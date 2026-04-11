@@ -3,8 +3,12 @@
   "id": "taiwan_green",
   "name": "臺灣",
   "variant": "綠線",
+  "aliases": [
+    "臺"
+  ],
   "side": "main",
   "camp": "taiwan",
+  "parent_faction": null,
   "bases": [
     {
       "name": "臺北",
@@ -37,5 +41,10 @@
   "special_rules": [
     "若有玩家選用臺灣，紅軍於回合結束時在臺灣城鎮擁有至少14個有效組織，則紅軍直接獲勝。"
   ],
-  "tags": ["engine", "build", "shared_org", "high_risk"]
+  "tags": [
+    "engine",
+    "build",
+    "shared_org",
+    "high_risk"
+  ]
 }

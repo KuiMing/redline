@@ -1,0 +1,49 @@
+{
+  "schema_version": "1.1",
+  "id": "republican",
+  "name": "民國派",
+  "group": "南方",
+  "side": "rebel",
+  "camp": "rebel",
+  "parent_faction": "rebel",
+  "bases": [
+    {
+      "name": "任意牆內",
+      "type": "flex"
+    },
+    {
+      "name": "任意南洋",
+      "type": "flex"
+    },
+    {
+      "name": "任意英美城鎮",
+      "type": "flex"
+    }
+  ],
+  "abilities": [
+    {
+      "ref": "on_build_draw",
+      "name_override": "還我河山"
+    }
+  ],
+  "shared_organizations_with": [
+    "臺灣（藍線）"
+  ],
+  "win_conditions": [
+    {
+      "type": "count_and_required",
+      "scope": "牆內與牆外",
+      "count": 11,
+      "required_locations": [
+        "南京",
+        "廣州",
+        "重慶"
+      ]
+    }
+  ],
+  "tags": [
+    "engine",
+    "build",
+    "shared_org"
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "schema_version": "1.1",
+  "id": "dai",
+  "name": "傣",
+  "group": "西南",
+  "aliases": [],
+  "side": "rebel",
+  "camp": "rebel",
+  "parent_faction": "rebel",
+  "bases": [
+    {
+      "name": "德宏",
+      "type": "fixed"
+    },
+    {
+      "name": "西雙版納",
+      "type": "fixed"
+    },
+    {
+      "name": "賀猛",
+      "type": "fixed"
+    },
+    {
+      "name": "曼谷",
+      "type": "fixed"
+    }
+  ],
+  "abilities": [
+    {
+      "name": "民族祭儀",
+      "type": "activated",
+      "timing": "己方行動階段",
+      "effect": "可將1張手牌放進牌庫底，翻牌庫頂牌並購買（費用為0），並展示牌庫頂牌。若牌中可獲得2點資金與2點宣傳，該牌則獲得2點宣傳或2點資金。",
+      "confidence": "low"
+    }
+  ],
+  "win_conditions": [
+    {
+      "type": "count_and_required",
+      "scope": "牆內與牆外",
+      "count": 12,
+      "required_locations": [
+        "德宏",
+        "西雙版納"
+      ]
+    }
+  ],
+  "tags": [
+    "hybrid",
+    "economy",
+    "manipulation"
+  ]
+}

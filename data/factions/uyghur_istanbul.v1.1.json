@@ -2,18 +2,38 @@
   "schema_version": "1.1",
   "id": "uyghur_istanbul",
   "name": "維吾爾",
+  "aliases": [
+    "維"
+  ],
   "variant": "伊斯坦堡",
   "side": "main",
   "camp": "uyghur",
+  "parent_faction": null,
   "bases": [
-    { "name": "伊斯坦堡", "type": "fixed" }
+    {
+      "name": "伊斯坦堡",
+      "type": "fixed"
+    }
   ],
   "abilities": [
-    { "ref": "guerrilla" },
-    { "name": "新疆社會管控", "type": "restriction", "effect": "無法無視距離建立牆內組織。" }
+    {
+      "ref": "guerrilla"
+    },
+    {
+      "name": "新疆社會管控",
+      "type": "restriction",
+      "effect": "無法無視距離建立牆內組織。"
+    }
   ],
   "win_conditions": [
-    { "type": "count_only", "scope": "牆內", "count": 14 }
+    {
+      "type": "count_only",
+      "scope": "牆內",
+      "count": 14
+    }
   ],
-  "tags": ["control", "distance_restricted"]
+  "tags": [
+    "control",
+    "distance_restricted"
+  ]
 }

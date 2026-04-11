@@ -2,27 +2,77 @@
   "schema_version": "1.1",
   "id": "hong_kong",
   "name": "香港",
-  "aliases": ["香"],
+  "aliases": [
+    "香"
+  ],
   "side": "main",
   "camp": "hong_kong",
+  "parent_faction": null,
   "bases": [
-    { "name": "香港城", "type": "initial" },
-    { "name": "臺北", "type": "relocatable" },
-    { "name": "倫敦", "type": "relocatable" },
-    { "name": "卡加利", "type": "relocatable" },
-    { "name": "多倫多", "type": "relocatable" }
-  ],
-  "abilities": [
     {
-      "name": "安全屋",
-      "type": "passive",
-      "effect": "建立牆內組織時，可建立組織距離額外增加1格。"
+      "name": "香港城",
+      "type": "initial",
+      "abilities": [
+        {
+          "name": "安全屋",
+          "type": "passive",
+          "effect": "建立牆內組織時，可建立組織距離額外增加1格。"
+        }
+      ]
     },
     {
-      "ref": "first_money_draw"
+      "name": "臺北",
+      "type": "relocatable",
+      "abilities": [
+        {
+          "name": "安全屋",
+          "type": "passive",
+          "effect": "建立牆內組織時，可建立組織距離額外增加1格。"
+        }
+      ]
+    },
+    {
+      "name": "倫敦",
+      "type": "relocatable",
+      "abilities": [
+        {
+          "name": "國際線",
+          "type": "passive",
+          "effect": "可以用資金支付宣傳。"
+        }
+      ]
+    },
+    {
+      "name": "卡加利",
+      "type": "relocatable",
+      "abilities": [
+        {
+          "name": "商貿組織",
+          "type": "triggered",
+          "trigger": "當您每回合第1次打出購買費用有資金的牌時",
+          "effect": "抽1張牌"
+        }
+      ]
+    },
+    {
+      "name": "多倫多",
+      "type": "relocatable",
+      "abilities": [
+        {
+          "name": "商貿組織",
+          "type": "triggered",
+          "trigger": "當您每回合第1次打出購買費用有資金的牌時",
+          "effect": "抽1張牌"
+        }
+      ]
     }
   ],
-  "shared_organizations_with": ["粵"],
+  "special_rules": [
+    "遊戲過程中可使用赤鱲角機場。",
+    "可與粵、澳門反賊共用組織。",
+    "「香港抗爭之烈」事件發生並完成結算後，可於每回合結束時將根據地免費遷移至臺北、倫敦、卡加利或多倫多（亦可選擇維留香港城）。",
+    "卡面另有一條推測規則文字，但 OCR 不穩，未納入正式欄位。"
+  ],
   "win_conditions": [
     {
       "type": "count_only",
@@ -30,5 +80,10 @@
       "count": 14
     }
   ],
-  "tags": ["mobile", "engine", "shared_org", "airport"]
+  "tags": [
+    "mobile",
+    "engine",
+    "shared_org",
+    "airport"
+  ]
 }

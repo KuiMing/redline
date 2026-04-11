@@ -1,0 +1,40 @@
+{
+  "schema_version": "1.1",
+  "id": "wan",
+  "name": "宛",
+  "side": "rebel",
+  "camp": "rebel",
+  "parent_faction": "rebel",
+  "bases": [
+    {
+      "name": "南陽",
+      "type": "fixed"
+    },
+    {
+      "name": "任意英美城鎮",
+      "type": "flex"
+    }
+  ],
+  "abilities": [
+    {
+      "ref": "martyr_draw",
+      "name_override": "殉道者"
+    }
+  ],
+  "restrictions": [
+    "必須搭配宛地圖使用。"
+  ],
+  "win_conditions": [
+    {
+      "type": "map_specific_count",
+      "map": "宛地圖",
+      "scope": "宛地（含南陽與宛地圖城鎮）",
+      "count": 14
+    }
+  ],
+  "tags": [
+    "reactive",
+    "map_dependency",
+    "anti_removal"
+  ]
+}

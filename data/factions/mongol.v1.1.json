@@ -2,13 +2,25 @@
   "schema_version": "1.1",
   "id": "mongol",
   "name": "蒙古",
-  "aliases": ["蒙"],
+  "aliases": [
+    "蒙"
+  ],
   "side": "main",
   "camp": "mongol",
+  "parent_faction": null,
   "bases": [
-    { "name": "烏蘭巴托", "type": "fixed" },
-    { "name": "東京", "type": "fixed" },
-    { "name": "紐約", "type": "fixed" }
+    {
+      "name": "烏蘭巴托",
+      "type": "fixed"
+    },
+    {
+      "name": "東京",
+      "type": "fixed"
+    },
+    {
+      "name": "紐約",
+      "type": "fixed"
+    }
   ],
   "abilities": [
     {
@@ -24,5 +36,9 @@
       "count": 14
     }
   ],
-  "tags": ["defense", "tax", "anti_removal"]
+  "tags": [
+    "defense",
+    "tax",
+    "anti_removal"
+  ]
 }

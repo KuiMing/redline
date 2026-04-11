@@ -2,10 +2,17 @@
   "schema_version": "1.1",
   "id": "red_army",
   "name": "紅軍",
+  "aliases": [
+    "紅"
+  ],
   "side": "main",
   "camp": "red_army",
+  "parent_faction": null,
   "bases": [
-    { "name": "北京", "type": "fixed" }
+    {
+      "name": "北京",
+      "type": "fixed"
+    }
   ],
   "setup_effects": [
     "在遊戲開始時額外將1張紅軍兵援放入起始牌庫。",
@@ -16,38 +23,53 @@
       "name": "統戰部",
       "type": "activated",
       "timing": "行動階段開始時",
-      "limit": "每回合可發動次數等同反共陣營玩家人數",
+      "limit": "每次任選1種；每回合可發動之總次數與反共陣營玩家總人數相同",
       "effect": "抽1張牌"
     },
     {
       "name": "政工部",
       "type": "activated",
       "timing": "行動階段開始時",
-      "limit": "對同一玩家每回合限1次",
+      "limit": "同一玩家每回合限用1次；視同打出1張行動卡",
       "effect": "將1張內宣放進其他玩家的牌庫頂"
     },
     {
       "name": "國安部",
       "type": "activated",
       "timing": "行動階段開始時",
-      "limit": "對同一玩家每回合限1次",
+      "limit": "同一玩家每回合限用1次；視同打出1張行動卡",
       "effect": "瓦解其他玩家在紅軍組織1格內的1個牆內組織"
     },
     {
       "name": "中紀委",
       "type": "activated",
       "timing": "行動階段開始時",
+      "limit": "視同打出1張行動卡",
       "effect": "棄掉任意張數的手牌，而後抽等量的牌"
     }
   ],
   "restrictions": [
     "紅軍組織不得離開紅軍的發展空間。"
   ],
+  "special_rules": [
+    "政工部與國安部每回合對同一玩家限用1次。",
+    "4種特殊能力每次效果視同打出1張行動卡，玩家可打出特定行動卡取消其效果。",
+    "紅軍根據地可被瓦解。當一玩家於1回合內對紅軍根據地成功進行2次瓦解，則紅軍根據地消失，消失後無法重建。"
+  ],
   "win_conditions": [
     {
       "type": "default_survival",
       "text": "遊戲結束前未有反共陣營玩家達成勝利條件。"
+    },
+    {
+      "type": "taiwan_override",
+      "condition": "若有玩家選用臺灣",
+      "text": "紅軍於回合結束時在臺灣城鎮擁有至少14個有效組織，則紅軍直接獲勝。"
     }
   ],
-  "tags": ["control", "aggressive", "central"]
+  "tags": [
+    "control",
+    "aggressive",
+    "central"
+  ]
 }

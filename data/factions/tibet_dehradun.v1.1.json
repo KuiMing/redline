@@ -5,19 +5,35 @@
   "variant": "德拉敦",
   "side": "main",
   "camp": "tibet",
+  "parent_faction": null,
   "bases": [
-    { "name": "德拉敦", "type": "fixed" }
+    {
+      "name": "德拉敦",
+      "type": "fixed",
+      "note": "印度特別邊境部隊"
+    }
   ],
   "abilities": [
-    { "ref": "guerrilla" },
+    {
+      "ref": "guerrilla"
+    },
     {
       "name": "印度研究分析室",
       "type": "restriction",
-      "effect": "禁止持有印度旗幟以外的旗幟卡；當您每回合第1次打出印度旗幟時，獲得2點資金。"
+      "effect": "禁止持有印度旗幟以外的旗幟卡；當您每回合第1次打出印度旗幟時，獲得2點資金。",
+      "confidence": "medium"
     }
   ],
   "win_conditions": [
-    { "type": "count_only", "scope": "牆內", "count": 14 }
+    {
+      "type": "count_only",
+      "scope": "牆內",
+      "count": 14
+    }
   ],
-  "tags": ["control", "discard", "restricted_build"]
+  "tags": [
+    "control",
+    "discard",
+    "restricted_build"
+  ]
 }

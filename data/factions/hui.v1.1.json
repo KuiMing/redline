@@ -1,0 +1,55 @@
+{
+  "schema_version": "1.1",
+  "id": "hui",
+  "name": "回族",
+  "aliases": [
+    "回"
+  ],
+  "side": "rebel",
+  "camp": "rebel",
+  "parent_faction": "rebel",
+  "bases": [
+    {
+      "name": "西寧",
+      "type": "fixed"
+    },
+    {
+      "name": "銀川",
+      "type": "fixed"
+    },
+    {
+      "name": "蘭州",
+      "type": "fixed"
+    },
+    {
+      "name": "昆明",
+      "type": "fixed"
+    },
+    {
+      "name": "利雅德",
+      "type": "fixed"
+    },
+    {
+      "name": "任意南洋城鎮",
+      "type": "flex"
+    }
+  ],
+  "abilities": [
+    {
+      "ref": "martyr_draw",
+      "name_override": "殉道者"
+    }
+  ],
+  "win_conditions": [
+    {
+      "type": "count_only",
+      "scope": "牆內",
+      "count": 14
+    }
+  ],
+  "tags": [
+    "reactive",
+    "draw",
+    "anti_removal"
+  ]
+}

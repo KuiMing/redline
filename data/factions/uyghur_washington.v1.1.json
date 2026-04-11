@@ -5,15 +5,33 @@
   "variant": "華盛頓",
   "side": "main",
   "camp": "uyghur",
+  "parent_faction": null,
   "bases": [
-    { "name": "華盛頓", "type": "fixed" }
+    {
+      "name": "華盛頓",
+      "type": "fixed"
+    }
   ],
   "abilities": [
-    { "ref": "first_money_gain2", "name_override": "基金會" },
-    { "name": "新疆社會管控", "type": "restriction", "effect": "無法無視距離建立牆內組織。" }
+    {
+      "ref": "first_money_gain2",
+      "name_override": "基金會"
+    },
+    {
+      "name": "新疆社會管控",
+      "type": "restriction",
+      "effect": "無法無視距離建立牆內組織。"
+    }
   ],
   "win_conditions": [
-    { "type": "count_only", "scope": "牆內", "count": 14 }
+    {
+      "type": "count_only",
+      "scope": "牆內",
+      "count": 14
+    }
   ],
-  "tags": ["economy", "distance_restricted"]
+  "tags": [
+    "economy",
+    "distance_restricted"
+  ]
 }

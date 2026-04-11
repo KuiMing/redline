@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.1",
+  "id": "dian",
+  "name": "滇",
+  "group": "西南",
+  "aliases": [],
+  "side": "rebel",
+  "camp": "rebel",
+  "parent_faction": "rebel",
+  "bases": [
+    {
+      "name": "昆明",
+      "type": "fixed"
+    },
+    {
+      "name": "美斯樂",
+      "type": "fixed"
+    }
+  ],
+  "abilities": [
+    {
+      "ref": "combo_three_unique"
+    }
+  ],
+  "special_rules": [
+    "遊戲過程中可與藏族共享組織。"
+  ],
+  "win_conditions": [
+    {
+      "type": "count_and_required",
+      "scope": "牆內與牆外",
+      "count": 11,
+      "required_locations": [
+        "昆明",
+        "德宏",
+        "西雙版納"
+      ]
+    }
+  ],
+  "tags": [
+    "combo",
+    "resource",
+    "shared_org"
+  ]
+}

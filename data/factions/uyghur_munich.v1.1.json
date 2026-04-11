@@ -5,17 +5,45 @@
   "variant": "慕尼黑",
   "side": "main",
   "camp": "uyghur",
+  "parent_faction": null,
   "bases": [
-    { "name": "慕尼黑", "type": "fixed" }
+    {
+      "name": "慕尼黑",
+      "type": "fixed"
+    }
   ],
   "abilities": [
-    { "ref": "first_money_gain2", "name_override": "基金會" },
-    { "name": "東突厥斯坦政府", "type": "setup", "effect": "在遊戲開始時額外將2張宣傳卡放入起始牌庫。" },
-    { "name": "非暴力", "type": "restriction", "effect": "禁止持有或裝備類卡牌。" },
-    { "name": "新疆社會管控", "type": "restriction", "effect": "無法無視距離建立牆內組織。" }
+    {
+      "ref": "first_money_gain2",
+      "name_override": "基金會"
+    },
+    {
+      "name": "東突厥斯坦政府",
+      "type": "setup",
+      "effect": "在遊戲開始時額外將2張宣傳卡放入起始牌庫。"
+    },
+    {
+      "name": "非暴力",
+      "type": "restriction",
+      "effect": "禁止持有或裝備類卡牌。"
+    },
+    {
+      "name": "新疆社會管控",
+      "type": "restriction",
+      "effect": "無法無視距離建立牆內組織。"
+    }
   ],
   "win_conditions": [
-    { "type": "count_only", "scope": "牆內", "count": 14 }
+    {
+      "type": "count_only",
+      "scope": "牆內",
+      "count": 14
+    }
   ],
-  "tags": ["economy", "setup_bonus", "distance_restricted", "restriction"]
+  "tags": [
+    "economy",
+    "setup_bonus",
+    "distance_restricted",
+    "restriction"
+  ]
 }

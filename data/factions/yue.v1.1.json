@@ -1,0 +1,49 @@
+{
+  "schema_version": "1.1",
+  "id": "yue",
+  "name": "粵",
+  "group": "南方",
+  "side": "rebel",
+  "camp": "rebel",
+  "parent_faction": "rebel",
+  "bases": [
+    {
+      "name": "廣州",
+      "type": "fixed"
+    },
+    {
+      "name": "任意南洋",
+      "type": "flex"
+    },
+    {
+      "name": "任意英美城鎮",
+      "type": "flex"
+    }
+  ],
+  "abilities": [
+    {
+      "ref": "first_money_draw"
+    }
+  ],
+  "shared_organizations_with": [
+    "香港"
+  ],
+  "win_conditions": [
+    {
+      "type": "count_and_required",
+      "scope": "牆內與牆外",
+      "count": 11,
+      "required_locations": [
+        "廣州",
+        "深圳",
+        "港澳"
+      ]
+    }
+  ],
+  "tags": [
+    "engine",
+    "money",
+    "draw",
+    "shared_org"
+  ]
+}

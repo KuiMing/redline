@@ -5,6 +5,7 @@
   "variant": "藍線",
   "side": "main",
   "camp": "taiwan",
+  "parent_faction": null,
   "bases": [
     {
       "name": "臺北",
@@ -14,7 +15,7 @@
   ],
   "abilities": [
     {
-      "ref": "on_build_draw",
+      "ref": "on_build_draw_inner_or_nanyang",
       "name_override": "民國之心"
     }
   ],
@@ -32,5 +33,10 @@
   "special_rules": [
     "若有玩家選用臺灣，紅軍於回合結束時在臺灣城鎮擁有至少14個有效組織，則紅軍直接獲勝。"
   ],
-  "tags": ["engine", "build", "shared_org", "high_risk"]
+  "tags": [
+    "engine",
+    "build",
+    "shared_org",
+    "high_risk"
+  ]
 }

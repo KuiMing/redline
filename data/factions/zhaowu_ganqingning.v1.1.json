@@ -1,0 +1,44 @@
+{
+  "schema_version": "1.1",
+  "id": "zhaowu_ganqingning",
+  "name": "昭武・甘青寧",
+  "group": "回族分支",
+  "side": "rebel",
+  "camp": "rebel",
+  "parent_faction": "rebel",
+  "bases": [
+    {
+      "name": "蘭州",
+      "type": "fixed"
+    },
+    {
+      "name": "利雅德",
+      "type": "fixed"
+    },
+    {
+      "name": "任意英美城鎮",
+      "type": "flex"
+    }
+  ],
+  "abilities": [
+    {
+      "ref": "combo_three_unique"
+    }
+  ],
+  "win_conditions": [
+    {
+      "type": "count_and_required",
+      "scope": "牆內與牆外",
+      "count": 11,
+      "required_locations": [
+        "蘭州",
+        "西寧",
+        "銀川"
+      ]
+    }
+  ],
+  "tags": [
+    "combo",
+    "resource"
+  ]
+}

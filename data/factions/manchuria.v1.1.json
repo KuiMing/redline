@@ -2,13 +2,25 @@
   "schema_version": "1.1",
   "id": "manchuria",
   "name": "滿洲",
-  "aliases": ["滿"],
+  "aliases": [
+    "滿"
+  ],
   "side": "main",
   "camp": "manchuria",
+  "parent_faction": null,
   "bases": [
-    { "name": "東京", "type": "fixed" },
-    { "name": "舊金山", "type": "fixed" },
-    { "name": "海參崴", "type": "fixed" }
+    {
+      "name": "東京",
+      "type": "fixed"
+    },
+    {
+      "name": "舊金山",
+      "type": "fixed"
+    },
+    {
+      "name": "海參崴",
+      "type": "fixed"
+    }
   ],
   "abilities": [
     {
@@ -22,5 +34,9 @@
       "count": 14
     }
   ],
-  "tags": ["combo", "resource", "baseline"]
+  "tags": [
+    "combo",
+    "resource",
+    "baseline"
+  ]
 }

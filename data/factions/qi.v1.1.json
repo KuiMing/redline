@@ -1,0 +1,47 @@
+{
+  "schema_version": "1.1",
+  "id": "qi",
+  "name": "齊",
+  "group": "北方",
+  "side": "rebel",
+  "camp": "rebel",
+  "parent_faction": "rebel",
+  "bases": [
+    {
+      "name": "青島",
+      "type": "fixed"
+    },
+    {
+      "name": "濟南",
+      "type": "fixed"
+    },
+    {
+      "name": "任意東洋",
+      "type": "flex"
+    },
+    {
+      "name": "任意英美城鎮",
+      "type": "flex"
+    }
+  ],
+  "abilities": [
+    {
+      "ref": "combo_three_unique"
+    }
+  ],
+  "win_conditions": [
+    {
+      "type": "count_and_required",
+      "scope": "牆內與牆外",
+      "count": 12,
+      "required_locations": [
+        "青島",
+        "濟南"
+      ]
+    }
+  ],
+  "tags": [
+    "combo",
+    "resource"
+  ]
+}

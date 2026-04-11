@@ -5,14 +5,28 @@
   "variant": "哲古宗",
   "side": "main",
   "camp": "tibet",
+  "parent_faction": null,
   "bases": [
-    { "name": "哲古宗", "type": "fixed" }
+    {
+      "name": "哲古宗",
+      "type": "fixed",
+      "note": "四水六崗衛教志願軍"
+    }
   ],
   "abilities": [
-    { "ref": "guerrilla" }
+    {
+      "ref": "guerrilla"
+    }
   ],
   "win_conditions": [
-    { "type": "count_only", "scope": "牆內", "count": 14 }
+    {
+      "type": "count_only",
+      "scope": "牆內",
+      "count": 14
+    }
   ],
-  "tags": ["control", "discard"]
+  "tags": [
+    "control",
+    "discard"
+  ]
 }

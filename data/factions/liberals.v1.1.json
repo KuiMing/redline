@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.1",
+  "id": "liberals",
+  "name": "自由派",
+  "group": "南方",
+  "side": "rebel",
+  "camp": "rebel",
+  "parent_faction": "rebel",
+  "bases": [
+    {
+      "name": "任意牆內城鎮",
+      "type": "flex"
+    }
+  ],
+  "abilities": [
+    {
+      "name": "立場試探",
+      "type": "activated",
+      "timing": "己方行動階段",
+      "effect": "可展示牌庫頂牌。若該牌購買費用為奇數，則將其加入手牌；若為偶數，您可選擇是否將其放進己方棄牌堆。"
+    }
+  ],
+  "win_conditions": [
+    {
+      "type": "count_only",
+      "scope": "牆內",
+      "count": 14
+    }
+  ],
+  "tags": [
+    "control",
+    "topdeck",
+    "manipulation"
+  ]
+}

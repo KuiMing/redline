@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.1",
+  "id": "underground_church",
+  "name": "地下教會",
+  "side": "rebel",
+  "camp": "rebel",
+  "parent_faction": "rebel",
+  "bases": [
+    {
+      "name": "任意牆內城鎮",
+      "type": "flex"
+    }
+  ],
+  "abilities": [
+    {
+      "ref": "martyr_draw",
+      "name_override": "殉道者"
+    }
+  ],
+  "shared_organizations_with": [
+    "臺灣（綠線）"
+  ],
+  "win_conditions": [
+    {
+      "type": "count_only",
+      "scope": "牆內",
+      "count": 14
+    }
+  ],
+  "tags": [
+    "reactive",
+    "shared_org",
+    "anti_removal"
+  ]
+}

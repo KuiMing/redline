@@ -5,15 +5,33 @@
   "variant": "阿拉木圖",
   "side": "main",
   "camp": "uyghur",
+  "parent_faction": null,
   "bases": [
-    { "name": "阿拉木圖", "type": "fixed" }
+    {
+      "name": "阿拉木圖",
+      "type": "fixed"
+    }
   ],
   "abilities": [
-    { "ref": "first_propaganda_draw" },
-    { "name": "新疆社會管控", "type": "restriction", "effect": "無法無視距離建立牆內組織。" }
+    {
+      "ref": "first_propaganda_draw"
+    },
+    {
+      "name": "新疆社會管控",
+      "type": "restriction",
+      "effect": "無法無視距離建立牆內組織。"
+    }
   ],
   "win_conditions": [
-    { "type": "count_only", "scope": "牆內", "count": 14 }
+    {
+      "type": "count_only",
+      "scope": "牆內",
+      "count": 14
+    }
   ],
-  "tags": ["engine", "draw", "distance_restricted"]
+  "tags": [
+    "engine",
+    "draw",
+    "distance_restricted"
+  ]
 }

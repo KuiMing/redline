@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.1",
+  "id": "federalists",
+  "name": "聯邦派",
+  "group": "北方",
+  "side": "rebel",
+  "camp": "rebel",
+  "parent_faction": "rebel",
+  "bases": [
+    {
+      "name": "任意牆內",
+      "type": "flex"
+    },
+    {
+      "name": "任意英美城鎮",
+      "type": "flex"
+    }
+  ],
+  "abilities": [
+    {
+      "ref": "first_money_draw"
+    }
+  ],
+  "win_conditions": [
+    {
+      "type": "count_only",
+      "scope": "牆內",
+      "count": 14
+    }
+  ],
+  "tags": [
+    "engine",
+    "draw",
+    "flex_base"
+  ]
+}
