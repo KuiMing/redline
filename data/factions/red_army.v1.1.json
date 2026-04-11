@@ -1,0 +1,53 @@
+{
+  "schema_version": "1.1",
+  "id": "red_army",
+  "name": "紅軍",
+  "side": "main",
+  "camp": "red_army",
+  "bases": [
+    { "name": "北京", "type": "fixed" }
+  ],
+  "setup_effects": [
+    "在遊戲開始時額外將1張紅軍兵援放入起始牌庫。",
+    "負責保管事件牌庫與回合指示板，於每回合事件階段翻出事件卡。"
+  ],
+  "abilities": [
+    {
+      "name": "統戰部",
+      "type": "activated",
+      "timing": "行動階段開始時",
+      "limit": "每回合可發動次數等同反共陣營玩家人數",
+      "effect": "抽1張牌"
+    },
+    {
+      "name": "政工部",
+      "type": "activated",
+      "timing": "行動階段開始時",
+      "limit": "對同一玩家每回合限1次",
+      "effect": "將1張內宣放進其他玩家的牌庫頂"
+    },
+    {
+      "name": "國安部",
+      "type": "activated",
+      "timing": "行動階段開始時",
+      "limit": "對同一玩家每回合限1次",
+      "effect": "瓦解其他玩家在紅軍組織1格內的1個牆內組織"
+    },
+    {
+      "name": "中紀委",
+      "type": "activated",
+      "timing": "行動階段開始時",
+      "effect": "棄掉任意張數的手牌，而後抽等量的牌"
+    }
+  ],
+  "restrictions": [
+    "紅軍組織不得離開紅軍的發展空間。"
+  ],
+  "win_conditions": [
+    {
+      "type": "default_survival",
+      "text": "遊戲結束前未有反共陣營玩家達成勝利條件。"
+    }
+  ],
+  "tags": ["control", "aggressive", "central"]
+}

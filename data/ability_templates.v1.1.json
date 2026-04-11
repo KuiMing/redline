@@ -1,0 +1,54 @@
+{
+  "schema_version": "1.1",
+  "ability_templates": {
+    "combo_three_unique": {
+      "name": "展現實力",
+      "type": "triggered",
+      "trigger": "在己方行動階段打出至少3張不同名稱的非起始牌",
+      "effect": "獲得3點宣傳或3點資金",
+      "tags": ["combo", "burst", "resource"]
+    },
+    "first_money_draw": {
+      "name": "商貿組織",
+      "type": "triggered",
+      "trigger": "當您每回合第1次打出購買費用有資金的牌時",
+      "effect": "抽1張牌",
+      "tags": ["engine", "money", "draw"]
+    },
+    "first_money_gain2": {
+      "name": "基金會",
+      "type": "triggered",
+      "trigger": "當您每回合第1次打出購買費用有資金的牌時",
+      "effect": "獲得2點資金",
+      "tags": ["engine", "money"]
+    },
+    "first_propaganda_draw": {
+      "name": "民族調和",
+      "type": "triggered",
+      "trigger": "當您每回合第1次打出購買費用有宣傳的牌時",
+      "effect": "抽1張牌",
+      "tags": ["engine", "propaganda", "draw"]
+    },
+    "on_build_draw": {
+      "name": "還我河山",
+      "type": "triggered",
+      "trigger": "若您在回合中曾於牆內建立至少1個組織",
+      "effect": "您可以在己方行動階段結束時額外再抽1張牌",
+      "tags": ["engine", "build", "draw"]
+    },
+    "martyr_draw": {
+      "name": "殉道者",
+      "type": "triggered",
+      "trigger": "每次己方牆內組織被其他玩家成功瓦解時",
+      "effect": "抽1張牌",
+      "tags": ["reactive", "draw", "defense"]
+    },
+    "guerrilla": {
+      "name": "游擊隊",
+      "type": "triggered",
+      "trigger": "在您建立至少1個牆內組織後",
+      "effect": "您可以抽1張牌，或令紅軍棄1張手牌；每回合限1次",
+      "tags": ["control", "draw", "discard"]
+    }
+  }
+}
