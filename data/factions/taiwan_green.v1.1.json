@@ -1,0 +1,41 @@
+{
+  "schema_version": "1.1",
+  "id": "taiwan_green",
+  "name": "臺灣",
+  "variant": "綠線",
+  "side": "main",
+  "camp": "taiwan",
+  "bases": [
+    {
+      "name": "臺北",
+      "type": "fixed",
+      "note": "綠線・輸出本土化運動"
+    }
+  ],
+  "abilities": [
+    {
+      "ref": "on_build_draw_inner",
+      "name_override": "本土社團"
+    }
+  ],
+  "shared_organizations_with": [
+    "地下教會",
+    "性別革命",
+    "客家",
+    "潮汕",
+    "閩",
+    "吳越",
+    "滇"
+  ],
+  "win_conditions": [
+    {
+      "type": "count_only",
+      "scope": "牆內",
+      "count": 14
+    }
+  ],
+  "special_rules": [
+    "若有玩家選用臺灣，紅軍於回合結束時在臺灣城鎮擁有至少14個有效組織，則紅軍直接獲勝。"
+  ],
+  "tags": ["engine", "build", "shared_org", "high_risk"]
+}

@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.1",
+  "id": "uyghur_istanbul",
+  "name": "維吾爾",
+  "variant": "伊斯坦堡",
+  "side": "main",
+  "camp": "uyghur",
+  "bases": [
+    { "name": "伊斯坦堡", "type": "fixed" }
+  ],
+  "abilities": [
+    { "ref": "guerrilla" },
+    { "name": "新疆社會管控", "type": "restriction", "effect": "無法無視距離建立牆內組織。" }
+  ],
+  "win_conditions": [
+    { "type": "count_only", "scope": "牆內", "count": 14 }
+  ],
+  "tags": ["control", "distance_restricted"]
+}

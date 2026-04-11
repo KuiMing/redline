@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.1",
+  "id": "mongol",
+  "name": "蒙古",
+  "aliases": ["蒙"],
+  "side": "main",
+  "camp": "mongol",
+  "bases": [
+    { "name": "烏蘭巴托", "type": "fixed" },
+    { "name": "東京", "type": "fixed" },
+    { "name": "紐約", "type": "fixed" }
+  ],
+  "abilities": [
+    {
+      "name": "盟族學校",
+      "type": "passive",
+      "effect": "其他玩家須先棄1張手牌，才可以手牌或陣營能力瓦解您的組織。"
+    }
+  ],
+  "win_conditions": [
+    {
+      "type": "count_only",
+      "scope": "牆內",
+      "count": 14
+    }
+  ],
+  "tags": ["defense", "tax", "anti_removal"]
+}

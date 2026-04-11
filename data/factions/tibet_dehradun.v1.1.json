@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.1",
+  "id": "tibet_dehradun",
+  "name": "西藏",
+  "variant": "德拉敦",
+  "side": "main",
+  "camp": "tibet",
+  "bases": [
+    { "name": "德拉敦", "type": "fixed" }
+  ],
+  "abilities": [
+    { "ref": "guerrilla" },
+    {
+      "name": "印度研究分析室",
+      "type": "restriction",
+      "effect": "禁止持有印度旗幟以外的旗幟卡；當您每回合第1次打出印度旗幟時，獲得2點資金。"
+    }
+  ],
+  "win_conditions": [
+    { "type": "count_only", "scope": "牆內", "count": 14 }
+  ],
+  "tags": ["control", "discard", "restricted_build"]
+}

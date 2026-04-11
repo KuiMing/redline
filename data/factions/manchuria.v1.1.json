@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.1",
+  "id": "manchuria",
+  "name": "滿洲",
+  "aliases": ["滿"],
+  "side": "main",
+  "camp": "manchuria",
+  "bases": [
+    { "name": "東京", "type": "fixed" },
+    { "name": "舊金山", "type": "fixed" },
+    { "name": "海參崴", "type": "fixed" }
+  ],
+  "abilities": [
+    {
+      "ref": "combo_three_unique"
+    }
+  ],
+  "win_conditions": [
+    {
+      "type": "count_only",
+      "scope": "牆內",
+      "count": 14
+    }
+  ],
+  "tags": ["combo", "resource", "baseline"]
+}

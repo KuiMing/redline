@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.1",
+  "id": "tibet_dharamsala",
+  "name": "西藏",
+  "variant": "達蘭薩拉",
+  "side": "main",
+  "camp": "tibet",
+  "bases": [
+    { "name": "達蘭薩拉", "type": "fixed" }
+  ],
+  "abilities": [
+    { "ref": "first_money_gain2", "name_override": "共合會" },
+    { "name": "達賴救援", "type": "setup", "effect": "在遊戲開始時額外將2張宣傳卡放入起始牌庫。" },
+    { "name": "非暴力", "type": "restriction", "effect": "禁止持有或裝備類卡牌。" }
+  ],
+  "win_conditions": [
+    { "type": "count_only", "scope": "牆內", "count": 14 }
+  ],
+  "tags": ["economy", "setup_bonus", "restriction"]
+}

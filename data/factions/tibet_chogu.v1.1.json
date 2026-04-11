@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.1",
+  "id": "tibet_chogu",
+  "name": "西藏",
+  "variant": "哲古宗",
+  "side": "main",
+  "camp": "tibet",
+  "bases": [
+    { "name": "哲古宗", "type": "fixed" }
+  ],
+  "abilities": [
+    { "ref": "guerrilla" }
+  ],
+  "win_conditions": [
+    { "type": "count_only", "scope": "牆內", "count": 14 }
+  ],
+  "tags": ["control", "discard"]
+}

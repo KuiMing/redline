@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.1",
+  "id": "kazakh",
+  "name": "哈薩克",
+  "aliases": ["哈"],
+  "side": "main",
+  "camp": "kazakh",
+  "bases": [
+    { "name": "阿拉木圖", "type": "fixed" }
+  ],
+  "abilities": [
+    {
+      "ref": "first_propaganda_draw"
+    }
+  ],
+  "win_conditions": [
+    {
+      "type": "count_and_required",
+      "scope": "牆內與牆外",
+      "count": 19,
+      "required_locations": ["阿勒泰", "塔城", "伊寧"]
+    }
+  ],
+  "tags": ["engine", "draw", "propaganda"]
+}
