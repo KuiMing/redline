@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.1",
+  "regions": [
+    { "id": "china", "name": "中華" },
+    { "id": "taiwan", "name": "臺灣" },
+    { "id": "hong_kong_macau", "name": "香港與澳門" },
+    { "id": "southeast_asia", "name": "南洋" },
+    { "id": "manchuria", "name": "滿洲" },
+    { "id": "outer_manchuria", "name": "外滿洲" },
+    { "id": "mongolian_plateau", "name": "蒙古高原" },
+    { "id": "inner_mongolia", "name": "南蒙古" },
+    { "id": "turkestan", "name": "突厥" },
+    { "id": "greater_tibet", "name": "大藏" },
+    { "id": "tibet_region", "name": "藏區" },
+    { "id": "india", "name": "印度" },
+    { "id": "middle_east", "name": "天方" },
+    { "id": "japan", "name": "日本" },
+    { "id": "korean_peninsula", "name": "朝鮮半島" },
+    { "id": "trans_siberian", "name": "西伯利亞鐵路" },
+    { "id": "anglo_america", "name": "英美" },
+    { "id": "europe", "name": "歐洲" }
+  ]
+}
