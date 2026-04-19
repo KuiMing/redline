@@ -37,19 +37,19 @@ def set_base(req: BaseRequest):
     return {**result, "state": current_game.state()}
 
 
-@app.post("/build")
-def build(req: BaseRequest):
-    if current_game is None:
-        return {"error": "No game created"}
-    result = current_game.build_organization(req.town)
-    return {**result, "state": current_game.state()}
-
-
 @app.post("/move")
 def move(req: MoveRequest):
     if current_game is None:
         return {"error": "No game created"}
     result = current_game.move_organization(req.from_town, req.to_town, req.mode)
+    return {**result, "state": current_game.state()}
+
+
+@app.post("/end_turn")
+def end_turn():
+    if current_game is None:
+        return {"error": "No game created"}
+    result = current_game.end_turn()
     return {**result, "state": current_game.state()}
 
 
@@ -68,12 +68,8 @@ def index():
             <title>Redline Game</title>
         </head>
         <body>
-            <h1>Redline MVP - Build & Move</h1>
+            <h1>Redline - Movement Rules Active</h1>
             <button onclick="createGame()">Create Game</button>
-            <br><br>
-            <input id="townInput" placeholder="Town" />
-            <button onclick="setBase()">Set Base</button>
-            <button onclick="buildOrg()">Build Org</button>
             <br><br>
             <input id="fromInput" placeholder="From" />
             <input id="toInput" placeholder="To" />
@@ -82,6 +78,7 @@ def index():
                 <option value="rail">rail</option>
             </select>
             <button onclick="moveOrg()">Move Org</button>
+            <button onclick="endTurn()">End Turn</button>
             <br><br>
             <button onclick="loadState()">Load State</button>
             <pre id='output'></pre>
@@ -89,28 +86,6 @@ def index():
             <script>
                 async function createGame() {
                     const res = await fetch('/create', {method: 'POST'});
-                    const data = await res.json();
-                    document.getElementById('output').textContent = JSON.stringify(data, null, 2);
-                }
-
-                async function setBase() {
-                    const town = document.getElementById('townInput').value;
-                    const res = await fetch('/set_base', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({town})
-                    });
-                    const data = await res.json();
-                    document.getElementById('output').textContent = JSON.stringify(data, null, 2);
-                }
-
-                async function buildOrg() {
-                    const town = document.getElementById('townInput').value;
-                    const res = await fetch('/build', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({town})
-                    });
                     const data = await res.json();
                     document.getElementById('output').textContent = JSON.stringify(data, null, 2);
                 }
@@ -124,6 +99,12 @@ def index():
                         headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({from_town: from, to_town: to, mode})
                     });
+                    const data = await res.json();
+                    document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+                }
+
+                async function endTurn() {
+                    const res = await fetch('/end_turn', {method: 'POST'});
                     const data = await res.json();
                     document.getElementById('output').textContent = JSON.stringify(data, null, 2);
                 }

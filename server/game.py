@@ -7,6 +7,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 MAP_PATH = BASE_DIR / "map.json"
 FACTIONS_PATH = BASE_DIR / "data" / "factions" / "all_faction.json"
 
+ROAD_COST = 1
+RAIL_COST = 3
+WALL_EXTRA_COST = 1  # additional cost when crossing wall
+
 
 class Player:
     def __init__(self, name, faction_id):
@@ -15,6 +19,7 @@ class Player:
         self.faction_id = faction_id
         self.organizations = {}
         self.base = None
+        self.moves_left = 2  # per turn baseline
 
 
 class Game:
@@ -81,17 +86,17 @@ class Game:
 
         return {"success": True}
 
-    def build_organization(self, town_name):
-        if self.phase != "main":
-            return {"error": "Not in main phase"}
+    def _is_wall_crossing(self, from_town, to_town):
+        # simple placeholder rule: crossing between china and non-china
+        from_region = self._get_region(from_town)
+        to_region = self._get_region(to_town)
+        return from_region == "china" and to_region != "china"
 
-        player = self.current_player()
-
-        if town_name not in self.map["towns"]:
-            return {"error": "Invalid town"}
-
-        player.organizations[town_name] = player.organizations.get(town_name, 0) + 1
-        return {"success": True}
+    def _get_region(self, town_name):
+        for region_key, region in self.map.get("regions", {}).items():
+            if town_name in region.get("towns", []):
+                return region_key
+        return None
 
     def move_organization(self, from_town, to_town, mode="road"):
         if self.phase != "main":
@@ -103,11 +108,18 @@ class Game:
             return {"error": "No organization in source town"}
 
         connections = self.map["towns"].get(from_town, {})
-        if mode not in ["road", "rail"]:
-            return {"error": "Invalid movement mode"}
-
         if to_town not in connections.get(mode, []):
             return {"error": "Towns not connected by this mode"}
+
+        cost = ROAD_COST if mode == "road" else RAIL_COST
+
+        if self._is_wall_crossing(from_town, to_town):
+            cost += WALL_EXTRA_COST
+
+        if player.moves_left < cost:
+            return {"error": "Not enough movement points"}
+
+        player.moves_left -= cost
 
         player.organizations[from_town] -= 1
         if player.organizations[from_town] == 0:
@@ -115,6 +127,14 @@ class Game:
 
         player.organizations[to_town] = player.organizations.get(to_town, 0) + 1
 
+        return {"success": True, "moves_left": player.moves_left}
+
+    def end_turn(self):
+        player = self.current_player()
+        player.moves_left = 2
+        self.next_player()
+        if self.current_player_index == 0:
+            self.turn += 1
         return {"success": True}
 
     def state(self):
@@ -128,7 +148,8 @@ class Game:
                     "name": p.name,
                     "faction": p.faction_id,
                     "base": p.base,
-                    "organizations": p.organizations
+                    "organizations": p.organizations,
+                    "moves_left": p.moves_left
                 }
                 for p in self.players
             ]
