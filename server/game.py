@@ -35,7 +35,6 @@ class Player:
         self.base = None
         self.moves_left = 0
 
-        # Phase 2 additions
         self.resources = {"money": 0, "propaganda": 0}
         self.hand = []
         self.deck = None
@@ -47,6 +46,13 @@ class Player:
         needed = 5 - len(self.hand)
         if needed > 0:
             self.hand.extend(self.deck.draw(needed))
+
+    def discard_hand(self):
+        self.deck.discard(self.hand)
+        self.hand = []
+
+    def reset_resources(self):
+        self.resources = {"money": 0, "propaganda": 0}
 
 
 class Game:
@@ -67,8 +73,11 @@ class Game:
         self.factions = self._load_factions()
         self.board_regions = self._load_board_regions()
 
+        self.purchase_area = []
+
         self._assign_factions(player_names)
         self._init_decks()
+        self._init_purchase_area()
 
     def _load_map(self):
         with open(MAP_PATH, "r", encoding="utf-8") as f:
@@ -95,7 +104,6 @@ class Game:
             self.players.append(Player(name, faction["id"]))
 
     def _init_decks(self):
-        # 7 followers + 3 donors
         for player in self.players:
             starter_cards = []
             for _ in range(7):
@@ -105,6 +113,15 @@ class Game:
 
             player.deck = Deck(starter_cards)
             player.hand = player.deck.draw(5)
+
+    def _init_purchase_area(self):
+        # minimal sample purchase cards
+        self.purchase_area = [
+            Card("宣傳家", "propaganda", {"propaganda": 2}),
+            Card("資助者", "money", {"money": 2}),
+            Card("領導", "draw", {"propaganda": 1}),
+            Card("交通經驗丙", "move", {"money": 1})
+        ]
 
     def current_player(self):
         return self.players[self.current_player_index]
@@ -125,6 +142,47 @@ class Game:
 
         return {"success": True}
 
+    def buy_card(self, card_index):
+        player = self.current_player()
+        if self.turn_phase != TurnPhase.ACTION:
+            return {"error": "Can only buy in ACTION phase"}
+
+        if card_index < 0 or card_index >= len(self.purchase_area):
+            return {"error": "Invalid purchase index"}
+
+        card = self.purchase_area[card_index]
+        cost = 2  # simplified flat cost
+
+        if player.resources["money"] < cost:
+            return {"error": "Not enough money"}
+
+        player.resources["money"] -= cost
+        player.deck.discard([card])
+
+        return {"success": True}
+
+    # ---------- Turn Flow ----------
+
+    def advance_turn_phase(self):
+        if self.turn_phase == TurnPhase.EVENT:
+            self.turn_phase = TurnPhase.ACTION
+        elif self.turn_phase == TurnPhase.ACTION:
+            self.turn_phase = TurnPhase.END
+        elif self.turn_phase == TurnPhase.END:
+            self._cleanup_end_turn()
+            self.turn_phase = TurnPhase.EVENT
+        return {"success": True}
+
+    def _cleanup_end_turn(self):
+        player = self.current_player()
+        player.discard_hand()
+        player.reset_resources()
+        player.draw_to_five()
+
+        self.current_player_index = (self.current_player_index + 1) % 4
+        if self.current_player_index == 0:
+            self.turn += 1
+
     # ---------- State ----------
 
     def state(self):
@@ -135,6 +193,7 @@ class Game:
             "turn_phase": self.turn_phase,
             "winner": self.winner,
             "current_player": self.current_player().name,
+            "purchase_area": [c.name for c in self.purchase_area],
             "players": [
                 {
                     "name": p.name,
