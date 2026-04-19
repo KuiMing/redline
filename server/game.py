@@ -2,14 +2,23 @@ import uuid
 import random
 from pathlib import Path
 import json
+from enum import Enum
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 MAP_PATH = BASE_DIR / "map.json"
 FACTIONS_PATH = BASE_DIR / "data" / "factions" / "all_faction.json"
 
-ROAD_COST = 1
-RAIL_COST = 3
-WALL_EXTRA_COST = 1  # additional cost when crossing wall
+
+class GamePhase(str, Enum):
+    SETUP = "setup"
+    MAIN = "main"
+    FINISHED = "finished"
+
+
+class TurnPhase(str, Enum):
+    EVENT = "event"
+    ACTION = "action"
+    END = "end"
 
 
 class Player:
@@ -19,7 +28,7 @@ class Player:
         self.faction_id = faction_id
         self.organizations = {}
         self.base = None
-        self.moves_left = 2  # per turn baseline
+        self.moves_left = 0
 
 
 class Game:
@@ -31,7 +40,9 @@ class Game:
         self.turn = 1
         self.current_player_index = 0
         self.players = []
-        self.phase = "setup_base"
+
+        self.game_phase = GamePhase.SETUP
+        self.turn_phase = TurnPhase.EVENT
 
         self.map = self._load_map()
         self.factions = self._load_factions()
@@ -64,9 +75,24 @@ class Game:
     def next_player(self):
         self.current_player_index = (self.current_player_index + 1) % 4
 
+    # ---------- Phase Control ----------
+
+    def _ensure_game_phase(self, expected):
+        if self.game_phase != expected:
+            return {"error": f"Invalid game phase. Expected {expected}"}
+        return None
+
+    def _ensure_turn_phase(self, expected):
+        if self.turn_phase != expected:
+            return {"error": f"Invalid turn phase. Expected {expected}"}
+        return None
+
+    # ---------- Setup ----------
+
     def set_base(self, town_name):
-        if self.phase != "setup_base":
-            return {"error": "Not in base setup phase"}
+        error = self._ensure_game_phase(GamePhase.SETUP)
+        if error:
+            return error
 
         if town_name not in self.map["towns"]:
             return {"error": "Invalid town"}
@@ -80,68 +106,41 @@ class Game:
         player.organizations[town_name] = 1
 
         if all(p.base is not None for p in self.players):
-            self.phase = "main"
+            self.game_phase = GamePhase.MAIN
+            self.turn_phase = TurnPhase.EVENT
+            for p in self.players:
+                p.moves_left = 2
         else:
             self.next_player()
 
         return {"success": True}
 
-    def _is_wall_crossing(self, from_town, to_town):
-        # simple placeholder rule: crossing between china and non-china
-        from_region = self._get_region(from_town)
-        to_region = self._get_region(to_town)
-        return from_region == "china" and to_region != "china"
+    # ---------- Turn Flow ----------
 
-    def _get_region(self, town_name):
-        for region_key, region in self.map.get("regions", {}).items():
-            if town_name in region.get("towns", []):
-                return region_key
-        return None
+    def advance_turn_phase(self):
+        if self.turn_phase == TurnPhase.EVENT:
+            self.turn_phase = TurnPhase.ACTION
+        elif self.turn_phase == TurnPhase.ACTION:
+            self.turn_phase = TurnPhase.END
+        elif self.turn_phase == TurnPhase.END:
+            self._end_turn()
+            self.turn_phase = TurnPhase.EVENT
+        return {"success": True}
 
-    def move_organization(self, from_town, to_town, mode="road"):
-        if self.phase != "main":
-            return {"error": "Not in main phase"}
-
-        player = self.current_player()
-
-        if player.organizations.get(from_town, 0) <= 0:
-            return {"error": "No organization in source town"}
-
-        connections = self.map["towns"].get(from_town, {})
-        if to_town not in connections.get(mode, []):
-            return {"error": "Towns not connected by this mode"}
-
-        cost = ROAD_COST if mode == "road" else RAIL_COST
-
-        if self._is_wall_crossing(from_town, to_town):
-            cost += WALL_EXTRA_COST
-
-        if player.moves_left < cost:
-            return {"error": "Not enough movement points"}
-
-        player.moves_left -= cost
-
-        player.organizations[from_town] -= 1
-        if player.organizations[from_town] == 0:
-            del player.organizations[from_town]
-
-        player.organizations[to_town] = player.organizations.get(to_town, 0) + 1
-
-        return {"success": True, "moves_left": player.moves_left}
-
-    def end_turn(self):
-        player = self.current_player()
-        player.moves_left = 2
+    def _end_turn(self):
         self.next_player()
         if self.current_player_index == 0:
             self.turn += 1
-        return {"success": True}
+        self.current_player().moves_left = 2
+
+    # ---------- State ----------
 
     def state(self):
         return {
             "game_id": self.id,
             "turn": self.turn,
-            "phase": self.phase,
+            "game_phase": self.game_phase,
+            "turn_phase": self.turn_phase,
             "current_player": self.current_player().name,
             "players": [
                 {
