@@ -14,6 +14,7 @@ class Player:
         self.name = name
         self.faction_id = faction_id
         self.organizations = {}
+        self.base = None
 
 
 class Game:
@@ -25,6 +26,7 @@ class Game:
         self.turn = 1
         self.current_player_index = 0
         self.players = []
+        self.phase = "setup_base"  # first interactive phase
 
         self.map = self._load_map()
         self.factions = self._load_factions()
@@ -46,7 +48,6 @@ class Game:
 
         random.shuffle(other_factions)
         selected = [red_faction] + other_factions[:3]
-
         random.shuffle(selected)
 
         for name, faction in zip(player_names, selected):
@@ -55,18 +56,46 @@ class Game:
     def current_player(self):
         return self.players[self.current_player_index]
 
-    def next_turn(self):
+    def next_player(self):
         self.current_player_index = (self.current_player_index + 1) % 4
-        if self.current_player_index == 0:
-            self.turn += 1
+
+    def set_base(self, town_name):
+        if self.phase != "setup_base":
+            return {"error": "Not in base setup phase"}
+
+        if town_name not in self.map["towns"]:
+            return {"error": "Invalid town"}
+
+        player = self.current_player()
+
+        # prevent duplicate bases
+        if any(p.base == town_name for p in self.players):
+            return {"error": "Town already taken as base"}
+
+        player.base = town_name
+        player.organizations[town_name] = 1
+
+        # move to next player or finish phase
+        if all(p.base is not None for p in self.players):
+            self.phase = "main"
+        else:
+            self.next_player()
+
+        return {"success": True}
 
     def state(self):
         return {
             "game_id": self.id,
             "turn": self.turn,
+            "phase": self.phase,
             "current_player": self.current_player().name,
             "players": [
-                {"name": p.name, "faction": p.faction_id}
+                {
+                    "name": p.name,
+                    "faction": p.faction_id,
+                    "base": p.base,
+                    "organizations": p.organizations
+                }
                 for p in self.players
             ]
         }
