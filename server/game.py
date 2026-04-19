@@ -8,6 +8,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 MAP_PATH = BASE_DIR / "map.json"
 FACTIONS_PATH = BASE_DIR / "data" / "factions" / "all_faction.json"
 
+ROAD_COST = 1
+RAIL_COST = 3
+WALL_EXTRA_COST = 1
+
 
 class GamePhase(str, Enum):
     SETUP = "setup"
@@ -75,7 +79,7 @@ class Game:
     def next_player(self):
         self.current_player_index = (self.current_player_index + 1) % 4
 
-    # ---------- Phase Control ----------
+    # ---------- Phase Guards ----------
 
     def _ensure_game_phase(self, expected):
         if self.game_phase != expected:
@@ -114,6 +118,71 @@ class Game:
             self.next_player()
 
         return {"success": True}
+
+    # ---------- Organization Mechanics (Action Phase Only) ----------
+
+    def build_organization(self, town_name):
+        error = self._ensure_game_phase(GamePhase.MAIN)
+        if error:
+            return error
+
+        error = self._ensure_turn_phase(TurnPhase.ACTION)
+        if error:
+            return error
+
+        if town_name not in self.map["towns"]:
+            return {"error": "Invalid town"}
+
+        player = self.current_player()
+        player.organizations[town_name] = player.organizations.get(town_name, 0) + 1
+
+        return {"success": True}
+
+    def _get_region(self, town_name):
+        # region info stored in board_towns file, not map.json
+        # minimal wall logic placeholder (china vs non-china)
+        china_towns = set()
+        board_towns_path = BASE_DIR / "data" / "board_towns.v1.1.json"
+        with open(board_towns_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        china_towns.update(data["regions"]["china"]["towns"])
+        return "china" if town_name in china_towns else "other"
+
+    def move_organization(self, from_town, to_town, mode="road"):
+        error = self._ensure_game_phase(GamePhase.MAIN)
+        if error:
+            return error
+
+        error = self._ensure_turn_phase(TurnPhase.ACTION)
+        if error:
+            return error
+
+        player = self.current_player()
+
+        if player.organizations.get(from_town, 0) <= 0:
+            return {"error": "No organization in source town"}
+
+        connections = self.map["towns"].get(from_town, {})
+        if to_town not in connections.get(mode, []):
+            return {"error": "Towns not connected by this mode"}
+
+        cost = ROAD_COST if mode == "road" else RAIL_COST
+
+        if self._get_region(from_town) == "china" and self._get_region(to_town) != "china":
+            cost += WALL_EXTRA_COST
+
+        if player.moves_left < cost:
+            return {"error": "Not enough movement points"}
+
+        player.moves_left -= cost
+
+        player.organizations[from_town] -= 1
+        if player.organizations[from_town] == 0:
+            del player.organizations[from_town]
+
+        player.organizations[to_town] = player.organizations.get(to_town, 0) + 1
+
+        return {"success": True, "moves_left": player.moves_left}
 
     # ---------- Turn Flow ----------
 
