@@ -91,12 +91,10 @@ class Game:
         return self.players[self.current_player_index]
 
     def _check_victory(self):
-        for player in self.players:
-            win, winner = self.victory_engine.check_player_victory(player)
-            if win:
-                self.game_phase = GamePhase.FINISHED
-                self.winner = winner
-                return
+        win, winner = self.victory_engine.evaluate(self)
+        if win:
+            self.game_phase = GamePhase.FINISHED
+            self.winner = winner
 
     def advance_turn_phase(self):
         if self.turn_phase == TurnPhase.EVENT:
