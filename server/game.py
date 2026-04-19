@@ -6,11 +6,13 @@ from enum import Enum
 from server.deck import Deck
 from server.cards import Card
 from server.victory import VictoryEngine
+from server.events import EventDeck
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 MAP_PATH = BASE_DIR / "map.json"
 FACTIONS_PATH = BASE_DIR / "data" / "factions" / "all_faction.json"
 BOARD_TOWNS_PATH = BASE_DIR / "data" / "board_towns.v1.1.json"
+EVENTS_PATH = BASE_DIR / "data" / "cards" / "event_and_era_cards.v1.1.json"
 
 
 class GamePhase(str, Enum):
@@ -54,15 +56,18 @@ class Game:
         self.game_phase = GamePhase.SETUP
         self.turn_phase = TurnPhase.EVENT
         self.winner = None
+        self.current_event = None
 
         self.map = self._load_map()
         self.factions = self._load_factions()
         self.board_regions = self._load_board_regions()
+        self.events = self._load_events()
 
         self.victory_engine = VictoryEngine(self.factions, self.board_regions)
 
         self._assign_factions(player_names)
         self._init_decks()
+        self.event_deck = EventDeck(self.events)
 
     def _load_map(self):
         with open(MAP_PATH, "r", encoding="utf-8") as f:
@@ -75,6 +80,13 @@ class Game:
     def _load_board_regions(self):
         with open(BOARD_TOWNS_PATH, "r", encoding="utf-8") as f:
             return json.load(f)["regions"]
+
+    def _load_events(self):
+        try:
+            with open(EVENTS_PATH, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except:
+            return []
 
     def _assign_factions(self, player_names):
         red_faction = next(f for f in self.factions if f["id"] == "red_army")
@@ -90,20 +102,29 @@ class Game:
     def current_player(self):
         return self.players[self.current_player_index]
 
-    def _check_victory(self):
-        win, winner = self.victory_engine.evaluate(self)
-        if win:
-            self.game_phase = GamePhase.FINISHED
-            self.winner = winner
+    # ---------- Event Phase ----------
+
+    def resolve_event_phase(self):
+        if self.turn_phase != TurnPhase.EVENT:
+            return {"error": "Not in EVENT phase"}
+
+        self.current_event = self.event_deck.draw()
+        return {"event": self.current_event}
+
+    # ---------- Turn Flow ----------
 
     def advance_turn_phase(self):
         if self.turn_phase == TurnPhase.EVENT:
+            self.resolve_event_phase()
             self.turn_phase = TurnPhase.ACTION
         elif self.turn_phase == TurnPhase.ACTION:
             self.turn_phase = TurnPhase.END
         elif self.turn_phase == TurnPhase.END:
-            self._check_victory()
-            if self.game_phase != GamePhase.FINISHED:
+            win, winner = self.victory_engine.evaluate(self)
+            if win:
+                self.game_phase = GamePhase.FINISHED
+                self.winner = winner
+            else:
                 self.current_player_index = (self.current_player_index + 1) % 4
                 if self.current_player_index == 0:
                     self.turn += 1
@@ -116,6 +137,7 @@ class Game:
             "turn": self.turn,
             "game_phase": self.game_phase,
             "turn_phase": self.turn_phase,
+            "current_event": self.current_event,
             "winner": self.winner,
             "current_player": self.current_player().name,
             "players": [
