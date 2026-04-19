@@ -12,6 +12,7 @@ FACTIONS_PATH = BASE_DIR / "data" / "factions" / "all_faction.json"
 BOARD_TOWNS_PATH = BASE_DIR / "data" / "board_towns.v1.1.json"
 
 WIN_THRESHOLD = 14
+BUILD_COST_PROPAGANDA = 1
 
 
 class GamePhase(str, Enum):
@@ -115,7 +116,6 @@ class Game:
             player.hand = player.deck.draw(5)
 
     def _init_purchase_area(self):
-        # minimal sample purchase cards
         self.purchase_area = [
             Card("宣傳家", "propaganda", {"propaganda": 2}),
             Card("資助者", "money", {"money": 2}),
@@ -125,6 +125,27 @@ class Game:
 
     def current_player(self):
         return self.players[self.current_player_index]
+
+    # ---------- Build Organization (strict rule) ----------
+
+    def build_organization(self, town_name):
+        if self.game_phase != GamePhase.MAIN:
+            return {"error": "Invalid game phase"}
+        if self.turn_phase != TurnPhase.ACTION:
+            return {"error": "Can only build during ACTION phase"}
+
+        if town_name not in self.map["towns"]:
+            return {"error": "Invalid town"}
+
+        player = self.current_player()
+
+        if player.resources["propaganda"] < BUILD_COST_PROPAGANDA:
+            return {"error": "Not enough propaganda to build"}
+
+        player.resources["propaganda"] -= BUILD_COST_PROPAGANDA
+        player.organizations[town_name] = player.organizations.get(town_name, 0) + 1
+
+        return {"success": True}
 
     # ---------- Card Mechanics ----------
 
@@ -151,7 +172,7 @@ class Game:
             return {"error": "Invalid purchase index"}
 
         card = self.purchase_area[card_index]
-        cost = 2  # simplified flat cost
+        cost = 2
 
         if player.resources["money"] < cost:
             return {"error": "Not enough money"}
@@ -182,6 +203,25 @@ class Game:
         self.current_player_index = (self.current_player_index + 1) % 4
         if self.current_player_index == 0:
             self.turn += 1
+
+    # ---------- Victory ----------
+
+    def _count_taiwan_orgs(self, player):
+        taiwan_towns = set(self.board_regions["taiwan"]["towns"])
+        return sum(count for town, count in player.organizations.items() if town in taiwan_towns)
+
+    def _check_victory(self):
+        for player in self.players:
+            if player.faction_id == "red_army":
+                if self._count_taiwan_orgs(player) >= WIN_THRESHOLD:
+                    self.game_phase = GamePhase.FINISHED
+                    self.winner = "red_army"
+                    return
+            else:
+                if player.total_organizations() >= WIN_THRESHOLD:
+                    self.game_phase = GamePhase.FINISHED
+                    self.winner = player.name
+                    return
 
     # ---------- State ----------
 
