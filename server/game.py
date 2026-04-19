@@ -5,14 +5,12 @@ import json
 from enum import Enum
 from server.deck import Deck
 from server.cards import Card
+from server.victory import VictoryEngine
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 MAP_PATH = BASE_DIR / "map.json"
 FACTIONS_PATH = BASE_DIR / "data" / "factions" / "all_faction.json"
 BOARD_TOWNS_PATH = BASE_DIR / "data" / "board_towns.v1.1.json"
-
-WIN_THRESHOLD = 14
-BUILD_COST_PROPAGANDA = 1
 
 
 class GamePhase(str, Enum):
@@ -35,25 +33,12 @@ class Player:
         self.organizations = {}
         self.base = None
         self.moves_left = 0
-
         self.resources = {"money": 0, "propaganda": 0}
         self.hand = []
         self.deck = None
 
     def total_organizations(self):
         return sum(self.organizations.values())
-
-    def draw_to_five(self):
-        needed = 5 - len(self.hand)
-        if needed > 0:
-            self.hand.extend(self.deck.draw(needed))
-
-    def discard_hand(self):
-        self.deck.discard(self.hand)
-        self.hand = []
-
-    def reset_resources(self):
-        self.resources = {"money": 0, "propaganda": 0}
 
 
 class Game:
@@ -74,11 +59,10 @@ class Game:
         self.factions = self._load_factions()
         self.board_regions = self._load_board_regions()
 
-        self.purchase_area = []
+        self.victory_engine = VictoryEngine(self.factions, self.board_regions)
 
         self._assign_factions(player_names)
         self._init_decks()
-        self._init_purchase_area()
 
     def _load_map(self):
         with open(MAP_PATH, "r", encoding="utf-8") as f:
@@ -86,8 +70,7 @@ class Game:
 
     def _load_factions(self):
         with open(FACTIONS_PATH, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        return data["factions"]
+            return json.load(f)["factions"]
 
     def _load_board_regions(self):
         with open(BOARD_TOWNS_PATH, "r", encoding="utf-8") as f:
@@ -104,85 +87,16 @@ class Game:
         for name, faction in zip(player_names, selected):
             self.players.append(Player(name, faction["id"]))
 
-    def _init_decks(self):
-        for player in self.players:
-            starter_cards = []
-            for _ in range(7):
-                starter_cards.append(Card("追隨者", "propaganda", {"propaganda": 1}))
-            for _ in range(3):
-                starter_cards.append(Card("樂捐者", "money", {"money": 1}))
-
-            player.deck = Deck(starter_cards)
-            player.hand = player.deck.draw(5)
-
-    def _init_purchase_area(self):
-        self.purchase_area = [
-            Card("宣傳家", "propaganda", {"propaganda": 2}),
-            Card("資助者", "money", {"money": 2}),
-            Card("領導", "draw", {"propaganda": 1}),
-            Card("交通經驗丙", "move", {"money": 1})
-        ]
-
     def current_player(self):
         return self.players[self.current_player_index]
 
-    # ---------- Build Organization (strict rule) ----------
-
-    def build_organization(self, town_name):
-        if self.game_phase != GamePhase.MAIN:
-            return {"error": "Invalid game phase"}
-        if self.turn_phase != TurnPhase.ACTION:
-            return {"error": "Can only build during ACTION phase"}
-
-        if town_name not in self.map["towns"]:
-            return {"error": "Invalid town"}
-
-        player = self.current_player()
-
-        if player.resources["propaganda"] < BUILD_COST_PROPAGANDA:
-            return {"error": "Not enough propaganda to build"}
-
-        player.resources["propaganda"] -= BUILD_COST_PROPAGANDA
-        player.organizations[town_name] = player.organizations.get(town_name, 0) + 1
-
-        return {"success": True}
-
-    # ---------- Card Mechanics ----------
-
-    def play_card(self, card_index):
-        player = self.current_player()
-        if self.turn_phase != TurnPhase.ACTION:
-            return {"error": "Can only play cards in ACTION phase"}
-
-        if card_index < 0 or card_index >= len(player.hand):
-            return {"error": "Invalid card index"}
-
-        card = player.hand.pop(card_index)
-        card.apply(player, self)
-        player.deck.discard([card])
-
-        return {"success": True}
-
-    def buy_card(self, card_index):
-        player = self.current_player()
-        if self.turn_phase != TurnPhase.ACTION:
-            return {"error": "Can only buy in ACTION phase"}
-
-        if card_index < 0 or card_index >= len(self.purchase_area):
-            return {"error": "Invalid purchase index"}
-
-        card = self.purchase_area[card_index]
-        cost = 2
-
-        if player.resources["money"] < cost:
-            return {"error": "Not enough money"}
-
-        player.resources["money"] -= cost
-        player.deck.discard([card])
-
-        return {"success": True}
-
-    # ---------- Turn Flow ----------
+    def _check_victory(self):
+        for player in self.players:
+            win, winner = self.victory_engine.check_player_victory(player)
+            if win:
+                self.game_phase = GamePhase.FINISHED
+                self.winner = winner
+                return
 
     def advance_turn_phase(self):
         if self.turn_phase == TurnPhase.EVENT:
@@ -190,40 +104,13 @@ class Game:
         elif self.turn_phase == TurnPhase.ACTION:
             self.turn_phase = TurnPhase.END
         elif self.turn_phase == TurnPhase.END:
-            self._cleanup_end_turn()
-            self.turn_phase = TurnPhase.EVENT
+            self._check_victory()
+            if self.game_phase != GamePhase.FINISHED:
+                self.current_player_index = (self.current_player_index + 1) % 4
+                if self.current_player_index == 0:
+                    self.turn += 1
+                self.turn_phase = TurnPhase.EVENT
         return {"success": True}
-
-    def _cleanup_end_turn(self):
-        player = self.current_player()
-        player.discard_hand()
-        player.reset_resources()
-        player.draw_to_five()
-
-        self.current_player_index = (self.current_player_index + 1) % 4
-        if self.current_player_index == 0:
-            self.turn += 1
-
-    # ---------- Victory ----------
-
-    def _count_taiwan_orgs(self, player):
-        taiwan_towns = set(self.board_regions["taiwan"]["towns"])
-        return sum(count for town, count in player.organizations.items() if town in taiwan_towns)
-
-    def _check_victory(self):
-        for player in self.players:
-            if player.faction_id == "red_army":
-                if self._count_taiwan_orgs(player) >= WIN_THRESHOLD:
-                    self.game_phase = GamePhase.FINISHED
-                    self.winner = "red_army"
-                    return
-            else:
-                if player.total_organizations() >= WIN_THRESHOLD:
-                    self.game_phase = GamePhase.FINISHED
-                    self.winner = player.name
-                    return
-
-    # ---------- State ----------
 
     def state(self):
         return {
@@ -233,13 +120,10 @@ class Game:
             "turn_phase": self.turn_phase,
             "winner": self.winner,
             "current_player": self.current_player().name,
-            "purchase_area": [c.name for c in self.purchase_area],
             "players": [
                 {
                     "name": p.name,
                     "faction": p.faction_id,
-                    "resources": p.resources,
-                    "hand": [c.name for c in p.hand],
                     "total_orgs": p.total_organizations()
                 }
                 for p in self.players
