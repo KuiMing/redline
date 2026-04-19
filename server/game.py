@@ -26,7 +26,7 @@ class Game:
         self.turn = 1
         self.current_player_index = 0
         self.players = []
-        self.phase = "setup_base"  # first interactive phase
+        self.phase = "setup_base"
 
         self.map = self._load_map()
         self.factions = self._load_factions()
@@ -68,18 +68,52 @@ class Game:
 
         player = self.current_player()
 
-        # prevent duplicate bases
         if any(p.base == town_name for p in self.players):
             return {"error": "Town already taken as base"}
 
         player.base = town_name
         player.organizations[town_name] = 1
 
-        # move to next player or finish phase
         if all(p.base is not None for p in self.players):
             self.phase = "main"
         else:
             self.next_player()
+
+        return {"success": True}
+
+    def build_organization(self, town_name):
+        if self.phase != "main":
+            return {"error": "Not in main phase"}
+
+        player = self.current_player()
+
+        if town_name not in self.map["towns"]:
+            return {"error": "Invalid town"}
+
+        player.organizations[town_name] = player.organizations.get(town_name, 0) + 1
+        return {"success": True}
+
+    def move_organization(self, from_town, to_town, mode="road"):
+        if self.phase != "main":
+            return {"error": "Not in main phase"}
+
+        player = self.current_player()
+
+        if player.organizations.get(from_town, 0) <= 0:
+            return {"error": "No organization in source town"}
+
+        connections = self.map["towns"].get(from_town, {})
+        if mode not in ["road", "rail"]:
+            return {"error": "Invalid movement mode"}
+
+        if to_town not in connections.get(mode, []):
+            return {"error": "Towns not connected by this mode"}
+
+        player.organizations[from_town] -= 1
+        if player.organizations[from_town] == 0:
+            del player.organizations[from_town]
+
+        player.organizations[to_town] = player.organizations.get(to_town, 0) + 1
 
         return {"success": True}
 
