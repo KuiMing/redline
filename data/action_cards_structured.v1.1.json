@@ -15,13 +15,16 @@
     {"id":"efficient_action","name":"高效行動","type":"command","cost":{"money":2,"propaganda":2},"resources":{"money":1,"propaganda":1},"effect":[{"type":"draw","count":3},{"type":"discard_self","count":2}]},
     {"id":"imitate_tactics","name":"模仿戰術","type":"command","cost":{"money":0,"propaganda":4},"resources":{"propaganda":2},"effect":[{"type":"peek_deck","count":1},{"type":"topdeck_to_hand"}]},
     {"id":"press_advantage","name":"乘勝追擊","type":"command","cost":{"money":2,"propaganda":0},"resources":{"money":1},"effect":[{"type":"gain_from_discard","max_cost":3}]},
-
     {"id":"bait_exhaustion","name":"誘導虛耗","type":"command","cost":{"money":0,"propaganda":3},"resources":{"propaganda":1},"effect":[{"type":"optional_trash"},{"type":"force_discard","count":1}]},
     {"id":"ignite_passion","name":"點燃熱情","type":"command","cost":{"money":1,"propaganda":2},"resources":{"propaganda":1},"effect":[{"type":"draw","count":1},{"type":"conditional_draw","condition":"played_propaganda_card","count":1}]},
     {"id":"build_confidence","name":"樹立信心","type":"command","cost":{"money":2,"propaganda":1},"resources":{"money":1},"effect":[{"type":"draw","count":1},{"type":"conditional_draw","condition":"played_money_card","count":1}]},
     {"id":"recruit_talent","name":"網羅人才","type":"command","cost":{"money":3,"propaganda":2},"resources":{"money":1,"propaganda":1},"effect":[{"type":"peek_deck","count":1},{"type":"topdeck_to_hand"}]},
     {"id":"forge_consensus","name":"凝聚共識","type":"command","cost":{"money":0,"propaganda":5},"resources":{"propaganda":3},"effect":[{"type":"draw","count":3},{"type":"discard_self","count":2},{"type":"conditional_bonus","condition":"non_starter_discard","money":0,"propaganda":2}]},
     {"id":"ideological_work","name":"思想建設","type":"command","cost":{"money":1,"propaganda":1},"resources":{"propaganda":1},"effect":[{"type":"extend_build_range","amount":1}]},
-    {"id":"expand_gains","name":"擴大戰果","type":"command","cost":{"money":4,"propaganda":0},"resources":{"money":2},"effect":[{"type":"gain_any_from_discard"}]}
+    {"id":"expand_gains","name":"擴大戰果","type":"command","cost":{"money":4,"propaganda":0},"resources":{"money":2},"effect":[{"type":"gain_any_from_discard"}]},
+
+    {"id":"transport_c","name":"交通經驗丙","type":"transport","cost":{"money":1,"propaganda":0},"resources":{"money":1},"effect":[{"type":"extra_move","count":2}]},
+    {"id":"transport_b","name":"交通經驗乙","type":"transport","cost":{"money":3,"propaganda":0},"resources":{"money":2},"effect":[{"type":"extra_move","count":4}]},
+    {"id":"transport_a","name":"交通經驗甲","type":"transport","cost":{"money":5,"propaganda":0},"resources":{"money":3},"effect":[{"type":"extra_move","count":6}]}
   ]
 }
