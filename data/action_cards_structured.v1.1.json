@@ -64,6 +64,79 @@
       "cost": {"money": 0, "propaganda": 0},
       "resources": {},
       "effect": []
+    },
+
+    {
+      "id": "leader",
+      "name": "領導",
+      "type": "command",
+      "cost": {"money": 0, "propaganda": 1},
+      "resources": {"propaganda": 1},
+      "effect": [
+        {"type": "draw", "count": 1}
+      ]
+    },
+    {
+      "id": "planning",
+      "name": "謀劃",
+      "type": "command",
+      "cost": {"money": 1, "propaganda": 1},
+      "resources": {"propaganda": 2},
+      "effect": [
+        {"type": "draw", "count": 2}
+      ]
+    },
+    {
+      "id": "strategy",
+      "name": "戰略",
+      "type": "command",
+      "cost": {"money": 1, "propaganda": 2},
+      "resources": {"propaganda": 3},
+      "effect": [
+        {"type": "draw", "count": 3}
+      ]
+    },
+    {
+      "id": "negotiation",
+      "name": "合作談判",
+      "type": "command",
+      "cost": {"money": 2, "propaganda": 2},
+      "resources": {"propaganda": 1},
+      "effect": [
+        {"type": "shared_draw", "count": 1}
+      ]
+    },
+    {
+      "id": "efficient_action",
+      "name": "高效行動",
+      "type": "command",
+      "cost": {"money": 2, "propaganda": 2},
+      "resources": {"money": 1, "propaganda": 1},
+      "effect": [
+        {"type": "draw", "count": 3},
+        {"type": "discard_self", "count": 2}
+      ]
+    },
+    {
+      "id": "imitate_tactics",
+      "name": "模仿戰術",
+      "type": "command",
+      "cost": {"money": 0, "propaganda": 4},
+      "resources": {"propaganda": 2},
+      "effect": [
+        {"type": "peek_deck", "count": 1},
+        {"type": "topdeck_to_hand"}
+      ]
+    },
+    {
+      "id": "press_advantage",
+      "name": "乘勝追擊",
+      "type": "command",
+      "cost": {"money": 2, "propaganda": 0},
+      "resources": {"money": 1},
+      "effect": [
+        {"type": "gain_from_discard", "max_cost": 3}
+      ]
     }
   ]
 }
