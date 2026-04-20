@@ -1,6 +1,7 @@
 {
   "schema_version": "1.1",
   "cards": [
+
     {"id":"propagandist","name":"宣傳家","type":"propaganda","cost":{"money":0,"propaganda":3},"resources":{"propaganda":2},"effect":[{"type":"optional_trash"},{"type":"build","range":1},{"type":"move","count":1}]},
     {"id":"ideologue","name":"思想家","type":"propaganda","cost":{"money":0,"propaganda":5},"resources":{"propaganda":3},"effect":[{"type":"optional_trash"},{"type":"build","range":"ignore_distance"},{"type":"move","count":3}]},
     {"id":"patron","name":"資助者","type":"money","cost":{"money":2,"propaganda":1},"resources":{"money":2},"effect":[{"type":"optional_trash"},{"type":"gain_resource","money":2,"propaganda":2}]},
@@ -25,6 +26,11 @@
 
     {"id":"transport_c","name":"交通經驗丙","type":"transport","cost":{"money":1,"propaganda":0},"resources":{"money":1},"effect":[{"type":"extra_move","count":2}]},
     {"id":"transport_b","name":"交通經驗乙","type":"transport","cost":{"money":3,"propaganda":0},"resources":{"money":2},"effect":[{"type":"extra_move","count":4}]},
-    {"id":"transport_a","name":"交通經驗甲","type":"transport","cost":{"money":5,"propaganda":0},"resources":{"money":3},"effect":[{"type":"extra_move","count":6}]}
+    {"id":"transport_a","name":"交通經驗甲","type":"transport","cost":{"money":5,"propaganda":0},"resources":{"money":3},"effect":[{"type":"extra_move","count":6}]},
+
+    {"id":"org_experience_c","name":"組織經驗丙","type":"organization","cost":{"money":2,"propaganda":1},"resources":{"propaganda":1},"effect":[{"type":"build","range":1}]},
+    {"id":"org_experience_b","name":"組織經驗乙","type":"organization","cost":{"money":3,"propaganda":2},"resources":{"propaganda":2},"effect":[{"type":"build","range":1},{"type":"build","range":1}]},
+    {"id":"org_experience_a","name":"組織經驗甲","type":"organization","cost":{"money":3,"propaganda":3},"resources":{"money":1,"propaganda":2},"effect":[{"type":"build","range":"ignore_distance"}]}
+
   ]
 }
