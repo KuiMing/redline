@@ -32,23 +32,41 @@ class Game:
         if self.turn_phase != TurnPhase.ACTION:
             return {"error": "Can only build during ACTION phase"}
 
+        if town_name not in self.map["towns"]:
+            return {"error": "Invalid town"}
+
         player = self.current_player()
 
         if self._has_active_effect("restrict_build"):
             return {"error": "Building restricted by active era"}
 
+        # ✅ Build range logic (base adjacency + extend_build_range)
+        base = player.base
+        if base and town_name != base:
+            connections = self.map["towns"].get(base, {}).get("road", []) + \
+                          self.map["towns"].get(base, {}).get("rail", [])
+            bonus = getattr(player, "build_range_bonus", 0)
+
+            if town_name not in connections and bonus <= 0:
+                return {"error": "Out of build range"}
+
         cost = 1
-        bonus = self._get_effect_value("propaganda_bonus", "amount")
+        bonus_prop = self._get_effect_value("propaganda_bonus", "amount")
 
         if player.resources["propaganda"] < cost:
             return {"error": "Not enough propaganda to build"}
 
         player.resources["propaganda"] -= cost
 
-        if bonus:
-            player.resources["propaganda"] += bonus
+        if bonus_prop:
+            player.resources["propaganda"] += bonus_prop
 
         player.organizations[town_name] = player.organizations.get(town_name, 0) + 1
+
+        # ✅ Reset temporary build bonus after use
+        if hasattr(player, "build_range_bonus"):
+            player.build_range_bonus = 0
+
         return {"success": True}
 
     # ---------- Buy Card ----------
