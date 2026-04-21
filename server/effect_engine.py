@@ -62,5 +62,11 @@ class EffectEngine:
                 player.hand.extend(drawn)
             return
 
+        # ✅ Extra move (increase movement points)
+        if etype == "extra_move":
+            count = effect.get("count", 1)
+            player.moves_left += count
+            return
+
         # Other effect types handled elsewhere or future steps
         return
