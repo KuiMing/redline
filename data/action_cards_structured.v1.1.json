@@ -44,7 +44,11 @@
     {"id":"intel_network","name":"情報網","type":"spy","cost":{"money":3,"propaganda":3},"resources":{"money":1,"propaganda":1},"effect":[{"type":"add_internal_conflict","count":1},{"type":"cancel_card"}]},
     {"id":"divide","name":"離間","type":"spy","cost":{"money":0,"propaganda":4},"resources":{"propaganda":2},"effect":[{"type":"add_internal_conflict","count":3}]},
     {"id":"leak","name":"走漏風聲","type":"spy","cost":{"money":2,"propaganda":0},"resources":{"propaganda":1},"effect":[{"type":"peek_deck","count":1},{"type":"add_internal_conflict","count":1}]},
-    {"id":"underground_party","name":"地下黨","type":"spy","cost":{"money":2,"propaganda":4},"resources":{"money":1,"propaganda":2},"effect":[{"type":"peek_deck","count":3},{"type":"gain_any_from_discard"}]}
+    {"id":"underground_party","name":"地下黨","type":"spy","cost":{"money":2,"propaganda":4},"resources":{"money":1,"propaganda":2},"effect":[{"type":"peek_deck","count":3},{"type":"gain_any_from_discard"}]},
+
+    {"id":"armed_unit_c","name":"武裝者","type":"armed","cost":{"money":2,"propaganda":0},"resources":{"propaganda":1},"effect":[{"type":"force_discard","count":1}]},
+    {"id":"armed_unit_b","name":"武裝小隊","type":"armed","cost":{"money":3,"propaganda":0},"resources":{"money":1,"propaganda":1},"effect":[{"type":"force_discard","count":2}]},
+    {"id":"armed_unit_a","name":"武裝集團","type":"armed","cost":{"money":4,"propaganda":0},"resources":{"money":1,"propaganda":2},"effect":[{"type":"force_discard","count":2},{"type":"conditional_draw","condition":"successful_discard","count":1}]}
 
   ]
 }
