@@ -151,10 +151,14 @@ class Game:
 
     def advance_turn_phase(self):
         if self.turn_phase == TurnPhase.EVENT:
+            self._check_era_trigger()
             self.turn_phase = TurnPhase.ACTION
         elif self.turn_phase == TurnPhase.ACTION:
             self.turn_phase = TurnPhase.END
         elif self.turn_phase == TurnPhase.END:
+            # tick active eras
+            if hasattr(self, "era_engine"):
+                self.era_engine.tick()
             self._end_turn()
         return {"success": True}
 
@@ -180,6 +184,57 @@ class Game:
         if win:
             self.game_phase = GamePhase.FINISHED
             self.winner = winner
+
+    # ---------- Era Trigger ----------
+
+    def _check_era_trigger(self):
+        if not hasattr(self, "era_engine"):
+            return
+
+        active_ids = set(self.era_engine.get_active_eras())
+
+        for era in self.structured_eras:
+            era_id = era.get("id")
+            if era_id in active_ids:
+                continue
+
+            trigger = era.get("trigger")
+            if not trigger:
+                continue
+
+            if self._evaluate_era_trigger(trigger):
+                self.era_engine.activate_era(era_id)
+
+    def _evaluate_era_trigger(self, trigger):
+        t = trigger.get("type")
+
+        if t == "count_only":
+            region = trigger.get("region")
+            count = trigger.get("count", 0)
+
+            for p in self.players:
+                region_towns = self.board_regions.get(region, {}).get("towns", [])
+                region_count = sum(
+                    v for town, v in p.organizations.items()
+                    if town in region_towns
+                )
+                if region_count >= count:
+                    return True
+
+        if t == "count_and_required":
+            region = trigger.get("region")
+            count = trigger.get("count", 0)
+
+            for p in self.players:
+                region_towns = self.board_regions.get(region, {}).get("towns", [])
+                region_count = sum(
+                    v for town, v in p.organizations.items()
+                    if town in region_towns
+                )
+                if region_count >= count:
+                    return True
+
+        return False
 
     # ---------- State ----------
 
