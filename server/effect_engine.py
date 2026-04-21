@@ -68,5 +68,12 @@ class EffectEngine:
             player.moves_left += count
             return
 
+        # ✅ Extend build range (temporary modifier stored on player)
+        if etype == "extend_build_range":
+            amount = effect.get("amount", 1)
+            current = getattr(player, "build_range_bonus", 0)
+            player.build_range_bonus = current + amount
+            return
+
         # Other effect types handled elsewhere or future steps
         return
