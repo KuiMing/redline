@@ -19,6 +19,16 @@ async function playCard(index) {
   renderState(data.state);
 }
 
+async function buyCard(index) {
+  const res = await fetch('/buy_card', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ index })
+  });
+  const data = await res.json();
+  renderState(data.state);
+}
+
 function renderState(state) {
   const container = document.getElementById('game');
   container.innerHTML = '';
@@ -42,6 +52,15 @@ function renderState(state) {
   }
 
   container.innerHTML += `<h2>Players</h2>`;
+
+  // Purchase Area
+  if (state.purchase_area && state.purchase_area.length > 0) {
+    container.innerHTML += `<div class='section'><h2>Purchase Area</h2>`;
+    state.purchase_area.forEach((card, index) => {
+      container.innerHTML += `<span class='card' onclick='buyCard(${index})'>${card}</span>`;
+    });
+    container.innerHTML += `</div>`;
+  }
 
   state.players.forEach(p => {
     const div = document.createElement('div');
