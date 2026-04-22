@@ -7,9 +7,13 @@
 </head>
 <body>
   <h1>Redline – Game State</h1>
-  <button onclick="createGame()">Create Game</button>
-  <button onclick="refreshState()">Refresh</button>
+  <div class="section">
+    <button onclick="createGame()">Create Game</button>
+    <button onclick="refreshState()">Refresh</button>
+    <button onclick="advanceTurn()">Advance Phase</button>
+  </div>
 
+  <div id="controls" class="section"></div>
   <div id="game"></div>
 
   <script src="/static/app.js"></script>

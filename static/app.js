@@ -9,6 +9,12 @@ async function refreshState() {
   renderState(state);
 }
 
+async function advanceTurn() {
+  const res = await fetch('/advance_turn', { method: 'POST' });
+  const data = await res.json();
+  renderState(data.state);
+}
+
 async function playCard(index) {
   const res = await fetch('/play_card', {
     method: 'POST',

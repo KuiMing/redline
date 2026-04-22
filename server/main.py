@@ -80,6 +80,14 @@ def build(payload: dict):
     return {**result, "state": current_game.state()}
 
 
+@app.post("/advance_turn")
+def advance_turn():
+    if current_game is None:
+        return {"error": "No game created"}
+    result = current_game.advance_turn_phase()
+    return {**result, "state": current_game.state()}
+
+
 @app.get("/state")
 def get_state():
     if current_game is None:
