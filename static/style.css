@@ -1,0 +1,5 @@
+body { font-family: Arial, sans-serif; padding: 20px; }
+h2 { margin-top: 20px; }
+.player { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
+.card { display: inline-block; padding: 4px 8px; margin: 4px; border: 1px solid #444; border-radius: 4px; }
+.section { margin-top: 20px; }
