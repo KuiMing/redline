@@ -82,7 +82,13 @@ function renderState(state) {
 
   container.innerHTML += `<div class='section'><strong>Turn:</strong> ${state.turn}</div>`;
   container.innerHTML += `<div class='section'><strong>Game Phase:</strong> ${state.game_phase}</div>`;
-  container.innerHTML += `<div class='section'><strong>Turn Phase:</strong> ${state.turn_phase}</div>`;
+  let phaseClass = '';
+  if (state.turn_phase === 'event') phaseClass = 'phase-event';
+  if (state.turn_phase === 'action') phaseClass = 'phase-action';
+  if (state.turn_phase === 'end') phaseClass = 'phase-end';
+  if (state.game_phase === 'finished') phaseClass = 'phase-finished';
+
+  container.innerHTML += `<div class='section ${phaseClass}'><strong>Phase:</strong> ${state.turn_phase}</div>`;
   container.innerHTML += `<div class='section'><strong>Current Player:</strong> ${state.current_player}</div>`;
 
   if (state.current_event) {
@@ -137,4 +143,16 @@ function renderState(state) {
 
     container.appendChild(div);
   });
+
+  if (state.winner) {
+    container.innerHTML += `<div class='section phase-finished'>🏆 Winner: ${state.winner}</div>`;
+  }
+
+  const btn = document.getElementById('advanceBtn');
+  if (btn) {
+    if (state.turn_phase === 'event') btn.textContent = 'Resolve Event';
+    if (state.turn_phase === 'action') btn.textContent = 'End Action';
+    if (state.turn_phase === 'end') btn.textContent = 'Finish Turn';
+    if (state.game_phase === 'finished') btn.disabled = true;
+  }
 }
