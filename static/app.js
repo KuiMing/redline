@@ -72,11 +72,14 @@ function renderState(state) {
     container.innerHTML += `</div>`;
   }
 
-  // Map Towns (click to build)
+  // Map Control View
   if (state.map && state.map.towns) {
-    container.innerHTML += `<div class='section'><h2>Map Towns (click to build)</h2>`;
-    Object.keys(state.map.towns).slice(0, 50).forEach(town => {
-      container.innerHTML += `<span class='card' onclick='buildOrg("${town}")'>${town}</span>`;
+    container.innerHTML += `<div class='section'><h2>Map Control</h2>`;
+    Object.keys(state.map.towns).forEach(town => {
+      const control = state.map.towns[town]
+        .map(c => `${c.player}(${c.count})`)
+        .join(', ');
+      container.innerHTML += `<div><strong>${town}</strong>: ${control}</div>`;
     });
     container.innerHTML += `</div>`;
   }
