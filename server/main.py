@@ -71,6 +71,15 @@ def buy_card(payload: dict):
     return {**result, "state": current_game.state()}
 
 
+@app.post("/build")
+def build(payload: dict):
+    if current_game is None:
+        return {"error": "No game created"}
+    town = payload.get("town")
+    result = current_game.build_organization(town)
+    return {**result, "state": current_game.state()}
+
+
 @app.get("/state")
 def get_state():
     if current_game is None:

@@ -29,6 +29,16 @@ async function buyCard(index) {
   renderState(data.state);
 }
 
+async function buildOrg(town) {
+  const res = await fetch('/build', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ town })
+  });
+  const data = await res.json();
+  renderState(data.state);
+}
+
 function renderState(state) {
   const container = document.getElementById('game');
   container.innerHTML = '';
@@ -58,6 +68,15 @@ function renderState(state) {
     container.innerHTML += `<div class='section'><h2>Purchase Area</h2>`;
     state.purchase_area.forEach((card, index) => {
       container.innerHTML += `<span class='card' onclick='buyCard(${index})'>${card}</span>`;
+    });
+    container.innerHTML += `</div>`;
+  }
+
+  // Map Towns (click to build)
+  if (state.map && state.map.towns) {
+    container.innerHTML += `<div class='section'><h2>Map Towns (click to build)</h2>`;
+    Object.keys(state.map.towns).slice(0, 50).forEach(town => {
+      container.innerHTML += `<span class='card' onclick='buildOrg("${town}")'>${town}</span>`;
     });
     container.innerHTML += `</div>`;
   }
