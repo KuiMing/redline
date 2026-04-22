@@ -9,6 +9,16 @@ async function refreshState() {
   renderState(state);
 }
 
+async function playCard(index) {
+  const res = await fetch('/play_card', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ index })
+  });
+  const data = await res.json();
+  renderState(data.state);
+}
+
 function renderState(state) {
   const container = document.getElementById('game');
   container.innerHTML = '';
@@ -46,8 +56,8 @@ function renderState(state) {
 
     if (p.hand && p.hand.length > 0) {
       div.innerHTML += `<div><strong>Hand:</strong><br>`;
-      p.hand.forEach(card => {
-        div.innerHTML += `<span class='card'>${card}</span>`;
+      p.hand.forEach((card, index) => {
+        div.innerHTML += `<span class='card' onclick='playCard(${index})'>${card}</span>`;
       });
       div.innerHTML += `</div>`;
     }

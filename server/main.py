@@ -53,6 +53,15 @@ def end_turn():
     return {**result, "state": current_game.state()}
 
 
+@app.post("/play_card")
+def play_card(payload: dict):
+    if current_game is None:
+        return {"error": "No game created"}
+    index = payload.get("index")
+    result = current_game.play_card(index)
+    return {**result, "state": current_game.state()}
+
+
 @app.get("/state")
 def get_state():
     if current_game is None:
