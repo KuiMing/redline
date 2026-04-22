@@ -239,12 +239,23 @@ class Game:
     # ---------- State ----------
 
     def state(self):
+        # aggregate map control
+        town_control = {}
+        for p in self.players:
+            for town, count in p.organizations.items():
+                if town not in town_control:
+                    town_control[town] = []
+                town_control[town].append({"player": p.name, "count": count})
+
         return {
             "turn": self.turn,
             "game_phase": self.game_phase,
             "turn_phase": self.turn_phase,
             "winner": self.winner,
             "current_player": self.current_player().name,
+            "map": {
+                "towns": town_control
+            },
             "players": [
                 {
                     "name": p.name,
