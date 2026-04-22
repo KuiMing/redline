@@ -88,6 +88,17 @@ def advance_turn():
     return {**result, "state": current_game.state()}
 
 
+@app.get("/legal_moves")
+def legal_moves(from_town: str):
+    if current_game is None:
+        return {"error": "No game created"}
+    connections = current_game.map["towns"].get(from_town, {})
+    return {
+        "road": connections.get("road", []),
+        "rail": connections.get("rail", [])
+    }
+
+
 @app.get("/state")
 def get_state():
     if current_game is None:

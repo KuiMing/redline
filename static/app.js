@@ -45,6 +45,32 @@ async function buildOrg(town) {
   renderState(data.state);
 }
 
+async function setMoveFrom(town) {
+  document.getElementById('moveFrom').value = town;
+
+  const res = await fetch(`/legal_moves?from_town=${town}`);
+  const data = await res.json();
+
+  const container = document.getElementById('legalMoves');
+  container.innerHTML = '<strong>Legal Moves:</strong><br>';
+
+  if (data.road) {
+    data.road.forEach(t => {
+      container.innerHTML += `<span class="card" onclick="setMoveTo('${t}')">🟡 ${t}</span>`;
+    });
+  }
+
+  if (data.rail) {
+    data.rail.forEach(t => {
+      container.innerHTML += `<span class="card" onclick="setMoveTo('${t}')">⚫ ${t}</span>`;
+    });
+  }
+}
+
+function setMoveTo(town) {
+  document.getElementById('moveTo').value = town;
+}
+
 function renderState(state) {
   const container = document.getElementById('game');
   container.innerHTML = '';

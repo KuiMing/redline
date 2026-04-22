@@ -14,6 +14,19 @@
   </div>
 
   <div id="controls" class="section"></div>
+
+  <div class="section">
+    <h3>Move Organization</h3>
+    <input id="moveFrom" placeholder="From town">
+    <input id="moveTo" placeholder="To town">
+    <select id="moveMode">
+      <option value="road">road</option>
+      <option value="rail">rail</option>
+    </select>
+    <button onclick="moveOrg()">Move</button>
+    <div id="legalMoves"></div>
+  </div>
+
   <div id="game"></div>
 
   <script src="/static/app.js"></script>
