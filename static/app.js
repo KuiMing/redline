@@ -1,158 +1,92 @@
-async function createGame() {
-  await fetch('/create', { method: 'POST' });
-  refreshState();
-}
+let ws = null;
+let gameId = null;
+let playerId = null;
 
-async function refreshState() {
-  const res = await fetch('/state');
-  const state = await res.json();
-  renderState(state);
-}
-
-async function advanceTurn() {
-  const res = await fetch('/advance_turn', { method: 'POST' });
+async function createRoom() {
+  const res = await fetch('/create', {method: 'POST'});
   const data = await res.json();
-  renderState(data.state);
+  gameId = data.game_id;
+  document.getElementById('roomInfo').innerText = 'Room ID: ' + gameId;
 }
 
-async function playCard(index) {
-  const res = await fetch('/play_card', {
+async function joinRoom() {
+  gameId = document.getElementById('roomId').value;
+  const name = document.getElementById('playerName').value;
+
+  const res = await fetch('/join', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ index })
+    body: JSON.stringify({game_id: gameId, name})
   });
+
   const data = await res.json();
-  renderState(data.state);
-}
-
-async function buyCard(index) {
-  const res = await fetch('/buy_card', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ index })
-  });
-  const data = await res.json();
-  renderState(data.state);
-}
-
-async function buildOrg(town) {
-  const res = await fetch('/build', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ town })
-  });
-  const data = await res.json();
-  renderState(data.state);
-}
-
-async function setMoveFrom(town) {
-  document.getElementById('moveFrom').value = town;
-
-  const res = await fetch(`/legal_moves?from_town=${town}`);
-  const data = await res.json();
-
-  const container = document.getElementById('legalMoves');
-  container.innerHTML = '<strong>Legal Moves:</strong><br>';
-
-  if (data.road) {
-    data.road.forEach(t => {
-      container.innerHTML += `<span class="card" onclick="setMoveTo('${t}')">🟡 ${t}</span>`;
-    });
-  }
-
-  if (data.rail) {
-    data.rail.forEach(t => {
-      container.innerHTML += `<span class="card" onclick="setMoveTo('${t}')">⚫ ${t}</span>`;
-    });
-  }
-}
-
-function setMoveTo(town) {
-  document.getElementById('moveTo').value = town;
-}
-
-function renderState(state) {
-  const container = document.getElementById('game');
-  container.innerHTML = '';
-
-  if (state.error) {
-    container.innerHTML = `<p>${state.error}</p>`;
+  if (data.error) {
+    alert(data.error);
     return;
   }
 
-  container.innerHTML += `<div class='section'><strong>Turn:</strong> ${state.turn}</div>`;
-  container.innerHTML += `<div class='section'><strong>Game Phase:</strong> ${state.game_phase}</div>`;
-  let phaseClass = '';
-  if (state.turn_phase === 'event') phaseClass = 'phase-event';
-  if (state.turn_phase === 'action') phaseClass = 'phase-action';
-  if (state.turn_phase === 'end') phaseClass = 'phase-end';
-  if (state.game_phase === 'finished') phaseClass = 'phase-finished';
+  playerId = data.player_id;
+  connect();
+}
 
-  container.innerHTML += `<div class='section ${phaseClass}'><strong>Phase:</strong> ${state.turn_phase}</div>`;
-  container.innerHTML += `<div class='section'><strong>Current Player:</strong> ${state.current_player}</div>`;
+function connect() {
+  ws = new WebSocket(`ws://${location.host}/ws/${gameId}/${playerId}`);
 
-  if (state.current_event) {
-    container.innerHTML += `<div class='section'><strong>Current Event:</strong> ${state.current_event.name || state.current_event}</div>`;
+  ws.onmessage = (event) => {
+    const state = JSON.parse(event.data);
+    render(state);
+  };
+
+  document.getElementById('lobby').style.display = 'none';
+  document.getElementById('gameUI').style.display = 'block';
+}
+
+function sendAction(action, payload = {}) {
+  ws.send(JSON.stringify({action, ...payload}));
+}
+
+function render(state) {
+  if (state.error) {
+    alert(state.error);
+    return;
   }
 
-  if (state.active_eras && state.active_eras.length > 0) {
-    container.innerHTML += `<div class='section'><strong>Active Eras:</strong> ${state.active_eras.join(', ')}</div>`;
-  }
+  document.getElementById('status').innerHTML =
+    `<strong>Turn:</strong> ${state.turn} | ` +
+    `<strong>Phase:</strong> ${state.turn_phase} | ` +
+    `<strong>Current:</strong> ${state.current_player}` +
+    (state.winner ? ` | 🏆 ${state.winner}` : '');
 
-  container.innerHTML += `<h2>Players</h2>`;
-
-  // Purchase Area
-  if (state.purchase_area && state.purchase_area.length > 0) {
-    container.innerHTML += `<div class='section'><h2>Purchase Area</h2>`;
-    state.purchase_area.forEach((card, index) => {
-      container.innerHTML += `<span class='card' onclick='buyCard(${index})'>${card}</span>`;
-    });
-    container.innerHTML += `</div>`;
-  }
-
-  // Map Control View
-  if (state.map && state.map.towns) {
-    container.innerHTML += `<div class='section'><h2>Map Control</h2>`;
-    Object.keys(state.map.towns).forEach(town => {
-      const control = state.map.towns[town]
-        .map(c => `${c.player}(${c.count})`)
-        .join(', ');
-      container.innerHTML += `<div><strong>${town}</strong>: ${control}</div>`;
-    });
-    container.innerHTML += `</div>`;
-  }
-
-  state.players.forEach(p => {
-    const div = document.createElement('div');
-    div.className = 'player';
-
-    div.innerHTML = `
-      <strong>${p.name}</strong><br>
-      Faction: ${p.faction}<br>
-      Resources: 💰 ${p.resources?.money ?? 0} | 📣 ${p.resources?.propaganda ?? 0}<br>
-      Total Orgs: ${p.total_orgs}
-    `;
-
-    if (p.hand && p.hand.length > 0) {
-      div.innerHTML += `<div><strong>Hand:</strong><br>`;
-      p.hand.forEach((card, index) => {
-        div.innerHTML += `<span class='card' onclick='playCard(${index})'>${card}</span>`;
-      });
-      div.innerHTML += `</div>`;
-    }
-
-    container.appendChild(div);
+  // Map
+  const mapDiv = document.getElementById('map');
+  mapDiv.innerHTML = '';
+  Object.keys(state.map.towns).forEach(town => {
+    const info = state.map.towns[town]
+      .map(c => `${c.player}(${c.count})`).join(', ');
+    mapDiv.innerHTML += `<div class='card' onclick="sendAction('build',{town:'${town}'})">${town}: ${info}</div>`;
   });
 
-  if (state.winner) {
-    container.innerHTML += `<div class='section phase-finished'>🏆 Winner: ${state.winner}</div>`;
+  // Purchase
+  const purchaseDiv = document.getElementById('purchase');
+  purchaseDiv.innerHTML = '';
+  (state.purchase_area || []).forEach((card, i) => {
+    purchaseDiv.innerHTML += `<span class='card' onclick="sendAction('buy_card',{index:${i}})">${card}</span>`;
+  });
+
+  // Hand
+  const handDiv = document.getElementById('hand');
+  handDiv.innerHTML = '';
+  const me = state.players.find(p => p.name === state.current_player);
+  if (me && me.hand) {
+    me.hand.forEach((card, i) => {
+      handDiv.innerHTML += `<span class='card' onclick="sendAction('play_card',{index:${i}})">${card}</span>`;
+    });
   }
 
-  const btn = document.getElementById('advanceBtn');
-  if (btn) {
-    if (state.turn_phase === 'event') btn.textContent = 'Resolve Event';
-    if (state.turn_phase === 'action') btn.textContent = 'End Action';
-    if (state.turn_phase === 'end') btn.textContent = 'Finish Turn';
-    if (state.game_phase === 'finished') btn.disabled = true;
-  }
+  // Log
+  const logDiv = document.getElementById('log');
+  logDiv.innerHTML = '';
+  (state.log || []).slice().reverse().forEach(entry => {
+    logDiv.innerHTML += `<div>${entry}</div>`;
+  });
 }

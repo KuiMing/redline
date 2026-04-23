@@ -2,32 +2,50 @@
 <html>
 <head>
   <meta charset="UTF-8" />
-  <title>Redline UI</title>
+  <title>Redline Multiplayer</title>
   <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
-  <h1>Redline – Game State</h1>
-  <div class="section">
-    <button onclick="createGame()">Create Game</button>
-    <button onclick="refreshState()">Refresh</button>
-    <button onclick="advanceTurn()">Advance Phase</button>
+  <h1>Redline</h1>
+
+  <div id="lobby">
+    <h3>Create Room</h3>
+    <button onclick="createRoom()">Create</button>
+    <div id="roomInfo"></div>
+
+    <h3>Join Room</h3>
+    <input id="roomId" placeholder="Room ID">
+    <input id="playerName" placeholder="Your Name">
+    <button onclick="joinRoom()">Join</button>
   </div>
 
-  <div id="controls" class="section"></div>
+  <div id="gameUI" style="display:none">
+    <div id="status"></div>
 
-  <div class="section">
-    <h3>Move Organization</h3>
-    <input id="moveFrom" placeholder="From town">
-    <input id="moveTo" placeholder="To town">
-    <select id="moveMode">
-      <option value="road">road</option>
-      <option value="rail">rail</option>
-    </select>
-    <button onclick="moveOrg()">Move</button>
-    <div id="legalMoves"></div>
+    <div class="section">
+      <h3>Map</h3>
+      <div id="map"></div>
+    </div>
+
+    <div class="section">
+      <h3>Purchase Area</h3>
+      <div id="purchase"></div>
+    </div>
+
+    <div class="section">
+      <h3>Your Hand</h3>
+      <div id="hand"></div>
+    </div>
+
+    <div class="section">
+      <button onclick="sendAction('advance')">Advance Phase</button>
+    </div>
+
+    <div class="section">
+      <h3>Action Log</h3>
+      <div id="log"></div>
+    </div>
   </div>
-
-  <div id="game"></div>
 
   <script src="/static/app.js"></script>
 </body>
