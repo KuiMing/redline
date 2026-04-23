@@ -41,6 +41,14 @@ function connect() {
   document.getElementById('gameUI').style.display = 'block';
 }
 
+async function startGame() {
+  await fetch('/start', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({game_id: gameId, player_id: playerId})
+  });
+}
+
 function sendAction(action, payload = {}) {
   ws.send(JSON.stringify({action, ...payload}));
 }

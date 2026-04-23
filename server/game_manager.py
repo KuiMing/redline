@@ -11,10 +11,12 @@ class GameManager:
         self.connections[game_id] = {}
         return game_id
 
-    def create_game_if_ready(self, game_id, GameClass, players):
-        # Start game when at least 2 players have joined (max 4)
-        if self.games.get(game_id) is None and len(players) >= 2:
+    # Game is now started explicitly via /start endpoint
+    def start_game(self, game_id, GameClass, players):
+        if self.games.get(game_id) is None:
             self.games[game_id] = GameClass(players)
+            return True
+        return False
 
     def get_game(self, game_id):
         return self.games.get(game_id)

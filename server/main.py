@@ -9,7 +9,8 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 manager = GameManager()
-lobby = {}  # {game_id: [player_names]}
+lobby = {}        # {game_id: [player_names]}
+lobby_hosts = {}  # {game_id: player_id}
 
 
 @app.post("/create")
@@ -30,13 +31,32 @@ def join_game(payload: dict):
     if len(lobby[game_id]) >= 4:
         return {"error": "Room full"}
 
-    lobby[game_id].append(name)
     player_id = str(uuid.uuid4())
+    lobby[game_id].append(name)
 
-    # 若滿 4 人，建立 Game
-    manager.create_game_if_ready(game_id, Game, lobby[game_id])
+    # 第一位加入者成為房主
+    if game_id not in lobby_hosts:
+        lobby_hosts[game_id] = player_id
 
     return {"player_id": player_id}
+
+
+@app.post("/start")
+def start_game(payload: dict):
+    game_id = payload.get("game_id")
+    player_id = payload.get("player_id")
+
+    if game_id not in lobby:
+        return {"error": "Game not found"}
+
+    if len(lobby[game_id]) < 2:
+        return {"error": "Need at least 2 players"}
+
+    if lobby_hosts.get(game_id) != player_id:
+        return {"error": "Only host can start"}
+
+    manager.start_game(game_id, Game, lobby[game_id])
+    return {"success": True}
 
 
 @app.websocket("/ws/{game_id}/{player_id}")
