@@ -26,7 +26,7 @@ async function joinRoom() {
   }
 
   playerId = data.player_id;
-  connect();
+  alert("Joined room. Waiting for host to start.");
 }
 
 function connect() {
@@ -42,11 +42,19 @@ function connect() {
 }
 
 async function startGame() {
-  await fetch('/start', {
+  const res = await fetch('/start', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({game_id: gameId, player_id: playerId})
   });
+
+  const data = await res.json();
+  if (data.error) {
+    alert(data.error);
+    return;
+  }
+
+  connect();
 }
 
 function sendAction(action, payload = {}) {
