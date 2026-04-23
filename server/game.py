@@ -96,6 +96,7 @@ class Game:
         self.victory_engine = VictoryEngine(self.factions, self.board_regions)
 
         self.turn_log = self._new_turn_log()
+        self.action_log = []
 
     # ---------- Init ----------
 
@@ -136,6 +137,11 @@ class Game:
     def current_player(self):
         return self.players[self.current_player_index]
 
+    def log(self, message):
+        self.action_log.append(f"[Turn {self.turn}] {message}")
+        if len(self.action_log) > 100:
+            self.action_log.pop(0)
+
     def play_card(self, index):
         if self.turn_phase != TurnPhase.ACTION:
             return {"error": "Not in ACTION phase"}
@@ -147,6 +153,7 @@ class Game:
         card_name = player.hand.pop(index)
         self.action_engine.execute(card_name, player, self)
         player.deck.discard([card_name])
+        self.log(f"{player.name} played {card_name}")
         return {"success": True}
 
     def advance_turn_phase(self):
@@ -171,6 +178,7 @@ class Game:
         player.discard_hand()
         player.reset_turn()
         player.draw_to_five()
+        self.log(f"End of turn for {player.name}")
 
         self.turn_log = self._new_turn_log()
 
