@@ -9,14 +9,34 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 manager = GameManager()
+lobby = {}  # {game_id: [player_names]}
 
 
 @app.post("/create")
-def create_game():
-    # Temporary fixed 4 players; later can be dynamic
-    player_names = ["Player1", "Player2", "Player3", "Player4"]
-    game = manager.create_game(Game, player_names)
-    return {"game_id": game.id}
+def create_room():
+    game_id = manager.create_room()
+    lobby[game_id] = []
+    return {"game_id": game_id}
+
+
+@app.post("/join")
+def join_game(payload: dict):
+    game_id = payload.get("game_id")
+    name = payload.get("name")
+
+    if game_id not in lobby:
+        return {"error": "Game not found"}
+
+    if len(lobby[game_id]) >= 4:
+        return {"error": "Room full"}
+
+    lobby[game_id].append(name)
+    player_id = str(uuid.uuid4())
+
+    # 若滿 4 人，建立 Game
+    manager.create_game_if_ready(game_id, Game, lobby[game_id])
+
+    return {"player_id": player_id}
 
 
 @app.websocket("/ws/{game_id}/{player_id}")
@@ -25,7 +45,7 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
 
     game = manager.get_game(game_id)
     if not game:
-        await websocket.send_json({"error": "Game not found"})
+        await websocket.send_json({"error": "Game not ready"})
         await websocket.close()
         return
 
@@ -36,14 +56,12 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
         return
 
     try:
-        # Send initial projected state
         await websocket.send_json(game.project_state(player_id))
 
         while True:
             data = await websocket.receive_json()
             action = data.get("action")
 
-            # Turn lock
             if game.current_player().id != player_id:
                 await websocket.send_json({"error": "Not your turn"})
                 continue
@@ -73,45 +91,59 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
 def index():
     return HTMLResponse("""
     <html>
-        <head><title>Redline Multiplayer</title></head>
+        <head><title>Redline Lobby</title></head>
         <body>
-            <h1>Redline Multiplayer</h1>
-            <button onclick="createGame()">Create Game</button>
+            <h1>Redline Lobby</h1>
+
+            <h3>Create Room</h3>
+            <button onclick="createRoom()">Create</button>
+            <div id='roomInfo'></div>
+
+            <h3>Join Room</h3>
+            <input id='roomId' placeholder='Room ID'>
+            <input id='playerName' placeholder='Your Name'>
+            <button onclick='joinRoom()'>Join</button>
+
             <div id='game'></div>
+
             <script>
                 let ws = null;
                 let gameId = null;
                 let playerId = null;
 
-                async function createGame() {
+                async function createRoom() {
                     const res = await fetch('/create', {method: 'POST'});
                     const data = await res.json();
                     gameId = data.game_id;
-                    playerId = crypto.randomUUID();
+                    document.getElementById('roomInfo').innerText = 'Room ID: ' + gameId;
+                }
+
+                async function joinRoom() {
+                    gameId = document.getElementById('roomId').value;
+                    const name = document.getElementById('playerName').value;
+
+                    const res = await fetch('/join', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({game_id: gameId, name})
+                    });
+
+                    const data = await res.json();
+                    if (data.error) {
+                        alert(data.error);
+                        return;
+                    }
+
+                    playerId = data.player_id;
                     connect();
                 }
 
                 function connect() {
                     ws = new WebSocket(`ws://${location.host}/ws/${gameId}/${playerId}`);
-
                     ws.onmessage = (event) => {
                         const state = JSON.parse(event.data);
-                        render(state);
+                        document.getElementById('game').innerHTML = '<pre>' + JSON.stringify(state, null, 2) + '</pre>';
                     };
-                }
-
-                function send(action, payload={}) {
-                    ws.send(JSON.stringify({action, ...payload}));
-                }
-
-                function render(state) {
-                    const container = document.getElementById('game');
-                    if (state.error) {
-                        container.innerHTML = state.error;
-                        return;
-                    }
-
-                    container.innerHTML = `<pre>${JSON.stringify(state, null, 2)}</pre>`;
                 }
             </script>
         </body>
