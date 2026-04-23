@@ -26,7 +26,24 @@ async function joinRoom() {
   }
 
   playerId = data.player_id;
-  alert("Joined room. Waiting for host to start.");
+  await refreshLobby();
+}
+
+async function refreshLobby() {
+  const res = await fetch(`/lobby/${gameId}`);
+  const data = await res.json();
+
+  const info = document.getElementById('roomInfo');
+
+  info.innerHTML = `
+    Room ID: ${gameId}<br>
+    Players (${data.count}/4):<br>
+    ${data.players.map(p => `<div>${p}</div>`).join("")}
+  `;
+
+  if (playerId === data.host_id) {
+    info.innerHTML += `<button onclick="startGame()">Start Game</button>`;
+  }
 }
 
 function connect() {

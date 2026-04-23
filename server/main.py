@@ -107,6 +107,18 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
         manager.remove_connection(game_id, player_id)
 
 
+@app.get("/lobby/{game_id}")
+def lobby_state(game_id: str):
+    if game_id not in lobby:
+        return {"error": "Game not found"}
+
+    return {
+        "players": lobby[game_id],
+        "host_id": lobby_hosts.get(game_id),
+        "count": len(lobby[game_id])
+    }
+
+
 @app.get("/")
 def index():
     return HTMLResponse("""
