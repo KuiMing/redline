@@ -1,166 +1,119 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
 from server.game import Game
+from server.game_manager import GameManager
+import uuid
 
 app = FastAPI()
-
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-current_game = None
-
-
-class BaseRequest(BaseModel):
-    town: str
-
-
-class MoveRequest(BaseModel):
-    from_town: str
-    to_town: str
-    mode: str = "road"
+manager = GameManager()
 
 
 @app.post("/create")
 def create_game():
-    global current_game
+    # Temporary fixed 4 players; later can be dynamic
     player_names = ["Player1", "Player2", "Player3", "Player4"]
-    current_game = Game(player_names)
-    return current_game.state()
+    game = manager.create_game(Game, player_names)
+    return {"game_id": game.id}
 
 
-@app.post("/set_base")
-def set_base(req: BaseRequest):
-    if current_game is None:
-        return {"error": "No game created"}
-    result = current_game.set_base(req.town)
-    return {**result, "state": current_game.state()}
+@app.websocket("/ws/{game_id}/{player_id}")
+async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str):
+    await websocket.accept()
+
+    game = manager.get_game(game_id)
+    if not game:
+        await websocket.send_json({"error": "Game not found"})
+        await websocket.close()
+        return
+
+    ok = manager.register_connection(game_id, player_id, websocket)
+    if not ok:
+        await websocket.send_json({"error": "Room full"})
+        await websocket.close()
+        return
+
+    try:
+        # Send initial projected state
+        await websocket.send_json(game.project_state(player_id))
+
+        while True:
+            data = await websocket.receive_json()
+            action = data.get("action")
+
+            # Turn lock
+            if game.current_player().id != player_id:
+                await websocket.send_json({"error": "Not your turn"})
+                continue
+
+            if action == "play_card":
+                game.play_card(data.get("index"))
+            elif action == "buy_card":
+                game.buy_card(data.get("index"))
+            elif action == "build":
+                game.build_organization(data.get("town"))
+            elif action == "move":
+                game.move_organization(
+                    data.get("from"),
+                    data.get("to"),
+                    data.get("mode", "road")
+                )
+            elif action == "advance":
+                game.advance_turn_phase()
+
+            await manager.broadcast(game_id, game)
+
+    except WebSocketDisconnect:
+        manager.remove_connection(game_id, player_id)
 
 
-@app.post("/move")
-def move(req: MoveRequest):
-    if current_game is None:
-        return {"error": "No game created"}
-    result = current_game.move_organization(req.from_town, req.to_town, req.mode)
-    return {**result, "state": current_game.state()}
-
-
-@app.post("/end_turn")
-def end_turn():
-    if current_game is None:
-        return {"error": "No game created"}
-    result = current_game.end_turn()
-    return {**result, "state": current_game.state()}
-
-
-@app.post("/play_card")
-def play_card(payload: dict):
-    if current_game is None:
-        return {"error": "No game created"}
-    index = payload.get("index")
-    result = current_game.play_card(index)
-    return {**result, "state": current_game.state()}
-
-
-@app.post("/buy_card")
-def buy_card(payload: dict):
-    if current_game is None:
-        return {"error": "No game created"}
-    index = payload.get("index")
-    result = current_game.buy_card(index)
-    return {**result, "state": current_game.state()}
-
-
-@app.post("/build")
-def build(payload: dict):
-    if current_game is None:
-        return {"error": "No game created"}
-    town = payload.get("town")
-    result = current_game.build_organization(town)
-    return {**result, "state": current_game.state()}
-
-
-@app.post("/advance_turn")
-def advance_turn():
-    if current_game is None:
-        return {"error": "No game created"}
-    result = current_game.advance_turn_phase()
-    return {**result, "state": current_game.state()}
-
-
-@app.get("/legal_moves")
-def legal_moves(from_town: str):
-    if current_game is None:
-        return {"error": "No game created"}
-    connections = current_game.map["towns"].get(from_town, {})
-    return {
-        "road": connections.get("road", []),
-        "rail": connections.get("rail", [])
-    }
-
-
-@app.get("/state")
-def get_state():
-    if current_game is None:
-        return {"error": "No game created"}
-    return current_game.state()
-
-
-@app.get("/", response_class=HTMLResponse)
+@app.get("/")
 def index():
-    return """
+    return HTMLResponse("""
     <html>
-        <head>
-            <title>Redline Game</title>
-        </head>
+        <head><title>Redline Multiplayer</title></head>
         <body>
-            <h1>Redline - Movement Rules Active</h1>
+            <h1>Redline Multiplayer</h1>
             <button onclick="createGame()">Create Game</button>
-            <br><br>
-            <input id="fromInput" placeholder="From" />
-            <input id="toInput" placeholder="To" />
-            <select id="modeSelect">
-                <option value="road">road</option>
-                <option value="rail">rail</option>
-            </select>
-            <button onclick="moveOrg()">Move Org</button>
-            <button onclick="endTurn()">End Turn</button>
-            <br><br>
-            <button onclick="loadState()">Load State</button>
-            <pre id='output'></pre>
-
+            <div id='game'></div>
             <script>
+                let ws = null;
+                let gameId = null;
+                let playerId = null;
+
                 async function createGame() {
                     const res = await fetch('/create', {method: 'POST'});
                     const data = await res.json();
-                    document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+                    gameId = data.game_id;
+                    playerId = crypto.randomUUID();
+                    connect();
                 }
 
-                async function moveOrg() {
-                    const from = document.getElementById('fromInput').value;
-                    const to = document.getElementById('toInput').value;
-                    const mode = document.getElementById('modeSelect').value;
-                    const res = await fetch('/move', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({from_town: from, to_town: to, mode})
-                    });
-                    const data = await res.json();
-                    document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+                function connect() {
+                    ws = new WebSocket(`ws://${location.host}/ws/${gameId}/${playerId}`);
+
+                    ws.onmessage = (event) => {
+                        const state = JSON.parse(event.data);
+                        render(state);
+                    };
                 }
 
-                async function endTurn() {
-                    const res = await fetch('/end_turn', {method: 'POST'});
-                    const data = await res.json();
-                    document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+                function send(action, payload={}) {
+                    ws.send(JSON.stringify({action, ...payload}));
                 }
 
-                async function loadState() {
-                    const res = await fetch('/state');
-                    const data = await res.json();
-                    document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+                function render(state) {
+                    const container = document.getElementById('game');
+                    if (state.error) {
+                        container.innerHTML = state.error;
+                        return;
+                    }
+
+                    container.innerHTML = `<pre>${JSON.stringify(state, null, 2)}</pre>`;
                 }
             </script>
         </body>
     </html>
-    """
+    """)
