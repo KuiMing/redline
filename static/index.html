@@ -2,52 +2,67 @@
 <html>
 <head>
   <meta charset="UTF-8" />
-  <title>Redline Multiplayer</title>
+  <title>REDLINE // STRATEGIC COMMAND</title>
   <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
-  <h1>Redline</h1>
 
-  <div id="lobby">
-    <h3>Create Room</h3>
-    <button onclick="createRoom()">Create</button>
-    <div id="roomInfo"></div>
+<div id="warTitle">逆統戰</div>
 
-    <h3>Join Room</h3>
-    <input id="roomId" placeholder="Room ID">
-    <input id="playerName" placeholder="Your Name">
-    <button onclick="joinRoom()">Join</button>
-    <button onclick="startGame()">Start Game</button>
+<div id="topBar">
+  <div class="title">REDLINE STRATEGIC COMMAND</div>
+  <div id="statusBar"></div>
+</div>
+
+<div id="hud"></div>
+
+<div id="lobby">
+  <button onclick="createRoom()">INITIATE COMMAND</button>
+  <input id="roomId" placeholder="ROOM ID">
+  <input id="playerName" placeholder="CALLSIGN">
+  <button onclick="joinRoom()">JOIN OPERATION</button>
+  <button onclick="startGame()">START</button>
+</div>
+
+<div id="gameShell" style="display:none">
+  <div id="gameTabs">
+    <button class="game-tab active" data-view="command">指揮中心</button>
+    <button class="game-tab" data-view="map">戰略地圖</button>
   </div>
 
-  <div id="gameUI" style="display:none">
-    <div id="status"></div>
+  <div id="commandView" class="game-view active">
+    <div id="commandGrid">
+      <div id="controlPanel" class="panel">
+        <div class="panel-title">CONTROL</div>
+        <button onclick="sendAction('advance')">ADVANCE</button>
+        <div id="purchase"></div>
+      </div>
 
-    <div class="section">
-      <h3>Map</h3>
-      <div id="map"></div>
-    </div>
+      <div id="logPanel" class="panel">
+        <div class="panel-title">INTEL LOG</div>
+        <div id="log"></div>
+      </div>
 
-    <div class="section">
-      <h3>Purchase Area</h3>
-      <div id="purchase"></div>
-    </div>
+      <div id="handPanel" class="panel">
+        <div class="panel-title">INTEL HAND</div>
+        <div id="hand"></div>
+      </div>
 
-    <div class="section">
-      <h3>Your Hand</h3>
-      <div id="hand"></div>
-    </div>
-
-    <div class="section">
-      <button onclick="sendAction('advance')">Advance Phase</button>
-    </div>
-
-    <div class="section">
-      <h3>Action Log</h3>
-      <div id="log"></div>
+      <div id="eraPanel" class="panel">
+        <div class="panel-title">ACTIVE ERA</div>
+        <div id="eras"></div>
+      </div>
     </div>
   </div>
 
-  <script src="/static/app.js"></script>
+  <div id="mapView" class="game-view">
+    <div id="mapPanel" class="panel map-only-panel">
+      <div class="panel-title">TACTICAL MAP</div>
+      <iframe id="strategicMapFrame" src="/static/leaflet_full_map.html"></iframe>
+    </div>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
 </body>
 </html>

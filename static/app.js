@@ -1,22 +1,47 @@
 let ws = null;
 let gameId = null;
 let playerId = null;
+let previousEras = [];
+
+function initTabs() {
+  const tabs = document.querySelectorAll('.game-tab');
+  const views = document.querySelectorAll('.game-view');
+  if (!tabs.length || !views.length) return;
+
+  tabs.forEach(tab => {
+    if (tab.dataset.bound === '1') return;
+    tab.dataset.bound = '1';
+    tab.addEventListener('click', () => {
+      const view = tab.dataset.view;
+      tabs.forEach(t => t.classList.toggle('active', t === tab));
+      views.forEach(v => v.classList.toggle('active', v.id === `${view}View`));
+    });
+  });
+}
 
 async function createRoom() {
-  const res = await fetch('/create', {method: 'POST'});
+  const res = await fetch('/create', { method: 'POST' });
   const data = await res.json();
   gameId = data.game_id;
-  document.getElementById('roomInfo').innerText = 'Room ID: ' + gameId;
+  playerId = data.host_id;
+  const roomInput = document.getElementById('roomId');
+  if (roomInput) roomInput.value = gameId;
+  alert("ROOM CREATED: " + gameId);
 }
 
 async function joinRoom() {
   gameId = document.getElementById('roomId').value;
   const name = document.getElementById('playerName').value;
 
+  const payload = {game_id: gameId, name};
+  if (playerId) {
+    payload.player_id = playerId;
+  }
+
   const res = await fetch('/join', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({game_id: gameId, name})
+    body: JSON.stringify(payload)
   });
 
   const data = await res.json();
@@ -26,36 +51,6 @@ async function joinRoom() {
   }
 
   playerId = data.player_id;
-  await refreshLobby();
-}
-
-async function refreshLobby() {
-  const res = await fetch(`/lobby/${gameId}`);
-  const data = await res.json();
-
-  const info = document.getElementById('roomInfo');
-
-  info.innerHTML = `
-    Room ID: ${gameId}<br>
-    Players (${data.count}/4):<br>
-    ${data.players.map(p => `<div>${p}</div>`).join("")}
-  `;
-
-  if (playerId === data.host_id) {
-    info.innerHTML += `<button onclick="startGame()">Start Game</button>`;
-  }
-}
-
-function connect() {
-  ws = new WebSocket(`ws://${location.host}/ws/${gameId}/${playerId}`);
-
-  ws.onmessage = (event) => {
-    const state = JSON.parse(event.data);
-    render(state);
-  };
-
-  document.getElementById('lobby').style.display = 'none';
-  document.getElementById('gameUI').style.display = 'block';
 }
 
 async function startGame() {
@@ -74,7 +69,29 @@ async function startGame() {
   connect();
 }
 
+// Abstract map removed — replaced by Leaflet
+
+
+function connect() {
+  ws = new WebSocket(`ws://${location.host}/ws/${gameId}/${playerId}`);
+
+  ws.onmessage = (event) => {
+    const state = JSON.parse(event.data);
+    render(state);
+    if (window.updateMap) {
+      updateMap(state);
+    }
+  };
+
+  document.getElementById('lobby').style.display = 'none';
+  const shell = document.getElementById('gameShell');
+  if (shell) shell.style.display = 'block';
+
+  initTabs();
+}
+
 function sendAction(action, payload = {}) {
+  if (!ws) return;
   ws.send(JSON.stringify({action, ...payload}));
 }
 
@@ -84,42 +101,66 @@ function render(state) {
     return;
   }
 
-  document.getElementById('status').innerHTML =
-    `<strong>Turn:</strong> ${state.turn} | ` +
-    `<strong>Phase:</strong> ${state.turn_phase} | ` +
-    `<strong>Current:</strong> ${state.current_player}` +
-    (state.winner ? ` | 🏆 ${state.winner}` : '');
+  // HUD
+  const hud = document.getElementById('hud');
+  if (hud) {
+    let orgInfo = '';
+    state.players.forEach(p => {
+      const total = Object.values(p.orgs || {}).reduce((a,b)=>a+b,0);
+      orgInfo += `${p.name.toUpperCase()}: ${total} | `;
+    });
 
-  // Map
-  const mapDiv = document.getElementById('map');
-  mapDiv.innerHTML = '';
-  Object.keys(state.map.towns).forEach(town => {
-    const info = state.map.towns[town]
-      .map(c => `${c.player}(${c.count})`).join(', ');
-    mapDiv.innerHTML += `<div class='card' onclick="sendAction('build',{town:'${town}'})">${town}: ${info}</div>`;
-  });
+    hud.innerHTML = `
+      TURN ${state.turn}
+      | PHASE ${state.turn_phase}
+      | ACTIVE ${state.current_player.toUpperCase()}
+      | ${orgInfo}
+    `;
+  }
 
-  // Purchase
-  const purchaseDiv = document.getElementById('purchase');
-  purchaseDiv.innerHTML = '';
-  (state.purchase_area || []).forEach((card, i) => {
-    purchaseDiv.innerHTML += `<span class='card' onclick="sendAction('buy_card',{index:${i}})">${card}</span>`;
-  });
+  // ✅ 地圖節點不在 render 中重建
+
 
   // Hand
   const handDiv = document.getElementById('hand');
-  handDiv.innerHTML = '';
-  const me = state.players.find(p => p.name === state.current_player);
-  if (me && me.hand) {
-    me.hand.forEach((card, i) => {
-      handDiv.innerHTML += `<span class='card' onclick="sendAction('play_card',{index:${i}})">${card}</span>`;
+  if (handDiv) {
+    handDiv.innerHTML = '';
+    const me = state.players.find(p => p.id === playerId);
+    if (me && me.hand) {
+      me.hand.forEach((card, i) => {
+        handDiv.innerHTML += `<div class='card' onclick="sendAction('play_card',{index:${i}})">${card}</div>`;
+      });
+    }
+  }
+
+  // Purchase
+  const purchaseDiv = document.getElementById('purchase');
+  if (purchaseDiv) {
+    purchaseDiv.innerHTML = '';
+    (state.purchase_area || []).forEach((card, i) => {
+      purchaseDiv.innerHTML += `<div class='card' onclick="sendAction('buy_card',{index:${i}})">${card}</div>`;
     });
   }
 
   // Log
   const logDiv = document.getElementById('log');
-  logDiv.innerHTML = '';
-  (state.log || []).slice().reverse().forEach(entry => {
-    logDiv.innerHTML += `<div>${entry}</div>`;
-  });
+  if (logDiv) {
+    logDiv.innerHTML = '';
+    (state.log || []).slice().reverse().forEach(entry => {
+      logDiv.innerHTML += `<div>${entry}</div>`;
+    });
+  }
+
+  // Active Eras
+  const eraDiv = document.getElementById('eras');
+  if (eraDiv) {
+    eraDiv.innerHTML = '';
+    if (state.active_eras && state.active_eras.length > 0) {
+      state.active_eras.forEach(e => {
+        eraDiv.innerHTML += `<div class=\"card\">${e}</div>`;
+      });
+    } else {
+      eraDiv.innerHTML = `<div class=\"card\">NONE</div>`;
+    }
+  }
 }

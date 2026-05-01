@@ -1,43 +1,56 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from server.game import Game
 from server.game_manager import GameManager
 import uuid
+import asyncio
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 manager = GameManager()
 lobby = {}        # {game_id: [player_names]}
-lobby_hosts = {}  # {game_id: player_id}
+lobby_hosts = {}  # {game_id: host_player_id}
 
 
 @app.post("/create")
 def create_room():
     game_id = manager.create_room()
-    lobby[game_id] = []
-    return {"game_id": game_id}
+    host_id = str(uuid.uuid4())
+
+    lobby[game_id] = []  # will store (player_id, name)
+    lobby_hosts[game_id] = host_id
+
+    return {"game_id": game_id, "host_id": host_id}
 
 
 @app.post("/join")
 def join_game(payload: dict):
     game_id = payload.get("game_id")
     name = payload.get("name")
+    requested_player_id = payload.get("player_id")
 
     if game_id not in lobby:
         return {"error": "Game not found"}
 
+    if not name:
+        return {"error": "Name required"}
+
+    # Reuse reserved/known player id when provided (e.g. room host)
+    if requested_player_id:
+        for idx, (pid, _) in enumerate(lobby[game_id]):
+            if pid == requested_player_id:
+                lobby[game_id][idx] = (requested_player_id, name)
+                return {"player_id": requested_player_id}
+        player_id = requested_player_id
+    else:
+        player_id = str(uuid.uuid4())
+
     if len(lobby[game_id]) >= 4:
         return {"error": "Room full"}
 
-    player_id = str(uuid.uuid4())
-    lobby[game_id].append(name)
-
-    # 第一位加入者成為房主
-    if game_id not in lobby_hosts:
-        lobby_hosts[game_id] = player_id
-
+    lobby[game_id].append((player_id, name))
     return {"player_id": player_id}
 
 
@@ -56,55 +69,15 @@ def start_game(payload: dict):
         return {"error": "Only host can start"}
 
     manager.start_game(game_id, Game, lobby[game_id])
-    return {"success": True}
 
-
-@app.websocket("/ws/{game_id}/{player_id}")
-async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str):
-    await websocket.accept()
-
+    # ✅ 對齊 Lobby player_id 與 Game.player.id
     game = manager.get_game(game_id)
-    if not game:
-        await websocket.send_json({"error": "Game not ready"})
-        await websocket.close()
-        return
+    lobby_player_ids = list(manager.connections.get(game_id, {}).keys())
 
-    ok = manager.register_connection(game_id, player_id, websocket)
-    if not ok:
-        await websocket.send_json({"error": "Room full"})
-        await websocket.close()
-        return
+    for player, lobby_id in zip(game.players, lobby_player_ids):
+        player.id = lobby_id
 
-    try:
-        await websocket.send_json(game.project_state(player_id))
-
-        while True:
-            data = await websocket.receive_json()
-            action = data.get("action")
-
-            if game.current_player().id != player_id:
-                await websocket.send_json({"error": "Not your turn"})
-                continue
-
-            if action == "play_card":
-                game.play_card(data.get("index"))
-            elif action == "buy_card":
-                game.buy_card(data.get("index"))
-            elif action == "build":
-                game.build_organization(data.get("town"))
-            elif action == "move":
-                game.move_organization(
-                    data.get("from"),
-                    data.get("to"),
-                    data.get("mode", "road")
-                )
-            elif action == "advance":
-                game.advance_turn_phase()
-
-            await manager.broadcast(game_id, game)
-
-    except WebSocketDisconnect:
-        manager.remove_connection(game_id, player_id)
+    return {"success": True}
 
 
 @app.get("/lobby/{game_id}")
@@ -119,65 +92,74 @@ def lobby_state(game_id: str):
     }
 
 
+@app.websocket("/ws/{game_id}/{player_id}")
+async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str):
+    await websocket.accept()
+
+    manager.register_connection(game_id, player_id, websocket)
+
+    game = manager.get_game(game_id)
+
+    if not game:
+        await websocket.send_json({"error": "Game not ready"})
+        return
+
+    # Send initial state
+    await websocket.send_json(game.state())
+
+    try:
+        while True:
+            data = await websocket.receive_json()
+            action = data.get("action")
+
+            if game.current_player().id != player_id:
+                await websocket.send_json({"error": "Not your turn"})
+                continue
+
+            if action == "advance":
+                game.advance_turn_phase()
+            elif action == "play_card":
+                game.play_card(data.get("index"))
+            elif action == "buy_card":
+                game.buy_card(data.get("index"))
+            elif action == "build":
+                game.build_organization(data.get("town"))
+            elif action == "move":
+                game.move_organization(
+                    data.get("from"),
+                    data.get("to"),
+                    data.get("mode", "road")
+                )
+
+            # Broadcast updated state
+            for pid, ws in manager.connections.get(game_id, {}).items():
+                await ws.send_json(game.state())
+
+    except Exception as e:
+        print("WS ERROR:", e)
+        manager.remove_connection(game_id, player_id)
+
+
+@app.get("/town-coordinates")
+def get_town_coordinates():
+    from pathlib import Path
+    import json
+    path = Path(__file__).resolve().parent.parent / "data" / "town_coordinates.v1.json"
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
+
+@app.get("/map-test")
+def map_test():
+    return FileResponse("static/map_test.html")
+
+@app.get("/map-data")
+def get_map_data():
+    from pathlib import Path
+    import json
+    path = Path(__file__).resolve().parent.parent / "data" / "map.json"
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
+
 @app.get("/")
 def index():
-    return HTMLResponse("""
-    <html>
-        <head><title>Redline Lobby</title></head>
-        <body>
-            <h1>Redline Lobby</h1>
-
-            <h3>Create Room</h3>
-            <button onclick="createRoom()">Create</button>
-            <div id='roomInfo'></div>
-
-            <h3>Join Room</h3>
-            <input id='roomId' placeholder='Room ID'>
-            <input id='playerName' placeholder='Your Name'>
-            <button onclick='joinRoom()'>Join</button>
-
-            <div id='game'></div>
-
-            <script>
-                let ws = null;
-                let gameId = null;
-                let playerId = null;
-
-                async function createRoom() {
-                    const res = await fetch('/create', {method: 'POST'});
-                    const data = await res.json();
-                    gameId = data.game_id;
-                    document.getElementById('roomInfo').innerText = 'Room ID: ' + gameId;
-                }
-
-                async function joinRoom() {
-                    gameId = document.getElementById('roomId').value;
-                    const name = document.getElementById('playerName').value;
-
-                    const res = await fetch('/join', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({game_id: gameId, name})
-                    });
-
-                    const data = await res.json();
-                    if (data.error) {
-                        alert(data.error);
-                        return;
-                    }
-
-                    playerId = data.player_id;
-                    connect();
-                }
-
-                function connect() {
-                    ws = new WebSocket(`ws://${location.host}/ws/${gameId}/${playerId}`);
-                    ws.onmessage = (event) => {
-                        const state = JSON.parse(event.data);
-                        document.getElementById('game').innerHTML = '<pre>' + JSON.stringify(state, null, 2) + '</pre>';
-                    };
-                }
-            </script>
-        </body>
-    </html>
-    """)
+    return FileResponse("static/index.html")
