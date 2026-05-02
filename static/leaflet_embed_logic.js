@@ -153,11 +153,11 @@ function movementOptionsForTown(townName) {
 function renderMovementHighlights(townName) {
   highlightLayer.clearLayers();
   selectedTown = townName;
-  if (!townName) return;
+  if (!townName) return false;
 
   const opts = movementOptionsForTown(townName);
   const origin = byName.get(townName);
-  if (!origin) return;
+  if (!origin) return false;
 
   const originMarker = currentMarkers.get(townName);
   if (originMarker) {
@@ -166,8 +166,10 @@ function renderMovementHighlights(townName) {
   }
 
   if (!playerOwnsTown(townName)) {
-    return;
+    return false;
   }
+
+  let highlightCount = 0;
 
   for (const toName of opts.road) {
     const target = byName.get(toName);
@@ -177,6 +179,7 @@ function renderMovementHighlights(townName) {
       weight: 4,
       opacity: 0.95
     }).addTo(highlightLayer);
+    highlightCount += 1;
 
     const marker = currentMarkers.get(toName);
     if (marker) marker.setStyle({ color: '#ffd166', weight: 3 });
@@ -191,10 +194,13 @@ function renderMovementHighlights(townName) {
       opacity: 0.95,
       dashArray: '10 6'
     }).addTo(highlightLayer);
+    highlightCount += 1;
 
     const marker = currentMarkers.get(toName);
     if (marker) marker.setStyle({ color: '#7dd3fc', weight: 3 });
   }
+
+  return highlightCount > 0;
 }
 
 function updateDynamicStyles() {
@@ -244,7 +250,9 @@ function renderMap() {
       updateInfoPanel(t.name);
       renderMap();
       applyGameStateToMap(lastGameState);
-      renderMovementHighlights(t.name);
+      const didHighlight = renderMovementHighlights(t.name);
+      window.__lastSelectedTown = t.name;
+      window.__lastHighlightSuccess = didHighlight;
     });
     currentMarkers.set(t.name, marker);
     if (shouldShowLabels()) marker.bindTooltip(t.name, { permanent:true, direction:'top', className:'town-label', offset:[0, -(markerRadius() + 4)] });
@@ -333,6 +341,24 @@ function applyGameStateToMap(state) {
 }
 
 window.applyGameStateToMap = applyGameStateToMap;
+window.__selectTownForTest = function (townName) {
+  const marker = currentMarkers.get(townName);
+  if (!marker) return { ok: false, reason: 'marker-not-found' };
+  updateInfoPanel(townName);
+  renderMap();
+  applyGameStateToMap(lastGameState);
+  const didHighlight = renderMovementHighlights(townName);
+  window.__lastSelectedTown = townName;
+  window.__lastHighlightSuccess = didHighlight;
+  return {
+    ok: true,
+    town: townName,
+    highlighted: didHighlight,
+    road: movementOptionsForTown(townName).road.length,
+    rail: movementOptionsForTown(townName).rail.length,
+    owns: playerOwnsTown(townName)
+  };
+};
 
 window.initializeStrategicMapWhenVisible = function () {
   if (!document.getElementById('map')) return;

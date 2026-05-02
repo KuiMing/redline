@@ -84,6 +84,7 @@ function connect() {
 
   ws.onmessage = (event) => {
     const state = JSON.parse(event.data);
+    window.lastGameState = state;
     render(state);
     syncStrategicMap(state);
   };

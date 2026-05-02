@@ -20,7 +20,7 @@ from server.era_engine import EraEngine
 from server.victory import VictoryEngine
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-MAP_PATH = BASE_DIR / "map.json"
+MAP_PATH = BASE_DIR / "data" / "map.json"
 FACTIONS_PATH = BASE_DIR / "data" / "factions" / "all_faction.json"
 BOARD_TOWNS_PATH = BASE_DIR / "data" / "board_towns.v1.1.json"
 STRUCTURED_ACTION_PATH = BASE_DIR / "data" / "action_cards_structured.v1.1.json"
@@ -69,9 +69,9 @@ class Player:
 
 
 class Game:
-    def __init__(self, player_names):
-        if len(player_names) != 4:
-            raise ValueError("Game requires exactly 4 players")
+    def __init__(self, players_data):
+        if len(players_data) < 2 or len(players_data) > 4:
+            raise ValueError("Game requires 2–4 players")
 
         self.id = str(uuid.uuid4())
         self.turn = 1
@@ -84,15 +84,20 @@ class Game:
         self.factions = self._load_json(FACTIONS_PATH)["factions"]
         self.board_regions = self._load_json(BOARD_TOWNS_PATH)["regions"]
         self.structured_cards = self._load_json(STRUCTURED_ACTION_PATH)["cards"]
+        # ✅ Load structured eras
         self.structured_eras = self._load_json(ERA_STRUCTURED_PATH)["eras"]
 
         self.players = []
-        self._assign_factions(player_names)
+        self._assign_factions(players_data)
         self._init_decks()
+        self._seed_starting_positions()
 
         self.action_engine = ActionCardEngine(self.structured_cards)
         self.effect_engine = EffectEngine()
         self.era_engine = EraEngine(self.structured_eras)
+        # ✅ TEMP: force activate hong_kong era for UI test
+        if "hong_kong" in self.era_engine.era_defs:
+            self.era_engine.activate_era("hong_kong")
         self.victory_engine = VictoryEngine(self.factions, self.board_regions)
 
         self.turn_log = self._new_turn_log()
@@ -104,15 +109,18 @@ class Game:
         with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
 
-    def _assign_factions(self, names):
+    def _assign_factions(self, players_data):
         red = next(f for f in self.factions if f["id"] == "red_army")
         others = [f for f in self.factions if f["id"] != "red_army"]
         random.shuffle(others)
-        selected = [red] + others[:3]
+
+        selected = [red] + others[:len(players_data)-1]
         random.shuffle(selected)
 
-        for name, faction in zip(names, selected):
-            self.players.append(Player(name, faction["id"]))
+        for (player_id, name), faction in zip(players_data, selected):
+            p = Player(name, faction["id"])
+            p.id = player_id
+            self.players.append(p)
 
     def _init_decks(self):
         for p in self.players:
@@ -123,6 +131,41 @@ class Game:
                 starter.append(Card("樂捐者", "money", {"money": 1}))
             p.deck = Deck(starter)
             p.hand = p.deck.draw(5)
+
+    def _seed_starting_positions(self):
+        # Minimal playable seed so map/interaction has real current-player towns.
+        # TODO: replace with proper rules-driven setup.
+        preferred = {
+            "taiwan": ["臺北", "高雄"],
+            "red_army": ["北京", "上海"],
+            "eastern_turkistan": ["喀什", "烏魯木齊"],
+            "hong_kong": ["香港城", "九龍城"],
+            "manchuria": ["瀋陽", "長春"],
+            "mongolia": ["烏蘭巴托", "喬巴山"],
+            "tibet": ["拉薩", "日喀則"],
+        }
+
+        fallback_cycle = ["北京", "臺北", "香港城", "東京", "首爾", "廣州", "上海", "烏蘭巴托"]
+        used = set()
+
+        for idx, p in enumerate(self.players):
+            towns = preferred.get(p.faction_id, [])
+            assigned = []
+            for town in towns:
+                if town in self.map.get("towns", {}) and town not in used:
+                    assigned.append(town)
+                    used.add(town)
+            while len(assigned) < 2:
+                town = fallback_cycle[(idx + len(assigned)) % len(fallback_cycle)]
+                if town in self.map.get("towns", {}) and town not in used:
+                    assigned.append(town)
+                    used.add(town)
+                else:
+                    break
+            for town in assigned:
+                p.organizations[town] = 1
+            if assigned:
+                p.base = assigned[0]
 
     def _new_turn_log(self):
         return {
@@ -163,9 +206,6 @@ class Game:
         elif self.turn_phase == TurnPhase.ACTION:
             self.turn_phase = TurnPhase.END
         elif self.turn_phase == TurnPhase.END:
-            # tick active eras
-            if hasattr(self, "era_engine"):
-                self.era_engine.tick()
             self._end_turn()
         return {"success": True}
 
@@ -182,7 +222,11 @@ class Game:
 
         self.turn_log = self._new_turn_log()
 
-        self.current_player_index = (self.current_player_index + 1) % 4
+        # ✅ Tick active eras at end of full turn
+        if self.era_engine:
+            self.era_engine.tick()
+
+        self.current_player_index = (self.current_player_index + 1) % len(self.players)
         if self.current_player_index == 0:
             self.turn += 1
         self.turn_phase = TurnPhase.EVENT
@@ -261,15 +305,17 @@ class Game:
             "turn_phase": self.turn_phase,
             "winner": self.winner,
             "current_player": self.current_player().name,
+            "active_eras": self.era_engine.get_active_eras() if self.era_engine else [],
             "map": {
                 "towns": town_control
             },
             "players": [
                 {
+                    "id": p.id,
                     "name": p.name,
                     "faction": p.faction_id,
                     "resources": p.resources,
-                    "hand": p.hand,
+                    "hand": [getattr(card, 'name', str(card)) for card in p.hand],
                     "orgs": p.organizations
                 }
                 for p in self.players
