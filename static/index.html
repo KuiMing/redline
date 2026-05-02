@@ -58,11 +58,13 @@
   <div id="mapView" class="game-view">
     <div id="mapPanel" class="panel map-only-panel">
       <div class="panel-title">TACTICAL MAP</div>
-      <iframe id="strategicMapFrame" src="/static/leaflet_full_map.html"></iframe>
+      <div id="strategicMapRoot"></div>
     </div>
   </div>
 </div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/static/leaflet_embed_logic.js"></script>
 <script src="/static/app.js"></script>
 </body>
 </html>

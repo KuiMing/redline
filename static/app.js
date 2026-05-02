@@ -86,6 +86,7 @@ function connect() {
   if (shell) shell.style.display = 'block';
 
   initTabs();
+  ensureStrategicMapMounted();
 }
 
 function sendAction(action, payload = {}) {
@@ -93,10 +94,23 @@ function sendAction(action, payload = {}) {
   ws.send(JSON.stringify({action, ...payload}));
 }
 
+async function ensureStrategicMapMounted() {
+  const root = document.getElementById('strategicMapRoot');
+  if (!root || root.dataset.mounted === '1') return;
+
+  const res = await fetch('/static/leaflet_embed_fragment.html');
+  root.innerHTML = await res.text();
+  root.dataset.mounted = '1';
+
+  if (window.dispatchEvent) {
+    window.dispatchEvent(new CustomEvent('redline-map-mounted'));
+  }
+}
+
 function syncStrategicMap(state) {
-  const frame = document.getElementById('strategicMapFrame');
-  if (!frame || !frame.contentWindow) return;
-  frame.contentWindow.postMessage({ type: 'redline-state', state }, '*');
+  if (window.applyGameStateToMap) {
+    window.applyGameStateToMap(state);
+  }
 }
 
 function render(state) {

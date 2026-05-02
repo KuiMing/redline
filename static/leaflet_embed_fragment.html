@@ -1,0 +1,47 @@
+<div id="app">
+  <aside>
+    <h1>逆統戰</h1>
+
+    <div class="card">
+      <label>搜尋城鎮</label>
+      <input id="searchBox" placeholder="例：臺北、香港城、喀什、烏蘭巴托" />
+      <div class="row">
+        <div>
+          <label>統治者</label>
+          <select id="rulerFilter"><option value="">全部</option></select>
+        </div>
+        <div>
+          <label>陣營</label>
+          <select id="campFilter"><option value="">全部</option></select>
+        </div>
+      </div>
+      <label>城鎮類型</label>
+      <select id="typeFilter"><option value="">全部</option></select>
+      <div class="row" style="margin-top:10px;">
+        <button id="resetFilter">清除篩選</button>
+        <button id="fitFiltered">聚焦結果</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="legend">
+        <span><i style="background:var(--road)"></i>一般道路：金色</span>
+        <span><i style="background:var(--rail)"></i>鐵路：紅色虛線</span>
+      </div>
+    </div>
+
+    <div class="card" id="info">
+      <div class="name">尚未選取城鎮</div>
+      <div>點擊地圖上的城鎮查看統治者、陣營、城鎮類型，以及一般道路 / 鐵路連線。</div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="toolbar">
+      <button id="fitAll">Fit All</button>
+      <button id="focusAsia">Focus Asia</button>
+      <button id="exportView">Export View</button>
+    </div>
+    <div id="map"></div>
+  </main>
+</div>

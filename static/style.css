@@ -145,12 +145,44 @@ body {
   z-index: 2;
 }
 
-#strategicMapFrame {
-  width: 100%;
-  height: 100%;
-  border: none;
-  background: #0A0D12;
+#strategicMapRoot {
+  flex: 1;
+  min-height: 0;
   position: relative;
   z-index: 3;
-  display: block;
+  display: flex;
+  overflow: hidden;
+  background: #0A0D12;
+}
+
+#strategicMapRoot #app {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  width: 100%;
+  height: 100%;
+}
+
+#strategicMapRoot aside {
+  background: linear-gradient(180deg,#11182b,#0d1426);
+  border-right: 1px solid #26314f;
+  padding: 16px;
+  overflow: auto;
+}
+
+#strategicMapRoot main {
+  position: relative;
+}
+
+#strategicMapRoot #map {
+  position: absolute;
+  inset: 0;
+}
+
+#strategicMapRoot .toolbar {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  display: flex;
+  gap: 8px;
+  z-index: 800;
 }
