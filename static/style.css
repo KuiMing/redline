@@ -154,7 +154,7 @@ body {
   z-index: 3;
   display: flex;
   overflow: hidden;
-  background: #0A0D12;
+  background: #d7dee8;
 }
 
 #strategicMapRoot #app {
@@ -185,6 +185,7 @@ body {
   inset: 0;
   width: 100%;
   height: 100%;
+  background: #d7dee8;
 }
 
 #strategicMapRoot .toolbar {
@@ -194,4 +195,19 @@ body {
   display: flex;
   gap: 8px;
   z-index: 800;
+}
+
+#strategicMapRoot .leaflet-container {
+  background: #d7dee8;
+}
+
+#strategicMapRoot .leaflet-tile-pane {
+  filter: saturate(0.85) brightness(1.03) contrast(1.02);
+}
+
+#strategicMapRoot .leaflet-tooltip.town-label {
+  background: rgba(255,255,255,0.92);
+  color: #111827;
+  border: 1px solid rgba(37, 99, 235, 0.25);
+  font-weight: 600;
 }

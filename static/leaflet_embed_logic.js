@@ -51,7 +51,7 @@ function initEmbeddedMap() {
     zoomAnimation: false,
     markerZoomAnimation: false,
   });
-  cartoLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  cartoLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
     maxZoom:19,
     noWrap:true,
     updateWhenIdle:false,
@@ -59,7 +59,7 @@ function initEmbeddedMap() {
     keepBuffer:4,
     attribution:'&copy; OpenStreetMap contributors &copy; CARTO'
   });
-  cartoDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  cartoDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
     maxZoom:19,
     noWrap:true,
     updateWhenIdle:false,
@@ -194,13 +194,13 @@ function renderMovementHighlights(townName) {
   let highlightCount = 0;
 
   roadLayer.eachLayer(layer => {
-    if (layer.setStyle) layer.setStyle({ color:'#d8a04a', opacity:0.12, weight:Math.max(1.5, roadWeight(map.getZoom()) - 1) });
+    if (layer.setStyle) layer.setStyle({ color:'#b7791f', opacity:0.08, weight:Math.max(1.5, roadWeight(map.getZoom()) - 1) });
   });
   railLayer.eachLayer(layer => {
-    if (layer.setStyle) layer.setStyle({ color:'#ef4444', opacity:0.15, weight:Math.max(2, railWeight(map.getZoom()) - 1), dashArray: railDashArray(map.getZoom()) });
+    if (layer.setStyle) layer.setStyle({ color:'#2563eb', opacity:0.10, weight:Math.max(2, railWeight(map.getZoom()) - 1), dashArray: railDashArray(map.getZoom()) });
   });
   markerLayer.eachLayer(layer => {
-    if (layer.setStyle) layer.setStyle({ opacity:1, fillOpacity:0.25, weight: markerStroke(map.getZoom()) });
+    if (layer.setStyle) layer.setStyle({ opacity:1, fillOpacity:0.12, weight: markerStroke(map.getZoom()) });
   });
 
   for (const toName of opts.road) {
@@ -239,10 +239,10 @@ function renderMovementHighlights(townName) {
 function updateDynamicStyles() {
   const z = map.getZoom();
   roadLayer.eachLayer(layer => {
-    if (layer.setStyle) layer.setStyle({ weight: roadWeight(z), opacity: 0.82 });
+    if (layer.setStyle) layer.setStyle({ color:'#b7791f', weight: roadWeight(z), opacity: 0.72 });
   });
   railLayer.eachLayer(layer => {
-    if (layer.setStyle) layer.setStyle({ color: '#ef4444', weight: railWeight(z), opacity: 0.9, dashArray: railDashArray(z), lineCap: 'round' });
+    if (layer.setStyle) layer.setStyle({ color: '#2563eb', weight: railWeight(z), opacity: 0.95, dashArray: railDashArray(z), lineCap: 'round' });
   });
   markerLayer.eachLayer(layer => {
     if (layer.setRadius) layer.setRadius(markerRadius(z));
