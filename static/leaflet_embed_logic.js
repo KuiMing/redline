@@ -367,8 +367,14 @@ window.addEventListener('redline-map-mounted', () => {
   renderMap();
   setTimeout(() => {
     if (map) {
-      map.invalidateSize();
+      map.invalidateSize(true);
       fitAll();
+      requestAnimationFrame(() => map.invalidateSize(true));
+      setTimeout(() => map.invalidateSize(true), 300);
+      setTimeout(() => {
+        map.invalidateSize(true);
+        fitAll();
+      }, 800);
     }
   }, 100);
 });
