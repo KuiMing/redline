@@ -323,28 +323,28 @@ function renderMovementHighlights(townName) {
     if (!target) continue;
     L.polyline([[origin.lat, origin.lon], [target.lat, target.lon]], {
       color: '#ffd166',
-      weight: 4,
-      opacity: 0.95
+      weight: 6,
+      opacity: 1
     }).addTo(highlightLayer);
     highlightCount += 1;
 
     const marker = currentMarkers.get(toName);
-    if (marker) marker.setStyle({ color: '#ffd166', weight: 4, fillOpacity: 0.95, radius: Math.max(9, markerRadius(map.getZoom()) + 1) });
+    if (marker) marker.setStyle({ color: '#ffd166', weight: 5, fillOpacity: 1, radius: Math.max(10, markerRadius(map.getZoom()) + 2) });
   }
 
   for (const toName of opts.rail) {
     const target = byName.get(toName);
     if (!target) continue;
     L.polyline([[origin.lat, origin.lon], [target.lat, target.lon]], {
-      color: '#7dd3fc',
-      weight: 5,
-      opacity: 0.95,
-      dashArray: '10 6'
+      color: '#67e8f9',
+      weight: 7,
+      opacity: 1,
+      dashArray: '14 8'
     }).addTo(highlightLayer);
     highlightCount += 1;
 
     const marker = currentMarkers.get(toName);
-    if (marker) marker.setStyle({ color: '#7dd3fc', weight: 4, fillOpacity: 0.98, radius: Math.max(9, markerRadius(map.getZoom()) + 1) });
+    if (marker) marker.setStyle({ color: '#67e8f9', weight: 5, fillOpacity: 1, radius: Math.max(10, markerRadius(map.getZoom()) + 2) });
   }
 
   focusSelectedTown(townName);
@@ -355,10 +355,10 @@ function renderMovementHighlights(townName) {
 function updateDynamicStyles() {
   const z = map.getZoom();
   roadLayer.eachLayer(layer => {
-    if (layer.setStyle) layer.setStyle({ color:'#c6923b', weight: roadWeight(z), opacity: 0.86 });
+    if (layer.setStyle) layer.setStyle({ color:'#7a6030', weight: roadWeight(z), opacity: 0.24 });
   });
   railLayer.eachLayer(layer => {
-    if (layer.setStyle) layer.setStyle({ color: '#7dd3fc', weight: railWeight(z), opacity: 0.95, dashArray: railDashArray(z), lineCap: 'round' });
+    if (layer.setStyle) layer.setStyle({ color: '#42667a', weight: railWeight(z), opacity: 0.28, dashArray: railDashArray(z), lineCap: 'round' });
   });
   markerLayer.eachLayer(layer => {
     if (layer.setRadius) layer.setRadius(markerRadius(z));
@@ -382,8 +382,8 @@ function renderMap() {
     const a = byName.get(link.source), b = byName.get(link.target);
     const latlngs = [[a.lat, a.lon], [b.lat, b.lon]];
     const style = link.type === 'road'
-      ? { color:'#d8a04a', weight:roadWeight(), opacity:0.82 }
-      : { color:'#ef4444', weight:railWeight(), opacity:0.9, dashArray: railDashArray(), lineCap:'round' };
+      ? { color:'#7a6030', weight:roadWeight(), opacity:0.24 }
+      : { color:'#42667a', weight:railWeight(), opacity:0.28, dashArray: railDashArray(), lineCap:'round' };
     const poly = L.polyline(latlngs, style).bindPopup(`${link.type.toUpperCase()}：${link.source} ↔ ${link.target}`);
     if (link.type === 'road' && showRoad) poly.addTo(roadLayer);
     if (link.type === 'rail' && showRail) poly.addTo(railLayer);
