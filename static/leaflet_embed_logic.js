@@ -42,9 +42,31 @@ let currentBasemap = 'cartoLight';
 
 function initEmbeddedMap() {
   if (map || !document.getElementById('map')) return;
-  map = L.map('map', { preferCanvas:false, worldCopyJump:false, renderer: L.svg() });
-  cartoLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom:19, attribution:'&copy; OpenStreetMap contributors &copy; CARTO' });
-  cartoDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom:19, attribution:'&copy; OpenStreetMap contributors &copy; CARTO' });
+  map = L.map('map', {
+    preferCanvas:false,
+    worldCopyJump:false,
+    renderer: L.svg(),
+    zoomControl: true,
+    fadeAnimation: false,
+    zoomAnimation: false,
+    markerZoomAnimation: false,
+  });
+  cartoLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    maxZoom:19,
+    noWrap:true,
+    updateWhenIdle:false,
+    updateWhenZooming:true,
+    keepBuffer:4,
+    attribution:'&copy; OpenStreetMap contributors &copy; CARTO'
+  });
+  cartoDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    maxZoom:19,
+    noWrap:true,
+    updateWhenIdle:false,
+    updateWhenZooming:true,
+    keepBuffer:4,
+    attribution:'&copy; OpenStreetMap contributors &copy; CARTO'
+  });
   cartoLight.addTo(map);
   roadLayer = L.layerGroup().addTo(map);
   railLayer = L.layerGroup().addTo(map);
@@ -288,7 +310,7 @@ function fitAll() {
 }
 
 function focusAsia() {
-  map.fitBounds([[-5, 68], [55, 145]], { padding:[20,20] });
+  map.setView([35, 110], 4, { animate: false });
 }
 
 function focusSelectedTown(townName) {
@@ -434,13 +456,19 @@ window.initializeStrategicMapWhenVisible = function () {
   setTimeout(() => {
     if (map) {
       map.invalidateSize(true);
-      fitAll();
-      requestAnimationFrame(() => map.invalidateSize(true));
-      setTimeout(() => map.invalidateSize(true), 300);
+      map.setView([35, 110], 3, { animate: false });
+      requestAnimationFrame(() => {
+        map.invalidateSize(true);
+        map.setView([35, 110], 3, { animate: false });
+      });
       setTimeout(() => {
         map.invalidateSize(true);
-        fitAll();
-      }, 800);
+        focusAsia();
+      }, 300);
+      setTimeout(() => {
+        map.invalidateSize(true);
+        focusAsia();
+      }, 1200);
     }
   }, 100);
 };
