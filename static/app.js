@@ -11,10 +11,17 @@ function initTabs() {
   tabs.forEach(tab => {
     if (tab.dataset.bound === '1') return;
     tab.dataset.bound = '1';
-    tab.addEventListener('click', () => {
+    tab.addEventListener('click', async () => {
       const view = tab.dataset.view;
       tabs.forEach(t => t.classList.toggle('active', t === tab));
       views.forEach(v => v.classList.toggle('active', v.id === `${view}View`));
+
+      if (view === 'map') {
+        await ensureStrategicMapMounted();
+        if (window.initializeStrategicMapWhenVisible) {
+          window.initializeStrategicMapWhenVisible();
+        }
+      }
     });
   });
 }
@@ -86,7 +93,6 @@ function connect() {
   if (shell) shell.style.display = 'block';
 
   initTabs();
-  ensureStrategicMapMounted();
 }
 
 function sendAction(action, payload = {}) {

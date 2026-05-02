@@ -334,37 +334,46 @@ function applyGameStateToMap(state) {
 
 window.applyGameStateToMap = applyGameStateToMap;
 
-window.addEventListener('redline-map-mounted', () => {
-  addOptions('rulerFilter', rulers);
-  addOptions('campFilter', camps);
-  addOptions('typeFilter', types);
+window.initializeStrategicMapWhenVisible = function () {
+  if (!document.getElementById('map')) return;
 
-  ['searchBox','rulerFilter','campFilter','typeFilter'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener('input', () => renderMap());
-  });
+  if (!window.__redlineMapControlsBound) {
+    window.__redlineMapControlsBound = true;
 
-  const resetBtn = document.getElementById('resetFilter');
-  if (resetBtn) {
-    resetBtn.addEventListener('click', () => {
-      ['searchBox','rulerFilter','campFilter','typeFilter'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = '';
-      });
-      renderMap();
+    addOptions('rulerFilter', rulers);
+    addOptions('campFilter', camps);
+    addOptions('typeFilter', types);
+
+    ['searchBox','rulerFilter','campFilter','typeFilter'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', () => renderMap());
     });
+
+    const resetBtn = document.getElementById('resetFilter');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        ['searchBox','rulerFilter','campFilter','typeFilter'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.value = '';
+        });
+        renderMap();
+      });
+    }
+
+    const fitFilteredBtn = document.getElementById('fitFiltered');
+    if (fitFilteredBtn) fitFilteredBtn.addEventListener('click', fitVisible);
+    const fitAllBtn = document.getElementById('fitAll');
+    if (fitAllBtn) fitAllBtn.addEventListener('click', fitAll);
+    const focusAsiaBtn = document.getElementById('focusAsia');
+    if (focusAsiaBtn) focusAsiaBtn.addEventListener('click', focusAsia);
   }
 
-  const fitFilteredBtn = document.getElementById('fitFiltered');
-  if (fitFilteredBtn) fitFilteredBtn.addEventListener('click', fitVisible);
-  const fitAllBtn = document.getElementById('fitAll');
-  if (fitAllBtn) fitAllBtn.addEventListener('click', fitAll);
-  const focusAsiaBtn = document.getElementById('focusAsia');
-  if (focusAsiaBtn) focusAsiaBtn.addEventListener('click', focusAsia);
+  if (!map) {
+    initEmbeddedMap();
+    bindMapEvents();
+    renderMap();
+  }
 
-  initEmbeddedMap();
-  bindMapEvents();
-  renderMap();
   setTimeout(() => {
     if (map) {
       map.invalidateSize(true);
@@ -377,4 +386,4 @@ window.addEventListener('redline-map-mounted', () => {
       }, 800);
     }
   }, 100);
-});
+};
