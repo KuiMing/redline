@@ -137,10 +137,10 @@ const links = [...linkMap.values()];
 const map = L.map('map', { preferCanvas:true, worldCopyJump:false });
 // Avoid direct use of tile.openstreetmap.org here: local HTML files may be blocked by OSM's tile usage policy
 // when Referer is missing. CARTO tiles use OSM data but are more suitable for this standalone viewer.
-const cartoLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom:19, attribution:'&copy; OpenStreetMap contributors &copy; CARTO' });
-const cartoDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom:19, attribution:'&copy; OpenStreetMap contributors &copy; CARTO' });
-cartoLight.addTo(map);
-let currentBasemap = 'cartoLight';
+const cartoLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', { maxZoom:19, attribution:'&copy; OpenStreetMap contributors &copy; CARTO' });
+const cartoDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', { maxZoom:19, attribution:'&copy; OpenStreetMap contributors &copy; CARTO' });
+cartoDark.addTo(map);
+let currentBasemap = 'cartoDark';
 
 const roadLayer = L.layerGroup().addTo(map);
 const railLayer = L.layerGroup().addTo(map);
@@ -243,21 +243,33 @@ function movementOptionsForTown(townName) {
 function renderMovementHighlights(townName) {
   highlightLayer.clearLayers();
   selectedTown = townName;
-  if (!townName) return;
+  if (!townName) return false;
 
   const opts = movementOptionsForTown(townName);
   const origin = byName.get(townName);
-  if (!origin) return;
+  if (!origin) return false;
 
   const originMarker = currentMarkers.get(townName);
   if (originMarker) {
     const selectable = playerOwnsTown(townName);
-    originMarker.setStyle({ color: selectable ? '#ffffff' : '#64748b', weight: 3 });
+    originMarker.setStyle({ color: selectable ? '#ffffff' : '#64748b', weight: 4, fillOpacity: 1, radius: Math.max(10, markerRadius(map.getZoom()) + 2) });
   }
 
   if (!playerOwnsTown(townName)) {
-    return;
+    return false;
   }
+
+  let highlightCount = 0;
+
+  roadLayer.eachLayer(layer => {
+    if (layer.setStyle) layer.setStyle({ color:'#d8a04a', opacity:0.12, weight:Math.max(1.5, roadWeight(map.getZoom()) - 1) });
+  });
+  railLayer.eachLayer(layer => {
+    if (layer.setStyle) layer.setStyle({ color:'#ef4444', opacity:0.15, weight:Math.max(2, railWeight(map.getZoom()) - 1), dashArray: railDashArray(map.getZoom()) });
+  });
+  markerLayer.eachLayer(layer => {
+    if (layer.setStyle) layer.setStyle({ opacity:1, fillOpacity:0.12, weight: markerStroke(map.getZoom()) });
+  });
 
   for (const toName of opts.road) {
     const target = byName.get(toName);
@@ -267,9 +279,10 @@ function renderMovementHighlights(townName) {
       weight: 4,
       opacity: 0.95
     }).addTo(highlightLayer);
+    highlightCount += 1;
 
     const marker = currentMarkers.get(toName);
-    if (marker) marker.setStyle({ color: '#ffd166', weight: 3 });
+    if (marker) marker.setStyle({ color: '#ffd166', weight: 4, fillOpacity: 0.95, radius: Math.max(9, markerRadius(map.getZoom()) + 1) });
   }
 
   for (const toName of opts.rail) {
@@ -281,19 +294,23 @@ function renderMovementHighlights(townName) {
       opacity: 0.95,
       dashArray: '10 6'
     }).addTo(highlightLayer);
+    highlightCount += 1;
 
     const marker = currentMarkers.get(toName);
-    if (marker) marker.setStyle({ color: '#7dd3fc', weight: 3 });
+    if (marker) marker.setStyle({ color: '#7dd3fc', weight: 4, fillOpacity: 0.98, radius: Math.max(9, markerRadius(map.getZoom()) + 1) });
   }
+
+  focusSelectedTown(townName);
+  return highlightCount > 0;
 }
 
 function updateDynamicStyles() {
   const z = map.getZoom();
   roadLayer.eachLayer(layer => {
-    if (layer.setStyle) layer.setStyle({ weight: roadWeight(z), opacity: 0.82 });
+    if (layer.setStyle) layer.setStyle({ color:'#c6923b', weight: roadWeight(z), opacity: 0.86 });
   });
   railLayer.eachLayer(layer => {
-    if (layer.setStyle) layer.setStyle({ color: '#ef4444', weight: railWeight(z), opacity: 0.9, dashArray: railDashArray(z), lineCap: 'round' });
+    if (layer.setStyle) layer.setStyle({ color: '#7dd3fc', weight: railWeight(z), opacity: 0.95, dashArray: railDashArray(z), lineCap: 'round' });
   });
   markerLayer.eachLayer(layer => {
     if (layer.setRadius) layer.setRadius(markerRadius(z));
@@ -334,7 +351,9 @@ function renderMap() {
       updateInfoPanel(t.name);
       renderMap();
       applyGameStateToMap(lastGameState);
-      renderMovementHighlights(t.name);
+      const didHighlight = renderMovementHighlights(t.name);
+      window.__lastSelectedTown = t.name;
+      window.__lastHighlightSuccess = didHighlight;
     });
     currentMarkers.set(t.name, marker);
     if (shouldShowLabels()) marker.bindTooltip(t.name, { permanent:true, direction:'top', className:'town-label', offset:[0, -(markerRadius() + 4)] });
@@ -354,11 +373,31 @@ function fitVisible() {
 
 function fitAll() {
   const pts = towns.map(t => [t.lat, t.lon]);
+  if (!pts.length) return;
   map.fitBounds(pts, { padding:[30,30] });
 }
 
 function focusAsia() {
   map.fitBounds([[-5, 68], [55, 145]], { padding:[20,20] });
+}
+
+function focusSelectedTown(townName) {
+  const origin = byName.get(townName);
+  if (!origin || !map) return;
+
+  const options = movementOptionsForTown(townName);
+  const pts = [[origin.lat, origin.lon]];
+  [...options.road, ...options.rail].forEach(name => {
+    const t = byName.get(name);
+    if (t) pts.push([t.lat, t.lon]);
+  });
+
+  if (pts.length <= 1) {
+    map.setView([origin.lat, origin.lon], 6, { animate: false });
+    return;
+  }
+
+  map.fitBounds(pts, { padding:[80,80], maxZoom: 6 });
 }
 
 ['searchBox','rulerFilter','campFilter','typeFilter'].forEach(id =>
@@ -453,6 +492,25 @@ window.connectGameMap = function ({ gameId: gid, playerId: pid }) {
   };
 
   return { ok: true };
+};
+
+window.__selectTownForTest = function (townName) {
+  const marker = currentMarkers.get(townName);
+  if (!marker) return { ok: false, reason: 'marker-not-found' };
+  updateInfoPanel(townName);
+  renderMap();
+  applyGameStateToMap(lastGameState);
+  const didHighlight = renderMovementHighlights(townName);
+  window.__lastSelectedTown = townName;
+  window.__lastHighlightSuccess = didHighlight;
+  return {
+    ok: true,
+    town: townName,
+    highlighted: didHighlight,
+    road: movementOptionsForTown(townName).road.length,
+    rail: movementOptionsForTown(townName).rail.length,
+    owns: playerOwnsTown(townName)
+  };
 };
 
 renderMap();
