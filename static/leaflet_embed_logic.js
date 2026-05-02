@@ -162,7 +162,7 @@ function renderMovementHighlights(townName) {
   const originMarker = currentMarkers.get(townName);
   if (originMarker) {
     const selectable = playerOwnsTown(townName);
-    originMarker.setStyle({ color: selectable ? '#ffffff' : '#64748b', weight: 3 });
+    originMarker.setStyle({ color: selectable ? '#ffffff' : '#64748b', weight: 4, fillOpacity: 1, radius: Math.max(10, markerRadius(map.getZoom()) + 2) });
   }
 
   if (!playerOwnsTown(townName)) {
@@ -170,6 +170,16 @@ function renderMovementHighlights(townName) {
   }
 
   let highlightCount = 0;
+
+  roadLayer.eachLayer(layer => {
+    if (layer.setStyle) layer.setStyle({ color:'#d8a04a', opacity:0.12, weight:Math.max(1.5, roadWeight(map.getZoom()) - 1) });
+  });
+  railLayer.eachLayer(layer => {
+    if (layer.setStyle) layer.setStyle({ color:'#ef4444', opacity:0.15, weight:Math.max(2, railWeight(map.getZoom()) - 1), dashArray: railDashArray(map.getZoom()) });
+  });
+  markerLayer.eachLayer(layer => {
+    if (layer.setStyle) layer.setStyle({ opacity:1, fillOpacity:0.25, weight: markerStroke(map.getZoom()) });
+  });
 
   for (const toName of opts.road) {
     const target = byName.get(toName);
@@ -182,7 +192,7 @@ function renderMovementHighlights(townName) {
     highlightCount += 1;
 
     const marker = currentMarkers.get(toName);
-    if (marker) marker.setStyle({ color: '#ffd166', weight: 3 });
+    if (marker) marker.setStyle({ color: '#ffd166', weight: 4, fillOpacity: 0.95, radius: Math.max(9, markerRadius(map.getZoom()) + 1) });
   }
 
   for (const toName of opts.rail) {
@@ -197,9 +207,10 @@ function renderMovementHighlights(townName) {
     highlightCount += 1;
 
     const marker = currentMarkers.get(toName);
-    if (marker) marker.setStyle({ color: '#7dd3fc', weight: 3 });
+    if (marker) marker.setStyle({ color: '#7dd3fc', weight: 4, fillOpacity: 0.98, radius: Math.max(9, markerRadius(map.getZoom()) + 1) });
   }
 
+  focusSelectedTown(townName);
   return highlightCount > 0;
 }
 
@@ -272,11 +283,31 @@ function fitVisible() {
 
 function fitAll() {
   const pts = towns.map(t => [t.lat, t.lon]);
+  if (!pts.length) return;
   map.fitBounds(pts, { padding:[30,30] });
 }
 
 function focusAsia() {
   map.fitBounds([[-5, 68], [55, 145]], { padding:[20,20] });
+}
+
+function focusSelectedTown(townName) {
+  const origin = byName.get(townName);
+  if (!origin || !map) return;
+
+  const options = movementOptionsForTown(townName);
+  const pts = [[origin.lat, origin.lon]];
+  [...options.road, ...options.rail].forEach(name => {
+    const t = byName.get(name);
+    if (t) pts.push([t.lat, t.lon]);
+  });
+
+  if (pts.length <= 1) {
+    map.setView([origin.lat, origin.lon], 6, { animate: false });
+    return;
+  }
+
+  map.fitBounds(pts, { padding:[80,80], maxZoom: 6 });
 }
 
 function bindMapEvents() {
