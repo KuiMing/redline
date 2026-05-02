@@ -173,6 +173,7 @@ let lastGameState = null;
 let selectedTown = null;
 let selectedMoveTargets = [];
 let pendingMove = null;
+let lastResolvedMove = null;
 
 function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 function zoomProgress(z = map.getZoom()) { return clamp((z - 2) / 6, 0, 1); }
@@ -239,6 +240,15 @@ function resetMoveSelection() {
   pendingMove = null;
 }
 
+function finalizeMoveSelection(fromTown, toTown) {
+  lastResolvedMove = { from: fromTown, to: toTown };
+  selectedTown = toTown;
+  updateInfoPanel(toTown);
+  renderMap();
+  applyGameStateToMap(lastGameState);
+  renderMovementHighlights(toTown);
+}
+
 function updateStatusPanel() {
   const currentPlayerEl = document.getElementById('statusCurrentPlayer');
   const selectedTownEl = document.getElementById('statusSelectedTown');
@@ -257,6 +267,8 @@ function updateStatusPanel() {
       hintEl.innerHTML = pendingMove.error
         ? `移動失敗：<span class="hint-strong">${pendingMove.error}</span>`
         : `正在移動 <span class="hint-strong">${pendingMove.from}</span> → <span class="hint-strong">${pendingMove.to}</span>（${pendingMove.mode}）`; 
+    } else if (lastResolvedMove) {
+      hintEl.innerHTML = `已完成移動：<span class="hint-strong">${lastResolvedMove.from}</span> → <span class="hint-strong">${lastResolvedMove.to}</span>`;
     } else if (!selectedTown) {
       hintEl.innerHTML = '連上遊戲後，只有 <span class="hint-strong">當前玩家自己擁有組織</span> 的城鎮可以高亮合法移動。';
     } else if (playerOwnsTown(selectedTown)) {
@@ -347,6 +359,7 @@ function renderMovementHighlights(townName) {
   highlightLayer.clearLayers();
   selectedTown = townName;
   selectedMoveTargets = [];
+  lastResolvedMove = null;
   updateStatusPanel();
   if (!townName) return false;
 
@@ -424,6 +437,7 @@ function sendMoveAction(fromTown, toTown, mode) {
     return { ok: false, reason: 'socket-not-open' };
   }
 
+  lastResolvedMove = null;
   pendingMove = { from: fromTown, to: toTown, mode };
   updateStatusPanel();
   ws.send(JSON.stringify({ action: 'move', from: fromTown, to: toTown, mode }));
@@ -554,8 +568,9 @@ map.on('popupopen', e => {
 });
 
 function applyGameStateToMap(state) {
+  const resolvingMove = pendingMove && !state?.error ? { ...pendingMove } : null;
   lastGameState = state;
-  if (pendingMove && !state?.error) {
+  if (resolvingMove) {
     pendingMove = null;
   }
   updateStatusPanel();
@@ -587,6 +602,11 @@ function applyGameStateToMap(state) {
       }
     }
   });
+
+  if (resolvingMove) {
+    finalizeMoveSelection(resolvingMove.from, resolvingMove.to);
+    return;
+  }
 
   if (selectedTown) {
     renderMovementHighlights(selectedTown);
