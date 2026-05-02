@@ -206,15 +206,29 @@ function townMatches(t, f=filters()) {
          (!f.type || t.type === f.type);
 }
 
+function townStateEntries(name) {
+  return (lastGameState && lastGameState.map && lastGameState.map.towns && lastGameState.map.towns[name]) || [];
+}
+
+function totalOrganizationsInTown(name) {
+  return townStateEntries(name).reduce((sum, item) => sum + (item.count || 0), 0);
+}
+
 function popupHtml(t) {
   const roads = (t.road||[]).map(n=>`<span class="pill">${n}</span>`).join(' ') || '無';
   const rails = (t.rail||[]).map(n=>`<span class="pill">${n}</span>`).join(' ') || '無';
+  const entries = townStateEntries(t.name);
+  const total = totalOrganizationsInTown(t.name);
+  const controller = entries.length ? entries.slice().sort((a,b)=>(b.count||0)-(a.count||0))[0].player : null;
   return `
     <div class="name">${t.name}</div>
     <div>座標：<code>${t.lon.toFixed(3)}, ${t.lat.toFixed(3)}</code></div>
-    <div>統治者：${(t.ruler||[]).map(x=>`<span class="pill">${x}</span>`).join(' ') || '無'}</div>
+    <div>靜態統治者：${(t.ruler||[]).map(x=>`<span class="pill">${x}</span>`).join(' ') || '無'}</div>
     <div>陣營：${(t.camp||[]).map(x=>`<span class="pill">${x}</span>`).join(' ') || '無'}</div>
     <div>城鎮類型：${t.type ? `<span class="pill">${t.type}</span>` : '一般城鎮'}</div>
+    <hr style="border-color:#2b385d;border-style:solid;border-width:1px 0 0;margin:10px 0;">
+    <div>當前控制者：${controller ? `<span class="pill">${controller}</span>` : '無組織'}</div>
+    <div>當前組織總數：<span class="pill">${total}</span></div>
     <hr style="border-color:#2b385d;border-style:solid;border-width:1px 0 0;margin:10px 0;">
     <div>一般道路：${roads}</div>
     <div>鐵路：${rails}</div>`;
@@ -257,7 +271,9 @@ function updateStatusPanel() {
 function updateInfoPanel(name) {
   const t = byName.get(name);
   if (!t) return;
-  document.getElementById('info').innerHTML = popupHtml(t);
+  const total = totalOrganizationsInTown(name);
+  const stateBadge = total > 0 ? `有組織（${total}）` : '無組織';
+  document.getElementById('info').innerHTML = `${popupHtml(t)}<hr style="border-color:#2b385d;border-style:solid;border-width:1px 0 0;margin:10px 0;"><div>視覺狀態：<span class="pill">${stateBadge}</span></div>`;
 }
 
 function shouldShowLabels() {
@@ -270,6 +286,37 @@ function clearLayers() {
   markerLayer.clearLayers();
   highlightLayer.clearLayers();
   currentMarkers = new Map();
+}
+
+function markerStyleForTown(name, zoom = map.getZoom()) {
+  const total = totalOrganizationsInTown(name);
+  const ownedByCurrent = playerOwnsTown(name);
+  const base = {
+    radius: markerRadius(zoom),
+    color: '#07111f',
+    weight: markerStroke(zoom),
+    fillColor: '#6b7280',
+    fillOpacity: 0.32,
+    opacity: 0.72,
+  };
+
+  if (total <= 0) {
+    return base;
+  }
+
+  const entries = townStateEntries(name);
+  const leader = entries.slice().sort((a, b) => (b.count || 0) - (a.count || 0))[0];
+  const player = (lastGameState?.players || []).find(p => p.name === leader?.player);
+  const controlColor = player?.faction ? (palette[player.faction] || '#cbd5e1') : '#cbd5e1';
+
+  return {
+    radius: Math.max(base.radius + 2, 8),
+    color: ownedByCurrent ? '#f8fafc' : '#cbd5e1',
+    weight: ownedByCurrent ? Math.max(base.weight + 1.5, 3) : Math.max(base.weight + 0.5, 2),
+    fillColor: controlColor,
+    fillOpacity: ownedByCurrent ? 0.98 : 0.88,
+    opacity: 1,
+  };
 }
 
 function currentPlayerName() {
@@ -392,8 +439,10 @@ function updateDynamicStyles() {
     if (layer.setStyle) layer.setStyle({ color: '#42667a', weight: railWeight(z), opacity: 0.28, dashArray: railDashArray(z), lineCap: 'round' });
   });
   markerLayer.eachLayer(layer => {
-    if (layer.setRadius) layer.setRadius(markerRadius(z));
-    if (layer.setStyle) layer.setStyle({ weight: markerStroke(z) });
+    const name = [...currentMarkers.entries()].find(([town, marker]) => marker === layer)?.[0];
+    if (name && layer.setStyle) {
+      layer.setStyle(markerStyleForTown(name, z));
+    }
     if (layer.getTooltip && layer.getTooltip()) {
       layer.getTooltip().options.offset = [0, -(markerRadius(z) + 4)];
     }
@@ -421,11 +470,7 @@ function renderMap() {
   }
 
   visibleTowns.forEach(t => {
-    const marker = L.circleMarker([t.lat, t.lon], {
-      radius: markerRadius(),
-      color:'#07111f', weight:markerStroke(),
-      fillColor: colorFor(t), fillOpacity:0.95
-    }).addTo(markerLayer);
+    const marker = L.circleMarker([t.lat, t.lon], markerStyleForTown(t.name)).addTo(markerLayer);
     marker.bindPopup(popupHtml(t), { maxWidth:380 });
     marker.on('click', () => {
       const moveOption = moveOptionForTown(t.name);
@@ -444,7 +489,9 @@ function renderMap() {
       window.__lastHighlightSuccess = didHighlight;
     });
     currentMarkers.set(t.name, marker);
-    if (shouldShowLabels()) marker.bindTooltip(t.name, { permanent:true, direction:'top', className:'town-label', offset:[0, -(markerRadius() + 4)] });
+    const total = totalOrganizationsInTown(t.name);
+    const labelText = total > 0 ? `${t.name} ${total}` : t.name;
+    if (shouldShowLabels()) marker.bindTooltip(labelText, { permanent:true, direction:'top', className:'town-label', offset:[0, -(markerRadius() + 4)] });
   });
 
   updateDynamicStyles();
@@ -527,36 +574,16 @@ function applyGameStateToMap(state) {
     const name = [...currentMarkers.entries()].find(([town, marker]) => marker === layer)?.[0];
     if (!name) return;
 
-    const townState = state.map.towns[name] || [];
-    if (!townState.length) {
-      layer.setStyle({ fillColor: '#cbd5e1', fillOpacity: 0.95 });
-      const t = byName.get(name);
-      if (t) {
-        layer.bindPopup(popupHtml(t), { maxWidth: 380 });
-      }
-      return;
+    if (layer.setStyle) {
+      layer.setStyle(markerStyleForTown(name));
     }
-
-    const sorted = [...townState].sort((a, b) => b.count - a.count);
-    const leader = sorted[0];
-    const total = sorted.reduce((sum, item) => sum + (item.count || 0), 0);
-
-    let color = '#cbd5e1';
-    const player = (state.players || []).find(p => p.name === leader.player);
-    if (player && player.faction) {
-      color = palette[player.faction] || color;
-    }
-
-    layer.setStyle({ fillColor: color, fillOpacity: 0.98 });
 
     const baseTown = byName.get(name);
     if (baseTown) {
-      const extra = `<hr style="border-color:#2b385d;border-style:solid;border-width:1px 0 0;margin:10px 0;">
-      <div>控制者：<span class="pill">${leader.player}</span></div>
-      <div>組織總數：<span class="pill">${total}</span></div>`;
-      layer.bindPopup(popupHtml(baseTown) + extra, { maxWidth: 380 });
+      layer.bindPopup(popupHtml(baseTown), { maxWidth: 380 });
       if (layer.getTooltip()) {
-        layer.setTooltipContent(`${name} (${total})`);
+        const total = totalOrganizationsInTown(name);
+        layer.setTooltipContent(total > 0 ? `${name} ${total}` : name);
       }
     }
   });
