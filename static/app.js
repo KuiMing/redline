@@ -78,9 +78,7 @@ function connect() {
   ws.onmessage = (event) => {
     const state = JSON.parse(event.data);
     render(state);
-    if (window.updateMap) {
-      updateMap(state);
-    }
+    syncStrategicMap(state);
   };
 
   document.getElementById('lobby').style.display = 'none';
@@ -93,6 +91,12 @@ function connect() {
 function sendAction(action, payload = {}) {
   if (!ws) return;
   ws.send(JSON.stringify({action, ...payload}));
+}
+
+function syncStrategicMap(state) {
+  const frame = document.getElementById('strategicMapFrame');
+  if (!frame || !frame.contentWindow) return;
+  frame.contentWindow.postMessage({ type: 'redline-state', state }, '*');
 }
 
 function render(state) {

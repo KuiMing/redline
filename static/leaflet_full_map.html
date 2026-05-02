@@ -145,9 +145,12 @@ let currentBasemap = 'cartoLight';
 const roadLayer = L.layerGroup().addTo(map);
 const railLayer = L.layerGroup().addTo(map);
 const markerLayer = L.layerGroup().addTo(map);
+const highlightLayer = L.layerGroup().addTo(map);
 let labelMode = 'auto', showRoad = true, showRail = true;
 let currentMarkers = new Map();
 let currentVisible = towns.map(t=>t.name);
+let lastGameState = null;
+let selectedTown = null;
 
 function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 function zoomProgress(z = map.getZoom()) { return clamp((z - 2) / 6, 0, 1); }
@@ -209,7 +212,79 @@ function clearLayers() {
   roadLayer.clearLayers();
   railLayer.clearLayers();
   markerLayer.clearLayers();
+  highlightLayer.clearLayers();
   currentMarkers = new Map();
+}
+
+function currentPlayerName() {
+  return lastGameState && lastGameState.current_player ? lastGameState.current_player : null;
+}
+
+function playerOwnsTown(townName) {
+  if (!lastGameState || !lastGameState.map || !lastGameState.map.towns) return false;
+  const entries = lastGameState.map.towns[townName] || [];
+  return entries.some(entry => entry.player === currentPlayerName() && (entry.count || 0) > 0);
+}
+
+function movementOptionsForTown(townName) {
+  if (!lastGameState || !townName) return { road: [], rail: [] };
+  const town = MAP_DATA.towns[townName];
+  if (!town) return { road: [], rail: [] };
+
+  // 第二版：只允許 current player 自己有組織的城鎮顯示可移動鄰接點
+  if (!playerOwnsTown(townName)) return { road: [], rail: [] };
+
+  return {
+    road: (town.road || []).filter(n => MAP_DATA.towns[n]),
+    rail: (town.rail || []).filter(n => MAP_DATA.towns[n])
+  };
+}
+
+function renderMovementHighlights(townName) {
+  highlightLayer.clearLayers();
+  selectedTown = townName;
+  if (!townName) return;
+
+  const opts = movementOptionsForTown(townName);
+  const origin = byName.get(townName);
+  if (!origin) return;
+
+  const originMarker = currentMarkers.get(townName);
+  if (originMarker) {
+    const selectable = playerOwnsTown(townName);
+    originMarker.setStyle({ color: selectable ? '#ffffff' : '#64748b', weight: 3 });
+  }
+
+  if (!playerOwnsTown(townName)) {
+    return;
+  }
+
+  for (const toName of opts.road) {
+    const target = byName.get(toName);
+    if (!target) continue;
+    L.polyline([[origin.lat, origin.lon], [target.lat, target.lon]], {
+      color: '#ffd166',
+      weight: 4,
+      opacity: 0.95
+    }).addTo(highlightLayer);
+
+    const marker = currentMarkers.get(toName);
+    if (marker) marker.setStyle({ color: '#ffd166', weight: 3 });
+  }
+
+  for (const toName of opts.rail) {
+    const target = byName.get(toName);
+    if (!target) continue;
+    L.polyline([[origin.lat, origin.lon], [target.lat, target.lon]], {
+      color: '#7dd3fc',
+      weight: 5,
+      opacity: 0.95,
+      dashArray: '10 6'
+    }).addTo(highlightLayer);
+
+    const marker = currentMarkers.get(toName);
+    if (marker) marker.setStyle({ color: '#7dd3fc', weight: 3 });
+  }
 }
 
 function updateDynamicStyles() {
@@ -255,12 +330,20 @@ function renderMap() {
       fillColor: colorFor(t), fillOpacity:0.95
     }).addTo(markerLayer);
     marker.bindPopup(popupHtml(t), { maxWidth:380 });
-    marker.on('click', () => updateInfoPanel(t.name));
+    marker.on('click', () => {
+      updateInfoPanel(t.name);
+      renderMap();
+      applyGameStateToMap(lastGameState);
+      renderMovementHighlights(t.name);
+    });
     currentMarkers.set(t.name, marker);
     if (shouldShowLabels()) marker.bindTooltip(t.name, { permanent:true, direction:'top', className:'town-label', offset:[0, -(markerRadius() + 4)] });
   });
 
   updateDynamicStyles();
+  if (selectedTown) {
+    renderMovementHighlights(selectedTown);
+  }
 }
 
 function fitVisible() {
@@ -294,6 +377,60 @@ map.on('zoomend', () => { if (labelMode === 'auto') renderMap(); else updateDyna
 map.on('popupopen', e => {
   const node = [...currentMarkers.entries()].find(([name, marker]) => marker === e.popup._source);
   if (node) updateInfoPanel(node[0]);
+});
+
+function applyGameStateToMap(state) {
+  lastGameState = state;
+  if (!state || !state.map || !state.map.towns) return;
+
+  highlightLayer.clearLayers();
+
+  markerLayer.eachLayer(layer => {
+    const name = [...currentMarkers.entries()].find(([town, marker]) => marker === layer)?.[0];
+    if (!name) return;
+
+    const townState = state.map.towns[name] || [];
+    if (!townState.length) {
+      layer.setStyle({ fillColor: '#cbd5e1', fillOpacity: 0.95 });
+      const t = byName.get(name);
+      if (t) {
+        layer.bindPopup(popupHtml(t), { maxWidth: 380 });
+      }
+      return;
+    }
+
+    const sorted = [...townState].sort((a, b) => b.count - a.count);
+    const leader = sorted[0];
+    const total = sorted.reduce((sum, item) => sum + (item.count || 0), 0);
+
+    let color = '#cbd5e1';
+    const player = (state.players || []).find(p => p.name === leader.player);
+    if (player && player.faction) {
+      color = palette[player.faction] || color;
+    }
+
+    layer.setStyle({ fillColor: color, fillOpacity: 0.98 });
+
+    const baseTown = byName.get(name);
+    if (baseTown) {
+      const extra = `<hr style="border-color:#2b385d;border-style:solid;border-width:1px 0 0;margin:10px 0;">
+      <div>控制者：<span class="pill">${leader.player}</span></div>
+      <div>組織總數：<span class="pill">${total}</span></div>`;
+      layer.bindPopup(popupHtml(baseTown) + extra, { maxWidth: 380 });
+      if (layer.getTooltip()) {
+        layer.setTooltipContent(`${name} (${total})`);
+      }
+    }
+  });
+
+  if (selectedTown) {
+    renderMovementHighlights(selectedTown);
+  }
+}
+
+window.addEventListener('message', (event) => {
+  if (!event.data || event.data.type !== 'redline-state') return;
+  applyGameStateToMap(event.data.state);
 });
 
 renderMap();
