@@ -47,7 +47,7 @@ class Player:
         self.organizations = {}
         self.base = None
         self.resources = {"money": 0, "propaganda": 0}
-        self.moves_left = 2
+        self.moves_left = 3
         self.hand = []
         self.deck = None
 
@@ -65,7 +65,7 @@ class Player:
 
     def reset_turn(self):
         self.resources = {"money": 0, "propaganda": 0}
-        self.moves_left = 2
+        self.moves_left = 3
 
 
 class Game:
@@ -237,6 +237,56 @@ class Game:
             self.game_phase = GamePhase.FINISHED
             self.winner = winner
 
+    def build_organization(self, town):
+        if self.turn_phase != TurnPhase.ACTION:
+            return {"error": "Not in ACTION phase"}
+
+        player = self.current_player()
+        if not town:
+            return {"error": "Town required"}
+        if town not in self.map.get("towns", {}):
+            return {"error": "Invalid town"}
+        if player.organizations.get(town, 0) <= 0:
+            return {"error": "No organization in town"}
+
+        player.organizations[town] = player.organizations.get(town, 0) + 1
+        self.log(f"{player.name} built organization in {town}")
+        return {"success": True}
+
+    def move_organization(self, from_town, to_town, mode="road"):
+        if self.turn_phase != TurnPhase.ACTION:
+            return {"error": "Not in ACTION phase"}
+
+        player = self.current_player()
+        if not from_town or not to_town:
+            return {"error": "Origin and destination required"}
+        if from_town == to_town:
+            return {"error": "Origin and destination must differ"}
+        if from_town not in self.map.get("towns", {}) or to_town not in self.map.get("towns", {}):
+            return {"error": "Invalid town"}
+        if player.organizations.get(from_town, 0) <= 0:
+            return {"error": "No organization in origin"}
+        if mode not in ("road", "rail"):
+            return {"error": "Invalid move mode"}
+
+        neighbors = self.map["towns"].get(from_town, {}).get(mode, []) or []
+        if to_town not in neighbors:
+            return {"error": f"No {mode} connection"}
+
+        cost_key = f"{mode}_cost"
+        cost = self.map.get("movement_rules", {}).get(cost_key, 1)
+        if player.moves_left < cost:
+            return {"error": "Not enough move points"}
+
+        player.organizations[from_town] -= 1
+        if player.organizations[from_town] <= 0:
+            del player.organizations[from_town]
+
+        player.organizations[to_town] = player.organizations.get(to_town, 0) + 1
+        player.moves_left -= cost
+        self.log(f"{player.name} moved 1 organization from {from_town} to {to_town} via {mode}")
+        return {"success": True}
+
     # ---------- Era Trigger ----------
 
     def _check_era_trigger(self):
@@ -315,6 +365,7 @@ class Game:
                     "name": p.name,
                     "faction": p.faction_id,
                     "resources": p.resources,
+                    "moves_left": p.moves_left,
                     "hand": [getattr(card, 'name', str(card)) for card in p.hand],
                     "orgs": p.organizations
                 }

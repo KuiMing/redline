@@ -116,20 +116,26 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
                 await websocket.send_json({"error": "Not your turn"})
                 continue
 
+            result = {"success": True}
+
             if action == "advance":
-                game.advance_turn_phase()
+                result = game.advance_turn_phase()
             elif action == "play_card":
-                game.play_card(data.get("index"))
+                result = game.play_card(data.get("index"))
             elif action == "buy_card":
-                game.buy_card(data.get("index"))
+                result = game.buy_card(data.get("index"))
             elif action == "build":
-                game.build_organization(data.get("town"))
+                result = game.build_organization(data.get("town"))
             elif action == "move":
-                game.move_organization(
+                result = game.move_organization(
                     data.get("from"),
                     data.get("to"),
                     data.get("mode", "road")
                 )
+
+            if result and result.get("error"):
+                await websocket.send_json({"error": result.get("error")})
+                continue
 
             # Broadcast updated state
             for pid, ws in manager.connections.get(game_id, {}).items():

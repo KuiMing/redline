@@ -171,6 +171,8 @@ let currentMarkers = new Map();
 let currentVisible = towns.map(t=>t.name);
 let lastGameState = null;
 let selectedTown = null;
+let selectedMoveTargets = [];
+let pendingMove = null;
 
 function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 function zoomProgress(z = map.getZoom()) { return clamp((z - 2) / 6, 0, 1); }
@@ -218,6 +220,11 @@ function popupHtml(t) {
     <div>鐵路：${rails}</div>`;
 }
 
+function resetMoveSelection() {
+  selectedMoveTargets = [];
+  pendingMove = null;
+}
+
 function updateStatusPanel() {
   const currentPlayerEl = document.getElementById('statusCurrentPlayer');
   const selectedTownEl = document.getElementById('statusSelectedTown');
@@ -232,11 +239,15 @@ function updateStatusPanel() {
   }
 
   if (hintEl) {
-    if (!selectedTown) {
+    if (pendingMove) {
+      hintEl.innerHTML = pendingMove.error
+        ? `移動失敗：<span class="hint-strong">${pendingMove.error}</span>`
+        : `正在移動 <span class="hint-strong">${pendingMove.from}</span> → <span class="hint-strong">${pendingMove.to}</span>（${pendingMove.mode}）`; 
+    } else if (!selectedTown) {
       hintEl.innerHTML = '連上遊戲後，只有 <span class="hint-strong">當前玩家自己擁有組織</span> 的城鎮可以高亮合法移動。';
     } else if (playerOwnsTown(selectedTown)) {
       const opts = movementOptionsForTown(selectedTown);
-      hintEl.innerHTML = `已選取 <span class="hint-strong">${selectedTown}</span>：可走一般道路 ${opts.road.length} 條、鐵路 ${opts.rail.length} 條。`;
+      hintEl.innerHTML = `已選取 <span class="hint-strong">${selectedTown}</span>：可走一般道路 ${opts.road.length} 條、鐵路 ${opts.rail.length} 條。點亮的鄰城可直接點擊移動。`;
     } else {
       hintEl.innerHTML = `已選取 <span class="hint-strong">${selectedTown}</span>：這不是當前玩家可操作的城鎮。`;
     }
@@ -288,6 +299,7 @@ function movementOptionsForTown(townName) {
 function renderMovementHighlights(townName) {
   highlightLayer.clearLayers();
   selectedTown = townName;
+  selectedMoveTargets = [];
   updateStatusPanel();
   if (!townName) return false;
 
@@ -321,6 +333,7 @@ function renderMovementHighlights(townName) {
   for (const toName of opts.road) {
     const target = byName.get(toName);
     if (!target) continue;
+    selectedMoveTargets.push({ town: toName, mode: 'road' });
     L.polyline([[origin.lat, origin.lon], [target.lat, target.lon]], {
       color: '#ffd166',
       weight: 6,
@@ -335,6 +348,7 @@ function renderMovementHighlights(townName) {
   for (const toName of opts.rail) {
     const target = byName.get(toName);
     if (!target) continue;
+    selectedMoveTargets.push({ town: toName, mode: 'rail' });
     L.polyline([[origin.lat, origin.lon], [target.lat, target.lon]], {
       color: '#67e8f9',
       weight: 7,
@@ -350,6 +364,23 @@ function renderMovementHighlights(townName) {
   focusSelectedTown(townName);
   updateStatusPanel();
   return highlightCount > 0;
+}
+
+function moveOptionForTown(townName) {
+  return selectedMoveTargets.find(item => item.town === townName) || null;
+}
+
+function sendMoveAction(fromTown, toTown, mode) {
+  if (!ws || ws.readyState !== WebSocket.OPEN) {
+    pendingMove = { from: fromTown, to: toTown, mode, error: 'WebSocket 尚未連線' };
+    updateStatusPanel();
+    return { ok: false, reason: 'socket-not-open' };
+  }
+
+  pendingMove = { from: fromTown, to: toTown, mode };
+  updateStatusPanel();
+  ws.send(JSON.stringify({ action: 'move', from: fromTown, to: toTown, mode }));
+  return { ok: true };
 }
 
 function updateDynamicStyles() {
@@ -397,7 +428,15 @@ function renderMap() {
     }).addTo(markerLayer);
     marker.bindPopup(popupHtml(t), { maxWidth:380 });
     marker.on('click', () => {
+      const moveOption = moveOptionForTown(t.name);
+      if (selectedTown && moveOption) {
+        const result = sendMoveAction(selectedTown, t.name, moveOption.mode);
+        window.__lastMoveRequest = { from: selectedTown, to: t.name, mode: moveOption.mode, ok: result.ok };
+        return;
+      }
+
       updateInfoPanel(t.name);
+      resetMoveSelection();
       renderMap();
       applyGameStateToMap(lastGameState);
       const didHighlight = renderMovementHighlights(t.name);
@@ -469,8 +508,18 @@ map.on('popupopen', e => {
 
 function applyGameStateToMap(state) {
   lastGameState = state;
+  if (pendingMove && !state?.error) {
+    pendingMove = null;
+  }
   updateStatusPanel();
-  if (!state || !state.map || !state.map.towns) return;
+  if (!state || state.error) {
+    if (state?.error) {
+      pendingMove = { ...(pendingMove || {}), error: state.error };
+      updateStatusPanel();
+    }
+    return;
+  }
+  if (!state.map || !state.map.towns) return;
 
   highlightLayer.clearLayers();
 
@@ -548,6 +597,7 @@ window.__selectTownForTest = function (townName) {
   const marker = currentMarkers.get(townName);
   if (!marker) return { ok: false, reason: 'marker-not-found' };
   updateInfoPanel(townName);
+  resetMoveSelection();
   renderMap();
   applyGameStateToMap(lastGameState);
   const didHighlight = renderMovementHighlights(townName);
@@ -561,6 +611,25 @@ window.__selectTownForTest = function (townName) {
     rail: movementOptionsForTown(townName).rail.length,
     owns: playerOwnsTown(townName)
   };
+};
+
+window.__moveFromToForTest = function (fromTown, toTown) {
+  resetMoveSelection();
+  renderMap();
+  applyGameStateToMap(lastGameState);
+  const highlighted = renderMovementHighlights(fromTown);
+  const option = moveOptionForTown(toTown);
+  if (!highlighted || !option) {
+    return { ok: false, reason: 'target-not-reachable', fromTown, toTown, highlighted };
+  }
+  const result = sendMoveAction(fromTown, toTown, option.mode);
+  return { ok: !!result.ok, fromTown, toTown, mode: option.mode };
+};
+
+window.__advanceToActionForTest = function () {
+  if (!ws || ws.readyState !== WebSocket.OPEN) return { ok: false, reason: 'socket-not-open' };
+  ws.send(JSON.stringify({ action: 'advance' }));
+  return { ok: true };
 };
 
 renderMap();
