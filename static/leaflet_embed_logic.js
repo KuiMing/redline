@@ -42,7 +42,7 @@ let currentBasemap = 'cartoLight';
 
 function initEmbeddedMap() {
   if (map || !document.getElementById('map')) return;
-  map = L.map('map', { preferCanvas:true, worldCopyJump:false });
+  map = L.map('map', { preferCanvas:false, worldCopyJump:false, renderer: L.svg() });
   cartoLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom:19, attribution:'&copy; OpenStreetMap contributors &copy; CARTO' });
   cartoDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom:19, attribution:'&copy; OpenStreetMap contributors &copy; CARTO' });
   cartoLight.addTo(map);
