@@ -44,6 +44,11 @@
   .town-label.leaflet-tooltip-left:before, .town-label.leaflet-tooltip-right:before,
   .town-label.leaflet-tooltip-top:before, .town-label.leaflet-tooltip-bottom:before { display:none; }
   .note { font-size:12px; color:#aab7d8; line-height:1.55; }
+  .status-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .status-tile { background:#0d1426; border:1px solid #27375d; padding:10px; border-radius:12px; }
+  .status-tile b { display:block; font-size:15px; color:#fff; margin-bottom:4px; }
+  .status-tile span { display:block; font-size:12px; color:var(--muted); line-height:1.5; }
+  .hint-strong { color:#dbeafe; font-weight:700; }
 </style>
 </head>
 <body>
@@ -75,8 +80,23 @@
     <div class="card">
       <div class="legend">
         <span><i style="background:var(--road)"></i>一般道路：金色</span>
-        <span><i style="background:var(--rail)"></i>鐵路：紅色虛線</span>
+        <span><i style="background:#7dd3fc"></i>鐵路：藍色虛線</span>
+        <span><i style="background:#ffffff"></i>已選城鎮：白色描邊</span>
       </div>
+    </div>
+
+    <div class="card">
+      <div class="status-grid">
+        <div class="status-tile">
+          <b id="statusCurrentPlayer">未連線</b>
+          <span>當前行動玩家</span>
+        </div>
+        <div class="status-tile">
+          <b id="statusSelectedTown">尚未選取</b>
+          <span>目前地圖選取城鎮</span>
+        </div>
+      </div>
+      <div class="note" id="interactionHint" style="margin-top:10px;">連上遊戲後，只有 <span class="hint-strong">當前玩家自己擁有組織</span> 的城鎮可以高亮合法移動。</div>
     </div>
 
     <div class="card" id="info">
@@ -198,6 +218,31 @@ function popupHtml(t) {
     <div>鐵路：${rails}</div>`;
 }
 
+function updateStatusPanel() {
+  const currentPlayerEl = document.getElementById('statusCurrentPlayer');
+  const selectedTownEl = document.getElementById('statusSelectedTown');
+  const hintEl = document.getElementById('interactionHint');
+
+  if (currentPlayerEl) {
+    currentPlayerEl.textContent = currentPlayerName() || '未連線';
+  }
+
+  if (selectedTownEl) {
+    selectedTownEl.textContent = selectedTown || '尚未選取';
+  }
+
+  if (hintEl) {
+    if (!selectedTown) {
+      hintEl.innerHTML = '連上遊戲後，只有 <span class="hint-strong">當前玩家自己擁有組織</span> 的城鎮可以高亮合法移動。';
+    } else if (playerOwnsTown(selectedTown)) {
+      const opts = movementOptionsForTown(selectedTown);
+      hintEl.innerHTML = `已選取 <span class="hint-strong">${selectedTown}</span>：可走一般道路 ${opts.road.length} 條、鐵路 ${opts.rail.length} 條。`;
+    } else {
+      hintEl.innerHTML = `已選取 <span class="hint-strong">${selectedTown}</span>：這不是當前玩家可操作的城鎮。`;
+    }
+  }
+}
+
 function updateInfoPanel(name) {
   const t = byName.get(name);
   if (!t) return;
@@ -243,6 +288,7 @@ function movementOptionsForTown(townName) {
 function renderMovementHighlights(townName) {
   highlightLayer.clearLayers();
   selectedTown = townName;
+  updateStatusPanel();
   if (!townName) return false;
 
   const opts = movementOptionsForTown(townName);
@@ -256,6 +302,7 @@ function renderMovementHighlights(townName) {
   }
 
   if (!playerOwnsTown(townName)) {
+    updateStatusPanel();
     return false;
   }
 
@@ -301,6 +348,7 @@ function renderMovementHighlights(townName) {
   }
 
   focusSelectedTown(townName);
+  updateStatusPanel();
   return highlightCount > 0;
 }
 
@@ -323,6 +371,7 @@ function updateDynamicStyles() {
 
 function renderMap() {
   clearLayers();
+  updateStatusPanel();
   const f = filters();
   const visibleTowns = towns.filter(t => townMatches(t, f));
   currentVisible = visibleTowns.map(t => t.name);
@@ -420,6 +469,7 @@ map.on('popupopen', e => {
 
 function applyGameStateToMap(state) {
   lastGameState = state;
+  updateStatusPanel();
   if (!state || !state.map || !state.map.towns) return;
 
   highlightLayer.clearLayers();
