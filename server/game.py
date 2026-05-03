@@ -91,6 +91,7 @@ class Game:
 
         self.players = []
         self._assign_factions(players_data)
+        self.faction_by_id = {f["id"]: f for f in self.factions}
         self._init_decks()
         self._assign_starting_bases()
 
@@ -157,7 +158,7 @@ class Game:
         # fixed / candidate / special currently choose first legal explicit town deterministically
         if kind in {"fixed", "candidate", "special"}:
             for name in names:
-                if name in towns and name not in used:
+                if name in towns and name not in used and self.can_faction_develop_in_town(faction.get("id"), name):
                     return name
             return None
 
@@ -174,10 +175,7 @@ class Game:
             for label in names:
                 pool = semantic_pools.get(label, [])
                 for town in pool:
-                    if town in towns and town not in used:
-                        return town
-                for town in pool:
-                    if town in towns:
+                    if town in towns and town not in used and self.can_faction_develop_in_town(faction.get("id"), town):
                         return town
             return None
 
@@ -186,6 +184,13 @@ class Game:
     def _assign_starting_bases(self):
         used = set()
         faction_by_id = {f["id"]: f for f in self.factions}
+
+        # Reserve single fixed bases so flex/candidate factions do not steal them before the owner faction sets up.
+        reserved = set()
+        for faction in self.factions:
+            kind, names = self._classify_base_options(faction)
+            if kind == "fixed" and names:
+                reserved.add(names[0])
 
         # rules: anti-CCP players establish first (tail order), red army last
         red_players = [p for p in self.players if p.faction_id == "red_army"]
@@ -196,7 +201,8 @@ class Game:
             faction = faction_by_id.get(p.faction_id)
             if not faction:
                 continue
-            base = self._resolve_starting_base(faction, used)
+            local_blocked = used | {b for b in reserved if b != next(iter(self._classify_base_options(faction)[1]), None)}
+            base = self._resolve_starting_base(faction, local_blocked)
             if not base:
                 continue
             p.base = base
@@ -210,6 +216,45 @@ class Game:
             "non_starter_discard": False,
             "successful_discard": False,
         }
+
+    def _camp_token_for_faction_id(self, faction_id):
+        faction = self.faction_by_id.get(faction_id, {})
+        camp = faction.get("camp")
+        mapping = {
+            "red_army": "紅軍",
+            "taiwan": "臺灣",
+            "hong_kong": "香港",
+            "manchuria": "滿洲",
+            "mongol": "蒙古",
+            "kazakh": "哈薩克",
+            "tibet": "藏國",
+            "uyghur": "維吾爾",
+            "rebel": "反賊",
+        }
+        return mapping.get(camp)
+
+    def _camp_token_for_player(self, player):
+        return self._camp_token_for_faction_id(player.faction_id)
+
+    def can_faction_develop_in_town(self, faction_id, town):
+        town_data = self.map.get("towns", {}).get(town)
+        if not town_data:
+            return False
+
+        camp_tags = town_data.get("camp", []) or []
+        faction_token = self._camp_token_for_faction_id(faction_id)
+
+        # Red Army can only develop where explicit red camp tag exists.
+        if faction_id == "red_army":
+            return "紅軍" in camp_tags
+
+        # Non-red factions may develop in their own tagged towns OR towns with no camp tags.
+        if not camp_tags:
+            return True
+        return faction_token in camp_tags
+
+    def can_develop_in_town(self, player, town):
+        return self.can_faction_develop_in_town(player.faction_id, town)
 
     def setup_test_card_scenario(self, player_id, card_name):
         player = next((p for p in self.players if p.id == player_id), None)
@@ -380,6 +425,8 @@ class Game:
             return {"error": "Invalid town"}
         if player.organizations.get(town, 0) <= 0:
             return {"error": "No organization in town"}
+        if not self.can_develop_in_town(player, town):
+            return {"error": "Cannot develop in this town"}
 
         player.organizations[town] = player.organizations.get(town, 0) + 1
         self.log(f"{player.name} built organization in {town}")

@@ -6,7 +6,7 @@
 - turn: 1
 - turn_phase: event
 - current_player: host
-- players: [{'name': 'host', 'faction': 'red_army', 'orgs': {'北京': 1}, 'hand': ['追隨者', '樂捐者', '追隨者', '追隨者', '追隨者']}, {'name': 'guest', 'faction': 'uyghur_munich', 'orgs': {'慕尼黑': 1}, 'hand': ['樂捐者', '追隨者', '追隨者', '追隨者', '追隨者']}]
+- players: [{'name': 'host', 'faction': 'red_army', 'orgs': {'北京': 1}, 'hand': ['追隨者', '追隨者', '追隨者', '追隨者', '追隨者']}, {'name': 'guest', 'faction': 'kazakh', 'orgs': {'阿拉木圖': 1}, 'hand': ['追隨者', '樂捐者', '追隨者', '樂捐者', '樂捐者']}]
 
 ## cycle_1_advance_to_action_before
 - turn: 1
@@ -20,8 +20,8 @@
 
 ## cycle_1_play_card
 - player: host
-- hand_before: ['追隨者', '樂捐者', '追隨者', '追隨者', '追隨者']
-- hand_after: ['樂捐者', '追隨者', '追隨者', '追隨者']
+- hand_before: ['追隨者', '追隨者', '追隨者', '追隨者', '追隨者']
+- hand_after: ['追隨者', '追隨者', '追隨者', '追隨者']
 - result: {'success': True}
 - resources: {'money': 0, 'propaganda': 0}
 - moves_left: 3
@@ -54,8 +54,8 @@
 
 ## cycle_2_play_card
 - player: guest
-- hand_before: ['樂捐者', '追隨者', '追隨者', '追隨者', '追隨者']
-- hand_after: ['追隨者', '追隨者', '追隨者', '追隨者']
+- hand_before: ['追隨者', '樂捐者', '追隨者', '樂捐者', '樂捐者']
+- hand_after: ['樂捐者', '追隨者', '樂捐者', '樂捐者']
 - result: {'success': True}
 - resources: {'money': 0, 'propaganda': 0}
 - moves_left: 3
@@ -63,7 +63,7 @@
 ## cycle_2_move
 - player: guest
 - result: {'success': True}
-- orgs_after: {'日內瓦': 1}
+- orgs_after: {'楚城': 1}
 - moves_left_after: 0
 
 ## cycle_2_advance_to_end
@@ -88,8 +88,8 @@
 
 ## cycle_3_play_card
 - player: host
-- hand_before: ['追隨者', '樂捐者', '追隨者', '樂捐者', '追隨者']
-- hand_after: ['樂捐者', '追隨者', '樂捐者', '追隨者']
+- hand_before: ['樂捐者', '追隨者', '樂捐者', '追隨者', '樂捐者']
+- hand_after: ['追隨者', '樂捐者', '追隨者', '樂捐者']
 - result: {'success': True}
 - resources: {'money': 0, 'propaganda': 0}
 - moves_left: 3
@@ -122,8 +122,8 @@
 
 ## cycle_4_play_card
 - player: guest
-- hand_before: ['樂捐者', '追隨者', '樂捐者', '追隨者', '追隨者']
-- hand_after: ['追隨者', '樂捐者', '追隨者', '追隨者']
+- hand_before: ['追隨者', '追隨者', '追隨者', '追隨者', '追隨者']
+- hand_after: ['追隨者', '追隨者', '追隨者', '追隨者']
 - result: {'success': True}
 - resources: {'money': 0, 'propaganda': 0}
 - moves_left: 3
@@ -131,7 +131,7 @@
 ## cycle_4_move
 - player: guest
 - result: {'success': True}
-- orgs_after: {'巴黎': 1}
+- orgs_after: {'塔拉茲': 1}
 - moves_left_after: 0
 
 ## cycle_4_advance_to_end

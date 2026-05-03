@@ -6,7 +6,7 @@
 - turn: 1
 - turn_phase: event
 - current_player: player1
-- base_validation: {'rows': [{'player': 'player1', 'faction': 'red_army', 'base': '北京', 'orgs': {'北京': 1}, 'single_base_org': True, 'base_allowed': True, 'allowed_sample': ['北京']}, {'player': 'player2', 'faction': 'yue', 'base': '曼谷', 'orgs': {'曼谷': 1}, 'single_base_org': True, 'base_allowed': True, 'allowed_sample': ['仰光', '倫敦', '卡加利', '吉隆坡', '多倫多', '廣州', '新加坡', '曼谷', '河內', '洛杉磯', '溫哥華', '紐約']}, {'player': 'player3', 'faction': 'taiwan_blue', 'base': '臺北', 'orgs': {'臺北': 1}, 'single_base_org': True, 'base_allowed': True, 'allowed_sample': ['臺北']}, {'player': 'player4', 'faction': 'wuyue', 'base': '東京', 'orgs': {'東京': 1}, 'single_base_org': True, 'base_allowed': True, 'allowed_sample': ['仙臺', '仰光', '倫敦', '卡加利', '吉隆坡', '多倫多', '大阪', '新加坡', '曼谷', '札幌', '杭州', '東京']}], 'unique_bases': True}
+- base_validation: {'rows': [{'player': 'player1', 'faction': 'miao', 'base': '貴陽', 'orgs': {'貴陽': 1}, 'single_base_org': True, 'base_allowed': True, 'allowed_sample': ['洛杉磯', '舊金山', '貴陽', '長沙']}, {'player': 'player2', 'faction': 'tibet_dehradun', 'base': '德拉敦', 'orgs': {'德拉敦': 1}, 'single_base_org': True, 'base_allowed': True, 'allowed_sample': ['德拉敦']}, {'player': 'player3', 'faction': 'red_army', 'base': '北京', 'orgs': {'北京': 1}, 'single_base_org': True, 'base_allowed': True, 'allowed_sample': ['北京']}, {'player': 'player4', 'faction': 'kazakh', 'base': '阿拉木圖', 'orgs': {'阿拉木圖': 1}, 'single_base_org': True, 'base_allowed': True, 'allowed_sample': ['阿拉木圖']}], 'unique_bases': True}
 
 ## cycle_1_advance_to_action_before
 - turn: 1
@@ -20,18 +20,18 @@
 
 ## cycle_1_play_card
 - player: player1
-- faction: red_army
-- hand_before: ['追隨者', '樂捐者', '追隨者', '追隨者', '樂捐者']
-- hand_after: ['樂捐者', '追隨者', '追隨者', '樂捐者']
+- faction: miao
+- hand_before: ['樂捐者', '追隨者', '樂捐者', '追隨者', '追隨者']
+- hand_after: ['追隨者', '樂捐者', '追隨者', '追隨者']
 - result: {'success': True}
 - resources: {'money': 0, 'propaganda': 0}
 - moves_left: 3
 
 ## cycle_1_move
 - player: player1
-- move_detail: {'from': '北京', 'to': '天津', 'mode': 'rail'}
+- move_detail: {'from': '貴陽', 'to': '重慶', 'mode': 'rail'}
 - result: {'success': True}
-- orgs_after: {'天津': 1}
+- orgs_after: {'重慶': 1}
 - moves_left_after: 0
 
 ## cycle_1_advance_to_end
@@ -56,18 +56,18 @@
 
 ## cycle_2_play_card
 - player: player2
-- faction: yue
-- hand_before: ['追隨者', '樂捐者', '追隨者', '樂捐者', '追隨者']
-- hand_after: ['樂捐者', '追隨者', '樂捐者', '追隨者']
+- faction: tibet_dehradun
+- hand_before: ['樂捐者', '樂捐者', '追隨者', '追隨者', '追隨者']
+- hand_after: ['樂捐者', '追隨者', '追隨者', '追隨者']
 - result: {'success': True}
 - resources: {'money': 0, 'propaganda': 0}
 - moves_left: 3
 
 ## cycle_2_move
 - player: player2
-- move_detail: {'from': '曼谷', 'to': '仰光', 'mode': 'road'}
+- move_detail: {'from': '德拉敦', 'to': '博卡拉', 'mode': 'road'}
 - result: {'success': True}
-- orgs_after: {'仰光': 1}
+- orgs_after: {'博卡拉': 1}
 - moves_left_after: 2
 
 ## cycle_2_advance_to_end
@@ -92,18 +92,18 @@
 
 ## cycle_3_play_card
 - player: player3
-- faction: taiwan_blue
-- hand_before: ['追隨者', '追隨者', '樂捐者', '追隨者', '樂捐者']
-- hand_after: ['追隨者', '樂捐者', '追隨者', '樂捐者']
+- faction: red_army
+- hand_before: ['追隨者', '樂捐者', '樂捐者', '追隨者', '追隨者']
+- hand_after: ['樂捐者', '樂捐者', '追隨者', '追隨者']
 - result: {'success': True}
 - resources: {'money': 0, 'propaganda': 0}
 - moves_left: 3
 
 ## cycle_3_move
 - player: player3
-- move_detail: {'from': '臺北', 'to': '基隆', 'mode': 'rail'}
+- move_detail: {'from': '北京', 'to': '天津', 'mode': 'rail'}
 - result: {'success': True}
-- orgs_after: {'基隆': 1}
+- orgs_after: {'天津': 1}
 - moves_left_after: 0
 
 ## cycle_3_advance_to_end
@@ -128,18 +128,18 @@
 
 ## cycle_4_play_card
 - player: player4
-- faction: wuyue
-- hand_before: ['追隨者', '追隨者', '樂捐者', '追隨者', '樂捐者']
-- hand_after: ['追隨者', '樂捐者', '追隨者', '樂捐者']
+- faction: kazakh
+- hand_before: ['追隨者', '追隨者', '追隨者', '追隨者', '樂捐者']
+- hand_after: ['追隨者', '追隨者', '追隨者', '樂捐者']
 - result: {'success': True}
 - resources: {'money': 0, 'propaganda': 0}
 - moves_left: 3
 
 ## cycle_4_move
 - player: player4
-- move_detail: {'from': '東京', 'to': '大阪', 'mode': 'rail'}
+- move_detail: {'from': '阿拉木圖', 'to': '楚城', 'mode': 'rail'}
 - result: {'success': True}
-- orgs_after: {'大阪': 1}
+- orgs_after: {'楚城': 1}
 - moves_left_after: 0
 
 ## cycle_4_advance_to_end
@@ -164,19 +164,19 @@
 
 ## cycle_5_play_card
 - player: player1
-- faction: red_army
-- hand_before: ['追隨者', '追隨者', '追隨者', '追隨者', '樂捐者']
-- hand_after: ['追隨者', '追隨者', '追隨者', '樂捐者']
+- faction: miao
+- hand_before: ['追隨者', '樂捐者', '追隨者', '追隨者', '追隨者']
+- hand_after: ['樂捐者', '追隨者', '追隨者', '追隨者']
 - result: {'success': True}
 - resources: {'money': 0, 'propaganda': 0}
 - moves_left: 3
 
 ## cycle_5_move
 - player: player1
-- move_detail: {'from': '天津', 'to': '承德', 'mode': 'road'}
+- move_detail: {'from': '重慶', 'to': '成都', 'mode': 'rail'}
 - result: {'success': True}
-- orgs_after: {'承德': 1}
-- moves_left_after: 2
+- orgs_after: {'成都': 1}
+- moves_left_after: 0
 
 ## cycle_5_advance_to_end
 - turn: 2
@@ -200,18 +200,18 @@
 
 ## cycle_6_play_card
 - player: player2
-- faction: yue
-- hand_before: ['追隨者', '追隨者', '追隨者', '樂捐者', '追隨者']
-- hand_after: ['追隨者', '追隨者', '樂捐者', '追隨者']
+- faction: tibet_dehradun
+- hand_before: ['追隨者', '追隨者', '追隨者', '追隨者', '樂捐者']
+- hand_after: ['追隨者', '追隨者', '追隨者', '樂捐者']
 - result: {'success': True}
 - resources: {'money': 0, 'propaganda': 0}
 - moves_left: 3
 
 ## cycle_6_move
 - player: player2
-- move_detail: {'from': '仰光', 'to': '曼谷', 'mode': 'road'}
+- move_detail: {'from': '博卡拉', 'to': '加德滿都', 'mode': 'road'}
 - result: {'success': True}
-- orgs_after: {'曼谷': 1}
+- orgs_after: {'加德滿都': 1}
 - moves_left_after: 2
 
 ## cycle_6_advance_to_end
@@ -236,18 +236,18 @@
 
 ## cycle_7_play_card
 - player: player3
-- faction: taiwan_blue
-- hand_before: ['追隨者', '追隨者', '追隨者', '樂捐者', '追隨者']
-- hand_after: ['追隨者', '追隨者', '樂捐者', '追隨者']
+- faction: red_army
+- hand_before: ['樂捐者', '追隨者', '追隨者', '追隨者', '追隨者']
+- hand_after: ['追隨者', '追隨者', '追隨者', '追隨者']
 - result: {'success': True}
 - resources: {'money': 0, 'propaganda': 0}
 - moves_left: 3
 
 ## cycle_7_move
 - player: player3
-- move_detail: {'from': '基隆', 'to': '新北', 'mode': 'road'}
+- move_detail: {'from': '天津', 'to': '承德', 'mode': 'road'}
 - result: {'success': True}
-- orgs_after: {'新北': 1}
+- orgs_after: {'承德': 1}
 - moves_left_after: 2
 
 ## cycle_7_advance_to_end
@@ -272,8 +272,8 @@
 
 ## cycle_8_play_card
 - player: player4
-- faction: wuyue
-- hand_before: ['追隨者', '追隨者', '追隨者', '樂捐者', '追隨者']
+- faction: kazakh
+- hand_before: ['樂捐者', '追隨者', '追隨者', '樂捐者', '追隨者']
 - hand_after: ['追隨者', '追隨者', '樂捐者', '追隨者']
 - result: {'success': True}
 - resources: {'money': 0, 'propaganda': 0}
@@ -281,9 +281,9 @@
 
 ## cycle_8_move
 - player: player4
-- move_detail: {'from': '大阪', 'to': '福岡', 'mode': 'rail'}
+- move_detail: {'from': '楚城', 'to': '塔拉茲', 'mode': 'rail'}
 - result: {'success': True}
-- orgs_after: {'福岡': 1}
+- orgs_after: {'塔拉茲': 1}
 - moves_left_after: 0
 
 ## cycle_8_advance_to_end
@@ -298,7 +298,7 @@
 
 ## before_forced_victory_check
 - candidate: player1
-- faction: red_army
+- faction: miao
 - org_count: 14
 - turn: 3
 - turn_phase: event

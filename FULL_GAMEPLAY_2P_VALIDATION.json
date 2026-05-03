@@ -14,7 +14,7 @@
           },
           "hand": [
             "追隨者",
-            "樂捐者",
+            "追隨者",
             "追隨者",
             "追隨者",
             "追隨者"
@@ -22,16 +22,16 @@
         },
         {
           "name": "guest",
-          "faction": "uyghur_munich",
+          "faction": "kazakh",
           "orgs": {
-            "慕尼黑": 1
+            "阿拉木圖": 1
           },
           "hand": [
+            "追隨者",
             "樂捐者",
             "追隨者",
-            "追隨者",
-            "追隨者",
-            "追隨者"
+            "樂捐者",
+            "樂捐者"
           ]
         }
       ]
@@ -53,13 +53,13 @@
       "player": "host",
       "hand_before": [
         "追隨者",
-        "樂捐者",
+        "追隨者",
         "追隨者",
         "追隨者",
         "追隨者"
       ],
       "hand_after": [
-        "樂捐者",
+        "追隨者",
         "追隨者",
         "追隨者",
         "追隨者"
@@ -112,17 +112,17 @@
       "step": "cycle_2_play_card",
       "player": "guest",
       "hand_before": [
+        "追隨者",
         "樂捐者",
         "追隨者",
-        "追隨者",
-        "追隨者",
-        "追隨者"
+        "樂捐者",
+        "樂捐者"
       ],
       "hand_after": [
+        "樂捐者",
         "追隨者",
-        "追隨者",
-        "追隨者",
-        "追隨者"
+        "樂捐者",
+        "樂捐者"
       ],
       "result": {
         "success": true
@@ -140,7 +140,7 @@
         "success": true
       },
       "orgs_after": {
-        "日內瓦": 1
+        "楚城": 1
       },
       "moves_left_after": 0
     },
@@ -172,17 +172,17 @@
       "step": "cycle_3_play_card",
       "player": "host",
       "hand_before": [
-        "追隨者",
         "樂捐者",
         "追隨者",
         "樂捐者",
-        "追隨者"
+        "追隨者",
+        "樂捐者"
       ],
       "hand_after": [
-        "樂捐者",
         "追隨者",
         "樂捐者",
-        "追隨者"
+        "追隨者",
+        "樂捐者"
       ],
       "result": {
         "success": true
@@ -232,15 +232,15 @@
       "step": "cycle_4_play_card",
       "player": "guest",
       "hand_before": [
-        "樂捐者",
         "追隨者",
-        "樂捐者",
+        "追隨者",
+        "追隨者",
         "追隨者",
         "追隨者"
       ],
       "hand_after": [
         "追隨者",
-        "樂捐者",
+        "追隨者",
         "追隨者",
         "追隨者"
       ],
@@ -260,7 +260,7 @@
         "success": true
       },
       "orgs_after": {
-        "巴黎": 1
+        "塔拉茲": 1
       },
       "moves_left_after": 0
     },
@@ -303,14 +303,14 @@
       "[Turn 1] host played 追隨者",
       "[Turn 1] host moved 1 organization from 北京 to 天津 via rail",
       "[Turn 1] End of turn for host",
-      "[Turn 1] guest played 樂捐者",
-      "[Turn 1] guest moved 1 organization from 慕尼黑 to 日內瓦 via rail",
+      "[Turn 1] guest played 追隨者",
+      "[Turn 1] guest moved 1 organization from 阿拉木圖 to 楚城 via rail",
       "[Turn 1] End of turn for guest",
-      "[Turn 2] host played 追隨者",
+      "[Turn 2] host played 樂捐者",
       "[Turn 2] host moved 1 organization from 天津 to 承德 via road",
       "[Turn 2] End of turn for host",
-      "[Turn 2] guest played 樂捐者",
-      "[Turn 2] guest moved 1 organization from 日內瓦 to 巴黎 via rail",
+      "[Turn 2] guest played 追隨者",
+      "[Turn 2] guest moved 1 organization from 楚城 to 塔拉茲 via rail",
       "[Turn 2] End of turn for guest"
     ],
     "purchase_area": [],
@@ -400,7 +400,7 @@
             "count": 1
           }
         ],
-        "巴黎": [
+        "塔拉茲": [
           {
             "player": "guest",
             "count": 1
@@ -420,10 +420,10 @@
         "moves_left": 3,
         "hand": [
           "追隨者",
-          "追隨者",
           "樂捐者",
           "追隨者",
-          "追隨者"
+          "追隨者",
+          "樂捐者"
         ],
         "orgs": {
           "北京": 1,
@@ -445,7 +445,7 @@
       {
         "id": "p2",
         "name": "guest",
-        "faction": "uyghur_munich",
+        "faction": "kazakh",
         "resources": {
           "money": 0,
           "propaganda": 0
@@ -453,13 +453,13 @@
         "moves_left": 3,
         "hand": [
           "追隨者",
-          "樂捐者",
           "追隨者",
-          "樂捐者",
-          "樂捐者"
+          "追隨者",
+          "追隨者",
+          "追隨者"
         ],
         "orgs": {
-          "巴黎": 1
+          "塔拉茲": 1
         }
       }
     ]

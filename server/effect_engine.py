@@ -75,11 +75,11 @@ class EffectEngine:
                 game.log(f"{player.name} trashed {getattr(trashed, 'name', str(trashed))}")
             return
 
-        # ✅ Build via card effect (MVP: reinforce current base or first owned town)
+        # ✅ Build via card effect (MVP: reinforce current base or first owned legal town)
         if etype == "build":
-            target = player.base if player.base and player.organizations.get(player.base, 0) > 0 else None
+            target = player.base if player.base and player.organizations.get(player.base, 0) > 0 and game.can_develop_in_town(player, player.base) else None
             if not target:
-                owned = [town for town, count in player.organizations.items() if count > 0]
+                owned = [town for town, count in player.organizations.items() if count > 0 and game.can_develop_in_town(player, town)]
                 target = owned[0] if owned else None
             if target:
                 player.organizations[target] = player.organizations.get(target, 0) + 1
