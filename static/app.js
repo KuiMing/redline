@@ -176,10 +176,20 @@ function render(state) {
       orgInfo += `${p.name.toUpperCase()}: ${total} | `;
     });
 
+    const me = state.players.find(p => p.id === playerId);
+    const myMoney = me?.resources?.money ?? 0;
+    const myPropaganda = me?.resources?.propaganda ?? 0;
+    const myMoves = me?.moves_left ?? 0;
+    const myHand = me?.hand?.length ?? 0;
+
     hud.innerHTML = `
       TURN ${state.turn}
       | PHASE ${state.turn_phase}
       | ACTIVE ${state.current_player.toUpperCase()}
+      | HAND ${myHand}
+      | MONEY ${myMoney}
+      | PROP ${myPropaganda}
+      | MOVES ${myMoves}
       | ${orgInfo}
     `;
   }
