@@ -5,15 +5,14 @@
 ### P0 — 必修：阻止「完成版」成立的缺口
 
 1. **地圖與遊戲引擎尚未真正閉環整合**
-   - 現況：Leaflet 地圖以 iframe 形式嵌入，可視化存在，但尚未成為遊戲主互動層。
-   - 缺口：
-     - 地圖未即時反映真實控制權 / 組織數
-     - 點擊城鎮未直接驅動 move / build / action
-     - 合法移動高亮尚未接上 rules / current player / turn lock
+   - 現況：Leaflet 地圖已改為 iframe 嵌入主頁，並可直接與遊戲引擎溝通、執行 move。
+   - 剩餘缺口：
+     - build / 其他 action 尚未接上地圖互動
      - Era / Event 對地圖的視覺效果未接上
+     - 仍需完整多人流程回歸驗證
    - 完成標準：
      - 地圖成為真正可互動的遊戲操作介面之一
-     - 地圖狀態與 WebSocket state 完全同步
+     - 地圖狀態與遊戲流程穩定同步
 
 2. **完整對局尚未驗證跑通**
    - 現況：局部流程已測，完整一局尚未證明可從 create → join → start → play → victory → end 全程無人工修補跑完。
@@ -33,13 +32,13 @@
      - 開局流程穩定且錯誤訊息明確
 
 4. **前端整合債尚未清理**
-   - 現況：Tabs、iframe、gameShell、commandView/mapView 為後補架構；app.js 仍有舊抽象地圖殘留。
+   - 現況：主頁 map tab 已正式走 iframe → leaflet_game_map.html；但舊原生嵌入資產仍在專案內。
    - 缺口：
-     - loadTownCoordinates 等舊碼未清
+     - leaflet_game_map_embed_fragment.html 等原生嵌入殘留待清理
      - map-module.js 舊骨架殘留
-     - style.css 含過時抽象地圖樣式
+     - style.css / checklist 文字仍有部分過時描述
    - 完成標準：
-     - 刪除不再使用的抽象地圖殘碼
+     - 刪除不再使用的舊嵌入殘碼
      - 前端結構清楚、單一路徑
 
 ### P1 — 重要：從 Alpha 走向可玩版

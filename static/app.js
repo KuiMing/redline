@@ -108,12 +108,10 @@ function strategicMapUrl() {
 
 function connectStrategicMapFrame() {
   const frame = document.getElementById('strategicMapFrame');
-  const targetWindow = frame && frame.contentWindow;
-  if (!targetWindow || !gameId || !playerId) return;
-
+  if (!frame || !frame.contentWindow || !gameId || !playerId) return;
   try {
-    if (typeof targetWindow.connectGameMap === 'function') {
-      targetWindow.connectGameMap({ gameId, playerId });
+    if (typeof frame.contentWindow.connectGameMap === 'function') {
+      frame.contentWindow.connectGameMap({ gameId, playerId });
     }
   } catch (err) {
     console.error('Failed to connect strategic map frame', err);
@@ -132,9 +130,7 @@ async function ensureStrategicMapMounted() {
   frame.onload = () => {
     setTimeout(() => {
       connectStrategicMapFrame();
-      if (window.lastGameState) {
-        syncStrategicMap(window.lastGameState);
-      }
+      setTimeout(() => connectStrategicMapFrame(), 250);
     }, 120);
   };
 
@@ -142,11 +138,8 @@ async function ensureStrategicMapMounted() {
   frame.dataset.loadedUrl = url;
 }
 
-function syncStrategicMap(state) {
-  const frame = document.getElementById('strategicMapFrame');
-  const targetWindow = frame && frame.contentWindow;
-  if (!targetWindow) return;
-  targetWindow.postMessage({ type: 'redline-state', state }, window.location.origin);
+function syncStrategicMap(_state) {
+  // iframe version uses its own websocket connection via query params.
 }
 
 function render(state) {
