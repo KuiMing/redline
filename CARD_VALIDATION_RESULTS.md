@@ -6,10 +6,12 @@
 
 ## 總結
 
-- 已完成 40 張 action card 的第一輪可執行驗證。
-- 大多數卡已能成功打出並產生可觀測的效果變化。
-- 目前發現 1 個明確行為瑕疵：**高效行動** 在 `draw + discard_self` 的組合下，仍存在「打出的牌沒有被乾淨移出效果流程」的可疑現象，需要下一輪修正。
-- 本報表是第一輪逐張驗證結果，不等於最終規則完稿驗收。
+- 已完成 40 張 action card 的第二輪可執行驗證。
+- 本輪已修正第一輪驗證腳本中對出牌索引的錯誤假設，重新驗證後：
+  - 40/40 張卡 `play_success`
+  - 40/40 張卡 `card_left_hand`
+- 也就是說，在目前的 MVP 規則語義下，40 張 action card 已全部通過第二輪基礎可執行驗證。
+- 本報表仍屬於「可執行驗證」結果，不等於最終規則完稿驗收；若規則語義後續更精細，仍可能需要再做規則級驗收。
 
 ## 宣傳家 (propaganda)
 - effects: optional_trash, build, move
@@ -143,16 +145,16 @@
 
 ## 高效行動 (command)
 - effects: draw, discard_self
-- checks: play_success
-- resources delta: money 0, propaganda 0
-- hand before → after: 3 → 2
+- checks: play_success, card_left_hand
+- resources delta: money 1, propaganda 1
+- hand before → after: 3 → 3
 - moves_left before → after: 3 → 3
 - orgs before → after: {'北京': 1, '上海': 1} → {'北京': 1, '上海': 1}
-- discard after: ['棄牌A', '棄牌B', '自棄2']
+- discard after: ['棄牌A', '棄牌B', '抽牌B', '抽牌C', '高效行動']
 - purchase_area after: []
 - other_hands before → after: {'player2': 2} → {'player2': 2}
 - turn_log after: {'played_money_card': False, 'played_propaganda_card': False, 'non_starter_discard': False, 'successful_discard': False}
-- log tail: ['[Turn 1] player1 played 自棄2']
+- log tail: ['[Turn 1] player1 played 高效行動']
 
 ## 模仿戰術 (command)
 - effects: peek_deck, topdeck_to_hand
@@ -234,16 +236,16 @@
 
 ## 凝聚共識 (command)
 - effects: draw, discard_self, conditional_bonus
-- checks: play_success
-- resources delta: money 0, propaganda 0
-- hand before → after: 3 → 2
+- checks: play_success, card_left_hand
+- resources delta: money 0, propaganda 5
+- hand before → after: 3 → 3
 - moves_left before → after: 3 → 3
 - orgs before → after: {'北京': 1, '上海': 1} → {'北京': 1, '上海': 1}
-- discard after: ['棄牌A', '棄牌B', '自棄2']
+- discard after: ['棄牌A', '棄牌B', '抽牌B', '抽牌C', '凝聚共識']
 - purchase_area after: []
 - other_hands before → after: {'player2': 2} → {'player2': 2}
 - turn_log after: {'played_money_card': False, 'played_propaganda_card': False, 'non_starter_discard': True, 'successful_discard': False}
-- log tail: ['[Turn 1] player1 played 自棄2']
+- log tail: ['[Turn 1] player1 played 凝聚共識']
 
 ## 思想建設 (command)
 - effects: extend_build_range

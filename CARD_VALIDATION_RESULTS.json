@@ -737,11 +737,12 @@
       "success": true
     },
     "checks": [
-      "play_success"
+      "play_success",
+      "card_left_hand"
     ],
     "resources_delta": {
-      "money": 0,
-      "propaganda": 0
+      "money": 1,
+      "propaganda": 1
     },
     "before": {
       "hand": [
@@ -769,12 +770,13 @@
     },
     "after": {
       "hand": [
-        "高效行動",
-        "自棄1"
+        "自棄1",
+        "自棄2",
+        "抽牌D"
       ],
       "resources": {
-        "money": 0,
-        "propaganda": 0
+        "money": 1,
+        "propaganda": 1
       },
       "moves_left": 3,
       "orgs": {
@@ -784,7 +786,9 @@
       "discard": [
         "棄牌A",
         "棄牌B",
-        "自棄2"
+        "抽牌B",
+        "抽牌C",
+        "高效行動"
       ],
       "purchase_area": [],
       "other_hands": {
@@ -797,7 +801,7 @@
         "successful_discard": false
       },
       "log_tail": [
-        "[Turn 1] player1 played 自棄2"
+        "[Turn 1] player1 played 高效行動"
       ]
     }
   },
@@ -1249,11 +1253,12 @@
       "success": true
     },
     "checks": [
-      "play_success"
+      "play_success",
+      "card_left_hand"
     ],
     "resources_delta": {
       "money": 0,
-      "propaganda": 0
+      "propaganda": 5
     },
     "before": {
       "hand": [
@@ -1281,12 +1286,13 @@
     },
     "after": {
       "hand": [
-        "凝聚共識",
-        "自棄1"
+        "自棄1",
+        "自棄2",
+        "抽牌D"
       ],
       "resources": {
         "money": 0,
-        "propaganda": 0
+        "propaganda": 5
       },
       "moves_left": 3,
       "orgs": {
@@ -1296,7 +1302,9 @@
       "discard": [
         "棄牌A",
         "棄牌B",
-        "自棄2"
+        "抽牌B",
+        "抽牌C",
+        "凝聚共識"
       ],
       "purchase_area": [],
       "other_hands": {
@@ -1309,7 +1317,7 @@
         "successful_discard": false
       },
       "log_tail": [
-        "[Turn 1] player1 played 自棄2"
+        "[Turn 1] player1 played 凝聚共識"
       ]
     }
   },

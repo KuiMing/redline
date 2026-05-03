@@ -122,7 +122,11 @@ def validate_card(card_def):
         'other_hands': {op.name: len(op.hand) for op in g.players if op is not p},
     }
 
-    result = g.play_card(len(p.hand) - 1)
+    play_index = next(
+        i for i, card in enumerate(p.hand)
+        if getattr(card, 'name', str(card)) == card_def['name']
+    )
+    result = g.play_card(play_index)
 
     after = {
         'hand': names(p.hand),
