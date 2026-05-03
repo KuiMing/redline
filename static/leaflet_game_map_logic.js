@@ -36,6 +36,7 @@ for (const [name,t] of Object.entries(MAP_DATA.towns)) {
 const links = [...linkMap.values()];
 
 const map = L.map('map', { preferCanvas:true, worldCopyJump:false });
+window.__redlinePlayableMap = map;
 // Avoid direct use of tile.openstreetmap.org here: local HTML files may be blocked by OSM's tile usage policy
 // when Referer is missing. CARTO tiles use OSM data but are more suitable for this standalone viewer.
 const cartoLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', { maxZoom:19, attribution:'&copy; OpenStreetMap contributors &copy; CARTO' });
@@ -561,4 +562,4 @@ window.__advanceToActionForTest = function () {
 };
 
 renderMap();
-setTimeout(fitAll, 100);
+setTimeout(focusAsia, 100);
