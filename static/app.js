@@ -18,16 +18,6 @@ function initTabs() {
 
       if (view === 'map') {
         await ensureStrategicMapMounted();
-        setTimeout(() => {
-          const playableMap = window.__redlinePlayableMap;
-          if (playableMap) {
-            playableMap.invalidateSize(false);
-            if (!window.__redlineMapFocusedOnce && window.focusAsia) {
-              window.__redlineMapFocusedOnce = true;
-              window.focusAsia();
-            }
-          }
-        }, 120);
       }
     });
   });
@@ -101,6 +91,7 @@ function connect() {
   if (shell) shell.style.display = 'block';
 
   initTabs();
+  ensureStrategicMapMounted();
 }
 
 function sendAction(action, payload = {}) {
@@ -108,43 +99,54 @@ function sendAction(action, payload = {}) {
   ws.send(JSON.stringify({action, ...payload}));
 }
 
+function strategicMapUrl() {
+  const url = new URL('/static/leaflet_game_map.html', window.location.origin);
+  if (gameId) url.searchParams.set('gameId', gameId);
+  if (playerId) url.searchParams.set('playerId', playerId);
+  return url.toString();
+}
+
+function connectStrategicMapFrame() {
+  const frame = document.getElementById('strategicMapFrame');
+  const targetWindow = frame && frame.contentWindow;
+  if (!targetWindow || !gameId || !playerId) return;
+
+  try {
+    if (typeof targetWindow.connectGameMap === 'function') {
+      targetWindow.connectGameMap({ gameId, playerId });
+    }
+  } catch (err) {
+    console.error('Failed to connect strategic map frame', err);
+  }
+}
+
 async function ensureStrategicMapMounted() {
-  const root = document.getElementById('strategicMapRoot');
-  if (!root || root.dataset.mounted === '1') return;
+  const frame = document.getElementById('strategicMapFrame');
+  if (!frame) return;
+  const url = strategicMapUrl();
+  if (frame.dataset.loadedUrl === url) {
+    connectStrategicMapFrame();
+    return;
+  }
 
-  const fragmentRes = await fetch('/static/leaflet_game_map_embed_fragment.html');
-  root.innerHTML = await fragmentRes.text();
-
-  const script = document.createElement('script');
-  script.addEventListener('load', () => {
-    if (window.connectGameMap && gameId && playerId) {
-      window.connectGameMap({ gameId, playerId });
-    }
-  }, { once: true });
-  script.addEventListener('error', () => {
-    console.error('Failed to load /static/leaflet_game_map_logic.js');
-  }, { once: true });
-  script.src = '/static/leaflet_game_map_logic.js';
-  script.dataset.redlineMapLogic = '1';
-  root.appendChild(script);
-
-  root.dataset.mounted = '1';
-
-  setTimeout(() => {
-    const playableMap = window.__redlinePlayableMap;
-    if (playableMap) {
-      playableMap.invalidateSize(false);
-      if (window.focusAsia) {
-        window.focusAsia();
+  frame.onload = () => {
+    setTimeout(() => {
+      connectStrategicMapFrame();
+      if (window.lastGameState) {
+        syncStrategicMap(window.lastGameState);
       }
-    }
-  }, 160);
+    }, 120);
+  };
+
+  frame.src = url;
+  frame.dataset.loadedUrl = url;
 }
 
 function syncStrategicMap(state) {
-  if (window.applyGameStateToMap) {
-    window.applyGameStateToMap(state);
-  }
+  const frame = document.getElementById('strategicMapFrame');
+  const targetWindow = frame && frame.contentWindow;
+  if (!targetWindow) return;
+  targetWindow.postMessage({ type: 'redline-state', state }, window.location.origin);
 }
 
 function render(state) {
