@@ -29,6 +29,7 @@ ERA_STRUCTURED_PATH = BASE_DIR / "data" / "era_structured.v1.1.json"
 
 class GamePhase(str, Enum):
     SETUP = "setup"
+    BASE_SELECTION = "base_selection"
     MAIN = "main"
     FINISHED = "finished"
 
@@ -93,7 +94,12 @@ class Game:
         self._assign_factions(players_data)
         self.faction_by_id = {f["id"]: f for f in self.factions}
         self._init_decks()
-        self._assign_starting_bases()
+        self.pending_base_choices = self._compute_pending_base_choices()
+        if self.pending_base_choices:
+            self.game_phase = GamePhase.BASE_SELECTION
+        else:
+            self._assign_starting_bases()
+            self.game_phase = GamePhase.MAIN
 
         self.action_engine = ActionCardEngine(self.structured_cards)
         self.effect_engine = EffectEngine()
@@ -181,33 +187,82 @@ class Game:
 
         return None
 
-    def _assign_starting_bases(self):
-        used = set()
-        faction_by_id = {f["id"]: f for f in self.factions}
+    def _candidate_base_names(self, faction):
+        kind, names = self._classify_base_options(faction)
+        towns = self.map.get("towns", {})
+        if kind in {"fixed", "candidate", "special"}:
+            return [name for name in names if name in towns and self.can_faction_develop_in_town(faction.get("id"), name)]
+        if kind == "flex":
+            semantic_pools = {
+                "任意牆內": self.board_regions.get("china", {}).get("towns", []),
+                "任意牆內城鎮": self.board_regions.get("china", {}).get("towns", []),
+                "任意英美城鎮": ["華盛頓", "紐約", "多倫多", "卡加利", "溫哥華", "舊金山", "洛杉磯", "倫敦"],
+                "任意南洋": ["曼谷", "吉隆坡", "新加坡", "雅加達", "河內", "胡志明市", "仰光"],
+                "任意南洋城鎮": ["曼谷", "吉隆坡", "新加坡", "雅加達", "河內", "胡志明市", "仰光"],
+                "任意東洋": ["東京", "大阪", "福岡", "札幌", "仙臺", "沖繩", "首爾", "釜山"],
+            }
+            candidates = []
+            for label in names:
+                pool = semantic_pools.get(label, [])
+                for town in pool:
+                    if town in towns and self.can_faction_develop_in_town(faction.get("id"), town):
+                        candidates.append(town)
+            seen = set()
+            ordered = []
+            for c in candidates:
+                if c not in seen:
+                    seen.add(c)
+                    ordered.append(c)
+            return ordered
+        return []
 
-        # Reserve single fixed bases so flex/candidate factions do not steal them before the owner faction sets up.
-        reserved = set()
-        for faction in self.factions:
-            kind, names = self._classify_base_options(faction)
-            if kind == "fixed" and names:
-                reserved.add(names[0])
-
-        # rules: anti-CCP players establish first (tail order), red army last
-        red_players = [p for p in self.players if p.faction_id == "red_army"]
-        non_red_players = [p for p in self.players if p.faction_id != "red_army"]
-        ordered_players = list(reversed(non_red_players)) + red_players
-
-        for p in ordered_players:
-            faction = faction_by_id.get(p.faction_id)
+    def _compute_pending_base_choices(self):
+        pending = {}
+        used_fixed = set()
+        for p in self.players:
+            faction = self.faction_by_id.get(p.faction_id)
             if not faction:
                 continue
-            local_blocked = used | {b for b in reserved if b != next(iter(self._classify_base_options(faction)[1]), None)}
-            base = self._resolve_starting_base(faction, local_blocked)
-            if not base:
-                continue
-            p.base = base
-            p.organizations = {base: 1}
-            used.add(base)
+            kind, _ = self._classify_base_options(faction)
+            candidates = self._candidate_base_names(faction)
+            if kind == "fixed" and len(candidates) == 1:
+                p.base = candidates[0]
+                p.organizations = {candidates[0]: 1}
+                used_fixed.add(candidates[0])
+            else:
+                pending[p.id] = candidates
+        return pending
+
+    def set_base_choice(self, player_id, base_name):
+        if self.game_phase != GamePhase.BASE_SELECTION:
+            return {"error": "Not in BASE_SELECTION phase"}
+        choices = self.pending_base_choices.get(player_id)
+        if not choices:
+            return {"error": "No pending base choice for player"}
+        if base_name not in choices:
+            return {"error": "Invalid base choice"}
+        if any(p.base == base_name for p in self.players if p.id != player_id):
+            return {"error": "Base already taken"}
+
+        player = next((p for p in self.players if p.id == player_id), None)
+        if not player:
+            return {"error": "Player not found"}
+
+        player.base = base_name
+        player.organizations = {base_name: 1}
+        del self.pending_base_choices[player_id]
+
+        if not self.pending_base_choices:
+            self.game_phase = GamePhase.MAIN
+        return {"success": True}
+
+    def _assign_starting_bases(self):
+        pending = self._compute_pending_base_choices()
+        if pending:
+            for player_id, choices in pending.items():
+                if not choices:
+                    continue
+                self.set_base_choice(player_id, choices[0])
 
     def _new_turn_log(self):
         return {
@@ -279,14 +334,16 @@ class Game:
             p.moves_left = 3
             p.build_range_bonus = 0
             if p is player:
-                p.organizations = {"北京": 1, "上海": 1}
-                p.base = "北京"
+                base = p.base or "北京"
+                p.organizations = {base: 1}
+                p.base = base
                 p.hand = [Card(card_def["name"], card_def["type"], card_def.get("resources", {}))]
                 p.deck.draw_pile = [starter("抽牌A"), starter("抽牌B"), starter("抽牌C"), starter("抽牌D")]
                 p.deck.discard_pile = [starter("棄牌A"), starter("棄牌B")]
             else:
-                p.organizations = {"香港城": 1 + (1 if idx % 2 else 0)}
-                p.base = "香港城"
+                base = p.base or "香港城"
+                p.organizations = {base: 1 + (1 if idx % 2 else 0)}
+                p.base = base
                 p.hand = [starter("對手手牌1"), starter("對手手牌2")]
                 p.deck.draw_pile = [starter("對手抽牌A"), starter("對手抽牌B")]
                 p.deck.discard_pile = [starter("對手棄牌A")]
@@ -535,6 +592,7 @@ class Game:
             "winner": self.winner,
             "current_player": self.current_player().name,
             "active_eras": self.era_engine.get_active_eras() if self.era_engine else [],
+            "pending_base_choices": self.pending_base_choices,
             "action_log": self.action_log,
             "purchase_area": [getattr(card, 'name', str(card)) for card in self.purchase_area],
             "map": {

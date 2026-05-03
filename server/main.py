@@ -113,6 +113,17 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
             data = await websocket.receive_json()
             action = data.get("action")
 
+            if action == "set_base":
+                result = game.set_base_choice(player_id, data.get("town"))
+                if result and result.get("error"):
+                    error_state = dict(game.state())
+                    error_state["error"] = result.get("error")
+                    await websocket.send_json(error_state)
+                    continue
+                for pid, ws in manager.connections.get(game_id, {}).items():
+                    await ws.send_json(game.state())
+                continue
+
             if game.current_player().id != player_id:
                 await websocket.send_json({"error": "Not your turn"})
                 continue
@@ -125,6 +136,8 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
                 result = game.play_card(data.get("index"))
             elif action == "buy_card":
                 result = game.buy_card(data.get("index"))
+            elif action == "set_base":
+                result = game.set_base_choice(player_id, data.get("town"))
             elif action == "build":
                 result = game.build_organization(data.get("town"))
             elif action == "move":
