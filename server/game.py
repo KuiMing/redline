@@ -178,6 +178,95 @@ class Game:
             "successful_discard": False,
         }
 
+    def setup_test_card_scenario(self, player_id, card_name):
+        player = next((p for p in self.players if p.id == player_id), None)
+        if not player:
+            return {"error": "Player not found"}
+
+        card_def = next((c for c in self.structured_cards if c["name"] == card_name), None)
+        if not card_def:
+            return {"error": "Card not found"}
+
+        def starter(name, card_type="starter"):
+            return Card(name, card_type, {})
+
+        self.current_player_index = self.players.index(player)
+        self.turn_phase = TurnPhase.ACTION
+        self.turn_log = self._new_turn_log()
+        self.action_log = []
+        self.purchase_area = []
+
+        for idx, p in enumerate(self.players):
+            p.resources = {"money": 0, "propaganda": 0}
+            p.moves_left = 3
+            p.build_range_bonus = 0
+            if p is player:
+                p.organizations = {"北京": 1, "上海": 1}
+                p.base = "北京"
+                p.hand = [Card(card_def["name"], card_def["type"], card_def.get("resources", {}))]
+                p.deck.draw_pile = [starter("抽牌A"), starter("抽牌B"), starter("抽牌C"), starter("抽牌D")]
+                p.deck.discard_pile = [starter("棄牌A"), starter("棄牌B")]
+            else:
+                p.organizations = {"香港城": 1 + (1 if idx % 2 else 0)}
+                p.base = "香港城"
+                p.hand = [starter("對手手牌1"), starter("對手手牌2")]
+                p.deck.draw_pile = [starter("對手抽牌A"), starter("對手抽牌B")]
+                p.deck.discard_pile = [starter("對手棄牌A")]
+
+        effects = [e["type"] for e in card_def.get("effect", [])]
+
+        if "optional_trash" in effects:
+            player.hand.insert(0, Card("可垃圾牌", "command", {}))
+
+        if "discard_self" in effects:
+            player.hand.extend([Card("自棄1", "command", {}), Card("自棄2", "command", {})])
+
+        if "gain_from_discard" in effects or "gain_any_from_discard" in effects:
+            player.deck.discard_pile = [Card("可回收牌", "command", {})]
+
+        if "trash_from_hand_or_discard" in effects:
+            player.hand.insert(0, Card("非起始牌", "command", {}))
+            player.deck.discard_pile = [starter("追隨者"), Card("棄牌區非起始牌", "command", {})]
+
+        if "conditional_draw" in effects:
+            for cond in [e for e in card_def.get("effect", []) if e["type"] == "conditional_draw"]:
+                c = cond.get("condition")
+                if c == "played_propaganda_card":
+                    self.turn_log["played_propaganda_card"] = True
+                elif c == "played_money_card":
+                    self.turn_log["played_money_card"] = True
+                elif c == "successful_discard":
+                    self.turn_log["successful_discard"] = True
+                elif c == "canceled_propaganda_card":
+                    self.turn_log["canceled_propaganda_card"] = True
+
+        if "conditional_bonus" in effects:
+            self.turn_log["non_starter_discard"] = True
+
+        if "shared_draw" in effects:
+            for p in self.players:
+                if p is not player:
+                    p.hand = [starter("對手手牌1")]
+                    p.deck.draw_pile = [starter("對手共抽1"), starter("對手共抽2")]
+
+        if "dissolve" in effects:
+            player.organizations = {"北京": 1}
+            for p in self.players:
+                if p is not player:
+                    p.organizations = {"香港城": 1}
+                    break
+
+        if "refresh_purchase_area" in effects:
+            player.deck.draw_pile = [Card("市場1", "command", {}), Card("市場2", "command", {}), Card("市場3", "command", {}), Card("市場4", "command", {})]
+
+        return {
+            "success": True,
+            "player": player.name,
+            "card": card_name,
+            "hand": [getattr(c, 'name', str(c)) for c in player.hand],
+            "turn_phase": self.turn_phase,
+        }
+
     # ---------- Core ----------
 
     def current_player(self):

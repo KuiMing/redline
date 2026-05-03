@@ -198,6 +198,19 @@ def test_set_hand(payload: dict):
     return {"success": True, "hand": [c.name for c in player.hand], "turn_phase": game.turn_phase}
 
 
+@app.post("/test/setup-card-scenario")
+def test_setup_card_scenario(payload: dict):
+    game_id = payload.get("game_id")
+    player_id = payload.get("player_id")
+    card_name = payload.get("card_name")
+
+    game = manager.get_game(game_id)
+    if not game:
+        return {"error": "Game not found"}
+
+    return game.setup_test_card_scenario(player_id, card_name)
+
+
 @app.get("/")
 def index():
     return FileResponse("static/index.html")
