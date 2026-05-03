@@ -50,6 +50,7 @@ class Player:
         self.moves_left = 3
         self.hand = []
         self.deck = None
+        self.build_range_bonus = 0
 
     def total_organizations(self):
         return sum(self.organizations.values())
@@ -66,6 +67,7 @@ class Player:
     def reset_turn(self):
         self.resources = {"money": 0, "propaganda": 0}
         self.moves_left = 3
+        self.build_range_bonus = 0
 
 
 class Game:
@@ -193,9 +195,16 @@ class Game:
         if index < 0 or index >= len(player.hand):
             return {"error": "Invalid index"}
 
-        card_name = player.hand.pop(index)
+        played_card = player.hand.pop(index)
+        card_name = getattr(played_card, "name", str(played_card))
+
+        if getattr(played_card, "card_type", None) == "money":
+            self.turn_log["played_money_card"] = True
+        if getattr(played_card, "card_type", None) == "propaganda":
+            self.turn_log["played_propaganda_card"] = True
+
         self.action_engine.execute(card_name, player, self)
-        player.deck.discard([card_name])
+        player.deck.discard([played_card])
         self.log(f"{player.name} played {card_name}")
         return {"success": True}
 
