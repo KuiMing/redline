@@ -130,7 +130,7 @@ body {
 }
 
 #mapView {
-  padding: 8px;
+  padding: 0;
   position: relative;
   z-index: 2;
   height: calc(100vh - 96px);
@@ -139,11 +139,18 @@ body {
 .map-only-panel {
   height: 100%;
   background: rgba(17, 22, 29, 0.96);
+  padding: 0;
+  border: 0;
+}
+
+.map-only-panel .panel-title {
+  display: none;
 }
 
 #mapPanel {
   position: relative;
   z-index: 2;
+  height: 100%;
 }
 
 #strategicMapRoot {

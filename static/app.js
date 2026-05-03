@@ -18,9 +18,16 @@ function initTabs() {
 
       if (view === 'map') {
         await ensureStrategicMapMounted();
-        if (window.initializeStrategicMapWhenVisible) {
-          window.initializeStrategicMapWhenVisible();
-        }
+        setTimeout(() => {
+          const playableMap = window.__redlinePlayableMap;
+          if (playableMap) {
+            playableMap.invalidateSize(false);
+            if (!window.__redlineMapFocusedOnce && window.focusAsia) {
+              window.__redlineMapFocusedOnce = true;
+              window.focusAsia();
+            }
+          }
+        }, 120);
       }
     });
   });
@@ -122,6 +129,16 @@ async function ensureStrategicMapMounted() {
   root.appendChild(script);
 
   root.dataset.mounted = '1';
+
+  setTimeout(() => {
+    const playableMap = window.__redlinePlayableMap;
+    if (playableMap) {
+      playableMap.invalidateSize(false);
+      if (window.focusAsia) {
+        window.focusAsia();
+      }
+    }
+  }, 160);
 }
 
 function syncStrategicMap(state) {
