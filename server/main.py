@@ -134,7 +134,9 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
                 )
 
             if result and result.get("error"):
-                await websocket.send_json({"error": result.get("error")})
+                error_state = dict(game.state())
+                error_state["error"] = result.get("error")
+                await websocket.send_json(error_state)
                 continue
 
             # Broadcast updated state

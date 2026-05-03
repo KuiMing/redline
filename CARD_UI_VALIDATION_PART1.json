@@ -17,16 +17,16 @@
       "hand_before": [
         "追隨者",
         "追隨者",
-        "追隨者",
+        "樂捐者",
         "追隨者",
         "追隨者"
       ],
-      "state_same": false,
-      "log_same": true,
-      "state_after": true
+      "error_before": null,
+      "error_after": "Not your turn",
+      "log_same": true
     },
     "chosen_card": "追隨者",
-    "host_log_changed": false,
+    "host_log_changed": true,
     "hud_changed": false,
     "host_state_after_player_count": 2
   },
@@ -48,17 +48,17 @@
       "guest": "guest2",
       "hand_before": [
         "追隨者",
-        "樂捐者",
-        "樂捐者",
         "追隨者",
+        "追隨者",
+        "樂捐者",
         "追隨者"
       ],
-      "state_same": false,
-      "log_same": true,
-      "state_after": true
+      "error_before": null,
+      "error_after": "Not your turn",
+      "log_same": true
     },
     "chosen_card": "追隨者",
-    "host_log_changed": false,
+    "host_log_changed": true,
     "hud_changed": false,
     "host_state_after_player_count": 3
   },
@@ -80,18 +80,18 @@
     "illegal_play": {
       "guest": "guest2",
       "hand_before": [
+        "追隨者",
         "樂捐者",
         "追隨者",
         "追隨者",
-        "追隨者",
-        "樂捐者"
+        "追隨者"
       ],
-      "state_same": false,
-      "log_same": true,
-      "state_after": true
+      "error_before": null,
+      "error_after": "Not your turn",
+      "log_same": true
     },
     "chosen_card": "追隨者",
-    "host_log_changed": false,
+    "host_log_changed": true,
     "hud_changed": false,
     "host_state_after_player_count": 4
   }

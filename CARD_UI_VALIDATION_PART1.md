@@ -8,9 +8,9 @@
 - turn_phase: event -> action
 - host hand count: 5 -> 4
 - guest hand counts: {'guest2': 5}
-- illegal_play: {'guest': 'guest2', 'hand_before': ['追隨者', '追隨者', '追隨者', '追隨者', '追隨者'], 'state_same': False, 'log_same': True, 'state_after': True}
+- illegal_play: {'guest': 'guest2', 'hand_before': ['追隨者', '追隨者', '樂捐者', '追隨者', '追隨者'], 'error_before': None, 'error_after': 'Not your turn', 'log_same': True}
 - chosen_card: 追隨者
-- host_log_changed: False
+- host_log_changed: True
 - hud_changed: False
 - host_state_after_player_count: 2
 
@@ -20,9 +20,9 @@
 - turn_phase: event -> action
 - host hand count: 5 -> 4
 - guest hand counts: {'guest2': 5, 'guest3': 5}
-- illegal_play: {'guest': 'guest2', 'hand_before': ['追隨者', '樂捐者', '樂捐者', '追隨者', '追隨者'], 'state_same': False, 'log_same': True, 'state_after': True}
+- illegal_play: {'guest': 'guest2', 'hand_before': ['追隨者', '追隨者', '追隨者', '樂捐者', '追隨者'], 'error_before': None, 'error_after': 'Not your turn', 'log_same': True}
 - chosen_card: 追隨者
-- host_log_changed: False
+- host_log_changed: True
 - hud_changed: False
 - host_state_after_player_count: 3
 
@@ -32,8 +32,8 @@
 - turn_phase: event -> action
 - host hand count: 5 -> 4
 - guest hand counts: {'guest2': 5, 'guest3': 5, 'guest4': 5}
-- illegal_play: {'guest': 'guest2', 'hand_before': ['樂捐者', '追隨者', '追隨者', '追隨者', '樂捐者'], 'state_same': False, 'log_same': True, 'state_after': True}
+- illegal_play: {'guest': 'guest2', 'hand_before': ['追隨者', '樂捐者', '追隨者', '追隨者', '追隨者'], 'error_before': None, 'error_after': 'Not your turn', 'log_same': True}
 - chosen_card: 追隨者
-- host_log_changed: False
+- host_log_changed: True
 - hud_changed: False
 - host_state_after_player_count: 4

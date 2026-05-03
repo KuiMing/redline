@@ -212,7 +212,8 @@ function render(state) {
   const logDiv = document.getElementById('log');
   if (logDiv) {
     logDiv.innerHTML = '';
-    (state.log || []).slice().reverse().forEach(entry => {
+    const entries = state.action_log || state.log || [];
+    entries.slice().reverse().forEach(entry => {
       logDiv.innerHTML += `<div>${entry}</div>`;
     });
   }
