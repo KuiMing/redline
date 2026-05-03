@@ -105,13 +105,23 @@ async function ensureStrategicMapMounted() {
   const root = document.getElementById('strategicMapRoot');
   if (!root || root.dataset.mounted === '1') return;
 
-  const res = await fetch('/static/leaflet_embed_fragment.html');
-  root.innerHTML = await res.text();
-  root.dataset.mounted = '1';
+  const fragmentRes = await fetch('/static/leaflet_game_map_embed_fragment.html');
+  root.innerHTML = await fragmentRes.text();
 
-  if (window.dispatchEvent) {
-    window.dispatchEvent(new CustomEvent('redline-map-mounted'));
-  }
+  const script = document.createElement('script');
+  script.addEventListener('load', () => {
+    if (window.connectGameMap && gameId && playerId) {
+      window.connectGameMap({ gameId, playerId });
+    }
+  }, { once: true });
+  script.addEventListener('error', () => {
+    console.error('Failed to load /static/leaflet_game_map_logic.js');
+  }, { once: true });
+  script.src = '/static/leaflet_game_map_logic.js';
+  script.dataset.redlineMapLogic = '1';
+  root.appendChild(script);
+
+  root.dataset.mounted = '1';
 }
 
 function syncStrategicMap(state) {

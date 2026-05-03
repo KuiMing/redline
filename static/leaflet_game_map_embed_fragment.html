@@ -1,0 +1,70 @@
+<style>
+.leaflet-game-embed{
+    --bg:#0b1020; --panel:#11182b; --text:#eef2ff; --muted:#9aa7c7;
+    --road:#d8a04a; --rail:#ef4444; --border:#2b385d;
+  }.leaflet-game-embed *{ box-sizing:border-box; }.leaflet-game-embed, .leaflet-game-embed{ margin:0; height:100%; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC","Microsoft JhengHei",sans-serif; background:var(--bg); color:var(--text); }.leaflet-game-embed #app{ display:grid; grid-template-columns:340px 1fr; height:100vh; }.leaflet-game-embed aside{ background:linear-gradient(180deg,var(--panel),#0d1426); border-right:1px solid #26314f; padding:16px; overflow:auto; }.leaflet-game-embed main{ position:relative; }.leaflet-game-embed #map{ position:absolute; inset:0; }.leaflet-game-embed h1{ font-size:20px; margin:0 0 6px; letter-spacing:.04em; }.leaflet-game-embed .sub{ font-size:12px; color:var(--muted); line-height:1.6; margin-bottom:14px; }.leaflet-game-embed .card{ background:rgba(23,33,58,.92); border:1px solid var(--border); border-radius:14px; padding:12px; margin:12px 0; box-shadow:0 10px 28px rgba(0,0,0,.22); }.leaflet-game-embed label{ display:block; color:#c7d2fe; font-size:12px; margin:10px 0 6px; }.leaflet-game-embed input, .leaflet-game-embed select, .leaflet-game-embed button{ width:100%; border-radius:10px; border:1px solid #344264; background:#0d1426; color:var(--text); padding:9px 10px; outline:none; }.leaflet-game-embed button{ cursor:pointer; background:#1c2a49; transition:.15s; }.leaflet-game-embed button:hover{ background:#26375e; }.leaflet-game-embed .row{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }.leaflet-game-embed .stats{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }.leaflet-game-embed .stat{ background:#0d1426; border:1px solid #27375d; padding:10px; border-radius:12px; }.leaflet-game-embed .stat b{ font-size:18px; display:block; }.leaflet-game-embed .stat span{ font-size:11px; color:var(--muted); }.leaflet-game-embed .legend{ display:flex; flex-wrap:wrap; gap:8px; font-size:12px; color:var(--muted); }.leaflet-game-embed .legend i{ width:14px;height:8px;border-radius:99px; display:inline-block; margin-right:5px; vertical-align:middle; }.leaflet-game-embed #info{ font-size:13px; line-height:1.6; }.leaflet-game-embed #info .name{ font-size:19px; color:#fff; font-weight:800; margin-bottom:5px; }.leaflet-game-embed #info code{ background:#0b1020; padding:2px 6px; border-radius:6px; color:#dbeafe; }.leaflet-game-embed .pill{ display:inline-block; font-size:11px; border:1px solid #3d4b70; background:#0e1629; padding:2px 7px; border-radius:999px; margin:2px; color:#dbeafe; }.leaflet-game-embed .toolbar{ position:absolute; right:16px; top:16px; display:flex; gap:8px; z-index:800; }.leaflet-game-embed .toolbar button{ width:auto; min-width:96px; background:rgba(17,24,43,.92); backdrop-filter:blur(8px); }.leaflet-game-embed .leaflet-container{ background:#0f1728; }.leaflet-game-embed .leaflet-popup-content-wrapper, .leaflet-game-embed .leaflet-popup-tip{ background:#0f1728; color:#eef2ff; }.leaflet-game-embed .leaflet-control-attribution{ background:rgba(10,15,26,.7) !important; color:#d4dcf6; }.leaflet-game-embed .leaflet-control-attribution a{ color:#9fc1ff; }.leaflet-game-embed .town-label{ background:rgba(8,16,32,.84); border:1px solid rgba(188,204,255,.2); color:#eef2ff; border-radius:4px; padding:1px 4px; font-size:11px; box-shadow:none; }.leaflet-game-embed .town-label.leaflet-tooltip-left:before, .leaflet-game-embed .town-label.leaflet-tooltip-right:before, .leaflet-game-embed .town-label.leaflet-tooltip-top:before, .leaflet-game-embed .town-label.leaflet-tooltip-bottom:before{ display:none; }.leaflet-game-embed .note{ font-size:12px; color:#aab7d8; line-height:1.55; }.leaflet-game-embed .status-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }.leaflet-game-embed .status-tile{ background:#0d1426; border:1px solid #27375d; padding:10px; border-radius:12px; }.leaflet-game-embed .status-tile b{ display:block; font-size:15px; color:#fff; margin-bottom:4px; }.leaflet-game-embed .status-tile span{ display:block; font-size:12px; color:var(--muted); line-height:1.5; }.leaflet-game-embed .hint-strong{ color:#dbeafe; font-weight:700; }
+</style>
+<div class="leaflet-game-embed">
+<div id="app">
+  <aside>
+    <h1>逆統戰</h1>
+
+    <div class="card">
+      <label>搜尋城鎮</label>
+      <input id="searchBox" placeholder="例：臺北、香港城、喀什、烏蘭巴托" />
+      <div class="row">
+        <div>
+          <label>統治者</label>
+          <select id="rulerFilter"><option value="">全部</option></select>
+        </div>
+        <div>
+          <label>陣營</label>
+          <select id="campFilter"><option value="">全部</option></select>
+        </div>
+      </div>
+      <label>城鎮類型</label>
+      <select id="typeFilter"><option value="">全部</option></select>
+      <div class="row" style="margin-top:10px;">
+        <button id="resetFilter">清除篩選</button>
+        <button id="fitFiltered">聚焦結果</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="legend">
+        <span><i style="background:var(--road)"></i>一般道路：金色</span>
+        <span><i style="background:#7dd3fc"></i>鐵路：藍色虛線</span>
+        <span><i style="background:#ffffff"></i>已選城鎮：白色描邊</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="status-grid">
+        <div class="status-tile">
+          <b id="statusCurrentPlayer">未連線</b>
+          <span>當前行動玩家</span>
+        </div>
+        <div class="status-tile">
+          <b id="statusSelectedTown">尚未選取</b>
+          <span>目前地圖選取城鎮</span>
+        </div>
+      </div>
+      <div class="note" id="interactionHint" style="margin-top:10px;">連上遊戲後，只有 <span class="hint-strong">當前玩家自己擁有組織</span> 的城鎮可以高亮合法移動。</div>
+    </div>
+
+    <div class="card" id="info">
+      <div class="name">尚未選取城鎮</div>
+      <div>點擊地圖上的城鎮查看統治者、陣營、城鎮類型，以及一般道路 / 鐵路連線。</div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="toolbar">
+      <button id="fitAll">Fit All</button>
+      <button id="focusAsia">Focus Asia</button>
+      <button id="exportView">Export View</button>
+    </div>
+    <div id="map"></div>
+  </main>
+</div>
+</div>
