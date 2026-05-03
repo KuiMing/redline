@@ -7,6 +7,9 @@ class EffectEngine:
     def _draw(self, player, count):
         player.hand.extend(player.deck.draw(count))
 
+    def _starter_names(self):
+        return {"追隨者", "樂捐者"}
+
     def execute(self, effect, player, game, context=None):
         etype = effect.get("type")
 
@@ -110,6 +113,84 @@ class EffectEngine:
                 should_draw = bool(game.turn_log.get("canceled_propaganda_card"))
             if should_draw:
                 self._draw(player, effect.get("count", 1))
+            return
+
+        # ✅ Add internal conflict cards (MVP: add named disruption cards to discard pile)
+        if etype == "add_internal_conflict":
+            count = effect.get("count", 1)
+            from server.cards import Card
+            cards = [Card("內鬥", "disruption", {}) for _ in range(count)]
+            player.deck.discard(cards)
+            game.log(f"{player.name} gained {count} 內鬥 card(s)")
+            return
+
+        # ✅ Cancel card (MVP: set turn flag for later conditional checks)
+        if etype == "cancel_card":
+            game.turn_log["canceled_propaganda_card"] = True
+            game.log(f"{player.name} triggered cancel-card effect")
+            return
+
+        # ✅ Conditional bonus
+        if etype == "conditional_bonus":
+            condition = effect.get("condition")
+            ok = False
+            if condition == "non_starter_discard":
+                ok = bool(game.turn_log.get("non_starter_discard"))
+            if ok:
+                player.resources["money"] += effect.get("money", 0)
+                player.resources["propaganda"] += effect.get("propaganda", 0)
+            return
+
+        # ✅ Dissolve (MVP: remove one org from first available opponent town; optional self sacrifice)
+        if etype == "dissolve":
+            if effect.get("requires_self_sacrifice"):
+                owned = [town for town, count in player.organizations.items() if count > 0]
+                if owned:
+                    town = owned[0]
+                    player.organizations[town] -= 1
+                    if player.organizations[town] <= 0:
+                        del player.organizations[town]
+            for other in game.players:
+                if other == player:
+                    continue
+                owned = [town for town, count in other.organizations.items() if count > 0]
+                if owned:
+                    town = owned[0]
+                    other.organizations[town] -= 1
+                    if other.organizations[town] <= 0:
+                        del other.organizations[town]
+                    game.log(f"{player.name} dissolved 1 organization from {other.name} at {town}")
+                    break
+            return
+
+        # ✅ Refresh purchase area (MVP: expose top 3 cards from current player's deck)
+        if etype == "refresh_purchase_area":
+            game.purchase_area = player.deck.draw(3)
+            return
+
+        # ✅ Trash from hand or discard
+        if etype == "trash_from_hand_or_discard":
+            count = effect.get("count", 1)
+            starters = self._starter_names()
+            for _ in range(count):
+                card = None
+                for i, c in enumerate(player.hand):
+                    if getattr(c, "name", str(c)) not in starters:
+                        card = player.hand.pop(i)
+                        game.turn_log["non_starter_discard"] = True
+                        break
+                if card is None:
+                    for i, c in enumerate(player.deck.discard_pile):
+                        if getattr(c, "name", str(c)) not in starters:
+                            card = player.deck.discard_pile.pop(i)
+                            game.turn_log["non_starter_discard"] = True
+                            break
+                if card is None and player.hand:
+                    card = player.hand.pop()
+                elif card is None and player.deck.discard_pile:
+                    card = player.deck.discard_pile.pop()
+                if card is not None:
+                    game.log(f"{player.name} trashed {getattr(card, 'name', str(card))}")
             return
 
         # ✅ Extra move (increase movement points)

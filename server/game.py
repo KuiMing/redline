@@ -104,6 +104,7 @@ class Game:
 
         self.turn_log = self._new_turn_log()
         self.action_log = []
+        self.purchase_area = []
 
     # ---------- Init ----------
 
@@ -365,6 +366,7 @@ class Game:
             "winner": self.winner,
             "current_player": self.current_player().name,
             "active_eras": self.era_engine.get_active_eras() if self.era_engine else [],
+            "purchase_area": [getattr(card, 'name', str(card)) for card in self.purchase_area],
             "map": {
                 "towns": town_control
             },
