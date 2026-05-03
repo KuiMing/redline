@@ -1,0 +1,2888 @@
+[
+  {
+    "name": "宣傳家",
+    "type": "propaganda",
+    "effects": [
+      "optional_trash",
+      "build",
+      "move"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 0,
+      "propaganda": 2
+    },
+    "before": {
+      "hand": [
+        "可垃圾牌",
+        "宣傳家"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [],
+      "resources": {
+        "money": 0,
+        "propaganda": 2
+      },
+      "moves_left": 4,
+      "orgs": {
+        "北京": 2,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "宣傳家"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": true,
+        "non_starter_discard": false,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 trashed 可垃圾牌",
+        "[Turn 1] player1 built organization in 北京 via card effect",
+        "[Turn 1] player1 played 宣傳家"
+      ]
+    }
+  },
+  {
+    "name": "思想家",
+    "type": "propaganda",
+    "effects": [
+      "optional_trash",
+      "build",
+      "move"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 0,
+      "propaganda": 3
+    },
+    "before": {
+      "hand": [
+        "可垃圾牌",
+        "思想家"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [],
+      "resources": {
+        "money": 0,
+        "propaganda": 3
+      },
+      "moves_left": 6,
+      "orgs": {
+        "北京": 2,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "思想家"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": true,
+        "non_starter_discard": false,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 trashed 可垃圾牌",
+        "[Turn 1] player1 built organization in 北京 via card effect",
+        "[Turn 1] player1 played 思想家"
+      ]
+    }
+  },
+  {
+    "name": "資助者",
+    "type": "money",
+    "effects": [
+      "optional_trash",
+      "gain_resource"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 4,
+      "propaganda": 2
+    },
+    "before": {
+      "hand": [
+        "可垃圾牌",
+        "資助者"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [],
+      "resources": {
+        "money": 4,
+        "propaganda": 2
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "資助者"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": true,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 trashed 可垃圾牌",
+        "[Turn 1] player1 played 資助者"
+      ]
+    }
+  },
+  {
+    "name": "資本家",
+    "type": "money",
+    "effects": [
+      "optional_trash",
+      "gain_resource"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 6,
+      "propaganda": 3
+    },
+    "before": {
+      "hand": [
+        "可垃圾牌",
+        "資本家"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [],
+      "resources": {
+        "money": 6,
+        "propaganda": 3
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "資本家"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": true,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 trashed 可垃圾牌",
+        "[Turn 1] player1 played 資本家"
+      ]
+    }
+  },
+  {
+    "name": "分神",
+    "type": "disruption",
+    "effects": [
+      "optional_trash"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 0,
+      "propaganda": 0
+    },
+    "before": {
+      "hand": [
+        "可垃圾牌",
+        "分神"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "分神"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 trashed 可垃圾牌",
+        "[Turn 1] player1 played 分神"
+      ]
+    }
+  },
+  {
+    "name": "內鬥",
+    "type": "disruption",
+    "effects": [],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 0,
+      "propaganda": 0
+    },
+    "before": {
+      "hand": [
+        "內鬥"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "內鬥"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 played 內鬥"
+      ]
+    }
+  },
+  {
+    "name": "領導",
+    "type": "command",
+    "effects": [
+      "draw"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 0,
+      "propaganda": 1
+    },
+    "before": {
+      "hand": [
+        "領導"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [
+        "抽牌D"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 1
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "領導"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 played 領導"
+      ]
+    }
+  },
+  {
+    "name": "謀劃",
+    "type": "command",
+    "effects": [
+      "draw"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 0,
+      "propaganda": 2
+    },
+    "before": {
+      "hand": [
+        "謀劃"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [
+        "抽牌D",
+        "抽牌C"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 2
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "謀劃"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 played 謀劃"
+      ]
+    }
+  },
+  {
+    "name": "戰略",
+    "type": "command",
+    "effects": [
+      "draw"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 0,
+      "propaganda": 3
+    },
+    "before": {
+      "hand": [
+        "戰略"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [
+        "抽牌D",
+        "抽牌C",
+        "抽牌B"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 3
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "戰略"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 played 戰略"
+      ]
+    }
+  },
+  {
+    "name": "合作談判",
+    "type": "command",
+    "effects": [
+      "shared_draw"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 0,
+      "propaganda": 1
+    },
+    "before": {
+      "hand": [
+        "合作談判"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 1
+      }
+    },
+    "after": {
+      "hand": [
+        "抽牌D"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 1
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "合作談判"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 played 合作談判"
+      ]
+    }
+  },
+  {
+    "name": "高效行動",
+    "type": "command",
+    "effects": [
+      "draw",
+      "discard_self"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success"
+    ],
+    "resources_delta": {
+      "money": 0,
+      "propaganda": 0
+    },
+    "before": {
+      "hand": [
+        "高效行動",
+        "自棄1",
+        "自棄2"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [
+        "高效行動",
+        "自棄1"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "自棄2"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 played 自棄2"
+      ]
+    }
+  },
+  {
+    "name": "模仿戰術",
+    "type": "command",
+    "effects": [
+      "peek_deck",
+      "topdeck_to_hand"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 0,
+      "propaganda": 2
+    },
+    "before": {
+      "hand": [
+        "模仿戰術"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [
+        "抽牌D"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 2
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "模仿戰術"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 played 模仿戰術"
+      ]
+    }
+  },
+  {
+    "name": "乘勝追擊",
+    "type": "command",
+    "effects": [
+      "gain_from_discard"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 1,
+      "propaganda": 0
+    },
+    "before": {
+      "hand": [
+        "乘勝追擊"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "可回收牌"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [
+        "可回收牌"
+      ],
+      "resources": {
+        "money": 1,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "乘勝追擊"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 played 乘勝追擊"
+      ]
+    }
+  },
+  {
+    "name": "誘導虛耗",
+    "type": "command",
+    "effects": [
+      "optional_trash",
+      "force_discard"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 0,
+      "propaganda": 1
+    },
+    "before": {
+      "hand": [
+        "可垃圾牌",
+        "誘導虛耗"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [],
+      "resources": {
+        "money": 0,
+        "propaganda": 1
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "誘導虛耗"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 1
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 trashed 可垃圾牌",
+        "[Turn 1] player1 played 誘導虛耗"
+      ]
+    }
+  },
+  {
+    "name": "點燃熱情",
+    "type": "command",
+    "effects": [
+      "draw",
+      "conditional_draw"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 0,
+      "propaganda": 1
+    },
+    "before": {
+      "hand": [
+        "點燃熱情"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [
+        "抽牌D",
+        "抽牌C"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 1
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "點燃熱情"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": true,
+        "non_starter_discard": false,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 played 點燃熱情"
+      ]
+    }
+  },
+  {
+    "name": "樹立信心",
+    "type": "command",
+    "effects": [
+      "draw",
+      "conditional_draw"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 1,
+      "propaganda": 0
+    },
+    "before": {
+      "hand": [
+        "樹立信心"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [
+        "抽牌D",
+        "抽牌C"
+      ],
+      "resources": {
+        "money": 1,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "樹立信心"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": true,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 played 樹立信心"
+      ]
+    }
+  },
+  {
+    "name": "網羅人才",
+    "type": "command",
+    "effects": [
+      "peek_deck",
+      "topdeck_to_hand"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 1,
+      "propaganda": 1
+    },
+    "before": {
+      "hand": [
+        "網羅人才"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [
+        "抽牌D"
+      ],
+      "resources": {
+        "money": 1,
+        "propaganda": 1
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "網羅人才"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 played 網羅人才"
+      ]
+    }
+  },
+  {
+    "name": "凝聚共識",
+    "type": "command",
+    "effects": [
+      "draw",
+      "discard_self",
+      "conditional_bonus"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success"
+    ],
+    "resources_delta": {
+      "money": 0,
+      "propaganda": 0
+    },
+    "before": {
+      "hand": [
+        "凝聚共識",
+        "自棄1",
+        "自棄2"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [
+        "凝聚共識",
+        "自棄1"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "自棄2"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": false,
+        "non_starter_discard": true,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 played 自棄2"
+      ]
+    }
+  },
+  {
+    "name": "思想建設",
+    "type": "command",
+    "effects": [
+      "extend_build_range"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 0,
+      "propaganda": 1
+    },
+    "before": {
+      "hand": [
+        "思想建設"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [],
+      "resources": {
+        "money": 0,
+        "propaganda": 1
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "思想建設"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 played 思想建設"
+      ]
+    }
+  },
+  {
+    "name": "擴大戰果",
+    "type": "command",
+    "effects": [
+      "gain_any_from_discard"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 2,
+      "propaganda": 0
+    },
+    "before": {
+      "hand": [
+        "擴大戰果"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "可回收牌"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [
+        "可回收牌"
+      ],
+      "resources": {
+        "money": 2,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "擴大戰果"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 played 擴大戰果"
+      ]
+    }
+  },
+  {
+    "name": "交通經驗丙",
+    "type": "transport",
+    "effects": [
+      "extra_move"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 1,
+      "propaganda": 0
+    },
+    "before": {
+      "hand": [
+        "交通經驗丙"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [],
+      "resources": {
+        "money": 1,
+        "propaganda": 0
+      },
+      "moves_left": 5,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "交通經驗丙"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 played 交通經驗丙"
+      ]
+    }
+  },
+  {
+    "name": "交通經驗乙",
+    "type": "transport",
+    "effects": [
+      "extra_move"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 2,
+      "propaganda": 0
+    },
+    "before": {
+      "hand": [
+        "交通經驗乙"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [],
+      "resources": {
+        "money": 2,
+        "propaganda": 0
+      },
+      "moves_left": 7,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "交通經驗乙"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 played 交通經驗乙"
+      ]
+    }
+  },
+  {
+    "name": "交通經驗甲",
+    "type": "transport",
+    "effects": [
+      "extra_move"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 3,
+      "propaganda": 0
+    },
+    "before": {
+      "hand": [
+        "交通經驗甲"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [],
+      "resources": {
+        "money": 3,
+        "propaganda": 0
+      },
+      "moves_left": 9,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "交通經驗甲"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 played 交通經驗甲"
+      ]
+    }
+  },
+  {
+    "name": "組織經驗丙",
+    "type": "organization",
+    "effects": [
+      "build"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 0,
+      "propaganda": 1
+    },
+    "before": {
+      "hand": [
+        "組織經驗丙"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [],
+      "resources": {
+        "money": 0,
+        "propaganda": 1
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 2,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "組織經驗丙"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 built organization in 北京 via card effect",
+        "[Turn 1] player1 played 組織經驗丙"
+      ]
+    }
+  },
+  {
+    "name": "組織經驗乙",
+    "type": "organization",
+    "effects": [
+      "build",
+      "build"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 0,
+      "propaganda": 2
+    },
+    "before": {
+      "hand": [
+        "組織經驗乙"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [],
+      "resources": {
+        "money": 0,
+        "propaganda": 2
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 3,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "組織經驗乙"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 built organization in 北京 via card effect",
+        "[Turn 1] player1 built organization in 北京 via card effect",
+        "[Turn 1] player1 played 組織經驗乙"
+      ]
+    }
+  },
+  {
+    "name": "組織經驗甲",
+    "type": "organization",
+    "effects": [
+      "build"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 1,
+      "propaganda": 2
+    },
+    "before": {
+      "hand": [
+        "組織經驗甲"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [],
+      "resources": {
+        "money": 1,
+        "propaganda": 2
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 2,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "組織經驗甲"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 built organization in 北京 via card effect",
+        "[Turn 1] player1 played 組織經驗甲"
+      ]
+    }
+  },
+  {
+    "name": "批判",
+    "type": "purge",
+    "effects": [
+      "trash_from_hand_or_discard"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 0,
+      "propaganda": 1
+    },
+    "before": {
+      "hand": [
+        "非起始牌",
+        "批判"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "追隨者",
+        "棄牌區非起始牌"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [],
+      "resources": {
+        "money": 0,
+        "propaganda": 1
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "追隨者",
+        "棄牌區非起始牌",
+        "批判"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": false,
+        "non_starter_discard": true,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 trashed 非起始牌",
+        "[Turn 1] player1 played 批判"
+      ]
+    }
+  },
+  {
+    "name": "批鬥",
+    "type": "purge",
+    "effects": [
+      "trash_from_hand_or_discard"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 0,
+      "propaganda": 2
+    },
+    "before": {
+      "hand": [
+        "非起始牌",
+        "批鬥"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "追隨者",
+        "棄牌區非起始牌"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [],
+      "resources": {
+        "money": 0,
+        "propaganda": 2
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "追隨者",
+        "批鬥"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": false,
+        "non_starter_discard": true,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 trashed 非起始牌",
+        "[Turn 1] player1 trashed 棄牌區非起始牌",
+        "[Turn 1] player1 played 批鬥"
+      ]
+    }
+  },
+  {
+    "name": "爆料黑幕",
+    "type": "propaganda_special",
+    "effects": [
+      "cancel_card",
+      "conditional_draw"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 0,
+      "propaganda": 2
+    },
+    "before": {
+      "hand": [
+        "爆料黑幕"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [
+        "抽牌D"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 2
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "爆料黑幕"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false,
+        "canceled_propaganda_card": true
+      },
+      "log_tail": [
+        "[Turn 1] player1 triggered cancel-card effect",
+        "[Turn 1] player1 played 爆料黑幕"
+      ]
+    }
+  },
+  {
+    "name": "輿論丕變",
+    "type": "propaganda_special",
+    "effects": [
+      "refresh_purchase_area",
+      "gain_resource"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 0,
+      "propaganda": 2
+    },
+    "before": {
+      "hand": [
+        "輿論丕變"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [],
+      "resources": {
+        "money": 0,
+        "propaganda": 2
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "輿論丕變"
+      ],
+      "purchase_area": [
+        "市場4",
+        "市場3",
+        "市場2"
+      ],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 played 輿論丕變"
+      ]
+    }
+  },
+  {
+    "name": "行動預告",
+    "type": "propaganda_special",
+    "effects": [
+      "topdeck_to_hand",
+      "gain_resource"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 0,
+      "propaganda": 3
+    },
+    "before": {
+      "hand": [
+        "行動預告"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [
+        "抽牌D"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 3
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "行動預告"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 played 行動預告"
+      ]
+    }
+  },
+  {
+    "name": "派遣間諜",
+    "type": "spy",
+    "effects": [
+      "dissolve"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 0,
+      "propaganda": 1
+    },
+    "before": {
+      "hand": [
+        "派遣間諜"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [],
+      "resources": {
+        "money": 0,
+        "propaganda": 1
+      },
+      "moves_left": 3,
+      "orgs": {},
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "派遣間諜"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 dissolved 1 organization from player2 at 香港城",
+        "[Turn 1] player1 played 派遣間諜"
+      ]
+    }
+  },
+  {
+    "name": "內應間諜",
+    "type": "spy",
+    "effects": [
+      "dissolve"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 0,
+      "propaganda": 2
+    },
+    "before": {
+      "hand": [
+        "內應間諜"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [],
+      "resources": {
+        "money": 0,
+        "propaganda": 2
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "內應間諜"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 dissolved 1 organization from player2 at 香港城",
+        "[Turn 1] player1 played 內應間諜"
+      ]
+    }
+  },
+  {
+    "name": "情報網",
+    "type": "spy",
+    "effects": [
+      "add_internal_conflict",
+      "cancel_card"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 1,
+      "propaganda": 1
+    },
+    "before": {
+      "hand": [
+        "情報網"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [],
+      "resources": {
+        "money": 1,
+        "propaganda": 1
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "內鬥",
+        "情報網"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false,
+        "canceled_propaganda_card": true
+      },
+      "log_tail": [
+        "[Turn 1] player1 gained 1 內鬥 card(s)",
+        "[Turn 1] player1 triggered cancel-card effect",
+        "[Turn 1] player1 played 情報網"
+      ]
+    }
+  },
+  {
+    "name": "離間",
+    "type": "spy",
+    "effects": [
+      "add_internal_conflict"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 0,
+      "propaganda": 2
+    },
+    "before": {
+      "hand": [
+        "離間"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [],
+      "resources": {
+        "money": 0,
+        "propaganda": 2
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "內鬥",
+        "內鬥",
+        "內鬥",
+        "離間"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 gained 3 內鬥 card(s)",
+        "[Turn 1] player1 played 離間"
+      ]
+    }
+  },
+  {
+    "name": "走漏風聲",
+    "type": "spy",
+    "effects": [
+      "peek_deck",
+      "add_internal_conflict"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 0,
+      "propaganda": 1
+    },
+    "before": {
+      "hand": [
+        "走漏風聲"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [],
+      "resources": {
+        "money": 0,
+        "propaganda": 1
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "內鬥",
+        "走漏風聲"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 gained 1 內鬥 card(s)",
+        "[Turn 1] player1 played 走漏風聲"
+      ]
+    }
+  },
+  {
+    "name": "地下黨",
+    "type": "spy",
+    "effects": [
+      "peek_deck",
+      "gain_any_from_discard"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 1,
+      "propaganda": 2
+    },
+    "before": {
+      "hand": [
+        "地下黨"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "可回收牌"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [
+        "可回收牌"
+      ],
+      "resources": {
+        "money": 1,
+        "propaganda": 2
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "地下黨"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 played 地下黨"
+      ]
+    }
+  },
+  {
+    "name": "武裝者",
+    "type": "armed",
+    "effects": [
+      "force_discard"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 0,
+      "propaganda": 1
+    },
+    "before": {
+      "hand": [
+        "武裝者"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [],
+      "resources": {
+        "money": 0,
+        "propaganda": 1
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "武裝者"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 1
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 played 武裝者"
+      ]
+    }
+  },
+  {
+    "name": "武裝小隊",
+    "type": "armed",
+    "effects": [
+      "force_discard"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 1,
+      "propaganda": 1
+    },
+    "before": {
+      "hand": [
+        "武裝小隊"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [],
+      "resources": {
+        "money": 1,
+        "propaganda": 1
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "武裝小隊"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 0
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false
+      },
+      "log_tail": [
+        "[Turn 1] player1 played 武裝小隊"
+      ]
+    }
+  },
+  {
+    "name": "武裝集團",
+    "type": "armed",
+    "effects": [
+      "force_discard",
+      "conditional_draw"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 1,
+      "propaganda": 2
+    },
+    "before": {
+      "hand": [
+        "武裝集團"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [
+        "抽牌D"
+      ],
+      "resources": {
+        "money": 1,
+        "propaganda": 2
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "武裝集團"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 0
+      },
+      "turn_log": {
+        "played_money_card": false,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": true
+      },
+      "log_tail": [
+        "[Turn 1] player1 played 武裝集團"
+      ]
+    }
+  }
+]
