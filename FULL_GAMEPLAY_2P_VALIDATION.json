@@ -8,30 +8,28 @@
       "players": [
         {
           "name": "host",
-          "faction": "uyghur_istanbul",
+          "faction": "red_army",
           "orgs": {
-            "北京": 1,
-            "臺北": 1
+            "北京": 1
           },
           "hand": [
             "追隨者",
             "樂捐者",
             "追隨者",
-            "樂捐者",
+            "追隨者",
             "追隨者"
           ]
         },
         {
           "name": "guest",
-          "faction": "red_army",
+          "faction": "uyghur_munich",
           "orgs": {
-            "上海": 1,
-            "香港城": 1
+            "慕尼黑": 1
           },
           "hand": [
-            "追隨者",
-            "追隨者",
             "樂捐者",
+            "追隨者",
+            "追隨者",
             "追隨者",
             "追隨者"
           ]
@@ -57,13 +55,13 @@
         "追隨者",
         "樂捐者",
         "追隨者",
-        "樂捐者",
+        "追隨者",
         "追隨者"
       ],
       "hand_after": [
         "樂捐者",
         "追隨者",
-        "樂捐者",
+        "追隨者",
         "追隨者"
       ],
       "result": {
@@ -82,7 +80,6 @@
         "success": true
       },
       "orgs_after": {
-        "臺北": 1,
         "天津": 1
       },
       "moves_left_after": 0
@@ -115,15 +112,15 @@
       "step": "cycle_2_play_card",
       "player": "guest",
       "hand_before": [
-        "追隨者",
-        "追隨者",
         "樂捐者",
+        "追隨者",
+        "追隨者",
         "追隨者",
         "追隨者"
       ],
       "hand_after": [
         "追隨者",
-        "樂捐者",
+        "追隨者",
         "追隨者",
         "追隨者"
       ],
@@ -143,8 +140,7 @@
         "success": true
       },
       "orgs_after": {
-        "香港城": 1,
-        "南京": 1
+        "日內瓦": 1
       },
       "moves_left_after": 0
     },
@@ -176,16 +172,16 @@
       "step": "cycle_3_play_card",
       "player": "host",
       "hand_before": [
+        "追隨者",
         "樂捐者",
         "追隨者",
-        "追隨者",
-        "追隨者",
+        "樂捐者",
         "追隨者"
       ],
       "hand_after": [
+        "樂捐者",
         "追隨者",
-        "追隨者",
-        "追隨者",
+        "樂捐者",
         "追隨者"
       ],
       "result": {
@@ -204,10 +200,9 @@
         "success": true
       },
       "orgs_after": {
-        "天津": 1,
-        "基隆": 1
+        "承德": 1
       },
-      "moves_left_after": 0
+      "moves_left_after": 2
     },
     {
       "step": "cycle_3_advance_to_end",
@@ -239,14 +234,14 @@
       "hand_before": [
         "樂捐者",
         "追隨者",
-        "追隨者",
         "樂捐者",
+        "追隨者",
         "追隨者"
       ],
       "hand_after": [
         "追隨者",
-        "追隨者",
         "樂捐者",
+        "追隨者",
         "追隨者"
       ],
       "result": {
@@ -265,10 +260,9 @@
         "success": true
       },
       "orgs_after": {
-        "南京": 1,
-        "澳門": 1
+        "巴黎": 1
       },
-      "moves_left_after": 2
+      "moves_left_after": 0
     },
     {
       "step": "cycle_4_advance_to_end",
@@ -285,38 +279,38 @@
     {
       "step": "before_forced_victory_check",
       "candidate": "host",
-      "faction": "uyghur_istanbul",
+      "faction": "red_army",
       "org_count": 14,
       "turn": 3,
       "turn_phase": "event"
     },
     {
       "step": "after_forced_victory_check",
-      "game_phase": "finished",
-      "winner": "host",
+      "game_phase": "setup",
+      "winner": null,
       "turn": 3,
       "turn_phase": "event"
     }
   ],
   "final_state": {
     "turn": 3,
-    "game_phase": "finished",
+    "game_phase": "setup",
     "turn_phase": "event",
-    "winner": "host",
+    "winner": null,
     "current_player": "host",
     "active_eras": [],
     "action_log": [
       "[Turn 1] host played 追隨者",
       "[Turn 1] host moved 1 organization from 北京 to 天津 via rail",
       "[Turn 1] End of turn for host",
-      "[Turn 1] guest played 追隨者",
-      "[Turn 1] guest moved 1 organization from 上海 to 南京 via rail",
+      "[Turn 1] guest played 樂捐者",
+      "[Turn 1] guest moved 1 organization from 慕尼黑 to 日內瓦 via rail",
       "[Turn 1] End of turn for guest",
-      "[Turn 2] host played 樂捐者",
-      "[Turn 2] host moved 1 organization from 臺北 to 基隆 via rail",
+      "[Turn 2] host played 追隨者",
+      "[Turn 2] host moved 1 organization from 天津 to 承德 via road",
       "[Turn 2] End of turn for host",
       "[Turn 2] guest played 樂捐者",
-      "[Turn 2] guest moved 1 organization from 香港城 to 澳門 via road",
+      "[Turn 2] guest moved 1 organization from 日內瓦 to 巴黎 via rail",
       "[Turn 2] End of turn for guest"
     ],
     "purchase_area": [],
@@ -406,13 +400,7 @@
             "count": 1
           }
         ],
-        "南京": [
-          {
-            "player": "guest",
-            "count": 1
-          }
-        ],
-        "澳門": [
+        "巴黎": [
           {
             "player": "guest",
             "count": 1
@@ -424,7 +412,7 @@
       {
         "id": "p1",
         "name": "host",
-        "faction": "uyghur_istanbul",
+        "faction": "red_army",
         "resources": {
           "money": 0,
           "propaganda": 0
@@ -433,8 +421,8 @@
         "hand": [
           "追隨者",
           "追隨者",
-          "追隨者",
           "樂捐者",
+          "追隨者",
           "追隨者"
         ],
         "orgs": {
@@ -457,7 +445,7 @@
       {
         "id": "p2",
         "name": "guest",
-        "faction": "red_army",
+        "faction": "uyghur_munich",
         "resources": {
           "money": 0,
           "propaganda": 0
@@ -467,12 +455,11 @@
           "追隨者",
           "樂捐者",
           "追隨者",
-          "追隨者",
+          "樂捐者",
           "樂捐者"
         ],
         "orgs": {
-          "南京": 1,
-          "澳門": 1
+          "巴黎": 1
         }
       }
     ]

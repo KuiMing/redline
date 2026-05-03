@@ -92,7 +92,7 @@ class Game:
         self.players = []
         self._assign_factions(players_data)
         self._init_decks()
-        self._seed_starting_positions()
+        self._assign_starting_bases()
 
         self.action_engine = ActionCardEngine(self.structured_cards)
         self.effect_engine = EffectEngine()
@@ -135,40 +135,73 @@ class Game:
             p.deck = Deck(starter)
             p.hand = p.deck.draw(5)
 
-    def _seed_starting_positions(self):
-        # Minimal playable seed so map/interaction has real current-player towns.
-        # TODO: replace with proper rules-driven setup.
-        preferred = {
-            "taiwan": ["臺北", "高雄"],
-            "red_army": ["北京", "上海"],
-            "eastern_turkistan": ["喀什", "烏魯木齊"],
-            "hong_kong": ["香港城", "九龍城"],
-            "manchuria": ["瀋陽", "長春"],
-            "mongolia": ["烏蘭巴托", "喬巴山"],
-            "tibet": ["拉薩", "日喀則"],
-        }
+    def _classify_base_options(self, faction):
+        bases = faction.get("bases", [])
+        names = [b.get("name") for b in bases if b.get("name")]
+        tags = set(faction.get("tags", []))
 
-        fallback_cycle = ["北京", "臺北", "香港城", "東京", "首爾", "廣州", "上海", "烏蘭巴托"]
+        if faction.get("id") == "hong_kong":
+            return "special", names
+        if any(name.startswith("任意") for name in names):
+            return "flex", names
+        if "flex_base" in tags:
+            return "flex", names
+        if len(names) == 1 and bases[0].get("type") == "fixed":
+            return "fixed", names
+        return "candidate", names
+
+    def _resolve_starting_base(self, faction, used):
+        kind, names = self._classify_base_options(faction)
+        towns = self.map.get("towns", {})
+
+        # fixed / candidate / special currently choose first legal explicit town deterministically
+        if kind in {"fixed", "candidate", "special"}:
+            for name in names:
+                if name in towns and name not in used:
+                    return name
+            return None
+
+        # flex rules: deterministic fallback by semantic token
+        if kind == "flex":
+            semantic_pools = {
+                "任意牆內": self.board_regions.get("china", {}).get("towns", []),
+                "任意牆內城鎮": self.board_regions.get("china", {}).get("towns", []),
+                "任意英美城鎮": ["華盛頓", "紐約", "多倫多", "卡加利", "溫哥華", "舊金山", "洛杉磯", "倫敦"],
+                "任意南洋": ["曼谷", "吉隆坡", "新加坡", "雅加達", "河內", "胡志明市", "仰光"],
+                "任意南洋城鎮": ["曼谷", "吉隆坡", "新加坡", "雅加達", "河內", "胡志明市", "仰光"],
+                "任意東洋": ["東京", "大阪", "福岡", "札幌", "仙臺", "沖繩", "首爾", "釜山"],
+            }
+            for label in names:
+                pool = semantic_pools.get(label, [])
+                for town in pool:
+                    if town in towns and town not in used:
+                        return town
+                for town in pool:
+                    if town in towns:
+                        return town
+            return None
+
+        return None
+
+    def _assign_starting_bases(self):
         used = set()
+        faction_by_id = {f["id"]: f for f in self.factions}
 
-        for idx, p in enumerate(self.players):
-            towns = preferred.get(p.faction_id, [])
-            assigned = []
-            for town in towns:
-                if town in self.map.get("towns", {}) and town not in used:
-                    assigned.append(town)
-                    used.add(town)
-            while len(assigned) < 2:
-                town = fallback_cycle[(idx + len(assigned)) % len(fallback_cycle)]
-                if town in self.map.get("towns", {}) and town not in used:
-                    assigned.append(town)
-                    used.add(town)
-                else:
-                    break
-            for town in assigned:
-                p.organizations[town] = 1
-            if assigned:
-                p.base = assigned[0]
+        # rules: anti-CCP players establish first (tail order), red army last
+        red_players = [p for p in self.players if p.faction_id == "red_army"]
+        non_red_players = [p for p in self.players if p.faction_id != "red_army"]
+        ordered_players = list(reversed(non_red_players)) + red_players
+
+        for p in ordered_players:
+            faction = faction_by_id.get(p.faction_id)
+            if not faction:
+                continue
+            base = self._resolve_starting_base(faction, used)
+            if not base:
+                continue
+            p.base = base
+            p.organizations = {base: 1}
+            used.add(base)
 
     def _new_turn_log(self):
         return {
