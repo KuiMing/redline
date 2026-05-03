@@ -1,7 +1,8 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from server.game import Game
+from server.game import Game, TurnPhase
+from server.cards import Card
 from server.game_manager import GameManager
 import uuid
 import asyncio
@@ -167,6 +168,35 @@ def get_map_data():
     path = Path(__file__).resolve().parent.parent / "data" / "map.json"
     with open(path, encoding="utf-8") as f:
         return json.load(f)
+
+@app.post("/test/set-hand")
+def test_set_hand(payload: dict):
+    game_id = payload.get("game_id")
+    player_id = payload.get("player_id")
+    cards = payload.get("cards", [])
+    turn_phase = payload.get("turn_phase")
+
+    game = manager.get_game(game_id)
+    if not game:
+        return {"error": "Game not found"}
+
+    player = next((p for p in game.players if p.id == player_id), None)
+    if not player:
+        return {"error": "Player not found"}
+
+    player.hand = []
+    for name in cards:
+        player.hand.append(Card(name, "test", {}))
+
+    if turn_phase == "action":
+        game.turn_phase = TurnPhase.ACTION
+    elif turn_phase == "event":
+        game.turn_phase = TurnPhase.EVENT
+    elif turn_phase == "end":
+        game.turn_phase = TurnPhase.END
+
+    return {"success": True, "hand": [c.name for c in player.hand], "turn_phase": game.turn_phase}
+
 
 @app.get("/")
 def index():
