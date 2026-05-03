@@ -91,11 +91,14 @@ function connect() {
   if (shell) shell.style.display = 'block';
 
   initTabs();
-  ensureStrategicMapMounted();
 }
 
 function sendAction(action, payload = {}) {
-  if (!ws) return;
+  const debug = document.getElementById('debugSocketState');
+  if (debug) {
+    debug.textContent = `sendAction:${action}:readyState=${ws ? ws.readyState : 'null'}`;
+  }
+  if (!ws || ws.readyState !== WebSocket.OPEN) return;
   ws.send(JSON.stringify({action, ...payload}));
 }
 
@@ -118,19 +121,35 @@ function connectStrategicMapFrame() {
   }
 }
 
+function strategicMapConnected() {
+  const frame = document.getElementById('strategicMapFrame');
+  if (!frame || !frame.contentWindow) return false;
+  try {
+    return !!frame.contentWindow.lastGameState;
+  } catch {
+    return false;
+  }
+}
+
 async function ensureStrategicMapMounted() {
   const frame = document.getElementById('strategicMapFrame');
   if (!frame) return;
   const url = strategicMapUrl();
   if (frame.dataset.loadedUrl === url) {
-    connectStrategicMapFrame();
+    if (!strategicMapConnected()) {
+      connectStrategicMapFrame();
+    }
     return;
   }
 
   frame.onload = () => {
     setTimeout(() => {
       connectStrategicMapFrame();
-      setTimeout(() => connectStrategicMapFrame(), 250);
+      setTimeout(() => {
+        if (!strategicMapConnected()) {
+          connectStrategicMapFrame();
+        }
+      }, 250);
     }, 120);
   };
 

@@ -6,9 +6,9 @@
     },
     "current_player": "host",
     "turn_phase_before": "event",
-    "turn_phase_after": "event",
+    "turn_phase_after": "action",
     "host_hand_count_before": 5,
-    "host_hand_count_after": 5,
+    "host_hand_count_after": 4,
     "guest_hand_counts": {
       "guest2": 5
     },
@@ -18,13 +18,14 @@
         "追隨者",
         "追隨者",
         "追隨者",
-        "樂捐者",
+        "追隨者",
         "追隨者"
       ],
       "state_same": false,
-      "log_same": true
+      "log_same": true,
+      "state_after": true
     },
-    "chosen_card": "樂捐者",
+    "chosen_card": "追隨者",
     "host_log_changed": false,
     "hud_changed": false,
     "host_state_after_player_count": 2
@@ -36,9 +37,9 @@
     },
     "current_player": "host",
     "turn_phase_before": "event",
-    "turn_phase_after": "event",
+    "turn_phase_after": "action",
     "host_hand_count_before": 5,
-    "host_hand_count_after": 5,
+    "host_hand_count_after": 4,
     "guest_hand_counts": {
       "guest2": 5,
       "guest3": 5
@@ -47,13 +48,14 @@
       "guest": "guest2",
       "hand_before": [
         "追隨者",
-        "追隨者",
-        "追隨者",
         "樂捐者",
-        "樂捐者"
+        "樂捐者",
+        "追隨者",
+        "追隨者"
       ],
       "state_same": false,
-      "log_same": true
+      "log_same": true,
+      "state_after": true
     },
     "chosen_card": "追隨者",
     "host_log_changed": false,
@@ -67,9 +69,9 @@
     },
     "current_player": "host",
     "turn_phase_before": "event",
-    "turn_phase_after": "event",
+    "turn_phase_after": "action",
     "host_hand_count_before": 5,
-    "host_hand_count_after": 5,
+    "host_hand_count_after": 4,
     "guest_hand_counts": {
       "guest2": 5,
       "guest3": 5,
@@ -78,16 +80,17 @@
     "illegal_play": {
       "guest": "guest2",
       "hand_before": [
+        "樂捐者",
         "追隨者",
         "追隨者",
-        "樂捐者",
-        "樂捐者",
-        "追隨者"
+        "追隨者",
+        "樂捐者"
       ],
       "state_same": false,
-      "log_same": true
+      "log_same": true,
+      "state_after": true
     },
-    "chosen_card": "樂捐者",
+    "chosen_card": "追隨者",
     "host_log_changed": false,
     "hud_changed": false,
     "host_state_after_player_count": 4

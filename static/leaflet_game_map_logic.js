@@ -508,6 +508,9 @@ window.connectGameMap = function ({ gameId: gid, playerId: pid }) {
   mapGameId = gid;
   mapPlayerId = pid;
   if (!mapGameId || !mapPlayerId) return { ok: false, reason: 'missing-ids' };
+  if (mapWs && [WebSocket.OPEN, WebSocket.CONNECTING].includes(mapWs.readyState)) {
+    return { ok: true, reused: true };
+  }
   if (mapWs) {
     try { mapWs.close(); } catch {}
   }
