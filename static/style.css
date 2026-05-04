@@ -13,7 +13,12 @@
 
 body {
   margin: 0;
-  background: url('/static/war_background.jpg') center center / cover no-repeat fixed;
+  background-color: #05080C;
+  background-image: url('/static/war_background.jpg');
+  background-position: center center;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   color: var(--text-main);
   font-family: 'Inter', sans-serif;
   overflow: hidden;
