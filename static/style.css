@@ -151,20 +151,46 @@ body {
   overflow: auto;
 }
 
+#factionVariantList {
+  margin-top: 8px;
+  padding: 8px;
+  border: 1px dashed rgba(58, 123, 213, 0.65);
+  border-radius: 8px;
+  background: rgba(8, 18, 32, 0.82);
+}
+
 .faction-choice-btn {
   appearance: none;
-  border: 1px solid #7c3aed;
-  background: #0E141C;
   color: var(--text-main);
   padding: 6px 10px;
   border-radius: 6px;
   cursor: pointer;
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.75rem;
+  transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
 }
 
 .faction-choice-btn:hover {
+  transform: translateY(-1px);
+}
+
+.faction-primary-btn {
+  border: 1px solid #7c3aed;
+  background: #0E141C;
+}
+
+.faction-primary-btn:hover {
   background: #1c1333;
+}
+
+.faction-variant-btn {
+  border: 1px solid rgba(58, 123, 213, 0.95);
+  background: rgba(14, 28, 48, 0.96);
+  color: #dbeafe;
+}
+
+.faction-variant-btn:hover {
+  background: rgba(24, 48, 79, 0.98);
 }
 
 #baseSelectionPanel {

@@ -96,7 +96,7 @@ async function renderFactionPicker() {
 
   availableFactionCategories.forEach(category => {
     const btn = document.createElement('button');
-    btn.className = 'faction-choice-btn';
+    btn.className = 'faction-choice-btn faction-primary-btn';
     btn.textContent = category.label;
     btn.disabled = takenCategories.has(category.id);
     btn.onclick = () => {
@@ -109,7 +109,7 @@ async function renderFactionPicker() {
       variants.style.display = 'flex';
       category.options.forEach(opt => {
         const vbtn = document.createElement('button');
-        vbtn.className = 'faction-choice-btn';
+        vbtn.className = 'faction-choice-btn faction-variant-btn';
         vbtn.textContent = `${opt.variant || opt.name || opt.id}`;
         vbtn.onclick = () => chooseFaction(opt.id);
         variants.appendChild(vbtn);
