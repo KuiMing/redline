@@ -14,6 +14,7 @@ manager = GameManager()
 lobby = {}        # {game_id: [(player_id, name)]}
 lobby_hosts = {}  # {game_id: host_player_id}
 lobby_factions = {}  # {game_id: {player_id: faction_id}}
+lobby_bases = {}  # {game_id: {player_id: base_name}}
 
 
 def faction_category(faction_id: str):
@@ -30,6 +31,29 @@ def faction_category(faction_id: str):
     return 'rebel'
 
 
+def faction_base_options(by_id, faction_id: str):
+    if faction_id == 'mongol':
+        return ['烏蘭巴托', '東京', '紐約']
+    if faction_id == 'manchuria':
+        return ['東京', '舊金山', '海參崴']
+    if faction_id == 'kazakh':
+        return ['阿拉木圖']
+    if faction_id == 'hong_kong':
+        return ['香港城']
+    if faction_id in {'uyghur_family', 'uyghur_istanbul', 'uyghur_munich', 'uyghur_washington', 'uyghur_almaty'}:
+        return ['伊斯坦堡', '慕尼黑', '華盛頓', '阿拉木圖']
+    if faction_id in {'tibet_family', 'tibet_dharamsala', 'tibet_dehradun', 'tibet_chogu'}:
+        return ['達蘭薩拉', '德拉敦', '哲古宗']
+
+    faction = by_id.get(faction_id, {})
+    options = []
+    for base in faction.get('bases', []):
+        name = base.get('name') if isinstance(base, dict) else base
+        if name and name not in options:
+            options.append(name)
+    return options
+
+
 @app.post("/create")
 def create_room():
     game_id = manager.create_room()
@@ -38,6 +62,7 @@ def create_room():
     lobby[game_id] = []  # will store (player_id, name)
     lobby_hosts[game_id] = host_id
     lobby_factions[game_id] = {}
+    lobby_bases[game_id] = {}
 
     return {"game_id": game_id, "host_id": host_id}
 
@@ -94,10 +119,44 @@ def start_game(payload: dict):
 
     game = Game(player_list)
     # override randomized faction assignment with chosen factions
+    chosen_bases = lobby_bases.get(game_id, {})
     for player in game.players:
         if player.id in chosen:
             player.faction_id = chosen[player.id]
     game.faction_by_id = {f["id"]: f for f in game.factions}
+    game.faction_by_id.update({
+        "uyghur_family": {
+            "id": "uyghur_family",
+            "name": "維吾爾",
+            "camp": "uyghur",
+            "bases": [
+                {"name": "伊斯坦堡", "variant_faction": "uyghur_istanbul"},
+                {"name": "慕尼黑", "variant_faction": "uyghur_munich"},
+                {"name": "華盛頓", "variant_faction": "uyghur_washington"},
+                {"name": "阿拉木圖", "variant_faction": "uyghur_almaty"},
+            ],
+        },
+        "tibet_family": {
+            "id": "tibet_family",
+            "name": "西藏",
+            "camp": "tibet",
+            "bases": [
+                {"name": "達蘭薩拉", "variant_faction": "tibet_dharamsala"},
+                {"name": "德拉敦", "variant_faction": "tibet_dehradun"},
+                {"name": "哲古宗", "variant_faction": "tibet_chogu"},
+            ],
+        },
+    })
+    for player in game.players:
+        base_name = chosen_bases.get(player.id)
+        if not base_name:
+            continue
+        faction = game.faction_by_id.get(player.faction_id, {})
+        if player.faction_id in {"uyghur_family", "tibet_family"}:
+            variant_map = {b.get("name"): b.get("variant_faction") for b in faction.get("bases", [])}
+            player.faction_id = variant_map.get(base_name, player.faction_id)
+        player.base = base_name
+        player.organizations = {base_name: 1}
     game.pending_base_choices = game._compute_pending_base_choices()
     if game.pending_base_choices:
         game.game_phase = GamePhase.BASE_SELECTION
@@ -127,22 +186,17 @@ def list_factions():
         {"id": "red_army", "label": "紅軍", "mode": "direct", "options": [by_id["red_army"]]},
         {"id": "taiwan", "label": "臺灣", "mode": "variant", "options": [by_id["taiwan_green"], by_id["taiwan_blue"]]},
         {"id": "hong_kong", "label": "香港", "mode": "direct", "options": [by_id["hong_kong"]]},
-        {"id": "uyghur", "label": "維吾爾", "mode": "variant", "options": [
-            {**by_id["uyghur_istanbul"], "variant": "伊斯坦堡"},
-            {**by_id["uyghur_munich"], "variant": "慕尼黑"},
-            {**by_id["uyghur_washington"], "variant": "華盛頓"},
-            {**by_id["uyghur_almaty"], "variant": "阿拉木圖"}
-        ]},
-        {"id": "tibet", "label": "西藏", "mode": "variant", "options": [
-            {**by_id["tibet_dharamsala"], "variant": "達蘭薩拉"},
-            {**by_id["tibet_dehradun"], "variant": "德拉敦"},
-            {**by_id["tibet_chogu"], "variant": "哲古宗"}
-        ]},
+        {"id": "uyghur", "label": "維吾爾", "mode": "direct", "options": [{"id": "uyghur_family", "name": "維吾爾"}]},
+        {"id": "tibet", "label": "西藏", "mode": "direct", "options": [{"id": "tibet_family", "name": "西藏"}]},
         {"id": "manchuria", "label": "滿洲", "mode": "direct", "options": [by_id["manchuria"]]},
         {"id": "mongol", "label": "蒙古", "mode": "direct", "options": [by_id["mongol"]]},
         {"id": "kazakh", "label": "哈薩克", "mode": "direct", "options": [by_id["kazakh"]]},
         {"id": "rebel", "label": "反賊", "mode": "variant", "options": rebels},
     ]
+
+    for category in categories:
+        for option in category["options"]:
+            option["base_options"] = faction_base_options(by_id, option["id"])
 
     return {"categories": categories}
 
@@ -152,6 +206,7 @@ def choose_faction(payload: dict):
     game_id = payload.get("game_id")
     player_id = payload.get("player_id")
     faction_id = payload.get("faction_id")
+    base_name = payload.get("base_name")
 
     if game_id not in lobby:
         return {"error": "Game not found"}
@@ -159,14 +214,29 @@ def choose_faction(payload: dict):
     if player_id not in [pid for pid, _ in lobby[game_id]]:
         return {"error": "Player not found in lobby"}
 
+    from pathlib import Path
+    import json
+    path = Path(__file__).resolve().parent.parent / "data" / "factions" / "all_faction.integrated.v2.json"
+    with open(path, encoding="utf-8") as f:
+        data = json.load(f)
+    by_id = {x["id"]: x for x in data["factions"]}
+
     # prevent duplicate category selection (主陣營唯一)
     taken = lobby_factions.get(game_id, {})
     wanted_category = faction_category(faction_id)
     if any(pid != player_id and faction_category(fid) == wanted_category for pid, fid in taken.items()):
         return {"error": "Faction category already taken"}
 
+    valid_bases = faction_base_options(by_id, faction_id)
+    if base_name and base_name not in valid_bases:
+        return {"error": "Invalid base option"}
+
     lobby_factions.setdefault(game_id, {})[player_id] = faction_id
-    return {"success": True, "factions": lobby_factions[game_id]}
+    if base_name:
+        lobby_bases.setdefault(game_id, {})[player_id] = base_name
+    else:
+        lobby_bases.setdefault(game_id, {}).pop(player_id, None)
+    return {"success": True, "factions": lobby_factions[game_id], "bases": lobby_bases.get(game_id, {})}
 
 
 @app.get("/lobby/{game_id}")
@@ -178,7 +248,8 @@ def lobby_state(game_id: str):
         "players": lobby[game_id],
         "host_id": lobby_hosts.get(game_id),
         "count": len(lobby[game_id]),
-        "factions": lobby_factions.get(game_id, {})
+        "factions": lobby_factions.get(game_id, {}),
+        "bases": lobby_bases.get(game_id, {}),
     }
 
 

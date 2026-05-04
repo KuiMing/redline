@@ -5,6 +5,7 @@ let previousEras = [];
 let availableFactionCategories = [];
 let pendingFactionCategory = null;
 let pendingFactionChoice = null;
+let pendingFactionBaseChoice = null;
 
 function initTabs() {
   const tabs = document.querySelectorAll('.game-tab');
@@ -55,7 +56,7 @@ async function confirmFactionChoice() {
   const res = await fetch('/choose-faction', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ game_id: gameId, player_id: playerId, faction_id: pendingFactionChoice })
+    body: JSON.stringify({ game_id: gameId, player_id: playerId, faction_id: pendingFactionChoice, base_name: pendingFactionBaseChoice })
   });
   const data = await res.json();
   if (data.error) {
@@ -63,6 +64,7 @@ async function confirmFactionChoice() {
     return;
   }
   pendingFactionChoice = null;
+  pendingFactionBaseChoice = null;
   pendingFactionCategory = null;
   await renderFactionPicker();
 }
@@ -128,6 +130,11 @@ function humanizeWinCondition(w) {
   return JSON.stringify(w, null, 0);
 }
 
+function baseDisplayName(baseName) {
+  if (!baseName) return '';
+  return baseName;
+}
+
 function renderFactionDetails(factionId) {
   const panel = document.getElementById('factionDetailPanel');
   const title = document.getElementById('factionDetailTitle');
@@ -164,7 +171,9 @@ function renderFactionDetails(factionId) {
     : (opt.win_conditions || []).map(humanizeWinCondition);
 
   title.textContent = factionDisplayName(factionId);
-  basesEl.innerHTML = '';
+  basesEl.innerHTML = pendingFactionBaseChoice
+    ? `<div class="faction-detail-section-title">根據地</div><ul><li>${baseDisplayName(pendingFactionBaseChoice)}</li></ul>`
+    : '';
   abilitiesEl.innerHTML = `<div class="faction-detail-section-title">能力</div><ul>${abilities.map(a => `<li>${typeof a === 'string' ? a : [a.name_override || a.name, a.trigger, a.effect].filter(Boolean).join('：')}</li>`).join('') || '<li>（暫無資料）</li>'}</ul>`;
   rulesEl.innerHTML = `<div class="faction-detail-section-title">規則</div><ul>${rules.map(r => `<li>${r}</li>`).join('') || '<li>（暫無資料）</li>'}</ul>`;
   winEl.innerHTML = `<div class="faction-detail-section-title">獲勝條件</div><ul>${wins.map(w => `<li>${w}</li>`).join('') || '<li>（暫無資料）</li>'}</ul>`;
@@ -176,9 +185,10 @@ async function renderFactionPicker() {
   const info = document.getElementById('factionPickerInfo');
   const list = document.getElementById('factionList');
   const variants = document.getElementById('factionVariantList');
+  const bases = document.getElementById('factionBaseList');
   const confirmBar = document.getElementById('factionConfirmBar');
   const confirmBtn = document.getElementById('confirmFactionBtn');
-  if (!panel || !info || !list || !variants || !confirmBar || !confirmBtn || !gameId || !playerId) return;
+  if (!panel || !info || !list || !variants || !bases || !confirmBar || !confirmBtn || !gameId || !playerId) return;
 
   const [lobbyRes] = await Promise.all([
     fetch(`/lobby/${gameId}`).then(r => r.json()),
@@ -187,19 +197,24 @@ async function renderFactionPicker() {
 
   panel.style.display = 'block';
   const chosen = lobbyRes.factions || {};
+  const chosenBases = lobbyRes.bases || {};
   const confirmed = chosen[playerId] || null;
+  const confirmedBase = chosenBases[playerId] || null;
   const activeChoice = pendingFactionChoice || confirmed;
+  const activeBase = pendingFactionBaseChoice || confirmedBase;
   info.textContent = activeChoice
-    ? `目前陣營：${factionDisplayName(activeChoice)}`
+    ? `目前陣營：${factionDisplayName(activeChoice)}${activeBase ? `｜根據地：${baseDisplayName(activeBase)}` : ''}`
     : '請先選擇你的陣營';
 
   list.innerHTML = '';
   variants.innerHTML = '';
   variants.style.display = 'none';
-  confirmBar.style.display = pendingFactionChoice ? 'block' : 'none';
-  confirmBtn.disabled = !pendingFactionChoice;
+  bases.innerHTML = '';
+  bases.style.display = 'none';
+  confirmBar.style.display = pendingFactionChoice && pendingFactionBaseChoice ? 'block' : 'none';
+  confirmBtn.disabled = !(pendingFactionChoice && pendingFactionBaseChoice);
   confirmBtn.onclick = confirmFactionChoice;
-  renderFactionDetails(activeChoice);
+  renderFactionDetails(pendingFactionChoice && pendingFactionBaseChoice ? activeChoice : null);
 
   const takenCategories = new Set(
     Object.entries(chosen)
@@ -215,29 +230,50 @@ async function renderFactionPicker() {
     btn.disabled = takenCategories.has(category.id);
     btn.onclick = async () => {
       pendingFactionCategory = category;
-      if (category.mode === 'direct') {
-        await chooseFaction(category.options[0].id);
-      }
+      pendingFactionChoice = category.mode === 'direct' ? category.options[0].id : null;
+      pendingFactionBaseChoice = null;
       await renderFactionPicker();
     };
     list.appendChild(btn);
   });
 
-  if (pendingFactionCategory && pendingFactionCategory.mode !== 'direct') {
-    variants.innerHTML = '';
-    variants.style.display = 'flex';
-    pendingFactionCategory.options.forEach(opt => {
-      const optId = opt.id;
-      const isSelectedVariant = activeChoice === optId;
-      const vbtn = document.createElement('button');
-      vbtn.className = `faction-choice-btn faction-variant-btn${isSelectedVariant ? ' active' : ''}`;
-      vbtn.textContent = `${opt.variant || opt.name || opt.id}`;
-      vbtn.onclick = async () => {
-        await chooseFaction(optId);
-        await renderFactionPicker();
-      };
-      variants.appendChild(vbtn);
-    });
+  if (pendingFactionCategory) {
+    const currentOption = (pendingFactionCategory.options || []).find(opt => opt.id === pendingFactionChoice) || null;
+
+    if (pendingFactionCategory.mode !== 'direct') {
+      variants.innerHTML = '';
+      variants.style.display = 'flex';
+      pendingFactionCategory.options.forEach(opt => {
+        const optId = opt.id;
+        const isSelectedVariant = activeChoice === optId;
+        const vbtn = document.createElement('button');
+        vbtn.className = `faction-choice-btn faction-variant-btn${isSelectedVariant ? ' active' : ''}`;
+        vbtn.textContent = `${opt.variant || opt.name || opt.id}`;
+        vbtn.onclick = async () => {
+          pendingFactionChoice = optId;
+          pendingFactionBaseChoice = null;
+          await renderFactionPicker();
+        };
+        variants.appendChild(vbtn);
+      });
+    }
+
+    const baseOptions = currentOption?.base_options || [];
+    if (baseOptions.length) {
+      bases.innerHTML = '';
+      bases.style.display = 'flex';
+      baseOptions.forEach(baseName => {
+        const bbtn = document.createElement('button');
+        const isSelectedBase = activeBase === baseName;
+        bbtn.className = `base-choice-btn${isSelectedBase ? ' active' : ''}`;
+        bbtn.textContent = baseDisplayName(baseName);
+        bbtn.onclick = async () => {
+          pendingFactionBaseChoice = baseName;
+          await renderFactionPicker();
+        };
+        bases.appendChild(bbtn);
+      });
+    }
   }
 }
 
