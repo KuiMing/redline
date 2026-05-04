@@ -1,7 +1,7 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from server.game import Game, TurnPhase
+from server.game import Game, TurnPhase, GamePhase
 from server.cards import Card
 from server.game_manager import GameManager
 import uuid
@@ -222,6 +222,40 @@ def test_setup_card_scenario(payload: dict):
         return {"error": "Game not found"}
 
     return game.setup_test_card_scenario(player_id, card_name)
+
+
+@app.post("/test/force-base-selection")
+def test_force_base_selection(payload: dict):
+    game_id = payload.get("game_id")
+    faction_ids = payload.get("faction_ids", [])
+    player_names = payload.get("player_names") or [f"player{i+1}" for i in range(len(faction_ids))]
+
+    if len(faction_ids) < 2:
+        return {"error": "Need at least 2 faction ids"}
+
+    players = [(str(uuid.uuid4()), name) for name in player_names]
+    game = Game(players)
+    for player, faction_id in zip(game.players, faction_ids):
+        player.faction_id = faction_id
+    game.pending_base_choices = game._compute_pending_base_choices()
+    if game.pending_base_choices:
+        game.game_phase = GamePhase.BASE_SELECTION
+    else:
+        game._assign_starting_bases()
+        game.game_phase = GamePhase.MAIN
+
+    manager.games[game_id] = game
+    manager.connections[game_id] = manager.connections.get(game_id, {})
+    lobby[game_id] = list(zip([p.id for p in game.players], [p.name for p in game.players]))
+    lobby_hosts[game_id] = game.players[0].id
+
+    return {
+        "success": True,
+        "game_id": game_id,
+        "players": [{"id": p.id, "name": p.name, "faction": p.faction_id} for p in game.players],
+        "pending_base_choices": game.pending_base_choices,
+        "game_phase": game.game_phase,
+    }
 
 
 @app.get("/")
