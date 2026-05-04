@@ -62,6 +62,18 @@ def run_game(player_count):
     game = Game([(f"p{i}", f"player{i}") for i in range(1, player_count + 1)])
     trace = []
 
+    if game.game_phase == game.game_phase.BASE_SELECTION:
+        initial_pending = dict(game.pending_base_choices)
+        for pid, choices in list(game.pending_base_choices.items()):
+            if choices:
+                game.set_base_choice(pid, choices[0])
+        trace.append({
+            "step": "base_selection_resolution",
+            "initial_pending": initial_pending,
+            "remaining_pending": dict(game.pending_base_choices),
+            "game_phase_after_selection": game.game_phase,
+        })
+
     base_validation = validate_bases(game)
     trace.append({
         "step": "init",

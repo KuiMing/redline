@@ -129,6 +129,41 @@ body {
   overflow: auto;
 }
 
+#baseSelectionPanel {
+  border: 1px solid var(--border);
+  background: rgba(10, 13, 18, 0.88);
+  border-radius: 8px;
+  padding: 8px;
+}
+
+#baseSelectionInfo {
+  font-size: 0.8rem;
+  margin-bottom: 8px;
+  color: #cbd5e1;
+}
+
+#baseSelectionChoices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.base-choice-btn {
+  appearance: none;
+  border: 1px solid var(--accent-blue);
+  background: #0E141C;
+  color: var(--text-main);
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+}
+
+.base-choice-btn:hover {
+  background: #152030;
+}
+
 #mapView {
   padding: 0;
   position: relative;

@@ -161,11 +161,42 @@ function syncStrategicMap(_state) {
   // iframe version uses its own websocket connection via query params.
 }
 
+function renderBaseSelection(state) {
+  const panel = document.getElementById('baseSelectionPanel');
+  const info = document.getElementById('baseSelectionInfo');
+  const choicesEl = document.getElementById('baseSelectionChoices');
+  if (!panel || !info || !choicesEl) return;
+
+  const choices = state.pending_base_choices?.[playerId] || [];
+  const inBaseSelection = state.game_phase === 'base_selection';
+
+  panel.style.display = inBaseSelection ? 'block' : 'none';
+  if (!inBaseSelection) {
+    choicesEl.innerHTML = '';
+    info.textContent = '';
+    return;
+  }
+
+  info.textContent = choices.length
+    ? '請選擇你的根據地'
+    : '等待其他玩家選擇根據地';
+
+  choicesEl.innerHTML = '';
+  choices.forEach(choice => {
+    const btn = document.createElement('button');
+    btn.className = 'base-choice-btn';
+    btn.textContent = choice;
+    btn.onclick = () => sendAction('set_base', { town: choice });
+    choicesEl.appendChild(btn);
+  });
+}
+
 function render(state) {
   if (state.error) {
     alert(state.error);
-    return;
   }
+
+  renderBaseSelection(state);
 
   // HUD
   const hud = document.getElementById('hud');
