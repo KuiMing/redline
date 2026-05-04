@@ -92,6 +92,55 @@ function factionDisplayName(factionId) {
   return byId.get(factionId) || factionId;
 }
 
+function factionOptionById(factionId) {
+  for (const category of availableFactionCategories) {
+    for (const opt of (category.options || [])) {
+      if (opt.id === factionId) return opt;
+    }
+  }
+  return null;
+}
+
+function renderFactionDetails(factionId) {
+  const panel = document.getElementById('factionDetailPanel');
+  const title = document.getElementById('factionDetailTitle');
+  const abilitiesEl = document.getElementById('factionDetailAbilities');
+  const rulesEl = document.getElementById('factionDetailRules');
+  const winEl = document.getElementById('factionDetailWin');
+  if (!panel || !title || !abilitiesEl || !rulesEl || !winEl) return;
+
+  if (!factionId) {
+    panel.style.display = 'none';
+    title.textContent = '';
+    abilitiesEl.innerHTML = '';
+    rulesEl.innerHTML = '';
+    winEl.innerHTML = '';
+    return;
+  }
+
+  const opt = factionOptionById(factionId);
+  if (!opt) {
+    panel.style.display = 'none';
+    return;
+  }
+
+  const abilities = opt.abilities_text || opt.abilities || [];
+  const rules = [
+    ...(opt.setup_effects || []),
+    ...(opt.special_rules || []),
+    ...(opt.restrictions || []),
+  ];
+  const wins = opt.win_condition_text
+    ? [opt.win_condition_text]
+    : (opt.win_conditions || []).map(w => w.text || JSON.stringify(w, null, 0));
+
+  title.textContent = factionDisplayName(factionId);
+  abilitiesEl.innerHTML = `<div class="faction-detail-section-title">能力</div><ul>${abilities.map(a => `<li>${typeof a === 'string' ? a : [a.name_override || a.name, a.trigger, a.effect].filter(Boolean).join('：')}</li>`).join('') || '<li>（暫無資料）</li>'}</ul>`;
+  rulesEl.innerHTML = `<div class="faction-detail-section-title">規則</div><ul>${rules.map(r => `<li>${r}</li>`).join('') || '<li>（暫無資料）</li>'}</ul>`;
+  winEl.innerHTML = `<div class="faction-detail-section-title">獲勝條件</div><ul>${wins.map(w => `<li>${w}</li>`).join('') || '<li>（暫無資料）</li>'}</ul>`;
+  panel.style.display = 'block';
+}
+
 async function renderFactionPicker() {
   const panel = document.getElementById('factionPicker');
   const info = document.getElementById('factionPickerInfo');
@@ -120,6 +169,7 @@ async function renderFactionPicker() {
   confirmBar.style.display = pendingFactionChoice ? 'block' : 'none';
   confirmBtn.disabled = !pendingFactionChoice;
   confirmBtn.onclick = confirmFactionChoice;
+  renderFactionDetails(activeChoice);
 
   const takenCategories = new Set(
     Object.entries(chosen)
@@ -133,24 +183,12 @@ async function renderFactionPicker() {
     btn.className = `faction-choice-btn faction-primary-btn${isSelectedCategory ? ' active' : ''}`;
     btn.textContent = category.label;
     btn.disabled = takenCategories.has(category.id);
-    btn.onclick = () => {
+    btn.onclick = async () => {
       pendingFactionCategory = category;
       if (category.mode === 'direct') {
-        chooseFaction(category.options[0].id);
-      } else {
-        variants.innerHTML = '';
-        variants.style.display = 'flex';
-        category.options.forEach(opt => {
-          const optId = opt.id;
-          const isSelectedVariant = activeChoice === optId;
-          const vbtn = document.createElement('button');
-          vbtn.className = `faction-choice-btn faction-variant-btn${isSelectedVariant ? ' active' : ''}`;
-          vbtn.textContent = `${opt.variant || opt.name || opt.id}`;
-          vbtn.onclick = () => chooseFaction(optId);
-          variants.appendChild(vbtn);
-        });
+        await chooseFaction(category.options[0].id);
       }
-      renderFactionPicker();
+      await renderFactionPicker();
     };
     list.appendChild(btn);
   });
@@ -164,9 +202,9 @@ async function renderFactionPicker() {
       const vbtn = document.createElement('button');
       vbtn.className = `faction-choice-btn faction-variant-btn${isSelectedVariant ? ' active' : ''}`;
       vbtn.textContent = `${opt.variant || opt.name || opt.id}`;
-      vbtn.onclick = () => {
-        chooseFaction(optId);
-        renderFactionPicker();
+      vbtn.onclick = async () => {
+        await chooseFaction(optId);
+        await renderFactionPicker();
       };
       variants.appendChild(vbtn);
     });

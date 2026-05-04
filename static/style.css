@@ -147,6 +147,42 @@ body {
   color: #cbd5e1;
 }
 
+#factionDetailPanel {
+  border: 1px solid rgba(246, 173, 85, 0.45);
+  background: rgba(18, 22, 28, 0.92);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+#factionDetailTitle {
+  font-family: 'Noto Sans TC', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #f7fafc;
+  margin-bottom: 10px;
+}
+
+.faction-detail-section-title {
+  color: #f6ad55;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  margin-bottom: 4px;
+}
+
+#factionDetailAbilities,
+#factionDetailRules,
+#factionDetailWin {
+  margin-bottom: 10px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: #dbe7f3;
+}
+
+#factionDetailPanel ul {
+  margin: 6px 0 0 18px;
+  padding: 0;
+}
+
 #factionConfirmBar {
   display: flex;
   justify-content: flex-end;
