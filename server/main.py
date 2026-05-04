@@ -114,7 +114,7 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
             action = data.get("action")
 
             if action == "set_base":
-                result = game.set_base_choice(player_id, data.get("town"))
+                result = game.set_base_choice(player_id, data.get("town"), data.get("label"))
                 if result and result.get("error"):
                     error_state = dict(game.state())
                     error_state["error"] = result.get("error")

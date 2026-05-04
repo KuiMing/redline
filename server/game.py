@@ -187,34 +187,38 @@ class Game:
 
         return None
 
-    def _candidate_base_names(self, faction):
-        kind, names = self._classify_base_options(faction)
+    def _base_option_to_towns(self, faction, option_name):
         towns = self.map.get("towns", {})
-        if kind in {"fixed", "candidate", "special"}:
-            return [name for name in names if name in towns and self.can_faction_develop_in_town(faction.get("id"), name)]
-        if kind == "flex":
-            semantic_pools = {
-                "任意牆內": self.board_regions.get("china", {}).get("towns", []),
-                "任意牆內城鎮": self.board_regions.get("china", {}).get("towns", []),
-                "任意英美城鎮": ["華盛頓", "紐約", "多倫多", "卡加利", "溫哥華", "舊金山", "洛杉磯", "倫敦"],
-                "任意南洋": ["曼谷", "吉隆坡", "新加坡", "雅加達", "河內", "胡志明市", "仰光"],
-                "任意南洋城鎮": ["曼谷", "吉隆坡", "新加坡", "雅加達", "河內", "胡志明市", "仰光"],
-                "任意東洋": ["東京", "大阪", "福岡", "札幌", "仙臺", "沖繩", "首爾", "釜山"],
-            }
-            candidates = []
-            for label in names:
-                pool = semantic_pools.get(label, [])
-                for town in pool:
-                    if town in towns and self.can_faction_develop_in_town(faction.get("id"), town):
-                        candidates.append(town)
-            seen = set()
-            ordered = []
-            for c in candidates:
-                if c not in seen:
-                    seen.add(c)
-                    ordered.append(c)
-            return ordered
-        return []
+        if option_name in towns:
+            return [option_name] if self.can_faction_develop_in_town(faction.get("id"), option_name) else []
+
+        semantic_pools = {
+            "任意牆內": self.board_regions.get("china", {}).get("towns", []),
+            "任意牆內城鎮": self.board_regions.get("china", {}).get("towns", []),
+            "任意英美城鎮": ["華盛頓", "紐約", "多倫多", "卡加利", "溫哥華", "舊金山", "洛杉磯", "倫敦"],
+            "任意南洋": ["曼谷", "吉隆坡", "新加坡", "雅加達", "河內", "胡志明市", "仰光"],
+            "任意南洋城鎮": ["曼谷", "吉隆坡", "新加坡", "雅加達", "河內", "胡志明市", "仰光"],
+            "任意東洋": ["東京", "大阪", "福岡", "札幌", "仙臺", "沖繩", "首爾", "釜山"],
+        }
+        pool = semantic_pools.get(option_name, [])
+        ordered = []
+        seen = set()
+        for town in pool:
+            if town in towns and town not in seen and self.can_faction_develop_in_town(faction.get("id"), town):
+                seen.add(town)
+                ordered.append(town)
+        return ordered
+
+    def _candidate_base_names(self, faction):
+        _, names = self._classify_base_options(faction)
+        candidates = []
+        seen = set()
+        for option_name in names:
+            for town in self._base_option_to_towns(faction, option_name):
+                if town not in seen:
+                    seen.add(town)
+                    candidates.append(town)
+        return candidates
 
     def _compute_pending_base_choices(self):
         pending = {}
@@ -223,23 +227,39 @@ class Game:
             faction = self.faction_by_id.get(p.faction_id)
             if not faction:
                 continue
-            kind, _ = self._classify_base_options(faction)
+            kind, names = self._classify_base_options(faction)
             candidates = self._candidate_base_names(faction)
             if kind == "fixed" and len(candidates) == 1:
                 p.base = candidates[0]
                 p.organizations = {candidates[0]: 1}
                 used_fixed.add(candidates[0])
             else:
-                pending[p.id] = candidates
+                pending[p.id] = {
+                    "labels": names,
+                    "resolved": {name: self._base_option_to_towns(faction, name) for name in names},
+                }
         return pending
 
-    def set_base_choice(self, player_id, base_name):
+    def set_base_choice(self, player_id, base_name, label=None):
         if self.game_phase != GamePhase.BASE_SELECTION:
             return {"error": "Not in BASE_SELECTION phase"}
-        choices = self.pending_base_choices.get(player_id)
-        if not choices:
+        choice_data = self.pending_base_choices.get(player_id)
+        if not choice_data:
             return {"error": "No pending base choice for player"}
-        if base_name not in choices:
+
+        labels = choice_data.get("labels", [])
+        resolved = choice_data.get("resolved", {})
+        if label is None:
+            if base_name in labels:
+                label = base_name
+            else:
+                for option_label, towns in resolved.items():
+                    if base_name in towns:
+                        label = option_label
+                        break
+        if label not in labels:
+            return {"error": "Invalid base option"}
+        if base_name not in resolved.get(label, []):
             return {"error": "Invalid base choice"}
         if any(p.base == base_name for p in self.players if p.id != player_id):
             return {"error": "Base already taken"}
@@ -259,10 +279,16 @@ class Game:
     def _assign_starting_bases(self):
         pending = self._compute_pending_base_choices()
         if pending:
-            for player_id, choices in pending.items():
-                if not choices:
+            for player_id, choice_data in pending.items():
+                labels = choice_data.get("labels", [])
+                resolved = choice_data.get("resolved", {})
+                if not labels:
                     continue
-                self.set_base_choice(player_id, choices[0])
+                label = labels[0]
+                towns = resolved.get(label, [])
+                if not towns:
+                    continue
+                self.set_base_choice(player_id, towns[0], label=label)
 
     def _new_turn_log(self):
         return {

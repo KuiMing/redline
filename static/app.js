@@ -161,32 +161,68 @@ function syncStrategicMap(_state) {
   // iframe version uses its own websocket connection via query params.
 }
 
+let pendingBaseSelectionLabel = null;
+
 function renderBaseSelection(state) {
   const panel = document.getElementById('baseSelectionPanel');
   const info = document.getElementById('baseSelectionInfo');
   const choicesEl = document.getElementById('baseSelectionChoices');
   if (!panel || !info || !choicesEl) return;
 
-  const choices = state.pending_base_choices?.[playerId] || [];
+  const choiceData = state.pending_base_choices?.[playerId] || null;
+  const labels = choiceData?.labels || [];
+  const resolved = choiceData?.resolved || {};
   const inBaseSelection = state.game_phase === 'base_selection';
 
   panel.style.display = inBaseSelection ? 'block' : 'none';
   if (!inBaseSelection) {
+    pendingBaseSelectionLabel = null;
     choicesEl.innerHTML = '';
     info.textContent = '';
     return;
   }
 
-  info.textContent = choices.length
-    ? '請選擇你的根據地'
-    : '等待其他玩家選擇根據地';
+  if (!choiceData) {
+    pendingBaseSelectionLabel = null;
+    info.textContent = '等待其他玩家選擇根據地';
+    choicesEl.innerHTML = '';
+    return;
+  }
 
   choicesEl.innerHTML = '';
-  choices.forEach(choice => {
+
+  if (!pendingBaseSelectionLabel) {
+    info.textContent = '請先選擇你的根據地類別';
+    labels.forEach(label => {
+      const btn = document.createElement('button');
+      btn.className = 'base-choice-btn';
+      btn.textContent = label;
+      btn.onclick = () => {
+        pendingBaseSelectionLabel = label;
+        renderBaseSelection(state);
+      };
+      choicesEl.appendChild(btn);
+    });
+    return;
+  }
+
+  const towns = resolved[pendingBaseSelectionLabel] || [];
+  info.textContent = `根據地類別：${pendingBaseSelectionLabel}，請選擇具體城鎮`;
+
+  const back = document.createElement('button');
+  back.className = 'base-choice-btn';
+  back.textContent = '← 返回類別';
+  back.onclick = () => {
+    pendingBaseSelectionLabel = null;
+    renderBaseSelection(state);
+  };
+  choicesEl.appendChild(back);
+
+  towns.forEach(choice => {
     const btn = document.createElement('button');
     btn.className = 'base-choice-btn';
     btn.textContent = choice;
-    btn.onclick = () => sendAction('set_base', { town: choice });
+    btn.onclick = () => sendAction('set_base', { label: pendingBaseSelectionLabel, town: choice });
     choicesEl.appendChild(btn);
   });
 }
