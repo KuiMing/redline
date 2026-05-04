@@ -61,8 +61,8 @@ async function chooseFaction(factionId) {
 function factionCategoryOf(factionId) {
   if (factionId === 'red_army') return 'red_army';
   if (['taiwan_green', 'taiwan_blue'].includes(factionId)) return 'taiwan';
-  if (['uyghur_istanbul', 'uyghur_munich', 'uyghur_washington', 'uyghur_almaty', 'uyghur_family'].includes(factionId)) return 'uyghur';
-  if (['tibet_dharamsala', 'tibet_dehradun', 'tibet_chogu', 'tibet_family'].includes(factionId)) return 'tibet';
+  if (['uyghur_family', 'uyghur_istanbul', 'uyghur_munich', 'uyghur_washington', 'uyghur_almaty'].includes(factionId)) return 'uyghur';
+  if (['tibet_family', 'tibet_dharamsala', 'tibet_dehradun', 'tibet_chogu'].includes(factionId)) return 'tibet';
   if (['hong_kong', 'manchuria', 'mongol', 'kazakh'].includes(factionId)) return factionId;
   return 'rebel';
 }

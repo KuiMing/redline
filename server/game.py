@@ -93,6 +93,29 @@ class Game:
         self.players = []
         self._assign_factions(players_data)
         self.faction_by_id = {f["id"]: f for f in self.factions}
+        self.faction_by_id.update({
+            "uyghur_family": {
+                "id": "uyghur_family",
+                "name": "維吾爾",
+                "camp": "uyghur",
+                "bases": [
+                    {"name": "伊斯坦堡", "variant_faction": "uyghur_istanbul"},
+                    {"name": "慕尼黑", "variant_faction": "uyghur_munich"},
+                    {"name": "華盛頓", "variant_faction": "uyghur_washington"},
+                    {"name": "阿拉木圖", "variant_faction": "uyghur_almaty"},
+                ],
+            },
+            "tibet_family": {
+                "id": "tibet_family",
+                "name": "西藏",
+                "camp": "tibet",
+                "bases": [
+                    {"name": "達蘭薩拉", "variant_faction": "tibet_dharamsala"},
+                    {"name": "德拉敦", "variant_faction": "tibet_dehradun"},
+                    {"name": "哲古宗", "variant_faction": "tibet_chogu"},
+                ],
+            },
+        })
         self._init_decks()
         self.pending_base_choices = self._compute_pending_base_choices()
         if self.pending_base_choices:
@@ -210,6 +233,8 @@ class Game:
         return ordered
 
     def _candidate_base_names(self, faction):
+        if faction.get("id") in {"uyghur_family", "tibet_family"}:
+            return [b.get("name") for b in faction.get("bases", []) if b.get("name")]
         _, names = self._classify_base_options(faction)
         candidates = []
         seen = set()
@@ -226,6 +251,13 @@ class Game:
         for p in self.players:
             faction = self.faction_by_id.get(p.faction_id)
             if not faction:
+                continue
+            if faction.get("id") in {"uyghur_family", "tibet_family"}:
+                labels = [b.get("name") for b in faction.get("bases", []) if b.get("name")]
+                pending[p.id] = {
+                    "labels": labels,
+                    "resolved": {name: [name] for name in labels},
+                }
                 continue
             kind, names = self._classify_base_options(faction)
             candidates = self._candidate_base_names(faction)
@@ -267,6 +299,14 @@ class Game:
         player = next((p for p in self.players if p.id == player_id), None)
         if not player:
             return {"error": "Player not found"}
+
+        faction = self.faction_by_id.get(player.faction_id, {})
+        if faction.get("id") in {"uyghur_family", "tibet_family"}:
+            variant_map = {
+                b.get("name"): b.get("variant_faction")
+                for b in faction.get("bases", [])
+            }
+            player.faction_id = variant_map.get(base_name, player.faction_id)
 
         player.base = base_name
         player.organizations = {base_name: 1}
