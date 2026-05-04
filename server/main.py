@@ -115,7 +115,7 @@ def start_game(payload: dict):
 def list_factions():
     from pathlib import Path
     import json
-    path = Path(__file__).resolve().parent.parent / "data" / "factions" / "all_faction.json"
+    path = Path(__file__).resolve().parent.parent / "data" / "factions" / "all_faction.integrated.v2.json"
     with open(path, encoding="utf-8") as f:
         data = json.load(f)
 

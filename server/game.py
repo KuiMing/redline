@@ -21,7 +21,7 @@ from server.victory import VictoryEngine
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 MAP_PATH = BASE_DIR / "data" / "map.json"
-FACTIONS_PATH = BASE_DIR / "data" / "factions" / "all_faction.json"
+FACTIONS_PATH = BASE_DIR / "data" / "factions" / "all_faction.integrated.v2.json"
 BOARD_TOWNS_PATH = BASE_DIR / "data" / "board_towns.v1.1.json"
 STRUCTURED_ACTION_PATH = BASE_DIR / "data" / "action_cards_structured.v1.1.json"
 ERA_STRUCTURED_PATH = BASE_DIR / "data" / "era_structured.v1.1.json"
