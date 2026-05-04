@@ -103,6 +103,31 @@ function factionOptionById(factionId) {
   return null;
 }
 
+function humanizeWinCondition(w) {
+  if (!w) return '（暫無資料）';
+  if (typeof w === 'string') return w;
+  if (w.text) return w.text;
+
+  if (w.type === 'count_only') {
+    return `回合結束時在${w.scope || '指定區域'}擁有至少 ${w.count} 個有效組織。`;
+  }
+
+  if (w.type === 'count_and_required') {
+    const required = (w.required_locations || []).join('、');
+    return `回合結束時在${w.scope || '指定區域'}擁有至少 ${w.count} 個有效組織，且必須包含 ${required}。`;
+  }
+
+  if (w.type === 'default_survival') {
+    return w.text || '遊戲結束前未有反共陣營玩家達成勝利條件。';
+  }
+
+  if (w.type === 'taiwan_override') {
+    return w.text || '若有玩家選用臺灣，紅軍在臺灣城鎮達成指定組織數時直接獲勝。';
+  }
+
+  return JSON.stringify(w, null, 0);
+}
+
 function renderFactionDetails(factionId) {
   const panel = document.getElementById('factionDetailPanel');
   const title = document.getElementById('factionDetailTitle');
@@ -136,7 +161,7 @@ function renderFactionDetails(factionId) {
   const abilities = opt.abilities_text || opt.abilities || [];
   const wins = opt.win_condition_text
     ? [opt.win_condition_text]
-    : (opt.win_conditions || []).map(w => w.text || JSON.stringify(w, null, 0));
+    : (opt.win_conditions || []).map(humanizeWinCondition);
 
   title.textContent = factionDisplayName(factionId);
   basesEl.innerHTML = '';
