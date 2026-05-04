@@ -189,7 +189,20 @@ function renderBaseSelection(state) {
     return;
   }
 
+  const hasGeneric = labels.some(label => label.startsWith('任意'));
   choicesEl.innerHTML = '';
+
+  if (!hasGeneric) {
+    info.textContent = '請選擇你的根據地';
+    labels.forEach(label => {
+      const btn = document.createElement('button');
+      btn.className = 'base-choice-btn';
+      btn.textContent = label;
+      btn.onclick = () => sendAction('set_base', { label, town: label });
+      choicesEl.appendChild(btn);
+    });
+    return;
+  }
 
   if (!pendingBaseSelectionLabel) {
     info.textContent = '請先選擇你的根據地類別';
@@ -198,6 +211,12 @@ function renderBaseSelection(state) {
       btn.className = 'base-choice-btn';
       btn.textContent = label;
       btn.onclick = () => {
+        const resolvedTowns = resolved[label] || [];
+        if (!label.startsWith('任意') || resolvedTowns.length <= 1) {
+          const town = resolvedTowns[0] || label;
+          sendAction('set_base', { label, town });
+          return;
+        }
         pendingBaseSelectionLabel = label;
         renderBaseSelection(state);
       };
