@@ -16,6 +16,20 @@ lobby_hosts = {}  # {game_id: host_player_id}
 lobby_factions = {}  # {game_id: {player_id: faction_id}}
 
 
+def faction_category(faction_id: str):
+    if faction_id == 'red_army':
+        return 'red_army'
+    if faction_id in {'taiwan_green', 'taiwan_blue'}:
+        return 'taiwan'
+    if faction_id in {'uyghur_family', 'uyghur_istanbul', 'uyghur_munich', 'uyghur_washington', 'uyghur_almaty'}:
+        return 'uyghur'
+    if faction_id in {'tibet_family', 'tibet_dharamsala', 'tibet_dehradun', 'tibet_chogu'}:
+        return 'tibet'
+    if faction_id in {'hong_kong', 'manchuria', 'mongol', 'kazakh'}:
+        return faction_id
+    return 'rebel'
+
+
 @app.post("/create")
 def create_room():
     game_id = manager.create_room()
@@ -101,32 +115,27 @@ def start_game(payload: dict):
 def list_factions():
     from pathlib import Path
     import json
-    from collections import defaultdict
     path = Path(__file__).resolve().parent.parent / "data" / "factions" / "all_faction.json"
     with open(path, encoding="utf-8") as f:
         data = json.load(f)
 
-    grouped = defaultdict(list)
-    singles = []
-    for x in data["factions"]:
-        item = {"id": x["id"], "name": x["name"], "variant": x.get("variant"), "camp": x.get("camp"), "group": x.get("group")}
-        grouped[x["name"]].append(item)
+    factions = data["factions"]
+    by_id = {x["id"]: x for x in factions}
+    rebels = [x for x in factions if x.get("camp") == "rebel"]
 
-    families = []
-    for name, items in grouped.items():
-        if len(items) == 1:
-            singles.append(items[0])
-        else:
-            families.append({
-                "family": name,
-                "options": items,
-            })
+    categories = [
+        {"id": "red_army", "label": "紅軍", "mode": "direct", "options": [by_id["red_army"]]},
+        {"id": "taiwan", "label": "臺灣", "mode": "variant", "options": [by_id["taiwan_green"], by_id["taiwan_blue"]]},
+        {"id": "hong_kong", "label": "香港", "mode": "direct", "options": [by_id["hong_kong"]]},
+        {"id": "uyghur", "label": "維吾爾", "mode": "base_selection_family", "options": [by_id["uyghur_istanbul"], by_id["uyghur_munich"], by_id["uyghur_washington"], by_id["uyghur_almaty"]]},
+        {"id": "tibet", "label": "西藏", "mode": "base_selection_family", "options": [by_id["tibet_dharamsala"], by_id["tibet_dehradun"], by_id["tibet_chogu"]]},
+        {"id": "manchuria", "label": "滿洲", "mode": "direct", "options": [by_id["manchuria"]]},
+        {"id": "mongol", "label": "蒙古", "mode": "direct", "options": [by_id["mongol"]]},
+        {"id": "kazakh", "label": "哈薩克", "mode": "direct", "options": [by_id["kazakh"]]},
+        {"id": "rebel", "label": "反賊", "mode": "variant", "options": rebels},
+    ]
 
-    return {
-        "factions": [{"id": x["id"], "name": x["name"], "variant": x.get("variant"), "camp": x.get("camp"), "group": x.get("group")} for x in data["factions"]],
-        "families": families,
-        "singles": singles,
-    }
+    return {"categories": categories}
 
 
 @app.post("/choose-faction")
@@ -141,10 +150,11 @@ def choose_faction(payload: dict):
     if player_id not in [pid for pid, _ in lobby[game_id]]:
         return {"error": "Player not found in lobby"}
 
-    # prevent duplicate faction selection
+    # prevent duplicate category selection (主陣營唯一)
     taken = lobby_factions.get(game_id, {})
-    if any(pid != player_id and fid == faction_id for pid, fid in taken.items()):
-        return {"error": "Faction already taken"}
+    wanted_category = faction_category(faction_id)
+    if any(pid != player_id and faction_category(fid) == wanted_category for pid, fid in taken.items()):
+        return {"error": "Faction category already taken"}
 
     lobby_factions.setdefault(game_id, {})[player_id] = faction_id
     return {"success": True, "factions": lobby_factions[game_id]}

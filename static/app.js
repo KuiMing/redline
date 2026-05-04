@@ -2,10 +2,8 @@ let ws = null;
 let gameId = null;
 let playerId = null;
 let previousEras = [];
-let availableFactions = [];
-let availableFactionFamilies = [];
-let availableFactionSingles = [];
-let pendingFactionFamily = null;
+let availableFactionCategories = [];
+let pendingFactionCategory = null;
 
 function initTabs() {
   const tabs = document.querySelectorAll('.game-tab');
@@ -28,13 +26,11 @@ function initTabs() {
 }
 
 async function loadFactions() {
-  if (availableFactions.length) return availableFactions;
+  if (availableFactionCategories.length) return availableFactionCategories;
   const res = await fetch('/factions');
   const data = await res.json();
-  availableFactions = data.factions || [];
-  availableFactionFamilies = data.families || [];
-  availableFactionSingles = data.singles || [];
-  return availableFactions;
+  availableFactionCategories = data.categories || [];
+  return availableFactionCategories;
 }
 
 async function createRoom() {
@@ -62,6 +58,15 @@ async function chooseFaction(factionId) {
   await renderFactionPicker();
 }
 
+function factionCategoryOf(factionId) {
+  if (factionId === 'red_army') return 'red_army';
+  if (['taiwan_green', 'taiwan_blue'].includes(factionId)) return 'taiwan';
+  if (['uyghur_istanbul', 'uyghur_munich', 'uyghur_washington', 'uyghur_almaty', 'uyghur_family'].includes(factionId)) return 'uyghur';
+  if (['tibet_dharamsala', 'tibet_dehradun', 'tibet_chogu', 'tibet_family'].includes(factionId)) return 'tibet';
+  if (['hong_kong', 'manchuria', 'mongol', 'kazakh'].includes(factionId)) return factionId;
+  return 'rebel';
+}
+
 async function renderFactionPicker() {
   const panel = document.getElementById('factionPicker');
   const info = document.getElementById('factionPickerInfo');
@@ -83,30 +88,29 @@ async function renderFactionPicker() {
   variants.innerHTML = '';
   variants.style.display = 'none';
 
-  const takenByOthers = new Set(Object.entries(chosen).filter(([pid]) => pid !== playerId).map(([, fid]) => fid));
+  const takenCategories = new Set(
+    Object.entries(chosen)
+      .filter(([pid]) => pid !== playerId)
+      .map(([, fid]) => factionCategoryOf(fid))
+  );
 
-  availableFactionSingles.forEach(f => {
+  availableFactionCategories.forEach(category => {
     const btn = document.createElement('button');
     btn.className = 'faction-choice-btn';
-    btn.textContent = `${f.name}${f.variant ? '・' + f.variant : ''}`;
-    btn.disabled = takenByOthers.has(f.id);
-    btn.onclick = () => chooseFaction(f.id);
-    list.appendChild(btn);
-  });
-
-  availableFactionFamilies.forEach(family => {
-    const btn = document.createElement('button');
-    btn.className = 'faction-choice-btn';
-    btn.textContent = family.family;
+    btn.textContent = category.label;
+    btn.disabled = takenCategories.has(category.id);
     btn.onclick = () => {
-      pendingFactionFamily = family;
+      if (category.mode === 'direct') {
+        chooseFaction(category.options[0].id);
+        return;
+      }
+      pendingFactionCategory = category;
       variants.innerHTML = '';
       variants.style.display = 'flex';
-      family.options.forEach(opt => {
+      category.options.forEach(opt => {
         const vbtn = document.createElement('button');
         vbtn.className = 'faction-choice-btn';
-        vbtn.textContent = `${opt.variant || opt.id}`;
-        vbtn.disabled = takenByOthers.has(opt.id);
+        vbtn.textContent = `${opt.variant || opt.name || opt.id}`;
         vbtn.onclick = () => chooseFaction(opt.id);
         variants.appendChild(vbtn);
       });
