@@ -104,14 +104,16 @@ function factionOptionById(factionId) {
 function renderFactionDetails(factionId) {
   const panel = document.getElementById('factionDetailPanel');
   const title = document.getElementById('factionDetailTitle');
+  const basesEl = document.getElementById('factionDetailBases');
   const abilitiesEl = document.getElementById('factionDetailAbilities');
   const rulesEl = document.getElementById('factionDetailRules');
   const winEl = document.getElementById('factionDetailWin');
-  if (!panel || !title || !abilitiesEl || !rulesEl || !winEl) return;
+  if (!panel || !title || !basesEl || !abilitiesEl || !rulesEl || !winEl) return;
 
   if (!factionId) {
     panel.style.display = 'none';
     title.textContent = '';
+    basesEl.innerHTML = '';
     abilitiesEl.innerHTML = '';
     rulesEl.innerHTML = '';
     winEl.innerHTML = '';
@@ -124,20 +126,30 @@ function renderFactionDetails(factionId) {
     return;
   }
 
-  const abilities = opt.abilities_text || opt.abilities || [];
+  const baseVariants = opt.base_variants || [];
   const rules = [
     ...(opt.setup_effects || []),
     ...(opt.special_rules || []),
     ...(opt.restrictions || []),
   ];
-  const wins = opt.win_condition_text
-    ? [opt.win_condition_text]
-    : (opt.win_conditions || []).map(w => w.text || JSON.stringify(w, null, 0));
 
   title.textContent = factionDisplayName(factionId);
-  abilitiesEl.innerHTML = `<div class="faction-detail-section-title">能力</div><ul>${abilities.map(a => `<li>${typeof a === 'string' ? a : [a.name_override || a.name, a.trigger, a.effect].filter(Boolean).join('：')}</li>`).join('') || '<li>（暫無資料）</li>'}</ul>`;
+
+  if (baseVariants.length) {
+    basesEl.innerHTML = `<div class="faction-detail-section-title">根據地分支</div><ul>${baseVariants.map(v => `<li>${v.base}</li>`).join('')}</ul>`;
+    abilitiesEl.innerHTML = `<div class="faction-detail-section-title">能力</div><ul><li>請先完成根據地選擇，之後再顯示最終能力。</li></ul>`;
+    winEl.innerHTML = `<div class="faction-detail-section-title">獲勝條件</div><ul><li>請先完成根據地選擇，之後再顯示對應分支的最終獲勝條件。</li></ul>`;
+  } else {
+    const abilities = opt.abilities_text || opt.abilities || [];
+    const wins = opt.win_condition_text
+      ? [opt.win_condition_text]
+      : (opt.win_conditions || []).map(w => w.text || JSON.stringify(w, null, 0));
+    basesEl.innerHTML = '';
+    abilitiesEl.innerHTML = `<div class="faction-detail-section-title">能力</div><ul>${abilities.map(a => `<li>${typeof a === 'string' ? a : [a.name_override || a.name, a.trigger, a.effect].filter(Boolean).join('：')}</li>`).join('') || '<li>（暫無資料）</li>'}</ul>`;
+    winEl.innerHTML = `<div class="faction-detail-section-title">獲勝條件</div><ul>${wins.map(w => `<li>${w}</li>`).join('') || '<li>（暫無資料）</li>'}</ul>`;
+  }
+
   rulesEl.innerHTML = `<div class="faction-detail-section-title">規則</div><ul>${rules.map(r => `<li>${r}</li>`).join('') || '<li>（暫無資料）</li>'}</ul>`;
-  winEl.innerHTML = `<div class="faction-detail-section-title">獲勝條件</div><ul>${wins.map(w => `<li>${w}</li>`).join('') || '<li>（暫無資料）</li>'}</ul>`;
   panel.style.display = 'block';
 }
 
@@ -349,6 +361,7 @@ function renderBaseSelection(state) {
   const panel = document.getElementById('baseSelectionPanel');
   const info = document.getElementById('baseSelectionInfo');
   const choicesEl = document.getElementById('baseSelectionChoices');
+  const picker = document.getElementById('factionPicker');
   if (!panel || !info || !choicesEl) return;
 
   const choiceData = state.pending_base_choices?.[playerId] || null;
@@ -357,6 +370,7 @@ function renderBaseSelection(state) {
   const inBaseSelection = state.game_phase === 'base_selection';
 
   panel.style.display = inBaseSelection ? 'block' : 'none';
+  if (picker) picker.style.display = inBaseSelection ? 'none' : 'block';
   if (!inBaseSelection) {
     pendingBaseSelectionLabel = null;
     choicesEl.innerHTML = '';
