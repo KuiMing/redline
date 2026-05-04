@@ -4,6 +4,7 @@ let playerId = null;
 let previousEras = [];
 let availableFactionCategories = [];
 let pendingFactionCategory = null;
+let pendingFactionChoice = null;
 
 function initTabs() {
   const tabs = document.querySelectorAll('.game-tab');
@@ -45,16 +46,24 @@ async function createRoom() {
 }
 
 async function chooseFaction(factionId) {
+  pendingFactionChoice = factionId;
+  await renderFactionPicker();
+}
+
+async function confirmFactionChoice() {
+  if (!pendingFactionChoice) return;
   const res = await fetch('/choose-faction', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ game_id: gameId, player_id: playerId, faction_id: factionId })
+    body: JSON.stringify({ game_id: gameId, player_id: playerId, faction_id: pendingFactionChoice })
   });
   const data = await res.json();
   if (data.error) {
     alert(data.error);
     return;
   }
+  pendingFactionChoice = null;
+  pendingFactionCategory = null;
   await renderFactionPicker();
 }
 
@@ -67,12 +76,30 @@ function factionCategoryOf(factionId) {
   return 'rebel';
 }
 
+function factionDisplayName(factionId) {
+  const byId = new Map();
+  availableFactionCategories.forEach(category => {
+    byId.set(category.id, category.label);
+    (category.options || []).forEach(opt => {
+      byId.set(opt.id, opt.variant || opt.name || opt.label || opt.id);
+    });
+  });
+
+  if (factionId === 'uyghur_family') return '維吾爾';
+  if (factionId === 'tibet_family') return '西藏';
+  if (factionId === 'taiwan_green') return '臺灣（綠線）';
+  if (factionId === 'taiwan_blue') return '臺灣（藍線）';
+  return byId.get(factionId) || factionId;
+}
+
 async function renderFactionPicker() {
   const panel = document.getElementById('factionPicker');
   const info = document.getElementById('factionPickerInfo');
   const list = document.getElementById('factionList');
   const variants = document.getElementById('factionVariantList');
-  if (!panel || !info || !list || !variants || !gameId || !playerId) return;
+  const confirmBar = document.getElementById('factionConfirmBar');
+  const confirmBtn = document.getElementById('confirmFactionBtn');
+  if (!panel || !info || !list || !variants || !confirmBar || !confirmBtn || !gameId || !playerId) return;
 
   const [lobbyRes] = await Promise.all([
     fetch(`/lobby/${gameId}`).then(r => r.json()),
@@ -81,12 +108,18 @@ async function renderFactionPicker() {
 
   panel.style.display = 'block';
   const chosen = lobbyRes.factions || {};
-  const mine = chosen[playerId] || null;
-  info.textContent = mine ? `已選陣營：${mine}` : '請先選擇你的陣營';
+  const confirmed = chosen[playerId] || null;
+  const activeChoice = pendingFactionChoice || confirmed;
+  info.textContent = activeChoice
+    ? `目前陣營：${factionDisplayName(activeChoice)}`
+    : '請先選擇你的陣營';
 
   list.innerHTML = '';
   variants.innerHTML = '';
   variants.style.display = 'none';
+  confirmBar.style.display = pendingFactionChoice ? 'block' : 'none';
+  confirmBtn.disabled = !pendingFactionChoice;
+  confirmBtn.onclick = confirmFactionChoice;
 
   const takenCategories = new Set(
     Object.entries(chosen)
@@ -96,27 +129,48 @@ async function renderFactionPicker() {
 
   availableFactionCategories.forEach(category => {
     const btn = document.createElement('button');
-    btn.className = 'faction-choice-btn faction-primary-btn';
+    const isSelectedCategory = activeChoice && factionCategoryOf(activeChoice) === category.id;
+    btn.className = `faction-choice-btn faction-primary-btn${isSelectedCategory ? ' active' : ''}`;
     btn.textContent = category.label;
     btn.disabled = takenCategories.has(category.id);
     btn.onclick = () => {
+      pendingFactionCategory = category;
       if (category.mode === 'direct') {
         chooseFaction(category.options[0].id);
-        return;
+      } else {
+        variants.innerHTML = '';
+        variants.style.display = 'flex';
+        category.options.forEach(opt => {
+          const optId = opt.id;
+          const isSelectedVariant = activeChoice === optId;
+          const vbtn = document.createElement('button');
+          vbtn.className = `faction-choice-btn faction-variant-btn${isSelectedVariant ? ' active' : ''}`;
+          vbtn.textContent = `${opt.variant || opt.name || opt.id}`;
+          vbtn.onclick = () => chooseFaction(optId);
+          variants.appendChild(vbtn);
+        });
       }
-      pendingFactionCategory = category;
-      variants.innerHTML = '';
-      variants.style.display = 'flex';
-      category.options.forEach(opt => {
-        const vbtn = document.createElement('button');
-        vbtn.className = 'faction-choice-btn faction-variant-btn';
-        vbtn.textContent = `${opt.variant || opt.name || opt.id}`;
-        vbtn.onclick = () => chooseFaction(opt.id);
-        variants.appendChild(vbtn);
-      });
+      renderFactionPicker();
     };
     list.appendChild(btn);
   });
+
+  if (pendingFactionCategory && pendingFactionCategory.mode !== 'direct') {
+    variants.innerHTML = '';
+    variants.style.display = 'flex';
+    pendingFactionCategory.options.forEach(opt => {
+      const optId = opt.id;
+      const isSelectedVariant = activeChoice === optId;
+      const vbtn = document.createElement('button');
+      vbtn.className = `faction-choice-btn faction-variant-btn${isSelectedVariant ? ' active' : ''}`;
+      vbtn.textContent = `${opt.variant || opt.name || opt.id}`;
+      vbtn.onclick = () => {
+        chooseFaction(optId);
+        renderFactionPicker();
+      };
+      variants.appendChild(vbtn);
+    });
+  }
 }
 
 async function joinRoom() {
