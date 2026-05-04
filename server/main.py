@@ -181,17 +181,34 @@ def list_factions():
     factions = data["factions"]
     by_id = {x["id"]: x for x in factions}
     rebels = [x for x in factions if x.get("camp") == "rebel"]
+    ability_templates = data.get("ability_templates", {})
+
+    def resolve_ui_faction(faction):
+        resolved = dict(faction)
+        resolved_abilities = []
+        for ability in faction.get("abilities", []):
+            if isinstance(ability, dict) and ability.get("ref"):
+                template = ability_templates.get(ability.get("ref"), {})
+                merged = dict(template)
+                merged.update({k: v for k, v in ability.items() if k != "ref"})
+                if ability.get("name_override"):
+                    merged["name"] = ability["name_override"]
+                resolved_abilities.append(merged)
+            else:
+                resolved_abilities.append(ability)
+        resolved["abilities"] = resolved_abilities
+        return resolved
 
     categories = [
-        {"id": "red_army", "label": "紅軍", "mode": "direct", "options": [by_id["red_army"]]},
-        {"id": "taiwan", "label": "臺灣", "mode": "variant", "options": [by_id["taiwan_green"], by_id["taiwan_blue"]]},
-        {"id": "hong_kong", "label": "香港", "mode": "direct", "options": [by_id["hong_kong"]]},
+        {"id": "red_army", "label": "紅軍", "mode": "direct", "options": [resolve_ui_faction(by_id["red_army"])]},
+        {"id": "taiwan", "label": "臺灣", "mode": "variant", "options": [resolve_ui_faction(by_id["taiwan_green"]), resolve_ui_faction(by_id["taiwan_blue"])]},
+        {"id": "hong_kong", "label": "香港", "mode": "direct", "options": [resolve_ui_faction(by_id["hong_kong"])]},
         {"id": "uyghur", "label": "維吾爾", "mode": "direct", "options": [{"id": "uyghur_family", "name": "維吾爾"}]},
         {"id": "tibet", "label": "西藏", "mode": "direct", "options": [{"id": "tibet_family", "name": "西藏"}]},
-        {"id": "manchuria", "label": "滿洲", "mode": "direct", "options": [by_id["manchuria"]]},
-        {"id": "mongol", "label": "蒙古", "mode": "direct", "options": [by_id["mongol"]]},
-        {"id": "kazakh", "label": "哈薩克", "mode": "direct", "options": [by_id["kazakh"]]},
-        {"id": "rebel", "label": "反賊", "mode": "variant", "options": rebels},
+        {"id": "manchuria", "label": "滿洲", "mode": "direct", "options": [resolve_ui_faction(by_id["manchuria"])]},
+        {"id": "mongol", "label": "蒙古", "mode": "direct", "options": [resolve_ui_faction(by_id["mongol"])]},
+        {"id": "kazakh", "label": "哈薩克", "mode": "direct", "options": [resolve_ui_faction(by_id["kazakh"])]},
+        {"id": "rebel", "label": "反賊", "mode": "variant", "options": [resolve_ui_faction(x) for x in rebels]},
     ]
 
     for category in categories:
