@@ -127,27 +127,17 @@ def list_factions():
         {"id": "red_army", "label": "紅軍", "mode": "direct", "options": [by_id["red_army"]]},
         {"id": "taiwan", "label": "臺灣", "mode": "variant", "options": [by_id["taiwan_green"], by_id["taiwan_blue"]]},
         {"id": "hong_kong", "label": "香港", "mode": "direct", "options": [by_id["hong_kong"]]},
-        {"id": "uyghur", "label": "維吾爾", "mode": "direct", "options": [{
-            "id": "uyghur_family",
-            "name": "維吾爾",
-            "special_rules": ["根據地將於下一步在伊斯坦堡／慕尼黑／華盛頓／阿拉木圖中擇一；選完根據地後才顯示最終能力與獲勝條件。"],
-            "base_variants": [
-                {"base": "伊斯坦堡", "faction": by_id["uyghur_istanbul"]},
-                {"base": "慕尼黑", "faction": by_id["uyghur_munich"]},
-                {"base": "華盛頓", "faction": by_id["uyghur_washington"]},
-                {"base": "阿拉木圖", "faction": by_id["uyghur_almaty"]},
-            ],
-        }]},
-        {"id": "tibet", "label": "西藏", "mode": "direct", "options": [{
-            "id": "tibet_family",
-            "name": "西藏",
-            "special_rules": ["根據地將於下一步在達蘭薩拉／德拉敦／哲古宗中擇一；選完根據地後才顯示最終能力與獲勝條件。"],
-            "base_variants": [
-                {"base": "達蘭薩拉", "faction": by_id["tibet_dharamsala"]},
-                {"base": "德拉敦", "faction": by_id["tibet_dehradun"]},
-                {"base": "哲古宗", "faction": by_id["tibet_chogu"]},
-            ],
-        }]},
+        {"id": "uyghur", "label": "維吾爾", "mode": "variant", "options": [
+            {**by_id["uyghur_istanbul"], "variant": "伊斯坦堡"},
+            {**by_id["uyghur_munich"], "variant": "慕尼黑"},
+            {**by_id["uyghur_washington"], "variant": "華盛頓"},
+            {**by_id["uyghur_almaty"], "variant": "阿拉木圖"}
+        ]},
+        {"id": "tibet", "label": "西藏", "mode": "variant", "options": [
+            {**by_id["tibet_dharamsala"], "variant": "達蘭薩拉"},
+            {**by_id["tibet_dehradun"], "variant": "德拉敦"},
+            {**by_id["tibet_chogu"], "variant": "哲古宗"}
+        ]},
         {"id": "manchuria", "label": "滿洲", "mode": "direct", "options": [by_id["manchuria"]]},
         {"id": "mongol", "label": "蒙古", "mode": "direct", "options": [by_id["mongol"]]},
         {"id": "kazakh", "label": "哈薩克", "mode": "direct", "options": [by_id["kazakh"]]},
