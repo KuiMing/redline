@@ -101,10 +101,32 @@ def start_game(payload: dict):
 def list_factions():
     from pathlib import Path
     import json
+    from collections import defaultdict
     path = Path(__file__).resolve().parent.parent / "data" / "factions" / "all_faction.json"
     with open(path, encoding="utf-8") as f:
         data = json.load(f)
-    return {"factions": [{"id": x["id"], "name": x["name"], "variant": x.get("variant"), "camp": x.get("camp"), "group": x.get("group")} for x in data["factions"]]}
+
+    grouped = defaultdict(list)
+    singles = []
+    for x in data["factions"]:
+        item = {"id": x["id"], "name": x["name"], "variant": x.get("variant"), "camp": x.get("camp"), "group": x.get("group")}
+        grouped[x["name"]].append(item)
+
+    families = []
+    for name, items in grouped.items():
+        if len(items) == 1:
+            singles.append(items[0])
+        else:
+            families.append({
+                "family": name,
+                "options": items,
+            })
+
+    return {
+        "factions": [{"id": x["id"], "name": x["name"], "variant": x.get("variant"), "camp": x.get("camp"), "group": x.get("group")} for x in data["factions"]],
+        "families": families,
+        "singles": singles,
+    }
 
 
 @app.post("/choose-faction")

@@ -142,7 +142,8 @@ body {
   color: #cbd5e1;
 }
 
-#factionList {
+#factionList,
+#factionVariantList {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;

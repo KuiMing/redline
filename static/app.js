@@ -3,6 +3,9 @@ let gameId = null;
 let playerId = null;
 let previousEras = [];
 let availableFactions = [];
+let availableFactionFamilies = [];
+let availableFactionSingles = [];
+let pendingFactionFamily = null;
 
 function initTabs() {
   const tabs = document.querySelectorAll('.game-tab');
@@ -29,6 +32,8 @@ async function loadFactions() {
   const res = await fetch('/factions');
   const data = await res.json();
   availableFactions = data.factions || [];
+  availableFactionFamilies = data.families || [];
+  availableFactionSingles = data.singles || [];
   return availableFactions;
 }
 
@@ -61,9 +66,10 @@ async function renderFactionPicker() {
   const panel = document.getElementById('factionPicker');
   const info = document.getElementById('factionPickerInfo');
   const list = document.getElementById('factionList');
-  if (!panel || !info || !list || !gameId || !playerId) return;
+  const variants = document.getElementById('factionVariantList');
+  if (!panel || !info || !list || !variants || !gameId || !playerId) return;
 
-  const [lobbyRes, factions] = await Promise.all([
+  const [lobbyRes] = await Promise.all([
     fetch(`/lobby/${gameId}`).then(r => r.json()),
     loadFactions(),
   ]);
@@ -74,13 +80,37 @@ async function renderFactionPicker() {
   info.textContent = mine ? `已選陣營：${mine}` : '請先選擇你的陣營';
 
   list.innerHTML = '';
-  factions.forEach(f => {
-    const taken = Object.entries(chosen).some(([pid, fid]) => pid !== playerId && fid === f.id);
+  variants.innerHTML = '';
+  variants.style.display = 'none';
+
+  const takenByOthers = new Set(Object.entries(chosen).filter(([pid]) => pid !== playerId).map(([, fid]) => fid));
+
+  availableFactionSingles.forEach(f => {
     const btn = document.createElement('button');
     btn.className = 'faction-choice-btn';
-    btn.textContent = `${f.name}${f.variant ? '・' + f.variant : ''} (${f.id})`;
-    btn.disabled = taken;
+    btn.textContent = `${f.name}${f.variant ? '・' + f.variant : ''}`;
+    btn.disabled = takenByOthers.has(f.id);
     btn.onclick = () => chooseFaction(f.id);
+    list.appendChild(btn);
+  });
+
+  availableFactionFamilies.forEach(family => {
+    const btn = document.createElement('button');
+    btn.className = 'faction-choice-btn';
+    btn.textContent = family.family;
+    btn.onclick = () => {
+      pendingFactionFamily = family;
+      variants.innerHTML = '';
+      variants.style.display = 'flex';
+      family.options.forEach(opt => {
+        const vbtn = document.createElement('button');
+        vbtn.className = 'faction-choice-btn';
+        vbtn.textContent = `${opt.variant || opt.id}`;
+        vbtn.disabled = takenByOthers.has(opt.id);
+        vbtn.onclick = () => chooseFaction(opt.id);
+        variants.appendChild(vbtn);
+      });
+    };
     list.appendChild(btn);
   });
 }
