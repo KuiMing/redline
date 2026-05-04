@@ -11,8 +11,9 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 manager = GameManager()
-lobby = {}        # {game_id: [player_names]}
+lobby = {}        # {game_id: [(player_id, name)]}
 lobby_hosts = {}  # {game_id: host_player_id}
+lobby_factions = {}  # {game_id: {player_id: faction_id}}
 
 
 @app.post("/create")
@@ -22,6 +23,7 @@ def create_room():
 
     lobby[game_id] = []  # will store (player_id, name)
     lobby_hosts[game_id] = host_id
+    lobby_factions[game_id] = {}
 
     return {"game_id": game_id, "host_id": host_id}
 
@@ -69,16 +71,61 @@ def start_game(payload: dict):
     if lobby_hosts.get(game_id) != player_id:
         return {"error": "Only host can start"}
 
-    manager.start_game(game_id, Game, lobby[game_id])
+    player_list = lobby[game_id]
+    chosen = lobby_factions.get(game_id, {})
+    if len(chosen) != len(player_list):
+        return {"error": "All players must choose factions first"}
+    if sum(1 for fid in chosen.values() if fid == 'red_army') != 1:
+        return {"error": "Exactly one player must choose red_army"}
 
-    # ✅ 對齊 Lobby player_id 與 Game.player.id
-    game = manager.get_game(game_id)
-    lobby_player_ids = list(manager.connections.get(game_id, {}).keys())
+    game = Game(player_list)
+    # override randomized faction assignment with chosen factions
+    for player in game.players:
+        if player.id in chosen:
+            player.faction_id = chosen[player.id]
+    game.faction_by_id = {f["id"]: f for f in game.factions}
+    game.pending_base_choices = game._compute_pending_base_choices()
+    if game.pending_base_choices:
+        game.game_phase = GamePhase.BASE_SELECTION
+    else:
+        game._assign_starting_bases()
+        game.game_phase = GamePhase.MAIN
 
-    for player, lobby_id in zip(game.players, lobby_player_ids):
-        player.id = lobby_id
+    manager.games[game_id] = game
+    manager.connections.setdefault(game_id, {})
 
     return {"success": True}
+
+
+@app.get("/factions")
+def list_factions():
+    from pathlib import Path
+    import json
+    path = Path(__file__).resolve().parent.parent / "data" / "factions" / "all_faction.json"
+    with open(path, encoding="utf-8") as f:
+        data = json.load(f)
+    return {"factions": [{"id": x["id"], "name": x["name"], "variant": x.get("variant"), "camp": x.get("camp"), "group": x.get("group")} for x in data["factions"]]}
+
+
+@app.post("/choose-faction")
+def choose_faction(payload: dict):
+    game_id = payload.get("game_id")
+    player_id = payload.get("player_id")
+    faction_id = payload.get("faction_id")
+
+    if game_id not in lobby:
+        return {"error": "Game not found"}
+
+    if player_id not in [pid for pid, _ in lobby[game_id]]:
+        return {"error": "Player not found in lobby"}
+
+    # prevent duplicate faction selection
+    taken = lobby_factions.get(game_id, {})
+    if any(pid != player_id and fid == faction_id for pid, fid in taken.items()):
+        return {"error": "Faction already taken"}
+
+    lobby_factions.setdefault(game_id, {})[player_id] = faction_id
+    return {"success": True, "factions": lobby_factions[game_id]}
 
 
 @app.get("/lobby/{game_id}")
@@ -89,7 +136,8 @@ def lobby_state(game_id: str):
     return {
         "players": lobby[game_id],
         "host_id": lobby_hosts.get(game_id),
-        "count": len(lobby[game_id])
+        "count": len(lobby[game_id]),
+        "factions": lobby_factions.get(game_id, {})
     }
 
 

@@ -129,6 +129,43 @@ body {
   overflow: auto;
 }
 
+#factionPicker {
+  border: 1px solid var(--border);
+  background: rgba(10, 13, 18, 0.88);
+  border-radius: 8px;
+  padding: 8px;
+}
+
+#factionPickerInfo {
+  font-size: 0.8rem;
+  margin-bottom: 8px;
+  color: #cbd5e1;
+}
+
+#factionList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 260px;
+  overflow: auto;
+}
+
+.faction-choice-btn {
+  appearance: none;
+  border: 1px solid #7c3aed;
+  background: #0E141C;
+  color: var(--text-main);
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+}
+
+.faction-choice-btn:hover {
+  background: #1c1333;
+}
+
 #baseSelectionPanel {
   border: 1px solid var(--border);
   background: rgba(10, 13, 18, 0.88);

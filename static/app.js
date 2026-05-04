@@ -2,6 +2,7 @@ let ws = null;
 let gameId = null;
 let playerId = null;
 let previousEras = [];
+let availableFactions = [];
 
 function initTabs() {
   const tabs = document.querySelectorAll('.game-tab');
@@ -23,6 +24,14 @@ function initTabs() {
   });
 }
 
+async function loadFactions() {
+  if (availableFactions.length) return availableFactions;
+  const res = await fetch('/factions');
+  const data = await res.json();
+  availableFactions = data.factions || [];
+  return availableFactions;
+}
+
 async function createRoom() {
   const res = await fetch('/create', { method: 'POST' });
   const data = await res.json();
@@ -30,7 +39,50 @@ async function createRoom() {
   playerId = data.host_id;
   const roomInput = document.getElementById('roomId');
   if (roomInput) roomInput.value = gameId;
+  await loadFactions();
   alert("ROOM CREATED: " + gameId);
+}
+
+async function chooseFaction(factionId) {
+  const res = await fetch('/choose-faction', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ game_id: gameId, player_id: playerId, faction_id: factionId })
+  });
+  const data = await res.json();
+  if (data.error) {
+    alert(data.error);
+    return;
+  }
+  await renderFactionPicker();
+}
+
+async function renderFactionPicker() {
+  const panel = document.getElementById('factionPicker');
+  const info = document.getElementById('factionPickerInfo');
+  const list = document.getElementById('factionList');
+  if (!panel || !info || !list || !gameId || !playerId) return;
+
+  const [lobbyRes, factions] = await Promise.all([
+    fetch(`/lobby/${gameId}`).then(r => r.json()),
+    loadFactions(),
+  ]);
+
+  panel.style.display = 'block';
+  const chosen = lobbyRes.factions || {};
+  const mine = chosen[playerId] || null;
+  info.textContent = mine ? `已選陣營：${mine}` : '請先選擇你的陣營';
+
+  list.innerHTML = '';
+  factions.forEach(f => {
+    const taken = Object.entries(chosen).some(([pid, fid]) => pid !== playerId && fid === f.id);
+    const btn = document.createElement('button');
+    btn.className = 'faction-choice-btn';
+    btn.textContent = `${f.name}${f.variant ? '・' + f.variant : ''} (${f.id})`;
+    btn.disabled = taken;
+    btn.onclick = () => chooseFaction(f.id);
+    list.appendChild(btn);
+  });
 }
 
 async function joinRoom() {
@@ -55,6 +107,8 @@ async function joinRoom() {
   }
 
   playerId = data.player_id;
+  await loadFactions();
+  await renderFactionPicker();
 }
 
 async function startGame() {
@@ -89,6 +143,8 @@ function connect() {
   document.getElementById('lobby').style.display = 'none';
   const shell = document.getElementById('gameShell');
   if (shell) shell.style.display = 'block';
+  const picker = document.getElementById('factionPicker');
+  if (picker) picker.style.display = 'none';
 
   initTabs();
 }
