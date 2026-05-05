@@ -179,7 +179,11 @@ function renderFactionDetails(factionId) {
     ...(opt.special_rules || []),
     ...(opt.restrictions || []),
   ];
-  const abilities = opt.abilities_text || opt.abilities || [];
+  const selectedBaseData = (opt.bases || []).find(base => base?.name === pendingFactionBaseChoice) || null;
+  const abilities = [
+    ...((opt.abilities_text || opt.abilities || [])),
+    ...((selectedBaseData?.abilities) || []),
+  ];
   const wins = opt.win_condition_text
     ? [opt.win_condition_text]
     : (opt.win_conditions || []).map(humanizeWinCondition);
