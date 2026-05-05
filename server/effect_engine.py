@@ -156,11 +156,9 @@ class EffectEngine:
                 owned = [town for town, count in other.organizations.items() if count > 0]
                 if owned:
                     town = owned[0]
-                    other.organizations[town] -= 1
-                    if other.organizations[town] <= 0:
-                        del other.organizations[town]
-                    game.log(f"{player.name} dissolved 1 organization from {other.name} at {town}")
-                    break
+                    result = game.dissolve_organization(player, other, town, source="card")
+                    if result.get("success"):
+                        break
             return
 
         # ✅ Refresh purchase area (MVP: expose top 3 cards from current player's deck)

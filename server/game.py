@@ -383,6 +383,15 @@ class Game:
     def _player_has_ability(self, player, name):
         return any(isinstance(a, dict) and a.get("name") == name for a in self._player_effective_abilities(player))
 
+    def _can_target_org_with_dissolve(self, attacker, defender, source="card"):
+        if self._player_has_ability(defender, "盟旗學校"):
+            if not attacker.hand:
+                return False, "盟旗學校：須先棄1張手牌，才可以瓦解蒙古組織"
+            discarded = attacker.hand.pop()
+            attacker.deck.discard([discarded])
+            self.log(f"{attacker.name} discarded {getattr(discarded, 'name', str(discarded))} to bypass 盟旗學校")
+        return True, None
+
     def _starter_card(self, name):
         if name == "宣傳家":
             return Card("宣傳家", "propaganda", {"propaganda": 2})
@@ -621,6 +630,18 @@ class Game:
         player.organizations[town] = player.organizations.get(town, 0) + 1
         self.turn_log.setdefault("built_towns", []).append(town)
         self.log(f"{player.name} built organization in {town}")
+        return {"success": True}
+
+    def dissolve_organization(self, attacker, defender, town, source="card"):
+        if not town or defender.organizations.get(town, 0) <= 0:
+            return {"error": "No organization in target town"}
+        ok, err = self._can_target_org_with_dissolve(attacker, defender, source=source)
+        if not ok:
+            return {"error": err}
+        defender.organizations[town] -= 1
+        if defender.organizations[town] <= 0:
+            del defender.organizations[town]
+        self.log(f"{attacker.name} dissolved 1 organization from {defender.name} at {town}")
         return {"success": True}
 
     def move_organization(self, from_town, to_town, mode="road"):
