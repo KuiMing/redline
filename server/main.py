@@ -440,6 +440,7 @@ def test_force_base_selection(payload: dict):
     if len(faction_ids) < 2:
         return {"error": "Need at least 2 faction ids"}
 
+    game_id = str(uuid.uuid4())
     players = [(str(uuid.uuid4()), name) for name in player_names]
     game = Game(players)
     for player, faction_id in zip(game.players, faction_ids):

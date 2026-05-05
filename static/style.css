@@ -294,10 +294,22 @@ body {
   color: #cbd5e1;
 }
 
+#buildSupportOrigins,
+#buildSupportTargets,
 #baseSelectionChoices {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+}
+
+#buildSupportInfo {
+  font-size: 0.8rem;
+  margin-bottom: 8px;
+  color: #cbd5e1;
+}
+
+#buildSupportTargets {
+  margin-top: 8px;
 }
 
 .base-choice-btn {

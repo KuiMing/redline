@@ -465,6 +465,79 @@ function syncStrategicMap(_state) {
 }
 
 let pendingBaseSelectionLabel = null;
+let pendingBuildOrigin = null;
+
+function renderBuildSupport(state) {
+  const panel = document.getElementById('buildSupportPanel');
+  const info = document.getElementById('buildSupportInfo');
+  const originsEl = document.getElementById('buildSupportOrigins');
+  const targetsEl = document.getElementById('buildSupportTargets');
+  if (!panel || !info || !originsEl || !targetsEl) return;
+
+  const me = state.players?.find(p => p.id === playerId) || null;
+  const myFaction = me?.faction || null;
+  const isSafehouse = myFaction === 'hong_kong' && ['香港城', '臺北'].includes(me?.orgs ? Object.keys(me.orgs)[0] || '' : '') || ['香港城', '臺北'].includes(me?.base || '');
+  const inAction = state.turn_phase === 'action';
+  const isMine = state.current_player && me && state.current_player === me.name;
+
+  panel.style.display = isSafehouse && inAction && isMine ? 'block' : 'none';
+  if (!(isSafehouse && inAction && isMine)) {
+    pendingBuildOrigin = null;
+    originsEl.innerHTML = '';
+    targetsEl.innerHTML = '';
+    info.textContent = '';
+    return;
+  }
+
+  const owned = Object.keys(me.orgs || {});
+  const towns = state.map?.towns || {};
+  originsEl.innerHTML = '';
+  targetsEl.innerHTML = '';
+
+  info.textContent = pendingBuildOrigin
+    ? `起點：${pendingBuildOrigin}，請選擇距離 2 內的建立目標`
+    : '安全屋可讓你建立距離 +1。請先選擇建立起點。';
+
+  owned.forEach(origin => {
+    const btn = document.createElement('button');
+    btn.className = `base-choice-btn${pendingBuildOrigin === origin ? ' active' : ''}`;
+    btn.textContent = origin;
+    btn.onclick = () => {
+      pendingBuildOrigin = origin;
+      renderBuildSupport(state);
+    };
+    originsEl.appendChild(btn);
+  });
+
+  if (!pendingBuildOrigin) return;
+
+  const graph = window.lastGameState?.map?.towns || towns;
+  const allTowns = Object.keys(towns);
+  const maxDistance = 2;
+  const visited = new Set([pendingBuildOrigin]);
+  let frontier = [[pendingBuildOrigin, 0]];
+  const reachable = new Set();
+  while (frontier.length) {
+    const [town, dist] = frontier.shift();
+    if (dist >= maxDistance) continue;
+    const data = towns[town] || {};
+    const nexts = new Set([...(data.road || []), ...(data.rail || [])]);
+    for (const nxt of nexts) {
+      if (visited.has(nxt)) continue;
+      visited.add(nxt);
+      reachable.add(nxt);
+      frontier.push([nxt, dist + 1]);
+    }
+  }
+
+  Array.from(reachable).sort().forEach(target => {
+    const btn = document.createElement('button');
+    btn.className = 'base-choice-btn';
+    btn.textContent = target;
+    btn.onclick = () => sendAction('build', { from: pendingBuildOrigin, town: target });
+    targetsEl.appendChild(btn);
+  });
+}
 
 function renderBaseSelection(state) {
   const panel = document.getElementById('baseSelectionPanel');
@@ -562,6 +635,7 @@ function render(state) {
 
   const detailFactionId = me?.faction || pendingFactionChoice || null;
   renderFactionDetails(inBaseSelection ? null : detailFactionId);
+  renderBuildSupport(state);
   renderBaseSelection(state);
 
   // HUD
