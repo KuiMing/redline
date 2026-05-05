@@ -31,77 +31,118 @@
       "type": "triggered",
       "trigger": "在己方行動階段打出至少3張不同名稱的非起始牌",
       "effect": "獲得3點宣傳或3點資金",
-      "tags": ["combo", "burst", "resource"]
+      "tags": [
+        "combo",
+        "burst",
+        "resource"
+      ]
     },
     "first_money_draw": {
       "name": "商貿組織",
       "type": "triggered",
       "trigger": "當您每回合第1次打出購買費用有資金的牌時",
       "effect": "抽1張牌",
-      "tags": ["engine", "money", "draw"]
+      "tags": [
+        "engine",
+        "money",
+        "draw"
+      ]
     },
     "first_money_gain2": {
       "name": "基金會",
       "type": "triggered",
       "trigger": "當您每回合第1次打出購買費用有資金的牌時",
       "effect": "獲得2點資金",
-      "tags": ["engine", "money"]
+      "tags": [
+        "engine",
+        "money"
+      ]
     },
     "first_propaganda_draw": {
       "name": "民族調和",
       "type": "triggered",
       "trigger": "當您每回合第1次打出購買費用有宣傳的牌時",
       "effect": "抽1張牌",
-      "tags": ["engine", "propaganda", "draw"]
+      "tags": [
+        "engine",
+        "propaganda",
+        "draw"
+      ]
     },
     "first_propaganda_draw_alt": {
       "name": "星星之火",
       "type": "triggered",
       "trigger": "當您每回合第1次打出購買費用有宣傳的牌時",
       "effect": "抽1張牌",
-      "tags": ["engine", "propaganda", "draw"]
+      "tags": [
+        "engine",
+        "propaganda",
+        "draw"
+      ]
     },
     "on_build_draw": {
       "name": "還我河山",
       "type": "triggered",
       "trigger": "若您在回合中曾於牆內建立至少1個組織",
       "effect": "您可以在己方行動階段結束時額外再抽1張牌",
-      "tags": ["engine", "build", "draw"]
+      "tags": [
+        "engine",
+        "build",
+        "draw"
+      ]
     },
     "on_build_draw_inner": {
       "name": "本土社團",
       "type": "triggered",
       "trigger": "若您在回合中曾於牆內城鎮建立至少1個組織",
       "effect": "您可以在己方行動階段結束時額外再抽1張牌",
-      "tags": ["engine", "build", "draw"]
+      "tags": [
+        "engine",
+        "build",
+        "draw"
+      ]
     },
     "on_build_draw_inner_or_nanyang": {
       "name": "民國之心",
       "type": "triggered",
       "trigger": "若您在回合中曾於牆內或南洋城鎮建立至少1個組織",
       "effect": "您可以在己方行動階段結束時額外再抽1張牌",
-      "tags": ["engine", "build", "draw"]
+      "tags": [
+        "engine",
+        "build",
+        "draw"
+      ]
     },
     "martyr_draw": {
       "name": "殉道者",
       "type": "triggered",
       "trigger": "每次己方牆內組織被其他玩家成功瓦解時",
       "effect": "抽1張牌",
-      "tags": ["reactive", "draw", "defense"]
+      "tags": [
+        "reactive",
+        "draw",
+        "defense"
+      ]
     },
     "guerrilla": {
       "name": "游擊隊",
       "type": "triggered",
       "trigger": "在您建立至少1個牆內組織後",
       "effect": "您可以抽1張牌，或令紅軍棄1張手牌；每回合限1次",
-      "tags": ["control", "draw", "discard"]
+      "tags": [
+        "control",
+        "draw",
+        "discard"
+      ]
     }
   },
   "factions": [
     {
       "id": "red_army",
       "name": "紅軍",
-      "aliases": ["紅"],
+      "aliases": [
+        "紅"
+      ],
       "side": "main",
       "camp": "red_army",
       "parent_faction": null,
@@ -164,7 +205,11 @@
           "text": "紅軍於回合結束時在臺灣城鎮擁有至少14個有效組織，則紅軍直接獲勝。"
         }
       ],
-      "tags": ["control", "aggressive", "central"]
+      "tags": [
+        "control",
+        "aggressive",
+        "central"
+      ]
     },
     {
       "id": "dian",
@@ -175,8 +220,14 @@
       "camp": "rebel",
       "parent_faction": "rebel",
       "bases": [
-        { "name": "昆明", "type": "fixed" },
-        { "name": "美斯樂", "type": "fixed" }
+        {
+          "name": "昆明",
+          "type": "fixed"
+        },
+        {
+          "name": "美斯樂",
+          "type": "fixed"
+        }
       ],
       "abilities": [
         {
@@ -191,10 +242,18 @@
           "type": "count_and_required",
           "scope": "牆內與牆外",
           "count": 11,
-          "required_locations": ["昆明", "德宏", "西雙版納"]
+          "required_locations": [
+            "昆明",
+            "德宏",
+            "西雙版納"
+          ]
         }
       ],
-      "tags": ["combo", "resource", "shared_org"]
+      "tags": [
+        "combo",
+        "resource",
+        "shared_org"
+      ]
     },
     {
       "id": "ye_lang_qian",
@@ -205,7 +264,10 @@
       "camp": "rebel",
       "parent_faction": "rebel",
       "bases": [
-        { "name": "貴陽", "type": "fixed" }
+        {
+          "name": "貴陽",
+          "type": "fixed"
+        }
       ],
       "abilities": [
         {
@@ -217,10 +279,15 @@
           "type": "count_and_required",
           "scope": "牆內與牆外",
           "count": 13,
-          "required_locations": ["貴陽"]
+          "required_locations": [
+            "貴陽"
+          ]
         }
       ],
-      "tags": ["combo", "resource"]
+      "tags": [
+        "combo",
+        "resource"
+      ]
     },
     {
       "id": "miao",
@@ -231,13 +298,34 @@
       "camp": "rebel",
       "parent_faction": "rebel",
       "bases": [
-        { "name": "貴陽", "type": "fixed" },
-        { "name": "長沙", "type": "fixed" },
-        { "name": "河南", "type": "fixed" },
-        { "name": "志明市", "type": "fixed" },
-        { "name": "芒塞", "type": "fixed" },
-        { "name": "舊金山", "type": "fixed" },
-        { "name": "洛杉磯", "type": "fixed" }
+        {
+          "name": "貴陽",
+          "type": "fixed"
+        },
+        {
+          "name": "長沙",
+          "type": "fixed"
+        },
+        {
+          "name": "河南",
+          "type": "fixed"
+        },
+        {
+          "name": "志明市",
+          "type": "fixed"
+        },
+        {
+          "name": "芒塞",
+          "type": "fixed"
+        },
+        {
+          "name": "舊金山",
+          "type": "fixed"
+        },
+        {
+          "name": "洛杉磯",
+          "type": "fixed"
+        }
       ],
       "abilities": [
         {
@@ -253,10 +341,19 @@
           "type": "count_and_required",
           "scope": "牆內與牆外",
           "count": 9,
-          "required_locations": ["貴陽", "長沙", "昆明", "重慶"]
+          "required_locations": [
+            "貴陽",
+            "長沙",
+            "昆明",
+            "重慶"
+          ]
         }
       ],
-      "tags": ["hybrid", "economy", "manipulation"]
+      "tags": [
+        "hybrid",
+        "economy",
+        "manipulation"
+      ]
     },
     {
       "id": "dai",
@@ -267,10 +364,22 @@
       "camp": "rebel",
       "parent_faction": "rebel",
       "bases": [
-        { "name": "德宏", "type": "fixed" },
-        { "name": "西雙版納", "type": "fixed" },
-        { "name": "賀猛", "type": "fixed" },
-        { "name": "曼谷", "type": "fixed" }
+        {
+          "name": "德宏",
+          "type": "fixed"
+        },
+        {
+          "name": "西雙版納",
+          "type": "fixed"
+        },
+        {
+          "name": "賀猛",
+          "type": "fixed"
+        },
+        {
+          "name": "曼谷",
+          "type": "fixed"
+        }
       ],
       "abilities": [
         {
@@ -286,20 +395,32 @@
           "type": "count_and_required",
           "scope": "牆內與牆外",
           "count": 12,
-          "required_locations": ["德宏", "西雙版納"]
+          "required_locations": [
+            "德宏",
+            "西雙版納"
+          ]
         }
       ],
-      "tags": ["hybrid", "economy", "manipulation"]
+      "tags": [
+        "hybrid",
+        "economy",
+        "manipulation"
+      ]
     },
     {
       "id": "kazakh",
       "name": "哈薩克",
-      "aliases": ["哈"],
+      "aliases": [
+        "哈"
+      ],
       "side": "main",
       "camp": "kazakh",
       "parent_faction": null,
       "bases": [
-        { "name": "阿拉木圖", "type": "fixed" }
+        {
+          "name": "阿拉木圖",
+          "type": "fixed"
+        }
       ],
       "abilities": [
         {
@@ -311,15 +432,25 @@
           "type": "count_and_required",
           "scope": "牆內與牆外",
           "count": 19,
-          "required_locations": ["阿勒泰", "塔城", "伊寧"]
+          "required_locations": [
+            "阿勒泰",
+            "塔城",
+            "伊寧"
+          ]
         }
       ],
-      "tags": ["engine", "draw", "propaganda"]
+      "tags": [
+        "engine",
+        "draw",
+        "propaganda"
+      ]
     },
     {
       "id": "hong_kong",
       "name": "香港",
-      "aliases": ["香"],
+      "aliases": [
+        "香"
+      ],
       "side": "main",
       "camp": "hong_kong",
       "parent_faction": null,
@@ -395,18 +526,36 @@
           "count": 14
         }
       ],
-      "tags": ["mobile", "engine", "shared_org", "airport"]
+      "tags": [
+        "mobile",
+        "engine",
+        "shared_org",
+        "airport"
+      ],
+      "abilities": [
+        {
+          "name": "攬炒策略",
+          "type": "setup",
+          "effect": "在遊戲開始時，免費將一張宣傳家洗入牌庫。"
+        }
+      ]
     },
     {
       "id": "tibet_dharamsala",
       "name": "西藏",
       "variant": "達蘭薩拉",
-      "aliases": ["藏"],
+      "aliases": [
+        "藏"
+      ],
       "side": "main",
       "camp": "tibet",
       "parent_faction": null,
       "bases": [
-        { "name": "達蘭薩拉", "type": "fixed", "note": "藏人行政中央" }
+        {
+          "name": "達蘭薩拉",
+          "type": "fixed",
+          "note": "藏人行政中央"
+        }
       ],
       "abilities": [
         {
@@ -431,7 +580,11 @@
           "count": 14
         }
       ],
-      "tags": ["economy", "setup_bonus", "restriction"]
+      "tags": [
+        "economy",
+        "setup_bonus",
+        "restriction"
+      ]
     },
     {
       "id": "tibet_dehradun",
@@ -441,7 +594,11 @@
       "camp": "tibet",
       "parent_faction": null,
       "bases": [
-        { "name": "德拉敦", "type": "fixed", "note": "印度特別邊境部隊" }
+        {
+          "name": "德拉敦",
+          "type": "fixed",
+          "note": "印度特別邊境部隊"
+        }
       ],
       "abilities": [
         {
@@ -461,7 +618,11 @@
           "count": 14
         }
       ],
-      "tags": ["control", "discard", "restricted_build"]
+      "tags": [
+        "control",
+        "discard",
+        "restricted_build"
+      ]
     },
     {
       "id": "tibet_chogu",
@@ -471,7 +632,11 @@
       "camp": "tibet",
       "parent_faction": null,
       "bases": [
-        { "name": "哲古宗", "type": "fixed", "note": "四水六崗衛教志願軍" }
+        {
+          "name": "哲古宗",
+          "type": "fixed",
+          "note": "四水六崗衛教志願軍"
+        }
       ],
       "abilities": [
         {
@@ -485,19 +650,33 @@
           "count": 14
         }
       ],
-      "tags": ["control", "discard"]
+      "tags": [
+        "control",
+        "discard"
+      ]
     },
     {
       "id": "mongol",
       "name": "蒙古",
-      "aliases": ["蒙"],
+      "aliases": [
+        "蒙"
+      ],
       "side": "main",
       "camp": "mongol",
       "parent_faction": null,
       "bases": [
-        { "name": "烏蘭巴托", "type": "fixed" },
-        { "name": "東京", "type": "fixed" },
-        { "name": "紐約", "type": "fixed" }
+        {
+          "name": "烏蘭巴托",
+          "type": "fixed"
+        },
+        {
+          "name": "東京",
+          "type": "fixed"
+        },
+        {
+          "name": "紐約",
+          "type": "fixed"
+        }
       ],
       "abilities": [
         {
@@ -513,19 +692,34 @@
           "count": 14
         }
       ],
-      "tags": ["defense", "tax", "anti_removal"]
+      "tags": [
+        "defense",
+        "tax",
+        "anti_removal"
+      ]
     },
     {
       "id": "manchuria",
       "name": "滿洲",
-      "aliases": ["滿"],
+      "aliases": [
+        "滿"
+      ],
       "side": "main",
       "camp": "manchuria",
       "parent_faction": null,
       "bases": [
-        { "name": "東京", "type": "fixed" },
-        { "name": "舊金山", "type": "fixed" },
-        { "name": "海參崴", "type": "fixed" }
+        {
+          "name": "東京",
+          "type": "fixed"
+        },
+        {
+          "name": "舊金山",
+          "type": "fixed"
+        },
+        {
+          "name": "海參崴",
+          "type": "fixed"
+        }
       ],
       "abilities": [
         {
@@ -539,18 +733,28 @@
           "count": 14
         }
       ],
-      "tags": ["combo", "resource", "baseline"]
+      "tags": [
+        "combo",
+        "resource",
+        "baseline"
+      ]
     },
     {
       "id": "taiwan_green",
       "name": "臺灣",
       "variant": "綠線",
-      "aliases": ["臺"],
+      "aliases": [
+        "臺"
+      ],
       "side": "main",
       "camp": "taiwan",
       "parent_faction": null,
       "bases": [
-        { "name": "臺北", "type": "fixed", "note": "綠線・輸出本土化運動" }
+        {
+          "name": "臺北",
+          "type": "fixed",
+          "note": "綠線・輸出本土化運動"
+        }
       ],
       "abilities": [
         {
@@ -558,7 +762,15 @@
           "name_override": "本土社團"
         }
       ],
-      "shared_organizations_with": ["地下教會", "性別革命", "客家", "潮汕", "閩", "吳越", "滇"],
+      "shared_organizations_with": [
+        "地下教會",
+        "性別革命",
+        "客家",
+        "潮汕",
+        "閩",
+        "吳越",
+        "滇"
+      ],
       "win_conditions": [
         {
           "type": "count_only",
@@ -569,7 +781,12 @@
       "special_rules": [
         "若有玩家選用臺灣，紅軍於回合結束時在臺灣城鎮擁有至少14個有效組織，則紅軍直接獲勝。"
       ],
-      "tags": ["engine", "build", "shared_org", "high_risk"]
+      "tags": [
+        "engine",
+        "build",
+        "shared_org",
+        "high_risk"
+      ]
     },
     {
       "id": "taiwan_blue",
@@ -579,7 +796,11 @@
       "camp": "taiwan",
       "parent_faction": null,
       "bases": [
-        { "name": "臺北", "type": "fixed", "note": "藍線・自由中國" }
+        {
+          "name": "臺北",
+          "type": "fixed",
+          "note": "藍線・自由中國"
+        }
       ],
       "abilities": [
         {
@@ -587,7 +808,10 @@
           "name_override": "民國之心"
         }
       ],
-      "shared_organizations_with": ["民國派", "滇"],
+      "shared_organizations_with": [
+        "民國派",
+        "滇"
+      ],
       "win_conditions": [
         {
           "type": "count_only",
@@ -598,18 +822,28 @@
       "special_rules": [
         "若有玩家選用臺灣，紅軍於回合結束時在臺灣城鎮擁有至少14個有效組織，則紅軍直接獲勝。"
       ],
-      "tags": ["engine", "build", "shared_org", "high_risk"]
+      "tags": [
+        "engine",
+        "build",
+        "shared_org",
+        "high_risk"
+      ]
     },
     {
       "id": "uyghur_istanbul",
       "name": "維吾爾",
-      "aliases": ["維"],
+      "aliases": [
+        "維"
+      ],
       "variant": "伊斯坦堡",
       "side": "main",
       "camp": "uyghur",
       "parent_faction": null,
       "bases": [
-        { "name": "伊斯坦堡", "type": "fixed" }
+        {
+          "name": "伊斯坦堡",
+          "type": "fixed"
+        }
       ],
       "abilities": [
         {
@@ -628,7 +862,10 @@
           "count": 14
         }
       ],
-      "tags": ["control", "distance_restricted"]
+      "tags": [
+        "control",
+        "distance_restricted"
+      ]
     },
     {
       "id": "uyghur_munich",
@@ -638,7 +875,10 @@
       "camp": "uyghur",
       "parent_faction": null,
       "bases": [
-        { "name": "慕尼黑", "type": "fixed" }
+        {
+          "name": "慕尼黑",
+          "type": "fixed"
+        }
       ],
       "abilities": [
         {
@@ -668,7 +908,12 @@
           "count": 14
         }
       ],
-      "tags": ["economy", "setup_bonus", "distance_restricted", "restriction"]
+      "tags": [
+        "economy",
+        "setup_bonus",
+        "distance_restricted",
+        "restriction"
+      ]
     },
     {
       "id": "uyghur_washington",
@@ -678,7 +923,10 @@
       "camp": "uyghur",
       "parent_faction": null,
       "bases": [
-        { "name": "華盛頓", "type": "fixed" }
+        {
+          "name": "華盛頓",
+          "type": "fixed"
+        }
       ],
       "abilities": [
         {
@@ -698,7 +946,10 @@
           "count": 14
         }
       ],
-      "tags": ["economy", "distance_restricted"]
+      "tags": [
+        "economy",
+        "distance_restricted"
+      ]
     },
     {
       "id": "uyghur_almaty",
@@ -708,7 +959,10 @@
       "camp": "uyghur",
       "parent_faction": null,
       "bases": [
-        { "name": "阿拉木圖", "type": "fixed" }
+        {
+          "name": "阿拉木圖",
+          "type": "fixed"
+        }
       ],
       "abilities": [
         {
@@ -727,7 +981,11 @@
           "count": 14
         }
       ],
-      "tags": ["engine", "draw", "distance_restricted"]
+      "tags": [
+        "engine",
+        "draw",
+        "distance_restricted"
+      ]
     },
     {
       "id": "federalists",
@@ -737,8 +995,14 @@
       "camp": "rebel",
       "parent_faction": "rebel",
       "bases": [
-        { "name": "任意牆內", "type": "flex" },
-        { "name": "任意英美城鎮", "type": "flex" }
+        {
+          "name": "任意牆內",
+          "type": "flex"
+        },
+        {
+          "name": "任意英美城鎮",
+          "type": "flex"
+        }
       ],
       "abilities": [
         {
@@ -752,7 +1016,11 @@
           "count": 14
         }
       ],
-      "tags": ["engine", "draw", "flex_base"]
+      "tags": [
+        "engine",
+        "draw",
+        "flex_base"
+      ]
     },
     {
       "id": "new_left",
@@ -762,8 +1030,14 @@
       "camp": "rebel",
       "parent_faction": "rebel",
       "bases": [
-        { "name": "任意牆內", "type": "flex" },
-        { "name": "任意南洋城鎮", "type": "flex" }
+        {
+          "name": "任意牆內",
+          "type": "flex"
+        },
+        {
+          "name": "任意南洋城鎮",
+          "type": "flex"
+        }
       ],
       "abilities": [
         {
@@ -777,7 +1051,11 @@
           "count": 14
         }
       ],
-      "tags": ["engine", "draw", "flex_base"]
+      "tags": [
+        "engine",
+        "draw",
+        "flex_base"
+      ]
     },
     {
       "id": "jin",
@@ -787,8 +1065,14 @@
       "camp": "rebel",
       "parent_faction": "rebel",
       "bases": [
-        { "name": "太原", "type": "fixed" },
-        { "name": "任意英美城鎮", "type": "flex" }
+        {
+          "name": "太原",
+          "type": "fixed"
+        },
+        {
+          "name": "任意英美城鎮",
+          "type": "flex"
+        }
       ],
       "abilities": [
         {
@@ -800,10 +1084,15 @@
           "type": "count_and_required",
           "scope": "牆內與牆外",
           "count": 13,
-          "required_locations": ["太原"]
+          "required_locations": [
+            "太原"
+          ]
         }
       ],
-      "tags": ["combo", "resource"]
+      "tags": [
+        "combo",
+        "resource"
+      ]
     },
     {
       "id": "qi",
@@ -813,10 +1102,22 @@
       "camp": "rebel",
       "parent_faction": "rebel",
       "bases": [
-        { "name": "青島", "type": "fixed" },
-        { "name": "濟南", "type": "fixed" },
-        { "name": "任意東洋", "type": "flex" },
-        { "name": "任意英美城鎮", "type": "flex" }
+        {
+          "name": "青島",
+          "type": "fixed"
+        },
+        {
+          "name": "濟南",
+          "type": "fixed"
+        },
+        {
+          "name": "任意東洋",
+          "type": "flex"
+        },
+        {
+          "name": "任意英美城鎮",
+          "type": "flex"
+        }
       ],
       "abilities": [
         {
@@ -828,10 +1129,16 @@
           "type": "count_and_required",
           "scope": "牆內與牆外",
           "count": 12,
-          "required_locations": ["青島", "濟南"]
+          "required_locations": [
+            "青島",
+            "濟南"
+          ]
         }
       ],
-      "tags": ["combo", "resource"]
+      "tags": [
+        "combo",
+        "resource"
+      ]
     },
     {
       "id": "republican",
@@ -841,9 +1148,18 @@
       "camp": "rebel",
       "parent_faction": "rebel",
       "bases": [
-        { "name": "任意牆內", "type": "flex" },
-        { "name": "任意南洋", "type": "flex" },
-        { "name": "任意英美城鎮", "type": "flex" }
+        {
+          "name": "任意牆內",
+          "type": "flex"
+        },
+        {
+          "name": "任意南洋",
+          "type": "flex"
+        },
+        {
+          "name": "任意英美城鎮",
+          "type": "flex"
+        }
       ],
       "abilities": [
         {
@@ -851,16 +1167,26 @@
           "name_override": "還我河山"
         }
       ],
-      "shared_organizations_with": ["臺灣（藍線）"],
+      "shared_organizations_with": [
+        "臺灣（藍線）"
+      ],
       "win_conditions": [
         {
           "type": "count_and_required",
           "scope": "牆內與牆外",
           "count": 11,
-          "required_locations": ["南京", "廣州", "重慶"]
+          "required_locations": [
+            "南京",
+            "廣州",
+            "重慶"
+          ]
         }
       ],
-      "tags": ["engine", "build", "shared_org"]
+      "tags": [
+        "engine",
+        "build",
+        "shared_org"
+      ]
     },
     {
       "id": "liberals",
@@ -870,7 +1196,10 @@
       "camp": "rebel",
       "parent_faction": "rebel",
       "bases": [
-        { "name": "任意牆內城鎮", "type": "flex" }
+        {
+          "name": "任意牆內城鎮",
+          "type": "flex"
+        }
       ],
       "abilities": [
         {
@@ -887,7 +1216,11 @@
           "count": 14
         }
       ],
-      "tags": ["control", "topdeck", "manipulation"]
+      "tags": [
+        "control",
+        "topdeck",
+        "manipulation"
+      ]
     },
     {
       "id": "wuyue",
@@ -897,27 +1230,52 @@
       "camp": "rebel",
       "parent_faction": "rebel",
       "bases": [
-        { "name": "杭州", "type": "fixed" },
-        { "name": "溫州", "type": "fixed" },
-        { "name": "任意東洋", "type": "flex" },
-        { "name": "任意南洋", "type": "flex" },
-        { "name": "任意英美城鎮", "type": "flex" }
+        {
+          "name": "杭州",
+          "type": "fixed"
+        },
+        {
+          "name": "溫州",
+          "type": "fixed"
+        },
+        {
+          "name": "任意東洋",
+          "type": "flex"
+        },
+        {
+          "name": "任意南洋",
+          "type": "flex"
+        },
+        {
+          "name": "任意英美城鎮",
+          "type": "flex"
+        }
       ],
       "abilities": [
         {
           "ref": "first_money_draw"
         }
       ],
-      "shared_organizations_with": ["臺灣（藍線）"],
+      "shared_organizations_with": [
+        "臺灣（藍線）"
+      ],
       "win_conditions": [
         {
           "type": "count_and_required",
           "scope": "牆內與牆外",
           "count": 12,
-          "required_locations": ["杭州", "溫州"]
+          "required_locations": [
+            "杭州",
+            "溫州"
+          ]
         }
       ],
-      "tags": ["engine", "money", "draw", "shared_org"]
+      "tags": [
+        "engine",
+        "money",
+        "draw",
+        "shared_org"
+      ]
     },
     {
       "id": "yue",
@@ -927,40 +1285,80 @@
       "camp": "rebel",
       "parent_faction": "rebel",
       "bases": [
-        { "name": "廣州", "type": "fixed" },
-        { "name": "任意南洋", "type": "flex" },
-        { "name": "任意英美城鎮", "type": "flex" }
+        {
+          "name": "廣州",
+          "type": "fixed"
+        },
+        {
+          "name": "任意南洋",
+          "type": "flex"
+        },
+        {
+          "name": "任意英美城鎮",
+          "type": "flex"
+        }
       ],
       "abilities": [
         {
           "ref": "first_money_draw"
         }
       ],
-      "shared_organizations_with": ["香港"],
+      "shared_organizations_with": [
+        "香港"
+      ],
       "win_conditions": [
         {
           "type": "count_and_required",
           "scope": "牆內與牆外",
           "count": 11,
-          "required_locations": ["廣州", "深圳", "港澳"]
+          "required_locations": [
+            "廣州",
+            "深圳",
+            "港澳"
+          ]
         }
       ],
-      "tags": ["engine", "money", "draw", "shared_org"]
+      "tags": [
+        "engine",
+        "money",
+        "draw",
+        "shared_org"
+      ]
     },
     {
       "id": "hui",
       "name": "回族",
-      "aliases": ["回"],
+      "aliases": [
+        "回"
+      ],
       "side": "rebel",
       "camp": "rebel",
       "parent_faction": "rebel",
       "bases": [
-        { "name": "西寧", "type": "fixed" },
-        { "name": "銀川", "type": "fixed" },
-        { "name": "蘭州", "type": "fixed" },
-        { "name": "昆明", "type": "fixed" },
-        { "name": "利雅德", "type": "fixed" },
-        { "name": "任意南洋城鎮", "type": "flex" }
+        {
+          "name": "西寧",
+          "type": "fixed"
+        },
+        {
+          "name": "銀川",
+          "type": "fixed"
+        },
+        {
+          "name": "蘭州",
+          "type": "fixed"
+        },
+        {
+          "name": "昆明",
+          "type": "fixed"
+        },
+        {
+          "name": "利雅德",
+          "type": "fixed"
+        },
+        {
+          "name": "任意南洋城鎮",
+          "type": "flex"
+        }
       ],
       "abilities": [
         {
@@ -975,7 +1373,11 @@
           "count": 14
         }
       ],
-      "tags": ["reactive", "draw", "anti_removal"]
+      "tags": [
+        "reactive",
+        "draw",
+        "anti_removal"
+      ]
     },
     {
       "id": "zhaowu_ganqingning",
@@ -985,9 +1387,18 @@
       "camp": "rebel",
       "parent_faction": "rebel",
       "bases": [
-        { "name": "蘭州", "type": "fixed" },
-        { "name": "利雅德", "type": "fixed" },
-        { "name": "任意英美城鎮", "type": "flex" }
+        {
+          "name": "蘭州",
+          "type": "fixed"
+        },
+        {
+          "name": "利雅德",
+          "type": "fixed"
+        },
+        {
+          "name": "任意英美城鎮",
+          "type": "flex"
+        }
       ],
       "abilities": [
         {
@@ -999,10 +1410,17 @@
           "type": "count_and_required",
           "scope": "牆內與牆外",
           "count": 11,
-          "required_locations": ["蘭州", "西寧", "銀川"]
+          "required_locations": [
+            "蘭州",
+            "西寧",
+            "銀川"
+          ]
         }
       ],
-      "tags": ["combo", "resource"]
+      "tags": [
+        "combo",
+        "resource"
+      ]
     },
     {
       "id": "qin_guanlong",
@@ -1012,8 +1430,14 @@
       "camp": "rebel",
       "parent_faction": "rebel",
       "bases": [
-        { "name": "西安", "type": "fixed" },
-        { "name": "任意英美城鎮", "type": "flex" }
+        {
+          "name": "西安",
+          "type": "fixed"
+        },
+        {
+          "name": "任意英美城鎮",
+          "type": "flex"
+        }
       ],
       "abilities": [
         {
@@ -1025,10 +1449,15 @@
           "type": "count_and_required",
           "scope": "牆內與牆外",
           "count": 13,
-          "required_locations": ["西安"]
+          "required_locations": [
+            "西安"
+          ]
         }
       ],
-      "tags": ["combo", "resource"]
+      "tags": [
+        "combo",
+        "resource"
+      ]
     },
     {
       "id": "wan",
@@ -1037,8 +1466,14 @@
       "camp": "rebel",
       "parent_faction": "rebel",
       "bases": [
-        { "name": "南陽", "type": "fixed" },
-        { "name": "任意英美城鎮", "type": "flex" }
+        {
+          "name": "南陽",
+          "type": "fixed"
+        },
+        {
+          "name": "任意英美城鎮",
+          "type": "flex"
+        }
       ],
       "abilities": [
         {
@@ -1057,7 +1492,11 @@
           "count": 14
         }
       ],
-      "tags": ["reactive", "map_dependency", "anti_removal"]
+      "tags": [
+        "reactive",
+        "map_dependency",
+        "anti_removal"
+      ]
     },
     {
       "id": "underground_church",
@@ -1066,7 +1505,10 @@
       "camp": "rebel",
       "parent_faction": "rebel",
       "bases": [
-        { "name": "任意牆內城鎮", "type": "flex" }
+        {
+          "name": "任意牆內城鎮",
+          "type": "flex"
+        }
       ],
       "abilities": [
         {
@@ -1074,7 +1516,9 @@
           "name_override": "殉道者"
         }
       ],
-      "shared_organizations_with": ["臺灣（綠線）"],
+      "shared_organizations_with": [
+        "臺灣（綠線）"
+      ],
       "win_conditions": [
         {
           "type": "count_only",
@@ -1082,7 +1526,11 @@
           "count": 14
         }
       ],
-      "tags": ["reactive", "shared_org", "anti_removal"]
+      "tags": [
+        "reactive",
+        "shared_org",
+        "anti_removal"
+      ]
     }
   ]
 }

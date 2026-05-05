@@ -336,6 +336,13 @@
         "engine",
         "shared_org",
         "airport"
+      ],
+      "abilities": [
+        {
+          "name": "攬炒策略",
+          "type": "setup",
+          "effect": "在遊戲開始時，免費將一張宣傳家洗入牌庫。"
+        }
       ]
     },
     {
