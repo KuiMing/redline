@@ -1,0 +1,29 @@
+{
+  "summary": {
+    "total": 4,
+    "passed": 4,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "huawen_chuanmei",
+      "ok": true,
+      "detail": "result={'success': True}, resources={'money': 1, 'propaganda': 0}"
+    },
+    {
+      "name": "gejie_zizhu",
+      "ok": true,
+      "detail": "['資助者']"
+    },
+    {
+      "name": "huodongjia",
+      "ok": true,
+      "detail": "['宣傳家', '宣傳家']"
+    },
+    {
+      "name": "ren_tong_ci_xin",
+      "ok": true,
+      "detail": "before=0, after=2"
+    }
+  ]
+}

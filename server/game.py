@@ -385,7 +385,19 @@ class Game:
             "還我河山": {"ref": "on_build_draw", "name_override": "還我河山"},
         }
         mapped = mapping.get(name)
-        return self._resolve_ability_ref(mapped) if mapped else None
+        if mapped:
+            return self._resolve_ability_ref(mapped)
+
+        direct = {
+            "華文傳媒": {"name": "華文傳媒", "type": "passive", "effect": "可以用資金支付宣傳。"},
+            "各界資助": {"name": "各界資助", "type": "setup", "effect": "在遊戲開始時額外將1張資助者洗入起始牌庫。"},
+            "民主陣線": {"name": "民主陣線", "type": "activated", "effect": "您可以用2點任意資源購買已被移除的任1張牌。"},
+            "立場試探": {"name": "立場試探", "type": "activated", "effect": "展示牌庫頂牌；若購買費用為奇數則加入手牌，若為偶數則放入棄牌堆。"},
+            "賭徒耳語": {"name": "賭徒耳語", "type": "activated", "effect": "將1張手牌放進牌庫底，猜牌庫頂牌購買費用奇偶；若猜中獲得3點宣傳與3點資金。"},
+            "活動家": {"name": "活動家", "type": "setup", "effect": "在遊戲開始時額外將2張宣傳家洗入起始牌庫。"},
+            "人同此心": {"name": "人同此心", "type": "triggered", "effect": "當您每回合第1次打出購買費用含宣傳的牌時，獲得2點宣傳。"},
+        }
+        return direct.get(name)
 
     def _resolve_faction_abilities(self, faction_id):
         faction = self.faction_by_id.get(faction_id, {})
@@ -457,6 +469,8 @@ class Game:
     def _starter_card(self, name):
         if name == "宣傳家":
             return Card("宣傳家", "propaganda", {"propaganda": 2})
+        if name == "資助者":
+            return Card("資助者", "money", {"money": 2})
         if name == "追隨者":
             return Card("追隨者", "propaganda", {"propaganda": 1})
         if name == "樂捐者":
@@ -469,8 +483,10 @@ class Game:
                 continue
             if ability.get("name") == "攬炒策略":
                 player.deck.discard([self._starter_card("宣傳家")])
-            elif ability.get("name") in {"達賴救援", "東突厥斯坦政府"}:
+            elif ability.get("name") in {"達賴救援", "東突厥斯坦政府", "活動家"}:
                 player.deck.discard([self._starter_card("宣傳家"), self._starter_card("宣傳家")])
+            elif ability.get("name") == "各界資助":
+                player.deck.discard([self._starter_card("資助者")])
 
     def _apply_turn_end_faction_abilities(self, player):
         effective = self._player_effective_abilities(player)
@@ -673,6 +689,10 @@ class Game:
                 self.turn_log["faction_first_propaganda_triggered"] = True
                 player.hand.extend(player.deck.draw(1))
                 self.log(f"{player.name} triggered {name} and drew 1 card")
+            elif name == "人同此心" and effective_type == "propaganda" and not self.turn_log.get("faction_first_prop_gain_triggered"):
+                self.turn_log["faction_first_prop_gain_triggered"] = True
+                player.resources["propaganda"] += 2
+                self.log(f"{player.name} triggered 人同此心 and gained 2 propaganda")
             elif name in {"基金會", "共合會"} and effective_type == "money" and not self.turn_log.get("faction_first_money_gain_triggered"):
                 self.turn_log["faction_first_money_gain_triggered"] = True
                 player.resources["money"] += 2
@@ -855,10 +875,16 @@ class Game:
             return {"error": "非暴力：不能購買武裝或裝備類卡牌"}
 
         card_type = getattr(card, "card_type", None)
-        if card_type == "money":
-            player.resources["money"] += 1
-        elif card_type == "propaganda":
-            player.resources["propaganda"] += 1
+        if self._player_has_ability(player, "華文傳媒"):
+            if card_type == "propaganda":
+                player.resources["money"] += 1
+            elif card_type == "money":
+                player.resources["money"] += 1
+        else:
+            if card_type == "money":
+                player.resources["money"] += 1
+            elif card_type == "propaganda":
+                player.resources["propaganda"] += 1
 
         player.deck.discard([card])
         self.purchase_area.pop(index)
