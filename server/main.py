@@ -466,6 +466,45 @@ def test_force_base_selection(payload: dict):
     }
 
 
+@app.post("/test/setup-hong-kong-safehouse")
+def test_setup_hong_kong_safehouse(payload: dict):
+    game_id = str(uuid.uuid4())
+    players = [(str(uuid.uuid4()), "hk"), (str(uuid.uuid4()), "red")]
+    game = Game(players)
+
+    hk = game.players[0]
+    red = game.players[1]
+
+    hk.faction_id = "hong_kong"
+    hk.base = payload.get("base", "香港城")
+    hk.organizations = {hk.base: 1}
+    hk.hand = []
+
+    red.faction_id = "red_army"
+    red.base = "北京"
+    red.organizations = {"北京": 1}
+
+    game.current_player_index = 0
+    game.turn_phase = TurnPhase.ACTION
+    game.game_phase = GamePhase.MAIN
+    game.pending_base_choices = {}
+
+    manager.games[game_id] = game
+    manager.connections[game_id] = manager.connections.get(game_id, {})
+    lobby[game_id] = list(zip([p.id for p in game.players], [p.name for p in game.players]))
+    lobby_hosts[game_id] = hk.id
+
+    return {
+        "success": True,
+        "game_id": game_id,
+        "player_id": hk.id,
+        "base": hk.base,
+        "turn_phase": game.turn_phase,
+        "game_phase": game.game_phase,
+        "players": [{"id": p.id, "name": p.name, "faction": p.faction_id} for p in game.players],
+    }
+
+
 @app.get("/")
 def index():
     return FileResponse("static/index.html")
