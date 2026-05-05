@@ -48,6 +48,9 @@ async function createRoom() {
 
 async function chooseFaction(factionId) {
   pendingFactionChoice = factionId;
+  const opt = factionOptionById(factionId);
+  const baseOptions = opt?.base_options || [];
+  pendingFactionBaseChoice = baseOptions.length === 1 ? baseOptions[0] : null;
   await renderFactionPicker();
 }
 
@@ -211,10 +214,12 @@ async function renderFactionPicker() {
   variants.style.display = 'none';
   bases.innerHTML = '';
   bases.style.display = 'none';
-  confirmBar.style.display = pendingFactionChoice && pendingFactionBaseChoice ? 'block' : 'none';
-  confirmBtn.disabled = !(pendingFactionChoice && pendingFactionBaseChoice);
+  const needsBaseChoice = !!(activeChoice && factionOptionById(activeChoice)?.base_options?.length);
+  const readyForConfirm = !!activeChoice && (!needsBaseChoice || !!activeBase);
+  confirmBar.style.display = readyForConfirm ? 'block' : 'none';
+  confirmBtn.disabled = !readyForConfirm;
   confirmBtn.onclick = confirmFactionChoice;
-  renderFactionDetails(pendingFactionChoice && pendingFactionBaseChoice ? activeChoice : null);
+  renderFactionDetails(readyForConfirm ? activeChoice : null);
 
   const takenCategories = new Set(
     Object.entries(chosen)
@@ -250,9 +255,7 @@ async function renderFactionPicker() {
         vbtn.className = `faction-choice-btn faction-variant-btn${isSelectedVariant ? ' active' : ''}`;
         vbtn.textContent = `${opt.variant || opt.name || opt.id}`;
         vbtn.onclick = async () => {
-          pendingFactionChoice = optId;
-          pendingFactionBaseChoice = null;
-          await renderFactionPicker();
+          await chooseFaction(optId);
         };
         variants.appendChild(vbtn);
       });
