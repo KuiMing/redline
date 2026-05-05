@@ -712,6 +712,47 @@ class Game:
         self.log(f"{player.name} built organization in {town}")
         return {"success": True}
 
+    def build_organization_with_support(self, origin_town, target_town):
+        if self.turn_phase != TurnPhase.ACTION:
+            return {"error": "Not in ACTION phase"}
+
+        player = self.current_player()
+        if not origin_town or not target_town:
+            return {"error": "Origin and target required"}
+        if origin_town not in self.map.get("towns", {}) or target_town not in self.map.get("towns", {}):
+            return {"error": "Invalid town"}
+        if player.organizations.get(origin_town, 0) <= 0:
+            return {"error": "No organization in origin"}
+        if not self.can_develop_in_town(player, target_town):
+            return {"error": "Cannot develop in this town"}
+
+        safehouse_bonus = 1 if self._player_has_ability(player, "安全屋") else 0
+        max_distance = 1 + int(getattr(player, 'build_range_bonus', 0) or 0) + safehouse_bonus
+        if origin_town != target_town:
+            frontier = [(origin_town, 0)]
+            seen = {origin_town}
+            reached = False
+            while frontier:
+                town, dist = frontier.pop(0)
+                if dist >= max_distance:
+                    continue
+                neighbors = set(self.map['towns'].get(town, {}).get('road', []) or []) | set(self.map['towns'].get(town, {}).get('rail', []) or [])
+                for nxt in neighbors:
+                    if nxt == target_town:
+                        reached = True
+                        frontier = []
+                        break
+                    if nxt not in seen:
+                        seen.add(nxt)
+                        frontier.append((nxt, dist + 1))
+            if not reached:
+                return {"error": "Target out of build range"}
+
+        player.organizations[target_town] = player.organizations.get(target_town, 0) + 1
+        self.turn_log.setdefault("built_towns", []).append(target_town)
+        self.log(f"{player.name} built organization in {target_town} from {origin_town}")
+        return {"success": True}
+
     def dissolve_organization(self, attacker, defender, town, source="card"):
         if not town or defender.organizations.get(town, 0) <= 0:
             return {"error": "No organization in target town"}

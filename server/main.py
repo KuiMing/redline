@@ -343,7 +343,10 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
             elif action == "set_base":
                 result = game.set_base_choice(player_id, data.get("town"))
             elif action == "build":
-                result = game.build_organization(data.get("town"))
+                if data.get("from") and data.get("town"):
+                    result = game.build_organization_with_support(data.get("from"), data.get("town"))
+                else:
+                    result = game.build_organization(data.get("town"))
             elif action == "move":
                 result = game.move_organization(
                     data.get("from"),
