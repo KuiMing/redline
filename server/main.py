@@ -178,6 +178,8 @@ def start_game(payload: dict):
             player.faction_id = variant_map.get(base_name, player.faction_id)
         player.base = base_name
         player.organizations = {base_name: 1}
+    for player in game.players:
+        game._apply_setup_abilities(player)
     game.pending_base_choices = game._compute_pending_base_choices()
     if game.pending_base_choices:
         game.game_phase = GamePhase.BASE_SELECTION

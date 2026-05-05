@@ -84,7 +84,9 @@ class Game:
         self.winner = None
 
         self.map = self._load_json(MAP_PATH)
-        self.factions = self._load_json(FACTIONS_PATH)["factions"]
+        self.factions_data = self._load_json(FACTIONS_PATH)
+        self.factions = self.factions_data["factions"]
+        self.ability_templates = self.factions_data.get("ability_templates", {})
         self.board_regions = self._load_json(BOARD_TOWNS_PATH)["regions"]
         self.structured_cards = self._load_json(STRUCTURED_ACTION_PATH)["cards"]
         # ✅ Load structured eras
@@ -123,6 +125,9 @@ class Game:
         else:
             self._assign_starting_bases()
             self.game_phase = GamePhase.MAIN
+
+        for p in self.players:
+            self._apply_setup_abilities(p)
 
         self.action_engine = ActionCardEngine(self.structured_cards)
         self.effect_engine = EffectEngine()
@@ -167,7 +172,14 @@ class Game:
 
     def _classify_base_options(self, faction):
         bases = faction.get("bases", [])
-        names = [b.get("name") for b in bases if b.get("name")]
+        names = []
+        for b in bases:
+            if isinstance(b, dict):
+                name = b.get("name")
+            else:
+                name = b
+            if name:
+                names.append(name)
         tags = set(faction.get("tags", []))
 
         if faction.get("id") == "hong_kong":
@@ -176,7 +188,8 @@ class Game:
             return "flex", names
         if "flex_base" in tags:
             return "flex", names
-        if len(names) == 1 and bases[0].get("type") == "fixed":
+        first_base = bases[0] if bases else None
+        if len(names) == 1 and isinstance(first_base, dict) and first_base.get("type") == "fixed":
             return "fixed", names
         return "candidate", names
 
@@ -336,7 +349,57 @@ class Game:
             "played_propaganda_card": False,
             "non_starter_discard": False,
             "successful_discard": False,
+            "built_towns": [],
         }
+
+    def _resolve_faction_abilities(self, faction_id):
+        faction = self.faction_by_id.get(faction_id, {})
+        resolved = []
+        for ability in faction.get("abilities", []):
+            if isinstance(ability, dict) and ability.get("ref"):
+                template = dict(self.ability_templates.get(ability.get("ref"), {}))
+                template.update({k: v for k, v in ability.items() if k != "ref"})
+                if ability.get("name_override"):
+                    template["name"] = ability["name_override"]
+                resolved.append(template)
+            else:
+                resolved.append(ability)
+        return resolved
+
+    def _player_base_data(self, player):
+        faction = self.faction_by_id.get(player.faction_id, {})
+        for base in faction.get("bases", []):
+            if isinstance(base, dict) and base.get("name") == player.base:
+                return base
+        return None
+
+    def _player_effective_abilities(self, player):
+        abilities = list(self._resolve_faction_abilities(player.faction_id))
+        base = self._player_base_data(player)
+        if base:
+            abilities.extend(base.get("abilities", []))
+        return abilities
+
+    def _player_has_ability(self, player, name):
+        return any(isinstance(a, dict) and a.get("name") == name for a in self._player_effective_abilities(player))
+
+    def _starter_card(self, name):
+        if name == "宣傳家":
+            return Card("宣傳家", "propaganda", {"propaganda": 2})
+        if name == "追隨者":
+            return Card("追隨者", "propaganda", {"propaganda": 1})
+        if name == "樂捐者":
+            return Card("樂捐者", "money", {"money": 1})
+        return Card(name, "command", {})
+
+    def _apply_setup_abilities(self, player):
+        for ability in self._player_effective_abilities(player):
+            if not isinstance(ability, dict):
+                continue
+            if ability.get("name") == "攬炒策略":
+                player.deck.discard([self._starter_card("宣傳家")])
+            elif ability.get("name") in {"達賴救援", "東突厥斯坦政府"}:
+                player.deck.discard([self._starter_card("宣傳家"), self._starter_card("宣傳家")])
 
     def _camp_token_for_faction_id(self, faction_id):
         faction = self.faction_by_id.get(faction_id, {})
@@ -489,9 +552,13 @@ class Game:
         played_card = player.hand.pop(index)
         card_name = getattr(played_card, "name", str(played_card))
 
-        if getattr(played_card, "card_type", None) == "money":
+        effective_type = getattr(played_card, "card_type", None)
+        if self._player_has_ability(player, "國際線") and getattr(played_card, "card_type", None) == "money":
+            effective_type = "propaganda"
+
+        if effective_type == "money":
             self.turn_log["played_money_card"] = True
-        if getattr(played_card, "card_type", None) == "propaganda":
+        if effective_type == "propaganda":
             self.turn_log["played_propaganda_card"] = True
 
         self.action_engine.execute(card_name, player, self)
@@ -551,7 +618,13 @@ class Game:
         if not self.can_develop_in_town(player, town):
             return {"error": "Cannot develop in this town"}
 
+        if self._player_has_ability(player, "盟族學校"):
+            town_data = self.map.get("towns", {}).get(town, {})
+            if "蒙古" not in (town_data.get("camp") or []):
+                return {"error": "盟族學校：只能在蒙古發展空間建立組織"}
+
         player.organizations[town] = player.organizations.get(town, 0) + 1
+        self.turn_log.setdefault("built_towns", []).append(town)
         self.log(f"{player.name} built organization in {town}")
         return {"success": True}
 
@@ -587,6 +660,29 @@ class Game:
         player.organizations[to_town] = player.organizations.get(to_town, 0) + 1
         player.moves_left -= cost
         self.log(f"{player.name} moved 1 organization from {from_town} to {to_town} via {mode}")
+        return {"success": True}
+
+    def buy_card(self, index):
+        if self.turn_phase != TurnPhase.ACTION:
+            return {"error": "Not in ACTION phase"}
+
+        player = self.current_player()
+        if index < 0 or index >= len(self.purchase_area):
+            return {"error": "Invalid index"}
+
+        card = self.purchase_area[index]
+        if not card:
+            return {"error": "No card in slot"}
+
+        card_type = getattr(card, "card_type", None)
+        if card_type == "money":
+            player.resources["money"] += 1
+        elif card_type == "propaganda":
+            player.resources["propaganda"] += 1
+
+        player.deck.discard([card])
+        self.purchase_area.pop(index)
+        self.log(f"{player.name} bought {getattr(card, 'name', str(card))}")
         return {"success": True}
 
     # ---------- Era Trigger ----------
