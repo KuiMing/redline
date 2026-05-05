@@ -78,7 +78,7 @@ def test_mongol_restriction():
     g.turn_phase = TurnPhase.ACTION
     player.organizations = {'烏蘭巴托': 1, '東京': 1}
     result = g.build_organization('東京')
-    return ok('mongol_school_restriction', result.get('error') == '盟族學校：只能在蒙古發展空間建立組織', str(result))
+    return ok('mongol_school_restriction', result.get('error') == '盟旗學校：只能在蒙古發展空間建立組織', str(result))
 
 
 def test_kazakh_propaganda_draw():

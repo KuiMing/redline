@@ -28,7 +28,7 @@
     {
       "name": "mongol_school_restriction",
       "ok": true,
-      "detail": "{'error': '盟族學校：只能在蒙古發展空間建立組織'}"
+      "detail": "{'error': '盟旗學校：只能在蒙古發展空間建立組織'}"
     },
     {
       "name": "kazakh_first_propaganda_draw",
