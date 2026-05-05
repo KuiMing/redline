@@ -618,11 +618,6 @@ class Game:
         if not self.can_develop_in_town(player, town):
             return {"error": "Cannot develop in this town"}
 
-        if self._player_has_ability(player, "盟旗學校"):
-            town_data = self.map.get("towns", {}).get(town, {})
-            if "蒙古" not in (town_data.get("camp") or []):
-                return {"error": "盟旗學校：只能在蒙古發展空間建立組織"}
-
         player.organizations[town] = player.organizations.get(town, 0) + 1
         self.turn_log.setdefault("built_towns", []).append(town)
         self.log(f"{player.name} built organization in {town}")

@@ -26,9 +26,9 @@
       "detail": "before=0, after=1"
     },
     {
-      "name": "mongol_school_restriction",
+      "name": "mongol_develop_legality",
       "ok": true,
-      "detail": "{'error': '盟旗學校：只能在蒙古發展空間建立組織'}"
+      "detail": "allow_mongol=True, allow_uncamped=True, block_other=True, result={'success': True}"
     },
     {
       "name": "kazakh_first_propaganda_draw",

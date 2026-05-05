@@ -72,13 +72,16 @@ def test_taiwan_blue_build_draw():
     return ok('taiwan_blue_end_turn_draw', after >= before + 1 or after >= 1, f'before={before}, after={after}')
 
 
-def test_mongol_restriction():
+def test_mongol_develop_legality():
     g = make_game('mongol', '東京')
     player = g.players[0]
     g.turn_phase = TurnPhase.ACTION
-    player.organizations = {'烏蘭巴托': 1, '東京': 1}
+    player.organizations = {'烏蘭巴托': 1, '東京': 1, '北京': 1}
+    allow_mongol = g.can_develop_in_town(player, '烏蘭巴托')
+    allow_uncamped = g.can_develop_in_town(player, '東京')
+    block_tagged_other = not g.can_develop_in_town(player, '北京')
     result = g.build_organization('東京')
-    return ok('mongol_school_restriction', result.get('error') == '盟旗學校：只能在蒙古發展空間建立組織', str(result))
+    return ok('mongol_develop_legality', allow_mongol and allow_uncamped and block_tagged_other and result.get('success') is True, f"allow_mongol={allow_mongol}, allow_uncamped={allow_uncamped}, block_other={block_tagged_other}, result={result}")
 
 
 def test_kazakh_propaganda_draw():
@@ -99,7 +102,7 @@ def main():
         test_hong_kong_international_line(),
         test_taiwan_green_build_draw(),
         test_taiwan_blue_build_draw(),
-        test_mongol_restriction(),
+        test_mongol_develop_legality(),
         test_kazakh_propaganda_draw(),
     ]
     summary = {
