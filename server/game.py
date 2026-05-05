@@ -350,20 +350,51 @@ class Game:
             "non_starter_discard": False,
             "successful_discard": False,
             "built_towns": [],
+            "played_nonstarter_names": [],
+            "combo_reward_triggered": False,
         }
+
+    def _resolve_ability_ref(self, ability):
+        if isinstance(ability, dict) and ability.get("ref"):
+            template = dict(self.ability_templates.get(ability.get("ref"), {}))
+            template.update({k: v for k, v in ability.items() if k != "ref"})
+            if ability.get("name_override"):
+                template["name"] = ability["name_override"]
+            return template
+        return ability if isinstance(ability, dict) else None
+
+    def _resolve_ability_text(self, text):
+        if not isinstance(text, str) or "【" not in text or "】" not in text:
+            return None
+        name = text.split("【", 1)[1].split("】", 1)[0]
+        mapping = {
+            "商貿組織": {"ref": "first_money_draw", "name_override": "商貿組織"},
+            "展現實力": {"ref": "combo_three_unique", "name_override": "展現實力"},
+            "殉道者": {"ref": "martyr_draw", "name_override": "殉道者"},
+            "青山里": {"ref": "martyr_draw", "name_override": "青山里"},
+            "星星之火": {"ref": "first_propaganda_draw", "name_override": "星星之火"},
+            "民族調和": {"ref": "first_propaganda_draw", "name_override": "民族調和"},
+            "基金會": {"ref": "first_money_gain2", "name_override": "基金會"},
+            "共合會": {"ref": "first_money_gain2", "name_override": "共合會"},
+            "本土社團": {"ref": "on_build_draw_inner", "name_override": "本土社團"},
+            "民國之心": {"ref": "on_build_draw_inner_or_nanyang", "name_override": "民國之心"},
+            "選我河山": {"ref": "on_build_draw", "name_override": "選我河山"},
+            "還我河山": {"ref": "on_build_draw", "name_override": "還我河山"},
+        }
+        mapped = mapping.get(name)
+        return self._resolve_ability_ref(mapped) if mapped else None
 
     def _resolve_faction_abilities(self, faction_id):
         faction = self.faction_by_id.get(faction_id, {})
         resolved = []
         for ability in faction.get("abilities", []):
-            if isinstance(ability, dict) and ability.get("ref"):
-                template = dict(self.ability_templates.get(ability.get("ref"), {}))
-                template.update({k: v for k, v in ability.items() if k != "ref"})
-                if ability.get("name_override"):
-                    template["name"] = ability["name_override"]
-                resolved.append(template)
-            else:
-                resolved.append(ability)
+            item = self._resolve_ability_ref(ability)
+            if item:
+                resolved.append(item)
+        for text in faction.get("abilities_text", []):
+            item = self._resolve_ability_text(text)
+            if item:
+                resolved.append(item)
         return resolved
 
     def _player_base_data(self, player):
@@ -409,6 +440,26 @@ class Game:
                 player.deck.discard([self._starter_card("宣傳家")])
             elif ability.get("name") in {"達賴救援", "東突厥斯坦政府"}:
                 player.deck.discard([self._starter_card("宣傳家"), self._starter_card("宣傳家")])
+
+    def _apply_turn_end_faction_abilities(self, player):
+        effective = self._player_effective_abilities(player)
+        built_towns = self.turn_log.get("built_towns", []) or []
+        built_in_china = any(t in set(self.board_regions.get("china", {}).get("towns", [])) for t in built_towns)
+        built_in_nanyang = any(t in {"曼谷", "吉隆坡", "新加坡", "雅加達", "河內", "胡志明市", "仰光"} for t in built_towns)
+
+        for ability in effective:
+            if not isinstance(ability, dict):
+                continue
+            name = ability.get("name")
+            if name in {"本土社團", "選我河山", "還我河山"} and built_in_china:
+                player.hand.extend(player.deck.draw(1))
+                self.log(f"{player.name} triggered {name} and drew 1 card")
+            elif name == "民國之心" and (built_in_china or built_in_nanyang):
+                player.hand.extend(player.deck.draw(1))
+                self.log(f"{player.name} triggered 民國之心 and drew 1 card")
+            elif name in {"商貿組織", "民族調和", "星星之火", "基金會", "共合會", "展現實力"}:
+                # not turn-end abilities
+                continue
 
     def _camp_token_for_faction_id(self, faction_id):
         faction = self.faction_by_id.get(faction_id, {})
@@ -570,7 +621,35 @@ class Game:
         if effective_type == "propaganda":
             self.turn_log["played_propaganda_card"] = True
 
+        if card_name not in {"追隨者", "樂捐者"}:
+            played_names = self.turn_log.setdefault("played_nonstarter_names", [])
+            if card_name not in played_names:
+                played_names.append(card_name)
+
         self.action_engine.execute(card_name, player, self)
+
+        for ability in self._player_effective_abilities(player):
+            if not isinstance(ability, dict):
+                continue
+            name = ability.get("name")
+            if name == "商貿組織" and effective_type == "money" and not self.turn_log.get("faction_first_money_triggered"):
+                self.turn_log["faction_first_money_triggered"] = True
+                player.hand.extend(player.deck.draw(1))
+                self.log(f"{player.name} triggered 商貿組織 and drew 1 card")
+            elif name in {"民族調和", "星星之火"} and effective_type == "propaganda" and not self.turn_log.get("faction_first_propaganda_triggered"):
+                self.turn_log["faction_first_propaganda_triggered"] = True
+                player.hand.extend(player.deck.draw(1))
+                self.log(f"{player.name} triggered {name} and drew 1 card")
+            elif name in {"基金會", "共合會"} and effective_type == "money" and not self.turn_log.get("faction_first_money_gain_triggered"):
+                self.turn_log["faction_first_money_gain_triggered"] = True
+                player.resources["money"] += 2
+                self.log(f"{player.name} triggered {name} and gained 2 money")
+            elif name == "展現實力" and not self.turn_log.get("combo_reward_triggered"):
+                if len(self.turn_log.get("played_nonstarter_names", [])) >= 3:
+                    self.turn_log["combo_reward_triggered"] = True
+                    player.resources["money"] += 3
+                    self.log(f"{player.name} triggered 展現實力 and gained 3 money")
+
         player.deck.discard([played_card])
         self.log(f"{player.name} played {card_name}")
         return {"success": True}
@@ -591,6 +670,7 @@ class Game:
             return
 
         player = self.current_player()
+        self._apply_turn_end_faction_abilities(player)
         player.discard_hand()
         player.reset_turn()
         player.draw_to_five()
@@ -642,6 +722,12 @@ class Game:
         if defender.organizations[town] <= 0:
             del defender.organizations[town]
         self.log(f"{attacker.name} dissolved 1 organization from {defender.name} at {town}")
+
+        inner_towns = set(self.board_regions.get("china", {}).get("towns", []))
+        if town in inner_towns and any(self._player_has_ability(defender, n) for n in {"殉道者", "青山里"}):
+            defender.hand.extend(defender.deck.draw(1))
+            self.log(f"{defender.name} triggered martyr-style ability and drew 1 card")
+
         return {"success": True}
 
     def move_organization(self, from_town, to_town, mode="road"):
