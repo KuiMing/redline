@@ -265,6 +265,8 @@ class Game:
             faction = self.faction_by_id.get(p.faction_id)
             if not faction:
                 continue
+            if p.base and p.organizations.get(p.base, 0) > 0:
+                continue
             if faction.get("id") in {"uyghur_family", "tibet_family"}:
                 labels = [b.get("name") for b in faction.get("bases", []) if b.get("name")]
                 pending[p.id] = {
@@ -352,6 +354,7 @@ class Game:
             "built_towns": [],
             "played_nonstarter_names": [],
             "combo_reward_triggered": False,
+            "guerrilla_triggered": False,
         }
 
     def _resolve_ability_ref(self, ability):
@@ -413,6 +416,34 @@ class Game:
 
     def _player_has_ability(self, player, name):
         return any(isinstance(a, dict) and a.get("name") == name for a in self._player_effective_abilities(player))
+
+    def _player_is_nonviolent(self, player):
+        return self._player_has_ability(player, "非暴力")
+
+    def _card_is_banned_for_player(self, player, card):
+        card_type = getattr(card, "card_type", None)
+        if self._player_is_nonviolent(player) and card_type in {"armed", "equipment"}:
+            return True
+        return False
+
+    def _apply_guerrilla_on_build(self, player, town):
+        if self.turn_log.get("guerrilla_triggered"):
+            return
+        if not self._player_has_ability(player, "游擊隊"):
+            return
+        inner_towns = set(self.board_regions.get("china", {}).get("towns", []))
+        if town not in inner_towns:
+            return
+
+        self.turn_log["guerrilla_triggered"] = True
+        red_player = next((p for p in self.players if p.faction_id == "red_army"), None)
+        if red_player and red_player.hand:
+            discarded = red_player.hand.pop()
+            red_player.deck.discard([discarded])
+            self.log(f"{player.name} triggered 游擊隊 and forced {red_player.name} to discard {getattr(discarded, 'name', str(discarded))}")
+        else:
+            player.hand.extend(player.deck.draw(1))
+            self.log(f"{player.name} triggered 游擊隊 and drew 1 card")
 
     def _can_target_org_with_dissolve(self, attacker, defender, source="card"):
         if self._player_has_ability(defender, "盟旗學校"):
@@ -608,6 +639,8 @@ class Game:
         player = self.current_player()
         if index < 0 or index >= len(player.hand):
             return {"error": "Invalid index"}
+        if self._card_is_banned_for_player(player, player.hand[index]):
+            return {"error": "非暴力：不能打出武裝或裝備類卡牌"}
 
         played_card = player.hand.pop(index)
         card_name = getattr(played_card, "name", str(played_card))
@@ -709,6 +742,7 @@ class Game:
 
         player.organizations[town] = player.organizations.get(town, 0) + 1
         self.turn_log.setdefault("built_towns", []).append(town)
+        self._apply_guerrilla_on_build(player, town)
         self.log(f"{player.name} built organization in {town}")
         return {"success": True}
 
@@ -750,6 +784,7 @@ class Game:
 
         player.organizations[target_town] = player.organizations.get(target_town, 0) + 1
         self.turn_log.setdefault("built_towns", []).append(target_town)
+        self._apply_guerrilla_on_build(player, target_town)
         self.log(f"{player.name} built organization in {target_town} from {origin_town}")
         return {"success": True}
 
@@ -816,6 +851,8 @@ class Game:
         card = self.purchase_area[index]
         if not card:
             return {"error": "No card in slot"}
+        if self._card_is_banned_for_player(player, card):
+            return {"error": "非暴力：不能購買武裝或裝備類卡牌"}
 
         card_type = getattr(card, "card_type", None)
         if card_type == "money":
