@@ -48,12 +48,14 @@ const roadLayer = L.layerGroup().addTo(map);
 const railLayer = L.layerGroup().addTo(map);
 const markerLayer = L.layerGroup().addTo(map);
 const highlightLayer = L.layerGroup().addTo(map);
+const buildHighlightLayer = L.layerGroup().addTo(map);
 let labelMode = 'auto', showRoad = true, showRail = true;
 let currentMarkers = new Map();
 let currentVisible = towns.map(t=>t.name);
 let lastGameState = null;
 let selectedTown = null;
 let selectedMoveTargets = [];
+let selectedBuildTargets = [];
 let pendingMove = null;
 let lastResolvedMove = null;
 
@@ -122,6 +124,11 @@ function resetMoveSelection() {
   pendingMove = null;
 }
 
+function resetBuildSelection() {
+  selectedBuildTargets = [];
+  buildHighlightLayer.clearLayers();
+}
+
 function finalizeMoveSelection(fromTown, toTown) {
   lastResolvedMove = { from: fromTown, to: toTown };
   selectedTown = toTown;
@@ -152,10 +159,14 @@ function updateStatusPanel() {
     } else if (lastResolvedMove) {
       hintEl.innerHTML = `已完成移動：<span class="hint-strong">${lastResolvedMove.from}</span> → <span class="hint-strong">${lastResolvedMove.to}</span>`;
     } else if (!selectedTown) {
-      hintEl.innerHTML = '連上遊戲後，只有 <span class="hint-strong">當前玩家自己擁有組織</span> 的城鎮可以高亮合法移動。';
+      hintEl.innerHTML = playerHasSafehouse()
+        ? '連上遊戲後，點選自己的香港組織城鎮，可同時查看移動與 <span class="hint-strong">安全屋建立範圍</span>。'
+        : '連上遊戲後，只有 <span class="hint-strong">當前玩家自己擁有組織</span> 的城鎮可以高亮合法移動。';
     } else if (playerOwnsTown(selectedTown)) {
       const opts = movementOptionsForTown(selectedTown);
-      hintEl.innerHTML = `已選取 <span class="hint-strong">${selectedTown}</span>：可走一般道路 ${opts.road.length} 條、鐵路 ${opts.rail.length} 條。點亮的鄰城可直接點擊移動。`;
+      const buildOpts = playerHasSafehouse() ? buildOptionsForTown(selectedTown) : [];
+      hintEl.innerHTML = `已選取 <span class="hint-strong">${selectedTown}</span>：可走一般道路 ${opts.road.length} 條、鐵路 ${opts.rail.length} 條` +
+        (buildOpts.length ? `，安全屋可建立 ${buildOpts.length} 個目標。` : '。') ;
     } else {
       hintEl.innerHTML = `已選取 <span class="hint-strong">${selectedTown}</span>：這不是當前玩家可操作的城鎮。`;
     }
@@ -237,11 +248,49 @@ function movementOptionsForTown(townName) {
   };
 }
 
+function currentPlayerState() {
+  if (!lastGameState || !mapPlayerId) return null;
+  return (lastGameState.players || []).find(p => p.id === mapPlayerId) || null;
+}
+
+function playerHasSafehouse() {
+  const player = currentPlayerState();
+  if (!player || player.faction !== 'hong_kong') return false;
+  return ['香港城', '臺北'].some(t => (player.orgs || {})[t] > 0);
+}
+
+function buildOptionsForTown(originTown) {
+  if (!lastGameState || !originTown || !playerHasSafehouse()) return [];
+  const player = currentPlayerState();
+  if (!player || !player.orgs || !player.orgs[originTown]) return [];
+
+  const maxDistance = 2;
+  const visited = new Set([originTown]);
+  const queue = [[originTown, 0]];
+  const reachable = new Set();
+
+  while (queue.length) {
+    const [town, dist] = queue.shift();
+    if (dist >= maxDistance) continue;
+    const data = MAP_DATA.towns[town] || {};
+    const neighbors = new Set([...(data.road || []), ...(data.rail || [])]);
+    for (const nxt of neighbors) {
+      if (visited.has(nxt)) continue;
+      visited.add(nxt);
+      reachable.add(nxt);
+      queue.push([nxt, dist + 1]);
+    }
+  }
+
+  return Array.from(reachable).filter(town => MAP_DATA.towns[town]);
+}
+
 function renderMovementHighlights(townName) {
   highlightLayer.clearLayers();
   selectedTown = townName;
   selectedMoveTargets = [];
   lastResolvedMove = null;
+  resetBuildSelection();
   updateStatusPanel();
   if (!townName) return false;
 
@@ -301,6 +350,23 @@ function renderMovementHighlights(townName) {
 
     const marker = currentMarkers.get(toName);
     if (marker) marker.setStyle({ color: '#67e8f9', weight: 5, fillOpacity: 1, radius: Math.max(10, markerRadius(map.getZoom()) + 2) });
+  }
+
+  if (playerHasSafehouse()) {
+    const buildTargets = buildOptionsForTown(townName);
+    selectedBuildTargets = buildTargets.slice();
+    for (const toName of buildTargets) {
+      const target = byName.get(toName);
+      if (!target) continue;
+      L.circleMarker([target.lat, target.lon], {
+        radius: Math.max(9, markerRadius(map.getZoom()) + 2),
+        color: '#f472b6',
+        weight: 3,
+        fillColor: '#ec4899',
+        fillOpacity: 0.28,
+        opacity: 1,
+      }).addTo(buildHighlightLayer).bindPopup(`安全屋可建立：${townName} → ${toName}`);
+    }
   }
 
   focusSelectedTown(townName);
@@ -376,8 +442,15 @@ function renderMap() {
         return;
       }
 
+      if (selectedTown && selectedBuildTargets.includes(t.name) && playerHasSafehouse()) {
+        if (!mapWs || mapWs.readyState !== WebSocket.OPEN) return;
+        mapWs.send(JSON.stringify({ action: 'build', from: selectedTown, town: t.name }));
+        return;
+      }
+
       updateInfoPanel(t.name);
       resetMoveSelection();
+      resetBuildSelection();
       renderMap();
       applyGameStateToMap(lastGameState);
       const didHighlight = renderMovementHighlights(t.name);
