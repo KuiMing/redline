@@ -31,6 +31,18 @@ def faction_category(faction_id: str):
     return 'rebel'
 
 
+def semantic_base_pool(option_name: str):
+    pools = {
+        '任意牆內': [],
+        '任意牆內城鎮': [],
+        '任意英美城鎮': ['華盛頓', '紐約', '多倫多', '卡加利', '溫哥華', '舊金山', '洛杉磯', '倫敦'],
+        '任意南洋': ['曼谷', '吉隆坡', '新加坡', '雅加達', '河內', '胡志明市', '仰光'],
+        '任意南洋城鎮': ['曼谷', '吉隆坡', '新加坡', '雅加達', '河內', '胡志明市', '仰光'],
+        '任意東洋': ['東京', '大阪', '福岡', '札幌', '仙臺', '沖繩', '首爾', '釜山'],
+    }
+    return pools.get(option_name, [])
+
+
 def faction_base_options(by_id, faction_id: str):
     if faction_id == 'mongol':
         return ['烏蘭巴托', '東京', '紐約']
@@ -52,6 +64,15 @@ def faction_base_options(by_id, faction_id: str):
         if name and name not in options:
             options.append(name)
     return options
+
+
+def faction_base_resolved(by_id, faction_id: str):
+    options = faction_base_options(by_id, faction_id)
+    resolved = {}
+    for option in options:
+        towns = semantic_base_pool(option)
+        resolved[option] = towns if towns else [option]
+    return resolved
 
 
 @app.post("/create")
@@ -214,6 +235,7 @@ def list_factions():
     for category in categories:
         for option in category["options"]:
             option["base_options"] = faction_base_options(by_id, option["id"])
+            option["base_resolved"] = faction_base_resolved(by_id, option["id"])
 
     return {"categories": categories}
 
@@ -245,8 +267,11 @@ def choose_faction(payload: dict):
         return {"error": "Faction category already taken"}
 
     valid_bases = faction_base_options(by_id, faction_id)
-    if base_name and base_name not in valid_bases:
-        return {"error": "Invalid base option"}
+    resolved_bases = faction_base_resolved(by_id, faction_id)
+    if base_name:
+        valid_towns = {town for towns in resolved_bases.values() for town in towns}
+        if base_name not in valid_towns:
+            return {"error": "Invalid base option"}
 
     lobby_factions.setdefault(game_id, {})[player_id] = faction_id
     if base_name:

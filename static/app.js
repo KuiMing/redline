@@ -6,6 +6,7 @@ let availableFactionCategories = [];
 let pendingFactionCategory = null;
 let pendingFactionChoice = null;
 let pendingFactionBaseChoice = null;
+let pendingFactionBaseGroup = null;
 
 function initTabs() {
   const tabs = document.querySelectorAll('.game-tab');
@@ -48,9 +49,18 @@ async function createRoom() {
 
 async function chooseFaction(factionId) {
   pendingFactionChoice = factionId;
+  pendingFactionBaseGroup = null;
   const opt = factionOptionById(factionId);
   const baseOptions = opt?.base_options || [];
-  pendingFactionBaseChoice = baseOptions.length === 1 ? baseOptions[0] : null;
+  const baseResolved = opt?.base_resolved || {};
+  if (baseOptions.length === 1) {
+    const only = baseOptions[0];
+    const towns = baseResolved[only] || [only];
+    pendingFactionBaseChoice = towns.length === 1 ? towns[0] : null;
+    pendingFactionBaseGroup = towns.length === 1 ? only : null;
+  } else {
+    pendingFactionBaseChoice = null;
+  }
   await renderFactionPicker();
 }
 
@@ -68,6 +78,7 @@ async function confirmFactionChoice() {
   }
   pendingFactionChoice = null;
   pendingFactionBaseChoice = null;
+  pendingFactionBaseGroup = null;
   pendingFactionCategory = null;
   await renderFactionPicker();
 }
@@ -176,7 +187,7 @@ function renderFactionDetails(factionId) {
   title.textContent = factionDisplayName(factionId);
   basesEl.innerHTML = pendingFactionBaseChoice
     ? `<div class="faction-detail-section-title">根據地</div><ul><li>${baseDisplayName(pendingFactionBaseChoice)}</li></ul>`
-    : '';
+    : (pendingFactionBaseGroup ? `<div class="faction-detail-section-title">根據地類別</div><ul><li>${baseDisplayName(pendingFactionBaseGroup)}</li></ul>` : '');
   abilitiesEl.innerHTML = `<div class="faction-detail-section-title">能力</div><ul>${abilities.map(a => `<li>${typeof a === 'string' ? a : [a.name_override || a.name, a.trigger, a.effect].filter(Boolean).join('：')}</li>`).join('') || '<li>（暫無資料）</li>'}</ul>`;
   rulesEl.innerHTML = `<div class="faction-detail-section-title">規則</div><ul>${rules.map(r => `<li>${r}</li>`).join('') || '<li>（暫無資料）</li>'}</ul>`;
   winEl.innerHTML = `<div class="faction-detail-section-title">獲勝條件</div><ul>${wins.map(w => `<li>${w}</li>`).join('') || '<li>（暫無資料）</li>'}</ul>`;
@@ -205,8 +216,9 @@ async function renderFactionPicker() {
   const confirmedBase = chosenBases[playerId] || null;
   const activeChoice = pendingFactionChoice || confirmed;
   const activeBase = pendingFactionBaseChoice || confirmedBase;
+  const activeBaseGroup = pendingFactionBaseGroup || null;
   info.textContent = activeChoice
-    ? `目前陣營：${factionDisplayName(activeChoice)}${activeBase ? `｜根據地：${baseDisplayName(activeBase)}` : ''}`
+    ? `目前陣營：${factionDisplayName(activeChoice)}${activeBase ? `｜根據地：${baseDisplayName(activeBase)}` : (activeBaseGroup ? `｜根據地類別：${baseDisplayName(activeBaseGroup)}` : '')}`
     : '請先選擇你的陣營';
 
   list.innerHTML = '';
@@ -214,7 +226,8 @@ async function renderFactionPicker() {
   variants.style.display = 'none';
   bases.innerHTML = '';
   bases.style.display = 'none';
-  const needsBaseChoice = !!(activeChoice && factionOptionById(activeChoice)?.base_options?.length);
+  const currentActiveOption = activeChoice ? factionOptionById(activeChoice) : null;
+  const needsBaseChoice = !!(activeChoice && currentActiveOption?.base_options?.length);
   const readyForConfirm = !!activeChoice && (!needsBaseChoice || !!activeBase);
   confirmBar.style.display = readyForConfirm ? 'block' : 'none';
   confirmBtn.disabled = !readyForConfirm;
@@ -237,6 +250,7 @@ async function renderFactionPicker() {
       pendingFactionCategory = category;
       pendingFactionChoice = category.mode === 'direct' ? category.options[0].id : null;
       pendingFactionBaseChoice = null;
+      pendingFactionBaseGroup = null;
       await renderFactionPicker();
     };
     list.appendChild(btn);
@@ -262,20 +276,54 @@ async function renderFactionPicker() {
     }
 
     const baseOptions = currentOption?.base_options || [];
+    const baseResolved = currentOption?.base_resolved || {};
     if (baseOptions.length) {
       bases.innerHTML = '';
       bases.style.display = 'flex';
-      baseOptions.forEach(baseName => {
-        const bbtn = document.createElement('button');
-        const isSelectedBase = activeBase === baseName;
-        bbtn.className = `base-choice-btn${isSelectedBase ? ' active' : ''}`;
-        bbtn.textContent = baseDisplayName(baseName);
-        bbtn.onclick = async () => {
-          pendingFactionBaseChoice = baseName;
+
+      if (pendingFactionBaseGroup) {
+        const back = document.createElement('button');
+        back.className = 'base-choice-btn';
+        back.textContent = '← 返回根據地類別';
+        back.onclick = async () => {
+          pendingFactionBaseGroup = null;
+          pendingFactionBaseChoice = null;
           await renderFactionPicker();
         };
-        bases.appendChild(bbtn);
-      });
+        bases.appendChild(back);
+
+        const towns = baseResolved[pendingFactionBaseGroup] || [];
+        towns.forEach(town => {
+          const bbtn = document.createElement('button');
+          const isSelectedTown = activeBase === town;
+          bbtn.className = `base-choice-btn${isSelectedTown ? ' active' : ''}`;
+          bbtn.textContent = baseDisplayName(town);
+          bbtn.onclick = async () => {
+            pendingFactionBaseChoice = town;
+            await renderFactionPicker();
+          };
+          bases.appendChild(bbtn);
+        });
+      } else {
+        baseOptions.forEach(baseName => {
+          const resolvedTowns = baseResolved[baseName] || [baseName];
+          const isSelectedBase = activeBaseGroup === baseName || (resolvedTowns.length === 1 && activeBase === resolvedTowns[0]);
+          const bbtn = document.createElement('button');
+          bbtn.className = `base-choice-btn${isSelectedBase ? ' active' : ''}`;
+          bbtn.textContent = baseDisplayName(baseName);
+          bbtn.onclick = async () => {
+            if (resolvedTowns.length > 1) {
+              pendingFactionBaseGroup = baseName;
+              pendingFactionBaseChoice = null;
+            } else {
+              pendingFactionBaseGroup = baseName;
+              pendingFactionBaseChoice = resolvedTowns[0];
+            }
+            await renderFactionPicker();
+          };
+          bases.appendChild(bbtn);
+        });
+      }
     }
   }
 }
