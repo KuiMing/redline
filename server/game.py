@@ -675,14 +675,21 @@ class Game:
                 count += other.organizations.get(town, 0)
         return count
 
-    def _town_has_shared_org_access(self, player, town):
-        own = player.organizations.get(town, 0) > 0
-        if own:
-            return True
+    def _shared_origin_owner(self, player, town):
+        if player.organizations.get(town, 0) > 0:
+            return player
         shared_with = self._factions_sharing_with(player.faction_id)
         if not shared_with:
-            return False
-        return any(other is not player and other.faction_id in shared_with and other.organizations.get(town, 0) > 0 for other in self.players)
+            return None
+        for other in self.players:
+            if other is player:
+                continue
+            if other.faction_id in shared_with and other.organizations.get(town, 0) > 0:
+                return other
+        return None
+
+    def _town_has_shared_org_access(self, player, town):
+        return self._shared_origin_owner(player, town) is not None
 
     def can_develop_in_town(self, player, town):
         if self._town_has_shared_org_access(player, town) and self.can_faction_develop_in_town(player.faction_id, town):
@@ -917,7 +924,8 @@ class Game:
             return {"error": "Origin and target required"}
         if origin_town not in self.map.get("towns", {}) or target_town not in self.map.get("towns", {}):
             return {"error": "Invalid town"}
-        if player.organizations.get(origin_town, 0) <= 0:
+        origin_owner = self._shared_origin_owner(player, origin_town)
+        if not origin_owner:
             return {"error": "No organization in origin"}
         if not self.can_develop_in_town(player, target_town):
             return {"error": "Cannot develop in this town"}
@@ -979,7 +987,8 @@ class Game:
             return {"error": "Origin and destination must differ"}
         if from_town not in self.map.get("towns", {}) or to_town not in self.map.get("towns", {}):
             return {"error": "Invalid town"}
-        if player.organizations.get(from_town, 0) <= 0:
+        origin_owner = self._shared_origin_owner(player, from_town)
+        if not origin_owner:
             return {"error": "No organization in origin"}
         if mode not in ("road", "rail"):
             return {"error": "Invalid move mode"}
@@ -993,13 +1002,16 @@ class Game:
         if player.moves_left < cost:
             return {"error": "Not enough move points"}
 
-        player.organizations[from_town] -= 1
-        if player.organizations[from_town] <= 0:
-            del player.organizations[from_town]
+        origin_owner.organizations[from_town] -= 1
+        if origin_owner.organizations[from_town] <= 0:
+            del origin_owner.organizations[from_town]
 
         player.organizations[to_town] = player.organizations.get(to_town, 0) + 1
         player.moves_left -= cost
-        self.log(f"{player.name} moved 1 organization from {from_town} to {to_town} via {mode}")
+        if origin_owner is player:
+            self.log(f"{player.name} moved 1 organization from {from_town} to {to_town} via {mode}")
+        else:
+            self.log(f"{player.name} moved 1 shared organization from {origin_owner.name}:{from_town} to {to_town} via {mode}")
         return {"success": True}
 
     def buy_card(self, index):
