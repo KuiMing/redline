@@ -420,12 +420,32 @@ function openGamblerGuessModal() {
   overlay.style.display = 'flex';
   document.getElementById('factionActionModalTitle').textContent = '賭徒耳語';
   document.getElementById('factionActionModalDesc').textContent = '請猜牌庫頂牌購買費用的奇偶。';
+  document.getElementById('factionActionModalRewardHint').textContent = '猜中可獲得 3 點資金與 3 點宣傳。';
   document.getElementById('guessOddBtn').onclick = () => {
     sendAction('faction_action', { name: '賭徒耳語', guess: 'odd' });
     closeFactionActionModal();
   };
   document.getElementById('guessEvenBtn').onclick = () => {
     sendAction('faction_action', { name: '賭徒耳語', guess: 'even' });
+    closeFactionActionModal();
+  };
+  document.getElementById('closeFactionActionModal').onclick = closeFactionActionModal;
+}
+
+function openEthnicRitualGuessModal() {
+  activeFactionActionModal = '民族祭儀';
+  const overlay = document.getElementById('factionActionModal');
+  if (!overlay) return;
+  overlay.style.display = 'flex';
+  document.getElementById('factionActionModalTitle').textContent = '民族祭儀';
+  document.getElementById('factionActionModalDesc').textContent = '請猜牌庫頂牌購買費用的奇偶。';
+  document.getElementById('factionActionModalRewardHint').textContent = '猜中可獲得 2 點宣傳與 2 點資金；沒猜中則獲得 2 點宣傳。';
+  document.getElementById('guessOddBtn').onclick = () => {
+    sendAction('faction_action', { name: '民族祭儀', guess: 'odd' });
+    closeFactionActionModal();
+  };
+  document.getElementById('guessEvenBtn').onclick = () => {
+    sendAction('faction_action', { name: '民族祭儀', guess: 'even' });
     closeFactionActionModal();
   };
   document.getElementById('closeFactionActionModal').onclick = closeFactionActionModal;
@@ -595,6 +615,18 @@ function renderFactionActionPanel(state) {
     btn.className = 'base-choice-btn';
     btn.textContent = '發動 賭徒耳語';
     btn.onclick = openGamblerGuessModal;
+    buttons.appendChild(btn);
+    return;
+  }
+
+  const ethnicRitualFactions = new Set(['dian_zhuang','zhuang','yi','bai','hani','dai','miao','tujia','dong','buyei','yao','li']);
+  if (ethnicRitualFactions.has(faction)) {
+    panel.style.display = 'block';
+    info.textContent = '可在行動階段發動一次民族祭儀，請先猜奇偶。';
+    const btn = document.createElement('button');
+    btn.className = 'base-choice-btn';
+    btn.textContent = '發動 民族祭儀';
+    btn.onclick = openEthnicRitualGuessModal;
     buttons.appendChild(btn);
   }
 }

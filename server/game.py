@@ -496,7 +496,7 @@ class Game:
                 self.log(f"{player.name} triggered 立場試探 and discarded {card.name}")
             return {"success": True}
 
-        if action_name == '賭徒耳語':
+        if action_name in {'賭徒耳語', '民族祭儀'}:
             if not player.hand:
                 return {"error": "No hand card to bottom-deck"}
             guess = kwargs.get('guess')
@@ -510,11 +510,19 @@ class Game:
             total = self._top_card_cost_total(card)
             guessed_odd = guess == 'odd'
             self.turn_log['faction_action_used'] = True
-            if (total % 2 == 1 and guessed_odd) or (total % 2 == 0 and not guessed_odd):
-                player.resources['money'] += 3
-                player.resources['propaganda'] += 3
+            hit = (total % 2 == 1 and guessed_odd) or (total % 2 == 0 and not guessed_odd)
+            if action_name == '賭徒耳語':
+                if hit:
+                    player.resources['money'] += 3
+                    player.resources['propaganda'] += 3
+            else:
+                if hit:
+                    player.resources['money'] += 2
+                    player.resources['propaganda'] += 2
+                else:
+                    player.resources['propaganda'] += 2
             player.deck.discard([card])
-            self.log(f"{player.name} triggered 賭徒耳語, guessed {guess}, and revealed {card.name}")
+            self.log(f"{player.name} triggered {action_name}, guessed {guess}, and revealed {card.name}")
             return {"success": True}
 
         return {"error": "Unknown faction action"}
