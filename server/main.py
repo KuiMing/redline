@@ -353,6 +353,8 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
                     data.get("to"),
                     data.get("mode", "road")
                 )
+            elif action == "faction_action":
+                result = game._activated_faction_action(game.current_player(), data.get("name"))
 
             if result and result.get("error"):
                 error_state = dict(game.state())
@@ -488,11 +490,14 @@ def test_setup_hong_kong_safehouse(payload: dict):
     game.turn_phase = TurnPhase.ACTION
     game.game_phase = GamePhase.MAIN
     game.pending_base_choices = {}
+    game.id = game_id
 
     manager.games[game_id] = game
     manager.connections[game_id] = manager.connections.get(game_id, {})
     lobby[game_id] = list(zip([p.id for p in game.players], [p.name for p in game.players]))
     lobby_hosts[game_id] = hk.id
+    lobby_factions[game_id] = {hk.id: "hong_kong", red.id: "red_army"}
+    lobby_bases[game_id] = {hk.id: hk.base, red.id: red.base}
 
     return {
         "success": True,
@@ -502,6 +507,7 @@ def test_setup_hong_kong_safehouse(payload: dict):
         "turn_phase": game.turn_phase,
         "game_phase": game.game_phase,
         "players": [{"id": p.id, "name": p.name, "faction": p.faction_id} for p in game.players],
+        "state": game.state(),
     }
 
 

@@ -355,6 +355,7 @@ class Game:
             "played_nonstarter_names": [],
             "combo_reward_triggered": False,
             "guerrilla_triggered": False,
+            "faction_action_used": False,
         }
 
     def _resolve_ability_ref(self, ability):
@@ -437,6 +438,76 @@ class Game:
         if self._player_is_nonviolent(player) and card_type in {"armed", "equipment"}:
             return True
         return False
+
+    def _resource_total(self, resources):
+        return int(resources.get("money", 0) or 0) + int(resources.get("propaganda", 0) or 0)
+
+    def _purchase_area_card_cost_total(self, card):
+        card_name = getattr(card, 'name', str(card))
+        for c in self.structured_cards:
+            if c.get('name') == card_name:
+                cost = c.get('cost', {})
+                return int(cost.get('money', 0) or 0) + int(cost.get('propaganda', 0) or 0)
+        return 0
+
+    def _purchase_area_card_cost_money(self, card):
+        card_name = getattr(card, 'name', str(card))
+        for c in self.structured_cards:
+            if c.get('name') == card_name:
+                cost = c.get('cost', {})
+                return int(cost.get('money', 0) or 0)
+        return 0
+
+    def _top_card_cost_total(self, card):
+        return self._purchase_area_card_cost_total(card)
+
+    def _activated_faction_action(self, player, action_name):
+        if action_name == '民主陣線':
+            if self._resource_total(player.resources) < 2:
+                return {"error": "Not enough resources"}
+            spend = 2
+            propaganda_spend = min(player.resources['propaganda'], spend)
+            player.resources['propaganda'] -= propaganda_spend
+            spend -= propaganda_spend
+            if spend > 0:
+                player.resources['money'] = max(0, player.resources['money'] - spend)
+            from server.cards import Card
+            gained = Card('已移除牌', 'command', {})
+            player.deck.discard([gained])
+            self.log(f"{player.name} triggered 民主陣線 and gained a removed card proxy")
+            return {"success": True}
+
+        if action_name == '立場試探':
+            if not player.deck.draw_pile:
+                return {"error": "Deck empty"}
+            card = player.deck.draw_pile.pop()
+            total = self._top_card_cost_total(card)
+            if total % 2 == 1:
+                player.hand.append(card)
+                self.log(f"{player.name} triggered 立場試探 and added {card.name} to hand")
+            else:
+                player.deck.discard([card])
+                self.log(f"{player.name} triggered 立場試探 and discarded {card.name}")
+            return {"success": True}
+
+        if action_name == '賭徒耳語':
+            if not player.hand:
+                return {"error": "No hand card to bottom-deck"}
+            bottom = player.hand.pop()
+            player.deck.draw_pile.insert(0, bottom)
+            if not player.deck.draw_pile:
+                return {"error": "Deck empty"}
+            card = player.deck.draw_pile.pop()
+            total = self._top_card_cost_total(card)
+            guessed_odd = True
+            if total % 2 == 1 and guessed_odd:
+                player.resources['money'] += 3
+                player.resources['propaganda'] += 3
+            player.deck.discard([card])
+            self.log(f"{player.name} triggered 賭徒耳語 and revealed {card.name}")
+            return {"success": True}
+
+        return {"error": "Unknown faction action"}
 
     def _apply_guerrilla_on_build(self, player, town):
         if self.turn_log.get("guerrilla_triggered"):
@@ -875,20 +946,29 @@ class Game:
             return {"error": "非暴力：不能購買武裝或裝備類卡牌"}
 
         card_type = getattr(card, "card_type", None)
-        if self._player_has_ability(player, "華文傳媒"):
-            if card_type == "propaganda":
-                player.resources["money"] += 1
-            elif card_type == "money":
-                player.resources["money"] += 1
+        card_name = getattr(card, 'name', str(card))
+        cost_money = 0
+        cost_propaganda = 0
+        for c in self.structured_cards:
+            if c.get('name') == card_name:
+                cost = c.get('cost', {})
+                cost_money = int(cost.get('money', 0) or 0)
+                cost_propaganda = int(cost.get('propaganda', 0) or 0)
+                break
+
+        if self._player_has_ability(player, "華文傳媒") and card_type == "propaganda":
+            if player.resources['money'] < cost_propaganda:
+                return {"error": "Not enough money for propaganda purchase"}
+            player.resources['money'] -= cost_propaganda
         else:
-            if card_type == "money":
-                player.resources["money"] += 1
-            elif card_type == "propaganda":
-                player.resources["propaganda"] += 1
+            if player.resources['money'] < cost_money or player.resources['propaganda'] < cost_propaganda:
+                return {"error": "Not enough resources"}
+            player.resources['money'] -= cost_money
+            player.resources['propaganda'] -= cost_propaganda
 
         player.deck.discard([card])
         self.purchase_area.pop(index)
-        self.log(f"{player.name} bought {getattr(card, 'name', str(card))}")
+        self.log(f"{player.name} bought {card_name}")
         return {"success": True}
 
     # ---------- Era Trigger ----------
