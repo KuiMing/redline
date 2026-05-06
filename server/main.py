@@ -353,6 +353,14 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
                     data.get("to"),
                     data.get("mode", "road")
                 )
+            elif action == "dissolve":
+                defender_name = data.get("defender")
+                town = data.get("town")
+                defender = next((p for p in game.players if p.name == defender_name or p.id == defender_name), None)
+                if not defender:
+                    result = {"error": "Defender not found"}
+                else:
+                    result = game.dissolve_organization(game.current_player(), defender, town, source="faction_action")
             elif action == "faction_action":
                 result = game._activated_faction_action(game.current_player(), data.get("name"), guess=data.get("guess"))
 
@@ -504,6 +512,108 @@ def test_setup_hong_kong_safehouse(payload: dict):
         "game_id": game_id,
         "player_id": hk.id,
         "base": hk.base,
+        "turn_phase": game.turn_phase,
+        "game_phase": game.game_phase,
+        "players": [{"id": p.id, "name": p.name, "faction": p.faction_id} for p in game.players],
+        "state": game.state(),
+    }
+
+
+@app.post("/test/setup-hu-taiwan-shared")
+def test_setup_hu_taiwan_shared(payload: dict):
+    game_id = str(uuid.uuid4())
+    players = [(str(uuid.uuid4()), "hu"), (str(uuid.uuid4()), "taiwan")]
+    game = Game(players)
+
+    hu = game.players[0]
+    tw = game.players[1]
+
+    hu.faction_id = "hu"
+    hu.base = payload.get("hu_base", "紐約")
+    hu.organizations = {hu.base: 1}
+    hu.hand = []
+    hu.moves_left = 3
+
+    tw.faction_id = "taiwan_green"
+    tw.base = payload.get("tw_base", "臺北")
+    tw.organizations = {
+        payload.get("shared_town", "上海"): 1,
+        tw.base: 1,
+    }
+    tw.hand = []
+
+    game.current_player_index = 0
+    game.turn_phase = TurnPhase.ACTION
+    game.game_phase = GamePhase.MAIN
+    game.pending_base_choices = {}
+    game.id = game_id
+
+    manager.games[game_id] = game
+    manager.connections[game_id] = manager.connections.get(game_id, {})
+    lobby[game_id] = list(zip([p.id for p in game.players], [p.name for p in game.players]))
+    lobby_hosts[game_id] = hu.id
+    lobby_factions[game_id] = {hu.id: "hu", tw.id: "taiwan_green"}
+    lobby_bases[game_id] = {hu.id: hu.base, tw.id: tw.base}
+
+    return {
+        "success": True,
+        "game_id": game_id,
+        "player_id": hu.id,
+        "shared_town": payload.get("shared_town", "上海"),
+        "turn_phase": game.turn_phase,
+        "game_phase": game.game_phase,
+        "players": [{"id": p.id, "name": p.name, "faction": p.faction_id} for p in game.players],
+        "state": game.state(),
+    }
+
+
+@app.post("/test/setup-shared-dissolve")
+def test_setup_shared_dissolve(payload: dict):
+    game_id = str(uuid.uuid4())
+    players = [(str(uuid.uuid4()), "atk"), (str(uuid.uuid4()), "hu"), (str(uuid.uuid4()), "taiwan")]
+    game = Game(players)
+
+    attacker = game.players[0]
+    hu = game.players[1]
+    tw = game.players[2]
+
+    attacker.faction_id = payload.get("attacker_faction", "red_army")
+    attacker.base = payload.get("attacker_base", "南京")
+    attacker.organizations = {attacker.base: 1}
+    attacker.hand = [] if payload.get("attacker_no_hand") else [Card("測試手牌", "money", {"money": 1})]
+
+    hu.faction_id = "hu"
+    hu.base = payload.get("hu_base", "紐約")
+    hu.organizations = {hu.base: 1}
+    hu.hand = []
+
+    tw.faction_id = payload.get("tw_faction", "taiwan_green")
+    tw.base = payload.get("tw_base", "臺北")
+    tw.organizations = {
+        payload.get("shared_town", "上海"): 1,
+        tw.base: 1,
+    }
+    tw.hand = []
+    tw.deck.draw_pile = [Card("補牌A", "money", {"money": 1})]
+
+    game.current_player_index = 0
+    game.turn_phase = TurnPhase.ACTION
+    game.game_phase = GamePhase.MAIN
+    game.pending_base_choices = {}
+    game.id = game_id
+
+    manager.games[game_id] = game
+    manager.connections[game_id] = manager.connections.get(game_id, {})
+    lobby[game_id] = list(zip([p.id for p in game.players], [p.name for p in game.players]))
+    lobby_hosts[game_id] = attacker.id
+    lobby_factions[game_id] = {attacker.id: attacker.faction_id, hu.id: "hu", tw.id: tw.faction_id}
+    lobby_bases[game_id] = {attacker.id: attacker.base, hu.id: hu.base, tw.id: tw.base}
+
+    return {
+        "success": True,
+        "game_id": game_id,
+        "player_id": attacker.id,
+        "shared_town": payload.get("shared_town", "上海"),
         "turn_phase": game.turn_phase,
         "game_phase": game.game_phase,
         "players": [{"id": p.id, "name": p.name, "faction": p.faction_id} for p in game.players],

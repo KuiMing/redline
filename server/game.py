@@ -960,22 +960,36 @@ class Game:
         return {"success": True}
 
     def dissolve_organization(self, attacker, defender, town, source="card"):
-        if not town or defender.organizations.get(town, 0) <= 0:
+        if not town:
             return {"error": "No organization in target town"}
-        ok, err = self._can_target_org_with_dissolve(attacker, defender, source=source)
+
+        target_owner = self._shared_origin_owner(defender, town)
+        if not target_owner:
+            return {"error": "No organization in target town"}
+
+        ok, err = self._can_target_org_with_dissolve(attacker, target_owner, source=source)
         if not ok:
             return {"error": err}
-        defender.organizations[town] -= 1
-        if defender.organizations[town] <= 0:
-            del defender.organizations[town]
-        self.log(f"{attacker.name} dissolved 1 organization from {defender.name} at {town}")
+
+        target_owner.organizations[town] -= 1
+        if target_owner.organizations[town] <= 0:
+            del target_owner.organizations[town]
+
+        if target_owner is defender:
+            self.log(f"{attacker.name} dissolved 1 organization from {defender.name} at {town}")
+        else:
+            self.log(f"{attacker.name} dissolved 1 shared organization via {defender.name} from {target_owner.name} at {town}")
 
         inner_towns = set(self.board_regions.get("china", {}).get("towns", []))
-        if town in inner_towns and any(self._player_has_ability(defender, n) for n in {"殉道者", "青山里"}):
-            defender.hand.extend(defender.deck.draw(1))
-            self.log(f"{defender.name} triggered martyr-style ability and drew 1 card")
+        if town in inner_towns and any(self._player_has_ability(target_owner, n) for n in {"殉道者", "青山里"}):
+            target_owner.hand.extend(target_owner.deck.draw(1))
+            self.log(f"{target_owner.name} triggered martyr-style ability and drew 1 card")
 
-        return {"success": True}
+        return {
+            "success": True,
+            "actual_owner": target_owner.name,
+            "shared_target": target_owner is not defender,
+        }
 
     def move_organization(self, from_town, to_town, mode="road"):
         if self.turn_phase != TurnPhase.ACTION:
