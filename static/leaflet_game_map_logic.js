@@ -264,6 +264,10 @@ function currentPlayerFaction() {
   return player ? player.faction : null;
 }
 
+function canActFromTown(townName) {
+  return playerOwnsTown(townName) || playerHasSharedAccessToTown(townName);
+}
+
 function playerOwnsTown(townName) {
   if (!lastGameState || !lastGameState.map || !lastGameState.map.towns) return false;
   const entries = lastGameState.map.towns[townName] || [];
@@ -281,8 +285,7 @@ function movementOptionsForTown(townName) {
   const town = MAP_DATA.towns[townName];
   if (!town) return { road: [], rail: [] };
 
-  // 第二版：只允許 current player 自己有組織的城鎮顯示可移動鄰接點
-  if (!playerOwnsTown(townName)) return { road: [], rail: [] };
+  if (!canActFromTown(townName)) return { road: [], rail: [] };
 
   return {
     road: (town.road || []).filter(n => MAP_DATA.towns[n]),
@@ -303,8 +306,7 @@ function playerHasSafehouse() {
 
 function buildOptionsForTown(originTown) {
   if (!lastGameState || !originTown || !playerHasSafehouse()) return [];
-  const player = currentPlayerState();
-  if (!player || !player.orgs || !player.orgs[originTown]) return [];
+  if (!canActFromTown(originTown)) return [];
 
   const maxDistance = 2;
   const visited = new Set([originTown]);
@@ -335,20 +337,30 @@ function renderMovementHighlights(townName, options = {}) {
   lastResolvedMove = null;
   resetBuildSelection();
   updateStatusPanel();
+  refreshDirectBuildUi();
   if (!townName) return false;
 
   const opts = movementOptionsForTown(townName);
   const origin = byName.get(townName);
   if (!origin) return false;
 
+  const canAct = canActFromTown(townName);
+  const ownOnly = playerOwnsTown(townName);
+  const sharedOnly = !ownOnly && playerHasSharedAccessToTown(townName);
+
   const originMarker = currentMarkers.get(townName);
   if (originMarker) {
-    const selectable = playerOwnsTown(townName);
-    originMarker.setStyle({ color: selectable ? '#ffffff' : '#64748b', weight: 4, fillOpacity: 1, radius: Math.max(10, markerRadius(map.getZoom()) + 2) });
+    originMarker.setStyle({
+      color: ownOnly ? '#ffffff' : (sharedOnly ? '#facc15' : '#64748b'),
+      weight: sharedOnly ? 5 : 4,
+      fillOpacity: 1,
+      radius: Math.max(10, markerRadius(map.getZoom()) + (sharedOnly ? 3 : 2))
+    });
   }
 
-  if (!playerOwnsTown(townName)) {
+  if (!canAct) {
     updateStatusPanel();
+    refreshDirectBuildUi();
     return false;
   }
 
@@ -412,11 +424,23 @@ function renderMovementHighlights(townName, options = {}) {
     }
   }
 
+  if (sharedOnly) {
+    L.circleMarker([origin.lat, origin.lon], {
+      radius: Math.max(12, markerRadius(map.getZoom()) + 5),
+      color: '#facc15',
+      weight: 3,
+      fillOpacity: 0,
+      opacity: 1,
+      dashArray: '6 4',
+    }).addTo(highlightLayer).bindPopup(`共享組織起點：${townName}`);
+  }
+
   if (autoFocus) {
     focusSelectedTown(townName);
   }
+  refreshDirectBuildUi();
   updateStatusPanel();
-  return highlightCount > 0;
+  return highlightCount > 0 || sharedOnly || selectedBuildTargets.length > 0;
 }
 
 function moveOptionForTown(townName) {
@@ -435,6 +459,41 @@ function sendMoveAction(fromTown, toTown, mode) {
   updateStatusPanel();
   mapWs.send(JSON.stringify({ action: 'move', from: fromTown, to: toTown, mode }));
   return { ok: true };
+}
+
+function sendDirectBuildAction(townName) {
+  if (!mapWs || mapWs.readyState !== WebSocket.OPEN) {
+    return { ok: false, reason: 'socket-not-open' };
+  }
+  mapWs.send(JSON.stringify({ action: 'build', town: townName }));
+  return { ok: true };
+}
+
+function refreshDirectBuildUi() {
+  const btn = document.getElementById('directBuildBtn');
+  const hint = document.getElementById('directBuildHint');
+  if (!btn || !hint) return;
+
+  if (!selectedTown) {
+    btn.disabled = true;
+    hint.innerHTML = '選取具有自己組織或共享組織可用性的城鎮後，這裡會顯示是否可直接建立。';
+    return;
+  }
+
+  const sharedOnly = !playerOwnsTown(selectedTown) && playerHasSharedAccessToTown(selectedTown);
+  const canAct = canActFromTown(selectedTown);
+  if (!canAct) {
+    btn.disabled = true;
+    hint.innerHTML = `目前選取 <span class="hint-strong">${selectedTown}</span>，但這不是你的組織或共享組織起點。`;
+    return;
+  }
+
+  btn.disabled = false;
+  if (sharedOnly) {
+    hint.innerHTML = `目前選取 <span class="hint-strong">${selectedTown}</span>：你可從 <span class="hint-strong">共享組織</span> 直接發展。`;
+  } else {
+    hint.innerHTML = `目前選取 <span class="hint-strong">${selectedTown}</span>：你可從自己的組織直接發展。`;
+  }
 }
 
 function updateDynamicStyles() {
@@ -520,6 +579,7 @@ function renderMap() {
       renderMap();
       applyGameStateToMap(lastGameState);
       const didHighlight = renderMovementHighlights(t.name, { autoFocus: true });
+      refreshDirectBuildUi();
       window.__lastSelectedTown = t.name;
       window.__lastHighlightSuccess = didHighlight;
     });
@@ -581,6 +641,10 @@ document.getElementById('resetFilter').addEventListener('click', () => {
 document.getElementById('fitFiltered').addEventListener('click', fitVisible);
 document.getElementById('fitAll').addEventListener('click', fitAll);
 document.getElementById('focusAsia').addEventListener('click', focusAsia);
+document.getElementById('directBuildBtn').addEventListener('click', () => {
+  if (!selectedTown) return;
+  sendDirectBuildAction(selectedTown);
+});
 
 map.on('zoom', updateDynamicStyles);
 map.on('zoomend', () => {
@@ -632,12 +696,14 @@ function applyGameStateToMap(state) {
 
   if (resolvingMove) {
     finalizeMoveSelection(resolvingMove.from, resolvingMove.to);
+    refreshDirectBuildUi();
     return;
   }
 
   if (selectedTown) {
     renderMovementHighlights(selectedTown, { autoFocus: false });
   }
+  refreshDirectBuildUi();
 }
 
 window.addEventListener('message', (event) => {
@@ -678,6 +744,7 @@ window.__selectTownForTest = function (townName) {
   renderMap();
   applyGameStateToMap(lastGameState);
   const didHighlight = renderMovementHighlights(townName, { autoFocus: true });
+  refreshDirectBuildUi();
   window.__lastSelectedTown = townName;
   window.__lastHighlightSuccess = didHighlight;
   return {
@@ -686,7 +753,9 @@ window.__selectTownForTest = function (townName) {
     highlighted: didHighlight,
     road: movementOptionsForTown(townName).road.length,
     rail: movementOptionsForTown(townName).rail.length,
-    owns: playerOwnsTown(townName)
+    owns: playerOwnsTown(townName),
+    shared: playerHasSharedAccessToTown(townName),
+    canAct: canActFromTown(townName)
   };
 };
 
