@@ -397,6 +397,7 @@ class Game:
             "賭徒耳語": {"name": "賭徒耳語", "type": "activated", "effect": "將1張手牌放進牌庫底，猜牌庫頂牌購買費用奇偶；若猜中獲得3點宣傳與3點資金。"},
             "活動家": {"name": "活動家", "type": "setup", "effect": "在遊戲開始時額外將2張宣傳家洗入起始牌庫。"},
             "人同此心": {"name": "人同此心", "type": "triggered", "effect": "當您每回合第1次打出購買費用含宣傳的牌時，獲得2點宣傳。"},
+            "共享組織": {"name": "共享組織", "type": "passive", "effect": "可與指定陣營共用組織。"},
         }
         return direct.get(name)
 
@@ -615,7 +616,31 @@ class Game:
             return True
         return faction_token in camp_tags
 
+    def _factions_sharing_with(self, faction_id):
+        faction = self.faction_by_id.get(faction_id, {})
+        shared = set(faction.get('shared_organizations_with', []) or [])
+        for text in faction.get('special_rules', []) or []:
+            if '共用組織' in text:
+                if '粵、澳門' in text:
+                    shared.update(['yue', 'aomen'])
+                if '藍線臺灣' in text:
+                    shared.update(['taiwan_blue'])
+                if '綠線臺灣' in text:
+                    shared.update(['taiwan_green'])
+        return shared
+
+    def _town_has_shared_org_access(self, player, town):
+        own = player.organizations.get(town, 0) > 0
+        if own:
+            return True
+        shared_with = self._factions_sharing_with(player.faction_id)
+        if not shared_with:
+            return False
+        return any(other is not player and other.faction_id in shared_with and other.organizations.get(town, 0) > 0 for other in self.players)
+
     def can_develop_in_town(self, player, town):
+        if self._town_has_shared_org_access(player, town) and self.can_faction_develop_in_town(player.faction_id, town):
+            return True
         return self.can_faction_develop_in_town(player.faction_id, town)
 
     def setup_test_card_scenario(self, player_id, card_name):
@@ -826,7 +851,7 @@ class Game:
             return {"error": "Town required"}
         if town not in self.map.get("towns", {}):
             return {"error": "Invalid town"}
-        if player.organizations.get(town, 0) <= 0:
+        if not self._town_has_shared_org_access(player, town):
             return {"error": "No organization in town"}
         if not self.can_develop_in_town(player, town):
             return {"error": "Cannot develop in this town"}
