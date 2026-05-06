@@ -51,6 +51,7 @@ const highlightLayer = L.layerGroup().addTo(map);
 const buildHighlightLayer = L.layerGroup().addTo(map);
 let labelMode = 'auto', showRoad = true, showRail = true;
 let currentMarkers = new Map();
+let currentSharedBadges = new Map();
 let currentVisible = towns.map(t=>t.name);
 let lastGameState = null;
 let selectedTown = null;
@@ -99,13 +100,23 @@ function totalOrganizationsInTown(name) {
   return townStateEntries(name).reduce((sum, item) => sum + (item.count || 0), 0);
 }
 
+function sharedAccessForTown(name) {
+  return ((lastGameState && lastGameState.map && lastGameState.map.shared_access && lastGameState.map.shared_access[name]) || []);
+}
+
+function sharedAccessSummary(name) {
+  const shared = sharedAccessForTown(name);
+  if (!shared.length) return '無';
+  return `此城鎮可被 ${shared.join(' / ')} 視為共用組織`;
+}
+
 function popupHtml(t) {
   const roads = (t.road||[]).map(n=>`<span class="pill">${n}</span>`).join(' ') || '無';
   const rails = (t.rail||[]).map(n=>`<span class="pill">${n}</span>`).join(' ') || '無';
   const entries = townStateEntries(t.name);
   const total = totalOrganizationsInTown(t.name);
   const controller = entries.length ? entries.slice().sort((a,b)=>(b.count||0)-(a.count||0))[0].player : null;
-  const shared = ((lastGameState && lastGameState.map && lastGameState.map.shared_access && lastGameState.map.shared_access[t.name]) || []);
+  const shared = sharedAccessForTown(t.name);
   return `
     <div class="name">${t.name}</div>
     <div>座標：<code>${t.lon.toFixed(3)}, ${t.lat.toFixed(3)}</code></div>
@@ -116,6 +127,7 @@ function popupHtml(t) {
     <div>當前控制者：${controller ? `<span class="pill">${controller}</span>` : '無組織'}</div>
     <div>當前組織總數：<span class="pill">${total}</span></div>
     <div>共享可用：${shared.length ? shared.map(x=>`<span class="pill">${x}</span>`).join(' ') : '無'}</div>
+    <div>共享說明：${shared.length ? `<span class="pill">${sharedAccessSummary(t.name)}</span>` : '無'}</div>
     <hr style="border-color:#2b385d;border-style:solid;border-width:1px 0 0;margin:10px 0;">
     <div>一般道路：${roads}</div>
     <div>鐵路：${rails}</div>`;
@@ -162,13 +174,16 @@ function updateStatusPanel() {
       hintEl.innerHTML = `已完成移動：<span class="hint-strong">${lastResolvedMove.from}</span> → <span class="hint-strong">${lastResolvedMove.to}</span>`;
     } else if (!selectedTown) {
       hintEl.innerHTML = playerHasSafehouse()
-        ? '連上遊戲後，點選自己的香港組織城鎮，可同時查看移動與 <span class="hint-strong">安全屋建立範圍</span>。'
-        : '連上遊戲後，只有 <span class="hint-strong">當前玩家自己擁有組織</span> 的城鎮可以高亮合法移動。';
+        ? '連上遊戲後，點選自己的香港組織城鎮，可同時查看移動與 <span class="hint-strong">安全屋建立範圍</span>。若城鎮有共享組織，會以 <span class="hint-strong">金色外框與 S 標記</span> 顯示。'
+        : '連上遊戲後，只有 <span class="hint-strong">當前玩家自己擁有組織</span> 的城鎮可以高亮合法移動；若城鎮具有共享組織，會以 <span class="hint-strong">金色外框與 S 標記</span> 顯示。';
     } else if (playerOwnsTown(selectedTown)) {
       const opts = movementOptionsForTown(selectedTown);
       const buildOpts = playerHasSafehouse() ? buildOptionsForTown(selectedTown) : [];
+      const sharedHint = playerHasSharedAccessToTown(selectedTown) ? ' 此城鎮也處於共享組織狀態。' : '';
       hintEl.innerHTML = `已選取 <span class="hint-strong">${selectedTown}</span>：可走一般道路 ${opts.road.length} 條、鐵路 ${opts.rail.length} 條` +
-        (buildOpts.length ? `，安全屋可建立 ${buildOpts.length} 個目標。` : '。') ;
+        (buildOpts.length ? `，安全屋可建立 ${buildOpts.length} 個目標。` : '。') + sharedHint;
+    } else if (playerHasSharedAccessToTown(selectedTown)) {
+      hintEl.innerHTML = `已選取 <span class="hint-strong">${selectedTown}</span>：此城鎮對當前玩家具有 <span class="hint-strong">共享組織</span> 可用性，但互動高亮規則尚未完全 shared-aware。`;
     } else {
       hintEl.innerHTML = `已選取 <span class="hint-strong">${selectedTown}</span>：這不是當前玩家可操作的城鎮。`;
     }
@@ -179,8 +194,10 @@ function updateInfoPanel(name) {
   const t = byName.get(name);
   if (!t) return;
   const total = totalOrganizationsInTown(name);
+  const shared = sharedAccessForTown(name);
   const stateBadge = total > 0 ? `有組織（${total}）` : '無組織';
-  document.getElementById('info').innerHTML = `${popupHtml(t)}<hr style="border-color:#2b385d;border-style:solid;border-width:1px 0 0;margin:10px 0;"><div>視覺狀態：<span class="pill">${stateBadge}</span></div>`;
+  const sharedBadge = shared.length ? `共享中（${shared.length}）` : '無共享';
+  document.getElementById('info').innerHTML = `${popupHtml(t)}<hr style="border-color:#2b385d;border-style:solid;border-width:1px 0 0;margin:10px 0;"><div>視覺狀態：<span class="pill">${stateBadge}</span> <span class="pill">${sharedBadge}</span></div>`;
 }
 
 function shouldShowLabels() {
@@ -192,12 +209,18 @@ function clearLayers() {
   railLayer.clearLayers();
   markerLayer.clearLayers();
   highlightLayer.clearLayers();
+  currentSharedBadges.forEach(marker => {
+    try { map.removeLayer(marker); } catch {}
+  });
   currentMarkers = new Map();
+  currentSharedBadges = new Map();
 }
 
 function markerStyleForTown(name, zoom = map.getZoom()) {
   const total = totalOrganizationsInTown(name);
   const ownedByCurrent = playerOwnsTown(name);
+  const shared = sharedAccessForTown(name);
+  const hasShared = shared.length > 0;
   const base = {
     radius: markerRadius(zoom),
     color: '#07111f',
@@ -208,7 +231,13 @@ function markerStyleForTown(name, zoom = map.getZoom()) {
   };
 
   if (total <= 0) {
-    return base;
+    return hasShared ? {
+      ...base,
+      color: '#facc15',
+      weight: Math.max(base.weight + 1.5, 2.5),
+      fillOpacity: 0.46,
+      opacity: 0.92,
+    } : base;
   }
 
   const entries = townStateEntries(name);
@@ -217,9 +246,9 @@ function markerStyleForTown(name, zoom = map.getZoom()) {
   const controlColor = player?.faction ? (palette[player.faction] || '#cbd5e1') : '#cbd5e1';
 
   return {
-    radius: Math.max(base.radius + 2, 8),
-    color: ownedByCurrent ? '#f8fafc' : '#cbd5e1',
-    weight: ownedByCurrent ? Math.max(base.weight + 1.5, 3) : Math.max(base.weight + 0.5, 2),
+    radius: Math.max(base.radius + (hasShared ? 3 : 2), hasShared ? 9 : 8),
+    color: hasShared ? '#facc15' : (ownedByCurrent ? '#f8fafc' : '#cbd5e1'),
+    weight: hasShared ? Math.max(base.weight + 2.5, 3.5) : (ownedByCurrent ? Math.max(base.weight + 1.5, 3) : Math.max(base.weight + 0.5, 2)),
     fillColor: controlColor,
     fillOpacity: ownedByCurrent ? 0.98 : 0.88,
     opacity: 1,
@@ -230,10 +259,21 @@ function currentPlayerName() {
   return lastGameState && lastGameState.current_player ? lastGameState.current_player : null;
 }
 
+function currentPlayerFaction() {
+  const player = currentPlayerState();
+  return player ? player.faction : null;
+}
+
 function playerOwnsTown(townName) {
   if (!lastGameState || !lastGameState.map || !lastGameState.map.towns) return false;
   const entries = lastGameState.map.towns[townName] || [];
   return entries.some(entry => entry.player === currentPlayerName() && (entry.count || 0) > 0);
+}
+
+function playerHasSharedAccessToTown(townName) {
+  const faction = currentPlayerFaction();
+  if (!faction) return false;
+  return sharedAccessForTown(townName).includes(faction);
 }
 
 function movementOptionsForTown(townName) {
@@ -414,6 +454,11 @@ function updateDynamicStyles() {
       layer.getTooltip().options.offset = [0, -(markerRadius(z) + 4)];
     }
   });
+  currentSharedBadges.forEach((badge, townName) => {
+    const town = byName.get(townName);
+    if (!town || !badge.setLatLng || !badge.getElement) return;
+    badge.setLatLng([town.lat, town.lon]);
+  });
 }
 
 function renderMap() {
@@ -439,6 +484,22 @@ function renderMap() {
   visibleTowns.forEach(t => {
     const marker = L.circleMarker([t.lat, t.lon], markerStyleForTown(t.name)).addTo(markerLayer);
     marker.bindPopup(popupHtml(t), { maxWidth:380 });
+
+    const shared = sharedAccessForTown(t.name);
+    if (shared.length) {
+      const badge = L.marker([t.lat, t.lon], {
+        interactive: false,
+        keyboard: false,
+        zIndexOffset: 700,
+        icon: L.divIcon({
+          className: 'shared-badge-wrap',
+          html: `<div class="shared-badge ${shared.length > 1 ? 'shared-badge-multi' : ''}" title="${sharedAccessSummary(t.name)}">S${shared.length > 1 ? shared.length : ''}</div>`,
+          iconSize: [26, 22],
+          iconAnchor: [-2, 14],
+        })
+      }).addTo(map);
+      currentSharedBadges.set(t.name, badge);
+    }
     marker.on('click', () => {
       const moveOption = moveOptionForTown(t.name);
       if (selectedTown && moveOption) {
