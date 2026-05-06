@@ -574,7 +574,8 @@
         "潮汕",
         "閩",
         "吳越",
-        "滇"
+        "滇",
+        "滬"
       ],
       "win_conditions": [
         {
@@ -1140,7 +1141,26 @@
       "special_rules": [
         "遊戲過程中可與綠線臺灣共用組織。"
       ],
-      "win_condition_text": "回合結束時在牆內與牆外共擁有至少13個有效組織，其中必須包含上海。"
+      "win_condition_text": "回合結束時在牆內與牆外共擁有至少13個有效組織，其中必須包含上海。",
+      "shared_organizations_with": [
+        "綠線臺灣"
+      ],
+      "win_conditions": [
+        {
+          "type": "count_and_required",
+          "scope": "牆內與牆外",
+          "count": 13,
+          "required_locations": [
+            "上海"
+          ]
+        }
+      ],
+      "tags": [
+        "engine",
+        "money",
+        "draw",
+        "shared_org"
+      ]
     },
     {
       "id": "xiang",

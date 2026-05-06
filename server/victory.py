@@ -68,12 +68,19 @@ class VictoryEngine:
                 total += game._shared_org_count(player, town)
             return total
 
+        all_org_towns = {
+            town
+            for p in game.players
+            for town, count in p.organizations.items()
+            if count > 0
+        }
+
         if scope == "牆內":
             china_towns = set(self.board_regions.get("china", {}).get("towns", []))
             return shared_count(china_towns)
         if scope == "牆內與牆外":
-            return shared_count(player.organizations.keys())
-        return sum(game._shared_org_count(player, town) for town in player.organizations.keys())
+            return shared_count(all_org_towns)
+        return shared_count(all_org_towns)
 
     def _count_taiwan_orgs(self, player):
         taiwan_towns = set(self.board_regions.get("taiwan", {}).get("towns", []))

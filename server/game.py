@@ -642,6 +642,7 @@ class Game:
             '閩': 'min',
             '吳越': 'wuyue',
             '滇': 'dian',
+            '滬': 'hu',
             '粵': 'yue',
             '澳門': 'aomen',
             '綠線臺灣': 'taiwan_green',
