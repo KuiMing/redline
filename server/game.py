@@ -616,9 +616,26 @@ class Game:
             return True
         return faction_token in camp_tags
 
+    def _canonical_faction_name_to_id(self, name):
+        mapping = {
+            '地下教會': 'underground_church',
+            '性別革命': 'gender_revolution',
+            '客家': 'hakka',
+            '潮汕': 'chaoshan',
+            '閩': 'min',
+            '吳越': 'wuyue',
+            '滇': 'dian',
+            '粵': 'yue',
+            '澳門': 'aomen',
+            '綠線臺灣': 'taiwan_green',
+            '藍線臺灣': 'taiwan_blue',
+            '民國派': 'republican',
+        }
+        return mapping.get(name, name)
+
     def _factions_sharing_with(self, faction_id):
         faction = self.faction_by_id.get(faction_id, {})
-        shared = set(faction.get('shared_organizations_with', []) or [])
+        shared = {self._canonical_faction_name_to_id(x) for x in (faction.get('shared_organizations_with', []) or [])}
         for text in faction.get('special_rules', []) or []:
             if '共用組織' in text:
                 if '粵、澳門' in text:
@@ -628,6 +645,18 @@ class Game:
                 if '綠線臺灣' in text:
                     shared.update(['taiwan_green'])
         return shared
+
+    def _shared_org_count(self, player, town):
+        count = player.organizations.get(town, 0)
+        shared_with = self._factions_sharing_with(player.faction_id)
+        if not shared_with:
+            return count
+        for other in self.players:
+            if other is player:
+                continue
+            if other.faction_id in shared_with:
+                count += other.organizations.get(town, 0)
+        return count
 
     def _town_has_shared_org_access(self, player, town):
         own = player.organizations.get(town, 0) > 0
