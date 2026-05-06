@@ -280,6 +280,20 @@ function playerHasSharedAccessToTown(townName) {
   return sharedAccessForTown(townName).includes(faction);
 }
 
+function actualTownOwnerName(townName) {
+  const entries = townStateEntries(townName);
+  if (!entries.length) return null;
+  const leader = entries.slice().sort((a, b) => (b.count || 0) - (a.count || 0))[0];
+  return leader?.player || null;
+}
+
+function sharedDissolveTargetForTown(townName) {
+  if (!playerHasSharedAccessToTown(townName)) return null;
+  const owner = actualTownOwnerName(townName);
+  if (!owner || owner === currentPlayerName()) return null;
+  return owner;
+}
+
 function movementOptionsForTown(townName) {
   if (!lastGameState || !townName) return { road: [], rail: [] };
   const town = MAP_DATA.towns[townName];
@@ -469,14 +483,26 @@ function sendDirectBuildAction(townName) {
   return { ok: true };
 }
 
+function sendDissolveAction(defender, townName) {
+  if (!mapWs || mapWs.readyState !== WebSocket.OPEN) {
+    return { ok: false, reason: 'socket-not-open' };
+  }
+  mapWs.send(JSON.stringify({ action: 'dissolve', defender, town: townName }));
+  return { ok: true };
+}
+
 function refreshDirectBuildUi() {
   const btn = document.getElementById('directBuildBtn');
   const hint = document.getElementById('directBuildHint');
-  if (!btn || !hint) return;
+  const dissolveBtn = document.getElementById('dissolveBtn');
+  const dissolveHint = document.getElementById('dissolveHint');
+  if (!btn || !hint || !dissolveBtn || !dissolveHint) return;
 
   if (!selectedTown) {
     btn.disabled = true;
+    dissolveBtn.disabled = true;
     hint.innerHTML = '選取具有自己組織或共享組織可用性的城鎮後，這裡會顯示是否可直接建立。';
+    dissolveHint.innerHTML = '選取具有共享可用性的城鎮後，這裡會顯示是否可對實際組織擁有者發動瓦解。';
     return;
   }
 
@@ -485,14 +511,22 @@ function refreshDirectBuildUi() {
   if (!canAct) {
     btn.disabled = true;
     hint.innerHTML = `目前選取 <span class="hint-strong">${selectedTown}</span>，但這不是你的組織或共享組織起點。`;
-    return;
+  } else {
+    btn.disabled = false;
+    if (sharedOnly) {
+      hint.innerHTML = `目前選取 <span class="hint-strong">${selectedTown}</span>：你可從 <span class="hint-strong">共享組織</span> 直接發展。`;
+    } else {
+      hint.innerHTML = `目前選取 <span class="hint-strong">${selectedTown}</span>：你可從自己的組織直接發展。`;
+    }
   }
 
-  btn.disabled = false;
-  if (sharedOnly) {
-    hint.innerHTML = `目前選取 <span class="hint-strong">${selectedTown}</span>：你可從 <span class="hint-strong">共享組織</span> 直接發展。`;
+  const dissolveTarget = sharedDissolveTargetForTown(selectedTown);
+  if (!dissolveTarget) {
+    dissolveBtn.disabled = true;
+    dissolveHint.innerHTML = `目前選取 <span class="hint-strong">${selectedTown}</span>：沒有可用的 shared dissolve 目標。`;
   } else {
-    hint.innerHTML = `目前選取 <span class="hint-strong">${selectedTown}</span>：你可從自己的組織直接發展。`;
+    dissolveBtn.disabled = false;
+    dissolveHint.innerHTML = `目前選取 <span class="hint-strong">${selectedTown}</span>：可瓦解實際擁有者 <span class="hint-strong">${dissolveTarget}</span> 的共享組織。`;
   }
 }
 
@@ -645,6 +679,12 @@ document.getElementById('directBuildBtn').addEventListener('click', () => {
   if (!selectedTown) return;
   sendDirectBuildAction(selectedTown);
 });
+document.getElementById('dissolveBtn').addEventListener('click', () => {
+  if (!selectedTown) return;
+  const target = sharedDissolveTargetForTown(selectedTown);
+  if (!target) return;
+  sendDissolveAction(target, selectedTown);
+});
 
 map.on('zoom', updateDynamicStyles);
 map.on('zoomend', () => {
@@ -770,6 +810,21 @@ window.__moveFromToForTest = function (fromTown, toTown) {
   }
   const result = sendMoveAction(fromTown, toTown, option.mode);
   return { ok: !!result.ok, fromTown, toTown, mode: option.mode };
+};
+
+window.__dissolveFromSharedForTest = function (townName) {
+  resetMoveSelection();
+  renderMap();
+  applyGameStateToMap(lastGameState);
+  updateInfoPanel(townName);
+  renderMovementHighlights(townName, { autoFocus: true });
+  refreshDirectBuildUi();
+  const defender = sharedDissolveTargetForTown(townName);
+  if (!defender) {
+    return { ok: false, reason: 'no-shared-dissolve-target', townName };
+  }
+  const result = sendDissolveAction(defender, townName);
+  return { ok: !!result.ok, townName, defender };
 };
 
 window.__advanceToActionForTest = function () {
