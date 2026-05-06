@@ -105,6 +105,7 @@ function popupHtml(t) {
   const entries = townStateEntries(t.name);
   const total = totalOrganizationsInTown(t.name);
   const controller = entries.length ? entries.slice().sort((a,b)=>(b.count||0)-(a.count||0))[0].player : null;
+  const shared = ((lastGameState && lastGameState.map && lastGameState.map.shared_access && lastGameState.map.shared_access[t.name]) || []);
   return `
     <div class="name">${t.name}</div>
     <div>座標：<code>${t.lon.toFixed(3)}, ${t.lat.toFixed(3)}</code></div>
@@ -114,6 +115,7 @@ function popupHtml(t) {
     <hr style="border-color:#2b385d;border-style:solid;border-width:1px 0 0;margin:10px 0;">
     <div>當前控制者：${controller ? `<span class="pill">${controller}</span>` : '無組織'}</div>
     <div>當前組織總數：<span class="pill">${total}</span></div>
+    <div>共享可用：${shared.length ? shared.map(x=>`<span class="pill">${x}</span>`).join(' ') : '無'}</div>
     <hr style="border-color:#2b385d;border-style:solid;border-width:1px 0 0;margin:10px 0;">
     <div>一般道路：${roads}</div>
     <div>鐵路：${rails}</div>`;
@@ -285,7 +287,8 @@ function buildOptionsForTown(originTown) {
   return Array.from(reachable).filter(town => MAP_DATA.towns[town]);
 }
 
-function renderMovementHighlights(townName) {
+function renderMovementHighlights(townName, options = {}) {
+  const { autoFocus = false } = options;
   highlightLayer.clearLayers();
   selectedTown = townName;
   selectedMoveTargets = [];
@@ -369,7 +372,9 @@ function renderMovementHighlights(townName) {
     }
   }
 
-  focusSelectedTown(townName);
+  if (autoFocus) {
+    focusSelectedTown(townName);
+  }
   updateStatusPanel();
   return highlightCount > 0;
 }
@@ -453,7 +458,7 @@ function renderMap() {
       resetBuildSelection();
       renderMap();
       applyGameStateToMap(lastGameState);
-      const didHighlight = renderMovementHighlights(t.name);
+      const didHighlight = renderMovementHighlights(t.name, { autoFocus: true });
       window.__lastSelectedTown = t.name;
       window.__lastHighlightSuccess = didHighlight;
     });
@@ -465,7 +470,7 @@ function renderMap() {
 
   updateDynamicStyles();
   if (selectedTown) {
-    renderMovementHighlights(selectedTown);
+    renderMovementHighlights(selectedTown, { autoFocus: false });
   }
 }
 
@@ -489,19 +494,20 @@ function focusSelectedTown(townName) {
   const origin = byName.get(townName);
   if (!origin || !map) return;
 
-  const options = movementOptionsForTown(townName);
+  const moveOptions = movementOptionsForTown(townName);
+  const buildOptions = playerHasSafehouse() ? buildOptionsForTown(townName) : [];
   const pts = [[origin.lat, origin.lon]];
-  [...options.road, ...options.rail].forEach(name => {
+  [...moveOptions.road, ...moveOptions.rail, ...buildOptions].forEach(name => {
     const t = byName.get(name);
     if (t) pts.push([t.lat, t.lon]);
   });
 
   if (pts.length <= 1) {
-    map.setView([origin.lat, origin.lon], 6, { animate: false });
+    map.setView([origin.lat, origin.lon], 9, { animate: false });
     return;
   }
 
-  map.fitBounds(pts, { padding:[80,80], maxZoom: 6 });
+  map.fitBounds(pts, { padding:[80,80], maxZoom: 9 });
 }
 
 ['searchBox','rulerFilter','campFilter','typeFilter'].forEach(id =>
@@ -516,7 +522,12 @@ document.getElementById('fitAll').addEventListener('click', fitAll);
 document.getElementById('focusAsia').addEventListener('click', focusAsia);
 
 map.on('zoom', updateDynamicStyles);
-map.on('zoomend', () => { if (labelMode === 'auto') renderMap(); else updateDynamicStyles(); });
+map.on('zoomend', () => {
+  if (labelMode === 'auto') renderMap(); else updateDynamicStyles();
+  if (selectedTown) {
+    updateStatusPanel();
+  }
+});
 map.on('popupopen', e => {
   const node = [...currentMarkers.entries()].find(([name, marker]) => marker === e.popup._source);
   if (node) updateInfoPanel(node[0]);
@@ -564,7 +575,7 @@ function applyGameStateToMap(state) {
   }
 
   if (selectedTown) {
-    renderMovementHighlights(selectedTown);
+    renderMovementHighlights(selectedTown, { autoFocus: false });
   }
 }
 
@@ -605,7 +616,7 @@ window.__selectTownForTest = function (townName) {
   resetMoveSelection();
   renderMap();
   applyGameStateToMap(lastGameState);
-  const didHighlight = renderMovementHighlights(townName);
+  const didHighlight = renderMovementHighlights(townName, { autoFocus: true });
   window.__lastSelectedTown = townName;
   window.__lastHighlightSuccess = didHighlight;
   return {

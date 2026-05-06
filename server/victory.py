@@ -36,7 +36,7 @@ class VictoryEngine:
             elif cond_type == "count_and_required":
                 required = set(cond.get("required_locations", []))
                 if (self._count_scope(player, cond.get("scope", "牆內"), game) >= cond.get("count", 0)
-                        and required.issubset(player.organizations.keys())):
+                        and all(game._shared_org_count(player, town) > 0 for town in required)):
                     met_conditions += 1
 
             elif cond_type == "map_specific_count":
@@ -62,10 +62,18 @@ class VictoryEngine:
         return False, None
 
     def _count_scope(self, player, scope, game):
+        def shared_count(towns):
+            total = 0
+            for town in towns:
+                total += game._shared_org_count(player, town)
+            return total
+
         if scope == "牆內":
             china_towns = set(self.board_regions.get("china", {}).get("towns", []))
-            return sum(v for t, v in player.organizations.items() if t in china_towns)
-        return player.total_organizations()
+            return shared_count(china_towns)
+        if scope == "牆內與牆外":
+            return shared_count(player.organizations.keys())
+        return sum(game._shared_org_count(player, town) for town in player.organizations.keys())
 
     def _count_taiwan_orgs(self, player):
         taiwan_towns = set(self.board_regions.get("taiwan", {}).get("towns", []))

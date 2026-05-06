@@ -1098,11 +1098,15 @@ class Game:
     def state(self):
         # aggregate map control
         town_control = {}
+        shared_access = {}
         for p in self.players:
             for town, count in p.organizations.items():
                 if town not in town_control:
                     town_control[town] = []
                 town_control[town].append({"player": p.name, "count": count})
+            for town in self.map.get('towns', {}).keys():
+                if self._shared_org_count(p, town) > p.organizations.get(town, 0):
+                    shared_access.setdefault(town, []).append(p.faction_id)
 
         return {
             "turn": self.turn,
@@ -1115,7 +1119,8 @@ class Game:
             "action_log": self.action_log,
             "purchase_area": [getattr(card, 'name', str(card)) for card in self.purchase_area],
             "map": {
-                "towns": town_control
+                "towns": town_control,
+                "shared_access": shared_access
             },
             "players": [
                 {
