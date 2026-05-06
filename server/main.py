@@ -80,7 +80,7 @@ def create_room():
     game_id = manager.create_room()
     host_id = str(uuid.uuid4())
 
-    lobby[game_id] = []  # will store (player_id, name)
+    lobby[game_id] = [(host_id, 'host')]  # host is immediately in lobby
     lobby_hosts[game_id] = host_id
     lobby_factions[game_id] = {}
     lobby_bases[game_id] = {}
@@ -354,7 +354,7 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
                     data.get("mode", "road")
                 )
             elif action == "faction_action":
-                result = game._activated_faction_action(game.current_player(), data.get("name"))
+                result = game._activated_faction_action(game.current_player(), data.get("name"), guess=data.get("guess"))
 
             if result and result.get("error"):
                 error_state = dict(game.state())

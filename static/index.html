@@ -43,6 +43,19 @@
   </div>
 </div>
 
+<div id="factionActionModal" class="modal-overlay" style="display:none;">
+  <div class="modal-glass">
+    <div class="panel-title">FACTION ACTION</div>
+    <div id="factionActionModalTitle" class="modal-title-text">賭徒耳語</div>
+    <div id="factionActionModalDesc" class="modal-body-text">請猜牌庫頂牌購買費用的奇偶。</div>
+    <div id="factionActionModalChoices" class="modal-choice-row">
+      <button id="guessOddBtn" class="modal-choice-btn">猜奇數</button>
+      <button id="guessEvenBtn" class="modal-choice-btn">猜偶數</button>
+    </div>
+    <button id="closeFactionActionModal" class="modal-cancel-btn">取消</button>
+  </div>
+</div>
+
 <div id="gameShell" style="display:none">
   <div id="gameTabs">
     <button class="game-tab active" data-view="command">指揮中心</button>
@@ -59,6 +72,11 @@
           <div id="buildSupportInfo"></div>
           <div id="buildSupportOrigins"></div>
           <div id="buildSupportTargets"></div>
+        </div>
+        <div id="factionActionPanel" style="display:none; margin-top:8px;">
+          <div class="panel-title">FACTION ACTION</div>
+          <div id="factionActionInfo"></div>
+          <div id="factionActionButtons"></div>
         </div>
         <div id="baseSelectionPanel" style="display:none; margin-top:8px;">
           <div class="panel-title">BASE SELECTION</div>

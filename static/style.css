@@ -296,13 +296,15 @@ body {
 
 #buildSupportOrigins,
 #buildSupportTargets,
+#factionActionButtons,
 #baseSelectionChoices {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
 
-#buildSupportInfo {
+#buildSupportInfo,
+#factionActionInfo {
   font-size: 0.8rem;
   margin-bottom: 8px;
   color: #cbd5e1;
@@ -326,6 +328,83 @@ body {
 
 .base-choice-btn:hover {
   background: #152030;
+}
+
+#factionActionPanel {
+  border: 1px solid var(--border);
+  background: rgba(10, 13, 18, 0.88);
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(4, 8, 14, 0.42);
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+  z-index: 50;
+}
+
+.modal-glass {
+  width: min(460px, calc(100vw - 32px));
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: linear-gradient(180deg, rgba(12, 18, 28, 0.82), rgba(17, 24, 39, 0.74));
+  box-shadow: 0 24px 80px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05);
+  border-radius: 18px;
+  padding: 18px;
+}
+
+.modal-title-text {
+  font-family: 'Noto Sans TC', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #f8fbff;
+  margin-bottom: 8px;
+}
+
+.modal-body-text {
+  color: #d6e2f0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin-bottom: 14px;
+}
+
+.modal-choice-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.modal-choice-btn,
+.modal-cancel-btn {
+  appearance: none;
+  border-radius: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.84rem;
+}
+
+.modal-choice-btn {
+  border: 1px solid rgba(96, 165, 250, 0.38);
+  background: rgba(30, 41, 59, 0.9);
+  color: #eff6ff;
+}
+
+.modal-choice-btn:hover {
+  background: rgba(37, 99, 235, 0.22);
+}
+
+.modal-cancel-btn {
+  width: 100%;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  background: rgba(17, 24, 39, 0.82);
+  color: #cbd5e1;
 }
 
 #mapView {

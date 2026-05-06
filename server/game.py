@@ -462,7 +462,10 @@ class Game:
     def _top_card_cost_total(self, card):
         return self._purchase_area_card_cost_total(card)
 
-    def _activated_faction_action(self, player, action_name):
+    def _activated_faction_action(self, player, action_name, **kwargs):
+        if self.turn_log.get('faction_action_used'):
+            return {"error": "Faction action already used this turn"}
+
         if action_name == '民主陣線':
             if self._resource_total(player.resources) < 2:
                 return {"error": "Not enough resources"}
@@ -475,6 +478,7 @@ class Game:
             from server.cards import Card
             gained = Card('已移除牌', 'command', {})
             player.deck.discard([gained])
+            self.turn_log['faction_action_used'] = True
             self.log(f"{player.name} triggered 民主陣線 and gained a removed card proxy")
             return {"success": True}
 
@@ -483,6 +487,7 @@ class Game:
                 return {"error": "Deck empty"}
             card = player.deck.draw_pile.pop()
             total = self._top_card_cost_total(card)
+            self.turn_log['faction_action_used'] = True
             if total % 2 == 1:
                 player.hand.append(card)
                 self.log(f"{player.name} triggered 立場試探 and added {card.name} to hand")
@@ -494,18 +499,22 @@ class Game:
         if action_name == '賭徒耳語':
             if not player.hand:
                 return {"error": "No hand card to bottom-deck"}
+            guess = kwargs.get('guess')
+            if guess not in {'odd', 'even'}:
+                return {"error": "Guess required"}
             bottom = player.hand.pop()
             player.deck.draw_pile.insert(0, bottom)
             if not player.deck.draw_pile:
                 return {"error": "Deck empty"}
             card = player.deck.draw_pile.pop()
             total = self._top_card_cost_total(card)
-            guessed_odd = True
-            if total % 2 == 1 and guessed_odd:
+            guessed_odd = guess == 'odd'
+            self.turn_log['faction_action_used'] = True
+            if (total % 2 == 1 and guessed_odd) or (total % 2 == 0 and not guessed_odd):
                 player.resources['money'] += 3
                 player.resources['propaganda'] += 3
             player.deck.discard([card])
-            self.log(f"{player.name} triggered 賭徒耳語 and revealed {card.name}")
+            self.log(f"{player.name} triggered 賭徒耳語, guessed {guess}, and revealed {card.name}")
             return {"success": True}
 
         return {"error": "Unknown faction action"}

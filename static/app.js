@@ -7,6 +7,8 @@ let pendingFactionCategory = null;
 let pendingFactionChoice = null;
 let pendingFactionBaseChoice = null;
 let pendingFactionBaseGroup = null;
+let cachedFullMapData = null;
+let activeFactionActionModal = null;
 
 function initTabs() {
   const tabs = document.querySelectorAll('.game-tab');
@@ -380,10 +382,10 @@ async function startGame() {
 function connect() {
   ws = new WebSocket(`ws://${location.host}/ws/${gameId}/${playerId}`);
 
-  ws.onmessage = (event) => {
+  ws.onmessage = async (event) => {
     const state = JSON.parse(event.data);
     window.lastGameState = state;
-    render(state);
+    await render(state);
     syncStrategicMap(state);
   };
 
@@ -403,6 +405,30 @@ function sendAction(action, payload = {}) {
   }
   if (!ws || ws.readyState !== WebSocket.OPEN) return;
   ws.send(JSON.stringify({action, ...payload}));
+}
+
+function closeFactionActionModal() {
+  activeFactionActionModal = null;
+  const overlay = document.getElementById('factionActionModal');
+  if (overlay) overlay.style.display = 'none';
+}
+
+function openGamblerGuessModal() {
+  activeFactionActionModal = '賭徒耳語';
+  const overlay = document.getElementById('factionActionModal');
+  if (!overlay) return;
+  overlay.style.display = 'flex';
+  document.getElementById('factionActionModalTitle').textContent = '賭徒耳語';
+  document.getElementById('factionActionModalDesc').textContent = '請猜牌庫頂牌購買費用的奇偶。';
+  document.getElementById('guessOddBtn').onclick = () => {
+    sendAction('faction_action', { name: '賭徒耳語', guess: 'odd' });
+    closeFactionActionModal();
+  };
+  document.getElementById('guessEvenBtn').onclick = () => {
+    sendAction('faction_action', { name: '賭徒耳語', guess: 'even' });
+    closeFactionActionModal();
+  };
+  document.getElementById('closeFactionActionModal').onclick = closeFactionActionModal;
 }
 
 function strategicMapUrl() {
@@ -464,10 +490,17 @@ function syncStrategicMap(_state) {
   // iframe version uses its own websocket connection via query params.
 }
 
+async function getFullMapData() {
+  if (cachedFullMapData) return cachedFullMapData;
+  const res = await fetch('/map-data');
+  cachedFullMapData = await res.json();
+  return cachedFullMapData;
+}
+
 let pendingBaseSelectionLabel = null;
 let pendingBuildOrigin = null;
 
-function renderBuildSupport(state) {
+async function renderBuildSupport(state) {
   const panel = document.getElementById('buildSupportPanel');
   const info = document.getElementById('buildSupportInfo');
   const originsEl = document.getElementById('buildSupportOrigins');
@@ -476,8 +509,9 @@ function renderBuildSupport(state) {
 
   const me = state.players?.find(p => p.id === playerId) || null;
   const myFaction = me?.faction || null;
-  const isSafehouse = myFaction === 'hong_kong' && ['香港城', '臺北'].includes(me?.orgs ? Object.keys(me.orgs)[0] || '' : '') || ['香港城', '臺北'].includes(me?.base || '');
-  const inAction = state.turn_phase === 'action';
+  const owned = Object.keys(me?.orgs || {});
+  const isSafehouse = myFaction === 'hong_kong' && owned.some(t => ['香港城', '臺北'].includes(t));
+  const inAction = String(state.turn_phase).toLowerCase() === 'action';
   const isMine = state.current_player && me && state.current_player === me.name;
 
   panel.style.display = isSafehouse && inAction && isMine ? 'block' : 'none';
@@ -489,8 +523,8 @@ function renderBuildSupport(state) {
     return;
   }
 
-  const owned = Object.keys(me.orgs || {});
-  const towns = state.map?.towns || {};
+  const mapData = await getFullMapData();
+  const towns = mapData?.towns || {};
   originsEl.innerHTML = '';
   targetsEl.innerHTML = '';
 
@@ -502,17 +536,15 @@ function renderBuildSupport(state) {
     const btn = document.createElement('button');
     btn.className = `base-choice-btn${pendingBuildOrigin === origin ? ' active' : ''}`;
     btn.textContent = origin;
-    btn.onclick = () => {
+    btn.onclick = async () => {
       pendingBuildOrigin = origin;
-      renderBuildSupport(state);
+      await renderBuildSupport(state);
     };
     originsEl.appendChild(btn);
   });
 
   if (!pendingBuildOrigin) return;
 
-  const graph = window.lastGameState?.map?.towns || towns;
-  const allTowns = Object.keys(towns);
   const maxDistance = 2;
   const visited = new Set([pendingBuildOrigin]);
   let frontier = [[pendingBuildOrigin, 0]];
@@ -537,6 +569,34 @@ function renderBuildSupport(state) {
     btn.onclick = () => sendAction('build', { from: pendingBuildOrigin, town: target });
     targetsEl.appendChild(btn);
   });
+}
+
+function renderFactionActionPanel(state) {
+  const panel = document.getElementById('factionActionPanel');
+  const info = document.getElementById('factionActionInfo');
+  const buttons = document.getElementById('factionActionButtons');
+  if (!panel || !info || !buttons) return;
+
+  const me = state.players?.find(p => p.id === playerId) || null;
+  const inAction = String(state.turn_phase).toLowerCase() === 'action';
+  const isMine = state.current_player && me && state.current_player === me.name;
+  const faction = me?.faction || '';
+
+  buttons.innerHTML = '';
+  panel.style.display = 'none';
+  info.textContent = '';
+
+  if (!inAction || !isMine) return;
+
+  if (faction === 'aomen') {
+    panel.style.display = 'block';
+    info.textContent = '澳門可在行動階段發動一次賭徒耳語，請先選擇猜奇或猜偶。';
+    const btn = document.createElement('button');
+    btn.className = 'base-choice-btn';
+    btn.textContent = '發動 賭徒耳語';
+    btn.onclick = openGamblerGuessModal;
+    buttons.appendChild(btn);
+  }
 }
 
 function renderBaseSelection(state) {
@@ -622,7 +682,7 @@ function renderBaseSelection(state) {
   });
 }
 
-function render(state) {
+async function render(state) {
   if (state.error) {
     alert(state.error);
   }
@@ -635,7 +695,8 @@ function render(state) {
 
   const detailFactionId = me?.faction || pendingFactionChoice || null;
   renderFactionDetails(inBaseSelection ? null : detailFactionId);
-  renderBuildSupport(state);
+  await renderBuildSupport(state);
+  renderFactionActionPanel(state);
   renderBaseSelection(state);
 
   // HUD
