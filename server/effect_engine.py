@@ -46,6 +46,11 @@ class EffectEngine:
         # ✅ Gain from discard (simplified cost handling)
         if etype == "gain_from_discard":
             if player.deck.discard_pile:
+                card = player.deck.discard_pile[-1]
+                ok, err = game._can_player_gain_flag_card(player, card)
+                if not ok:
+                    game.log(f"{player.name} could not gain {getattr(card, 'name', str(card))}: {err}")
+                    return
                 card = player.deck.discard_pile.pop()
                 player.hand.append(card)
             return
@@ -53,6 +58,11 @@ class EffectEngine:
         # ✅ Gain any from discard
         if etype == "gain_any_from_discard":
             if player.deck.discard_pile:
+                card = player.deck.discard_pile[-1]
+                ok, err = game._can_player_gain_flag_card(player, card)
+                if not ok:
+                    game.log(f"{player.name} could not gain {getattr(card, 'name', str(card))}: {err}")
+                    return
                 card = player.deck.discard_pile.pop()
                 player.hand.append(card)
             return

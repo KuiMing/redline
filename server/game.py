@@ -25,6 +25,8 @@ FACTIONS_PATH = BASE_DIR / "data" / "factions" / "all_faction.integrated.v2.json
 BOARD_TOWNS_PATH = BASE_DIR / "data" / "board_towns.v1.1.json"
 STRUCTURED_ACTION_PATH = BASE_DIR / "data" / "action_cards_structured.v1.1.json"
 ERA_STRUCTURED_PATH = BASE_DIR / "data" / "era_structured.v1.1.json"
+SUPPORT_CARDS_PATH = BASE_DIR / "data" / "cards" / "support_cards.v1.1.json"
+SUPPORT_TAXONOMY_PATH = BASE_DIR / "SUPPORT_CARD_TAXONOMY.json"
 
 
 class GamePhase(str, Enum):
@@ -89,6 +91,8 @@ class Game:
         self.ability_templates = self.factions_data.get("ability_templates", {})
         self.board_regions = self._load_json(BOARD_TOWNS_PATH)["regions"]
         self.structured_cards = self._load_json(STRUCTURED_ACTION_PATH)["cards"]
+        self.support_cards = self._load_json(SUPPORT_CARDS_PATH)
+        self.support_taxonomy = self._load_json(SUPPORT_TAXONOMY_PATH).get("cards", []) if SUPPORT_TAXONOMY_PATH.exists() else []
         # ✅ Load structured eras
         self.structured_eras = self._load_json(ERA_STRUCTURED_PATH)["eras"]
 
@@ -435,7 +439,20 @@ class Game:
     def _player_is_nonviolent(self, player):
         return self._player_has_ability(player, "非暴力")
 
+    def _support_taxonomy_entry(self, card_name):
+        for entry in self.support_taxonomy:
+            if entry.get("name") == card_name:
+                return entry
+        return None
+
+    def _is_support_card(self, card):
+        card_name = getattr(card, "name", str(card))
+        return self._support_taxonomy_entry(card_name) is not None
+
     def _is_india_flag_card(self, card):
+        entry = self._support_taxonomy_entry(getattr(card, "name", str(card)))
+        if entry is not None:
+            return bool(entry.get("counts_as_flag_card"))
         card_type = getattr(card, "card_type", None)
         return card_type in {"transport", "organization", "spy", "purge"}
 
@@ -444,6 +461,8 @@ class Game:
 
     def _can_player_gain_flag_card(self, player, card):
         if not self._player_has_india_research_room(player):
+            return True, None
+        if not self._is_support_card(card):
             return True, None
         if self._is_india_flag_card(card):
             return True, None
@@ -1061,6 +1080,9 @@ class Game:
             return {"error": "No card in slot"}
         if self._player_is_nonviolent(player) and self._card_is_banned_for_player(player, card):
             return {"error": "非暴力：不能購買武裝或裝備類卡牌"}
+        ok, err = self._can_player_gain_flag_card(player, card)
+        if not ok:
+            return {"error": err}
 
         card_type = getattr(card, "card_type", None)
         card_name = getattr(card, 'name', str(card))
