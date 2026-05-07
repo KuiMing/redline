@@ -483,8 +483,7 @@ class Game:
         entry = self._support_taxonomy_entry(getattr(card, "name", str(card)))
         if entry is not None:
             return bool(entry.get("counts_as_flag_card"))
-        card_type = getattr(card, "card_type", None)
-        return card_type in {"transport", "organization", "spy", "purge"}
+        return False
 
     def _player_has_india_research_room(self, player):
         return self._player_has_ability(player, "印度研究分析室")

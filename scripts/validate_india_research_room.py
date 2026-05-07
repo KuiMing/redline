@@ -23,51 +23,38 @@ def make_game():
     return g, t, o
 
 
-def test_first_india_flag_gain2():
+def test_non_support_card_no_bonus():
     g, t, _ = make_game()
     t.hand = [Card('交通經驗丙', 'transport', {'money': 1})]
     before = t.resources['money']
     result = g.play_card(0)
     after = t.resources['money']
-    ok = result.get('success') and after >= before + 3
-    return {'name': 'first_india_flag_gain2', 'ok': ok, 'detail': {'result': result, 'before': before, 'after': after}}
+    ok = result.get('success') and after == before + 1
+    return {'name': 'non_support_card_no_bonus', 'ok': ok, 'detail': {'result': result, 'before': before, 'after': after}}
 
 
-def test_second_india_flag_no_extra_bonus():
-    g, t, _ = make_game()
-    t.hand = [Card('交通經驗丙', 'transport', {'money': 1}), Card('交通經驗乙', 'transport', {'money': 2})]
-    g.play_card(0)
-    after_first = t.resources['money']
-    g.play_card(0)
-    after_second = t.resources['money']
-    gained_second = after_second - after_first
-    ok = gained_second == 2
-    return {'name': 'second_india_flag_no_extra_bonus', 'ok': ok, 'detail': {'after_first': after_first, 'after_second': after_second, 'gained_second': gained_second}}
-
-
-def test_buy_non_india_flag_allowed():
+def test_buy_non_support_card_allowed():
     g, t, _ = make_game()
     t.resources = {'money': 5, 'propaganda': 5}
     g.purchase_area = [Card('資助者', 'money', {'money': 2})]
     result = g.buy_card(0)
     ok = result.get('success') is True
-    return {'name': 'buy_non_india_flag_allowed', 'ok': ok, 'detail': result}
+    return {'name': 'buy_non_support_card_allowed', 'ok': ok, 'detail': result}
 
 
-def test_gain_from_discard_non_india_flag_allowed():
+def test_gain_from_discard_non_support_card_allowed():
     g, t, _ = make_game()
     t.deck.discard_pile = [Card('資助者', 'money', {'money': 2})]
     g.effect_engine.execute({'type': 'gain_any_from_discard'}, t, g)
     ok = any(getattr(c, 'name', '') == '資助者' for c in t.hand)
-    return {'name': 'gain_from_discard_non_india_flag_allowed', 'ok': ok, 'detail': {'hand': [c.name for c in t.hand]}}
+    return {'name': 'gain_from_discard_non_support_card_allowed', 'ok': ok, 'detail': {'hand': [c.name for c in t.hand]}}
 
 
 def main():
     results = [
-        test_first_india_flag_gain2(),
-        test_second_india_flag_no_extra_bonus(),
-        test_buy_non_india_flag_allowed(),
-        test_gain_from_discard_non_india_flag_allowed(),
+        test_non_support_card_no_bonus(),
+        test_buy_non_support_card_allowed(),
+        test_gain_from_discard_non_support_card_allowed(),
     ]
     summary = {
         'total': len(results),
