@@ -131,6 +131,11 @@ def start_game(payload: dict):
     if lobby_hosts.get(game_id) != player_id:
         return {"error": "Only host can start"}
 
+    # For test/setup endpoints that already created a live game state,
+    # preserve the prepared runtime instead of rebuilding a fresh one.
+    if game_id in manager.games:
+        return {"success": True, "reused": True}
+
     player_list = lobby[game_id]
     chosen = lobby_factions.get(game_id, {})
     if len(chosen) != len(player_list):
