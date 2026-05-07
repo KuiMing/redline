@@ -1,0 +1,265 @@
+{
+  "east": {
+    "setup": {
+      "success": true,
+      "game_id": "d043d275-81b9-4430-8b13-cb5dfa5212d5",
+      "player_id": "7f8ccb07-dcf0-46b9-a32c-48f25409b9e3",
+      "support_name": "東洋奧援",
+      "turn_phase": "action",
+      "game_phase": "main",
+      "players": [
+        {
+          "id": "7f8ccb07-dcf0-46b9-a32c-48f25409b9e3",
+          "name": "player",
+          "faction": "federalists"
+        },
+        {
+          "id": "ef4b0889-ead6-450a-88c1-146500076ca7",
+          "name": "red",
+          "faction": "red_army"
+        }
+      ],
+      "state": {
+        "turn": 1,
+        "game_phase": "main",
+        "turn_phase": "action",
+        "winner": null,
+        "current_player": "player",
+        "active_eras": [
+          "hong_kong"
+        ],
+        "pending_base_choices": {},
+        "action_log": [],
+        "purchase_area": [],
+        "map": {
+          "towns": {
+            "東京": [
+              {
+                "player": "player",
+                "count": 1
+              }
+            ],
+            "北京": [
+              {
+                "player": "player",
+                "count": 1
+              },
+              {
+                "player": "red",
+                "count": 1
+              }
+            ]
+          },
+          "shared_access": {}
+        },
+        "players": [
+          {
+            "id": "7f8ccb07-dcf0-46b9-a32c-48f25409b9e3",
+            "name": "player",
+            "faction": "federalists",
+            "resources": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "moves_left": 3,
+            "hand": [
+              "東洋奧援"
+            ],
+            "orgs": {
+              "東京": 1,
+              "北京": 1
+            }
+          },
+          {
+            "id": "ef4b0889-ead6-450a-88c1-146500076ca7",
+            "name": "red",
+            "faction": "red_army",
+            "resources": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "moves_left": 3,
+            "hand": [],
+            "orgs": {
+              "北京": 1
+            }
+          }
+        ]
+      }
+    },
+    "hud_after": "TURN 1\n      | PHASE action\n      | ACTIVE PLAYER\n      | HAND 0\n      | MONEY 0\n      | PROP 0\n      | MOVES 3\n      | PLAYER: 2 | RED: 1 |",
+    "log": "[Turn 1] player played 東洋奧援[Turn 1] player resolved 東洋奧援 at tier 1 (matched rulers: none)"
+  },
+  "north": {
+    "setup": {
+      "success": true,
+      "game_id": "876feda5-2e0e-445e-8507-881b199f9b4a",
+      "player_id": "5e7ad1e1-a786-4a43-a865-787f094f3934",
+      "support_name": "北國奧援",
+      "turn_phase": "action",
+      "game_phase": "main",
+      "players": [
+        {
+          "id": "5e7ad1e1-a786-4a43-a865-787f094f3934",
+          "name": "player",
+          "faction": "federalists"
+        },
+        {
+          "id": "f594c99a-a976-447e-95fb-170343fe51c4",
+          "name": "red",
+          "faction": "red_army"
+        }
+      ],
+      "state": {
+        "turn": 1,
+        "game_phase": "main",
+        "turn_phase": "action",
+        "winner": null,
+        "current_player": "player",
+        "active_eras": [
+          "hong_kong"
+        ],
+        "pending_base_choices": {},
+        "action_log": [],
+        "purchase_area": [],
+        "map": {
+          "towns": {
+            "東京": [
+              {
+                "player": "player",
+                "count": 1
+              }
+            ],
+            "北京": [
+              {
+                "player": "red",
+                "count": 1
+              }
+            ]
+          },
+          "shared_access": {}
+        },
+        "players": [
+          {
+            "id": "5e7ad1e1-a786-4a43-a865-787f094f3934",
+            "name": "player",
+            "faction": "federalists",
+            "resources": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "moves_left": 3,
+            "hand": [
+              "北國奧援"
+            ],
+            "orgs": {
+              "東京": 1
+            }
+          },
+          {
+            "id": "f594c99a-a976-447e-95fb-170343fe51c4",
+            "name": "red",
+            "faction": "red_army",
+            "resources": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "moves_left": 3,
+            "hand": [],
+            "orgs": {
+              "北京": 1
+            }
+          }
+        ]
+      }
+    },
+    "hud_after": "TURN 1\n      | PHASE action\n      | ACTIVE PLAYER\n      | HAND 0\n      | MONEY 0\n      | PROP 0\n      | MOVES 3\n      | PLAYER: 1 | RED: 1 |",
+    "log": "[Turn 1] player played 北國奧援[Turn 1] player resolved 北國奧援 at tier 2 (matched rulers: 東洋)"
+  },
+  "taiwan": {
+    "setup": {
+      "success": true,
+      "game_id": "023eee8a-2245-4fd3-8836-7eb4794353e4",
+      "player_id": "326a5830-599f-456c-ae6d-81e5a2a41f04",
+      "support_name": "臺灣奧援",
+      "turn_phase": "action",
+      "game_phase": "main",
+      "players": [
+        {
+          "id": "326a5830-599f-456c-ae6d-81e5a2a41f04",
+          "name": "player",
+          "faction": "federalists"
+        },
+        {
+          "id": "7ea2e8e0-ac3f-4445-b2e3-68c70f63f6f2",
+          "name": "red",
+          "faction": "red_army"
+        }
+      ],
+      "state": {
+        "turn": 1,
+        "game_phase": "main",
+        "turn_phase": "action",
+        "winner": null,
+        "current_player": "player",
+        "active_eras": [
+          "hong_kong"
+        ],
+        "pending_base_choices": {},
+        "action_log": [],
+        "purchase_area": [],
+        "map": {
+          "towns": {
+            "莫斯科": [
+              {
+                "player": "player",
+                "count": 1
+              }
+            ],
+            "北京": [
+              {
+                "player": "red",
+                "count": 1
+              }
+            ]
+          },
+          "shared_access": {}
+        },
+        "players": [
+          {
+            "id": "326a5830-599f-456c-ae6d-81e5a2a41f04",
+            "name": "player",
+            "faction": "federalists",
+            "resources": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "moves_left": 3,
+            "hand": [
+              "臺灣奧援"
+            ],
+            "orgs": {
+              "莫斯科": 1
+            }
+          },
+          {
+            "id": "7ea2e8e0-ac3f-4445-b2e3-68c70f63f6f2",
+            "name": "red",
+            "faction": "red_army",
+            "resources": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "moves_left": 3,
+            "hand": [],
+            "orgs": {
+              "北京": 1
+            }
+          }
+        ]
+      }
+    },
+    "hud_after": "TURN 1\n      | PHASE action\n      | ACTIVE PLAYER\n      | HAND 0\n      | MONEY 0\n      | PROP 0\n      | MOVES 3\n      | PLAYER: 1 | RED: 1 |",
+    "log": "[Turn 1] player played 臺灣奧援[Turn 1] player resolved 臺灣奧援 at tier 1 (matched rulers: none)"
+  }
+}
