@@ -1,0 +1,50 @@
+{
+  "summary": {
+    "total": 4,
+    "passed": 4,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "first_india_flag_gain2",
+      "ok": true,
+      "detail": {
+        "result": {
+          "success": true
+        },
+        "before": 0,
+        "after": 3
+      }
+    },
+    {
+      "name": "second_india_flag_no_extra_bonus",
+      "ok": true,
+      "detail": {
+        "after_first": 3,
+        "after_second": 5,
+        "gained_second": 2
+      }
+    },
+    {
+      "name": "buy_non_india_flag_allowed",
+      "ok": true,
+      "detail": {
+        "success": true
+      }
+    },
+    {
+      "name": "gain_from_discard_non_india_flag_allowed",
+      "ok": true,
+      "detail": {
+        "hand": [
+          "樂捐者",
+          "追隨者",
+          "追隨者",
+          "樂捐者",
+          "追隨者",
+          "資助者"
+        ]
+      }
+    }
+  ]
+}

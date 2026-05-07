@@ -356,6 +356,7 @@ class Game:
             "combo_reward_triggered": False,
             "guerrilla_triggered": False,
             "faction_action_used": False,
+            "india_flag_money_triggered": False,
         }
 
     def _resolve_ability_ref(self, ability):
@@ -433,6 +434,20 @@ class Game:
 
     def _player_is_nonviolent(self, player):
         return self._player_has_ability(player, "非暴力")
+
+    def _is_india_flag_card(self, card):
+        card_type = getattr(card, "card_type", None)
+        return card_type in {"transport", "organization", "spy", "purge"}
+
+    def _player_has_india_research_room(self, player):
+        return self._player_has_ability(player, "印度研究分析室")
+
+    def _can_player_gain_flag_card(self, player, card):
+        if not self._player_has_india_research_room(player):
+            return True, None
+        if self._is_india_flag_card(card):
+            return True, None
+        return False, "印度研究分析室：不能持有印度旗幟以外的旗幟卡"
 
     def _card_is_banned_for_player(self, player, card):
         card_type = getattr(card, "card_type", None)
@@ -819,6 +834,10 @@ class Game:
             self.turn_log["played_money_card"] = True
         if effective_type == "propaganda":
             self.turn_log["played_propaganda_card"] = True
+        if self._player_has_india_research_room(player) and self._is_india_flag_card(played_card) and not self.turn_log.get("india_flag_money_triggered"):
+            self.turn_log["india_flag_money_triggered"] = True
+            player.resources["money"] += 2
+            self.log(f"{player.name} triggered 印度研究分析室 and gained 2 money")
 
         if card_name not in {"追隨者", "樂捐者"}:
             played_names = self.turn_log.setdefault("played_nonstarter_names", [])
@@ -1040,7 +1059,7 @@ class Game:
         card = self.purchase_area[index]
         if not card:
             return {"error": "No card in slot"}
-        if self._card_is_banned_for_player(player, card):
+        if self._player_is_nonviolent(player) and self._card_is_banned_for_player(player, card):
             return {"error": "非暴力：不能購買武裝或裝備類卡牌"}
 
         card_type = getattr(card, "card_type", None)
