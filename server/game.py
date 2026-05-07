@@ -799,7 +799,7 @@ class Game:
         self.turn_phase = TurnPhase.ACTION
         self.turn_log = self._new_turn_log()
         self.action_log = []
-        self.purchase_area = []
+        self.purchase_area = self._initial_purchase_area()
 
         for idx, p in enumerate(self.players):
             p.resources = {"money": 0, "propaganda": 0}

@@ -1,0 +1,190 @@
+{
+  "india": {
+    "setup": {
+      "success": true,
+      "game_id": "cda56bff-dadc-47da-a56b-316bdff33044",
+      "player_id": "d588250d-c4c0-4dca-aa09-e32507083c8e",
+      "support_name": "印度奧援",
+      "turn_phase": "action",
+      "game_phase": "main",
+      "players": [
+        {
+          "id": "d588250d-c4c0-4dca-aa09-e32507083c8e",
+          "name": "tibet",
+          "faction": "tibet_dehradun"
+        },
+        {
+          "id": "2395a20a-48b6-4564-a6af-e8e8b3650718",
+          "name": "red",
+          "faction": "red_army"
+        }
+      ],
+      "state": {
+        "turn": 1,
+        "game_phase": "main",
+        "turn_phase": "action",
+        "winner": null,
+        "current_player": "tibet",
+        "active_eras": [
+          "hong_kong"
+        ],
+        "pending_base_choices": {},
+        "action_log": [],
+        "purchase_area": [
+          "印度奧援"
+        ],
+        "map": {
+          "towns": {
+            "德拉敦": [
+              {
+                "player": "tibet",
+                "count": 1
+              }
+            ],
+            "北京": [
+              {
+                "player": "red",
+                "count": 1
+              }
+            ]
+          },
+          "shared_access": {}
+        },
+        "players": [
+          {
+            "id": "d588250d-c4c0-4dca-aa09-e32507083c8e",
+            "name": "tibet",
+            "faction": "tibet_dehradun",
+            "resources": {
+              "money": 5,
+              "propaganda": 5
+            },
+            "moves_left": 3,
+            "hand": [],
+            "orgs": {
+              "德拉敦": 1
+            }
+          },
+          {
+            "id": "2395a20a-48b6-4564-a6af-e8e8b3650718",
+            "name": "red",
+            "faction": "red_army",
+            "resources": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "moves_left": 3,
+            "hand": [
+              "樂捐者",
+              "樂捐者",
+              "追隨者",
+              "追隨者",
+              "追隨者"
+            ],
+            "orgs": {
+              "北京": 1
+            }
+          }
+        ]
+      }
+    },
+    "purchase_before": "宣傳家思想家資助者資本家印度奧援",
+    "purchase_after": "宣傳家思想家資助者資本家印度奧援",
+    "hud": "TURN 1\n      | PHASE event\n      | ACTIVE TIBET\n      | HAND 5\n      | MONEY 0\n      | PROP 0\n      | MOVES 3\n      | TIBET: 1 | RED: 1 |",
+    "log": ""
+  },
+  "anglo": {
+    "setup": {
+      "success": true,
+      "game_id": "a941568c-586b-48cc-a1f4-e304cab7da9c",
+      "player_id": "939fbe70-8ce0-4542-bcfa-03e6a2fca940",
+      "support_name": "英美奧援",
+      "turn_phase": "action",
+      "game_phase": "main",
+      "players": [
+        {
+          "id": "939fbe70-8ce0-4542-bcfa-03e6a2fca940",
+          "name": "tibet",
+          "faction": "tibet_dehradun"
+        },
+        {
+          "id": "e320e66c-d3a4-4949-aece-c02523e40535",
+          "name": "red",
+          "faction": "red_army"
+        }
+      ],
+      "state": {
+        "turn": 1,
+        "game_phase": "main",
+        "turn_phase": "action",
+        "winner": null,
+        "current_player": "tibet",
+        "active_eras": [
+          "hong_kong"
+        ],
+        "pending_base_choices": {},
+        "action_log": [],
+        "purchase_area": [
+          "英美奧援"
+        ],
+        "map": {
+          "towns": {
+            "德拉敦": [
+              {
+                "player": "tibet",
+                "count": 1
+              }
+            ],
+            "北京": [
+              {
+                "player": "red",
+                "count": 1
+              }
+            ]
+          },
+          "shared_access": {}
+        },
+        "players": [
+          {
+            "id": "939fbe70-8ce0-4542-bcfa-03e6a2fca940",
+            "name": "tibet",
+            "faction": "tibet_dehradun",
+            "resources": {
+              "money": 5,
+              "propaganda": 5
+            },
+            "moves_left": 3,
+            "hand": [],
+            "orgs": {
+              "德拉敦": 1
+            }
+          },
+          {
+            "id": "e320e66c-d3a4-4949-aece-c02523e40535",
+            "name": "red",
+            "faction": "red_army",
+            "resources": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "moves_left": 3,
+            "hand": [
+              "追隨者",
+              "追隨者",
+              "追隨者",
+              "追隨者",
+              "追隨者"
+            ],
+            "orgs": {
+              "北京": 1
+            }
+          }
+        ]
+      }
+    },
+    "purchase_before": "宣傳家思想家資助者資本家印度奧援",
+    "purchase_after": "宣傳家思想家資助者資本家印度奧援",
+    "hud": "TURN 1\n      | PHASE event\n      | ACTIVE TIBET\n      | HAND 5\n      | MONEY 0\n      | PROP 0\n      | MOVES 3\n      | TIBET: 1 | RED: 1 |",
+    "log": ""
+  }
+}
