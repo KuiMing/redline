@@ -143,7 +143,7 @@ class Game:
 
         self.turn_log = self._new_turn_log()
         self.action_log = []
-        self.purchase_area = []
+        self.purchase_area = self._initial_purchase_area()
 
     # ---------- Init ----------
 
@@ -173,6 +173,36 @@ class Game:
                 starter.append(Card("樂捐者", "money", {"money": 1}))
             p.deck = Deck(starter)
             p.hand = p.deck.draw(5)
+
+    def _support_card_runtime_type(self, name):
+        mapping = {
+            '英美奧援': 'support',
+            '東洋奧援': 'support',
+            '南洋奧援': 'support',
+            '印度奧援': 'support',
+            '天方奧援': 'support',
+            '歐洲奧援': 'support',
+            '北國奧援': 'support',
+            '臺灣奧援': 'support',
+            '紅軍奧援': 'support',
+        }
+        return mapping.get(name, 'support')
+
+    def _make_support_card(self, support_name):
+        return Card(support_name, self._support_card_runtime_type(support_name), {})
+
+    def _initial_purchase_area(self):
+        names = ['宣傳家', '思想家', '資助者', '資本家', '印度奧援']
+        cards = []
+        for name in names:
+            if name == '印度奧援':
+                cards.append(self._make_support_card(name))
+                continue
+            for c in self.structured_cards:
+                if c.get('name') == name:
+                    cards.append(Card(c['name'], c['type'], c.get('resources', {})))
+                    break
+        return cards
 
     def _classify_base_options(self, faction):
         bases = faction.get("bases", [])
@@ -483,6 +513,22 @@ class Game:
             if c.get('name') == card_name:
                 cost = c.get('cost', {})
                 return int(cost.get('money', 0) or 0) + int(cost.get('propaganda', 0) or 0)
+        entry = self._support_taxonomy_entry(card_name)
+        if entry and isinstance(entry.get('cost'), str):
+            text = entry['cost']
+            money = 0
+            propaganda = 0
+            if '資金' in text:
+                try:
+                    money = int(text.split('資金')[0].split('+')[-1].strip()[-1])
+                except Exception:
+                    money = 0
+            if '宣傳' in text:
+                try:
+                    propaganda = int(text.split('宣傳')[0].split('+')[-1].strip()[-1])
+                except Exception:
+                    propaganda = 0
+            return money + propaganda
         return 0
 
     def _purchase_area_card_cost_money(self, card):
@@ -491,6 +537,12 @@ class Game:
             if c.get('name') == card_name:
                 cost = c.get('cost', {})
                 return int(cost.get('money', 0) or 0)
+        entry = self._support_taxonomy_entry(card_name)
+        if entry and isinstance(entry.get('cost'), str) and '資金' in entry['cost']:
+            try:
+                return int(entry['cost'].split('資金')[0].split('+')[-1].strip()[-1])
+            except Exception:
+                return 0
         return 0
 
     def _top_card_cost_total(self, card):
