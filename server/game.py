@@ -188,8 +188,24 @@ class Game:
         }
         return mapping.get(name, 'support')
 
+    def _support_card_cost(self, support_name):
+        entry = self._support_taxonomy_entry(support_name) or {}
+        text = entry.get('cost', '')
+        if text == '起始牌':
+            return {'money': 0, 'propaganda': 0}
+        money = 0
+        propaganda = 0
+        if isinstance(text, str):
+            import re
+            m = re.search(r'(\d+)資金', text)
+            p = re.search(r'(\d+)宣傳', text)
+            money = int(m.group(1)) if m else 0
+            propaganda = int(p.group(1)) if p else 0
+        return {'money': money, 'propaganda': propaganda}
+
     def _make_support_card(self, support_name):
-        return Card(support_name, self._support_card_runtime_type(support_name), {})
+        entry = self._support_taxonomy_entry(support_name) or {}
+        return Card(support_name, self._support_card_runtime_type(support_name), self._support_card_cost(support_name), effect={'support_taxonomy': entry})
 
     def _initial_purchase_area(self):
         names = ['宣傳家', '思想家', '資助者', '資本家', '印度奧援']
@@ -203,6 +219,62 @@ class Game:
                     cards.append(Card(c['name'], c['type'], c.get('resources', {})))
                     break
         return cards
+
+    def _support_card_effect_text(self, card_name, tier, region_entry):
+        if not region_entry:
+            return None
+        if tier >= 3:
+            return region_entry.get('tier_3')
+        if tier == 2:
+            return region_entry.get('tier_2')
+        return region_entry.get('tier_1')
+
+    def _resolve_support_card_effect(self, card_name, tier, region_entry):
+        text = self._support_card_effect_text(card_name, tier, region_entry)
+        if not text:
+            return None, None
+
+        if card_name == '印度奧援':
+            count = 3 if tier >= 3 else 2 if tier == 2 else 1
+            return 'add_internal_conflict', {'count': count, 'target': 'red_army'}
+        if card_name == '英美奧援':
+            amount = 3 if tier >= 3 else 2 if tier == 2 else 1
+            return 'gain_resource', {'money': amount}
+        if card_name == '歐洲奧援':
+            amount = 4 if tier >= 3 else 3 if tier == 2 else 2
+            return 'gain_resource', {'propaganda': amount}
+        if card_name == '南洋奧援':
+            if tier >= 3:
+                return 'draw', {'count': 2}
+            if tier == 2:
+                return 'draw', {'count': 1}
+            return 'draw_then_discard', {'draw': 1, 'discard': 1}
+        return 'text_only', {'text': text}
+
+    def _execute_support_card(self, player, card):
+        card_name = getattr(card, 'name', str(card))
+        tier, region_entry, matched = self._support_card_tier(player, card_name)
+        effect_type, payload = self._resolve_support_card_effect(card_name, tier, region_entry)
+        if effect_type == 'gain_resource':
+            player.resources['money'] += int(payload.get('money', 0) or 0)
+            player.resources['propaganda'] += int(payload.get('propaganda', 0) or 0)
+        elif effect_type == 'draw':
+            player.hand.extend(player.deck.draw(int(payload.get('count', 0) or 0)))
+        elif effect_type == 'draw_then_discard':
+            draw_count = int(payload.get('draw', 0) or 0)
+            discard_count = int(payload.get('discard', 0) or 0)
+            player.hand.extend(player.deck.draw(draw_count))
+            for _ in range(min(discard_count, len(player.hand))):
+                discarded = player.hand.pop()
+                player.deck.discard([discarded])
+        elif effect_type == 'add_internal_conflict':
+            count = int(payload.get('count', 0) or 0)
+            target = next((p for p in self.players if p.faction_id == 'red_army'), None)
+            if target:
+                cards = [Card('分神', 'disruption', {}) for _ in range(count)]
+                target.deck.discard(cards)
+        self.log(f"{player.name} resolved {card_name} at tier {tier} (matched rulers: {', '.join(matched) if matched else 'none'})")
+        return {'tier': tier, 'matched_rulers': matched, 'effect_type': effect_type, 'effect_text': self._support_card_effect_text(card_name, tier, region_entry)}
 
     def _classify_base_options(self, faction):
         bases = faction.get("bases", [])
@@ -484,6 +556,30 @@ class Game:
         if entry is not None:
             return bool(entry.get("counts_as_flag_card"))
         return False
+
+    def _player_ruler_presence(self, player):
+        rulers = set()
+        for town, count in (player.organizations or {}).items():
+            if count <= 0:
+                continue
+            town_data = self.map.get("towns", {}).get(town, {})
+            for ruler in (town_data.get("ruler", []) or []):
+                rulers.add(ruler)
+        return rulers
+
+    def _support_card_tier(self, player, card_name):
+        entry = self._support_taxonomy_entry(card_name)
+        if not entry:
+            return 1, None, []
+        present = self._player_ruler_presence(player)
+        best = (1, None, [])
+        for region in entry.get("regions", []) or []:
+            preferred = region.get("preferred_rulers", []) or []
+            matched = [r for r in preferred if r in present]
+            tier = 1 + min(2, len(matched))
+            if tier > best[0]:
+                best = (tier, region, matched)
+        return best
 
     def _player_has_india_research_room(self, player):
         return self._player_has_ability(player, "印度研究分析室")
@@ -900,7 +996,10 @@ class Game:
         if self._player_has_ability(player, "國際線") and getattr(played_card, "card_type", None) == "money":
             effective_type = "propaganda"
 
-        if effective_type == "money":
+        support_resolution = None
+        if effective_type == 'support':
+            support_resolution = self._execute_support_card(player, played_card)
+        elif effective_type == "money":
             self.turn_log["played_money_card"] = True
         if effective_type == "propaganda":
             self.turn_log["played_propaganda_card"] = True
@@ -914,7 +1013,8 @@ class Game:
             if card_name not in played_names:
                 played_names.append(card_name)
 
-        self.action_engine.execute(card_name, player, self)
+        if effective_type != 'support':
+            self.action_engine.execute(card_name, player, self)
 
         for ability in self._player_effective_abilities(player):
             if not isinstance(ability, dict):

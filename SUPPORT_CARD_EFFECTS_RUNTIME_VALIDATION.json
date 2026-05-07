@@ -1,0 +1,33 @@
+{
+  "summary": {
+    "total": 3,
+    "passed": 3,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "india_support_tier3_adds_three_distractions",
+      "ok": true,
+      "detail": {
+        "before": 0,
+        "after": 3
+      }
+    },
+    {
+      "name": "anglo_support_tier2_gains_money",
+      "ok": true,
+      "detail": {
+        "before": 0,
+        "after": 2
+      }
+    },
+    {
+      "name": "nanyang_support_tier1_draw_then_discard_net_zero",
+      "ok": true,
+      "detail": {
+        "before": 2,
+        "after": 1
+      }
+    }
+  ]
+}
