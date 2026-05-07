@@ -220,17 +220,22 @@ class Game:
                     break
         return cards
 
-    def _support_card_effect_text(self, card_name, tier, region_entry):
-        if not region_entry:
+    def _support_card_effect_text(self, card_name, tier, region_index):
+        entry = self._support_taxonomy_entry(card_name)
+        if not entry:
             return None
+        regions = entry.get('regions', []) or []
+        if region_index is None or region_index >= len(regions):
+            return None
+        region_entry = regions[region_index]
         if tier >= 3:
             return region_entry.get('tier_3')
         if tier == 2:
             return region_entry.get('tier_2')
         return region_entry.get('tier_1')
 
-    def _resolve_support_card_effect(self, card_name, tier, region_entry):
-        text = self._support_card_effect_text(card_name, tier, region_entry)
+    def _resolve_support_card_effect(self, card_name, tier, region_index):
+        text = self._support_card_effect_text(card_name, tier, region_index)
         if not text:
             return None, None
 
@@ -249,12 +254,30 @@ class Game:
             if tier == 2:
                 return 'draw', {'count': 1}
             return 'draw_then_discard', {'draw': 1, 'discard': 1}
+        if card_name == '東洋奧援':
+            if tier >= 3:
+                return 'build_anywhere_inner', {'count': 1}
+            if tier == 2:
+                return 'build_near_inner', {'count': 1}
+            return 'gain_resource', {'propaganda': 2}
+        if card_name == '北國奧援':
+            if tier >= 3:
+                return 'dissolve_many_near', {'count': 2}
+            if tier == 2:
+                return 'dissolve_many_near', {'count': 1}
+            return 'dissolve_self_and_enemy', {'count': 1}
+        if card_name == '臺灣奧援':
+            if tier >= 3:
+                return 'dissolve_and_build', {'count': 1}
+            if tier == 2:
+                return 'dissolve_many_near', {'count': 1}
+            return 'gain_resource', {'propaganda': 1}
         return 'text_only', {'text': text}
 
     def _execute_support_card(self, player, card):
         card_name = getattr(card, 'name', str(card))
-        tier, region_entry, matched = self._support_card_tier(player, card_name)
-        effect_type, payload = self._resolve_support_card_effect(card_name, tier, region_entry)
+        tier, region_index, matched = self._support_card_tier(player, card_name)
+        effect_type, payload = self._resolve_support_card_effect(card_name, tier, region_index)
         if effect_type == 'gain_resource':
             player.resources['money'] += int(payload.get('money', 0) or 0)
             player.resources['propaganda'] += int(payload.get('propaganda', 0) or 0)
@@ -273,8 +296,63 @@ class Game:
             if target:
                 cards = [Card('分神', 'disruption', {}) for _ in range(count)]
                 target.deck.discard(cards)
+        elif effect_type == 'build_anywhere_inner':
+            inner_towns = self.board_regions.get('china', {}).get('towns', []) or []
+            target_town = next((town for town in inner_towns if self.can_develop_in_town(player, town)), None)
+            if target_town:
+                player.organizations[target_town] = player.organizations.get(target_town, 0) + 1
+        elif effect_type == 'build_near_inner':
+            inner_towns = set(self.board_regions.get('china', {}).get('towns', []) or [])
+            target_town = None
+            for origin in list(player.organizations.keys()):
+                neighbors = set(self.map.get('towns', {}).get(origin, {}).get('road', []) or []) | set(self.map.get('towns', {}).get(origin, {}).get('rail', []) or [])
+                target_town = next((town for town in neighbors if town in inner_towns and self.can_develop_in_town(player, town)), None)
+                if target_town:
+                    break
+            if target_town:
+                player.organizations[target_town] = player.organizations.get(target_town, 0) + 1
+        elif effect_type == 'dissolve_many_near':
+            count = int(payload.get('count', 0) or 0)
+            for other in self.players:
+                if other is player:
+                    continue
+                enemy_towns = [town for town, c in (other.organizations or {}).items() if c > 0]
+                while count > 0 and enemy_towns:
+                    town = enemy_towns.pop(0)
+                    result = self.dissolve_organization(player, other, town, source='support_card')
+                    if result.get('success'):
+                        count -= 1
+                    else:
+                        break
+        elif effect_type == 'dissolve_self_and_enemy':
+            own_town = next((town for town, c in (player.organizations or {}).items() if c > 0), None)
+            if own_town:
+                player.organizations[own_town] -= 1
+                if player.organizations[own_town] <= 0:
+                    del player.organizations[own_town]
+            for other in self.players:
+                if other is player:
+                    continue
+                enemy_town = next((town for town, c in (other.organizations or {}).items() if c > 0), None)
+                if enemy_town:
+                    self.dissolve_organization(player, other, enemy_town, source='support_card')
+                    break
+        elif effect_type == 'dissolve_and_build':
+            built = False
+            for other in self.players:
+                if other is player:
+                    continue
+                enemy_town = next((town for town, c in (other.organizations or {}).items() if c > 0), None)
+                if enemy_town:
+                    result = self.dissolve_organization(player, other, enemy_town, source='support_card')
+                    if result.get('success'):
+                        player.organizations[enemy_town] = player.organizations.get(enemy_town, 0) + 1
+                        built = True
+                    break
+            if not built:
+                pass
         self.log(f"{player.name} resolved {card_name} at tier {tier} (matched rulers: {', '.join(matched) if matched else 'none'})")
-        return {'tier': tier, 'matched_rulers': matched, 'effect_type': effect_type, 'effect_text': self._support_card_effect_text(card_name, tier, region_entry)}
+        return {'tier': tier, 'matched_rulers': matched, 'effect_type': effect_type, 'effect_text': self._support_card_effect_text(card_name, tier, region_index)}
 
     def _classify_base_options(self, faction):
         bases = faction.get("bases", [])
@@ -572,14 +650,18 @@ class Game:
         if not entry:
             return 1, None, []
         present = self._player_ruler_presence(player)
-        best = (1, None, [])
-        for region in entry.get("regions", []) or []:
+        best_tier = 1
+        best_idx = 0 if (entry.get("regions", []) or []) else None
+        best_matched = []
+        for idx, region in enumerate(entry.get("regions", []) or []):
             preferred = region.get("preferred_rulers", []) or []
             matched = [r for r in preferred if r in present]
             tier = 1 + min(2, len(matched))
-            if tier > best[0]:
-                best = (tier, region, matched)
-        return best
+            if tier > best_tier:
+                best_tier = tier
+                best_idx = idx
+                best_matched = matched
+        return best_tier, best_idx, best_matched
 
     def _player_has_india_research_room(self, player):
         return self._player_has_ability(player, "印度研究分析室")
