@@ -672,6 +672,56 @@ def test_setup_india_support_purchase(payload: dict):
     }
 
 
+@app.post("/test/setup-support-card-play")
+def test_setup_support_card_play(payload: dict):
+    game_id = str(uuid.uuid4())
+    players = [(str(uuid.uuid4()), "player"), (str(uuid.uuid4()), "red")]
+    game = Game(players)
+
+    player = game.players[0]
+    red = game.players[1]
+
+    player.faction_id = payload.get("faction_id", "tibet_dehradun")
+    player.base = payload.get("base", "德拉敦")
+    player.organizations = payload.get("orgs") or {player.base: 1}
+    player.resources = payload.get("resources") or {"money": 0, "propaganda": 0}
+    player.hand = [game._make_support_card(payload.get("support_name", "印度奧援"))]
+    player.deck.draw_pile = [Card("補牌A", "command", {}), Card("補牌B", "command", {})]
+    player.deck.discard_pile = []
+
+    red.faction_id = "red_army"
+    red.base = "北京"
+    red.organizations = {"北京": 1}
+    red.hand = []
+    red.deck.draw_pile = [Card("紅軍抽牌A", "command", {})]
+    red.deck.discard_pile = []
+
+    game.purchase_area = []
+    game.current_player_index = 0
+    game.turn_phase = TurnPhase.ACTION
+    game.game_phase = GamePhase.MAIN
+    game.pending_base_choices = {}
+    game.id = game_id
+
+    manager.games[game_id] = game
+    manager.connections[game_id] = manager.connections.get(game_id, {})
+    lobby[game_id] = list(zip([p.id for p in game.players], [p.name for p in game.players]))
+    lobby_hosts[game_id] = player.id
+    lobby_factions[game_id] = {player.id: player.faction_id, red.id: red.faction_id}
+    lobby_bases[game_id] = {player.id: player.base, red.id: red.base}
+
+    return {
+        "success": True,
+        "game_id": game_id,
+        "player_id": player.id,
+        "support_name": payload.get("support_name", "印度奧援"),
+        "turn_phase": game.turn_phase,
+        "game_phase": game.game_phase,
+        "players": [{"id": p.id, "name": p.name, "faction": p.faction_id} for p in game.players],
+        "state": game.state(),
+    }
+
+
 @app.get("/")
 def index():
     return FileResponse("static/index.html")
