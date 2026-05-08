@@ -209,7 +209,7 @@ class Game:
         return Card(support_name, self._support_card_runtime_type(support_name), self._support_card_cost(support_name), effect={'support_taxonomy': entry})
 
     def _initial_purchase_area(self):
-        names = ['宣傳家', '思想家', '資助者', '資本家']
+        names = ['宣傳家', '思想家', '資助者', '資本家', '分神', '內鬥']
         cards = []
         for name in names:
             for c in self.structured_cards:

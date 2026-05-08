@@ -779,7 +779,11 @@ async function render(state) {
   if (purchaseDiv) {
     purchaseDiv.innerHTML = '';
     (state.purchase_area || []).forEach((card, i) => {
-      purchaseDiv.innerHTML += `<div class='card' onclick="sendAction('buy_card',{index:${i}})">${card}</div>`;
+      let label = card;
+      if (card === '分神' || card === '內鬥') {
+        label = `${card}（常設）`;
+      }
+      purchaseDiv.innerHTML += `<div class='card' onclick="sendAction('buy_card',{index:${i}})">${label}</div>`;
     });
   }
 
