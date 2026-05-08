@@ -722,6 +722,49 @@ def test_setup_support_card_play(payload: dict):
     }
 
 
+@app.post("/test/setup-purchase-deck-ui")
+def test_setup_purchase_deck_ui(payload: dict):
+    game_id = str(uuid.uuid4())
+    players = [(str(uuid.uuid4()), "viewer"), (str(uuid.uuid4()), "red")]
+    game = Game(players)
+
+    viewer = game.players[0]
+    red = game.players[1]
+
+    viewer.faction_id = payload.get("faction_id", "tibet_dehradun")
+    viewer.base = payload.get("base", "德拉敦")
+    viewer.organizations = payload.get("orgs") or {viewer.base: 1}
+    viewer.resources = payload.get("resources") or {"money": 5, "propaganda": 5}
+    viewer.hand = []
+
+    red.faction_id = "red_army"
+    red.base = "北京"
+    red.organizations = {"北京": 1}
+
+    game.current_player_index = 0
+    game.turn_phase = TurnPhase.ACTION
+    game.game_phase = GamePhase.MAIN
+    game.pending_base_choices = {}
+    game.id = game_id
+
+    manager.games[game_id] = game
+    manager.connections[game_id] = manager.connections.get(game_id, {})
+    lobby[game_id] = list(zip([p.id for p in game.players], [p.name for p in game.players]))
+    lobby_hosts[game_id] = viewer.id
+    lobby_factions[game_id] = {viewer.id: viewer.faction_id, red.id: red.faction_id}
+    lobby_bases[game_id] = {viewer.id: viewer.base, red.id: red.base}
+
+    return {
+        "success": True,
+        "game_id": game_id,
+        "player_id": viewer.id,
+        "turn_phase": game.turn_phase,
+        "game_phase": game.game_phase,
+        "players": [{"id": p.id, "name": p.name, "faction": p.faction_id} for p in game.players],
+        "state": game.state(),
+    }
+
+
 @app.get("/")
 def index():
     return FileResponse("static/index.html")
