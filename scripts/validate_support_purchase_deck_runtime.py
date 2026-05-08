@@ -29,11 +29,14 @@ def main():
     t.resources = {'money': 99, 'propaganda': 99}
     static_buy_result = g.buy_card(0) if g.purchase_area else {'error': 'empty purchase area'}
     random_buy_result = g.buy_card(6) if len(g.purchase_area) > 6 else {'error': 'no random slot'}
-    area_len_after = len(g.purchase_area)
+    area_len_after_buy = len(g.purchase_area)
+    g.turn_phase = TurnPhase.END
+    g.advance_turn_phase()
+    area_len_after_refill = len(g.purchase_area)
 
     payload = {
         'summary': {
-            'total': 8,
+            'total': 9,
             'passed': sum([
                 has_purchase_deck,
                 initial_area_len == 6,
@@ -42,9 +45,10 @@ def main():
                 '分神' in purchase_names,
                 '內鬥' in purchase_names,
                 static_buy_result.get('error') == 'Static purchase cards cannot be bought from random slot logic',
-                random_buy_result.get('error') == 'no random slot' and area_len_after == 6,
+                random_buy_result.get('error') == 'no random slot' and area_len_after_buy == 6,
+                area_len_after_refill == 11,
             ]),
-            'failed': 8 - sum([
+            'failed': 9 - sum([
                 has_purchase_deck,
                 initial_area_len == 6,
                 initial_deck_len == 53,
@@ -52,7 +56,8 @@ def main():
                 '分神' in purchase_names,
                 '內鬥' in purchase_names,
                 static_buy_result.get('error') == 'Static purchase cards cannot be bought from random slot logic',
-                random_buy_result.get('error') == 'no random slot' and area_len_after == 6,
+                random_buy_result.get('error') == 'no random slot' and area_len_after_buy == 6,
+                area_len_after_refill == 11,
             ]),
         },
         'has_purchase_deck': has_purchase_deck,
@@ -62,7 +67,8 @@ def main():
         'purchase_names': purchase_names,
         'static_buy_result': static_buy_result,
         'random_buy_result': random_buy_result,
-        'area_len_after': area_len_after,
+        'area_len_after_buy': area_len_after_buy,
+        'area_len_after_refill': area_len_after_refill,
     }
     (ROOT / 'SUPPORT_PURCHASE_DECK_RUNTIME_VALIDATION.json').write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     (ROOT / 'SUPPORT_PURCHASE_DECK_RUNTIME_VALIDATION.md').write_text(

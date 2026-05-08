@@ -24,19 +24,22 @@
 - 53 張 purchase deck
 
 ### 3. 常設購買區
-目前 `purchase_area` 仍保留常設 4 張：
+目前 `purchase_area` 固定常設 6 張：
 - 宣傳家
 - 思想家
 - 資助者
 - 資本家
+- 分神
+- 內鬥
 
-然後會再從 `purchase_deck` 抽牌補入：
-- 買走一張後，自動補 1 張
+### 4. 隨機購買區
+- 由 `purchase_deck` 額外抽出 5 張補在常設區之後
+- 常設區前 6 格不會被隨機牌取代
 
-### 4. buy 後補牌
-#### server/game.py::buy_card()
-- `purchase_area.pop(index)` 後
-- 會自動 `extend(self._draw_purchase_cards(1))`
+### 5. 補牌時機
+#### server/game.py::_end_turn()
+- 不再是買完立即補
+- 改成玩家行動結束時，在 `_end_turn()` 內統一補滿隨機購買區
 
 ## 驗證
 新增：

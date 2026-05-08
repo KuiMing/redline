@@ -7,4 +7,5 @@
 - purchase_names: ["宣傳家", "思想家", "資助者", "資本家", "分神", "內鬥"]
 - static_buy_result: {"error": "Static purchase cards cannot be bought from random slot logic"}
 - random_buy_result: {"error": "no random slot"}
-- area_len_after: 6
+- area_len_after_buy: 6
+- area_len_after_refill: 11

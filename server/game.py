@@ -1201,6 +1201,11 @@ class Game:
         player.discard_hand()
         player.reset_turn()
         player.draw_to_five()
+        while len(self.purchase_area) < len(self._static_purchase_cards()) + 5:
+            drawn = self._draw_purchase_cards(1)
+            if not drawn:
+                break
+            self.purchase_area.extend(drawn)
         self.log(f"End of turn for {player.name}")
 
         self.turn_log = self._new_turn_log()
@@ -1398,11 +1403,6 @@ class Game:
         player.deck.discard([card])
         self.purchase_area.pop(index)
         self.log(f"{player.name} bought {card_name}")
-        while len(self.purchase_area) < len(self._static_purchase_cards()) + 5:
-            drawn = self._draw_purchase_cards(1)
-            if not drawn:
-                break
-            self.purchase_area.extend(drawn)
         return {"success": True}
 
     # ---------- Era Trigger ----------

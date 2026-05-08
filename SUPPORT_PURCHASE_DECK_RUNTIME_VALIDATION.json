@@ -1,7 +1,7 @@
 {
   "summary": {
-    "total": 8,
-    "passed": 8,
+    "total": 9,
+    "passed": 9,
     "failed": 0
   },
   "has_purchase_deck": true,
@@ -22,5 +22,6 @@
   "random_buy_result": {
     "error": "no random slot"
   },
-  "area_len_after": 6
+  "area_len_after_buy": 6,
+  "area_len_after_refill": 11
 }
