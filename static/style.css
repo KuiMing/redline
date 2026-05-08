@@ -134,6 +134,17 @@ body {
   overflow: auto;
 }
 
+#cardDetail {
+  min-height: 120px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  color: #dbe7f3;
+  line-height: 1.5;
+  font-size: 0.82rem;
+  white-space: pre-wrap;
+}
+
 #purchaseSection {
   margin-top: 10px;
   display: flex;
@@ -156,7 +167,8 @@ body {
 
 #purchaseSection .card,
 #hand .card {
-  min-height: 104px;
+  min-height: 120px;
+  max-height: 120px;
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 10px;
@@ -165,6 +177,19 @@ body {
   flex-direction: column;
   justify-content: space-between;
   line-height: 1.35;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+#purchaseSection .card:hover,
+#hand .card:hover {
+  border-color: #60a5fa;
+  transform: translateY(-1px);
+}
+
+.card-selected {
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.45);
+  border-color: #93c5fd !important;
 }
 
 .purchase-card-static {

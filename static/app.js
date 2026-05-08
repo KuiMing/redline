@@ -9,6 +9,7 @@ let pendingFactionBaseChoice = null;
 let pendingFactionBaseGroup = null;
 let cachedFullMapData = null;
 let activeFactionActionModal = null;
+let selectedCardDetail = null;
 
 function initTabs() {
   const tabs = document.querySelectorAll('.game-tab');
@@ -149,6 +150,27 @@ function humanizeWinCondition(w) {
 function baseDisplayName(baseName) {
   if (!baseName) return '';
   return baseName;
+}
+
+function describeCard(cardName, zone, isStatic = false) {
+  const supportHint = /奧援/.test(cardName) ? '奧援卡，會依區域主導者判定 I・II・III 級效果。' : '';
+  const zoneHint = zone === 'hand' ? '這是你目前手牌，可直接打出。' : (isStatic ? '這是常設購買區卡牌，不屬於隨機購買區。' : '這是隨機購買區卡牌。');
+  return `${cardName}\n\n區域：${zone === 'hand' ? '手牌' : (isStatic ? '常設購買區' : '隨機購買區')}\n${zoneHint}${supportHint ? `\n${supportHint}` : ''}`;
+}
+
+function renderSelectedCardDetail() {
+  const detail = document.getElementById('cardDetail');
+  if (!detail) return;
+  if (!selectedCardDetail) {
+    detail.textContent = '點選購買區或手牌卡牌後，可在此查看詳細資訊。';
+    return;
+  }
+  detail.textContent = describeCard(selectedCardDetail.name, selectedCardDetail.zone, selectedCardDetail.isStatic);
+}
+
+function selectCardDetail(name, zone, isStatic = false) {
+  selectedCardDetail = { name, zone, isStatic };
+  renderSelectedCardDetail();
 }
 
 function renderFactionDetails(factionId) {
@@ -769,7 +791,7 @@ async function render(state) {
     const me = state.players.find(p => p.id === playerId);
     if (me && me.hand) {
       me.hand.forEach((card, i) => {
-        handDiv.innerHTML += `<div class='card' onclick="sendAction('play_card',{index:${i}})">${card}</div>`;
+        handDiv.innerHTML += `<div class='card' onclick="selectCardDetail(${JSON.stringify(card)},'hand',false)" ondblclick="sendAction('play_card',{index:${i}})">${card}</div>`;
       });
     }
   }
@@ -790,9 +812,9 @@ async function render(state) {
       const canBuy = !isStatic;
       const body = isSupport ? '奧援卡／依區域主導者判定 I・II・III 級效果' : (isStatic ? '固定存在於購買區' : '一般行動卡／由購買區牌庫補入');
       container.innerHTML += `
-        <div class='card ${typeClass}${supportClass}' ${canBuy ? `onclick="sendAction('buy_card',{index:${i}})"` : ''}>
+        <div class='card ${typeClass}${supportClass}' onclick="selectCardDetail(${JSON.stringify(card)},'purchase',${isStatic})" ${canBuy ? `ondblclick="sendAction('buy_card',{index:${i}})"` : ''}>
           <div class='purchase-card-title'>${card}</div>
-          <div class='purchase-card-meta'>${typeLabel}${isSupport ? '｜奧援' : ''}${canBuy ? '｜可購買' : '｜不可直接購買'}</div>
+          <div class='purchase-card-meta'>${typeLabel}${isSupport ? '｜奧援' : ''}${canBuy ? '｜雙擊購買' : '｜不可直接購買'}</div>
           <div class='purchase-card-body'>${body}</div>
         </div>`;
     });
@@ -807,6 +829,8 @@ async function render(state) {
       logDiv.innerHTML += `<div>${entry}</div>`;
     });
   }
+
+  renderSelectedCardDetail();
 
   // Active Eras
   const eraDiv = document.getElementById('eras');
