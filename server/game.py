@@ -272,6 +272,12 @@ class Game:
             if tier == 2:
                 return 'dissolve_many_near', {'count': 1}
             return 'gain_resource', {'propaganda': 1}
+        if card_name == '天方奧援':
+            if tier >= 3:
+                return 'force_discard_near', {'count': 2, 'random': True}
+            if tier == 2:
+                return 'force_discard_near', {'count': 1, 'random': True}
+            return 'force_discard_near', {'count': 1, 'random': False}
         return 'text_only', {'text': text}
 
     def _execute_support_card(self, player, card):
@@ -351,6 +357,15 @@ class Game:
                     break
             if not built:
                 pass
+        elif effect_type == 'force_discard_near':
+            count = int(payload.get('count', 0) or 0)
+            random_pick = bool(payload.get('random'))
+            target = next((other for other in self.players if other is not player and other.hand), None)
+            if target:
+                for _ in range(min(count, len(target.hand))):
+                    idx = 0 if not random_pick else random.randrange(len(target.hand))
+                    discarded = target.hand.pop(idx)
+                    target.deck.discard([discarded])
         self.log(f"{player.name} resolved {card_name} at tier {tier} (matched rulers: {', '.join(matched) if matched else 'none'})")
         return {'tier': tier, 'matched_rulers': matched, 'effect_type': effect_type, 'effect_text': self._support_card_effect_text(card_name, tier, region_index)}
 

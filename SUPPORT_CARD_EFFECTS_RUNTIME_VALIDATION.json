@@ -1,7 +1,7 @@
 {
   "summary": {
-    "total": 6,
-    "passed": 6,
+    "total": 7,
+    "passed": 7,
     "failed": 0
   },
   "results": [
@@ -52,6 +52,14 @@
       "ok": true,
       "detail": {
         "before": 0,
+        "after": 1
+      }
+    },
+    {
+      "name": "middle_east_support_tier1_forces_one_discard",
+      "ok": true,
+      "detail": {
+        "before": 2,
         "after": 1
       }
     }

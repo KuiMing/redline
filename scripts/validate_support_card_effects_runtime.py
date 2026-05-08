@@ -118,6 +118,25 @@ def test_taiwan_support_tier1_gains_one_propaganda():
     return {'name': 'taiwan_support_tier1_gains_one_propaganda', 'ok': ok, 'detail': {'before': before, 'after': after}}
 
 
+def test_middle_east_support_tier1_forces_one_discard():
+    g = Game([('p1', 'Any'), ('p2', 'Red')])
+    a, r = g.players
+    a.faction_id = 'federalists'
+    a.organizations = {'北京': 1}
+    a.base = '北京'
+    r.faction_id = 'red_army'
+    r.organizations = {'南京': 1}
+    r.hand = [Card('目標牌A', 'command', {}), Card('目標牌B', 'command', {})]
+    g.turn_phase = TurnPhase.ACTION
+    g.current_player_index = 0
+    a.hand = [g._make_support_card('天方奧援')]
+    before = len(r.hand)
+    result = g.play_card(0)
+    after = len(r.hand)
+    ok = result.get('success') and after == before - 1
+    return {'name': 'middle_east_support_tier1_forces_one_discard', 'ok': ok, 'detail': {'before': before, 'after': after}}
+
+
 def main():
     results = [
         test_india_support_tier3_adds_three_distractions(),
@@ -126,6 +145,7 @@ def main():
         test_east_asia_support_tier1_gains_two_propaganda(),
         test_northland_support_tier2_dissolves_one(),
         test_taiwan_support_tier1_gains_one_propaganda(),
+        test_middle_east_support_tier1_forces_one_discard(),
     ]
     summary = {
         'total': len(results),
