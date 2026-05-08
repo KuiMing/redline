@@ -802,7 +802,7 @@ async function render(state) {
         eraDiv.innerHTML += `<div class=\"card\">${e}</div>`;
       });
     } else {
-      eraDiv.innerHTML = `<div class=\"card\">NONE</div>`;
+      eraDiv.innerHTML = `<div class=\"card\">無</div>`;
     }
   }
 }
