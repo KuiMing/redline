@@ -144,6 +144,7 @@ class Game:
         self.turn_log = self._new_turn_log()
         self.action_log = []
         self.purchase_area = self._initial_purchase_area()
+        self.purchase_deck = self._initial_purchase_deck()
 
     # ---------- Init ----------
 
@@ -208,17 +209,49 @@ class Game:
         return Card(support_name, self._support_card_runtime_type(support_name), self._support_card_cost(support_name), effect={'support_taxonomy': entry})
 
     def _initial_purchase_area(self):
-        names = ['宣傳家', '思想家', '資助者', '資本家', '印度奧援']
+        names = ['宣傳家', '思想家', '資助者', '資本家']
         cards = []
         for name in names:
-            if name == '印度奧援':
-                cards.append(self._make_support_card(name))
-                continue
             for c in self.structured_cards:
                 if c.get('name') == name:
                     cards.append(Card(c['name'], c['type'], c.get('resources', {})))
                     break
+        cards.extend(self._draw_purchase_cards(5))
         return cards
+
+    def _initial_purchase_deck(self):
+        support_pool = []
+        for entry in self.support_taxonomy:
+            name = entry.get('name')
+            copies = int(entry.get('copies') or 0)
+            if not name or copies <= 0:
+                continue
+            support_pool.extend([self._make_support_card(name) for _ in range(copies)])
+        random.shuffle(support_pool)
+        support_sample = support_pool[:18]
+
+        general_pool = []
+        excluded = {'宣傳家', '思想家', '資助者', '資本家', '追隨者', '樂捐者'}
+        for card in self.structured_cards:
+            if card.get('name') in excluded:
+                continue
+            general_pool.append(Card(card['name'], card['type'], card.get('resources', {})))
+        random.shuffle(general_pool)
+        general_sample = general_pool[:35]
+
+        deck_cards = support_sample + general_sample
+        random.shuffle(deck_cards)
+        return Deck(deck_cards)
+
+    def _draw_purchase_cards(self, count):
+        if not getattr(self, 'purchase_deck', None):
+            return []
+        drawn = self.purchase_deck.draw(count)
+        if len(drawn) < count:
+            if not self.purchase_deck.draw_pile and not self.purchase_deck.discard_pile:
+                self.purchase_deck = self._initial_purchase_deck()
+                drawn.extend(self.purchase_deck.draw(count - len(drawn)))
+        return drawn
 
     def _support_card_effect_text(self, card_name, tier, region_index):
         entry = self._support_taxonomy_entry(card_name)
@@ -991,6 +1024,7 @@ class Game:
         self.turn_phase = TurnPhase.ACTION
         self.turn_log = self._new_turn_log()
         self.action_log = []
+        self.purchase_deck = self._initial_purchase_deck()
         self.purchase_area = self._initial_purchase_area()
 
         for idx, p in enumerate(self.players):
@@ -1356,6 +1390,7 @@ class Game:
         player.deck.discard([card])
         self.purchase_area.pop(index)
         self.log(f"{player.name} bought {card_name}")
+        self.purchase_area.extend(self._draw_purchase_cards(1))
         return {"success": True}
 
     # ---------- Era Trigger ----------

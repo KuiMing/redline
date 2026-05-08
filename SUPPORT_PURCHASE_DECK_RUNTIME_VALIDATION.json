@@ -1,0 +1,16 @@
+{
+  "summary": {
+    "total": 5,
+    "passed": 5,
+    "failed": 0
+  },
+  "has_purchase_deck": true,
+  "initial_area_len": 4,
+  "initial_deck_len": 53,
+  "support_in_deck": 18,
+  "first_name": "宣傳家",
+  "buy_result": {
+    "success": true
+  },
+  "area_len_after": 4
+}
