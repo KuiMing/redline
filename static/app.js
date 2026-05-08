@@ -791,7 +791,14 @@ async function render(state) {
     const me = state.players.find(p => p.id === playerId);
     if (me && me.hand) {
       me.hand.forEach((card, i) => {
-        handDiv.innerHTML += `<div class='card' onclick="selectCardDetail(${JSON.stringify(card)},'hand',false)" ondblclick="sendAction('play_card',{index:${i}})">${card}</div>`;
+        const isSupport = /奧援/.test(card);
+        const body = isSupport ? '奧援卡／雙擊打出，效果依區域主導者判定。' : '一般手牌／雙擊可直接打出。';
+        handDiv.innerHTML += `
+          <div class='card hand-card' onclick="selectCardDetail(${JSON.stringify(card)},'hand',false)" ondblclick="sendAction('play_card',{index:${i}})">
+            <div class='purchase-card-title'>${card}</div>
+            <div class='hand-card-meta'>手牌${isSupport ? '｜奧援' : ''}｜雙擊打出</div>
+            <div class='purchase-card-body'>${body}</div>
+          </div>`;
       });
     }
   }

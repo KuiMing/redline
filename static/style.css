@@ -132,6 +132,10 @@ body {
 #hand {
   flex: 1;
   overflow: auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  align-content: start;
 }
 
 #cardDetail {
@@ -179,6 +183,15 @@ body {
   line-height: 1.35;
   overflow: hidden;
   cursor: pointer;
+}
+
+.hand-card {
+  box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.12);
+}
+
+.hand-card-meta {
+  font-size: 0.72rem;
+  color: #86efac;
 }
 
 #purchaseSection .card:hover,
