@@ -6,6 +6,8 @@ from server.cards import Card
 from server.game_manager import GameManager
 import uuid
 import asyncio
+import csv
+from pathlib import Path
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -15,6 +17,56 @@ lobby = {}        # {game_id: [(player_id, name)]}
 lobby_hosts = {}  # {game_id: host_player_id}
 lobby_factions = {}  # {game_id: {player_id: faction_id}}
 lobby_bases = {}  # {game_id: {player_id: base_name}}
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+ACTION_CSV_PATH = BASE_DIR / 'data' / 'raw' / 'action_cards.csv'
+SUPPORT_CSV_PATH = BASE_DIR / 'data' / 'raw' / 'support_cards.csv'
+
+
+def _load_card_presentation_catalog():
+    catalog = {}
+    if ACTION_CSV_PATH.exists():
+        with ACTION_CSV_PATH.open(encoding='utf-8') as f:
+            reader = csv.reader(f)
+            next(reader, None)
+            for row in reader:
+                if len(row) < 10 or not row[1]:
+                    continue
+                catalog[row[1]] = {
+                    'name': row[1],
+                    'color': row[2],
+                    'kind': row[3],
+                    'strength': row[4],
+                    'cost_text': row[5],
+                    'effect_text': row[6],
+                    'resource_text': row[7],
+                    'position_text': row[8],
+                    'meaning_text': row[9],
+                }
+    if SUPPORT_CSV_PATH.exists():
+        with SUPPORT_CSV_PATH.open(encoding='utf-8') as f:
+            reader = csv.reader(f)
+            next(reader, None)
+            seen = set()
+            for row in reader:
+                if len(row) < 9 or not row[0] or row[0] in seen:
+                    continue
+                seen.add(row[0])
+                catalog[row[0]] = {
+                    'name': row[0],
+                    'color': '奧援',
+                    'kind': '奧援',
+                    'strength': '特殊',
+                    'cost_text': row[1],
+                    'effect_text': f"III級：{row[3]}\nII級：{row[5]}\nI級：{row[7]}",
+                    'resource_text': '依效果而定',
+                    'position_text': '隨機購買區',
+                    'meaning_text': '奧援卡',
+                }
+    return catalog
+
+
+CARD_PRESENTATION_CATALOG = _load_card_presentation_catalog()
 
 
 def faction_category(faction_id: str):
@@ -73,6 +125,11 @@ def faction_base_resolved(by_id, faction_id: str):
         towns = semantic_base_pool(option)
         resolved[option] = towns if towns else [option]
     return resolved
+
+
+@app.get('/card-presentation')
+def card_presentation():
+    return {'cards': CARD_PRESENTATION_CATALOG}
 
 
 @app.post("/create")
@@ -765,6 +822,69 @@ def test_setup_purchase_deck_ui(payload: dict):
         "success": True,
         "game_id": game_id,
         "player_id": viewer.id,
+        "turn_phase": game.turn_phase,
+        "game_phase": game.game_phase,
+        "players": [{"id": p.id, "name": p.name, "faction": p.faction_id} for p in game.players],
+        "state": game.state(),
+    }
+
+
+@app.post("/test/setup-hand-preview")
+def test_setup_hand_preview(payload: dict):
+    game_id = str(uuid.uuid4())
+    players = [(str(uuid.uuid4()), "viewer"), (str(uuid.uuid4()), "red")]
+    game = Game(players)
+
+    viewer = game.players[0]
+    red = game.players[1]
+
+    viewer.faction_id = payload.get("faction_id", "tibet_dehradun")
+    viewer.base = payload.get("base", "德拉敦")
+    viewer.organizations = payload.get("orgs") or {viewer.base: 1}
+    viewer.resources = payload.get("resources") or {"money": 4, "propaganda": 3}
+
+    hand_names = payload.get("hand_names") or ["宣傳家", "印度奧援", "東洋奧援"]
+    hand_cards = []
+    for name in hand_names:
+        support_entry = game._support_taxonomy_entry(name)
+        if support_entry:
+            hand_cards.append(game._make_support_card(name))
+            continue
+        card_def = next((c for c in game.structured_cards if c.get("name") == name), None)
+        if card_def:
+            hand_cards.append(Card(card_def["name"], card_def["type"], card_def.get("resources", {})))
+        else:
+            hand_cards.append(Card(name, "command", {}))
+    viewer.hand = hand_cards
+
+    red.faction_id = "red_army"
+    red.base = "北京"
+    red.organizations = {"北京": 1}
+
+    while len(game.purchase_area) < 11:
+        drawn = game._draw_purchase_cards(1)
+        if not drawn:
+            break
+        game.purchase_area.extend(drawn)
+
+    game.current_player_index = 0
+    game.turn_phase = TurnPhase.ACTION
+    game.game_phase = GamePhase.MAIN
+    game.pending_base_choices = {}
+    game.id = game_id
+
+    manager.games[game_id] = game
+    manager.connections[game_id] = manager.connections.get(game_id, {})
+    lobby[game_id] = list(zip([p.id for p in game.players], [p.name for p in game.players]))
+    lobby_hosts[game_id] = viewer.id
+    lobby_factions[game_id] = {viewer.id: viewer.faction_id, red.id: red.faction_id}
+    lobby_bases[game_id] = {viewer.id: viewer.base, red.id: red.base}
+
+    return {
+        "success": True,
+        "game_id": game_id,
+        "player_id": viewer.id,
+        "hand_names": hand_names,
         "turn_phase": game.turn_phase,
         "game_phase": game.game_phase,
         "players": [{"id": p.id, "name": p.name, "faction": p.faction_id} for p in game.players],
