@@ -737,7 +737,7 @@ async function render(state) {
     let orgInfo = '';
     state.players.forEach(p => {
       const total = Object.values(p.orgs || {}).reduce((a,b)=>a+b,0);
-      orgInfo += `${p.name.toUpperCase()}: ${total} | `;
+      orgInfo += `${p.name}: ${total} | `;
     });
 
     const me = state.players.find(p => p.id === playerId);
@@ -745,15 +745,16 @@ async function render(state) {
     const myPropaganda = me?.resources?.propaganda ?? 0;
     const myMoves = me?.moves_left ?? 0;
     const myHand = me?.hand?.length ?? 0;
+    const phaseLabel = String(state.turn_phase || '').toLowerCase() === 'action' ? '行動' : String(state.turn_phase || '').toLowerCase() === 'event' ? '事件' : String(state.turn_phase || '').toLowerCase() === 'end' ? '結束' : state.turn_phase;
 
     hud.innerHTML = `
-      TURN ${state.turn}
-      | PHASE ${state.turn_phase}
-      | ACTIVE ${state.current_player.toUpperCase()}
-      | HAND ${myHand}
-      | MONEY ${myMoney}
-      | PROP ${myPropaganda}
-      | MOVES ${myMoves}
+      回合 ${state.turn}
+      | 階段 ${phaseLabel}
+      | 當前玩家 ${state.current_player}
+      | 手牌 ${myHand}
+      | 資金 ${myMoney}
+      | 宣傳 ${myPropaganda}
+      | 移動 ${myMoves}
       | ${orgInfo}
     `;
   }
