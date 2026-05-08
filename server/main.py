@@ -42,6 +42,7 @@ def _load_card_presentation_catalog():
                     'resource_text': row[7],
                     'position_text': row[8],
                     'meaning_text': row[9],
+                    'count_text': row[10] if len(row) > 10 else '',
                 }
     if SUPPORT_CSV_PATH.exists():
         with SUPPORT_CSV_PATH.open(encoding='utf-8') as f:
@@ -62,6 +63,7 @@ def _load_card_presentation_catalog():
                     'resource_text': '依效果而定',
                     'position_text': '隨機購買區',
                     'meaning_text': '奧援卡',
+                    'count_text': row[8] if len(row) > 8 else '',
                 }
     return catalog
 

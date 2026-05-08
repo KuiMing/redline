@@ -181,6 +181,62 @@ function cardPresentation(cardName) {
   return (cardPresentationCatalog || {})[cardName] || null;
 }
 
+function escapeHtml(value) {
+  return String(value || '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function splitEffectLines(text) {
+  return String(text || '')
+    .split(/\n+/)
+    .map(s => s.trim())
+    .filter(Boolean);
+}
+
+function splitBadgeItems(text) {
+  return String(text || '')
+    .split(/[+、]/)
+    .map(s => s.trim())
+    .filter(Boolean);
+}
+
+function renderBadgeList(items, className = '') {
+  if (!items.length) return '';
+  return `<div class="card-badges ${className}">${items.map(item => `<span class="card-badge">${escapeHtml(item)}</span>`).join('')}</div>`;
+}
+
+function renderCardFace(cardName, zone, isStatic = false, compact = false) {
+  const info = cardPresentation(cardName) || {};
+  const isSupport = /奧援/.test(cardName);
+  const colorClass = cardColorClass(info.color || (isSupport ? '奧援' : ''));
+  const typeLabel = zone === 'hand' ? '手牌' : (isStatic ? '常設購買區' : '隨機購買區');
+  const headerMeta = [info.kind, info.strength, info.cost_text].filter(Boolean).join('｜');
+  const effectLines = splitEffectLines(info.effect_text || (isSupport ? '奧援卡，依區域主導者判定 I・II・III 級效果。' : '（暫無資料）'));
+  const badgeItems = [];
+  if (info.resource_text) badgeItems.push(`資源 ${info.resource_text}`);
+  if (info.position_text) badgeItems.push(info.position_text);
+  else badgeItems.push(typeLabel);
+  const meaning = info.meaning_text ? `<div class="card-meaning">${escapeHtml(info.meaning_text)}</div>` : '';
+  const count = info.count_text ? `<div class="card-count">剩 ${escapeHtml(info.count_text)}</div>` : '';
+  return `
+    <div class="card-face ${colorClass}${compact ? ' compact' : ''}">
+      <div class="card-face-top">
+        <div class="purchase-card-title">${escapeHtml(cardName)}</div>
+        ${count}
+      </div>
+      <div class="card-face-meta-row">${escapeHtml(headerMeta || (isSupport ? '奧援｜特殊' : typeLabel))}</div>
+      <div class="purchase-card-body card-effect-block">
+        ${effectLines.slice(0, compact ? 2 : 4).map(line => `<div>${escapeHtml(line)}</div>`).join('')}
+      </div>
+      ${meaning}
+      ${renderBadgeList(badgeItems)}
+    </div>`;
+}
+
 function describeCard(cardName, zone, isStatic = false) {
   const info = cardPresentation(cardName);
   const supportHint = /奧援/.test(cardName) ? '奧援卡，會依區域主導者判定 I・II・III 級效果。' : '';
@@ -188,17 +244,22 @@ function describeCard(cardName, zone, isStatic = false) {
   if (!info) {
     return `${cardName}\n\n區域：${zone === 'hand' ? '手牌' : (isStatic ? '常設購買區' : '隨機購買區')}\n${zoneHint}${supportHint ? `\n${supportHint}` : ''}`;
   }
-  return `${info.name}\n\n顏色：${info.color || '未知'}\n種類：${info.kind || '未知'}\n強度：${info.strength || '未知'}\n購買費用：${info.cost_text || '未知'}\n提供資源：${info.resource_text || '未知'}\n位置：${zone === 'hand' ? '手牌' : (isStatic ? '常設購買區' : '隨機購買區')}\n\n效果：${info.effect_text || '（暫無資料）'}\n\n意涵：${info.meaning_text || '（暫無資料）'}${supportHint ? `\n\n${supportHint}` : ''}`;
+  return `${info.name}\n\n顏色：${info.color || '未知'}\n種類：${info.kind || '未知'}\n強度：${info.strength || '未知'}\n購買費用：${info.cost_text || '未知'}\n提供資源：${info.resource_text || '未知'}\n位置：${zone === 'hand' ? '手牌' : (isStatic ? '常設購買區' : '隨機購買區')}\n張數：${info.count_text || '未知'}\n\n效果：${info.effect_text || '（暫無資料）'}\n\n意涵：${info.meaning_text || '（暫無資料）'}${supportHint ? `\n\n${supportHint}` : ''}`;
 }
 
 function renderSelectedCardDetail() {
   const detail = document.getElementById('cardDetail');
   if (!detail) return;
   if (!selectedCardDetail) {
-    detail.textContent = '點選購買區或手牌卡牌後，可在此查看詳細資訊。';
+    detail.innerHTML = '<div class="card-detail-placeholder">點選購買區或手牌卡牌後，可在此查看詳細資訊。</div>';
     return;
   }
-  detail.textContent = describeCard(selectedCardDetail.name, selectedCardDetail.zone, selectedCardDetail.isStatic);
+  const info = cardPresentation(selectedCardDetail.name) || {};
+  detail.innerHTML = `
+    <div class="card-detail-shell">
+      ${renderCardFace(selectedCardDetail.name, selectedCardDetail.zone, selectedCardDetail.isStatic, false)}
+      <div class="card-detail-note">${escapeHtml(describeCard(selectedCardDetail.name, selectedCardDetail.zone, selectedCardDetail.isStatic))}</div>
+    </div>`;
 }
 
 function selectCardDetail(name, zone, isStatic = false) {
@@ -825,15 +886,9 @@ async function render(state) {
     const me = state.players.find(p => p.id === playerId);
     if (me && me.hand) {
       me.hand.forEach((card, i) => {
-        const info = cardPresentation(card) || {};
-        const isSupport = /奧援/.test(card);
-        const body = info.effect_text || (isSupport ? '奧援卡／雙擊打出，效果依區域主導者判定。' : '一般手牌／雙擊可直接打出。');
-        const colorClass = cardColorClass(info.color || (isSupport ? '奧援' : ''));
         handDiv.innerHTML += `
-          <div class='card hand-card ${colorClass}' onclick="selectCardDetail(${JSON.stringify(card)},'hand',false)" ondblclick="sendAction('play_card',{index:${i}})">
-            <div class='purchase-card-title'>${card}</div>
-            <div class='hand-card-meta'>手牌${isSupport ? '｜奧援' : ''}｜雙擊打出</div>
-            <div class='purchase-card-body'>${body}</div>
+          <div class='card hand-card' onclick="selectCardDetail(${JSON.stringify(card)},'hand',false)" ondblclick="sendAction('play_card',{index:${i}})">
+            ${renderCardFace(card, 'hand', false, true)}
           </div>`;
       });
     }
@@ -849,18 +904,12 @@ async function render(state) {
       const isStatic = i < 6;
       const isSupport = /奧援/.test(card);
       const container = isStatic ? purchaseStaticDiv : purchaseRandomDiv;
-      const info = cardPresentation(card) || {};
-      const typeLabel = isStatic ? '常設' : '隨機';
       const typeClass = isStatic ? 'purchase-card-static' : 'purchase-card-random';
       const supportClass = isSupport ? ' purchase-card-support' : '';
-      const colorClass = cardColorClass(info.color || (isSupport ? '奧援' : ''));
       const canBuy = !isStatic;
-      const body = info.effect_text || (isSupport ? '奧援卡／依區域主導者判定 I・II・III 級效果' : (isStatic ? '固定存在於購買區' : '一般行動卡／由購買區牌庫補入'));
       container.innerHTML += `
-        <div class='card ${typeClass}${supportClass} ${colorClass}' onclick="selectCardDetail(${JSON.stringify(card)},'purchase',${isStatic})" ${canBuy ? `ondblclick="sendAction('buy_card',{index:${i}})"` : ''}>
-          <div class='purchase-card-title'>${card}</div>
-          <div class='purchase-card-meta'>${typeLabel}${isSupport ? '｜奧援' : ''}${canBuy ? '｜雙擊購買' : '｜不可直接購買'}</div>
-          <div class='purchase-card-body'>${body}</div>
+        <div class='card ${typeClass}${supportClass}' onclick="selectCardDetail(${JSON.stringify(card)},'purchase',${isStatic})" ${canBuy ? `ondblclick="sendAction('buy_card',{index:${i}})"` : ''}>
+          ${renderCardFace(card, 'purchase', isStatic, true)}
         </div>`;
     });
   }

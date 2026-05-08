@@ -149,14 +149,15 @@ body {
 }
 
 #cardDetail {
-  min-height: 120px;
+  min-height: 220px;
   border: 1px dashed var(--border);
   border-radius: 10px;
   padding: 10px;
   color: #dbe7f3;
   line-height: 1.5;
   font-size: 0.82rem;
-  white-space: pre-wrap;
+  white-space: normal;
+  overflow: auto;
 }
 
 #purchaseSection {
@@ -181,15 +182,15 @@ body {
 
 #purchaseSection .card,
 #hand .card {
-  min-height: 120px;
-  max-height: 120px;
+  min-height: 220px;
+  max-height: 220px;
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 10px;
+  border-radius: 12px;
+  padding: 0;
   background: rgba(14, 20, 28, 0.96);
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: stretch;
   line-height: 1.35;
   overflow: hidden;
   cursor: pointer;
@@ -197,11 +198,6 @@ body {
 
 .hand-card {
   box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.12);
-}
-
-.hand-card-meta {
-  font-size: 0.72rem;
-  color: #86efac;
 }
 
 #purchaseSection .card:hover,
@@ -279,11 +275,49 @@ body {
   box-shadow: inset 0 0 0 1px rgba(253,186,116,0.24);
 }
 
+.card-face {
+  min-height: 100%;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: #edf2f7;
+}
+
+.card-face.compact {
+  gap: 6px;
+}
+
+.card-face-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
 .purchase-card-title {
   font-family: 'Noto Sans TC', sans-serif;
-  font-weight: 700;
-  font-size: 0.95rem;
-  margin-bottom: 6px;
+  font-weight: 800;
+  font-size: 1rem;
+  line-height: 1.18;
+  margin: 0;
+}
+
+.card-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  color: rgba(255,255,255,0.88);
+  background: rgba(0,0,0,0.28);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 999px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+.card-face-meta-row {
+  font-size: 0.72rem;
+  color: #dbeafe;
+  font-family: 'JetBrains Mono', monospace;
 }
 
 .purchase-card-meta {
@@ -294,6 +328,57 @@ body {
 .purchase-card-body {
   font-size: 0.76rem;
   color: #dbe7f3;
+}
+
+.card-effect-block {
+  flex: 1;
+  overflow: hidden;
+}
+
+.card-effect-block > div + div {
+  margin-top: 3px;
+}
+
+.card-meaning {
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.75);
+  font-style: italic;
+}
+
+.card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: auto;
+}
+
+.card-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.66rem;
+  background: rgba(4, 10, 18, 0.42);
+  border: 1px solid rgba(255,255,255,0.14);
+  color: rgba(255,255,255,0.92);
+}
+
+.card-detail-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.card-detail-note {
+  white-space: pre-wrap;
+  font-size: 0.8rem;
+  color: #dbe7f3;
+  line-height: 1.55;
+}
+
+.card-detail-placeholder {
+  color: #93a4b8;
 }
 
 #factionPicker {
