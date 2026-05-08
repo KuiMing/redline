@@ -1,7 +1,7 @@
 {
   "summary": {
-    "total": 7,
-    "passed": 7,
+    "total": 8,
+    "passed": 8,
     "failed": 0
   },
   "has_purchase_deck": true,
@@ -16,9 +16,11 @@
     "分神",
     "內鬥"
   ],
-  "first_name": "宣傳家",
-  "buy_result": {
-    "success": true
+  "static_buy_result": {
+    "error": "Static purchase cards cannot be bought from random slot logic"
+  },
+  "random_buy_result": {
+    "error": "no random slot"
   },
   "area_len_after": 6
 }

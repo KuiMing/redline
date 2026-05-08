@@ -780,8 +780,13 @@ async function render(state) {
     purchaseDiv.innerHTML = '';
     (state.purchase_area || []).forEach((card, i) => {
       let label = card;
+      const isStatic = i < 6;
       if (card === '分神' || card === '內鬥') {
         label = `${card}（常設）`;
+      }
+      const extra = isStatic ? '（常設）' : '（隨機）';
+      if (!(card === '分神' || card === '內鬥')) {
+        label = `${card}${extra}`;
       }
       purchaseDiv.innerHTML += `<div class='card' onclick="sendAction('buy_card',{index:${i}})">${label}</div>`;
     });

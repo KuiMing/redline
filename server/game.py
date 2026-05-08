@@ -208,7 +208,7 @@ class Game:
         entry = self._support_taxonomy_entry(support_name) or {}
         return Card(support_name, self._support_card_runtime_type(support_name), self._support_card_cost(support_name), effect={'support_taxonomy': entry})
 
-    def _initial_purchase_area(self):
+    def _static_purchase_cards(self):
         names = ['宣傳家', '思想家', '資助者', '資本家', '分神', '內鬥']
         cards = []
         for name in names:
@@ -216,6 +216,10 @@ class Game:
                 if c.get('name') == name:
                     cards.append(Card(c['name'], c['type'], c.get('resources', {})))
                     break
+        return cards
+
+    def _initial_purchase_area(self):
+        cards = self._static_purchase_cards()
         cards.extend(self._draw_purchase_cards(5))
         return cards
 
@@ -1357,6 +1361,10 @@ class Game:
         if index < 0 or index >= len(self.purchase_area):
             return {"error": "Invalid index"}
 
+        static_count = len(self._static_purchase_cards())
+        if index < static_count:
+            return {"error": "Static purchase cards cannot be bought from random slot logic"}
+
         card = self.purchase_area[index]
         if not card:
             return {"error": "No card in slot"}
@@ -1390,7 +1398,11 @@ class Game:
         player.deck.discard([card])
         self.purchase_area.pop(index)
         self.log(f"{player.name} bought {card_name}")
-        self.purchase_area.extend(self._draw_purchase_cards(1))
+        while len(self.purchase_area) < len(self._static_purchase_cards()) + 5:
+            drawn = self._draw_purchase_cards(1)
+            if not drawn:
+                break
+            self.purchase_area.extend(drawn)
         return {"success": True}
 
     # ---------- Era Trigger ----------

@@ -741,6 +741,13 @@ def test_setup_purchase_deck_ui(payload: dict):
     red.base = "北京"
     red.organizations = {"北京": 1}
 
+    # full purchase UI path: static 6 + 5 random
+    while len(game.purchase_area) < 11:
+        drawn = game._draw_purchase_cards(1)
+        if not drawn:
+            break
+        game.purchase_area.extend(drawn)
+
     game.current_player_index = 0
     game.turn_phase = TurnPhase.ACTION
     game.game_phase = GamePhase.MAIN

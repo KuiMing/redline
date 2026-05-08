@@ -5,6 +5,6 @@
 - initial_deck_len: 53
 - support_in_deck: 18
 - purchase_names: ["宣傳家", "思想家", "資助者", "資本家", "分神", "內鬥"]
-- first_name: 宣傳家
-- buy_result: {"success": true}
+- static_buy_result: {"error": "Static purchase cards cannot be bought from random slot logic"}
+- random_buy_result: {"error": "no random slot"}
 - area_len_after: 6

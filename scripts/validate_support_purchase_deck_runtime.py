@@ -27,13 +27,13 @@ def main():
     purchase_names = [getattr(c, 'name', str(c)) for c in g.purchase_area]
 
     t.resources = {'money': 99, 'propaganda': 99}
-    first_name = getattr(g.purchase_area[0], 'name', '') if g.purchase_area else ''
-    buy_result = g.buy_card(0) if g.purchase_area else {'error': 'empty purchase area'}
+    static_buy_result = g.buy_card(0) if g.purchase_area else {'error': 'empty purchase area'}
+    random_buy_result = g.buy_card(6) if len(g.purchase_area) > 6 else {'error': 'no random slot'}
     area_len_after = len(g.purchase_area)
 
     payload = {
         'summary': {
-            'total': 7,
+            'total': 8,
             'passed': sum([
                 has_purchase_deck,
                 initial_area_len == 6,
@@ -41,16 +41,18 @@ def main():
                 support_in_deck == 18,
                 '分神' in purchase_names,
                 '內鬥' in purchase_names,
-                buy_result.get('success') is True and area_len_after == 6,
+                static_buy_result.get('error') == 'Static purchase cards cannot be bought from random slot logic',
+                random_buy_result.get('error') == 'no random slot' and area_len_after == 6,
             ]),
-            'failed': 7 - sum([
+            'failed': 8 - sum([
                 has_purchase_deck,
                 initial_area_len == 6,
                 initial_deck_len == 53,
                 support_in_deck == 18,
                 '分神' in purchase_names,
                 '內鬥' in purchase_names,
-                buy_result.get('success') is True and area_len_after == 6,
+                static_buy_result.get('error') == 'Static purchase cards cannot be bought from random slot logic',
+                random_buy_result.get('error') == 'no random slot' and area_len_after == 6,
             ]),
         },
         'has_purchase_deck': has_purchase_deck,
@@ -58,8 +60,8 @@ def main():
         'initial_deck_len': initial_deck_len,
         'support_in_deck': support_in_deck,
         'purchase_names': purchase_names,
-        'first_name': first_name,
-        'buy_result': buy_result,
+        'static_buy_result': static_buy_result,
+        'random_buy_result': random_buy_result,
         'area_len_after': area_len_after,
     }
     (ROOT / 'SUPPORT_PURCHASE_DECK_RUNTIME_VALIDATION.json').write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
