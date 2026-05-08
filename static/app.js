@@ -162,16 +162,96 @@ function baseDisplayName(baseName) {
 }
 
 const CARD_COLOR_STYLES = {
-  '灰': { accent: '#9ca3af', bg: 'rgba(156,163,175,.14)', border: 'rgba(156,163,175,.62)', title: '#f3f4f6', tagBg: 'rgba(156,163,175,.20)', tagBorder: 'rgba(156,163,175,.72)', tagText: '#f9fafb' },
-  '銅': { accent: '#b87333', bg: 'rgba(184,115,51,.16)', border: 'rgba(184,115,51,.72)', title: '#ffd6a3', tagBg: 'rgba(184,115,51,.22)', tagBorder: 'rgba(184,115,51,.78)', tagText: '#ffe1bd' },
-  '紫': { accent: '#a78bfa', bg: 'rgba(167,139,250,.16)', border: 'rgba(167,139,250,.68)', title: '#ddd6fe', tagBg: 'rgba(167,139,250,.22)', tagBorder: 'rgba(167,139,250,.82)', tagText: '#ede9fe' },
-  '青': { accent: '#22d3ee', bg: 'rgba(34,211,238,.13)', border: 'rgba(34,211,238,.66)', title: '#cffafe', tagBg: 'rgba(34,211,238,.20)', tagBorder: 'rgba(34,211,238,.78)', tagText: '#ecfeff' },
-  '藍': { accent: '#60a5fa', bg: 'rgba(96,165,250,.14)', border: 'rgba(96,165,250,.68)', title: '#dbeafe', tagBg: 'rgba(96,165,250,.22)', tagBorder: 'rgba(96,165,250,.80)', tagText: '#eff6ff' },
-  '綠': { accent: '#4ade80', bg: 'rgba(74,222,128,.13)', border: 'rgba(74,222,128,.64)', title: '#dcfce7', tagBg: 'rgba(74,222,128,.19)', tagBorder: 'rgba(74,222,128,.78)', tagText: '#f0fdf4' },
-  '棕': { accent: '#a16207', bg: 'rgba(161,98,7,.17)', border: 'rgba(161,98,7,.72)', title: '#fde68a', tagBg: 'rgba(161,98,7,.23)', tagBorder: 'rgba(161,98,7,.82)', tagText: '#fef3c7' },
-  '橘': { accent: '#f59e0b', bg: 'rgba(245,158,11,.16)', border: 'rgba(245,158,11,.72)', title: '#ffedd5', tagBg: 'rgba(245,158,11,.22)', tagBorder: 'rgba(245,158,11,.82)', tagText: '#fff7ed' },
-  '紅': { accent: '#ef4444', bg: 'rgba(239,68,68,.14)', border: 'rgba(239,68,68,.68)', title: '#fee2e2', tagBg: 'rgba(239,68,68,.22)', tagBorder: 'rgba(239,68,68,.82)', tagText: '#fef2f2' },
-  '奧援': { accent: '#f59e0b', bg: 'linear-gradient(135deg, rgba(245,158,11,.18), rgba(96,165,250,.10))', border: 'rgba(245,158,11,.76)', title: '#ffedd5', tagBg: 'rgba(245,158,11,.24)', tagBorder: 'rgba(245,158,11,.86)', tagText: '#fff7ed' }
+  '灰': {
+    accent: '#9ca3af',
+    bg: 'linear-gradient(180deg, rgba(156,163,175,.18) 0%, rgba(255,255,255,.025) 100%)',
+    border: 'rgba(156,163,175,.62)',
+    title: '#f3f4f6',
+    tagBg: 'rgba(156,163,175,.20)',
+    tagBorder: 'rgba(156,163,175,.72)',
+    tagText: '#f9fafb'
+  },
+  '銅': {
+    accent: '#b87333',
+    bg: 'linear-gradient(180deg, rgba(184,115,51,.20) 0%, rgba(255,255,255,.025) 100%)',
+    border: 'rgba(184,115,51,.72)',
+    title: '#ffd6a3',
+    tagBg: 'rgba(184,115,51,.22)',
+    tagBorder: 'rgba(184,115,51,.78)',
+    tagText: '#ffe1bd'
+  },
+  '紫': {
+    accent: '#a78bfa',
+    bg: 'linear-gradient(180deg, rgba(167,139,250,.22) 0%, rgba(255,255,255,.025) 100%)',
+    border: 'rgba(167,139,250,.68)',
+    title: '#ddd6fe',
+    tagBg: 'rgba(167,139,250,.22)',
+    tagBorder: 'rgba(167,139,250,.82)',
+    tagText: '#ede9fe'
+  },
+  '青': {
+    accent: '#22d3ee',
+    bg: 'linear-gradient(180deg, rgba(34,211,238,.18) 0%, rgba(255,255,255,.025) 100%)',
+    border: 'rgba(34,211,238,.66)',
+    title: '#cffafe',
+    tagBg: 'rgba(34,211,238,.20)',
+    tagBorder: 'rgba(34,211,238,.78)',
+    tagText: '#ecfeff'
+  },
+  '藍': {
+    accent: '#60a5fa',
+    bg: 'linear-gradient(180deg, rgba(96,165,250,.18) 0%, rgba(255,255,255,.025) 100%)',
+    border: 'rgba(96,165,250,.68)',
+    title: '#dbeafe',
+    tagBg: 'rgba(96,165,250,.22)',
+    tagBorder: 'rgba(96,165,250,.80)',
+    tagText: '#eff6ff'
+  },
+  '綠': {
+    accent: '#4ade80',
+    bg: 'linear-gradient(180deg, rgba(74,222,128,.18) 0%, rgba(255,255,255,.025) 100%)',
+    border: 'rgba(74,222,128,.64)',
+    title: '#dcfce7',
+    tagBg: 'rgba(74,222,128,.19)',
+    tagBorder: 'rgba(74,222,128,.78)',
+    tagText: '#f0fdf4'
+  },
+  '棕': {
+    accent: '#a16207',
+    bg: 'linear-gradient(180deg, rgba(161,98,7,.22) 0%, rgba(255,255,255,.025) 100%)',
+    border: 'rgba(161,98,7,.72)',
+    title: '#fde68a',
+    tagBg: 'rgba(161,98,7,.23)',
+    tagBorder: 'rgba(161,98,7,.82)',
+    tagText: '#fef3c7'
+  },
+  '橘': {
+    accent: '#f59e0b',
+    bg: 'linear-gradient(180deg, rgba(245,158,11,.20) 0%, rgba(255,255,255,.025) 100%)',
+    border: 'rgba(245,158,11,.72)',
+    title: '#ffedd5',
+    tagBg: 'rgba(245,158,11,.22)',
+    tagBorder: 'rgba(245,158,11,.82)',
+    tagText: '#fff7ed'
+  },
+  '紅': {
+    accent: '#ef4444',
+    bg: 'linear-gradient(180deg, rgba(239,68,68,.18) 0%, rgba(255,255,255,.025) 100%)',
+    border: 'rgba(239,68,68,.68)',
+    title: '#fee2e2',
+    tagBg: 'rgba(239,68,68,.22)',
+    tagBorder: 'rgba(239,68,68,.82)',
+    tagText: '#fef2f2'
+  },
+  '奧援': {
+    accent: '#f59e0b',
+    bg: 'linear-gradient(135deg, rgba(245,158,11,.18), rgba(96,165,250,.10))',
+    border: 'rgba(245,158,11,.76)',
+    title: '#ffedd5',
+    tagBg: 'rgba(245,158,11,.24)',
+    tagBorder: 'rgba(245,158,11,.86)',
+    tagText: '#fff7ed'
+  }
 };
 
 function cardColorClass(colorName) {
@@ -917,8 +997,10 @@ async function render(state) {
     const me = state.players.find(p => p.id === playerId);
     if (me && me.hand) {
       me.hand.forEach((card, i) => {
+        const colorName = (cardPresentation(card)?.color) || (/奧援/.test(card) ? '奧援' : '灰');
+        const colorClass = cardColorClass(colorName);
         handDiv.innerHTML += `
-          <div class='card hand-card' onclick="selectCardDetail(${JSON.stringify(card)},'hand',false)" ondblclick="sendAction('play_card',{index:${i}})">
+          <div class='card hand-card ${colorClass}' onclick="selectCardDetail(${JSON.stringify(card)},'hand',false)" ondblclick="sendAction('play_card',{index:${i}})">
             ${renderCardFace(card, 'hand', false, true)}
           </div>`;
       });
@@ -937,9 +1019,11 @@ async function render(state) {
       const container = isStatic ? purchaseStaticDiv : purchaseRandomDiv;
       const typeClass = isStatic ? 'purchase-card-static' : 'purchase-card-random';
       const supportClass = isSupport ? ' purchase-card-support' : '';
+      const colorName = (cardPresentation(card)?.color) || (isSupport ? '奧援' : '灰');
+      const colorClass = cardColorClass(colorName);
       const canBuy = !isStatic;
       container.innerHTML += `
-        <div class='card ${typeClass}${supportClass}' onclick="selectCardDetail(${JSON.stringify(card)},'purchase',${isStatic})" ${canBuy ? `ondblclick="sendAction('buy_card',{index:${i}})"` : ''}>
+        <div class='card ${typeClass}${supportClass} ${colorClass}' onclick="selectCardDetail(${JSON.stringify(card)},'purchase',${isStatic})" ${canBuy ? `ondblclick="sendAction('buy_card',{index:${i}})"` : ''}>
           ${renderCardFace(card, 'purchase', isStatic, true)}
         </div>`;
     });
