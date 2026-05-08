@@ -182,10 +182,10 @@ body {
 
 #purchaseSection .card,
 #hand .card {
-  min-height: 220px;
-  max-height: 220px;
+  min-height: 320px;
+  max-height: 320px;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 0;
   background: rgba(14, 20, 28, 0.96);
   display: flex;
@@ -194,6 +194,7 @@ body {
   line-height: 1.35;
   overflow: hidden;
   cursor: pointer;
+  box-shadow: 0 10px 30px rgba(0,0,0,.22);
 }
 
 .hand-card {
@@ -221,71 +222,46 @@ body {
 
 .purchase-card-support {
   border-color: #f6ad55;
-  background: linear-gradient(180deg, rgba(55, 34, 12, 0.96), rgba(30, 20, 10, 0.96));
 }
 
-.card-color-gray {
-  border-color: rgba(148,163,184,0.55);
-  background: linear-gradient(180deg, rgba(100,116,139,0.22), rgba(14,20,28,0.96));
-  box-shadow: inset 0 0 0 1px rgba(148,163,184,0.22);
-}
-.card-color-copper {
-  border-color: rgba(184,115,51,0.7);
-  background: linear-gradient(180deg, rgba(184,115,51,0.24), rgba(14,20,28,0.96));
-  box-shadow: inset 0 0 0 1px rgba(184,115,51,0.2);
-}
-.card-color-purple {
-  border-color: rgba(139,92,246,0.8);
-  background: linear-gradient(180deg, rgba(91,33,182,0.30), rgba(24,10,40,0.98));
-  box-shadow: inset 0 0 0 1px rgba(167,139,250,0.24);
-}
-.card-color-cyan {
-  border-color: rgba(34,195,238,0.8);
-  background: linear-gradient(180deg, rgba(8,145,178,0.24), rgba(9,28,36,0.96));
-  box-shadow: inset 0 0 0 1px rgba(103,232,249,0.2);
-}
-.card-color-blue {
-  border-color: rgba(59,130,246,0.8);
-  background: linear-gradient(180deg, rgba(30,64,175,0.24), rgba(12,22,42,0.96));
-  box-shadow: inset 0 0 0 1px rgba(96,165,250,0.2);
-}
-.card-color-green {
-  border-color: rgba(34,197,94,0.8);
-  background: linear-gradient(180deg, rgba(21,128,61,0.22), rgba(10,28,18,0.96));
-  box-shadow: inset 0 0 0 1px rgba(74,222,128,0.2);
-}
-.card-color-brown {
-  border-color: rgba(139,90,43,0.85);
-  background: linear-gradient(180deg, rgba(120,53,15,0.24), rgba(33,19,10,0.96));
-  box-shadow: inset 0 0 0 1px rgba(180,120,80,0.2);
-}
-.card-color-orange {
-  border-color: rgba(245,158,11,0.85);
-  background: linear-gradient(180deg, rgba(180,83,9,0.24), rgba(42,20,8,0.96));
-  box-shadow: inset 0 0 0 1px rgba(251,191,36,0.2);
-}
-.card-color-red {
-  border-color: rgba(239,68,68,0.85);
-  background: linear-gradient(180deg, rgba(153,27,27,0.26), rgba(38,10,10,0.96));
-  box-shadow: inset 0 0 0 1px rgba(248,113,113,0.2);
-}
+.card-color-gray,
+.card-color-copper,
+.card-color-purple,
+.card-color-cyan,
+.card-color-blue,
+.card-color-green,
+.card-color-brown,
+.card-color-orange,
+.card-color-red,
 .card-color-support {
-  border-color: rgba(246,173,85,0.88);
-  background: linear-gradient(180deg, rgba(180,83,9,0.30), rgba(45,24,8,0.98));
-  box-shadow: inset 0 0 0 1px rgba(253,186,116,0.24);
+  border-color: var(--card-border, var(--border));
 }
 
 .card-face {
   min-height: 100%;
-  padding: 10px;
+  padding: 16px 12px 12px;
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 8px;
   color: #edf2f7;
+  background: linear-gradient(180deg, var(--card-bg, rgba(255,255,255,.03)) 0%, rgba(255,255,255,.025) 100%);
+  border-radius: 14px;
+  position: relative;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.015);
+}
+
+.card-face::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 5px;
+  background: var(--card-accent, var(--border));
 }
 
 .card-face.compact {
-  gap: 6px;
+  gap: 8px;
 }
 
 .card-face-top {
@@ -297,27 +273,32 @@ body {
 
 .purchase-card-title {
   font-family: 'Noto Sans TC', sans-serif;
-  font-weight: 800;
-  font-size: 1rem;
-  line-height: 1.18;
+  font-weight: 700;
+  font-size: 17px;
+  line-height: 1.2;
   margin: 0;
+  padding-right: 34px;
+  color: var(--card-title, var(--text-main));
 }
 
 .card-count {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.68rem;
-  color: rgba(255,255,255,0.88);
-  background: rgba(0,0,0,0.28);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 999px;
-  padding: 2px 8px;
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  font-size: 11px;
+  color: #ffd166;
+  background: transparent;
+  border: none;
+  padding: 0;
   white-space: nowrap;
+  font-family: 'JetBrains Mono', monospace;
 }
 
 .card-face-meta-row {
-  font-size: 0.72rem;
-  color: #dbeafe;
-  font-family: 'JetBrains Mono', monospace;
+  color: #9eb0ca;
+  font-size: 12px;
+  margin-bottom: 2px;
+  flex: 0 0 auto;
 }
 
 .purchase-card-meta {
@@ -326,13 +307,16 @@ body {
 }
 
 .purchase-card-body {
-  font-size: 0.76rem;
-  color: #dbe7f3;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #e9eef7;
 }
 
 .card-effect-block {
-  flex: 1;
-  overflow: hidden;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 2px;
 }
 
 .card-effect-block > div + div {
@@ -340,27 +324,26 @@ body {
 }
 
 .card-meaning {
-  font-size: 0.7rem;
-  color: rgba(255,255,255,0.75);
-  font-style: italic;
+  font-size: 12px;
+  color: #9eb0ca;
 }
 
 .card-badges {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
-  margin-top: auto;
+  gap: 6px;
+  margin-top: 8px;
+  flex: 0 0 auto;
 }
 
 .card-badge {
-  display: inline-flex;
-  align-items: center;
+  font-size: 11px;
+  color: var(--tag-text, var(--text-main));
+  padding: 4px 8px;
   border-radius: 999px;
-  padding: 2px 8px;
-  font-size: 0.66rem;
-  background: rgba(4, 10, 18, 0.42);
-  border: 1px solid rgba(255,255,255,0.14);
-  color: rgba(255,255,255,0.92);
+  background: var(--tag-bg, rgba(116,192,252,.12));
+  border: 1px solid var(--tag-border, rgba(116,192,252,.35));
+  font-weight: 700;
 }
 
 .card-detail-shell {

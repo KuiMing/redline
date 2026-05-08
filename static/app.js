@@ -161,6 +161,19 @@ function baseDisplayName(baseName) {
   return baseName;
 }
 
+const CARD_COLOR_STYLES = {
+  '灰': { accent: '#9ca3af', bg: 'rgba(156,163,175,.14)', border: 'rgba(156,163,175,.62)', title: '#f3f4f6', tagBg: 'rgba(156,163,175,.20)', tagBorder: 'rgba(156,163,175,.72)', tagText: '#f9fafb' },
+  '銅': { accent: '#b87333', bg: 'rgba(184,115,51,.16)', border: 'rgba(184,115,51,.72)', title: '#ffd6a3', tagBg: 'rgba(184,115,51,.22)', tagBorder: 'rgba(184,115,51,.78)', tagText: '#ffe1bd' },
+  '紫': { accent: '#a78bfa', bg: 'rgba(167,139,250,.16)', border: 'rgba(167,139,250,.68)', title: '#ddd6fe', tagBg: 'rgba(167,139,250,.22)', tagBorder: 'rgba(167,139,250,.82)', tagText: '#ede9fe' },
+  '青': { accent: '#22d3ee', bg: 'rgba(34,211,238,.13)', border: 'rgba(34,211,238,.66)', title: '#cffafe', tagBg: 'rgba(34,211,238,.20)', tagBorder: 'rgba(34,211,238,.78)', tagText: '#ecfeff' },
+  '藍': { accent: '#60a5fa', bg: 'rgba(96,165,250,.14)', border: 'rgba(96,165,250,.68)', title: '#dbeafe', tagBg: 'rgba(96,165,250,.22)', tagBorder: 'rgba(96,165,250,.80)', tagText: '#eff6ff' },
+  '綠': { accent: '#4ade80', bg: 'rgba(74,222,128,.13)', border: 'rgba(74,222,128,.64)', title: '#dcfce7', tagBg: 'rgba(74,222,128,.19)', tagBorder: 'rgba(74,222,128,.78)', tagText: '#f0fdf4' },
+  '棕': { accent: '#a16207', bg: 'rgba(161,98,7,.17)', border: 'rgba(161,98,7,.72)', title: '#fde68a', tagBg: 'rgba(161,98,7,.23)', tagBorder: 'rgba(161,98,7,.82)', tagText: '#fef3c7' },
+  '橘': { accent: '#f59e0b', bg: 'rgba(245,158,11,.16)', border: 'rgba(245,158,11,.72)', title: '#ffedd5', tagBg: 'rgba(245,158,11,.22)', tagBorder: 'rgba(245,158,11,.82)', tagText: '#fff7ed' },
+  '紅': { accent: '#ef4444', bg: 'rgba(239,68,68,.14)', border: 'rgba(239,68,68,.68)', title: '#fee2e2', tagBg: 'rgba(239,68,68,.22)', tagBorder: 'rgba(239,68,68,.82)', tagText: '#fef2f2' },
+  '奧援': { accent: '#f59e0b', bg: 'linear-gradient(135deg, rgba(245,158,11,.18), rgba(96,165,250,.10))', border: 'rgba(245,158,11,.76)', title: '#ffedd5', tagBg: 'rgba(245,158,11,.24)', tagBorder: 'rgba(245,158,11,.86)', tagText: '#fff7ed' }
+};
+
 function cardColorClass(colorName) {
   const mapping = {
     '灰': 'card-color-gray',
@@ -175,6 +188,22 @@ function cardColorClass(colorName) {
     '奧援': 'card-color-support',
   };
   return mapping[colorName] || '';
+}
+
+function styleVars(style) {
+  return [
+    `--card-accent:${style.accent}`,
+    `--card-bg:${style.bg}`,
+    `--card-border:${style.border}`,
+    `--card-title:${style.title}`,
+    `--tag-bg:${style.tagBg}`,
+    `--tag-border:${style.tagBorder}`,
+    `--tag-text:${style.tagText}`,
+  ].join(';');
+}
+
+function cardColorStyle(color) {
+  return CARD_COLOR_STYLES[color] || CARD_COLOR_STYLES['灰'];
 }
 
 function cardPresentation(cardName) {
@@ -212,9 +241,11 @@ function renderBadgeList(items, className = '') {
 function renderCardFace(cardName, zone, isStatic = false, compact = false) {
   const info = cardPresentation(cardName) || {};
   const isSupport = /奧援/.test(cardName);
-  const colorClass = cardColorClass(info.color || (isSupport ? '奧援' : ''));
+  const color = info.color || (isSupport ? '奧援' : '灰');
+  const colorClass = cardColorClass(color);
+  const colorStyle = styleVars(cardColorStyle(color));
   const typeLabel = zone === 'hand' ? '手牌' : (isStatic ? '常設購買區' : '隨機購買區');
-  const headerMeta = [info.kind, info.strength, info.cost_text].filter(Boolean).join('｜');
+  const headerMeta = [info.kind, info.strength, info.cost_text].filter(Boolean).join(' ・ ');
   const effectLines = splitEffectLines(info.effect_text || (isSupport ? '奧援卡，依區域主導者判定 I・II・III 級效果。' : '（暫無資料）'));
   const badgeItems = [];
   if (info.resource_text) badgeItems.push(`資源 ${info.resource_text}`);
@@ -223,14 +254,14 @@ function renderCardFace(cardName, zone, isStatic = false, compact = false) {
   const meaning = info.meaning_text ? `<div class="card-meaning">${escapeHtml(info.meaning_text)}</div>` : '';
   const count = info.count_text ? `<div class="card-count">剩 ${escapeHtml(info.count_text)}</div>` : '';
   return `
-    <div class="card-face ${colorClass}${compact ? ' compact' : ''}">
+    <div class="card-face ${colorClass}${compact ? ' compact' : ''}" style="${colorStyle}">
       <div class="card-face-top">
         <div class="purchase-card-title">${escapeHtml(cardName)}</div>
         ${count}
       </div>
-      <div class="card-face-meta-row">${escapeHtml(headerMeta || (isSupport ? '奧援｜特殊' : typeLabel))}</div>
+      <div class="card-face-meta-row">${escapeHtml(headerMeta || (isSupport ? '奧援 ・ 特殊' : typeLabel))}</div>
       <div class="purchase-card-body card-effect-block">
-        ${effectLines.slice(0, compact ? 2 : 4).map(line => `<div>${escapeHtml(line)}</div>`).join('')}
+        ${effectLines.slice(0, compact ? 3 : 6).map(line => `<div>${escapeHtml(line)}</div>`).join('')}
       </div>
       ${meaning}
       ${renderBadgeList(badgeItems)}
