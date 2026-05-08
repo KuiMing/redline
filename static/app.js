@@ -775,20 +775,26 @@ async function render(state) {
   }
 
   // Purchase
-  const purchaseDiv = document.getElementById('purchase');
-  if (purchaseDiv) {
-    purchaseDiv.innerHTML = '';
+  const purchaseStaticDiv = document.getElementById('purchaseStatic');
+  const purchaseRandomDiv = document.getElementById('purchaseRandom');
+  if (purchaseStaticDiv && purchaseRandomDiv) {
+    purchaseStaticDiv.innerHTML = '';
+    purchaseRandomDiv.innerHTML = '';
     (state.purchase_area || []).forEach((card, i) => {
-      let label = card;
       const isStatic = i < 6;
-      if (card === '分神' || card === '內鬥') {
-        label = `${card}（常設）`;
-      }
-      const extra = isStatic ? '（常設）' : '（隨機）';
-      if (!(card === '分神' || card === '內鬥')) {
-        label = `${card}${extra}`;
-      }
-      purchaseDiv.innerHTML += `<div class='card' onclick="sendAction('buy_card',{index:${i}})">${label}</div>`;
+      const isSupport = /奧援/.test(card);
+      const container = isStatic ? purchaseStaticDiv : purchaseRandomDiv;
+      const typeLabel = isStatic ? '常設' : '隨機';
+      const typeClass = isStatic ? 'purchase-card-static' : 'purchase-card-random';
+      const supportClass = isSupport ? ' purchase-card-support' : '';
+      const canBuy = !isStatic;
+      const body = isSupport ? '奧援卡／依區域主導者判定 I・II・III 級效果' : (isStatic ? '固定存在於購買區' : '一般行動卡／由購買區牌庫補入');
+      container.innerHTML += `
+        <div class='card ${typeClass}${supportClass}' ${canBuy ? `onclick="sendAction('buy_card',{index:${i}})"` : ''}>
+          <div class='purchase-card-title'>${card}</div>
+          <div class='purchase-card-meta'>${typeLabel}${isSupport ? '｜奧援' : ''}${canBuy ? '｜可購買' : '｜不可直接購買'}</div>
+          <div class='purchase-card-body'>${body}</div>
+        </div>`;
     });
   }
 
