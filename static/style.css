@@ -106,7 +106,8 @@ body {
 }
 
 #lobby input,
-#lobby button {
+#lobby button,
+#lobby select {
   font-family: 'JetBrains Mono', monospace;
 }
 

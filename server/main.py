@@ -17,6 +17,7 @@ lobby = {}        # {game_id: [(player_id, name)]}
 lobby_hosts = {}  # {game_id: host_player_id}
 lobby_factions = {}  # {game_id: {player_id: faction_id}}
 lobby_bases = {}  # {game_id: {player_id: base_name}}
+lobby_market_mode = {}  # {game_id: "sample_53" | "all_cards"}
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 ACTION_CSV_PATH = BASE_DIR / 'data' / 'raw' / 'action_cards.csv'
@@ -143,6 +144,7 @@ def create_room():
     lobby_hosts[game_id] = host_id
     lobby_factions[game_id] = {}
     lobby_bases[game_id] = {}
+    lobby_market_mode[game_id] = "sample_53"
 
     return {"game_id": game_id, "host_id": host_id}
 
@@ -180,6 +182,7 @@ def join_game(payload: dict):
 def start_game(payload: dict):
     game_id = payload.get("game_id")
     player_id = payload.get("player_id")
+    market_mode = payload.get("market_mode")
 
     if game_id not in lobby:
         return {"error": "Game not found"}
@@ -189,6 +192,9 @@ def start_game(payload: dict):
 
     if lobby_hosts.get(game_id) != player_id:
         return {"error": "Only host can start"}
+
+    if market_mode in {"sample_53", "all_cards"}:
+        lobby_market_mode[game_id] = market_mode
 
     # For test/setup endpoints that already created a live game state,
     # preserve the prepared runtime instead of rebuilding a fresh one.
@@ -202,7 +208,7 @@ def start_game(payload: dict):
     if sum(1 for fid in chosen.values() if fid == 'red_army') != 1:
         return {"error": "Exactly one player must choose red_army"}
 
-    game = Game(player_list)
+    game = Game(player_list, market_mode=lobby_market_mode.get(game_id, "sample_53"))
     # override randomized faction assignment with chosen factions
     chosen_bases = lobby_bases.get(game_id, {})
     for player in game.players:
@@ -254,7 +260,7 @@ def start_game(payload: dict):
     manager.games[game_id] = game
     manager.connections.setdefault(game_id, {})
 
-    return {"success": True}
+    return {"success": True, "market_mode": lobby_market_mode.get(game_id, "sample_53")}
 
 
 @app.get("/factions")
@@ -358,6 +364,7 @@ def lobby_state(game_id: str):
         "count": len(lobby[game_id]),
         "factions": lobby_factions.get(game_id, {}),
         "bases": lobby_bases.get(game_id, {}),
+        "market_mode": lobby_market_mode.get(game_id, "sample_53"),
     }
 
 

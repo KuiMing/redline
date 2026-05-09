@@ -586,10 +586,11 @@ async function joinRoom() {
 }
 
 async function startGame() {
+  const marketMode = document.getElementById('marketModeSelect')?.value || 'sample_53';
   const res = await fetch('/start', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({game_id: gameId, player_id: playerId})
+    body: JSON.stringify({game_id: gameId, player_id: playerId, market_mode: marketMode})
   });
 
   const data = await res.json();

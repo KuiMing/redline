@@ -74,7 +74,7 @@ class Player:
 
 
 class Game:
-    def __init__(self, players_data):
+    def __init__(self, players_data, market_mode="sample_53"):
         if len(players_data) < 2 or len(players_data) > 4:
             raise ValueError("Game requires 2–4 players")
 
@@ -84,6 +84,7 @@ class Game:
         self.game_phase = GamePhase.SETUP
         self.turn_phase = TurnPhase.EVENT
         self.winner = None
+        self.market_mode = market_mode or "sample_53"
 
         self.map = self._load_json(MAP_PATH)
         self.factions_data = self._load_json(FACTIONS_PATH)
@@ -233,19 +234,25 @@ class Game:
             if not name or copies <= 0:
                 continue
             support_pool.extend([self._make_support_card(name) for _ in range(copies)])
-        random.shuffle(support_pool)
-        support_sample = support_pool[:18]
 
         general_pool = []
         excluded = {'宣傳家', '思想家', '資助者', '資本家', '追隨者', '樂捐者'}
         for card in self.structured_cards:
             if card.get('name') in excluded:
                 continue
-            general_pool.append(Card(card['name'], card['type'], card.get('resources', {})))
-        random.shuffle(general_pool)
-        general_sample = general_pool[:35]
+            copies = int(card.get('copies') or card.get('count') or 1)
+            for _ in range(max(1, copies)):
+                general_pool.append(Card(card['name'], card['type'], card.get('resources', {})))
 
-        deck_cards = support_sample + general_sample
+        if self.market_mode == 'all_cards':
+            deck_cards = support_pool + general_pool
+        else:
+            random.shuffle(support_pool)
+            support_sample = support_pool[:18]
+            random.shuffle(general_pool)
+            general_sample = general_pool[:35]
+            deck_cards = support_sample + general_sample
+
         random.shuffle(deck_cards)
         return Deck(deck_cards)
 
@@ -1553,6 +1560,7 @@ class Game:
             "active_eras": self.era_engine.get_active_eras() if self.era_engine else [],
             "active_era_details": active_era_details,
             "era_notification": notification,
+            "market_mode": self.market_mode,
             "pending_base_choices": self.pending_base_choices,
             "action_log": self.action_log,
             "purchase_area": [getattr(card, 'name', str(card)) for card in self.purchase_area],
