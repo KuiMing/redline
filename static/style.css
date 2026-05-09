@@ -363,6 +363,7 @@ body {
 }
 
 #purchaseSection .card:hover,
+#purchaseRandom .card:hover,
 #hand .card:hover {
   border-color: #60a5fa;
   transform: translateY(-1px);
@@ -516,6 +517,7 @@ body {
   border-radius: 8px;
   padding: 8px;
   max-height: 560px;
+  max-width: 1220px;
   overflow: auto;
 }
 
