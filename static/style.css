@@ -35,6 +35,24 @@ body {
   position: relative;
 }
 
+#gameStageViewport {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  z-index: 2;
+}
+
+#gameStage {
+  width: 1280px;
+  height: 720px;
+  display: flex;
+  flex-direction: column;
+  transform-origin: center center;
+}
+
 #warTitle {
   position: fixed;
   top: 48%;
@@ -51,55 +69,56 @@ body {
 }
 
 #topBar {
-  height: 48px;
+  height: 40px;
   background: #05080C;
   border-bottom: 1px solid var(--border);
-  padding: 10px 20px;
+  padding: 8px 16px;
   display: flex;
   justify-content: space-between;
+  align-items: center;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
 }
 
 #hud {
-  min-height: 42px;
-  padding: 8px 16px;
+  min-height: 56px;
+  padding: 8px 14px;
   background: rgba(5, 8, 12, 0.92);
   border-bottom: 1px solid rgba(30, 42, 56, 0.8);
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.76rem;
+  font-size: 0.72rem;
   color: #dbe7f3;
 }
 
 #phaseActionBar {
-  min-height: 60px;
-  padding: 10px 16px;
+  min-height: 52px;
+  padding: 8px 14px;
   background: rgba(8, 12, 18, 0.94);
   border-bottom: 1px solid rgba(30, 42, 56, 0.8);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
 }
 
 #phaseActionMeta {
   color: #cbd5e1;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
 }
 
 .phase-action-btn {
   appearance: none;
-  border-radius: 12px;
-  padding: 12px 18px;
+  border-radius: 10px;
+  padding: 10px 14px;
   cursor: pointer;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.9rem;
+  font-size: 0.78rem;
   font-weight: 700;
   border: 1px solid rgba(245, 158, 11, 0.6);
   background: linear-gradient(180deg, rgba(245,158,11,0.94), rgba(180,83,9,0.94));
   color: #11161d;
-  box-shadow: 0 0 0 1px rgba(251,191,36,0.14), 0 10px 24px rgba(180,83,9,0.24);
+  box-shadow: 0 0 0 1px rgba(251,191,36,0.14), 0 8px 18px rgba(180,83,9,0.24);
 }
 
 .phase-action-btn:hover {
@@ -140,17 +159,17 @@ body {
 }
 
 #gameShell {
-  height: calc(100vh - 48px - 42px - 67px);
-  width: 100vw;
+  height: calc(720px - 40px - 56px - 52px);
+  width: 1280px;
   display: none;
 }
 
 #gameTabs {
-  height: 48px;
+  height: 42px;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
+  padding: 6px 12px;
   background: rgba(5, 8, 12, 0.92);
   border-bottom: 1px solid var(--border);
   position: relative;
@@ -191,12 +210,12 @@ body {
 
 #commandGrid {
   display: grid;
-  grid-template-columns: 28% 36% 36%;
+  grid-template-columns: 260px 1fr 1fr;
   grid-template-rows: 100%;
   height: 100%;
   width: 100%;
-  gap: 12px;
-  padding: 12px;
+  gap: 10px;
+  padding: 10px;
   align-items: stretch;
 }
 
@@ -244,8 +263,8 @@ body {
   flex: 1;
   overflow: auto;
   display: grid;
-  grid-template-columns: repeat(2, 260px);
-  gap: 12px;
+  grid-template-columns: repeat(1, 240px);
+  gap: 8px;
   justify-content: start;
   align-content: start;
 }
@@ -267,32 +286,32 @@ body {
 
 .purchase-card-grid {
   display: grid;
-  grid-template-columns: repeat(2, 260px);
-  gap: 12px;
+  grid-template-columns: repeat(1, 240px);
+  gap: 8px;
   justify-content: start;
 }
 
 #purchaseSection .card,
 #purchaseRandom .card,
 #hand .card {
-  width: 260px;
-  min-width: 260px;
-  max-width: 260px;
-  min-height: 320px;
-  height: 320px;
-  max-height: 320px;
+  width: 240px;
+  min-width: 240px;
+  max-width: 240px;
+  min-height: 250px;
+  height: 250px;
+  max-height: 250px;
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 12px;
   padding: 0;
   background: rgba(14, 20, 28, 0.96);
   display: flex;
   flex-direction: column;
   justify-content: stretch;
-  line-height: 1.35;
+  line-height: 1.3;
   overflow: hidden;
   cursor: pointer;
-  box-shadow: 0 10px 30px rgba(0,0,0,.22);
-  flex: 0 0 260px;
+  box-shadow: 0 8px 20px rgba(0,0,0,.2);
+  flex: 0 0 240px;
 }
 
 .hand-card {
@@ -337,15 +356,15 @@ body {
 
 .card-face {
   min-height: 100%;
-  padding: 16px 12px 12px;
+  padding: 12px 10px 10px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   color: #edf2f7;
   background-color: rgba(24,33,49,.9);
   background-image: var(--card-bg, linear-gradient(180deg, rgba(255,255,255,.03) 0%, rgba(255,255,255,.025) 100%));
   background-repeat: no-repeat;
-  border-radius: 14px;
+  border-radius: 12px;
   position: relative;
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.015);
 }
@@ -374,18 +393,18 @@ body {
 .purchase-card-title {
   font-family: 'Noto Sans TC', sans-serif;
   font-weight: 700;
-  font-size: 17px;
-  line-height: 1.2;
+  font-size: 15px;
+  line-height: 1.15;
   margin: 0;
-  padding-right: 34px;
+  padding-right: 30px;
   color: var(--card-title, var(--text-main));
 }
 
 .card-count {
   position: absolute;
-  right: 10px;
-  top: 10px;
-  font-size: 11px;
+  right: 8px;
+  top: 8px;
+  font-size: 10px;
   color: #ffd166;
   background: transparent;
   border: none;
@@ -396,8 +415,8 @@ body {
 
 .card-face-meta-row {
   color: #9eb0ca;
-  font-size: 12px;
-  margin-bottom: 2px;
+  font-size: 10px;
+  margin-bottom: 1px;
   flex: 0 0 auto;
 }
 
@@ -407,8 +426,8 @@ body {
 }
 
 .purchase-card-body {
-  font-size: 13px;
-  line-height: 1.45;
+  font-size: 11px;
+  line-height: 1.35;
   color: #e9eef7;
 }
 
@@ -424,22 +443,22 @@ body {
 }
 
 .card-meaning {
-  font-size: 12px;
+  font-size: 10px;
   color: #9eb0ca;
 }
 
 .card-badges {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 8px;
+  gap: 4px;
+  margin-top: 6px;
   flex: 0 0 auto;
 }
 
 .card-badge {
-  font-size: 11px;
+  font-size: 9px;
   color: var(--tag-text, var(--text-main));
-  padding: 4px 8px;
+  padding: 3px 6px;
   border-radius: 999px;
   background: var(--tag-bg, rgba(116,192,252,.12));
   border: 1px solid var(--tag-border, rgba(116,192,252,.35));
@@ -780,7 +799,7 @@ body {
   padding: 0;
   position: relative;
   z-index: 2;
-  height: calc(100vh - 96px);
+  height: 100%;
 }
 
 .log-only-panel {

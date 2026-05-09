@@ -1,0 +1,56 @@
+{
+  "stageOffset": {
+    "w": 1280,
+    "h": 720
+  },
+  "shellOffset": {
+    "w": 1280,
+    "h": 572
+  },
+  "transform": "matrix(1.48438, 0, 0, 1.48438, 0, 0)",
+  "grid": "260px 490px 490px",
+  "cardSample": [
+    {
+      "sel": "#purchaseStatic .card",
+      "idx": 0,
+      "w": 356.25,
+      "h": 371.09375,
+      "title": "宣傳家"
+    },
+    {
+      "sel": "#purchaseStatic .card",
+      "idx": 1,
+      "w": 356.25,
+      "h": 371.09375,
+      "title": "思想家"
+    },
+    {
+      "sel": "#purchaseStatic .card",
+      "idx": 2,
+      "w": 356.25,
+      "h": 371.09375,
+      "title": "資助者"
+    },
+    {
+      "sel": "#purchaseStatic .card",
+      "idx": 3,
+      "w": 356.25,
+      "h": 371.09375,
+      "title": "資本家"
+    },
+    {
+      "sel": "#purchaseStatic .card",
+      "idx": 4,
+      "w": 356.25,
+      "h": 371.09375,
+      "title": "分神"
+    },
+    {
+      "sel": "#purchaseStatic .card",
+      "idx": 5,
+      "w": 356.25,
+      "h": 371.09375,
+      "title": "內鬥"
+    }
+  ]
+}
