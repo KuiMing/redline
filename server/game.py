@@ -144,8 +144,8 @@ class Game:
 
         self.turn_log = self._new_turn_log()
         self.action_log = []
-        self.purchase_area = self._initial_purchase_area()
         self.purchase_deck = self._initial_purchase_deck()
+        self.purchase_area = self._initial_purchase_area()
         self.static_purchase_supply = {name: 1 for name in ['宣傳家', '思想家', '資助者', '資本家', '分神', '內鬥']}
         self.era_notification = None
 
@@ -1574,9 +1574,12 @@ class Game:
                     "id": p.id,
                     "name": p.name,
                     "faction": p.faction_id,
+                    "base": p.base,
                     "resources": p.resources,
                     "moves_left": p.moves_left,
                     "hand": [getattr(card, 'name', str(card)) for card in p.hand],
+                    "deck_count": len(p.deck.draw_pile) if p.deck else 0,
+                    "discard_count": len(p.deck.discard_pile) if p.deck else 0,
                     "orgs": p.organizations
                 }
                 for p in self.players
