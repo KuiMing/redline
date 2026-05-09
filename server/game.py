@@ -1171,8 +1171,13 @@ class Game:
             if card_name not in played_names:
                 played_names.append(card_name)
 
+        action_context = {'current_card': played_card}
         if effective_type != 'support':
-            self.action_engine.execute(card_name, player, self, context={'current_card': played_card})
+            if card_name in getattr(self.action_engine, 'cards', {}):
+                self.action_engine.execute(card_name, player, self, context=action_context)
+            else:
+                for key, value in getattr(played_card, 'resources', {}).items():
+                    player.resources[key] += value
 
         for ability in self._player_effective_abilities(player):
             if not isinstance(ability, dict):
@@ -1200,7 +1205,8 @@ class Game:
                     player.resources["money"] += 3
                     self.log(f"{player.name} triggered 展現實力 and gained 3 money")
 
-        player.deck.discard([played_card])
+        if not action_context.get('removed_current_card'):
+            player.deck.discard([played_card])
         self.log(f"{player.name} played {card_name}")
         return {"success": True}
 

@@ -36,7 +36,7 @@ summary: {'total_checks': 4, 'passed': 4, 'failed': 0, 'errors': []}
 - hand_before: ['追隨者', '追隨者', '樂捐者', '追隨者', '追隨者']
 - hand_after: ['追隨者', '樂捐者', '追隨者', '追隨者']
 - result: {'success': True}
-- resources: {'money': 0, 'propaganda': 0}
+- resources: {'money': 0, 'propaganda': 1}
 - moves_left: 3
 
 ## cycle_1_move
@@ -72,7 +72,7 @@ summary: {'total_checks': 4, 'passed': 4, 'failed': 0, 'errors': []}
 - hand_before: ['追隨者', '樂捐者', '追隨者', '追隨者', '樂捐者']
 - hand_after: ['樂捐者', '追隨者', '追隨者', '樂捐者']
 - result: {'success': True}
-- resources: {'money': 0, 'propaganda': 0}
+- resources: {'money': 0, 'propaganda': 1}
 - moves_left: 3
 
 ## cycle_2_move
@@ -108,7 +108,7 @@ summary: {'total_checks': 4, 'passed': 4, 'failed': 0, 'errors': []}
 - hand_before: ['樂捐者', '樂捐者', '追隨者', '追隨者', '追隨者']
 - hand_after: ['樂捐者', '追隨者', '追隨者', '追隨者']
 - result: {'success': True}
-- resources: {'money': 0, 'propaganda': 0}
+- resources: {'money': 1, 'propaganda': 0}
 - moves_left: 3
 
 ## cycle_3_move
@@ -144,7 +144,7 @@ summary: {'total_checks': 4, 'passed': 4, 'failed': 0, 'errors': []}
 - hand_before: ['追隨者', '追隨者', '追隨者', '樂捐者', '追隨者']
 - hand_after: ['追隨者', '追隨者', '樂捐者', '追隨者']
 - result: {'success': True}
-- resources: {'money': 0, 'propaganda': 0}
+- resources: {'money': 0, 'propaganda': 1}
 - moves_left: 3
 
 ## cycle_4_move

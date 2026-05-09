@@ -171,7 +171,7 @@
       },
       "resources": {
         "money": 0,
-        "propaganda": 0
+        "propaganda": 1
       },
       "moves_left": 3
     },
@@ -233,7 +233,7 @@
       },
       "resources": {
         "money": 0,
-        "propaganda": 0
+        "propaganda": 1
       },
       "moves_left": 3
     },
@@ -294,7 +294,7 @@
         "success": true
       },
       "resources": {
-        "money": 0,
+        "money": 1,
         "propaganda": 0
       },
       "moves_left": 3
@@ -357,7 +357,7 @@
       },
       "resources": {
         "money": 0,
-        "propaganda": 0
+        "propaganda": 1
       },
       "moves_left": 3
     },

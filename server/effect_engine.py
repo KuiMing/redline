@@ -85,6 +85,7 @@ class EffectEngine:
             if current_card is not None:
                 returned = game._return_removed_card_to_purchase_supply(current_card)
                 if returned:
+                    context['removed_current_card'] = True
                     game.log(f"{player.name} removed {getattr(current_card, 'name', str(current_card))} and it returned to {returned.get('zone')}")
             elif player.hand:
                 trashed = player.hand.pop()
