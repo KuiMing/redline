@@ -1,4 +1,5 @@
 import json
+import random
 import sys
 from pathlib import Path
 
@@ -70,14 +71,17 @@ def validate_bases(game):
 
 def first_connected_move(game, player):
     for from_town in list(player.organizations.keys()):
+        if from_town == player.base and player.organizations.get(from_town, 0) <= 1:
+            continue
         town = game.map['towns'].get(from_town, {})
         for mode in ('road', 'rail'):
             for target in list(town.get(mode) or []):
                 return {'from': from_town, 'to': target, 'mode': mode}, game.move_organization(from_town, target, mode)
-    return None, {'skipped': True}
+    return None, {'skipped': 'no movable non-anchor organization'}
 
 
 def main():
+    random.seed(20260510)
     game = Game([('p1', 'anti'), ('p2', 'red')])
     trace = []
     resolve_base_selection(game, trace)

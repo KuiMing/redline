@@ -1,4 +1,5 @@
 import json
+import random
 import sys
 from pathlib import Path
 
@@ -7,6 +8,7 @@ if str(BASE) not in sys.path:
     sys.path.insert(0, str(BASE))
 
 from server.game import Game, TurnPhase
+from server.victory import VictoryEngine
 
 
 SEMANTIC_POOLS = {
@@ -19,7 +21,7 @@ SEMANTIC_POOLS = {
 }
 
 ALIAS_TOWNS = {
-    '梅洲': '梅州',
+    '梅州': '梅州',
 }
 
 
@@ -67,7 +69,53 @@ def validate_bases(game):
     }
 
 
+def forced_victory_orgs(game, player):
+    faction = game.faction_by_id.get(player.faction_id, {})
+    conditions = faction.get('win_conditions', []) or []
+    all_towns = list(game.map.get('towns', {}).keys())
+    china_towns = list(game.board_regions.get('china', {}).get('towns', []))
+
+    if not conditions:
+        return {town: 1 for town in china_towns[:14]}
+
+    orgs = {}
+    target_conditions = max(1, (len(conditions) * 2) // 3)
+    satisfied_seeded = 0
+
+    for cond in conditions:
+        if satisfied_seeded >= target_conditions:
+            break
+        cond_type = cond.get('type')
+        if cond_type == 'default_survival':
+            continue
+        if cond_type == 'taiwan_override' and player.faction_id != 'red_army':
+            continue
+
+        required = [town for town in cond.get('required_locations', []) if town in game.map.get('towns', {})]
+        for town in required:
+            orgs[town] = 1
+
+        count = int(cond.get('count', 0) or 0)
+        if cond.get('scope') == '牆內':
+            pool = china_towns
+        else:
+            pool = all_towns
+
+        for town in pool:
+            if town not in orgs:
+                orgs[town] = 1
+            in_scope_count = sum(1 for seeded in orgs if seeded in set(pool))
+            if in_scope_count >= max(count, 0):
+                break
+        satisfied_seeded += 1
+
+    if not orgs:
+        orgs = {town: 1 for town in china_towns[:14]}
+    return orgs
+
+
 def run_game(player_count):
+    random.seed(20260510 + player_count)
     game = Game([(f"p{i}", f"player{i}") for i in range(1, player_count + 1)])
     trace = []
 
@@ -136,6 +184,8 @@ def run_game(player_count):
         move_result = {"skipped": True}
         move_detail = None
         for from_town in list(player.organizations.keys()):
+            if from_town == player.base and player.organizations.get(from_town, 0) <= 1:
+                continue
             town = game.map["towns"].get(from_town, {})
             roads = list(town.get("road") or [])
             rails = list(town.get("rail") or [])
@@ -174,26 +224,36 @@ def run_game(player_count):
             "current_player": game.current_player().name,
         })
 
-    winner_player = game.players[0]
-    china_towns = list(game.board_regions.get("china", {}).get("towns", []))[:14]
-    if len(china_towns) >= 14:
-        winner_player.organizations = {town: 1 for town in china_towns[:14]}
+    winner_player = next(
+        (p for p in game.players if p.faction_id != 'red_army' and game.faction_by_id.get(p.faction_id, {}).get('win_conditions')),
+        None,
+    )
+    forced_red_survival = False
+    if winner_player is None:
+        winner_player = next((p for p in game.players if p.faction_id == 'red_army'), game.players[0])
+        game.turn = 21
+        forced_red_survival = True
     else:
-        winner_player.organizations = {f"城{i}": 1 for i in range(14)}
+        winner_player.organizations = forced_victory_orgs(game, winner_player)
 
     trace.append({
         "step": "before_forced_victory_check",
         "candidate": winner_player.name,
         "faction": winner_player.faction_id,
         "org_count": sum(winner_player.organizations.values()),
+        "forced_red_survival": forced_red_survival,
         "turn": game.turn,
         "turn_phase": game.turn_phase,
     })
 
-    game._check_victory()
+    did_win, winner_name = VictoryEngine(game.factions, game.board_regions).evaluate(game)
+    if did_win:
+        game.game_phase = game.game_phase.FINISHED
+        game.winner = winner_name
 
     trace.append({
         "step": "after_forced_victory_check",
+        "did_win": did_win,
         "game_phase": game.game_phase,
         "winner": game.winner,
         "turn": game.turn,

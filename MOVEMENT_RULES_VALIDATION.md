@@ -1,0 +1,52 @@
+# MOVEMENT RULES VALIDATION
+
+日期：2026-05-10
+
+summary: {'total': 9, 'passed': 9, 'failed': 0}
+
+## movement_rejected_outside_action_phase — PASS
+- result: {'error': 'Not in ACTION phase'}
+- before: {'orgs': {'香港城': 1}, 'moves_left': 3, 'base': '香港城'}
+- after: {'orgs': {'香港城': 1}, 'moves_left': 3, 'base': '香港城'}
+
+## road_adjacent_move_costs_one_and_moves_org — PASS
+- result: {'success': True}
+- before: {'orgs': {'澳門': 1}, 'moves_left': 3, 'base': '香港城'}
+- after: {'orgs': {'香港城': 1}, 'moves_left': 2, 'base': '香港城'}
+
+## rail_adjacent_move_costs_three_and_moves_org — PASS
+- result: {'success': True}
+- before: {'orgs': {'北京': 1}, 'moves_left': 3, 'base': '香港城'}
+- after: {'orgs': {'天津': 1}, 'moves_left': 0, 'base': '香港城'}
+
+## rail_move_rejected_when_moves_left_below_three — PASS
+- result: {'error': 'Not enough move points'}
+- before: {'orgs': {'北京': 1}, 'moves_left': 2, 'base': '香港城'}
+- after: {'orgs': {'北京': 1}, 'moves_left': 2, 'base': '香港城'}
+
+## non_adjacent_move_rejected_without_spending_points — PASS
+- result: {'error': 'No road connection'}
+- before: {'orgs': {'香港城': 2}, 'moves_left': 3, 'base': '香港城'}
+- after: {'orgs': {'香港城': 2}, 'moves_left': 3, 'base': '香港城'}
+
+## invalid_move_mode_rejected_without_state_change — PASS
+- result: {'error': 'Invalid move mode'}
+- before: {'orgs': {'香港城': 2}, 'moves_left': 3, 'base': '香港城'}
+- after: {'orgs': {'香港城': 2}, 'moves_left': 3, 'base': '香港城'}
+
+## invalid_origin_rejected_without_state_change — PASS
+- result: {'error': 'Invalid town'}
+- before: {'orgs': {'香港城': 1}, 'moves_left': 3, 'base': '香港城'}
+- after: {'orgs': {'香港城': 1}, 'moves_left': 3, 'base': '香港城'}
+
+## base_anchor_organization_cannot_leave_base — PASS
+- rule: RULES.md: 根據地的組織棋在遊戲過程中不得離開根據地底座。
+- result: {'error': 'Base anchor organization cannot move'}
+- before: {'orgs': {'香港城': 1}, 'moves_left': 3, 'base': '香港城'}
+- after: {'orgs': {'香港城': 1}, 'moves_left': 3, 'base': '香港城'}
+
+## extra_organization_on_base_can_move_but_anchor_remains — PASS
+- rule: 只有根據地底座上的保底組織不可離開；同城額外組織仍可正常遷移。
+- result: {'success': True}
+- before: {'orgs': {'香港城': 2}, 'moves_left': 3, 'base': '香港城'}
+- after: {'orgs': {'香港城': 1, '澳門': 1}, 'moves_left': 2, 'base': '香港城'}

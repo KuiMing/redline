@@ -4,6 +4,17 @@
     {
       "step": "base_selection_choice",
       "choice": {
+        "player_id": "p1",
+        "label": "青島",
+        "town": "青島",
+        "result": {
+          "success": true
+        }
+      }
+    },
+    {
+      "step": "base_selection_choice",
+      "choice": {
         "player_id": "p2",
         "label": "任意牆內",
         "town": "深圳",
@@ -15,6 +26,41 @@
     {
       "step": "base_selection_resolution",
       "initial_pending": {
+        "p1": {
+          "labels": [
+            "青島",
+            "濟南",
+            "任意東洋",
+            "任意英美城鎮"
+          ],
+          "resolved": {
+            "青島": [
+              "青島"
+            ],
+            "濟南": [
+              "濟南"
+            ],
+            "任意東洋": [
+              "東京",
+              "大阪",
+              "福岡",
+              "札幌",
+              "仙臺",
+              "沖繩",
+              "首爾",
+              "釜山"
+            ],
+            "任意英美城鎮": [
+              "華盛頓",
+              "紐約",
+              "多倫多",
+              "卡加利",
+              "溫哥華",
+              "舊金山",
+              "洛杉磯"
+            ]
+          }
+        },
         "p2": {
           "labels": [
             "任意牆內",
@@ -87,15 +133,26 @@
         "rows": [
           {
             "player": "player1",
-            "faction": "uyghur_istanbul",
-            "base": "伊斯坦堡",
+            "faction": "qi",
+            "base": "青島",
             "orgs": {
-              "伊斯坦堡": 1
+              "青島": 1
             },
             "single_base_org": true,
             "base_allowed": true,
             "allowed_sample": [
-              "伊斯坦堡"
+              "仙臺",
+              "倫敦",
+              "卡加利",
+              "多倫多",
+              "大阪",
+              "札幌",
+              "東京",
+              "沖繩",
+              "洛杉磯",
+              "溫哥華",
+              "濟南",
+              "福岡"
             ]
           },
           {
@@ -154,17 +211,17 @@
     {
       "step": "cycle_1_play_card",
       "player": "player1",
-      "faction": "uyghur_istanbul",
+      "faction": "qi",
       "hand_before": [
         "追隨者",
-        "追隨者",
         "樂捐者",
+        "追隨者",
         "追隨者",
         "追隨者"
       ],
       "hand_after": [
-        "追隨者",
         "樂捐者",
+        "追隨者",
         "追隨者",
         "追隨者"
       ],
@@ -180,18 +237,14 @@
     {
       "step": "cycle_1_move",
       "player": "player1",
-      "move_detail": {
-        "from": "伊斯坦堡",
-        "to": "伊德利卜",
-        "mode": "rail"
-      },
+      "move_detail": null,
       "result": {
-        "success": true
+        "skipped": true
       },
       "orgs_after": {
-        "伊德利卜": 1
+        "青島": 1
       },
-      "moves_left_after": 0
+      "moves_left_after": 3
     },
     {
       "step": "cycle_1_advance_to_end",
@@ -226,13 +279,13 @@
         "追隨者",
         "追隨者",
         "追隨者",
-        "樂捐者"
+        "追隨者"
       ],
       "hand_after": [
         "追隨者",
         "追隨者",
         "追隨者",
-        "樂捐者"
+        "追隨者"
       ],
       "result": {
         "success": true
@@ -246,18 +299,14 @@
     {
       "step": "cycle_2_move",
       "player": "player2",
-      "move_detail": {
-        "from": "深圳",
-        "to": "元朗",
-        "mode": "road"
-      },
+      "move_detail": null,
       "result": {
-        "success": true
+        "skipped": true
       },
       "orgs_after": {
-        "元朗": 1
+        "深圳": 1
       },
-      "moves_left_after": 2
+      "moves_left_after": 3
     },
     {
       "step": "cycle_2_advance_to_end",
@@ -292,13 +341,13 @@
         "樂捐者",
         "追隨者",
         "追隨者",
-        "樂捐者"
+        "追隨者"
       ],
       "hand_after": [
         "樂捐者",
         "追隨者",
         "追隨者",
-        "樂捐者"
+        "追隨者"
       ],
       "result": {
         "success": true
@@ -312,18 +361,14 @@
     {
       "step": "cycle_3_move",
       "player": "player3",
-      "move_detail": {
-        "from": "北京",
-        "to": "天津",
-        "mode": "rail"
-      },
+      "move_detail": null,
       "result": {
-        "success": true
+        "skipped": true
       },
       "orgs_after": {
-        "天津": 1
+        "北京": 1
       },
-      "moves_left_after": 0
+      "moves_left_after": 3
     },
     {
       "step": "cycle_3_advance_to_end",
@@ -352,19 +397,19 @@
     {
       "step": "cycle_4_play_card",
       "player": "player1",
-      "faction": "uyghur_istanbul",
+      "faction": "qi",
       "hand_before": [
-        "樂捐者",
+        "追隨者",
         "樂捐者",
         "追隨者",
         "追隨者",
-        "追隨者"
+        "樂捐者"
       ],
       "hand_after": [
         "樂捐者",
         "追隨者",
         "追隨者",
-        "追隨者"
+        "樂捐者"
       ],
       "result": {
         "success": true
@@ -378,18 +423,14 @@
     {
       "step": "cycle_4_move",
       "player": "player1",
-      "move_detail": {
-        "from": "伊德利卜",
-        "to": "伊斯坦堡",
-        "mode": "rail"
-      },
+      "move_detail": null,
       "result": {
-        "success": true
+        "skipped": true
       },
       "orgs_after": {
-        "伊斯坦堡": 1
+        "青島": 1
       },
-      "moves_left_after": 0
+      "moves_left_after": 3
     },
     {
       "step": "cycle_4_advance_to_end",
@@ -421,16 +462,16 @@
       "faction": "reform_opening",
       "hand_before": [
         "追隨者",
-        "樂捐者",
         "追隨者",
         "樂捐者",
-        "追隨者"
+        "樂捐者",
+        "樂捐者"
       ],
       "hand_after": [
-        "樂捐者",
         "追隨者",
         "樂捐者",
-        "追隨者"
+        "樂捐者",
+        "樂捐者"
       ],
       "result": {
         "success": true
@@ -444,18 +485,14 @@
     {
       "step": "cycle_5_move",
       "player": "player2",
-      "move_detail": {
-        "from": "元朗",
-        "to": "深圳",
-        "mode": "road"
-      },
+      "move_detail": null,
       "result": {
-        "success": true
+        "skipped": true
       },
       "orgs_after": {
         "深圳": 1
       },
-      "moves_left_after": 2
+      "moves_left_after": 3
     },
     {
       "step": "cycle_5_advance_to_end",
@@ -486,17 +523,17 @@
       "player": "player3",
       "faction": "red_army",
       "hand_before": [
-        "追隨者",
-        "追隨者",
-        "追隨者",
         "樂捐者",
-        "追隨者"
+        "追隨者",
+        "追隨者",
+        "追隨者",
+        "樂捐者"
       ],
       "hand_after": [
         "追隨者",
         "追隨者",
-        "樂捐者",
-        "追隨者"
+        "追隨者",
+        "樂捐者"
       ],
       "result": {
         "success": true
@@ -510,18 +547,14 @@
     {
       "step": "cycle_6_move",
       "player": "player3",
-      "move_detail": {
-        "from": "天津",
-        "to": "承德",
-        "mode": "road"
-      },
+      "move_detail": null,
       "result": {
-        "success": true
+        "skipped": true
       },
       "orgs_after": {
-        "承德": 1
+        "北京": 1
       },
-      "moves_left_after": 2
+      "moves_left_after": 3
     },
     {
       "step": "cycle_6_advance_to_end",
@@ -537,25 +570,27 @@
     },
     {
       "step": "before_forced_victory_check",
-      "candidate": "player1",
-      "faction": "uyghur_istanbul",
-      "org_count": 14,
-      "turn": 3,
+      "candidate": "player3",
+      "faction": "red_army",
+      "org_count": 1,
+      "forced_red_survival": true,
+      "turn": 21,
       "turn_phase": "event"
     },
     {
       "step": "after_forced_victory_check",
+      "did_win": true,
       "game_phase": "finished",
-      "winner": "player1",
-      "turn": 3,
+      "winner": "red_army",
+      "turn": 21,
       "turn_phase": "event"
     }
   ],
   "final_state": {
-    "turn": 3,
+    "turn": 21,
     "game_phase": "finished",
     "turn_phase": "event",
-    "winner": "player1",
+    "winner": "red_army",
     "current_player": "player1",
     "active_eras": [],
     "active_era_details": [],
@@ -564,22 +599,16 @@
     "pending_base_choices": {},
     "action_log": [
       "[Turn 1] player1 played 追隨者",
-      "[Turn 1] player1 moved 1 organization from 伊斯坦堡 to 伊德利卜 via rail",
       "[Turn 1] End of turn for player1",
       "[Turn 1] player2 played 追隨者",
-      "[Turn 1] player2 moved 1 organization from 深圳 to 元朗 via road",
       "[Turn 1] End of turn for player2",
       "[Turn 1] player3 played 追隨者",
-      "[Turn 1] player3 moved 1 organization from 北京 to 天津 via rail",
       "[Turn 1] End of turn for player3",
-      "[Turn 2] player1 played 樂捐者",
-      "[Turn 2] player1 moved 1 organization from 伊德利卜 to 伊斯坦堡 via rail",
+      "[Turn 2] player1 played 追隨者",
       "[Turn 2] End of turn for player1",
       "[Turn 2] player2 played 追隨者",
-      "[Turn 2] player2 moved 1 organization from 元朗 to 深圳 via road",
       "[Turn 2] End of turn for player2",
-      "[Turn 2] player3 played 追隨者",
-      "[Turn 2] player3 moved 1 organization from 天津 to 承德 via road",
+      "[Turn 2] player3 played 樂捐者",
       "[Turn 2] End of turn for player3"
     ],
     "purchase_area": [
@@ -589,11 +618,11 @@
       "資本家",
       "分神",
       "內鬥",
-      "派遣間諜",
-      "內鬥",
       "英美奧援",
-      "天方奧援",
-      "武裝集團"
+      "合作談判",
+      "歐洲奧援",
+      "南洋奧援",
+      "行動預告"
     ],
     "static_purchase_supply": {
       "宣傳家": 1,
@@ -605,7 +634,7 @@
     },
     "map": {
       "towns": {
-        "北京": [
+        "青島": [
           {
             "player": "player1",
             "count": 1
@@ -613,87 +642,11 @@
         ],
         "深圳": [
           {
-            "player": "player1",
-            "count": 1
-          },
-          {
             "player": "player2",
             "count": 1
           }
         ],
-        "廣州": [
-          {
-            "player": "player1",
-            "count": 1
-          }
-        ],
-        "湛茂": [
-          {
-            "player": "player1",
-            "count": 1
-          }
-        ],
-        "梅州": [
-          {
-            "player": "player1",
-            "count": 1
-          }
-        ],
-        "潮州": [
-          {
-            "player": "player1",
-            "count": 1
-          }
-        ],
-        "桂林": [
-          {
-            "player": "player1",
-            "count": 1
-          }
-        ],
-        "南寧": [
-          {
-            "player": "player1",
-            "count": 1
-          }
-        ],
-        "海口": [
-          {
-            "player": "player1",
-            "count": 1
-          }
-        ],
-        "三亞": [
-          {
-            "player": "player1",
-            "count": 1
-          }
-        ],
-        "廈門": [
-          {
-            "player": "player1",
-            "count": 1
-          }
-        ],
-        "福州": [
-          {
-            "player": "player1",
-            "count": 1
-          }
-        ],
-        "溫州": [
-          {
-            "player": "player1",
-            "count": 1
-          }
-        ],
-        "杭州": [
-          {
-            "player": "player1",
-            "count": 1
-          }
-        ],
-        "承德": [
+        "北京": [
           {
             "player": "player3",
             "count": 1
@@ -706,37 +659,24 @@
       {
         "id": "p1",
         "name": "player1",
-        "faction": "uyghur_istanbul",
-        "base": "伊斯坦堡",
+        "faction": "qi",
+        "base": "青島",
         "resources": {
           "money": 0,
           "propaganda": 0
         },
         "moves_left": 3,
         "hand": [
-          "追隨者",
-          "追隨者",
-          "追隨者",
           "樂捐者",
+          "追隨者",
+          "追隨者",
+          "追隨者",
           "追隨者"
         ],
         "deck_count": 5,
         "discard_count": 0,
         "orgs": {
-          "北京": 1,
-          "深圳": 1,
-          "廣州": 1,
-          "湛茂": 1,
-          "梅州": 1,
-          "潮州": 1,
-          "桂林": 1,
-          "南寧": 1,
-          "海口": 1,
-          "三亞": 1,
-          "廈門": 1,
-          "福州": 1,
-          "溫州": 1,
-          "杭州": 1
+          "青島": 1
         }
       },
       {
@@ -751,9 +691,9 @@
         "moves_left": 3,
         "hand": [
           "追隨者",
-          "追隨者",
-          "追隨者",
           "樂捐者",
+          "樂捐者",
+          "追隨者",
           "追隨者"
         ],
         "deck_count": 5,
@@ -773,16 +713,16 @@
         },
         "moves_left": 3,
         "hand": [
-          "追隨者",
-          "追隨者",
           "樂捐者",
+          "追隨者",
+          "追隨者",
           "樂捐者",
           "追隨者"
         ],
         "deck_count": 5,
         "discard_count": 0,
         "orgs": {
-          "承德": 1
+          "北京": 1
         }
       }
     ]

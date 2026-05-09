@@ -4,9 +4,20 @@
     {
       "step": "base_selection_choice",
       "choice": {
-        "player_id": "p2",
-        "label": "南昌",
-        "town": "南昌",
+        "player_id": "p1",
+        "label": "任意牆內",
+        "town": "深圳",
+        "result": {
+          "success": true
+        }
+      }
+    },
+    {
+      "step": "base_selection_choice",
+      "choice": {
+        "player_id": "p3",
+        "label": "潮州",
+        "town": "潮州",
         "result": {
           "success": true
         }
@@ -15,14 +26,93 @@
     {
       "step": "base_selection_resolution",
       "initial_pending": {
-        "p2": {
+        "p1": {
           "labels": [
-            "南昌",
+            "任意牆內",
+            "任意南洋",
             "任意英美城鎮"
           ],
           "resolved": {
-            "南昌": [
-              "南昌"
+            "任意牆內": [
+              "北京",
+              "深圳",
+              "廣州",
+              "湛茂",
+              "梅州",
+              "潮州",
+              "桂林",
+              "南寧",
+              "海口",
+              "三亞",
+              "廈門",
+              "福州",
+              "溫州",
+              "杭州",
+              "上海",
+              "南京",
+              "合肥",
+              "武漢",
+              "南昌",
+              "長沙",
+              "南陽",
+              "鄭州",
+              "徐州",
+              "濟南",
+              "青島",
+              "天津",
+              "石家莊",
+              "太原",
+              "延安",
+              "西安",
+              "銀川",
+              "蘭州",
+              "敦煌",
+              "西寧",
+              "重慶",
+              "成都",
+              "貴陽",
+              "昆明",
+              "德宏",
+              "西雙版納"
+            ],
+            "任意南洋": [
+              "曼谷",
+              "吉隆坡",
+              "新加坡",
+              "雅加達",
+              "河內",
+              "胡志明市",
+              "仰光"
+            ],
+            "任意英美城鎮": [
+              "華盛頓",
+              "紐約",
+              "多倫多",
+              "卡加利",
+              "溫哥華",
+              "舊金山",
+              "洛杉磯"
+            ]
+          }
+        },
+        "p3": {
+          "labels": [
+            "潮州",
+            "任意南洋",
+            "任意英美城鎮"
+          ],
+          "resolved": {
+            "潮州": [
+              "潮州"
+            ],
+            "任意南洋": [
+              "曼谷",
+              "吉隆坡",
+              "新加坡",
+              "雅加達",
+              "河內",
+              "胡志明市",
+              "仰光"
             ],
             "任意英美城鎮": [
               "華盛頓",
@@ -48,40 +138,30 @@
         "rows": [
           {
             "player": "player1",
-            "faction": "taiwan_blue",
-            "base": "臺北",
+            "faction": "republican",
+            "base": "深圳",
             "orgs": {
-              "臺北": 1
+              "深圳": 1
             },
             "single_base_org": true,
             "base_allowed": true,
             "allowed_sample": [
-              "臺北"
+              "三亞",
+              "上海",
+              "仰光",
+              "倫敦",
+              "北京",
+              "南京",
+              "南寧",
+              "南昌",
+              "南陽",
+              "卡加利",
+              "合肥",
+              "吉隆坡"
             ]
           },
           {
             "player": "player2",
-            "faction": "gan",
-            "base": "南昌",
-            "orgs": {
-              "南昌": 1
-            },
-            "single_base_org": true,
-            "base_allowed": true,
-            "allowed_sample": [
-              "倫敦",
-              "南昌",
-              "卡加利",
-              "多倫多",
-              "洛杉磯",
-              "溫哥華",
-              "紐約",
-              "舊金山",
-              "華盛頓"
-            ]
-          },
-          {
-            "player": "player3",
             "faction": "red_army",
             "base": "北京",
             "orgs": {
@@ -94,16 +174,40 @@
             ]
           },
           {
-            "player": "player4",
-            "faction": "kazakh",
-            "base": "阿拉木圖",
+            "player": "player3",
+            "faction": "chaoshan",
+            "base": "潮州",
             "orgs": {
-              "阿拉木圖": 1
+              "潮州": 1
             },
             "single_base_org": true,
             "base_allowed": true,
             "allowed_sample": [
-              "阿拉木圖"
+              "仰光",
+              "倫敦",
+              "卡加利",
+              "吉隆坡",
+              "多倫多",
+              "新加坡",
+              "曼谷",
+              "河內",
+              "洛杉磯",
+              "溫哥華",
+              "潮州",
+              "紐約"
+            ]
+          },
+          {
+            "player": "player4",
+            "faction": "taiwan_green",
+            "base": "臺北",
+            "orgs": {
+              "臺北": 1
+            },
+            "single_base_org": true,
+            "base_allowed": true,
+            "allowed_sample": [
+              "臺北"
             ]
           }
         ],
@@ -125,16 +229,16 @@
     {
       "step": "cycle_1_play_card",
       "player": "player1",
-      "faction": "taiwan_blue",
+      "faction": "republican",
       "hand_before": [
-        "樂捐者",
         "追隨者",
+        "樂捐者",
         "追隨者",
         "追隨者",
         "追隨者"
       ],
       "hand_after": [
-        "追隨者",
+        "樂捐者",
         "追隨者",
         "追隨者",
         "追隨者"
@@ -151,18 +255,14 @@
     {
       "step": "cycle_1_move",
       "player": "player1",
-      "move_detail": {
-        "from": "臺北",
-        "to": "基隆",
-        "mode": "rail"
-      },
+      "move_detail": null,
       "result": {
-        "success": true
+        "skipped": true
       },
       "orgs_after": {
-        "基隆": 1
+        "深圳": 1
       },
-      "moves_left_after": 0
+      "moves_left_after": 3
     },
     {
       "step": "cycle_1_advance_to_end",
@@ -191,19 +291,19 @@
     {
       "step": "cycle_2_play_card",
       "player": "player2",
-      "faction": "gan",
+      "faction": "red_army",
       "hand_before": [
         "追隨者",
-        "樂捐者",
-        "樂捐者",
         "追隨者",
-        "追隨者"
+        "追隨者",
+        "追隨者",
+        "樂捐者"
       ],
       "hand_after": [
-        "樂捐者",
-        "樂捐者",
         "追隨者",
-        "追隨者"
+        "追隨者",
+        "追隨者",
+        "樂捐者"
       ],
       "result": {
         "success": true
@@ -217,18 +317,14 @@
     {
       "step": "cycle_2_move",
       "player": "player2",
-      "move_detail": {
-        "from": "南昌",
-        "to": "武漢",
-        "mode": "rail"
-      },
+      "move_detail": null,
       "result": {
-        "success": true
+        "skipped": true
       },
       "orgs_after": {
-        "武漢": 1
+        "北京": 1
       },
-      "moves_left_after": 0
+      "moves_left_after": 3
     },
     {
       "step": "cycle_2_advance_to_end",
@@ -257,19 +353,20 @@
     {
       "step": "cycle_3_play_card",
       "player": "player3",
-      "faction": "red_army",
+      "faction": "chaoshan",
       "hand_before": [
+        "樂捐者",
         "追隨者",
         "追隨者",
-        "追隨者",
-        "追隨者",
-        "樂捐者"
+        "樂捐者",
+        "追隨者"
       ],
       "hand_after": [
         "追隨者",
         "追隨者",
+        "樂捐者",
         "追隨者",
-        "樂捐者"
+        "追隨者"
       ],
       "result": {
         "success": true
@@ -283,18 +380,14 @@
     {
       "step": "cycle_3_move",
       "player": "player3",
-      "move_detail": {
-        "from": "北京",
-        "to": "天津",
-        "mode": "rail"
-      },
+      "move_detail": null,
       "result": {
-        "success": true
+        "skipped": true
       },
       "orgs_after": {
-        "天津": 1
+        "潮州": 1
       },
-      "moves_left_after": 0
+      "moves_left_after": 3
     },
     {
       "step": "cycle_3_advance_to_end",
@@ -323,20 +416,19 @@
     {
       "step": "cycle_4_play_card",
       "player": "player4",
-      "faction": "kazakh",
+      "faction": "taiwan_green",
       "hand_before": [
         "追隨者",
         "追隨者",
         "樂捐者",
-        "樂捐者",
-        "追隨者"
+        "追隨者",
+        "樂捐者"
       ],
       "hand_after": [
         "追隨者",
         "樂捐者",
-        "樂捐者",
         "追隨者",
-        "追隨者"
+        "樂捐者"
       ],
       "result": {
         "success": true
@@ -350,18 +442,14 @@
     {
       "step": "cycle_4_move",
       "player": "player4",
-      "move_detail": {
-        "from": "阿拉木圖",
-        "to": "楚城",
-        "mode": "rail"
-      },
+      "move_detail": null,
       "result": {
-        "success": true
+        "skipped": true
       },
       "orgs_after": {
-        "楚城": 1
+        "臺北": 1
       },
-      "moves_left_after": 0
+      "moves_left_after": 3
     },
     {
       "step": "cycle_4_advance_to_end",
@@ -390,18 +478,18 @@
     {
       "step": "cycle_5_play_card",
       "player": "player1",
-      "faction": "taiwan_blue",
+      "faction": "republican",
       "hand_before": [
         "樂捐者",
         "追隨者",
-        "樂捐者",
         "追隨者",
+        "樂捐者",
         "追隨者"
       ],
       "hand_after": [
         "追隨者",
-        "樂捐者",
         "追隨者",
+        "樂捐者",
         "追隨者"
       ],
       "result": {
@@ -416,18 +504,14 @@
     {
       "step": "cycle_5_move",
       "player": "player1",
-      "move_detail": {
-        "from": "基隆",
-        "to": "新北",
-        "mode": "road"
-      },
+      "move_detail": null,
       "result": {
-        "success": true
+        "skipped": true
       },
       "orgs_after": {
-        "新北": 1
+        "深圳": 1
       },
-      "moves_left_after": 2
+      "moves_left_after": 3
     },
     {
       "step": "cycle_5_advance_to_end",
@@ -456,19 +540,19 @@
     {
       "step": "cycle_6_play_card",
       "player": "player2",
-      "faction": "gan",
+      "faction": "red_army",
       "hand_before": [
+        "樂捐者",
         "追隨者",
+        "樂捐者",
         "追隨者",
-        "追隨者",
-        "追隨者",
-        "樂捐者"
+        "追隨者"
       ],
       "hand_after": [
         "追隨者",
+        "樂捐者",
         "追隨者",
-        "追隨者",
-        "樂捐者"
+        "追隨者"
       ],
       "result": {
         "success": true
@@ -482,18 +566,14 @@
     {
       "step": "cycle_6_move",
       "player": "player2",
-      "move_detail": {
-        "from": "武漢",
-        "to": "鄭州",
-        "mode": "rail"
-      },
+      "move_detail": null,
       "result": {
-        "success": true
+        "skipped": true
       },
       "orgs_after": {
-        "鄭州": 1
+        "北京": 1
       },
-      "moves_left_after": 0
+      "moves_left_after": 3
     },
     {
       "step": "cycle_6_advance_to_end",
@@ -522,7 +602,7 @@
     {
       "step": "cycle_7_play_card",
       "player": "player3",
-      "faction": "red_army",
+      "faction": "chaoshan",
       "hand_before": [
         "追隨者",
         "樂捐者",
@@ -548,18 +628,14 @@
     {
       "step": "cycle_7_move",
       "player": "player3",
-      "move_detail": {
-        "from": "天津",
-        "to": "承德",
-        "mode": "road"
-      },
+      "move_detail": null,
       "result": {
-        "success": true
+        "skipped": true
       },
       "orgs_after": {
-        "承德": 1
+        "潮州": 1
       },
-      "moves_left_after": 2
+      "moves_left_after": 3
     },
     {
       "step": "cycle_7_advance_to_end",
@@ -588,16 +664,15 @@
     {
       "step": "cycle_8_play_card",
       "player": "player4",
-      "faction": "kazakh",
+      "faction": "taiwan_green",
       "hand_before": [
         "追隨者",
-        "樂捐者",
         "追隨者",
         "追隨者",
-        "追隨者"
+        "追隨者",
+        "樂捐者"
       ],
       "hand_after": [
-        "樂捐者",
         "追隨者",
         "追隨者",
         "追隨者",
@@ -615,18 +690,14 @@
     {
       "step": "cycle_8_move",
       "player": "player4",
-      "move_detail": {
-        "from": "楚城",
-        "to": "塔拉茲",
-        "mode": "rail"
-      },
+      "move_detail": null,
       "result": {
-        "success": true
+        "skipped": true
       },
       "orgs_after": {
-        "塔拉茲": 1
+        "臺北": 1
       },
-      "moves_left_after": 0
+      "moves_left_after": 3
     },
     {
       "step": "cycle_8_advance_to_end",
@@ -642,16 +713,18 @@
     },
     {
       "step": "before_forced_victory_check",
-      "candidate": "player1",
-      "faction": "taiwan_blue",
+      "candidate": "player4",
+      "faction": "taiwan_green",
       "org_count": 14,
+      "forced_red_survival": false,
       "turn": 3,
       "turn_phase": "event"
     },
     {
       "step": "after_forced_victory_check",
+      "did_win": true,
       "game_phase": "finished",
-      "winner": "player1",
+      "winner": "player4",
       "turn": 3,
       "turn_phase": "event"
     }
@@ -660,7 +733,7 @@
     "turn": 3,
     "game_phase": "finished",
     "turn_phase": "event",
-    "winner": "player1",
+    "winner": "player4",
     "current_player": "player1",
     "active_eras": [],
     "active_era_details": [],
@@ -668,31 +741,22 @@
     "market_mode": "sample_53",
     "pending_base_choices": {},
     "action_log": [
-      "[Turn 1] player1 played 樂捐者",
-      "[Turn 1] player1 moved 1 organization from 臺北 to 基隆 via rail",
+      "[Turn 1] player1 played 追隨者",
       "[Turn 1] End of turn for player1",
       "[Turn 1] player2 played 追隨者",
-      "[Turn 1] player2 moved 1 organization from 南昌 to 武漢 via rail",
       "[Turn 1] End of turn for player2",
-      "[Turn 1] player3 played 追隨者",
-      "[Turn 1] player3 moved 1 organization from 北京 to 天津 via rail",
+      "[Turn 1] player3 triggered 商貿組織 and drew 1 card",
+      "[Turn 1] player3 played 樂捐者",
       "[Turn 1] End of turn for player3",
-      "[Turn 1] player4 triggered 民族調和 and drew 1 card",
       "[Turn 1] player4 played 追隨者",
-      "[Turn 1] player4 moved 1 organization from 阿拉木圖 to 楚城 via rail",
       "[Turn 1] End of turn for player4",
       "[Turn 2] player1 played 樂捐者",
-      "[Turn 2] player1 moved 1 organization from 基隆 to 新北 via road",
       "[Turn 2] End of turn for player1",
-      "[Turn 2] player2 played 追隨者",
-      "[Turn 2] player2 moved 1 organization from 武漢 to 鄭州 via rail",
+      "[Turn 2] player2 played 樂捐者",
       "[Turn 2] End of turn for player2",
       "[Turn 2] player3 played 追隨者",
-      "[Turn 2] player3 moved 1 organization from 天津 to 承德 via road",
       "[Turn 2] End of turn for player3",
-      "[Turn 2] player4 triggered 民族調和 and drew 1 card",
       "[Turn 2] player4 played 追隨者",
-      "[Turn 2] player4 moved 1 organization from 楚城 to 塔拉茲 via rail",
       "[Turn 2] End of turn for player4"
     ],
     "purchase_area": [
@@ -702,10 +766,10 @@
       "資本家",
       "分神",
       "內鬥",
-      "印度奧援",
-      "地下黨",
-      "情報網",
-      "東洋奧援",
+      "英美奧援",
+      "臺灣奧援",
+      "凝聚共識",
+      "內應間諜",
       "歐洲奧援"
     ],
     "static_purchase_supply": {
@@ -718,116 +782,223 @@
     },
     "map": {
       "towns": {
-        "北京": [
-          {
-            "player": "player1",
-            "count": 1
-          }
-        ],
         "深圳": [
           {
             "player": "player1",
             "count": 1
-          }
-        ],
-        "廣州": [
+          },
           {
-            "player": "player1",
+            "player": "player4",
             "count": 1
           }
         ],
-        "湛茂": [
+        "北京": [
           {
-            "player": "player1",
+            "player": "player2",
             "count": 1
-          }
-        ],
-        "梅州": [
+          },
           {
-            "player": "player1",
+            "player": "player4",
             "count": 1
           }
         ],
         "潮州": [
           {
-            "player": "player1",
+            "player": "player3",
+            "count": 1
+          },
+          {
+            "player": "player4",
+            "count": 1
+          }
+        ],
+        "廣州": [
+          {
+            "player": "player4",
+            "count": 1
+          }
+        ],
+        "湛茂": [
+          {
+            "player": "player4",
+            "count": 1
+          }
+        ],
+        "梅州": [
+          {
+            "player": "player4",
             "count": 1
           }
         ],
         "桂林": [
           {
-            "player": "player1",
+            "player": "player4",
             "count": 1
           }
         ],
         "南寧": [
           {
-            "player": "player1",
+            "player": "player4",
             "count": 1
           }
         ],
         "海口": [
           {
-            "player": "player1",
+            "player": "player4",
             "count": 1
           }
         ],
         "三亞": [
           {
-            "player": "player1",
+            "player": "player4",
             "count": 1
           }
         ],
         "廈門": [
           {
-            "player": "player1",
+            "player": "player4",
             "count": 1
           }
         ],
         "福州": [
           {
-            "player": "player1",
+            "player": "player4",
             "count": 1
           }
         ],
         "溫州": [
           {
-            "player": "player1",
+            "player": "player4",
             "count": 1
           }
         ],
         "杭州": [
-          {
-            "player": "player1",
-            "count": 1
-          }
-        ],
-        "鄭州": [
-          {
-            "player": "player2",
-            "count": 1
-          }
-        ],
-        "承德": [
-          {
-            "player": "player3",
-            "count": 1
-          }
-        ],
-        "塔拉茲": [
           {
             "player": "player4",
             "count": 1
           }
         ]
       },
-      "shared_access": {}
+      "shared_access": {
+        "北京": [
+          "chaoshan"
+        ],
+        "杭州": [
+          "chaoshan"
+        ],
+        "桂林": [
+          "chaoshan"
+        ],
+        "溫州": [
+          "chaoshan"
+        ],
+        "福州": [
+          "chaoshan"
+        ],
+        "廈門": [
+          "chaoshan"
+        ],
+        "潮州": [
+          "chaoshan",
+          "taiwan_green"
+        ],
+        "梅州": [
+          "chaoshan"
+        ],
+        "廣州": [
+          "chaoshan"
+        ],
+        "湛茂": [
+          "chaoshan"
+        ],
+        "南寧": [
+          "chaoshan"
+        ],
+        "海口": [
+          "chaoshan"
+        ],
+        "三亞": [
+          "chaoshan"
+        ],
+        "深圳": [
+          "chaoshan"
+        ]
+      }
     },
     "players": [
       {
         "id": "p1",
         "name": "player1",
-        "faction": "taiwan_blue",
+        "faction": "republican",
+        "base": "深圳",
+        "resources": {
+          "money": 0,
+          "propaganda": 0
+        },
+        "moves_left": 3,
+        "hand": [
+          "追隨者",
+          "樂捐者",
+          "追隨者",
+          "樂捐者",
+          "追隨者"
+        ],
+        "deck_count": 5,
+        "discard_count": 0,
+        "orgs": {
+          "深圳": 1
+        }
+      },
+      {
+        "id": "p2",
+        "name": "player2",
+        "faction": "red_army",
+        "base": "北京",
+        "resources": {
+          "money": 0,
+          "propaganda": 0
+        },
+        "moves_left": 3,
+        "hand": [
+          "樂捐者",
+          "樂捐者",
+          "追隨者",
+          "追隨者",
+          "追隨者"
+        ],
+        "deck_count": 5,
+        "discard_count": 0,
+        "orgs": {
+          "北京": 1
+        }
+      },
+      {
+        "id": "p3",
+        "name": "player3",
+        "faction": "chaoshan",
+        "base": "潮州",
+        "resources": {
+          "money": 0,
+          "propaganda": 0
+        },
+        "moves_left": 3,
+        "hand": [
+          "追隨者",
+          "樂捐者",
+          "追隨者",
+          "追隨者",
+          "追隨者"
+        ],
+        "deck_count": 0,
+        "discard_count": 5,
+        "orgs": {
+          "潮州": 1
+        }
+      },
+      {
+        "id": "p4",
+        "name": "player4",
+        "faction": "taiwan_green",
         "base": "臺北",
         "resources": {
           "money": 0,
@@ -839,7 +1010,7 @@
           "追隨者",
           "追隨者",
           "追隨者",
-          "追隨者"
+          "樂捐者"
         ],
         "deck_count": 5,
         "discard_count": 0,
@@ -858,75 +1029,6 @@
           "福州": 1,
           "溫州": 1,
           "杭州": 1
-        }
-      },
-      {
-        "id": "p2",
-        "name": "player2",
-        "faction": "gan",
-        "base": "南昌",
-        "resources": {
-          "money": 0,
-          "propaganda": 0
-        },
-        "moves_left": 3,
-        "hand": [
-          "樂捐者",
-          "樂捐者",
-          "追隨者",
-          "樂捐者",
-          "追隨者"
-        ],
-        "deck_count": 5,
-        "discard_count": 0,
-        "orgs": {
-          "鄭州": 1
-        }
-      },
-      {
-        "id": "p3",
-        "name": "player3",
-        "faction": "red_army",
-        "base": "北京",
-        "resources": {
-          "money": 0,
-          "propaganda": 0
-        },
-        "moves_left": 3,
-        "hand": [
-          "追隨者",
-          "追隨者",
-          "樂捐者",
-          "追隨者",
-          "追隨者"
-        ],
-        "deck_count": 5,
-        "discard_count": 0,
-        "orgs": {
-          "承德": 1
-        }
-      },
-      {
-        "id": "p4",
-        "name": "player4",
-        "faction": "kazakh",
-        "base": "阿拉木圖",
-        "resources": {
-          "money": 0,
-          "propaganda": 0
-        },
-        "moves_left": 3,
-        "hand": [
-          "樂捐者",
-          "追隨者",
-          "追隨者",
-          "追隨者",
-          "追隨者"
-        ],
-        "deck_count": 5,
-        "discard_count": 0,
-        "orgs": {
-          "塔拉茲": 1
         }
       }
     ]

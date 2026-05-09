@@ -1371,6 +1371,9 @@ class Game:
         if player.moves_left < cost:
             return {"error": "Not enough move points"}
 
+        if from_town == origin_owner.base and origin_owner.organizations.get(from_town, 0) <= 1:
+            return {"error": "Base anchor organization cannot move"}
+
         origin_owner.organizations[from_town] -= 1
         if origin_owner.organizations[from_town] <= 0:
             del origin_owner.organizations[from_town]
