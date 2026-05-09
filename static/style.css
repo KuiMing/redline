@@ -387,6 +387,11 @@ body {
   min-height: 0;
 }
 
+#purchaseStatic {
+  grid-template-columns: 220px;
+  justify-content: center;
+}
+
 .purchase-subtitle {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.72rem;
