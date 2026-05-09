@@ -10,6 +10,7 @@ let pendingFactionBaseGroup = null;
 let cachedFullMapData = null;
 let activeFactionActionModal = null;
 let cardPresentationCatalog = null;
+let lastEraNotificationKey = null;
 
 function initTabs() {
   const tabs = document.querySelectorAll('.game-tab');
@@ -612,6 +613,59 @@ function closeFactionActionModal() {
   if (overlay) overlay.style.display = 'none';
 }
 
+function closeEraAchievementModal() {
+  const overlay = document.getElementById('eraAchievementModal');
+  if (overlay) overlay.style.display = 'none';
+}
+
+function minimizeEraAchievement() {
+  closeEraAchievementModal();
+}
+
+function renderEraAchievement(state) {
+  const overlay = document.getElementById('eraAchievementModal');
+  const title = document.getElementById('eraAchievementTitle');
+  const cond = document.getElementById('eraAchievementCondition');
+  const success = document.getElementById('eraAchievementSuccess');
+  const fail = document.getElementById('eraAchievementFail');
+  const duration = document.getElementById('eraAchievementDuration');
+  const pin = document.getElementById('eraPinnedNotice');
+  const minimizeBtn = document.getElementById('eraAchievementMinimizeBtn');
+  if (!overlay || !title || !cond || !success || !fail || !duration || !pin || !minimizeBtn) return;
+
+  const info = state.era_notification || null;
+  const activeDetails = state.active_era_details || [];
+
+  if (!info) {
+    overlay.style.display = 'none';
+    pin.style.display = 'none';
+    pin.innerHTML = '';
+    lastEraNotificationKey = null;
+    return;
+  }
+
+  const key = `${info.id}:${info.remaining ?? 'perm'}`;
+  title.textContent = `${info.name}｜條件已達成`;
+  cond.textContent = `達成條件：${info.trigger_text || '（暫缺）'}`;
+  success.textContent = info.success_text || '（暫缺）';
+  fail.textContent = info.fail_text || '（暫缺）';
+  duration.textContent = `效果期限：${info.duration_text || '（暫缺）'}${info.remaining == null ? '' : `｜剩餘 ${info.remaining} 回合`}`;
+  minimizeBtn.onclick = minimizeEraAchievement;
+
+  const activeHtml = activeDetails.map(item => {
+    const remainText = item.remaining == null ? '持續中' : `剩餘 ${item.remaining} 回合`;
+    const activeClass = item.id === info.id ? ' active' : '';
+    return `<div class="era-pin-card${activeClass}"><div class="era-pin-title">${escapeHtml(item.name)}</div><div class="era-pin-meta">條件已達成｜${escapeHtml(remainText)}</div></div>`;
+  }).join('');
+  pin.innerHTML = activeHtml;
+  pin.style.display = activeHtml ? 'flex' : 'none';
+
+  if (lastEraNotificationKey !== key) {
+    overlay.style.display = 'flex';
+    lastEraNotificationKey = key;
+  }
+}
+
 function openGamblerGuessModal() {
   activeFactionActionModal = '賭徒耳語';
   const overlay = document.getElementById('factionActionModal');
@@ -930,6 +984,7 @@ async function render(state) {
   await renderBuildSupport(state);
   renderFactionActionPanel(state);
   renderBaseSelection(state);
+  renderEraAchievement(state);
 
   // HUD
   const hud = document.getElementById('hud');
@@ -946,16 +1001,23 @@ async function render(state) {
     const myMoves = me?.moves_left ?? 0;
     const myHand = me?.hand?.length ?? 0;
     const phaseLabel = String(state.turn_phase || '').toLowerCase() === 'action' ? '行動' : String(state.turn_phase || '').toLowerCase() === 'event' ? '事件' : String(state.turn_phase || '').toLowerCase() === 'end' ? '結束' : state.turn_phase;
+    const eraStatus = (state.active_era_details || []).map(item => {
+      const remainText = item.remaining == null ? '持續中' : `剩餘 ${item.remaining} 回合`;
+      return `<span class="hud-era-pill">${escapeHtml(item.name)}｜條件已達成｜${escapeHtml(remainText)}</span>`;
+    }).join('');
 
     hud.innerHTML = `
-      回合 ${state.turn}
-      | 階段 ${phaseLabel}
-      | 當前玩家 ${state.current_player}
-      | 手牌 ${myHand}
-      | 資金 ${myMoney}
-      | 宣傳 ${myPropaganda}
-      | 移動 ${myMoves}
-      | ${orgInfo}
+      <div class="hud-main-row">
+        <span>回合 ${state.turn}</span>
+        <span>階段 ${phaseLabel}</span>
+        <span>當前玩家 ${state.current_player}</span>
+        <span>手牌 ${myHand}</span>
+        <span>資金 ${myMoney}</span>
+        <span>宣傳 ${myPropaganda}</span>
+        <span>移動 ${myMoves}</span>
+        <span>${orgInfo}</span>
+      </div>
+      ${eraStatus ? `<div class="hud-era-row">${eraStatus}</div>` : ''}
     `;
   }
 

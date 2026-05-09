@@ -145,6 +145,7 @@ class Game:
         self.action_log = []
         self.purchase_area = self._initial_purchase_area()
         self.purchase_deck = self._initial_purchase_deck()
+        self.era_notification = None
 
     # ---------- Init ----------
 
@@ -1212,7 +1213,9 @@ class Game:
 
         # ✅ Tick active eras at end of full turn
         if self.era_engine:
-            self.era_engine.tick()
+            expired_eras = self.era_engine.tick()
+            if self.era_notification and self.era_notification.get("id") in set(expired_eras):
+                self.era_notification = None
 
         self.current_player_index = (self.current_player_index + 1) % len(self.players)
         if self.current_player_index == 0:
@@ -1407,6 +1410,50 @@ class Game:
 
     # ---------- Era Trigger ----------
 
+    def _era_card_entry(self, era_name):
+        path = BASE_DIR / "data" / "cards" / "event_and_era_cards.v1.1.json"
+        if not path.exists():
+            return None
+        try:
+            rows = self._load_json(path)
+        except Exception:
+            return None
+        for row in rows:
+            if isinstance(row, list) and row and row[0] == era_name:
+                return row
+        return None
+
+    def _era_notification_payload(self, era):
+        era_name = era.get("name", "未知時代")
+        row = self._era_card_entry(era_name)
+        trigger_text = None
+        success_text = None
+        fail_text = None
+        if row and len(row) >= 5:
+            trigger_text = row[2] or None
+            success_text = row[3] or None
+            fail_text = row[4] or None
+        trigger = era.get("trigger") or {}
+        if not trigger_text and trigger.get("type") == "count_only":
+            trigger_text = f"在指定區域擁有至少 {trigger.get('count', 0)} 個有效組織。"
+        duration = era.get("duration", {})
+        if duration.get("type") == "turns":
+            duration_text = f"持續 {duration.get('value', 0)} 回合"
+        elif duration.get("type") == "permanent":
+            duration_text = "持續至遊戲結束"
+        else:
+            duration_text = "持續時間未明"
+        return {
+            "id": era.get("id"),
+            "name": era_name,
+            "trigger_text": trigger_text or "（條件資料暫缺）",
+            "success_text": success_text or "（紅軍壓制效果暫缺）",
+            "fail_text": fail_text or "（革命反撲效果暫缺）",
+            "duration_text": duration_text,
+            "remaining": None,
+            "minimized": False,
+        }
+
     def _check_era_trigger(self):
         if not hasattr(self, "era_engine"):
             return
@@ -1423,7 +1470,9 @@ class Game:
                 continue
 
             if self._evaluate_era_trigger(trigger):
-                self.era_engine.activate_era(era_id)
+                if self.era_engine.activate_era(era_id):
+                    self.era_notification = self._era_notification_payload(era)
+                    self.log(f"Era triggered: {era.get('name', era_id)}")
 
     def _evaluate_era_trigger(self, trigger):
         t = trigger.get("type")
@@ -1471,6 +1520,15 @@ class Game:
                 if self._shared_org_count(p, town) > p.organizations.get(town, 0):
                     shared_access.setdefault(town, []).append(p.faction_id)
 
+        active_era_details = self.era_engine.get_active_era_details() if self.era_engine else []
+        notification = None
+        if self.era_notification:
+            notification = dict(self.era_notification)
+            active_match = next((e for e in active_era_details if e.get("id") == notification.get("id")), None)
+            if active_match:
+                notification["remaining"] = active_match.get("remaining")
+                notification["duration"] = active_match.get("duration")
+
         return {
             "turn": self.turn,
             "game_phase": self.game_phase,
@@ -1478,6 +1536,8 @@ class Game:
             "winner": self.winner,
             "current_player": self.current_player().name,
             "active_eras": self.era_engine.get_active_eras() if self.era_engine else [],
+            "active_era_details": active_era_details,
+            "era_notification": notification,
             "pending_base_choices": self.pending_base_choices,
             "action_log": self.action_log,
             "purchase_area": [getattr(card, 'name', str(card)) for card in self.purchase_area],
