@@ -64,6 +64,8 @@ async function createRoom() {
   playerId = data.host_id;
   const roomInput = document.getElementById('roomId');
   if (roomInput) roomInput.value = gameId;
+  const marketSelect = document.getElementById('marketModeSelect');
+  if (marketSelect) marketSelect.value = 'sample_53';
   await loadFactions();
   alert("ROOM CREATED: " + gameId);
 }
