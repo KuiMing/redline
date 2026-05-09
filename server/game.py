@@ -145,6 +145,7 @@ class Game:
         self.action_log = []
         self.purchase_area = self._initial_purchase_area()
         self.purchase_deck = self._initial_purchase_deck()
+        self.static_purchase_supply = {name: 1 for name in ['宣傳家', '思想家', '資助者', '資本家', '分神', '內鬥']}
         self.era_notification = None
 
     # ---------- Init ----------
@@ -257,6 +258,20 @@ class Game:
                 self.purchase_deck = self._initial_purchase_deck()
                 drawn.extend(self.purchase_deck.draw(count - len(drawn)))
         return drawn
+
+    def _return_removed_card_to_purchase_supply(self, card):
+        card_name = getattr(card, 'name', str(card))
+        static_names = {getattr(c, 'name', str(c)) for c in self._static_purchase_cards()}
+        if card_name in static_names:
+            current = int(self.static_purchase_supply.get(card_name, 1) or 1)
+            self.static_purchase_supply[card_name] = current + 1
+            self.log(f"{card_name} returned to static purchase supply")
+            return {'zone': 'static_supply', 'name': card_name, 'count': self.static_purchase_supply[card_name]}
+        if getattr(self, 'purchase_deck', None):
+            self.purchase_deck.discard([card])
+            self.log(f"{card_name} returned to purchase deck discard")
+            return {'zone': 'deck_discard', 'name': card_name}
+        return None
 
     def _support_card_effect_text(self, card_name, tier, region_index):
         entry = self._support_taxonomy_entry(card_name)
@@ -1150,7 +1165,7 @@ class Game:
                 played_names.append(card_name)
 
         if effective_type != 'support':
-            self.action_engine.execute(card_name, player, self)
+            self.action_engine.execute(card_name, player, self, context={'current_card': played_card})
 
         for ability in self._player_effective_abilities(player):
             if not isinstance(ability, dict):
@@ -1541,6 +1556,7 @@ class Game:
             "pending_base_choices": self.pending_base_choices,
             "action_log": self.action_log,
             "purchase_area": [getattr(card, 'name', str(card)) for card in self.purchase_area],
+            "static_purchase_supply": dict(getattr(self, 'static_purchase_supply', {})),
             "map": {
                 "towns": town_control,
                 "shared_access": shared_access

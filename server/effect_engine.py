@@ -80,9 +80,18 @@ class EffectEngine:
 
         # ✅ Optional trash (MVP: trash the last card in hand if any)
         if etype == "optional_trash":
-            if player.hand:
+            context = context or {}
+            current_card = context.get('current_card')
+            if current_card is not None:
+                returned = game._return_removed_card_to_purchase_supply(current_card)
+                if returned:
+                    game.log(f"{player.name} removed {getattr(current_card, 'name', str(current_card))} and it returned to {returned.get('zone')}")
+            elif player.hand:
                 trashed = player.hand.pop()
-                game.log(f"{player.name} trashed {getattr(trashed, 'name', str(trashed))}")
+                returned = game._return_removed_card_to_purchase_supply(trashed)
+                game.log(f"{player.name} removed {getattr(trashed, 'name', str(trashed))}")
+                if returned:
+                    game.log(f"{getattr(trashed, 'name', str(trashed))} returned to {returned.get('zone')}")
             return
 
         # ✅ Build via card effect (MVP: reinforce current base or first owned legal town)
