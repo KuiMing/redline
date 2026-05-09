@@ -126,9 +126,25 @@ function factionDisplayName(factionId) {
     }
   }
 
-  if (factionId === 'uyghur_family') return '維吾爾';
-  if (factionId === 'tibet_family') return '西藏';
-  return factionId;
+  const fallbackNames = {
+    red_army: '紅軍',
+    taiwan_green: '臺灣（綠線）',
+    taiwan_blue: '臺灣（藍線）',
+    hong_kong: '香港',
+    manchuria: '滿洲',
+    mongol: '蒙古',
+    kazakh: '哈薩克',
+    uyghur_family: '維吾爾',
+    uyghur_istanbul: '維吾爾（伊斯坦堡）',
+    uyghur_munich: '維吾爾（慕尼黑）',
+    uyghur_washington: '維吾爾（華府）',
+    uyghur_almaty: '維吾爾（阿拉木圖）',
+    tibet_family: '西藏',
+    tibet_dharamsala: '西藏（達蘭薩拉）',
+    tibet_dehradun: '西藏（德拉敦）',
+    tibet_chogu: '西藏（錯古）'
+  };
+  return fallbackNames[factionId] || factionId || '未選陣營';
 }
 
 function factionOptionById(factionId) {
@@ -984,11 +1000,74 @@ function renderBaseSelection(state) {
   });
 }
 
+function factionToneClass(factionId) {
+  if (factionId === 'red_army') return ' tone-red';
+  if (String(factionId || '').startsWith('taiwan')) return ' tone-taiwan';
+  if (String(factionId || '').startsWith('tibet')) return ' tone-tibet';
+  if (String(factionId || '').startsWith('uyghur') || factionId === 'kazakh') return ' tone-gold';
+  if (factionId === 'hong_kong') return ' tone-hongkong';
+  return '';
+}
+
+function playerBaseName(player) {
+  const orgTowns = Object.keys(player?.orgs || {});
+  if (player?.base) return player.base;
+  if (player?.base_name) return player.base_name;
+  if (orgTowns.length === 1) return orgTowns[0];
+  if (orgTowns.length > 1) return orgTowns.join('、');
+  return '未部署';
+}
+
+function renderPlayerStatusCards(state) {
+  const target = document.getElementById('playerStatusOverview');
+  if (!target) return;
+
+  const players = state.players || [];
+  if (!players.length) {
+    target.innerHTML = '<div class="player-status-empty">尚未取得玩家戰況。</div>';
+    return;
+  }
+
+  target.innerHTML = players.map(player => {
+    const totalOrgs = Object.values(player.orgs || {}).reduce((a, b) => a + b, 0);
+    const money = player.resources?.money ?? 0;
+    const propaganda = player.resources?.propaganda ?? 0;
+    const handCount = player.hand?.length ?? 0;
+    const moves = player.moves_left ?? 0;
+    const isCurrent = state.current_player === player.name;
+    const factionName = factionDisplayName(player.faction);
+    const baseName = playerBaseName(player);
+    const initial = escapeHtml(String(player.name || '?').slice(0, 1).toUpperCase());
+    return `
+      <article class="player-status-card${isCurrent ? ' current' : ''}${factionToneClass(player.faction)}">
+        <div class="player-status-top">
+          <div class="player-status-avatar">${initial}</div>
+          <div class="player-status-id">
+            <div class="player-status-name">${escapeHtml(player.name || '未命名玩家')}</div>
+            <div class="player-status-subtitle">${isCurrent ? '當前行動玩家' : '玩家戰況'}</div>
+          </div>
+          ${isCurrent ? '<span class="player-status-current">當前玩家</span>' : ''}
+        </div>
+        <div class="player-status-badges">
+          <span class="player-status-badge faction">陣營：${escapeHtml(factionName)}</span>
+          <span class="player-status-badge">根據地：${escapeHtml(baseName)}</span>
+        </div>
+        <div class="player-status-stats">
+          <div class="player-status-stat"><span>組織</span><strong>${totalOrgs}</strong></div>
+          <div class="player-status-stat"><span>資金</span><strong>${money}</strong></div>
+          <div class="player-status-stat"><span>宣傳</span><strong>${propaganda}</strong></div>
+          <div class="player-status-stat"><span>手牌</span><strong>${handCount}</strong></div>
+          <div class="player-status-stat"><span>移動</span><strong>${moves}</strong></div>
+        </div>
+      </article>`;
+  }).join('');
+}
+
 async function render(state) {
   if (state.error) {
     alert(state.error);
   }
-  await loadCardPresentationCatalog();
+  await Promise.all([loadCardPresentationCatalog(), loadFactions()]);
 
   const me = state.players?.find(p => p.id === playerId) || null;
   const inBaseSelection = state.game_phase === 'base_selection';
@@ -1006,12 +1085,13 @@ async function render(state) {
   // HUD
   const hud = document.getElementById('hud');
   if (hud) {
-    const orgInfo = state.players.map(p => {
+    const players = state.players || [];
+    const orgInfo = players.map(p => {
       const total = Object.values(p.orgs || {}).reduce((a,b)=>a+b,0);
       return `<span class="hud-chip">${escapeHtml(p.name)} 組織 ${total}</span>`;
     }).join('');
 
-    const me = state.players.find(p => p.id === playerId);
+    const me = players.find(p => p.id === playerId);
     const myMoney = me?.resources?.money ?? 0;
     const myPropaganda = me?.resources?.propaganda ?? 0;
     const myMoves = me?.moves_left ?? 0;
@@ -1056,7 +1136,7 @@ async function render(state) {
   const handDiv = document.getElementById('hand');
   if (handDiv) {
     handDiv.innerHTML = '';
-    const me = state.players.find(p => p.id === playerId);
+    const me = (state.players || []).find(p => p.id === playerId);
     if (me && me.hand) {
       me.hand.forEach((card, i) => {
         const colorName = (cardPresentation(card)?.color) || (/奧援/.test(card) ? '奧援' : '灰');
@@ -1092,6 +1172,7 @@ async function render(state) {
   }
 
   // Log
+  renderPlayerStatusCards(state);
   const logTargets = [document.getElementById('log'), document.getElementById('logViewContent')].filter(Boolean);
   if (logTargets.length) {
     const entries = state.action_log || state.log || [];
