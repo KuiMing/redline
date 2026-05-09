@@ -1006,11 +1006,10 @@ async function render(state) {
   // HUD
   const hud = document.getElementById('hud');
   if (hud) {
-    let orgInfo = '';
-    state.players.forEach(p => {
+    const orgInfo = state.players.map(p => {
       const total = Object.values(p.orgs || {}).reduce((a,b)=>a+b,0);
-      orgInfo += `${p.name}: ${total} | `;
-    });
+      return `<span class="hud-chip">${escapeHtml(p.name)} 組織 ${total}</span>`;
+    }).join('');
 
     const me = state.players.find(p => p.id === playerId);
     const myMoney = me?.resources?.money ?? 0;
@@ -1025,14 +1024,14 @@ async function render(state) {
 
     hud.innerHTML = `
       <div class="hud-main-row">
-        <span>回合 ${state.turn}</span>
-        <span>階段 ${phaseLabel}</span>
-        <span>當前玩家 ${state.current_player}</span>
-        <span>手牌 ${myHand}</span>
-        <span>資金 ${myMoney}</span>
-        <span>宣傳 ${myPropaganda}</span>
-        <span>移動 ${myMoves}</span>
-        <span>${orgInfo}</span>
+        <span class="hud-chip hud-chip-primary">回合 ${state.turn}</span>
+        <span class="hud-chip hud-chip-primary">${phaseLabel}階段</span>
+        <span class="hud-chip">當前玩家 ${escapeHtml(state.current_player)}</span>
+        <span class="hud-chip">手牌 ${myHand}</span>
+        <span class="hud-chip hud-chip-resource">資金 ${myMoney}</span>
+        <span class="hud-chip hud-chip-resource">宣傳 ${myPropaganda}</span>
+        <span class="hud-chip">移動 ${myMoves}</span>
+        ${orgInfo}
       </div>
       ${eraStatus ? `<div class="hud-era-row">${eraStatus}</div>` : ''}
     `;
