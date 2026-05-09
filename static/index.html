@@ -79,6 +79,7 @@
   <div id="gameTabs">
     <button class="game-tab active" data-view="command">指揮中心</button>
     <button class="game-tab" data-view="map">戰略地圖</button>
+    <button class="game-tab" data-view="log">戰況紀錄</button>
   </div>
 
   <div id="commandView" class="game-view active">
@@ -111,12 +112,7 @@
         </div>
       </div>
 
-      <div id="logPanel" class="panel">
-        <div class="panel-title">戰況紀錄</div>
-        <div id="log"></div>
-      </div>
-
-      <div id="handPanel" class="panel">
+      <div id="handPanel" class="panel hand-panel-wide">
         <div class="panel-title">手牌</div>
         <div id="hand"></div>
       </div>
@@ -132,6 +128,13 @@
         loading="eager"
         referrerpolicy="no-referrer"
       ></iframe>
+    </div>
+  </div>
+
+  <div id="logView" class="game-view">
+    <div id="logViewPanel" class="panel log-only-panel">
+      <div class="panel-title">戰況紀錄</div>
+      <div id="logViewContent"></div>
     </div>
   </div>
 </div>

@@ -1064,12 +1064,12 @@ async function render(state) {
   }
 
   // Log
-  const logDiv = document.getElementById('log');
-  if (logDiv) {
-    logDiv.innerHTML = '';
+  const logTargets = [document.getElementById('log'), document.getElementById('logViewContent')].filter(Boolean);
+  if (logTargets.length) {
     const entries = state.action_log || state.log || [];
-    entries.slice().reverse().forEach(entry => {
-      logDiv.innerHTML += `<div>${entry}</div>`;
+    const html = entries.slice().reverse().map(entry => `<div>${entry}</div>`).join('');
+    logTargets.forEach(target => {
+      target.innerHTML = html;
     });
   }
 

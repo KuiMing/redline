@@ -143,8 +143,8 @@ body {
 
 #commandGrid {
   display: grid;
-  grid-template-columns: 65% 35%;
-  grid-template-rows: 70% 30%;
+  grid-template-columns: 58% 42%;
+  grid-template-rows: 100%;
   height: 100%;
   width: 100vw;
 }
@@ -157,6 +157,10 @@ body {
   overflow: hidden;
 }
 
+.hand-panel-wide {
+  min-width: 0;
+}
+
 .panel-title {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.75rem;
@@ -165,7 +169,8 @@ body {
 }
 
 
-#log {
+#log,
+#logViewContent {
   flex: 1;
   background: #05080C;
   font-family: 'JetBrains Mono', monospace;
@@ -700,11 +705,17 @@ body {
   line-height: 1.45;
 }
 
-#mapView {
+#mapView,
+#logView {
   padding: 0;
   position: relative;
   z-index: 2;
   height: calc(100vh - 96px);
+}
+
+.log-only-panel {
+  height: 100%;
+  background: rgba(17, 22, 29, 0.96);
 }
 
 .map-only-panel {
