@@ -18,9 +18,18 @@ SEMANTIC_POOLS = {
     "任意東洋": {"東京", "大阪", "福岡", "札幌", "仙臺", "沖繩", "首爾", "釜山"},
 }
 
+ALIAS_TOWNS = {
+    '梅洲': '梅州',
+}
+
 
 def allowed_base_names(game, faction):
-    names = [b.get("name") for b in faction.get("bases", []) if b.get("name")]
+    names = []
+    for b in faction.get("bases", []):
+        if isinstance(b, dict) and b.get("name"):
+            names.append(b.get("name"))
+        elif isinstance(b, str) and b:
+            names.append(b)
     china_towns = set(game.board_regions.get("china", {}).get("towns", []))
     allowed = set()
     for name in names:
@@ -63,10 +72,20 @@ def run_game(player_count):
     trace = []
 
     if game.game_phase == game.game_phase.BASE_SELECTION:
-        initial_pending = dict(game.pending_base_choices)
-        for pid, choices in list(game.pending_base_choices.items()):
-            if choices:
-                game.set_base_choice(pid, choices[0])
+        initial_pending = json.loads(json.dumps(game.pending_base_choices, ensure_ascii=False))
+        for pid, choice_data in list(game.pending_base_choices.items()):
+            labels = choice_data.get('labels', [])
+            resolved = choice_data.get('resolved', {})
+            chosen = None
+            for label in labels:
+                for town in resolved.get(label, []):
+                    result = game.set_base_choice(pid, town, label=label)
+                    if result.get('success'):
+                        chosen = {'player_id': pid, 'label': label, 'town': town, 'result': result}
+                        break
+                if chosen:
+                    break
+            trace.append({"step": "base_selection_choice", "choice": chosen})
         trace.append({
             "step": "base_selection_resolution",
             "initial_pending": initial_pending,
@@ -121,12 +140,12 @@ def run_game(player_count):
             roads = list(town.get("road") or [])
             rails = list(town.get("rail") or [])
             if roads:
-                target = roads[0]
+                target = ALIAS_TOWNS.get(roads[0], roads[0])
                 move_result = game.move_organization(from_town, target, "road")
                 move_detail = {"from": from_town, "to": target, "mode": "road"}
                 break
             if rails:
-                target = rails[0]
+                target = ALIAS_TOWNS.get(rails[0], rails[0])
                 move_result = game.move_organization(from_town, target, "rail")
                 move_detail = {"from": from_town, "to": target, "mode": "rail"}
                 break
@@ -214,8 +233,16 @@ def write_outputs(result):
 
 
 def main():
+    summaries = []
     for count in (3, 4):
-        write_outputs(run_game(count))
+        result = run_game(count)
+        write_outputs(result)
+        errors = [item for item in result['trace'] if isinstance(item.get('result'), dict) and item['result'].get('error')]
+        passed = result['final_state'].get('game_phase') == 'finished' and result['final_state'].get('winner') and not errors
+        summaries.append({'player_count': count, 'passed': passed, 'error_count': len(errors), 'winner': result['final_state'].get('winner'), 'game_phase': result['final_state'].get('game_phase')})
+    print(json.dumps({'summaries': summaries}, ensure_ascii=False))
+    if not all(item['passed'] for item in summaries):
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

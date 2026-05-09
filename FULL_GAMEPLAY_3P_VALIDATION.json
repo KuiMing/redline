@@ -2,17 +2,78 @@
   "player_count": 3,
   "trace": [
     {
+      "step": "base_selection_choice",
+      "choice": {
+        "player_id": "p2",
+        "label": "任意牆內",
+        "town": "深圳",
+        "result": {
+          "success": true
+        }
+      }
+    },
+    {
       "step": "base_selection_resolution",
       "initial_pending": {
-        "p3": [
-          "華盛頓",
-          "紐約",
-          "多倫多",
-          "卡加利",
-          "溫哥華",
-          "舊金山",
-          "洛杉磯"
-        ]
+        "p2": {
+          "labels": [
+            "任意牆內",
+            "任意英美城鎮"
+          ],
+          "resolved": {
+            "任意牆內": [
+              "北京",
+              "深圳",
+              "廣州",
+              "湛茂",
+              "梅州",
+              "潮州",
+              "桂林",
+              "南寧",
+              "海口",
+              "三亞",
+              "廈門",
+              "福州",
+              "溫州",
+              "杭州",
+              "上海",
+              "南京",
+              "合肥",
+              "武漢",
+              "南昌",
+              "長沙",
+              "南陽",
+              "鄭州",
+              "徐州",
+              "濟南",
+              "青島",
+              "天津",
+              "石家莊",
+              "太原",
+              "延安",
+              "西安",
+              "銀川",
+              "蘭州",
+              "敦煌",
+              "西寧",
+              "重慶",
+              "成都",
+              "貴陽",
+              "昆明",
+              "德宏",
+              "西雙版納"
+            ],
+            "任意英美城鎮": [
+              "華盛頓",
+              "紐約",
+              "多倫多",
+              "卡加利",
+              "溫哥華",
+              "舊金山",
+              "洛杉磯"
+            ]
+          }
+        }
       },
       "remaining_pending": {},
       "game_phase_after_selection": "main"
@@ -26,6 +87,43 @@
         "rows": [
           {
             "player": "player1",
+            "faction": "uyghur_istanbul",
+            "base": "伊斯坦堡",
+            "orgs": {
+              "伊斯坦堡": 1
+            },
+            "single_base_org": true,
+            "base_allowed": true,
+            "allowed_sample": [
+              "伊斯坦堡"
+            ]
+          },
+          {
+            "player": "player2",
+            "faction": "reform_opening",
+            "base": "深圳",
+            "orgs": {
+              "深圳": 1
+            },
+            "single_base_org": true,
+            "base_allowed": true,
+            "allowed_sample": [
+              "三亞",
+              "上海",
+              "倫敦",
+              "北京",
+              "南京",
+              "南寧",
+              "南昌",
+              "南陽",
+              "卡加利",
+              "合肥",
+              "多倫多",
+              "天津"
+            ]
+          },
+          {
+            "player": "player3",
             "faction": "red_army",
             "base": "北京",
             "orgs": {
@@ -35,41 +133,6 @@
             "base_allowed": true,
             "allowed_sample": [
               "北京"
-            ]
-          },
-          {
-            "player": "player2",
-            "faction": "tibet_dehradun",
-            "base": "德拉敦",
-            "orgs": {
-              "德拉敦": 1
-            },
-            "single_base_org": true,
-            "base_allowed": true,
-            "allowed_sample": [
-              "德拉敦"
-            ]
-          },
-          {
-            "player": "player3",
-            "faction": "zhaowu_ganqingning",
-            "base": "華盛頓",
-            "orgs": {
-              "華盛頓": 1
-            },
-            "single_base_org": true,
-            "base_allowed": true,
-            "allowed_sample": [
-              "倫敦",
-              "利雅德",
-              "卡加利",
-              "多倫多",
-              "洛杉磯",
-              "溫哥華",
-              "紐約",
-              "舊金山",
-              "華盛頓",
-              "蘭州"
             ]
           }
         ],
@@ -91,17 +154,17 @@
     {
       "step": "cycle_1_play_card",
       "player": "player1",
-      "faction": "red_army",
+      "faction": "uyghur_istanbul",
       "hand_before": [
         "追隨者",
         "追隨者",
-        "追隨者",
+        "樂捐者",
         "追隨者",
         "追隨者"
       ],
       "hand_after": [
         "追隨者",
-        "追隨者",
+        "樂捐者",
         "追隨者",
         "追隨者"
       ],
@@ -118,15 +181,15 @@
       "step": "cycle_1_move",
       "player": "player1",
       "move_detail": {
-        "from": "北京",
-        "to": "天津",
+        "from": "伊斯坦堡",
+        "to": "伊德利卜",
         "mode": "rail"
       },
       "result": {
         "success": true
       },
       "orgs_after": {
-        "天津": 1
+        "伊德利卜": 1
       },
       "moves_left_after": 0
     },
@@ -157,19 +220,19 @@
     {
       "step": "cycle_2_play_card",
       "player": "player2",
-      "faction": "tibet_dehradun",
+      "faction": "reform_opening",
       "hand_before": [
         "追隨者",
         "追隨者",
-        "樂捐者",
         "追隨者",
-        "追隨者"
+        "追隨者",
+        "樂捐者"
       ],
       "hand_after": [
         "追隨者",
-        "樂捐者",
         "追隨者",
-        "追隨者"
+        "追隨者",
+        "樂捐者"
       ],
       "result": {
         "success": true
@@ -184,15 +247,15 @@
       "step": "cycle_2_move",
       "player": "player2",
       "move_detail": {
-        "from": "德拉敦",
-        "to": "博卡拉",
+        "from": "深圳",
+        "to": "元朗",
         "mode": "road"
       },
       "result": {
         "success": true
       },
       "orgs_after": {
-        "博卡拉": 1
+        "元朗": 1
       },
       "moves_left_after": 2
     },
@@ -223,19 +286,19 @@
     {
       "step": "cycle_3_play_card",
       "player": "player3",
-      "faction": "zhaowu_ganqingning",
+      "faction": "red_army",
       "hand_before": [
         "追隨者",
         "樂捐者",
         "追隨者",
         "追隨者",
-        "追隨者"
+        "樂捐者"
       ],
       "hand_after": [
         "樂捐者",
         "追隨者",
         "追隨者",
-        "追隨者"
+        "樂捐者"
       ],
       "result": {
         "success": true
@@ -250,17 +313,17 @@
       "step": "cycle_3_move",
       "player": "player3",
       "move_detail": {
-        "from": "華盛頓",
-        "to": "倫敦",
-        "mode": "road"
+        "from": "北京",
+        "to": "天津",
+        "mode": "rail"
       },
       "result": {
         "success": true
       },
       "orgs_after": {
-        "倫敦": 1
+        "天津": 1
       },
-      "moves_left_after": 2
+      "moves_left_after": 0
     },
     {
       "step": "cycle_3_advance_to_end",
@@ -289,17 +352,17 @@
     {
       "step": "cycle_4_play_card",
       "player": "player1",
-      "faction": "red_army",
+      "faction": "uyghur_istanbul",
       "hand_before": [
         "樂捐者",
         "樂捐者",
-        "樂捐者",
+        "追隨者",
         "追隨者",
         "追隨者"
       ],
       "hand_after": [
         "樂捐者",
-        "樂捐者",
+        "追隨者",
         "追隨者",
         "追隨者"
       ],
@@ -316,17 +379,17 @@
       "step": "cycle_4_move",
       "player": "player1",
       "move_detail": {
-        "from": "天津",
-        "to": "承德",
-        "mode": "road"
+        "from": "伊德利卜",
+        "to": "伊斯坦堡",
+        "mode": "rail"
       },
       "result": {
         "success": true
       },
       "orgs_after": {
-        "承德": 1
+        "伊斯坦堡": 1
       },
-      "moves_left_after": 2
+      "moves_left_after": 0
     },
     {
       "step": "cycle_4_advance_to_end",
@@ -355,16 +418,16 @@
     {
       "step": "cycle_5_play_card",
       "player": "player2",
-      "faction": "tibet_dehradun",
+      "faction": "reform_opening",
       "hand_before": [
-        "樂捐者",
         "追隨者",
+        "樂捐者",
         "追隨者",
         "樂捐者",
         "追隨者"
       ],
       "hand_after": [
-        "追隨者",
+        "樂捐者",
         "追隨者",
         "樂捐者",
         "追隨者"
@@ -382,15 +445,15 @@
       "step": "cycle_5_move",
       "player": "player2",
       "move_detail": {
-        "from": "博卡拉",
-        "to": "加德滿都",
+        "from": "元朗",
+        "to": "深圳",
         "mode": "road"
       },
       "result": {
         "success": true
       },
       "orgs_after": {
-        "加德滿都": 1
+        "深圳": 1
       },
       "moves_left_after": 2
     },
@@ -421,18 +484,18 @@
     {
       "step": "cycle_6_play_card",
       "player": "player3",
-      "faction": "zhaowu_ganqingning",
+      "faction": "red_army",
       "hand_before": [
-        "樂捐者",
-        "樂捐者",
         "追隨者",
         "追隨者",
+        "追隨者",
+        "樂捐者",
         "追隨者"
       ],
       "hand_after": [
+        "追隨者",
+        "追隨者",
         "樂捐者",
-        "追隨者",
-        "追隨者",
         "追隨者"
       ],
       "result": {
@@ -448,15 +511,15 @@
       "step": "cycle_6_move",
       "player": "player3",
       "move_detail": {
-        "from": "倫敦",
-        "to": "華盛頓",
+        "from": "天津",
+        "to": "承德",
         "mode": "road"
       },
       "result": {
         "success": true
       },
       "orgs_after": {
-        "華盛頓": 1
+        "承德": 1
       },
       "moves_left_after": 2
     },
@@ -475,48 +538,71 @@
     {
       "step": "before_forced_victory_check",
       "candidate": "player1",
-      "faction": "red_army",
+      "faction": "uyghur_istanbul",
       "org_count": 14,
       "turn": 3,
       "turn_phase": "event"
     },
     {
       "step": "after_forced_victory_check",
-      "game_phase": "main",
-      "winner": null,
+      "game_phase": "finished",
+      "winner": "player1",
       "turn": 3,
       "turn_phase": "event"
     }
   ],
   "final_state": {
     "turn": 3,
-    "game_phase": "main",
+    "game_phase": "finished",
     "turn_phase": "event",
-    "winner": null,
+    "winner": "player1",
     "current_player": "player1",
     "active_eras": [],
+    "active_era_details": [],
+    "era_notification": null,
+    "market_mode": "sample_53",
     "pending_base_choices": {},
     "action_log": [
       "[Turn 1] player1 played 追隨者",
-      "[Turn 1] player1 moved 1 organization from 北京 to 天津 via rail",
+      "[Turn 1] player1 moved 1 organization from 伊斯坦堡 to 伊德利卜 via rail",
       "[Turn 1] End of turn for player1",
       "[Turn 1] player2 played 追隨者",
-      "[Turn 1] player2 moved 1 organization from 德拉敦 to 博卡拉 via road",
+      "[Turn 1] player2 moved 1 organization from 深圳 to 元朗 via road",
       "[Turn 1] End of turn for player2",
       "[Turn 1] player3 played 追隨者",
-      "[Turn 1] player3 moved 1 organization from 華盛頓 to 倫敦 via road",
+      "[Turn 1] player3 moved 1 organization from 北京 to 天津 via rail",
       "[Turn 1] End of turn for player3",
       "[Turn 2] player1 played 樂捐者",
-      "[Turn 2] player1 moved 1 organization from 天津 to 承德 via road",
+      "[Turn 2] player1 moved 1 organization from 伊德利卜 to 伊斯坦堡 via rail",
       "[Turn 2] End of turn for player1",
-      "[Turn 2] player2 played 樂捐者",
-      "[Turn 2] player2 moved 1 organization from 博卡拉 to 加德滿都 via road",
+      "[Turn 2] player2 played 追隨者",
+      "[Turn 2] player2 moved 1 organization from 元朗 to 深圳 via road",
       "[Turn 2] End of turn for player2",
-      "[Turn 2] player3 played 樂捐者",
-      "[Turn 2] player3 moved 1 organization from 倫敦 to 華盛頓 via road",
+      "[Turn 2] player3 played 追隨者",
+      "[Turn 2] player3 moved 1 organization from 天津 to 承德 via road",
       "[Turn 2] End of turn for player3"
     ],
-    "purchase_area": [],
+    "purchase_area": [
+      "宣傳家",
+      "思想家",
+      "資助者",
+      "資本家",
+      "分神",
+      "內鬥",
+      "派遣間諜",
+      "內鬥",
+      "英美奧援",
+      "天方奧援",
+      "武裝集團"
+    ],
+    "static_purchase_supply": {
+      "宣傳家": 1,
+      "思想家": 1,
+      "資助者": 1,
+      "資本家": 1,
+      "分神": 1,
+      "內鬥": 1
+    },
     "map": {
       "towns": {
         "北京": [
@@ -528,6 +614,10 @@
         "深圳": [
           {
             "player": "player1",
+            "count": 1
+          },
+          {
+            "player": "player2",
             "count": 1
           }
         ],
@@ -603,25 +693,21 @@
             "count": 1
           }
         ],
-        "加德滿都": [
-          {
-            "player": "player2",
-            "count": 1
-          }
-        ],
-        "華盛頓": [
+        "承德": [
           {
             "player": "player3",
             "count": 1
           }
         ]
-      }
+      },
+      "shared_access": {}
     },
     "players": [
       {
         "id": "p1",
         "name": "player1",
-        "faction": "red_army",
+        "faction": "uyghur_istanbul",
+        "base": "伊斯坦堡",
         "resources": {
           "money": 0,
           "propaganda": 0
@@ -630,10 +716,12 @@
         "hand": [
           "追隨者",
           "追隨者",
-          "樂捐者",
           "追隨者",
+          "樂捐者",
           "追隨者"
         ],
+        "deck_count": 5,
+        "discard_count": 0,
         "orgs": {
           "北京": 1,
           "深圳": 1,
@@ -654,27 +742,31 @@
       {
         "id": "p2",
         "name": "player2",
-        "faction": "tibet_dehradun",
+        "faction": "reform_opening",
+        "base": "深圳",
         "resources": {
           "money": 0,
           "propaganda": 0
         },
         "moves_left": 3,
         "hand": [
+          "追隨者",
+          "追隨者",
+          "追隨者",
           "樂捐者",
-          "追隨者",
-          "追隨者",
-          "追隨者",
           "追隨者"
         ],
+        "deck_count": 5,
+        "discard_count": 0,
         "orgs": {
-          "加德滿都": 1
+          "深圳": 1
         }
       },
       {
         "id": "p3",
         "name": "player3",
-        "faction": "zhaowu_ganqingning",
+        "faction": "red_army",
+        "base": "北京",
         "resources": {
           "money": 0,
           "propaganda": 0
@@ -683,12 +775,14 @@
         "hand": [
           "追隨者",
           "追隨者",
-          "追隨者",
-          "追隨者",
-          "樂捐者"
+          "樂捐者",
+          "樂捐者",
+          "追隨者"
         ],
+        "deck_count": 5,
+        "discard_count": 0,
         "orgs": {
-          "華盛頓": 1
+          "承德": 1
         }
       }
     ]

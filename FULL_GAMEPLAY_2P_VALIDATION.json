@@ -46,11 +46,11 @@
             "香港城": 1
           },
           "hand": [
-            "追隨者",
-            "樂捐者",
             "樂捐者",
             "追隨者",
-            "樂捐者"
+            "追隨者",
+            "追隨者",
+            "追隨者"
           ]
         },
         {
@@ -61,7 +61,7 @@
             "北京": 1
           },
           "hand": [
-            "樂捐者",
+            "追隨者",
             "樂捐者",
             "追隨者",
             "追隨者",
@@ -87,17 +87,17 @@
       "player": "anti",
       "faction": "hong_kong",
       "hand_before": [
-        "追隨者",
-        "樂捐者",
         "樂捐者",
         "追隨者",
-        "樂捐者"
+        "追隨者",
+        "追隨者",
+        "追隨者"
       ],
       "hand_after": [
-        "樂捐者",
-        "樂捐者",
         "追隨者",
-        "樂捐者"
+        "追隨者",
+        "追隨者",
+        "追隨者"
       ],
       "result": {
         "success": true
@@ -153,7 +153,7 @@
       "player": "red",
       "faction": "red_army",
       "hand_before": [
-        "樂捐者",
+        "追隨者",
         "樂捐者",
         "追隨者",
         "追隨者",
@@ -219,17 +219,17 @@
       "player": "anti",
       "faction": "hong_kong",
       "hand_before": [
+        "樂捐者",
         "追隨者",
         "追隨者",
         "追隨者",
-        "追隨者",
-        "追隨者"
+        "樂捐者"
       ],
       "hand_after": [
         "追隨者",
         "追隨者",
         "追隨者",
-        "追隨者"
+        "樂捐者"
       ],
       "result": {
         "success": true
@@ -285,15 +285,15 @@
       "player": "red",
       "faction": "red_army",
       "hand_before": [
+        "追隨者",
         "樂捐者",
-        "追隨者",
-        "追隨者",
+        "樂捐者",
         "追隨者",
         "追隨者"
       ],
       "hand_after": [
-        "追隨者",
-        "追隨者",
+        "樂捐者",
+        "樂捐者",
         "追隨者",
         "追隨者"
       ],
@@ -362,16 +362,16 @@
     "market_mode": "sample_53",
     "pending_base_choices": {},
     "action_log": [
-      "[Turn 1] anti played 追隨者",
+      "[Turn 1] anti played 樂捐者",
       "[Turn 1] anti moved 1 organization from 香港城 to 澳門 via road",
       "[Turn 1] End of turn for anti",
-      "[Turn 1] red played 樂捐者",
+      "[Turn 1] red played 追隨者",
       "[Turn 1] red moved 1 organization from 北京 to 天津 via rail",
       "[Turn 1] End of turn for red",
-      "[Turn 2] anti played 追隨者",
+      "[Turn 2] anti played 樂捐者",
       "[Turn 2] anti moved 1 organization from 澳門 to 赤臘角 via road",
       "[Turn 2] End of turn for anti",
-      "[Turn 2] red played 樂捐者",
+      "[Turn 2] red played 追隨者",
       "[Turn 2] red moved 1 organization from 天津 to 承德 via road",
       "[Turn 2] End of turn for red"
     ],
@@ -382,11 +382,11 @@
       "資本家",
       "分神",
       "內鬥",
-      "輿論丕變",
-      "分神",
-      "擴大戰果",
-      "組織經驗丙",
-      "東洋奧援"
+      "交通經驗乙",
+      "批判",
+      "謀劃",
+      "印度奧援",
+      "天方奧援"
     ],
     "static_purchase_supply": {
       "宣傳家": 1,
@@ -494,6 +494,7 @@
         "id": "p1",
         "name": "anti",
         "faction": "hong_kong",
+        "base": "香港城",
         "resources": {
           "money": 0,
           "propaganda": 0
@@ -501,11 +502,13 @@
         "moves_left": 3,
         "hand": [
           "樂捐者",
-          "追隨者",
           "樂捐者",
+          "追隨者",
           "追隨者",
           "追隨者"
         ],
+        "deck_count": 5,
+        "discard_count": 0,
         "orgs": {
           "北京": 1,
           "深圳": 1,
@@ -527,18 +530,21 @@
         "id": "p2",
         "name": "red",
         "faction": "red_army",
+        "base": "北京",
         "resources": {
           "money": 0,
           "propaganda": 0
         },
         "moves_left": 3,
         "hand": [
-          "樂捐者",
           "追隨者",
+          "樂捐者",
           "追隨者",
           "追隨者",
           "追隨者"
         ],
+        "deck_count": 5,
+        "discard_count": 0,
         "orgs": {
           "北京": 1
         }
