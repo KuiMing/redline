@@ -1105,6 +1105,7 @@ async function render(state) {
       return `<span class="hud-era-pill">${escapeHtml(item.name)}｜條件已達成｜${escapeHtml(remainText)}</span>`;
     }).join('');
 
+    const marketModeLabel = state.market_mode === 'all_cards' ? '全部卡牌' : '53 張卡牌';
     hud.innerHTML = `
       <div class="hud-main-row">
         <span class="hud-chip hud-chip-primary">回合 ${state.turn}</span>
@@ -1114,6 +1115,7 @@ async function render(state) {
         <span class="hud-chip hud-chip-resource">資金 ${myMoney}</span>
         <span class="hud-chip hud-chip-resource">宣傳 ${myPropaganda}</span>
         <span class="hud-chip">移動 ${myMoves}</span>
+        <span class="hud-chip hud-chip-market">牌庫模式 ${marketModeLabel}</span>
         ${orgInfo}
       </div>
       ${eraStatus ? `<div class="hud-era-row">${eraStatus}</div>` : ''}

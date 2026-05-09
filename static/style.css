@@ -251,6 +251,12 @@ body {
   color: #fff7ed;
 }
 
+.hud-chip-market {
+  border-color: rgba(245, 158, 11, 0.26);
+  background: rgba(92, 50, 12, 0.38);
+  color: #ffedd5;
+}
+
 #gameShell {
   position: absolute;
   left: 0;
