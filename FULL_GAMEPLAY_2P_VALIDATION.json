@@ -1,37 +1,71 @@
 {
+  "summary": {
+    "total_checks": 4,
+    "passed": 4,
+    "failed": 0,
+    "errors": []
+  },
   "trace": [
     {
       "step": "init",
       "turn": 1,
       "turn_phase": "event",
-      "current_player": "host",
+      "game_phase": "main",
+      "current_player": "anti",
+      "base_validation": {
+        "rows": [
+          {
+            "player": "anti",
+            "faction": "hong_kong",
+            "base": "香港城",
+            "orgs": {
+              "香港城": 1
+            },
+            "single_base_org": true,
+            "base_allowed": true
+          },
+          {
+            "player": "red",
+            "faction": "red_army",
+            "base": "北京",
+            "orgs": {
+              "北京": 1
+            },
+            "single_base_org": true,
+            "base_allowed": true
+          }
+        ],
+        "unique_bases": true
+      },
       "players": [
         {
-          "name": "host",
+          "name": "anti",
+          "faction": "hong_kong",
+          "base": "香港城",
+          "orgs": {
+            "香港城": 1
+          },
+          "hand": [
+            "追隨者",
+            "樂捐者",
+            "樂捐者",
+            "追隨者",
+            "樂捐者"
+          ]
+        },
+        {
+          "name": "red",
           "faction": "red_army",
+          "base": "北京",
           "orgs": {
             "北京": 1
           },
           "hand": [
-            "追隨者",
-            "追隨者",
+            "樂捐者",
+            "樂捐者",
             "追隨者",
             "追隨者",
             "追隨者"
-          ]
-        },
-        {
-          "name": "guest",
-          "faction": "kazakh",
-          "orgs": {
-            "阿拉木圖": 1
-          },
-          "hand": [
-            "追隨者",
-            "樂捐者",
-            "追隨者",
-            "樂捐者",
-            "樂捐者"
           ]
         }
       ]
@@ -40,29 +74,30 @@
       "step": "cycle_1_advance_to_action_before",
       "turn": 1,
       "turn_phase": "event",
-      "current_player": "host"
+      "current_player": "anti"
     },
     {
       "step": "cycle_1_advance_to_action_after",
       "turn": 1,
       "turn_phase": "action",
-      "current_player": "host"
+      "current_player": "anti"
     },
     {
       "step": "cycle_1_play_card",
-      "player": "host",
+      "player": "anti",
+      "faction": "hong_kong",
       "hand_before": [
         "追隨者",
+        "樂捐者",
+        "樂捐者",
         "追隨者",
-        "追隨者",
-        "追隨者",
-        "追隨者"
+        "樂捐者"
       ],
       "hand_after": [
+        "樂捐者",
+        "樂捐者",
         "追隨者",
-        "追隨者",
-        "追隨者",
-        "追隨者"
+        "樂捐者"
       ],
       "result": {
         "success": true
@@ -75,54 +110,60 @@
     },
     {
       "step": "cycle_1_move",
-      "player": "host",
+      "player": "anti",
+      "move_detail": {
+        "from": "香港城",
+        "to": "澳門",
+        "mode": "road"
+      },
       "result": {
         "success": true
       },
       "orgs_after": {
-        "天津": 1
+        "澳門": 1
       },
-      "moves_left_after": 0
+      "moves_left_after": 2
     },
     {
       "step": "cycle_1_advance_to_end",
       "turn": 1,
       "turn_phase": "end",
-      "current_player": "host"
+      "current_player": "anti"
     },
     {
       "step": "cycle_1_end_turn",
       "turn": 1,
       "turn_phase": "event",
-      "current_player": "guest"
+      "current_player": "red"
     },
     {
       "step": "cycle_2_advance_to_action_before",
       "turn": 1,
       "turn_phase": "event",
-      "current_player": "guest"
+      "current_player": "red"
     },
     {
       "step": "cycle_2_advance_to_action_after",
       "turn": 1,
       "turn_phase": "action",
-      "current_player": "guest"
+      "current_player": "red"
     },
     {
       "step": "cycle_2_play_card",
-      "player": "guest",
+      "player": "red",
+      "faction": "red_army",
       "hand_before": [
-        "追隨者",
+        "樂捐者",
         "樂捐者",
         "追隨者",
-        "樂捐者",
-        "樂捐者"
+        "追隨者",
+        "追隨者"
       ],
       "hand_after": [
         "樂捐者",
         "追隨者",
-        "樂捐者",
-        "樂捐者"
+        "追隨者",
+        "追隨者"
       ],
       "result": {
         "success": true
@@ -135,12 +176,17 @@
     },
     {
       "step": "cycle_2_move",
-      "player": "guest",
+      "player": "red",
+      "move_detail": {
+        "from": "北京",
+        "to": "天津",
+        "mode": "rail"
+      },
       "result": {
         "success": true
       },
       "orgs_after": {
-        "楚城": 1
+        "天津": 1
       },
       "moves_left_after": 0
     },
@@ -148,41 +194,42 @@
       "step": "cycle_2_advance_to_end",
       "turn": 1,
       "turn_phase": "end",
-      "current_player": "guest"
+      "current_player": "red"
     },
     {
       "step": "cycle_2_end_turn",
       "turn": 2,
       "turn_phase": "event",
-      "current_player": "host"
+      "current_player": "anti"
     },
     {
       "step": "cycle_3_advance_to_action_before",
       "turn": 2,
       "turn_phase": "event",
-      "current_player": "host"
+      "current_player": "anti"
     },
     {
       "step": "cycle_3_advance_to_action_after",
       "turn": 2,
       "turn_phase": "action",
-      "current_player": "host"
+      "current_player": "anti"
     },
     {
       "step": "cycle_3_play_card",
-      "player": "host",
+      "player": "anti",
+      "faction": "hong_kong",
       "hand_before": [
-        "樂捐者",
         "追隨者",
-        "樂捐者",
         "追隨者",
-        "樂捐者"
+        "追隨者",
+        "追隨者",
+        "追隨者"
       ],
       "hand_after": [
         "追隨者",
-        "樂捐者",
         "追隨者",
-        "樂捐者"
+        "追隨者",
+        "追隨者"
       ],
       "result": {
         "success": true
@@ -195,12 +242,17 @@
     },
     {
       "step": "cycle_3_move",
-      "player": "host",
+      "player": "anti",
+      "move_detail": {
+        "from": "澳門",
+        "to": "赤臘角",
+        "mode": "road"
+      },
       "result": {
         "success": true
       },
       "orgs_after": {
-        "承德": 1
+        "赤臘角": 1
       },
       "moves_left_after": 2
     },
@@ -208,31 +260,32 @@
       "step": "cycle_3_advance_to_end",
       "turn": 2,
       "turn_phase": "end",
-      "current_player": "host"
+      "current_player": "anti"
     },
     {
       "step": "cycle_3_end_turn",
       "turn": 2,
       "turn_phase": "event",
-      "current_player": "guest"
+      "current_player": "red"
     },
     {
       "step": "cycle_4_advance_to_action_before",
       "turn": 2,
       "turn_phase": "event",
-      "current_player": "guest"
+      "current_player": "red"
     },
     {
       "step": "cycle_4_advance_to_action_after",
       "turn": 2,
       "turn_phase": "action",
-      "current_player": "guest"
+      "current_player": "red"
     },
     {
       "step": "cycle_4_play_card",
-      "player": "guest",
+      "player": "red",
+      "faction": "red_army",
       "hand_before": [
-        "追隨者",
+        "樂捐者",
         "追隨者",
         "追隨者",
         "追隨者",
@@ -255,175 +308,203 @@
     },
     {
       "step": "cycle_4_move",
-      "player": "guest",
+      "player": "red",
+      "move_detail": {
+        "from": "天津",
+        "to": "承德",
+        "mode": "road"
+      },
       "result": {
         "success": true
       },
       "orgs_after": {
-        "塔拉茲": 1
+        "承德": 1
       },
-      "moves_left_after": 0
+      "moves_left_after": 2
     },
     {
       "step": "cycle_4_advance_to_end",
       "turn": 2,
       "turn_phase": "end",
-      "current_player": "guest"
+      "current_player": "red"
     },
     {
       "step": "cycle_4_end_turn",
       "turn": 3,
       "turn_phase": "event",
-      "current_player": "host"
+      "current_player": "anti"
     },
     {
-      "step": "before_forced_victory_check",
-      "candidate": "host",
-      "faction": "red_army",
+      "step": "before_forced_legal_anti_victory_check",
+      "candidate": "anti",
+      "faction": "hong_kong",
       "org_count": 14,
       "turn": 3,
       "turn_phase": "event"
     },
     {
-      "step": "after_forced_victory_check",
-      "game_phase": "setup",
-      "winner": null,
+      "step": "after_forced_legal_anti_victory_check",
+      "game_phase": "finished",
+      "winner": "anti",
       "turn": 3,
       "turn_phase": "event"
     }
   ],
   "final_state": {
     "turn": 3,
-    "game_phase": "setup",
+    "game_phase": "finished",
     "turn_phase": "event",
-    "winner": null,
-    "current_player": "host",
+    "winner": "anti",
+    "current_player": "anti",
     "active_eras": [],
+    "active_era_details": [],
+    "era_notification": null,
+    "market_mode": "sample_53",
+    "pending_base_choices": {},
     "action_log": [
-      "[Turn 1] host played 追隨者",
-      "[Turn 1] host moved 1 organization from 北京 to 天津 via rail",
-      "[Turn 1] End of turn for host",
-      "[Turn 1] guest played 追隨者",
-      "[Turn 1] guest moved 1 organization from 阿拉木圖 to 楚城 via rail",
-      "[Turn 1] End of turn for guest",
-      "[Turn 2] host played 樂捐者",
-      "[Turn 2] host moved 1 organization from 天津 to 承德 via road",
-      "[Turn 2] End of turn for host",
-      "[Turn 2] guest played 追隨者",
-      "[Turn 2] guest moved 1 organization from 楚城 to 塔拉茲 via rail",
-      "[Turn 2] End of turn for guest"
+      "[Turn 1] anti played 追隨者",
+      "[Turn 1] anti moved 1 organization from 香港城 to 澳門 via road",
+      "[Turn 1] End of turn for anti",
+      "[Turn 1] red played 樂捐者",
+      "[Turn 1] red moved 1 organization from 北京 to 天津 via rail",
+      "[Turn 1] End of turn for red",
+      "[Turn 2] anti played 追隨者",
+      "[Turn 2] anti moved 1 organization from 澳門 to 赤臘角 via road",
+      "[Turn 2] End of turn for anti",
+      "[Turn 2] red played 樂捐者",
+      "[Turn 2] red moved 1 organization from 天津 to 承德 via road",
+      "[Turn 2] End of turn for red"
     ],
-    "purchase_area": [],
+    "purchase_area": [
+      "宣傳家",
+      "思想家",
+      "資助者",
+      "資本家",
+      "分神",
+      "內鬥",
+      "輿論丕變",
+      "分神",
+      "擴大戰果",
+      "組織經驗丙",
+      "東洋奧援"
+    ],
+    "static_purchase_supply": {
+      "宣傳家": 1,
+      "思想家": 1,
+      "資助者": 1,
+      "資本家": 1,
+      "分神": 1,
+      "內鬥": 1
+    },
     "map": {
       "towns": {
         "北京": [
           {
-            "player": "host",
+            "player": "anti",
+            "count": 1
+          },
+          {
+            "player": "red",
             "count": 1
           }
         ],
         "深圳": [
           {
-            "player": "host",
+            "player": "anti",
             "count": 1
           }
         ],
         "廣州": [
           {
-            "player": "host",
+            "player": "anti",
             "count": 1
           }
         ],
         "湛茂": [
           {
-            "player": "host",
+            "player": "anti",
             "count": 1
           }
         ],
         "梅州": [
           {
-            "player": "host",
+            "player": "anti",
             "count": 1
           }
         ],
         "潮州": [
           {
-            "player": "host",
+            "player": "anti",
             "count": 1
           }
         ],
         "桂林": [
           {
-            "player": "host",
+            "player": "anti",
             "count": 1
           }
         ],
         "南寧": [
           {
-            "player": "host",
+            "player": "anti",
             "count": 1
           }
         ],
         "海口": [
           {
-            "player": "host",
+            "player": "anti",
             "count": 1
           }
         ],
         "三亞": [
           {
-            "player": "host",
+            "player": "anti",
             "count": 1
           }
         ],
         "廈門": [
           {
-            "player": "host",
+            "player": "anti",
             "count": 1
           }
         ],
         "福州": [
           {
-            "player": "host",
+            "player": "anti",
             "count": 1
           }
         ],
         "溫州": [
           {
-            "player": "host",
+            "player": "anti",
             "count": 1
           }
         ],
         "杭州": [
           {
-            "player": "host",
-            "count": 1
-          }
-        ],
-        "塔拉茲": [
-          {
-            "player": "guest",
+            "player": "anti",
             "count": 1
           }
         ]
-      }
+      },
+      "shared_access": {}
     },
     "players": [
       {
         "id": "p1",
-        "name": "host",
-        "faction": "red_army",
+        "name": "anti",
+        "faction": "hong_kong",
         "resources": {
           "money": 0,
           "propaganda": 0
         },
         "moves_left": 3,
         "hand": [
+          "樂捐者",
           "追隨者",
           "樂捐者",
           "追隨者",
-          "追隨者",
-          "樂捐者"
+          "追隨者"
         ],
         "orgs": {
           "北京": 1,
@@ -444,22 +525,22 @@
       },
       {
         "id": "p2",
-        "name": "guest",
-        "faction": "kazakh",
+        "name": "red",
+        "faction": "red_army",
         "resources": {
           "money": 0,
           "propaganda": 0
         },
         "moves_left": 3,
         "hand": [
-          "追隨者",
+          "樂捐者",
           "追隨者",
           "追隨者",
           "追隨者",
           "追隨者"
         ],
         "orgs": {
-          "塔拉茲": 1
+          "北京": 1
         }
       }
     ]
