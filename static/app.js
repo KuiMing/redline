@@ -9,7 +9,6 @@ let pendingFactionBaseChoice = null;
 let pendingFactionBaseGroup = null;
 let cachedFullMapData = null;
 let activeFactionActionModal = null;
-let selectedCardDetail = null;
 let cardPresentationCatalog = null;
 
 function initTabs() {
@@ -348,34 +347,7 @@ function renderCardFace(cardName, zone, isStatic = false, compact = false) {
     </div>`;
 }
 
-function describeCard(cardName, zone, isStatic = false) {
-  const info = cardPresentation(cardName);
-  const supportHint = /奧援/.test(cardName) ? '奧援卡，會依區域主導者判定 I・II・III 級效果。' : '';
-  const zoneHint = zone === 'hand' ? '這是你目前手牌，可直接打出。' : (isStatic ? '這是常設購買區卡牌，不屬於隨機購買區。' : '這是隨機購買區卡牌。');
-  if (!info) {
-    return `${cardName}\n\n區域：${zone === 'hand' ? '手牌' : (isStatic ? '常設購買區' : '隨機購買區')}\n${zoneHint}${supportHint ? `\n${supportHint}` : ''}`;
-  }
-  return `${info.name}\n\n顏色：${info.color || '未知'}\n種類：${info.kind || '未知'}\n強度：${info.strength || '未知'}\n購買費用：${info.cost_text || '未知'}\n提供資源：${info.resource_text || '未知'}\n位置：${zone === 'hand' ? '手牌' : (isStatic ? '常設購買區' : '隨機購買區')}\n張數：${info.count_text || '未知'}\n\n效果：${info.effect_text || '（暫無資料）'}\n\n意涵：${info.meaning_text || '（暫無資料）'}${supportHint ? `\n\n${supportHint}` : ''}`;
-}
-
-function renderSelectedCardDetail() {
-  const detail = document.getElementById('cardDetail');
-  if (!detail) return;
-  if (!selectedCardDetail) {
-    detail.innerHTML = '<div class="card-detail-placeholder">點選購買區或手牌卡牌後，可在此查看詳細資訊。</div>';
-    return;
-  }
-  const info = cardPresentation(selectedCardDetail.name) || {};
-  detail.innerHTML = `
-    <div class="card-detail-shell">
-      ${renderCardFace(selectedCardDetail.name, selectedCardDetail.zone, selectedCardDetail.isStatic, false)}
-      <div class="card-detail-note">${escapeHtml(describeCard(selectedCardDetail.name, selectedCardDetail.zone, selectedCardDetail.isStatic))}</div>
-    </div>`;
-}
-
-function selectCardDetail(name, zone, isStatic = false) {
-  selectedCardDetail = { name, zone, isStatic };
-  renderSelectedCardDetail();
+function selectCardDetail(_name, _zone, _isStatic = false) {
 }
 
 function renderFactionDetails(factionId) {
@@ -1038,8 +1010,6 @@ async function render(state) {
       logDiv.innerHTML += `<div>${entry}</div>`;
     });
   }
-
-  renderSelectedCardDetail();
 
   // Active Eras
   const eraDiv = document.getElementById('eras');

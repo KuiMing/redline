@@ -148,18 +148,6 @@ body {
   align-content: start;
 }
 
-#cardDetail {
-  min-height: 220px;
-  border: 1px dashed var(--border);
-  border-radius: 10px;
-  padding: 10px;
-  color: #dbe7f3;
-  line-height: 1.5;
-  font-size: 0.82rem;
-  white-space: normal;
-  overflow: auto;
-}
-
 #purchaseSection {
   margin-top: 10px;
   display: flex;
@@ -348,23 +336,6 @@ body {
   font-weight: 700;
 }
 
-.card-detail-shell {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 12px;
-  align-items: start;
-}
-
-.card-detail-note {
-  white-space: pre-wrap;
-  font-size: 0.8rem;
-  color: #dbe7f3;
-  line-height: 1.55;
-}
-
-.card-detail-placeholder {
-  color: #93a4b8;
-}
 
 #factionPicker {
   border: 1px solid var(--border);
