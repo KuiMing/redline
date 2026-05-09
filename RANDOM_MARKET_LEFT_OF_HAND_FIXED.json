@@ -1,0 +1,10 @@
+{
+  "randomWrapRight": 1127,
+  "handWrapLeft": 1143,
+  "overlap": false,
+  "randomCardRight": 1067,
+  "handCardLeft": 1143,
+  "cardOverlap": false,
+  "commandColumns": "320px 748px",
+  "handColumns": "260px 260px"
+}
