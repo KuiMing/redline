@@ -9,17 +9,11 @@
 
 <div id="warTitle">逆統戰</div>
 
+<div id="lobbyViewport">
 <div id="topBar">
   <div class="title">逆統戰指揮中心</div>
   <div id="statusBar"></div>
 </div>
-
-<div id="hud"></div>
-<div id="phaseActionBar">
-  <div id="phaseActionMeta"></div>
-  <button id="advanceStepBtn" class="phase-action-btn" onclick="sendAction('advance')">結束目前步驟</button>
-</div>
-<div id="debugSocketState" style="display:none"></div>
 
 <div id="lobby">
   <button onclick="createRoom()">建立房間</button>
@@ -78,6 +72,21 @@
 </div>
 
 <div id="eraPinnedNotice" style="display:none;"></div>
+</div>
+
+<div id="gameStageViewport" style="display:none;">
+  <div id="gameStage">
+    <div id="topBar">
+      <div class="title">逆統戰指揮中心</div>
+      <div id="statusBar"></div>
+    </div>
+
+    <div id="hud"></div>
+    <div id="phaseActionBar">
+      <div id="phaseActionMeta"></div>
+      <button id="advanceStepBtn" class="phase-action-btn" onclick="sendAction('advance')">結束目前步驟</button>
+    </div>
+    <div id="debugSocketState" style="display:none"></div>
 
 <div id="gameShell" style="display:none">
   <div id="gameTabs">
@@ -140,6 +149,7 @@
       <div class="panel-title">戰況紀錄</div>
       <div id="logViewContent"></div>
     </div>
+  </div>
   </div>
 </div>
 
