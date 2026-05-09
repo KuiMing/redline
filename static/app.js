@@ -1073,16 +1073,4 @@ async function render(state) {
     });
   }
 
-  // Active Eras
-  const eraDiv = document.getElementById('eras');
-  if (eraDiv) {
-    eraDiv.innerHTML = '';
-    if (state.active_eras && state.active_eras.length > 0) {
-      state.active_eras.forEach(e => {
-        eraDiv.innerHTML += `<div class=\"card\">${e}</div>`;
-      });
-    } else {
-      eraDiv.innerHTML = `<div class=\"card\">無</div>`;
-    }
-  }
 }
