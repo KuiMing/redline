@@ -194,7 +194,7 @@ body {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: auto;
 }
 
 #hand {
@@ -229,8 +229,13 @@ body {
 }
 
 #purchaseSection .card,
+#purchaseRandom .card,
 #hand .card {
+  width: 260px;
+  min-width: 260px;
+  max-width: 260px;
   min-height: 320px;
+  height: 320px;
   max-height: 320px;
   border: 1px solid var(--border);
   border-radius: 14px;
@@ -243,6 +248,7 @@ body {
   overflow: hidden;
   cursor: pointer;
   box-shadow: 0 10px 30px rgba(0,0,0,.22);
+  flex: 0 0 260px;
 }
 
 .hand-card {
