@@ -12,6 +12,8 @@ let activeFactionActionModal = null;
 let cardPresentationCatalog = null;
 let lastEraNotificationKey = null;
 let stageResizeBound = false;
+let lobbySyncTimer = null;
+let latestLobbyState = null;
 
 function resizeStage() {
   const scale = Math.min(
@@ -47,9 +49,11 @@ function renderLobbyRoster(lobbyRes, statusText = null) {
     return;
   }
 
+  latestLobbyState = lobbyRes;
   const players = lobbyRes.players || [];
   const chosen = lobbyRes.factions || {};
   const bases = lobbyRes.bases || {};
+  const ready = lobbyRes.ready || {};
   const hostId = lobbyRes.host_id;
   const cards = players.map(([pid, name]) => {
     const isHost = pid === hostId;
@@ -57,11 +61,13 @@ function renderLobbyRoster(lobbyRes, statusText = null) {
     const faction = chosen[pid];
     const base = bases[pid];
     const role = [isHost ? '房主' : '玩家', isMe ? '你' : null].filter(Boolean).join(' / ');
-    const status = faction
-      ? `${role}｜${factionDisplayName(faction)}${base ? `｜${baseDisplayName(base)}` : ''}`
-      : `${role}｜尚未選擇陣營`;
+    const readyText = ready[pid] ? '已準備' : '未準備';
+    const factionText = faction
+      ? `${factionDisplayName(faction)}${base ? `｜${baseDisplayName(base)}` : ''}`
+      : '尚未選擇陣營';
+    const status = `${role}｜${readyText}｜${factionText}`;
     return `
-      <div class="lobby-player-card ${isHost ? 'host' : ''}${isMe ? ' self' : ''}">
+      <div class="lobby-player-card ${isHost ? 'host' : ''}${isMe ? ' self' : ''}${ready[pid] ? ' ready' : ''}">
         <div class="lobby-player-avatar">${escapeHtml(playerInitialFromInput(name))}</div>
         <div>
           <strong${isMe ? ' id="lobbyRosterName"' : ''}>${escapeHtml(name)}</strong>
@@ -81,10 +87,111 @@ function renderLobbyRoster(lobbyRes, statusText = null) {
     </div>`).join('');
 
   roster.innerHTML = cards + emptyCards;
+  updateLobbyActionControls(lobbyRes);
   if (hint) {
-    const ready = players.length > 0 && Object.keys(chosen).length === players.length;
-    hint.textContent = statusText || (ready ? '玩家陣營已就緒；房主可以啟動行動。' : `已進入 ${players.length}/4 人作戰室；等待玩家選擇陣營。`);
+    const everyoneChose = players.length > 0 && Object.keys(chosen).length === players.length;
+    const everyoneReady = players.length > 0 && players.every(([pid]) => ready[pid]);
+    if (statusText) {
+      hint.textContent = statusText;
+    } else if (everyoneChose && everyoneReady) {
+      hint.textContent = '所有玩家已準備；房主可以啟動行動。';
+    } else if (everyoneChose) {
+      hint.textContent = '玩家陣營已選定；等待所有玩家按下準備。';
+    } else {
+      hint.textContent = `已進入 ${players.length}/4 人作戰室；等待玩家選擇陣營。`;
+    }
   }
+}
+
+function lobbyReadiness(lobbyRes = latestLobbyState) {
+  const players = lobbyRes?.players || [];
+  const chosen = lobbyRes?.factions || {};
+  const ready = lobbyRes?.ready || {};
+  const hasRoom = !!(gameId && playerId && players.length);
+  const isHost = hasRoom && lobbyRes?.host_id === playerId;
+  const meChose = !!chosen[playerId];
+  const meReady = !!ready[playerId];
+  const enoughPlayers = players.length >= 2;
+  const everyoneChose = enoughPlayers && Object.keys(chosen).length === players.length;
+  const everyoneReady = enoughPlayers && players.every(([pid]) => ready[pid]);
+  return {players, chosen, ready, hasRoom, isHost, meChose, meReady, enoughPlayers, everyoneChose, everyoneReady};
+}
+
+function updateLobbyActionControls(lobbyRes = latestLobbyState) {
+  const startBtn = document.getElementById('startGameBtn');
+  const readyBtn = document.getElementById('toggleReadyBtn');
+  const status = lobbyReadiness(lobbyRes);
+
+  if (readyBtn) {
+    readyBtn.disabled = !status.hasRoom || !status.meChose;
+    readyBtn.textContent = status.meReady ? '取消準備' : '我已準備';
+    readyBtn.title = !status.hasRoom
+      ? '請先建立或進入作戰室'
+      : !status.meChose
+        ? '請先選擇陣營與根據地'
+        : status.meReady ? '取消你的準備狀態' : '確認準備狀態';
+  }
+
+  if (startBtn) {
+    startBtn.disabled = !(status.isHost && status.everyoneChose && status.everyoneReady);
+    startBtn.title = !status.hasRoom
+      ? '請先建立作戰室'
+      : !status.isHost
+        ? '只有房主可以啟動行動'
+        : !status.enoughPlayers
+          ? '至少需要 2 位玩家'
+          : !status.everyoneChose
+            ? '所有玩家都需要先選擇陣營'
+            : !status.everyoneReady
+              ? '所有玩家都需要按下準備'
+              : '所有玩家已準備，可以啟動行動';
+  }
+}
+
+async function refreshLobbyState(statusText = null) {
+  if (!gameId) return null;
+  const res = await fetch(`/lobby/${gameId}`);
+  const lobbyRes = await res.json();
+  if (lobbyRes.error) {
+    updateLobbyStatus(lobbyRes.error);
+    return null;
+  }
+  await loadFactions();
+  renderLobbyRoster(lobbyRes, statusText);
+  return lobbyRes;
+}
+
+function startLobbySync() {
+  if (lobbySyncTimer) clearInterval(lobbySyncTimer);
+  lobbySyncTimer = setInterval(() => {
+    if (!gameId || ws) return;
+    refreshLobbyState().catch(err => console.warn('Lobby sync failed', err));
+  }, 1500);
+}
+
+function stopLobbySync() {
+  if (lobbySyncTimer) clearInterval(lobbySyncTimer);
+  lobbySyncTimer = null;
+}
+
+async function toggleReady() {
+  if (!gameId || !playerId) {
+    updateLobbyStatus('請先建立或進入作戰室。');
+    return;
+  }
+  const nextReady = !latestLobbyState?.ready?.[playerId];
+  const res = await fetch('/ready', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ game_id: gameId, player_id: playerId, ready: nextReady })
+  });
+  const data = await res.json();
+  if (data.error) {
+    updateLobbyStatus(data.error === 'Choose faction before ready' ? '請先選擇陣營與根據地，再按準備。' : data.error);
+    await refreshLobbyState();
+    return;
+  }
+  await refreshLobbyState(nextReady ? '你已標記準備，等待其他玩家。' : '你已取消準備。');
 }
 
 function syncLobbyRoomCode() {
@@ -134,6 +241,7 @@ function initLobbyControls() {
   const select = document.getElementById('marketModeSelect');
   setMarketMode(select?.value || 'sample_53');
   updateLobbyStatus();
+  updateLobbyActionControls();
   syncLobbyRoomCode();
 }
 
@@ -186,8 +294,9 @@ async function createRoom() {
   const marketSelect = document.getElementById('marketModeSelect');
   if (marketSelect) setMarketMode('sample_53');
   await loadFactions();
-  updateLobbyStatus('作戰室已建立；請選擇陣營，或分享房間代碼。');
+  startLobbySync();
   await renderFactionPicker();
+  updateLobbyStatus('作戰室已建立；請選擇陣營，或分享房間代碼。');
 }
 
 async function chooseFaction(factionId) {
@@ -706,8 +815,9 @@ async function joinRoom() {
 
   playerId = data.player_id;
   await loadFactions();
-  updateLobbyStatus('已進入作戰室；請選擇你的陣營與根據地。');
+  startLobbySync();
   await renderFactionPicker();
+  updateLobbyStatus('已進入作戰室；請選擇你的陣營與根據地。');
 }
 
 async function startGame() {
@@ -720,7 +830,8 @@ async function startGame() {
 
   const data = await res.json();
   if (data.error) {
-    alert(data.error);
+    updateLobbyStatus(data.error === 'All players must be ready before start' ? '所有玩家都需要先按下準備。' : data.error);
+    await refreshLobbyState();
     return;
   }
 
@@ -731,6 +842,7 @@ async function startGame() {
 
 
 function connect() {
+  stopLobbySync();
   ws = new WebSocket(`ws://${location.host}/ws/${gameId}/${playerId}`);
 
   ws.onmessage = async (event) => {

@@ -17,6 +17,7 @@ lobby = {}        # {game_id: [(player_id, name)]}
 lobby_hosts = {}  # {game_id: host_player_id}
 lobby_factions = {}  # {game_id: {player_id: faction_id}}
 lobby_bases = {}  # {game_id: {player_id: base_name}}
+lobby_ready = {}  # {game_id: {player_id: bool}}
 lobby_market_mode = {}  # {game_id: "sample_53" | "all_cards"}
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -144,6 +145,7 @@ def create_room():
     lobby_hosts[game_id] = host_id
     lobby_factions[game_id] = {}
     lobby_bases[game_id] = {}
+    lobby_ready[game_id] = {host_id: False}
     lobby_market_mode[game_id] = "sample_53"
 
     return {"game_id": game_id, "host_id": host_id}
@@ -166,6 +168,7 @@ def join_game(payload: dict):
         for idx, (pid, _) in enumerate(lobby[game_id]):
             if pid == requested_player_id:
                 lobby[game_id][idx] = (requested_player_id, name)
+                lobby_ready.setdefault(game_id, {}).setdefault(requested_player_id, False)
                 return {"player_id": requested_player_id}
         player_id = requested_player_id
     else:
@@ -175,6 +178,7 @@ def join_game(payload: dict):
         return {"error": "Room full"}
 
     lobby[game_id].append((player_id, name))
+    lobby_ready.setdefault(game_id, {})[player_id] = False
     return {"player_id": player_id}
 
 
@@ -193,15 +197,21 @@ def start_game(payload: dict):
     if lobby_hosts.get(game_id) != player_id:
         return {"error": "Only host can start"}
 
+    player_list = lobby[game_id]
+    ready = lobby_ready.setdefault(game_id, {})
+    for pid, _ in player_list:
+        ready.setdefault(pid, False)
+    if any(not ready.get(pid, False) for pid, _ in player_list):
+        return {"error": "All players must be ready before start"}
+
     if market_mode in {"sample_53", "all_cards"}:
         lobby_market_mode[game_id] = market_mode
 
     # For test/setup endpoints that already created a live game state,
     # preserve the prepared runtime instead of rebuilding a fresh one.
-    if game_id in manager.games:
+    if manager.games.get(game_id) is not None:
         return {"success": True, "reused": True}
 
-    player_list = lobby[game_id]
     chosen = lobby_factions.get(game_id, {})
     if len(chosen) != len(player_list):
         return {"error": "All players must choose factions first"}
@@ -346,6 +356,7 @@ def choose_faction(payload: dict):
             return {"error": "Invalid base option"}
 
     lobby_factions.setdefault(game_id, {})[player_id] = faction_id
+    lobby_ready.setdefault(game_id, {})[player_id] = False
     if base_name:
         lobby_bases.setdefault(game_id, {})[player_id] = base_name
     else:
@@ -353,10 +364,32 @@ def choose_faction(payload: dict):
     return {"success": True, "factions": lobby_factions[game_id], "bases": lobby_bases.get(game_id, {})}
 
 
+@app.post("/ready")
+def set_ready(payload: dict):
+    game_id = payload.get("game_id")
+    player_id = payload.get("player_id")
+    is_ready = bool(payload.get("ready"))
+
+    if game_id not in lobby:
+        return {"error": "Game not found"}
+    if player_id not in [pid for pid, _ in lobby[game_id]]:
+        return {"error": "Player not found in lobby"}
+    if is_ready and player_id not in lobby_factions.get(game_id, {}):
+        return {"error": "Choose faction before ready"}
+
+    ready = lobby_ready.setdefault(game_id, {})
+    ready[player_id] = is_ready
+    return {"success": True, "ready": ready}
+
+
 @app.get("/lobby/{game_id}")
 def lobby_state(game_id: str):
     if game_id not in lobby:
         return {"error": "Game not found"}
+
+    ready = lobby_ready.setdefault(game_id, {})
+    for pid, _ in lobby[game_id]:
+        ready.setdefault(pid, False)
 
     return {
         "players": lobby[game_id],
@@ -364,6 +397,7 @@ def lobby_state(game_id: str):
         "count": len(lobby[game_id]),
         "factions": lobby_factions.get(game_id, {}),
         "bases": lobby_bases.get(game_id, {}),
+        "ready": ready,
         "market_mode": lobby_market_mode.get(game_id, "sample_53"),
     }
 

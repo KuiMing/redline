@@ -339,6 +339,16 @@ body {
   color: rgba(148, 163, 184, 0.92);
 }
 
+.lobby-player-card.ready {
+  border-color: rgba(34, 197, 94, 0.42);
+  background: linear-gradient(135deg, rgba(22, 101, 52, 0.24), rgba(15, 23, 42, 0.62));
+}
+
+.lobby-player-card.ready .lobby-player-avatar {
+  background: linear-gradient(180deg, #22c55e, #166534);
+  box-shadow: 0 0 22px rgba(34, 197, 94, 0.24);
+}
+
 .lobby-player-avatar {
   width: 42px;
   height: 42px;
@@ -412,8 +422,18 @@ body {
   box-shadow: 0 14px 30px rgba(180, 83, 9, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
+.lobby-action-btn:disabled,
+.lobby-action-btn.primary:disabled {
+  cursor: not-allowed;
+  border-color: rgba(71, 85, 105, 0.30);
+  background: rgba(15, 23, 42, 0.46);
+  color: rgba(148, 163, 184, 0.58);
+  box-shadow: none;
+  filter: grayscale(0.25);
+}
+
 .lobby-mini-btn:hover,
-.lobby-action-btn:hover,
+.lobby-action-btn:not(:disabled):hover,
 .lobby-market-option:hover {
   transform: translateY(-1px);
   filter: brightness(1.06);
