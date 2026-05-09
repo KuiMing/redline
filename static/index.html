@@ -91,31 +91,31 @@
       <div id="lobbyStatusHint" class="lobby-status-hint">先建立作戰室，或貼上房間代碼後進入。</div>
     </div>
 
+    <div id="factionPicker" class="lobby-faction-panel" style="display:none;">
+      <div class="panel-title">陣營選擇</div>
+      <div id="factionPickerInfo"></div>
+      <div id="factionList"></div>
+      <div id="factionVariantList" style="display:none; margin-top:8px;"></div>
+      <div id="factionBaseList" style="display:none; margin-top:8px;"></div>
+      <div id="factionDetailPanel" style="display:none; margin-top:10px;">
+        <div class="panel-title">陣營資訊</div>
+        <div id="factionDetailTitle"></div>
+        <div id="factionDetailBases"></div>
+        <div id="factionDetailAbilities"></div>
+        <div id="factionDetailRules"></div>
+        <div id="factionDetailWin"></div>
+        <div id="factionConfirmBar" style="display:none; margin-top:10px;">
+          <button id="confirmFactionBtn">確認陣營</button>
+        </div>
+      </div>
+    </div>
+
     <div class="lobby-actions">
       <button id="createRoomBtn" class="lobby-action-btn" type="button" onclick="createRoom()">建立作戰室</button>
       <button id="joinRoomBtn" class="lobby-action-btn" type="button" onclick="joinRoom()">進入作戰室</button>
       <button id="startGameBtn" class="lobby-action-btn primary" type="button" onclick="startGame()">啟動行動</button>
     </div>
   </section>
-
-  <div id="factionPicker" class="lobby-faction-panel" style="display:none;">
-    <div class="panel-title">陣營選擇</div>
-    <div id="factionPickerInfo"></div>
-    <div id="factionList"></div>
-    <div id="factionVariantList" style="display:none; margin-top:8px;"></div>
-    <div id="factionBaseList" style="display:none; margin-top:8px;"></div>
-    <div id="factionDetailPanel" style="display:none; margin-top:10px;">
-      <div class="panel-title">陣營資訊</div>
-      <div id="factionDetailTitle"></div>
-      <div id="factionDetailBases"></div>
-      <div id="factionDetailAbilities"></div>
-      <div id="factionDetailRules"></div>
-      <div id="factionDetailWin"></div>
-      <div id="factionConfirmBar" style="display:none; margin-top:10px;">
-        <button id="confirmFactionBtn">確認陣營</button>
-      </div>
-    </div>
-  </div>
 </div>
 
 <div id="factionActionModal" class="modal-overlay" style="display:none;">

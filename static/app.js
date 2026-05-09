@@ -39,6 +39,54 @@ function updateLobbyStatus(statusText = null) {
   if (statusText && hint) hint.textContent = statusText;
 }
 
+function renderLobbyRoster(lobbyRes, statusText = null) {
+  const roster = document.getElementById('lobbyRoster');
+  const hint = document.getElementById('lobbyStatusHint');
+  if (!roster || !lobbyRes) {
+    updateLobbyStatus(statusText);
+    return;
+  }
+
+  const players = lobbyRes.players || [];
+  const chosen = lobbyRes.factions || {};
+  const bases = lobbyRes.bases || {};
+  const hostId = lobbyRes.host_id;
+  const cards = players.map(([pid, name]) => {
+    const isHost = pid === hostId;
+    const isMe = pid === playerId;
+    const faction = chosen[pid];
+    const base = bases[pid];
+    const role = [isHost ? '房主' : '玩家', isMe ? '你' : null].filter(Boolean).join(' / ');
+    const status = faction
+      ? `${role}｜${factionDisplayName(faction)}${base ? `｜${baseDisplayName(base)}` : ''}`
+      : `${role}｜尚未選擇陣營`;
+    return `
+      <div class="lobby-player-card ${isHost ? 'host' : ''}${isMe ? ' self' : ''}">
+        <div class="lobby-player-avatar">${escapeHtml(playerInitialFromInput(name))}</div>
+        <div>
+          <strong${isMe ? ' id="lobbyRosterName"' : ''}>${escapeHtml(name)}</strong>
+          <span${isMe ? ' id="lobbyRosterStatus"' : ''}>${escapeHtml(status)}</span>
+        </div>
+      </div>`;
+  }).join('');
+
+  const emptySlots = Math.max(0, 4 - players.length);
+  const emptyCards = Array.from({length: emptySlots}).map((_, idx) => `
+    <div class="lobby-player-card empty">
+      <div class="lobby-player-avatar">+</div>
+      <div>
+        <strong>${idx === 0 ? '等待玩家加入' : '空席位'}</strong>
+        <span>${idx === 0 ? '分享房間代碼邀請下一位玩家' : '最多 4 位玩家'}</span>
+      </div>
+    </div>`).join('');
+
+  roster.innerHTML = cards + emptyCards;
+  if (hint) {
+    const ready = players.length > 0 && Object.keys(chosen).length === players.length;
+    hint.textContent = statusText || (ready ? '玩家陣營已就緒；房主可以啟動行動。' : `已進入 ${players.length}/4 人作戰室；等待玩家選擇陣營。`);
+  }
+}
+
 function syncLobbyRoomCode() {
   const roomInput = document.getElementById('roomId');
   if (!roomInput) return;
@@ -517,6 +565,7 @@ async function renderFactionPicker() {
   panel.style.display = 'block';
   const chosen = lobbyRes.factions || {};
   const chosenBases = lobbyRes.bases || {};
+  renderLobbyRoster(lobbyRes);
   const confirmed = chosen[playerId] || null;
   const confirmedBase = chosenBases[playerId] || null;
   const activeChoice = pendingFactionChoice || confirmed;
