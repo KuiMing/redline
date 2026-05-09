@@ -1,0 +1,18 @@
+{
+  "commandView": {
+    "top": 205,
+    "bottom": 1848,
+    "height": 1643
+  },
+  "commandGrid": {
+    "top": 205,
+    "bottom": 1848,
+    "height": 1643
+  },
+  "controlBottom": 1836,
+  "randomBottom": 1836,
+  "handBottom": 1836,
+  "blankUnderContent": 12,
+  "purchaseStaticScrollH": 1570,
+  "purchaseStaticClientH": 1570
+}
