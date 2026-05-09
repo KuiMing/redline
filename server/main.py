@@ -398,6 +398,7 @@ def lobby_state(game_id: str):
         "factions": lobby_factions.get(game_id, {}),
         "bases": lobby_bases.get(game_id, {}),
         "ready": ready,
+        "started": manager.games.get(game_id) is not None,
         "market_mode": lobby_market_mode.get(game_id, "sample_53"),
     }
 

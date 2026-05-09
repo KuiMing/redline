@@ -157,6 +157,11 @@ async function refreshLobbyState(statusText = null) {
     return null;
   }
   await loadFactions();
+  if (lobbyRes.started && !ws) {
+    updateLobbyStatus('作戰已啟動，正在進入遊戲。');
+    connect();
+    return lobbyRes;
+  }
   renderLobbyRoster(lobbyRes, statusText);
   return lobbyRes;
 }

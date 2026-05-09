@@ -1,0 +1,112 @@
+{
+  "game_id": "307cc505-8420-49fb-9a22-9e0c1902d947",
+  "host_player_id": "abfea387-87dc-4c2b-ba84-c68f234605c1",
+  "ally_player_id": "a8882303-35c0-4a61-b0c0-ebd41468b438",
+  "summary": {
+    "total": 9,
+    "passed": 9,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "host_created_room",
+      "ok": true,
+      "detail": {
+        "game_id": "307cc505-8420-49fb-9a22-9e0c1902d947",
+        "host_player_id": "abfea387-87dc-4c2b-ba84-c68f234605c1"
+      }
+    },
+    {
+      "name": "two_browser_contexts_join_same_lobby",
+      "ok": true,
+      "detail": {
+        "ally_player_id": "a8882303-35c0-4a61-b0c0-ebd41468b438",
+        "host_roster": "H\nhost\n房主 / 你｜未準備｜尚未選擇陣營\nA\nally\n玩家｜未準備｜尚未選擇陣營\n+\n等待玩家加入\n分享房間代碼邀請下一位玩家\n+\n空席位\n最多 4 位玩家",
+        "ally_roster": "A\nhost\n房主｜未準備｜尚未選擇陣營\nA\nally\n已進入作戰室；請選擇你的陣營與根據地。\n+\n等待玩家加入\n分享房間代碼邀請下一位玩家\n+\n空席位\n最多 4 位玩家"
+      }
+    },
+    {
+      "name": "both_players_show_chosen_factions",
+      "ok": true,
+      "detail": {
+        "choose_host": {
+          "success": true,
+          "factions": {
+            "abfea387-87dc-4c2b-ba84-c68f234605c1": "red_army"
+          },
+          "bases": {}
+        },
+        "choose_ally": {
+          "success": true,
+          "factions": {
+            "abfea387-87dc-4c2b-ba84-c68f234605c1": "red_army",
+            "a8882303-35c0-4a61-b0c0-ebd41468b438": "taiwan_green"
+          },
+          "bases": {
+            "a8882303-35c0-4a61-b0c0-ebd41468b438": "臺北"
+          }
+        },
+        "host_roster": "H\nhost\n房主 / 你｜未準備｜紅軍\nA\nally\n玩家｜未準備｜臺灣（綠線）｜臺北\n+\n等待玩家加入\n分享房間代碼邀請下一位玩家\n+\n空席位\n最多 4 位玩家",
+        "ally_roster": "H\nhost\n房主｜未準備｜紅軍\nA\nally\n玩家 / 你｜未準備｜臺灣（綠線）｜臺北\n+\n等待玩家加入\n分享房間代碼邀請下一位玩家\n+\n空席位\n最多 4 位玩家"
+      }
+    },
+    {
+      "name": "both_players_ready_plain_text",
+      "ok": true,
+      "detail": {
+        "host_roster": "H\nhost\n房主 / 你｜已準備｜紅軍\nA\nally\n玩家｜已準備｜臺灣（綠線）｜臺北\n+\n等待玩家加入\n分享房間代碼邀請下一位玩家\n+\n空席位\n最多 4 位玩家",
+        "ally_roster": "H\nhost\n房主｜已準備｜紅軍\nA\nally\n玩家 / 你｜已準備｜臺灣（綠線）｜臺北\n+\n等待玩家加入\n分享房間代碼邀請下一位玩家\n+\n空席位\n最多 4 位玩家"
+      }
+    },
+    {
+      "name": "non_host_start_button_locked",
+      "ok": true,
+      "detail": {
+        "disabled": true,
+        "title": "只有房主可以啟動行動",
+        "text": "啟動行動"
+      }
+    },
+    {
+      "name": "host_can_start_and_enters_game_shell",
+      "ok": true,
+      "detail": {
+        "host_start_before": {
+          "disabled": false,
+          "title": "所有玩家已準備，可以啟動行動",
+          "text": "啟動行動"
+        },
+        "host_body_excerpt": "逆統戰\n逆統戰指揮中心\n回合 1\n事件階段\n當前玩家 host\n手牌 5\n資金 0\n宣傳 0\n移動 3\n牌庫模式 53 張卡牌\nhost 組織 1\nally 組織 1\n[香港]香港人被自殺｜條件已達成｜剩餘 2 回合\n目前：事件｜下一步：結束事件階段\n結束事件階段\n指揮中心\n戰略地圖\n戰況紀錄\n常設購買區\n宣傳家\n剩 15\n宣傳 ・ 乙級 ・ 宣傳3\n打出可移除本牌。若移除本牌，可於己方組織1格內建立1個組織，並進行1次組織遷移。\n擅於宣傳的辯士\n資源 宣傳2\n常設購買區\n思想家\n剩 15\n宣傳 ・ 甲級 ・ 宣傳5\n打出可移除本牌。若移除本牌，可無視距離於己方發展空間建立1個組織，並進行3次組織遷移。\n締造革命理論的智者\n資源 宣傳3\n常設購買區\n資助者\n剩 15\n資金 ・ 乙級 ・ 資金2+宣傳1\n打出可移除本牌。若移除本牌，獲得2點資金與2點宣傳。\n贊助您事業的中產階級\n資源 資金2\n常設購買區\n資本家\n剩 15\n資金 ・ 甲級 ・ 資金3+宣傳2\n打出可移除本牌。若移除本牌，獲得3點資金與3點宣傳。\n贊助您事業的企業家\n資源 資金3\n常設購買區\n分神\n剩 30\n混亂 ・ 乙級 ・ 無\n無效果。打出可移除本牌。\n有其它事情迫使你分散心力\n資源 無\n常設購買區（可視為起始牌）\n內鬥\n剩 20\n混亂 ・ 丙級 ・ 無\n無效果。\n內部鬥爭令組織效率低落\n資源 無\n常設購買區（可視為起始牌）\n隨機購買區\n手牌\n樂捐者\n剩 15\n資金 ・ 丙級 ・ 無\n無效果。\n贊助您事業的善心人\n資源 資金1\n起始牌\n追隨者\n剩 35\n宣傳 ・ 丙級 ・ 無\n無效果。\n追隨您的志士\n資源 宣傳1\n起始牌\n追隨者\n剩 35\n宣傳 ・ 丙級 ・ 無\n無效果。\n追隨您的志士\n資源 宣傳1\n起始牌\n追隨者\n剩 35\n宣傳 ・ 丙級 ・ 無\n無效果。\n追隨您的志士\n資源 宣傳1\n起始牌\n追隨者\n剩 3"
+      }
+    },
+    {
+      "name": "ally_auto_enters_game_shell_after_host_start",
+      "ok": true,
+      "detail": {
+        "ally_body_excerpt": "逆統戰\n逆統戰指揮中心\n回合 1\n事件階段\n當前玩家 host\n手牌 5\n資金 0\n宣傳 0\n移動 3\n牌庫模式 53 張卡牌\nhost 組織 1\nally 組織 1\n[香港]香港人被自殺｜條件已達成｜剩餘 2 回合\n目前：事件｜等待 host 操作\n結束事件階段\n指揮中心\n戰略地圖\n戰況紀錄\n常設購買區\n宣傳家\n剩 15\n宣傳 ・ 乙級 ・ 宣傳3\n打出可移除本牌。若移除本牌，可於己方組織1格內建立1個組織，並進行1次組織遷移。\n擅於宣傳的辯士\n資源 宣傳2\n常設購買區\n思想家\n剩 15\n宣傳 ・ 甲級 ・ 宣傳5\n打出可移除本牌。若移除本牌，可無視距離於己方發展空間建立1個組織，並進行3次組織遷移。\n締造革命理論的智者\n資源 宣傳3\n常設購買區\n資助者\n剩 15\n資金 ・ 乙級 ・ 資金2+宣傳1\n打出可移除本牌。若移除本牌，獲得2點資金與2點宣傳。\n贊助您事業的中產階級\n資源 資金2\n常設購買區\n資本家\n剩 15\n資金 ・ 甲級 ・ 資金3+宣傳2\n打出可移除本牌。若移除本牌，獲得3點資金與3點宣傳。\n贊助您事業的企業家\n資源 資金3\n常設購買區\n分神\n剩 30\n混亂 ・ 乙級 ・ 無\n無效果。打出可移除本牌。\n有其它事情迫使你分散心力\n資源 無\n常設購買區（可視為起始牌）\n內鬥\n剩 20\n混亂 ・ 丙級 ・ 無\n無效果。\n內部鬥爭令組織效率低落\n資源 無\n常設購買區（可視為起始牌）\n隨機購買區\n手牌\n樂捐者\n剩 15\n資金 ・ 丙級 ・ 無\n無效果。\n贊助您事業的善心人\n資源 資金1\n起始牌\n追隨者\n剩 35\n宣傳 ・ 丙級 ・ 無\n無效果。\n追隨您的志士\n資源 宣傳1\n起始牌\n樂捐者\n剩 15\n資金 ・ 丙級 ・ 無\n無效果。\n贊助您事業的善心人\n資源 資金1\n起始牌\n追隨者\n剩 35\n宣傳 ・ 丙級 ・ 無\n無效果。\n追隨您的志士\n資源 宣傳1\n起始牌\n樂捐者\n剩 15\n資金 ・ 丙級 ・ 無\n無效果。\n贊助您事業的善心人\n資源 資金1\n起始牌",
+        "ally_lobby_display": "none",
+        "ally_game_shell_display": "block"
+      }
+    },
+    {
+      "name": "battle_log_player_cards_available_after_start",
+      "ok": true,
+      "detail": {
+        "host_cards": "H\nhost\n當前行動玩家\n當前玩家\n陣營：紅軍\n根據地：北京\n組織\n1\n資金\n0\n宣傳\n0\n手牌\n5\n移動\n3\nA\nally\n玩家戰況\n陣營：臺灣（綠線）\n根據地：臺北\n組織\n1\n資金\n0\n宣傳\n0\n手牌\n5\n移動\n3",
+        "ally_cards": "H\nhost\n當前行動玩家\n當前玩家\n陣營：紅軍\n根據地：北京\n組織\n1\n資金\n0\n宣傳\n0\n手牌\n5\n移動\n3\nA\nally\n玩家戰況\n陣營：臺灣（綠線）\n根據地：臺北\n組織\n1\n資金\n0\n宣傳\n0\n手牌\n5\n移動\n3"
+      }
+    },
+    {
+      "name": "game_views_include_both_players_and_factions",
+      "ok": true,
+      "detail": {
+        "host_excerpt": "逆統戰\n逆統戰指揮中心\n回合 1\n事件階段\n當前玩家 host\n手牌 5\n資金 0\n宣傳 0\n移動 3\n牌庫模式 53 張卡牌\nhost 組織 1\nally 組織 1\n[香港]香港人被自殺｜條件已達成｜剩餘 2 回合\n目前：事件｜下一步：結束事件階段\n結束事件階段\n指揮中心\n戰略地圖\n戰況紀錄\n戰況總覽\nH\nhost\n當前行動玩家\n當前玩家\n陣營：紅軍\n根據地：北京\n組織\n1\n資金\n0\n宣傳\n0\n手牌\n5\n移動\n3\nA\nally\n玩家戰況\n陣營：臺灣（綠線）\n根據地：臺北\n組織\n1\n資金\n0\n宣傳\n0\n手牌\n5\n移動\n3\n事件紀錄",
+        "ally_excerpt": "逆統戰\n逆統戰指揮中心\n回合 1\n事件階段\n當前玩家 host\n手牌 5\n資金 0\n宣傳 0\n移動 3\n牌庫模式 53 張卡牌\nhost 組織 1\nally 組織 1\n[香港]香港人被自殺｜條件已達成｜剩餘 2 回合\n目前：事件｜等待 host 操作\n結束事件階段\n指揮中心\n戰略地圖\n戰況紀錄\n戰況總覽\nH\nhost\n當前行動玩家\n當前玩家\n陣營：紅軍\n根據地：北京\n組織\n1\n資金\n0\n宣傳\n0\n手牌\n5\n移動\n3\nA\nally\n玩家戰況\n陣營：臺灣（綠線）\n根據地：臺北\n組織\n1\n資金\n0\n宣傳\n0\n手牌\n5\n移動\n3\n事件紀錄"
+      }
+    }
+  ],
+  "screenshots": {
+    "host": "/Users/benmini/.openclaw/workspace/redline/multiplayer_lobby_flow_host.png",
+    "ally": "/Users/benmini/.openclaw/workspace/redline/multiplayer_lobby_flow_ally.png"
+  }
+}
