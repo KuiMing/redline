@@ -11,6 +11,15 @@ let cachedFullMapData = null;
 let activeFactionActionModal = null;
 let cardPresentationCatalog = null;
 let lastEraNotificationKey = null;
+let stageResizeBound = false;
+
+function resizeStage() {
+  const scale = Math.min(
+    window.innerWidth / 1280,
+    window.innerHeight / 720
+  );
+  document.documentElement.style.setProperty('--stage-scale', String(scale));
+}
 
 function initTabs() {
   const tabs = document.querySelectorAll('.game-tab');
@@ -594,6 +603,11 @@ function connect() {
   if (shell) shell.style.display = 'block';
   const picker = document.getElementById('factionPicker');
   if (picker) picker.style.display = 'none';
+  resizeStage();
+  if (!stageResizeBound) {
+    window.addEventListener('resize', resizeStage);
+    stageResizeBound = true;
+  }
 
   initTabs();
 }
@@ -606,6 +620,9 @@ function sendAction(action, payload = {}) {
   if (!ws || ws.readyState !== WebSocket.OPEN) return;
   ws.send(JSON.stringify({action, ...payload}));
 }
+
+window.addEventListener('DOMContentLoaded', resizeStage);
+resizeStage();
 
 function closeFactionActionModal() {
   activeFactionActionModal = null;

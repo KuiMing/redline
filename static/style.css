@@ -17,51 +17,102 @@
   --color-orange: #f59e0b;
   --color-red: #ef4444;
   --color-support: #f6ad55;
+  --stage-w: 1280px;
+  --stage-h: 720px;
+  --stage-scale: 1;
 }
 
 * { box-sizing: border-box; }
 
+html,
 body {
   margin: 0;
-  background-color: #05080C;
-  background-image: url('/static/war_background.jpg');
-  background-position: center center;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #05080C;
+}
+
+body {
   color: var(--text-main);
   font-family: 'Inter', sans-serif;
+}
+
+#stageViewport {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
   overflow: hidden;
+  background: #05080C;
+}
+
+#designStage {
+  width: var(--stage-w);
+  height: var(--stage-h);
   position: relative;
+  overflow: hidden;
+  transform: scale(var(--stage-scale));
+  transform-origin: center center;
+  background-image: url('/static/war_background.jpg');
+  background-size: 1280px 720px;
+  background-position: center center;
+  background-repeat: no-repeat;
 }
 
 #warTitle {
-  position: fixed;
-  top: 48%;
-  left: 50%;
+  position: absolute;
+  top: 330px;
+  left: 640px;
   transform: translate(-50%, -50%);
-  font-size: 20vw;
+  font-size: 220px;
   font-weight: 900;
   font-family: 'Noto Sans TC', sans-serif;
-  letter-spacing: -0.8vw;
+  letter-spacing: -8px;
   pointer-events: none;
-  z-index: -1;
+  z-index: 0;
   text-align: center;
   color: rgba(197,48,48,0.18);
 }
 
+#lobby {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1280px;
+  height: 720px;
+  padding: 24px;
+  z-index: 2;
+  overflow: hidden;
+}
+
+#lobby input,
+#lobby button {
+  font-family: 'JetBrains Mono', monospace;
+}
+
 #topBar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1280px;
   height: 48px;
   background: #05080C;
   border-bottom: 1px solid var(--border);
   padding: 10px 20px;
   display: flex;
   justify-content: space-between;
+  align-items: center;
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.8rem;
+  z-index: 2;
 }
 
 #hud {
+  position: absolute;
+  left: 0;
+  top: 48px;
+  width: 1280px;
   min-height: 42px;
   padding: 8px 16px;
   background: rgba(5, 8, 12, 0.92);
@@ -69,9 +120,14 @@ body {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.76rem;
   color: #dbe7f3;
+  z-index: 2;
 }
 
 #phaseActionBar {
+  position: absolute;
+  left: 0;
+  top: 90px;
+  width: 1280px;
   min-height: 60px;
   padding: 10px 16px;
   background: rgba(8, 12, 18, 0.94);
@@ -80,6 +136,7 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  z-index: 2;
 }
 
 #phaseActionMeta {
@@ -140,12 +197,20 @@ body {
 }
 
 #gameShell {
-  height: calc(100vh - 48px - 42px - 67px);
-  width: 100vw;
+  position: absolute;
+  left: 0;
+  top: 150px;
+  width: 1280px;
+  height: 570px;
   display: none;
+  z-index: 2;
 }
 
 #gameTabs {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1280px;
   height: 48px;
   display: flex;
   align-items: center;
@@ -153,7 +218,6 @@ body {
   padding: 8px 16px;
   background: rgba(5, 8, 12, 0.92);
   border-bottom: 1px solid var(--border);
-  position: relative;
   z-index: 2;
 }
 
@@ -176,8 +240,11 @@ body {
 
 .game-view {
   display: none;
-  height: 100%;
-  width: 100%;
+  position: absolute;
+  left: 0;
+  top: 48px;
+  width: 1280px;
+  height: 522px;
 }
 
 .game-view.active {
@@ -186,15 +253,16 @@ body {
 
 #commandView {
   overflow: hidden;
-  height: 100%;
 }
 
 #commandGrid {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1280px;
+  height: 522px;
   display: grid;
-  grid-template-columns: 28% 36% 36%;
-  grid-template-rows: 100%;
-  height: 100%;
-  width: 100%;
+  grid-template-columns: 300px 460px 460px;
   gap: 12px;
   padding: 12px;
   align-items: stretch;
@@ -240,11 +308,12 @@ body {
 
 #hand,
 #purchaseRandom,
-#purchaseStatic {
+#purchaseStatic,
+.purchase-card-grid {
   flex: 1;
   overflow: auto;
   display: grid;
-  grid-template-columns: repeat(2, 260px);
+  grid-template-columns: repeat(2, 220px);
   gap: 12px;
   justify-content: start;
   align-content: start;
@@ -265,22 +334,15 @@ body {
   margin-top: 4px;
 }
 
-.purchase-card-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 260px);
-  gap: 12px;
-  justify-content: start;
-}
-
 #purchaseSection .card,
 #purchaseRandom .card,
 #hand .card {
-  width: 260px;
-  min-width: 260px;
-  max-width: 260px;
-  min-height: 320px;
-  height: 320px;
-  max-height: 320px;
+  width: 220px;
+  min-width: 220px;
+  max-width: 220px;
+  min-height: 270px;
+  height: 270px;
+  max-height: 270px;
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 0;
@@ -292,7 +354,7 @@ body {
   overflow: hidden;
   cursor: pointer;
   box-shadow: 0 10px 30px rgba(0,0,0,.22);
-  flex: 0 0 260px;
+  flex: 0 0 220px;
 }
 
 .hand-card {
@@ -374,7 +436,7 @@ body {
 .purchase-card-title {
   font-family: 'Noto Sans TC', sans-serif;
   font-weight: 700;
-  font-size: 17px;
+  font-size: 15px;
   line-height: 1.2;
   margin: 0;
   padding-right: 34px;
@@ -407,8 +469,8 @@ body {
 }
 
 .purchase-card-body {
-  font-size: 13px;
-  line-height: 1.45;
+  font-size: 12px;
+  line-height: 1.4;
   color: #e9eef7;
 }
 
@@ -437,9 +499,9 @@ body {
 }
 
 .card-badge {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--tag-text, var(--text-main));
-  padding: 4px 8px;
+  padding: 3px 7px;
   border-radius: 999px;
   background: var(--tag-bg, rgba(116,192,252,.12));
   border: 1px solid var(--tag-border, rgba(116,192,252,.35));
@@ -452,6 +514,8 @@ body {
   background: rgba(10, 13, 18, 0.88);
   border-radius: 8px;
   padding: 8px;
+  max-height: 560px;
+  overflow: auto;
 }
 
 #factionPickerInfo {
@@ -651,8 +715,11 @@ body {
 }
 
 .modal-overlay {
-  position: fixed;
-  inset: 0;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1280px;
+  height: 720px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -736,7 +803,7 @@ body {
 }
 
 #eraPinnedNotice {
-  position: fixed;
+  position: absolute;
   top: 58px;
   right: 14px;
   z-index: 45;
@@ -777,19 +844,29 @@ body {
 
 #mapView,
 #logView {
-  padding: 0;
   position: relative;
-  z-index: 2;
-  height: calc(100vh - 96px);
+  width: 1280px;
+  height: 522px;
+  overflow: hidden;
 }
 
 .log-only-panel {
-  height: 100%;
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  width: 1256px;
+  height: 498px;
+  overflow: hidden;
   background: rgba(17, 22, 29, 0.96);
 }
 
 .map-only-panel {
-  height: 100%;
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  width: 1256px;
+  height: 498px;
+  overflow: hidden;
   background: rgba(17, 22, 29, 0.96);
   padding: 0;
   border: 0;
@@ -803,6 +880,11 @@ body {
   position: relative;
   z-index: 2;
   height: 100%;
+}
+
+#statusBar {
+  min-width: 120px;
+  text-align: right;
 }
 
 #strategicMapFrame {
