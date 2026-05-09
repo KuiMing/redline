@@ -1,0 +1,38 @@
+{
+  "viewport": {
+    "w": 1900,
+    "h": 1800
+  },
+  "bodyH": 1800,
+  "docH": 1800,
+  "topBar": {
+    "top": 0,
+    "bottom": 48,
+    "height": 48
+  },
+  "hud": {
+    "top": 48,
+    "bottom": 90,
+    "height": 42
+  },
+  "phaseActionBar": {
+    "top": 90,
+    "bottom": 157,
+    "height": 67
+  },
+  "gameShell": {
+    "top": 157,
+    "bottom": 1800,
+    "height": 1643
+  },
+  "commandView": {
+    "top": 205,
+    "bottom": 1848,
+    "height": 1643
+  },
+  "commandGrid": {
+    "top": 205,
+    "bottom": 1848,
+    "height": 1643
+  }
+}

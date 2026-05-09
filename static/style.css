@@ -140,7 +140,7 @@ body {
 }
 
 #gameShell {
-  height: calc(100vh - 48px - 42px - 60px);
+  height: calc(100vh - 48px - 42px - 67px);
   width: 100vw;
   display: none;
 }
@@ -177,7 +177,7 @@ body {
 .game-view {
   display: none;
   height: 100%;
-  width: 100vw;
+  width: 100%;
 }
 
 .game-view.active {
