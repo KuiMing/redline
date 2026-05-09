@@ -21,6 +21,74 @@ function resizeStage() {
   document.documentElement.style.setProperty('--stage-scale', String(scale));
 }
 
+function playerInitialFromInput(name) {
+  const trimmed = (name || '').trim();
+  return (trimmed[0] || 'H').toUpperCase();
+}
+
+function updateLobbyStatus(statusText = null) {
+  const nameInput = document.getElementById('playerName');
+  const rosterName = document.getElementById('lobbyRosterName');
+  const rosterStatus = document.getElementById('lobbyRosterStatus');
+  const avatar = document.querySelector('.lobby-player-card.host .lobby-player-avatar');
+  const hint = document.getElementById('lobbyStatusHint');
+  const name = (nameInput?.value || 'host').trim() || 'host';
+  if (rosterName) rosterName.textContent = name;
+  if (avatar) avatar.textContent = playerInitialFromInput(name);
+  if (statusText && rosterStatus) rosterStatus.textContent = statusText;
+  if (statusText && hint) hint.textContent = statusText;
+}
+
+function syncLobbyRoomCode() {
+  const roomInput = document.getElementById('roomId');
+  if (!roomInput) return;
+  roomInput.title = roomInput.value || '尚未建立房間';
+}
+
+function setMarketMode(mode) {
+  const select = document.getElementById('marketModeSelect');
+  if (select) select.value = mode;
+  document.querySelectorAll('.lobby-market-option').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.marketMode === mode);
+  });
+}
+
+async function copyRoomId() {
+  const roomIdValue = document.getElementById('roomId')?.value || '';
+  if (!roomIdValue) {
+    updateLobbyStatus('尚未建立作戰室，沒有可複製的房間代碼。');
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(roomIdValue);
+    updateLobbyStatus('房間代碼已複製，可以分享給其他玩家。');
+  } catch (err) {
+    updateLobbyStatus('無法自動複製；請手動選取房間代碼。');
+  }
+}
+
+function initLobbyControls() {
+  resizeStage();
+  if (!stageResizeBound) {
+    window.addEventListener('resize', resizeStage);
+    stageResizeBound = true;
+  }
+  const nameInput = document.getElementById('playerName');
+  if (nameInput && nameInput.dataset.bound !== '1') {
+    nameInput.dataset.bound = '1';
+    nameInput.addEventListener('input', () => updateLobbyStatus());
+  }
+  const roomInput = document.getElementById('roomId');
+  if (roomInput && roomInput.dataset.bound !== '1') {
+    roomInput.dataset.bound = '1';
+    roomInput.addEventListener('input', syncLobbyRoomCode);
+  }
+  const select = document.getElementById('marketModeSelect');
+  setMarketMode(select?.value || 'sample_53');
+  updateLobbyStatus();
+  syncLobbyRoomCode();
+}
+
 function initTabs() {
   const tabs = document.querySelectorAll('.game-tab');
   const views = document.querySelectorAll('.game-view');
@@ -63,11 +131,15 @@ async function createRoom() {
   gameId = data.game_id;
   playerId = data.host_id;
   const roomInput = document.getElementById('roomId');
-  if (roomInput) roomInput.value = gameId;
+  if (roomInput) {
+    roomInput.value = gameId;
+    syncLobbyRoomCode();
+  }
   const marketSelect = document.getElementById('marketModeSelect');
-  if (marketSelect) marketSelect.value = 'sample_53';
+  if (marketSelect) setMarketMode('sample_53');
   await loadFactions();
-  alert("ROOM CREATED: " + gameId);
+  updateLobbyStatus('作戰室已建立；請選擇陣營，或分享房間代碼。');
+  await renderFactionPicker();
 }
 
 async function chooseFaction(factionId) {
@@ -563,6 +635,7 @@ async function renderFactionPicker() {
 
 async function joinRoom() {
   gameId = document.getElementById('roomId').value;
+  syncLobbyRoomCode();
   const name = document.getElementById('playerName').value;
 
   const payload = {game_id: gameId, name};
@@ -584,6 +657,7 @@ async function joinRoom() {
 
   playerId = data.player_id;
   await loadFactions();
+  updateLobbyStatus('已進入作戰室；請選擇你的陣營與根據地。');
   await renderFactionPicker();
 }
 
@@ -1188,3 +1262,5 @@ async function render(state) {
   }
 
 }
+
+document.addEventListener('DOMContentLoaded', initLobbyControls);

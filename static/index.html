@@ -24,16 +24,81 @@
 <div id="debugSocketState" style="display:none"></div>
 
 <div id="lobby">
-  <button onclick="createRoom()">建立房間</button>
-  <input id="roomId" placeholder="房間 ID">
-  <input id="playerName" placeholder="玩家名稱 / 代號">
-  <button onclick="joinRoom()">加入房間</button>
-  <select id="marketModeSelect">
-    <option value="sample_53">53 張卡牌</option>
-    <option value="all_cards">全部卡牌</option>
-  </select>
-  <button onclick="startGame()">開始遊戲</button>
-  <div id="factionPicker" style="display:none; margin-top:12px;">
+  <div class="lobby-brand">
+    <div class="lobby-kicker">REDLINE COMMAND LOBBY</div>
+    <div class="lobby-title">作戰準備室</div>
+    <div class="lobby-subtitle">建立房間・選擇卡牌模式・等待玩家就緒</div>
+  </div>
+
+  <div class="lobby-briefing" aria-hidden="true">
+    <div>作戰項目</div>
+    <span>01 認知作戰</span>
+    <span>02 資訊滲透</span>
+    <span>03 文化統戰</span>
+    <span>04 經濟脅迫</span>
+    <span>05 政治操控</span>
+  </div>
+
+  <section class="lobby-card" aria-label="作戰準備室">
+    <div class="lobby-card-glow"></div>
+    <div class="lobby-column lobby-room-column">
+      <div class="lobby-section-title">ROOM CONTROL</div>
+
+      <label class="lobby-field">
+        <span>房間代碼</span>
+        <div class="lobby-room-row">
+          <input id="roomId" class="lobby-code-input" placeholder="尚未建立房間" autocomplete="off">
+          <button id="copyRoomBtn" class="lobby-mini-btn" type="button" onclick="copyRoomId()">複製</button>
+        </div>
+      </label>
+
+      <label class="lobby-field">
+        <span>你的行動代號</span>
+        <input id="playerName" class="lobby-text-input" placeholder="輸入玩家名稱 / 代號" value="host" autocomplete="off">
+      </label>
+
+      <div class="lobby-field">
+        <span>卡牌模式</span>
+        <select id="marketModeSelect" class="lobby-hidden-select" aria-label="卡牌模式">
+          <option value="sample_53">53 張卡牌</option>
+          <option value="all_cards">全部卡牌</option>
+        </select>
+        <div class="lobby-market-toggle" role="group" aria-label="卡牌模式">
+          <button class="lobby-market-option active" type="button" data-market-mode="sample_53" onclick="setMarketMode('sample_53')">53 張核心</button>
+          <button class="lobby-market-option" type="button" data-market-mode="all_cards" onclick="setMarketMode('all_cards')">全部卡牌</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="lobby-column lobby-roster-column">
+      <div class="lobby-section-title">PLAYER ROSTER</div>
+      <div id="lobbyRoster" class="lobby-roster">
+        <div class="lobby-player-card host">
+          <div class="lobby-player-avatar">H</div>
+          <div>
+            <strong id="lobbyRosterName">host</strong>
+            <span id="lobbyRosterStatus">尚未建立作戰室</span>
+          </div>
+        </div>
+        <div class="lobby-player-card empty">
+          <div class="lobby-player-avatar">+</div>
+          <div>
+            <strong>等待玩家加入</strong>
+            <span>分享房間代碼邀請下一位玩家</span>
+          </div>
+        </div>
+      </div>
+      <div id="lobbyStatusHint" class="lobby-status-hint">先建立作戰室，或貼上房間代碼後進入。</div>
+    </div>
+
+    <div class="lobby-actions">
+      <button id="createRoomBtn" class="lobby-action-btn" type="button" onclick="createRoom()">建立作戰室</button>
+      <button id="joinRoomBtn" class="lobby-action-btn" type="button" onclick="joinRoom()">進入作戰室</button>
+      <button id="startGameBtn" class="lobby-action-btn primary" type="button" onclick="startGame()">啟動行動</button>
+    </div>
+  </section>
+
+  <div id="factionPicker" class="lobby-faction-panel" style="display:none;">
     <div class="panel-title">陣營選擇</div>
     <div id="factionPickerInfo"></div>
     <div id="factionList"></div>
