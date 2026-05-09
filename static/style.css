@@ -206,8 +206,6 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: linear-gradient(180deg, rgba(17, 22, 29, 0.94), rgba(12, 17, 24, 0.92));
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
 }
 
 .hand-panel-wide,
