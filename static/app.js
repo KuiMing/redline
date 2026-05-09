@@ -579,14 +579,6 @@ async function startGame() {
 // Abstract map removed — replaced by Leaflet
 
 
-function updateGameStageScale() {
-  const viewport = document.getElementById('gameStageViewport');
-  const stage = document.getElementById('gameStage');
-  if (!viewport || !stage) return;
-  const scale = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
-  stage.style.transform = `scale(${scale})`;
-}
-
 function connect() {
   ws = new WebSocket(`ws://${location.host}/ws/${gameId}/${playerId}`);
 
@@ -600,12 +592,8 @@ function connect() {
   document.getElementById('lobby').style.display = 'none';
   const shell = document.getElementById('gameShell');
   if (shell) shell.style.display = 'block';
-  const stageViewport = document.getElementById('gameStageViewport');
-  if (stageViewport) stageViewport.style.display = 'flex';
   const picker = document.getElementById('factionPicker');
   if (picker) picker.style.display = 'none';
-  updateGameStageScale();
-  window.addEventListener('resize', updateGameStageScale, { passive: true });
 
   initTabs();
 }

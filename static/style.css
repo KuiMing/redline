@@ -35,29 +35,6 @@ body {
   position: relative;
 }
 
-#lobbyViewport {
-  position: relative;
-  z-index: 1;
-}
-
-#gameStageViewport {
-  position: fixed;
-  inset: 0;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  z-index: 1;
-}
-
-#gameStage {
-  width: 1280px;
-  height: 720px;
-  transform-origin: center center;
-  display: flex;
-  flex-direction: column;
-}
-
 #warTitle {
   position: fixed;
   top: 48%;
@@ -163,8 +140,8 @@ body {
 }
 
 #gameShell {
-  height: calc(720px - 48px - 42px - 67px);
-  width: 1280px;
+  height: calc(100vh - 48px - 42px - 67px);
+  width: 100vw;
   display: none;
 }
 
@@ -214,11 +191,11 @@ body {
 
 #commandGrid {
   display: grid;
-  grid-template-columns: 290px 455px 455px;
+  grid-template-columns: 28% 36% 36%;
   grid-template-rows: 100%;
   height: 100%;
   width: 100%;
-  gap: 16px;
+  gap: 12px;
   padding: 12px;
   align-items: stretch;
 }
