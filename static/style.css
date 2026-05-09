@@ -44,7 +44,11 @@ body {
   display: grid;
   place-items: center;
   overflow: hidden;
-  background: #05080C;
+  background-color: #05080C;
+  background-image: url('/static/war_background.jpg');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
 }
 
 #designStage {
@@ -54,10 +58,7 @@ body {
   overflow: hidden;
   transform: scale(var(--stage-scale));
   transform-origin: center center;
-  background-image: url('/static/war_background.jpg');
-  background-size: 1280px 720px;
-  background-position: center center;
-  background-repeat: no-repeat;
+  background: transparent;
 }
 
 #warTitle {
