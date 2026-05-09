@@ -1,0 +1,9 @@
+{
+  "gridColumns": "525.266px 675.359px 675.359px",
+  "controlWidth": 525.265625,
+  "randomWidth": 675.359375,
+  "handWidth": 675.359375,
+  "randomBeforeHand": true,
+  "handCardCount": 5,
+  "randomCardCount": 5
+}
