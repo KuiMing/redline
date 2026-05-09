@@ -71,6 +71,49 @@ body {
   color: #dbe7f3;
 }
 
+#phaseActionBar {
+  min-height: 60px;
+  padding: 10px 16px;
+  background: rgba(8, 12, 18, 0.94);
+  border-bottom: 1px solid rgba(30, 42, 56, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+#phaseActionMeta {
+  color: #cbd5e1;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+}
+
+.phase-action-btn {
+  appearance: none;
+  border-radius: 12px;
+  padding: 12px 18px;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border: 1px solid rgba(245, 158, 11, 0.6);
+  background: linear-gradient(180deg, rgba(245,158,11,0.94), rgba(180,83,9,0.94));
+  color: #11161d;
+  box-shadow: 0 0 0 1px rgba(251,191,36,0.14), 0 10px 24px rgba(180,83,9,0.24);
+}
+
+.phase-action-btn:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
+.phase-action-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: grayscale(0.1);
+  transform: none;
+}
+
 .hud-main-row {
   display: flex;
   flex-wrap: wrap;
@@ -97,7 +140,7 @@ body {
 }
 
 #gameShell {
-  height: calc(100vh - 48px);
+  height: calc(100vh - 48px - 42px - 60px);
   width: 100vw;
   display: none;
 }
@@ -133,7 +176,7 @@ body {
 
 .game-view {
   display: none;
-  height: calc(100vh - 96px);
+  height: 100%;
   width: 100vw;
 }
 

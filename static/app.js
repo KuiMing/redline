@@ -1019,6 +1019,18 @@ async function render(state) {
       </div>
       ${eraStatus ? `<div class="hud-era-row">${eraStatus}</div>` : ''}
     `;
+
+    const phaseActionMeta = document.getElementById('phaseActionMeta');
+    const advanceBtn = document.getElementById('advanceStepBtn');
+    const isMyTurn = !!(me && state.current_player === me.name);
+    const stepLabel = phaseLabel === '事件' ? '結束事件階段' : phaseLabel === '行動' ? '結束行動階段' : phaseLabel === '結束' ? '結束回合' : '結束目前步驟';
+    if (phaseActionMeta) {
+      phaseActionMeta.textContent = isMyTurn ? `目前：${phaseLabel}｜下一步：${stepLabel}` : `目前：${phaseLabel}｜等待 ${state.current_player} 操作`;
+    }
+    if (advanceBtn) {
+      advanceBtn.textContent = stepLabel;
+      advanceBtn.disabled = !isMyTurn;
+    }
   }
 
   // ✅ 地圖節點不在 render 中重建

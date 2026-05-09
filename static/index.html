@@ -15,6 +15,10 @@
 </div>
 
 <div id="hud"></div>
+<div id="phaseActionBar">
+  <div id="phaseActionMeta"></div>
+  <button id="advanceStepBtn" class="phase-action-btn" onclick="sendAction('advance')">結束目前步驟</button>
+</div>
 <div id="debugSocketState" style="display:none"></div>
 
 <div id="lobby">
@@ -86,7 +90,6 @@
     <div id="commandGrid">
       <div id="controlPanel" class="panel">
         <div class="panel-title">控制面板</div>
-        <button onclick="sendAction('advance')">結束目前步驟</button>
         <div id="buildSupportPanel" style="display:none; margin-top:8px;">
           <div class="panel-title">支援建立</div>
           <div id="buildSupportInfo"></div>
