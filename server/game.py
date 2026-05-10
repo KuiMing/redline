@@ -137,9 +137,6 @@ class Game:
         self.action_engine = ActionCardEngine(self.structured_cards)
         self.effect_engine = EffectEngine()
         self.era_engine = EraEngine(self.structured_eras)
-        # ✅ TEMP: force activate hong_kong era for UI test
-        if "hong_kong" in self.era_engine.era_defs:
-            self.era_engine.activate_era("hong_kong")
         self.victory_engine = VictoryEngine(self.factions, self.board_regions)
 
         self.turn_log = self._new_turn_log()
@@ -1528,6 +1525,24 @@ class Game:
                     self.era_notification = self._era_notification_payload(era)
                     self.log(f"Era triggered: {era.get('name', era_id)}")
 
+    def _player_matches_era_trigger(self, player, trigger):
+        faction_id = trigger.get("faction_id")
+        if faction_id and player.faction_id != faction_id:
+            return False
+        camp = trigger.get("camp")
+        if camp:
+            faction = self.faction_by_id.get(player.faction_id, {})
+            if faction.get("camp") != camp and player.faction_id != camp:
+                return False
+        return True
+
+    def _player_region_org_count(self, player, region):
+        region_towns = self.board_regions.get(region, {}).get("towns", [])
+        return sum(
+            v for town, v in player.organizations.items()
+            if town in region_towns
+        )
+
     def _evaluate_era_trigger(self, trigger):
         t = trigger.get("type")
 
@@ -1536,26 +1551,30 @@ class Game:
             count = trigger.get("count", 0)
 
             for p in self.players:
-                region_towns = self.board_regions.get(region, {}).get("towns", [])
-                region_count = sum(
-                    v for town, v in p.organizations.items()
-                    if town in region_towns
-                )
-                if region_count >= count:
+                if not self._player_matches_era_trigger(p, trigger):
+                    continue
+                if self._player_region_org_count(p, region) >= count:
                     return True
 
         if t == "count_and_required":
-            region = trigger.get("region")
-            count = trigger.get("count", 0)
-
-            for p in self.players:
-                region_towns = self.board_regions.get(region, {}).get("towns", [])
-                region_count = sum(
-                    v for town, v in p.organizations.items()
-                    if town in region_towns
-                )
-                if region_count >= count:
-                    return True
+            requirements = trigger.get("requirements")
+            if requirements:
+                for p in self.players:
+                    if not self._player_matches_era_trigger(p, trigger):
+                        continue
+                    if all(
+                        self._player_region_org_count(p, req.get("region")) >= req.get("count", 0)
+                        for req in requirements
+                    ):
+                        return True
+            else:
+                region = trigger.get("region")
+                count = trigger.get("count", 0)
+                for p in self.players:
+                    if not self._player_matches_era_trigger(p, trigger):
+                        continue
+                    if self._player_region_org_count(p, region) >= count:
+                        return True
 
         return False
 

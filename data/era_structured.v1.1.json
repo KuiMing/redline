@@ -1,0 +1,103 @@
+{
+  "schema_version": "1.2",
+  "eras": [
+    {
+      "id": "hong_kong",
+      "name": "[香港]香港人被自殺",
+      "trigger": {
+        "type": "count_only",
+        "camp": "hong_kong",
+        "region": "hong_kong",
+        "count": 10
+      },
+      "duration": { "type": "turns", "value": 2 },
+      "effects": {}
+    },
+    {
+      "id": "mongolia",
+      "name": "[蒙古]莫日根事件爆發",
+      "trigger": {
+        "type": "count_only",
+        "camp": "mongol",
+        "region": "mongolian_plateau",
+        "count": 4
+      },
+      "duration": { "type": "turns", "value": 1 },
+      "effects": {}
+    },
+    {
+      "id": "tibet",
+      "name": "[藏國]藏國騷亂",
+      "trigger": {
+        "type": "count_only",
+        "camp": "tibet",
+        "region": "tibet_region",
+        "count": 7
+      },
+      "duration": { "type": "turns", "value": 1 },
+      "effects": {}
+    },
+    {
+      "id": "kazakh",
+      "name": "[哈薩克]伊塔事件",
+      "trigger": {
+        "type": "count_and_required",
+        "camp": "kazakh",
+        "requirements": [
+          { "region": "turkestan", "count": 7 },
+          { "region": "china", "count": 3 }
+        ]
+      },
+      "duration": { "type": "permanent" },
+      "effects": {}
+    },
+    {
+      "id": "uyghur",
+      "name": "[維吾爾]莎車大屠殺",
+      "trigger": {
+        "type": "count_only",
+        "camp": "uyghur",
+        "region": "turkestan",
+        "count": 7
+      },
+      "duration": { "type": "turns", "value": 2 },
+      "effects": {}
+    },
+    {
+      "id": "manchuria",
+      "name": "[滿洲]滿洲地方派系凝聚",
+      "trigger": {
+        "type": "count_only",
+        "camp": "manchuria",
+        "region": "manchuria",
+        "count": 10
+      },
+      "duration": { "type": "turns", "value": 1 },
+      "effects": {}
+    },
+    {
+      "id": "rebels",
+      "name": "[反賊]公知世代的終結",
+      "trigger": {
+        "type": "count_only",
+        "camp": "rebel",
+        "region": "china",
+        "count": 4
+      },
+      "duration": { "type": "permanent" },
+      "effects": {}
+    },
+    {
+      "id": "taiwan",
+      "name": "[臺灣]綏靖派反對介入對岸",
+      "trigger": {
+        "type": "count_only",
+        "camp": "taiwan",
+        "region": "taiwan",
+        "count": 7
+      },
+      "duration": { "type": "turns", "value": 2 },
+      "effects": {}
+    }
+  ]
+}
