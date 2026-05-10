@@ -29,7 +29,7 @@ def make_game():
     game.current_player_index = 0
     game.game_phase = GamePhase.MAIN
     game.turn_phase = TurnPhase.ACTION
-    player.moves_left = 3
+    player.moves_left = 0
     return game, player
 
 
@@ -49,6 +49,7 @@ def run_checks():
     checks = []
 
     game, player = make_game()
+    player.moves_left = 3
     game.turn_phase = TurnPhase.EVENT
     before = snapshot(player)
     result = game.move_organization('香港城', '澳門', 'road')
@@ -62,7 +63,21 @@ def run_checks():
     game, player = make_game()
     player.organizations = {'澳門': 1}
     player.base = '香港城'
-    player.moves_left = 3
+    before = snapshot(player)
+    result = game.move_organization('澳門', '香港城', 'road')
+    after = snapshot(player)
+    checks.append(check(
+        'initial_zero_move_points_cannot_move',
+        bool(result.get('error'))
+        and result.get('error') == 'Not enough move points'
+        and before == after,
+        {'result': result, 'before': before, 'after': after, 'rule': '一開始沒有移動點；必須靠卡牌或效果取得移動點後才能移動。'},
+    ))
+
+    game, player = make_game()
+    player.organizations = {'澳門': 1}
+    player.base = '香港城'
+    player.moves_left = 1
     before = snapshot(player)
     result = game.move_organization('澳門', '香港城', 'road')
     after = snapshot(player)
@@ -78,12 +93,12 @@ def run_checks():
     game, player = make_game()
     player.organizations = {'北京': 1}
     player.base = '香港城'
-    player.moves_left = 3
+    player.moves_left = 1
     before = snapshot(player)
     result = game.move_organization('北京', '天津', 'rail')
     after = snapshot(player)
     checks.append(check(
-        'rail_adjacent_move_costs_three_and_moves_org',
+        'rail_adjacent_move_costs_one_move_count_and_moves_org',
         result.get('success') is True
         and after['orgs'].get('北京', 0) == 0
         and after['orgs'].get('天津') == 1
@@ -94,12 +109,12 @@ def run_checks():
     game, player = make_game()
     player.organizations = {'北京': 1}
     player.base = '香港城'
-    player.moves_left = 2
+    player.moves_left = 0
     before = snapshot(player)
     result = game.move_organization('北京', '天津', 'rail')
     after = snapshot(player)
     checks.append(check(
-        'rail_move_rejected_when_moves_left_below_three',
+        'rail_move_rejected_when_no_move_count_left',
         bool(result.get('error')) and before == after,
         {'result': result, 'before': before, 'after': after},
     ))
@@ -118,6 +133,7 @@ def run_checks():
 
     game, player = make_game()
     player.organizations = {'香港城': 2}
+    player.moves_left = 3
     before = snapshot(player)
     result = game.move_organization('香港城', '澳門', 'air')
     after = snapshot(player)
@@ -128,6 +144,7 @@ def run_checks():
     ))
 
     game, player = make_game()
+    player.moves_left = 3
     before = snapshot(player)
     result = game.move_organization('不存在', '澳門', 'road')
     after = snapshot(player)

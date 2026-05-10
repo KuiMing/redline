@@ -7,8 +7,8 @@ summary: {'total': 6, 'passed': 6, 'failed': 0}
 ## end_turn_discards_hand_resets_and_draws_to_five — PASS
 - before: {'hand': ['H1', 'H2', 'H3'], 'draw_pile': ['D1', 'D2', 'D3', 'D4'], 'discard_pile': ['X1', 'X2'], 'hand_count': 3, 'draw_count': 4, 'discard_count': 2, 'total_cards': 9, 'resources': {'money': 7, 'propaganda': 6}, 'moves_left': 0}
 - result: {'action_to_end': {'success': True}, 'end_to_next': {'success': True}}
-- after: {'hand': ['D4', 'D3', 'D2', 'D1', 'X1'], 'draw_pile': ['H1', 'X2', 'H2', 'H3'], 'discard_pile': [], 'hand_count': 5, 'draw_count': 4, 'discard_count': 0, 'total_cards': 9, 'resources': {'money': 0, 'propaganda': 0}, 'moves_left': 3, 'turn_phase': 'event', 'current_player': 'other'}
-- rule: 回合結束：棄掉當前手牌、重置資源與移動點、補到 5 張且總牌數守恆。
+- after: {'hand': ['D4', 'D3', 'D2', 'D1', 'X1'], 'draw_pile': ['H1', 'X2', 'H2', 'H3'], 'discard_pile': [], 'hand_count': 5, 'draw_count': 4, 'discard_count': 0, 'total_cards': 9, 'resources': {'money': 0, 'propaganda': 0}, 'moves_left': 0, 'turn_phase': 'event', 'current_player': 'other'}
+- rule: 回合結束：棄掉當前手牌、重置資源與移動點為 0、補到 5 張且總牌數守恆。
 
 ## draw_reshuffles_discard_when_draw_pile_runs_out — PASS
 - before: {'hand': [], 'draw_pile': ['D1', 'D2'], 'discard_pile': ['R1', 'R2', 'R3'], 'hand_count': 0, 'draw_count': 2, 'discard_count': 3, 'total_cards': 5}

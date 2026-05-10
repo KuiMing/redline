@@ -1,7 +1,7 @@
 {
-  "game_id": "e2d12c4f-bd7e-48c6-812a-6362d073ca31",
-  "host_player_id": "5a3983a3-a5f9-42a9-951c-e569bdf36cc4",
-  "ally_player_id": "97a27080-aa17-4357-9d88-565250c80918",
+  "game_id": "c1c5968c-c3de-435f-b887-d5a7bc1cfe12",
+  "host_player_id": "6f44ac54-c468-4055-b06c-d6d77fa1b2d5",
+  "ally_player_id": "0578cb81-4f06-46e1-a3a0-82053bd8d923",
   "summary": {
     "total": 8,
     "passed": 8,
@@ -39,7 +39,7 @@
       "ok": true,
       "detail": {
         "player": {
-          "id": "5a3983a3-a5f9-42a9-951c-e569bdf36cc4",
+          "id": "6f44ac54-c468-4055-b06c-d6d77fa1b2d5",
           "name": "host",
           "faction": "red_army",
           "base": "北京",
@@ -47,13 +47,13 @@
             "money": 0,
             "propaganda": 0
           },
-          "moves_left": 3,
+          "moves_left": 0,
           "hand": [
             "追隨者",
             "追隨者",
-            "追隨者",
-            "追隨者",
-            "樂捐者"
+            "樂捐者",
+            "樂捐者",
+            "追隨者"
           ],
           "deck_count": 5,
           "discard_count": 0,
@@ -72,7 +72,7 @@
       "ok": true,
       "detail": {
         "player": {
-          "id": "97a27080-aa17-4357-9d88-565250c80918",
+          "id": "0578cb81-4f06-46e1-a3a0-82053bd8d923",
           "name": "ally",
           "faction": "taiwan_green",
           "base": "臺北",
@@ -80,13 +80,13 @@
             "money": 0,
             "propaganda": 0
           },
-          "moves_left": 3,
+          "moves_left": 0,
           "hand": [
             "追隨者",
             "樂捐者",
             "追隨者",
-            "追隨者",
-            "樂捐者"
+            "樂捐者",
+            "追隨者"
           ],
           "deck_count": 5,
           "discard_count": 0,
@@ -105,7 +105,7 @@
       "ok": true,
       "detail": {
         "player": {
-          "id": "5a3983a3-a5f9-42a9-951c-e569bdf36cc4",
+          "id": "6f44ac54-c468-4055-b06c-d6d77fa1b2d5",
           "name": "host",
           "faction": "red_army",
           "base": "北京",
@@ -113,13 +113,13 @@
             "money": 0,
             "propaganda": 0
           },
-          "moves_left": 3,
+          "moves_left": 0,
           "hand": [
             "追隨者",
             "追隨者",
-            "追隨者",
-            "追隨者",
-            "樂捐者"
+            "樂捐者",
+            "樂捐者",
+            "追隨者"
           ],
           "deck_count": 5,
           "discard_count": 0,
@@ -134,7 +134,7 @@
       "ok": true,
       "detail": {
         "player": {
-          "id": "97a27080-aa17-4357-9d88-565250c80918",
+          "id": "0578cb81-4f06-46e1-a3a0-82053bd8d923",
           "name": "ally",
           "faction": "taiwan_green",
           "base": "臺北",
@@ -142,13 +142,13 @@
             "money": 0,
             "propaganda": 0
           },
-          "moves_left": 3,
+          "moves_left": 0,
           "hand": [
             "追隨者",
             "樂捐者",
             "追隨者",
-            "追隨者",
-            "樂捐者"
+            "樂捐者",
+            "追隨者"
           ],
           "deck_count": 5,
           "discard_count": 0,
@@ -170,11 +170,11 @@
           "資本家",
           "分神",
           "內鬥",
-          "爆料黑幕",
-          "組織經驗丙",
-          "武裝者",
-          "紅軍奧援",
-          "領導"
+          "高效行動",
+          "組織經驗乙",
+          "誘導虛耗",
+          "凝聚共識",
+          "合作談判"
         ],
         "static_supply": {
           "宣傳家": 1,

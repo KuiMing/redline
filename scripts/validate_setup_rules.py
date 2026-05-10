@@ -90,7 +90,7 @@ def check_setup(browser):
                and p.get('deck_count') == 5
                and p.get('discard_count') == 0
                and p.get('resources') == {'money': 0, 'propaganda': 0}
-               and p.get('moves_left') == 3,
+               and p.get('moves_left') == 0,
                {'player': p})
 
     purchase_area = state.get('purchase_area') or []

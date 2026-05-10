@@ -20,20 +20,20 @@ screenshot: /Users/benmini/.openclaw/workspace/redline/setup_rules_validation.pn
 
 ## host_faction_and_base_initialized
 - result: PASS
-- detail: {"player": {"id": "5a3983a3-a5f9-42a9-951c-e569bdf36cc4", "name": "host", "faction": "red_army", "base": "北京", "resources": {"money": 0, "propaganda": 0}, "moves_left": 3, "hand": ["追隨者", "追隨者", "追隨者", "追隨者", "樂捐者"], "deck_count": 5, "discard_count": 0, "orgs": {"北京": 1}}, "expected": {"faction": "red_army", "base": "北京"}}
+- detail: {"player": {"id": "6f44ac54-c468-4055-b06c-d6d77fa1b2d5", "name": "host", "faction": "red_army", "base": "北京", "resources": {"money": 0, "propaganda": 0}, "moves_left": 0, "hand": ["追隨者", "追隨者", "樂捐者", "樂捐者", "追隨者"], "deck_count": 5, "discard_count": 0, "orgs": {"北京": 1}}, "expected": {"faction": "red_army", "base": "北京"}}
 
 ## ally_faction_and_base_initialized
 - result: PASS
-- detail: {"player": {"id": "97a27080-aa17-4357-9d88-565250c80918", "name": "ally", "faction": "taiwan_green", "base": "臺北", "resources": {"money": 0, "propaganda": 0}, "moves_left": 3, "hand": ["追隨者", "樂捐者", "追隨者", "追隨者", "樂捐者"], "deck_count": 5, "discard_count": 0, "orgs": {"臺北": 1}}, "expected": {"faction": "taiwan_green", "base": "臺北"}}
+- detail: {"player": {"id": "0578cb81-4f06-46e1-a3a0-82053bd8d923", "name": "ally", "faction": "taiwan_green", "base": "臺北", "resources": {"money": 0, "propaganda": 0}, "moves_left": 0, "hand": ["追隨者", "樂捐者", "追隨者", "樂捐者", "追隨者"], "deck_count": 5, "discard_count": 0, "orgs": {"臺北": 1}}, "expected": {"faction": "taiwan_green", "base": "臺北"}}
 
 ## host_starter_hand_resources_and_moves
 - result: PASS
-- detail: {"player": {"id": "5a3983a3-a5f9-42a9-951c-e569bdf36cc4", "name": "host", "faction": "red_army", "base": "北京", "resources": {"money": 0, "propaganda": 0}, "moves_left": 3, "hand": ["追隨者", "追隨者", "追隨者", "追隨者", "樂捐者"], "deck_count": 5, "discard_count": 0, "orgs": {"北京": 1}}}
+- detail: {"player": {"id": "6f44ac54-c468-4055-b06c-d6d77fa1b2d5", "name": "host", "faction": "red_army", "base": "北京", "resources": {"money": 0, "propaganda": 0}, "moves_left": 0, "hand": ["追隨者", "追隨者", "樂捐者", "樂捐者", "追隨者"], "deck_count": 5, "discard_count": 0, "orgs": {"北京": 1}}}
 
 ## ally_starter_hand_resources_and_moves
 - result: PASS
-- detail: {"player": {"id": "97a27080-aa17-4357-9d88-565250c80918", "name": "ally", "faction": "taiwan_green", "base": "臺北", "resources": {"money": 0, "propaganda": 0}, "moves_left": 3, "hand": ["追隨者", "樂捐者", "追隨者", "追隨者", "樂捐者"], "deck_count": 5, "discard_count": 0, "orgs": {"臺北": 1}}}
+- detail: {"player": {"id": "0578cb81-4f06-46e1-a3a0-82053bd8d923", "name": "ally", "faction": "taiwan_green", "base": "臺北", "resources": {"money": 0, "propaganda": 0}, "moves_left": 0, "hand": ["追隨者", "樂捐者", "追隨者", "樂捐者", "追隨者"], "deck_count": 5, "discard_count": 0, "orgs": {"臺北": 1}}}
 
 ## purchase_area_setup_matches_rules
 - result: PASS
-- detail: {"purchase_area_count": 11, "purchase_area": ["宣傳家", "思想家", "資助者", "資本家", "分神", "內鬥", "爆料黑幕", "組織經驗丙", "武裝者", "紅軍奧援", "領導"], "static_supply": {"宣傳家": 1, "思想家": 1, "資助者": 1, "資本家": 1, "分神": 1, "內鬥": 1}}
+- detail: {"purchase_area_count": 11, "purchase_area": ["宣傳家", "思想家", "資助者", "資本家", "分神", "內鬥", "高效行動", "組織經驗乙", "誘導虛耗", "凝聚共識", "合作談判"], "static_supply": {"宣傳家": 1, "思想家": 1, "資助者": 1, "資本家": 1, "分神": 1, "內鬥": 1}}

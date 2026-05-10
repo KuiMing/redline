@@ -50,7 +50,7 @@ class Player:
         self.organizations = {}
         self.base = None
         self.resources = {"money": 0, "propaganda": 0}
-        self.moves_left = 3
+        self.moves_left = 0
         self.hand = []
         self.deck = None
         self.build_range_bonus = 0
@@ -69,7 +69,7 @@ class Player:
 
     def reset_turn(self):
         self.resources = {"money": 0, "propaganda": 0}
-        self.moves_left = 3
+        self.moves_left = 0
         self.build_range_bonus = 0
 
 
@@ -1056,7 +1056,7 @@ class Game:
 
         for idx, p in enumerate(self.players):
             p.resources = {"money": 0, "propaganda": 0}
-            p.moves_left = 3
+            p.moves_left = 0
             p.build_range_bonus = 0
             if p is player:
                 base = p.base or "北京"
@@ -1372,8 +1372,9 @@ class Game:
         if to_town not in neighbors:
             return {"error": f"No {mode} connection"}
 
-        cost_key = f"{mode}_cost"
-        cost = self.map.get("movement_rules", {}).get(cost_key, 1)
+        # Movement points represent movement counts, not distance/cost budget.
+        # Every legal organization move consumes one count; cards/effects grant counts.
+        cost = 1
         if player.moves_left < cost:
             return {"error": "Not enough move points"}
 

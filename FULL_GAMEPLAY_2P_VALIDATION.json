@@ -173,7 +173,7 @@
         "money": 0,
         "propaganda": 1
       },
-      "moves_left": 3
+      "moves_left": 0
     },
     {
       "step": "cycle_1_move",
@@ -185,7 +185,7 @@
       "orgs_after": {
         "香港城": 1
       },
-      "moves_left_after": 3
+      "moves_left_after": 0
     },
     {
       "step": "cycle_1_advance_to_end",
@@ -235,7 +235,7 @@
         "money": 0,
         "propaganda": 1
       },
-      "moves_left": 3
+      "moves_left": 0
     },
     {
       "step": "cycle_2_move",
@@ -247,7 +247,7 @@
       "orgs_after": {
         "北京": 1
       },
-      "moves_left_after": 3
+      "moves_left_after": 0
     },
     {
       "step": "cycle_2_advance_to_end",
@@ -297,7 +297,7 @@
         "money": 1,
         "propaganda": 0
       },
-      "moves_left": 3
+      "moves_left": 0
     },
     {
       "step": "cycle_3_move",
@@ -309,7 +309,7 @@
       "orgs_after": {
         "香港城": 1
       },
-      "moves_left_after": 3
+      "moves_left_after": 0
     },
     {
       "step": "cycle_3_advance_to_end",
@@ -359,7 +359,7 @@
         "money": 0,
         "propaganda": 1
       },
-      "moves_left": 3
+      "moves_left": 0
     },
     {
       "step": "cycle_4_move",
@@ -371,7 +371,7 @@
       "orgs_after": {
         "北京": 1
       },
-      "moves_left_after": 3
+      "moves_left_after": 0
     },
     {
       "step": "cycle_4_advance_to_end",
@@ -546,7 +546,7 @@
           "money": 0,
           "propaganda": 0
         },
-        "moves_left": 3,
+        "moves_left": 0,
         "hand": [
           "追隨者",
           "追隨者",
@@ -582,7 +582,7 @@
           "money": 0,
           "propaganda": 0
         },
-        "moves_left": 3,
+        "moves_left": 0,
         "hand": [
           "追隨者",
           "樂捐者",

@@ -640,7 +640,7 @@ def test_setup_hu_taiwan_shared(payload: dict):
     hu.base = payload.get("hu_base", "紐約")
     hu.organizations = {hu.base: 1}
     hu.hand = []
-    hu.moves_left = 3
+    hu.moves_left = 0
 
     tw.faction_id = "taiwan_green"
     tw.base = payload.get("tw_base", "臺北")

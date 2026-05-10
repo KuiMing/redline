@@ -19,7 +19,7 @@
             "propaganda": 0
           },
           "hand_count": 1,
-          "moves_left": 3,
+          "moves_left": 0,
           "discard": []
         },
         "after": {
@@ -28,7 +28,7 @@
             "propaganda": 1
           },
           "hand_count": 0,
-          "moves_left": 3,
+          "moves_left": 0,
           "discard": [
             "追隨者"
           ]
@@ -52,7 +52,7 @@
             "propaganda": 0
           },
           "hand_count": 1,
-          "moves_left": 3,
+          "moves_left": 0,
           "discard": []
         },
         "after": {
@@ -61,7 +61,7 @@
             "propaganda": 0
           },
           "hand_count": 0,
-          "moves_left": 3,
+          "moves_left": 0,
           "discard": [
             "樂捐者"
           ]
@@ -84,7 +84,7 @@
             "money": 0,
             "propaganda": 0
           },
-          "moves_left": 3,
+          "moves_left": 0,
           "orgs": {
             "北京": 1
           },
@@ -96,7 +96,7 @@
             "money": 0,
             "propaganda": 2
           },
-          "moves_left": 4,
+          "moves_left": 1,
           "orgs": {
             "北京": 2
           },
@@ -108,7 +108,7 @@
             "money": 0,
             "propaganda": 2
           },
-          "moves_left": 4,
+          "moves_left": 1,
           "orgs": {
             "北京": 2
           },
@@ -129,7 +129,7 @@
             "money": 0,
             "propaganda": 0
           },
-          "moves_left": 3,
+          "moves_left": 0,
           "orgs": {
             "北京": 1
           },
@@ -141,7 +141,7 @@
             "money": 0,
             "propaganda": 3
           },
-          "moves_left": 6,
+          "moves_left": 3,
           "orgs": {
             "北京": 2
           },
@@ -153,7 +153,7 @@
             "money": 0,
             "propaganda": 3
           },
-          "moves_left": 6,
+          "moves_left": 3,
           "orgs": {
             "北京": 2
           },
@@ -174,7 +174,7 @@
             "money": 0,
             "propaganda": 0
           },
-          "moves_left": 3,
+          "moves_left": 0,
           "orgs": {
             "北京": 1
           },
@@ -186,7 +186,7 @@
             "money": 4,
             "propaganda": 2
           },
-          "moves_left": 3,
+          "moves_left": 0,
           "orgs": {
             "北京": 1
           },
@@ -198,7 +198,7 @@
             "money": 4,
             "propaganda": 2
           },
-          "moves_left": 3,
+          "moves_left": 0,
           "orgs": {
             "北京": 1
           },
@@ -219,7 +219,7 @@
             "money": 0,
             "propaganda": 0
           },
-          "moves_left": 3,
+          "moves_left": 0,
           "orgs": {
             "北京": 1
           },
@@ -231,7 +231,7 @@
             "money": 6,
             "propaganda": 3
           },
-          "moves_left": 3,
+          "moves_left": 0,
           "orgs": {
             "北京": 1
           },
@@ -243,7 +243,7 @@
             "money": 6,
             "propaganda": 3
           },
-          "moves_left": 3,
+          "moves_left": 0,
           "orgs": {
             "北京": 1
           },
@@ -264,7 +264,7 @@
             "money": 0,
             "propaganda": 0
           },
-          "moves_left": 3,
+          "moves_left": 0,
           "orgs": {
             "北京": 1
           },
@@ -276,7 +276,7 @@
             "money": 0,
             "propaganda": 0
           },
-          "moves_left": 3,
+          "moves_left": 0,
           "orgs": {
             "北京": 1
           },
@@ -288,7 +288,7 @@
             "money": 0,
             "propaganda": 0
           },
-          "moves_left": 3,
+          "moves_left": 0,
           "orgs": {
             "北京": 1
           },
@@ -309,7 +309,7 @@
             "money": 0,
             "propaganda": 0
           },
-          "moves_left": 3,
+          "moves_left": 0,
           "orgs": {
             "北京": 1
           },
@@ -321,7 +321,7 @@
             "money": 0,
             "propaganda": 0
           },
-          "moves_left": 3,
+          "moves_left": 0,
           "orgs": {
             "北京": 1
           },
@@ -335,7 +335,7 @@
             "money": 0,
             "propaganda": 0
           },
-          "moves_left": 3,
+          "moves_left": 0,
           "orgs": {
             "北京": 1
           },

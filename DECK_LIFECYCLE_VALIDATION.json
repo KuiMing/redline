@@ -67,11 +67,11 @@
             "money": 0,
             "propaganda": 0
           },
-          "moves_left": 3,
+          "moves_left": 0,
           "turn_phase": "event",
           "current_player": "other"
         },
-        "rule": "回合結束：棄掉當前手牌、重置資源與移動點、補到 5 張且總牌數守恆。"
+        "rule": "回合結束：棄掉當前手牌、重置資源與移動點為 0、補到 5 張且總牌數守恆。"
       }
     },
     {

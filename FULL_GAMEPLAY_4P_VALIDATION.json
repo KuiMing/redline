@@ -250,7 +250,7 @@
         "money": 0,
         "propaganda": 1
       },
-      "moves_left": 3
+      "moves_left": 0
     },
     {
       "step": "cycle_1_move",
@@ -262,7 +262,7 @@
       "orgs_after": {
         "深圳": 1
       },
-      "moves_left_after": 3
+      "moves_left_after": 0
     },
     {
       "step": "cycle_1_advance_to_end",
@@ -312,7 +312,7 @@
         "money": 0,
         "propaganda": 1
       },
-      "moves_left": 3
+      "moves_left": 0
     },
     {
       "step": "cycle_2_move",
@@ -324,7 +324,7 @@
       "orgs_after": {
         "北京": 1
       },
-      "moves_left_after": 3
+      "moves_left_after": 0
     },
     {
       "step": "cycle_2_advance_to_end",
@@ -375,7 +375,7 @@
         "money": 1,
         "propaganda": 0
       },
-      "moves_left": 3
+      "moves_left": 0
     },
     {
       "step": "cycle_3_move",
@@ -387,7 +387,7 @@
       "orgs_after": {
         "潮州": 1
       },
-      "moves_left_after": 3
+      "moves_left_after": 0
     },
     {
       "step": "cycle_3_advance_to_end",
@@ -437,7 +437,7 @@
         "money": 0,
         "propaganda": 1
       },
-      "moves_left": 3
+      "moves_left": 0
     },
     {
       "step": "cycle_4_move",
@@ -449,7 +449,7 @@
       "orgs_after": {
         "臺北": 1
       },
-      "moves_left_after": 3
+      "moves_left_after": 0
     },
     {
       "step": "cycle_4_advance_to_end",
@@ -499,7 +499,7 @@
         "money": 1,
         "propaganda": 0
       },
-      "moves_left": 3
+      "moves_left": 0
     },
     {
       "step": "cycle_5_move",
@@ -511,7 +511,7 @@
       "orgs_after": {
         "深圳": 1
       },
-      "moves_left_after": 3
+      "moves_left_after": 0
     },
     {
       "step": "cycle_5_advance_to_end",
@@ -561,7 +561,7 @@
         "money": 1,
         "propaganda": 0
       },
-      "moves_left": 3
+      "moves_left": 0
     },
     {
       "step": "cycle_6_move",
@@ -573,7 +573,7 @@
       "orgs_after": {
         "北京": 1
       },
-      "moves_left_after": 3
+      "moves_left_after": 0
     },
     {
       "step": "cycle_6_advance_to_end",
@@ -623,7 +623,7 @@
         "money": 0,
         "propaganda": 1
       },
-      "moves_left": 3
+      "moves_left": 0
     },
     {
       "step": "cycle_7_move",
@@ -635,7 +635,7 @@
       "orgs_after": {
         "潮州": 1
       },
-      "moves_left_after": 3
+      "moves_left_after": 0
     },
     {
       "step": "cycle_7_advance_to_end",
@@ -685,7 +685,7 @@
         "money": 0,
         "propaganda": 1
       },
-      "moves_left": 3
+      "moves_left": 0
     },
     {
       "step": "cycle_8_move",
@@ -697,7 +697,7 @@
       "orgs_after": {
         "臺北": 1
       },
-      "moves_left_after": 3
+      "moves_left_after": 0
     },
     {
       "step": "cycle_8_advance_to_end",
@@ -935,7 +935,7 @@
           "money": 0,
           "propaganda": 0
         },
-        "moves_left": 3,
+        "moves_left": 0,
         "hand": [
           "追隨者",
           "樂捐者",
@@ -958,7 +958,7 @@
           "money": 0,
           "propaganda": 0
         },
-        "moves_left": 3,
+        "moves_left": 0,
         "hand": [
           "樂捐者",
           "樂捐者",
@@ -981,7 +981,7 @@
           "money": 0,
           "propaganda": 0
         },
-        "moves_left": 3,
+        "moves_left": 0,
         "hand": [
           "追隨者",
           "樂捐者",
@@ -1004,7 +1004,7 @@
           "money": 0,
           "propaganda": 0
         },
-        "moves_left": 3,
+        "moves_left": 0,
         "hand": [
           "樂捐者",
           "追隨者",

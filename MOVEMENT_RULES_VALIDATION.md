@@ -2,27 +2,33 @@
 
 日期：2026-05-10
 
-summary: {'total': 9, 'passed': 9, 'failed': 0}
+summary: {'total': 10, 'passed': 10, 'failed': 0}
 
 ## movement_rejected_outside_action_phase — PASS
 - result: {'error': 'Not in ACTION phase'}
 - before: {'orgs': {'香港城': 1}, 'moves_left': 3, 'base': '香港城'}
 - after: {'orgs': {'香港城': 1}, 'moves_left': 3, 'base': '香港城'}
 
+## initial_zero_move_points_cannot_move — PASS
+- result: {'error': 'Not enough move points'}
+- before: {'orgs': {'澳門': 1}, 'moves_left': 0, 'base': '香港城'}
+- after: {'orgs': {'澳門': 1}, 'moves_left': 0, 'base': '香港城'}
+- rule: 一開始沒有移動點；必須靠卡牌或效果取得移動點後才能移動。
+
 ## road_adjacent_move_costs_one_and_moves_org — PASS
 - result: {'success': True}
-- before: {'orgs': {'澳門': 1}, 'moves_left': 3, 'base': '香港城'}
-- after: {'orgs': {'香港城': 1}, 'moves_left': 2, 'base': '香港城'}
+- before: {'orgs': {'澳門': 1}, 'moves_left': 1, 'base': '香港城'}
+- after: {'orgs': {'香港城': 1}, 'moves_left': 0, 'base': '香港城'}
 
-## rail_adjacent_move_costs_three_and_moves_org — PASS
+## rail_adjacent_move_costs_one_move_count_and_moves_org — PASS
 - result: {'success': True}
-- before: {'orgs': {'北京': 1}, 'moves_left': 3, 'base': '香港城'}
+- before: {'orgs': {'北京': 1}, 'moves_left': 1, 'base': '香港城'}
 - after: {'orgs': {'天津': 1}, 'moves_left': 0, 'base': '香港城'}
 
-## rail_move_rejected_when_moves_left_below_three — PASS
+## rail_move_rejected_when_no_move_count_left — PASS
 - result: {'error': 'Not enough move points'}
-- before: {'orgs': {'北京': 1}, 'moves_left': 2, 'base': '香港城'}
-- after: {'orgs': {'北京': 1}, 'moves_left': 2, 'base': '香港城'}
+- before: {'orgs': {'北京': 1}, 'moves_left': 0, 'base': '香港城'}
+- after: {'orgs': {'北京': 1}, 'moves_left': 0, 'base': '香港城'}
 
 ## non_adjacent_move_rejected_without_spending_points — PASS
 - result: {'error': 'No road connection'}

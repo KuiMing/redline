@@ -23,7 +23,7 @@ def make_game_with_card(card):
     actor.base = '北京'
     actor.organizations = {'北京': 1}
     actor.resources = {'money': 0, 'propaganda': 0}
-    actor.moves_left = 3
+    actor.moves_left = 0
     actor.hand = [card]
     actor.deck.draw_pile = []
     actor.deck.discard_pile = []
@@ -78,12 +78,12 @@ def run_checks():
         ))
 
     static_expectations = {
-        '宣傳家': {'resources': {'money': 0, 'propaganda': 2}, 'moves_left': 4, 'orgs': {'北京': 2}, 'supply_delta': 1},
-        '思想家': {'resources': {'money': 0, 'propaganda': 3}, 'moves_left': 6, 'orgs': {'北京': 2}, 'supply_delta': 1},
-        '資助者': {'resources': {'money': 4, 'propaganda': 2}, 'moves_left': 3, 'orgs': {'北京': 1}, 'supply_delta': 1},
-        '資本家': {'resources': {'money': 6, 'propaganda': 3}, 'moves_left': 3, 'orgs': {'北京': 1}, 'supply_delta': 1},
-        '分神': {'resources': {'money': 0, 'propaganda': 0}, 'moves_left': 3, 'orgs': {'北京': 1}, 'supply_delta': 1},
-        '內鬥': {'resources': {'money': 0, 'propaganda': 0}, 'moves_left': 3, 'orgs': {'北京': 1}, 'supply_delta': 0},
+        '宣傳家': {'resources': {'money': 0, 'propaganda': 2}, 'moves_left': 1, 'orgs': {'北京': 2}, 'supply_delta': 1},
+        '思想家': {'resources': {'money': 0, 'propaganda': 3}, 'moves_left': 3, 'orgs': {'北京': 2}, 'supply_delta': 1},
+        '資助者': {'resources': {'money': 4, 'propaganda': 2}, 'moves_left': 0, 'orgs': {'北京': 1}, 'supply_delta': 1},
+        '資本家': {'resources': {'money': 6, 'propaganda': 3}, 'moves_left': 0, 'orgs': {'北京': 1}, 'supply_delta': 1},
+        '分神': {'resources': {'money': 0, 'propaganda': 0}, 'moves_left': 0, 'orgs': {'北京': 1}, 'supply_delta': 1},
+        '內鬥': {'resources': {'money': 0, 'propaganda': 0}, 'moves_left': 0, 'orgs': {'北京': 1}, 'supply_delta': 0},
     }
 
     seed_game = Game([('seed1', 'seed'), ('seed2', 'red')])

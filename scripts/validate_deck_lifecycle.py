@@ -48,7 +48,7 @@ def make_game():
     actor.base = '北京'
     actor.organizations = {'北京': 1}
     actor.resources = {'money': 0, 'propaganda': 0}
-    actor.moves_left = 3
+    actor.moves_left = 0
 
     other.id = 'p2'
     other.name = 'other'
@@ -96,11 +96,11 @@ def run_checks():
         and after['hand_count'] == 5
         and after['total_cards'] == before['total_cards']
         and after['resources'] == {'money': 0, 'propaganda': 0}
-        and after['moves_left'] == 3
+        and after['moves_left'] == 0
         and after['turn_phase'] == TurnPhase.EVENT.value
         and after['current_player'] == 'other'
         and set(after['hand']).issubset(set(before['hand'] + before['draw_pile'] + before['discard_pile'])),
-        {'before': before, 'result': result, 'after': after, 'rule': '回合結束：棄掉當前手牌、重置資源與移動點、補到 5 張且總牌數守恆。'},
+        {'before': before, 'result': result, 'after': after, 'rule': '回合結束：棄掉當前手牌、重置資源與移動點為 0、補到 5 張且總牌數守恆。'},
     ))
 
     # 2. Drawing more cards than draw pile contains reshuffles discard pile and continues drawing.
