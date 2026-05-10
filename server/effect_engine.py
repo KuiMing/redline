@@ -117,11 +117,19 @@ class EffectEngine:
             player.moves_left += count
             return
 
-        # ✅ Shared draw
+        # ✅ Shared draw with one selected target (MVP default: first other player)
         if etype == "shared_draw":
             count = effect.get("count", 1)
-            for other in game.players:
-                self._draw(other, count)
+            self._draw(player, count)
+            context = context or {}
+            target_id = context.get("target_player_id") or effect.get("target_player_id")
+            target = None
+            if target_id:
+                target = next((p for p in game.players if getattr(p, "id", None) == target_id), None)
+            if target is None:
+                target = next((p for p in game.players if p != player), None)
+            if target is not None:
+                self._draw(target, count)
             return
 
         # ✅ Conditional draw
