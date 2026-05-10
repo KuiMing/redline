@@ -69,11 +69,20 @@ Summary: 5/5 passed
 }
 ```
 
-## PASS — kazakh_era_requires_kazakh_faction_and_two_region_counts
+## PASS — kazakh_era_requires_kazakh_faction_northland_ruler_and_inner_counts
 
 ```json
 {
-  "rule": "哈薩克伊塔事件需哈薩克在北國/突厥區達7組織，且在牆內/中華區達3組織；非哈薩克不應觸發。",
+  "rule": "哈薩克伊塔事件需哈薩克在 map.json ruler=北國 的城鎮達7組織，且在牆內/中華區達3組織；非哈薩克不應觸發。",
+  "northland_towns_sample": [
+    "海參崴",
+    "伯力",
+    "共青城",
+    "南薩哈林斯克",
+    "海蘭泡",
+    "赤塔",
+    "杜尚貝"
+  ],
   "wrong_faction_triggered": false,
   "kazakh_triggered": true,
   "active_eras_after_kazakh_check": [

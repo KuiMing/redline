@@ -44,7 +44,7 @@
         "type": "count_and_required",
         "camp": "kazakh",
         "requirements": [
-          { "region": "turkestan", "count": 7 },
+          { "ruler": "北國", "count": 7 },
           { "region": "china", "count": 3 }
         ]
       },

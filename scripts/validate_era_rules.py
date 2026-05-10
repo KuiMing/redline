@@ -45,6 +45,14 @@ def first_towns(game, region, count):
     return towns[:count]
 
 
+def first_ruler_towns(game, ruler, count):
+    towns = [
+        town for town, info in game.map.get('towns', {}).items()
+        if ruler in (info.get('ruler') or [])
+    ]
+    return towns[:count]
+
+
 def place_orgs(player, towns, count_each=1):
     player.organizations = {town: count_each for town in towns}
 
@@ -107,11 +115,12 @@ def run_checks():
         }
     ))
 
-    # 5. Kazakhstan era should require Kazakh faction and both regional requirements.
+    # 5. Kazakhstan era should require Kazakh faction, Northland-ruler towns, and inner-China towns.
     game, actor, red = make_game()
+    northland_towns = first_ruler_towns(game, '北國', 7)
     actor.faction_id = 'taiwan_green'
     actor.organizations = {}
-    for town in first_towns(game, 'turkestan', 7):
+    for town in northland_towns:
         actor.organizations[town] = 1
     for town in first_towns(game, 'china', 3):
         actor.organizations[town] = 1
@@ -121,17 +130,18 @@ def run_checks():
     game, actor, red = make_game()
     actor.faction_id = 'kazakh'
     actor.organizations = {}
-    for town in first_towns(game, 'turkestan', 7):
+    for town in northland_towns:
         actor.organizations[town] = 1
     for town in first_towns(game, 'china', 3):
         actor.organizations[town] = 1
     game._check_era_trigger()
     kazakh_active = 'kazakh' in game.era_engine.get_active_eras()
     checks.append(check(
-        'kazakh_era_requires_kazakh_faction_and_two_region_counts',
-        not wrong_faction_active and kazakh_active,
+        'kazakh_era_requires_kazakh_faction_northland_ruler_and_inner_counts',
+        len(northland_towns) >= 7 and not wrong_faction_active and kazakh_active,
         {
-            'rule': '哈薩克伊塔事件需哈薩克在北國/突厥區達7組織，且在牆內/中華區達3組織；非哈薩克不應觸發。',
+            'rule': '哈薩克伊塔事件需哈薩克在 map.json ruler=北國 的城鎮達7組織，且在牆內/中華區達3組織；非哈薩克不應觸發。',
+            'northland_towns_sample': northland_towns,
             'wrong_faction_triggered': wrong_faction_active,
             'kazakh_triggered': kazakh_active,
             'active_eras_after_kazakh_check': game.era_engine.get_active_eras(),

@@ -144,6 +144,7 @@ class Game:
         self.purchase_deck = self._initial_purchase_deck()
         self.purchase_area = self._initial_purchase_area()
         self.static_purchase_supply = {name: 1 for name in ['宣傳家', '思想家', '資助者', '資本家', '分神', '內鬥']}
+        self.pending_choice = None
         self.era_notification = None
 
     # ---------- Init ----------
@@ -276,6 +277,53 @@ class Game:
             self.log(f"{card_name} returned to purchase deck discard")
             return {'zone': 'deck_discard', 'name': card_name}
         return None
+
+    def _remove_card_from_game(self, card):
+        card_name = getattr(card, 'name', str(card))
+        self.log(f"{card_name} was removed from game")
+        return {'zone': 'removed', 'name': card_name}
+
+    def _resolve_underground_party(self, player):
+        if not getattr(self, 'purchase_deck', None):
+            return {'error': 'Purchase deck unavailable'}
+        choices = self.purchase_deck.draw(3)
+        if not choices:
+            return {'error': 'Purchase deck empty'}
+        self.pending_choice = {
+            'type': 'underground_party',
+            'player_id': player.id,
+            'cards': choices,
+            'prompt': '地下黨：從購買區牌庫頂拿取3張牌，任選其中1張加入手牌，其餘移除。'
+        }
+        self.log(f"{player.name} revealed 3 cards for 地下黨")
+        return {'pending_choice': True}
+
+    def resolve_pending_choice(self, player_id, index):
+        choice = self.pending_choice or {}
+        if not choice:
+            return {'error': 'No pending choice'}
+        if choice.get('player_id') != player_id:
+            return {'error': 'Not your pending choice'}
+        cards = choice.get('cards') or []
+        if index is None or index < 0 or index >= len(cards):
+            return {'error': 'Invalid choice index'}
+        player = next((p for p in self.players if p.id == player_id), None)
+        if not player:
+            return {'error': 'Player not found'}
+        chosen = cards[index]
+        player.hand.append(chosen)
+        removed = []
+        for i, card in enumerate(cards):
+            if i == index:
+                continue
+            removed.append(self._remove_card_from_game(card))
+        self.pending_choice = None
+        self.log(f"{player.name} chose {getattr(chosen, 'name', str(chosen))} via 地下黨")
+        return {
+            'success': True,
+            'chosen_card': getattr(chosen, 'name', str(chosen)),
+            'removed_cards': removed,
+        }
 
     def _support_card_effect_text(self, card_name, tier, region_index):
         entry = self._support_taxonomy_entry(card_name)
@@ -1168,7 +1216,7 @@ class Game:
             if card_name not in played_names:
                 played_names.append(card_name)
 
-        action_context = {'current_card': played_card}
+        action_context = {'current_card': played_card, 'card_name': card_name}
         if effective_type != 'support':
             if card_name in getattr(self.action_engine, 'cards', {}):
                 self.action_engine.execute(card_name, player, self, context=action_context)
@@ -1543,6 +1591,17 @@ class Game:
             if town in region_towns
         )
 
+    def _player_requirement_org_count(self, player, requirement):
+        if requirement.get("region"):
+            return self._player_region_org_count(player, requirement.get("region"))
+        if requirement.get("ruler"):
+            ruler = requirement.get("ruler")
+            return sum(
+                v for town, v in player.organizations.items()
+                if ruler in (self.map.get("towns", {}).get(town, {}).get("ruler") or [])
+            )
+        return 0
+
     def _evaluate_era_trigger(self, trigger):
         t = trigger.get("type")
 
@@ -1563,7 +1622,7 @@ class Game:
                     if not self._player_matches_era_trigger(p, trigger):
                         continue
                     if all(
-                        self._player_region_org_count(p, req.get("region")) >= req.get("count", 0)
+                        self._player_requirement_org_count(p, req) >= req.get("count", 0)
                         for req in requirements
                     ):
                         return True
@@ -1602,6 +1661,15 @@ class Game:
                 notification["remaining"] = active_match.get("remaining")
                 notification["duration"] = active_match.get("duration")
 
+        pending_choice = None
+        if self.pending_choice:
+            pending_choice = {
+                'type': self.pending_choice.get('type'),
+                'player_id': self.pending_choice.get('player_id'),
+                'prompt': self.pending_choice.get('prompt'),
+                'cards': [getattr(card, 'name', str(card)) for card in (self.pending_choice.get('cards') or [])],
+            }
+
         return {
             "turn": self.turn,
             "game_phase": self.game_phase,
@@ -1613,6 +1681,7 @@ class Game:
             "era_notification": notification,
             "market_mode": self.market_mode,
             "pending_base_choices": self.pending_base_choices,
+            "pending_choice": pending_choice,
             "action_log": self.action_log,
             "purchase_area": [getattr(card, 'name', str(card)) for card in self.purchase_area],
             "static_purchase_supply": dict(getattr(self, 'static_purchase_supply', {})),
