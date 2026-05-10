@@ -1393,6 +1393,27 @@ class Game:
             self.log(f"{player.name} moved 1 shared organization from {origin_owner.name}:{from_town} to {to_town} via {mode}")
         return {"success": True}
 
+    def _card_purchase_cost(self, card):
+        card_name = getattr(card, 'name', str(card))
+        if getattr(card, "card_type", None) == "support":
+            return self._support_card_cost(card_name)
+        for c in self.structured_cards:
+            if c.get('name') == card_name:
+                cost = c.get('cost', {}) or {}
+                return {
+                    'money': int(cost.get('money', 0) or 0),
+                    'propaganda': int(cost.get('propaganda', 0) or 0),
+                }
+        return {'money': 0, 'propaganda': 0}
+
+    def _copy_purchase_card(self, card):
+        return Card(
+            getattr(card, 'name', str(card)),
+            getattr(card, 'card_type', None),
+            dict(getattr(card, 'resources', {}) or {}),
+            getattr(card, 'effect', None),
+        )
+
     def buy_card(self, index):
         if self.turn_phase != TurnPhase.ACTION:
             return {"error": "Not in ACTION phase"}
@@ -1400,10 +1421,6 @@ class Game:
         player = self.current_player()
         if index < 0 or index >= len(self.purchase_area):
             return {"error": "Invalid index"}
-
-        static_count = len(self._static_purchase_cards())
-        if index < static_count:
-            return {"error": "Static purchase cards cannot be bought from random slot logic"}
 
         card = self.purchase_area[index]
         if not card:
@@ -1414,16 +1431,18 @@ class Game:
         if not ok:
             return {"error": err}
 
-        card_type = getattr(card, "card_type", None)
+        static_count = len(self._static_purchase_cards())
+        is_static_purchase = index < static_count
         card_name = getattr(card, 'name', str(card))
-        cost_money = 0
-        cost_propaganda = 0
-        for c in self.structured_cards:
-            if c.get('name') == card_name:
-                cost = c.get('cost', {})
-                cost_money = int(cost.get('money', 0) or 0)
-                cost_propaganda = int(cost.get('propaganda', 0) or 0)
-                break
+        if is_static_purchase:
+            supply = int(self.static_purchase_supply.get(card_name, 0) or 0)
+            if supply <= 0:
+                return {"error": "Static purchase card is out of supply"}
+
+        card_type = getattr(card, "card_type", None)
+        cost = self._card_purchase_cost(card)
+        cost_money = int(cost.get('money', 0) or 0)
+        cost_propaganda = int(cost.get('propaganda', 0) or 0)
 
         if self._player_has_ability(player, "華文傳媒") and card_type == "propaganda":
             if player.resources['money'] < cost_propaganda:
@@ -1435,8 +1454,11 @@ class Game:
             player.resources['money'] -= cost_money
             player.resources['propaganda'] -= cost_propaganda
 
-        player.deck.discard([card])
-        self.purchase_area.pop(index)
+        player.deck.discard([self._copy_purchase_card(card)])
+        if is_static_purchase:
+            self.static_purchase_supply[card_name] = int(self.static_purchase_supply.get(card_name, 0) or 0) - 1
+        else:
+            self.purchase_area.pop(index)
         self.log(f"{player.name} bought {card_name}")
         return {"success": True}
 
