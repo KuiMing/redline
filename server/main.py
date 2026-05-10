@@ -445,7 +445,7 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
             if action == "advance":
                 result = game.advance_turn_phase()
             elif action == "play_card":
-                result = game.play_card(data.get("index"), mode=data.get("mode"))
+                result = game.play_card(data.get("index"), mode=data.get("mode"), target_player_id=data.get("target_player_id"))
             elif action == "buy_card":
                 result = game.buy_card(data.get("index"))
             elif action == "set_base":

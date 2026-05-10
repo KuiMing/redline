@@ -1185,7 +1185,7 @@ class Game:
         if len(self.action_log) > 100:
             self.action_log.pop(0)
 
-    def play_card(self, index, mode=None):
+    def play_card(self, index, mode=None, target_player_id=None):
         if self.turn_phase != TurnPhase.ACTION:
             return {"error": "Not in ACTION phase"}
 
@@ -1230,6 +1230,8 @@ class Game:
                 played_names.append(card_name)
 
         action_context = {'current_card': played_card, 'card_name': card_name}
+        if target_player_id:
+            action_context['target_player_id'] = target_player_id
         if effective_type != 'support':
             if card_name in getattr(self.action_engine, 'cards', {}):
                 self.action_engine.execute(card_name, player, self, context=action_context, include_resources=False)

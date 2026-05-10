@@ -881,6 +881,29 @@ function sendAction(action, payload = {}) {
   ws.send(JSON.stringify({action, ...payload}));
 }
 
+function playHandCard(index, card, mode) {
+  const payload = {index, mode};
+  const cardName = typeof card === 'string' ? card : (card?.name || card?.title || '');
+  if (mode === 'action' && cardName === '合作談判') {
+    const state = window.lastGameState || {};
+    const players = (state.players || []).filter(p => p.id !== playerId);
+    if (players.length > 1) {
+      const menu = players.map((p, idx) => `${idx + 1}. ${p.name}`).join('\n');
+      const answer = window.prompt(`合作談判：請選擇抽牌對象\n${menu}`, '1');
+      if (answer === null) return;
+      const choiceIndex = Number.parseInt(answer, 10) - 1;
+      if (!Number.isInteger(choiceIndex) || choiceIndex < 0 || choiceIndex >= players.length) {
+        window.alert('無效的抽牌對象');
+        return;
+      }
+      payload.target_player_id = players[choiceIndex].id;
+    } else if (players.length === 1) {
+      payload.target_player_id = players[0].id;
+    }
+  }
+  sendAction('play_card', payload);
+}
+
 window.addEventListener('DOMContentLoaded', resizeStage);
 resizeStage();
 
@@ -1435,8 +1458,8 @@ async function render(state) {
           <div class='card hand-card ${colorClass}' onclick="selectCardDetail(${JSON.stringify(card)},'hand',false)">
             ${renderCardFace(card, 'hand', false, true)}
             <div class="hand-card-actions">
-              <button type="button" onclick="event.stopPropagation(); sendAction('play_card',{index:${i},mode:'resource'})">資源</button>
-              <button type="button" onclick="event.stopPropagation(); sendAction('play_card',{index:${i},mode:'action'})">行動</button>
+              <button type="button" onclick="event.stopPropagation(); playHandCard(${i}, ${JSON.stringify(card)}, 'resource')">資源</button>
+              <button type="button" onclick="event.stopPropagation(); playHandCard(${i}, ${JSON.stringify(card)}, 'action')">行動</button>
             </div>
           </div>`;
       });
