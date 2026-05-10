@@ -283,10 +283,10 @@ class Game:
         self.log(f"{card_name} was removed from game")
         return {'zone': 'removed', 'name': card_name}
 
-    def _resolve_underground_party(self, player):
+    def _resolve_underground_party(self, player, count=3):
         if not getattr(self, 'purchase_deck', None):
             return {'error': 'Purchase deck unavailable'}
-        choices = self.purchase_deck.draw(3)
+        choices = self.purchase_deck.draw(count)
         if not choices:
             return {'error': 'Purchase deck empty'}
         self.pending_choice = {
@@ -316,7 +316,10 @@ class Game:
         for i, card in enumerate(cards):
             if i == index:
                 continue
-            removed.append(self._remove_card_from_game(card))
+            returned = self._return_removed_card_to_purchase_supply(card)
+            if returned is None:
+                returned = self._remove_card_from_game(card)
+            removed.append(returned)
         self.pending_choice = None
         self.log(f"{player.name} chose {getattr(chosen, 'name', str(chosen))} via 地下黨")
         return {

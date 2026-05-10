@@ -67,6 +67,11 @@ class EffectEngine:
                 player.hand.append(card)
             return
 
+        # ✅ Choose from purchase deck (used by 地下黨)
+        if etype == "choose_from_purchase_deck":
+            game._resolve_underground_party(player, count=effect.get("count", 3))
+            return
+
         # ✅ Peek deck (MVP: no UI return)
         if etype == "peek_deck":
             return
