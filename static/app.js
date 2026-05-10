@@ -1227,6 +1227,13 @@ function renderFactionActionPanel(state) {
   }
 }
 
+function setPhaseActionNotice(message = '') {
+  const notice = document.getElementById('phaseActionNotice');
+  if (!notice) return;
+  notice.textContent = message || '';
+  notice.classList.toggle('visible', !!message);
+}
+
 function renderBaseSelection(state) {
   const panel = document.getElementById('baseSelectionPanel');
   const info = document.getElementById('baseSelectionInfo');
@@ -1238,20 +1245,26 @@ function renderBaseSelection(state) {
   const resolved = choiceData?.resolved || {};
   const inBaseSelection = state.game_phase === 'base_selection';
 
-  panel.style.display = inBaseSelection ? 'block' : 'none';
   if (!inBaseSelection) {
+    panel.style.display = 'none';
     pendingBaseSelectionLabel = null;
     choicesEl.innerHTML = '';
     info.textContent = '';
+    setPhaseActionNotice('');
     return;
   }
 
   if (!choiceData) {
+    panel.style.display = 'none';
     pendingBaseSelectionLabel = null;
-    info.textContent = '等待其他玩家選擇根據地';
     choicesEl.innerHTML = '';
+    info.textContent = '';
+    setPhaseActionNotice('等待其他玩家選擇根據地');
     return;
   }
+
+  panel.style.display = 'block';
+  setPhaseActionNotice('');
 
   const hasGeneric = labels.some(label => label.startsWith('任意'));
   choicesEl.innerHTML = '';

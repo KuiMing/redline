@@ -509,6 +509,34 @@ body {
   backdrop-filter: blur(8px);
 }
 
+#phaseActionControls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  min-width: 0;
+}
+
+#phaseActionNotice {
+  display: none;
+  max-width: 360px;
+  color: #fde68a;
+  border: 1px solid rgba(245, 158, 11, 0.36);
+  background: rgba(120, 53, 15, 0.30);
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.08);
+}
+
+#phaseActionNotice.visible {
+  display: block;
+}
+
 #phaseActionMeta {
   color: #cbd5e1;
   font-family: 'JetBrains Mono', monospace;

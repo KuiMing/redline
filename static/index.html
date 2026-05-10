@@ -19,7 +19,10 @@
 <div id="hud"></div>
 <div id="phaseActionBar">
   <div id="phaseActionMeta"></div>
-  <button id="advanceStepBtn" class="phase-action-btn" onclick="sendAction('advance')">結束目前步驟</button>
+  <div id="phaseActionControls">
+    <div id="phaseActionNotice" aria-live="polite"></div>
+    <button id="advanceStepBtn" class="phase-action-btn" onclick="sendAction('advance')">結束目前步驟</button>
+  </div>
 </div>
 <div id="debugSocketState" style="display:none"></div>
 
