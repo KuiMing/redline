@@ -73,7 +73,7 @@ def check_play_opens_choice_from_purchase_deck_only():
     ]
     game.purchase_deck.discard_pile = []
 
-    result = game.play_card(0)
+    result = game.play_card(0, mode="action")
     state_choice = game.state().get("pending_choice")
     expected_choices = ["候選一", "候選二", "候選三"]
     return {
@@ -83,7 +83,7 @@ def check_play_opens_choice_from_purchase_deck_only():
             and state_choice is not None
             and state_choice.get("cards") == expected_choices
             and "不該取得的棄牌" not in card_names(player.hand)
-            and player.resources == {"money": 1, "propaganda": 2}
+            and player.resources == {"money": 0, "propaganda": 0}
         ),
         "details": {
             "play_result": result,
@@ -111,7 +111,7 @@ def check_resolve_choice_keeps_one_and_returns_rest_to_purchase_area():
     ]
     game.purchase_deck.discard_pile = []
 
-    game.play_card(0)
+    game.play_card(0, mode="action")
     result = game.resolve_pending_choice(player.id, 1)
     removed_cards = result.get("removed_cards", []) if isinstance(result, dict) else []
     removed_zones = [r.get("zone") for r in removed_cards if isinstance(r, dict)]

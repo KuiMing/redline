@@ -15,7 +15,7 @@
 - expected_choices: ['候選一', '候選二', '候選三']
 - player_hand: []
 - player_discard: ['不該取得的棄牌', '地下黨']
-- resources: {'money': 1, 'propaganda': 2}
+- resources: {'money': 0, 'propaganda': 0}
 - purchase_draw_remaining: ['底牌']
 
 ## PASS — resolve_choice_adds_selected_to_hand_and_returns_unselected_to_purchase_deck_discard

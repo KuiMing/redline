@@ -1185,18 +1185,28 @@ class Game:
         if len(self.action_log) > 100:
             self.action_log.pop(0)
 
-    def play_card(self, index):
+    def play_card(self, index, mode=None):
         if self.turn_phase != TurnPhase.ACTION:
             return {"error": "Not in ACTION phase"}
+
+        if mode not in {"resource", "action"}:
+            return {"error": "Card play mode must be resource or action"}
 
         player = self.current_player()
         if index < 0 or index >= len(player.hand):
             return {"error": "Invalid index"}
-        if self._card_is_banned_for_player(player, player.hand[index]):
+        if mode == "action" and self._card_is_banned_for_player(player, player.hand[index]):
             return {"error": "非暴力：不能打出武裝或裝備類卡牌"}
 
         played_card = player.hand.pop(index)
         card_name = getattr(played_card, "name", str(played_card))
+
+        if mode == "resource":
+            for key, value in getattr(played_card, 'resources', {}).items():
+                player.resources[key] += value
+            player.deck.discard([played_card])
+            self.log(f"{player.name} played {card_name} as resource")
+            return {"success": True}
 
         effective_type = getattr(played_card, "card_type", None)
         if self._player_has_ability(player, "國際線") and getattr(played_card, "card_type", None) == "money":
@@ -1222,10 +1232,9 @@ class Game:
         action_context = {'current_card': played_card, 'card_name': card_name}
         if effective_type != 'support':
             if card_name in getattr(self.action_engine, 'cards', {}):
-                self.action_engine.execute(card_name, player, self, context=action_context)
+                self.action_engine.execute(card_name, player, self, context=action_context, include_resources=False)
             else:
-                for key, value in getattr(played_card, 'resources', {}).items():
-                    player.resources[key] += value
+                pass
 
         for ability in self._player_effective_abilities(player):
             if not isinstance(ability, dict):

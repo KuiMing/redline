@@ -46,8 +46,8 @@
           "地下黨"
         ],
         "resources": {
-          "money": 1,
-          "propaganda": 2
+          "money": 0,
+          "propaganda": 0
         },
         "purchase_draw_remaining": [
           "底牌"

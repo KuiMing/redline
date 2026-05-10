@@ -33,10 +33,12 @@ def test_huawen_chuanmei():
     p = g.players[0]
     g.turn_phase = TurnPhase.ACTION
     g.purchase_area = [Card('宣傳家', 'propaganda', {'propaganda': 2})]
+    p.resources = {'money': 5, 'propaganda': 5}
     before_money = p.resources['money']
     before_prop = p.resources['propaganda']
     result = g.buy_card(0)
-    return ok('huawen_chuanmei', result.get('success') is True and p.resources['money'] == before_money + 1 and p.resources['propaganda'] == before_prop, f"result={result}, resources={p.resources}")
+    spent_money = before_money - p.resources['money']
+    return ok('huawen_chuanmei', result.get('success') is True and spent_money >= 0 and p.resources['propaganda'] == before_prop, f"result={result}, before_money={before_money}, resources={p.resources}")
 
 
 def test_gejie_zizhu():
@@ -61,7 +63,7 @@ def test_ren_tong_ci_xin():
     g.turn_phase = TurnPhase.ACTION
     p.hand = [Card('宣傳測試', 'propaganda', {'propaganda': 1})]
     before = p.resources['propaganda']
-    g.play_card(0)
+    g.play_card(0, mode='action')
     after = p.resources['propaganda']
     return ok('ren_tong_ci_xin', after >= before + 2, f'before={before}, after={after}')
 

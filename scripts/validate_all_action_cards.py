@@ -126,7 +126,7 @@ def validate_card(card_def):
         i for i, card in enumerate(p.hand)
         if getattr(card, 'name', str(card)) == card_def['name']
     )
-    result = g.play_card(play_index)
+    result = g.play_card(play_index, mode='action')
 
     after = {
         'hand': names(p.hand),

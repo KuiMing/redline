@@ -21,7 +21,7 @@ def test_india_support_tier3_adds_three_distractions():
     g.current_player_index = 0
     t.hand = [g._make_support_card('印度奧援')]
     before = len(r.deck.discard_pile)
-    result = g.play_card(0)
+    result = g.play_card(0, mode='action')
     after = len(r.deck.discard_pile)
     ok = result.get('success') and after - before == 3
     return {'name': 'india_support_tier3_adds_three_distractions', 'ok': ok, 'detail': {'before': before, 'after': after}}
@@ -39,7 +39,7 @@ def test_anglo_support_tier2_gains_money():
     g.current_player_index = 0
     a.hand = [g._make_support_card('英美奧援')]
     before = a.resources['money']
-    result = g.play_card(0)
+    result = g.play_card(0, mode='action')
     after = a.resources['money']
     ok = result.get('success') and after - before >= 2
     return {'name': 'anglo_support_tier2_gains_money', 'ok': ok, 'detail': {'before': before, 'after': after}}
@@ -58,7 +58,7 @@ def test_nanyang_support_tier1_draw_then_discard_net_zero():
     a.hand = [g._make_support_card('南洋奧援'), Card('測試牌', 'command', {})]
     a.deck.draw_pile = [Card('補牌', 'command', {})]
     before = len(a.hand)
-    result = g.play_card(0)
+    result = g.play_card(0, mode='action')
     after = len(a.hand)
     ok = result.get('success') and after == before - 1
     return {'name': 'nanyang_support_tier1_draw_then_discard_net_zero', 'ok': ok, 'detail': {'before': before, 'after': after}}
@@ -76,7 +76,7 @@ def test_east_asia_support_tier1_gains_two_propaganda():
     g.current_player_index = 0
     a.hand = [g._make_support_card('東洋奧援')]
     before = a.resources['propaganda']
-    result = g.play_card(0)
+    result = g.play_card(0, mode='action')
     after = a.resources['propaganda']
     ok = result.get('success') and after == before + 2
     return {'name': 'east_asia_support_tier1_gains_two_propaganda', 'ok': ok, 'detail': {'before': before, 'after': after}}
@@ -94,7 +94,7 @@ def test_northland_support_tier2_dissolves_one():
     g.current_player_index = 0
     a.hand = [g._make_support_card('北國奧援')]
     before = dict(r.organizations)
-    result = g.play_card(0)
+    result = g.play_card(0, mode='action')
     after_total = sum(r.organizations.values())
     ok = result.get('success') and after_total == sum(before.values()) - 1
     return {'name': 'northland_support_tier2_dissolves_one', 'ok': ok, 'detail': {'before': before, 'after': r.organizations}}
@@ -112,7 +112,7 @@ def test_taiwan_support_tier1_gains_one_propaganda():
     g.current_player_index = 0
     a.hand = [g._make_support_card('臺灣奧援')]
     before = a.resources['propaganda']
-    result = g.play_card(0)
+    result = g.play_card(0, mode='action')
     after = a.resources['propaganda']
     ok = result.get('success') and after == before + 1
     return {'name': 'taiwan_support_tier1_gains_one_propaganda', 'ok': ok, 'detail': {'before': before, 'after': after}}
@@ -131,7 +131,7 @@ def test_middle_east_support_tier1_forces_one_discard():
     g.current_player_index = 0
     a.hand = [g._make_support_card('天方奧援')]
     before = len(r.hand)
-    result = g.play_card(0)
+    result = g.play_card(0, mode='action')
     after = len(r.hand)
     ok = result.get('success') and after == before - 1
     return {'name': 'middle_east_support_tier1_forces_one_discard', 'ok': ok, 'detail': {'before': before, 'after': after}}

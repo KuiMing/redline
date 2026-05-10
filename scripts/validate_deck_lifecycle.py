@@ -146,7 +146,7 @@ def run_checks():
     player.deck.draw_pile = []
     player.deck.discard_pile = []
     before = player_zone_snapshot(player) | {'resources': dict(player.resources)}
-    result = game.play_card(0)
+    result = game.play_card(0, mode='resource')
     after = player_zone_snapshot(player) | {'resources': dict(player.resources)}
     checks.append(check(
         'ordinary_played_card_moves_from_hand_to_discard',

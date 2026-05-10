@@ -40,7 +40,7 @@ def test_hong_kong_international_line():
     player = g.players[0]
     g.turn_phase = TurnPhase.ACTION
     player.hand = [Card('測試金錢牌', 'money', {'money': 1})]
-    g.play_card(0)
+    g.play_card(0, mode='action')
     return ok('hong_kong_international_line', bool(g.turn_log.get('played_propaganda_card')), str(g.turn_log))
 
 
@@ -91,7 +91,7 @@ def test_kazakh_propaganda_draw():
     player.hand = [Card('宣傳測試', 'propaganda', {'propaganda': 1})]
     player.deck.draw_pile = [Card('補牌1', 'money', {'money': 1})]
     before = len(player.hand)
-    g.play_card(0)
+    g.play_card(0, mode='action')
     after = len(player.hand)
     return ok('kazakh_first_propaganda_draw', bool(g.turn_log.get('played_propaganda_card')), f'before={before}, after={after}, log={g.turn_log}')
 

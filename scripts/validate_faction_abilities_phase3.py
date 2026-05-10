@@ -33,7 +33,7 @@ def test_nonviolence_play_block():
     p = g.players[0]
     g.turn_phase = TurnPhase.ACTION
     p.hand = [Card('武裝測試', 'armed', {'money': 0})]
-    result = g.play_card(0)
+    result = g.play_card(0, mode='action')
     return ok('nonviolence_play_block', result.get('error') == '非暴力：不能打出武裝或裝備類卡牌', str(result))
 
 

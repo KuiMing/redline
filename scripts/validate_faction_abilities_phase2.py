@@ -35,7 +35,7 @@ def test_first_money_draw():
     p.hand = [Card('金錢測試', 'money', {'money': 1})]
     p.deck.draw_pile = [Card('補牌A', 'money', {'money': 1})]
     before = len(p.hand)
-    g.play_card(0)
+    g.play_card(0, mode='action')
     after = len(p.hand)
     return ok('first_money_draw', after >= before, f'before={before}, after={after}')
 
@@ -55,9 +55,9 @@ def test_combo_three_unique():
         {'name': '丙', 'type': 'command', 'resources': {}, 'effect': []},
     ])
     g.action_engine.cards.update({c['name']: c for c in g.structured_cards if c['name'] in {'甲','乙','丙'}})
-    g.play_card(0)
-    g.play_card(0)
-    g.play_card(0)
+    g.play_card(0, mode='action')
+    g.play_card(0, mode='action')
+    g.play_card(0, mode='action')
     return ok('combo_three_unique', p.resources['money'] >= 3 or p.resources['propaganda'] >= 3, str(p.resources))
 
 
@@ -82,7 +82,7 @@ def test_first_money_gain2():
     g.turn_phase = TurnPhase.ACTION
     p.hand = [Card('金錢測試', 'money', {'money': 1})]
     before = p.resources['money']
-    g.play_card(0)
+    g.play_card(0, mode='action')
     after = p.resources['money']
     return ok('first_money_gain2', after >= before + 2, f'before={before}, after={after}')
 

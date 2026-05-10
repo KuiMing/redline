@@ -111,7 +111,7 @@ def main():
 
         player = game.current_player()
         hand_before = [c.name for c in player.hand]
-        play_result = game.play_card(0) if player.hand else {'skipped': True}
+        play_result = game.play_card(0, mode='action') if player.hand else {'skipped': True}
         hand_after = [c.name for c in player.hand]
         trace.append({
             'step': f'cycle_{cycle}_play_card',

@@ -27,7 +27,7 @@ def test_non_support_card_no_bonus():
     g, t, _ = make_game()
     t.hand = [Card('交通經驗丙', 'transport', {'money': 1})]
     before = t.resources['money']
-    result = g.play_card(0)
+    result = g.play_card(0, mode='resource')
     after = t.resources['money']
     ok = result.get('success') and after == before + 1
     return {'name': 'non_support_card_no_bonus', 'ok': ok, 'detail': {'result': result, 'before': before, 'after': after}}

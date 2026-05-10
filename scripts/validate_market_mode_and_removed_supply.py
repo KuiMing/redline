@@ -77,7 +77,7 @@ def validate():
         remove_game.purchase_area.extend(drawn)
     before_len = len(remove_game.purchase_area)
     before_supply = dict(remove_game.static_purchase_supply)
-    result = remove_game.play_card(0)
+    result = remove_game.play_card(0, mode='action')
     after_len = len(remove_game.purchase_area)
     after_supply = dict(remove_game.static_purchase_supply)
     checks.append({

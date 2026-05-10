@@ -14,6 +14,7 @@ let lastEraNotificationKey = null;
 let stageResizeBound = false;
 let lobbySyncTimer = null;
 let latestLobbyState = null;
+let activeChoiceModal = null;
 
 function resizeStage() {
   const scale = Math.min(
@@ -894,6 +895,49 @@ function closeEraAchievementModal() {
   if (overlay) overlay.style.display = 'none';
 }
 
+function closeChoiceModal() {
+  activeChoiceModal = null;
+  const overlay = document.getElementById('choiceModal');
+  if (overlay) overlay.style.display = 'none';
+}
+
+function renderChoiceModal(state) {
+  const overlay = document.getElementById('choiceModal');
+  const title = document.getElementById('choiceModalTitle');
+  const desc = document.getElementById('choiceModalDesc');
+  const cards = document.getElementById('choiceModalCards');
+  const closeBtn = document.getElementById('closeChoiceModal');
+  if (!overlay || !title || !desc || !cards || !closeBtn) return;
+
+  const choice = state.pending_choice || null;
+  const me = (state.players || []).find(p => p.id === playerId) || null;
+  const isMine = !!(choice && me && choice.player_id === me.id);
+  if (!choice || !isMine) {
+    overlay.style.display = 'none';
+    cards.innerHTML = '';
+    activeChoiceModal = null;
+    return;
+  }
+
+  activeChoiceModal = choice.type;
+  title.textContent = choice.type === 'underground_party' ? '地下黨' : '卡牌選擇';
+  desc.textContent = choice.prompt || '請選擇 1 張卡加入手牌，其餘移除。';
+  cards.innerHTML = '';
+  (choice.cards || []).forEach((cardName, index) => {
+    const wrapper = document.createElement('button');
+    wrapper.className = 'choice-card-btn';
+    wrapper.type = 'button';
+    wrapper.onclick = () => {
+      sendAction('resolve_choice', { index });
+      closeChoiceModal();
+    };
+    wrapper.innerHTML = renderCardFace(cardName, 'choice', false, true);
+    cards.appendChild(wrapper);
+  });
+  closeBtn.onclick = closeChoiceModal;
+  overlay.style.display = 'flex';
+}
+
 function minimizeEraAchievement() {
   closeEraAchievementModal();
 }
@@ -1324,6 +1368,7 @@ async function render(state) {
   renderFactionActionPanel(state);
   renderBaseSelection(state);
   renderEraAchievement(state);
+  renderChoiceModal(state);
 
   // HUD
   const hud = document.getElementById('hud');
@@ -1387,8 +1432,12 @@ async function render(state) {
         const colorName = (cardPresentation(card)?.color) || (/奧援/.test(card) ? '奧援' : '灰');
         const colorClass = cardColorClass(colorName);
         handDiv.innerHTML += `
-          <div class='card hand-card ${colorClass}' onclick="selectCardDetail(${JSON.stringify(card)},'hand',false)" ondblclick="sendAction('play_card',{index:${i}})">
+          <div class='card hand-card ${colorClass}' onclick="selectCardDetail(${JSON.stringify(card)},'hand',false)">
             ${renderCardFace(card, 'hand', false, true)}
+            <div class="hand-card-actions">
+              <button type="button" onclick="event.stopPropagation(); sendAction('play_card',{index:${i},mode:'resource'})">資源</button>
+              <button type="button" onclick="event.stopPropagation(); sendAction('play_card',{index:${i},mode:'action'})">行動</button>
+            </div>
           </div>`;
       });
     }

@@ -445,7 +445,7 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
             if action == "advance":
                 result = game.advance_turn_phase()
             elif action == "play_card":
-                result = game.play_card(data.get("index"))
+                result = game.play_card(data.get("index"), mode=data.get("mode"))
             elif action == "buy_card":
                 result = game.buy_card(data.get("index"))
             elif action == "set_base":
@@ -471,6 +471,8 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
                     result = game.dissolve_organization(game.current_player(), defender, town, source="faction_action")
             elif action == "faction_action":
                 result = game._activated_faction_action(game.current_player(), data.get("name"), guess=data.get("guess"))
+            elif action == "resolve_choice":
+                result = game.resolve_pending_choice(player_id, data.get("index"))
 
             if result and result.get("error"):
                 error_state = dict(game.state())
@@ -826,6 +828,61 @@ def test_setup_remove_to_purchase(payload: dict):
         "player_id": viewer.id,
         "card_name": card_name,
         "purchase_area": [getattr(c, 'name', str(c)) for c in game.purchase_area],
+        "hand": [getattr(c, 'name', str(c)) for c in viewer.hand],
+    }
+
+
+@app.post("/test/setup-underground-party")
+def test_setup_underground_party(payload: dict):
+    game_id = str(uuid.uuid4())
+    players = [(str(uuid.uuid4()), "viewer"), (str(uuid.uuid4()), "red")]
+    game = Game(players)
+
+    viewer = game.players[0]
+    red = game.players[1]
+
+    viewer.faction_id = payload.get("faction_id", "tibet_dehradun")
+    viewer.base = payload.get("base", "德拉敦")
+    viewer.organizations = payload.get("orgs") or {viewer.base: 1}
+    viewer.resources = payload.get("resources") or {"money": 4, "propaganda": 4}
+    card_def = next(c for c in game.structured_cards if c.get("name") == "地下黨")
+    viewer.hand = [Card(card_def["name"], card_def["type"], card_def.get("resources", {}))]
+
+    red.faction_id = "red_army"
+    red.base = "北京"
+    red.organizations = {"北京": 1}
+    red.hand = []
+
+    game.purchase_deck.draw_pile = [
+        Card("候選A", "command", {}),
+        Card("候選B", "command", {}),
+        Card("候選C", "command", {}),
+    ]
+    game.purchase_deck.discard_pile = []
+    game.purchase_area = game._static_purchase_cards()[:]
+    while len(game.purchase_area) < 11:
+        drawn = game._draw_purchase_cards(1)
+        if not drawn:
+            break
+        game.purchase_area.extend(drawn)
+
+    game.current_player_index = 0
+    game.turn_phase = TurnPhase.ACTION
+    game.game_phase = GamePhase.MAIN
+    game.pending_base_choices = {}
+    game.id = game_id
+
+    manager.games[game_id] = game
+    manager.connections[game_id] = manager.connections.get(game_id, {})
+    lobby[game_id] = list(zip([p.id for p in game.players], [p.name for p in game.players]))
+    lobby_hosts[game_id] = viewer.id
+    lobby_factions[game_id] = {p.id: p.faction_id for p in game.players}
+    lobby_bases[game_id] = {p.id: p.base for p in game.players}
+
+    return {
+        "game_id": game_id,
+        "player_id": viewer.id,
+        "purchase_draw_pile": [getattr(c, 'name', str(c)) for c in game.purchase_deck.draw_pile],
         "hand": [getattr(c, 'name', str(c)) for c in viewer.hand],
     }
 

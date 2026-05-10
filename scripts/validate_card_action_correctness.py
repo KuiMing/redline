@@ -65,7 +65,7 @@ def run_checks():
     for name, card, expected_resources in starter_cases:
         game, player = make_game_with_card(card)
         before = {'resources': dict(player.resources), 'hand_count': len(player.hand), 'moves_left': player.moves_left, 'discard': discard_names(player)}
-        result = game.play_card(0)
+        result = game.play_card(0, mode='resource')
         after = {'resources': dict(player.resources), 'hand_count': len(player.hand), 'moves_left': player.moves_left, 'discard': discard_names(player)}
         checks.append(check(
             f'{name}_grants_intrinsic_resource_and_discards_played_card',
@@ -78,10 +78,10 @@ def run_checks():
         ))
 
     static_expectations = {
-        '宣傳家': {'resources': {'money': 0, 'propaganda': 2}, 'moves_left': 1, 'orgs': {'北京': 2}, 'supply_delta': 1},
-        '思想家': {'resources': {'money': 0, 'propaganda': 3}, 'moves_left': 3, 'orgs': {'北京': 2}, 'supply_delta': 1},
-        '資助者': {'resources': {'money': 4, 'propaganda': 2}, 'moves_left': 0, 'orgs': {'北京': 1}, 'supply_delta': 1},
-        '資本家': {'resources': {'money': 6, 'propaganda': 3}, 'moves_left': 0, 'orgs': {'北京': 1}, 'supply_delta': 1},
+        '宣傳家': {'resources': {'money': 0, 'propaganda': 0}, 'moves_left': 1, 'orgs': {'北京': 2}, 'supply_delta': 1},
+        '思想家': {'resources': {'money': 0, 'propaganda': 0}, 'moves_left': 3, 'orgs': {'北京': 2}, 'supply_delta': 1},
+        '資助者': {'resources': {'money': 2, 'propaganda': 2}, 'moves_left': 0, 'orgs': {'北京': 1}, 'supply_delta': 1},
+        '資本家': {'resources': {'money': 3, 'propaganda': 3}, 'moves_left': 0, 'orgs': {'北京': 1}, 'supply_delta': 1},
         '分神': {'resources': {'money': 0, 'propaganda': 0}, 'moves_left': 0, 'orgs': {'北京': 1}, 'supply_delta': 1},
         '內鬥': {'resources': {'money': 0, 'propaganda': 0}, 'moves_left': 0, 'orgs': {'北京': 1}, 'supply_delta': 0},
     }
@@ -97,7 +97,7 @@ def run_checks():
             'supply': supply_before,
             'discard': discard_names(player),
         }
-        result = game.play_card(0)
+        result = game.play_card(0, mode='action')
         supply_after = game.static_purchase_supply.get(name, 0)
         after = {
             'resources': dict(player.resources),
