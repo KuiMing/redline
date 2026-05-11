@@ -1,0 +1,23 @@
+# LEAK CARD TARGET UI VALIDATION
+
+日期：2026-05-11
+
+summary: {'total': 2, 'passed': 2, 'failed': 0}
+
+screenshot: docs/records/leak-card/leak_card_target_modal.png
+
+## 走漏風聲_action_button_opens_target_modal_with_all_other_players — PASS
+- seeded: {'handText': '走漏風聲\n剩 5\n間諜 ・ 乙級 ・ 資金2\n選擇1位玩家棄掉其牌庫頂牌，若該牌購買費用為1點以上，則將1張內鬥放進該玩家棄牌堆。\n洩密打亂了敵營的計畫\n資源 宣傳1\n隨機購買區\n資源\n行動', 'buttonHtml': ['<button type="button" onclick="event.stopPropagation(); playHandCard(0, \'走漏風聲\', \'resource\')">資源</button>', '<button type="button" onclick="event.stopPropagation(); playHandCard(0, \'走漏風聲\', \'action\')">行動</button>']}
+- modal_text: 陣營能力
+走漏風聲
+走漏風聲：請選擇棄牌庫頂牌對象
+target-a
+target-b
+目標玩家會棄掉牌庫頂牌；若該牌購買費用為 1 點以上，從常設購買區移動 1 張內鬥到該玩家棄牌堆。
+取消
+- modal_box: {'x': 410, 'y': 213.421875, 'width': 460, 'height': 293.140625}
+- screenshot: docs/records/leak-card/leak_card_target_modal.png
+
+## 走漏風聲_clicking_target_b_sends_target_player_id_p3 — PASS
+- sent_raw: {"action":"play_card","index":0,"mode":"action","target_player_id":"p3"}
+- sent: {'action': 'play_card', 'index': 0, 'mode': 'action', 'target_player_id': 'p3'}

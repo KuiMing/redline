@@ -72,6 +72,41 @@ class EffectEngine:
             game._resolve_underground_party(player, count=effect.get("count", 3))
             return
 
+        # ✅ Leak top deck (走漏風聲)
+        if etype == "leak_top_deck":
+            context = context or {}
+            target_id = context.get("target_player_id") or effect.get("target_player_id")
+            target = None
+            if target_id:
+                target = next((p for p in game.players if getattr(p, "id", None) == target_id), None)
+            if target is None:
+                target = next((p for p in game.players if p != player), None)
+            if target is None:
+                return
+
+            discarded = target.deck.draw(1)
+            if not discarded:
+                game.log(f"{player.name} leaked {target.name}'s plan, but their deck was empty")
+                return
+
+            top_card = discarded[0]
+            target.deck.discard([top_card])
+            card_name = getattr(top_card, "name", str(top_card))
+            cost = game._card_purchase_cost(top_card) if hasattr(game, "_card_purchase_cost") else {}
+            total_cost = int(cost.get("money", 0) or 0) + int(cost.get("propaganda", 0) or 0)
+            if total_cost >= 1:
+                supply = int(getattr(game, "static_purchase_supply", {}).get("內鬥", 0) or 0)
+                if supply > 0:
+                    from server.cards import Card
+                    game.static_purchase_supply["內鬥"] = supply - 1
+                    target.deck.discard([Card("內鬥", "disruption", {})])
+                    game.log(f"{player.name} used 走漏風聲 on {target.name}: discarded {card_name} and moved 內鬥 from supply to discard")
+                else:
+                    game.log(f"{player.name} used 走漏風聲 on {target.name}: discarded {card_name}, but 內鬥 supply was empty")
+            else:
+                game.log(f"{player.name} used 走漏風聲 on {target.name}: discarded {card_name}")
+            return
+
         # ✅ Peek deck (MVP: no UI return)
         if etype == "peek_deck":
             return

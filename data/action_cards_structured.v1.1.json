@@ -43,7 +43,7 @@
     {"id":"embedded_agent","name":"內應間諜","type":"spy","cost":{"money":3,"propaganda":2},"resources":{"propaganda":2},"effect":[{"type":"dissolve","range":1}]},
     {"id":"intel_network","name":"情報網","type":"spy","cost":{"money":3,"propaganda":3},"resources":{"money":1,"propaganda":1},"effect":[{"type":"add_internal_conflict","count":1},{"type":"cancel_card"}]},
     {"id":"divide","name":"離間","type":"spy","cost":{"money":0,"propaganda":4},"resources":{"propaganda":2},"effect":[{"type":"add_internal_conflict","count":3}]},
-    {"id":"leak","name":"走漏風聲","type":"spy","cost":{"money":2,"propaganda":0},"resources":{"propaganda":1},"effect":[{"type":"peek_deck","count":1},{"type":"add_internal_conflict","count":1}]},
+    {"id":"leak","name":"走漏風聲","type":"spy","cost":{"money":2,"propaganda":0},"resources":{"propaganda":1},"effect":[{"type":"leak_top_deck"}]},
     {"id":"underground_party","name":"地下黨","type":"spy","cost":{"money":2,"propaganda":4},"resources":{"money":1,"propaganda":2},"effect":[{"type":"choose_from_purchase_deck","count":3,"choose":1,"destination":"hand","rest":"remove"}]},
 
     {"id":"armed_unit_c","name":"武裝者","type":"armed","cost":{"money":2,"propaganda":0},"resources":{"propaganda":1},"effect":[{"type":"force_discard","count":1}]},

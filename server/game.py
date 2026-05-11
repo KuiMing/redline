@@ -1195,11 +1195,17 @@ class Game:
         player = self.current_player()
         if index < 0 or index >= len(player.hand):
             return {"error": "Invalid index"}
-        if mode == "action" and self._card_is_banned_for_player(player, player.hand[index]):
+        pending_card = player.hand[index]
+        pending_card_name = getattr(pending_card, "name", str(pending_card))
+        if mode == "action" and self._card_is_banned_for_player(player, pending_card):
             return {"error": "非暴力：不能打出武裝或裝備類卡牌"}
+        if mode == "action" and pending_card_name == "走漏風聲" and target_player_id is not None:
+            target = next((p for p in self.players if getattr(p, "id", None) == target_player_id), None)
+            if target is None or target == player:
+                return {"error": "走漏風聲必須指定其他玩家"}
 
         played_card = player.hand.pop(index)
-        card_name = getattr(played_card, "name", str(played_card))
+        card_name = pending_card_name
 
         if mode == "resource":
             for key, value in getattr(played_card, 'resources', {}).items():
@@ -1230,7 +1236,7 @@ class Game:
                 played_names.append(card_name)
 
         action_context = {'current_card': played_card, 'card_name': card_name}
-        if target_player_id:
+        if target_player_id is not None:
             action_context['target_player_id'] = target_player_id
         if effective_type != 'support':
             if card_name in getattr(self.action_engine, 'cards', {}):

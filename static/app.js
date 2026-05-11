@@ -561,6 +561,13 @@ function escapeHtml(value) {
     .replaceAll("'", '&#39;');
 }
 
+function jsSingleQuotedString(value) {
+  return `'${String(value || '')
+    .replaceAll('\\', '\\\\')
+    .replaceAll("'", "\\'")
+    .replaceAll('\n', '\\n')}'`;
+}
+
 function splitEffectLines(text) {
   return String(text || '')
     .split(/\n+/)
@@ -881,25 +888,50 @@ function sendAction(action, payload = {}) {
   ws.send(JSON.stringify({action, ...payload}));
 }
 
+function openCardTargetModal(index, cardName, targetLabel) {
+  const state = window.lastGameState || {};
+  const players = (state.players || []).filter(p => p.id !== playerId);
+  const overlay = document.getElementById('factionActionModal');
+  const title = document.getElementById('factionActionModalTitle');
+  const desc = document.getElementById('factionActionModalDesc');
+  const choices = document.getElementById('factionActionModalChoices');
+  const hint = document.getElementById('factionActionModalRewardHint');
+  const closeBtn = document.getElementById('closeFactionActionModal');
+  if (!overlay || !title || !desc || !choices || !hint || !closeBtn) return false;
+
+  if (players.length === 1) {
+    sendAction('play_card', {index, mode: 'action', target_player_id: players[0].id});
+    return true;
+  }
+
+  title.textContent = cardName;
+  desc.textContent = `${cardName}：請選擇${targetLabel}`;
+  hint.textContent = cardName === '走漏風聲'
+    ? '目標玩家會棄掉牌庫頂牌；若該牌購買費用為 1 點以上，從常設購買區移動 1 張內鬥到該玩家棄牌堆。'
+    : '指定的玩家會與你各抽 1 張牌。';
+  choices.innerHTML = '';
+  players.forEach((p) => {
+    const btn = document.createElement('button');
+    btn.className = 'modal-choice-btn';
+    btn.type = 'button';
+    btn.textContent = p.name;
+    btn.onclick = () => {
+      sendAction('play_card', {index, mode: 'action', target_player_id: p.id});
+      overlay.style.display = 'none';
+    };
+    choices.appendChild(btn);
+  });
+  closeBtn.onclick = () => { overlay.style.display = 'none'; };
+  overlay.style.display = 'flex';
+  return true;
+}
+
 function playHandCard(index, card, mode) {
   const payload = {index, mode};
   const cardName = typeof card === 'string' ? card : (card?.name || card?.title || '');
-  if (mode === 'action' && cardName === '合作談判') {
-    const state = window.lastGameState || {};
-    const players = (state.players || []).filter(p => p.id !== playerId);
-    if (players.length > 1) {
-      const menu = players.map((p, idx) => `${idx + 1}. ${p.name}`).join('\n');
-      const answer = window.prompt(`合作談判：請選擇抽牌對象\n${menu}`, '1');
-      if (answer === null) return;
-      const choiceIndex = Number.parseInt(answer, 10) - 1;
-      if (!Number.isInteger(choiceIndex) || choiceIndex < 0 || choiceIndex >= players.length) {
-        window.alert('無效的抽牌對象');
-        return;
-      }
-      payload.target_player_id = players[choiceIndex].id;
-    } else if (players.length === 1) {
-      payload.target_player_id = players[0].id;
-    }
+  if (mode === 'action' && (cardName === '合作談判' || cardName === '走漏風聲')) {
+    const label = cardName === '合作談判' ? '抽牌對象' : '棄牌庫頂牌對象';
+    if (openCardTargetModal(index, cardName, label)) return;
   }
   sendAction('play_card', payload);
 }
@@ -1465,14 +1497,15 @@ async function render(state) {
     const me = (state.players || []).find(p => p.id === playerId);
     if (me && me.hand) {
       me.hand.forEach((card, i) => {
+        const cardArg = escapeHtml(jsSingleQuotedString(card));
         const colorName = (cardPresentation(card)?.color) || (/奧援/.test(card) ? '奧援' : '灰');
         const colorClass = cardColorClass(colorName);
         handDiv.innerHTML += `
-          <div class='card hand-card ${colorClass}' onclick="selectCardDetail(${JSON.stringify(card)},'hand',false)">
+          <div class='card hand-card ${colorClass}' onclick="selectCardDetail(${cardArg},'hand',false)">
             ${renderCardFace(card, 'hand', false, true)}
             <div class="hand-card-actions">
-              <button type="button" onclick="event.stopPropagation(); playHandCard(${i}, ${JSON.stringify(card)}, 'resource')">資源</button>
-              <button type="button" onclick="event.stopPropagation(); playHandCard(${i}, ${JSON.stringify(card)}, 'action')">行動</button>
+              <button type="button" onclick="event.stopPropagation(); playHandCard(${i}, ${cardArg}, 'resource')">資源</button>
+              <button type="button" onclick="event.stopPropagation(); playHandCard(${i}, ${cardArg}, 'action')">行動</button>
             </div>
           </div>`;
       });
