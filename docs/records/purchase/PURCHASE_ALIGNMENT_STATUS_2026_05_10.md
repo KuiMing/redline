@@ -46,12 +46,12 @@ python3 scripts/validate_purchase_section_alignment.py
 - failed: 0
 
 最新驗證檔：
-- `PURCHASE_SECTION_ALIGNMENT_VALIDATION.json`
-- `PURCHASE_SECTION_ALIGNMENT_VALIDATION.md`
-- `purchase_section_alignment_validation.png`
+- `docs/records/purchase/PURCHASE_SECTION_ALIGNMENT_VALIDATION.json`
+- `docs/records/purchase/PURCHASE_SECTION_ALIGNMENT_VALIDATION.md`
+- `docs/records/purchase/purchase_section_alignment_validation.png`
 
 ## 最新量測結果
-來自 `PURCHASE_SECTION_ALIGNMENT_VALIDATION.json`：
+來自 `docs/records/purchase/PURCHASE_SECTION_ALIGNMENT_VALIDATION.json`：
 
 - 常設第一張卡：
   - `x = 21`
@@ -67,7 +67,7 @@ python3 scripts/validate_purchase_section_alignment.py
 - 目前此目標已達成
 
 ## 目前可直接檢查的截圖
-- `purchase_section_alignment_validation.png`
+- `docs/records/purchase/purchase_section_alignment_validation.png`
 
 ## 如果後續還要再調
 可能的下一步：

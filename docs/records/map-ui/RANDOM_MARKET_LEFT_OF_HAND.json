@@ -1,0 +1,8 @@
+{
+  "hasCommandCardRow": true,
+  "randomBeforeHand": true,
+  "rowColumns": "382px 382px",
+  "randomTitle": "隨機購買區\n            \n ",
+  "handCardCount": 5,
+  "randomCardCount": 5
+}

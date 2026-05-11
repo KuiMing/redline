@@ -1,0 +1,8 @@
+{
+  "purchaseWidth": "260px",
+  "purchaseHeight": "320px",
+  "handWidth": "260px",
+  "handHeight": "320px",
+  "purchaseGridColumns": "260px 260px",
+  "handGridColumns": "260px 260px"
+}

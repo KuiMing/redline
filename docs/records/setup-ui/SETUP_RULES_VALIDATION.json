@@ -1,0 +1,191 @@
+{
+  "game_id": "c1c5968c-c3de-435f-b887-d5a7bc1cfe12",
+  "host_player_id": "6f44ac54-c468-4055-b06c-d6d77fa1b2d5",
+  "ally_player_id": "0578cb81-4f06-46e1-a3a0-82053bd8d923",
+  "summary": {
+    "total": 8,
+    "passed": 8,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "start_endpoint_accepts_ready_setup",
+      "ok": true,
+      "detail": {
+        "success": true,
+        "market_mode": "sample_53"
+      }
+    },
+    {
+      "name": "setup_enters_main_event_phase",
+      "ok": true,
+      "detail": {
+        "game_phase": "main",
+        "turn_phase": "event",
+        "turn": 1,
+        "winner": null
+      }
+    },
+    {
+      "name": "starting_player_is_first_non_red",
+      "ok": true,
+      "detail": {
+        "current_player": "ally",
+        "expected": "ally"
+      }
+    },
+    {
+      "name": "host_faction_and_base_initialized",
+      "ok": true,
+      "detail": {
+        "player": {
+          "id": "6f44ac54-c468-4055-b06c-d6d77fa1b2d5",
+          "name": "host",
+          "faction": "red_army",
+          "base": "北京",
+          "resources": {
+            "money": 0,
+            "propaganda": 0
+          },
+          "moves_left": 0,
+          "hand": [
+            "追隨者",
+            "追隨者",
+            "樂捐者",
+            "樂捐者",
+            "追隨者"
+          ],
+          "deck_count": 5,
+          "discard_count": 0,
+          "orgs": {
+            "北京": 1
+          }
+        },
+        "expected": {
+          "faction": "red_army",
+          "base": "北京"
+        }
+      }
+    },
+    {
+      "name": "ally_faction_and_base_initialized",
+      "ok": true,
+      "detail": {
+        "player": {
+          "id": "0578cb81-4f06-46e1-a3a0-82053bd8d923",
+          "name": "ally",
+          "faction": "taiwan_green",
+          "base": "臺北",
+          "resources": {
+            "money": 0,
+            "propaganda": 0
+          },
+          "moves_left": 0,
+          "hand": [
+            "追隨者",
+            "樂捐者",
+            "追隨者",
+            "樂捐者",
+            "追隨者"
+          ],
+          "deck_count": 5,
+          "discard_count": 0,
+          "orgs": {
+            "臺北": 1
+          }
+        },
+        "expected": {
+          "faction": "taiwan_green",
+          "base": "臺北"
+        }
+      }
+    },
+    {
+      "name": "host_starter_hand_resources_and_moves",
+      "ok": true,
+      "detail": {
+        "player": {
+          "id": "6f44ac54-c468-4055-b06c-d6d77fa1b2d5",
+          "name": "host",
+          "faction": "red_army",
+          "base": "北京",
+          "resources": {
+            "money": 0,
+            "propaganda": 0
+          },
+          "moves_left": 0,
+          "hand": [
+            "追隨者",
+            "追隨者",
+            "樂捐者",
+            "樂捐者",
+            "追隨者"
+          ],
+          "deck_count": 5,
+          "discard_count": 0,
+          "orgs": {
+            "北京": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "ally_starter_hand_resources_and_moves",
+      "ok": true,
+      "detail": {
+        "player": {
+          "id": "0578cb81-4f06-46e1-a3a0-82053bd8d923",
+          "name": "ally",
+          "faction": "taiwan_green",
+          "base": "臺北",
+          "resources": {
+            "money": 0,
+            "propaganda": 0
+          },
+          "moves_left": 0,
+          "hand": [
+            "追隨者",
+            "樂捐者",
+            "追隨者",
+            "樂捐者",
+            "追隨者"
+          ],
+          "deck_count": 5,
+          "discard_count": 0,
+          "orgs": {
+            "臺北": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "purchase_area_setup_matches_rules",
+      "ok": true,
+      "detail": {
+        "purchase_area_count": 11,
+        "purchase_area": [
+          "宣傳家",
+          "思想家",
+          "資助者",
+          "資本家",
+          "分神",
+          "內鬥",
+          "高效行動",
+          "組織經驗乙",
+          "誘導虛耗",
+          "凝聚共識",
+          "合作談判"
+        ],
+        "static_supply": {
+          "宣傳家": 1,
+          "思想家": 1,
+          "資助者": 1,
+          "資本家": 1,
+          "分神": 1,
+          "內鬥": 1
+        }
+      }
+    }
+  ],
+  "screenshot": "/Users/benmini/.openclaw/workspace/redline/setup_rules_validation.png"
+}

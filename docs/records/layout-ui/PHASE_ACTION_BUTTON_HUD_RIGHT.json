@@ -1,0 +1,6 @@
+{
+  "hasInlineAdvanceButton": false,
+  "phaseActionBtnText": "結束行動階段",
+  "phaseActionMeta": "目前：行動｜下一步：結束行動階段",
+  "phaseActionDisabled": false
+}

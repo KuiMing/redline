@@ -1,0 +1,67 @@
+{
+  "summary": {
+    "total": 7,
+    "passed": 7,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "india_support_tier3_adds_three_distractions",
+      "ok": true,
+      "detail": {
+        "before": 0,
+        "after": 3
+      }
+    },
+    {
+      "name": "anglo_support_tier2_gains_money",
+      "ok": true,
+      "detail": {
+        "before": 0,
+        "after": 2
+      }
+    },
+    {
+      "name": "nanyang_support_tier1_draw_then_discard_net_zero",
+      "ok": true,
+      "detail": {
+        "before": 2,
+        "after": 1
+      }
+    },
+    {
+      "name": "east_asia_support_tier1_gains_two_propaganda",
+      "ok": true,
+      "detail": {
+        "before": 0,
+        "after": 2
+      }
+    },
+    {
+      "name": "northland_support_tier2_dissolves_one",
+      "ok": true,
+      "detail": {
+        "before": {
+          "南京": 1
+        },
+        "after": {}
+      }
+    },
+    {
+      "name": "taiwan_support_tier1_gains_one_propaganda",
+      "ok": true,
+      "detail": {
+        "before": 0,
+        "after": 1
+      }
+    },
+    {
+      "name": "middle_east_support_tier1_forces_one_discard",
+      "ok": true,
+      "detail": {
+        "before": 2,
+        "after": 1
+      }
+    }
+  ]
+}

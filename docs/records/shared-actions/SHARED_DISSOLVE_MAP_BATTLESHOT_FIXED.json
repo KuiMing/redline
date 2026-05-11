@@ -1,0 +1,138 @@
+{
+  "setup": {
+    "success": true,
+    "game_id": "8b2435b3-af3d-40fa-ae8c-8ef155af7701",
+    "player_id": "7184408c-ca8b-4e4a-8a9d-5fa995263ada",
+    "shared_town": "上海",
+    "turn_phase": "action",
+    "game_phase": "main",
+    "players": [
+      {
+        "id": "7184408c-ca8b-4e4a-8a9d-5fa995263ada",
+        "name": "hu",
+        "faction": "hu"
+      },
+      {
+        "id": "c9aadf43-89b1-4a11-9271-99f8e7b7056c",
+        "name": "taiwan",
+        "faction": "taiwan_green"
+      }
+    ],
+    "state": {
+      "turn": 1,
+      "game_phase": "main",
+      "turn_phase": "action",
+      "winner": null,
+      "current_player": "hu",
+      "active_eras": [
+        "hong_kong"
+      ],
+      "pending_base_choices": {},
+      "action_log": [],
+      "purchase_area": [],
+      "map": {
+        "towns": {
+          "紐約": [
+            {
+              "player": "hu",
+              "count": 1
+            }
+          ],
+          "上海": [
+            {
+              "player": "taiwan",
+              "count": 1
+            }
+          ],
+          "臺北": [
+            {
+              "player": "taiwan",
+              "count": 1
+            }
+          ]
+        },
+        "shared_access": {
+          "臺北": [
+            "hu"
+          ],
+          "上海": [
+            "hu"
+          ],
+          "紐約": [
+            "taiwan_green"
+          ]
+        }
+      },
+      "players": [
+        {
+          "id": "7184408c-ca8b-4e4a-8a9d-5fa995263ada",
+          "name": "hu",
+          "faction": "hu",
+          "resources": {
+            "money": 0,
+            "propaganda": 0
+          },
+          "moves_left": 3,
+          "hand": [],
+          "orgs": {
+            "紐約": 1
+          }
+        },
+        {
+          "id": "c9aadf43-89b1-4a11-9271-99f8e7b7056c",
+          "name": "taiwan",
+          "faction": "taiwan_green",
+          "resources": {
+            "money": 0,
+            "propaganda": 0
+          },
+          "moves_left": 3,
+          "hand": [],
+          "orgs": {
+            "上海": 1,
+            "臺北": 1
+          }
+        }
+      ]
+    }
+  },
+  "select_result": {
+    "ok": true,
+    "town": "上海",
+    "highlighted": true,
+    "road": 0,
+    "rail": 2,
+    "owns": false,
+    "shared": true,
+    "canAct": true
+  },
+  "dissolve_result": {
+    "ok": true,
+    "townName": "上海",
+    "defender": "taiwan"
+  },
+  "dissolve_hint": "目前選取 上海：沒有可用的 shared dissolve 目標。",
+  "interaction_hint": "已選取 上海：這不是當前玩家可操作的城鎮。",
+  "map_towns_after": {
+    "紐約": [
+      {
+        "player": "hu",
+        "count": 1
+      }
+    ],
+    "臺北": [
+      {
+        "player": "taiwan",
+        "count": 1
+      }
+    ]
+  },
+  "players_after": {
+    "hu": {
+      "紐約": 1
+    },
+    "taiwan_green": {
+      "臺北": 1
+    }
+  }
+}

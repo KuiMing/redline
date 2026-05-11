@@ -1,0 +1,49 @@
+{
+  "setup": {
+    "game_id": "7f536166-2ee5-43c1-b487-a6f8ce00303b",
+    "player_id": "e4fa2533-16c7-4941-a761-fcfa09b8305f"
+  },
+  "summary": {
+    "total": 2,
+    "passed": 2,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "waiting_notice_is_in_phase_action_bar_next_to_button",
+      "ok": true,
+      "detail": {
+        "notice_text": "等待其他玩家選擇根據地",
+        "notice_box": {
+          "x": 964.3125,
+          "y": 106.5,
+          "width": 163.28125,
+          "height": 33
+        },
+        "button_box": {
+          "x": 1139.59375,
+          "y": 100,
+          "width": 124.40625,
+          "height": 46
+        },
+        "phase_bar_box": {
+          "x": 0,
+          "y": 90,
+          "width": 1280,
+          "height": 67
+        },
+        "vertical_center_delta_px": 0.0,
+        "horizontal_gap_px": 12.0
+      }
+    },
+    {
+      "name": "waiting_notice_does_not_occupy_left_purchase_column",
+      "ok": true,
+      "detail": {
+        "base_selection_panel_display": "none",
+        "left_column_contains_waiting": false
+      }
+    }
+  ],
+  "screenshot": "/Users/benmini/.openclaw/workspace/redline/base_selection_notice_placement_validation.png"
+}

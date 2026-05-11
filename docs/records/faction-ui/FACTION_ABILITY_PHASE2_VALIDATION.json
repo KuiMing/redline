@@ -1,0 +1,29 @@
+{
+  "summary": {
+    "total": 4,
+    "passed": 4,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "first_money_draw",
+      "ok": true,
+      "detail": "before=1, after=1"
+    },
+    {
+      "name": "combo_three_unique",
+      "ok": true,
+      "detail": "{'money': 3, 'propaganda': 0}"
+    },
+    {
+      "name": "martyr_draw_target_behavior",
+      "ok": true,
+      "detail": "before=0, after=1"
+    },
+    {
+      "name": "first_money_gain2",
+      "ok": true,
+      "detail": "before=0, after=2"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "summary": {
+    "total": 1,
+    "passed": 1,
+    "failed": 0
+  },
+  "result": {
+    "success": true
+  },
+  "hk_orgs": {
+    "深圳": 1
+  },
+  "yue_orgs": {}
+}

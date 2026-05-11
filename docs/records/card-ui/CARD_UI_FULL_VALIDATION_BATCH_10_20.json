@@ -1,0 +1,527 @@
+[
+  {
+    "card": "高效行動",
+    "type": "command",
+    "effects": [
+      "draw",
+      "discard_self"
+    ],
+    "hand_before": [
+      "高效行動",
+      "自棄1",
+      "自棄2"
+    ],
+    "hand_after": [
+      "自棄1",
+      "自棄2",
+      "抽牌D"
+    ],
+    "hud_changed": true,
+    "log_changed": true,
+    "purchase_changed": false,
+    "error": null,
+    "resources_before": {
+      "money": 0,
+      "propaganda": 0
+    },
+    "resources_after": {
+      "money": 1,
+      "propaganda": 1
+    },
+    "moves_before": 3,
+    "moves_after": 3,
+    "orgs_before": {
+      "北京": 1,
+      "上海": 1
+    },
+    "orgs_after": {
+      "北京": 1,
+      "上海": 1
+    },
+    "opponents_before": {
+      "guest": {
+        "hand": 2,
+        "orgs": {
+          "香港城": 2
+        }
+      }
+    },
+    "opponents_after": {
+      "guest": {
+        "hand": 2,
+        "orgs": {
+          "香港城": 2
+        }
+      }
+    }
+  },
+  {
+    "card": "模仿戰術",
+    "type": "command",
+    "effects": [
+      "peek_deck",
+      "topdeck_to_hand"
+    ],
+    "hand_before": [
+      "模仿戰術"
+    ],
+    "hand_after": [
+      "抽牌D"
+    ],
+    "hud_changed": true,
+    "log_changed": true,
+    "purchase_changed": false,
+    "error": null,
+    "resources_before": {
+      "money": 0,
+      "propaganda": 0
+    },
+    "resources_after": {
+      "money": 0,
+      "propaganda": 2
+    },
+    "moves_before": 3,
+    "moves_after": 3,
+    "orgs_before": {
+      "北京": 1,
+      "上海": 1
+    },
+    "orgs_after": {
+      "北京": 1,
+      "上海": 1
+    },
+    "opponents_before": {
+      "guest": {
+        "hand": 2,
+        "orgs": {
+          "香港城": 2
+        }
+      }
+    },
+    "opponents_after": {
+      "guest": {
+        "hand": 2,
+        "orgs": {
+          "香港城": 2
+        }
+      }
+    }
+  },
+  {
+    "card": "乘勝追擊",
+    "type": "command",
+    "effects": [
+      "gain_from_discard"
+    ],
+    "hand_before": [
+      "乘勝追擊"
+    ],
+    "hand_after": [
+      "可回收牌"
+    ],
+    "hud_changed": true,
+    "log_changed": true,
+    "purchase_changed": false,
+    "error": null,
+    "resources_before": {
+      "money": 0,
+      "propaganda": 0
+    },
+    "resources_after": {
+      "money": 1,
+      "propaganda": 0
+    },
+    "moves_before": 3,
+    "moves_after": 3,
+    "orgs_before": {
+      "北京": 1,
+      "上海": 1
+    },
+    "orgs_after": {
+      "北京": 1,
+      "上海": 1
+    },
+    "opponents_before": {
+      "guest": {
+        "hand": 2,
+        "orgs": {
+          "香港城": 2
+        }
+      }
+    },
+    "opponents_after": {
+      "guest": {
+        "hand": 2,
+        "orgs": {
+          "香港城": 2
+        }
+      }
+    }
+  },
+  {
+    "card": "誘導虛耗",
+    "type": "command",
+    "effects": [
+      "optional_trash",
+      "force_discard"
+    ],
+    "hand_before": [
+      "可垃圾牌",
+      "誘導虛耗"
+    ],
+    "hand_after": [],
+    "hud_changed": true,
+    "log_changed": true,
+    "purchase_changed": false,
+    "error": null,
+    "resources_before": {
+      "money": 0,
+      "propaganda": 0
+    },
+    "resources_after": {
+      "money": 0,
+      "propaganda": 1
+    },
+    "moves_before": 3,
+    "moves_after": 3,
+    "orgs_before": {
+      "北京": 1,
+      "上海": 1
+    },
+    "orgs_after": {
+      "北京": 1,
+      "上海": 1
+    },
+    "opponents_before": {
+      "guest": {
+        "hand": 2,
+        "orgs": {
+          "香港城": 2
+        }
+      }
+    },
+    "opponents_after": {
+      "guest": {
+        "hand": 1,
+        "orgs": {
+          "香港城": 2
+        }
+      }
+    }
+  },
+  {
+    "card": "點燃熱情",
+    "type": "command",
+    "effects": [
+      "draw",
+      "conditional_draw"
+    ],
+    "hand_before": [
+      "點燃熱情"
+    ],
+    "hand_after": [
+      "抽牌D",
+      "抽牌C"
+    ],
+    "hud_changed": true,
+    "log_changed": true,
+    "purchase_changed": false,
+    "error": null,
+    "resources_before": {
+      "money": 0,
+      "propaganda": 0
+    },
+    "resources_after": {
+      "money": 0,
+      "propaganda": 1
+    },
+    "moves_before": 3,
+    "moves_after": 3,
+    "orgs_before": {
+      "北京": 1,
+      "上海": 1
+    },
+    "orgs_after": {
+      "北京": 1,
+      "上海": 1
+    },
+    "opponents_before": {
+      "guest": {
+        "hand": 2,
+        "orgs": {
+          "香港城": 2
+        }
+      }
+    },
+    "opponents_after": {
+      "guest": {
+        "hand": 2,
+        "orgs": {
+          "香港城": 2
+        }
+      }
+    }
+  },
+  {
+    "card": "樹立信心",
+    "type": "command",
+    "effects": [
+      "draw",
+      "conditional_draw"
+    ],
+    "hand_before": [
+      "樹立信心"
+    ],
+    "hand_after": [
+      "抽牌D",
+      "抽牌C"
+    ],
+    "hud_changed": true,
+    "log_changed": true,
+    "purchase_changed": false,
+    "error": null,
+    "resources_before": {
+      "money": 0,
+      "propaganda": 0
+    },
+    "resources_after": {
+      "money": 1,
+      "propaganda": 0
+    },
+    "moves_before": 3,
+    "moves_after": 3,
+    "orgs_before": {
+      "北京": 1,
+      "上海": 1
+    },
+    "orgs_after": {
+      "北京": 1,
+      "上海": 1
+    },
+    "opponents_before": {
+      "guest": {
+        "hand": 2,
+        "orgs": {
+          "香港城": 2
+        }
+      }
+    },
+    "opponents_after": {
+      "guest": {
+        "hand": 2,
+        "orgs": {
+          "香港城": 2
+        }
+      }
+    }
+  },
+  {
+    "card": "網羅人才",
+    "type": "command",
+    "effects": [
+      "peek_deck",
+      "topdeck_to_hand"
+    ],
+    "hand_before": [
+      "網羅人才"
+    ],
+    "hand_after": [
+      "抽牌D"
+    ],
+    "hud_changed": true,
+    "log_changed": true,
+    "purchase_changed": false,
+    "error": null,
+    "resources_before": {
+      "money": 0,
+      "propaganda": 0
+    },
+    "resources_after": {
+      "money": 1,
+      "propaganda": 1
+    },
+    "moves_before": 3,
+    "moves_after": 3,
+    "orgs_before": {
+      "北京": 1,
+      "上海": 1
+    },
+    "orgs_after": {
+      "北京": 1,
+      "上海": 1
+    },
+    "opponents_before": {
+      "guest": {
+        "hand": 2,
+        "orgs": {
+          "香港城": 2
+        }
+      }
+    },
+    "opponents_after": {
+      "guest": {
+        "hand": 2,
+        "orgs": {
+          "香港城": 2
+        }
+      }
+    }
+  },
+  {
+    "card": "凝聚共識",
+    "type": "command",
+    "effects": [
+      "draw",
+      "discard_self",
+      "conditional_bonus"
+    ],
+    "hand_before": [
+      "凝聚共識",
+      "自棄1",
+      "自棄2"
+    ],
+    "hand_after": [
+      "自棄1",
+      "自棄2",
+      "抽牌D"
+    ],
+    "hud_changed": true,
+    "log_changed": true,
+    "purchase_changed": false,
+    "error": null,
+    "resources_before": {
+      "money": 0,
+      "propaganda": 0
+    },
+    "resources_after": {
+      "money": 0,
+      "propaganda": 5
+    },
+    "moves_before": 3,
+    "moves_after": 3,
+    "orgs_before": {
+      "北京": 1,
+      "上海": 1
+    },
+    "orgs_after": {
+      "北京": 1,
+      "上海": 1
+    },
+    "opponents_before": {
+      "guest": {
+        "hand": 2,
+        "orgs": {
+          "香港城": 2
+        }
+      }
+    },
+    "opponents_after": {
+      "guest": {
+        "hand": 2,
+        "orgs": {
+          "香港城": 2
+        }
+      }
+    }
+  },
+  {
+    "card": "思想建設",
+    "type": "command",
+    "effects": [
+      "extend_build_range"
+    ],
+    "hand_before": [
+      "思想建設"
+    ],
+    "hand_after": [],
+    "hud_changed": true,
+    "log_changed": true,
+    "purchase_changed": false,
+    "error": null,
+    "resources_before": {
+      "money": 0,
+      "propaganda": 0
+    },
+    "resources_after": {
+      "money": 0,
+      "propaganda": 1
+    },
+    "moves_before": 3,
+    "moves_after": 3,
+    "orgs_before": {
+      "北京": 1,
+      "上海": 1
+    },
+    "orgs_after": {
+      "北京": 1,
+      "上海": 1
+    },
+    "opponents_before": {
+      "guest": {
+        "hand": 2,
+        "orgs": {
+          "香港城": 2
+        }
+      }
+    },
+    "opponents_after": {
+      "guest": {
+        "hand": 2,
+        "orgs": {
+          "香港城": 2
+        }
+      }
+    }
+  },
+  {
+    "card": "擴大戰果",
+    "type": "command",
+    "effects": [
+      "gain_any_from_discard"
+    ],
+    "hand_before": [
+      "擴大戰果"
+    ],
+    "hand_after": [
+      "可回收牌"
+    ],
+    "hud_changed": true,
+    "log_changed": true,
+    "purchase_changed": false,
+    "error": null,
+    "resources_before": {
+      "money": 0,
+      "propaganda": 0
+    },
+    "resources_after": {
+      "money": 2,
+      "propaganda": 0
+    },
+    "moves_before": 3,
+    "moves_after": 3,
+    "orgs_before": {
+      "北京": 1,
+      "上海": 1
+    },
+    "orgs_after": {
+      "北京": 1,
+      "上海": 1
+    },
+    "opponents_before": {
+      "guest": {
+        "hand": 2,
+        "orgs": {
+          "香港城": 2
+        }
+      }
+    },
+    "opponents_after": {
+      "guest": {
+        "hand": 2,
+        "orgs": {
+          "香港城": 2
+        }
+      }
+    }
+  }
+]

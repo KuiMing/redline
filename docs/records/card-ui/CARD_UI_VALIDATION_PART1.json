@@ -1,0 +1,104 @@
+[
+  {
+    "players": 2,
+    "start_result": {
+      "success": true
+    },
+    "current_player": "host",
+    "turn_phase_before": "event",
+    "turn_phase_after": "action",
+    "host_hand_count_before": 5,
+    "host_hand_count_after": 4,
+    "guest_hand_counts": {
+      "guest2": 5
+    },
+    "illegal_play": {
+      "guest": "guest2",
+      "hand_before": [
+        "追隨者",
+        "追隨者",
+        "追隨者",
+        "樂捐者",
+        "追隨者"
+      ],
+      "error_before": null,
+      "error_after": "Not your turn",
+      "log_same": true
+    },
+    "chosen_card": "追隨者",
+    "host_log_changed": true,
+    "hud_changed": true,
+    "hud_before": "TURN 1 | PHASE action | ACTIVE HOST | HAND 5 | MONEY 0 | PROP 0 | MOVES 3 | HOST: 2 | GUEST2: 2 |",
+    "hud_after": "TURN 1 | PHASE action | ACTIVE HOST | HAND 4 | MONEY 0 | PROP 0 | MOVES 3 | HOST: 2 | GUEST2: 2 |",
+    "host_state_after_player_count": 2
+  },
+  {
+    "players": 3,
+    "start_result": {
+      "success": true
+    },
+    "current_player": "host",
+    "turn_phase_before": "event",
+    "turn_phase_after": "action",
+    "host_hand_count_before": 5,
+    "host_hand_count_after": 4,
+    "guest_hand_counts": {
+      "guest2": 5,
+      "guest3": 5
+    },
+    "illegal_play": {
+      "guest": "guest2",
+      "hand_before": [
+        "樂捐者",
+        "樂捐者",
+        "追隨者",
+        "追隨者",
+        "追隨者"
+      ],
+      "error_before": null,
+      "error_after": "Not your turn",
+      "log_same": true
+    },
+    "chosen_card": "追隨者",
+    "host_log_changed": true,
+    "hud_changed": true,
+    "hud_before": "TURN 1 | PHASE action | ACTIVE HOST | HAND 5 | MONEY 0 | PROP 0 | MOVES 3 | HOST: 2 | GUEST2: 2 | GUEST3: 0 |",
+    "hud_after": "TURN 1 | PHASE action | ACTIVE HOST | HAND 4 | MONEY 0 | PROP 0 | MOVES 3 | HOST: 2 | GUEST2: 2 | GUEST3: 0 |",
+    "host_state_after_player_count": 3
+  },
+  {
+    "players": 4,
+    "start_result": {
+      "success": true
+    },
+    "current_player": "host",
+    "turn_phase_before": "event",
+    "turn_phase_after": "action",
+    "host_hand_count_before": 5,
+    "host_hand_count_after": 4,
+    "guest_hand_counts": {
+      "guest2": 5,
+      "guest3": 5,
+      "guest4": 5
+    },
+    "illegal_play": {
+      "guest": "guest2",
+      "hand_before": [
+        "追隨者",
+        "追隨者",
+        "樂捐者",
+        "追隨者",
+        "追隨者"
+      ],
+      "error_before": null,
+      "error_after": "Not your turn",
+      "log_same": true
+    },
+    "chosen_card": "樂捐者",
+    "host_log_changed": true,
+    "hud_changed": true,
+    "hud_before": "TURN 1 | PHASE action | ACTIVE HOST | HAND 5 | MONEY 0 | PROP 0 | MOVES 3 | HOST: 2 | GUEST2: 0 | GUEST3: 2 | GUEST4: 2 |",
+    "hud_after": "TURN 1 | PHASE action | ACTIVE HOST | HAND 4 | MONEY 0 | PROP 0 | MOVES 3 | HOST: 2 | GUEST2: 0 | GUEST3: 2 | GUEST4: 2 |",
+    "host_state_after_player_count": 4
+  }
+]

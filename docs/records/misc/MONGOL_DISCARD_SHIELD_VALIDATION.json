@@ -1,0 +1,20 @@
+{
+  "success_case": {
+    "result": {
+      "success": true
+    },
+    "attacker_hand_after": [],
+    "attacker_discard_after": [
+      "測試棄牌"
+    ],
+    "mongol_orgs_after": {}
+  },
+  "fail_case": {
+    "result": {
+      "error": "盟旗學校：須先棄1張手牌，才可以瓦解蒙古組織"
+    },
+    "mongol_orgs_after": {
+      "烏蘭巴托": 1
+    }
+  }
+}
