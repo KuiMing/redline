@@ -1,0 +1,19 @@
+# Python cache / local tooling
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Local logs
+*.log
+server.log
+
+# OS/editor noise
+.DS_Store
+.idea/
+.vscode/
+
+# Root-level ad-hoc screenshots/previews should be moved to docs/records/<topic>/
+/*.png
+/*.webp
+/*.jpg
+/*.jpeg

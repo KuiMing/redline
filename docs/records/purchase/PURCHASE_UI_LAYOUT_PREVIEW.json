@@ -1,0 +1,101 @@
+{
+  "setup": {
+    "success": true,
+    "game_id": "31360da4-acef-4677-bc82-b92255a33f20",
+    "player_id": "6921e05f-6e7c-45d6-8ac8-46675e5e4473",
+    "turn_phase": "action",
+    "game_phase": "main",
+    "players": [
+      {
+        "id": "6921e05f-6e7c-45d6-8ac8-46675e5e4473",
+        "name": "viewer",
+        "faction": "tibet_dehradun"
+      },
+      {
+        "id": "a079a577-b290-4f3c-bd73-13576f97624c",
+        "name": "red",
+        "faction": "red_army"
+      }
+    ],
+    "state": {
+      "turn": 1,
+      "game_phase": "main",
+      "turn_phase": "action",
+      "winner": null,
+      "current_player": "viewer",
+      "active_eras": [
+        "hong_kong"
+      ],
+      "pending_base_choices": {},
+      "action_log": [],
+      "purchase_area": [
+        "宣傳家",
+        "思想家",
+        "資助者",
+        "資本家",
+        "分神",
+        "內鬥",
+        "點燃熱情",
+        "交通經驗丙",
+        "英美奧援",
+        "東洋奧援",
+        "高效行動"
+      ],
+      "map": {
+        "towns": {
+          "德拉敦": [
+            {
+              "player": "viewer",
+              "count": 1
+            }
+          ],
+          "北京": [
+            {
+              "player": "red",
+              "count": 1
+            }
+          ]
+        },
+        "shared_access": {}
+      },
+      "players": [
+        {
+          "id": "6921e05f-6e7c-45d6-8ac8-46675e5e4473",
+          "name": "viewer",
+          "faction": "tibet_dehradun",
+          "resources": {
+            "money": 5,
+            "propaganda": 5
+          },
+          "moves_left": 3,
+          "hand": [],
+          "orgs": {
+            "德拉敦": 1
+          }
+        },
+        {
+          "id": "a079a577-b290-4f3c-bd73-13576f97624c",
+          "name": "red",
+          "faction": "red_army",
+          "resources": {
+            "money": 0,
+            "propaganda": 0
+          },
+          "moves_left": 3,
+          "hand": [
+            "追隨者",
+            "樂捐者",
+            "追隨者",
+            "追隨者",
+            "樂捐者"
+          ],
+          "orgs": {
+            "北京": 1
+          }
+        }
+      ]
+    }
+  },
+  "purchase_text": "購買區\n          常設購買區\n          \n        \n          宣傳家\n          常設｜不可直接購買\n          固定存在於購買區\n        \n        \n          思想家\n          常設｜不可直接購買\n          固定存在於購買區\n        \n        \n          資助者\n          常設｜不可直接購買\n          固定存在於購買區\n        \n        \n          資本家\n          常設｜不可直接購買\n          固定存在於購買區\n        \n        \n          分神\n          常設｜不可直接購買\n          固定存在於購買區\n        \n        \n          內鬥\n          常設｜不可直接購買\n          固定存在於購買區\n        \n          隨機購買區\n          \n        \n          點燃熱情\n          隨機｜雙擊購買\n          一般行動卡／由購買區牌庫補入\n        \n        \n          交通經驗丙\n          隨機｜雙擊購買\n          一般行動卡／由購買區牌庫補入\n        \n        \n          英美奧援\n          隨機｜奧援｜雙擊購買\n          奧援卡／依區域主導者判定 I・II・III 級效果\n        \n        \n          東洋奧援\n          隨機｜奧援｜雙擊購買\n          奧援卡／依區域主導者判定 I・II・III 級效果\n        \n        \n          高效行動\n          隨機｜雙擊購買\n          一般行動卡／由購買區牌庫補入",
+  "hud": "回合 1\n      | 階段 行動\n      | 當前玩家 viewer\n      | 手牌 0\n      | 資金 5\n      | 宣傳 5\n      | 移動 3\n      | viewer: 1 | red: 1 |"
+}

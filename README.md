@@ -16,8 +16,7 @@ Redline 是一個以瀏覽器 UI 與 Python WebSocket 伺服器實作的桌遊�
   - 設計文件、提交範圍、驗證紀錄與截圖證據。
 - `docs/records/`
   - 任務導向的驗證紀錄與 battle-shot / screenshot 證據。新紀錄建議放在這裡，不要再散落到 repo 根目錄。
-- `docs/records/leak-card/`
-  - `走漏風聲` 相關提交範圍、規則驗證、UI 驗證與截圖。
+  - 目前已依主題整理，例如 `leak-card/`、`purchase/`、`layout-ui/`、`faction-ui/`、`safehouse/`、`lobby/`、`map-ui/`。
 - `sketches/`
   - UI 草圖或一次性設計探索；正式實作前應整理成 `static/` 或 `docs/`。
 

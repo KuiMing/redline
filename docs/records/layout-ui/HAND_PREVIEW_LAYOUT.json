@@ -1,0 +1,111 @@
+{
+  "setup": {
+    "success": true,
+    "game_id": "9ff18336-e438-4c52-95bc-cab00b450e64",
+    "player_id": "9c05a210-1393-48a4-8aa2-64902c0f899f",
+    "hand_names": [
+      "宣傳家",
+      "印度奧援",
+      "東洋奧援"
+    ],
+    "turn_phase": "action",
+    "game_phase": "main",
+    "players": [
+      {
+        "id": "9c05a210-1393-48a4-8aa2-64902c0f899f",
+        "name": "viewer",
+        "faction": "tibet_dehradun"
+      },
+      {
+        "id": "609cd92b-fbb3-485b-99c3-70be4edd1a42",
+        "name": "red",
+        "faction": "red_army"
+      }
+    ],
+    "state": {
+      "turn": 1,
+      "game_phase": "main",
+      "turn_phase": "action",
+      "winner": null,
+      "current_player": "viewer",
+      "active_eras": [
+        "hong_kong"
+      ],
+      "pending_base_choices": {},
+      "action_log": [],
+      "purchase_area": [
+        "宣傳家",
+        "思想家",
+        "資助者",
+        "資本家",
+        "分神",
+        "內鬥",
+        "離間",
+        "歐洲奧援",
+        "爆料黑幕",
+        "組織經驗丙",
+        "謀劃"
+      ],
+      "map": {
+        "towns": {
+          "德拉敦": [
+            {
+              "player": "viewer",
+              "count": 1
+            }
+          ],
+          "北京": [
+            {
+              "player": "red",
+              "count": 1
+            }
+          ]
+        },
+        "shared_access": {}
+      },
+      "players": [
+        {
+          "id": "9c05a210-1393-48a4-8aa2-64902c0f899f",
+          "name": "viewer",
+          "faction": "tibet_dehradun",
+          "resources": {
+            "money": 4,
+            "propaganda": 3
+          },
+          "moves_left": 3,
+          "hand": [
+            "宣傳家",
+            "印度奧援",
+            "東洋奧援"
+          ],
+          "orgs": {
+            "德拉敦": 1
+          }
+        },
+        {
+          "id": "609cd92b-fbb3-485b-99c3-70be4edd1a42",
+          "name": "red",
+          "faction": "red_army",
+          "resources": {
+            "money": 0,
+            "propaganda": 0
+          },
+          "moves_left": 3,
+          "hand": [
+            "追隨者",
+            "樂捐者",
+            "追隨者",
+            "追隨者",
+            "追隨者"
+          ],
+          "orgs": {
+            "北京": 1
+          }
+        }
+      ]
+    }
+  },
+  "hand_text": "手牌\n        點選購買區或手牌卡牌後，可在此查看詳細資訊。\n        宣傳家印度奧援東洋奧援",
+  "detail_text": "點選購買區或手牌卡牌後，可在此查看詳細資訊。",
+  "purchase_text": "購買區\n          常設購買區\n          \n        \n          宣傳家\n          常設｜不可直接購買\n          固定存在於購買區\n        \n        \n          思想家\n          常設｜不可直接購買\n          固定存在於購買區\n        \n        \n          資助者\n          常設｜不可直接購買\n          固定存在於購買區\n        \n        \n          資本家\n          常設｜不可直接購買\n          固定存在於購買區\n        \n        \n          分神\n          常設｜不可直接購買\n          固定存在於購買區\n        \n        \n          內鬥\n          常設｜不可直接購買\n          固定存在於購買區\n        \n          隨機購買區\n          \n        \n          離間\n          隨機｜雙擊購買\n          一般行動卡／由購買區牌庫補入\n        \n        \n          歐洲奧援\n          隨機｜奧援｜雙擊購買\n          奧援卡／依區域主導者判定 I・II・III 級效果\n        \n        \n          爆料黑幕\n          隨機｜雙擊購買\n          一般行動卡／由購買區牌庫補入\n        \n        \n          組織經驗丙\n          隨機｜雙擊購買\n          一般行動卡／由購買區牌庫補入\n        \n        \n          謀劃\n          隨機｜雙擊購買\n          一般行動卡／由購買區牌庫補入"
+}

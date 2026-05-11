@@ -1,0 +1,110 @@
+{
+  "setup": {
+    "success": true,
+    "game_id": "6baf8df4-e1fe-4782-9eab-a6c60edbd7ea",
+    "player_id": "574ecb38-c7ef-4f3c-a409-7fccf5ab709c",
+    "hand_names": [
+      "宣傳家",
+      "印度奧援",
+      "東洋奧援"
+    ],
+    "turn_phase": "action",
+    "game_phase": "main",
+    "players": [
+      {
+        "id": "574ecb38-c7ef-4f3c-a409-7fccf5ab709c",
+        "name": "viewer",
+        "faction": "tibet_dehradun"
+      },
+      {
+        "id": "18a8f398-aabf-4837-aaa8-b47730b2b2a0",
+        "name": "red",
+        "faction": "red_army"
+      }
+    ],
+    "state": {
+      "turn": 1,
+      "game_phase": "main",
+      "turn_phase": "action",
+      "winner": null,
+      "current_player": "viewer",
+      "active_eras": [
+        "hong_kong"
+      ],
+      "pending_base_choices": {},
+      "action_log": [],
+      "purchase_area": [
+        "宣傳家",
+        "思想家",
+        "資助者",
+        "資本家",
+        "分神",
+        "內鬥",
+        "合作談判",
+        "武裝集團",
+        "凝聚共識",
+        "戰略",
+        "組織經驗丙"
+      ],
+      "map": {
+        "towns": {
+          "德拉敦": [
+            {
+              "player": "viewer",
+              "count": 1
+            }
+          ],
+          "北京": [
+            {
+              "player": "red",
+              "count": 1
+            }
+          ]
+        },
+        "shared_access": {}
+      },
+      "players": [
+        {
+          "id": "574ecb38-c7ef-4f3c-a409-7fccf5ab709c",
+          "name": "viewer",
+          "faction": "tibet_dehradun",
+          "resources": {
+            "money": 4,
+            "propaganda": 3
+          },
+          "moves_left": 3,
+          "hand": [
+            "宣傳家",
+            "印度奧援",
+            "東洋奧援"
+          ],
+          "orgs": {
+            "德拉敦": 1
+          }
+        },
+        {
+          "id": "18a8f398-aabf-4837-aaa8-b47730b2b2a0",
+          "name": "red",
+          "faction": "red_army",
+          "resources": {
+            "money": 0,
+            "propaganda": 0
+          },
+          "moves_left": 3,
+          "hand": [
+            "追隨者",
+            "追隨者",
+            "追隨者",
+            "樂捐者",
+            "樂捐者"
+          ],
+          "orgs": {
+            "北京": 1
+          }
+        }
+      ]
+    }
+  },
+  "hand_text": "手牌\n        點選購買區或手牌卡牌後，可在此查看詳細資訊。\n        \n          \n            宣傳家\n            手牌｜雙擊打出\n            一般手牌／雙擊可直接打出。\n          \n          \n            印度奧援\n            手牌｜奧援｜雙擊打出\n            奧援卡／雙擊打出，效果依區域主導者判定。\n          \n          \n            東洋奧援\n            手牌｜奧援｜雙擊打出\n            奧援卡／雙擊打出，效果依區域主導者判定。",
+  "detail_text": "點選購買區或手牌卡牌後，可在此查看詳細資訊。"
+}

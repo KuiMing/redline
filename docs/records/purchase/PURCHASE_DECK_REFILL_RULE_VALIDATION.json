@@ -1,0 +1,105 @@
+{
+  "setup": {
+    "success": true,
+    "game_id": "5dfae04d-c33e-4c5e-9117-1e3e49200b7e",
+    "player_id": "c5a817c7-21ea-42ab-b213-a18a4e910753",
+    "turn_phase": "action",
+    "game_phase": "main",
+    "players": [
+      {
+        "id": "c5a817c7-21ea-42ab-b213-a18a4e910753",
+        "name": "viewer",
+        "faction": "federalists"
+      },
+      {
+        "id": "be827288-f6b4-42ef-9b9d-59500ddfeee0",
+        "name": "red",
+        "faction": "red_army"
+      }
+    ],
+    "state": {
+      "turn": 1,
+      "game_phase": "main",
+      "turn_phase": "action",
+      "winner": null,
+      "current_player": "viewer",
+      "active_eras": [
+        "hong_kong"
+      ],
+      "pending_base_choices": {},
+      "action_log": [],
+      "purchase_area": [
+        "宣傳家",
+        "思想家",
+        "資助者",
+        "資本家",
+        "分神",
+        "內鬥",
+        "臺灣奧援",
+        "凝聚共識",
+        "東洋奧援",
+        "南洋奧援",
+        "合作談判"
+      ],
+      "map": {
+        "towns": {
+          "北京": [
+            {
+              "player": "viewer",
+              "count": 1
+            },
+            {
+              "player": "red",
+              "count": 1
+            }
+          ]
+        },
+        "shared_access": {}
+      },
+      "players": [
+        {
+          "id": "c5a817c7-21ea-42ab-b213-a18a4e910753",
+          "name": "viewer",
+          "faction": "federalists",
+          "resources": {
+            "money": 99,
+            "propaganda": 99
+          },
+          "moves_left": 3,
+          "hand": [],
+          "orgs": {
+            "北京": 1
+          }
+        },
+        {
+          "id": "be827288-f6b4-42ef-9b9d-59500ddfeee0",
+          "name": "red",
+          "faction": "red_army",
+          "resources": {
+            "money": 0,
+            "propaganda": 0
+          },
+          "moves_left": 3,
+          "hand": [
+            "追隨者",
+            "追隨者",
+            "樂捐者",
+            "追隨者",
+            "追隨者"
+          ],
+          "orgs": {
+            "北京": 1
+          }
+        }
+      ]
+    }
+  },
+  "purchase_before": "宣傳家（常設）思想家（常設）資助者（常設）資本家（常設）分神（常設）內鬥（常設）臺灣奧援（隨機）凝聚共識（隨機）東洋奧援（隨機）南洋奧援（隨機）合作談判（隨機）",
+  "count_before": 11,
+  "purchase_after_buy": "宣傳家（常設）思想家（常設）資助者（常設）資本家（常設）分神（常設）內鬥（常設）凝聚共識（隨機）東洋奧援（隨機）南洋奧援（隨機）合作談判（隨機）模仿戰術（隨機）",
+  "count_after_buy": 11,
+  "purchase_after_refill": "宣傳家（常設）思想家（常設）資助者（常設）資本家（常設）分神（常設）內鬥（常設）凝聚共識（隨機）東洋奧援（隨機）南洋奧援（隨機）合作談判（隨機）模仿戰術（隨機）",
+  "count_after_refill": 11,
+  "log": "[Turn 1] End of turn for viewer[Turn 1] viewer bought 臺灣奧援",
+  "hud": "回合 1\n      | 階段 事件\n      | 當前玩家 red\n      | 手牌 5\n      | 資金 0\n      | 宣傳 0\n      | 移動 3\n      | viewer: 1 | red: 1 |"
+}

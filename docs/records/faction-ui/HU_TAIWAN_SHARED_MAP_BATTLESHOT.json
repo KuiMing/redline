@@ -1,0 +1,127 @@
+{
+  "setup": {
+    "success": true,
+    "game_id": "39131e79-2396-47b3-a4b6-2c407d27adf5",
+    "player_id": "30db2ef2-19e9-4b60-91ee-a51aa417ad19",
+    "shared_town": "上海",
+    "turn_phase": "action",
+    "game_phase": "main",
+    "players": [
+      {
+        "id": "30db2ef2-19e9-4b60-91ee-a51aa417ad19",
+        "name": "hu",
+        "faction": "hu"
+      },
+      {
+        "id": "0ada1dd5-3803-47df-8a46-d49668f78e24",
+        "name": "taiwan",
+        "faction": "taiwan_green"
+      }
+    ],
+    "state": {
+      "turn": 1,
+      "game_phase": "main",
+      "turn_phase": "action",
+      "winner": null,
+      "current_player": "hu",
+      "active_eras": [
+        "hong_kong"
+      ],
+      "pending_base_choices": {},
+      "action_log": [],
+      "purchase_area": [],
+      "map": {
+        "towns": {
+          "紐約": [
+            {
+              "player": "hu",
+              "count": 1
+            }
+          ],
+          "上海": [
+            {
+              "player": "taiwan",
+              "count": 1
+            }
+          ],
+          "臺北": [
+            {
+              "player": "taiwan",
+              "count": 1
+            }
+          ]
+        },
+        "shared_access": {
+          "臺北": [
+            "hu"
+          ],
+          "上海": [
+            "hu"
+          ],
+          "紐約": [
+            "taiwan_green"
+          ]
+        }
+      },
+      "players": [
+        {
+          "id": "30db2ef2-19e9-4b60-91ee-a51aa417ad19",
+          "name": "hu",
+          "faction": "hu",
+          "resources": {
+            "money": 0,
+            "propaganda": 0
+          },
+          "moves_left": 3,
+          "hand": [],
+          "orgs": {
+            "紐約": 1
+          }
+        },
+        {
+          "id": "0ada1dd5-3803-47df-8a46-d49668f78e24",
+          "name": "taiwan",
+          "faction": "taiwan_green",
+          "resources": {
+            "money": 0,
+            "propaganda": 0
+          },
+          "moves_left": 3,
+          "hand": [],
+          "orgs": {
+            "上海": 1,
+            "臺北": 1
+          }
+        }
+      ]
+    }
+  },
+  "select_result": {
+    "ok": true,
+    "town": "上海",
+    "highlighted": false,
+    "road": 0,
+    "rail": 0,
+    "owns": false
+  },
+  "move_result": {
+    "ok": false,
+    "reason": "target-not-reachable",
+    "fromTown": "上海",
+    "toTown": "南京",
+    "highlighted": false
+  },
+  "direct_build_hint": "選取具有自己組織或共享組織可用性的城鎮後，這裡會顯示是否可直接建立。",
+  "interaction_hint": "已選取 上海：這不是當前玩家可操作的城鎮。",
+  "selected_town": "上海",
+  "hu_orgs_after": {
+    "紐約": 1
+  },
+  "taiwan_orgs_after": {
+    "上海": 1,
+    "臺北": 1
+  },
+  "shared_access_shanghai": [
+    "hu"
+  ]
+}

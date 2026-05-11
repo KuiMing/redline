@@ -1,0 +1,265 @@
+{
+  "india": {
+    "setup": {
+      "success": true,
+      "game_id": "d46ef95a-d1fd-442c-be0e-4ea17cbf2964",
+      "player_id": "b6ca6e3e-1779-4dd6-86f0-6028c8d341e3",
+      "support_name": "印度奧援",
+      "turn_phase": "action",
+      "game_phase": "main",
+      "players": [
+        {
+          "id": "b6ca6e3e-1779-4dd6-86f0-6028c8d341e3",
+          "name": "player",
+          "faction": "tibet_dehradun"
+        },
+        {
+          "id": "951e1c8e-5659-4f52-ae13-ad6fd6992d61",
+          "name": "red",
+          "faction": "red_army"
+        }
+      ],
+      "state": {
+        "turn": 1,
+        "game_phase": "main",
+        "turn_phase": "action",
+        "winner": null,
+        "current_player": "player",
+        "active_eras": [
+          "hong_kong"
+        ],
+        "pending_base_choices": {},
+        "action_log": [],
+        "purchase_area": [],
+        "map": {
+          "towns": {
+            "河內": [
+              {
+                "player": "player",
+                "count": 1
+              }
+            ],
+            "紐約": [
+              {
+                "player": "player",
+                "count": 1
+              }
+            ],
+            "北京": [
+              {
+                "player": "red",
+                "count": 1
+              }
+            ]
+          },
+          "shared_access": {}
+        },
+        "players": [
+          {
+            "id": "b6ca6e3e-1779-4dd6-86f0-6028c8d341e3",
+            "name": "player",
+            "faction": "tibet_dehradun",
+            "resources": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "moves_left": 3,
+            "hand": [
+              "印度奧援"
+            ],
+            "orgs": {
+              "河內": 1,
+              "紐約": 1
+            }
+          },
+          {
+            "id": "951e1c8e-5659-4f52-ae13-ad6fd6992d61",
+            "name": "red",
+            "faction": "red_army",
+            "resources": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "moves_left": 3,
+            "hand": [],
+            "orgs": {
+              "北京": 1
+            }
+          }
+        ]
+      }
+    },
+    "hud_after": "回合 1\n      | 階段 行動\n      | 當前玩家 player\n      | 手牌 0\n      | 資金 2\n      | 宣傳 0\n      | 移動 3\n      | player: 2 | red: 1 |",
+    "log": "[Turn 1] player played 印度奧援[Turn 1] player triggered 印度研究分析室 and gained 2 money[Turn 1] player resolved 印度奧援 at tier 3 (matched rulers: 南洋, 英美)"
+  },
+  "anglo": {
+    "setup": {
+      "success": true,
+      "game_id": "369b3f0a-aa3d-41b3-bc91-9d6a67bb7c71",
+      "player_id": "acb703ab-d89f-49cb-a7f6-25833d4613fd",
+      "support_name": "英美奧援",
+      "turn_phase": "action",
+      "game_phase": "main",
+      "players": [
+        {
+          "id": "acb703ab-d89f-49cb-a7f6-25833d4613fd",
+          "name": "player",
+          "faction": "federalists"
+        },
+        {
+          "id": "a8e23de4-996e-448e-b25f-45e11878535e",
+          "name": "red",
+          "faction": "red_army"
+        }
+      ],
+      "state": {
+        "turn": 1,
+        "game_phase": "main",
+        "turn_phase": "action",
+        "winner": null,
+        "current_player": "player",
+        "active_eras": [
+          "hong_kong"
+        ],
+        "pending_base_choices": {},
+        "action_log": [],
+        "purchase_area": [],
+        "map": {
+          "towns": {
+            "東京": [
+              {
+                "player": "player",
+                "count": 1
+              }
+            ],
+            "北京": [
+              {
+                "player": "red",
+                "count": 1
+              }
+            ]
+          },
+          "shared_access": {}
+        },
+        "players": [
+          {
+            "id": "acb703ab-d89f-49cb-a7f6-25833d4613fd",
+            "name": "player",
+            "faction": "federalists",
+            "resources": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "moves_left": 3,
+            "hand": [
+              "英美奧援"
+            ],
+            "orgs": {
+              "東京": 1
+            }
+          },
+          {
+            "id": "a8e23de4-996e-448e-b25f-45e11878535e",
+            "name": "red",
+            "faction": "red_army",
+            "resources": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "moves_left": 3,
+            "hand": [],
+            "orgs": {
+              "北京": 1
+            }
+          }
+        ]
+      }
+    },
+    "hud_after": "回合 1\n      | 階段 行動\n      | 當前玩家 player\n      | 手牌 0\n      | 資金 2\n      | 宣傳 0\n      | 移動 3\n      | player: 1 | red: 1 |",
+    "log": "[Turn 1] player played 英美奧援[Turn 1] player resolved 英美奧援 at tier 2 (matched rulers: 東洋)"
+  },
+  "nanyang": {
+    "setup": {
+      "success": true,
+      "game_id": "22c89ccb-dd79-4bf8-abaf-c54cde37c1ef",
+      "player_id": "c0478c24-6841-4953-bd6a-75948e55558e",
+      "support_name": "南洋奧援",
+      "turn_phase": "action",
+      "game_phase": "main",
+      "players": [
+        {
+          "id": "c0478c24-6841-4953-bd6a-75948e55558e",
+          "name": "player",
+          "faction": "federalists"
+        },
+        {
+          "id": "2130d7d2-0445-46f8-a000-b3176cf4f206",
+          "name": "red",
+          "faction": "red_army"
+        }
+      ],
+      "state": {
+        "turn": 1,
+        "game_phase": "main",
+        "turn_phase": "action",
+        "winner": null,
+        "current_player": "player",
+        "active_eras": [
+          "hong_kong"
+        ],
+        "pending_base_choices": {},
+        "action_log": [],
+        "purchase_area": [],
+        "map": {
+          "towns": {
+            "北京": [
+              {
+                "player": "player",
+                "count": 1
+              },
+              {
+                "player": "red",
+                "count": 1
+              }
+            ]
+          },
+          "shared_access": {}
+        },
+        "players": [
+          {
+            "id": "c0478c24-6841-4953-bd6a-75948e55558e",
+            "name": "player",
+            "faction": "federalists",
+            "resources": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "moves_left": 3,
+            "hand": [
+              "南洋奧援"
+            ],
+            "orgs": {
+              "北京": 1
+            }
+          },
+          {
+            "id": "2130d7d2-0445-46f8-a000-b3176cf4f206",
+            "name": "red",
+            "faction": "red_army",
+            "resources": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "moves_left": 3,
+            "hand": [],
+            "orgs": {
+              "北京": 1
+            }
+          }
+        ]
+      }
+    },
+    "hud_after": "回合 1\n      | 階段 行動\n      | 當前玩家 player\n      | 手牌 0\n      | 資金 0\n      | 宣傳 0\n      | 移動 3\n      | player: 1 | red: 1 |",
+    "log": "[Turn 1] player played 南洋奧援[Turn 1] player resolved 南洋奧援 at tier 1 (matched rulers: none)"
+  }
+}

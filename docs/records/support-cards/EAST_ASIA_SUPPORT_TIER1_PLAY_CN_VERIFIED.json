@@ -1,0 +1,92 @@
+{
+  "setup": {
+    "success": true,
+    "game_id": "41735e52-9b6e-4157-8846-101a4df13e30",
+    "player_id": "a660dc1d-7fcf-4ee4-bce4-d4cd68e6ddf1",
+    "support_name": "東洋奧援",
+    "turn_phase": "action",
+    "game_phase": "main",
+    "players": [
+      {
+        "id": "a660dc1d-7fcf-4ee4-bce4-d4cd68e6ddf1",
+        "name": "player",
+        "faction": "federalists"
+      },
+      {
+        "id": "5f99670d-b3d5-4ac4-ac39-b74bfdcdeed4",
+        "name": "red",
+        "faction": "red_army"
+      }
+    ],
+    "state": {
+      "turn": 1,
+      "game_phase": "main",
+      "turn_phase": "action",
+      "winner": null,
+      "current_player": "player",
+      "active_eras": [
+        "hong_kong"
+      ],
+      "pending_base_choices": {},
+      "action_log": [],
+      "purchase_area": [],
+      "map": {
+        "towns": {
+          "東京": [
+            {
+              "player": "player",
+              "count": 1
+            }
+          ],
+          "北京": [
+            {
+              "player": "player",
+              "count": 1
+            },
+            {
+              "player": "red",
+              "count": 1
+            }
+          ]
+        },
+        "shared_access": {}
+      },
+      "players": [
+        {
+          "id": "a660dc1d-7fcf-4ee4-bce4-d4cd68e6ddf1",
+          "name": "player",
+          "faction": "federalists",
+          "resources": {
+            "money": 0,
+            "propaganda": 0
+          },
+          "moves_left": 3,
+          "hand": [
+            "東洋奧援"
+          ],
+          "orgs": {
+            "東京": 1,
+            "北京": 1
+          }
+        },
+        {
+          "id": "5f99670d-b3d5-4ac4-ac39-b74bfdcdeed4",
+          "name": "red",
+          "faction": "red_army",
+          "resources": {
+            "money": 0,
+            "propaganda": 0
+          },
+          "moves_left": 3,
+          "hand": [],
+          "orgs": {
+            "北京": 1
+          }
+        }
+      ]
+    }
+  },
+  "hud_before": "回合 1\n      | 階段 行動\n      | 當前玩家 player\n      | 手牌 1\n      | 資金 0\n      | 宣傳 0\n      | 移動 3\n      | player: 2 | red: 1 |",
+  "hud_after": "回合 1\n      | 階段 行動\n      | 當前玩家 player\n      | 手牌 0\n      | 資金 0\n      | 宣傳 2\n      | 移動 3\n      | player: 2 | red: 1 |",
+  "log": "[Turn 1] player played 東洋奧援[Turn 1] player resolved 東洋奧援 at tier 1 (matched rulers: none)"
+}
