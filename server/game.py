@@ -311,6 +311,29 @@ class Game:
         if not player:
             return {'error': 'Player not found'}
         chosen = cards[index]
+        choice_type = choice.get('type')
+
+        if choice_type == 'recruit_talent':
+            source_cards = choice.get('source_cards') or []
+            for card in list(source_cards):
+                if card is chosen:
+                    continue
+                if card in player.deck.draw_pile:
+                    player.deck.draw_pile.remove(card)
+                if card in player.deck.discard_pile:
+                    player.deck.discard_pile.remove(card)
+            if chosen in player.deck.draw_pile:
+                player.deck.draw_pile.remove(chosen)
+            if chosen in player.deck.discard_pile:
+                player.deck.discard_pile.remove(chosen)
+            player.hand.append(chosen)
+            import random
+            random.shuffle(player.deck.draw_pile)
+            self.pending_choice = None
+            self.log(f"{player.name} recruited {getattr(chosen, 'name', str(chosen))} from deck")
+            return {'success': True, 'chosen_card': getattr(chosen, 'name', str(chosen))}
+
+        chosen = cards[index]
         player.hand.append(chosen)
         removed = []
         for i, card in enumerate(cards):
@@ -664,6 +687,7 @@ class Game:
             "guerrilla_triggered": False,
             "faction_action_used": False,
             "india_flag_money_triggered": False,
+            "purchased_cards_this_turn": [],
         }
 
     def _resolve_ability_ref(self, ability):
@@ -1210,7 +1234,8 @@ class Game:
         if mode == "resource":
             for key, value in getattr(played_card, 'resources', {}).items():
                 player.resources[key] += value
-            player.deck.discard([played_card])
+            if not self._return_borrowed_card_to_owner_topdeck(played_card):
+                player.deck.discard([played_card])
             self.log(f"{player.name} played {card_name} as resource")
             return {"success": True}
 
@@ -1271,7 +1296,8 @@ class Game:
                     self.log(f"{player.name} triggered 展現實力 and gained 3 money")
 
         if not action_context.get('removed_current_card'):
-            player.deck.discard([played_card])
+            if not self._return_borrowed_card_to_owner_topdeck(played_card):
+                player.deck.discard([played_card])
         self.log(f"{player.name} played {card_name}")
         return {"success": True}
 
@@ -1479,6 +1505,26 @@ class Game:
             getattr(card, 'effect', None),
         )
 
+    def _return_borrowed_card_to_owner_topdeck(self, card):
+        purchase_index = getattr(card, '_return_to_purchase_area_index', None)
+        if purchase_index is not None:
+            if 0 <= purchase_index < len(getattr(self, 'purchase_area', []) or []):
+                self.log(f"{getattr(card, 'name', str(card))} returned to purchase area slot {purchase_index}")
+                return True
+        owner_id = getattr(card, '_return_to_owner_topdeck', None)
+        if not owner_id:
+            return False
+        owner = next((p for p in self.players if getattr(p, 'id', None) == owner_id), None)
+        if owner is None:
+            return False
+        try:
+            delattr(card, '_return_to_owner_topdeck')
+        except AttributeError:
+            pass
+        owner.deck.draw_pile.append(card)
+        self.log(f"{getattr(card, 'name', str(card))} returned to {owner.name}'s deck top")
+        return True
+
     def buy_card(self, index):
         if self.turn_phase != TurnPhase.ACTION:
             return {"error": "Not in ACTION phase"}
@@ -1519,7 +1565,9 @@ class Game:
             player.resources['money'] -= cost_money
             player.resources['propaganda'] -= cost_propaganda
 
-        player.deck.discard([self._copy_purchase_card(card)])
+        purchased_card = self._copy_purchase_card(card)
+        player.deck.discard([purchased_card])
+        self.turn_log.setdefault('purchased_cards_this_turn', []).append(purchased_card)
         if is_static_purchase:
             self.static_purchase_supply[card_name] = int(self.static_purchase_supply.get(card_name, 0) or 0) - 1
         else:

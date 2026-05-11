@@ -16,7 +16,7 @@
     ],
     "resources_delta": {
       "money": 0,
-      "propaganda": 2
+      "propaganda": 0
     },
     "before": {
       "hand": [
@@ -42,10 +42,13 @@
       }
     },
     "after": {
-      "hand": [],
+      "hand": [
+        "可垃圾牌",
+        "抽牌D"
+      ],
       "resources": {
         "money": 0,
-        "propaganda": 2
+        "propaganda": 0
       },
       "moves_left": 4,
       "orgs": {
@@ -54,8 +57,7 @@
       },
       "discard": [
         "棄牌A",
-        "棄牌B",
-        "宣傳家"
+        "棄牌B"
       ],
       "purchase_area": [],
       "other_hands": {
@@ -65,11 +67,21 @@
         "played_money_card": false,
         "played_propaganda_card": true,
         "non_starter_discard": false,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "宣傳家"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": [],
+        "faction_first_propaganda_triggered": true
       },
       "log_tail": [
-        "[Turn 1] player1 trashed 可垃圾牌",
         "[Turn 1] player1 built organization in 北京 via card effect",
+        "[Turn 1] player1 triggered 星星之火 and drew 1 card",
         "[Turn 1] player1 played 宣傳家"
       ]
     }
@@ -91,7 +103,7 @@
     ],
     "resources_delta": {
       "money": 0,
-      "propaganda": 3
+      "propaganda": 0
     },
     "before": {
       "hand": [
@@ -117,10 +129,12 @@
       }
     },
     "after": {
-      "hand": [],
+      "hand": [
+        "可垃圾牌"
+      ],
       "resources": {
         "money": 0,
-        "propaganda": 3
+        "propaganda": 0
       },
       "moves_left": 6,
       "orgs": {
@@ -129,8 +143,7 @@
       },
       "discard": [
         "棄牌A",
-        "棄牌B",
-        "思想家"
+        "棄牌B"
       ],
       "purchase_area": [],
       "other_hands": {
@@ -140,10 +153,19 @@
         "played_money_card": false,
         "played_propaganda_card": true,
         "non_starter_discard": false,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "思想家"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
-        "[Turn 1] player1 trashed 可垃圾牌",
+        "[Turn 1] player1 removed 思想家 and it returned to static_supply",
         "[Turn 1] player1 built organization in 北京 via card effect",
         "[Turn 1] player1 played 思想家"
       ]
@@ -164,7 +186,7 @@
       "card_left_hand"
     ],
     "resources_delta": {
-      "money": 4,
+      "money": 2,
       "propaganda": 2
     },
     "before": {
@@ -191,9 +213,11 @@
       }
     },
     "after": {
-      "hand": [],
+      "hand": [
+        "可垃圾牌"
+      ],
       "resources": {
-        "money": 4,
+        "money": 2,
         "propaganda": 2
       },
       "moves_left": 3,
@@ -203,8 +227,7 @@
       },
       "discard": [
         "棄牌A",
-        "棄牌B",
-        "資助者"
+        "棄牌B"
       ],
       "purchase_area": [],
       "other_hands": {
@@ -214,10 +237,20 @@
         "played_money_card": true,
         "played_propaganda_card": false,
         "non_starter_discard": false,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "資助者"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
-        "[Turn 1] player1 trashed 可垃圾牌",
+        "[Turn 1] 資助者 returned to static purchase supply",
+        "[Turn 1] player1 removed 資助者 and it returned to static_supply",
         "[Turn 1] player1 played 資助者"
       ]
     }
@@ -237,7 +270,7 @@
       "card_left_hand"
     ],
     "resources_delta": {
-      "money": 6,
+      "money": 3,
       "propaganda": 3
     },
     "before": {
@@ -264,9 +297,11 @@
       }
     },
     "after": {
-      "hand": [],
+      "hand": [
+        "可垃圾牌"
+      ],
       "resources": {
-        "money": 6,
+        "money": 3,
         "propaganda": 3
       },
       "moves_left": 3,
@@ -276,8 +311,7 @@
       },
       "discard": [
         "棄牌A",
-        "棄牌B",
-        "資本家"
+        "棄牌B"
       ],
       "purchase_area": [],
       "other_hands": {
@@ -287,10 +321,20 @@
         "played_money_card": true,
         "played_propaganda_card": false,
         "non_starter_discard": false,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "資本家"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
-        "[Turn 1] player1 trashed 可垃圾牌",
+        "[Turn 1] 資本家 returned to static purchase supply",
+        "[Turn 1] player1 removed 資本家 and it returned to static_supply",
         "[Turn 1] player1 played 資本家"
       ]
     }
@@ -336,7 +380,9 @@
       }
     },
     "after": {
-      "hand": [],
+      "hand": [
+        "可垃圾牌"
+      ],
       "resources": {
         "money": 0,
         "propaganda": 0
@@ -348,8 +394,7 @@
       },
       "discard": [
         "棄牌A",
-        "棄牌B",
-        "分神"
+        "棄牌B"
       ],
       "purchase_area": [],
       "other_hands": {
@@ -359,10 +404,20 @@
         "played_money_card": false,
         "played_propaganda_card": false,
         "non_starter_discard": false,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "分神"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
-        "[Turn 1] player1 trashed 可垃圾牌",
+        "[Turn 1] 分神 returned to static purchase supply",
+        "[Turn 1] player1 removed 分神 and it returned to static_supply",
         "[Turn 1] player1 played 分神"
       ]
     }
@@ -428,7 +483,16 @@
         "played_money_card": false,
         "played_propaganda_card": false,
         "non_starter_discard": false,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "內鬥"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
         "[Turn 1] player1 played 內鬥"
@@ -450,7 +514,7 @@
     ],
     "resources_delta": {
       "money": 0,
-      "propaganda": 1
+      "propaganda": 0
     },
     "before": {
       "hand": [
@@ -480,7 +544,7 @@
       ],
       "resources": {
         "money": 0,
-        "propaganda": 1
+        "propaganda": 0
       },
       "moves_left": 3,
       "orgs": {
@@ -500,7 +564,16 @@
         "played_money_card": false,
         "played_propaganda_card": false,
         "non_starter_discard": false,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "領導"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
         "[Turn 1] player1 played 領導"
@@ -522,7 +595,7 @@
     ],
     "resources_delta": {
       "money": 0,
-      "propaganda": 2
+      "propaganda": 0
     },
     "before": {
       "hand": [
@@ -553,7 +626,7 @@
       ],
       "resources": {
         "money": 0,
-        "propaganda": 2
+        "propaganda": 0
       },
       "moves_left": 3,
       "orgs": {
@@ -573,7 +646,16 @@
         "played_money_card": false,
         "played_propaganda_card": false,
         "non_starter_discard": false,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "謀劃"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
         "[Turn 1] player1 played 謀劃"
@@ -595,7 +677,7 @@
     ],
     "resources_delta": {
       "money": 0,
-      "propaganda": 3
+      "propaganda": 0
     },
     "before": {
       "hand": [
@@ -627,7 +709,7 @@
       ],
       "resources": {
         "money": 0,
-        "propaganda": 3
+        "propaganda": 0
       },
       "moves_left": 3,
       "orgs": {
@@ -647,7 +729,16 @@
         "played_money_card": false,
         "played_propaganda_card": false,
         "non_starter_discard": false,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "戰略"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
         "[Turn 1] player1 played 戰略"
@@ -658,7 +749,8 @@
     "name": "合作談判",
     "type": "command",
     "effects": [
-      "shared_draw"
+      "shared_draw",
+      "gain_resource"
     ],
     "result": {
       "success": true
@@ -669,7 +761,7 @@
     ],
     "resources_delta": {
       "money": 0,
-      "propaganda": 1
+      "propaganda": 2
     },
     "before": {
       "hand": [
@@ -699,7 +791,7 @@
       ],
       "resources": {
         "money": 0,
-        "propaganda": 1
+        "propaganda": 2
       },
       "moves_left": 3,
       "orgs": {
@@ -719,7 +811,16 @@
         "played_money_card": false,
         "played_propaganda_card": false,
         "non_starter_discard": false,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "合作談判"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
         "[Turn 1] player1 played 合作談判"
@@ -741,8 +842,8 @@
       "card_left_hand"
     ],
     "resources_delta": {
-      "money": 1,
-      "propaganda": 1
+      "money": 0,
+      "propaganda": 0
     },
     "before": {
       "hand": [
@@ -775,8 +876,8 @@
         "抽牌D"
       ],
       "resources": {
-        "money": 1,
-        "propaganda": 1
+        "money": 0,
+        "propaganda": 0
       },
       "moves_left": 3,
       "orgs": {
@@ -798,7 +899,16 @@
         "played_money_card": false,
         "played_propaganda_card": false,
         "non_starter_discard": false,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "高效行動"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
         "[Turn 1] player1 played 高效行動"
@@ -809,8 +919,7 @@
     "name": "模仿戰術",
     "type": "command",
     "effects": [
-      "peek_deck",
-      "topdeck_to_hand"
+      "imitate_topdeck"
     ],
     "result": {
       "success": true
@@ -821,7 +930,7 @@
     ],
     "resources_delta": {
       "money": 0,
-      "propaganda": 2
+      "propaganda": 0
     },
     "before": {
       "hand": [
@@ -847,11 +956,11 @@
     },
     "after": {
       "hand": [
-        "抽牌D"
+        "對手抽牌B"
       ],
       "resources": {
         "money": 0,
-        "propaganda": 2
+        "propaganda": 0
       },
       "moves_left": 3,
       "orgs": {
@@ -871,9 +980,19 @@
         "played_money_card": false,
         "played_propaganda_card": false,
         "non_starter_discard": false,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "模仿戰術"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
+        "[Turn 1] player1 imitated player2's top card 對手抽牌B",
         "[Turn 1] player1 played 模仿戰術"
       ]
     }
@@ -892,7 +1011,7 @@
       "card_left_hand"
     ],
     "resources_delta": {
-      "money": 1,
+      "money": 0,
       "propaganda": 0
     },
     "before": {
@@ -921,7 +1040,7 @@
         "可回收牌"
       ],
       "resources": {
-        "money": 1,
+        "money": 0,
         "propaganda": 0
       },
       "moves_left": 3,
@@ -940,7 +1059,16 @@
         "played_money_card": false,
         "played_propaganda_card": false,
         "non_starter_discard": false,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "乘勝追擊"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
         "[Turn 1] player1 played 乘勝追擊"
@@ -951,6 +1079,7 @@
     "name": "誘導虛耗",
     "type": "command",
     "effects": [
+      "draw",
       "optional_trash",
       "force_discard"
     ],
@@ -963,7 +1092,7 @@
     ],
     "resources_delta": {
       "money": 0,
-      "propaganda": 1
+      "propaganda": 0
     },
     "before": {
       "hand": [
@@ -989,10 +1118,13 @@
       }
     },
     "after": {
-      "hand": [],
+      "hand": [
+        "可垃圾牌",
+        "抽牌D"
+      ],
       "resources": {
         "money": 0,
-        "propaganda": 1
+        "propaganda": 0
       },
       "moves_left": 3,
       "orgs": {
@@ -1001,8 +1133,7 @@
       },
       "discard": [
         "棄牌A",
-        "棄牌B",
-        "誘導虛耗"
+        "棄牌B"
       ],
       "purchase_area": [],
       "other_hands": {
@@ -1012,10 +1143,20 @@
         "played_money_card": false,
         "played_propaganda_card": false,
         "non_starter_discard": false,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "誘導虛耗"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
-        "[Turn 1] player1 trashed 可垃圾牌",
+        "[Turn 1] 誘導虛耗 returned to purchase deck discard",
+        "[Turn 1] player1 removed 誘導虛耗 and it returned to deck_discard",
         "[Turn 1] player1 played 誘導虛耗"
       ]
     }
@@ -1036,7 +1177,7 @@
     ],
     "resources_delta": {
       "money": 0,
-      "propaganda": 1
+      "propaganda": 0
     },
     "before": {
       "hand": [
@@ -1067,7 +1208,7 @@
       ],
       "resources": {
         "money": 0,
-        "propaganda": 1
+        "propaganda": 0
       },
       "moves_left": 3,
       "orgs": {
@@ -1087,7 +1228,16 @@
         "played_money_card": false,
         "played_propaganda_card": true,
         "non_starter_discard": false,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "點燃熱情"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
         "[Turn 1] player1 played 點燃熱情"
@@ -1109,7 +1259,7 @@
       "card_left_hand"
     ],
     "resources_delta": {
-      "money": 1,
+      "money": 0,
       "propaganda": 0
     },
     "before": {
@@ -1140,7 +1290,7 @@
         "抽牌C"
       ],
       "resources": {
-        "money": 1,
+        "money": 0,
         "propaganda": 0
       },
       "moves_left": 3,
@@ -1161,7 +1311,16 @@
         "played_money_card": true,
         "played_propaganda_card": false,
         "non_starter_discard": false,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "樹立信心"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
         "[Turn 1] player1 played 樹立信心"
@@ -1172,8 +1331,7 @@
     "name": "網羅人才",
     "type": "command",
     "effects": [
-      "peek_deck",
-      "topdeck_to_hand"
+      "choose_from_own_deck"
     ],
     "result": {
       "success": true
@@ -1183,8 +1341,8 @@
       "card_left_hand"
     ],
     "resources_delta": {
-      "money": 1,
-      "propaganda": 1
+      "money": 0,
+      "propaganda": 0
     },
     "before": {
       "hand": [
@@ -1209,12 +1367,10 @@
       }
     },
     "after": {
-      "hand": [
-        "抽牌D"
-      ],
+      "hand": [],
       "resources": {
-        "money": 1,
-        "propaganda": 1
+        "money": 0,
+        "propaganda": 0
       },
       "moves_left": 3,
       "orgs": {
@@ -1234,9 +1390,19 @@
         "played_money_card": false,
         "played_propaganda_card": false,
         "non_starter_discard": false,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "網羅人才"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
+        "[Turn 1] player1 may recruit 1 card from deck",
         "[Turn 1] player1 played 網羅人才"
       ]
     }
@@ -1258,7 +1424,7 @@
     ],
     "resources_delta": {
       "money": 0,
-      "propaganda": 5
+      "propaganda": 2
     },
     "before": {
       "hand": [
@@ -1292,7 +1458,7 @@
       ],
       "resources": {
         "money": 0,
-        "propaganda": 5
+        "propaganda": 2
       },
       "moves_left": 3,
       "orgs": {
@@ -1314,7 +1480,16 @@
         "played_money_card": false,
         "played_propaganda_card": false,
         "non_starter_discard": true,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "凝聚共識"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
         "[Turn 1] player1 played 凝聚共識"
@@ -1325,6 +1500,7 @@
     "name": "思想建設",
     "type": "command",
     "effects": [
+      "draw",
       "extend_build_range"
     ],
     "result": {
@@ -1336,7 +1512,7 @@
     ],
     "resources_delta": {
       "money": 0,
-      "propaganda": 1
+      "propaganda": 0
     },
     "before": {
       "hand": [
@@ -1361,10 +1537,12 @@
       }
     },
     "after": {
-      "hand": [],
+      "hand": [
+        "抽牌D"
+      ],
       "resources": {
         "money": 0,
-        "propaganda": 1
+        "propaganda": 0
       },
       "moves_left": 3,
       "orgs": {
@@ -1384,7 +1562,16 @@
         "played_money_card": false,
         "played_propaganda_card": false,
         "non_starter_discard": false,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "思想建設"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
         "[Turn 1] player1 played 思想建設"
@@ -1405,7 +1592,7 @@
       "card_left_hand"
     ],
     "resources_delta": {
-      "money": 2,
+      "money": 0,
       "propaganda": 0
     },
     "before": {
@@ -1434,7 +1621,7 @@
         "可回收牌"
       ],
       "resources": {
-        "money": 2,
+        "money": 0,
         "propaganda": 0
       },
       "moves_left": 3,
@@ -1453,7 +1640,16 @@
         "played_money_card": false,
         "played_propaganda_card": false,
         "non_starter_discard": false,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "擴大戰果"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
         "[Turn 1] player1 played 擴大戰果"
@@ -1474,7 +1670,7 @@
       "card_left_hand"
     ],
     "resources_delta": {
-      "money": 1,
+      "money": 0,
       "propaganda": 0
     },
     "before": {
@@ -1502,7 +1698,7 @@
     "after": {
       "hand": [],
       "resources": {
-        "money": 1,
+        "money": 0,
         "propaganda": 0
       },
       "moves_left": 5,
@@ -1523,7 +1719,16 @@
         "played_money_card": false,
         "played_propaganda_card": false,
         "non_starter_discard": false,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "交通經驗丙"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
         "[Turn 1] player1 played 交通經驗丙"
@@ -1544,7 +1749,7 @@
       "card_left_hand"
     ],
     "resources_delta": {
-      "money": 2,
+      "money": 0,
       "propaganda": 0
     },
     "before": {
@@ -1572,7 +1777,7 @@
     "after": {
       "hand": [],
       "resources": {
-        "money": 2,
+        "money": 0,
         "propaganda": 0
       },
       "moves_left": 7,
@@ -1593,7 +1798,16 @@
         "played_money_card": false,
         "played_propaganda_card": false,
         "non_starter_discard": false,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "交通經驗乙"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
         "[Turn 1] player1 played 交通經驗乙"
@@ -1614,7 +1828,7 @@
       "card_left_hand"
     ],
     "resources_delta": {
-      "money": 3,
+      "money": 0,
       "propaganda": 0
     },
     "before": {
@@ -1642,7 +1856,7 @@
     "after": {
       "hand": [],
       "resources": {
-        "money": 3,
+        "money": 0,
         "propaganda": 0
       },
       "moves_left": 9,
@@ -1663,7 +1877,16 @@
         "played_money_card": false,
         "played_propaganda_card": false,
         "non_starter_discard": false,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "交通經驗甲"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
         "[Turn 1] player1 played 交通經驗甲"
@@ -1685,7 +1908,7 @@
     ],
     "resources_delta": {
       "money": 0,
-      "propaganda": 1
+      "propaganda": 0
     },
     "before": {
       "hand": [
@@ -1713,7 +1936,7 @@
       "hand": [],
       "resources": {
         "money": 0,
-        "propaganda": 1
+        "propaganda": 0
       },
       "moves_left": 3,
       "orgs": {
@@ -1733,7 +1956,16 @@
         "played_money_card": false,
         "played_propaganda_card": false,
         "non_starter_discard": false,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "組織經驗丙"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
         "[Turn 1] player1 built organization in 北京 via card effect",
@@ -1757,7 +1989,7 @@
     ],
     "resources_delta": {
       "money": 0,
-      "propaganda": 2
+      "propaganda": 0
     },
     "before": {
       "hand": [
@@ -1785,7 +2017,7 @@
       "hand": [],
       "resources": {
         "money": 0,
-        "propaganda": 2
+        "propaganda": 0
       },
       "moves_left": 3,
       "orgs": {
@@ -1805,7 +2037,16 @@
         "played_money_card": false,
         "played_propaganda_card": false,
         "non_starter_discard": false,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "組織經驗乙"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
         "[Turn 1] player1 built organization in 北京 via card effect",
@@ -1828,8 +2069,8 @@
       "card_left_hand"
     ],
     "resources_delta": {
-      "money": 1,
-      "propaganda": 2
+      "money": 0,
+      "propaganda": 0
     },
     "before": {
       "hand": [
@@ -1856,8 +2097,8 @@
     "after": {
       "hand": [],
       "resources": {
-        "money": 1,
-        "propaganda": 2
+        "money": 0,
+        "propaganda": 0
       },
       "moves_left": 3,
       "orgs": {
@@ -1877,7 +2118,16 @@
         "played_money_card": false,
         "played_propaganda_card": false,
         "non_starter_discard": false,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "組織經驗甲"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
         "[Turn 1] player1 built organization in 北京 via card effect",
@@ -1900,7 +2150,7 @@
     ],
     "resources_delta": {
       "money": 0,
-      "propaganda": 1
+      "propaganda": 0
     },
     "before": {
       "hand": [
@@ -1929,7 +2179,7 @@
       "hand": [],
       "resources": {
         "money": 0,
-        "propaganda": 1
+        "propaganda": 0
       },
       "moves_left": 3,
       "orgs": {
@@ -1949,7 +2199,16 @@
         "played_money_card": false,
         "played_propaganda_card": false,
         "non_starter_discard": true,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "批判"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
         "[Turn 1] player1 trashed 非起始牌",
@@ -1972,7 +2231,7 @@
     ],
     "resources_delta": {
       "money": 0,
-      "propaganda": 2
+      "propaganda": 0
     },
     "before": {
       "hand": [
@@ -2001,7 +2260,7 @@
       "hand": [],
       "resources": {
         "money": 0,
-        "propaganda": 2
+        "propaganda": 0
       },
       "moves_left": 3,
       "orgs": {
@@ -2020,7 +2279,16 @@
         "played_money_card": false,
         "played_propaganda_card": false,
         "non_starter_discard": true,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "批鬥"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
         "[Turn 1] player1 trashed 非起始牌",
@@ -2045,7 +2313,7 @@
     ],
     "resources_delta": {
       "money": 0,
-      "propaganda": 2
+      "propaganda": 0
     },
     "before": {
       "hand": [
@@ -2075,7 +2343,7 @@
       ],
       "resources": {
         "money": 0,
-        "propaganda": 2
+        "propaganda": 0
       },
       "moves_left": 3,
       "orgs": {
@@ -2096,6 +2364,15 @@
         "played_propaganda_card": false,
         "non_starter_discard": false,
         "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "爆料黑幕"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": [],
         "canceled_propaganda_card": true
       },
       "log_tail": [
@@ -2120,7 +2397,7 @@
     ],
     "resources_delta": {
       "money": 0,
-      "propaganda": 2
+      "propaganda": 1
     },
     "before": {
       "hand": [
@@ -2148,7 +2425,7 @@
       "hand": [],
       "resources": {
         "money": 0,
-        "propaganda": 2
+        "propaganda": 1
       },
       "moves_left": 3,
       "orgs": {
@@ -2172,7 +2449,16 @@
         "played_money_card": false,
         "played_propaganda_card": false,
         "non_starter_discard": false,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "輿論丕變"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
         "[Turn 1] player1 played 輿論丕變"
@@ -2183,7 +2469,7 @@
     "name": "行動預告",
     "type": "propaganda_special",
     "effects": [
-      "topdeck_to_hand",
+      "topdeck_purchased_this_turn",
       "gain_resource"
     ],
     "result": {
@@ -2195,7 +2481,7 @@
     ],
     "resources_delta": {
       "money": 0,
-      "propaganda": 3
+      "propaganda": 1
     },
     "before": {
       "hand": [
@@ -2220,12 +2506,10 @@
       }
     },
     "after": {
-      "hand": [
-        "抽牌D"
-      ],
+      "hand": [],
       "resources": {
         "money": 0,
-        "propaganda": 3
+        "propaganda": 1
       },
       "moves_left": 3,
       "orgs": {
@@ -2245,7 +2529,16 @@
         "played_money_card": false,
         "played_propaganda_card": false,
         "non_starter_discard": false,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "行動預告"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
         "[Turn 1] player1 played 行動預告"
@@ -2267,7 +2560,7 @@
     ],
     "resources_delta": {
       "money": 0,
-      "propaganda": 1
+      "propaganda": 0
     },
     "before": {
       "hand": [
@@ -2294,7 +2587,7 @@
       "hand": [],
       "resources": {
         "money": 0,
-        "propaganda": 1
+        "propaganda": 0
       },
       "moves_left": 3,
       "orgs": {},
@@ -2311,7 +2604,16 @@
         "played_money_card": false,
         "played_propaganda_card": false,
         "non_starter_discard": false,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "派遣間諜"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
         "[Turn 1] player1 dissolved 1 organization from player2 at 香港城",
@@ -2334,7 +2636,7 @@
     ],
     "resources_delta": {
       "money": 0,
-      "propaganda": 2
+      "propaganda": 0
     },
     "before": {
       "hand": [
@@ -2361,7 +2663,7 @@
       "hand": [],
       "resources": {
         "money": 0,
-        "propaganda": 2
+        "propaganda": 0
       },
       "moves_left": 3,
       "orgs": {
@@ -2380,7 +2682,16 @@
         "played_money_card": false,
         "played_propaganda_card": false,
         "non_starter_discard": false,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "內應間諜"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
         "[Turn 1] player1 dissolved 1 organization from player2 at 香港城",
@@ -2392,8 +2703,7 @@
     "name": "情報網",
     "type": "spy",
     "effects": [
-      "add_internal_conflict",
-      "cancel_card"
+      "choose_one"
     ],
     "result": {
       "success": true
@@ -2403,8 +2713,8 @@
       "card_left_hand"
     ],
     "resources_delta": {
-      "money": 1,
-      "propaganda": 1
+      "money": 0,
+      "propaganda": 0
     },
     "before": {
       "hand": [
@@ -2431,8 +2741,8 @@
     "after": {
       "hand": [],
       "resources": {
-        "money": 1,
-        "propaganda": 1
+        "money": 0,
+        "propaganda": 0
       },
       "moves_left": 3,
       "orgs": {
@@ -2454,11 +2764,18 @@
         "played_propaganda_card": false,
         "non_starter_discard": false,
         "successful_discard": false,
-        "canceled_propaganda_card": true
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "情報網"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
         "[Turn 1] player1 gained 1 內鬥 card(s)",
-        "[Turn 1] player1 triggered cancel-card effect",
         "[Turn 1] player1 played 情報網"
       ]
     }
@@ -2478,7 +2795,7 @@
     ],
     "resources_delta": {
       "money": 0,
-      "propaganda": 2
+      "propaganda": 0
     },
     "before": {
       "hand": [
@@ -2506,7 +2823,7 @@
       "hand": [],
       "resources": {
         "money": 0,
-        "propaganda": 2
+        "propaganda": 0
       },
       "moves_left": 3,
       "orgs": {
@@ -2529,7 +2846,16 @@
         "played_money_card": false,
         "played_propaganda_card": false,
         "non_starter_discard": false,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "離間"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
         "[Turn 1] player1 gained 3 內鬥 card(s)",
@@ -2541,8 +2867,7 @@
     "name": "走漏風聲",
     "type": "spy",
     "effects": [
-      "peek_deck",
-      "add_internal_conflict"
+      "leak_top_deck"
     ],
     "result": {
       "success": true
@@ -2553,7 +2878,7 @@
     ],
     "resources_delta": {
       "money": 0,
-      "propaganda": 1
+      "propaganda": 0
     },
     "before": {
       "hand": [
@@ -2581,7 +2906,7 @@
       "hand": [],
       "resources": {
         "money": 0,
-        "propaganda": 1
+        "propaganda": 0
       },
       "moves_left": 3,
       "orgs": {
@@ -2591,7 +2916,6 @@
       "discard": [
         "棄牌A",
         "棄牌B",
-        "內鬥",
         "走漏風聲"
       ],
       "purchase_area": [],
@@ -2602,10 +2926,19 @@
         "played_money_card": false,
         "played_propaganda_card": false,
         "non_starter_discard": false,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "走漏風聲"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
-        "[Turn 1] player1 gained 1 內鬥 card(s)",
+        "[Turn 1] player1 used 走漏風聲 on player2: discarded 對手抽牌B",
         "[Turn 1] player1 played 走漏風聲"
       ]
     }
@@ -2614,8 +2947,7 @@
     "name": "地下黨",
     "type": "spy",
     "effects": [
-      "peek_deck",
-      "gain_any_from_discard"
+      "choose_from_purchase_deck"
     ],
     "result": {
       "success": true
@@ -2625,8 +2957,8 @@
       "card_left_hand"
     ],
     "resources_delta": {
-      "money": 1,
-      "propaganda": 2
+      "money": 0,
+      "propaganda": 0
     },
     "before": {
       "hand": [
@@ -2642,7 +2974,8 @@
         "上海": 1
       },
       "discard": [
-        "可回收牌"
+        "棄牌A",
+        "棄牌B"
       ],
       "purchase_area": [],
       "other_hands": {
@@ -2650,12 +2983,10 @@
       }
     },
     "after": {
-      "hand": [
-        "可回收牌"
-      ],
+      "hand": [],
       "resources": {
-        "money": 1,
-        "propaganda": 2
+        "money": 0,
+        "propaganda": 0
       },
       "moves_left": 3,
       "orgs": {
@@ -2663,6 +2994,8 @@
         "上海": 1
       },
       "discard": [
+        "棄牌A",
+        "棄牌B",
         "地下黨"
       ],
       "purchase_area": [],
@@ -2673,9 +3006,19 @@
         "played_money_card": false,
         "played_propaganda_card": false,
         "non_starter_discard": false,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "地下黨"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
+        "[Turn 1] player1 revealed 3 cards for 地下黨",
         "[Turn 1] player1 played 地下黨"
       ]
     }
@@ -2695,7 +3038,7 @@
     ],
     "resources_delta": {
       "money": 0,
-      "propaganda": 1
+      "propaganda": 0
     },
     "before": {
       "hand": [
@@ -2723,7 +3066,7 @@
       "hand": [],
       "resources": {
         "money": 0,
-        "propaganda": 1
+        "propaganda": 0
       },
       "moves_left": 3,
       "orgs": {
@@ -2743,7 +3086,16 @@
         "played_money_card": false,
         "played_propaganda_card": false,
         "non_starter_discard": false,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "武裝者"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
         "[Turn 1] player1 played 武裝者"
@@ -2764,8 +3116,8 @@
       "card_left_hand"
     ],
     "resources_delta": {
-      "money": 1,
-      "propaganda": 1
+      "money": 0,
+      "propaganda": 0
     },
     "before": {
       "hand": [
@@ -2792,8 +3144,8 @@
     "after": {
       "hand": [],
       "resources": {
-        "money": 1,
-        "propaganda": 1
+        "money": 0,
+        "propaganda": 0
       },
       "moves_left": 3,
       "orgs": {
@@ -2813,7 +3165,16 @@
         "played_money_card": false,
         "played_propaganda_card": false,
         "non_starter_discard": false,
-        "successful_discard": false
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "武裝小隊"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
         "[Turn 1] player1 played 武裝小隊"
@@ -2835,8 +3196,8 @@
       "card_left_hand"
     ],
     "resources_delta": {
-      "money": 1,
-      "propaganda": 2
+      "money": 0,
+      "propaganda": 0
     },
     "before": {
       "hand": [
@@ -2865,8 +3226,8 @@
         "抽牌D"
       ],
       "resources": {
-        "money": 1,
-        "propaganda": 2
+        "money": 0,
+        "propaganda": 0
       },
       "moves_left": 3,
       "orgs": {
@@ -2886,10 +3247,340 @@
         "played_money_card": false,
         "played_propaganda_card": false,
         "non_starter_discard": false,
-        "successful_discard": true
+        "successful_discard": true,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "武裝集團"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
         "[Turn 1] player1 played 武裝集團"
+      ]
+    }
+  },
+  {
+    "name": "企業人脈",
+    "type": "money",
+    "effects": [
+      "use_purchase_area_card"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 0,
+      "propaganda": 0
+    },
+    "before": {
+      "hand": [
+        "企業人脈"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "企業人脈"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": true,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "企業人脈"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
+      },
+      "log_tail": [
+        "[Turn 1] player1 played 企業人脈"
+      ]
+    }
+  },
+  {
+    "name": "產業滲透",
+    "type": "money",
+    "effects": [
+      "cancel_card",
+      "conditional_draw"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 0,
+      "propaganda": 0
+    },
+    "before": {
+      "hand": [
+        "產業滲透"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "產業滲透"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": true,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "產業滲透"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": [],
+        "canceled_propaganda_card": true
+      },
+      "log_tail": [
+        "[Turn 1] player1 triggered cancel-card effect",
+        "[Turn 1] player1 played 產業滲透"
+      ]
+    }
+  },
+  {
+    "name": "企畫遊說",
+    "type": "money",
+    "effects": [
+      "reveal_topdeck_cost_gain"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 2,
+      "propaganda": 0
+    },
+    "before": {
+      "hand": [
+        "企畫遊說"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [],
+      "resources": {
+        "money": 2,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "企畫遊說"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": true,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "企畫遊說"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
+      },
+      "log_tail": [
+        "[Turn 1] player1 revealed 抽牌D for 企畫遊說",
+        "[Turn 1] player1 played 企畫遊說"
+      ]
+    }
+  },
+  {
+    "name": "行動募資",
+    "type": "money",
+    "effects": [
+      "topdeck_purchased_this_turn",
+      "gain_resource"
+    ],
+    "result": {
+      "success": true
+    },
+    "checks": [
+      "play_success",
+      "card_left_hand"
+    ],
+    "resources_delta": {
+      "money": 1,
+      "propaganda": 0
+    },
+    "before": {
+      "hand": [
+        "行動募資"
+      ],
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      }
+    },
+    "after": {
+      "hand": [],
+      "resources": {
+        "money": 1,
+        "propaganda": 0
+      },
+      "moves_left": 3,
+      "orgs": {
+        "北京": 1,
+        "上海": 1
+      },
+      "discard": [
+        "棄牌A",
+        "棄牌B",
+        "行動募資"
+      ],
+      "purchase_area": [],
+      "other_hands": {
+        "player2": 2
+      },
+      "turn_log": {
+        "played_money_card": true,
+        "played_propaganda_card": false,
+        "non_starter_discard": false,
+        "successful_discard": false,
+        "built_towns": [],
+        "played_nonstarter_names": [
+          "行動募資"
+        ],
+        "combo_reward_triggered": false,
+        "guerrilla_triggered": false,
+        "faction_action_used": false,
+        "india_flag_money_triggered": false,
+        "purchased_cards_this_turn": []
+      },
+      "log_tail": [
+        "[Turn 1] player1 played 行動募資"
       ]
     }
   }

@@ -111,6 +111,43 @@ class EffectEngine:
         if etype == "peek_deck":
             return
 
+        # ✅ Choose any card from own deck (網羅人才)
+        if etype == "choose_from_own_deck":
+            cards = list(player.deck.draw_pile)
+            if effect.get('include_discard_for_faction') == player.faction_id:
+                cards.extend(player.deck.discard_pile)
+            if not cards:
+                return
+            game.pending_choice = {
+                'type': 'recruit_talent',
+                'player_id': player.id,
+                'cards': cards,
+                'source_cards': cards[:],
+                'prompt': '網羅人才：從己方牌庫任選1張加入手牌，而後將牌庫洗牌。'
+            }
+            game.log(f"{player.name} may recruit 1 card from deck")
+            return
+
+        # ✅ Temporarily use another player's top deck card (模仿戰術)
+        if etype == "imitate_topdeck":
+            context = context or {}
+            target_id = context.get("target_player_id") or effect.get("target_player_id")
+            target = None
+            if target_id:
+                target = next((p for p in game.players if getattr(p, "id", None) == target_id), None)
+            if target is None:
+                target = next((p for p in game.players if p != player), None)
+            if target is None:
+                return
+            drawn = target.deck.draw(1)
+            if not drawn:
+                return
+            borrowed = drawn[0]
+            setattr(borrowed, '_return_to_owner_topdeck', target.id)
+            player.hand.append(borrowed)
+            game.log(f"{player.name} imitated {target.name}'s top card {getattr(borrowed, 'name', str(borrowed))}")
+            return
+
         # ✅ Top deck to hand
         if etype == "topdeck_to_hand":
             drawn = player.deck.draw(1)
@@ -167,6 +204,65 @@ class EffectEngine:
                 self._draw(target, count)
             return
 
+        # ✅ Choose one branch, defaulting to the first option until UI choice is wired (情報網)
+        if etype == "choose_one":
+            context = context or {}
+            options = effect.get('options') or []
+            selected = context.get('choice_index', effect.get('default_index', 0))
+            if not isinstance(selected, int) or selected < 0 or selected >= len(options):
+                selected = 0
+            for nested in options[selected].get('effect', []):
+                self.execute(nested, player, game, context=context)
+            return
+
+        # ✅ Move a card bought this turn from discard to deck top (行動預告/行動募資)
+        if etype == "topdeck_purchased_this_turn":
+            purchased = list(game.turn_log.get('purchased_cards_this_turn') or [])
+            for card in reversed(purchased):
+                if card in player.deck.discard_pile:
+                    player.deck.discard_pile.remove(card)
+                    player.deck.draw_pile.append(card)
+                    game.log(f"{player.name} placed bought card {getattr(card, 'name', str(card))} on deck top")
+                    break
+            return
+
+        # ✅ Temporarily use a face-up purchase-area card (企業人脈; MVP first non-static random card)
+        if etype == "use_purchase_area_card":
+            static_count = len(game._static_purchase_cards()) if hasattr(game, '_static_purchase_cards') else 0
+            start = static_count if effect.get('prefer_random_market', True) else 0
+            source = None
+            source_index = None
+            for idx in range(start, len(getattr(game, 'purchase_area', []) or [])):
+                candidate = game.purchase_area[idx]
+                if candidate:
+                    source = candidate
+                    source_index = idx
+                    break
+            if source is None:
+                return
+            borrowed = game._copy_purchase_card(source)
+            setattr(borrowed, '_return_to_purchase_area_index', source_index)
+            player.hand.append(borrowed)
+            game.log(f"{player.name} borrowed {getattr(borrowed, 'name', str(borrowed))} from purchase area")
+            return
+
+        # ✅ Reveal top deck and gain money by purchase cost threshold (企畫遊說)
+        if etype == "reveal_topdeck_cost_gain":
+            if not player.deck.draw_pile:
+                player.deck._reshuffle()
+            if not player.deck.draw_pile:
+                return
+            top = player.deck.draw_pile[-1]
+            cost = game._card_purchase_cost(top) if hasattr(game, '_card_purchase_cost') else {}
+            total = int(cost.get('money', 0) or 0) + int(cost.get('propaganda', 0) or 0)
+            threshold = int(effect.get('threshold', 3) or 3)
+            if total >= threshold:
+                player.resources['money'] += int(effect.get('money_if_at_least', 4) or 4)
+            else:
+                player.resources['money'] += int(effect.get('money_otherwise', 2) or 2)
+            game.log(f"{player.name} revealed {getattr(top, 'name', str(top))} for 企畫遊說")
+            return
+
         # ✅ Conditional draw
         if etype == "conditional_draw":
             condition = effect.get("condition")
@@ -179,6 +275,8 @@ class EffectEngine:
                 should_draw = bool(game.turn_log.get("successful_discard"))
             elif condition == "canceled_propaganda_card":
                 should_draw = bool(game.turn_log.get("canceled_propaganda_card"))
+            elif condition == "canceled_money_cost_card":
+                should_draw = bool(game.turn_log.get("canceled_money_cost_card"))
             if should_draw:
                 self._draw(player, effect.get("count", 1))
             return

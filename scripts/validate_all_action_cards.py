@@ -168,7 +168,9 @@ def validate_card(card_def):
 
 def main():
     results = [validate_card(card) for card in CARDS]
-    out = BASE / 'CARD_VALIDATION_RESULTS.json'
+    records_dir = BASE / 'docs' / 'records' / 'card-ui'
+    records_dir.mkdir(parents=True, exist_ok=True)
+    out = records_dir / 'CARD_VALIDATION_RESULTS.json'
     out.write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding='utf-8')
 
     md = []
@@ -192,9 +194,10 @@ def main():
         md.append(f"- turn_log after: {r['after']['turn_log']}")
         md.append(f"- log tail: {r['after']['log_tail']}")
         md.append('')
-    (BASE / 'CARD_VALIDATION_RESULTS.md').write_text('\n'.join(md), encoding='utf-8')
+    md_out = records_dir / 'CARD_VALIDATION_RESULTS.md'
+    md_out.write_text('\n'.join(md), encoding='utf-8')
     print(out)
-    print(BASE / 'CARD_VALIDATION_RESULTS.md')
+    print(md_out)
 
 
 if __name__ == '__main__':

@@ -10,8 +10,10 @@ if str(BASE) not in sys.path:
 from server.cards import Card
 from server.game import Game, GamePhase, TurnPhase
 
-OUT_JSON = BASE / 'CARD_ACTION_CORRECTNESS_VALIDATION.json'
-OUT_MD = BASE / 'CARD_ACTION_CORRECTNESS_VALIDATION.md'
+RECORDS_DIR = BASE / 'docs' / 'records' / 'card-ui'
+RECORDS_DIR.mkdir(parents=True, exist_ok=True)
+OUT_JSON = RECORDS_DIR / 'CARD_ACTION_CORRECTNESS_VALIDATION.json'
+OUT_MD = RECORDS_DIR / 'CARD_ACTION_CORRECTNESS_VALIDATION.md'
 
 
 def make_game_with_card(card):
