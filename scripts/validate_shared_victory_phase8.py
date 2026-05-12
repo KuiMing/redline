@@ -17,7 +17,7 @@ def main():
     tw.organizations = {'北京': 8, '南京': 3, '廣州': 3}
     church.organizations = {'北京': 2, '南京': 0, '廣州': 0}
     g.faction_by_id = {f['id']: f for f in g.factions}
-    ve = VictoryEngine(g.factions, g.board_regions)
+    ve = VictoryEngine(g.factions)
     count = ve._count_scope(tw, '牆內', g)
     payload = {
         'summary': {

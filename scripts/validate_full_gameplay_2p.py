@@ -13,6 +13,11 @@ OUT_JSON = BASE / 'FULL_GAMEPLAY_2P_VALIDATION.json'
 OUT_MD = BASE / 'FULL_GAMEPLAY_2P_VALIDATION.md'
 
 
+def china_towns(game, count=None):
+    towns = list(game._towns_for_region_alias('china'))
+    return towns if count is None else towns[:count]
+
+
 def resolve_base_selection(game, trace):
     if game.game_phase == GamePhase.BASE_SELECTION:
         initial_pending = json.loads(json.dumps(game.pending_base_choices, ensure_ascii=False))
@@ -140,8 +145,8 @@ def main():
         game.advance_turn_phase()
         trace.append({'step': f'cycle_{cycle}_end_turn', 'turn': game.turn, 'turn_phase': game.turn_phase, 'current_player': game.current_player().name})
 
-    china_towns = list(game.board_regions.get('china', {}).get('towns', []))[:14]
-    anti.organizations = {town: 1 for town in china_towns}
+    china_towns_sample = china_towns(game, 14)
+    anti.organizations = {town: 1 for town in china_towns_sample}
     red.organizations = {'北京': 1}
     trace.append({
         'step': 'before_forced_legal_anti_victory_check',

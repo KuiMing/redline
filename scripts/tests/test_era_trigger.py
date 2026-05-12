@@ -20,7 +20,7 @@ if not hk_player:
     exit()
 
 # ✅ 取得香港區 town
-hong_kong_towns = g.board_regions.get("hong_kong", {}).get("towns", [])
+hong_kong_towns = g._towns_for_region_alias("hong_kong")
 
 if not hong_kong_towns:
     print("❌ 找不到 hong_kong region")

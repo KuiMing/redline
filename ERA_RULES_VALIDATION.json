@@ -1,0 +1,93 @@
+{
+  "generated_at": "2026-05-13",
+  "rule_area": "era_rules",
+  "summary": {
+    "total": 5,
+    "passed": 5,
+    "failed": 0
+  },
+  "checks": [
+    {
+      "name": "new_game_starts_without_forced_hong_kong_era",
+      "passed": true,
+      "details": {
+        "rule": "時代關卡必須由觸發條件啟動；新局不應為 UI 測試強制啟動香港時代。",
+        "active_eras": []
+      }
+    },
+    {
+      "name": "hong_kong_era_requires_hong_kong_faction",
+      "passed": true,
+      "details": {
+        "rule": "香港時代條件文字是「香港在牆內擁有至少10個有效組織」；應限定香港陣營，而非任意玩家。",
+        "actor_faction": "taiwan_green",
+        "actor_orgs": {
+          "三亞": 10
+        },
+        "active_eras": []
+      }
+    },
+    {
+      "name": "hong_kong_era_triggers_for_hong_kong_faction",
+      "passed": true,
+      "details": {
+        "rule": "香港陣營在香港區達到10組織時，香港時代應觸發。",
+        "actor_faction": "hong_kong",
+        "actor_orgs": {
+          "三亞": 10
+        },
+        "active_eras": [
+          "hong_kong"
+        ],
+        "notification": {
+          "id": "hong_kong",
+          "name": "[香港]香港人被自殺",
+          "trigger_text": "[香港抗爭遍地開花]香港在牆內擁有至少10個有效組織",
+          "success_text": "[新型態的血腥鎮壓]紅軍每次對香港使用間諜類卡牌時，可再隨機棄掉香港1張手牌。持續2回合。",
+          "fail_text": "[沉冤待雪香港報仇]香港購買每張武裝類卡牌之費用額外減少2點資金。持續2回合。",
+          "duration_text": "持續 2 回合",
+          "remaining": null,
+          "minimized": false
+        }
+      }
+    },
+    {
+      "name": "kazakh_era_definition_exists",
+      "passed": true,
+      "details": {
+        "rule": "原始時代卡表包含「[哈薩克]伊塔事件」，runtime structured era data 也應包含 kazakh。",
+        "known_era_ids": [
+          "hong_kong",
+          "kazakh",
+          "manchuria",
+          "mongolia",
+          "rebels",
+          "taiwan",
+          "tibet",
+          "uyghur"
+        ]
+      }
+    },
+    {
+      "name": "kazakh_era_requires_kazakh_faction_northland_ruler_and_inner_counts",
+      "passed": true,
+      "details": {
+        "rule": "哈薩克伊塔事件需哈薩克在 map.json ruler=北國 的城鎮達7組織，且在牆內/中華區達3組織；非哈薩克不應觸發。",
+        "northland_towns_sample": [
+          "海參崴",
+          "伯力",
+          "共青城",
+          "南薩哈林斯克",
+          "海蘭泡",
+          "赤塔",
+          "杜尚貝"
+        ],
+        "wrong_faction_triggered": false,
+        "kazakh_triggered": true,
+        "active_eras_after_kazakh_check": [
+          "kazakh"
+        ]
+      }
+    }
+  ]
+}

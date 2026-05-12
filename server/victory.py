@@ -1,7 +1,6 @@
 class VictoryEngine:
-    def __init__(self, factions_data, board_regions=None):
+    def __init__(self, factions_data):
         self.factions = {f['id']: f for f in factions_data}
-        self.board_regions = board_regions or {}
 
     def _towns_for_ruler(self, game, ruler):
         towns_by_ruler = getattr(game, 'towns_by_ruler', None) or {}

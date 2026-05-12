@@ -41,7 +41,7 @@ def check(name, passed, details):
 
 
 def first_towns(game, region, count):
-    towns = game.board_regions.get(region, {}).get('towns', [])
+    towns = game._towns_for_region_alias(region)
     return towns[:count]
 
 

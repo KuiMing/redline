@@ -25,6 +25,10 @@ ALIAS_TOWNS = {
 }
 
 
+def china_towns(game):
+    return list(game._towns_for_region_alias('china'))
+
+
 def allowed_base_names(game, faction):
     names = []
     for b in faction.get("bases", []):
@@ -32,7 +36,7 @@ def allowed_base_names(game, faction):
             names.append(b.get("name"))
         elif isinstance(b, str) and b:
             names.append(b)
-    china_towns = set(game.board_regions.get("china", {}).get("towns", []))
+    china_town_set = set(china_towns(game))
     allowed = set()
     for name in names:
         if name in game.map.get("towns", {}):
@@ -40,7 +44,7 @@ def allowed_base_names(game, faction):
             continue
         pool = SEMANTIC_POOLS.get(name)
         if pool == "china":
-            allowed.update(china_towns)
+            allowed.update(china_town_set)
         elif isinstance(pool, set):
             allowed.update(pool)
     return allowed
@@ -73,10 +77,10 @@ def forced_victory_orgs(game, player):
     faction = game.faction_by_id.get(player.faction_id, {})
     conditions = faction.get('win_conditions', []) or []
     all_towns = list(game.map.get('towns', {}).keys())
-    china_towns = list(game.board_regions.get('china', {}).get('towns', []))
+    china_town_list = china_towns(game)
 
     if not conditions:
-        return {town: 1 for town in china_towns[:14]}
+        return {town: 1 for town in china_town_list[:14]}
 
     orgs = {}
     target_conditions = max(1, (len(conditions) * 2) // 3)
@@ -97,7 +101,7 @@ def forced_victory_orgs(game, player):
 
         count = int(cond.get('count', 0) or 0)
         if cond.get('scope') == '牆內':
-            pool = china_towns
+            pool = china_town_list
         else:
             pool = all_towns
 
@@ -110,7 +114,7 @@ def forced_victory_orgs(game, player):
         satisfied_seeded += 1
 
     if not orgs:
-        orgs = {town: 1 for town in china_towns[:14]}
+        orgs = {town: 1 for town in china_town_list[:14]}
     return orgs
 
 
@@ -246,7 +250,7 @@ def run_game(player_count):
         "turn_phase": game.turn_phase,
     })
 
-    did_win, winner_name = VictoryEngine(game.factions, game.board_regions).evaluate(game)
+    did_win, winner_name = VictoryEngine(game.factions).evaluate(game)
     if did_win:
         game.game_phase = game.game_phase.FINISHED
         game.winner = winner_name

@@ -35,7 +35,7 @@
 
 - `PURCHASE_SECTION_ALIGNMENT_VALIDATION.json`
 - `PURCHASE_SECTION_ALIGNMENT_VALIDATION.md`
-- `data/board_towns.v1.1.json`
+- `data/map.json`
 - `map.json`（目前是 deleted，需特別小心）
 - `scripts/validate_purchase_section_alignment.py`
 - `static/leaflet_embed_logic.js`

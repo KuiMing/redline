@@ -22,7 +22,7 @@ def main():
     access = g._town_has_shared_org_access(hu, '上海')
     count = g._shared_org_count(hu, '上海')
 
-    ve = VictoryEngine(g.factions, g.board_regions)
+    ve = VictoryEngine(g.factions)
     win, winner = ve._check_player_conditions(hu, g)
 
     payload = {
