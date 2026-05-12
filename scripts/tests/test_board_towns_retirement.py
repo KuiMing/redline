@@ -16,16 +16,7 @@ def make_game():
     return game
 
 
-def test_hong_kong_fixed_base_resolves_to_map_json_town_name():
-    game = make_game()
-    hong_kong = game.faction_by_id["hong_kong"]
-
-    resolved = game._base_option_to_towns(hong_kong, "香港城")
-
-    assert resolved == ["香港城"]
-
-
-def test_any_inner_uses_map_ruler_red_army_not_legacy_board_region_names():
+def test_any_inner_semantic_pool_comes_from_map_ruler_data_only():
     game = make_game()
     faction = {"id": "red_army", "bases": ["任意牆內"]}
 
@@ -41,18 +32,20 @@ def test_any_inner_uses_map_ruler_red_army_not_legacy_board_region_names():
     assert "香港城" in towns
 
 
-def test_count_only_era_trigger_uses_map_ruler_scope():
+def test_any_inner_resolution_ignores_legacy_board_regions_shadow_attr():
     game = make_game()
-    player = game.players[0]
-    player.faction_id = "hong_kong"
-    player.organizations = {"香港城": 10}
+    faction = {"id": "red_army", "bases": ["任意牆內"]}
+    original = game._base_option_to_towns(faction, "任意牆內")
 
-    trigger = {"type": "count_only", "faction_id": "hong_kong", "region": "hong_kong", "count": 10}
+    game.board_regions = {"china": {"towns": ["假城鎮"]}}
 
-    assert game._evaluate_era_trigger(trigger) is True
+    resolved = game._base_option_to_towns(faction, "任意牆內")
+
+    assert resolved == original
+    assert "假城鎮" not in resolved
 
 
-def test_red_army_taiwan_override_uses_map_ruler_taiwan_towns():
+def test_victory_engine_constructor_no_longer_requires_board_regions_argument():
     game = make_game()
     red_player = next(p for p in game.players if p.faction_id == "red_army")
     red_player.organizations = {"臺北": 14}

@@ -13,11 +13,11 @@ OUT_MD = ROOT / 'VICTORY_RULES_VALIDATION.md'
 
 
 def china_towns(game, count=14):
-    return list(game.board_regions.get('china', {}).get('towns', []))[:count]
+    return list(game._towns_for_region_alias('china'))[:count]
 
 
 def taiwan_towns(game, count=14):
-    return list(game.board_regions.get('taiwan', {}).get('towns', []))[:count]
+    return list(game._towns_for_region_alias('taiwan'))[:count]
 
 
 def resolve_base_selection(game):

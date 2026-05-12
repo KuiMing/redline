@@ -22,7 +22,6 @@ from server.victory import VictoryEngine
 BASE_DIR = Path(__file__).resolve().parent.parent
 MAP_PATH = BASE_DIR / "data" / "map.json"
 FACTIONS_PATH = BASE_DIR / "data" / "factions" / "all_faction.integrated.v2.json"
-BOARD_TOWNS_PATH = BASE_DIR / "data" / "board_towns.v1.1.json"
 STRUCTURED_ACTION_PATH = BASE_DIR / "data" / "action_cards_structured.v1.1.json"
 ERA_STRUCTURED_PATH = BASE_DIR / "data" / "era_structured.v1.1.json"
 SUPPORT_CARDS_PATH = BASE_DIR / "data" / "cards" / "support_cards.v1.1.json"
@@ -90,7 +89,6 @@ class Game:
         self.factions_data = self._load_json(FACTIONS_PATH)
         self.factions = self.factions_data["factions"]
         self.ability_templates = self.factions_data.get("ability_templates", {})
-        self.board_regions = self._load_json(BOARD_TOWNS_PATH)["regions"]
         self.towns_by_ruler = self._build_towns_by_ruler(self.map)
         self.structured_cards = self._load_json(STRUCTURED_ACTION_PATH)["cards"]
         self.support_cards = self._load_json(SUPPORT_CARDS_PATH)
@@ -138,7 +136,7 @@ class Game:
         self.action_engine = ActionCardEngine(self.structured_cards)
         self.effect_engine = EffectEngine()
         self.era_engine = EraEngine(self.structured_eras)
-        self.victory_engine = VictoryEngine(self.factions, self.board_regions)
+        self.victory_engine = VictoryEngine(self.factions)
 
         self.turn_log = self._new_turn_log()
         self.action_log = []
@@ -739,8 +737,8 @@ class Game:
             return [option_name] if self.can_faction_develop_in_town(faction.get("id"), option_name) else []
 
         semantic_pools = {
-            "任意牆內": self.board_regions.get("china", {}).get("towns", []),
-            "任意牆內城鎮": self.board_regions.get("china", {}).get("towns", []),
+            "任意牆內": self._towns_for_region_alias("china"),
+            "任意牆內城鎮": self._towns_for_region_alias("china"),
             "任意英美城鎮": ["華盛頓", "紐約", "多倫多", "卡加利", "溫哥華", "舊金山", "洛杉磯", "倫敦"],
             "任意南洋": ["曼谷", "吉隆坡", "新加坡", "雅加達", "河內", "胡志明市", "仰光"],
             "任意南洋城鎮": ["曼谷", "吉隆坡", "新加坡", "雅加達", "河內", "胡志明市", "仰光"],
