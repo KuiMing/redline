@@ -283,6 +283,46 @@ class Game:
         self.log(f"{card_name} was removed from game")
         return {'zone': 'removed', 'name': card_name}
 
+    def _town_neighbors(self, town):
+        if not town:
+            return set()
+        entry = self.map.get('towns', {}).get(town, {}) or {}
+        return set(entry.get('road', []) or []) | set(entry.get('rail', []) or [])
+
+    def _towns_within_steps(self, origins, max_steps=1):
+        origins = [town for town in (origins or []) if town in self.map.get('towns', {})]
+        if max_steps < 0 or not origins:
+            return set()
+        seen = set(origins)
+        frontier = [(town, 0) for town in origins]
+        while frontier:
+            town, dist = frontier.pop(0)
+            if dist >= max_steps:
+                continue
+            for nxt in self._town_neighbors(town):
+                if nxt not in seen:
+                    seen.add(nxt)
+                    frontier.append((nxt, dist + 1))
+        return seen
+
+    def _player_has_org_within_steps_of_player(self, source_player, target_player, max_steps=1):
+        source_towns = [town for town, count in (getattr(source_player, 'organizations', {}) or {}).items() if count > 0]
+        target_towns = {town for town, count in (getattr(target_player, 'organizations', {}) or {}).items() if count > 0}
+        if not source_towns or not target_towns:
+            return False
+        reachable = self._towns_within_steps(source_towns, max_steps=max_steps)
+        return bool(reachable & target_towns)
+
+    def _find_target_town_within_steps_of_player(self, source_player, target_player, max_steps=1):
+        source_towns = [town for town, count in (getattr(source_player, 'organizations', {}) or {}).items() if count > 0]
+        if not source_towns:
+            return None
+        reachable = self._towns_within_steps(source_towns, max_steps=max_steps)
+        for town, count in (getattr(target_player, 'organizations', {}) or {}).items():
+            if count > 0 and town in reachable:
+                return town
+        return None
+
     def _resolve_underground_party(self, player, count=3):
         if not getattr(self, 'purchase_deck', None):
             return {'error': 'Purchase deck unavailable'}
@@ -331,6 +371,15 @@ class Game:
             random.shuffle(player.deck.draw_pile)
             self.pending_choice = None
             self.log(f"{player.name} recruited {getattr(chosen, 'name', str(chosen))} from deck")
+            return {'success': True, 'chosen_card': getattr(chosen, 'name', str(chosen))}
+
+        if choice_type == 'gain_any_from_discard':
+            if chosen not in player.deck.discard_pile:
+                return {'error': 'Chosen card not in discard pile'}
+            player.deck.discard_pile.remove(chosen)
+            player.hand.append(chosen)
+            self.pending_choice = None
+            self.log(f"{player.name} gained {getattr(chosen, 'name', str(chosen))} from discard via 擴大戰果")
             return {'success': True, 'chosen_card': getattr(chosen, 'name', str(chosen))}
 
         chosen = cards[index]
@@ -1209,7 +1258,7 @@ class Game:
         if len(self.action_log) > 100:
             self.action_log.pop(0)
 
-    def play_card(self, index, mode=None, target_player_id=None):
+    def play_card(self, index, mode=None, target_player_id=None, reaction=None):
         if self.turn_phase != TurnPhase.ACTION:
             return {"error": "Not in ACTION phase"}
 
@@ -1227,6 +1276,18 @@ class Game:
             target = next((p for p in self.players if getattr(p, "id", None) == target_player_id), None)
             if target is None or target == player:
                 return {"error": "走漏風聲必須指定其他玩家"}
+        if mode == "action" and pending_card_name in {"武裝者", "武裝小隊", "武裝集團"}:
+            target = next((p for p in self.players if getattr(p, "id", None) == target_player_id), None) if target_player_id is not None else None
+            if target is None or target == player:
+                return {"error": "武裝卡必須指定其他玩家"}
+            if not self._player_has_org_within_steps_of_player(player, target, max_steps=1):
+                return {"error": "Target player has no organization within range"}
+        if mode == "action" and pending_card_name in {"派遣間諜", "內應間諜"}:
+            target = next((p for p in self.players if getattr(p, "id", None) == target_player_id), None) if target_player_id is not None else None
+            if target is None or target == player:
+                return {"error": "間諜卡必須指定其他玩家"}
+            if not self._find_target_town_within_steps_of_player(player, target, max_steps=1):
+                return {"error": "No target organization within range"}
 
         played_card = player.hand.pop(index)
         card_name = pending_card_name
@@ -1260,14 +1321,48 @@ class Game:
             if card_name not in played_names:
                 played_names.append(card_name)
 
+        reaction_context = None
+        if reaction:
+            reaction_player_id = reaction.get('player_id')
+            reaction_card_index = reaction.get('card_index')
+            reaction_player = next((p for p in self.players if getattr(p, 'id', None) == reaction_player_id), None)
+            if reaction_player is not None and reaction_player != player and reaction_card_index is not None:
+                if 0 <= reaction_card_index < len(reaction_player.hand):
+                    reaction_card = reaction_player.hand[reaction_card_index]
+                    reaction_card_name = getattr(reaction_card, 'name', str(reaction_card))
+                    if reaction_card_name == '爆料黑幕':
+                        reaction_played = reaction_player.hand.pop(reaction_card_index)
+                        reaction_context = {
+                            'reacting_player': reaction_player,
+                            'reaction_card': reaction_played,
+                            'canceled_card': played_card,
+                            'canceled_card_name': card_name,
+                            'canceled_card_cost': self._card_purchase_cost(played_card),
+                        }
+                        cost = reaction_context['canceled_card_cost'] or {}
+                        has_propaganda_cost = int(cost.get('propaganda', 0) or 0) > 0
+                        self.turn_log['canceled_propaganda_card'] = has_propaganda_cost
+                        self.log(f"{reaction_player.name} reacted with 爆料黑幕 to cancel {card_name}")
+
         action_context = {'current_card': played_card, 'card_name': card_name}
         if target_player_id is not None:
             action_context['target_player_id'] = target_player_id
+        if reaction_context is not None:
+            action_context['reaction_context'] = reaction_context
+            action_context['card_canceled'] = True
         if effective_type != 'support':
             if card_name in getattr(self.action_engine, 'cards', {}):
-                self.action_engine.execute(card_name, player, self, context=action_context, include_resources=False)
+                if not action_context.get('card_canceled'):
+                    self.action_engine.execute(card_name, player, self, context=action_context, include_resources=False)
             else:
                 pass
+
+        if reaction_context is not None:
+            reaction_player = reaction_context['reacting_player']
+            self.action_engine.execute('爆料黑幕', reaction_player, self, context=reaction_context, include_resources=False)
+            return_borrowed = self._return_borrowed_card_to_owner_topdeck(reaction_context['reaction_card'])
+            if not return_borrowed and reaction_context['reaction_card'] not in reaction_player.deck.discard_pile:
+                reaction_player.deck.discard([reaction_context['reaction_card']])
 
         for ability in self._player_effective_abilities(player):
             if not isinstance(ability, dict):

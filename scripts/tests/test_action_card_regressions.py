@@ -15,6 +15,7 @@ def make_game():
     g.turn_phase = TurnPhase.ACTION
     g.current_player_index = 0
     g.pending_base_choices = {}
+    g.players[0].faction_id = 'red_army'
     return g
 
 
@@ -55,6 +56,23 @@ def test_recruit_talent_selects_any_card_from_own_deck_not_topdeck_only():
     assert 'TopCard' not in names(p.hand)
 
 
+def test_lure_exhaustion_draws_then_self_removes_and_sets_successful_discard():
+    g = make_game()
+    p1, p2 = g.players
+    p1.hand = [card(g, '誘導虛耗')]
+    p2.hand = [Card('EnemyCard', 'command', {})]
+    p1.deck.draw_pile = [Card('DrawnCard', 'command', {})]
+
+    result = g.play_card(0, mode='action', target_player_id=p2.id)
+
+    assert result.get('success'), result
+    assert names(p1.hand) == ['DrawnCard']
+    assert '誘導虛耗' not in names(p1.deck.discard_pile)
+    assert names(p2.hand) == []
+    assert names(p2.deck.discard_pile) == ['EnemyCard']
+    assert g.turn_log.get('successful_discard') is True
+
+
 def test_imitate_tactics_uses_target_player_top_card_not_own_top_card():
     g = make_game()
     p1, p2 = g.players
@@ -82,6 +100,18 @@ def test_intel_network_runs_only_one_default_option_not_cancel_too():
 
     assert names(p.deck.discard_pile).count('內鬥') == 1
     assert not g.turn_log.get('canceled_propaganda_card')
+
+
+def test_divide_adds_internal_conflict_to_other_players_not_self():
+    g = make_game()
+    p1, p2 = g.players
+    p1.hand = [card(g, '離間')]
+
+    result = g.play_card(0, mode='action', target_player_id=p2.id)
+
+    assert result.get('success'), result
+    assert names(p1.deck.discard_pile).count('內鬥') == 0
+    assert names(p2.deck.discard_pile).count('內鬥') == 3
 
 
 def test_announce_action_topdecks_latest_card_bought_this_turn_and_gains_propaganda():
@@ -112,10 +142,266 @@ def test_action_fundraising_topdecks_latest_card_bought_this_turn_and_gains_mone
     assert 'PurchasedCard' not in names(p.deck.discard_pile)
 
 
+def test_underground_party_keeps_one_card_and_returns_the_rest_to_purchase_deck_system():
+    g = make_game()
+    p = g.current_player()
+    p.hand = [card(g, '地下黨')]
+    starting_purchase_count = len(g.purchase_deck.draw_pile) + len(g.purchase_deck.discard_pile)
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    assert g.pending_choice and g.pending_choice['type'] == 'underground_party'
+    revealed = list(g.pending_choice['cards'])
+    chosen_name = names(revealed)[0]
+    resolved = g.resolve_pending_choice(p.id, 0)
+    assert resolved.get('success'), resolved
+    assert chosen_name in names(p.hand)
+    ending_purchase_count = len(g.purchase_deck.draw_pile) + len(g.purchase_deck.discard_pile)
+    assert ending_purchase_count == starting_purchase_count - 1
+
+
+def test_field_agent_requires_target_org_within_one_step_of_sacrificed_org():
+    g = make_game()
+    p1, p2 = g.players
+    p1.hand = [card(g, '派遣間諜')]
+    p1.organizations = {'北京': 1}
+    p2.organizations = {'香港城': 1}
+
+    result = g.play_card(0, mode='action', target_player_id=p2.id)
+
+    assert result.get('error') == 'No target organization within range'
+    assert p1.organizations == {'北京': 1}
+    assert p2.organizations == {'香港城': 1}
+
+
+
+def test_embedded_agent_requires_target_org_within_one_step_of_own_org():
+    g = make_game()
+    p1, p2 = g.players
+    p1.hand = [card(g, '內應間諜')]
+    p1.organizations = {'北京': 1}
+    p2.organizations = {'香港城': 1}
+
+    result = g.play_card(0, mode='action', target_player_id=p2.id)
+
+    assert result.get('error') == 'No target organization within range'
+    assert p1.organizations == {'北京': 1}
+    assert p2.organizations == {'香港城': 1}
+
+
+
+def test_armed_c_requires_target_player_with_org_within_one_step_of_self_org():
+    g = make_game()
+    p1, p2 = g.players
+    p1.hand = [card(g, '武裝者')]
+    p1.organizations = {'北京': 1}
+    p2.organizations = {'香港城': 1}
+    p2.hand = [Card('Enemy1', 'command', {})]
+
+    result = g.play_card(0, mode='action', target_player_id=p2.id)
+
+    assert result.get('error') == 'Target player has no organization within range'
+    assert names(p2.hand) == ['Enemy1']
+    assert names(p2.deck.discard_pile) == []
+
+
+
+def test_armed_b_requires_target_player_with_org_within_one_step_of_self_org():
+    g = make_game()
+    p1, p2 = g.players
+    p1.hand = [card(g, '武裝小隊')]
+    p1.organizations = {'北京': 1}
+    p2.organizations = {'香港城': 1}
+    p2.hand = [Card('Enemy1', 'command', {}), Card('Enemy2', 'command', {})]
+
+    result = g.play_card(0, mode='action', target_player_id=p2.id)
+
+    assert result.get('error') == 'Target player has no organization within range'
+    assert names(p2.hand) == ['Enemy1', 'Enemy2']
+    assert names(p2.deck.discard_pile) == []
+
+
+
+def test_armed_group_draws_after_successful_enemy_discard():
+    g = make_game()
+    p1, p2 = g.players
+    p1.hand = [card(g, '武裝集團')]
+    p1.organizations = {'北京': 1}
+    p1.deck.draw_pile = [Card('RewardDraw', 'command', {})]
+    p2.organizations = {'天津': 1}
+    p2.hand = [Card('Enemy1', 'command', {}), Card('Enemy2', 'command', {})]
+
+    result = g.play_card(0, mode='action', target_player_id=p2.id)
+
+    assert result.get('success'), result
+    assert names(p2.hand) == []
+    assert names(p2.deck.discard_pile) == ['Enemy2', 'Enemy1']
+    assert 'RewardDraw' in names(p1.hand)
+    assert g.turn_log.get('successful_discard') is True
+
+
+def test_shift_public_opinion_refreshes_random_market_instead_of_using_player_deck_cards():
+    g = make_game()
+    p = g.current_player()
+    p.hand = [card(g, '輿論丕變')]
+    p.deck.draw_pile = [Card('PlayerDeckTop', 'command', {})]
+    before_random_market = names(g.purchase_area[6:])
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    after_random_market = names(g.purchase_area[6:])
+    assert len(after_random_market) == 5
+    assert after_random_market != before_random_market
+    assert 'PlayerDeckTop' not in after_random_market
+    assert p.resources['propaganda'] == 1
+
+
+def test_purge_cards_return_removed_cards_to_purchase_deck_system():
+    g = make_game()
+    p = g.current_player()
+    p.hand = [card(g, '批判'), Card('TrashTarget', 'command', {})]
+    starting_purchase_count = len(g.purchase_deck.draw_pile) + len(g.purchase_deck.discard_pile)
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    ending_purchase_count = len(g.purchase_deck.draw_pile) + len(g.purchase_deck.discard_pile)
+    assert ending_purchase_count == starting_purchase_count + 1
+
+
+def test_major_purge_returns_two_removed_cards_to_purchase_deck_system():
+    g = make_game()
+    p = g.current_player()
+    p.hand = [card(g, '批鬥'), Card('TrashTarget1', 'command', {}), Card('TrashTarget2', 'command', {})]
+    starting_purchase_count = len(g.purchase_deck.draw_pile) + len(g.purchase_deck.discard_pile)
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    ending_purchase_count = len(g.purchase_deck.draw_pile) + len(g.purchase_deck.discard_pile)
+    assert ending_purchase_count == starting_purchase_count + 2
+
+
+def test_ignite_passion_draws_two_after_other_propaganda_cost_card_played():
+    g = make_game()
+    p = g.current_player()
+    p.hand = [card(g, '點燃熱情')]
+    p.deck.draw_pile = [Card('Bottom', 'command', {}), Card('FirstDraw', 'command', {}), Card('SecondDraw', 'command', {})]
+    g.turn_log['played_propaganda_card'] = True
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    assert names(p.hand) == ['SecondDraw', 'FirstDraw']
+
+
+
+def test_build_confidence_draws_two_after_other_money_cost_card_played():
+    g = make_game()
+    p = g.current_player()
+    p.hand = [card(g, '樹立信心')]
+    p.deck.draw_pile = [Card('Bottom', 'command', {}), Card('FirstDraw', 'command', {}), Card('SecondDraw', 'command', {})]
+    g.turn_log['played_money_card'] = True
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    assert names(p.hand) == ['SecondDraw', 'FirstDraw']
+
+
+
+def test_forge_consensus_grants_propaganda_when_both_discards_are_non_starters():
+    g = make_game()
+    p = g.current_player()
+    p.hand = [card(g, '凝聚共識')]
+    p.deck.draw_pile = [Card('Bottom', 'command', {}), Card('UsefulA', 'command', {}), Card('UsefulB', 'command', {})]
+    p.deck.discard_pile = [Card('ExistingDiscard', 'command', {})]
+    g.turn_log['non_starter_discard'] = True
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    assert p.resources['propaganda'] == 2
+    assert names(p.hand) == ['UsefulB']
+    assert names(p.deck.discard_pile) == ['ExistingDiscard', 'Bottom', 'UsefulA', '凝聚共識']
+
+
+
+def test_expand_gains_can_choose_any_card_from_own_discard():
+    g = make_game()
+    p = g.current_player()
+    p.hand = [card(g, '擴大戰果')]
+    p.deck.discard_pile = [Card('WantedCard', 'command', {}), Card('TopCard', 'command', {})]
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    assert g.pending_choice and g.pending_choice['type'] == 'gain_any_from_discard'
+    assert names(g.pending_choice['cards']) == ['WantedCard', 'TopCard']
+    resolved = g.resolve_pending_choice(p.id, 0)
+    assert resolved.get('success'), resolved
+    assert 'WantedCard' in names(p.hand)
+    assert 'TopCard' not in names(p.hand)
+
+
+
+def test_expose_scandal_can_cancel_target_action_card_and_prevent_its_effect():
+    g = make_game()
+    p1, p2 = g.players
+    p1.hand = [card(g, '點燃熱情')]
+    p1.deck.draw_pile = [Card('Bottom', 'command', {}), Card('WouldHaveDrawn', 'command', {})]
+    p2.hand = [card(g, '爆料黑幕')]
+    p2.deck.draw_pile = []
+
+    result = g.play_card(0, mode='action', reaction={'player_id': p2.id, 'card_index': 0})
+
+    assert result.get('success'), result
+    assert names(p1.hand) == []
+    assert names(p1.deck.discard_pile) == ['點燃熱情']
+    assert names(p2.hand) == []
+    assert names(p2.deck.discard_pile) == ['爆料黑幕']
+    assert g.turn_log.get('canceled_propaganda_card') is True
+
+
+
+def test_expose_scandal_only_draws_when_canceled_card_has_propaganda_cost():
+    g = make_game()
+    p1, p2 = g.players
+    p1.hand = [card(g, '擴大戰果')]
+    p1.deck.discard_pile = [Card('DiscardTarget', 'command', {})]
+    p2.hand = [card(g, '爆料黑幕')]
+    p2.deck.draw_pile = [Card('ReactionDraw', 'command', {})]
+
+    result = g.play_card(0, mode='action', reaction={'player_id': p2.id, 'card_index': 0})
+
+    assert result.get('success'), result
+    assert 'ReactionDraw' not in names(p2.hand)
+    assert g.turn_log.get('canceled_propaganda_card') is False
+
+
+
+def test_expose_scandal_draws_when_canceled_card_has_propaganda_cost():
+    g = make_game()
+    p1, p2 = g.players
+    p1.hand = [card(g, '點燃熱情')]
+    p1.deck.draw_pile = [Card('Bottom', 'command', {}), Card('WouldHaveDrawn', 'command', {})]
+    p2.hand = [card(g, '爆料黑幕')]
+    p2.deck.draw_pile = [Card('ReactionDraw', 'command', {})]
+
+    result = g.play_card(0, mode='action', reaction={'player_id': p2.id, 'card_index': 0})
+
+    assert result.get('success'), result
+    assert 'ReactionDraw' in names(p2.hand)
+    assert g.turn_log.get('canceled_propaganda_card') is True
+
+
+
 def test_missing_cards_exist_in_structured_action_data():
     g = make_game()
     structured = {c['name']: c for c in g.structured_cards}
-    for name in ['企業人脈', '產業滲透', '企畫遊說', '行動募資']:
+    for name in ['企業人脈', '產業滲透', '企畫遊說', '行動募資', '點燃熱情', '樹立信心', '凝聚共識', '擴大戰果', '爆料黑幕']:
         assert name in structured
         assert structured[name].get('effect'), name
 

@@ -36,11 +36,23 @@ class EffectEngine:
         # ✅ Force discard opponents
         if etype == "force_discard":
             count = effect.get("count", 1)
-            for other in game.players:
-                if other != player:
-                    for _ in range(min(count, len(other.hand))):
-                        card = other.hand.pop()
-                        other.deck.discard([card])
+            context = context or {}
+            target_id = context.get("target_player_id") or effect.get("target_player_id")
+            targets = []
+            if target_id:
+                target = next((p for p in game.players if getattr(p, "id", None) == target_id), None)
+                if target is not None and target != player:
+                    targets = [target]
+            if not targets:
+                targets = [other for other in game.players if other != player]
+            discarded_any = False
+            for other in targets:
+                for _ in range(min(count, len(other.hand))):
+                    card = other.hand.pop()
+                    other.deck.discard([card])
+                    discarded_any = True
+            if discarded_any:
+                game.turn_log["successful_discard"] = True
             return
 
         # ✅ Gain from discard (simplified cost handling)
@@ -57,14 +69,25 @@ class EffectEngine:
 
         # ✅ Gain any from discard
         if etype == "gain_any_from_discard":
-            if player.deck.discard_pile:
-                card = player.deck.discard_pile[-1]
+            cards = list(player.deck.discard_pile)
+            if not cards:
+                return
+            gainable = []
+            for card in cards:
                 ok, err = game._can_player_gain_flag_card(player, card)
-                if not ok:
+                if ok:
+                    gainable.append(card)
+                else:
                     game.log(f"{player.name} could not gain {getattr(card, 'name', str(card))}: {err}")
-                    return
-                card = player.deck.discard_pile.pop()
-                player.hand.append(card)
+            if not gainable:
+                return
+            game.pending_choice = {
+                'type': 'gain_any_from_discard',
+                'player_id': player.id,
+                'cards': gainable,
+                'prompt': '擴大戰果：從己方棄牌堆任選1張牌加入手牌。',
+            }
+            game.log(f"{player.name} may gain 1 card from discard")
             return
 
         # ✅ Choose from purchase deck (used by 地下黨)
@@ -285,15 +308,27 @@ class EffectEngine:
         if etype == "add_internal_conflict":
             count = effect.get("count", 1)
             from server.cards import Card
-            cards = [Card("內鬥", "disruption", {}) for _ in range(count)]
-            player.deck.discard(cards)
-            game.log(f"{player.name} gained {count} 內鬥 card(s)")
+            context = context or {}
+            target_id = context.get("target_player_id") or effect.get("target_player_id")
+            targets = []
+            if target_id:
+                target = next((p for p in game.players if getattr(p, "id", None) == target_id), None)
+                if target is not None:
+                    targets = [target]
+            if not targets:
+                targets = [player]
+            for target in targets:
+                cards = [Card("內鬥", "disruption", {}) for _ in range(count)]
+                target.deck.discard(cards)
+                game.log(f"{target.name} gained {count} 內鬥 card(s)")
             return
 
-        # ✅ Cancel card (MVP: set turn flag for later conditional checks)
+        # ✅ Cancel card (MVP reaction hook: flags are prepared by Game.play_card; draw handled here)
         if etype == "cancel_card":
-            game.turn_log["canceled_propaganda_card"] = True
-            game.log(f"{player.name} triggered cancel-card effect")
+            context = context or {}
+            reaction_player = context.get("reacting_player", player)
+            canceled_name = context.get("canceled_card_name") or "unknown card"
+            game.log(f"{reaction_player.name} canceled {canceled_name}")
             return
 
         # ✅ Conditional bonus
@@ -307,29 +342,49 @@ class EffectEngine:
                 player.resources["propaganda"] += effect.get("propaganda", 0)
             return
 
-        # ✅ Dissolve (MVP: remove one org from first available opponent town; optional self sacrifice)
+        # ✅ Dissolve (MVP: remove one in-range opponent org; optional self sacrifice)
         if etype == "dissolve":
+            context = context or {}
+            target_id = context.get("target_player_id") or effect.get("target_player_id")
+            target = None
+            if target_id:
+                target = next((p for p in game.players if getattr(p, "id", None) == target_id), None)
+            opponents = [target] if target is not None and target != player else [other for other in game.players if other != player]
+            range_limit = int(effect.get("range", 1) or 1)
             if effect.get("requires_self_sacrifice"):
                 owned = [town for town, count in player.organizations.items() if count > 0]
-                if owned:
-                    town = owned[0]
-                    player.organizations[town] -= 1
-                    if player.organizations[town] <= 0:
-                        del player.organizations[town]
-            for other in game.players:
-                if other == player:
+                valid_sacrifice = None
+                for town in owned:
+                    reachable = game._towns_within_steps([town], max_steps=range_limit)
+                    if any(any(c > 0 and otown in reachable for otown, c in other.organizations.items()) for other in opponents):
+                        valid_sacrifice = town
+                        break
+                if valid_sacrifice is None:
+                    return
+                player.organizations[valid_sacrifice] -= 1
+                if player.organizations[valid_sacrifice] <= 0:
+                    del player.organizations[valid_sacrifice]
+            for other in opponents:
+                if other is None:
                     continue
-                owned = [town for town, count in other.organizations.items() if count > 0]
-                if owned:
-                    town = owned[0]
+                town = game._find_target_town_within_steps_of_player(player, other, max_steps=range_limit)
+                if town:
                     result = game.dissolve_organization(player, other, town, source="card")
                     if result.get("success"):
                         break
             return
 
-        # ✅ Refresh purchase area (MVP: expose top 3 cards from current player's deck)
+        # ✅ Refresh purchase area (refresh random market only)
         if etype == "refresh_purchase_area":
-            game.purchase_area = player.deck.draw(3)
+            static_count = len(game._static_purchase_cards()) if hasattr(game, '_static_purchase_cards') else 0
+            existing = list(getattr(game, 'purchase_area', []) or [])
+            random_market = existing[static_count:]
+            for card in random_market:
+                returned = game._return_removed_card_to_purchase_supply(card)
+                if returned is None:
+                    game._remove_card_from_game(card)
+            refreshed = game._draw_purchase_cards(len(random_market))
+            game.purchase_area = existing[:static_count] + refreshed
             return
 
         # ✅ Trash from hand or discard
@@ -354,7 +409,10 @@ class EffectEngine:
                 elif card is None and player.deck.discard_pile:
                     card = player.deck.discard_pile.pop()
                 if card is not None:
+                    returned = game._return_removed_card_to_purchase_supply(card)
                     game.log(f"{player.name} trashed {getattr(card, 'name', str(card))}")
+                    if returned:
+                        game.log(f"{getattr(card, 'name', str(card))} returned to {returned.get('zone')}")
             return
 
         # ✅ Extra move (increase movement points)
