@@ -204,6 +204,24 @@ def test_action_fundraising_topdecks_latest_card_bought_this_turn_and_gains_mone
     assert 'PurchasedCard' not in names(p.deck.discard_pile)
 
 
+
+def test_negotiation_draws_actor_and_chosen_other_player_only_and_gains_two_propaganda():
+    g = make_game()
+    p1, p2 = g.players
+    p1.hand = [card(g, '合作談判')]
+    p1.deck.draw_pile = [Card('ActorDraw', 'command', {})]
+    p2.deck.draw_pile = [Card('TargetDraw', 'command', {})]
+    p2.hand = []
+    p1.resources = {'money': 0, 'propaganda': 0}
+
+    result = g.play_card(0, mode='action', target_player_id=p2.id)
+
+    assert result.get('success'), result
+    assert names(p1.hand) == ['ActorDraw']
+    assert names(p2.hand) == ['TargetDraw']
+    assert p1.resources['propaganda'] == 2
+
+
 def test_underground_party_keeps_one_card_and_returns_the_rest_to_purchase_deck_system():
     g = make_game()
     p = g.current_player()
