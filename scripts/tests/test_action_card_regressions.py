@@ -95,6 +95,25 @@ def test_imitate_tactics_uses_target_player_top_card_not_own_top_card():
     assert 'OpponentTop' not in names(p1.deck.discard_pile)
 
 
+def test_imitate_tactics_borrowed_card_returns_to_owner_topdeck_after_action_play():
+    g = make_game()
+    p1, p2 = g.players
+    p1.hand = [card(g, '模仿戰術')]
+    p2.deck.draw_pile = [Card('TargetBottom', 'command', {}), Card('點燃熱情', 'command', {'propaganda': 1})]
+    p1.deck.draw_pile = [Card('Bottom', 'command', {}), Card('FirstDraw', 'command', {}), Card('SecondDraw', 'command', {})]
+
+    result = g.play_card(0, mode='action', target_player_id=p2.id)
+
+    assert result.get('success'), result
+    borrowed_index = names(p1.hand).index('點燃熱情')
+    action_result = g.play_card(borrowed_index, mode='action')
+    assert action_result.get('success'), action_result
+    assert names(p2.deck.draw_pile)[-1] == '點燃熱情'
+    assert '點燃熱情' not in names(p1.deck.discard_pile)
+    assert names(p1.hand) == ['SecondDraw']
+
+
+
 def test_intel_network_runs_only_one_default_option_not_cancel_too():
     g = make_game()
     p = play_only(g, '情報網')
@@ -248,6 +267,22 @@ def test_armed_c_requires_target_player_with_org_within_one_step_of_self_org():
     assert result.get('error') == 'Target player has no organization within range'
     assert names(p2.hand) == ['Enemy1']
     assert names(p2.deck.discard_pile) == []
+
+
+
+def test_armed_c_discards_one_when_target_player_has_org_within_one_step():
+    g = make_game()
+    p1, p2 = g.players
+    p1.hand = [card(g, '武裝者')]
+    p1.organizations = {'北京': 1}
+    p2.organizations = {'天津': 1}
+    p2.hand = [Card('Enemy1', 'command', {}), Card('Enemy2', 'command', {})]
+
+    result = g.play_card(0, mode='action', target_player_id=p2.id)
+
+    assert result.get('success'), result
+    assert names(p2.hand) == ['Enemy1']
+    assert names(p2.deck.discard_pile)[-1] == 'Enemy2'
 
 
 
