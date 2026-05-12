@@ -681,6 +681,21 @@ def test_efficient_action_can_choose_any_two_cards_to_discard():
 
 
 
+def test_thought_building_draws_one_and_extends_build_range_this_turn():
+    g = make_game()
+    p = g.current_player()
+    p.hand = [card(g, '思想建設')]
+    p.deck.draw_pile = [Card('DrawnCard', 'command', {})]
+    p.build_range_bonus = 0
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    assert names(p.hand) == ['DrawnCard']
+    assert p.build_range_bonus == 1
+
+
+
 def test_press_advantage_only_gains_card_costing_three_or_less_from_discard():
     g = make_game()
     p = g.current_player()
