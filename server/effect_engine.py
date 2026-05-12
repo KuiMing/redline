@@ -299,15 +299,27 @@ class EffectEngine:
                 self._draw(target, count)
             return
 
-        # ✅ Choose one branch, defaulting to the first option until UI choice is wired (情報網)
+        # ✅ Choose one branch via pending choice (情報網)
         if etype == "choose_one":
             context = context or {}
             options = effect.get('options') or []
-            selected = context.get('choice_index', effect.get('default_index', 0))
-            if not isinstance(selected, int) or selected < 0 or selected >= len(options):
-                selected = 0
-            for nested in options[selected].get('effect', []):
-                self.execute(nested, player, game, context=context)
+            if not options:
+                return
+            if hasattr(game, '_set_pending_option_choice'):
+                game._set_pending_option_choice(
+                    player,
+                    'choose_one',
+                    options,
+                    '情報網：選擇一個效果執行。',
+                    source_name=context.get('card_name') if context else None,
+                    context=context,
+                )
+            else:
+                selected = context.get('choice_index', effect.get('default_index', 0))
+                if not isinstance(selected, int) or selected < 0 or selected >= len(options):
+                    selected = 0
+                for nested in options[selected].get('effect', []):
+                    self.execute(nested, player, game, context=context)
             return
 
         # ✅ Move a card bought this turn from discard to deck top (行動預告/行動募資)

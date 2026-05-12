@@ -346,6 +346,17 @@ class Game:
         }
         return {'pending_choice': True}
 
+    def _set_pending_option_choice(self, player, choice_key, options, prompt, **extra):
+        self.pending_choice = {
+            'type': 'option_choice',
+            'choice_key': choice_key,
+            'player_id': player.id,
+            'options': list(options),
+            'prompt': prompt,
+            **extra,
+        }
+        return {'pending_choice': True}
+
     def _resolve_underground_party(self, player, count=3):
         if not getattr(self, 'purchase_deck', None):
             return {'error': 'Purchase deck unavailable'}
@@ -448,6 +459,28 @@ class Game:
 
         return {'error': 'Unsupported pending choice type'}
 
+    def _resolve_option_choice(self, player, choice, index):
+        options = choice.get('options') or []
+        if index is None or index < 0 or index >= len(options):
+            return {'error': 'Invalid choice index'}
+        choice_key = choice.get('choice_key')
+
+        if choice_key == 'choose_one':
+            selected = options[index]
+            context = dict(choice.get('context') or {})
+            context['choice_index'] = index
+            for nested in selected.get('effect', []):
+                self.effect_engine.execute(nested, player, self, context=context)
+            self.pending_choice = None
+            self.log(f"{player.name} resolved choose_one option {index}")
+            return {
+                'success': True,
+                'choice_index': index,
+                'label': selected.get('label'),
+            }
+
+        return {'error': 'Unsupported pending choice type'}
+
     def resolve_pending_choice(self, player_id, index):
         choice = self.pending_choice or {}
         if not choice:
@@ -461,6 +494,8 @@ class Game:
             return self._resolve_card_choice(player, choice, index)
         if choice.get('type') == 'multi_card_choice':
             return self._resolve_multi_card_choice(player, choice, index)
+        if choice.get('type') == 'option_choice':
+            return self._resolve_option_choice(player, choice, index)
         return {'error': 'Unsupported pending choice type'}
 
     def _support_card_effect_text(self, card_name, tier, region_index):

@@ -99,8 +99,50 @@ def test_intel_network_runs_only_one_default_option_not_cancel_too():
     g = make_game()
     p = play_only(g, '情報網')
 
+    assert g.pending_choice and g.pending_choice['type'] == 'option_choice'
+    assert g.pending_choice['choice_key'] == 'choose_one'
+    assert len(g.pending_choice['options']) == 3
+    resolved = g.resolve_pending_choice(p.id, 0)
+    assert resolved.get('success'), resolved
     assert names(p.deck.discard_pile).count('內鬥') == 1
     assert not g.turn_log.get('canceled_propaganda_card')
+
+
+
+def test_intel_network_can_choose_dissolve_branch_instead_of_default_internal_conflict():
+    g = make_game()
+    p1, p2 = g.players
+    p1.hand = [card(g, '情報網')]
+    p1.organizations = {'北京': 1}
+    p2.organizations = {'天津': 1}
+
+    result = g.play_card(0, mode='action', target_player_id=p2.id)
+
+    assert result.get('success'), result
+    assert g.pending_choice and g.pending_choice['type'] == 'option_choice'
+    assert g.pending_choice['choice_key'] == 'choose_one'
+    resolved = g.resolve_pending_choice(p1.id, 1)
+    assert resolved.get('success'), resolved
+    assert p2.organizations.get('天津', 0) == 0
+    assert names(p2.deck.discard_pile).count('內鬥') == 0
+
+
+
+def test_intel_network_can_choose_cancel_branch_without_running_other_branches():
+    g = make_game()
+    p1, p2 = g.players
+    p1.hand = [card(g, '情報網')]
+    p2.hand = [Card('EnemyCard', 'command', {})]
+
+    result = g.play_card(0, mode='action', target_player_id=p2.id)
+
+    assert result.get('success'), result
+    assert g.pending_choice and g.pending_choice['type'] == 'option_choice'
+    resolved = g.resolve_pending_choice(p1.id, 2)
+    assert resolved.get('success'), resolved
+    assert names(p2.deck.discard_pile).count('內鬥') == 0
+    assert g.turn_log.get('canceled_propaganda_card') is None
+
 
 
 def test_divide_adds_internal_conflict_to_other_players_not_self():
