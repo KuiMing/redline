@@ -732,6 +732,22 @@ def test_propagandist_trashes_self_then_grants_build_and_one_move():
 
 
 
+def test_capitalist_trashes_self_and_grants_three_money_and_three_propaganda():
+    g = make_game()
+    p = g.current_player()
+    p.hand = [card(g, '資本家')]
+    p.resources = {'money': 0, 'propaganda': 0}
+    starting_supply = g.static_purchase_supply.get('資本家', 0)
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    assert p.resources == {'money': 3, 'propaganda': 3}
+    assert '資本家' not in names(p.deck.discard_pile)
+    assert g.static_purchase_supply.get('資本家', 0) == starting_supply + 1
+
+
+
 def test_press_advantage_only_gains_card_costing_three_or_less_from_discard():
     g = make_game()
     p = g.current_player()
