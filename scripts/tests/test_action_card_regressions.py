@@ -398,6 +398,58 @@ def test_expand_gains_can_choose_any_card_from_own_discard():
 
 
 
+def test_business_network_borrows_only_from_random_market_and_keeps_market_card_in_place():
+    g = make_game()
+    p = g.current_player()
+    p.hand = [card(g, '企業人脈')]
+    static_name = names(g.purchase_area[:6])[0]
+    random_name = names(g.purchase_area[6:])[0]
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    hand_names = names(p.hand)
+    assert random_name in hand_names
+    assert static_name not in hand_names
+    assert names(g.purchase_area[:6])[0] == static_name
+    assert names(g.purchase_area[6:])[0] == random_name
+
+
+
+def test_business_network_borrowed_card_returns_to_purchase_area_after_resource_play():
+    g = make_game()
+    p = g.current_player()
+    p.hand = [card(g, '企業人脈')]
+    random_name = names(g.purchase_area[6:])[0]
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    borrowed_index = names(p.hand).index(random_name)
+    resource_result = g.play_card(borrowed_index, mode='resource')
+    assert resource_result.get('success'), resource_result
+    assert random_name not in names(p.deck.discard_pile)
+    assert names(g.purchase_area[6:])[0] == random_name
+
+
+
+def test_business_network_borrowed_card_returns_to_purchase_area_after_action_play():
+    g = make_game()
+    p = g.current_player()
+    p.hand = [card(g, '企業人脈')]
+    random_name = names(g.purchase_area[6:])[0]
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    borrowed_index = names(p.hand).index(random_name)
+    action_result = g.play_card(borrowed_index, mode='action')
+    assert action_result.get('success'), action_result
+    assert random_name not in names(p.deck.discard_pile)
+    assert names(g.purchase_area[6:])[0] == random_name
+
+
+
 def test_industry_infiltration_can_cancel_target_action_card_and_draw_when_canceled_card_has_money_cost():
     g = make_game()
     p1, p2 = g.players
