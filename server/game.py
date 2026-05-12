@@ -91,6 +91,7 @@ class Game:
         self.factions = self.factions_data["factions"]
         self.ability_templates = self.factions_data.get("ability_templates", {})
         self.board_regions = self._load_json(BOARD_TOWNS_PATH)["regions"]
+        self.towns_by_ruler = self._build_towns_by_ruler(self.map)
         self.structured_cards = self._load_json(STRUCTURED_ACTION_PATH)["cards"]
         self.support_cards = self._load_json(SUPPORT_CARDS_PATH)
         self.support_taxonomy = self._load_json(SUPPORT_TAXONOMY_PATH).get("cards", []) if SUPPORT_TAXONOMY_PATH.exists() else []
@@ -150,8 +151,40 @@ class Game:
     # ---------- Init ----------
 
     def _load_json(self, path):
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             return json.load(f)
+
+    def _build_towns_by_ruler(self, map_data):
+        grouped = {}
+        for town, info in (map_data.get("towns", {}) or {}).items():
+            for ruler in (info.get("ruler") or []):
+                grouped.setdefault(ruler, []).append(town)
+        for towns in grouped.values():
+            towns.sort()
+        return grouped
+
+    def _towns_for_region_alias(self, region):
+        alias_to_ruler = {
+            "china": "紅軍",
+            "taiwan": "臺灣",
+            "hong_kong": "紅軍",
+            "southeast_asia": "南洋",
+            "manchuria": "滿洲",
+            "outer_manchuria": "北國",
+            "mongolian_plateau": "蒙古",
+            "inner_mongolia": "紅軍",
+            "turkestan": "紅軍",
+            "tibet_region": "藏國",
+            "india": "印度",
+            "middle_east": "天方",
+            "japan": "東洋",
+            "korean_peninsula": "東洋",
+            "trans_siberian": "北國",
+            "anglo_america": "英美",
+            "europe": "歐洲",
+        }
+        ruler = alias_to_ruler.get(region, region)
+        return list(self.towns_by_ruler.get(ruler, []))
 
     def _assign_factions(self, players_data):
         red = next(f for f in self.factions if f["id"] == "red_army")
@@ -581,12 +614,12 @@ class Game:
                 cards = [Card('分神', 'disruption', {}) for _ in range(count)]
                 target.deck.discard(cards)
         elif effect_type == 'build_anywhere_inner':
-            inner_towns = self.board_regions.get('china', {}).get('towns', []) or []
+            inner_towns = self._towns_for_region_alias('china')
             target_town = next((town for town in inner_towns if self.can_develop_in_town(player, town)), None)
             if target_town:
                 player.organizations[target_town] = player.organizations.get(target_town, 0) + 1
         elif effect_type == 'build_near_inner':
-            inner_towns = set(self.board_regions.get('china', {}).get('towns', []) or [])
+            inner_towns = set(self._towns_for_region_alias('china'))
             target_town = None
             for origin in list(player.organizations.keys()):
                 neighbors = set(self.map.get('towns', {}).get(origin, {}).get('road', []) or []) | set(self.map.get('towns', {}).get(origin, {}).get('rail', []) or [])
@@ -684,8 +717,8 @@ class Game:
         # flex rules: deterministic fallback by semantic token
         if kind == "flex":
             semantic_pools = {
-                "任意牆內": self.board_regions.get("china", {}).get("towns", []),
-                "任意牆內城鎮": self.board_regions.get("china", {}).get("towns", []),
+                "任意牆內": self._towns_for_region_alias("china"),
+                "任意牆內城鎮": self._towns_for_region_alias("china"),
                 "任意英美城鎮": ["華盛頓", "紐約", "多倫多", "卡加利", "溫哥華", "舊金山", "洛杉磯", "倫敦"],
                 "任意南洋": ["曼谷", "吉隆坡", "新加坡", "雅加達", "河內", "胡志明市", "仰光"],
                 "任意南洋城鎮": ["曼谷", "吉隆坡", "新加坡", "雅加達", "河內", "胡志明市", "仰光"],
@@ -1089,7 +1122,7 @@ class Game:
             return
         if not self._player_has_ability(player, "游擊隊"):
             return
-        inner_towns = set(self.board_regions.get("china", {}).get("towns", []))
+        inner_towns = set(self._towns_for_region_alias("china"))
         if town not in inner_towns:
             return
 
@@ -1137,7 +1170,7 @@ class Game:
     def _apply_turn_end_faction_abilities(self, player):
         effective = self._player_effective_abilities(player)
         built_towns = self.turn_log.get("built_towns", []) or []
-        built_in_china = any(t in set(self.board_regions.get("china", {}).get("towns", [])) for t in built_towns)
+        built_in_china = any(t in set(self._towns_for_region_alias("china")) for t in built_towns)
         built_in_nanyang = any(t in {"曼谷", "吉隆坡", "新加坡", "雅加達", "河內", "胡志明市", "仰光"} for t in built_towns)
 
         for ability in effective:
@@ -1645,7 +1678,7 @@ class Game:
         else:
             self.log(f"{attacker.name} dissolved 1 shared organization via {defender.name} from {target_owner.name} at {town}")
 
-        inner_towns = set(self.board_regions.get("china", {}).get("towns", []))
+        inner_towns = set(self._towns_for_region_alias("china"))
         if town in inner_towns and any(self._player_has_ability(target_owner, n) for n in {"殉道者", "青山里"}):
             target_owner.hand.extend(target_owner.deck.draw(1))
             self.log(f"{target_owner.name} triggered martyr-style ability and drew 1 card")
@@ -1867,7 +1900,7 @@ class Game:
         return True
 
     def _player_region_org_count(self, player, region):
-        region_towns = self.board_regions.get(region, {}).get("towns", [])
+        region_towns = self._towns_for_region_alias(region)
         return sum(
             v for town, v in player.organizations.items()
             if town in region_towns

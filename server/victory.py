@@ -3,6 +3,10 @@ class VictoryEngine:
         self.factions = {f['id']: f for f in factions_data}
         self.board_regions = board_regions
 
+    def _towns_for_ruler(self, game, ruler):
+        towns_by_ruler = getattr(game, 'towns_by_ruler', None) or {}
+        return set(towns_by_ruler.get(ruler, []))
+
     def evaluate(self, game):
         # 1. Red Army default survival (turn 20 rule)
         if game.turn > 20:
@@ -46,7 +50,7 @@ class VictoryEngine:
 
             elif cond_type == "taiwan_override":
                 if player.faction_id == "red_army":
-                    if self._count_taiwan_orgs(player) >= 14:
+                    if self._count_taiwan_orgs(player, game) >= 14:
                         return True, "red_army"
 
             elif cond_type == "default_survival":
@@ -76,12 +80,12 @@ class VictoryEngine:
         }
 
         if scope == "牆內":
-            china_towns = set(self.board_regions.get("china", {}).get("towns", []))
+            china_towns = self._towns_for_ruler(game, "紅軍")
             return shared_count(china_towns)
         if scope == "牆內與牆外":
             return shared_count(all_org_towns)
         return shared_count(all_org_towns)
 
-    def _count_taiwan_orgs(self, player):
-        taiwan_towns = set(self.board_regions.get("taiwan", {}).get("towns", []))
+    def _count_taiwan_orgs(self, player, game):
+        taiwan_towns = self._towns_for_ruler(game, "臺灣")
         return sum(v for t, v in player.organizations.items() if t in taiwan_towns)
