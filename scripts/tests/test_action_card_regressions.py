@@ -714,6 +714,24 @@ def test_strategic_thinker_trashes_self_then_grants_build_and_three_moves():
 
 
 
+def test_propagandist_trashes_self_then_grants_build_and_one_move():
+    g = make_game()
+    p = g.current_player()
+    p.hand = [card(g, '宣傳家')]
+    p.organizations = {'北京': 1}
+    p.moves_left = 0
+    starting_supply = g.static_purchase_supply.get('宣傳家', 0)
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    assert p.organizations.get('北京', 0) == 2
+    assert p.moves_left == 1
+    assert '宣傳家' not in names(p.deck.discard_pile)
+    assert g.static_purchase_supply.get('宣傳家', 0) == starting_supply + 1
+
+
+
 def test_press_advantage_only_gains_card_costing_three_or_less_from_discard():
     g = make_game()
     p = g.current_player()
