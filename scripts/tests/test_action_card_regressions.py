@@ -748,6 +748,153 @@ def test_capitalist_trashes_self_and_grants_three_money_and_three_propaganda():
 
 
 
+def test_funder_trashes_self_and_grants_two_money_and_two_propaganda():
+    g = make_game()
+    p = g.current_player()
+    p.hand = [card(g, '資助者')]
+    p.resources = {'money': 0, 'propaganda': 0}
+    starting_supply = g.static_purchase_supply.get('資助者', 0)
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    assert p.resources == {'money': 2, 'propaganda': 2}
+    assert '資助者' not in names(p.deck.discard_pile)
+    assert g.static_purchase_supply.get('資助者', 0) == starting_supply + 1
+
+
+
+def test_distraction_trashes_self_and_returns_to_static_supply():
+    g = make_game()
+    p = g.current_player()
+    p.hand = [card(g, '分神')]
+    starting_supply = g.static_purchase_supply.get('分神', 0)
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    assert '分神' not in names(p.deck.discard_pile)
+    assert g.static_purchase_supply.get('分神', 0) == starting_supply + 1
+
+
+
+def test_leadership_draws_one_card():
+    g = make_game()
+    p = g.current_player()
+    p.hand = [card(g, '領導')]
+    p.deck.draw_pile = [Card('Draw1', 'command', {})]
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    assert names(p.hand) == ['Draw1']
+
+
+
+def test_plotting_draws_two_cards():
+    g = make_game()
+    p = g.current_player()
+    p.hand = [card(g, '謀劃')]
+    p.deck.draw_pile = [Card('Bottom', 'command', {}), Card('Draw1', 'command', {}), Card('Draw2', 'command', {})]
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    assert names(p.hand) == ['Draw2', 'Draw1']
+
+
+
+def test_strategy_draws_three_cards():
+    g = make_game()
+    p = g.current_player()
+    p.hand = [card(g, '戰略')]
+    p.deck.draw_pile = [Card('Bottom', 'command', {}), Card('Draw1', 'command', {}), Card('Draw2', 'command', {}), Card('Draw3', 'command', {})]
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    assert names(p.hand) == ['Draw3', 'Draw2', 'Draw1']
+
+
+
+def test_transport_c_grants_two_moves():
+    g = make_game()
+    p = g.current_player()
+    p.hand = [card(g, '交通經驗丙')]
+    p.moves_left = 0
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    assert p.moves_left == 2
+
+
+
+def test_transport_b_grants_four_moves():
+    g = make_game()
+    p = g.current_player()
+    p.hand = [card(g, '交通經驗乙')]
+    p.moves_left = 0
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    assert p.moves_left == 4
+
+
+
+def test_transport_a_grants_six_moves():
+    g = make_game()
+    p = g.current_player()
+    p.hand = [card(g, '交通經驗甲')]
+    p.moves_left = 0
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    assert p.moves_left == 6
+
+
+
+def test_organization_c_builds_one_in_current_town():
+    g = make_game()
+    p = g.current_player()
+    p.hand = [card(g, '組織經驗丙')]
+    p.organizations = {'北京': 1}
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    assert p.organizations.get('北京', 0) == 2
+
+
+
+def test_organization_b_builds_two_in_current_town():
+    g = make_game()
+    p = g.current_player()
+    p.hand = [card(g, '組織經驗乙')]
+    p.organizations = {'北京': 1}
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    assert p.organizations.get('北京', 0) == 3
+
+
+
+def test_organization_a_builds_one_even_with_ignore_distance_flag():
+    g = make_game()
+    p = g.current_player()
+    p.hand = [card(g, '組織經驗甲')]
+    p.organizations = {'北京': 1}
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    assert p.organizations.get('北京', 0) == 2
+
+
+
 def test_press_advantage_only_gains_card_costing_three_or_less_from_discard():
     g = make_game()
     p = g.current_player()
