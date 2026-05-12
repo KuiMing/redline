@@ -22,9 +22,27 @@ class EffectEngine:
         # ✅ Discard self
         if etype == "discard_self":
             count = effect.get("count", 1)
-            for _ in range(min(count, len(player.hand))):
-                card = player.hand.pop()
-                player.deck.discard([card])
+            if len(player.hand) < count:
+                count = len(player.hand)
+            if count <= 0:
+                return
+            cards = list(player.hand)
+            if hasattr(game, '_set_pending_multi_card_choice'):
+                extra = {'source_name': context.get('card_name') if context else None}
+                if context and context.get('card_name') == '凝聚共識':
+                    extra['grant_propaganda_if_all_non_starter'] = 2
+                game._set_pending_multi_card_choice(
+                    player,
+                    'discard_self',
+                    cards,
+                    f'從所有手牌中棄掉任{count}張牌。',
+                    count=count,
+                    **extra,
+                )
+            else:
+                for _ in range(min(count, len(player.hand))):
+                    card = player.hand.pop()
+                    player.deck.discard([card])
             return
 
         # ✅ Gain resources
@@ -57,14 +75,47 @@ class EffectEngine:
 
         # ✅ Gain from discard (simplified cost handling)
         if etype == "gain_from_discard":
-            if player.deck.discard_pile:
-                card = player.deck.discard_pile[-1]
+            max_cost = effect.get("max_cost")
+            candidates = list(player.deck.discard_pile)
+            if max_cost is not None:
+                filtered = []
+                for card in candidates:
+                    cost = game._card_purchase_cost(card) if hasattr(game, '_card_purchase_cost') else {}
+                    total_cost = int(cost.get('money', 0) or 0) + int(cost.get('propaganda', 0) or 0)
+                    if total_cost <= int(max_cost):
+                        filtered.append(card)
+                candidates = filtered
+            if not candidates:
+                return
+            gainable = []
+            for card in candidates:
                 ok, err = game._can_player_gain_flag_card(player, card)
-                if not ok:
+                if ok:
+                    gainable.append(card)
+                else:
                     game.log(f"{player.name} could not gain {getattr(card, 'name', str(card))}: {err}")
-                    return
-                card = player.deck.discard_pile.pop()
-                player.hand.append(card)
+            if not gainable:
+                return
+            if hasattr(game, '_set_pending_card_choice'):
+                game._set_pending_card_choice(
+                    player,
+                    'gain_from_discard',
+                    gainable,
+                    f"從己方棄牌堆任選1張費用{int(max_cost)}點以下的牌加入手牌。" if max_cost is not None else '從己方棄牌堆任選1張牌加入手牌。',
+                    source_name='乘勝追擊',
+                    max_cost=max_cost,
+                )
+            else:
+                game.pending_choice = {
+                    'type': 'card_choice',
+                    'choice_key': 'gain_from_discard',
+                    'player_id': player.id,
+                    'cards': gainable,
+                    'prompt': f"從己方棄牌堆任選1張費用{int(max_cost)}點以下的牌加入手牌。" if max_cost is not None else '從己方棄牌堆任選1張牌加入手牌。',
+                    'source_name': '乘勝追擊',
+                    'max_cost': max_cost,
+                }
+            game.log(f"{player.name} may gain 1 eligible card from discard")
             return
 
         # ✅ Gain any from discard
@@ -81,12 +132,23 @@ class EffectEngine:
                     game.log(f"{player.name} could not gain {getattr(card, 'name', str(card))}: {err}")
             if not gainable:
                 return
-            game.pending_choice = {
-                'type': 'gain_any_from_discard',
-                'player_id': player.id,
-                'cards': gainable,
-                'prompt': '擴大戰果：從己方棄牌堆任選1張牌加入手牌。',
-            }
+            if hasattr(game, '_set_pending_card_choice'):
+                game._set_pending_card_choice(
+                    player,
+                    'gain_any_from_discard',
+                    gainable,
+                    '擴大戰果：從己方棄牌堆任選1張牌加入手牌。',
+                    source_name='擴大戰果',
+                )
+            else:
+                game.pending_choice = {
+                    'type': 'card_choice',
+                    'choice_key': 'gain_any_from_discard',
+                    'player_id': player.id,
+                    'cards': gainable,
+                    'prompt': '擴大戰果：從己方棄牌堆任選1張牌加入手牌。',
+                    'source_name': '擴大戰果',
+                }
             game.log(f"{player.name} may gain 1 card from discard")
             return
 
@@ -141,13 +203,23 @@ class EffectEngine:
                 cards.extend(player.deck.discard_pile)
             if not cards:
                 return
-            game.pending_choice = {
-                'type': 'recruit_talent',
-                'player_id': player.id,
-                'cards': cards,
-                'source_cards': cards[:],
-                'prompt': '網羅人才：從己方牌庫任選1張加入手牌，而後將牌庫洗牌。'
-            }
+            if hasattr(game, '_set_pending_card_choice'):
+                game._set_pending_card_choice(
+                    player,
+                    'recruit_talent',
+                    cards,
+                    '網羅人才：從己方牌庫任選1張加入手牌，而後將牌庫洗牌。',
+                    source_cards=cards[:],
+                )
+            else:
+                game.pending_choice = {
+                    'type': 'card_choice',
+                    'choice_key': 'recruit_talent',
+                    'player_id': player.id,
+                    'cards': cards,
+                    'source_cards': cards[:],
+                    'prompt': '網羅人才：從己方牌庫任選1張加入手牌，而後將牌庫洗牌。'
+                }
             game.log(f"{player.name} may recruit 1 card from deck")
             return
 

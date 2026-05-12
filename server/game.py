@@ -323,37 +323,52 @@ class Game:
                 return town
         return None
 
+    def _set_pending_card_choice(self, player, choice_key, cards, prompt, **extra):
+        self.pending_choice = {
+            'type': 'card_choice',
+            'choice_key': choice_key,
+            'player_id': player.id,
+            'cards': list(cards),
+            'prompt': prompt,
+            **extra,
+        }
+        return {'pending_choice': True}
+
+    def _set_pending_multi_card_choice(self, player, choice_key, cards, prompt, count, **extra):
+        self.pending_choice = {
+            'type': 'multi_card_choice',
+            'choice_key': choice_key,
+            'player_id': player.id,
+            'cards': list(cards),
+            'prompt': prompt,
+            'count': count,
+            **extra,
+        }
+        return {'pending_choice': True}
+
     def _resolve_underground_party(self, player, count=3):
         if not getattr(self, 'purchase_deck', None):
             return {'error': 'Purchase deck unavailable'}
         choices = self.purchase_deck.draw(count)
         if not choices:
             return {'error': 'Purchase deck empty'}
-        self.pending_choice = {
-            'type': 'underground_party',
-            'player_id': player.id,
-            'cards': choices,
-            'prompt': '地下黨：從購買區牌庫頂拿取3張牌，任選其中1張加入手牌，其餘移除。'
-        }
+        self._set_pending_card_choice(
+            player,
+            'underground_party',
+            choices,
+            '地下黨：從購買區牌庫頂拿取3張牌，任選其中1張加入手牌，其餘移除。',
+        )
         self.log(f"{player.name} revealed 3 cards for 地下黨")
         return {'pending_choice': True}
 
-    def resolve_pending_choice(self, player_id, index):
-        choice = self.pending_choice or {}
-        if not choice:
-            return {'error': 'No pending choice'}
-        if choice.get('player_id') != player_id:
-            return {'error': 'Not your pending choice'}
+    def _resolve_card_choice(self, player, choice, index):
         cards = choice.get('cards') or []
         if index is None or index < 0 or index >= len(cards):
             return {'error': 'Invalid choice index'}
-        player = next((p for p in self.players if p.id == player_id), None)
-        if not player:
-            return {'error': 'Player not found'}
         chosen = cards[index]
-        choice_type = choice.get('type')
+        choice_key = choice.get('choice_key')
 
-        if choice_type == 'recruit_talent':
+        if choice_key == 'recruit_talent':
             source_cards = choice.get('source_cards') or []
             for card in list(source_cards):
                 if card is chosen:
@@ -373,32 +388,80 @@ class Game:
             self.log(f"{player.name} recruited {getattr(chosen, 'name', str(chosen))} from deck")
             return {'success': True, 'chosen_card': getattr(chosen, 'name', str(chosen))}
 
-        if choice_type == 'gain_any_from_discard':
+        if choice_key in {'gain_any_from_discard', 'gain_from_discard'}:
             if chosen not in player.deck.discard_pile:
                 return {'error': 'Chosen card not in discard pile'}
             player.deck.discard_pile.remove(chosen)
             player.hand.append(chosen)
             self.pending_choice = None
-            self.log(f"{player.name} gained {getattr(chosen, 'name', str(chosen))} from discard via 擴大戰果")
+            source_name = choice.get('source_name') or choice_key
+            self.log(f"{player.name} gained {getattr(chosen, 'name', str(chosen))} from discard via {source_name}")
             return {'success': True, 'chosen_card': getattr(chosen, 'name', str(chosen))}
 
-        chosen = cards[index]
-        player.hand.append(chosen)
-        removed = []
-        for i, card in enumerate(cards):
-            if i == index:
-                continue
-            returned = self._return_removed_card_to_purchase_supply(card)
-            if returned is None:
-                returned = self._remove_card_from_game(card)
-            removed.append(returned)
-        self.pending_choice = None
-        self.log(f"{player.name} chose {getattr(chosen, 'name', str(chosen))} via 地下黨")
-        return {
-            'success': True,
-            'chosen_card': getattr(chosen, 'name', str(chosen)),
-            'removed_cards': removed,
-        }
+        if choice_key == 'underground_party':
+            player.hand.append(chosen)
+            removed = []
+            for i, card in enumerate(cards):
+                if i == index:
+                    continue
+                returned = self._return_removed_card_to_purchase_supply(card)
+                if returned is None:
+                    returned = self._remove_card_from_game(card)
+                removed.append(returned)
+            self.pending_choice = None
+            self.log(f"{player.name} chose {getattr(chosen, 'name', str(chosen))} via 地下黨")
+            return {
+                'success': True,
+                'chosen_card': getattr(chosen, 'name', str(chosen)),
+                'removed_cards': removed,
+            }
+
+        return {'error': 'Unsupported pending choice type'}
+
+    def _resolve_multi_card_choice(self, player, choice, indices):
+        cards = choice.get('cards') or []
+        count = int(choice.get('count', 1) or 1)
+        if not isinstance(indices, list) or len(indices) != count:
+            return {'error': 'Invalid choice count'}
+        if len(set(indices)) != len(indices):
+            return {'error': 'Duplicate choice indices'}
+        if any(i is None or i < 0 or i >= len(cards) for i in indices):
+            return {'error': 'Invalid choice index'}
+        choice_key = choice.get('choice_key')
+        selected_cards = [cards[i] for i in indices]
+
+        if choice_key == 'discard_self':
+            for card in selected_cards:
+                if card not in player.hand:
+                    return {'error': 'Chosen card not in hand'}
+            non_starters = [card for card in selected_cards if getattr(card, 'name', str(card)) not in {'追隨者', '樂捐者'}]
+            if len(non_starters) == len(selected_cards):
+                self.turn_log['non_starter_discard'] = True
+            for card in selected_cards:
+                player.hand.remove(card)
+                player.deck.discard([card])
+            if choice.get('grant_propaganda_if_all_non_starter') and len(non_starters) == len(selected_cards):
+                player.resources['propaganda'] += int(choice.get('grant_propaganda_if_all_non_starter'))
+            self.pending_choice = None
+            self.log(f"{player.name} discarded {len(selected_cards)} chosen card(s)")
+            return {'success': True, 'chosen_cards': [getattr(card, 'name', str(card)) for card in selected_cards]}
+
+        return {'error': 'Unsupported pending choice type'}
+
+    def resolve_pending_choice(self, player_id, index):
+        choice = self.pending_choice or {}
+        if not choice:
+            return {'error': 'No pending choice'}
+        if choice.get('player_id') != player_id:
+            return {'error': 'Not your pending choice'}
+        player = next((p for p in self.players if p.id == player_id), None)
+        if not player:
+            return {'error': 'Player not found'}
+        if choice.get('type') == 'card_choice':
+            return self._resolve_card_choice(player, choice, index)
+        if choice.get('type') == 'multi_card_choice':
+            return self._resolve_multi_card_choice(player, choice, index)
+        return {'error': 'Unsupported pending choice type'}
 
     def _support_card_effect_text(self, card_name, tier, region_index):
         entry = self._support_taxonomy_entry(card_name)

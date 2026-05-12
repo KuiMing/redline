@@ -48,7 +48,8 @@ def test_recruit_talent_selects_any_card_from_own_deck_not_topdeck_only():
     result = g.play_card(0, mode='action')
 
     assert result.get('success'), result
-    assert g.pending_choice and g.pending_choice['type'] == 'recruit_talent'
+    assert g.pending_choice and g.pending_choice['type'] == 'card_choice'
+    assert g.pending_choice['choice_key'] == 'recruit_talent'
     assert names(g.pending_choice['cards']) == ['DesiredCard', 'MiddleCard', 'TopCard']
     resolved = g.resolve_pending_choice(p.id, 0)
     assert resolved.get('success'), resolved
@@ -151,7 +152,8 @@ def test_underground_party_keeps_one_card_and_returns_the_rest_to_purchase_deck_
     result = g.play_card(0, mode='action')
 
     assert result.get('success'), result
-    assert g.pending_choice and g.pending_choice['type'] == 'underground_party'
+    assert g.pending_choice and g.pending_choice['type'] == 'card_choice'
+    assert g.pending_choice['choice_key'] == 'underground_party'
     revealed = list(g.pending_choice['cards'])
     chosen_name = names(revealed)[0]
     resolved = g.resolve_pending_choice(p.id, 0)
@@ -315,17 +317,23 @@ def test_build_confidence_draws_two_after_other_money_cost_card_played():
 def test_forge_consensus_grants_propaganda_when_both_discards_are_non_starters():
     g = make_game()
     p = g.current_player()
-    p.hand = [card(g, '凝聚共識')]
+    p.hand = [card(g, '凝聚共識'), Card('KeepMe', 'command', {})]
     p.deck.draw_pile = [Card('Bottom', 'command', {}), Card('UsefulA', 'command', {}), Card('UsefulB', 'command', {})]
     p.deck.discard_pile = [Card('ExistingDiscard', 'command', {})]
-    g.turn_log['non_starter_discard'] = True
 
     result = g.play_card(0, mode='action')
 
     assert result.get('success'), result
+    assert g.pending_choice and g.pending_choice['type'] == 'multi_card_choice'
+    assert g.pending_choice['choice_key'] == 'discard_self'
+    assert names(g.pending_choice['cards']) == ['KeepMe', 'UsefulB', 'UsefulA', 'Bottom']
+    resolved = g.resolve_pending_choice(p.id, [1, 2])
+    assert resolved.get('success'), resolved
     assert p.resources['propaganda'] == 2
-    assert names(p.hand) == ['UsefulB']
-    assert names(p.deck.discard_pile) == ['ExistingDiscard', 'Bottom', 'UsefulA', '凝聚共識']
+    assert g.turn_log.get('non_starter_discard') is True
+    assert 'KeepMe' in names(p.hand)
+    assert 'Bottom' in names(p.hand)
+    assert names(p.deck.discard_pile) == ['ExistingDiscard', '凝聚共識', 'UsefulB', 'UsefulA']
 
 
 
@@ -338,7 +346,8 @@ def test_expand_gains_can_choose_any_card_from_own_discard():
     result = g.play_card(0, mode='action')
 
     assert result.get('success'), result
-    assert g.pending_choice and g.pending_choice['type'] == 'gain_any_from_discard'
+    assert g.pending_choice and g.pending_choice['type'] == 'card_choice'
+    assert g.pending_choice['choice_key'] == 'gain_any_from_discard'
     assert names(g.pending_choice['cards']) == ['WantedCard', 'TopCard']
     resolved = g.resolve_pending_choice(p.id, 0)
     assert resolved.get('success'), resolved
@@ -352,6 +361,7 @@ def test_expose_scandal_can_cancel_target_action_card_and_prevent_its_effect():
     p1, p2 = g.players
     p1.hand = [card(g, '點燃熱情')]
     p1.deck.draw_pile = [Card('Bottom', 'command', {}), Card('WouldHaveDrawn', 'command', {})]
+    starting_discard = len(p1.deck.discard_pile)
     p2.hand = [card(g, '爆料黑幕')]
     p2.deck.draw_pile = []
 
@@ -359,7 +369,8 @@ def test_expose_scandal_can_cancel_target_action_card_and_prevent_its_effect():
 
     assert result.get('success'), result
     assert names(p1.hand) == []
-    assert names(p1.deck.discard_pile) == ['點燃熱情']
+    assert len(p1.deck.discard_pile) == starting_discard + 1
+    assert names(p1.deck.discard_pile)[-1] == '點燃熱情'
     assert names(p2.hand) == []
     assert names(p2.deck.discard_pile) == ['爆料黑幕']
     assert g.turn_log.get('canceled_propaganda_card') is True
@@ -398,10 +409,53 @@ def test_expose_scandal_draws_when_canceled_card_has_propaganda_cost():
 
 
 
+def test_efficient_action_can_choose_any_two_cards_to_discard():
+    g = make_game()
+    p = g.current_player()
+    p.hand = [card(g, '高效行動'), Card('KeepMe', 'command', {})]
+    p.deck.draw_pile = [Card('Bottom', 'command', {}), Card('DrawA', 'command', {}), Card('DrawB', 'command', {})]
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    assert g.pending_choice and g.pending_choice['type'] == 'multi_card_choice'
+    assert g.pending_choice['choice_key'] == 'discard_self'
+    assert names(g.pending_choice['cards']) == ['KeepMe', 'DrawB', 'DrawA', 'Bottom']
+    resolved = g.resolve_pending_choice(p.id, [1, 2])
+    assert resolved.get('success'), resolved
+    assert names(p.hand) == ['KeepMe', 'Bottom']
+    assert names(p.deck.discard_pile)[-3:] == ['高效行動', 'DrawB', 'DrawA']
+
+
+
+def test_press_advantage_only_gains_card_costing_three_or_less_from_discard():
+    g = make_game()
+    p = g.current_player()
+    p.hand = [card(g, '乘勝追擊')]
+    cheap = Card('CheapTarget', 'command', {})
+    expensive = Card('ExpensiveTarget', 'command', {})
+    p.deck.discard_pile = [cheap, expensive]
+    g.structured_cards.append({'name': 'CheapTarget', 'cost': {'money': 2, 'propaganda': 0}})
+    g.structured_cards.append({'name': 'ExpensiveTarget', 'cost': {'money': 4, 'propaganda': 0}})
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    assert g.pending_choice and g.pending_choice['type'] == 'card_choice'
+    assert g.pending_choice['choice_key'] == 'gain_from_discard'
+    assert names(g.pending_choice['cards']) == ['CheapTarget']
+    resolved = g.resolve_pending_choice(p.id, 0)
+    assert resolved.get('success'), resolved
+    assert 'CheapTarget' in names(p.hand)
+    assert 'ExpensiveTarget' not in names(p.hand)
+    assert 'ExpensiveTarget' in names(p.deck.discard_pile)
+
+
+
 def test_missing_cards_exist_in_structured_action_data():
     g = make_game()
     structured = {c['name']: c for c in g.structured_cards}
-    for name in ['企業人脈', '產業滲透', '企畫遊說', '行動募資', '點燃熱情', '樹立信心', '凝聚共識', '擴大戰果', '爆料黑幕']:
+    for name in ['企業人脈', '產業滲透', '企畫遊說', '行動募資', '點燃熱情', '樹立信心', '凝聚共識', '擴大戰果', '爆料黑幕', '乘勝追擊']:
         assert name in structured
         assert structured[name].get('effect'), name
 
