@@ -356,6 +356,112 @@ def test_expand_gains_can_choose_any_card_from_own_discard():
 
 
 
+def test_industry_infiltration_can_cancel_target_action_card_and_draw_when_canceled_card_has_money_cost():
+    g = make_game()
+    p1, p2 = g.players
+    p1.hand = [card(g, '擴大戰果')]
+    p1.deck.discard_pile = [Card('DiscardTarget', 'command', {})]
+    p2.hand = [card(g, '產業滲透')]
+    p2.deck.draw_pile = [Card('ReactionDraw', 'command', {})]
+
+    result = g.play_card(0, mode='action', reaction={'player_id': p2.id, 'card_index': 0})
+
+    assert result.get('success'), result
+    assert names(p1.hand) == []
+    assert names(p1.deck.discard_pile)[-1] == '擴大戰果'
+    assert 'DiscardTarget' in names(p1.deck.discard_pile)
+    assert 'ReactionDraw' in names(p2.hand)
+    assert names(p2.deck.discard_pile)[-1] == '產業滲透'
+    assert g.turn_log.get('canceled_money_cost_card') is True
+
+
+
+def test_industry_infiltration_does_not_draw_when_canceled_card_has_no_money_only_cost():
+    g = make_game()
+    p1, p2 = g.players
+    p1.hand = [card(g, '凝聚共識')]
+    p1.deck.draw_pile = [Card('Bottom', 'command', {}), Card('WouldHaveDrawn', 'command', {})]
+    p2.hand = [card(g, '產業滲透')]
+    p2.deck.draw_pile = [Card('ReactionDraw', 'command', {})]
+
+    result = g.play_card(0, mode='action', reaction={'player_id': p2.id, 'card_index': 0})
+
+    assert result.get('success'), result
+    assert 'ReactionDraw' not in names(p2.hand)
+    assert g.turn_log.get('canceled_money_cost_card') is None
+    assert 'WouldHaveDrawn' in names(p1.hand)
+
+
+
+def test_industry_infiltration_requires_an_actual_action_card_target_to_cancel():
+    g = make_game()
+    p1, p2 = g.players
+    p1.hand = [Card('樂捐者', 'money', {'money': 1})]
+    p2.hand = [card(g, '產業滲透')]
+
+    result = g.play_card(0, mode='resource', reaction={'player_id': p2.id, 'card_index': 0})
+
+    assert result.get('success'), result
+    assert names(p2.hand) == ['產業滲透']
+    assert names(p2.deck.discard_pile) == []
+    assert g.turn_log.get('canceled_money_cost_card') is None
+
+
+
+def test_expose_scandal_requires_an_actual_action_card_target_to_cancel():
+    g = make_game()
+    p1, p2 = g.players
+    p1.hand = [Card('追隨者', 'propaganda', {'propaganda': 1})]
+    p2.hand = [card(g, '爆料黑幕')]
+
+    result = g.play_card(0, mode='resource', reaction={'player_id': p2.id, 'card_index': 0})
+
+    assert result.get('success'), result
+    assert names(p1.hand) == []
+    assert names(p2.hand) == ['爆料黑幕']
+    assert names(p2.deck.discard_pile) == []
+    assert g.turn_log.get('canceled_propaganda_card') is None
+
+
+
+def test_expose_scandal_cannot_cancel_another_expose_scandal_reaction():
+    g = make_game()
+    p1, p2 = g.players
+    p1.hand = [card(g, '點燃熱情')]
+    p1.deck.draw_pile = [Card('Bottom', 'command', {}), Card('WouldHaveDrawn', 'command', {})]
+    p2.hand = [card(g, '爆料黑幕'), card(g, '爆料黑幕')]
+    p2.deck.draw_pile = [Card('ReactionDraw', 'command', {})]
+
+    result = g.play_card(
+        0,
+        mode='action',
+        reaction={'player_id': p2.id, 'card_index': 0, 'reaction': {'player_id': p1.id, 'card_index': 0}},
+    )
+
+    assert result.get('success'), result
+    assert names(p1.hand) == []
+    assert names(p1.deck.discard_pile)[-1] == '點燃熱情'
+    assert names(p2.hand) == ['爆料黑幕', 'ReactionDraw']
+    assert names(p2.deck.discard_pile) == ['爆料黑幕']
+
+
+
+def test_expose_scandal_reaction_must_be_from_another_player_holding_expose_scandal():
+    g = make_game()
+    p1, p2 = g.players
+    p1.hand = [card(g, '點燃熱情')]
+    p1.deck.draw_pile = [Card('Bottom', 'command', {}), Card('WouldHaveDrawn', 'command', {})]
+    p2.hand = [card(g, '高效行動')]
+
+    result = g.play_card(0, mode='action', reaction={'player_id': p2.id, 'card_index': 0})
+
+    assert result.get('success'), result
+    assert 'WouldHaveDrawn' in names(p1.hand)
+    assert names(p2.hand) == ['高效行動']
+    assert names(p2.deck.discard_pile) == []
+
+
+
 def test_expose_scandal_can_cancel_target_action_card_and_prevent_its_effect():
     g = make_game()
     p1, p2 = g.players

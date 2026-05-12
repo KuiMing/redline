@@ -1321,6 +1321,53 @@ class Game:
         if len(self.action_log) > 100:
             self.action_log.pop(0)
 
+    def _build_reaction_context(self, player, played_card, card_name, mode, reaction):
+        if mode != 'action' or not reaction:
+            return None
+        reaction_player_id = reaction.get('player_id')
+        reaction_card_index = reaction.get('card_index')
+        reaction_player = next((p for p in self.players if getattr(p, 'id', None) == reaction_player_id), None)
+        if reaction_player is None or reaction_player == player or reaction_card_index is None:
+            return None
+        if reaction_card_index < 0 or reaction_card_index >= len(reaction_player.hand):
+            return None
+        reaction_card = reaction_player.hand[reaction_card_index]
+        reaction_card_name = getattr(reaction_card, 'name', str(reaction_card))
+        if reaction_card_name not in {'爆料黑幕', '產業滲透'}:
+            return None
+
+        cost = self._card_purchase_cost(played_card) or {}
+        if reaction_card_name == '產業滲透' and int(cost.get('money', 0) or 0) <= 0:
+            return None
+
+        reaction_played = reaction_player.hand.pop(reaction_card_index)
+        reaction_context = {
+            'reacting_player': reaction_player,
+            'reaction_card': reaction_played,
+            'reaction_card_name': reaction_card_name,
+            'canceled_card': played_card,
+            'canceled_card_name': card_name,
+            'canceled_card_cost': cost,
+        }
+        has_propaganda_cost = int(cost.get('propaganda', 0) or 0) > 0
+        has_money_cost = int(cost.get('money', 0) or 0) > 0
+        if reaction_card_name == '爆料黑幕':
+            self.turn_log['canceled_propaganda_card'] = has_propaganda_cost
+        elif reaction_card_name == '產業滲透':
+            self.turn_log['canceled_money_cost_card'] = has_money_cost
+        self.log(f"{reaction_player.name} reacted with {reaction_card_name} to cancel {card_name}")
+        return reaction_context
+
+    def _resolve_reaction_context(self, reaction_context):
+        if reaction_context is None:
+            return
+        reaction_player = reaction_context['reacting_player']
+        reaction_card_name = reaction_context.get('reaction_card_name') or '爆料黑幕'
+        self.action_engine.execute(reaction_card_name, reaction_player, self, context=reaction_context, include_resources=False)
+        return_borrowed = self._return_borrowed_card_to_owner_topdeck(reaction_context['reaction_card'])
+        if not return_borrowed and reaction_context['reaction_card'] not in reaction_player.deck.discard_pile:
+            reaction_player.deck.discard([reaction_context['reaction_card']])
+
     def play_card(self, index, mode=None, target_player_id=None, reaction=None):
         if self.turn_phase != TurnPhase.ACTION:
             return {"error": "Not in ACTION phase"}
@@ -1384,28 +1431,7 @@ class Game:
             if card_name not in played_names:
                 played_names.append(card_name)
 
-        reaction_context = None
-        if reaction:
-            reaction_player_id = reaction.get('player_id')
-            reaction_card_index = reaction.get('card_index')
-            reaction_player = next((p for p in self.players if getattr(p, 'id', None) == reaction_player_id), None)
-            if reaction_player is not None and reaction_player != player and reaction_card_index is not None:
-                if 0 <= reaction_card_index < len(reaction_player.hand):
-                    reaction_card = reaction_player.hand[reaction_card_index]
-                    reaction_card_name = getattr(reaction_card, 'name', str(reaction_card))
-                    if reaction_card_name == '爆料黑幕':
-                        reaction_played = reaction_player.hand.pop(reaction_card_index)
-                        reaction_context = {
-                            'reacting_player': reaction_player,
-                            'reaction_card': reaction_played,
-                            'canceled_card': played_card,
-                            'canceled_card_name': card_name,
-                            'canceled_card_cost': self._card_purchase_cost(played_card),
-                        }
-                        cost = reaction_context['canceled_card_cost'] or {}
-                        has_propaganda_cost = int(cost.get('propaganda', 0) or 0) > 0
-                        self.turn_log['canceled_propaganda_card'] = has_propaganda_cost
-                        self.log(f"{reaction_player.name} reacted with 爆料黑幕 to cancel {card_name}")
+        reaction_context = self._build_reaction_context(player, played_card, card_name, mode, reaction)
 
         action_context = {'current_card': played_card, 'card_name': card_name}
         if target_player_id is not None:
@@ -1420,12 +1446,7 @@ class Game:
             else:
                 pass
 
-        if reaction_context is not None:
-            reaction_player = reaction_context['reacting_player']
-            self.action_engine.execute('爆料黑幕', reaction_player, self, context=reaction_context, include_resources=False)
-            return_borrowed = self._return_borrowed_card_to_owner_topdeck(reaction_context['reaction_card'])
-            if not return_borrowed and reaction_context['reaction_card'] not in reaction_player.deck.discard_pile:
-                reaction_player.deck.discard([reaction_context['reaction_card']])
+        self._resolve_reaction_context(reaction_context)
 
         for ability in self._player_effective_abilities(player):
             if not isinstance(ability, dict):
