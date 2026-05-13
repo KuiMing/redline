@@ -291,7 +291,6 @@ def validate_visibility(player_count):
         start_payload = request_json(host, '/start', {'game_id': room, 'player_id': players[0][1], 'market_mode': 'sample_53'})
         if start_payload.get('error'):
             raise RuntimeError(f'start failed: {start_payload}')
-        wait_for_lobby_started(host)
         connect_and_wait_for_state(host)
         host_hand = hand_cards(host)
         other_hands = {}
@@ -338,17 +337,19 @@ def validate_type_flow(card_type, card_name):
 
         guest_before = guest_page.evaluate('window.lastGameState')
         guest_logs_before = log_lines(guest_page)
-        if guest_page.locator('#hand .card').count() > 0:
-            guest_page.locator('#hand .card').first.click()
+        guest_hand_before = hand_cards(guest_page)
+        if guest_page.locator('#hand .card button').count() > 0:
+            guest_page.locator('#hand .card button').nth(0).click()
             guest_page.wait_for_timeout(1200)
         guest_after = guest_page.evaluate('window.lastGameState')
         guest_logs_after = log_lines(guest_page)
+        guest_hand_after = hand_cards(guest_page)
 
         host_hand_before = hand_cards(turn_page)
         hud_before = turn_page.locator('#hud').inner_text() if turn_page.locator('#hud').count() else ''
         chosen_card = host_hand_before[0] if host_hand_before else None
-        if turn_page.locator('#hand .card').count() > 0:
-            turn_page.locator('#hand .card').first.click()
+        if turn_page.locator('#hand .card button').count() > 0:
+            turn_page.locator('#hand .card button').nth(0).click()
             turn_page.wait_for_timeout(1500)
         host_hand_after = hand_cards(turn_page)
         host_logs_after = log_lines(turn_page)
@@ -364,6 +365,8 @@ def validate_type_flow(card_type, card_name):
             'phase_after_advance': after_phase,
             'guest_illegal_play_state_same': guest_before == guest_after,
             'guest_log_unchanged': guest_logs_before == guest_logs_after,
+            'guest_hand_before': guest_hand_before,
+            'guest_hand_after': guest_hand_after,
             'host_hand_before': host_hand_before,
             'host_hand_after': host_hand_after,
             'host_logs_after': host_logs_after[:5],
@@ -402,6 +405,7 @@ def main():
         md.append(f"- phase_after_advance: {item['phase_after_advance']}")
         md.append(f"- guest_illegal_play_state_same: {item['guest_illegal_play_state_same']}")
         md.append(f"- guest_log_unchanged: {item['guest_log_unchanged']}")
+        md.append(f"- guest_hand_before -> after: {item['guest_hand_before']} -> {item['guest_hand_after']}")
         md.append(f"- host_hand_before -> after: {item['host_hand_before']} -> {item['host_hand_after']}")
         md.append(f"- host_logs_after: {item['host_logs_after']}")
         md.append(f"- HUD before -> after: {item['hud_before']} -> {item['hud_after']}")
