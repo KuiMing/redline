@@ -12,6 +12,9 @@ except ModuleNotFoundError:
     raise
 
 BASE = Path(__file__).resolve().parent.parent
+RECORD_DIR = BASE / 'docs' / 'records' / 'card-ui'
+OUT_JSON = RECORD_DIR / 'CARD_UI_VALIDATION_RESULTS.json'
+OUT_MD = RECORD_DIR / 'CARD_UI_VALIDATION_RESULTS.md'
 CARDS = json.loads((BASE / 'data' / 'action_cards_structured.v1.1.json').read_text(encoding='utf-8'))['cards']
 
 TYPE_ORDER = [
@@ -384,6 +387,7 @@ def validate_type_flow(card_type, card_name):
 
 
 def main():
+    RECORD_DIR.mkdir(parents=True, exist_ok=True)
     report = {
         'visibility': [validate_visibility(2), validate_visibility(3), validate_visibility(4)],
         'type_flows': [],
@@ -391,8 +395,7 @@ def main():
     for t in TYPE_ORDER:
         report['type_flows'].append(validate_type_flow(t, TYPE_CARD[t]))
 
-    out_json = BASE / 'CARD_UI_VALIDATION_RESULTS.json'
-    out_json.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
+    OUT_JSON.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
 
     md = []
     md.append('# CARD UI VALIDATION RESULTS')
@@ -418,10 +421,9 @@ def main():
         md.append(f"- host_logs_after: {item['host_logs_after']}")
         md.append(f"- HUD before -> after: {item['hud_before']} -> {item['hud_after']}")
         md.append('')
-    out_md = BASE / 'CARD_UI_VALIDATION_RESULTS.md'
-    out_md.write_text('\n'.join(md), encoding='utf-8')
-    print(out_json)
-    print(out_md)
+    OUT_MD.write_text('\n'.join(md), encoding='utf-8')
+    print(OUT_JSON)
+    print(OUT_MD)
 
 
 if __name__ == '__main__':
