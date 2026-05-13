@@ -926,7 +926,14 @@ function openCardTargetModal(index, cardName, targetLabel) {
   return true;
 }
 
+function isMyTurnState(state = window.lastGameState) {
+  const players = state?.players || [];
+  const me = players.find(p => p.id === playerId);
+  return !!(me && state?.current_player === me.name);
+}
+
 function playHandCard(index, card, mode) {
+  if (!isMyTurnState()) return;
   const payload = {index, mode};
   const cardName = typeof card === 'string' ? card : (card?.name || card?.title || '');
   if (mode === 'action' && (cardName === '合作談判' || cardName === '走漏風聲')) {
@@ -1476,7 +1483,7 @@ async function render(state) {
 
     const phaseActionMeta = document.getElementById('phaseActionMeta');
     const advanceBtn = document.getElementById('advanceStepBtn');
-    const isMyTurn = !!(me && state.current_player === me.name);
+    const isMyTurn = isMyTurnState(state);
     const stepLabel = phaseLabel === '事件' ? '結束事件階段' : phaseLabel === '行動' ? '結束行動階段' : phaseLabel === '結束' ? '結束回合' : '結束目前步驟';
     if (phaseActionMeta) {
       phaseActionMeta.textContent = isMyTurn ? `目前：${phaseLabel}｜下一步：${stepLabel}` : `目前：${phaseLabel}｜等待 ${state.current_player} 操作`;
@@ -1495,6 +1502,7 @@ async function render(state) {
   if (handDiv) {
     handDiv.innerHTML = '';
     const me = (state.players || []).find(p => p.id === playerId);
+    const isMyTurn = isMyTurnState(state);
     if (me && me.hand) {
       me.hand.forEach((card, i) => {
         const cardArg = escapeHtml(jsSingleQuotedString(card));
@@ -1504,8 +1512,8 @@ async function render(state) {
           <div class='card hand-card ${colorClass}' onclick="selectCardDetail(${cardArg},'hand',false)">
             ${renderCardFace(card, 'hand', false, true)}
             <div class="hand-card-actions">
-              <button type="button" onclick="event.stopPropagation(); playHandCard(${i}, ${cardArg}, 'resource')">資源</button>
-              <button type="button" onclick="event.stopPropagation(); playHandCard(${i}, ${cardArg}, 'action')">行動</button>
+              <button type="button" ${isMyTurn ? '' : 'disabled aria-disabled="true"'} onclick="event.stopPropagation(); playHandCard(${i}, ${cardArg}, 'resource')">資源</button>
+              <button type="button" ${isMyTurn ? '' : 'disabled aria-disabled="true"'} onclick="event.stopPropagation(); playHandCard(${i}, ${cardArg}, 'action')">行動</button>
             </div>
           </div>`;
       });
