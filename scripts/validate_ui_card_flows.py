@@ -330,23 +330,26 @@ def validate_type_flow(card_type, card_name):
         connect_and_wait_for_state(page)
         connect_and_wait_for_state(guest_page)
         turn_page = active_turn_page(page, [guest_page])
+        waiting_page = guest_page if turn_page is page else page
 
         displayed = hand_cards(turn_page)
         advance_to_action(turn_page)
+        connect_and_wait_for_state(waiting_page)
+        waiting_page.wait_for_timeout(400)
         after_phase = turn_page.evaluate('window.lastGameState.turn_phase')
 
-        guest_before = guest_page.evaluate('window.lastGameState')
-        guest_logs_before = log_lines(guest_page)
-        guest_hand_before = hand_cards(guest_page)
+        guest_before = waiting_page.evaluate('window.lastGameState')
+        guest_logs_before = log_lines(waiting_page)
+        guest_hand_before = hand_cards(waiting_page)
         guest_button_disabled = False
-        if guest_page.locator('#hand .card button').count() > 0:
-            guest_button_disabled = bool(guest_page.locator('#hand .card button').nth(0).evaluate('(btn) => btn.disabled'))
+        if waiting_page.locator('#hand .card button').count() > 0:
+            guest_button_disabled = bool(waiting_page.locator('#hand .card button').nth(0).evaluate('(btn) => btn.disabled'))
             if not guest_button_disabled:
-                guest_page.locator('#hand .card button').nth(0).click(force=True)
-                guest_page.wait_for_timeout(1200)
-        guest_after = guest_page.evaluate('window.lastGameState')
-        guest_logs_after = log_lines(guest_page)
-        guest_hand_after = hand_cards(guest_page)
+                waiting_page.locator('#hand .card button').nth(0).click(force=True)
+                waiting_page.wait_for_timeout(1200)
+        guest_after = waiting_page.evaluate('window.lastGameState')
+        guest_logs_after = log_lines(waiting_page)
+        guest_hand_after = hand_cards(waiting_page)
 
         host_hand_before = hand_cards(turn_page)
         hud_before = turn_page.locator('#hud').inner_text() if turn_page.locator('#hud').count() else ''
