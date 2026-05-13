@@ -25,7 +25,7 @@ FACTIONS_PATH = BASE_DIR / "data" / "factions" / "all_faction.integrated.v2.json
 STRUCTURED_ACTION_PATH = BASE_DIR / "data" / "action_cards_structured.v1.1.json"
 ERA_STRUCTURED_PATH = BASE_DIR / "data" / "era_structured.v1.1.json"
 SUPPORT_CARDS_PATH = BASE_DIR / "data" / "cards" / "support_cards.v1.1.json"
-SUPPORT_TAXONOMY_PATH = BASE_DIR / "SUPPORT_CARD_TAXONOMY.json"
+SUPPORT_TAXONOMY_PATH = BASE_DIR / "data" / "cards" / "support_taxonomy.v1.1.json"
 
 
 class GamePhase(str, Enum):
@@ -1731,7 +1731,7 @@ class Game:
 
     def _card_purchase_cost(self, card):
         card_name = getattr(card, 'name', str(card))
-        if getattr(card, "card_type", None) == "support":
+        if getattr(card, "card_type", None) == "support" or getattr(card, "type", None) == "support":
             return self._support_card_cost(card_name)
         for c in self.structured_cards:
             if c.get('name') == card_name:

@@ -14,10 +14,10 @@ except ModuleNotFoundError:
 
 ROOT = Path(__file__).resolve().parent.parent
 BASE_URL = 'http://127.0.0.1:8000'
-OUT_JSON = ROOT / 'MULTIPLAYER_LOBBY_FLOW_VALIDATION.json'
-OUT_MD = ROOT / 'MULTIPLAYER_LOBBY_FLOW_VALIDATION.md'
-HOST_SCREENSHOT = ROOT / 'multiplayer_lobby_flow_host.png'
-ALLY_SCREENSHOT = ROOT / 'multiplayer_lobby_flow_ally.png'
+OUT_JSON = ROOT / 'docs' / 'records' / 'lobby' / 'MULTIPLAYER_LOBBY_FLOW_VALIDATION.json'
+OUT_MD = ROOT / 'docs' / 'records' / 'lobby' / 'MULTIPLAYER_LOBBY_FLOW_VALIDATION.md'
+HOST_SCREENSHOT = ROOT / 'docs' / 'records' / 'lobby' / 'multiplayer_lobby_flow_host.png'
+ALLY_SCREENSHOT = ROOT / 'docs' / 'records' / 'lobby' / 'multiplayer_lobby_flow_ally.png'
 
 
 def request_json(path, payload=None):
@@ -178,6 +178,7 @@ def check_flow(browser):
 
 
 def write_reports(payload):
+    OUT_JSON.parent.mkdir(parents=True, exist_ok=True)
     OUT_JSON.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     lines = [
         '# MULTIPLAYER LOBBY FLOW VALIDATION',

@@ -1,6 +1,6 @@
 # Purchase Rules Validation
 
-Generated: 2026-05-10
+Generated: 2026-05-13
 
 Summary: 4/4 passed
 
@@ -26,10 +26,10 @@ Summary: 4/4 passed
     "分神",
     "內鬥",
     "組織經驗甲",
-    "派遣間諜",
-    "臺灣奧援",
-    "內鬥",
-    "北國奧援"
+    "凝聚共識",
+    "離間",
+    "批鬥",
+    "樹立信心"
   ],
   "area_after": [
     "宣傳家",
@@ -39,10 +39,10 @@ Summary: 4/4 passed
     "分神",
     "內鬥",
     "組織經驗甲",
-    "派遣間諜",
-    "臺灣奧援",
-    "內鬥",
-    "北國奧援"
+    "凝聚共識",
+    "離間",
+    "批鬥",
+    "樹立信心"
   ],
   "discard_before": [],
   "discard_after": [

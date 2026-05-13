@@ -3,8 +3,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SUPPORT_PATH = ROOT / 'data' / 'cards' / 'support_cards.v1.1.json'
-OUT_JSON = ROOT / 'SUPPORT_CARD_TAXONOMY.json'
-OUT_MD = ROOT / 'SUPPORT_CARD_TAXONOMY.md'
+OUT_JSON = ROOT / 'data' / 'cards' / 'support_taxonomy.v1.1.json'
+OUT_MD = ROOT / 'docs' / 'records' / 'support-cards' / 'SUPPORT_CARD_TAXONOMY.md'
 
 REGION_NAME_TO_ID = {
     '英美': 'anglo_support',
@@ -77,6 +77,8 @@ def main():
         ],
     }
 
+    OUT_JSON.parent.mkdir(parents=True, exist_ok=True)
+    OUT_MD.parent.mkdir(parents=True, exist_ok=True)
     OUT_JSON.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 
     lines = [

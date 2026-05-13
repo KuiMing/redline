@@ -8,7 +8,7 @@
 
 ## 新增
 - `scripts/build_support_card_taxonomy.py`
-- `SUPPORT_CARD_TAXONOMY.json`
+- `data/cards/support_taxonomy.v1.1.json`
 - `SUPPORT_CARD_TAXONOMY.md`
 
 ## 本輪 taxonomy 結論

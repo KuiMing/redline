@@ -40,6 +40,7 @@ def validate_page(page) -> dict:
     setup = post('/test/force-base-selection', {
         'faction_ids': ['red_army', 'hong_kong'],
         'player_names': ['玩家1', '玩家2'],
+        'bases': {'p1': ['北京'], 'p2': ['香港城']},
     })
     game_id = setup['game_id']
     player_id = setup['players'][0]['id']

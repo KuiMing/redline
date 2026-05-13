@@ -4,7 +4,7 @@
 
 ## 本輪完成
 
-把上一輪建立的 `SUPPORT_CARD_TAXONOMY.json` 真正接進 `印度研究分析室` 的 engine 判定，讓限制不再只依賴 action card type 猜測。
+把上一輪建立的 `data/cards/support_taxonomy.v1.1.json` 真正接進 `印度研究分析室` 的 engine 判定，讓限制不再只依賴 action card type 猜測。
 
 ## 已完成
 
