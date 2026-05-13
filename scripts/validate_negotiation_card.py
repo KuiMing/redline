@@ -22,8 +22,9 @@ if str(ROOT) not in sys.path:
 from server.cards import Card
 from server.game import Game, GamePhase, TurnPhase
 
-OUT_JSON = ROOT / "NEGOTIATION_CARD_VALIDATION.json"
-OUT_MD = ROOT / "NEGOTIATION_CARD_VALIDATION.md"
+RECORD_DIR = ROOT / "docs" / "records" / "shared-actions"
+OUT_JSON = RECORD_DIR / "NEGOTIATION_CARD_VALIDATION.json"
+OUT_MD = RECORD_DIR / "NEGOTIATION_CARD_VALIDATION.md"
 
 
 def make_game(player_count=3):
@@ -105,6 +106,7 @@ def run_explicit_target_validation():
 
 
 def main():
+    RECORD_DIR.mkdir(parents=True, exist_ok=True)
     checks = [run_default_target_validation(), run_explicit_target_validation()]
     summary = {
         "total": len(checks),

@@ -23,9 +23,11 @@ except ModuleNotFoundError:
 
 ROOT = Path(__file__).resolve().parent.parent
 BASE_URL = 'http://127.0.0.1:8000'
-OUT_JSON = ROOT / 'PURCHASE_SECTION_ALIGNMENT_VALIDATION.json'
-OUT_MD = ROOT / 'PURCHASE_SECTION_ALIGNMENT_VALIDATION.md'
-SCREENSHOT = ROOT / 'purchase_section_alignment_validation.png'
+RECORDS_DIR = ROOT / 'docs' / 'records' / 'purchase'
+RECORDS_DIR.mkdir(parents=True, exist_ok=True)
+OUT_JSON = RECORDS_DIR / 'PURCHASE_SECTION_ALIGNMENT_VALIDATION.json'
+OUT_MD = RECORDS_DIR / 'PURCHASE_SECTION_ALIGNMENT_VALIDATION.md'
+SCREENSHOT = RECORDS_DIR / 'purchase_section_alignment_validation.png'
 
 
 def post(path: str, payload: dict) -> dict:
@@ -53,28 +55,48 @@ def validate_page(page) -> dict:
 
     static_box = page.locator('#purchaseSection .panel-title').bounding_box()
     random_box = page.locator('#randomMarketPanel .panel-title').bounding_box()
+    static_card_box = page.locator('#purchaseStatic .card').first.bounding_box()
+    random_card_box = page.locator('#purchaseRandom .card').first.bounding_box()
     static_cards = page.locator('#purchaseStatic .card').count()
     random_cards = page.locator('#purchaseRandom .card').count()
     base_panel_display = page.locator('#baseSelectionPanel').evaluate("el => getComputedStyle(el).display")
 
     top_delta = None
-    aligned = False
+    title_aligned = False
     if static_box and random_box:
         top_delta = round(abs(static_box['y'] - random_box['y']), 2)
-        aligned = top_delta <= 4
+        title_aligned = top_delta <= 4
+
+    card_left_delta = None
+    card_top_delta = None
+    cards_aligned = False
+    if static_card_box and random_card_box:
+        card_left_delta = round(abs(static_card_box['x'] - random_card_box['x']), 2)
+        card_top_delta = round(abs(static_card_box['y'] - random_card_box['y']), 2)
+        cards_aligned = card_left_delta <= 4 and card_top_delta <= 4
 
     page.screenshot(path=str(SCREENSHOT), full_page=True)
 
     results = [
         {
             'name': 'static_purchase_title_aligns_with_random_market_title',
-            'ok': bool(aligned),
+            'ok': bool(title_aligned),
             'detail': {
                 'static_title_box': static_box,
                 'random_title_box': random_box,
                 'top_delta_px': top_delta,
                 'allowed_delta_px': 4,
                 'base_selection_panel_display': base_panel_display,
+            },
+        },
+        {
+            'name': 'static_purchase_first_card_top_aligns_with_random_market_first_card',
+            'ok': bool(card_top_delta is not None and card_top_delta <= 4),
+            'detail': {
+                'static_first_card_box': static_card_box,
+                'random_first_card_box': random_card_box,
+                'top_delta_px': card_top_delta,
+                'allowed_delta_px': 4,
             },
         },
         {
@@ -92,7 +114,7 @@ def validate_page(page) -> dict:
             'failed': sum(1 for r in results if not r['ok']),
         },
         'results': results,
-        'screenshot': str(SCREENSHOT),
+        'screenshot': str(SCREENSHOT.relative_to(ROOT)),
     }
 
 

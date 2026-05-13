@@ -1,6 +1,6 @@
 # Era Rules Validation
 
-Generated: 2026-05-10
+Generated: 2026-05-13
 
 Summary: 5/5 passed
 
@@ -20,7 +20,7 @@ Summary: 5/5 passed
   "rule": "香港時代條件文字是「香港在牆內擁有至少10個有效組織」；應限定香港陣營，而非任意玩家。",
   "actor_faction": "taiwan_green",
   "actor_orgs": {
-    "維多利亞城": 10
+    "三亞": 10
   },
   "active_eras": []
 }
@@ -33,7 +33,7 @@ Summary: 5/5 passed
   "rule": "香港陣營在香港區達到10組織時，香港時代應觸發。",
   "actor_faction": "hong_kong",
   "actor_orgs": {
-    "維多利亞城": 10
+    "三亞": 10
   },
   "active_eras": [
     "hong_kong"

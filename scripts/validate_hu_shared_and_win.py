@@ -8,8 +8,13 @@ sys.path.insert(0, str(ROOT))
 from server.game import Game
 from server.victory import VictoryEngine
 
+RECORD_DIR = ROOT / 'docs' / 'records' / 'shared-actions'
+OUT_JSON = RECORD_DIR / 'HU_SHARED_AND_WIN_VALIDATION.json'
+OUT_MD = RECORD_DIR / 'HU_SHARED_AND_WIN_VALIDATION.md'
+
 
 def main():
+    RECORD_DIR.mkdir(parents=True, exist_ok=True)
     g = Game([('p1', 'TW'), ('p2', 'HU')])
     tw, hu = g.players
     tw.faction_id = 'taiwan_green'
@@ -48,8 +53,8 @@ def main():
         'winner': winner,
     }
 
-    (ROOT / 'HU_SHARED_AND_WIN_VALIDATION.json').write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-    (ROOT / 'HU_SHARED_AND_WIN_VALIDATION.md').write_text(
+    OUT_JSON.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    OUT_MD.write_text(
         '# HU SHARED AND WIN VALIDATION\n\n'
         f"- shared_with: {json.dumps(sorted(shared_with), ensure_ascii=False)}\n"
         f"- access_shanghai: {access}\n"
@@ -59,6 +64,8 @@ def main():
         encoding='utf-8'
     )
     print(json.dumps(payload, ensure_ascii=False))
+    if payload['summary']['failed']:
+        raise SystemExit(1)
 
 
 if __name__ == '__main__':

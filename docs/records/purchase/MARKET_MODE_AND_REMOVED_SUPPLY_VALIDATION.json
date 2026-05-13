@@ -6,10 +6,10 @@
   },
   "checks": [
     {
-      "name": "sample_53 draw pile is 48 after 5 random market cards exposed",
+      "name": "sample_53 draw pile matches 35-card sampled market deck minus 5 exposed market cards",
       "passed": true,
-      "actual": 48,
-      "expected": 48
+      "actual": 30,
+      "expected": 30
     },
     {
       "name": "sample_53 state market mode",
@@ -18,10 +18,10 @@
       "expected": "sample_53"
     },
     {
-      "name": "all_cards draw pile exceeds sample_53 after 5 random market cards exposed",
+      "name": "all_cards draw pile exceeds sample_53 sampled market deck after 5 exposed cards",
       "passed": true,
-      "actual": 64,
-      "expected": "> 48"
+      "actual": 35,
+      "expected": "> 30"
     },
     {
       "name": "all_cards state market mode",

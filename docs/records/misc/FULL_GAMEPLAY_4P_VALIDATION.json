@@ -6,7 +6,7 @@
       "choice": {
         "player_id": "p1",
         "label": "任意牆內",
-        "town": "深圳",
+        "town": "三亞",
         "result": {
           "success": true
         }
@@ -34,46 +34,49 @@
           ],
           "resolved": {
             "任意牆內": [
-              "北京",
-              "深圳",
-              "廣州",
-              "湛茂",
-              "梅州",
-              "潮州",
-              "桂林",
-              "南寧",
-              "海口",
               "三亞",
-              "廈門",
-              "福州",
-              "溫州",
-              "杭州",
               "上海",
+              "北京",
               "南京",
-              "合肥",
-              "武漢",
+              "南寧",
               "南昌",
-              "長沙",
               "南陽",
-              "鄭州",
-              "徐州",
-              "濟南",
-              "青島",
+              "合肥",
               "天津",
-              "石家莊",
               "太原",
+              "奇臺",
+              "廈門",
+              "廣州",
               "延安",
-              "西安",
-              "銀川",
-              "蘭州",
-              "敦煌",
-              "西寧",
-              "重慶",
-              "成都",
-              "貴陽",
-              "昆明",
+              "徐州",
               "德宏",
-              "西雙版納"
+              "成都",
+              "敦煌",
+              "昆明",
+              "昌吉",
+              "杭州",
+              "桂林",
+              "梅州",
+              "武漢",
+              "海口",
+              "深圳",
+              "湛茂",
+              "溫州",
+              "潮州",
+              "澳門",
+              "濟南",
+              "石家莊",
+              "福州",
+              "蘭州",
+              "西安",
+              "西寧",
+              "西雙版納",
+              "貴陽",
+              "鄭州",
+              "重慶",
+              "銀川",
+              "長沙",
+              "青島"
             ],
             "任意南洋": [
               "曼谷",
@@ -139,25 +142,25 @@
           {
             "player": "player1",
             "faction": "republican",
-            "base": "深圳",
+            "base": "三亞",
             "orgs": {
-              "深圳": 1
+              "三亞": 1
             },
             "single_base_org": true,
             "base_allowed": true,
             "allowed_sample": [
               "三亞",
               "上海",
+              "上粉沙打",
+              "丹東",
+              "九龍城",
               "仰光",
+              "伊寧",
+              "佳木斯",
               "倫敦",
-              "北京",
-              "南京",
-              "南寧",
-              "南昌",
-              "南陽",
-              "卡加利",
-              "合肥",
-              "吉隆坡"
+              "元朗",
+              "克孜勒蘇",
+              "克拉瑪依"
             ]
           },
           {
@@ -248,7 +251,7 @@
       },
       "resources": {
         "money": 0,
-        "propaganda": 1
+        "propaganda": 0
       },
       "moves_left": 0
     },
@@ -260,7 +263,7 @@
         "skipped": true
       },
       "orgs_after": {
-        "深圳": 1
+        "三亞": 1
       },
       "moves_left_after": 0
     },
@@ -310,7 +313,7 @@
       },
       "resources": {
         "money": 0,
-        "propaganda": 1
+        "propaganda": 0
       },
       "moves_left": 0
     },
@@ -372,7 +375,7 @@
         "success": true
       },
       "resources": {
-        "money": 1,
+        "money": 0,
         "propaganda": 0
       },
       "moves_left": 0
@@ -435,7 +438,7 @@
       },
       "resources": {
         "money": 0,
-        "propaganda": 1
+        "propaganda": 0
       },
       "moves_left": 0
     },
@@ -496,7 +499,7 @@
         "success": true
       },
       "resources": {
-        "money": 1,
+        "money": 0,
         "propaganda": 0
       },
       "moves_left": 0
@@ -509,7 +512,7 @@
         "skipped": true
       },
       "orgs_after": {
-        "深圳": 1
+        "三亞": 1
       },
       "moves_left_after": 0
     },
@@ -558,7 +561,7 @@
         "success": true
       },
       "resources": {
-        "money": 1,
+        "money": 0,
         "propaganda": 0
       },
       "moves_left": 0
@@ -621,7 +624,7 @@
       },
       "resources": {
         "money": 0,
-        "propaganda": 1
+        "propaganda": 0
       },
       "moves_left": 0
     },
@@ -683,7 +686,7 @@
       },
       "resources": {
         "money": 0,
-        "propaganda": 1
+        "propaganda": 0
       },
       "moves_left": 0
     },
@@ -740,6 +743,7 @@
     "era_notification": null,
     "market_mode": "sample_53",
     "pending_base_choices": {},
+    "pending_choice": null,
     "action_log": [
       "[Turn 1] player1 played 追隨者",
       "[Turn 1] End of turn for player1",
@@ -766,11 +770,11 @@
       "資本家",
       "分神",
       "內鬥",
-      "英美奧援",
-      "臺灣奧援",
-      "凝聚共識",
+      "樹立信心",
       "內應間諜",
-      "歐洲奧援"
+      "走漏風聲",
+      "凝聚共識",
+      "高效行動"
     ],
     "static_purchase_supply": {
       "宣傳家": 1,
@@ -782,7 +786,7 @@
     },
     "map": {
       "towns": {
-        "深圳": [
+        "三亞": [
           {
             "player": "player1",
             "count": 1
@@ -806,73 +810,75 @@
           {
             "player": "player3",
             "count": 1
-          },
+          }
+        ],
+        "上海": [
           {
             "player": "player4",
             "count": 1
           }
         ],
-        "廣州": [
+        "上粉沙打": [
           {
             "player": "player4",
             "count": 1
           }
         ],
-        "湛茂": [
+        "丹東": [
           {
             "player": "player4",
             "count": 1
           }
         ],
-        "梅州": [
+        "九龍城": [
           {
             "player": "player4",
             "count": 1
           }
         ],
-        "桂林": [
+        "伊寧": [
+          {
+            "player": "player4",
+            "count": 1
+          }
+        ],
+        "佳木斯": [
+          {
+            "player": "player4",
+            "count": 1
+          }
+        ],
+        "元朗": [
+          {
+            "player": "player4",
+            "count": 1
+          }
+        ],
+        "克孜勒蘇": [
+          {
+            "player": "player4",
+            "count": 1
+          }
+        ],
+        "克拉瑪依": [
+          {
+            "player": "player4",
+            "count": 1
+          }
+        ],
+        "包頭": [
+          {
+            "player": "player4",
+            "count": 1
+          }
+        ],
+        "南京": [
           {
             "player": "player4",
             "count": 1
           }
         ],
         "南寧": [
-          {
-            "player": "player4",
-            "count": 1
-          }
-        ],
-        "海口": [
-          {
-            "player": "player4",
-            "count": 1
-          }
-        ],
-        "三亞": [
-          {
-            "player": "player4",
-            "count": 1
-          }
-        ],
-        "廈門": [
-          {
-            "player": "player4",
-            "count": 1
-          }
-        ],
-        "福州": [
-          {
-            "player": "player4",
-            "count": 1
-          }
-        ],
-        "溫州": [
-          {
-            "player": "player4",
-            "count": 1
-          }
-        ],
-        "杭州": [
           {
             "player": "player4",
             "count": 1
@@ -880,48 +886,50 @@
         ]
       },
       "shared_access": {
+        "丹東": [
+          "chaoshan"
+        ],
+        "佳木斯": [
+          "chaoshan"
+        ],
         "北京": [
           "chaoshan"
         ],
-        "杭州": [
+        "包頭": [
           "chaoshan"
         ],
-        "桂林": [
+        "南京": [
           "chaoshan"
         ],
-        "溫州": [
-          "chaoshan"
-        ],
-        "福州": [
-          "chaoshan"
-        ],
-        "廈門": [
-          "chaoshan"
-        ],
-        "潮州": [
-          "chaoshan",
-          "taiwan_green"
-        ],
-        "梅州": [
-          "chaoshan"
-        ],
-        "廣州": [
-          "chaoshan"
-        ],
-        "湛茂": [
+        "上海": [
           "chaoshan"
         ],
         "南寧": [
           "chaoshan"
         ],
-        "海口": [
-          "chaoshan"
-        ],
         "三亞": [
           "chaoshan"
         ],
-        "深圳": [
+        "上粉沙打": [
           "chaoshan"
+        ],
+        "元朗": [
+          "chaoshan"
+        ],
+        "九龍城": [
+          "chaoshan"
+        ],
+        "克拉瑪依": [
+          "chaoshan"
+        ],
+        "伊寧": [
+          "chaoshan"
+        ],
+        "克孜勒蘇": [
+          "chaoshan"
+        ],
+        "潮州": [
+          "taiwan_green"
         ]
       }
     },
@@ -930,7 +938,7 @@
         "id": "p1",
         "name": "player1",
         "faction": "republican",
-        "base": "深圳",
+        "base": "三亞",
         "resources": {
           "money": 0,
           "propaganda": 0
@@ -938,7 +946,7 @@
         "moves_left": 0,
         "hand": [
           "追隨者",
-          "樂捐者",
+          "追隨者",
           "追隨者",
           "樂捐者",
           "追隨者"
@@ -946,7 +954,7 @@
         "deck_count": 5,
         "discard_count": 0,
         "orgs": {
-          "深圳": 1
+          "三亞": 1
         }
       },
       {
@@ -960,10 +968,10 @@
         },
         "moves_left": 0,
         "hand": [
-          "樂捐者",
+          "追隨者",
           "樂捐者",
           "追隨者",
-          "追隨者",
+          "樂捐者",
           "追隨者"
         ],
         "deck_count": 5,
@@ -983,8 +991,8 @@
         },
         "moves_left": 0,
         "hand": [
-          "追隨者",
           "樂捐者",
+          "追隨者",
           "追隨者",
           "追隨者",
           "追隨者"
@@ -1006,7 +1014,7 @@
         },
         "moves_left": 0,
         "hand": [
-          "樂捐者",
+          "追隨者",
           "追隨者",
           "追隨者",
           "追隨者",
@@ -1015,20 +1023,20 @@
         "deck_count": 5,
         "discard_count": 0,
         "orgs": {
-          "北京": 1,
-          "深圳": 1,
-          "廣州": 1,
-          "湛茂": 1,
-          "梅州": 1,
-          "潮州": 1,
-          "桂林": 1,
-          "南寧": 1,
-          "海口": 1,
           "三亞": 1,
-          "廈門": 1,
-          "福州": 1,
-          "溫州": 1,
-          "杭州": 1
+          "上海": 1,
+          "上粉沙打": 1,
+          "丹東": 1,
+          "九龍城": 1,
+          "伊寧": 1,
+          "佳木斯": 1,
+          "元朗": 1,
+          "克孜勒蘇": 1,
+          "克拉瑪依": 1,
+          "包頭": 1,
+          "北京": 1,
+          "南京": 1,
+          "南寧": 1
         }
       }
     ]

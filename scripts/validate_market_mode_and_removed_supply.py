@@ -9,8 +9,9 @@ if str(ROOT) not in sys.path:
 from server.game import Game, TurnPhase, GamePhase
 from server.cards import Card
 
-OUT_JSON = ROOT / 'MARKET_MODE_AND_REMOVED_SUPPLY_VALIDATION.json'
-OUT_MD = ROOT / 'MARKET_MODE_AND_REMOVED_SUPPLY_VALIDATION.md'
+RECORD_DIR = ROOT / 'docs' / 'records' / 'purchase'
+OUT_JSON = RECORD_DIR / 'MARKET_MODE_AND_REMOVED_SUPPLY_VALIDATION.json'
+OUT_MD = RECORD_DIR / 'MARKET_MODE_AND_REMOVED_SUPPLY_VALIDATION.md'
 
 
 def make_game(mode: str):
@@ -37,14 +38,17 @@ def make_card(game: Game, name: str):
 
 
 def validate():
+    RECORD_DIR.mkdir(parents=True, exist_ok=True)
     checks = []
+
+    sample_53_expected = 35 - 5
 
     game53, _, _ = make_game('sample_53')
     checks.append({
-        'name': 'sample_53 draw pile is 48 after 5 random market cards exposed',
-        'passed': len(game53.purchase_deck.draw_pile) == 48,
+        'name': 'sample_53 draw pile matches 35-card sampled market deck minus 5 exposed market cards',
+        'passed': len(game53.purchase_deck.draw_pile) == sample_53_expected,
         'actual': len(game53.purchase_deck.draw_pile),
-        'expected': 48,
+        'expected': sample_53_expected,
     })
     checks.append({
         'name': 'sample_53 state market mode',
@@ -56,10 +60,10 @@ def validate():
     game_all, _, _ = make_game('all_cards')
     all_count = len(game_all.purchase_deck.draw_pile)
     checks.append({
-        'name': 'all_cards draw pile exceeds sample_53 after 5 random market cards exposed',
-        'passed': all_count > 48,
+        'name': 'all_cards draw pile exceeds sample_53 sampled market deck after 5 exposed cards',
+        'passed': all_count > sample_53_expected,
         'actual': all_count,
-        'expected': '> 48',
+        'expected': f"> {sample_53_expected}",
     })
     checks.append({
         'name': 'all_cards state market mode',

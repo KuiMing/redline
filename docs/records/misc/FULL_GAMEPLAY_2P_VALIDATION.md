@@ -5,10 +5,10 @@
 summary: {'total_checks': 4, 'passed': 4, 'failed': 0, 'errors': []}
 
 ## base_selection_choice
-- choice: {'player_id': 'p1', 'label': '任意牆內城鎮', 'town': '深圳', 'result': {'success': True}}
+- choice: {'player_id': 'p1', 'label': '任意牆內城鎮', 'town': '三亞', 'result': {'success': True}}
 
 ## base_selection_resolution
-- initial_pending: {'p1': {'labels': ['任意牆內城鎮'], 'resolved': {'任意牆內城鎮': ['北京', '深圳', '廣州', '湛茂', '梅州', '潮州', '桂林', '南寧', '海口', '三亞', '廈門', '福州', '溫州', '杭州', '上海', '南京', '合肥', '武漢', '南昌', '長沙', '南陽', '鄭州', '徐州', '濟南', '青島', '天津', '石家莊', '太原', '延安', '西安', '銀川', '蘭州', '敦煌', '西寧', '重慶', '成都', '貴陽', '昆明', '德宏', '西雙版納']}}}
+- initial_pending: {'p1': {'labels': ['任意牆內城鎮'], 'resolved': {'任意牆內城鎮': ['三亞', '上海', '北京', '南京', '南寧', '南昌', '南陽', '合肥', '天津', '太原', '奇臺', '廈門', '廣州', '延安', '徐州', '德宏', '成都', '敦煌', '昆明', '昌吉', '杭州', '桂林', '梅州', '武漢', '海口', '深圳', '湛茂', '溫州', '潮州', '澳門', '濟南', '石家莊', '福州', '蘭州', '西安', '西寧', '西雙版納', '貴陽', '鄭州', '重慶', '銀川', '長沙', '青島']}}}
 - remaining_pending: {}
 - game_phase_after_selection: GamePhase.MAIN
 
@@ -36,7 +36,7 @@ summary: {'total_checks': 4, 'passed': 4, 'failed': 0, 'errors': []}
 - hand_before: ['追隨者', '追隨者', '樂捐者', '追隨者', '追隨者']
 - hand_after: ['追隨者', '樂捐者', '追隨者', '追隨者']
 - result: {'success': True}
-- resources: {'money': 0, 'propaganda': 1}
+- resources: {'money': 0, 'propaganda': 0}
 - moves_left: 0
 
 ## cycle_1_move
@@ -72,7 +72,7 @@ summary: {'total_checks': 4, 'passed': 4, 'failed': 0, 'errors': []}
 - hand_before: ['追隨者', '樂捐者', '追隨者', '追隨者', '樂捐者']
 - hand_after: ['樂捐者', '追隨者', '追隨者', '樂捐者']
 - result: {'success': True}
-- resources: {'money': 0, 'propaganda': 1}
+- resources: {'money': 0, 'propaganda': 0}
 - moves_left: 0
 
 ## cycle_2_move
@@ -108,7 +108,7 @@ summary: {'total_checks': 4, 'passed': 4, 'failed': 0, 'errors': []}
 - hand_before: ['樂捐者', '樂捐者', '追隨者', '追隨者', '追隨者']
 - hand_after: ['樂捐者', '追隨者', '追隨者', '追隨者']
 - result: {'success': True}
-- resources: {'money': 1, 'propaganda': 0}
+- resources: {'money': 0, 'propaganda': 0}
 - moves_left: 0
 
 ## cycle_3_move
@@ -144,7 +144,7 @@ summary: {'total_checks': 4, 'passed': 4, 'failed': 0, 'errors': []}
 - hand_before: ['追隨者', '追隨者', '追隨者', '樂捐者', '追隨者']
 - hand_after: ['追隨者', '追隨者', '樂捐者', '追隨者']
 - result: {'success': True}
-- resources: {'money': 0, 'propaganda': 1}
+- resources: {'money': 0, 'propaganda': 0}
 - moves_left: 0
 
 ## cycle_4_move

@@ -24,6 +24,8 @@ ALIAS_TOWNS = {
     '梅州': '梅州',
 }
 
+RECORD_DIR = BASE / 'docs' / 'records' / 'misc'
+
 
 def china_towns(game):
     return list(game._towns_for_region_alias('china'))
@@ -273,8 +275,9 @@ def run_game(player_count):
 
 def write_outputs(result):
     count = result["player_count"]
-    json_path = BASE / f"FULL_GAMEPLAY_{count}P_VALIDATION.json"
-    md_path = BASE / f"FULL_GAMEPLAY_{count}P_VALIDATION.md"
+    RECORD_DIR.mkdir(parents=True, exist_ok=True)
+    json_path = RECORD_DIR / f"FULL_GAMEPLAY_{count}P_VALIDATION.json"
+    md_path = RECORD_DIR / f"FULL_GAMEPLAY_{count}P_VALIDATION.md"
     json_path.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
 
     lines = [f"# FULL GAMEPLAY {count}P VALIDATION", "", "日期：2026-05-03", ""]

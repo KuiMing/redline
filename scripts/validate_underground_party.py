@@ -20,8 +20,9 @@ if str(ROOT) not in sys.path:
 from server.cards import Card
 from server.game import Game, GamePhase, TurnPhase
 
-JSON_OUT = ROOT / "UNDERGROUND_PARTY_VALIDATION.json"
-MD_OUT = ROOT / "UNDERGROUND_PARTY_VALIDATION.md"
+RECORD_DIR = ROOT / "docs" / "records" / "purchase"
+JSON_OUT = RECORD_DIR / "UNDERGROUND_PARTY_VALIDATION.json"
+MD_OUT = RECORD_DIR / "UNDERGROUND_PARTY_VALIDATION.md"
 
 
 def card_names(cards):
@@ -138,6 +139,7 @@ def check_resolve_choice_keeps_one_and_returns_rest_to_purchase_area():
 
 
 def write_report(results):
+    RECORD_DIR.mkdir(parents=True, exist_ok=True)
     summary = {
         "total": len(results),
         "passed": sum(1 for r in results if r["passed"]),

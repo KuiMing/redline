@@ -9,8 +9,9 @@ if str(BASE) not in sys.path:
 
 from server.game import Game, TurnPhase, GamePhase
 
-OUT_JSON = BASE / 'FULL_GAMEPLAY_2P_VALIDATION.json'
-OUT_MD = BASE / 'FULL_GAMEPLAY_2P_VALIDATION.md'
+RECORD_DIR = BASE / 'docs' / 'records' / 'misc'
+OUT_JSON = RECORD_DIR / 'FULL_GAMEPLAY_2P_VALIDATION.json'
+OUT_MD = RECORD_DIR / 'FULL_GAMEPLAY_2P_VALIDATION.md'
 
 
 def china_towns(game, count=None):
@@ -86,6 +87,7 @@ def first_connected_move(game, player):
 
 
 def main():
+    RECORD_DIR.mkdir(parents=True, exist_ok=True)
     random.seed(20260510)
     game = Game([('p1', 'anti'), ('p2', 'red')])
     trace = []

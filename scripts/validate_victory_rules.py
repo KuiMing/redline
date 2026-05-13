@@ -8,8 +8,9 @@ if str(ROOT) not in sys.path:
 
 from server.game import Game, GamePhase
 
-OUT_JSON = ROOT / 'VICTORY_RULES_VALIDATION.json'
-OUT_MD = ROOT / 'VICTORY_RULES_VALIDATION.md'
+RECORD_DIR = ROOT / 'docs' / 'records' / 'shared-actions'
+OUT_JSON = RECORD_DIR / 'VICTORY_RULES_VALIDATION.json'
+OUT_MD = RECORD_DIR / 'VICTORY_RULES_VALIDATION.md'
 
 
 def china_towns(game, count=14):
@@ -132,6 +133,7 @@ def test_no_win_when_below_threshold():
 
 
 def main():
+    RECORD_DIR.mkdir(parents=True, exist_ok=True)
     results = [
         test_red_survival_after_turn_20(),
         test_red_taiwan_14_orgs_early_win(),

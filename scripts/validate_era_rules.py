@@ -10,8 +10,9 @@ if str(BASE) not in sys.path:
 
 from server.game import Game, GamePhase, TurnPhase
 
-OUT_JSON = BASE / 'ERA_RULES_VALIDATION.json'
-OUT_MD = BASE / 'ERA_RULES_VALIDATION.md'
+RECORD_DIR = BASE / 'docs' / 'records' / 'misc'
+OUT_JSON = RECORD_DIR / 'ERA_RULES_VALIDATION.json'
+OUT_MD = RECORD_DIR / 'ERA_RULES_VALIDATION.md'
 
 
 def make_game():
@@ -152,6 +153,7 @@ def run_checks():
 
 
 def write_reports(checks):
+    RECORD_DIR.mkdir(parents=True, exist_ok=True)
     summary = {
         'total': len(checks),
         'passed': sum(1 for c in checks if c['passed']),
