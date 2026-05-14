@@ -1200,6 +1200,47 @@ body {
   padding: 8px;
 }
 
+#factionActionPanel.overlay-active {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(460px, calc(100vw - 48px));
+  max-height: calc(100vh - 96px);
+  transform: translate(-50%, -50%);
+  z-index: 35;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 18px;
+  padding: 18px;
+  background: linear-gradient(180deg, rgba(12, 18, 28, 0.92), rgba(17, 24, 39, 0.86));
+  box-shadow: 0 24px 80px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05);
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+}
+
+#factionActionPanel.overlay-active .panel-title {
+  font-size: 1.2rem;
+  margin-bottom: 8px;
+  color: #f8fbff;
+}
+
+#factionActionPanel.overlay-active #factionActionInfo {
+  color: #d6e2f0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin-bottom: 14px;
+}
+
+#factionActionPanel.overlay-active #factionActionButtons {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+#factionActionPanel.overlay-active .base-choice-btn {
+  width: 100%;
+  justify-content: center;
+}
+
 .modal-overlay {
   position: absolute;
   left: 0;

@@ -1355,41 +1355,50 @@ function renderFactionActionPanel(state) {
 
   buttons.innerHTML = '';
   panel.style.display = 'none';
+  panel.classList.remove('overlay-active');
   info.textContent = '';
 
   if (!inAction || !isMine) return;
 
-  if (faction === 'aomen') {
+  const showCenteredActionPanel = (message, buildButton) => {
     panel.style.display = 'block';
-    info.textContent = '澳門可在行動階段發動一次賭徒耳語，請先選擇猜奇或猜偶。';
-    const btn = document.createElement('button');
-    btn.className = 'base-choice-btn';
-    btn.textContent = '發動 賭徒耳語';
-    btn.onclick = openGamblerGuessModal;
+    panel.classList.add('overlay-active');
+    info.textContent = message;
+    const btn = buildButton();
     buttons.appendChild(btn);
+  };
+
+  if (faction === 'aomen') {
+    showCenteredActionPanel('澳門可在行動階段發動一次賭徒耳語，請先選擇猜奇或猜偶。', () => {
+      const btn = document.createElement('button');
+      btn.className = 'base-choice-btn';
+      btn.textContent = '發動 賭徒耳語';
+      btn.onclick = openGamblerGuessModal;
+      return btn;
+    });
     return;
   }
 
   if (faction === 'fujian') {
-    panel.style.display = 'block';
-    info.textContent = '福建可在行動階段發動一次立場試探。';
-    const btn = document.createElement('button');
-    btn.className = 'base-choice-btn';
-    btn.textContent = '發動 立場試探';
-    btn.onclick = () => sendAction('faction_action', { name: '立場試探' });
-    buttons.appendChild(btn);
+    showCenteredActionPanel('福建可在行動階段發動一次立場試探。', () => {
+      const btn = document.createElement('button');
+      btn.className = 'base-choice-btn';
+      btn.textContent = '發動 立場試探';
+      btn.onclick = () => sendAction('faction_action', { name: '立場試探' });
+      return btn;
+    });
     return;
   }
 
   const ethnicRitualFactions = new Set(['dian_zhuang','zhuang','yi','bai','hani','dai','miao','tujia','dong','buyei','yao','li']);
   if (ethnicRitualFactions.has(faction)) {
-    panel.style.display = 'block';
-    info.textContent = '可在行動階段發動一次民族祭儀，請先猜奇偶。';
-    const btn = document.createElement('button');
-    btn.className = 'base-choice-btn';
-    btn.textContent = '發動 民族祭儀';
-    btn.onclick = openEthnicRitualGuessModal;
-    buttons.appendChild(btn);
+    showCenteredActionPanel('可在行動階段發動一次民族祭儀，請先猜奇偶。', () => {
+      const btn = document.createElement('button');
+      btn.className = 'base-choice-btn';
+      btn.textContent = '發動 民族祭儀';
+      btn.onclick = openEthnicRitualGuessModal;
+      return btn;
+    });
   }
 }
 
