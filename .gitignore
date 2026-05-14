@@ -17,3 +17,8 @@ server.log
 /*.webp
 /*.jpg
 /*.jpeg
+
+# Local scratch / generated artifacts that should not sit uncommitted in repo root
+/sketches/
+/scripts/debug_analyze_card_ui_report.py
+/scripts/generate_era_structured.py

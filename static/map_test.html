@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Map Test</title>
+  <style>
+    body { margin:0; background:#0A0D12; overflow:hidden; }
+    #viewport {
+      position:relative;
+      width:100vw;
+      height:100vh;
+      overflow:hidden;
+      cursor:grab;
+    }
+    #stage {
+      position:absolute;
+      width:2400px;
+      height:1400px;
+      transform-origin:0 0;
+    }
+    .node {
+      position:absolute;
+      transform:translate(-50%,-50%);
+      font-size:8px;
+      color:white;
+      background:rgba(0,0,0,0.7);
+      padding:2px 4px;
+      border:1px solid rgba(255,255,255,0.2);
+    }
+  </style>
+</head>
+<body>
+<div id="viewport">
+  <div id="stage">
+    <svg id="lines" width="2400" height="1400" style="position:absolute; left:0; top:0;"></svg>
+  </div>
+</div>
+<script>
+let state={x:-900,y:-500,scale:1};
+const viewport=document.getElementById('viewport');
+const stage=document.getElementById('stage');
+
+function apply(){
+ stage.style.transform=`translate(${state.x}px,${state.y}px) scale(${state.scale})`;
+}
+
+Promise.all([
+  fetch('/town-coordinates').then(r=>r.json()),
+  fetch('/map-data').then(r=>r.json())
+]).then(([coordData, mapData])=>{
+  const coords = coordData.towns;
+  const towns = mapData.towns;
+  const svg = document.getElementById('lines');
+
+  // Draw road & rail lines
+  Object.entries(towns).forEach(([town, info])=>{
+    const from = coords[town];
+    if (!from) return;
+
+    // ✅ 只畫 rail 主幹線
+    info.rail.forEach(toTown=>{
+      const to = coords[toTown];
+      if (!to) return;
+      const line = document.createElementNS("http://www.w3.org/2000/svg","line");
+      line.setAttribute("x1", from.x);
+      line.setAttribute("y1", from.y);
+      line.setAttribute("x2", to.x);
+      line.setAttribute("y2", to.y);
+      line.setAttribute("stroke","#3A7BD5");
+      line.setAttribute("stroke-width","2");
+      line.setAttribute("opacity","0.6");
+      svg.appendChild(line);
+    });
+  });
+
+  // Draw nodes
+  Object.entries(coords).forEach(([town,pos])=>{
+    const d=document.createElement('div');
+    d.className='node';
+    d.style.left=pos.x+'px';
+    d.style.top=pos.y+'px';
+    d.innerText=town;
+    stage.appendChild(d);
+  });
+
+  apply();
+});
+
+let dragging=false,startX,startY;
+viewport.addEventListener('mousedown',e=>{
+ dragging=true;
+ startX=e.clientX-state.x;
+ startY=e.clientY-state.y;
+});
+window.addEventListener('mouseup',()=>dragging=false);
+window.addEventListener('mousemove',e=>{
+ if(!dragging) return;
+ state.x=e.clientX-startX;
+ state.y=e.clientY-startY;
+ apply();
+});
+viewport.addEventListener('wheel',e=>{
+ e.preventDefault();
+ state.scale+=e.deltaY>0?-0.1:0.1;
+ state.scale=Math.max(0.5,Math.min(2.5,state.scale));
+ apply();
+});
+</script>
+</body>
+</html>

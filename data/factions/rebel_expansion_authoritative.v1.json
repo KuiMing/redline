@@ -1,0 +1,133 @@
+{
+  "schema_version": "1.0",
+  "source": "user-provided authoritative rebel roster (2026-05-04)",
+  "camp": "rebel",
+  "notes": [
+    "This file records the user-confirmed authoritative rebel faction roster and should be treated as the canonical source for future integration.",
+    "It is not yet fully wired into runtime selection/engine logic; use together with REBEL_EXPANSION_GAP_ANALYSIS.md."
+  ],
+  "factions": [
+    {
+      "id": "liberals",
+      "name": "自由派",
+      "group": "政治類陣營",
+      "bases": ["任意牆內城鎮"],
+      "abilities": ["【立場試探】在己方行動階段，可展示牌庫頂牌，若該牌購買費用為奇數，則將其加入手牌；若為偶數，您可選擇是否將其放進己方棄牌堆。"],
+      "win_condition": "回合結束時在牆內擁有至少14個有效組織。"
+    },
+    {
+      "id": "republican",
+      "name": "民國派",
+      "group": "政治類陣營",
+      "bases": ["任意牆內", "任意南洋", "任意英美城鎮"],
+      "abilities": ["【選我河山】若您在回合中曾於牆內建立至少1個組織，您可以在己方行動階段結束時額外再抽1張牌。"],
+      "special_rules": ["遊戲過程中可與藍線臺灣共用組織。"],
+      "win_condition": "回合結束時在牆內擁有至少11個有效組織，其中必須包含南京、廣州、重慶。"
+    },
+    {
+      "id": "federalists",
+      "name": "聯邦派",
+      "group": "政治類陣營",
+      "bases": ["任意牆內", "任意英美城鎮"],
+      "abilities": ["【商貿組織】當您每回合第1次打出購買費用含資金的牌時，抽1張牌。"],
+      "win_condition": "回合結束時在牆內擁有至少14個有效組織。"
+    },
+    {
+      "id": "minyun",
+      "name": "民運派",
+      "group": "政治類陣營",
+      "bases": ["巴黎", "任意東洋", "任意英美城鎮"],
+      "abilities": [
+        "【民主陣線】您可以用2點任意資源購買已被移除的任1張牌。",
+        "【各界資助】在遊戲開始時額外將1張資助者洗入起始牌庫。",
+        "【非暴力】禁止持有武裝類卡牌。"
+      ],
+      "win_condition": "回合結束時在牆內擁有至少14個有效組織。"
+    },
+    {
+      "id": "new_left",
+      "name": "新左派",
+      "group": "政治類陣營",
+      "bases": ["任意牆內", "任意南洋城鎮"],
+      "abilities": ["【星星之火】當您每回合第1次打出購買費用含宣傳的牌時，抽1張牌。"],
+      "win_condition": "回合結束時在牆內擁有至少14個有效組織。"
+    },
+    {
+      "id": "reform_opening",
+      "name": "改革開放派",
+      "group": "政治類陣營",
+      "bases": ["任意牆內", "任意英美城鎮"],
+      "abilities": ["【紅軍派系】每回合可檢視1次牌庫頂3張牌，將其以任意順序放回牌庫頂，並抽1張牌。"],
+      "win_condition": "回合結束時在牆內擁有至少14個有效組織。"
+    },
+    {
+      "id": "falun_gong",
+      "name": "法輪功",
+      "group": "政治類陣營",
+      "bases": ["紐約"],
+      "abilities": ["【華文傳媒】可以用資金支付宣傳。"],
+      "win_condition": "回合結束時在牆內擁有至少14個有效組織。"
+    },
+    {
+      "id": "underground_church",
+      "name": "地下教會",
+      "group": "政治類陣營",
+      "bases": ["任意牆內城鎮"],
+      "abilities": ["【殉道者】每次己方牆內組織被其他玩家成功瓦解時，抽1張牌。"],
+      "special_rules": ["遊戲過程中可與綠線臺灣共用組織。"],
+      "win_condition": "回合結束時在牆內擁有至少14個有效組織。"
+    },
+    {
+      "id": "gender_revolution",
+      "name": "性別革命",
+      "group": "政治類陣營",
+      "bases": ["任意牆內城鎮"],
+      "abilities": [
+        "【人同此心】當您每回合第1次打出購買費用含宣傳的牌時，獲得2點宣傳。",
+        "【活動家】在遊戲開始時額外將2張宣傳家洗入起始牌庫。",
+        "【非暴力】禁止持有武裝類卡牌。"
+      ],
+      "special_rules": ["遊戲過程中可與綠線臺灣共用組織。"],
+      "win_condition": "回合結束時在牆內擁有至少14個有效組織。"
+    },
+    {
+      "id": "qiong",
+      "name": "瓊",
+      "group": "地域類陣營（華南）",
+      "bases": ["海口", "三亞", "任意南洋", "任意英美城鎮"],
+      "abilities": ["【展現實力】在己方行動階段打出至少3張不同名稱的非起始牌，則可獲得3點宣傳或3點資金。"],
+      "win_condition": "回合結束時在牆內與牆外共擁有至少12個有效組織，其中必須包含海口、三亞。"
+    },
+    {
+      "id": "yue",
+      "name": "粵",
+      "group": "地域類陣營（華南）",
+      "bases": ["廣州", "任意南洋", "任意英美城鎮"],
+      "abilities": ["【商貿組織】當您每回合第1次打出購買費用含資金的牌時，抽1張牌。"],
+      "special_rules": ["遊戲過程中可與香港共用組織。"],
+      "win_condition": "回合結束時在牆內與牆外共擁有至少11個有效組織，其中必須包含廣州、深圳、湛茂。"
+    },
+    {
+      "id": "aomen",
+      "name": "澳門",
+      "group": "地域類陣營（華南）",
+      "bases": ["澳門", "任意南洋", "任意英美城鎮"],
+      "abilities": ["【賭徒耳語】在己方行動階段，可將1張手牌放進牌庫底，猜牌庫頂牌購買費用奇偶，並展示牌庫頂牌。若猜中可獲得3點宣傳與3點資金。"],
+      "special_rules": ["遊戲過程中可與香港共用組織。"],
+      "win_condition": "回合結束時在牆內與牆外共擁有至少13個有效組織，其中必須包含澳門。"
+    },
+    {
+      "id": "hakka",
+      "name": "客家",
+      "group": "地域類陣營（華南）",
+      "bases": ["梅州", "任意南洋", "任意英美城鎮"],
+      "abilities": ["【商貿組織】當您每回合第1次打出購買費用含資金的牌時，抽1張牌。"],
+      "special_rules": ["遊戲過程中可與綠線臺灣共用組織。"],
+      "win_condition": "回合結束時在牆內與牆外共擁有至少13個有效組織，其中必須包含梅州。"
+    },
+    {
+      "id": "chaoshan",
+      "name": "潮汕",
+      "group": "地域類陣營（華南）",
+      "bases": ["潮州", "任意南洋", "任意英美城鎮"],
+      "abilities": ["【商貿組織】當您每回合第1次打出購買費用含資金的牌時，抽1張牌。"

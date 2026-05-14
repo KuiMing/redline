@@ -933,6 +933,7 @@ def test_setup_support_card_play(payload: dict):
         "turn_phase": game.turn_phase,
         "game_phase": game.game_phase,
         "players": [{"id": p.id, "name": p.name, "faction": p.faction_id} for p in game.players],
+        "support_tier": game._support_card_tier(player, payload.get("support_name", "印度奧援"))[0],
         "state": game.state(),
     }
 

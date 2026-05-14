@@ -9,7 +9,7 @@ RECORD_DIR = BASE / 'docs' / 'records' / 'leak-card'
 OUT_JSON = RECORD_DIR / 'LEAK_CARD_TARGET_UI_VALIDATION.json'
 OUT_MD = RECORD_DIR / 'LEAK_CARD_TARGET_UI_VALIDATION.md'
 SCREENSHOT = RECORD_DIR / 'leak_card_target_modal.png'
-BASE_URL = 'http://127.0.0.1:8001/static/index.html?validate_leak_target_ui=1'
+BASE_URL = 'http://127.0.0.1:8000/static/index.html?validate_leak_target_ui=1'
 
 
 def record_path(path):
