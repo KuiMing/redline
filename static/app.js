@@ -1370,6 +1370,17 @@ function renderFactionActionPanel(state) {
     return;
   }
 
+  if (faction === 'fujian') {
+    panel.style.display = 'block';
+    info.textContent = '福建可在行動階段發動一次立場試探。';
+    const btn = document.createElement('button');
+    btn.className = 'base-choice-btn';
+    btn.textContent = '發動 立場試探';
+    btn.onclick = () => sendAction('faction_action', { name: '立場試探' });
+    buttons.appendChild(btn);
+    return;
+  }
+
   const ethnicRitualFactions = new Set(['dian_zhuang','zhuang','yi','bai','hani','dai','miao','tujia','dong','buyei','yao','li']);
   if (ethnicRitualFactions.has(faction)) {
     panel.style.display = 'block';

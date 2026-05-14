@@ -222,6 +222,38 @@ def test_negotiation_draws_actor_and_chosen_other_player_only_and_gains_two_prop
     assert p1.resources['propaganda'] == 2
 
 
+def test_fujian_stance_probe_adds_odd_cost_top_card_to_hand():
+    g = make_game()
+    p = g.current_player()
+    p.faction_id = 'fujian'
+    p.hand = []
+    p.deck.draw_pile = [Card('Bottom', 'command', {}), card(g, '點燃熱情')]
+
+    result = g._activated_faction_action(p, '立場試探')
+
+    assert result.get('success'), result
+    assert names(p.hand) == ['點燃熱情']
+    assert names(p.deck.discard_pile) == []
+    assert g.turn_log.get('faction_action_used') is True
+
+
+
+def test_fujian_stance_probe_discards_even_cost_top_card():
+    g = make_game()
+    p = g.current_player()
+    p.faction_id = 'fujian'
+    p.hand = []
+    p.deck.draw_pile = [Card('Bottom', 'command', {}), card(g, '合作談判')]
+
+    result = g._activated_faction_action(p, '立場試探')
+
+    assert result.get('success'), result
+    assert names(p.hand) == []
+    assert names(p.deck.discard_pile) == ['合作談判']
+    assert g.turn_log.get('faction_action_used') is True
+
+
+
 def test_underground_party_keeps_one_card_and_returns_the_rest_to_purchase_deck_system():
     g = make_game()
     p = g.current_player()
