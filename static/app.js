@@ -1346,7 +1346,15 @@ function renderFactionActionPanel(state) {
   const panel = document.getElementById('factionActionPanel');
   const info = document.getElementById('factionActionInfo');
   const buttons = document.getElementById('factionActionButtons');
-  if (!panel || !info || !buttons) return;
+  const modalOverlay = document.getElementById('factionActionModal');
+  const modalTitle = document.getElementById('factionActionModalTitle');
+  const modalDesc = document.getElementById('factionActionModalDesc');
+  const modalChoices = document.getElementById('factionActionModalChoices');
+  const modalHint = document.getElementById('factionActionModalRewardHint');
+  const closeBtn = document.getElementById('closeFactionActionModal');
+  const oddBtn = document.getElementById('guessOddBtn');
+  const evenBtn = document.getElementById('guessEvenBtn');
+  if (!panel || !info || !buttons || !modalOverlay || !modalTitle || !modalDesc || !modalChoices || !modalHint || !closeBtn) return;
 
   const me = state.players?.find(p => p.id === playerId) || null;
   const inAction = String(state.turn_phase).toLowerCase() === 'action';
@@ -1357,48 +1365,84 @@ function renderFactionActionPanel(state) {
   panel.style.display = 'none';
   panel.classList.remove('overlay-active');
   info.textContent = '';
+  modalOverlay.style.display = 'none';
+  modalChoices.innerHTML = '';
+  modalHint.textContent = '';
+  modalDesc.textContent = '';
+  modalTitle.textContent = '';
+  if (oddBtn) oddBtn.style.display = 'none';
+  if (evenBtn) evenBtn.style.display = 'none';
 
   if (!inAction || !isMine) return;
 
-  const showCenteredActionPanel = (message, buildButton) => {
-    panel.style.display = 'block';
-    panel.classList.add('overlay-active');
-    info.textContent = message;
-    const btn = buildButton();
-    buttons.appendChild(btn);
+  const showCenteredActionPanel = (title, message, buildButtons, hint = '') => {
+    panel.style.display = 'none';
+    panel.classList.remove('overlay-active');
+    info.textContent = '';
+    buttons.innerHTML = '';
+    modalOverlay.style.display = 'flex';
+    modalTitle.textContent = title;
+    modalDesc.textContent = message;
+    modalHint.textContent = hint;
+    modalChoices.innerHTML = '';
+    if (oddBtn) oddBtn.style.display = 'none';
+    if (evenBtn) evenBtn.style.display = 'none';
+    buildButtons(modalChoices);
+    closeBtn.onclick = closeFactionActionModal;
   };
 
   if (faction === 'aomen') {
-    showCenteredActionPanel('澳門可在行動階段發動一次賭徒耳語，請先選擇猜奇或猜偶。', () => {
-      const btn = document.createElement('button');
-      btn.className = 'base-choice-btn';
-      btn.textContent = '發動 賭徒耳語';
-      btn.onclick = openGamblerGuessModal;
-      return btn;
-    });
+    showCenteredActionPanel(
+      '賭徒耳語',
+      '澳門可在行動階段發動一次賭徒耳語，請先選擇猜奇或猜偶。',
+      (target) => {
+        const btn = document.createElement('button');
+        btn.className = 'modal-choice-btn';
+        btn.type = 'button';
+        btn.textContent = '發動 賭徒耳語';
+        btn.onclick = openGamblerGuessModal;
+        target.appendChild(btn);
+      },
+      '將 1 張手牌放進牌庫底，猜牌庫頂牌購買費用奇偶；若猜中獲得 3 點宣傳與 3 點資金。'
+    );
     return;
   }
 
   if (faction === 'fujian') {
-    showCenteredActionPanel('福建可在行動階段發動一次立場試探。', () => {
-      const btn = document.createElement('button');
-      btn.className = 'base-choice-btn';
-      btn.textContent = '發動 立場試探';
-      btn.onclick = () => sendAction('faction_action', { name: '立場試探' });
-      return btn;
-    });
+    showCenteredActionPanel(
+      '立場試探',
+      '福建可在行動階段發動一次立場試探。',
+      (target) => {
+        const btn = document.createElement('button');
+        btn.className = 'modal-choice-btn';
+        btn.type = 'button';
+        btn.textContent = '發動 立場試探';
+        btn.onclick = () => {
+          sendAction('faction_action', { name: '立場試探' });
+          closeFactionActionModal();
+        };
+        target.appendChild(btn);
+      },
+      '展示牌庫頂牌；若購買費用為奇數則加入手牌，若為偶數則放入棄牌堆。'
+    );
     return;
   }
 
   const ethnicRitualFactions = new Set(['dian_zhuang','zhuang','yi','bai','hani','dai','miao','tujia','dong','buyei','yao','li']);
   if (ethnicRitualFactions.has(faction)) {
-    showCenteredActionPanel('可在行動階段發動一次民族祭儀，請先猜奇偶。', () => {
-      const btn = document.createElement('button');
-      btn.className = 'base-choice-btn';
-      btn.textContent = '發動 民族祭儀';
-      btn.onclick = openEthnicRitualGuessModal;
-      return btn;
-    });
+    showCenteredActionPanel(
+      '民族祭儀',
+      '可在行動階段發動一次民族祭儀，請先猜奇偶。',
+      (target) => {
+        const btn = document.createElement('button');
+        btn.className = 'modal-choice-btn';
+        btn.type = 'button';
+        btn.textContent = '發動 民族祭儀';
+        btn.onclick = openEthnicRitualGuessModal;
+        target.appendChild(btn);
+      },
+      '猜中可獲得 2 點宣傳與 2 點資金；沒猜中則獲得 2 點宣傳。'
+    );
   }
 }
 
