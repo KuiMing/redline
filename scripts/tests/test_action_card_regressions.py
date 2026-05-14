@@ -419,6 +419,8 @@ def test_forge_consensus_grants_propaganda_when_both_discards_are_non_starters()
     result = g.play_card(0, mode='action')
 
     assert result.get('success'), result
+    assert result.get('pending_choice') is True
+    assert p.resources['propaganda'] == 0
     assert g.pending_choice and g.pending_choice['type'] == 'multi_card_choice'
     assert g.pending_choice['choice_key'] == 'discard_self'
     assert names(g.pending_choice['cards']) == ['KeepMe', 'UsefulB', 'UsefulA', 'Bottom']
@@ -429,6 +431,25 @@ def test_forge_consensus_grants_propaganda_when_both_discards_are_non_starters()
     assert 'KeepMe' in names(p.hand)
     assert 'Bottom' in names(p.hand)
     assert names(p.deck.discard_pile) == ['ExistingDiscard', '凝聚共識', 'UsefulB', 'UsefulA']
+
+
+def test_forge_consensus_does_not_grant_propaganda_before_pending_choice_or_when_discards_are_starters():
+    g = make_game()
+    p = g.current_player()
+    p.hand = [card(g, '凝聚共識'), Card('KeepMe', 'command', {})]
+    p.deck.draw_pile = [Card('Bottom', 'command', {}), Card('追隨者', 'starter', {}), Card('樂捐者', 'starter', {})]
+    p.deck.discard_pile = [Card('ExistingDiscard', 'command', {})]
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    assert result.get('pending_choice') is True
+    assert p.resources['propaganda'] == 0
+    assert g.pending_choice and g.pending_choice['type'] == 'multi_card_choice'
+    resolved = g.resolve_pending_choice(p.id, [1, 2])
+    assert resolved.get('success'), resolved
+    assert p.resources['propaganda'] == 0
+    assert names(p.deck.discard_pile) == ['ExistingDiscard', '凝聚共識', '樂捐者', '追隨者']
 
 
 
