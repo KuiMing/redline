@@ -388,6 +388,55 @@ class Game:
         }
         return {'pending_choice': True}
 
+    def _set_pending_town_choice(self, player, choice_key, towns, prompt, **extra):
+        normalized = []
+        for town in list(towns or []):
+            if isinstance(town, dict):
+                item = dict(town)
+            else:
+                item = {'town': town}
+            if item.get('town'):
+                normalized.append(item)
+        self.pending_choice = {
+            'type': 'town_choice',
+            'choice_key': choice_key,
+            'player_id': player.id,
+            'towns': normalized,
+            'prompt': prompt,
+            **extra,
+        }
+        return {'pending_choice': True}
+
+    def _set_pending_target_choice(self, player, choice_key, targets, prompt, **extra):
+        normalized = []
+        for target in list(targets or []):
+            if isinstance(target, dict):
+                item = dict(target)
+            else:
+                item = {'id': str(target), 'label': str(target)}
+            if item.get('id') is not None:
+                normalized.append(item)
+        self.pending_choice = {
+            'type': 'target_choice',
+            'choice_key': choice_key,
+            'player_id': player.id,
+            'targets': normalized,
+            'prompt': prompt,
+            **extra,
+        }
+        return {'pending_choice': True}
+
+    def _set_pending_support_flow_choice(self, player, choice_key, step, prompt, **extra):
+        self.pending_choice = {
+            'type': 'support_flow_choice',
+            'choice_key': choice_key,
+            'player_id': player.id,
+            'step': step,
+            'prompt': prompt,
+            **extra,
+        }
+        return {'pending_choice': True}
+
     def _resolve_underground_party(self, player, count=3):
         if not getattr(self, 'purchase_deck', None):
             return {'error': 'Purchase deck unavailable'}
@@ -512,6 +561,52 @@ class Game:
 
         return {'error': 'Unsupported pending choice type'}
 
+    def _resolve_town_choice(self, player, choice, index):
+        towns = choice.get('towns') or []
+        if index is None or index < 0 or index >= len(towns):
+            return {'error': 'Invalid choice index'}
+        selected = towns[index] or {}
+        town = selected.get('town')
+        if not town:
+            return {'error': 'Invalid town choice'}
+        self.pending_choice = None
+        return {
+            'success': True,
+            'choice_index': index,
+            'town': town,
+            'selected': selected,
+            'choice_key': choice.get('choice_key'),
+        }
+
+    def _resolve_target_choice(self, player, choice, index):
+        targets = choice.get('targets') or []
+        if index is None or index < 0 or index >= len(targets):
+            return {'error': 'Invalid choice index'}
+        selected = targets[index] or {}
+        target_id = selected.get('id')
+        if target_id is None:
+            return {'error': 'Invalid target choice'}
+        self.pending_choice = None
+        return {
+            'success': True,
+            'choice_index': index,
+            'target_id': target_id,
+            'selected': selected,
+            'choice_key': choice.get('choice_key'),
+        }
+
+    def _resolve_support_flow_choice(self, player, choice, index):
+        step = choice.get('step')
+        if step == 'town':
+            result = self._resolve_town_choice(player, choice, index)
+        elif step == 'target':
+            result = self._resolve_target_choice(player, choice, index)
+        else:
+            return {'error': 'Unsupported support flow step'}
+        if result.get('error'):
+            return result
+        return self._resolve_support_interaction_result(player, result, choice)
+
     def resolve_pending_choice(self, player_id, index):
         choice = self.pending_choice or {}
         if not choice:
@@ -527,6 +622,12 @@ class Game:
             return self._resolve_multi_card_choice(player, choice, index)
         if choice.get('type') == 'option_choice':
             return self._resolve_option_choice(player, choice, index)
+        if choice.get('type') == 'town_choice':
+            return self._resolve_town_choice(player, choice, index)
+        if choice.get('type') == 'target_choice':
+            return self._resolve_target_choice(player, choice, index)
+        if choice.get('type') == 'support_flow_choice':
+            return self._resolve_support_flow_choice(player, choice, index)
         return {'error': 'Unsupported pending choice type'}
 
     def _support_card_effect_text(self, card_name, tier, region_index):
@@ -540,7 +641,7 @@ class Game:
         if tier >= 3:
             return region_entry.get('tier_3')
         if tier == 2:
-            return region_entry.get('tier_2')
+            return region_entry.get('tier_2') or region_entry.get('tier_3')
         return region_entry.get('tier_1')
 
     def _resolve_support_card_effect(self, card_name, tier, region_index):
@@ -565,21 +666,23 @@ class Game:
             return 'draw_then_discard', {'draw': 1, 'discard': 1}
         if card_name == '東洋奧援':
             if tier >= 3:
-                return 'build_anywhere_inner', {'count': 1}
+                return 'interactive_build_anywhere_inner', {'count': 1}
+            if tier == 2 and region_index == 0:
+                return 'interactive_build_anywhere_inner', {'count': 1}
             if tier == 2:
-                return 'build_near_inner', {'count': 1}
+                return 'interactive_build_near_inner', {'count': 1}
             return 'gain_resource', {'propaganda': 2}
         if card_name == '北國奧援':
             if tier >= 3:
-                return 'dissolve_many_near', {'count': 2}
+                return 'interactive_dissolve_many_near', {'count': 2}
             if tier == 2:
-                return 'dissolve_many_near', {'count': 1}
-            return 'dissolve_self_and_enemy', {'count': 1}
+                return 'interactive_dissolve_many_near', {'count': 1}
+            return 'interactive_dissolve_self_and_enemy', {'count': 1}
         if card_name == '臺灣奧援':
             if tier >= 3:
-                return 'dissolve_and_build', {'count': 1}
+                return 'interactive_dissolve_and_build', {'count': 1}
             if tier == 2:
-                return 'dissolve_many_near', {'count': 1}
+                return 'interactive_dissolve_many_near', {'count': 1}
             return 'gain_resource', {'propaganda': 1}
         if card_name == '天方奧援':
             if tier >= 3:
@@ -589,10 +692,164 @@ class Game:
             return 'force_discard_near', {'count': 1, 'random': False}
         return 'text_only', {'text': text}
 
+    def _interactive_support_build_towns(self, player, near_only=False):
+        inner_towns = set(self._towns_for_region_alias('china'))
+        if near_only:
+            reachable = set()
+            for origin in list((player.organizations or {}).keys()):
+                neighbors = set(self.map.get('towns', {}).get(origin, {}).get('road', []) or []) | set(self.map.get('towns', {}).get(origin, {}).get('rail', []) or [])
+                reachable |= {town for town in neighbors if town in inner_towns}
+        else:
+            reachable = inner_towns
+        return [
+            {'town': town}
+            for town in sorted(reachable)
+            if self.can_develop_in_town(player, town)
+        ]
+
+    def _interactive_support_dissolve_targets(self, player, require_self_sacrifice=False):
+        targets = []
+        for other in self.players:
+            if other is player:
+                continue
+            for town, count in (other.organizations or {}).items():
+                if count <= 0:
+                    continue
+                if not self._player_has_org_within_steps_of_player(player, other, max_steps=1):
+                    continue
+                targets.append({
+                    'id': f'{getattr(other, "id", other.name)}::{town}',
+                    'label': f'{other.name}｜{town}',
+                    'player_id': getattr(other, 'id', None),
+                    'town': town,
+                    'requires_self_sacrifice': require_self_sacrifice,
+                })
+        return targets
+
+    def _start_support_interaction(self, player, card_name, tier, region_index, effect_type, payload):
+        effect_text = self._support_card_effect_text(card_name, tier, region_index)
+        base_context = {
+            'card_name': card_name,
+            'tier': tier,
+            'region_index': region_index,
+            'effect_type': effect_type,
+            'effect_payload': dict(payload or {}),
+            'effect_text': effect_text,
+        }
+        if effect_type == 'interactive_build_anywhere_inner':
+            towns = self._interactive_support_build_towns(player, near_only=False)
+            if not towns:
+                return None
+            result = self._set_pending_support_flow_choice(
+                player,
+                'support_interaction',
+                'town',
+                f'{card_name}：選擇 1 個建立組織的牆內城鎮。',
+                source_name=card_name,
+                towns=towns,
+                context=base_context,
+            )
+            return {'pending_choice': True, **result}
+        if effect_type == 'interactive_build_near_inner':
+            towns = self._interactive_support_build_towns(player, near_only=True)
+            if not towns:
+                return None
+            result = self._set_pending_support_flow_choice(
+                player,
+                'support_interaction',
+                'town',
+                f'{card_name}：選擇 1 個己方組織 1 格內的牆內城鎮建立組織。',
+                source_name=card_name,
+                towns=towns,
+                context=base_context,
+            )
+            return {'pending_choice': True, **result}
+        if effect_type == 'interactive_dissolve_many_near':
+            targets = self._interactive_support_dissolve_targets(player, require_self_sacrifice=False)
+            if not targets:
+                return None
+            result = self._set_pending_support_flow_choice(
+                player,
+                'support_interaction',
+                'target',
+                f'{card_name}：選擇 1 個要瓦解的鄰近敵方組織。',
+                source_name=card_name,
+                targets=targets,
+                context=base_context,
+            )
+            return {'pending_choice': True, **result}
+        if effect_type == 'interactive_dissolve_self_and_enemy':
+            targets = self._interactive_support_dissolve_targets(player, require_self_sacrifice=True)
+            if not targets:
+                return None
+            result = self._set_pending_support_flow_choice(
+                player,
+                'support_interaction',
+                'target',
+                f'{card_name}：選擇 1 個要瓦解的鄰近敵方組織；結算前先移除己方 1 個組織。',
+                source_name=card_name,
+                targets=targets,
+                context=base_context,
+            )
+            return {'pending_choice': True, **result}
+        if effect_type == 'interactive_dissolve_and_build':
+            targets = self._interactive_support_dissolve_targets(player, require_self_sacrifice=False)
+            if not targets:
+                return None
+            result = self._set_pending_support_flow_choice(
+                player,
+                'support_interaction',
+                'target',
+                f'{card_name}：先選擇 1 個要瓦解的敵方組織，成功後可在同地建立組織。',
+                source_name=card_name,
+                targets=targets,
+                context=base_context,
+            )
+            return {'pending_choice': True, **result}
+        return None
+
+    def _resolve_support_interaction_result(self, player, result, choice):
+        context = dict((choice or {}).get('context') or {})
+        effect_type = context.get('effect_type')
+        card_name = context.get('card_name') or '奧援卡'
+        if effect_type in {'interactive_build_anywhere_inner', 'interactive_build_near_inner'}:
+            town = result.get('town')
+            if not town or not self.can_develop_in_town(player, town):
+                return {'error': 'Invalid build town'}
+            player.organizations[town] = player.organizations.get(town, 0) + 1
+            self.log(f"{player.name} resolved {card_name} and built in {town}")
+            return {'success': True, 'town': town}
+        if effect_type in {'interactive_dissolve_many_near', 'interactive_dissolve_self_and_enemy', 'interactive_dissolve_and_build'}:
+            selected = result.get('selected') or {}
+            target_player_id = selected.get('player_id')
+            town = selected.get('town')
+            target_player = next((p for p in self.players if getattr(p, 'id', None) == target_player_id), None)
+            if target_player is None or not town:
+                return {'error': 'Invalid dissolve target'}
+            if effect_type == 'interactive_dissolve_self_and_enemy':
+                own_town = next((name for name, count in (player.organizations or {}).items() if count > 0), None)
+                if own_town is None:
+                    return {'error': 'No own organization to sacrifice'}
+                player.organizations[own_town] -= 1
+                if player.organizations[own_town] <= 0:
+                    del player.organizations[own_town]
+            dissolve_result = self.dissolve_organization(player, target_player, town, source='support_card')
+            if dissolve_result.get('error'):
+                return dissolve_result
+            if effect_type == 'interactive_dissolve_and_build' and self.can_develop_in_town(player, town):
+                player.organizations[town] = player.organizations.get(town, 0) + 1
+                self.log(f"{player.name} resolved {card_name} and built in {town} after dissolve")
+            return {'success': True, 'town': town, 'target_player_id': target_player_id}
+        return {'error': 'Unsupported support interaction result'}
+
     def _execute_support_card(self, player, card):
         card_name = getattr(card, 'name', str(card))
         tier, region_index, matched = self._support_card_tier(player, card_name)
         effect_type, payload = self._resolve_support_card_effect(card_name, tier, region_index)
+        interaction_started = self._start_support_interaction(player, card_name, tier, region_index, effect_type, payload)
+        if interaction_started:
+            self.log(f"{player.name} started interactive support resolution for {card_name} at tier {tier}")
+            return {'tier': tier, 'matched_rulers': matched, 'effect_type': effect_type, 'effect_text': self._support_card_effect_text(card_name, tier, region_index), 'pending_choice': True}
         if effect_type == 'gain_resource':
             player.resources['money'] += int(payload.get('money', 0) or 0)
             player.resources['propaganda'] += int(payload.get('propaganda', 0) or 0)
@@ -981,8 +1238,14 @@ class Game:
         for idx, region in enumerate(entry.get("regions", []) or []):
             preferred = region.get("preferred_rulers", []) or []
             matched = [r for r in preferred if r in present]
-            tier = 1 + min(2, len(matched))
-            if tier > best_tier:
+            tier_3_defined = bool(region.get("tier_3"))
+            if tier_3_defined and len(matched) >= 2:
+                tier = 3
+            elif matched:
+                tier = 2
+            else:
+                tier = 1
+            if tier > best_tier or (tier == best_tier and best_matched == [] and matched):
                 best_tier = tier
                 best_idx = idx
                 best_matched = matched
@@ -1481,8 +1744,17 @@ class Game:
             effective_type = "propaganda"
 
         support_resolution = None
+        action_context = {'current_card': played_card, 'card_name': card_name}
+        if target_player_id is not None:
+            action_context['target_player_id'] = target_player_id
         if effective_type == 'support':
             support_resolution = self._execute_support_card(player, played_card)
+            if support_resolution and support_resolution.get('pending_choice'):
+                if not action_context.get('removed_current_card'):
+                    if not self._return_borrowed_card_to_owner_topdeck(played_card):
+                        player.deck.discard([played_card])
+                self.log(f"{player.name} played {card_name}")
+                return {"success": True, "pending_choice": True}
         elif effective_type == "money":
             self.turn_log["played_money_card"] = True
         if effective_type == "propaganda":
@@ -1499,9 +1771,6 @@ class Game:
 
         reaction_context = self._build_reaction_context(player, played_card, card_name, mode, reaction)
 
-        action_context = {'current_card': played_card, 'card_name': card_name}
-        if target_player_id is not None:
-            action_context['target_player_id'] = target_player_id
         if reaction_context is not None:
             action_context['reaction_context'] = reaction_context
             action_context['card_canceled'] = True
@@ -1539,6 +1808,13 @@ class Game:
                     self.turn_log["combo_reward_triggered"] = True
                     player.resources["money"] += 3
                     self.log(f"{player.name} triggered 展現實力 and gained 3 money")
+
+        if self.pending_choice:
+            if not action_context.get('removed_current_card'):
+                if not self._return_borrowed_card_to_owner_topdeck(played_card):
+                    player.deck.discard([played_card])
+            self.log(f"{player.name} played {card_name}")
+            return {"success": True, "pending_choice": True}
 
         if not action_context.get('removed_current_card'):
             if not self._return_borrowed_card_to_owner_topdeck(played_card):
