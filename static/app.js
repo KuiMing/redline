@@ -897,26 +897,40 @@ function openCardTargetModal(index, cardName, targetLabel) {
   const choices = document.getElementById('factionActionModalChoices');
   const hint = document.getElementById('factionActionModalRewardHint');
   const closeBtn = document.getElementById('closeFactionActionModal');
+  const oddBtn = document.getElementById('guessOddBtn');
+  const evenBtn = document.getElementById('guessEvenBtn');
   if (!overlay || !title || !desc || !choices || !hint || !closeBtn) return false;
 
+  const actionPayload = {index, mode: 'action'};
+  const requiresRange = new Set(['武裝者', '武裝小隊', '武裝集團', '派遣間諜', '內應間諜']);
   if (players.length === 1) {
-    sendAction('play_card', {index, mode: 'action', target_player_id: players[0].id});
+    sendAction('play_card', {...actionPayload, target_player_id: players[0].id});
     return true;
   }
 
   title.textContent = cardName;
   desc.textContent = `${cardName}：請選擇${targetLabel}`;
-  hint.textContent = cardName === '走漏風聲'
-    ? '目標玩家會棄掉牌庫頂牌；若該牌購買費用為 1 點以上，從常設購買區移動 1 張內鬥到該玩家棄牌堆。'
-    : '指定的玩家會與你各抽 1 張牌。';
+  if (cardName === '走漏風聲') {
+    hint.textContent = '目標玩家會棄掉牌庫頂牌；若該牌購買費用為 1 點以上，從常設購買區移動 1 張內鬥到該玩家棄牌堆。';
+  } else if (cardName === '合作談判') {
+    hint.textContent = '指定的玩家會與你各抽 1 張牌。';
+  } else if (requiresRange.has(cardName)) {
+    hint.textContent = cardName.startsWith('武裝')
+      ? '必須指定有組織位在己方組織 1 格內的其他玩家。'
+      : '必須指定有組織位在己方組織 1 格內的其他玩家，並對其組織發動間諜效果。';
+  } else {
+    hint.textContent = '請選擇目標玩家。';
+  }
   choices.innerHTML = '';
+  if (oddBtn) oddBtn.style.display = 'none';
+  if (evenBtn) evenBtn.style.display = 'none';
   players.forEach((p) => {
     const btn = document.createElement('button');
     btn.className = 'modal-choice-btn';
     btn.type = 'button';
     btn.textContent = p.name;
     btn.onclick = () => {
-      sendAction('play_card', {index, mode: 'action', target_player_id: p.id});
+      sendAction('play_card', {...actionPayload, target_player_id: p.id});
       overlay.style.display = 'none';
     };
     choices.appendChild(btn);
@@ -936,9 +950,18 @@ function playHandCard(index, card, mode) {
   if (!isMyTurnState()) return;
   const payload = {index, mode};
   const cardName = typeof card === 'string' ? card : (card?.name || card?.title || '');
-  if (mode === 'action' && (cardName === '合作談判' || cardName === '走漏風聲')) {
-    const label = cardName === '合作談判' ? '抽牌對象' : '棄牌庫頂牌對象';
-    if (openCardTargetModal(index, cardName, label)) return;
+  const playerTargetCards = new Set(['合作談判', '走漏風聲', '武裝者', '武裝小隊', '武裝集團', '派遣間諜', '內應間諜']);
+  if (mode === 'action' && playerTargetCards.has(cardName)) {
+    const labelMap = {
+      '合作談判': '抽牌對象',
+      '走漏風聲': '棄牌庫頂牌對象',
+      '武裝者': '攻擊對象',
+      '武裝小隊': '攻擊對象',
+      '武裝集團': '攻擊對象',
+      '派遣間諜': '滲透對象',
+      '內應間諜': '滲透對象',
+    };
+    if (openCardTargetModal(index, cardName, labelMap[cardName] || '目標玩家')) return;
   }
   sendAction('play_card', payload);
 }
@@ -981,21 +1004,114 @@ function renderChoiceModal(state) {
     return;
   }
 
-  activeChoiceModal = choice.type;
-  title.textContent = choice.type === 'underground_party' ? '地下黨' : '卡牌選擇';
-  desc.textContent = choice.prompt || '請選擇 1 張卡加入手牌，其餘移除。';
+  const choiceType = choice.type;
+  const sourceName = choice.source_name || choice.choice_key || '';
+  const requiredCount = Math.max(1, Number(choice.count || 1));
+  activeChoiceModal = choiceType;
+  title.textContent = choiceType === 'underground_party'
+    ? '地下黨'
+    : (sourceName || '卡牌選擇');
+  desc.textContent = choice.prompt || '請進行選擇。';
   cards.innerHTML = '';
-  (choice.cards || []).forEach((cardName, index) => {
-    const wrapper = document.createElement('button');
-    wrapper.className = 'choice-card-btn';
-    wrapper.type = 'button';
-    wrapper.onclick = () => {
-      sendAction('resolve_choice', { index });
+
+  if (choiceType === 'card_choice' || choiceType === 'underground_party') {
+    (choice.cards || []).forEach((cardName, index) => {
+      const wrapper = document.createElement('button');
+      wrapper.className = 'choice-card-btn';
+      wrapper.type = 'button';
+      wrapper.onclick = () => {
+        sendAction('resolve_choice', { index });
+        closeChoiceModal();
+      };
+      wrapper.innerHTML = renderCardFace(cardName, 'choice', false, true);
+      cards.appendChild(wrapper);
+    });
+  } else if (choiceType === 'multi_card_choice') {
+    const selected = new Set();
+    const header = document.createElement('div');
+    header.className = 'choice-multi-selection-summary';
+    const submit = document.createElement('button');
+    submit.className = 'modal-choice-btn';
+    submit.type = 'button';
+    submit.disabled = true;
+
+    const updateSummary = () => {
+      header.textContent = `已選 ${selected.size}/${requiredCount} 張`;
+      submit.textContent = requiredCount === 1 ? '確認選擇' : `確認棄掉 ${requiredCount} 張`;
+      submit.disabled = selected.size !== requiredCount;
+    };
+
+    submit.onclick = () => {
+      if (selected.size !== requiredCount) return;
+      sendAction('resolve_choice', { index: Array.from(selected) });
       closeChoiceModal();
     };
-    wrapper.innerHTML = renderCardFace(cardName, 'choice', false, true);
-    cards.appendChild(wrapper);
-  });
+
+    updateSummary();
+    cards.appendChild(header);
+
+    (choice.cards || []).forEach((cardName, index) => {
+      const wrapper = document.createElement('button');
+      wrapper.className = 'choice-card-btn choice-card-btn-multi';
+      wrapper.type = 'button';
+      wrapper.setAttribute('aria-pressed', 'false');
+      wrapper.onclick = () => {
+        if (selected.has(index)) {
+          selected.delete(index);
+        } else {
+          if (selected.size >= requiredCount) return;
+          selected.add(index);
+        }
+        const active = selected.has(index);
+        wrapper.classList.toggle('selected', active);
+        wrapper.setAttribute('aria-pressed', active ? 'true' : 'false');
+        updateSummary();
+      };
+      wrapper.innerHTML = renderCardFace(cardName, 'choice', false, true);
+      cards.appendChild(wrapper);
+    });
+
+    cards.appendChild(submit);
+  } else if (choiceType === 'option_choice') {
+    (choice.options || []).forEach((option, index) => {
+      const btn = document.createElement('button');
+      btn.className = 'modal-choice-btn';
+      btn.type = 'button';
+      btn.textContent = option?.label || `選項 ${index + 1}`;
+      btn.onclick = () => {
+        sendAction('resolve_choice', { index });
+        closeChoiceModal();
+      };
+      cards.appendChild(btn);
+    });
+  } else if (choiceType === 'town_choice' || (choiceType === 'support_flow_choice' && choice.step === 'town')) {
+    (choice.towns || []).forEach((entry, index) => {
+      const btn = document.createElement('button');
+      btn.className = 'modal-choice-btn';
+      btn.type = 'button';
+      const town = entry?.town || `城鎮 ${index + 1}`;
+      const meta = entry?.label ? `｜${entry.label}` : '';
+      btn.textContent = `${town}${meta}`;
+      btn.onclick = () => {
+        sendAction('resolve_choice', { index });
+        closeChoiceModal();
+      };
+      cards.appendChild(btn);
+    });
+  } else if (choiceType === 'target_choice' || (choiceType === 'support_flow_choice' && choice.step === 'target')) {
+    (choice.targets || []).forEach((entry, index) => {
+      const btn = document.createElement('button');
+      btn.className = 'modal-choice-btn';
+      btn.type = 'button';
+      btn.textContent = entry?.label || entry?.town || entry?.id || `目標 ${index + 1}`;
+      btn.onclick = () => {
+        sendAction('resolve_choice', { index });
+        closeChoiceModal();
+      };
+      cards.appendChild(btn);
+    });
+  }
+
   closeBtn.onclick = closeChoiceModal;
   overlay.style.display = 'flex';
 }

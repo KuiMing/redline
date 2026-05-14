@@ -693,7 +693,7 @@ body {
   width: 1280px;
   height: 522px;
   display: grid;
-  grid-template-columns: 300px 460px 460px;
+  grid-template-columns: 312px 460px 460px;
   gap: 12px;
   padding: 12px;
   align-items: stretch;
@@ -757,14 +757,19 @@ body {
 #purchaseSection {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0;
   flex: 1;
   min-height: 0;
 }
 
+#purchaseSection .panel-title,
+#randomMarketPanel .panel-title {
+  margin-bottom: 14px;
+}
+
 #purchaseStatic {
   grid-template-columns: 220px;
-  justify-content: center;
+  justify-content: start;
 }
 
 .purchase-subtitle {
@@ -1294,6 +1299,38 @@ body {
 
 .choice-card-btn .card-face {
   min-height: 270px;
+}
+
+.choice-multi-selection-summary {
+  grid-column: 1 / -1;
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  color: #cbd5e1;
+  padding: 4px 0 2px;
+}
+
+.choice-card-btn-multi {
+  border-radius: 18px;
+  transition: transform 0.12s ease, filter 0.12s ease, box-shadow 0.12s ease;
+}
+
+.choice-card-btn-multi:hover {
+  transform: translateY(-2px);
+}
+
+.choice-card-btn-multi.selected {
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.9), 0 14px 28px rgba(37, 99, 235, 0.24);
+  border-radius: 18px;
+}
+
+.choice-card-btn-multi.selected .card-face {
+  filter: brightness(1.04);
+}
+
+.choice-glass .modal-choice-btn[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .era-achievement-section-title {
