@@ -25,7 +25,7 @@ class EffectEngine:
             if len(player.hand) < count:
                 count = len(player.hand)
             if count <= 0:
-                return
+                return None
             cards = list(player.hand)
             if hasattr(game, '_set_pending_multi_card_choice'):
                 extra = {'source_name': context.get('card_name') if context else None}
@@ -39,11 +39,12 @@ class EffectEngine:
                     count=count,
                     **extra,
                 )
+                return {'pending_choice': True}
             else:
                 for _ in range(min(count, len(player.hand))):
                     card = player.hand.pop()
                     player.deck.discard([card])
-            return
+            return None
 
         # ✅ Gain resources
         if etype == "gain_resource":

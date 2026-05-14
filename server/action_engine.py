@@ -9,7 +9,7 @@ class ActionCardEngine:
     def execute(self, card_name, player, game, context=None, include_resources=True):
         card = self.cards.get(card_name)
         if not card:
-            return
+            return None
 
         # Resource mode: printed resources only.
         # Action mode passes include_resources=False so card effects do not also grant printed resources.
@@ -20,4 +20,7 @@ class ActionCardEngine:
         # 統一 effect pipeline
         context = context or {}
         for effect in card.get("effect", []):
-            self.effect_engine.execute(effect, player, game, context=context)
+            result = self.effect_engine.execute(effect, player, game, context=context)
+            if isinstance(result, dict) and result.get('pending_choice'):
+                return result
+        return None

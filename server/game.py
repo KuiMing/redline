@@ -1777,7 +1777,13 @@ class Game:
         if effective_type != 'support':
             if card_name in getattr(self.action_engine, 'cards', {}):
                 if not action_context.get('card_canceled'):
-                    self.action_engine.execute(card_name, player, self, context=action_context, include_resources=False)
+                    action_result = self.action_engine.execute(card_name, player, self, context=action_context, include_resources=False)
+                    if isinstance(action_result, dict) and action_result.get('pending_choice'):
+                        if not action_context.get('removed_current_card'):
+                            if not self._return_borrowed_card_to_owner_topdeck(played_card):
+                                player.deck.discard([played_card])
+                        self.log(f"{player.name} played {card_name}")
+                        return {"success": True, "pending_choice": True}
             else:
                 pass
 
