@@ -1,0 +1,307 @@
+{
+  "total": 50,
+  "passed": 42,
+  "failed": 8,
+  "results": [
+    {
+      "script": "scripts/validate_all_action_cards.py",
+      "exit_code": 0,
+      "duration_sec": 0.1,
+      "output_tail": "/Users/benmini/.openclaw/workspace/redline/docs/records/card-ui/CARD_VALIDATION_RESULTS.json\n/Users/benmini/.openclaw/workspace/redline/docs/records/card-ui/CARD_VALIDATION_RESULTS.md\n"
+    },
+    {
+      "script": "scripts/validate_all_cards_ui.py",
+      "exit_code": 1,
+      "duration_sec": 6.6,
+      "output_tail": "\nTraceback (most recent call last):\n  File \"/Users/benmini/.openclaw/workspace/redline/scripts/validate_all_cards_ui.py\", line 64, in <module>\n    me_before = next((pl for pl in state_before['players'] if pl['id'] == host_id), None)\nKeyError: 'players'\n"
+    },
+    {
+      "script": "scripts/validate_all_cards_ui_batch.py",
+      "exit_code": 2,
+      "duration_sec": 0.1,
+      "output_tail": "\nusage: validate_all_cards_ui_batch.py [-h] --start START --end END\nvalidate_all_cards_ui_batch.py: error: the following arguments are required: --start, --end\n"
+    },
+    {
+      "script": "scripts/validate_base_selection_notice_placement.py",
+      "exit_code": 1,
+      "duration_sec": 1.98,
+      "output_tail": "{\"total\": 2, \"passed\": 1, \"failed\": 1}\n"
+    },
+    {
+      "script": "scripts/validate_card_action_correctness.py",
+      "exit_code": 0,
+      "duration_sec": 0.07,
+      "output_tail": "{\"summary\": {\"total\": 8, \"passed\": 8, \"failed\": 0}, \"json\": \"/Users/benmini/.openclaw/workspace/redline/docs/records/card-ui/CARD_ACTION_CORRECTNESS_VALIDATION.json\", \"md\": \"/Users/benmini/.openclaw/workspace/redline/docs/records/card-ui/CARD_ACTION_CORRECTNESS_VALIDATION.md\"}\n"
+    },
+    {
+      "script": "scripts/validate_card_effect_audit_p1.py",
+      "exit_code": 0,
+      "duration_sec": 0.05,
+      "output_tail": "{\"summary\": {\"total\": 2, \"passed\": 2, \"failed\": 0}}\n"
+    },
+    {
+      "script": "scripts/validate_card_type_ui_flows.py",
+      "exit_code": 1,
+      "duration_sec": 6.71,
+      "output_tail": "\nTraceback (most recent call last):\n  File \"/Users/benmini/.openclaw/workspace/redline/scripts/validate_card_type_ui_flows.py\", line 75, in <module>\n    'resources': state_after['players'][0]['resources'] if state_after else None,\nKeyError: 'players'\n"
+    },
+    {
+      "script": "scripts/validate_card_use_modes.py",
+      "exit_code": 0,
+      "duration_sec": 0.04,
+      "output_tail": "{\"summary\": {\"total\": 4, \"passed\": 4, \"failed\": 0}}\n"
+    },
+    {
+      "script": "scripts/validate_deck_lifecycle.py",
+      "exit_code": 0,
+      "duration_sec": 0.05,
+      "output_tail": "{\"summary\": {\"total\": 6, \"passed\": 6, \"failed\": 0}, \"json\": \"/Users/benmini/.openclaw/workspace/redline/DECK_LIFECYCLE_VALIDATION.json\", \"md\": \"/Users/benmini/.openclaw/workspace/redline/DECK_LIFECYCLE_VALIDATION.md\"}\n"
+    },
+    {
+      "script": "scripts/validate_era_rules.py",
+      "exit_code": 0,
+      "duration_sec": 0.05,
+      "output_tail": "{\"summary\": {\"total\": 5, \"passed\": 5, \"failed\": 0}}\n"
+    },
+    {
+      "script": "scripts/validate_ethnic_ritual_ui_and_engine.py",
+      "exit_code": 1,
+      "duration_sec": 31.24,
+      "output_tail": "\nTraceback (most recent call last):\n  File \"/Users/benmini/.openclaw/workspace/redline/scripts/validate_ethnic_ritual_ui_and_engine.py\", line 92, in <module>\n    main()\n  File \"/Users/benmini/.openclaw/workspace/redline/scripts/validate_ethnic_ritual_ui_and_engine.py\", line 67, in main\n    panel_visible, modal_visible = validate_ui()\n  File \"/Users/benmini/.openclaw/workspace/redline/scripts/validate_ethnic_ritual_ui_and_engine.py\", line 51, in validate_ui\n    page.click('text=JOIN OPERATION')\n  File \"/Users/benmini/Library/Python/3.9/lib/python/site-packages/playwright/sync_api/_generated.py\", line 9962, in click\n    self._sync(\n  File \"/Users/benmini/Library/Python/3.9/lib/python/site-packages/playwright/_impl/_sync_base.py\", line 115, in _sync\n    return task.result()\n  File \"/Users/benmini/Library/Python/3.9/lib/python/site-packages/playwright/_impl/_page.py\", line 854, in click\n    return await self._main_frame._click(**locals_to_params(locals()))\n  File \"/Users/benmini/Library/Python/3.9/lib/python/site-packages/playwright/_impl/_frame.py\", line 566, in _click\n    await self._channel.send(\"click\", self._timeout, locals_to_params(locals()))\n  File \"/Users/benmini/Library/Python/3.9/lib/python/site-packages/playwright/_impl/_connection.py\", line 69, in send\n    return await self._connection.wrap_api_call(\n  File \"/Users/benmini/Library/Python/3.9/lib/python/site-packages/playwright/_impl/_connection.py\", line 559, in wrap_api_call\n    raise rewrite_error(error, f\"{parsed_st['apiName']}: {error}\") from None\nplaywright._impl._errors.TimeoutError: Page.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\"text=JOIN OPERATION\")\n\n"
+    },
+    {
+      "script": "scripts/validate_faction_abilities_phase1.py",
+      "exit_code": 0,
+      "duration_sec": 0.06,
+      "output_tail": "{\"summary\": {\"total\": 6, \"passed\": 6, \"failed\": 0}, \"results\": [{\"name\": \"hong_kong_lam_chau_setup\", \"ok\": true, \"detail\": \"['宣傳家']\"}, {\"name\": \"hong_kong_international_line\", \"ok\": true, \"detail\": \"{'played_money_card': False, 'played_propaganda_card': True, 'non_starter_discard': False, 'successful_discard': False, 'built_towns': [], 'played_nonstarter_names': ['測試金錢牌'], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': False, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': []}\"}, {\"name\": \"taiwan_green_end_turn_draw\", \"ok\": true, \"detail\": \"before=0, after=1\"}, {\"name\": \"taiwan_blue_end_turn_draw\", \"ok\": true, \"detail\": \"before=0, after=1\"}, {\"name\": \"mongol_develop_legality\", \"ok\": true, \"detail\": \"allow_mongol=True, allow_uncamped=True, block_other=True, result={'success': True}\"}, {\"name\": \"kazakh_first_propaganda_draw\", \"ok\": true, \"detail\": \"before=1, after=1, log={'played_money_card': False, 'played_propaganda_card': True, 'non_starter_discard': False, 'successful_discard': False, 'built_towns': [], 'played_nonstarter_names': ['宣傳測試'], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': False, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': [], 'faction_first_propaganda_triggered': True}\"}]}\n"
+    },
+    {
+      "script": "scripts/validate_faction_abilities_phase2.py",
+      "exit_code": 0,
+      "duration_sec": 0.04,
+      "output_tail": "{\"summary\": {\"total\": 4, \"passed\": 4, \"failed\": 0}, \"results\": [{\"name\": \"first_money_draw\", \"ok\": true, \"detail\": \"before=1, after=1\"}, {\"name\": \"combo_three_unique\", \"ok\": true, \"detail\": \"{'money': 3, 'propaganda': 0}\"}, {\"name\": \"martyr_draw_target_behavior\", \"ok\": true, \"detail\": \"before=0, after=1\"}, {\"name\": \"first_money_gain2\", \"ok\": true, \"detail\": \"before=0, after=2\"}]}\n"
+    },
+    {
+      "script": "scripts/validate_faction_abilities_phase3.py",
+      "exit_code": 0,
+      "duration_sec": 0.04,
+      "output_tail": "{\"summary\": {\"total\": 4, \"passed\": 4, \"failed\": 0}, \"results\": [{\"name\": \"nonviolence_play_block\", \"ok\": true, \"detail\": \"{'error': '非暴力：不能打出武裝或裝備類卡牌'}\"}, {\"name\": \"nonviolence_buy_block\", \"ok\": true, \"detail\": \"{'error': '非暴力：不能購買武裝或裝備類卡牌'}\"}, {\"name\": \"guerrilla_forces_red_discard\", \"ok\": true, \"detail\": \"red_hand=0\"}, {\"name\": \"guerrilla_draw_if_red_empty\", \"ok\": true, \"detail\": \"hand=1\"}]}\n"
+    },
+    {
+      "script": "scripts/validate_faction_abilities_phase4.py",
+      "exit_code": 0,
+      "duration_sec": 0.04,
+      "output_tail": "{\"summary\": {\"total\": 4, \"passed\": 4, \"failed\": 0}, \"results\": [{\"name\": \"huawen_chuanmei\", \"ok\": true, \"detail\": \"result={'success': True}, before_money=5, resources={'money': 2, 'propaganda': 5}\"}, {\"name\": \"gejie_zizhu\", \"ok\": true, \"detail\": \"['資助者']\"}, {\"name\": \"huodongjia\", \"ok\": true, \"detail\": \"['宣傳家', '宣傳家']\"}, {\"name\": \"ren_tong_ci_xin\", \"ok\": true, \"detail\": \"before=0, after=2\"}]}\n"
+    },
+    {
+      "script": "scripts/validate_faction_abilities_phase5.py",
+      "exit_code": 0,
+      "duration_sec": 0.04,
+      "output_tail": "{\"summary\": {\"total\": 4, \"passed\": 3, \"failed\": 1}, \"results\": [{\"name\": \"democracy_frontline\", \"ok\": true, \"detail\": \"result={'success': True}, discard=1\"}, {\"name\": \"political_probe\", \"ok\": true, \"detail\": \"result={'success': True}, hand=1\"}, {\"name\": \"huawen_media_spend_money\", \"ok\": true, \"detail\": \"result={'success': True}, resources={'money': 0, 'propaganda': 0}\"}, {\"name\": \"gambler_whisper\", \"ok\": false, \"detail\": \"result={'error': 'Guess required'}, resources={'money': 0, 'propaganda': 0}\"}]}\n"
+    },
+    {
+      "script": "scripts/validate_faction_picker_combinations.py",
+      "exit_code": 1,
+      "duration_sec": 30.81,
+      "output_tail": "\nTraceback (most recent call last):\n  File \"/Users/benmini/.openclaw/workspace/redline/scripts/validate_faction_picker_combinations.py\", line 248, in <module>\n    main()\n  File \"/Users/benmini/.openclaw/workspace/redline/scripts/validate_faction_picker_combinations.py\", line 204, in main\n    result = validate_combo(page, combo)\n  File \"/Users/benmini/.openclaw/workspace/redline/scripts/validate_faction_picker_combinations.py\", line 101, in validate_combo\n    page.get_by_text('JOIN OPERATION').click()\n  File \"/Users/benmini/Library/Python/3.9/lib/python/site-packages/playwright/sync_api/_generated.py\", line 15631, in click\n    self._sync(\n  File \"/Users/benmini/Library/Python/3.9/lib/python/site-packages/playwright/_impl/_sync_base.py\", line 115, in _sync\n    return task.result()\n  File \"/Users/benmini/Library/Python/3.9/lib/python/site-packages/playwright/_impl/_locator.py\", line 162, in click\n    return await self._frame._click(self._selector, strict=True, **params)\n  File \"/Users/benmini/Library/Python/3.9/lib/python/site-packages/playwright/_impl/_frame.py\", line 566, in _click\n    await self._channel.send(\"click\", self._timeout, locals_to_params(locals()))\n  File \"/Users/benmini/Library/Python/3.9/lib/python/site-packages/playwright/_impl/_connection.py\", line 69, in send\n    return await self._connection.wrap_api_call(\n  File \"/Users/benmini/Library/Python/3.9/lib/python/site-packages/playwright/_impl/_connection.py\", line 559, in wrap_api_call\n    raise rewrite_error(error, f\"{parsed_st['apiName']}: {error}\") from None\nplaywright._impl._errors.TimeoutError: Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for get_by_text(\"JOIN OPERATION\")\n\n"
+    },
+    {
+      "script": "scripts/validate_full_gameplay_2p.py",
+      "exit_code": 0,
+      "duration_sec": 0.05,
+      "output_tail": "{\"summary\": {\"total_checks\": 4, \"passed\": 4, \"failed\": 0, \"errors\": []}, \"json\": \"/Users/benmini/.openclaw/workspace/redline/docs/records/misc/FULL_GAMEPLAY_2P_VALIDATION.json\", \"md\": \"/Users/benmini/.openclaw/workspace/redline/docs/records/misc/FULL_GAMEPLAY_2P_VALIDATION.md\"}\n"
+    },
+    {
+      "script": "scripts/validate_full_gameplay_multi.py",
+      "exit_code": 0,
+      "duration_sec": 0.05,
+      "output_tail": "/Users/benmini/.openclaw/workspace/redline/docs/records/misc/FULL_GAMEPLAY_3P_VALIDATION.json\n/Users/benmini/.openclaw/workspace/redline/docs/records/misc/FULL_GAMEPLAY_3P_VALIDATION.md\n/Users/benmini/.openclaw/workspace/redline/docs/records/misc/FULL_GAMEPLAY_4P_VALIDATION.json\n/Users/benmini/.openclaw/workspace/redline/docs/records/misc/FULL_GAMEPLAY_4P_VALIDATION.md\n{\"summaries\": [{\"player_count\": 3, \"passed\": true, \"error_count\": 0, \"winner\": \"red_army\", \"game_phase\": \"finished\"}, {\"player_count\": 4, \"passed\": true, \"error_count\": 0, \"winner\": \"player4\", \"game_phase\": \"finished\"}]}\n"
+    },
+    {
+      "script": "scripts/validate_hu_shared_and_win.py",
+      "exit_code": 0,
+      "duration_sec": 0.04,
+      "output_tail": "{\"summary\": {\"total\": 4, \"passed\": 4, \"failed\": 0}, \"shared_with\": [\"taiwan_green\"], \"access_shanghai\": true, \"shared_count_shanghai\": 1, \"win\": true, \"winner\": \"HU\"}\n"
+    },
+    {
+      "script": "scripts/validate_india_research_room.py",
+      "exit_code": 0,
+      "duration_sec": 0.04,
+      "output_tail": "{\"summary\": {\"total\": 3, \"passed\": 2, \"failed\": 1}, \"results\": [{\"name\": \"non_support_card_no_bonus\", \"ok\": true, \"detail\": {\"result\": {\"success\": true}, \"before\": 0, \"after\": 1}}, {\"name\": \"buy_non_support_card_allowed\", \"ok\": true, \"detail\": {\"success\": true}}, {\"name\": \"gain_from_discard_non_support_card_allowed\", \"ok\": false, \"detail\": {\"hand\": [\"追隨者\", \"追隨者\", \"追隨者\", \"樂捐者\", \"樂捐者\"]}}]}\n"
+    },
+    {
+      "script": "scripts/validate_india_research_room_support_taxonomy.py",
+      "exit_code": 0,
+      "duration_sec": 0.04,
+      "output_tail": "{\"summary\": {\"total\": 4, \"passed\": 3, \"failed\": 1}, \"results\": [{\"name\": \"support_taxonomy_marks_india_support\", \"ok\": true, \"detail\": {\"is_india_flag\": true}}, {\"name\": \"buy_india_support_allowed\", \"ok\": false, \"detail\": {\"error\": \"Static purchase card is out of supply\"}}, {\"name\": \"buy_non_india_support_blocked\", \"ok\": true, \"detail\": {\"error\": \"印度研究分析室：不能持有印度旗幟以外的旗幟卡\"}}, {\"name\": \"gain_non_india_support_from_discard_blocked\", \"ok\": true, \"detail\": {\"hand\": [\"追隨者\", \"樂捐者\", \"追隨者\", \"追隨者\", \"追隨者\"]}}]}\n"
+    },
+    {
+      "script": "scripts/validate_leak_card.py",
+      "exit_code": 0,
+      "duration_sec": 0.05,
+      "output_tail": "{\"summary\": {\"total\": 6, \"passed\": 6, \"failed\": 0}, \"json\": \"docs/records/leak-card/LEAK_CARD_VALIDATION.json\", \"md\": \"docs/records/leak-card/LEAK_CARD_VALIDATION.md\"}\n"
+    },
+    {
+      "script": "scripts/validate_leak_card_target_ui.py",
+      "exit_code": 1,
+      "duration_sec": 0.6,
+      "output_tail": "\nTraceback (most recent call last):\n  File \"/Users/benmini/.openclaw/workspace/redline/scripts/validate_leak_card_target_ui.py\", line 135, in <module>\n    main()\n  File \"/Users/benmini/.openclaw/workspace/redline/scripts/validate_leak_card_target_ui.py\", line 128, in main\n    out = write_outputs(run_checks())\n  File \"/Users/benmini/.openclaw/workspace/redline/scripts/validate_leak_card_target_ui.py\", line 41, in run_checks\n    page.goto(BASE_URL, wait_until='networkidle')\n  File \"/Users/benmini/Library/Python/3.9/lib/python/site-packages/playwright/sync_api/_generated.py\", line 9054, in goto\n    self._sync(\n  File \"/Users/benmini/Library/Python/3.9/lib/python/site-packages/playwright/_impl/_sync_base.py\", line 115, in _sync\n    return task.result()\n  File \"/Users/benmini/Library/Python/3.9/lib/python/site-packages/playwright/_impl/_page.py\", line 552, in goto\n    return await self._main_frame.goto(**locals_to_params(locals()))\n  File \"/Users/benmini/Library/Python/3.9/lib/python/site-packages/playwright/_impl/_frame.py\", line 153, in goto\n    await self._channel.send(\n  File \"/Users/benmini/Library/Python/3.9/lib/python/site-packages/playwright/_impl/_connection.py\", line 69, in send\n    return await self._connection.wrap_api_call(\n  File \"/Users/benmini/Library/Python/3.9/lib/python/site-packages/playwright/_impl/_connection.py\", line 559, in wrap_api_call\n    raise rewrite_error(error, f\"{parsed_st['apiName']}: {error}\") from None\nplaywright._impl._errors.Error: Page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:8001/static/index.html?validate_leak_target_ui=1\nCall log:\n  - navigating to \"http://127.0.0.1:8001/static/index.html?validate_leak_target_ui=1\", waiting until \"networkidle\"\n\n"
+    },
+    {
+      "script": "scripts/validate_lobby_polish.py",
+      "exit_code": 0,
+      "duration_sec": 2.35,
+      "output_tail": "{\"game_id\": \"9a419120-c0f8-456e-9f30-c8985f11a689\", \"summary\": {\"total\": 3, \"passed\": 3, \"failed\": 0}, \"results\": [{\"name\": \"faction_picker_embedded_in_lobby_card\", \"ok\": true, \"detail\": {}}, {\"name\": \"faction_picker_does_not_overlap_lobby_actions\", \"ok\": true, \"detail\": {\"display\": \"block\", \"pickerTop\": 520.96875, \"pickerBottom\": 618.96875, \"actionsTop\": 650.96875, \"overlapsActions\": false}}, {\"name\": \"lobby_roster_syncs_all_joined_players\", \"ok\": true, \"detail\": {\"roster_text\": \"H\\nhost\\n房主 / 你｜未準備｜尚未選擇陣營\\nA\\nally\\n玩家｜未準備｜尚未選擇陣營\\n+\\n等待玩家加入\\n分享房間代碼邀請下一位玩家\\n+\\n空席位\\n最多 4 位玩家\", \"card_count\": 4, \"second_player_id\": \"79b9c904-ee5d-45c1-9f6e-70dd2b665941\"}}], \"screenshot\": \"/Users/benmini/.openclaw/workspace/redline/lobby_polish_validation.png\"}\n"
+    },
+    {
+      "script": "scripts/validate_lobby_ready_sync.py",
+      "exit_code": 0,
+      "duration_sec": 4.54,
+      "output_tail": "{\"game_id\": \"920feeac-3121-4afb-8945-1662f39a9557\", \"summary\": {\"total\": 6, \"passed\": 6, \"failed\": 0}, \"results\": [{\"name\": \"host_start_button_locked_until_ready\", \"ok\": true, \"detail\": {\"exists\": true, \"disabled\": true, \"text\": \"啟動行動\", \"title\": \"至少需要 2 位玩家\"}}, {\"name\": \"ready_toggle_visible_in_lobby\", \"ok\": true, \"detail\": {\"exists\": true, \"text\": \"我已準備\", \"disabled\": true}}, {\"name\": \"lobby_roster_auto_syncs_joined_players\", \"ok\": true, \"detail\": {\"roster_text\": \"H\\nhost\\n房主 / 你｜未準備｜尚未選擇陣營\\nA\\nally\\n玩家｜未準備｜尚未選擇陣營\\n+\\n等待玩家加入\\n分享房間代碼邀請下一位玩家\\n+\\n空席位\\n最多 4 位玩家\", \"second_player_id\": \"cc7d4139-8eae-4e8f-862b-2e33317e7608\"}}, {\"name\": \"lobby_state_exposes_ready_map\", \"ok\": true, \"detail\": {\"lobby_state_keys\": [\"bases\", \"count\", \"factions\", \"host_id\", \"market_mode\", \"players\", \"ready\", \"started\"]}}, {\"name\": \"backend_rejects_start_before_all_ready\", \"ok\": true, \"detail\": {\"error\": \"All players must be ready before start\"}}, {\"name\": \"host_start_button_unlocks_when_all_players_ready\", \"ok\": true, \"detail\": {\"start_button\": {\"disabled\": false, \"title\": \"所有玩家已準備，可以啟動行動\", \"text\": \"啟動行動\"}, \"roster_text\": \"H\\nhost\\n房主 / 你｜已準備｜紅軍\\nA\\nally\\n玩家｜已準備｜臺灣（綠線）\\n+\\n等待玩家加入\\n分享房間代碼邀請下一位玩家\\n+\\n空席位\\n最多 4 位玩家\"}}], \"screenshot\": \"/Users/benmini/.openclaw/workspace/redline/lobby_ready_sync_validation.png\"}\n"
+    },
+    {
+      "script": "scripts/validate_main_tabs_layout.py",
+      "exit_code": 0,
+      "duration_sec": 5.08,
+      "output_tail": "{\"setup\": {\"game_id\": \"4745e4ca-677d-49f6-893f-e5fda2cca578\", \"player_id\": \"dfbd34c8-6f06-4dc1-bfa7-5b004ddf3b67\"}, \"summary\": {\"total\": 7, \"passed\": 7, \"failed\": 0}, \"results\": [{\"name\": \"command_tab_visible\", \"ok\": true, \"detail\": {\"hand_count\": 5, \"static_count\": 6, \"random_count\": 5}}, {\"name\": \"command_tab_card_zones_populated\", \"ok\": true, \"detail\": {\"hand_count\": 5, \"static_count\": 6, \"random_count\": 5}}, {\"name\": \"map_tab_visible\", \"ok\": true, \"detail\": {\"iframe_count\": 1}}, {\"name\": \"battle_log_tab_visible\", \"ok\": true, \"detail\": {\"active_tab\": \"戰況紀錄\"}}, {\"name\": \"player_status_card_count_matches_players\", \"ok\": true, \"detail\": {\"card_count\": 2, \"players\": [\"viewer\", \"red\"]}}, {\"name\": \"player_status_cards_have_required_fields\", \"ok\": true, \"detail\": {\"card_texts\": [\"V\\nviewer\\n當前行動玩家\\n當前玩家\\n陣營：西藏（德拉敦）\\n根據地：德拉敦\\n組織\\n1\\n資金\\n4\\n宣傳\\n3\\n手牌\\n5\\n移動\\n0\", \"R\\nred\\n玩家戰況\\n陣營：紅軍\\n根據地：北京\\n組織\\n1\\n資金\\n0\\n宣傳\\n0\\n手牌\\n5\\n移動\\n0\"]}}, {\"name\": \"viewport_1280x720_has_no_body_overflow\", \"ok\": true, \"detail\": {\"bodyScrollWidth\": 1280, \"bodyClientWidth\": 1280, \"bodyScrollHeight\": 720, \"bodyClientHeight\": 720, \"hasOverflowX\": false, \"hasOverflowY\": false, \"viewport\": {\"w\": 1280, \"h\": 720}}}], \"screenshot\": \"/Users/benmini/.openclaw/workspace/redline/main_tabs_layout_validation.png\"}\n"
+    },
+    {
+      "script": "scripts/validate_market_mode_and_removed_supply.py",
+      "exit_code": 0,
+      "duration_sec": 0.05,
+      "output_tail": "{\n  \"summary\": {\n    \"total\": 7,\n    \"passed\": 6,\n    \"failed\": 1\n  },\n  \"checks\": [\n    {\n      \"name\": \"sample_53 draw pile matches 35-card sampled market deck minus 5 exposed market cards\",\n      \"passed\": false,\n      \"actual\": 48,\n      \"expected\": 30\n    },\n    {\n      \"name\": \"sample_53 state market mode\",\n      \"passed\": true,\n      \"actual\": \"sample_53\",\n      \"expected\": \"sample_53\"\n    },\n    {\n      \"name\": \"all_cards draw pile exceeds sample_53 sampled market deck after 5 exposed cards\",\n      \"passed\": true,\n      \"actual\": 68,\n      \"expected\": \"> 30\"\n    },\n    {\n      \"name\": \"all_cards state market mode\",\n      \"passed\": true,\n      \"actual\": \"all_cards\",\n      \"expected\": \"all_cards\"\n    },\n    {\n      \"name\": \"remove propagandist keeps visible purchase area length\",\n      \"passed\": true,\n      \"actual\": {\n        \"before\": 11,\n        \"after\": 11\n      },\n      \"expected\": \"equal\"\n    },\n    {\n      \"name\": \"remove propagandist increments static supply\",\n      \"passed\": true,\n      \"actual\": {\n        \"before\": 1,\n        \"after\": 2\n      },\n      \"expected\": 2\n    },\n    {\n      \"name\": \"remove propagandist play succeeds\",\n      \"passed\": true,\n      \"actual\": {\n        \"success\": true\n      },\n      \"expected\": {\n        \"success\": true\n      }\n    }\n  ]\n}\n"
+    },
+    {
+      "script": "scripts/validate_mongol_discard_shield.py",
+      "exit_code": 0,
+      "duration_sec": 0.04,
+      "output_tail": "{\"success_case\": {\"result\": {\"success\": true, \"actual_owner\": \"Mongol\", \"shared_target\": false}, \"attacker_hand_after\": [], \"attacker_discard_after\": [\"測試棄牌\"], \"mongol_orgs_after\": {}}, \"fail_case\": {\"result\": {\"error\": \"盟旗學校：須先棄1張手牌，才可以瓦解蒙古組織\"}, \"mongol_orgs_after\": {\"烏蘭巴托\": 1}}}\n"
+    },
+    {
+      "script": "scripts/validate_movement_rules.py",
+      "exit_code": 0,
+      "duration_sec": 0.05,
+      "output_tail": "{\"summary\": {\"total\": 10, \"passed\": 10, \"failed\": 0}, \"json\": \"/Users/benmini/.openclaw/workspace/redline/MOVEMENT_RULES_VALIDATION.json\", \"md\": \"/Users/benmini/.openclaw/workspace/redline/MOVEMENT_RULES_VALIDATION.md\"}\n"
+    },
+    {
+      "script": "scripts/validate_multiplayer_lobby_flow.py",
+      "exit_code": 0,
+      "duration_sec": 6.92,
+      "output_tail": "t\\n房主 / 你｜已準備｜紅軍\\nA\\nally\\n玩家｜已準備｜臺灣（綠線）｜臺北\\n+\\n等待玩家加入\\n分享房間代碼邀請下一位玩家\\n+\\n空席位\\n最多 4 位玩家\", \"ally_roster\": \"H\\nhost\\n房主｜已準備｜紅軍\\nA\\nally\\n玩家 / 你｜已準備｜臺灣（綠線）｜臺北\\n+\\n等待玩家加入\\n分享房間代碼邀請下一位玩家\\n+\\n空席位\\n最多 4 位玩家\"}}, {\"name\": \"non_host_start_button_locked\", \"ok\": true, \"detail\": {\"disabled\": true, \"title\": \"只有房主可以啟動行動\", \"text\": \"啟動行動\"}}, {\"name\": \"host_can_start_and_enters_game_shell\", \"ok\": true, \"detail\": {\"host_start_before\": {\"disabled\": false, \"title\": \"所有玩家已準備，可以啟動行動\", \"text\": \"啟動行動\"}, \"host_body_excerpt\": \"逆統戰\\n逆統戰指揮中心\\n回合 1\\n事件階段\\n當前玩家 ally\\n手牌 5\\n資金 0\\n宣傳 0\\n移動 0\\n牌庫模式 53 張卡牌\\nhost 組織 1\\nally 組織 1\\n目前：事件｜等待 ally 操作\\n結束事件階段\\n指揮中心\\n戰略地圖\\n戰況紀錄\\n常設購買區\\n宣傳家\\n剩 15\\n宣傳 ・ 乙級 ・ 宣傳3\\n打出可移除本牌。若移除本牌，可於己方組織1格內建立1個組織，並進行1次組織遷移。\\n擅於宣傳的辯士\\n資源 宣傳2\\n常設購買區\\n思想家\\n剩 15\\n宣傳 ・ 甲級 ・ 宣傳5\\n打出可移除本牌。若移除本牌，可無視距離於己方發展空間建立1個組織，並進行3次組織遷移。\\n締造革命理論的智者\\n資源 宣傳3\\n常設購買區\\n資助者\\n剩 15\\n資金 ・ 乙級 ・ 資金2+宣傳1\\n打出可移除本牌。若移除本牌，獲得2點資金與2點宣傳。\\n贊助您事業的中產階級\\n資源 資金2\\n常設購買區\\n資本家\\n剩 15\\n資金 ・ 甲級 ・ 資金3+宣傳2\\n打出可移除本牌。若移除本牌，獲得3點資金與3點宣傳。\\n贊助您事業的企業家\\n資源 資金3\\n常設購買區\\n分神\\n剩 30\\n混亂 ・ 乙級 ・ 無\\n無效果。打出可移除本牌。\\n有其它事情迫使你分散心力\\n資源 無\\n常設購買區（可視為起始牌）\\n內鬥\\n剩 20\\n混亂 ・ 丙級 ・ 無\\n無效果。\\n內部鬥爭令組織效率低落\\n資源 無\\n常設購買區（可視為起始牌）\\n隨機購買區\\n武裝者\\n剩 8\\n武裝 ・ 丙級 ・ 資金2\\n選擇1位有組織位在己方組織1格內的玩家，由該玩家選1張手牌棄掉。\\n勇武的行動者\\n資源 宣傳1\\n隨機購買區\\n模仿戰術\\n剩 5\\n指揮 ・ 乙級 ・ 宣傳4\\n選擇1位玩家展示其牌庫頂牌，本回合您可以使用該牌。使用後將該牌放回擁有者的牌庫頂。\\n師敵之長計以制敵\\n資源 宣傳2\\n隨機購買區\\n輿論丕變\\n剩 6\\n宣傳 ・ 丙級 ・ 宣傳3\\n移除隨機購買區的所有牌，並立即補滿。獲得1點宣傳。\\n釋出消\"}}, {\"name\": \"ally_auto_enters_game_shell_after_host_start\", \"ok\": true, \"detail\": {\"ally_body_excerpt\": \"逆統戰\\n逆統戰指揮中心\\n回合 1\\n事件階段\\n當前玩家 ally\\n手牌 5\\n資金 0\\n宣傳 0\\n移動 0\\n牌庫模式 53 張卡牌\\nhost 組織 1\\nally 組織 1\\n目前：事件｜下一步：結束事件階段\\n結束事件階段\\n指揮中心\\n戰略地圖\\n戰況紀錄\\n常設購買區\\n宣傳家\\n剩 15\\n宣傳 ・ 乙級 ・ 宣傳3\\n打出可移除本牌。若移除本牌，可於己方組織1格內建立1個組織，並進行1次組織遷移。\\n擅於宣傳的辯士\\n資源 宣傳2\\n常設購買區\\n思想家\\n剩 15\\n宣傳 ・ 甲級 ・ 宣傳5\\n打出可移除本牌。若移除本牌，可無視距離於己方發展空間建立1個組織，並進行3次組織遷移。\\n締造革命理論的智者\\n資源 宣傳3\\n常設購買區\\n資助者\\n剩 15\\n資金 ・ 乙級 ・ 資金2+宣傳1\\n打出可移除本牌。若移除本牌，獲得2點資金與2點宣傳。\\n贊助您事業的中產階級\\n資源 資金2\\n常設購買區\\n資本家\\n剩 15\\n資金 ・ 甲級 ・ 資金3+宣傳2\\n打出可移除本牌。若移除本牌，獲得3點資金與3點宣傳。\\n贊助您事業的企業家\\n資源 資金3\\n常設購買區\\n分神\\n剩 30\\n混亂 ・ 乙級 ・ 無\\n無效果。打出可移除本牌。\\n有其它事情迫使你分散心力\\n資源 無\\n常設購買區（可視為起始牌）\\n內鬥\\n剩 20\\n混亂 ・ 丙級 ・ 無\\n無效果。\\n內部鬥爭令組織效率低落\\n資源 無\\n常設購買區（可視為起始牌）\\n隨機購買區\\n武裝者\\n剩 8\\n武裝 ・ 丙級 ・ 資金2\\n選擇1位有組織位在己方組織1格內的玩家，由該玩家選1張手牌棄掉。\\n勇武的行動者\\n資源 宣傳1\\n隨機購買區\\n模仿戰術\\n剩 5\\n指揮 ・ 乙級 ・ 宣傳4\\n選擇1位玩家展示其牌庫頂牌，本回合您可以使用該牌。使用後將該牌放回擁有者的牌庫頂。\\n師敵之長計以制敵\\n資源 宣傳2\\n隨機購買區\\n輿論丕變\\n剩 6\\n宣傳 ・ 丙級 ・ 宣傳3\\n移除隨機購買區的所有牌，並立即補滿。獲得1點宣傳。\\n釋出消息改變輿論與政局\\n資源 宣傳1\\n隨機購買區\\n組織經驗乙\\n剩 3\\n組織 ・ 乙級 ・ 資金3+宣傳2\\n於己方組織1格內建立2個組織。\\n熟練而快速地拓展組織\\n資源 宣傳2\\n隨機購買區\\n批鬥\\n剩 4\\n整肅 ・ 乙級 ・ 宣傳4\\n從己方手牌或棄牌堆中移除任2張牌。\\n驅除不同意見的派系\\n資源 宣傳2\\n隨機購買區\\n手牌\\n追隨者\\n剩 35\\n宣傳 ・ 丙級 ・ 無\\n無效果。\\n追隨您的志士\\n資源 宣傳1\\n起始牌\\n資\", \"ally_lobby_display\": \"none\", \"ally_game_shell_display\": \"block\"}}, {\"name\": \"battle_log_player_cards_available_after_start\", \"ok\": true, \"detail\": {\"host_cards\": \"H\\nhost\\n玩家戰況\\n陣營：紅軍\\n根據地：北京\\n組織\\n1\\n資金\\n0\\n宣傳\\n0\\n手牌\\n5\\n移動\\n0\\nA\\nally\\n當前行動玩家\\n當前玩家\\n陣營：臺灣（綠線）\\n根據地：臺北\\n組織\\n1\\n資金\\n0\\n宣傳\\n0\\n手牌\\n5\\n移動\\n0\", \"ally_cards\": \"H\\nhost\\n玩家戰況\\n陣營：紅軍\\n根據地：北京\\n組織\\n1\\n資金\\n0\\n宣傳\\n0\\n手牌\\n5\\n移動\\n0\\nA\\nally\\n當前行動玩家\\n當前玩家\\n陣營：臺灣（綠線）\\n根據地：臺北\\n組織\\n1\\n資金\\n0\\n宣傳\\n0\\n手牌\\n5\\n移動\\n0\"}}, {\"name\": \"game_views_include_both_players_and_factions\", \"ok\": true, \"detail\": {\"host_excerpt\": \"逆統戰\\n逆統戰指揮中心\\n回合 1\\n事件階段\\n當前玩家 ally\\n手牌 5\\n資金 0\\n宣傳 0\\n移動 0\\n牌庫模式 53 張卡牌\\nhost 組織 1\\nally 組織 1\\n目前：事件｜等待 ally 操作\\n結束事件階段\\n指揮中心\\n戰略地圖\\n戰況紀錄\\n戰況總覽\\nH\\nhost\\n玩家戰況\\n陣營：紅軍\\n根據地：北京\\n組織\\n1\\n資金\\n0\\n宣傳\\n0\\n手牌\\n5\\n移動\\n0\\nA\\nally\\n當前行動玩家\\n當前玩家\\n陣營：臺灣（綠線）\\n根據地：臺北\\n組織\\n1\\n資金\\n0\\n宣傳\\n0\\n手牌\\n5\\n移動\\n0\\n事件紀錄\", \"ally_excerpt\": \"逆統戰\\n逆統戰指揮中心\\n回合 1\\n事件階段\\n當前玩家 ally\\n手牌 5\\n資金 0\\n宣傳 0\\n移動 0\\n牌庫模式 53 張卡牌\\nhost 組織 1\\nally 組織 1\\n目前：事件｜下一步：結束事件階段\\n結束事件階段\\n指揮中心\\n戰略地圖\\n戰況紀錄\\n戰況總覽\\nH\\nhost\\n玩家戰況\\n陣營：紅軍\\n根據地：北京\\n組織\\n1\\n資金\\n0\\n宣傳\\n0\\n手牌\\n5\\n移動\\n0\\nA\\nally\\n當前行動玩家\\n當前玩家\\n陣營：臺灣（綠線）\\n根據地：臺北\\n組織\\n1\\n資金\\n0\\n宣傳\\n0\\n手牌\\n5\\n移動\\n0\\n事件紀錄\"}}], \"screenshots\": {\"host\": \"/Users/benmini/.openclaw/workspace/redline/docs/records/lobby/multiplayer_lobby_flow_host.png\", \"ally\": \"/Users/benmini/.openclaw/workspace/redline/docs/records/lobby/multiplayer_lobby_flow_ally.png\"}}\n"
+    },
+    {
+      "script": "scripts/validate_negotiation_card.py",
+      "exit_code": 0,
+      "duration_sec": 0.04,
+      "output_tail": "{\"summary\": {\"total\": 2, \"passed\": 2, \"failed\": 0}}\n"
+    },
+    {
+      "script": "scripts/validate_purchase_rules.py",
+      "exit_code": 0,
+      "duration_sec": 0.04,
+      "output_tail": "{\"summary\": {\"total\": 4, \"passed\": 4, \"failed\": 0}}\n"
+    },
+    {
+      "script": "scripts/validate_purchase_section_alignment.py",
+      "exit_code": 0,
+      "duration_sec": 1.98,
+      "output_tail": "{\"total\": 3, \"passed\": 3, \"failed\": 0}\n"
+    },
+    {
+      "script": "scripts/validate_safehouse_build_range.py",
+      "exit_code": 0,
+      "duration_sec": 0.04,
+      "output_tail": "{\"near\": {\"success\": true}, \"far\": {\"error\": \"Cannot develop in this town\"}, \"orgs\": {\"香港城\": 1, \"廣州\": 1}}\n"
+    },
+    {
+      "script": "scripts/validate_setup_rules.py",
+      "exit_code": 1,
+      "duration_sec": 1.39,
+      "output_tail": "{\"game_id\": \"34e4ac48-c194-489a-9c59-7f59d44c7d51\", \"host_player_id\": \"8ee353e7-e49a-4f38-958b-dd1562eccc46\", \"ally_player_id\": \"c3f5c252-0317-43b3-ada5-cca3d2fbb20c\", \"summary\": {\"total\": 8, \"passed\": 7, \"failed\": 1}, \"results\": [{\"name\": \"start_endpoint_accepts_ready_setup\", \"ok\": true, \"detail\": {\"success\": true, \"market_mode\": \"sample_53\"}}, {\"name\": \"setup_enters_main_event_phase\", \"ok\": true, \"detail\": {\"game_phase\": \"main\", \"turn_phase\": \"event\", \"turn\": 1, \"winner\": null}}, {\"name\": \"starting_player_is_first_non_red\", \"ok\": true, \"detail\": {\"current_player\": \"ally\", \"expected\": \"ally\"}}, {\"name\": \"host_faction_and_base_initialized\", \"ok\": true, \"detail\": {\"player\": {\"id\": \"8ee353e7-e49a-4f38-958b-dd1562eccc46\", \"name\": \"host\", \"faction\": \"red_army\", \"base\": \"北京\", \"resources\": {\"money\": 0, \"propaganda\": 0}, \"moves_left\": 0, \"hand\": [\"樂捐者\", \"追隨者\", \"追隨者\", \"追隨者\", \"追隨者\"], \"deck_count\": 5, \"discard_count\": 1, \"orgs\": {\"北京\": 1}}, \"expected\": {\"faction\": \"red_army\", \"base\": \"北京\"}}}, {\"name\": \"ally_faction_and_base_initialized\", \"ok\": true, \"detail\": {\"player\": {\"id\": \"c3f5c252-0317-43b3-ada5-cca3d2fbb20c\", \"name\": \"ally\", \"faction\": \"taiwan_green\", \"base\": \"臺北\", \"resources\": {\"money\": 0, \"propaganda\": 0}, \"moves_left\": 0, \"hand\": [\"追隨者\", \"追隨者\", \"樂捐者\", \"樂捐者\", \"追隨者\"], \"deck_count\": 5, \"discard_count\": 0, \"orgs\": {\"臺北\": 1}}, \"expected\": {\"faction\": \"taiwan_green\", \"base\": \"臺北\"}}}, {\"name\": \"host_starter_hand_resources_and_moves\", \"ok\": false, \"detail\": {\"player\": {\"id\": \"8ee353e7-e49a-4f38-958b-dd1562eccc46\", \"name\": \"host\", \"faction\": \"red_army\", \"base\": \"北京\", \"resources\": {\"money\": 0, \"propaganda\": 0}, \"moves_left\": 0, \"hand\": [\"樂捐者\", \"追隨者\", \"追隨者\", \"追隨者\", \"追隨者\"], \"deck_count\": 5, \"discard_count\": 1, \"orgs\": {\"北京\": 1}}}}, {\"name\": \"ally_starter_hand_resources_and_moves\", \"ok\": true, \"detail\": {\"player\": {\"id\": \"c3f5c252-0317-43b3-ada5-cca3d2fbb20c\", \"name\": \"ally\", \"faction\": \"taiwan_green\", \"base\": \"臺北\", \"resources\": {\"money\": 0, \"propaganda\": 0}, \"moves_left\": 0, \"hand\": [\"追隨者\", \"追隨者\", \"樂捐者\", \"樂捐者\", \"追隨者\"], \"deck_count\": 5, \"discard_count\": 0, \"orgs\": {\"臺北\": 1}}}}, {\"name\": \"purchase_area_setup_matches_rules\", \"ok\": true, \"detail\": {\"purchase_area_count\": 11, \"purchase_area\": [\"宣傳家\", \"思想家\", \"資助者\", \"資本家\", \"分神\", \"內鬥\", \"網羅人才\", \"行動募資\", \"模仿戰術\", \"武裝者\", \"爆料黑幕\"], \"static_supply\": {\"宣傳家\": 1, \"思想家\": 1, \"資助者\": 1, \"資本家\": 1, \"分神\": 1, \"內鬥\": 1}}}], \"screenshot\": \"/Users/benmini/.openclaw/workspace/redline/setup_rules_validation.png\"}\n"
+    },
+    {
+      "script": "scripts/validate_shared_dissolve_phase8.py",
+      "exit_code": 0,
+      "duration_sec": 0.04,
+      "output_tail": "{\"summary\": {\"total\": 2, \"passed\": 2, \"failed\": 0}, \"results\": [{\"name\": \"shared_dissolve_hits_actual_owner\", \"ok\": true, \"detail\": {\"result\": {\"success\": true, \"actual_owner\": \"tw\", \"shared_target\": true}, \"hu_orgs\": {\"紐約\": 1}, \"tw_orgs\": {\"臺北\": 1}}}, {\"name\": \"shared_dissolve_triggers_defense\", \"ok\": true, \"detail\": {\"result\": {\"error\": \"盟旗學校：須先棄1張手牌，才可以瓦解蒙古組織\"}, \"hu_orgs\": {\"紐約\": 1}, \"tw_orgs\": {\"上海\": 1}}}]}\n"
+    },
+    {
+      "script": "scripts/validate_shared_dissolve_ui_phase8.py",
+      "exit_code": 0,
+      "duration_sec": 0.03,
+      "output_tail": "{\"summary\": {\"total\": 6, \"passed\": 6, \"failed\": 0}, \"checks\": {\"dissolve_button_html\": true, \"dissolve_hint_html\": true, \"actual_owner_helper\": true, \"shared_dissolve_target_helper\": true, \"send_dissolve_action\": true, \"test_dissolve_helper\": true}}\n"
+    },
+    {
+      "script": "scripts/validate_shared_interaction_ui_phase8.py",
+      "exit_code": 0,
+      "duration_sec": 0.04,
+      "output_tail": "{\"summary\": {\"total\": 6, \"passed\": 6, \"failed\": 0}, \"checks\": {\"can_act_from_town\": true, \"shared_movement_enabled\": true, \"shared_build_button\": true, \"shared_build_hint_text\": true, \"shared_origin_highlight\": true, \"test_select_reports_shared\": true}}\n"
+    },
+    {
+      "script": "scripts/validate_shared_map_visual_phase8.py",
+      "exit_code": 0,
+      "duration_sec": 0.03,
+      "output_tail": "{\"summary\": {\"total\": 6, \"passed\": 6, \"failed\": 0}, \"checks\": {\"shared_access_helper\": true, \"shared_summary_helper\": true, \"shared_badge_marker\": true, \"shared_badge_css\": true, \"status_panel_shared_hint\": true, \"info_panel_shared_badge\": true}}\n"
+    },
+    {
+      "script": "scripts/validate_shared_move_phase8.py",
+      "exit_code": 0,
+      "duration_sec": 0.04,
+      "output_tail": "{\"summary\": {\"total\": 1, \"passed\": 0, \"failed\": 1}, \"result\": {\"error\": \"Not enough move points\"}, \"hk_orgs\": {}, \"yue_orgs\": {\"廣州\": 1}}\n"
+    },
+    {
+      "script": "scripts/validate_shared_org_count_phase6b.py",
+      "exit_code": 0,
+      "duration_sec": 0.04,
+      "output_tail": "{\"summary\": {\"total\": 1, \"passed\": 1, \"failed\": 0}, \"count_tw\": 5, \"count_church\": 5}\n"
+    },
+    {
+      "script": "scripts/validate_shared_organizations_phase6.py",
+      "exit_code": 0,
+      "duration_sec": 0.11,
+      "output_tail": "{\"summary\": {\"total\": 1, \"passed\": 1, \"failed\": 0}, \"result\": {\"shared_hk\": true, \"shared_yue\": true, \"build_result\": {\"success\": true}, \"hk_orgs\": {\"香港城\": 2}}}\n"
+    },
+    {
+      "script": "scripts/validate_shared_victory_phase8.py",
+      "exit_code": 0,
+      "duration_sec": 0.06,
+      "output_tail": "{\"summary\": {\"total\": 1, \"passed\": 1, \"failed\": 0}, \"count\": 16}\n"
+    },
+    {
+      "script": "scripts/validate_support_card_effects_runtime.py",
+      "exit_code": 0,
+      "duration_sec": 0.07,
+      "output_tail": "{\"summary\": {\"total\": 7, \"passed\": 7, \"failed\": 0}, \"results\": [{\"name\": \"india_support_tier3_adds_three_distractions\", \"ok\": true, \"detail\": {\"before\": 0, \"after\": 3}}, {\"name\": \"anglo_support_tier2_gains_money\", \"ok\": true, \"detail\": {\"before\": 0, \"after\": 2}}, {\"name\": \"nanyang_support_tier1_draw_then_discard_net_zero\", \"ok\": true, \"detail\": {\"before\": 2, \"after\": 1}}, {\"name\": \"east_asia_support_tier1_gains_two_propaganda\", \"ok\": true, \"detail\": {\"before\": 0, \"after\": 2}}, {\"name\": \"northland_support_tier2_dissolves_one\", \"ok\": true, \"detail\": {\"before\": {\"南京\": 1}, \"after\": {}}}, {\"name\": \"taiwan_support_tier1_gains_one_propaganda\", \"ok\": true, \"detail\": {\"before\": 0, \"after\": 1}}, {\"name\": \"middle_east_support_tier1_forces_one_discard\", \"ok\": true, \"detail\": {\"before\": 2, \"after\": 1}}]}\n"
+    },
+    {
+      "script": "scripts/validate_support_cards_runtime_purchase_area.py",
+      "exit_code": 0,
+      "duration_sec": 0.05,
+      "output_tail": "{\"summary\": {\"total\": 3, \"passed\": 3, \"failed\": 0}, \"purchase_area\": [\"宣傳家\", \"思想家\", \"資助者\", \"資本家\", \"分神\", \"內鬥\", \"情報網\", \"批鬥\", \"歐洲奧援\", \"英美奧援\", \"印度奧援\"], \"buy_india\": {\"success\": true}, \"buy_anglo\": {\"error\": \"印度研究分析室：不能持有印度旗幟以外的旗幟卡\"}}\n"
+    },
+    {
+      "script": "scripts/validate_support_purchase_deck_runtime.py",
+      "exit_code": 0,
+      "duration_sec": 0.05,
+      "output_tail": "{\"summary\": {\"total\": 8, \"passed\": 8, \"failed\": 0}, \"checks\": {\"has_purchase_deck\": true, \"initial_area_has_static_plus_five_random\": true, \"purchase_deck_has_48_cards_after_market_draw\": true, \"support_total_in_market_and_deck_is_18\": true, \"static_area_contains_disruption_cards\": true, \"static_buy_succeeds_and_decrements_supply_without_removing_slot\": true, \"random_buy_succeeds_and_removes_slot\": true, \"end_turn_refills_market_to_static_plus_five_random\": true}, \"initial_area_len\": 11, \"initial_deck_len\": 48, \"support_total\": 18, \"purchase_names\": [\"宣傳家\", \"思想家\", \"資助者\", \"資本家\", \"分神\", \"內鬥\", \"組織經驗甲\", \"凝聚共識\", \"離間\", \"批鬥\", \"樹立信心\"], \"static_supply_before\": {\"宣傳家\": 1, \"思想家\": 1, \"資助者\": 1, \"資本家\": 1, \"分神\": 1, \"內鬥\": 1}, \"static_supply_after\": {\"宣傳家\": 0, \"思想家\": 1, \"資助者\": 1, \"資本家\": 1, \"分神\": 1, \"內鬥\": 1}, \"static_buy_result\": {\"success\": true}, \"random_slot_before\": \"組織經驗甲\", \"random_buy_result\": {\"success\": true}, \"area_len_after_static_buy\": 11, \"area_len_after_random_buy\": 10, \"area_len_after_refill\": 11}\n"
+    },
+    {
+      "script": "scripts/validate_ui_card_flows.py",
+      "exit_code": 0,
+      "duration_sec": 62.25,
+      "output_tail": "/Users/benmini/.openclaw/workspace/redline/docs/records/card-ui/CARD_UI_VALIDATION_RESULTS.json\n/Users/benmini/.openclaw/workspace/redline/docs/records/card-ui/CARD_UI_VALIDATION_RESULTS.md\n"
+    },
+    {
+      "script": "scripts/validate_underground_party.py",
+      "exit_code": 0,
+      "duration_sec": 0.06,
+      "output_tail": "{\"summary\": {\"total\": 3, \"passed\": 3, \"failed\": 0}}\n"
+    },
+    {
+      "script": "scripts/validate_victory_rules.py",
+      "exit_code": 0,
+      "duration_sec": 0.05,
+      "output_tail": "{\"summary\": {\"total\": 5, \"passed\": 5, \"failed\": 0}, \"results\": [{\"name\": \"red_survival_after_turn_20\", \"ok\": true, \"detail\": {\"phase\": \"finished\", \"winner\": \"red_army\", \"turn\": 21}}, {\"name\": \"red_taiwan_14_orgs_early_win\", \"ok\": true, \"detail\": {\"phase\": \"finished\", \"winner\": \"red_army\", \"red_orgs\": {\"南投\": 1, \"嘉義\": 1, \"基隆\": 1, \"宜蘭\": 1, \"屏東\": 1, \"彰化\": 1, \"新北\": 1, \"新竹\": 1, \"東沙\": 1, \"桃園\": 1, \"澎湖\": 1, \"臺中\": 1, \"臺北\": 1, \"臺南\": 1}}}, {\"name\": \"non_red_china_14_orgs_win\", \"ok\": true, \"detail\": {\"phase\": \"finished\", \"winner\": \"anti\", \"anti_org_count\": 14}}, {\"name\": \"shared_orgs_count_for_non_red_victory\", \"ok\": true, \"detail\": {\"shared_count\": 14, \"phase\": \"finished\", \"winner\": \"Taiwan\", \"tw_orgs\": {\"三亞\": 1, \"上海\": 1, \"上粉沙打\": 1, \"丹東\": 1, \"九龍城\": 1, \"伊寧\": 1, \"佳木斯\": 1, \"元朗\": 1}, \"hu_orgs\": {\"克孜勒蘇\": 1, \"克拉瑪依\": 1, \"包頭\": 1, \"北京\": 1, \"南京\": 1, \"南寧\": 1}}}, {\"name\": \"no_win_when_below_threshold\", \"ok\": true, \"detail\": {\"phase\": \"main\", \"winner\": null, \"anti_org_count\": 13, \"turn\": 20}}]}\n"
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "summary": {
+    "total": 4,
+    "passed": 3,
+    "failed": 1
+  },
+  "results": [
+    {
+      "name": "support_taxonomy_marks_india_support",
+      "ok": true,
+      "detail": {
+        "is_india_flag": true
+      }
+    },
+    {
+      "name": "buy_india_support_allowed",
+      "ok": false,
+      "detail": {
+        "error": "Static purchase card is out of supply"
+      }
+    },
+    {
+      "name": "buy_non_india_support_blocked",
+      "ok": true,
+      "detail": {
+        "error": "印度研究分析室：不能持有印度旗幟以外的旗幟卡"
+      }
+    },
+    {
+      "name": "gain_non_india_support_from_discard_blocked",
+      "ok": true,
+      "detail": {
+        "hand": [
+          "追隨者",
+          "樂捐者",
+          "追隨者",
+          "追隨者",
+          "追隨者"
+        ]
+      }
+    }
+  ]
+}

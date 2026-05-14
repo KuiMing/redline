@@ -1,0 +1,14 @@
+{
+  "summary": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1
+  },
+  "result": {
+    "error": "Not enough move points"
+  },
+  "hk_orgs": {},
+  "yue_orgs": {
+    "廣州": 1
+  }
+}

@@ -1,6 +1,6 @@
 # LEAK CARD VALIDATION
 
-日期：2026-05-11
+日期：2026-05-14
 
 summary: {'total': 6, 'passed': 6, 'failed': 0}
 

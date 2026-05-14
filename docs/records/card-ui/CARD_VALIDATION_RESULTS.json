@@ -43,8 +43,7 @@
     },
     "after": {
       "hand": [
-        "可垃圾牌",
-        "抽牌D"
+        "可垃圾牌"
       ],
       "resources": {
         "money": 0,
@@ -76,12 +75,11 @@
         "guerrilla_triggered": false,
         "faction_action_used": false,
         "india_flag_money_triggered": false,
-        "purchased_cards_this_turn": [],
-        "faction_first_propaganda_triggered": true
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
+        "[Turn 1] player1 removed 宣傳家 and it returned to static_supply",
         "[Turn 1] player1 built organization in 北京 via card effect",
-        "[Turn 1] player1 triggered 星星之火 and drew 1 card",
         "[Turn 1] player1 played 宣傳家"
       ]
     }
@@ -873,7 +871,9 @@
       "hand": [
         "自棄1",
         "自棄2",
-        "抽牌D"
+        "抽牌D",
+        "抽牌C",
+        "抽牌B"
       ],
       "resources": {
         "money": 0,
@@ -887,8 +887,6 @@
       "discard": [
         "棄牌A",
         "棄牌B",
-        "抽牌B",
-        "抽牌C",
         "高效行動"
       ],
       "purchase_area": [],
@@ -1036,9 +1034,7 @@
       }
     },
     "after": {
-      "hand": [
-        "可回收牌"
-      ],
+      "hand": [],
       "resources": {
         "money": 0,
         "propaganda": 0
@@ -1049,6 +1045,7 @@
         "上海": 1
       },
       "discard": [
+        "可回收牌",
         "乘勝追擊"
       ],
       "purchase_area": [],
@@ -1071,6 +1068,7 @@
         "purchased_cards_this_turn": []
       },
       "log_tail": [
+        "[Turn 1] player1 may gain 1 eligible card from discard",
         "[Turn 1] player1 played 乘勝追擊"
       ]
     }
@@ -1143,7 +1141,7 @@
         "played_money_card": false,
         "played_propaganda_card": false,
         "non_starter_discard": false,
-        "successful_discard": false,
+        "successful_discard": true,
         "built_towns": [],
         "played_nonstarter_names": [
           "誘導虛耗"
@@ -1454,7 +1452,9 @@
       "hand": [
         "自棄1",
         "自棄2",
-        "抽牌D"
+        "抽牌D",
+        "抽牌C",
+        "抽牌B"
       ],
       "resources": {
         "money": 0,
@@ -1468,8 +1468,6 @@
       "discard": [
         "棄牌A",
         "棄牌B",
-        "抽牌B",
-        "抽牌C",
         "凝聚共識"
       ],
       "purchase_area": [],
@@ -1617,9 +1615,7 @@
       }
     },
     "after": {
-      "hand": [
-        "可回收牌"
-      ],
+      "hand": [],
       "resources": {
         "money": 0,
         "propaganda": 0
@@ -1630,6 +1626,7 @@
         "上海": 1
       },
       "discard": [
+        "可回收牌",
         "擴大戰果"
       ],
       "purchase_area": [],
@@ -1652,6 +1649,7 @@
         "purchased_cards_this_turn": []
       },
       "log_tail": [
+        "[Turn 1] player1 may gain 1 card from discard",
         "[Turn 1] player1 played 擴大戰果"
       ]
     }
@@ -2212,6 +2210,7 @@
       },
       "log_tail": [
         "[Turn 1] player1 trashed 非起始牌",
+        "[Turn 1] 非起始牌 returned to deck_discard",
         "[Turn 1] player1 played 批判"
       ]
     }
@@ -2291,8 +2290,8 @@
         "purchased_cards_this_turn": []
       },
       "log_tail": [
-        "[Turn 1] player1 trashed 非起始牌",
         "[Turn 1] player1 trashed 棄牌區非起始牌",
+        "[Turn 1] 棄牌區非起始牌 returned to deck_discard",
         "[Turn 1] player1 played 批鬥"
       ]
     }
@@ -2376,7 +2375,7 @@
         "canceled_propaganda_card": true
       },
       "log_tail": [
-        "[Turn 1] player1 triggered cancel-card effect",
+        "[Turn 1] player1 canceled unknown card",
         "[Turn 1] player1 played 爆料黑幕"
       ]
     }
@@ -2437,11 +2436,7 @@
         "棄牌B",
         "輿論丕變"
       ],
-      "purchase_area": [
-        "市場4",
-        "市場3",
-        "市場2"
-      ],
+      "purchase_area": [],
       "other_hands": {
         "player2": 2
       },
@@ -2552,12 +2547,9 @@
       "dissolve"
     ],
     "result": {
-      "success": true
+      "error": "間諜卡必須指定其他玩家"
     },
-    "checks": [
-      "play_success",
-      "card_left_hand"
-    ],
+    "checks": [],
     "resources_delta": {
       "money": 0,
       "propaganda": 0
@@ -2584,17 +2576,20 @@
       }
     },
     "after": {
-      "hand": [],
+      "hand": [
+        "派遣間諜"
+      ],
       "resources": {
         "money": 0,
         "propaganda": 0
       },
       "moves_left": 3,
-      "orgs": {},
+      "orgs": {
+        "北京": 1
+      },
       "discard": [
         "棄牌A",
-        "棄牌B",
-        "派遣間諜"
+        "棄牌B"
       ],
       "purchase_area": [],
       "other_hands": {
@@ -2606,19 +2601,14 @@
         "non_starter_discard": false,
         "successful_discard": false,
         "built_towns": [],
-        "played_nonstarter_names": [
-          "派遣間諜"
-        ],
+        "played_nonstarter_names": [],
         "combo_reward_triggered": false,
         "guerrilla_triggered": false,
         "faction_action_used": false,
         "india_flag_money_triggered": false,
         "purchased_cards_this_turn": []
       },
-      "log_tail": [
-        "[Turn 1] player1 dissolved 1 organization from player2 at 香港城",
-        "[Turn 1] player1 played 派遣間諜"
-      ]
+      "log_tail": []
     }
   },
   {
@@ -2628,12 +2618,9 @@
       "dissolve"
     ],
     "result": {
-      "success": true
+      "error": "間諜卡必須指定其他玩家"
     },
-    "checks": [
-      "play_success",
-      "card_left_hand"
-    ],
+    "checks": [],
     "resources_delta": {
       "money": 0,
       "propaganda": 0
@@ -2660,7 +2647,9 @@
       }
     },
     "after": {
-      "hand": [],
+      "hand": [
+        "內應間諜"
+      ],
       "resources": {
         "money": 0,
         "propaganda": 0
@@ -2671,8 +2660,7 @@
       },
       "discard": [
         "棄牌A",
-        "棄牌B",
-        "內應間諜"
+        "棄牌B"
       ],
       "purchase_area": [],
       "other_hands": {
@@ -2684,19 +2672,14 @@
         "non_starter_discard": false,
         "successful_discard": false,
         "built_towns": [],
-        "played_nonstarter_names": [
-          "內應間諜"
-        ],
+        "played_nonstarter_names": [],
         "combo_reward_triggered": false,
         "guerrilla_triggered": false,
         "faction_action_used": false,
         "india_flag_money_triggered": false,
         "purchased_cards_this_turn": []
       },
-      "log_tail": [
-        "[Turn 1] player1 dissolved 1 organization from player2 at 香港城",
-        "[Turn 1] player1 played 內應間諜"
-      ]
+      "log_tail": []
     }
   },
   {
@@ -2752,7 +2735,6 @@
       "discard": [
         "棄牌A",
         "棄牌B",
-        "內鬥",
         "情報網"
       ],
       "purchase_area": [],
@@ -2775,7 +2757,6 @@
         "purchased_cards_this_turn": []
       },
       "log_tail": [
-        "[Turn 1] player1 gained 1 內鬥 card(s)",
         "[Turn 1] player1 played 情報網"
       ]
     }
@@ -3030,12 +3011,9 @@
       "force_discard"
     ],
     "result": {
-      "success": true
+      "error": "武裝卡必須指定其他玩家"
     },
-    "checks": [
-      "play_success",
-      "card_left_hand"
-    ],
+    "checks": [],
     "resources_delta": {
       "money": 0,
       "propaganda": 0
@@ -3063,7 +3041,9 @@
       }
     },
     "after": {
-      "hand": [],
+      "hand": [
+        "武裝者"
+      ],
       "resources": {
         "money": 0,
         "propaganda": 0
@@ -3075,12 +3055,11 @@
       },
       "discard": [
         "棄牌A",
-        "棄牌B",
-        "武裝者"
+        "棄牌B"
       ],
       "purchase_area": [],
       "other_hands": {
-        "player2": 1
+        "player2": 2
       },
       "turn_log": {
         "played_money_card": false,
@@ -3088,18 +3067,14 @@
         "non_starter_discard": false,
         "successful_discard": false,
         "built_towns": [],
-        "played_nonstarter_names": [
-          "武裝者"
-        ],
+        "played_nonstarter_names": [],
         "combo_reward_triggered": false,
         "guerrilla_triggered": false,
         "faction_action_used": false,
         "india_flag_money_triggered": false,
         "purchased_cards_this_turn": []
       },
-      "log_tail": [
-        "[Turn 1] player1 played 武裝者"
-      ]
+      "log_tail": []
     }
   },
   {
@@ -3109,12 +3084,9 @@
       "force_discard"
     ],
     "result": {
-      "success": true
+      "error": "武裝卡必須指定其他玩家"
     },
-    "checks": [
-      "play_success",
-      "card_left_hand"
-    ],
+    "checks": [],
     "resources_delta": {
       "money": 0,
       "propaganda": 0
@@ -3142,7 +3114,9 @@
       }
     },
     "after": {
-      "hand": [],
+      "hand": [
+        "武裝小隊"
+      ],
       "resources": {
         "money": 0,
         "propaganda": 0
@@ -3154,12 +3128,11 @@
       },
       "discard": [
         "棄牌A",
-        "棄牌B",
-        "武裝小隊"
+        "棄牌B"
       ],
       "purchase_area": [],
       "other_hands": {
-        "player2": 0
+        "player2": 2
       },
       "turn_log": {
         "played_money_card": false,
@@ -3167,18 +3140,14 @@
         "non_starter_discard": false,
         "successful_discard": false,
         "built_towns": [],
-        "played_nonstarter_names": [
-          "武裝小隊"
-        ],
+        "played_nonstarter_names": [],
         "combo_reward_triggered": false,
         "guerrilla_triggered": false,
         "faction_action_used": false,
         "india_flag_money_triggered": false,
         "purchased_cards_this_turn": []
       },
-      "log_tail": [
-        "[Turn 1] player1 played 武裝小隊"
-      ]
+      "log_tail": []
     }
   },
   {
@@ -3189,12 +3158,9 @@
       "conditional_draw"
     ],
     "result": {
-      "success": true
+      "error": "武裝卡必須指定其他玩家"
     },
-    "checks": [
-      "play_success",
-      "card_left_hand"
-    ],
+    "checks": [],
     "resources_delta": {
       "money": 0,
       "propaganda": 0
@@ -3223,7 +3189,7 @@
     },
     "after": {
       "hand": [
-        "抽牌D"
+        "武裝集團"
       ],
       "resources": {
         "money": 0,
@@ -3236,12 +3202,11 @@
       },
       "discard": [
         "棄牌A",
-        "棄牌B",
-        "武裝集團"
+        "棄牌B"
       ],
       "purchase_area": [],
       "other_hands": {
-        "player2": 0
+        "player2": 2
       },
       "turn_log": {
         "played_money_card": false,
@@ -3249,18 +3214,14 @@
         "non_starter_discard": false,
         "successful_discard": true,
         "built_towns": [],
-        "played_nonstarter_names": [
-          "武裝集團"
-        ],
+        "played_nonstarter_names": [],
         "combo_reward_triggered": false,
         "guerrilla_triggered": false,
         "faction_action_used": false,
         "india_flag_money_triggered": false,
         "purchased_cards_this_turn": []
       },
-      "log_tail": [
-        "[Turn 1] player1 played 武裝集團"
-      ]
+      "log_tail": []
     }
   },
   {
@@ -3415,11 +3376,10 @@
         "guerrilla_triggered": false,
         "faction_action_used": false,
         "india_flag_money_triggered": false,
-        "purchased_cards_this_turn": [],
-        "canceled_propaganda_card": true
+        "purchased_cards_this_turn": []
       },
       "log_tail": [
-        "[Turn 1] player1 triggered cancel-card effect",
+        "[Turn 1] player1 canceled unknown card",
         "[Turn 1] player1 played 產業滲透"
       ]
     }

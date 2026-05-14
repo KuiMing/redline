@@ -1,6 +1,6 @@
 # LEAK CARD TARGET UI VALIDATION
 
-日期：2026-05-11
+日期：2026-05-14
 
 summary: {'total': 2, 'passed': 2, 'failed': 0}
 

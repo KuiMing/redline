@@ -1,0 +1,36 @@
+{
+  "game_id": "9a419120-c0f8-456e-9f30-c8985f11a689",
+  "summary": {
+    "total": 3,
+    "passed": 3,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "faction_picker_embedded_in_lobby_card",
+      "ok": true,
+      "detail": {}
+    },
+    {
+      "name": "faction_picker_does_not_overlap_lobby_actions",
+      "ok": true,
+      "detail": {
+        "display": "block",
+        "pickerTop": 520.96875,
+        "pickerBottom": 618.96875,
+        "actionsTop": 650.96875,
+        "overlapsActions": false
+      }
+    },
+    {
+      "name": "lobby_roster_syncs_all_joined_players",
+      "ok": true,
+      "detail": {
+        "roster_text": "H\nhost\n房主 / 你｜未準備｜尚未選擇陣營\nA\nally\n玩家｜未準備｜尚未選擇陣營\n+\n等待玩家加入\n分享房間代碼邀請下一位玩家\n+\n空席位\n最多 4 位玩家",
+        "card_count": 4,
+        "second_player_id": "79b9c904-ee5d-45c1-9f6e-70dd2b665941"
+      }
+    }
+  ],
+  "screenshot": "/Users/benmini/.openclaw/workspace/redline/lobby_polish_validation.png"
+}

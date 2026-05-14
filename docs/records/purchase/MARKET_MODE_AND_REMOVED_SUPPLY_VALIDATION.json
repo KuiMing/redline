@@ -1,14 +1,14 @@
 {
   "summary": {
     "total": 7,
-    "passed": 7,
-    "failed": 0
+    "passed": 6,
+    "failed": 1
   },
   "checks": [
     {
       "name": "sample_53 draw pile matches 35-card sampled market deck minus 5 exposed market cards",
-      "passed": true,
-      "actual": 30,
+      "passed": false,
+      "actual": 48,
       "expected": 30
     },
     {
@@ -20,7 +20,7 @@
     {
       "name": "all_cards draw pile exceeds sample_53 sampled market deck after 5 exposed cards",
       "passed": true,
-      "actual": 35,
+      "actual": 68,
       "expected": "> 30"
     },
     {

@@ -8,14 +8,14 @@
 - effects: optional_trash, build, move
 - checks: play_success, card_left_hand
 - resources delta: money 0, propaganda 0
-- hand before → after: 2 → 2
+- hand before → after: 2 → 1
 - moves_left before → after: 3 → 4
 - orgs before → after: {'北京': 1, '上海': 1} → {'北京': 2, '上海': 1}
 - discard after: ['棄牌A', '棄牌B']
 - purchase_area after: []
 - other_hands before → after: {'player2': 2} → {'player2': 2}
-- turn_log after: {'played_money_card': False, 'played_propaganda_card': True, 'non_starter_discard': False, 'successful_discard': False, 'built_towns': [], 'played_nonstarter_names': ['宣傳家'], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': False, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': [], 'faction_first_propaganda_triggered': True}
-- log tail: ['[Turn 1] player1 built organization in 北京 via card effect', '[Turn 1] player1 triggered 星星之火 and drew 1 card', '[Turn 1] player1 played 宣傳家']
+- turn_log after: {'played_money_card': False, 'played_propaganda_card': True, 'non_starter_discard': False, 'successful_discard': False, 'built_towns': [], 'played_nonstarter_names': ['宣傳家'], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': False, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': []}
+- log tail: ['[Turn 1] player1 removed 宣傳家 and it returned to static_supply', '[Turn 1] player1 built organization in 北京 via card effect', '[Turn 1] player1 played 宣傳家']
 
 ## 思想家 (propaganda)
 - effects: optional_trash, build, move
@@ -138,10 +138,10 @@
 - effects: draw, discard_self
 - checks: play_success, card_left_hand
 - resources delta: money 0, propaganda 0
-- hand before → after: 3 → 3
+- hand before → after: 3 → 5
 - moves_left before → after: 3 → 3
 - orgs before → after: {'北京': 1, '上海': 1} → {'北京': 1, '上海': 1}
-- discard after: ['棄牌A', '棄牌B', '抽牌B', '抽牌C', '高效行動']
+- discard after: ['棄牌A', '棄牌B', '高效行動']
 - purchase_area after: []
 - other_hands before → after: {'player2': 2} → {'player2': 2}
 - turn_log after: {'played_money_card': False, 'played_propaganda_card': False, 'non_starter_discard': False, 'successful_discard': False, 'built_towns': [], 'played_nonstarter_names': ['高效行動'], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': False, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': []}
@@ -164,14 +164,14 @@
 - effects: gain_from_discard
 - checks: play_success, card_left_hand
 - resources delta: money 0, propaganda 0
-- hand before → after: 1 → 1
+- hand before → after: 1 → 0
 - moves_left before → after: 3 → 3
 - orgs before → after: {'北京': 1, '上海': 1} → {'北京': 1, '上海': 1}
-- discard after: ['乘勝追擊']
+- discard after: ['可回收牌', '乘勝追擊']
 - purchase_area after: []
 - other_hands before → after: {'player2': 2} → {'player2': 2}
 - turn_log after: {'played_money_card': False, 'played_propaganda_card': False, 'non_starter_discard': False, 'successful_discard': False, 'built_towns': [], 'played_nonstarter_names': ['乘勝追擊'], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': False, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': []}
-- log tail: ['[Turn 1] player1 played 乘勝追擊']
+- log tail: ['[Turn 1] player1 may gain 1 eligible card from discard', '[Turn 1] player1 played 乘勝追擊']
 
 ## 誘導虛耗 (command)
 - effects: draw, optional_trash, force_discard
@@ -183,7 +183,7 @@
 - discard after: ['棄牌A', '棄牌B']
 - purchase_area after: []
 - other_hands before → after: {'player2': 2} → {'player2': 1}
-- turn_log after: {'played_money_card': False, 'played_propaganda_card': False, 'non_starter_discard': False, 'successful_discard': False, 'built_towns': [], 'played_nonstarter_names': ['誘導虛耗'], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': False, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': []}
+- turn_log after: {'played_money_card': False, 'played_propaganda_card': False, 'non_starter_discard': False, 'successful_discard': True, 'built_towns': [], 'played_nonstarter_names': ['誘導虛耗'], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': False, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': []}
 - log tail: ['[Turn 1] 誘導虛耗 returned to purchase deck discard', '[Turn 1] player1 removed 誘導虛耗 and it returned to deck_discard', '[Turn 1] player1 played 誘導虛耗']
 
 ## 點燃熱情 (command)
@@ -229,10 +229,10 @@
 - effects: draw, discard_self, conditional_bonus
 - checks: play_success, card_left_hand
 - resources delta: money 0, propaganda 2
-- hand before → after: 3 → 3
+- hand before → after: 3 → 5
 - moves_left before → after: 3 → 3
 - orgs before → after: {'北京': 1, '上海': 1} → {'北京': 1, '上海': 1}
-- discard after: ['棄牌A', '棄牌B', '抽牌B', '抽牌C', '凝聚共識']
+- discard after: ['棄牌A', '棄牌B', '凝聚共識']
 - purchase_area after: []
 - other_hands before → after: {'player2': 2} → {'player2': 2}
 - turn_log after: {'played_money_card': False, 'played_propaganda_card': False, 'non_starter_discard': True, 'successful_discard': False, 'built_towns': [], 'played_nonstarter_names': ['凝聚共識'], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': False, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': []}
@@ -255,14 +255,14 @@
 - effects: gain_any_from_discard
 - checks: play_success, card_left_hand
 - resources delta: money 0, propaganda 0
-- hand before → after: 1 → 1
+- hand before → after: 1 → 0
 - moves_left before → after: 3 → 3
 - orgs before → after: {'北京': 1, '上海': 1} → {'北京': 1, '上海': 1}
-- discard after: ['擴大戰果']
+- discard after: ['可回收牌', '擴大戰果']
 - purchase_area after: []
 - other_hands before → after: {'player2': 2} → {'player2': 2}
 - turn_log after: {'played_money_card': False, 'played_propaganda_card': False, 'non_starter_discard': False, 'successful_discard': False, 'built_towns': [], 'played_nonstarter_names': ['擴大戰果'], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': False, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': []}
-- log tail: ['[Turn 1] player1 played 擴大戰果']
+- log tail: ['[Turn 1] player1 may gain 1 card from discard', '[Turn 1] player1 played 擴大戰果']
 
 ## 交通經驗丙 (transport)
 - effects: extra_move
@@ -353,7 +353,7 @@
 - purchase_area after: []
 - other_hands before → after: {'player2': 2} → {'player2': 2}
 - turn_log after: {'played_money_card': False, 'played_propaganda_card': False, 'non_starter_discard': True, 'successful_discard': False, 'built_towns': [], 'played_nonstarter_names': ['批判'], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': False, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': []}
-- log tail: ['[Turn 1] player1 trashed 非起始牌', '[Turn 1] player1 played 批判']
+- log tail: ['[Turn 1] player1 trashed 非起始牌', '[Turn 1] 非起始牌 returned to deck_discard', '[Turn 1] player1 played 批判']
 
 ## 批鬥 (purge)
 - effects: trash_from_hand_or_discard
@@ -366,7 +366,7 @@
 - purchase_area after: []
 - other_hands before → after: {'player2': 2} → {'player2': 2}
 - turn_log after: {'played_money_card': False, 'played_propaganda_card': False, 'non_starter_discard': True, 'successful_discard': False, 'built_towns': [], 'played_nonstarter_names': ['批鬥'], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': False, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': []}
-- log tail: ['[Turn 1] player1 trashed 非起始牌', '[Turn 1] player1 trashed 棄牌區非起始牌', '[Turn 1] player1 played 批鬥']
+- log tail: ['[Turn 1] player1 trashed 棄牌區非起始牌', '[Turn 1] 棄牌區非起始牌 returned to deck_discard', '[Turn 1] player1 played 批鬥']
 
 ## 爆料黑幕 (propaganda_special)
 - effects: cancel_card, conditional_draw
@@ -379,7 +379,7 @@
 - purchase_area after: []
 - other_hands before → after: {'player2': 2} → {'player2': 2}
 - turn_log after: {'played_money_card': False, 'played_propaganda_card': False, 'non_starter_discard': False, 'successful_discard': False, 'built_towns': [], 'played_nonstarter_names': ['爆料黑幕'], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': False, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': [], 'canceled_propaganda_card': True}
-- log tail: ['[Turn 1] player1 triggered cancel-card effect', '[Turn 1] player1 played 爆料黑幕']
+- log tail: ['[Turn 1] player1 canceled unknown card', '[Turn 1] player1 played 爆料黑幕']
 
 ## 輿論丕變 (propaganda_special)
 - effects: refresh_purchase_area, gain_resource
@@ -389,7 +389,7 @@
 - moves_left before → after: 3 → 3
 - orgs before → after: {'北京': 1, '上海': 1} → {'北京': 1, '上海': 1}
 - discard after: ['棄牌A', '棄牌B', '輿論丕變']
-- purchase_area after: ['市場4', '市場3', '市場2']
+- purchase_area after: []
 - other_hands before → after: {'player2': 2} → {'player2': 2}
 - turn_log after: {'played_money_card': False, 'played_propaganda_card': False, 'non_starter_discard': False, 'successful_discard': False, 'built_towns': [], 'played_nonstarter_names': ['輿論丕變'], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': False, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': []}
 - log tail: ['[Turn 1] player1 played 輿論丕變']
@@ -409,29 +409,29 @@
 
 ## 派遣間諜 (spy)
 - effects: dissolve
-- checks: play_success, card_left_hand
+- checks: 
 - resources delta: money 0, propaganda 0
-- hand before → after: 1 → 0
+- hand before → after: 1 → 1
 - moves_left before → after: 3 → 3
-- orgs before → after: {'北京': 1} → {}
-- discard after: ['棄牌A', '棄牌B', '派遣間諜']
+- orgs before → after: {'北京': 1} → {'北京': 1}
+- discard after: ['棄牌A', '棄牌B']
 - purchase_area after: []
 - other_hands before → after: {'player2': 2} → {'player2': 2}
-- turn_log after: {'played_money_card': False, 'played_propaganda_card': False, 'non_starter_discard': False, 'successful_discard': False, 'built_towns': [], 'played_nonstarter_names': ['派遣間諜'], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': False, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': []}
-- log tail: ['[Turn 1] player1 dissolved 1 organization from player2 at 香港城', '[Turn 1] player1 played 派遣間諜']
+- turn_log after: {'played_money_card': False, 'played_propaganda_card': False, 'non_starter_discard': False, 'successful_discard': False, 'built_towns': [], 'played_nonstarter_names': [], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': False, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': []}
+- log tail: []
 
 ## 內應間諜 (spy)
 - effects: dissolve
-- checks: play_success, card_left_hand
+- checks: 
 - resources delta: money 0, propaganda 0
-- hand before → after: 1 → 0
+- hand before → after: 1 → 1
 - moves_left before → after: 3 → 3
 - orgs before → after: {'北京': 1} → {'北京': 1}
-- discard after: ['棄牌A', '棄牌B', '內應間諜']
+- discard after: ['棄牌A', '棄牌B']
 - purchase_area after: []
 - other_hands before → after: {'player2': 2} → {'player2': 2}
-- turn_log after: {'played_money_card': False, 'played_propaganda_card': False, 'non_starter_discard': False, 'successful_discard': False, 'built_towns': [], 'played_nonstarter_names': ['內應間諜'], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': False, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': []}
-- log tail: ['[Turn 1] player1 dissolved 1 organization from player2 at 香港城', '[Turn 1] player1 played 內應間諜']
+- turn_log after: {'played_money_card': False, 'played_propaganda_card': False, 'non_starter_discard': False, 'successful_discard': False, 'built_towns': [], 'played_nonstarter_names': [], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': False, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': []}
+- log tail: []
 
 ## 情報網 (spy)
 - effects: choose_one
@@ -440,11 +440,11 @@
 - hand before → after: 1 → 0
 - moves_left before → after: 3 → 3
 - orgs before → after: {'北京': 1, '上海': 1} → {'北京': 1, '上海': 1}
-- discard after: ['棄牌A', '棄牌B', '內鬥', '情報網']
+- discard after: ['棄牌A', '棄牌B', '情報網']
 - purchase_area after: []
 - other_hands before → after: {'player2': 2} → {'player2': 2}
 - turn_log after: {'played_money_card': False, 'played_propaganda_card': False, 'non_starter_discard': False, 'successful_discard': False, 'built_towns': [], 'played_nonstarter_names': ['情報網'], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': False, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': []}
-- log tail: ['[Turn 1] player1 gained 1 內鬥 card(s)', '[Turn 1] player1 played 情報網']
+- log tail: ['[Turn 1] player1 played 情報網']
 
 ## 離間 (spy)
 - effects: add_internal_conflict
@@ -487,42 +487,42 @@
 
 ## 武裝者 (armed)
 - effects: force_discard
-- checks: play_success, card_left_hand
-- resources delta: money 0, propaganda 0
-- hand before → after: 1 → 0
-- moves_left before → after: 3 → 3
-- orgs before → after: {'北京': 1, '上海': 1} → {'北京': 1, '上海': 1}
-- discard after: ['棄牌A', '棄牌B', '武裝者']
-- purchase_area after: []
-- other_hands before → after: {'player2': 2} → {'player2': 1}
-- turn_log after: {'played_money_card': False, 'played_propaganda_card': False, 'non_starter_discard': False, 'successful_discard': False, 'built_towns': [], 'played_nonstarter_names': ['武裝者'], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': False, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': []}
-- log tail: ['[Turn 1] player1 played 武裝者']
-
-## 武裝小隊 (armed)
-- effects: force_discard
-- checks: play_success, card_left_hand
-- resources delta: money 0, propaganda 0
-- hand before → after: 1 → 0
-- moves_left before → after: 3 → 3
-- orgs before → after: {'北京': 1, '上海': 1} → {'北京': 1, '上海': 1}
-- discard after: ['棄牌A', '棄牌B', '武裝小隊']
-- purchase_area after: []
-- other_hands before → after: {'player2': 2} → {'player2': 0}
-- turn_log after: {'played_money_card': False, 'played_propaganda_card': False, 'non_starter_discard': False, 'successful_discard': False, 'built_towns': [], 'played_nonstarter_names': ['武裝小隊'], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': False, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': []}
-- log tail: ['[Turn 1] player1 played 武裝小隊']
-
-## 武裝集團 (armed)
-- effects: force_discard, conditional_draw
-- checks: play_success, card_left_hand
+- checks: 
 - resources delta: money 0, propaganda 0
 - hand before → after: 1 → 1
 - moves_left before → after: 3 → 3
 - orgs before → after: {'北京': 1, '上海': 1} → {'北京': 1, '上海': 1}
-- discard after: ['棄牌A', '棄牌B', '武裝集團']
+- discard after: ['棄牌A', '棄牌B']
 - purchase_area after: []
-- other_hands before → after: {'player2': 2} → {'player2': 0}
-- turn_log after: {'played_money_card': False, 'played_propaganda_card': False, 'non_starter_discard': False, 'successful_discard': True, 'built_towns': [], 'played_nonstarter_names': ['武裝集團'], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': False, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': []}
-- log tail: ['[Turn 1] player1 played 武裝集團']
+- other_hands before → after: {'player2': 2} → {'player2': 2}
+- turn_log after: {'played_money_card': False, 'played_propaganda_card': False, 'non_starter_discard': False, 'successful_discard': False, 'built_towns': [], 'played_nonstarter_names': [], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': False, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': []}
+- log tail: []
+
+## 武裝小隊 (armed)
+- effects: force_discard
+- checks: 
+- resources delta: money 0, propaganda 0
+- hand before → after: 1 → 1
+- moves_left before → after: 3 → 3
+- orgs before → after: {'北京': 1, '上海': 1} → {'北京': 1, '上海': 1}
+- discard after: ['棄牌A', '棄牌B']
+- purchase_area after: []
+- other_hands before → after: {'player2': 2} → {'player2': 2}
+- turn_log after: {'played_money_card': False, 'played_propaganda_card': False, 'non_starter_discard': False, 'successful_discard': False, 'built_towns': [], 'played_nonstarter_names': [], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': False, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': []}
+- log tail: []
+
+## 武裝集團 (armed)
+- effects: force_discard, conditional_draw
+- checks: 
+- resources delta: money 0, propaganda 0
+- hand before → after: 1 → 1
+- moves_left before → after: 3 → 3
+- orgs before → after: {'北京': 1, '上海': 1} → {'北京': 1, '上海': 1}
+- discard after: ['棄牌A', '棄牌B']
+- purchase_area after: []
+- other_hands before → after: {'player2': 2} → {'player2': 2}
+- turn_log after: {'played_money_card': False, 'played_propaganda_card': False, 'non_starter_discard': False, 'successful_discard': True, 'built_towns': [], 'played_nonstarter_names': [], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': False, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': []}
+- log tail: []
 
 ## 企業人脈 (money)
 - effects: use_purchase_area_card
@@ -547,8 +547,8 @@
 - discard after: ['棄牌A', '棄牌B', '產業滲透']
 - purchase_area after: []
 - other_hands before → after: {'player2': 2} → {'player2': 2}
-- turn_log after: {'played_money_card': True, 'played_propaganda_card': False, 'non_starter_discard': False, 'successful_discard': False, 'built_towns': [], 'played_nonstarter_names': ['產業滲透'], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': False, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': [], 'canceled_propaganda_card': True}
-- log tail: ['[Turn 1] player1 triggered cancel-card effect', '[Turn 1] player1 played 產業滲透']
+- turn_log after: {'played_money_card': True, 'played_propaganda_card': False, 'non_starter_discard': False, 'successful_discard': False, 'built_towns': [], 'played_nonstarter_names': ['產業滲透'], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': False, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': []}
+- log tail: ['[Turn 1] player1 canceled unknown card', '[Turn 1] player1 played 產業滲透']
 
 ## 企畫遊說 (money)
 - effects: reveal_topdeck_cost_gain

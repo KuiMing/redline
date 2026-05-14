@@ -1,6 +1,6 @@
 # Era Rules Validation
 
-Generated: 2026-05-13
+Generated: 2026-05-14
 
 Summary: 5/5 passed
 
