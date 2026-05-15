@@ -334,35 +334,20 @@ class EffectEngine:
                     break
             return
 
-        # ✅ Temporarily use a face-up purchase-area card (企業人脈; pending choice among face-up market cards)
+        # ✅ Temporarily use a face-up purchase-area card (企業人脈; MVP first non-static random card)
         if etype == "use_purchase_area_card":
             static_count = len(game._static_purchase_cards()) if hasattr(game, '_static_purchase_cards') else 0
             start = static_count if effect.get('prefer_random_market', True) else 0
-            choices = []
+            source = None
+            source_index = None
             for idx in range(start, len(getattr(game, 'purchase_area', []) or [])):
                 candidate = game.purchase_area[idx]
-                if not candidate:
-                    continue
-                choices.append({
-                    'card': candidate,
-                    'zone': 'purchase_area',
-                    'zone_label': f'購買區槽位 {idx - start + 1}',
-                    'purchase_index': idx,
-                })
-            if not choices:
+                if candidate:
+                    source = candidate
+                    source_index = idx
+                    break
+            if source is None:
                 return
-            if hasattr(game, '_set_pending_card_choice'):
-                game._set_pending_card_choice(
-                    player,
-                    'use_purchase_area_card',
-                    choices,
-                    '企業人脈：選擇購買區正面朝上的 1 張牌，視同打出該牌。',
-                    source_name='企業人脈',
-                )
-                return {'pending_choice': True}
-            selected = choices[0]
-            source = selected.get('card')
-            source_index = selected.get('purchase_index')
             borrowed = game._copy_purchase_card(source)
             setattr(borrowed, '_return_to_purchase_area_index', source_index)
             player.hand.append(borrowed)
@@ -384,41 +369,6 @@ class EffectEngine:
             else:
                 player.resources['money'] += int(effect.get('money_otherwise', 2) or 2)
             game.log(f"{player.name} revealed {getattr(top, 'name', str(top))} for 企畫遊說")
-            return
-
-        # ✅ Reveal top deck and resolve odd/even outcome (立場試探)
-        if etype == "reveal_topdeck_odd_even":
-            if not player.deck.draw_pile:
-                player.deck._reshuffle()
-            if not player.deck.draw_pile:
-                game.log(f"{player.name} used 立場試探 but had no cards to reveal")
-                return
-            top = player.deck.draw_pile[-1]
-            cost = game._card_purchase_cost(top) if hasattr(game, '_card_purchase_cost') else {}
-            total = int(cost.get('money', 0) or 0) + int(cost.get('propaganda', 0) or 0)
-            is_odd = (total % 2) == 1
-            card_name = getattr(top, 'name', str(top))
-            if is_odd:
-                player.deck.draw_pile.pop()
-                player.hand.append(top)
-                game.log(f"{player.name} used 立場試探: revealed {card_name} (cost {total}, odd) and added it to hand")
-                return
-            if hasattr(game, '_set_pending_option_choice'):
-                game._set_pending_option_choice(
-                    player,
-                    'stance_probe_even',
-                    [
-                        {'label': '放進棄牌堆'},
-                        {'label': '留在牌庫頂'},
-                    ],
-                    f'立場試探：展示牌庫頂牌 {card_name}（費用 {total}，偶數）。是否將其放進己方棄牌堆？',
-                    source_name='立場試探',
-                    revealed_card_name=card_name,
-                    revealed_total_cost=total,
-                )
-                game.log(f"{player.name} used 立場試探: revealed {card_name} (cost {total}, even)")
-                return {'pending_choice': True}
-            game.log(f"{player.name} used 立場試探: revealed {card_name} (cost {total}, even) and left it on deck top")
             return
 
         # ✅ Conditional draw
