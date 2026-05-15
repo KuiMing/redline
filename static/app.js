@@ -998,6 +998,52 @@ function closeChoiceModal() {
   if (overlay) overlay.style.display = 'none';
 }
 
+function renderBusinessNetworkResult(state) {
+  const choice = state?.pending_choice || null;
+  const result = state?.last_action_result || null;
+  const phaseNoticeMessage = document.getElementById('phaseActionNotice')?.textContent || '';
+
+  if (choice?.choice_key === 'use_purchase_area_card') {
+    const sourceName = choice?.source_name || '企業人脈';
+    const cards = choice.cards || [];
+    const countText = `${cards.length} 張可選`; 
+    return {
+      type: 'pending',
+      message: `${sourceName}：請從購買區選 1 張牌借用`,
+      html: `
+        <div class="business-network-result business-network-result-pending">
+          <div class="business-network-result-title">企業人脈待選中</div>
+          <div class="business-network-result-body">目前正在選擇購買區牌，${countText}。</div>
+        </div>
+      `,
+    };
+  }
+
+  if (result?.chosen_card && /borrowed/.test(phaseNoticeMessage || '') || result?.purchase_index != null) {
+    const chosenCard = result?.chosen_card || '未知卡牌';
+    const purchaseIndex = Number.isFinite(result?.purchase_index) ? result.purchase_index + 1 : null;
+    const slotText = purchaseIndex != null ? `購買區槽位 ${purchaseIndex}` : '購買區';
+    const resultKey = JSON.stringify({ chosenCard, purchaseIndex, phaseNoticeMessage });
+    if (lastBusinessNetworkResultKey !== resultKey) {
+      lastBusinessNetworkResultKey = resultKey;
+      setPhaseActionNotice(`企業人脈：已借用 ${chosenCard}（${slotText}）`);
+    }
+    return {
+      type: 'resolved',
+      message: `企業人脈：已借用 ${chosenCard}（${slotText}）`,
+      html: `
+        <div class="business-network-result business-network-result-resolved">
+          <div class="business-network-result-title">企業人脈已完成</div>
+          <div class="business-network-result-body">已從 <strong>${escapeHtml(slotText)}</strong> 借用 <strong>${escapeHtml(chosenCard)}</strong>，並視同打出。</div>
+        </div>
+      `,
+    };
+  }
+
+  lastBusinessNetworkResultKey = null;
+  return { type: 'idle', message: '', html: '' };
+}
+
 function renderChoiceModal(state) {
   const overlay = document.getElementById('choiceModal');
   const title = document.getElementById('choiceModalTitle');
@@ -1019,12 +1065,13 @@ function renderChoiceModal(state) {
   const choiceType = choice.type;
   const sourceName = choice.source_name || choice.choice_key || '';
   const requiredCount = Math.max(1, Number(choice.count || 1));
+  const businessNetworkState = renderBusinessNetworkResult(state);
   activeChoiceModal = choiceType;
   title.textContent = choiceType === 'underground_party'
     ? '地下黨'
     : (sourceName || '卡牌選擇');
   desc.textContent = choice.prompt || '請進行選擇。';
-  cards.innerHTML = '';
+  cards.innerHTML = businessNetworkState.html || '';
 
   if (choiceType === 'card_choice' || choiceType === 'underground_party') {
     (choice.cards || []).forEach((cardEntry, index) => {
@@ -1294,6 +1341,7 @@ async function getFullMapData() {
 
 let pendingBaseSelectionLabel = null;
 let pendingBuildOrigin = null;
+let lastBusinessNetworkResultKey = null;
 
 async function renderBuildSupport(state) {
   const panel = document.getElementById('buildSupportPanel');
@@ -1681,6 +1729,10 @@ async function render(state) {
 
   const me = state.players?.find(p => p.id === playerId) || null;
   const inBaseSelection = state.game_phase === 'base_selection';
+  const businessNetworkState = renderBusinessNetworkResult(state);
+  if (businessNetworkState.type === 'idle') {
+    lastBusinessNetworkResultKey = null;
+  }
   const showLobbyFactionPicker = !inBaseSelection && !ws;
   const factionPicker = document.getElementById('factionPicker');
   if (factionPicker) factionPicker.style.display = showLobbyFactionPicker ? 'block' : 'none';
@@ -1751,6 +1803,9 @@ async function render(state) {
     handDiv.innerHTML = '';
     const me = (state.players || []).find(p => p.id === playerId);
     const isMyTurn = isMyTurnState(state);
+    if (businessNetworkState.type === 'resolved') {
+      handDiv.innerHTML += businessNetworkState.html;
+    }
     if (me && me.hand) {
       me.hand.forEach((card, i) => {
         const cardArg = escapeHtml(jsSingleQuotedString(card));
@@ -1796,8 +1851,11 @@ async function render(state) {
   if (logTargets.length) {
     const entries = state.action_log || state.log || [];
     const html = entries.slice().reverse().map(entry => `<div>${entry}</div>`).join('');
+    const businessNetworkLog = businessNetworkState.type === 'resolved'
+      ? `<div class="business-network-log-highlight">${escapeHtml(businessNetworkState.message)}</div>`
+      : '';
     logTargets.forEach(target => {
-      target.innerHTML = html;
+      target.innerHTML = `${businessNetworkLog}${html}`;
     });
   }
 
