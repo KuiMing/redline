@@ -924,6 +924,8 @@ function openCardTargetModal(index, cardName, targetLabel) {
   desc.textContent = `${cardName}：請選擇${targetLabel}`;
   if (cardName === '走漏風聲') {
     hint.textContent = '目標玩家會棄掉牌庫頂牌；若該牌購買費用為 1 點以上，從常設購買區移動 1 張內鬥到該玩家棄牌堆。';
+  } else if (cardName === '模仿戰術') {
+    hint.textContent = '目標玩家會展示牌庫頂牌；本回合你可以使用該牌，使用後會放回該玩家的牌庫頂。';
   } else if (cardName === '合作談判') {
     hint.textContent = '指定的玩家會與你各抽 1 張牌。';
   } else if (requiresRange.has(cardName)) {
@@ -962,11 +964,12 @@ function playHandCard(index, card, mode) {
   if (!isMyTurnState()) return;
   const payload = {index, mode};
   const cardName = typeof card === 'string' ? card : (card?.name || card?.title || '');
-  const playerTargetCards = new Set(['合作談判', '走漏風聲', '武裝者', '武裝小隊', '武裝集團', '派遣間諜', '內應間諜']);
+  const playerTargetCards = new Set(['合作談判', '走漏風聲', '模仿戰術', '武裝者', '武裝小隊', '武裝集團', '派遣間諜', '內應間諜']);
   if (mode === 'action' && playerTargetCards.has(cardName)) {
     const labelMap = {
       '合作談判': '抽牌對象',
       '走漏風聲': '棄牌庫頂牌對象',
+      '模仿戰術': '展示牌庫頂牌對象',
       '武裝者': '攻擊對象',
       '武裝小隊': '攻擊對象',
       '武裝集團': '攻擊對象',
