@@ -1094,19 +1094,33 @@ def test_setup_trash_choice_ui(payload: dict):
     game.game_phase = GamePhase.MAIN
     game.pending_base_choices = {}
     game.id = game_id
-    game._set_pending_card_choice(
-        viewer,
-        'trash_from_hand_or_discard',
-        [
-            {'card': viewer.hand[0], 'zone': 'hand', 'zone_label': '手牌'},
-            {'card': viewer.hand[1], 'zone': 'hand', 'zone_label': '手牌'},
-            {'card': viewer.deck.discard_pile[0], 'zone': 'discard', 'zone_label': '棄牌堆'},
-            {'card': viewer.deck.discard_pile[1], 'zone': 'discard', 'zone_label': '棄牌堆'},
-        ],
-        '批判：請從己方手牌或棄牌堆中移除 1 張牌。',
-        source_name='批判',
-        count=1,
-    )
+    source_name = payload.get('source_name', '批判')
+    count = int(payload.get('count', 1) or 1)
+    cards = [
+        {'card': viewer.hand[0], 'zone': 'hand', 'zone_label': '手牌'},
+        {'card': viewer.hand[1], 'zone': 'hand', 'zone_label': '手牌'},
+        {'card': viewer.deck.discard_pile[0], 'zone': 'discard', 'zone_label': '棄牌堆'},
+        {'card': viewer.deck.discard_pile[1], 'zone': 'discard', 'zone_label': '棄牌堆'},
+    ]
+    prompt = f"{source_name}：請從己方手牌或棄牌堆中移除 {count} 張牌。"
+    if count <= 1:
+        game._set_pending_card_choice(
+            viewer,
+            'trash_from_hand_or_discard',
+            cards,
+            prompt,
+            source_name=source_name,
+            count=1,
+        )
+    else:
+        game._set_pending_multi_card_choice(
+            viewer,
+            'trash_from_hand_or_discard',
+            cards,
+            prompt,
+            count=count,
+            source_name=source_name,
+        )
 
     manager.games[game_id] = game
     manager.connections[game_id] = manager.connections.get(game_id, {})
