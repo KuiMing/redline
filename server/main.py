@@ -1013,6 +1013,9 @@ def test_setup_hand_preview(payload: dict):
         if support_entry:
             hand_cards.append(game._make_support_card(name))
             continue
+        if name == '立場試探':
+            hand_cards.append(Card('立場試探', 'command', {}, effect=[{'type': 'reveal_topdeck_odd_even'}]))
+            continue
         card_def = next((c for c in game.structured_cards if c.get("name") == name), None)
         if card_def:
             hand_cards.append(Card(card_def["name"], card_def["type"], card_def.get("resources", {})))

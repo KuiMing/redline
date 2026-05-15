@@ -537,6 +537,23 @@ class Game:
                 'removed_card': returned,
             }
 
+        if choice_key == 'use_purchase_area_card':
+            source = chosen.get('card') if isinstance(chosen, dict) else chosen
+            source_index = chosen.get('purchase_index') if isinstance(chosen, dict) else None
+            if source is None:
+                return {'error': 'Chosen card missing'}
+            borrowed = self._copy_purchase_card(source)
+            if source_index is not None:
+                setattr(borrowed, '_return_to_purchase_area_index', source_index)
+            player.hand.append(borrowed)
+            self.pending_choice = None
+            self.log(f"{player.name} borrowed {getattr(borrowed, 'name', str(borrowed))} from purchase area")
+            return {
+                'success': True,
+                'chosen_card': getattr(borrowed, 'name', str(borrowed)),
+                'purchase_index': source_index,
+            }
+
         return {'error': 'Unsupported pending choice type'}
 
     def _resolve_multi_card_choice(self, player, choice, indices):
@@ -611,6 +628,32 @@ class Game:
         if index is None or index < 0 or index >= len(options):
             return {'error': 'Invalid choice index'}
         choice_key = choice.get('choice_key')
+
+        if choice_key == 'stance_probe_even':
+            revealed_name = choice.get('revealed_card_name') or '未知卡牌'
+            total_cost = int(choice.get('revealed_total_cost', 0) or 0)
+            if not player.deck.draw_pile:
+                return {'error': 'Revealed card no longer on deck top'}
+            top = player.deck.draw_pile[-1]
+            if getattr(top, 'name', str(top)) != revealed_name:
+                return {'error': 'Revealed card changed before resolving'}
+            moved = False
+            if index == 0:
+                player.deck.draw_pile.pop()
+                player.deck.discard([top])
+                moved = True
+            self.pending_choice = None
+            if moved:
+                self.log(f"{player.name} resolved 立場試探: moved {revealed_name} (cost {total_cost}, even) to discard")
+            else:
+                self.log(f"{player.name} resolved 立場試探: kept {revealed_name} (cost {total_cost}, even) on deck top")
+            return {
+                'success': True,
+                'choice_index': index,
+                'label': options[index].get('label') if isinstance(options[index], dict) else str(options[index]),
+                'revealed_card': revealed_name,
+                'moved_to_discard': moved,
+            }
 
         if choice_key == 'choose_one':
             selected = options[index]
@@ -2094,6 +2137,8 @@ class Game:
         card_name = getattr(card, 'name', str(card))
         if getattr(card, "card_type", None) == "support" or getattr(card, "type", None) == "support":
             return self._support_card_cost(card_name)
+        if card_name == '立場試探':
+            return {'money': 0, 'propaganda': 0}
         for c in self.structured_cards:
             if c.get('name') == card_name:
                 cost = c.get('cost', {}) or {}
@@ -2344,6 +2389,9 @@ class Game:
                 'prompt': self.pending_choice.get('prompt'),
                 'source_name': self.pending_choice.get('source_name'),
                 'count': self.pending_choice.get('count'),
+                'step': self.pending_choice.get('step'),
+                'revealed_card_name': self.pending_choice.get('revealed_card_name'),
+                'revealed_total_cost': self.pending_choice.get('revealed_total_cost'),
                 'cards': [
                     {
                         'name': getattr(card.get('card'), 'name', str(card.get('card'))),
@@ -2351,6 +2399,27 @@ class Game:
                         'zone_label': card.get('zone_label'),
                     } if isinstance(card, dict) else getattr(card, 'name', str(card))
                     for card in (self.pending_choice.get('cards') or [])
+                ],
+                'options': [
+                    {
+                        'label': option.get('label'),
+                    } if isinstance(option, dict) else {'label': str(option)}
+                    for option in (self.pending_choice.get('options') or [])
+                ],
+                'towns': [
+                    {
+                        'town': town.get('town'),
+                        'label': town.get('label'),
+                    } if isinstance(town, dict) else {'town': str(town)}
+                    for town in (self.pending_choice.get('towns') or [])
+                ],
+                'targets': [
+                    {
+                        'id': target.get('id'),
+                        'label': target.get('label'),
+                        'town': target.get('town'),
+                    } if isinstance(target, dict) else {'id': str(target), 'label': str(target)}
+                    for target in (self.pending_choice.get('targets') or [])
                 ],
             }
 
