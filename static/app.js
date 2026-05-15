@@ -15,6 +15,7 @@ let stageResizeBound = false;
 let lobbySyncTimer = null;
 let latestLobbyState = null;
 let activeChoiceModal = null;
+let lastFactionActionResultKey = null;
 
 function resizeStage() {
   const scale = Math.min(
@@ -324,10 +325,20 @@ async function chooseFaction(factionId) {
 
 async function confirmFactionChoice() {
   if (!pendingFactionChoice) return;
+  const selectedOption = factionOptionById(pendingFactionChoice);
+  const baseOptions = selectedOption?.base_options || [];
+  const baseResolved = selectedOption?.base_resolved || {};
+  let chosenBase = pendingFactionBaseChoice;
+  if (!chosenBase && baseOptions.length === 1) {
+    const only = baseOptions[0];
+    const resolvedOnly = baseResolved[only];
+    const towns = Array.isArray(resolvedOnly) && resolvedOnly.length ? resolvedOnly : [only];
+    chosenBase = towns[0] || only;
+  }
   const res = await fetch('/choose-faction', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ game_id: gameId, player_id: playerId, faction_id: pendingFactionChoice, base_name: pendingFactionBaseChoice })
+    body: JSON.stringify({ game_id: gameId, player_id: playerId, faction_id: pendingFactionChoice, base_name: chosenBase })
   });
   const data = await res.json();
   if (data.error) {
@@ -338,6 +349,7 @@ async function confirmFactionChoice() {
   pendingFactionBaseChoice = null;
   pendingFactionBaseGroup = null;
   pendingFactionCategory = null;
+  await refreshLobbyState('陣營已確認，請按下準備。');
   await renderFactionPicker();
 }
 
@@ -1373,9 +1385,12 @@ function renderFactionActionPanel(state) {
   if (oddBtn) oddBtn.style.display = 'none';
   if (evenBtn) evenBtn.style.display = 'none';
 
+  const factionResult = renderFactionActionResult(state, faction);
+  const hasResult = factionResult.hasResult;
+
   if (!inAction || !isMine) return;
 
-  const showCenteredActionPanel = (title, message, buildButtons, hint = '') => {
+  const showCenteredActionPanel = (title, message, buildButtons, hint = '', resultHtml = '') => {
     panel.style.display = 'none';
     panel.classList.remove('overlay-active');
     info.textContent = '';
@@ -1383,7 +1398,7 @@ function renderFactionActionPanel(state) {
     modalOverlay.style.display = 'flex';
     modalTitle.textContent = title;
     modalDesc.textContent = message;
-    modalHint.textContent = hint;
+    modalHint.innerHTML = resultHtml || escapeHtml(hint);
     modalChoices.innerHTML = '';
     if (oddBtn) oddBtn.style.display = 'none';
     if (evenBtn) evenBtn.style.display = 'none';
@@ -1408,10 +1423,10 @@ function renderFactionActionPanel(state) {
     return;
   }
 
-  if (faction === 'fujian') {
+  if (faction === 'liberals') {
     showCenteredActionPanel(
       '立場試探',
-      '福建可在行動階段發動一次立場試探。',
+      hasResult ? '本回合發動結果如下；若仍可操作，可再次查看效果說明。' : '自由派可在行動階段發動一次立場試探。',
       (target) => {
         const btn = document.createElement('button');
         btn.className = 'modal-choice-btn';
@@ -1419,11 +1434,11 @@ function renderFactionActionPanel(state) {
         btn.textContent = '發動 立場試探';
         btn.onclick = () => {
           sendAction('faction_action', { name: '立場試探' });
-          closeFactionActionModal();
         };
         target.appendChild(btn);
       },
-      '展示牌庫頂牌；若購買費用為奇數則加入手牌，若為偶數則放入棄牌堆。'
+      '展示牌庫頂牌；若購買費用為奇數則加入手牌，若為偶數則放入棄牌堆。',
+      factionResult.html
     );
     return;
   }
@@ -1451,6 +1466,47 @@ function setPhaseActionNotice(message = '') {
   if (!notice) return;
   notice.textContent = message || '';
   notice.classList.toggle('visible', !!message);
+}
+
+function formatFactionActionResult(result) {
+  if (!result || !result.name) return '';
+  if (result.name === '立場試探') {
+    const cardName = result.revealed_card || '未知卡牌';
+    const costText = Number.isFinite(result.cost_total) ? `（費用 ${result.cost_total}）` : '';
+    const destinationText = result.destination === 'hand' ? '加入手牌' : result.destination === 'discard' ? '放入棄牌堆' : '已處理';
+    return `立場試探結果：翻到 ${cardName}${costText}，${destinationText}`;
+  }
+  return '';
+}
+
+function renderFactionActionResult(state, faction) {
+  const info = document.getElementById('factionActionInfo');
+  if (!info) return {hasResult: false, message: '', html: ''};
+
+  const result = state.last_action_result || null;
+  const message = formatFactionActionResult(result);
+  if (result?.name === '立場試探' && message) {
+    const resultKey = JSON.stringify(result);
+    if (lastFactionActionResultKey !== resultKey) {
+      lastFactionActionResultKey = resultKey;
+      setPhaseActionNotice(message);
+    }
+    const html = `<div class="faction-action-result">${escapeHtml(message)}</div>`;
+    info.innerHTML = html;
+    return {hasResult: true, message, html};
+  }
+
+  lastFactionActionResultKey = null;
+  setPhaseActionNotice('');
+
+  if (faction === 'liberals') {
+    const html = '<div class="faction-action-placeholder">發動後會在此直接顯示翻到的卡牌與去向。</div>';
+    info.innerHTML = html;
+    return {hasResult: false, message: '', html};
+  }
+
+  info.textContent = '';
+  return {hasResult: false, message: '', html: ''};
 }
 
 function renderBaseSelection(state) {
