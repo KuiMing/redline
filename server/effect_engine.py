@@ -475,30 +475,46 @@ class EffectEngine:
         # ✅ Trash from hand or discard
         if etype == "trash_from_hand_or_discard":
             count = effect.get("count", 1)
-            starters = self._starter_names()
-            for _ in range(count):
-                card = None
-                for i, c in enumerate(player.hand):
-                    if getattr(c, "name", str(c)) not in starters:
-                        card = player.hand.pop(i)
-                        game.turn_log["non_starter_discard"] = True
-                        break
-                if card is None:
-                    for i, c in enumerate(player.deck.discard_pile):
-                        if getattr(c, "name", str(c)) not in starters:
-                            card = player.deck.discard_pile.pop(i)
-                            game.turn_log["non_starter_discard"] = True
-                            break
-                if card is None and player.hand:
-                    card = player.hand.pop()
-                elif card is None and player.deck.discard_pile:
-                    card = player.deck.discard_pile.pop()
-                if card is not None:
-                    returned = game._return_removed_card_to_purchase_supply(card)
-                    game.log(f"{player.name} trashed {getattr(card, 'name', str(card))}")
-                    if returned:
-                        game.log(f"{getattr(card, 'name', str(card))} returned to {returned.get('zone')}")
-            return
+            candidates = []
+            for idx, card in enumerate(list(player.hand)):
+                candidates.append({
+                    'card': card,
+                    'zone': 'hand',
+                    'zone_label': '手牌',
+                    'zone_index': idx,
+                })
+            for idx, card in enumerate(list(player.deck.discard_pile)):
+                candidates.append({
+                    'card': card,
+                    'zone': 'discard',
+                    'zone_label': '棄牌堆',
+                    'zone_index': idx,
+                })
+            if not candidates:
+                return None
+            prompt = f'請從己方手牌或棄牌堆中移除任{count}張牌。'
+            if hasattr(game, '_set_pending_card_choice'):
+                if int(count or 1) <= 1:
+                    game._set_pending_card_choice(
+                        player,
+                        'trash_from_hand_or_discard',
+                        candidates,
+                        prompt,
+                        count=1,
+                        source_name=context.get('card_name') if context else None,
+                    )
+                    return {'pending_choice': True}
+                if hasattr(game, '_set_pending_multi_card_choice'):
+                    game._set_pending_multi_card_choice(
+                        player,
+                        'trash_from_hand_or_discard',
+                        candidates,
+                        prompt,
+                        count=int(count or 1),
+                        source_name=context.get('card_name') if context else None,
+                    )
+                    return {'pending_choice': True}
+            return None
 
         # ✅ Extra move (increase movement points)
         if etype == "extra_move":

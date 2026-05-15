@@ -507,6 +507,36 @@ class Game:
                 'removed_cards': removed,
             }
 
+        if choice_key == 'trash_from_hand_or_discard':
+            card = chosen.get('card') if isinstance(chosen, dict) else chosen
+            zone = chosen.get('zone') if isinstance(chosen, dict) else None
+            zone_label = chosen.get('zone_label') if isinstance(chosen, dict) else None
+            if zone == 'hand':
+                if card not in player.hand:
+                    return {'error': 'Chosen card not in hand'}
+                player.hand.remove(card)
+            elif zone == 'discard':
+                if card not in player.deck.discard_pile:
+                    return {'error': 'Chosen card not in discard pile'}
+                player.deck.discard_pile.remove(card)
+            else:
+                return {'error': 'Unsupported trash source'}
+            if getattr(card, 'name', str(card)) not in {'追隨者', '樂捐者'}:
+                self.turn_log['non_starter_discard'] = True
+            returned = self._return_removed_card_to_purchase_supply(card)
+            if returned is None:
+                returned = self._remove_card_from_game(card)
+            self.pending_choice = None
+            source_name = choice.get('source_name') or choice_key
+            self.log(f"{player.name} trashed {getattr(card, 'name', str(card))} from {zone_label or zone} via {source_name}")
+            return {
+                'success': True,
+                'chosen_card': getattr(card, 'name', str(card)),
+                'zone': zone,
+                'zone_label': zone_label,
+                'removed_card': returned,
+            }
+
         return {'error': 'Unsupported pending choice type'}
 
     def _resolve_multi_card_choice(self, player, choice, indices):
@@ -536,6 +566,43 @@ class Game:
             self.pending_choice = None
             self.log(f"{player.name} discarded {len(selected_cards)} chosen card(s)")
             return {'success': True, 'chosen_cards': [getattr(card, 'name', str(card)) for card in selected_cards]}
+
+        if choice_key == 'trash_from_hand_or_discard':
+            starters = {'追隨者', '樂捐者'}
+            chosen_cards = []
+            zones = []
+            removed_cards = []
+            for entry in selected_cards:
+                card = entry.get('card') if isinstance(entry, dict) else entry
+                zone = entry.get('zone') if isinstance(entry, dict) else None
+                zone_label = entry.get('zone_label') if isinstance(entry, dict) else None
+                if zone == 'hand':
+                    if card not in player.hand:
+                        return {'error': 'Chosen card not in hand'}
+                    player.hand.remove(card)
+                elif zone == 'discard':
+                    if card not in player.deck.discard_pile:
+                        return {'error': 'Chosen card not in discard pile'}
+                    player.deck.discard_pile.remove(card)
+                else:
+                    return {'error': 'Unsupported trash source'}
+                if getattr(card, 'name', str(card)) not in starters:
+                    self.turn_log['non_starter_discard'] = True
+                returned = self._return_removed_card_to_purchase_supply(card)
+                if returned is None:
+                    returned = self._remove_card_from_game(card)
+                chosen_cards.append(getattr(card, 'name', str(card)))
+                zones.append(zone_label or zone)
+                removed_cards.append(returned)
+            self.pending_choice = None
+            source_name = choice.get('source_name') or choice_key
+            self.log(f"{player.name} trashed {len(chosen_cards)} chosen card(s) via {source_name}")
+            return {
+                'success': True,
+                'chosen_cards': chosen_cards,
+                'zones': zones,
+                'removed_cards': removed_cards,
+            }
 
         return {'error': 'Unsupported pending choice type'}
 
@@ -1311,6 +1378,9 @@ class Game:
         return 0
 
     def _top_card_cost_total(self, card):
+        resources = getattr(card, 'resources', None)
+        if isinstance(resources, dict):
+            return self._resource_total(resources)
         return self._purchase_area_card_cost_total(card)
 
     def _activated_faction_action(self, player, action_name, **kwargs):
@@ -1339,13 +1409,22 @@ class Game:
             card = player.deck.draw_pile.pop()
             total = self._top_card_cost_total(card)
             self.turn_log['faction_action_used'] = True
-            if total % 2 == 1:
+            destination = 'hand' if total % 2 == 1 else 'discard'
+            if destination == 'hand':
                 player.hand.append(card)
                 self.log(f"{player.name} triggered 立場試探 and added {card.name} to hand")
             else:
                 player.deck.discard([card])
                 self.log(f"{player.name} triggered 立場試探 and discarded {card.name}")
-            return {"success": True}
+            return {
+                "success": True,
+                "result": {
+                    "name": action_name,
+                    "revealed_card": getattr(card, 'name', str(card)),
+                    "cost_total": total,
+                    "destination": destination,
+                },
+            }
 
         if action_name in {'賭徒耳語', '民族祭儀'}:
             if not player.hand:
@@ -2260,9 +2339,19 @@ class Game:
         if self.pending_choice:
             pending_choice = {
                 'type': self.pending_choice.get('type'),
+                'choice_key': self.pending_choice.get('choice_key'),
                 'player_id': self.pending_choice.get('player_id'),
                 'prompt': self.pending_choice.get('prompt'),
-                'cards': [getattr(card, 'name', str(card)) for card in (self.pending_choice.get('cards') or [])],
+                'source_name': self.pending_choice.get('source_name'),
+                'count': self.pending_choice.get('count'),
+                'cards': [
+                    {
+                        'name': getattr(card.get('card'), 'name', str(card.get('card'))),
+                        'zone': card.get('zone'),
+                        'zone_label': card.get('zone_label'),
+                    } if isinstance(card, dict) else getattr(card, 'name', str(card))
+                    for card in (self.pending_choice.get('cards') or [])
+                ],
             }
 
         return {

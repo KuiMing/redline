@@ -243,14 +243,31 @@ def test_fujian_stance_probe_discards_even_cost_top_card():
     p = g.current_player()
     p.faction_id = 'fujian'
     p.hand = []
-    p.deck.draw_pile = [Card('Bottom', 'command', {}), card(g, '合作談判')]
+    p.deck.draw_pile = [Card('Bottom', 'command', {}), Card('EvenTop', 'command', {'money': 2})]
 
     result = g._activated_faction_action(p, '立場試探')
 
     assert result.get('success'), result
     assert names(p.hand) == []
-    assert names(p.deck.discard_pile) == ['合作談判']
+    assert names(p.deck.discard_pile) == ['EvenTop']
     assert g.turn_log.get('faction_action_used') is True
+
+
+
+def test_fujian_stance_probe_treats_starter_donor_as_odd_cost_and_adds_it_to_hand():
+    g = make_game()
+    p = g.current_player()
+    p.faction_id = 'fujian'
+    p.hand = [Card('Existing', 'command', {})]
+    p.deck.draw_pile = [Card('Bottom', 'command', {}), Card('樂捐者', 'money', {'money': 1})]
+    p.deck.discard_pile = []
+
+    result = g._activated_faction_action(p, '立場試探')
+
+    assert result.get('success'), result
+    assert names(p.hand) == ['Existing', '樂捐者']
+    assert names(p.deck.discard_pile) == []
+    assert g.action_log[-1] == '[Turn 1] P1 triggered 立場試探 and added 樂捐者 to hand'
 
 
 
@@ -396,8 +413,12 @@ def test_purge_cards_return_removed_cards_to_purchase_deck_system():
     result = g.play_card(0, mode='action')
 
     assert result.get('success'), result
+    assert g.pending_choice and g.pending_choice['choice_key'] == 'trash_from_hand_or_discard'
+    resolved = g.resolve_pending_choice(p.id, 0)
+    assert resolved.get('success'), resolved
     ending_purchase_count = len(g.purchase_deck.draw_pile) + len(g.purchase_deck.discard_pile)
     assert ending_purchase_count == starting_purchase_count + 1
+
 
 
 def test_major_purge_returns_two_removed_cards_to_purchase_deck_system():
@@ -409,6 +430,10 @@ def test_major_purge_returns_two_removed_cards_to_purchase_deck_system():
     result = g.play_card(0, mode='action')
 
     assert result.get('success'), result
+    assert g.pending_choice and g.pending_choice['choice_key'] == 'trash_from_hand_or_discard'
+    assert g.pending_choice['type'] == 'multi_card_choice'
+    resolved = g.resolve_pending_choice(p.id, [0, 1])
+    assert resolved.get('success'), resolved
     ending_purchase_count = len(g.purchase_deck.draw_pile) + len(g.purchase_deck.discard_pile)
     assert ending_purchase_count == starting_purchase_count + 2
 
@@ -993,6 +1018,35 @@ def test_planning_lobby_reveals_top_card_cost_and_grants_correct_money():
     assert result.get('success'), result
     assert p.resources['money'] == 4
     assert names(p.deck.draw_pile)[-1] == 'ExpensiveTop'
+
+
+
+def test_criticism_prompts_player_to_choose_card_from_hand_or_discard_then_trashes_selected_card():
+    g = make_game()
+    p = g.current_player()
+    selected = Card('SelectedDiscard', 'command', {})
+    other_discard = Card('OtherDiscard', 'command', {})
+    hand_keep = Card('HandKeep', 'command', {})
+    p.hand = [card(g, '批判'), hand_keep]
+    p.deck.discard_pile = [selected, other_discard]
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    assert g.pending_choice and g.pending_choice['choice_key'] == 'trash_from_hand_or_discard'
+    assert g.pending_choice['type'] == 'card_choice'
+    pending_cards = g.pending_choice['cards']
+    assert [entry['zone'] for entry in pending_cards] == ['hand', 'discard', 'discard']
+    assert [getattr(entry['card'], 'name', str(entry['card'])) for entry in pending_cards] == ['HandKeep', 'SelectedDiscard', 'OtherDiscard']
+
+    resolved = g.resolve_pending_choice(p.id, 1)
+    assert resolved.get('success'), resolved
+    assert resolved.get('chosen_card') == 'SelectedDiscard'
+    assert resolved.get('zone') == 'discard'
+    assert 'SelectedDiscard' not in names(p.deck.discard_pile)
+    assert 'OtherDiscard' in names(p.deck.discard_pile)
+    assert 'HandKeep' in names(p.hand)
+    assert g.pending_choice is None
 
 
 if __name__ == '__main__':

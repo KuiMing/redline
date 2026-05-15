@@ -1027,7 +1027,8 @@ function renderChoiceModal(state) {
   cards.innerHTML = '';
 
   if (choiceType === 'card_choice' || choiceType === 'underground_party') {
-    (choice.cards || []).forEach((cardName, index) => {
+    (choice.cards || []).forEach((cardEntry, index) => {
+      const cardName = typeof cardEntry === 'string' ? cardEntry : (cardEntry?.name || '未知卡牌');
       const wrapper = document.createElement('button');
       wrapper.className = 'choice-card-btn';
       wrapper.type = 'button';
@@ -1035,7 +1036,12 @@ function renderChoiceModal(state) {
         sendAction('resolve_choice', { index });
         closeChoiceModal();
       };
-      wrapper.innerHTML = renderCardFace(cardName, 'choice', false, true);
+      if (cardEntry && typeof cardEntry === 'object' && cardEntry.zone_label) {
+        const zoneBadge = `<div class="choice-card-zone-label">${escapeHtml(cardEntry.zone_label)}</div>`;
+        wrapper.innerHTML = `${zoneBadge}${renderCardFace(cardName, 'choice', false, true)}`;
+      } else {
+        wrapper.innerHTML = renderCardFace(cardName, 'choice', false, true);
+      }
       cards.appendChild(wrapper);
     });
   } else if (choiceType === 'multi_card_choice') {
@@ -1062,7 +1068,8 @@ function renderChoiceModal(state) {
     updateSummary();
     cards.appendChild(header);
 
-    (choice.cards || []).forEach((cardName, index) => {
+    (choice.cards || []).forEach((cardEntry, index) => {
+      const cardName = typeof cardEntry === 'string' ? cardEntry : (cardEntry?.name || '未知卡牌');
       const wrapper = document.createElement('button');
       wrapper.className = 'choice-card-btn choice-card-btn-multi';
       wrapper.type = 'button';
@@ -1079,7 +1086,12 @@ function renderChoiceModal(state) {
         wrapper.setAttribute('aria-pressed', active ? 'true' : 'false');
         updateSummary();
       };
-      wrapper.innerHTML = renderCardFace(cardName, 'choice', false, true);
+      if (cardEntry && typeof cardEntry === 'object' && cardEntry.zone_label) {
+        const zoneBadge = `<div class="choice-card-zone-label">${escapeHtml(cardEntry.zone_label)}</div>`;
+        wrapper.innerHTML = `${zoneBadge}${renderCardFace(cardName, 'choice', false, true)}`;
+      } else {
+        wrapper.innerHTML = renderCardFace(cardName, 'choice', false, true);
+      }
       cards.appendChild(wrapper);
     });
 

@@ -481,8 +481,12 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
                 continue
 
             # Broadcast updated state
+            updated_state = game.state()
+            action_result = result.get("result") if isinstance(result, dict) else None
+            if action_result:
+                updated_state["last_action_result"] = action_result
             for pid, ws in manager.connections.get(game_id, {}).items():
-                await ws.send_json(game.state())
+                await ws.send_json(updated_state)
 
     except Exception as e:
         print("WS ERROR:", e)
@@ -1048,6 +1052,75 @@ def test_setup_hand_preview(payload: dict):
         "game_phase": game.game_phase,
         "players": [{"id": p.id, "name": p.name, "faction": p.faction_id} for p in game.players],
         "state": game.state(),
+    }
+
+
+@app.post("/test/setup-trash-choice-ui")
+def test_setup_trash_choice_ui(payload: dict):
+    game_id = str(uuid.uuid4())
+    players = [(str(uuid.uuid4()), "viewer"), (str(uuid.uuid4()), "red")]
+    game = Game(players)
+
+    viewer = game.players[0]
+    red = game.players[1]
+
+    viewer.faction_id = payload.get("faction_id", "red_army")
+    viewer.base = payload.get("base", "北京")
+    viewer.organizations = payload.get("orgs") or {viewer.base: 1}
+    viewer.resources = payload.get("resources") or {"money": 0, "propaganda": 0}
+    viewer.hand = [
+        Card("思想家", "command", {"propaganda": 2}),
+        Card("宣傳家", "propaganda", {"propaganda": 1}),
+    ]
+    viewer.deck.discard_pile = [
+        Card("資本家", "money", {"money": 3}),
+        Card("樂捐者", "money", {"money": 1}),
+    ]
+
+    red.faction_id = "hong_kong"
+    red.base = "香港城"
+    red.organizations = {"香港城": 1}
+    red.hand = [Card("追隨者", "propaganda", {"propaganda": 1})]
+    red.deck.discard_pile = []
+
+    while len(game.purchase_area) < 11:
+        drawn = game._draw_purchase_cards(1)
+        if not drawn:
+            break
+        game.purchase_area.extend(drawn)
+
+    game.current_player_index = 0
+    game.turn_phase = TurnPhase.ACTION
+    game.game_phase = GamePhase.MAIN
+    game.pending_base_choices = {}
+    game.id = game_id
+    game._set_pending_card_choice(
+        viewer,
+        'trash_from_hand_or_discard',
+        [
+            {'card': viewer.hand[0], 'zone': 'hand', 'zone_label': '手牌'},
+            {'card': viewer.hand[1], 'zone': 'hand', 'zone_label': '手牌'},
+            {'card': viewer.deck.discard_pile[0], 'zone': 'discard', 'zone_label': '棄牌堆'},
+            {'card': viewer.deck.discard_pile[1], 'zone': 'discard', 'zone_label': '棄牌堆'},
+        ],
+        '批判：請從己方手牌或棄牌堆中移除 1 張牌。',
+        source_name='批判',
+        count=1,
+    )
+
+    manager.games[game_id] = game
+    manager.connections[game_id] = manager.connections.get(game_id, {})
+    lobby[game_id] = list(zip([p.id for p in game.players], [p.name for p in game.players]))
+    lobby_hosts[game_id] = viewer.id
+    lobby_factions[game_id] = {viewer.id: viewer.faction_id, red.id: red.faction_id}
+    lobby_bases[game_id] = {viewer.id: viewer.base, red.id: red.base}
+
+    return {
+        'success': True,
+        'game_id': game_id,
+        'player_id': viewer.id,
+        'state': game.state(),
+        'players': [{'id': p.id, 'name': p.name, 'faction': p.faction_id} for p in game.players],
     }
 
 
