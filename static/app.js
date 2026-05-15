@@ -1006,7 +1006,7 @@ function renderBusinessNetworkResult(state) {
   if (choice?.choice_key === 'use_purchase_area_card') {
     const sourceName = choice?.source_name || '企業人脈';
     const cards = choice.cards || [];
-    const countText = `${cards.length} 張可選`; 
+    const countText = `${cards.length} 張可選`;
     return {
       type: 'pending',
       message: `${sourceName}：請從購買區選 1 張牌借用`,
@@ -1019,7 +1019,7 @@ function renderBusinessNetworkResult(state) {
     };
   }
 
-  if (result?.chosen_card && /borrowed/.test(phaseNoticeMessage || '') || result?.purchase_index != null) {
+  if ((result?.chosen_card && /borrowed/.test(phaseNoticeMessage || '')) || result?.purchase_index != null) {
     const chosenCard = result?.chosen_card || '未知卡牌';
     const purchaseIndex = Number.isFinite(result?.purchase_index) ? result.purchase_index + 1 : null;
     const slotText = purchaseIndex != null ? `購買區槽位 ${purchaseIndex}` : '購買區';
@@ -1044,6 +1044,22 @@ function renderBusinessNetworkResult(state) {
   return { type: 'idle', message: '', html: '' };
 }
 
+function renderBusinessNetworkModalHeader(state) {
+  const choice = state?.pending_choice || null;
+  if (choice?.choice_key !== 'use_purchase_area_card') return null;
+  const cards = choice.cards || [];
+  return {
+    title: '企業人脈｜借用購買區卡牌',
+    desc: `請從購買區正面朝上的牌中選 1 張借用。本次共有 ${cards.length} 張可借用。`,
+    helperHtml: `
+      <div class="business-network-modal-helper">
+        <div class="business-network-modal-helper-title">操作提示</div>
+        <div class="business-network-modal-helper-body">你選到的牌會直接視同打出；下方每張候選牌都會標示其購買區槽位與「可借用」。</div>
+      </div>
+    `,
+  };
+}
+
 function renderChoiceModal(state) {
   const overlay = document.getElementById('choiceModal');
   const title = document.getElementById('choiceModalTitle');
@@ -1066,11 +1082,12 @@ function renderChoiceModal(state) {
   const sourceName = choice.source_name || choice.choice_key || '';
   const requiredCount = Math.max(1, Number(choice.count || 1));
   const businessNetworkState = renderBusinessNetworkResult(state);
+  const businessNetworkModalHeader = renderBusinessNetworkModalHeader(state);
   activeChoiceModal = choiceType;
-  title.textContent = choiceType === 'underground_party'
+  title.textContent = businessNetworkModalHeader?.title || (choiceType === 'underground_party'
     ? '地下黨'
-    : (sourceName || '卡牌選擇');
-  desc.textContent = choice.prompt || '請進行選擇。';
+    : (sourceName || '卡牌選擇'));
+  desc.innerHTML = `${escapeHtml(businessNetworkModalHeader?.desc || choice.prompt || '請進行選擇。')}${businessNetworkModalHeader?.helperHtml || ''}`;
   cards.innerHTML = businessNetworkState.html || '';
 
   if (choiceType === 'card_choice' || choiceType === 'underground_party') {
@@ -1083,11 +1100,13 @@ function renderChoiceModal(state) {
         sendAction('resolve_choice', { index });
         closeChoiceModal();
       };
-      if (cardEntry && typeof cardEntry === 'object' && cardEntry.zone_label) {
-        const zoneBadge = `<div class="choice-card-zone-label">${escapeHtml(cardEntry.zone_label)}</div>`;
-        wrapper.innerHTML = `${zoneBadge}${renderCardFace(cardName, 'choice', false, true)}`;
+      const zoneLabel = cardEntry && typeof cardEntry === 'object' ? cardEntry.zone_label : '';
+      const canBorrowLabel = sourceName === '企業人脈' ? '<div class="choice-card-action-tag">可借用</div>' : '';
+      if (zoneLabel) {
+        const zoneBadge = `<div class="choice-card-zone-label">${escapeHtml(zoneLabel)}</div>`;
+        wrapper.innerHTML = `${zoneBadge}${canBorrowLabel}${renderCardFace(cardName, 'choice', false, true)}`;
       } else {
-        wrapper.innerHTML = renderCardFace(cardName, 'choice', false, true);
+        wrapper.innerHTML = `${canBorrowLabel}${renderCardFace(cardName, 'choice', false, true)}`;
       }
       cards.appendChild(wrapper);
     });

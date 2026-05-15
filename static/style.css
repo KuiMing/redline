@@ -1423,6 +1423,40 @@ body {
   padding: 5px 10px;
 }
 
+.choice-card-action-tag {
+  margin: 0 0 8px;
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  color: #fef3c7;
+  background: rgba(120, 53, 15, 0.42);
+  border: 1px solid rgba(250, 204, 21, 0.36);
+  border-radius: 999px;
+  padding: 5px 10px;
+}
+
+.business-network-modal-helper {
+  margin-top: 10px;
+  border-radius: 14px;
+  padding: 10px 12px;
+  border: 1px solid rgba(96, 165, 250, 0.28);
+  background: rgba(15, 23, 42, 0.54);
+}
+
+.business-network-modal-helper-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  color: #dbeafe;
+  margin-bottom: 4px;
+}
+
+.business-network-modal-helper-body {
+  color: #cbd5e1;
+  line-height: 1.55;
+}
+
 .choice-card-btn .card-face {
   min-height: 270px;
 }

@@ -334,20 +334,35 @@ class EffectEngine:
                     break
             return
 
-        # ✅ Temporarily use a face-up purchase-area card (企業人脈; MVP first non-static random card)
+        # ✅ Temporarily use a face-up purchase-area card (企業人脈)
         if etype == "use_purchase_area_card":
             static_count = len(game._static_purchase_cards()) if hasattr(game, '_static_purchase_cards') else 0
             start = static_count if effect.get('prefer_random_market', True) else 0
-            source = None
-            source_index = None
+            choices = []
             for idx in range(start, len(getattr(game, 'purchase_area', []) or [])):
                 candidate = game.purchase_area[idx]
                 if candidate:
-                    source = candidate
-                    source_index = idx
-                    break
-            if source is None:
+                    choices.append({
+                        'card': candidate,
+                        'name': getattr(candidate, 'name', str(candidate)),
+                        'zone': 'purchase_area',
+                        'zone_label': f'購買區槽位 {idx - start + 1}',
+                        'purchase_index': idx,
+                    })
+            if not choices:
                 return
+            if hasattr(game, '_set_pending_card_choice'):
+                game._set_pending_card_choice(
+                    player,
+                    'use_purchase_area_card',
+                    choices,
+                    '企業人脈：選擇購買區正面朝上的 1 張牌，視同打出該牌。',
+                    source_name='企業人脈',
+                )
+                return {'pending_choice': True}
+            source_entry = choices[0]
+            source = source_entry['card']
+            source_index = source_entry['purchase_index']
             borrowed = game._copy_purchase_card(source)
             setattr(borrowed, '_return_to_purchase_area_index', source_index)
             player.hand.append(borrowed)

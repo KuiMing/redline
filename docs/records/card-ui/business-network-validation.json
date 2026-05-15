@@ -1,0 +1,84 @@
+{
+  "game_id": "e2396abf-8810-4d0c-812d-d318d9d60b6d",
+  "player_id": "9a9c1679-5431-49a0-8ce8-0a63c08c1cdb",
+  "initial_purchase_area": [
+    "宣傳家",
+    "思想家",
+    "資助者",
+    "資本家",
+    "分神",
+    "內鬥",
+    "合作談判",
+    "交通經驗乙",
+    "模仿戰術",
+    "資本家",
+    "填充D"
+  ],
+  "initial_state_hand": [
+    "企業人脈"
+  ],
+  "pending_choice": {
+    "type": "card_choice",
+    "choice_key": "use_purchase_area_card",
+    "player_id": "9a9c1679-5431-49a0-8ce8-0a63c08c1cdb",
+    "prompt": "企業人脈：選擇購買區正面朝上的 1 張牌，視同打出該牌。",
+    "source_name": "企業人脈",
+    "count": null,
+    "step": null,
+    "cards": [
+      {
+        "name": "合作談判",
+        "zone": "purchase_area",
+        "zone_label": "購買區槽位 1"
+      },
+      {
+        "name": "交通經驗乙",
+        "zone": "purchase_area",
+        "zone_label": "購買區槽位 2"
+      },
+      {
+        "name": "模仿戰術",
+        "zone": "purchase_area",
+        "zone_label": "購買區槽位 3"
+      },
+      {
+        "name": "資本家",
+        "zone": "purchase_area",
+        "zone_label": "購買區槽位 4"
+      },
+      {
+        "name": "填充D",
+        "zone": "purchase_area",
+        "zone_label": "購買區槽位 5"
+      }
+    ],
+    "options": [],
+    "towns": [],
+    "targets": []
+  },
+  "hand_after_play": [],
+  "action_log_after_play": [
+    "[Turn 1] viewer played 企業人脈"
+  ],
+  "resolved_hand": [
+    "模仿戰術"
+  ],
+  "resolved_pending_choice": null,
+  "resolved_action_log": [
+    "[Turn 1] viewer played 企業人脈",
+    "[Turn 1] viewer borrowed 模仿戰術 from purchase area"
+  ],
+  "purchase_area_after_resolve": [
+    "宣傳家",
+    "思想家",
+    "資助者",
+    "資本家",
+    "分神",
+    "內鬥",
+    "合作談判",
+    "交通經驗乙",
+    "模仿戰術",
+    "資本家",
+    "填充D"
+  ]
+}

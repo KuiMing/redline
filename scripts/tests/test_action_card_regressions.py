@@ -114,6 +114,40 @@ def test_imitate_tactics_borrowed_card_returns_to_owner_topdeck_after_action_pla
 
 
 
+def test_business_network_borrowed_transport_card_grants_its_action_effect_after_choice_resolution():
+    g = make_game()
+    p = g.current_player()
+    p.hand = [card(g, '企業人脈')]
+    g.purchase_area = [
+        card(g, '宣傳家'),
+        card(g, '思想家'),
+        card(g, '資助者'),
+        card(g, '資本家'),
+        card(g, '分神'),
+        card(g, '內鬥'),
+        card(g, '合作談判'),
+        card(g, '交通經驗乙'),
+        card(g, '模仿戰術'),
+    ]
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    assert g.pending_choice and g.pending_choice['type'] == 'card_choice'
+    assert g.pending_choice['choice_key'] == 'use_purchase_area_card'
+    assert [entry['name'] for entry in g.pending_choice['cards']] == ['合作談判', '交通經驗乙', '模仿戰術']
+
+    resolved = g.resolve_pending_choice(p.id, 1)
+    assert resolved.get('success'), resolved
+    assert resolved.get('chosen_card') == '交通經驗乙'
+    assert resolved.get('purchase_index') == 7
+    assert p.moves_left == 4
+    assert '交通經驗乙' not in names(p.hand)
+    assert '交通經驗乙' not in names(p.deck.discard_pile)
+    assert names(g.purchase_area)[7] == '交通經驗乙'
+
+
+
 def test_intel_network_runs_only_one_default_option_not_cancel_too():
     g = make_game()
     p = play_only(g, '情報網')
@@ -534,16 +568,16 @@ def test_business_network_borrows_only_from_random_market_and_keeps_market_card_
     p = g.current_player()
     p.hand = [card(g, '企業人脈')]
     static_name = names(g.purchase_area[:6])[0]
-    random_name = names(g.purchase_area[6:])[0]
+    random_names = names(g.purchase_area[6:])
 
     result = g.play_card(0, mode='action')
 
     assert result.get('success'), result
-    hand_names = names(p.hand)
-    assert random_name in hand_names
-    assert static_name not in hand_names
+    assert g.pending_choice and g.pending_choice['choice_key'] == 'use_purchase_area_card'
+    assert [entry['name'] for entry in g.pending_choice['cards']] == random_names
+    assert static_name not in [entry['name'] for entry in g.pending_choice['cards']]
     assert names(g.purchase_area[:6])[0] == static_name
-    assert names(g.purchase_area[6:])[0] == random_name
+    assert names(g.purchase_area[6:]) == random_names
 
 
 
@@ -556,9 +590,10 @@ def test_business_network_borrowed_card_returns_to_purchase_area_after_resource_
     result = g.play_card(0, mode='action')
 
     assert result.get('success'), result
-    borrowed_index = names(p.hand).index(random_name)
-    resource_result = g.play_card(borrowed_index, mode='resource')
-    assert resource_result.get('success'), resource_result
+    assert g.pending_choice and g.pending_choice['choice_key'] == 'use_purchase_area_card'
+    resolved = g.resolve_pending_choice(p.id, 0)
+    assert resolved.get('success'), resolved
+    assert resolved.get('chosen_card') == random_name
     assert random_name not in names(p.deck.discard_pile)
     assert names(g.purchase_area[6:])[0] == random_name
 
@@ -568,14 +603,26 @@ def test_business_network_borrowed_card_returns_to_purchase_area_after_action_pl
     g = make_game()
     p = g.current_player()
     p.hand = [card(g, '企業人脈')]
+    g.purchase_area = [
+        card(g, '宣傳家'),
+        card(g, '思想家'),
+        card(g, '資助者'),
+        card(g, '資本家'),
+        card(g, '分神'),
+        card(g, '內鬥'),
+        card(g, '行動預告'),
+    ]
     random_name = names(g.purchase_area[6:])[0]
+    p.deck.discard_pile = [Card('PurchasedCard', 'command', {})]
+    g.turn_log['purchased_cards_this_turn'] = [p.deck.discard_pile[0]]
 
     result = g.play_card(0, mode='action')
 
     assert result.get('success'), result
-    borrowed_index = names(p.hand).index(random_name)
-    action_result = g.play_card(borrowed_index, mode='action')
-    assert action_result.get('success'), action_result
+    assert g.pending_choice and g.pending_choice['choice_key'] == 'use_purchase_area_card'
+    resolved = g.resolve_pending_choice(p.id, 0)
+    assert resolved.get('success'), resolved
+    assert resolved.get('chosen_card') == random_name
     assert random_name not in names(p.deck.discard_pile)
     assert names(g.purchase_area[6:])[0] == random_name
 

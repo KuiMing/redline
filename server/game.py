@@ -507,6 +507,31 @@ class Game:
                 'removed_cards': removed,
             }
 
+        if choice_key == 'use_purchase_area_card':
+            source_entry = chosen if isinstance(chosen, dict) else {'card': chosen}
+            source = source_entry.get('card')
+            purchase_index = source_entry.get('purchase_index')
+            if source is None:
+                return {'error': 'Chosen purchase-area card missing'}
+            borrowed = self._copy_purchase_card(source)
+            if purchase_index is not None:
+                setattr(borrowed, '_return_to_purchase_area_index', purchase_index)
+            player.hand.append(borrowed)
+            self.pending_choice = None
+            self.log(f"{player.name} borrowed {getattr(borrowed, 'name', str(borrowed))} from purchase area")
+            borrowed_index = len(player.hand) - 1
+            action_result = self.play_card(borrowed_index, mode='action')
+            if action_result.get('error'):
+                return action_result
+            response = {
+                'success': True,
+                'chosen_card': getattr(borrowed, 'name', str(borrowed)),
+                'purchase_index': purchase_index,
+            }
+            if 'pending_choice' in action_result:
+                response['pending_choice'] = action_result.get('pending_choice')
+            return response
+
         if choice_key == 'trash_from_hand_or_discard':
             card = chosen.get('card') if isinstance(chosen, dict) else chosen
             zone = chosen.get('zone') if isinstance(chosen, dict) else None
