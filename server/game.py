@@ -2055,12 +2055,11 @@ class Game:
 
         effective_type = getattr(played_card, "card_type", None)
         if getattr(played_card, 'name', str(played_card)) == '紅軍奧援' and mode == "action":
+            player.hand.extend(player.deck.draw(1))
             support_resolution = self._resolve_red_support_target_choice(player, played_card, mode='action')
             if support_resolution and support_resolution.get('pending_choice'):
-                player.hand.extend(player.deck.draw(1))
                 self.log(f"{player.name} played {card_name}")
                 return {"success": True, **support_resolution}
-            player.hand.extend(player.deck.draw(1))
             player.deck.discard([played_card])
             self.log(f"{player.name} played {card_name}")
             return {"success": True}
