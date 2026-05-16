@@ -67,6 +67,18 @@ def _load_card_presentation_catalog():
                     'meaning_text': '奧援卡',
                     'count_text': row[8] if len(row) > 8 else '',
                 }
+    catalog['紅軍奧援'] = {
+        'name': '紅軍奧援',
+        'color': '奧援',
+        'kind': '奧援',
+        'strength': '特殊',
+        'cost_text': '起始牌',
+        'effect_text': '行動：抽1張牌，然後將本牌放入1位反共玩家的棄牌堆。\n資源：提供1資金+1宣傳，然後將本牌放入1位反共玩家的棄牌堆。',
+        'resource_text': '1資金 + 1宣傳',
+        'position_text': '起始牌',
+        'meaning_text': '紅軍專屬奧援卡',
+        'count_text': '1',
+    }
     return catalog
 
 
@@ -436,8 +448,23 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
                     await ws.send_json(game.state())
                 continue
 
-            if game.current_player().id != player_id:
-                await websocket.send_json({"error": "Not your turn"})
+            bypass_turn_check = False
+            if action == "resolve_choice":
+                pending_choice = getattr(game, "pending_choice", None) or {}
+                bypass_turn_check = pending_choice.get("player_id") == player_id
+
+            current_player = game.current_player()
+            if current_player is not None and current_player.id != player_id and not bypass_turn_check:
+                debug_state = dict(game.state())
+                debug_state["error"] = "Not your turn"
+                debug_state["_debug_turn_gate"] = {
+                    "action": action,
+                    "player_id": player_id,
+                    "current_player_id": current_player.id,
+                    "current_player_name": getattr(current_player, "name", None),
+                    "bypass_turn_check": bypass_turn_check,
+                }
+                await websocket.send_json(debug_state)
                 continue
 
             result = {"success": True}
@@ -483,8 +510,11 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
             # Broadcast updated state
             updated_state = game.state()
             action_result = result if isinstance(result, dict) and not result.get("result") else (result.get("result") if isinstance(result, dict) else None)
-            if action_result and not action_result.get("pending_choice"):
-                updated_state["last_action_result"] = action_result
+            if action_result:
+                if action_result.get("pending_choice"):
+                    updated_state["pending_choice"] = game.state().get("pending_choice")
+                else:
+                    updated_state["last_action_result"] = action_result
             for pid, ws in manager.connections.get(game_id, {}).items():
                 await ws.send_json(updated_state)
 
@@ -519,6 +549,7 @@ def test_set_hand(payload: dict):
     player_id = payload.get("player_id")
     cards = payload.get("cards", [])
     turn_phase = payload.get("turn_phase")
+    set_current_player = bool(payload.get("set_current_player"))
 
     game = manager.get_game(game_id)
     if not game:
@@ -539,7 +570,19 @@ def test_set_hand(payload: dict):
     elif turn_phase == "end":
         game.turn_phase = TurnPhase.END
 
-    return {"success": True, "hand": [c.name for c in player.hand], "turn_phase": game.turn_phase}
+    if set_current_player:
+        for idx, candidate in enumerate(game.players):
+            if candidate.id == player_id:
+                game.current_player_index = idx
+                break
+
+    return {
+        "success": True,
+        "hand": [c.name for c in player.hand],
+        "turn_phase": game.turn_phase,
+        "current_player": game.current_player().name if game.current_player() else None,
+        "current_player_id": game.current_player().id if game.current_player() else None,
+    }
 
 
 @app.post("/test/setup-card-scenario")
@@ -1152,6 +1195,67 @@ def test_setup_business_network_transport_proof(payload: dict):
     }
 
 
+@app.post("/test/setup-planning-lobby-ui")
+def test_setup_planning_lobby_ui(payload: dict):
+    game_id = str(uuid.uuid4())
+    players = [(str(uuid.uuid4()), "viewer"), (str(uuid.uuid4()), "red")]
+    game = Game(players)
+
+    viewer = game.players[0]
+    red = game.players[1]
+
+    viewer.faction_id = payload.get("faction_id", "tibet_dehradun")
+    viewer.base = payload.get("base", "德拉敦")
+    viewer.organizations = payload.get("orgs") or {viewer.base: 1}
+    viewer.resources = payload.get("resources") or {"money": 0, "propaganda": 0}
+    card_def = next(c for c in game.structured_cards if c.get("name") == "企畫遊說")
+    viewer.hand = [Card(card_def["name"], card_def["type"], card_def.get("resources", {}))]
+    top_card_name = payload.get("top_card_name", "思想家")
+    top_card_def = next((c for c in game.structured_cards if c.get("name") == top_card_name), None)
+    if top_card_def:
+        top_card = Card(top_card_def["name"], top_card_def["type"], top_card_def.get("resources", {}))
+    else:
+        top_card = Card(top_card_name, "command", {})
+    viewer.deck.draw_pile = [top_card]
+    viewer.deck.discard_pile = []
+
+    red.faction_id = "red_army"
+    red.base = "北京"
+    red.organizations = {"北京": 1}
+    red.hand = []
+
+    while len(game.purchase_area) < 11:
+        drawn = game._draw_purchase_cards(1)
+        if not drawn:
+            break
+        game.purchase_area.extend(drawn)
+
+    game.current_player_index = 0
+    game.turn_phase = TurnPhase.ACTION
+    game.game_phase = GamePhase.MAIN
+    game.pending_base_choices = {}
+    game.id = game_id
+
+    manager.games[game_id] = game
+    manager.connections[game_id] = manager.connections.get(game_id, {})
+    lobby[game_id] = list(zip([p.id for p in game.players], [p.name for p in game.players]))
+    lobby_hosts[game_id] = viewer.id
+    lobby_factions[game_id] = {viewer.id: viewer.faction_id, red.id: red.faction_id}
+    lobby_bases[game_id] = {viewer.id: viewer.base, red.id: red.base}
+
+    return {
+        "success": True,
+        "game_id": game_id,
+        "player_id": viewer.id,
+        "top_card_name": top_card_name,
+        "top_card_cost": game._card_purchase_cost(top_card),
+        "turn_phase": game.turn_phase,
+        "game_phase": game.game_phase,
+        "players": [{"id": p.id, "name": p.name, "faction": p.faction_id} for p in game.players],
+        "state": game.state(),
+    }
+
+
 @app.post("/test/setup-trash-choice-ui")
 def test_setup_trash_choice_ui(payload: dict):
     game_id = str(uuid.uuid4())
@@ -1218,6 +1322,111 @@ def test_setup_trash_choice_ui(payload: dict):
             count=count,
             source_name=source_name,
         )
+
+    manager.games[game_id] = game
+    manager.connections[game_id] = manager.connections.get(game_id, {})
+    lobby[game_id] = list(zip([p.id for p in game.players], [p.name for p in game.players]))
+    lobby_hosts[game_id] = viewer.id
+    lobby_factions[game_id] = {viewer.id: viewer.faction_id, red.id: red.faction_id}
+    lobby_bases[game_id] = {viewer.id: viewer.base, red.id: red.base}
+
+    return {
+        'success': True,
+        'game_id': game_id,
+        'player_id': viewer.id,
+        'state': game.state(),
+        'players': [{'id': p.id, 'name': p.name, 'faction': p.faction_id} for p in game.players],
+    }
+
+
+@app.post("/test/setup-red-support-proof")
+def test_setup_red_support_proof(payload: dict):
+    mode = payload.get("mode", "resource")
+    actor_faction = payload.get("actor_faction", "liberals")
+    opponent_faction = payload.get("opponent_faction", "red_army" if actor_faction != "red_army" else "liberals")
+
+    game_id = str(uuid.uuid4())
+    players = [(str(uuid.uuid4()), "viewer"), (str(uuid.uuid4()), "target")]
+    game = Game(players)
+
+    viewer = game.players[0]
+    target = game.players[1]
+
+    viewer.faction_id = actor_faction
+    viewer.base = "北京" if actor_faction == "red_army" else "德拉敦"
+    viewer.organizations = {viewer.base: 1}
+    viewer.resources = {"money": 0, "propaganda": 0}
+    viewer.hand = [game._make_support_card("紅軍奧援")]
+    viewer.deck.draw_pile = []
+    viewer.deck.discard_pile = []
+
+    target.faction_id = opponent_faction
+    target.base = "北京" if opponent_faction == "red_army" else "香港城"
+    target.organizations = {target.base: 1}
+    target.resources = {"money": 0, "propaganda": 0}
+    target.hand = []
+    target.deck.draw_pile = []
+    target.deck.discard_pile = []
+
+    if mode == "action":
+        viewer.deck.discard_pile = [Card("抽到展示牌", "command", {})]
+
+    game.current_player_index = 0
+    game.turn_phase = TurnPhase.ACTION
+    game.game_phase = GamePhase.MAIN
+    game.pending_base_choices = {}
+    game.id = game_id
+
+    manager.games[game_id] = game
+    manager.connections[game_id] = manager.connections.get(game_id, {})
+    lobby[game_id] = list(zip([p.id for p in game.players], [p.name for p in game.players]))
+    lobby_hosts[game_id] = viewer.id
+    lobby_factions[game_id] = {viewer.id: viewer.faction_id, target.id: target.faction_id}
+    lobby_bases[game_id] = {viewer.id: viewer.base, target.id: target.base}
+
+    return {
+        "success": True,
+        "game_id": game_id,
+        "player_id": viewer.id,
+        "mode": mode,
+        "players": [{"id": p.id, "name": p.name, "faction": p.faction_id} for p in game.players],
+        "state": game.state(),
+    }
+
+
+@app.post("/test/setup-bait-exhaustion-ui")
+def test_setup_bait_exhaustion_ui(payload: dict):
+    game_id = str(uuid.uuid4())
+    players = [(str(uuid.uuid4()), "viewer"), (str(uuid.uuid4()), "red")]
+    game = Game(players)
+
+    viewer = game.players[0]
+    red = game.players[1]
+
+    viewer.faction_id = payload.get("faction_id", "red_army")
+    viewer.base = payload.get("base", "北京")
+    viewer.organizations = payload.get("orgs") or {viewer.base: 1}
+    viewer.resources = payload.get("resources") or {"money": 0, "propaganda": 0}
+    viewer.hand = [
+        Card("誘導虛耗", "command", {"propaganda": 1}),
+        Card("可移除手牌", "command", {}),
+    ]
+    top_card_name = payload.get("draw_top_card", "宣傳家")
+    viewer.deck.draw_pile = [Card(top_card_name, "propaganda", {"propaganda": 1})]
+    viewer.deck.discard_pile = []
+
+    red.faction_id = "hong_kong"
+    red.base = "香港城"
+    red.organizations = {"香港城": 1}
+    red.hand = [Card("對手被棄牌", "command", {})]
+    red.deck.draw_pile = [Card("對手抽牌A", "command", {})]
+    red.deck.discard_pile = []
+
+    game.current_player_index = 0
+    game.turn_phase = TurnPhase.ACTION
+    game.game_phase = GamePhase.MAIN
+    game.pending_base_choices = {}
+    game.id = game_id
 
     manager.games[game_id] = game
     manager.connections[game_id] = manager.connections.get(game_id, {})

@@ -57,7 +57,70 @@ def test_recruit_talent_selects_any_card_from_own_deck_not_topdeck_only():
     assert 'TopCard' not in names(p.hand)
 
 
-def test_lure_exhaustion_draws_then_self_removes_and_sets_successful_discard():
+def test_red_support_requires_red_army_to_choose_rebel_discard_target_before_resolving_resource_mode():
+    g = make_game()
+    red = g.current_player()
+    rebel = g.players[1]
+    rebel.faction_id = 'hong_kong'
+    red.hand = [Card('紅軍奧援', 'support', {'money': 1, 'propaganda': 1})]
+    red.resources = {'money': 0, 'propaganda': 0}
+    rebel.deck.discard_pile = []
+
+    result = g.play_card(0, mode='resource')
+
+    assert result.get('pending_choice') is True
+    assert red.resources == {'money': 0, 'propaganda': 0}
+    assert names(red.hand) == []
+    assert g.pending_choice and g.pending_choice['type'] == 'target_choice'
+    assert g.pending_choice['choice_key'] == 'red_support_target_player'
+    assert g.pending_choice['player_id'] == red.id
+    assert [entry['label'] for entry in g.pending_choice['targets']] == ['P2']
+
+    state_choice = g.state()['pending_choice']
+    assert state_choice['type'] == 'target_choice'
+    assert state_choice['choice_key'] == 'red_support_target_player'
+    assert state_choice['player_id'] == red.id
+    assert state_choice['targets'] == [{'id': rebel.id, 'label': 'P2'}]
+    assert state_choice['source_name'] == '紅軍奧援'
+    assert state_choice['mode'] == 'resource'
+
+    resolved = g.resolve_pending_choice(red.id, 0)
+
+    assert resolved.get('success'), resolved
+    assert resolved.get('target_player_name') == 'P2'
+    assert red.resources == {'money': 1, 'propaganda': 1}
+    assert names(red.hand) == []
+    assert names(rebel.deck.discard_pile)[-1] == '紅軍奧援'
+    assert g.pending_choice is None
+
+
+def test_red_support_requires_red_army_to_choose_rebel_discard_target_before_resolving_action_mode():
+    g = make_game()
+    red = g.current_player()
+    rebel = g.players[1]
+    rebel.faction_id = 'hong_kong'
+    red.hand = [Card('紅軍奧援', 'support', {'money': 1, 'propaganda': 1})]
+    red.deck.draw_pile = [Card('DrawnCard', 'command', {})]
+    rebel.deck.discard_pile = []
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('pending_choice') is True
+    assert names(red.hand) == ['DrawnCard']
+    assert names(red.deck.draw_pile) == []
+    assert g.pending_choice and g.pending_choice['choice_key'] == 'red_support_target_player'
+    assert g.pending_choice['mode'] == 'action'
+
+    resolved = g.resolve_pending_choice(red.id, 0)
+
+    assert resolved.get('success'), resolved
+    assert resolved.get('target_player_name') == 'P2'
+    assert names(red.hand) == ['DrawnCard']
+    assert names(rebel.deck.discard_pile)[-1] == '紅軍奧援'
+    assert g.pending_choice is None
+
+
+def test_lure_exhaustion_draws_then_prompts_target_choice_after_self_remove():
     g = make_game()
     p1, p2 = g.players
     p1.hand = [card(g, '誘導虛耗')]
@@ -67,8 +130,51 @@ def test_lure_exhaustion_draws_then_self_removes_and_sets_successful_discard():
     result = g.play_card(0, mode='action', target_player_id=p2.id)
 
     assert result.get('success'), result
+    assert result.get('pending_choice') is True
     assert names(p1.hand) == ['DrawnCard']
-    assert '誘導虛耗' not in names(p1.deck.discard_pile)
+    assert g.pending_choice and g.pending_choice['type'] == 'card_choice'
+    assert g.pending_choice['choice_key'] == 'optional_trash'
+
+    resolved = g.resolve_pending_choice(p1.id, 0)
+
+    assert resolved.get('success'), resolved
+    assert resolved.get('pending_choice') is True
+    assert names(p1.deck.discard_pile) == ['誘導虛耗']
+    assert g.pending_choice and g.pending_choice['type'] == 'target_choice'
+    assert g.pending_choice['choice_key'] == 'bait_exhaustion_target'
+    assert [entry['label'] for entry in g.pending_choice['targets']] == ['P2']
+
+    state_choice = g.state()['pending_choice']
+    assert state_choice['type'] == 'target_choice'
+    assert state_choice['choice_key'] == 'bait_exhaustion_target'
+    assert state_choice['source_name'] == '誘導虛耗'
+    assert state_choice['step'] is None
+    assert state_choice['options'] == []
+    assert state_choice['towns'] == []
+    assert state_choice['targets'] == [{'id': p2.id, 'label': 'P2'}]
+
+    target_resolved = g.resolve_pending_choice(p1.id, 0)
+
+    assert target_resolved.get('success'), target_resolved
+    assert target_resolved.get('pending_choice') is True
+    assert target_resolved.get('target_player_name') == 'P2'
+    assert g.pending_choice and g.pending_choice['type'] == 'card_choice'
+    assert g.pending_choice['choice_key'] == 'bait_exhaustion_target_discard'
+    assert g.pending_choice['player_id'] == p2.id
+    assert names(g.pending_choice['cards']) == ['EnemyCard']
+
+    target_state_choice = g.state()['pending_choice']
+    assert target_state_choice['type'] == 'card_choice'
+    assert target_state_choice['choice_key'] == 'bait_exhaustion_target_discard'
+    assert target_state_choice['player_id'] == p2.id
+    assert target_state_choice['cards'] == ['EnemyCard']
+    assert target_state_choice['source_name'] == '誘導虛耗'
+
+    discard_resolved = g.resolve_pending_choice(p2.id, 0)
+
+    assert discard_resolved.get('success'), discard_resolved
+    assert discard_resolved.get('discarded_card') == 'EnemyCard'
+    assert discard_resolved.get('target_player_name') == 'P2'
     assert names(p2.hand) == []
     assert names(p2.deck.discard_pile) == ['EnemyCard']
     assert g.turn_log.get('successful_discard') is True
@@ -146,6 +252,80 @@ def test_business_network_borrowed_transport_card_grants_its_action_effect_after
     assert '交通經驗乙' not in names(p.deck.discard_pile)
     assert names(g.purchase_area)[7] == '交通經驗乙'
 
+
+
+def test_red_support_uses_csv_resource_values_when_played_as_resource():
+    g = make_game()
+    p = g.current_player()
+    rebel = g.players[1]
+    rebel.faction_id = 'hong_kong'
+    p.hand = [g._make_support_card('紅軍奧援')]
+    p.resources = {'money': 0, 'propaganda': 0}
+
+    result = g.play_card(0, mode='resource')
+
+    assert result.get('success'), result
+    assert result.get('pending_choice') is True
+    assert p.resources == {'money': 0, 'propaganda': 0}
+    resolved = g.resolve_pending_choice(p.id, 0)
+    assert resolved.get('success'), resolved
+    assert p.resources == {'money': 1, 'propaganda': 1}
+    assert names(rebel.deck.discard_pile)[-1] == '紅軍奧援'
+
+
+
+def test_red_support_action_draws_and_moves_to_red_army_discard_when_rebel_plays_it():
+    g = make_game()
+    p1, p2 = g.players
+    p1.faction_id = 'liberals'
+    p2.faction_id = 'red_army'
+    p1.hand = []
+    p2.hand = []
+    g.current_player_index = 0
+    support = g._make_support_card('紅軍奧援')
+    p1.deck.draw_pile = []
+    p1.deck.discard_pile = [Card('DrawnCard', 'command', {})]
+    p2.deck.discard_pile = []
+
+    resolution = g._execute_support_card(p1, support)
+
+    assert names(p1.hand) == ['DrawnCard']
+    assert names(p1.deck.discard_pile) == []
+    assert names(p2.deck.discard_pile) == ['紅軍奧援']
+    assert resolution['effect_type'] == 'red_support_draw_and_pass'
+    assert resolution['moved_to_player_id'] == p2.id
+
+
+
+def test_red_support_action_draws_and_moves_to_rebel_discard_when_red_army_plays_it():
+    g = make_game()
+    p1, p2 = g.players
+    p1.faction_id = 'red_army'
+    p2.faction_id = 'liberals'
+    p1.hand = []
+    p2.hand = []
+    g.current_player_index = 0
+    support = g._make_support_card('紅軍奧援')
+    p1.deck.draw_pile = []
+    p1.deck.discard_pile = [Card('DrawnCard', 'command', {})]
+    p2.deck.discard_pile = []
+
+    resolution = g._execute_support_card(p1, support)
+
+    assert names(p1.hand) == ['DrawnCard']
+    assert names(p1.deck.discard_pile) == []
+    assert names(p2.deck.discard_pile) == []
+    assert resolution['effect_type'] == 'red_support_draw_and_pass'
+    assert resolution['effect_text'] is None
+    assert resolution['pending_choice'] is True
+    assert g.pending_choice and g.pending_choice['choice_key'] == 'red_support_target_player'
+
+    resolved = g.resolve_pending_choice(p1.id, 0)
+
+    assert resolved.get('success'), resolved
+    assert names(p1.hand) == ['DrawnCard']
+    assert names(p2.deck.discard_pile) == ['紅軍奧援']
+    assert resolved['moved_to_player_id'] == p2.id
 
 
 def test_intel_network_runs_only_one_default_option_not_cancel_too():

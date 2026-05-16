@@ -222,6 +222,8 @@ class Game:
         return mapping.get(name, 'support')
 
     def _support_card_cost(self, support_name):
+        if support_name == '紅軍奧援':
+            return {'money': 1, 'propaganda': 1}
         entry = self._support_taxonomy_entry(support_name) or {}
         text = entry.get('cost', '')
         if text == '起始牌':
@@ -562,6 +564,88 @@ class Game:
                 'removed_card': returned,
             }
 
+        if choice_key == 'optional_trash':
+            card = chosen.get('card') if isinstance(chosen, dict) else chosen
+            zone = chosen.get('zone') if isinstance(chosen, dict) else None
+            zone_label = chosen.get('zone_label') if isinstance(chosen, dict) else None
+            removes_current_card = bool(chosen.get('removes_current_card')) if isinstance(chosen, dict) else False
+            if card is None:
+                return {'error': 'Chosen card missing'}
+            if zone == 'current_card':
+                pass
+            elif zone == 'hand':
+                if card not in player.hand:
+                    return {'error': 'Chosen card not in hand'}
+                player.hand.remove(card)
+            else:
+                return {'error': 'Unsupported optional trash source'}
+            if getattr(card, 'name', str(card)) not in {'追隨者', '樂捐者'}:
+                self.turn_log['non_starter_discard'] = True
+            returned = self._return_removed_card_to_purchase_supply(card)
+            if returned is None:
+                returned = self._remove_card_from_game(card)
+            if removes_current_card:
+                choice_context = choice.get('context') if isinstance(choice.get('context'), dict) else None
+                if isinstance(choice_context, dict):
+                    choice_context['removed_current_card'] = True
+            source_name = choice.get('source_name') or choice_key
+            self.log(f"{player.name} trashed {getattr(card, 'name', str(card))} from {zone_label or zone} via {source_name}")
+            followup = choice.get('followup_target_choice') if isinstance(choice, dict) else None
+            if isinstance(followup, dict) and followup.get('targets'):
+                self.pending_choice = {
+                    'type': 'target_choice',
+                    'choice_key': followup.get('choice_key') or 'target_choice',
+                    'player_id': player.id,
+                    'targets': list(followup.get('targets') or []),
+                    'prompt': followup.get('prompt') or '請選擇目標。',
+                    'source_name': followup.get('source_name') or source_name,
+                    'context': {
+                        'source_name': source_name,
+                        'removed_card': returned,
+                        'removed_current_card': removes_current_card,
+                        'trashed_card_name': getattr(card, 'name', str(card)),
+                        **(choice.get('context') if isinstance(choice.get('context'), dict) else {}),
+                    },
+                }
+                return {
+                    'success': True,
+                    'chosen_card': getattr(card, 'name', str(card)),
+                    'zone': zone,
+                    'zone_label': zone_label,
+                    'removed_card': returned,
+                    'removed_current_card': removes_current_card,
+                    'pending_choice': True,
+                }
+            self.pending_choice = None
+            return {
+                'success': True,
+                'chosen_card': getattr(card, 'name', str(card)),
+                'zone': zone,
+                'zone_label': zone_label,
+                'removed_card': returned,
+                'removed_current_card': removes_current_card,
+            }
+
+        if choice_key == 'bait_exhaustion_target_discard':
+            if chosen not in player.hand:
+                return {'error': 'Chosen card not in hand'}
+            player.hand.remove(chosen)
+            player.deck.discard([chosen])
+            self.turn_log['successful_discard'] = True
+            self.pending_choice = None
+            choice_context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
+            initiator_name = choice_context.get('initiator_player_name') or '其他玩家'
+            target_name = choice_context.get('target_player_name') or player.name
+            source_name = choice.get('source_name') or choice_context.get('source_name') or '誘導虛耗'
+            self.log(f"{initiator_name} used {source_name} to force {target_name} to discard {getattr(chosen, 'name', str(chosen))}")
+            return {
+                'success': True,
+                'discarded_card': getattr(chosen, 'name', str(chosen)),
+                'target_player_name': target_name,
+                'initiator_player_name': initiator_name,
+                'choice_key': choice_key,
+            }
+
         return {'error': 'Unsupported pending choice type'}
 
     def _resolve_multi_card_choice(self, player, choice, indices):
@@ -678,13 +762,72 @@ class Game:
         target_id = selected.get('id')
         if target_id is None:
             return {'error': 'Invalid target choice'}
+        choice_key = choice.get('choice_key')
+        if choice_key == 'bait_exhaustion_target':
+            target_player = next((p for p in self.players if getattr(p, 'id', None) == target_id), None)
+            if target_player is None:
+                return {'error': 'Target player not found'}
+            if not getattr(target_player, 'hand', None):
+                return {'error': 'Target player has no hand cards'}
+            source_name = (choice.get('context') or {}).get('source_name') or '誘導虛耗'
+            self.pending_choice = {
+                'type': 'card_choice',
+                'choice_key': 'bait_exhaustion_target_discard',
+                'player_id': target_player.id,
+                'cards': list(target_player.hand),
+                'prompt': f"{source_name}：請選擇 1 張手牌棄掉。",
+                'source_name': source_name,
+                'context': {
+                    'initiator_player_id': player.id,
+                    'initiator_player_name': getattr(player, 'name', str(getattr(player, 'id', ''))),
+                    'target_player_id': target_player.id,
+                    'target_player_name': getattr(target_player, 'name', str(target_id)),
+                    **(choice.get('context') if isinstance(choice.get('context'), dict) else {}),
+                },
+            }
+            return {
+                'success': True,
+                'choice_index': index,
+                'target_id': target_id,
+                'selected': selected,
+                'choice_key': choice_key,
+                'target_player_name': getattr(target_player, 'name', str(target_id)),
+                'pending_choice': True,
+            }
+        if choice_key == 'red_support_target_player':
+            target_player = next((p for p in self.players if getattr(p, 'id', None) == target_id), None)
+            if target_player is None:
+                return {'error': 'Target player not found'}
+            context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
+            mode = choice.get('mode') or context.get('mode')
+            card = context.get('card')
+            if card is None:
+                return {'error': 'Support card context missing'}
+            if mode == 'resource':
+                for key, value in getattr(card, 'resources', {}).items():
+                    player.resources[key] += value
+            elif mode != 'action':
+                return {'error': 'Invalid support mode'}
+            target_player.deck.discard([card])
+            self.pending_choice = None
+            self.log(f"{player.name} passed 紅軍奧援 to {target_player.name}'s discard pile")
+            return {
+                'success': True,
+                'choice_index': index,
+                'target_id': target_id,
+                'selected': selected,
+                'choice_key': choice_key,
+                'target_player_name': getattr(target_player, 'name', str(target_id)),
+                'moved_to_player_id': getattr(target_player, 'id', None),
+                'moved_to_player_name': getattr(target_player, 'name', str(target_id)),
+            }
         self.pending_choice = None
         return {
             'success': True,
             'choice_index': index,
             'target_id': target_id,
             'selected': selected,
-            'choice_key': choice.get('choice_key'),
+            'choice_key': choice_key,
         }
 
     def _resolve_support_flow_choice(self, player, choice, index):
@@ -737,6 +880,8 @@ class Game:
         return region_entry.get('tier_1')
 
     def _resolve_support_card_effect(self, card_name, tier, region_index):
+        if card_name == '紅軍奧援':
+            return 'red_support_draw_and_pass', {'draw': 1}
         text = self._support_card_effect_text(card_name, tier, region_index)
         if not text:
             return None, None
@@ -782,6 +927,8 @@ class Game:
             if tier == 2:
                 return 'force_discard_near', {'count': 1, 'random': True}
             return 'force_discard_near', {'count': 1, 'random': False}
+        if card_name == '紅軍奧援':
+            return 'red_support_draw_and_pass', {'draw': 1}
         return 'text_only', {'text': text}
 
     def _interactive_support_build_towns(self, player, near_only=False):
@@ -934,6 +1081,33 @@ class Game:
             return {'success': True, 'town': town, 'target_player_id': target_player_id}
         return {'error': 'Unsupported support interaction result'}
 
+    def _resolve_red_support_target_choice(self, player, card, mode):
+        current_faction = self.faction_by_id.get(player.faction_id, {})
+        current_camp = current_faction.get('camp')
+        if current_camp != 'red_army':
+            return None
+        targets = [
+            {'id': getattr(other, 'id', None), 'label': getattr(other, 'name', str(getattr(other, 'id', '')))}
+            for other in self.players
+            if other is not player and self.faction_by_id.get(other.faction_id, {}).get('camp') != 'red_army'
+        ]
+        if not targets:
+            return None
+        self._set_pending_target_choice(
+            player,
+            'red_support_target_player',
+            targets,
+            '紅軍奧援：請選擇要將本牌放入哪位反共玩家的棄牌堆。',
+            source_name='紅軍奧援',
+            mode=mode,
+            context={
+                'card_name': '紅軍奧援',
+                'mode': mode,
+                'card': card,
+            },
+        )
+        return {'pending_choice': True, 'card_moved_out_of_play': True}
+
     def _execute_support_card(self, player, card):
         card_name = getattr(card, 'name', str(card))
         tier, region_index, matched = self._support_card_tier(player, card_name)
@@ -945,6 +1119,36 @@ class Game:
         if effect_type == 'gain_resource':
             player.resources['money'] += int(payload.get('money', 0) or 0)
             player.resources['propaganda'] += int(payload.get('propaganda', 0) or 0)
+        elif effect_type == 'red_support_draw_and_pass':
+            player.hand.extend(player.deck.draw(int(payload.get('draw', 0) or 0)))
+            current_faction = self.faction_by_id.get(player.faction_id, {})
+            current_camp = current_faction.get('camp')
+            pending_red_target = self._resolve_red_support_target_choice(player, card, mode='action')
+            if pending_red_target and pending_red_target.get('pending_choice'):
+                return {
+                    'tier': tier,
+                    'matched_rulers': matched,
+                    'effect_type': effect_type,
+                    'effect_text': self._support_card_effect_text(card_name, tier, region_index),
+                    'pending_choice': True,
+                    'card_moved_out_of_play': True,
+                }
+            if current_camp == 'red_army':
+                target = next((p for p in self.players if p is not player and self.faction_by_id.get(p.faction_id, {}).get('camp') != 'red_army'), None)
+            else:
+                target = next((p for p in self.players if p is not player and self.faction_by_id.get(p.faction_id, {}).get('camp') == 'red_army'), None)
+            if target is not None:
+                target.deck.discard([card])
+                self.log(f"{player.name} passed {card_name} to {target.name}'s discard pile")
+                return {
+                    'tier': tier,
+                    'matched_rulers': matched,
+                    'effect_type': effect_type,
+                    'effect_text': self._support_card_effect_text(card_name, tier, region_index),
+                    'moved_to_player_id': getattr(target, 'id', None),
+                    'moved_to_player_name': target.name,
+                    'card_moved_out_of_play': True,
+                }
         elif effect_type == 'draw':
             player.hand.extend(player.deck.draw(int(payload.get('count', 0) or 0)))
         elif effect_type == 'draw_then_discard':
@@ -1694,6 +1898,7 @@ class Game:
 
         if "optional_trash" in effects:
             player.hand.insert(0, Card("可垃圾牌", "command", {}))
+            player.hand.insert(1, Card("可移除手牌", "command", {}))
 
         if "discard_self" in effects:
             player.hand.extend([Card("自棄1", "command", {}), Card("自棄2", "command", {})])
@@ -1836,6 +2041,11 @@ class Game:
         card_name = pending_card_name
 
         if mode == "resource":
+            if getattr(played_card, 'name', str(played_card)) == '紅軍奧援':
+                support_resolution = self._resolve_red_support_target_choice(player, played_card, mode='resource')
+                if support_resolution and support_resolution.get('pending_choice'):
+                    self.log(f"{player.name} played {card_name} as resource")
+                    return {"success": True, "pending_choice": True}
             for key, value in getattr(played_card, 'resources', {}).items():
                 player.resources[key] += value
             if not self._return_borrowed_card_to_owner_topdeck(played_card):
@@ -1844,6 +2054,16 @@ class Game:
             return {"success": True}
 
         effective_type = getattr(played_card, "card_type", None)
+        if getattr(played_card, 'name', str(played_card)) == '紅軍奧援' and mode == "action":
+            support_resolution = self._resolve_red_support_target_choice(player, played_card, mode='action')
+            if support_resolution and support_resolution.get('pending_choice'):
+                player.hand.extend(player.deck.draw(1))
+                self.log(f"{player.name} played {card_name}")
+                return {"success": True, **support_resolution}
+            player.hand.extend(player.deck.draw(1))
+            player.deck.discard([played_card])
+            self.log(f"{player.name} played {card_name}")
+            return {"success": True}
         if self._player_has_ability(player, "國際線") and getattr(played_card, "card_type", None) == "money":
             effective_type = "propaganda"
 
@@ -1854,11 +2074,15 @@ class Game:
         if effective_type == 'support':
             support_resolution = self._execute_support_card(player, played_card)
             if support_resolution and support_resolution.get('pending_choice'):
+                if support_resolution.get('card_moved_out_of_play'):
+                    action_context['removed_current_card'] = True
                 if not action_context.get('removed_current_card'):
                     if not self._return_borrowed_card_to_owner_topdeck(played_card):
                         player.deck.discard([played_card])
                 self.log(f"{player.name} played {card_name}")
-                return {"success": True, "pending_choice": True}
+                return {"success": True, "pending_choice": True, **support_resolution}
+            if support_resolution and support_resolution.get('card_moved_out_of_play'):
+                action_context['removed_current_card'] = True
         elif effective_type == "money":
             self.turn_log["played_money_card"] = True
         if effective_type == "propaganda":
@@ -2369,6 +2593,7 @@ class Game:
                 'prompt': self.pending_choice.get('prompt'),
                 'source_name': self.pending_choice.get('source_name'),
                 'count': self.pending_choice.get('count'),
+                'mode': self.pending_choice.get('mode'),
                 'cards': [
                     {
                         'name': getattr(card.get('card'), 'name', str(card.get('card'))),
@@ -2377,6 +2602,19 @@ class Game:
                     } if isinstance(card, dict) else getattr(card, 'name', str(card))
                     for card in (self.pending_choice.get('cards') or [])
                 ],
+                'options': [
+                    dict(option) if isinstance(option, dict) else option
+                    for option in (self.pending_choice.get('options') or [])
+                ],
+                'towns': [
+                    dict(entry) if isinstance(entry, dict) else {'town': entry}
+                    for entry in (self.pending_choice.get('towns') or [])
+                ],
+                'targets': [
+                    dict(entry) if isinstance(entry, dict) else {'id': entry, 'label': str(entry)}
+                    for entry in (self.pending_choice.get('targets') or [])
+                ],
+                'step': self.pending_choice.get('step'),
             }
 
         return {
