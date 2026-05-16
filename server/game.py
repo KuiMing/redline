@@ -1534,13 +1534,11 @@ class Game:
         for idx, region in enumerate(entry.get("regions", []) or []):
             preferred = region.get("preferred_rulers", []) or []
             matched = [r for r in preferred if r in present]
-            tier_3_defined = bool(region.get("tier_3"))
-            if tier_3_defined and len(matched) >= 2:
-                tier = 3
-            elif matched:
+            tier = 1
+            if matched:
                 tier = 2
-            else:
-                tier = 1
+                if len(matched) >= len(preferred) and region.get("tier_3"):
+                    tier = 3
             if tier > best_tier or (tier == best_tier and best_matched == [] and matched):
                 best_tier = tier
                 best_idx = idx

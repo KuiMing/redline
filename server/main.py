@@ -1394,6 +1394,82 @@ def test_setup_red_support_proof(payload: dict):
     }
 
 
+@app.post("/test/setup-taiwan-support-proof")
+def test_setup_taiwan_support_proof(payload: dict):
+    tier = int(payload.get("tier", 2) or 2)
+    game_id = str(uuid.uuid4())
+    players = [(str(uuid.uuid4()), "player"), (str(uuid.uuid4()), "red")]
+    game = Game(players)
+
+    player = game.players[0]
+    red = game.players[1]
+
+    player.faction_id = payload.get("faction_id", "taiwan_green")
+    player.base = "臺北"
+    default_orgs = {
+        3: {"臺北": 1, "屏東": 1, "佬沃": 1, "馬祖": 1},
+        2: {"臺北": 1, "屏東": 1, "佬沃": 1, "馬祖": 1},
+        1: {"臺北": 1},
+    }
+    default_regions = {
+        3: ['東洋', '南洋'],
+        2: ['東洋'],
+        1: [],
+    }
+    player.organizations = payload.get("orgs") or default_orgs.get(tier, default_orgs[1])
+    player.resources = {"money": 0, "propaganda": 0}
+    player.hand = [game._make_support_card("臺灣奧援")]
+    player.deck.draw_pile = []
+    player.deck.discard_pile = []
+
+    red.faction_id = "red_army"
+    red.base = "北京"
+    default_enemy_orgs = {
+        3: {"北京": 1, "福州": 1},
+        2: {"北京": 1, "福州": 1},
+        1: {"北京": 1},
+    }
+    red.organizations = payload.get("enemy_orgs") or default_enemy_orgs.get(tier, default_enemy_orgs[1])
+    red.resources = {"money": 0, "propaganda": 0}
+    red.hand = []
+    red.deck.draw_pile = []
+    red.deck.discard_pile = []
+
+    original_resolver = game._support_card_tier
+
+    def forced_tier(target_player, card_name):
+        if getattr(target_player, 'id', None) == player.id and card_name == '臺灣奧援':
+            matched = payload.get('matched_regions')
+            if matched is None:
+                matched = default_regions.get(tier, default_regions[1])
+            return tier, 0, list(matched)
+        return original_resolver(target_player, card_name)
+
+    game._support_card_tier = forced_tier
+
+    game.current_player_index = 0
+    game.turn_phase = TurnPhase.ACTION
+    game.game_phase = GamePhase.MAIN
+    game.pending_base_choices = {}
+    game.id = game_id
+
+    manager.games[game_id] = game
+    manager.connections[game_id] = manager.connections.get(game_id, {})
+    lobby[game_id] = list(zip([p.id for p in game.players], [p.name for p in game.players]))
+    lobby_hosts[game_id] = player.id
+    lobby_factions[game_id] = {player.id: player.faction_id, red.id: red.faction_id}
+    lobby_bases[game_id] = {player.id: player.base, red.id: red.base}
+
+    return {
+        "success": True,
+        "game_id": game_id,
+        "player_id": player.id,
+        "tier": tier,
+        "players": [{"id": p.id, "name": p.name, "faction": p.faction_id} for p in game.players],
+        "state": game.state(),
+    }
+
+
 @app.post("/test/setup-bait-exhaustion-ui")
 def test_setup_bait_exhaustion_ui(payload: dict):
     game_id = str(uuid.uuid4())

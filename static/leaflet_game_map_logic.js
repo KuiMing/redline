@@ -49,6 +49,7 @@ const railLayer = L.layerGroup().addTo(map);
 const markerLayer = L.layerGroup().addTo(map);
 const highlightLayer = L.layerGroup().addTo(map);
 const buildHighlightLayer = L.layerGroup().addTo(map);
+const supportChoiceHighlightLayer = L.layerGroup().addTo(map);
 let labelMode = 'auto', showRoad = true, showRail = true;
 let currentMarkers = new Map();
 let currentSharedBadges = new Map();
@@ -59,6 +60,7 @@ let selectedMoveTargets = [];
 let selectedBuildTargets = [];
 let pendingMove = null;
 let lastResolvedMove = null;
+let supportChoiceHighlight = null;
 
 function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 function zoomProgress(z = map.getZoom()) { return clamp((z - 2) / 6, 0, 1); }
@@ -141,6 +143,46 @@ function resetMoveSelection() {
 function resetBuildSelection() {
   selectedBuildTargets = [];
   buildHighlightLayer.clearLayers();
+}
+
+function renderSupportChoiceHighlights() {
+  supportChoiceHighlightLayer.clearLayers();
+  if (!supportChoiceHighlight || supportChoiceHighlight.mode !== 'support-targets') return;
+  const towns = Array.isArray(supportChoiceHighlight.towns) ? supportChoiceHighlight.towns : [];
+  const bounds = [];
+  towns.forEach(entry => {
+    const townName = entry?.town;
+    const town = byName.get(townName);
+    if (!town) return;
+    bounds.push([town.lat, town.lon]);
+    L.circleMarker([town.lat, town.lon], {
+      radius: Math.max(14, markerRadius(map.getZoom()) + 6),
+      color: '#f97316',
+      weight: 4,
+      fillColor: '#fb923c',
+      fillOpacity: 0.22,
+      opacity: 1,
+    }).addTo(supportChoiceHighlightLayer).bindPopup(`${supportChoiceHighlight.sourceName || '可選目標'}：${entry?.label || townName}`);
+    L.circleMarker([town.lat, town.lon], {
+      radius: Math.max(7, markerRadius(map.getZoom()) + 1),
+      color: '#fff7ed',
+      weight: 2,
+      fillColor: '#f97316',
+      fillOpacity: 0.95,
+      opacity: 1,
+    }).addTo(supportChoiceHighlightLayer);
+  });
+  if (bounds.length) {
+    const hintEl = document.getElementById('interactionHint');
+    if (hintEl) {
+      hintEl.innerHTML = `${supportChoiceHighlight.sourceName || '當前選擇'}：<span class="hint-strong">${supportChoiceHighlight.prompt || '請依列表選擇目標。'}</span> 地圖上已用橘色外框標出可選城鎮。`;
+    }
+  }
+}
+
+function applySupportChoiceHighlight(payload) {
+  supportChoiceHighlight = payload || null;
+  renderSupportChoiceHighlights();
 }
 
 function finalizeMoveSelection(fromTown, toTown) {
@@ -454,6 +496,7 @@ function renderMovementHighlights(townName, options = {}) {
   }
   refreshDirectBuildUi();
   updateStatusPanel();
+  renderSupportChoiceHighlights();
   return highlightCount > 0 || sharedOnly || selectedBuildTargets.length > 0;
 }
 
@@ -552,6 +595,7 @@ function updateDynamicStyles() {
     if (!town || !badge.setLatLng || !badge.getElement) return;
     badge.setLatLng([town.lat, town.lon]);
   });
+  renderSupportChoiceHighlights();
 }
 
 function renderMap() {
@@ -627,6 +671,7 @@ function renderMap() {
   if (selectedTown) {
     renderMovementHighlights(selectedTown, { autoFocus: false });
   }
+  renderSupportChoiceHighlights();
 }
 
 function fitVisible() {
@@ -696,6 +741,13 @@ map.on('zoomend', () => {
 map.on('popupopen', e => {
   const node = [...currentMarkers.entries()].find(([name, marker]) => marker === e.popup._source);
   if (node) updateInfoPanel(node[0]);
+});
+
+window.addEventListener('message', (event) => {
+  if (event.origin !== window.location.origin) return;
+  const data = event.data || {};
+  if (data.type !== 'redline-choice-highlight') return;
+  applySupportChoiceHighlight(data.payload || null);
 });
 
 function applyGameStateToMap(state) {

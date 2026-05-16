@@ -16,6 +16,7 @@ let lobbySyncTimer = null;
 let latestLobbyState = null;
 let activeChoiceModal = null;
 let lastFactionActionResultKey = null;
+let lastSupportChoiceMapHighlightPayload = null;
 
 function resizeStage() {
   const scale = Math.min(
@@ -997,8 +998,23 @@ function closeEraAchievementModal() {
 
 function closeChoiceModal() {
   activeChoiceModal = null;
+  syncChoiceModalMapHighlight(null);
   const overlay = document.getElementById('choiceModal');
   if (overlay) overlay.style.display = 'none';
+}
+
+function syncChoiceModalMapHighlight(payload) {
+  lastSupportChoiceMapHighlightPayload = payload || null;
+  const frame = document.getElementById('strategicMapFrame');
+  if (!frame || !frame.contentWindow) return;
+  try {
+    frame.contentWindow.postMessage({
+      type: 'redline-choice-highlight',
+      payload: lastSupportChoiceMapHighlightPayload,
+    }, window.location.origin);
+  } catch (err) {
+    console.warn('Failed to sync choice highlight to map', err);
+  }
 }
 
 function renderBusinessNetworkResult(state) {
@@ -1067,17 +1083,21 @@ function renderChoiceModal(state) {
   const overlay = document.getElementById('choiceModal');
   const title = document.getElementById('choiceModalTitle');
   const desc = document.getElementById('choiceModalDesc');
+  const mapHint = document.getElementById('choiceModalMapHint');
   const cards = document.getElementById('choiceModalCards');
   const closeBtn = document.getElementById('closeChoiceModal');
-  if (!overlay || !title || !desc || !cards || !closeBtn) return;
+  if (!overlay || !title || !desc || !mapHint || !cards || !closeBtn) return;
 
   const choice = state.pending_choice || null;
   const me = (state.players || []).find(p => p.id === playerId) || null;
   const isMine = !!(choice && me && choice.player_id === me.id);
   if (!choice || !isMine) {
     overlay.style.display = 'none';
+    mapHint.style.display = 'none';
+    mapHint.textContent = '';
     cards.innerHTML = '';
     activeChoiceModal = null;
+    syncChoiceModalMapHighlight(null);
     return;
   }
 
@@ -1099,6 +1119,32 @@ function renderChoiceModal(state) {
   title.textContent = resolvedTitle;
   desc.innerHTML = `${escapeHtml(businessNetworkModalHeader?.desc || choice.prompt || '請進行選擇。')}${businessNetworkModalHeader?.helperHtml || ''}`;
   cards.innerHTML = businessNetworkState.html || '';
+
+  let mapHighlightPayload = null;
+  if (choice.choice_key === 'support_interaction' && (choice.step === 'target' || choiceType === 'target_choice')) {
+    const targets = (choice.targets || []).filter(entry => entry?.town);
+    if (targets.length) {
+      mapHint.style.display = 'block';
+      mapHint.textContent = '地圖會同步高亮可選目標；主操作仍以此處列表為準。你也可以切到「戰略地圖」查看對應城鎮外框。';
+      mapHighlightPayload = {
+        mode: 'support-targets',
+        sourceName: sourceName || resolvedTitle,
+        prompt: choice.prompt || '',
+        towns: targets.map(entry => ({
+          town: entry.town,
+          label: entry.label || entry.town,
+        })),
+      };
+      ensureStrategicMapMounted().catch(err => console.warn('Failed to mount strategic map for choice highlight', err));
+    } else {
+      mapHint.style.display = 'none';
+      mapHint.textContent = '';
+    }
+  } else {
+    mapHint.style.display = 'none';
+    mapHint.textContent = '';
+  }
+  syncChoiceModalMapHighlight(mapHighlightPayload);
 
   if (choiceType === 'card_choice' || choiceType === 'underground_party') {
     (choice.cards || []).forEach((cardEntry, index) => {
@@ -1342,15 +1388,24 @@ async function ensureStrategicMapMounted() {
     if (!strategicMapConnected()) {
       connectStrategicMapFrame();
     }
+    if (lastSupportChoiceMapHighlightPayload) {
+      setTimeout(() => syncChoiceModalMapHighlight(lastSupportChoiceMapHighlightPayload), 0);
+    }
     return;
   }
 
   frame.onload = () => {
     setTimeout(() => {
       connectStrategicMapFrame();
+      if (lastSupportChoiceMapHighlightPayload) {
+        syncChoiceModalMapHighlight(lastSupportChoiceMapHighlightPayload);
+      }
       setTimeout(() => {
         if (!strategicMapConnected()) {
           connectStrategicMapFrame();
+        }
+        if (lastSupportChoiceMapHighlightPayload) {
+          syncChoiceModalMapHighlight(lastSupportChoiceMapHighlightPayload);
         }
       }, 250);
     }, 120);
