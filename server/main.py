@@ -73,10 +73,10 @@ def _load_card_presentation_catalog():
         'kind': '奧援',
         'strength': '特殊',
         'cost_text': '起始牌',
-        'effect_text': '行動：抽1張牌，然後將本牌放入1位反共玩家的棄牌堆。\n資源：提供1資金+1宣傳，然後將本牌放入1位反共玩家的棄牌堆。',
-        'resource_text': '1資金 + 1宣傳',
+        'effect_text': '行動：抽1張牌。若您為紅軍，打出後將本牌放進任一反共陣營玩家棄牌堆；若您為反共陣營玩家，打出後將本牌放進紅軍棄牌堆。',
+        'resource_text': '提供1資金+1宣傳；打出後依陣營放入對應棄牌堆',
         'position_text': '起始牌',
-        'meaning_text': '紅軍專屬奧援卡',
+        'meaning_text': '會轉移至對立陣營棄牌堆的特殊奧援卡',
         'count_text': '1',
     }
     return catalog
