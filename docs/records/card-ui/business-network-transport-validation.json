@@ -1,6 +1,6 @@
 {
-  "game_id": "553d4448-ec9f-4763-93ef-d26f11002f96",
-  "player_id": "3c184401-e960-4ecd-ba8d-1528f1b8bd04",
+  "game_id": "e3b201a6-9bad-405b-bae5-31e98a33123d",
+  "player_id": "6f6b0ab2-f11c-4542-88bd-06b59cd4a3d9",
   "initial_purchase_area": [
     "宣傳家",
     "思想家",
@@ -21,7 +21,7 @@
   "pending_choice": {
     "type": "card_choice",
     "choice_key": "use_purchase_area_card",
-    "player_id": "3c184401-e960-4ecd-ba8d-1528f1b8bd04",
+    "player_id": "6f6b0ab2-f11c-4542-88bd-06b59cd4a3d9",
     "prompt": "企業人脈：選擇購買區正面朝上的 1 張牌，視同打出該牌。",
     "source_name": "企業人脈",
     "count": null,
