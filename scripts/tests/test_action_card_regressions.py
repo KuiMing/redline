@@ -120,6 +120,102 @@ def test_red_support_requires_red_army_to_choose_rebel_discard_target_before_res
     assert g.pending_choice is None
 
 
+def test_taiwan_support_tier3_requires_target_choice_and_builds_in_same_town_after_resolution():
+    g = make_game()
+    actor = g.current_player()
+    enemy = g.players[1]
+
+    actor.faction_id = 'taiwan_green'
+    actor.base = '佬沃'
+    actor.organizations = {'屏東': 1, '佬沃': 1, '馬祖': 1}
+    actor.hand = [g._make_support_card('臺灣奧援')]
+    actor.resources = {'money': 0, 'propaganda': 0}
+    actor.deck.draw_pile = []
+    actor.deck.discard_pile = []
+
+    enemy.faction_id = 'red_army'
+    enemy.base = '福州'
+    enemy.organizations = {'福州': 1}
+    enemy.deck.discard_pile = []
+
+    original_resolver = g._support_card_tier
+    def forced_tier(player, card_name):
+        if getattr(player, 'id', None) == actor.id and card_name == '臺灣奧援':
+            return 3, 0, ['東洋', '南洋']
+        return original_resolver(player, card_name)
+    g._support_card_tier = forced_tier
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('pending_choice') is True, result
+    assert result.get('tier') == 3
+    assert result.get('effect_type') == 'interactive_dissolve_and_build'
+    assert g.pending_choice and g.pending_choice['type'] == 'support_flow_choice'
+    assert g.pending_choice['step'] == 'target'
+    assert g.pending_choice['source_name'] == '臺灣奧援'
+    assert g.pending_choice['context']['effect_type'] == 'interactive_dissolve_and_build'
+    assert g.pending_choice['targets'] == [{
+        'id': f'{enemy.id}::福州',
+        'label': 'P2｜福州',
+        'player_id': enemy.id,
+        'town': '福州',
+        'requires_self_sacrifice': False,
+    }]
+
+    state_choice = g.state()['pending_choice']
+    assert state_choice['type'] == 'support_flow_choice'
+    assert state_choice['step'] == 'target'
+    assert state_choice['source_name'] == '臺灣奧援'
+    assert state_choice['targets'] == [{
+        'id': f'{enemy.id}::福州',
+        'label': 'P2｜福州',
+        'player_id': enemy.id,
+        'town': '福州',
+        'requires_self_sacrifice': False,
+    }]
+
+    resolved = g.resolve_pending_choice(actor.id, 0)
+
+    assert resolved.get('success'), resolved
+    assert enemy.organizations.get('福州', 0) == 0
+    assert actor.organizations['福州'] == 1
+    assert g.pending_choice is None
+
+
+
+def test_taiwan_support_tier2_requires_target_choice_without_auto_resolution():
+    g = make_game()
+    actor = g.current_player()
+    enemy = g.players[1]
+
+    actor.faction_id = 'taiwan_green'
+    actor.base = '屏東'
+    actor.organizations = {'屏東': 1, '佬沃': 1, '馬祖': 1}
+    actor.hand = [g._make_support_card('臺灣奧援')]
+
+    enemy.faction_id = 'red_army'
+    enemy.base = '福州'
+    enemy.organizations = {'福州': 1}
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('pending_choice') is True, result
+    assert result.get('tier') == 2
+    assert result.get('effect_type') == 'interactive_dissolve_many_near'
+    assert g.pending_choice['type'] == 'support_flow_choice'
+    assert g.pending_choice['step'] == 'target'
+    assert g.pending_choice['context']['effect_type'] == 'interactive_dissolve_many_near'
+    assert actor.organizations == {'屏東': 1, '佬沃': 1, '馬祖': 1}
+    assert enemy.organizations == {'福州': 1}
+
+    resolved = g.resolve_pending_choice(actor.id, 0)
+
+    assert resolved.get('success'), resolved
+    assert enemy.organizations.get('福州', 0) == 0
+    assert actor.organizations == {'屏東': 1, '佬沃': 1, '馬祖': 1}
+
+
+
 def test_lure_exhaustion_draws_then_prompts_target_choice_after_self_remove():
     g = make_game()
     p1, p2 = g.players
