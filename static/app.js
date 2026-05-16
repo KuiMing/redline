@@ -1082,14 +1082,21 @@ function renderChoiceModal(state) {
   }
 
   const choiceType = choice.type;
-  const sourceName = choice.source_name || choice.choice_key || '';
+  const choiceKey = choice.choice_key || '';
+  const sourceName = choice.source_name || choiceKey || '';
   const requiredCount = Math.max(1, Number(choice.count || 1));
   const businessNetworkState = renderBusinessNetworkResult(state);
   const businessNetworkModalHeader = renderBusinessNetworkModalHeader(state);
+  const mimicLikeTargetChoice = choiceType === 'target_choice';
+  const targetChoiceTitleMap = {
+    bait_exhaustion_target: '誘導虛耗',
+  };
+  const resolvedTitle = businessNetworkModalHeader?.title
+    || (mimicLikeTargetChoice
+      ? (targetChoiceTitleMap[choiceKey] || sourceName || '選擇目標玩家')
+      : (choiceType === 'underground_party' ? '地下黨' : (sourceName || '卡牌選擇')));
   activeChoiceModal = choiceType;
-  title.textContent = businessNetworkModalHeader?.title || (choiceType === 'underground_party'
-    ? '地下黨'
-    : (sourceName || '卡牌選擇'));
+  title.textContent = resolvedTitle;
   desc.innerHTML = `${escapeHtml(businessNetworkModalHeader?.desc || choice.prompt || '請進行選擇。')}${businessNetworkModalHeader?.helperHtml || ''}`;
   cards.innerHTML = businessNetworkState.html || '';
 
@@ -1192,6 +1199,8 @@ function renderChoiceModal(state) {
       cards.appendChild(btn);
     });
   } else if (choiceType === 'target_choice' || (choiceType === 'support_flow_choice' && choice.step === 'target')) {
+    const row = document.createElement('div');
+    row.className = 'modal-choice-row';
     (choice.targets || []).forEach((entry, index) => {
       const btn = document.createElement('button');
       btn.className = 'modal-choice-btn';
@@ -1201,8 +1210,9 @@ function renderChoiceModal(state) {
         sendAction('resolve_choice', { index });
         closeChoiceModal();
       };
-      cards.appendChild(btn);
+      row.appendChild(btn);
     });
+    cards.appendChild(row);
   }
 
   closeBtn.onclick = closeChoiceModal;
