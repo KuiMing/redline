@@ -99,8 +99,8 @@
 - [note] 天方奧援：部分實作。
   - 依據：`force_discard_near` 已做。
   - 問題：目前自動找第一個有手牌的對手；缺指定對手 / 範圍確認 UI。
-- [note] 紅軍奧援：未完整實作。
-  - 依據：runtime type / support pool 有列入，但 `_resolve_support_card_effect` 尚無專屬 effect 分支，最後落到 text fallback。
+- [note] 紅軍奧援：已實作，缺 live UI 點擊與截圖驗證。
+  - 依據：`_resolve_support_card_effect`／目標玩家選擇 pending choice／support pass to target discard 已完成，另有 `scripts/tests/test_action_card_regressions.py` 覆蓋。
 - [note] 已實作，但缺 UI 證據。
   - Action：合作談判、乘勝追擊、擴大戰果、網羅人才、地下黨、走漏風聲、武裝者、武裝小隊、武裝集團、派遣間諜、內應間諜、行動預告、行動募資。
   - Support：英美奧援、歐洲奧援、南洋奧援、印度奧援。
