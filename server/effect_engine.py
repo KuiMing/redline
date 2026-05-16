@@ -251,21 +251,53 @@ class EffectEngine:
                 player.hand.extend(drawn)
             return
 
-        # ✅ Optional trash (MVP: trash the last card in hand if any)
+        # ✅ Optional trash (choose current card or one hand card)
         if etype == "optional_trash":
             context = context or {}
             current_card = context.get('current_card')
+            removable = []
             if current_card is not None:
-                returned = game._return_removed_card_to_purchase_supply(current_card)
-                if returned:
-                    context['removed_current_card'] = True
-                    game.log(f"{player.name} removed {getattr(current_card, 'name', str(current_card))} and it returned to {returned.get('zone')}")
-            elif player.hand:
-                trashed = player.hand.pop()
-                returned = game._return_removed_card_to_purchase_supply(trashed)
-                game.log(f"{player.name} removed {getattr(trashed, 'name', str(trashed))}")
-                if returned:
-                    game.log(f"{getattr(trashed, 'name', str(trashed))} returned to {returned.get('zone')}")
+                removable.append({
+                    'card': current_card,
+                    'zone': 'current_card',
+                    'zone_label': '剛打出的牌',
+                    'removes_current_card': True,
+                })
+            for card in list(player.hand):
+                removable.append({
+                    'card': card,
+                    'zone': 'hand',
+                    'zone_label': '手牌',
+                    'removes_current_card': False,
+                })
+            if not removable:
+                return
+            if hasattr(game, '_set_pending_card_choice'):
+                source_name = context.get('card_name') if context else None
+                prompt = f"{source_name or '誘導虛耗'}：你可以移除誘導虛耗這張卡牌。"
+                targets = [
+                    {
+                        'id': getattr(other, 'id', None),
+                        'label': getattr(other, 'name', str(getattr(other, 'id', '目標玩家'))),
+                    }
+                    for other in getattr(game, 'players', [])
+                    if other != player and getattr(other, 'id', None) is not None
+                ]
+                game._set_pending_card_choice(
+                    player,
+                    'optional_trash',
+                    removable,
+                    prompt,
+                    source_name=source_name or '誘導虛耗',
+                    context=context,
+                    followup_target_choice={
+                        'choice_key': 'bait_exhaustion_target',
+                        'prompt': '誘導虛耗：請選擇 1 位玩家棄掉 1 張手牌。',
+                        'targets': targets,
+                        'source_name': source_name or '誘導虛耗',
+                    },
+                )
+                return {'pending_choice': True}
             return
 
         # ✅ Build via card effect (MVP: reinforce current base or first owned legal town)
