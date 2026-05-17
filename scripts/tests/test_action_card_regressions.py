@@ -172,7 +172,7 @@ def test_north_support_tier1_sacrifices_the_selected_own_org_before_dissolving_e
 
     actor.faction_id = 'liberals'
     actor.base = '巴黎'
-    actor.organizations = {'巴黎': 1, '慕尼黑': 1}
+    actor.organizations = {'巴黎': 1, '日內瓦': 1}
     actor.hand = [g._make_support_card('北國奧援')]
     actor.resources = {'money': 0, 'propaganda': 0}
 
@@ -187,8 +187,8 @@ def test_north_support_tier1_sacrifices_the_selected_own_org_before_dissolving_e
     assert result.get('effect_type') == 'interactive_dissolve_self_and_enemy'
     assert g.pending_choice['step'] == 'sacrifice_town'
     assert g.pending_choice['towns'] == [{
-        'town': '慕尼黑',
-        'label': '慕尼黑（可瓦解鄰近敵方組織）',
+        'town': '日內瓦',
+        'label': '日內瓦（可瓦解鄰近敵方組織）',
         'target_count': 1,
     }]
 
@@ -203,7 +203,7 @@ def test_north_support_tier1_sacrifices_the_selected_own_org_before_dissolving_e
         'label': 'P2｜慕尼黑',
         'player_id': enemy.id,
         'town': '慕尼黑',
-        'sacrifice_town': '慕尼黑',
+        'sacrifice_town': '日內瓦',
     }]
 
     resolved = g.resolve_pending_choice(actor.id, 0)

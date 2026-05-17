@@ -1422,7 +1422,7 @@ def test_setup_support_proof(payload: dict):
         "北國奧援": {
             3: {"海參崴": 1},
             2: {"巴黎": 1, "沖繩": 1},
-            1: {"巴黎": 1, "慕尼黑": 1},
+            1: {"巴黎": 1, "日內瓦": 1},
         },
     }
     default_regions_by_card = {
