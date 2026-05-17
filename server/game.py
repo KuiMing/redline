@@ -925,6 +925,8 @@ class Game:
             return self._resolve_target_choice(player, choice, index)
         if choice.get('type') == 'support_flow_choice':
             return self._resolve_support_flow_choice(player, choice, index)
+        if choice.get('type') == 'reaction_choice':
+            return self._resolve_reaction_choice(player, choice, index)
         return {'error': 'Unsupported pending choice type'}
 
     def _support_card_effect_text(self, card_name, tier, region_index):
@@ -1616,6 +1618,7 @@ class Game:
             "faction_action_used": False,
             "india_flag_money_triggered": False,
             "purchased_cards_this_turn": [],
+            "reaction_prompted_player_ids": [],
         }
 
     def _resolve_ability_ref(self, ability):
@@ -2175,6 +2178,142 @@ class Game:
             return True
         return False
 
+    def _reaction_prompt_candidates(self, acting_player, played_card):
+        cost = self._card_purchase_cost(played_card) or {}
+        candidates = []
+        for player in self.players:
+            if player is acting_player:
+                continue
+            if player.id in set(self.turn_log.get('reaction_prompted_player_ids') or []):
+                continue
+            cards = []
+            for hand_index, hand_card in enumerate(getattr(player, 'hand', []) or []):
+                name = getattr(hand_card, 'name', str(hand_card))
+                if name not in {'爆料黑幕', '產業滲透', '情報網'}:
+                    continue
+                if not self._reaction_card_cancel_predicate(name, cost):
+                    continue
+                cards.append({'name': name, 'card_index': hand_index})
+            if cards:
+                candidates.append({'player': player, 'cards': cards})
+        return candidates
+
+    def _resume_reaction_pending_action(self, choice, reaction_context=None):
+        player = choice.get('acting_player')
+        played_card = choice.get('played_card')
+        card_name = choice.get('played_card_name')
+        effective_type = choice.get('effective_type')
+        action_context = dict(choice.get('action_context') or {})
+        action_context['current_card'] = played_card
+        action_context['card_name'] = card_name
+        support_resolution = choice.get('support_resolution')
+
+        if reaction_context is not None:
+            action_context['reaction_context'] = reaction_context
+            action_context['card_canceled'] = True
+
+        if effective_type != 'support':
+            if card_name in getattr(self.action_engine, 'cards', {}):
+                if not action_context.get('card_canceled'):
+                    action_result = self.action_engine.execute(card_name, player, self, context=action_context, include_resources=False)
+                    if isinstance(action_result, dict) and action_result.get('pending_choice'):
+                        if not action_context.get('removed_current_card'):
+                            if not self._return_borrowed_card_to_owner_topdeck(played_card):
+                                player.deck.discard([played_card])
+                        self.log(f"{player.name} played {card_name}")
+                        return {"success": True, "pending_choice": True}
+
+        self._resolve_reaction_context(reaction_context)
+
+        for ability in self._player_effective_abilities(player):
+            if not isinstance(ability, dict):
+                continue
+            name = ability.get("name")
+            if name == "商貿組織" and effective_type == "money" and not self.turn_log.get("faction_first_money_triggered"):
+                self.turn_log["faction_first_money_triggered"] = True
+                player.hand.extend(player.deck.draw(1))
+                self.log(f"{player.name} triggered 商貿組織 and drew 1 card")
+            elif name in {"民族調和", "星星之火"} and effective_type == "propaganda" and not self.turn_log.get("faction_first_propaganda_triggered"):
+                self.turn_log["faction_first_propaganda_triggered"] = True
+                player.hand.extend(player.deck.draw(1))
+                self.log(f"{player.name} triggered {name} and drew 1 card")
+            elif name == "人同此心" and effective_type == "propaganda" and not self.turn_log.get("faction_first_prop_gain_triggered"):
+                self.turn_log["faction_first_prop_gain_triggered"] = True
+                player.resources["propaganda"] += 2
+                self.log(f"{player.name} triggered 人同此心 and gained 2 propaganda")
+            elif name in {"基金會", "共合會"} and effective_type == "money" and not self.turn_log.get("faction_first_money_gain_triggered"):
+                self.turn_log["faction_first_money_gain_triggered"] = True
+                player.resources["money"] += 2
+                self.log(f"{player.name} triggered {name} and gained 2 money")
+            elif name == "展現實力" and not self.turn_log.get("combo_reward_triggered"):
+                if len(self.turn_log.get("played_nonstarter_names", [])) >= 3:
+                    self.turn_log["combo_reward_triggered"] = True
+                    player.resources["money"] += 3
+                    self.log(f"{player.name} triggered 展現實力 and gained 3 money")
+
+        if self.pending_choice:
+            if not action_context.get('removed_current_card'):
+                if not self._return_borrowed_card_to_owner_topdeck(played_card):
+                    player.deck.discard([played_card])
+            self.log(f"{player.name} played {card_name}")
+            return {"success": True, "pending_choice": True}
+
+        if not action_context.get('removed_current_card'):
+            if not self._return_borrowed_card_to_owner_topdeck(played_card):
+                player.deck.discard([played_card])
+        self.log(f"{player.name} played {card_name}")
+        return {"success": True}
+
+    def _set_pending_reaction_choice(self, reacting_player, acting_player, played_card, card_name, candidates, effective_type, action_context, support_resolution=None):
+        prompted = self.turn_log.setdefault('reaction_prompted_player_ids', [])
+        if reacting_player.id not in prompted:
+            prompted.append(reacting_player.id)
+        self.pending_choice = {
+            'type': 'reaction_choice',
+            'choice_key': 'cancel_other_player_action',
+            'player_id': reacting_player.id,
+            'acting_player': acting_player,
+            'acting_player_id': acting_player.id,
+            'acting_player_name': acting_player.name,
+            'played_card': played_card,
+            'played_card_name': card_name,
+            'effective_type': effective_type,
+            'action_context': dict(action_context or {}),
+            'support_resolution': support_resolution,
+            'cards': list(candidates),
+            'prompt': f'{acting_player.name} 打出 {card_name}。是否要取消對方的行動？',
+            'source_name': '取消反應',
+        }
+        return {'pending_choice': True}
+
+    def _resolve_reaction_choice(self, player, choice, index):
+        cards = choice.get('cards') or []
+        if index is None:
+            return {'error': 'Invalid choice index'}
+        if index == 0:
+            self.pending_choice = None
+            result = self._resume_reaction_pending_action(choice, reaction_context=None)
+            result['skipped_reaction'] = True
+            return result
+        card_choice_index = index - 1
+        if card_choice_index < 0 or card_choice_index >= len(cards):
+            return {'error': 'Invalid choice index'}
+        selected = cards[card_choice_index]
+        reaction_context = self._build_reaction_context(
+            choice.get('acting_player'),
+            choice.get('played_card'),
+            choice.get('played_card_name'),
+            'action',
+            {'player_id': player.id, 'card_index': selected.get('card_index')},
+        )
+        if reaction_context is None:
+            return {'error': 'Invalid reaction card'}
+        self.pending_choice = None
+        result = self._resume_reaction_pending_action(choice, reaction_context=reaction_context)
+        result['reaction_card'] = reaction_context.get('reaction_card_name')
+        result['canceled_card'] = reaction_context.get('canceled_card_name')
+        return result
+
     def _build_reaction_context(self, player, played_card, card_name, mode, reaction):
         if mode != 'action' or not reaction:
             return None
@@ -2218,7 +2357,10 @@ class Game:
             return
         reaction_player = reaction_context['reacting_player']
         reaction_card_name = reaction_context.get('reaction_card_name') or '爆料黑幕'
-        self.action_engine.execute(reaction_card_name, reaction_player, self, context=reaction_context, include_resources=False)
+        if reaction_card_name == '情報網':
+            self.effect_engine.execute({'type': 'cancel_card'}, reaction_player, self, context=reaction_context)
+        else:
+            self.action_engine.execute(reaction_card_name, reaction_player, self, context=reaction_context, include_resources=False)
         return_borrowed = self._return_borrowed_card_to_owner_topdeck(reaction_context['reaction_card'])
         if not return_borrowed and reaction_context['reaction_card'] not in reaction_player.deck.discard_pile:
             reaction_player.deck.discard([reaction_context['reaction_card']])
@@ -2314,6 +2456,20 @@ class Game:
                 played_names.append(card_name)
 
         reaction_context = self._build_reaction_context(player, played_card, card_name, mode, reaction)
+        if reaction_context is None and reaction is None:
+            reaction_candidates = self._reaction_prompt_candidates(player, played_card)
+            if reaction_candidates:
+                first_candidate = reaction_candidates[0]
+                return self._set_pending_reaction_choice(
+                    first_candidate['player'],
+                    player,
+                    played_card,
+                    card_name,
+                    first_candidate['cards'],
+                    effective_type,
+                    action_context,
+                    support_resolution=support_resolution,
+                )
 
         if reaction_context is not None:
             action_context['reaction_context'] = reaction_context
@@ -2810,8 +2966,11 @@ class Game:
                 'source_name': self.pending_choice.get('source_name'),
                 'count': self.pending_choice.get('count'),
                 'mode': self.pending_choice.get('mode'),
+                'acting_player_id': self.pending_choice.get('acting_player_id'),
+                'acting_player_name': self.pending_choice.get('acting_player_name'),
+                'played_card_name': self.pending_choice.get('played_card_name'),
                 'cards': [
-                    {
+                    dict(card) if isinstance(card, dict) and 'name' in card and 'card' not in card else {
                         'name': getattr(card.get('card'), 'name', str(card.get('card'))),
                         'zone': card.get('zone'),
                         'zone_label': card.get('zone_label'),

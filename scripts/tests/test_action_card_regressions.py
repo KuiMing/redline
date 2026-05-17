@@ -655,6 +655,73 @@ def test_intel_network_reaction_does_not_trigger_on_resource_play():
     assert g.turn_log.get('canceled_card') is None
 
 
+def test_first_other_player_action_prompts_cancel_reaction_once_with_all_available_cards():
+    g = make_game()
+    actor, reactor = g.players
+    actor.hand = [card(g, '點燃熱情')]
+    actor.deck.draw_pile = [Card('ShouldNotDrawYet', 'command', {})]
+    reactor.hand = [card(g, '情報網'), card(g, '爆料黑幕'), card(g, '產業滲透')]
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('pending_choice') is True, result
+    assert g.pending_choice and g.pending_choice['type'] == 'reaction_choice'
+    assert g.pending_choice['choice_key'] == 'cancel_other_player_action'
+    assert g.pending_choice['player_id'] == reactor.id
+    assert g.pending_choice['acting_player_id'] == actor.id
+    assert g.pending_choice['played_card_name'] == '點燃熱情'
+    assert [entry['name'] for entry in g.pending_choice['cards']] == ['情報網', '爆料黑幕', '產業滲透']
+    assert names(actor.hand) == []
+    assert names(actor.deck.discard_pile) == []
+    assert names(actor.deck.draw_pile) == ['ShouldNotDrawYet']
+
+    state_choice = g.state()['pending_choice']
+    assert state_choice['type'] == 'reaction_choice'
+    assert [entry['name'] for entry in state_choice['cards']] == ['情報網', '爆料黑幕', '產業滲透']
+    assert state_choice['prompt'] == 'P1 打出 點燃熱情。是否要取消對方的行動？'
+
+    skipped = g.resolve_pending_choice(reactor.id, 0)
+    assert skipped.get('success'), skipped
+    assert skipped.get('skipped_reaction') is True
+    assert names(actor.hand) == ['ShouldNotDrawYet']
+    assert names(actor.deck.discard_pile) == ['點燃熱情']
+    assert names(reactor.hand) == ['情報網', '爆料黑幕', '產業滲透']
+
+    actor.hand = [card(g, '領導')]
+    actor.deck.draw_pile = [Card('ShouldDrawWithoutSecondPrompt', 'command', {})]
+    second = g.play_card(0, mode='action')
+
+    assert second.get('success'), second
+    assert not second.get('pending_choice')
+    assert g.pending_choice is None
+    assert names(actor.hand) == ['ShouldDrawWithoutSecondPrompt']
+    assert names(reactor.hand) == ['情報網', '爆料黑幕', '產業滲透']
+
+
+def test_cancel_reaction_prompt_can_select_one_reaction_card_to_cancel_action():
+    g = make_game()
+    actor, reactor = g.players
+    actor.hand = [card(g, '領導')]
+    actor.deck.draw_pile = [Card('ShouldNotDraw', 'command', {})]
+    reactor.hand = [card(g, '情報網'), card(g, '爆料黑幕')]
+    reactor.deck.discard_pile = []
+
+    prompted = g.play_card(0, mode='action')
+    assert prompted.get('pending_choice') is True, prompted
+
+    resolved = g.resolve_pending_choice(reactor.id, 1)
+
+    assert resolved.get('success'), resolved
+    assert resolved.get('canceled_card') == '領導'
+    assert resolved.get('reaction_card') == '情報網'
+    assert g.pending_choice is None
+    assert names(actor.hand) == []
+    assert names(actor.deck.draw_pile) == ['ShouldNotDraw']
+    assert names(actor.deck.discard_pile) == ['領導']
+    assert names(reactor.hand) == ['爆料黑幕']
+    assert names(reactor.deck.discard_pile)[-1] == '情報網'
+    assert g.turn_log.get('canceled_card') is True
+
 
 def test_tianfang_support_tier1_prompts_actor_target_choice_then_target_discard_choice():
     g = make_game()

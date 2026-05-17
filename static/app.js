@@ -1237,6 +1237,34 @@ function renderChoiceModal(state) {
       };
       cards.appendChild(btn);
     });
+  } else if (choiceType === 'reaction_choice') {
+    const row = document.createElement('div');
+    row.className = 'modal-choice-row';
+
+    const skipBtn = document.createElement('button');
+    skipBtn.className = 'modal-choice-btn';
+    skipBtn.type = 'button';
+    skipBtn.textContent = '不取消';
+    skipBtn.onclick = () => {
+      sendAction('resolve_choice', { index: 0 });
+    };
+    row.appendChild(skipBtn);
+
+    (choice.cards || []).forEach((cardEntry, cardIndex) => {
+      const btn = document.createElement('button');
+      btn.className = 'modal-choice-btn';
+      btn.type = 'button';
+      const cardName = typeof cardEntry === 'string' ? cardEntry : (cardEntry?.name || `取消牌 ${cardIndex + 1}`);
+      btn.textContent = `使用 ${cardName} 取消`;
+      btn.onclick = () => {
+        sendAction('resolve_choice', { index: cardIndex + 1 });
+      };
+      row.appendChild(btn);
+    });
+    cards.appendChild(row);
+    closeBtn.onclick = () => {
+      sendAction('resolve_choice', { index: 0 });
+    };
   } else if (choiceType === 'town_choice' || (choiceType === 'support_flow_choice' && choice.step === 'town')) {
     (choice.towns || []).forEach((entry, index) => {
       const btn = document.createElement('button');
@@ -1266,7 +1294,9 @@ function renderChoiceModal(state) {
     cards.appendChild(row);
   }
 
-  closeBtn.onclick = closeChoiceModal;
+  if (choiceType !== 'reaction_choice') {
+    closeBtn.onclick = closeChoiceModal;
+  }
   overlay.style.display = 'flex';
 }
 
