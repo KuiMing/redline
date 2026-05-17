@@ -832,7 +832,7 @@ class Game:
 
     def _resolve_support_flow_choice(self, player, choice, index):
         step = choice.get('step')
-        if step == 'town':
+        if step in {'town', 'sacrifice_town'}:
             result = self._resolve_town_choice(player, choice, index)
         elif step == 'target':
             result = self._resolve_target_choice(player, choice, index)
@@ -965,6 +965,39 @@ class Game:
                 })
         return targets
 
+    def _interactive_support_dissolve_targets_near_town(self, player, origin_town):
+        reachable = self._towns_within_steps([origin_town], max_steps=1)
+        targets = []
+        for other in self.players:
+            if other is player:
+                continue
+            for town, count in (other.organizations or {}).items():
+                if count <= 0 or town not in reachable:
+                    continue
+                targets.append({
+                    'id': f'{getattr(other, "id", other.name)}::{town}',
+                    'label': f'{other.name}｜{town}',
+                    'player_id': getattr(other, 'id', None),
+                    'town': town,
+                    'sacrifice_town': origin_town,
+                })
+        return targets
+
+    def _interactive_support_sacrifice_towns(self, player):
+        towns = []
+        for town, count in (player.organizations or {}).items():
+            if count <= 0:
+                continue
+            targets = self._interactive_support_dissolve_targets_near_town(player, town)
+            if not targets:
+                continue
+            towns.append({
+                'town': town,
+                'label': f'{town}（可瓦解鄰近敵方組織）',
+                'target_count': len(targets),
+            })
+        return towns
+
     def _start_support_interaction(self, player, card_name, tier, region_index, effect_type, payload):
         effect_text = self._support_card_effect_text(card_name, tier, region_index)
         base_context = {
@@ -1018,16 +1051,16 @@ class Game:
             )
             return {'pending_choice': True, **result}
         if effect_type == 'interactive_dissolve_self_and_enemy':
-            targets = self._interactive_support_dissolve_targets(player, require_self_sacrifice=True)
-            if not targets:
+            towns = self._interactive_support_sacrifice_towns(player)
+            if not towns:
                 return None
             result = self._set_pending_support_flow_choice(
                 player,
                 'support_interaction',
-                'target',
-                f'{card_name}：選擇 1 個要瓦解的鄰近敵方組織；結算前先移除己方 1 個組織。',
+                'sacrifice_town',
+                f'{card_name}：先選擇 1 個要瓦解的己方組織。',
                 source_name=card_name,
-                targets=targets,
+                towns=towns,
                 context=base_context,
             )
             return {'pending_choice': True, **result}
@@ -1058,6 +1091,29 @@ class Game:
             player.organizations[town] = player.organizations.get(town, 0) + 1
             self.log(f"{player.name} resolved {card_name} and built in {town}")
             return {'success': True, 'town': town}
+        if effect_type == 'interactive_dissolve_self_and_enemy' and choice.get('step') == 'sacrifice_town':
+            sacrifice_town = result.get('town')
+            if not sacrifice_town or (player.organizations or {}).get(sacrifice_town, 0) <= 0:
+                return {'error': 'Invalid own organization to sacrifice'}
+            targets = self._interactive_support_dissolve_targets_near_town(player, sacrifice_town)
+            if not targets:
+                return {'error': 'No enemy organization within range of sacrificed organization'}
+            player.organizations[sacrifice_town] -= 1
+            if player.organizations[sacrifice_town] <= 0:
+                del player.organizations[sacrifice_town]
+            self.log(f"{player.name} dissolved 1 own organization at {sacrifice_town} for {card_name}")
+            next_context = dict(context)
+            next_context['sacrifice_town'] = sacrifice_town
+            self._set_pending_support_flow_choice(
+                player,
+                'support_interaction',
+                'target',
+                f'{card_name}：選擇 {sacrifice_town} 1 格內的 1 個敵方組織瓦解。',
+                source_name=card_name,
+                targets=targets,
+                context=next_context,
+            )
+            return {'success': True, 'pending_choice': True, 'town': sacrifice_town}
         if effect_type in {'interactive_dissolve_many_near', 'interactive_dissolve_self_and_enemy', 'interactive_dissolve_and_build'}:
             selected = result.get('selected') or {}
             target_player_id = selected.get('player_id')
@@ -1066,12 +1122,11 @@ class Game:
             if target_player is None or not town:
                 return {'error': 'Invalid dissolve target'}
             if effect_type == 'interactive_dissolve_self_and_enemy':
-                own_town = next((name for name, count in (player.organizations or {}).items() if count > 0), None)
-                if own_town is None:
-                    return {'error': 'No own organization to sacrifice'}
-                player.organizations[own_town] -= 1
-                if player.organizations[own_town] <= 0:
-                    del player.organizations[own_town]
+                sacrifice_town = context.get('sacrifice_town')
+                if not sacrifice_town:
+                    return {'error': 'Missing sacrificed organization'}
+                if town not in self._towns_within_steps([sacrifice_town], max_steps=1):
+                    return {'error': 'Target organization is not within range of sacrificed organization'}
             dissolve_result = self.dissolve_organization(player, target_player, town, source='support_card')
             if dissolve_result.get('error'):
                 return dissolve_result

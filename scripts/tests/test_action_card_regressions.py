@@ -185,18 +185,31 @@ def test_north_support_tier1_sacrifices_the_selected_own_org_before_dissolving_e
     assert result.get('pending_choice') is True, result
     assert result.get('tier') == 1
     assert result.get('effect_type') == 'interactive_dissolve_self_and_enemy'
+    assert g.pending_choice['step'] == 'sacrifice_town'
+    assert g.pending_choice['towns'] == [{
+        'town': '慕尼黑',
+        'label': '慕尼黑（可瓦解鄰近敵方組織）',
+        'target_count': 1,
+    }]
+
+    sacrificed = g.resolve_pending_choice(actor.id, 0)
+
+    assert sacrificed.get('success'), sacrificed
+    assert sacrificed.get('pending_choice') is True, sacrificed
+    assert actor.organizations == {'巴黎': 1}
+    assert g.pending_choice['step'] == 'target'
     assert g.pending_choice['targets'] == [{
         'id': f'{enemy.id}::慕尼黑',
         'label': 'P2｜慕尼黑',
         'player_id': enemy.id,
         'town': '慕尼黑',
-        'requires_self_sacrifice': True,
+        'sacrifice_town': '慕尼黑',
     }]
 
     resolved = g.resolve_pending_choice(actor.id, 0)
 
     assert resolved.get('success'), resolved
-    assert actor.organizations == {'慕尼黑': 1}
+    assert actor.organizations == {'巴黎': 1}
     assert enemy.organizations.get('慕尼黑', 0) == 0
 
 
