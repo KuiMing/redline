@@ -1394,54 +1394,93 @@ def test_setup_red_support_proof(payload: dict):
     }
 
 
-@app.post("/test/setup-taiwan-support-proof")
-def test_setup_taiwan_support_proof(payload: dict):
+@app.post("/test/setup-support-proof")
+def test_setup_support_proof(payload: dict):
+    support_name = payload.get("support_name", "臺灣奧援")
     tier = int(payload.get("tier", 2) or 2)
     game_id = str(uuid.uuid4())
-    players = [(str(uuid.uuid4()), "player"), (str(uuid.uuid4()), "red")]
+    players = [(str(uuid.uuid4()), payload.get("player_name", "player")), (str(uuid.uuid4()), payload.get("enemy_name", "red"))]
     game = Game(players)
 
     player = game.players[0]
-    red = game.players[1]
+    enemy = game.players[1]
 
-    player.faction_id = payload.get("faction_id", "taiwan_green")
-    player.base = "臺北"
-    default_orgs = {
-        3: {"臺北": 1, "屏東": 1, "佬沃": 1, "馬祖": 1},
-        2: {"臺北": 1, "屏東": 1, "佬沃": 1, "馬祖": 1},
-        1: {"臺北": 1},
+    default_player_faction = {
+        "臺灣奧援": "taiwan_green",
+        "北國奧援": "liberals",
     }
-    default_regions = {
-        3: ['東洋', '南洋'],
-        2: ['東洋'],
-        1: [],
+    default_player_base = {
+        "臺灣奧援": "臺北",
+        "北國奧援": "海參崴",
     }
-    player.organizations = payload.get("orgs") or default_orgs.get(tier, default_orgs[1])
-    player.resources = {"money": 0, "propaganda": 0}
-    player.hand = [game._make_support_card("臺灣奧援")]
+    default_orgs_by_card = {
+        "臺灣奧援": {
+            3: {"臺北": 1, "屏東": 1, "佬沃": 1, "馬祖": 1},
+            2: {"臺北": 1, "屏東": 1, "佬沃": 1, "馬祖": 1},
+            1: {"東京": 1},
+        },
+        "北國奧援": {
+            3: {"海參崴": 1},
+            2: {"巴黎": 1, "沖繩": 1},
+            1: {"巴黎": 1, "慕尼黑": 1},
+        },
+    }
+    default_regions_by_card = {
+        "臺灣奧援": {
+            3: ['臺灣'],
+            2: ['東洋', '南洋'],
+            1: ['東洋'],
+        },
+        "北國奧援": {
+            3: ['北國'],
+            2: ['歐洲', '東洋'],
+            1: ['歐洲'],
+        },
+    }
+    default_enemy_orgs_by_card = {
+        "臺灣奧援": {
+            3: {"北京": 1, "福州": 1},
+            2: {"北京": 1, "福州": 1},
+            1: {"北京": 1},
+        },
+        "北國奧援": {
+            3: {"北京": 1, "伯力": 1},
+            2: {"北京": 1, "福州": 1},
+            1: {"慕尼黑": 1},
+        },
+    }
+    default_enemy_base = {
+        "臺灣奧援": "北京",
+        "北國奧援": "北京",
+    }
+    default_enemy_faction = {
+        "臺灣奧援": "red_army",
+        "北國奧援": "red_army",
+    }
+
+    player.faction_id = payload.get("faction_id", default_player_faction.get(support_name, "taiwan_green"))
+    player.base = payload.get("base", default_player_base.get(support_name, "臺北"))
+    player.organizations = payload.get("orgs") or default_orgs_by_card.get(support_name, {}).get(tier, {})
+    player.resources = payload.get("resources") or {"money": 0, "propaganda": 0}
+    player.hand = [game._make_support_card(support_name)]
     player.deck.draw_pile = []
     player.deck.discard_pile = []
 
-    red.faction_id = "red_army"
-    red.base = "北京"
-    default_enemy_orgs = {
-        3: {"北京": 1, "福州": 1},
-        2: {"北京": 1, "福州": 1},
-        1: {"北京": 1},
-    }
-    red.organizations = payload.get("enemy_orgs") or default_enemy_orgs.get(tier, default_enemy_orgs[1])
-    red.resources = {"money": 0, "propaganda": 0}
-    red.hand = []
-    red.deck.draw_pile = []
-    red.deck.discard_pile = []
+    enemy.faction_id = payload.get("enemy_faction_id", default_enemy_faction.get(support_name, "red_army"))
+    enemy.base = payload.get("enemy_base", default_enemy_base.get(support_name, "北京"))
+    enemy.organizations = payload.get("enemy_orgs") or default_enemy_orgs_by_card.get(support_name, {}).get(tier, {})
+    enemy.resources = {"money": 0, "propaganda": 0}
+    enemy.hand = []
+    enemy.deck.draw_pile = []
+    enemy.deck.discard_pile = []
 
     original_resolver = game._support_card_tier
 
     def forced_tier(target_player, card_name):
-        if getattr(target_player, 'id', None) == player.id and card_name == '臺灣奧援':
+        if getattr(target_player, 'id', None) == player.id and card_name == support_name:
             matched = payload.get('matched_regions')
             if matched is None:
-                matched = default_regions.get(tier, default_regions[1])
+                matched = default_regions_by_card.get(support_name, {}).get(tier, [])
             return tier, 0, list(matched)
         return original_resolver(target_player, card_name)
 
@@ -1457,17 +1496,25 @@ def test_setup_taiwan_support_proof(payload: dict):
     manager.connections[game_id] = manager.connections.get(game_id, {})
     lobby[game_id] = list(zip([p.id for p in game.players], [p.name for p in game.players]))
     lobby_hosts[game_id] = player.id
-    lobby_factions[game_id] = {player.id: player.faction_id, red.id: red.faction_id}
-    lobby_bases[game_id] = {player.id: player.base, red.id: red.base}
+    lobby_factions[game_id] = {player.id: player.faction_id, enemy.id: enemy.faction_id}
+    lobby_bases[game_id] = {player.id: player.base, enemy.id: enemy.base}
 
     return {
         "success": True,
         "game_id": game_id,
         "player_id": player.id,
         "tier": tier,
+        "support_name": support_name,
         "players": [{"id": p.id, "name": p.name, "faction": p.faction_id} for p in game.players],
         "state": game.state(),
     }
+
+
+@app.post("/test/setup-taiwan-support-proof")
+def test_setup_taiwan_support_proof(payload: dict):
+    scoped = dict(payload or {})
+    scoped.setdefault("support_name", "臺灣奧援")
+    return test_setup_support_proof(scoped)
 
 
 @app.post("/test/setup-bait-exhaustion-ui")

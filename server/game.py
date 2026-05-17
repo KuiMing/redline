@@ -1528,6 +1528,7 @@ class Game:
         if not entry:
             return 1, None, []
         present = self._player_ruler_presence(player)
+        support_region = entry.get("support_region")
         best_tier = 1
         best_idx = 0 if (entry.get("regions", []) or []) else None
         best_matched = []
@@ -1535,10 +1536,10 @@ class Game:
             preferred = region.get("preferred_rulers", []) or []
             matched = [r for r in preferred if r in present]
             tier = 1
-            if matched:
+            if support_region and support_region in present and region.get("tier_3"):
+                tier = 3
+            elif len(matched) >= len(preferred) and preferred:
                 tier = 2
-                if len(matched) >= len(preferred) and region.get("tier_3"):
-                    tier = 3
             if tier > best_tier or (tier == best_tier and best_matched == [] and matched):
                 best_tier = tier
                 best_idx = idx

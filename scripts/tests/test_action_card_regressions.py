@@ -120,6 +120,86 @@ def test_red_support_requires_red_army_to_choose_rebel_discard_target_before_res
     assert g.pending_choice is None
 
 
+def test_taiwan_support_tier1_gains_propaganda_without_opening_target_choice():
+    g = make_game()
+    actor = g.current_player()
+    enemy = g.players[1]
+
+    actor.faction_id = 'taiwan_green'
+    actor.base = '東京'
+    actor.organizations = {'東京': 1}
+    actor.hand = [g._make_support_card('臺灣奧援')]
+    actor.resources = {'money': 0, 'propaganda': 0}
+
+    enemy.faction_id = 'red_army'
+    enemy.base = '北京'
+    enemy.organizations = {'北京': 1}
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success') is True, result
+    assert actor.resources == {'money': 0, 'propaganda': 1}
+    assert g.pending_choice is None
+
+
+def test_north_support_uses_support_region_for_tier3_and_requires_full_pair_for_tier2():
+    g = make_game()
+    actor = g.current_player()
+
+    actor.faction_id = 'liberals'
+    actor.base = '海參崴'
+
+    actor.organizations = {'海參崴': 1}
+    tier3 = g._support_card_tier(actor, '北國奧援')
+    assert tier3[0] == 3
+    assert g._resolve_support_card_effect('北國奧援', tier3[0], tier3[1]) == ('interactive_dissolve_many_near', {'count': 2})
+
+    actor.organizations = {'巴黎': 1}
+    tier1 = g._support_card_tier(actor, '北國奧援')
+    assert tier1[0] == 1
+    assert g._resolve_support_card_effect('北國奧援', tier1[0], tier1[1]) == ('interactive_dissolve_self_and_enemy', {'count': 1})
+
+    actor.organizations = {'巴黎': 1, '沖繩': 1}
+    tier2 = g._support_card_tier(actor, '北國奧援')
+    assert tier2 == (2, 0, ['歐洲', '東洋'])
+    assert g._resolve_support_card_effect('北國奧援', tier2[0], tier2[1]) == ('interactive_dissolve_many_near', {'count': 1})
+
+
+def test_north_support_tier1_sacrifices_the_selected_own_org_before_dissolving_enemy():
+    g = make_game()
+    actor = g.current_player()
+    enemy = g.players[1]
+
+    actor.faction_id = 'liberals'
+    actor.base = '巴黎'
+    actor.organizations = {'巴黎': 1, '慕尼黑': 1}
+    actor.hand = [g._make_support_card('北國奧援')]
+    actor.resources = {'money': 0, 'propaganda': 0}
+
+    enemy.faction_id = 'red_army'
+    enemy.base = '慕尼黑'
+    enemy.organizations = {'慕尼黑': 1}
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('pending_choice') is True, result
+    assert result.get('tier') == 1
+    assert result.get('effect_type') == 'interactive_dissolve_self_and_enemy'
+    assert g.pending_choice['targets'] == [{
+        'id': f'{enemy.id}::慕尼黑',
+        'label': 'P2｜慕尼黑',
+        'player_id': enemy.id,
+        'town': '慕尼黑',
+        'requires_self_sacrifice': True,
+    }]
+
+    resolved = g.resolve_pending_choice(actor.id, 0)
+
+    assert resolved.get('success'), resolved
+    assert actor.organizations == {'慕尼黑': 1}
+    assert enemy.organizations.get('慕尼黑', 0) == 0
+
+
 def test_taiwan_support_tier3_requires_target_choice_and_builds_in_same_town_after_resolution():
     g = make_game()
     actor = g.current_player()
@@ -189,13 +269,13 @@ def test_taiwan_support_tier2_requires_target_choice_without_auto_resolution():
     enemy = g.players[1]
 
     actor.faction_id = 'taiwan_green'
-    actor.base = '屏東'
-    actor.organizations = {'屏東': 1, '佬沃': 1, '馬祖': 1}
+    actor.base = '東京'
+    actor.organizations = {'東京': 1, '佬沃': 1}
     actor.hand = [g._make_support_card('臺灣奧援')]
 
     enemy.faction_id = 'red_army'
-    enemy.base = '福州'
-    enemy.organizations = {'福州': 1}
+    enemy.base = '大阪'
+    enemy.organizations = {'大阪': 1}
 
     result = g.play_card(0, mode='action')
 
@@ -205,14 +285,14 @@ def test_taiwan_support_tier2_requires_target_choice_without_auto_resolution():
     assert g.pending_choice['type'] == 'support_flow_choice'
     assert g.pending_choice['step'] == 'target'
     assert g.pending_choice['context']['effect_type'] == 'interactive_dissolve_many_near'
-    assert actor.organizations == {'屏東': 1, '佬沃': 1, '馬祖': 1}
-    assert enemy.organizations == {'福州': 1}
+    assert actor.organizations == {'東京': 1, '佬沃': 1}
+    assert enemy.organizations == {'大阪': 1}
 
     resolved = g.resolve_pending_choice(actor.id, 0)
 
     assert resolved.get('success'), resolved
-    assert enemy.organizations.get('福州', 0) == 0
-    assert actor.organizations == {'屏東': 1, '佬沃': 1, '馬祖': 1}
+    assert enemy.organizations.get('大阪', 0) == 0
+    assert actor.organizations == {'東京': 1, '佬沃': 1}
 
 
 
