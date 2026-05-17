@@ -589,6 +589,11 @@ def test_intel_network_can_choose_dissolve_branch_instead_of_default_internal_co
     assert g.pending_choice['choice_key'] == 'choose_one'
     resolved = g.resolve_pending_choice(p1.id, 1)
     assert resolved.get('success'), resolved
+    assert resolved.get('pending_choice') is True
+    assert g.pending_choice and g.pending_choice['choice_key'] == 'intel_network_dissolve_target'
+    assert [entry['label'] for entry in g.pending_choice['targets']] == ['P2｜天津']
+    target_resolved = g.resolve_pending_choice(p1.id, 0)
+    assert target_resolved.get('success'), target_resolved
     assert p2.organizations.get('天津', 0) == 0
     assert names(p2.deck.discard_pile).count('內鬥') == 0
 
@@ -608,6 +613,46 @@ def test_intel_network_can_choose_cancel_branch_without_running_other_branches()
     assert resolved.get('success'), resolved
     assert names(p2.deck.discard_pile).count('內鬥') == 0
     assert g.turn_log.get('canceled_propaganda_card') is None
+
+
+
+def test_intel_network_reaction_cancels_other_player_action_without_bonus_draw():
+    g = make_game()
+    actor, reactor = g.players
+    actor.hand = [card(g, '領導')]
+    actor.deck.draw_pile = [Card('ShouldNotDraw', 'command', {})]
+    reactor.hand = [card(g, '情報網')]
+    reactor.deck.draw_pile = [Card('IntelShouldNotDrawBonus', 'command', {})]
+    reactor.deck.discard_pile = []
+
+    result = g.play_card(0, mode='action', reaction={'player_id': reactor.id, 'card_index': 0})
+
+    assert result.get('success'), result
+    assert names(actor.hand) == []
+    assert names(actor.deck.discard_pile) == ['領導']
+    assert names(reactor.hand) == []
+    assert names(reactor.deck.discard_pile)[-1] == '情報網'
+    assert names(reactor.hand) == []
+    assert g.turn_log.get('canceled_card') is True
+    assert g.turn_log.get('canceled_propaganda_card') is None
+    assert g.turn_log.get('canceled_money_cost_card') is None
+
+
+
+def test_intel_network_reaction_does_not_trigger_on_resource_play():
+    g = make_game()
+    actor, reactor = g.players
+    actor.hand = [card(g, '領導')]
+    actor.resources = {'money': 0, 'propaganda': 0}
+    reactor.hand = [card(g, '情報網')]
+
+    result = g.play_card(0, mode='resource', reaction={'player_id': reactor.id, 'card_index': 0})
+
+    assert result.get('success'), result
+    assert actor.resources == {'money': 0, 'propaganda': 1}
+    assert names(reactor.hand) == ['情報網']
+    assert names(reactor.deck.discard_pile) == []
+    assert g.turn_log.get('canceled_card') is None
 
 
 

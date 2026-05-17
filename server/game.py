@@ -2166,6 +2166,15 @@ class Game:
         if len(self.action_log) > 100:
             self.action_log.pop(0)
 
+    def _reaction_card_cancel_predicate(self, reaction_card_name, canceled_cost):
+        if reaction_card_name == '爆料黑幕':
+            return True
+        if reaction_card_name == '產業滲透':
+            return int((canceled_cost or {}).get('money', 0) or 0) > 0
+        if reaction_card_name == '情報網':
+            return True
+        return False
+
     def _build_reaction_context(self, player, played_card, card_name, mode, reaction):
         if mode != 'action' or not reaction:
             return None
@@ -2178,11 +2187,11 @@ class Game:
             return None
         reaction_card = reaction_player.hand[reaction_card_index]
         reaction_card_name = getattr(reaction_card, 'name', str(reaction_card))
-        if reaction_card_name not in {'爆料黑幕', '產業滲透'}:
+        if reaction_card_name not in {'爆料黑幕', '產業滲透', '情報網'}:
             return None
 
         cost = self._card_purchase_cost(played_card) or {}
-        if reaction_card_name == '產業滲透' and int(cost.get('money', 0) or 0) <= 0:
+        if not self._reaction_card_cancel_predicate(reaction_card_name, cost):
             return None
 
         reaction_played = reaction_player.hand.pop(reaction_card_index)
@@ -2194,6 +2203,7 @@ class Game:
             'canceled_card_name': card_name,
             'canceled_card_cost': cost,
         }
+        self.turn_log['canceled_card'] = True
         has_propaganda_cost = int(cost.get('propaganda', 0) or 0) > 0
         has_money_cost = int(cost.get('money', 0) or 0) > 0
         if reaction_card_name == '爆料黑幕':
