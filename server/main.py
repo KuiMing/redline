@@ -1470,7 +1470,8 @@ def test_setup_support_proof(payload: dict):
     enemy.base = payload.get("enemy_base", default_enemy_base.get(support_name, "北京"))
     enemy.organizations = payload.get("enemy_orgs") or default_enemy_orgs_by_card.get(support_name, {}).get(tier, {})
     enemy.resources = {"money": 0, "propaganda": 0}
-    enemy.hand = []
+    enemy_hand_names = payload.get("enemy_hand") or []
+    enemy.hand = [Card(name, "command", {}) for name in enemy_hand_names]
     enemy.deck.draw_pile = []
     enemy.deck.discard_pile = []
 
@@ -1498,6 +1499,12 @@ def test_setup_support_proof(payload: dict):
     lobby_hosts[game_id] = player.id
     lobby_factions[game_id] = {player.id: player.faction_id, enemy.id: enemy.faction_id}
     lobby_bases[game_id] = {player.id: player.base, enemy.id: enemy.base}
+
+    auto_resolve_target_index = payload.get("auto_resolve_target_index")
+    if auto_resolve_target_index is not None:
+        played = game.play_card(0, mode='action')
+        if played.get('pending_choice'):
+            game.resolve_pending_choice(player.id, int(auto_resolve_target_index))
 
     return {
         "success": True,

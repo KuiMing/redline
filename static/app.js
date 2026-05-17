@@ -1226,7 +1226,6 @@ function renderChoiceModal(state) {
       btn.textContent = option?.label || `選項 ${index + 1}`;
       btn.onclick = () => {
         sendAction('resolve_choice', { index });
-        closeChoiceModal();
       };
       cards.appendChild(btn);
     });
@@ -1240,7 +1239,6 @@ function renderChoiceModal(state) {
       btn.textContent = `${town}${meta}`;
       btn.onclick = () => {
         sendAction('resolve_choice', { index });
-        closeChoiceModal();
       };
       cards.appendChild(btn);
     });
@@ -1254,7 +1252,6 @@ function renderChoiceModal(state) {
       btn.textContent = entry?.label || entry?.town || entry?.id || `目標 ${index + 1}`;
       btn.onclick = () => {
         sendAction('resolve_choice', { index });
-        closeChoiceModal();
       };
       row.appendChild(btn);
     });

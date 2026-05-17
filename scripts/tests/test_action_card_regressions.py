@@ -567,6 +567,82 @@ def test_intel_network_can_choose_cancel_branch_without_running_other_branches()
 
 
 
+def test_tianfang_support_tier1_prompts_actor_target_choice_then_target_discard_choice():
+    g = make_game()
+    p1, p2 = g.players
+    p1.hand = [g._make_support_card('天方奧援')]
+    p1.organizations = {'北京': 1}
+    p2.organizations = {'天津': 1}
+    p2.hand = [Card('EnemyCardA', 'command', {}), Card('EnemyCardB', 'command', {})]
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    assert result.get('pending_choice') is True
+    assert g.pending_choice and g.pending_choice['type'] == 'support_flow_choice'
+    assert g.pending_choice['step'] == 'target'
+    assert g.pending_choice['context']['effect_type'] == 'force_discard_near'
+    assert g.pending_choice['context']['effect_payload'] == {'count': 1, 'random': False}
+    assert [entry['label'] for entry in g.pending_choice['targets']] == ['P2']
+
+    state_choice = g.state()['pending_choice']
+    assert state_choice['type'] == 'support_flow_choice'
+    assert state_choice['targets'] == [{'id': p2.id, 'label': 'P2', 'player_id': p2.id}]
+    assert state_choice['source_name'] == '天方奧援'
+
+    target_resolved = g.resolve_pending_choice(p1.id, 0)
+
+    assert target_resolved.get('success'), target_resolved
+    assert target_resolved.get('pending_choice') is True
+    assert target_resolved.get('target_player_id') == p2.id
+    assert g.pending_choice and g.pending_choice['type'] == 'card_choice'
+    assert g.pending_choice['choice_key'] == 'tianfang_support_target_discard'
+    assert g.pending_choice['player_id'] == p2.id
+    assert names(g.pending_choice['cards']) == ['EnemyCardA', 'EnemyCardB']
+
+    target_state_choice = g.state()['pending_choice']
+    assert target_state_choice['type'] == 'card_choice'
+    assert target_state_choice['choice_key'] == 'tianfang_support_target_discard'
+    assert target_state_choice['player_id'] == p2.id
+    assert target_state_choice['cards'] == ['EnemyCardA', 'EnemyCardB']
+    assert target_state_choice['source_name'] == '天方奧援'
+
+    discard_resolved = g.resolve_pending_choice(p2.id, 1)
+
+    assert discard_resolved.get('success'), discard_resolved
+    assert discard_resolved.get('discarded_card') == 'EnemyCardB'
+    assert discard_resolved.get('target_player_name') == 'P2'
+    assert names(p2.hand) == ['EnemyCardA']
+    assert names(p2.deck.discard_pile) == ['EnemyCardB']
+
+
+
+def test_tianfang_support_tier3_discards_two_random_cards_from_chosen_target_in_range():
+    g = make_game()
+    p1, p2 = g.players
+    p1.hand = [g._make_support_card('天方奧援')]
+    p1.faction_id = 'india'
+    p1.organizations = {'喀布爾': 1, '拉瓦爾品第': 1}
+    p2.organizations = {'杜尚貝': 1}
+    p2.hand = [Card('EnemyCardA', 'command', {}), Card('EnemyCardB', 'command', {})]
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    assert result.get('pending_choice') is True
+    assert result.get('tier') == 3
+    assert g.pending_choice and g.pending_choice['context']['effect_payload'] == {'count': 2, 'random': True}
+
+    resolved = g.resolve_pending_choice(p1.id, 0)
+
+    assert resolved.get('success'), resolved
+    assert resolved.get('target_player_id') == p2.id
+    assert sorted(resolved.get('discarded_cards')) == ['EnemyCardA', 'EnemyCardB']
+    assert names(p2.hand) == []
+    assert sorted(names(p2.deck.discard_pile)) == ['EnemyCardA', 'EnemyCardB']
+
+
+
 def test_divide_adds_internal_conflict_to_other_players_not_self():
     g = make_game()
     p1, p2 = g.players

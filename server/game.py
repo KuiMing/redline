@@ -646,6 +646,25 @@ class Game:
                 'choice_key': choice_key,
             }
 
+        if choice_key == 'tianfang_support_target_discard':
+            if chosen not in player.hand:
+                return {'error': 'Chosen card not in hand'}
+            player.hand.remove(chosen)
+            player.deck.discard([chosen])
+            self.pending_choice = None
+            choice_context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
+            initiator_name = choice_context.get('initiator_player_name') or '其他玩家'
+            target_name = choice_context.get('target_player_name') or player.name
+            source_name = choice.get('source_name') or choice_context.get('source_name') or '天方奧援'
+            self.log(f"{initiator_name} used {source_name} to force {target_name} to discard {getattr(chosen, 'name', str(chosen))}")
+            return {
+                'success': True,
+                'discarded_card': getattr(chosen, 'name', str(chosen)),
+                'target_player_name': target_name,
+                'initiator_player_name': initiator_name,
+                'choice_key': choice_key,
+            }
+
         return {'error': 'Unsupported pending choice type'}
 
     def _resolve_multi_card_choice(self, player, choice, indices):
@@ -983,6 +1002,22 @@ class Game:
                 })
         return targets
 
+    def _interactive_support_discard_targets_near(self, player):
+        targets = []
+        for other in self.players:
+            if other is player:
+                continue
+            if not getattr(other, 'hand', None):
+                continue
+            if not self._player_has_org_within_steps_of_player(player, other, max_steps=1):
+                continue
+            targets.append({
+                'id': getattr(other, 'id', None),
+                'label': getattr(other, 'name', str(getattr(other, 'id', ''))),
+                'player_id': getattr(other, 'id', None),
+            })
+        return targets
+
     def _interactive_support_sacrifice_towns(self, player):
         towns = []
         for town, count in (player.organizations or {}).items():
@@ -1078,6 +1113,23 @@ class Game:
                 context=base_context,
             )
             return {'pending_choice': True, **result}
+        if effect_type == 'force_discard_near':
+            targets = self._interactive_support_discard_targets_near(player)
+            if not targets:
+                return None
+            count = int((payload or {}).get('count', 0) or 0)
+            random_pick = bool((payload or {}).get('random'))
+            discard_text = f'隨機棄 {count} 張手牌' if random_pick else '選 1 張手牌棄掉'
+            result = self._set_pending_support_flow_choice(
+                player,
+                'support_interaction',
+                'target',
+                f'{card_name}：選擇 1 位己方組織 1 格內的玩家，令其{discard_text}。',
+                source_name=card_name,
+                targets=targets,
+                context=base_context,
+            )
+            return {'pending_choice': True, **result}
         return None
 
     def _resolve_support_interaction_result(self, player, result, choice):
@@ -1134,6 +1186,53 @@ class Game:
                 player.organizations[town] = player.organizations.get(town, 0) + 1
                 self.log(f"{player.name} resolved {card_name} and built in {town} after dissolve")
             return {'success': True, 'town': town, 'target_player_id': target_player_id}
+        if effect_type == 'force_discard_near':
+            selected = result.get('selected') or {}
+            target_player_id = selected.get('player_id') or selected.get('id')
+            target_player = next((p for p in self.players if getattr(p, 'id', None) == target_player_id), None)
+            if target_player is None:
+                return {'error': 'Invalid discard target'}
+            if not getattr(target_player, 'hand', None):
+                return {'error': 'Target player has no hand cards'}
+            if not self._player_has_org_within_steps_of_player(player, target_player, max_steps=1):
+                return {'error': 'Target player is not within range'}
+            count = int(context.get('effect_payload', {}).get('count', 0) or 0)
+            random_pick = bool(context.get('effect_payload', {}).get('random'))
+            if random_pick:
+                discarded_names = []
+                for _ in range(min(count, len(target_player.hand))):
+                    idx = random.randrange(len(target_player.hand))
+                    discarded = target_player.hand.pop(idx)
+                    discarded_names.append(getattr(discarded, 'name', str(discarded)))
+                    target_player.deck.discard([discarded])
+                self.log(f"{player.name} resolved {card_name} targeting {target_player.name} and discarded {len(discarded_names)} random card(s)")
+                return {
+                    'success': True,
+                    'target_player_id': target_player_id,
+                    'target_player_name': getattr(target_player, 'name', str(target_player_id)),
+                    'discarded_cards': discarded_names,
+                }
+            self.pending_choice = {
+                'type': 'card_choice',
+                'choice_key': 'tianfang_support_target_discard',
+                'player_id': target_player.id,
+                'cards': list(target_player.hand),
+                'prompt': f"{card_name}：請選擇 1 張手牌棄掉。",
+                'source_name': card_name,
+                'context': {
+                    'initiator_player_id': player.id,
+                    'initiator_player_name': getattr(player, 'name', str(getattr(player, 'id', ''))),
+                    'target_player_id': target_player.id,
+                    'target_player_name': getattr(target_player, 'name', str(target_player_id)),
+                    **context,
+                },
+            }
+            return {
+                'success': True,
+                'pending_choice': True,
+                'target_player_id': target_player_id,
+                'target_player_name': getattr(target_player, 'name', str(target_player_id)),
+            }
         return {'error': 'Unsupported support interaction result'}
 
     def _resolve_red_support_target_choice(self, player, card, mode):
