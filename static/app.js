@@ -1813,6 +1813,11 @@ function renderPlayerStatusCards(state) {
     const money = player.resources?.money ?? 0;
     const propaganda = player.resources?.propaganda ?? 0;
     const handCount = player.hand?.length ?? 0;
+    const discardPile = player.discard_pile || [];
+    const discardCount = player.discard_count ?? discardPile.length;
+    const discardPreview = discardPile.length
+      ? discardPile.map(card => `<span class="player-status-discard-card">${escapeHtml(card)}</span>`).join('')
+      : '<span class="player-status-discard-empty">無</span>';
     const moves = player.moves_left ?? 0;
     const isCurrent = state.current_player === player.name;
     const factionName = factionDisplayName(player.faction);
@@ -1837,7 +1842,12 @@ function renderPlayerStatusCards(state) {
           <div class="player-status-stat"><span>資金</span><strong>${money}</strong></div>
           <div class="player-status-stat"><span>宣傳</span><strong>${propaganda}</strong></div>
           <div class="player-status-stat"><span>手牌</span><strong>${handCount}</strong></div>
+          <div class="player-status-stat"><span>棄牌</span><strong>${discardCount}</strong></div>
           <div class="player-status-stat"><span>移動</span><strong>${moves}</strong></div>
+        </div>
+        <div class="player-status-discard-preview">
+          <span class="player-status-discard-label">棄牌堆</span>
+          <div class="player-status-discard-list">${discardPreview}</div>
         </div>
       </article>`;
   }).join('');

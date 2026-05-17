@@ -568,10 +568,14 @@ def test_intel_network_first_branch_adds_internal_conflict_without_running_other
     assert result.get('success'), result
     resolved = g.resolve_pending_choice(p1.id, 0)
     assert resolved.get('success'), resolved
-    assert names(p1.deck.discard_pile).count('內鬥') == 1
-    assert names(p2.deck.discard_pile).count('內鬥') == 0
-    assert names(p3.deck.discard_pile).count('內鬥') == 0
-    assert names(p4.deck.discard_pile).count('內鬥') == 0
+    assert names(p1.deck.discard_pile) == ['情報網']
+    assert names(p2.deck.discard_pile) == ['棄牌A', '內鬥']
+    assert names(p3.deck.discard_pile) == ['棄牌B', '內鬥']
+    assert names(p4.deck.discard_pile) == ['棄牌C', '內鬥']
+    state_players = {player['name']: player for player in g.state()['players']}
+    assert state_players['P2']['discard_pile'] == ['棄牌A', '內鬥']
+    assert state_players['P3']['discard_pile'] == ['棄牌B', '內鬥']
+    assert state_players['P4']['discard_pile'] == ['棄牌C', '內鬥']
     assert p2.organizations.get('天津', 0) == 1
 
 
@@ -1709,3 +1713,32 @@ if __name__ == '__main__':
             print(f'FAIL {test.__name__}: {exc}')
     if failures:
         raise SystemExit(1)
+
+
+def test_intel_network_first_option_adds_internal_conflict_to_up_to_three_other_players_only():
+    g = Game([('p1', 'viewer'), ('p2', 'enemyA'), ('p3', 'enemyB'), ('p4', 'enemyC')])
+    g.game_phase = GamePhase.MAIN
+    g.turn_phase = TurnPhase.ACTION
+    g.current_player_index = 0
+    g.pending_base_choices = {}
+    actor, enemy_a, enemy_b, enemy_c = g.players
+    actor.faction_id = 'red_army'
+    for player in g.players[1:]:
+        player.faction_id = 'hong_kong'
+    actor.hand = [card(g, '情報網')]
+    for player in g.players:
+        player.deck.discard_pile = []
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('pending_choice') is True, result
+    assert g.pending_choice and g.pending_choice['type'] == 'option_choice'
+
+    resolved = g.resolve_pending_choice(actor.id, 0)
+
+    assert resolved.get('success'), resolved
+    assert names(actor.deck.discard_pile) == ['情報網']
+    assert names(enemy_a.deck.discard_pile) == ['內鬥']
+    assert names(enemy_b.deck.discard_pile) == ['內鬥']
+    assert names(enemy_c.deck.discard_pile) == ['內鬥']
+    assert g.pending_choice is None

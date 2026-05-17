@@ -447,6 +447,8 @@ class EffectEngine:
                 target = next((p for p in game.players if getattr(p, "id", None) == target_id), None)
                 if target is not None:
                     targets = [target]
+            elif context.get("card_name") == "情報網" and context.get("choice_index") == 0:
+                targets = [other for other in game.players if other != player][:3]
             if not targets:
                 targets = [player]
             for target in targets:

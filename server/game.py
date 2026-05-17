@@ -3022,6 +3022,7 @@ class Game:
                     "hand": [getattr(card, 'name', str(card)) for card in p.hand],
                     "deck_count": len(p.deck.draw_pile) if p.deck else 0,
                     "discard_count": len(p.deck.discard_pile) if p.deck else 0,
+                    "discard_pile": [getattr(card, 'name', str(card)) for card in p.deck.discard_pile] if p.deck else [],
                     "orgs": p.organizations
                 }
                 for p in self.players
