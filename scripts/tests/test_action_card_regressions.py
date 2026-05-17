@@ -517,18 +517,62 @@ def test_red_support_action_draws_and_moves_to_rebel_discard_when_red_army_plays
     assert resolved['moved_to_player_id'] == p2.id
 
 
-def test_intel_network_runs_only_one_default_option_not_cancel_too():
-    g = make_game()
-    p = play_only(g, '情報網')
 
-    assert g.pending_choice and g.pending_choice['type'] == 'option_choice'
-    assert g.pending_choice['choice_key'] == 'choose_one'
-    assert len(g.pending_choice['options']) == 3
-    resolved = g.resolve_pending_choice(p.id, 0)
+def test_intel_network_state_serializes_three_options_for_ui():
+    g = Game([('p1', 'P1'), ('p2', 'P2'), ('p3', 'P3'), ('p4', 'P4')])
+    g.game_phase = GamePhase.MAIN
+    g.turn_phase = TurnPhase.ACTION
+    g.current_player_index = 0
+    g.pending_base_choices = {}
+    g.players[0].faction_id = 'red_army'
+    p1, p2, p3, p4 = g.players
+    p1.hand = [card(g, '情報網')]
+    p1.organizations = {'北京': 1}
+    p2.organizations = {'天津': 1}
+    p2.deck.discard_pile = [Card('棄牌A', 'command', {})]
+    p3.deck.discard_pile = [Card('棄牌B', 'command', {})]
+    p4.deck.discard_pile = [Card('棄牌C', 'command', {})]
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    state_choice = g.state()['pending_choice']
+    assert state_choice['type'] == 'option_choice'
+    assert state_choice['choice_key'] == 'choose_one'
+    assert state_choice['source_name'] == '情報網'
+    assert [opt['label'] for opt in state_choice['options']] == [
+        '在至多3位玩家棄牌堆各放入1張內鬥',
+        '瓦解己方組織1格內的1個對手組織',
+        '取消1張對方所打出行動卡之能力',
+    ]
+
+
+
+def test_intel_network_first_branch_adds_internal_conflict_without_running_other_branches():
+    g = Game([('p1', 'P1'), ('p2', 'P2'), ('p3', 'P3'), ('p4', 'P4')])
+    g.game_phase = GamePhase.MAIN
+    g.turn_phase = TurnPhase.ACTION
+    g.current_player_index = 0
+    g.pending_base_choices = {}
+    g.players[0].faction_id = 'red_army'
+    p1, p2, p3, p4 = g.players
+    p1.hand = [card(g, '情報網')]
+    p1.organizations = {'北京': 1}
+    p2.organizations = {'天津': 1}
+    p2.deck.discard_pile = [Card('棄牌A', 'command', {})]
+    p3.deck.discard_pile = [Card('棄牌B', 'command', {})]
+    p4.deck.discard_pile = [Card('棄牌C', 'command', {})]
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    resolved = g.resolve_pending_choice(p1.id, 0)
     assert resolved.get('success'), resolved
-    assert names(p.deck.discard_pile).count('內鬥') == 1
-    assert not g.turn_log.get('canceled_propaganda_card')
-
+    assert names(p1.deck.discard_pile).count('內鬥') == 1
+    assert names(p2.deck.discard_pile).count('內鬥') == 0
+    assert names(p3.deck.discard_pile).count('內鬥') == 0
+    assert names(p4.deck.discard_pile).count('內鬥') == 0
+    assert p2.organizations.get('天津', 0) == 1
 
 
 def test_intel_network_can_choose_dissolve_branch_instead_of_default_internal_conflict():

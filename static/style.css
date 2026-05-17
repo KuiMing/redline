@@ -1353,10 +1353,19 @@ body {
 }
 
 .modal-choice-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-wrap: nowrap;
   gap: 10px;
   margin-bottom: 12px;
+  max-width: min(100%, calc((5 * 220px) + (4 * 10px)));
+}
+
+.modal-choice-row .modal-choice-btn {
+  flex: 1 1 0;
+  max-width: 220px;
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: keep-all;
 }
 
 .modal-choice-btn,
@@ -1388,6 +1397,37 @@ body {
 
 .era-achievement-glass {
   width: min(640px, calc(100vw - 32px));
+}
+
+.modal-overlay.choice-modal-map-context {
+  background: rgba(4, 8, 14, 0.16);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  pointer-events: none;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 76px 22px 0 0;
+}
+
+.choice-modal-map-context .choice-glass {
+  width: 392px;
+  max-height: 560px;
+  overflow: auto;
+  pointer-events: auto;
+  background: linear-gradient(180deg, rgba(12, 18, 28, 0.90), rgba(17, 24, 39, 0.84));
+}
+
+.choice-modal-map-context .choice-card-grid {
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.choice-modal-map-context .choice-card-grid .modal-choice-btn {
+  width: 100%;
+}
+
+.choice-modal-map-context .modal-body-text {
+  margin-bottom: 10px;
 }
 
 .choice-glass {

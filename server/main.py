@@ -603,6 +603,7 @@ def test_force_base_selection(payload: dict):
     game_id = payload.get("game_id")
     faction_ids = payload.get("faction_ids", [])
     player_names = payload.get("player_names") or [f"player{i+1}" for i in range(len(faction_ids))]
+    chosen_bases = payload.get("chosen_bases") or {}
 
     if len(faction_ids) < 2:
         return {"error": "Need at least 2 faction ids"}
@@ -612,24 +613,92 @@ def test_force_base_selection(payload: dict):
     game = Game(players)
     for player, faction_id in zip(game.players, faction_ids):
         player.faction_id = faction_id
+
     game.pending_base_choices = game._compute_pending_base_choices()
+    for player in game.players:
+        base_name = chosen_bases.get(player.name) or chosen_bases.get(player.id)
+        if not base_name:
+            continue
+        result = game.choose_base(player.id, base_name)
+        if result.get("error"):
+            return {"error": result["error"], "player": player.name, "base_name": base_name}
+
     if game.pending_base_choices:
         game.game_phase = GamePhase.BASE_SELECTION
     else:
-        game._assign_starting_bases()
         game.game_phase = GamePhase.MAIN
+        first_non_red = next((idx for idx, player in enumerate(game.players) if player.faction_id != 'red_army'), 0)
+        game.current_player_index = first_non_red
 
     manager.games[game_id] = game
     manager.connections[game_id] = manager.connections.get(game_id, {})
     lobby[game_id] = list(zip([p.id for p in game.players], [p.name for p in game.players]))
     lobby_hosts[game_id] = game.players[0].id
+    lobby_factions[game_id] = {p.id: p.faction_id for p in game.players}
+    lobby_bases[game_id] = {p.id: p.base for p in game.players if p.base}
 
     return {
         "success": True,
         "game_id": game_id,
-        "players": [{"id": p.id, "name": p.name, "faction": p.faction_id} for p in game.players],
+        "players": [{"id": p.id, "name": p.name, "faction": p.faction_id, "base": p.base} for p in game.players],
         "pending_base_choices": game.pending_base_choices,
         "game_phase": game.game_phase,
+    }
+
+
+@app.post("/test/setup-intel-network-proof")
+def test_setup_intel_network_proof(payload: dict):
+    game_id = str(uuid.uuid4())
+    players = [
+        (str(uuid.uuid4()), "viewer"),
+        (str(uuid.uuid4()), "enemyA"),
+        (str(uuid.uuid4()), "enemyB"),
+        (str(uuid.uuid4()), "enemyC"),
+    ]
+    game = Game(players)
+
+    viewer, enemy_a, enemy_b, enemy_c = game.players
+
+    viewer.faction_id = payload.get("viewer_faction", "red_army")
+    viewer.base = payload.get("viewer_base", "北京")
+    viewer.organizations = {"北京": 1}
+    viewer.hand = [Card("情報網", "command", {})]
+
+    enemy_a.faction_id = payload.get("enemy_a_faction", "hong_kong")
+    enemy_a.base = payload.get("enemy_a_base", "香港城")
+    enemy_a_organizations = payload.get("enemy_a_organizations") or {"天津": 1, "香港城": 1, "廣州": 1}
+    enemy_a.organizations = dict(enemy_a_organizations)
+    enemy_a.hand = [Card("敵方手牌A1", "command", {}), Card("敵方手牌A2", "command", {})]
+
+    enemy_b.faction_id = payload.get("enemy_b_faction", "taiwan_green")
+    enemy_b.base = payload.get("enemy_b_base", "臺北")
+    enemy_b.organizations = {"臺北": 1}
+    enemy_b.hand = [Card("敵方手牌B1", "command", {}), Card("敵方手牌B2", "command", {})]
+
+    enemy_c.faction_id = payload.get("enemy_c_faction", "minyun")
+    enemy_c.base = payload.get("enemy_c_base", "巴黎")
+    enemy_c.organizations = {"巴黎": 1, "上海": 1}
+    enemy_c.hand = [Card("敵方手牌C1", "command", {}), Card("敵方手牌C2", "command", {})]
+
+    game.current_player_index = 0
+    game.turn_phase = TurnPhase.ACTION
+    game.game_phase = GamePhase.MAIN
+    game.pending_base_choices = {}
+    game.id = game_id
+
+    manager.games[game_id] = game
+    manager.connections[game_id] = manager.connections.get(game_id, {})
+    lobby[game_id] = list(zip([p.id for p in game.players], [p.name for p in game.players]))
+    lobby_hosts[game_id] = viewer.id
+    lobby_factions[game_id] = {p.id: p.faction_id for p in game.players}
+    lobby_bases[game_id] = {p.id: p.base for p in game.players}
+
+    return {
+        "success": True,
+        "game_id": game_id,
+        "player_id": viewer.id,
+        "players": [{"id": p.id, "name": p.name, "faction": p.faction_id} for p in game.players],
+        "state": game.state(),
     }
 
 

@@ -1000,7 +1000,10 @@ function closeChoiceModal() {
   activeChoiceModal = null;
   syncChoiceModalMapHighlight(null);
   const overlay = document.getElementById('choiceModal');
-  if (overlay) overlay.style.display = 'none';
+  if (overlay) {
+    overlay.classList.remove('choice-modal-map-context');
+    overlay.style.display = 'none';
+  }
 }
 
 function syncChoiceModalMapHighlight(payload) {
@@ -1093,6 +1096,7 @@ function renderChoiceModal(state) {
   const isMine = !!(choice && me && choice.player_id === me.id);
   if (!choice || !isMine) {
     overlay.style.display = 'none';
+    overlay.classList.remove('choice-modal-map-context');
     mapHint.style.display = 'none';
     mapHint.textContent = '';
     cards.innerHTML = '';
@@ -1104,6 +1108,10 @@ function renderChoiceModal(state) {
   const choiceType = choice.type;
   const choiceKey = choice.choice_key || '';
   const sourceName = choice.source_name || choiceKey || '';
+  const targetChoicesWithMapHighlight = new Set(['support_interaction', 'intel_network_dissolve_target']);
+  const shouldUseMapContextModal = targetChoicesWithMapHighlight.has(choiceKey)
+    && (choice.step === 'target' || choiceType === 'target_choice');
+  overlay.classList.toggle('choice-modal-map-context', shouldUseMapContextModal);
   const requiredCount = Math.max(1, Number(choice.count || 1));
   const businessNetworkState = renderBusinessNetworkResult(state);
   const businessNetworkModalHeader = renderBusinessNetworkModalHeader(state);
@@ -1121,7 +1129,7 @@ function renderChoiceModal(state) {
   cards.innerHTML = businessNetworkState.html || '';
 
   let mapHighlightPayload = null;
-  if (choice.choice_key === 'support_interaction' && (choice.step === 'target' || choiceType === 'target_choice')) {
+  if (targetChoicesWithMapHighlight.has(choice.choice_key) && (choice.step === 'target' || choiceType === 'target_choice')) {
     const targets = (choice.targets || []).filter(entry => entry?.town);
     if (targets.length) {
       mapHint.style.display = 'block';

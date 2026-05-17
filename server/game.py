@@ -744,14 +744,34 @@ class Game:
             selected = options[index]
             context = dict(choice.get('context') or {})
             context['choice_index'] = index
-            for nested in selected.get('effect', []):
-                self.effect_engine.execute(nested, player, self, context=context)
             self.pending_choice = None
+            result = None
+            pending_target_result = None
+            for nested in selected.get('effect', []):
+                nested_type = nested.get('type') if isinstance(nested, dict) else None
+                source_name = context.get('card_name') or choice.get('source_name')
+                if nested_type == 'dissolve' and source_name == '情報網':
+                    targets = self._interactive_support_dissolve_targets(player, require_self_sacrifice=False)
+                    if targets:
+                        pending_target_result = self._set_pending_target_choice(
+                            player,
+                            'intel_network_dissolve_target',
+                            targets,
+                            '情報網：選擇 1 個要瓦解的鄰近敵方組織。',
+                            source_name='情報網',
+                            context=context,
+                        )
+                        result = pending_target_result
+                        continue
+                nested_result = self.effect_engine.execute(nested, player, self, context=context)
+                if isinstance(nested_result, dict) and nested_result.get('pending_choice'):
+                    result = nested_result
             self.log(f"{player.name} resolved choose_one option {index}")
             return {
                 'success': True,
                 'choice_index': index,
                 'label': selected.get('label'),
+                **({'pending_choice': True} if isinstance(result, dict) and result.get('pending_choice') else {}),
             }
 
         return {'error': 'Unsupported pending choice type'}
@@ -812,6 +832,29 @@ class Game:
                 'choice_key': choice_key,
                 'target_player_name': getattr(target_player, 'name', str(target_id)),
                 'pending_choice': True,
+            }
+        if choice_key == 'intel_network_dissolve_target':
+            target_player_id = selected.get('player_id') or target_id
+            town = selected.get('town')
+            target_player = next((p for p in self.players if getattr(p, 'id', None) == target_player_id), None)
+            if target_player is None:
+                return {'error': 'Target player not found'}
+            if not town:
+                return {'error': 'Target town not found'}
+            if not self._player_has_org_within_steps_of_player(player, target_player, max_steps=1):
+                return {'error': 'Target player is not within range'}
+            result = self.dissolve_organization(player, target_player, town, source='card')
+            if result.get('error'):
+                return result
+            self.pending_choice = None
+            return {
+                'success': True,
+                'choice_index': index,
+                'target_id': target_id,
+                'selected': selected,
+                'choice_key': choice_key,
+                'target_player_name': getattr(target_player, 'name', str(target_player_id)),
+                'town': town,
             }
         if choice_key == 'red_support_target_player':
             target_player = next((p for p in self.players if getattr(p, 'id', None) == target_id), None)
@@ -2083,6 +2126,17 @@ class Game:
                 if p is not player:
                     p.hand = [starter("對手手牌1")]
                     p.deck.draw_pile = [starter("對手共抽1"), starter("對手共抽2")]
+
+        if card_name == '情報網':
+            player.organizations = {'北京': 1}
+            other_players = [p for p in self.players if p is not player]
+            if other_players:
+                other_players[0].organizations = {'天津': 1}
+                other_players[0].deck.discard_pile = [starter('對手棄牌A')]
+            if len(other_players) > 1:
+                other_players[1].deck.discard_pile = [starter('對手棄牌B')]
+            if len(other_players) > 2:
+                other_players[2].deck.discard_pile = [starter('對手棄牌C')]
 
         if "dissolve" in effects:
             player.organizations = {"北京": 1}
