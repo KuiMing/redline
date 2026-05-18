@@ -23,9 +23,6 @@
 - [todo] 補 Action 卡正式 UI 證據與回歸紀錄。
   - 範圍：合作談判、乘勝追擊、擴大戰果、網羅人才、地下黨、走漏風聲、武裝者、武裝小隊、武裝集團、派遣間諜、內應間諜、行動預告、行動募資。
   - 完成條件：每張卡至少有可重跑驗證腳本或正式 UI 截圖，能證明前／中／後狀態與 action log。
-- [todo] 補 Support 卡正式 UI 證據與回歸紀錄。
-  - 範圍：英美奧援、歐洲奧援、南洋奧援、印度奧援。
-  - 完成條件：每張支援卡有正式 UI 前／中／後截圖或可重跑 validator，並能證明 tier 判定與實際效果。
 
 ### P2：repo hygiene / validator hygiene
 - [todo] 第二輪 root validation artifacts 整理。
@@ -108,6 +105,10 @@
   - 2026-05-15：已提交 `bd8700a` `[verified] fix liberals stance-probe lobby and ui flow`。
 
 ### 奧援／支援卡 UI 與效果驗證
+- [done] 英美奧援、歐洲奧援、南洋奧援、印度奧援：補可重跑 runtime validator。
+  - 2026-05-18：已擴充 `scripts/validate_support_card_effects_runtime.py`，針對 4 張卡各跑 I／II／III 級共 12 個情境，驗證 tier 判定、實際資源／抽牌／棄牌堆效果與 action log。
+  - 產物：`docs/records/support-cards/SUPPORT_CARD_EFFECTS_RUNTIME_VALIDATION.{json,md}`。
+  - 測試：`python3 scripts/validate_support_card_effects_runtime.py` 通過（12 passed）。
 - [done] 東洋奧援完成。
   - 2026-05-15：依使用者確認，東洋奧援已完成，不再列入待辦。
 - [done] 北國奧援：補玩家指定瓦解目標 UI／驗證與收尾整理。

@@ -1,13 +1,23 @@
 # SUPPORT CARD EFFECTS RUNTIME VALIDATION
 
-- total: 7
-- passed: 7
+可重跑指令：`python3 scripts/validate_support_card_effects_runtime.py`
+
+- scope: 英美奧援, 歐洲奧援, 南洋奧援, 印度奧援
+- total: 12
+- passed: 12
 - failed: 0
 
-- PASS india_support_tier3_adds_three_distractions: {"before": 0, "after": 3}
-- PASS anglo_support_tier2_gains_money: {"before": 0, "after": 2}
-- PASS nanyang_support_tier1_draw_then_discard_net_zero: {"before": 2, "after": 1}
-- PASS east_asia_support_tier1_gains_two_propaganda: {"before": 0, "after": 2}
-- PASS northland_support_tier2_dissolves_one: {"before": {"南京": 1}, "after": {}}
-- PASS taiwan_support_tier1_gains_one_propaganda: {"before": 0, "after": 1}
-- PASS middle_east_support_tier1_forces_one_discard: {"before": 2, "after": 1}
+## Results
+
+- PASS 英美奧援_tier1: tier=1 matched=[] checks={"play_card_success": true, "tier_detected": true, "action_log_tier": true, "money_delta": true} before={"player_hand": 1, "player_discard": 0, "red_discard": 0, "money": 0, "propaganda": 0, "draw_pile": 4} after={"player_hand": 0, "player_discard": 1, "red_discard": 0, "money": 1, "propaganda": 0, "draw_pile": 4, "red_discard_names": [], "player_hand_names": [], "player_discard_names": ["英美奧援"]}
+- PASS 英美奧援_tier2: tier=2 matched=["東洋", "臺灣"] checks={"play_card_success": true, "tier_detected": true, "action_log_tier": true, "money_delta": true} before={"player_hand": 1, "player_discard": 0, "red_discard": 0, "money": 0, "propaganda": 0, "draw_pile": 4} after={"player_hand": 0, "player_discard": 1, "red_discard": 0, "money": 2, "propaganda": 0, "draw_pile": 4, "red_discard_names": [], "player_hand_names": [], "player_discard_names": ["英美奧援"]}
+- PASS 英美奧援_tier3: tier=3 matched=[] checks={"play_card_success": true, "tier_detected": true, "action_log_tier": true, "money_delta": true} before={"player_hand": 1, "player_discard": 0, "red_discard": 0, "money": 0, "propaganda": 0, "draw_pile": 4} after={"player_hand": 0, "player_discard": 1, "red_discard": 0, "money": 3, "propaganda": 0, "draw_pile": 4, "red_discard_names": [], "player_hand_names": [], "player_discard_names": ["英美奧援"]}
+- PASS 歐洲奧援_tier1: tier=1 matched=[] checks={"play_card_success": true, "tier_detected": true, "action_log_tier": true, "propaganda_delta": true} before={"player_hand": 1, "player_discard": 0, "red_discard": 0, "money": 0, "propaganda": 0, "draw_pile": 4} after={"player_hand": 0, "player_discard": 1, "red_discard": 0, "money": 0, "propaganda": 2, "draw_pile": 4, "red_discard_names": [], "player_hand_names": [], "player_discard_names": ["歐洲奧援"]}
+- PASS 歐洲奧援_tier2: tier=2 matched=["北國", "天方"] checks={"play_card_success": true, "tier_detected": true, "action_log_tier": true, "propaganda_delta": true} before={"player_hand": 1, "player_discard": 0, "red_discard": 0, "money": 0, "propaganda": 0, "draw_pile": 4} after={"player_hand": 0, "player_discard": 1, "red_discard": 0, "money": 0, "propaganda": 3, "draw_pile": 4, "red_discard_names": [], "player_hand_names": [], "player_discard_names": ["歐洲奧援"]}
+- PASS 歐洲奧援_tier3: tier=3 matched=[] checks={"play_card_success": true, "tier_detected": true, "action_log_tier": true, "propaganda_delta": true} before={"player_hand": 1, "player_discard": 0, "red_discard": 0, "money": 0, "propaganda": 0, "draw_pile": 4} after={"player_hand": 0, "player_discard": 1, "red_discard": 0, "money": 0, "propaganda": 4, "draw_pile": 4, "red_discard_names": [], "player_hand_names": [], "player_discard_names": ["歐洲奧援"]}
+- PASS 南洋奧援_tier1: tier=1 matched=[] checks={"play_card_success": true, "tier_detected": true, "action_log_tier": true, "draw_pile_delta": true, "player_discard_delta": true, "draw_then_discard_net_hand": true} before={"player_hand": 2, "player_discard": 0, "red_discard": 0, "money": 0, "propaganda": 0, "draw_pile": 4} after={"player_hand": 1, "player_discard": 2, "red_discard": 0, "money": 0, "propaganda": 0, "draw_pile": 3, "red_discard_names": [], "player_hand_names": ["保留手牌"], "player_discard_names": ["補牌4", "南洋奧援"]}
+- PASS 南洋奧援_tier2: tier=2 matched=["臺灣", "東洋"] checks={"play_card_success": true, "tier_detected": true, "action_log_tier": true, "draw_pile_delta": true, "player_discard_delta": true, "draw_hand_count": true} before={"player_hand": 1, "player_discard": 0, "red_discard": 0, "money": 0, "propaganda": 0, "draw_pile": 4} after={"player_hand": 1, "player_discard": 1, "red_discard": 0, "money": 0, "propaganda": 0, "draw_pile": 3, "red_discard_names": [], "player_hand_names": ["補牌4"], "player_discard_names": ["南洋奧援"]}
+- PASS 南洋奧援_tier3: tier=3 matched=[] checks={"play_card_success": true, "tier_detected": true, "action_log_tier": true, "draw_pile_delta": true, "player_discard_delta": true, "draw_hand_count": true} before={"player_hand": 1, "player_discard": 0, "red_discard": 0, "money": 0, "propaganda": 0, "draw_pile": 4} after={"player_hand": 2, "player_discard": 1, "red_discard": 0, "money": 0, "propaganda": 0, "draw_pile": 2, "red_discard_names": [], "player_hand_names": ["補牌4", "補牌3"], "player_discard_names": ["南洋奧援"]}
+- PASS 印度奧援_tier1: tier=1 matched=[] checks={"play_card_success": true, "tier_detected": true, "action_log_tier": true, "red_discard_delta": true, "red_discard_names": true} before={"player_hand": 1, "player_discard": 0, "red_discard": 0, "money": 0, "propaganda": 0, "draw_pile": 4} after={"player_hand": 0, "player_discard": 1, "red_discard": 1, "money": 0, "propaganda": 0, "draw_pile": 4, "red_discard_names": ["分神"], "player_hand_names": [], "player_discard_names": ["印度奧援"]}
+- PASS 印度奧援_tier2: tier=2 matched=["南洋", "英美"] checks={"play_card_success": true, "tier_detected": true, "action_log_tier": true, "red_discard_delta": true, "red_discard_names": true} before={"player_hand": 1, "player_discard": 0, "red_discard": 0, "money": 0, "propaganda": 0, "draw_pile": 4} after={"player_hand": 0, "player_discard": 1, "red_discard": 2, "money": 0, "propaganda": 0, "draw_pile": 4, "red_discard_names": ["分神", "分神"], "player_hand_names": [], "player_discard_names": ["印度奧援"]}
+- PASS 印度奧援_tier3: tier=3 matched=[] checks={"play_card_success": true, "tier_detected": true, "action_log_tier": true, "red_discard_delta": true, "red_discard_names": true} before={"player_hand": 1, "player_discard": 0, "red_discard": 0, "money": 0, "propaganda": 0, "draw_pile": 4} after={"player_hand": 0, "player_discard": 1, "red_discard": 3, "money": 0, "propaganda": 0, "draw_pile": 4, "red_discard_names": ["分神", "分神", "分神"], "player_hand_names": [], "player_discard_names": ["印度奧援"]}
