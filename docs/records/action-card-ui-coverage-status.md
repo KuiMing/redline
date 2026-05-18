@@ -232,7 +232,7 @@
 - 類型：command
 - 預期 UI 需求：card_choice
 - 目前判定：有正式 UI 截圖證據
-- 對應證據：docs/records/action-cards/ACTION_CARD_RECRUIT_TALENT_UI_SCREENSHOTS_2026_05_18.md
+- 對應證據：docs/records/action-cards/ACTION_CARD_RECRUIT_TALENT_UI_SCREENSHOTS_2026_05_18.md（含一般版本與紅軍可從棄牌堆選牌特例）
 - app.js 訊號：pending_choice_ui_present
 
 ### 行動募資

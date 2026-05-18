@@ -71,10 +71,11 @@ def test_press_advantage_prompts_for_eligible_discard_card_and_leaves_high_cost_
 def test_recruit_talent_selects_any_card_from_own_deck_not_topdeck_only():
     g = make_game()
     p = g.current_player()
+    p.faction_id = 'tibet_dehradun'
     p.hand = [card(g, '網羅人才')]
     # Deck top is TopCard (last element). DesiredCard is deliberately not on top.
     p.deck.draw_pile = [Card('DesiredCard', 'command', {}), Card('MiddleCard', 'command', {}), Card('TopCard', 'command', {})]
-    p.deck.discard_pile = []
+    p.deck.discard_pile = [Card('DiscardOnly', 'command', {})]
 
     result = g.play_card(0, mode='action')
 
@@ -86,6 +87,33 @@ def test_recruit_talent_selects_any_card_from_own_deck_not_topdeck_only():
     assert resolved.get('success'), resolved
     assert 'DesiredCard' in names(p.hand)
     assert 'TopCard' not in names(p.hand)
+    assert 'DiscardOnly' in names(p.deck.discard_pile)
+
+
+def test_red_army_recruit_talent_can_select_from_own_deck_or_discard():
+    g = make_game()
+    p = g.current_player()
+    p.faction_id = 'red_army'
+    p.hand = [card(g, '網羅人才')]
+    p.deck.draw_pile = [Card('DeckChoiceA', 'command', {}), Card('DeckChoiceB', 'command', {})]
+    p.deck.discard_pile = [Card('DiscardChoice', 'command', {})]
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    assert g.pending_choice and g.pending_choice['type'] == 'card_choice'
+    assert g.pending_choice['choice_key'] == 'recruit_talent'
+    assert names(g.pending_choice['cards']) == ['DeckChoiceA', 'DeckChoiceB', 'DiscardChoice']
+
+    resolved = g.resolve_pending_choice(p.id, 2)
+
+    assert resolved.get('success'), resolved
+    assert names(p.hand) == ['DiscardChoice']
+    assert names(p.deck.discard_pile) == ['網羅人才']
+    assert 'DeckChoiceA' not in names(p.deck.draw_pile)
+    assert 'DeckChoiceB' not in names(p.deck.draw_pile)
+    assert g.pending_choice is None
+    assert any('recruited DiscardChoice from deck' in entry for entry in g.action_log)
 
 
 def test_red_support_requires_red_army_to_choose_rebel_discard_target_before_resolving_resource_mode():

@@ -1220,17 +1220,22 @@ def test_setup_recruit_talent_proof(payload: dict):
         return Card(name, "command", {})
 
     viewer.faction_id = payload.get("faction_id", "tibet_dehradun")
-    viewer.base = payload.get("base", "德拉敦")
+    viewer.base = payload.get("base") or ("北京" if viewer.faction_id == "red_army" else "德拉敦")
     viewer.organizations = payload.get("orgs") or {viewer.base: 1}
     viewer.resources = payload.get("resources") or {"money": 4, "propaganda": 4}
     viewer.hand = [proof_card("網羅人才")]
     deck_names = payload.get("deck_names") or ["宣傳家", "合作談判", "走漏風聲"]
+    discard_names = payload.get("discard_names") or ["棄牌見證"]
     viewer.deck.draw_pile = [proof_card(name) for name in deck_names]
-    viewer.deck.discard_pile = [proof_card("棄牌見證")]
+    viewer.deck.discard_pile = [proof_card(name) for name in discard_names]
 
-    red.faction_id = "red_army"
-    red.base = "北京"
-    red.organizations = {"北京": 1}
+    if viewer.faction_id == "red_army":
+        red.faction_id = "tibet_dehradun"
+        red.base = "德拉敦"
+    else:
+        red.faction_id = "red_army"
+        red.base = "北京"
+    red.organizations = {red.base: 1}
     red.hand = []
 
     game.purchase_area = game._static_purchase_cards()[:]
@@ -1242,7 +1247,8 @@ def test_setup_recruit_talent_proof(payload: dict):
     game.game_phase = GamePhase.MAIN
     game.pending_base_choices = {}
     game.id = game_id
-    game.log("UI proof setup: viewer has 網羅人才; deck choices include 宣傳家 / 合作談判 / 走漏風聲.")
+    log_target = "deck/discard choices" if viewer.faction_id == "red_army" else "deck choices"
+    game.log(f"UI proof setup: viewer has 網羅人才; {log_target} include {' / '.join(deck_names + discard_names)}.")
 
     manager.games[game_id] = game
     manager.connections[game_id] = manager.connections.get(game_id, {})

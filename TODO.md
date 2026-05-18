@@ -52,9 +52,10 @@
 
 ### 行動卡／指令卡邏輯與回歸測試
 - [done] 網羅人才：補正式 UI 截圖證據。
-  - 2026-05-18：以 `POST /test/setup-recruit-talent-proof` 建立真實 UI 場景，截圖證明起始手牌有 `網羅人才`，打出後 `card_choice` / `recruit_talent` modal 列出己方牌庫候選 `宣傳家` / `合作談判` / `走漏風聲`，選 `合作談判` 後手牌變為 `合作談判`。
-  - 產物：`docs/records/action-cards/ACTION_CARD_RECRUIT_TALENT_UI_SCREENSHOTS_2026_05_18.md`、`docs/records/action-cards/ACTION_CARD_RECRUIT_TALENT_UI_2026_05_18_*.png`。
-  - 戰況紀錄：棄牌堆顯示 `棄牌見證` / `網羅人才`，log 寫入 `viewer may recruit 1 card from deck`、`viewer played 網羅人才`、`viewer recruited 合作談判 from deck`。
+  - 2026-05-18：以 `POST /test/setup-recruit-talent-proof` 建立真實 UI 場景，截圖證明一般版本起始手牌有 `網羅人才`，打出後 `card_choice` / `recruit_talent` modal 列出己方牌庫候選 `宣傳家` / `合作談判` / `走漏風聲`，選 `合作談判` 後手牌變為 `合作談判`。
+  - 2026-05-18：補紅軍特例 regression 與正式 UI 證據；紅軍 viewer（北京）打出 `網羅人才` 時，modal 同時列出牌庫 `宣傳家` / `走漏風聲` 與棄牌堆 `合作談判`，選棄牌堆 `合作談判` 後手牌變為 `合作談判`，棄牌堆只剩 `網羅人才`。
+  - 產物：`docs/records/action-cards/ACTION_CARD_RECRUIT_TALENT_UI_SCREENSHOTS_2026_05_18.md`、`docs/records/action-cards/ACTION_CARD_RECRUIT_TALENT_UI_2026_05_18_*.png`、`docs/records/action-cards/ACTION_CARD_RECRUIT_TALENT_RED_ARMY_UI_2026_05_18_*.png`。
+  - 戰況紀錄：一般版 log 寫入 `viewer recruited 合作談判 from deck`；紅軍版 log 寫入 `deck/discard choices include 宣傳家 / 走漏風聲 / 合作談判` 與 `viewer recruited 合作談判 from deck`。
 - [done] 地下黨：補正式 UI 截圖證據。
   - 2026-05-18：以 `POST /test/setup-underground-party` 建立真實 UI 場景，截圖證明起始手牌有 `地下黨`，打出後 `card_choice` modal 揭示購買牌庫頂 3 張 `宣傳家` / `合作談判` / `走漏風聲`，選 `合作談判` 後手牌變為 `合作談判`。
   - 產物：`docs/records/action-cards/ACTION_CARD_UNDERGROUND_PARTY_UI_SCREENSHOTS_2026_05_18.md`、`docs/records/action-cards/ACTION_CARD_UNDERGROUND_PARTY_UI_2026_05_18_*.png`。
