@@ -1250,6 +1250,65 @@ def test_setup_hand_preview(payload: dict):
     }
 
 
+@app.post("/test/setup-end-turn-topdeck-proof")
+def test_setup_end_turn_topdeck_proof(payload: dict):
+    game_id = str(uuid.uuid4())
+    players = [(str(uuid.uuid4()), "viewer"), (str(uuid.uuid4()), "red")]
+    game = Game(players)
+
+    viewer = game.players[0]
+    red = game.players[1]
+
+    card_name = payload.get("card_name", "行動預告")
+    bought_card_name = payload.get("bought_card", "本回合購得牌")
+    extra_hand = payload.get("extra_hand") or ["Filler"]
+
+    def proof_card(name):
+        card_def = next((c for c in game.structured_cards if c.get("name") == name), None)
+        if card_def:
+            return Card(card_def["name"], card_def.get("type", "command"), dict(card_def.get("resources", {}) or {}))
+        return Card(name, "command", {})
+
+    bought_card = proof_card(bought_card_name)
+
+    viewer.faction_id = payload.get("faction_id", "tibet_dehradun")
+    viewer.base = payload.get("base", "德拉敦")
+    viewer.organizations = {viewer.base: 1}
+    viewer.resources = payload.get("resources") or {"money": 0, "propaganda": 0}
+    viewer.hand = [proof_card(card_name)] + [proof_card(name) for name in extra_hand]
+    viewer.deck.draw_pile = [proof_card(name) for name in (payload.get("draw_pile") or ["補牌1", "補牌2", "補牌3", "補牌4", "補牌5"])]
+    viewer.deck.discard_pile = [bought_card]
+
+    red.faction_id = "red_army"
+    red.base = "北京"
+    red.organizations = {"北京": 1}
+    red.hand = []
+
+    game.current_player_index = 0
+    game.turn_phase = TurnPhase.END
+    game.game_phase = GamePhase.MAIN
+    game.pending_base_choices = {}
+    game.turn_log["purchased_cards_this_turn"] = [bought_card]
+    game.id = game_id
+    game.log(f"UI proof setup: viewer has {card_name}; bought card {bought_card_name} is in discard before end-turn refill.")
+
+    manager.games[game_id] = game
+    manager.connections[game_id] = manager.connections.get(game_id, {})
+    lobby[game_id] = list(zip([p.id for p in game.players], [p.name for p in game.players]))
+    lobby_hosts[game_id] = viewer.id
+    lobby_factions[game_id] = {viewer.id: viewer.faction_id, red.id: red.faction_id}
+    lobby_bases[game_id] = {viewer.id: viewer.base, red.id: red.base}
+
+    return {
+        "success": True,
+        "game_id": game_id,
+        "player_id": viewer.id,
+        "card_name": card_name,
+        "bought_card": bought_card_name,
+        "state": game.state(),
+    }
+
+
 @app.post("/test/setup-business-network-transport-proof")
 def test_setup_business_network_transport_proof(payload: dict):
     game_id = str(uuid.uuid4())

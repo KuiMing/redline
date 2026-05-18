@@ -55,6 +55,7 @@
   - 2026-05-18：END 階段真正結束回合／補滿手牌前，若手上有 `行動預告` / `行動募資` 且本回合購得牌仍在棄牌堆，會先跳 `end_turn_topdeck_action` 選項提示；玩家可選擇不使用或使用其中一張。
   - 使用後會先把本回合購得牌置於牌庫頂，再執行棄手牌／補到 5 張，因此剛購得的牌會在補牌時進手牌；選擇不使用則購得牌維持在棄牌堆。
   - 產物：`scripts/validate_action_card_end_turn_topdeck_runtime.py`、`docs/records/action-cards/ACTION_CARD_END_TURN_TOPDECK_RUNTIME_VALIDATION.{json,md}`。
+  - UI 截圖：`docs/records/action-cards/ACTION_CARD_END_TURN_TOPDECK_UI_SCREENSHOTS_2026_05_18.md`；包含 `ACTION_ANNOUNCEMENT_END_TURN_*.png` 與 `ACTION_FUNDRAISING_END_TURN_*.png`，逐步證明起始 END 階段、提示 modal、補牌後手牌、戰況紀錄。
   - 測試：`python3 scripts/validate_action_card_end_turn_topdeck_runtime.py` 通過（3 passed）；`python3 -m pytest -q scripts/tests/test_action_card_regressions.py -k 'action_announcement or action_fundraising or end_turn'` 通過（3 passed）；`python3 -m compileall -q server scripts static` 通過。
 - [done] 武裝者、武裝小隊、武裝集團：補可重跑 runtime validator 與目標玩家自選棄牌流程。
   - 2026-05-18：已修正 `force_discard` 對武裝系列改走 `armed_target_discard` pending choice，不再由系統自動從手牌尾端棄牌；目標玩家可自選棄牌，武裝集團在成功棄牌後才讓出牌者抽 1 張。
