@@ -10,7 +10,35 @@
 - `note` 不是立即待做，只保留盤點或後續提醒。
 
 ## 目前 active todo
-- 目前沒有 active `todo` / `in_progress` 項目。
+
+### P0：已確認 UI 缺口
+- [todo] 情報網：把 `target_choice` 瓦解目標同步接上地圖 highlight。
+  - 盤點依據：目前情報網瓦解目標 modal 會列出 `enemyA｜天津`、`enemyA｜香港城`、`enemyA｜廣州`，但 `choiceModalMapHint` 沒內容、`lastSupportChoiceMapHighlightPayload` 為 `null`，地圖沒有同步高亮可瓦解組織。
+  - 完成條件：選擇情報網瓦解目標時，modal 清單與戰略地圖上的可選組織同步標示；補正式 UI 截圖與狀態／log 證據。
+
+### P1：已實作但缺正式 UI 證據
+- [todo] 補 Action 卡正式 UI 證據與回歸紀錄。
+  - 範圍：合作談判、乘勝追擊、擴大戰果、網羅人才、地下黨、走漏風聲、武裝者、武裝小隊、武裝集團、派遣間諜、內應間諜、行動預告、行動募資。
+  - 完成條件：每張卡至少有可重跑驗證腳本或正式 UI 截圖，能證明前／中／後狀態與 action log。
+- [todo] 補 Support 卡正式 UI 證據與回歸紀錄。
+  - 範圍：英美奧援、歐洲奧援、南洋奧援、印度奧援。
+  - 完成條件：每張支援卡有正式 UI 前／中／後截圖或可重跑 validator，並能證明 tier 判定與實際效果。
+
+### P2：repo hygiene / validator hygiene
+- [todo] 第二輪 root validation artifacts 整理。
+  - 盤點依據：repo root 目前仍有 63 個 validation/report/screenshot 類檔案，例如 `*_VALIDATION.md`、`*_VALIDATION.json`、`*_validation.png`、`multiplayer_lobby_flow_*.png`。
+  - 完成條件：依 README 規則搬到 `docs/records/<topic>/`，修正 stale references，確認 root 只保留 `README.md`、`TODO.md`、`rules.md`、`North.md` 等真正根層文件。
+- [todo] 修正仍輸出到 repo root 的 validator scripts。
+  - 盤點依據：目前約 33 個 `scripts/validate_*.py` 仍把 `*_VALIDATION.*` 或截圖寫到 root，例如 base selection、card effect audit、faction ability、lobby、movement、shared action、support runtime 等驗證腳本。
+  - 完成條件：所有相關 validator 直接輸出到對應 `docs/records/<topic>/`；重跑被改動 validator，確認新路徑產物存在且舊 root 產物不再回生。
+- [todo] 補 validator failure exit-code 檢查。
+  - 盤點依據：整理 validator 時需避免「報告顯示 failed 但 process exit 0」的靜默回歸。
+  - 完成條件：高使用率 validator 在 failed/exception 時會非 0 結束；文件或測試紀錄可證明行為。
+
+### P3：後續 UI polish
+- [todo] 清理 faction action centered modal 上線後的殘留 UI 狀態。
+  - 盤點依據：faction action centered modal 已上線，但仍可能有多餘按鈕／面板殘留狀態需要收斂。
+  - 完成條件：正式 UI 操作中不再殘留過期提示、按鈕或面板；補最小截圖／console 驗證。
 
 ## 已完成
 
@@ -85,8 +113,7 @@
   - 2026-05-16：已修正 `/card-presentation` / live UI 的紅軍奧援卡牌說明，並修正 action 打出後最終手牌為 5；提交 `c0d325f`、`db93978`。
 
 ## note（不是 active todo）
-- [note] 已實作但缺 UI 證據。
-  - Action：合作談判、乘勝追擊、擴大戰果、網羅人才、地下黨、走漏風聲、武裝者、武裝小隊、武裝集團、派遣間諜、內應間諜、行動預告、行動募資。
-  - Support：英美奧援、歐洲奧援、南洋奧援、印度奧援。
-- [note] 後續可清理 UI 殘留狀態。
-  - faction action centered modal 已上線，但後續仍可再清理多餘按鈕／面板殘留狀態。
+- [note] 2026-05-18 通盤檢查補充。
+  - 已搜尋 repo 內 `TODO` / `FIXME` / `待辦` / `後續` / `未實作` / `not implemented` 等標記，未找到額外明確程式碼註記。
+  - 已跑 `python3 -m compileall -q server scripts`，目前 server/scripts 語法檢查通過。
+  - `search_files` 在此 repo 對檔名列舉回傳 0，但用 Python 直接列舉確認 root 與 scripts 狀態；後續盤點不要只依賴單一檔名搜尋工具輸出。
