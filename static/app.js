@@ -1108,7 +1108,7 @@ function renderChoiceModal(state) {
   const choiceType = choice.type;
   const choiceKey = choice.choice_key || '';
   const sourceName = choice.source_name || choiceKey || '';
-  const targetChoicesWithMapHighlight = new Set(['support_interaction', 'intel_network_dissolve_target']);
+  const targetChoicesWithMapHighlight = new Set(['support_interaction', 'card_dissolve_interaction', 'intel_network_dissolve_target']);
   const shouldUseMapContextModal = targetChoicesWithMapHighlight.has(choiceKey)
     && (choice.step === 'target' || choiceType === 'target_choice');
   overlay.classList.toggle('choice-modal-map-context', shouldUseMapContextModal);
@@ -1265,7 +1265,7 @@ function renderChoiceModal(state) {
     closeBtn.onclick = () => {
       sendAction('resolve_choice', { index: 0 });
     };
-  } else if (choiceType === 'town_choice' || (choiceType === 'support_flow_choice' && choice.step === 'town')) {
+  } else if (choiceType === 'town_choice' || (choiceType === 'support_flow_choice' && (choice.step === 'town' || choice.step === 'sacrifice_town'))) {
     (choice.towns || []).forEach((entry, index) => {
       const btn = document.createElement('button');
       btn.className = 'modal-choice-btn';

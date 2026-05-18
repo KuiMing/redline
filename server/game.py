@@ -1106,15 +1106,22 @@ class Game:
             if self.can_develop_in_town(player, town)
         ]
 
-    def _interactive_support_dissolve_targets(self, player, require_self_sacrifice=False):
+    def _target_players_for_interaction(self, player, target_player_id=None):
+        if target_player_id is not None:
+            target = next((p for p in self.players if getattr(p, 'id', None) == target_player_id), None)
+            return [target] if target is not None and target is not player else []
+        return [other for other in self.players if other is not player]
+
+    def _interactive_support_dissolve_targets(self, player, require_self_sacrifice=False, max_steps=1, target_players=None):
         targets = []
-        for other in self.players:
-            if other is player:
+        opponents = list(target_players) if target_players is not None else [other for other in self.players if other is not player]
+        source_towns = [town for town, count in (player.organizations or {}).items() if count > 0]
+        reachable = self._towns_within_steps(source_towns, max_steps=max_steps)
+        for other in opponents:
+            if other is None or other is player:
                 continue
             for town, count in (other.organizations or {}).items():
-                if count <= 0:
-                    continue
-                if not self._player_has_org_within_steps_of_player(player, other, max_steps=1):
+                if count <= 0 or town not in reachable:
                     continue
                 targets.append({
                     'id': f'{getattr(other, "id", other.name)}::{town}',
@@ -1125,11 +1132,12 @@ class Game:
                 })
         return targets
 
-    def _interactive_support_dissolve_targets_near_town(self, player, origin_town):
-        reachable = self._towns_within_steps([origin_town], max_steps=1)
+    def _interactive_support_dissolve_targets_near_town(self, player, origin_town, max_steps=1, target_players=None):
+        reachable = self._towns_within_steps([origin_town], max_steps=max_steps)
         targets = []
-        for other in self.players:
-            if other is player:
+        opponents = list(target_players) if target_players is not None else [other for other in self.players if other is not player]
+        for other in opponents:
+            if other is None or other is player:
                 continue
             for town, count in (other.organizations or {}).items():
                 if count <= 0 or town not in reachable:
@@ -1159,12 +1167,17 @@ class Game:
             })
         return targets
 
-    def _interactive_support_sacrifice_towns(self, player):
+    def _interactive_support_sacrifice_towns(self, player, max_steps=1, target_players=None):
         towns = []
         for town, count in (player.organizations or {}).items():
             if count <= 0:
                 continue
-            targets = self._interactive_support_dissolve_targets_near_town(player, town)
+            targets = self._interactive_support_dissolve_targets_near_town(
+                player,
+                town,
+                max_steps=max_steps,
+                target_players=target_players,
+            )
             if not targets:
                 continue
             towns.append({
@@ -1173,6 +1186,52 @@ class Game:
                 'target_count': len(targets),
             })
         return towns
+
+    def _start_card_dissolve_interaction(self, player, card_name, requires_self_sacrifice=False, range_limit=1, target_player_id=None):
+        target_players = self._target_players_for_interaction(player, target_player_id)
+        effect_type = 'interactive_dissolve_self_and_enemy' if requires_self_sacrifice else 'interactive_dissolve_many_near'
+        base_context = {
+            'card_name': card_name,
+            'effect_type': effect_type,
+            'effect_payload': {'range': range_limit},
+            'target_player_id': target_player_id,
+        }
+        if requires_self_sacrifice:
+            towns = self._interactive_support_sacrifice_towns(
+                player,
+                max_steps=range_limit,
+                target_players=target_players,
+            )
+            if not towns:
+                return None
+            result = self._set_pending_support_flow_choice(
+                player,
+                'card_dissolve_interaction',
+                'sacrifice_town',
+                f'{card_name}：先選擇 1 個要瓦解的己方組織。',
+                source_name=card_name,
+                towns=towns,
+                context=base_context,
+            )
+            return {'pending_choice': True, **result}
+        targets = self._interactive_support_dissolve_targets(
+            player,
+            require_self_sacrifice=False,
+            max_steps=range_limit,
+            target_players=target_players,
+        )
+        if not targets:
+            return None
+        result = self._set_pending_support_flow_choice(
+            player,
+            'card_dissolve_interaction',
+            'target',
+            f'{card_name}：選擇 1 個要瓦解的鄰近敵方組織。',
+            source_name=card_name,
+            targets=targets,
+            context=base_context,
+        )
+        return {'pending_choice': True, **result}
 
     def _start_support_interaction(self, player, card_name, tier, region_index, effect_type, payload):
         effect_text = self._support_card_effect_text(card_name, tier, region_index)
@@ -1288,7 +1347,12 @@ class Game:
             sacrifice_town = result.get('town')
             if not sacrifice_town or (player.organizations or {}).get(sacrifice_town, 0) <= 0:
                 return {'error': 'Invalid own organization to sacrifice'}
-            targets = self._interactive_support_dissolve_targets_near_town(player, sacrifice_town)
+            targets = self._interactive_support_dissolve_targets_near_town(
+                player,
+                sacrifice_town,
+                max_steps=int((context.get('effect_payload') or {}).get('range', 1) or 1),
+                target_players=self._target_players_for_interaction(player, context.get('target_player_id')),
+            )
             if not targets:
                 return {'error': 'No enemy organization within range of sacrificed organization'}
             player.organizations[sacrifice_town] -= 1
@@ -2485,11 +2549,16 @@ class Game:
                 return {"error": "武裝卡必須指定其他玩家"}
             if not self._player_has_org_within_steps_of_player(player, target, max_steps=1):
                 return {"error": "Target player has no organization within range"}
-        if mode == "action" and pending_card_name in {"派遣間諜", "內應間諜"}:
-            target = next((p for p in self.players if getattr(p, "id", None) == target_player_id), None) if target_player_id is not None else None
+        if mode == "action" and pending_card_name in {"派遣間諜", "內應間諜"} and target_player_id is not None:
+            target = next((p for p in self.players if getattr(p, "id", None) == target_player_id), None)
             if target is None or target == player:
                 return {"error": "間諜卡必須指定其他玩家"}
-            if not self._find_target_town_within_steps_of_player(player, target, max_steps=1):
+            target_players = [target]
+            if pending_card_name == "派遣間諜":
+                valid = bool(self._interactive_support_sacrifice_towns(player, max_steps=1, target_players=target_players))
+            else:
+                valid = bool(self._interactive_support_dissolve_targets(player, max_steps=1, target_players=target_players))
+            if not valid:
                 return {"error": "No target organization within range"}
 
         played_card = player.hand.pop(index)
@@ -2571,7 +2640,23 @@ class Game:
             action_context['reaction_context'] = reaction_context
             action_context['card_canceled'] = True
         if effective_type != 'support':
-            if card_name in getattr(self.action_engine, 'cards', {}):
+            if card_name in {"派遣間諜", "內應間諜"}:
+                if not action_context.get('card_canceled'):
+                    spy_result = self._start_card_dissolve_interaction(
+                        player,
+                        card_name,
+                        requires_self_sacrifice=(card_name == "派遣間諜"),
+                        range_limit=1,
+                        target_player_id=target_player_id,
+                    )
+                    if spy_result and spy_result.get('pending_choice'):
+                        if not action_context.get('removed_current_card'):
+                            if not self._return_borrowed_card_to_owner_topdeck(played_card):
+                                player.deck.discard([played_card])
+                        self.log(f"{player.name} played {card_name}")
+                        return {"success": True, "pending_choice": True, **spy_result}
+                    return {"error": "No target organization within range"}
+            elif card_name in getattr(self.action_engine, 'cards', {}):
                 if not action_context.get('card_canceled'):
                     action_result = self.action_engine.execute(card_name, player, self, context=action_context, include_resources=False)
                     if isinstance(action_result, dict) and action_result.get('pending_choice'):

@@ -1068,6 +1068,50 @@ def test_field_agent_requires_target_org_within_one_step_of_sacrificed_org():
 
 
 
+def test_field_agent_prompts_sacrifice_then_target_org_like_north_support():
+    g = make_game()
+    p1, p2 = g.players
+    p1.hand = [card(g, '派遣間諜')]
+    p1.organizations = {'北京': 1, '上海': 1}
+    p2.organizations = {'天津': 1, '杭州': 1, '香港城': 1}
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('pending_choice') is True, result
+    assert g.pending_choice and g.pending_choice['type'] == 'support_flow_choice'
+    assert g.pending_choice['choice_key'] == 'card_dissolve_interaction'
+    assert g.pending_choice['step'] == 'sacrifice_town'
+    assert g.pending_choice['source_name'] == '派遣間諜'
+    assert g.pending_choice['towns'] == [
+        {'town': '北京', 'label': '北京（可瓦解鄰近敵方組織）', 'target_count': 1},
+        {'town': '上海', 'label': '上海（可瓦解鄰近敵方組織）', 'target_count': 1},
+    ]
+
+    sacrificed = g.resolve_pending_choice(p1.id, 1)
+
+    assert sacrificed.get('success'), sacrificed
+    assert sacrificed.get('pending_choice') is True
+    assert p1.organizations == {'北京': 1}
+    assert g.pending_choice['step'] == 'target'
+    assert g.pending_choice['targets'] == [{
+        'id': f'{p2.id}::杭州',
+        'label': 'P2｜杭州',
+        'player_id': p2.id,
+        'town': '杭州',
+        'sacrifice_town': '上海',
+    }]
+
+    resolved = g.resolve_pending_choice(p1.id, 0)
+
+    assert resolved.get('success'), resolved
+    assert p1.organizations == {'北京': 1}
+    assert p2.organizations.get('杭州', 0) == 0
+    assert p2.organizations.get('天津', 0) == 1
+    assert p2.organizations.get('香港城', 0) == 1
+    assert g.pending_choice is None
+
+
+
 def test_embedded_agent_requires_target_org_within_one_step_of_own_org():
     g = make_game()
     p1, p2 = g.players
@@ -1080,6 +1124,38 @@ def test_embedded_agent_requires_target_org_within_one_step_of_own_org():
     assert result.get('error') == 'No target organization within range'
     assert p1.organizations == {'北京': 1}
     assert p2.organizations == {'香港城': 1}
+
+
+
+def test_embedded_agent_prompts_exact_in_range_target_org_without_self_sacrifice():
+    g = make_game()
+    p1, p2 = g.players
+    p1.hand = [card(g, '內應間諜')]
+    p1.organizations = {'北京': 1}
+    p2.organizations = {'天津': 1, '香港城': 1}
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('pending_choice') is True, result
+    assert g.pending_choice and g.pending_choice['type'] == 'support_flow_choice'
+    assert g.pending_choice['choice_key'] == 'card_dissolve_interaction'
+    assert g.pending_choice['step'] == 'target'
+    assert g.pending_choice['source_name'] == '內應間諜'
+    assert g.pending_choice['targets'] == [{
+        'id': f'{p2.id}::天津',
+        'label': 'P2｜天津',
+        'player_id': p2.id,
+        'town': '天津',
+        'requires_self_sacrifice': False,
+    }]
+
+    resolved = g.resolve_pending_choice(p1.id, 0)
+
+    assert resolved.get('success'), resolved
+    assert p1.organizations == {'北京': 1}
+    assert p2.organizations.get('天津', 0) == 0
+    assert p2.organizations.get('香港城', 0) == 1
+    assert g.pending_choice is None
 
 
 

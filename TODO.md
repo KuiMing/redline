@@ -1,6 +1,6 @@
 # Redline TODO
 
-最後更新：2026-05-18
+最後更新：2026-05-19
 
 ## 工作規則
 - 每次開始新工作前，先把對應項目加入此檔。
@@ -21,7 +21,7 @@
 
 ### P1：已實作但缺正式 UI 證據
 - [todo] 補 Action 卡正式 UI 證據與回歸紀錄。
-  - 範圍：合作談判、走漏風聲、派遣間諜、內應間諜。
+  - 範圍：合作談判、走漏風聲。
   - 完成條件：每張卡至少有可重跑驗證腳本或正式 UI 截圖，能證明前／中／後狀態與 action log。
 
 ### P2：repo hygiene / validator hygiene
@@ -79,6 +79,11 @@
   - 2026-05-18：已修正 `force_discard` 對武裝系列改走 `armed_target_discard` pending choice，不再由系統自動從手牌尾端棄牌；目標玩家可自選棄牌，武裝集團在成功棄牌後才讓出牌者抽 1 張。
   - 產物：`scripts/validate_action_card_armed_series_runtime.py`、`docs/records/action-cards/ACTION_CARD_ARMED_SERIES_RUNTIME_VALIDATION.{json,md}`。
   - 測試：`python3 scripts/validate_action_card_armed_series_runtime.py` 通過（3 passed）；`python3 -m pytest -q scripts/tests/test_action_card_regressions.py -k 'armed'` 通過（5 passed）；`python3 -m compileall -q server scripts static` 通過。
+- [done] 派遣間諜、內應間諜：補北國奧援式互動瓦解流程與正式 UI 證據。
+  - 2026-05-19：`派遣間諜` 改為兩段式 pending choice，先選己方犧牲組織，再只列出該組織 1 格內的敵方組織；正式 UI 證明可先選 `北京` / `上海`，選 `上海` 後只可瓦解 `enemy｜杭州`，完成後 viewer 組織 1、enemy 組織 2。
+  - 2026-05-19：`內應間諜` 改為直接 target pending choice，不犧牲己方組織；正式 UI 證明只列出 `enemy｜天津`，完成後 viewer 組織仍 1、enemy 組織 1，log 沒有己方犧牲紀錄。
+  - 產物：`docs/records/action-cards/ACTION_CARD_SPY_CARDS_UI_SCREENSHOTS_2026_05_19.md`、`docs/records/action-cards/ACTION_CARD_SPY_CARDS_UI_2026_05_19_*.png`。
+  - 測試：`python3 -m pytest -q scripts/tests/test_action_card_regressions.py -k 'field_agent or embedded_agent or support'` 通過（16 passed）；`python3 -m compileall -q server scripts static` 通過；`git diff --check` 通過。
 - [done] 補齊多張 action card regression coverage（合作談判、思想建設、思想家、宣傳家、資本家等）。
   - 2026-05-12：完成多張行動卡測試補強與既有 regressions 擴充。
 - [done] 修正情報網 choose-one branching、商業網絡借用行為、共識鍛造棄牌後 bonus 流程。
