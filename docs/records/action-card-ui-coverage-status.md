@@ -1,6 +1,6 @@
 # Action Card UI Coverage Status
 
-更新時間：2026-05-12
+更新時間：2026-05-18
 
 ## 判讀原則
 
@@ -147,8 +147,8 @@
 ### 擴大戰果
 - 類型：command
 - 預期 UI 需求：card_choice
-- 目前判定：需要 UI 互動，但缺少明確 UI validator 證據
-- 對應 validator：無明確對應
+- 目前判定：有正式 UI 截圖證據
+- 對應證據：docs/records/action-cards/ACTION_CARD_EXPAND_RESULTS_UI_SCREENSHOTS_2026_05_18.md
 - app.js 訊號：pending_choice_ui_present
 
 ### 模仿戰術

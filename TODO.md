@@ -21,7 +21,7 @@
 
 ### P1：已實作但缺正式 UI 證據
 - [todo] 補 Action 卡正式 UI 證據與回歸紀錄。
-  - 範圍：合作談判、擴大戰果、網羅人才、地下黨、走漏風聲、派遣間諜、內應間諜。
+  - 範圍：合作談判、網羅人才、地下黨、走漏風聲、派遣間諜、內應間諜。
   - 完成條件：每張卡至少有可重跑驗證腳本或正式 UI 截圖，能證明前／中／後狀態與 action log。
 
 ### P2：repo hygiene / validator hygiene
@@ -51,6 +51,10 @@
   - 證據截圖：`/Users/benmini/.hermes/cache/screenshots/browser_screenshot_c506238701ce4e3ca9e5ecf730d1d028.png`。
 
 ### 行動卡／指令卡邏輯與回歸測試
+- [done] 擴大戰果：補正式 UI 截圖證據。
+  - 2026-05-18：以 `POST /test/setup-expand-results-proof` 建立真實 UI 場景，截圖證明起始手牌有 `擴大戰果`、打出後 `card_choice` modal 列出己方棄牌堆 `宣傳家` / `合作談判` / `走漏風聲`，其中總費用 4 的 `合作談判` 仍可選，選取後手牌變為 `合作談判`。
+  - 產物：`docs/records/action-cards/ACTION_CARD_EXPAND_RESULTS_UI_SCREENSHOTS_2026_05_18.md`、`docs/records/action-cards/ACTION_CARD_EXPAND_RESULTS_UI_2026_05_18_*.png`。
+  - 戰況紀錄：棄牌堆變為 `宣傳家` / `走漏風聲` / `擴大戰果`，log 寫入 `viewer gained 合作談判 from discard via 擴大戰果`。
 - [done] 乘勝追擊：補可重跑 runtime validator、回歸測試與正式 UI 截圖證據。
   - 2026-05-18：已驗證 `gain_from_discard` pending choice 只列出己方棄牌堆總費用 3 點以下卡牌，總費用以資金 + 宣傳計算；測試同時證明總費用 4 的 `合作談判` 不會被列為候選，解析後選中的 `走漏風聲` 進入手牌，未選／不合格牌留在棄牌堆，並寫入 action log。
   - 2026-05-18 UI 證據：以 `POST /test/setup-press-advantage-proof` 建立真實 UI 場景，截圖證明起始手牌有 `乘勝追擊`、打出後 modal 只列出 `宣傳家` / `走漏風聲`、選 `宣傳家` 後手牌變為 `宣傳家`，戰況紀錄顯示 `合作談判` / `走漏風聲` / `乘勝追擊` 留在棄牌堆並寫入 `viewer gained 宣傳家 from discard via 乘勝追擊`。
