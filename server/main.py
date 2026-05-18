@@ -1152,36 +1152,39 @@ def test_setup_underground_party(payload: dict):
     viewer = game.players[0]
     red = game.players[1]
 
+    def proof_card(name):
+        card_def = next((c for c in game.structured_cards if c.get("name") == name), None)
+        if card_def:
+            return Card(card_def["name"], card_def.get("type", "command"), dict(card_def.get("resources", {}) or {}))
+        return Card(name, "command", {})
+
     viewer.faction_id = payload.get("faction_id", "tibet_dehradun")
     viewer.base = payload.get("base", "德拉敦")
     viewer.organizations = payload.get("orgs") or {viewer.base: 1}
     viewer.resources = payload.get("resources") or {"money": 4, "propaganda": 4}
-    card_def = next(c for c in game.structured_cards if c.get("name") == "地下黨")
-    viewer.hand = [Card(card_def["name"], card_def["type"], card_def.get("resources", {}))]
+    viewer.hand = [proof_card("地下黨")]
+    viewer.deck.draw_pile = [proof_card("抽牌A"), proof_card("抽牌B")]
+    viewer.deck.discard_pile = []
 
     red.faction_id = "red_army"
     red.base = "北京"
     red.organizations = {"北京": 1}
     red.hand = []
 
-    game.purchase_deck.draw_pile = [
-        Card("候選A", "command", {}),
-        Card("候選B", "command", {}),
-        Card("候選C", "command", {}),
-    ]
+    # Deck.draw() pops from the end; arrange the three proof candidates so the UI reveals them in this order.
+    candidate_names = payload.get("candidate_names") or ["宣傳家", "合作談判", "走漏風聲"]
+    game.purchase_deck.draw_pile = [proof_card(name) for name in reversed(candidate_names)]
     game.purchase_deck.discard_pile = []
     game.purchase_area = game._static_purchase_cards()[:]
-    while len(game.purchase_area) < 11:
-        drawn = game._draw_purchase_cards(1)
-        if not drawn:
-            break
-        game.purchase_area.extend(drawn)
+    random_market_names = payload.get("purchase_area_random") or ["批鬥", "組織經驗甲", "組織經驗丙", "北國奧援", "模仿戰術"]
+    game.purchase_area.extend(proof_card(name) for name in random_market_names)
 
     game.current_player_index = 0
     game.turn_phase = TurnPhase.ACTION
     game.game_phase = GamePhase.MAIN
     game.pending_base_choices = {}
     game.id = game_id
+    game.log("UI proof setup: viewer has 地下黨; purchase deck top reveals 宣傳家 / 合作談判 / 走漏風聲.")
 
     manager.games[game_id] = game
     manager.connections[game_id] = manager.connections.get(game_id, {})
@@ -1191,10 +1194,13 @@ def test_setup_underground_party(payload: dict):
     lobby_bases[game_id] = {p.id: p.base for p in game.players}
 
     return {
+        "success": True,
         "game_id": game_id,
         "player_id": viewer.id,
         "purchase_draw_pile": [getattr(c, 'name', str(c)) for c in game.purchase_deck.draw_pile],
+        "expected_reveal_order": list(candidate_names),
         "hand": [getattr(c, 'name', str(c)) for c in viewer.hand],
+        "state": game.state(),
     }
 
 

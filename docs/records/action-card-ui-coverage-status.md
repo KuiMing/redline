@@ -91,8 +91,8 @@
 ### 地下黨
 - 類型：spy
 - 預期 UI 需求：card_choice
-- 目前判定：需要 UI 互動，但缺少明確 UI validator 證據
-- 對應 validator：無明確對應
+- 目前判定：有正式 UI 截圖證據
+- 對應證據：docs/records/action-cards/ACTION_CARD_UNDERGROUND_PARTY_UI_SCREENSHOTS_2026_05_18.md
 - app.js 訊號：named_in_app_js, pending_choice_ui_present
 
 ### 宣傳家

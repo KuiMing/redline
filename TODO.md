@@ -21,7 +21,7 @@
 
 ### P1：已實作但缺正式 UI 證據
 - [todo] 補 Action 卡正式 UI 證據與回歸紀錄。
-  - 範圍：合作談判、網羅人才、地下黨、走漏風聲、派遣間諜、內應間諜。
+  - 範圍：合作談判、網羅人才、走漏風聲、派遣間諜、內應間諜。
   - 完成條件：每張卡至少有可重跑驗證腳本或正式 UI 截圖，能證明前／中／後狀態與 action log。
 
 ### P2：repo hygiene / validator hygiene
@@ -51,6 +51,10 @@
   - 證據截圖：`/Users/benmini/.hermes/cache/screenshots/browser_screenshot_c506238701ce4e3ca9e5ecf730d1d028.png`。
 
 ### 行動卡／指令卡邏輯與回歸測試
+- [done] 地下黨：補正式 UI 截圖證據。
+  - 2026-05-18：以 `POST /test/setup-underground-party` 建立真實 UI 場景，截圖證明起始手牌有 `地下黨`，打出後 `card_choice` modal 揭示購買牌庫頂 3 張 `宣傳家` / `合作談判` / `走漏風聲`，選 `合作談判` 後手牌變為 `合作談判`。
+  - 產物：`docs/records/action-cards/ACTION_CARD_UNDERGROUND_PARTY_UI_SCREENSHOTS_2026_05_18.md`、`docs/records/action-cards/ACTION_CARD_UNDERGROUND_PARTY_UI_2026_05_18_*.png`。
+  - 戰況紀錄：`宣傳家 returned to static purchase supply`、`走漏風聲 returned to purchase deck discard`、`viewer chose 合作談判 via 地下黨`。
 - [done] 擴大戰果：補正式 UI 截圖證據。
   - 2026-05-18：以 `POST /test/setup-expand-results-proof` 建立真實 UI 場景，截圖證明起始手牌有 `擴大戰果`、打出後 `card_choice` modal 列出己方棄牌堆 `宣傳家` / `合作談判` / `走漏風聲`，其中總費用 4 的 `合作談判` 仍可選，選取後手牌變為 `合作談判`。
   - 產物：`docs/records/action-cards/ACTION_CARD_EXPAND_RESULTS_UI_SCREENSHOTS_2026_05_18.md`、`docs/records/action-cards/ACTION_CARD_EXPAND_RESULTS_UI_2026_05_18_*.png`。
