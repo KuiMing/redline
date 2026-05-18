@@ -61,6 +61,7 @@ let selectedBuildTargets = [];
 let pendingMove = null;
 let lastResolvedMove = null;
 let supportChoiceHighlight = null;
+let supportChoiceHighlightFocusKey = null;
 
 function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 function zoomProgress(z = map.getZoom()) { return clamp((z - 2) / 6, 0, 1); }
@@ -145,7 +146,28 @@ function resetBuildSelection() {
   buildHighlightLayer.clearLayers();
 }
 
-function renderSupportChoiceHighlights() {
+function supportChoiceHighlightKey(payload) {
+  if (!payload || payload.mode !== 'support-targets') return null;
+  const towns = Array.isArray(payload.towns) ? payload.towns : [];
+  return JSON.stringify({
+    mode: payload.mode,
+    sourceName: payload.sourceName || '',
+    prompt: payload.prompt || '',
+    towns: towns.map(entry => entry?.town || '').filter(Boolean).sort(),
+  });
+}
+
+function focusSupportChoiceTargets(bounds) {
+  if (!bounds.length) return;
+  if (bounds.length === 1) {
+    map.setView(bounds[0], Math.max(map.getZoom(), 8), { animate: false });
+    return;
+  }
+  map.fitBounds(bounds, { padding: [110, 110], maxZoom: 8 });
+}
+
+function renderSupportChoiceHighlights(options = {}) {
+  const { autoFocus = false } = options;
   supportChoiceHighlightLayer.clearLayers();
   if (!supportChoiceHighlight || supportChoiceHighlight.mode !== 'support-targets') return;
   const towns = Array.isArray(supportChoiceHighlight.towns) ? supportChoiceHighlight.towns : [];
@@ -177,12 +199,18 @@ function renderSupportChoiceHighlights() {
     if (hintEl) {
       hintEl.innerHTML = `${supportChoiceHighlight.sourceName || '當前選擇'}：<span class="hint-strong">${supportChoiceHighlight.prompt || '請依列表選擇目標。'}</span> 地圖上已用橘色外框標出可選城鎮。`;
     }
+    if (autoFocus) {
+      focusSupportChoiceTargets(bounds);
+    }
   }
 }
 
 function applySupportChoiceHighlight(payload) {
+  const nextKey = supportChoiceHighlightKey(payload);
+  const shouldAutoFocus = !!nextKey && nextKey !== supportChoiceHighlightFocusKey;
   supportChoiceHighlight = payload || null;
-  renderSupportChoiceHighlights();
+  supportChoiceHighlightFocusKey = nextKey;
+  renderSupportChoiceHighlights({ autoFocus: shouldAutoFocus });
 }
 
 function finalizeMoveSelection(fromTown, toTown) {
@@ -799,8 +827,14 @@ function applyGameStateToMap(state) {
 }
 
 window.addEventListener('message', (event) => {
-  if (!event.data || event.data.type !== 'redline-state') return;
-  applyGameStateToMap(event.data.state);
+  if (!event.data) return;
+  if (event.data.type === 'redline-state') {
+    applyGameStateToMap(event.data.state);
+    return;
+  }
+  if (event.data.type === 'redline-choice-highlight') {
+    applySupportChoiceHighlight(event.data.payload || null);
+  }
 });
 
 let mapWs = null;
