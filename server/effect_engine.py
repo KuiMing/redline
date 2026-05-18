@@ -57,11 +57,32 @@ class EffectEngine:
             count = effect.get("count", 1)
             context = context or {}
             target_id = context.get("target_player_id") or effect.get("target_player_id")
+            source_name = context.get("card_name")
             targets = []
             if target_id:
                 target = next((p for p in game.players if getattr(p, "id", None) == target_id), None)
                 if target is not None and target != player:
                     targets = [target]
+            if source_name in {"武裝者", "武裝小隊", "武裝集團"} and targets:
+                target = targets[0]
+                choice_count = min(int(count or 1), len(target.hand))
+                if choice_count <= 0:
+                    return
+                extra = {
+                    'source_name': source_name,
+                    'initiator_player_id': getattr(player, 'id', None),
+                    'initiator_player_name': getattr(player, 'name', '其他玩家'),
+                    'target_player_name': getattr(target, 'name', '目標玩家'),
+                }
+                if source_name == "武裝集團":
+                    extra['draw_on_success'] = 1
+                prompt = f"{source_name}：從所有手牌中棄掉任{choice_count}張牌。"
+                if choice_count == 1:
+                    game._set_pending_card_choice(target, 'armed_target_discard', list(target.hand), prompt, **extra)
+                else:
+                    game._set_pending_multi_card_choice(target, 'armed_target_discard', list(target.hand), prompt, count=choice_count, **extra)
+                game.log(f"{player.name} used {source_name} to ask {target.name} to choose {choice_count} discard(s)")
+                return {'pending_choice': True}
             if not targets:
                 targets = [other for other in game.players if other != player]
             discarded_any = False

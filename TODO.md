@@ -21,7 +21,7 @@
 
 ### P1：已實作但缺正式 UI 證據
 - [todo] 補 Action 卡正式 UI 證據與回歸紀錄。
-  - 範圍：合作談判、乘勝追擊、擴大戰果、網羅人才、地下黨、走漏風聲、武裝者、武裝小隊、武裝集團、派遣間諜、內應間諜、行動預告、行動募資。
+  - 範圍：合作談判、乘勝追擊、擴大戰果、網羅人才、地下黨、走漏風聲、派遣間諜、內應間諜、行動預告、行動募資。
   - 完成條件：每張卡至少有可重跑驗證腳本或正式 UI 截圖，能證明前／中／後狀態與 action log。
 
 ### P2：repo hygiene / validator hygiene
@@ -51,6 +51,10 @@
   - 證據截圖：`/Users/benmini/.hermes/cache/screenshots/browser_screenshot_c506238701ce4e3ca9e5ecf730d1d028.png`。
 
 ### 行動卡／指令卡邏輯與回歸測試
+- [done] 武裝者、武裝小隊、武裝集團：補可重跑 runtime validator 與目標玩家自選棄牌流程。
+  - 2026-05-18：已修正 `force_discard` 對武裝系列改走 `armed_target_discard` pending choice，不再由系統自動從手牌尾端棄牌；目標玩家可自選棄牌，武裝集團在成功棄牌後才讓出牌者抽 1 張。
+  - 產物：`scripts/validate_action_card_armed_series_runtime.py`、`docs/records/action-cards/ACTION_CARD_ARMED_SERIES_RUNTIME_VALIDATION.{json,md}`。
+  - 測試：`python3 scripts/validate_action_card_armed_series_runtime.py` 通過（3 passed）；`python3 -m pytest -q scripts/tests/test_action_card_regressions.py -k 'armed'` 通過（5 passed）；`python3 -m compileall -q server scripts static` 通過。
 - [done] 補齊多張 action card regression coverage（合作談判、思想建設、思想家、宣傳家、資本家等）。
   - 2026-05-12：完成多張行動卡測試補強與既有 regressions 擴充。
 - [done] 修正情報網 choose-one branching、商業網絡借用行為、共識鍛造棄牌後 bonus 流程。

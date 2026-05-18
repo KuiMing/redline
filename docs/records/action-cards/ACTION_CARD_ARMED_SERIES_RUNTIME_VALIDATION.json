@@ -1,0 +1,449 @@
+{
+  "generated_at": "2026-05-18T12:47:27",
+  "total": 3,
+  "passed": 3,
+  "failed": 0,
+  "results": [
+    {
+      "card_name": "武裝者",
+      "status": "passed",
+      "failures": [],
+      "play_result": {
+        "success": true,
+        "pending_choice": true
+      },
+      "resolve_result": {
+        "success": true,
+        "discarded_card": "Enemy1",
+        "target_player_name": "P2",
+        "initiator_player_name": "P1",
+        "choice_key": "armed_target_discard"
+      },
+      "before": {
+        "p1_hand": [
+          "武裝者"
+        ],
+        "p1_draw_pile": [],
+        "p1_discard_pile": [],
+        "p1_organizations": {
+          "北京": 1
+        },
+        "p2_hand": [
+          "Enemy1",
+          "Enemy2"
+        ],
+        "p2_discard_pile": [],
+        "p2_organizations": {
+          "天津": 1
+        },
+        "turn_log": {
+          "played_money_card": false,
+          "played_propaganda_card": false,
+          "non_starter_discard": false,
+          "successful_discard": false,
+          "built_towns": [],
+          "played_nonstarter_names": [
+            "武裝者"
+          ],
+          "combo_reward_triggered": false,
+          "guerrilla_triggered": false,
+          "faction_action_used": false,
+          "india_flag_money_triggered": false,
+          "purchased_cards_this_turn": [],
+          "reaction_prompted_player_ids": []
+        },
+        "pending_choice": null,
+        "action_log_tail": []
+      },
+      "pending": {
+        "p1_hand": [],
+        "p1_draw_pile": [],
+        "p1_discard_pile": [
+          "武裝者"
+        ],
+        "p1_organizations": {
+          "北京": 1
+        },
+        "p2_hand": [
+          "Enemy1",
+          "Enemy2"
+        ],
+        "p2_discard_pile": [],
+        "p2_organizations": {
+          "天津": 1
+        },
+        "turn_log": {
+          "played_money_card": false,
+          "played_propaganda_card": false,
+          "non_starter_discard": false,
+          "successful_discard": false,
+          "built_towns": [],
+          "played_nonstarter_names": [
+            "武裝者"
+          ],
+          "combo_reward_triggered": false,
+          "guerrilla_triggered": false,
+          "faction_action_used": false,
+          "india_flag_money_triggered": false,
+          "purchased_cards_this_turn": [],
+          "reaction_prompted_player_ids": []
+        },
+        "pending_choice": {
+          "type": "card_choice",
+          "choice_key": "armed_target_discard",
+          "player_id": "p2",
+          "count": null,
+          "cards": [
+            "Enemy1",
+            "Enemy2"
+          ],
+          "prompt": "武裝者：從所有手牌中棄掉任1張牌。"
+        },
+        "action_log_tail": [
+          "[Turn 1] P1 used 武裝者 to ask P2 to choose 1 discard(s)",
+          "[Turn 1] P1 played 武裝者"
+        ]
+      },
+      "after": {
+        "p1_hand": [],
+        "p1_draw_pile": [],
+        "p1_discard_pile": [
+          "武裝者"
+        ],
+        "p1_organizations": {
+          "北京": 1
+        },
+        "p2_hand": [
+          "Enemy2"
+        ],
+        "p2_discard_pile": [
+          "Enemy1"
+        ],
+        "p2_organizations": {
+          "天津": 1
+        },
+        "turn_log": {
+          "played_money_card": false,
+          "played_propaganda_card": false,
+          "non_starter_discard": false,
+          "successful_discard": true,
+          "built_towns": [],
+          "played_nonstarter_names": [
+            "武裝者"
+          ],
+          "combo_reward_triggered": false,
+          "guerrilla_triggered": false,
+          "faction_action_used": false,
+          "india_flag_money_triggered": false,
+          "purchased_cards_this_turn": [],
+          "reaction_prompted_player_ids": []
+        },
+        "pending_choice": null,
+        "action_log_tail": [
+          "[Turn 1] P1 used 武裝者 to ask P2 to choose 1 discard(s)",
+          "[Turn 1] P1 played 武裝者",
+          "[Turn 1] P1 used 武裝者 to force P2 to discard Enemy1"
+        ]
+      }
+    },
+    {
+      "card_name": "武裝小隊",
+      "status": "passed",
+      "failures": [],
+      "play_result": {
+        "success": true,
+        "pending_choice": true
+      },
+      "resolve_result": {
+        "success": true,
+        "chosen_cards": [
+          "Enemy1",
+          "Enemy3"
+        ],
+        "target_player_name": "P2",
+        "initiator_player_name": "P1",
+        "choice_key": "armed_target_discard"
+      },
+      "before": {
+        "p1_hand": [
+          "武裝小隊"
+        ],
+        "p1_draw_pile": [],
+        "p1_discard_pile": [],
+        "p1_organizations": {
+          "北京": 1
+        },
+        "p2_hand": [
+          "Enemy1",
+          "Enemy2",
+          "Enemy3"
+        ],
+        "p2_discard_pile": [],
+        "p2_organizations": {
+          "天津": 1
+        },
+        "turn_log": {
+          "played_money_card": false,
+          "played_propaganda_card": false,
+          "non_starter_discard": false,
+          "successful_discard": false,
+          "built_towns": [],
+          "played_nonstarter_names": [
+            "武裝小隊"
+          ],
+          "combo_reward_triggered": false,
+          "guerrilla_triggered": false,
+          "faction_action_used": false,
+          "india_flag_money_triggered": false,
+          "purchased_cards_this_turn": [],
+          "reaction_prompted_player_ids": []
+        },
+        "pending_choice": null,
+        "action_log_tail": []
+      },
+      "pending": {
+        "p1_hand": [],
+        "p1_draw_pile": [],
+        "p1_discard_pile": [
+          "武裝小隊"
+        ],
+        "p1_organizations": {
+          "北京": 1
+        },
+        "p2_hand": [
+          "Enemy1",
+          "Enemy2",
+          "Enemy3"
+        ],
+        "p2_discard_pile": [],
+        "p2_organizations": {
+          "天津": 1
+        },
+        "turn_log": {
+          "played_money_card": false,
+          "played_propaganda_card": false,
+          "non_starter_discard": false,
+          "successful_discard": false,
+          "built_towns": [],
+          "played_nonstarter_names": [
+            "武裝小隊"
+          ],
+          "combo_reward_triggered": false,
+          "guerrilla_triggered": false,
+          "faction_action_used": false,
+          "india_flag_money_triggered": false,
+          "purchased_cards_this_turn": [],
+          "reaction_prompted_player_ids": []
+        },
+        "pending_choice": {
+          "type": "multi_card_choice",
+          "choice_key": "armed_target_discard",
+          "player_id": "p2",
+          "count": 2,
+          "cards": [
+            "Enemy1",
+            "Enemy2",
+            "Enemy3"
+          ],
+          "prompt": "武裝小隊：從所有手牌中棄掉任2張牌。"
+        },
+        "action_log_tail": [
+          "[Turn 1] P1 used 武裝小隊 to ask P2 to choose 2 discard(s)",
+          "[Turn 1] P1 played 武裝小隊"
+        ]
+      },
+      "after": {
+        "p1_hand": [],
+        "p1_draw_pile": [],
+        "p1_discard_pile": [
+          "武裝小隊"
+        ],
+        "p1_organizations": {
+          "北京": 1
+        },
+        "p2_hand": [
+          "Enemy2"
+        ],
+        "p2_discard_pile": [
+          "Enemy1",
+          "Enemy3"
+        ],
+        "p2_organizations": {
+          "天津": 1
+        },
+        "turn_log": {
+          "played_money_card": false,
+          "played_propaganda_card": false,
+          "non_starter_discard": false,
+          "successful_discard": true,
+          "built_towns": [],
+          "played_nonstarter_names": [
+            "武裝小隊"
+          ],
+          "combo_reward_triggered": false,
+          "guerrilla_triggered": false,
+          "faction_action_used": false,
+          "india_flag_money_triggered": false,
+          "purchased_cards_this_turn": [],
+          "reaction_prompted_player_ids": []
+        },
+        "pending_choice": null,
+        "action_log_tail": [
+          "[Turn 1] P1 used 武裝小隊 to ask P2 to choose 2 discard(s)",
+          "[Turn 1] P1 played 武裝小隊",
+          "[Turn 1] P1 used 武裝小隊 to force P2 to discard 2 card(s)"
+        ]
+      }
+    },
+    {
+      "card_name": "武裝集團",
+      "status": "passed",
+      "failures": [],
+      "play_result": {
+        "success": true,
+        "pending_choice": true
+      },
+      "resolve_result": {
+        "success": true,
+        "chosen_cards": [
+          "Enemy1",
+          "Enemy2"
+        ],
+        "target_player_name": "P2",
+        "initiator_player_name": "P1",
+        "choice_key": "armed_target_discard"
+      },
+      "before": {
+        "p1_hand": [
+          "武裝集團"
+        ],
+        "p1_draw_pile": [
+          "RewardDraw"
+        ],
+        "p1_discard_pile": [],
+        "p1_organizations": {
+          "北京": 1
+        },
+        "p2_hand": [
+          "Enemy1",
+          "Enemy2"
+        ],
+        "p2_discard_pile": [],
+        "p2_organizations": {
+          "天津": 1
+        },
+        "turn_log": {
+          "played_money_card": false,
+          "played_propaganda_card": false,
+          "non_starter_discard": false,
+          "successful_discard": false,
+          "built_towns": [],
+          "played_nonstarter_names": [
+            "武裝集團"
+          ],
+          "combo_reward_triggered": false,
+          "guerrilla_triggered": false,
+          "faction_action_used": false,
+          "india_flag_money_triggered": false,
+          "purchased_cards_this_turn": [],
+          "reaction_prompted_player_ids": []
+        },
+        "pending_choice": null,
+        "action_log_tail": []
+      },
+      "pending": {
+        "p1_hand": [],
+        "p1_draw_pile": [
+          "RewardDraw"
+        ],
+        "p1_discard_pile": [
+          "武裝集團"
+        ],
+        "p1_organizations": {
+          "北京": 1
+        },
+        "p2_hand": [
+          "Enemy1",
+          "Enemy2"
+        ],
+        "p2_discard_pile": [],
+        "p2_organizations": {
+          "天津": 1
+        },
+        "turn_log": {
+          "played_money_card": false,
+          "played_propaganda_card": false,
+          "non_starter_discard": false,
+          "successful_discard": false,
+          "built_towns": [],
+          "played_nonstarter_names": [
+            "武裝集團"
+          ],
+          "combo_reward_triggered": false,
+          "guerrilla_triggered": false,
+          "faction_action_used": false,
+          "india_flag_money_triggered": false,
+          "purchased_cards_this_turn": [],
+          "reaction_prompted_player_ids": []
+        },
+        "pending_choice": {
+          "type": "multi_card_choice",
+          "choice_key": "armed_target_discard",
+          "player_id": "p2",
+          "count": 2,
+          "cards": [
+            "Enemy1",
+            "Enemy2"
+          ],
+          "prompt": "武裝集團：從所有手牌中棄掉任2張牌。"
+        },
+        "action_log_tail": [
+          "[Turn 1] P1 used 武裝集團 to ask P2 to choose 2 discard(s)",
+          "[Turn 1] P1 played 武裝集團"
+        ]
+      },
+      "after": {
+        "p1_hand": [
+          "RewardDraw"
+        ],
+        "p1_draw_pile": [],
+        "p1_discard_pile": [
+          "武裝集團"
+        ],
+        "p1_organizations": {
+          "北京": 1
+        },
+        "p2_hand": [],
+        "p2_discard_pile": [
+          "Enemy1",
+          "Enemy2"
+        ],
+        "p2_organizations": {
+          "天津": 1
+        },
+        "turn_log": {
+          "played_money_card": false,
+          "played_propaganda_card": false,
+          "non_starter_discard": false,
+          "successful_discard": true,
+          "built_towns": [],
+          "played_nonstarter_names": [
+            "武裝集團"
+          ],
+          "combo_reward_triggered": false,
+          "guerrilla_triggered": false,
+          "faction_action_used": false,
+          "india_flag_money_triggered": false,
+          "purchased_cards_this_turn": [],
+          "reaction_prompted_player_ids": []
+        },
+        "pending_choice": null,
+        "action_log_tail": [
+          "[Turn 1] P1 used 武裝集團 to ask P2 to choose 2 discard(s)",
+          "[Turn 1] P1 played 武裝集團",
+          "[Turn 1] P1 used 武裝集團 to force P2 to discard 2 card(s)"
+        ]
+      }
+    }
+  ]
+}

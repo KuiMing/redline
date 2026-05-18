@@ -976,7 +976,7 @@ def test_armed_c_requires_target_player_with_org_within_one_step_of_self_org():
 
 
 
-def test_armed_c_discards_one_when_target_player_has_org_within_one_step():
+def test_armed_c_target_player_chooses_one_discard_when_in_range():
     g = make_game()
     p1, p2 = g.players
     p1.hand = [card(g, '武裝者')]
@@ -987,8 +987,17 @@ def test_armed_c_discards_one_when_target_player_has_org_within_one_step():
     result = g.play_card(0, mode='action', target_player_id=p2.id)
 
     assert result.get('success'), result
-    assert names(p2.hand) == ['Enemy1']
-    assert names(p2.deck.discard_pile)[-1] == 'Enemy2'
+    assert result.get('pending_choice') is True
+    assert g.pending_choice and g.pending_choice['type'] == 'card_choice'
+    assert g.pending_choice['choice_key'] == 'armed_target_discard'
+    assert g.pending_choice['player_id'] == p2.id
+    assert names(g.pending_choice['cards']) == ['Enemy1', 'Enemy2']
+    assert names(p2.hand) == ['Enemy1', 'Enemy2']
+    resolved = g.resolve_pending_choice(p2.id, 0)
+    assert resolved.get('success'), resolved
+    assert names(p2.hand) == ['Enemy2']
+    assert names(p2.deck.discard_pile)[-1] == 'Enemy1'
+    assert any('P1 used 武裝者 to force P2 to discard Enemy1' in line for line in g.action_log)
 
 
 
@@ -1008,7 +1017,32 @@ def test_armed_b_requires_target_player_with_org_within_one_step_of_self_org():
 
 
 
-def test_armed_group_draws_after_successful_enemy_discard():
+def test_armed_b_target_player_chooses_two_discards_when_in_range():
+    g = make_game()
+    p1, p2 = g.players
+    p1.hand = [card(g, '武裝小隊')]
+    p1.organizations = {'北京': 1}
+    p2.organizations = {'天津': 1}
+    p2.hand = [Card('Enemy1', 'command', {}), Card('Enemy2', 'command', {}), Card('Enemy3', 'command', {})]
+
+    result = g.play_card(0, mode='action', target_player_id=p2.id)
+
+    assert result.get('success'), result
+    assert result.get('pending_choice') is True
+    assert g.pending_choice and g.pending_choice['type'] == 'multi_card_choice'
+    assert g.pending_choice['choice_key'] == 'armed_target_discard'
+    assert g.pending_choice['player_id'] == p2.id
+    assert g.pending_choice['count'] == 2
+    assert names(g.pending_choice['cards']) == ['Enemy1', 'Enemy2', 'Enemy3']
+    resolved = g.resolve_pending_choice(p2.id, [0, 2])
+    assert resolved.get('success'), resolved
+    assert names(p2.hand) == ['Enemy2']
+    assert names(p2.deck.discard_pile) == ['Enemy1', 'Enemy3']
+    assert any('P1 used 武裝小隊 to force P2 to discard 2 card(s)' in line for line in g.action_log)
+
+
+
+def test_armed_group_target_player_chooses_two_discards_then_actor_draws():
     g = make_game()
     p1, p2 = g.players
     p1.hand = [card(g, '武裝集團')]
@@ -1020,10 +1054,20 @@ def test_armed_group_draws_after_successful_enemy_discard():
     result = g.play_card(0, mode='action', target_player_id=p2.id)
 
     assert result.get('success'), result
+    assert result.get('pending_choice') is True
+    assert g.pending_choice and g.pending_choice['type'] == 'multi_card_choice'
+    assert g.pending_choice['choice_key'] == 'armed_target_discard'
+    assert g.pending_choice['player_id'] == p2.id
+    assert g.pending_choice['count'] == 2
+    assert names(g.pending_choice['cards']) == ['Enemy1', 'Enemy2']
+    assert 'RewardDraw' not in names(p1.hand)
+    resolved = g.resolve_pending_choice(p2.id, [0, 1])
+    assert resolved.get('success'), resolved
     assert names(p2.hand) == []
-    assert names(p2.deck.discard_pile) == ['Enemy2', 'Enemy1']
+    assert names(p2.deck.discard_pile) == ['Enemy1', 'Enemy2']
     assert 'RewardDraw' in names(p1.hand)
     assert g.turn_log.get('successful_discard') is True
+    assert any('P1 used 武裝集團 to force P2 to discard 2 card(s)' in line for line in g.action_log)
 
 
 def test_shift_public_opinion_refreshes_random_market_instead_of_using_player_deck_cards():

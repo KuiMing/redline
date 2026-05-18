@@ -626,6 +626,28 @@ class Game:
                 'removed_current_card': removes_current_card,
             }
 
+        if choice_key == 'armed_target_discard':
+            if chosen not in player.hand:
+                return {'error': 'Chosen card not in hand'}
+            player.hand.remove(chosen)
+            player.deck.discard([chosen])
+            self.turn_log['successful_discard'] = True
+            self.pending_choice = None
+            initiator = next((p for p in self.players if getattr(p, 'id', None) == choice.get('initiator_player_id')), None)
+            if initiator is not None and choice.get('draw_on_success'):
+                initiator.hand.extend(initiator.deck.draw(int(choice.get('draw_on_success'))))
+            initiator_name = choice.get('initiator_player_name') or '其他玩家'
+            target_name = choice.get('target_player_name') or player.name
+            source_name = choice.get('source_name') or choice_key
+            self.log(f"{initiator_name} used {source_name} to force {target_name} to discard {getattr(chosen, 'name', str(chosen))}")
+            return {
+                'success': True,
+                'discarded_card': getattr(chosen, 'name', str(chosen)),
+                'target_player_name': target_name,
+                'initiator_player_name': initiator_name,
+                'choice_key': choice_key,
+            }
+
         if choice_key == 'bait_exhaustion_target_discard':
             if chosen not in player.hand:
                 return {'error': 'Chosen card not in hand'}
@@ -694,6 +716,31 @@ class Game:
             self.pending_choice = None
             self.log(f"{player.name} discarded {len(selected_cards)} chosen card(s)")
             return {'success': True, 'chosen_cards': [getattr(card, 'name', str(card)) for card in selected_cards]}
+
+        if choice_key == 'armed_target_discard':
+            for card in selected_cards:
+                if card not in player.hand:
+                    return {'error': 'Chosen card not in hand'}
+            for card in selected_cards:
+                player.hand.remove(card)
+                player.deck.discard([card])
+            self.turn_log['successful_discard'] = True
+            self.pending_choice = None
+            initiator = next((p for p in self.players if getattr(p, 'id', None) == choice.get('initiator_player_id')), None)
+            if initiator is not None and choice.get('draw_on_success'):
+                initiator.hand.extend(initiator.deck.draw(int(choice.get('draw_on_success'))))
+            initiator_name = choice.get('initiator_player_name') or '其他玩家'
+            target_name = choice.get('target_player_name') or player.name
+            source_name = choice.get('source_name') or choice_key
+            chosen_names = [getattr(card, 'name', str(card)) for card in selected_cards]
+            self.log(f"{initiator_name} used {source_name} to force {target_name} to discard {len(chosen_names)} card(s)")
+            return {
+                'success': True,
+                'chosen_cards': chosen_names,
+                'target_player_name': target_name,
+                'initiator_player_name': initiator_name,
+                'choice_key': choice_key,
+            }
 
         if choice_key == 'trash_from_hand_or_discard':
             starters = {'追隨者', '樂捐者'}
