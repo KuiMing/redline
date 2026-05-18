@@ -51,9 +51,10 @@
   - 證據截圖：`/Users/benmini/.hermes/cache/screenshots/browser_screenshot_c506238701ce4e3ca9e5ecf730d1d028.png`。
 
 ### 行動卡／指令卡邏輯與回歸測試
-- [done] 乘勝追擊：補可重跑 runtime validator 與回歸測試。
+- [done] 乘勝追擊：補可重跑 runtime validator、回歸測試與正式 UI 截圖證據。
   - 2026-05-18：已驗證 `gain_from_discard` pending choice 只列出己方棄牌堆總費用 3 點以下卡牌，總費用以資金 + 宣傳計算；測試同時證明總費用 4 的 `合作談判` 不會被列為候選，解析後選中的 `走漏風聲` 進入手牌，未選／不合格牌留在棄牌堆，並寫入 action log。
-  - 產物：`scripts/validate_action_card_press_advantage_runtime.py`、`docs/records/action-cards/ACTION_CARD_PRESS_ADVANTAGE_RUNTIME_VALIDATION.{json,md}`。
+  - 2026-05-18 UI 證據：以 `POST /test/setup-press-advantage-proof` 建立真實 UI 場景，截圖證明起始手牌有 `乘勝追擊`、打出後 modal 只列出 `宣傳家` / `走漏風聲`、選 `宣傳家` 後手牌變為 `宣傳家`，戰況紀錄顯示 `合作談判` / `走漏風聲` / `乘勝追擊` 留在棄牌堆並寫入 `viewer gained 宣傳家 from discard via 乘勝追擊`。
+  - 產物：`scripts/validate_action_card_press_advantage_runtime.py`、`docs/records/action-cards/ACTION_CARD_PRESS_ADVANTAGE_RUNTIME_VALIDATION.{json,md}`、`docs/records/action-cards/ACTION_CARD_PRESS_ADVANTAGE_UI_SCREENSHOTS_2026_05_18.md`、`docs/records/action-cards/ACTION_CARD_PRESS_ADVANTAGE_UI_2026_05_18_*.png`。
   - 測試：`python3 scripts/validate_action_card_press_advantage_runtime.py` 通過（1 passed）；`python3 -m pytest -q scripts/tests/test_action_card_regressions.py -k 'press_advantage'` 通過（2 passed）；`python3 -m compileall -q server scripts static` 通過。
 - [done] 行動預告、行動募資：補回合結束前提示與補牌置頂驗證。
   - 2026-05-18：END 階段真正結束回合／補滿手牌前，若手上有 `行動預告` / `行動募資` 且本回合購得牌仍在棄牌堆，會先跳 `end_turn_topdeck_action` 選項提示；玩家可選擇不使用或使用其中一張。
