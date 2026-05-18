@@ -9,12 +9,15 @@
 - `todo` 只放真正下一步要做的事；已完成紀錄集中放在下方「已完成」。
 - `note` 不是立即待做，只保留盤點或後續提醒。
 
+## 下一 session 接手提示
+- 先跑 `git status --short` 與 `git log --oneline -5`，確認最新 TODO commit 與 `c690f5b` 都在目前分支。
+- 除非使用者明確要求，不要重做情報網 target choice map highlight；下一步依使用者新指示處理。
+- 若回到奧援卡，先確認指定卡名與級別；不要用北國奧援 I級規則推測 II級。
+
 ## 目前 active todo
 
 ### P0：已確認 UI 缺口
-- [todo] 情報網：把 `target_choice` 瓦解目標同步接上地圖 highlight。
-  - 盤點依據：目前情報網瓦解目標 modal 會列出 `enemyA｜天津`、`enemyA｜香港城`、`enemyA｜廣州`，但 `choiceModalMapHint` 沒內容、`lastSupportChoiceMapHighlightPayload` 為 `null`，地圖沒有同步高亮可瓦解組織。
-  - 完成條件：選擇情報網瓦解目標時，modal 清單與戰略地圖上的可選組織同步標示；補正式 UI 截圖與狀態／log 證據。
+- 目前無 P0 active todo。
 
 ### P1：已實作但缺正式 UI 證據
 - [todo] 補 Action 卡正式 UI 證據與回歸紀錄。
@@ -41,6 +44,14 @@
   - 完成條件：正式 UI 操作中不再殘留過期提示、按鈕或面板；補最小截圖／console 驗證。
 
 ## 已完成
+
+### 地圖／target choice UI
+- [done] 情報網：把 `target_choice` 瓦解目標同步接上地圖 highlight。
+  - 2026-05-18：已修正 `static/leaflet_game_map_logic.js`，讓戰略地圖 iframe 接收 `redline-choice-highlight` postMessage，並在情報網 `intel_network_dissolve_target` 狀態同步高亮可瓦解組織。
+  - 正式 UI 已驗證：情報網選「瓦解己方組織1格內的1個對手組織」後，modal 列出 `enemyA｜天津`、`enemyA｜香港城`、`enemyA｜廣州`；`choiceModalMapHint` 顯示地圖同步提示；iframe 內 `supportChoiceHighlightLayer.getLayers().length = 6`，payload towns = 天津／香港城／廣州，地圖 zoom = 8 並顯示橘色高亮。
+  - 測試：`python3 -m compileall -q server scripts static` 通過；`python3 -m pytest -q scripts/tests/test_intel_network_cancel_reaction_proof.py` 通過（2 passed）。
+  - 提交：`c690f5b fix: highlight intel network dissolve targets on map`。
+  - 證據截圖：`/Users/benmini/.hermes/cache/screenshots/browser_screenshot_c506238701ce4e3ca9e5ecf730d1d028.png`。
 
 ### 行動卡／指令卡邏輯與回歸測試
 - [done] 補齊多張 action card regression coverage（合作談判、思想建設、思想家、宣傳家、資本家等）。
