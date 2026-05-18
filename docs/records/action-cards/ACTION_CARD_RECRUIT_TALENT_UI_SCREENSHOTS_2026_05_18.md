@@ -72,7 +72,9 @@ Fixture endpoint：`POST /test/setup-recruit-talent-proof`
 2. `ACTION_CARD_RECRUIT_TALENT_RED_ARMY_UI_2026_05_18_02_CHOICE_MODAL.png`
    - 打出 `網羅人才` 後顯示 `卡牌選擇` modal。
    - modal key 顯示 `recruit_talent`。
+   - prompt 顯示紅軍特例文字：`從己方牌庫或棄牌堆任選1張加入手牌`。
    - 候選卡同時包含牌庫的 `宣傳家` / `走漏風聲` 與棄牌堆的 `合作談判`。
+   - UI 來源標籤明確顯示：`宣傳家` 與 `走漏風聲` 標為 `牌庫`，`合作談判` 標為 `棄牌堆`。
 
 3. `ACTION_CARD_RECRUIT_TALENT_RED_ARMY_UI_2026_05_18_03_AFTER_HAND.png`
    - 選棄牌堆來源的 `合作談判` 後 modal 關閉。
@@ -83,9 +85,9 @@ Fixture endpoint：`POST /test/setup-recruit-talent-proof`
    - viewer discard pile 只剩 `網羅人才`，表示 `合作談判` 已從棄牌堆移入手牌。
    - 事件紀錄包含：
      - `[Turn 1] UI proof setup: viewer has 網羅人才; deck/discard choices include 宣傳家 / 走漏風聲 / 合作談判.`
-     - `[Turn 1] viewer may recruit 1 card from deck`
+     - `[Turn 1] viewer may recruit 1 card from deck/discard`
      - `[Turn 1] viewer played 網羅人才`
-     - `[Turn 1] viewer recruited 合作談判 from deck`
+     - `[Turn 1] viewer recruited 合作談判 from discard via 網羅人才`
 
 ## Structured browser state evidence
 
@@ -114,9 +116,9 @@ draw_pile: []
 discard_pile: ['網羅人才']
 action_log last entries:
 - [Turn 1] UI proof setup: viewer has 網羅人才; deck/discard choices include 宣傳家 / 走漏風聲 / 合作談判.
-- [Turn 1] viewer may recruit 1 card from deck
+- [Turn 1] viewer may recruit 1 card from deck/discard
 - [Turn 1] viewer played 網羅人才
-- [Turn 1] viewer recruited 合作談判 from deck
+- [Turn 1] viewer recruited 合作談判 from discard via 網羅人才
 ```
 
 ## Verification commands

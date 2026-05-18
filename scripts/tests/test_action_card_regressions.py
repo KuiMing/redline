@@ -25,7 +25,12 @@ def card(g, name):
 
 
 def names(cards):
-    return [getattr(c, 'name', str(c)) for c in cards]
+    result = []
+    for c in cards:
+        if isinstance(c, dict) and 'card' in c:
+            c = c['card']
+        result.append(getattr(c, 'name', str(c)))
+    return result
 
 
 def play_only(g, name):
@@ -104,16 +109,22 @@ def test_red_army_recruit_talent_can_select_from_own_deck_or_discard():
     assert g.pending_choice and g.pending_choice['type'] == 'card_choice'
     assert g.pending_choice['choice_key'] == 'recruit_talent'
     assert names(g.pending_choice['cards']) == ['DeckChoiceA', 'DeckChoiceB', 'DiscardChoice']
+    assert g.state()['pending_choice']['cards'] == [
+        {'name': 'DeckChoiceA', 'zone': 'draw_pile', 'zone_label': '牌庫'},
+        {'name': 'DeckChoiceB', 'zone': 'draw_pile', 'zone_label': '牌庫'},
+        {'name': 'DiscardChoice', 'zone': 'discard_pile', 'zone_label': '棄牌堆'},
+    ]
 
     resolved = g.resolve_pending_choice(p.id, 2)
 
     assert resolved.get('success'), resolved
+    assert resolved.get('source_zone') == 'discard_pile'
     assert names(p.hand) == ['DiscardChoice']
     assert names(p.deck.discard_pile) == ['網羅人才']
     assert 'DeckChoiceA' not in names(p.deck.draw_pile)
     assert 'DeckChoiceB' not in names(p.deck.draw_pile)
     assert g.pending_choice is None
-    assert any('recruited DiscardChoice from deck' in entry for entry in g.action_log)
+    assert any('recruited DiscardChoice from discard via 網羅人才' in entry for entry in g.action_log)
 
 
 def test_red_support_requires_red_army_to_choose_rebel_discard_target_before_resolving_resource_mode():

@@ -357,11 +357,22 @@ class Game:
         return None
 
     def _set_pending_card_choice(self, player, choice_key, cards, prompt, **extra):
+        card_list = list(cards)
+        card_zones = extra.pop('card_zones', None)
+        if card_zones:
+            normalized_cards = []
+            for card, zone in zip(card_list, card_zones):
+                normalized_cards.append({
+                    'card': card,
+                    'zone': zone.get('zone') if isinstance(zone, dict) else None,
+                    'zone_label': zone.get('zone_label') if isinstance(zone, dict) else None,
+                })
+            card_list = normalized_cards
         self.pending_choice = {
             'type': 'card_choice',
             'choice_key': choice_key,
             'player_id': player.id,
-            'cards': list(cards),
+            'cards': card_list,
             'prompt': prompt,
             **extra,
         }
@@ -463,23 +474,38 @@ class Game:
 
         if choice_key == 'recruit_talent':
             source_cards = choice.get('source_cards') or []
+            chosen_entry = chosen if isinstance(chosen, dict) else None
+            chosen_card = chosen_entry.get('card') if chosen_entry else chosen
+            source_zone = None
+            if chosen_entry:
+                source_zone = chosen_entry.get('zone')
+            elif chosen_card in player.deck.discard_pile:
+                source_zone = 'discard_pile'
+            elif chosen_card in player.deck.draw_pile:
+                source_zone = 'draw_pile'
             for card in list(source_cards):
-                if card is chosen:
+                if card is chosen_card:
                     continue
                 if card in player.deck.draw_pile:
                     player.deck.draw_pile.remove(card)
                 if card in player.deck.discard_pile:
                     player.deck.discard_pile.remove(card)
-            if chosen in player.deck.draw_pile:
-                player.deck.draw_pile.remove(chosen)
-            if chosen in player.deck.discard_pile:
-                player.deck.discard_pile.remove(chosen)
-            player.hand.append(chosen)
+            if chosen_card in player.deck.draw_pile:
+                player.deck.draw_pile.remove(chosen_card)
+                source_zone = source_zone or 'draw_pile'
+            if chosen_card in player.deck.discard_pile:
+                player.deck.discard_pile.remove(chosen_card)
+                source_zone = source_zone or 'discard_pile'
+            player.hand.append(chosen_card)
             import random
             random.shuffle(player.deck.draw_pile)
             self.pending_choice = None
-            self.log(f"{player.name} recruited {getattr(chosen, 'name', str(chosen))} from deck")
-            return {'success': True, 'chosen_card': getattr(chosen, 'name', str(chosen))}
+            chosen_name = getattr(chosen_card, 'name', str(chosen_card))
+            if source_zone == 'discard_pile':
+                self.log(f"{player.name} recruited {chosen_name} from discard via 網羅人才")
+            else:
+                self.log(f"{player.name} recruited {chosen_name} from deck")
+            return {'success': True, 'chosen_card': chosen_name, 'source_zone': source_zone}
 
         if choice_key in {'gain_any_from_discard', 'gain_from_discard'}:
             if chosen not in player.deck.discard_pile:

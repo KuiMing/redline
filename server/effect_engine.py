@@ -221,8 +221,17 @@ class EffectEngine:
         # ✅ Choose any card from own deck (網羅人才)
         if etype == "choose_from_own_deck":
             cards = list(player.deck.draw_pile)
+            card_zones = [
+                {'zone': 'draw_pile', 'zone_label': '牌庫'}
+                for _ in player.deck.draw_pile
+            ]
             if effect.get('include_discard_for_faction') == player.faction_id:
-                cards.extend(player.deck.discard_pile)
+                discard_cards = list(player.deck.discard_pile)
+                cards.extend(discard_cards)
+                card_zones.extend(
+                    {'zone': 'discard_pile', 'zone_label': '棄牌堆'}
+                    for _ in discard_cards
+                )
             if not cards:
                 return
             if hasattr(game, '_set_pending_card_choice'):
@@ -230,8 +239,9 @@ class EffectEngine:
                     player,
                     'recruit_talent',
                     cards,
-                    '網羅人才：從己方牌庫任選1張加入手牌，而後將牌庫洗牌。',
+                    '網羅人才：從己方牌庫或棄牌堆任選1張加入手牌，而後將牌庫洗牌。' if effect.get('include_discard_for_faction') == player.faction_id else '網羅人才：從己方牌庫任選1張加入手牌，而後將牌庫洗牌。',
                     source_cards=cards[:],
+                    card_zones=card_zones,
                 )
             else:
                 game.pending_choice = {
@@ -240,9 +250,10 @@ class EffectEngine:
                     'player_id': player.id,
                     'cards': cards,
                     'source_cards': cards[:],
-                    'prompt': '網羅人才：從己方牌庫任選1張加入手牌，而後將牌庫洗牌。'
+                    'card_zones': card_zones,
+                    'prompt': '網羅人才：從己方牌庫或棄牌堆任選1張加入手牌，而後將牌庫洗牌。' if effect.get('include_discard_for_faction') == player.faction_id else '網羅人才：從己方牌庫任選1張加入手牌，而後將牌庫洗牌。'
                 }
-            game.log(f"{player.name} may recruit 1 card from deck")
+            game.log(f"{player.name} may recruit 1 card from deck/discard" if effect.get('include_discard_for_faction') == player.faction_id else f"{player.name} may recruit 1 card from deck")
             return
 
         # ✅ Temporarily use another player's top deck card (模仿戰術)
