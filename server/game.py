@@ -821,6 +821,29 @@ class Game:
                 **({'pending_choice': True} if isinstance(result, dict) and result.get('pending_choice') else {}),
             }
 
+        if choice_key == 'end_turn_topdeck_action':
+            selected = options[index]
+            self.pending_choice = None
+            if selected.get('action') == 'skip':
+                self.log(f"{player.name} skipped end-turn action topdeck prompt")
+                self._end_turn()
+                return {'success': True, 'choice_index': index, 'skipped': True}
+            hand_index = selected.get('hand_index')
+            card_name = selected.get('card_name')
+            if hand_index is None or hand_index < 0 or hand_index >= len(player.hand):
+                return {'error': 'Chosen action card not in hand'}
+            played_card = player.hand[hand_index]
+            if getattr(played_card, 'name', str(played_card)) != card_name:
+                return {'error': 'Chosen action card changed'}
+            player.hand.pop(hand_index)
+            structured = next((c for c in self.structured_cards if c.get('name') == card_name), None)
+            for effect in list((structured or {}).get('effect') or []):
+                self.effect_engine.execute(effect, player, self, context={'card_name': card_name})
+            player.deck.discard([played_card])
+            self.log(f"{player.name} used {card_name} before drawing new hand")
+            self._end_turn()
+            return {'success': True, 'choice_index': index, 'chosen_card': card_name}
+
         return {'error': 'Unsupported pending choice type'}
 
     def _resolve_town_choice(self, player, choice, index):
@@ -2575,6 +2598,31 @@ class Game:
         self.log(f"{player.name} played {card_name}")
         return {"success": True}
 
+    def _available_purchased_cards_for_end_turn_topdeck(self, player):
+        purchased = list(self.turn_log.get('purchased_cards_this_turn') or [])
+        return [card for card in purchased if card in player.deck.discard_pile]
+
+    def _prompt_end_turn_topdeck_action_if_available(self):
+        player = self.current_player()
+        if not self._available_purchased_cards_for_end_turn_topdeck(player):
+            return None
+        eligible_names = {'行動預告', '行動募資'}
+        options = [{'label': '不使用', 'action': 'skip'}]
+        for idx, card in enumerate(list(player.hand)):
+            card_name = getattr(card, 'name', str(card))
+            if card_name in eligible_names:
+                options.append({'label': f'使用 {card_name}', 'action': 'use', 'card_name': card_name, 'hand_index': idx})
+        if len(options) <= 1:
+            return None
+        self._set_pending_option_choice(
+            player,
+            'end_turn_topdeck_action',
+            options,
+            '回合結束前：你本回合有購得的牌，可使用行動預告／行動募資將其中 1 張置於牌庫頂，接著補牌時抽上手。',
+        )
+        self.log(f"{player.name} may use 行動預告/行動募資 before drawing new hand")
+        return {'pending_choice': True}
+
     def advance_turn_phase(self):
         if self.turn_phase == TurnPhase.EVENT:
             self._check_era_trigger()
@@ -2582,6 +2630,9 @@ class Game:
         elif self.turn_phase == TurnPhase.ACTION:
             self.turn_phase = TurnPhase.END
         elif self.turn_phase == TurnPhase.END:
+            pending = self._prompt_end_turn_topdeck_action_if_available()
+            if pending:
+                return {"success": True, "pending_choice": True}
             self._end_turn()
         return {"success": True}
 

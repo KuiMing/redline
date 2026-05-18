@@ -844,6 +844,59 @@ def test_action_fundraising_topdecks_latest_card_bought_this_turn_and_gains_mone
 
 
 
+def test_end_turn_prompts_action_announcement_and_draws_purchased_card_after_resolution():
+    g = make_game()
+    p = g.current_player()
+    bought = Card('PurchasedCard', 'command', {})
+    p.hand = [card(g, '行動預告'), Card('Filler', 'command', {})]
+    p.deck.draw_pile = [Card('Bottom1', 'command', {}), Card('Bottom2', 'command', {}), Card('Bottom3', 'command', {}), Card('Bottom4', 'command', {}), Card('Bottom5', 'command', {})]
+    p.deck.discard_pile = [bought]
+    g.turn_log['purchased_cards_this_turn'] = [bought]
+    g.turn_phase = TurnPhase.END
+
+    result = g.advance_turn_phase()
+
+    assert result.get('pending_choice') is True
+    assert g.pending_choice and g.pending_choice['type'] == 'option_choice'
+    assert g.pending_choice['choice_key'] == 'end_turn_topdeck_action'
+    assert [option['label'] for option in g.pending_choice['options']] == ['不使用', '使用 行動預告']
+    assert names(p.hand) == ['行動預告', 'Filler']
+
+    resolved = g.resolve_pending_choice(p.id, 1)
+
+    assert resolved.get('success'), resolved
+    assert g.turn_phase == TurnPhase.EVENT
+    assert 'PurchasedCard' in names(p.hand)
+    assert 'PurchasedCard' not in names(p.deck.discard_pile)
+    assert '行動預告' in names(p.deck.discard_pile)
+    assert any('used 行動預告 before drawing new hand' in line for line in g.action_log)
+
+
+
+def test_end_turn_can_skip_action_fundraising_prompt_and_purchased_card_stays_discarded():
+    g = make_game()
+    p = g.current_player()
+    bought = Card('PurchasedCard', 'command', {})
+    p.hand = [card(g, '行動募資')]
+    p.deck.draw_pile = [Card('Draw1', 'command', {}), Card('Draw2', 'command', {}), Card('Draw3', 'command', {}), Card('Draw4', 'command', {}), Card('Draw5', 'command', {})]
+    p.deck.discard_pile = [bought]
+    g.turn_log['purchased_cards_this_turn'] = [bought]
+    g.turn_phase = TurnPhase.END
+
+    result = g.advance_turn_phase()
+
+    assert result.get('pending_choice') is True
+    assert [option['label'] for option in g.pending_choice['options']] == ['不使用', '使用 行動募資']
+    resolved = g.resolve_pending_choice(p.id, 0)
+
+    assert resolved.get('success'), resolved
+    assert g.turn_phase == TurnPhase.EVENT
+    assert 'PurchasedCard' not in names(p.hand)
+    assert 'PurchasedCard' in names(p.deck.discard_pile)
+    assert any('skipped end-turn action topdeck prompt' in line for line in g.action_log)
+
+
+
 def test_negotiation_draws_actor_and_chosen_other_player_only_and_gains_two_propaganda():
     g = make_game()
     p1, p2 = g.players
