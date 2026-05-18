@@ -1204,6 +1204,64 @@ def test_setup_underground_party(payload: dict):
     }
 
 
+@app.post("/test/setup-recruit-talent-proof")
+def test_setup_recruit_talent_proof(payload: dict):
+    game_id = str(uuid.uuid4())
+    players = [(str(uuid.uuid4()), "viewer"), (str(uuid.uuid4()), "red")]
+    game = Game(players)
+
+    viewer = game.players[0]
+    red = game.players[1]
+
+    def proof_card(name):
+        card_def = next((c for c in game.structured_cards if c.get("name") == name), None)
+        if card_def:
+            return Card(card_def["name"], card_def.get("type", "command"), dict(card_def.get("resources", {}) or {}))
+        return Card(name, "command", {})
+
+    viewer.faction_id = payload.get("faction_id", "tibet_dehradun")
+    viewer.base = payload.get("base", "德拉敦")
+    viewer.organizations = payload.get("orgs") or {viewer.base: 1}
+    viewer.resources = payload.get("resources") or {"money": 4, "propaganda": 4}
+    viewer.hand = [proof_card("網羅人才")]
+    deck_names = payload.get("deck_names") or ["宣傳家", "合作談判", "走漏風聲"]
+    viewer.deck.draw_pile = [proof_card(name) for name in deck_names]
+    viewer.deck.discard_pile = [proof_card("棄牌見證")]
+
+    red.faction_id = "red_army"
+    red.base = "北京"
+    red.organizations = {"北京": 1}
+    red.hand = []
+
+    game.purchase_area = game._static_purchase_cards()[:]
+    random_market_names = payload.get("purchase_area_random") or ["批鬥", "組織經驗甲", "組織經驗丙", "北國奧援", "模仿戰術"]
+    game.purchase_area.extend(proof_card(name) for name in random_market_names)
+
+    game.current_player_index = 0
+    game.turn_phase = TurnPhase.ACTION
+    game.game_phase = GamePhase.MAIN
+    game.pending_base_choices = {}
+    game.id = game_id
+    game.log("UI proof setup: viewer has 網羅人才; deck choices include 宣傳家 / 合作談判 / 走漏風聲.")
+
+    manager.games[game_id] = game
+    manager.connections[game_id] = manager.connections.get(game_id, {})
+    lobby[game_id] = list(zip([p.id for p in game.players], [p.name for p in game.players]))
+    lobby_hosts[game_id] = viewer.id
+    lobby_factions[game_id] = {p.id: p.faction_id for p in game.players}
+    lobby_bases[game_id] = {p.id: p.base for p in game.players}
+
+    return {
+        "success": True,
+        "game_id": game_id,
+        "player_id": viewer.id,
+        "deck_draw_pile": [getattr(c, 'name', str(c)) for c in viewer.deck.draw_pile],
+        "discard_pile": [getattr(c, 'name', str(c)) for c in viewer.deck.discard_pile],
+        "hand": [getattr(c, 'name', str(c)) for c in viewer.hand],
+        "state": game.state(),
+    }
+
+
 @app.post("/test/setup-support-card-play")
 def test_setup_support_card_play(payload: dict):
     game_id = str(uuid.uuid4())
