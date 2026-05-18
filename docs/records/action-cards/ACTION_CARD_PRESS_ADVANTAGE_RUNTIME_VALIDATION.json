@@ -1,0 +1,155 @@
+{
+  "generated_at": "2026-05-18T14:23:01",
+  "total": 1,
+  "passed": 1,
+  "failed": 0,
+  "results": [
+    {
+      "card_name": "乘勝追擊",
+      "status": "passed",
+      "failures": [],
+      "play_result": {
+        "success": true,
+        "pending_choice": true
+      },
+      "resolve_result": {
+        "success": true,
+        "chosen_card": "走漏風聲"
+      },
+      "before": {
+        "hand": [
+          "乘勝追擊"
+        ],
+        "discard_pile": [
+          "宣傳家",
+          "合作談判",
+          "走漏風聲"
+        ],
+        "draw_pile": [
+          "追隨者",
+          "追隨者",
+          "追隨者",
+          "樂捐者",
+          "樂捐者"
+        ],
+        "resources": {
+          "money": 0,
+          "propaganda": 0
+        },
+        "turn_log": {
+          "played_money_card": false,
+          "played_propaganda_card": false,
+          "non_starter_discard": false,
+          "successful_discard": false,
+          "built_towns": [],
+          "played_nonstarter_names": [
+            "乘勝追擊"
+          ],
+          "combo_reward_triggered": false,
+          "guerrilla_triggered": false,
+          "faction_action_used": false,
+          "india_flag_money_triggered": false,
+          "purchased_cards_this_turn": [],
+          "reaction_prompted_player_ids": []
+        },
+        "pending_choice": null,
+        "action_log_tail": []
+      },
+      "pending": {
+        "hand": [],
+        "discard_pile": [
+          "宣傳家",
+          "合作談判",
+          "走漏風聲",
+          "乘勝追擊"
+        ],
+        "draw_pile": [
+          "追隨者",
+          "追隨者",
+          "追隨者",
+          "樂捐者",
+          "樂捐者"
+        ],
+        "resources": {
+          "money": 0,
+          "propaganda": 0
+        },
+        "turn_log": {
+          "played_money_card": false,
+          "played_propaganda_card": false,
+          "non_starter_discard": false,
+          "successful_discard": false,
+          "built_towns": [],
+          "played_nonstarter_names": [
+            "乘勝追擊"
+          ],
+          "combo_reward_triggered": false,
+          "guerrilla_triggered": false,
+          "faction_action_used": false,
+          "india_flag_money_triggered": false,
+          "purchased_cards_this_turn": [],
+          "reaction_prompted_player_ids": []
+        },
+        "pending_choice": {
+          "type": "card_choice",
+          "choice_key": "gain_from_discard",
+          "player_id": "p1",
+          "source_name": "乘勝追擊",
+          "max_cost": 3,
+          "cards": [
+            "宣傳家",
+            "走漏風聲"
+          ],
+          "prompt": "從己方棄牌堆任選1張費用3點以下的牌加入手牌。"
+        },
+        "action_log_tail": [
+          "[Turn 1] P1 may gain 1 eligible card from discard",
+          "[Turn 1] P1 played 乘勝追擊"
+        ]
+      },
+      "after": {
+        "hand": [
+          "走漏風聲"
+        ],
+        "discard_pile": [
+          "宣傳家",
+          "合作談判",
+          "乘勝追擊"
+        ],
+        "draw_pile": [
+          "追隨者",
+          "追隨者",
+          "追隨者",
+          "樂捐者",
+          "樂捐者"
+        ],
+        "resources": {
+          "money": 0,
+          "propaganda": 0
+        },
+        "turn_log": {
+          "played_money_card": false,
+          "played_propaganda_card": false,
+          "non_starter_discard": false,
+          "successful_discard": false,
+          "built_towns": [],
+          "played_nonstarter_names": [
+            "乘勝追擊"
+          ],
+          "combo_reward_triggered": false,
+          "guerrilla_triggered": false,
+          "faction_action_used": false,
+          "india_flag_money_triggered": false,
+          "purchased_cards_this_turn": [],
+          "reaction_prompted_player_ids": []
+        },
+        "pending_choice": null,
+        "action_log_tail": [
+          "[Turn 1] P1 may gain 1 eligible card from discard",
+          "[Turn 1] P1 played 乘勝追擊",
+          "[Turn 1] P1 gained 走漏風聲 from discard via 乘勝追擊"
+        ]
+      }
+    }
+  ]
+}

@@ -21,7 +21,7 @@
 
 ### P1：已實作但缺正式 UI 證據
 - [todo] 補 Action 卡正式 UI 證據與回歸紀錄。
-  - 範圍：合作談判、乘勝追擊、擴大戰果、網羅人才、地下黨、走漏風聲、派遣間諜、內應間諜。
+  - 範圍：合作談判、擴大戰果、網羅人才、地下黨、走漏風聲、派遣間諜、內應間諜。
   - 完成條件：每張卡至少有可重跑驗證腳本或正式 UI 截圖，能證明前／中／後狀態與 action log。
 
 ### P2：repo hygiene / validator hygiene
@@ -51,6 +51,10 @@
   - 證據截圖：`/Users/benmini/.hermes/cache/screenshots/browser_screenshot_c506238701ce4e3ca9e5ecf730d1d028.png`。
 
 ### 行動卡／指令卡邏輯與回歸測試
+- [done] 乘勝追擊：補可重跑 runtime validator 與回歸測試。
+  - 2026-05-18：已驗證 `gain_from_discard` pending choice 只列出己方棄牌堆總費用 3 點以下卡牌，總費用以資金 + 宣傳計算；測試同時證明總費用 4 的 `合作談判` 不會被列為候選，解析後選中的 `走漏風聲` 進入手牌，未選／不合格牌留在棄牌堆，並寫入 action log。
+  - 產物：`scripts/validate_action_card_press_advantage_runtime.py`、`docs/records/action-cards/ACTION_CARD_PRESS_ADVANTAGE_RUNTIME_VALIDATION.{json,md}`。
+  - 測試：`python3 scripts/validate_action_card_press_advantage_runtime.py` 通過（1 passed）；`python3 -m pytest -q scripts/tests/test_action_card_regressions.py -k 'press_advantage'` 通過（2 passed）；`python3 -m compileall -q server scripts static` 通過。
 - [done] 行動預告、行動募資：補回合結束前提示與補牌置頂驗證。
   - 2026-05-18：END 階段真正結束回合／補滿手牌前，若手上有 `行動預告` / `行動募資` 且本回合購得牌仍在棄牌堆，會先跳 `end_turn_topdeck_action` 選項提示；玩家可選擇不使用或使用其中一張。
   - 使用後會先把本回合購得牌置於牌庫頂，再執行棄手牌／補到 5 張，因此剛購得的牌會在補牌時進手牌；選擇不使用則購得牌維持在棄牌堆。

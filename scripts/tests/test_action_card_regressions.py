@@ -37,6 +37,37 @@ def play_only(g, name):
     return p
 
 
+def test_press_advantage_prompts_for_eligible_discard_card_and_leaves_high_cost_cards():
+    g = make_game()
+    p = g.current_player()
+    p.hand = [card(g, '乘勝追擊')]
+    p.deck.discard_pile = [
+        card(g, '宣傳家'),      # total cost 3: eligible
+        card(g, '合作談判'),    # total cost 4: ineligible, should not be offered
+        card(g, '走漏風聲'),    # total cost 2: eligible
+    ]
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('pending_choice') is True, result
+    assert g.pending_choice and g.pending_choice['type'] == 'card_choice'
+    assert g.pending_choice['choice_key'] == 'gain_from_discard'
+    assert g.pending_choice['source_name'] == '乘勝追擊'
+    assert g.pending_choice['max_cost'] == 3
+    assert names(g.pending_choice['cards']) == ['宣傳家', '走漏風聲']
+    assert names(p.deck.discard_pile) == ['宣傳家', '合作談判', '走漏風聲', '乘勝追擊']
+
+    resolved = g.resolve_pending_choice(p.id, 1)
+
+    assert resolved.get('success'), resolved
+    assert resolved.get('chosen_card') == '走漏風聲'
+    assert names(p.hand) == ['走漏風聲']
+    assert names(p.deck.discard_pile) == ['宣傳家', '合作談判', '乘勝追擊']
+    assert g.pending_choice is None
+    assert any('gained 走漏風聲 from discard via 乘勝追擊' in entry for entry in g.action_log)
+
+
+
 def test_recruit_talent_selects_any_card_from_own_deck_not_topdeck_only():
     g = make_game()
     p = g.current_player()
