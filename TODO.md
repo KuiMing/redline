@@ -82,7 +82,7 @@
 - [done] 派遣間諜、內應間諜：補北國奧援式互動瓦解流程與正式 UI 證據。
   - 2026-05-19：`派遣間諜` 改為兩段式 pending choice，先選己方犧牲組織，再只列出該組織 1 格內的敵方組織；正式 UI 證明可先選 `北京` / `上海`，選 `上海` 後只可瓦解 `enemy｜杭州`，完成後 viewer 組織 1、enemy 組織 2。
   - 2026-05-19：`內應間諜` 改為直接 target pending choice，不犧牲己方組織；正式 UI 證明只列出 `enemy｜天津`，完成後 viewer 組織仍 1、enemy 組織 1，log 沒有己方犧牲紀錄。
-  - 產物：`docs/records/action-cards/ACTION_CARD_SPY_CARDS_UI_SCREENSHOTS_2026_05_19.md`、`docs/records/action-cards/ACTION_CARD_SPY_CARDS_UI_2026_05_19_*.png`。
+  - 產物：`docs/records/action-cards/ACTION_CARD_SPY_CARDS_UI_SCREENSHOTS_2026_05_19.md`、`docs/records/action-cards/ACTION_CARD_SPY_CARDS_UI_2026_05_19_*.png`；後續已補 `10_FIELD_AGENT_MAP_HIGHLIGHT` / `11_EMBEDDED_AGENT_MAP_HIGHLIGHT`，證明 target choice 會同步在戰略地圖以北國奧援同款橘色外框標出可瓦解目標。
   - 測試：`python3 -m pytest -q scripts/tests/test_action_card_regressions.py -k 'field_agent or embedded_agent or support'` 通過（16 passed）；`python3 -m compileall -q server scripts static` 通過；`git diff --check` 通過。
 - [done] 補齊多張 action card regression coverage（合作談判、思想建設、思想家、宣傳家、資本家等）。
   - 2026-05-12：完成多張行動卡測試補強與既有 regressions 擴充。

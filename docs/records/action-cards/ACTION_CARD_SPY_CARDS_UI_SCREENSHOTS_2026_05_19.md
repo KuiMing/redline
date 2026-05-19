@@ -34,11 +34,16 @@
 - Modal prompt：`派遣間諜：選擇 上海 1 格內的 1 個敵方組織瓦解。`
 - 可選目標只剩：`enemy｜杭州`。
 
-### 4. 完成後狀態
+### 4. 戰略地圖 target highlight
+- 截圖：`ACTION_CARD_SPY_CARDS_UI_2026_05_19_10_FIELD_AGENT_MAP_HIGHLIGHT.png`
+- 證明：切到 `戰略地圖` 時，modal 仍顯示 `派遣間諜` target choice，地圖以北國奧援同款橘色外框標出唯一合法可瓦解目標 `杭州`。
+- Highlight payload：`mode: support-targets`，`towns: [{ town: '杭州', label: 'enemy｜杭州' }]`。
+
+### 5. 完成後狀態
 - 截圖：`ACTION_CARD_SPY_CARDS_UI_2026_05_19_04_FIELD_AGENT_AFTER.png`
 - 證明：viewer 組織 1，enemy 組織 2；代表己方 `上海` 與敵方 `杭州` 已瓦解。
 
-### 5. 戰況紀錄
+### 6. 戰況紀錄
 - 截圖：`ACTION_CARD_SPY_CARDS_UI_2026_05_19_05_FIELD_AGENT_LOG.png`
 - Log 證據：
   - `[Turn 1] viewer played 派遣間諜`
@@ -57,11 +62,16 @@
 - 沒有己方犧牲步驟。
 - 可選目標只列出：`enemy｜天津`。
 
-### 3. 完成後狀態
+### 3. 戰略地圖 target highlight
+- 截圖：`ACTION_CARD_SPY_CARDS_UI_2026_05_19_11_EMBEDDED_AGENT_MAP_HIGHLIGHT.png`
+- 證明：切到 `戰略地圖` 時，modal 仍顯示 `內應間諜` target choice，地圖以北國奧援同款橘色外框標出唯一合法可瓦解目標 `天津`。
+- Highlight payload：`mode: support-targets`，`towns: [{ town: '天津', label: 'enemy｜天津' }]`。
+
+### 4. 完成後狀態
 - 截圖：`ACTION_CARD_SPY_CARDS_UI_2026_05_19_08_EMBEDDED_AGENT_AFTER.png`
 - 證明：viewer 組織仍為 1，enemy 組織降為 1；代表沒有犧牲己方組織，敵方 `天津` 已瓦解。
 
-### 4. 戰況紀錄
+### 5. 戰況紀錄
 - 截圖：`ACTION_CARD_SPY_CARDS_UI_2026_05_19_09_EMBEDDED_AGENT_LOG.png`
 - Log 證據：
   - `[Turn 1] viewer played 內應間諜`
