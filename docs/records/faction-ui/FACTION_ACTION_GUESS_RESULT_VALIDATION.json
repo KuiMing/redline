@@ -1,0 +1,187 @@
+{
+  "summary": {
+    "total": 5,
+    "passed": 5,
+    "failed": 0
+  },
+  "tests": [
+    {
+      "name": "賭徒耳語_odd_奇數牌",
+      "passed": true,
+      "checks": {
+        "success": true,
+        "result_name": true,
+        "revealed_card": true,
+        "cost_total": true,
+        "guess": true,
+        "hit": true,
+        "reward": true,
+        "destination": true,
+        "state_flag": true,
+        "hand_bottomed": true,
+        "revealed_discarded": true,
+        "resource_money": true,
+        "resource_propaganda": true
+      },
+      "result": {
+        "success": true,
+        "result": {
+          "name": "賭徒耳語",
+          "revealed_card": "奇數牌",
+          "cost_total": 1,
+          "guess": "odd",
+          "hit": true,
+          "reward": {
+            "money": 3,
+            "propaganda": 3
+          },
+          "destination": "discard"
+        }
+      },
+      "resources": {
+        "money": 3,
+        "propaganda": 3
+      },
+      "discard_pile": [
+        "奇數牌"
+      ]
+    },
+    {
+      "name": "賭徒耳語_odd_偶數牌",
+      "passed": true,
+      "checks": {
+        "success": true,
+        "result_name": true,
+        "revealed_card": true,
+        "cost_total": true,
+        "guess": true,
+        "hit": true,
+        "reward": true,
+        "destination": true,
+        "state_flag": true,
+        "hand_bottomed": true,
+        "revealed_discarded": true,
+        "resource_money": true,
+        "resource_propaganda": true
+      },
+      "result": {
+        "success": true,
+        "result": {
+          "name": "賭徒耳語",
+          "revealed_card": "偶數牌",
+          "cost_total": 2,
+          "guess": "odd",
+          "hit": false,
+          "reward": {
+            "money": 0,
+            "propaganda": 0
+          },
+          "destination": "discard"
+        }
+      },
+      "resources": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "discard_pile": [
+        "偶數牌"
+      ]
+    },
+    {
+      "name": "民族祭儀_even_偶數牌",
+      "passed": true,
+      "checks": {
+        "success": true,
+        "result_name": true,
+        "revealed_card": true,
+        "cost_total": true,
+        "guess": true,
+        "hit": true,
+        "reward": true,
+        "destination": true,
+        "state_flag": true,
+        "hand_bottomed": true,
+        "revealed_discarded": true,
+        "resource_money": true,
+        "resource_propaganda": true
+      },
+      "result": {
+        "success": true,
+        "result": {
+          "name": "民族祭儀",
+          "revealed_card": "偶數牌",
+          "cost_total": 2,
+          "guess": "even",
+          "hit": true,
+          "reward": {
+            "money": 2,
+            "propaganda": 2
+          },
+          "destination": "discard"
+        }
+      },
+      "resources": {
+        "money": 2,
+        "propaganda": 2
+      },
+      "discard_pile": [
+        "偶數牌"
+      ]
+    },
+    {
+      "name": "民族祭儀_even_奇數牌",
+      "passed": true,
+      "checks": {
+        "success": true,
+        "result_name": true,
+        "revealed_card": true,
+        "cost_total": true,
+        "guess": true,
+        "hit": true,
+        "reward": true,
+        "destination": true,
+        "state_flag": true,
+        "hand_bottomed": true,
+        "revealed_discarded": true,
+        "resource_money": true,
+        "resource_propaganda": true
+      },
+      "result": {
+        "success": true,
+        "result": {
+          "name": "民族祭儀",
+          "revealed_card": "奇數牌",
+          "cost_total": 1,
+          "guess": "even",
+          "hit": false,
+          "reward": {
+            "money": 0,
+            "propaganda": 2
+          },
+          "destination": "discard"
+        }
+      },
+      "resources": {
+        "money": 0,
+        "propaganda": 2
+      },
+      "discard_pile": [
+        "奇數牌"
+      ]
+    },
+    {
+      "name": "static_modal_formats_guess_results",
+      "passed": true,
+      "checks": {
+        "gambler_result_branch": true,
+        "ethnic_result_branch": true,
+        "guess_text": true,
+        "reward_text": true,
+        "result_actions_include_guess_cards": true,
+        "aomen_modal_receives_result_html": true,
+        "ethnic_modal_receives_result_html": true,
+        "placeholder_mentions_guess_result": true
+      }
+    }
+  ]
+}

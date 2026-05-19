@@ -1591,7 +1591,7 @@ function renderFactionActionPanel(state) {
   if (faction === 'aomen') {
     showCenteredActionPanel(
       '賭徒耳語',
-      '澳門可在行動階段發動一次賭徒耳語，請先選擇猜奇或猜偶。',
+      hasResult ? '本回合發動結果如下。' : '澳門可在行動階段發動一次賭徒耳語，請先選擇猜奇或猜偶。',
       (target) => {
         const btn = document.createElement('button');
         btn.className = 'modal-choice-btn';
@@ -1600,7 +1600,8 @@ function renderFactionActionPanel(state) {
         btn.onclick = openGamblerGuessModal;
         target.appendChild(btn);
       },
-      '將 1 張手牌放進牌庫底，猜牌庫頂牌購買費用奇偶；若猜中獲得 3 點宣傳與 3 點資金。'
+      '將 1 張手牌放進牌庫底，猜牌庫頂牌購買費用奇偶；若猜中獲得 3 點宣傳與 3 點資金。',
+      factionResult.html
     );
     return;
   }
@@ -1629,7 +1630,7 @@ function renderFactionActionPanel(state) {
   if (ethnicRitualFactions.has(faction)) {
     showCenteredActionPanel(
       '民族祭儀',
-      '可在行動階段發動一次民族祭儀，請先猜奇偶。',
+      hasResult ? '本回合發動結果如下。' : '可在行動階段發動一次民族祭儀，請先猜奇偶。',
       (target) => {
         const btn = document.createElement('button');
         btn.className = 'modal-choice-btn';
@@ -1638,7 +1639,8 @@ function renderFactionActionPanel(state) {
         btn.onclick = openEthnicRitualGuessModal;
         target.appendChild(btn);
       },
-      '猜中可獲得 2 點宣傳與 2 點資金；沒猜中則獲得 2 點宣傳。'
+      '猜中可獲得 2 點宣傳與 2 點資金；沒猜中則獲得 2 點宣傳。',
+      factionResult.html
     );
   }
 }
@@ -1652,11 +1654,22 @@ function setPhaseActionNotice(message = '') {
 
 function formatFactionActionResult(result) {
   if (!result || !result.name) return '';
+  const cardName = result.revealed_card || '未知卡牌';
+  const costText = Number.isFinite(result.cost_total) ? `（費用 ${result.cost_total}）` : '';
   if (result.name === '立場試探') {
-    const cardName = result.revealed_card || '未知卡牌';
-    const costText = Number.isFinite(result.cost_total) ? `（費用 ${result.cost_total}）` : '';
     const destinationText = result.destination === 'hand' ? '加入手牌' : result.destination === 'discard' ? '放入棄牌堆' : '已處理';
     return `立場試探結果：翻到 ${cardName}${costText}，${destinationText}`;
+  }
+  if (result.name === '賭徒耳語' || result.name === '民族祭儀') {
+    const guessText = result.guess === 'odd' ? '奇數' : result.guess === 'even' ? '偶數' : '未知';
+    const parityText = Number.isFinite(result.cost_total) ? (result.cost_total % 2 === 1 ? '奇數' : '偶數') : '未知';
+    const outcomeText = result.hit ? '猜中' : '沒猜中';
+    const reward = result.reward || {};
+    const rewardParts = [];
+    if (Number(reward.money || 0) > 0) rewardParts.push(`資金 +${Number(reward.money || 0)}`);
+    if (Number(reward.propaganda || 0) > 0) rewardParts.push(`宣傳 +${Number(reward.propaganda || 0)}`);
+    const rewardText = rewardParts.length ? `，獲得 ${rewardParts.join('、')}` : '，未獲得額外資源';
+    return `${result.name}結果：猜${guessText}，翻到 ${cardName}${costText} 是${parityText}，${outcomeText}${rewardText}`;
   }
   return '';
 }
@@ -1667,7 +1680,8 @@ function renderFactionActionResult(state, faction) {
 
   const result = state.last_action_result || null;
   const message = formatFactionActionResult(result);
-  if (result?.name === '立場試探' && message) {
+  const resultActionNames = new Set(['立場試探', '賭徒耳語', '民族祭儀']);
+  if (resultActionNames.has(result?.name) && message) {
     const resultKey = JSON.stringify(result);
     if (lastFactionActionResultKey !== resultKey) {
       lastFactionActionResultKey = resultKey;
@@ -1683,6 +1697,19 @@ function renderFactionActionResult(state, faction) {
 
   if (faction === 'liberals') {
     const html = '<div class="faction-action-placeholder">發動後會在此直接顯示翻到的卡牌與去向。</div>';
+    info.innerHTML = html;
+    return {hasResult: false, message: '', html};
+  }
+
+  if (faction === 'aomen') {
+    const html = '<div class="faction-action-placeholder">發動後會在此直接顯示猜測、翻牌與資源結果。</div>';
+    info.innerHTML = html;
+    return {hasResult: false, message: '', html};
+  }
+
+  const ethnicRitualFactions = new Set(['dian_zhuang','zhuang','yi','bai','hani','dai','miao','tujia','dong','buyei','yao','li']);
+  if (ethnicRitualFactions.has(faction)) {
+    const html = '<div class="faction-action-placeholder">發動後會在此直接顯示猜測、翻牌與資源結果。</div>';
     info.innerHTML = html;
     return {hasResult: false, message: '', html};
   }

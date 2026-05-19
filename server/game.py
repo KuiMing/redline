@@ -2041,7 +2041,22 @@ class Game:
                     player.resources['propaganda'] += 2
             player.deck.discard([card])
             self.log(f"{player.name} triggered {action_name}, guessed {guess}, and revealed {card.name}")
-            return {"success": True}
+            reward = {
+                "money": 3 if action_name == '賭徒耳語' and hit else (2 if action_name == '民族祭儀' and hit else 0),
+                "propaganda": 3 if action_name == '賭徒耳語' and hit else (2 if action_name == '民族祭儀' else 0),
+            }
+            return {
+                "success": True,
+                "result": {
+                    "name": action_name,
+                    "revealed_card": getattr(card, 'name', str(card)),
+                    "cost_total": total,
+                    "guess": guess,
+                    "hit": hit,
+                    "reward": reward,
+                    "destination": "discard",
+                },
+            }
 
         return {"error": "Unknown faction action"}
 

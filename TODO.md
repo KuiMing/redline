@@ -30,8 +30,15 @@
 ### P3：後續 UI polish
 - 目前無 P3 active todo。
   - 2026-05-19 已清理 faction action centered modal 殘留狀態：猜奇偶按鈕改為動態建立，陣營能力本回合已發動後不再殘留「發動」或猜奇偶按鈕，舊 `#factionActionPanel` 維持隱藏。
+  - 2026-05-19 已補 `賭徒耳語` / `民族祭儀` resolve 後的結果顯示：modal 會列出猜奇偶、翻到卡牌、費用奇偶、猜中／沒中與資源獎勵。
 
 ## 已完成
+
+- [done] 賭徒耳語／民族祭儀：補 resolve 後的結果顯示。
+  - 2026-05-19：`server/game.py` 現在會為 `賭徒耳語` / `民族祭儀` 回傳 `last_action_result` payload，包含翻到卡牌、總費用、猜奇偶、是否猜中、獎勵與棄牌去向。
+  - `static/app.js` 的 centered modal 會在發動後顯示結果文字，例如「賭徒耳語結果：猜奇數，翻到 追隨者（費用 1） 是奇數，猜中，獲得 資金 +3、宣傳 +3」；民族祭儀同樣顯示 +2/+2 或沒猜中仍 +2 宣傳的結果。
+  - 產物：`scripts/validate_faction_action_guess_result.py`、`docs/records/faction-ui/FACTION_ACTION_GUESS_RESULT_VALIDATION.{json,md}`、`FACTION_ACTION_GAMBLER_GUESS_RESULT_UI_2026_05_19.png`、`FACTION_ACTION_ETHNIC_RITUAL_RESULT_UI_2026_05_19.png`。
+  - 驗證：`python3 scripts/validate_faction_action_guess_result.py` 通過（5 passed）；`python3 scripts/validate_faction_action_centered_modal_cleanup.py` 通過；正式 browser console/vision 驗證兩張卡結果 modal 只剩 `取消`，且顯示猜測、翻牌、費用與獎勵；`python3 -m compileall -q server scripts static` 與 `git diff --check` 通過。
 
 - [done] 清理 faction action centered modal 上線後的殘留 UI 狀態。
   - 2026-05-19：已修正 `static/app.js`，猜奇偶 modal 改為動態建立「猜奇數／猜偶數」按鈕，避免 centered modal 先清空 `#factionActionModalChoices` 後仍呼叫舊 `guessOddBtn` / `guessEvenBtn` 造成按鈕殘留或失效。
