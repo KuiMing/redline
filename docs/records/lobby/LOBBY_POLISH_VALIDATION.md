@@ -16,4 +16,4 @@ screenshot: /Users/benmini/.openclaw/workspace/redline/lobby_polish_validation.p
 
 ## lobby_roster_syncs_all_joined_players
 - result: PASS
-- detail: {"roster_text": "H\nhost\n房主 / 你｜未準備｜尚未選擇陣營\nA\nally\n玩家｜未準備｜尚未選擇陣營\n+\n等待玩家加入\n分享房間代碼邀請下一位玩家\n+\n空席位\n最多 4 位玩家", "card_count": 4, "second_player_id": "4b5782ce-e685-4823-b5aa-530d30860bbd"}
+- detail: {"roster_text": "H\nhost\n房主 / 你｜未準備｜尚未選擇陣營\nA\nally\n玩家｜未準備｜尚未選擇陣營\n+\n等待玩家加入\n分享房間代碼邀請下一位玩家\n+\n空席位\n最多 4 位玩家", "card_count": 4, "second_player_id": "79b9c904-ee5d-45c1-9f6e-70dd2b665941"}

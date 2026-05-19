@@ -6,6 +6,7 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parent.parent
+RECORD_DIR = ROOT / 'docs' / 'records' / 'faction-ui'
 sys.path.insert(0, str(ROOT))
 
 from server.game import Game
@@ -57,12 +58,13 @@ def validate_ui():
         page.click('text=發動 民族祭儀')
         page.wait_for_timeout(300)
         modal_visible = page.locator('#factionActionModal').is_visible()
-        page.screenshot(path='ethnic_ritual_guess_modal_ui.png', full_page=True)
+        page.screenshot(path=str(RECORD_DIR / 'ethnic_ritual_guess_modal_ui.png'), full_page=True)
         browser.close()
     return visible, modal_visible
 
 
 def main():
+    RECORD_DIR.mkdir(parents=True, exist_ok=True)
     engine_result, resources = validate_engine()
     panel_visible, modal_visible = validate_ui()
     payload = {
@@ -76,8 +78,8 @@ def main():
         'panel_visible': panel_visible,
         'modal_visible': modal_visible,
     }
-    Path('ETHNIC_RITUAL_UI_AND_ENGINE_VALIDATION.json').write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-    Path('ETHNIC_RITUAL_UI_AND_ENGINE_VALIDATION.md').write_text(
+    (RECORD_DIR / 'ETHNIC_RITUAL_UI_AND_ENGINE_VALIDATION.json').write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    (RECORD_DIR / 'ETHNIC_RITUAL_UI_AND_ENGINE_VALIDATION.md').write_text(
         '# ETHNIC RITUAL UI AND ENGINE VALIDATION\n\n'
         f"- engine_result: {json.dumps(engine_result, ensure_ascii=False)}\n"
         f"- resources: {resources}\n"
@@ -86,6 +88,8 @@ def main():
         encoding='utf-8'
     )
     print(json.dumps(payload, ensure_ascii=False))
+    if payload['summary']['failed']:
+        raise SystemExit(1)
 
 
 if __name__ == '__main__':

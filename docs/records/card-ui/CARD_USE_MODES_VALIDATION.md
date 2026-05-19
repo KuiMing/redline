@@ -13,9 +13,9 @@
 - discard: ['地下黨']
 
 ## PASS — action_mode_executes_effect_without_printed_resources
-- result: {'success': True}
+- result: {'success': True, 'pending_choice': True}
 - resources: {'money': 0, 'propaganda': 0}
-- pending_choice: {'type': 'underground_party', 'player_id': 'p1', 'prompt': '地下黨：從購買區牌庫頂拿取3張牌，任選其中1張加入手牌，其餘移除。', 'cards': ['候選一', '候選二', '候選三']}
+- pending_choice: {'type': 'card_choice', 'choice_key': 'underground_party', 'player_id': 'p1', 'prompt': '地下黨：從購買區牌庫頂拿取3張牌，任選其中1張加入手牌，其餘移除。', 'source_name': None, 'count': None, 'mode': None, 'acting_player_id': None, 'acting_player_name': None, 'played_card_name': None, 'cards': ['候選一', '候選二', '候選三'], 'options': [], 'towns': [], 'targets': [], 'step': None}
 - purchase_draw_after: ['底牌']
 - discard: ['地下黨']
 

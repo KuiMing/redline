@@ -14,10 +14,11 @@ except ModuleNotFoundError:
     raise
 
 ROOT = Path(__file__).resolve().parent.parent
+RECORD_DIR = ROOT / 'docs' / 'records' / 'lobby'
 BASE_URL = 'http://127.0.0.1:8000'
-OUT_JSON = ROOT / 'LOBBY_READY_SYNC_VALIDATION.json'
-OUT_MD = ROOT / 'LOBBY_READY_SYNC_VALIDATION.md'
-SCREENSHOT = ROOT / 'lobby_ready_sync_validation.png'
+OUT_JSON = RECORD_DIR / 'LOBBY_READY_SYNC_VALIDATION.json'
+OUT_MD = RECORD_DIR / 'LOBBY_READY_SYNC_VALIDATION.md'
+SCREENSHOT = RECORD_DIR / 'lobby_ready_sync_validation.png'
 
 
 def request_json(path, payload=None):
@@ -114,6 +115,7 @@ def check_page(page):
 
 
 def main():
+    RECORD_DIR.mkdir(parents=True, exist_ok=True)
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         ctx = browser.new_context(viewport={'width': 1280, 'height': 720})

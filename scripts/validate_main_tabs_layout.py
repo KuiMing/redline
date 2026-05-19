@@ -13,10 +13,11 @@ except ModuleNotFoundError:
     raise
 
 ROOT = Path(__file__).resolve().parent.parent
+RECORD_DIR = ROOT / 'docs' / 'records' / 'layout-ui'
 BASE_URL = 'http://127.0.0.1:8000'
-OUT_JSON = ROOT / 'MAIN_TABS_LAYOUT_VALIDATION.json'
-OUT_MD = ROOT / 'MAIN_TABS_LAYOUT_VALIDATION.md'
-SCREENSHOT = ROOT / 'main_tabs_layout_validation.png'
+OUT_JSON = RECORD_DIR / 'MAIN_TABS_LAYOUT_VALIDATION.json'
+OUT_MD = RECORD_DIR / 'MAIN_TABS_LAYOUT_VALIDATION.md'
+SCREENSHOT = RECORD_DIR / 'main_tabs_layout_validation.png'
 
 
 def post(path, payload):
@@ -105,6 +106,7 @@ def check_page(page):
 
 
 def main():
+    RECORD_DIR.mkdir(parents=True, exist_ok=True)
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         ctx = browser.new_context(viewport={'width': 1280, 'height': 720})

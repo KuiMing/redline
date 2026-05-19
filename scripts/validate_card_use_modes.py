@@ -14,14 +14,15 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+RECORD_DIR = ROOT / 'docs' / 'records' / 'card-ui'
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from server.cards import Card
 from server.game import Game, GamePhase, TurnPhase
 
-OUT_JSON = ROOT / "CARD_USE_MODES_VALIDATION.json"
-OUT_MD = ROOT / "CARD_USE_MODES_VALIDATION.md"
+OUT_JSON = RECORD_DIR / "CARD_USE_MODES_VALIDATION.json"
+OUT_MD = RECORD_DIR / "CARD_USE_MODES_VALIDATION.md"
 
 
 def names(cards):
@@ -177,6 +178,7 @@ def write_report(results):
 
 
 def main():
+    RECORD_DIR.mkdir(parents=True, exist_ok=True)
     results = [
         check_resource_mode_grants_only_printed_resources(),
         check_action_mode_executes_only_effect_without_printed_resources(),

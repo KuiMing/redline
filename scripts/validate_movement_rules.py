@@ -5,13 +5,14 @@ from datetime import date
 from pathlib import Path
 
 BASE = Path(__file__).resolve().parent.parent
+RECORD_DIR = BASE / 'docs' / 'records' / 'map-ui'
 if str(BASE) not in sys.path:
     sys.path.insert(0, str(BASE))
 
 from server.game import Game, GamePhase, TurnPhase
 
-OUT_JSON = BASE / 'MOVEMENT_RULES_VALIDATION.json'
-OUT_MD = BASE / 'MOVEMENT_RULES_VALIDATION.md'
+OUT_JSON = RECORD_DIR / 'MOVEMENT_RULES_VALIDATION.json'
+OUT_MD = RECORD_DIR / 'MOVEMENT_RULES_VALIDATION.md'
 
 
 def make_game():
@@ -217,6 +218,7 @@ def write_outputs(checks):
 
 
 def main():
+    RECORD_DIR.mkdir(parents=True, exist_ok=True)
     out = write_outputs(run_checks())
     print(json.dumps({'summary': out['summary'], 'json': str(OUT_JSON), 'md': str(OUT_MD)}, ensure_ascii=False))
     if out['summary']['failed']:

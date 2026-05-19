@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+RECORD_DIR = ROOT / 'docs' / 'records' / 'shared-actions'
 sys.path.insert(0, str(ROOT))
 
 from server.game import Game
@@ -62,6 +63,7 @@ def validate_shared_dissolve_triggers_defense():
 
 
 def main():
+    RECORD_DIR.mkdir(parents=True, exist_ok=True)
     results = [
         validate_shared_dissolve_hits_actual_owner(),
         validate_shared_dissolve_triggers_defense(),
@@ -72,7 +74,7 @@ def main():
         'failed': sum(1 for r in results if not r['ok']),
     }
     payload = {'summary': summary, 'results': results}
-    (ROOT / 'SHARED_DISSOLVE_PHASE8_VALIDATION.json').write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    (RECORD_DIR / 'SHARED_DISSOLVE_PHASE8_VALIDATION.json').write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     lines = [
         '# SHARED DISSOLVE PHASE8 VALIDATION',
         '',
@@ -83,8 +85,10 @@ def main():
     ]
     for r in results:
         lines.append(f"- {'PASS' if r['ok'] else 'FAIL'} {r['name']}: {json.dumps(r['detail'], ensure_ascii=False)}")
-    (ROOT / 'SHARED_DISSOLVE_PHASE8_VALIDATION.md').write_text('\n'.join(lines) + '\n', encoding='utf-8')
+    (RECORD_DIR / 'SHARED_DISSOLVE_PHASE8_VALIDATION.md').write_text('\n'.join(lines) + '\n', encoding='utf-8')
     print(json.dumps(payload, ensure_ascii=False))
+    if payload['summary']['failed']:
+        raise SystemExit(1)
 
 
 if __name__ == '__main__':

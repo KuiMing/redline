@@ -41,7 +41,8 @@
       "passed": true,
       "details": {
         "result": {
-          "success": true
+          "success": true,
+          "pending_choice": true
         },
         "before_deck": [
           "牌庫底",
@@ -53,15 +54,15 @@
         "deck_after": [
           "牌庫底"
         ],
-        "discard_after": [],
+        "discard_after": [
+          "誘導虛耗"
+        ],
         "resources_after": {
           "money": 0,
           "propaganda": 0
         },
         "build_range_bonus": 0,
         "action_log_tail": [
-          "[Turn 1] 誘導虛耗 returned to purchase deck discard",
-          "[Turn 1] P1 removed 誘導虛耗 and it returned to deck_discard",
           "[Turn 1] P1 played 誘導虛耗"
         ]
       }

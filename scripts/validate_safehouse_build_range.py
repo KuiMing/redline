@@ -3,12 +3,14 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+RECORD_DIR = ROOT / 'docs' / 'records' / 'safehouse'
 sys.path.insert(0, str(ROOT))
 
 from server.game import Game, TurnPhase
 
 
 def main():
+    RECORD_DIR.mkdir(parents=True, exist_ok=True)
     g = Game([('p1', 'HK'), ('p2', 'Other')])
     hk = g.players[0]
     hk.faction_id = 'hong_kong'
@@ -25,8 +27,8 @@ def main():
         'far': far,
         'orgs': hk.organizations,
     }
-    Path('SAFEHOUSE_BUILD_RANGE_VALIDATION.json').write_text(json.dumps(out, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-    Path('SAFEHOUSE_BUILD_RANGE_VALIDATION.md').write_text(
+    (RECORD_DIR / 'SAFEHOUSE_BUILD_RANGE_VALIDATION.json').write_text(json.dumps(out, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    (RECORD_DIR / 'SAFEHOUSE_BUILD_RANGE_VALIDATION.md').write_text(
         '# SAFEHOUSE BUILD RANGE VALIDATION\n\n'
         f"- near: {json.dumps(near, ensure_ascii=False)}\n"
         f"- far: {json.dumps(far, ensure_ascii=False)}\n",

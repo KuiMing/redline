@@ -1,6 +1,8 @@
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+RECORD_DIR = ROOT / 'docs' / 'records' / 'shared-actions'
+RECORD_DIR.mkdir(parents=True, exist_ok=True)
 js = (ROOT / 'static' / 'leaflet_game_map_logic.js').read_text(encoding='utf-8')
 html = (ROOT / 'static' / 'leaflet_game_map.html').read_text(encoding='utf-8')
 
@@ -16,8 +18,8 @@ checks = {
 passed = sum(1 for v in checks.values() if v)
 failed = sum(1 for v in checks.values() if not v)
 
-json_path = ROOT / 'SHARED_MAP_VISUAL_PHASE8_VALIDATION.json'
-md_path = ROOT / 'SHARED_MAP_VISUAL_PHASE8_VALIDATION.md'
+json_path = RECORD_DIR / 'SHARED_MAP_VISUAL_PHASE8_VALIDATION.json'
+md_path = RECORD_DIR / 'SHARED_MAP_VISUAL_PHASE8_VALIDATION.md'
 
 payload = {
     'summary': {
@@ -36,3 +38,5 @@ md_path.write_text(
     encoding='utf-8'
 )
 print(json.dumps(payload, ensure_ascii=False))
+if payload['summary']['failed']:
+    raise SystemExit(1)

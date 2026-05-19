@@ -3,20 +3,23 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+RECORD_DIR = ROOT / 'docs' / 'records' / 'shared-actions'
 sys.path.insert(0, str(ROOT))
 
 from server.game import Game, TurnPhase
 
 
 def main():
+    RECORD_DIR.mkdir(parents=True, exist_ok=True)
     g = Game([('p1', 'HK'), ('p2', 'Yue')])
     hk, yue = g.players
     hk.faction_id = 'hong_kong'
     yue.faction_id = 'yue'
     hk.base = '香港城'
-    yue.base = '廣州'
+    yue.base = '南寧'
     hk.organizations = {}
     yue.organizations = {'廣州': 1}
+    hk.moves_left = 1
     g.turn_phase = TurnPhase.ACTION
     g.current_player_index = 0
 
@@ -32,8 +35,8 @@ def main():
         'hk_orgs': hk.organizations,
         'yue_orgs': yue.organizations,
     }
-    (ROOT / 'SHARED_MOVE_PHASE8_VALIDATION.json').write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-    (ROOT / 'SHARED_MOVE_PHASE8_VALIDATION.md').write_text(
+    (RECORD_DIR / 'SHARED_MOVE_PHASE8_VALIDATION.json').write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    (RECORD_DIR / 'SHARED_MOVE_PHASE8_VALIDATION.md').write_text(
         '# SHARED MOVE PHASE8 VALIDATION\n\n'
         f"- result: {json.dumps(result, ensure_ascii=False)}\n"
         f"- hk_orgs: {json.dumps(hk.organizations, ensure_ascii=False)}\n"
@@ -41,6 +44,8 @@ def main():
         encoding='utf-8'
     )
     print(json.dumps(payload, ensure_ascii=False))
+    if payload['summary']['failed']:
+        raise SystemExit(1)
 
 
 if __name__ == '__main__':

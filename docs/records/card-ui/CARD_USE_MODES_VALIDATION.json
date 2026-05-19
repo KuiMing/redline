@@ -37,21 +37,33 @@
       "passed": true,
       "details": {
         "result": {
-          "success": true
+          "success": true,
+          "pending_choice": true
         },
         "resources": {
           "money": 0,
           "propaganda": 0
         },
         "pending_choice": {
-          "type": "underground_party",
+          "type": "card_choice",
+          "choice_key": "underground_party",
           "player_id": "p1",
           "prompt": "地下黨：從購買區牌庫頂拿取3張牌，任選其中1張加入手牌，其餘移除。",
+          "source_name": null,
+          "count": null,
+          "mode": null,
+          "acting_player_id": null,
+          "acting_player_name": null,
+          "played_card_name": null,
           "cards": [
             "候選一",
             "候選二",
             "候選三"
-          ]
+          ],
+          "options": [],
+          "towns": [],
+          "targets": [],
+          "step": null
         },
         "purchase_draw_after": [
           "底牌"

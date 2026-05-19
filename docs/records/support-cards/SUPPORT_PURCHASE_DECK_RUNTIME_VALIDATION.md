@@ -6,7 +6,7 @@ Summary: 8/8 passed
 - initial_area_len: 11
 - initial_deck_len: 48
 - support_total: 18
-- purchase_names: ["宣傳家", "思想家", "資助者", "資本家", "分神", "內鬥", "組織經驗甲", "派遣間諜", "臺灣奧援", "內鬥", "北國奧援"]
+- purchase_names: ["宣傳家", "思想家", "資助者", "資本家", "分神", "內鬥", "組織經驗甲", "凝聚共識", "離間", "批鬥", "樹立信心"]
 - static_supply_before: {"宣傳家": 1, "思想家": 1, "資助者": 1, "資本家": 1, "分神": 1, "內鬥": 1}
 - static_supply_after: {"宣傳家": 0, "思想家": 1, "資助者": 1, "資本家": 1, "分神": 1, "內鬥": 1}
 - static_buy_result: {"success": true}

@@ -1,5 +1,5 @@
 {
-  "game_id": "0e5b03d0-4998-417a-87fa-a0bdc5dbc93c",
+  "game_id": "920feeac-3121-4afb-8945-1662f39a9557",
   "summary": {
     "total": 6,
     "passed": 6,
@@ -30,7 +30,7 @@
       "ok": true,
       "detail": {
         "roster_text": "H\nhost\n房主 / 你｜未準備｜尚未選擇陣營\nA\nally\n玩家｜未準備｜尚未選擇陣營\n+\n等待玩家加入\n分享房間代碼邀請下一位玩家\n+\n空席位\n最多 4 位玩家",
-        "second_player_id": "caccdf9f-9c1e-4917-93cb-3d51f36f1c8d"
+        "second_player_id": "cc7d4139-8eae-4e8f-862b-2e33317e7608"
       }
     },
     {
@@ -44,7 +44,8 @@
           "host_id",
           "market_mode",
           "players",
-          "ready"
+          "ready",
+          "started"
         ]
       }
     },

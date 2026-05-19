@@ -1,7 +1,7 @@
 {
-  "game_id": "c1c5968c-c3de-435f-b887-d5a7bc1cfe12",
-  "host_player_id": "6f44ac54-c468-4055-b06c-d6d77fa1b2d5",
-  "ally_player_id": "0578cb81-4f06-46e1-a3a0-82053bd8d923",
+  "game_id": "cdcfe01d-49d1-40e9-acab-9814ff996882",
+  "host_player_id": "dc1b7be3-ef88-46aa-b2e9-01d6185907bc",
+  "ally_player_id": "73569706-8a0c-4d70-a8cb-20f6c8e2fbfe",
   "summary": {
     "total": 8,
     "passed": 8,
@@ -39,7 +39,7 @@
       "ok": true,
       "detail": {
         "player": {
-          "id": "6f44ac54-c468-4055-b06c-d6d77fa1b2d5",
+          "id": "dc1b7be3-ef88-46aa-b2e9-01d6185907bc",
           "name": "host",
           "faction": "red_army",
           "base": "北京",
@@ -51,7 +51,7 @@
           "hand": [
             "追隨者",
             "追隨者",
-            "樂捐者",
+            "追隨者",
             "樂捐者",
             "追隨者"
           ],
@@ -72,7 +72,7 @@
       "ok": true,
       "detail": {
         "player": {
-          "id": "0578cb81-4f06-46e1-a3a0-82053bd8d923",
+          "id": "73569706-8a0c-4d70-a8cb-20f6c8e2fbfe",
           "name": "ally",
           "faction": "taiwan_green",
           "base": "臺北",
@@ -83,7 +83,7 @@
           "moves_left": 0,
           "hand": [
             "追隨者",
-            "樂捐者",
+            "追隨者",
             "追隨者",
             "樂捐者",
             "追隨者"
@@ -105,7 +105,7 @@
       "ok": true,
       "detail": {
         "player": {
-          "id": "6f44ac54-c468-4055-b06c-d6d77fa1b2d5",
+          "id": "dc1b7be3-ef88-46aa-b2e9-01d6185907bc",
           "name": "host",
           "faction": "red_army",
           "base": "北京",
@@ -117,7 +117,7 @@
           "hand": [
             "追隨者",
             "追隨者",
-            "樂捐者",
+            "追隨者",
             "樂捐者",
             "追隨者"
           ],
@@ -134,7 +134,7 @@
       "ok": true,
       "detail": {
         "player": {
-          "id": "0578cb81-4f06-46e1-a3a0-82053bd8d923",
+          "id": "73569706-8a0c-4d70-a8cb-20f6c8e2fbfe",
           "name": "ally",
           "faction": "taiwan_green",
           "base": "臺北",
@@ -145,7 +145,7 @@
           "moves_left": 0,
           "hand": [
             "追隨者",
-            "樂捐者",
+            "追隨者",
             "追隨者",
             "樂捐者",
             "追隨者"
@@ -170,11 +170,11 @@
           "資本家",
           "分神",
           "內鬥",
-          "高效行動",
-          "組織經驗乙",
-          "誘導虛耗",
-          "凝聚共識",
-          "合作談判"
+          "交通經驗乙",
+          "爆料黑幕",
+          "情報網",
+          "領導",
+          "樹立信心"
         ],
         "static_supply": {
           "宣傳家": 1,

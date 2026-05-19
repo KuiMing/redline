@@ -5,6 +5,7 @@ from datetime import date
 from pathlib import Path
 
 BASE = Path(__file__).resolve().parent.parent
+RECORD_DIR = BASE / 'docs' / 'records' / 'card-ui'
 if str(BASE) not in sys.path:
     sys.path.insert(0, str(BASE))
 
@@ -12,8 +13,8 @@ from server.cards import Card
 from server.deck import Deck
 from server.game import Game, GamePhase, TurnPhase
 
-OUT_JSON = BASE / 'DECK_LIFECYCLE_VALIDATION.json'
-OUT_MD = BASE / 'DECK_LIFECYCLE_VALIDATION.md'
+OUT_JSON = RECORD_DIR / 'DECK_LIFECYCLE_VALIDATION.json'
+OUT_MD = RECORD_DIR / 'DECK_LIFECYCLE_VALIDATION.md'
 
 
 def make_card(name, card_type='test', money=0, propaganda=0):
@@ -225,6 +226,7 @@ def write_outputs(checks):
 
 
 def main():
+    RECORD_DIR.mkdir(parents=True, exist_ok=True)
     out = write_outputs(run_checks())
     print(json.dumps({'summary': out['summary'], 'json': str(OUT_JSON), 'md': str(OUT_MD)}, ensure_ascii=False))
     if out['summary']['failed']:

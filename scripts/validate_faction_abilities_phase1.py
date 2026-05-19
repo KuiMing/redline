@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+RECORD_DIR = ROOT / 'docs' / 'records' / 'faction-ui'
 sys.path.insert(0, str(ROOT))
 
 from server.game import Game, TurnPhase
@@ -97,6 +98,7 @@ def test_kazakh_propaganda_draw():
 
 
 def main():
+    RECORD_DIR.mkdir(parents=True, exist_ok=True)
     results = [
         test_hong_kong_setup(),
         test_hong_kong_international_line(),
@@ -111,9 +113,9 @@ def main():
         'failed': sum(1 for r in results if not r['ok']),
     }
     out = {'summary': summary, 'results': results}
-    with open('FACTION_ABILITY_PHASE1_VALIDATION.json', 'w', encoding='utf-8') as f:
+    with open(RECORD_DIR / 'FACTION_ABILITY_PHASE1_VALIDATION.json', 'w', encoding='utf-8') as f:
         json.dump(out, f, ensure_ascii=False, indent=2)
-    with open('FACTION_ABILITY_PHASE1_VALIDATION.md', 'w', encoding='utf-8') as f:
+    with open(RECORD_DIR / 'FACTION_ABILITY_PHASE1_VALIDATION.md', 'w', encoding='utf-8') as f:
         f.write('# FACTION ABILITY PHASE1 VALIDATION\n\n')
         f.write(f"- total: {summary['total']}\n")
         f.write(f"- passed: {summary['passed']}\n")
@@ -122,6 +124,8 @@ def main():
             mark = 'PASS' if r['ok'] else 'FAIL'
             f.write(f"- {mark} {r['name']}: {r['detail']}\n")
     print(json.dumps(out, ensure_ascii=False))
+    if summary['failed']:
+        raise SystemExit(1)
 
 
 if __name__ == '__main__':

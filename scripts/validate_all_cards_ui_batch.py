@@ -4,6 +4,7 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 BASE = Path(__file__).resolve().parent.parent
+RECORD_DIR = BASE / 'docs' / 'records' / 'card-ui'
 CARDS = json.loads((BASE / 'data' / 'action_cards_structured.v1.1.json').read_text(encoding='utf-8'))['cards']
 
 
@@ -99,7 +100,8 @@ def main():
     parser.add_argument('--end', type=int, required=True)
     args = parser.parse_args()
     results = run_batch(args.start, args.end)
-    out = BASE / f"CARD_UI_FULL_VALIDATION_BATCH_{args.start}_{args.end}.json"
+    RECORD_DIR.mkdir(parents=True, exist_ok=True)
+    out = RECORD_DIR / f"CARD_UI_FULL_VALIDATION_BATCH_{args.start}_{args.end}.json"
     out.write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding='utf-8')
     print(out)
 

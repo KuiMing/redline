@@ -22,10 +22,11 @@ except ModuleNotFoundError:
     raise
 
 ROOT = Path(__file__).resolve().parent.parent
+RECORD_DIR = ROOT / 'docs' / 'records' / 'setup-ui'
 BASE_URL = 'http://127.0.0.1:8000'
-OUT_JSON = ROOT / 'BASE_SELECTION_NOTICE_PLACEMENT_VALIDATION.json'
-OUT_MD = ROOT / 'BASE_SELECTION_NOTICE_PLACEMENT_VALIDATION.md'
-SCREENSHOT = ROOT / 'base_selection_notice_placement_validation.png'
+OUT_JSON = RECORD_DIR / 'BASE_SELECTION_NOTICE_PLACEMENT_VALIDATION.json'
+OUT_MD = RECORD_DIR / 'BASE_SELECTION_NOTICE_PLACEMENT_VALIDATION.md'
+SCREENSHOT = RECORD_DIR / 'base_selection_notice_placement_validation.png'
 
 
 def post(path: str, payload: dict) -> dict:

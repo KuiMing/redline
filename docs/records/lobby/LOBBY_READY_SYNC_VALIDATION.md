@@ -16,11 +16,11 @@ screenshot: /Users/benmini/.openclaw/workspace/redline/lobby_ready_sync_validati
 
 ## lobby_roster_auto_syncs_joined_players
 - result: PASS
-- detail: {"roster_text": "H\nhost\n房主 / 你｜未準備｜尚未選擇陣營\nA\nally\n玩家｜未準備｜尚未選擇陣營\n+\n等待玩家加入\n分享房間代碼邀請下一位玩家\n+\n空席位\n最多 4 位玩家", "second_player_id": "caccdf9f-9c1e-4917-93cb-3d51f36f1c8d"}
+- detail: {"roster_text": "H\nhost\n房主 / 你｜未準備｜尚未選擇陣營\nA\nally\n玩家｜未準備｜尚未選擇陣營\n+\n等待玩家加入\n分享房間代碼邀請下一位玩家\n+\n空席位\n最多 4 位玩家", "second_player_id": "cc7d4139-8eae-4e8f-862b-2e33317e7608"}
 
 ## lobby_state_exposes_ready_map
 - result: PASS
-- detail: {"lobby_state_keys": ["bases", "count", "factions", "host_id", "market_mode", "players", "ready"]}
+- detail: {"lobby_state_keys": ["bases", "count", "factions", "host_id", "market_mode", "players", "ready", "started"]}
 
 ## backend_rejects_start_before_all_ready
 - result: PASS

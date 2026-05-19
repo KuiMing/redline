@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+RECORD_DIR = ROOT / 'docs' / 'records' / 'support-cards'
 sys.path.insert(0, str(ROOT))
 
 from server.game import Game, TurnPhase
@@ -14,6 +15,7 @@ def names(cards):
 
 
 def main():
+    RECORD_DIR.mkdir(parents=True, exist_ok=True)
     random.seed(20260510)
     g = Game([('p1', 'Tibet'), ('p2', 'Red')])
     t, r = g.players
@@ -87,8 +89,8 @@ def main():
         'area_len_after_random_buy': area_len_after_random_buy,
         'area_len_after_refill': area_len_after_refill,
     }
-    (ROOT / 'SUPPORT_PURCHASE_DECK_RUNTIME_VALIDATION.json').write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-    (ROOT / 'SUPPORT_PURCHASE_DECK_RUNTIME_VALIDATION.md').write_text(
+    (RECORD_DIR / 'SUPPORT_PURCHASE_DECK_RUNTIME_VALIDATION.json').write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    (RECORD_DIR / 'SUPPORT_PURCHASE_DECK_RUNTIME_VALIDATION.md').write_text(
         '# SUPPORT PURCHASE DECK RUNTIME VALIDATION\n\n'
         f"Summary: {passed}/{len(checks)} passed\n\n" +
         '\n'.join(f'- {k}: {json.dumps(v, ensure_ascii=False) if not isinstance(v, (int,bool,str)) else v}' for k, v in payload.items() if k != 'summary') + '\n',

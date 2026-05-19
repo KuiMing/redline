@@ -41,11 +41,11 @@ def validate():
     RECORD_DIR.mkdir(parents=True, exist_ok=True)
     checks = []
 
-    sample_53_expected = 35 - 5
+    sample_53_expected = 18 + 35 - 5
 
     game53, _, _ = make_game('sample_53')
     checks.append({
-        'name': 'sample_53 draw pile matches 35-card sampled market deck minus 5 exposed market cards',
+        'name': 'sample_53 draw pile matches 53-card sampled market deck minus 5 exposed market cards',
         'passed': len(game53.purchase_deck.draw_pile) == sample_53_expected,
         'actual': len(game53.purchase_deck.draw_pile),
         'expected': sample_53_expected,
@@ -82,6 +82,9 @@ def validate():
     before_len = len(remove_game.purchase_area)
     before_supply = dict(remove_game.static_purchase_supply)
     result = remove_game.play_card(0, mode='action')
+    if result.get('pending_choice') and remove_game.pending_choice:
+        resolve_result = remove_game.resolve_pending_choice(viewer.id, 0)
+        result = {**result, 'resolved_pending_choice': resolve_result}
     after_len = len(remove_game.purchase_area)
     after_supply = dict(remove_game.static_purchase_supply)
     checks.append({
@@ -132,3 +135,5 @@ def validate():
 if __name__ == '__main__':
     result = validate()
     print(json.dumps(result, ensure_ascii=False, indent=2))
+    if result['summary']['failed']:
+        raise SystemExit(1)

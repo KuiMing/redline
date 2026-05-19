@@ -4,8 +4,9 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parent.parent
-OUT_JSON = ROOT / 'FACTION_PICKER_COMBINATION_VALIDATION.json'
-OUT_MD = ROOT / 'FACTION_PICKER_COMBINATION_VALIDATION.md'
+RECORD_DIR = ROOT / 'docs' / 'records' / 'faction-ui'
+OUT_JSON = RECORD_DIR / 'FACTION_PICKER_COMBINATION_VALIDATION.json'
+OUT_MD = RECORD_DIR / 'FACTION_PICKER_COMBINATION_VALIDATION.md'
 BASE_URL = 'http://127.0.0.1:8000'
 
 
@@ -194,6 +195,7 @@ def validate_combo(page, combo):
 
 
 def main():
+    RECORD_DIR.mkdir(parents=True, exist_ok=True)
     categories = json.loads(urllib.request.urlopen(f'{BASE_URL}/factions').read().decode('utf-8'))['categories']
     combos = build_combos(categories)
     results = []
@@ -241,6 +243,8 @@ def main():
         lines.append('All combinations passed.')
     OUT_MD.write_text('\n'.join(lines) + '\n', encoding='utf-8')
     print(json.dumps(summary, ensure_ascii=False))
+    if summary['failed']:
+        raise SystemExit(1)
 
 
 if __name__ == '__main__':

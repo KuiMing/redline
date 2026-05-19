@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+RECORD_DIR = ROOT / 'docs' / 'records' / 'faction-ui'
 sys.path.insert(0, str(ROOT))
 
 from server.game import Game, TurnPhase
@@ -69,6 +70,7 @@ def test_ren_tong_ci_xin():
 
 
 def main():
+    RECORD_DIR.mkdir(parents=True, exist_ok=True)
     results = [
         test_huawen_chuanmei(),
         test_gejie_zizhu(),
@@ -81,12 +83,14 @@ def main():
         'failed': sum(1 for r in results if not r['ok']),
     }
     out = {'summary': summary, 'results': results}
-    Path('FACTION_ABILITY_PHASE4_VALIDATION.json').write_text(json.dumps(out, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    (RECORD_DIR / 'FACTION_ABILITY_PHASE4_VALIDATION.json').write_text(json.dumps(out, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     lines = ['# FACTION ABILITY PHASE4 VALIDATION', '', f"- total: {summary['total']}", f"- passed: {summary['passed']}", f"- failed: {summary['failed']}", '']
     for r in results:
         lines.append(f"- {'PASS' if r['ok'] else 'FAIL'} {r['name']}: {r['detail']}")
-    Path('FACTION_ABILITY_PHASE4_VALIDATION.md').write_text('\n'.join(lines) + '\n', encoding='utf-8')
+    (RECORD_DIR / 'FACTION_ABILITY_PHASE4_VALIDATION.md').write_text('\n'.join(lines) + '\n', encoding='utf-8')
     print(json.dumps(out, ensure_ascii=False))
+    if summary['failed']:
+        raise SystemExit(1)
 
 
 if __name__ == '__main__':

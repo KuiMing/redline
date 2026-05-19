@@ -8,7 +8,7 @@
     {
       "name": "huawen_chuanmei",
       "ok": true,
-      "detail": "result={'success': True}, resources={'money': 1, 'propaganda': 0}"
+      "detail": "result={'success': True}, before_money=5, resources={'money': 2, 'propaganda': 5}"
     },
     {
       "name": "gejie_zizhu",

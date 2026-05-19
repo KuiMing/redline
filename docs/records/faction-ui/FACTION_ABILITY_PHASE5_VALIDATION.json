@@ -13,7 +13,7 @@
     {
       "name": "political_probe",
       "ok": true,
-      "detail": "result={'success': True}, hand=1"
+      "detail": "result={'success': True, 'result': {'name': '立場試探', 'revealed_card': '奇數牌', 'cost_total': 1, 'destination': 'hand'}}, hand=1"
     },
     {
       "name": "huawen_media_spend_money",

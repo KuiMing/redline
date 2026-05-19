@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+RECORD_DIR = ROOT / 'docs' / 'records' / 'shared-actions'
 sys.path.insert(0, str(ROOT))
 
 from server.game import Game, TurnPhase
@@ -13,6 +14,7 @@ def ok(name, condition, detail=''):
 
 
 def main():
+    RECORD_DIR.mkdir(parents=True, exist_ok=True)
     g = Game([('p1', 'HK'), ('p2', 'Yue')])
     hk, yue = g.players
     hk.faction_id = 'hong_kong'
@@ -39,8 +41,8 @@ def main():
         'failed': 0 if (can_hk_use_shared and can_yue_use_shared and result.get('success') is True) else 1,
     }
     payload = {'summary': summary, 'result': out}
-    Path('SHARED_ORGANIZATIONS_PHASE6_VALIDATION.json').write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-    Path('SHARED_ORGANIZATIONS_PHASE6_VALIDATION.md').write_text(
+    (RECORD_DIR / 'SHARED_ORGANIZATIONS_PHASE6_VALIDATION.json').write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    (RECORD_DIR / 'SHARED_ORGANIZATIONS_PHASE6_VALIDATION.md').write_text(
         '# SHARED ORGANIZATIONS PHASE6 VALIDATION\n\n'
         f"- shared_hk: {can_hk_use_shared}\n"
         f"- shared_yue: {can_yue_use_shared}\n"
@@ -48,6 +50,8 @@ def main():
         encoding='utf-8'
     )
     print(json.dumps(payload, ensure_ascii=False))
+    if payload['summary']['failed']:
+        raise SystemExit(1)
 
 
 if __name__ == '__main__':

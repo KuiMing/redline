@@ -24,15 +24,8 @@
   - 2026-05-19 重新確認：`合作談判` 已有可重跑 validator 與回歸測試；`走漏風聲` 已有 rule validator、target UI validator 與截圖紀錄。
 
 ### P2：repo hygiene / validator hygiene
-- [todo] 第二輪 root validation artifacts 整理。
-  - 盤點依據：repo root 目前仍有 63 個 validation/report/screenshot 類檔案，例如 `*_VALIDATION.md`、`*_VALIDATION.json`、`*_validation.png`、`multiplayer_lobby_flow_*.png`。
-  - 完成條件：依 README 規則搬到 `docs/records/<topic>/`，修正 stale references，確認 root 只保留 `README.md`、`TODO.md`、`rules.md`、`North.md` 等真正根層文件。
-- [todo] 修正仍輸出到 repo root 的 validator scripts。
-  - 盤點依據：目前約 33 個 `scripts/validate_*.py` 仍把 `*_VALIDATION.*` 或截圖寫到 root，例如 base selection、card effect audit、faction ability、lobby、movement、shared action、support runtime 等驗證腳本。
-  - 完成條件：所有相關 validator 直接輸出到對應 `docs/records/<topic>/`；重跑被改動 validator，確認新路徑產物存在且舊 root 產物不再回生。
-- [todo] 補 validator failure exit-code 檢查。
-  - 盤點依據：整理 validator 時需避免「報告顯示 failed 但 process exit 0」的靜默回歸。
-  - 完成條件：高使用率 validator 在 failed/exception 時會非 0 結束；文件或測試紀錄可證明行為。
+- 目前無 P2 active todo。
+  - 2026-05-19 已完成第二輪 root validation artifacts / validator output path / failure exit-code 整理；root record-like 檔案數確認為 0。
 
 ### P3：後續 UI polish
 - [todo] 清理 faction action centered modal 上線後的殘留 UI 狀態。
@@ -40,6 +33,12 @@
   - 完成條件：正式 UI 操作中不再殘留過期提示、按鈕或面板；補最小截圖／console 驗證。
 
 ## 已完成
+
+- [done] 第二輪 root validation artifacts / validator output path / failure exit-code 整理。
+  - 2026-05-19：已將第二輪根層 `*_VALIDATION.{json,md}` 與相關截圖移入對應 `docs/records/<topic>/`（card-ui、faction-ui、lobby、layout-ui、map-ui、purchase、safehouse、setup-ui、shared-actions、support-cards），並移除舊 `docs/records/misc` / 錯 topic 重複副本。
+  - 已修正相關 `scripts/validate_*.py` 直接輸出到 `docs/records/<topic>/`；root record-like 檔案數以 Python 盤點確認為 0。
+  - 已補高使用率 validator 的 failure exit-code 檢查，並修正 rerun fixture：`validate_market_mode_and_removed_supply.py` 依 53 張 sampled market deck 檢查、解析 `宣傳家` optional trash 後再確認 supply；`validate_shared_move_phase8.py` fixture 補 move point；`validate_india_research_room.py` / support runtime validator 改為穩定 pending-choice / support fixture。
+  - 驗證：23 個 touched runtime/static validators 全部 exit 0；`git diff --check` 通過；`python3 -m compileall -q server scripts static` 通過。
 
 ### 地圖／target choice UI
 - [done] 情報網：把 `target_choice` 瓦解目標同步接上地圖 highlight。

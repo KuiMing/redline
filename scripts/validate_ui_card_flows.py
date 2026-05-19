@@ -394,6 +394,33 @@ def main():
     }
     for t in TYPE_ORDER:
         report['type_flows'].append(validate_type_flow(t, TYPE_CARD[t]))
+    failures = []
+    for item in report['visibility']:
+        if not item.get('host_hand'):
+            failures.append(f"{item.get('player_count')}p host hand not visible")
+        for name, cards in (item.get('other_hands') or {}).items():
+            if not cards:
+                failures.append(f"{item.get('player_count')}p {name} hand not visible")
+    for item in report['type_flows']:
+        prefix = f"{item.get('type')}:{item.get('representative_card')}"
+        if item.get('phase_after_advance') != 'action':
+            failures.append(f"{prefix} did not reach action phase")
+        if not item.get('guest_illegal_play_state_same'):
+            failures.append(f"{prefix} waiting-player illegal play changed state")
+        if not item.get('guest_log_unchanged'):
+            failures.append(f"{prefix} waiting-player illegal play changed log")
+        if not item.get('guest_button_disabled'):
+            failures.append(f"{prefix} waiting-player hand button was not disabled")
+        if not item.get('host_hand_before'):
+            failures.append(f"{prefix} active player hand was empty before play")
+        if item.get('host_hand_before') == item.get('host_hand_after'):
+            failures.append(f"{prefix} active player hand did not change after play")
+    report['summary'] = {
+        'visibility_cases': len(report['visibility']),
+        'type_flow_cases': len(report['type_flows']),
+        'failed': len(failures),
+    }
+    report['failures'] = failures
 
     OUT_JSON.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
 
@@ -402,6 +429,13 @@ def main():
     md.append('')
     md.append('日期：2026-05-03')
     md.append('')
+    md.append(f"summary: {json.dumps(report['summary'], ensure_ascii=False)}")
+    md.append('')
+    if report['failures']:
+        md.append('## Failures')
+        for failure in report['failures']:
+            md.append(f'- {failure}')
+        md.append('')
     md.append('## 手牌可見性')
     for item in report['visibility']:
         md.append(f"### {item['player_count']} 人")
@@ -422,8 +456,9 @@ def main():
         md.append(f"- HUD before -> after: {item['hud_before']} -> {item['hud_after']}")
         md.append('')
     OUT_MD.write_text('\n'.join(md), encoding='utf-8')
-    print(OUT_JSON)
-    print(OUT_MD)
+    print(json.dumps({'summary': report['summary'], 'json': str(OUT_JSON), 'md': str(OUT_MD)}, ensure_ascii=False))
+    if failures:
+        raise SystemExit(1)
 
 
 if __name__ == '__main__':

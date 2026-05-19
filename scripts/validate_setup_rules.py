@@ -14,10 +14,11 @@ except ModuleNotFoundError:
     raise
 
 ROOT = Path(__file__).resolve().parent.parent
+RECORD_DIR = ROOT / 'docs' / 'records' / 'setup-ui'
 BASE_URL = 'http://127.0.0.1:8000'
-OUT_JSON = ROOT / 'SETUP_RULES_VALIDATION.json'
-OUT_MD = ROOT / 'SETUP_RULES_VALIDATION.md'
-SCREENSHOT = ROOT / 'setup_rules_validation.png'
+OUT_JSON = RECORD_DIR / 'SETUP_RULES_VALIDATION.json'
+OUT_MD = RECORD_DIR / 'SETUP_RULES_VALIDATION.md'
+SCREENSHOT = RECORD_DIR / 'setup_rules_validation.png'
 
 
 def request_json(path, payload=None):
@@ -149,6 +150,7 @@ def write_reports(payload):
 
 
 def main():
+    RECORD_DIR.mkdir(parents=True, exist_ok=True)
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         payload = check_setup(browser)

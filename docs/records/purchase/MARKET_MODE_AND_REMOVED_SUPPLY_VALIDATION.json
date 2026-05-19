@@ -1,15 +1,15 @@
 {
   "summary": {
     "total": 7,
-    "passed": 6,
-    "failed": 1
+    "passed": 7,
+    "failed": 0
   },
   "checks": [
     {
-      "name": "sample_53 draw pile matches 35-card sampled market deck minus 5 exposed market cards",
-      "passed": false,
+      "name": "sample_53 draw pile matches 53-card sampled market deck minus 5 exposed market cards",
+      "passed": true,
       "actual": 48,
-      "expected": 30
+      "expected": 48
     },
     {
       "name": "sample_53 state market mode",
@@ -21,7 +21,7 @@
       "name": "all_cards draw pile exceeds sample_53 sampled market deck after 5 exposed cards",
       "passed": true,
       "actual": 68,
-      "expected": "> 30"
+      "expected": "> 48"
     },
     {
       "name": "all_cards state market mode",
@@ -51,7 +51,21 @@
       "name": "remove propagandist play succeeds",
       "passed": true,
       "actual": {
-        "success": true
+        "success": true,
+        "pending_choice": true,
+        "resolved_pending_choice": {
+          "success": true,
+          "chosen_card": "宣傳家",
+          "zone": "current_card",
+          "zone_label": "剛打出的牌",
+          "removed_card": {
+            "zone": "static_supply",
+            "name": "宣傳家",
+            "count": 2
+          },
+          "removed_current_card": true,
+          "pending_choice": true
+        }
       },
       "expected": {
         "success": true

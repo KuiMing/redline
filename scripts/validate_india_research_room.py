@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+RECORD_DIR = ROOT / 'docs' / 'records' / 'support-cards'
 sys.path.insert(0, str(ROOT))
 
 from server.game import Game, TurnPhase
@@ -45,12 +46,24 @@ def test_buy_non_support_card_allowed():
 def test_gain_from_discard_non_support_card_allowed():
     g, t, _ = make_game()
     t.deck.discard_pile = [Card('資助者', 'money', {'money': 2})]
-    g.effect_engine.execute({'type': 'gain_any_from_discard'}, t, g)
+    result = g.effect_engine.execute({'type': 'gain_any_from_discard'}, t, g)
+    pending_cards = [getattr(c, 'name', str(c)) for c in (g.pending_choice or {}).get('cards', [])] if g.pending_choice else []
+    if g.pending_choice and g.pending_choice.get('cards'):
+        g.resolve_pending_choice(t.id, 0)
     ok = any(getattr(c, 'name', '') == '資助者' for c in t.hand)
-    return {'name': 'gain_from_discard_non_support_card_allowed', 'ok': ok, 'detail': {'hand': [c.name for c in t.hand]}}
+    return {
+        'name': 'gain_from_discard_non_support_card_allowed',
+        'ok': ok,
+        'detail': {
+            'result': result,
+            'pending_cards': pending_cards,
+            'hand': [c.name for c in t.hand],
+        },
+    }
 
 
 def main():
+    RECORD_DIR.mkdir(parents=True, exist_ok=True)
     results = [
         test_non_support_card_no_bonus(),
         test_buy_non_support_card_allowed(),
@@ -62,12 +75,14 @@ def main():
         'failed': sum(1 for r in results if not r['ok']),
     }
     payload = {'summary': summary, 'results': results}
-    (ROOT / 'INDIA_RESEARCH_ROOM_VALIDATION.json').write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    (RECORD_DIR / 'INDIA_RESEARCH_ROOM_VALIDATION.json').write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     lines = ['# INDIA RESEARCH ROOM VALIDATION', '', f"- total: {summary['total']}", f"- passed: {summary['passed']}", f"- failed: {summary['failed']}", '']
     for r in results:
         lines.append(f"- {'PASS' if r['ok'] else 'FAIL'} {r['name']}: {json.dumps(r['detail'], ensure_ascii=False)}")
-    (ROOT / 'INDIA_RESEARCH_ROOM_VALIDATION.md').write_text('\n'.join(lines) + '\n', encoding='utf-8')
+    (RECORD_DIR / 'INDIA_RESEARCH_ROOM_VALIDATION.md').write_text('\n'.join(lines) + '\n', encoding='utf-8')
     print(json.dumps(payload, ensure_ascii=False))
+    if payload['summary']['failed']:
+        raise SystemExit(1)
 
 
 if __name__ == '__main__':

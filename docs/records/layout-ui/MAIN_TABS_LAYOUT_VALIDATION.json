@@ -1,7 +1,7 @@
 {
   "setup": {
-    "game_id": "1cb459a9-f50d-437a-a72f-f9fe1dbca264",
-    "player_id": "280c5ca9-3def-40a3-9d52-70c1e1d564bc"
+    "game_id": "4745e4ca-677d-49f6-893f-e5fda2cca578",
+    "player_id": "dfbd34c8-6f06-4dc1-bfa7-5b004ddf3b67"
   },
   "summary": {
     "total": 7,
@@ -57,8 +57,8 @@
       "ok": true,
       "detail": {
         "card_texts": [
-          "V\nviewer\n當前行動玩家\n當前玩家\n陣營：西藏（德拉敦）\n根據地：德拉敦\n組織\n1\n資金\n4\n宣傳\n3\n手牌\n5\n移動\n3",
-          "R\nred\n玩家戰況\n陣營：紅軍\n根據地：北京\n組織\n1\n資金\n0\n宣傳\n0\n手牌\n5\n移動\n3"
+          "V\nviewer\n當前行動玩家\n當前玩家\n陣營：西藏（德拉敦）\n根據地：德拉敦\n組織\n1\n資金\n4\n宣傳\n3\n手牌\n5\n移動\n0",
+          "R\nred\n玩家戰況\n陣營：紅軍\n根據地：北京\n組織\n1\n資金\n0\n宣傳\n0\n手牌\n5\n移動\n0"
         ]
       }
     },

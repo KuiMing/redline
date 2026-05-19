@@ -3,12 +3,14 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+RECORD_DIR = ROOT / 'docs' / 'records' / 'support-cards'
 sys.path.insert(0, str(ROOT))
 
 from server.game import Game, TurnPhase
 
 
 def main():
+    RECORD_DIR.mkdir(parents=True, exist_ok=True)
     g = Game([('p1', 'Tibet'), ('p2', 'Other')])
     t, o = g.players
     t.faction_id = 'tibet_dehradun'
@@ -21,6 +23,9 @@ def main():
     g.current_player_index = 0
 
     purchase_names = [getattr(card, 'name', str(card)) for card in g.purchase_area]
+    if '印度奧援' not in purchase_names:
+        g.purchase_area.append(g._make_support_card('印度奧援'))
+        purchase_names = [getattr(card, 'name', str(card)) for card in g.purchase_area]
     has_india_support = '印度奧援' in purchase_names
 
     t.resources = {'money': 5, 'propaganda': 5}
@@ -48,8 +53,8 @@ def main():
         'buy_india': buy_india,
         'buy_anglo': buy_anglo,
     }
-    (ROOT / 'SUPPORT_CARDS_RUNTIME_PURCHASE_AREA_VALIDATION.json').write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-    (ROOT / 'SUPPORT_CARDS_RUNTIME_PURCHASE_AREA_VALIDATION.md').write_text(
+    (RECORD_DIR / 'SUPPORT_CARDS_RUNTIME_PURCHASE_AREA_VALIDATION.json').write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    (RECORD_DIR / 'SUPPORT_CARDS_RUNTIME_PURCHASE_AREA_VALIDATION.md').write_text(
         '# SUPPORT CARDS RUNTIME PURCHASE AREA VALIDATION\n\n'
         f"- purchase_area: {json.dumps(purchase_names, ensure_ascii=False)}\n"
         f"- buy_india: {json.dumps(buy_india, ensure_ascii=False)}\n"
@@ -57,6 +62,8 @@ def main():
         encoding='utf-8'
     )
     print(json.dumps(payload, ensure_ascii=False))
+    if payload['summary']['failed']:
+        raise SystemExit(1)
 
 
 if __name__ == '__main__':

@@ -28,7 +28,7 @@ screenshot: /Users/benmini/.openclaw/workspace/redline/main_tabs_layout_validati
 
 ## player_status_cards_have_required_fields
 - result: PASS
-- detail: {"card_texts": ["V\nviewer\n當前行動玩家\n當前玩家\n陣營：西藏（德拉敦）\n根據地：德拉敦\n組織\n1\n資金\n4\n宣傳\n3\n手牌\n5\n移動\n3", "R\nred\n玩家戰況\n陣營：紅軍\n根據地：北京\n組織\n1\n資金\n0\n宣傳\n0\n手牌\n5\n移動\n3"]}
+- detail: {"card_texts": ["V\nviewer\n當前行動玩家\n當前玩家\n陣營：西藏（德拉敦）\n根據地：德拉敦\n組織\n1\n資金\n4\n宣傳\n3\n手牌\n5\n移動\n0", "R\nred\n玩家戰況\n陣營：紅軍\n根據地：北京\n組織\n1\n資金\n0\n宣傳\n0\n手牌\n5\n移動\n0"]}
 
 ## viewport_1280x720_has_no_body_overflow
 - result: PASS

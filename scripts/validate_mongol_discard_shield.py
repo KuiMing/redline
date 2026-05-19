@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+RECORD_DIR = ROOT / 'docs' / 'records' / 'faction-ui'
 sys.path.insert(0, str(ROOT))
 
 from server.game import Game
@@ -10,6 +11,7 @@ from server.cards import Card
 
 
 def main():
+    RECORD_DIR.mkdir(parents=True, exist_ok=True)
     g = Game([('p1', 'Mongol'), ('p2', 'Attacker')])
     mongol = g.players[0]
     attacker = g.players[1]
@@ -44,7 +46,7 @@ def main():
             'mongol_orgs_after': dict(mongol.organizations),
         }
     }
-    Path('MONGOL_DISCARD_SHIELD_VALIDATION.json').write_text(json.dumps(out, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    (RECORD_DIR / 'MONGOL_DISCARD_SHIELD_VALIDATION.json').write_text(json.dumps(out, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     lines = [
         '# MONGOL DISCARD SHIELD VALIDATION',
         '',
@@ -52,7 +54,7 @@ def main():
         f"- attacker_discard_after: {discard_after_success}",
         f"- fail_case: {json.dumps(result_fail, ensure_ascii=False)}",
     ]
-    Path('MONGOL_DISCARD_SHIELD_VALIDATION.md').write_text('\n'.join(lines) + '\n', encoding='utf-8')
+    (RECORD_DIR / 'MONGOL_DISCARD_SHIELD_VALIDATION.md').write_text('\n'.join(lines) + '\n', encoding='utf-8')
     print(json.dumps(out, ensure_ascii=False))
 
 

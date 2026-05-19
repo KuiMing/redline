@@ -13,7 +13,7 @@
     {
       "name": "hong_kong_international_line",
       "ok": true,
-      "detail": "{'played_money_card': False, 'played_propaganda_card': True, 'non_starter_discard': False, 'successful_discard': False, 'built_towns': []}"
+      "detail": "{'played_money_card': False, 'played_propaganda_card': True, 'non_starter_discard': False, 'successful_discard': False, 'built_towns': [], 'played_nonstarter_names': ['測試金錢牌'], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': False, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': [], 'reaction_prompted_player_ids': []}"
     },
     {
       "name": "taiwan_green_end_turn_draw",
@@ -33,7 +33,7 @@
     {
       "name": "kazakh_first_propaganda_draw",
       "ok": true,
-      "detail": "before=1, after=0, log={'played_money_card': False, 'played_propaganda_card': True, 'non_starter_discard': False, 'successful_discard': False, 'built_towns': []}"
+      "detail": "before=1, after=1, log={'played_money_card': False, 'played_propaganda_card': True, 'non_starter_discard': False, 'successful_discard': False, 'built_towns': [], 'played_nonstarter_names': ['宣傳測試'], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': False, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': [], 'reaction_prompted_player_ids': [], 'faction_first_propaganda_triggered': True}"
     }
   ]
 }

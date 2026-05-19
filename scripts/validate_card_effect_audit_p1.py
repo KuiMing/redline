@@ -11,14 +11,15 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+RECORD_DIR = ROOT / 'docs' / 'records' / 'card-ui'
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from server.cards import Card
 from server.game import Game, GamePhase, TurnPhase
 
-OUT_JSON = ROOT / "CARD_EFFECT_AUDIT_P1_VALIDATION.json"
-OUT_MD = ROOT / "CARD_EFFECT_AUDIT_P1_VALIDATION.md"
+OUT_JSON = RECORD_DIR / "CARD_EFFECT_AUDIT_P1_VALIDATION.json"
+OUT_MD = RECORD_DIR / "CARD_EFFECT_AUDIT_P1_VALIDATION.md"
 
 
 def make_game(card_name: str):
@@ -82,6 +83,7 @@ def assert_thought_building(game, player):
 
 
 def main():
+    RECORD_DIR.mkdir(parents=True, exist_ok=True)
     checks = [
         run_case("思想建設", assert_thought_building),
         run_case("誘導虛耗"),

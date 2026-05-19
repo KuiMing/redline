@@ -3,6 +3,7 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 BASE = Path(__file__).resolve().parent.parent
+RECORD_DIR = BASE / 'docs' / 'records' / 'card-ui'
 CARDS = json.loads((BASE / 'data' / 'action_cards_structured.v1.1.json').read_text(encoding='utf-8'))['cards']
 
 
@@ -88,8 +89,9 @@ with sync_playwright() as p:
 
     browser.close()
 
-out_json = BASE / 'CARD_UI_FULL_VALIDATION.json'
-out_md = BASE / 'CARD_UI_FULL_VALIDATION.md'
+RECORD_DIR.mkdir(parents=True, exist_ok=True)
+out_json = RECORD_DIR / 'CARD_UI_FULL_VALIDATION.json'
+out_md = RECORD_DIR / 'CARD_UI_FULL_VALIDATION.md'
 out_json.write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding='utf-8')
 lines = ['# CARD UI FULL VALIDATION', '', '日期：2026-05-03', '', f'總卡數：{len(results)}', '']
 for r in results:
