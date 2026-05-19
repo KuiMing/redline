@@ -20,9 +20,8 @@
 - 目前無 P0 active todo。
 
 ### P1：已實作但缺正式 UI 證據
-- [todo] 補 Action 卡正式 UI 證據與回歸紀錄。
-  - 範圍：合作談判、走漏風聲。
-  - 完成條件：每張卡至少有可重跑驗證腳本或正式 UI 截圖，能證明前／中／後狀態與 action log。
+- 目前無 P1 active todo。
+  - 2026-05-19 重新確認：`合作談判` 已有可重跑 validator 與回歸測試；`走漏風聲` 已有 rule validator、target UI validator 與截圖紀錄。
 
 ### P2：repo hygiene / validator hygiene
 - [todo] 第二輪 root validation artifacts 整理。
@@ -79,6 +78,9 @@
   - 2026-05-18：已修正 `force_discard` 對武裝系列改走 `armed_target_discard` pending choice，不再由系統自動從手牌尾端棄牌；目標玩家可自選棄牌，武裝集團在成功棄牌後才讓出牌者抽 1 張。
   - 產物：`scripts/validate_action_card_armed_series_runtime.py`、`docs/records/action-cards/ACTION_CARD_ARMED_SERIES_RUNTIME_VALIDATION.{json,md}`。
   - 測試：`python3 scripts/validate_action_card_armed_series_runtime.py` 通過（3 passed）；`python3 -m pytest -q scripts/tests/test_action_card_regressions.py -k 'armed'` 通過（5 passed）；`python3 -m compileall -q server scripts static` 通過。
+- [done] 合作談判、走漏風聲：重新確認既有驗證紀錄，從 P1 active todo 移除。
+  - 2026-05-19：`合作談判` 已有 `scripts/validate_negotiation_card.py` 與 `docs/records/shared-actions/NEGOTIATION_CARD_VALIDATION.{json,md}`，並在 `scripts/tests/test_action_card_regressions.py::test_negotiation_draws_actor_and_chosen_other_player_only_and_gains_two_propaganda` 覆蓋 actor + 指定目標各抽 1、actor 獲得 2 宣傳。
+  - 2026-05-19：`走漏風聲` 已有 `scripts/validate_leak_card.py`、`scripts/validate_leak_card_target_ui.py`、`docs/records/leak-card/LEAK_CARD_VALIDATION.{json,md}`、`docs/records/leak-card/LEAK_CARD_TARGET_UI_VALIDATION.{json,md}` 與 `docs/records/leak-card/leak_card_target_modal.png`；重新執行 rule / UI validators 皆通過。
 - [done] 派遣間諜、內應間諜：補北國奧援式互動瓦解流程與正式 UI 證據。
   - 2026-05-19：`派遣間諜` 改為兩段式 pending choice，先選己方犧牲組織，再只列出該組織 1 格內的敵方組織；正式 UI 證明可先選 `北京` / `上海`，選 `上海` 後只可瓦解 `enemy｜杭州`，完成後 viewer 組織 1、enemy 組織 2。
   - 2026-05-19：`內應間諜` 改為直接 target pending choice，不犧牲己方組織；正式 UI 證明只列出 `enemy｜天津`，完成後 viewer 組織仍 1、enemy 組織 1，log 沒有己方犧牲紀錄。
