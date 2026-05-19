@@ -1348,42 +1348,41 @@ function renderEraAchievement(state) {
   }
 }
 
-function openGamblerGuessModal() {
-  activeFactionActionModal = '賭徒耳語';
+function openFactionGuessModal(actionName, hintText) {
+  activeFactionActionModal = actionName;
   const overlay = document.getElementById('factionActionModal');
-  if (!overlay) return;
+  const title = document.getElementById('factionActionModalTitle');
+  const desc = document.getElementById('factionActionModalDesc');
+  const choices = document.getElementById('factionActionModalChoices');
+  const hint = document.getElementById('factionActionModalRewardHint');
+  const closeBtn = document.getElementById('closeFactionActionModal');
+  if (!overlay || !title || !desc || !choices || !hint || !closeBtn) return;
+
   overlay.style.display = 'flex';
-  document.getElementById('factionActionModalTitle').textContent = '賭徒耳語';
-  document.getElementById('factionActionModalDesc').textContent = '請猜牌庫頂牌購買費用的奇偶。';
-  document.getElementById('factionActionModalRewardHint').textContent = '猜中可獲得 3 點資金與 3 點宣傳。';
-  document.getElementById('guessOddBtn').onclick = () => {
-    sendAction('faction_action', { name: '賭徒耳語', guess: 'odd' });
-    closeFactionActionModal();
-  };
-  document.getElementById('guessEvenBtn').onclick = () => {
-    sendAction('faction_action', { name: '賭徒耳語', guess: 'even' });
-    closeFactionActionModal();
-  };
-  document.getElementById('closeFactionActionModal').onclick = closeFactionActionModal;
+  title.textContent = actionName;
+  desc.textContent = '請猜牌庫頂牌購買費用的奇偶。';
+  hint.textContent = hintText;
+  choices.innerHTML = '';
+  ['odd', 'even'].forEach((guess) => {
+    const btn = document.createElement('button');
+    btn.className = 'modal-choice-btn';
+    btn.type = 'button';
+    btn.textContent = guess === 'odd' ? '猜奇數' : '猜偶數';
+    btn.onclick = () => {
+      sendAction('faction_action', { name: actionName, guess });
+      closeFactionActionModal();
+    };
+    choices.appendChild(btn);
+  });
+  closeBtn.onclick = closeFactionActionModal;
+}
+
+function openGamblerGuessModal() {
+  openFactionGuessModal('賭徒耳語', '猜中可獲得 3 點資金與 3 點宣傳。');
 }
 
 function openEthnicRitualGuessModal() {
-  activeFactionActionModal = '民族祭儀';
-  const overlay = document.getElementById('factionActionModal');
-  if (!overlay) return;
-  overlay.style.display = 'flex';
-  document.getElementById('factionActionModalTitle').textContent = '民族祭儀';
-  document.getElementById('factionActionModalDesc').textContent = '請猜牌庫頂牌購買費用的奇偶。';
-  document.getElementById('factionActionModalRewardHint').textContent = '猜中可獲得 2 點宣傳與 2 點資金；沒猜中則獲得 2 點宣傳。';
-  document.getElementById('guessOddBtn').onclick = () => {
-    sendAction('faction_action', { name: '民族祭儀', guess: 'odd' });
-    closeFactionActionModal();
-  };
-  document.getElementById('guessEvenBtn').onclick = () => {
-    sendAction('faction_action', { name: '民族祭儀', guess: 'even' });
-    closeFactionActionModal();
-  };
-  document.getElementById('closeFactionActionModal').onclick = closeFactionActionModal;
+  openFactionGuessModal('民族祭儀', '猜中可獲得 2 點宣傳與 2 點資金；沒猜中則獲得 2 點宣傳。');
 }
 
 function strategicMapUrl() {
@@ -1554,6 +1553,7 @@ function renderFactionActionPanel(state) {
   const inAction = String(state.turn_phase).toLowerCase() === 'action';
   const isMine = state.current_player && me && state.current_player === me.name;
   const faction = me?.faction || '';
+  const factionActionUsed = !!state.faction_action_used;
 
   buttons.innerHTML = '';
   panel.style.display = 'none';
@@ -1579,12 +1579,12 @@ function renderFactionActionPanel(state) {
     buttons.innerHTML = '';
     modalOverlay.style.display = 'flex';
     modalTitle.textContent = title;
-    modalDesc.textContent = message;
-    modalHint.innerHTML = resultHtml || escapeHtml(hint);
+    modalDesc.textContent = factionActionUsed ? '本回合已發動陣營能力。' : message;
+    modalHint.innerHTML = resultHtml || escapeHtml(factionActionUsed ? '請進行其他行動，或結束目前行動階段。' : hint);
     modalChoices.innerHTML = '';
     if (oddBtn) oddBtn.style.display = 'none';
     if (evenBtn) evenBtn.style.display = 'none';
-    buildButtons(modalChoices);
+    if (!factionActionUsed) buildButtons(modalChoices);
     closeBtn.onclick = closeFactionActionModal;
   };
 

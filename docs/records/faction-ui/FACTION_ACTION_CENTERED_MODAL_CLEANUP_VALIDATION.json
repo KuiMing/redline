@@ -1,0 +1,35 @@
+{
+  "summary": {
+    "total": 2,
+    "passed": 2,
+    "failed": 0
+  },
+  "tests": [
+    {
+      "name": "runtime_state_exposes_faction_action_used",
+      "passed": true,
+      "before_flag_was_false": true,
+      "after_flag": true,
+      "result": {
+        "success": true,
+        "result": {
+          "name": "立場試探",
+          "revealed_card": "追隨者",
+          "cost_total": 1,
+          "destination": "hand"
+        }
+      }
+    },
+    {
+      "name": "static_centered_modal_cleans_stale_buttons",
+      "passed": true,
+      "checks": {
+        "dynamic_guess_modal_helper_exists": true,
+        "guess_buttons_created_dynamically": true,
+        "centered_panel_suppresses_buttons_after_used": true,
+        "used_state_message_present": true,
+        "no_stale_static_guess_onclick_lookup": true
+      }
+    }
+  ]
+}

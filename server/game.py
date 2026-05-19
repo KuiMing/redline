@@ -3213,6 +3213,7 @@ class Game:
             "market_mode": self.market_mode,
             "pending_base_choices": self.pending_base_choices,
             "pending_choice": pending_choice,
+            "faction_action_used": bool(self.turn_log.get('faction_action_used')),
             "action_log": self.action_log,
             "purchase_area": [getattr(card, 'name', str(card)) for card in self.purchase_area],
             "static_purchase_supply": dict(getattr(self, 'static_purchase_supply', {})),

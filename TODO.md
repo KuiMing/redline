@@ -28,11 +28,16 @@
   - 2026-05-19 已完成第二輪 root validation artifacts / validator output path / failure exit-code 整理；root record-like 檔案數確認為 0。
 
 ### P3：後續 UI polish
-- [todo] 清理 faction action centered modal 上線後的殘留 UI 狀態。
-  - 盤點依據：faction action centered modal 已上線，但仍可能有多餘按鈕／面板殘留狀態需要收斂。
-  - 完成條件：正式 UI 操作中不再殘留過期提示、按鈕或面板；補最小截圖／console 驗證。
+- 目前無 P3 active todo。
+  - 2026-05-19 已清理 faction action centered modal 殘留狀態：猜奇偶按鈕改為動態建立，陣營能力本回合已發動後不再殘留「發動」或猜奇偶按鈕，舊 `#factionActionPanel` 維持隱藏。
 
 ## 已完成
+
+- [done] 清理 faction action centered modal 上線後的殘留 UI 狀態。
+  - 2026-05-19：已修正 `static/app.js`，猜奇偶 modal 改為動態建立「猜奇數／猜偶數」按鈕，避免 centered modal 先清空 `#factionActionModalChoices` 後仍呼叫舊 `guessOddBtn` / `guessEvenBtn` 造成按鈕殘留或失效。
+  - 已在 `server/game.py` 的 state 補出 `faction_action_used`，UI 於本回合陣營能力已發動後只顯示「本回合已發動陣營能力」與取消按鈕，不再殘留「發動 立場試探／民族祭儀」或猜奇偶按鈕；舊 `#factionActionPanel` 維持隱藏。
+  - 產物：`scripts/validate_faction_action_centered_modal_cleanup.py`、`docs/records/faction-ui/FACTION_ACTION_CENTERED_MODAL_CLEANUP_VALIDATION.{json,md}`、`docs/records/faction-ui/FACTION_ACTION_CENTERED_MODAL_CLEANUP_UI_2026_05_19.png`。
+  - 驗證：`python3 scripts/validate_faction_action_centered_modal_cleanup.py` 通過（2 passed）；正式 browser console 驗證 `faction_action_used=true`、modal 只剩 `取消`、`#factionActionPanel` display=`none`；`python3 -m compileall -q server scripts static` 通過。
 
 - [done] 第二輪 root validation artifacts / validator output path / failure exit-code 整理。
   - 2026-05-19：已將第二輪根層 `*_VALIDATION.{json,md}` 與相關截圖移入對應 `docs/records/<topic>/`（card-ui、faction-ui、lobby、layout-ui、map-ui、purchase、safehouse、setup-ui、shared-actions、support-cards），並移除舊 `docs/records/misc` / 錯 topic 重複副本。
