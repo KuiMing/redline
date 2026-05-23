@@ -18,11 +18,11 @@
 ## 目前 active todo
 
 ### P0：事件卡完整化規劃（MVP 後下一階段）
-- [todo] 事件／時代卡資料盤點與 canonical scope 決定。
-  - 目的：決定下一階段到底要完成「structured event deck」還是連 raw data 後半的「時代關卡」一起納入。
-  - 已知現況：`data/events_structured.v1.1.json` 有 20 筆 structured rows，其中去掉 `（副本）` 後是 15 張 base event；事件牌庫依 `data/cards/event_and_era_cards.v1.1.json` 張數建立為 27 張。
-  - 已知缺口：`data/cards/event_and_era_cards.v1.1.json` 後半另有 8 張時代關卡尚未完整納入事件/時代系統：`[香港]香港人被自殺`、`[蒙古]莫日根事件爆發`、`[藏國]藏國騷亂`、`[哈薩克]伊塔事件`、`[維吾爾]莎車大屠殺`、`[滿洲]滿洲地方派系凝聚`、`[反賊]公知世代的終結`、`[臺灣]綏靖派反對介入對岸`。
-  - 驗收：新增一份 `docs/records/event-cards/EVENT_CARD_CANONICAL_SCOPE_AUDIT_*.md`，列出每張 raw event/era card 是否在 structured data、是否進 deck、是否需要 runtime/UI。
+- [done] 事件／時代卡資料盤點與 canonical scope 決定。
+  - 2026-05-23：已新增 `scripts/validate_event_card_canonical_scope.py`，產出 `docs/records/event-cards/EVENT_CARD_CANONICAL_SCOPE_AUDIT_2026_05_23.{json,md}`。
+  - 盤點結論：raw 檔共有 13 張事件列、8 張時代關卡列；目前 structured data 有 20 rows（15 base + 5 副本），runtime event deck 依 base structured rows 與 raw 張數建立為 27 張。
+  - canonical scope 建議：目前 MVP 應明確視為「15 張 structured base rows 進 runtime event deck」；若要宣稱完整 raw event/era，需先決定 8 張 raw 時代關卡是以 era-stage mechanics 還是 event-deck cards 納入。
+  - 已知缺口：8 張時代關卡中有 6 張完全未 structured；`[反賊]公知世代的終結`、`[臺灣]綏靖派反對介入對岸` 目前只是 event-like MVP adaptation，仍需 canonical 決策。
 
 - [todo] 修正 structured event data 與 raw card text 不一致的事件。
   - 優先比對並修正：`貿易戰加劇`、`紅軍權貴出逃`、`烏魯木齊七五事件`、`上海合作組織`、`一帶一路 南洋`、`一帶一路 天方`。
