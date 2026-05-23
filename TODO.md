@@ -29,10 +29,16 @@
 
 ### P3：後續 UI polish
 - 目前無 P3 active todo。
+  - 2026-05-23 已修正 lobby / 陣營選擇畫面在內容超高時可上下捲動，避免臺灣等陣營資訊／規則／獲勝條件被固定 720px 舞台切掉。
   - 2026-05-19 已清理 faction action centered modal 殘留狀態：猜奇偶按鈕改為動態建立，陣營能力本回合已發動後不再殘留「發動」或猜奇偶按鈕，舊 `#factionActionPanel` 維持隱藏。
   - 2026-05-19 已補 `賭徒耳語` / `民族祭儀` resolve 後的結果顯示：modal 會列出猜奇偶、翻到卡牌、費用奇偶、猜中／沒中與資源獎勵。
 
 ## 已完成
+
+- [done] Lobby / 陣營選擇畫面：內容超高時可上下捲動。
+  - 2026-05-23：已修正 `static/style.css`，將 `#lobby` 從 `overflow: hidden` 改為 `overflow-y: auto` 並保留水平裁切，讓陣營資訊、規則與獲勝條件在小螢幕或內容較長時可往下滑完整查看。
+  - 產物：`scripts/validate_lobby_scroll_layout.py`、`docs/records/lobby/LOBBY_SCROLL_LAYOUT_VALIDATION.{json,md}`、`docs/records/lobby/LOBBY_FACTION_PICKER_SCROLL_UI_2026_05_23.png`。
+  - 驗證：`python3 scripts/validate_lobby_scroll_layout.py` 通過（4 passed）；正式 browser console 驗證 `#lobby` 可捲動（`scrollHeight=952`, `clientHeight=720`, `scrollTop` 可由 0 變 232）；browser vision 確認臺灣（綠線）陣營資訊、規則、獲勝條件與「確認陣營」可見；`python3 -m compileall -q server scripts static` 與 `git diff --check` 通過。
 
 - [done] 賭徒耳語／民族祭儀：補 resolve 後的結果顯示。
   - 2026-05-19：`server/game.py` 現在會為 `賭徒耳語` / `民族祭儀` 回傳 `last_action_result` payload，包含翻到卡牌、總費用、猜奇偶、是否猜中、獎勵與棄牌去向。

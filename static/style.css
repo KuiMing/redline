@@ -102,7 +102,9 @@ body {
   height: 720px;
   padding: 24px;
   z-index: 5;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   background:
     radial-gradient(circle at 50% 44%, rgba(245, 158, 11, 0.15), transparent 30%),
     radial-gradient(circle at 58% 22%, rgba(197, 48, 48, 0.22), transparent 36%),

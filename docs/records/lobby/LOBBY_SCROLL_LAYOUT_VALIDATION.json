@@ -1,0 +1,30 @@
+{
+  "summary": {
+    "total": 4,
+    "passed": 4,
+    "failed": 0
+  },
+  "checks": [
+    {
+      "name": "lobby_uses_vertical_scroll",
+      "passed": true,
+      "detail": "#lobby must allow vertical scrolling for tall faction setup/detail content."
+    },
+    {
+      "name": "lobby_keeps_horizontal_clip",
+      "passed": true,
+      "detail": "#lobby should still avoid horizontal spill while allowing vertical scroll."
+    },
+    {
+      "name": "lobby_scroll_contained",
+      "passed": true,
+      "detail": "Scroll gestures should stay inside the fixed 1280x720 lobby stage."
+    },
+    {
+      "name": "lobby_no_single_overflow_hidden_shorthand",
+      "passed": true,
+      "detail": "A single overflow:hidden on #lobby clips the faction picker bottom on smaller screens."
+    }
+  ],
+  "notes": "Validates the lobby/faction picker scroll fix for overflowing faction detail content."
+}
