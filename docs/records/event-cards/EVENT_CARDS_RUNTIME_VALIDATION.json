@@ -1,6 +1,6 @@
 {
   "status": "passed",
-  "passed": 10,
+  "passed": 14,
   "results": [
     {
       "name": "test_idle_noop",
@@ -75,6 +75,42 @@
       }
     },
     {
+      "name": "test_trade_war_purchase_trigger_topdecks_from_discard",
+      "status": "passed",
+      "detail": {
+        "event": "貿易戰加劇",
+        "choice_key": "event_topdeck_from_discard",
+        "deck_top": "四點行動",
+        "discard": [
+          "舊棄牌"
+        ]
+      }
+    },
+    {
+      "name": "test_trade_war_purchase_trigger_ignores_low_cost_non_anglo_support",
+      "status": "passed",
+      "detail": {
+        "event": "貿易戰加劇",
+        "progress": {
+          "count": 0,
+          "required": 1,
+          "succeeded": false,
+          "settled": false,
+          "status": "active"
+        },
+        "pending_choice": null
+      }
+    },
+    {
+      "name": "test_trade_war_purchase_trigger_accepts_anglo_support_by_name",
+      "status": "passed",
+      "detail": {
+        "event": "貿易戰加劇",
+        "triggered_by": "英美奧援",
+        "choice_key": "event_topdeck_from_discard"
+      }
+    },
+    {
       "name": "test_auto_event_modifier",
       "status": "passed",
       "detail": {
@@ -96,6 +132,25 @@
         "全國人大召開": 2,
         "重大災難": 2,
         "total": 27
+      }
+    },
+    {
+      "name": "test_trade_war_structured_matches_raw_rule",
+      "status": "passed",
+      "detail": {
+        "event": "貿易戰加劇",
+        "trigger": {
+          "type": "buy_card",
+          "count": 1,
+          "min_cost": 4,
+          "card_names": [
+            "英美奧援"
+          ]
+        },
+        "success": {
+          "type": "topdeck_from_discard",
+          "count": 1
+        }
       }
     },
     {

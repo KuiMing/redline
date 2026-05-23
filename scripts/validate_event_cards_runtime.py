@@ -119,6 +119,68 @@ def test_draw_trigger_succeeds():
     return {"event": "北京政爭", "progress": game.event_progress, "hand_count": len(player.hand)}
 
 
+def test_trade_war_purchase_trigger_topdecks_from_discard():
+    game = make_game("貿易戰加劇")
+    player = game.players[0]
+    player.resources = {"money": 4, "propaganda": 0}
+    player.deck.discard_pile = [Card("舊棄牌", "command", {"money": 0})]
+    player.deck.draw_pile = [Card("原牌庫頂下方", "command", {})]
+    target = Card("四點行動", "command", {"money": 0})
+    static_count = len(game._static_purchase_cards())
+    game.purchase_area = game._static_purchase_cards() + [target]
+    game._card_purchase_cost = lambda card: {"money": 4, "propaganda": 0} if getattr(card, "name", "") == "四點行動" else {"money": 0, "propaganda": 0}
+
+    assert_ok(game.advance_turn_phase(), "draw trade war event")
+    assert_ok(game.advance_turn_phase(), "enter action")
+    result = assert_ok(game.buy_card(static_count), "buy total-cost-4 card")
+    assert result.get("pending_choice") is True, result
+    assert game.event_progress["succeeded"] is True
+    assert game.event_progress["settled"] is True
+    choice = game.state()["pending_choice"]
+    assert choice["choice_key"] == "event_topdeck_from_discard"
+    assert names(choice["cards"]) == ["舊棄牌", "四點行動"], names(choice["cards"])
+    assert_ok(game.resolve_pending_choice(player.id, 1), "topdeck purchased card")
+    assert names(player.deck.draw_pile)[-1] == "四點行動"
+    assert "四點行動" not in names(player.deck.discard_pile)
+    return {"event": "貿易戰加劇", "choice_key": choice["choice_key"], "deck_top": names(player.deck.draw_pile)[-1], "discard": names(player.deck.discard_pile)}
+
+
+def test_trade_war_purchase_trigger_ignores_low_cost_non_anglo_support():
+    game = make_game("貿易戰加劇")
+    player = game.players[0]
+    player.resources = {"money": 3, "propaganda": 0}
+    game.purchase_area = game._static_purchase_cards() + [Card("低費行動", "command", {"money": 0})]
+    static_count = len(game._static_purchase_cards())
+    game._card_purchase_cost = lambda card: {"money": 3, "propaganda": 0} if getattr(card, "name", "") == "低費行動" else {"money": 0, "propaganda": 0}
+
+    assert_ok(game.advance_turn_phase(), "draw trade war event")
+    assert_ok(game.advance_turn_phase(), "enter action")
+    assert_ok(game.buy_card(static_count), "buy low-cost non-support card")
+    assert game.event_progress["succeeded"] is False
+    assert game.pending_choice is None
+    return {"event": "貿易戰加劇", "progress": game.event_progress, "pending_choice": game.pending_choice}
+
+
+def test_trade_war_purchase_trigger_accepts_anglo_support_by_name():
+    game = make_game("貿易戰加劇")
+    player = game.players[0]
+    player.resources = {"money": 0, "propaganda": 0}
+    player.deck.discard_pile = [Card("可置頂牌", "command", {})]
+    support = Card("英美奧援", "support", {})
+    game.purchase_area = game._static_purchase_cards() + [support]
+    static_count = len(game._static_purchase_cards())
+    game._card_purchase_cost = lambda card: {"money": 0, "propaganda": 0}
+
+    assert_ok(game.advance_turn_phase(), "draw trade war event")
+    assert_ok(game.advance_turn_phase(), "enter action")
+    result = assert_ok(game.buy_card(static_count), "buy 英美奧援 by name")
+    assert result.get("pending_choice") is True, result
+    choice = game.state()["pending_choice"]
+    assert choice["choice_key"] == "event_topdeck_from_discard"
+    assert names(choice["cards"]) == ["可置頂牌", "英美奧援"], names(choice["cards"])
+    return {"event": "貿易戰加劇", "triggered_by": "英美奧援", "choice_key": choice["choice_key"]}
+
+
 def test_event_deck_uses_declared_counts_without_structured_duplicate_overcount():
     game = make_game("歲月靜好")
     counts = {}
@@ -131,13 +193,20 @@ def test_event_deck_uses_declared_counts_without_structured_duplicate_overcount(
     return {"全國人大召開": counts["全國人大召開"], "重大災難": counts["重大災難"], "total": sum(counts.values())}
 
 
+def test_trade_war_structured_matches_raw_rule():
+    game = make_game("貿易戰加劇")
+    event = game._event_by_name("貿易戰加劇")
+    assert event["trigger"] == {"type": "buy_card", "count": 1, "min_cost": 4, "card_names": ["英美奧援"]}
+    assert event["success"] == {"type": "topdeck_from_discard", "count": 1}
+    assert event["failure"] == {"type": "none"}
+    return {"event": event["name"], "trigger": event["trigger"], "success": event["success"]}
+
+
 def test_event_modifiers_are_consumed_by_runtime_rules():
     game = make_game("歲月靜好")
     player = game.players[0]
 
-    game.current_event = game._event_by_name("貿易戰加劇")
-    game.event_progress = {"count": 1, "required": 1, "succeeded": True, "settled": False, "status": "success_pending"}
-    assert_ok(game._settle_current_event(), "apply reduce_cost")
+    game.event_modifiers = [{"type": "reduce_cost", "amount": 1}]
     assert game._event_reduce_cost_amount() == 1
 
     game.turn_phase = TurnPhase.ACTION
@@ -199,8 +268,12 @@ def main():
         test_hong_kong_failure_discard_choice,
         test_major_disaster_success,
         test_draw_trigger_succeeds,
+        test_trade_war_purchase_trigger_topdecks_from_discard,
+        test_trade_war_purchase_trigger_ignores_low_cost_non_anglo_support,
+        test_trade_war_purchase_trigger_accepts_anglo_support_by_name,
         test_auto_event_modifier,
         test_event_deck_uses_declared_counts_without_structured_duplicate_overcount,
+        test_trade_war_structured_matches_raw_rule,
         test_event_modifiers_are_consumed_by_runtime_rules,
         test_pending_choice_blocks_phase_advance_until_resolved,
         test_event_deck_reshuffle,

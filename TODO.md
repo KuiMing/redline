@@ -25,9 +25,10 @@
   - 已知缺口：8 張時代關卡中有 6 張完全未 structured；`[反賊]公知世代的終結`、`[臺灣]綏靖派反對介入對岸` 目前只是 event-like MVP adaptation，仍需 canonical 決策。
 
 - [todo] 修正 structured event data 與 raw card text 不一致的事件。
-  - 優先比對並修正：`貿易戰加劇`、`紅軍權貴出逃`、`烏魯木齊七五事件`、`上海合作組織`、`一帶一路 南洋`、`一帶一路 天方`。
+  - 2026-05-23：已修正 `貿易戰加劇`：structured trigger 改為購買 `英美奧援` 或總費用 4 點以上卡牌，success 改為從棄牌堆選 1 張置頂；新增 runtime primitive `buy_card` / `topdeck_from_discard` 與 validator proof。
+  - 優先比對並修正：`紅軍權貴出逃`、`烏魯木齊七五事件`、`上海合作組織`、`一帶一路 南洋`、`一帶一路 天方`。
   - 已知差異：
-    - `貿易戰加劇` raw 是購買英美奧援或 4 點以上卡牌，成功從棄牌堆選 1 張置頂；目前 structured 是 `play_card_with_money -> reduce_cost`。
+    - `貿易戰加劇` raw 是購買英美奧援或 4 點以上卡牌，成功從棄牌堆選 1 張置頂；2026-05-23 已修正並補 runtime validator。
     - `紅軍權貴出逃` raw 成功是從手牌或棄牌移除 1 張；目前 structured 是 `discard_self`。
     - `烏魯木齊七五事件` raw trigger 是回合結束時牆內有組織，成功是在己方組織 1 格內免費建 1 個；目前 structured 是 `build_organization` trigger + generic build choice。
     - `上海合作組織` raw 是紅軍對北國城鎮組織使用武裝/間諜距離增加為 5 格；目前是 generic `ignore_distance`。

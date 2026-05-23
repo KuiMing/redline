@@ -24,8 +24,8 @@
       "failure": {"type": "none"}},
 
     {"id": "trade_war", "name": "貿易戰加劇", "type": "mission",
-      "trigger": {"type": "play_card_with_money", "count": 1},
-      "success": {"type": "reduce_cost", "amount": 1, "duration": 1},
+      "trigger": {"type": "buy_card", "count": 1, "min_cost": 4, "card_names": ["英美奧援"]},
+      "success": {"type": "topdeck_from_discard", "count": 1},
       "failure": {"type": "none"}},
 
     {"id": "east_turkestan_camp", "name": "東突厥集中營", "type": "mission",
@@ -78,8 +78,8 @@
       "failure": {"type": "red_dissolve", "count": 1, "scope": "牆內"}},
 
     {"id": "second_trade_war", "name": "貿易戰加劇（副本）", "type": "mission",
-      "trigger": {"type": "play_card_with_money", "count": 1},
-      "success": {"type": "reduce_cost", "amount": 1, "duration": 1},
+      "trigger": {"type": "buy_card", "count": 1, "min_cost": 4, "card_names": ["英美奧援"]},
+      "success": {"type": "topdeck_from_discard", "count": 1},
       "failure": {"type": "none"}},
 
     {"id": "second_border_conflict", "name": "藏印邊境軍事對峙（副本）", "type": "mission",

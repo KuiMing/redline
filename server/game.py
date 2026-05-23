@@ -227,6 +227,7 @@ class Game:
             'use_faction_ability': '使用或觸發陣營特殊能力',
             'play_card_with_money': '打出購買費用含資金的卡牌',
             'play_card_with_propaganda': '打出購買費用含宣傳的卡牌',
+            'buy_card': '購買符合條件的卡牌',
             'build_organization': '建立組織',
             'move_organization': '進行組織遷移',
             'draw': '藉由卡牌效果或能力抽牌',
@@ -234,7 +235,16 @@ class Game:
         count = int(trigger.get('count', 1) or 1)
         scope = trigger.get('scope')
         scope_text = f'（{scope}）' if scope else ''
-        return f"{labels.get(trigger.get('type'), trigger.get('type') or '未知條件')}{scope_text}至少 {count} 次"
+        detail = ''
+        if trigger.get('type') == 'buy_card':
+            criteria = []
+            if trigger.get('min_cost') is not None:
+                criteria.append(f"總費用 {trigger.get('min_cost')} 點以上")
+            if trigger.get('card_names'):
+                criteria.append('或'.join(trigger.get('card_names') or []))
+            if criteria:
+                detail = f"（{' / '.join(criteria)}）"
+        return f"{labels.get(trigger.get('type'), trigger.get('type') or '未知條件')}{scope_text}{detail}至少 {count} 次"
 
     def _event_effect_text(self, effect):
         if not effect or effect.get('type') == 'none':
@@ -254,6 +264,7 @@ class Game:
             'restrict_build': '本回合建立組織受限',
             'ignore_distance': '本回合無視距離限制',
             'build_organization': f'建立 {count} 個組織',
+            'topdeck_from_discard': f'從棄牌堆選 {count} 張置於牌庫頂',
         }
         return labels.get(t, t or '未知效果')
 
@@ -302,8 +313,34 @@ class Game:
         if self.event_progress['count'] >= required:
             self.event_progress['succeeded'] = True
             self.event_progress['status'] = 'success_pending'
-            self._settle_current_event()
+            result = self._settle_current_event()
+            self.event_notification = self._event_display_payload()
+            return result
         self.event_notification = self._event_display_payload()
+        return {'success': True}
+
+    def _event_purchase_trigger_matches(self, trigger, card, original_cost=None):
+        if (trigger or {}).get('type') != 'buy_card':
+            return False
+        card_name = getattr(card, 'name', str(card))
+        if card_name in set(trigger.get('card_names') or []):
+            return True
+        min_cost = trigger.get('min_cost')
+        if min_cost is not None:
+            cost = original_cost or self._card_purchase_cost(card)
+            total = int((cost or {}).get('money', 0) or 0) + int((cost or {}).get('propaganda', 0) or 0)
+            if total >= int(min_cost or 0):
+                return True
+        return False
+
+    def _track_event_purchase(self, card, original_cost=None):
+        event = self.current_event or {}
+        if event.get('type') != 'mission' or not self.event_progress or self.event_progress.get('settled'):
+            return {'success': True}
+        trigger = event.get('trigger') or {}
+        if not self._event_purchase_trigger_matches(trigger, card, original_cost=original_cost):
+            return {'success': True}
+        return self._track_event_progress('buy_card') or {'success': True}
 
     def _draw_player_cards(self, player, count=1, source='effect'):
         drawn = player.deck.draw(int(count or 1))
@@ -385,6 +422,29 @@ class Game:
             if towns:
                 self._set_pending_town_choice(player, 'event_build_organization', towns, f"{self.current_event.get('name')}：選擇要建立組織的城鎮。", source_name=self.current_event.get('name'))
                 return {'success': True, 'pending_choice': True}
+        elif t == 'topdeck_from_discard':
+            cards = list(player.deck.discard_pile)
+            if cards:
+                choice_count = min(count, len(cards))
+                if choice_count == 1:
+                    self._set_pending_card_choice(
+                        player,
+                        'event_topdeck_from_discard',
+                        cards,
+                        f"{self.current_event.get('name')}：從棄牌堆選 1 張牌置於牌庫頂。",
+                        source_name=self.current_event.get('name'),
+                    )
+                else:
+                    self._set_pending_multi_card_choice(
+                        player,
+                        'event_topdeck_from_discard',
+                        cards,
+                        f"{self.current_event.get('name')}：從棄牌堆選 {choice_count} 張牌置於牌庫頂。",
+                        choice_count,
+                        source_name=self.current_event.get('name'),
+                    )
+                return {'success': True, 'pending_choice': True}
+            self.log(f"Event {outcome}: {player.name} has no discard card to topdeck")
         self.log(f"Event {outcome} resolved: {self.current_event.get('name')} / {t}")
         return {'success': True, 'effect': t}
 
@@ -764,6 +824,17 @@ class Game:
             source_name = choice.get('source_name') or choice_key
             self.log(f"{player.name} gained {getattr(chosen, 'name', str(chosen))} from discard via {source_name}")
             return {'success': True, 'chosen_card': getattr(chosen, 'name', str(chosen))}
+
+        if choice_key == 'event_topdeck_from_discard':
+            if chosen not in player.deck.discard_pile:
+                return {'error': 'Chosen card not in discard pile'}
+            player.deck.discard_pile.remove(chosen)
+            player.deck.draw_pile.append(chosen)
+            self.pending_choice = None
+            source_name = choice.get('source_name') or (self.current_event or {}).get('name') or choice_key
+            chosen_name = getattr(chosen, 'name', str(chosen))
+            self.log(f"{player.name} placed {chosen_name} on deck top via {source_name}")
+            return {'success': True, 'chosen_card': chosen_name}
 
         if choice_key == 'underground_party':
             player.hand.append(chosen)
@@ -3315,6 +3386,9 @@ class Game:
         else:
             self.purchase_area.pop(index)
         self.log(f"{player.name} bought {card_name}")
+        event_result = self._track_event_purchase(purchased_card, original_cost=cost)
+        if isinstance(event_result, dict) and event_result.get('pending_choice'):
+            return {"success": True, "pending_choice": True}
         return {"success": True}
 
     # ---------- Era Trigger ----------
