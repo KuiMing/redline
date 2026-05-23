@@ -17,7 +17,10 @@
 ## 目前 active todo
 
 ### P0：事件卡 MVP 實作規劃（下一個新 session 優先）
-- [todo] 事件卡 runtime / UI MVP：目前只有 `data/events_structured.v1.1.json`、`data/cards/event_and_era_cards.v1.1.json`、`server/events.py`、`server/event_model.py` 的資料與 stub；`Game` 尚未持有 event deck / current event 狀態，EVENT 階段也只檢查 era 後直接進 ACTION。
+- [done] 事件卡 runtime / UI MVP：已補 `Game` event deck / current event / progress / modifier 狀態、EVENT 階段抽牌展示、任務條件追蹤、成功／失敗結算與 UI 事件卡面板。
+  - 2026-05-23：完成 MVP。事件牌庫會依 `data/events_structured.v1.1.json` 與 `data/cards/event_and_era_cards.v1.1.json` 張數建立；EVENT 階段第一次 advance 抽牌並停留展示，第二次 advance 進 ACTION；ACTION 結束結算 mission success/failure。已支援 trigger：`play_card_with_money`、`play_card_with_propaganda`、`build_organization`、`move_organization`、`use_faction_ability`；購買費用判定用卡牌購買成本。已接 effect MVP：`draw`、`gain_card`（遵守 static supply）、`discard_self`、`discard_random`、`red_dissolve`、`add_internal_conflict`、`move`、`reduce_cost` / `restrict_build` / `ignore_distance` modifier、`build_organization`、`none`。
+  - 產物：`scripts/validate_event_cards_runtime.py`、`docs/records/event-cards/EVENT_CARDS_RUNTIME_VALIDATION.{json,md}`、`docs/records/event-cards/EVENT_CARD_UI_PROOF_2026_05_23.md`、`docs/records/event-cards/EVENT_CARD_HONG_KONG_UI_2026_05_23.png`。
+  - 驗證：`python3 scripts/validate_event_cards_runtime.py` 通過（10 passed：idle、mission success/failure、static supply consumption、draw trigger、auto modifier、event deck declared counts、modifier runtime consumption、pending-choice advance guard、deck reshuffle）；正式 browser UI 截圖證明 `香港抗暴之戰` 事件卡面板顯示名稱、任務條件、進度、成功獎勵、失敗懲罰。
   - Scope 原則：先做可 playtest 的 MVP，不一次補所有精緻例外；每一階段都要有 runtime validator，UI 變更要有正式 UI proof。
   - Phase 1｜事件牌庫與狀態：在 `server/game.py` 初始化事件牌庫、棄牌堆、目前事件、事件任務進度；從 `data/events_structured.v1.1.json` 載入 structured events，依 `data/cards/event_and_era_cards.v1.1.json` 的張數建立 deck；`歲月靜好` 可作 idle no-op。
   - Phase 2｜EVENT 階段抽牌與展示：`advance_turn_phase()` 在 EVENT 階段抽 1 張事件卡並寫入 state；前端 `static/app.js` / `static/style.css` 顯示事件卡名稱、類型、任務條件、成功獎勵、失敗懲罰；事件展示後可由當前玩家按「進入行動階段」。

@@ -18,6 +18,7 @@ from server.action_engine import ActionCardEngine
 from server.effect_engine import EffectEngine
 from server.era_engine import EraEngine
 from server.victory import VictoryEngine
+from server.events import EventDeck
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 MAP_PATH = BASE_DIR / "data" / "map.json"
@@ -26,6 +27,8 @@ STRUCTURED_ACTION_PATH = BASE_DIR / "data" / "action_cards_structured.v1.1.json"
 ERA_STRUCTURED_PATH = BASE_DIR / "data" / "era_structured.v1.1.json"
 SUPPORT_CARDS_PATH = BASE_DIR / "data" / "cards" / "support_cards.v1.1.json"
 SUPPORT_TAXONOMY_PATH = BASE_DIR / "data" / "cards" / "support_taxonomy.v1.1.json"
+EVENT_STRUCTURED_PATH = BASE_DIR / "data" / "events_structured.v1.1.json"
+EVENT_CARD_COUNTS_PATH = BASE_DIR / "data" / "cards" / "event_and_era_cards.v1.1.json"
 STATIC_PURCHASE_CARD_NAMES = ('宣傳家', '思想家', '資助者', '資本家', '分神', '內鬥')
 
 
@@ -96,6 +99,7 @@ class Game:
         self.support_taxonomy = self._load_json(SUPPORT_TAXONOMY_PATH).get("cards", []) if SUPPORT_TAXONOMY_PATH.exists() else []
         # ✅ Load structured eras
         self.structured_eras = self._load_json(ERA_STRUCTURED_PATH)["eras"]
+        self.structured_events = self._load_json(EVENT_STRUCTURED_PATH).get("events", [])
 
         self.players = []
         self._assign_factions(players_data)
@@ -144,6 +148,11 @@ class Game:
         self.purchase_deck = self._initial_purchase_deck()
         self.purchase_area = self._initial_purchase_area()
         self.static_purchase_supply = {name: 1 for name in STATIC_PURCHASE_CARD_NAMES}
+        self.event_deck = EventDeck(self._initial_event_cards())
+        self.current_event = None
+        self.event_progress = None
+        self.event_modifiers = []
+        self.event_notification = None
         self.pending_choice = None
         self.era_notification = None
 
@@ -152,6 +161,245 @@ class Game:
     def _load_json(self, path):
         with open(path, encoding="utf-8") as f:
             return json.load(f)
+
+    def _event_card_counts(self):
+        counts = {}
+        if not EVENT_CARD_COUNTS_PATH.exists():
+            return counts
+        rows = self._load_json(EVENT_CARD_COUNTS_PATH)
+        for row in rows:
+            if not isinstance(row, list) or len(row) < 6:
+                continue
+            name = row[0]
+            if not name or name in {'事件卡名稱', '時代關卡名稱'}:
+                continue
+            try:
+                count = int(row[5])
+            except (TypeError, ValueError):
+                continue
+            counts[name] = count
+        return counts
+
+    def _initial_event_cards(self):
+        counts = self._event_card_counts()
+        cards = []
+        for event in self.structured_events:
+            name = event.get('name')
+            if name and '（副本）' in name:
+                continue
+            copies = int(counts.get(name, 1) or 1)
+            for _ in range(max(1, copies)):
+                cards.append(dict(event))
+        return cards
+
+    def _event_by_name(self, name):
+        for event in self.structured_events:
+            if event.get('name') == name or event.get('id') == name:
+                return dict(event)
+        return None
+
+    def _event_display_payload(self, event=None):
+        event = event or self.current_event
+        if not event:
+            return None
+        trigger = event.get('trigger') or {}
+        success = event.get('success') or {}
+        failure = event.get('failure') or {}
+        progress = dict(self.event_progress or {})
+        return {
+            'id': event.get('id'),
+            'name': event.get('name'),
+            'type': event.get('type'),
+            'trigger': trigger,
+            'success': success,
+            'failure': failure,
+            'progress': progress,
+            'status': progress.get('status') or 'active',
+            'trigger_text': self._event_condition_text(trigger, event),
+            'success_text': self._event_effect_text(success),
+            'failure_text': self._event_effect_text(failure),
+        }
+
+    def _event_condition_text(self, trigger, event=None):
+        if not trigger:
+            return '無'
+        labels = {
+            'use_faction_ability': '使用或觸發陣營特殊能力',
+            'play_card_with_money': '打出購買費用含資金的卡牌',
+            'play_card_with_propaganda': '打出購買費用含宣傳的卡牌',
+            'build_organization': '建立組織',
+            'move_organization': '進行組織遷移',
+            'draw': '藉由卡牌效果或能力抽牌',
+        }
+        count = int(trigger.get('count', 1) or 1)
+        scope = trigger.get('scope')
+        scope_text = f'（{scope}）' if scope else ''
+        return f"{labels.get(trigger.get('type'), trigger.get('type') or '未知條件')}{scope_text}至少 {count} 次"
+
+    def _event_effect_text(self, effect):
+        if not effect or effect.get('type') == 'none':
+            return '無'
+        t = effect.get('type')
+        count = int(effect.get('count', effect.get('amount', 1)) or 1)
+        card = effect.get('card')
+        labels = {
+            'draw': f'抽 {count} 張牌',
+            'gain_card': f'獲得 {count} 張{card or "指定牌"}',
+            'discard_self': f'己方選 {count} 張手牌棄掉',
+            'discard_random': f'被隨機棄掉 {count} 張手牌',
+            'red_dissolve': f'紅軍瓦解 {count} 個組織',
+            'add_internal_conflict': f'獲得 {count} 張內鬥',
+            'move': f'獲得 {count} 次組織遷移',
+            'reduce_cost': f'本回合購牌費用降低 {effect.get("amount", 1)}',
+            'restrict_build': '本回合建立組織受限',
+            'ignore_distance': '本回合無視距離限制',
+            'build_organization': f'建立 {count} 個組織',
+        }
+        return labels.get(t, t or '未知效果')
+
+    def _start_event_phase(self):
+        event = self.event_deck.draw() if getattr(self, 'event_deck', None) else None
+        self.current_event = dict(event) if event else None
+        self.event_modifiers = []
+        if not self.current_event:
+            self.event_progress = None
+            self.event_notification = None
+            return
+        event_type = self.current_event.get('type')
+        trigger = self.current_event.get('trigger') or {}
+        required = int(trigger.get('count', 0) or 0)
+        self.event_progress = {'count': 0, 'required': required, 'succeeded': False, 'settled': False, 'status': 'active'}
+        if event_type == 'idle':
+            self.event_progress.update({'succeeded': True, 'settled': True, 'status': 'idle'})
+            self.log(f"Event drawn: {self.current_event.get('name')} (no-op)")
+        elif event_type == 'auto':
+            self._apply_event_effect(self.current_event.get('effect') or {}, self.current_player(), outcome='auto')
+            self.event_progress.update({'succeeded': True, 'settled': True, 'status': 'auto'})
+            self.log(f"Event drawn: {self.current_event.get('name')} (auto)")
+        else:
+            self.log(f"Event drawn: {self.current_event.get('name')}")
+        self.event_notification = self._event_display_payload()
+
+    def _event_trigger_matches_scope(self, trigger, town=None):
+        scope = trigger.get('scope')
+        if not scope:
+            return True
+        if scope == '牆內':
+            return town is None or town in set(self._towns_for_region_alias('china'))
+        return True
+
+    def _track_event_progress(self, trigger_type, amount=1, town=None):
+        event = self.current_event or {}
+        if event.get('type') != 'mission' or not self.event_progress or self.event_progress.get('settled'):
+            return
+        trigger = event.get('trigger') or {}
+        if trigger.get('type') != trigger_type:
+            return
+        if not self._event_trigger_matches_scope(trigger, town=town):
+            return
+        self.event_progress['count'] = int(self.event_progress.get('count', 0) or 0) + int(amount or 1)
+        required = int(trigger.get('count', 1) or 1)
+        if self.event_progress['count'] >= required:
+            self.event_progress['succeeded'] = True
+            self.event_progress['status'] = 'success_pending'
+            self._settle_current_event()
+        self.event_notification = self._event_display_payload()
+
+    def _draw_player_cards(self, player, count=1, source='effect'):
+        drawn = player.deck.draw(int(count or 1))
+        player.hand.extend(drawn)
+        if source != 'refill' and drawn:
+            self._track_event_progress('draw', amount=len(drawn))
+        return drawn
+
+    def _event_modifier_active(self, modifier_type):
+        return any((m or {}).get('type') == modifier_type for m in (getattr(self, 'event_modifiers', []) or []))
+
+    def _event_reduce_cost_amount(self):
+        return sum(int((m or {}).get('amount', 0) or 0) for m in (getattr(self, 'event_modifiers', []) or []) if (m or {}).get('type') == 'reduce_cost')
+
+    def _gain_event_card(self, player, card_name, count=1):
+        gained = 0
+        for _ in range(int(count or 1)):
+            if card_name in STATIC_PURCHASE_CARD_NAMES:
+                supply = int(self.static_purchase_supply.get(card_name, 0) or 0)
+                if supply <= 0:
+                    self.log(f"Event could not gain {card_name}: static supply empty")
+                    continue
+                self.static_purchase_supply[card_name] = supply - 1
+            player.deck.discard([self._starter_card(card_name)])
+            gained += 1
+        if gained:
+            self.log(f"{player.name} gained {gained} {card_name} from event")
+        return gained
+
+    def _red_player(self):
+        return next((p for p in self.players if p.faction_id == 'red_army'), None)
+
+    def _apply_event_effect(self, effect, player, outcome='success'):
+        effect = effect or {'type': 'none'}
+        t = effect.get('type')
+        count = int(effect.get('count', 1) or 1)
+        if t in (None, 'none'):
+            self.log(f"Event {outcome}: no effect")
+            return {'success': True, 'effect': t or 'none'}
+        if t == 'draw':
+            self._draw_player_cards(player, count)
+        elif t == 'gain_card':
+            self._gain_event_card(player, effect.get('card'), count)
+        elif t == 'discard_self':
+            cards = list(player.hand)
+            if not cards:
+                self.log(f"Event {outcome}: {player.name} has no hand card to discard")
+            else:
+                self._set_pending_multi_card_choice(player, 'event_discard_self', cards, f"{self.current_event.get('name')}：請選擇 {min(count, len(cards))} 張手牌棄掉。", min(count, len(cards)), source_name=self.current_event.get('name'))
+                return {'success': True, 'pending_choice': True}
+        elif t == 'discard_random':
+            for _ in range(min(count, len(player.hand))):
+                card = random.choice(player.hand)
+                player.hand.remove(card)
+                player.deck.discard([card])
+        elif t == 'red_dissolve':
+            red = self._red_player()
+            if red:
+                targets = []
+                for other in self.players:
+                    if other is red:
+                        continue
+                    for town, n in (other.organizations or {}).items():
+                        if n > 0 and self._event_trigger_matches_scope({'scope': effect.get('scope')}, town=town):
+                            targets.append({'id': f'{other.id}:{town}', 'player_id': other.id, 'town': town, 'label': f'{other.name}｜{town}'})
+                if targets:
+                    self._set_pending_target_choice(red, 'event_red_dissolve', targets, f"{self.current_event.get('name')}：紅軍選擇要瓦解的組織。", source_name=self.current_event.get('name'))
+                    return {'success': True, 'pending_choice': True}
+        elif t == 'add_internal_conflict':
+            self._gain_event_card(player, '內鬥', count)
+        elif t == 'move':
+            player.moves_left += count
+        elif t in {'reduce_cost', 'restrict_build', 'ignore_distance'}:
+            modifier = dict(effect)
+            modifier['event_id'] = (self.current_event or {}).get('id')
+            self.event_modifiers.append(modifier)
+        elif t == 'build_organization':
+            towns = [{'town': town} for town in sorted(self.map.get('towns', {})) if self.can_develop_in_town(player, town)]
+            if towns:
+                self._set_pending_town_choice(player, 'event_build_organization', towns, f"{self.current_event.get('name')}：選擇要建立組織的城鎮。", source_name=self.current_event.get('name'))
+                return {'success': True, 'pending_choice': True}
+        self.log(f"Event {outcome} resolved: {self.current_event.get('name')} / {t}")
+        return {'success': True, 'effect': t}
+
+    def _settle_current_event(self):
+        event = self.current_event or {}
+        if event.get('type') != 'mission' or not self.event_progress or self.event_progress.get('settled'):
+            return {'success': True}
+        player = self.current_player()
+        succeeded = bool(self.event_progress.get('succeeded'))
+        effect = event.get('success') if succeeded else event.get('failure')
+        self.event_progress['settled'] = True
+        self.event_progress['status'] = 'success' if succeeded else 'failure'
+        result = self._apply_event_effect(effect or {'type': 'none'}, player, outcome='success' if succeeded else 'failure')
+        self.event_notification = self._event_display_payload()
+        return result
 
     def _build_towns_by_ruler(self, map_data):
         grouped = {}
@@ -661,7 +909,7 @@ class Game:
             self.pending_choice = None
             initiator = next((p for p in self.players if getattr(p, 'id', None) == choice.get('initiator_player_id')), None)
             if initiator is not None and choice.get('draw_on_success'):
-                initiator.hand.extend(initiator.deck.draw(int(choice.get('draw_on_success'))))
+                self._draw_player_cards(initiator, int(choice.get('draw_on_success')))
             initiator_name = choice.get('initiator_player_name') or '其他玩家'
             target_name = choice.get('target_player_name') or player.name
             source_name = choice.get('source_name') or choice_key
@@ -727,7 +975,7 @@ class Game:
         choice_key = choice.get('choice_key')
         selected_cards = [cards[i] for i in indices]
 
-        if choice_key == 'discard_self':
+        if choice_key in {'discard_self', 'event_discard_self'}:
             for card in selected_cards:
                 if card not in player.hand:
                     return {'error': 'Chosen card not in hand'}
@@ -754,7 +1002,7 @@ class Game:
             self.pending_choice = None
             initiator = next((p for p in self.players if getattr(p, 'id', None) == choice.get('initiator_player_id')), None)
             if initiator is not None and choice.get('draw_on_success'):
-                initiator.hand.extend(initiator.deck.draw(int(choice.get('draw_on_success'))))
+                self._draw_player_cards(initiator, int(choice.get('draw_on_success')))
             initiator_name = choice.get('initiator_player_name') or '其他玩家'
             target_name = choice.get('target_player_name') or player.name
             source_name = choice.get('source_name') or choice_key
@@ -880,13 +1128,17 @@ class Game:
         town = selected.get('town')
         if not town:
             return {'error': 'Invalid town choice'}
+        choice_key = choice.get('choice_key')
+        if choice_key == 'event_build_organization':
+            player.organizations[town] = player.organizations.get(town, 0) + 1
+            self.log(f"{player.name} built organization in {town} via event")
         self.pending_choice = None
         return {
             'success': True,
             'choice_index': index,
             'town': town,
             'selected': selected,
-            'choice_key': choice.get('choice_key'),
+            'choice_key': choice_key,
         }
 
     def _resolve_target_choice(self, player, choice, index):
@@ -929,7 +1181,7 @@ class Game:
                 'target_player_name': getattr(target_player, 'name', str(target_id)),
                 'pending_choice': True,
             }
-        if choice_key == 'intel_network_dissolve_target':
+        if choice_key in {'intel_network_dissolve_target', 'event_red_dissolve'}:
             target_player_id = selected.get('player_id') or target_id
             town = selected.get('town')
             target_player = next((p for p in self.players if getattr(p, 'id', None) == target_player_id), None)
@@ -937,7 +1189,7 @@ class Game:
                 return {'error': 'Target player not found'}
             if not town:
                 return {'error': 'Target town not found'}
-            if not self._player_has_org_within_steps_of_player(player, target_player, max_steps=1):
+            if choice_key == 'intel_network_dissolve_target' and not self._player_has_org_within_steps_of_player(player, target_player, max_steps=1):
                 return {'error': 'Target player is not within range'}
             result = self.dissolve_organization(player, target_player, town, source='card')
             if result.get('error'):
@@ -1399,7 +1651,7 @@ class Game:
                 return {'error': 'Invalid discard target'}
             if not getattr(target_player, 'hand', None):
                 return {'error': 'Target player has no hand cards'}
-            if not self._player_has_org_within_steps_of_player(player, target_player, max_steps=1):
+            if choice_key == 'intel_network_dissolve_target' and not self._player_has_org_within_steps_of_player(player, target_player, max_steps=1):
                 return {'error': 'Target player is not within range'}
             count = int(context.get('effect_payload', {}).get('count', 0) or 0)
             random_pick = bool(context.get('effect_payload', {}).get('random'))
@@ -1479,7 +1731,7 @@ class Game:
             player.resources['money'] += int(payload.get('money', 0) or 0)
             player.resources['propaganda'] += int(payload.get('propaganda', 0) or 0)
         elif effect_type == 'red_support_draw_and_pass':
-            player.hand.extend(player.deck.draw(int(payload.get('draw', 0) or 0)))
+            self._draw_player_cards(player, int(payload.get('draw', 0) or 0))
             current_faction = self.faction_by_id.get(player.faction_id, {})
             current_camp = current_faction.get('camp')
             pending_red_target = self._resolve_red_support_target_choice(player, card, mode='action')
@@ -1509,11 +1761,11 @@ class Game:
                     'card_moved_out_of_play': True,
                 }
         elif effect_type == 'draw':
-            player.hand.extend(player.deck.draw(int(payload.get('count', 0) or 0)))
+            self._draw_player_cards(player, int(payload.get('count', 0) or 0))
         elif effect_type == 'draw_then_discard':
             draw_count = int(payload.get('draw', 0) or 0)
             discard_count = int(payload.get('discard', 0) or 0)
-            player.hand.extend(player.deck.draw(draw_count))
+            self._draw_player_cards(player, draw_count)
             for _ in range(min(discard_count, len(player.hand))):
                 discarded = player.hand.pop()
                 player.deck.discard([discarded])
@@ -1988,6 +2240,7 @@ class Game:
             gained = Card('已移除牌', 'command', {})
             player.deck.discard([gained])
             self.turn_log['faction_action_used'] = True
+            self._track_event_progress('use_faction_ability')
             self.log(f"{player.name} triggered 民主陣線 and gained a removed card proxy")
             return {"success": True}
 
@@ -1997,6 +2250,7 @@ class Game:
             card = player.deck.draw_pile.pop()
             total = self._top_card_cost_total(card)
             self.turn_log['faction_action_used'] = True
+            self._track_event_progress('use_faction_ability')
             destination = 'hand' if total % 2 == 1 else 'discard'
             if destination == 'hand':
                 player.hand.append(card)
@@ -2028,6 +2282,7 @@ class Game:
             total = self._top_card_cost_total(card)
             guessed_odd = guess == 'odd'
             self.turn_log['faction_action_used'] = True
+            self._track_event_progress('use_faction_ability')
             hit = (total % 2 == 1 and guessed_odd) or (total % 2 == 0 and not guessed_odd)
             if action_name == '賭徒耳語':
                 if hit:
@@ -2076,7 +2331,7 @@ class Game:
             red_player.deck.discard([discarded])
             self.log(f"{player.name} triggered 游擊隊 and forced {red_player.name} to discard {getattr(discarded, 'name', str(discarded))}")
         else:
-            player.hand.extend(player.deck.draw(1))
+            self._draw_player_cards(player, 1)
             self.log(f"{player.name} triggered 游擊隊 and drew 1 card")
 
     def _can_target_org_with_dissolve(self, attacker, defender, source="card"):
@@ -2121,10 +2376,10 @@ class Game:
                 continue
             name = ability.get("name")
             if name in {"本土社團", "選我河山", "還我河山"} and built_in_china:
-                player.hand.extend(player.deck.draw(1))
+                self._draw_player_cards(player, 1)
                 self.log(f"{player.name} triggered {name} and drew 1 card")
             elif name == "民國之心" and (built_in_china or built_in_nanyang):
-                player.hand.extend(player.deck.draw(1))
+                self._draw_player_cards(player, 1)
                 self.log(f"{player.name} triggered 民國之心 and drew 1 card")
             elif name in {"商貿組織", "民族調和", "星星之火", "基金會", "共合會", "展現實力"}:
                 # not turn-end abilities
@@ -2406,11 +2661,11 @@ class Game:
             name = ability.get("name")
             if name == "商貿組織" and effective_type == "money" and not self.turn_log.get("faction_first_money_triggered"):
                 self.turn_log["faction_first_money_triggered"] = True
-                player.hand.extend(player.deck.draw(1))
+                self._draw_player_cards(player, 1)
                 self.log(f"{player.name} triggered 商貿組織 and drew 1 card")
             elif name in {"民族調和", "星星之火"} and effective_type == "propaganda" and not self.turn_log.get("faction_first_propaganda_triggered"):
                 self.turn_log["faction_first_propaganda_triggered"] = True
-                player.hand.extend(player.deck.draw(1))
+                self._draw_player_cards(player, 1)
                 self.log(f"{player.name} triggered {name} and drew 1 card")
             elif name == "人同此心" and effective_type == "propaganda" and not self.turn_log.get("faction_first_prop_gain_triggered"):
                 self.turn_log["faction_first_prop_gain_triggered"] = True
@@ -2587,6 +2842,11 @@ class Game:
                     return {"success": True, "pending_choice": True}
             for key, value in getattr(played_card, 'resources', {}).items():
                 player.resources[key] += value
+            purchase_cost = self._card_purchase_cost(played_card)
+            if int(purchase_cost.get('money', 0) or 0) > 0:
+                self._track_event_progress('play_card_with_money')
+            if int(purchase_cost.get('propaganda', 0) or 0) > 0:
+                self._track_event_progress('play_card_with_propaganda')
             if not self._return_borrowed_card_to_owner_topdeck(played_card):
                 player.deck.discard([played_card])
             self.log(f"{player.name} played {card_name} as resource")
@@ -2594,7 +2854,7 @@ class Game:
 
         effective_type = getattr(played_card, "card_type", None)
         if getattr(played_card, 'name', str(played_card)) == '紅軍奧援' and mode == "action":
-            player.hand.extend(player.deck.draw(1))
+            self._draw_player_cards(player, 1)
             support_resolution = self._resolve_red_support_target_choice(player, played_card, mode='action')
             if support_resolution and support_resolution.get('pending_choice'):
                 self.log(f"{player.name} played {card_name}")
@@ -2625,6 +2885,11 @@ class Game:
             self.turn_log["played_money_card"] = True
         if effective_type == "propaganda":
             self.turn_log["played_propaganda_card"] = True
+        purchase_cost = self._card_purchase_cost(played_card)
+        if int(purchase_cost.get('money', 0) or 0) > 0:
+            self._track_event_progress('play_card_with_money')
+        if int(purchase_cost.get('propaganda', 0) or 0) > 0:
+            self._track_event_progress('play_card_with_propaganda')
         if self._player_has_india_research_room(player) and self._is_india_flag_card(played_card) and not self.turn_log.get("india_flag_money_triggered"):
             self.turn_log["india_flag_money_triggered"] = True
             player.resources["money"] += 2
@@ -2691,11 +2956,11 @@ class Game:
             name = ability.get("name")
             if name == "商貿組織" and effective_type == "money" and not self.turn_log.get("faction_first_money_triggered"):
                 self.turn_log["faction_first_money_triggered"] = True
-                player.hand.extend(player.deck.draw(1))
+                self._draw_player_cards(player, 1)
                 self.log(f"{player.name} triggered 商貿組織 and drew 1 card")
             elif name in {"民族調和", "星星之火"} and effective_type == "propaganda" and not self.turn_log.get("faction_first_propaganda_triggered"):
                 self.turn_log["faction_first_propaganda_triggered"] = True
-                player.hand.extend(player.deck.draw(1))
+                self._draw_player_cards(player, 1)
                 self.log(f"{player.name} triggered {name} and drew 1 card")
             elif name == "人同此心" and effective_type == "propaganda" and not self.turn_log.get("faction_first_prop_gain_triggered"):
                 self.turn_log["faction_first_prop_gain_triggered"] = True
@@ -2750,10 +3015,18 @@ class Game:
         return {'pending_choice': True}
 
     def advance_turn_phase(self):
+        if self.pending_choice:
+            return {"error": "Resolve pending choice before advancing phase"}
         if self.turn_phase == TurnPhase.EVENT:
             self._check_era_trigger()
+            if not self.current_event:
+                self._start_event_phase()
+                return {"success": True}
             self.turn_phase = TurnPhase.ACTION
         elif self.turn_phase == TurnPhase.ACTION:
+            event_result = self._settle_current_event()
+            if event_result and event_result.get('pending_choice'):
+                return {"success": True, "pending_choice": True}
             self.turn_phase = TurnPhase.END
         elif self.turn_phase == TurnPhase.END:
             pending = self._prompt_end_turn_topdeck_action_if_available()
@@ -2779,6 +3052,10 @@ class Game:
             self.purchase_area.extend(drawn)
         self.log(f"End of turn for {player.name}")
 
+        self.current_event = None
+        self.event_progress = None
+        self.event_modifiers = []
+        self.event_notification = None
         self.turn_log = self._new_turn_log()
 
         # ✅ Tick active eras at end of full turn
@@ -2805,6 +3082,8 @@ class Game:
         player = self.current_player()
         if not town:
             return {"error": "Town required"}
+        if self._event_modifier_active('restrict_build'):
+            return {"error": "Current event restricts building organizations"}
         if town not in self.map.get("towns", {}):
             return {"error": "Invalid town"}
         if not self._town_has_shared_org_access(player, town):
@@ -2814,6 +3093,7 @@ class Game:
 
         player.organizations[town] = player.organizations.get(town, 0) + 1
         self.turn_log.setdefault("built_towns", []).append(town)
+        self._track_event_progress('build_organization', town=town)
         self._apply_guerrilla_on_build(player, town)
         self.log(f"{player.name} built organization in {town}")
         return {"success": True}
@@ -2825,6 +3105,8 @@ class Game:
         player = self.current_player()
         if not origin_town or not target_town:
             return {"error": "Origin and target required"}
+        if self._event_modifier_active('restrict_build'):
+            return {"error": "Current event restricts building organizations"}
         if origin_town not in self.map.get("towns", {}) or target_town not in self.map.get("towns", {}):
             return {"error": "Invalid town"}
         origin_owner = self._shared_origin_owner(player, origin_town)
@@ -2835,7 +3117,7 @@ class Game:
 
         safehouse_bonus = 1 if self._player_has_ability(player, "安全屋") else 0
         max_distance = 1 + int(getattr(player, 'build_range_bonus', 0) or 0) + safehouse_bonus
-        if origin_town != target_town:
+        if origin_town != target_town and not self._event_modifier_active('ignore_distance'):
             frontier = [(origin_town, 0)]
             seen = {origin_town}
             reached = False
@@ -2857,6 +3139,7 @@ class Game:
 
         player.organizations[target_town] = player.organizations.get(target_town, 0) + 1
         self.turn_log.setdefault("built_towns", []).append(target_town)
+        self._track_event_progress('build_organization', town=target_town)
         self._apply_guerrilla_on_build(player, target_town)
         self.log(f"{player.name} built organization in {target_town} from {origin_town}")
         return {"success": True}
@@ -2884,7 +3167,7 @@ class Game:
 
         inner_towns = set(self._towns_for_region_alias("china"))
         if town in inner_towns and any(self._player_has_ability(target_owner, n) for n in {"殉道者", "青山里"}):
-            target_owner.hand.extend(target_owner.deck.draw(1))
+            self._draw_player_cards(target_owner, 1)
             self.log(f"{target_owner.name} triggered martyr-style ability and drew 1 card")
 
         return {
@@ -2911,7 +3194,7 @@ class Game:
             return {"error": "Invalid move mode"}
 
         neighbors = self.map["towns"].get(from_town, {}).get(mode, []) or []
-        if to_town not in neighbors:
+        if to_town not in neighbors and not self._event_modifier_active('ignore_distance'):
             return {"error": f"No {mode} connection"}
 
         # Movement points represent movement counts, not distance/cost budget.
@@ -2929,6 +3212,7 @@ class Game:
 
         player.organizations[to_town] = player.organizations.get(to_town, 0) + 1
         player.moves_left -= cost
+        self._track_event_progress('move_organization')
         if origin_owner is player:
             self.log(f"{player.name} moved 1 organization from {from_town} to {to_town} via {mode}")
         else:
@@ -3005,6 +3289,13 @@ class Game:
         cost = self._card_purchase_cost(card)
         cost_money = int(cost.get('money', 0) or 0)
         cost_propaganda = int(cost.get('propaganda', 0) or 0)
+        reduction = self._event_reduce_cost_amount()
+        if reduction > 0:
+            money_reduction = min(cost_money, reduction)
+            cost_money -= money_reduction
+            reduction -= money_reduction
+            if reduction > 0:
+                cost_propaganda = max(0, cost_propaganda - reduction)
 
         if self._player_has_ability(player, "華文傳媒") and card_type == "propaganda":
             if player.resources['money'] < cost_propaganda:
@@ -3225,6 +3516,10 @@ class Game:
             "active_eras": self.era_engine.get_active_eras() if self.era_engine else [],
             "active_era_details": active_era_details,
             "era_notification": notification,
+            "current_event": self._event_display_payload(),
+            "event_deck_count": len(self.event_deck.draw_pile) if getattr(self, 'event_deck', None) else 0,
+            "event_discard_count": len(self.event_deck.discard_pile) if getattr(self, 'event_deck', None) else 0,
+            "event_modifiers": list(getattr(self, 'event_modifiers', []) or []),
             "market_mode": self.market_mode,
             "pending_base_choices": self.pending_base_choices,
             "pending_choice": pending_choice,

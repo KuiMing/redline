@@ -1,0 +1,222 @@
+#!/usr/bin/env python3
+"""Runtime validator for event-card MVP."""
+import json
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+
+from server.cards import Card
+from server.game import Game, TurnPhase, GamePhase
+
+RECORD_DIR = ROOT / "docs" / "records" / "event-cards"
+JSON_OUT = RECORD_DIR / "EVENT_CARDS_RUNTIME_VALIDATION.json"
+MD_OUT = RECORD_DIR / "EVENT_CARDS_RUNTIME_VALIDATION.md"
+
+
+def make_game(event_name="歲月靜好"):
+    game = Game([("viewer", "viewer"), ("red", "red")], market_mode="all_cards")
+    game.players[0].faction_id = "liberals"
+    game.players[1].faction_id = "red_army"
+    game.players[0].base = "臺北"
+    game.players[1].base = "北京"
+    game.players[0].organizations = {"臺北": 1}
+    game.players[1].organizations = {"北京": 1}
+    game.pending_base_choices = []
+    game.game_phase = GamePhase.MAIN
+    game.current_player_index = 0
+    game.turn_phase = TurnPhase.EVENT
+    event = game._event_by_name(event_name)
+    assert event, f"missing event: {event_name}"
+    game.event_deck.draw_pile = [event]
+    game.event_deck.discard_pile = []
+    game.current_event = None
+    game.event_progress = None
+    game.event_modifiers = []
+    game.event_notification = None
+    return game
+
+
+def assert_ok(result, label):
+    assert not result.get("error"), f"{label}: {result}"
+    return result
+
+
+def names(cards):
+    return [getattr(c, "name", str(c)) for c in cards]
+
+
+def test_idle_noop():
+    game = make_game("歲月靜好")
+    assert_ok(game.advance_turn_phase(), "draw idle event")
+    state = game.state()
+    assert state["turn_phase"] == TurnPhase.EVENT
+    assert state["current_event"]["name"] == "歲月靜好"
+    assert state["current_event"]["status"] == "idle"
+    assert_ok(game.advance_turn_phase(), "enter action after idle display")
+    assert game.turn_phase == TurnPhase.ACTION
+    return {"event": "歲月靜好", "status": state["current_event"]["status"], "phase_after_second_advance": game.turn_phase}
+
+
+def test_hong_kong_success_static_supply():
+    game = make_game("香港抗暴之戰")
+    player = game.players[0]
+    player.hand = [Card("資助者", "money", {"money": 2})]
+    game.static_purchase_supply["宣傳家"] = 1
+    assert_ok(game.advance_turn_phase(), "draw hk event")
+    assert_ok(game.advance_turn_phase(), "enter action")
+    assert_ok(game.play_card(0, mode="resource"), "play money-cost card")
+    assert game.event_progress["succeeded"] is True
+    assert game.event_progress["settled"] is True
+    discard = names(player.deck.discard_pile)
+    assert discard.count("宣傳家") == 1, discard
+    assert game.static_purchase_supply["宣傳家"] == 0
+    return {"event": "香港抗暴之戰", "progress": game.event_progress, "discard": discard, "static_supply": game.static_purchase_supply["宣傳家"]}
+
+
+def test_hong_kong_failure_discard_choice():
+    game = make_game("香港抗暴之戰")
+    player = game.players[0]
+    player.hand = [Card("追隨者", "propaganda", {"propaganda": 1}), Card("樂捐者", "money", {"money": 1})]
+    assert_ok(game.advance_turn_phase(), "draw hk event")
+    assert_ok(game.advance_turn_phase(), "enter action")
+    result = assert_ok(game.advance_turn_phase(), "settle failure")
+    assert result.get("pending_choice") is True
+    choice = game.state()["pending_choice"]
+    assert choice["choice_key"] == "event_discard_self"
+    assert choice["count"] == 1
+    assert_ok(game.resolve_pending_choice(player.id, [0]), "resolve discard")
+    assert names(player.deck.discard_pile)[-1] == "追隨者"
+    return {"event": "香港抗暴之戰", "choice_key": choice["choice_key"], "discard": names(player.deck.discard_pile)}
+
+
+def test_major_disaster_success():
+    game = make_game("重大災難")
+    player = game.players[0]
+    player.hand = [Card("宣傳家", "propaganda", {"propaganda": 2})]
+    game.static_purchase_supply["宣傳家"] = 1
+    assert_ok(game.advance_turn_phase(), "draw disaster event")
+    assert_ok(game.advance_turn_phase(), "enter action")
+    assert_ok(game.play_card(0, mode="resource"), "play propaganda-cost card")
+    assert game.event_progress["succeeded"] is True
+    assert game.event_progress["settled"] is True
+    assert game.static_purchase_supply["宣傳家"] == 0
+    return {"event": "重大災難", "progress": game.event_progress, "discard": names(player.deck.discard_pile)}
+
+
+def test_draw_trigger_succeeds():
+    game = make_game("北京政爭")
+    player = game.players[0]
+    before = len(player.hand)
+    assert_ok(game.advance_turn_phase(), "draw beijing event")
+    assert_ok(game.advance_turn_phase(), "enter action")
+    game._draw_player_cards(player, 1)
+    assert game.event_progress["succeeded"] is True
+    assert game.event_progress["settled"] is True
+    # 北京政爭成功獎勵也會抽 1 張；若牌庫不足，至少確認觸發抽牌有進手牌。
+    assert len(player.hand) >= before + 1
+    return {"event": "北京政爭", "progress": game.event_progress, "hand_count": len(player.hand)}
+
+
+def test_event_deck_uses_declared_counts_without_structured_duplicate_overcount():
+    game = make_game("歲月靜好")
+    counts = {}
+    for card in game._initial_event_cards():
+        counts[card["name"]] = counts.get(card["name"], 0) + 1
+    assert counts["全國人大召開"] == 2, counts
+    assert counts["重大災難"] == 2, counts
+    assert "全國人大召開（副本）" not in counts
+    assert "重大災難（副本）" not in counts
+    return {"全國人大召開": counts["全國人大召開"], "重大災難": counts["重大災難"], "total": sum(counts.values())}
+
+
+def test_event_modifiers_are_consumed_by_runtime_rules():
+    game = make_game("歲月靜好")
+    player = game.players[0]
+
+    game.current_event = game._event_by_name("貿易戰加劇")
+    game.event_progress = {"count": 1, "required": 1, "succeeded": True, "settled": False, "status": "success_pending"}
+    assert_ok(game._settle_current_event(), "apply reduce_cost")
+    assert game._event_reduce_cost_amount() == 1
+
+    game.turn_phase = TurnPhase.ACTION
+    card_index = next(i for i, card in enumerate(game.purchase_area) if getattr(card, "name", "") == "資助者")
+    player.resources = {"money": 1, "propaganda": 1}
+    assert_ok(game.buy_card(card_index), "buy reduced-cost static card")
+
+    game.event_modifiers = [{"type": "restrict_build"}]
+    blocked = game.build_organization("臺北")
+    assert blocked.get("error") == "Current event restricts building organizations"
+
+    game.event_modifiers = [{"type": "ignore_distance"}]
+    player.moves_left = 1
+    player.organizations["臺北"] = 2
+    moved = game.move_organization("臺北", "北京", mode="road")
+    assert_ok(moved, "ignore_distance move")
+    return {"reduce_cost_buy": names(player.deck.discard_pile), "restrict_build_error": blocked.get("error"), "ignore_distance_move": moved}
+
+
+def test_pending_choice_blocks_phase_advance_until_resolved():
+    game = make_game("香港抗暴之戰")
+    player = game.players[0]
+    player.hand = [Card("追隨者", "propaganda", {"propaganda": 1})]
+    assert_ok(game.advance_turn_phase(), "draw hk event")
+    assert_ok(game.advance_turn_phase(), "enter action")
+    result = assert_ok(game.advance_turn_phase(), "settle failure")
+    assert result.get("pending_choice") is True
+    blocked = game.advance_turn_phase()
+    assert blocked.get("error") == "Resolve pending choice before advancing phase"
+    assert_ok(game.resolve_pending_choice(player.id, [0]), "resolve event pending choice")
+    assert_ok(game.advance_turn_phase(), "advance after resolving pending choice")
+    return {"event": "香港抗暴之戰", "blocked_error": blocked.get("error"), "phase_after_resolve": game.turn_phase}
+
+
+def test_auto_event_modifier():
+    game = make_game("上海合作組織")
+    assert_ok(game.advance_turn_phase(), "draw auto event")
+    assert game.current_event["name"] == "上海合作組織"
+    assert game.event_modifiers and game.event_modifiers[0]["type"] == "ignore_distance"
+    assert game.event_progress["status"] == "auto"
+    return {"event": "上海合作組織", "modifiers": game.event_modifiers, "status": game.event_progress["status"]}
+
+
+def test_event_deck_reshuffle():
+    game = make_game("歲月靜好")
+    event = game.event_deck.draw_pile.pop()
+    game.event_deck.discard_pile = [event]
+    assert_ok(game.advance_turn_phase(), "draw reshuffled event")
+    assert game.current_event["name"] == "歲月靜好"
+    assert len(game.event_deck.draw_pile) == 0
+    assert len(game.event_deck.discard_pile) == 1
+    return {"event": game.current_event["name"], "discard_count": len(game.event_deck.discard_pile)}
+
+
+def main():
+    tests = [
+        test_idle_noop,
+        test_hong_kong_success_static_supply,
+        test_hong_kong_failure_discard_choice,
+        test_major_disaster_success,
+        test_draw_trigger_succeeds,
+        test_auto_event_modifier,
+        test_event_deck_uses_declared_counts_without_structured_duplicate_overcount,
+        test_event_modifiers_are_consumed_by_runtime_rules,
+        test_pending_choice_blocks_phase_advance_until_resolved,
+        test_event_deck_reshuffle,
+    ]
+    results = []
+    for test in tests:
+        results.append({"name": test.__name__, "status": "passed", "detail": test()})
+    RECORD_DIR.mkdir(parents=True, exist_ok=True)
+    payload = {"status": "passed", "passed": len(results), "results": results}
+    JSON_OUT.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    lines = ["# Event Cards Runtime Validation", "", f"Status: passed ({len(results)} passed)", ""]
+    for item in results:
+        lines.append(f"- {item['name']}: passed — {item['detail']}")
+    MD_OUT.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
+
+
+if __name__ == "__main__":
+    main()

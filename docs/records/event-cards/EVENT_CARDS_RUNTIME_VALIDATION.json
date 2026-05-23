@@ -1,0 +1,132 @@
+{
+  "status": "passed",
+  "passed": 10,
+  "results": [
+    {
+      "name": "test_idle_noop",
+      "status": "passed",
+      "detail": {
+        "event": "歲月靜好",
+        "status": "idle",
+        "phase_after_second_advance": "action"
+      }
+    },
+    {
+      "name": "test_hong_kong_success_static_supply",
+      "status": "passed",
+      "detail": {
+        "event": "香港抗暴之戰",
+        "progress": {
+          "count": 1,
+          "required": 1,
+          "succeeded": true,
+          "settled": true,
+          "status": "success"
+        },
+        "discard": [
+          "宣傳家",
+          "資助者"
+        ],
+        "static_supply": 0
+      }
+    },
+    {
+      "name": "test_hong_kong_failure_discard_choice",
+      "status": "passed",
+      "detail": {
+        "event": "香港抗暴之戰",
+        "choice_key": "event_discard_self",
+        "discard": [
+          "追隨者"
+        ]
+      }
+    },
+    {
+      "name": "test_major_disaster_success",
+      "status": "passed",
+      "detail": {
+        "event": "重大災難",
+        "progress": {
+          "count": 1,
+          "required": 1,
+          "succeeded": true,
+          "settled": true,
+          "status": "success"
+        },
+        "discard": [
+          "宣傳家",
+          "宣傳家"
+        ]
+      }
+    },
+    {
+      "name": "test_draw_trigger_succeeds",
+      "status": "passed",
+      "detail": {
+        "event": "北京政爭",
+        "progress": {
+          "count": 1,
+          "required": 1,
+          "succeeded": true,
+          "settled": true,
+          "status": "success"
+        },
+        "hand_count": 7
+      }
+    },
+    {
+      "name": "test_auto_event_modifier",
+      "status": "passed",
+      "detail": {
+        "event": "上海合作組織",
+        "modifiers": [
+          {
+            "type": "ignore_distance",
+            "duration": 1,
+            "event_id": "shanghai_cooperation_org"
+          }
+        ],
+        "status": "auto"
+      }
+    },
+    {
+      "name": "test_event_deck_uses_declared_counts_without_structured_duplicate_overcount",
+      "status": "passed",
+      "detail": {
+        "全國人大召開": 2,
+        "重大災難": 2,
+        "total": 27
+      }
+    },
+    {
+      "name": "test_event_modifiers_are_consumed_by_runtime_rules",
+      "status": "passed",
+      "detail": {
+        "reduce_cost_buy": [
+          "資助者"
+        ],
+        "restrict_build_error": "Current event restricts building organizations",
+        "ignore_distance_move": {
+          "success": true
+        }
+      }
+    },
+    {
+      "name": "test_pending_choice_blocks_phase_advance_until_resolved",
+      "status": "passed",
+      "detail": {
+        "event": "香港抗暴之戰",
+        "blocked_error": "Resolve pending choice before advancing phase",
+        "phase_after_resolve": "end"
+      }
+    },
+    {
+      "name": "test_event_deck_reshuffle",
+      "status": "passed",
+      "detail": {
+        "event": "歲月靜好",
+        "discard_count": 1
+      }
+    }
+  ]
+}

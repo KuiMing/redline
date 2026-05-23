@@ -2031,3 +2031,43 @@ def test_setup_bait_exhaustion_ui(payload: dict):
 @app.get("/")
 def index():
     return FileResponse("static/index.html")
+
+
+@app.post("/test/setup-event-card-proof")
+def test_setup_event_card_proof(payload: dict):
+    event_name = payload.get("event_name") or "香港抗暴之戰"
+    players = [(str(uuid.uuid4()), "viewer"), (str(uuid.uuid4()), "red")]
+    game = Game(players, market_mode="all_cards")
+    game.players[0].faction_id = "liberals"
+    game.players[1].faction_id = "red_army"
+    game.players[0].base = "臺北"
+    game.players[1].base = "北京"
+    game.players[0].organizations = {"臺北": 1}
+    game.players[1].organizations = {"北京": 1}
+    game.pending_base_choices = []
+    game.game_phase = GamePhase.MAIN
+    game.current_player_index = 0
+    game.turn_phase = TurnPhase.EVENT
+    game.players[0].hand = [Card("合作談判", "command", {}), Card("追隨者", "propaganda", {"propaganda": 1})]
+    game.players[0].deck.discard_pile = []
+    event = game._event_by_name(event_name) or game._event_by_name("香港抗暴之戰")
+    game.event_deck.draw_pile = [event] if event else []
+    game.event_deck.discard_pile = []
+
+    game_id = str(uuid.uuid4())
+    manager.games[game_id] = game
+    manager.connections[game_id] = manager.connections.get(game_id, {})
+    lobby[game_id] = [(p.id, p.name) for p in game.players]
+    lobby_hosts[game_id] = game.players[0].id
+    lobby_factions[game_id] = {p.id: p.faction_id for p in game.players}
+    lobby_bases[game_id] = {p.id: p.base for p in game.players if p.base}
+    lobby_ready[game_id] = {p.id: True for p in game.players}
+    return {
+        "success": True,
+        "game_id": game_id,
+        "player_id": game.players[0].id,
+        "red_player_id": game.players[1].id,
+        "event_name": event.get("name") if event else None,
+        "url": f"/?game_id={game_id}&player_id={game.players[0].id}",
+        "state": game.state(),
+    }

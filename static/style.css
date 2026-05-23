@@ -1884,3 +1884,25 @@ body {
   background: rgba(15, 23, 42, 0.72);
   border-color: rgba(148, 163, 184, 0.24);
 }
+
+
+.event-card-panel {
+  margin-bottom: 12px;
+  border: 1px solid rgba(255, 214, 128, 0.45);
+  background: rgba(38, 27, 12, 0.58);
+}
+.event-card-name {
+  font-size: 16px;
+  font-weight: 800;
+  color: #ffe1a3;
+  margin-bottom: 4px;
+}
+.event-card-meta, .event-card-progress, .event-card-line {
+  font-size: 12px;
+  line-height: 1.45;
+  color: #f5dfbd;
+  margin-top: 4px;
+}
+.event-card-progress {
+  color: #c6f6d5;
+}
