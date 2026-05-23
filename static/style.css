@@ -522,13 +522,15 @@ body {
 #phaseActionControls {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 12px;
   min-width: 0;
 }
 
 #phaseActionNotice {
   display: none;
+  position: absolute;
+  right: 16px;
   max-width: 360px;
   color: #fde68a;
   border: 1px solid rgba(245, 158, 11, 0.36);
@@ -555,6 +557,9 @@ body {
 }
 
 .phase-action-btn {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   appearance: none;
   border-radius: 12px;
   padding: 12px 18px;
@@ -570,14 +575,14 @@ body {
 
 .phase-action-btn:hover {
   filter: brightness(1.05);
-  transform: translateY(-1px);
+  transform: translateX(-50%) translateY(-1px);
 }
 
 .phase-action-btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
   filter: grayscale(0.1);
-  transform: none;
+  transform: translateX(-50%);
 }
 
 .hud-main-row {
@@ -1887,9 +1892,20 @@ body {
 
 
 .event-card-panel {
-  margin-bottom: 12px;
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  width: 300px;
+  max-height: 238px;
+  overflow: auto;
+  z-index: 4;
+  padding: 10px;
+  border-radius: 10px;
+  margin-bottom: 0;
   border: 1px solid rgba(255, 214, 128, 0.45);
-  background: rgba(38, 27, 12, 0.58);
+  background: rgba(38, 27, 12, 0.84);
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
 }
 .event-card-name {
   font-size: 16px;
