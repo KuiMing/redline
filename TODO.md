@@ -1,6 +1,6 @@
 # Redline TODO
 
-最後更新：2026-05-19
+最後更新：2026-05-23
 
 ## 工作規則
 - 每次開始新工作前，先把對應項目加入此檔。
@@ -16,8 +16,17 @@
 
 ## 目前 active todo
 
-### P0：已確認 UI 缺口
-- 目前無 P0 active todo。
+### P0：事件卡 MVP 實作規劃（下一個新 session 優先）
+- [todo] 事件卡 runtime / UI MVP：目前只有 `data/events_structured.v1.1.json`、`data/cards/event_and_era_cards.v1.1.json`、`server/events.py`、`server/event_model.py` 的資料與 stub；`Game` 尚未持有 event deck / current event 狀態，EVENT 階段也只檢查 era 後直接進 ACTION。
+  - Scope 原則：先做可 playtest 的 MVP，不一次補所有精緻例外；每一階段都要有 runtime validator，UI 變更要有正式 UI proof。
+  - Phase 1｜事件牌庫與狀態：在 `server/game.py` 初始化事件牌庫、棄牌堆、目前事件、事件任務進度；從 `data/events_structured.v1.1.json` 載入 structured events，依 `data/cards/event_and_era_cards.v1.1.json` 的張數建立 deck；`歲月靜好` 可作 idle no-op。
+  - Phase 2｜EVENT 階段抽牌與展示：`advance_turn_phase()` 在 EVENT 階段抽 1 張事件卡並寫入 state；前端 `static/app.js` / `static/style.css` 顯示事件卡名稱、類型、任務條件、成功獎勵、失敗懲罰；事件展示後可由當前玩家按「進入行動階段」。
+  - Phase 3｜任務條件追蹤：把本回合 action 計數寫進 `turn_log` / event progress，至少支援 structured triggers：`play_card_with_money`、`play_card_with_propaganda`、`build_organization`、`move_organization`、`use_faction_ability`；需確認購買費用有資金／宣傳的判定用卡牌購買成本，不是打出時獲得資源。
+  - Phase 4｜成功／失敗結算：在 END 階段或結束事件任務時判定 mission success/failure，實作/串接 effect types：`draw`、`gain_card`、`discard_self`、`discard_random`、`red_dissolve`、`add_internal_conflict`、`move`、`reduce_cost`、`restrict_build`、`ignore_distance`、`none`；涉及常設牌（宣傳家、分神、內鬥）必須扣 static supply，供應為 0 就不新增。
+  - Phase 5｜自動事件：`上海合作組織`、`一帶一路 南洋`、`一帶一路 天方` 等 auto event 先以 turn-scoped modifier 實作；作用範圍與距離規則若不明，先寫 TODO / validator characterization，不用猜規則。
+  - Phase 6｜紅軍瓦解／玩家選擇 UI：`red_dissolve`、`discard_self`、`move`、`build_organization` 若需要玩家指定目標，沿用現有 pending choice modal / target choice map highlight 架構；但不要重做情報網 target choice map highlight，只重用既有機制。
+  - Phase 7｜驗證與證據：新增 `scripts/validate_event_cards_runtime.py` 覆蓋 idle、mission success、mission failure、auto event、deck reshuffle、static supply consumption；新增 UI proof scenario endpoint（例如 `/test/setup-event-card-proof`）與 `docs/records/event-cards/` validation/screenshots；跑 `python3 -m compileall -q server scripts static`、`git diff --check`、root record-like count。
+  - 建議首張驗證路線：先用 `歲月靜好` 驗 no-op，再用 `香港抗暴之戰` 驗 `play_card_with_money -> gain_card 宣傳家 x2` 與 failure `discard_self`，再用 `重大災難` 驗 `play_card_with_propaganda -> gain_card 宣傳家 x1`。
 
 ### P1：已實作但缺正式 UI 證據
 - 目前無 P1 active todo。
