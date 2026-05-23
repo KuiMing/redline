@@ -103,6 +103,7 @@
       "status": "passed",
       "detail": {
         "reduce_cost_buy": [
+          "宣傳家",
           "資助者"
         ],
         "restrict_build_error": "Current event restricts building organizations",

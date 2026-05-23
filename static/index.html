@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>REDLINE // STRATEGIC COMMAND</title>
-  <link rel="stylesheet" href="/static/style.css" />
+  <link rel="stylesheet" href="/static/style.css?v=event-panel-visible-20260523" />
 </head>
 <body>
 <div id="stageViewport">
@@ -23,6 +23,10 @@
     <div id="phaseActionNotice" aria-live="polite"></div>
     <button id="advanceStepBtn" class="phase-action-btn" onclick="sendAction('advance')">結束目前步驟</button>
   </div>
+</div>
+<div id="eventCardPanel" class="event-card-panel" style="display:none;">
+  <div class="panel-title">目前事件</div>
+  <div id="eventCardContent"></div>
 </div>
 <div id="debugSocketState" style="display:none"></div>
 
@@ -207,10 +211,6 @@
         <div class="panel-title">手牌</div>
         <div id="hand"></div>
       </div>
-    </div>
-    <div id="eventCardPanel" class="event-card-panel" style="display:none;">
-      <div class="panel-title">目前事件</div>
-      <div id="eventCardContent"></div>
     </div>
   </div>
 

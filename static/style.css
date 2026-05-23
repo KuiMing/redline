@@ -1893,10 +1893,10 @@ body {
 
 .event-card-panel {
   position: absolute;
-  right: 12px;
-  top: -118px;
+  right: 88px;
+  top: 124px;
   width: 320px;
-  max-height: 104px;
+  max-height: 88px;
   overflow: auto;
   z-index: 4;
   padding: 10px;
