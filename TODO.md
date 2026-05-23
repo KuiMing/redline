@@ -29,11 +29,18 @@
 
 ### P3：後續 UI polish
 - 目前無 P3 active todo。
+  - 2026-05-23 已修正 lobby 房間代碼輸入提示，讓非 host 玩家清楚知道可貼上對方分享的代碼後按「進入作戰室」。
   - 2026-05-23 已修正 lobby / 陣營選擇畫面在內容超高時可上下捲動，避免臺灣等陣營資訊／規則／獲勝條件被固定 720px 舞台切掉。
   - 2026-05-19 已清理 faction action centered modal 殘留狀態：猜奇偶按鈕改為動態建立，陣營能力本回合已發動後不再殘留「發動」或猜奇偶按鈕，舊 `#factionActionPanel` 維持隱藏。
   - 2026-05-19 已補 `賭徒耳語` / `民族祭儀` resolve 後的結果顯示：modal 會列出猜奇偶、翻到卡牌、費用奇偶、猜中／沒中與資源獎勵。
 
 ## 已完成
+
+- [done] Lobby：補清楚的加入房間代碼輸入提示。
+  - 2026-05-23：已將房間代碼欄位標成「建立 / 加入房間代碼」，placeholder 改為「貼上房間代碼，或建立新作戰室」，並新增提示「要加入別人的房間：把對方分享的代碼貼在這格，再按『進入作戰室』。」
+  - `joinRoom()` 現在會 trim 代碼，空白時直接在 lobby 顯示「請先把房間代碼貼到…」提示，不會送出空房號 request。
+  - 產物：`scripts/validate_lobby_join_room_code_ui.py`、`docs/records/lobby/LOBBY_JOIN_ROOM_CODE_UI_VALIDATION.{json,md}`、`docs/records/lobby/LOBBY_JOIN_ROOM_CODE_UI_2026_05_23.png`。
+  - 驗證：`python3 scripts/validate_lobby_join_room_code_ui.py` 通過（5 passed）；browser console/vision 確認欄位標籤、placeholder、helper 與「進入作戰室」按鈕都清楚可見；`python3 -m compileall -q server scripts static` 與 `git diff --check` 通過。
 
 - [done] Lobby / 陣營選擇畫面：內容超高時可上下捲動。
   - 2026-05-23：已修正 `static/style.css`，將 `#lobby` 從 `overflow: hidden` 改為 `overflow-y: auto` 並保留水平裁切，讓陣營資訊、規則與獲勝條件在小螢幕或內容較長時可往下滑完整查看。

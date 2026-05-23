@@ -237,6 +237,14 @@ body {
   letter-spacing: 0.14em;
 }
 
+.lobby-field-hint {
+  margin-top: 8px;
+  color: rgba(245, 158, 11, 0.86);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
 .lobby-room-row {
   display: grid;
   grid-template-columns: 1fr auto;

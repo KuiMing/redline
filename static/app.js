@@ -205,7 +205,8 @@ async function toggleReady() {
 function syncLobbyRoomCode() {
   const roomInput = document.getElementById('roomId');
   if (!roomInput) return;
-  roomInput.title = roomInput.value || '尚未建立房間';
+  const value = roomInput.value.trim();
+  roomInput.title = value || '貼上房間代碼後按「進入作戰室」，或按「建立作戰室」建立新房間。';
 }
 
 function setMarketMode(mode) {
@@ -818,8 +819,14 @@ async function renderFactionPicker() {
 }
 
 async function joinRoom() {
-  gameId = document.getElementById('roomId').value;
+  gameId = (document.getElementById('roomId')?.value || '').trim();
+  const roomInput = document.getElementById('roomId');
+  if (roomInput) roomInput.value = gameId;
   syncLobbyRoomCode();
+  if (!gameId) {
+    updateLobbyStatus('請先把房間代碼貼到「建立 / 加入房間代碼」欄位，再按進入作戰室。');
+    return;
+  }
   const name = document.getElementById('playerName').value;
 
   const payload = {game_id: gameId, name};
