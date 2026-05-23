@@ -43,6 +43,7 @@
 - 目前無 P3 active todo。
   - 2026-05-23 已調整事件卡 MVP 版面：`目前事件` 區塊改掛在全域舞台上方右側（不再放在 `#commandView` 內被 overflow 裁切），並上移到卡牌區上方，不遮住手牌／購買區卡牌；`結束事件階段` 按鈕在階段操作列水平置中；proof 截圖放在 `docs/records/event-cards/EVENT_CARD_LAYOUT_VISIBLE_NO_OVERLAP_UI_2026_05_23.png`。
   - 2026-05-23 依紅框標示再調整事件區塊：`.event-card-panel` CSS 尺寸改為 `width: 300px; height: 238px`，位置移到全域舞台右上空白區（`top: 0; right: 24px`），正式 browser UI 量測 CSS size 為 300px × 238px、與手牌／常設購買區／隨機購買區卡牌 overlap count = 0；proof 放在 `docs/records/event-cards/EVENT_CARD_LAYOUT_REDFRAME_300X238_PROOF_2026_05_23.md` 與同名 UI 截圖。
+  - 2026-05-23 依使用者要求試看 200px 高度：`.event-card-panel` 維持 `width: 300px` 與右上紅框位置，`height/max-height` 改為 `200px`；正式 browser UI 量測 CSS size 為 300px × 200px、卡牌 overlap count = 0；proof 放在 `docs/records/event-cards/EVENT_CARD_LAYOUT_REDFRAME_300X200_PROOF_2026_05_23.md` 與同名 UI 截圖。
   - 2026-05-23 已修正常設購買區卡牌可購買性：常設牌現在也有明確「購買」按鈕，供應量大於 0 時可購買，購買後進棄牌堆並扣該常設供應量。
   - 2026-05-23 已修正常設購買區卡牌混入隨機購買區與手牌資源／行動按鈕失效問題：`分神`、`內鬥` 等常設牌不再進 purchase deck，手牌按鈕改用綁定事件 listener。
   - 2026-05-23 已修正 lobby 房間代碼輸入提示，讓非 host 玩家清楚知道可貼上對方分享的代碼後按「進入作戰室」。
