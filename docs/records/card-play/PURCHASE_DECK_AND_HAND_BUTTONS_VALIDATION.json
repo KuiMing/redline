@@ -1,0 +1,47 @@
+{
+  "checks": {
+    "purchase_deck_excludes_static_cards": [
+      {
+        "mode": "sample_53",
+        "static_area": [
+          "宣傳家",
+          "思想家",
+          "資助者",
+          "資本家",
+          "分神",
+          "內鬥"
+        ],
+        "random_static_overlap": []
+      },
+      {
+        "mode": "all_cards",
+        "static_area": [
+          "宣傳家",
+          "思想家",
+          "資助者",
+          "資本家",
+          "分神",
+          "內鬥"
+        ],
+        "random_static_overlap": []
+      }
+    ],
+    "engine_play_card_modes_still_work": {
+      "resource_result": {
+        "success": true
+      },
+      "action_result": {
+        "success": true
+      },
+      "resources": {
+        "money": 0,
+        "propaganda": 1
+      }
+    },
+    "hand_buttons_use_bound_event_listeners": {
+      "bound_event_listener": true,
+      "inline_play_hand_card_removed": true
+    }
+  },
+  "passed": 7
+}

@@ -968,6 +968,21 @@ function isMyTurnState(state = window.lastGameState) {
   return !!(me && state?.current_player === me.name);
 }
 
+function bindHandCardActionButtons(container) {
+  if (!container) return;
+  container.querySelectorAll('.hand-card-action-btn').forEach((btn) => {
+    btn.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const index = Number.parseInt(btn.dataset.cardIndex || '', 10);
+      const cardName = btn.dataset.cardName || '';
+      const mode = btn.dataset.cardMode || '';
+      if (Number.isNaN(index) || !cardName || !mode) return;
+      playHandCard(index, cardName, mode);
+    });
+  });
+}
+
 function playHandCard(index, card, mode) {
   if (!isMyTurnState()) return;
   const payload = {index, mode};
@@ -1975,17 +1990,19 @@ async function render(state) {
     if (me && me.hand) {
       me.hand.forEach((card, i) => {
         const cardArg = escapeHtml(jsSingleQuotedString(card));
+        const cardAttr = escapeHtml(card);
         const colorName = (cardPresentation(card)?.color) || (/奧援/.test(card) ? '奧援' : '灰');
         const colorClass = cardColorClass(colorName);
         handDiv.innerHTML += `
           <div class='card hand-card ${colorClass}' onclick="selectCardDetail(${cardArg},'hand',false)">
             ${renderCardFace(card, 'hand', false, true)}
             <div class="hand-card-actions">
-              <button type="button" ${isMyTurn ? '' : 'disabled aria-disabled="true"'} onclick="event.stopPropagation(); playHandCard(${i}, ${cardArg}, 'resource')">資源</button>
-              <button type="button" ${isMyTurn ? '' : 'disabled aria-disabled="true"'} onclick="event.stopPropagation(); playHandCard(${i}, ${cardArg}, 'action')">行動</button>
+              <button class="hand-card-action-btn" type="button" ${isMyTurn ? '' : 'disabled aria-disabled="true"'} data-card-index="${i}" data-card-name="${cardAttr}" data-card-mode="resource">資源</button>
+              <button class="hand-card-action-btn" type="button" ${isMyTurn ? '' : 'disabled aria-disabled="true"'} data-card-index="${i}" data-card-name="${cardAttr}" data-card-mode="action">行動</button>
             </div>
           </div>`;
       });
+      bindHandCardActionButtons(handDiv);
     }
   }
 

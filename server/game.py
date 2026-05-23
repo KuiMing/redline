@@ -26,6 +26,7 @@ STRUCTURED_ACTION_PATH = BASE_DIR / "data" / "action_cards_structured.v1.1.json"
 ERA_STRUCTURED_PATH = BASE_DIR / "data" / "era_structured.v1.1.json"
 SUPPORT_CARDS_PATH = BASE_DIR / "data" / "cards" / "support_cards.v1.1.json"
 SUPPORT_TAXONOMY_PATH = BASE_DIR / "data" / "cards" / "support_taxonomy.v1.1.json"
+STATIC_PURCHASE_CARD_NAMES = ('宣傳家', '思想家', '資助者', '資本家', '分神', '內鬥')
 
 
 class GamePhase(str, Enum):
@@ -142,7 +143,7 @@ class Game:
         self.action_log = []
         self.purchase_deck = self._initial_purchase_deck()
         self.purchase_area = self._initial_purchase_area()
-        self.static_purchase_supply = {name: 1 for name in ['宣傳家', '思想家', '資助者', '資本家', '分神', '內鬥']}
+        self.static_purchase_supply = {name: 1 for name in STATIC_PURCHASE_CARD_NAMES}
         self.pending_choice = None
         self.era_notification = None
 
@@ -243,9 +244,8 @@ class Game:
         return Card(support_name, self._support_card_runtime_type(support_name), self._support_card_cost(support_name), effect={'support_taxonomy': entry})
 
     def _static_purchase_cards(self):
-        names = ['宣傳家', '思想家', '資助者', '資本家', '分神', '內鬥']
         cards = []
-        for name in names:
+        for name in STATIC_PURCHASE_CARD_NAMES:
             for c in self.structured_cards:
                 if c.get('name') == name:
                     cards.append(Card(c['name'], c['type'], c.get('resources', {})))
@@ -267,7 +267,7 @@ class Game:
             support_pool.extend([self._make_support_card(name) for _ in range(copies)])
 
         general_pool = []
-        excluded = {'宣傳家', '思想家', '資助者', '資本家', '追隨者', '樂捐者'}
+        excluded = set(STATIC_PURCHASE_CARD_NAMES) | {'追隨者', '樂捐者'}
         for card in self.structured_cards:
             if card.get('name') in excluded:
                 continue
