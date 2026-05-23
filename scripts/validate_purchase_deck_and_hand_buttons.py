@@ -66,7 +66,28 @@ def validate_engine_play_card_modes_still_work():
     return {"resource_result": resource_result, "action_result": action_result, "resources": dict(player.resources)}
 
 
-def validate_hand_buttons_use_bound_event_listeners():
+def validate_static_purchase_can_be_bought_once():
+    game = Game([("p1", "P1"), ("p2", "P2")])
+    game.current_player_index = 0
+    game.turn_phase = TurnPhase.ACTION
+    game.game_phase = GamePhase.MAIN
+    player = game.players[0]
+    player.resources = {"money": 3, "propaganda": 3}
+    static_index = list(STATIC_PURCHASE_CARD_NAMES).index("分神")
+
+    before_area = [card.name for card in game.purchase_area[:len(STATIC_PURCHASE_CARD_NAMES)]]
+    result = game.buy_card(static_index)
+    assert_true(result.get("success"), f"static purchase failed: {result}")
+    assert_true(game.static_purchase_supply["分神"] == 0, f"static supply did not decrement: {game.static_purchase_supply}")
+    assert_true([card.name for card in player.deck.discard_pile][-1] == "分神", "bought static card did not enter discard")
+    assert_true([card.name for card in game.purchase_area[:len(STATIC_PURCHASE_CARD_NAMES)]] == before_area, "static market slot should remain in purchase area")
+
+    second_result = game.buy_card(static_index)
+    assert_true(second_result.get("error") == "Static purchase card is out of supply", f"second static buy should be blocked: {second_result}")
+    return {"first_buy": result, "second_buy": second_result, "remaining_supply": game.static_purchase_supply["分神"]}
+
+
+def validate_hand_and_purchase_buttons_use_working_click_targets():
     app_js = (ROOT / "static" / "app.js").read_text(encoding="utf-8")
     assert_true("function bindHandCardActionButtons" in app_js, "missing hand-card button binder")
     assert_true(".hand-card-action-btn" in app_js, "missing hand-card action button class")
@@ -75,7 +96,10 @@ def validate_hand_buttons_use_bound_event_listeners():
     assert_true("addEventListener('click'" in app_js, "hand buttons are not bound with click listeners")
     inline_hand_button = re.search(r"<button[^>]+onclick=\\\"event\.stopPropagation\(\); playHandCard", app_js)
     assert_true(not inline_hand_button, "hand card buttons still depend on inline onclick playHandCard")
-    return {"bound_event_listener": True, "inline_play_hand_card_removed": True}
+    assert_true("purchase-card-buy-btn" in app_js, "purchase cards need an explicit buy button")
+    assert_true("const canBuy = !isStatic || staticSupply > 0" in app_js, "static purchase cards are not buyable when supply remains")
+    assert_true("sendAction('buy_card',{index:${i}})" in app_js, "purchase buy button does not send buy_card action")
+    return {"bound_event_listener": True, "inline_play_hand_card_removed": True, "static_purchase_buy_button": True}
 
 
 def main():
@@ -83,9 +107,10 @@ def main():
         "checks": {
             "purchase_deck_excludes_static_cards": validate_purchase_deck_excludes_static_cards(),
             "engine_play_card_modes_still_work": validate_engine_play_card_modes_still_work(),
-            "hand_buttons_use_bound_event_listeners": validate_hand_buttons_use_bound_event_listeners(),
+            "static_purchase_can_be_bought_once": validate_static_purchase_can_be_bought_once(),
+            "hand_and_purchase_buttons_use_working_click_targets": validate_hand_and_purchase_buttons_use_working_click_targets(),
         },
-        "passed": 7,
+        "passed": 11,
     }
     REPORT_JSON.parent.mkdir(parents=True, exist_ok=True)
     REPORT_JSON.write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -93,9 +118,11 @@ def main():
         "# Purchase deck / hand buttons validation\n\n"
         "- purchase deck excludes static cards in sample_53 and all_cards: passed\n"
         "- static area contains 宣傳家 / 思想家 / 資助者 / 資本家 / 分神 / 內鬥 only: passed\n"
+        "- static purchase card 分神 can be bought once, enters discard, decrements supply, and blocks a second buy at supply 0: passed\n"
         "- play_card resource mode mutates resources/hand/discard: passed\n"
         "- play_card action mode mutates hand/discard: passed\n"
-        "- hand card buttons use bound event listeners instead of inline playHandCard onclick: passed\n",
+        "- hand card buttons use bound event listeners instead of inline playHandCard onclick: passed\n"
+        "- purchase cards, including static cards with remaining supply, expose an explicit buy button: passed\n",
         encoding="utf-8",
     )
     print(json.dumps(results, ensure_ascii=False, indent=2))

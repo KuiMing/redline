@@ -38,10 +38,20 @@
         "propaganda": 1
       }
     },
-    "hand_buttons_use_bound_event_listeners": {
+    "static_purchase_can_be_bought_once": {
+      "first_buy": {
+        "success": true
+      },
+      "second_buy": {
+        "error": "Static purchase card is out of supply"
+      },
+      "remaining_supply": 0
+    },
+    "hand_and_purchase_buttons_use_working_click_targets": {
       "bound_event_listener": true,
-      "inline_play_hand_card_removed": true
+      "inline_play_hand_card_removed": true,
+      "static_purchase_buy_button": true
     }
   },
-  "passed": 7
+  "passed": 11
 }

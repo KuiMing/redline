@@ -2020,10 +2020,13 @@ async function render(state) {
       const supportClass = isSupport ? ' purchase-card-support' : '';
       const colorName = (cardPresentation(card)?.color) || (isSupport ? '奧援' : '灰');
       const colorClass = cardColorClass(colorName);
-      const canBuy = !isStatic;
+      const staticSupply = Number(state.static_purchase_supply?.[card] ?? 1);
+      const canBuy = !isStatic || staticSupply > 0;
+      const buyTitle = isStatic && staticSupply <= 0 ? '常設供應已售完' : '購買此卡';
       container.innerHTML += `
         <div class='card ${typeClass}${supportClass} ${colorClass}' onclick="selectCardDetail(${JSON.stringify(card)},'purchase',${isStatic})" ${canBuy ? `ondblclick="sendAction('buy_card',{index:${i}})"` : ''}>
           ${renderCardFace(card, 'purchase', isStatic, true)}
+          <button class="purchase-card-buy-btn" type="button" ${canBuy ? '' : 'disabled aria-disabled="true"'} title="${buyTitle}" onclick="event.stopPropagation(); sendAction('buy_card',{index:${i}})">購買</button>
         </div>`;
     });
   }
