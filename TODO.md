@@ -26,22 +26,23 @@
 
 - [todo] 修正 structured event data 與 raw card text 不一致的事件。
   - 2026-05-24 整理：目前應分三層追蹤，不要把「MVP 可 playtest」等同「所有 raw event/era 已完整實作」。
-    1. `raw 13 張事件卡`：目前 runtime deck 的主要對齊目標；`一帶一路 南洋`、`一帶一路 天方` 已於 2026-05-24 完成 raw/structured 對齊，下一步是逐張審核 6 張未重審事件卡。
+    1. `raw 13 張事件卡`：目前 runtime deck 的主要對齊目標；13 張事件卡 raw/structured 對齊已於 2026-05-24 完成。
     2. `structured MVP adaptation`：`公知世代的終結`、`臺灣綏靖派反對介入` 目前在 structured data 裡是 event-like MVP adaptation，但 raw 檔屬於時代關卡，需 canonical 決策後再決定是否保留此 adaptation 或改成 era-stage mechanics。
     3. `raw 8 張時代關卡`：尚未完整納入 runtime；若要宣稱完整 event/era，需另開 P0 設計 runtime primitive、持續效果與 UI proof。
   - raw 13 張事件卡盤點：
     - 已修正並有針對性 validator/proof：`貿易戰加劇`、`紅軍權貴出逃`、`烏魯木齊七五事件`、`上海合作組織`、`一帶一路 南洋`、`一帶一路 天方`。
-    - MVP structured 可 playtest，但尚未逐張重新做 raw 對齊審核：`全國人大召開`、`香港抗暴之戰`、`重大災難`、`藏印邊境軍事對峙`、`東突厥集中營`、`北京政爭`。
+    - 2026-05-24 已逐張重審且 raw/structured 對齊：`全國人大召開`、`香港抗暴之戰`、`重大災難`、`藏印邊境軍事對峙`、`東突厥集中營`、`北京政爭`。
     - 明確待修 raw/structured mismatch：目前無；`一帶一路 南洋`、`一帶一路 天方` 已於 2026-05-24 修正。
   - raw 8 張時代關卡盤點：
     - 尚未 structured/runtime：`[香港]香港人被自殺`、`[蒙古]莫日根事件爆發`、`[藏國]藏國騷亂`、`[哈薩克]伊塔事件`、`[維吾爾]莎車大屠殺`、`[滿洲]滿洲地方派系凝聚`。
     - 目前僅 event-like MVP adaptation、需重新決策：`[反賊]公知世代的終結`、`[臺灣]綏靖派反對介入對岸`。
-  - 建議下一步順序：繼續 raw 13 張事件卡 deck 對齊（逐張審核 6 張未重審事件卡），再處理 8 張時代關卡 canonical/runtime/UI proof。
+  - 建議下一步順序：raw 13 張事件卡 deck 對齊已完成；接著處理 8 張時代關卡 canonical/runtime/UI proof。
   - 2026-05-23：已修正 `貿易戰加劇`：structured trigger 改為購買 `英美奧援` 或總費用 4 點以上卡牌，success 改為從棄牌堆選 1 張置頂；新增 runtime primitive `buy_card` / `topdeck_from_discard` 與 validator proof。
   - 2026-05-24：已修正 `紅軍權貴出逃`：structured success 改為 `trash_from_hand_or_discard`，成功後可從手牌或棄牌堆選 1 張移除；新增 runtime validator 與正式 browser UI proof。
   - 2026-05-24：已修正 `烏魯木齊七五事件`：structured trigger 改為回合結束時牆內有己方組織，success 改為在己方組織 1 格內免費建 1 個；新增 end-turn state / nearby build runtime validator 與正式 browser UI proof。
   - 2026-05-24：已修正 `上海合作組織`：structured effect 改為 `scoped_card_range`，限定紅軍 `armed` / `spy` 卡對北國城鎮組織距離為 5 格；runtime validator 已覆蓋 structured 對齊、自動 modifier、武裝卡 5 格北國可用且非北國不放行、間諜 target choice 僅列北國目標。
   - 2026-05-24：已修正 `一帶一路 南洋` / `一帶一路 天方`：structured effect 改為 `build_organization_in_region`，限定紅軍在 `southeast_asia` / `middle_east` 區域免費無視距離建立 1 個組織；新增 runtime validator 與正式 Strategic Map UI proof。
+  - 2026-05-24：已完成剩餘 6 張事件卡 raw/structured 逐張對齊審核：`全國人大召開`、`香港抗暴之戰`、`重大災難`、`藏印邊境軍事對峙`、`東突厥集中營`、`北京政爭`；新增 runtime validator 覆蓋全國人大成功/失敗、藏印邊境成功、東突厥成功/失敗，審核紀錄在 `docs/records/event-cards/EVENT_CARD_REMAINING_SIX_RAW_ALIGNMENT_AUDIT_2026_05_24.{md,json}`。
   - 已知差異：
     - `貿易戰加劇` raw 是購買英美奧援或 4 點以上卡牌，成功從棄牌堆選 1 張置頂；2026-05-23 已修正並補 runtime validator。
     - `紅軍權貴出逃` raw 成功是從手牌或棄牌移除 1 張；2026-05-24 已修正為 `trash_from_hand_or_discard` 並補 runtime/UI proof。

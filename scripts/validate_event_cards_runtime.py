@@ -121,6 +121,128 @@ def test_draw_trigger_succeeds():
     return {"event": "北京政爭", "progress": game.event_progress, "hand_count": len(player.hand)}
 
 
+def test_remaining_six_event_structured_matches_raw_rules():
+    game = make_game("歲月靜好")
+    expected = {
+        "全國人大召開": {
+            "trigger": {"type": "use_faction_ability", "count": 1},
+            "success": {"type": "draw", "count": 1},
+            "failure": {"type": "red_dissolve", "count": 1, "scope": "牆內"},
+        },
+        "香港抗暴之戰": {
+            "trigger": {"type": "play_card_with_money", "count": 1},
+            "success": {"type": "gain_card", "card": "宣傳家", "count": 2},
+            "failure": {"type": "discard_self", "count": 1},
+        },
+        "重大災難": {
+            "trigger": {"type": "play_card_with_propaganda", "count": 1},
+            "success": {"type": "gain_card", "card": "宣傳家", "count": 1},
+            "failure": {"type": "discard_self", "count": 1},
+        },
+        "藏印邊境軍事對峙": {
+            "trigger": {"type": "build_organization", "count": 1, "scope": "牆內"},
+            "success": {"type": "move", "count": 2},
+            "failure": {"type": "none"},
+        },
+        "東突厥集中營": {
+            "trigger": {"type": "play_card_with_propaganda", "count": 1},
+            "success": {"type": "gain_card", "card": "宣傳家", "count": 1},
+            "failure": {"type": "discard_random", "count": 1},
+        },
+        "北京政爭": {
+            "trigger": {"type": "draw", "count": 1},
+            "success": {"type": "draw", "count": 1},
+            "failure": {"type": "none"},
+        },
+    }
+    details = {}
+    for name, spec in expected.items():
+        event = game._event_by_name(name)
+        assert event, name
+        assert event["trigger"] == spec["trigger"], {name: event["trigger"]}
+        assert event["success"] == spec["success"], {name: event["success"]}
+        assert event["failure"] == spec["failure"], {name: event["failure"]}
+        details[name] = spec
+    return {"events": details}
+
+
+def test_national_people_congress_faction_ability_success_draws():
+    game = make_game("全國人大召開")
+    player = game.players[0]
+    player.resources = {"money": 2, "propaganda": 0}
+    player.hand = [Card("保留手牌", "command", {})]
+    player.deck.draw_pile = [Card("獎勵抽牌", "command", {})]
+    assert_ok(game.advance_turn_phase(), "draw npc event")
+    assert_ok(game.advance_turn_phase(), "enter action")
+    assert_ok(game._activated_faction_action(player, "民主陣線"), "use faction ability")
+    assert game.event_progress["succeeded"] is True
+    assert game.event_progress["settled"] is True
+    assert "獎勵抽牌" in names(player.hand)
+    return {"event": "全國人大召開", "progress": game.event_progress, "hand": names(player.hand), "discard": names(player.deck.discard_pile)}
+
+
+def test_national_people_congress_failure_red_dissolves_wall_org_only():
+    game = make_game("全國人大召開")
+    viewer = game.players[0]
+    red = game.players[1]
+    viewer.organizations = {"北京": 1, "臺北": 1}
+    viewer.hand = [Card("保留手牌", "command", {})]
+    assert_ok(game.advance_turn_phase(), "draw npc event")
+    assert_ok(game.advance_turn_phase(), "enter action")
+    result = assert_ok(game.advance_turn_phase(), "settle npc failure")
+    assert result.get("pending_choice") is True
+    choice = game.state()["pending_choice"]
+    assert choice["choice_key"] == "event_red_dissolve"
+    assert choice["player_id"] == red.id
+    towns = [target["town"] for target in choice["targets"]]
+    assert towns == ["北京"], towns
+    assert_ok(game.resolve_pending_choice(red.id, 0), "red dissolves wall org")
+    assert viewer.organizations.get("北京", 0) == 0
+    assert viewer.organizations.get("臺北", 0) == 1
+    return {"event": "全國人大召開", "choice_key": choice["choice_key"], "targets": towns, "remaining_orgs": viewer.organizations}
+
+
+def test_tibet_border_build_wall_org_grants_two_moves():
+    game = make_game("藏印邊境軍事對峙")
+    player = game.players[0]
+    player.organizations = {"北京": 1}
+    player.moves_left = 0
+    assert_ok(game.advance_turn_phase(), "draw tibet border event")
+    assert_ok(game.advance_turn_phase(), "enter action")
+    assert_ok(game.build_organization("北京"), "build wall org")
+    assert game.event_progress["succeeded"] is True
+    assert game.event_progress["settled"] is True
+    assert player.moves_left == 2
+    return {"event": "藏印邊境軍事對峙", "progress": game.event_progress, "moves_left": player.moves_left, "organizations": player.organizations}
+
+
+def test_east_turkestan_success_and_failure_paths():
+    success_game = make_game("東突厥集中營")
+    success_player = success_game.players[0]
+    success_player.hand = [Card("宣傳家", "propaganda", {"propaganda": 1})]
+    success_game.static_purchase_supply["宣傳家"] = 1
+    assert_ok(success_game.advance_turn_phase(), "draw east turkestan success event")
+    assert_ok(success_game.advance_turn_phase(), "enter action success")
+    assert_ok(success_game.play_card(0, mode="resource"), "play propaganda card")
+    assert success_game.event_progress["succeeded"] is True
+    assert success_game.static_purchase_supply["宣傳家"] == 0
+    assert "宣傳家" in names(success_player.deck.discard_pile)
+
+    failure_game = make_game("東突厥集中營")
+    failure_player = failure_game.players[0]
+    failure_player.hand = [Card("會被隨機棄掉", "command", {})]
+    assert_ok(failure_game.advance_turn_phase(), "draw east turkestan failure event")
+    assert_ok(failure_game.advance_turn_phase(), "enter action failure")
+    assert_ok(failure_game.advance_turn_phase(), "settle failure")
+    assert names(failure_player.hand) == []
+    assert names(failure_player.deck.discard_pile)[-1] == "會被隨機棄掉"
+    return {
+        "event": "東突厥集中營",
+        "success_discard": names(success_player.deck.discard_pile),
+        "failure_discard": names(failure_player.deck.discard_pile),
+    }
+
+
 def test_trade_war_purchase_trigger_topdecks_from_discard():
     game = make_game("貿易戰加劇")
     player = game.players[0]
@@ -543,6 +665,11 @@ def main():
         test_hong_kong_failure_discard_choice,
         test_major_disaster_success,
         test_draw_trigger_succeeds,
+        test_remaining_six_event_structured_matches_raw_rules,
+        test_national_people_congress_faction_ability_success_draws,
+        test_national_people_congress_failure_red_dissolves_wall_org_only,
+        test_tibet_border_build_wall_org_grants_two_moves,
+        test_east_turkestan_success_and_failure_paths,
         test_trade_war_purchase_trigger_topdecks_from_discard,
         test_trade_war_purchase_trigger_ignores_low_cost_non_anglo_support,
         test_trade_war_purchase_trigger_accepts_anglo_support_by_name,
