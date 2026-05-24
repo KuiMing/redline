@@ -204,8 +204,11 @@ function renderSupportChoiceHighlights(options = {}) {
   if (bounds.length) {
     const hintEl = document.getElementById('interactionHint');
     if (hintEl) {
-      const focusText = supportChoiceHighlight.focusTown ? ` 已聚焦 ${supportChoiceHighlight.focusTown}，請回到選擇視窗確認或改選。` : '';
-      hintEl.innerHTML = `${supportChoiceHighlight.sourceName || '當前選擇'}：<span class="hint-strong">${supportChoiceHighlight.prompt || '請依列表選擇目標。'}</span> 地圖上已用橘色外框標出可選城鎮。${focusText}`;
+      const focusText = supportChoiceHighlight.focusTown ? ` 已聚焦 ${supportChoiceHighlight.focusTown}。` : '';
+      const actionText = supportChoiceHighlight.choiceKey === 'event_build_organization'
+        ? '請點選橘色城鎮，然後使用左側「在目前城鎮建立組織（事件卡）」按鈕完成建立。'
+        : '請回到選擇視窗確認或改選。';
+      hintEl.innerHTML = `${supportChoiceHighlight.sourceName || '當前選擇'}：<span class="hint-strong">${supportChoiceHighlight.prompt || '請依列表選擇目標。'}</span> 地圖上已用橘色外框標出可選城鎮。${focusText}${actionText}`;
     }
     if (autoFocus) {
       focusSupportChoiceTargets(focusedBounds || bounds);
@@ -254,6 +257,8 @@ function updateStatusPanel() {
       hintEl.innerHTML = playerHasSafehouse()
         ? '連上遊戲後，點選自己的香港組織城鎮，可同時查看移動與 <span class="hint-strong">安全屋建立範圍</span>。若城鎮有共享組織，會以 <span class="hint-strong">金色外框與 S 標記</span> 顯示。'
         : '連上遊戲後，只有 <span class="hint-strong">當前玩家自己擁有組織</span> 的城鎮可以高亮合法移動；若城鎮具有共享組織，會以 <span class="hint-strong">金色外框與 S 標記</span> 顯示。';
+    } else if (eventBuildChoiceForTown(selectedTown)) {
+      hintEl.innerHTML = `已選取 <span class="hint-strong">${selectedTown}</span>：事件卡效果允許在此建立組織，請使用左側「在目前城鎮建立組織（事件卡）」按鈕完成。`;
     } else if (playerOwnsTown(selectedTown)) {
       const opts = movementOptionsForTown(selectedTown);
       const buildOpts = playerHasSafehouse() ? buildOptionsForTown(selectedTown) : [];
@@ -554,9 +559,22 @@ function sendMoveAction(fromTown, toTown, mode) {
   return { ok: true };
 }
 
+function eventBuildChoiceForTown(townName) {
+  if (!supportChoiceHighlight || supportChoiceHighlight.choiceKey !== 'event_build_organization') return null;
+  const towns = Array.isArray(supportChoiceHighlight.towns) ? supportChoiceHighlight.towns : [];
+  const entry = towns.find(item => item?.town === townName);
+  if (!entry || !Number.isFinite(Number(entry.index))) return null;
+  return { ...entry, index: Number(entry.index) };
+}
+
 function sendDirectBuildAction(townName) {
   if (!mapWs || mapWs.readyState !== WebSocket.OPEN) {
     return { ok: false, reason: 'socket-not-open' };
+  }
+  const eventChoice = eventBuildChoiceForTown(townName);
+  if (eventChoice) {
+    mapWs.send(JSON.stringify({ action: 'resolve_choice', index: eventChoice.index }));
+    return { ok: true, eventChoice: true, index: eventChoice.index };
   }
   mapWs.send(JSON.stringify({ action: 'build', town: townName }));
   return { ok: true };
@@ -579,23 +597,32 @@ function refreshDirectBuildUi() {
 
   if (!selectedTown) {
     btn.disabled = true;
+    btn.textContent = '在目前城鎮建立組織';
     dissolveBtn.disabled = true;
-    hint.innerHTML = '選取具有自己組織或共享組織可用性的城鎮後，這裡會顯示是否可直接建立。';
+    hint.innerHTML = '選取具有自己組織、共享組織可用性或事件卡允許建立的城鎮後，這裡會顯示是否可直接建立。';
     dissolveHint.innerHTML = '選取具有共享可用性的城鎮後，這裡會顯示是否可對實際組織擁有者發動瓦解。';
     return;
   }
 
-  const sharedOnly = !playerOwnsTown(selectedTown) && playerHasSharedAccessToTown(selectedTown);
-  const canAct = canActFromTown(selectedTown);
-  if (!canAct) {
-    btn.disabled = true;
-    hint.innerHTML = `目前選取 <span class="hint-strong">${selectedTown}</span>，但這不是你的組織或共享組織起點。`;
-  } else {
+  const eventChoice = eventBuildChoiceForTown(selectedTown);
+  if (eventChoice) {
     btn.disabled = false;
-    if (sharedOnly) {
-      hint.innerHTML = `目前選取 <span class="hint-strong">${selectedTown}</span>：你可從 <span class="hint-strong">共享組織</span> 直接發展。`;
+    btn.textContent = '在目前城鎮建立組織（事件卡）';
+    hint.innerHTML = `目前選取 <span class="hint-strong">${selectedTown}</span>：事件卡效果允許在此建立組織；按上方按鈕完成建立。`;
+  } else {
+    btn.textContent = '在目前城鎮建立組織';
+    const sharedOnly = !playerOwnsTown(selectedTown) && playerHasSharedAccessToTown(selectedTown);
+    const canAct = canActFromTown(selectedTown);
+    if (!canAct) {
+      btn.disabled = true;
+      hint.innerHTML = `目前選取 <span class="hint-strong">${selectedTown}</span>，但這不是你的組織或共享組織起點。`;
     } else {
-      hint.innerHTML = `目前選取 <span class="hint-strong">${selectedTown}</span>：你可從自己的組織直接發展。`;
+      btn.disabled = false;
+      if (sharedOnly) {
+        hint.innerHTML = `目前選取 <span class="hint-strong">${selectedTown}</span>：你可從 <span class="hint-strong">共享組織</span> 直接發展。`;
+      } else {
+        hint.innerHTML = `目前選取 <span class="hint-strong">${selectedTown}</span>：你可從自己的組織直接發展。`;
+      }
     }
   }
 
@@ -865,6 +892,11 @@ window.connectGameMap = function ({ gameId: gid, playerId: pid }) {
     const state = JSON.parse(event.data);
     window.lastGameState = state;
     applyGameStateToMap(state);
+    try {
+      window.parent?.postMessage({ type: 'redline-map-state', state }, window.location.origin);
+    } catch (err) {
+      console.warn('Failed to sync map state to parent', err);
+    }
   };
 
   return { ok: true };
@@ -919,6 +951,21 @@ window.__dissolveFromSharedForTest = function (townName) {
   }
   const result = sendDissolveAction(defender, townName);
   return { ok: !!result.ok, townName, defender };
+};
+
+window.__directBuildForTest = function (townName) {
+  resetMoveSelection();
+  renderMap();
+  applyGameStateToMap(lastGameState);
+  updateInfoPanel(townName);
+  selectedTown = townName;
+  refreshDirectBuildUi();
+  const button = document.getElementById('directBuildBtn');
+  if (!button || button.disabled) {
+    return { ok: false, reason: 'direct-build-disabled', townName, eventChoice: !!eventBuildChoiceForTown(townName) };
+  }
+  const result = sendDirectBuildAction(townName);
+  return { ok: !!result.ok, townName, eventChoice: !!result.eventChoice, index: result.index };
 };
 
 window.__advanceToActionForTest = function () {

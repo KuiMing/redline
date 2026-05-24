@@ -1,6 +1,6 @@
 # Redline TODO
 
-最後更新：2026-05-23
+最後更新：2026-05-24
 
 ## 工作規則
 - 開始新工作前先做 intake：讀 `TODO.md`、跑 `git status --short`、跑 `git log --oneline -5`。
@@ -48,7 +48,7 @@
   - 2026-05-24：已補 `烏魯木齊七五事件` 在己方組織 1 格內免費建組織的正式 browser UI proof；確認既有 pending town choice modal 顯示 `天津` / `石家莊`，resolve 後 `viewer 組織 2` 且事件面板為成功 1/1。
   - 2026-05-24：已讓 `event_build_organization` 的 `town_choice` 重用既有 pending choice / map highlight 架構，在 modal 提示可切到戰略地圖查看城鎮位置，並於地圖用橘色外框標出 `天津` / `石家莊` 可建組織城鎮；proof records：`docs/records/event-cards/URUMQI_BUILD_CHOICE_MAP_HIGHLIGHT_UI_PROOF_2026_05_24.{md,json}`。
   - 2026-05-24：已補乾淨版烏魯木齊地圖 proof：proof endpoint 改用非立場試探陣營，且 pending choice 期間會隱藏陣營能力 overlay，避免 `立場試探` 混入正式 UI 證據；另補一張 active `戰略地圖` tab 且地圖區域可見的正式 UI 截圖；proof records：`docs/records/event-cards/URUMQI_BUILD_CHOICE_MAP_HIGHLIGHT_UI_PROOF_CLEAN_2026_05_24.{md,json}`。
-  - 2026-05-24：已把 `event_build_organization` town choice 改為兩段式流程：第一段選城鎮會自動切到 `戰略地圖` 並聚焦該城鎮，第二段按 `確認建立於 ...` 才送出 resolve；正式 browser UI 截圖與 state proof 在 `docs/records/event-cards/URUMQI_BUILD_CHOICE_TWO_STEP_UI_2026_05_24.png`、`URUMQI_BUILD_CHOICE_TWO_STEP_UI_PROOF_2026_05_24.{md,json}`。
+  - 2026-05-24：已把 `event_build_organization` town choice 改為沿用正式 `戰略地圖` 側欄建組織操作；pending choice 自動切到地圖並用既有 map highlight 標示可建城鎮，玩家選取城鎮後按「在目前城鎮建立組織（事件卡）」完成 resolve，不再使用 choice modal 兩段式確認；正式 browser UI 截圖與 state proof 在 `docs/records/event-cards/URUMQI_BUILD_DIRECT_MAP_SIDEBAR_UI_2026_05_24.png`、`URUMQI_BUILD_DIRECT_MAP_SIDEBAR_UI_PROOF_2026_05_24.{md,json}`。
   - 原則：只重用既有 pending choice modal / target choice map highlight 架構；不要重做情報網 highlight。
   - 驗收：每一種互動型 effect 至少有一個正式 browser UI proof，截圖與紀錄放 `docs/records/event-cards/`。
 

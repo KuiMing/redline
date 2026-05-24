@@ -1,0 +1,36 @@
+{
+  "status": "passed",
+  "scenario": "烏魯木齊七五事件 success 觸發 event_build_organization；在正式戰略地圖側欄選天津並用直接建組織按鈕 resolve。",
+  "screenshot": "docs/records/event-cards/URUMQI_BUILD_DIRECT_MAP_SIDEBAR_UI_2026_05_24.png",
+  "before": {
+    "pending_choice": "event_build_organization",
+    "viewer_orgs": {
+      "北京": 1
+    },
+    "map_button": "在目前城鎮建立組織（事件卡）",
+    "map_hint": "目前選取 天津：事件卡效果允許在此建立組織；按上方按鈕完成建立。"
+  },
+  "action": {
+    "via": "strategic_map_sidebar_direct_build_button",
+    "town": "天津",
+    "result": {
+      "ok": true,
+      "eventChoice": true,
+      "index": 0
+    }
+  },
+  "after": {
+    "pending_choice": null,
+    "viewer_orgs": {
+      "北京": 1,
+      "天津": 1
+    },
+    "current_event_status": "success/settled",
+    "visible_town_label": "天津 1"
+  },
+  "notes": [
+    "event_build_organization 不再用 choice modal 兩段式確認；pending town choice 被導向正式戰略地圖。",
+    "地圖側欄沿用既有直接建組織區塊，事件卡可建城鎮時按鈕文字改為「在目前城鎮建立組織（事件卡）」。",
+    "iframe map state 會 postMessage 回主 UI，按下地圖側欄按鈕後主 UI state 同步為 pending_choice=None。"
+  ]
+}

@@ -8,6 +8,7 @@ RECORD_DIR = ROOT / "docs" / "records" / "event-cards"
 JSON_OUT = RECORD_DIR / "EVENT_CARD_UI_HIGHLIGHT_VALIDATION.json"
 MD_OUT = RECORD_DIR / "EVENT_CARD_UI_HIGHLIGHT_VALIDATION.md"
 APP_JS = ROOT / "static" / "app.js"
+LEAFLET_JS = ROOT / "static" / "leaflet_game_map_logic.js"
 SERVER_MAIN = ROOT / "server" / "main.py"
 
 
@@ -19,47 +20,48 @@ def assert_contains(text: str, needle: str, label: str, failures: list[str]) -> 
 def main() -> None:
     app = APP_JS.read_text(encoding="utf-8")
     server_main = SERVER_MAIN.read_text(encoding="utf-8")
+    leaflet = LEAFLET_JS.read_text(encoding="utf-8")
     failures: list[str] = []
     checks = [
         {
-            "name": "event_build_organization town_choice is included in map-highlight allowlist",
-            "needle": "new Set(['event_build_organization'])",
+            "name": "event build town choices are routed out of modal into the strategic map",
+            "needle": "if (choiceKey === 'event_build_organization' && (choiceType === 'town_choice' || choice.step === 'town'))",
             "text": app,
         },
         {
-            "name": "build town choices use existing support-targets highlight payload",
+            "name": "event build town choices use existing support-targets highlight payload",
             "needle": "mode: 'support-targets'",
             "text": app,
         },
         {
-            "name": "build town choices read pending choice towns",
-            "needle": "const towns = (choice.towns || []).filter(entry => entry?.town);",
+            "name": "event build payload is tagged for map-side direct build resolution",
+            "needle": "choiceKey: 'event_build_organization'",
             "text": app,
         },
         {
-            "name": "modal explains event build town choices use a two-step map then confirm flow",
-            "needle": "兩段式流程：先選城鎮，畫面會切到「戰略地圖」",
+            "name": "event build town choices read pending choice towns with indices",
+            "needle": "towns: towns.map((entry, index) => ({",
             "text": app,
         },
         {
-            "name": "event build town choices keep a client-side focused selection before resolving",
-            "needle": "choiceModalTwoStepSelection = { index, town };",
+            "name": "event build map flow reuses the strategic map tab instead of a two-step modal",
+            "needle": "Failed to focus strategic map for event build choice",
             "text": app,
         },
         {
-            "name": "event build town choices focus the strategic map before confirmation",
-            "needle": "setActiveGameView('map').catch(err => console.warn('Failed to focus strategic map for build choice', err));",
-            "text": app,
+            "name": "map side recognizes event build highlighted towns",
+            "needle": "function eventBuildChoiceForTown(townName)",
+            "text": leaflet,
         },
         {
-            "name": "event build town choices require explicit confirm after map focus",
-            "needle": "確認建立（請先選城鎮看地圖）",
-            "text": app,
+            "name": "map direct build button resolves event build pending choice",
+            "needle": "mapWs.send(JSON.stringify({ action: 'resolve_choice', index: eventChoice.index }));",
+            "text": leaflet,
         },
         {
-            "name": "strategic map iframe is mounted for choice highlight",
-            "needle": "ensureStrategicMapMounted().catch(err => console.warn('Failed to mount strategic map for choice highlight', err));",
-            "text": app,
+            "name": "map direct build hint labels event-card build behavior",
+            "needle": "在目前城鎮建立組織（事件卡）",
+            "text": leaflet,
         },
         {
             "name": "pending choices suppress faction action overlay during focused proof flows",

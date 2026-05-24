@@ -64,15 +64,17 @@ def test_hong_kong_success_static_supply():
     player = game.players[0]
     player.hand = [Card("資助者", "money", {"money": 2})]
     game.static_purchase_supply["宣傳家"] = 1
+    before_discard = names(player.deck.discard_pile)
+    before_count = before_discard.count("宣傳家")
     assert_ok(game.advance_turn_phase(), "draw hk event")
     assert_ok(game.advance_turn_phase(), "enter action")
     assert_ok(game.play_card(0, mode="resource"), "play money-cost card")
     assert game.event_progress["succeeded"] is True
     assert game.event_progress["settled"] is True
     discard = names(player.deck.discard_pile)
-    assert discard.count("宣傳家") == 1, discard
+    assert discard.count("宣傳家") == before_count + 1, {"before": before_discard, "after": discard}
     assert game.static_purchase_supply["宣傳家"] == 0
-    return {"event": "香港抗暴之戰", "progress": game.event_progress, "discard": discard, "static_supply": game.static_purchase_supply["宣傳家"]}
+    return {"event": "香港抗暴之戰", "progress": game.event_progress, "discard": discard, "initial_static_card_count": before_count, "static_supply": game.static_purchase_supply["宣傳家"]}
 
 
 def test_hong_kong_failure_discard_choice():

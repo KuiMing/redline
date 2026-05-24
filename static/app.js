@@ -17,7 +17,6 @@ let latestLobbyState = null;
 let activeChoiceModal = null;
 let lastFactionActionResultKey = null;
 let lastSupportChoiceMapHighlightPayload = null;
-let choiceModalTwoStepSelection = null;
 
 function resizeStage() {
   const scale = Math.min(
@@ -1027,7 +1026,6 @@ function closeEraAchievementModal() {
 
 function closeChoiceModal() {
   activeChoiceModal = null;
-  choiceModalTwoStepSelection = null;
   syncChoiceModalMapHighlight(null);
   const overlay = document.getElementById('choiceModal');
   if (overlay) {
@@ -1048,6 +1046,31 @@ function syncChoiceModalMapHighlight(payload) {
   } catch (err) {
     console.warn('Failed to sync choice highlight to map', err);
   }
+}
+
+window.addEventListener('message', (event) => {
+  if (event.origin !== window.location.origin) return;
+  const data = event.data || {};
+  if (data.type !== 'redline-map-state' || !data.state) return;
+  window.lastGameState = data.state;
+  render(data.state).catch(err => console.warn('Failed to render synced map state', err));
+});
+
+function eventBuildChoiceMapPayload(choice, sourceName = '', resolvedTitle = '') {
+  if (!choice || choice.choice_key !== 'event_build_organization') return null;
+  const towns = (choice.towns || []).filter(entry => entry?.town);
+  if (!towns.length) return null;
+  return {
+    mode: 'support-targets',
+    choiceKey: 'event_build_organization',
+    sourceName: sourceName || choice.source_name || resolvedTitle || '事件卡建立組織',
+    prompt: choice.prompt || '事件卡效果：請在戰略地圖選擇可建立組織的城鎮。',
+    towns: towns.map((entry, index) => ({
+      town: entry.town,
+      label: entry.label || entry.town,
+      index,
+    })),
+  };
 }
 
 function renderBusinessNetworkResult(state) {
@@ -1138,13 +1161,30 @@ function renderChoiceModal(state) {
   const choiceType = choice.type;
   const choiceKey = choice.choice_key || '';
   const sourceName = choice.source_name || choiceKey || '';
+
+  if (choiceKey === 'event_build_organization' && (choiceType === 'town_choice' || choice.step === 'town')) {
+    const payload = eventBuildChoiceMapPayload(choice, sourceName, sourceName);
+    overlay.style.display = 'none';
+    overlay.classList.remove('choice-modal-map-context');
+    mapHint.style.display = 'none';
+    mapHint.textContent = '';
+    cards.innerHTML = '';
+    activeChoiceModal = null;
+    if (payload) {
+      lastSupportChoiceMapHighlightPayload = payload;
+      setActiveGameView('map')
+        .then(() => syncChoiceModalMapHighlight(payload))
+        .catch(err => console.warn('Failed to focus strategic map for event build choice', err));
+    } else {
+      syncChoiceModalMapHighlight(null);
+    }
+    return;
+  }
+
   const targetChoicesWithMapHighlight = new Set(['support_interaction', 'card_dissolve_interaction', 'intel_network_dissolve_target']);
-  const buildTownChoicesWithMapHighlight = new Set(['event_build_organization']);
   const shouldHighlightTargetChoices = targetChoicesWithMapHighlight.has(choiceKey)
     && (choice.step === 'target' || choiceType === 'target_choice');
-  const shouldHighlightBuildTownChoices = buildTownChoicesWithMapHighlight.has(choiceKey)
-    && (choiceType === 'town_choice' || choice.step === 'town');
-  const shouldUseMapContextModal = shouldHighlightTargetChoices || shouldHighlightBuildTownChoices;
+  const shouldUseMapContextModal = shouldHighlightTargetChoices;
   overlay.classList.toggle('choice-modal-map-context', shouldUseMapContextModal);
   const requiredCount = Math.max(1, Number(choice.count || 1));
   const businessNetworkState = renderBusinessNetworkResult(state);
@@ -1173,25 +1213,6 @@ function renderChoiceModal(state) {
         sourceName: sourceName || resolvedTitle,
         prompt: choice.prompt || '',
         towns: targets.map(entry => ({
-          town: entry.town,
-          label: entry.label || entry.town,
-        })),
-      };
-      ensureStrategicMapMounted().catch(err => console.warn('Failed to mount strategic map for choice highlight', err));
-    } else {
-      mapHint.style.display = 'none';
-      mapHint.textContent = '';
-    }
-  } else if (shouldHighlightBuildTownChoices) {
-    const towns = (choice.towns || []).filter(entry => entry?.town);
-    if (towns.length) {
-      mapHint.style.display = 'block';
-      mapHint.textContent = '兩段式流程：先選城鎮，畫面會切到「戰略地圖」並聚焦可建立組織的位置；確認地圖資訊後，再按「確認建立」完成。';
-      mapHighlightPayload = {
-        mode: 'support-targets',
-        sourceName: sourceName || resolvedTitle,
-        prompt: choice.prompt || '',
-        towns: towns.map(entry => ({
           town: entry.town,
           label: entry.label || entry.town,
         })),
@@ -1319,71 +1340,18 @@ function renderChoiceModal(state) {
       sendAction('resolve_choice', { index: 0 });
     };
   } else if (choiceType === 'town_choice' || (choiceType === 'support_flow_choice' && (choice.step === 'town' || choice.step === 'sacrifice_town'))) {
-    const usesTwoStepBuildTownFlow = shouldHighlightBuildTownChoices;
-    const baseHighlightPayload = mapHighlightPayload ? { ...mapHighlightPayload } : null;
-    const updateTwoStepBuildTownSelection = (entry, index, buttons, submit, summary) => {
-      const town = entry?.town || `城鎮 ${index + 1}`;
-      choiceModalTwoStepSelection = { index, town };
-      buttons.forEach((button, buttonIndex) => {
-        const active = buttonIndex === index;
-        button.classList.toggle('selected', active);
-        button.setAttribute('aria-pressed', active ? 'true' : 'false');
-        button.textContent = `${active ? '已聚焦：' : '先看地圖：'}${button.dataset.townLabel || `城鎮 ${buttonIndex + 1}`}`;
-      });
-      if (summary) {
-        summary.innerHTML = `第一段已在戰略地圖聚焦 <strong>${escapeHtml(town)}</strong>。確認位置、連線與控制資訊後，按下方按鈕建立組織；也可改選其他城鎮重新聚焦。`;
-      }
-      if (submit) {
-        submit.disabled = false;
-        submit.textContent = `確認建立於 ${town}`;
-      }
-      if (baseHighlightPayload) {
-        syncChoiceModalMapHighlight({ ...baseHighlightPayload, focusTown: town });
-      }
-      setActiveGameView('map').catch(err => console.warn('Failed to focus strategic map for build choice', err));
-    };
-
-    const townButtons = [];
-    let submit = null;
-    let summary = null;
-    if (usesTwoStepBuildTownFlow) {
-      summary = document.createElement('div');
-      summary.className = 'choice-two-step-summary';
-      summary.textContent = '第一段：選一個城鎮並切到戰略地圖查看位置。第二段：確認後才會建立組織。';
-      cards.appendChild(summary);
-    }
     (choice.towns || []).forEach((entry, index) => {
       const btn = document.createElement('button');
       btn.className = 'modal-choice-btn';
       btn.type = 'button';
       const town = entry?.town || `城鎮 ${index + 1}`;
       const meta = entry?.label ? `｜${entry.label}` : '';
-      const label = `${town}${meta}`;
-      btn.dataset.townLabel = label;
-      btn.textContent = usesTwoStepBuildTownFlow ? `先看地圖：${label}` : label;
-      if (usesTwoStepBuildTownFlow) {
-        btn.setAttribute('aria-pressed', 'false');
-        btn.onclick = () => updateTwoStepBuildTownSelection(entry, index, townButtons, submit, summary);
-      } else {
-        btn.onclick = () => {
-          sendAction('resolve_choice', { index });
-        };
-      }
-      townButtons.push(btn);
+      btn.textContent = `${town}${meta}`;
+      btn.onclick = () => {
+        sendAction('resolve_choice', { index });
+      };
       cards.appendChild(btn);
     });
-    if (usesTwoStepBuildTownFlow) {
-      submit = document.createElement('button');
-      submit.className = 'modal-choice-btn choice-two-step-confirm';
-      submit.type = 'button';
-      submit.disabled = true;
-      submit.textContent = '確認建立（請先選城鎮看地圖）';
-      submit.onclick = () => {
-        if (!choiceModalTwoStepSelection || typeof choiceModalTwoStepSelection.index !== 'number') return;
-        sendAction('resolve_choice', { index: choiceModalTwoStepSelection.index });
-      };
-      cards.appendChild(submit);
-    }
   } else if (choiceType === 'target_choice' || (choiceType === 'support_flow_choice' && choice.step === 'target')) {
     const row = document.createElement('div');
     row.className = 'modal-choice-row';

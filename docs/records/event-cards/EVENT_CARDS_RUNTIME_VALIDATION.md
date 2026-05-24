@@ -3,7 +3,7 @@
 Status: passed (20 passed)
 
 - test_idle_noop: passed — {'event': '歲月靜好', 'status': 'idle', 'phase_after_second_advance': <TurnPhase.ACTION: 'action'>}
-- test_hong_kong_success_static_supply: passed — {'event': '香港抗暴之戰', 'progress': {'count': 1, 'required': 1, 'succeeded': True, 'settled': True, 'status': 'success'}, 'discard': ['宣傳家', '資助者'], 'static_supply': 0}
+- test_hong_kong_success_static_supply: passed — {'event': '香港抗暴之戰', 'progress': {'count': 1, 'required': 1, 'succeeded': True, 'settled': True, 'status': 'success'}, 'discard': ['宣傳家', '資助者'], 'initial_static_card_count': 0, 'static_supply': 0}
 - test_hong_kong_failure_discard_choice: passed — {'event': '香港抗暴之戰', 'choice_key': 'event_discard_self', 'discard': ['追隨者']}
 - test_major_disaster_success: passed — {'event': '重大災難', 'progress': {'count': 1, 'required': 1, 'succeeded': True, 'settled': True, 'status': 'success'}, 'discard': ['宣傳家', '宣傳家']}
 - test_draw_trigger_succeeds: passed — {'event': '北京政爭', 'progress': {'count': 1, 'required': 1, 'succeeded': True, 'settled': True, 'status': 'success'}, 'hand_count': 7}
