@@ -1,6 +1,6 @@
 {
   "status": "passed",
-  "passed": 31,
+  "passed": 32,
   "results": [
     {
       "name": "test_idle_noop",
@@ -526,6 +526,14 @@
         "ignore_distance_move": {
           "success": true
         }
+      }
+    },
+    {
+      "name": "test_event_red_dissolve_ui_reuses_target_map_highlight",
+      "status": "passed",
+      "detail": {
+        "choice_key": "event_red_dissolve",
+        "highlight_pipeline": "support-targets"
       }
     },
     {

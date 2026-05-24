@@ -472,6 +472,16 @@ def test_event_modifiers_are_consumed_by_runtime_rules():
     return {"reduce_cost_buy": names(player.deck.discard_pile), "restrict_build_error": blocked.get("error"), "ignore_distance_move": moved}
 
 
+
+def test_event_red_dissolve_ui_reuses_target_map_highlight():
+    app_js = (ROOT / "static" / "app.js").read_text(encoding="utf-8")
+    needle = "targetChoicesWithMapHighlight = new Set(['support_interaction', 'card_dissolve_interaction', 'intel_network_dissolve_target', 'event_red_dissolve'])"
+    assert needle in app_js, "event_red_dissolve should reuse existing target choice map highlight pipeline"
+    return {
+        "choice_key": "event_red_dissolve",
+        "highlight_pipeline": "support-targets",
+    }
+
 def test_pending_choice_blocks_phase_advance_until_resolved():
     game = make_game("香港抗暴之戰")
     player = game.players[0]
@@ -689,6 +699,7 @@ def main():
         test_event_deck_uses_declared_counts_without_structured_duplicate_overcount,
         test_trade_war_structured_matches_raw_rule,
         test_event_modifiers_are_consumed_by_runtime_rules,
+        test_event_red_dissolve_ui_reuses_target_map_highlight,
         test_pending_choice_blocks_phase_advance_until_resolved,
         test_event_deck_reshuffle,
     ]

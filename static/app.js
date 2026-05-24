@@ -1181,7 +1181,7 @@ function renderChoiceModal(state) {
     return;
   }
 
-  const targetChoicesWithMapHighlight = new Set(['support_interaction', 'card_dissolve_interaction', 'intel_network_dissolve_target']);
+  const targetChoicesWithMapHighlight = new Set(['support_interaction', 'card_dissolve_interaction', 'intel_network_dissolve_target', 'event_red_dissolve']);
   const shouldHighlightTargetChoices = targetChoicesWithMapHighlight.has(choiceKey)
     && (choice.step === 'target' || choiceType === 'target_choice');
   const shouldUseMapContextModal = shouldHighlightTargetChoices;

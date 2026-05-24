@@ -64,6 +64,7 @@
   - 2026-05-24：已補乾淨版烏魯木齊地圖 proof：proof endpoint 改用非立場試探陣營，且 pending choice 期間會隱藏陣營能力 overlay，避免 `立場試探` 混入正式 UI 證據；另補一張 active `戰略地圖` tab 且地圖區域可見的正式 UI 截圖；proof records：`docs/records/event-cards/URUMQI_BUILD_CHOICE_MAP_HIGHLIGHT_UI_PROOF_CLEAN_2026_05_24.{md,json}`。
   - 2026-05-24：已把 `event_build_organization` town choice 改為沿用正式 `戰略地圖` 側欄建組織操作；pending choice 自動切到地圖並用既有 map highlight 標示可建城鎮，玩家選取城鎮後按「在目前城鎮建立組織（事件卡）」完成 resolve，不再使用 choice modal 兩段式確認；正式 browser UI 截圖與 state proof 在 `docs/records/event-cards/URUMQI_BUILD_DIRECT_MAP_SIDEBAR_UI_2026_05_24.png`、`URUMQI_BUILD_DIRECT_MAP_SIDEBAR_UI_PROOF_2026_05_24.{md,json}`。
   - 2026-05-24：已補 `一帶一路 南洋` / `一帶一路 天方` 區域限定免費建組織正式 Strategic Map UI proof；確認兩張事件都重用 `event_build_organization` pending choice / map highlight，且 pending choice 分別帶 `region=southeast_asia` / `region=middle_east`、`free=true`、`ignore_distance=true`。proof records：`docs/records/event-cards/BELT_ROAD_SOUTHEAST_MAP_BUILD_UI_PROOF_2026_05_24.{md,json}`、`BELT_ROAD_MIDDLE_EAST_MAP_BUILD_UI_PROOF_2026_05_24.{md,json}`。
+  - 2026-05-24：已補 `全國人大召開` 失敗後 `event_red_dissolve` 的正式 map-highlight UI proof；紅軍目標選擇 modal 會列出其他玩家牆內組織，並重用既有 `support-targets` 地圖高亮流程在戰略地圖標出 `viewer｜北京`。proof records：`docs/records/event-cards/NATIONAL_PEOPLE_CONGRESS_RED_DISSOLVE_MAP_HIGHLIGHT_UI_PROOF_2026_05_24.{md,json}` 與同名 PNG。
   - 原則：只重用既有 pending choice modal / target choice map highlight 架構；不要重做情報網 highlight。
   - 驗收：每一種互動型 effect 至少有一個正式 browser UI proof，截圖與紀錄放 `docs/records/event-cards/`。
 

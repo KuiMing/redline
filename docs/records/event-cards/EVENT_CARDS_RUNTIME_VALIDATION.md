@@ -1,6 +1,6 @@
 # Event Cards Runtime Validation
 
-Status: passed (31 passed)
+Status: passed (32 passed)
 
 - test_idle_noop: passed — {'event': '歲月靜好', 'status': 'idle', 'phase_after_second_advance': <TurnPhase.ACTION: 'action'>}
 - test_hong_kong_success_static_supply: passed — {'event': '香港抗暴之戰', 'progress': {'count': 1, 'required': 1, 'succeeded': True, 'settled': True, 'status': 'success'}, 'discard': ['宣傳家', '資助者'], 'initial_static_card_count': 0, 'static_supply': 0}
@@ -31,5 +31,6 @@ Status: passed (31 passed)
 - test_event_deck_uses_declared_counts_without_structured_duplicate_overcount: passed — {'全國人大召開': 2, '重大災難': 2, 'total': 27}
 - test_trade_war_structured_matches_raw_rule: passed — {'event': '貿易戰加劇', 'trigger': {'type': 'buy_card', 'count': 1, 'min_cost': 4, 'card_names': ['英美奧援']}, 'success': {'type': 'topdeck_from_discard', 'count': 1}}
 - test_event_modifiers_are_consumed_by_runtime_rules: passed — {'reduce_cost_buy': ['資助者'], 'restrict_build_error': 'Current event restricts building organizations', 'ignore_distance_move': {'success': True}}
+- test_event_red_dissolve_ui_reuses_target_map_highlight: passed — {'choice_key': 'event_red_dissolve', 'highlight_pipeline': 'support-targets'}
 - test_pending_choice_blocks_phase_advance_until_resolved: passed — {'event': '香港抗暴之戰', 'blocked_error': 'Resolve pending choice before advancing phase', 'phase_after_resolve': <TurnPhase.END: 'end'>}
 - test_event_deck_reshuffle: passed — {'event': '歲月靜好', 'discard_count': 1}

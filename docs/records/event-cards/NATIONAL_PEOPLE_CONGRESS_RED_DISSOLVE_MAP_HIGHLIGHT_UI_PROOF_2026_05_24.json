@@ -1,0 +1,26 @@
+{
+  "status": "passed",
+  "date": "2026-05-24",
+  "event": "全國人大召開",
+  "scenario": "failure red_dissolve target choice map highlight",
+  "game_id": "47693ce3-56eb-4d13-ab21-792ee24f6069",
+  "red_player_id": "2f0ffb39-daa9-4630-8771-7bcc84b6d649",
+  "target_player": "viewer",
+  "target_town": "北京",
+  "screenshot": "NATIONAL_PEOPLE_CONGRESS_RED_DISSOLVE_MAP_HIGHLIGHT_UI_2026_05_24.png",
+  "ui_evidence": [
+    "choice modal 顯示「全國人大召開：紅軍選擇要瓦解的組織。」",
+    "modal 目標按鈕顯示「viewer｜北京」",
+    "modal 提示地圖會同步高亮可選目標",
+    "戰略地圖側欄提示全國人大召開目標高亮，地圖上北京節點有橘色外框"
+  ],
+  "implementation": {
+    "choice_key": "event_red_dissolve",
+    "reused_pipeline": "targetChoicesWithMapHighlight -> support-targets map payload",
+    "no_new_intel_highlight": true
+  },
+  "validation": {
+    "runtime_validator": "python3 scripts/validate_event_cards_runtime.py",
+    "static_assertion": "test_event_red_dissolve_ui_reuses_target_map_highlight"
+  }
+}
