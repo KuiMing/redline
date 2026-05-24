@@ -25,6 +25,16 @@
       "name": "strategic map iframe is mounted for choice highlight",
       "needle": "ensureStrategicMapMounted().catch(err => console.warn('Failed to mount strategic map for choice highlight', err));",
       "status": "passed"
+    },
+    {
+      "name": "pending choices suppress faction action overlay during focused proof flows",
+      "needle": "if (!inAction || !isMine || hasActivePendingChoice) return;",
+      "status": "passed"
+    },
+    {
+      "name": "Urumqi proof endpoint uses a non-faction-action viewer faction",
+      "needle": "viewer.faction_id = \"taiwan_green\"",
+      "status": "passed"
     }
   ],
   "failures": []

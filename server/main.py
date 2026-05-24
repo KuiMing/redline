@@ -2191,7 +2191,7 @@ def test_setup_urumqi_event_proof(payload: dict):
     game = Game(players, market_mode="all_cards")
     viewer = game.players[0]
     red = game.players[1]
-    viewer.faction_id = "liberals"
+    viewer.faction_id = "taiwan_green"
     red.faction_id = "red_army"
     viewer.base = "臺北"
     red.base = "北京"

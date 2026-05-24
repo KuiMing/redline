@@ -1632,6 +1632,7 @@ function renderFactionActionPanel(state) {
   const isMine = state.current_player && me && state.current_player === me.name;
   const faction = me?.faction || '';
   const factionActionUsed = !!state.faction_action_used;
+  const hasActivePendingChoice = !!(state.pending_choice && me && state.pending_choice.player_id === me.id);
 
   buttons.innerHTML = '';
   panel.style.display = 'none';
@@ -1648,7 +1649,7 @@ function renderFactionActionPanel(state) {
   const factionResult = renderFactionActionResult(state, faction);
   const hasResult = factionResult.hasResult;
 
-  if (!inAction || !isMine) return;
+  if (!inAction || !isMine || hasActivePendingChoice) return;
 
   const showCenteredActionPanel = (title, message, buildButtons, hint = '', resultHtml = '') => {
     panel.style.display = 'none';

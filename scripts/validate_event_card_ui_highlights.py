@@ -8,6 +8,7 @@ RECORD_DIR = ROOT / "docs" / "records" / "event-cards"
 JSON_OUT = RECORD_DIR / "EVENT_CARD_UI_HIGHLIGHT_VALIDATION.json"
 MD_OUT = RECORD_DIR / "EVENT_CARD_UI_HIGHLIGHT_VALIDATION.md"
 APP_JS = ROOT / "static" / "app.js"
+SERVER_MAIN = ROOT / "server" / "main.py"
 
 
 def assert_contains(text: str, needle: str, label: str, failures: list[str]) -> None:
@@ -17,36 +18,52 @@ def assert_contains(text: str, needle: str, label: str, failures: list[str]) -> 
 
 def main() -> None:
     app = APP_JS.read_text(encoding="utf-8")
+    server_main = SERVER_MAIN.read_text(encoding="utf-8")
     failures: list[str] = []
     checks = [
         {
             "name": "event_build_organization town_choice is included in map-highlight allowlist",
             "needle": "new Set(['event_build_organization'])",
+            "text": app,
         },
         {
             "name": "build town choices use existing support-targets highlight payload",
             "needle": "mode: 'support-targets'",
+            "text": app,
         },
         {
             "name": "build town choices read pending choice towns",
             "needle": "const towns = (choice.towns || []).filter(entry => entry?.town);",
+            "text": app,
         },
         {
             "name": "modal tells player the map highlights buildable organization towns",
             "needle": "地圖會同步高亮可以建立組織的城鎮",
+            "text": app,
         },
         {
             "name": "strategic map iframe is mounted for choice highlight",
             "needle": "ensureStrategicMapMounted().catch(err => console.warn('Failed to mount strategic map for choice highlight', err));",
+            "text": app,
+        },
+        {
+            "name": "pending choices suppress faction action overlay during focused proof flows",
+            "needle": "if (!inAction || !isMine || hasActivePendingChoice) return;",
+            "text": app,
+        },
+        {
+            "name": "Urumqi proof endpoint uses a non-faction-action viewer faction",
+            "needle": "viewer.faction_id = \"taiwan_green\"",
+            "text": server_main,
         },
     ]
     for check in checks:
-        assert_contains(app, check["needle"], check["name"], failures)
+        assert_contains(check["text"], check["needle"], check["name"], failures)
 
     payload = {
         "status": "failed" if failures else "passed",
         "checks": [
-            {"name": check["name"], "needle": check["needle"], "status": "passed" if check["needle"] in app else "failed"}
+            {"name": check["name"], "needle": check["needle"], "status": "passed" if check["needle"] in check["text"] else "failed"}
             for check in checks
         ],
         "failures": failures,

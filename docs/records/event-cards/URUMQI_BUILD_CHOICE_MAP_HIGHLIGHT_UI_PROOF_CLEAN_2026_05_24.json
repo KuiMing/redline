@@ -1,0 +1,48 @@
+{
+  "status": "passed",
+  "date": "2026-05-24",
+  "scenario": "Clean Urumqi build-choice map-highlight UI proof",
+  "diagnosis": [
+    "Previous proof scenario used viewer faction liberals, so the centered faction-action modal could show 立場試探 during ACTION phase and visually contaminate the event-card proof.",
+    "Frontend renderFactionActionPanel now suppresses faction action overlay while the current player has an active pending choice.",
+    "The Urumqi proof endpoint now uses taiwan_green for the viewer to avoid unrelated faction-action copy in this focused event proof."
+  ],
+  "verified_state": {
+    "turn": 1,
+    "phase": "action",
+    "current_player": "viewer",
+    "viewer_faction": "taiwan_green",
+    "event": "烏魯木齊七五事件",
+    "pending_choice": {
+      "type": "town_choice",
+      "choice_key": "event_build_organization",
+      "source_name": "烏魯木齊七五事件",
+      "prompt": "烏魯木齊七五事件：在己方組織 1 格內免費建立 1 個組織。",
+      "towns": [
+        "天津",
+        "石家莊"
+      ]
+    }
+  },
+  "verified_ui": {
+    "choice_modal_display": "flex",
+    "choice_modal_title": "烏魯木齊七五事件",
+    "choice_modal_buttons": [
+      "天津",
+      "石家莊"
+    ],
+    "choice_modal_map_hint": "地圖會同步高亮可以建立組織的城鎮；主操作仍以此處列表為準。你也可以切到「戰略地圖」查看城鎮位置、連線與控制資訊。",
+    "faction_action_modal_display": "none",
+    "faction_action_modal_absent_from_flow": true,
+    "map_hint": "地圖上已用橘色外框標出可選城鎮。",
+    "map_labels": [
+      "天津",
+      "石家莊"
+    ],
+    "map_frame_connected": true
+  },
+  "screenshots": [
+    "URUMQI_BUILD_CHOICE_MAP_HIGHLIGHT_MODAL_UI_CLEAN_2026_05_24.png",
+    "URUMQI_BUILD_CHOICE_MAP_HIGHLIGHT_MAP_UI_CLEAN_2026_05_24.png"
+  ]
+}
