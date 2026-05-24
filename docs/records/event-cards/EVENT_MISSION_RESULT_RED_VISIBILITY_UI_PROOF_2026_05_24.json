@@ -1,0 +1,21 @@
+{
+  "status": "passed",
+  "date": "2026-05-24",
+  "scenario": "全國人大召開 failure result visible to Red Army player",
+  "proof_endpoint": "/test/setup-national-people-congress-red-dissolve-proof",
+  "game_id": "306fe902-b88c-4ccc-9476-066e0dae2f8d",
+  "red_player_id": "42b93220-57b8-4902-b885-e3b3bc9c49bc",
+  "state_assertions": {
+    "current_event": "全國人大召開",
+    "status": "failure",
+    "result_text": "非紅軍任務失敗，紅軍效果生效",
+    "pending_choice": "event_red_dissolve",
+    "red_player_can_see_choice": true
+  },
+  "ui_assertions": [
+    "Red Army view shows the current event panel.",
+    "Panel includes 任務結果：非紅軍任務失敗，紅軍效果生效.",
+    "Red Army target choice modal remains available for the failure effect."
+  ],
+  "screenshot": "EVENT_MISSION_RESULT_RED_VISIBILITY_UI_2026_05_24.png"
+}

@@ -1400,6 +1400,7 @@ function renderCurrentEvent(state) {
   content.innerHTML = `
     <div class="event-card-name">${escapeHtml(event.name || '未知事件')}</div>
     <div class="event-card-meta">類型：${escapeHtml(typeMap[event.type] || event.type || '未知')}｜狀態：${escapeHtml(statusMap[event.status] || event.status || '進行中')}</div>
+    <div class="event-card-result"><strong>任務結果：</strong>${escapeHtml(event.result_text || statusMap[event.status] || '進行中')}</div>
     <div class="event-card-line"><strong>任務條件：</strong>${escapeHtml(event.trigger_text || '無')}</div>
     <div class="event-card-progress">進度：${current}/${required || 0}</div>
     <div class="event-card-line"><strong>成功獎勵：</strong>${escapeHtml(event.success_text || '無')}</div>

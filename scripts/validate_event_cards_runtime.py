@@ -163,11 +163,19 @@ def test_event_mission_triggers_ignore_red_army_actor():
     assert game.event_progress["count"] == 0, "red army purchases must not satisfy event-card mission conditions"
     game._track_event_purchase(bought, original_cost={"money": 1, "propaganda": 0}, player=non_red)
     assert game.event_progress["count"] == 1, "non-red purchases should satisfy event-card mission conditions"
+    success_payload = game._event_display_payload()
+    assert success_payload["result_text"] == "非紅軍任務成功"
+
+    game.event_progress = {"count": 0, "required": 1, "succeeded": False, "settled": True, "status": "failure"}
+    failure_payload = game._event_display_payload()
+    assert failure_payload["result_text"] == "非紅軍任務失敗，紅軍效果生效"
 
     return {
         "red_progress": 0,
-        "non_red_progress": game.event_progress["count"],
+        "non_red_progress": success_payload["progress"]["count"],
         "checked_triggers": checked_triggers + ["buy_card"],
+        "success_result_text": success_payload["result_text"],
+        "failure_result_text": failure_payload["result_text"],
     }
 
 def test_remaining_six_event_structured_matches_raw_rules():

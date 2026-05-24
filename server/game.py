@@ -215,6 +215,7 @@ class Game:
             'failure': failure,
             'progress': progress,
             'status': progress.get('status') or 'active',
+            'result_text': self._event_result_text(event),
             'trigger_text': self._event_condition_text(trigger, event),
             'success_text': self._event_effect_text(success),
             'failure_text': self._event_effect_text(failure),
@@ -248,6 +249,26 @@ class Game:
         if trigger.get('type') == 'end_turn_state' and trigger.get('condition') == 'own_organization_in_scope':
             detail = f"（己方至少 {count} 個組織）"
         return f"{labels.get(trigger.get('type'), trigger.get('type') or '未知條件')}{scope_text}{detail}至少 {count} 次"
+
+    def _event_result_text(self, event=None):
+        event = event or self.current_event
+        if not event:
+            return ''
+        progress = dict(self.event_progress or {})
+        status = progress.get('status') or 'active'
+        if event.get('type') == 'mission':
+            if status == 'success_pending':
+                return '非紅軍任務條件已達成，等待結算'
+            if status == 'success':
+                return '非紅軍任務成功'
+            if status == 'failure':
+                return '非紅軍任務失敗，紅軍效果生效'
+            return '非紅軍任務進行中'
+        if status == 'auto':
+            return '紅軍事件效果已自動套用'
+        if status == 'idle':
+            return '本次事件無效果'
+        return ''
 
     def _event_effect_text(self, effect):
         if not effect or effect.get('type') == 'none':

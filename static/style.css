@@ -1942,11 +1942,14 @@ body {
   color: #ffe1a3;
   margin-bottom: 4px;
 }
-.event-card-meta, .event-card-progress, .event-card-line {
+.event-card-meta, .event-card-progress, .event-card-line, .event-card-result {
   font-size: 12px;
   line-height: 1.45;
   color: #f5dfbd;
   margin-top: 4px;
+}
+.event-card-result {
+  color: #ffdf7e;
 }
 .event-card-progress {
   color: #c6f6d5;
