@@ -1,0 +1,37 @@
+{
+  "proof": "ELITE_DEFECTION_UI_PROOF_2026_05_24",
+  "event_name": "紅軍權貴出逃",
+  "game_id": "b0624f68-3576-4937-8ac7-34e87ddd59d4",
+  "player_id": "e3b064b0-1faa-4d55-bb94-1be8a4092307",
+  "url": "http://127.0.0.1:8000/?game_id=b0624f68-3576-4937-8ac7-34e87ddd59d4&player_id=e3b064b0-1faa-4d55-bb94-1be8a4092307",
+  "setup_endpoint": "POST /test/setup-elite-defection-event-proof",
+  "moves": [
+    {"from": "桃園", "to": "新竹", "mode": "rail"},
+    {"from": "基隆", "to": "新北", "mode": "road"},
+    {"from": "臺中", "to": "南投", "mode": "road"}
+  ],
+  "screenshots": {
+    "pending_choice": "docs/records/event-cards/ELITE_DEFECTION_UI_PENDING_CHOICE_2026_05_24.png",
+    "resolved": "docs/records/event-cards/ELITE_DEFECTION_UI_RESOLVED_2026_05_24.png"
+  },
+  "verified_checks": {
+    "pending_choice_key": "trash_from_hand_or_discard",
+    "pending_prompt": "紅軍權貴出逃：請從己方手牌或棄牌堆中移除 1 張牌。",
+    "pending_options_include": [
+      {"zone_label": "手牌", "name": "手牌移除目標"},
+      {"zone_label": "手牌", "name": "手牌保留"},
+      {"zone_label": "棄牌堆", "name": "棄牌移除目標"}
+    ],
+    "resolved_event_status": "success",
+    "resolved_progress": {"count": 3, "required": 3, "settled": true, "succeeded": true},
+    "resolved_pending_choice": null,
+    "resolved_discard_pile": [],
+    "action_log_tail": [
+      "viewer moved 1 organization from 桃園 to 新竹 via rail",
+      "viewer moved 1 organization from 基隆 to 新北 via road",
+      "viewer moved 1 organization from 臺中 to 南投 via road",
+      "棄牌移除目標 returned to purchase deck discard",
+      "viewer trashed 棄牌移除目標 from 棄牌堆 via 紅軍權貴出逃"
+    ]
+  }
+}

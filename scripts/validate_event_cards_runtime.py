@@ -181,6 +181,74 @@ def test_trade_war_purchase_trigger_accepts_anglo_support_by_name():
     return {"event": "貿易戰加劇", "triggered_by": "英美奧援", "choice_key": choice["choice_key"]}
 
 
+def test_elite_defection_trashes_from_hand_after_three_moves():
+    game = make_game("紅軍權貴出逃")
+    player = game.players[0]
+    player.moves_left = 3
+    player.organizations = {"臺北": 1, "桃園": 1, "基隆": 1, "臺中": 1}
+    player.hand = [Card("手牌移除目標", "command", {})]
+    player.deck.discard_pile = [Card("棄牌保留", "command", {})]
+
+    assert_ok(game.advance_turn_phase(), "draw elite defection event")
+    assert_ok(game.advance_turn_phase(), "enter action")
+    assert_ok(game.move_organization("桃園", "新竹", mode="rail"), "first move")
+    assert_ok(game.move_organization("基隆", "新北", mode="road"), "second move")
+    assert_ok(game.move_organization("臺中", "南投", mode="road"), "third move")
+    assert game.pending_choice is not None
+    assert game.event_progress["succeeded"] is True
+    assert game.event_progress["settled"] is True
+    choice = game.state()["pending_choice"]
+    assert choice["choice_key"] == "trash_from_hand_or_discard"
+    assert choice["cards"] == [
+        {"name": "手牌移除目標", "zone": "hand", "zone_label": "手牌"},
+        {"name": "棄牌保留", "zone": "discard", "zone_label": "棄牌堆"},
+    ], choice["cards"]
+    resolve = assert_ok(game.resolve_pending_choice(player.id, 0), "trash hand card")
+    assert resolve["chosen_card"] == "手牌移除目標"
+    assert resolve["zone"] == "hand"
+    assert names(player.hand) == []
+    assert names(player.deck.discard_pile) == ["棄牌保留"]
+    assert resolve["removed_card"]["name"] == "手牌移除目標"
+    assert resolve["removed_card"]["zone"] in {"deck_discard", "static_supply", "removed"}
+    return {"event": "紅軍權貴出逃", "choice_key": choice["choice_key"], "trashed": resolve["chosen_card"], "zone": resolve["zone"]}
+
+
+def test_elite_defection_trashes_from_discard_after_three_moves():
+    game = make_game("紅軍權貴出逃")
+    player = game.players[0]
+    player.moves_left = 3
+    player.organizations = {"臺北": 1, "桃園": 1, "基隆": 1, "臺中": 1}
+    player.hand = [Card("手牌保留", "command", {})]
+    player.deck.discard_pile = [Card("棄牌移除目標", "command", {})]
+
+    assert_ok(game.advance_turn_phase(), "draw elite defection event")
+    assert_ok(game.advance_turn_phase(), "enter action")
+    assert_ok(game.move_organization("桃園", "新竹", mode="rail"), "first move")
+    assert_ok(game.move_organization("基隆", "新北", mode="road"), "second move")
+    assert_ok(game.move_organization("臺中", "南投", mode="road"), "third move")
+    choice = game.state()["pending_choice"]
+    assert choice["choice_key"] == "trash_from_hand_or_discard"
+    resolve = assert_ok(game.resolve_pending_choice(player.id, 1), "trash discard card")
+    assert resolve["chosen_card"] == "棄牌移除目標"
+    assert resolve["zone"] == "discard"
+    assert names(player.hand) == ["手牌保留"]
+    assert names(player.deck.discard_pile) == []
+    assert resolve["removed_card"]["name"] == "棄牌移除目標"
+    assert resolve["removed_card"]["zone"] in {"deck_discard", "static_supply", "removed"}
+    return {"event": "紅軍權貴出逃", "choice_key": choice["choice_key"], "trashed": resolve["chosen_card"], "zone": resolve["zone"]}
+
+
+def test_elite_defection_structured_matches_raw_rule():
+    game = make_game("紅軍權貴出逃")
+    event = game._event_by_name("紅軍權貴出逃")
+    assert event["trigger"] == {"type": "move_organization", "count": 3}
+    assert event["success"] == {"type": "trash_from_hand_or_discard", "count": 1}
+    assert event["failure"] == {"type": "discard_self", "count": 1}
+    duplicate = game._event_by_name("紅軍權貴出逃（副本）")
+    assert duplicate["success"] == event["success"]
+    return {"event": event["name"], "trigger": event["trigger"], "success": event["success"], "duplicate_success": duplicate["success"]}
+
+
 def test_event_deck_uses_declared_counts_without_structured_duplicate_overcount():
     game = make_game("歲月靜好")
     counts = {}
@@ -271,6 +339,9 @@ def main():
         test_trade_war_purchase_trigger_topdecks_from_discard,
         test_trade_war_purchase_trigger_ignores_low_cost_non_anglo_support,
         test_trade_war_purchase_trigger_accepts_anglo_support_by_name,
+        test_elite_defection_trashes_from_hand_after_three_moves,
+        test_elite_defection_trashes_from_discard_after_three_moves,
+        test_elite_defection_structured_matches_raw_rule,
         test_auto_event_modifier,
         test_event_deck_uses_declared_counts_without_structured_duplicate_overcount,
         test_trade_war_structured_matches_raw_rule,

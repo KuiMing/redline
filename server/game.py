@@ -265,6 +265,7 @@ class Game:
             'ignore_distance': '本回合無視距離限制',
             'build_organization': f'建立 {count} 個組織',
             'topdeck_from_discard': f'從棄牌堆選 {count} 張置於牌庫頂',
+            'trash_from_hand_or_discard': f'從手牌或棄牌堆移除 {count} 張牌',
         }
         return labels.get(t, t or '未知效果')
 
@@ -445,6 +446,37 @@ class Game:
                     )
                 return {'success': True, 'pending_choice': True}
             self.log(f"Event {outcome}: {player.name} has no discard card to topdeck")
+        elif t == 'trash_from_hand_or_discard':
+            cards = [
+                {'card': card, 'zone': 'hand', 'zone_label': '手牌'}
+                for card in list(player.hand)
+            ] + [
+                {'card': card, 'zone': 'discard', 'zone_label': '棄牌堆'}
+                for card in list(player.deck.discard_pile)
+            ]
+            if cards:
+                choice_count = min(count, len(cards))
+                prompt = f"{self.current_event.get('name')}：請從己方手牌或棄牌堆中移除 {choice_count} 張牌。"
+                if choice_count == 1:
+                    self._set_pending_card_choice(
+                        player,
+                        'trash_from_hand_or_discard',
+                        cards,
+                        prompt,
+                        source_name=self.current_event.get('name'),
+                        count=1,
+                    )
+                else:
+                    self._set_pending_multi_card_choice(
+                        player,
+                        'trash_from_hand_or_discard',
+                        cards,
+                        prompt,
+                        choice_count,
+                        source_name=self.current_event.get('name'),
+                    )
+                return {'success': True, 'pending_choice': True}
+            self.log(f"Event {outcome}: {player.name} has no hand/discard card to remove")
         self.log(f"Event {outcome} resolved: {self.current_event.get('name')} / {t}")
         return {'success': True, 'effect': t}
 

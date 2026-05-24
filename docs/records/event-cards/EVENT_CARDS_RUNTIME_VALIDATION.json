@@ -1,6 +1,6 @@
 {
   "status": "passed",
-  "passed": 14,
+  "passed": 17,
   "results": [
     {
       "name": "test_idle_noop",
@@ -108,6 +108,45 @@
         "event": "貿易戰加劇",
         "triggered_by": "英美奧援",
         "choice_key": "event_topdeck_from_discard"
+      }
+    },
+    {
+      "name": "test_elite_defection_trashes_from_hand_after_three_moves",
+      "status": "passed",
+      "detail": {
+        "event": "紅軍權貴出逃",
+        "choice_key": "trash_from_hand_or_discard",
+        "trashed": "手牌移除目標",
+        "zone": "hand"
+      }
+    },
+    {
+      "name": "test_elite_defection_trashes_from_discard_after_three_moves",
+      "status": "passed",
+      "detail": {
+        "event": "紅軍權貴出逃",
+        "choice_key": "trash_from_hand_or_discard",
+        "trashed": "棄牌移除目標",
+        "zone": "discard"
+      }
+    },
+    {
+      "name": "test_elite_defection_structured_matches_raw_rule",
+      "status": "passed",
+      "detail": {
+        "event": "紅軍權貴出逃",
+        "trigger": {
+          "type": "move_organization",
+          "count": 3
+        },
+        "success": {
+          "type": "trash_from_hand_or_discard",
+          "count": 1
+        },
+        "duplicate_success": {
+          "type": "trash_from_hand_or_discard",
+          "count": 1
+        }
       }
     },
     {

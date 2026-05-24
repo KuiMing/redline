@@ -40,7 +40,7 @@
 
     {"id": "elite_defection", "name": "紅軍權貴出逃", "type": "mission",
       "trigger": {"type": "move_organization", "count": 3},
-      "success": {"type": "discard_self", "count": 1},
+      "success": {"type": "trash_from_hand_or_discard", "count": 1},
       "failure": {"type": "discard_self", "count": 1}},
 
     {"id": "urumqi_incident", "name": "烏魯木齊七五事件", "type": "mission",
@@ -89,7 +89,7 @@
 
     {"id": "second_elite_defection", "name": "紅軍權貴出逃（副本）", "type": "mission",
       "trigger": {"type": "move_organization", "count": 3},
-      "success": {"type": "discard_self", "count": 1},
+      "success": {"type": "trash_from_hand_or_discard", "count": 1},
       "failure": {"type": "discard_self", "count": 1}}
   ]
 }
