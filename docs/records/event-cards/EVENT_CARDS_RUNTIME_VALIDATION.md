@@ -1,6 +1,6 @@
 # Event Cards Runtime Validation
 
-Status: passed (20 passed)
+Status: passed (23 passed)
 
 - test_idle_noop: passed — {'event': '歲月靜好', 'status': 'idle', 'phase_after_second_advance': <TurnPhase.ACTION: 'action'>}
 - test_hong_kong_success_static_supply: passed — {'event': '香港抗暴之戰', 'progress': {'count': 1, 'required': 1, 'succeeded': True, 'settled': True, 'status': 'success'}, 'discard': ['宣傳家', '資助者'], 'initial_static_card_count': 0, 'static_supply': 0}
@@ -16,7 +16,10 @@ Status: passed (20 passed)
 - test_urumqi_end_turn_wall_org_builds_near_own_org: passed — {'event': '烏魯木齊七五事件', 'trigger_count': 1, 'choice_key': 'event_build_organization', 'sample_towns': ['天津', '石家莊'], 'built': '天津'}
 - test_urumqi_end_turn_without_wall_org_fails_random_discard: passed — {'event': '烏魯木齊七五事件', 'trigger_count': 0, 'discard': '會被隨機棄掉'}
 - test_urumqi_structured_matches_raw_rule: passed — {'event': '烏魯木齊七五事件', 'trigger': {'type': 'end_turn_state', 'count': 1, 'condition': 'own_organization_in_scope', 'scope': '牆內'}, 'success': {'type': 'build_organization_near_own', 'count': 1, 'max_steps': 1}, 'failure': {'type': 'discard_random', 'count': 1}}
-- test_auto_event_modifier: passed — {'event': '上海合作組織', 'modifiers': [{'type': 'ignore_distance', 'duration': 1, 'event_id': 'shanghai_cooperation_org'}], 'status': 'auto'}
+- test_shanghai_cooperation_scoped_modifier_structured_matches_raw_rule: passed — {'event': '上海合作組織', 'effect': {'type': 'scoped_card_range', 'duration': 1, 'player_faction': 'red_army', 'card_types': ['armed', 'spy'], 'target_region': 'outer_manchuria', 'range': 5}}
+- test_shanghai_cooperation_auto_modifier: passed — {'event': '上海合作組織', 'modifiers': [{'type': 'scoped_card_range', 'duration': 1, 'player_faction': 'red_army', 'card_types': ['armed', 'spy'], 'target_region': 'outer_manchuria', 'range': 5, 'event_id': 'shanghai_cooperation_org'}], 'status': 'auto'}
+- test_shanghai_cooperation_armed_reaches_north_org_at_five_steps_only: passed — {'event': '上海合作組織', 'allowed_target': '海參崴', 'blocked_target': '臺北', 'non_red_blocked': True, 'choice_key': 'armed_target_discard'}
+- test_shanghai_cooperation_spy_targets_north_org_at_five_steps: passed — {'event': '上海合作組織', 'choice_key': 'card_dissolve_interaction', 'targets': [{'id': 'viewer::海參崴', 'label': 'viewer｜海參崴', 'player_id': 'viewer', 'town': '海參崴', 'requires_self_sacrifice': False}]}
 - test_event_deck_uses_declared_counts_without_structured_duplicate_overcount: passed — {'全國人大召開': 2, '重大災難': 2, 'total': 27}
 - test_trade_war_structured_matches_raw_rule: passed — {'event': '貿易戰加劇', 'trigger': {'type': 'buy_card', 'count': 1, 'min_cost': 4, 'card_names': ['英美奧援']}, 'success': {'type': 'topdeck_from_discard', 'count': 1}}
 - test_event_modifiers_are_consumed_by_runtime_rules: passed — {'reduce_cost_buy': ['資助者'], 'restrict_build_error': 'Current event restricts building organizations', 'ignore_distance_move': {'success': True}}

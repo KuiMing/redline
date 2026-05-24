@@ -1,6 +1,6 @@
 {
   "status": "passed",
-  "passed": 20,
+  "passed": 23,
   "results": [
     {
       "name": "test_idle_noop",
@@ -196,18 +196,71 @@
       }
     },
     {
-      "name": "test_auto_event_modifier",
+      "name": "test_shanghai_cooperation_scoped_modifier_structured_matches_raw_rule",
+      "status": "passed",
+      "detail": {
+        "event": "上海合作組織",
+        "effect": {
+          "type": "scoped_card_range",
+          "duration": 1,
+          "player_faction": "red_army",
+          "card_types": [
+            "armed",
+            "spy"
+          ],
+          "target_region": "outer_manchuria",
+          "range": 5
+        }
+      }
+    },
+    {
+      "name": "test_shanghai_cooperation_auto_modifier",
       "status": "passed",
       "detail": {
         "event": "上海合作組織",
         "modifiers": [
           {
-            "type": "ignore_distance",
+            "type": "scoped_card_range",
             "duration": 1,
+            "player_faction": "red_army",
+            "card_types": [
+              "armed",
+              "spy"
+            ],
+            "target_region": "outer_manchuria",
+            "range": 5,
             "event_id": "shanghai_cooperation_org"
           }
         ],
         "status": "auto"
+      }
+    },
+    {
+      "name": "test_shanghai_cooperation_armed_reaches_north_org_at_five_steps_only",
+      "status": "passed",
+      "detail": {
+        "event": "上海合作組織",
+        "allowed_target": "海參崴",
+        "blocked_target": "臺北",
+        "non_red_blocked": true,
+        "choice_key": "armed_target_discard"
+      }
+    },
+    {
+      "name": "test_shanghai_cooperation_spy_targets_north_org_at_five_steps",
+      "status": "passed",
+      "detail": {
+        "event": "上海合作組織",
+        "choice_key": "card_dissolve_interaction",
+        "targets": [
+          {
+            "id": "viewer::海參崴",
+            "label": "viewer｜海參崴",
+            "player_id": "viewer",
+            "town": "海參崴",
+            "requires_self_sacrifice": false
+          }
+        ]
       }
     },
     {

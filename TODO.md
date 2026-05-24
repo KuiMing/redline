@@ -28,12 +28,13 @@
   - 2026-05-23：已修正 `貿易戰加劇`：structured trigger 改為購買 `英美奧援` 或總費用 4 點以上卡牌，success 改為從棄牌堆選 1 張置頂；新增 runtime primitive `buy_card` / `topdeck_from_discard` 與 validator proof。
   - 2026-05-24：已修正 `紅軍權貴出逃`：structured success 改為 `trash_from_hand_or_discard`，成功後可從手牌或棄牌堆選 1 張移除；新增 runtime validator 與正式 browser UI proof。
   - 2026-05-24：已修正 `烏魯木齊七五事件`：structured trigger 改為回合結束時牆內有己方組織，success 改為在己方組織 1 格內免費建 1 個；新增 end-turn state / nearby build runtime validator 與正式 browser UI proof。
-  - 優先比對並修正：`上海合作組織`、`一帶一路 南洋`、`一帶一路 天方`。
+  - 2026-05-24：已修正 `上海合作組織`：structured effect 改為 `scoped_card_range`，限定紅軍 `armed` / `spy` 卡對北國城鎮組織距離為 5 格；runtime validator 已覆蓋 structured 對齊、自動 modifier、武裝卡 5 格北國可用且非北國不放行、間諜 target choice 僅列北國目標。
+  - 優先比對並修正：`一帶一路 南洋`、`一帶一路 天方`。
   - 已知差異：
     - `貿易戰加劇` raw 是購買英美奧援或 4 點以上卡牌，成功從棄牌堆選 1 張置頂；2026-05-23 已修正並補 runtime validator。
     - `紅軍權貴出逃` raw 成功是從手牌或棄牌移除 1 張；2026-05-24 已修正為 `trash_from_hand_or_discard` 並補 runtime/UI proof。
     - `烏魯木齊七五事件` raw trigger 是回合結束時牆內有組織，成功是在己方組織 1 格內免費建 1 個；2026-05-24 已修正為 `end_turn_state` + `build_organization_near_own` 並補 runtime/UI proof。
-    - `上海合作組織` raw 是紅軍對北國城鎮組織使用武裝/間諜距離增加為 5 格；目前是 generic `ignore_distance`。
+    - `上海合作組織` raw 是紅軍對北國城鎮組織使用武裝/間諜距離增加為 5 格；2026-05-24 已修正為 scoped `armed`/`spy` range modifier 並補 runtime validator。
     - `一帶一路 南洋` / `一帶一路 天方` raw 是紅軍免費在指定區域無視距離建立 1 個組織；目前是 generic `ignore_distance`。
   - 驗收：更新 `data/events_structured.v1.1.json` 與 effect vocabulary；新增/更新 validator 證明 raw text 與 structured effect 對齊。
 

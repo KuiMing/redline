@@ -365,13 +365,93 @@ def test_pending_choice_blocks_phase_advance_until_resolved():
     return {"event": "香港抗暴之戰", "blocked_error": blocked.get("error"), "phase_after_resolve": game.turn_phase}
 
 
-def test_auto_event_modifier():
+def test_shanghai_cooperation_scoped_modifier_structured_matches_raw_rule():
     game = make_game("上海合作組織")
+    event = game._event_by_name("上海合作組織")
+    expected = {
+        "type": "scoped_card_range",
+        "duration": 1,
+        "player_faction": "red_army",
+        "card_types": ["armed", "spy"],
+        "target_region": "outer_manchuria",
+        "range": 5,
+    }
+    assert event["effect"] == expected
+    return {"event": event["name"], "effect": event["effect"]}
+
+
+def test_shanghai_cooperation_auto_modifier():
+    game = make_game("上海合作組織")
+    game.current_player_index = 1
     assert_ok(game.advance_turn_phase(), "draw auto event")
     assert game.current_event["name"] == "上海合作組織"
-    assert game.event_modifiers and game.event_modifiers[0]["type"] == "ignore_distance"
+    assert game.event_modifiers and game.event_modifiers[0]["type"] == "scoped_card_range"
+    assert game.event_modifiers[0]["range"] == 5
+    assert game.event_modifiers[0]["target_region"] == "outer_manchuria"
     assert game.event_progress["status"] == "auto"
     return {"event": "上海合作組織", "modifiers": game.event_modifiers, "status": game.event_progress["status"]}
+
+
+def test_shanghai_cooperation_armed_reaches_north_org_at_five_steps_only():
+    game = make_game("上海合作組織")
+    red = game.players[1]
+    target = game.players[0]
+    game.current_player_index = 1
+    red.organizations = {"北京": 1}
+    target.organizations = {"海參崴": 1}
+    red.hand = [Card("武裝者", "armed", {})]
+    target.hand = [Card("被棄目標", "command", {})]
+    assert_ok(game.advance_turn_phase(), "draw shanghai event")
+    assert_ok(game.advance_turn_phase(), "enter red action")
+    result = assert_ok(game.play_card(0, mode="action", target_player_id=target.id), "armed reaches north org at 5 steps")
+    assert result.get("pending_choice") is True
+    choice = game.state()["pending_choice"]
+    assert choice["choice_key"] == "armed_target_discard"
+
+    blocked_game = make_game("上海合作組織")
+    blocked_red = blocked_game.players[1]
+    blocked_target = blocked_game.players[0]
+    blocked_game.current_player_index = 1
+    blocked_red.organizations = {"北京": 1}
+    blocked_target.organizations = {"臺北": 1}
+    blocked_red.hand = [Card("武裝者", "armed", {})]
+    blocked_target.hand = [Card("不該被棄", "command", {})]
+    assert_ok(blocked_game.advance_turn_phase(), "draw shanghai event blocked case")
+    assert_ok(blocked_game.advance_turn_phase(), "enter red action blocked case")
+    blocked = blocked_game.play_card(0, mode="action", target_player_id=blocked_target.id)
+    assert blocked.get("error") == "Target player has no organization within range"
+
+    non_red_game = make_game("上海合作組織")
+    non_red_actor = non_red_game.players[0]
+    non_red_target = non_red_game.players[1]
+    non_red_game.current_player_index = 0
+    non_red_actor.organizations = {"北京": 1}
+    non_red_target.organizations = {"海參崴": 1}
+    non_red_actor.hand = [Card("武裝者", "armed", {})]
+    non_red_target.hand = [Card("不該被非紅軍棄", "command", {})]
+    assert_ok(non_red_game.advance_turn_phase(), "draw shanghai event non-red case")
+    assert_ok(non_red_game.advance_turn_phase(), "enter non-red action")
+    non_red_blocked = non_red_game.play_card(0, mode="action", target_player_id=non_red_target.id)
+    assert non_red_blocked.get("error") == "Target player has no organization within range"
+    return {"event": "上海合作組織", "allowed_target": "海參崴", "blocked_target": "臺北", "non_red_blocked": True, "choice_key": choice["choice_key"]}
+
+
+def test_shanghai_cooperation_spy_targets_north_org_at_five_steps():
+    game = make_game("上海合作組織")
+    red = game.players[1]
+    target = game.players[0]
+    game.current_player_index = 1
+    red.organizations = {"北京": 1}
+    target.organizations = {"海參崴": 1}
+    red.hand = [Card("內應間諜", "spy", {})]
+    assert_ok(game.advance_turn_phase(), "draw shanghai event")
+    assert_ok(game.advance_turn_phase(), "enter red action")
+    result = assert_ok(game.play_card(0, mode="action", target_player_id=target.id), "spy reaches north org at 5 steps")
+    assert result.get("pending_choice") is True
+    choice = game.state()["pending_choice"]
+    assert choice["choice_key"] == "card_dissolve_interaction"
+    assert [entry["town"] for entry in choice["targets"]] == ["海參崴"]
+    return {"event": "上海合作組織", "choice_key": choice["choice_key"], "targets": choice["targets"]}
 
 
 def test_event_deck_reshuffle():
@@ -401,7 +481,10 @@ def main():
         test_urumqi_end_turn_wall_org_builds_near_own_org,
         test_urumqi_end_turn_without_wall_org_fails_random_discard,
         test_urumqi_structured_matches_raw_rule,
-        test_auto_event_modifier,
+        test_shanghai_cooperation_scoped_modifier_structured_matches_raw_rule,
+        test_shanghai_cooperation_auto_modifier,
+        test_shanghai_cooperation_armed_reaches_north_org_at_five_steps_only,
+        test_shanghai_cooperation_spy_targets_north_org_at_five_steps,
         test_event_deck_uses_declared_counts_without_structured_duplicate_overcount,
         test_trade_war_structured_matches_raw_rule,
         test_event_modifiers_are_consumed_by_runtime_rules,

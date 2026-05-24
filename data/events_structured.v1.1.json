@@ -49,7 +49,7 @@
       "failure": {"type": "discard_random", "count": 1}},
 
     {"id": "shanghai_cooperation_org", "name": "上海合作組織", "type": "auto",
-      "effect": {"type": "ignore_distance", "duration": 1}},
+      "effect": {"type": "scoped_card_range", "duration": 1, "player_faction": "red_army", "card_types": ["armed", "spy"], "target_region": "outer_manchuria", "range": 5}},
 
     {"id": "belt_road_southeast", "name": "一帶一路 南洋", "type": "auto",
       "effect": {"type": "ignore_distance", "duration": 1}},

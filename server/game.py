@@ -266,6 +266,7 @@ class Game:
             'reduce_cost': f'本回合購牌費用降低 {effect.get("amount", 1)}',
             'restrict_build': '本回合建立組織受限',
             'ignore_distance': '本回合無視距離限制',
+            'scoped_card_range': f'本回合{effect.get("target_region", "指定區域")}目標距離增加為 {effect.get("range", 1)} 格',
             'build_organization': f'建立 {count} 個組織',
             'build_organization_near_own': f'在己方組織 {effect.get("max_steps", 1)} 格內建立 {count} 個組織',
             'topdeck_from_discard': f'從棄牌堆選 {count} 張置於牌庫頂',
@@ -401,6 +402,42 @@ class Game:
     def _event_reduce_cost_amount(self):
         return sum(int((m or {}).get('amount', 0) or 0) for m in (getattr(self, 'event_modifiers', []) or []) if (m or {}).get('type') == 'reduce_cost')
 
+    def _town_matches_region_alias(self, town, region):
+        if not region:
+            return True
+        return town in set(self._towns_for_region_alias(region))
+
+    def _event_scoped_card_range(self, player, card_type, target_region=None):
+        best = None
+        for modifier in (getattr(self, 'event_modifiers', []) or []):
+            if (modifier or {}).get('type') != 'scoped_card_range':
+                continue
+            faction = modifier.get('player_faction')
+            if faction and getattr(player, 'faction_id', None) != faction:
+                continue
+            allowed_types = set(modifier.get('card_types') or [])
+            if allowed_types and card_type not in allowed_types:
+                continue
+            mod_region = modifier.get('target_region')
+            if target_region and mod_region and target_region != mod_region:
+                continue
+            rng = int(modifier.get('range', 1) or 1)
+            best = rng if best is None else max(best, rng)
+        return best
+
+    def _event_card_range_context(self, player, card):
+        card_type = getattr(card, 'card_type', None)
+        target_region = None
+        scoped_range = self._event_scoped_card_range(player, card_type)
+        if scoped_range is not None:
+            for modifier in (getattr(self, 'event_modifiers', []) or []):
+                if (modifier or {}).get('type') == 'scoped_card_range' and card_type in set(modifier.get('card_types') or []):
+                    faction = modifier.get('player_faction')
+                    if not faction or getattr(player, 'faction_id', None) == faction:
+                        target_region = modifier.get('target_region')
+                        break
+        return {'range_limit': scoped_range or 1, 'target_region': target_region}
+
     def _gain_event_card(self, player, card_name, count=1):
         gained = 0
         for _ in range(int(count or 1)):
@@ -459,7 +496,7 @@ class Game:
             self._gain_event_card(player, '內鬥', count)
         elif t == 'move':
             player.moves_left += count
-        elif t in {'reduce_cost', 'restrict_build', 'ignore_distance'}:
+        elif t in {'reduce_cost', 'restrict_build', 'ignore_distance', 'scoped_card_range'}:
             modifier = dict(effect)
             modifier['event_id'] = (self.current_event or {}).get('id')
             self.event_modifiers.append(modifier)
@@ -744,21 +781,25 @@ class Game:
                     frontier.append((nxt, dist + 1))
         return seen
 
-    def _player_has_org_within_steps_of_player(self, source_player, target_player, max_steps=1):
+    def _player_has_org_within_steps_of_player(self, source_player, target_player, max_steps=1, target_region=None):
         source_towns = [town for town, count in (getattr(source_player, 'organizations', {}) or {}).items() if count > 0]
-        target_towns = {town for town, count in (getattr(target_player, 'organizations', {}) or {}).items() if count > 0}
+        target_towns = {
+            town
+            for town, count in (getattr(target_player, 'organizations', {}) or {}).items()
+            if count > 0 and self._town_matches_region_alias(town, target_region)
+        }
         if not source_towns or not target_towns:
             return False
         reachable = self._towns_within_steps(source_towns, max_steps=max_steps)
         return bool(reachable & target_towns)
 
-    def _find_target_town_within_steps_of_player(self, source_player, target_player, max_steps=1):
+    def _find_target_town_within_steps_of_player(self, source_player, target_player, max_steps=1, target_region=None):
         source_towns = [town for town, count in (getattr(source_player, 'organizations', {}) or {}).items() if count > 0]
         if not source_towns:
             return None
         reachable = self._towns_within_steps(source_towns, max_steps=max_steps)
         for town, count in (getattr(target_player, 'organizations', {}) or {}).items():
-            if count > 0 and town in reachable:
+            if count > 0 and town in reachable and self._town_matches_region_alias(town, target_region):
                 return town
         return None
 
@@ -1533,7 +1574,7 @@ class Game:
             return [target] if target is not None and target is not player else []
         return [other for other in self.players if other is not player]
 
-    def _interactive_support_dissolve_targets(self, player, require_self_sacrifice=False, max_steps=1, target_players=None):
+    def _interactive_support_dissolve_targets(self, player, require_self_sacrifice=False, max_steps=1, target_players=None, target_region=None):
         targets = []
         opponents = list(target_players) if target_players is not None else [other for other in self.players if other is not player]
         source_towns = [town for town, count in (player.organizations or {}).items() if count > 0]
@@ -1542,7 +1583,7 @@ class Game:
             if other is None or other is player:
                 continue
             for town, count in (other.organizations or {}).items():
-                if count <= 0 or town not in reachable:
+                if count <= 0 or town not in reachable or not self._town_matches_region_alias(town, target_region):
                     continue
                 targets.append({
                     'id': f'{getattr(other, "id", other.name)}::{town}',
@@ -1553,7 +1594,7 @@ class Game:
                 })
         return targets
 
-    def _interactive_support_dissolve_targets_near_town(self, player, origin_town, max_steps=1, target_players=None):
+    def _interactive_support_dissolve_targets_near_town(self, player, origin_town, max_steps=1, target_players=None, target_region=None):
         reachable = self._towns_within_steps([origin_town], max_steps=max_steps)
         targets = []
         opponents = list(target_players) if target_players is not None else [other for other in self.players if other is not player]
@@ -1561,7 +1602,7 @@ class Game:
             if other is None or other is player:
                 continue
             for town, count in (other.organizations or {}).items():
-                if count <= 0 or town not in reachable:
+                if count <= 0 or town not in reachable or not self._town_matches_region_alias(town, target_region):
                     continue
                 targets.append({
                     'id': f'{getattr(other, "id", other.name)}::{town}',
@@ -1588,7 +1629,7 @@ class Game:
             })
         return targets
 
-    def _interactive_support_sacrifice_towns(self, player, max_steps=1, target_players=None):
+    def _interactive_support_sacrifice_towns(self, player, max_steps=1, target_players=None, target_region=None):
         towns = []
         for town, count in (player.organizations or {}).items():
             if count <= 0:
@@ -1598,6 +1639,7 @@ class Game:
                 town,
                 max_steps=max_steps,
                 target_players=target_players,
+                target_region=target_region,
             )
             if not targets:
                 continue
@@ -1608,13 +1650,13 @@ class Game:
             })
         return towns
 
-    def _start_card_dissolve_interaction(self, player, card_name, requires_self_sacrifice=False, range_limit=1, target_player_id=None):
+    def _start_card_dissolve_interaction(self, player, card_name, requires_self_sacrifice=False, range_limit=1, target_player_id=None, target_region=None):
         target_players = self._target_players_for_interaction(player, target_player_id)
         effect_type = 'interactive_dissolve_self_and_enemy' if requires_self_sacrifice else 'interactive_dissolve_many_near'
         base_context = {
             'card_name': card_name,
             'effect_type': effect_type,
-            'effect_payload': {'range': range_limit},
+            'effect_payload': {'range': range_limit, 'target_region': target_region},
             'target_player_id': target_player_id,
         }
         if requires_self_sacrifice:
@@ -1622,6 +1664,7 @@ class Game:
                 player,
                 max_steps=range_limit,
                 target_players=target_players,
+                target_region=target_region,
             )
             if not towns:
                 return None
@@ -1640,6 +1683,7 @@ class Game:
             require_self_sacrifice=False,
             max_steps=range_limit,
             target_players=target_players,
+            target_region=target_region,
         )
         if not targets:
             return None
@@ -2986,17 +3030,19 @@ class Game:
             target = next((p for p in self.players if getattr(p, "id", None) == target_player_id), None) if target_player_id is not None else None
             if target is None or target == player:
                 return {"error": "武裝卡必須指定其他玩家"}
-            if not self._player_has_org_within_steps_of_player(player, target, max_steps=1):
+            range_context = self._event_card_range_context(player, pending_card)
+            if not self._player_has_org_within_steps_of_player(player, target, max_steps=range_context['range_limit'], target_region=range_context['target_region']):
                 return {"error": "Target player has no organization within range"}
         if mode == "action" and pending_card_name in {"派遣間諜", "內應間諜"} and target_player_id is not None:
             target = next((p for p in self.players if getattr(p, "id", None) == target_player_id), None)
             if target is None or target == player:
                 return {"error": "間諜卡必須指定其他玩家"}
             target_players = [target]
+            range_context = self._event_card_range_context(player, pending_card)
             if pending_card_name == "派遣間諜":
-                valid = bool(self._interactive_support_sacrifice_towns(player, max_steps=1, target_players=target_players))
+                valid = bool(self._interactive_support_sacrifice_towns(player, max_steps=range_context['range_limit'], target_players=target_players, target_region=range_context['target_region']))
             else:
-                valid = bool(self._interactive_support_dissolve_targets(player, max_steps=1, target_players=target_players))
+                valid = bool(self._interactive_support_dissolve_targets(player, max_steps=range_context['range_limit'], target_players=target_players, target_region=range_context['target_region']))
             if not valid:
                 return {"error": "No target organization within range"}
 
@@ -3095,8 +3141,9 @@ class Game:
                         player,
                         card_name,
                         requires_self_sacrifice=(card_name == "派遣間諜"),
-                        range_limit=1,
+                        range_limit=self._event_card_range_context(player, played_card)['range_limit'],
                         target_player_id=target_player_id,
+                        target_region=self._event_card_range_context(player, played_card)['target_region'],
                     )
                     if spy_result and spy_result.get('pending_choice'):
                         if not action_context.get('removed_current_card'):
