@@ -1,0 +1,33 @@
+{
+  "status": "passed",
+  "date": "2026-05-24",
+  "event": "一帶一路 天方",
+  "proof_type": "formal_browser_ui_screenshot",
+  "screenshot": "docs/records/event-cards/BELT_ROAD_MIDDLE_EAST_MAP_BUILD_UI_2026_05_24.png",
+  "setup_endpoint": "POST /test/setup-event-card-proof {\"event_name\":\"一帶一路 天方\"}",
+  "game_id": "518e63d0-9525-4d78-b4da-f6234c0554fa",
+  "observed_state": {
+    "turn_phase": "event",
+    "current_event": {
+      "name": "一帶一路 天方",
+      "type": "auto",
+      "status": "auto"
+    },
+    "pending_choice": {
+      "choice_key": "event_build_organization",
+      "player": "red",
+      "region": "middle_east",
+      "free": true,
+      "ignore_distance": true,
+      "sample_towns": [
+        "吉爾吉特",
+        "喀布爾",
+        "拉瓦爾品第",
+        "米蘭沙阿",
+        "費札巴德",
+        "霍斯特"
+      ]
+    }
+  },
+  "browser_vision_summary": "Strategic Map tab/sidebar visible; active event panel shows 一帶一路 天方 auto effect applied; map displays orange-highlight selectable towns in 天方/Middle East region for event build organization."
+}

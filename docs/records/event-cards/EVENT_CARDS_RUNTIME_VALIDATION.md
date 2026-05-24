@@ -1,6 +1,6 @@
 # Event Cards Runtime Validation
 
-Status: passed (23 passed)
+Status: passed (26 passed)
 
 - test_idle_noop: passed — {'event': '歲月靜好', 'status': 'idle', 'phase_after_second_advance': <TurnPhase.ACTION: 'action'>}
 - test_hong_kong_success_static_supply: passed — {'event': '香港抗暴之戰', 'progress': {'count': 1, 'required': 1, 'succeeded': True, 'settled': True, 'status': 'success'}, 'discard': ['宣傳家', '資助者'], 'initial_static_card_count': 0, 'static_supply': 0}
@@ -20,6 +20,9 @@ Status: passed (23 passed)
 - test_shanghai_cooperation_auto_modifier: passed — {'event': '上海合作組織', 'modifiers': [{'type': 'scoped_card_range', 'duration': 1, 'player_faction': 'red_army', 'card_types': ['armed', 'spy'], 'target_region': 'outer_manchuria', 'range': 5, 'event_id': 'shanghai_cooperation_org'}], 'status': 'auto'}
 - test_shanghai_cooperation_armed_reaches_north_org_at_five_steps_only: passed — {'event': '上海合作組織', 'allowed_target': '海參崴', 'blocked_target': '臺北', 'non_red_blocked': True, 'choice_key': 'armed_target_discard'}
 - test_shanghai_cooperation_spy_targets_north_org_at_five_steps: passed — {'event': '上海合作組織', 'choice_key': 'card_dissolve_interaction', 'targets': [{'id': 'viewer::海參崴', 'label': 'viewer｜海參崴', 'player_id': 'viewer', 'town': '海參崴', 'requires_self_sacrifice': False}]}
+- test_belt_road_structured_matches_raw_rule: passed — {'events': {'一帶一路 南洋': {'type': 'build_organization_in_region', 'count': 1, 'player_faction': 'red_army', 'region': 'southeast_asia', 'free': True, 'ignore_distance': True}, '一帶一路 天方': {'type': 'build_organization_in_region', 'count': 1, 'player_faction': 'red_army', 'region': 'middle_east', 'free': True, 'ignore_distance': True}}}
+- test_belt_road_southeast_auto_builds_red_org_in_region: passed — {'event': '一帶一路 南洋', 'choice_key': 'event_build_organization', 'region': 'southeast_asia', 'sample_towns': ['仰光', '佬沃', '吉隆坡', '新加坡', '曼谷', '老街', '芒賽', '賀猛'], 'built': '新加坡'}
+- test_belt_road_middle_east_auto_builds_red_org_in_region: passed — {'event': '一帶一路 天方', 'choice_key': 'event_build_organization', 'region': 'middle_east', 'sample_towns': ['吉爾吉特', '喀布爾', '拉瓦爾品第', '米蘭沙阿', '費札巴德', '霍斯特'], 'built': '喀布爾'}
 - test_event_deck_uses_declared_counts_without_structured_duplicate_overcount: passed — {'全國人大召開': 2, '重大災難': 2, 'total': 27}
 - test_trade_war_structured_matches_raw_rule: passed — {'event': '貿易戰加劇', 'trigger': {'type': 'buy_card', 'count': 1, 'min_cost': 4, 'card_names': ['英美奧援']}, 'success': {'type': 'topdeck_from_discard', 'count': 1}}
 - test_event_modifiers_are_consumed_by_runtime_rules: passed — {'reduce_cost_buy': ['資助者'], 'restrict_build_error': 'Current event restricts building organizations', 'ignore_distance_move': {'success': True}}

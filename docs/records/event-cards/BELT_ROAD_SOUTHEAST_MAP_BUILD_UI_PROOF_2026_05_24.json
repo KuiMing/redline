@@ -1,0 +1,38 @@
+{
+  "status": "passed",
+  "date": "2026-05-24",
+  "event": "一帶一路 南洋",
+  "proof_type": "formal_browser_ui_screenshot",
+  "screenshot": "docs/records/event-cards/BELT_ROAD_SOUTHEAST_MAP_BUILD_UI_2026_05_24.png",
+  "setup_endpoint": "POST /test/setup-event-card-proof {\"event_name\":\"一帶一路 南洋\"}",
+  "game_id": "4ed8fa13-3e49-4e5c-b4de-5988a13136ed",
+  "observed_state": {
+    "turn_phase": "event",
+    "current_event": {
+      "name": "一帶一路 南洋",
+      "type": "auto",
+      "status": "auto"
+    },
+    "pending_choice": {
+      "choice_key": "event_build_organization",
+      "player": "red",
+      "region": "southeast_asia",
+      "free": true,
+      "ignore_distance": true,
+      "sample_towns": [
+        "仰光",
+        "佬沃",
+        "吉隆坡",
+        "新加坡",
+        "曼谷",
+        "老街",
+        "芒賽",
+        "賀猛",
+        "邦康",
+        "雅加達",
+        "馬尼拉"
+      ]
+    }
+  },
+  "browser_vision_summary": "Strategic Map tab/sidebar visible; active event panel shows 一帶一路 南洋 auto effect applied; map displays orange-highlight selectable towns in 南洋/Southeast Asia for event build organization."
+}

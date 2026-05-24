@@ -26,32 +26,32 @@
 
 - [todo] 修正 structured event data 與 raw card text 不一致的事件。
   - 2026-05-24 整理：目前應分三層追蹤，不要把「MVP 可 playtest」等同「所有 raw event/era 已完整實作」。
-    1. `raw 13 張事件卡`：目前 runtime deck 的主要對齊目標；其中 `一帶一路 南洋`、`一帶一路 天方` 仍明確不一致。
+    1. `raw 13 張事件卡`：目前 runtime deck 的主要對齊目標；`一帶一路 南洋`、`一帶一路 天方` 已於 2026-05-24 完成 raw/structured 對齊，下一步是逐張審核 6 張未重審事件卡。
     2. `structured MVP adaptation`：`公知世代的終結`、`臺灣綏靖派反對介入` 目前在 structured data 裡是 event-like MVP adaptation，但 raw 檔屬於時代關卡，需 canonical 決策後再決定是否保留此 adaptation 或改成 era-stage mechanics。
     3. `raw 8 張時代關卡`：尚未完整納入 runtime；若要宣稱完整 event/era，需另開 P0 設計 runtime primitive、持續效果與 UI proof。
   - raw 13 張事件卡盤點：
-    - 已修正並有針對性 validator/proof：`貿易戰加劇`、`紅軍權貴出逃`、`烏魯木齊七五事件`、`上海合作組織`。
+    - 已修正並有針對性 validator/proof：`貿易戰加劇`、`紅軍權貴出逃`、`烏魯木齊七五事件`、`上海合作組織`、`一帶一路 南洋`、`一帶一路 天方`。
     - MVP structured 可 playtest，但尚未逐張重新做 raw 對齊審核：`全國人大召開`、`香港抗暴之戰`、`重大災難`、`藏印邊境軍事對峙`、`東突厥集中營`、`北京政爭`。
-    - 明確待修 raw/structured mismatch：`一帶一路 南洋`、`一帶一路 天方`。
+    - 明確待修 raw/structured mismatch：目前無；`一帶一路 南洋`、`一帶一路 天方` 已於 2026-05-24 修正。
   - raw 8 張時代關卡盤點：
     - 尚未 structured/runtime：`[香港]香港人被自殺`、`[蒙古]莫日根事件爆發`、`[藏國]藏國騷亂`、`[哈薩克]伊塔事件`、`[維吾爾]莎車大屠殺`、`[滿洲]滿洲地方派系凝聚`。
     - 目前僅 event-like MVP adaptation、需重新決策：`[反賊]公知世代的終結`、`[臺灣]綏靖派反對介入對岸`。
-  - 建議下一步順序：先完成 raw 13 張事件卡 deck 對齊（`一帶一路 南洋` → `一帶一路 天方` → 逐張審核 6 張未重審事件卡），再處理 8 張時代關卡 canonical/runtime/UI proof。
+  - 建議下一步順序：繼續 raw 13 張事件卡 deck 對齊（逐張審核 6 張未重審事件卡），再處理 8 張時代關卡 canonical/runtime/UI proof。
   - 2026-05-23：已修正 `貿易戰加劇`：structured trigger 改為購買 `英美奧援` 或總費用 4 點以上卡牌，success 改為從棄牌堆選 1 張置頂；新增 runtime primitive `buy_card` / `topdeck_from_discard` 與 validator proof。
   - 2026-05-24：已修正 `紅軍權貴出逃`：structured success 改為 `trash_from_hand_or_discard`，成功後可從手牌或棄牌堆選 1 張移除；新增 runtime validator 與正式 browser UI proof。
   - 2026-05-24：已修正 `烏魯木齊七五事件`：structured trigger 改為回合結束時牆內有己方組織，success 改為在己方組織 1 格內免費建 1 個；新增 end-turn state / nearby build runtime validator 與正式 browser UI proof。
   - 2026-05-24：已修正 `上海合作組織`：structured effect 改為 `scoped_card_range`，限定紅軍 `armed` / `spy` 卡對北國城鎮組織距離為 5 格；runtime validator 已覆蓋 structured 對齊、自動 modifier、武裝卡 5 格北國可用且非北國不放行、間諜 target choice 僅列北國目標。
-  - 優先比對並修正：`一帶一路 南洋`、`一帶一路 天方`。
+  - 2026-05-24：已修正 `一帶一路 南洋` / `一帶一路 天方`：structured effect 改為 `build_organization_in_region`，限定紅軍在 `southeast_asia` / `middle_east` 區域免費無視距離建立 1 個組織；新增 runtime validator 與正式 Strategic Map UI proof。
   - 已知差異：
     - `貿易戰加劇` raw 是購買英美奧援或 4 點以上卡牌，成功從棄牌堆選 1 張置頂；2026-05-23 已修正並補 runtime validator。
     - `紅軍權貴出逃` raw 成功是從手牌或棄牌移除 1 張；2026-05-24 已修正為 `trash_from_hand_or_discard` 並補 runtime/UI proof。
     - `烏魯木齊七五事件` raw trigger 是回合結束時牆內有組織，成功是在己方組織 1 格內免費建 1 個；2026-05-24 已修正為 `end_turn_state` + `build_organization_near_own` 並補 runtime/UI proof。
     - `上海合作組織` raw 是紅軍對北國城鎮組織使用武裝/間諜距離增加為 5 格；2026-05-24 已修正為 scoped `armed`/`spy` range modifier 並補 runtime validator。
-    - `一帶一路 南洋` / `一帶一路 天方` raw 是紅軍免費在指定區域無視距離建立 1 個組織；目前是 generic `ignore_distance`。
+    - `一帶一路 南洋` / `一帶一路 天方` raw 是紅軍免費在指定區域無視距離建立 1 個組織；2026-05-24 已由 generic `ignore_distance` 修正為區域限定免費建組織。
   - 驗收：更新 `data/events_structured.v1.1.json` 與 effect vocabulary；新增/更新 validator 證明 raw text 與 structured effect 對齊。
 
 - [todo] 補齊缺少的 trigger/effect runtime primitives。
-  - 可能需要新增：購買事件 trigger（指定卡類/費用門檻）、回合結束狀態 trigger、從棄牌堆選牌置頂、從手牌/棄牌移除、區域限定免費建組織、卡種/區域/距離限定 modifier、持續回合 modifier。
+  - 可能需要新增：購買事件 trigger（指定卡類/費用門檻）、回合結束狀態 trigger、從棄牌堆選牌置頂、從手牌/棄牌移除、卡種/區域/距離限定 modifier、持續回合 modifier。
   - 驗收：`scripts/validate_event_cards_runtime.py` 擴充到逐張事件或逐 effect primitive 覆蓋；所有新增效果都有 deterministic runtime assertions。
 
 - [todo] 補事件卡玩家選擇 UI / map proof。
@@ -62,6 +62,7 @@
   - 2026-05-24：已讓 `event_build_organization` 的 `town_choice` 重用既有 pending choice / map highlight 架構，在 modal 提示可切到戰略地圖查看城鎮位置，並於地圖用橘色外框標出 `天津` / `石家莊` 可建組織城鎮；proof records：`docs/records/event-cards/URUMQI_BUILD_CHOICE_MAP_HIGHLIGHT_UI_PROOF_2026_05_24.{md,json}`。
   - 2026-05-24：已補乾淨版烏魯木齊地圖 proof：proof endpoint 改用非立場試探陣營，且 pending choice 期間會隱藏陣營能力 overlay，避免 `立場試探` 混入正式 UI 證據；另補一張 active `戰略地圖` tab 且地圖區域可見的正式 UI 截圖；proof records：`docs/records/event-cards/URUMQI_BUILD_CHOICE_MAP_HIGHLIGHT_UI_PROOF_CLEAN_2026_05_24.{md,json}`。
   - 2026-05-24：已把 `event_build_organization` town choice 改為沿用正式 `戰略地圖` 側欄建組織操作；pending choice 自動切到地圖並用既有 map highlight 標示可建城鎮，玩家選取城鎮後按「在目前城鎮建立組織（事件卡）」完成 resolve，不再使用 choice modal 兩段式確認；正式 browser UI 截圖與 state proof 在 `docs/records/event-cards/URUMQI_BUILD_DIRECT_MAP_SIDEBAR_UI_2026_05_24.png`、`URUMQI_BUILD_DIRECT_MAP_SIDEBAR_UI_PROOF_2026_05_24.{md,json}`。
+  - 2026-05-24：已補 `一帶一路 南洋` / `一帶一路 天方` 區域限定免費建組織正式 Strategic Map UI proof；確認兩張事件都重用 `event_build_organization` pending choice / map highlight，且 pending choice 分別帶 `region=southeast_asia` / `region=middle_east`、`free=true`、`ignore_distance=true`。proof records：`docs/records/event-cards/BELT_ROAD_SOUTHEAST_MAP_BUILD_UI_PROOF_2026_05_24.{md,json}`、`BELT_ROAD_MIDDLE_EAST_MAP_BUILD_UI_PROOF_2026_05_24.{md,json}`。
   - 原則：只重用既有 pending choice modal / target choice map highlight 架構；不要重做情報網 highlight。
   - 驗收：每一種互動型 effect 至少有一個正式 browser UI proof，截圖與紀錄放 `docs/records/event-cards/`。
 

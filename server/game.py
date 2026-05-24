@@ -268,6 +268,7 @@ class Game:
             'ignore_distance': '本回合無視距離限制',
             'scoped_card_range': f'本回合{effect.get("target_region", "指定區域")}目標距離增加為 {effect.get("range", 1)} 格',
             'build_organization': f'建立 {count} 個組織',
+            'build_organization_in_region': f'在{effect.get("region", "指定區域")}免費建立 {count} 個組織',
             'build_organization_near_own': f'在己方組織 {effect.get("max_steps", 1)} 格內建立 {count} 個組織',
             'topdeck_from_discard': f'從棄牌堆選 {count} 張置於牌庫頂',
             'trash_from_hand_or_discard': f'從手牌或棄牌堆移除 {count} 張牌',
@@ -456,10 +457,25 @@ class Game:
     def _red_player(self):
         return next((p for p in self.players if p.faction_id == 'red_army'), None)
 
+    def _event_effect_player(self, default_player, effect):
+        faction = (effect or {}).get('player_faction')
+        if not faction:
+            return default_player
+        return next((p for p in self.players if getattr(p, 'faction_id', None) == faction), default_player)
+
+    def _event_build_towns_in_region(self, player, region):
+        region_towns = set(self._towns_for_region_alias(region))
+        return [
+            {'town': town, 'region': region}
+            for town in sorted(region_towns)
+            if self.can_develop_in_town(player, town)
+        ]
+
     def _apply_event_effect(self, effect, player, outcome='success'):
         effect = effect or {'type': 'none'}
         t = effect.get('type')
         count = int(effect.get('count', 1) or 1)
+        player = self._event_effect_player(player, effect)
         if t in (None, 'none'):
             self.log(f"Event {outcome}: no effect")
             return {'success': True, 'effect': t or 'none'}
@@ -505,6 +521,23 @@ class Game:
             if towns:
                 self._set_pending_town_choice(player, 'event_build_organization', towns, f"{self.current_event.get('name')}：選擇要建立組織的城鎮。", source_name=self.current_event.get('name'))
                 return {'success': True, 'pending_choice': True}
+        elif t == 'build_organization_in_region':
+            region = effect.get('region')
+            towns = self._event_build_towns_in_region(player, region)
+            if towns:
+                self._set_pending_town_choice(
+                    player,
+                    'event_build_organization',
+                    towns,
+                    f"{self.current_event.get('name')}：在指定區域免費建立 {min(count, len(towns))} 個組織。",
+                    source_name=self.current_event.get('name'),
+                    count=min(count, len(towns)),
+                    region=region,
+                    free=bool(effect.get('free', True)),
+                    ignore_distance=bool(effect.get('ignore_distance', True)),
+                )
+                return {'success': True, 'pending_choice': True}
+            self.log(f"Event {outcome}: {player.name} has no valid town in {region} to build")
         elif t == 'build_organization_near_own':
             max_steps = int(effect.get('max_steps', 1) or 1)
             towns = self._event_build_towns_near_own(player, max_steps=max_steps)
@@ -3703,6 +3736,9 @@ class Game:
                 'acting_player_id': self.pending_choice.get('acting_player_id'),
                 'acting_player_name': self.pending_choice.get('acting_player_name'),
                 'played_card_name': self.pending_choice.get('played_card_name'),
+                'region': self.pending_choice.get('region'),
+                'free': self.pending_choice.get('free'),
+                'ignore_distance': self.pending_choice.get('ignore_distance'),
                 'cards': [
                     dict(card) if isinstance(card, dict) and 'name' in card and 'card' not in card else {
                         'name': getattr(card.get('card'), 'name', str(card.get('card'))),

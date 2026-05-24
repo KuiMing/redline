@@ -454,6 +454,77 @@ def test_shanghai_cooperation_spy_targets_north_org_at_five_steps():
     return {"event": "上海合作組織", "choice_key": choice["choice_key"], "targets": choice["targets"]}
 
 
+def test_belt_road_structured_matches_raw_rule():
+    game = make_game("一帶一路 南洋")
+    southeast = game._event_by_name("一帶一路 南洋")
+    middle_east = game._event_by_name("一帶一路 天方")
+    assert southeast["effect"] == {
+        "type": "build_organization_in_region",
+        "count": 1,
+        "player_faction": "red_army",
+        "region": "southeast_asia",
+        "free": True,
+        "ignore_distance": True,
+    }
+    assert middle_east["effect"] == {
+        "type": "build_organization_in_region",
+        "count": 1,
+        "player_faction": "red_army",
+        "region": "middle_east",
+        "free": True,
+        "ignore_distance": True,
+    }
+    return {"events": {southeast["name"]: southeast["effect"], middle_east["name"]: middle_east["effect"]}}
+
+
+def test_belt_road_southeast_auto_builds_red_org_in_region():
+    game = make_game("一帶一路 南洋")
+    viewer = game.players[0]
+    red = game.players[1]
+    game.current_player_index = 0  # 即使抽到事件的是非紅軍，也應由紅軍執行此自動效果。
+    viewer.organizations = {"臺北": 1}
+    red.organizations = {"北京": 1}
+    red.hand = [Card("紅軍保留手牌", "command", {})]
+    assert_ok(game.advance_turn_phase(), "draw belt road southeast event")
+    assert game.current_event["name"] == "一帶一路 南洋"
+    assert game.event_progress["status"] == "auto"
+    choice = game.state()["pending_choice"]
+    assert choice["choice_key"] == "event_build_organization"
+    assert choice["player_id"] == red.id
+    assert choice["region"] == "southeast_asia"
+    towns = [item["town"] for item in choice["towns"]]
+    assert "新加坡" in towns, towns
+    assert "喀布爾" not in towns, towns
+    assert "河內" not in towns, towns  # 南洋但非紅軍可發展城鎮，不應放行。
+    idx = towns.index("新加坡")
+    resolve = assert_ok(game.resolve_pending_choice(red.id, idx), "build free southeast org")
+    assert resolve["town"] == "新加坡"
+    assert red.organizations.get("新加坡") == 1
+    assert names(red.hand) == ["紅軍保留手牌"]
+    return {"event": "一帶一路 南洋", "choice_key": choice["choice_key"], "region": choice["region"], "sample_towns": towns[:8], "built": resolve["town"]}
+
+
+def test_belt_road_middle_east_auto_builds_red_org_in_region():
+    game = make_game("一帶一路 天方")
+    red = game.players[1]
+    game.current_player_index = 1
+    red.organizations = {"北京": 1}
+    assert_ok(game.advance_turn_phase(), "draw belt road middle east event")
+    assert game.current_event["name"] == "一帶一路 天方"
+    choice = game.state()["pending_choice"]
+    assert choice["choice_key"] == "event_build_organization"
+    assert choice["player_id"] == red.id
+    assert choice["region"] == "middle_east"
+    towns = [item["town"] for item in choice["towns"]]
+    assert "喀布爾" in towns, towns
+    assert "新加坡" not in towns, towns
+    assert "伊斯坦堡" not in towns, towns  # 天方但非紅軍可發展城鎮，不應放行。
+    idx = towns.index("喀布爾")
+    resolve = assert_ok(game.resolve_pending_choice(red.id, idx), "build free middle east org")
+    assert red.organizations.get("喀布爾") == 1
+    return {"event": "一帶一路 天方", "choice_key": choice["choice_key"], "region": choice["region"], "sample_towns": towns[:8], "built": resolve["town"]}
+
+
 def test_event_deck_reshuffle():
     game = make_game("歲月靜好")
     event = game.event_deck.draw_pile.pop()
@@ -485,6 +556,9 @@ def main():
         test_shanghai_cooperation_auto_modifier,
         test_shanghai_cooperation_armed_reaches_north_org_at_five_steps_only,
         test_shanghai_cooperation_spy_targets_north_org_at_five_steps,
+        test_belt_road_structured_matches_raw_rule,
+        test_belt_road_southeast_auto_builds_red_org_in_region,
+        test_belt_road_middle_east_auto_builds_red_org_in_region,
         test_event_deck_uses_declared_counts_without_structured_duplicate_overcount,
         test_trade_war_structured_matches_raw_rule,
         test_event_modifiers_are_consumed_by_runtime_rules,

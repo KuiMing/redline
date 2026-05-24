@@ -52,10 +52,10 @@
       "effect": {"type": "scoped_card_range", "duration": 1, "player_faction": "red_army", "card_types": ["armed", "spy"], "target_region": "outer_manchuria", "range": 5}},
 
     {"id": "belt_road_southeast", "name": "一帶一路 南洋", "type": "auto",
-      "effect": {"type": "ignore_distance", "duration": 1}},
+      "effect": {"type": "build_organization_in_region", "count": 1, "player_faction": "red_army", "region": "southeast_asia", "free": true, "ignore_distance": true}},
 
     {"id": "belt_road_middle_east", "name": "一帶一路 天方", "type": "auto",
-      "effect": {"type": "ignore_distance", "duration": 1}},
+      "effect": {"type": "build_organization_in_region", "count": 1, "player_faction": "red_army", "region": "middle_east", "free": true, "ignore_distance": true}},
 
     {"id": "end_of_public_intellectuals", "name": "公知世代的終結", "type": "mission",
       "trigger": {"type": "build_organization", "count": 1, "scope": "牆內"},
