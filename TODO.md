@@ -25,6 +25,18 @@
   - 已知缺口：8 張時代關卡中有 6 張完全未 structured；`[反賊]公知世代的終結`、`[臺灣]綏靖派反對介入對岸` 目前只是 event-like MVP adaptation，仍需 canonical 決策。
 
 - [todo] 修正 structured event data 與 raw card text 不一致的事件。
+  - 2026-05-24 整理：目前應分三層追蹤，不要把「MVP 可 playtest」等同「所有 raw event/era 已完整實作」。
+    1. `raw 13 張事件卡`：目前 runtime deck 的主要對齊目標；其中 `一帶一路 南洋`、`一帶一路 天方` 仍明確不一致。
+    2. `structured MVP adaptation`：`公知世代的終結`、`臺灣綏靖派反對介入` 目前在 structured data 裡是 event-like MVP adaptation，但 raw 檔屬於時代關卡，需 canonical 決策後再決定是否保留此 adaptation 或改成 era-stage mechanics。
+    3. `raw 8 張時代關卡`：尚未完整納入 runtime；若要宣稱完整 event/era，需另開 P0 設計 runtime primitive、持續效果與 UI proof。
+  - raw 13 張事件卡盤點：
+    - 已修正並有針對性 validator/proof：`貿易戰加劇`、`紅軍權貴出逃`、`烏魯木齊七五事件`、`上海合作組織`。
+    - MVP structured 可 playtest，但尚未逐張重新做 raw 對齊審核：`全國人大召開`、`香港抗暴之戰`、`重大災難`、`藏印邊境軍事對峙`、`東突厥集中營`、`北京政爭`。
+    - 明確待修 raw/structured mismatch：`一帶一路 南洋`、`一帶一路 天方`。
+  - raw 8 張時代關卡盤點：
+    - 尚未 structured/runtime：`[香港]香港人被自殺`、`[蒙古]莫日根事件爆發`、`[藏國]藏國騷亂`、`[哈薩克]伊塔事件`、`[維吾爾]莎車大屠殺`、`[滿洲]滿洲地方派系凝聚`。
+    - 目前僅 event-like MVP adaptation、需重新決策：`[反賊]公知世代的終結`、`[臺灣]綏靖派反對介入對岸`。
+  - 建議下一步順序：先完成 raw 13 張事件卡 deck 對齊（`一帶一路 南洋` → `一帶一路 天方` → 逐張審核 6 張未重審事件卡），再處理 8 張時代關卡 canonical/runtime/UI proof。
   - 2026-05-23：已修正 `貿易戰加劇`：structured trigger 改為購買 `英美奧援` 或總費用 4 點以上卡牌，success 改為從棄牌堆選 1 張置頂；新增 runtime primitive `buy_card` / `topdeck_from_discard` 與 validator proof。
   - 2026-05-24：已修正 `紅軍權貴出逃`：structured success 改為 `trash_from_hand_or_discard`，成功後可從手牌或棄牌堆選 1 張移除；新增 runtime validator 與正式 browser UI proof。
   - 2026-05-24：已修正 `烏魯木齊七五事件`：structured trigger 改為回合結束時牆內有己方組織，success 改為在己方組織 1 格內免費建 1 個；新增 end-turn state / nearby build runtime validator 與正式 browser UI proof。
