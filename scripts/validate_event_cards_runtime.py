@@ -121,6 +121,55 @@ def test_draw_trigger_succeeds():
     return {"event": "北京政爭", "progress": game.event_progress, "hand_count": len(player.hand)}
 
 
+
+def test_event_mission_triggers_ignore_red_army_actor():
+    game = make_game("全國人大召開")
+    non_red = game.players[0]
+    red = game.players[1]
+    red.faction_id = "red_army"
+
+    checked_triggers = [
+        "use_faction_ability",
+        "play_card_with_money",
+        "play_card_with_propaganda",
+        "build_organization",
+        "move_organization",
+        "draw",
+    ]
+    for trigger_type in checked_triggers:
+        game.current_event = {
+            "name": "測試事件",
+            "type": "mission",
+            "trigger": {"type": trigger_type, "count": 1},
+            "success": {"type": "none"},
+            "failure": {"type": "none"},
+        }
+        game.event_progress = {"count": 0, "required": 1, "succeeded": False, "settled": False, "status": "active"}
+        game._track_event_progress(trigger_type, player=red)
+        assert game.event_progress["count"] == 0, f"red army {trigger_type} must not satisfy event-card mission conditions"
+        game._track_event_progress(trigger_type, player=non_red)
+        assert game.event_progress["count"] == 1, f"non-red {trigger_type} should satisfy event-card mission conditions"
+
+    game.current_event = {
+        "name": "測試購買事件",
+        "type": "mission",
+        "trigger": {"type": "buy_card", "count": 1, "min_cost": 1},
+        "success": {"type": "none"},
+        "failure": {"type": "none"},
+    }
+    bought = Card("測試牌", "command", {})
+    game.event_progress = {"count": 0, "required": 1, "succeeded": False, "settled": False, "status": "active"}
+    game._track_event_purchase(bought, original_cost={"money": 1, "propaganda": 0}, player=red)
+    assert game.event_progress["count"] == 0, "red army purchases must not satisfy event-card mission conditions"
+    game._track_event_purchase(bought, original_cost={"money": 1, "propaganda": 0}, player=non_red)
+    assert game.event_progress["count"] == 1, "non-red purchases should satisfy event-card mission conditions"
+
+    return {
+        "red_progress": 0,
+        "non_red_progress": game.event_progress["count"],
+        "checked_triggers": checked_triggers + ["buy_card"],
+    }
+
 def test_remaining_six_event_structured_matches_raw_rules():
     game = make_game("歲月靜好")
     expected = {
@@ -675,6 +724,7 @@ def main():
         test_hong_kong_failure_discard_choice,
         test_major_disaster_success,
         test_draw_trigger_succeeds,
+        test_event_mission_triggers_ignore_red_army_actor,
         test_remaining_six_event_structured_matches_raw_rules,
         test_national_people_congress_faction_ability_success_draws,
         test_national_people_congress_failure_red_dissolves_wall_org_only,

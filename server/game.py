@@ -306,12 +306,19 @@ class Game:
             return town is None or town in set(self._towns_for_region_alias('china'))
         return True
 
-    def _track_event_progress(self, trigger_type, amount=1, town=None):
+    def _event_trigger_actor_allowed(self, player):
+        if player is None:
+            return True
+        return getattr(player, 'faction_id', None) != 'red_army'
+
+    def _track_event_progress(self, trigger_type, amount=1, town=None, player=None):
         event = self.current_event or {}
         if event.get('type') != 'mission' or not self.event_progress or self.event_progress.get('settled'):
             return
         trigger = event.get('trigger') or {}
         if trigger.get('type') != trigger_type:
+            return
+        if not self._event_trigger_actor_allowed(player):
             return
         if not self._event_trigger_matches_scope(trigger, town=town):
             return
@@ -340,14 +347,14 @@ class Game:
                 return True
         return False
 
-    def _track_event_purchase(self, card, original_cost=None):
+    def _track_event_purchase(self, card, original_cost=None, player=None):
         event = self.current_event or {}
         if event.get('type') != 'mission' or not self.event_progress or self.event_progress.get('settled'):
             return {'success': True}
         trigger = event.get('trigger') or {}
         if not self._event_purchase_trigger_matches(trigger, card, original_cost=original_cost):
             return {'success': True}
-        return self._track_event_progress('buy_card') or {'success': True}
+        return self._track_event_progress('buy_card', player=player) or {'success': True}
 
     def _event_state_condition_met(self, trigger, player):
         condition = (trigger or {}).get('condition')
@@ -394,7 +401,7 @@ class Game:
         drawn = player.deck.draw(int(count or 1))
         player.hand.extend(drawn)
         if source != 'refill' and drawn:
-            self._track_event_progress('draw', amount=len(drawn))
+            self._track_event_progress('draw', amount=len(drawn), player=player)
         return drawn
 
     def _event_modifier_active(self, modifier_type):
@@ -2486,7 +2493,7 @@ class Game:
             gained = Card('已移除牌', 'command', {})
             player.deck.discard([gained])
             self.turn_log['faction_action_used'] = True
-            self._track_event_progress('use_faction_ability')
+            self._track_event_progress('use_faction_ability', player=player)
             self.log(f"{player.name} triggered 民主陣線 and gained a removed card proxy")
             return {"success": True}
 
@@ -2496,7 +2503,7 @@ class Game:
             card = player.deck.draw_pile.pop()
             total = self._top_card_cost_total(card)
             self.turn_log['faction_action_used'] = True
-            self._track_event_progress('use_faction_ability')
+            self._track_event_progress('use_faction_ability', player=player)
             destination = 'hand' if total % 2 == 1 else 'discard'
             if destination == 'hand':
                 player.hand.append(card)
@@ -2528,7 +2535,7 @@ class Game:
             total = self._top_card_cost_total(card)
             guessed_odd = guess == 'odd'
             self.turn_log['faction_action_used'] = True
-            self._track_event_progress('use_faction_ability')
+            self._track_event_progress('use_faction_ability', player=player)
             hit = (total % 2 == 1 and guessed_odd) or (total % 2 == 0 and not guessed_odd)
             if action_name == '賭徒耳語':
                 if hit:
@@ -3092,9 +3099,9 @@ class Game:
                 player.resources[key] += value
             purchase_cost = self._card_purchase_cost(played_card)
             if int(purchase_cost.get('money', 0) or 0) > 0:
-                self._track_event_progress('play_card_with_money')
+                self._track_event_progress('play_card_with_money', player=player)
             if int(purchase_cost.get('propaganda', 0) or 0) > 0:
-                self._track_event_progress('play_card_with_propaganda')
+                self._track_event_progress('play_card_with_propaganda', player=player)
             if not self._return_borrowed_card_to_owner_topdeck(played_card):
                 player.deck.discard([played_card])
             self.log(f"{player.name} played {card_name} as resource")
@@ -3135,9 +3142,9 @@ class Game:
             self.turn_log["played_propaganda_card"] = True
         purchase_cost = self._card_purchase_cost(played_card)
         if int(purchase_cost.get('money', 0) or 0) > 0:
-            self._track_event_progress('play_card_with_money')
+            self._track_event_progress('play_card_with_money', player=player)
         if int(purchase_cost.get('propaganda', 0) or 0) > 0:
-            self._track_event_progress('play_card_with_propaganda')
+            self._track_event_progress('play_card_with_propaganda', player=player)
         if self._player_has_india_research_room(player) and self._is_india_flag_card(played_card) and not self.turn_log.get("india_flag_money_triggered"):
             self.turn_log["india_flag_money_triggered"] = True
             player.resources["money"] += 2
@@ -3342,7 +3349,7 @@ class Game:
 
         player.organizations[town] = player.organizations.get(town, 0) + 1
         self.turn_log.setdefault("built_towns", []).append(town)
-        self._track_event_progress('build_organization', town=town)
+        self._track_event_progress('build_organization', town=town, player=player)
         self._apply_guerrilla_on_build(player, town)
         self.log(f"{player.name} built organization in {town}")
         return {"success": True}
@@ -3388,7 +3395,7 @@ class Game:
 
         player.organizations[target_town] = player.organizations.get(target_town, 0) + 1
         self.turn_log.setdefault("built_towns", []).append(target_town)
-        self._track_event_progress('build_organization', town=target_town)
+        self._track_event_progress('build_organization', town=target_town, player=player)
         self._apply_guerrilla_on_build(player, target_town)
         self.log(f"{player.name} built organization in {target_town} from {origin_town}")
         return {"success": True}
@@ -3461,7 +3468,7 @@ class Game:
 
         player.organizations[to_town] = player.organizations.get(to_town, 0) + 1
         player.moves_left -= cost
-        self._track_event_progress('move_organization')
+        self._track_event_progress('move_organization', player=player)
         if origin_owner is player:
             self.log(f"{player.name} moved 1 organization from {from_town} to {to_town} via {mode}")
         else:
@@ -3564,7 +3571,7 @@ class Game:
         else:
             self.purchase_area.pop(index)
         self.log(f"{player.name} bought {card_name}")
-        event_result = self._track_event_purchase(purchased_card, original_cost=cost)
+        event_result = self._track_event_purchase(purchased_card, original_cost=cost, player=player)
         if isinstance(event_result, dict) and event_result.get('pending_choice'):
             return {"success": True, "pending_choice": True}
         return {"success": True}

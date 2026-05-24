@@ -43,6 +43,7 @@
   - 2026-05-24：已修正 `上海合作組織`：structured effect 改為 `scoped_card_range`，限定紅軍 `armed` / `spy` 卡對北國城鎮組織距離為 5 格；runtime validator 已覆蓋 structured 對齊、自動 modifier、武裝卡 5 格北國可用且非北國不放行、間諜 target choice 僅列北國目標。
   - 2026-05-24：已修正 `一帶一路 南洋` / `一帶一路 天方`：structured effect 改為 `build_organization_in_region`，限定紅軍在 `southeast_asia` / `middle_east` 區域免費無視距離建立 1 個組織；新增 runtime validator 與正式 Strategic Map UI proof。
   - 2026-05-24：已完成剩餘 6 張事件卡 raw/structured 逐張對齊審核：`全國人大召開`、`香港抗暴之戰`、`重大災難`、`藏印邊境軍事對峙`、`東突厥集中營`、`北京政爭`；新增 runtime validator 覆蓋全國人大成功/失敗、藏印邊境成功、東突厥成功/失敗，審核紀錄在 `docs/records/event-cards/EVENT_CARD_REMAINING_SIX_RAW_ALIGNMENT_AUDIT_2026_05_24.{md,json}`。
+  - 2026-05-24：已套用規則釐清：事件卡 mission「任務條件」只由非紅軍陣營行動推進；紅軍行動／抽牌／購買／建組織／移動不會完成 mission trigger。自動型紅軍事件（如 `一帶一路`、`上海合作組織`）仍依各自 event effect 處理。
   - 已知差異：
     - `貿易戰加劇` raw 是購買英美奧援或 4 點以上卡牌，成功從棄牌堆選 1 張置頂；2026-05-23 已修正並補 runtime validator。
     - `紅軍權貴出逃` raw 成功是從手牌或棄牌移除 1 張；2026-05-24 已修正為 `trash_from_hand_or_discard` 並補 runtime/UI proof。

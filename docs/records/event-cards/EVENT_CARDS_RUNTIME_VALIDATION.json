@@ -1,6 +1,6 @@
 {
   "status": "passed",
-  "passed": 32,
+  "passed": 33,
   "results": [
     {
       "name": "test_idle_noop",
@@ -73,6 +73,23 @@
           "status": "success"
         },
         "hand_count": 7
+      }
+    },
+    {
+      "name": "test_event_mission_triggers_ignore_red_army_actor",
+      "status": "passed",
+      "detail": {
+        "red_progress": 0,
+        "non_red_progress": 1,
+        "checked_triggers": [
+          "use_faction_ability",
+          "play_card_with_money",
+          "play_card_with_propaganda",
+          "build_organization",
+          "move_organization",
+          "draw",
+          "buy_card"
+        ]
       }
     },
     {
@@ -229,6 +246,8 @@
       "detail": {
         "event": "東突厥集中營",
         "success_discard": [
+          "宣傳家",
+          "宣傳家",
           "宣傳家",
           "宣傳家"
         ],
