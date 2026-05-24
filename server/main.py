@@ -2071,3 +2071,57 @@ def test_setup_event_card_proof(payload: dict):
         "url": f"/?game_id={game_id}&player_id={game.players[0].id}",
         "state": game.state(),
     }
+
+
+@app.post("/test/setup-trade-war-event-proof")
+def test_setup_trade_war_event_proof(payload: dict):
+    players = [(str(uuid.uuid4()), "viewer"), (str(uuid.uuid4()), "red")]
+    game = Game(players, market_mode="all_cards")
+    viewer = game.players[0]
+    red = game.players[1]
+    viewer.faction_id = "liberals"
+    red.faction_id = "red_army"
+    viewer.base = "臺北"
+    red.base = "北京"
+    viewer.organizations = {"臺北": 1}
+    red.organizations = {"北京": 1}
+    viewer.resources = {"money": 4, "propaganda": 0}
+    viewer.hand = [Card("追隨者", "propaganda", {"propaganda": 1})]
+    viewer.deck.draw_pile = [Card("原牌庫頂下方", "command", {})]
+    viewer.deck.discard_pile = [Card("舊棄牌", "command", {})]
+    game.pending_base_choices = []
+    game.game_phase = GamePhase.MAIN
+    game.current_player_index = 0
+    game.turn_phase = TurnPhase.ACTION
+    event = game._event_by_name("貿易戰加劇")
+    game.current_event = event
+    game.event_progress = {
+        "count": 0,
+        "required": int((event or {}).get("trigger", {}).get("count", 1) or 1),
+        "succeeded": False,
+        "settled": False,
+        "status": "active",
+    }
+    game.event_notification = game._event_display_payload()
+    game.event_deck.draw_pile = []
+    game.event_deck.discard_pile = []
+    game.purchase_area = game._static_purchase_cards() + [Card("擴大戰果", "command", {})]
+
+    game_id = str(uuid.uuid4())
+    manager.games[game_id] = game
+    manager.connections[game_id] = manager.connections.get(game_id, {})
+    lobby[game_id] = [(p.id, p.name) for p in game.players]
+    lobby_hosts[game_id] = viewer.id
+    lobby_factions[game_id] = {p.id: p.faction_id for p in game.players}
+    lobby_bases[game_id] = {p.id: p.base for p in game.players if p.base}
+    lobby_ready[game_id] = {p.id: True for p in game.players}
+    return {
+        "success": True,
+        "game_id": game_id,
+        "player_id": viewer.id,
+        "red_player_id": red.id,
+        "event_name": event.get("name") if event else None,
+        "purchase_index": len(game._static_purchase_cards()),
+        "url": f"/?game_id={game_id}&player_id={viewer.id}",
+        "state": game.state(),
+    }

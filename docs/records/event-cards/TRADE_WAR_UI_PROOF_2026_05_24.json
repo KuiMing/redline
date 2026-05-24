@@ -1,0 +1,40 @@
+{
+  "date": "2026-05-24",
+  "scenario": "貿易戰加劇 UI proof: buy total-cost-4 card, then choose it from discard to topdeck",
+  "url": "http://127.0.0.1:8000/?game_id=5d2e1600-654d-4cda-b98a-1ece35ee1169&player_id=bad7a0dc-b6ff-4cb1-b1cf-0542df26d819",
+  "screenshots": {
+    "pending_choice": "docs/records/event-cards/TRADE_WAR_UI_PENDING_CHOICE_2026_05_24.png",
+    "resolved": "docs/records/event-cards/TRADE_WAR_UI_RESOLVED_2026_05_24.png"
+  },
+  "final_state": {
+    "turn_phase": "action",
+    "current_player": "viewer",
+    "current_event": {
+      "id": "trade_war",
+      "name": "貿易戰加劇",
+      "status": "success",
+      "progress": {
+        "count": 1,
+        "required": 1,
+        "succeeded": true,
+        "settled": true,
+        "status": "success"
+      },
+      "trigger_text": "購買符合條件的卡牌（總費用 4 點以上 / 英美奧援）至少 1 次",
+      "success_text": "從棄牌堆選 1 張置於牌庫頂"
+    },
+    "pending_choice": null,
+    "modal_display": "none",
+    "action_log": [
+      "[Turn 1] viewer bought 擴大戰果",
+      "[Turn 1] viewer placed 擴大戰果 on deck top via 貿易戰加劇"
+    ],
+    "viewer": {
+      "resources": {"money": 0, "propaganda": 0},
+      "deck_count": 2,
+      "discard_count": 1,
+      "discard_pile": ["舊棄牌"]
+    },
+    "purchase_area": ["宣傳家", "思想家", "資助者", "資本家", "分神", "內鬥"]
+  }
+}

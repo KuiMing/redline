@@ -41,6 +41,7 @@
 
 - [todo] 補事件卡玩家選擇 UI / map proof。
   - 範圍：`discard_self`、`red_dissolve`、`build_organization`、從棄牌堆選牌、從手牌/棄牌移除、區域建組織等需要玩家指定目標的效果。
+  - 2026-05-24：已補 `貿易戰加劇` 從棄牌堆選牌置頂的正式 browser UI proof；確認既有 pending card choice modal 可顯示 `event_topdeck_from_discard` 並 resolve，截圖與 state/log proof 在 `docs/records/event-cards/TRADE_WAR_UI_PROOF_2026_05_24.{md,json}`。
   - 原則：只重用既有 pending choice modal / target choice map highlight 架構；不要重做情報網 highlight。
   - 驗收：每一種互動型 effect 至少有一個正式 browser UI proof，截圖與紀錄放 `docs/records/event-cards/`。
 
