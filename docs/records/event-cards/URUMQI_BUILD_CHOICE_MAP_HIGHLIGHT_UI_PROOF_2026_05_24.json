@@ -1,0 +1,26 @@
+{
+  "status": "passed",
+  "scenario": "烏魯木齊七五事件成功結算後，event_build_organization town_choice 提示可建組織城鎮並同步戰略地圖高亮。",
+  "url": "http://127.0.0.1:8000/?game_id=f914086b-f695-477e-b14b-08dfb35b19a6&player_id=16bae672-7c80-419e-8170-e3feeb7a89d6&v=event-map-highlight",
+  "state_evidence": {
+    "current_event": "烏魯木齊七五事件",
+    "pending_choice": {
+      "type": "town_choice",
+      "choice_key": "event_build_organization",
+      "source_name": "烏魯木齊七五事件",
+      "towns": [
+        "天津",
+        "石家莊"
+      ]
+    },
+    "modal_hint": "地圖會同步高亮可以建立組織的城鎮；主操作仍以此處列表為準。你也可以切到「戰略地圖」查看城鎮位置、連線與控制資訊。",
+    "map_hint": "烏魯木齊七五事件：烏魯木齊七五事件：在己方組織 1 格內免費建立 1 個組織。 地圖上已用橘色外框標出可選城鎮。",
+    "orange_choice_markers": 4,
+    "active_tab": "戰略地圖",
+    "map_connected": true
+  },
+  "screenshots": {
+    "modal": "docs/records/event-cards/URUMQI_BUILD_CHOICE_MAP_HIGHLIGHT_MODAL_UI_2026_05_24.png",
+    "map": "docs/records/event-cards/URUMQI_BUILD_CHOICE_MAP_HIGHLIGHT_MAP_UI_2026_05_24.png"
+  }
+}

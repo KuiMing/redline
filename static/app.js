@@ -1131,8 +1131,12 @@ function renderChoiceModal(state) {
   const choiceKey = choice.choice_key || '';
   const sourceName = choice.source_name || choiceKey || '';
   const targetChoicesWithMapHighlight = new Set(['support_interaction', 'card_dissolve_interaction', 'intel_network_dissolve_target']);
-  const shouldUseMapContextModal = targetChoicesWithMapHighlight.has(choiceKey)
+  const buildTownChoicesWithMapHighlight = new Set(['event_build_organization']);
+  const shouldHighlightTargetChoices = targetChoicesWithMapHighlight.has(choiceKey)
     && (choice.step === 'target' || choiceType === 'target_choice');
+  const shouldHighlightBuildTownChoices = buildTownChoicesWithMapHighlight.has(choiceKey)
+    && (choiceType === 'town_choice' || choice.step === 'town');
+  const shouldUseMapContextModal = shouldHighlightTargetChoices || shouldHighlightBuildTownChoices;
   overlay.classList.toggle('choice-modal-map-context', shouldUseMapContextModal);
   const requiredCount = Math.max(1, Number(choice.count || 1));
   const businessNetworkState = renderBusinessNetworkResult(state);
@@ -1151,7 +1155,7 @@ function renderChoiceModal(state) {
   cards.innerHTML = businessNetworkState.html || '';
 
   let mapHighlightPayload = null;
-  if (targetChoicesWithMapHighlight.has(choice.choice_key) && (choice.step === 'target' || choiceType === 'target_choice')) {
+  if (shouldHighlightTargetChoices) {
     const targets = (choice.targets || []).filter(entry => entry?.town);
     if (targets.length) {
       mapHint.style.display = 'block';
@@ -1161,6 +1165,25 @@ function renderChoiceModal(state) {
         sourceName: sourceName || resolvedTitle,
         prompt: choice.prompt || '',
         towns: targets.map(entry => ({
+          town: entry.town,
+          label: entry.label || entry.town,
+        })),
+      };
+      ensureStrategicMapMounted().catch(err => console.warn('Failed to mount strategic map for choice highlight', err));
+    } else {
+      mapHint.style.display = 'none';
+      mapHint.textContent = '';
+    }
+  } else if (shouldHighlightBuildTownChoices) {
+    const towns = (choice.towns || []).filter(entry => entry?.town);
+    if (towns.length) {
+      mapHint.style.display = 'block';
+      mapHint.textContent = '地圖會同步高亮可以建立組織的城鎮；主操作仍以此處列表為準。你也可以切到「戰略地圖」查看城鎮位置、連線與控制資訊。';
+      mapHighlightPayload = {
+        mode: 'support-targets',
+        sourceName: sourceName || resolvedTitle,
+        prompt: choice.prompt || '',
+        towns: towns.map(entry => ({
           town: entry.town,
           label: entry.label || entry.town,
         })),

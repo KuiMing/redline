@@ -1,0 +1,31 @@
+{
+  "status": "passed",
+  "checks": [
+    {
+      "name": "event_build_organization town_choice is included in map-highlight allowlist",
+      "needle": "new Set(['event_build_organization'])",
+      "status": "passed"
+    },
+    {
+      "name": "build town choices use existing support-targets highlight payload",
+      "needle": "mode: 'support-targets'",
+      "status": "passed"
+    },
+    {
+      "name": "build town choices read pending choice towns",
+      "needle": "const towns = (choice.towns || []).filter(entry => entry?.town);",
+      "status": "passed"
+    },
+    {
+      "name": "modal tells player the map highlights buildable organization towns",
+      "needle": "地圖會同步高亮可以建立組織的城鎮",
+      "status": "passed"
+    },
+    {
+      "name": "strategic map iframe is mounted for choice highlight",
+      "needle": "ensureStrategicMapMounted().catch(err => console.warn('Failed to mount strategic map for choice highlight', err));",
+      "status": "passed"
+    }
+  ],
+  "failures": []
+}
