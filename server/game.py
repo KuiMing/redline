@@ -228,6 +228,7 @@ class Game:
             'play_card_with_money': '打出購買費用含資金的卡牌',
             'play_card_with_propaganda': '打出購買費用含宣傳的卡牌',
             'buy_card': '購買符合條件的卡牌',
+            'end_turn_state': '回合結束時符合狀態',
             'build_organization': '建立組織',
             'move_organization': '進行組織遷移',
             'draw': '藉由卡牌效果或能力抽牌',
@@ -244,6 +245,8 @@ class Game:
                 criteria.append('或'.join(trigger.get('card_names') or []))
             if criteria:
                 detail = f"（{' / '.join(criteria)}）"
+        if trigger.get('type') == 'end_turn_state' and trigger.get('condition') == 'own_organization_in_scope':
+            detail = f"（己方至少 {count} 個組織）"
         return f"{labels.get(trigger.get('type'), trigger.get('type') or '未知條件')}{scope_text}{detail}至少 {count} 次"
 
     def _event_effect_text(self, effect):
@@ -264,6 +267,7 @@ class Game:
             'restrict_build': '本回合建立組織受限',
             'ignore_distance': '本回合無視距離限制',
             'build_organization': f'建立 {count} 個組織',
+            'build_organization_near_own': f'在己方組織 {effect.get("max_steps", 1)} 格內建立 {count} 個組織',
             'topdeck_from_discard': f'從棄牌堆選 {count} 張置於牌庫頂',
             'trash_from_hand_or_discard': f'從手牌或棄牌堆移除 {count} 張牌',
         }
@@ -342,6 +346,47 @@ class Game:
         if not self._event_purchase_trigger_matches(trigger, card, original_cost=original_cost):
             return {'success': True}
         return self._track_event_progress('buy_card') or {'success': True}
+
+    def _event_state_condition_met(self, trigger, player):
+        condition = (trigger or {}).get('condition')
+        if condition == 'own_organization_in_scope':
+            scope = (trigger or {}).get('scope')
+            required = int((trigger or {}).get('count', 1) or 1)
+            if scope == '牆內':
+                allowed = set(self._towns_for_region_alias('china'))
+            else:
+                allowed = set(self.map.get('towns', {}) or {})
+            count = sum(
+                int(n or 0)
+                for town, n in (getattr(player, 'organizations', {}) or {}).items()
+                if town in allowed and int(n or 0) > 0
+            )
+            return count >= required, count
+        return False, 0
+
+    def _event_build_towns_near_own(self, player, max_steps=1):
+        origins = [town for town, count in (getattr(player, 'organizations', {}) or {}).items() if count > 0]
+        if not origins:
+            return []
+        candidates = set()
+        for origin in origins:
+            frontier = [(origin, 0)]
+            seen = {origin}
+            while frontier:
+                town, dist = frontier.pop(0)
+                if dist >= int(max_steps or 1):
+                    continue
+                for nxt in sorted(self._town_neighbors(town)):
+                    if nxt in seen:
+                        continue
+                    seen.add(nxt)
+                    candidates.add(nxt)
+                    frontier.append((nxt, dist + 1))
+        return [
+            {'town': town}
+            for town in sorted(candidates)
+            if self.can_develop_in_town(player, town)
+        ]
 
     def _draw_player_cards(self, player, count=1, source='effect'):
         drawn = player.deck.draw(int(count or 1))
@@ -423,6 +468,20 @@ class Game:
             if towns:
                 self._set_pending_town_choice(player, 'event_build_organization', towns, f"{self.current_event.get('name')}：選擇要建立組織的城鎮。", source_name=self.current_event.get('name'))
                 return {'success': True, 'pending_choice': True}
+        elif t == 'build_organization_near_own':
+            max_steps = int(effect.get('max_steps', 1) or 1)
+            towns = self._event_build_towns_near_own(player, max_steps=max_steps)
+            if towns:
+                self._set_pending_town_choice(
+                    player,
+                    'event_build_organization',
+                    towns,
+                    f"{self.current_event.get('name')}：在己方組織 {max_steps} 格內免費建立 {min(count, len(towns))} 個組織。",
+                    source_name=self.current_event.get('name'),
+                    count=min(count, len(towns)),
+                )
+                return {'success': True, 'pending_choice': True}
+            self.log(f"Event {outcome}: {player.name} has no valid nearby town to build")
         elif t == 'topdeck_from_discard':
             cards = list(player.deck.discard_pile)
             if cards:
@@ -485,6 +544,13 @@ class Game:
         if event.get('type') != 'mission' or not self.event_progress or self.event_progress.get('settled'):
             return {'success': True}
         player = self.current_player()
+        trigger = event.get('trigger') or {}
+        if trigger.get('type') == 'end_turn_state' and not self.event_progress.get('succeeded'):
+            met, count = self._event_state_condition_met(trigger, player)
+            self.event_progress['count'] = count
+            if met:
+                self.event_progress['succeeded'] = True
+                self.event_progress['status'] = 'success_pending'
         succeeded = bool(self.event_progress.get('succeeded'))
         effect = event.get('success') if succeeded else event.get('failure')
         self.event_progress['settled'] = True

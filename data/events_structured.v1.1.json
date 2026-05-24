@@ -44,8 +44,8 @@
       "failure": {"type": "discard_self", "count": 1}},
 
     {"id": "urumqi_incident", "name": "烏魯木齊七五事件", "type": "mission",
-      "trigger": {"type": "build_organization", "count": 1, "scope": "牆內"},
-      "success": {"type": "build_organization", "count": 1},
+      "trigger": {"type": "end_turn_state", "count": 1, "condition": "own_organization_in_scope", "scope": "牆內"},
+      "success": {"type": "build_organization_near_own", "count": 1, "max_steps": 1},
       "failure": {"type": "discard_random", "count": 1}},
 
     {"id": "shanghai_cooperation_org", "name": "上海合作組織", "type": "auto",

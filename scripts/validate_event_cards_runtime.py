@@ -249,6 +249,60 @@ def test_elite_defection_structured_matches_raw_rule():
     return {"event": event["name"], "trigger": event["trigger"], "success": event["success"], "duplicate_success": duplicate["success"]}
 
 
+def test_urumqi_end_turn_wall_org_builds_near_own_org():
+    game = make_game("烏魯木齊七五事件")
+    player = game.players[0]
+    player.organizations = {"北京": 1}
+    player.hand = [Card("保留手牌", "command", {})]
+
+    assert_ok(game.advance_turn_phase(), "draw urumqi event")
+    assert_ok(game.advance_turn_phase(), "enter action")
+    result = assert_ok(game.advance_turn_phase(), "settle end-turn wall org success")
+    assert result.get("pending_choice") is True, result
+    assert game.event_progress["count"] == 1
+    assert game.event_progress["succeeded"] is True
+    assert game.event_progress["settled"] is True
+    choice = game.state()["pending_choice"]
+    assert choice["choice_key"] == "event_build_organization"
+    assert choice["type"] == "town_choice"
+    choice_towns = [item["town"] for item in choice["towns"]]
+    assert "天津" in choice_towns, choice_towns
+    assert "臺北" not in choice_towns, choice_towns
+    assert "石家莊" in choice_towns, choice_towns
+    idx = choice_towns.index("天津")
+    resolve = assert_ok(game.resolve_pending_choice(player.id, idx), "build near own org")
+    assert resolve["town"] == "天津"
+    assert player.organizations.get("天津") == 1
+    assert names(player.hand) == ["保留手牌"]
+    return {"event": "烏魯木齊七五事件", "trigger_count": game.event_progress["count"], "choice_key": choice["choice_key"], "sample_towns": choice_towns[:6], "built": resolve["town"]}
+
+
+def test_urumqi_end_turn_without_wall_org_fails_random_discard():
+    game = make_game("烏魯木齊七五事件")
+    player = game.players[0]
+    player.organizations = {"臺北": 1}
+    player.hand = [Card("會被隨機棄掉", "command", {})]
+
+    assert_ok(game.advance_turn_phase(), "draw urumqi event")
+    assert_ok(game.advance_turn_phase(), "enter action")
+    assert_ok(game.advance_turn_phase(), "settle end-turn no wall org failure")
+    assert game.event_progress["count"] == 0
+    assert game.event_progress["succeeded"] is False
+    assert game.event_progress["settled"] is True
+    assert names(player.hand) == []
+    assert names(player.deck.discard_pile)[-1] == "會被隨機棄掉"
+    return {"event": "烏魯木齊七五事件", "trigger_count": game.event_progress["count"], "discard": names(player.deck.discard_pile)[-1]}
+
+
+def test_urumqi_structured_matches_raw_rule():
+    game = make_game("烏魯木齊七五事件")
+    event = game._event_by_name("烏魯木齊七五事件")
+    assert event["trigger"] == {"type": "end_turn_state", "count": 1, "condition": "own_organization_in_scope", "scope": "牆內"}
+    assert event["success"] == {"type": "build_organization_near_own", "count": 1, "max_steps": 1}
+    assert event["failure"] == {"type": "discard_random", "count": 1}
+    return {"event": event["name"], "trigger": event["trigger"], "success": event["success"], "failure": event["failure"]}
+
+
 def test_event_deck_uses_declared_counts_without_structured_duplicate_overcount():
     game = make_game("歲月靜好")
     counts = {}
@@ -342,6 +396,9 @@ def main():
         test_elite_defection_trashes_from_hand_after_three_moves,
         test_elite_defection_trashes_from_discard_after_three_moves,
         test_elite_defection_structured_matches_raw_rule,
+        test_urumqi_end_turn_wall_org_builds_near_own_org,
+        test_urumqi_end_turn_without_wall_org_fails_random_discard,
+        test_urumqi_structured_matches_raw_rule,
         test_auto_event_modifier,
         test_event_deck_uses_declared_counts_without_structured_duplicate_overcount,
         test_trade_war_structured_matches_raw_rule,

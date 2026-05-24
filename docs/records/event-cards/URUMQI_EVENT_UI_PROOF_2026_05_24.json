@@ -1,0 +1,30 @@
+{
+  "status": "passed",
+  "event": "烏魯木齊七五事件",
+  "scenario": "回合結束時 viewer 在牆內北京有 1 個組織，事件成功後以既有 town_choice modal 在己方組織 1 格內免費建立 1 個組織。",
+  "game_id": "59ac3fb8-50e8-4710-a405-0b429518c816",
+  "player_id": "baa893d7-f642-43a9-af89-b266d73564ef",
+  "screenshots": {
+    "choice_modal": "docs/records/event-cards/URUMQI_EVENT_CHOICE_UI_2026_05_24.png",
+    "resolved_panel": "docs/records/event-cards/URUMQI_EVENT_RESOLVED_UI_2026_05_24.png"
+  },
+  "choice_state": {
+    "type": "town_choice",
+    "choice_key": "event_build_organization",
+    "prompt": "烏魯木齊七五事件：在己方組織 1 格內免費建立 1 個組織。",
+    "towns": ["天津", "石家莊"]
+  },
+  "resolved_state": {
+    "current_event": {
+      "name": "烏魯木齊七五事件",
+      "status": "success",
+      "progress": {"count": 1, "required": 1, "succeeded": true, "settled": true},
+      "trigger_text": "回合結束時符合狀態（牆內）（己方至少 1 個組織）至少 1 次",
+      "success_text": "在己方組織 1 格內建立 1 個組織"
+    },
+    "last_action_result": {"success": true, "choice_key": "event_build_organization", "town": "天津"},
+    "viewer_organizations": {"北京": 1, "天津": 1},
+    "organization_count_label": "viewer 組織 2",
+    "action_log": ["[Turn 1] viewer built organization in 天津 via event"]
+  }
+}

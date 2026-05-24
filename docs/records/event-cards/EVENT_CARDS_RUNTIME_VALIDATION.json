@@ -1,6 +1,6 @@
 {
   "status": "passed",
-  "passed": 17,
+  "passed": 20,
   "results": [
     {
       "name": "test_idle_noop",
@@ -145,6 +145,51 @@
         },
         "duplicate_success": {
           "type": "trash_from_hand_or_discard",
+          "count": 1
+        }
+      }
+    },
+    {
+      "name": "test_urumqi_end_turn_wall_org_builds_near_own_org",
+      "status": "passed",
+      "detail": {
+        "event": "烏魯木齊七五事件",
+        "trigger_count": 1,
+        "choice_key": "event_build_organization",
+        "sample_towns": [
+          "天津",
+          "石家莊"
+        ],
+        "built": "天津"
+      }
+    },
+    {
+      "name": "test_urumqi_end_turn_without_wall_org_fails_random_discard",
+      "status": "passed",
+      "detail": {
+        "event": "烏魯木齊七五事件",
+        "trigger_count": 0,
+        "discard": "會被隨機棄掉"
+      }
+    },
+    {
+      "name": "test_urumqi_structured_matches_raw_rule",
+      "status": "passed",
+      "detail": {
+        "event": "烏魯木齊七五事件",
+        "trigger": {
+          "type": "end_turn_state",
+          "count": 1,
+          "condition": "own_organization_in_scope",
+          "scope": "牆內"
+        },
+        "success": {
+          "type": "build_organization_near_own",
+          "count": 1,
+          "max_steps": 1
+        },
+        "failure": {
+          "type": "discard_random",
           "count": 1
         }
       }

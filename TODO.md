@@ -27,11 +27,12 @@
 - [todo] 修正 structured event data 與 raw card text 不一致的事件。
   - 2026-05-23：已修正 `貿易戰加劇`：structured trigger 改為購買 `英美奧援` 或總費用 4 點以上卡牌，success 改為從棄牌堆選 1 張置頂；新增 runtime primitive `buy_card` / `topdeck_from_discard` 與 validator proof。
   - 2026-05-24：已修正 `紅軍權貴出逃`：structured success 改為 `trash_from_hand_or_discard`，成功後可從手牌或棄牌堆選 1 張移除；新增 runtime validator 與正式 browser UI proof。
-  - 優先比對並修正：`烏魯木齊七五事件`、`上海合作組織`、`一帶一路 南洋`、`一帶一路 天方`。
+  - 2026-05-24：已修正 `烏魯木齊七五事件`：structured trigger 改為回合結束時牆內有己方組織，success 改為在己方組織 1 格內免費建 1 個；新增 end-turn state / nearby build runtime validator 與正式 browser UI proof。
+  - 優先比對並修正：`上海合作組織`、`一帶一路 南洋`、`一帶一路 天方`。
   - 已知差異：
     - `貿易戰加劇` raw 是購買英美奧援或 4 點以上卡牌，成功從棄牌堆選 1 張置頂；2026-05-23 已修正並補 runtime validator。
     - `紅軍權貴出逃` raw 成功是從手牌或棄牌移除 1 張；2026-05-24 已修正為 `trash_from_hand_or_discard` 並補 runtime/UI proof。
-    - `烏魯木齊七五事件` raw trigger 是回合結束時牆內有組織，成功是在己方組織 1 格內免費建 1 個；目前 structured 是 `build_organization` trigger + generic build choice。
+    - `烏魯木齊七五事件` raw trigger 是回合結束時牆內有組織，成功是在己方組織 1 格內免費建 1 個；2026-05-24 已修正為 `end_turn_state` + `build_organization_near_own` 並補 runtime/UI proof。
     - `上海合作組織` raw 是紅軍對北國城鎮組織使用武裝/間諜距離增加為 5 格；目前是 generic `ignore_distance`。
     - `一帶一路 南洋` / `一帶一路 天方` raw 是紅軍免費在指定區域無視距離建立 1 個組織；目前是 generic `ignore_distance`。
   - 驗收：更新 `data/events_structured.v1.1.json` 與 effect vocabulary；新增/更新 validator 證明 raw text 與 structured effect 對齊。
@@ -44,6 +45,7 @@
   - 範圍：`discard_self`、`red_dissolve`、`build_organization`、從棄牌堆選牌、從手牌/棄牌移除、區域建組織等需要玩家指定目標的效果。
   - 2026-05-24：已補 `貿易戰加劇` 從棄牌堆選牌置頂的正式 browser UI proof；確認既有 pending card choice modal 可顯示 `event_topdeck_from_discard` 並 resolve，截圖與 state/log proof 在 `docs/records/event-cards/TRADE_WAR_UI_PROOF_2026_05_24.{md,json}`。
   - 2026-05-24：已補 `紅軍權貴出逃` 從手牌或棄牌堆選 1 張移除的正式 browser UI proof；確認既有 pending card choice modal 可顯示手牌/棄牌堆來源標籤並 resolve。
+  - 2026-05-24：已補 `烏魯木齊七五事件` 在己方組織 1 格內免費建組織的正式 browser UI proof；確認既有 pending town choice modal 顯示 `天津` / `石家莊`，resolve 後 `viewer 組織 2` 且事件面板為成功 1/1。
   - 原則：只重用既有 pending choice modal / target choice map highlight 架構；不要重做情報網 highlight。
   - 驗收：每一種互動型 effect 至少有一個正式 browser UI proof，截圖與紀錄放 `docs/records/event-cards/`。
 
