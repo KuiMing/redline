@@ -47,7 +47,7 @@
   - 2026-05-24：已補 `紅軍權貴出逃` 從手牌或棄牌堆選 1 張移除的正式 browser UI proof；確認既有 pending card choice modal 可顯示手牌/棄牌堆來源標籤並 resolve。
   - 2026-05-24：已補 `烏魯木齊七五事件` 在己方組織 1 格內免費建組織的正式 browser UI proof；確認既有 pending town choice modal 顯示 `天津` / `石家莊`，resolve 後 `viewer 組織 2` 且事件面板為成功 1/1。
   - 2026-05-24：已讓 `event_build_organization` 的 `town_choice` 重用既有 pending choice / map highlight 架構，在 modal 提示可切到戰略地圖查看城鎮位置，並於地圖用橘色外框標出 `天津` / `石家莊` 可建組織城鎮；proof records：`docs/records/event-cards/URUMQI_BUILD_CHOICE_MAP_HIGHLIGHT_UI_PROOF_2026_05_24.{md,json}`。
-  - 2026-05-24：已補乾淨版烏魯木齊地圖 proof：proof endpoint 改用非立場試探陣營，且 pending choice 期間會隱藏陣營能力 overlay，避免 `立場試探` 混入正式 UI 證據；proof records：`docs/records/event-cards/URUMQI_BUILD_CHOICE_MAP_HIGHLIGHT_UI_PROOF_CLEAN_2026_05_24.{md,json}`。
+  - 2026-05-24：已補乾淨版烏魯木齊地圖 proof：proof endpoint 改用非立場試探陣營，且 pending choice 期間會隱藏陣營能力 overlay，避免 `立場試探` 混入正式 UI 證據；另補一張 active `戰略地圖` tab 且地圖區域可見的正式 UI 截圖；proof records：`docs/records/event-cards/URUMQI_BUILD_CHOICE_MAP_HIGHLIGHT_UI_PROOF_CLEAN_2026_05_24.{md,json}`。
   - 原則：只重用既有 pending choice modal / target choice map highlight 架構；不要重做情報網 highlight。
   - 驗收：每一種互動型 effect 至少有一個正式 browser UI proof，截圖與紀錄放 `docs/records/event-cards/`。
 

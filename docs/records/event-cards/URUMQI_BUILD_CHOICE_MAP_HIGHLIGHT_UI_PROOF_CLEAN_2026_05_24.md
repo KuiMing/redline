@@ -16,7 +16,9 @@ Status: passed
 - Faction action modal display: `none`；畫面流程沒有 `立場試探` modal 干擾。
 - Map iframe hint: `地圖上已用橘色外框標出可選城鎮。`
 - Map labels observed in iframe: `天津`, `石家莊`。
+- Active tab: `戰略地圖`；`mapView` visible，iframe 地圖區域在正式 UI 截圖中可見。
 
 ## Screenshots
 - Modal clean proof: `URUMQI_BUILD_CHOICE_MAP_HIGHLIGHT_MODAL_UI_CLEAN_2026_05_24.png`
 - Map clean proof: `URUMQI_BUILD_CHOICE_MAP_HIGHLIGHT_MAP_UI_CLEAN_2026_05_24.png`
+- Map visible proof: `URUMQI_BUILD_CHOICE_MAP_HIGHLIGHT_MAP_VISIBLE_UI_2026_05_24.png`

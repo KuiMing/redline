@@ -39,10 +39,14 @@
       "天津",
       "石家莊"
     ],
-    "map_frame_connected": true
+    "map_frame_connected": true,
+    "map_visible_screenshot": "URUMQI_BUILD_CHOICE_MAP_HIGHLIGHT_MAP_VISIBLE_UI_2026_05_24.png",
+    "map_tab_active": true,
+    "map_view_visible": true
   },
   "screenshots": [
     "URUMQI_BUILD_CHOICE_MAP_HIGHLIGHT_MODAL_UI_CLEAN_2026_05_24.png",
-    "URUMQI_BUILD_CHOICE_MAP_HIGHLIGHT_MAP_UI_CLEAN_2026_05_24.png"
+    "URUMQI_BUILD_CHOICE_MAP_HIGHLIGHT_MAP_UI_CLEAN_2026_05_24.png",
+    "URUMQI_BUILD_CHOICE_MAP_HIGHLIGHT_MAP_VISIBLE_UI_2026_05_24.png"
   ]
 }
