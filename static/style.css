@@ -1463,6 +1463,34 @@ body {
   width: 100%;
 }
 
+.choice-two-step-summary {
+  border: 1px solid rgba(250, 204, 21, 0.30);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: rgba(113, 63, 18, 0.24);
+  color: #fef3c7;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.choice-two-step-confirm {
+  border-color: rgba(250, 204, 21, 0.58);
+  background: rgba(180, 83, 9, 0.34);
+  color: #fff7ed;
+  font-weight: 700;
+}
+
+.choice-modal-map-context .modal-choice-btn.selected {
+  border-color: rgba(250, 204, 21, 0.82);
+  background: rgba(202, 138, 4, 0.34);
+  color: #fef9c3;
+}
+
+.choice-modal-map-context .choice-two-step-confirm[disabled] {
+  opacity: 0.58;
+  cursor: not-allowed;
+}
+
 .choice-modal-map-context .modal-body-text {
   margin-bottom: 10px;
 }

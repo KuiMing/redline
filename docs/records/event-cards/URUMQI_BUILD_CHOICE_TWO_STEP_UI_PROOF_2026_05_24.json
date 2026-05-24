@@ -1,0 +1,39 @@
+{
+  "status": "passed",
+  "scenario": "烏魯木齊七五事件成功效果 event_build_organization town_choice 兩段式 UI",
+  "server_url": "http://127.0.0.1:8000",
+  "game_id": "8f0fdca7-b0a0-4a75-8f88-ebd406dd3a48",
+  "player_id": "ba498b51-4c4c-47bf-b926-4cf606f5c377",
+  "event_name": "烏魯木齊七五事件",
+  "before_confirm": {
+    "active_tab": "戰略地圖",
+    "modal_contains": [
+      "兩段式流程：先選城鎮",
+      "第一段已在戰略地圖聚焦 天津",
+      "已聚焦：天津",
+      "先看地圖：石家莊",
+      "確認建立於 天津"
+    ],
+    "iframe_hint": "烏魯木齊七五事件：烏魯木齊七五事件：在己方組織 1 格內免費建立 1 個組織。 地圖上已用橘色外框標出可選城鎮。 已聚焦 天津，請回到選擇視窗確認或改選。",
+    "screenshot": "docs/records/event-cards/URUMQI_BUILD_CHOICE_TWO_STEP_UI_2026_05_24.png"
+  },
+  "after_confirm": {
+    "modal_display": "none",
+    "pending_choice": null,
+    "viewer_orgs": {
+      "北京": 1,
+      "天津": 1
+    },
+    "red_orgs": {
+      "北京": 1
+    },
+    "current_event_status": "success",
+    "current_event_progress": {
+      "count": 1,
+      "required": 1,
+      "settled": true,
+      "status": "success",
+      "succeeded": true
+    }
+  }
+}

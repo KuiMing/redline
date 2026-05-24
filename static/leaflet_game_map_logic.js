@@ -153,6 +153,7 @@ function supportChoiceHighlightKey(payload) {
     mode: payload.mode,
     sourceName: payload.sourceName || '',
     prompt: payload.prompt || '',
+    focusTown: payload.focusTown || '',
     towns: towns.map(entry => entry?.town || '').filter(Boolean).sort(),
   });
 }
@@ -172,24 +173,30 @@ function renderSupportChoiceHighlights(options = {}) {
   if (!supportChoiceHighlight || supportChoiceHighlight.mode !== 'support-targets') return;
   const towns = Array.isArray(supportChoiceHighlight.towns) ? supportChoiceHighlight.towns : [];
   const bounds = [];
+  let focusedBounds = null;
   towns.forEach(entry => {
     const townName = entry?.town;
     const town = byName.get(townName);
     if (!town) return;
-    bounds.push([town.lat, town.lon]);
+    const townBounds = [town.lat, town.lon];
+    bounds.push(townBounds);
+    if (supportChoiceHighlight.focusTown && supportChoiceHighlight.focusTown === townName) {
+      focusedBounds = [townBounds];
+    }
+    const isFocused = supportChoiceHighlight.focusTown && supportChoiceHighlight.focusTown === townName;
     L.circleMarker([town.lat, town.lon], {
-      radius: Math.max(14, markerRadius(map.getZoom()) + 6),
-      color: '#f97316',
-      weight: 4,
-      fillColor: '#fb923c',
-      fillOpacity: 0.22,
+      radius: Math.max(isFocused ? 18 : 14, markerRadius(map.getZoom()) + (isFocused ? 10 : 6)),
+      color: isFocused ? '#facc15' : '#f97316',
+      weight: isFocused ? 5 : 4,
+      fillColor: isFocused ? '#fde68a' : '#fb923c',
+      fillOpacity: isFocused ? 0.34 : 0.22,
       opacity: 1,
     }).addTo(supportChoiceHighlightLayer).bindPopup(`${supportChoiceHighlight.sourceName || '可選目標'}：${entry?.label || townName}`);
     L.circleMarker([town.lat, town.lon], {
-      radius: Math.max(7, markerRadius(map.getZoom()) + 1),
+      radius: Math.max(isFocused ? 9 : 7, markerRadius(map.getZoom()) + (isFocused ? 2 : 1)),
       color: '#fff7ed',
       weight: 2,
-      fillColor: '#f97316',
+      fillColor: isFocused ? '#facc15' : '#f97316',
       fillOpacity: 0.95,
       opacity: 1,
     }).addTo(supportChoiceHighlightLayer);
@@ -197,10 +204,11 @@ function renderSupportChoiceHighlights(options = {}) {
   if (bounds.length) {
     const hintEl = document.getElementById('interactionHint');
     if (hintEl) {
-      hintEl.innerHTML = `${supportChoiceHighlight.sourceName || '當前選擇'}：<span class="hint-strong">${supportChoiceHighlight.prompt || '請依列表選擇目標。'}</span> 地圖上已用橘色外框標出可選城鎮。`;
+      const focusText = supportChoiceHighlight.focusTown ? ` 已聚焦 ${supportChoiceHighlight.focusTown}，請回到選擇視窗確認或改選。` : '';
+      hintEl.innerHTML = `${supportChoiceHighlight.sourceName || '當前選擇'}：<span class="hint-strong">${supportChoiceHighlight.prompt || '請依列表選擇目標。'}</span> 地圖上已用橘色外框標出可選城鎮。${focusText}`;
     }
     if (autoFocus) {
-      focusSupportChoiceTargets(bounds);
+      focusSupportChoiceTargets(focusedBounds || bounds);
     }
   }
 }

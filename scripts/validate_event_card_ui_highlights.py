@@ -37,8 +37,23 @@ def main() -> None:
             "text": app,
         },
         {
-            "name": "modal tells player the map highlights buildable organization towns",
-            "needle": "地圖會同步高亮可以建立組織的城鎮",
+            "name": "modal explains event build town choices use a two-step map then confirm flow",
+            "needle": "兩段式流程：先選城鎮，畫面會切到「戰略地圖」",
+            "text": app,
+        },
+        {
+            "name": "event build town choices keep a client-side focused selection before resolving",
+            "needle": "choiceModalTwoStepSelection = { index, town };",
+            "text": app,
+        },
+        {
+            "name": "event build town choices focus the strategic map before confirmation",
+            "needle": "setActiveGameView('map').catch(err => console.warn('Failed to focus strategic map for build choice', err));",
+            "text": app,
+        },
+        {
+            "name": "event build town choices require explicit confirm after map focus",
+            "needle": "確認建立（請先選城鎮看地圖）",
             "text": app,
         },
         {
