@@ -1181,12 +1181,14 @@ function renderChoiceModal(state) {
     return;
   }
 
-  const targetChoicesWithMapHighlight = new Set(['support_interaction', 'card_dissolve_interaction', 'intel_network_dissolve_target', 'event_red_dissolve']);
+  const targetChoicesWithMapHighlight = new Set(['support_interaction', 'card_dissolve_interaction', 'intel_network_dissolve_target', 'event_red_dissolve', 'red_army_state_security_target']);
   const shouldHighlightTargetChoices = targetChoicesWithMapHighlight.has(choiceKey)
     && (choice.step === 'target' || choiceType === 'target_choice');
   const shouldUseMapContextModal = shouldHighlightTargetChoices;
   overlay.classList.toggle('choice-modal-map-context', shouldUseMapContextModal);
-  const requiredCount = Math.max(1, Number(choice.count || 1));
+  const maxChoiceCount = Math.max(0, Number(choice.count || 1));
+  const minChoiceCount = choice.min_count === 0 ? 0 : Math.max(1, Number(choice.min_count ?? maxChoiceCount));
+  const exactChoiceCount = maxChoiceCount;
   const businessNetworkState = renderBusinessNetworkResult(state);
   const businessNetworkModalHeader = renderBusinessNetworkModalHeader(state);
   const mimicLikeTargetChoice = choiceType === 'target_choice';
@@ -1257,14 +1259,23 @@ function renderChoiceModal(state) {
     submit.type = 'button';
     submit.disabled = true;
 
+    const isVariableCountChoice = choiceKey === 'red_army_ccdi_discard_draw';
     const updateSummary = () => {
-      header.textContent = `已選 ${selected.size}/${requiredCount} 張`;
-      submit.textContent = requiredCount === 1 ? '確認選擇' : `確認棄掉 ${requiredCount} 張`;
-      submit.disabled = selected.size !== requiredCount;
+      header.textContent = isVariableCountChoice
+        ? `已選 ${selected.size}/${maxChoiceCount} 張（可選 ${minChoiceCount}～${maxChoiceCount} 張）`
+        : `已選 ${selected.size}/${exactChoiceCount} 張`;
+      submit.textContent = isVariableCountChoice
+        ? `確認棄掉 ${selected.size} 張並抽 ${selected.size} 張`
+        : (exactChoiceCount === 1 ? '確認選擇' : `確認棄掉 ${exactChoiceCount} 張`);
+      submit.disabled = isVariableCountChoice
+        ? selected.size < minChoiceCount || selected.size > maxChoiceCount
+        : selected.size !== exactChoiceCount;
     };
 
     submit.onclick = () => {
-      if (selected.size !== requiredCount) return;
+      if (isVariableCountChoice) {
+        if (selected.size < minChoiceCount || selected.size > maxChoiceCount) return;
+      } else if (selected.size !== exactChoiceCount) return;
       sendAction('resolve_choice', { index: Array.from(selected) });
       closeChoiceModal();
     };
@@ -1282,7 +1293,7 @@ function renderChoiceModal(state) {
         if (selected.has(index)) {
           selected.delete(index);
         } else {
-          if (selected.size >= requiredCount) return;
+          if (selected.size >= maxChoiceCount) return;
           selected.add(index);
         }
         const active = selected.has(index);
@@ -1670,6 +1681,7 @@ function renderFactionActionPanel(state) {
   info.textContent = '';
   modalOverlay.style.display = 'none';
   modalChoices.innerHTML = '';
+  modalChoices.classList.remove('red-army-action-choices');
   modalHint.textContent = '';
   modalDesc.textContent = '';
   modalTitle.textContent = '';
@@ -1691,6 +1703,7 @@ function renderFactionActionPanel(state) {
     modalDesc.textContent = factionActionUsed ? '本回合已發動陣營能力。' : message;
     modalHint.innerHTML = resultHtml || escapeHtml(factionActionUsed ? '請進行其他行動，或結束目前行動階段。' : hint);
     modalChoices.innerHTML = '';
+    modalChoices.classList.remove('red-army-action-choices');
     if (oddBtn) oddBtn.style.display = 'none';
     if (evenBtn) evenBtn.style.display = 'none';
     if (!factionActionUsed) buildButtons(modalChoices);
@@ -1710,6 +1723,46 @@ function renderFactionActionPanel(state) {
         target.appendChild(btn);
       },
       '將 1 張手牌放進牌庫底，猜牌庫頂牌購買費用奇偶；若猜中獲得 3 點宣傳與 3 點資金。',
+      factionResult.html
+    );
+    return;
+  }
+
+  if (faction === 'red_army') {
+    const usedCount = Number(state.red_army_action_count || 0);
+    const limitCount = Number(state.red_army_action_limit || 0);
+    showCenteredActionPanel(
+      '紅軍能力',
+      hasResult ? '本回合紅軍能力發動結果如下；若仍未達上限，可繼續發動。' : `紅軍每回合可發動能力 ${limitCount} 次；目前已用 ${usedCount}/${limitCount} 次。`,
+      (target) => {
+        target.classList.add('red-army-action-choices');
+        [
+          ['統戰部', '抽 1 張牌。'],
+          ['政工部', '選擇 1 名非紅軍玩家，將 1 張內宣放到其牌庫頂；同一目標每回合限 1 次。'],
+          ['國安部', '選擇其他玩家在紅軍組織 1 格內的 1 個牆內組織瓦解；同一目標每回合限 1 次。'],
+          ['中紀委', '可棄掉任意張手牌，然後抽等量的牌。'],
+        ].forEach(([name, helper]) => {
+          const btn = document.createElement('button');
+          btn.className = 'modal-choice-btn';
+          btn.type = 'button';
+          btn.textContent = `發動 ${name}`;
+          btn.title = helper;
+          btn.onclick = () => {
+            sendAction('faction_action', { name });
+            closeFactionActionModal();
+          };
+          target.appendChild(btn);
+        });
+      },
+      `
+        <div>本回合已用 ${usedCount}/${limitCount} 次。政工部／國安部如需目標，會重用既有選擇彈窗與地圖高亮。</div>
+        <ul class="red-army-action-help-list">
+          <li><strong>統戰部：</strong>抽 1 張牌。</li>
+          <li><strong>政工部：</strong>選擇 1 名非紅軍玩家，將 1 張內宣放到其牌庫頂；同一目標每回合限 1 次。</li>
+          <li><strong>國安部：</strong>選擇其他玩家在紅軍組織 1 格內的 1 個牆內組織瓦解；同一目標每回合限 1 次。</li>
+          <li><strong>中紀委：</strong>可棄掉任意張手牌，然後抽等量的牌。</li>
+        </ul>
+      `,
       factionResult.html
     );
     return;
@@ -1769,6 +1822,18 @@ function formatFactionActionResult(result) {
     const destinationText = result.destination === 'hand' ? '加入手牌' : result.destination === 'discard' ? '放入棄牌堆' : '已處理';
     return `立場試探結果：翻到 ${cardName}${costText}，${destinationText}`;
   }
+  if (result.name === '統戰部') {
+    return `統戰部結果：抽 ${Number(result.drawn || 0)} 張牌`;
+  }
+  if (result.name === '政工部') {
+    return `政工部結果：已將 ${result.topdecked_card || '內宣'} 放到 ${result.target_player_name || '目標玩家'} 的牌庫頂`;
+  }
+  if (result.name === '國安部') {
+    return `國安部結果：已瓦解 ${result.target_player_name || '目標玩家'} 在 ${result.town || '目標城鎮'} 的組織`;
+  }
+  if (result.name === '中紀委') {
+    return `中紀委結果：棄 ${Number(result.discarded ?? result.chosen_cards?.length ?? 0)} 張，抽 ${Number(result.drawn || 0)} 張`;
+  }
   if (result.name === '賭徒耳語' || result.name === '民族祭儀') {
     const guessText = result.guess === 'odd' ? '奇數' : result.guess === 'even' ? '偶數' : '未知';
     const parityText = Number.isFinite(result.cost_total) ? (result.cost_total % 2 === 1 ? '奇數' : '偶數') : '未知';
@@ -1789,7 +1854,7 @@ function renderFactionActionResult(state, faction) {
 
   const result = state.last_action_result || null;
   const message = formatFactionActionResult(result);
-  const resultActionNames = new Set(['立場試探', '賭徒耳語', '民族祭儀']);
+  const resultActionNames = new Set(['立場試探', '賭徒耳語', '民族祭儀', '統戰部', '政工部', '國安部', '中紀委']);
   if (resultActionNames.has(result?.name) && message) {
     const resultKey = JSON.stringify(result);
     if (lastFactionActionResultKey !== resultKey) {
@@ -1812,6 +1877,21 @@ function renderFactionActionResult(state, faction) {
 
   if (faction === 'aomen') {
     const html = '<div class="faction-action-placeholder">發動後會在此直接顯示猜測、翻牌與資源結果。</div>';
+    info.innerHTML = html;
+    return {hasResult: false, message: '', html};
+  }
+
+  if (faction === 'red_army') {
+    const html = `
+      <div class="faction-action-placeholder">
+        <div>紅軍可在此發動統戰部、政工部、國安部或中紀委；結果會直接顯示於此。</div>
+        <ul class="red-army-action-help-list">
+          <li><strong>統戰部：</strong>抽 1 張牌。</li>
+          <li><strong>政工部：</strong>選擇 1 名非紅軍玩家，將 1 張內宣放到其牌庫頂；同一目標每回合限 1 次。</li>
+          <li><strong>國安部：</strong>選擇其他玩家在紅軍組織 1 格內的 1 個牆內組織瓦解；同一目標每回合限 1 次。</li>
+          <li><strong>中紀委：</strong>可棄掉任意張手牌，然後抽等量的牌。</li>
+        </ul>
+      </div>`;
     info.innerHTML = html;
     return {hasResult: false, message: '', html};
   }

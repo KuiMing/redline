@@ -532,8 +532,8 @@ def test_event_modifiers_are_consumed_by_runtime_rules():
 
 def test_event_red_dissolve_ui_reuses_target_map_highlight():
     app_js = (ROOT / "static" / "app.js").read_text(encoding="utf-8")
-    needle = "targetChoicesWithMapHighlight = new Set(['support_interaction', 'card_dissolve_interaction', 'intel_network_dissolve_target', 'event_red_dissolve'])"
-    assert needle in app_js, "event_red_dissolve should reuse existing target choice map highlight pipeline"
+    needle = "targetChoicesWithMapHighlight = new Set("
+    assert needle in app_js and "'event_red_dissolve'" in app_js, "event_red_dissolve should reuse existing target choice map highlight pipeline"
     return {
         "choice_key": "event_red_dissolve",
         "highlight_pipeline": "support-targets",

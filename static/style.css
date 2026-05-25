@@ -1405,6 +1405,34 @@ body {
   word-break: keep-all;
 }
 
+.modal-choice-row.red-army-action-choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  max-width: 100%;
+}
+
+.modal-choice-row.red-army-action-choices .modal-choice-btn {
+  max-width: none;
+  width: 100%;
+  white-space: normal;
+  word-break: keep-all;
+  line-height: 1.35;
+}
+
+.red-army-action-help-list {
+  margin: 8px 0 2px;
+  padding-left: 1.2rem;
+}
+
+.red-army-action-help-list li {
+  margin: 3px 0;
+}
+
+.red-army-action-help-list strong {
+  color: #fca5a5;
+}
+
 .modal-choice-btn,
 .modal-cancel-btn {
   appearance: none;

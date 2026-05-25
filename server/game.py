@@ -1243,7 +1243,13 @@ class Game:
     def _resolve_multi_card_choice(self, player, choice, indices):
         cards = choice.get('cards') or []
         count = int(choice.get('count', 1) or 1)
-        if not isinstance(indices, list) or len(indices) != count:
+        min_count = int(choice.get('min_count', count) if choice.get('min_count') is not None else count)
+        if not isinstance(indices, list):
+            return {'error': 'Invalid choice count'}
+        if choice.get('choice_key') == 'red_army_ccdi_discard_draw':
+            if len(indices) < min_count or len(indices) > count:
+                return {'error': 'Invalid choice count'}
+        elif len(indices) != count:
             return {'error': 'Invalid choice count'}
         if len(set(indices)) != len(indices):
             return {'error': 'Duplicate choice indices'}
@@ -1251,6 +1257,30 @@ class Game:
             return {'error': 'Invalid choice index'}
         choice_key = choice.get('choice_key')
         selected_cards = [cards[i] for i in indices]
+
+        if choice_key == 'red_army_ccdi_discard_draw':
+            ok, err = self._red_army_can_use_action(player, '中紀委')
+            if not ok:
+                return {'error': err}
+            for card in selected_cards:
+                if card not in player.hand:
+                    return {'error': 'Chosen card not in hand'}
+            for card in selected_cards:
+                player.hand.remove(card)
+                player.deck.discard([card])
+            drawn = self._draw_player_cards(player, len(selected_cards)) if selected_cards else []
+            self._mark_red_army_action_used('中紀委')
+            self._track_event_progress('use_faction_ability', player=player)
+            self.pending_choice = None
+            self.log(f"{player.name} triggered 中紀委, discarded {len(selected_cards)}, and drew {len(drawn)}")
+            return {
+                'success': True,
+                'name': '中紀委',
+                'chosen_cards': [getattr(card, 'name', str(card)) for card in selected_cards],
+                'discarded': len(selected_cards),
+                'drawn': len(drawn),
+                'choice_key': choice_key,
+            }
 
         if choice_key in {'discard_self', 'event_discard_self'}:
             for card in selected_cards:
@@ -1478,6 +1508,56 @@ class Game:
                 'target_id': target_id,
                 'selected': selected,
                 'choice_key': choice_key,
+                'target_player_name': getattr(target_player, 'name', str(target_player_id)),
+                'town': town,
+            }
+        if choice_key == 'red_army_propaganda_department_target':
+            target_player = next((p for p in self.players if getattr(p, 'id', None) == target_id), None)
+            if target_player is None or getattr(target_player, 'faction_id', None) == 'red_army':
+                return {'error': 'Target player not found'}
+            ok, err = self._red_army_can_use_action(player, '政工部', target_player.id)
+            if not ok:
+                return {'error': err}
+            from server.cards import Card
+            target_player.deck.draw_pile.append(Card('內宣', 'command', {}))
+            self._mark_red_army_action_used('政工部', target_player.id)
+            self._track_event_progress('use_faction_ability', player=player)
+            self.pending_choice = None
+            self.log(f"{player.name} triggered 政工部 and placed 內宣 on {target_player.name}'s deck")
+            return {
+                'success': True,
+                'choice_index': index,
+                'target_id': target_id,
+                'selected': selected,
+                'choice_key': choice_key,
+                'name': '政工部',
+                'target_player_name': getattr(target_player, 'name', str(target_id)),
+                'topdecked_card': '內宣',
+            }
+        if choice_key == 'red_army_state_security_target':
+            target_player_id = selected.get('player_id') or target_id
+            town = selected.get('town')
+            target_player = next((p for p in self.players if getattr(p, 'id', None) == target_player_id), None)
+            if target_player is None:
+                return {'error': 'Target player not found'}
+            if not town:
+                return {'error': 'Target town not found'}
+            ok, err = self._red_army_can_use_action(player, '國安部', target_player.id)
+            if not ok:
+                return {'error': err}
+            result = self.dissolve_organization(player, target_player, town, source='faction_action')
+            if result.get('error'):
+                return result
+            self._mark_red_army_action_used('國安部', target_player.id)
+            self._track_event_progress('use_faction_ability', player=player)
+            self.pending_choice = None
+            return {
+                'success': True,
+                'choice_index': index,
+                'target_id': target_id,
+                'selected': selected,
+                'choice_key': choice_key,
+                'name': '國安部',
                 'target_player_name': getattr(target_player, 'name', str(target_player_id)),
                 'town': town,
             }
@@ -2308,6 +2388,8 @@ class Game:
             "combo_reward_triggered": False,
             "guerrilla_triggered": False,
             "faction_action_used": False,
+            "red_army_action_count": 0,
+            "red_army_targeted_actions": {},
             "india_flag_money_triggered": False,
             "purchased_cards_this_turn": [],
             "reaction_prompted_player_ids": [],
@@ -2503,9 +2585,156 @@ class Game:
             return self._resource_total(resources)
         return self._purchase_area_card_cost_total(card)
 
+    def _non_red_players(self):
+        return [p for p in self.players if getattr(p, 'faction_id', None) != 'red_army']
+
+    def _red_army_action_limit(self):
+        return len(self._non_red_players())
+
+    def _red_army_action_count(self):
+        return int(self.turn_log.get('red_army_action_count', 0) or 0)
+
+    def _red_army_targeted_action_key(self, action_name, target_player_id):
+        return f'{action_name}:{target_player_id}'
+
+    def _red_army_can_use_action(self, player, action_name, target_player_id=None):
+        if getattr(player, 'faction_id', None) != 'red_army':
+            return False, 'Only Red Army can use this faction action'
+        if self._red_army_action_count() >= self._red_army_action_limit():
+            return False, 'Red Army faction action limit reached this turn'
+        if action_name in {'政工部', '國安部'} and target_player_id:
+            used = self.turn_log.setdefault('red_army_targeted_actions', {})
+            if used.get(self._red_army_targeted_action_key(action_name, target_player_id)):
+                return False, f'{action_name} already used on this player this turn'
+        return True, None
+
+    def _mark_red_army_action_used(self, action_name, target_player_id=None):
+        self.turn_log['red_army_action_count'] = self._red_army_action_count() + 1
+        if action_name in {'政工部', '國安部'} and target_player_id:
+            used = self.turn_log.setdefault('red_army_targeted_actions', {})
+            used[self._red_army_targeted_action_key(action_name, target_player_id)] = True
+        self.turn_log['faction_action_used'] = self._red_army_action_count() >= self._red_army_action_limit()
+
+    def _red_army_target_players(self, action_name):
+        targets = []
+        for other in self._non_red_players():
+            if action_name in {'政工部', '國安部'}:
+                ok, _ = self._red_army_can_use_action(self._red_player(), action_name, getattr(other, 'id', None))
+                if not ok:
+                    continue
+            targets.append({
+                'id': getattr(other, 'id', None),
+                'label': getattr(other, 'name', str(getattr(other, 'id', ''))),
+                'player_id': getattr(other, 'id', None),
+            })
+        return targets
+
+    def _red_army_state_security_targets(self, player):
+        inner_towns = set(self._towns_for_region_alias('china'))
+        targets = []
+        reachable = self._towns_within_steps([
+            town for town, count in (player.organizations or {}).items() if count > 0
+        ], max_steps=1)
+        for other in self._non_red_players():
+            ok, _ = self._red_army_can_use_action(player, '國安部', getattr(other, 'id', None))
+            if not ok:
+                continue
+            for town, count in (other.organizations or {}).items():
+                if count > 0 and town in inner_towns and town in reachable:
+                    targets.append({
+                        'id': f'{getattr(other, "id", other.name)}::{town}',
+                        'label': f'{other.name}｜{town}',
+                        'player_id': getattr(other, 'id', None),
+                        'town': town,
+                    })
+        return targets
+
+    def _resolve_red_army_action_target(self, player, action_name, target_player_id=None):
+        if target_player_id:
+            target = next((p for p in self.players if getattr(p, 'id', None) == target_player_id), None)
+            if target is None or getattr(target, 'faction_id', None) == 'red_army':
+                return None, {'error': 'Invalid Red Army target'}
+            ok, err = self._red_army_can_use_action(player, action_name, target_player_id)
+            if not ok:
+                return None, {'error': err}
+            return target, None
+        targets = self._red_army_target_players(action_name)
+        if not targets:
+            return None, {'error': 'No valid target'}
+        self._set_pending_target_choice(
+            player,
+            'red_army_propaganda_department_target' if action_name == '政工部' else 'red_army_state_security_player',
+            targets,
+            f'{action_name}：請選擇目標玩家。',
+            source_name=action_name,
+        )
+        return None, {'pending_choice': True}
+
+    def _start_red_army_state_security(self, player):
+        targets = self._red_army_state_security_targets(player)
+        if not targets:
+            return {'error': 'No valid State Security target'}
+        self._set_pending_target_choice(
+            player,
+            'red_army_state_security_target',
+            targets,
+            '國安部：選擇其他玩家在紅軍組織 1 格內的 1 個牆內組織瓦解。',
+            source_name='國安部',
+        )
+        return {'pending_choice': True}
+
     def _activated_faction_action(self, player, action_name, **kwargs):
-        if self.turn_log.get('faction_action_used'):
+        red_army_actions = {'統戰部', '政工部', '國安部', '中紀委'}
+        if action_name not in red_army_actions and self.turn_log.get('faction_action_used'):
             return {"error": "Faction action already used this turn"}
+
+        if action_name == '統戰部':
+            ok, err = self._red_army_can_use_action(player, action_name)
+            if not ok:
+                return {'error': err}
+            drawn = self._draw_player_cards(player, 1)
+            self._mark_red_army_action_used(action_name)
+            self._track_event_progress('use_faction_ability', player=player)
+            self.log(f"{player.name} triggered 統戰部 and drew {len(drawn)} card(s)")
+            return {'success': True, 'result': {'name': action_name, 'drawn': len(drawn)}}
+
+        if action_name == '政工部':
+            target, pending_or_error = self._resolve_red_army_action_target(player, action_name, kwargs.get('target_player_id'))
+            if pending_or_error:
+                return pending_or_error
+            from server.cards import Card
+            target.deck.draw_pile.append(Card('內宣', 'command', {}))
+            self._mark_red_army_action_used(action_name, target.id)
+            self._track_event_progress('use_faction_ability', player=player)
+            self.log(f"{player.name} triggered 政工部 and placed 內宣 on {target.name}'s deck")
+            return {'success': True, 'result': {'name': action_name, 'target_player_name': target.name, 'topdecked_card': '內宣'}}
+
+        if action_name == '國安部':
+            ok, err = self._red_army_can_use_action(player, action_name)
+            if not ok:
+                return {'error': err}
+            return self._start_red_army_state_security(player)
+
+        if action_name == '中紀委':
+            ok, err = self._red_army_can_use_action(player, action_name)
+            if not ok:
+                return {'error': err}
+            cards = list(player.hand)
+            if not cards:
+                self._mark_red_army_action_used(action_name)
+                self._track_event_progress('use_faction_ability', player=player)
+                self.log(f"{player.name} triggered 中紀委 with no hand cards")
+                return {'success': True, 'result': {'name': action_name, 'discarded': 0, 'drawn': 0}}
+            self._set_pending_multi_card_choice(
+                player,
+                'red_army_ccdi_discard_draw',
+                cards,
+                '中紀委：可棄掉任意張手牌，然後抽等量的牌。',
+                len(cards),
+                source_name='中紀委',
+                min_count=0,
+            )
+            return {'pending_choice': True}
 
         if action_name == '民主陣線':
             if self._resource_total(player.resources) < 2:
@@ -3766,6 +3995,7 @@ class Game:
                 'prompt': self.pending_choice.get('prompt'),
                 'source_name': self.pending_choice.get('source_name'),
                 'count': self.pending_choice.get('count'),
+                'min_count': self.pending_choice.get('min_count'),
                 'mode': self.pending_choice.get('mode'),
                 'acting_player_id': self.pending_choice.get('acting_player_id'),
                 'acting_player_name': self.pending_choice.get('acting_player_name'),
@@ -3807,6 +4037,8 @@ class Game:
             "era_notification": notification,
             "current_event": self._event_display_payload(),
             "event_deck_count": len(self.event_deck.draw_pile) if getattr(self, 'event_deck', None) else 0,
+            "red_army_action_count": self.turn_log.get('red_army_action_count', 0),
+            "red_army_action_limit": self._red_army_action_limit(),
             "event_discard_count": len(self.event_deck.discard_pile) if getattr(self, 'event_deck', None) else 0,
             "event_modifiers": list(getattr(self, 'event_modifiers', []) or []),
             "market_mode": self.market_mode,

@@ -31,7 +31,7 @@ Status: passed (33 passed)
 - test_belt_road_middle_east_auto_builds_red_org_in_region: passed — {'event': '一帶一路 天方', 'choice_key': 'event_build_organization', 'region': 'middle_east', 'sample_towns': ['吉爾吉特', '喀布爾', '拉瓦爾品第', '米蘭沙阿', '費札巴德', '霍斯特'], 'built': '喀布爾'}
 - test_event_deck_uses_declared_counts_without_structured_duplicate_overcount: passed — {'全國人大召開': 2, '重大災難': 2, 'total': 27}
 - test_trade_war_structured_matches_raw_rule: passed — {'event': '貿易戰加劇', 'trigger': {'type': 'buy_card', 'count': 1, 'min_cost': 4, 'card_names': ['英美奧援']}, 'success': {'type': 'topdeck_from_discard', 'count': 1}}
-- test_event_modifiers_are_consumed_by_runtime_rules: passed — {'reduce_cost_buy': ['宣傳家', '宣傳家', '資助者'], 'restrict_build_error': 'Current event restricts building organizations', 'ignore_distance_move': {'success': True}}
+- test_event_modifiers_are_consumed_by_runtime_rules: passed — {'reduce_cost_buy': ['資助者'], 'restrict_build_error': 'Current event restricts building organizations', 'ignore_distance_move': {'success': True}}
 - test_event_red_dissolve_ui_reuses_target_map_highlight: passed — {'choice_key': 'event_red_dissolve', 'highlight_pipeline': 'support-targets'}
 - test_pending_choice_blocks_phase_advance_until_resolved: passed — {'event': '香港抗暴之戰', 'blocked_error': 'Resolve pending choice before advancing phase', 'phase_after_resolve': <TurnPhase.END: 'end'>}
 - test_event_deck_reshuffle: passed — {'event': '歲月靜好', 'discard_count': 1}
