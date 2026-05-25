@@ -702,6 +702,10 @@ class Game:
             p.id = player_id
             self.players.append(p)
 
+    def _is_starter_support_card(self, support_name):
+        entry = self._support_taxonomy_entry(support_name) or {}
+        return entry.get('cost') == '起始牌'
+
     def _init_decks(self):
         for p in self.players:
             starter = []
@@ -709,6 +713,8 @@ class Game:
                 starter.append(Card("追隨者", "propaganda", {"propaganda": 1}))
             for _ in range(3):
                 starter.append(Card("樂捐者", "money", {"money": 1}))
+            if p.faction_id == 'red_army':
+                starter.append(self._make_support_card("紅軍奧援"))
             p.deck = Deck(starter)
             p.hand = p.deck.draw(5)
 
@@ -766,7 +772,7 @@ class Game:
         for entry in self.support_taxonomy:
             name = entry.get('name')
             copies = int(entry.get('copies') or 0)
-            if not name or copies <= 0:
+            if not name or copies <= 0 or self._is_starter_support_card(name):
                 continue
             support_pool.extend([self._make_support_card(name) for _ in range(copies)])
 

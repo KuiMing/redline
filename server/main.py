@@ -236,6 +236,9 @@ def start_game(payload: dict):
     for player in game.players:
         if player.id in chosen:
             player.faction_id = chosen[player.id]
+    # Rebuild starting decks after lobby faction overrides so faction-specific
+    # starter cards such as 紅軍奧援 are assigned to the actual chosen faction.
+    game._init_decks()
     game.faction_by_id = {f["id"]: f for f in game.factions}
     game.faction_by_id.update({
         "uyghur_family": {

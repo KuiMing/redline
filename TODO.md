@@ -103,6 +103,8 @@
 - [done] Lobby 加入房間代碼提示與陣營選擇畫面捲動修正。
   - 驗證紀錄：`docs/records/lobby/`。
 - [done] 常設購買區可購買性、常設牌不混入隨機購買區、手牌資源/行動按鈕 listener 修正。
+- [done] 紅軍奧援起始牌庫歸屬修正。
+  - 2026-05-25：已修正 `紅軍奧援` 不應進隨機奧援購買樣本，而應作為紅軍起始牌庫專屬卡；Lobby 選定紅軍後會重建起始牌庫，確保實際選紅軍玩家擁有 1 張 `紅軍奧援`，非紅軍與購買牌庫不含該卡。驗證紀錄：`docs/records/support-cards/SUPPORT_PURCHASE_DECK_RUNTIME_VALIDATION.{md,json}`。
 - [done] 第二輪 root validation artifacts / validator output path / failure exit-code 整理。
   - root record-like count 已確認為 0。
 
