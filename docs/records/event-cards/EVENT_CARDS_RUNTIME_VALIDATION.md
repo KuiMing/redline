@@ -12,7 +12,7 @@ Status: passed (33 passed)
 - test_national_people_congress_faction_ability_success_draws: passed — {'event': '全國人大召開', 'progress': {'count': 1, 'required': 1, 'succeeded': True, 'settled': True, 'status': 'success'}, 'hand': ['保留手牌', '獎勵抽牌'], 'discard': ['已移除牌']}
 - test_national_people_congress_failure_red_dissolves_wall_org_only: passed — {'event': '全國人大召開', 'choice_key': 'event_red_dissolve', 'targets': ['北京'], 'remaining_orgs': {'臺北': 1}}
 - test_tibet_border_build_wall_org_grants_two_moves: passed — {'event': '藏印邊境軍事對峙', 'progress': {'count': 1, 'required': 1, 'succeeded': True, 'settled': True, 'status': 'success'}, 'moves_left': 2, 'organizations': {'北京': 2}}
-- test_east_turkestan_success_and_failure_paths: passed — {'event': '東突厥集中營', 'success_discard': ['宣傳家', '宣傳家'], 'failure_discard': ['會被隨機棄掉']}
+- test_east_turkestan_success_and_failure_paths: passed — {'event': '東突厥集中營', 'success_discard': ['宣傳家', '宣傳家', '宣傳家', '宣傳家'], 'failure_discard': ['會被隨機棄掉']}
 - test_trade_war_purchase_trigger_topdecks_from_discard: passed — {'event': '貿易戰加劇', 'choice_key': 'event_topdeck_from_discard', 'deck_top': '四點行動', 'discard': ['舊棄牌']}
 - test_trade_war_purchase_trigger_ignores_low_cost_non_anglo_support: passed — {'event': '貿易戰加劇', 'progress': {'count': 0, 'required': 1, 'succeeded': False, 'settled': False, 'status': 'active'}, 'pending_choice': None}
 - test_trade_war_purchase_trigger_accepts_anglo_support_by_name: passed — {'event': '貿易戰加劇', 'triggered_by': '英美奧援', 'choice_key': 'event_topdeck_from_discard'}

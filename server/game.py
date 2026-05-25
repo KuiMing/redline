@@ -155,6 +155,7 @@ class Game:
         self.event_notification = None
         self.pending_choice = None
         self.era_notification = None
+        self.red_army_destroyed_bases = set()
 
     # ---------- Init ----------
 
@@ -2407,6 +2408,7 @@ class Game:
             "india_flag_money_triggered": False,
             "purchased_cards_this_turn": [],
             "reaction_prompted_player_ids": [],
+            "red_army_base_dissolves": {},
         }
 
     def _resolve_ability_ref(self, ability):
@@ -2699,8 +2701,18 @@ class Game:
 
     def _activated_faction_action(self, player, action_name, **kwargs):
         red_army_actions = {'統戰部', '政工部', '國安部', '中紀委'}
+        skip_reaction_prompt = bool(kwargs.pop('_skip_reaction_prompt', False))
         if action_name not in red_army_actions and self.turn_log.get('faction_action_used'):
             return {"error": "Faction action already used this turn"}
+
+        if action_name in red_army_actions and not skip_reaction_prompt:
+            target_player_id = kwargs.get('target_player_id') if action_name in {'政工部'} else None
+            ok, err = self._red_army_can_use_action(player, action_name, target_player_id)
+            if not ok:
+                return {'error': err}
+            prompt = self._red_army_action_reaction_prompt(player, action_name, kwargs)
+            if prompt:
+                return prompt
 
         if action_name == '統戰部':
             ok, err = self._red_army_can_use_action(player, action_name)
@@ -2940,8 +2952,10 @@ class Game:
         camp_tags = town_data.get("camp", []) or []
         faction_token = self._camp_token_for_faction_id(faction_id)
 
-        # Red Army can only develop where explicit red camp tag exists.
+        # Red Army can only develop where explicit red camp tag exists, and destroyed Red Army bases cannot be rebuilt.
         if faction_id == "red_army":
+            if town in set(getattr(self, 'red_army_destroyed_bases', set()) or []):
+                return False
             return "紅軍" in camp_tags
 
         # Non-red factions may develop in their own tagged towns OR towns with no camp tags.
@@ -3162,6 +3176,15 @@ class Game:
         card_name = choice.get('played_card_name')
         effective_type = choice.get('effective_type')
         action_context = dict(choice.get('action_context') or {})
+        red_army_action_name = action_context.get('red_army_action_name')
+        if red_army_action_name:
+            if reaction_context is not None:
+                self._resolve_reaction_context(reaction_context)
+                self.log(f"{player.name}'s {red_army_action_name} was canceled by reaction")
+                return {"success": True, "canceled": True}
+            red_kwargs = dict(action_context.get('red_army_action_kwargs') or {})
+            red_kwargs['_skip_reaction_prompt'] = True
+            return self._activated_faction_action(player, red_army_action_name, **red_kwargs)
         action_context['current_card'] = played_card
         action_context['card_name'] = card_name
         support_resolution = choice.get('support_resolution')
@@ -3309,6 +3332,25 @@ class Game:
             self.turn_log['canceled_money_cost_card'] = has_money_cost
         self.log(f"{reaction_player.name} reacted with {reaction_card_name} to cancel {card_name}")
         return reaction_context
+
+    def _red_army_action_reaction_prompt(self, player, action_name, kwargs):
+        virtual_card = Card(action_name, 'command', {})
+        reaction_candidates = self._reaction_prompt_candidates(player, virtual_card)
+        if not reaction_candidates:
+            return None
+        first_candidate = reaction_candidates[0]
+        return self._set_pending_reaction_choice(
+            first_candidate['player'],
+            player,
+            virtual_card,
+            action_name,
+            first_candidate['cards'],
+            'action',
+            {
+                'red_army_action_name': action_name,
+                'red_army_action_kwargs': dict(kwargs or {}),
+            },
+        )
 
     def _resolve_reaction_context(self, reaction_context):
         if reaction_context is None:
@@ -3619,6 +3661,8 @@ class Game:
             return {"error": "Invalid town"}
         if not self._town_has_shared_org_access(player, town):
             return {"error": "No organization in town"}
+        if town in set(getattr(self, 'red_army_destroyed_bases', set()) or []) and getattr(player, 'faction_id', None) == 'red_army':
+            return {"error": "Red Army base has been destroyed and cannot be rebuilt"}
         if not self.can_develop_in_town(player, town):
             return {"error": "Cannot develop in this town"}
 
@@ -3643,6 +3687,8 @@ class Game:
         origin_owner = self._shared_origin_owner(player, origin_town)
         if not origin_owner:
             return {"error": "No organization in origin"}
+        if target_town in set(getattr(self, 'red_army_destroyed_bases', set()) or []) and getattr(player, 'faction_id', None) == 'red_army':
+            return {"error": "Red Army base has been destroyed and cannot be rebuilt"}
         if not self.can_develop_in_town(player, target_town):
             return {"error": "Cannot develop in this town"}
 
@@ -3675,6 +3721,24 @@ class Game:
         self.log(f"{player.name} built organization in {target_town} from {origin_town}")
         return {"success": True}
 
+    def _record_red_army_base_dissolve(self, attacker, target_owner, town):
+        if getattr(target_owner, 'faction_id', None) != 'red_army':
+            return
+        if town != getattr(target_owner, 'base', None):
+            return
+        counts = self.turn_log.setdefault('red_army_base_dissolves', {})
+        attacker_id = getattr(attacker, 'id', getattr(attacker, 'name', 'attacker'))
+        key = f'{attacker_id}:{town}'
+        counts[key] = int(counts.get(key, 0) or 0) + 1
+        if counts[key] < 2:
+            return
+        self.red_army_destroyed_bases.add(town)
+        if target_owner.organizations.get(town, 0) > 0:
+            del target_owner.organizations[town]
+        if getattr(target_owner, 'base', None) == town:
+            target_owner.base = None
+        self.log(f"{attacker.name} destroyed Red Army base at {town}")
+
     def dissolve_organization(self, attacker, defender, town, source="card"):
         if not town:
             return {"error": "No organization in target town"}
@@ -3690,6 +3754,7 @@ class Game:
         target_owner.organizations[town] -= 1
         if target_owner.organizations[town] <= 0:
             del target_owner.organizations[town]
+        self._record_red_army_base_dissolve(attacker, target_owner, town)
 
         if target_owner is defender:
             self.log(f"{attacker.name} dissolved 1 organization from {defender.name} at {town}")
@@ -3727,6 +3792,8 @@ class Game:
         neighbors = self.map["towns"].get(from_town, {}).get(mode, []) or []
         if to_town not in neighbors and not self._event_modifier_active('ignore_distance'):
             return {"error": f"No {mode} connection"}
+        if getattr(origin_owner, 'faction_id', None) == 'red_army' and not self.can_faction_develop_in_town('red_army', to_town):
+            return {"error": "Red Army organization cannot leave Red Army development space"}
 
         # Movement points represent movement counts, not distance/cost budget.
         # Every legal organization move consumes one count; cards/effects grant counts.

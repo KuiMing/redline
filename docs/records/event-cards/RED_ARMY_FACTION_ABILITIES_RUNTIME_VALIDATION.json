@@ -8,7 +8,7 @@
     {
       "name": "red_army_united_front_draws_until_non_red_limit",
       "ok": true,
-      "detail": "first={'success': True, 'result': {'name': '統戰部', 'drawn': 1}}, second={'success': True, 'result': {'name': '統戰部', 'drawn': 1}}, third={'error': 'Red Army faction action limit reached this turn'}, hand=['補牌2', '補牌1'], turn_log={'played_money_card': False, 'played_propaganda_card': False, 'non_starter_discard': False, 'successful_discard': False, 'built_towns': [], 'played_nonstarter_names': [], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': True, 'red_army_action_count': 2, 'red_army_targeted_actions': {}, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': [], 'reaction_prompted_player_ids': []}"
+      "detail": "first={'success': True, 'result': {'name': '統戰部', 'drawn': 1}}, second={'success': True, 'result': {'name': '統戰部', 'drawn': 1}}, third={'error': 'Red Army faction action limit reached this turn'}, hand=['補牌2', '補牌1'], turn_log={'played_money_card': False, 'played_propaganda_card': False, 'non_starter_discard': False, 'successful_discard': False, 'built_towns': [], 'played_nonstarter_names': [], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': True, 'red_army_action_count': 2, 'red_army_targeted_actions': {}, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': [], 'reaction_prompted_player_ids': [], 'red_army_base_dissolves': {}}"
     },
     {
       "name": "red_army_propaganda_department_topdecks_internal_conflict_and_limits_same_target",

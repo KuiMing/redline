@@ -249,6 +249,8 @@
         "event": "東突厥集中營",
         "success_discard": [
           "宣傳家",
+          "宣傳家",
+          "宣傳家",
           "宣傳家"
         ],
         "failure_discard": [
