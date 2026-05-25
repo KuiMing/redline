@@ -482,6 +482,16 @@ class Game:
             self.log(f"{player.name} gained {gained} {card_name} from event")
         return gained
 
+    def _topdeck_static_purchase_card(self, target_player, card_name, source_name):
+        if card_name in STATIC_PURCHASE_CARD_NAMES:
+            supply = int(self.static_purchase_supply.get(card_name, 0) or 0)
+            if supply <= 0:
+                self.log(f"{source_name}: could not place {card_name} on {target_player.name}'s deck because static supply was empty")
+                return False
+            self.static_purchase_supply[card_name] = supply - 1
+        target_player.deck.draw_pile.append(self._starter_card(card_name))
+        return True
+
     def _red_player(self):
         return next((p for p in self.players if p.faction_id == 'red_army'), None)
 
@@ -1518,12 +1528,15 @@ class Game:
             ok, err = self._red_army_can_use_action(player, '政工部', target_player.id)
             if not ok:
                 return {'error': err}
-            from server.cards import Card
-            target_player.deck.draw_pile.append(Card('內宣', 'command', {}))
+            topdecked = '內鬥'
+            added = self._topdeck_static_purchase_card(target_player, topdecked, '政工部')
             self._mark_red_army_action_used('政工部', target_player.id)
             self._track_event_progress('use_faction_ability', player=player)
             self.pending_choice = None
-            self.log(f"{player.name} triggered 政工部 and placed 內宣 on {target_player.name}'s deck")
+            if added:
+                self.log(f"{player.name} triggered 政工部 and placed {topdecked} on {target_player.name}'s deck")
+            else:
+                self.log(f"{player.name} triggered 政工部 but {topdecked} supply was empty")
             return {
                 'success': True,
                 'choice_index': index,
@@ -1532,7 +1545,8 @@ class Game:
                 'choice_key': choice_key,
                 'name': '政工部',
                 'target_player_name': getattr(target_player, 'name', str(target_id)),
-                'topdecked_card': '內宣',
+                'topdecked_card': topdecked if added else None,
+                'static_supply_empty': not added,
             }
         if choice_key == 'red_army_state_security_target':
             target_player_id = selected.get('player_id') or target_id
@@ -2702,12 +2716,15 @@ class Game:
             target, pending_or_error = self._resolve_red_army_action_target(player, action_name, kwargs.get('target_player_id'))
             if pending_or_error:
                 return pending_or_error
-            from server.cards import Card
-            target.deck.draw_pile.append(Card('內宣', 'command', {}))
+            topdecked = '內鬥'
+            added = self._topdeck_static_purchase_card(target, topdecked, action_name)
             self._mark_red_army_action_used(action_name, target.id)
             self._track_event_progress('use_faction_ability', player=player)
-            self.log(f"{player.name} triggered 政工部 and placed 內宣 on {target.name}'s deck")
-            return {'success': True, 'result': {'name': action_name, 'target_player_name': target.name, 'topdecked_card': '內宣'}}
+            if added:
+                self.log(f"{player.name} triggered 政工部 and placed {topdecked} on {target.name}'s deck")
+            else:
+                self.log(f"{player.name} triggered 政工部 but {topdecked} supply was empty")
+            return {'success': True, 'result': {'name': action_name, 'target_player_name': target.name, 'topdecked_card': topdecked if added else None, 'static_supply_empty': not added}}
 
         if action_name == '國安部':
             ok, err = self._red_army_can_use_action(player, action_name)
@@ -2857,6 +2874,8 @@ class Game:
             return Card("宣傳家", "propaganda", {"propaganda": 2})
         if name == "資助者":
             return Card("資助者", "money", {"money": 2})
+        if name in {"分神", "內鬥"}:
+            return Card(name, "disruption", {})
         if name == "追隨者":
             return Card("追隨者", "propaganda", {"propaganda": 1})
         if name == "樂捐者":

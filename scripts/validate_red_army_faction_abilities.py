@@ -55,10 +55,24 @@ def test_propaganda_department_target_choice_and_per_target_limit():
     resolved = game.resolve_pending_choice(red.id, target_index)
     top_name = a.deck.draw_pile[-1].name if a.deck.draw_pile else None
     repeat = game._activated_faction_action(red, '政工部', target_player_id=a.id)
+    top_type = a.deck.draw_pile[-1].card_type if a.deck.draw_pile else None
+    supply_after = game.static_purchase_supply.get('內鬥')
     return ok(
-        'red_army_propaganda_department_topdecks_internal_propaganda_and_limits_same_target',
-        start.get('pending_choice') and choice.get('choice_key') == 'red_army_propaganda_department_target' and resolved.get('success') and top_name == '內宣' and repeat.get('error'),
-        f'start={start}, choice={game.state().get("pending_choice")}, resolved={resolved}, top={top_name}, repeat={repeat}',
+        'red_army_propaganda_department_topdecks_internal_conflict_and_limits_same_target',
+        start.get('pending_choice') and choice.get('choice_key') == 'red_army_propaganda_department_target' and resolved.get('success') and top_name == '內鬥' and top_type == 'disruption' and supply_after == 0 and repeat.get('error'),
+        f'start={start}, choice={game.state().get("pending_choice")}, resolved={resolved}, top={top_name}, top_type={top_type}, supply_after={supply_after}, repeat={repeat}',
+    )
+
+
+def test_propaganda_department_respects_internal_conflict_static_supply_empty():
+    game, red, a, b = make_red_game()
+    game.static_purchase_supply['內鬥'] = 0
+    a.deck.draw_pile = []
+    result = game._activated_faction_action(red, '政工部', target_player_id=a.id)
+    return ok(
+        'red_army_propaganda_department_does_not_create_internal_conflict_when_supply_empty',
+        result.get('success') and result.get('result', {}).get('static_supply_empty') and not a.deck.draw_pile and game.static_purchase_supply.get('內鬥') == 0,
+        f'result={result}, draw_pile={[c.name for c in a.deck.draw_pile]}, supply={game.static_purchase_supply.get("內鬥")}',
     )
 
 
@@ -111,7 +125,7 @@ def test_frontend_exposes_red_army_buttons_and_choice_helpers():
         "red_army_state_security_target",
         "red_army_ccdi_discard_draw",
         "<strong>統戰部：</strong>抽 1 張牌。",
-        "<strong>政工部：</strong>選擇 1 名非紅軍玩家，將 1 張內宣放到其牌庫頂；同一目標每回合限 1 次。",
+        "<strong>政工部：</strong>選擇 1 名非紅軍玩家，將 1 張內鬥放到其牌庫頂；同一目標每回合限 1 次。",
         "<strong>國安部：</strong>選擇其他玩家在紅軍組織 1 格內的 1 個牆內組織瓦解；同一目標每回合限 1 次。",
         "<strong>中紀委：</strong>可棄掉任意張手牌，然後抽等量的牌。",
         'minChoiceCount',
@@ -130,6 +144,7 @@ def main():
     results = [
         test_united_front_draws_once_per_use_until_non_red_limit(),
         test_propaganda_department_target_choice_and_per_target_limit(),
+        test_propaganda_department_respects_internal_conflict_static_supply_empty(),
         test_state_security_dissolves_inner_org_within_one_step(),
         test_ccdi_discards_any_number_then_draws_equal(),
         test_non_red_cannot_use_red_army_abilities(),

@@ -1,0 +1,24 @@
+{
+  "date": "2026-05-25",
+  "scope": "Red Army 政工部 now topdecks static purchase card 內鬥 instead of obsolete 內宣",
+  "browser_url": "http://127.0.0.1:8000/",
+  "screenshots": {
+    "help_ui": "docs/records/event-cards/RED_ARMY_POLITICAL_WORK_INTERNAL_CONFLICT_HELP_UI_2026_05_25.png",
+    "result_ui": "docs/records/event-cards/RED_ARMY_POLITICAL_WORK_INTERNAL_CONFLICT_RESULT_UI_2026_05_25.png"
+  },
+  "visible_ui_evidence": {
+    "help_text": "政工部：選擇 1 名非紅軍玩家，將 1 張內鬥放到其牌庫頂；同一目標每回合限 1 次。",
+    "result_text": "政工部結果：已將 內鬥 放到 自由派 的牌庫頂"
+  },
+  "runtime_state_evidence_from_browser": {
+    "internal_conflict_static_supply_after": 0,
+    "liberal_player_deck_count_after": 1,
+    "red_army_action_count_after": 1,
+    "pending_choice_after": null,
+    "internal_conflict_purchase_button_disabled": true
+  },
+  "notes": [
+    "Proof scenario used the real FastAPI app and browser UI via /test/setup-red-army-abilities-proof, then clicked the real 發動 政工部 and 自由派 target buttons.",
+    "The result consumes existing static supply and does not create 內鬥 when supply is empty; runtime validator covers both success and supply-empty paths."
+  ]
+}

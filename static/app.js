@@ -1738,7 +1738,7 @@ function renderFactionActionPanel(state) {
         target.classList.add('red-army-action-choices');
         [
           ['統戰部', '抽 1 張牌。'],
-          ['政工部', '選擇 1 名非紅軍玩家，將 1 張內宣放到其牌庫頂；同一目標每回合限 1 次。'],
+          ['政工部', '選擇 1 名非紅軍玩家，將 1 張內鬥放到其牌庫頂；同一目標每回合限 1 次。'],
           ['國安部', '選擇其他玩家在紅軍組織 1 格內的 1 個牆內組織瓦解；同一目標每回合限 1 次。'],
           ['中紀委', '可棄掉任意張手牌，然後抽等量的牌。'],
         ].forEach(([name, helper]) => {
@@ -1758,7 +1758,7 @@ function renderFactionActionPanel(state) {
         <div>本回合已用 ${usedCount}/${limitCount} 次。政工部／國安部如需目標，會重用既有選擇彈窗與地圖高亮。</div>
         <ul class="red-army-action-help-list">
           <li><strong>統戰部：</strong>抽 1 張牌。</li>
-          <li><strong>政工部：</strong>選擇 1 名非紅軍玩家，將 1 張內宣放到其牌庫頂；同一目標每回合限 1 次。</li>
+          <li><strong>政工部：</strong>選擇 1 名非紅軍玩家，將 1 張內鬥放到其牌庫頂；同一目標每回合限 1 次。</li>
           <li><strong>國安部：</strong>選擇其他玩家在紅軍組織 1 格內的 1 個牆內組織瓦解；同一目標每回合限 1 次。</li>
           <li><strong>中紀委：</strong>可棄掉任意張手牌，然後抽等量的牌。</li>
         </ul>
@@ -1826,7 +1826,10 @@ function formatFactionActionResult(result) {
     return `統戰部結果：抽 ${Number(result.drawn || 0)} 張牌`;
   }
   if (result.name === '政工部') {
-    return `政工部結果：已將 ${result.topdecked_card || '內宣'} 放到 ${result.target_player_name || '目標玩家'} 的牌庫頂`;
+    if (result.static_supply_empty) {
+      return `政工部結果：內鬥供應已空，未放入 ${result.target_player_name || '目標玩家'} 的牌庫頂`;
+    }
+    return `政工部結果：已將 ${result.topdecked_card || '內鬥'} 放到 ${result.target_player_name || '目標玩家'} 的牌庫頂`;
   }
   if (result.name === '國安部') {
     return `國安部結果：已瓦解 ${result.target_player_name || '目標玩家'} 在 ${result.town || '目標城鎮'} 的組織`;
@@ -1887,7 +1890,7 @@ function renderFactionActionResult(state, faction) {
         <div>紅軍可在此發動統戰部、政工部、國安部或中紀委；結果會直接顯示於此。</div>
         <ul class="red-army-action-help-list">
           <li><strong>統戰部：</strong>抽 1 張牌。</li>
-          <li><strong>政工部：</strong>選擇 1 名非紅軍玩家，將 1 張內宣放到其牌庫頂；同一目標每回合限 1 次。</li>
+          <li><strong>政工部：</strong>選擇 1 名非紅軍玩家，將 1 張內鬥放到其牌庫頂；同一目標每回合限 1 次。</li>
           <li><strong>國安部：</strong>選擇其他玩家在紅軍組織 1 格內的 1 個牆內組織瓦解；同一目標每回合限 1 次。</li>
           <li><strong>中紀委：</strong>可棄掉任意張手牌，然後抽等量的牌。</li>
         </ul>

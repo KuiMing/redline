@@ -1,7 +1,7 @@
 {
   "summary": {
-    "total": 6,
-    "passed": 6,
+    "total": 7,
+    "passed": 7,
     "failed": 0
   },
   "results": [
@@ -11,9 +11,14 @@
       "detail": "first={'success': True, 'result': {'name': '統戰部', 'drawn': 1}}, second={'success': True, 'result': {'name': '統戰部', 'drawn': 1}}, third={'error': 'Red Army faction action limit reached this turn'}, hand=['補牌2', '補牌1'], turn_log={'played_money_card': False, 'played_propaganda_card': False, 'non_starter_discard': False, 'successful_discard': False, 'built_towns': [], 'played_nonstarter_names': [], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': True, 'red_army_action_count': 2, 'red_army_targeted_actions': {}, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': [], 'reaction_prompted_player_ids': []}"
     },
     {
-      "name": "red_army_propaganda_department_topdecks_internal_propaganda_and_limits_same_target",
+      "name": "red_army_propaganda_department_topdecks_internal_conflict_and_limits_same_target",
       "ok": true,
-      "detail": "start={'pending_choice': True}, choice=None, resolved={'success': True, 'choice_index': 0, 'target_id': 'a', 'selected': {'id': 'a', 'label': 'A', 'player_id': 'a'}, 'choice_key': 'red_army_propaganda_department_target', 'name': '政工部', 'target_player_name': 'A', 'topdecked_card': '內宣'}, top=內宣, repeat={'error': '政工部 already used on this player this turn'}"
+      "detail": "start={'pending_choice': True}, choice=None, resolved={'success': True, 'choice_index': 0, 'target_id': 'a', 'selected': {'id': 'a', 'label': 'A', 'player_id': 'a'}, 'choice_key': 'red_army_propaganda_department_target', 'name': '政工部', 'target_player_name': 'A', 'topdecked_card': '內鬥', 'static_supply_empty': False}, top=內鬥, top_type=disruption, supply_after=0, repeat={'error': '政工部 already used on this player this turn'}"
+    },
+    {
+      "name": "red_army_propaganda_department_does_not_create_internal_conflict_when_supply_empty",
+      "ok": true,
+      "detail": "result={'success': True, 'result': {'name': '政工部', 'target_player_name': 'A', 'topdecked_card': None, 'static_supply_empty': True}}, draw_pile=[], supply=0"
     },
     {
       "name": "red_army_state_security_dissolves_one_inner_org_within_one_step",
