@@ -279,6 +279,43 @@ def run_checks():
         }
     ))
 
+    # Tibet red suppression: Red Army discards a hand card, then builds near a Tibet organization.
+    game, actor, red = make_game('tibet')
+    tibet_town = next(town for town in game._towns_for_region_alias('tibet_region') if game.can_faction_develop_in_town('red_army', town))
+    actor.organizations = {tibet_town: 1}
+    red.hand = [Card('紅軍棄牌測試', 'money', {'money': 1})]
+    red.organizations = {'北京': 1}
+    game.era_engine.activate_era('tibet')
+    runtime_effects = game._apply_era_activation_effects(game.era_engine.get_definition('tibet'))
+    first_choice = dict(game.pending_choice or {})
+    discard_result = game.resolve_pending_choice(red.id, 0)
+    build_choice = dict(game.pending_choice or {})
+    build_index = next(i for i, entry in enumerate(build_choice.get('towns') or []) if entry.get('town') == tibet_town)
+    build_result = game.resolve_pending_choice(red.id, build_index)
+    checks.append(check(
+        'tibet_red_discards_then_builds_near_tibet_org',
+        runtime_effects.get('red_suppression', {}).get('status') == 'pending_discard_choice'
+        and first_choice.get('choice_key') == 'era_red_discard_to_build_near_target'
+        and discard_result.get('pending_choice') is True
+        and build_choice.get('choice_key') == 'era_red_build_near_target'
+        and build_result.get('success') is True
+        and discard_count(red, '紅軍棄牌測試') == 1
+        and red.organizations.get(tibet_town) == 1,
+        {
+            'rule': '藏國紅軍壓制效果：紅軍棄 1 張手牌後，在藏國組織 1 格內免費建立 1 個紅軍組織。',
+            'tibet_org_town': tibet_town,
+            'runtime_effects': runtime_effects,
+            'first_choice_key': first_choice.get('choice_key'),
+            'discard_result': discard_result,
+            'build_choice_key': build_choice.get('choice_key'),
+            'build_town_count': len(build_choice.get('towns') or []),
+            'build_result': build_result,
+            'red_discard_count': discard_count(red, '紅軍棄牌測試'),
+            'red_orgs': dict(red.organizations),
+            'era_effects_applied': game.turn_log.get('era_effects_applied'),
+        }
+    ))
+
     return checks
 
 

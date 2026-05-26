@@ -1,0 +1,30 @@
+{
+  "status": "passed",
+  "scenario": "藏國時代關卡紅軍壓制：紅軍棄 1 張手牌後，重用既有 pending town choice / map highlight / 戰略地圖側欄建立組織流程。",
+  "screenshot": "docs/records/event-cards/TIBET_ERA_RED_BUILD_MAP_UI_2026_05_26.png",
+  "setup_endpoint": "/test/setup-tibet-era-red-build-proof",
+  "before": {
+    "current_player": "紅軍",
+    "hand_count": 0,
+    "discard": ["紅軍棄牌 UI proof"],
+    "pending_choice_key": "era_red_build_near_target",
+    "pending_choice_type": "town_choice",
+    "pending_towns": ["加德滿都", "博卡拉", "日喀則"],
+    "map_hint": "[藏國]藏國騷亂：[藏國]藏國騷亂：選擇要免費建立紅軍組織的城鎮。 地圖上已用橘色外框標出可選城鎮。請點選橘色城鎮，然後使用左側「在目前城鎮建立組織（效果）」按鈕完成建立。",
+    "visible_highlight": "正式 browser UI 戰略地圖顯示橘色高亮可選城鎮：加德滿都、博卡拉、日喀則"
+  },
+  "action": {
+    "via": "strategic_map_sidebar_direct_build_button",
+    "town": "加德滿都",
+    "result": {"ok": true, "eventChoice": true, "index": 0}
+  },
+  "after": {
+    "pending_choice": null,
+    "red_orgs": {"北京": 1, "加德滿都": 1},
+    "red_discard": ["紅軍棄牌 UI proof"]
+  },
+  "notes": [
+    "沒有重做情報網 target choice map highlight；只擴充既有 event_build_organization map payload / support-targets 流程可接受 era_red_build_near_target。",
+    "UI 按鈕文字改成通用「在目前城鎮建立組織（效果）」，以同時支援事件卡與時代關卡 pending town choice。"
+  ]
+}

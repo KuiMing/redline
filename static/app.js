@@ -1057,13 +1057,13 @@ window.addEventListener('message', (event) => {
 });
 
 function eventBuildChoiceMapPayload(choice, sourceName = '', resolvedTitle = '') {
-  if (!choice || choice.choice_key !== 'event_build_organization') return null;
+  if (!choice || !['event_build_organization', 'era_red_build_near_target'].includes(choice.choice_key)) return null;
   const towns = (choice.towns || []).filter(entry => entry?.town);
   if (!towns.length) return null;
   return {
     mode: 'support-targets',
-    choiceKey: 'event_build_organization',
-    sourceName: sourceName || choice.source_name || resolvedTitle || '事件卡建立組織',
+    choiceKey: choice.choice_key,
+    sourceName: sourceName || choice.source_name || resolvedTitle || '建立組織',
     prompt: choice.prompt || '事件卡效果：請在戰略地圖選擇可建立組織的城鎮。',
     towns: towns.map((entry, index) => ({
       town: entry.town,
@@ -1162,7 +1162,7 @@ function renderChoiceModal(state) {
   const choiceKey = choice.choice_key || '';
   const sourceName = choice.source_name || choiceKey || '';
 
-  if (choiceKey === 'event_build_organization' && (choiceType === 'town_choice' || choice.step === 'town')) {
+  if (['event_build_organization', 'era_red_build_near_target'].includes(choiceKey) && (choiceType === 'town_choice' || choice.step === 'town')) {
     const payload = eventBuildChoiceMapPayload(choice, sourceName, sourceName);
     overlay.style.display = 'none';
     overlay.classList.remove('choice-modal-map-context');

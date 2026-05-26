@@ -738,7 +738,17 @@ class Game:
             "europe": "歐洲",
         }
         ruler = alias_to_ruler.get(region, region)
-        return list(self.towns_by_ruler.get(ruler, []))
+        towns = list(self.towns_by_ruler.get(ruler, []))
+        if towns:
+            return towns
+        # Some era regions (for example tibet_region) are represented by camp tags
+        # rather than ruler tags on the current map data.
+        camp_towns = [
+            town for town, info in (self.map.get("towns", {}) or {}).items()
+            if ruler in (info.get("camp") or [])
+        ]
+        camp_towns.sort()
+        return camp_towns
 
     def _assign_factions(self, players_data):
         red = next(f for f in self.factions if f["id"] == "red_army")
@@ -1289,6 +1299,37 @@ class Game:
                 'choice_key': choice_key,
             }
 
+        if choice_key == 'era_red_discard_to_build_near_target':
+            if chosen not in player.hand:
+                return {'error': 'Chosen card not in hand'}
+            context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
+            effect = context.get('effect') if isinstance(context.get('effect'), dict) else {}
+            towns = self._era_build_towns_near_target(player, effect)
+            if not towns:
+                return {'error': 'No valid era build towns'}
+            player.hand.remove(chosen)
+            player.deck.discard([chosen])
+            source_name = choice.get('source_name') or context.get('era_name') or '時代關卡'
+            self._set_pending_town_choice(
+                player,
+                'era_red_build_near_target',
+                towns,
+                f"{source_name}：選擇要免費建立紅軍組織的城鎮。",
+                source_name=source_name,
+                context={
+                    **context,
+                    'discarded_card': getattr(chosen, 'name', str(chosen)),
+                },
+            )
+            self.log(f"{player.name} discarded {getattr(chosen, 'name', str(chosen))} for {source_name}")
+            return {
+                'success': True,
+                'discarded_card': getattr(chosen, 'name', str(chosen)),
+                'choice_key': choice_key,
+                'pending_choice': True,
+                'town_count': len(towns),
+            }
+
         return {'error': 'Unsupported pending choice type'}
 
     def _resolve_multi_card_choice(self, player, choice, indices):
@@ -1490,6 +1531,15 @@ class Game:
         if choice_key == 'event_build_organization':
             player.organizations[town] = player.organizations.get(town, 0) + 1
             self.log(f"{player.name} built organization in {town} via event")
+        elif choice_key == 'era_red_build_near_target':
+            player.organizations[town] = player.organizations.get(town, 0) + 1
+            self.turn_log.setdefault('era_effects_applied', []).append({
+                'era': (choice.get('context') or {}).get('era_id'),
+                'type': 'red_discard_to_build_near_target',
+                'town': town,
+                'discarded_card': (choice.get('context') or {}).get('discarded_card'),
+            })
+            self.log(f"{player.name} built organization in {town} via era effect")
         self.pending_choice = None
         return {
             'success': True,
@@ -4000,6 +4050,48 @@ class Game:
             self.log(f"Era {era_name}: {target.name} drew {len(cards)} card(s)")
         return drawn
 
+    def _era_build_towns_near_target(self, builder, effect):
+        target_players = self._era_effect_target_players(effect)
+        target_region = (effect or {}).get('target_region')
+        max_steps = int((effect or {}).get('max_steps', 1) or 1)
+        source_towns = []
+        for target in target_players:
+            for town, count in (getattr(target, 'organizations', {}) or {}).items():
+                if count > 0 and self._town_matches_region_alias(town, target_region):
+                    source_towns.append(town)
+        if not source_towns:
+            return []
+        reachable = self._towns_within_steps(source_towns, max_steps=max_steps)
+        towns = []
+        for town in sorted(reachable):
+            if self.can_develop_in_town(builder, town):
+                towns.append({'town': town, 'near_target_towns': sorted([src for src in source_towns if town in self._towns_within_steps([src], max_steps=max_steps)])})
+        return towns
+
+    def _start_era_red_discard_build_flow(self, effect, era):
+        red = self._red_player()
+        if red is None:
+            return {'type': (effect or {}).get('type'), 'status': 'no_red_player'}
+        if not getattr(red, 'hand', None):
+            return {'type': (effect or {}).get('type'), 'status': 'red_has_no_hand_cards'}
+        towns = self._era_build_towns_near_target(red, effect)
+        if not towns:
+            return {'type': (effect or {}).get('type'), 'status': 'no_valid_build_towns'}
+        era_name = (era or {}).get('name', (era or {}).get('id', '時代關卡'))
+        self._set_pending_card_choice(
+            red,
+            'era_red_discard_to_build_near_target',
+            list(red.hand),
+            f"{era_name}：紅軍請棄 1 張手牌，接著在目標組織 {int((effect or {}).get('max_steps', 1) or 1)} 格內免費建立 1 個組織。",
+            source_name=era_name,
+            context={
+                'era_id': (era or {}).get('id'),
+                'era_name': era_name,
+                'effect': dict(effect or {}),
+            },
+        )
+        return {'type': (effect or {}).get('type'), 'status': 'pending_discard_choice', 'player_id': red.id, 'town_count': len(towns)}
+
     def _apply_era_activation_effects(self, era):
         effects = (era or {}).get('effects') or {}
         results = {}
@@ -4010,6 +4102,8 @@ class Game:
                 results[side] = {'type': effect_type, 'added': self._apply_era_static_cards_to_discard(effect, era_name)}
             elif effect_type == 'draw' and (effect or {}).get('immediate', False):
                 results[side] = {'type': effect_type, 'drawn': self._apply_era_draw(effect, era_name)}
+            elif effect_type == 'red_discard_to_build_near_target':
+                results[side] = self._start_era_red_discard_build_flow(effect, era)
             else:
                 results[side] = {'type': effect_type, 'status': 'active_modifier_or_pending_runtime'}
         return results

@@ -1,8 +1,8 @@
 {
   "date": "2026-05-26",
   "summary": {
-    "total": 10,
-    "passed": 10,
+    "total": 11,
+    "passed": 11,
     "failed": 0
   },
   "checks": [
@@ -274,6 +274,61 @@
         },
         "active_eras": [
           "kazakh"
+        ]
+      }
+    },
+    {
+      "name": "tibet_red_discards_then_builds_near_tibet_org",
+      "passed": true,
+      "details": {
+        "rule": "藏國紅軍壓制效果：紅軍棄 1 張手牌後，在藏國組織 1 格內免費建立 1 個紅軍組織。",
+        "tibet_org_town": "加德滿都",
+        "runtime_effects": {
+          "red_suppression": {
+            "type": "red_discard_to_build_near_target",
+            "status": "pending_discard_choice",
+            "player_id": "red",
+            "town_count": 3
+          },
+          "revolution_counterattack": {
+            "type": "hand_card_resource_bonus",
+            "status": "active_modifier_or_pending_runtime"
+          }
+        },
+        "first_choice_key": "era_red_discard_to_build_near_target",
+        "discard_result": {
+          "success": true,
+          "discarded_card": "紅軍棄牌測試",
+          "choice_key": "era_red_discard_to_build_near_target",
+          "pending_choice": true,
+          "town_count": 3
+        },
+        "build_choice_key": "era_red_build_near_target",
+        "build_town_count": 3,
+        "build_result": {
+          "success": true,
+          "choice_index": 0,
+          "town": "加德滿都",
+          "selected": {
+            "town": "加德滿都",
+            "near_target_towns": [
+              "加德滿都"
+            ]
+          },
+          "choice_key": "era_red_build_near_target"
+        },
+        "red_discard_count": 1,
+        "red_orgs": {
+          "北京": 1,
+          "加德滿都": 1
+        },
+        "era_effects_applied": [
+          {
+            "era": "tibet",
+            "type": "red_discard_to_build_near_target",
+            "town": "加德滿都",
+            "discarded_card": "紅軍棄牌測試"
+          }
         ]
       }
     }

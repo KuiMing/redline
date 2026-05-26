@@ -205,8 +205,8 @@ function renderSupportChoiceHighlights(options = {}) {
     const hintEl = document.getElementById('interactionHint');
     if (hintEl) {
       const focusText = supportChoiceHighlight.focusTown ? ` 已聚焦 ${supportChoiceHighlight.focusTown}。` : '';
-      const actionText = supportChoiceHighlight.choiceKey === 'event_build_organization'
-        ? '請點選橘色城鎮，然後使用左側「在目前城鎮建立組織（事件卡）」按鈕完成建立。'
+      const actionText = ['event_build_organization', 'era_red_build_near_target'].includes(supportChoiceHighlight.choiceKey)
+        ? '請點選橘色城鎮，然後使用左側「在目前城鎮建立組織（效果）」按鈕完成建立。'
         : '請回到選擇視窗確認或改選。';
       hintEl.innerHTML = `${supportChoiceHighlight.sourceName || '當前選擇'}：<span class="hint-strong">${supportChoiceHighlight.prompt || '請依列表選擇目標。'}</span> 地圖上已用橘色外框標出可選城鎮。${focusText}${actionText}`;
     }
@@ -560,7 +560,7 @@ function sendMoveAction(fromTown, toTown, mode) {
 }
 
 function eventBuildChoiceForTown(townName) {
-  if (!supportChoiceHighlight || supportChoiceHighlight.choiceKey !== 'event_build_organization') return null;
+  if (!supportChoiceHighlight || !['event_build_organization', 'era_red_build_near_target'].includes(supportChoiceHighlight.choiceKey)) return null;
   const towns = Array.isArray(supportChoiceHighlight.towns) ? supportChoiceHighlight.towns : [];
   const entry = towns.find(item => item?.town === townName);
   if (!entry || !Number.isFinite(Number(entry.index))) return null;
@@ -607,8 +607,8 @@ function refreshDirectBuildUi() {
   const eventChoice = eventBuildChoiceForTown(selectedTown);
   if (eventChoice) {
     btn.disabled = false;
-    btn.textContent = '在目前城鎮建立組織（事件卡）';
-    hint.innerHTML = `目前選取 <span class="hint-strong">${selectedTown}</span>：事件卡效果允許在此建立組織；按上方按鈕完成建立。`;
+    btn.textContent = '在目前城鎮建立組織（效果）';
+    hint.innerHTML = `目前選取 <span class="hint-strong">${selectedTown}</span>：目前效果允許在此建立組織；按上方按鈕完成建立。`;
   } else {
     btn.textContent = '在目前城鎮建立組織';
     const sharedOnly = !playerOwnsTown(selectedTown) && playerHasSharedAccessToTown(selectedTown);
