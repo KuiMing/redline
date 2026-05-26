@@ -53,9 +53,9 @@
     - `一帶一路 南洋` / `一帶一路 天方` raw 是紅軍免費在指定區域無視距離建立 1 個組織；2026-05-24 已由 generic `ignore_distance` 修正為區域限定免費建組織。
   - 驗收：更新 `data/events_structured.v1.1.json` 與 effect vocabulary；新增/更新 validator 證明 raw text 與 structured effect 對齊。
 
-- [todo] 補齊缺少的 trigger/effect runtime primitives。
-  - 可能需要新增：購買事件 trigger（指定卡類/費用門檻）、回合結束狀態 trigger、從棄牌堆選牌置頂、從手牌/棄牌移除、卡種/區域/距離限定 modifier、持續回合 modifier。
-  - 驗收：`scripts/validate_event_cards_runtime.py` 擴充到逐張事件或逐 effect primitive 覆蓋；所有新增效果都有 deterministic runtime assertions。
+- [done] 補齊缺少的 trigger/effect runtime primitives。
+  - 2026-05-26：已確認並補強事件卡 runtime primitives：購買事件 trigger（指定卡名／總費用門檻）、回合結束狀態 trigger、從棄牌堆選牌置頂、從手牌／棄牌移除、卡種／區域／距離限定 modifier 均有 deterministic runtime 覆蓋；本次另補 `duration` / `remaining_turns` 持續回合 modifier runtime，事件 modifier 會依回合結束倒數並支援跨回合持續。
+  - 驗證紀錄：`docs/records/event-cards/EVENT_CARDS_RUNTIME_VALIDATION.{json,md}`（35 passed，含 `test_event_modifier_duration_ticks_across_turns` 與 `test_event_runtime_primitive_inventory_is_covered`）。
 
 - [todo] 補事件卡玩家選擇 UI / map proof。
   - 範圍：`discard_self`、`red_dissolve`、`build_organization`、從棄牌堆選牌、從手牌/棄牌移除、區域建組織等需要玩家指定目標的效果。

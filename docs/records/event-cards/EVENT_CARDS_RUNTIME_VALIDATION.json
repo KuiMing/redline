@@ -1,6 +1,6 @@
 {
   "status": "passed",
-  "passed": 33,
+  "passed": 35,
   "results": [
     {
       "name": "test_idle_noop",
@@ -24,6 +24,7 @@
           "status": "success"
         },
         "discard": [
+          "資助者",
           "宣傳家",
           "資助者"
         ],
@@ -249,8 +250,6 @@
         "event": "東突厥集中營",
         "success_discard": [
           "宣傳家",
-          "宣傳家",
-          "宣傳家",
           "宣傳家"
         ],
         "failure_discard": [
@@ -412,7 +411,9 @@
             ],
             "target_region": "outer_manchuria",
             "range": 5,
-            "event_id": "shanghai_cooperation_org"
+            "remaining_turns": 1,
+            "event_id": "shanghai_cooperation_org",
+            "event_name": "上海合作組織"
           }
         ],
         "status": "auto"
@@ -546,6 +547,84 @@
         "restrict_build_error": "Current event restricts building organizations",
         "ignore_distance_move": {
           "success": true
+        }
+      }
+    },
+    {
+      "name": "test_event_modifier_duration_ticks_across_turns",
+      "status": "passed",
+      "detail": {
+        "effect": "reduce_cost",
+        "duration": 2,
+        "remaining_after_first_turn": 1,
+        "expired_after_second_turn": true
+      }
+    },
+    {
+      "name": "test_event_runtime_primitive_inventory_is_covered",
+      "status": "passed",
+      "detail": {
+        "購買事件 trigger": {
+          "event": "貿易戰加劇",
+          "trigger": {
+            "type": "buy_card",
+            "count": 1,
+            "min_cost": 4,
+            "card_names": [
+              "英美奧援"
+            ]
+          }
+        },
+        "回合結束狀態 trigger": {
+          "event": "烏魯木齊七五事件",
+          "trigger": {
+            "type": "end_turn_state",
+            "count": 1,
+            "condition": "own_organization_in_scope",
+            "scope": "牆內"
+          }
+        },
+        "從棄牌堆選牌置頂": {
+          "event": "貿易戰加劇",
+          "success": {
+            "type": "topdeck_from_discard",
+            "count": 1
+          }
+        },
+        "從手牌/棄牌移除": {
+          "event": "紅軍權貴出逃",
+          "success": {
+            "type": "trash_from_hand_or_discard",
+            "count": 1
+          }
+        },
+        "卡種/區域/距離限定 modifier": {
+          "event": "上海合作組織",
+          "effect": {
+            "type": "scoped_card_range",
+            "duration": 1,
+            "player_faction": "red_army",
+            "card_types": [
+              "armed",
+              "spy"
+            ],
+            "target_region": "outer_manchuria",
+            "range": 5
+          }
+        },
+        "持續回合 modifier": {
+          "event": "上海合作組織",
+          "effect": {
+            "type": "scoped_card_range",
+            "duration": 1,
+            "player_faction": "red_army",
+            "card_types": [
+              "armed",
+              "spy"
+            ],
+            "target_region": "outer_manchuria",
+            "range": 5
+          }
         }
       }
     },

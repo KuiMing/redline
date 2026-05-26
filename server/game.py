@@ -300,7 +300,7 @@ class Game:
     def _start_event_phase(self):
         event = self.event_deck.draw() if getattr(self, 'event_deck', None) else None
         self.current_event = dict(event) if event else None
-        self.event_modifiers = []
+        self.event_modifiers = self._active_event_modifiers()
         if not self.current_event:
             self.event_progress = None
             self.event_notification = None
@@ -426,11 +426,36 @@ class Game:
             self._track_event_progress('draw', amount=len(drawn), player=player)
         return drawn
 
+    def _active_event_modifiers(self):
+        return [
+            modifier for modifier in (getattr(self, 'event_modifiers', []) or [])
+            if int((modifier or {}).get('remaining_turns', 1) or 0) > 0
+        ]
+
     def _event_modifier_active(self, modifier_type):
-        return any((m or {}).get('type') == modifier_type for m in (getattr(self, 'event_modifiers', []) or []))
+        return any((m or {}).get('type') == modifier_type for m in self._active_event_modifiers())
 
     def _event_reduce_cost_amount(self):
-        return sum(int((m or {}).get('amount', 0) or 0) for m in (getattr(self, 'event_modifiers', []) or []) if (m or {}).get('type') == 'reduce_cost')
+        return sum(int((m or {}).get('amount', 0) or 0) for m in self._active_event_modifiers() if (m or {}).get('type') == 'reduce_cost')
+
+    def _event_modifier_from_effect(self, effect):
+        modifier = dict(effect or {})
+        duration = int(modifier.get('duration', 1) or 1)
+        modifier['duration'] = max(1, duration)
+        modifier['remaining_turns'] = int(modifier.get('remaining_turns', modifier['duration']) or modifier['duration'])
+        modifier['event_id'] = (self.current_event or {}).get('id')
+        modifier['event_name'] = (self.current_event or {}).get('name')
+        return modifier
+
+    def _tick_event_modifiers_at_turn_end(self):
+        active = []
+        for modifier in self._active_event_modifiers():
+            remaining = int((modifier or {}).get('remaining_turns', 1) or 1) - 1
+            if remaining > 0:
+                next_modifier = dict(modifier)
+                next_modifier['remaining_turns'] = remaining
+                active.append(next_modifier)
+        self.event_modifiers = active
 
     def _town_matches_region_alias(self, town, region):
         if not region:
@@ -439,7 +464,7 @@ class Game:
 
     def _event_scoped_card_range(self, player, card_type, target_region=None):
         best = None
-        for modifier in (getattr(self, 'event_modifiers', []) or []):
+        for modifier in self._active_event_modifiers():
             if (modifier or {}).get('type') != 'scoped_card_range':
                 continue
             faction = modifier.get('player_faction')
@@ -460,7 +485,7 @@ class Game:
         target_region = None
         scoped_range = self._event_scoped_card_range(player, card_type)
         if scoped_range is not None:
-            for modifier in (getattr(self, 'event_modifiers', []) or []):
+            for modifier in self._active_event_modifiers():
                 if (modifier or {}).get('type') == 'scoped_card_range' and card_type in set(modifier.get('card_types') or []):
                     faction = modifier.get('player_faction')
                     if not faction or getattr(player, 'faction_id', None) == faction:
@@ -552,9 +577,7 @@ class Game:
         elif t == 'move':
             player.moves_left += count
         elif t in {'reduce_cost', 'restrict_build', 'ignore_distance', 'scoped_card_range'}:
-            modifier = dict(effect)
-            modifier['event_id'] = (self.current_event or {}).get('id')
-            self.event_modifiers.append(modifier)
+            self.event_modifiers.append(self._event_modifier_from_effect(effect))
         elif t == 'build_organization':
             towns = [{'town': town} for town in sorted(self.map.get('towns', {})) if self.can_develop_in_town(player, town)]
             if towns:
@@ -3627,7 +3650,7 @@ class Game:
 
         self.current_event = None
         self.event_progress = None
-        self.event_modifiers = []
+        self._tick_event_modifiers_at_turn_end()
         self.event_notification = None
         self.turn_log = self._new_turn_log()
 

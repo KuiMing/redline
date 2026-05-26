@@ -509,7 +509,7 @@ def test_event_modifiers_are_consumed_by_runtime_rules():
     game = make_game("歲月靜好")
     player = game.players[0]
 
-    game.event_modifiers = [{"type": "reduce_cost", "amount": 1}]
+    game.event_modifiers = [{"type": "reduce_cost", "amount": 1, "duration": 1, "remaining_turns": 1}]
     assert game._event_reduce_cost_amount() == 1
 
     game.turn_phase = TurnPhase.ACTION
@@ -517,16 +517,61 @@ def test_event_modifiers_are_consumed_by_runtime_rules():
     player.resources = {"money": 1, "propaganda": 1}
     assert_ok(game.buy_card(card_index), "buy reduced-cost static card")
 
-    game.event_modifiers = [{"type": "restrict_build"}]
+    game.event_modifiers = [{"type": "restrict_build", "duration": 1, "remaining_turns": 1}]
     blocked = game.build_organization("臺北")
     assert blocked.get("error") == "Current event restricts building organizations"
 
-    game.event_modifiers = [{"type": "ignore_distance"}]
+    game.event_modifiers = [{"type": "ignore_distance", "duration": 1, "remaining_turns": 1}]
     player.moves_left = 1
     player.organizations["臺北"] = 2
     moved = game.move_organization("臺北", "北京", mode="road")
     assert_ok(moved, "ignore_distance move")
     return {"reduce_cost_buy": names(player.deck.discard_pile), "restrict_build_error": blocked.get("error"), "ignore_distance_move": moved}
+
+
+def test_event_modifier_duration_ticks_across_turns():
+    game = make_game("歲月靜好")
+    player = game.players[0]
+    game.turn_phase = TurnPhase.ACTION
+    game.current_event = {"id": "duration_test", "name": "持續測試事件", "type": "mission"}
+    result = game._apply_event_effect({"type": "reduce_cost", "amount": 1, "duration": 2}, player)
+    assert_ok(result, "apply duration modifier")
+    assert game.event_modifiers[0]["duration"] == 2
+    assert game.event_modifiers[0]["remaining_turns"] == 2
+    assert game._event_reduce_cost_amount() == 1
+
+    game._end_turn()
+    assert game.event_modifiers[0]["remaining_turns"] == 1
+    assert game._event_reduce_cost_amount() == 1
+
+    game.turn_phase = TurnPhase.END
+    game._end_turn()
+    assert game.event_modifiers == []
+    assert game._event_reduce_cost_amount() == 0
+    return {"effect": "reduce_cost", "duration": 2, "remaining_after_first_turn": 1, "expired_after_second_turn": True}
+
+
+def test_event_runtime_primitive_inventory_is_covered():
+    game = make_game("歲月靜好")
+    event_specs = {event["name"]: event for event in game.structured_events}
+    required_triggers = {
+        "購買事件 trigger": ("貿易戰加劇", "trigger", "buy_card"),
+        "回合結束狀態 trigger": ("烏魯木齊七五事件", "trigger", "end_turn_state"),
+    }
+    required_effects = {
+        "從棄牌堆選牌置頂": ("貿易戰加劇", "success", "topdeck_from_discard"),
+        "從手牌/棄牌移除": ("紅軍權貴出逃", "success", "trash_from_hand_or_discard"),
+        "卡種/區域/距離限定 modifier": ("上海合作組織", "effect", "scoped_card_range"),
+    }
+    coverage = {}
+    for label, (event_name, field, effect_type) in {**required_triggers, **required_effects}.items():
+        spec = event_specs[event_name][field]
+        assert spec["type"] == effect_type, {label: spec}
+        coverage[label] = {"event": event_name, field: spec}
+    duration_spec = event_specs["上海合作組織"]["effect"]
+    assert duration_spec["duration"] == 1
+    coverage["持續回合 modifier"] = {"event": "上海合作組織", "effect": duration_spec}
+    return coverage
 
 
 
@@ -757,6 +802,8 @@ def main():
         test_event_deck_uses_declared_counts_without_structured_duplicate_overcount,
         test_trade_war_structured_matches_raw_rule,
         test_event_modifiers_are_consumed_by_runtime_rules,
+        test_event_modifier_duration_ticks_across_turns,
+        test_event_runtime_primitive_inventory_is_covered,
         test_event_red_dissolve_ui_reuses_target_map_highlight,
         test_pending_choice_blocks_phase_advance_until_resolved,
         test_event_deck_reshuffle,
