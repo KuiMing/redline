@@ -44,6 +44,23 @@ def first_towns(game, region, count):
     return towns[:count]
 
 
+def first_developable_towns(game, player, region, count):
+    towns = [town for town in game._towns_for_region_alias(region) if game.can_faction_develop_in_town(player.faction_id, town)]
+    assert len(towns) >= count, f'{region} only has {len(towns)} developable towns for {player.faction_id}'
+    return towns[:count]
+
+
+def first_out_of_range_developable_pair(game, player, region):
+    towns = first_developable_towns(game, player, region, 2)
+    all_towns = [town for town in game._towns_for_region_alias(region) if game.can_faction_develop_in_town(player.faction_id, town)]
+    for origin in towns:
+        neighbors = set(game.map.get('towns', {}).get(origin, {}).get('road', []) or []) | set(game.map.get('towns', {}).get(origin, {}).get('rail', []) or [])
+        for target in all_towns:
+            if target != origin and target not in neighbors:
+                return origin, target
+    raise AssertionError(f'No out-of-range developable pair for {player.faction_id} in {region}')
+
+
 def place_orgs(player, towns, count_each=1):
     player.organizations = {town: count_each for town in towns}
 
@@ -158,6 +175,107 @@ def run_checks():
             'remaining_money': actor.resources.get('money'),
             'discard_armed': discard_count(actor, '武裝小隊'),
             'active_era_effects': game.era_engine.get_active_era_details(),
+        }
+    ))
+
+    # Mongolia/Tibet-style resource-card bonus: propaganda card played as resource grants +1 propaganda.
+    game, actor, _red = make_game('mongol')
+    game.era_engine.activate_era('mongolia')
+    actor.hand = [Card('宣傳家', 'propaganda', {'propaganda': 2})]
+    actor.resources = {'money': 0, 'propaganda': 0}
+    result = game.play_card(0, mode='resource')
+    checks.append(check(
+        'mongolia_propaganda_resource_card_bonus_adds_one_propaganda',
+        result.get('success') is True and actor.resources.get('propaganda') == 3,
+        {
+            'rule': '蒙古反撲效果：宣傳類手牌用於購買/資源時額外提供 1 宣傳。',
+            'play_result': result,
+            'resources_after': dict(actor.resources),
+            'era_effects_applied': game.turn_log.get('era_effects_applied'),
+        }
+    ))
+
+    # Uyghur play-card hook: armed card grants 2 propaganda when played.
+    game, actor, red = make_game('uyghur_istanbul')
+    game.era_engine.activate_era('uyghur')
+    actor.organizations = {'北京': 1}
+    red.organizations = {'北京': 1}
+    red.hand = [Card('目標手牌', 'money', {'money': 1})]
+    actor.hand = [Card('武裝者', 'armed', {'propaganda': 1})]
+    actor.resources = {'money': 0, 'propaganda': 0}
+    result = game.play_card(0, mode='action', target_player_id='red')
+    checks.append(check(
+        'uyghur_armed_play_grants_two_propaganda',
+        result.get('success') is True
+        and result.get('pending_choice') is True
+        and actor.resources.get('propaganda') == 2,
+        {
+            'rule': '維吾爾反撲效果：每打出 1 張武裝類卡牌，獲得 2 宣傳。',
+            'play_result': result,
+            'resources_after': dict(actor.resources),
+            'pending_choice': game.pending_choice.get('choice_key') if game.pending_choice else None,
+            'era_effects_applied': game.turn_log.get('era_effects_applied'),
+        }
+    ))
+
+    # Taiwan build hook: building in Taiwan region grants 1 propaganda.
+    game, actor, _red = make_game('taiwan_green')
+    game.era_engine.activate_era('taiwan')
+    taiwan_town = first_towns(game, 'taiwan', 1)[0]
+    actor.organizations = {taiwan_town: 1}
+    actor.resources = {'money': 0, 'propaganda': 0}
+    result = game.build_organization(taiwan_town)
+    checks.append(check(
+        'taiwan_build_in_taiwan_grants_one_propaganda',
+        result.get('success') is True and actor.resources.get('propaganda') == 1,
+        {
+            'rule': '臺灣反撲效果：在臺灣城鎮建立至少 1 個組織時，獲得 1 宣傳。',
+            'town': taiwan_town,
+            'build_result': result,
+            'resources_after': dict(actor.resources),
+            'era_effects_applied': game.turn_log.get('era_effects_applied'),
+        }
+    ))
+
+    # Rebel build-count hook: third build in the turn draws once, then only once.
+    game, actor, _red = make_game('liberals')
+    game.era_engine.activate_era('rebels')
+    china_towns = first_developable_towns(game, actor, 'china', 3)
+    actor.organizations = {town: 1 for town in china_towns}
+    hand_before = len(actor.hand)
+    results = [game.build_organization(town) for town in china_towns]
+    hand_after = len(actor.hand)
+    checks.append(check(
+        'rebels_third_build_draws_one_card_once',
+        all(r.get('success') is True for r in results)
+        and hand_after - hand_before == 1
+        and game.turn_log.get('era_build_count_draw_bonus:rebels') is True,
+        {
+            'rule': '反賊反撲效果：回合中建立至少 3 個組織時，當回合抽 1 張；同一回合只觸發一次。',
+            'towns': china_towns,
+            'build_results': results,
+            'hand_before': hand_before,
+            'hand_after': hand_after,
+            'era_effects_applied': game.turn_log.get('era_effects_applied'),
+        }
+    ))
+
+    # Kazakh/Rebel suppression hook: active restriction blocks ignore-distance builds in China.
+    game, actor, _red = make_game('kazakh')
+    game.era_engine.activate_era('kazakh')
+    origin, target = first_out_of_range_developable_pair(game, actor, 'china')
+    actor.organizations = {origin: 1}
+    game.event_modifiers.append({'type': 'ignore_distance', 'remaining_turns': 1, 'duration': 1})
+    result = game.build_organization_with_support(origin, target)
+    checks.append(check(
+        'kazakh_restricts_ignore_distance_build_in_china',
+        result.get('error') == 'Target out of build range',
+        {
+            'rule': '哈薩克紅軍壓制效果：此後無法再無視距離建立牆內組織。',
+            'origin': origin,
+            'target': target,
+            'build_result': result,
+            'active_eras': game.era_engine.get_active_eras(),
         }
     ))
 

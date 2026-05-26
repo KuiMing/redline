@@ -1,7 +1,7 @@
 # Era Effects Runtime Validation
 
 - Date: 2026-05-26
-- Summary: 5/5 passed
+- Summary: 10/10 passed
 
 ## PASS: mongolia_adds_internal_conflict_with_static_supply_cap
 
@@ -155,6 +155,131 @@
         }
       }
     }
+  ]
+}
+```
+
+## PASS: mongolia_propaganda_resource_card_bonus_adds_one_propaganda
+
+```json
+{
+  "rule": "蒙古反撲效果：宣傳類手牌用於購買/資源時額外提供 1 宣傳。",
+  "play_result": {
+    "success": true
+  },
+  "resources_after": {
+    "money": 0,
+    "propaganda": 3
+  },
+  "era_effects_applied": [
+    {
+      "era": "mongolia",
+      "type": "hand_card_resource_bonus",
+      "resource": "propaganda",
+      "amount": 1
+    }
+  ]
+}
+```
+
+## PASS: uyghur_armed_play_grants_two_propaganda
+
+```json
+{
+  "rule": "維吾爾反撲效果：每打出 1 張武裝類卡牌，獲得 2 宣傳。",
+  "play_result": {
+    "success": true,
+    "pending_choice": true
+  },
+  "resources_after": {
+    "money": 0,
+    "propaganda": 2
+  },
+  "pending_choice": "armed_target_discard",
+  "era_effects_applied": [
+    {
+      "era": "uyghur",
+      "type": "gain_resource_on_play_card",
+      "resource": "propaganda",
+      "amount": 2
+    }
+  ]
+}
+```
+
+## PASS: taiwan_build_in_taiwan_grants_one_propaganda
+
+```json
+{
+  "rule": "臺灣反撲效果：在臺灣城鎮建立至少 1 個組織時，獲得 1 宣傳。",
+  "town": "南投",
+  "build_result": {
+    "success": true
+  },
+  "resources_after": {
+    "money": 0,
+    "propaganda": 1
+  },
+  "era_effects_applied": [
+    {
+      "era": "taiwan",
+      "type": "gain_resource_on_build_in_region",
+      "resource": "propaganda",
+      "amount": 1,
+      "town": "南投"
+    }
+  ]
+}
+```
+
+## PASS: rebels_third_build_draws_one_card_once
+
+```json
+{
+  "rule": "反賊反撲效果：回合中建立至少 3 個組織時，當回合抽 1 張；同一回合只觸發一次。",
+  "towns": [
+    "三亞",
+    "上海",
+    "北京"
+  ],
+  "build_results": [
+    {
+      "success": true
+    },
+    {
+      "success": true
+    },
+    {
+      "success": true
+    }
+  ],
+  "hand_before": 5,
+  "hand_after": 6,
+  "era_effects_applied": [
+    {
+      "era": "rebels",
+      "type": "build_count_draw_bonus",
+      "drawn": [
+        "樂捐者"
+      ],
+      "built_count": 3
+    }
+  ]
+}
+```
+
+## PASS: kazakh_restricts_ignore_distance_build_in_china
+
+```json
+{
+  "rule": "哈薩克紅軍壓制效果：此後無法再無視距離建立牆內組織。",
+  "origin": "伊寧",
+  "target": "克拉瑪依",
+  "build_result": {
+    "error": "Target out of build range"
+  },
+  "active_eras": [
+    "kazakh"
   ]
 }
 ```

@@ -3454,6 +3454,7 @@ class Game:
                     return {"success": True, "pending_choice": True}
             for key, value in getattr(played_card, 'resources', {}).items():
                 player.resources[key] += value
+            self._apply_era_resource_card_bonus(player, played_card)
             purchase_cost = self._card_purchase_cost(played_card)
             if int(purchase_cost.get('money', 0) or 0) > 0:
                 self._track_event_progress('play_card_with_money', player=player)
@@ -3553,6 +3554,7 @@ class Game:
                 if not action_context.get('card_canceled'):
                     action_result = self.action_engine.execute(card_name, player, self, context=action_context, include_resources=False)
                     if isinstance(action_result, dict) and action_result.get('pending_choice'):
+                        self._apply_era_play_card_effects(player, played_card)
                         if not action_context.get('removed_current_card'):
                             if not self._return_borrowed_card_to_owner_topdeck(played_card):
                                 player.deck.discard([played_card])
@@ -3597,6 +3599,7 @@ class Game:
             return {"success": True, "pending_choice": True}
 
         if not action_context.get('removed_current_card'):
+            self._apply_era_play_card_effects(player, played_card)
             if not self._return_borrowed_card_to_owner_topdeck(played_card):
                 player.deck.discard([played_card])
         self.log(f"{player.name} played {card_name}")
@@ -3709,6 +3712,7 @@ class Game:
         player.organizations[town] = player.organizations.get(town, 0) + 1
         self.turn_log.setdefault("built_towns", []).append(town)
         self._track_event_progress('build_organization', town=town, player=player)
+        self._apply_era_build_effects(player, town)
         self._apply_guerrilla_on_build(player, town)
         self.log(f"{player.name} built organization in {town}")
         return {"success": True}
@@ -3734,7 +3738,7 @@ class Game:
 
         safehouse_bonus = 1 if self._player_has_ability(player, "安全屋") else 0
         max_distance = 1 + int(getattr(player, 'build_range_bonus', 0) or 0) + safehouse_bonus
-        if origin_town != target_town and not self._event_modifier_active('ignore_distance'):
+        if origin_town != target_town and (not self._event_modifier_active('ignore_distance') or self._era_restricts_ignore_distance_build(player, target_town)):
             frontier = [(origin_town, 0)]
             seen = {origin_town}
             reached = False
@@ -3757,6 +3761,7 @@ class Game:
         player.organizations[target_town] = player.organizations.get(target_town, 0) + 1
         self.turn_log.setdefault("built_towns", []).append(target_town)
         self._track_event_progress('build_organization', town=target_town, player=player)
+        self._apply_era_build_effects(player, target_town)
         self._apply_guerrilla_on_build(player, target_town)
         self.log(f"{player.name} built organization in {target_town} from {origin_town}")
         return {"success": True}
@@ -4032,6 +4037,90 @@ class Game:
                 continue
             reductions[resource] += int(effect.get('amount', 0) or 0)
         return reductions
+
+    def _apply_era_resource_card_bonus(self, player, card):
+        applied = []
+        for era, _side, effect in self._active_era_effects():
+            if (effect or {}).get('type') != 'hand_card_resource_bonus':
+                continue
+            if not self._player_matches_camp(player, effect.get('target_camp')):
+                continue
+            if not self._card_matches_types(card, effect.get('card_types') or []):
+                continue
+            resource = effect.get('resource')
+            amount = int(effect.get('amount', 0) or 0)
+            if resource not in {'money', 'propaganda'} or amount <= 0:
+                continue
+            player.resources[resource] += amount
+            applied.append({'era': era.get('id'), 'type': effect.get('type'), 'resource': resource, 'amount': amount})
+            self.log(f"Era {era.get('name', era.get('id'))}: {player.name} gained {amount} {resource} from resource-card bonus")
+        if applied:
+            self.turn_log.setdefault('era_effects_applied', []).extend(applied)
+        return applied
+
+    def _apply_era_play_card_effects(self, player, card):
+        applied = []
+        for era, _side, effect in self._active_era_effects():
+            if (effect or {}).get('type') != 'gain_resource_on_play_card':
+                continue
+            if not self._player_matches_camp(player, effect.get('target_camp')):
+                continue
+            if not self._card_matches_types(card, effect.get('card_types') or []):
+                continue
+            resource = effect.get('resource')
+            amount = int(effect.get('amount', 0) or 0)
+            if resource not in {'money', 'propaganda'} or amount <= 0:
+                continue
+            player.resources[resource] += amount
+            applied.append({'era': era.get('id'), 'type': effect.get('type'), 'resource': resource, 'amount': amount})
+            self.log(f"Era {era.get('name', era.get('id'))}: {player.name} gained {amount} {resource} for playing {getattr(card, 'name', str(card))}")
+        if applied:
+            self.turn_log.setdefault('era_effects_applied', []).extend(applied)
+        return applied
+
+    def _apply_era_build_effects(self, player, town):
+        applied = []
+        built_count = len(self.turn_log.get('built_towns') or [])
+        for era, _side, effect in self._active_era_effects():
+            if not self._player_matches_camp(player, effect.get('target_camp')):
+                continue
+            effect_type = (effect or {}).get('type')
+            if effect_type == 'gain_resource_on_build_in_region':
+                region = effect.get('region')
+                if region and not self._town_matches_region_alias(town, region):
+                    continue
+                resource = effect.get('resource')
+                amount = int(effect.get('amount', 0) or 0)
+                if resource not in {'money', 'propaganda'} or amount <= 0:
+                    continue
+                player.resources[resource] += amount
+                applied.append({'era': era.get('id'), 'type': effect_type, 'resource': resource, 'amount': amount, 'town': town})
+                self.log(f"Era {era.get('name', era.get('id'))}: {player.name} gained {amount} {resource} for building in {town}")
+            elif effect_type == 'build_count_draw_bonus':
+                required = int(effect.get('build_count', 0) or 0)
+                draw_count = int(effect.get('draw_count', 0) or 0)
+                key = f"era_build_count_draw_bonus:{era.get('id')}"
+                if required <= 0 or draw_count <= 0 or built_count < required or self.turn_log.get(key):
+                    continue
+                drawn = self._draw_player_cards(player, draw_count, source='era')
+                self.turn_log[key] = True
+                applied.append({'era': era.get('id'), 'type': effect_type, 'drawn': [getattr(c, 'name', str(c)) for c in drawn], 'built_count': built_count})
+                self.log(f"Era {era.get('name', era.get('id'))}: {player.name} drew {len(drawn)} card(s) after building {built_count} organizations")
+        if applied:
+            self.turn_log.setdefault('era_effects_applied', []).extend(applied)
+        return applied
+
+    def _era_restricts_ignore_distance_build(self, player, target_town):
+        for era, _side, effect in self._active_era_effects():
+            if (effect or {}).get('type') != 'restrict_ignore_distance_build':
+                continue
+            if not self._player_matches_camp(player, effect.get('target_camp')):
+                continue
+            scope = effect.get('scope')
+            if scope and not self._town_matches_region_alias(target_town, scope):
+                continue
+            return True
+        return False
 
     def _era_card_entry(self, era_name):
         path = BASE_DIR / "data" / "cards" / "event_and_era_cards.v1.1.json"

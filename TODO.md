@@ -37,7 +37,8 @@
     - 2026-05-26：已決定 8 張 raw 時代關卡 canonical scope 為 **era-stage mechanics**，不是事件牌堆卡；8 張皆保留在 `data/era_structured.v1.1.json`，並已補上雙方效果宣告：`red_suppression`（紅軍壓制）與 `revolution_counterattack`（革命反撲）。
     - 已新增 `scripts/validate_era_canonical_scope.py`，驗證 raw 8 張皆由 structured era-stage 表示、raw bracketed era rows 未進 event deck、靜態常設牌效果明確標記 consume static supply；紀錄：`docs/records/event-cards/ERA_CANONICAL_SCOPE_AUDIT_2026_05_26.{md,json}`。
     - 2026-05-26：已完成第一批不需新 UI 的 era effect runtime：`add_static_cards_to_discard` 會透過 static supply 加入棄牌堆（目前 `蒙古`/`臺灣` 內鬥、`滿洲` 分神皆受供應量上限保護）、`draw` immediate 會在時代啟動時立即抽牌（`哈薩克` 抽 2）、`reduce_purchase_cost` 會由 active era modifier 套用到購買成本（`香港` 武裝類卡牌 -2 資金）。新增 validator / proof：`scripts/validate_era_effects_runtime.py`、`docs/records/event-cards/ERA_EFFECTS_RUNTIME_VALIDATION.{md,json}`。
-    - 仍待 runtime 落地：需新互動或更細 gameplay hook 的時代效果尚未接完，例如紅軍棄牌後建組織、紅軍用牌追加棄牌/瓦解、手牌購買資源 bonus、出牌得資源、建組織後抽牌/得資源、檢視牌庫頂並重排等。
+    - 2026-05-26：已完成第二批跳過香港 UI 的 no-new-UI / gameplay-hook era runtime：`hand_card_resource_bonus`（蒙古宣傳類手牌作資源時 +1 宣傳）、`gain_resource_on_play_card`（維吾爾打出武裝類卡牌 +2 宣傳）、`gain_resource_on_build_in_region`（臺灣在臺灣城鎮建組織 +1 宣傳）、`build_count_draw_bonus`（反賊同回合建立第 3 個組織後抽 1 張、每回合一次）、`restrict_ignore_distance_build`（哈薩克啟動後對牆內城鎮不再允許無視距離建組織）。已擴充 `scripts/validate_era_effects_runtime.py` 與 `docs/records/event-cards/ERA_EFFECTS_RUNTIME_VALIDATION.{md,json}` 至 10 項 runtime checks。
+    - 仍待 runtime 落地：需新互動或更細 gameplay hook 的時代效果尚未接完，例如紅軍棄牌後建組織、紅軍用牌追加棄牌/瓦解、檢視牌庫頂並重排等。
     - 既有 event-like MVP adaptation 仍暫留：`公知世代的終結`、`臺灣綏靖派反對介入`；後續 runtime 完成後再決定移除或改為只保留 era-stage 版本。
   - 建議下一步順序：raw 13 張事件卡 deck 對齊已完成；8 張時代關卡已完成 canonical/data declaration；第一批 no-new-UI era runtime 已完成；接著分批實作需要 pending choice / map highlight / play-card hook 的剩餘 era effects。
   - 2026-05-23：已修正 `貿易戰加劇`：structured trigger 改為購買 `英美奧援` 或總費用 4 點以上卡牌，success 改為從棄牌堆選 1 張置頂；新增 runtime primitive `buy_card` / `topdeck_from_discard` 與 validator proof。
