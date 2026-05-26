@@ -422,7 +422,7 @@ class Game:
     def _draw_player_cards(self, player, count=1, source='effect'):
         drawn = player.deck.draw(int(count or 1))
         player.hand.extend(drawn)
-        if source != 'refill' and drawn:
+        if source not in {'refill', 'era'} and drawn:
             self._track_event_progress('draw', amount=len(drawn), player=player)
         return drawn
 
@@ -526,6 +526,23 @@ class Game:
         if not faction:
             return default_player
         return next((p for p in self.players if getattr(p, 'faction_id', None) == faction), default_player)
+
+    def _player_camp(self, player):
+        faction = self.faction_by_id.get(getattr(player, 'faction_id', None), {})
+        return faction.get('camp') or getattr(player, 'faction_id', None)
+
+    def _player_matches_camp(self, player, camp):
+        if not camp:
+            return True
+        return self._player_camp(player) == camp or getattr(player, 'faction_id', None) == camp
+
+    def _players_matching_camp(self, camp):
+        return [player for player in self.players if self._player_matches_camp(player, camp)]
+
+    def _card_matches_types(self, card, card_types):
+        if not card_types:
+            return True
+        return getattr(card, 'card_type', None) in set(card_types or [])
 
     def _event_build_towns_in_region(self, player, region):
         region_towns = set(self._towns_for_region_alias(region))
@@ -3918,6 +3935,10 @@ class Game:
             if reduction > 0:
                 cost_propaganda = max(0, cost_propaganda - reduction)
 
+        era_reduction = self._era_purchase_cost_reduction(player, card)
+        cost_money = max(0, cost_money - int(era_reduction.get('money', 0) or 0))
+        cost_propaganda = max(0, cost_propaganda - int(era_reduction.get('propaganda', 0) or 0))
+
         if self._player_has_ability(player, "華文傳媒") and card_type == "propaganda":
             if player.resources['money'] < cost_propaganda:
                 return {"error": "Not enough money for propaganda purchase"}
@@ -3942,6 +3963,75 @@ class Game:
         return {"success": True}
 
     # ---------- Era Trigger ----------
+
+    def _era_effect_target_players(self, effect):
+        camp = (effect or {}).get('target_camp')
+        faction = (effect or {}).get('target_faction')
+        if faction:
+            return [p for p in self.players if getattr(p, 'faction_id', None) == faction]
+        if camp:
+            return self._players_matching_camp(camp)
+        return []
+
+    def _apply_era_static_cards_to_discard(self, effect, era_name):
+        card_name = (effect or {}).get('card')
+        count = int((effect or {}).get('count', 1) or 1)
+        targets = self._era_effect_target_players(effect)
+        added = {}
+        for target in targets:
+            gained = self._gain_event_card(target, card_name, count)
+            added[target.id] = gained
+            if gained:
+                self.log(f"Era {era_name}: added {gained} {card_name} to {target.name}'s discard")
+        return added
+
+    def _apply_era_draw(self, effect, era_name):
+        count = int((effect or {}).get('count', 1) or 1)
+        targets = self._era_effect_target_players(effect)
+        drawn = {}
+        for target in targets:
+            cards = self._draw_player_cards(target, count, source='era')
+            drawn[target.id] = [getattr(card, 'name', str(card)) for card in cards]
+            self.log(f"Era {era_name}: {target.name} drew {len(cards)} card(s)")
+        return drawn
+
+    def _apply_era_activation_effects(self, era):
+        effects = (era or {}).get('effects') or {}
+        results = {}
+        era_name = (era or {}).get('name', (era or {}).get('id', 'era'))
+        for side, effect in effects.items():
+            effect_type = (effect or {}).get('type')
+            if effect_type == 'add_static_cards_to_discard':
+                results[side] = {'type': effect_type, 'added': self._apply_era_static_cards_to_discard(effect, era_name)}
+            elif effect_type == 'draw' and (effect or {}).get('immediate', False):
+                results[side] = {'type': effect_type, 'drawn': self._apply_era_draw(effect, era_name)}
+            else:
+                results[side] = {'type': effect_type, 'status': 'active_modifier_or_pending_runtime'}
+        return results
+
+    def _active_era_effects(self):
+        if not getattr(self, 'era_engine', None):
+            return []
+        effects = []
+        for detail in self.era_engine.get_active_era_details():
+            for side, effect in ((detail.get('effects') or {}).items()):
+                effects.append((detail, side, effect or {}))
+        return effects
+
+    def _era_purchase_cost_reduction(self, player, card):
+        reductions = {'money': 0, 'propaganda': 0}
+        for _era, _side, effect in self._active_era_effects():
+            if (effect or {}).get('type') != 'reduce_purchase_cost':
+                continue
+            if not self._player_matches_camp(player, effect.get('target_camp')):
+                continue
+            if not self._card_matches_types(card, effect.get('card_types') or []):
+                continue
+            resource = effect.get('resource', 'money')
+            if resource not in reductions:
+                continue
+            reductions[resource] += int(effect.get('amount', 0) or 0)
+        return reductions
 
     def _era_card_entry(self, era_name):
         path = BASE_DIR / "data" / "cards" / "event_and_era_cards.v1.1.json"
@@ -4004,7 +4094,9 @@ class Game:
 
             if self._evaluate_era_trigger(trigger):
                 if self.era_engine.activate_era(era_id):
+                    activation_results = self._apply_era_activation_effects(era)
                     self.era_notification = self._era_notification_payload(era)
+                    self.era_notification['runtime_effects'] = activation_results
                     self.log(f"Era triggered: {era.get('name', era_id)}")
 
     def _player_matches_era_trigger(self, player, trigger):

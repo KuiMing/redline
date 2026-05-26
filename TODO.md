@@ -36,9 +36,10 @@
   - raw 8 張時代關卡盤點：
     - 2026-05-26：已決定 8 張 raw 時代關卡 canonical scope 為 **era-stage mechanics**，不是事件牌堆卡；8 張皆保留在 `data/era_structured.v1.1.json`，並已補上雙方效果宣告：`red_suppression`（紅軍壓制）與 `revolution_counterattack`（革命反撲）。
     - 已新增 `scripts/validate_era_canonical_scope.py`，驗證 raw 8 張皆由 structured era-stage 表示、raw bracketed era rows 未進 event deck、靜態常設牌效果明確標記 consume static supply；紀錄：`docs/records/event-cards/ERA_CANONICAL_SCOPE_AUDIT_2026_05_26.{md,json}`。
-    - 仍待 runtime 落地：目前效果已結構化宣告，但多數尚未接到實際 gameplay effect；下一步應分批接 EraEngine effect runtime 與 UI proof。
+    - 2026-05-26：已完成第一批不需新 UI 的 era effect runtime：`add_static_cards_to_discard` 會透過 static supply 加入棄牌堆（目前 `蒙古`/`臺灣` 內鬥、`滿洲` 分神皆受供應量上限保護）、`draw` immediate 會在時代啟動時立即抽牌（`哈薩克` 抽 2）、`reduce_purchase_cost` 會由 active era modifier 套用到購買成本（`香港` 武裝類卡牌 -2 資金）。新增 validator / proof：`scripts/validate_era_effects_runtime.py`、`docs/records/event-cards/ERA_EFFECTS_RUNTIME_VALIDATION.{md,json}`。
+    - 仍待 runtime 落地：需新互動或更細 gameplay hook 的時代效果尚未接完，例如紅軍棄牌後建組織、紅軍用牌追加棄牌/瓦解、手牌購買資源 bonus、出牌得資源、建組織後抽牌/得資源、檢視牌庫頂並重排等。
     - 既有 event-like MVP adaptation 仍暫留：`公知世代的終結`、`臺灣綏靖派反對介入`；後續 runtime 完成後再決定移除或改為只保留 era-stage 版本。
-  - 建議下一步順序：raw 13 張事件卡 deck 對齊已完成；8 張時代關卡已完成 canonical/data declaration；接著分批實作 era effect runtime，優先做不需新 UI 的靜態牌加入棄牌堆／立即抽牌／購買費用 modifier。
+  - 建議下一步順序：raw 13 張事件卡 deck 對齊已完成；8 張時代關卡已完成 canonical/data declaration；第一批 no-new-UI era runtime 已完成；接著分批實作需要 pending choice / map highlight / play-card hook 的剩餘 era effects。
   - 2026-05-23：已修正 `貿易戰加劇`：structured trigger 改為購買 `英美奧援` 或總費用 4 點以上卡牌，success 改為從棄牌堆選 1 張置頂；新增 runtime primitive `buy_card` / `topdeck_from_discard` 與 validator proof。
   - 2026-05-24：已修正 `紅軍權貴出逃`：structured success 改為 `trash_from_hand_or_discard`，成功後可從手牌或棄牌堆選 1 張移除；新增 runtime validator 與正式 browser UI proof。
   - 2026-05-24：已修正 `烏魯木齊七五事件`：structured trigger 改為回合結束時牆內有己方組織，success 改為在己方組織 1 格內免費建 1 個；新增 end-turn state / nearby build runtime validator 與正式 browser UI proof。
