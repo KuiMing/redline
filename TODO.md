@@ -1,6 +1,6 @@
 # Redline TODO
 
-最後更新：2026-05-25
+最後更新：2026-05-26
 
 ## 工作規則
 - 開始新工作前先做 intake：讀 `TODO.md`、跑 `git status --short`、跑 `git log --oneline -5`。
@@ -34,9 +34,11 @@
     - 2026-05-24 已逐張重審且 raw/structured 對齊：`全國人大召開`、`香港抗暴之戰`、`重大災難`、`藏印邊境軍事對峙`、`東突厥集中營`、`北京政爭`。
     - 明確待修 raw/structured mismatch：目前無；`一帶一路 南洋`、`一帶一路 天方` 已於 2026-05-24 修正。
   - raw 8 張時代關卡盤點：
-    - 尚未 structured/runtime：`[香港]香港人被自殺`、`[蒙古]莫日根事件爆發`、`[藏國]藏國騷亂`、`[哈薩克]伊塔事件`、`[維吾爾]莎車大屠殺`、`[滿洲]滿洲地方派系凝聚`。
-    - 目前僅 event-like MVP adaptation、需重新決策：`[反賊]公知世代的終結`、`[臺灣]綏靖派反對介入對岸`。
-  - 建議下一步順序：raw 13 張事件卡 deck 對齊已完成；接著處理 8 張時代關卡 canonical/runtime/UI proof。
+    - 2026-05-26：已決定 8 張 raw 時代關卡 canonical scope 為 **era-stage mechanics**，不是事件牌堆卡；8 張皆保留在 `data/era_structured.v1.1.json`，並已補上雙方效果宣告：`red_suppression`（紅軍壓制）與 `revolution_counterattack`（革命反撲）。
+    - 已新增 `scripts/validate_era_canonical_scope.py`，驗證 raw 8 張皆由 structured era-stage 表示、raw bracketed era rows 未進 event deck、靜態常設牌效果明確標記 consume static supply；紀錄：`docs/records/event-cards/ERA_CANONICAL_SCOPE_AUDIT_2026_05_26.{md,json}`。
+    - 仍待 runtime 落地：目前效果已結構化宣告，但多數尚未接到實際 gameplay effect；下一步應分批接 EraEngine effect runtime 與 UI proof。
+    - 既有 event-like MVP adaptation 仍暫留：`公知世代的終結`、`臺灣綏靖派反對介入`；後續 runtime 完成後再決定移除或改為只保留 era-stage 版本。
+  - 建議下一步順序：raw 13 張事件卡 deck 對齊已完成；8 張時代關卡已完成 canonical/data declaration；接著分批實作 era effect runtime，優先做不需新 UI 的靜態牌加入棄牌堆／立即抽牌／購買費用 modifier。
   - 2026-05-23：已修正 `貿易戰加劇`：structured trigger 改為購買 `英美奧援` 或總費用 4 點以上卡牌，success 改為從棄牌堆選 1 張置頂；新增 runtime primitive `buy_card` / `topdeck_from_discard` 與 validator proof。
   - 2026-05-24：已修正 `紅軍權貴出逃`：structured success 改為 `trash_from_hand_or_discard`，成功後可從手牌或棄牌堆選 1 張移除；新增 runtime validator 與正式 browser UI proof。
   - 2026-05-24：已修正 `烏魯木齊七五事件`：structured trigger 改為回合結束時牆內有己方組織，success 改為在己方組織 1 格內免費建 1 個；新增 end-turn state / nearby build runtime validator 與正式 browser UI proof。

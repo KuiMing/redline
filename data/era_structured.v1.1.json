@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.2",
+  "schema_version": "1.3",
   "eras": [
     {
       "id": "hong_kong",
@@ -11,7 +11,24 @@
         "count": 10
       },
       "duration": { "type": "turns", "value": 2 },
-      "effects": {}
+      "effects": {
+        "red_suppression": {
+          "type": "bonus_discard_on_red_card",
+          "player_faction": "red_army",
+          "target_camp": "hong_kong",
+          "card_types": ["spy"],
+          "discard_count": 1,
+          "duration": 2
+        },
+        "revolution_counterattack": {
+          "type": "reduce_purchase_cost",
+          "target_camp": "hong_kong",
+          "card_types": ["armed"],
+          "resource": "money",
+          "amount": 2,
+          "duration": 2
+        }
+      }
     },
     {
       "id": "mongolia",
@@ -23,7 +40,23 @@
         "count": 4
       },
       "duration": { "type": "turns", "value": 1 },
-      "effects": {}
+      "effects": {
+        "red_suppression": {
+          "type": "add_static_cards_to_discard",
+          "target_camp": "mongol",
+          "card": "內鬥",
+          "count": 3,
+          "consume_static_supply": true
+        },
+        "revolution_counterattack": {
+          "type": "hand_card_resource_bonus",
+          "target_camp": "mongol",
+          "card_types": ["propaganda"],
+          "resource": "propaganda",
+          "amount": 1,
+          "duration": 1
+        }
+      }
     },
     {
       "id": "tibet",
@@ -35,7 +68,27 @@
         "count": 7
       },
       "duration": { "type": "turns", "value": 1 },
-      "effects": {}
+      "effects": {
+        "red_suppression": {
+          "type": "red_discard_to_build_near_target",
+          "player_faction": "red_army",
+          "target_camp": "tibet",
+          "target_region": "tibet_region",
+          "max_steps": 1,
+          "builds_per_discard": 1,
+          "free": true,
+          "ignore_distance": true,
+          "duration": 1
+        },
+        "revolution_counterattack": {
+          "type": "hand_card_resource_bonus",
+          "target_camp": "tibet",
+          "card_types": ["propaganda"],
+          "resource": "propaganda",
+          "amount": 1,
+          "duration": 1
+        }
+      }
     },
     {
       "id": "kazakh",
@@ -49,7 +102,20 @@
         ]
       },
       "duration": { "type": "permanent" },
-      "effects": {}
+      "effects": {
+        "red_suppression": {
+          "type": "restrict_ignore_distance_build",
+          "target_camp": "kazakh",
+          "scope": "china",
+          "duration": "permanent"
+        },
+        "revolution_counterattack": {
+          "type": "draw",
+          "target_camp": "kazakh",
+          "count": 2,
+          "immediate": true
+        }
+      }
     },
     {
       "id": "uyghur",
@@ -61,7 +127,25 @@
         "count": 7
       },
       "duration": { "type": "turns", "value": 2 },
-      "effects": {}
+      "effects": {
+        "red_suppression": {
+          "type": "bonus_dissolve_on_red_card_near_self",
+          "player_faction": "red_army",
+          "target_camp": "uyghur",
+          "card_types": ["armed"],
+          "max_steps": 1,
+          "dissolve_count": 1,
+          "duration": 2
+        },
+        "revolution_counterattack": {
+          "type": "gain_resource_on_play_card",
+          "target_camp": "uyghur",
+          "card_types": ["armed"],
+          "resource": "propaganda",
+          "amount": 2,
+          "duration": 2
+        }
+      }
     },
     {
       "id": "manchuria",
@@ -73,7 +157,22 @@
         "count": 10
       },
       "duration": { "type": "turns", "value": 1 },
-      "effects": {}
+      "effects": {
+        "red_suppression": {
+          "type": "add_static_cards_to_discard",
+          "target_camp": "manchuria",
+          "card": "分神",
+          "count": 5,
+          "consume_static_supply": true
+        },
+        "revolution_counterattack": {
+          "type": "inspect_deck_top_and_reorder",
+          "target_camp": "manchuria",
+          "look_count": 7,
+          "top_count": 2,
+          "immediate": true
+        }
+      }
     },
     {
       "id": "rebels",
@@ -85,7 +184,21 @@
         "count": 4
       },
       "duration": { "type": "permanent" },
-      "effects": {}
+      "effects": {
+        "red_suppression": {
+          "type": "restrict_ignore_distance_build",
+          "target_camp": "rebel",
+          "scope": "china",
+          "duration": "permanent"
+        },
+        "revolution_counterattack": {
+          "type": "build_count_draw_bonus",
+          "target_camp": "rebel",
+          "build_count": 3,
+          "draw_count": 1,
+          "duration": "permanent"
+        }
+      }
     },
     {
       "id": "taiwan",
@@ -97,7 +210,23 @@
         "count": 7
       },
       "duration": { "type": "turns", "value": 2 },
-      "effects": {}
+      "effects": {
+        "red_suppression": {
+          "type": "add_static_cards_to_discard",
+          "target_camp": "taiwan",
+          "card": "內鬥",
+          "count": 3,
+          "consume_static_supply": true
+        },
+        "revolution_counterattack": {
+          "type": "gain_resource_on_build_in_region",
+          "target_camp": "taiwan",
+          "region": "taiwan",
+          "resource": "propaganda",
+          "amount": 1,
+          "duration": 2
+        }
+      }
     }
   ]
 }
