@@ -231,8 +231,21 @@ async function copyRoomId() {
   }
 }
 
+function initProofSessionFromUrl() {
+  if (ws || gameId || playerId) return false;
+  const params = new URLSearchParams(window.location.search || '');
+  const proofGameId = params.get('game_id');
+  const proofPlayerId = params.get('player_id');
+  if (!proofGameId || !proofPlayerId) return false;
+  gameId = proofGameId;
+  playerId = proofPlayerId;
+  connect();
+  return true;
+}
+
 function initLobbyControls() {
   resizeStage();
+  if (initProofSessionFromUrl()) return;
   if (!stageResizeBound) {
     window.addEventListener('resize', resizeStage);
     stageResizeBound = true;
@@ -1260,13 +1273,18 @@ function renderChoiceModal(state) {
     submit.disabled = true;
 
     const isVariableCountChoice = choiceKey === 'red_army_ccdi_discard_draw';
+    const isEraDeckReorderChoice = choiceKey === 'era_inspect_deck_top_and_reorder';
     const updateSummary = () => {
       header.textContent = isVariableCountChoice
         ? `已選 ${selected.size}/${maxChoiceCount} 張（可選 ${minChoiceCount}～${maxChoiceCount} 張）`
-        : `已選 ${selected.size}/${exactChoiceCount} 張`;
+        : isEraDeckReorderChoice
+          ? `已選 ${selected.size}/${exactChoiceCount} 張置頂（依點選順序放回牌庫頂）`
+          : `已選 ${selected.size}/${exactChoiceCount} 張`;
       submit.textContent = isVariableCountChoice
         ? `確認棄掉 ${selected.size} 張並抽 ${selected.size} 張`
-        : (exactChoiceCount === 1 ? '確認選擇' : `確認棄掉 ${exactChoiceCount} 張`);
+        : isEraDeckReorderChoice
+          ? `確認置頂 ${exactChoiceCount} 張`
+          : (exactChoiceCount === 1 ? '確認選擇' : `確認棄掉 ${exactChoiceCount} 張`);
       submit.disabled = isVariableCountChoice
         ? selected.size < minChoiceCount || selected.size > maxChoiceCount
         : selected.size !== exactChoiceCount;

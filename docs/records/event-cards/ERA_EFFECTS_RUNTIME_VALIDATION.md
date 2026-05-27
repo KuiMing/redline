@@ -1,7 +1,7 @@
 # Era Effects Runtime Validation
 
 - Date: 2026-05-27
-- Summary: 12/12 passed
+- Summary: 13/13 passed
 
 ## PASS: mongolia_adds_internal_conflict_with_static_supply_cap
 
@@ -73,7 +73,10 @@
     },
     "revolution_counterattack": {
       "type": "inspect_deck_top_and_reorder",
-      "status": "active_modifier_or_pending_runtime"
+      "status": "pending_reorder_choice",
+      "player_id": "actor",
+      "inspected_count": 6,
+      "top_count": 2
     }
   }
 }
@@ -263,6 +266,84 @@
       "status": "resolved",
       "town": "天津",
       "target_player_id": "actor"
+    }
+  ]
+}
+```
+
+## PASS: manchuria_inspects_top_seven_and_reorders_two_to_top
+
+```json
+{
+  "rule": "滿洲革命反撲效果：檢視牌庫頂 7 張，依玩家點選順序選 2 張放回牌庫頂。",
+  "runtime_effects": {
+    "red_suppression": {
+      "type": "add_static_cards_to_discard",
+      "added": {
+        "actor": 1
+      }
+    },
+    "revolution_counterattack": {
+      "type": "inspect_deck_top_and_reorder",
+      "status": "pending_reorder_choice",
+      "player_id": "actor",
+      "inspected_count": 7,
+      "top_count": 2
+    }
+  },
+  "choice_key": "era_inspect_deck_top_and_reorder",
+  "choice_count": 2,
+  "inspected_cards": [
+    "第一張",
+    "第二張",
+    "第三張",
+    "第四張",
+    "第五張",
+    "第六張",
+    "第七張"
+  ],
+  "resolve_result": {
+    "success": true,
+    "choice_key": "era_inspect_deck_top_and_reorder",
+    "inspected_cards": [
+      "第一張",
+      "第二張",
+      "第三張",
+      "第四張",
+      "第五張",
+      "第六張",
+      "第七張"
+    ],
+    "chosen_cards": [
+      "第三張",
+      "第一張"
+    ],
+    "deck_top": [
+      "第三張",
+      "第一張"
+    ]
+  },
+  "first_two_drawn_after_reorder": [
+    "第三張",
+    "第一張"
+  ],
+  "era_effects_applied": [
+    {
+      "era": "manchuria",
+      "type": "inspect_deck_top_and_reorder",
+      "inspected": [
+        "第一張",
+        "第二張",
+        "第三張",
+        "第四張",
+        "第五張",
+        "第六張",
+        "第七張"
+      ],
+      "selected_top": [
+        "第三張",
+        "第一張"
+      ]
     }
   ]
 }

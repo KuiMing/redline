@@ -1,6 +1,6 @@
 # Redline TODO
 
-最後更新：2026-05-26
+最後更新：2026-05-27
 
 ## 工作規則
 - 開始新工作前先做 intake：讀 `TODO.md`、跑 `git status --short`、跑 `git log --oneline -5`。
@@ -40,7 +40,8 @@
     - 2026-05-26：已完成第二批跳過香港 UI 的 no-new-UI / gameplay-hook era runtime：`hand_card_resource_bonus`（蒙古宣傳類手牌作資源時 +1 宣傳）、`gain_resource_on_play_card`（維吾爾打出武裝類卡牌 +2 宣傳）、`gain_resource_on_build_in_region`（臺灣在臺灣城鎮建組織 +1 宣傳）、`build_count_draw_bonus`（反賊同回合建立第 3 個組織後抽 1 張、每回合一次）、`restrict_ignore_distance_build`（哈薩克啟動後對牆內城鎮不再允許無視距離建組織）。已擴充 `scripts/validate_era_effects_runtime.py` 與 `docs/records/event-cards/ERA_EFFECTS_RUNTIME_VALIDATION.{md,json}` 至 10 項 runtime checks。
     - 2026-05-26：已完成第一個互動型 era runtime：藏國紅軍壓制 `red_discard_to_build_near_target`。啟動後紅軍先用既有 pending card choice 棄 1 張手牌，再重用既有 pending town choice / map highlight / 側欄建立組織架構，在藏國玩家藏國組織 1 格內免費建立 1 個紅軍組織；validator/proof 擴充至 11 項 runtime checks。
     - 2026-05-27：已完成維吾爾互動型 era runtime：紅軍打出武裝類卡牌後，先沿用既有武裝牌目標棄牌 pending choice；棄牌完成後接續 `era_red_bonus_dissolve_target`，重用既有 target choice / map highlight 架構，讓紅軍選擇 1 個自身組織 1 格內的維吾爾組織瓦解。`scripts/validate_era_effects_runtime.py` 擴充至 12 項 runtime checks；proof records：`docs/records/event-cards/UYGHUR_ERA_RED_DISSOLVE_MAP_UI_PROOF_2026_05_27.{md,json}` 與同名 PNG。
-    - 仍待 runtime 落地：需新互動或更細 gameplay hook 的時代效果尚未接完，例如檢視牌庫頂並重排等。
+    - 2026-05-27：已完成滿洲互動型 era runtime：革命反撲 `inspect_deck_top_and_reorder` 會檢視滿洲玩家牌庫頂 7 張，重用既有 multi-card pending choice modal 依點選順序選 2 張置頂；紅軍壓制 `分神` 仍遵守 static supply，只能消耗既有常設供應。`scripts/validate_era_effects_runtime.py` 擴充至 13 項 runtime checks；proof records：`docs/records/event-cards/MANCHURIA_ERA_REORDER_UI_PROOF_2026_05_27.{md,json}` 與 `MANCHURIA_ERA_REORDER_CHOICE_UI_2026_05_27.png`。
+    - 仍待 runtime 落地：其餘需要新互動或更細 gameplay hook 的時代效果尚未接完。
     - 既有 event-like MVP adaptation 仍暫留：`公知世代的終結`、`臺灣綏靖派反對介入`；後續 runtime 完成後再決定移除或改為只保留 era-stage 版本。
   - 建議下一步順序：raw 13 張事件卡 deck 對齊已完成；8 張時代關卡已完成 canonical/data declaration；第一批 no-new-UI era runtime 已完成；接著分批實作需要 pending choice / map highlight / play-card hook 的剩餘 era effects。
   - 2026-05-23：已修正 `貿易戰加劇`：structured trigger 改為購買 `英美奧援` 或總費用 4 點以上卡牌，success 改為從棄牌堆選 1 張置頂；新增 runtime primitive `buy_card` / `topdeck_from_discard` 與 validator proof。
@@ -74,6 +75,7 @@
   - 2026-05-24：已補 `一帶一路 南洋` / `一帶一路 天方` 區域限定免費建組織正式 Strategic Map UI proof；確認兩張事件都重用 `event_build_organization` pending choice / map highlight，且 pending choice 分別帶 `region=southeast_asia` / `region=middle_east`、`free=true`、`ignore_distance=true`。proof records：`docs/records/event-cards/BELT_ROAD_SOUTHEAST_MAP_BUILD_UI_PROOF_2026_05_24.{md,json}`、`BELT_ROAD_MIDDLE_EAST_MAP_BUILD_UI_PROOF_2026_05_24.{md,json}`。
   - 2026-05-26：已補藏國時代關卡 `era_red_build_near_target` 正式 Strategic Map UI proof；確認時代關卡 pending town choice 重用既有 map highlight / 側欄建立組織流程，proof records：`docs/records/event-cards/TIBET_ERA_RED_BUILD_MAP_UI_PROOF_2026_05_26.{md,json}` 與同名 PNG。
   - 2026-05-27：已補維吾爾時代關卡 `era_red_bonus_dissolve_target` 正式 Strategic Map UI proof；確認紅軍打出武裝牌後的追加瓦解 target choice 重用既有 target choice / map highlight 架構，proof records：`docs/records/event-cards/UYGHUR_ERA_RED_DISSOLVE_MAP_UI_PROOF_2026_05_27.{md,json}` 與同名 PNG。
+  - 2026-05-27：已補滿洲時代關卡 `era_inspect_deck_top_and_reorder` 正式 modal UI proof；確認檢視牌庫頂 7 張、選 2 張置頂重用既有 multi-card pending choice modal，並以 `確認置頂 2 張` 完成 resolve。proof records：`docs/records/event-cards/MANCHURIA_ERA_REORDER_UI_PROOF_2026_05_27.{md,json}` 與 `MANCHURIA_ERA_REORDER_CHOICE_UI_2026_05_27.png`。
   - 2026-05-24：已補 `全國人大召開` 失敗後 `event_red_dissolve` 的正式 map-highlight UI proof；紅軍目標選擇 modal 會列出其他玩家牆內組織，並重用既有 `support-targets` 地圖高亮流程在戰略地圖標出 `viewer｜北京`。proof records：`docs/records/event-cards/NATIONAL_PEOPLE_CONGRESS_RED_DISSOLVE_MAP_HIGHLIGHT_UI_PROOF_2026_05_24.{md,json}` 與同名 PNG。
   - 原則：只重用既有 pending choice modal / target choice map highlight 架構；不要重做情報網 highlight。
   - 驗收：每一種互動型 effect 至少有一個正式 browser UI proof，截圖與紀錄放 `docs/records/event-cards/`。

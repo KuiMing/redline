@@ -256,6 +256,43 @@ def run_checks():
         }
     ))
 
+
+    # Manchuria counterattack: inspect top 7, select 2 in order, and place them back on deck top.
+    game, actor, _red = make_game('manchuria')
+    actor.deck.draw_pile = [Card(f'底牌{i}', 'command', {}) for i in range(3)] + [
+        Card('第七張', 'command', {}),
+        Card('第六張', 'command', {}),
+        Card('第五張', 'command', {}),
+        Card('第四張', 'command', {}),
+        Card('第三張', 'command', {}),
+        Card('第二張', 'command', {}),
+        Card('第一張', 'command', {}),
+    ]
+    game.era_engine.activate_era('manchuria')
+    runtime_effects = game._apply_era_activation_effects(game.era_engine.get_definition('manchuria'))
+    reorder_choice = dict(game.pending_choice or {})
+    resolve_result = game.resolve_pending_choice(actor.id, [2, 0])
+    draw_result = [getattr(card, 'name', str(card)) for card in actor.deck.draw(2)]
+    checks.append(check(
+        'manchuria_inspects_top_seven_and_reorders_two_to_top',
+        runtime_effects.get('revolution_counterattack', {}).get('status') == 'pending_reorder_choice'
+        and reorder_choice.get('choice_key') == 'era_inspect_deck_top_and_reorder'
+        and [getattr(card, 'name', str(card)) for card in (reorder_choice.get('cards') or [])] == ['第一張', '第二張', '第三張', '第四張', '第五張', '第六張', '第七張']
+        and resolve_result.get('success') is True
+        and resolve_result.get('chosen_cards') == ['第三張', '第一張']
+        and draw_result == ['第三張', '第一張'],
+        {
+            'rule': '滿洲革命反撲效果：檢視牌庫頂 7 張，依玩家點選順序選 2 張放回牌庫頂。',
+            'runtime_effects': runtime_effects,
+            'choice_key': reorder_choice.get('choice_key'),
+            'choice_count': reorder_choice.get('count'),
+            'inspected_cards': [getattr(card, 'name', str(card)) for card in (reorder_choice.get('cards') or [])],
+            'resolve_result': resolve_result,
+            'first_two_drawn_after_reorder': draw_result,
+            'era_effects_applied': game.turn_log.get('era_effects_applied'),
+        }
+    ))
+
     # Taiwan build hook: building in Taiwan region grants 1 propaganda.
     game, actor, _red = make_game('taiwan_green')
     game.era_engine.activate_era('taiwan')

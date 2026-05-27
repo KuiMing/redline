@@ -1,0 +1,60 @@
+{
+  "date": "2026-05-27",
+  "proof": "Manchuria era inspect/reorder pending-choice UI",
+  "screenshot": "docs/records/event-cards/MANCHURIA_ERA_REORDER_CHOICE_UI_2026_05_27.png",
+  "scenario": {
+    "endpoint": "POST /test/setup-manchuria-era-reorder-proof",
+    "url": "http://127.0.0.1:8000/?game_id=a9b3c08e-c448-4d6d-859c-95a2347f3fee&player_id=5274c222-7f65-4337-906c-9017a7368751",
+    "era": "[滿洲]滿洲地方派系凝聚",
+    "choice_key": "era_inspect_deck_top_and_reorder"
+  },
+  "ui_evidence": {
+    "modal_title": "卡牌選擇",
+    "prompt": "[滿洲]滿洲地方派系凝聚：檢視牌庫頂 7 張，請依序選擇 2 張放回牌庫頂。第一張會成為下一張抽到的牌。",
+    "visible_choices": [
+      "第一張",
+      "第二張",
+      "第三張",
+      "第四張",
+      "第五張",
+      "第六張",
+      "第七張"
+    ],
+    "selected_summary": "已選 2/2 張置頂（依點選順序放回牌庫頂）",
+    "submit_button": "確認置頂 2 張",
+    "submit_enabled": true
+  },
+  "runtime_evidence_after_submit": {
+    "pending_choice": null,
+    "last_action_result": {
+      "success": true,
+      "choice_key": "era_inspect_deck_top_and_reorder",
+      "inspected_cards": [
+        "第一張",
+        "第二張",
+        "第三張",
+        "第四張",
+        "第五張",
+        "第六張",
+        "第七張"
+      ],
+      "chosen_cards": [
+        "第三張",
+        "第一張"
+      ],
+      "deck_top": [
+        "第三張",
+        "第一張"
+      ]
+    },
+    "action_log_tail": [
+      "viewer gained 1 分神 from event",
+      "Era [滿洲]滿洲地方派系凝聚: added 1 分神 to viewer discard",
+      "viewer reordered deck top via [滿洲]滿洲地方派系凝聚: 第三張, 第一張"
+    ]
+  },
+  "static_supply_evidence": {
+    "分神_supply_after_activation": 0,
+    "note": "常設牌分神透過既有 static supply path 只取得 1 張；供應歸零後不憑空新增。"
+  }
+}

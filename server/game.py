@@ -1378,6 +1378,41 @@ class Game:
                 'choice_key': choice_key,
             }
 
+        if choice_key == 'era_inspect_deck_top_and_reorder':
+            inspected_cards = list(choice.get('cards') or [])
+            top_count = int(choice.get('top_count', count) or count)
+            if len(indices) != top_count:
+                return {'error': 'Invalid choice count'}
+            if any(card not in player.deck.draw_pile for card in inspected_cards):
+                return {'error': 'Inspected deck cards changed'}
+            for card in inspected_cards:
+                player.deck.draw_pile.remove(card)
+            selected_set = set(selected_cards)
+            remaining_top_first = [card for card in inspected_cards if card not in selected_set]
+            # Deck.draw() pops from the end, so append bottom-to-top. The first clicked
+            # selected card becomes the next card drawn; the second clicked card is below it.
+            player.deck.draw_pile.extend(reversed(remaining_top_first))
+            player.deck.draw_pile.extend(reversed(selected_cards))
+            self.pending_choice = None
+            selected_names = [getattr(card, 'name', str(card)) for card in selected_cards]
+            inspected_names = [getattr(card, 'name', str(card)) for card in inspected_cards]
+            new_top_names = [getattr(card, 'name', str(card)) for card in reversed(player.deck.draw_pile[-top_count:])]
+            self.turn_log.setdefault('era_effects_applied', []).append({
+                'era': (choice.get('context') or {}).get('era_id') if isinstance(choice.get('context'), dict) else None,
+                'type': 'inspect_deck_top_and_reorder',
+                'inspected': inspected_names,
+                'selected_top': selected_names,
+            })
+            source_name = choice.get('source_name') or '時代關卡'
+            self.log(f"{player.name} reordered deck top via {source_name}: {', '.join(selected_names)}")
+            return {
+                'success': True,
+                'choice_key': choice_key,
+                'inspected_cards': inspected_names,
+                'chosen_cards': selected_names,
+                'deck_top': new_top_names,
+            }
+
         if choice_key in {'discard_self', 'event_discard_self'}:
             for card in selected_cards:
                 if card not in player.hand:
@@ -4120,6 +4155,40 @@ class Game:
         )
         return {'type': (effect or {}).get('type'), 'status': 'pending_discard_choice', 'player_id': red.id, 'town_count': len(towns)}
 
+    def _start_era_inspect_deck_top_and_reorder_flow(self, effect, era):
+        targets = self._era_effect_target_players(effect)
+        if not targets:
+            return {'type': (effect or {}).get('type'), 'status': 'no_target_player'}
+        player = targets[0]
+        look_count = int((effect or {}).get('look_count', 1) or 1)
+        top_count = int((effect or {}).get('top_count', 1) or 1)
+        inspected = list(reversed(player.deck.draw_pile[-look_count:]))
+        if len(inspected) < top_count:
+            return {'type': (effect or {}).get('type'), 'status': 'not_enough_deck_cards', 'player_id': player.id, 'inspected_count': len(inspected)}
+        era_name = (era or {}).get('name', (era or {}).get('id', '時代關卡'))
+        self._set_pending_multi_card_choice(
+            player,
+            'era_inspect_deck_top_and_reorder',
+            inspected,
+            f"{era_name}：檢視牌庫頂 {len(inspected)} 張，請依序選擇 {top_count} 張放回牌庫頂。第一張會成為下一張抽到的牌。",
+            top_count,
+            top_count=top_count,
+            look_count=len(inspected),
+            source_name=era_name,
+            context={
+                'era_id': (era or {}).get('id'),
+                'era_name': era_name,
+                'effect': dict(effect or {}),
+            },
+        )
+        return {
+            'type': (effect or {}).get('type'),
+            'status': 'pending_reorder_choice',
+            'player_id': player.id,
+            'inspected_count': len(inspected),
+            'top_count': top_count,
+        }
+
     def _apply_era_activation_effects(self, era):
         effects = (era or {}).get('effects') or {}
         results = {}
@@ -4132,6 +4201,8 @@ class Game:
                 results[side] = {'type': effect_type, 'drawn': self._apply_era_draw(effect, era_name)}
             elif effect_type == 'red_discard_to_build_near_target':
                 results[side] = self._start_era_red_discard_build_flow(effect, era)
+            elif effect_type == 'inspect_deck_top_and_reorder':
+                results[side] = self._start_era_inspect_deck_top_and_reorder_flow(effect, era)
             else:
                 results[side] = {'type': effect_type, 'status': 'active_modifier_or_pending_runtime'}
         return results
