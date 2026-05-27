@@ -1,0 +1,56 @@
+{
+  "proof": "HONG_KONG_ERA_RED_DISCARD_UI_PROOF_2026_05_27",
+  "captured_at": "2026-05-27T05:17:26.610Z",
+  "endpoint": "POST /test/setup-hong-kong-era-red-discard-proof",
+  "flow": [
+    "Red Army browser plays 內應間諜 via the real hand Action button.",
+    "Red Army resolves the original spy target-choice modal at 香港｜天津.",
+    "Hong Kong browser receives the follow-up era_bonus_discard_on_red_card card-choice modal.",
+    "Hong Kong selects 香港目標手牌 in the real modal; pending_choice clears."
+  ],
+  "screenshots": {
+    "choice_modal": "HONG_KONG_ERA_RED_DISCARD_CHOICE_UI_2026_05_27.png",
+    "resolved_state": "HONG_KONG_ERA_RED_DISCARD_RESOLVED_UI_2026_05_27.png"
+  },
+  "game_id": "dc0ad67b-6cc3-458c-8f96-4e35ff55eb98",
+  "viewer_player_id": "a94876d5-73a2-4e6d-8d1c-f69aad92dca0",
+  "pending_choice_after_resolve": null,
+  "action_log": [
+    "[Turn 1] 紅軍 played 內應間諜",
+    "[Turn 1] 紅軍 dissolved 1 organization from 香港 at 天津",
+    "[Turn 1] Era [香港]香港人被自殺: 香港 must discard 1 after Red Army played 內應間諜",
+    "[Turn 1] 紅軍 used [香港]香港人被自殺 to force 香港 to discard 香港目標手牌"
+  ],
+  "players_after_resolve": [
+    {
+      "id": "a94876d5-73a2-4e6d-8d1c-f69aad92dca0",
+      "name": "香港",
+      "faction": "hong_kong",
+      "hand": ["香港保留手牌"],
+      "discard_pile": ["香港目標手牌"],
+      "orgs": {}
+    },
+    {
+      "id": "d986102e-9a81-4fd3-9724-aeee4f20674b",
+      "name": "紅軍",
+      "faction": "red_army",
+      "hand": [],
+      "discard_pile": ["內應間諜"],
+      "orgs": {"北京": 1}
+    }
+  ],
+  "active_era_details": [
+    {
+      "id": "hong_kong",
+      "name": "[香港]香港人被自殺",
+      "remaining": 2,
+      "red_suppression_type": "bonus_discard_on_red_card",
+      "revolution_counterattack_type": "reduce_purchase_cost"
+    }
+  ],
+  "visible_ui_after_resolve": {
+    "choice_modal_display": "none",
+    "era_panel_text": "[香港]香港人被自殺｜條件已達成｜剩餘 2 回合",
+    "hand_text": "香港保留手牌"
+  }
+}
