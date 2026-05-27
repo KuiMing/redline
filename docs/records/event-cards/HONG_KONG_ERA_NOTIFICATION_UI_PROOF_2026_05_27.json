@@ -1,0 +1,99 @@
+{
+  "proof": "Hong Kong era achievement notification UI text",
+  "date": "2026-05-27",
+  "game_id": "3d0a7827-b742-45c6-94b3-ec82b77c6380",
+  "player_id": "dab409f7-04b1-40e9-9ad7-3667ccf5f83d",
+  "url": "http://127.0.0.1:8000/?game_id=3d0a7827-b742-45c6-94b3-ec82b77c6380&player_id=dab409f7-04b1-40e9-9ad7-3667ccf5f83d",
+  "screenshot": "docs/records/event-cards/HONG_KONG_ERA_NOTIFICATION_UI_PROOF_2026_05_27.png",
+  "browser_snapshot_verified_texts": {
+    "title": "時代關卡達成",
+    "name": "[香港]香港人被自殺｜條件已達成",
+    "trigger_text": "達成條件：[香港抗爭遍地開花]香港在牆內擁有至少10個有效組織",
+    "success_label": "紅軍壓制",
+    "success_text": "[新型態的血腥鎮壓]紅軍每次對香港使用間諜類卡牌時，可再隨機棄掉香港1張手牌。持續2回合。",
+    "fail_label": "革命反撲",
+    "fail_text": "[沉冤待雪香港報仇]香港購買每張武裝類卡牌之費用額外減少2點資金。持續2回合。",
+    "duration_text": "效果期限：持續 2 回合｜剩餘 2 回合"
+  },
+  "state_era_notification": {
+    "duration": {
+      "type": "turns",
+      "value": 2
+    },
+    "duration_text": "持續 2 回合",
+    "fail_text": "[沉冤待雪香港報仇]香港購買每張武裝類卡牌之費用額外減少2點資金。持續2回合。",
+    "id": "hong_kong",
+    "minimized": false,
+    "name": "[香港]香港人被自殺",
+    "remaining": 2,
+    "runtime_effects": {
+      "red_suppression": {
+        "card_types": [
+          "spy"
+        ],
+        "discard_count": 1,
+        "duration": 2,
+        "player_faction": "red_army",
+        "target_camp": "hong_kong",
+        "type": "bonus_discard_on_red_card"
+      },
+      "revolution_counterattack": {
+        "amount": 2,
+        "card_types": [
+          "armed"
+        ],
+        "duration": 2,
+        "resource": "money",
+        "target_camp": "hong_kong",
+        "type": "reduce_purchase_cost"
+      }
+    },
+    "success_text": "[新型態的血腥鎮壓]紅軍每次對香港使用間諜類卡牌時，可再隨機棄掉香港1張手牌。持續2回合。",
+    "trigger_text": "[香港抗爭遍地開花]香港在牆內擁有至少10個有效組織"
+  },
+  "contains_missing_placeholder": false,
+  "notes": [
+    "正式 browser UI 截圖由 live server 產生；vision 服務 429，但 screenshot 已保留，browser snapshot / console state 均確認沒有「暫缺」。",
+    "此 proof 覆蓋時代關卡達成大彈窗的 trigger/success/fail/duration 文字。"
+  ],
+  "browser_console_state_evidence": {
+    "hasLastGameState": true,
+    "bodyHasMissing": false,
+    "era_notification": {
+      "duration": {
+        "type": "turns",
+        "value": 2
+      },
+      "duration_text": "持續 2 回合",
+      "fail_text": "[沉冤待雪香港報仇]香港購買每張武裝類卡牌之費用額外減少2點資金。持續2回合。",
+      "id": "hong_kong",
+      "minimized": false,
+      "name": "[香港]香港人被自殺",
+      "remaining": 2,
+      "runtime_effects": {
+        "red_suppression": {
+          "card_types": [
+            "spy"
+          ],
+          "discard_count": 1,
+          "duration": 2,
+          "player_faction": "red_army",
+          "target_camp": "hong_kong",
+          "type": "bonus_discard_on_red_card"
+        },
+        "revolution_counterattack": {
+          "amount": 2,
+          "card_types": [
+            "armed"
+          ],
+          "duration": 2,
+          "resource": "money",
+          "target_camp": "hong_kong",
+          "type": "reduce_purchase_cost"
+        }
+      },
+      "success_text": "[新型態的血腥鎮壓]紅軍每次對香港使用間諜類卡牌時，可再隨機棄掉香港1張手牌。持續2回合。",
+      "trigger_text": "[香港抗爭遍地開花]香港在牆內擁有至少10個有效組織"
+    }
+  }
+}

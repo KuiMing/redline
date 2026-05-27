@@ -2425,13 +2425,13 @@ def test_setup_hong_kong_era_red_discard_proof(payload: dict):
     game.turn_phase = TurnPhase.ACTION
     game.era_engine.activate_era("hong_kong")
     era = game.era_engine.get_definition("hong_kong")
-    game.era_notification = {
-        "id": era.get("id") if era else "hong_kong",
-        "name": era.get("name") if era else "[香港]香港人被自殺",
-        "runtime_effects": {
-            "red_suppression": (era.get("effects") or {}).get("red_suppression") if era else None,
-            "revolution_counterattack": (era.get("effects") or {}).get("revolution_counterattack") if era else None,
-        },
+    game.era_notification = game._era_notification_payload(era) if era else {
+        "id": "hong_kong",
+        "name": "[香港]香港人被自殺",
+    }
+    game.era_notification["runtime_effects"] = {
+        "red_suppression": (era.get("effects") or {}).get("red_suppression") if era else None,
+        "revolution_counterattack": (era.get("effects") or {}).get("revolution_counterattack") if era else None,
     }
 
     game_id = str(uuid.uuid4())

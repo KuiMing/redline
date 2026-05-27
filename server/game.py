@@ -4642,6 +4642,7 @@ class Game:
             notification = dict(self.era_notification)
             active_match = next((e for e in active_era_details if e.get("id") == notification.get("id")), None)
             if active_match:
+                notification = {**self._era_notification_payload(active_match), **notification}
                 notification["remaining"] = active_match.get("remaining")
                 notification["duration"] = active_match.get("duration")
 

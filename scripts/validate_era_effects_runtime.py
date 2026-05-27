@@ -218,6 +218,32 @@ def run_checks():
         }
     ))
 
+
+    # Era notification payloads must be complete enough for the achievement modal; no UI fallback 暫缺 text.
+    game, _actor, _red = make_game('hong_kong')
+    notification_details = {}
+    missing_notifications = []
+    for era in game.structured_eras:
+        payload = game._era_notification_payload(era)
+        fields = {
+            'trigger_text': payload.get('trigger_text'),
+            'success_text': payload.get('success_text'),
+            'fail_text': payload.get('fail_text'),
+            'duration_text': payload.get('duration_text'),
+        }
+        notification_details[era.get('id')] = fields
+        if any(not value or '暫缺' in str(value) for value in fields.values()):
+            missing_notifications.append({'id': era.get('id'), 'fields': fields})
+    checks.append(check(
+        'era_notification_payloads_have_complete_ui_text',
+        not missing_notifications,
+        {
+            'rule': '時代關卡達成 modal 應顯示觸發條件、紅軍壓制、革命反撲與期限文字，不應出現暫缺 fallback。',
+            'missing_notifications': missing_notifications,
+            'notification_details': notification_details,
+        }
+    ))
+
     # Mongolia/Tibet-style resource-card bonus: propaganda card played as resource grants +1 propaganda.
     game, actor, _red = make_game('mongol')
     game.era_engine.activate_era('mongolia')

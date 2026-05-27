@@ -38,8 +38,6 @@
         "event": "香港抗暴之戰",
         "choice_key": "event_discard_self",
         "discard": [
-          "宣傳家",
-          "宣傳家",
           "追隨者"
         ]
       }
@@ -57,6 +55,8 @@
           "status": "success"
         },
         "discard": [
+          "宣傳家",
+          "宣傳家",
           "宣傳家",
           "宣傳家"
         ]
@@ -543,8 +543,6 @@
       "status": "passed",
       "detail": {
         "reduce_cost_buy": [
-          "宣傳家",
-          "宣傳家",
           "資助者"
         ],
         "restrict_build_error": "Current event restricts building organizations",
