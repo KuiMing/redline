@@ -2401,6 +2401,66 @@ def test_setup_tibet_era_red_build_proof(payload: dict):
     }
 
 
+@app.post("/test/setup-era-notification-proof")
+def test_setup_era_notification_proof(payload: dict):
+    era_id = payload.get("era_id") or payload.get("id") or "mongolia"
+    players = [(str(uuid.uuid4()), "viewer"), (str(uuid.uuid4()), "red")]
+    game = Game(players, market_mode="all_cards")
+    viewer = game.players[0]
+    red = game.players[1]
+    era = game.era_engine.get_definition(era_id)
+    if not era:
+        return {"success": False, "error": f"Unknown era: {era_id}"}
+
+    trigger = era.get("trigger") or {}
+    camp_to_faction = {
+        "mongol": ("mongol", "烏蘭巴托"),
+        "tibet": ("tibet", "拉薩"),
+        "kazakh": ("kazakh", "阿拉木圖"),
+        "uyghur": ("uyghur", "烏魯木齊"),
+        "manchuria": ("manchuria", "瀋陽"),
+        "rebel": ("liberals", "上海"),
+        "taiwan": ("taiwan_green", "臺北"),
+        "hong_kong": ("hong_kong", "香港"),
+    }
+    viewer.faction_id, viewer.base = camp_to_faction.get(trigger.get("camp"), ("liberals", "上海"))
+    red.faction_id = "red_army"
+    red.base = "北京"
+    viewer.organizations = {viewer.base: 1}
+    red.organizations = {"北京": 1}
+    viewer.hand = [Card("追隨者", "propaganda", {"propaganda": 1})]
+    red.hand = [Card("追隨者", "propaganda", {"propaganda": 1})]
+    game.pending_base_choices = []
+    game.game_phase = GamePhase.MAIN
+    game.current_player_index = 0
+    game.turn_phase = TurnPhase.ACTION
+    game.era_engine.activate_era(era_id)
+    game.era_notification = game._era_notification_payload(era)
+    game.era_notification["runtime_effects"] = {
+        "red_suppression": (era.get("effects") or {}).get("red_suppression"),
+        "revolution_counterattack": (era.get("effects") or {}).get("revolution_counterattack"),
+    }
+
+    game_id = str(uuid.uuid4())
+    manager.games[game_id] = game
+    manager.connections[game_id] = manager.connections.get(game_id, {})
+    lobby[game_id] = [(p.id, p.name) for p in game.players]
+    lobby_hosts[game_id] = viewer.id
+    lobby_factions[game_id] = {p.id: p.faction_id for p in game.players}
+    lobby_bases[game_id] = {p.id: p.base for p in game.players if p.base}
+    lobby_ready[game_id] = {p.id: True for p in game.players}
+    return {
+        "success": True,
+        "game_id": game_id,
+        "player_id": viewer.id,
+        "red_player_id": red.id,
+        "era_id": era.get("id"),
+        "era_name": era.get("name"),
+        "url": f"/?game_id={game_id}&player_id={viewer.id}",
+        "state": game.state(),
+    }
+
+
 @app.post("/test/setup-hong-kong-era-red-discard-proof")
 def test_setup_hong_kong_era_red_discard_proof(payload: dict):
     players = [(str(uuid.uuid4()), "香港"), (str(uuid.uuid4()), "紅軍")]
