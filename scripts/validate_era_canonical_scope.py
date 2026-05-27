@@ -11,8 +11,9 @@ RAW_PATH = BASE / "data" / "cards" / "event_and_era_cards.v1.1.json"
 ERA_PATH = BASE / "data" / "era_structured.v1.1.json"
 EVENT_PATH = BASE / "data" / "events_structured.v1.1.json"
 RECORD_DIR = BASE / "docs" / "records" / "event-cards"
-OUT_JSON = RECORD_DIR / "ERA_CANONICAL_SCOPE_AUDIT_2026_05_26.json"
-OUT_MD = RECORD_DIR / "ERA_CANONICAL_SCOPE_AUDIT_2026_05_26.md"
+STAMP = date.today().strftime("%Y_%m_%d")
+OUT_JSON = RECORD_DIR / f"ERA_CANONICAL_SCOPE_AUDIT_{STAMP}.json"
+OUT_MD = RECORD_DIR / f"ERA_CANONICAL_SCOPE_AUDIT_{STAMP}.md"
 
 EXPECTED_RAW_ERA_COUNT = 8
 STATIC_SUPPLY_CARDS = {"內鬥", "分神"}

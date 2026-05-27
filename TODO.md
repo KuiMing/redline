@@ -20,9 +20,9 @@
 ### P0：事件卡完整化規劃（MVP 後下一階段）
 - [done] 事件／時代卡資料盤點與 canonical scope 決定。
   - 2026-05-23：已新增 `scripts/validate_event_card_canonical_scope.py`，產出 `docs/records/event-cards/EVENT_CARD_CANONICAL_SCOPE_AUDIT_2026_05_23.{json,md}`。
-  - 盤點結論：raw 檔共有 13 張事件列、8 張時代關卡列；目前 structured data 有 20 rows（15 base + 5 副本），runtime event deck 依 base structured rows 與 raw 張數建立為 27 張。
-  - canonical scope 建議：目前 MVP 應明確視為「15 張 structured base rows 進 runtime event deck」；若要宣稱完整 raw event/era，需先決定 8 張 raw 時代關卡是以 era-stage mechanics 還是 event-deck cards 納入。
-  - 已知缺口：8 張時代關卡中有 6 張完全未 structured；`[反賊]公知世代的終結`、`[臺灣]綏靖派反對介入對岸` 目前只是 event-like MVP adaptation，仍需 canonical 決策。
+  - 盤點結論（已於 2026-05-27 收斂）：raw 檔共有 13 張事件列、8 張時代關卡列；事件 runtime deck 只包含 raw 13 張事件列（含副本共 25 張），8 張時代關卡以 `data/era_structured.v1.1.json` era-stage mechanics 實作，不進事件牌堆。
+  - canonical scope 決策：事件卡 MVP scope 為「13 張 raw event rows 進 runtime event deck」；8 張 raw era-stage rows 只作為 era-stage mechanics，不作為 event-deck cards。
+  - 2026-05-27：`[反賊]公知世代的終結`、`[臺灣]綏靖派反對介入對岸` 的 event-like MVP adaptation 已移除，避免同一張時代關卡同時出現在事件牌堆與時代關卡系統。
 
 - [todo] 修正 structured event data 與 raw card text 不一致的事件。
   - 2026-05-24 整理：目前應分三層追蹤，不要把「MVP 可 playtest」等同「所有 raw event/era 已完整實作」。
@@ -44,8 +44,8 @@
     - 2026-05-27：已完成香港紅軍壓制 `bonus_discard_on_red_card` runtime 與正式 browser UI proof：紅軍打出間諜類卡牌並完成原本間諜瓦解 pending choice 後，接續重用既有 card choice / multi-card choice 架構，要求香港玩家棄 1 張手牌；香港革命反撲武裝購買 -2 資金仍維持。`scripts/validate_era_effects_runtime.py` 擴充至 14 項 runtime checks；runtime proof records：`docs/records/event-cards/ERA_EFFECTS_RUNTIME_VALIDATION.{md,json}`；UI proof records：`docs/records/event-cards/HONG_KONG_ERA_RED_DISCARD_UI_PROOF_2026_05_27.{md,json}` 與兩張同名前綴 PNG。
     - 2026-05-27：已補齊時代關卡達成大彈窗的官方說明文字 fallback：`era_notification` 會合併 structured era payload，測試端點也改用同一 payload；香港達成彈窗不再顯示 `（暫缺）`。`scripts/validate_era_effects_runtime.py` 新增 notification 文案完整性檢查；proof records：`docs/records/event-cards/HONG_KONG_ERA_NOTIFICATION_UI_PROOF_2026_05_27.{md,json,png}`。
     - 2026-05-27：已依要求補齊香港以外 7 張時代關卡達成通知正式 browser UI 截圖，並新增通用 `/test/setup-era-notification-proof` proof endpoint；proof records：`docs/records/event-cards/ERA_NOTIFICATION_ALL_NON_HONG_KONG_UI_PROOF_2026_05_27.{md,json}` 與 `ERA_NOTIFICATION_{MONGOLIA,TIBET,KAZAKH,UYGHUR,MANCHURIA,REBELS,TAIWAN}_UI_PROOF_2026_05_27.png`。
+    - 2026-05-27：已收斂事件牌堆 canonical scope：移除 `公知世代的終結`、`臺灣綏靖派反對介入` 兩張 event-like MVP adaptation；這兩張只保留在 `data/era_structured.v1.1.json` 作為 era-stage mechanics。事件 runtime deck 回到 raw 13 張事件列共 25 張，時代關卡不進事件牌堆；`scripts/validate_event_card_canonical_scope.py` 與 `EVENT_CARD_CANONICAL_SCOPE_AUDIT_2026_05_27.{md,json}` 已更新。
     - 仍待 runtime 落地：其餘需要新互動或更細 gameplay hook 的時代效果尚未接完。
-    - 既有 event-like MVP adaptation 仍暫留：`公知世代的終結`、`臺灣綏靖派反對介入`；後續 runtime 完成後再決定移除或改為只保留 era-stage 版本。
   - 建議下一步順序：raw 13 張事件卡 deck 對齊已完成；8 張時代關卡已完成 canonical/data declaration；第一批 no-new-UI era runtime 已完成；接著分批實作需要 pending choice / map highlight / play-card hook 的剩餘 era effects。
   - 2026-05-23：已修正 `貿易戰加劇`：structured trigger 改為購買 `英美奧援` 或總費用 4 點以上卡牌，success 改為從棄牌堆選 1 張置頂；新增 runtime primitive `buy_card` / `topdeck_from_discard` 與 validator proof。
   - 2026-05-24：已修正 `紅軍權貴出逃`：structured success 改為 `trash_from_hand_or_discard`，成功後可從手牌或棄牌堆選 1 張移除；新增 runtime validator 與正式 browser UI proof。
@@ -83,7 +83,8 @@
   - 原則：只重用既有 pending choice modal / target choice map highlight 架構；不要重做情報網 highlight。
   - 驗收：每一種互動型 effect 至少有一個正式 browser UI proof，截圖與紀錄放 `docs/records/event-cards/`。
 
-- [todo] 事件卡完整化總驗證。
+- [done] 事件卡完整化總驗證。
+  - 2026-05-27：事件牌堆 canonical scope、event/era validators、compileall、diff check、root record-like count 已完成；事件牌堆不再包含 raw 時代關卡 adaptation。
   - 必跑：事件卡 runtime validator、`python3 -m compileall -q server scripts static`、`git diff --check`、root record-like count 檢查。
   - 若有 UI 變更：補正式 browser UI screenshot proof。
   - 若要 LAN playtest：重啟 server 綁 `0.0.0.0:8000` 並確認 `TCP *:8000 (LISTEN)`。

@@ -1,0 +1,190 @@
+# Event Card Canonical Scope Audit
+
+Status: passed
+Raw source: `data/cards/event_and_era_cards.v1.1.json`
+Structured source: `data/events_structured.v1.1.json`
+
+## Summary
+
+- raw_total_cards: 21
+- raw_event_rows: 13
+- raw_era_rows: 8
+- raw_event_declared_copies: 25
+- structured_rows_including_duplicates: 18
+- structured_base_rows: 13
+- structured_duplicate_rows: 5
+- runtime_event_deck_copies: 25
+- raw_event_runtime_deck_copies: 25
+- era_rows_not_structured: 8
+- era_rows_partially_adapted: 0
+- known_raw_structured_deltas: 0
+- orphan_structured_base_rows: []
+
+## Runtime vocabulary in structured data
+
+- trigger_types: {'build_organization': 2, 'buy_card': 2, 'draw': 1, 'end_turn_state': 1, 'move_organization': 2, 'play_card_with_money': 1, 'play_card_with_propaganda': 3, 'use_faction_ability': 2}
+- effect_types: {'build_organization_in_region': 2, 'build_organization_near_own': 1, 'discard_random': 2, 'discard_self': 5, 'draw': 3, 'gain_card': 4, 'move': 2, 'none': 6, 'red_dissolve': 2, 'scoped_card_range': 1, 'topdeck_from_discard': 2, 'trash_from_hand_or_discard': 2}
+
+## Card-by-card scope
+
+- 歲月靜好
+  - section: event; copies: 5; status: structured
+  - structured_name: 歲月靜好; in_runtime_event_deck: True; runtime_copy_count: 5
+  - runtime: idle
+  - raw trigger/condition: 無
+  - raw success/red: 無
+  - raw failure/rebel: 無
+- 全國人大召開
+  - section: event; copies: 2; status: structured
+  - structured_name: 全國人大召開; in_runtime_event_deck: True; runtime_copy_count: 2
+  - runtime: mission trigger=use_faction_ability success=draw failure=red_dissolve
+  - raw trigger/condition: [反抗必隨壓迫而起]使用或觸發至少1次陣營特殊能力
+  - raw success/red: [覺醒之士投身我方]抽1張牌
+  - raw failure/rebel: [鐵拳之下同志潰散]被紅軍無視距離瓦解1個牆內組織
+- 香港抗暴之戰
+  - section: event; copies: 1; status: structured
+  - structured_name: 香港抗暴之戰; in_runtime_event_deck: True; runtime_copy_count: 1
+  - runtime: mission trigger=play_card_with_money success=gain_card failure=discard_self
+  - raw trigger/condition: [運用資金支援前線]打出至少1張購買費用有資金的卡牌
+  - raw success/red: [風雨同路手足同情]獲得2張宣傳家
+  - raw failure/rebel: [兄弟爬山各自努力]己方選1張手牌棄掉
+- 重大災難
+  - section: event; copies: 2; status: structured
+  - structured_name: 重大災難; in_runtime_event_deck: True; runtime_copy_count: 2
+  - runtime: mission trigger=play_card_with_propaganda success=gain_card failure=discard_self
+  - raw trigger/condition: [寧鳴而死不默而生]打出至少1張購買費用有宣傳的卡牌
+  - raw success/red: [悲憤無畏的吹哨人]獲得1張宣傳家
+  - raw failure/rebel: [大難當前無暇他顧]己方選1張手牌棄掉
+- 藏印邊境軍事對峙
+  - section: event; copies: 2; status: structured
+  - structured_name: 藏印邊境軍事對峙; in_runtime_event_deck: True; runtime_copy_count: 2
+  - runtime: mission trigger=build_organization success=move failure=none
+  - raw trigger/condition: [趁機加速組織工作]在牆內建立至少1個組織
+  - raw success/red: [裡應外合趁虛而入]進行2次組織遷移
+  - raw failure/rebel: 無
+- 貿易戰加劇
+  - section: event; copies: 2; status: structured
+  - structured_name: 貿易戰加劇; in_runtime_event_deck: True; runtime_copy_count: 2
+  - runtime: mission trigger=buy_card success=topdeck_from_discard failure=none
+  - raw trigger/condition: [逆襲之日或已來臨]購買至少1張英美奧援 或至少1張購買費用4點以上的卡牌
+  - raw success/red: [反共志士重回陣線]從棄牌堆選1張牌置於牌庫頂
+  - raw failure/rebel: 無
+- 東突厥集中營
+  - section: event; copies: 1; status: structured
+  - structured_name: 東突厥集中營; in_runtime_event_deck: True; runtime_copy_count: 1
+  - runtime: mission trigger=play_card_with_propaganda success=gain_card failure=discard_random
+  - raw trigger/condition: [保衛出逃的見證者]打出至少1張購買費用有宣傳的卡牌
+  - raw success/red: [發生在我身上的事]獲得1張宣傳家
+  - raw failure/rebel: [出逃者遭紅軍謀害]被紅軍隨機棄掉1張手牌
+- 北京政爭
+  - section: event; copies: 1; status: structured
+  - structured_name: 北京政爭; in_runtime_event_deck: True; runtime_copy_count: 1
+  - runtime: mission trigger=draw success=draw failure=none
+  - raw trigger/condition: [試圖伸出友誼之手]藉由卡牌效果或能力從牌庫抽取至少1張牌
+  - raw success/red: [暗送秋波互為照應]抽1張牌
+  - raw failure/rebel: 無
+- 紅軍權貴出逃
+  - section: event; copies: 2; status: structured
+  - structured_name: 紅軍權貴出逃; in_runtime_event_deck: True; runtime_copy_count: 2
+  - runtime: mission trigger=move_organization success=trash_from_hand_or_discard failure=discard_self
+  - raw trigger/condition: [掩護政軍要人出逃]進行至少3次組織遷移
+  - raw success/red: [供出我方潛藏內鬼]從己方手牌或棄牌中移除1張牌
+  - raw failure/rebel: [喪失重要情報來源]己方選1張手牌棄掉
+- 烏魯木齊七五事件
+  - section: event; copies: 1; status: structured
+  - structured_name: 烏魯木齊七五事件; in_runtime_event_deck: True; runtime_copy_count: 1
+  - runtime: mission trigger=end_turn_state success=build_organization_near_own failure=discard_random
+  - raw trigger/condition: [探聽東突厥的現況]在回合結束時至少有1個組織在牆內
+  - raw success/red: [配合外媒建立渠道]免費在己方組織1格內建立1個組織
+  - raw failure/rebel: [缺乏一手消息來源]被紅軍隨機棄掉1張手牌
+- 上海合作組織
+  - section: event; copies: 2; status: structured
+  - structured_name: 上海合作組織; in_runtime_event_deck: True; runtime_copy_count: 2
+  - runtime: auto effect=scoped_card_range
+  - raw trigger/condition: 自動執行：紅軍對北國城鎮組織可使用武裝與間諜類卡牌的距離增加為5格
+  - raw success/red: 無
+  - raw failure/rebel: 無
+- 一帶一路 南洋
+  - section: event; copies: 2; status: structured
+  - structured_name: 一帶一路 南洋; in_runtime_event_deck: True; runtime_copy_count: 2
+  - runtime: auto effect=build_organization_in_region
+  - raw trigger/condition: 自動執行：紅軍可以免費在南洋無視距離建立1個組織
+  - raw success/red: 無
+  - raw failure/rebel: 無
+- 一帶一路 天方
+  - section: event; copies: 2; status: structured
+  - structured_name: 一帶一路 天方; in_runtime_event_deck: True; runtime_copy_count: 2
+  - runtime: auto effect=build_organization_in_region
+  - raw trigger/condition: 自動執行：紅軍可以免費在天方無視距離建立1個組織
+  - raw success/red: 無
+  - raw failure/rebel: 無
+- [香港]香港人被自殺
+  - section: era; copies: 1; status: era_not_structured
+  - structured_name: none; in_runtime_event_deck: False; runtime_copy_count: 0
+  - runtime: not structured
+  - raw trigger/condition: [香港抗爭遍地開花]香港在牆內擁有至少10個有效組織
+  - raw success/red: [新型態的血腥鎮壓]紅軍每次對香港使用間諜類卡牌時，可再隨機棄掉香港1張手牌。持續2回合。
+  - raw failure/rebel: [沉冤待雪香港報仇]香港購買每張武裝類卡牌之費用額外減少2點資金。持續2回合。
+  - note: Raw era-stage row is represented in data/era_structured.v1.1.json, not in structured event runtime data.
+- [蒙古]莫日根事件爆發
+  - section: era; copies: 1; status: era_not_structured
+  - structured_name: none; in_runtime_event_deck: False; runtime_copy_count: 0
+  - runtime: not structured
+  - raw trigger/condition: [牧民維權團體成形]蒙古在牆內擁有至少4個有效組織
+  - raw success/red: [知識分子互相猜疑]將3張內鬥放進蒙古棄牌堆。
+  - raw failure/rebel: [南蒙古人世代覺醒]蒙古當回合手牌中的每張宣傳類卡牌 用於購買時可額外提供1點宣傳。
+  - note: Raw era-stage row is represented in data/era_structured.v1.1.json, not in structured event runtime data.
+- [藏國]藏國騷亂
+  - section: era; copies: 1; status: era_not_structured
+  - structured_name: none; in_runtime_event_deck: False; runtime_copy_count: 0
+  - runtime: not structured
+  - raw trigger/condition: [藏人完成示威準備]藏國在牆內擁有至少7個有效組織
+  - raw success/red: [青藏鐵路運兵鎮壓]紅軍當回合可棄掉任意張數手牌，無視距離在藏國有效組織１格內建立與張數同數量的組織。
+  - raw failure/rebel: [心向法王達賴喇嘛]藏國當回合手牌中的每張宣傳類卡牌 用於購買時可額外提供1點宣傳。
+  - note: Raw era-stage row is represented in data/era_structured.v1.1.json, not in structured event runtime data.
+- [哈薩克]伊塔事件
+  - section: era; copies: 1; status: era_not_structured
+  - structured_name: none; in_runtime_event_deck: False; runtime_copy_count: 0
+  - runtime: not structured
+  - raw trigger/condition: [三玉茲與三區革命]哈薩克在北國擁有至少7個有效組織，在牆內擁有至少3個有效組織
+  - raw success/red: [紅軍提防哈薩克人]哈薩克此後無法再無視距離建立牆內組織。
+  - raw failure/rebel: [出逃同胞加入隊伍]當回合哈薩克立即額外抽2張牌。
+  - note: Raw era-stage row is represented in data/era_structured.v1.1.json, not in structured event runtime data.
+- [維吾爾]莎車大屠殺
+  - section: era; copies: 1; status: era_not_structured
+  - structured_name: none; in_runtime_event_deck: False; runtime_copy_count: 0
+  - runtime: not structured
+  - raw trigger/condition: [突厥戰士踏遍七城]維吾爾在牆內擁有至少7個有效組織
+  - raw success/red: [武力清剿叛軍基地]紅軍每次對維吾爾使用武裝類卡牌時，可再瓦解己方組織1格內的1個維吾爾組織。持續2回合。
+  - raw failure/rebel: [壯士去兮弔民伐罪]維吾爾每打出1張武裝類卡牌，獲得2點宣傳。持續2回合。
+  - note: Raw era-stage row is represented in data/era_structured.v1.1.json, not in structured event runtime data.
+- [滿洲]滿洲地方派系凝聚
+  - section: era; copies: 1; status: era_not_structured
+  - structured_name: none; in_runtime_event_deck: False; runtime_copy_count: 0
+  - runtime: not structured
+  - raw trigger/condition: [山海關外故國甦生]滿洲在牆內擁有至少10個有效組織
+  - raw success/red: [試圖清洗地方勢力]將5張分神放進滿洲棄牌堆。
+  - raw failure/rebel: [行政資源固守地盤]滿洲當回合可檢視己方牌庫頂7張牌，將其中2張牌移到牌庫最頂，其餘順序不變。
+  - note: Raw era-stage row is represented in data/era_structured.v1.1.json, not in structured event runtime data.
+- [反賊]公知世代的終結
+  - section: era; copies: 1; status: era_not_structured
+  - structured_name: none; in_runtime_event_deck: False; runtime_copy_count: 0
+  - runtime: not structured
+  - raw trigger/condition: [寒冬將至新芽始生]反賊在牆內擁有至少4個有效組織
+  - raw success/red: [互聯網管控全面化]反賊此後無法再無視距離建立牆內組織。
+  - raw failure/rebel: [反賊結社潛入地下]反賊在回合中建立至少3個組織，則當回合可再抽1張牌。持續至遊戲結束。
+  - note: Raw era-stage row is represented in data/era_structured.v1.1.json, not in structured event runtime data.
+- [臺灣]綏靖派反對介入對岸
+  - section: era; copies: 1; status: era_not_structured
+  - structured_name: none; in_runtime_event_deck: False; runtime_copy_count: 0
+  - runtime: not structured
+  - raw trigger/condition: [臺灣重建敵後工作]臺灣在牆內擁有至少7個有效組織
+  - raw success/red: [鼓吹停止挑釁紅軍]將3張內鬥放進臺灣棄牌堆
+  - raw failure/rebel: [打擊國內綏靖主義]每當臺灣在臺灣城鎮建立至少1個組織時，獲得1點宣傳。持續2回合。
+  - note: Raw era-stage row is represented in data/era_structured.v1.1.json, not in structured event runtime data.
+
+## Canonical scope recommendation
+
+- Treat event-card runtime deck scope as the 13 raw event rows only.
+- Treat the 8 raw era-stage rows as data/era_structured.v1.1.json era-stage mechanics, not event-deck cards.
+- Do not reintroduce event-like adaptations for raw era rows unless the canonical scope is explicitly changed.

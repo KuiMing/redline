@@ -23,24 +23,15 @@ STAMP = date.today().strftime("%Y_%m_%d")
 JSON_OUT = RECORD_DIR / f"EVENT_CARD_CANONICAL_SCOPE_AUDIT_{STAMP}.json"
 MD_OUT = RECORD_DIR / f"EVENT_CARD_CANONICAL_SCOPE_AUDIT_{STAMP}.md"
 
-# Existing MVP intentionally adapts two raw era rows into event-like structured rows
-# with shortened names. Keep this map explicit so future completion work can either
-# bless or replace the adaptation instead of losing track of it.
-ERA_STRUCTURED_ALIASES = {
-    "[反賊]公知世代的終結": "公知世代的終結",
-    "[臺灣]綏靖派反對介入對岸": "臺灣綏靖派反對介入",
-}
+# Existing MVP used to adapt two raw era rows into event-like structured rows
+# with shortened names. These rows are now canonical era-stage mechanics in
+# ``data/era_structured.v1.1.json`` and must not stay in the runtime event deck.
+ERA_STRUCTURED_ALIASES = {}
 
-# Raw-vs-structured semantic deltas already identified in TODO.md. This audit records
-# them in machine-readable form without changing runtime rules.
-KNOWN_TODO_DELTAS = {
-    "貿易戰加劇": "TODO.md notes raw trigger is buying 英美奧援 or a 4+ total-cost card, and success topdecks 1 card from discard; structured MVP uses play_card_with_money -> reduce_cost.",
-    "紅軍權貴出逃": "TODO.md notes raw success removes 1 card from hand or discard; structured MVP uses discard_self.",
-    "烏魯木齊七五事件": "TODO.md notes raw trigger is end-of-turn having an organization inside the wall, and success builds for free within 1 step of own organization; structured MVP uses build_organization trigger + generic build choice.",
-    "上海合作組織": "TODO.md notes raw effect is Red Army weapon/spy range against 北國 town organizations becomes 5; structured MVP uses generic ignore_distance.",
-    "一帶一路 南洋": "TODO.md notes raw effect is Red Army free build in 南洋 ignoring distance; structured MVP uses generic ignore_distance.",
-    "一帶一路 天方": "TODO.md notes raw effect is Red Army free build in 天方 ignoring distance; structured MVP uses generic ignore_distance.",
-}
+# Raw-vs-structured semantic deltas previously identified in TODO.md and now
+# resolved by runtime validators. Keep this empty so stale deltas fail review
+# by inspection instead of being treated as current gaps.
+KNOWN_TODO_DELTAS = {}
 
 
 def load_json(path: Path) -> Any:
@@ -131,9 +122,9 @@ def main() -> int:
         if card["name"] in KNOWN_TODO_DELTAS:
             notes.append(KNOWN_TODO_DELTAS[card["name"]])
         if card["section"] == "era" and not event:
-            notes.append("Raw era-stage row is not currently represented in structured event runtime data.")
+            notes.append("Raw era-stage row is represented in data/era_structured.v1.1.json, not in structured event runtime data.")
         if card["section"] == "era" and event:
-            notes.append("Raw era-stage row is currently represented only as an event-like MVP adaptation; canonical era-stage scope still needs a decision.")
+            notes.append("Unexpected: raw era-stage row is still represented as an event-like adaptation.")
         entries.append(
             {
                 **card,
@@ -180,6 +171,7 @@ def main() -> int:
             "structured_base_rows": len(base_structured),
             "structured_duplicate_rows": len(structured) - len(base_structured),
             "runtime_event_deck_copies": runtime_deck_copies,
+            "raw_event_runtime_deck_copies": raw_event_copies,
             "era_rows_not_structured": sum(1 for entry in entries if entry["scope_status"] == "era_not_structured"),
             "era_rows_partially_adapted": sum(1 for entry in entries if entry["scope_status"] == "partial_era_adapted"),
             "known_raw_structured_deltas": len(KNOWN_TODO_DELTAS),
@@ -191,9 +183,9 @@ def main() -> int:
         },
         "entries": entries,
         "canonical_scope_recommendation": [
-            "Treat current MVP scope as the 15 structured base rows that enter the runtime event deck.",
-            "Before claiming full raw event/era completion, decide whether the 8 raw era-stage rows are in scope as era-stage mechanics or event-deck cards.",
-            "Resolve the six TODO.md raw-vs-structured deltas before expanding UI proof claims.",
+            "Treat event-card runtime deck scope as the 13 raw event rows only.",
+            "Treat the 8 raw era-stage rows as data/era_structured.v1.1.json era-stage mechanics, not event-deck cards.",
+            "Do not reintroduce event-like adaptations for raw era rows unless the canonical scope is explicitly changed.",
         ],
     }
 

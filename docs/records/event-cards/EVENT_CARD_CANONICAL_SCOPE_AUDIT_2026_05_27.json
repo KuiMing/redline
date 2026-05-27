@@ -1,0 +1,469 @@
+{
+  "status": "passed",
+  "failures": [],
+  "paths": {
+    "raw_cards": "data/cards/event_and_era_cards.v1.1.json",
+    "structured_events": "data/events_structured.v1.1.json"
+  },
+  "summary": {
+    "raw_total_cards": 21,
+    "raw_event_rows": 13,
+    "raw_era_rows": 8,
+    "raw_event_declared_copies": 25,
+    "structured_rows_including_duplicates": 18,
+    "structured_base_rows": 13,
+    "structured_duplicate_rows": 5,
+    "runtime_event_deck_copies": 25,
+    "raw_event_runtime_deck_copies": 25,
+    "era_rows_not_structured": 8,
+    "era_rows_partially_adapted": 0,
+    "known_raw_structured_deltas": 0,
+    "orphan_structured_base_rows": []
+  },
+  "runtime_vocabulary": {
+    "trigger_types": {
+      "build_organization": 2,
+      "buy_card": 2,
+      "draw": 1,
+      "end_turn_state": 1,
+      "move_organization": 2,
+      "play_card_with_money": 1,
+      "play_card_with_propaganda": 3,
+      "use_faction_ability": 2
+    },
+    "effect_types": {
+      "build_organization_in_region": 2,
+      "build_organization_near_own": 1,
+      "discard_random": 2,
+      "discard_self": 5,
+      "draw": 3,
+      "gain_card": 4,
+      "move": 2,
+      "none": 6,
+      "red_dissolve": 2,
+      "scoped_card_range": 1,
+      "topdeck_from_discard": 2,
+      "trash_from_hand_or_discard": 2
+    }
+  },
+  "entries": [
+    {
+      "section": "event",
+      "name": "歲月靜好",
+      "brief": "時光未央 歲月靜好 現世安穩 故國如初",
+      "trigger_text": "無",
+      "success_or_red_text": "無",
+      "failure_or_rebel_text": "無",
+      "copies": 5,
+      "structured_name": "歲月靜好",
+      "structured": {
+        "id": "quiet_times",
+        "name": "歲月靜好",
+        "type": "idle"
+      },
+      "in_runtime_event_deck": true,
+      "runtime_copy_count": 5,
+      "scope_status": "structured",
+      "notes": []
+    },
+    {
+      "section": "event",
+      "name": "全國人大召開",
+      "brief": "紅軍各地官員為了在大會期間展現政績 紛紛祭出過激手段壓制民間陳情與抗爭",
+      "trigger_text": "[反抗必隨壓迫而起]使用或觸發至少1次陣營特殊能力",
+      "success_or_red_text": "[覺醒之士投身我方]抽1張牌",
+      "failure_or_rebel_text": "[鐵拳之下同志潰散]被紅軍無視距離瓦解1個牆內組織",
+      "copies": 2,
+      "structured_name": "全國人大召開",
+      "structured": {
+        "id": "national_people_congress",
+        "name": "全國人大召開",
+        "type": "mission",
+        "trigger_type": "use_faction_ability",
+        "success_type": "draw",
+        "failure_type": "red_dissolve"
+      },
+      "in_runtime_event_deck": true,
+      "runtime_copy_count": 2,
+      "scope_status": "structured",
+      "notes": []
+    },
+    {
+      "section": "event",
+      "name": "香港抗暴之戰",
+      "brief": "紅軍修法破壞香港的自由與自治 百萬香港市民前仆後繼上街對抗惡法",
+      "trigger_text": "[運用資金支援前線]打出至少1張購買費用有資金的卡牌",
+      "success_or_red_text": "[風雨同路手足同情]獲得2張宣傳家",
+      "failure_or_rebel_text": "[兄弟爬山各自努力]己方選1張手牌棄掉",
+      "copies": 1,
+      "structured_name": "香港抗暴之戰",
+      "structured": {
+        "id": "hong_kong_protest",
+        "name": "香港抗暴之戰",
+        "type": "mission",
+        "trigger_type": "play_card_with_money",
+        "success_type": "gain_card",
+        "failure_type": "discard_self"
+      },
+      "in_runtime_event_deck": true,
+      "runtime_copy_count": 1,
+      "scope_status": "structured",
+      "notes": []
+    },
+    {
+      "section": "event",
+      "name": "重大災難",
+      "brief": "人民團結一心共抗災難 卻有些紅軍官員為掩蓋過失而草菅人命",
+      "trigger_text": "[寧鳴而死不默而生]打出至少1張購買費用有宣傳的卡牌",
+      "success_or_red_text": "[悲憤無畏的吹哨人]獲得1張宣傳家",
+      "failure_or_rebel_text": "[大難當前無暇他顧]己方選1張手牌棄掉",
+      "copies": 2,
+      "structured_name": "重大災難",
+      "structured": {
+        "id": "major_disaster",
+        "name": "重大災難",
+        "type": "mission",
+        "trigger_type": "play_card_with_propaganda",
+        "success_type": "gain_card",
+        "failure_type": "discard_self"
+      },
+      "in_runtime_event_deck": true,
+      "runtime_copy_count": 2,
+      "scope_status": "structured",
+      "notes": []
+    },
+    {
+      "section": "event",
+      "name": "藏印邊境軍事對峙",
+      "brief": "紅軍與印度軍在藏印邊境發生對峙與衝突 紅軍高層暫時無暇顧及國內瑣事",
+      "trigger_text": "[趁機加速組織工作]在牆內建立至少1個組織",
+      "success_or_red_text": "[裡應外合趁虛而入]進行2次組織遷移",
+      "failure_or_rebel_text": "無",
+      "copies": 2,
+      "structured_name": "藏印邊境軍事對峙",
+      "structured": {
+        "id": "tibet_border_conflict",
+        "name": "藏印邊境軍事對峙",
+        "type": "mission",
+        "trigger_type": "build_organization",
+        "success_type": "move",
+        "failure_type": "none"
+      },
+      "in_runtime_event_deck": true,
+      "runtime_copy_count": 2,
+      "scope_status": "structured",
+      "notes": []
+    },
+    {
+      "section": "event",
+      "name": "貿易戰加劇",
+      "brief": "為矯正紅軍不正當的商業競爭手段 英美諸國祭出高額關稅重創紅軍財政",
+      "trigger_text": "[逆襲之日或已來臨]購買至少1張英美奧援 或至少1張購買費用4點以上的卡牌",
+      "success_or_red_text": "[反共志士重回陣線]從棄牌堆選1張牌置於牌庫頂",
+      "failure_or_rebel_text": "無",
+      "copies": 2,
+      "structured_name": "貿易戰加劇",
+      "structured": {
+        "id": "trade_war",
+        "name": "貿易戰加劇",
+        "type": "mission",
+        "trigger_type": "buy_card",
+        "success_type": "topdeck_from_discard",
+        "failure_type": "none"
+      },
+      "in_runtime_event_deck": true,
+      "runtime_copy_count": 2,
+      "scope_status": "structured",
+      "notes": []
+    },
+    {
+      "section": "event",
+      "name": "東突厥集中營",
+      "brief": "紅軍以反恐與再教育為由囚禁上百萬穆斯林 維吾爾與哈薩克人被性侵、絕育和虐殺",
+      "trigger_text": "[保衛出逃的見證者]打出至少1張購買費用有宣傳的卡牌",
+      "success_or_red_text": "[發生在我身上的事]獲得1張宣傳家",
+      "failure_or_rebel_text": "[出逃者遭紅軍謀害]被紅軍隨機棄掉1張手牌",
+      "copies": 1,
+      "structured_name": "東突厥集中營",
+      "structured": {
+        "id": "east_turkestan_camp",
+        "name": "東突厥集中營",
+        "type": "mission",
+        "trigger_type": "play_card_with_propaganda",
+        "success_type": "gain_card",
+        "failure_type": "discard_random"
+      },
+      "in_runtime_event_deck": true,
+      "runtime_copy_count": 1,
+      "scope_status": "structured",
+      "notes": []
+    },
+    {
+      "section": "event",
+      "name": "北京政爭",
+      "brief": "帝都夜未眠 青年學生與紅軍反對派系 正各自謀劃著些什麼",
+      "trigger_text": "[試圖伸出友誼之手]藉由卡牌效果或能力從牌庫抽取至少1張牌",
+      "success_or_red_text": "[暗送秋波互為照應]抽1張牌",
+      "failure_or_rebel_text": "無",
+      "copies": 1,
+      "structured_name": "北京政爭",
+      "structured": {
+        "id": "beijing_power_struggle",
+        "name": "北京政爭",
+        "type": "mission",
+        "trigger_type": "draw",
+        "success_type": "draw",
+        "failure_type": "none"
+      },
+      "in_runtime_event_deck": true,
+      "runtime_copy_count": 1,
+      "scope_status": "structured",
+      "notes": []
+    },
+    {
+      "section": "event",
+      "name": "紅軍權貴出逃",
+      "brief": "紅軍當權派借打擊貪腐之名整肅反對派 失勢者冒險攜眷出逃 投靠境外勢力",
+      "trigger_text": "[掩護政軍要人出逃]進行至少3次組織遷移",
+      "success_or_red_text": "[供出我方潛藏內鬼]從己方手牌或棄牌中移除1張牌",
+      "failure_or_rebel_text": "[喪失重要情報來源]己方選1張手牌棄掉",
+      "copies": 2,
+      "structured_name": "紅軍權貴出逃",
+      "structured": {
+        "id": "elite_defection",
+        "name": "紅軍權貴出逃",
+        "type": "mission",
+        "trigger_type": "move_organization",
+        "success_type": "trash_from_hand_or_discard",
+        "failure_type": "discard_self"
+      },
+      "in_runtime_event_deck": true,
+      "runtime_copy_count": 2,
+      "scope_status": "structured",
+      "notes": []
+    },
+    {
+      "section": "event",
+      "name": "烏魯木齊七五事件",
+      "brief": "示威演變為暴動與仇殺 更引來鎮壓與清鄉 紅軍切斷東突厥網路與國際電話一整年",
+      "trigger_text": "[探聽東突厥的現況]在回合結束時至少有1個組織在牆內",
+      "success_or_red_text": "[配合外媒建立渠道]免費在己方組織1格內建立1個組織",
+      "failure_or_rebel_text": "[缺乏一手消息來源]被紅軍隨機棄掉1張手牌",
+      "copies": 1,
+      "structured_name": "烏魯木齊七五事件",
+      "structured": {
+        "id": "urumqi_incident",
+        "name": "烏魯木齊七五事件",
+        "type": "mission",
+        "trigger_type": "end_turn_state",
+        "success_type": "build_organization_near_own",
+        "failure_type": "discard_random"
+      },
+      "in_runtime_event_deck": true,
+      "runtime_copy_count": 1,
+      "scope_status": "structured",
+      "notes": []
+    },
+    {
+      "section": "event",
+      "name": "上海合作組織",
+      "brief": "紅軍以打擊恐怖主義之名 要求北方諸國協助消滅反對紅軍的組織",
+      "trigger_text": "自動執行：紅軍對北國城鎮組織可使用武裝與間諜類卡牌的距離增加為5格",
+      "success_or_red_text": "無",
+      "failure_or_rebel_text": "無",
+      "copies": 2,
+      "structured_name": "上海合作組織",
+      "structured": {
+        "id": "shanghai_cooperation_org",
+        "name": "上海合作組織",
+        "type": "auto",
+        "effect_type": "scoped_card_range"
+      },
+      "in_runtime_event_deck": true,
+      "runtime_copy_count": 2,
+      "scope_status": "structured",
+      "notes": []
+    },
+    {
+      "section": "event",
+      "name": "一帶一路 南洋",
+      "brief": "為了爭取紅軍的鉅額投資計畫 南洋諸國允許紅軍在當地拓展勢力範圍",
+      "trigger_text": "自動執行：紅軍可以免費在南洋無視距離建立1個組織",
+      "success_or_red_text": "無",
+      "failure_or_rebel_text": "無",
+      "copies": 2,
+      "structured_name": "一帶一路 南洋",
+      "structured": {
+        "id": "belt_road_southeast",
+        "name": "一帶一路 南洋",
+        "type": "auto",
+        "effect_type": "build_organization_in_region"
+      },
+      "in_runtime_event_deck": true,
+      "runtime_copy_count": 2,
+      "scope_status": "structured",
+      "notes": []
+    },
+    {
+      "section": "event",
+      "name": "一帶一路 天方",
+      "brief": "為了爭取紅軍的鉅額投資計畫 天方諸國允許紅軍在當地拓展勢力範圍",
+      "trigger_text": "自動執行：紅軍可以免費在天方無視距離建立1個組織",
+      "success_or_red_text": "無",
+      "failure_or_rebel_text": "無",
+      "copies": 2,
+      "structured_name": "一帶一路 天方",
+      "structured": {
+        "id": "belt_road_middle_east",
+        "name": "一帶一路 天方",
+        "type": "auto",
+        "effect_type": "build_organization_in_region"
+      },
+      "in_runtime_event_deck": true,
+      "runtime_copy_count": 2,
+      "scope_status": "structured",
+      "notes": []
+    },
+    {
+      "section": "era",
+      "name": "[香港]香港人被自殺",
+      "brief": "紅軍用不會受國際譴責的方式出兵鎮壓香港：讓警察和武警潛入民宅姦殺抗爭者",
+      "trigger_text": "[香港抗爭遍地開花]香港在牆內擁有至少10個有效組織",
+      "success_or_red_text": "[新型態的血腥鎮壓]紅軍每次對香港使用間諜類卡牌時，可再隨機棄掉香港1張手牌。持續2回合。",
+      "failure_or_rebel_text": "[沉冤待雪香港報仇]香港購買每張武裝類卡牌之費用額外減少2點資金。持續2回合。",
+      "copies": 1,
+      "structured_name": null,
+      "structured": null,
+      "in_runtime_event_deck": false,
+      "runtime_copy_count": 0,
+      "scope_status": "era_not_structured",
+      "notes": [
+        "Raw era-stage row is represented in data/era_structured.v1.1.json, not in structured event runtime data."
+      ]
+    },
+    {
+      "section": "era",
+      "name": "[蒙古]莫日根事件爆發",
+      "brief": "為保衛草場而死的牧民 引爆南蒙古學生示威 紅軍要想辦法破壞蒙古人團結",
+      "trigger_text": "[牧民維權團體成形]蒙古在牆內擁有至少4個有效組織",
+      "success_or_red_text": "[知識分子互相猜疑]將3張內鬥放進蒙古棄牌堆。",
+      "failure_or_rebel_text": "[南蒙古人世代覺醒]蒙古當回合手牌中的每張宣傳類卡牌 用於購買時可額外提供1點宣傳。",
+      "copies": 1,
+      "structured_name": null,
+      "structured": null,
+      "in_runtime_event_deck": false,
+      "runtime_copy_count": 0,
+      "scope_status": "era_not_structured",
+      "notes": [
+        "Raw era-stage row is represented in data/era_structured.v1.1.json, not in structured event runtime data."
+      ]
+    },
+    {
+      "section": "era",
+      "name": "[藏國]藏國騷亂",
+      "brief": "衛藏、康、安多接連爆發藏人示威與暴動 紅軍順著青藏鐵路迅速出兵鎮壓",
+      "trigger_text": "[藏人完成示威準備]藏國在牆內擁有至少7個有效組織",
+      "success_or_red_text": "[青藏鐵路運兵鎮壓]紅軍當回合可棄掉任意張數手牌，無視距離在藏國有效組織１格內建立與張數同數量的組織。",
+      "failure_or_rebel_text": "[心向法王達賴喇嘛]藏國當回合手牌中的每張宣傳類卡牌 用於購買時可額外提供1點宣傳。",
+      "copies": 1,
+      "structured_name": null,
+      "structured": null,
+      "in_runtime_event_deck": false,
+      "runtime_copy_count": 0,
+      "scope_status": "era_not_structured",
+      "notes": [
+        "Raw era-stage row is represented in data/era_structured.v1.1.json, not in structured event runtime data."
+      ]
+    },
+    {
+      "section": "era",
+      "name": "[哈薩克]伊塔事件",
+      "brief": "哈薩克人掌控準噶爾盆地各口岸的兩側  祕密幫助大量哈薩克與維吾爾人西逃",
+      "trigger_text": "[三玉茲與三區革命]哈薩克在北國擁有至少7個有效組織，在牆內擁有至少3個有效組織",
+      "success_or_red_text": "[紅軍提防哈薩克人]哈薩克此後無法再無視距離建立牆內組織。",
+      "failure_or_rebel_text": "[出逃同胞加入隊伍]當回合哈薩克立即額外抽2張牌。",
+      "copies": 1,
+      "structured_name": null,
+      "structured": null,
+      "in_runtime_event_deck": false,
+      "runtime_copy_count": 0,
+      "scope_status": "era_not_structured",
+      "notes": [
+        "Raw era-stage row is represented in data/era_structured.v1.1.json, not in structured event runtime data."
+      ]
+    },
+    {
+      "section": "era",
+      "name": "[維吾爾]莎車大屠殺",
+      "brief": "由於懷疑居民窩藏東突厥游擊隊員 紅軍在開齋夜屠殺了數千名維吾爾婦孺",
+      "trigger_text": "[突厥戰士踏遍七城]維吾爾在牆內擁有至少7個有效組織",
+      "success_or_red_text": "[武力清剿叛軍基地]紅軍每次對維吾爾使用武裝類卡牌時，可再瓦解己方組織1格內的1個維吾爾組織。持續2回合。",
+      "failure_or_rebel_text": "[壯士去兮弔民伐罪]維吾爾每打出1張武裝類卡牌，獲得2點宣傳。持續2回合。",
+      "copies": 1,
+      "structured_name": null,
+      "structured": null,
+      "in_runtime_event_deck": false,
+      "runtime_copy_count": 0,
+      "scope_status": "era_not_structured",
+      "notes": [
+        "Raw era-stage row is represented in data/era_structured.v1.1.json, not in structured event runtime data."
+      ]
+    },
+    {
+      "section": "era",
+      "name": "[滿洲]滿洲地方派系凝聚",
+      "brief": "滿洲當地紅軍幹部勾結本土勢力架空中央 迫使紅軍中央出手干預地方情勢",
+      "trigger_text": "[山海關外故國甦生]滿洲在牆內擁有至少10個有效組織",
+      "success_or_red_text": "[試圖清洗地方勢力]將5張分神放進滿洲棄牌堆。",
+      "failure_or_rebel_text": "[行政資源固守地盤]滿洲當回合可檢視己方牌庫頂7張牌，將其中2張牌移到牌庫最頂，其餘順序不變。",
+      "copies": 1,
+      "structured_name": null,
+      "structured": null,
+      "in_runtime_event_deck": false,
+      "runtime_copy_count": 0,
+      "scope_status": "era_not_structured",
+      "notes": [
+        "Raw era-stage row is represented in data/era_structured.v1.1.json, not in structured event runtime data."
+      ]
+    },
+    {
+      "section": "era",
+      "name": "[反賊]公知世代的終結",
+      "brief": "言論相對自由的十年結束了 新的領導人要求網信辦嚴控網路輿論",
+      "trigger_text": "[寒冬將至新芽始生]反賊在牆內擁有至少4個有效組織",
+      "success_or_red_text": "[互聯網管控全面化]反賊此後無法再無視距離建立牆內組織。",
+      "failure_or_rebel_text": "[反賊結社潛入地下]反賊在回合中建立至少3個組織，則當回合可再抽1張牌。持續至遊戲結束。",
+      "copies": 1,
+      "structured_name": null,
+      "structured": null,
+      "in_runtime_event_deck": false,
+      "runtime_copy_count": 0,
+      "scope_status": "era_not_structured",
+      "notes": [
+        "Raw era-stage row is represented in data/era_structured.v1.1.json, not in structured event runtime data."
+      ]
+    },
+    {
+      "section": "era",
+      "name": "[臺灣]綏靖派反對介入對岸",
+      "brief": "臺灣對共和國滲透日深 紅軍策動臺灣綏靖派阻礙反共工作",
+      "trigger_text": "[臺灣重建敵後工作]臺灣在牆內擁有至少7個有效組織",
+      "success_or_red_text": "[鼓吹停止挑釁紅軍]將3張內鬥放進臺灣棄牌堆",
+      "failure_or_rebel_text": "[打擊國內綏靖主義]每當臺灣在臺灣城鎮建立至少1個組織時，獲得1點宣傳。持續2回合。",
+      "copies": 1,
+      "structured_name": null,
+      "structured": null,
+      "in_runtime_event_deck": false,
+      "runtime_copy_count": 0,
+      "scope_status": "era_not_structured",
+      "notes": [
+        "Raw era-stage row is represented in data/era_structured.v1.1.json, not in structured event runtime data."
+      ]
+    }
+  ],
+  "canonical_scope_recommendation": [
+    "Treat event-card runtime deck scope as the 13 raw event rows only.",
+    "Treat the 8 raw era-stage rows as data/era_structured.v1.1.json era-stage mechanics, not event-deck cards.",
+    "Do not reintroduce event-like adaptations for raw era rows unless the canonical scope is explicitly changed."
+  ]
+}

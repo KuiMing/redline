@@ -57,16 +57,6 @@
     {"id": "belt_road_middle_east", "name": "一帶一路 天方", "type": "auto",
       "effect": {"type": "build_organization_in_region", "count": 1, "player_faction": "red_army", "region": "middle_east", "free": true, "ignore_distance": true}},
 
-    {"id": "end_of_public_intellectuals", "name": "公知世代的終結", "type": "mission",
-      "trigger": {"type": "build_organization", "count": 1, "scope": "牆內"},
-      "success": {"type": "draw", "count": 1},
-      "failure": {"type": "restrict_build", "duration": 1}},
-
-    {"id": "taiwan_appeasement", "name": "臺灣綏靖派反對介入", "type": "mission",
-      "trigger": {"type": "build_organization", "count": 1, "scope": "牆內"},
-      "success": {"type": "gain_card", "card": "宣傳家", "count": 1},
-      "failure": {"type": "add_internal_conflict", "count": 3}},
-
     {"id": "second_major_disaster", "name": "重大災難（副本）", "type": "mission",
       "trigger": {"type": "play_card_with_propaganda", "count": 1},
       "success": {"type": "gain_card", "card": "宣傳家", "count": 1},
