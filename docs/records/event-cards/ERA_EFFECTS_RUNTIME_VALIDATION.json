@@ -1,8 +1,8 @@
 {
   "date": "2026-05-27",
   "summary": {
-    "total": 13,
-    "passed": 13,
+    "total": 14,
+    "passed": 14,
     "failed": 0
   },
   "checks": [
@@ -156,6 +156,51 @@
                 "duration": 2
               }
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "hong_kong_red_spy_play_forces_bonus_discard_after_spy_resolution",
+      "passed": true,
+      "details": {
+        "rule": "香港紅軍壓制效果：紅軍打出間諜類卡牌並完成原本目標選擇後，香港玩家再以既有 card choice UI 棄 1 張手牌。",
+        "play_result": {
+          "success": true,
+          "pending_choice": true
+        },
+        "spy_choice_key": "card_dissolve_interaction",
+        "spy_result": {
+          "success": true,
+          "town": "天津",
+          "target_player_id": "actor",
+          "pending_choice": true
+        },
+        "discard_choice_key": "era_bonus_discard_on_red_card",
+        "discard_prompt": "[香港]香港人被自殺：紅軍打出 內應間諜，請棄掉 1 張手牌。",
+        "discard_result": {
+          "success": true,
+          "discarded_card": "香港目標手牌",
+          "target_player_name": "actor",
+          "initiator_player_name": "red",
+          "choice_key": "era_bonus_discard_on_red_card"
+        },
+        "actor_orgs_after": {},
+        "actor_discard_count": 1,
+        "era_effects_applied": [
+          {
+            "era": "hong_kong",
+            "type": "bonus_discard_on_red_card",
+            "status": "pending_discard_choice",
+            "target_player_id": "actor",
+            "discard_count": 1
+          },
+          {
+            "era": "hong_kong",
+            "type": "bonus_discard_on_red_card",
+            "status": "resolved",
+            "discarded_count": 1,
+            "target_player_id": "actor"
           }
         ]
       }

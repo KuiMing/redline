@@ -178,6 +178,46 @@ def run_checks():
         }
     ))
 
+    # Hong Kong red suppression hook: Red Army spy card resolves, then target discards 1 card.
+    game, actor, red = make_game('hong_kong')
+    game.current_player_index = game.players.index(red)
+    game.era_engine.activate_era('hong_kong')
+    actor.organizations = {'天津': 1}
+    actor.hand = [Card('香港目標手牌', 'money', {'money': 1})]
+    actor.deck.discard_pile = []
+    red.organizations = {'北京': 1}
+    red.hand = [Card('內應間諜', 'spy', {'propaganda': 2})]
+    red.resources = {'money': 0, 'propaganda': 0}
+    play_result = game.play_card(0, mode='action', target_player_id=actor.id)
+    spy_choice = dict(game.pending_choice or {})
+    spy_index = next((i for i, entry in enumerate(spy_choice.get('targets') or []) if entry.get('player_id') == actor.id and entry.get('town') == '天津'), None)
+    spy_result = game.resolve_pending_choice(red.id, spy_index) if spy_index is not None else {'error': 'spy target not found'}
+    discard_choice = dict(game.pending_choice or {})
+    discard_result = game.resolve_pending_choice(actor.id, 0)
+    checks.append(check(
+        'hong_kong_red_spy_play_forces_bonus_discard_after_spy_resolution',
+        play_result.get('success') is True
+        and spy_choice.get('choice_key') == 'card_dissolve_interaction'
+        and spy_result.get('success') is True
+        and spy_result.get('pending_choice') is True
+        and discard_choice.get('choice_key') == 'era_bonus_discard_on_red_card'
+        and discard_result.get('success') is True
+        and actor.organizations.get('天津', 0) == 0
+        and discard_count(actor, '香港目標手牌') == 1,
+        {
+            'rule': '香港紅軍壓制效果：紅軍打出間諜類卡牌並完成原本目標選擇後，香港玩家再以既有 card choice UI 棄 1 張手牌。',
+            'play_result': play_result,
+            'spy_choice_key': spy_choice.get('choice_key'),
+            'spy_result': spy_result,
+            'discard_choice_key': discard_choice.get('choice_key'),
+            'discard_prompt': discard_choice.get('prompt'),
+            'discard_result': discard_result,
+            'actor_orgs_after': dict(actor.organizations),
+            'actor_discard_count': discard_count(actor, '香港目標手牌'),
+            'era_effects_applied': game.turn_log.get('era_effects_applied'),
+        }
+    ))
+
     # Mongolia/Tibet-style resource-card bonus: propaganda card played as resource grants +1 propaganda.
     game, actor, _red = make_game('mongol')
     game.era_engine.activate_era('mongolia')

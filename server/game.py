@@ -1238,7 +1238,7 @@ class Game:
                 'removed_current_card': removes_current_card,
             }
 
-        if choice_key == 'armed_target_discard':
+        if choice_key in {'armed_target_discard', 'era_bonus_discard_on_red_card'}:
             if chosen not in player.hand:
                 return {'error': 'Chosen card not in hand'}
             player.hand.remove(chosen)
@@ -1252,6 +1252,14 @@ class Game:
             target_name = choice.get('target_player_name') or player.name
             source_name = choice.get('source_name') or choice_key
             self.log(f"{initiator_name} used {source_name} to force {target_name} to discard {getattr(chosen, 'name', str(chosen))}")
+            if choice_key == 'era_bonus_discard_on_red_card':
+                self.turn_log.setdefault('era_effects_applied', []).append({
+                    'era': (choice.get('context') or {}).get('era_id') if isinstance(choice.get('context'), dict) else None,
+                    'type': 'bonus_discard_on_red_card',
+                    'status': 'resolved',
+                    'discarded_count': 1,
+                    'target_player_id': getattr(player, 'id', None),
+                })
             response = {
                 'success': True,
                 'discarded_card': getattr(chosen, 'name', str(chosen)),
@@ -1429,7 +1437,7 @@ class Game:
             self.log(f"{player.name} discarded {len(selected_cards)} chosen card(s)")
             return {'success': True, 'chosen_cards': [getattr(card, 'name', str(card)) for card in selected_cards]}
 
-        if choice_key == 'armed_target_discard':
+        if choice_key in {'armed_target_discard', 'era_bonus_discard_on_red_card'}:
             for card in selected_cards:
                 if card not in player.hand:
                     return {'error': 'Chosen card not in hand'}
@@ -1446,6 +1454,14 @@ class Game:
             source_name = choice.get('source_name') or choice_key
             chosen_names = [getattr(card, 'name', str(card)) for card in selected_cards]
             self.log(f"{initiator_name} used {source_name} to force {target_name} to discard {len(chosen_names)} card(s)")
+            if choice_key == 'era_bonus_discard_on_red_card':
+                self.turn_log.setdefault('era_effects_applied', []).append({
+                    'era': (choice.get('context') or {}).get('era_id') if isinstance(choice.get('context'), dict) else None,
+                    'type': 'bonus_discard_on_red_card',
+                    'status': 'resolved',
+                    'discarded_count': len(chosen_names),
+                    'target_player_id': getattr(player, 'id', None),
+                })
             response = {
                 'success': True,
                 'chosen_cards': chosen_names,
@@ -1772,7 +1788,14 @@ class Game:
             return {'error': 'Unsupported support flow step'}
         if result.get('error'):
             return result
-        return self._resolve_support_interaction_result(player, result, choice)
+        response = self._resolve_support_interaction_result(player, result, choice)
+        if not isinstance(response, dict) or response.get('error') or response.get('pending_choice'):
+            return response
+        context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
+        followup = self._start_era_followup_discard_choice(context.get('era_followup_discard_choice'))
+        if followup and followup.get('pending_choice'):
+            response['pending_choice'] = True
+        return response
 
     def resolve_pending_choice(self, player_id, index):
         choice = self.pending_choice or {}
@@ -1962,7 +1985,7 @@ class Game:
             })
         return towns
 
-    def _start_card_dissolve_interaction(self, player, card_name, requires_self_sacrifice=False, range_limit=1, target_player_id=None, target_region=None):
+    def _start_card_dissolve_interaction(self, player, card_name, requires_self_sacrifice=False, range_limit=1, target_player_id=None, target_region=None, extra_context=None):
         target_players = self._target_players_for_interaction(player, target_player_id)
         effect_type = 'interactive_dissolve_self_and_enemy' if requires_self_sacrifice else 'interactive_dissolve_many_near'
         base_context = {
@@ -1970,6 +1993,7 @@ class Game:
             'effect_type': effect_type,
             'effect_payload': {'range': range_limit, 'target_region': target_region},
             'target_player_id': target_player_id,
+            **(extra_context if isinstance(extra_context, dict) else {}),
         }
         if requires_self_sacrifice:
             towns = self._interactive_support_sacrifice_towns(
@@ -3593,6 +3617,9 @@ class Game:
         era_followup_target_choice = self._era_followup_target_choice_for_play_card(player, played_card)
         if era_followup_target_choice:
             action_context['era_followup_target_choice'] = era_followup_target_choice
+        era_followup_discard_choice = self._era_followup_discard_choice_for_play_card(player, played_card, target_player_id=target_player_id)
+        if era_followup_discard_choice:
+            action_context['era_followup_discard_choice'] = era_followup_discard_choice
         if target_player_id is not None:
             action_context['target_player_id'] = target_player_id
         if effective_type == 'support':
@@ -3655,6 +3682,7 @@ class Game:
                         range_limit=self._event_card_range_context(player, played_card)['range_limit'],
                         target_player_id=target_player_id,
                         target_region=self._event_card_range_context(player, played_card)['target_region'],
+                        extra_context={'era_followup_discard_choice': action_context.get('era_followup_discard_choice')} if action_context.get('era_followup_discard_choice') else None,
                     )
                     if spy_result and spy_result.get('pending_choice'):
                         if not action_context.get('removed_current_card'):
@@ -4296,6 +4324,75 @@ class Game:
                 'card_name': getattr(card, 'name', str(card)),
             }
         return None
+
+    def _era_followup_discard_choice_for_play_card(self, player, card, target_player_id=None):
+        for era, _side, effect in self._active_era_effects():
+            if (effect or {}).get('type') != 'bonus_discard_on_red_card':
+                continue
+            if not self._player_matches_camp(player, effect.get('player_faction')):
+                continue
+            if not self._card_matches_types(card, effect.get('card_types') or []):
+                continue
+            targets = self._target_players_for_interaction(player, target_player_id)
+            target_camp = effect.get('target_camp')
+            target = next(
+                (
+                    other for other in targets
+                    if other is not None
+                    and self._player_matches_camp(other, target_camp)
+                    and getattr(other, 'hand', None)
+                ),
+                None,
+            )
+            if target is None:
+                continue
+            return {
+                'era_id': era.get('id'),
+                'era_name': era.get('name', era.get('id', '時代關卡')),
+                'target_player_id': getattr(target, 'id', None),
+                'target_player_name': getattr(target, 'name', str(getattr(target, 'id', ''))),
+                'initiator_player_id': getattr(player, 'id', None),
+                'initiator_player_name': getattr(player, 'name', str(getattr(player, 'id', ''))),
+                'card_name': getattr(card, 'name', str(card)),
+                'discard_count': int(effect.get('discard_count', 1) or 1),
+            }
+        return None
+
+    def _start_era_followup_discard_choice(self, payload):
+        if not isinstance(payload, dict):
+            return None
+        target = next((p for p in self.players if getattr(p, 'id', None) == payload.get('target_player_id')), None)
+        if target is None or not getattr(target, 'hand', None):
+            return None
+        count = min(int(payload.get('discard_count', 1) or 1), len(target.hand))
+        if count <= 0:
+            return None
+        era_name = payload.get('era_name') or '時代關卡'
+        prompt = f"{era_name}：紅軍打出 {payload.get('card_name') or '間諜類卡牌'}，請棄掉 {count} 張手牌。"
+        extra = {
+            'source_name': era_name,
+            'initiator_player_id': payload.get('initiator_player_id'),
+            'initiator_player_name': payload.get('initiator_player_name') or '紅軍',
+            'target_player_name': payload.get('target_player_name') or getattr(target, 'name', '目標玩家'),
+            'context': {
+                'era_id': payload.get('era_id'),
+                'era_name': era_name,
+                'card_name': payload.get('card_name'),
+            },
+        }
+        if count == 1:
+            result = self._set_pending_card_choice(target, 'era_bonus_discard_on_red_card', list(target.hand), prompt, **extra)
+        else:
+            result = self._set_pending_multi_card_choice(target, 'era_bonus_discard_on_red_card', list(target.hand), prompt, count=count, **extra)
+        self.turn_log.setdefault('era_effects_applied', []).append({
+            'era': payload.get('era_id'),
+            'type': 'bonus_discard_on_red_card',
+            'status': 'pending_discard_choice',
+            'target_player_id': getattr(target, 'id', None),
+            'discard_count': count,
+        })
+        self.log(f"Era {era_name}: {target.name} must discard {count} after Red Army played {payload.get('card_name')}")
+        return result
 
     def _start_era_followup_target_choice(self, payload):
         if not isinstance(payload, dict):
