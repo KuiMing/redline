@@ -2344,6 +2344,55 @@ def test_setup_tibet_era_red_build_proof(payload: dict):
     }
 
 
+@app.post("/test/setup-uyghur-era-red-dissolve-proof")
+def test_setup_uyghur_era_red_dissolve_proof(payload: dict):
+    players = [(str(uuid.uuid4()), "維吾爾"), (str(uuid.uuid4()), "紅軍")]
+    game = Game(players, market_mode="all_cards")
+    actor = game.players[0]
+    red = game.players[1]
+    actor.faction_id = "uyghur_istanbul"
+    red.faction_id = "red_army"
+    actor.base = "烏魯木齊"
+    red.base = "北京"
+    actor.organizations = {"天津": 1}
+    red.organizations = {"北京": 1}
+    actor.hand = [Card("維吾爾棄牌 UI proof", "money", {"money": 1})]
+    actor.deck.discard_pile = []
+    red.hand = [Card("武裝者", "armed", {"propaganda": 1})]
+    red.deck.discard_pile = []
+    actor.resources = {"money": 0, "propaganda": 0}
+    red.resources = {"money": 0, "propaganda": 0}
+    game.pending_base_choices = []
+    game.game_phase = GamePhase.MAIN
+    game.current_player_index = 1
+    game.turn_phase = TurnPhase.ACTION
+    game.era_engine.activate_era("uyghur")
+    play_result = game.play_card(0, mode="action", target_player_id=actor.id)
+    discard_choice = dict(game.pending_choice or {})
+    discard_result = game.resolve_pending_choice(actor.id, 0)
+
+    game_id = str(uuid.uuid4())
+    manager.games[game_id] = game
+    manager.connections[game_id] = manager.connections.get(game_id, {})
+    lobby[game_id] = [(p.id, p.name) for p in game.players]
+    lobby_hosts[game_id] = actor.id
+    lobby_factions[game_id] = {p.id: p.faction_id for p in game.players}
+    lobby_bases[game_id] = {p.id: p.base for p in game.players if p.base}
+    lobby_ready[game_id] = {p.id: True for p in game.players}
+    return {
+        "success": True,
+        "game_id": game_id,
+        "player_id": red.id,
+        "actor_player_id": actor.id,
+        "play_result": play_result,
+        "discard_choice": discard_choice,
+        "discard_result": discard_result,
+        "pending_choice": game.pending_choice,
+        "url": f"/?game_id={game_id}&player_id={red.id}",
+        "state": game.state(),
+    }
+
+
 @app.post("/test/setup-urumqi-event-proof")
 def test_setup_urumqi_event_proof(payload: dict):
     players = [(str(uuid.uuid4()), "viewer"), (str(uuid.uuid4()), "red")]

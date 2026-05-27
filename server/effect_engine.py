@@ -74,6 +74,8 @@ class EffectEngine:
                     'initiator_player_name': getattr(player, 'name', '其他玩家'),
                     'target_player_name': getattr(target, 'name', '目標玩家'),
                 }
+                if context.get('era_followup_target_choice'):
+                    extra['era_followup_target_choice'] = context.get('era_followup_target_choice')
                 if source_name == "武裝集團":
                     extra['draw_on_success'] = 1
                 prompt = f"{source_name}：從所有手牌中棄掉任{choice_count}張牌。"

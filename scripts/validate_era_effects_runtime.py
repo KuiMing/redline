@@ -195,7 +195,7 @@ def run_checks():
         }
     ))
 
-    # Uyghur play-card hook: armed card grants 2 propaganda when played.
+    # Uyghur counterattack hook: Uyghur armed card grants 2 propaganda when played.
     game, actor, red = make_game('uyghur_istanbul')
     game.era_engine.activate_era('uyghur')
     actor.organizations = {'北京': 1}
@@ -214,6 +214,44 @@ def run_checks():
             'play_result': result,
             'resources_after': dict(actor.resources),
             'pending_choice': game.pending_choice.get('choice_key') if game.pending_choice else None,
+            'era_effects_applied': game.turn_log.get('era_effects_applied'),
+        }
+    ))
+
+    # Uyghur red suppression hook: Red Army armed card asks target to discard, then dissolves 1 Uyghur org within 1 step.
+    game, actor, red = make_game('uyghur_istanbul')
+    game.current_player_index = game.players.index(red)
+    game.era_engine.activate_era('uyghur')
+    actor.organizations = {'天津': 1}
+    actor.hand = [Card('維吾爾目標手牌', 'money', {'money': 1})]
+    red.organizations = {'北京': 1}
+    red.hand = [Card('武裝者', 'armed', {'propaganda': 1})]
+    red.resources = {'money': 0, 'propaganda': 0}
+    play_result = game.play_card(0, mode='action', target_player_id='actor')
+    discard_choice = dict(game.pending_choice or {})
+    discard_result = game.resolve_pending_choice(actor.id, 0)
+    dissolve_choice = dict(game.pending_choice or {})
+    dissolve_index = next((i for i, entry in enumerate(dissolve_choice.get('targets') or []) if entry.get('player_id') == actor.id and entry.get('town') == '天津'), None)
+    dissolve_result = game.resolve_pending_choice(red.id, dissolve_index) if dissolve_index is not None else {'error': 'target not found'}
+    checks.append(check(
+        'uyghur_red_armed_play_dissolves_uyghur_org_after_discard_choice',
+        play_result.get('success') is True
+        and discard_choice.get('choice_key') == 'armed_target_discard'
+        and discard_result.get('pending_choice') is True
+        and dissolve_choice.get('choice_key') == 'era_red_bonus_dissolve_target'
+        and dissolve_result.get('success') is True
+        and actor.organizations.get('天津', 0) == 0
+        and discard_count(actor, '維吾爾目標手牌') == 1,
+        {
+            'rule': '維吾爾紅軍壓制效果：紅軍打出武裝類卡牌後，在既有武裝棄牌 pending choice 完成後，選擇 1 個紅軍組織 1 格內的維吾爾組織瓦解。',
+            'play_result': play_result,
+            'discard_choice_key': discard_choice.get('choice_key'),
+            'discard_result': discard_result,
+            'dissolve_choice_key': dissolve_choice.get('choice_key'),
+            'dissolve_targets': dissolve_choice.get('targets'),
+            'dissolve_result': dissolve_result,
+            'actor_orgs_after': dict(actor.organizations),
+            'actor_discard_count': discard_count(actor, '維吾爾目標手牌'),
             'era_effects_applied': game.turn_log.get('era_effects_applied'),
         }
     ))

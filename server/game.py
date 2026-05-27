@@ -1252,13 +1252,17 @@ class Game:
             target_name = choice.get('target_player_name') or player.name
             source_name = choice.get('source_name') or choice_key
             self.log(f"{initiator_name} used {source_name} to force {target_name} to discard {getattr(chosen, 'name', str(chosen))}")
-            return {
+            response = {
                 'success': True,
                 'discarded_card': getattr(chosen, 'name', str(chosen)),
                 'target_player_name': target_name,
                 'initiator_player_name': initiator_name,
                 'choice_key': choice_key,
             }
+            followup = self._start_era_followup_target_choice(choice.get('era_followup_target_choice'))
+            if followup and followup.get('pending_choice'):
+                response['pending_choice'] = True
+            return response
 
         if choice_key == 'bait_exhaustion_target_discard':
             if chosen not in player.hand:
@@ -1407,13 +1411,17 @@ class Game:
             source_name = choice.get('source_name') or choice_key
             chosen_names = [getattr(card, 'name', str(card)) for card in selected_cards]
             self.log(f"{initiator_name} used {source_name} to force {target_name} to discard {len(chosen_names)} card(s)")
-            return {
+            response = {
                 'success': True,
                 'chosen_cards': chosen_names,
                 'target_player_name': target_name,
                 'initiator_player_name': initiator_name,
                 'choice_key': choice_key,
             }
+            followup = self._start_era_followup_target_choice(choice.get('era_followup_target_choice'))
+            if followup and followup.get('pending_choice'):
+                response['pending_choice'] = True
+            return response
 
         if choice_key == 'trash_from_hand_or_discard':
             starters = {'追隨者', '樂捐者'}
@@ -1589,7 +1597,7 @@ class Game:
                 'target_player_name': getattr(target_player, 'name', str(target_id)),
                 'pending_choice': True,
             }
-        if choice_key in {'intel_network_dissolve_target', 'event_red_dissolve'}:
+        if choice_key in {'intel_network_dissolve_target', 'event_red_dissolve', 'era_red_bonus_dissolve_target'}:
             target_player_id = selected.get('player_id') or target_id
             town = selected.get('town')
             target_player = next((p for p in self.players if getattr(p, 'id', None) == target_player_id), None)
@@ -1599,10 +1607,27 @@ class Game:
                 return {'error': 'Target town not found'}
             if choice_key == 'intel_network_dissolve_target' and not self._player_has_org_within_steps_of_player(player, target_player, max_steps=1):
                 return {'error': 'Target player is not within range'}
+            if choice_key == 'era_red_bonus_dissolve_target':
+                context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
+                max_steps = int(context.get('max_steps', 1) or 1)
+                target_camp = context.get('target_camp')
+                if target_camp and not self._player_matches_camp(target_player, target_camp):
+                    return {'error': 'Target player is not valid for era effect'}
+                source_towns = [src for src, count in (getattr(player, 'organizations', {}) or {}).items() if count > 0]
+                if town not in self._towns_within_steps(source_towns, max_steps=max_steps):
+                    return {'error': 'Target organization is not within era range'}
             result = self.dissolve_organization(player, target_player, town, source='card')
             if result.get('error'):
                 return result
             self.pending_choice = None
+            if choice_key == 'era_red_bonus_dissolve_target':
+                self.turn_log.setdefault('era_effects_applied', []).append({
+                    'era': (choice.get('context') or {}).get('era_id') if isinstance(choice.get('context'), dict) else None,
+                    'type': 'bonus_dissolve_on_red_card_near_self',
+                    'status': 'resolved',
+                    'town': town,
+                    'target_player_id': target_player_id,
+                })
             return {
                 'success': True,
                 'choice_index': index,
@@ -3530,6 +3555,9 @@ class Game:
 
         support_resolution = None
         action_context = {'current_card': played_card, 'card_name': card_name}
+        era_followup_target_choice = self._era_followup_target_choice_for_play_card(player, played_card)
+        if era_followup_target_choice:
+            action_context['era_followup_target_choice'] = era_followup_target_choice
         if target_player_id is not None:
             action_context['target_player_id'] = target_player_id
         if effective_type == 'support':
@@ -4151,6 +4179,85 @@ class Game:
         if applied:
             self.turn_log.setdefault('era_effects_applied', []).extend(applied)
         return applied
+
+    def _era_bonus_dissolve_targets_for_effect(self, player, effect):
+        max_steps = int((effect or {}).get('max_steps', 1) or 1)
+        target_camp = (effect or {}).get('target_camp')
+        source_towns = [town for town, count in (getattr(player, 'organizations', {}) or {}).items() if count > 0]
+        if not source_towns:
+            return []
+        reachable = self._towns_within_steps(source_towns, max_steps=max_steps)
+        targets = []
+        for other in self.players:
+            if other is player:
+                continue
+            if target_camp and not self._player_matches_camp(other, target_camp):
+                continue
+            for town, count in (getattr(other, 'organizations', {}) or {}).items():
+                if count <= 0 or town not in reachable:
+                    continue
+                targets.append({
+                    'id': f'{getattr(other, "id", other.name)}::{town}',
+                    'label': f'{other.name}｜{town}',
+                    'player_id': getattr(other, 'id', None),
+                    'town': town,
+                })
+        return targets
+
+    def _era_followup_target_choice_for_play_card(self, player, card):
+        for era, _side, effect in self._active_era_effects():
+            if (effect or {}).get('type') != 'bonus_dissolve_on_red_card_near_self':
+                continue
+            if not self._player_matches_camp(player, effect.get('player_faction')):
+                continue
+            if not self._card_matches_types(card, effect.get('card_types') or []):
+                continue
+            targets = self._era_bonus_dissolve_targets_for_effect(player, effect)
+            if not targets:
+                continue
+            era_name = era.get('name', era.get('id', '時代關卡'))
+            return {
+                'era_id': era.get('id'),
+                'era_name': era_name,
+                'targets': targets,
+                'max_steps': int((effect or {}).get('max_steps', 1) or 1),
+                'target_camp': (effect or {}).get('target_camp'),
+                'card_name': getattr(card, 'name', str(card)),
+            }
+        return None
+
+    def _start_era_followup_target_choice(self, payload):
+        if not isinstance(payload, dict):
+            return None
+        red = self._red_player()
+        if red is None:
+            return None
+        era_name = payload.get('era_name') or '時代關卡'
+        targets = list(payload.get('targets') or [])
+        if not targets:
+            return None
+        result = self._set_pending_target_choice(
+            red,
+            'era_red_bonus_dissolve_target',
+            targets,
+            f"{era_name}：紅軍選擇 1 個維吾爾組織瓦解。",
+            source_name=era_name,
+            context={
+                'era_id': payload.get('era_id'),
+                'era_name': era_name,
+                'max_steps': payload.get('max_steps', 1),
+                'target_camp': payload.get('target_camp'),
+                'card_name': payload.get('card_name'),
+            },
+        )
+        self.turn_log.setdefault('era_effects_applied', []).append({
+            'era': payload.get('era_id'),
+            'type': 'bonus_dissolve_on_red_card_near_self',
+            'status': 'pending_target_choice',
+            'target_count': len(targets),
+        })
+        self.log(f"Era {era_name}: {red.name} may dissolve 1 target organization after playing {payload.get('card_name')}")
+        return result
 
     def _apply_era_play_card_effects(self, player, card):
         applied = []

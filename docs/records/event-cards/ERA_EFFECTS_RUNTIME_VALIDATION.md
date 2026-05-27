@@ -1,7 +1,7 @@
 # Era Effects Runtime Validation
 
-- Date: 2026-05-26
-- Summary: 11/11 passed
+- Date: 2026-05-27
+- Summary: 12/12 passed
 
 ## PASS: mongolia_adds_internal_conflict_with_static_supply_cap
 
@@ -202,6 +202,67 @@
       "type": "gain_resource_on_play_card",
       "resource": "propaganda",
       "amount": 2
+    }
+  ]
+}
+```
+
+## PASS: uyghur_red_armed_play_dissolves_uyghur_org_after_discard_choice
+
+```json
+{
+  "rule": "維吾爾紅軍壓制效果：紅軍打出武裝類卡牌後，在既有武裝棄牌 pending choice 完成後，選擇 1 個紅軍組織 1 格內的維吾爾組織瓦解。",
+  "play_result": {
+    "success": true,
+    "pending_choice": true
+  },
+  "discard_choice_key": "armed_target_discard",
+  "discard_result": {
+    "success": true,
+    "discarded_card": "維吾爾目標手牌",
+    "target_player_name": "actor",
+    "initiator_player_name": "red",
+    "choice_key": "armed_target_discard",
+    "pending_choice": true
+  },
+  "dissolve_choice_key": "era_red_bonus_dissolve_target",
+  "dissolve_targets": [
+    {
+      "id": "actor::天津",
+      "label": "actor｜天津",
+      "player_id": "actor",
+      "town": "天津"
+    }
+  ],
+  "dissolve_result": {
+    "success": true,
+    "choice_index": 0,
+    "target_id": "actor::天津",
+    "selected": {
+      "id": "actor::天津",
+      "label": "actor｜天津",
+      "player_id": "actor",
+      "town": "天津"
+    },
+    "choice_key": "era_red_bonus_dissolve_target",
+    "target_player_name": "actor",
+    "town": "天津"
+  },
+  "actor_orgs_after": {},
+  "actor_discard_count": 1,
+  "era_effects_applied": [
+    {
+      "era": "uyghur",
+      "type": "bonus_dissolve_on_red_card_near_self",
+      "status": "pending_target_choice",
+      "target_count": 1
+    },
+    {
+      "era": "uyghur",
+      "type": "bonus_dissolve_on_red_card_near_self",
+      "status": "resolved",
+      "town": "天津",
+      "target_player_id": "actor"
     }
   ]
 }
