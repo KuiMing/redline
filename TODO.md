@@ -1,6 +1,6 @@
 # Redline TODO
 
-最後更新：2026-05-27
+最後更新：2026-05-28
 
 ## 工作規則
 - 開始新工作前先做 intake：讀 `TODO.md`、跑 `git status --short`、跑 `git log --oneline -5`。
@@ -45,6 +45,7 @@
     - 2026-05-27：已補齊時代關卡達成大彈窗的官方說明文字 fallback：`era_notification` 會合併 structured era payload，測試端點也改用同一 payload；香港達成彈窗不再顯示 `（暫缺）`。`scripts/validate_era_effects_runtime.py` 新增 notification 文案完整性檢查；proof records：`docs/records/event-cards/HONG_KONG_ERA_NOTIFICATION_UI_PROOF_2026_05_27.{md,json,png}`。
     - 2026-05-27：已依要求補齊香港以外 7 張時代關卡達成通知正式 browser UI 截圖，並新增通用 `/test/setup-era-notification-proof` proof endpoint；proof records：`docs/records/event-cards/ERA_NOTIFICATION_ALL_NON_HONG_KONG_UI_PROOF_2026_05_27.{md,json}` 與 `ERA_NOTIFICATION_{MONGOLIA,TIBET,KAZAKH,UYGHUR,MANCHURIA,REBELS,TAIWAN}_UI_PROOF_2026_05_27.png`。
     - 2026-05-27：已收斂事件牌堆 canonical scope：移除 `公知世代的終結`、`臺灣綏靖派反對介入` 兩張 event-like MVP adaptation；這兩張只保留在 `data/era_structured.v1.1.json` 作為 era-stage mechanics。事件 runtime deck 回到 raw 13 張事件列共 25 張，時代關卡不進事件牌堆；`scripts/validate_event_card_canonical_scope.py` 與 `EVENT_CARD_CANONICAL_SCOPE_AUDIT_2026_05_27.{md,json}` 已更新。
+    - 2026-05-28：藏國紅軍壓制已由「棄 1 張→建 1 個」修正為「可棄任意張→同數建立」：紅軍使用既有 multi-card pending choice 選 1～可建城鎮數張手牌，棄牌後依序重用既有 `era_red_build_near_target` town choice / Strategic Map sidebar 建立同數組織；validator 擴充至 15 項 runtime checks，並補正式 browser UI proof：`docs/records/event-cards/TIBET_ERA_RED_MULTI_DISCARD_BUILD_UI_PROOF_2026_05_28.{md,json}` 與 `TIBET_ERA_RED_MULTI_{DISCARD_MODAL,BUILD_MAP}_UI_2026_05_28.png`。
     - 仍待 runtime 落地：其餘需要新互動或更細 gameplay hook 的時代效果尚未接完。
   - 建議下一步順序：raw 13 張事件卡 deck 對齊已完成；8 張時代關卡已完成 canonical/data declaration；第一批 no-new-UI era runtime 已完成；接著分批實作需要 pending choice / map highlight / play-card hook 的剩餘 era effects。
   - 2026-05-23：已修正 `貿易戰加劇`：structured trigger 改為購買 `英美奧援` 或總費用 4 點以上卡牌，success 改為從棄牌堆選 1 張置頂；新增 runtime primitive `buy_card` / `topdeck_from_discard` 與 validator proof。

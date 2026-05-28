@@ -1,5 +1,5 @@
 {
-  "date": "2026-05-27",
+  "date": "2026-05-28",
   "summary": {
     "total": 15,
     "passed": 15,
@@ -521,56 +521,111 @@
       }
     },
     {
-      "name": "tibet_red_discards_then_builds_near_tibet_org",
+      "name": "tibet_red_discards_any_number_then_builds_same_count_near_tibet_org",
       "passed": true,
       "details": {
-        "rule": "藏國紅軍壓制效果：紅軍棄 1 張手牌後，在藏國組織 1 格內免費建立 1 個紅軍組織。",
-        "tibet_org_town": "加德滿都",
+        "rule": "藏國紅軍壓制效果：紅軍可棄任意張手牌，並在藏國組織 1 格內免費建立同數量紅軍組織。",
+        "tibet_org_town": "列城",
         "runtime_effects": {
           "red_suppression": {
             "type": "red_discard_to_build_near_target",
             "status": "pending_discard_choice",
             "player_id": "red",
-            "town_count": 3
+            "town_count": 2,
+            "max_discard": 2
           },
           "revolution_counterattack": {
             "type": "hand_card_resource_bonus",
             "status": "active_modifier_or_pending_runtime"
           }
         },
-        "first_choice_key": "era_red_discard_to_build_near_target",
+        "first_choice": {
+          "choice_key": "era_red_discard_to_build_near_target",
+          "type": "multi_card_choice",
+          "count": 2,
+          "min_count": 1,
+          "prompt": "[藏國]藏國騷亂：紅軍可棄掉任意張手牌，接著在目標組織 1 格內免費建立同數量組織。"
+        },
         "discard_result": {
           "success": true,
-          "discarded_card": "紅軍棄牌測試",
+          "discarded_cards": [
+            "紅軍棄牌測試一",
+            "紅軍棄牌測試二"
+          ],
+          "discarded_count": 2,
           "choice_key": "era_red_discard_to_build_near_target",
           "pending_choice": true,
-          "town_count": 3
+          "town_count": 2,
+          "remaining_builds": 2
         },
-        "build_choice_key": "era_red_build_near_target",
-        "build_town_count": 3,
-        "build_result": {
+        "first_build_choice_towns": [
+          "吉爾吉特",
+          "阿里"
+        ],
+        "first_build_result": {
           "success": true,
           "choice_index": 0,
-          "town": "加德滿都",
+          "town": "吉爾吉特",
           "selected": {
-            "town": "加德滿都",
+            "town": "吉爾吉特",
             "near_target_towns": [
-              "加德滿都"
+              "列城"
             ]
           },
-          "choice_key": "era_red_build_near_target"
+          "choice_key": "era_red_build_near_target",
+          "pending_choice": true,
+          "remaining_builds": 1
         },
-        "red_discard_count": 1,
+        "second_build_choice_towns": [
+          "阿里"
+        ],
+        "second_build_result": {
+          "success": true,
+          "choice_index": 0,
+          "town": "阿里",
+          "selected": {
+            "town": "阿里",
+            "near_target_towns": [
+              "列城"
+            ]
+          },
+          "choice_key": "era_red_build_near_target",
+          "remaining_builds": 0
+        },
+        "red_discard_counts": {
+          "紅軍棄牌測試一": 1,
+          "紅軍棄牌測試二": 1
+        },
         "red_orgs": {
           "北京": 1,
-          "加德滿都": 1
+          "吉爾吉特": 1,
+          "阿里": 1
         },
+        "red_hand_after": [
+          "紅軍保留手牌"
+        ],
         "era_effects_applied": [
           {
             "era": "tibet",
             "type": "red_discard_to_build_near_target",
-            "town": "加德滿都",
-            "discarded_card": "紅軍棄牌測試"
+            "town": "吉爾吉特",
+            "discarded_cards": [
+              "紅軍棄牌測試一",
+              "紅軍棄牌測試二"
+            ],
+            "build_index": 1,
+            "build_total": 2
+          },
+          {
+            "era": "tibet",
+            "type": "red_discard_to_build_near_target",
+            "town": "阿里",
+            "discarded_cards": [
+              "紅軍棄牌測試一",
+              "紅軍棄牌測試二"
+            ],
+            "build_index": 2,
+            "build_total": 2
           }
         ]
       }

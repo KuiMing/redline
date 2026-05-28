@@ -1,0 +1,28 @@
+{
+  "date": "2026-05-28",
+  "scenario": "[藏國]藏國騷亂 red suppression: discard any number of Red Army hand cards and build the same count near a Tibet organization.",
+  "endpoint": "/test/setup-tibet-era-red-build-proof",
+  "screenshots": [
+    "docs/records/event-cards/TIBET_ERA_RED_MULTI_DISCARD_MODAL_UI_2026_05_28.png",
+    "docs/records/event-cards/TIBET_ERA_RED_MULTI_BUILD_MAP_UI_2026_05_28.png"
+  ],
+  "modal_snapshot_evidence": {
+    "selected_text": "已選 2/2 張（可選 1～2 張）",
+    "submit_text": "確認棄掉 2 張並建立 2 個組織"
+  },
+  "state_evidence_after_discard": {
+    "pending_choice": {
+      "type": "town_choice",
+      "choice_key": "era_red_build_near_target",
+      "prompt": "[藏國]藏國騷亂：已棄 2 張手牌，請依序選擇 2 個城鎮免費建立紅軍組織。",
+      "towns": ["吉爾吉特", "阿里"]
+    },
+    "red_hand": ["紅軍保留 UI proof"],
+    "red_discard": ["紅軍棄牌 UI proof 一", "紅軍棄牌 UI proof 二"],
+    "action_log_tail": ["[Turn 1] 紅軍 discarded 2 card(s) for [藏國]藏國騷亂"]
+  },
+  "notes": [
+    "Town choice reuses existing pending choice / support-targets Strategic Map sidebar build pipeline.",
+    "Browser vision analysis returned 429 after screenshots were captured; browser snapshot and console state are recorded as evidence."
+  ]
+}

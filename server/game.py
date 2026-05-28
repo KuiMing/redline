@@ -1314,33 +1314,7 @@ class Game:
         if choice_key == 'era_red_discard_to_build_near_target':
             if chosen not in player.hand:
                 return {'error': 'Chosen card not in hand'}
-            context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
-            effect = context.get('effect') if isinstance(context.get('effect'), dict) else {}
-            towns = self._era_build_towns_near_target(player, effect)
-            if not towns:
-                return {'error': 'No valid era build towns'}
-            player.hand.remove(chosen)
-            player.deck.discard([chosen])
-            source_name = choice.get('source_name') or context.get('era_name') or '時代關卡'
-            self._set_pending_town_choice(
-                player,
-                'era_red_build_near_target',
-                towns,
-                f"{source_name}：選擇要免費建立紅軍組織的城鎮。",
-                source_name=source_name,
-                context={
-                    **context,
-                    'discarded_card': getattr(chosen, 'name', str(chosen)),
-                },
-            )
-            self.log(f"{player.name} discarded {getattr(chosen, 'name', str(chosen))} for {source_name}")
-            return {
-                'success': True,
-                'discarded_card': getattr(chosen, 'name', str(chosen)),
-                'choice_key': choice_key,
-                'pending_choice': True,
-                'town_count': len(towns),
-            }
+            return self._resolve_era_red_discard_to_build_choice(player, choice, [chosen])
 
         return {'error': 'Unsupported pending choice type'}
 
@@ -1350,7 +1324,7 @@ class Game:
         min_count = int(choice.get('min_count', count) if choice.get('min_count') is not None else count)
         if not isinstance(indices, list):
             return {'error': 'Invalid choice count'}
-        if choice.get('choice_key') == 'red_army_ccdi_discard_draw':
+        if choice.get('choice_key') in {'red_army_ccdi_discard_draw', 'era_red_discard_to_build_near_target'}:
             if len(indices) < min_count or len(indices) > count:
                 return {'error': 'Invalid choice count'}
         elif len(indices) != count:
@@ -1385,6 +1359,9 @@ class Game:
                 'drawn': len(drawn),
                 'choice_key': choice_key,
             }
+
+        if choice_key == 'era_red_discard_to_build_near_target':
+            return self._resolve_era_red_discard_to_build_choice(player, choice, selected_cards)
 
         if choice_key == 'era_inspect_deck_top_and_reorder':
             inspected_cards = list(choice.get('cards') or [])
@@ -1591,14 +1568,72 @@ class Game:
             player.organizations[town] = player.organizations.get(town, 0) + 1
             self.log(f"{player.name} built organization in {town} via event")
         elif choice_key == 'era_red_build_near_target':
+            context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
+            remaining_builds = max(0, int(context.get('remaining_builds', 1) or 1))
+            if remaining_builds <= 0:
+                return {'error': 'No era builds remaining'}
+            if player.organizations.get(town, 0) > 0:
+                return {'error': 'Era build town already has your organization'}
             player.organizations[town] = player.organizations.get(town, 0) + 1
-            self.turn_log.setdefault('era_effects_applied', []).append({
-                'era': (choice.get('context') or {}).get('era_id'),
+            applied_entry = {
+                'era': context.get('era_id'),
                 'type': 'red_discard_to_build_near_target',
                 'town': town,
-                'discarded_card': (choice.get('context') or {}).get('discarded_card'),
-            })
+                'discarded_cards': list(context.get('discarded_cards') or []),
+                'build_index': len(list(context.get('built_towns') or [])) + 1,
+                'build_total': int(context.get('build_total', remaining_builds) or remaining_builds),
+            }
+            self.turn_log.setdefault('era_effects_applied', []).append(applied_entry)
+            built_towns = list(context.get('built_towns') or []) + [town]
+            remaining_builds -= 1
+            if remaining_builds > 0:
+                effect = context.get('effect') if isinstance(context.get('effect'), dict) else {}
+                towns = [entry for entry in self._era_build_towns_near_target(player, effect) if entry.get('town') not in set(built_towns)]
+                source_name = choice.get('source_name') or context.get('era_name') or '時代關卡'
+                if towns:
+                    self._set_pending_town_choice(
+                        player,
+                        'era_red_build_near_target',
+                        towns,
+                        f"{source_name}：還可免費建立 {remaining_builds} 個紅軍組織。",
+                        source_name=source_name,
+                        context={
+                            **context,
+                            'remaining_builds': remaining_builds,
+                            'built_towns': built_towns,
+                        },
+                    )
+                    self.log(f"{player.name} built organization in {town} via era effect; {remaining_builds} build(s) remain")
+                    return {
+                        'success': True,
+                        'choice_index': index,
+                        'town': town,
+                        'selected': selected,
+                        'choice_key': choice_key,
+                        'pending_choice': True,
+                        'remaining_builds': remaining_builds,
+                    }
+                self.log(f"{player.name} built organization in {town} via era effect; no more valid towns for remaining builds")
+                self.pending_choice = None
+                return {
+                    'success': True,
+                    'choice_index': index,
+                    'town': town,
+                    'selected': selected,
+                    'choice_key': choice_key,
+                    'remaining_builds_unresolved': remaining_builds,
+                    'no_more_valid_towns': True,
+                }
             self.log(f"{player.name} built organization in {town} via era effect")
+            self.pending_choice = None
+            return {
+                'success': True,
+                'choice_index': index,
+                'town': town,
+                'selected': selected,
+                'choice_key': choice_key,
+                'remaining_builds': 0,
+            }
         self.pending_choice = None
         return {
             'success': True,
@@ -4141,6 +4176,48 @@ class Game:
             self.log(f"Era {era_name}: {target.name} drew {len(cards)} card(s)")
         return drawn
 
+    def _resolve_era_red_discard_to_build_choice(self, player, choice, selected_cards):
+        if not selected_cards:
+            return {'error': 'Invalid choice count'}
+        for card in selected_cards:
+            if card not in player.hand:
+                return {'error': 'Chosen card not in hand'}
+        context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
+        effect = context.get('effect') if isinstance(context.get('effect'), dict) else {}
+        build_count = len(selected_cards)
+        towns = self._era_build_towns_near_target(player, effect)
+        if not towns:
+            return {'error': 'No valid era build towns'}
+        for card in selected_cards:
+            player.hand.remove(card)
+            player.deck.discard([card])
+        discarded_names = [getattr(card, 'name', str(card)) for card in selected_cards]
+        source_name = choice.get('source_name') or context.get('era_name') or '時代關卡'
+        self._set_pending_town_choice(
+            player,
+            'era_red_build_near_target',
+            towns,
+            f"{source_name}：已棄 {build_count} 張手牌，請依序選擇 {build_count} 個城鎮免費建立紅軍組織。",
+            source_name=source_name,
+            context={
+                **context,
+                'discarded_cards': discarded_names,
+                'remaining_builds': build_count,
+                'build_total': build_count,
+                'built_towns': [],
+            },
+        )
+        self.log(f"{player.name} discarded {build_count} card(s) for {source_name}")
+        return {
+            'success': True,
+            'discarded_cards': discarded_names,
+            'discarded_count': build_count,
+            'choice_key': choice.get('choice_key'),
+            'pending_choice': True,
+            'town_count': len(towns),
+            'remaining_builds': build_count,
+        }
+
     def _era_build_towns_near_target(self, builder, effect):
         target_players = self._era_effect_target_players(effect)
         target_region = (effect or {}).get('target_region')
@@ -4168,12 +4245,23 @@ class Game:
         towns = self._era_build_towns_near_target(red, effect)
         if not towns:
             return {'type': (effect or {}).get('type'), 'status': 'no_valid_build_towns'}
+        build_limit = int((effect or {}).get('builds_per_discard', 1) or 1) * len(red.hand)
+        if build_limit <= 0:
+            return {'type': (effect or {}).get('type'), 'status': 'red_has_no_hand_cards'}
+        town_count = len(towns)
+        if town_count <= 0:
+            return {'type': (effect or {}).get('type'), 'status': 'no_valid_build_towns'}
+        max_discard = min(len(red.hand), town_count)
+        if max_discard <= 0:
+            return {'type': (effect or {}).get('type'), 'status': 'no_valid_build_towns'}
         era_name = (era or {}).get('name', (era or {}).get('id', '時代關卡'))
-        self._set_pending_card_choice(
+        self._set_pending_multi_card_choice(
             red,
             'era_red_discard_to_build_near_target',
             list(red.hand),
-            f"{era_name}：紅軍請棄 1 張手牌，接著在目標組織 {int((effect or {}).get('max_steps', 1) or 1)} 格內免費建立 1 個組織。",
+            f"{era_name}：紅軍可棄掉任意張手牌，接著在目標組織 {int((effect or {}).get('max_steps', 1) or 1)} 格內免費建立同數量組織。",
+            count=max_discard,
+            min_count=1,
             source_name=era_name,
             context={
                 'era_id': (era or {}).get('id'),
@@ -4181,7 +4269,7 @@ class Game:
                 'effect': dict(effect or {}),
             },
         )
-        return {'type': (effect or {}).get('type'), 'status': 'pending_discard_choice', 'player_id': red.id, 'town_count': len(towns)}
+        return {'type': (effect or {}).get('type'), 'status': 'pending_discard_choice', 'player_id': red.id, 'town_count': len(towns), 'max_discard': max_discard}
 
     def _start_era_inspect_deck_top_and_reorder_flow(self, effect, era):
         targets = self._era_effect_target_players(effect)

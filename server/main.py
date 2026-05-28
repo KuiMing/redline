@@ -2362,13 +2362,14 @@ def test_setup_tibet_era_red_build_proof(payload: dict):
     red.base = "北京"
     actor.resources = {"money": 0, "propaganda": 0}
     red.resources = {"money": 0, "propaganda": 0}
-    tibet_town = next(
-        town for town in game._towns_for_region_alias("tibet_region")
-        if game.can_faction_develop_in_town("red_army", town)
-    )
+    tibet_town = "列城"
     actor.organizations = {tibet_town: 1}
     red.organizations = {"北京": 1}
-    red.hand = [Card("紅軍棄牌 UI proof", "money", {"money": 1})]
+    red.hand = [
+        Card("紅軍棄牌 UI proof 一", "money", {"money": 1}),
+        Card("紅軍棄牌 UI proof 二", "propaganda", {"propaganda": 1}),
+        Card("紅軍保留 UI proof", "money", {"money": 1}),
+    ]
     red.deck.discard_pile = []
     game.pending_base_choices = []
     game.game_phase = GamePhase.MAIN
@@ -2377,7 +2378,12 @@ def test_setup_tibet_era_red_build_proof(payload: dict):
     game.era_engine.activate_era("tibet")
     era = game.era_engine.get_definition("tibet")
     runtime_effects = game._apply_era_activation_effects(era)
-    discard_result = game.resolve_pending_choice(red.id, 0)
+    discard_result = None
+    if payload.get("resolve_discard", True):
+        discard_indices = payload.get("discard_indices")
+        if discard_indices is None:
+            discard_indices = [0, 1]
+        discard_result = game.resolve_pending_choice(red.id, discard_indices)
 
     game_id = str(uuid.uuid4())
     manager.games[game_id] = game

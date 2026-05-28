@@ -1272,19 +1272,22 @@ function renderChoiceModal(state) {
     submit.type = 'button';
     submit.disabled = true;
 
-    const isVariableCountChoice = choiceKey === 'red_army_ccdi_discard_draw';
+    const isVariableCountChoice = choiceKey === 'red_army_ccdi_discard_draw' || choiceKey === 'era_red_discard_to_build_near_target';
     const isEraDeckReorderChoice = choiceKey === 'era_inspect_deck_top_and_reorder';
+    const isEraVariableBuildChoice = choiceKey === 'era_red_discard_to_build_near_target';
     const updateSummary = () => {
       header.textContent = isVariableCountChoice
         ? `已選 ${selected.size}/${maxChoiceCount} 張（可選 ${minChoiceCount}～${maxChoiceCount} 張）`
         : isEraDeckReorderChoice
           ? `已選 ${selected.size}/${exactChoiceCount} 張置頂（依點選順序放回牌庫頂）`
           : `已選 ${selected.size}/${exactChoiceCount} 張`;
-      submit.textContent = isVariableCountChoice
-        ? `確認棄掉 ${selected.size} 張並抽 ${selected.size} 張`
-        : isEraDeckReorderChoice
-          ? `確認置頂 ${exactChoiceCount} 張`
-          : (exactChoiceCount === 1 ? '確認選擇' : `確認棄掉 ${exactChoiceCount} 張`);
+      submit.textContent = isEraVariableBuildChoice
+        ? `確認棄掉 ${selected.size} 張並建立 ${selected.size} 個組織`
+        : isVariableCountChoice
+          ? `確認棄掉 ${selected.size} 張並抽 ${selected.size} 張`
+          : isEraDeckReorderChoice
+            ? `確認置頂 ${exactChoiceCount} 張`
+            : (exactChoiceCount === 1 ? '確認選擇' : `確認棄掉 ${exactChoiceCount} 張`);
       submit.disabled = isVariableCountChoice
         ? selected.size < minChoiceCount || selected.size > maxChoiceCount
         : selected.size !== exactChoiceCount;
