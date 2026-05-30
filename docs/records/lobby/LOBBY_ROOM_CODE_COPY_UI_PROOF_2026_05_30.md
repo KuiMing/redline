@@ -1,0 +1,27 @@
+# Lobby room-code copy UI proof
+
+- date: 2026-05-30
+- URL: `http://127.0.0.1:8000/?v=lobby-copy-20260530`
+- screenshot: `docs/records/lobby/LOBBY_ROOM_CODE_COPY_UI_2026_05_30.png`
+- console errors: 0
+
+## Flow
+1. create room from official browser lobby UI
+2. click top sticky room-code banner copy button
+3. verify window.__lastRoomCopyResult reports ok=true and method=execCommand
+4. wait past lobby polling interval and verify copied status remains visible
+5. choose Red Army -> Beijing -> confirm faction -> ready remains clickable
+
+## Observed state
+- `room_code`: "45e1dd03-60e8-4b5d-8885-e26dc8cfdf42"
+- `copy_result`: {"ok": true, "method": "execCommand", "value": "45e1dd03-60e8-4b5d-8885-e26dc8cfdf42"}
+- `post_copy_status_after_poll`: "房間代碼已複製，可以分享給其他玩家。"
+- `confirm_button_hit_test`: "elementFromPoint at center returned #confirmFactionBtn"
+- `ready_button_after_confirm`: {"disabled": false, "text": "我已準備"}
+- `ready_button_after_click`: {"disabled": false, "text": "取消準備"}
+- `console_errors`: 0
+- `lan_listener`: "TCP *:8000 (LISTEN) already active before proof"
+
+## Notes
+- browser_vision captured a real original UI screenshot but analysis failed; screenshot was preserved as proof artifact.
+- The copy path now first uses document.execCommand during the click gesture, then falls back to navigator.clipboard, then selects the full code for manual copy if automatic copy is blocked.

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>REDLINE // STRATEGIC COMMAND</title>
-  <link rel="stylesheet" href="/static/style.css?v=red-army-help-20260525" />
+  <link rel="stylesheet" href="/static/style.css?v=lobby-copy-20260530" />
 </head>
 <body>
 <div id="stageViewport">
@@ -31,6 +31,13 @@
 <div id="debugSocketState" style="display:none"></div>
 
 <div id="lobby">
+  <div id="lobbyRoomBanner" class="lobby-room-banner" style="display:none;" aria-live="polite">
+    <span class="lobby-room-banner-label">房間代碼</span>
+    <button id="lobbyRoomBannerCode" class="lobby-room-banner-code" type="button" onclick="copyRoomId()" title="點擊複製房間代碼"></button>
+    <button id="copyRoomBannerBtn" class="lobby-room-banner-copy" type="button" onclick="copyRoomId()">複製</button>
+    <span class="lobby-room-banner-hint">分享給其他玩家加入</span>
+  </div>
+
   <div class="lobby-brand">
     <div class="lobby-kicker">REDLINE COMMAND LOBBY</div>
     <div class="lobby-title">作戰準備室</div>
@@ -112,9 +119,9 @@
         <div id="factionDetailAbilities"></div>
         <div id="factionDetailRules"></div>
         <div id="factionDetailWin"></div>
-        <div id="factionConfirmBar" style="display:none; margin-top:10px;">
-          <button id="confirmFactionBtn">確認陣營</button>
-        </div>
+      </div>
+      <div id="factionConfirmBar" style="display:none; margin-top:10px;">
+        <button id="confirmFactionBtn">確認陣營</button>
       </div>
     </div>
 
@@ -238,6 +245,6 @@
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="/static/app.js?v=red-army-help-20260525"></script>
+<script src="/static/app.js?v=lobby-copy-20260530"></script>
 </body>
 </html>

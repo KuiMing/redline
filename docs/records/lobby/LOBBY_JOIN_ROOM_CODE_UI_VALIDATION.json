@@ -1,7 +1,7 @@
 {
   "summary": {
-    "total": 5,
-    "passed": 5,
+    "total": 13,
+    "passed": 13,
     "failed": 0
   },
   "checks": [
@@ -29,6 +29,46 @@
       "name": "join_room_empty_feedback",
       "passed": true,
       "detail": "Pressing join with an empty field should show clear in-page feedback instead of sending an empty request."
+    },
+    {
+      "name": "top_banner_exists_after_room_created",
+      "passed": true,
+      "detail": "Lobby must include a top room-code banner so the created room code stays visible above faction selection."
+    },
+    {
+      "name": "top_banner_syncs_from_game_id",
+      "passed": true,
+      "detail": "The banner must sync from the active game id and toggle lobby room-active spacing when a room exists."
+    },
+    {
+      "name": "copy_fallback_selects_room_code",
+      "passed": true,
+      "detail": "If automatic copy is blocked, fallback should select the full room code and give explicit manual-copy instructions."
+    },
+    {
+      "name": "copy_uses_exec_command_before_clipboard_api",
+      "passed": true,
+      "detail": "Copy should first use a click-gesture execCommand path so LAN/http browsers can copy even when navigator.clipboard is unavailable."
+    },
+    {
+      "name": "copy_records_runtime_result_for_browser_proof",
+      "passed": true,
+      "detail": "Browser proof can inspect the last copy result to distinguish real automatic copy from manual-select fallback."
+    },
+    {
+      "name": "copy_status_survives_lobby_sync",
+      "passed": true,
+      "detail": "The copied/manual-select status should stay visible instead of being overwritten by the lobby polling refresh."
+    },
+    {
+      "name": "banner_is_top_sticky_not_covering_actions",
+      "passed": true,
+      "detail": "The banner must be placed at the top of the lobby and reserve visual space instead of overlapping faction/action controls."
+    },
+    {
+      "name": "confirm_faction_bar_remains_clickable",
+      "passed": true,
+      "detail": "Long faction details should keep the confirm-faction button sticky inside the faction panel instead of under the fixed action bar."
     }
   ]
 }

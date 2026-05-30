@@ -14,6 +14,7 @@ let lastEraNotificationKey = null;
 let stageResizeBound = false;
 let lobbySyncTimer = null;
 let latestLobbyState = null;
+let lobbyTransientStatus = null;
 let activeChoiceModal = null;
 let lastFactionActionResultKey = null;
 let lastSupportChoiceMapHighlightPayload = null;
@@ -40,8 +41,22 @@ function updateLobbyStatus(statusText = null) {
   const name = (nameInput?.value || 'host').trim() || 'host';
   if (rosterName) rosterName.textContent = name;
   if (avatar) avatar.textContent = playerInitialFromInput(name);
-  if (statusText && rosterStatus) rosterStatus.textContent = statusText;
-  if (statusText && hint) hint.textContent = statusText;
+  if (statusText) {
+    lobbyTransientStatus = statusText;
+    if (rosterStatus) rosterStatus.textContent = statusText;
+    if (hint) hint.textContent = statusText;
+  }
+}
+
+function deriveLobbyHint(lobbyRes) {
+  const players = lobbyRes?.players || [];
+  const chosen = lobbyRes?.factions || {};
+  const ready = lobbyRes?.ready || {};
+  const everyoneChose = players.length > 0 && Object.keys(chosen).length === players.length;
+  const everyoneReady = players.length > 0 && players.every(([pid]) => ready[pid]);
+  if (everyoneChose && everyoneReady) return '所有玩家已準備；房主可以啟動行動。';
+  if (everyoneChose) return '玩家陣營已選定；等待所有玩家按下準備。';
+  return `已進入 ${players.length}/4 人作戰室；等待玩家選擇陣營。`;
 }
 
 function renderLobbyRoster(lobbyRes, statusText = null) {
@@ -92,17 +107,9 @@ function renderLobbyRoster(lobbyRes, statusText = null) {
   roster.innerHTML = cards + emptyCards;
   updateLobbyActionControls(lobbyRes);
   if (hint) {
-    const everyoneChose = players.length > 0 && Object.keys(chosen).length === players.length;
-    const everyoneReady = players.length > 0 && players.every(([pid]) => ready[pid]);
-    if (statusText) {
-      hint.textContent = statusText;
-    } else if (everyoneChose && everyoneReady) {
-      hint.textContent = '所有玩家已準備；房主可以啟動行動。';
-    } else if (everyoneChose) {
-      hint.textContent = '玩家陣營已選定；等待所有玩家按下準備。';
-    } else {
-      hint.textContent = `已進入 ${players.length}/4 人作戰室；等待玩家選擇陣營。`;
-    }
+    if (statusText) lobbyTransientStatus = statusText;
+    const transient = lobbyTransientStatus;
+    hint.textContent = transient || deriveLobbyHint(lobbyRes);
   }
 }
 
@@ -153,6 +160,7 @@ function updateLobbyActionControls(lobbyRes = latestLobbyState) {
 
 async function refreshLobbyState(statusText = null) {
   if (!gameId) return null;
+  if (statusText) lobbyTransientStatus = statusText;
   const res = await fetch(`/lobby/${gameId}`);
   const lobbyRes = await res.json();
   if (lobbyRes.error) {
@@ -202,11 +210,23 @@ async function toggleReady() {
   await refreshLobbyState(nextReady ? '你已標記準備，等待其他玩家。' : '你已取消準備。');
 }
 
+function currentRoomCode() {
+  return (gameId || document.getElementById('roomId')?.value || '').trim();
+}
+
 function syncLobbyRoomCode() {
   const roomInput = document.getElementById('roomId');
-  if (!roomInput) return;
-  const value = roomInput.value.trim();
-  roomInput.title = value || '貼上房間代碼後按「進入作戰室」，或按「建立作戰室」建立新房間。';
+  const lobby = document.getElementById('lobby');
+  const banner = document.getElementById('lobbyRoomBanner');
+  const bannerCode = document.getElementById('lobbyRoomBannerCode');
+  const value = currentRoomCode();
+  if (roomInput) roomInput.title = value || '貼上房間代碼後按「進入作戰室」，或按「建立作戰室」建立新房間。';
+  if (lobby) lobby.classList.toggle('room-active', !!value);
+  if (banner && bannerCode) {
+    banner.style.display = value ? 'flex' : 'none';
+    bannerCode.textContent = value;
+    bannerCode.title = value ? `點擊複製房間代碼 ${value}` : '尚未建立作戰室';
+  }
 }
 
 function setMarketMode(mode) {
@@ -217,17 +237,72 @@ function setMarketMode(mode) {
   });
 }
 
-async function copyRoomId() {
-  const roomIdValue = document.getElementById('roomId')?.value || '';
-  if (!roomIdValue) {
-    updateLobbyStatus('尚未建立作戰室，沒有可複製的房間代碼。');
+function selectRoomCodeForManualCopy(roomIdValue) {
+  const roomInput = document.getElementById('roomId');
+  const bannerCode = document.getElementById('lobbyRoomBannerCode');
+  if (roomInput) {
+    roomInput.focus();
+    roomInput.select();
+    roomInput.setSelectionRange(0, roomInput.value.length);
     return;
   }
+  if (bannerCode) {
+    const range = document.createRange();
+    range.selectNodeContents(bannerCode);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+    return;
+  }
+  const selection = window.getSelection();
+  if (selection) selection.removeAllRanges();
+}
+
+function copyRoomIdWithExecCommand(roomIdValue) {
+  const copyTarget = document.createElement('textarea');
+  copyTarget.value = roomIdValue;
+  copyTarget.setAttribute('readonly', 'readonly');
+  copyTarget.setAttribute('aria-hidden', 'true');
+  copyTarget.style.position = 'fixed';
+  copyTarget.style.left = '-9999px';
+  copyTarget.style.top = '0';
+  document.body.appendChild(copyTarget);
+  copyTarget.focus();
+  copyTarget.select();
+  copyTarget.setSelectionRange(0, copyTarget.value.length);
+  let copied = false;
   try {
+    copied = document.execCommand && document.execCommand('copy');
+  } catch (err) {
+    copied = false;
+  }
+  document.body.removeChild(copyTarget);
+  return !!copied;
+}
+
+async function copyRoomId() {
+  const roomIdValue = currentRoomCode();
+  if (!roomIdValue) {
+    updateLobbyStatus('尚未建立作戰室，沒有可複製的房間代碼。');
+    window.__lastRoomCopyResult = { ok: false, method: 'empty', value: '' };
+    return;
+  }
+
+  if (copyRoomIdWithExecCommand(roomIdValue)) {
+    updateLobbyStatus('房間代碼已複製，可以分享給其他玩家。');
+    window.__lastRoomCopyResult = { ok: true, method: 'execCommand', value: roomIdValue };
+    return;
+  }
+
+  try {
+    if (!navigator.clipboard?.writeText) throw new Error('Clipboard API unavailable');
     await navigator.clipboard.writeText(roomIdValue);
     updateLobbyStatus('房間代碼已複製，可以分享給其他玩家。');
+    window.__lastRoomCopyResult = { ok: true, method: 'clipboard', value: roomIdValue };
   } catch (err) {
-    updateLobbyStatus('無法自動複製；請手動選取房間代碼。');
+    selectRoomCodeForManualCopy(roomIdValue);
+    updateLobbyStatus('無法自動複製；已選取房間代碼，請按 Ctrl+C / ⌘C 手動複製。');
+    window.__lastRoomCopyResult = { ok: false, method: 'manual-select', value: roomIdValue };
   }
 }
 
@@ -253,7 +328,10 @@ function initLobbyControls() {
   const nameInput = document.getElementById('playerName');
   if (nameInput && nameInput.dataset.bound !== '1') {
     nameInput.dataset.bound = '1';
-    nameInput.addEventListener('input', () => updateLobbyStatus());
+    nameInput.addEventListener('input', () => {
+      lobbyTransientStatus = null;
+      updateLobbyStatus();
+    });
   }
   const roomInput = document.getElementById('roomId');
   if (roomInput && roomInput.dataset.bound !== '1') {
@@ -321,13 +399,15 @@ async function createRoom() {
   }
   const marketSelect = document.getElementById('marketModeSelect');
   if (marketSelect) setMarketMode('sample_53');
+  lobbyTransientStatus = '作戰室已建立；請選擇陣營，或分享房間代碼。';
   await loadFactions();
   startLobbySync();
   await renderFactionPicker();
-  updateLobbyStatus('作戰室已建立；請選擇陣營，或分享房間代碼。');
+  updateLobbyStatus(lobbyTransientStatus);
 }
 
 async function chooseFaction(factionId) {
+  lobbyTransientStatus = null;
   pendingFactionChoice = factionId;
   pendingFactionBaseGroup = null;
   const opt = factionOptionById(factionId);
@@ -839,6 +919,7 @@ async function renderFactionPicker() {
 
 async function joinRoom() {
   gameId = (document.getElementById('roomId')?.value || '').trim();
+  lobbyTransientStatus = null;
   const roomInput = document.getElementById('roomId');
   if (roomInput) roomInput.value = gameId;
   syncLobbyRoomCode();

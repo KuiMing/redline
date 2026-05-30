@@ -1,0 +1,57 @@
+{
+  "proof": "lobby_room_code_top_banner_ui",
+  "captured_at": "2026-05-30 15:50:09 CST",
+  "url": "http://127.0.0.1:8000/?proof=lobby-room-banner-2026-05-30-final",
+  "screenshot": "docs/records/lobby/LOBBY_ROOM_CODE_TOP_BANNER_UI_2026_05_30.png",
+  "room_code": "bf13bae8-00df-47dd-a333-24e102ff1993",
+  "flow_verified": [
+    "create room",
+    "top room-code banner appears",
+    "choose Red Army",
+    "choose Beijing base",
+    "confirm faction",
+    "ready button becomes enabled"
+  ],
+  "ui_evidence": {
+    "bannerAboveFaction": true,
+    "confirmClickable": true,
+    "readyEnabled": true,
+    "readyClickable": true,
+    "lobbyRoomBanner": {
+      "text": "房間代碼 bf13bae8-00df-47dd-a333-24e102ff1993 複製 分享給其他玩家加入",
+      "display": "flex",
+      "visibility": "visible",
+      "rect": {"x": 174, "y": 65, "w": 932, "h": 55, "b": 120},
+      "hit": "lobbyRoomBannerCode"
+    },
+    "lobbyRoomBannerCode": {
+      "text": "bf13bae8-00df-47dd-a333-24e102ff1993",
+      "display": "block",
+      "visibility": "visible",
+      "rect": {"x": 378, "y": 73, "w": 391, "h": 38, "b": 111},
+      "hit": "lobbyRoomBannerCode"
+    },
+    "factionPicker": {
+      "display": "block",
+      "visibility": "visible",
+      "rect": {"x": 231, "y": 397, "w": 818, "h": 167, "b": 564},
+      "hit": "factionPicker"
+    },
+    "confirmFactionBtn": {
+      "text": "確認陣營",
+      "disabled": false,
+      "display": "inline-block",
+      "visibility": "visible",
+      "rect": {"x": 239, "y": 522, "w": 70, "h": 31, "b": 553},
+      "hit": "confirmFactionBtn"
+    },
+    "toggleReadyBtn": {
+      "text": "我已準備",
+      "disabled": false,
+      "display": "block",
+      "visibility": "visible",
+      "rect": {"x": 645, "y": 583, "w": 196, "h": 42, "b": 626},
+      "hit": "toggleReadyBtn"
+    }
+  }
+}
