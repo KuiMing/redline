@@ -36,6 +36,10 @@ def render_ability(a):
     return '：'.join([x for x in [a.get('name_override') or a.get('name'), a.get('trigger'), a.get('effect')] if x])
 
 
+def is_rule_like_ability(a):
+    return isinstance(a, dict) and a.get('type') in {'setup', 'restriction'}
+
+
 def faction_display_name(category, option):
     if option['id'] == 'taiwan_green':
         return '臺灣（綠線）'
@@ -124,16 +128,22 @@ def validate_combo(page, combo):
     win = text_of(page.locator('#factionDetailWin'))
     confirm_visible = page.locator('#confirmFactionBtn').is_visible()
 
-    expected_abilities = [render_ability(a) for a in combo['option'].get('abilities', []) or combo['option'].get('abilities_text', [])]
+    detail_option = combo['option']
+    if combo['base_town'] and combo['option'].get('variant_details'):
+        detail_option = combo['option']['variant_details'].get(combo['base_town'], detail_option)
+
+    all_expected_abilities = detail_option.get('abilities', []) or detail_option.get('abilities_text', [])
+    expected_abilities = [render_ability(a) for a in all_expected_abilities if not is_rule_like_ability(a)]
     expected_rules = [
-        *(combo['option'].get('setup_effects', []) or []),
-        *(combo['option'].get('special_rules', []) or []),
-        *(combo['option'].get('restrictions', []) or []),
+        *(detail_option.get('setup_effects', []) or []),
+        *(detail_option.get('special_rules', []) or []),
+        *(detail_option.get('restrictions', []) or []),
+        *(render_ability(a) for a in all_expected_abilities if is_rule_like_ability(a)),
     ]
-    if combo['option'].get('win_condition_text'):
-        expected_wins = [combo['option']['win_condition_text']]
+    if detail_option.get('win_condition_text'):
+        expected_wins = [detail_option['win_condition_text']]
     else:
-        expected_wins = [humanize_win_condition(w) for w in combo['option'].get('win_conditions', [])]
+        expected_wins = [humanize_win_condition(w) for w in detail_option.get('win_conditions', [])]
 
     errors = []
     if combo['display_name'] not in info:

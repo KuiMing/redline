@@ -1,0 +1,101 @@
+{
+  "summary": {
+    "total": 7,
+    "passed": 7,
+    "failed": 0
+  },
+  "checks": [
+    {
+      "family_id": "uyghur_family",
+      "label": "維吾爾",
+      "base": "伊斯坦堡",
+      "has_detail": true,
+      "abilities_count": 2,
+      "win_conditions_count": 1,
+      "resolved_base": [
+        "伊斯坦堡"
+      ],
+      "ok": true,
+      "errors": []
+    },
+    {
+      "family_id": "uyghur_family",
+      "label": "維吾爾",
+      "base": "慕尼黑",
+      "has_detail": true,
+      "abilities_count": 4,
+      "win_conditions_count": 1,
+      "resolved_base": [
+        "慕尼黑"
+      ],
+      "ok": true,
+      "errors": []
+    },
+    {
+      "family_id": "uyghur_family",
+      "label": "維吾爾",
+      "base": "華盛頓",
+      "has_detail": true,
+      "abilities_count": 2,
+      "win_conditions_count": 1,
+      "resolved_base": [
+        "華盛頓"
+      ],
+      "ok": true,
+      "errors": []
+    },
+    {
+      "family_id": "uyghur_family",
+      "label": "維吾爾",
+      "base": "阿拉木圖",
+      "has_detail": true,
+      "abilities_count": 2,
+      "win_conditions_count": 1,
+      "resolved_base": [
+        "阿拉木圖"
+      ],
+      "ok": true,
+      "errors": []
+    },
+    {
+      "family_id": "tibet_family",
+      "label": "西藏",
+      "base": "達蘭薩拉",
+      "has_detail": true,
+      "abilities_count": 3,
+      "win_conditions_count": 1,
+      "resolved_base": [
+        "達蘭薩拉"
+      ],
+      "ok": true,
+      "errors": []
+    },
+    {
+      "family_id": "tibet_family",
+      "label": "西藏",
+      "base": "德拉敦",
+      "has_detail": true,
+      "abilities_count": 2,
+      "win_conditions_count": 1,
+      "resolved_base": [
+        "德拉敦"
+      ],
+      "ok": true,
+      "errors": []
+    },
+    {
+      "family_id": "tibet_family",
+      "label": "西藏",
+      "base": "哲古宗",
+      "has_detail": true,
+      "abilities_count": 1,
+      "win_conditions_count": 1,
+      "resolved_base": [
+        "哲古宗"
+      ],
+      "ok": true,
+      "errors": []
+    }
+  ],
+  "failures": []
+}

@@ -470,6 +470,7 @@ function factionDisplayName(factionId) {
       if (factionId === 'taiwan_green') return '臺灣（綠線）';
       if (factionId === 'taiwan_blue') return '臺灣（藍線）';
       if (category.id === 'uyghur' || category.id === 'tibet') {
+        if (opt.id === `${category.id}_family`) return category.label;
         return `${category.label}（${opt.variant || opt.name || opt.id}）`;
       }
       return opt.variant || opt.name || opt.label || opt.id;
@@ -733,7 +734,7 @@ function renderCardFace(cardName, zone, isStatic = false, compact = false) {
 function selectCardDetail(_name, _zone, _isStatic = false) {
 }
 
-function renderFactionDetails(factionId) {
+function renderFactionDetails(factionId, selectedBaseName = null, selectedBaseGroupName = null) {
   const panel = document.getElementById('factionDetailPanel');
   const title = document.getElementById('factionDetailTitle');
   const basesEl = document.getElementById('factionDetailBases');
@@ -758,25 +759,38 @@ function renderFactionDetails(factionId) {
     return;
   }
 
-  const rules = [
-    ...(opt.setup_effects || []),
-    ...(opt.special_rules || []),
-    ...(opt.restrictions || []),
-  ];
-  const selectedBaseData = (opt.bases || []).find(base => base?.name === pendingFactionBaseChoice) || null;
-  const abilities = [
-    ...((opt.abilities_text || opt.abilities || [])),
+  const activeDetailBase = selectedBaseName || pendingFactionBaseChoice;
+  const activeDetailBaseGroup = selectedBaseGroupName || pendingFactionBaseGroup;
+  const detailSource = (activeDetailBase && opt.variant_details)
+    ? (opt.variant_details[activeDetailBase] || null)
+    : null;
+  const detail = detailSource || opt;
+  const selectedBaseData = (detail.bases || []).find(base => base?.name === activeDetailBase) || null;
+  const rawAbilities = [
+    ...((detail.abilities_text || detail.abilities || [])),
     ...((selectedBaseData?.abilities) || []),
   ];
-  const wins = opt.win_condition_text
-    ? [opt.win_condition_text]
-    : (opt.win_conditions || []).map(humanizeWinCondition);
+  const renderFactionDetailItem = item => typeof item === 'string'
+    ? item
+    : [item.name_override || item.name, item.trigger, item.effect].filter(Boolean).join('：');
+  const abilities = rawAbilities.filter(item => !(typeof item === 'object' && item && ['setup', 'restriction'].includes(item.type)));
+  const rules = [
+    ...(detail.setup_effects || []),
+    ...(detail.special_rules || []),
+    ...(detail.restrictions || []),
+    ...rawAbilities
+      .filter(item => typeof item === 'object' && item && ['setup', 'restriction'].includes(item.type))
+      .map(renderFactionDetailItem),
+  ];
+  const wins = detail.win_condition_text
+    ? [detail.win_condition_text]
+    : (detail.win_conditions || []).map(humanizeWinCondition);
 
-  title.textContent = factionDisplayName(factionId);
-  basesEl.innerHTML = pendingFactionBaseChoice
-    ? `<div class="faction-detail-section-title">根據地</div><ul><li>${baseDisplayName(pendingFactionBaseChoice)}</li></ul>`
-    : (pendingFactionBaseGroup ? `<div class="faction-detail-section-title">根據地類別</div><ul><li>${baseDisplayName(pendingFactionBaseGroup)}</li></ul>` : '');
-  abilitiesEl.innerHTML = `<div class="faction-detail-section-title">能力</div><ul>${abilities.map(a => `<li>${typeof a === 'string' ? a : [a.name_override || a.name, a.trigger, a.effect].filter(Boolean).join('：')}</li>`).join('') || '<li>（暫無資料）</li>'}</ul>`;
+  title.textContent = detailSource ? `${opt.name || factionDisplayName(factionId)}（${detailSource.variant || activeDetailBase}）` : factionDisplayName(factionId);
+  basesEl.innerHTML = activeDetailBase
+    ? `<div class="faction-detail-section-title">根據地</div><ul><li>${baseDisplayName(activeDetailBase)}</li></ul>`
+    : (activeDetailBaseGroup ? `<div class="faction-detail-section-title">根據地類別</div><ul><li>${baseDisplayName(activeDetailBaseGroup)}</li></ul>` : '');
+  abilitiesEl.innerHTML = `<div class="faction-detail-section-title">能力</div><ul>${abilities.map(a => `<li>${renderFactionDetailItem(a)}</li>`).join('') || '<li>（暫無資料）</li>'}</ul>`;
   rulesEl.innerHTML = `<div class="faction-detail-section-title">規則</div><ul>${rules.map(r => `<li>${r}</li>`).join('') || '<li>（暫無資料）</li>'}</ul>`;
   winEl.innerHTML = `<div class="faction-detail-section-title">獲勝條件</div><ul>${wins.map(w => `<li>${w}</li>`).join('') || '<li>（暫無資料）</li>'}</ul>`;
   panel.style.display = 'block';
@@ -821,7 +835,7 @@ async function renderFactionPicker() {
   confirmBar.style.display = readyForConfirm ? 'block' : 'none';
   confirmBtn.disabled = !readyForConfirm;
   confirmBtn.onclick = confirmFactionChoice;
-  renderFactionDetails(readyForConfirm ? activeChoice : null);
+  renderFactionDetails(readyForConfirm ? activeChoice : null, activeBase, activeBaseGroup);
 
   const takenCategories = new Set(
     Object.entries(chosen)
@@ -2191,7 +2205,8 @@ async function render(state) {
   if (factionPicker) factionPicker.style.display = showLobbyFactionPicker ? 'block' : 'none';
 
   const detailFactionId = me?.faction || pendingFactionChoice || null;
-  renderFactionDetails(inBaseSelection ? null : detailFactionId);
+  const detailBaseName = me?.base || pendingFactionBaseChoice || null;
+  renderFactionDetails(inBaseSelection ? null : detailFactionId, detailBaseName, pendingFactionBaseGroup);
   await renderBuildSupport(state);
   renderFactionActionPanel(state);
   renderBaseSelection(state);

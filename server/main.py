@@ -319,12 +319,30 @@ def list_factions():
         resolved["abilities"] = resolved_abilities
         return resolved
 
+    def resolve_family_ui_faction(family_id, name, camp, variant_ids):
+        bases = []
+        variant_details = {}
+        for variant_id in variant_ids:
+            variant = resolve_ui_faction(by_id[variant_id])
+            base = next((b for b in variant.get("bases", []) if isinstance(b, dict) and b.get("name")), None)
+            base_name = base.get("name") if base else variant.get("variant")
+            if base_name:
+                bases.append({"name": base_name, "variant_faction": variant_id})
+                variant_details[base_name] = variant
+        return {
+            "id": family_id,
+            "name": name,
+            "camp": camp,
+            "bases": bases,
+            "variant_details": variant_details,
+        }
+
     categories = [
         {"id": "red_army", "label": "紅軍", "mode": "direct", "options": [resolve_ui_faction(by_id["red_army"])]},
         {"id": "taiwan", "label": "臺灣", "mode": "variant", "options": [resolve_ui_faction(by_id["taiwan_green"]), resolve_ui_faction(by_id["taiwan_blue"])]},
         {"id": "hong_kong", "label": "香港", "mode": "direct", "options": [resolve_ui_faction(by_id["hong_kong"])]},
-        {"id": "uyghur", "label": "維吾爾", "mode": "direct", "options": [{"id": "uyghur_family", "name": "維吾爾"}]},
-        {"id": "tibet", "label": "西藏", "mode": "direct", "options": [{"id": "tibet_family", "name": "西藏"}]},
+        {"id": "uyghur", "label": "維吾爾", "mode": "direct", "options": [resolve_family_ui_faction("uyghur_family", "維吾爾", "uyghur", ["uyghur_istanbul", "uyghur_munich", "uyghur_washington", "uyghur_almaty"])]},
+        {"id": "tibet", "label": "西藏", "mode": "direct", "options": [resolve_family_ui_faction("tibet_family", "西藏", "tibet", ["tibet_dharamsala", "tibet_dehradun", "tibet_chogu"])]},
         {"id": "manchuria", "label": "滿洲", "mode": "direct", "options": [resolve_ui_faction(by_id["manchuria"])]},
         {"id": "mongol", "label": "蒙古", "mode": "direct", "options": [resolve_ui_faction(by_id["mongol"])]},
         {"id": "kazakh", "label": "哈薩克", "mode": "direct", "options": [resolve_ui_faction(by_id["kazakh"])]},
