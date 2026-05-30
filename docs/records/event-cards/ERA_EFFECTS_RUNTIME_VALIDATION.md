@@ -1,6 +1,6 @@
 # Era Effects Runtime Validation
 
-- Date: 2026-05-28
+- Date: 2026-05-30
 - Summary: 15/15 passed
 
 ## PASS: mongolia_adds_internal_conflict_with_static_supply_cap
