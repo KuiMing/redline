@@ -1,0 +1,33 @@
+{
+  "status": "passed",
+  "scenario": "Official browser UI: 香港抗暴之戰 mission reaches success_pending during viewer ACTION after playing 資助者 as resource.",
+  "url": "http://127.0.0.1:8000/?game_id=cf030016-0c31-4af9-af2d-c7683db425fe&player_id=de41c7db-35a2-427a-98bc-c4235eb07ca4",
+  "expected": [
+    "Event remains visible during ACTION after condition is met.",
+    "Mission status/result says it waits until all players finish ACTION before settlement.",
+    "No pending choice opens immediately at trigger time."
+  ],
+  "observed_state": {
+    "turn": 1,
+    "phase": "action",
+    "current_player": "viewer",
+    "event_name": "香港抗暴之戰",
+    "event_status": "success_pending",
+    "event_result_text": "非紅軍任務條件已達成，等待全體玩家行動結束後結算",
+    "event_progress": {
+      "count": 1,
+      "required": 1,
+      "succeeded": true,
+      "settled": false,
+      "status": "success_pending"
+    },
+    "pending_choice": null,
+    "log_tail": [
+      "[Turn 1] Event drawn: 香港抗暴之戰",
+      "[Turn 1] viewer played 資助者 as resource"
+    ]
+  },
+  "event_panel_text": "目前事件\n香港抗暴之戰\n類型：任務｜狀態：條件已達成，等全體玩家行動結束後結算\n任務結果：非紅軍任務條件已達成，等待全體玩家行動結束後結算\n任務條件：打出購買費用含資金的卡牌至少 1 次\n進度：1/1\n成功獎勵：獲得 2 張宣傳家\n失敗懲罰：己方選 1 張手牌棄掉",
+  "screenshot": "docs/records/playtest-flow/EVENT_CARD_ROUND_WIDE_SUCCESS_PENDING_UI_2026_05_31.png",
+  "note": "browser_vision captured the original UI screenshot but vision analysis failed; state/snapshot evidence was preserved with the screenshot."
+}

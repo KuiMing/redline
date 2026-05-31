@@ -262,7 +262,7 @@ class Game:
         status = progress.get('status') or 'active'
         if event.get('type') == 'mission':
             if status == 'success_pending':
-                return '非紅軍任務條件已達成，等待結算'
+                return '非紅軍任務條件已達成，等待全體玩家行動結束後結算'
             if status == 'success':
                 return '非紅軍任務成功'
             if status == 'failure':
@@ -348,13 +348,15 @@ class Game:
         if not self._event_trigger_matches_scope(trigger, town=town):
             return
         self.event_progress['count'] = int(self.event_progress.get('count', 0) or 0) + int(amount or 1)
+        if player is not None:
+            self.event_progress['last_actor_id'] = getattr(player, 'id', None)
+            self.event_progress['last_actor_name'] = getattr(player, 'name', None)
         required = int(trigger.get('count', 1) or 1)
         if self.event_progress['count'] >= required:
             self.event_progress['succeeded'] = True
             self.event_progress['status'] = 'success_pending'
-            result = self._settle_current_event()
             self.event_notification = self._event_display_payload()
-            return result
+            return {'success': True}
         self.event_notification = self._event_display_payload()
         return {'success': True}
 
@@ -696,6 +698,8 @@ class Game:
         if event.get('type') != 'mission' or not self.event_progress or self.event_progress.get('settled'):
             return {'success': True}
         player = self.current_player()
+        if self.event_progress and self.event_progress.get('last_actor_id'):
+            player = next((p for p in self.players if p.id == self.event_progress.get('last_actor_id')), player)
         trigger = event.get('trigger') or {}
         if trigger.get('type') == 'end_turn_state' and not self.event_progress.get('succeeded'):
             met, count = self._event_state_condition_met(trigger, player)
@@ -3821,9 +3825,14 @@ class Game:
                 return {"success": True}
             self.turn_phase = TurnPhase.ACTION
         elif self.turn_phase == TurnPhase.ACTION:
-            event_result = self._settle_current_event()
-            if event_result and event_result.get('pending_choice'):
-                return {"success": True, "pending_choice": True}
+            # Mission events are round-wide: resolve only after the last player of
+            # the round has finished ACTION, not after each individual player.
+            next_player_index = (self.current_player_index + 1) % len(self.players)
+            is_round_final_action = next_player_index == getattr(self, 'round_start_player_index', 0)
+            if is_round_final_action:
+                event_result = self._settle_current_event()
+                if event_result and event_result.get('pending_choice'):
+                    return {"success": True, "pending_choice": True}
             self.turn_phase = TurnPhase.END
         elif self.turn_phase == TurnPhase.END:
             pending = self._prompt_end_turn_topdeck_action_if_available()
@@ -3849,10 +3858,8 @@ class Game:
             self.purchase_area.extend(drawn)
         self.log(f"End of turn for {player.name}")
 
-        self.current_event = None
-        self.event_progress = None
         self._tick_event_modifiers_at_turn_end()
-        self.event_notification = None
+        self.event_notification = self._event_display_payload()
         self.turn_log = self._new_turn_log()
 
         # ✅ Tick active eras at end of full turn
@@ -3864,8 +3871,12 @@ class Game:
         self.current_player_index = (self.current_player_index + 1) % len(self.players)
         if self.current_player_index == getattr(self, 'round_start_player_index', 0):
             self.turn += 1
+            self.current_event = None
+            self.event_progress = None
+            self.event_notification = None
         self.turn_phase = TurnPhase.EVENT
-        self._start_event_phase()
+        if not self.current_event:
+            self._start_event_phase()
 
     def _check_victory(self):
         win, winner = self.victory_engine.evaluate(self)

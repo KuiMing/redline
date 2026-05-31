@@ -1517,7 +1517,7 @@ function renderCurrentEvent(state) {
   const required = Number(progress.required || event.trigger?.count || 0);
   const statusMap = {
     active: '進行中',
-    success_pending: '條件已達成，結束行動階段時結算',
+    success_pending: '條件已達成，等全體玩家行動結束後結算',
     success: '成功已結算',
     failure: '失敗已結算',
     idle: '無效果',

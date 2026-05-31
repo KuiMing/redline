@@ -1,7 +1,7 @@
 {
   "summary": {
     "passed": true,
-    "passed_count": 11,
+    "passed_count": 13,
     "failed_count": 0
   },
   "checks": [
@@ -105,7 +105,35 @@
         "turn": 1,
         "turn_phase": "event",
         "current_player": "host",
-        "current_faction": "red_army"
+        "current_faction": "red_army",
+        "event_before": "tibet_border_conflict",
+        "event_after": "tibet_border_conflict",
+        "event_deck_before": 24,
+        "event_deck_after": 24,
+        "event_discard_before": 1,
+        "event_discard_after": 1,
+        "event_status_after": "active"
+      }
+    },
+    {
+      "name": "Ben end does not draw or replace event before Red Army also ends",
+      "passed": true,
+      "details": {
+        "step": "ben_end_to_red_event",
+        "result": {
+          "success": true
+        },
+        "turn": 1,
+        "turn_phase": "event",
+        "current_player": "host",
+        "current_faction": "red_army",
+        "event_before": "tibet_border_conflict",
+        "event_after": "tibet_border_conflict",
+        "event_deck_before": 24,
+        "event_deck_after": 24,
+        "event_discard_before": 1,
+        "event_discard_after": 1,
+        "event_status_after": "active"
       }
     },
     {
@@ -119,7 +147,35 @@
         "turn": 2,
         "turn_phase": "event",
         "current_player": "ally",
-        "current_faction": "taiwan_green"
+        "current_faction": "taiwan_green",
+        "event_before": "tibet_border_conflict",
+        "event_after": "quiet_times",
+        "event_deck_before": 24,
+        "event_deck_after": 23,
+        "event_discard_before": 1,
+        "event_discard_after": 2,
+        "event_status_after": "idle"
+      }
+    },
+    {
+      "name": "new event is drawn only after the full round ends",
+      "passed": true,
+      "details": {
+        "step": "red_end_to_next_round",
+        "result": {
+          "success": true
+        },
+        "turn": 2,
+        "turn_phase": "event",
+        "current_player": "ally",
+        "current_faction": "taiwan_green",
+        "event_before": "tibet_border_conflict",
+        "event_after": "quiet_times",
+        "event_deck_before": 24,
+        "event_deck_after": 23,
+        "event_discard_before": 1,
+        "event_discard_after": 2,
+        "event_status_after": "idle"
       }
     },
     {
@@ -185,9 +241,7 @@
         "action_log": [
           "[Turn 1] Event drawn: 貿易戰加劇",
           "[Turn 1] player1 played 樂捐者 as resource",
-          "[Turn 1] Event failure: no effect",
-          "[Turn 1] End of turn for player1",
-          "[Turn 1] Event drawn: 全國人大召開"
+          "[Turn 1] End of turn for player1"
         ],
         "purchase_area": [
           "宣傳家",
@@ -317,7 +371,7 @@
       }
     },
     {
-      "name": "ending turn advances to next player event phase",
+      "name": "ending turn advances to next player event phase without drawing a new event",
       "passed": true,
       "details": {
         "turn": 1,
@@ -329,21 +383,23 @@
         "active_era_details": [],
         "era_notification": null,
         "current_event": {
-          "id": "national_people_congress",
-          "name": "全國人大召開",
+          "id": "trade_war",
+          "name": "貿易戰加劇",
           "type": "mission",
           "trigger": {
-            "type": "use_faction_ability",
-            "count": 1
+            "type": "buy_card",
+            "count": 1,
+            "min_cost": 4,
+            "card_names": [
+              "英美奧援"
+            ]
           },
           "success": {
-            "type": "draw",
+            "type": "topdeck_from_discard",
             "count": 1
           },
           "failure": {
-            "type": "red_dissolve",
-            "count": 1,
-            "scope": "牆內"
+            "type": "none"
           },
           "progress": {
             "count": 0,
@@ -354,14 +410,14 @@
           },
           "status": "active",
           "result_text": "非紅軍任務進行中",
-          "trigger_text": "使用或觸發陣營特殊能力至少 1 次",
-          "success_text": "抽 1 張牌",
-          "failure_text": "紅軍瓦解 1 個組織"
+          "trigger_text": "購買符合條件的卡牌（總費用 4 點以上 / 英美奧援）至少 1 次",
+          "success_text": "從棄牌堆選 1 張置於牌庫頂",
+          "failure_text": "無"
         },
-        "event_deck_count": 23,
+        "event_deck_count": 24,
         "red_army_action_count": 0,
         "red_army_action_limit": 2,
-        "event_discard_count": 2,
+        "event_discard_count": 1,
         "event_modifiers": [],
         "market_mode": "sample_53",
         "pending_base_choices": {},
@@ -370,9 +426,7 @@
         "action_log": [
           "[Turn 1] Event drawn: 貿易戰加劇",
           "[Turn 1] player1 played 樂捐者 as resource",
-          "[Turn 1] Event failure: no effect",
-          "[Turn 1] End of turn for player1",
-          "[Turn 1] Event drawn: 全國人大召開"
+          "[Turn 1] End of turn for player1"
         ],
         "purchase_area": [
           "宣傳家",
@@ -520,21 +574,23 @@
         "active_era_details": [],
         "era_notification": null,
         "current_event": {
-          "id": "national_people_congress",
-          "name": "全國人大召開",
+          "id": "trade_war",
+          "name": "貿易戰加劇",
           "type": "mission",
           "trigger": {
-            "type": "use_faction_ability",
-            "count": 1
+            "type": "buy_card",
+            "count": 1,
+            "min_cost": 4,
+            "card_names": [
+              "英美奧援"
+            ]
           },
           "success": {
-            "type": "draw",
+            "type": "topdeck_from_discard",
             "count": 1
           },
           "failure": {
-            "type": "red_dissolve",
-            "count": 1,
-            "scope": "牆內"
+            "type": "none"
           },
           "progress": {
             "count": 0,
@@ -545,14 +601,14 @@
           },
           "status": "active",
           "result_text": "非紅軍任務進行中",
-          "trigger_text": "使用或觸發陣營特殊能力至少 1 次",
-          "success_text": "抽 1 張牌",
-          "failure_text": "紅軍瓦解 1 個組織"
+          "trigger_text": "購買符合條件的卡牌（總費用 4 點以上 / 英美奧援）至少 1 次",
+          "success_text": "從棄牌堆選 1 張置於牌庫頂",
+          "failure_text": "無"
         },
-        "event_deck_count": 23,
+        "event_deck_count": 24,
         "red_army_action_count": 0,
         "red_army_action_limit": 2,
-        "event_discard_count": 2,
+        "event_discard_count": 1,
         "event_modifiers": [],
         "market_mode": "sample_53",
         "pending_base_choices": {},
@@ -561,9 +617,7 @@
         "action_log": [
           "[Turn 1] Event drawn: 貿易戰加劇",
           "[Turn 1] player1 played 樂捐者 as resource",
-          "[Turn 1] Event failure: no effect",
-          "[Turn 1] End of turn for player1",
-          "[Turn 1] Event drawn: 全國人大召開"
+          "[Turn 1] End of turn for player1"
         ],
         "purchase_area": [
           "宣傳家",
@@ -743,7 +797,7 @@
     },
     {
       "step": "formal_lobby_start_event_state",
-      "game_id": "abc67c53-cdf0-4996-8477-3b8dd70ecd67",
+      "game_id": "1c0bccf0-a29e-4a72-b525-7cc8919958da",
       "start_result": {
         "success": true,
         "market_mode": "sample_53"
@@ -795,7 +849,14 @@
           "turn": 1,
           "turn_phase": "action",
           "current_player": "ally",
-          "current_faction": "taiwan_green"
+          "current_faction": "taiwan_green",
+          "event_before": "tibet_border_conflict",
+          "event_after": "tibet_border_conflict",
+          "event_deck_before": 24,
+          "event_deck_after": 24,
+          "event_discard_before": 1,
+          "event_discard_after": 1,
+          "event_status_after": "active"
         },
         {
           "step": "ben_action_to_end",
@@ -805,7 +866,14 @@
           "turn": 1,
           "turn_phase": "end",
           "current_player": "ally",
-          "current_faction": "taiwan_green"
+          "current_faction": "taiwan_green",
+          "event_before": "tibet_border_conflict",
+          "event_after": "tibet_border_conflict",
+          "event_deck_before": 24,
+          "event_deck_after": 24,
+          "event_discard_before": 1,
+          "event_discard_after": 1,
+          "event_status_after": "active"
         },
         {
           "step": "ben_end_to_red_event",
@@ -815,7 +883,14 @@
           "turn": 1,
           "turn_phase": "event",
           "current_player": "host",
-          "current_faction": "red_army"
+          "current_faction": "red_army",
+          "event_before": "tibet_border_conflict",
+          "event_after": "tibet_border_conflict",
+          "event_deck_before": 24,
+          "event_deck_after": 24,
+          "event_discard_before": 1,
+          "event_discard_after": 1,
+          "event_status_after": "active"
         },
         {
           "step": "red_event_to_action",
@@ -825,7 +900,14 @@
           "turn": 1,
           "turn_phase": "action",
           "current_player": "host",
-          "current_faction": "red_army"
+          "current_faction": "red_army",
+          "event_before": "tibet_border_conflict",
+          "event_after": "tibet_border_conflict",
+          "event_deck_before": 24,
+          "event_deck_after": 24,
+          "event_discard_before": 1,
+          "event_discard_after": 1,
+          "event_status_after": "active"
         },
         {
           "step": "red_action_to_end",
@@ -835,7 +917,14 @@
           "turn": 1,
           "turn_phase": "end",
           "current_player": "host",
-          "current_faction": "red_army"
+          "current_faction": "red_army",
+          "event_before": "tibet_border_conflict",
+          "event_after": "tibet_border_conflict",
+          "event_deck_before": 24,
+          "event_deck_after": 24,
+          "event_discard_before": 1,
+          "event_discard_after": 1,
+          "event_status_after": "failure"
         },
         {
           "step": "red_end_to_next_round",
@@ -845,7 +934,14 @@
           "turn": 2,
           "turn_phase": "event",
           "current_player": "ally",
-          "current_faction": "taiwan_green"
+          "current_faction": "taiwan_green",
+          "event_before": "tibet_border_conflict",
+          "event_after": "quiet_times",
+          "event_deck_before": 24,
+          "event_deck_after": 23,
+          "event_discard_before": 1,
+          "event_discard_after": 2,
+          "event_status_after": "idle"
         }
       ]
     },
@@ -920,21 +1016,23 @@
       "turn_phase": "event",
       "current_player": "player2",
       "current_event": {
-        "id": "national_people_congress",
-        "name": "全國人大召開",
+        "id": "trade_war",
+        "name": "貿易戰加劇",
         "type": "mission",
         "trigger": {
-          "type": "use_faction_ability",
-          "count": 1
+          "type": "buy_card",
+          "count": 1,
+          "min_cost": 4,
+          "card_names": [
+            "英美奧援"
+          ]
         },
         "success": {
-          "type": "draw",
+          "type": "topdeck_from_discard",
           "count": 1
         },
         "failure": {
-          "type": "red_dissolve",
-          "count": 1,
-          "scope": "牆內"
+          "type": "none"
         },
         "progress": {
           "count": 0,
@@ -945,9 +1043,9 @@
         },
         "status": "active",
         "result_text": "非紅軍任務進行中",
-        "trigger_text": "使用或觸發陣營特殊能力至少 1 次",
-        "success_text": "抽 1 張牌",
-        "failure_text": "紅軍瓦解 1 個組織"
+        "trigger_text": "購買符合條件的卡牌（總費用 4 點以上 / 英美奧援）至少 1 次",
+        "success_text": "從棄牌堆選 1 張置於牌庫頂",
+        "failure_text": "無"
       }
     },
     {
@@ -979,21 +1077,23 @@
     "active_era_details": [],
     "era_notification": null,
     "current_event": {
-      "id": "national_people_congress",
-      "name": "全國人大召開",
+      "id": "trade_war",
+      "name": "貿易戰加劇",
       "type": "mission",
       "trigger": {
-        "type": "use_faction_ability",
-        "count": 1
+        "type": "buy_card",
+        "count": 1,
+        "min_cost": 4,
+        "card_names": [
+          "英美奧援"
+        ]
       },
       "success": {
-        "type": "draw",
+        "type": "topdeck_from_discard",
         "count": 1
       },
       "failure": {
-        "type": "red_dissolve",
-        "count": 1,
-        "scope": "牆內"
+        "type": "none"
       },
       "progress": {
         "count": 0,
@@ -1004,14 +1104,14 @@
       },
       "status": "active",
       "result_text": "非紅軍任務進行中",
-      "trigger_text": "使用或觸發陣營特殊能力至少 1 次",
-      "success_text": "抽 1 張牌",
-      "failure_text": "紅軍瓦解 1 個組織"
+      "trigger_text": "購買符合條件的卡牌（總費用 4 點以上 / 英美奧援）至少 1 次",
+      "success_text": "從棄牌堆選 1 張置於牌庫頂",
+      "failure_text": "無"
     },
-    "event_deck_count": 23,
+    "event_deck_count": 24,
     "red_army_action_count": 0,
     "red_army_action_limit": 2,
-    "event_discard_count": 2,
+    "event_discard_count": 1,
     "event_modifiers": [],
     "market_mode": "sample_53",
     "pending_base_choices": {},
@@ -1020,9 +1120,7 @@
     "action_log": [
       "[Turn 1] Event drawn: 貿易戰加劇",
       "[Turn 1] player1 played 樂捐者 as resource",
-      "[Turn 1] Event failure: no effect",
-      "[Turn 1] End of turn for player1",
-      "[Turn 1] Event drawn: 全國人大召開"
+      "[Turn 1] End of turn for player1"
     ],
     "purchase_area": [
       "宣傳家",

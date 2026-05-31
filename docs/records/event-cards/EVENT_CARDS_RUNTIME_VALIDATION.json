@@ -21,11 +21,13 @@
           "required": 1,
           "succeeded": true,
           "settled": true,
-          "status": "success"
+          "status": "success",
+          "last_actor_id": "viewer",
+          "last_actor_name": "viewer"
         },
         "discard": [
-          "宣傳家",
-          "資助者"
+          "資助者",
+          "宣傳家"
         ],
         "initial_static_card_count": 0,
         "static_supply": 0
@@ -52,7 +54,9 @@
           "required": 1,
           "succeeded": true,
           "settled": true,
-          "status": "success"
+          "status": "success",
+          "last_actor_id": "viewer",
+          "last_actor_name": "viewer"
         },
         "discard": [
           "宣傳家",
@@ -70,7 +74,9 @@
           "required": 1,
           "succeeded": true,
           "settled": true,
-          "status": "success"
+          "status": "success",
+          "last_actor_id": "viewer",
+          "last_actor_name": "viewer"
         },
         "hand_count": 7
       }
@@ -199,7 +205,9 @@
           "required": 1,
           "succeeded": true,
           "settled": true,
-          "status": "success"
+          "status": "success",
+          "last_actor_id": "viewer",
+          "last_actor_name": "viewer"
         },
         "hand": [
           "保留手牌",
@@ -234,7 +242,9 @@
           "required": 1,
           "succeeded": true,
           "settled": true,
-          "status": "success"
+          "status": "success",
+          "last_actor_id": "viewer",
+          "last_actor_name": "viewer"
         },
         "moves_left": 2,
         "organizations": {

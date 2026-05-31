@@ -118,6 +118,7 @@ def run_validation():
     lobby_round_start_index = getattr(lobby_game, 'round_start_player_index', None)
     lobby_turn_flow = []
     for step in ['ben_event_to_action', 'ben_action_to_end', 'ben_end_to_red_event', 'red_event_to_action', 'red_action_to_end', 'red_end_to_next_round']:
+        before_state = lobby_game.state()
         advance_result = lobby_game.advance_turn_phase()
         step_state = lobby_game.state()
         lobby_turn_flow.append({
@@ -127,6 +128,13 @@ def run_validation():
             'turn_phase': step_state.get('turn_phase'),
             'current_player': step_state.get('current_player'),
             'current_faction': getattr(lobby_game.current_player(), 'faction_id', None),
+            'event_before': (before_state.get('current_event') or {}).get('id'),
+            'event_after': (step_state.get('current_event') or {}).get('id'),
+            'event_deck_before': before_state.get('event_deck_count'),
+            'event_deck_after': step_state.get('event_deck_count'),
+            'event_discard_before': before_state.get('event_discard_count'),
+            'event_discard_after': step_state.get('event_discard_count'),
+            'event_status_after': ((step_state.get('current_event') or {}).get('progress') or {}).get('status'),
         })
     trace.append({
         'step': 'formal_lobby_round_flow_after_ben_turn',
@@ -140,8 +148,20 @@ def run_validation():
         ben_end_state.get('turn') == 1 and ben_end_state.get('turn_phase') == 'event' and ben_end_state.get('current_faction') == 'red_army',
         ben_end_state,
     )
+    assert_true(checks, 'Ben end does not draw or replace event before Red Army also ends',
+        ben_end_state.get('event_before') == ben_end_state.get('event_after')
+        and ben_end_state.get('event_deck_before') == ben_end_state.get('event_deck_after')
+        and ben_end_state.get('event_discard_before') == ben_end_state.get('event_discard_after'),
+        ben_end_state,
+    )
     assert_true(checks, 'formal 2p lobby increments to turn 2 only after Red Army ends',
         red_end_state.get('turn') == 2 and red_end_state.get('turn_phase') == 'event' and red_end_state.get('current_player') == lobby_start_player,
+        red_end_state,
+    )
+    assert_true(checks, 'new event is drawn only after the full round ends',
+        red_end_state.get('event_before') != red_end_state.get('event_after')
+        and red_end_state.get('event_deck_after') == red_end_state.get('event_deck_before') - 1
+        and red_end_state.get('event_discard_after') == red_end_state.get('event_discard_before') + 1,
         red_end_state,
     )
 
@@ -191,7 +211,14 @@ def run_validation():
         'current_player': state_next_event['current_player'],
         'current_event': state_next_event.get('current_event'),
     })
-    assert_true(checks, 'ending turn advances to next player event phase', state_next_event['turn_phase'] == 'event' and state_next_event['current_player'] == 'player2', state_next_event)
+    assert_true(checks, 'ending turn advances to next player event phase without drawing a new event',
+        state_next_event['turn_phase'] == 'event'
+        and state_next_event['current_player'] == 'player2'
+        and (state_next_event.get('current_event') or {}).get('id') == (state_action.get('current_event') or {}).get('id')
+        and state_next_event.get('event_deck_count') == state_action.get('event_deck_count')
+        and state_next_event.get('event_discard_count') == state_action.get('event_discard_count'),
+        state_next_event,
+    )
 
     next_idx, next_card = first_current_player_action_card(game)
     next_event_play = game.play_card(next_idx, mode='action') if next_idx is not None else {'skipped': True}

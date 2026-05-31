@@ -26,6 +26,10 @@ def make_game(event_name="歲月靜好"):
     game.pending_base_choices = []
     game.game_phase = GamePhase.MAIN
     game.current_player_index = 0
+    # Most runtime checks focus the non-red viewer as the last actor of a
+    # round, so mission settlement happens on ACTION -> END without needing
+    # to drive the Red Army's unrelated turn.
+    game.round_start_player_index = 1
     game.turn_phase = TurnPhase.EVENT
     event = game._event_by_name(event_name)
     assert event, f"missing event: {event_name}"
@@ -42,6 +46,11 @@ def make_game(event_name="歲月靜好"):
 def assert_ok(result, label):
     assert not result.get("error"), f"{label}: {result}"
     return result
+
+
+def settle_round_event(game, label="settle round event"):
+    """Mission progress can succeed during ACTION, but event effects resolve at round end."""
+    return assert_ok(game.advance_turn_phase(), label)
 
 
 def names(cards):
@@ -71,6 +80,7 @@ def test_hong_kong_success_static_supply():
     assert_ok(game.advance_turn_phase(), "enter action")
     assert_ok(game.play_card(0, mode="resource"), "play money-cost card")
     assert game.event_progress["succeeded"] is True
+    settle_round_event(game, "settle hk success at round end")
     assert game.event_progress["settled"] is True
     discard = names(player.deck.discard_pile)
     assert discard.count("宣傳家") == before_count + 1, {"before": before_discard, "after": discard}
@@ -103,6 +113,7 @@ def test_major_disaster_success():
     assert_ok(game.advance_turn_phase(), "enter action")
     assert_ok(game.play_card(0, mode="resource"), "play propaganda-cost card")
     assert game.event_progress["succeeded"] is True
+    settle_round_event(game, "settle disaster success at round end")
     assert game.event_progress["settled"] is True
     assert game.static_purchase_supply["宣傳家"] == 0
     return {"event": "重大災難", "progress": game.event_progress, "discard": names(player.deck.discard_pile)}
@@ -116,6 +127,7 @@ def test_draw_trigger_succeeds():
     assert_ok(game.advance_turn_phase(), "enter action")
     game._draw_player_cards(player, 1)
     assert game.event_progress["succeeded"] is True
+    settle_round_event(game, "settle draw-trigger success at round end")
     assert game.event_progress["settled"] is True
     # 北京政爭成功獎勵也會抽 1 張；若牌庫不足，至少確認觸發抽牌有進手牌。
     assert len(player.hand) >= before + 1
@@ -165,7 +177,11 @@ def test_event_mission_triggers_ignore_red_army_actor():
     game._track_event_purchase(bought, original_cost={"money": 1, "propaganda": 0}, player=non_red)
     assert game.event_progress["count"] == 1, "non-red purchases should satisfy event-card mission conditions"
     success_payload = game._event_display_payload()
-    assert success_payload["result_text"] == "非紅軍任務成功"
+    assert success_payload["result_text"] == "非紅軍任務條件已達成，等待全體玩家行動結束後結算"
+    game.turn_phase = TurnPhase.ACTION
+    settle_round_event(game, "settle shared mission success")
+    settled_success_payload = game._event_display_payload()
+    assert settled_success_payload["result_text"] == "非紅軍任務成功"
 
     game.event_progress = {"count": 0, "required": 1, "succeeded": False, "settled": True, "status": "failure"}
     failure_payload = game._event_display_payload()
@@ -175,7 +191,7 @@ def test_event_mission_triggers_ignore_red_army_actor():
         "red_progress": 0,
         "non_red_progress": success_payload["progress"]["count"],
         "checked_triggers": checked_triggers + ["buy_card"],
-        "success_result_text": success_payload["result_text"],
+        "success_result_text": settled_success_payload["result_text"],
         "failure_result_text": failure_payload["result_text"],
     }
 
@@ -234,6 +250,7 @@ def test_national_people_congress_faction_ability_success_draws():
     assert_ok(game.advance_turn_phase(), "enter action")
     assert_ok(game._activated_faction_action(player, "民主陣線"), "use faction ability")
     assert game.event_progress["succeeded"] is True
+    settle_round_event(game, "settle npc success at round end")
     assert game.event_progress["settled"] is True
     assert "獎勵抽牌" in names(player.hand)
     return {"event": "全國人大召開", "progress": game.event_progress, "hand": names(player.hand), "discard": names(player.deck.discard_pile)}
@@ -269,6 +286,7 @@ def test_tibet_border_build_wall_org_grants_two_moves():
     assert_ok(game.advance_turn_phase(), "enter action")
     assert_ok(game.build_organization("北京"), "build wall org")
     assert game.event_progress["succeeded"] is True
+    settle_round_event(game, "settle border success at round end")
     assert game.event_progress["settled"] is True
     assert player.moves_left == 2
     return {"event": "藏印邊境軍事對峙", "progress": game.event_progress, "moves_left": player.moves_left, "organizations": player.organizations}
@@ -283,6 +301,7 @@ def test_east_turkestan_success_and_failure_paths():
     assert_ok(success_game.advance_turn_phase(), "enter action success")
     assert_ok(success_game.play_card(0, mode="resource"), "play propaganda card")
     assert success_game.event_progress["succeeded"] is True
+    settle_round_event(success_game, "settle east turkestan success at round end")
     assert success_game.static_purchase_supply["宣傳家"] == 0
     assert "宣傳家" in names(success_player.deck.discard_pile)
 
@@ -315,8 +334,10 @@ def test_trade_war_purchase_trigger_topdecks_from_discard():
     assert_ok(game.advance_turn_phase(), "draw trade war event")
     assert_ok(game.advance_turn_phase(), "enter action")
     result = assert_ok(game.buy_card(static_count), "buy total-cost-4 card")
-    assert result.get("pending_choice") is True, result
+    assert not result.get("pending_choice"), result
     assert game.event_progress["succeeded"] is True
+    result = settle_round_event(game, "settle trade war success at round end")
+    assert result.get("pending_choice") is True, result
     assert game.event_progress["settled"] is True
     choice = game.state()["pending_choice"]
     assert choice["choice_key"] == "event_topdeck_from_discard"
@@ -356,6 +377,9 @@ def test_trade_war_purchase_trigger_accepts_anglo_support_by_name():
     assert_ok(game.advance_turn_phase(), "draw trade war event")
     assert_ok(game.advance_turn_phase(), "enter action")
     result = assert_ok(game.buy_card(static_count), "buy 英美奧援 by name")
+    assert not result.get("pending_choice"), result
+    assert game.event_progress["succeeded"] is True
+    result = settle_round_event(game, "settle trade war name success at round end")
     assert result.get("pending_choice") is True, result
     choice = game.state()["pending_choice"]
     assert choice["choice_key"] == "event_topdeck_from_discard"
@@ -376,8 +400,10 @@ def test_elite_defection_trashes_from_hand_after_three_moves():
     assert_ok(game.move_organization("桃園", "新竹", mode="rail"), "first move")
     assert_ok(game.move_organization("基隆", "新北", mode="road"), "second move")
     assert_ok(game.move_organization("臺中", "南投", mode="road"), "third move")
-    assert game.pending_choice is not None
+    assert game.pending_choice is None
     assert game.event_progress["succeeded"] is True
+    settle_round_event(game, "settle elite defection success at round end")
+    assert game.pending_choice is not None
     assert game.event_progress["settled"] is True
     choice = game.state()["pending_choice"]
     assert choice["choice_key"] == "trash_from_hand_or_discard"
@@ -408,6 +434,7 @@ def test_elite_defection_trashes_from_discard_after_three_moves():
     assert_ok(game.move_organization("桃園", "新竹", mode="rail"), "first move")
     assert_ok(game.move_organization("基隆", "新北", mode="road"), "second move")
     assert_ok(game.move_organization("臺中", "南投", mode="road"), "third move")
+    settle_round_event(game, "settle elite defection discard-zone success at round end")
     choice = game.state()["pending_choice"]
     assert choice["choice_key"] == "trash_from_hand_or_discard"
     resolve = assert_ok(game.resolve_pending_choice(player.id, 1), "trash discard card")
