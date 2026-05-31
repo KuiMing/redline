@@ -20,10 +20,17 @@ FAMILIES = {
     'uyghur_family': {
         'label': '維吾爾',
         'bases': ['伊斯坦堡', '慕尼黑', '華盛頓', '阿拉木圖'],
+        'expected_ability_names': {
+            '慕尼黑': ['基金會'],
+            '華盛頓': ['基金會'],
+        },
     },
     'tibet_family': {
         'label': '西藏',
         'bases': ['達蘭薩拉', '德拉敦', '哲古宗'],
+        'expected_ability_names': {
+            '達蘭薩拉': ['基金會'],
+        },
     },
 }
 
@@ -74,6 +81,11 @@ def main():
                 detail_base_names = [b.get('name') for b in detail.get('bases', []) if isinstance(b, dict)]
                 if base_name not in detail_base_names:
                     errors.append(f'detail bases missing {base_name}: {detail_base_names}')
+                ability_names = [a.get('name') for a in detail.get('abilities', []) if isinstance(a, dict)]
+                check['ability_names'] = ability_names
+                for expected_name in spec.get('expected_ability_names', {}).get(base_name, []):
+                    if expected_name not in ability_names:
+                        errors.append(f'expected ability name missing: {expected_name}; got {ability_names}')
             check['ok'] = not errors
             check['errors'] = errors
             checks.append(check)

@@ -15,6 +15,10 @@
       "resolved_base": [
         "伊斯坦堡"
       ],
+      "ability_names": [
+        "游擊隊",
+        "新疆社會管控"
+      ],
       "ok": true,
       "errors": []
     },
@@ -27,6 +31,12 @@
       "win_conditions_count": 1,
       "resolved_base": [
         "慕尼黑"
+      ],
+      "ability_names": [
+        "基金會",
+        "東突厥斯坦政府",
+        "非暴力",
+        "新疆社會管控"
       ],
       "ok": true,
       "errors": []
@@ -41,6 +51,10 @@
       "resolved_base": [
         "華盛頓"
       ],
+      "ability_names": [
+        "基金會",
+        "新疆社會管控"
+      ],
       "ok": true,
       "errors": []
     },
@@ -53,6 +67,10 @@
       "win_conditions_count": 1,
       "resolved_base": [
         "阿拉木圖"
+      ],
+      "ability_names": [
+        "民族調和",
+        "新疆社會管控"
       ],
       "ok": true,
       "errors": []
@@ -67,6 +85,11 @@
       "resolved_base": [
         "達蘭薩拉"
       ],
+      "ability_names": [
+        "基金會",
+        "達賴救援",
+        "非暴力"
+      ],
       "ok": true,
       "errors": []
     },
@@ -80,6 +103,10 @@
       "resolved_base": [
         "德拉敦"
       ],
+      "ability_names": [
+        "游擊隊",
+        "印度研究分析室"
+      ],
       "ok": true,
       "errors": []
     },
@@ -92,6 +119,9 @@
       "win_conditions_count": 1,
       "resolved_base": [
         "哲古宗"
+      ],
+      "ability_names": [
+        "游擊隊"
       ],
       "ok": true,
       "errors": []

@@ -1,0 +1,21 @@
+{
+  "scenario": "Lobby 陣營選擇西藏、根據地選擇達蘭薩拉",
+  "screenshot": "docs/records/faction-ui/LOBBY_TIBET_DHARAMSALA_FOUNDATION_UI_2026_05_31.png",
+  "browser_snapshot_evidence": {
+    "info": "目前陣營：西藏｜根據地：達蘭薩拉",
+    "title": "西藏（達蘭薩拉）",
+    "abilities": "能力基金會：當您每回合第1次打出購買費用有資金的牌時：獲得2點資金",
+    "rules": "規則達賴救援：在遊戲開始時額外將2張宣傳卡放入起始牌庫。非暴力：禁止持有或裝備類卡牌。",
+    "win": "獲勝條件回合結束時在牆內擁有至少 14 個有效組織。",
+    "confirm_visible": true
+  },
+  "checks": {
+    "title_is_tibet_dharamsala": true,
+    "ability_contains_基金會": true,
+    "ability_not_contains_共和會": true,
+    "ability_not_contains_共合會": true,
+    "official_browser_screenshot_captured": true
+  },
+  "ok": true,
+  "note": "Vision analysis failed after the real browser screenshot was captured, so this record pairs the original screenshot with browser snapshot/console text evidence."
+}
