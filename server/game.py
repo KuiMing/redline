@@ -84,6 +84,7 @@ class Game:
         self.id = str(uuid.uuid4())
         self.turn = 1
         self.current_player_index = 0
+        self.round_start_player_index = 0
         self.game_phase = GamePhase.SETUP
         self.turn_phase = TurnPhase.EVENT
         self.winner = None
@@ -3861,7 +3862,7 @@ class Game:
                 self.era_notification = None
 
         self.current_player_index = (self.current_player_index + 1) % len(self.players)
-        if self.current_player_index == 0:
+        if self.current_player_index == getattr(self, 'round_start_player_index', 0):
             self.turn += 1
         self.turn_phase = TurnPhase.EVENT
         self._start_event_phase()

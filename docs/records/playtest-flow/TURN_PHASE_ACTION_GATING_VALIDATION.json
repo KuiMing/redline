@@ -1,7 +1,7 @@
 {
   "summary": {
     "passed": true,
-    "passed_count": 9,
+    "passed_count": 11,
     "failed_count": 0
   },
   "checks": [
@@ -92,6 +92,34 @@
           "failure_text": "無"
         },
         "event_deck_count": 24
+      }
+    },
+    {
+      "name": "formal 2p lobby keeps turn 1 when Ben ends and passes to Red Army",
+      "passed": true,
+      "details": {
+        "step": "ben_end_to_red_event",
+        "result": {
+          "success": true
+        },
+        "turn": 1,
+        "turn_phase": "event",
+        "current_player": "host",
+        "current_faction": "red_army"
+      }
+    },
+    {
+      "name": "formal 2p lobby increments to turn 2 only after Red Army ends",
+      "passed": true,
+      "details": {
+        "step": "red_end_to_next_round",
+        "result": {
+          "success": true
+        },
+        "turn": 2,
+        "turn_phase": "event",
+        "current_player": "ally",
+        "current_faction": "taiwan_green"
       }
     },
     {
@@ -715,7 +743,7 @@
     },
     {
       "step": "formal_lobby_start_event_state",
-      "game_id": "9878fdc7-1faa-4134-a101-87e904d6b710",
+      "game_id": "abc67c53-cdf0-4996-8477-3b8dd70ecd67",
       "start_result": {
         "success": true,
         "market_mode": "sample_53"
@@ -753,6 +781,73 @@
         "failure_text": "無"
       },
       "event_deck_count": 24
+    },
+    {
+      "step": "formal_lobby_round_flow_after_ben_turn",
+      "round_start_player": "ally",
+      "round_start_player_index": 1,
+      "flow": [
+        {
+          "step": "ben_event_to_action",
+          "result": {
+            "success": true
+          },
+          "turn": 1,
+          "turn_phase": "action",
+          "current_player": "ally",
+          "current_faction": "taiwan_green"
+        },
+        {
+          "step": "ben_action_to_end",
+          "result": {
+            "success": true
+          },
+          "turn": 1,
+          "turn_phase": "end",
+          "current_player": "ally",
+          "current_faction": "taiwan_green"
+        },
+        {
+          "step": "ben_end_to_red_event",
+          "result": {
+            "success": true
+          },
+          "turn": 1,
+          "turn_phase": "event",
+          "current_player": "host",
+          "current_faction": "red_army"
+        },
+        {
+          "step": "red_event_to_action",
+          "result": {
+            "success": true
+          },
+          "turn": 1,
+          "turn_phase": "action",
+          "current_player": "host",
+          "current_faction": "red_army"
+        },
+        {
+          "step": "red_action_to_end",
+          "result": {
+            "success": true
+          },
+          "turn": 1,
+          "turn_phase": "end",
+          "current_player": "host",
+          "current_faction": "red_army"
+        },
+        {
+          "step": "red_end_to_next_round",
+          "result": {
+            "success": true
+          },
+          "turn": 2,
+          "turn_phase": "event",
+          "current_player": "ally",
+          "current_faction": "taiwan_green"
+        }
+      ]
     },
     {
       "step": "event_phase_action_attempt",

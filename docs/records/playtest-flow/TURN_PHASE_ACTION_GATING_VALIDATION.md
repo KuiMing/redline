@@ -3,7 +3,7 @@
 日期：2026-05-31
 
 - passed: True
-- passed_count: 9
+- passed_count: 11
 - failed_count: 0
 
 ## Checks
@@ -13,6 +13,10 @@
   - details: {'current_event': {'id': 'trade_war', 'name': '貿易戰加劇', 'type': 'mission', 'trigger': {'type': 'buy_card', 'count': 1, 'min_cost': 4, 'card_names': ['英美奧援']}, 'success': {'type': 'topdeck_from_discard', 'count': 1}, 'failure': {'type': 'none'}, 'progress': {'count': 0, 'required': 1, 'succeeded': False, 'settled': False, 'status': 'active'}, 'status': 'active', 'result_text': '非紅軍任務進行中', 'trigger_text': '購買符合條件的卡牌（總費用 4 點以上 / 英美奧援）至少 1 次', 'success_text': '從棄牌堆選 1 張置於牌庫頂', 'failure_text': '無'}, 'event_deck_count': 24}
 - PASS: formal lobby start immediately exposes current event card
   - details: {'start_result': {'success': True, 'market_mode': 'sample_53'}, 'turn_phase': <TurnPhase.EVENT: 'event'>, 'current_event': {'id': 'tibet_border_conflict', 'name': '藏印邊境軍事對峙', 'type': 'mission', 'trigger': {'type': 'build_organization', 'count': 1, 'scope': '牆內'}, 'success': {'type': 'move', 'count': 2}, 'failure': {'type': 'none'}, 'progress': {'count': 0, 'required': 1, 'succeeded': False, 'settled': False, 'status': 'active'}, 'status': 'active', 'result_text': '非紅軍任務進行中', 'trigger_text': '建立組織（牆內）至少 1 次', 'success_text': '獲得 2 次組織遷移', 'failure_text': '無'}, 'event_deck_count': 24}
+- PASS: formal 2p lobby keeps turn 1 when Ben ends and passes to Red Army
+  - details: {'step': 'ben_end_to_red_event', 'result': {'success': True}, 'turn': 1, 'turn_phase': <TurnPhase.EVENT: 'event'>, 'current_player': 'host', 'current_faction': 'red_army'}
+- PASS: formal 2p lobby increments to turn 2 only after Red Army ends
+  - details: {'step': 'red_end_to_next_round', 'result': {'success': True}, 'turn': 2, 'turn_phase': <TurnPhase.EVENT: 'event'>, 'current_player': 'ally', 'current_faction': 'taiwan_green'}
 - PASS: event phase blocks action card play
   - details: {'error': 'Not in ACTION phase'}
 - PASS: advance from event reaches action for same current player
@@ -35,13 +39,18 @@
 - current_event: {'id': 'trade_war', 'name': '貿易戰加劇', 'type': 'mission', 'trigger': {'type': 'buy_card', 'count': 1, 'min_cost': 4, 'card_names': ['英美奧援']}, 'success': {'type': 'topdeck_from_discard', 'count': 1}, 'failure': {'type': 'none'}, 'progress': {'count': 0, 'required': 1, 'succeeded': False, 'settled': False, 'status': 'active'}, 'status': 'active', 'result_text': '非紅軍任務進行中', 'trigger_text': '購買符合條件的卡牌（總費用 4 點以上 / 英美奧援）至少 1 次', 'success_text': '從棄牌堆選 1 張置於牌庫頂', 'failure_text': '無'}
 
 ### formal_lobby_start_event_state
-- game_id: 9878fdc7-1faa-4134-a101-87e904d6b710
+- game_id: abc67c53-cdf0-4996-8477-3b8dd70ecd67
 - start_result: {'success': True, 'market_mode': 'sample_53'}
 - turn: 1
 - turn_phase: TurnPhase.EVENT
 - current_player: ally
 - current_event: {'id': 'tibet_border_conflict', 'name': '藏印邊境軍事對峙', 'type': 'mission', 'trigger': {'type': 'build_organization', 'count': 1, 'scope': '牆內'}, 'success': {'type': 'move', 'count': 2}, 'failure': {'type': 'none'}, 'progress': {'count': 0, 'required': 1, 'succeeded': False, 'settled': False, 'status': 'active'}, 'status': 'active', 'result_text': '非紅軍任務進行中', 'trigger_text': '建立組織（牆內）至少 1 次', 'success_text': '獲得 2 次組織遷移', 'failure_text': '無'}
 - event_deck_count: 24
+
+### formal_lobby_round_flow_after_ben_turn
+- round_start_player: ally
+- round_start_player_index: 1
+- flow: [{'step': 'ben_event_to_action', 'result': {'success': True}, 'turn': 1, 'turn_phase': <TurnPhase.ACTION: 'action'>, 'current_player': 'ally', 'current_faction': 'taiwan_green'}, {'step': 'ben_action_to_end', 'result': {'success': True}, 'turn': 1, 'turn_phase': <TurnPhase.END: 'end'>, 'current_player': 'ally', 'current_faction': 'taiwan_green'}, {'step': 'ben_end_to_red_event', 'result': {'success': True}, 'turn': 1, 'turn_phase': <TurnPhase.EVENT: 'event'>, 'current_player': 'host', 'current_faction': 'red_army'}, {'step': 'red_event_to_action', 'result': {'success': True}, 'turn': 1, 'turn_phase': <TurnPhase.ACTION: 'action'>, 'current_player': 'host', 'current_faction': 'red_army'}, {'step': 'red_action_to_end', 'result': {'success': True}, 'turn': 1, 'turn_phase': <TurnPhase.END: 'end'>, 'current_player': 'host', 'current_faction': 'red_army'}, {'step': 'red_end_to_next_round', 'result': {'success': True}, 'turn': 2, 'turn_phase': <TurnPhase.EVENT: 'event'>, 'current_player': 'ally', 'current_faction': 'taiwan_green'}]
 
 ### event_phase_action_attempt
 - card: 樂捐者
