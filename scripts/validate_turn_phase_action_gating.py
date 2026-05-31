@@ -8,6 +8,7 @@ if str(BASE) not in sys.path:
     sys.path.insert(0, str(BASE))
 
 from server.game import Game, TurnPhase
+from server.main import create_room, join_game, choose_faction, set_ready, start_game, manager
 
 RECORD_DIR = BASE / 'docs' / 'records' / 'playtest-flow'
 
@@ -47,6 +48,26 @@ def first_current_player_action_card(game):
     return None, None
 
 
+def setup_formal_lobby_game():
+    create = create_room()
+    game_id = create['game_id']
+    host_id = create['host_id']
+    join = join_game({'game_id': game_id, 'name': 'ally'})
+    ally_id = join['player_id']
+    choose_faction({'game_id': game_id, 'player_id': host_id, 'faction_id': 'red_army'})
+    choose_faction({'game_id': game_id, 'player_id': ally_id, 'faction_id': 'taiwan_green', 'base_name': '臺北'})
+    set_ready({'game_id': game_id, 'player_id': host_id, 'ready': True})
+    set_ready({'game_id': game_id, 'player_id': ally_id, 'ready': True})
+    start = start_game({'game_id': game_id, 'player_id': host_id, 'market_mode': 'sample_53'})
+    return {
+        'game_id': game_id,
+        'host_id': host_id,
+        'ally_id': ally_id,
+        'start_result': start,
+        'game': manager.games.get(game_id),
+    }
+
+
 def run_validation():
     random.seed(20260531)
     game = Game([('p1', 'player1'), ('p2', 'player2'), ('p3', 'player3')])
@@ -67,6 +88,30 @@ def run_validation():
         'turn': game.turn,
         'turn_phase': str(game.turn_phase),
         'current_player': game.current_player().name,
+    })
+    assert_true(checks, 'direct engine base selection immediately exposes current event', bool(state_after_setup.get('current_event')), {
+        'current_event': state_after_setup.get('current_event'),
+        'event_deck_count': state_after_setup.get('event_deck_count'),
+    })
+
+    lobby_setup = setup_formal_lobby_game()
+    lobby_game = lobby_setup['game']
+    lobby_state = lobby_game.state() if lobby_game else {}
+    trace.append({
+        'step': 'formal_lobby_start_event_state',
+        'game_id': lobby_setup['game_id'],
+        'start_result': lobby_setup['start_result'],
+        'turn': lobby_state.get('turn'),
+        'turn_phase': lobby_state.get('turn_phase'),
+        'current_player': lobby_state.get('current_player'),
+        'current_event': lobby_state.get('current_event'),
+        'event_deck_count': lobby_state.get('event_deck_count'),
+    })
+    assert_true(checks, 'formal lobby start immediately exposes current event card', bool(lobby_state.get('current_event')) and lobby_state.get('turn_phase') == 'event', {
+        'start_result': lobby_setup['start_result'],
+        'turn_phase': lobby_state.get('turn_phase'),
+        'current_event': lobby_state.get('current_event'),
+        'event_deck_count': lobby_state.get('event_deck_count'),
     })
 
     idx, card_name = first_current_player_action_card(game)

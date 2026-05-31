@@ -283,6 +283,8 @@ def start_game(payload: dict):
         game.game_phase = GamePhase.MAIN
         first_non_red = next((idx for idx, player in enumerate(game.players) if player.faction_id != 'red_army'), 0)
         game.current_player_index = first_non_red
+        if game.turn_phase == TurnPhase.EVENT and not game.current_event:
+            game._start_event_phase()
 
     manager.games[game_id] = game
     manager.connections.setdefault(game_id, {})

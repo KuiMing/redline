@@ -1,0 +1,14 @@
+{
+  "date": "2026-05-31",
+  "topic": "Formal lobby/start initial event card visibility",
+  "url": "http://127.0.0.1:8000/?game_id=a7b11a8d-cddc-4c97-92f6-5e598c2cf38c&player_id=ab747916-f028-4e9f-9bf5-5b65696e378d",
+  "observed": {
+    "turn_phase": "event",
+    "current_event": "貿易戰加劇",
+    "event_panel_display": "block",
+    "advance_button": "開始購買階段",
+    "event_panel_text": "目前事件\n貿易戰加劇\n類型：任務｜狀態：進行中\n任務結果：非紅軍任務進行中\n任務條件：購買符合條件的卡牌（總費用 4 點以上 / 英美奧援）至少 1 次\n進度：0/1\n成功獎勵：從棄牌堆選 1 張置於牌庫頂\n失敗懲罰：無"
+  },
+  "screenshot": "docs/records/playtest-flow/FORMAL_START_EVENT_CARD_VISIBLE_UI_2026_05_31.png",
+  "note": "Captured from the official browser UI after a real /create → /join → /choose-faction → /ready → /start flow. Browser vision analysis failed after screenshot capture, so live DOM/state evidence is paired with the original screenshot artifact."
+}

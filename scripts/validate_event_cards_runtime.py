@@ -35,6 +35,7 @@ def make_game(event_name="歲月靜好"):
     game.event_progress = None
     game.event_modifiers = []
     game.event_notification = None
+    game.pending_choice = None
     return game
 
 
