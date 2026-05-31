@@ -156,6 +156,8 @@ class Game:
         self.pending_choice = None
         self.era_notification = None
         self.red_army_destroyed_bases = set()
+        if self.game_phase == GamePhase.MAIN and self.turn_phase == TurnPhase.EVENT:
+            self._start_event_phase()
 
     # ---------- Init ----------
 
@@ -2585,6 +2587,8 @@ class Game:
 
         if not self.pending_base_choices:
             self.game_phase = GamePhase.MAIN
+            if self.turn_phase == TurnPhase.EVENT and not self.current_event:
+                self._start_event_phase()
         return {"success": True}
 
     def _assign_starting_bases(self):
@@ -3860,6 +3864,7 @@ class Game:
         if self.current_player_index == 0:
             self.turn += 1
         self.turn_phase = TurnPhase.EVENT
+        self._start_event_phase()
 
     def _check_victory(self):
         win, winner = self.victory_engine.evaluate(self)

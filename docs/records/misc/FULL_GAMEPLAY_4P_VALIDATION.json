@@ -260,7 +260,8 @@
       "player": "player1",
       "move_detail": null,
       "result": {
-        "skipped": true
+        "skipped": true,
+        "reason": "no move points"
       },
       "orgs_after": {
         "三亞": 1
@@ -299,14 +300,14 @@
         "追隨者",
         "追隨者",
         "追隨者",
-        "追隨者",
-        "樂捐者"
+        "樂捐者",
+        "追隨者"
       ],
       "hand_after": [
         "追隨者",
         "追隨者",
-        "追隨者",
-        "樂捐者"
+        "樂捐者",
+        "追隨者"
       ],
       "result": {
         "success": true
@@ -322,7 +323,8 @@
       "player": "player2",
       "move_detail": null,
       "result": {
-        "skipped": true
+        "skipped": true,
+        "reason": "no move points"
       },
       "orgs_after": {
         "北京": 1
@@ -385,7 +387,8 @@
       "player": "player3",
       "move_detail": null,
       "result": {
-        "skipped": true
+        "skipped": true,
+        "reason": "no move points"
       },
       "orgs_after": {
         "潮州": 1
@@ -447,7 +450,8 @@
       "player": "player4",
       "move_detail": null,
       "result": {
-        "skipped": true
+        "skipped": true,
+        "reason": "no move points"
       },
       "orgs_after": {
         "臺北": 1
@@ -509,7 +513,8 @@
       "player": "player1",
       "move_detail": null,
       "result": {
-        "skipped": true
+        "skipped": true,
+        "reason": "no move points"
       },
       "orgs_after": {
         "三亞": 1
@@ -519,42 +524,60 @@
     {
       "step": "cycle_5_advance_to_end",
       "turn": 2,
-      "turn_phase": "end",
+      "turn_phase": "action",
       "current_player": "player1"
     },
     {
       "step": "cycle_5_end_turn",
       "turn": 2,
-      "turn_phase": "event",
-      "current_player": "player2"
+      "turn_phase": "action",
+      "current_player": "player1"
     },
     {
       "step": "cycle_6_advance_to_action_before",
       "turn": 2,
-      "turn_phase": "event",
-      "current_player": "player2"
+      "turn_phase": "action",
+      "current_player": "player1"
     },
     {
       "step": "cycle_6_advance_to_action_after",
       "turn": 2,
       "turn_phase": "action",
-      "current_player": "player2"
+      "current_player": "player1"
+    },
+    {
+      "step": "cycle_6_after_advance_to_action_resolve_pending_choices",
+      "resolved": [
+        {
+          "player_id": "p1",
+          "choice_type": "multi_card_choice",
+          "choice_key": "event_discard_self",
+          "index": [
+            0
+          ],
+          "result": {
+            "success": true,
+            "chosen_cards": [
+              "追隨者"
+            ]
+          },
+          "turn": 2,
+          "turn_phase": "action",
+          "current_player": "player1"
+        }
+      ]
     },
     {
       "step": "cycle_6_play_card",
-      "player": "player2",
-      "faction": "red_army",
+      "player": "player1",
+      "faction": "republican",
       "hand_before": [
-        "樂捐者",
         "追隨者",
         "樂捐者",
-        "追隨者",
         "追隨者"
       ],
       "hand_after": [
-        "追隨者",
         "樂捐者",
-        "追隨者",
         "追隨者"
       ],
       "result": {
@@ -568,13 +591,14 @@
     },
     {
       "step": "cycle_6_move",
-      "player": "player2",
+      "player": "player1",
       "move_detail": null,
       "result": {
-        "skipped": true
+        "skipped": true,
+        "reason": "no move points"
       },
       "orgs_after": {
-        "北京": 1
+        "三亞": 1
       },
       "moves_left_after": 0
     },
@@ -582,42 +606,42 @@
       "step": "cycle_6_advance_to_end",
       "turn": 2,
       "turn_phase": "end",
-      "current_player": "player2"
+      "current_player": "player1"
     },
     {
       "step": "cycle_6_end_turn",
       "turn": 2,
       "turn_phase": "event",
-      "current_player": "player3"
+      "current_player": "player2"
     },
     {
       "step": "cycle_7_advance_to_action_before",
       "turn": 2,
       "turn_phase": "event",
-      "current_player": "player3"
+      "current_player": "player2"
     },
     {
       "step": "cycle_7_advance_to_action_after",
       "turn": 2,
       "turn_phase": "action",
-      "current_player": "player3"
+      "current_player": "player2"
     },
     {
       "step": "cycle_7_play_card",
-      "player": "player3",
-      "faction": "chaoshan",
+      "player": "player2",
+      "faction": "red_army",
       "hand_before": [
-        "追隨者",
         "樂捐者",
         "追隨者",
         "追隨者",
-        "樂捐者"
+        "樂捐者",
+        "紅軍奧援"
       ],
       "hand_after": [
+        "追隨者",
+        "追隨者",
         "樂捐者",
-        "追隨者",
-        "追隨者",
-        "樂捐者"
+        "紅軍奧援"
       ],
       "result": {
         "success": true
@@ -630,13 +654,14 @@
     },
     {
       "step": "cycle_7_move",
-      "player": "player3",
+      "player": "player2",
       "move_detail": null,
       "result": {
-        "skipped": true
+        "skipped": true,
+        "reason": "no move points"
       },
       "orgs_after": {
-        "潮州": 1
+        "北京": 1
       },
       "moves_left_after": 0
     },
@@ -644,42 +669,42 @@
       "step": "cycle_7_advance_to_end",
       "turn": 2,
       "turn_phase": "end",
-      "current_player": "player3"
+      "current_player": "player2"
     },
     {
       "step": "cycle_7_end_turn",
       "turn": 2,
       "turn_phase": "event",
-      "current_player": "player4"
+      "current_player": "player3"
     },
     {
       "step": "cycle_8_advance_to_action_before",
       "turn": 2,
       "turn_phase": "event",
-      "current_player": "player4"
+      "current_player": "player3"
     },
     {
       "step": "cycle_8_advance_to_action_after",
       "turn": 2,
       "turn_phase": "action",
-      "current_player": "player4"
+      "current_player": "player3"
     },
     {
       "step": "cycle_8_play_card",
-      "player": "player4",
-      "faction": "taiwan_green",
+      "player": "player3",
+      "faction": "chaoshan",
       "hand_before": [
         "追隨者",
+        "樂捐者",
         "追隨者",
         "追隨者",
-        "追隨者",
-        "樂捐者"
+        "追隨者"
       ],
       "hand_after": [
+        "樂捐者",
         "追隨者",
         "追隨者",
-        "追隨者",
-        "樂捐者"
+        "追隨者"
       ],
       "result": {
         "success": true
@@ -692,27 +717,28 @@
     },
     {
       "step": "cycle_8_move",
-      "player": "player4",
+      "player": "player3",
       "move_detail": null,
       "result": {
-        "skipped": true
+        "skipped": true,
+        "reason": "no move points"
       },
       "orgs_after": {
-        "臺北": 1
+        "潮州": 1
       },
       "moves_left_after": 0
     },
     {
       "step": "cycle_8_advance_to_end",
       "turn": 2,
-      "turn_phase": "end",
-      "current_player": "player4"
+      "turn_phase": "action",
+      "current_player": "player3"
     },
     {
       "step": "cycle_8_end_turn",
-      "turn": 3,
-      "turn_phase": "event",
-      "current_player": "player1"
+      "turn": 2,
+      "turn_phase": "action",
+      "current_player": "player3"
     },
     {
       "step": "before_forced_victory_check",
@@ -720,48 +746,116 @@
       "faction": "taiwan_green",
       "org_count": 14,
       "forced_red_survival": false,
-      "turn": 3,
-      "turn_phase": "event"
+      "turn": 2,
+      "turn_phase": "action"
     },
     {
       "step": "after_forced_victory_check",
       "did_win": true,
       "game_phase": "finished",
       "winner": "player4",
-      "turn": 3,
-      "turn_phase": "event"
+      "turn": 2,
+      "turn_phase": "action"
     }
   ],
   "final_state": {
-    "turn": 3,
+    "turn": 2,
     "game_phase": "finished",
-    "turn_phase": "event",
+    "turn_phase": "action",
     "winner": "player4",
-    "current_player": "player1",
+    "current_player": "player3",
     "active_eras": [],
     "active_era_details": [],
     "era_notification": null,
+    "current_event": {
+      "id": "elite_defection",
+      "name": "紅軍權貴出逃",
+      "type": "mission",
+      "trigger": {
+        "type": "move_organization",
+        "count": 3
+      },
+      "success": {
+        "type": "trash_from_hand_or_discard",
+        "count": 1
+      },
+      "failure": {
+        "type": "discard_self",
+        "count": 1
+      },
+      "progress": {
+        "count": 0,
+        "required": 3,
+        "succeeded": false,
+        "settled": true,
+        "status": "failure"
+      },
+      "status": "failure",
+      "result_text": "非紅軍任務失敗，紅軍效果生效",
+      "trigger_text": "進行組織遷移至少 3 次",
+      "success_text": "從手牌或棄牌堆移除 1 張牌",
+      "failure_text": "己方選 1 張手牌棄掉"
+    },
+    "event_deck_count": 18,
+    "red_army_action_count": 0,
+    "red_army_action_limit": 3,
+    "event_discard_count": 7,
+    "event_modifiers": [],
     "market_mode": "sample_53",
     "pending_base_choices": {},
-    "pending_choice": null,
+    "pending_choice": {
+      "type": "multi_card_choice",
+      "choice_key": "event_discard_self",
+      "player_id": "p3",
+      "prompt": "紅軍權貴出逃：請選擇 1 張手牌棄掉。",
+      "source_name": "紅軍權貴出逃",
+      "count": 1,
+      "min_count": null,
+      "mode": null,
+      "acting_player_id": null,
+      "acting_player_name": null,
+      "played_card_name": null,
+      "region": null,
+      "free": null,
+      "ignore_distance": null,
+      "cards": [
+        "樂捐者",
+        "追隨者",
+        "追隨者",
+        "追隨者"
+      ],
+      "options": [],
+      "towns": [],
+      "targets": [],
+      "step": null
+    },
+    "faction_action_used": false,
     "action_log": [
+      "[Turn 1] Event drawn: 歲月靜好 (no-op)",
       "[Turn 1] player1 played 追隨者",
       "[Turn 1] End of turn for player1",
+      "[Turn 1] Event drawn: 歲月靜好 (no-op)",
       "[Turn 1] player2 played 追隨者",
       "[Turn 1] End of turn for player2",
+      "[Turn 1] Event drawn: 貿易戰加劇",
       "[Turn 1] player3 triggered 商貿組織 and drew 1 card",
       "[Turn 1] player3 played 樂捐者",
+      "[Turn 1] Event failure: no effect",
       "[Turn 1] End of turn for player3",
+      "[Turn 1] Event drawn: 藏印邊境軍事對峙",
       "[Turn 1] player4 played 追隨者",
+      "[Turn 1] Event failure: no effect",
       "[Turn 1] End of turn for player4",
+      "[Turn 2] Event drawn: 重大災難",
       "[Turn 2] player1 played 樂捐者",
+      "[Turn 2] player1 discarded 1 chosen card(s)",
+      "[Turn 2] player1 played 追隨者",
       "[Turn 2] End of turn for player1",
+      "[Turn 2] Event drawn: 歲月靜好 (no-op)",
       "[Turn 2] player2 played 樂捐者",
       "[Turn 2] End of turn for player2",
-      "[Turn 2] player3 played 追隨者",
-      "[Turn 2] End of turn for player3",
-      "[Turn 2] player4 played 追隨者",
-      "[Turn 2] End of turn for player4"
+      "[Turn 2] Event drawn: 紅軍權貴出逃",
+      "[Turn 2] player3 played 追隨者"
     ],
     "purchase_area": [
       "宣傳家",
@@ -770,11 +864,11 @@
       "資本家",
       "分神",
       "內鬥",
-      "分神",
-      "天方奧援",
-      "南洋奧援",
-      "思想建設",
-      "交通經驗乙"
+      "英美奧援",
+      "網羅人才",
+      "北國奧援",
+      "武裝集團",
+      "歐洲奧援"
     ],
     "static_purchase_supply": {
       "宣傳家": 1,
@@ -947,12 +1041,13 @@
         "hand": [
           "追隨者",
           "樂捐者",
-          "追隨者",
+          "樂捐者",
           "樂捐者",
           "追隨者"
         ],
         "deck_count": 5,
         "discard_count": 0,
+        "discard_pile": [],
         "orgs": {
           "三亞": 1
         }
@@ -968,14 +1063,15 @@
         },
         "moves_left": 0,
         "hand": [
-          "樂捐者",
-          "樂捐者",
           "追隨者",
           "追隨者",
+          "追隨者",
+          "樂捐者",
           "追隨者"
         ],
-        "deck_count": 5,
+        "deck_count": 6,
         "discard_count": 0,
+        "discard_pile": [],
         "orgs": {
           "北京": 1
         }
@@ -991,14 +1087,16 @@
         },
         "moves_left": 0,
         "hand": [
-          "追隨者",
           "樂捐者",
           "追隨者",
           "追隨者",
           "追隨者"
         ],
-        "deck_count": 0,
-        "discard_count": 5,
+        "deck_count": 5,
+        "discard_count": 1,
+        "discard_pile": [
+          "追隨者"
+        ],
         "orgs": {
           "潮州": 1
         }
@@ -1014,14 +1112,21 @@
         },
         "moves_left": 0,
         "hand": [
-          "樂捐者",
+          "追隨者",
           "追隨者",
           "追隨者",
           "追隨者",
           "樂捐者"
         ],
-        "deck_count": 5,
-        "discard_count": 0,
+        "deck_count": 0,
+        "discard_count": 5,
+        "discard_pile": [
+          "追隨者",
+          "追隨者",
+          "樂捐者",
+          "追隨者",
+          "樂捐者"
+        ],
         "orgs": {
           "三亞": 1,
           "上海": 1,

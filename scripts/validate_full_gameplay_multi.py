@@ -120,6 +120,37 @@ def forced_victory_orgs(game, player):
     return orgs
 
 
+def resolve_pending_choices(game, trace, label, max_steps=12):
+    resolved = []
+    for step in range(max_steps):
+        choice = getattr(game, 'pending_choice', None)
+        if not choice:
+            break
+        player_id = choice.get('player_id')
+        choice_type = choice.get('type')
+        choice_key = choice.get('choice_key')
+        if not player_id:
+            resolved.append({'error': 'pending choice without player_id', 'choice': dict(choice)})
+            break
+        index = [0] if choice_type == 'multi_card_choice' and int(choice.get('count', 1) or 1) == 1 else 0
+        result = game.resolve_pending_choice(player_id, index)
+        resolved.append({
+            'player_id': player_id,
+            'choice_type': choice_type,
+            'choice_key': choice_key,
+            'index': index,
+            'result': result,
+            'turn': game.turn,
+            'turn_phase': game.turn_phase,
+            'current_player': game.current_player().name,
+        })
+        if isinstance(result, dict) and result.get('error'):
+            break
+    if resolved:
+        trace.append({'step': f'{label}_resolve_pending_choices', 'resolved': resolved})
+    return resolved
+
+
 def run_game(player_count):
     random.seed(20260510 + player_count)
     game = Game([(f"p{i}", f"player{i}") for i in range(1, player_count + 1)])
@@ -171,6 +202,15 @@ def run_game(player_count):
             "turn_phase": game.turn_phase,
             "current_player": game.current_player().name,
         })
+        resolve_pending_choices(game, trace, f"cycle_{cycle}_after_advance_to_action")
+        if game.turn_phase == TurnPhase.EVENT and not game.pending_choice:
+            game.advance_turn_phase()
+            trace.append({
+                "step": f"cycle_{cycle}_advance_to_action_after_pending_resolution",
+                "turn": game.turn,
+                "turn_phase": game.turn_phase,
+                "current_player": game.current_player().name,
+            })
 
         player = game.current_player()
         hand_before = [c.name for c in player.hand]
@@ -187,24 +227,25 @@ def run_game(player_count):
             "moves_left": player.moves_left,
         })
 
-        move_result = {"skipped": True}
+        move_result = {"skipped": True, "reason": "no move points"}
         move_detail = None
-        for from_town in list(player.organizations.keys()):
-            if from_town == player.base and player.organizations.get(from_town, 0) <= 1:
-                continue
-            town = game.map["towns"].get(from_town, {})
-            roads = list(town.get("road") or [])
-            rails = list(town.get("rail") or [])
-            if roads:
-                target = ALIAS_TOWNS.get(roads[0], roads[0])
-                move_result = game.move_organization(from_town, target, "road")
-                move_detail = {"from": from_town, "to": target, "mode": "road"}
-                break
-            if rails:
-                target = ALIAS_TOWNS.get(rails[0], rails[0])
-                move_result = game.move_organization(from_town, target, "rail")
-                move_detail = {"from": from_town, "to": target, "mode": "rail"}
-                break
+        if player.moves_left > 0:
+            for from_town in list(player.organizations.keys()):
+                if from_town == player.base and player.organizations.get(from_town, 0) <= 1:
+                    continue
+                town = game.map["towns"].get(from_town, {})
+                roads = list(town.get("road") or [])
+                rails = list(town.get("rail") or [])
+                if roads:
+                    target = ALIAS_TOWNS.get(roads[0], roads[0])
+                    move_result = game.move_organization(from_town, target, "road")
+                    move_detail = {"from": from_town, "to": target, "mode": "road"}
+                    break
+                if rails:
+                    target = ALIAS_TOWNS.get(rails[0], rails[0])
+                    move_result = game.move_organization(from_town, target, "rail")
+                    move_detail = {"from": from_town, "to": target, "mode": "rail"}
+                    break
         trace.append({
             "step": f"cycle_{cycle}_move",
             "player": player.name,
