@@ -656,6 +656,35 @@ body {
   transform: translateX(-50%);
 }
 
+.phase-secondary-btn {
+  position: absolute;
+  left: calc(50% - 158px);
+  transform: translateX(-50%);
+  appearance: none;
+  border-radius: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border: 1px solid rgba(248, 113, 113, 0.62);
+  background: linear-gradient(180deg, rgba(127, 29, 29, 0.96), rgba(69, 10, 10, 0.96));
+  color: #fee2e2;
+  box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.14), 0 10px 24px rgba(127, 29, 29, 0.24);
+}
+
+.phase-secondary-btn:hover {
+  filter: brightness(1.08);
+  transform: translateX(-50%) translateY(-1px);
+}
+
+.phase-secondary-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: grayscale(0.1);
+  transform: translateX(-50%);
+}
+
 .hud-main-row {
   display: flex;
   flex-wrap: wrap;

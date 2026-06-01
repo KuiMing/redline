@@ -1127,6 +1127,77 @@ function closeFactionActionModal() {
   if (overlay) overlay.style.display = 'none';
 }
 
+function openRedArmyAbilityModal(state = window.lastGameState || {}) {
+  const overlay = document.getElementById('factionActionModal');
+  const title = document.getElementById('factionActionModalTitle');
+  const desc = document.getElementById('factionActionModalDesc');
+  const choices = document.getElementById('factionActionModalChoices');
+  const hint = document.getElementById('factionActionModalRewardHint');
+  const closeBtn = document.getElementById('closeFactionActionModal');
+  const oddBtn = document.getElementById('guessOddBtn');
+  const evenBtn = document.getElementById('guessEvenBtn');
+  if (!overlay || !title || !desc || !choices || !hint || !closeBtn) return false;
+
+  const usedCount = Number(state.red_army_action_count || 0);
+  const limitCount = Number(state.red_army_action_limit || 0);
+  const usedUp = limitCount > 0 && usedCount >= limitCount;
+  const pendingChoice = state.pending_choice || null;
+  const me = (state.players || []).find(p => p.id === playerId) || null;
+  const hasMyPendingChoice = !!(pendingChoice && me && pendingChoice.player_id === me.id);
+  const phase = String(state.turn_phase || '').toLowerCase();
+  const beforeOrDuringPurchase = phase === 'event' || phase === 'action';
+
+  activeFactionActionModal = 'red_army';
+  overlay.style.display = 'flex';
+  title.textContent = '紅軍能力';
+  desc.textContent = usedUp
+    ? '本回合紅軍能力已達發動上限。'
+    : `紅軍可在開始購買階段之前自行選擇何時發動；本回合已用 ${usedCount}/${limitCount} 次。`;
+  choices.innerHTML = '';
+  choices.classList.add('red-army-action-choices');
+  if (oddBtn) oddBtn.style.display = 'none';
+  if (evenBtn) evenBtn.style.display = 'none';
+  closeBtn.onclick = closeFactionActionModal;
+
+  const helpHtml = `
+    <div>政工部／國安部如需目標，會重用既有選擇彈窗與地圖高亮。</div>
+    <ul class="red-army-action-help-list">
+      <li><strong>統戰部：</strong>抽 1 張牌。</li>
+      <li><strong>政工部：</strong>選擇 1 名非紅軍玩家，將 1 張內鬥放到其牌庫頂；同一目標每回合限 1 次。</li>
+      <li><strong>國安部：</strong>選擇其他玩家在紅軍組織 1 格內的 1 個牆內組織瓦解；同一目標每回合限 1 次。</li>
+      <li><strong>中紀委：</strong>可棄掉任意張手牌，然後抽等量的牌。</li>
+    </ul>`;
+  if (hasMyPendingChoice) {
+    hint.textContent = '請先處理目前的待選擇效果。';
+    return true;
+  }
+  if (!beforeOrDuringPurchase) {
+    hint.textContent = '紅軍能力需在事件／購買前流程中發動。';
+    return true;
+  }
+  hint.innerHTML = helpHtml;
+  if (usedUp) return true;
+
+  [
+    ['統戰部', '抽 1 張牌。'],
+    ['政工部', '選擇 1 名非紅軍玩家，將 1 張內鬥放到其牌庫頂；同一目標每回合限 1 次。'],
+    ['國安部', '選擇其他玩家在紅軍組織 1 格內的 1 個牆內組織瓦解；同一目標每回合限 1 次。'],
+    ['中紀委', '可棄掉任意張手牌，然後抽等量的牌。'],
+  ].forEach(([name, helper]) => {
+    const btn = document.createElement('button');
+    btn.className = 'modal-choice-btn';
+    btn.type = 'button';
+    btn.textContent = `發動 ${name}`;
+    btn.title = helper;
+    btn.onclick = () => {
+      sendAction('faction_action', { name });
+      closeFactionActionModal();
+    };
+    choices.appendChild(btn);
+  });
+  return true;
+}
+
 function closeEraAchievementModal() {
   const overlay = document.getElementById('eraAchievementModal');
   if (overlay) overlay.style.display = 'none';
@@ -1785,7 +1856,8 @@ function renderFactionActionPanel(state) {
   if (!panel || !info || !buttons || !modalOverlay || !modalTitle || !modalDesc || !modalChoices || !modalHint || !closeBtn) return;
 
   const me = state.players?.find(p => p.id === playerId) || null;
-  const inAction = String(state.turn_phase).toLowerCase() === 'action';
+  const phase = String(state.turn_phase || '').toLowerCase();
+  const inAction = phase === 'action';
   const isMine = state.current_player && me && state.current_player === me.name;
   const faction = me?.faction || '';
   const factionActionUsed = !!state.faction_action_used;
@@ -1806,6 +1878,27 @@ function renderFactionActionPanel(state) {
 
   const factionResult = renderFactionActionResult(state, faction);
   const hasResult = factionResult.hasResult;
+
+  if (faction === 'red_army' && isMine && (phase === 'event' || phase === 'action')) {
+    const usedCount = Number(state.red_army_action_count || 0);
+    const limitCount = Number(state.red_army_action_limit || 0);
+    const usedUp = limitCount > 0 && usedCount >= limitCount;
+    panel.style.display = 'block';
+    info.innerHTML = factionResult.html || `
+      <div class="faction-action-placeholder">
+        <div>紅軍能力不再自動彈出；可在開始購買階段前，按上方或此處的「紅軍能力」按鈕自行選擇時機。</div>
+        <div>本回合已用 ${usedCount}/${limitCount} 次。</div>
+      </div>`;
+    const btn = document.createElement('button');
+    btn.className = 'base-choice-btn';
+    btn.type = 'button';
+    btn.textContent = `紅軍能力（${usedCount}/${limitCount}）`;
+    btn.disabled = usedUp || hasActivePendingChoice;
+    btn.setAttribute('aria-disabled', btn.disabled ? 'true' : 'false');
+    btn.onclick = () => openRedArmyAbilityModal(state);
+    buttons.appendChild(btn);
+    return;
+  }
 
   if (!inAction || !isMine || hasActivePendingChoice) return;
 
@@ -1844,45 +1937,6 @@ function renderFactionActionPanel(state) {
     return;
   }
 
-  if (faction === 'red_army') {
-    const usedCount = Number(state.red_army_action_count || 0);
-    const limitCount = Number(state.red_army_action_limit || 0);
-    showCenteredActionPanel(
-      '紅軍能力',
-      hasResult ? '本回合紅軍能力發動結果如下；若仍未達上限，可繼續發動。' : `紅軍每回合可發動能力 ${limitCount} 次；目前已用 ${usedCount}/${limitCount} 次。`,
-      (target) => {
-        target.classList.add('red-army-action-choices');
-        [
-          ['統戰部', '抽 1 張牌。'],
-          ['政工部', '選擇 1 名非紅軍玩家，將 1 張內鬥放到其牌庫頂；同一目標每回合限 1 次。'],
-          ['國安部', '選擇其他玩家在紅軍組織 1 格內的 1 個牆內組織瓦解；同一目標每回合限 1 次。'],
-          ['中紀委', '可棄掉任意張手牌，然後抽等量的牌。'],
-        ].forEach(([name, helper]) => {
-          const btn = document.createElement('button');
-          btn.className = 'modal-choice-btn';
-          btn.type = 'button';
-          btn.textContent = `發動 ${name}`;
-          btn.title = helper;
-          btn.onclick = () => {
-            sendAction('faction_action', { name });
-            closeFactionActionModal();
-          };
-          target.appendChild(btn);
-        });
-      },
-      `
-        <div>本回合已用 ${usedCount}/${limitCount} 次。政工部／國安部如需目標，會重用既有選擇彈窗與地圖高亮。</div>
-        <ul class="red-army-action-help-list">
-          <li><strong>統戰部：</strong>抽 1 張牌。</li>
-          <li><strong>政工部：</strong>選擇 1 名非紅軍玩家，將 1 張內鬥放到其牌庫頂；同一目標每回合限 1 次。</li>
-          <li><strong>國安部：</strong>選擇其他玩家在紅軍組織 1 格內的 1 個牆內組織瓦解；同一目標每回合限 1 次。</li>
-          <li><strong>中紀委：</strong>可棄掉任意張手牌，然後抽等量的牌。</li>
-        </ul>
-      `,
-      factionResult.html
-    );
-    return;
-  }
 
   if (faction === 'liberals') {
     showCenteredActionPanel(
@@ -2252,6 +2306,7 @@ async function render(state) {
 
     const phaseActionMeta = document.getElementById('phaseActionMeta');
     const advanceBtn = document.getElementById('advanceStepBtn');
+    const redArmyBtn = document.getElementById('redArmyAbilityBtn');
     const isMyTurn = isMyTurnState(state);
     const stepLabel = phaseLabel === '事件' ? '開始購買階段' : phaseLabel === '行動' ? '結束行動階段' : phaseLabel === '結束' ? '結束回合' : '結束目前步驟';
     if (phaseActionMeta) {
@@ -2260,6 +2315,18 @@ async function render(state) {
     if (advanceBtn) {
       advanceBtn.textContent = stepLabel;
       advanceBtn.disabled = !isMyTurn;
+    }
+    if (redArmyBtn) {
+      const myFaction = me?.faction || '';
+      const rawPhase = String(state.turn_phase || '').toLowerCase();
+      const usedCount = Number(state.red_army_action_count || 0);
+      const limitCount = Number(state.red_army_action_limit || 0);
+      const usedUp = limitCount > 0 && usedCount >= limitCount;
+      const hasMyPendingChoice = !!(state.pending_choice && me && state.pending_choice.player_id === me.id);
+      const canShowRedArmyButton = isMyTurn && myFaction === 'red_army' && (rawPhase === 'event' || rawPhase === 'action');
+      redArmyBtn.style.display = canShowRedArmyButton ? 'inline-flex' : 'none';
+      redArmyBtn.textContent = `紅軍能力 ${usedCount}/${limitCount}`;
+      redArmyBtn.disabled = !canShowRedArmyButton || usedUp || hasMyPendingChoice;
     }
   }
 

@@ -117,7 +117,11 @@ def test_non_red_cannot_use_red_army_abilities():
 def test_frontend_exposes_red_army_buttons_and_choice_helpers():
     app_js = (ROOT / 'static' / 'app.js').read_text(encoding='utf-8')
     required = [
-        "faction === 'red_army'",
+        "id=\"redArmyAbilityBtn\"",
+        "openRedArmyAbilityModal",
+        "紅軍能力不再自動彈出",
+        "faction === 'red_army' && isMine && (phase === 'event' || phase === 'action')",
+        "rawPhase === 'event' || rawPhase === 'action'",
         "'統戰部'",
         "'政工部'",
         "'國安部'",
@@ -131,7 +135,8 @@ def test_frontend_exposes_red_army_buttons_and_choice_helpers():
         'minChoiceCount',
         'maxChoiceCount',
     ]
-    missing = [item for item in required if item not in app_js]
+    html = (ROOT / 'static' / 'index.html').read_text(encoding='utf-8')
+    missing = [item for item in required if item not in app_js and item not in html]
     return ok(
         'frontend_exposes_red_army_buttons_and_choice_helpers',
         not missing,

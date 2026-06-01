@@ -1,0 +1,22 @@
+{
+  "title": "Red Army ability manual timing button UI proof",
+  "date": "2026-06-01",
+  "scenario": "/test/setup-red-army-abilities-proof, Red Army current player in ACTION before purchase/end flow",
+  "verified": {
+    "button_before_modal": {
+      "text": "紅軍能力 0/2",
+      "display": "flex",
+      "disabled": false
+    },
+    "modal_before_click": "none",
+    "modal_after_click": "flex",
+    "choices": [
+      "發動 統戰部",
+      "發動 政工部",
+      "發動 國安部",
+      "發動 中紀委"
+    ]
+  },
+  "screenshot": "docs/records/event-cards/RED_ARMY_ABILITY_MANUAL_BUTTON_UI_2026_06_01.png",
+  "note": "Browser vision tool failed after capturing the original UI screenshot, so proof pairs the preserved screenshot with live browser console state evidence."
+}

@@ -521,12 +521,25 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
                 else:
                     result = game.dissolve_organization(game.current_player(), defender, town, source="faction_action")
             elif action == "faction_action":
-                result = game._activated_faction_action(
-                    game.current_player(),
-                    data.get("name"),
-                    guess=data.get("guess"),
-                    target_player_id=data.get("target_player_id"),
-                )
+                actor = game.current_player()
+                action_phase = str(getattr(game, "turn_phase", "")).lower()
+                if getattr(actor, "faction_id", None) == "red_army" and action_phase in {"turnphase.event", "event"}:
+                    game.turn_phase = TurnPhase.ACTION
+                    result = game._activated_faction_action(
+                        actor,
+                        data.get("name"),
+                        guess=data.get("guess"),
+                        target_player_id=data.get("target_player_id"),
+                    )
+                    if not (result and result.get("error")):
+                        game.turn_phase = TurnPhase.EVENT
+                else:
+                    result = game._activated_faction_action(
+                        actor,
+                        data.get("name"),
+                        guess=data.get("guess"),
+                        target_player_id=data.get("target_player_id"),
+                    )
             elif action == "resolve_choice":
                 result = game.resolve_pending_choice(player_id, data.get("index"))
 
