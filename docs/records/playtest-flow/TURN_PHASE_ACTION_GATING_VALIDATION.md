@@ -47,7 +47,7 @@
 - current_event: {'id': 'trade_war', 'name': '貿易戰加劇', 'type': 'mission', 'trigger': {'type': 'buy_card', 'count': 1, 'min_cost': 4, 'card_names': ['英美奧援']}, 'success': {'type': 'topdeck_from_discard', 'count': 1}, 'failure': {'type': 'none'}, 'progress': {'count': 0, 'required': 1, 'succeeded': False, 'settled': False, 'status': 'active'}, 'status': 'active', 'result_text': '非紅軍任務進行中', 'trigger_text': '購買符合條件的卡牌（總費用 4 點以上 / 英美奧援）至少 1 次', 'success_text': '從棄牌堆選 1 張置於牌庫頂', 'failure_text': '無'}
 
 ### formal_lobby_start_event_state
-- game_id: 4b519ee1-02d9-4db3-bee3-f6466c9aae73
+- game_id: 748a95c4-e302-448c-aad2-693ec876ac7f
 - start_result: {'success': True, 'market_mode': 'sample_53'}
 - turn: 1
 - turn_phase: event

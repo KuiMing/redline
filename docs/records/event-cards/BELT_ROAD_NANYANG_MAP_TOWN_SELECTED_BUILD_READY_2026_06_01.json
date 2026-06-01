@@ -1,0 +1,62 @@
+{
+  "date": "2026-06-01",
+  "artifact": "BELT_ROAD_NANYANG_MAP_TOWN_SELECTED_BUILD_READY_2026_06_01",
+  "scenario": {
+    "endpoint": "/test/setup-belt-road-red-turn-proof",
+    "payload": {
+      "advance_to_red": true,
+      "event_name": "一帶一路 南洋"
+    }
+  },
+  "fix": {
+    "files": [
+      "static/leaflet_game_map.html",
+      "static/leaflet_game_map_logic.js"
+    ],
+    "changes": [
+      "town labels no longer intercept pointer events",
+      "map script URL cache-busted for browser refresh",
+      "event build choices derive index when backend towns do not include one",
+      "map click near orange support/event town selects the town",
+      "selected town info panel refreshes after game state updates"
+    ]
+  },
+  "browser_proof": {
+    "after_select": {
+      "selected": "仰光",
+      "status": "仰光",
+      "build_button_text": "在目前城鎮建立組織（效果）",
+      "build_button_disabled": false,
+      "info_contains": [
+        "仰光",
+        "靜態統治者：南洋",
+        "當前控制者：無組織",
+        "當前組織總數：0"
+      ]
+    },
+    "after_build": {
+      "pending_choice": null,
+      "red_organizations": {
+        "北京": 1,
+        "仰光": 1
+      },
+      "iframe_town_state": [
+        {
+          "player": "紅軍",
+          "count": 1
+        }
+      ],
+      "info_contains": [
+        "當前控制者：紅軍",
+        "當前組織總數：1",
+        "視覺狀態：有組織（1）"
+      ],
+      "action_log_tail": [
+        "[Turn 1] Event drawn: 一帶一路 南洋 (auto deferred)",
+        "[Turn 1] End of turn for BEN",
+        "[Turn 1] 紅軍 built organization in 仰光 via event"
+      ]
+    }
+  },
+  "screenshot": "BELT_ROAD_NANYANG_MAP_TOWN_SELECTED_BUILD_READY_2026_06_01.png"
+}

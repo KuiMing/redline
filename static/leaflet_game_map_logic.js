@@ -579,8 +579,31 @@ function eventBuildChoiceForTown(townName) {
   if (!supportChoiceHighlight || !['event_build_organization', 'era_red_build_near_target'].includes(supportChoiceHighlight.choiceKey)) return null;
   const towns = Array.isArray(supportChoiceHighlight.towns) ? supportChoiceHighlight.towns : [];
   const entry = towns.find(item => item?.town === townName);
-  if (!entry || !Number.isFinite(Number(entry.index))) return null;
-  return { ...entry, index: Number(entry.index) };
+  if (!entry) return null;
+  const resolvedIndex = Number.isFinite(Number(entry.index))
+    ? Number(entry.index)
+    : towns.findIndex(item => item?.town === townName);
+  if (!Number.isFinite(resolvedIndex) || resolvedIndex < 0) return null;
+  return { ...entry, index: resolvedIndex };
+}
+
+function supportChoiceTownNearLatLng(latlng, maxPixels = 28) {
+  if (!supportChoiceHighlight || supportChoiceHighlight.mode !== 'support-targets') return null;
+  const towns = Array.isArray(supportChoiceHighlight.towns) ? supportChoiceHighlight.towns : [];
+  if (!towns.length || !latlng || !map) return null;
+  const clickPoint = map.latLngToContainerPoint(latlng);
+  let nearest = null;
+  towns.forEach(entry => {
+    const townName = entry?.town;
+    const town = byName.get(townName);
+    if (!town) return;
+    const point = map.latLngToContainerPoint([town.lat, town.lon]);
+    const distance = clickPoint.distanceTo(point);
+    if (distance <= maxPixels && (!nearest || distance < nearest.distance)) {
+      nearest = { town: townName, distance };
+    }
+  });
+  return nearest?.town || null;
 }
 
 function sendDirectBuildAction(townName) {
@@ -802,6 +825,12 @@ document.getElementById('dissolveBtn').addEventListener('click', () => {
   sendDissolveAction(target, selectedTown);
 });
 
+map.on('click', (event) => {
+  const supportTown = supportChoiceTownNearLatLng(event.latlng);
+  if (supportTown) {
+    selectTownForCurrentMapAction(supportTown, { autoFocus: false });
+  }
+});
 map.on('zoom', updateDynamicStyles);
 map.on('zoomend', () => {
   if (labelMode === 'auto') renderMap(); else updateDynamicStyles();
@@ -868,6 +897,7 @@ function applyGameStateToMap(state) {
   }
 
   if (selectedTown) {
+    updateInfoPanel(selectedTown);
     renderMovementHighlights(selectedTown, { autoFocus: false });
   }
   refreshDirectBuildUi();
