@@ -1,7 +1,7 @@
 {
   "summary": {
     "passed": true,
-    "passed_count": 13,
+    "passed_count": 14,
     "failed_count": 0
   },
   "checks": [
@@ -744,6 +744,15 @@
           }
         ]
       }
+    },
+    {
+      "name": "frontend disables hand resource/action buttons outside action phase",
+      "passed": true,
+      "details": {
+        "uses_action_phase_guard": true,
+        "disables_hand_buttons_when_not_action": true,
+        "click_guard_blocks_event_phase": true
+      }
     }
   ],
   "trace": [
@@ -797,7 +806,7 @@
     },
     {
       "step": "formal_lobby_start_event_state",
-      "game_id": "1c0bccf0-a29e-4a72-b525-7cc8919958da",
+      "game_id": "103609f1-fc1e-4a25-b2d2-1ed26b239ebc",
       "start_result": {
         "success": true,
         "market_mode": "sample_53"
@@ -1065,6 +1074,12 @@
       "turn": 1,
       "turn_phase": "action",
       "current_player": "player2"
+    },
+    {
+      "step": "frontend_hand_button_action_phase_guard",
+      "uses_action_phase_guard": true,
+      "disables_hand_buttons_when_not_action": true,
+      "click_guard_blocks_event_phase": true
     }
   ],
   "final_state": {

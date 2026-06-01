@@ -242,6 +242,18 @@ def run_validation():
     })
     assert_true(checks, 'next player can advance event to action without changing current player', state_next_action['turn_phase'] == 'action' and state_next_action['current_player'] == 'player2', state_next_action)
 
+    frontend_source = (BASE / 'static' / 'app.js').read_text(encoding='utf-8')
+    frontend_hand_button_guards = {
+        'uses_action_phase_guard': "rawPhase === 'action'" in frontend_source,
+        'disables_hand_buttons_when_not_action': "handActionDisabledAttr" in frontend_source and "canPlayHandCard" in frontend_source,
+        'click_guard_blocks_event_phase': "phase !== 'action'" in frontend_source and "請先按「開始購買階段」" in frontend_source,
+    }
+    trace.append({
+        'step': 'frontend_hand_button_action_phase_guard',
+        **frontend_hand_button_guards,
+    })
+    assert_true(checks, 'frontend disables hand resource/action buttons outside action phase', all(frontend_hand_button_guards.values()), frontend_hand_button_guards)
+
     result = {
         'summary': {
             'passed': all(item['passed'] for item in checks),
@@ -264,7 +276,7 @@ def write_outputs(result):
     lines = [
         '# TURN PHASE ACTION GATING VALIDATION',
         '',
-        '日期：2026-05-31',
+        '日期：2026-06-01',
         '',
         f"- passed: {result['summary']['passed']}",
         f"- passed_count: {result['summary']['passed_count']}",

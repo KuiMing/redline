@@ -1,0 +1,42 @@
+{
+  "date": "2026-06-01",
+  "artifact": "RED_SUPPORT_EVENT_PHASE_HAND_BUTTON_GATING_UI_2026_06_01",
+  "scenario": {
+    "endpoint": "/test/setup-support-proof",
+    "support_name": "紅軍奧援",
+    "turn_phase": "event",
+    "player_name": "紅軍",
+    "faction_id": "red_army"
+  },
+  "expected_behavior": {
+    "event_phase_hand_resource_button_disabled": true,
+    "event_phase_hand_action_button_disabled": true,
+    "red_army_ability_button_still_available_before_purchase": true,
+    "advance_button_label": "開始購買階段"
+  },
+  "browser_evidence": {
+    "current": "紅軍",
+    "setupPhase": "event",
+    "statePhase": "event",
+    "buttons": [
+      {
+        "card": "紅軍奧援",
+        "mode": "resource",
+        "text": "資源",
+        "disabled": true,
+        "opacity": "0.42",
+        "cursor": "not-allowed"
+      },
+      {
+        "card": "紅軍奧援",
+        "mode": "action",
+        "text": "行動",
+        "disabled": true,
+        "opacity": "0.42",
+        "cursor": "not-allowed"
+      }
+    ],
+    "stylesheet": "/static/style.css?v=hand-gating-20260601"
+  },
+  "screenshot": "RED_SUPPORT_EVENT_PHASE_HAND_BUTTON_GATING_UI_2026_06_01.png"
+}

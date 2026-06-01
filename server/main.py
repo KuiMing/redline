@@ -2032,7 +2032,8 @@ def test_setup_support_proof(payload: dict):
     game._support_card_tier = forced_tier
 
     game.current_player_index = 0
-    game.turn_phase = TurnPhase.ACTION
+    requested_phase = str(payload.get("turn_phase", "action") or "action").lower()
+    game.turn_phase = TurnPhase.EVENT if requested_phase == "event" else TurnPhase.ACTION
     game.game_phase = GamePhase.MAIN
     game.pending_base_choices = {}
     game.id = game_id
