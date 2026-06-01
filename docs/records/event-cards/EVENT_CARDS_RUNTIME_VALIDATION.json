@@ -481,10 +481,11 @@
       }
     },
     {
-      "name": "test_belt_road_southeast_auto_builds_red_org_in_region",
+      "name": "test_belt_road_southeast_waits_until_red_turn_then_builds_in_region",
       "status": "passed",
       "detail": {
         "event": "一帶一路 南洋",
+        "status_before_red_turn": "auto_pending",
         "choice_key": "event_build_organization",
         "region": "southeast_asia",
         "sample_towns": [

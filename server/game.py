@@ -270,6 +270,9 @@ class Game:
             return '非紅軍任務進行中'
         if status == 'auto':
             return '紅軍事件效果已自動套用'
+        if status == 'auto_pending':
+            target_name = progress.get('auto_target_player_name') or '紅軍'
+            return f'等待 {target_name} 回合發動紅軍事件效果'
         if status == 'idle':
             return '本次事件無效果'
         return ''
@@ -316,9 +319,13 @@ class Game:
             self.event_progress.update({'succeeded': True, 'settled': True, 'status': 'idle'})
             self.log(f"Event drawn: {self.current_event.get('name')} (no-op)")
         elif event_type == 'auto':
-            self._apply_event_effect(self.current_event.get('effect') or {}, self.current_player(), outcome='auto')
-            self.event_progress.update({'succeeded': True, 'settled': True, 'status': 'auto'})
-            self.log(f"Event drawn: {self.current_event.get('name')} (auto)")
+            result = self._apply_auto_event_if_ready()
+            if result and result.get('pending_choice'):
+                self.log(f"Event drawn: {self.current_event.get('name')} (auto pending choice)")
+            elif result and result.get('deferred'):
+                self.log(f"Event drawn: {self.current_event.get('name')} (auto deferred)")
+            else:
+                self.log(f"Event drawn: {self.current_event.get('name')} (auto)")
         else:
             self.log(f"Event drawn: {self.current_event.get('name')}")
         self.event_notification = self._event_display_payload()
@@ -531,6 +538,48 @@ class Game:
         if not faction:
             return default_player
         return next((p for p in self.players if getattr(p, 'faction_id', None) == faction), default_player)
+
+    def _auto_event_target_player(self, event=None):
+        event = event or self.current_event or {}
+        return self._event_effect_player(self.current_player(), event.get('effect') or {})
+
+    def _apply_auto_event_if_ready(self):
+        event = self.current_event or {}
+        if event.get('type') != 'auto':
+            return {'success': True, 'skipped': True}
+        if self.event_progress and self.event_progress.get('settled'):
+            return {'success': True, 'skipped': True}
+        effect = event.get('effect') or {}
+        target_player = self._auto_event_target_player(event)
+        current = self.current_player()
+        target_faction = effect.get('player_faction')
+        if target_faction and target_player and current and target_player.id != current.id:
+            self.event_progress = self.event_progress or {'count': 0, 'required': 0, 'succeeded': False, 'settled': False}
+            self.event_progress.update({
+                'succeeded': False,
+                'settled': False,
+                'status': 'auto_pending',
+                'auto_target_player_id': target_player.id,
+                'auto_target_player_name': target_player.name,
+                'auto_target_faction': target_faction,
+            })
+            self.event_notification = self._event_display_payload()
+            return {'success': True, 'deferred': True, 'target_player_id': target_player.id}
+
+        result = self._apply_event_effect(effect, current, outcome='auto') or {'success': True}
+        self.event_progress = self.event_progress or {'count': 0, 'required': 0}
+        self.event_progress.update({
+            'succeeded': True,
+            'settled': True,
+            'status': 'auto',
+            'auto_target_player_id': getattr(target_player, 'id', None),
+            'auto_target_player_name': getattr(target_player, 'name', None),
+            'auto_target_faction': target_faction,
+        })
+        self.event_notification = self._event_display_payload()
+        if result.get('pending_choice'):
+            return {'success': True, 'pending_choice': True, 'target_player_id': getattr(target_player, 'id', None)}
+        return {'success': True, 'applied': True, 'target_player_id': getattr(target_player, 'id', None)}
 
     def _player_camp(self, player):
         faction = self.faction_by_id.get(getattr(player, 'faction_id', None), {})
@@ -3823,6 +3872,9 @@ class Game:
             if not self.current_event:
                 self._start_event_phase()
                 return {"success": True}
+            auto_result = self._apply_auto_event_if_ready()
+            if auto_result and auto_result.get('pending_choice'):
+                return {"success": True, "pending_choice": True}
             self.turn_phase = TurnPhase.ACTION
         elif self.turn_phase == TurnPhase.ACTION:
             # Mission events are round-wide: resolve only after the last player of
@@ -3877,6 +3929,8 @@ class Game:
         self.turn_phase = TurnPhase.EVENT
         if not self.current_event:
             self._start_event_phase()
+        else:
+            self._apply_auto_event_if_ready()
 
     def _check_victory(self):
         win, winner = self.victory_engine.evaluate(self)

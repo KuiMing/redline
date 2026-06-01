@@ -739,17 +739,30 @@ def test_belt_road_structured_matches_raw_rule():
     return {"events": {southeast["name"]: southeast["effect"], middle_east["name"]: middle_east["effect"]}}
 
 
-def test_belt_road_southeast_auto_builds_red_org_in_region():
+def test_belt_road_southeast_waits_until_red_turn_then_builds_in_region():
     game = make_game("一帶一路 南洋")
     viewer = game.players[0]
     red = game.players[1]
-    game.current_player_index = 0  # 即使抽到事件的是非紅軍，也應由紅軍執行此自動效果。
+    game.current_player_index = 0
+    game.round_start_player_index = 0
     viewer.organizations = {"臺北": 1}
     red.organizations = {"北京": 1}
     red.hand = [Card("紅軍保留手牌", "command", {})]
-    assert_ok(game.advance_turn_phase(), "draw belt road southeast event")
+
+    assert_ok(game.advance_turn_phase(), "draw belt road southeast event on non-red turn")
     assert game.current_event["name"] == "一帶一路 南洋"
+    assert game.event_progress["status"] == "auto_pending"
+    assert game.event_progress["auto_target_player_id"] == red.id
+    assert game.state()["pending_choice"] is None
+
+    assert_ok(game.advance_turn_phase(), "non-red enters action without resolving red effect")
+    assert game.turn_phase == TurnPhase.ACTION
+    assert_ok(game.advance_turn_phase(), "non-red enters end")
+    assert_ok(game.advance_turn_phase(), "non-red ends turn and red event effect becomes pending")
+    assert game.current_player() is red
+    assert game.turn_phase == TurnPhase.EVENT
     assert game.event_progress["status"] == "auto"
+
     choice = game.state()["pending_choice"]
     assert choice["choice_key"] == "event_build_organization"
     assert choice["player_id"] == red.id
@@ -763,7 +776,7 @@ def test_belt_road_southeast_auto_builds_red_org_in_region():
     assert resolve["town"] == "新加坡"
     assert red.organizations.get("新加坡") == 1
     assert names(red.hand) == ["紅軍保留手牌"]
-    return {"event": "一帶一路 南洋", "choice_key": choice["choice_key"], "region": choice["region"], "sample_towns": towns[:8], "built": resolve["town"]}
+    return {"event": "一帶一路 南洋", "status_before_red_turn": "auto_pending", "choice_key": choice["choice_key"], "region": choice["region"], "sample_towns": towns[:8], "built": resolve["town"]}
 
 
 def test_belt_road_middle_east_auto_builds_red_org_in_region():
@@ -825,7 +838,7 @@ def main():
         test_shanghai_cooperation_armed_reaches_north_org_at_five_steps_only,
         test_shanghai_cooperation_spy_targets_north_org_at_five_steps,
         test_belt_road_structured_matches_raw_rule,
-        test_belt_road_southeast_auto_builds_red_org_in_region,
+        test_belt_road_southeast_waits_until_red_turn_then_builds_in_region,
         test_belt_road_middle_east_auto_builds_red_org_in_region,
         test_event_deck_uses_declared_counts_without_structured_duplicate_overcount,
         test_trade_war_structured_matches_raw_rule,

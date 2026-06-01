@@ -2384,6 +2384,64 @@ def test_setup_elite_defection_event_proof(payload: dict):
     }
 
 
+@app.post("/test/setup-belt-road-red-turn-proof")
+def test_setup_belt_road_red_turn_proof(payload: dict):
+    players = [(str(uuid.uuid4()), "BEN"), (str(uuid.uuid4()), "紅軍")]
+    game = Game(players, market_mode="all_cards")
+    viewer = game.players[0]
+    red = game.players[1]
+    viewer.faction_id = payload.get("viewer_faction", "liberals")
+    red.faction_id = "red_army"
+    viewer.base = payload.get("viewer_base", "臺北")
+    red.base = "北京"
+    viewer.organizations = {viewer.base: 1}
+    red.organizations = {"北京": 1}
+    viewer.hand = [Card("BEN 保留手牌", "money", {"money": 1})]
+    red.hand = [Card("紅軍保留手牌", "propaganda", {"propaganda": 1})]
+    game.pending_base_choices = {}
+    game.game_phase = GamePhase.MAIN
+    game.current_player_index = 0
+    game.round_start_player_index = 0
+    game.turn_phase = TurnPhase.EVENT
+    event_name = payload.get("event_name", "一帶一路 南洋")
+    event = game._event_by_name(event_name)
+    game.event_deck.draw_pile = [event] if event else []
+    game.event_deck.discard_pile = []
+    game.current_event = None
+    game.event_progress = None
+    game.event_notification = None
+    game.pending_choice = None
+    draw_result = game.advance_turn_phase()
+    initial_state = game.state()
+    advance_results = []
+    if payload.get("advance_to_red", False):
+        for _ in range(3):
+            advance_results.append(game.advance_turn_phase())
+            if game.current_player_index == 1 and game.turn_phase == TurnPhase.EVENT:
+                break
+
+    game_id = str(uuid.uuid4())
+    manager.games[game_id] = game
+    manager.connections[game_id] = manager.connections.get(game_id, {})
+    lobby[game_id] = [(p.id, p.name) for p in game.players]
+    lobby_hosts[game_id] = viewer.id
+    lobby_factions[game_id] = {p.id: p.faction_id for p in game.players}
+    lobby_bases[game_id] = {p.id: p.base for p in game.players if p.base}
+    lobby_ready[game_id] = {p.id: True for p in game.players}
+    return {
+        "success": True,
+        "game_id": game_id,
+        "player_id": viewer.id,
+        "red_player_id": red.id,
+        "event_name": event_name,
+        "draw_result": draw_result,
+        "advance_results": advance_results,
+        "initial_state": initial_state,
+        "url": f"/?game_id={game_id}&player_id={red.id}",
+        "state": game.state(),
+    }
+
+
 @app.post("/test/setup-tibet-era-red-build-proof")
 def test_setup_tibet_era_red_build_proof(payload: dict):
     players = [(str(uuid.uuid4()), "藏國"), (str(uuid.uuid4()), "紅軍")]

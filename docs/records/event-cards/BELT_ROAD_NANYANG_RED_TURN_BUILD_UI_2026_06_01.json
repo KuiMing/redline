@@ -1,0 +1,31 @@
+{
+  "date": "2026-06-01",
+  "artifact": "BELT_ROAD_NANYANG_RED_TURN_BUILD_UI_2026_06_01",
+  "event": "一帶一路 南洋",
+  "proof_endpoint": "/test/setup-belt-road-red-turn-proof",
+  "initial_state": {
+    "current_player": "BEN",
+    "turn_phase": "event",
+    "event_status": "auto_pending",
+    "pending_choice": null
+  },
+  "red_turn_state": {
+    "current_player": "紅軍",
+    "turn_phase": "event",
+    "event_status": "auto",
+    "pending_choice_key": "event_build_organization",
+    "pending_choice_player": "red_army",
+    "sample_towns": ["仰光", "佬沃", "吉隆坡", "新加坡", "曼谷"]
+  },
+  "ui_interaction": {
+    "selected_town": "新加坡",
+    "button_text_after_select": "在目前城鎮建立組織（效果）",
+    "button_disabled_after_select": false,
+    "pending_choice_after_build": null,
+    "red_organization_in_singapore_after_build": 1
+  },
+  "files": {
+    "screenshot": "docs/records/event-cards/BELT_ROAD_NANYANG_RED_TURN_BUILD_UI_2026_06_01.png",
+    "markdown": "docs/records/event-cards/BELT_ROAD_NANYANG_RED_TURN_BUILD_UI_2026_06_01.md"
+  }
+}

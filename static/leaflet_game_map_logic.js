@@ -167,6 +167,20 @@ function focusSupportChoiceTargets(bounds) {
   map.fitBounds(bounds, { padding: [110, 110], maxZoom: 8 });
 }
 
+function selectTownForCurrentMapAction(townName, options = {}) {
+  const { autoFocus = true } = options;
+  updateInfoPanel(townName);
+  resetMoveSelection();
+  resetBuildSelection();
+  renderMap();
+  applyGameStateToMap(lastGameState);
+  const didHighlight = renderMovementHighlights(townName, { autoFocus });
+  refreshDirectBuildUi();
+  window.__lastSelectedTown = townName;
+  window.__lastHighlightSuccess = didHighlight;
+  return didHighlight;
+}
+
 function renderSupportChoiceHighlights(options = {}) {
   const { autoFocus = false } = options;
   supportChoiceHighlightLayer.clearLayers();
@@ -184,7 +198,7 @@ function renderSupportChoiceHighlights(options = {}) {
       focusedBounds = [townBounds];
     }
     const isFocused = supportChoiceHighlight.focusTown && supportChoiceHighlight.focusTown === townName;
-    L.circleMarker([town.lat, town.lon], {
+    const outerMarker = L.circleMarker([town.lat, town.lon], {
       radius: Math.max(isFocused ? 18 : 14, markerRadius(map.getZoom()) + (isFocused ? 10 : 6)),
       color: isFocused ? '#facc15' : '#f97316',
       weight: isFocused ? 5 : 4,
@@ -192,7 +206,8 @@ function renderSupportChoiceHighlights(options = {}) {
       fillOpacity: isFocused ? 0.34 : 0.22,
       opacity: 1,
     }).addTo(supportChoiceHighlightLayer).bindPopup(`${supportChoiceHighlight.sourceName || '可選目標'}：${entry?.label || townName}`);
-    L.circleMarker([town.lat, town.lon], {
+    outerMarker.on('click', () => selectTownForCurrentMapAction(townName, { autoFocus: false }));
+    const innerMarker = L.circleMarker([town.lat, town.lon], {
       radius: Math.max(isFocused ? 9 : 7, markerRadius(map.getZoom()) + (isFocused ? 2 : 1)),
       color: '#fff7ed',
       weight: 2,
@@ -200,6 +215,7 @@ function renderSupportChoiceHighlights(options = {}) {
       fillOpacity: 0.95,
       opacity: 1,
     }).addTo(supportChoiceHighlightLayer);
+    innerMarker.on('click', () => selectTownForCurrentMapAction(townName, { autoFocus: false }));
   });
   if (bounds.length) {
     const hintEl = document.getElementById('interactionHint');
@@ -714,15 +730,7 @@ function renderMap() {
         return;
       }
 
-      updateInfoPanel(t.name);
-      resetMoveSelection();
-      resetBuildSelection();
-      renderMap();
-      applyGameStateToMap(lastGameState);
-      const didHighlight = renderMovementHighlights(t.name, { autoFocus: true });
-      refreshDirectBuildUi();
-      window.__lastSelectedTown = t.name;
-      window.__lastHighlightSuccess = didHighlight;
+      selectTownForCurrentMapAction(t.name, { autoFocus: true });
     });
     currentMarkers.set(t.name, marker);
     const total = totalOrganizationsInTown(t.name);
@@ -816,6 +824,10 @@ window.addEventListener('message', (event) => {
 function applyGameStateToMap(state) {
   const resolvingMove = pendingMove && !state?.error ? { ...pendingMove } : null;
   lastGameState = state;
+  const pendingChoice = state?.pending_choice || null;
+  if (!pendingChoice || !['event_build_organization', 'era_red_build_near_target'].includes(pendingChoice.choice_key)) {
+    applySupportChoiceHighlight(null);
+  }
   if (resolvingMove) {
     pendingMove = null;
   }
