@@ -242,17 +242,49 @@ def run_validation():
     })
     assert_true(checks, 'next player can advance event to action without changing current player', state_next_action['turn_phase'] == 'action' and state_next_action['current_player'] == 'player2', state_next_action)
 
+    red_support_game = Game([('red', '紅軍'), ('ben', 'BEN')], market_mode='all_cards')
+    red_player = red_support_game.players[0]
+    ben_player = red_support_game.players[1]
+    red_player.faction_id = 'red_army'
+    red_player.base = '北京'
+    red_player.organizations = {'北京': 1}
+    red_player.hand = [red_support_game._make_support_card('紅軍奧援')]
+    red_player.deck.draw_pile = []
+    red_player.deck.discard_pile = []
+    ben_player.faction_id = 'taiwan_green'
+    ben_player.base = '臺北'
+    ben_player.organizations = {'臺北': 1}
+    red_support_game.current_player_index = 0
+    red_support_game.turn_phase = TurnPhase.EVENT
+    red_support_action_result = red_support_game.play_card(0, mode='action')
+    red_support_state = red_support_game.state()
+    trace.append({
+        'step': 'red_support_event_phase_action_before_purchase',
+        'result': red_support_action_result,
+        'turn_phase': red_support_state.get('turn_phase'),
+        'pending_choice': red_support_state.get('pending_choice'),
+        'hand': red_support_state.get('players', [{}])[0].get('hand'),
+    })
+    assert_true(checks, 'red army support action can be played in event phase before purchase',
+        isinstance(red_support_action_result, dict)
+        and red_support_action_result.get('success')
+        and red_support_action_result.get('pending_choice')
+        and red_support_state.get('turn_phase') == 'event',
+        red_support_action_result,
+    )
+
     frontend_source = (BASE / 'static' / 'app.js').read_text(encoding='utf-8')
     frontend_hand_button_guards = {
-        'uses_action_phase_guard': "rawPhase === 'action'" in frontend_source,
-        'disables_hand_buttons_when_not_action': "handActionDisabledAttr" in frontend_source and "canPlayHandCard" in frontend_source,
-        'click_guard_blocks_event_phase': "phase !== 'action'" in frontend_source and "請先按「開始購買階段」" in frontend_source,
+        'keeps_default_cards_action_phase_guarded': "rawPhase === 'action'" in frontend_source,
+        'allows_red_support_event_action': "cardName === '紅軍奧援'" in frontend_source and "mode === 'action'" in frontend_source and "rawPhase === 'event'" in frontend_source,
+        'render_uses_per_mode_disabled_attrs': "resourceDisabledAttr" in frontend_source and "actionDisabledAttr" in frontend_source,
+        'click_guard_allows_red_support_exception': "isRedSupportPrepAction" in frontend_source,
     }
     trace.append({
-        'step': 'frontend_hand_button_action_phase_guard',
+        'step': 'frontend_hand_button_red_support_event_exception',
         **frontend_hand_button_guards,
     })
-    assert_true(checks, 'frontend disables hand resource/action buttons outside action phase', all(frontend_hand_button_guards.values()), frontend_hand_button_guards)
+    assert_true(checks, 'frontend enables only red support action button before purchase', all(frontend_hand_button_guards.values()), frontend_hand_button_guards)
 
     result = {
         'summary': {

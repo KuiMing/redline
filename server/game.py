@@ -3633,9 +3633,6 @@ class Game:
             reaction_player.deck.discard([reaction_context['reaction_card']])
 
     def play_card(self, index, mode=None, target_player_id=None, reaction=None):
-        if self.turn_phase != TurnPhase.ACTION:
-            return {"error": "Not in ACTION phase"}
-
         if mode not in {"resource", "action"}:
             return {"error": "Card play mode must be resource or action"}
 
@@ -3644,6 +3641,14 @@ class Game:
             return {"error": "Invalid index"}
         pending_card = player.hand[index]
         pending_card_name = getattr(pending_card, "name", str(pending_card))
+        is_red_support_prep_action = (
+            self.turn_phase == TurnPhase.EVENT
+            and mode == "action"
+            and pending_card_name == "紅軍奧援"
+            and getattr(player, 'faction_id', None) == 'red_army'
+        )
+        if self.turn_phase != TurnPhase.ACTION and not is_red_support_prep_action:
+            return {"error": "Not in ACTION phase"}
         if mode == "action" and self._card_is_banned_for_player(player, pending_card):
             return {"error": "非暴力：不能打出武裝或裝備類卡牌"}
         if mode == "action" and pending_card_name == "走漏風聲" and target_player_id is not None:

@@ -1,7 +1,7 @@
 {
   "summary": {
     "passed": true,
-    "passed_count": 14,
+    "passed_count": 15,
     "failed_count": 0
   },
   "checks": [
@@ -746,12 +746,22 @@
       }
     },
     {
-      "name": "frontend disables hand resource/action buttons outside action phase",
+      "name": "red army support action can be played in event phase before purchase",
       "passed": true,
       "details": {
-        "uses_action_phase_guard": true,
-        "disables_hand_buttons_when_not_action": true,
-        "click_guard_blocks_event_phase": true
+        "success": true,
+        "pending_choice": true,
+        "card_moved_out_of_play": true
+      }
+    },
+    {
+      "name": "frontend enables only red support action button before purchase",
+      "passed": true,
+      "details": {
+        "keeps_default_cards_action_phase_guarded": true,
+        "allows_red_support_event_action": true,
+        "render_uses_per_mode_disabled_attrs": true,
+        "click_guard_allows_red_support_exception": true
       }
     }
   ],
@@ -806,7 +816,7 @@
     },
     {
       "step": "formal_lobby_start_event_state",
-      "game_id": "103609f1-fc1e-4a25-b2d2-1ed26b239ebc",
+      "game_id": "4b519ee1-02d9-4db3-bee3-f6466c9aae73",
       "start_result": {
         "success": true,
         "market_mode": "sample_53"
@@ -1076,10 +1086,47 @@
       "current_player": "player2"
     },
     {
-      "step": "frontend_hand_button_action_phase_guard",
-      "uses_action_phase_guard": true,
-      "disables_hand_buttons_when_not_action": true,
-      "click_guard_blocks_event_phase": true
+      "step": "red_support_event_phase_action_before_purchase",
+      "result": {
+        "success": true,
+        "pending_choice": true,
+        "card_moved_out_of_play": true
+      },
+      "turn_phase": "event",
+      "pending_choice": {
+        "type": "target_choice",
+        "choice_key": "red_support_target_player",
+        "player_id": "red",
+        "prompt": "紅軍奧援：請選擇要將本牌放入哪位反共玩家的棄牌堆。",
+        "source_name": "紅軍奧援",
+        "count": null,
+        "min_count": null,
+        "mode": "action",
+        "acting_player_id": null,
+        "acting_player_name": null,
+        "played_card_name": null,
+        "region": null,
+        "free": null,
+        "ignore_distance": null,
+        "cards": [],
+        "options": [],
+        "towns": [],
+        "targets": [
+          {
+            "id": "ben",
+            "label": "BEN"
+          }
+        ],
+        "step": null
+      },
+      "hand": []
+    },
+    {
+      "step": "frontend_hand_button_red_support_event_exception",
+      "keeps_default_cards_action_phase_guarded": true,
+      "allows_red_support_event_action": true,
+      "render_uses_per_mode_disabled_attrs": true,
+      "click_guard_allows_red_support_exception": true
     }
   ],
   "final_state": {

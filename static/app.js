@@ -1102,8 +1102,13 @@ function playHandCard(index, card, mode) {
   const state = window.lastGameState || {};
   const phase = String(state.turn_phase || '').toLowerCase();
   const me = (state.players || []).find(p => p.id === playerId) || null;
-  if (phase !== 'action') {
-    setPhaseActionNotice('目前仍在事件階段，請先按「開始購買階段」再打出手牌。');
+  const cardName = typeof card === 'string' ? card : (card?.name || card?.title || '');
+  const isRedSupportPrepAction = phase === 'event' && mode === 'action' && cardName === '紅軍奧援' && me?.faction === 'red_army';
+  if (phase !== 'action' && !isRedSupportPrepAction) {
+    const message = cardName === '紅軍奧援' && mode === 'resource'
+      ? '事件階段可先發動紅軍奧援的「行動」，資源需等開始購買階段。'
+      : '目前仍在事件階段；只有紅軍奧援的「行動」可在開始購買階段前使用。';
+    setPhaseActionNotice(message);
     return;
   }
   if (state.pending_choice && me && state.pending_choice.player_id === me.id) {
@@ -1111,7 +1116,6 @@ function playHandCard(index, card, mode) {
     return;
   }
   const payload = {index, mode};
-  const cardName = typeof card === 'string' ? card : (card?.name || card?.title || '');
   const playerTargetCards = new Set(['合作談判', '走漏風聲', '模仿戰術', '武裝者', '武裝小隊', '武裝集團', '派遣間諜', '內應間諜']);
   if (mode === 'action' && playerTargetCards.has(cardName)) {
     const labelMap = {
@@ -2356,26 +2360,38 @@ async function render(state) {
     if (me && me.hand) {
       const rawPhase = String(state.turn_phase || '').toLowerCase();
       const hasMyPendingChoice = !!(state.pending_choice && state.pending_choice.player_id === me.id);
-      const canPlayHandCard = isMyTurn && rawPhase === 'action' && !hasMyPendingChoice;
-      const handActionDisabledAttr = canPlayHandCard ? '' : 'disabled aria-disabled="true"';
-      const handActionTitle = canPlayHandCard
-        ? '打出這張手牌'
-        : rawPhase === 'event'
-          ? '目前仍在事件階段，請先按「開始購買階段」再打出手牌。'
-          : hasMyPendingChoice
-            ? '請先處理目前待選擇效果。'
-            : '只有當前玩家的購買／行動階段可以打出手牌。';
+      const canPlayHandCardMode = (cardName, mode) => {
+        if (!isMyTurn || hasMyPendingChoice) return false;
+        if (rawPhase === 'action') return true;
+        return rawPhase === 'event' && mode === 'action' && cardName === '紅軍奧援' && me.faction === 'red_army';
+      };
+      const handButtonTitle = (cardName, mode, canPlay) => {
+        if (canPlay) return '打出這張手牌';
+        if (hasMyPendingChoice) return '請先處理目前待選擇效果。';
+        if (rawPhase === 'event') {
+          return (cardName === '紅軍奧援' && mode === 'resource')
+            ? '事件階段可先發動紅軍奧援的「行動」，資源需等開始購買階段。'
+            : '目前仍在事件階段；只有紅軍奧援的「行動」可在開始購買階段前使用。';
+        }
+        return '只有當前玩家的購買／行動階段可以打出手牌。';
+      };
       me.hand.forEach((card, i) => {
         const cardArg = escapeHtml(jsSingleQuotedString(card));
         const cardAttr = escapeHtml(card);
         const colorName = (cardPresentation(card)?.color) || (/奧援/.test(card) ? '奧援' : '灰');
         const colorClass = cardColorClass(colorName);
+        const canPlayResource = canPlayHandCardMode(card, 'resource');
+        const canPlayAction = canPlayHandCardMode(card, 'action');
+        const resourceDisabledAttr = canPlayResource ? '' : 'disabled aria-disabled="true"';
+        const actionDisabledAttr = canPlayAction ? '' : 'disabled aria-disabled="true"';
+        const resourceTitle = handButtonTitle(card, 'resource', canPlayResource);
+        const actionTitle = handButtonTitle(card, 'action', canPlayAction);
         handDiv.innerHTML += `
           <div class='card hand-card ${colorClass}' onclick="selectCardDetail(${cardArg},'hand',false)">
             ${renderCardFace(card, 'hand', false, true)}
             <div class="hand-card-actions">
-              <button class="hand-card-action-btn" type="button" ${handActionDisabledAttr} title="${escapeHtml(handActionTitle)}" data-card-index="${i}" data-card-name="${cardAttr}" data-card-mode="resource">資源</button>
-              <button class="hand-card-action-btn" type="button" ${handActionDisabledAttr} title="${escapeHtml(handActionTitle)}" data-card-index="${i}" data-card-name="${cardAttr}" data-card-mode="action">行動</button>
+              <button class="hand-card-action-btn" type="button" ${resourceDisabledAttr} title="${escapeHtml(resourceTitle)}" data-card-index="${i}" data-card-name="${cardAttr}" data-card-mode="resource">資源</button>
+              <button class="hand-card-action-btn" type="button" ${actionDisabledAttr} title="${escapeHtml(actionTitle)}" data-card-index="${i}" data-card-name="${cardAttr}" data-card-mode="action">行動</button>
             </div>
           </div>`;
       });

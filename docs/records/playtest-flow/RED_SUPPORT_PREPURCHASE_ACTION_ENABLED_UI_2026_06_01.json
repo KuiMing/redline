@@ -1,0 +1,46 @@
+{
+  "date": "2026-06-01",
+  "artifact": "RED_SUPPORT_PREPURCHASE_ACTION_ENABLED_UI_2026_06_01",
+  "scenario": {
+    "endpoint": "/test/setup-support-proof",
+    "support_name": "紅軍奧援",
+    "turn_phase": "event",
+    "player_name": "紅軍",
+    "faction_id": "red_army"
+  },
+  "expected_behavior": {
+    "event_phase_red_support_action_button_enabled": true,
+    "event_phase_red_support_resource_button_disabled": true,
+    "click_action_creates_red_support_target_choice": true,
+    "state_remains_event_phase_before_purchase": true
+  },
+  "before_click_buttons": [
+    {
+      "card": "紅軍奧援",
+      "mode": "resource",
+      "text": "資源",
+      "disabled": true,
+      "opacity": "0.42",
+      "cursor": "not-allowed",
+      "title": "事件階段可先發動紅軍奧援的「行動」，資源需等開始購買階段。"
+    },
+    {
+      "card": "紅軍奧援",
+      "mode": "action",
+      "text": "行動",
+      "disabled": false,
+      "opacity": "1",
+      "cursor": "pointer",
+      "title": "打出這張手牌"
+    }
+  ],
+  "after_click": {
+    "phase": "event",
+    "current": "紅軍",
+    "choiceKey": "red_support_target_player",
+    "prompt": "紅軍奧援：請選擇要將本牌放入哪位反共玩家的棄牌堆。",
+    "hand": [],
+    "logTail": ["[Turn 1] 紅軍 played 紅軍奧援"]
+  },
+  "screenshot": "RED_SUPPORT_PREPURCHASE_ACTION_ENABLED_UI_2026_06_01.png"
+}
