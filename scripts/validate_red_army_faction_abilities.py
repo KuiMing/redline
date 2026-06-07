@@ -49,6 +49,7 @@ def test_united_front_draws_once_per_use_until_non_red_limit():
 def test_propaganda_department_target_choice_and_per_target_limit():
     game, red, a, b = make_red_game()
     a.deck.draw_pile = []
+    supply_before = int(game.static_purchase_supply.get('內鬥', 0) or 0)
     start = game._activated_faction_action(red, '政工部')
     choice = game.pending_choice or {}
     target_index = next((i for i, t in enumerate(choice.get('targets') or []) if t.get('id') == a.id), None)
@@ -59,8 +60,8 @@ def test_propaganda_department_target_choice_and_per_target_limit():
     supply_after = game.static_purchase_supply.get('內鬥')
     return ok(
         'red_army_propaganda_department_topdecks_internal_conflict_and_limits_same_target',
-        start.get('pending_choice') and choice.get('choice_key') == 'red_army_propaganda_department_target' and resolved.get('success') and top_name == '內鬥' and top_type == 'disruption' and supply_after == 0 and repeat.get('error'),
-        f'start={start}, choice={game.state().get("pending_choice")}, resolved={resolved}, top={top_name}, top_type={top_type}, supply_after={supply_after}, repeat={repeat}',
+        start.get('pending_choice') and choice.get('choice_key') == 'red_army_propaganda_department_target' and resolved.get('success') and top_name == '內鬥' and top_type == 'disruption' and supply_after == supply_before - 1 and repeat.get('error'),
+        f'start={start}, choice={game.state().get("pending_choice")}, resolved={resolved}, top={top_name}, top_type={top_type}, supply_before={supply_before}, supply_after={supply_after}, repeat={repeat}',
     )
 
 

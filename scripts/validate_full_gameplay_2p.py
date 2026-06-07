@@ -43,6 +43,55 @@ def resolve_base_selection(game, trace):
         })
 
 
+def resolve_pending_choice_for_validation(game, trace, step):
+    """Pick the first legal option so event/support prompts do not stall the smoke test."""
+    choice = game.pending_choice
+    if not choice:
+        return None
+    player_id = choice.get('player_id')
+    choice_type = choice.get('type')
+    if choice_type == 'multi_card_choice':
+        min_count = int(choice.get('min_count', choice.get('count', 0)) or 0)
+        index = list(range(min_count))
+    else:
+        index = 0
+    result = game.resolve_pending_choice(player_id, index)
+    trace.append({
+        'step': step,
+        'choice_key': choice.get('choice_key'),
+        'choice_type': choice_type,
+        'player_id': player_id,
+        'index': index,
+        'result': result,
+        'turn': game.turn,
+        'turn_phase': game.turn_phase,
+        'current_player': game.current_player().name,
+    })
+    return result
+
+
+def advance_to_action_for_validation(game, trace, cycle):
+    safety = 0
+    while game.turn_phase == TurnPhase.EVENT and safety < 6:
+        if game.pending_choice:
+            resolve_pending_choice_for_validation(game, trace, f'cycle_{cycle}_resolve_event_choice')
+            safety += 1
+            continue
+        result = game.advance_turn_phase()
+        trace.append({
+            'step': f'cycle_{cycle}_advance_event_step',
+            'result': result,
+            'turn': game.turn,
+            'turn_phase': game.turn_phase,
+            'current_player': game.current_player().name,
+            'pending_choice': (game.pending_choice or {}).get('choice_key'),
+            'event': (game.current_event or {}).get('name'),
+            'event_progress': dict(game.event_progress or {}),
+        })
+        safety += 1
+    return game.turn_phase == TurnPhase.ACTION
+
+
 def force_deterministic_2p_setup(game):
     anti, red = game.players
     anti.name = 'anti'
@@ -76,6 +125,8 @@ def validate_bases(game):
 
 
 def first_connected_move(game, player):
+    if player.moves_left <= 0:
+        return None, {'skipped': 'no move points available'}
     for from_town in list(player.organizations.keys()):
         if from_town == player.base and player.organizations.get(from_town, 0) <= 1:
             continue
@@ -112,9 +163,9 @@ def main():
     })
 
     for cycle in range(1, 5):
-        trace.append({'step': f'cycle_{cycle}_advance_to_action_before', 'turn': game.turn, 'turn_phase': game.turn_phase, 'current_player': game.current_player().name})
-        game.advance_turn_phase()
-        trace.append({'step': f'cycle_{cycle}_advance_to_action_after', 'turn': game.turn, 'turn_phase': game.turn_phase, 'current_player': game.current_player().name})
+        trace.append({'step': f'cycle_{cycle}_advance_to_action_before', 'turn': game.turn, 'turn_phase': game.turn_phase, 'current_player': game.current_player().name, 'pending_choice': (game.pending_choice or {}).get('choice_key')})
+        reached_action = advance_to_action_for_validation(game, trace, cycle)
+        trace.append({'step': f'cycle_{cycle}_advance_to_action_after', 'turn': game.turn, 'turn_phase': game.turn_phase, 'current_player': game.current_player().name, 'pending_choice': (game.pending_choice or {}).get('choice_key'), 'reached_action': reached_action})
 
         player = game.current_player()
         hand_before = [c.name for c in player.hand]

@@ -66,25 +66,30 @@ def validate_engine_play_card_modes_still_work():
     return {"resource_result": resource_result, "action_result": action_result, "resources": dict(player.resources)}
 
 
-def validate_static_purchase_can_be_bought_once():
+def validate_static_purchase_can_be_bought_repeatedly_until_supply_empty():
     game = Game([("p1", "P1"), ("p2", "P2")])
     game.current_player_index = 0
     game.turn_phase = TurnPhase.ACTION
     game.game_phase = GamePhase.MAIN
     player = game.players[0]
-    player.resources = {"money": 3, "propaganda": 3}
     static_index = list(STATIC_PURCHASE_CARD_NAMES).index("分神")
 
     before_area = [card.name for card in game.purchase_area[:len(STATIC_PURCHASE_CARD_NAMES)]]
-    result = game.buy_card(static_index)
-    assert_true(result.get("success"), f"static purchase failed: {result}")
-    assert_true(game.static_purchase_supply["分神"] == 0, f"static supply did not decrement: {game.static_purchase_supply}")
-    assert_true([card.name for card in player.deck.discard_pile][-1] == "分神", "bought static card did not enter discard")
-    assert_true([card.name for card in game.purchase_area[:len(STATIC_PURCHASE_CARD_NAMES)]] == before_area, "static market slot should remain in purchase area")
+    initial_supply = game.static_purchase_supply["分神"]
+    buys = []
+    for _ in range(initial_supply):
+        player.resources = {"money": 3, "propaganda": 3}
+        result = game.buy_card(static_index)
+        buys.append(result)
+        assert_true(result.get("success"), f"static purchase failed: {result}")
+        assert_true([card.name for card in game.purchase_area[:len(STATIC_PURCHASE_CARD_NAMES)]] == before_area, "static market slot should remain in purchase area")
+    assert_true(game.static_purchase_supply["分神"] == 0, f"static supply did not decrement to zero: {game.static_purchase_supply}")
+    assert_true([card.name for card in player.deck.discard_pile][-initial_supply:] == ["分神"] * initial_supply, "bought static cards did not enter discard")
 
-    second_result = game.buy_card(static_index)
-    assert_true(second_result.get("error") == "Static purchase card is out of supply", f"second static buy should be blocked: {second_result}")
-    return {"first_buy": result, "second_buy": second_result, "remaining_supply": game.static_purchase_supply["分神"]}
+    player.resources = {"money": 3, "propaganda": 3}
+    final_result = game.buy_card(static_index)
+    assert_true(final_result.get("error") == "Static purchase card is out of supply", f"static buy should be blocked at supply 0: {final_result}")
+    return {"buys": buys, "final_buy": final_result, "initial_supply": initial_supply, "remaining_supply": game.static_purchase_supply["分神"]}
 
 
 def validate_hand_and_purchase_buttons_use_working_click_targets():
@@ -107,7 +112,7 @@ def main():
         "checks": {
             "purchase_deck_excludes_static_cards": validate_purchase_deck_excludes_static_cards(),
             "engine_play_card_modes_still_work": validate_engine_play_card_modes_still_work(),
-            "static_purchase_can_be_bought_once": validate_static_purchase_can_be_bought_once(),
+            "static_purchase_can_be_bought_repeatedly_until_supply_empty": validate_static_purchase_can_be_bought_repeatedly_until_supply_empty(),
             "hand_and_purchase_buttons_use_working_click_targets": validate_hand_and_purchase_buttons_use_working_click_targets(),
         },
         "passed": 11,
@@ -118,7 +123,7 @@ def main():
         "# Purchase deck / hand buttons validation\n\n"
         "- purchase deck excludes static cards in sample_53 and all_cards: passed\n"
         "- static area contains 宣傳家 / 思想家 / 資助者 / 資本家 / 分神 / 內鬥 only: passed\n"
-        "- static purchase card 分神 can be bought once, enters discard, decrements supply, and blocks a second buy at supply 0: passed\n"
+        "- static purchase card 分神 can be bought repeatedly until its live supply reaches 0, enters discard each time, and blocks further buys at supply 0: passed\n"
         "- play_card resource mode mutates resources/hand/discard: passed\n"
         "- play_card action mode mutates hand/discard: passed\n"
         "- hand card buttons use bound event listeners instead of inline playHandCard onclick: passed\n"

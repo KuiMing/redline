@@ -38,13 +38,103 @@
         "propaganda": 1
       }
     },
-    "static_purchase_can_be_bought_once": {
-      "first_buy": {
-        "success": true
-      },
-      "second_buy": {
+    "static_purchase_can_be_bought_repeatedly_until_supply_empty": {
+      "buys": [
+        {
+          "success": true
+        },
+        {
+          "success": true
+        },
+        {
+          "success": true
+        },
+        {
+          "success": true
+        },
+        {
+          "success": true
+        },
+        {
+          "success": true
+        },
+        {
+          "success": true
+        },
+        {
+          "success": true
+        },
+        {
+          "success": true
+        },
+        {
+          "success": true
+        },
+        {
+          "success": true
+        },
+        {
+          "success": true
+        },
+        {
+          "success": true
+        },
+        {
+          "success": true
+        },
+        {
+          "success": true
+        },
+        {
+          "success": true
+        },
+        {
+          "success": true
+        },
+        {
+          "success": true
+        },
+        {
+          "success": true
+        },
+        {
+          "success": true
+        },
+        {
+          "success": true
+        },
+        {
+          "success": true
+        },
+        {
+          "success": true
+        },
+        {
+          "success": true
+        },
+        {
+          "success": true
+        },
+        {
+          "success": true
+        },
+        {
+          "success": true
+        },
+        {
+          "success": true
+        },
+        {
+          "success": true
+        },
+        {
+          "success": true
+        }
+      ],
+      "final_buy": {
         "error": "Static purchase card is out of supply"
       },
+      "initial_supply": 30,
       "remaining_supply": 0
     },
     "hand_and_purchase_buttons_use_working_click_targets": {

@@ -132,9 +132,9 @@
           },
           "hand": [
             "追隨者",
+            "紅軍奧援",
+            "追隨者",
             "樂捐者",
-            "追隨者",
-            "追隨者",
             "樂捐者"
           ]
         }
@@ -144,13 +144,37 @@
       "step": "cycle_1_advance_to_action_before",
       "turn": 1,
       "turn_phase": "event",
-      "current_player": "anti"
+      "current_player": "anti",
+      "pending_choice": null
+    },
+    {
+      "step": "cycle_1_advance_event_step",
+      "result": {
+        "success": true
+      },
+      "turn": 1,
+      "turn_phase": "action",
+      "current_player": "anti",
+      "pending_choice": null,
+      "event": "一帶一路 南洋",
+      "event_progress": {
+        "count": 0,
+        "required": 0,
+        "succeeded": false,
+        "settled": false,
+        "status": "auto_pending",
+        "auto_target_player_id": "p2",
+        "auto_target_player_name": "red",
+        "auto_target_faction": "red_army"
+      }
     },
     {
       "step": "cycle_1_advance_to_action_after",
       "turn": 1,
       "turn_phase": "action",
-      "current_player": "anti"
+      "current_player": "anti",
+      "pending_choice": null,
+      "reached_action": true
     },
     {
       "step": "cycle_1_play_card",
@@ -183,7 +207,7 @@
       "player": "anti",
       "move_detail": null,
       "result": {
-        "skipped": "no movable non-anchor organization"
+        "skipped": "no move points available"
       },
       "orgs_after": {
         "香港城": 1
@@ -206,13 +230,57 @@
       "step": "cycle_2_advance_to_action_before",
       "turn": 1,
       "turn_phase": "event",
+      "current_player": "red",
+      "pending_choice": "event_build_organization"
+    },
+    {
+      "step": "cycle_2_resolve_event_choice",
+      "choice_key": "event_build_organization",
+      "choice_type": "town_choice",
+      "player_id": "p2",
+      "index": 0,
+      "result": {
+        "success": true,
+        "choice_index": 0,
+        "town": "仰光",
+        "selected": {
+          "town": "仰光",
+          "region": "southeast_asia"
+        },
+        "choice_key": "event_build_organization"
+      },
+      "turn": 1,
+      "turn_phase": "event",
       "current_player": "red"
+    },
+    {
+      "step": "cycle_2_advance_event_step",
+      "result": {
+        "success": true
+      },
+      "turn": 1,
+      "turn_phase": "action",
+      "current_player": "red",
+      "pending_choice": null,
+      "event": "一帶一路 南洋",
+      "event_progress": {
+        "count": 0,
+        "required": 0,
+        "succeeded": true,
+        "settled": true,
+        "status": "auto",
+        "auto_target_player_id": "p2",
+        "auto_target_player_name": "red",
+        "auto_target_faction": "red_army"
+      }
     },
     {
       "step": "cycle_2_advance_to_action_after",
       "turn": 1,
       "turn_phase": "action",
-      "current_player": "red"
+      "current_player": "red",
+      "pending_choice": null,
+      "reached_action": true
     },
     {
       "step": "cycle_2_play_card",
@@ -220,15 +288,15 @@
       "faction": "red_army",
       "hand_before": [
         "追隨者",
+        "紅軍奧援",
+        "追隨者",
         "樂捐者",
-        "追隨者",
-        "追隨者",
         "樂捐者"
       ],
       "hand_after": [
+        "紅軍奧援",
+        "追隨者",
         "樂捐者",
-        "追隨者",
-        "追隨者",
         "樂捐者"
       ],
       "result": {
@@ -245,10 +313,11 @@
       "player": "red",
       "move_detail": null,
       "result": {
-        "skipped": "no movable non-anchor organization"
+        "skipped": "no move points available"
       },
       "orgs_after": {
-        "北京": 1
+        "北京": 1,
+        "仰光": 1
       },
       "moves_left_after": 0
     },
@@ -268,13 +337,34 @@
       "step": "cycle_3_advance_to_action_before",
       "turn": 2,
       "turn_phase": "event",
-      "current_player": "anti"
+      "current_player": "anti",
+      "pending_choice": null
+    },
+    {
+      "step": "cycle_3_advance_event_step",
+      "result": {
+        "success": true
+      },
+      "turn": 2,
+      "turn_phase": "action",
+      "current_player": "anti",
+      "pending_choice": null,
+      "event": "歲月靜好",
+      "event_progress": {
+        "count": 0,
+        "required": 0,
+        "succeeded": true,
+        "settled": true,
+        "status": "idle"
+      }
     },
     {
       "step": "cycle_3_advance_to_action_after",
       "turn": 2,
       "turn_phase": "action",
-      "current_player": "anti"
+      "current_player": "anti",
+      "pending_choice": null,
+      "reached_action": true
     },
     {
       "step": "cycle_3_play_card",
@@ -307,7 +397,7 @@
       "player": "anti",
       "move_detail": null,
       "result": {
-        "skipped": "no movable non-anchor organization"
+        "skipped": "no move points available"
       },
       "orgs_after": {
         "香港城": 1
@@ -330,13 +420,34 @@
       "step": "cycle_4_advance_to_action_before",
       "turn": 2,
       "turn_phase": "event",
-      "current_player": "red"
+      "current_player": "red",
+      "pending_choice": null
+    },
+    {
+      "step": "cycle_4_advance_event_step",
+      "result": {
+        "success": true
+      },
+      "turn": 2,
+      "turn_phase": "action",
+      "current_player": "red",
+      "pending_choice": null,
+      "event": "歲月靜好",
+      "event_progress": {
+        "count": 0,
+        "required": 0,
+        "succeeded": true,
+        "settled": true,
+        "status": "idle"
+      }
     },
     {
       "step": "cycle_4_advance_to_action_after",
       "turn": 2,
       "turn_phase": "action",
-      "current_player": "red"
+      "current_player": "red",
+      "pending_choice": null,
+      "reached_action": true
     },
     {
       "step": "cycle_4_play_card",
@@ -346,14 +457,14 @@
         "追隨者",
         "追隨者",
         "追隨者",
-        "樂捐者",
-        "追隨者"
+        "追隨者",
+        "樂捐者"
       ],
       "hand_after": [
         "追隨者",
         "追隨者",
-        "樂捐者",
-        "追隨者"
+        "追隨者",
+        "樂捐者"
       ],
       "result": {
         "success": true
@@ -369,10 +480,11 @@
       "player": "red",
       "move_detail": null,
       "result": {
-        "skipped": "no movable non-anchor organization"
+        "skipped": "no move points available"
       },
       "orgs_after": {
-        "北京": 1
+        "北京": 1,
+        "仰光": 1
       },
       "moves_left_after": 0
     },
@@ -413,18 +525,48 @@
     "active_eras": [],
     "active_era_details": [],
     "era_notification": null,
+    "current_event": {
+      "id": "quiet_times",
+      "name": "歲月靜好",
+      "type": "idle",
+      "trigger": {},
+      "success": {},
+      "failure": {},
+      "progress": {
+        "count": 0,
+        "required": 0,
+        "succeeded": true,
+        "settled": true,
+        "status": "idle"
+      },
+      "status": "idle",
+      "result_text": "本次事件無效果",
+      "trigger_text": "無",
+      "success_text": "無",
+      "failure_text": "無"
+    },
+    "event_deck_count": 22,
+    "red_army_action_count": 0,
+    "red_army_action_limit": 1,
+    "event_discard_count": 3,
+    "event_modifiers": [],
     "market_mode": "sample_53",
     "pending_base_choices": {},
     "pending_choice": null,
+    "faction_action_used": false,
     "action_log": [
+      "[Turn 1] Event drawn: 一帶一路 南洋 (auto deferred)",
       "[Turn 1] anti played 追隨者",
       "[Turn 1] End of turn for anti",
+      "[Turn 1] red built organization in 仰光 via event",
       "[Turn 1] red played 追隨者",
       "[Turn 1] End of turn for red",
+      "[Turn 2] Event drawn: 歲月靜好 (no-op)",
       "[Turn 2] anti played 樂捐者",
       "[Turn 2] End of turn for anti",
       "[Turn 2] red played 追隨者",
-      "[Turn 2] End of turn for red"
+      "[Turn 2] End of turn for red",
+      "[Turn 3] Event drawn: 歲月靜好 (no-op)"
     ],
     "purchase_area": [
       "宣傳家",
@@ -433,19 +575,19 @@
       "資本家",
       "分神",
       "內鬥",
-      "組織經驗甲",
-      "凝聚共識",
+      "高效行動",
+      "組織經驗乙",
+      "樹立信心",
       "離間",
-      "批鬥",
-      "樹立信心"
+      "武裝小隊"
     ],
     "static_purchase_supply": {
-      "宣傳家": 1,
-      "思想家": 1,
-      "資助者": 1,
-      "資本家": 1,
-      "分神": 1,
-      "內鬥": 1
+      "宣傳家": 10,
+      "思想家": 10,
+      "資助者": 10,
+      "資本家": 10,
+      "分神": 10,
+      "內鬥": 10
     },
     "map": {
       "towns": {
@@ -552,14 +694,15 @@
         },
         "moves_left": 0,
         "hand": [
-          "追隨者",
-          "追隨者",
+          "樂捐者",
           "追隨者",
           "樂捐者",
+          "追隨者",
           "追隨者"
         ],
         "deck_count": 5,
         "discard_count": 0,
+        "discard_pile": [],
         "orgs": {
           "三亞": 1,
           "上海": 1,
@@ -590,12 +733,13 @@
         "hand": [
           "追隨者",
           "樂捐者",
-          "樂捐者",
+          "追隨者",
           "追隨者",
           "追隨者"
         ],
-        "deck_count": 5,
+        "deck_count": 6,
         "discard_count": 0,
+        "discard_pile": [],
         "orgs": {
           "北京": 1
         }

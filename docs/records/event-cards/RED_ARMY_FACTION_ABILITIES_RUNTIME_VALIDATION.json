@@ -13,7 +13,7 @@
     {
       "name": "red_army_propaganda_department_topdecks_internal_conflict_and_limits_same_target",
       "ok": true,
-      "detail": "start={'pending_choice': True}, choice=None, resolved={'success': True, 'choice_index': 0, 'target_id': 'a', 'selected': {'id': 'a', 'label': 'A', 'player_id': 'a'}, 'choice_key': 'red_army_propaganda_department_target', 'name': '政工部', 'target_player_name': 'A', 'topdecked_card': '內鬥', 'static_supply_empty': False}, top=內鬥, top_type=disruption, supply_after=0, repeat={'error': '政工部 already used on this player this turn'}"
+      "detail": "start={'pending_choice': True}, choice=None, resolved={'success': True, 'choice_index': 0, 'target_id': 'a', 'selected': {'id': 'a', 'label': 'A', 'player_id': 'a'}, 'choice_key': 'red_army_propaganda_department_target', 'name': '政工部', 'target_player_name': 'A', 'topdecked_card': '內鬥', 'static_supply_empty': False}, top=內鬥, top_type=disruption, supply_before=10, supply_after=9, repeat={'error': '政工部 already used on this player this turn'}"
     },
     {
       "name": "red_army_propaganda_department_does_not_create_internal_conflict_when_supply_empty",

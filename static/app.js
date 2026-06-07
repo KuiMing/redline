@@ -701,7 +701,7 @@ function renderBadgeList(items, className = '') {
   return `<div class="card-badges ${className}">${items.map(item => `<span class="card-badge">${escapeHtml(item)}</span>`).join('')}</div>`;
 }
 
-function renderCardFace(cardName, zone, isStatic = false, compact = false) {
+function renderCardFace(cardName, zone, isStatic = false, compact = false, countOverride = null) {
   const info = cardPresentation(cardName) || {};
   const isSupport = /奧援/.test(cardName);
   const color = info.color || (isSupport ? '奧援' : '灰');
@@ -715,7 +715,8 @@ function renderCardFace(cardName, zone, isStatic = false, compact = false) {
   if (info.position_text) badgeItems.push(info.position_text);
   else badgeItems.push(typeLabel);
   const meaning = info.meaning_text ? `<div class="card-meaning">${escapeHtml(info.meaning_text)}</div>` : '';
-  const count = info.count_text ? `<div class="card-count">剩 ${escapeHtml(info.count_text)}</div>` : '';
+  const countText = countOverride != null ? String(countOverride) : info.count_text;
+  const count = countText ? `<div class="card-count">剩 ${escapeHtml(countText)}</div>` : '';
   return `
     <div class="card-face ${colorClass}${compact ? ' compact' : ''}" style="${colorStyle}">
       <div class="card-face-top">
@@ -1898,8 +1899,15 @@ function renderFactionActionPanel(state) {
     const usedCount = Number(state.red_army_action_count || 0);
     const limitCount = Number(state.red_army_action_limit || 0);
     const usedUp = limitCount > 0 && usedCount >= limitCount;
+    if (usedUp || hasResult) {
+      panel.style.display = 'none';
+      panel.classList.remove('overlay-active');
+      info.textContent = '';
+      buttons.innerHTML = '';
+      return;
+    }
     panel.style.display = 'block';
-    info.innerHTML = factionResult.html || `
+    info.innerHTML = `
       <div class="faction-action-placeholder">
         <div>紅軍能力不再自動彈出；可在開始購買階段前，按上方或此處的「紅軍能力」按鈕自行選擇時機。</div>
         <div>本回合已用 ${usedCount}/${limitCount} 次。</div>
@@ -2418,7 +2426,7 @@ async function render(state) {
       const buyTitle = isStatic && staticSupply <= 0 ? '常設供應已售完' : '購買此卡';
       container.innerHTML += `
         <div class='card ${typeClass}${supportClass} ${colorClass}' onclick="selectCardDetail(${JSON.stringify(card)},'purchase',${isStatic})" ${canBuy ? `ondblclick="sendAction('buy_card',{index:${i}})"` : ''}>
-          ${renderCardFace(card, 'purchase', isStatic, true)}
+          ${renderCardFace(card, 'purchase', isStatic, true, isStatic ? staticSupply : null)}
           <button class="purchase-card-buy-btn" type="button" ${canBuy ? '' : 'disabled aria-disabled="true"'} title="${buyTitle}" onclick="event.stopPropagation(); sendAction('buy_card',{index:${i}})">購買</button>
         </div>`;
     });

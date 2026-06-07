@@ -1,0 +1,122 @@
+{
+  "summary": {
+    "total": 5,
+    "passed": 5,
+    "failed": 0
+  },
+  "checks": [
+    {
+      "name": "static_propagandist_can_be_bought_after_first_round_and_supply_decrements",
+      "passed": true,
+      "details": {
+        "before": 15,
+        "after": 13,
+        "first": {
+          "success": true
+        },
+        "second": {
+          "success": true
+        }
+      }
+    },
+    {
+      "name": "propagandist_action_returns_card_builds_and_grants_one_move_without_bait_prompt",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true
+        },
+        "before_supply": 15,
+        "after_supply": 16,
+        "orgs": {
+          "臺北": 2
+        },
+        "moves_left": 1,
+        "pending_choice": null
+      }
+    },
+    {
+      "name": "press_advantage_opens_discard_gain_choice",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true,
+          "pending_choice": true
+        },
+        "pending_choice": {
+          "type": "card_choice",
+          "choice_key": "gain_from_discard",
+          "player_id": "ben",
+          "prompt": "從己方棄牌堆任選1張費用3點以下的牌加入手牌。",
+          "source_name": "乘勝追擊",
+          "count": null,
+          "min_count": null,
+          "mode": null,
+          "acting_player_id": null,
+          "acting_player_name": null,
+          "played_card_name": null,
+          "region": null,
+          "free": null,
+          "ignore_distance": null,
+          "cards": [
+            "宣傳家"
+          ],
+          "options": [],
+          "towns": [],
+          "targets": [],
+          "step": null
+        }
+      }
+    },
+    {
+      "name": "support_resource_gives_no_resources_and_support_purchase_removes_random_slot",
+      "passed": true,
+      "details": {
+        "resource_result": {
+          "success": true
+        },
+        "resources_after": {
+          "money": 0,
+          "propaganda": 0
+        },
+        "before_area": [
+          "宣傳家",
+          "思想家",
+          "資助者",
+          "資本家",
+          "分神",
+          "內鬥",
+          "北國奧援"
+        ],
+        "buy_result": {
+          "success": true
+        },
+        "after_area": [
+          "宣傳家",
+          "思想家",
+          "資助者",
+          "資本家",
+          "分神",
+          "內鬥"
+        ]
+      }
+    },
+    {
+      "name": "east_turkestan_failure_random_discards_non_red_not_red",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true,
+          "effect": "discard_random"
+        },
+        "non_red_hand": [],
+        "non_red_discard": [
+          "手牌0"
+        ],
+        "red_hand": [
+          "手牌1"
+        ]
+      }
+    }
+  ]
+}

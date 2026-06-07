@@ -413,6 +413,7 @@
         "success": true
       },
       "action_log_tail": [
+        "[Turn 1] Event drawn: 紅軍權貴出逃",
         "[Turn 1] player resolved 南洋奧援 at tier 2 (matched rulers: 臺灣, 東洋)",
         "[Turn 1] player played 南洋奧援"
       ],
@@ -578,6 +579,7 @@
         "success": true
       },
       "action_log_tail": [
+        "[Turn 1] Event drawn: 全國人大召開",
         "[Turn 1] player resolved 印度奧援 at tier 2 (matched rulers: 南洋, 英美)",
         "[Turn 1] player played 印度奧援"
       ],

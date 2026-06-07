@@ -306,9 +306,15 @@ class EffectEngine:
                 })
             if not removable:
                 return
+            source_name = context.get('card_name') if context else None
+            if source_name in {'宣傳家', '思想家', '資助者', '資本家', '分神'} and current_card is not None:
+                returned = game._return_removed_card_to_purchase_supply(current_card) if hasattr(game, '_return_removed_card_to_purchase_supply') else None
+                context['removed_current_card'] = True
+                if hasattr(game, 'log'):
+                    game.log(f"{player.name} removed {source_name} and returned it to static purchase supply")
+                return {'removed_current_card': True, 'removed_card': returned}
             if hasattr(game, '_set_pending_card_choice'):
-                source_name = context.get('card_name') if context else None
-                prompt = f"{source_name or '誘導虛耗'}：你可以移除誘導虛耗這張卡牌。"
+                prompt = f"{source_name or '此牌'}：你可以移除剛打出的這張牌，或移除 1 張手牌。"
                 targets = [
                     {
                         'id': getattr(other, 'id', None),
@@ -317,19 +323,22 @@ class EffectEngine:
                     for other in getattr(game, 'players', [])
                     if other != player and getattr(other, 'id', None) is not None
                 ]
+                followup_target_choice = None
+                if source_name == '誘導虛耗':
+                    followup_target_choice = {
+                        'choice_key': 'bait_exhaustion_target',
+                        'prompt': '誘導虛耗：請選擇 1 位玩家棄掉 1 張手牌。',
+                        'targets': targets,
+                        'source_name': source_name,
+                    }
                 game._set_pending_card_choice(
                     player,
                     'optional_trash',
                     removable,
                     prompt,
-                    source_name=source_name or '誘導虛耗',
+                    source_name=source_name or '此牌',
                     context=context,
-                    followup_target_choice={
-                        'choice_key': 'bait_exhaustion_target',
-                        'prompt': '誘導虛耗：請選擇 1 位玩家棄掉 1 張手牌。',
-                        'targets': targets,
-                        'source_name': source_name or '誘導虛耗',
-                    },
+                    followup_target_choice=followup_target_choice,
                 )
                 return {'pending_choice': True}
             return

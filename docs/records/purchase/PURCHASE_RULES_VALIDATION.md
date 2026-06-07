@@ -1,6 +1,6 @@
 # Purchase Rules Validation
 
-Generated: 2026-05-14
+Generated: 2026-06-07
 
 Summary: 4/4 passed
 
@@ -16,8 +16,8 @@ Summary: 4/4 passed
     "money": 0,
     "propaganda": 0
   },
-  "supply_before": 1,
-  "supply_after": 0,
+  "supply_before": 15,
+  "supply_after": 14,
   "area_before": [
     "宣傳家",
     "思想家",
@@ -25,11 +25,11 @@ Summary: 4/4 passed
     "資本家",
     "分神",
     "內鬥",
-    "組織經驗甲",
-    "凝聚共識",
+    "高效行動",
+    "組織經驗乙",
+    "樹立信心",
     "離間",
-    "批鬥",
-    "樹立信心"
+    "武裝小隊"
   ],
   "area_after": [
     "宣傳家",
@@ -38,11 +38,11 @@ Summary: 4/4 passed
     "資本家",
     "分神",
     "內鬥",
-    "組織經驗甲",
-    "凝聚共識",
+    "高效行動",
+    "組織經驗乙",
+    "樹立信心",
     "離間",
-    "批鬥",
-    "樹立信心"
+    "武裝小隊"
   ],
   "discard_before": [],
   "discard_after": [

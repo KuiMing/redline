@@ -29,7 +29,16 @@ SUPPORT_CARDS_PATH = BASE_DIR / "data" / "cards" / "support_cards.v1.1.json"
 SUPPORT_TAXONOMY_PATH = BASE_DIR / "data" / "cards" / "support_taxonomy.v1.1.json"
 EVENT_STRUCTURED_PATH = BASE_DIR / "data" / "events_structured.v1.1.json"
 EVENT_CARD_COUNTS_PATH = BASE_DIR / "data" / "cards" / "event_and_era_cards.v1.1.json"
-STATIC_PURCHASE_CARD_NAMES = ('宣傳家', '思想家', '資助者', '資本家', '分神', '內鬥')
+STATIC_PURCHASE_CARD_SUPPLY = {
+    # data/raw/action_cards.csv 「卡牌張數」
+    '宣傳家': 15,
+    '思想家': 15,
+    '資助者': 15,
+    '資本家': 15,
+    '分神': 30,
+    '內鬥': 20,
+}
+STATIC_PURCHASE_CARD_NAMES = tuple(STATIC_PURCHASE_CARD_SUPPLY)
 
 
 class GamePhase(str, Enum):
@@ -148,7 +157,7 @@ class Game:
         self.action_log = []
         self.purchase_deck = self._initial_purchase_deck()
         self.purchase_area = self._initial_purchase_area()
-        self.static_purchase_supply = {name: 1 for name in STATIC_PURCHASE_CARD_NAMES}
+        self.static_purchase_supply = dict(STATIC_PURCHASE_CARD_SUPPLY)
         self.event_deck = EventDeck(self._initial_event_cards())
         self.current_event = None
         self.event_progress = None
@@ -626,10 +635,18 @@ class Game:
                 self._set_pending_multi_card_choice(player, 'event_discard_self', cards, f"{self.current_event.get('name')}：請選擇 {min(count, len(cards))} 張手牌棄掉。", min(count, len(cards)), source_name=self.current_event.get('name'))
                 return {'success': True, 'pending_choice': True}
         elif t == 'discard_random':
-            for _ in range(min(count, len(player.hand))):
-                card = random.choice(player.hand)
-                player.hand.remove(card)
-                player.deck.discard([card])
+            targets = [player]
+            if outcome == 'failure' and not (effect or {}).get('player_faction'):
+                targets = [p for p in self.players if getattr(p, 'faction_id', None) != 'red_army']
+            discarded_total = 0
+            for target in targets:
+                for _ in range(min(count, len(target.hand))):
+                    card = random.choice(target.hand)
+                    target.hand.remove(card)
+                    target.deck.discard([card])
+                    discarded_total += 1
+            if discarded_total:
+                self.log(f"Event {outcome}: discarded {discarded_total} random hand card(s)")
         elif t == 'red_dissolve':
             red = self._red_player()
             if red:
@@ -868,7 +885,8 @@ class Game:
 
     def _make_support_card(self, support_name):
         entry = self._support_taxonomy_entry(support_name) or {}
-        return Card(support_name, self._support_card_runtime_type(support_name), self._support_card_cost(support_name), effect={'support_taxonomy': entry})
+        # 奧援卡沒有「資源模式」印刷資源；購買費用由 _support_card_cost 另行計算。
+        return Card(support_name, self._support_card_runtime_type(support_name), {}, effect={'support_taxonomy': entry})
 
     def _static_purchase_cards(self):
         cards = []
@@ -1285,6 +1303,7 @@ class Game:
                     'pending_choice': True,
                 }
             self.pending_choice = None
+            resume_result = self._resume_after_optional_trash(player, choice, removed_current_card=removes_current_card)
             return {
                 'success': True,
                 'chosen_card': getattr(card, 'name', str(card)),
@@ -1292,6 +1311,7 @@ class Game:
                 'zone_label': zone_label,
                 'removed_card': returned,
                 'removed_current_card': removes_current_card,
+                **({'pending_choice': True} if isinstance(resume_result, dict) and resume_result.get('pending_choice') else {}),
             }
 
         if choice_key in {'armed_target_discard', 'era_bonus_discard_on_red_card'}:
@@ -3632,6 +3652,38 @@ class Game:
         if not return_borrowed and reaction_context['reaction_card'] not in reaction_player.deck.discard_pile:
             reaction_player.deck.discard([reaction_context['reaction_card']])
 
+    def _pending_choice_holds_current_card(self):
+        choice = getattr(self, 'pending_choice', None) or {}
+        return bool(
+            isinstance(choice, dict)
+            and choice.get('choice_key') == 'optional_trash'
+            and isinstance(choice.get('context'), dict)
+            and choice['context'].get('current_card') is not None
+        )
+
+    def _resume_after_optional_trash(self, player, choice, removed_current_card=False):
+        context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
+        card_name = context.get('card_name') or choice.get('source_name')
+        current_card = context.get('current_card')
+        if not removed_current_card and current_card is not None:
+            if not self._return_borrowed_card_to_owner_topdeck(current_card):
+                player.deck.discard([current_card])
+        if not card_name or card_name == '誘導虛耗':
+            return None
+        card_def = getattr(self.action_engine, 'cards', {}).get(card_name) if getattr(self, 'action_engine', None) else None
+        if not card_def:
+            return None
+        seen_optional = False
+        for effect in card_def.get('effect', []):
+            if not seen_optional:
+                if effect.get('type') == 'optional_trash':
+                    seen_optional = True
+                continue
+            result = self.effect_engine.execute(effect, player, self, context=context)
+            if isinstance(result, dict) and result.get('pending_choice'):
+                return result
+        return None
+
     def play_card(self, index, mode=None, target_player_id=None, reaction=None):
         if mode not in {"resource", "action"}:
             return {"error": "Card play mode must be resource or action"}
@@ -3679,11 +3731,10 @@ class Game:
         card_name = pending_card_name
 
         if mode == "resource":
-            if getattr(played_card, 'name', str(played_card)) == '紅軍奧援':
-                support_resolution = self._resolve_red_support_target_choice(player, played_card, mode='resource')
-                if support_resolution and support_resolution.get('pending_choice'):
-                    self.log(f"{player.name} played {card_name} as resource")
-                    return {"success": True, "pending_choice": True}
+            if getattr(played_card, 'card_type', None) == 'support':
+                player.deck.discard([played_card])
+                self.log(f"{player.name} played {card_name} as resource (no resources from support card)")
+                return {"success": True}
             for key, value in getattr(played_card, 'resources', {}).items():
                 player.resources[key] += value
             self._apply_era_resource_card_bonus(player, played_card)
@@ -3794,7 +3845,7 @@ class Game:
                     action_result = self.action_engine.execute(card_name, player, self, context=action_context, include_resources=False)
                     if isinstance(action_result, dict) and action_result.get('pending_choice'):
                         self._apply_era_play_card_effects(player, played_card)
-                        if not action_context.get('removed_current_card'):
+                        if not action_context.get('removed_current_card') and not self._pending_choice_holds_current_card():
                             if not self._return_borrowed_card_to_owner_topdeck(played_card):
                                 player.deck.discard([played_card])
                         self.log(f"{player.name} played {card_name}")
