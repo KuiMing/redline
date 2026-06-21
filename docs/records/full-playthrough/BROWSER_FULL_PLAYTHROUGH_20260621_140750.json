@@ -1,0 +1,6913 @@
+{
+  "passed": true,
+  "room_id": "95f1ebaa-e69d-4497-a5ed-5830ab5ffd8c",
+  "screenshots": [
+    "/Users/benmini/.openclaw/workspace/redline/docs/records/full-playthrough/20260621_140750/01_lobby_ready.png",
+    "/Users/benmini/.openclaw/workspace/redline/docs/records/full-playthrough/20260621_140750/020_progress.png",
+    "/Users/benmini/.openclaw/workspace/redline/docs/records/full-playthrough/20260621_140750/02_game_start_current_player.png",
+    "/Users/benmini/.openclaw/workspace/redline/docs/records/full-playthrough/20260621_140750/120_progress.png",
+    "/Users/benmini/.openclaw/workspace/redline/docs/records/full-playthrough/20260621_140750/240_progress.png",
+    "/Users/benmini/.openclaw/workspace/redline/docs/records/full-playthrough/20260621_140750/360_progress.png",
+    "/Users/benmini/.openclaw/workspace/redline/docs/records/full-playthrough/20260621_140750/99_final_state.png"
+  ],
+  "trace": [
+    {
+      "step": "rules_loaded",
+      "rules": {
+        "path": "/Users/benmini/.openclaw/workspace/redline/rules.md",
+        "sha256": "3b349ccb3ef27eceb3e2fd3478f2935b07f9b43e28df2e0c521249519646998e",
+        "lines": 202
+      }
+    },
+    {
+      "step": "create_room",
+      "room_id": "95f1ebaa-e69d-4497-a5ed-5830ab5ffd8c"
+    },
+    {
+      "step": "join_room",
+      "player": "B"
+    },
+    {
+      "step": "join_room",
+      "player": "C"
+    },
+    {
+      "step": "join_room",
+      "player": "D"
+    },
+    {
+      "step": "choose_faction",
+      "label": "紅軍",
+      "info": "目前陣營：紅軍｜根據地：北京"
+    },
+    {
+      "step": "choose_faction",
+      "label": "臺灣",
+      "info": "目前陣營：臺灣（綠線）｜根據地：臺北"
+    },
+    {
+      "step": "choose_faction",
+      "label": "香港",
+      "info": "目前陣營：香港｜根據地：香港城"
+    },
+    {
+      "step": "choose_faction",
+      "label": "蒙古",
+      "info": "目前陣營：蒙古｜根據地：烏蘭巴托"
+    },
+    {
+      "step": "ready",
+      "player": "A"
+    },
+    {
+      "step": "ready",
+      "player": "B"
+    },
+    {
+      "step": "ready",
+      "player": "C"
+    },
+    {
+      "step": "ready",
+      "player": "D"
+    },
+    {
+      "step": "start_game_clicked"
+    },
+    {
+      "step": "game_shell_visible",
+      "player": "A",
+      "state": {
+        "turn": 1,
+        "turn_phase": "event",
+        "game_phase": "main",
+        "current_player": "B",
+        "winner": null,
+        "pending_choice": null
+      }
+    },
+    {
+      "step": "game_shell_visible",
+      "player": "B",
+      "state": {
+        "turn": 1,
+        "turn_phase": "event",
+        "game_phase": "main",
+        "current_player": "B",
+        "winner": null,
+        "pending_choice": null
+      }
+    },
+    {
+      "step": "game_shell_visible",
+      "player": "C",
+      "state": {
+        "turn": 1,
+        "turn_phase": "event",
+        "game_phase": "main",
+        "current_player": "B",
+        "winner": null,
+        "pending_choice": null
+      }
+    },
+    {
+      "step": "game_shell_visible",
+      "player": "D",
+      "state": {
+        "turn": 1,
+        "turn_phase": "event",
+        "game_phase": "main",
+        "current_player": "B",
+        "winner": null,
+        "pending_choice": null
+      }
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 1,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 1,
+      "player": "B"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 1,
+      "player": "B"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 1,
+      "player": "B"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 1,
+      "player": "B"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 1,
+      "player": "B"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 1,
+      "player": "B"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 1,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 1,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 1,
+      "player": "C"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 1,
+      "player": "C"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 1,
+      "player": "C"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 1,
+      "player": "C"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 1,
+      "player": "C"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 1,
+      "player": "C"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 1,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 1,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 1,
+      "player": "D"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 1,
+      "player": "D"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 1,
+      "player": "D"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 1,
+      "player": "D"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 1,
+      "player": "D"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 1,
+      "player": "D"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 1,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 1,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 1,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 1,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 1,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 1,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 1,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 1,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 1,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 1,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 1,
+      "player": "host"
+    },
+    {
+      "step": "resolve_pending_choice_ui",
+      "choice": {
+        "type": "target_choice",
+        "choice_key": "red_support_target_player",
+        "player_id": "8b682284-4dd6-4cae-af34-976b79633257",
+        "step": null,
+        "count": null
+      },
+      "selector": "#choiceModal .choice-card-grid button:visible:not(#closeChoiceModal)"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 1,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 1,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 1,
+      "player": "host"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 1,
+      "player": "host"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 1,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 2,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 2,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 2,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 2,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 2,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 2,
+      "player": "B"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 2,
+      "player": "B"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 2,
+      "player": "B"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 2,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 2,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 2,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 2,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 2,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 2,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 2,
+      "player": "C"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 2,
+      "player": "C"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 2,
+      "player": "C"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 2,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 2,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 2,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 2,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 2,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 2,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 2,
+      "player": "D"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 2,
+      "player": "D"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 2,
+      "player": "D"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 2,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 2,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 2,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 2,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 2,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 2,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 2,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 2,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 2,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 2,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 2,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 2,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 2,
+      "player": "host"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 2,
+      "player": "host"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 2,
+      "player": "host"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 2,
+      "player": "host"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 2,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 3,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 3,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 3,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 3,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 3,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 3,
+      "player": "B"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 3,
+      "player": "B"
+    },
+    {
+      "step": "buy_random_card_ui",
+      "index": 6,
+      "turn": 3,
+      "player": "B"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 3,
+      "player": "B"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 3,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 3,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 3,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 3,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 3,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 3,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 3,
+      "player": "C"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 3,
+      "player": "C"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 3,
+      "player": "C"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 3,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 3,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 3,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 3,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 3,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 3,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 3,
+      "player": "D"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 3,
+      "player": "D"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 3,
+      "player": "D"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 3,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 3,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 3,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 3,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 3,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 3,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 3,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 3,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 3,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 3,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 3,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 3,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 3,
+      "player": "host"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 3,
+      "player": "host"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 3,
+      "player": "host"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 3,
+      "player": "host"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 3,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 4,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 4,
+      "player": "B"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 4,
+      "player": "B"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 4,
+      "player": "B"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 4,
+      "player": "B"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 4,
+      "player": "B"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 4,
+      "player": "B"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 4,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 4,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 4,
+      "player": "C"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 4,
+      "player": "C"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 4,
+      "player": "C"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 4,
+      "player": "C"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 4,
+      "player": "C"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 4,
+      "player": "C"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 4,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 4,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 4,
+      "player": "D"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 4,
+      "player": "D"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 4,
+      "player": "D"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 4,
+      "player": "D"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 4,
+      "player": "D"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 4,
+      "player": "D"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 4,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 4,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 4,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 4,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 4,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 4,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 4,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 4,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 4,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 4,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 4,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 4,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 4,
+      "player": "host"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 4,
+      "player": "host"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 4,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 5,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 5,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 5,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 5,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 5,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 5,
+      "player": "B"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 5,
+      "player": "B"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 5,
+      "player": "B"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 5,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 5,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 5,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 5,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 5,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 5,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 5,
+      "player": "C"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 5,
+      "player": "C"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 5,
+      "player": "C"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 5,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 5,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 5,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 5,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 5,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 5,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 5,
+      "player": "D"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 5,
+      "player": "D"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 5,
+      "player": "D"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 5,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 5,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 5,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 5,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 5,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 5,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 5,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 5,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 5,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 5,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 5,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 5,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 5,
+      "player": "host"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 5,
+      "player": "host"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 5,
+      "player": "host"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 5,
+      "player": "host"
+    },
+    {
+      "step": "resolve_event_build_on_map_ui",
+      "choice": {
+        "type": "town_choice",
+        "choice_key": "event_build_organization",
+        "player_id": "8b682284-4dd6-4cae-af34-976b79633257",
+        "step": null,
+        "count": 1
+      },
+      "town": "天津"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 5,
+      "player": "host"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 5,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 6,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 6,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 6,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 6,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 6,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 6,
+      "player": "B"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 6,
+      "player": "B"
+    },
+    {
+      "step": "buy_random_card_ui",
+      "index": 6,
+      "turn": 6,
+      "player": "B"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 6,
+      "player": "B"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 6,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 6,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 6,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 6,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 6,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 6,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 6,
+      "player": "C"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 6,
+      "player": "C"
+    },
+    {
+      "step": "buy_random_card_ui",
+      "index": 6,
+      "turn": 6,
+      "player": "C"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 6,
+      "player": "C"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 6,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 6,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 6,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 6,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 6,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 6,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 6,
+      "player": "D"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 6,
+      "player": "D"
+    },
+    {
+      "step": "buy_random_card_ui",
+      "index": 6,
+      "turn": 6,
+      "player": "D"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 6,
+      "player": "D"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 6,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 6,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 6,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 6,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 6,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 6,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 6,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 6,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 6,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 6,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 6,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 6,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 6,
+      "player": "host"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 6,
+      "player": "host"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 6,
+      "player": "host"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 6,
+      "player": "host"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 6,
+      "player": "host"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 6,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 7,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 7,
+      "player": "B"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 7,
+      "player": "B"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 7,
+      "player": "B"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 7,
+      "player": "B"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 7,
+      "player": "B"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 7,
+      "player": "B"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 7,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 7,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 7,
+      "player": "C"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 7,
+      "player": "C"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 7,
+      "player": "C"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 7,
+      "player": "C"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 7,
+      "player": "C"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 7,
+      "player": "C"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 7,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 7,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 7,
+      "player": "D"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 7,
+      "player": "D"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 7,
+      "player": "D"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 7,
+      "player": "D"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 7,
+      "player": "D"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 7,
+      "player": "D"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 7,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 7,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 7,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 7,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 7,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 7,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 7,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 7,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 7,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 7,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 7,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 7,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 7,
+      "player": "host"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 7,
+      "player": "host"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 7,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 8,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 8,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 8,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 8,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 8,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 8,
+      "player": "B"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 8,
+      "player": "B"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 8,
+      "player": "B"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 8,
+      "player": "B"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 8,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 8,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 8,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 8,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 8,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 8,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 8,
+      "player": "C"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 8,
+      "player": "C"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 2,
+      "card": "資助者",
+      "turn": 8,
+      "player": "C"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 8,
+      "player": "C"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 8,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 8,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 8,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 8,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 8,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 8,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 8,
+      "player": "D"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 8,
+      "player": "D"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 8,
+      "player": "D"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 8,
+      "player": "D"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 8,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 8,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 8,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 8,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 8,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 8,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 8,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 8,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 8,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 8,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 8,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 8,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 8,
+      "player": "host"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 8,
+      "player": "host"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 1,
+      "card": "思想家",
+      "turn": 8,
+      "player": "host"
+    },
+    {
+      "step": "buy_random_card_ui",
+      "index": 6,
+      "turn": 8,
+      "player": "host"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 8,
+      "player": "host"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 8,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 9,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 9,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 9,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 9,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 9,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 9,
+      "player": "B"
+    },
+    {
+      "step": "buy_random_card_ui",
+      "index": 6,
+      "turn": 9,
+      "player": "B"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 9,
+      "player": "B"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 9,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 9,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 9,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 9,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 9,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 9,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 9,
+      "player": "C"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 1,
+      "card": "思想家",
+      "turn": 9,
+      "player": "C"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 9,
+      "player": "C"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 9,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 9,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 9,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 9,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 9,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 9,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 9,
+      "player": "D"
+    },
+    {
+      "step": "buy_random_card_ui",
+      "index": 6,
+      "turn": 9,
+      "player": "D"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 9,
+      "player": "D"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 9,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 9,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 9,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 9,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 9,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 9,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 9,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 9,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 9,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 9,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 9,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 9,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 9,
+      "player": "host"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 1,
+      "card": "思想家",
+      "turn": 9,
+      "player": "host"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 1,
+      "card": "思想家",
+      "turn": 9,
+      "player": "host"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 9,
+      "player": "host"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 9,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 10,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 10,
+      "player": "B"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 10,
+      "player": "B"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 10,
+      "player": "B"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 10,
+      "player": "B"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 10,
+      "player": "B"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 10,
+      "player": "B"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 10,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 10,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 10,
+      "player": "C"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 10,
+      "player": "C"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 10,
+      "player": "C"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 10,
+      "player": "C"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 10,
+      "player": "C"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 2,
+      "card": "資助者",
+      "turn": 10,
+      "player": "C"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 10,
+      "player": "C"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 10,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 10,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 10,
+      "player": "D"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 10,
+      "player": "D"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 10,
+      "player": "D"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 10,
+      "player": "D"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 10,
+      "player": "D"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 10,
+      "player": "D"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 10,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 10,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 10,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 10,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 10,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 10,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 10,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 10,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 10,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 10,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 10,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 10,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 10,
+      "player": "host"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 10,
+      "player": "host"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 10,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 11,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 11,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 11,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 11,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 11,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 11,
+      "player": "B"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 11,
+      "player": "B"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 11,
+      "player": "B"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 11,
+      "player": "B"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 11,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 11,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 11,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 11,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 11,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 11,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 11,
+      "player": "C"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 11,
+      "player": "C"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 11,
+      "player": "C"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 2,
+      "card": "資助者",
+      "turn": 11,
+      "player": "C"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 11,
+      "player": "C"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 11,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 11,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 11,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 11,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 11,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 11,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 11,
+      "player": "D"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 11,
+      "player": "D"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 11,
+      "player": "D"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 11,
+      "player": "D"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 11,
+      "player": "D"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 11,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 11,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 11,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 11,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 11,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 11,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 11,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 11,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 11,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 11,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 11,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 11,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 11,
+      "player": "host"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 11,
+      "player": "host"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 1,
+      "card": "思想家",
+      "turn": 11,
+      "player": "host"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 2,
+      "card": "資助者",
+      "turn": 11,
+      "player": "host"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 11,
+      "player": "host"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 11,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 12,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 12,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 12,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 12,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 12,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 12,
+      "player": "B"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 2,
+      "card": "資助者",
+      "turn": 12,
+      "player": "B"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 12,
+      "player": "B"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 12,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 12,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 12,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 12,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 12,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 12,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 12,
+      "player": "C"
+    },
+    {
+      "step": "buy_random_card_ui",
+      "index": 6,
+      "turn": 12,
+      "player": "C"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 12,
+      "player": "C"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 12,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 12,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 12,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 12,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 12,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 12,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 12,
+      "player": "D"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 1,
+      "card": "思想家",
+      "turn": 12,
+      "player": "D"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 2,
+      "card": "資助者",
+      "turn": 12,
+      "player": "D"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 12,
+      "player": "D"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 12,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "resolve_event_build_on_map_ui",
+      "choice": {
+        "type": "town_choice",
+        "choice_key": "event_build_organization",
+        "player_id": "8b682284-4dd6-4cae-af34-976b79633257",
+        "step": null,
+        "count": 1
+      },
+      "town": "吉爾吉特"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 12,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 12,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 12,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 12,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 12,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 12,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 12,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 12,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 12,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 12,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 12,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 12,
+      "player": "host"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 1,
+      "card": "思想家",
+      "turn": 12,
+      "player": "host"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 1,
+      "card": "思想家",
+      "turn": 12,
+      "player": "host"
+    },
+    {
+      "step": "buy_random_card_ui",
+      "index": 6,
+      "turn": 12,
+      "player": "host"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 12,
+      "player": "host"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 12,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 13,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 13,
+      "player": "B"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 13,
+      "player": "B"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 13,
+      "player": "B"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 13,
+      "player": "B"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 13,
+      "player": "B"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 13,
+      "player": "B"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 13,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 13,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 13,
+      "player": "C"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 13,
+      "player": "C"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 13,
+      "player": "C"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 13,
+      "player": "C"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 13,
+      "player": "C"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 2,
+      "card": "資助者",
+      "turn": 13,
+      "player": "C"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 13,
+      "player": "C"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 13,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 13,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 13,
+      "player": "D"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 13,
+      "player": "D"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 13,
+      "player": "D"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 13,
+      "player": "D"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 13,
+      "player": "D"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 13,
+      "player": "D"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 13,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "resolve_event_build_on_map_ui",
+      "choice": {
+        "type": "town_choice",
+        "choice_key": "event_build_organization",
+        "player_id": "8b682284-4dd6-4cae-af34-976b79633257",
+        "step": null,
+        "count": 1
+      },
+      "town": "仰光"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 13,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 13,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 13,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 13,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 13,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 13,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 13,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 13,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 13,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 13,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 13,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 13,
+      "player": "host"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 13,
+      "player": "host"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 13,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 14,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 14,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 14,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 14,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 14,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 14,
+      "player": "B"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 14,
+      "player": "B"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 14,
+      "player": "B"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 14,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 14,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 14,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 14,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 14,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 14,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 14,
+      "player": "C"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 14,
+      "player": "C"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 14,
+      "player": "C"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 14,
+      "player": "C"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 14,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 14,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 14,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 14,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 14,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 14,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 14,
+      "player": "D"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 14,
+      "player": "D"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 14,
+      "player": "D"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 14,
+      "player": "D"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 14,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 14,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 14,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 14,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 14,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 14,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 14,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 14,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 14,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 14,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 14,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 14,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 14,
+      "player": "host"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 1,
+      "card": "思想家",
+      "turn": 14,
+      "player": "host"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 1,
+      "card": "思想家",
+      "turn": 14,
+      "player": "host"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 2,
+      "card": "資助者",
+      "turn": 14,
+      "player": "host"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 14,
+      "player": "host"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 14,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 15,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 15,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 15,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 15,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 15,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 15,
+      "player": "B"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 1,
+      "card": "思想家",
+      "turn": 15,
+      "player": "B"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 15,
+      "player": "B"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 15,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 15,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 15,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 15,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 15,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 15,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 15,
+      "player": "C"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 2,
+      "card": "資助者",
+      "turn": 15,
+      "player": "C"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 2,
+      "card": "資助者",
+      "turn": 15,
+      "player": "C"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 15,
+      "player": "C"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 15,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 15,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 15,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 15,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 15,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 15,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 15,
+      "player": "D"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 15,
+      "player": "D"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 15,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 15,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 15,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 15,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 15,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 15,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 15,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 15,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 15,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 15,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 15,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 15,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 15,
+      "player": "host"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 1,
+      "card": "思想家",
+      "turn": 15,
+      "player": "host"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 2,
+      "card": "資助者",
+      "turn": 15,
+      "player": "host"
+    },
+    {
+      "step": "buy_random_card_ui",
+      "index": 6,
+      "turn": 15,
+      "player": "host"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 15,
+      "player": "host"
+    },
+    {
+      "step": "resolve_pending_choice_ui",
+      "choice": {
+        "type": "target_choice",
+        "choice_key": "event_red_dissolve",
+        "player_id": "8b682284-4dd6-4cae-af34-976b79633257",
+        "step": null,
+        "count": null
+      },
+      "selector": "#choiceModal .choice-card-grid button:visible:not(#closeChoiceModal)"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 15,
+      "player": "host"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 15,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 16,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 16,
+      "player": "B"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 16,
+      "player": "B"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 16,
+      "player": "B"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 16,
+      "player": "B"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 16,
+      "player": "B"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 16,
+      "player": "B"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 16,
+      "player": "B"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 16,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 16,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 16,
+      "player": "C"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 16,
+      "player": "C"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 16,
+      "player": "C"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 16,
+      "player": "C"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 16,
+      "player": "C"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 2,
+      "card": "資助者",
+      "turn": 16,
+      "player": "C"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 16,
+      "player": "C"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 16,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 16,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 16,
+      "player": "D"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 16,
+      "player": "D"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 16,
+      "player": "D"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 16,
+      "player": "D"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 16,
+      "player": "D"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 16,
+      "player": "D"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 16,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 16,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 16,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 16,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 16,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 16,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 16,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 16,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 16,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 16,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 16,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 16,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 16,
+      "player": "host"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 16,
+      "player": "host"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 2,
+      "card": "資助者",
+      "turn": 16,
+      "player": "host"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 16,
+      "player": "host"
+    },
+    {
+      "step": "resolve_pending_choice_ui",
+      "choice": {
+        "type": "target_choice",
+        "choice_key": "event_red_dissolve",
+        "player_id": "8b682284-4dd6-4cae-af34-976b79633257",
+        "step": null,
+        "count": null
+      },
+      "selector": "#choiceModal .choice-card-grid button:visible:not(#closeChoiceModal)"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 16,
+      "player": "host"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 16,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 17,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 17,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 17,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 17,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 17,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 17,
+      "player": "B"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 17,
+      "player": "B"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 17,
+      "player": "B"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 17,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 17,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 17,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 17,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 17,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 17,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 17,
+      "player": "C"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 1,
+      "card": "思想家",
+      "turn": 17,
+      "player": "C"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 2,
+      "card": "資助者",
+      "turn": 17,
+      "player": "C"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 17,
+      "player": "C"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 17,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 17,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 17,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 17,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 17,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 17,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 17,
+      "player": "D"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 17,
+      "player": "D"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 17,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "resolve_event_build_on_map_ui",
+      "choice": {
+        "type": "town_choice",
+        "choice_key": "event_build_organization",
+        "player_id": "8b682284-4dd6-4cae-af34-976b79633257",
+        "step": null,
+        "count": 1
+      },
+      "town": "吉爾吉特"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 17,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 17,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 17,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 17,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 17,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 17,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 17,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 17,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 17,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 17,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 17,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 17,
+      "player": "host"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 1,
+      "card": "思想家",
+      "turn": 17,
+      "player": "host"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 1,
+      "card": "思想家",
+      "turn": 17,
+      "player": "host"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 2,
+      "card": "資助者",
+      "turn": 17,
+      "player": "host"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 17,
+      "player": "host"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 17,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 18,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 18,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 18,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 18,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 18,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 18,
+      "player": "B"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 1,
+      "card": "思想家",
+      "turn": 18,
+      "player": "B"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 2,
+      "card": "資助者",
+      "turn": 18,
+      "player": "B"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 18,
+      "player": "B"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 18,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 18,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 18,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 18,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 18,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 18,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 18,
+      "player": "C"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 2,
+      "card": "資助者",
+      "turn": 18,
+      "player": "C"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 18,
+      "player": "C"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 18,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 18,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 18,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 18,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 18,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 18,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 18,
+      "player": "D"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 18,
+      "player": "D"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 18,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 18,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 18,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 18,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 18,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 18,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 18,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 18,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 18,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 18,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 18,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 18,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 18,
+      "player": "host"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 1,
+      "card": "思想家",
+      "turn": 18,
+      "player": "host"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 1,
+      "card": "思想家",
+      "turn": 18,
+      "player": "host"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 18,
+      "player": "host"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 18,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 19,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 19,
+      "player": "B"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 19,
+      "player": "B"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 19,
+      "player": "B"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 19,
+      "player": "B"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 19,
+      "player": "B"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 19,
+      "player": "B"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 19,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 19,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 19,
+      "player": "C"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 19,
+      "player": "C"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 19,
+      "player": "C"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 19,
+      "player": "C"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 19,
+      "player": "C"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 2,
+      "card": "資助者",
+      "turn": 19,
+      "player": "C"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 19,
+      "player": "C"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 19,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 19,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 19,
+      "player": "D"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 19,
+      "player": "D"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 19,
+      "player": "D"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 19,
+      "player": "D"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 19,
+      "player": "D"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 19,
+      "player": "D"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 19,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 19,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 19,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 19,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 19,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 19,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 19,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 19,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 19,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 19,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 19,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 19,
+      "player": "host"
+    },
+    {
+      "step": "play_card_action_ui",
+      "turn": 19,
+      "player": "host"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 19,
+      "player": "host"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 2,
+      "card": "資助者",
+      "turn": 19,
+      "player": "host"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 19,
+      "player": "host"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 19,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 20,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 20,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 20,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 20,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 20,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 20,
+      "player": "B"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 20,
+      "player": "B"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 2,
+      "card": "資助者",
+      "turn": 20,
+      "player": "B"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 20,
+      "player": "B"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 20,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 20,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 20,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 20,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 20,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 20,
+      "player": "C"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 20,
+      "player": "C"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 20,
+      "player": "C"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 20,
+      "player": "C"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 20,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "C",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 20,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 20,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 20,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 20,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 20,
+      "player": "D"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 20,
+      "player": "D"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 20,
+      "player": "D"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 20,
+      "player": "D"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 20,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "D",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 20,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 20,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 20,
+      "player": "host"
+    },
+    {
+      "step": "red_army_ability_ui",
+      "turn": 20,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 20,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 20,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 20,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 20,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 20,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 20,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 20,
+      "player": "host"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 20,
+      "player": "host"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 20,
+      "player": "host"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 0,
+      "card": "宣傳家",
+      "turn": 20,
+      "player": "host"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 2,
+      "card": "資助者",
+      "turn": 20,
+      "player": "host"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 2,
+      "card": "資助者",
+      "turn": 20,
+      "player": "host"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 20,
+      "player": "host"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 20,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "host",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 21,
+      "turn_phase": "event",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "A",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "B",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "C",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "close_info_modal_ui",
+      "player_page": "D",
+      "button": "縮到右上角"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 21,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 21,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 21,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 21,
+      "player": "B"
+    },
+    {
+      "step": "play_card_resource_ui",
+      "turn": 21,
+      "player": "B"
+    },
+    {
+      "step": "buy_card_ui",
+      "index": 2,
+      "card": "資助者",
+      "turn": 21,
+      "player": "B"
+    },
+    {
+      "step": "advance_from_action_ui",
+      "turn": 21,
+      "player": "B"
+    },
+    {
+      "step": "advance_phase_ui",
+      "turn": 21,
+      "turn_phase": "end",
+      "game_phase": "main",
+      "current_player": "B",
+      "winner": null,
+      "pending_choice": null
+    },
+    {
+      "step": "finished_detected",
+      "iteration": 1088,
+      "state": {
+        "turn": 21,
+        "turn_phase": "end",
+        "game_phase": "finished",
+        "current_player": "B",
+        "winner": "red_army",
+        "pending_choice": null
+      }
+    }
+  ],
+  "final_state_summary": {
+    "turn": 21,
+    "turn_phase": "end",
+    "game_phase": "finished",
+    "current_player": "B",
+    "winner": "red_army",
+    "pending_choice": null
+  },
+  "final_state": {
+    "turn": 21,
+    "game_phase": "finished",
+    "turn_phase": "end",
+    "winner": "red_army",
+    "current_player": "B",
+    "active_eras": [
+      "taiwan",
+      "mongolia"
+    ],
+    "active_era_details": [
+      {
+        "id": "taiwan",
+        "name": "[臺灣]綏靖派反對介入對岸",
+        "trigger": {
+          "type": "count_only",
+          "camp": "taiwan",
+          "region": "taiwan",
+          "count": 7
+        },
+        "duration": {
+          "type": "turns",
+          "value": 2
+        },
+        "remaining": 1,
+        "effects": {
+          "red_suppression": {
+            "type": "add_static_cards_to_discard",
+            "target_camp": "taiwan",
+            "card": "內鬥",
+            "count": 3,
+            "consume_static_supply": true
+          },
+          "revolution_counterattack": {
+            "type": "gain_resource_on_build_in_region",
+            "target_camp": "taiwan",
+            "region": "taiwan",
+            "resource": "propaganda",
+            "amount": 1,
+            "duration": 2
+          }
+        }
+      },
+      {
+        "id": "mongolia",
+        "name": "[蒙古]莫日根事件爆發",
+        "trigger": {
+          "type": "count_only",
+          "camp": "mongol",
+          "region": "mongolian_plateau",
+          "count": 4
+        },
+        "duration": {
+          "type": "turns",
+          "value": 1
+        },
+        "remaining": 1,
+        "effects": {
+          "red_suppression": {
+            "type": "add_static_cards_to_discard",
+            "target_camp": "mongol",
+            "card": "內鬥",
+            "count": 3,
+            "consume_static_supply": true
+          },
+          "revolution_counterattack": {
+            "type": "hand_card_resource_bonus",
+            "target_camp": "mongol",
+            "card_types": [
+              "propaganda"
+            ],
+            "resource": "propaganda",
+            "amount": 1,
+            "duration": 1
+          }
+        }
+      }
+    ],
+    "era_notification": {
+      "id": "mongolia",
+      "name": "[蒙古]莫日根事件爆發",
+      "trigger_text": "[牧民維權團體成形]蒙古在牆內擁有至少4個有效組織",
+      "success_text": "[知識分子互相猜疑]將3張內鬥放進蒙古棄牌堆。",
+      "fail_text": "[南蒙古人世代覺醒]蒙古當回合手牌中的每張宣傳類卡牌 用於購買時可額外提供1點宣傳。",
+      "duration_text": "持續 1 回合",
+      "remaining": 1,
+      "minimized": false,
+      "runtime_effects": {
+        "red_suppression": {
+          "type": "add_static_cards_to_discard",
+          "added": {
+            "e0be965d-d177-4447-b1eb-2fe669d5cb89": 0
+          }
+        },
+        "revolution_counterattack": {
+          "type": "hand_card_resource_bonus",
+          "status": "active_modifier_or_pending_runtime"
+        }
+      },
+      "duration": {
+        "type": "turns",
+        "value": 1
+      }
+    },
+    "current_event": {
+      "id": "beijing_power_struggle",
+      "name": "北京政爭",
+      "type": "mission",
+      "trigger": {
+        "type": "draw",
+        "count": 1
+      },
+      "success": {
+        "type": "draw",
+        "count": 1
+      },
+      "failure": {
+        "type": "none"
+      },
+      "progress": {
+        "count": 0,
+        "required": 1,
+        "succeeded": false,
+        "settled": false,
+        "status": "active"
+      },
+      "status": "active",
+      "result_text": "非紅軍任務進行中",
+      "trigger_text": "藉由卡牌效果或能力抽牌至少 1 次",
+      "success_text": "抽 1 張牌",
+      "failure_text": "無"
+    },
+    "event_deck_count": 4,
+    "red_army_action_count": 0,
+    "red_army_action_limit": 3,
+    "event_discard_count": 21,
+    "event_modifiers": [],
+    "market_mode": "sample_53",
+    "pending_base_choices": {},
+    "pending_choice": null,
+    "faction_action_used": false,
+    "action_log": [
+      "[Turn 19] host built organization in 北京 via card effect",
+      "[Turn 19] host played 思想家",
+      "[Turn 19] host played 追隨者",
+      "[Turn 19] 資助者 returned to static purchase supply",
+      "[Turn 19] host removed 資助者 and returned it to static purchase supply",
+      "[Turn 19] host played 資助者",
+      "[Turn 19] 思想家 returned to static purchase supply",
+      "[Turn 19] host removed 思想家 and returned it to static purchase supply",
+      "[Turn 19] host built organization in 北京 via card effect",
+      "[Turn 19] host played 思想家",
+      "[Turn 19] 宣傳家 returned to static purchase supply",
+      "[Turn 19] host removed 宣傳家 and returned it to static purchase supply",
+      "[Turn 19] host built organization in 北京 via card effect",
+      "[Turn 19] host played 宣傳家",
+      "[Turn 19] host played 追隨者",
+      "[Turn 19] 資助者 returned to static purchase supply",
+      "[Turn 19] host removed 資助者 and returned it to static purchase supply",
+      "[Turn 19] host played 資助者",
+      "[Turn 19] host played 追隨者",
+      "[Turn 19] host bought 宣傳家",
+      "[Turn 19] host bought 資助者",
+      "[Turn 19] D gained 1 宣傳家 from event",
+      "[Turn 19] Event success resolved: 東突厥集中營 / gain_card",
+      "[Turn 19] End of turn for host",
+      "[Turn 20] Event drawn: 歲月靜好 (no-op)",
+      "[Turn 20] Event could not gain 內鬥: static supply empty",
+      "[Turn 20] Event could not gain 內鬥: static supply empty",
+      "[Turn 20] Event could not gain 內鬥: static supply empty",
+      "[Turn 20] Era triggered: [蒙古]莫日根事件爆發",
+      "[Turn 20] B played 資助者 as resource",
+      "[Turn 20] B played 樂捐者 as resource",
+      "[Turn 20] B played 追隨者 as resource",
+      "[Turn 20] B played 宣傳家 as resource",
+      "[Turn 20] B played 宣傳家 as resource",
+      "[Turn 20] B bought 宣傳家",
+      "[Turn 20] B bought 資助者",
+      "[Turn 20] End of turn for B",
+      "[Turn 20] Event could not gain 內鬥: static supply empty",
+      "[Turn 20] Event could not gain 內鬥: static supply empty",
+      "[Turn 20] Event could not gain 內鬥: static supply empty",
+      "[Turn 20] Era triggered: [蒙古]莫日根事件爆發",
+      "[Turn 20] Event could not gain 內鬥: static supply empty",
+      "[Turn 20] Event could not gain 內鬥: static supply empty",
+      "[Turn 20] Event could not gain 內鬥: static supply empty",
+      "[Turn 20] Era triggered: [臺灣]綏靖派反對介入對岸",
+      "[Turn 20] C played 資助者 as resource",
+      "[Turn 20] C played 宣傳家 as resource",
+      "[Turn 20] C played 資助者 as resource",
+      "[Turn 20] C played 追隨者 as resource",
+      "[Turn 20] C played 資助者 as resource",
+      "[Turn 20] C bought 宣傳家",
+      "[Turn 20] End of turn for C",
+      "[Turn 20] Event could not gain 內鬥: static supply empty",
+      "[Turn 20] Event could not gain 內鬥: static supply empty",
+      "[Turn 20] Event could not gain 內鬥: static supply empty",
+      "[Turn 20] Era triggered: [蒙古]莫日根事件爆發",
+      "[Turn 20] D played 內鬥 as resource",
+      "[Turn 20] D played 內鬥 as resource",
+      "[Turn 20] Era [蒙古]莫日根事件爆發: D gained 1 propaganda from resource-card bonus",
+      "[Turn 20] D played 宣傳家 as resource",
+      "[Turn 20] D played 內鬥 as resource",
+      "[Turn 20] Era [蒙古]莫日根事件爆發: D gained 1 propaganda from resource-card bonus",
+      "[Turn 20] D played 追隨者 as resource",
+      "[Turn 20] D bought 宣傳家",
+      "[Turn 20] End of turn for D",
+      "[Turn 20] Event could not gain 內鬥: static supply empty",
+      "[Turn 20] Event could not gain 內鬥: static supply empty",
+      "[Turn 20] Event could not gain 內鬥: static supply empty",
+      "[Turn 20] Era triggered: [蒙古]莫日根事件爆發",
+      "[Turn 20] Event could not gain 內鬥: static supply empty",
+      "[Turn 20] Event could not gain 內鬥: static supply empty",
+      "[Turn 20] Event could not gain 內鬥: static supply empty",
+      "[Turn 20] Era triggered: [臺灣]綏靖派反對介入對岸",
+      "[Turn 20] host triggered 統戰部 and drew 1 card(s)",
+      "[Turn 20] host triggered 統戰部 and drew 1 card(s)",
+      "[Turn 20] host triggered 統戰部 and drew 1 card(s)",
+      "[Turn 20] host played 思想家 as resource",
+      "[Turn 20] host played 追隨者 as resource",
+      "[Turn 20] host played 思想家 as resource",
+      "[Turn 20] host played 樂捐者 as resource",
+      "[Turn 20] host played 追隨者 as resource",
+      "[Turn 20] host played 樂捐者 as resource",
+      "[Turn 20] host played 樂捐者 as resource",
+      "[Turn 20] host played 資助者 as resource",
+      "[Turn 20] host bought 宣傳家",
+      "[Turn 20] host bought 宣傳家",
+      "[Turn 20] host bought 資助者",
+      "[Turn 20] host bought 資助者",
+      "[Turn 20] End of turn for host",
+      "[Turn 21] Event drawn: 北京政爭",
+      "[Turn 21] Event could not gain 內鬥: static supply empty",
+      "[Turn 21] Event could not gain 內鬥: static supply empty",
+      "[Turn 21] Event could not gain 內鬥: static supply empty",
+      "[Turn 21] Era triggered: [蒙古]莫日根事件爆發",
+      "[Turn 21] B played 樂捐者 as resource",
+      "[Turn 21] B played 追隨者 as resource",
+      "[Turn 21] B played 追隨者 as resource",
+      "[Turn 21] B played 樂捐者 as resource",
+      "[Turn 21] B played 追隨者 as resource",
+      "[Turn 21] B bought 資助者"
+    ],
+    "purchase_area": [
+      "宣傳家",
+      "思想家",
+      "資助者",
+      "資本家",
+      "分神",
+      "內鬥",
+      "內應間諜",
+      "戰略",
+      "天方奧援",
+      "批判",
+      "組織經驗乙"
+    ],
+    "static_purchase_supply": {
+      "宣傳家": 0,
+      "思想家": 8,
+      "資助者": 0,
+      "資本家": 15,
+      "分神": 30,
+      "內鬥": 0
+    },
+    "map": {
+      "towns": {
+        "北京": [
+          {
+            "player": "host",
+            "count": 19
+          }
+        ],
+        "天津": [
+          {
+            "player": "host",
+            "count": 1
+          }
+        ],
+        "吉爾吉特": [
+          {
+            "player": "host",
+            "count": 2
+          }
+        ],
+        "仰光": [
+          {
+            "player": "host",
+            "count": 1
+          }
+        ],
+        "臺北": [
+          {
+            "player": "B",
+            "count": 11
+          }
+        ],
+        "香港城": [
+          {
+            "player": "C",
+            "count": 6
+          }
+        ],
+        "烏蘭巴托": [
+          {
+            "player": "D",
+            "count": 7
+          }
+        ]
+      },
+      "shared_access": {}
+    },
+    "players": [
+      {
+        "id": "8b682284-4dd6-4cae-af34-976b79633257",
+        "name": "host",
+        "faction": "red_army",
+        "base": "北京",
+        "resources": {
+          "money": 0,
+          "propaganda": 0
+        },
+        "moves_left": 0,
+        "hand": [
+          "宣傳家",
+          "思想家",
+          "追隨者",
+          "追隨者",
+          "思想家"
+        ],
+        "deck_count": 7,
+        "discard_count": 12,
+        "discard_pile": [
+          "思想家",
+          "追隨者",
+          "思想家",
+          "樂捐者",
+          "追隨者",
+          "樂捐者",
+          "樂捐者",
+          "資助者",
+          "宣傳家",
+          "宣傳家",
+          "資助者",
+          "資助者"
+        ],
+        "orgs": {
+          "北京": 19,
+          "天津": 1,
+          "吉爾吉特": 2,
+          "仰光": 1
+        }
+      },
+      {
+        "id": "fcbf23d7-3895-4041-8f58-165e1194fd24",
+        "name": "B",
+        "faction": "taiwan_green",
+        "base": "臺北",
+        "resources": {
+          "money": 0,
+          "propaganda": 2
+        },
+        "moves_left": 0,
+        "hand": [],
+        "deck_count": 4,
+        "discard_count": 14,
+        "discard_pile": [
+          "追隨者",
+          "資助者",
+          "樂捐者",
+          "追隨者",
+          "宣傳家",
+          "宣傳家",
+          "宣傳家",
+          "資助者",
+          "樂捐者",
+          "追隨者",
+          "追隨者",
+          "樂捐者",
+          "追隨者",
+          "資助者"
+        ],
+        "orgs": {
+          "臺北": 11
+        }
+      },
+      {
+        "id": "45dbfbc8-8ec1-49af-a331-28815793ea6c",
+        "name": "C",
+        "faction": "hong_kong",
+        "base": "香港城",
+        "resources": {
+          "money": 0,
+          "propaganda": 0
+        },
+        "moves_left": 0,
+        "hand": [
+          "樂捐者",
+          "資助者",
+          "樂捐者",
+          "追隨者",
+          "追隨者"
+        ],
+        "deck_count": 11,
+        "discard_count": 6,
+        "discard_pile": [
+          "資助者",
+          "宣傳家",
+          "資助者",
+          "追隨者",
+          "資助者",
+          "宣傳家"
+        ],
+        "orgs": {
+          "香港城": 6
+        }
+      },
+      {
+        "id": "e0be965d-d177-4447-b1eb-2fe669d5cb89",
+        "name": "D",
+        "faction": "mongol",
+        "base": "烏蘭巴托",
+        "resources": {
+          "money": 0,
+          "propaganda": 0
+        },
+        "moves_left": 0,
+        "hand": [
+          "宣傳家",
+          "內鬥",
+          "內鬥",
+          "宣傳家",
+          "內鬥"
+        ],
+        "deck_count": 28,
+        "discard_count": 7,
+        "discard_pile": [
+          "宣傳家",
+          "內鬥",
+          "內鬥",
+          "宣傳家",
+          "內鬥",
+          "追隨者",
+          "宣傳家"
+        ],
+        "orgs": {
+          "烏蘭巴托": 7
+        }
+      }
+    ],
+    "last_action_result": {
+      "success": true
+    }
+  },
+  "console_errors": []
+}

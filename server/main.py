@@ -1380,7 +1380,21 @@ def test_setup_purchase_deck_ui(payload: dict):
     red.base = "北京"
     red.organizations = {"北京": 1}
 
-    # full purchase UI path: static 6 + 5 random
+    # full purchase UI path: static 6 + 5 random. Tests may pin the
+    # random slots to verify a specific market-card purchase/refill flow.
+    pinned_random = payload.get("purchase_area_random") or []
+    if pinned_random:
+        game.purchase_area = game._static_purchase_cards()[:]
+        for name in pinned_random[:5]:
+            support = game._support_taxonomy_entry(name)
+            if support:
+                game.purchase_area.append(game._make_support_card(name))
+                continue
+            card_def = next((c for c in game.structured_cards if c.get("name") == name), None)
+            if card_def:
+                game.purchase_area.append(Card(card_def["name"], card_def.get("type", "command"), card_def.get("resources", {})))
+            else:
+                game.purchase_area.append(Card(name, "command", {}))
     while len(game.purchase_area) < 11:
         drawn = game._draw_purchase_cards(1)
         if not drawn:
@@ -2199,8 +2213,22 @@ def test_setup_event_card_proof(payload: dict):
     game.players[0].hand = [Card("合作談判", "command", {}), Card("追隨者", "propaganda", {"propaganda": 1})]
     game.players[0].deck.discard_pile = []
     event = game._event_by_name(event_name) or game._event_by_name("香港抗暴之戰")
-    game.event_deck.draw_pile = [event] if event else []
-    game.event_deck.discard_pile = []
+    if payload.get("current_event_active") and event:
+        game.current_event = event
+        game.event_progress = {
+            "count": 0,
+            "required": int(event.get("trigger", {}).get("count", 1) or 1),
+            "succeeded": False,
+            "settled": False,
+            "status": "active",
+        }
+        game.event_notification = game._event_display_payload()
+        game.turn_phase = TurnPhase.ACTION
+        game.event_deck.draw_pile = []
+        game.event_deck.discard_pile = []
+    else:
+        game.event_deck.draw_pile = [event] if event else []
+        game.event_deck.discard_pile = []
 
     game_id = str(uuid.uuid4())
     manager.games[game_id] = game

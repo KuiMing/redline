@@ -1,0 +1,309 @@
+{
+  "passed": true,
+  "summary": {
+    "total": 8,
+    "passed": 8,
+    "failed": 0
+  },
+  "checks": [
+    {
+      "name": "常設購買區供應依 CSV 初始值，購買後卡片仍在且 UI 使用 live supply",
+      "passed": true,
+      "details": {
+        "static_before": {
+          "宣傳家": 15,
+          "思想家": 15,
+          "資助者": 15,
+          "資本家": 15,
+          "分神": 30,
+          "內鬥": 20
+        },
+        "ui_static_before": {
+          "宣傳家": true,
+          "思想家": true,
+          "資助者": true,
+          "資本家": true,
+          "分神": true,
+          "內鬥": true
+        },
+        "static_after": {
+          "宣傳家": 14,
+          "思想家": 15,
+          "資助者": 15,
+          "資本家": 15,
+          "分神": 30,
+          "內鬥": 20
+        }
+      }
+    },
+    {
+      "name": "宣傳家行動不出現誘導虛耗，回歸供應、建立組織、給 1 移動",
+      "passed": true,
+      "details": {
+        "before_supply": 15,
+        "after_supply": 16,
+        "player": {
+          "id": "081a872a-207d-4860-a302-531beb0e128f",
+          "name": "viewer",
+          "faction": "taiwan_green",
+          "base": "臺北",
+          "resources": {
+            "money": 5,
+            "propaganda": 5
+          },
+          "moves_left": 1,
+          "hand": [],
+          "deck_count": 6,
+          "discard_count": 0,
+          "discard_pile": [],
+          "orgs": {
+            "臺北": 2
+          }
+        },
+        "modal": ""
+      }
+    },
+    {
+      "name": "奧援卡 ACTION 階段可行動；資源模式不給資源；行動模式才觸發效果",
+      "passed": true,
+      "details": {
+        "hand_buttons_before": [
+          {
+            "text": "資源",
+            "disabled": false,
+            "mode": "resource"
+          },
+          {
+            "text": "行動",
+            "disabled": false,
+            "mode": "action"
+          }
+        ],
+        "resource_player": {
+          "id": "1121fd9c-1f49-4bc2-a374-37c7c2aa0361",
+          "name": "player",
+          "faction": "liberals",
+          "base": "海參崴",
+          "resources": {
+            "money": 0,
+            "propaganda": 0
+          },
+          "moves_left": 0,
+          "hand": [],
+          "deck_count": 2,
+          "discard_count": 1,
+          "discard_pile": [
+            "北國奧援"
+          ],
+          "orgs": {
+            "海參崴": 1
+          }
+        },
+        "action_pending": null,
+        "action_log_tail": [
+          "[Turn 1] player resolved 北國奧援 at tier 3 (matched rulers: none)",
+          "[Turn 1] player played 北國奧援"
+        ]
+      }
+    },
+    {
+      "name": "乘勝追擊行動後開啟從己方棄牌堆選擇 3 點以下牌加入手牌",
+      "passed": true,
+      "details": {
+        "pending_choice": {
+          "type": "card_choice",
+          "choice_key": "gain_from_discard",
+          "player_id": "3b28fe93-bc3b-490c-be16-b43c21d3546d",
+          "prompt": "從己方棄牌堆任選1張費用3點以下的牌加入手牌。",
+          "source_name": "乘勝追擊",
+          "count": null,
+          "min_count": null,
+          "mode": null,
+          "acting_player_id": null,
+          "acting_player_name": null,
+          "played_card_name": null,
+          "region": null,
+          "free": null,
+          "ignore_distance": null,
+          "cards": [
+            "宣傳家",
+            "走漏風聲"
+          ],
+          "options": [],
+          "towns": [],
+          "targets": [],
+          "step": null
+        },
+        "modal": "卡牌選擇\n乘勝追擊\n從己方棄牌堆任選1張費用3點以下的牌加入手牌。\n宣傳家\n剩 15\n宣傳 ・ 乙級 ・ 宣傳3\n打出可移除本牌。若移除本牌，可於己方組織1格內建立1個組織，並進行1次組織遷移。\n擅於宣傳的辯士\n資源 宣傳2\n常設購買區\n走漏風聲\n剩 5\n間諜 ・ 乙級 ・ 資金2\n選擇1位玩家棄掉其牌庫頂牌，若該牌購買費用為1點以上，則將1張內鬥放進該玩家棄牌堆。\n洩密打亂了敵營的計畫\n資源 宣傳1\n隨機購買區\n關閉\n---\n卡牌選擇\n乘勝追擊\n從己方棄牌堆任選1張費用3點以下的牌加入手牌。\n宣傳家\n剩 15\n宣傳 ・ 乙級 ・ 宣傳3\n打出可移除本牌。若移除本牌，可於己方組織1格內建立1個組織，並進行1次組織遷移。\n擅於宣傳的辯士\n資源 宣傳2\n常設購買區\n走漏風聲\n剩 5\n間諜 ・ 乙級 ・ 資金2\n選擇1位玩家棄掉其牌庫頂牌，若該牌購買費用為1點以上，則將1張內鬥放進該玩家棄牌堆。\n洩密打亂了敵營的計畫\n資源 宣傳1\n隨機購買區\n關閉"
+      }
+    },
+    {
+      "name": "隨機購買區購買北國奧援後原 slot 立即移除/補牌",
+      "passed": true,
+      "details": {
+        "before_area": [
+          "宣傳家",
+          "思想家",
+          "資助者",
+          "資本家",
+          "分神",
+          "內鬥",
+          "北國奧援",
+          "合作談判",
+          "走漏風聲",
+          "模仿戰術",
+          "批鬥"
+        ],
+        "after_area": [
+          "宣傳家",
+          "思想家",
+          "資助者",
+          "資本家",
+          "分神",
+          "內鬥",
+          "合作談判",
+          "走漏風聲",
+          "模仿戰術",
+          "批鬥"
+        ],
+        "state_resources": {
+          "money": 9,
+          "propaganda": 8
+        }
+      }
+    },
+    {
+      "name": "東突厥集中營非紅軍任務失敗後隨機棄非紅軍手牌",
+      "passed": true,
+      "details": {
+        "before_viewer_hand": [
+          "合作談判",
+          "追隨者"
+        ],
+        "viewer_after": {
+          "id": "9149437f-6133-4fd8-a9b9-80f526bc27a4",
+          "name": "viewer",
+          "faction": "liberals",
+          "base": "臺北",
+          "resources": {
+            "money": 0,
+            "propaganda": 0
+          },
+          "moves_left": 0,
+          "hand": [
+            "樂捐者",
+            "樂捐者",
+            "追隨者",
+            "樂捐者"
+          ],
+          "deck_count": 0,
+          "discard_count": 3,
+          "discard_pile": [
+            "合作談判",
+            "追隨者",
+            "追隨者"
+          ],
+          "orgs": {
+            "臺北": 1
+          }
+        },
+        "red_after": {
+          "id": "1c470882-277d-4e33-b9a7-78255399ec61",
+          "name": "red",
+          "faction": "red_army",
+          "base": "北京",
+          "resources": {
+            "money": 0,
+            "propaganda": 0
+          },
+          "moves_left": 0,
+          "hand": [
+            "紅軍奧援",
+            "追隨者",
+            "樂捐者",
+            "追隨者",
+            "樂捐者"
+          ],
+          "deck_count": 6,
+          "discard_count": 0,
+          "discard_pile": [],
+          "orgs": {
+            "北京": 1
+          }
+        },
+        "event": {
+          "id": "east_turkestan_camp",
+          "name": "東突厥集中營",
+          "type": "mission",
+          "trigger": {
+            "type": "play_card_with_propaganda",
+            "count": 1
+          },
+          "success": {
+            "type": "gain_card",
+            "card": "宣傳家",
+            "count": 1
+          },
+          "failure": {
+            "type": "discard_random",
+            "count": 1
+          },
+          "progress": {
+            "count": 0,
+            "required": 1,
+            "succeeded": false,
+            "settled": true,
+            "status": "failure"
+          },
+          "status": "failure",
+          "result_text": "非紅軍任務失敗，紅軍效果生效",
+          "trigger_text": "打出購買費用含宣傳的卡牌至少 1 次",
+          "success_text": "獲得 1 張宣傳家",
+          "failure_text": "被隨機棄掉 1 張手牌"
+        },
+        "log_tail": [
+          "[Turn 1] End of turn for viewer",
+          "[Turn 1] Event failure: discarded 1 random hand card(s)",
+          "[Turn 1] Event failure resolved: 東突厥集中營 / discard_random"
+        ]
+      }
+    },
+    {
+      "name": "紅軍能力執行完後面板/視窗收起不擋購買區",
+      "passed": true,
+      "details": {
+        "modal_visible": false,
+        "log_tail": [
+          "[Turn 1] 紅軍 triggered 統戰部 and drew 1 card(s)"
+        ]
+      }
+    },
+    {
+      "name": "後期回合沒有 pending_choice / 前端 gating 阻斷開始購買階段（完整 UI playthrough 證據）",
+      "passed": true,
+      "details": {
+        "full_playthrough_json": "/Users/benmini/.openclaw/workspace/redline/docs/records/full-playthrough/BROWSER_FULL_PLAYTHROUGH_20260621_120941.json",
+        "final_summary": {
+          "turn": 21,
+          "turn_phase": "end",
+          "game_phase": "finished",
+          "current_player": "B",
+          "winner": "red_army",
+          "pending_choice": null
+        },
+        "advance_blockers": []
+      }
+    }
+  ],
+  "screenshots": [
+    "/Users/benmini/.openclaw/workspace/redline/docs/records/playtest-feedback/targeted-browser-20260621_140716/01_static_supply_after_buy.png",
+    "/Users/benmini/.openclaw/workspace/redline/docs/records/playtest-feedback/targeted-browser-20260621_140716/02_propagandist_action.png",
+    "/Users/benmini/.openclaw/workspace/redline/docs/records/playtest-feedback/targeted-browser-20260621_140716/03_support_resource_noop.png",
+    "/Users/benmini/.openclaw/workspace/redline/docs/records/playtest-feedback/targeted-browser-20260621_140716/04_support_action_effect.png",
+    "/Users/benmini/.openclaw/workspace/redline/docs/records/playtest-feedback/targeted-browser-20260621_140716/05_press_advantage_choice.png",
+    "/Users/benmini/.openclaw/workspace/redline/docs/records/playtest-feedback/targeted-browser-20260621_140716/06_random_support_purchase_refill.png",
+    "/Users/benmini/.openclaw/workspace/redline/docs/records/playtest-feedback/targeted-browser-20260621_140716/07_east_turkestan_failure_discard.png",
+    "/Users/benmini/.openclaw/workspace/redline/docs/records/playtest-feedback/targeted-browser-20260621_140716/08_red_army_ability_collapsed.png"
+  ],
+  "console_messages": []
+}
