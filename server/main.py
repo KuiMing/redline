@@ -1,7 +1,7 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from server.game import Game, TurnPhase, GamePhase
+from server.game import Game, TurnPhase, GamePhase, STATIC_PURCHASE_CARD_SUPPLY
 from server.cards import Card
 from server.game_manager import GameManager
 import uuid
@@ -273,6 +273,7 @@ def start_game(payload: dict):
             player.faction_id = variant_map.get(base_name, player.faction_id)
         player.base = base_name
         player.organizations = {base_name: 1}
+    game.static_purchase_supply = dict(STATIC_PURCHASE_CARD_SUPPLY)
     for player in game.players:
         game._apply_setup_abilities(player)
     game.pending_base_choices = game._compute_pending_base_choices()

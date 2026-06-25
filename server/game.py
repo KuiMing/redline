@@ -145,6 +145,7 @@ class Game:
             self._assign_starting_bases()
             self.game_phase = GamePhase.MAIN
 
+        self.static_purchase_supply = dict(STATIC_PURCHASE_CARD_SUPPLY)
         for p in self.players:
             self._apply_setup_abilities(p)
 
@@ -157,7 +158,6 @@ class Game:
         self.action_log = []
         self.purchase_deck = self._initial_purchase_deck()
         self.purchase_area = self._initial_purchase_area()
-        self.static_purchase_supply = dict(STATIC_PURCHASE_CARD_SUPPLY)
         self.event_deck = EventDeck(self._initial_event_cards())
         self.current_event = None
         self.event_progress = None
@@ -3181,16 +3181,29 @@ class Game:
             return Card("樂捐者", "money", {"money": 1})
         return Card(name, "command", {})
 
+    def _add_setup_static_card_to_discard(self, player, card_name, count=1):
+        gained = 0
+        for _ in range(int(count or 1)):
+            if card_name in STATIC_PURCHASE_CARD_NAMES:
+                supply = int(self.static_purchase_supply.get(card_name, 0) or 0)
+                if supply <= 0:
+                    self.log(f"Setup could not add {card_name}: static supply empty")
+                    continue
+                self.static_purchase_supply[card_name] = supply - 1
+            player.deck.discard([self._starter_card(card_name)])
+            gained += 1
+        return gained
+
     def _apply_setup_abilities(self, player):
         for ability in self._player_effective_abilities(player):
             if not isinstance(ability, dict):
                 continue
             if ability.get("name") == "攬炒策略":
-                player.deck.discard([self._starter_card("宣傳家")])
+                self._add_setup_static_card_to_discard(player, "宣傳家")
             elif ability.get("name") in {"達賴救援", "東突厥斯坦政府", "活動家"}:
-                player.deck.discard([self._starter_card("宣傳家"), self._starter_card("宣傳家")])
+                self._add_setup_static_card_to_discard(player, "宣傳家", 2)
             elif ability.get("name") == "各界資助":
-                player.deck.discard([self._starter_card("資助者")])
+                self._add_setup_static_card_to_discard(player, "資助者")
 
     def _apply_turn_end_faction_abilities(self, player):
         effective = self._player_effective_abilities(player)

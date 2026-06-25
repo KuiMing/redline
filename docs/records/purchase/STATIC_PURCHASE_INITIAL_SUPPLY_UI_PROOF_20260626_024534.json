@@ -1,0 +1,17 @@
+{
+  "generated_at": "2026-06-26T02:45:34",
+  "proof_type": "browser_ui_dom_and_screenshot_observation",
+  "scenario": "Formal 4-player lobby start: red_army 北京, hong_kong 香港城, tibet_family 達蘭薩拉, uyghur_family 慕尼黑. Setup abilities add 1+2+2 宣傳家, so visible static supply should show 宣傳家 剩 10.",
+  "browser_url": "http://127.0.0.1:8765/",
+  "room_id": "f86e9e9b-4afb-43cb-b944-1a58515a6795",
+  "header_text": "回合 1\n事件階段\n當前玩家 HK\n手牌 5\n資金 0\n宣傳 0\n移動 0\n牌庫模式 53 張卡牌",
+  "static_purchase_cards": [
+    {"name": "宣傳家", "visible_count": "剩 10"},
+    {"name": "思想家", "visible_count": "剩 15"},
+    {"name": "資助者", "visible_count": "剩 15"},
+    {"name": "資本家", "visible_count": "剩 15"},
+    {"name": "分神", "visible_count": "剩 30"},
+    {"name": "內鬥", "visible_count": "剩 20"}
+  ],
+  "screenshot_observation": "Browser screenshot captured after WebSocket render showed 常設購買區 cards with 宣傳家 badge 剩 10 and other visible static counts 15/15/15/30/20."
+}
