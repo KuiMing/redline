@@ -701,6 +701,19 @@ function renderBadgeList(items, className = '') {
   return `<div class="card-badges ${className}">${items.map(item => `<span class="card-badge">${escapeHtml(item)}</span>`).join('')}</div>`;
 }
 
+function staticCardCatalogCount(cardName) {
+  const raw = cardPresentation(cardName)?.count_text;
+  const parsed = Number.parseInt(String(raw ?? '').trim(), 10);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function liveStaticSupplyForCard(state, cardName) {
+  const raw = state?.static_purchase_supply?.[cardName];
+  const parsed = Number.parseInt(String(raw ?? '').trim(), 10);
+  if (Number.isFinite(parsed)) return parsed;
+  return staticCardCatalogCount(cardName);
+}
+
 function renderCardFace(cardName, zone, isStatic = false, compact = false, countOverride = null) {
   const info = cardPresentation(cardName) || {};
   const isSupport = /奧援/.test(cardName);
@@ -2421,9 +2434,9 @@ async function render(state) {
       const supportClass = isSupport ? ' purchase-card-support' : '';
       const colorName = (cardPresentation(card)?.color) || (isSupport ? '奧援' : '灰');
       const colorClass = cardColorClass(colorName);
-      const staticSupply = Number(state.static_purchase_supply?.[card] ?? 1);
-      const canBuy = !isStatic || staticSupply > 0;
-      const buyTitle = isStatic && staticSupply <= 0 ? '常設供應已售完' : '購買此卡';
+      const staticSupply = isStatic ? liveStaticSupplyForCard(state, card) : null;
+      const canBuy = !isStatic || (staticSupply != null && staticSupply > 0);
+      const buyTitle = isStatic && (staticSupply == null || staticSupply <= 0) ? '常設供應已售完' : '購買此卡';
       container.innerHTML += `
         <div class='card ${typeClass}${supportClass} ${colorClass}' onclick="selectCardDetail(${JSON.stringify(card)},'purchase',${isStatic})" ${canBuy ? `ondblclick="sendAction('buy_card',{index:${i}})"` : ''}>
           ${renderCardFace(card, 'purchase', isStatic, true, isStatic ? staticSupply : null)}

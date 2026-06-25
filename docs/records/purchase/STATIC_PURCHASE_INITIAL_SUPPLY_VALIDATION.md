@@ -2,7 +2,7 @@
 
 Generated: 2026-06-26
 
-Summary: 4/4 passed
+Summary: 5/5 passed
 
 ## PASS — static_supply_constants_match_raw_card_counts
 
@@ -25,6 +25,17 @@ Summary: 4/4 passed
     "分神": 30,
     "內鬥": 20
   }
+}
+```
+
+## PASS — frontend_static_supply_fallback_uses_catalog_not_one
+
+```json
+{
+  "rule": "前端若暫時沒有 live static_purchase_supply，不可把常設卡 fallback 成 1；應使用 card-presentation CSV count_text。",
+  "forbidden_literal_present": false,
+  "uses_live_helper": true,
+  "uses_catalog_helper": true
 }
 ```
 

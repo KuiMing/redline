@@ -1,0 +1,122 @@
+{
+  "summary": {
+    "total": 3,
+    "passed": 3,
+    "failed": 0
+  },
+  "checks": [
+    {
+      "name": "formal_start_host_ui_static_counts_not_one",
+      "passed": true,
+      "details": {
+        "actual": {
+          "宣傳家": 10,
+          "思想家": 15,
+          "資助者": 15,
+          "資本家": 15,
+          "分神": 30,
+          "內鬥": 20
+        },
+        "expected": {
+          "宣傳家": 10,
+          "思想家": 15,
+          "資助者": 15,
+          "資本家": 15,
+          "分神": 30,
+          "內鬥": 20
+        },
+        "url": "http://127.0.0.1:8000/?game_id=987120d9-4e31-4f46-a8fb-b3605bad839d&player_id=52b19e3a-b52e-4e5d-91bf-625f222660c1&v=static-ui-browser-20260626_031526",
+        "state_static_purchase_supply": {
+          "宣傳家": 10,
+          "思想家": 15,
+          "資助者": 15,
+          "資本家": 15,
+          "分神": 30,
+          "內鬥": 20
+        },
+        "screenshot": "docs/records/purchase/static-purchase-ui-20260626_031526/01_host_formal_start_static_counts.png"
+      }
+    },
+    {
+      "name": "formal_start_current_player_ui_static_counts_not_one",
+      "passed": true,
+      "details": {
+        "actual": {
+          "宣傳家": 10,
+          "思想家": 15,
+          "資助者": 15,
+          "資本家": 15,
+          "分神": 30,
+          "內鬥": 20
+        },
+        "expected": {
+          "宣傳家": 10,
+          "思想家": 15,
+          "資助者": 15,
+          "資本家": 15,
+          "分神": 30,
+          "內鬥": 20
+        },
+        "url": "http://127.0.0.1:8000/?game_id=987120d9-4e31-4f46-a8fb-b3605bad839d&player_id=95d9a48b-a73a-4b8c-bcb0-82c5a9bd73b0&v=static-ui-browser-20260626_031526",
+        "state_static_purchase_supply": {
+          "宣傳家": 10,
+          "思想家": 15,
+          "資助者": 15,
+          "資本家": 15,
+          "分神": 30,
+          "內鬥": 20
+        },
+        "screenshot": "docs/records/purchase/static-purchase-ui-20260626_031526/02_hk_formal_start_static_counts.png"
+      }
+    },
+    {
+      "name": "after_buy_ui_static_count_decrements_and_card_stays",
+      "passed": true,
+      "details": {
+        "actual": {
+          "宣傳家": 9,
+          "思想家": 15,
+          "資助者": 15,
+          "資本家": 15,
+          "分神": 30,
+          "內鬥": 20
+        },
+        "expected": {
+          "宣傳家": 9,
+          "思想家": 15,
+          "資助者": 15,
+          "資本家": 15,
+          "分神": 30,
+          "內鬥": 20
+        },
+        "state_static_purchase_supply": {
+          "宣傳家": 9,
+          "思想家": 15,
+          "資助者": 15,
+          "資本家": 15,
+          "分神": 30,
+          "內鬥": 20
+        },
+        "hk_resources": {
+          "money": 0,
+          "propaganda": 0
+        },
+        "hk_discard_tail": [
+          "宣傳家",
+          "追隨者",
+          "追隨者",
+          "追隨者",
+          "宣傳家"
+        ],
+        "action_log_tail": [
+          "[Turn 1] Event drawn: 一帶一路 南洋 (auto deferred)",
+          "[Turn 1] hk played 追隨者 as resource",
+          "[Turn 1] hk played 追隨者 as resource",
+          "[Turn 1] hk played 追隨者 as resource",
+          "[Turn 1] hk bought 宣傳家"
+        ],
+        "screenshot": "docs/records/purchase/static-purchase-ui-20260626_031526/03_after_buy_propagandist_static_count_decrements.png"
+      }
+    }
+  ]
+}

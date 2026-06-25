@@ -76,6 +76,7 @@ def check(name, passed, details):
 
 def run_checks():
     raw_counts = raw_static_counts()
+    app_js = (BASE / 'static' / 'app.js').read_text(encoding='utf-8')
     checks = []
 
     checks.append(check(
@@ -85,6 +86,19 @@ def run_checks():
             'rule': '常設購買區總張數以 data/raw/action_cards.csv「卡牌張數」為準。',
             'raw_counts': raw_counts,
             'runtime_constants': STATIC_PURCHASE_CARD_SUPPLY,
+        },
+    ))
+
+    checks.append(check(
+        'frontend_static_supply_fallback_uses_catalog_not_one',
+        'state.static_purchase_supply?.[card] ?? 1' not in app_js
+        and 'liveStaticSupplyForCard(state, card)' in app_js
+        and 'staticCardCatalogCount(cardName)' in app_js,
+        {
+            'rule': '前端若暫時沒有 live static_purchase_supply，不可把常設卡 fallback 成 1；應使用 card-presentation CSV count_text。',
+            'forbidden_literal_present': 'state.static_purchase_supply?.[card] ?? 1' in app_js,
+            'uses_live_helper': 'liveStaticSupplyForCard(state, card)' in app_js,
+            'uses_catalog_helper': 'staticCardCatalogCount(cardName)' in app_js,
         },
     ))
 

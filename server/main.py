@@ -604,7 +604,11 @@ def test_set_hand(payload: dict):
 
     player.hand = []
     for name in cards:
-        player.hand.append(Card(name, "test", {}))
+        card_def = next((c for c in game.structured_cards if c.get("name") == name), None)
+        if card_def:
+            player.hand.append(Card(card_def["name"], card_def.get("type", "test"), card_def.get("resources", {})))
+        else:
+            player.hand.append(game._starter_card(name))
 
     if turn_phase == "action":
         game.turn_phase = TurnPhase.ACTION
