@@ -188,6 +188,9 @@ def main():
             wait_state(page)
             for _ in range(3):
                 play_follower_resource(page)
+            purchase_phase_state = click_advance(page)
+            if purchase_phase_state.get("turn_phase") != "end":
+                raise AssertionError(f"expected purchase phase after action, got {purchase_phase_state.get('turn_phase')}")
             bought_state = buy_static(page, "宣傳家")
             after_buy_counts = static_ui_counts(page)
             buy_shot = screenshot_dir / "03_after_buy_propagandist_static_count_decrements.png"

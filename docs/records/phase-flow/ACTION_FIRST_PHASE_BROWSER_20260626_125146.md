@@ -1,0 +1,37 @@
+# Action-first phase browser validation
+
+```json
+{
+  "summary": {
+    "total": 5,
+    "passed": 5,
+    "failed": 0
+  },
+  "checks": [
+    {
+      "name": "starts_in_action_phase",
+      "passed": true
+    },
+    {
+      "name": "hand_actions_enabled_initially",
+      "passed": true
+    },
+    {
+      "name": "purchase_disabled_before_purchase_phase",
+      "passed": true
+    },
+    {
+      "name": "advance_enters_purchase_phase",
+      "passed": true
+    },
+    {
+      "name": "purchase_phase_disables_hand_enables_buy",
+      "passed": true
+    }
+  ],
+  "screenshots": [
+    "docs/records/phase-flow/action-first-phase-20260626_125146/01_initial_action_phase_cards_enabled_buy_disabled.png",
+    "docs/records/phase-flow/action-first-phase-20260626_125146/02_purchase_phase_hand_disabled_buy_enabled.png"
+  ]
+}
+```

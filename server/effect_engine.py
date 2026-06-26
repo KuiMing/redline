@@ -343,8 +343,28 @@ class EffectEngine:
                 return {'pending_choice': True}
             return
 
-        # ✅ Build via card effect (MVP: reinforce current base or first owned legal town)
+        # ✅ Build via card effect: prompt the player to choose a legal build town.
         if etype == "build":
+            context = context or {}
+            source_name = context.get('card_name') or '建立組織卡'
+            if hasattr(game, '_card_build_town_choices') and hasattr(game, '_set_pending_town_choice'):
+                towns = game._card_build_town_choices(player, effect)
+                if towns:
+                    game._set_pending_town_choice(
+                        player,
+                        'card_build_organization',
+                        towns,
+                        f"{source_name}：選擇要建立組織的城鎮。",
+                        source_name=source_name,
+                        context={
+                            **context,
+                            'source_name': source_name,
+                            'effect': dict(effect),
+                        },
+                    )
+                    return {'pending_choice': True}
+                game.log(f"{player.name} had no legal town to build via {source_name}")
+                return
             target = player.base if player.base and player.organizations.get(player.base, 0) > 0 and game.can_develop_in_town(player, player.base) else None
             if not target:
                 owned = [town for town, count in player.organizations.items() if count > 0 and game.can_develop_in_town(player, town)]

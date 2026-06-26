@@ -95,7 +95,7 @@ class Game:
         self.current_player_index = 0
         self.round_start_player_index = 0
         self.game_phase = GamePhase.SETUP
-        self.turn_phase = TurnPhase.EVENT
+        self.turn_phase = TurnPhase.ACTION
         self.winner = None
         self.market_mode = market_mode or "sample_53"
 
@@ -166,7 +166,7 @@ class Game:
         self.pending_choice = None
         self.era_notification = None
         self.red_army_destroyed_bases = set()
-        if self.game_phase == GamePhase.MAIN and self.turn_phase == TurnPhase.EVENT:
+        if self.game_phase == GamePhase.MAIN:
             self._start_event_phase()
 
     # ---------- Init ----------
@@ -983,6 +983,35 @@ class Game:
                     frontier.append((nxt, dist + 1))
         return seen
 
+    def _card_build_town_choices(self, player, effect):
+        if self._event_modifier_active('restrict_build'):
+            return []
+        if not player:
+            return []
+        build_range = (effect or {}).get('range', 1)
+        all_towns = set(self.map.get('towns', {}) or {})
+        if build_range == 'ignore_distance':
+            candidates = all_towns
+        else:
+            source_towns = [
+                town for town, count in (getattr(player, 'organizations', {}) or {}).items()
+                if int(count or 0) > 0
+            ]
+            if not source_towns:
+                return []
+            max_steps = int(build_range or 1) + int(getattr(player, 'build_range_bonus', 0) or 0)
+            candidates = self._towns_within_steps(source_towns, max_steps=max_steps)
+        choices = []
+        for town in sorted(candidates):
+            if town in set(getattr(self, 'red_army_destroyed_bases', set()) or []) and getattr(player, 'faction_id', None) == 'red_army':
+                continue
+            if not self.can_develop_in_town(player, town):
+                continue
+            if build_range == 'ignore_distance' and self._era_restricts_ignore_distance_build(player, town):
+                continue
+            choices.append({'town': town})
+        return choices
+
     def _player_has_org_within_steps_of_player(self, source_player, target_player, max_steps=1, target_region=None):
         source_towns = [town for town, count in (getattr(source_player, 'organizations', {}) or {}).items() if count > 0]
         target_towns = {
@@ -1643,6 +1672,35 @@ class Game:
         if choice_key == 'event_build_organization':
             player.organizations[town] = player.organizations.get(town, 0) + 1
             self.log(f"{player.name} built organization in {town} via event")
+        elif choice_key == 'card_build_organization':
+            player.organizations[town] = player.organizations.get(town, 0) + 1
+            self.turn_log.setdefault("built_towns", []).append(town)
+            self._track_event_progress('build_organization', town=town, player=player)
+            self._apply_era_build_effects(player, town)
+            self._apply_guerrilla_on_build(player, town)
+            self.log(f"{player.name} built organization in {town} via {choice.get('source_name') or 'card'}")
+            self.pending_choice = None
+            context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
+            remaining_effects = list(context.get('remaining_effects') or [])
+            for idx, effect in enumerate(remaining_effects):
+                context['remaining_effects'] = remaining_effects[idx + 1:]
+                result = self.effect_engine.execute(effect, player, self, context=context)
+                if isinstance(result, dict) and result.get('pending_choice'):
+                    return {
+                        'success': True,
+                        'choice_index': index,
+                        'town': town,
+                        'selected': selected,
+                        'choice_key': choice_key,
+                        'pending_choice': True,
+                    }
+            return {
+                'success': True,
+                'choice_index': index,
+                'town': town,
+                'selected': selected,
+                'choice_key': choice_key,
+            }
         elif choice_key == 'era_red_build_near_target':
             context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
             remaining_builds = max(0, int(context.get('remaining_builds', 1) or 1))
@@ -2248,6 +2306,7 @@ class Game:
         context = dict((choice or {}).get('context') or {})
         effect_type = context.get('effect_type')
         card_name = context.get('card_name') or '奧援卡'
+        choice_key = (choice or {}).get('choice_key')
         if effect_type in {'interactive_build_anywhere_inner', 'interactive_build_near_inner'}:
             town = result.get('town')
             if not town or not self.can_develop_in_town(player, town):
@@ -2661,7 +2720,7 @@ class Game:
 
         if not self.pending_base_choices:
             self.game_phase = GamePhase.MAIN
-            if self.turn_phase == TurnPhase.EVENT and not self.current_event:
+            if self.turn_phase == TurnPhase.ACTION and not self.current_event:
                 self._start_event_phase()
         return {"success": True}
 
@@ -3687,11 +3746,13 @@ class Game:
         if not card_def:
             return None
         seen_optional = False
-        for effect in card_def.get('effect', []):
+        effects = card_def.get('effect', [])
+        for idx, effect in enumerate(effects):
             if not seen_optional:
                 if effect.get('type') == 'optional_trash':
                     seen_optional = True
                 continue
+            context['remaining_effects'] = effects[idx + 1:]
             result = self.effect_engine.execute(effect, player, self, context=context)
             if isinstance(result, dict) and result.get('pending_choice'):
                 return result
@@ -3946,16 +4007,16 @@ class Game:
                 return {"success": True, "pending_choice": True}
             self.turn_phase = TurnPhase.ACTION
         elif self.turn_phase == TurnPhase.ACTION:
-            # Mission events are round-wide: resolve only after the last player of
-            # the round has finished ACTION, not after each individual player.
+            self.turn_phase = TurnPhase.END
+        elif self.turn_phase == TurnPhase.END:
+            # Mission events are round-wide: resolve after the final player's
+            # purchase step, so buy_card triggers have a chance to progress.
             next_player_index = (self.current_player_index + 1) % len(self.players)
             is_round_final_action = next_player_index == getattr(self, 'round_start_player_index', 0)
-            if is_round_final_action:
+            if is_round_final_action and not (self.event_progress or {}).get('settled'):
                 event_result = self._settle_current_event()
                 if event_result and event_result.get('pending_choice'):
                     return {"success": True, "pending_choice": True}
-            self.turn_phase = TurnPhase.END
-        elif self.turn_phase == TurnPhase.END:
             pending = self._prompt_end_turn_topdeck_action_if_available()
             if pending:
                 return {"success": True, "pending_choice": True}
@@ -3995,7 +4056,7 @@ class Game:
             self.current_event = None
             self.event_progress = None
             self.event_notification = None
-        self.turn_phase = TurnPhase.EVENT
+        self.turn_phase = TurnPhase.ACTION
         if not self.current_event:
             self._start_event_phase()
         else:
@@ -4220,8 +4281,8 @@ class Game:
         return True
 
     def buy_card(self, index):
-        if self.turn_phase != TurnPhase.ACTION:
-            return {"error": "Not in ACTION phase"}
+        if self.turn_phase != TurnPhase.END:
+            return {"error": "Not in PURCHASE phase"}
 
         player = self.current_player()
         if index < 0 or index >= len(self.purchase_area):

@@ -19,7 +19,9 @@ class ActionCardEngine:
 
         # 統一 effect pipeline
         context = context or {}
-        for effect in card.get("effect", []):
+        effects = card.get("effect", [])
+        for idx, effect in enumerate(effects):
+            context['remaining_effects'] = effects[idx + 1:]
             result = self.effect_engine.execute(effect, player, game, context=context)
             if isinstance(result, dict) and result.get('pending_choice'):
                 return result

@@ -221,7 +221,7 @@ function renderSupportChoiceHighlights(options = {}) {
     const hintEl = document.getElementById('interactionHint');
     if (hintEl) {
       const focusText = supportChoiceHighlight.focusTown ? ` 已聚焦 ${supportChoiceHighlight.focusTown}。` : '';
-      const actionText = ['event_build_organization', 'era_red_build_near_target'].includes(supportChoiceHighlight.choiceKey)
+      const actionText = ['event_build_organization', 'era_red_build_near_target', 'card_build_organization'].includes(supportChoiceHighlight.choiceKey)
         ? '請點選橘色城鎮，然後使用左側「在目前城鎮建立組織（效果）」按鈕完成建立。'
         : '請回到選擇視窗確認或改選。';
       hintEl.innerHTML = `${supportChoiceHighlight.sourceName || '當前選擇'}：<span class="hint-strong">${supportChoiceHighlight.prompt || '請依列表選擇目標。'}</span> 地圖上已用橘色外框標出可選城鎮。${focusText}${actionText}`;
@@ -576,7 +576,7 @@ function sendMoveAction(fromTown, toTown, mode) {
 }
 
 function eventBuildChoiceForTown(townName) {
-  if (!supportChoiceHighlight || !['event_build_organization', 'era_red_build_near_target'].includes(supportChoiceHighlight.choiceKey)) return null;
+  if (!supportChoiceHighlight || !['event_build_organization', 'era_red_build_near_target', 'card_build_organization'].includes(supportChoiceHighlight.choiceKey)) return null;
   const towns = Array.isArray(supportChoiceHighlight.towns) ? supportChoiceHighlight.towns : [];
   const entry = towns.find(item => item?.town === townName);
   if (!entry) return null;
@@ -854,7 +854,7 @@ function applyGameStateToMap(state) {
   const resolvingMove = pendingMove && !state?.error ? { ...pendingMove } : null;
   lastGameState = state;
   const pendingChoice = state?.pending_choice || null;
-  if (!pendingChoice || !['event_build_organization', 'era_red_build_near_target'].includes(pendingChoice.choice_key)) {
+  if (!pendingChoice || !['event_build_organization', 'era_red_build_near_target', 'card_build_organization'].includes(pendingChoice.choice_key)) {
     applySupportChoiceHighlight(null);
   }
   if (resolvingMove) {

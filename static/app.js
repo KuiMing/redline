@@ -1119,9 +1119,11 @@ function playHandCard(index, card, mode) {
   const cardName = typeof card === 'string' ? card : (card?.name || card?.title || '');
   const isRedSupportPrepAction = phase === 'event' && mode === 'action' && cardName === '紅軍奧援' && me?.faction === 'red_army';
   if (phase !== 'action' && !isRedSupportPrepAction) {
-    const message = cardName === '紅軍奧援' && mode === 'resource'
-      ? '事件階段可先發動紅軍奧援的「行動」，資源需等開始購買階段。'
-      : '目前仍在事件階段；只有紅軍奧援的「行動」可在開始購買階段前使用。';
+    const message = phase === 'end'
+      ? '目前是購買階段；不能再打出手牌，請購買卡牌或結束回合。'
+      : cardName === '紅軍奧援' && mode === 'resource'
+        ? '事件結算中可先發動紅軍奧援的「行動」，資源需等行動階段。'
+        : '目前不能打出一般手牌；請先處理事件結算或等待行動階段。';
     setPhaseActionNotice(message);
     return;
   }
@@ -1181,7 +1183,7 @@ function openRedArmyAbilityModal(state = window.lastGameState || {}) {
   title.textContent = '紅軍能力';
   desc.textContent = usedUp
     ? '本回合紅軍能力已達發動上限。'
-    : `紅軍可在開始購買階段之前自行選擇何時發動；本回合已用 ${usedCount}/${limitCount} 次。`;
+    : `紅軍可在開始行動階段之前自行選擇何時發動；本回合已用 ${usedCount}/${limitCount} 次。`;
   choices.innerHTML = '';
   choices.classList.add('red-army-action-choices');
   if (oddBtn) oddBtn.style.display = 'none';
@@ -1265,7 +1267,7 @@ window.addEventListener('message', (event) => {
 });
 
 function eventBuildChoiceMapPayload(choice, sourceName = '', resolvedTitle = '') {
-  if (!choice || !['event_build_organization', 'era_red_build_near_target'].includes(choice.choice_key)) return null;
+  if (!choice || !['event_build_organization', 'era_red_build_near_target', 'card_build_organization'].includes(choice.choice_key)) return null;
   const towns = (choice.towns || []).filter(entry => entry?.town);
   if (!towns.length) return null;
   return {
@@ -1370,7 +1372,7 @@ function renderChoiceModal(state) {
   const choiceKey = choice.choice_key || '';
   const sourceName = choice.source_name || choiceKey || '';
 
-  if (['event_build_organization', 'era_red_build_near_target'].includes(choiceKey) && (choiceType === 'town_choice' || choice.step === 'town')) {
+  if (['event_build_organization', 'era_red_build_near_target', 'card_build_organization'].includes(choiceKey) && (choiceType === 'town_choice' || choice.step === 'town')) {
     const payload = eventBuildChoiceMapPayload(choice, sourceName, sourceName);
     overlay.style.display = 'none';
     overlay.classList.remove('choice-modal-map-context');
@@ -1922,7 +1924,7 @@ function renderFactionActionPanel(state) {
     panel.style.display = 'block';
     info.innerHTML = `
       <div class="faction-action-placeholder">
-        <div>紅軍能力不再自動彈出；可在開始購買階段前，按上方或此處的「紅軍能力」按鈕自行選擇時機。</div>
+        <div>紅軍能力不再自動彈出；可在開始行動階段前，按上方或此處的「紅軍能力」按鈕自行選擇時機。</div>
         <div>本回合已用 ${usedCount}/${limitCount} 次。</div>
       </div>`;
     const btn = document.createElement('button');
@@ -2318,7 +2320,7 @@ async function render(state) {
     const myPropaganda = me?.resources?.propaganda ?? 0;
     const myMoves = me?.moves_left ?? 0;
     const myHand = me?.hand?.length ?? 0;
-    const phaseLabel = String(state.turn_phase || '').toLowerCase() === 'action' ? '行動' : String(state.turn_phase || '').toLowerCase() === 'event' ? '事件' : String(state.turn_phase || '').toLowerCase() === 'end' ? '結束' : state.turn_phase;
+    const phaseLabel = String(state.turn_phase || '').toLowerCase() === 'action' ? '行動' : String(state.turn_phase || '').toLowerCase() === 'event' ? '事件結算' : String(state.turn_phase || '').toLowerCase() === 'end' ? '購買' : state.turn_phase;
     const eraStatus = (state.active_era_details || []).map(item => {
       const remainText = item.remaining == null ? '持續中' : `剩餘 ${item.remaining} 回合`;
       return `<span class="hud-era-pill">${escapeHtml(item.name)}｜條件已達成｜${escapeHtml(remainText)}</span>`;
@@ -2344,7 +2346,7 @@ async function render(state) {
     const advanceBtn = document.getElementById('advanceStepBtn');
     const redArmyBtn = document.getElementById('redArmyAbilityBtn');
     const isMyTurn = isMyTurnState(state);
-    const stepLabel = phaseLabel === '事件' ? '開始購買階段' : phaseLabel === '行動' ? '結束行動階段' : phaseLabel === '結束' ? '結束回合' : '結束目前步驟';
+    const stepLabel = phaseLabel === '事件結算' ? '繼續行動階段' : phaseLabel === '行動' ? '開始購買階段' : phaseLabel === '購買' ? '結束回合' : '結束目前步驟';
     if (phaseActionMeta) {
       phaseActionMeta.textContent = isMyTurn ? `目前：${phaseLabel}｜下一步：${stepLabel}` : `目前：${phaseLabel}｜等待 ${state.current_player} 操作`;
     }
@@ -2389,12 +2391,13 @@ async function render(state) {
       const handButtonTitle = (cardName, mode, canPlay) => {
         if (canPlay) return '打出這張手牌';
         if (hasMyPendingChoice) return '請先處理目前待選擇效果。';
+        if (rawPhase === 'end') return '目前是購買階段；不能再打出手牌。';
         if (rawPhase === 'event') {
           return (cardName === '紅軍奧援' && mode === 'resource')
-            ? '事件階段可先發動紅軍奧援的「行動」，資源需等開始購買階段。'
-            : '目前仍在事件階段；只有紅軍奧援的「行動」可在開始購買階段前使用。';
+            ? '事件結算中可先發動紅軍奧援的「行動」，資源需等行動階段。'
+            : '目前不能打出一般手牌；請先處理事件結算或等待行動階段。';
         }
-        return '只有當前玩家的購買／行動階段可以打出手牌。';
+        return '只有當前玩家的行動階段可以打出手牌。';
       };
       me.hand.forEach((card, i) => {
         const cardArg = escapeHtml(jsSingleQuotedString(card));
@@ -2435,12 +2438,21 @@ async function render(state) {
       const colorName = (cardPresentation(card)?.color) || (isSupport ? '奧援' : '灰');
       const colorClass = cardColorClass(colorName);
       const staticSupply = isStatic ? liveStaticSupplyForCard(state, card) : null;
-      const canBuy = !isStatic || (staticSupply != null && staticSupply > 0);
-      const buyTitle = isStatic && (staticSupply == null || staticSupply <= 0) ? '常設供應已售完' : '購買此卡';
+      const inPurchasePhase = String(state.turn_phase || '').toLowerCase() === 'end';
+      const isMyPurchaseTurn = isMyTurnState(state);
+      const hasMyPendingChoice = !!(state.pending_choice && me && state.pending_choice.player_id === me.id);
+      const canBuy = inPurchasePhase && isMyPurchaseTurn && !hasMyPendingChoice && (!isStatic || (staticSupply != null && staticSupply > 0));
+      const buyTitle = !inPurchasePhase
+        ? '行動階段結束後才能購買。'
+        : !isMyPurchaseTurn
+          ? '等待當前玩家購買。'
+          : hasMyPendingChoice
+            ? '請先處理目前待選擇效果。'
+            : isStatic && (staticSupply == null || staticSupply <= 0) ? '常設供應已售完' : '購買此卡';
       container.innerHTML += `
         <div class='card ${typeClass}${supportClass} ${colorClass}' onclick="selectCardDetail(${JSON.stringify(card)},'purchase',${isStatic})" ${canBuy ? `ondblclick="sendAction('buy_card',{index:${i}})"` : ''}>
           ${renderCardFace(card, 'purchase', isStatic, true, isStatic ? staticSupply : null)}
-          <button class="purchase-card-buy-btn" type="button" ${canBuy ? '' : 'disabled aria-disabled="true"'} title="${buyTitle}" onclick="event.stopPropagation(); sendAction('buy_card',{index:${i}})">購買</button>
+          <button class="purchase-card-buy-btn" type="button" ${canBuy ? '' : 'disabled aria-disabled="true"'} title="${escapeHtml(buyTitle)}" onclick="event.stopPropagation(); sendAction('buy_card',{index:${i}})">購買</button>
         </div>`;
     });
   }
