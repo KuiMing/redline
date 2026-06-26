@@ -1624,16 +1624,25 @@ function renderCurrentEvent(state) {
     failure: '失敗已結算',
     idle: '無效果',
     auto: '自動效果已套用',
+    auto_pending: '等待指定玩家回合發動',
   };
   const typeMap = {idle: '歲月靜好', mission: '任務', auto: '自動'};
-  content.innerHTML = `
-    <div class="event-card-name">${escapeHtml(event.name || '未知事件')}</div>
-    <div class="event-card-meta">類型：${escapeHtml(typeMap[event.type] || event.type || '未知')}｜狀態：${escapeHtml(statusMap[event.status] || event.status || '進行中')}</div>
-    <div class="event-card-result"><strong>任務結果：</strong>${escapeHtml(event.result_text || statusMap[event.status] || '進行中')}</div>
+  const autoEffectLine = event.type === 'auto'
+    ? `<div class="event-card-line"><strong>自動效果：</strong>${escapeHtml(event.effect_text || '無')}</div>`
+    : '';
+  const missionLines = event.type === 'mission'
+    ? `
     <div class="event-card-line"><strong>任務條件：</strong>${escapeHtml(event.trigger_text || '無')}</div>
     <div class="event-card-progress">進度：${current}/${required || 0}</div>
     <div class="event-card-line"><strong>成功獎勵：</strong>${escapeHtml(event.success_text || '無')}</div>
-    <div class="event-card-line"><strong>失敗懲罰：</strong>${escapeHtml(event.failure_text || '無')}</div>
+    <div class="event-card-line"><strong>失敗／紅軍效果：</strong>${escapeHtml(event.failure_text || '無')}</div>`
+    : '';
+  content.innerHTML = `
+    <div class="event-card-name">${escapeHtml(event.name || '未知事件')}</div>
+    <div class="event-card-meta">類型：${escapeHtml(typeMap[event.type] || event.type || '未知')}｜狀態：${escapeHtml(statusMap[event.status] || event.status || '進行中')}</div>
+    <div class="event-card-result"><strong>事件結果：</strong>${escapeHtml(event.result_text || statusMap[event.status] || '進行中')}</div>
+    ${autoEffectLine}
+    ${missionLines}
   `;
 }
 
