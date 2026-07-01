@@ -39,7 +39,7 @@ def make_game():
 
     game.current_player_index = 0
     game.game_phase = GamePhase.MAIN
-    game.turn_phase = TurnPhase.ACTION
+    game.turn_phase = TurnPhase.END
     game.winner = None
     return game, actor
 

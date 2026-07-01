@@ -80,13 +80,18 @@ def main():
         checks.append({'name': 'hand_actions_enabled_initially', 'passed': not resource_disabled and not action_disabled})
         checks.append({'name': 'purchase_disabled_before_purchase_phase', 'passed': buy_disabled_action})
 
+        for _ in range(3):
+            page.locator(".hand-card").filter(has_text='追隨者').locator("button[data-card-mode='resource']").first.click(timeout=5000)
+            page.wait_for_timeout(250)
+
         page.locator('#advanceStepBtn').click(timeout=5000)
         page.wait_for_function('window.lastGameState && window.lastGameState.turn_phase === "end"', timeout=10000)
         page.wait_for_timeout(350)
         state2 = page.evaluate('window.lastGameState')
         meta2 = page.locator('#phaseActionMeta').inner_text(timeout=5000)
         advance_text2 = page.locator('#advanceStepBtn').inner_text(timeout=5000)
-        resource_disabled2 = page.locator(".hand-card").filter(has_text='追隨者').locator("button[data-card-mode='resource']").first.is_disabled()
+        hand_resource_count_after_purchase = page.locator(".hand-card button[data-card-mode='resource']").count()
+        resource_disabled2 = hand_resource_count_after_purchase == 0 or page.locator(".hand-card button[data-card-mode='resource']").first.is_disabled()
         buy_disabled_purchase = page.locator('#purchaseStatic .purchase-card-buy-btn').first.is_disabled()
         shot2 = screenshot_dir / '02_purchase_phase_hand_disabled_buy_enabled.png'
         page.screenshot(path=str(shot2), full_page=True)

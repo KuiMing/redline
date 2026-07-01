@@ -2351,11 +2351,13 @@ async function render(state) {
       ${eraStatus ? `<div class="hud-era-row">${eraStatus}</div>` : ''}
     `;
 
+    const phaseActionBar = document.getElementById('phaseActionBar');
+    if (phaseActionBar) phaseActionBar.style.display = state.game_phase === 'main' ? 'flex' : 'none';
     const phaseActionMeta = document.getElementById('phaseActionMeta');
     const advanceBtn = document.getElementById('advanceStepBtn');
     const redArmyBtn = document.getElementById('redArmyAbilityBtn');
     const isMyTurn = isMyTurnState(state);
-    const stepLabel = phaseLabel === '事件結算' ? '繼續行動階段' : phaseLabel === '行動' ? '開始購買階段' : phaseLabel === '購買' ? '結束回合' : '結束目前步驟';
+    const stepLabel = phaseLabel === '事件結算' ? '開始行動階段' : phaseLabel === '行動' ? '開始購買階段' : phaseLabel === '購買' ? '結束回合' : '結束目前步驟';
     if (phaseActionMeta) {
       phaseActionMeta.textContent = isMyTurn ? `目前：${phaseLabel}｜下一步：${stepLabel}` : `目前：${phaseLabel}｜等待 ${state.current_player} 操作`;
     }
@@ -2450,14 +2452,24 @@ async function render(state) {
       const inPurchasePhase = String(state.turn_phase || '').toLowerCase() === 'end';
       const isMyPurchaseTurn = isMyTurnState(state);
       const hasMyPendingChoice = !!(state.pending_choice && me && state.pending_choice.player_id === me.id);
-      const canBuy = inPurchasePhase && isMyPurchaseTurn && !hasMyPendingChoice && (!isStatic || (staticSupply != null && staticSupply > 0));
+      const purchaseCost = state.purchase_area_costs?.[i] || {money: 0, propaganda: 0};
+      const purchaseAffordable = !!state.purchase_area_affordable?.[i];
+      const costParts = [];
+      if (Number(purchaseCost.money || 0) > 0) costParts.push(`${purchaseCost.money}資金`);
+      if (Number(purchaseCost.propaganda || 0) > 0) costParts.push(`${purchaseCost.propaganda}宣傳`);
+      const costText = costParts.length ? costParts.join(' + ') : '免費';
+      const canBuy = inPurchasePhase && isMyPurchaseTurn && !hasMyPendingChoice && purchaseAffordable && (!isStatic || (staticSupply != null && staticSupply > 0));
       const buyTitle = !inPurchasePhase
         ? '行動階段結束後才能購買。'
         : !isMyPurchaseTurn
           ? '等待當前玩家購買。'
           : hasMyPendingChoice
             ? '請先處理目前待選擇效果。'
-            : isStatic && (staticSupply == null || staticSupply <= 0) ? '常設供應已售完' : '購買此卡';
+            : isStatic && (staticSupply == null || staticSupply <= 0)
+              ? '常設供應已售完'
+              : !purchaseAffordable
+                ? `資源不足，需要 ${costText}`
+                : `購買此卡（${costText}）`;
       container.innerHTML += `
         <div class='card ${typeClass}${supportClass} ${colorClass}' onclick="selectCardDetail(${JSON.stringify(card)},'purchase',${isStatic})" ${canBuy ? `ondblclick="sendAction('buy_card',{index:${i}})"` : ''}>
           ${renderCardFace(card, 'purchase', isStatic, true, isStatic ? staticSupply : null)}

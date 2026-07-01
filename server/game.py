@@ -4286,6 +4286,36 @@ class Game:
                 }
         return {'money': 0, 'propaganda': 0}
 
+    def _effective_purchase_cost(self, player, card):
+        cost = dict(self._card_purchase_cost(card) or {})
+        cost_money = int(cost.get('money', 0) or 0)
+        cost_propaganda = int(cost.get('propaganda', 0) or 0)
+
+        reduction = self._event_reduce_cost_amount()
+        if reduction > 0:
+            money_reduction = min(cost_money, reduction)
+            cost_money -= money_reduction
+            reduction -= money_reduction
+            if reduction > 0:
+                cost_propaganda = max(0, cost_propaganda - reduction)
+
+        era_reduction = self._era_purchase_cost_reduction(player, card)
+        cost_money = max(0, cost_money - int(era_reduction.get('money', 0) or 0))
+        cost_propaganda = max(0, cost_propaganda - int(era_reduction.get('propaganda', 0) or 0))
+        return {'money': cost_money, 'propaganda': cost_propaganda}
+
+    def _player_can_afford_purchase(self, player, card, effective_cost=None):
+        cost = effective_cost if effective_cost is not None else self._effective_purchase_cost(player, card)
+        cost_money = int(cost.get('money', 0) or 0)
+        cost_propaganda = int(cost.get('propaganda', 0) or 0)
+        card_type = getattr(card, "card_type", None)
+        if self._player_has_ability(player, "華文傳媒") and card_type == "propaganda":
+            return player.resources.get('money', 0) >= cost_propaganda
+        return (
+            player.resources.get('money', 0) >= cost_money
+            and player.resources.get('propaganda', 0) >= cost_propaganda
+        )
+
     def _copy_purchase_card(self, card):
         return Card(
             getattr(card, 'name', str(card)),
@@ -4340,27 +4370,17 @@ class Game:
                 return {"error": "Static purchase card is out of supply"}
 
         card_type = getattr(card, "card_type", None)
-        cost = self._card_purchase_cost(card)
+        original_cost = self._card_purchase_cost(card)
+        cost = self._effective_purchase_cost(player, card)
         cost_money = int(cost.get('money', 0) or 0)
         cost_propaganda = int(cost.get('propaganda', 0) or 0)
-        reduction = self._event_reduce_cost_amount()
-        if reduction > 0:
-            money_reduction = min(cost_money, reduction)
-            cost_money -= money_reduction
-            reduction -= money_reduction
-            if reduction > 0:
-                cost_propaganda = max(0, cost_propaganda - reduction)
-
-        era_reduction = self._era_purchase_cost_reduction(player, card)
-        cost_money = max(0, cost_money - int(era_reduction.get('money', 0) or 0))
-        cost_propaganda = max(0, cost_propaganda - int(era_reduction.get('propaganda', 0) or 0))
 
         if self._player_has_ability(player, "華文傳媒") and card_type == "propaganda":
             if player.resources['money'] < cost_propaganda:
                 return {"error": "Not enough money for propaganda purchase"}
             player.resources['money'] -= cost_propaganda
         else:
-            if player.resources['money'] < cost_money or player.resources['propaganda'] < cost_propaganda:
+            if not self._player_can_afford_purchase(player, card, cost):
                 return {"error": "Not enough resources"}
             player.resources['money'] -= cost_money
             player.resources['propaganda'] -= cost_propaganda
@@ -4373,7 +4393,7 @@ class Game:
         else:
             self.purchase_area.pop(index)
         self.log(f"{player.name} bought {card_name}")
-        event_result = self._track_event_purchase(purchased_card, original_cost=cost, player=player)
+        event_result = self._track_event_purchase(purchased_card, original_cost=original_cost, player=player)
         if isinstance(event_result, dict) and event_result.get('pending_choice'):
             return {"success": True, "pending_choice": True}
         return {"success": True}
@@ -5009,6 +5029,16 @@ class Game:
                 'step': self.pending_choice.get('step'),
             }
 
+        current_player = self.current_player()
+        purchase_area_costs = [
+            self._effective_purchase_cost(current_player, card)
+            for card in self.purchase_area
+        ]
+        purchase_area_affordable = [
+            self._player_can_afford_purchase(current_player, card, purchase_area_costs[idx])
+            for idx, card in enumerate(self.purchase_area)
+        ]
+
         return {
             "turn": self.turn,
             "game_phase": self.game_phase,
@@ -5030,6 +5060,8 @@ class Game:
             "faction_action_used": bool(self.turn_log.get('faction_action_used')),
             "action_log": self.action_log,
             "purchase_area": [getattr(card, 'name', str(card)) for card in self.purchase_area],
+            "purchase_area_costs": purchase_area_costs,
+            "purchase_area_affordable": purchase_area_affordable,
             "static_purchase_supply": dict(getattr(self, 'static_purchase_supply', {})),
             "map": {
                 "towns": town_control,
