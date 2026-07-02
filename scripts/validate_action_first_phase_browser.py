@@ -46,6 +46,14 @@ def wait_state(page):
     return page.evaluate('window.lastGameState')
 
 
+def event_panel_snapshot(page):
+    panel = page.locator('#eventCardPanel')
+    return {
+        'visible': panel.is_visible(timeout=5000),
+        'text': panel.inner_text(timeout=5000) if panel.is_visible(timeout=5000) else '',
+    }
+
+
 def main():
     RECORD_DIR.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -71,12 +79,14 @@ def main():
         state = wait_state(page)
         meta = page.locator('#phaseActionMeta').inner_text(timeout=5000)
         advance_text = page.locator('#advanceStepBtn').inner_text(timeout=5000)
+        event_panel = event_panel_snapshot(page)
         resource_disabled = page.locator(".hand-card").filter(has_text='追隨者').locator("button[data-card-mode='resource']").first.is_disabled()
         action_disabled = page.locator(".hand-card").filter(has_text='追隨者').locator("button[data-card-mode='action']").first.is_disabled()
         buy_disabled_action = page.locator('#purchaseStatic .purchase-card-buy-btn').first.is_disabled()
         shot1 = screenshot_dir / '01_initial_action_phase_cards_enabled_buy_disabled.png'
         page.screenshot(path=str(shot1), full_page=True)
         checks.append({'name': 'starts_in_action_phase', 'passed': state.get('turn_phase') == 'action' and '目前：行動｜下一步：開始購買階段' in meta and advance_text == '開始購買階段'})
+        checks.append({'name': 'current_event_visible_at_action_start', 'passed': bool(state.get('current_event')) and event_panel['visible'] and (state.get('current_event') or {}).get('name', '') in event_panel['text'], 'details': {'current_event': state.get('current_event'), 'event_panel': event_panel}})
         checks.append({'name': 'hand_actions_enabled_initially', 'passed': not resource_disabled and not action_disabled})
         checks.append({'name': 'purchase_disabled_before_purchase_phase', 'passed': buy_disabled_action})
 
