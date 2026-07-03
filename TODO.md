@@ -1,6 +1,6 @@
 # Redline TODO
 
-最後更新：2026-06-01
+最後更新：2026-07-04
 
 ## 工作規則
 - 開始新工作前先做 intake：讀 `TODO.md`、跑 `git status --short`、跑 `git log --oneline -5`。
@@ -41,6 +41,16 @@
   - 若要 LAN playtest：重啟 server 綁 `0.0.0.0:8000` 並確認 `TCP *:8000 (LISTEN)`。
 
 ### P1：LAN / end-to-end playtest feedback
+- [todo] Playtest bug：城鎮曾有紅軍組織、紅軍移走後，其他玩家仍無法在該城鎮建立組織。
+  - 2026-07-04 回報情境：紅軍曾在 `新北` 建立組織，之後紅軍組織已移到 `新竹`；輪到 `f`（台灣綠線）時，照規則應可在 `新北` 建立，但 UI/系統阻擋建立。
+  - 需檢查：`can_develop_in_town` / map state / sidebar selected town / shared-org gating 是否把歷史佔領狀態當成目前佔領狀態。
+  - 回報截圖：`/Users/benmini/.hermes/image_cache/img_ca2f10a480ad.jpg`。
+
+- [todo] Playtest bug：組織遷移不得移入或跨越敵方組織城鎮；目前可移到已有紅軍組織的 `新竹`。
+  - 2026-07-04 log：`[Turn 5] f moved 1 organization from 桃園 to 新竹 via rail`；當時紅軍組織在 `新竹`，台灣綠線應不能移動到 `新竹`。
+  - 需檢查：`Game.move_organization()` 目前只檢查 rail/road 連線與移動點，缺少「目的地有敵方組織不可進入」；鐵路 3 格 BFS 也需確認中途與目的地都遵守「可跨越己方，不可跨越敵方」。
+  - 回報截圖：`/Users/benmini/.hermes/image_cache/img_ca2f10a480ad.jpg`。
+
 - [todo] 下一步建議：開 LAN 桌測／端到端 playtest，記錄實際遊戲中出現的 UI polish 或規則落差，再回寫成具體 P0/P1 項目。
   - 目前事件／時代 scope 已可 playtest；不要再以 speculative implementation 延伸 P0，除非 playtest 或規則文本指出具體 bug。
   - 事件面板 polish 待 playtest 後再決定是否需要展開/收合、詳細文字、或事件歷史紀錄。

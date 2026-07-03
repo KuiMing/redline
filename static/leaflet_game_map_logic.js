@@ -402,8 +402,30 @@ function movementOptionsForTown(townName) {
 
   return {
     road: (town.road || []).filter(n => MAP_DATA.towns[n]),
-    rail: (town.rail || []).filter(n => MAP_DATA.towns[n])
+    rail: railOptionsWithinThree(townName)
   };
+}
+
+function railOptionsWithinThree(originTown) {
+  const visited = new Set([originTown]);
+  const queue = [[originTown, 0]];
+  const reachable = new Set();
+
+  while (queue.length) {
+    const [townName, distance] = queue.shift();
+    if (distance >= 3) continue;
+    const town = MAP_DATA.towns[townName] || {};
+    for (const nextTown of (town.rail || [])) {
+      if (!MAP_DATA.towns[nextTown]) continue;
+      reachable.add(nextTown);
+      if (visited.has(nextTown)) continue;
+      visited.add(nextTown);
+      queue.push([nextTown, distance + 1]);
+    }
+  }
+
+  reachable.delete(originTown);
+  return Array.from(reachable);
 }
 
 function currentPlayerState() {

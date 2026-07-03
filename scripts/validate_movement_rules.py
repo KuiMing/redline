@@ -108,6 +108,50 @@ def run_checks():
     ))
 
     game, player = make_game()
+    player.organizations = {'新北': 1}
+    player.base = '香港城'
+    player.moves_left = 1
+    before = snapshot(player)
+    result = game.move_organization('新北', '苗栗', 'rail')
+    after = snapshot(player)
+    checks.append(check(
+        'rail_three_step_move_costs_one_move_count_and_moves_org',
+        result.get('success') is True
+        and after['orgs'].get('新北', 0) == 0
+        and after['orgs'].get('苗栗') == 1
+        and after['moves_left'] == 0,
+        {'result': result, 'before': before, 'after': after, 'rule': 'rules.md：鐵路一次最多 3 格；新北→桃園→新竹→苗栗 consumes 1 move count.'},
+    ))
+
+    game, player = make_game()
+    player.organizations = {'新北': 1}
+    player.base = '香港城'
+    player.moves_left = 1
+    before = snapshot(player)
+    result = game.move_organization('新北', '彰化', 'rail')
+    after = snapshot(player)
+    checks.append(check(
+        'rail_four_step_move_rejected_without_spending_points',
+        bool(result.get('error')) and before == after,
+        {'result': result, 'before': before, 'after': after, 'rule': '新北→彰化 requires 4 rail edges, exceeding the 3-step rail limit.'},
+    ))
+
+    game, player = make_game()
+    other = game.players[1]
+    player.organizations = {'新北': 1}
+    other.organizations = {'新竹': 1}
+    player.base = '香港城'
+    player.moves_left = 1
+    before = snapshot(player)
+    result = game.move_organization('新北', '苗栗', 'rail')
+    after = snapshot(player)
+    checks.append(check(
+        'rail_three_step_cannot_pass_enemy_organization',
+        bool(result.get('error')) and before == after,
+        {'result': result, 'before': before, 'after': after, 'enemy_org': dict(other.organizations), 'rule': '可跨越己方組織，但不可跨越敵方。'},
+    ))
+
+    game, player = make_game()
     player.organizations = {'北京': 1}
     player.base = '香港城'
     player.moves_left = 0

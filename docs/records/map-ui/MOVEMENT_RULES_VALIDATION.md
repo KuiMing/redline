@@ -1,8 +1,8 @@
 # MOVEMENT RULES VALIDATION
 
-日期：2026-05-19
+日期：2026-07-04
 
-summary: {'total': 10, 'passed': 10, 'failed': 0}
+summary: {'total': 13, 'passed': 13, 'failed': 0}
 
 ## movement_rejected_outside_action_phase — PASS
 - result: {'error': 'Not in ACTION phase'}
@@ -24,6 +24,25 @@ summary: {'total': 10, 'passed': 10, 'failed': 0}
 - result: {'success': True}
 - before: {'orgs': {'北京': 1}, 'moves_left': 1, 'base': '香港城'}
 - after: {'orgs': {'天津': 1}, 'moves_left': 0, 'base': '香港城'}
+
+## rail_three_step_move_costs_one_move_count_and_moves_org — PASS
+- result: {'success': True}
+- before: {'orgs': {'新北': 1}, 'moves_left': 1, 'base': '香港城'}
+- after: {'orgs': {'苗栗': 1}, 'moves_left': 0, 'base': '香港城'}
+- rule: rules.md：鐵路一次最多 3 格；新北→桃園→新竹→苗栗 consumes 1 move count.
+
+## rail_four_step_move_rejected_without_spending_points — PASS
+- result: {'error': 'No rail connection'}
+- before: {'orgs': {'新北': 1}, 'moves_left': 1, 'base': '香港城'}
+- after: {'orgs': {'新北': 1}, 'moves_left': 1, 'base': '香港城'}
+- rule: 新北→彰化 requires 4 rail edges, exceeding the 3-step rail limit.
+
+## rail_three_step_cannot_pass_enemy_organization — PASS
+- result: {'error': 'No rail connection'}
+- before: {'orgs': {'新北': 1}, 'moves_left': 1, 'base': '香港城'}
+- after: {'orgs': {'新北': 1}, 'moves_left': 1, 'base': '香港城'}
+- enemy_org: {'新竹': 1}
+- rule: 可跨越己方組織，但不可跨越敵方。
 
 ## rail_move_rejected_when_no_move_count_left — PASS
 - result: {'error': 'Not enough move points'}

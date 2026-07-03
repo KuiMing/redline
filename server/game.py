@@ -3429,6 +3429,37 @@ class Game:
     def _town_has_shared_org_access(self, player, town):
         return self._shared_origin_owner(player, town) is not None
 
+    def _town_blocks_movement_for_player(self, player, town):
+        friendly_factions = {player.faction_id}
+        friendly_factions.update(self._factions_sharing_with(player.faction_id))
+        for other in self.players:
+            if other.faction_id in friendly_factions:
+                continue
+            if other.organizations.get(town, 0) > 0:
+                return True
+        return False
+
+    def _rail_reachable_within_three(self, player, from_town, to_town):
+        visited = {from_town}
+        queue = [(from_town, 0)]
+        while queue:
+            town, distance = queue.pop(0)
+            if distance >= 3:
+                continue
+            for neighbor in self.map.get('towns', {}).get(town, {}).get('rail', []) or []:
+                if neighbor not in self.map.get('towns', {}):
+                    continue
+                next_distance = distance + 1
+                if neighbor == to_town:
+                    return True
+                if neighbor in visited:
+                    continue
+                if self._town_blocks_movement_for_player(player, neighbor):
+                    continue
+                visited.add(neighbor)
+                queue.append((neighbor, next_distance))
+        return False
+
     def can_develop_in_town(self, player, town):
         if self._town_has_shared_org_access(player, town) and self.can_faction_develop_in_town(player.faction_id, town):
             return True
@@ -4337,7 +4368,10 @@ class Game:
             return {"error": "Invalid move mode"}
 
         neighbors = self.map["towns"].get(from_town, {}).get(mode, []) or []
-        if to_town not in neighbors and not self._event_modifier_active('ignore_distance'):
+        legal_move = to_town in neighbors
+        if mode == "rail" and not legal_move:
+            legal_move = self._rail_reachable_within_three(player, from_town, to_town)
+        if not legal_move and not self._event_modifier_active('ignore_distance'):
             return {"error": f"No {mode} connection"}
         if getattr(origin_owner, 'faction_id', None) == 'red_army' and not self.can_faction_develop_in_town('red_army', to_town):
             return {"error": "Red Army organization cannot leave Red Army development space"}
