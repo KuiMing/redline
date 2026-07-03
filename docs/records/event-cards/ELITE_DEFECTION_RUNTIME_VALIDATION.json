@@ -14,20 +14,28 @@
       }
     },
     {
-      "name": "failure_discard_choice_before_red_turn",
+      "name": "failure_discard_choice_after_refill_before_red_action",
       "passed": true,
       "details": {
         "result": {
           "success": true,
           "pending_choice": true
         },
-        "current_player": "viewer",
+        "current_player": "red",
+        "viewer_hand_after_refill": [
+          "補牌5",
+          "補牌4",
+          "補牌3",
+          "補牌2",
+          "補牌1"
+        ],
         "event_progress": {
           "count": 0,
           "required": 3,
           "succeeded": false,
           "settled": true,
-          "status": "failure"
+          "status": "failure",
+          "failure_target_player_id": "viewer-id"
         },
         "pending_choice": {
           "type": "multi_card_choice",
@@ -45,22 +53,36 @@
           "free": null,
           "ignore_distance": null,
           "cards": [
-            "懲罰棄牌"
+            "補牌5",
+            "補牌4",
+            "補牌3",
+            "補牌2",
+            "補牌1"
           ],
           "options": [],
           "towns": [],
           "targets": [],
           "step": null
-        }
+        },
+        "log": [
+          "[Turn 1] Event drawn: 紅軍權貴出逃",
+          "[Turn 1] End of turn for viewer",
+          "[Turn 1] Event failure: viewer must discard 1 hand card(s)"
+        ]
       }
     },
     {
-      "name": "penalty_discards_non_red_viewer_not_red_army",
+      "name": "penalty_discards_refilled_non_red_viewer_not_red_army",
       "passed": true,
       "details": {
-        "viewer_hand": [],
+        "viewer_hand": [
+          "補牌4",
+          "補牌3",
+          "補牌2",
+          "補牌1"
+        ],
         "viewer_discard": [
-          "懲罰棄牌"
+          "補牌5"
         ],
         "red_hand": [
           "紅軍不應被棄"

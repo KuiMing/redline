@@ -65,13 +65,13 @@
         "faction": "taiwan_blue",
         "hand": [
           "g補牌5",
-          "g補牌4",
           "g補牌3",
+          "g補牌2",
           "g補牌1"
         ],
         "draw": [],
         "discard": [
-          "g補牌2"
+          "g補牌4"
         ]
       },
       "r": {
@@ -95,7 +95,8 @@
       "required": 1,
       "succeeded": false,
       "settled": true,
-      "status": "failure"
+      "status": "failure",
+      "failure_target_player_id": "p2"
     },
     "current_player": "r",
     "turn_phase": "TurnPhase.ACTION"
@@ -162,7 +163,8 @@
       "required": 1,
       "succeeded": false,
       "settled": true,
-      "status": "failure"
+      "status": "failure",
+      "failure_target_player_id": "p2"
     },
     "current_player": "r",
     "turn_phase": "TurnPhase.ACTION"

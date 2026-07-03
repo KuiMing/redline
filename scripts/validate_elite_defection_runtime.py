@@ -29,8 +29,12 @@ def setup_game():
     red.base = '北京'
     viewer.organizations = {'臺北': 1}
     red.organizations = {'北京': 1}
-    viewer.hand = [Card('懲罰棄牌', 'command', {})]
+    viewer.hand = []
+    viewer.deck.draw_pile = [Card(f'補牌{i + 1}', 'command', {}) for i in range(5)]
+    viewer.deck.discard_pile = []
     red.hand = [Card('紅軍不應被棄', 'command', {})]
+    red.deck.draw_pile = []
+    red.deck.discard_pile = []
     game.pending_base_choices = []
     game.game_phase = GamePhase.MAIN
     game.current_player_index = 0
@@ -43,7 +47,13 @@ def setup_game():
     game.current_event = None
     game.event_progress = None
     game.event_notification = None
+    game.pending_choice = None
+    game.action_log = []
     return game, viewer, red
+
+
+def names(cards):
+    return [c.name for c in cards]
 
 
 def main():
@@ -59,19 +69,32 @@ def main():
     })
 
     assert_ok(game.advance_turn_phase(), 'enter purchase')
-    result = assert_ok(game.advance_turn_phase(), 'settle failure before red turn')
+    result = assert_ok(game.advance_turn_phase(), 'refill then settle failure before red turn')
     choice = game.state().get('pending_choice') or {}
     checks.append({
-        'name': 'failure_discard_choice_before_red_turn',
-        'passed': bool(result.get('pending_choice')) and game.current_player_index == 0 and choice.get('choice_key') == 'event_discard_self' and choice.get('player_id') == viewer.id,
-        'details': {'result': result, 'current_player': game.current_player().name, 'event_progress': game.event_progress, 'pending_choice': choice},
+        'name': 'failure_discard_choice_after_refill_before_red_action',
+        'passed': (
+            bool(result.get('pending_choice'))
+            and game.current_player_index == 1
+            and choice.get('choice_key') == 'event_discard_self'
+            and choice.get('player_id') == viewer.id
+            and len(choice.get('cards') or []) == 5
+        ),
+        'details': {
+            'result': result,
+            'current_player': game.current_player().name,
+            'viewer_hand_after_refill': names(viewer.hand),
+            'event_progress': game.event_progress,
+            'pending_choice': choice,
+            'log': list(game.action_log),
+        },
     })
 
     assert_ok(game.resolve_pending_choice(viewer.id, [0]), 'resolve discard')
     checks.append({
-        'name': 'penalty_discards_non_red_viewer_not_red_army',
-        'passed': [c.name for c in viewer.hand] == [] and [c.name for c in viewer.deck.discard_pile][-1:] == ['懲罰棄牌'] and [c.name for c in red.hand] == ['紅軍不應被棄'],
-        'details': {'viewer_hand': [c.name for c in viewer.hand], 'viewer_discard': [c.name for c in viewer.deck.discard_pile], 'red_hand': [c.name for c in red.hand]},
+        'name': 'penalty_discards_refilled_non_red_viewer_not_red_army',
+        'passed': len(viewer.hand) == 4 and len(viewer.deck.discard_pile) == 1 and names(red.hand) == ['紅軍不應被棄'],
+        'details': {'viewer_hand': names(viewer.hand), 'viewer_discard': names(viewer.deck.discard_pile), 'red_hand': names(red.hand)},
     })
 
     summary = {'total': len(checks), 'passed': sum(1 for c in checks if c['passed']), 'failed': sum(1 for c in checks if not c['passed'])}

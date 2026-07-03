@@ -666,6 +666,7 @@ class Game:
             if not cards:
                 self.log(f"Event {outcome}: {player.name} has no hand card to discard")
             else:
+                self.log(f"Event {outcome}: {player.name} must discard {min(count, len(cards))} hand card(s)")
                 self._set_pending_multi_card_choice(player, 'event_discard_self', cards, f"{self.current_event.get('name')}：請選擇 {min(count, len(cards))} 張手牌棄掉。", min(count, len(cards)), source_name=self.current_event.get('name'))
                 return {'success': True, 'pending_choice': True}
         elif t == 'discard_random':
@@ -807,7 +808,9 @@ class Game:
         if event.get('type') != 'mission' or not self.event_progress or self.event_progress.get('settled'):
             return {'success': True}
         player = self.current_player()
-        if self.event_progress and self.event_progress.get('last_actor_id'):
+        if self.event_progress and self.event_progress.get('failure_target_player_id'):
+            player = next((p for p in self.players if p.id == self.event_progress.get('failure_target_player_id')), player)
+        elif self.event_progress and self.event_progress.get('last_actor_id'):
             player = next((p for p in self.players if p.id == self.event_progress.get('last_actor_id')), player)
         trigger = event.get('trigger') or {}
         if trigger.get('type') == 'end_turn_state' and not self.event_progress.get('succeeded'):
@@ -4076,7 +4079,7 @@ class Game:
         if self.event_progress.get('succeeded'):
             return False
         failure = event.get('failure') or {}
-        return failure.get('type') == 'discard_random' and not failure.get('player_faction')
+        return failure.get('type') in {'discard_random', 'discard_self'} and not failure.get('player_faction')
 
     def advance_turn_phase(self):
         if self.pending_choice:
@@ -4098,6 +4101,8 @@ class Game:
             next_player_index = (self.current_player_index + 1) % len(self.players)
             is_round_final_action = self._is_final_non_red_turn_before_round_wrap(next_player_index)
             defer_failure_discard = is_round_final_action and self._should_defer_failure_discard_until_after_refill()
+            if defer_failure_discard and self.event_progress is not None:
+                self.event_progress['failure_target_player_id'] = self.current_player().id
             if is_round_final_action and not defer_failure_discard and not (self.event_progress or {}).get('settled'):
                 event_result = self._settle_current_event()
                 if event_result and event_result.get('pending_choice'):
