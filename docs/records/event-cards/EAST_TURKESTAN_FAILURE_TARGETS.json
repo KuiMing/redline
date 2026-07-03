@@ -1,5 +1,5 @@
 {
-  "scenario": "東突厥集中營 mission failure random discard targets non-red players",
+  "scenario": "東突厥集中營 failure resolves after final non-red refill, then random-discards non-red players",
   "passed": true,
   "checks": [
     true,
@@ -7,12 +7,13 @@
     true,
     true,
     true,
+    true,
+    true,
     true
   ],
-  "target_case": {
+  "refill_case": {
     "result": {
-      "success": true,
-      "effect": "discard_random"
+      "success": true
     },
     "before": {
       "f": {
@@ -22,14 +23,18 @@
           "f手牌2",
           "f手牌3"
         ],
+        "draw": [],
         "discard": []
       },
       "g": {
         "faction": "taiwan_blue",
-        "hand": [
-          "g手牌1",
-          "g手牌2",
-          "g手牌3"
+        "hand": [],
+        "draw": [
+          "g補牌1",
+          "g補牌2",
+          "g補牌3",
+          "g補牌4",
+          "g補牌5"
         ],
         "discard": []
       },
@@ -40,6 +45,7 @@
           "r手牌2",
           "r手牌3"
         ],
+        "draw": [],
         "discard": []
       }
     },
@@ -50,6 +56,7 @@
           "f手牌1",
           "f手牌2"
         ],
+        "draw": [],
         "discard": [
           "f手牌3"
         ]
@@ -57,11 +64,14 @@
       "g": {
         "faction": "taiwan_blue",
         "hand": [
-          "g手牌1",
-          "g手牌2"
+          "g補牌5",
+          "g補牌4",
+          "g補牌3",
+          "g補牌1"
         ],
+        "draw": [],
         "discard": [
-          "g手牌3"
+          "g補牌2"
         ]
       },
       "r": {
@@ -71,10 +81,12 @@
           "r手牌2",
           "r手牌3"
         ],
+        "draw": [],
         "discard": []
       }
     },
     "log": [
+      "[Turn 1] End of turn for g",
       "[Turn 1] Event failure: f discarded 1 random hand card(s); g discarded 1 random hand card(s)",
       "[Turn 1] Event failure resolved: 東突厥集中營 / discard_random"
     ],
@@ -84,22 +96,25 @@
       "succeeded": false,
       "settled": true,
       "status": "failure"
-    }
+    },
+    "current_player": "r",
+    "turn_phase": "TurnPhase.ACTION"
   },
   "empty_hand_case": {
     "result": {
-      "success": true,
-      "effect": "discard_random"
+      "success": true
     },
     "before": {
       "f": {
         "faction": "hong_kong",
         "hand": [],
+        "draw": [],
         "discard": []
       },
       "g": {
         "faction": "taiwan_blue",
         "hand": [],
+        "draw": [],
         "discard": []
       },
       "r": {
@@ -109,6 +124,7 @@
           "r手牌2",
           "r手牌3"
         ],
+        "draw": [],
         "discard": []
       }
     },
@@ -116,11 +132,13 @@
       "f": {
         "faction": "hong_kong",
         "hand": [],
+        "draw": [],
         "discard": []
       },
       "g": {
         "faction": "taiwan_blue",
         "hand": [],
+        "draw": [],
         "discard": []
       },
       "r": {
@@ -130,10 +148,12 @@
           "r手牌2",
           "r手牌3"
         ],
+        "draw": [],
         "discard": []
       }
     },
     "log": [
+      "[Turn 1] End of turn for g",
       "[Turn 1] Event failure: no eligible non-red player hand cards to discard",
       "[Turn 1] Event failure resolved: 東突厥集中營 / discard_random"
     ],
@@ -143,20 +163,14 @@
       "succeeded": false,
       "settled": true,
       "status": "failure"
-    }
+    },
+    "current_player": "r",
+    "turn_phase": "TurnPhase.ACTION"
   },
   "target_assertions": {
-    "f": {
-      "hand_delta": 1,
-      "discard_delta": 1
-    },
-    "g": {
-      "hand_delta": 1,
-      "discard_delta": 1
-    },
-    "r": {
-      "hand_delta": 0,
-      "discard_delta": 0
-    }
+    "f_hand_delta": 1,
+    "g_hand_after_refill_and_penalty": 4,
+    "g_discard_delta": 1,
+    "r_hand_delta": 0
   }
 }

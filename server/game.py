@@ -4069,6 +4069,15 @@ class Game:
         self.log(f"{player.name} may use 行動預告/行動募資 before drawing new hand")
         return {'pending_choice': True}
 
+    def _should_defer_failure_discard_until_after_refill(self):
+        event = self.current_event or {}
+        if event.get('type') != 'mission' or not self.event_progress or self.event_progress.get('settled'):
+            return False
+        if self.event_progress.get('succeeded'):
+            return False
+        failure = event.get('failure') or {}
+        return failure.get('type') == 'discard_random' and not failure.get('player_faction')
+
     def advance_turn_phase(self):
         if self.pending_choice:
             return {"error": "Resolve pending choice before advancing phase"}
@@ -4088,7 +4097,8 @@ class Game:
             # purchase step, so buy_card triggers have a chance to progress.
             next_player_index = (self.current_player_index + 1) % len(self.players)
             is_round_final_action = self._is_final_non_red_turn_before_round_wrap(next_player_index)
-            if is_round_final_action and not (self.event_progress or {}).get('settled'):
+            defer_failure_discard = is_round_final_action and self._should_defer_failure_discard_until_after_refill()
+            if is_round_final_action and not defer_failure_discard and not (self.event_progress or {}).get('settled'):
                 event_result = self._settle_current_event()
                 if event_result and event_result.get('pending_choice'):
                     return {"success": True, "pending_choice": True}
@@ -4096,6 +4106,10 @@ class Game:
             if pending:
                 return {"success": True, "pending_choice": True}
             self._end_turn()
+            if defer_failure_discard and not (self.event_progress or {}).get('settled'):
+                event_result = self._settle_current_event()
+                if event_result and event_result.get('pending_choice'):
+                    return {"success": True, "pending_choice": True}
         return {"success": True}
 
     def _end_turn(self):
