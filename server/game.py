@@ -670,17 +670,26 @@ class Game:
                 return {'success': True, 'pending_choice': True}
         elif t == 'discard_random':
             targets = [player]
-            if outcome == 'failure' and not (effect or {}).get('player_faction'):
+            default_failure_targets_non_red = outcome == 'failure' and not (effect or {}).get('player_faction')
+            if default_failure_targets_non_red:
                 targets = [p for p in self.players if getattr(p, 'faction_id', None) != 'red_army']
             discarded_total = 0
+            discarded_by_player = []
             for target in targets:
+                discarded_for_target = 0
                 for _ in range(min(count, len(target.hand))):
                     card = random.choice(target.hand)
                     target.hand.remove(card)
                     target.deck.discard([card])
                     discarded_total += 1
-            if discarded_total:
-                self.log(f"Event {outcome}: discarded {discarded_total} random hand card(s)")
+                    discarded_for_target += 1
+                if discarded_for_target:
+                    discarded_by_player.append(f"{target.name} discarded {discarded_for_target} random hand card(s)")
+            if discarded_by_player:
+                self.log(f"Event {outcome}: " + '; '.join(discarded_by_player))
+            else:
+                target_label = 'non-red player' if default_failure_targets_non_red else getattr(player, 'name', 'target player')
+                self.log(f"Event {outcome}: no eligible {target_label} hand cards to discard")
         elif t == 'red_dissolve':
             red = self._red_player()
             if red:

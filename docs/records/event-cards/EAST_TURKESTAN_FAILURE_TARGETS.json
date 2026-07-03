@@ -1,0 +1,162 @@
+{
+  "scenario": "東突厥集中營 mission failure random discard targets non-red players",
+  "passed": true,
+  "checks": [
+    true,
+    true,
+    true,
+    true,
+    true,
+    true
+  ],
+  "target_case": {
+    "result": {
+      "success": true,
+      "effect": "discard_random"
+    },
+    "before": {
+      "f": {
+        "faction": "hong_kong",
+        "hand": [
+          "f手牌1",
+          "f手牌2",
+          "f手牌3"
+        ],
+        "discard": []
+      },
+      "g": {
+        "faction": "taiwan_blue",
+        "hand": [
+          "g手牌1",
+          "g手牌2",
+          "g手牌3"
+        ],
+        "discard": []
+      },
+      "r": {
+        "faction": "red_army",
+        "hand": [
+          "r手牌1",
+          "r手牌2",
+          "r手牌3"
+        ],
+        "discard": []
+      }
+    },
+    "after": {
+      "f": {
+        "faction": "hong_kong",
+        "hand": [
+          "f手牌1",
+          "f手牌2"
+        ],
+        "discard": [
+          "f手牌3"
+        ]
+      },
+      "g": {
+        "faction": "taiwan_blue",
+        "hand": [
+          "g手牌1",
+          "g手牌2"
+        ],
+        "discard": [
+          "g手牌3"
+        ]
+      },
+      "r": {
+        "faction": "red_army",
+        "hand": [
+          "r手牌1",
+          "r手牌2",
+          "r手牌3"
+        ],
+        "discard": []
+      }
+    },
+    "log": [
+      "[Turn 1] Event failure: f discarded 1 random hand card(s); g discarded 1 random hand card(s)",
+      "[Turn 1] Event failure resolved: 東突厥集中營 / discard_random"
+    ],
+    "event_progress": {
+      "count": 0,
+      "required": 1,
+      "succeeded": false,
+      "settled": true,
+      "status": "failure"
+    }
+  },
+  "empty_hand_case": {
+    "result": {
+      "success": true,
+      "effect": "discard_random"
+    },
+    "before": {
+      "f": {
+        "faction": "hong_kong",
+        "hand": [],
+        "discard": []
+      },
+      "g": {
+        "faction": "taiwan_blue",
+        "hand": [],
+        "discard": []
+      },
+      "r": {
+        "faction": "red_army",
+        "hand": [
+          "r手牌1",
+          "r手牌2",
+          "r手牌3"
+        ],
+        "discard": []
+      }
+    },
+    "after": {
+      "f": {
+        "faction": "hong_kong",
+        "hand": [],
+        "discard": []
+      },
+      "g": {
+        "faction": "taiwan_blue",
+        "hand": [],
+        "discard": []
+      },
+      "r": {
+        "faction": "red_army",
+        "hand": [
+          "r手牌1",
+          "r手牌2",
+          "r手牌3"
+        ],
+        "discard": []
+      }
+    },
+    "log": [
+      "[Turn 1] Event failure: no eligible non-red player hand cards to discard",
+      "[Turn 1] Event failure resolved: 東突厥集中營 / discard_random"
+    ],
+    "event_progress": {
+      "count": 0,
+      "required": 1,
+      "succeeded": false,
+      "settled": true,
+      "status": "failure"
+    }
+  },
+  "target_assertions": {
+    "f": {
+      "hand_delta": 1,
+      "discard_delta": 1
+    },
+    "g": {
+      "hand_delta": 1,
+      "discard_delta": 1
+    },
+    "r": {
+      "hand_delta": 0,
+      "discard_delta": 0
+    }
+  }
+}
