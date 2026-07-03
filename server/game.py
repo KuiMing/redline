@@ -3529,6 +3529,38 @@ class Game:
     def current_player(self):
         return self.players[self.current_player_index]
 
+    def _non_red_player_indices(self):
+        return [
+            idx for idx, player in enumerate(self.players)
+            if getattr(player, 'faction_id', None) != 'red_army'
+        ]
+
+    def _is_final_non_red_turn_before_round_wrap(self, next_player_index):
+        """Return True when the current END step finishes the non-red mission window.
+
+        Event-card missions are non-red tasks: Red Army actions do not progress
+        them, and failure penalties should fire before control passes to Red
+        Army-only turns. With action-first turns, using the full table wrap as
+        the settlement boundary delays cards like 紅軍權貴出逃 until after the
+        Red Army turn and applies discard_self to the wrong player.
+        """
+        current = self.current_player()
+        next_player = self.players[next_player_index]
+        if getattr(current, 'faction_id', None) != 'red_army' and getattr(next_player, 'faction_id', None) == 'red_army':
+            return True
+
+        non_red_indices = self._non_red_player_indices()
+        if not non_red_indices:
+            return next_player_index == getattr(self, 'round_start_player_index', 0)
+
+        round_start = getattr(self, 'round_start_player_index', 0)
+        ordered = list(range(len(self.players)))
+        ordered = ordered[round_start:] + ordered[:round_start]
+        non_red_in_round_order = [idx for idx in ordered if idx in non_red_indices]
+        if not non_red_in_round_order:
+            return next_player_index == round_start
+        return self.current_player_index == non_red_in_round_order[-1]
+
     def log(self, message):
         self.action_log.append(f"[Turn {self.turn}] {message}")
         if len(self.action_log) > 100:
@@ -4046,7 +4078,7 @@ class Game:
             # Mission events are round-wide: resolve after the final player's
             # purchase step, so buy_card triggers have a chance to progress.
             next_player_index = (self.current_player_index + 1) % len(self.players)
-            is_round_final_action = next_player_index == getattr(self, 'round_start_player_index', 0)
+            is_round_final_action = self._is_final_non_red_turn_before_round_wrap(next_player_index)
             if is_round_final_action and not (self.event_progress or {}).get('settled'):
                 event_result = self._settle_current_event()
                 if event_result and event_result.get('pending_choice'):
