@@ -1,0 +1,3792 @@
+{
+  "summary": {
+    "total": 28,
+    "passed": 28,
+    "failed": 0
+  },
+  "checks": [
+    {
+      "name": "全國人大召開 success draw after refill",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true
+        },
+        "before": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [],
+            "draw": [
+              "補牌1",
+              "補牌2",
+              "補牌3",
+              "補牌4",
+              "補牌5",
+              "補牌6"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "after": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [
+              "補牌6",
+              "補牌5",
+              "補牌4",
+              "補牌3",
+              "補牌2",
+              "補牌1"
+            ],
+            "draw": [],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "log": [
+          "[Turn 1] End of turn for ally",
+          "[Turn 1] Event success resolved: 全國人大召開 / draw"
+        ],
+        "pending_choice": null,
+        "event_progress": {
+          "count": 999,
+          "required": 1,
+          "succeeded": true,
+          "settled": true,
+          "status": "success",
+          "last_actor_id": "ally-id",
+          "last_actor_name": "ally",
+          "settlement_target_player_id": "ally-id"
+        },
+        "current_player": "red",
+        "phase": "TurnPhase.ACTION"
+      }
+    },
+    {
+      "name": "全國人大召開 failure red_dissolve after refill",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true,
+          "pending_choice": true
+        },
+        "before": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          },
+          "ally": {
+            "hand": [],
+            "draw": [
+              "ally補牌1",
+              "ally補牌2",
+              "ally補牌3",
+              "ally補牌4",
+              "ally補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "上海": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "after": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          },
+          "ally": {
+            "hand": [
+              "ally補牌5",
+              "ally補牌4",
+              "ally補牌3",
+              "ally補牌2",
+              "ally補牌1"
+            ],
+            "draw": [],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "上海": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "log": [
+          "[Turn 1] End of turn for ally"
+        ],
+        "pending_choice": {
+          "type": "target_choice",
+          "choice_key": "event_red_dissolve",
+          "player_id": "red-id",
+          "prompt": "全國人大召開：紅軍選擇要瓦解的組織。",
+          "source_name": "全國人大召開",
+          "count": null,
+          "min_count": null,
+          "mode": null,
+          "acting_player_id": null,
+          "acting_player_name": null,
+          "played_card_name": null,
+          "region": null,
+          "free": null,
+          "ignore_distance": null,
+          "cards": [],
+          "options": [],
+          "towns": [],
+          "targets": [
+            {
+              "id": "viewer-id:北京",
+              "player_id": "viewer-id",
+              "town": "北京",
+              "label": "viewer｜北京"
+            },
+            {
+              "id": "ally-id:上海",
+              "player_id": "ally-id",
+              "town": "上海",
+              "label": "ally｜上海"
+            }
+          ],
+          "step": null
+        },
+        "event_progress": {
+          "count": 0,
+          "required": 1,
+          "succeeded": false,
+          "settled": true,
+          "status": "failure",
+          "last_actor_id": "ally-id",
+          "last_actor_name": "ally",
+          "settlement_target_player_id": "ally-id"
+        },
+        "current_player": "red",
+        "phase": "TurnPhase.ACTION"
+      }
+    },
+    {
+      "name": "香港抗暴之戰 success gain_card after refill",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true
+        },
+        "before": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [],
+            "draw": [
+              "ally補牌1",
+              "ally補牌2",
+              "ally補牌3",
+              "ally補牌4",
+              "ally補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "after": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [
+              "ally補牌5",
+              "ally補牌4",
+              "ally補牌3",
+              "ally補牌2",
+              "ally補牌1"
+            ],
+            "draw": [],
+            "discard": [
+              "宣傳家",
+              "宣傳家"
+            ],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "log": [
+          "[Turn 1] End of turn for ally",
+          "[Turn 1] ally gained 2 宣傳家 from event",
+          "[Turn 1] Event success resolved: 香港抗暴之戰 / gain_card"
+        ],
+        "pending_choice": null,
+        "event_progress": {
+          "count": 999,
+          "required": 1,
+          "succeeded": true,
+          "settled": true,
+          "status": "success",
+          "last_actor_id": "ally-id",
+          "last_actor_name": "ally",
+          "settlement_target_player_id": "ally-id"
+        },
+        "current_player": "red",
+        "phase": "TurnPhase.ACTION"
+      }
+    },
+    {
+      "name": "香港抗暴之戰 failure discard_self after refill",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true,
+          "pending_choice": true
+        },
+        "before": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [],
+            "draw": [
+              "ally補牌1",
+              "ally補牌2",
+              "ally補牌3",
+              "ally補牌4",
+              "ally補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "after": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [
+              "ally補牌5",
+              "ally補牌4",
+              "ally補牌3",
+              "ally補牌2",
+              "ally補牌1"
+            ],
+            "draw": [],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "log": [
+          "[Turn 1] End of turn for ally",
+          "[Turn 1] Event failure: ally must discard 1 hand card(s)"
+        ],
+        "pending_choice": {
+          "type": "multi_card_choice",
+          "choice_key": "event_discard_self",
+          "player_id": "ally-id",
+          "prompt": "香港抗暴之戰：請選擇 1 張手牌棄掉。",
+          "source_name": "香港抗暴之戰",
+          "count": 1,
+          "min_count": null,
+          "mode": null,
+          "acting_player_id": null,
+          "acting_player_name": null,
+          "played_card_name": null,
+          "region": null,
+          "free": null,
+          "ignore_distance": null,
+          "cards": [
+            "ally補牌5",
+            "ally補牌4",
+            "ally補牌3",
+            "ally補牌2",
+            "ally補牌1"
+          ],
+          "options": [],
+          "towns": [],
+          "targets": [],
+          "step": null
+        },
+        "event_progress": {
+          "count": 0,
+          "required": 1,
+          "succeeded": false,
+          "settled": true,
+          "status": "failure",
+          "last_actor_id": "ally-id",
+          "last_actor_name": "ally",
+          "settlement_target_player_id": "ally-id"
+        },
+        "current_player": "red",
+        "phase": "TurnPhase.ACTION"
+      }
+    },
+    {
+      "name": "重大災難 success gain_card after refill",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true
+        },
+        "before": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [],
+            "draw": [
+              "ally補牌1",
+              "ally補牌2",
+              "ally補牌3",
+              "ally補牌4",
+              "ally補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "after": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [
+              "ally補牌5",
+              "ally補牌4",
+              "ally補牌3",
+              "ally補牌2",
+              "ally補牌1"
+            ],
+            "draw": [],
+            "discard": [
+              "宣傳家"
+            ],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "log": [
+          "[Turn 1] End of turn for ally",
+          "[Turn 1] ally gained 1 宣傳家 from event",
+          "[Turn 1] Event success resolved: 重大災難 / gain_card"
+        ],
+        "pending_choice": null,
+        "event_progress": {
+          "count": 999,
+          "required": 1,
+          "succeeded": true,
+          "settled": true,
+          "status": "success",
+          "last_actor_id": "ally-id",
+          "last_actor_name": "ally",
+          "settlement_target_player_id": "ally-id"
+        },
+        "current_player": "red",
+        "phase": "TurnPhase.ACTION"
+      }
+    },
+    {
+      "name": "重大災難 failure discard_self after refill",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true,
+          "pending_choice": true
+        },
+        "before": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [],
+            "draw": [
+              "ally補牌1",
+              "ally補牌2",
+              "ally補牌3",
+              "ally補牌4",
+              "ally補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "after": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [
+              "ally補牌5",
+              "ally補牌4",
+              "ally補牌3",
+              "ally補牌2",
+              "ally補牌1"
+            ],
+            "draw": [],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "log": [
+          "[Turn 1] End of turn for ally",
+          "[Turn 1] Event failure: ally must discard 1 hand card(s)"
+        ],
+        "pending_choice": {
+          "type": "multi_card_choice",
+          "choice_key": "event_discard_self",
+          "player_id": "ally-id",
+          "prompt": "重大災難：請選擇 1 張手牌棄掉。",
+          "source_name": "重大災難",
+          "count": 1,
+          "min_count": null,
+          "mode": null,
+          "acting_player_id": null,
+          "acting_player_name": null,
+          "played_card_name": null,
+          "region": null,
+          "free": null,
+          "ignore_distance": null,
+          "cards": [
+            "ally補牌5",
+            "ally補牌4",
+            "ally補牌3",
+            "ally補牌2",
+            "ally補牌1"
+          ],
+          "options": [],
+          "towns": [],
+          "targets": [],
+          "step": null
+        },
+        "event_progress": {
+          "count": 0,
+          "required": 1,
+          "succeeded": false,
+          "settled": true,
+          "status": "failure",
+          "last_actor_id": "ally-id",
+          "last_actor_name": "ally",
+          "settlement_target_player_id": "ally-id"
+        },
+        "current_player": "red",
+        "phase": "TurnPhase.ACTION"
+      }
+    },
+    {
+      "name": "藏印邊境軍事對峙 success move after reset/refill",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true
+        },
+        "before": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [],
+            "draw": [
+              "ally補牌1",
+              "ally補牌2",
+              "ally補牌3",
+              "ally補牌4",
+              "ally補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "after": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [
+              "ally補牌5",
+              "ally補牌4",
+              "ally補牌3",
+              "ally補牌2",
+              "ally補牌1"
+            ],
+            "draw": [],
+            "discard": [],
+            "moves_left": 2,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "log": [
+          "[Turn 1] End of turn for ally",
+          "[Turn 1] Event success resolved: 藏印邊境軍事對峙 / move"
+        ],
+        "pending_choice": null,
+        "event_progress": {
+          "count": 999,
+          "required": 1,
+          "succeeded": true,
+          "settled": true,
+          "status": "success",
+          "last_actor_id": "ally-id",
+          "last_actor_name": "ally",
+          "settlement_target_player_id": "ally-id"
+        },
+        "current_player": "red",
+        "phase": "TurnPhase.ACTION"
+      }
+    },
+    {
+      "name": "藏印邊境軍事對峙 failure none after refill no-op",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true
+        },
+        "before": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [],
+            "draw": [
+              "ally補牌1",
+              "ally補牌2",
+              "ally補牌3",
+              "ally補牌4",
+              "ally補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "after": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [
+              "ally補牌5",
+              "ally補牌4",
+              "ally補牌3",
+              "ally補牌2",
+              "ally補牌1"
+            ],
+            "draw": [],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "log": [
+          "[Turn 1] End of turn for ally",
+          "[Turn 1] Event failure: no effect"
+        ],
+        "pending_choice": null,
+        "event_progress": {
+          "count": 0,
+          "required": 1,
+          "succeeded": false,
+          "settled": true,
+          "status": "failure",
+          "last_actor_id": "ally-id",
+          "last_actor_name": "ally",
+          "settlement_target_player_id": "ally-id"
+        },
+        "current_player": "red",
+        "phase": "TurnPhase.ACTION"
+      }
+    },
+    {
+      "name": "貿易戰加劇 success topdeck before refill",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true,
+          "pending_choice": true
+        },
+        "before": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [],
+            "draw": [
+              "ally補牌1",
+              "ally補牌2",
+              "ally補牌3",
+              "ally補牌4",
+              "ally補牌5"
+            ],
+            "discard": [
+              "可置頂牌"
+            ],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "after": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [],
+            "draw": [
+              "ally補牌1",
+              "ally補牌2",
+              "ally補牌3",
+              "ally補牌4",
+              "ally補牌5"
+            ],
+            "discard": [
+              "可置頂牌"
+            ],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "log": [],
+        "pending_choice": {
+          "type": "card_choice",
+          "choice_key": "event_topdeck_from_discard",
+          "player_id": "ally-id",
+          "prompt": "貿易戰加劇：從棄牌堆選 1 張牌置於牌庫頂。",
+          "source_name": "貿易戰加劇",
+          "count": null,
+          "min_count": null,
+          "mode": null,
+          "acting_player_id": null,
+          "acting_player_name": null,
+          "played_card_name": null,
+          "region": null,
+          "free": null,
+          "ignore_distance": null,
+          "cards": [
+            "可置頂牌"
+          ],
+          "options": [],
+          "towns": [],
+          "targets": [],
+          "step": null
+        },
+        "event_progress": {
+          "count": 999,
+          "required": 1,
+          "succeeded": true,
+          "settled": true,
+          "status": "success",
+          "last_actor_id": "ally-id",
+          "last_actor_name": "ally",
+          "settlement_target_player_id": "ally-id"
+        },
+        "current_player": "ally",
+        "phase": "TurnPhase.END"
+      }
+    },
+    {
+      "name": "貿易戰加劇 failure none after refill no-op",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true
+        },
+        "before": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [],
+            "draw": [
+              "ally補牌1",
+              "ally補牌2",
+              "ally補牌3",
+              "ally補牌4",
+              "ally補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "after": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [
+              "ally補牌5",
+              "ally補牌4",
+              "ally補牌3",
+              "ally補牌2",
+              "ally補牌1"
+            ],
+            "draw": [],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "log": [
+          "[Turn 1] End of turn for ally",
+          "[Turn 1] Event failure: no effect"
+        ],
+        "pending_choice": null,
+        "event_progress": {
+          "count": 0,
+          "required": 1,
+          "succeeded": false,
+          "settled": true,
+          "status": "failure",
+          "last_actor_id": "ally-id",
+          "last_actor_name": "ally",
+          "settlement_target_player_id": "ally-id"
+        },
+        "current_player": "red",
+        "phase": "TurnPhase.ACTION"
+      }
+    },
+    {
+      "name": "東突厥集中營 success gain_card after refill",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true
+        },
+        "before": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [],
+            "draw": [
+              "ally補牌1",
+              "ally補牌2",
+              "ally補牌3",
+              "ally補牌4",
+              "ally補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "after": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [
+              "ally補牌5",
+              "ally補牌4",
+              "ally補牌3",
+              "ally補牌2",
+              "ally補牌1"
+            ],
+            "draw": [],
+            "discard": [
+              "宣傳家"
+            ],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "log": [
+          "[Turn 1] End of turn for ally",
+          "[Turn 1] ally gained 1 宣傳家 from event",
+          "[Turn 1] Event success resolved: 東突厥集中營 / gain_card"
+        ],
+        "pending_choice": null,
+        "event_progress": {
+          "count": 999,
+          "required": 1,
+          "succeeded": true,
+          "settled": true,
+          "status": "success",
+          "last_actor_id": "ally-id",
+          "last_actor_name": "ally",
+          "settlement_target_player_id": "ally-id"
+        },
+        "current_player": "red",
+        "phase": "TurnPhase.ACTION"
+      }
+    },
+    {
+      "name": "東突厥集中營 failure discard_random after refill",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true
+        },
+        "before": {
+          "viewer": {
+            "hand": [
+              "viewer既有手牌"
+            ],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [],
+            "draw": [
+              "ally補牌1",
+              "ally補牌2",
+              "ally補牌3",
+              "ally補牌4",
+              "ally補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "after": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [
+              "viewer既有手牌"
+            ],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [
+              "ally補牌5",
+              "ally補牌4",
+              "ally補牌2",
+              "ally補牌1"
+            ],
+            "draw": [],
+            "discard": [
+              "ally補牌3"
+            ],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "log": [
+          "[Turn 1] End of turn for ally",
+          "[Turn 1] Event failure: viewer discarded 1 random hand card(s); ally discarded 1 random hand card(s)",
+          "[Turn 1] Event failure resolved: 東突厥集中營 / discard_random"
+        ],
+        "pending_choice": null,
+        "event_progress": {
+          "count": 0,
+          "required": 1,
+          "succeeded": false,
+          "settled": true,
+          "status": "failure",
+          "last_actor_id": "ally-id",
+          "last_actor_name": "ally",
+          "settlement_target_player_id": "ally-id"
+        },
+        "current_player": "red",
+        "phase": "TurnPhase.ACTION"
+      }
+    },
+    {
+      "name": "北京政爭 success draw after refill",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true
+        },
+        "before": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [],
+            "draw": [
+              "補牌1",
+              "補牌2",
+              "補牌3",
+              "補牌4",
+              "補牌5",
+              "補牌6"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "after": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [
+              "補牌6",
+              "補牌5",
+              "補牌4",
+              "補牌3",
+              "補牌2",
+              "補牌1"
+            ],
+            "draw": [],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "log": [
+          "[Turn 1] End of turn for ally",
+          "[Turn 1] Event success resolved: 北京政爭 / draw"
+        ],
+        "pending_choice": null,
+        "event_progress": {
+          "count": 999,
+          "required": 1,
+          "succeeded": true,
+          "settled": true,
+          "status": "success",
+          "last_actor_id": "ally-id",
+          "last_actor_name": "ally",
+          "settlement_target_player_id": "ally-id"
+        },
+        "current_player": "red",
+        "phase": "TurnPhase.ACTION"
+      }
+    },
+    {
+      "name": "北京政爭 failure none after refill no-op",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true
+        },
+        "before": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [],
+            "draw": [
+              "ally補牌1",
+              "ally補牌2",
+              "ally補牌3",
+              "ally補牌4",
+              "ally補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "after": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [
+              "ally補牌5",
+              "ally補牌4",
+              "ally補牌3",
+              "ally補牌2",
+              "ally補牌1"
+            ],
+            "draw": [],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "log": [
+          "[Turn 1] End of turn for ally",
+          "[Turn 1] Event failure: no effect"
+        ],
+        "pending_choice": null,
+        "event_progress": {
+          "count": 0,
+          "required": 1,
+          "succeeded": false,
+          "settled": true,
+          "status": "failure",
+          "last_actor_id": "ally-id",
+          "last_actor_name": "ally",
+          "settlement_target_player_id": "ally-id"
+        },
+        "current_player": "red",
+        "phase": "TurnPhase.ACTION"
+      }
+    },
+    {
+      "name": "紅軍權貴出逃 success trash hand/discard after refill",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true,
+          "pending_choice": true
+        },
+        "before": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [],
+            "draw": [
+              "ally補牌1",
+              "ally補牌2",
+              "ally補牌3",
+              "ally補牌4",
+              "ally補牌5"
+            ],
+            "discard": [
+              "棄牌可移除"
+            ],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "after": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [
+              "ally補牌5",
+              "ally補牌4",
+              "ally補牌3",
+              "ally補牌2",
+              "ally補牌1"
+            ],
+            "draw": [],
+            "discard": [
+              "棄牌可移除"
+            ],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "log": [
+          "[Turn 1] End of turn for ally"
+        ],
+        "pending_choice": {
+          "type": "card_choice",
+          "choice_key": "trash_from_hand_or_discard",
+          "player_id": "ally-id",
+          "prompt": "紅軍權貴出逃：請從己方手牌或棄牌堆中移除 1 張牌。",
+          "source_name": "紅軍權貴出逃",
+          "count": 1,
+          "min_count": null,
+          "mode": null,
+          "acting_player_id": null,
+          "acting_player_name": null,
+          "played_card_name": null,
+          "region": null,
+          "free": null,
+          "ignore_distance": null,
+          "cards": [
+            {
+              "name": "ally補牌5",
+              "zone": "hand",
+              "zone_label": "手牌"
+            },
+            {
+              "name": "ally補牌4",
+              "zone": "hand",
+              "zone_label": "手牌"
+            },
+            {
+              "name": "ally補牌3",
+              "zone": "hand",
+              "zone_label": "手牌"
+            },
+            {
+              "name": "ally補牌2",
+              "zone": "hand",
+              "zone_label": "手牌"
+            },
+            {
+              "name": "ally補牌1",
+              "zone": "hand",
+              "zone_label": "手牌"
+            },
+            {
+              "name": "棄牌可移除",
+              "zone": "discard",
+              "zone_label": "棄牌堆"
+            }
+          ],
+          "options": [],
+          "towns": [],
+          "targets": [],
+          "step": null
+        },
+        "event_progress": {
+          "count": 999,
+          "required": 1,
+          "succeeded": true,
+          "settled": true,
+          "status": "success",
+          "last_actor_id": "ally-id",
+          "last_actor_name": "ally",
+          "settlement_target_player_id": "ally-id"
+        },
+        "current_player": "red",
+        "phase": "TurnPhase.ACTION"
+      }
+    },
+    {
+      "name": "紅軍權貴出逃 failure discard_self after refill",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true,
+          "pending_choice": true
+        },
+        "before": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [],
+            "draw": [
+              "ally補牌1",
+              "ally補牌2",
+              "ally補牌3",
+              "ally補牌4",
+              "ally補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "after": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [
+              "ally補牌5",
+              "ally補牌4",
+              "ally補牌3",
+              "ally補牌2",
+              "ally補牌1"
+            ],
+            "draw": [],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "log": [
+          "[Turn 1] End of turn for ally",
+          "[Turn 1] Event failure: ally must discard 1 hand card(s)"
+        ],
+        "pending_choice": {
+          "type": "multi_card_choice",
+          "choice_key": "event_discard_self",
+          "player_id": "ally-id",
+          "prompt": "紅軍權貴出逃：請選擇 1 張手牌棄掉。",
+          "source_name": "紅軍權貴出逃",
+          "count": 1,
+          "min_count": null,
+          "mode": null,
+          "acting_player_id": null,
+          "acting_player_name": null,
+          "played_card_name": null,
+          "region": null,
+          "free": null,
+          "ignore_distance": null,
+          "cards": [
+            "ally補牌5",
+            "ally補牌4",
+            "ally補牌3",
+            "ally補牌2",
+            "ally補牌1"
+          ],
+          "options": [],
+          "towns": [],
+          "targets": [],
+          "step": null
+        },
+        "event_progress": {
+          "count": 0,
+          "required": 1,
+          "succeeded": false,
+          "settled": true,
+          "status": "failure",
+          "last_actor_id": "ally-id",
+          "last_actor_name": "ally",
+          "settlement_target_player_id": "ally-id"
+        },
+        "current_player": "red",
+        "phase": "TurnPhase.ACTION"
+      }
+    },
+    {
+      "name": "烏魯木齊七五事件 success build after refill",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true,
+          "pending_choice": true
+        },
+        "before": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [],
+            "draw": [
+              "ally補牌1",
+              "ally補牌2",
+              "ally補牌3",
+              "ally補牌4",
+              "ally補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "after": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [
+              "ally補牌5",
+              "ally補牌4",
+              "ally補牌3",
+              "ally補牌2",
+              "ally補牌1"
+            ],
+            "draw": [],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "log": [
+          "[Turn 1] End of turn for ally"
+        ],
+        "pending_choice": {
+          "type": "town_choice",
+          "choice_key": "event_build_organization",
+          "player_id": "ally-id",
+          "prompt": "烏魯木齊七五事件：在己方組織 1 格內免費建立 1 個組織。",
+          "source_name": "烏魯木齊七五事件",
+          "count": 1,
+          "min_count": null,
+          "mode": null,
+          "acting_player_id": null,
+          "acting_player_name": null,
+          "played_card_name": null,
+          "region": null,
+          "free": null,
+          "ignore_distance": null,
+          "cards": [],
+          "options": [],
+          "towns": [
+            {
+              "town": "九龍城"
+            },
+            {
+              "town": "柴灣"
+            },
+            {
+              "town": "澳門"
+            },
+            {
+              "town": "赤柱"
+            }
+          ],
+          "targets": [],
+          "step": null
+        },
+        "event_progress": {
+          "count": 999,
+          "required": 1,
+          "succeeded": true,
+          "settled": true,
+          "status": "success",
+          "last_actor_id": "ally-id",
+          "last_actor_name": "ally",
+          "settlement_target_player_id": "ally-id"
+        },
+        "current_player": "red",
+        "phase": "TurnPhase.ACTION"
+      }
+    },
+    {
+      "name": "烏魯木齊七五事件 failure discard_random after refill",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true
+        },
+        "before": {
+          "viewer": {
+            "hand": [
+              "viewer既有手牌"
+            ],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [],
+            "draw": [
+              "ally補牌1",
+              "ally補牌2",
+              "ally補牌3",
+              "ally補牌4",
+              "ally補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "after": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [
+              "viewer既有手牌"
+            ],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [
+              "ally補牌5",
+              "ally補牌4",
+              "ally補牌2",
+              "ally補牌1"
+            ],
+            "draw": [],
+            "discard": [
+              "ally補牌3"
+            ],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "log": [
+          "[Turn 1] End of turn for ally",
+          "[Turn 1] Event failure: viewer discarded 1 random hand card(s); ally discarded 1 random hand card(s)",
+          "[Turn 1] Event failure resolved: 烏魯木齊七五事件 / discard_random"
+        ],
+        "pending_choice": null,
+        "event_progress": {
+          "count": 0,
+          "required": 1,
+          "succeeded": false,
+          "settled": true,
+          "status": "failure",
+          "last_actor_id": "ally-id",
+          "last_actor_name": "ally",
+          "settlement_target_player_id": "ally-id"
+        },
+        "current_player": "red",
+        "phase": "TurnPhase.ACTION"
+      }
+    },
+    {
+      "name": "重大災難（副本） success gain_card after refill",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true
+        },
+        "before": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [],
+            "draw": [
+              "ally補牌1",
+              "ally補牌2",
+              "ally補牌3",
+              "ally補牌4",
+              "ally補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "after": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [
+              "ally補牌5",
+              "ally補牌4",
+              "ally補牌3",
+              "ally補牌2",
+              "ally補牌1"
+            ],
+            "draw": [],
+            "discard": [
+              "宣傳家"
+            ],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "log": [
+          "[Turn 1] End of turn for ally",
+          "[Turn 1] ally gained 1 宣傳家 from event",
+          "[Turn 1] Event success resolved: 重大災難（副本） / gain_card"
+        ],
+        "pending_choice": null,
+        "event_progress": {
+          "count": 999,
+          "required": 1,
+          "succeeded": true,
+          "settled": true,
+          "status": "success",
+          "last_actor_id": "ally-id",
+          "last_actor_name": "ally",
+          "settlement_target_player_id": "ally-id"
+        },
+        "current_player": "red",
+        "phase": "TurnPhase.ACTION"
+      }
+    },
+    {
+      "name": "重大災難（副本） failure discard_self after refill",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true,
+          "pending_choice": true
+        },
+        "before": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [],
+            "draw": [
+              "ally補牌1",
+              "ally補牌2",
+              "ally補牌3",
+              "ally補牌4",
+              "ally補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "after": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [
+              "ally補牌5",
+              "ally補牌4",
+              "ally補牌3",
+              "ally補牌2",
+              "ally補牌1"
+            ],
+            "draw": [],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "log": [
+          "[Turn 1] End of turn for ally",
+          "[Turn 1] Event failure: ally must discard 1 hand card(s)"
+        ],
+        "pending_choice": {
+          "type": "multi_card_choice",
+          "choice_key": "event_discard_self",
+          "player_id": "ally-id",
+          "prompt": "重大災難（副本）：請選擇 1 張手牌棄掉。",
+          "source_name": "重大災難（副本）",
+          "count": 1,
+          "min_count": null,
+          "mode": null,
+          "acting_player_id": null,
+          "acting_player_name": null,
+          "played_card_name": null,
+          "region": null,
+          "free": null,
+          "ignore_distance": null,
+          "cards": [
+            "ally補牌5",
+            "ally補牌4",
+            "ally補牌3",
+            "ally補牌2",
+            "ally補牌1"
+          ],
+          "options": [],
+          "towns": [],
+          "targets": [],
+          "step": null
+        },
+        "event_progress": {
+          "count": 0,
+          "required": 1,
+          "succeeded": false,
+          "settled": true,
+          "status": "failure",
+          "last_actor_id": "ally-id",
+          "last_actor_name": "ally",
+          "settlement_target_player_id": "ally-id"
+        },
+        "current_player": "red",
+        "phase": "TurnPhase.ACTION"
+      }
+    },
+    {
+      "name": "全國人大召開（副本） success draw after refill",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true
+        },
+        "before": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [],
+            "draw": [
+              "補牌1",
+              "補牌2",
+              "補牌3",
+              "補牌4",
+              "補牌5",
+              "補牌6"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "after": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [
+              "補牌6",
+              "補牌5",
+              "補牌4",
+              "補牌3",
+              "補牌2",
+              "補牌1"
+            ],
+            "draw": [],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "log": [
+          "[Turn 1] End of turn for ally",
+          "[Turn 1] Event success resolved: 全國人大召開（副本） / draw"
+        ],
+        "pending_choice": null,
+        "event_progress": {
+          "count": 999,
+          "required": 1,
+          "succeeded": true,
+          "settled": true,
+          "status": "success",
+          "last_actor_id": "ally-id",
+          "last_actor_name": "ally",
+          "settlement_target_player_id": "ally-id"
+        },
+        "current_player": "red",
+        "phase": "TurnPhase.ACTION"
+      }
+    },
+    {
+      "name": "全國人大召開（副本） failure red_dissolve after refill",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true,
+          "pending_choice": true
+        },
+        "before": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          },
+          "ally": {
+            "hand": [],
+            "draw": [
+              "ally補牌1",
+              "ally補牌2",
+              "ally補牌3",
+              "ally補牌4",
+              "ally補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "上海": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "after": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          },
+          "ally": {
+            "hand": [
+              "ally補牌5",
+              "ally補牌4",
+              "ally補牌3",
+              "ally補牌2",
+              "ally補牌1"
+            ],
+            "draw": [],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "上海": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "log": [
+          "[Turn 1] End of turn for ally"
+        ],
+        "pending_choice": {
+          "type": "target_choice",
+          "choice_key": "event_red_dissolve",
+          "player_id": "red-id",
+          "prompt": "全國人大召開（副本）：紅軍選擇要瓦解的組織。",
+          "source_name": "全國人大召開（副本）",
+          "count": null,
+          "min_count": null,
+          "mode": null,
+          "acting_player_id": null,
+          "acting_player_name": null,
+          "played_card_name": null,
+          "region": null,
+          "free": null,
+          "ignore_distance": null,
+          "cards": [],
+          "options": [],
+          "towns": [],
+          "targets": [
+            {
+              "id": "viewer-id:北京",
+              "player_id": "viewer-id",
+              "town": "北京",
+              "label": "viewer｜北京"
+            },
+            {
+              "id": "ally-id:上海",
+              "player_id": "ally-id",
+              "town": "上海",
+              "label": "ally｜上海"
+            }
+          ],
+          "step": null
+        },
+        "event_progress": {
+          "count": 0,
+          "required": 1,
+          "succeeded": false,
+          "settled": true,
+          "status": "failure",
+          "last_actor_id": "ally-id",
+          "last_actor_name": "ally",
+          "settlement_target_player_id": "ally-id"
+        },
+        "current_player": "red",
+        "phase": "TurnPhase.ACTION"
+      }
+    },
+    {
+      "name": "貿易戰加劇（副本） success topdeck before refill",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true,
+          "pending_choice": true
+        },
+        "before": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [],
+            "draw": [
+              "ally補牌1",
+              "ally補牌2",
+              "ally補牌3",
+              "ally補牌4",
+              "ally補牌5"
+            ],
+            "discard": [
+              "可置頂牌"
+            ],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "after": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [],
+            "draw": [
+              "ally補牌1",
+              "ally補牌2",
+              "ally補牌3",
+              "ally補牌4",
+              "ally補牌5"
+            ],
+            "discard": [
+              "可置頂牌"
+            ],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "log": [],
+        "pending_choice": {
+          "type": "card_choice",
+          "choice_key": "event_topdeck_from_discard",
+          "player_id": "ally-id",
+          "prompt": "貿易戰加劇（副本）：從棄牌堆選 1 張牌置於牌庫頂。",
+          "source_name": "貿易戰加劇（副本）",
+          "count": null,
+          "min_count": null,
+          "mode": null,
+          "acting_player_id": null,
+          "acting_player_name": null,
+          "played_card_name": null,
+          "region": null,
+          "free": null,
+          "ignore_distance": null,
+          "cards": [
+            "可置頂牌"
+          ],
+          "options": [],
+          "towns": [],
+          "targets": [],
+          "step": null
+        },
+        "event_progress": {
+          "count": 999,
+          "required": 1,
+          "succeeded": true,
+          "settled": true,
+          "status": "success",
+          "last_actor_id": "ally-id",
+          "last_actor_name": "ally",
+          "settlement_target_player_id": "ally-id"
+        },
+        "current_player": "ally",
+        "phase": "TurnPhase.END"
+      }
+    },
+    {
+      "name": "貿易戰加劇（副本） failure none after refill no-op",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true
+        },
+        "before": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [],
+            "draw": [
+              "ally補牌1",
+              "ally補牌2",
+              "ally補牌3",
+              "ally補牌4",
+              "ally補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "after": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [
+              "ally補牌5",
+              "ally補牌4",
+              "ally補牌3",
+              "ally補牌2",
+              "ally補牌1"
+            ],
+            "draw": [],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "log": [
+          "[Turn 1] End of turn for ally",
+          "[Turn 1] Event failure: no effect"
+        ],
+        "pending_choice": null,
+        "event_progress": {
+          "count": 0,
+          "required": 1,
+          "succeeded": false,
+          "settled": true,
+          "status": "failure",
+          "last_actor_id": "ally-id",
+          "last_actor_name": "ally",
+          "settlement_target_player_id": "ally-id"
+        },
+        "current_player": "red",
+        "phase": "TurnPhase.ACTION"
+      }
+    },
+    {
+      "name": "藏印邊境軍事對峙（副本） success move after reset/refill",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true
+        },
+        "before": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [],
+            "draw": [
+              "ally補牌1",
+              "ally補牌2",
+              "ally補牌3",
+              "ally補牌4",
+              "ally補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "after": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [
+              "ally補牌5",
+              "ally補牌4",
+              "ally補牌3",
+              "ally補牌2",
+              "ally補牌1"
+            ],
+            "draw": [],
+            "discard": [],
+            "moves_left": 2,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "log": [
+          "[Turn 1] End of turn for ally",
+          "[Turn 1] Event success resolved: 藏印邊境軍事對峙（副本） / move"
+        ],
+        "pending_choice": null,
+        "event_progress": {
+          "count": 999,
+          "required": 1,
+          "succeeded": true,
+          "settled": true,
+          "status": "success",
+          "last_actor_id": "ally-id",
+          "last_actor_name": "ally",
+          "settlement_target_player_id": "ally-id"
+        },
+        "current_player": "red",
+        "phase": "TurnPhase.ACTION"
+      }
+    },
+    {
+      "name": "藏印邊境軍事對峙（副本） failure none after refill no-op",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true
+        },
+        "before": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [],
+            "draw": [
+              "ally補牌1",
+              "ally補牌2",
+              "ally補牌3",
+              "ally補牌4",
+              "ally補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "after": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [
+              "ally補牌5",
+              "ally補牌4",
+              "ally補牌3",
+              "ally補牌2",
+              "ally補牌1"
+            ],
+            "draw": [],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "log": [
+          "[Turn 1] End of turn for ally",
+          "[Turn 1] Event failure: no effect"
+        ],
+        "pending_choice": null,
+        "event_progress": {
+          "count": 0,
+          "required": 1,
+          "succeeded": false,
+          "settled": true,
+          "status": "failure",
+          "last_actor_id": "ally-id",
+          "last_actor_name": "ally",
+          "settlement_target_player_id": "ally-id"
+        },
+        "current_player": "red",
+        "phase": "TurnPhase.ACTION"
+      }
+    },
+    {
+      "name": "紅軍權貴出逃（副本） success trash hand/discard after refill",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true,
+          "pending_choice": true
+        },
+        "before": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [],
+            "draw": [
+              "ally補牌1",
+              "ally補牌2",
+              "ally補牌3",
+              "ally補牌4",
+              "ally補牌5"
+            ],
+            "discard": [
+              "棄牌可移除"
+            ],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "after": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [
+              "ally補牌5",
+              "ally補牌4",
+              "ally補牌3",
+              "ally補牌2",
+              "ally補牌1"
+            ],
+            "draw": [],
+            "discard": [
+              "棄牌可移除"
+            ],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "log": [
+          "[Turn 1] End of turn for ally"
+        ],
+        "pending_choice": {
+          "type": "card_choice",
+          "choice_key": "trash_from_hand_or_discard",
+          "player_id": "ally-id",
+          "prompt": "紅軍權貴出逃（副本）：請從己方手牌或棄牌堆中移除 1 張牌。",
+          "source_name": "紅軍權貴出逃（副本）",
+          "count": 1,
+          "min_count": null,
+          "mode": null,
+          "acting_player_id": null,
+          "acting_player_name": null,
+          "played_card_name": null,
+          "region": null,
+          "free": null,
+          "ignore_distance": null,
+          "cards": [
+            {
+              "name": "ally補牌5",
+              "zone": "hand",
+              "zone_label": "手牌"
+            },
+            {
+              "name": "ally補牌4",
+              "zone": "hand",
+              "zone_label": "手牌"
+            },
+            {
+              "name": "ally補牌3",
+              "zone": "hand",
+              "zone_label": "手牌"
+            },
+            {
+              "name": "ally補牌2",
+              "zone": "hand",
+              "zone_label": "手牌"
+            },
+            {
+              "name": "ally補牌1",
+              "zone": "hand",
+              "zone_label": "手牌"
+            },
+            {
+              "name": "棄牌可移除",
+              "zone": "discard",
+              "zone_label": "棄牌堆"
+            }
+          ],
+          "options": [],
+          "towns": [],
+          "targets": [],
+          "step": null
+        },
+        "event_progress": {
+          "count": 999,
+          "required": 1,
+          "succeeded": true,
+          "settled": true,
+          "status": "success",
+          "last_actor_id": "ally-id",
+          "last_actor_name": "ally",
+          "settlement_target_player_id": "ally-id"
+        },
+        "current_player": "red",
+        "phase": "TurnPhase.ACTION"
+      }
+    },
+    {
+      "name": "紅軍權貴出逃（副本） failure discard_self after refill",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true,
+          "pending_choice": true
+        },
+        "before": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [],
+            "draw": [
+              "ally補牌1",
+              "ally補牌2",
+              "ally補牌3",
+              "ally補牌4",
+              "ally補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "after": {
+          "viewer": {
+            "hand": [],
+            "draw": [
+              "viewer補牌1",
+              "viewer補牌2",
+              "viewer補牌3",
+              "viewer補牌4",
+              "viewer補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "臺北": 1
+            }
+          },
+          "ally": {
+            "hand": [
+              "ally補牌5",
+              "ally補牌4",
+              "ally補牌3",
+              "ally補牌2",
+              "ally補牌1"
+            ],
+            "draw": [],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "香港城": 1
+            }
+          },
+          "red": {
+            "hand": [],
+            "draw": [
+              "red補牌1",
+              "red補牌2",
+              "red補牌3",
+              "red補牌4",
+              "red補牌5"
+            ],
+            "discard": [],
+            "moves_left": 0,
+            "orgs": {
+              "北京": 1
+            }
+          }
+        },
+        "log": [
+          "[Turn 1] End of turn for ally",
+          "[Turn 1] Event failure: ally must discard 1 hand card(s)"
+        ],
+        "pending_choice": {
+          "type": "multi_card_choice",
+          "choice_key": "event_discard_self",
+          "player_id": "ally-id",
+          "prompt": "紅軍權貴出逃（副本）：請選擇 1 張手牌棄掉。",
+          "source_name": "紅軍權貴出逃（副本）",
+          "count": 1,
+          "min_count": null,
+          "mode": null,
+          "acting_player_id": null,
+          "acting_player_name": null,
+          "played_card_name": null,
+          "region": null,
+          "free": null,
+          "ignore_distance": null,
+          "cards": [
+            "ally補牌5",
+            "ally補牌4",
+            "ally補牌3",
+            "ally補牌2",
+            "ally補牌1"
+          ],
+          "options": [],
+          "towns": [],
+          "targets": [],
+          "step": null
+        },
+        "event_progress": {
+          "count": 0,
+          "required": 1,
+          "succeeded": false,
+          "settled": true,
+          "status": "failure",
+          "last_actor_id": "ally-id",
+          "last_actor_name": "ally",
+          "settlement_target_player_id": "ally-id"
+        },
+        "current_player": "red",
+        "phase": "TurnPhase.ACTION"
+      }
+    }
+  ]
+}

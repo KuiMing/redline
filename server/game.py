@@ -808,7 +808,9 @@ class Game:
         if event.get('type') != 'mission' or not self.event_progress or self.event_progress.get('settled'):
             return {'success': True}
         player = self.current_player()
-        if self.event_progress and self.event_progress.get('failure_target_player_id'):
+        if self.event_progress and self.event_progress.get('settlement_target_player_id'):
+            player = next((p for p in self.players if p.id == self.event_progress.get('settlement_target_player_id')), player)
+        elif self.event_progress and self.event_progress.get('failure_target_player_id'):
             player = next((p for p in self.players if p.id == self.event_progress.get('failure_target_player_id')), player)
         elif self.event_progress and self.event_progress.get('last_actor_id'):
             player = next((p for p in self.players if p.id == self.event_progress.get('last_actor_id')), player)
@@ -4072,14 +4074,26 @@ class Game:
         self.log(f"{player.name} may use 行動預告/行動募資 before drawing new hand")
         return {'pending_choice': True}
 
-    def _should_defer_failure_discard_until_after_refill(self):
+    def _mission_settlement_target_id(self):
+        if self.event_progress and self.event_progress.get('last_actor_id'):
+            return self.event_progress.get('last_actor_id')
+        player = self.current_player()
+        return getattr(player, 'id', None)
+
+    def _should_defer_event_settlement_until_after_refill(self):
         event = self.current_event or {}
         if event.get('type') != 'mission' or not self.event_progress or self.event_progress.get('settled'):
             return False
-        if self.event_progress.get('succeeded'):
+        succeeded = bool(self.event_progress.get('succeeded'))
+        effect = event.get('success') if succeeded else event.get('failure')
+        effect_type = (effect or {}).get('type')
+        # Top-deck rewards must resolve before refill so the chosen card can be drawn.
+        if succeeded and effect_type == 'topdeck_from_discard':
             return False
-        failure = event.get('failure') or {}
-        return failure.get('type') in {'discard_random', 'discard_self'} and not failure.get('player_faction')
+        # All other mission outcomes are resolved after end-turn cleanup/refill so
+        # rewards and penalties operate on the player's next hand instead of being
+        # immediately discarded or dodged by emptying the hand.
+        return True
 
     def advance_turn_phase(self):
         if self.pending_choice:
@@ -4100,10 +4114,10 @@ class Game:
             # purchase step, so buy_card triggers have a chance to progress.
             next_player_index = (self.current_player_index + 1) % len(self.players)
             is_round_final_action = self._is_final_non_red_turn_before_round_wrap(next_player_index)
-            defer_failure_discard = is_round_final_action and self._should_defer_failure_discard_until_after_refill()
-            if defer_failure_discard and self.event_progress is not None:
-                self.event_progress['failure_target_player_id'] = self.current_player().id
-            if is_round_final_action and not defer_failure_discard and not (self.event_progress or {}).get('settled'):
+            defer_event_settlement = is_round_final_action and self._should_defer_event_settlement_until_after_refill()
+            if is_round_final_action and self.event_progress is not None:
+                self.event_progress['settlement_target_player_id'] = self._mission_settlement_target_id()
+            if is_round_final_action and not defer_event_settlement and not (self.event_progress or {}).get('settled'):
                 event_result = self._settle_current_event()
                 if event_result and event_result.get('pending_choice'):
                     return {"success": True, "pending_choice": True}
@@ -4111,7 +4125,7 @@ class Game:
             if pending:
                 return {"success": True, "pending_choice": True}
             self._end_turn()
-            if defer_failure_discard and not (self.event_progress or {}).get('settled'):
+            if defer_event_settlement and not (self.event_progress or {}).get('settled'):
                 event_result = self._settle_current_event()
                 if event_result and event_result.get('pending_choice'):
                     return {"success": True, "pending_choice": True}

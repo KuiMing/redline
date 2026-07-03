@@ -53,12 +53,12 @@
       "f": {
         "faction": "hong_kong",
         "hand": [
-          "f手牌1",
-          "f手牌2"
+          "f手牌2",
+          "f手牌3"
         ],
         "draw": [],
         "discard": [
-          "f手牌3"
+          "f手牌1"
         ]
       },
       "g": {
@@ -96,7 +96,7 @@
       "succeeded": false,
       "settled": true,
       "status": "failure",
-      "failure_target_player_id": "p2"
+      "settlement_target_player_id": "p2"
     },
     "current_player": "r",
     "turn_phase": "TurnPhase.ACTION"
@@ -164,7 +164,7 @@
       "succeeded": false,
       "settled": true,
       "status": "failure",
-      "failure_target_player_id": "p2"
+      "settlement_target_player_id": "p2"
     },
     "current_player": "r",
     "turn_phase": "TurnPhase.ACTION"

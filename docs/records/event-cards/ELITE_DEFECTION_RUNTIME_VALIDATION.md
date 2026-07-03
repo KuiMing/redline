@@ -38,7 +38,7 @@
           "succeeded": false,
           "settled": true,
           "status": "failure",
-          "failure_target_player_id": "viewer-id"
+          "settlement_target_player_id": "viewer-id"
         },
         "pending_choice": {
           "type": "multi_card_choice",

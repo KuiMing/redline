@@ -1,0 +1,34 @@
+# Event outcome timing audit
+
+- total: `28`
+- passed: `28`
+- failed: `0`
+
+- ✅ 全國人大召開 success draw after refill
+- ✅ 全國人大召開 failure red_dissolve after refill
+- ✅ 香港抗暴之戰 success gain_card after refill
+- ✅ 香港抗暴之戰 failure discard_self after refill
+- ✅ 重大災難 success gain_card after refill
+- ✅ 重大災難 failure discard_self after refill
+- ✅ 藏印邊境軍事對峙 success move after reset/refill
+- ✅ 藏印邊境軍事對峙 failure none after refill no-op
+- ✅ 貿易戰加劇 success topdeck before refill
+- ✅ 貿易戰加劇 failure none after refill no-op
+- ✅ 東突厥集中營 success gain_card after refill
+- ✅ 東突厥集中營 failure discard_random after refill
+- ✅ 北京政爭 success draw after refill
+- ✅ 北京政爭 failure none after refill no-op
+- ✅ 紅軍權貴出逃 success trash hand/discard after refill
+- ✅ 紅軍權貴出逃 failure discard_self after refill
+- ✅ 烏魯木齊七五事件 success build after refill
+- ✅ 烏魯木齊七五事件 failure discard_random after refill
+- ✅ 重大災難（副本） success gain_card after refill
+- ✅ 重大災難（副本） failure discard_self after refill
+- ✅ 全國人大召開（副本） success draw after refill
+- ✅ 全國人大召開（副本） failure red_dissolve after refill
+- ✅ 貿易戰加劇（副本） success topdeck before refill
+- ✅ 貿易戰加劇（副本） failure none after refill no-op
+- ✅ 藏印邊境軍事對峙（副本） success move after reset/refill
+- ✅ 藏印邊境軍事對峙（副本） failure none after refill no-op
+- ✅ 紅軍權貴出逃（副本） success trash hand/discard after refill
+- ✅ 紅軍權貴出逃（副本） failure discard_self after refill
