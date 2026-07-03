@@ -1,0 +1,34 @@
+{
+  "success": true,
+  "url": "http://127.0.0.1:8000/?game_id=ae587336-867d-4e6e-a38f-fbdbb22af893&player_id=25e591cf-5092-4289-a62b-d5e8c7d273ea",
+  "screenshot": "/Users/benmini/.openclaw/workspace/redline/docs/records/event-cards/belt-road-red-turn-build-gating-20260703_215949/after_bangkok_build_purchase_phase.png",
+  "before": {
+    "turn_phase": "action",
+    "pending_choice": "event_build_organization",
+    "current_event": "一帶一路 南洋",
+    "prompt": "一帶一路 南洋：在指定區域免費建立 1 個組織。"
+  },
+  "after_build": {
+    "turn_phase": "action",
+    "pending_choice": null,
+    "red_orgs": {
+      "北京": 1,
+      "曼谷": 1
+    },
+    "log_tail": [
+      "[Turn 1] Event drawn: 一帶一路 南洋 (auto deferred)",
+      "[Turn 1] End of turn for BEN",
+      "[Turn 1] 紅軍 built organization in 曼谷 via event"
+    ]
+  },
+  "after_advance": {
+    "turn_phase": "end",
+    "pending_choice": null,
+    "phase_label": "購買",
+    "log_tail": [
+      "[Turn 1] Event drawn: 一帶一路 南洋 (auto deferred)",
+      "[Turn 1] End of turn for BEN",
+      "[Turn 1] 紅軍 built organization in 曼谷 via event"
+    ]
+  }
+}

@@ -4134,11 +4134,28 @@ class Game:
             self.game_phase = GamePhase.FINISHED
             self.winner = winner
 
+    def _resolve_pending_build_choice_for_town(self, player, town):
+        choice = self.pending_choice or {}
+        if not choice:
+            return None
+        if choice.get('player_id') != getattr(player, 'id', None):
+            return {"error": "Resolve pending choice before building"}
+        if choice.get('choice_key') not in {'event_build_organization', 'era_red_build_near_target', 'card_build_organization'}:
+            return {"error": "Resolve pending choice before building"}
+        towns = choice.get('towns') or []
+        for index, entry in enumerate(towns):
+            if (entry or {}).get('town') == town:
+                return self.resolve_pending_choice(player.id, index)
+        return {"error": "Resolve pending build choice before building elsewhere"}
+
     def build_organization(self, town):
+        player = self.current_player()
+        pending_result = self._resolve_pending_build_choice_for_town(player, town)
+        if pending_result is not None:
+            return pending_result
+
         if self.turn_phase != TurnPhase.ACTION:
             return {"error": "Not in ACTION phase"}
-
-        player = self.current_player()
         if not town:
             return {"error": "Town required"}
         if self._event_modifier_active('restrict_build'):
