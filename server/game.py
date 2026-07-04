@@ -3629,6 +3629,11 @@ class Game:
         return False
 
     def _reaction_prompt_candidates(self, acting_player, played_card):
+        # 奧援卡是 support card, not a cancelable action/command card.
+        # Prompting a cancellation reaction after support effects have already
+        # resolved leaves a stale pending_choice that blocks phase advance.
+        if getattr(played_card, 'card_type', None) == 'support':
+            return []
         cost = self._card_purchase_cost(played_card) or {}
         candidates = []
         for player in self.players:
