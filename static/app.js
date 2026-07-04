@@ -1096,6 +1096,20 @@ function isMyTurnState(state = window.lastGameState) {
   return !!(me && state?.current_player === me.name);
 }
 
+function pendingChoiceWaitText(state = window.lastGameState) {
+  const choice = state?.pending_choice || null;
+  if (!choice) return '';
+  const me = (state.players || []).find(p => p.id === playerId) || null;
+  const targetName = choice.player_name || (state.players || []).find(p => p.id === choice.player_id)?.name || '指定玩家';
+  if (choice.type === 'reaction_choice') {
+    const cardName = choice.played_card_name || '這張牌';
+    if (me && choice.player_id === me.id) return `${choice.prompt || `是否要取消 ${cardName}？`}（請選擇「不取消」或使用取消牌）`;
+    return `等待 ${targetName} 回應是否取消 ${cardName}；對方選「不取消」後才會抽牌並繼續。`;
+  }
+  if (me && choice.player_id === me.id) return choice.prompt || '請先處理目前待選擇效果。';
+  return `等待 ${targetName} 處理待選擇效果。`;
+}
+
 function bindHandCardActionButtons(container) {
   if (!container) return;
   container.querySelectorAll('.hand-card-action-btn').forEach((btn) => {
@@ -2357,13 +2371,15 @@ async function render(state) {
     const advanceBtn = document.getElementById('advanceStepBtn');
     const redArmyBtn = document.getElementById('redArmyAbilityBtn');
     const isMyTurn = isMyTurnState(state);
+    const waitText = pendingChoiceWaitText(state);
     const stepLabel = phaseLabel === '事件結算' ? '開始行動階段' : phaseLabel === '行動' ? '開始購買階段' : phaseLabel === '購買' ? '結束回合' : '結束目前步驟';
     if (phaseActionMeta) {
-      phaseActionMeta.textContent = isMyTurn ? `目前：${phaseLabel}｜下一步：${stepLabel}` : `目前：${phaseLabel}｜等待 ${state.current_player} 操作`;
+      phaseActionMeta.textContent = waitText || (isMyTurn ? `目前：${phaseLabel}｜下一步：${stepLabel}` : `目前：${phaseLabel}｜等待 ${state.current_player} 操作`);
     }
     if (advanceBtn) {
       advanceBtn.textContent = stepLabel;
-      advanceBtn.disabled = !isMyTurn;
+      advanceBtn.disabled = !isMyTurn || !!waitText;
+      advanceBtn.title = waitText || '';
     }
     if (redArmyBtn) {
       const myFaction = me?.faction || '';

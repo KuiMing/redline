@@ -1764,6 +1764,35 @@ def test_leadership_draws_one_card():
 
 
 
+def test_leadership_reshuffles_discard_to_draw_after_reaction_skip_and_can_advance():
+    g = make_game()
+    actor, reactor = g.players
+    actor.hand = [card(g, '領導')]
+    actor.deck.draw_pile = []
+    actor.deck.discard_pile = [Card('DiscardDraw1', 'command', {})]
+    reactor.hand = [card(g, '爆料黑幕')]
+
+    prompted = g.play_card(0, mode='action')
+
+    assert prompted.get('pending_choice') is True, prompted
+    assert g.pending_choice and g.pending_choice['type'] == 'reaction_choice'
+    assert g.pending_choice['player_name'] == reactor.name
+    assert names(actor.hand) == []
+    assert any('played 領導; waiting for P2 to choose cancel reaction' in entry for entry in g.action_log)
+
+    skipped = g.resolve_pending_choice(reactor.id, 0)
+
+    assert skipped.get('success'), skipped
+    assert skipped.get('skipped_reaction') is True
+    assert g.pending_choice is None
+    assert names(actor.hand) == ['DiscardDraw1']
+    assert names(actor.deck.discard_pile) == ['領導']
+    advanced = g.advance_turn_phase()
+    assert advanced.get('success'), advanced
+    assert g.turn_phase == TurnPhase.END
+
+
+
 def test_plotting_draws_two_cards():
     g = make_game()
     p = g.current_player()

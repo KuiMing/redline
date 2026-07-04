@@ -3736,6 +3736,7 @@ class Game:
             'type': 'reaction_choice',
             'choice_key': 'cancel_other_player_action',
             'player_id': reacting_player.id,
+            'player_name': reacting_player.name,
             'acting_player': acting_player,
             'acting_player_id': acting_player.id,
             'acting_player_name': acting_player.name,
@@ -3748,6 +3749,8 @@ class Game:
             'prompt': f'{acting_player.name} 打出 {card_name}。是否要取消對方的行動？',
             'source_name': '取消反應',
         }
+        candidate_names = '、'.join(str(card.get('name') or '取消反應牌') for card in candidates)
+        self.log(f"{acting_player.name} played {card_name}; waiting for {reacting_player.name} to choose cancel reaction ({candidate_names or '取消反應牌'})")
         return {'pending_choice': True}
 
     def _resolve_reaction_choice(self, player, choice, index):
@@ -5135,6 +5138,7 @@ class Game:
                 'type': self.pending_choice.get('type'),
                 'choice_key': self.pending_choice.get('choice_key'),
                 'player_id': self.pending_choice.get('player_id'),
+                'player_name': self.pending_choice.get('player_name'),
                 'prompt': self.pending_choice.get('prompt'),
                 'source_name': self.pending_choice.get('source_name'),
                 'count': self.pending_choice.get('count'),
