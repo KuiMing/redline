@@ -1104,7 +1104,7 @@ function pendingChoiceWaitText(state = window.lastGameState) {
   if (choice.type === 'reaction_choice') {
     const cardName = choice.played_card_name || '這張牌';
     if (me && choice.player_id === me.id) return `${choice.prompt || `是否要取消 ${cardName}？`}（請選擇「不取消」或使用取消牌）`;
-    return `等待 ${targetName} 回應是否取消 ${cardName}；對方選「不取消」後才會抽牌並繼續。`;
+    return `等待 ${targetName} 回應是否取消 ${cardName}；若 10 秒內未回應，系統會自動視同不取消。`;
   }
   if (me && choice.player_id === me.id) return choice.prompt || '請先處理目前待選擇效果。';
   return `等待 ${targetName} 處理待選擇效果。`;

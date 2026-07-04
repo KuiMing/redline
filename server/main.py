@@ -19,6 +19,66 @@ lobby_factions = {}  # {game_id: {player_id: faction_id}}
 lobby_bases = {}  # {game_id: {player_id: base_name}}
 lobby_ready = {}  # {game_id: {player_id: bool}}
 lobby_market_mode = {}  # {game_id: "sample_53" | "all_cards"}
+REACTION_RESPONSE_TIMEOUT_SECONDS = 10
+reaction_timeout_tasks = {}
+
+
+async def broadcast_game_state(game_id, game, last_action_result=None):
+    for pid, ws in manager.connections.get(game_id, {}).items():
+        state = game.state(pid)
+        if last_action_result:
+            if last_action_result.get("pending_choice"):
+                state["pending_choice"] = game.state(pid).get("pending_choice")
+            else:
+                state["last_action_result"] = last_action_result
+        await ws.send_json(state)
+
+
+def schedule_reaction_timeout(game_id, game):
+    choice = getattr(game, "pending_choice", None) or {}
+    if choice.get("type") != "reaction_choice":
+        task = reaction_timeout_tasks.pop(game_id, None)
+        if task:
+            task.cancel()
+        return
+
+    token = (
+        choice.get("player_id"),
+        choice.get("acting_player_id"),
+        choice.get("played_card_name"),
+        id(choice.get("played_card")),
+    )
+    old_task = reaction_timeout_tasks.pop(game_id, None)
+    if old_task:
+        old_task.cancel()
+
+    async def _auto_skip_reaction():
+        try:
+            await asyncio.sleep(REACTION_RESPONSE_TIMEOUT_SECONDS)
+            active_game = manager.get_game(game_id)
+            if active_game is not game:
+                return
+            active_game = game
+            active_choice = getattr(active_game, "pending_choice", None) or {}
+            active_token = (
+                active_choice.get("player_id"),
+                active_choice.get("acting_player_id"),
+                active_choice.get("played_card_name"),
+                id(active_choice.get("played_card")),
+            )
+            if active_choice.get("type") != "reaction_choice" or active_token != token:
+                return
+            reacting_player_id = active_choice.get("player_id")
+            active_game.log(f"{active_choice.get('played_card_name', 'card')} cancel reaction timed out after {REACTION_RESPONSE_TIMEOUT_SECONDS} seconds; treated as no cancel")
+            result = active_game.resolve_pending_choice(reacting_player_id, 0)
+            await broadcast_game_state(game_id, active_game, result if isinstance(result, dict) else None)
+        except asyncio.CancelledError:
+            return
+        finally:
+            if reaction_timeout_tasks.get(game_id) is asyncio.current_task():
+                reaction_timeout_tasks.pop(game_id, None)
+
+    reaction_timeout_tasks[game_id] = asyncio.create_task(_auto_skip_reaction())
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 ACTION_CSV_PATH = BASE_DIR / 'data' / 'raw' / 'action_cards.csv'
@@ -455,7 +515,7 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
         return
 
     # Send initial state
-    await websocket.send_json(game.state())
+    await websocket.send_json(game.state(player_id))
 
     try:
         while True:
@@ -465,12 +525,11 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
             if action == "set_base":
                 result = game.set_base_choice(player_id, data.get("town"), data.get("label"))
                 if result and result.get("error"):
-                    error_state = dict(game.state())
+                    error_state = dict(game.state(player_id))
                     error_state["error"] = result.get("error")
                     await websocket.send_json(error_state)
                     continue
-                for pid, ws in manager.connections.get(game_id, {}).items():
-                    await ws.send_json(game.state())
+                await broadcast_game_state(game_id, game)
                 continue
 
             bypass_turn_check = False
@@ -480,7 +539,7 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
 
             current_player = game.current_player()
             if current_player is not None and current_player.id != player_id and not bypass_turn_check:
-                debug_state = dict(game.state())
+                debug_state = dict(game.state(player_id))
                 debug_state["error"] = "Not your turn"
                 debug_state["_debug_turn_gate"] = {
                     "action": action,
@@ -545,21 +604,15 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
                 result = game.resolve_pending_choice(player_id, data.get("index"))
 
             if result and result.get("error"):
-                error_state = dict(game.state())
+                error_state = dict(game.state(player_id))
                 error_state["error"] = result.get("error")
                 await websocket.send_json(error_state)
                 continue
 
             # Broadcast updated state
-            updated_state = game.state()
             action_result = result if isinstance(result, dict) and not result.get("result") else (result.get("result") if isinstance(result, dict) else None)
-            if action_result:
-                if action_result.get("pending_choice"):
-                    updated_state["pending_choice"] = game.state().get("pending_choice")
-                else:
-                    updated_state["last_action_result"] = action_result
-            for pid, ws in manager.connections.get(game_id, {}).items():
-                await ws.send_json(updated_state)
+            schedule_reaction_timeout(game_id, game)
+            await broadcast_game_state(game_id, game, action_result)
 
     except Exception as e:
         print("WS ERROR:", e)

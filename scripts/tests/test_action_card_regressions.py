@@ -1778,7 +1778,7 @@ def test_leadership_reshuffles_discard_to_draw_after_reaction_skip_and_can_advan
     assert g.pending_choice and g.pending_choice['type'] == 'reaction_choice'
     assert g.pending_choice['player_name'] == reactor.name
     assert names(actor.hand) == []
-    assert any('played 領導; waiting for P2 to choose cancel reaction' in entry for entry in g.action_log)
+    assert any('played 領導; waiting up to 10 seconds for P2 to choose cancel reaction' in entry for entry in g.action_log)
 
     skipped = g.resolve_pending_choice(reactor.id, 0)
 

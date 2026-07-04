@@ -3749,8 +3749,7 @@ class Game:
             'prompt': f'{acting_player.name} 打出 {card_name}。是否要取消對方的行動？',
             'source_name': '取消反應',
         }
-        candidate_names = '、'.join(str(card.get('name') or '取消反應牌') for card in candidates)
-        self.log(f"{acting_player.name} played {card_name}; waiting for {reacting_player.name} to choose cancel reaction ({candidate_names or '取消反應牌'})")
+        self.log(f"{acting_player.name} played {card_name}; waiting up to 10 seconds for {reacting_player.name} to choose cancel reaction")
         return {'pending_choice': True}
 
     def _resolve_reaction_choice(self, player, choice, index):
@@ -5109,7 +5108,7 @@ class Game:
 
     # ---------- State ----------
 
-    def state(self):
+    def state(self, viewer_player_id=None):
         # aggregate map control
         town_control = {}
         shared_access = {}
@@ -5134,13 +5133,31 @@ class Game:
 
         pending_choice = None
         if self.pending_choice:
+            pending_is_reaction = self.pending_choice.get('type') == 'reaction_choice'
+            pending_is_for_viewer = viewer_player_id is None or self.pending_choice.get('player_id') == viewer_player_id
+            pending_cards = self.pending_choice.get('cards') or []
+            if pending_is_reaction and not pending_is_for_viewer:
+                serialized_pending_cards = []
+                pending_prompt = f"{self.pending_choice.get('acting_player_name', '玩家')} 打出 {self.pending_choice.get('played_card_name', '卡牌')}。等待對方是否取消。"
+                pending_source_name = '等待反應'
+            else:
+                serialized_pending_cards = [
+                    dict(card) if isinstance(card, dict) and 'name' in card and 'card' not in card else {
+                        'name': getattr(card.get('card'), 'name', str(card.get('card'))),
+                        'zone': card.get('zone'),
+                        'zone_label': card.get('zone_label'),
+                    } if isinstance(card, dict) else getattr(card, 'name', str(card))
+                    for card in pending_cards
+                ]
+                pending_prompt = self.pending_choice.get('prompt')
+                pending_source_name = self.pending_choice.get('source_name')
             pending_choice = {
                 'type': self.pending_choice.get('type'),
                 'choice_key': self.pending_choice.get('choice_key'),
                 'player_id': self.pending_choice.get('player_id'),
                 'player_name': self.pending_choice.get('player_name'),
-                'prompt': self.pending_choice.get('prompt'),
-                'source_name': self.pending_choice.get('source_name'),
+                'prompt': pending_prompt,
+                'source_name': pending_source_name,
                 'count': self.pending_choice.get('count'),
                 'min_count': self.pending_choice.get('min_count'),
                 'mode': self.pending_choice.get('mode'),
@@ -5150,14 +5167,7 @@ class Game:
                 'region': self.pending_choice.get('region'),
                 'free': self.pending_choice.get('free'),
                 'ignore_distance': self.pending_choice.get('ignore_distance'),
-                'cards': [
-                    dict(card) if isinstance(card, dict) and 'name' in card and 'card' not in card else {
-                        'name': getattr(card.get('card'), 'name', str(card.get('card'))),
-                        'zone': card.get('zone'),
-                        'zone_label': card.get('zone_label'),
-                    } if isinstance(card, dict) else getattr(card, 'name', str(card))
-                    for card in (self.pending_choice.get('cards') or [])
-                ],
+                'cards': serialized_pending_cards,
                 'options': [
                     dict(option) if isinstance(option, dict) else option
                     for option in (self.pending_choice.get('options') or [])
@@ -5219,7 +5229,7 @@ class Game:
                     "base": p.base,
                     "resources": p.resources,
                     "moves_left": p.moves_left,
-                    "hand": [getattr(card, 'name', str(card)) for card in p.hand],
+                    "hand": [getattr(card, 'name', str(card)) for card in p.hand] if (viewer_player_id is None or p.id == viewer_player_id) else ['未知手牌' for _ in p.hand],
                     "deck_count": len(p.deck.draw_pile) if p.deck else 0,
                     "discard_count": len(p.deck.discard_pile) if p.deck else 0,
                     "discard_pile": [getattr(card, 'name', str(card)) for card in p.deck.discard_pile] if p.deck else [],
