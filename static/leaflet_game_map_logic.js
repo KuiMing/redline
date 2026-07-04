@@ -401,9 +401,20 @@ function movementOptionsForTown(townName) {
   if (!canActFromTown(townName)) return { road: [], rail: [] };
 
   return {
-    road: (town.road || []).filter(n => MAP_DATA.towns[n]),
+    road: (town.road || []).filter(n => MAP_DATA.towns[n] && !townHasEnemyOrganization(n)),
     rail: railOptionsWithinThree(townName)
   };
+}
+
+function townHasEnemyOrganization(townName) {
+  const entries = townStateEntries(townName);
+  if (!entries.length) return false;
+  const currentName = currentPlayerName();
+  return entries.some(entry => {
+    if (!entry || (entry.count || 0) <= 0) return false;
+    if (entry.player === currentName) return false;
+    return !playerHasSharedAccessToTown(townName);
+  });
 }
 
 function railOptionsWithinThree(originTown) {
@@ -417,6 +428,7 @@ function railOptionsWithinThree(originTown) {
     const town = MAP_DATA.towns[townName] || {};
     for (const nextTown of (town.rail || [])) {
       if (!MAP_DATA.towns[nextTown]) continue;
+      if (townHasEnemyOrganization(nextTown)) continue;
       reachable.add(nextTown);
       if (visited.has(nextTown)) continue;
       visited.add(nextTown);

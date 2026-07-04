@@ -471,7 +471,7 @@ class Game:
         return [
             {'town': town}
             for town in sorted(candidates)
-            if self.can_develop_in_town(player, town)
+            if self._can_player_build_in_town(player, town)
         ]
 
     def _draw_player_cards(self, player, count=1, source='effect'):
@@ -646,7 +646,7 @@ class Game:
         return [
             {'town': town, 'region': region}
             for town in sorted(region_towns)
-            if self.can_develop_in_town(player, town)
+            if self._can_player_build_in_town(player, town)
         ]
 
     def _apply_event_effect(self, effect, player, outcome='success'):
@@ -711,7 +711,7 @@ class Game:
         elif t in {'reduce_cost', 'restrict_build', 'ignore_distance', 'scoped_card_range'}:
             self.event_modifiers.append(self._event_modifier_from_effect(effect))
         elif t == 'build_organization':
-            towns = [{'town': town} for town in sorted(self.map.get('towns', {})) if self.can_develop_in_town(player, town)]
+            towns = [{'town': town} for town in sorted(self.map.get('towns', {})) if self._can_player_build_in_town(player, town)]
             if towns:
                 self._set_pending_town_choice(player, 'event_build_organization', towns, f"{self.current_event.get('name')}：選擇要建立組織的城鎮。", source_name=self.current_event.get('name'))
                 return {'success': True, 'pending_choice': True}
@@ -1053,7 +1053,7 @@ class Game:
         for town in sorted(candidates):
             if town in set(getattr(self, 'red_army_destroyed_bases', set()) or []) and getattr(player, 'faction_id', None) == 'red_army':
                 continue
-            if not self.can_develop_in_town(player, town):
+            if not self._can_player_build_in_town(player, town):
                 continue
             if build_range == 'ignore_distance' and self._era_restricts_ignore_distance_build(player, town):
                 continue
@@ -1717,6 +1717,9 @@ class Game:
         if not town:
             return {'error': 'Invalid town choice'}
         choice_key = choice.get('choice_key')
+        if choice_key in {'event_build_organization', 'card_build_organization', 'era_red_build_near_target'}:
+            if not self._can_player_build_in_town(player, town):
+                return {'error': 'Cannot build in enemy-occupied or invalid town'}
         if choice_key == 'event_build_organization':
             player.organizations[town] = player.organizations.get(town, 0) + 1
             self.log(f"{player.name} built organization in {town} via event")
@@ -2117,7 +2120,7 @@ class Game:
         return [
             {'town': town}
             for town in sorted(reachable)
-            if self.can_develop_in_town(player, town)
+            if self._can_player_build_in_town(player, town)
         ]
 
     def _target_players_for_interaction(self, player, target_player_id=None):
@@ -2357,7 +2360,7 @@ class Game:
         choice_key = (choice or {}).get('choice_key')
         if effect_type in {'interactive_build_anywhere_inner', 'interactive_build_near_inner'}:
             town = result.get('town')
-            if not town or not self.can_develop_in_town(player, town):
+            if not town or not self._can_player_build_in_town(player, town):
                 return {'error': 'Invalid build town'}
             player.organizations[town] = player.organizations.get(town, 0) + 1
             self.log(f"{player.name} resolved {card_name} and built in {town}")
@@ -2406,7 +2409,7 @@ class Game:
             dissolve_result = self.dissolve_organization(player, target_player, town, source='support_card')
             if dissolve_result.get('error'):
                 return dissolve_result
-            if effect_type == 'interactive_dissolve_and_build' and self.can_develop_in_town(player, town):
+            if effect_type == 'interactive_dissolve_and_build' and self._can_player_build_in_town(player, town):
                 player.organizations[town] = player.organizations.get(town, 0) + 1
                 self.log(f"{player.name} resolved {card_name} and built in {town} after dissolve")
             return {'success': True, 'town': town, 'target_player_id': target_player_id}
@@ -2544,7 +2547,7 @@ class Game:
                 target.deck.discard(cards)
         elif effect_type == 'build_anywhere_inner':
             inner_towns = self._towns_for_region_alias('china')
-            target_town = next((town for town in inner_towns if self.can_develop_in_town(player, town)), None)
+            target_town = next((town for town in inner_towns if self._can_player_build_in_town(player, town)), None)
             if target_town:
                 player.organizations[target_town] = player.organizations.get(target_town, 0) + 1
         elif effect_type == 'build_near_inner':
@@ -2552,7 +2555,7 @@ class Game:
             target_town = None
             for origin in list(player.organizations.keys()):
                 neighbors = set(self.map.get('towns', {}).get(origin, {}).get('road', []) or []) | set(self.map.get('towns', {}).get(origin, {}).get('rail', []) or [])
-                target_town = next((town for town in neighbors if town in inner_towns and self.can_develop_in_town(player, town)), None)
+                target_town = next((town for town in neighbors if town in inner_towns and self._can_player_build_in_town(player, town)), None)
                 if target_town:
                     break
             if target_town:
@@ -3439,6 +3442,11 @@ class Game:
                 return True
         return False
 
+    def _can_player_build_in_town(self, player, town):
+        if self._town_blocks_movement_for_player(player, town):
+            return False
+        return self.can_develop_in_town(player, town)
+
     def _rail_reachable_within_three(self, player, from_town, to_town):
         visited = {from_town}
         queue = [(from_town, 0)]
@@ -3451,7 +3459,7 @@ class Game:
                     continue
                 next_distance = distance + 1
                 if neighbor == to_town:
-                    return True
+                    return not self._town_blocks_movement_for_player(player, neighbor)
                 if neighbor in visited:
                     continue
                 if self._town_blocks_movement_for_player(player, neighbor):
@@ -4239,7 +4247,7 @@ class Game:
             return {"error": "No organization in town"}
         if town in set(getattr(self, 'red_army_destroyed_bases', set()) or []) and getattr(player, 'faction_id', None) == 'red_army':
             return {"error": "Red Army base has been destroyed and cannot be rebuilt"}
-        if not self.can_develop_in_town(player, town):
+        if not self._can_player_build_in_town(player, town):
             return {"error": "Cannot develop in this town"}
 
         player.organizations[town] = player.organizations.get(town, 0) + 1
@@ -4266,7 +4274,7 @@ class Game:
             return {"error": "No organization in origin"}
         if target_town in set(getattr(self, 'red_army_destroyed_bases', set()) or []) and getattr(player, 'faction_id', None) == 'red_army':
             return {"error": "Red Army base has been destroyed and cannot be rebuilt"}
-        if not self.can_develop_in_town(player, target_town):
+        if not self._can_player_build_in_town(player, target_town):
             return {"error": "Cannot develop in this town"}
 
         safehouse_bonus = 1 if self._player_has_ability(player, "安全屋") else 0
@@ -4373,6 +4381,8 @@ class Game:
             legal_move = self._rail_reachable_within_three(player, from_town, to_town)
         if not legal_move and not self._event_modifier_active('ignore_distance'):
             return {"error": f"No {mode} connection"}
+        if self._town_blocks_movement_for_player(player, to_town):
+            return {"error": "Cannot move into enemy organization"}
         if getattr(origin_owner, 'faction_id', None) == 'red_army' and not self.can_faction_develop_in_town('red_army', to_town):
             return {"error": "Red Army organization cannot leave Red Army development space"}
 
@@ -4612,7 +4622,7 @@ class Game:
         reachable = self._towns_within_steps(source_towns, max_steps=max_steps)
         towns = []
         for town in sorted(reachable):
-            if self.can_develop_in_town(builder, town):
+            if self._can_player_build_in_town(builder, town):
                 towns.append({'town': town, 'near_target_towns': sorted([src for src in source_towns if town in self._towns_within_steps([src], max_steps=max_steps)])})
         return towns
 
