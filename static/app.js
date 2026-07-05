@@ -1329,9 +1329,11 @@ function closeEraAchievementModal() {
   if (overlay) overlay.style.display = 'none';
 }
 
-function closeChoiceModal() {
+function closeChoiceModal(preserveMapHighlight = false) {
   activeChoiceModal = null;
-  syncChoiceModalMapHighlight(null);
+  if (!preserveMapHighlight) {
+    syncChoiceModalMapHighlight(null);
+  }
   const overlay = document.getElementById('choiceModal');
   if (overlay) {
     overlay.classList.remove('choice-modal-map-context');
@@ -1519,9 +1521,10 @@ function renderChoiceModal(state) {
         mode: 'support-targets',
         sourceName: sourceName || resolvedTitle,
         prompt: choice.prompt || '',
-        towns: targets.map(entry => ({
+        towns: targets.map((entry, index) => ({
           town: entry.town,
           label: entry.label || entry.town,
+          index,
         })),
       };
       ensureStrategicMapMounted().catch(err => console.warn('Failed to mount strategic map for choice highlight', err));
@@ -1693,7 +1696,7 @@ function renderChoiceModal(state) {
   }
 
   if (choiceType !== 'reaction_choice') {
-    closeBtn.onclick = closeChoiceModal;
+    closeBtn.onclick = () => closeChoiceModal(shouldUseMapContextModal);
   }
   overlay.style.display = 'flex';
 }

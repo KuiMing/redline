@@ -1,0 +1,103 @@
+{
+  "success": true,
+  "summary": {
+    "total": 3,
+    "passed": 3,
+    "failed": 0
+  },
+  "checks": [
+    {
+      "name": "情報網瓦解選項建立 target pending choice",
+      "passed": true,
+      "details": {
+        "pending_choice": {
+          "type": "target_choice",
+          "choice_key": "intel_network_dissolve_target",
+          "player_id": "969bc4eb-40b5-4543-b8ad-83b819eb46b1",
+          "player_name": null,
+          "prompt": "情報網：選擇 1 個要瓦解的鄰近敵方組織。",
+          "source_name": "情報網",
+          "count": null,
+          "min_count": null,
+          "mode": null,
+          "acting_player_id": null,
+          "acting_player_name": null,
+          "played_card_name": null,
+          "region": null,
+          "free": null,
+          "ignore_distance": null,
+          "cards": [],
+          "options": [],
+          "towns": [],
+          "targets": [
+            {
+              "id": "a616b444-e10d-47d0-9569-02a83aa25aed::天津",
+              "label": "enemyA｜天津",
+              "player_id": "a616b444-e10d-47d0-9569-02a83aa25aed",
+              "town": "天津",
+              "requires_self_sacrifice": false
+            }
+          ],
+          "step": null
+        }
+      }
+    },
+    {
+      "name": "關閉 modal 後仍可用地圖效果按鈕完成瓦解",
+      "passed": true,
+      "details": {
+        "selected_town": "天津",
+        "enemyA_orgs": {
+          "香港城": 1,
+          "廣州": 1
+        },
+        "pending_after_close": {
+          "type": "target_choice",
+          "choice_key": "intel_network_dissolve_target",
+          "player_id": "969bc4eb-40b5-4543-b8ad-83b819eb46b1",
+          "player_name": null,
+          "prompt": "情報網：選擇 1 個要瓦解的鄰近敵方組織。",
+          "source_name": "情報網",
+          "count": null,
+          "min_count": null,
+          "mode": null,
+          "acting_player_id": null,
+          "acting_player_name": null,
+          "played_card_name": null,
+          "region": null,
+          "free": null,
+          "ignore_distance": null,
+          "cards": [],
+          "options": [],
+          "towns": [],
+          "targets": [
+            {
+              "id": "a616b444-e10d-47d0-9569-02a83aa25aed::天津",
+              "label": "enemyA｜天津",
+              "player_id": "a616b444-e10d-47d0-9569-02a83aa25aed",
+              "town": "天津",
+              "requires_self_sacrifice": false
+            }
+          ],
+          "step": null
+        }
+      }
+    },
+    {
+      "name": "瓦解後 pending choice 清除，可繼續流程",
+      "passed": true,
+      "details": {
+        "turn_phase": "action",
+        "log_tail": [
+          "[Turn 1] viewer played 情報網",
+          "[Turn 1] viewer resolved choose_one option 1",
+          "[Turn 1] viewer dissolved 1 organization from enemyA at 天津"
+        ]
+      }
+    }
+  ],
+  "screenshots": [
+    "/Users/benmini/.openclaw/workspace/redline/docs/records/action-cards/intel-network-map-close-20260706_073203/before_closing_choice_modal.png",
+    "/Users/benmini/.openclaw/workspace/redline/docs/records/action-cards/intel-network-map-close-20260706_073203/after_map_dissolve_modal_closed.png"
+  ]
+}

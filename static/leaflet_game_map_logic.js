@@ -223,7 +223,7 @@ function renderSupportChoiceHighlights(options = {}) {
       const focusText = supportChoiceHighlight.focusTown ? ` 已聚焦 ${supportChoiceHighlight.focusTown}。` : '';
       const actionText = ['event_build_organization', 'era_red_build_near_target', 'card_build_organization'].includes(supportChoiceHighlight.choiceKey)
         ? '請點選橘色城鎮，然後使用左側「在目前城鎮建立組織（效果）」按鈕完成建立。'
-        : '請回到選擇視窗確認或改選。';
+        : '請點選橘色城鎮，然後使用左側「瓦解目前城鎮（效果）」按鈕完成瓦解；也可回到選擇視窗確認。';
       hintEl.innerHTML = `${supportChoiceHighlight.sourceName || '當前選擇'}：<span class="hint-strong">${supportChoiceHighlight.prompt || '請依列表選擇目標。'}</span> 地圖上已用橘色外框標出可選城鎮。${focusText}${actionText}`;
     }
     if (autoFocus) {
@@ -621,6 +621,19 @@ function eventBuildChoiceForTown(townName) {
   return { ...entry, index: resolvedIndex };
 }
 
+function supportTargetChoiceForTown(townName) {
+  if (!supportChoiceHighlight || supportChoiceHighlight.mode !== 'support-targets') return null;
+  if (['event_build_organization', 'era_red_build_near_target', 'card_build_organization'].includes(supportChoiceHighlight.choiceKey)) return null;
+  const towns = Array.isArray(supportChoiceHighlight.towns) ? supportChoiceHighlight.towns : [];
+  const entry = towns.find(item => item?.town === townName);
+  if (!entry) return null;
+  const resolvedIndex = Number.isFinite(Number(entry.index))
+    ? Number(entry.index)
+    : towns.findIndex(item => item?.town === townName);
+  if (!Number.isFinite(resolvedIndex) || resolvedIndex < 0) return null;
+  return { ...entry, index: resolvedIndex };
+}
+
 function supportChoiceTownNearLatLng(latlng, maxPixels = 28) {
   if (!supportChoiceHighlight || supportChoiceHighlight.mode !== 'support-targets') return null;
   const towns = Array.isArray(supportChoiceHighlight.towns) ? supportChoiceHighlight.towns : [];
@@ -656,6 +669,11 @@ function sendDirectBuildAction(townName) {
 function sendDissolveAction(defender, townName) {
   if (!mapWs || mapWs.readyState !== WebSocket.OPEN) {
     return { ok: false, reason: 'socket-not-open' };
+  }
+  const supportTargetChoice = supportTargetChoiceForTown(townName);
+  if (supportTargetChoice) {
+    mapWs.send(JSON.stringify({ action: 'resolve_choice', index: supportTargetChoice.index }));
+    return { ok: true, supportTargetChoice: true, index: supportTargetChoice.index };
   }
   mapWs.send(JSON.stringify({ action: 'dissolve', defender, town: townName }));
   return { ok: true };
@@ -699,13 +717,21 @@ function refreshDirectBuildUi() {
     }
   }
 
-  const dissolveTarget = sharedDissolveTargetForTown(selectedTown);
-  if (!dissolveTarget) {
-    dissolveBtn.disabled = true;
-    dissolveHint.innerHTML = `目前選取 <span class="hint-strong">${selectedTown}</span>：沒有可用的 shared dissolve 目標。`;
-  } else {
+  const supportTargetChoice = supportTargetChoiceForTown(selectedTown);
+  if (supportTargetChoice) {
     dissolveBtn.disabled = false;
-    dissolveHint.innerHTML = `目前選取 <span class="hint-strong">${selectedTown}</span>：可瓦解實際擁有者 <span class="hint-strong">${dissolveTarget}</span> 的共享組織。`;
+    dissolveBtn.textContent = '瓦解目前城鎮（效果）';
+    dissolveHint.innerHTML = `目前選取 <span class="hint-strong">${selectedTown}</span>：${supportChoiceHighlight.sourceName || '目前效果'} 允許選擇此目標；按上方按鈕完成瓦解。`;
+  } else {
+    dissolveBtn.textContent = '瓦解目前城鎮組織';
+    const dissolveTarget = sharedDissolveTargetForTown(selectedTown);
+    if (!dissolveTarget) {
+      dissolveBtn.disabled = true;
+      dissolveHint.innerHTML = `目前選取 <span class="hint-strong">${selectedTown}</span>：沒有可用的 shared dissolve 目標。`;
+    } else {
+      dissolveBtn.disabled = false;
+      dissolveHint.innerHTML = `目前選取 <span class="hint-strong">${selectedTown}</span>：可瓦解實際擁有者 <span class="hint-strong">${dissolveTarget}</span> 的共享組織。`;
+    }
   }
 }
 
@@ -854,6 +880,11 @@ document.getElementById('directBuildBtn').addEventListener('click', () => {
 });
 document.getElementById('dissolveBtn').addEventListener('click', () => {
   if (!selectedTown) return;
+  const supportTargetChoice = supportTargetChoiceForTown(selectedTown);
+  if (supportTargetChoice) {
+    sendDissolveAction(null, selectedTown);
+    return;
+  }
   const target = sharedDissolveTargetForTown(selectedTown);
   if (!target) return;
   sendDissolveAction(target, selectedTown);
@@ -887,8 +918,10 @@ window.addEventListener('message', (event) => {
 function applyGameStateToMap(state) {
   const resolvingMove = pendingMove && !state?.error ? { ...pendingMove } : null;
   lastGameState = state;
+  window.__lastMapState = state;
   const pendingChoice = state?.pending_choice || null;
-  if (!pendingChoice || !['event_build_organization', 'era_red_build_near_target', 'card_build_organization'].includes(pendingChoice.choice_key)) {
+  const mapChoiceKeys = ['event_build_organization', 'era_red_build_near_target', 'card_build_organization', 'support_interaction', 'card_dissolve_interaction', 'intel_network_dissolve_target', 'event_red_dissolve', 'red_army_state_security_target', 'era_red_bonus_dissolve_target'];
+  if (!pendingChoice || !mapChoiceKeys.includes(pendingChoice.choice_key)) {
     applySupportChoiceHighlight(null);
   }
   if (resolvingMove) {
@@ -1014,6 +1047,7 @@ window.__moveFromToForTest = function (fromTown, toTown) {
   return { ok: !!result.ok, fromTown, toTown, mode: option.mode };
 };
 
+window.selectTownForCurrentMapAction = selectTownForCurrentMapAction;
 window.__dissolveFromSharedForTest = function (townName) {
   resetMoveSelection();
   renderMap();
