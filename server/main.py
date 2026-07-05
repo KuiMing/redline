@@ -2553,6 +2553,10 @@ def test_setup_belt_road_red_turn_proof(payload: dict):
             advance_results.append(game.advance_turn_phase())
             if game.current_player_index == 1 and game.turn_phase == TurnPhase.EVENT:
                 break
+    if payload.get("stale_visual_build", False):
+        stale_town = payload.get("stale_town", "曼谷")
+        if game.pending_choice and game.pending_choice.get("choice_key") == "event_build_organization":
+            red.organizations[stale_town] = max(1, red.organizations.get(stale_town, 0))
 
     game_id = str(uuid.uuid4())
     manager.games[game_id] = game

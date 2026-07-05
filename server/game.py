@@ -1717,6 +1717,21 @@ class Game:
         if not town:
             return {'error': 'Invalid town choice'}
         choice_key = choice.get('choice_key')
+        if choice_key == 'event_build_organization' and player.organizations.get(town, 0) > 0:
+            # Recovery for old/stale browser states: the map may already have sent a
+            # generic build that mutated the board, while the event town choice stayed
+            # pending and continued to block the phase button.  Treat the matching
+            # event choice as consumed without adding a duplicate organization.
+            self.pending_choice = None
+            self.log(f"{player.name} already had organization in {town}; consumed stale event build choice")
+            return {
+                'success': True,
+                'choice_index': index,
+                'town': town,
+                'selected': selected,
+                'choice_key': choice_key,
+                'recovered_stale_choice': True,
+            }
         if choice_key in {'event_build_organization', 'card_build_organization', 'era_red_build_near_target'}:
             if not self._can_player_build_in_town(player, town):
                 return {'error': 'Cannot build in enemy-occupied or invalid town'}
@@ -4141,8 +4156,23 @@ class Game:
         # immediately discarded or dodged by emptying the hand.
         return True
 
+    def _recover_stale_event_build_choice_if_satisfied(self):
+        choice = self.pending_choice or {}
+        if choice.get('choice_key') != 'event_build_organization':
+            return False
+        player = next((p for p in self.players if getattr(p, 'id', None) == choice.get('player_id')), None)
+        if player is None:
+            return False
+        for entry in choice.get('towns') or []:
+            town = (entry or {}).get('town')
+            if town and player.organizations.get(town, 0) > 0:
+                self.pending_choice = None
+                self.log(f"{player.name} already had organization in {town}; auto-cleared stale event build choice")
+                return True
+        return False
+
     def advance_turn_phase(self):
-        if self.pending_choice:
+        if self.pending_choice and not self._recover_stale_event_build_choice_if_satisfied():
             return {"error": "Resolve pending choice before advancing phase"}
         if self.turn_phase == TurnPhase.EVENT:
             self._check_era_trigger()

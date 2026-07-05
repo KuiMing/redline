@@ -1,0 +1,70 @@
+{
+  "success": true,
+  "base_url": "http://127.0.0.1:8000",
+  "cases": [
+    {
+      "case": "normal_generic_build",
+      "url": "http://127.0.0.1:8000/?game_id=48128581-636a-4221-a6e8-69f1753dfaea&player_id=54430ead-b045-457e-a7e2-b9fa52173069",
+      "screenshot": "/Users/benmini/.openclaw/workspace/redline/docs/records/event-cards/belt-road-red-turn-build-gating-20260706_063601/normal_generic_build_after_bangkok_build_purchase_phase.png",
+      "before": {
+        "turn_phase": "action",
+        "pending_choice": "event_build_organization",
+        "current_event": "一帶一路 南洋",
+        "prompt": "一帶一路 南洋：在指定區域免費建立 1 個組織。",
+        "red_bangkok_orgs": 0
+      },
+      "after_build": {
+        "turn_phase": "action",
+        "pending_choice": null,
+        "red_bangkok_orgs": 1,
+        "log_tail": [
+          "[Turn 1] Event drawn: 一帶一路 南洋 (auto deferred)",
+          "[Turn 1] End of turn for BEN",
+          "[Turn 1] 紅軍 built organization in 曼谷 via event"
+        ]
+      },
+      "after_advance": {
+        "turn_phase": "end",
+        "pending_choice": null,
+        "phase_label": "購買",
+        "log_tail": [
+          "[Turn 1] Event drawn: 一帶一路 南洋 (auto deferred)",
+          "[Turn 1] End of turn for BEN",
+          "[Turn 1] 紅軍 built organization in 曼谷 via event"
+        ]
+      }
+    },
+    {
+      "case": "stale_recovery",
+      "url": "http://127.0.0.1:8000/?game_id=8962b4d3-4b3d-421e-9d21-aba633ec44c4&player_id=a992b1c4-771c-4948-b9fa-5c716de352ed",
+      "screenshot": "/Users/benmini/.openclaw/workspace/redline/docs/records/event-cards/belt-road-red-turn-build-gating-20260706_063601/stale_recovery_after_bangkok_build_purchase_phase.png",
+      "before": {
+        "turn_phase": "action",
+        "pending_choice": "event_build_organization",
+        "current_event": "一帶一路 南洋",
+        "prompt": "一帶一路 南洋：在指定區域免費建立 1 個組織。",
+        "red_bangkok_orgs": 1
+      },
+      "after_build": {
+        "turn_phase": "action",
+        "pending_choice": null,
+        "red_bangkok_orgs": 1,
+        "log_tail": [
+          "[Turn 1] Event drawn: 一帶一路 南洋 (auto deferred)",
+          "[Turn 1] End of turn for BEN",
+          "[Turn 1] 紅軍 already had organization in 曼谷; consumed stale event build choice"
+        ]
+      },
+      "after_advance": {
+        "turn_phase": "end",
+        "pending_choice": null,
+        "phase_label": "購買",
+        "log_tail": [
+          "[Turn 1] Event drawn: 一帶一路 南洋 (auto deferred)",
+          "[Turn 1] End of turn for BEN",
+          "[Turn 1] 紅軍 already had organization in 曼谷; consumed stale event build choice"
+        ]
+      }
+    }
+  ]
+}

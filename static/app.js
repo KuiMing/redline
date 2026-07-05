@@ -1165,9 +1165,21 @@ function isMyTurnState(state = window.lastGameState) {
   return !!(me && state?.current_player === me.name);
 }
 
+function isSatisfiedStaleEventBuildChoice(state = window.lastGameState) {
+  const choice = state?.pending_choice || null;
+  if (!choice || choice.choice_key !== 'event_build_organization') return false;
+  const owner = (state.players || []).find(p => p.id === choice.player_id) || null;
+  if (!owner) return false;
+  return (choice.towns || []).some(entry => {
+    const town = entry?.town;
+    return !!(town && Number(owner.orgs?.[town] || 0) > 0);
+  });
+}
+
 function pendingChoiceWaitText(state = window.lastGameState) {
   const choice = state?.pending_choice || null;
   if (!choice) return '';
+  if (isSatisfiedStaleEventBuildChoice(state)) return '';
   const me = (state.players || []).find(p => p.id === playerId) || null;
   const targetName = choice.player_name || (state.players || []).find(p => p.id === choice.player_id)?.name || '指定玩家';
   if (choice.type === 'reaction_choice') {

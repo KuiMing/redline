@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Browser proof for 一帶一路南洋 red-turn build gating."""
+"""Browser proof for 一帶一路南洋 red-turn build gating and stale-choice recovery."""
 
 from __future__ import annotations
 
@@ -31,38 +31,51 @@ def post_json(path: str, payload: dict | None = None) -> dict:
         return json.loads(res.read().decode("utf-8"))
 
 
-def main() -> None:
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
-    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    screenshot_dir = OUT_DIR / f"belt-road-red-turn-build-gating-{stamp}"
-    screenshot_dir.mkdir(parents=True, exist_ok=True)
+def run_case(browser, screenshot_dir: Path, *, stale_visual_build: bool, recovery_action: str = "build") -> dict:
+    if stale_visual_build and recovery_action == "advance":
+        case_name = "stale_advance_recovery"
+    else:
+        case_name = "stale_recovery" if stale_visual_build else "normal_generic_build"
     setup = post_json(
         "/test/setup-belt-road-red-turn-proof",
-        {"advance_to_red": True, "event_name": "一帶一路 南洋"},
+        {
+            "advance_to_red": True,
+            "event_name": "一帶一路 南洋",
+            "stale_visual_build": stale_visual_build,
+            "stale_town": "曼谷",
+        },
     )
     if setup.get("error"):
         raise AssertionError(setup)
     url = BASE_URL + setup["url"]
 
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        page = browser.new_page(viewport={"width": 1280, "height": 720})
-        page.goto(url, wait_until="networkidle")
-        page.wait_for_function("window.lastGameState && window.lastGameState.pending_choice && window.lastGameState.pending_choice.choice_key === 'event_build_organization'", timeout=15000)
-        before = page.evaluate("window.lastGameState")
-        page.frame_locator("iframe").locator("body").wait_for(timeout=15000)
-        page.evaluate("document.querySelector('iframe').contentWindow.sendDirectBuildAction('曼谷')")
-        page.wait_for_function("window.lastGameState && !window.lastGameState.pending_choice && window.lastGameState.players.find(p => p.faction === 'red_army').orgs['曼谷'] === 1", timeout=15000)
-        after_build = page.evaluate("window.lastGameState")
+    page = browser.new_page(viewport={"width": 1280, "height": 720})
+    page.goto(url, wait_until="networkidle")
+    page.wait_for_function(
+        "window.lastGameState && window.lastGameState.pending_choice && window.lastGameState.pending_choice.choice_key === 'event_build_organization'",
+        timeout=15000,
+    )
+    before = page.evaluate("window.lastGameState")
+    page.frame_locator("iframe").locator("body").wait_for(timeout=15000)
+    if recovery_action == "advance":
         page.locator("#advanceStepBtn").click()
-        page.wait_for_function("window.lastGameState && window.lastGameState.turn_phase === 'end'", timeout=15000)
-        after_advance = page.evaluate("window.lastGameState")
-        screenshot_path = screenshot_dir / "after_bangkok_build_purchase_phase.png"
-        page.screenshot(path=str(screenshot_path), full_page=True)
-        browser.close()
+    else:
+        page.evaluate("document.querySelector('iframe').contentWindow.sendDirectBuildAction('曼谷')")
+    page.wait_for_function(
+        "window.lastGameState && !window.lastGameState.pending_choice && window.lastGameState.players.find(p => p.faction === 'red_army').orgs['曼谷'] === 1",
+        timeout=15000,
+    )
+    after_build = page.evaluate("window.lastGameState")
+    if after_build.get("turn_phase") != "end":
+        page.locator("#advanceStepBtn").click()
+    page.wait_for_function("window.lastGameState && window.lastGameState.turn_phase === 'end'", timeout=15000)
+    after_advance = page.evaluate("window.lastGameState")
+    screenshot_path = screenshot_dir / f"{case_name}_after_bangkok_build_purchase_phase.png"
+    page.screenshot(path=str(screenshot_path), full_page=True)
+    page.close()
 
-    report = {
-        "success": True,
+    return {
+        "case": case_name,
         "url": url,
         "screenshot": str(screenshot_path),
         "before": {
@@ -70,11 +83,12 @@ def main() -> None:
             "pending_choice": (before.get("pending_choice") or {}).get("choice_key"),
             "current_event": (before.get("current_event") or {}).get("name"),
             "prompt": (before.get("pending_choice") or {}).get("prompt"),
+            "red_bangkok_orgs": next(p for p in before["players"] if p["faction"] == "red_army")["orgs"].get("曼谷", 0),
         },
         "after_build": {
             "turn_phase": after_build.get("turn_phase"),
             "pending_choice": after_build.get("pending_choice"),
-            "red_orgs": next(p for p in after_build["players"] if p["faction"] == "red_army")["orgs"],
+            "red_bangkok_orgs": next(p for p in after_build["players"] if p["faction"] == "red_army")["orgs"].get("曼谷", 0),
             "log_tail": after_build.get("action_log", [])[-4:],
         },
         "after_advance": {
@@ -84,19 +98,37 @@ def main() -> None:
             "log_tail": after_advance.get("action_log", [])[-4:],
         },
     }
+
+
+def main() -> None:
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    screenshot_dir = OUT_DIR / f"belt-road-red-turn-build-gating-{stamp}"
+    screenshot_dir.mkdir(parents=True, exist_ok=True)
+
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        cases = [
+            run_case(browser, screenshot_dir, stale_visual_build=False),
+            run_case(browser, screenshot_dir, stale_visual_build=True),
+            run_case(browser, screenshot_dir, stale_visual_build=True, recovery_action="advance"),
+        ]
+        browser.close()
+
+    report = {"success": True, "base_url": BASE_URL, "cases": cases}
     json_path = OUT_DIR / f"BELT_ROAD_RED_TURN_BROWSER_{stamp}.json"
     md_path = OUT_DIR / f"BELT_ROAD_RED_TURN_BROWSER_{stamp}.md"
     json_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     md_path.write_text(
         "# 一帶一路南洋 browser proof\n\n"
-        f"- URL: {url}\n"
-        "- Before: pending event_build_organization for 一帶一路 南洋\n"
-        "- After build: 紅軍在曼谷有 1 組織，pending_choice = null\n"
-        "- After advance: turn_phase = end（UI 購買階段）\n"
-        f"- Screenshot: {screenshot_path}\n",
+        f"- Base URL: {BASE_URL}\n"
+        "- Normal generic-build path: pending event_build_organization resolved, 紅軍在曼谷有 1 組織，phase advances to end/purchase.\n"
+        "- Stale visual-build recovery path: 曼谷已有紅軍組織但 pending_choice 仍存在時，再按曼谷會清空 pending_choice，不重複建立，phase advances to end/purchase.\n"
+        "- Stale advance-button recovery path: 曼谷已有紅軍組織但 pending_choice 仍存在時，直接按開始購買階段也會自動清空 pending_choice 並進入 end/purchase.\n"
+        + "".join(f"- Screenshot ({case['case']}): {case['screenshot']}\n" for case in cases),
         encoding="utf-8",
     )
-    print(json.dumps({"success": True, "json": str(json_path), "md": str(md_path), "screenshot": str(screenshot_path)}, ensure_ascii=False))
+    print(json.dumps({"success": True, "json": str(json_path), "md": str(md_path), "screenshots": [c["screenshot"] for c in cases]}, ensure_ascii=False))
 
 
 if __name__ == "__main__":

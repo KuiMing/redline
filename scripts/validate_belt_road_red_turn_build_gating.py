@@ -80,6 +80,14 @@ def run_case(mode: str):
         build_result = game.resolve_pending_choice(red.id, bangkok_index)
     elif mode == "generic_build":
         build_result = game.build_organization("曼谷")
+    elif mode == "stale_visual_build_recovery":
+        # Simulate a live playtest state produced before the backend fix: the org
+        # already appears on the board, but pending_choice still blocks purchase.
+        red.organizations["曼谷"] = 1
+        build_result = game.build_organization("曼谷")
+    elif mode == "stale_advance_recovery":
+        red.organizations["曼谷"] = 1
+        build_result = game.advance_turn_phase()
     else:
         raise ValueError(mode)
 
@@ -90,7 +98,7 @@ def run_case(mode: str):
         "event_progress": dict(game.event_progress or {}),
         "log_tail": game.action_log[-6:],
     }
-    advance_result = game.advance_turn_phase()
+    advance_result = build_result if mode == "stale_advance_recovery" else game.advance_turn_phase()
     after_advance = {
         "advance_result": advance_result,
         "turn_phase": str(game.turn_phase),
@@ -123,13 +131,20 @@ def run_case(mode: str):
 
 def main() -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    cases = [run_case("resolve_choice"), run_case("generic_build")]
+    cases = [
+        run_case("resolve_choice"),
+        run_case("generic_build"),
+        run_case("stale_visual_build_recovery"),
+        run_case("stale_advance_recovery"),
+    ]
     report = {"success": True, "cases": cases}
     OUT_JSON.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     OUT_MD.write_text(
         "# 一帶一路南洋：紅軍事件建立組織 gating regression\n\n"
         "- resolve_choice path: passed\n"
         "- generic build fallback path: passed\n"
+        "- stale visual-build recovery path: passed\n"
+        "- stale advance-button recovery path: passed\n"
         "- Verified: 建立曼谷後 pending_choice 清空，按開始購買階段可進入 TurnPhase.END。\n",
         encoding="utf-8",
     )
