@@ -1,4 +1,7 @@
 let ws = null;
+let wsReconnectTimer = null;
+let wsReconnectAttempts = 0;
+let pendingOutboundActions = [];
 let gameId = null;
 let playerId = null;
 let previousEras = [];
@@ -1002,15 +1005,67 @@ async function startGame() {
 // Abstract map removed — replaced by Leaflet
 
 
-function connect() {
+function websocketUrl() {
+  const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
+  return `${protocol}://${location.host}/ws/${gameId}/${playerId}`;
+}
+
+function setSocketDebug(text) {
+  const debug = document.getElementById('debugSocketState');
+  if (debug) debug.textContent = text;
+}
+
+function scheduleReconnect(reason = 'closed') {
+  if (!gameId || !playerId) return;
+  if (wsReconnectTimer) return;
+  const delay = Math.min(5000, 500 + wsReconnectAttempts * 500);
+  wsReconnectAttempts += 1;
+  setSocketDebug(`websocket:${reason}; reconnecting in ${delay}ms`);
+  wsReconnectTimer = setTimeout(() => {
+    wsReconnectTimer = null;
+    connect({reconnect: true});
+  }, delay);
+}
+
+function flushPendingOutboundActions() {
+  if (!ws || ws.readyState !== WebSocket.OPEN) return;
+  const queued = pendingOutboundActions.splice(0, pendingOutboundActions.length);
+  queued.forEach(({action, payload}) => {
+    ws.send(JSON.stringify({action, ...payload}));
+  });
+}
+
+function connect(options = {}) {
   stopLobbySync();
-  ws = new WebSocket(`ws://${location.host}/ws/${gameId}/${playerId}`);
+  if (!gameId || !playerId) return;
+  if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
+  if (wsReconnectTimer) {
+    clearTimeout(wsReconnectTimer);
+    wsReconnectTimer = null;
+  }
+  ws = new WebSocket(websocketUrl());
+
+  ws.onopen = () => {
+    wsReconnectAttempts = 0;
+    setSocketDebug(options.reconnect ? 'websocket:reconnected' : 'websocket:open');
+    flushPendingOutboundActions();
+  };
 
   ws.onmessage = async (event) => {
     const state = JSON.parse(event.data);
     window.lastGameState = state;
     await render(state);
     syncStrategicMap(state);
+  };
+
+  ws.onclose = () => {
+    ws = null;
+    scheduleReconnect('closed');
+  };
+
+  ws.onerror = () => {
+    setSocketDebug('websocket:error');
+    if (ws) ws.close();
   };
 
   document.getElementById('lobby').style.display = 'none';
@@ -1021,6 +1076,15 @@ function connect() {
   resizeStage();
   if (!stageResizeBound) {
     window.addEventListener('resize', resizeStage);
+    window.addEventListener('online', () => scheduleReconnect('online'));
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && (!ws || ws.readyState === WebSocket.CLOSED || ws.readyState === WebSocket.CLOSING)) {
+        scheduleReconnect('visible');
+      }
+    });
+    window.addEventListener('pageshow', () => {
+      if (!ws || ws.readyState === WebSocket.CLOSED || ws.readyState === WebSocket.CLOSING) scheduleReconnect('pageshow');
+    });
     stageResizeBound = true;
   }
 
@@ -1028,11 +1092,16 @@ function connect() {
 }
 
 function sendAction(action, payload = {}) {
-  const debug = document.getElementById('debugSocketState');
-  if (debug) {
-    debug.textContent = `sendAction:${action}:readyState=${ws ? ws.readyState : 'null'}`;
+  setSocketDebug(`sendAction:${action}:readyState=${ws ? ws.readyState : 'null'}`);
+  if (!ws || ws.readyState === WebSocket.CLOSED || ws.readyState === WebSocket.CLOSING) {
+    pendingOutboundActions.push({action, payload});
+    connect({reconnect: true});
+    return;
   }
-  if (!ws || ws.readyState !== WebSocket.OPEN) return;
+  if (ws.readyState === WebSocket.CONNECTING) {
+    pendingOutboundActions.push({action, payload});
+    return;
+  }
   ws.send(JSON.stringify({action, ...payload}));
 }
 
