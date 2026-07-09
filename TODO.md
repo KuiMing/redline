@@ -224,6 +224,13 @@
   - proof：`docs/records/support-cards/EAST_ASIA_SUPPORT_TAXONOMY_FIX_VALIDATION_20260710.{json,md}`。
   - 落差盤點報告已同步更新對應項目狀態：`docs/records/rules-audit/RULES_VS_IMPLEMENTATION_GAP_AUDIT_20260710.md`。
 
+- [done] A3：粵/澳門與香港的共用組織規則只有單向生效。
+  - root cause：`server/game.py:_factions_sharing_with` 用寫死的中文子字串比對各陣營 `special_rules` 文字來判斷共用組織關係；`hong_kong` 自己的文字「可與粵、澳門反賊共用組織。」有命中 `粵、澳門` pattern，但 `yue`（粵）與 `aomen`（澳門）各自的文字「遊戲過程中可與香港共用組織。」沒有任何 pattern 包含『香港』，導致從 `yue`/`aomen` 玩家視角呼叫 `_factions_sharing_with` 時看不到 `hong_kong` 的組織，只有 `hong_kong` 看得到 `yue`/`aomen`，關係只單向生效。
+  - 修正：在 `_factions_sharing_with` 的 pattern 清單補上 `if '香港' in text: shared.update(['hong_kong'])`，使 `yue`/`aomen` ↔ `hong_kong` 雙向對稱。
+  - 驗證：`python3 scripts/validate_yue_aomen_hongkong_shared_org.py`（5/5 passed，涵蓋 yue→hong_kong、aomen→hong_kong 兩個新修正方向、hong_kong→yue、hong_kong→aomen 兩個既有方向回歸測試，以及一個無關陣營不應被誤判共用的 sanity check）。
+  - proof：`docs/records/faction-ui/YUE_AOMEN_HONGKONG_SHARED_ORG_FIX_VALIDATION_20260710.{json,md}`。
+  - 落差盤點報告已同步更新對應項目狀態：`docs/records/rules-audit/RULES_VS_IMPLEMENTATION_GAP_AUDIT_20260710.md`。
+
 ### 已有完整紀錄的其他模組
 - [done] 情報網 target choice map highlight。
   - 提交：`c690f5b fix: highlight intel network dissolve targets on map`。

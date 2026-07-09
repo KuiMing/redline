@@ -3415,6 +3415,8 @@ class Game:
                     shared.update(['taiwan_blue'])
                 if '綠線臺灣' in text:
                     shared.update(['taiwan_green'])
+                if '香港' in text:
+                    shared.update(['hong_kong'])
         return shared
 
     def _shared_org_count(self, player, town):

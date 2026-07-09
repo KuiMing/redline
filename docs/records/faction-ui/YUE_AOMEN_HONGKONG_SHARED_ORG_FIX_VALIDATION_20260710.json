@@ -1,0 +1,65 @@
+{
+  "summary": {
+    "scope": [
+      "yue",
+      "aomen",
+      "hong_kong"
+    ],
+    "purpose": "Regression proof for A3 fix: _factions_sharing_with in server/game.py only matched hard-coded substrings ('粵、澳門', '藍線臺灣', '綠線臺灣') in a faction's own special_rules text, so hong_kong -> yue/aomen worked but the reverse (yue/aomen -> hong_kong, declared via each faction's own \"遊戲過程中可與香港共用組織。\" special_rules text) never matched. Added a '香港' pattern so the relationship is symmetric.",
+    "total": 5,
+    "passed": 5,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "yue_sees_hong_kong_org_in_廣州",
+      "viewer_faction": "yue",
+      "owner_faction": "hong_kong",
+      "town": "廣州",
+      "expect_shared": true,
+      "shared_org_count": 2,
+      "origin_owner_faction": "hong_kong",
+      "ok": true
+    },
+    {
+      "name": "aomen_sees_hong_kong_org_in_深圳",
+      "viewer_faction": "aomen",
+      "owner_faction": "hong_kong",
+      "town": "深圳",
+      "expect_shared": true,
+      "shared_org_count": 2,
+      "origin_owner_faction": "hong_kong",
+      "ok": true
+    },
+    {
+      "name": "hong_kong_sees_yue_org_in_廣州",
+      "viewer_faction": "hong_kong",
+      "owner_faction": "yue",
+      "town": "廣州",
+      "expect_shared": true,
+      "shared_org_count": 2,
+      "origin_owner_faction": "yue",
+      "ok": true
+    },
+    {
+      "name": "hong_kong_sees_aomen_org_in_深圳",
+      "viewer_faction": "hong_kong",
+      "owner_faction": "aomen",
+      "town": "深圳",
+      "expect_shared": true,
+      "shared_org_count": 2,
+      "origin_owner_faction": "aomen",
+      "ok": true
+    },
+    {
+      "name": "liberals_sees_hong_kong_org_in_廣州",
+      "viewer_faction": "liberals",
+      "owner_faction": "hong_kong",
+      "town": "廣州",
+      "expect_shared": false,
+      "shared_org_count": 0,
+      "origin_owner_faction": null,
+      "ok": true
+    }
+  ]
+}

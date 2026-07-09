@@ -13,7 +13,8 @@
 ## 進度狀態
 
 - ✅ 已完成：**B1-a**（`東洋奧援` 中介資料檔損毀 + 連帶曝露的 tier2 誤判 bug）—— 2026-07-10 修正並驗證，詳見下方 B1-a 段落與 `TODO.md`「規則資料 vs 程式實作落差修正」條目。
-- ⏳ 待處理：其餘全部項目（A1-A4、B1-b、B1-c、B2 已無落差不需處理、B3 全部、C1-C3）。
+- ✅ 已完成：**A3**（粵/澳門↔香港共用組織單向生效）—— 2026-07-10 修正並驗證，詳見下方 A3 段落與 `TODO.md`「規則資料 vs 程式實作落差修正」條目。
+- ⏳ 待處理：其餘全部項目（A1、A2、A4、B1-b、B1-c、B2 已無落差不需處理、B3 全部、C1-C3）。
 
 本文件本身是**盤點結果 + 後續改善規劃**，不是修正 PR；所有項目都還沒有動程式碼。
 
@@ -72,7 +73,7 @@ conditions = faction.get("win_conditions", [])
 
 ---
 
-### A3. `hong_kong` ↔ `yue`(粵) / `aomen`(澳門) 的共用組織規則只有單向生效
+### A3. [已修正 2026-07-10] `hong_kong` ↔ `yue`(粵) / `aomen`(澳門) 的共用組織規則只有單向生效
 
 **現況**：`server/game.py:3409` 的 `_factions_sharing_with(faction_id)` 決定某陣營可以把哪些其他陣營的組織算進自己的「共用組織」數量。它先讀結構化欄位 `shared_organizations_with`（目前只有 `taiwan_green`、`taiwan_blue`、`hu` 三個陣營有填這個結構化欄位），再用**寫死的中文子字串比對** `special_rules` 陣列裡的文字：
 
@@ -103,6 +104,8 @@ for text in faction.get('special_rules', []) or []:
 **建議改善方向**：這個寫死子字串比對的方式本身就很脆弱（任何 `special_rules` 文字措辭一改就會漏判，正如這次找到的例子），建議：
 1. 短期修法：在 pattern 清單裡補上 `'香港' in text → shared.update(['hong_kong'])`。
 2. 中期建議：把「共用組織」關係整併成資料層的結構化欄位（比照 `taiwan_green`/`taiwan_blue`/`hu` 已經在用的 `shared_organizations_with` 陣列），逐一幫其餘用文字宣告共用關係的陣營（`hong_kong`, `republican`, `underground_church`, `gender_revolution`, `hakka`, `chaoshan`, `min`, `wuyue`, `yue`, `aomen`, `dian`）都補上結構化欄位，之後 `_factions_sharing_with` 可以只讀結構化欄位、不用再猜字串，一次消除同類型的問題（也方便未來新增陣營時不會又漏掉）。
+
+**修正記錄（2026-07-10）**：已採用短期修法，在 `_factions_sharing_with` 補上 `'香港' in text → shared.update(['hong_kong'])`。驗證：`python3 scripts/validate_yue_aomen_hongkong_shared_org.py`（5/5 passed，涵蓋兩個新修正方向、兩個既有方向回歸測試、一個無關陣營 sanity check）；proof：`docs/records/faction-ui/YUE_AOMEN_HONGKONG_SHARED_ORG_FIX_VALIDATION_20260710.{json,md}`；`TODO.md` 已同步新增對應 `[done]` 條目。中期建議（把全部共用組織關係轉成結構化欄位）尚未執行，維持待處理。
 
 ---
 
@@ -214,7 +217,7 @@ for text in faction.get('special_rules', []) or []:
 ### 第二梯隊——明確的規則實作缺口，修法清楚
 
 3. **A2（3 個能力字串未解析，影響 15 個陣營）**——在既有對照表補項目；「非暴力」需先確認武裝/裝備分類範圍再決定要不要沿用既有實作，「民族祭儀」可參考 `賭徒耳語` 改寫。
-4. **A3（粵/澳門↔香港共用組織單向生效）**——短期補一個字串 pattern，中期建議把全部共用組織關係一次轉成結構化欄位。
+4. ~~**A3（粵/澳門↔香港共用組織單向生效）**~~ ——**已於 2026-07-10 修正**（短期字串 pattern 修法），詳見上方 A3 段落的「修正記錄」與 `TODO.md`；中期把全部共用組織關係轉成結構化欄位的建議仍待處理。
 5. **B3 中的 `派遣間諜`（犧牲組織後才找目標，可能白白損失組織卻沒瓦解到敵方）**——邏輯順序調整，屬於正確性 bug，建議提前處理。
 6. **B3 中的 `樹立信心`（條件判定看種類而非購買費用組成，跟已追蹤的 `點燃熱情` 同根因）**——建議和 `點燃熱情` 一起修，兩者共用同一段判定邏輯調整。
 7. **B3 中的 `組織經驗甲`（TODO.md 現有描述需擴大範圍，兩段規則子句完全未實作）**——請一併更新 TODO.md 描述再排入既有 P1 流程處理。
