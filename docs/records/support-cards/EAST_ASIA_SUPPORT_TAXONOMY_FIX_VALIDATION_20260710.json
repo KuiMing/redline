@@ -1,0 +1,106 @@
+{
+  "summary": {
+    "scope": [
+      "東洋奧援"
+    ],
+    "purpose": "Regression proof for B1-a fix: data/cards/support_taxonomy.v1.1.json 東洋奧援 entry was missing the 北國/英美 secondary-region pair (stale/corrupted vs. its own generator script). Also verifies the region_index==0 tier-2 effect branch in server/game.py:_resolve_support_card_effect grants the correct near-range build, not the ignore-distance build, now that region_index 0 legitimately resolves to tier 2 for the 臺灣/南洋 pair.",
+    "total": 4,
+    "passed": 4,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "tier3_own_region",
+      "org_towns": [
+        "沖繩"
+      ],
+      "expected_tier": 3,
+      "detected_tier": 3,
+      "region_index": 0,
+      "matched_rulers": [],
+      "expected_effect_type": "interactive_build_anywhere_inner",
+      "actual_effect_type": "interactive_build_anywhere_inner",
+      "result": {
+        "success": true
+      },
+      "checks": {
+        "play_card_success": true,
+        "tier_detected": true,
+        "effect_type_matches": true
+      },
+      "ok": true
+    },
+    {
+      "name": "tier2_taiwan_southeast_asia_pair",
+      "org_towns": [
+        "臺北",
+        "河內"
+      ],
+      "expected_tier": 2,
+      "detected_tier": 2,
+      "region_index": 0,
+      "matched_rulers": [
+        "臺灣",
+        "南洋"
+      ],
+      "expected_effect_type": "interactive_build_near_inner",
+      "actual_effect_type": "interactive_build_near_inner",
+      "result": {
+        "success": true
+      },
+      "checks": {
+        "play_card_success": true,
+        "tier_detected": true,
+        "effect_type_matches": true
+      },
+      "ok": true
+    },
+    {
+      "name": "tier2_northland_anglo_pair",
+      "org_towns": [
+        "伯力",
+        "紐約"
+      ],
+      "expected_tier": 2,
+      "detected_tier": 2,
+      "region_index": 1,
+      "matched_rulers": [
+        "北國",
+        "英美"
+      ],
+      "expected_effect_type": "interactive_build_near_inner",
+      "actual_effect_type": "interactive_build_near_inner",
+      "result": {
+        "success": true
+      },
+      "checks": {
+        "play_card_success": true,
+        "tier_detected": true,
+        "effect_type_matches": true
+      },
+      "ok": true
+    },
+    {
+      "name": "tier1_fallback",
+      "org_towns": [
+        "北京"
+      ],
+      "expected_tier": 1,
+      "detected_tier": 1,
+      "region_index": 0,
+      "matched_rulers": [],
+      "expected_effect_type": "gain_resource",
+      "actual_effect_type": "gain_resource",
+      "result": {
+        "success": true
+      },
+      "checks": {
+        "play_card_success": true,
+        "tier_detected": true,
+        "effect_type_matches": true,
+        "propaganda_gained_2": true
+      },
+      "ok": true
+    }
+  ]
+}

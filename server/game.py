@@ -2096,8 +2096,6 @@ class Game:
         if card_name == '東洋奧援':
             if tier >= 3:
                 return 'interactive_build_anywhere_inner', {'count': 1}
-            if tier == 2 and region_index == 0:
-                return 'interactive_build_anywhere_inner', {'count': 1}
             if tier == 2:
                 return 'interactive_build_near_inner', {'count': 1}
             return 'gain_resource', {'propaganda': 2}

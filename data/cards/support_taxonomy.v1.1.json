@@ -54,31 +54,33 @@
       "cost": "1資金+2宣傳",
       "copies": "4",
       "regions": [
-    {
-      "preferred_rulers": [
-        "東洋"
+        {
+          "preferred_rulers": [
+            "臺灣",
+            "南洋"
+          ],
+          "preferred_ruler_ids": [
+            "taiwan_support",
+            "southeast_asia_support"
+          ],
+          "tier_3": "在牆內無視距離於己方發展空間建立1個組織。",
+          "tier_2": "在牆內於己方組織1格內建立1個組織。",
+          "tier_1": "獲得2點宣傳。"
+        },
+        {
+          "preferred_rulers": [
+            "北國",
+            "英美"
+          ],
+          "preferred_ruler_ids": [
+            "northland_support",
+            "anglo_support"
+          ],
+          "tier_3": "在牆內無視距離於己方發展空間建立1個組織。",
+          "tier_2": "在牆內於己方組織1格內建立1個組織。",
+          "tier_1": "獲得2點宣傳。"
+        }
       ],
-      "preferred_ruler_ids": [
-        "east_asia_support"
-      ],
-      "tier_3": "在牆內無視距離於己方發展空間建立1個組織。",
-      "tier_2": "",
-      "tier_1": "獲得2點宣傳。"
-    },
-    {
-      "preferred_rulers": [
-        "臺灣",
-        "南洋"
-      ],
-      "preferred_ruler_ids": [
-        "taiwan_support",
-        "southeast_asia_support"
-      ],
-      "tier_3": "",
-      "tier_2": "在牆內於己方組織1格內建立1個組織。",
-      "tier_1": "獲得2點宣傳。"
-    }
-],
       "support_card": true,
       "support_region": "東洋",
       "counts_as_flag_card": false,
