@@ -40,6 +40,9 @@ STATIC_PURCHASE_CARD_SUPPLY = {
 }
 STATIC_PURCHASE_CARD_NAMES = tuple(STATIC_PURCHASE_CARD_SUPPLY)
 
+# rules.md 步驟⑦：事件牌庫為混洗後抽出的 20 張
+EVENT_DECK_SIZE = 20
+
 
 class GamePhase(str, Enum):
     SETUP = "setup"
@@ -158,7 +161,7 @@ class Game:
         self.action_log = []
         self.purchase_deck = self._initial_purchase_deck()
         self.purchase_area = self._initial_purchase_area()
-        self.event_deck = EventDeck(self._initial_event_cards())
+        self.event_deck = EventDeck(self._draw_event_deck_cards())
         self.current_event = None
         self.event_progress = None
         self.event_modifiers = []
@@ -204,6 +207,14 @@ class Game:
             for _ in range(max(1, copies)):
                 cards.append(dict(event))
         return cards
+
+    def _draw_event_deck_cards(self, deck_size=EVENT_DECK_SIZE):
+        # rules.md 步驟⑦：「取出事件卡，混洗後抽出20張，牌面朝下，作為事件牌庫。」
+        # 全池（依卡牌張數展開共 25 張）只抽 20 張入庫，其餘本場不使用。
+        pool = self._initial_event_cards()
+        if len(pool) <= deck_size:
+            return pool
+        return random.sample(pool, deck_size)
 
     def _event_by_name(self, name):
         for event in self.structured_events:

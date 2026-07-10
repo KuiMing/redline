@@ -175,6 +175,11 @@
   - 新增 validation reports、proof markdown、screenshots 時，直接放到 `docs/records/<topic>/`。
   - 若新增 validator，確認輸出路徑不是 repo root，且失敗時 exit non-zero。
 
+- [todo] `scripts/validate_event_cards_runtime.py` 已長期失效（stale），需更新至現行事件生命週期後恢復可跑。
+  - 2026-07-11 發現：`test_hong_kong_success_static_supply` 起穩定失敗；用 git worktree 往回跑 20+ 個 commit（含 `8191639` 之前）全部 FAIL，證明壞掉已久、沒有人在跑。
+  - root cause：2026-05-31 事件卡生命週期改為「任務條件達成先 `success_pending`，等全體玩家 ACTION 結束才結算」（TODO 已記錄的刻意設計），但腳本裡的 `settle_round_event()` helper 還停留在舊設計（`advance_turn_phase()` 一次就期待 `settled=True`）；單人 advance 後實際狀態是 `success_pending`＋輪到下一位玩家，不是結算完成。屬於驗證腳本過期，不是 runtime bug。
+  - 需修：把 `settle_round_event()` 改成推進到整輪結束（所有玩家含紅軍完成 ACTION）再斷言 `settled`；逐一檢查該檔 20+ 個 test 是否還有其他依賴舊生命週期的斷言。修好前，該腳本的 FAIL 不應被當成 regression 訊號（例如 S3 修正時已另建 `validate_event_deck_draw_twenty.py` 獨立驗證）。
+
 ## 已完成摘要
 
 ### 事件卡 MVP
@@ -265,6 +270,13 @@
   - 驗證：`python3 scripts/validate_minyun_gender_revolution_nonviolent.py`（7/7 case 全過：兩個陣營的能力都能正確解析、打出與購買武裝卡都被正確擋下且卡牌保留在原本位置；另外驗證一個沒有此能力的陣營仍可正常打出武裝卡，作為回歸 sanity check）。
   - proof：`docs/records/faction-ui/MINYUN_GENDER_REVOLUTION_NONVIOLENT_FIX_VALIDATION_20260711.{json,md}`。
   - 落差盤點報告已同步更新對應項目狀態：`docs/records/rules-audit/RULES_VS_IMPLEMENTATION_GAP_AUDIT_20260710.md`；A2 剩下兩個能力（`紅軍派系`、`民族祭儀`）仍待處理。
+
+- [done] S3（第二輪盤點）：事件牌庫未依 `rules.md` 步驟⑦「混洗後抽出20張」，全部事件卡都直接入庫。
+  - root cause：`server/game.py:_initial_event_cards()` 依「卡牌張數」展開全部事件卡（共 25 張——第二輪盤點報告原寫 33 張是勘誤，那個數字誤把同一份 CSV 裡的時代卡張數也算進去了）後整批餵給 `EventDeck`，從不抽樣 20 張，導致每場事件組成分佈與實體規則不同（例如 5 張 `歲月靜好` 必定全部在庫）。
+  - 修正：新增常數 `EVENT_DECK_SIZE = 20` 與 `_draw_event_deck_cards()`（全池 `random.sample` 抽 20 張，池小於 20 時全取），`EventDeck` 建構改用它；`_initial_event_cards()` 保持回傳完整全池不變，既有的 declared-counts 回歸測試（`validate_event_cards_runtime.py` 內）不受影響。C2（開局可選抽除至多 5 張歲月靜好的難度選項）尚未做，仍待處理。
+  - 驗證：`python3 scripts/validate_event_deck_draw_twenty.py`（12 場開局全過：牌庫+已抽出的當前事件合計恰為 20、組成是全池子集、多場之間組成有變化證明是真抽樣；注意 `Game.__init__` 開局進 MAIN 會立刻抽第 1 張事件，驗證需把 discard_pile 算入總量）。另確認 `scripts/validate_event_card_canonical_scope.py` 仍 PASS。
+  - proof：`docs/records/event-cards/EVENT_DECK_DRAW_TWENTY_VALIDATION_20260711.{json,md}`。
+  - 落差盤點報告已同步更新（含 33→25 勘誤）：`docs/records/rules-audit/RULES_VS_IMPLEMENTATION_GAP_AUDIT_SECOND_PASS_20260711.md`。
 
 ### 已有完整紀錄的其他模組
 - [done] 情報網 target choice map highlight。
