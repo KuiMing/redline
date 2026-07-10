@@ -3704,23 +3704,34 @@ class Game:
 
         self._resolve_reaction_context(reaction_context)
 
+        # Deferred-reaction path never used to set these (only the immediate play_card
+        # path did), so a card that triggered a reaction prompt — even one the reactor
+        # skipped — silently failed to count toward 點燃熱情/樹立信心's "played a card with
+        # money/propaganda cost this turn" condition for whichever card came after it.
+        if action_context.get('cost_has_money'):
+            self.turn_log['played_money_card'] = True
+        if action_context.get('cost_has_propaganda'):
+            self.turn_log['played_propaganda_card'] = True
+
+        trigger_cost_has_money = action_context.get('cost_has_money')
+        trigger_cost_has_propaganda = action_context.get('cost_has_propaganda')
         for ability in self._player_effective_abilities(player):
             if not isinstance(ability, dict):
                 continue
             name = ability.get("name")
-            if name == "商貿組織" and effective_type == "money" and not self.turn_log.get("faction_first_money_triggered"):
+            if name == "商貿組織" and trigger_cost_has_money and not self.turn_log.get("faction_first_money_triggered"):
                 self.turn_log["faction_first_money_triggered"] = True
                 self._draw_player_cards(player, 1)
                 self.log(f"{player.name} triggered 商貿組織 and drew 1 card")
-            elif name in {"民族調和", "星星之火"} and effective_type == "propaganda" and not self.turn_log.get("faction_first_propaganda_triggered"):
+            elif name in {"民族調和", "星星之火"} and trigger_cost_has_propaganda and not self.turn_log.get("faction_first_propaganda_triggered"):
                 self.turn_log["faction_first_propaganda_triggered"] = True
                 self._draw_player_cards(player, 1)
                 self.log(f"{player.name} triggered {name} and drew 1 card")
-            elif name == "人同此心" and effective_type == "propaganda" and not self.turn_log.get("faction_first_prop_gain_triggered"):
+            elif name == "人同此心" and trigger_cost_has_propaganda and not self.turn_log.get("faction_first_prop_gain_triggered"):
                 self.turn_log["faction_first_prop_gain_triggered"] = True
                 player.resources["propaganda"] += 2
                 self.log(f"{player.name} triggered 人同此心 and gained 2 propaganda")
-            elif name in {"基金會", "共合會"} and effective_type == "money" and not self.turn_log.get("faction_first_money_gain_triggered"):
+            elif name in {"基金會", "共合會"} and trigger_cost_has_money and not self.turn_log.get("faction_first_money_gain_triggered"):
                 self.turn_log["faction_first_money_gain_triggered"] = True
                 player.resources["money"] += 2
                 self.log(f"{player.name} triggered {name} and gained 2 money")
@@ -3976,8 +3987,29 @@ class Game:
         if self._player_has_ability(player, "國際線") and getattr(played_card, "card_type", None) == "money":
             effective_type = "propaganda"
 
+        # 打出「購買費用有資金/宣傳的牌」類觸發（點燃熱情/樹立信心/商貿組織/基金會·共合會/
+        # 民族調和·星星之火/人同此心）要看實際購買費用組成，不能只看卡牌種類分類
+        # （例如「謀劃」種類是指揮，購買費用卻是資金1+宣傳1）。維持排除奧援卡（support）
+        # 的既有行為不變，只修正非奧援卡的種類/費用不一致問題。
+        purchase_cost = self._card_purchase_cost(played_card) or {}
+        cost_has_money = effective_type != 'support' and int(purchase_cost.get('money', 0) or 0) > 0
+        cost_has_propaganda = effective_type != 'support' and int(purchase_cost.get('propaganda', 0) or 0) > 0
+        if self._player_has_ability(player, "國際線") and cost_has_money:
+            cost_has_propaganda = True
+            cost_has_money = False
+
         support_resolution = None
-        action_context = {'current_card': played_card, 'card_name': card_name}
+        # Snapshot state *before* this card's own cost is counted, so 點燃熱情/樹立信心's
+        # "若本回合曾打出其它購買費用有資金/宣傳的牌" ("an *other* card") condition can't be
+        # satisfied by a card whose own purchase cost happens to include money/propaganda.
+        action_context = {
+            'current_card': played_card,
+            'card_name': card_name,
+            'cost_has_money': cost_has_money,
+            'cost_has_propaganda': cost_has_propaganda,
+            'prior_played_money_card': self.turn_log.get('played_money_card', False),
+            'prior_played_propaganda_card': self.turn_log.get('played_propaganda_card', False),
+        }
         era_followup_target_choice = self._era_followup_target_choice_for_play_card(player, played_card)
         if era_followup_target_choice:
             action_context['era_followup_target_choice'] = era_followup_target_choice
@@ -3998,11 +4030,10 @@ class Game:
                 return {"success": True, "pending_choice": True, **support_resolution}
             if support_resolution and support_resolution.get('card_moved_out_of_play'):
                 action_context['removed_current_card'] = True
-        elif effective_type == "money":
+        elif cost_has_money:
             self.turn_log["played_money_card"] = True
-        if effective_type == "propaganda":
+        if cost_has_propaganda:
             self.turn_log["played_propaganda_card"] = True
-        purchase_cost = self._card_purchase_cost(played_card)
         if int(purchase_cost.get('money', 0) or 0) > 0:
             self._track_event_progress('play_card_with_money', player=player)
         if int(purchase_cost.get('propaganda', 0) or 0) > 0:
@@ -4074,19 +4105,19 @@ class Game:
             if not isinstance(ability, dict):
                 continue
             name = ability.get("name")
-            if name == "商貿組織" and effective_type == "money" and not self.turn_log.get("faction_first_money_triggered"):
+            if name == "商貿組織" and cost_has_money and not self.turn_log.get("faction_first_money_triggered"):
                 self.turn_log["faction_first_money_triggered"] = True
                 self._draw_player_cards(player, 1)
                 self.log(f"{player.name} triggered 商貿組織 and drew 1 card")
-            elif name in {"民族調和", "星星之火"} and effective_type == "propaganda" and not self.turn_log.get("faction_first_propaganda_triggered"):
+            elif name in {"民族調和", "星星之火"} and cost_has_propaganda and not self.turn_log.get("faction_first_propaganda_triggered"):
                 self.turn_log["faction_first_propaganda_triggered"] = True
                 self._draw_player_cards(player, 1)
                 self.log(f"{player.name} triggered {name} and drew 1 card")
-            elif name == "人同此心" and effective_type == "propaganda" and not self.turn_log.get("faction_first_prop_gain_triggered"):
+            elif name == "人同此心" and cost_has_propaganda and not self.turn_log.get("faction_first_prop_gain_triggered"):
                 self.turn_log["faction_first_prop_gain_triggered"] = True
                 player.resources["propaganda"] += 2
                 self.log(f"{player.name} triggered 人同此心 and gained 2 propaganda")
-            elif name in {"基金會", "共合會"} and effective_type == "money" and not self.turn_log.get("faction_first_money_gain_triggered"):
+            elif name in {"基金會", "共合會"} and cost_has_money and not self.turn_log.get("faction_first_money_gain_triggered"):
                 self.turn_log["faction_first_money_gain_triggered"] = True
                 player.resources["money"] += 2
                 self.log(f"{player.name} triggered {name} and gained 2 money")

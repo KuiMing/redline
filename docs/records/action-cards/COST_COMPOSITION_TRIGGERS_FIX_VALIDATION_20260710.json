@@ -1,0 +1,124 @@
+{
+  "summary": {
+    "scope": [
+      "點燃熱情",
+      "樹立信心",
+      "商貿組織",
+      "基金會/共合會",
+      "民族調和/星星之火",
+      "人同此心"
+    ],
+    "purpose": "These 2 cards and 4 faction abilities all key off whether the played card's purchase cost includes a money/propaganda component (\"購買費用有資金/宣傳的牌\"), but server/game.py used to check the card's own category (card_type / effective_type) instead — a poor proxy, since many command/spy/organization/armed/transport-category cards have mixed money+propaganda costs (e.g. 謀劃: category=指揮, cost=資金1+宣傳1). Fixed by deriving cost_has_money/cost_has_propaganda from actual purchase cost via _card_purchase_cost, threaded through both the immediate play_card path and the deferred reaction-resume path (action_context), while preserving the pre-existing exclusion of support cards.",
+    "mismatch_card_used": "謀劃",
+    "total": 9,
+    "passed": 9,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "ignite_passion_bonus_after_mismatched_category_card",
+      "checks": {
+        "play_success": true,
+        "drew_2_cards": true
+      },
+      "ok": true,
+      "detail": {
+        "drawn": 2
+      }
+    },
+    {
+      "name": "build_confidence_bonus_after_mismatched_category_card",
+      "checks": {
+        "play_success": true,
+        "drew_2_cards": true
+      },
+      "ok": true,
+      "detail": {
+        "drawn": 2
+      }
+    },
+    {
+      "name": "ignite_passion_no_bonus_without_qualifying_play",
+      "checks": {
+        "play_success": true,
+        "drew_only_1_card": true
+      },
+      "ok": true,
+      "detail": {
+        "drawn": 1
+      }
+    },
+    {
+      "name": "support_card_still_excluded_from_cost_triggers",
+      "checks": {
+        "play_success": true,
+        "drew_only_1_card": true
+      },
+      "ok": true,
+      "detail": {
+        "drawn": 1
+      }
+    },
+    {
+      "name": "faction_ability_商貿組織_triggers_on_mismatched_category_card",
+      "checks": {
+        "play_success": true,
+        "triggered_flag_set": true,
+        "drew_3_cards_total": true
+      },
+      "ok": true,
+      "detail": {
+        "drawn": 3
+      }
+    },
+    {
+      "name": "faction_ability_基金會_triggers_on_mismatched_category_card",
+      "checks": {
+        "play_success": true,
+        "triggered_flag_set": true,
+        "gained_2_money": true
+      },
+      "ok": true
+    },
+    {
+      "name": "faction_ability_民族調和_triggers_on_mismatched_category_card",
+      "checks": {
+        "play_success": true,
+        "triggered_flag_set": true,
+        "drew_3_cards_total": true
+      },
+      "ok": true,
+      "detail": {
+        "drawn": 3
+      }
+    },
+    {
+      "name": "faction_ability_人同此心_triggers_on_mismatched_category_card",
+      "checks": {
+        "play_success": true,
+        "triggered_flag_set": true,
+        "gained_2_propaganda": true
+      },
+      "ok": true
+    },
+    {
+      "name": "faction_ability_still_triggers_after_reaction_skip",
+      "checks": {
+        "reaction_prompt_raised": true,
+        "reaction_choice_type_correct": true,
+        "skip_resolved_success": true,
+        "skipped_reaction_flag": true,
+        "triggered_flag_set": true,
+        "drew_3_cards_total": true
+      },
+      "ok": true,
+      "detail": {
+        "drawn": 3,
+        "resolved": {
+          "success": true,
+          "skipped_reaction": true
+        }
+      }
+    }
+  ]
+}

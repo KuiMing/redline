@@ -485,10 +485,13 @@ class EffectEngine:
         if etype == "conditional_draw":
             condition = effect.get("condition")
             should_draw = False
+            ctx = context or {}
             if condition == "played_propaganda_card":
-                should_draw = bool(game.turn_log.get("played_propaganda_card"))
+                # "其它" (an *other* card this turn) — use the pre-this-card snapshot so a
+                # card whose own cost includes propaganda can't satisfy its own condition.
+                should_draw = bool(ctx.get("prior_played_propaganda_card", game.turn_log.get("played_propaganda_card")))
             elif condition == "played_money_card":
-                should_draw = bool(game.turn_log.get("played_money_card"))
+                should_draw = bool(ctx.get("prior_played_money_card", game.turn_log.get("played_money_card")))
             elif condition == "successful_discard":
                 should_draw = bool(game.turn_log.get("successful_discard"))
             elif condition == "canceled_propaganda_card":

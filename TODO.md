@@ -245,6 +245,13 @@
   - proof：`docs/records/action-cards/INTEL_NETWORK_NO_REACTION_OPTION_OWN_TURN_VALIDATION_20260710.{json,md}`。
   - 落差盤點報告已同步更新對應項目狀態：`docs/records/rules-audit/RULES_VS_IMPLEMENTATION_GAP_AUDIT_20260710.md`。
 
+- [done] `點燃熱情`／`樹立信心` 條件判定看錯欄位（種類而非購買費用），且同一根因也影響4個陣營能力。
+  - root cause：兩張卡的觸發條件都是「若本回合曾打出其它購買費用有資金/宣傳的牌」，但 `server/game.py:play_card()` 判斷「這回合有沒有打過資金/宣傳牌」時，用的是 `effective_type = getattr(played_card, "card_type", None)`（也就是卡牌的「種類」分類），而不是實際購買費用組成。實際比對全部46張行動卡的「種類」與「購買費用」欄位，發現兩者經常對不上（例如`謀劃`種類是「指揮」，購買費用卻是「資金1+宣傳1」），導致打出這類卡完全不會被算進「本回合曾打出資金/宣傳牌」，`點燃熱情`/`樹立信心`因此常態性漏觸發。同一組 `effective_type` 判斷還驅動另外4個陣營能力（`商貿組織`、`基金會`/`共合會`、`民族調和`/`星星之火`、`人同此心`，規則文字同樣是「打出購買費用有資金/宣傳的牌時」），一併有同樣的低觸發問題。
+  - 修正：改成用 `_card_purchase_cost()` 判斷實際購買費用是否含資金/宣傳（`cost_has_money`/`cost_has_propaganda`），取代 `effective_type` 判斷；維持既有「奧援卡不算」的行為不變；沿用既有 `國際線` 能力（資金可折抵宣傳）把資金費用轉記為宣傳費用的邏輯。修正時額外抓到一個因此次修正而浮現的新問題：`點燃熱情`/`樹立信心`的條件文字明講是「其它」（別的）牌，但改成看購買費用後，這兩張卡自己的購買費用本身就含資金/宣傳，會變成觸發到自己身上；修法是在 `play_card()` 記錄「本回合這張牌打出前」的旗標快照存進 `action_context['prior_played_money_card']`/`prior_played_propaganda_card`，`server/effect_engine.py` 的 `conditional_draw` 改讀這個「打出前」快照而非即時旗標，恢復「排除自己」的正確語意。另外也發現並補上一個獨立於本次根因、但同樣影響這兩張卡的既有缺口：透過反應延遲流程（`_resume_reaction_pending_action`，例如某張牌打出後別人可以選擇是否用`情報網`/`爆料黑幕`取消，即使最後選擇跳過）播放的牌，先前完全不會設定`played_money_card`/`played_propaganda_card`旗標，這次一併補上。
+  - 驗證：`python3 scripts/validate_cost_composition_triggers.py`（9/9 case 全過：`點燃熱情`/`樹立信心`用種類/費用不一致的卡觸發成功；沒有合格出牌時維持只抽1張的基線；奧援卡仍不算入的回歸測試；4個陣營能力都用種類/費用不一致的卡驗證成功觸發；反應延遲流程中即使選擇跳過反應，旗標與能力仍正確觸發）。
+  - proof：`docs/records/action-cards/COST_COMPOSITION_TRIGGERS_FIX_VALIDATION_20260710.{json,md}`。
+  - 落差盤點報告已同步更新對應項目狀態：`docs/records/rules-audit/RULES_VS_IMPLEMENTATION_GAP_AUDIT_20260710.md`。
+
 ### 已有完整紀錄的其他模組
 - [done] 情報網 target choice map highlight。
   - 提交：`c690f5b fix: highlight intel network dissolve targets on map`。
