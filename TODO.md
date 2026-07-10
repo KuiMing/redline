@@ -287,6 +287,13 @@
   - proof：`docs/records/faction-ui/RED_FACTION_INSPECT_REORDER_VALIDATION_20260711.{json,md}`。
   - 落差盤點報告已同步更新；A2 剩餘：`民族祭儀` 的①②（明確缺口）與③（待確認）。
 
+- [done] A2（收尾）：`民族祭儀`／`賭徒耳語` 與能力文字的三個偏差修正。
+  - root cause：兩能力共用的猜奇偶分支有三處與能力文字不符——①「將1張手牌放進牌庫底」實作成寫死 `hand.pop()` 拿最後一張，玩家沒有選擇；②`民族祭儀` 沒猜中應「獲得2點宣傳**或**2點資金」二選一，實作固定給2點宣傳；③文字只說「展示牌庫頂牌」，實作卻把展示的牌丟進棄牌堆（2026-07-11 使用者確認：看完應放回牌庫頂）。
+  - 修正：抽出 `_resolve_guess_ability_with_bottom_card()` helper——手牌多於1張時先開 `guess_ability_bottom_card` 卡牌選擇（只有1張時自動使用，維持一步完成）；展示的頂牌改為放回牌庫頂（`destination: deck_top`）；`民族祭儀` 沒猜中改開 `ethnic_ritual_miss_reward` 選項選擇（2宣傳／2資金），猜中與 `賭徒耳語` 路徑維持一步結算。前端零新元件（重用通用卡選/選項 modal 與既有結果面板），僅更新兩處 `民族祭儀` 提示文字為「沒猜中則獲得 2 點宣傳或 2 點資金（二選一）」。
+  - 驗證：更新並擴充 `python3 scripts/validate_faction_action_guess_result.py`（7/7：兩能力命中/未命中、民族祭儀未命中選宣傳/選資金兩路、多張手牌時墊底牌由玩家選且未選的留在手牌、展示牌回到牌庫頂且棄牌堆不變、墊底牌在牌庫底；並順手把該腳本兩個過期的 static 檢查更新到現行 UI 文案——該腳本自此恢復全綠）。回歸：`validate_faction_abilities_phase5.py` 的 `賭徒耳語` 案例 PASS（該腳本僅剩既有的 `華文傳媒` phase 失敗，與本次無關）、`validate_red_faction_inspect_reorder.py` 5/5、`validate_minyun_gender_revolution_nonviolent.py` 7/7。
+  - proof：`docs/records/faction-ui/FACTION_ACTION_GUESS_RESULT_VALIDATION.{json,md}`（重新產生，7/7 PASS）。
+  - 至此 A2（3個能力字串未解析）全部收尾：非暴力、紅軍派系、民族祭儀（含賭徒耳語連帶修正）。
+
 ### 已有完整紀錄的其他模組
 - [done] 情報網 target choice map highlight。
   - 提交：`c690f5b fix: highlight intel network dissolve targets on map`。

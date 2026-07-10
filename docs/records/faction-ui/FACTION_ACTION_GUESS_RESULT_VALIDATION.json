@@ -1,7 +1,7 @@
 {
   "summary": {
-    "total": 5,
-    "passed": 5,
+    "total": 7,
+    "passed": 7,
     "failed": 0
   },
   "tests": [
@@ -19,7 +19,8 @@
         "destination": true,
         "state_flag": true,
         "hand_bottomed": true,
-        "revealed_discarded": true,
+        "revealed_topdecked": true,
+        "bottom_card_at_deck_bottom": true,
         "resource_money": true,
         "resource_propaganda": true
       },
@@ -31,20 +32,23 @@
           "cost_total": 1,
           "guess": "odd",
           "hit": true,
+          "bottom_card": "墊牌",
+          "destination": "deck_top",
           "reward": {
             "money": 3,
             "propaganda": 3
-          },
-          "destination": "discard"
+          }
         }
       },
       "resources": {
         "money": 3,
         "propaganda": 3
       },
-      "discard_pile": [
+      "deck_pile": [
+        "墊牌",
         "奇數牌"
-      ]
+      ],
+      "discard_pile": []
     },
     {
       "name": "賭徒耳語_odd_偶數牌",
@@ -60,7 +64,8 @@
         "destination": true,
         "state_flag": true,
         "hand_bottomed": true,
-        "revealed_discarded": true,
+        "revealed_topdecked": true,
+        "bottom_card_at_deck_bottom": true,
         "resource_money": true,
         "resource_propaganda": true
       },
@@ -72,20 +77,23 @@
           "cost_total": 2,
           "guess": "odd",
           "hit": false,
+          "bottom_card": "墊牌",
+          "destination": "deck_top",
           "reward": {
             "money": 0,
             "propaganda": 0
-          },
-          "destination": "discard"
+          }
         }
       },
       "resources": {
         "money": 0,
         "propaganda": 0
       },
-      "discard_pile": [
+      "deck_pile": [
+        "墊牌",
         "偶數牌"
-      ]
+      ],
+      "discard_pile": []
     },
     {
       "name": "民族祭儀_even_偶數牌",
@@ -101,7 +109,8 @@
         "destination": true,
         "state_flag": true,
         "hand_bottomed": true,
-        "revealed_discarded": true,
+        "revealed_topdecked": true,
+        "bottom_card_at_deck_bottom": true,
         "resource_money": true,
         "resource_propaganda": true
       },
@@ -113,23 +122,26 @@
           "cost_total": 2,
           "guess": "even",
           "hit": true,
+          "bottom_card": "墊牌",
+          "destination": "deck_top",
           "reward": {
             "money": 2,
             "propaganda": 2
-          },
-          "destination": "discard"
+          }
         }
       },
       "resources": {
         "money": 2,
         "propaganda": 2
       },
-      "discard_pile": [
+      "deck_pile": [
+        "墊牌",
         "偶數牌"
-      ]
+      ],
+      "discard_pile": []
     },
     {
-      "name": "民族祭儀_even_奇數牌",
+      "name": "民族祭儀_even_奇數牌_missidx0",
       "passed": true,
       "checks": {
         "success": true,
@@ -142,9 +154,11 @@
         "destination": true,
         "state_flag": true,
         "hand_bottomed": true,
-        "revealed_discarded": true,
+        "revealed_topdecked": true,
+        "bottom_card_at_deck_bottom": true,
         "resource_money": true,
-        "resource_propaganda": true
+        "resource_propaganda": true,
+        "miss_reward_choice_offered": true
       },
       "result": {
         "success": true,
@@ -154,20 +168,116 @@
           "cost_total": 1,
           "guess": "even",
           "hit": false,
+          "bottom_card": "墊牌",
+          "destination": "deck_top",
           "reward": {
             "money": 0,
             "propaganda": 2
-          },
-          "destination": "discard"
+          }
         }
       },
       "resources": {
         "money": 0,
         "propaganda": 2
       },
-      "discard_pile": [
+      "deck_pile": [
+        "墊牌",
         "奇數牌"
-      ]
+      ],
+      "discard_pile": []
+    },
+    {
+      "name": "民族祭儀_even_奇數牌_missidx1",
+      "passed": true,
+      "checks": {
+        "success": true,
+        "result_name": true,
+        "revealed_card": true,
+        "cost_total": true,
+        "guess": true,
+        "hit": true,
+        "reward": true,
+        "destination": true,
+        "state_flag": true,
+        "hand_bottomed": true,
+        "revealed_topdecked": true,
+        "bottom_card_at_deck_bottom": true,
+        "resource_money": true,
+        "resource_propaganda": true,
+        "miss_reward_choice_offered": true
+      },
+      "result": {
+        "success": true,
+        "result": {
+          "name": "民族祭儀",
+          "revealed_card": "奇數牌",
+          "cost_total": 1,
+          "guess": "even",
+          "hit": false,
+          "bottom_card": "墊牌",
+          "destination": "deck_top",
+          "reward": {
+            "money": 2,
+            "propaganda": 0
+          }
+        }
+      },
+      "resources": {
+        "money": 2,
+        "propaganda": 0
+      },
+      "deck_pile": [
+        "墊牌",
+        "奇數牌"
+      ],
+      "discard_pile": []
+    },
+    {
+      "name": "賭徒耳語_odd_奇數牌_bottom-要墊底的牌",
+      "passed": true,
+      "checks": {
+        "success": true,
+        "result_name": true,
+        "revealed_card": true,
+        "cost_total": true,
+        "guess": true,
+        "hit": true,
+        "reward": true,
+        "destination": true,
+        "state_flag": true,
+        "hand_bottomed": true,
+        "revealed_topdecked": true,
+        "bottom_card_at_deck_bottom": true,
+        "resource_money": true,
+        "resource_propaganda": true,
+        "bottom_choice_offered": true,
+        "unchosen_card_kept_in_hand": true
+      },
+      "result": {
+        "success": true,
+        "result": {
+          "name": "賭徒耳語",
+          "revealed_card": "奇數牌",
+          "cost_total": 1,
+          "guess": "odd",
+          "hit": true,
+          "bottom_card": "要墊底的牌",
+          "destination": "deck_top",
+          "reward": {
+            "money": 3,
+            "propaganda": 3
+          }
+        }
+      },
+      "resources": {
+        "money": 3,
+        "propaganda": 3
+      },
+      "deck_pile": [
+        "要墊底的牌",
+        "奇數牌"
+      ],
+      "discard_pile": []
     },
     {
       "name": "static_modal_formats_guess_results",

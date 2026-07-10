@@ -1826,7 +1826,7 @@ function openGamblerGuessModal() {
 }
 
 function openEthnicRitualGuessModal() {
-  openFactionGuessModal('民族祭儀', '猜中可獲得 2 點宣傳與 2 點資金；沒猜中則獲得 2 點宣傳。');
+  openFactionGuessModal('民族祭儀', '猜中可獲得 2 點宣傳與 2 點資金；沒猜中則獲得 2 點宣傳或 2 點資金（二選一）。');
 }
 
 function strategicMapUrl() {
@@ -2137,7 +2137,7 @@ function renderFactionActionPanel(state) {
         btn.onclick = openEthnicRitualGuessModal;
         target.appendChild(btn);
       },
-      '猜中可獲得 2 點宣傳與 2 點資金；沒猜中則獲得 2 點宣傳。',
+      '猜中可獲得 2 點宣傳與 2 點資金；沒猜中則獲得 2 點宣傳或 2 點資金（二選一）。',
       factionResult.html
     );
   }

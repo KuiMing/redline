@@ -1436,6 +1436,11 @@ class Game:
                 response['pending_choice'] = True
             return response
 
+        if choice_key == 'guess_ability_bottom_card':
+            ctx = choice.get('context') if isinstance(choice.get('context'), dict) else {}
+            self.pending_choice = None
+            return self._resolve_guess_ability_with_bottom_card(player, ctx.get('action_name'), ctx.get('guess'), chosen)
+
         if choice_key == 'draw_then_discard_choice':
             if chosen not in player.hand:
                 return {'error': 'Chosen card not in hand'}
@@ -1682,6 +1687,18 @@ class Game:
         if index is None or index < 0 or index >= len(options):
             return {'error': 'Invalid choice index'}
         choice_key = choice.get('choice_key')
+
+        if choice_key == 'ethnic_ritual_miss_reward':
+            base_result = dict(((choice.get('context') or {}).get('base_result')) or {})
+            if index == 1:
+                player.resources['money'] += 2
+                reward = {'money': 2, 'propaganda': 0}
+            else:
+                player.resources['propaganda'] += 2
+                reward = {'money': 0, 'propaganda': 2}
+            self.pending_choice = None
+            self.log(f"{player.name} chose 民族祭儀 miss reward: {'2 money' if index == 1 else '2 propaganda'}")
+            return {'success': True, 'result': {**base_result, 'reward': reward}}
 
         if choice_key == 'choose_one':
             selected = options[index]
@@ -3299,46 +3316,63 @@ class Game:
             guess = kwargs.get('guess')
             if guess not in {'odd', 'even'}:
                 return {"error": "Guess required"}
-            bottom = player.hand.pop()
-            player.deck.draw_pile.insert(0, bottom)
-            if not player.deck.draw_pile:
-                return {"error": "Deck empty"}
-            card = player.deck.draw_pile.pop()
-            total = self._top_card_cost_total(card)
-            guessed_odd = guess == 'odd'
             self.turn_log['faction_action_used'] = True
             self._track_event_progress('use_faction_ability', player=player)
-            hit = (total % 2 == 1 and guessed_odd) or (total % 2 == 0 and not guessed_odd)
-            if action_name == '賭徒耳語':
-                if hit:
-                    player.resources['money'] += 3
-                    player.resources['propaganda'] += 3
-            else:
-                if hit:
-                    player.resources['money'] += 2
-                    player.resources['propaganda'] += 2
-                else:
-                    player.resources['propaganda'] += 2
-            player.deck.discard([card])
-            self.log(f"{player.name} triggered {action_name}, guessed {guess}, and revealed {card.name}")
-            reward = {
-                "money": 3 if action_name == '賭徒耳語' and hit else (2 if action_name == '民族祭儀' and hit else 0),
-                "propaganda": 3 if action_name == '賭徒耳語' and hit else (2 if action_name == '民族祭儀' else 0),
-            }
-            return {
-                "success": True,
-                "result": {
-                    "name": action_name,
-                    "revealed_card": getattr(card, 'name', str(card)),
-                    "cost_total": total,
-                    "guess": guess,
-                    "hit": hit,
-                    "reward": reward,
-                    "destination": "discard",
-                },
-            }
+            # 能力文字：「將1張手牌放進牌庫底」——由玩家選擇要墊哪一張；只有一張時不用問
+            if len(player.hand) == 1:
+                return self._resolve_guess_ability_with_bottom_card(player, action_name, guess, player.hand[0])
+            self._set_pending_card_choice(
+                player,
+                'guess_ability_bottom_card',
+                list(player.hand),
+                f'{action_name}：請選擇 1 張手牌放進牌庫底。',
+                source_name=action_name,
+                context={'action_name': action_name, 'guess': guess},
+            )
+            return {'success': True, 'pending_choice': True}
 
         return {"error": "Unknown faction action"}
+
+    def _resolve_guess_ability_with_bottom_card(self, player, action_name, guess, bottom_card):
+        if bottom_card not in player.hand:
+            return {'error': 'Chosen card not in hand'}
+        player.hand.remove(bottom_card)
+        player.deck.draw_pile.insert(0, bottom_card)
+        card = player.deck.draw_pile.pop()
+        total = self._top_card_cost_total(card)
+        guessed_odd = guess == 'odd'
+        hit = (total % 2 == 1 and guessed_odd) or (total % 2 == 0 and not guessed_odd)
+        # 能力文字只說「展示牌庫頂牌」：看完放回牌庫頂，不進棄牌堆
+        player.deck.draw_pile.append(card)
+        self.log(f"{player.name} triggered {action_name}, guessed {guess}, and revealed {card.name}")
+        base_result = {
+            'name': action_name,
+            'revealed_card': getattr(card, 'name', str(card)),
+            'cost_total': total,
+            'guess': guess,
+            'hit': hit,
+            'bottom_card': getattr(bottom_card, 'name', str(bottom_card)),
+            'destination': 'deck_top',
+        }
+        if action_name == '賭徒耳語':
+            if hit:
+                player.resources['money'] += 3
+                player.resources['propaganda'] += 3
+            return {'success': True, 'result': {**base_result, 'reward': {'money': 3 if hit else 0, 'propaganda': 3 if hit else 0}}}
+        if hit:
+            player.resources['money'] += 2
+            player.resources['propaganda'] += 2
+            return {'success': True, 'result': {**base_result, 'reward': {'money': 2, 'propaganda': 2}}}
+        # 民族祭儀沒猜中：「獲得2點宣傳或2點資金」由玩家二選一
+        self._set_pending_option_choice(
+            player,
+            'ethnic_ritual_miss_reward',
+            [{'label': '獲得 2 點宣傳'}, {'label': '獲得 2 點資金'}],
+            '民族祭儀：沒猜中，請選擇獲得 2 點宣傳或 2 點資金。',
+            source_name=action_name,
+            context={'base_result': base_result},
+        )
+        return {'success': True, 'pending_choice': True}
 
     def _apply_guerrilla_on_build(self, player, town):
         if self.turn_log.get("guerrilla_triggered"):
