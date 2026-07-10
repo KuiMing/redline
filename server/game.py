@@ -1425,6 +1425,20 @@ class Game:
                 response['pending_choice'] = True
             return response
 
+        if choice_key == 'draw_then_discard_choice':
+            if chosen not in player.hand:
+                return {'error': 'Chosen card not in hand'}
+            player.hand.remove(chosen)
+            player.deck.discard([chosen])
+            self.pending_choice = None
+            source_name = choice.get('source_name') or choice_key
+            self.log(f"{player.name} discarded {getattr(chosen, 'name', str(chosen))} via {source_name}")
+            return {
+                'success': True,
+                'discarded_card': getattr(chosen, 'name', str(chosen)),
+                'choice_key': choice_key,
+            }
+
         if choice_key == 'bait_exhaustion_target_discard':
             if chosen not in player.hand:
                 return {'error': 'Chosen card not in hand'}
@@ -2549,9 +2563,24 @@ class Game:
             draw_count = int(payload.get('draw', 0) or 0)
             discard_count = int(payload.get('discard', 0) or 0)
             self._draw_player_cards(player, draw_count)
-            for _ in range(min(discard_count, len(player.hand))):
-                discarded = player.hand.pop()
-                player.deck.discard([discarded])
+            # 卡面文字是「再從所有手牌中棄掉1張牌」，玩家可以自己選要棄哪一張（包含
+            # 剛抽到的那張），不是寫死棄掉手牌最後一張（那樣等於抽了又立刻棄掉同一張，
+            # 淨效果變成沒抽沒棄）。
+            if discard_count > 0 and player.hand:
+                self._set_pending_card_choice(
+                    player,
+                    'draw_then_discard_choice',
+                    list(player.hand),
+                    f'{card_name}：請從手牌中選擇 1 張棄掉。',
+                    source_name=card_name,
+                )
+                return {
+                    'tier': tier,
+                    'matched_rulers': matched,
+                    'effect_type': effect_type,
+                    'effect_text': self._support_card_effect_text(card_name, tier, region_index),
+                    'pending_choice': True,
+                }
         elif effect_type == 'add_internal_conflict':
             count = int(payload.get('count', 0) or 0)
             target = next((p for p in self.players if p.faction_id == 'red_army'), None)

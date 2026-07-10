@@ -252,6 +252,13 @@
   - proof：`docs/records/action-cards/COST_COMPOSITION_TRIGGERS_FIX_VALIDATION_20260710.{json,md}`。
   - 落差盤點報告已同步更新對應項目狀態：`docs/records/rules-audit/RULES_VS_IMPLEMENTATION_GAP_AUDIT_20260710.md`。
 
+- [done] B1-b：`南洋奧援` I級「抽1張牌，再從所有手牌中棄掉1張牌」等於沒抽沒棄。
+  - root cause：`server/game.py:_execute_support_card()` 的 `draw_then_discard` 分支原本是抽牌後直接 `player.hand.pop()`；因為 `_draw_player_cards()` 把抽到的牌加到手牌**尾端**，`pop()` 彈出的正好就是剛抽到的那張，等於「抽1張又立刻棄掉同一張」，淨效果是 no-op，玩家完全沒有選擇棄哪張牌的機會，跟卡面文字「從所有手牌中棄掉1張牌」暗示的玩家選擇不符。
+  - 修正：抽牌後改成用既有的 `_set_pending_card_choice()` 對整副手牌（含剛抽到的牌）開一個真正的棄牌選擇（新 choice_key `draw_then_discard_choice`），`_resolve_card_choice()` 補上對應解析：把玩家選中的牌從手牌移到棄牌堆（棄牌堆，不是移除出局）。
+  - 驗證：新增 `python3 scripts/validate_south_seas_support_tier1_discard_choice.py`（2/2 case 全過：確認會跳出涵蓋全部手牌的棄牌選擇、不會自動解決；確認玩家可以選擇棄掉「別的」那張牌、保留剛抽到的牌，證明是真選擇而非固定結果）；同步更新既有回歸測試 `python3 scripts/validate_support_card_effects_runtime.py`（12/12 case 全過，含南洋奧援三個等級）讓它改成先解決棄牌選擇（選擇棄掉剛抽到的牌）再檢查最終手牌/棄牌堆狀態。
+  - proof：`docs/records/support-cards/SOUTH_SEAS_SUPPORT_TIER1_DISCARD_CHOICE_VALIDATION_20260711.{json,md}`、更新後的 `docs/records/support-cards/SUPPORT_CARD_EFFECTS_RUNTIME_VALIDATION.{json,md}`。
+  - 落差盤點報告已同步更新對應項目狀態：`docs/records/rules-audit/RULES_VS_IMPLEMENTATION_GAP_AUDIT_20260710.md`。
+
 ### 已有完整紀錄的其他模組
 - [done] 情報網 target choice map highlight。
   - 提交：`c690f5b fix: highlight intel network dissolve targets on map`。

@@ -98,6 +98,16 @@ def _run_case(case, tier):
         'draw_pile': len(player.deck.draw_pile),
     }
     result = g.play_card(0, mode='action')
+    if card_name == '南洋奧援' and tier == 1 and result.get('pending_choice'):
+        # I級「抽1張牌，再從所有手牌中棄掉1張牌」現在是玩家自選要棄哪張，不是寫死棄掉
+        # 剛抽到的那張；這裡選擇棄掉剛抽到的補牌，驗證「保留手牌」不會被誤棄掉。
+        pending = g.pending_choice or {}
+        cards = pending.get('cards') or []
+        discard_index = next(
+            (i for i, c in enumerate(cards) if getattr(c, 'name', str(c)) != '保留手牌'),
+            0,
+        )
+        result = g.resolve_pending_choice(player.id, discard_index)
     after = {
         'player_hand': len(player.hand),
         'player_discard': len(player.deck.discard_pile),
@@ -110,10 +120,19 @@ def _run_case(case, tier):
         'player_discard_names': [getattr(c, 'name', str(c)) for c in player.deck.discard_pile],
     }
 
+    if card_name == '南洋奧援' and tier == 1:
+        # Tier 1 now resolves through an interactive discard choice, so it follows the
+        # same logging convention as the other interactive support flows (a specific
+        # completion message, not the generic "resolved X at tier Y" line — see
+        # _resolve_support_flow_choice's build/dissolve branches for the same pattern).
+        action_log_check = any('discarded' in str(line) and '南洋奧援' in str(line) for line in getattr(g, 'action_log', []))
+    else:
+        action_log_check = _support_log_contains(g, card_name, tier)
+
     checks = {
         'play_card_success': result.get('success') is True,
         'tier_detected': detected_tier == tier,
-        'action_log_tier': _support_log_contains(g, card_name, tier),
+        'action_log_tier': action_log_check,
     }
     expected = {}
 

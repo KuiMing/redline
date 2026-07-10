@@ -1,0 +1,42 @@
+{
+  "summary": {
+    "scope": [
+      "南洋奧援"
+    ],
+    "purpose": "南洋奧援 tier 1 (\"抽1張牌，再從所有手牌中棄掉1張牌\") used to hard-pop the last hand card, which was always the just-drawn card (drawn cards are appended to the end of hand) — a net no-op with no real player choice. Fixed by offering a genuine pending choice over the whole hand. This proves the choice is real: the player can choose to discard a DIFFERENT card and keep the just-drawn one, not just reproduce the old fixed outcome.",
+    "total": 2,
+    "passed": 2,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "choice_is_offered_not_auto_resolved",
+      "checks": {
+        "play_success": true,
+        "pending_choice_raised": true,
+        "choice_key_correct": true,
+        "both_hand_cards_offered": true
+      },
+      "ok": true
+    },
+    {
+      "name": "player_can_keep_the_drawn_card_and_discard_the_other",
+      "checks": {
+        "resolved_success": true,
+        "discarded_the_other_card": true,
+        "drawn_card_kept_in_hand": true,
+        "other_card_actually_discarded": true
+      },
+      "ok": true,
+      "detail": {
+        "hand_names": [
+          "抽到的牌"
+        ],
+        "discard_names": [
+          "南洋奧援",
+          "保留手牌"
+        ]
+      }
+    }
+  ]
+}
