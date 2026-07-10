@@ -238,6 +238,13 @@
   - proof：`docs/records/action-cards/BUSINESS_NETWORK_STATIC_PURCHASE_AREA_FIX_VALIDATION_20260710.{json,md}`。
   - 落差盤點報告已同步更新對應項目狀態：`docs/records/rules-audit/RULES_VS_IMPLEMENTATION_GAP_AUDIT_20260710.md`。
 
+- [done] `情報網` 非反應時機下選項C選了沒效果。
+  - root cause：`情報網` 卡面效果「三選一：Ａ放內鬥／Ｂ瓦解／Ｃ其他玩家行動時打出，取消對方能力」，其中 C 依卡面文字只在「別人打牌、自己手上握著情報網跳出來反應」的情境才有意義。但 `data/action_cards_structured.v1.1.json` 的 `choose_one` 效果定義把 A/B/C 三個選項無條件全部列出，不管是不是在反應情境；玩家在自己回合正常打出情報網選了 C，會呼叫 `cancel_card`（`server/effect_engine.py:524-529`），但 context 裡沒有真正「被取消的牌」資訊，只會印一行「canceled unknown card」，沒有任何實際效果，等於白白浪費一整張卡。真正的反應取消用法完全由另一套獨立流程處理（`_reaction_prompt_candidates`／`_build_reaction_context`／`_resolve_reaction_context`，`server/game.py` 約 3646-3866 行），該流程從不經過 `choose_one`，所以選項 C 在 `choose_one` 這條路徑裡本來就永遠不會有正確結果。
+  - 修正：直接把選項 C 從 `data/action_cards_structured.v1.1.json` 的 `情報網` `choose_one` 選項清單移除，自己回合正常打出時只保留 A/B 兩個真正有效果的選項；反應取消能力完全交給既有的獨立反應流程，不受影響。
+  - 驗證：`python3 scripts/validate_intel_network_no_reaction_option_own_turn.py`（2/2 case、8 項 check 全過：確認自己回合正常打出只剩 2 個選項且不含取消字樣；同時回歸驗證反應流程仍可正確取消對方的牌，且被取消的牌效果沒有執行）。
+  - proof：`docs/records/action-cards/INTEL_NETWORK_NO_REACTION_OPTION_OWN_TURN_VALIDATION_20260710.{json,md}`。
+  - 落差盤點報告已同步更新對應項目狀態：`docs/records/rules-audit/RULES_VS_IMPLEMENTATION_GAP_AUDIT_20260710.md`。
+
 ### 已有完整紀錄的其他模組
 - [done] 情報網 target choice map highlight。
   - 提交：`c690f5b fix: highlight intel network dissolve targets on map`。

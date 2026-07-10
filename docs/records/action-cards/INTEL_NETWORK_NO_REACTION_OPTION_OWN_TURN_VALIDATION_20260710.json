@@ -1,0 +1,76 @@
+{
+  "summary": {
+    "scope": [
+      "情報網"
+    ],
+    "purpose": "情報網 choose_one previously always offered a 3rd option (\"取消1張對方所打出行動卡之能力\") even when played normally on the owner's own turn, where cancel_card has no real reaction context and silently no-ops (wastes the whole card for nothing). The genuine reaction-cancel use of 情報網 is handled entirely by a separate code path (_reaction_prompt_candidates / _build_reaction_context / _resolve_reaction_context) that never goes through choose_one at all, so the 3rd option was unreachable-but-broken. Fix: removed it from data/action_cards_structured.v1.1.json, leaving only the 2 real own-turn options; the reaction path is untouched and still works.",
+    "total": 2,
+    "passed": 2,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "own_turn_play_offers_only_two_options",
+      "play_card_result": {
+        "success": true,
+        "pending_choice": true
+      },
+      "option_labels": [
+        "在至多3位玩家棄牌堆各放入1張內鬥",
+        "瓦解己方組織1格內的1個對手組織"
+      ],
+      "checks": {
+        "play_card_success": true,
+        "choose_one_offered": true,
+        "exactly_two_options": true,
+        "no_cancel_option_label": true
+      },
+      "ok": true
+    },
+    {
+      "name": "reaction_path_still_cancels_correctly",
+      "play_result": {
+        "pending_choice": true
+      },
+      "reaction_choice": {
+        "type": "reaction_choice",
+        "choice_key": "cancel_other_player_action",
+        "player_id": "p2",
+        "player_name": "player2",
+        "acting_player_id": "p1",
+        "acting_player_name": "player",
+        "played_card_name": "領導",
+        "effective_type": "command",
+        "action_context": {
+          "current_card": "<server.cards.Card object at 0x1095b6370>",
+          "card_name": "領導"
+        },
+        "support_resolution": null,
+        "cards": [
+          {
+            "name": "情報網",
+            "card_index": 0
+          }
+        ],
+        "prompt": "player 打出 領導。是否要取消對方的行動？",
+        "source_name": "取消反應"
+      },
+      "resolved": {
+        "success": true,
+        "reaction_card": "情報網",
+        "canceled_card": "領導"
+      },
+      "checks": {
+        "reaction_prompt_raised": true,
+        "reaction_choice_type_correct": true,
+        "reaction_offered_to_holder": true,
+        "reaction_candidate_is_intel_network": true,
+        "resolved_success": true,
+        "used_intel_network_as_reaction": true,
+        "canceled_correct_card": true,
+        "acting_player_did_not_draw": true
+      },
+      "ok": true
+    }
+  ]
+}
