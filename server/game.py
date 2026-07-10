@@ -1560,20 +1560,29 @@ class Game:
             selected_names = [getattr(card, 'name', str(card)) for card in selected_cards]
             inspected_names = [getattr(card, 'name', str(card)) for card in inspected_cards]
             new_top_names = [getattr(card, 'name', str(card)) for card in reversed(player.deck.draw_pile[-top_count:])]
-            self.turn_log.setdefault('era_effects_applied', []).append({
-                'era': (choice.get('context') or {}).get('era_id') if isinstance(choice.get('context'), dict) else None,
-                'type': 'inspect_deck_top_and_reorder',
-                'inspected': inspected_names,
-                'selected_top': selected_names,
-            })
+            context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
+            if context.get('era_id'):
+                self.turn_log.setdefault('era_effects_applied', []).append({
+                    'era': context.get('era_id'),
+                    'type': 'inspect_deck_top_and_reorder',
+                    'inspected': inspected_names,
+                    'selected_top': selected_names,
+                })
             source_name = choice.get('source_name') or '時代關卡'
             self.log(f"{player.name} reordered deck top via {source_name}: {', '.join(selected_names)}")
+            drawn_names = []
+            draw_after = int(context.get('draw_after_reorder', 0) or 0)
+            if draw_after:
+                drawn = self._draw_player_cards(player, draw_after)
+                drawn_names = [getattr(card, 'name', str(card)) for card in drawn]
+                self.log(f"{player.name} drew {len(drawn)} card(s) after reordering via {source_name}")
             return {
                 'success': True,
                 'choice_key': choice_key,
                 'inspected_cards': inspected_names,
                 'chosen_cards': selected_names,
                 'deck_top': new_top_names,
+                **({'drawn_cards': drawn_names} if drawn_names else {}),
             }
 
         if choice_key in {'discard_self', 'event_discard_self'}:
@@ -2902,6 +2911,8 @@ class Game:
             "人同此心": {"name": "人同此心", "type": "triggered", "effect": "當您每回合第1次打出購買費用含宣傳的牌時，獲得2點宣傳。"},
             "共享組織": {"name": "共享組織", "type": "passive", "effect": "可與指定陣營共用組織。"},
             "非暴力": {"name": "非暴力", "type": "restriction", "effect": "禁止持有武裝類卡牌。"},
+            "民族祭儀": {"name": "民族祭儀", "type": "activated", "effect": "將1張手牌放進牌庫底，猜牌庫頂牌購買費用奇偶並展示；猜中獲得2點宣傳與2點資金，沒猜中獲得2點宣傳或2點資金。"},
+            "紅軍派系": {"name": "紅軍派系", "type": "activated", "effect": "每回合可檢視1次牌庫頂3張牌，將其以任意順序放回牌庫頂，並抽1張牌。"},
         }
         return direct.get(name)
 
@@ -3153,8 +3164,12 @@ class Game:
     def _activated_faction_action(self, player, action_name, **kwargs):
         red_army_actions = {'統戰部', '政工部', '國安部', '中紀委'}
         skip_reaction_prompt = bool(kwargs.pop('_skip_reaction_prompt', False))
-        if action_name not in red_army_actions and self.turn_log.get('faction_action_used'):
-            return {"error": "Faction action already used this turn"}
+        if action_name not in red_army_actions:
+            if self.turn_log.get('faction_action_used'):
+                return {"error": "Faction action already used this turn"}
+            # 後端也要驗證能力歸屬；不能只靠前端依陣營顯示按鈕
+            if not self._player_has_ability(player, action_name):
+                return {"error": "Player's faction does not have this ability"}
 
         if action_name in red_army_actions and not skip_reaction_prompt:
             target_player_id = kwargs.get('target_player_id') if action_name in {'政工部'} else None
@@ -3232,6 +3247,27 @@ class Game:
             self._track_event_progress('use_faction_ability', player=player)
             self.log(f"{player.name} triggered 民主陣線 and gained a removed card proxy")
             return {"success": True}
+
+        if action_name == '紅軍派系':
+            look = min(3, len(player.deck.draw_pile))
+            if look <= 0:
+                return {"error": "Deck empty"}
+            inspected = list(reversed(player.deck.draw_pile[-look:]))
+            self.turn_log['faction_action_used'] = True
+            self._track_event_progress('use_faction_ability', player=player)
+            self._set_pending_multi_card_choice(
+                player,
+                'era_inspect_deck_top_and_reorder',
+                inspected,
+                f"紅軍派系：檢視牌庫頂 {look} 張，請依序選擇 {look} 張放回牌庫頂（第一張會成為下一張抽到的牌），完成後抽 1 張牌。",
+                look,
+                top_count=look,
+                look_count=look,
+                source_name='紅軍派系',
+                context={'draw_after_reorder': 1},
+            )
+            self.log(f"{player.name} triggered 紅軍派系 and inspected top {look} card(s)")
+            return {'success': True, 'pending_choice': True, 'result': {'name': action_name, 'inspected_count': look}}
 
         if action_name == '立場試探':
             if not player.deck.draw_pile:

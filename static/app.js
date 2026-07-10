@@ -2083,6 +2083,27 @@ function renderFactionActionPanel(state) {
   }
 
 
+  if (faction === 'reform_opening') {
+    showCenteredActionPanel(
+      '紅軍派系',
+      hasResult ? '本回合發動結果如下。' : '改革開放派可在行動階段發動一次紅軍派系。',
+      (target) => {
+        const btn = document.createElement('button');
+        btn.className = 'modal-choice-btn';
+        btn.type = 'button';
+        btn.textContent = '發動 紅軍派系';
+        btn.onclick = () => {
+          sendAction('faction_action', { name: '紅軍派系' });
+          closeFactionActionModal();
+        };
+        target.appendChild(btn);
+      },
+      '檢視牌庫頂 3 張牌，以任意順序放回牌庫頂，然後抽 1 張牌。',
+      factionResult.html
+    );
+    return;
+  }
+
   if (faction === 'liberals') {
     showCenteredActionPanel(
       '立場試探',

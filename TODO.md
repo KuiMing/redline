@@ -278,6 +278,15 @@
   - proof：`docs/records/event-cards/EVENT_DECK_DRAW_TWENTY_VALIDATION_20260711.{json,md}`。
   - 落差盤點報告已同步更新（含 33→25 勘誤）：`docs/records/rules-audit/RULES_VS_IMPLEMENTATION_GAP_AUDIT_SECOND_PASS_20260711.md`。
 
+- [done] A2（部分）：改革開放派 `紅軍派系` 能力未實作；順帶補上陣營能力後端歸屬檢查、更正 `民族祭儀`「完全未實作」的盤點誤判。
+  - root cause 1（紅軍派系）：`reform_opening` 的 abilities_text「【紅軍派系】每回合可檢視1次牌庫頂3張牌，將其以任意順序放回牌庫頂，並抽1張牌。」在 `_resolve_ability_text` 沒有對應名稱、`_activated_faction_action` 也沒有分支，前端也沒有按鈕，完全無法使用。
+  - root cause 2（歸屬檢查漏洞）：`_activated_faction_action` 對非紅軍能力**完全沒有檢查發動者陣營是否擁有該能力**，只靠前端依陣營顯示按鈕；任何玩家都能直接透過 WebSocket `faction_action` 呼叫別家的 `立場試探`/`賭徒耳語`/`民族祭儀`/`民主陣線`。
+  - 盤點誤判更正（民族祭儀）：第一輪盤點 A2 說 `民族祭儀` 完全未實作——實際上 runtime 分支（`game.py` 與 `賭徒耳語` 共用的猜奇偶分支）與前端 UI（12 陣營的按鈕、猜奇偶 modal、結果顯示）**都已存在**，缺的只是能力名稱對照（導致 `_player_has_ability` 查不到）。仍殘留與能力文字的偏差，另列待辦：①放牌庫底的手牌是寫死 `hand.pop()` 最後一張，未讓玩家選擇（`賭徒耳語` 同文字模式、同問題）；②沒猜中應「獲得2點宣傳**或**2點資金」二選一，目前固定給2點宣傳；③展示的牌庫頂牌目前直接進棄牌堆，能力文字只說「展示」，去向需確認（`賭徒耳語` 亦同）——③歸入第三梯隊待確認語意。
+  - 修正：`_resolve_ability_text` 補上 `紅軍派系` 與 `民族祭儀`；`_activated_faction_action` 開頭對非紅軍能力加 `_player_has_ability` 歸屬檢查；新增 `紅軍派系` 分支——重用既有 `era_inspect_deck_top_and_reorder` 多選卡重排機制（`top_count=look_count=min(3,牌庫)`），新增 `draw_after_reorder` context 旗標讓重排完成後自動抽1張；`static/app.js` 加 `reform_opening` 的發動按鈕分支。
+  - 驗證：`python3 scripts/validate_red_faction_inspect_reorder.py`（5/5：重排順序正確反映到牌庫頂且抽到重排後的新頂牌、每回合限1次、錯誤陣營呼叫被擋（含用民族祭儀反向驗證）、牌庫不足3張時檢視現有張數、既有能力（立場試探/民族祭儀正確陣營）不被新歸屬檢查誤擋）。回歸：`validate_red_army_faction_abilities.py`、`validate_red_army_special_rules.py`、`validate_faction_action_centered_modal_cleanup.py` PASS；`validate_faction_abilities_phase5.py` 與 `validate_faction_action_guess_result.py` 各有 1 個 FAIL 但經 stash 比對確認為既有失敗（前者是 `華文傳媒` 測試用 ACTION phase 呼叫需要 END phase 的 `buy_card`；後者是 static modal 檢查項），與本次修改無關。
+  - proof：`docs/records/faction-ui/RED_FACTION_INSPECT_REORDER_VALIDATION_20260711.{json,md}`。
+  - 落差盤點報告已同步更新；A2 剩餘：`民族祭儀` 的①②（明確缺口）與③（待確認）。
+
 ### 已有完整紀錄的其他模組
 - [done] 情報網 target choice map highlight。
   - 提交：`c690f5b fix: highlight intel network dissolve targets on map`。
