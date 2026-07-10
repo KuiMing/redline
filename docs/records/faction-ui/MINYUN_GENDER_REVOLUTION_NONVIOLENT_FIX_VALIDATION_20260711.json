@@ -1,0 +1,82 @@
+{
+  "summary": {
+    "scope": [
+      "minyun",
+      "gender_revolution"
+    ],
+    "purpose": "民運派 (minyun) and 性別革命 (gender_revolution) declare a 【非暴力】 ability via abilities_text (\"禁止持有武裝類卡牌\"), but _resolve_ability_text had no mapping for the name \"非暴力\", so the ability silently resolved to None and was dropped — these two factions were never actually blocked from playing/buying armed cards. Fixed by adding \"非暴力\" to the direct-mapping dict, reusing the same restriction already enforced for structured-schema factions (e.g. tibet_dharamsala, uyghur_munich). Confirmed no scope-widening risk: this repo's card data has no \"equipment\"-category cards at all, so blocking {armed, equipment} behaves identically to blocking just {armed} in practice.",
+    "total": 7,
+    "passed": 7,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "minyun_has_非暴力_ability",
+      "checks": {
+        "ability_resolved": true
+      },
+      "ok": true
+    },
+    {
+      "name": "minyun_blocked_from_playing_armed_card",
+      "result": {
+        "error": "非暴力：不能打出武裝或裝備類卡牌"
+      },
+      "checks": {
+        "play_blocked": true,
+        "card_still_in_hand": true
+      },
+      "ok": true
+    },
+    {
+      "name": "minyun_blocked_from_buying_armed_card",
+      "result": {
+        "error": "非暴力：不能購買武裝或裝備類卡牌"
+      },
+      "checks": {
+        "buy_blocked": true
+      },
+      "ok": true
+    },
+    {
+      "name": "gender_revolution_has_非暴力_ability",
+      "checks": {
+        "ability_resolved": true
+      },
+      "ok": true
+    },
+    {
+      "name": "gender_revolution_blocked_from_playing_armed_card",
+      "result": {
+        "error": "非暴力：不能打出武裝或裝備類卡牌"
+      },
+      "checks": {
+        "play_blocked": true,
+        "card_still_in_hand": true
+      },
+      "ok": true
+    },
+    {
+      "name": "gender_revolution_blocked_from_buying_armed_card",
+      "result": {
+        "error": "非暴力：不能購買武裝或裝備類卡牌"
+      },
+      "checks": {
+        "buy_blocked": true
+      },
+      "ok": true
+    },
+    {
+      "name": "unrelated_faction_liberals_not_blocked",
+      "result": {
+        "success": true,
+        "pending_choice": true
+      },
+      "checks": {
+        "play_succeeded": true,
+        "no_nonviolent_ability": true
+      },
+      "ok": true
+    }
+  ]
+}

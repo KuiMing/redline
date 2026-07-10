@@ -2890,6 +2890,7 @@ class Game:
             "活動家": {"name": "活動家", "type": "setup", "effect": "在遊戲開始時額外將2張宣傳家洗入起始牌庫。"},
             "人同此心": {"name": "人同此心", "type": "triggered", "effect": "當您每回合第1次打出購買費用含宣傳的牌時，獲得2點宣傳。"},
             "共享組織": {"name": "共享組織", "type": "passive", "effect": "可與指定陣營共用組織。"},
+            "非暴力": {"name": "非暴力", "type": "restriction", "effect": "禁止持有武裝類卡牌。"},
         }
         return direct.get(name)
 

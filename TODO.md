@@ -259,6 +259,13 @@
   - proof：`docs/records/support-cards/SOUTH_SEAS_SUPPORT_TIER1_DISCARD_CHOICE_VALIDATION_20260711.{json,md}`、更新後的 `docs/records/support-cards/SUPPORT_CARD_EFFECTS_RUNTIME_VALIDATION.{json,md}`。
   - 落差盤點報告已同步更新對應項目狀態：`docs/records/rules-audit/RULES_VS_IMPLEMENTATION_GAP_AUDIT_20260710.md`。
 
+- [done] A2（部分）：`民運派`／`性別革命` 的 `非暴力` 能力未被解析，武裝卡限制形同虛設。
+  - root cause：`民運派`（minyun）與`性別革命`（gender_revolution）的 `abilities_text` 各有一條「【非暴力】禁止持有武裝類卡牌。」，但 `server/game.py:_resolve_ability_text()` 的名稱對照表（`mapping`/`direct` 兩個字典）沒有「非暴力」這個名稱，導致這條能力被 `_resolve_faction_abilities()` 悄悄丟棄；`_player_is_nonviolent()`／`_card_is_banned_for_player()` 永遠查不到這兩個陣營有「非暴力」能力，武裝類卡牌的打出/購買限制完全沒有生效。
+  - 修正：在 `direct` 對照表補上 `"非暴力": {"name": "非暴力", "type": "restriction", "effect": "禁止持有武裝類卡牌。"}`，沿用既有 `_player_is_nonviolent()`/`_card_is_banned_for_player()` 的檢查邏輯（跟結構化陣營如西藏達蘭薩拉、維吾爾慕尼黑共用同一套機制），不需要新增任何檢查點。已確認範圍風險：`_card_is_banned_for_player()` 目前擋的是 `{"armed","equipment"}` 兩種卡牌種類，但實際核對 `data/raw/action_cards.csv` 全部46張卡的種類欄，這個遊戲的卡牌資料裡完全沒有「裝備」種類的卡，所以在目前資料下擋 `{"armed","equipment"}` 跟只擋 `{"armed"}` 效果一致，沒有把限制範圍意外擴大到「裝備類」的疑慮。
+  - 驗證：`python3 scripts/validate_minyun_gender_revolution_nonviolent.py`（7/7 case 全過：兩個陣營的能力都能正確解析、打出與購買武裝卡都被正確擋下且卡牌保留在原本位置；另外驗證一個沒有此能力的陣營仍可正常打出武裝卡，作為回歸 sanity check）。
+  - proof：`docs/records/faction-ui/MINYUN_GENDER_REVOLUTION_NONVIOLENT_FIX_VALIDATION_20260711.{json,md}`。
+  - 落差盤點報告已同步更新對應項目狀態：`docs/records/rules-audit/RULES_VS_IMPLEMENTATION_GAP_AUDIT_20260710.md`；A2 剩下兩個能力（`紅軍派系`、`民族祭儀`）仍待處理。
+
 ### 已有完整紀錄的其他模組
 - [done] 情報網 target choice map highlight。
   - 提交：`c690f5b fix: highlight intel network dissolve targets on map`。
