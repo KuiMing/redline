@@ -42,7 +42,7 @@
     {"id":"armed_unit_c","name":"武裝者","type":"armed","cost":{"money":2,"propaganda":0},"resources":{"propaganda":1},"effect":[{"type":"force_discard","count":1}]},
     {"id":"armed_unit_b","name":"武裝小隊","type":"armed","cost":{"money":3,"propaganda":0},"resources":{"money":1,"propaganda":1},"effect":[{"type":"force_discard","count":2}]},
     {"id":"armed_unit_a","name":"武裝集團","type":"armed","cost":{"money":4,"propaganda":0},"resources":{"money":1,"propaganda":2},"effect":[{"type":"force_discard","count":2},{"type":"conditional_draw","condition":"successful_discard","count":1}]},
-    {"id":"business_network","name":"企業人脈","type":"money","cost":{"money":4,"propaganda":0},"resources":{"money":1},"effect":[{"type":"use_purchase_area_card","prefer_random_market":true}]},
+    {"id":"business_network","name":"企業人脈","type":"money","cost":{"money":4,"propaganda":0},"resources":{"money":1},"effect":[{"type":"use_purchase_area_card","prefer_random_market":false}]},
     {"id":"industry_infiltration","name":"產業滲透","type":"money","cost":{"money":4,"propaganda":1},"resources":{"money":2},"effect":[{"type":"cancel_card"},{"type":"conditional_draw","condition":"canceled_money_cost_card","count":1}]},
     {"id":"planning_lobby","name":"企畫遊說","type":"money","cost":{"money":1,"propaganda":2},"resources":{"money":1},"effect":[{"type":"reveal_topdeck_cost_gain","threshold":3,"money_if_at_least":4,"money_otherwise":2}]},
     {"id":"action_fundraising","name":"行動募資","type":"money","cost":{"money":1,"propaganda":3},"resources":{"money":2},"effect":[{"type":"topdeck_purchased_this_turn"},{"type":"gain_resource","money":1,"propaganda":0}]}

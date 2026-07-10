@@ -1,0 +1,64 @@
+{
+  "summary": {
+    "scope": [
+      "企業人脈"
+    ],
+    "purpose": "企業人脈 card text (\"將購買區面朝上的任1張牌暫時移出購買區\") does not restrict the borrowable pool to the random-market slots. Prior to this fix, use_purchase_area_card had prefer_random_market=true, which excluded the 6 static purchase-area cards (宣傳家/思想家/資助者/資本家/分神/內鬥). This proof shows a static card is now offered and can be borrowed.",
+    "static_card_names": [
+      "內鬥",
+      "分神",
+      "宣傳家",
+      "思想家",
+      "資助者",
+      "資本家"
+    ],
+    "passed": 1,
+    "failed": 0
+  },
+  "before_hand_count": 1,
+  "play_card_result": {
+    "success": true,
+    "pending_choice": true
+  },
+  "choice_zone_labels": [
+    "購買區槽位 1",
+    "購買區槽位 2",
+    "購買區槽位 3",
+    "購買區槽位 4",
+    "購買區槽位 5",
+    "購買區槽位 6",
+    "購買區槽位 7",
+    "購買區槽位 8",
+    "購買區槽位 9",
+    "購買區槽位 10",
+    "購買區槽位 11"
+  ],
+  "choice_names": [
+    "宣傳家",
+    "思想家",
+    "資助者",
+    "資本家",
+    "分神",
+    "內鬥",
+    "領導",
+    "樹立信心",
+    "地下黨",
+    "擴大戰果",
+    "點燃熱情"
+  ],
+  "picked_static_card": "宣傳家",
+  "borrow_result": {
+    "success": true,
+    "chosen_card": "宣傳家",
+    "purchase_index": 0
+  },
+  "checks": {
+    "play_card_success": true,
+    "pending_choice_offered": true,
+    "static_purchase_card_offered": true,
+    "total_choices_cover_full_purchase_area": true,
+    "borrow_resolved_without_error": true,
+    "borrowed_chosen_card_matches": true
+  },
+  "ok": true
+}

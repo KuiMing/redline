@@ -231,6 +231,13 @@
   - proof：`docs/records/faction-ui/YUE_AOMEN_HONGKONG_SHARED_ORG_FIX_VALIDATION_20260710.{json,md}`。
   - 落差盤點報告已同步更新對應項目狀態：`docs/records/rules-audit/RULES_VS_IMPLEMENTATION_GAP_AUDIT_20260710.md`。
 
+- [done] `企業人脈` 借用範圍誤排除常設購買區。
+  - root cause：`data/action_cards_structured.v1.1.json` 的 `企業人脈` 效果定義 `prefer_random_market: true`，導致 `server/effect_engine.py` 的 `use_purchase_area_card` 分派只從隨機購買區（`static_count` 之後的槽位）列出可借用選項，排除了常設購買區的 6 張牌（`宣傳家`/`思想家`/`資助者`/`資本家`/`分神`/`內鬥`）；但卡面文字「將購買區面朝上的任1張牌暫時移出購買區」沒有限定只能是隨機購買區。
+  - 修正：把 `企業人脈` 的 `prefer_random_market` 改成 `false`，可借用範圍涵蓋整個購買區（常設 + 隨機）。
+  - 驗證：`python3 scripts/validate_business_network_static_purchase_area.py`（1/1 case、6 項 check 全過，確認選項列出全部 11 個購買區槽位，且成功借用並使用常設購買區的 `宣傳家`）。
+  - proof：`docs/records/action-cards/BUSINESS_NETWORK_STATIC_PURCHASE_AREA_FIX_VALIDATION_20260710.{json,md}`。
+  - 落差盤點報告已同步更新對應項目狀態：`docs/records/rules-audit/RULES_VS_IMPLEMENTATION_GAP_AUDIT_20260710.md`。
+
 ### 已有完整紀錄的其他模組
 - [done] 情報網 target choice map highlight。
   - 提交：`c690f5b fix: highlight intel network dissolve targets on map`。
