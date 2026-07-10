@@ -20,7 +20,7 @@
 
 ===== 第二批：規則資料 vs 程式實作落差修正 =====
 
-先讀 `docs/records/rules-audit/RULES_VS_IMPLEMENTATION_GAP_AUDIT_20260710.md`（規則落差盤點報告），這是這批工作的權威依據，每個項目的完整背景、root cause 與程式碼位置都寫在裡面，不要重新猜測，直接照報告內容查證後動工。
+先讀 `docs/records/rules-audit/RULES_VS_IMPLEMENTATION_GAP_AUDIT_20260710.md`（第一輪規則落差盤點報告），**再讀 `docs/records/rules-audit/RULES_VS_IMPLEMENTATION_GAP_AUDIT_SECOND_PASS_20260711.md`（第二輪盤點，含 S1-S7 新發現與「第一輪剩餘＋第二輪新發現」的合併優先順序——以第二輪報告的合併順序為準）**。這兩份是這批工作的權威依據，每個項目的完整背景、root cause 與程式碼位置都寫在裡面，不要重新猜測，直接照報告內容查證後動工。
 
 依報告裡「建議的後續改善優先順序」逐項處理，梯隊順序如下（同一梯隊內可自行排序，但不要跳過前面梯隊直接做後面梯隊）：
 

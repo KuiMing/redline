@@ -3,7 +3,7 @@
 把下面這段貼到新 session 即可：
 
 ```text
-請到 `/Users/benmini/.openclaw/workspace/redline`，先讀 `docs/records/rules-audit/RULES_VS_IMPLEMENTATION_GAP_AUDIT_20260710.md`（規則資料 vs 程式實作落差盤點報告），再讀 `TODO.md`（本專案權威追蹤清單，目前這份盤點裡的項目大多還沒被列進去）。
+請到 `/Users/benmini/.openclaw/workspace/redline`，先讀 `docs/records/rules-audit/RULES_VS_IMPLEMENTATION_GAP_AUDIT_20260710.md`（第一輪規則落差盤點報告）與 `docs/records/rules-audit/RULES_VS_IMPLEMENTATION_GAP_AUDIT_SECOND_PASS_20260711.md`（第二輪盤點，含 S1-S7 新發現與合併後的優先順序——**以第二輪報告的合併順序為準**），再讀 `TODO.md`（本專案權威追蹤清單）。
 
 請依照盤點報告裡「建議的後續改善優先順序」逐項處理，梯隊順序如下（同一梯隊內可自行排序，但不要跳過前面梯隊直接做後面梯隊；每個項目的完整背景、root cause 與程式碼位置都寫在盤點報告對應章節，不要重新猜測，直接照報告內容查證後動工）：
 
