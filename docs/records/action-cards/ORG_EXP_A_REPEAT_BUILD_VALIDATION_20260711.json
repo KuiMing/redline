@@ -1,0 +1,63 @@
+{
+  "summary": {
+    "scope": [
+      "組織經驗甲"
+    ],
+    "purpose": "B3 remainder + P1 playtest item: 組織經驗甲's printed clause \"每從手上棄掉1張購買費用4點以上的牌，可重複上述動作1次\" had no implementation, and playtest reported the missing confirmation flow. Now after each build resolves, if the hand holds any card whose purchase cost totals >=4 AND a legal build town exists (supply limit / distance restrictions included), an explicit confirm prompt opens (不再建立 / 棄1張再建立1次); accepting opens a card choice limited to qualifying cards, discarding reopens the build town choice with the same effect context (so 新疆社會管控's inner 1-step downgrade carries through), looping until the player declines or runs out of qualifying cards/towns. Declining or lacking qualifiers never auto-consumes anything.",
+    "total": 5,
+    "passed": 5,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "full_repeat_loop_build_discard_build",
+      "checks": {
+        "build_choice_opened": true,
+        "first_build_done": true,
+        "repeat_prompt_opened": true,
+        "discard_choice_opened": true,
+        "only_qualifying_cards_offered": true,
+        "card_discarded": true,
+        "second_build_choice_opened": true,
+        "second_build_done": true,
+        "loop_ends_without_qualifying_cards": true
+      },
+      "ok": true
+    },
+    {
+      "name": "decline_keeps_hand_and_ends_flow",
+      "checks": {
+        "declined_ok": true,
+        "no_pending_after_decline": true,
+        "qualifying_card_kept_in_hand": true,
+        "only_one_build": true
+      },
+      "ok": true
+    },
+    {
+      "name": "no_qualifying_cards_no_prompt",
+      "checks": {
+        "build_done": true,
+        "no_repeat_prompt": true
+      },
+      "ok": true
+    },
+    {
+      "name": "two_repeats_with_two_qualifying_cards",
+      "checks": {
+        "three_builds_total": true,
+        "loop_ended": true,
+        "both_cards_discarded": true
+      },
+      "ok": true
+    },
+    {
+      "name": "restricted_faction_repeat_respects_inner_distance",
+      "checks": {
+        "first_list_inner_limited_to_1_step": true,
+        "repeat_list_inner_limited_to_1_step": true
+      },
+      "ok": true
+    }
+  ]
+}

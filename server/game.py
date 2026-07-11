@@ -1454,6 +1454,29 @@ class Game:
                 response['pending_choice'] = True
             return response
 
+        if choice_key == 'org_exp_repeat_discard':
+            if chosen not in player.hand:
+                return {'error': 'Chosen card not in hand'}
+            ctx = dict(choice.get('context') or {})
+            source_name = choice.get('source_name') or ctx.get('card_name') or '組織經驗甲'
+            player.hand.remove(chosen)
+            player.deck.discard([chosen])
+            self.pending_choice = None
+            self.log(f"{player.name} discarded {getattr(chosen, 'name', str(chosen))} to repeat build via {source_name}")
+            towns = self._card_build_town_choices(player, ctx.get('effect') or {})
+            if not towns:
+                self.log(f"{player.name} had no legal town for repeated build via {source_name}")
+                return {'success': True, 'discarded_card': getattr(chosen, 'name', str(chosen)), 'no_build_town': True}
+            self._set_pending_town_choice(
+                player,
+                'card_build_organization',
+                towns,
+                f'{source_name}：選擇要建立組織的城鎮。',
+                source_name=source_name,
+                context=ctx,
+            )
+            return {'success': True, 'discarded_card': getattr(chosen, 'name', str(chosen)), 'pending_choice': True}
+
         if choice_key == 'topdeck_purchased_choice':
             if chosen not in player.deck.discard_pile:
                 return {'error': 'Chosen card not in discard pile'}
@@ -1727,6 +1750,27 @@ class Game:
             return {'error': 'Invalid choice index'}
         choice_key = choice.get('choice_key')
 
+        if choice_key == 'org_exp_repeat_prompt':
+            context = dict(choice.get('context') or {})
+            source_name = choice.get('source_name') or context.get('card_name') or '組織經驗甲'
+            self.pending_choice = None
+            if index == 0:
+                self.log(f"{player.name} declined to repeat build via {source_name}")
+                return {'success': True, 'choice_key': choice_key, 'declined': True}
+            min_cost = int(((context.get('effect') or {}).get('repeat_on_discard_min_cost')) or 4)
+            qualifying = self._org_exp_repeat_qualifying_cards(player, min_cost)
+            if not qualifying:
+                return {'error': 'No qualifying card to discard'}
+            self._set_pending_card_choice(
+                player,
+                'org_exp_repeat_discard',
+                qualifying,
+                f'{source_name}：選擇 1 張購買費用{min_cost}點以上的手牌棄掉。',
+                source_name=source_name,
+                context=context,
+            )
+            return {'success': True, 'choice_key': choice_key, 'pending_choice': True}
+
         if choice_key == 'ethnic_ritual_miss_reward':
             base_result = dict(((choice.get('context') or {}).get('base_result')) or {})
             if index == 1:
@@ -1811,6 +1855,37 @@ class Game:
 
         return {'error': 'Unsupported pending choice type'}
 
+    def _org_exp_repeat_qualifying_cards(self, player, min_cost):
+        cards = []
+        for card in list(player.hand):
+            cost = self._card_purchase_cost(card) or {}
+            total = int(cost.get('money', 0) or 0) + int(cost.get('propaganda', 0) or 0)
+            if total >= min_cost:
+                cards.append(card)
+        return cards
+
+    def _maybe_prompt_org_exp_repeat_build(self, player, context):
+        # 組織經驗甲：「每從手上棄掉1張購買費用4點以上的牌，可重複上述動作1次」
+        effect = (context or {}).get('effect') if isinstance(context, dict) else None
+        min_cost = int(((effect or {}).get('repeat_on_discard_min_cost')) or 0)
+        if not min_cost:
+            return None
+        qualifying = self._org_exp_repeat_qualifying_cards(player, min_cost)
+        if not qualifying:
+            return None
+        if not self._card_build_town_choices(player, effect):
+            return None  # 沒有合法城鎮可再建（含組織棋供應上限、距離限制）
+        card_name = context.get('card_name') or context.get('source_name') or '組織經驗甲'
+        self._set_pending_option_choice(
+            player,
+            'org_exp_repeat_prompt',
+            [{'label': '不再建立'}, {'label': f'棄1張購買費用{min_cost}點以上的牌，再建立1次'}],
+            f'{card_name}：是否要從手上棄掉1張購買費用{min_cost}點以上的牌，再建立1個組織？',
+            source_name=card_name,
+            context=dict(context),
+        )
+        return {'pending_choice': True}
+
     def _resolve_town_choice(self, player, choice, index):
         towns = choice.get('towns') or []
         if index is None or index < 0 or index >= len(towns):
@@ -1850,6 +1925,15 @@ class Game:
             self.log(f"{player.name} built organization in {town} via {choice.get('source_name') or 'card'}")
             self.pending_choice = None
             context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
+            if self._maybe_prompt_org_exp_repeat_build(player, context):
+                return {
+                    'success': True,
+                    'choice_index': index,
+                    'town': town,
+                    'selected': selected,
+                    'choice_key': choice_key,
+                    'pending_choice': True,
+                }
             remaining_effects = list(context.get('remaining_effects') or [])
             for idx, effect in enumerate(remaining_effects):
                 context['remaining_effects'] = remaining_effects[idx + 1:]

@@ -138,10 +138,9 @@
   - 期望：`離間` 應只將 `內鬥` 放到指定對方／目標玩家的牌堆；紅軍自己不應成為此效果的放置目標。
   - 需檢查：`離間` card effect 定義、target player selection、`add_internal_conflict` / static supply 消耗、紅軍作為 actor 時的 target/recipient 判定，以及 UI/log 是否正確顯示內鬥進入哪位玩家牌堆。
 
-- [todo] Playtest card/flow polish：使用 `組織經驗甲` 時，應確認是否還要花其他 4 點以上卡牌來建立組織。
+- [done] Playtest card/flow polish：使用 `組織經驗甲` 時，應確認是否還要花其他 4 點以上卡牌來建立組織。
   - 2026-07-06 回報情境：玩家使用 `組織經驗甲` 時，目前流程似乎沒有先詢問玩家是否要額外花其他 4 點以上的卡牌來建立組織。
-  - 期望：`組織經驗甲` 若提供「可再花其他 4 點以上卡牌建立組織」的選項，UI 應跳出確認／選卡流程；玩家可選擇不做，不能直接跳過或自動執行。
-  - 需檢查：`組織經驗甲` card effect 定義、4 點以上卡牌判定是否使用總購買成本、optional build pending choice / card-choice modal、取消/不使用時是否正確繼續流程。
+  - 2026-07-11 已修正：連同卡面「棄4點以上可重複建立」子句一併實作，每次建立後跳出明確確認（不再建立／棄1張再建立1次），4點判定使用總購買成本（資金+宣傳），拒絕時不消耗任何東西。詳見「規則資料 vs 程式實作落差修正」區塊的對應條目；驗證 `python3 scripts/validate_org_exp_a_repeat_build.py`（5/5）；proof `docs/records/action-cards/ORG_EXP_A_REPEAT_BUILD_VALIDATION_20260711.{json,md}`。
 
 - [todo] Playtest card rule bug：`點燃熱情` 在本回合曾打出宣傳費用卡牌時應抽 2 張，但實際只拿到 1 張。
   - 2026-07-06 回報情境：Turn 19 使用 `點燃熱情`，且該回合曾經打出過有宣傳費用的卡牌；log 顯示 `[Turn 19] f played 點燃熱情`、`[Turn 19] f chose 點燃熱情 via 地下黨`，但最終只有拿到 1 張卡牌。
@@ -325,6 +324,13 @@
   - 驗證：新增 `python3 scripts/validate_topdeck_purchased_choice.py`（4/4：行動階段買2張時跳選擇、選「先買的」而非舊實作固定的「後買的」證明是真選擇、+1資源在選擇後正確續跑；買1張維持一步自動；買0張 no-op 且資源照給；回合結束流程買2張時選完才結束回合、選中的牌因先頂牌後補手牌而進入新手牌、無懸空選擇）。既有 `validate_action_card_end_turn_topdeck_runtime.py` 為既有 FAIL（「未推進到EVENT」的過期 phase 斷言，stash 比對確認早於本次；其使用情境的卡牌行為檢查全數仍過），已屬 P2 validator hygiene 範圍。
   - proof：`docs/records/action-cards/TOPDECK_PURCHASED_CHOICE_VALIDATION_20260711.{json,md}`。
   - 落差盤點報告已同步更新對應項目狀態。
+
+- [done] B3 收尾＋P1 playtest 項目：`組織經驗甲`「棄4點以上卡牌可重複建立」子句與確認流程。
+  - root cause：卡面「每從手上棄掉1張購買費用4點以上的牌，可重複上述動作1次」完全沒有實作（結構化效果只有單一 build 步驟）；playtest 亦回報「應先詢問玩家是否要額外花4點以上卡牌」的確認流程缺失（P1 2026-07-06 項目）。
+  - 修正：資料驅動——`data/action_cards_structured.v1.1.json` 效果加 `repeat_on_discard_min_cost: 4`；每次建立結算後，若手上有購買費用合計≥4 的牌**且**仍有合法建立城鎮（含組織棋供應上限、新疆社會管控距離限制），開啟明確的確認選項（「不再建立」／「棄1張再建立1次」）；接受後開卡牌選擇（只列合格卡），棄掉後以同一 effect context 重開建立城鎮選擇（`新疆社會管控` 的牆內1格降級自動沿用），循環直到玩家拒絕或無合格卡/城鎮。拒絕或無合格牌時不自動消耗任何東西。前端零改動（重用通用選項/卡牌/城鎮 modal）。
+  - 驗證：新增 `python3 scripts/validate_org_exp_a_repeat_build.py`（5/5：完整「建立→棄牌→再建立」循環且只列合格卡（1點的領導不出現）；拒絕時保留手牌且流程正確結束；無合格卡時不跳詢問；兩張合格卡可連續重複兩次後正確收尾；受限陣營（維吾爾）重複建立清單同樣遵守牆內1格降級）。回歸：`validate_xinjiang_distance_restriction`、`validate_org_supply_limits`、`validate_card_effect_audit_p1` 全 PASS。
+  - proof：`docs/records/action-cards/ORG_EXP_A_REPEAT_BUILD_VALIDATION_20260711.{json,md}`。
+  - 對應的 P1 playtest 項目（「使用組織經驗甲時，應確認是否還要花其他4點以上卡牌來建立組織」）一併完成，見下方 P1 區塊同步標記。
 
 ### 已有完整紀錄的其他模組
 - [done] 情報網 target choice map highlight。
