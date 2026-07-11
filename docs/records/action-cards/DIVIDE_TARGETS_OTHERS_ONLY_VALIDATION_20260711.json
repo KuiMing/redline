@@ -1,0 +1,36 @@
+{
+  "summary": {
+    "scope": [
+      "離間"
+    ],
+    "purpose": "P1 playtest item: 離間 (\"在至多3位玩家棄牌堆各放入1張內鬥\") was structured as count:3 with no target, and add_internal_conflict's no-target fallback placed all three 內鬥 into the CASTER's own discard pile — the reported red-army bug. The card is now target_scope:\"others\"/max_targets:3/count:1-each, the fallback to the caster is removed (logged no-op instead), and the supply-consumption fix from C1 applies. 情報網 option A shares the same path.",
+    "total": 2,
+    "passed": 2,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "red_divide_targets_others_only",
+      "checks": {
+        "play_ok": true,
+        "caster_deck_has_no_internal_conflict": true,
+        "each_other_player_got_one": true,
+        "supply_consumed_two": true
+      },
+      "ok": true
+    },
+    {
+      "name": "up_to_three_targets_one_each",
+      "got": [
+        1,
+        1,
+        1
+      ],
+      "checks": {
+        "three_targets_each_one": true,
+        "caster_untouched": true
+      },
+      "ok": true
+    }
+  ]
+}

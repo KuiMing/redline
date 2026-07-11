@@ -36,7 +36,7 @@
     {"id":"field_agent","name":"派遣間諜","type":"spy","cost":{"money":2,"propaganda":1},"resources":{"propaganda":1},"effect":[{"type":"dissolve","range":1,"requires_self_sacrifice":true}]},
     {"id":"embedded_agent","name":"內應間諜","type":"spy","cost":{"money":3,"propaganda":2},"resources":{"propaganda":2},"effect":[{"type":"dissolve","range":1}]},
     {"id":"intel_network","name":"情報網","type":"spy","cost":{"money":3,"propaganda":3},"resources":{"money":1,"propaganda":1},"effect":[{"type":"choose_one","default_index":0,"options":[{"label":"在至多3位玩家棄牌堆各放入1張內鬥","effect":[{"type":"add_internal_conflict","count":1}]},{"label":"瓦解己方組織1格內的1個對手組織","effect":[{"type":"dissolve","count":1}]}]}]},
-    {"id":"divide","name":"離間","type":"spy","cost":{"money":0,"propaganda":4},"resources":{"propaganda":2},"effect":[{"type":"add_internal_conflict","count":3}]},
+    {"id":"divide","name":"離間","type":"spy","cost":{"money":0,"propaganda":4},"resources":{"propaganda":2},"effect":[{"type":"add_internal_conflict","count":1,"target_scope":"others","max_targets":3}]},
     {"id":"leak","name":"走漏風聲","type":"spy","cost":{"money":2,"propaganda":0},"resources":{"propaganda":1},"effect":[{"type":"leak_top_deck"}]},
     {"id":"underground_party","name":"地下黨","type":"spy","cost":{"money":2,"propaganda":4},"resources":{"money":1,"propaganda":2},"effect":[{"type":"choose_from_purchase_deck","count":3,"choose":1,"destination":"hand","rest":"remove"}]},
     {"id":"armed_unit_c","name":"武裝者","type":"armed","cost":{"money":2,"propaganda":0},"resources":{"propaganda":1},"effect":[{"type":"force_discard","count":1}]},

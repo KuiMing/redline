@@ -550,10 +550,14 @@ class EffectEngine:
                 target = next((p for p in game.players if getattr(p, "id", None) == target_id), None)
                 if target is not None:
                     targets = [target]
-            elif context.get("card_name") == "情報網" and context.get("choice_index") == 0:
-                targets = [other for other in game.players if other != player][:3]
+            elif effect.get("target_scope") == "others" or (context.get("card_name") == "情報網" and context.get("choice_index") == 0):
+                # 離間／情報網A：「在至多3位玩家棄牌堆各放入1張內鬥」——對象是其他玩家，
+                # 絕不包含施放者自己（P1 回報：紅軍離間把內鬥放進自己牌堆的 bug）
+                max_targets = int(effect.get("max_targets", 3) or 3)
+                targets = [other for other in game.players if other != player][:max_targets]
             if not targets:
-                targets = [player]
+                game.log(f"{player.name} 的 add_internal_conflict 沒有合法目標，未放置內鬥")
+                return
             for target in targets:
                 # 依 static supply 原則從供應取牌（內鬥耗盡時依 C1 裁決以雙倍分神替代）
                 if hasattr(game, '_take_internal_conflict_cards'):

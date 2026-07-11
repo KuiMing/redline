@@ -136,8 +136,9 @@
   - 期望：打出 `模仿戰術` 後，若依規則應可選擇某些可模仿／可使用的卡牌，UI 應顯示對應選擇視窗或明確提示沒有合法目標；不能沒有回饋或讓玩家以為流程卡住。
   - 需檢查：`模仿戰術` card effect 定義、pending choice 建立邏輯、可模仿卡牌來源與合法性篩選、`static/app.js` choice/card modal render，以及無合法目標時的 log/提示與 phase gating。
 
-- [todo] Playtest card rule bug：紅軍使用 `離間` 時，`內鬥` 應只放到對方牌堆，不應放到紅軍自己的牌堆。
-  - 2026-07-11 進度註記：`離間` 憑空創造內鬥、不扣供應的部分已隨 C1 修正（commit `9c59dc2`）；**目標選擇 bug 仍在**——`add_internal_conflict` etype 無 target 時 fallback 到 `[player]`（施放者自己），需要補目標玩家選擇流程。
+- [done] Playtest card rule bug：紅軍使用 `離間` 時，`內鬥` 應只放到對方牌堆，不應放到紅軍自己的牌堆。
+  - 2026-07-11 進度註記：`離間` 憑空創造內鬥、不扣供應的部分已隨 C1 修正（commit `9c59dc2`）。
+  - 2026-07-12 已修正：`離間` 效果改為 `target_scope: others / max_targets: 3 / 每人1張`（資料驅動），對象為施放者以外最多 3 位玩家、每人棄牌堆各放 1 張；`add_internal_conflict` 移除「無目標時 fallback 給施放者自己」的錯誤路徑（改為記 log 不放置）；`情報網`選項A 共用同一路徑。驗證 `python3 scripts/validate_divide_targets_others_only.py`（2/2：3人局施放者牌堆無內鬥、其他兩人各1張、供應扣2；4人局最多3個目標各1張）。proof `docs/records/action-cards/DIVIDE_TARGETS_OTHERS_ONLY_VALIDATION_20260711.{json,md}`。
   - 2026-07-06 回報情境：紅軍使用 `離間` 後，效果似乎把 `內鬥` 放到了紅軍自己的牌堆。
   - 期望：`離間` 應只將 `內鬥` 放到指定對方／目標玩家的牌堆；紅軍自己不應成為此效果的放置目標。
   - 需檢查：`離間` card effect 定義、target player selection、`add_internal_conflict` / static supply 消耗、紅軍作為 actor 時的 target/recipient 判定，以及 UI/log 是否正確顯示內鬥進入哪位玩家牌堆。
