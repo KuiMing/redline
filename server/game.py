@@ -1408,6 +1408,16 @@ class Game:
             }
 
         if choice_key == 'optional_trash':
+            if isinstance(chosen, dict) and chosen.get('skip'):
+                # 選擇不移除：本牌照常進棄牌堆，且不觸發「若移除本牌」的後續效果
+                self.pending_choice = None
+                resume = self._resume_after_optional_trash(player, choice, removed_current_card=False)
+                self.log(f"{player.name} declined to trash via {choice.get('source_name') or 'optional_trash'}")
+                return {
+                    'success': True,
+                    'skipped': True,
+                    **({'pending_choice': True} if isinstance(resume, dict) and resume.get('pending_choice') else {}),
+                }
             card = chosen.get('card') if isinstance(chosen, dict) else chosen
             zone = chosen.get('zone') if isinstance(chosen, dict) else None
             zone_label = chosen.get('zone_label') if isinstance(chosen, dict) else None

@@ -1,0 +1,54 @@
+{
+  "summary": {
+    "scope": [
+      "誘導虛耗"
+    ],
+    "purpose": "P1 playtest item: 誘導虛耗's optional trash listed the whole hand (\"或移除 1 張手牌\") even though the card text only allows removing the just-played 誘導虛耗 itself (\"打出可移除本牌\"). The choice now offers exactly the played card plus an explicit decline option; removing it proceeds to the choose-a-player forced-discard flow (\"若移除本牌…\"), while declining sends the card to the discard pile normally and skips the forced discard entirely.",
+    "total": 3,
+    "passed": 3,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "only_the_played_card_offered",
+      "names": [
+        [
+          "current_card",
+          "誘導虛耗"
+        ],
+        [
+          "skip",
+          "不移除"
+        ]
+      ],
+      "checks": {
+        "choice_opened": true,
+        "exactly_two_options": true,
+        "first_is_the_card_itself": true,
+        "second_is_skip": true,
+        "no_hand_cards_offered": true
+      },
+      "ok": true
+    },
+    {
+      "name": "remove_self_then_force_target_discard",
+      "checks": {
+        "remove_ok": true,
+        "followup_target_choice": true,
+        "target_hand_discard_opened": true,
+        "target_discarded": true
+      },
+      "ok": true
+    },
+    {
+      "name": "decline_keeps_card_in_discard_and_skips_forced_discard",
+      "checks": {
+        "declined_ok": true,
+        "no_followup": true,
+        "card_goes_to_own_discard_not_removed": true,
+        "target_hand_untouched": true
+      },
+      "ok": true
+    }
+  ]
+}

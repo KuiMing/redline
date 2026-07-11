@@ -119,11 +119,12 @@
   - 期望：在建立組織相關 UI 中顯示可建立城鎮數量；若受陣營適用城鎮、牆內/牆外、敵方佔領、事件/卡牌限制影響，數字應跟實際可點擊/可建立名單一致。
   - 需檢查：`static/leaflet_game_map_logic.js` 建立高亮資料、`static/app.js` sidebar/action prompt 顯示、後端 build eligibility/state projection 是否能提供一致的可建立城鎮 count。
 
-- [todo] Playtest card rule bug：`誘導虛耗` 只能移除剛打出的 `誘導虛耗` 本身，不能移除其他卡牌。
+- [done] Playtest card rule bug：`誘導虛耗` 只能移除剛打出的 `誘導虛耗` 本身，不能移除其他卡牌。
   - 2026-07-05 回報情境：使用 `誘導虛耗` 後，UI 顯示「你可以移除剛打出的這張牌，或移除 1 張手牌」，並列出手牌中的 `天方奧援`、`內鬥`、`追隨者`、`樂捐者` 等可移除選項。
   - 期望：依卡牌規則，`誘導虛耗` 的可移除對象應只限於剛打出的 `誘導虛耗` 這張牌；不應允許移除其他手牌，也不應在選擇視窗列出其他手牌作為可移除選項。
   - 需檢查：`誘導虛耗` action effect 的 optional trash / pending choice 建立邏輯、`pending_choice.cards` 來源、`static/app.js` 的 card-choice modal 呈現；確認 runtime 後端也拒絕移除非 `誘導虛耗` 的卡。
   - 回報截圖：`/Users/benmini/.hermes/image_cache/img_fe2d5d612086.jpg`。
+  - 2026-07-12 已修正：`optional_trash` 對 `誘導虛耗` 的可移除清單改為僅列「剛打出的誘導虛耗本身」＋明確的「不移除本牌」選項（後端也不再接受手牌項）；移除本牌才進入「選 1 位玩家棄 1 張手牌」的後續流程，選擇不移除則本牌照常進棄牌堆、不觸發後續效果（符合卡面「若移除本牌」條件）。驗證 `python3 scripts/validate_bait_exhaustion_self_only.py`（3/3）；proof `docs/records/action-cards/BAIT_EXHAUSTION_SELF_ONLY_VALIDATION_20260711.{json,md}`。
 
 - [todo] Playtest card ownership bug：非紅軍陣營打出 `紅軍奧援` 後，卡牌應回到紅軍棄牌堆。
   - 2026-07-06 回報情境：非紅軍陣營打出 `紅軍奧援` 後，此卡沒有回到紅軍的棄牌堆。

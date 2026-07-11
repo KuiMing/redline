@@ -288,6 +288,7 @@ class EffectEngine:
         if etype == "optional_trash":
             context = context or {}
             current_card = context.get('current_card')
+            source_name = context.get('card_name') if context else None
             removable = []
             if current_card is not None:
                 removable.append({
@@ -296,16 +297,25 @@ class EffectEngine:
                     'zone_label': '剛打出的牌',
                     'removes_current_card': True,
                 })
-            for card in list(player.hand):
+            if source_name == '誘導虛耗':
+                # 卡面：「打出可移除本牌。若移除本牌，可選擇1位玩家…」——
+                # 可移除對象僅限剛打出的誘導虛耗本身，不含其他手牌；並提供「不移除」選項
                 removable.append({
-                    'card': card,
-                    'zone': 'hand',
-                    'zone_label': '手牌',
-                    'removes_current_card': False,
+                    'skip': True,
+                    'name': '不移除',
+                    'zone': 'skip',
+                    'zone_label': '不移除本牌（結束效果）',
                 })
+            else:
+                for card in list(player.hand):
+                    removable.append({
+                        'card': card,
+                        'zone': 'hand',
+                        'zone_label': '手牌',
+                        'removes_current_card': False,
+                    })
             if not removable:
                 return
-            source_name = context.get('card_name') if context else None
             if source_name in {'宣傳家', '思想家', '資助者', '資本家', '分神'} and current_card is not None:
                 returned = game._return_removed_card_to_purchase_supply(current_card) if hasattr(game, '_return_removed_card_to_purchase_supply') else None
                 context['removed_current_card'] = True
@@ -313,7 +323,10 @@ class EffectEngine:
                     game.log(f"{player.name} removed {source_name} and returned it to static purchase supply")
                 return {'removed_current_card': True, 'removed_card': returned}
             if hasattr(game, '_set_pending_card_choice'):
-                prompt = f"{source_name or '此牌'}：你可以移除剛打出的這張牌，或移除 1 張手牌。"
+                if source_name == '誘導虛耗':
+                    prompt = '誘導虛耗：可移除剛打出的誘導虛耗（僅限本牌）；若移除，可選擇 1 位玩家棄掉 1 張手牌。'
+                else:
+                    prompt = f"{source_name or '此牌'}：你可以移除剛打出的這張牌，或移除 1 張手牌。"
                 targets = [
                     {
                         'id': getattr(other, 'id', None),
