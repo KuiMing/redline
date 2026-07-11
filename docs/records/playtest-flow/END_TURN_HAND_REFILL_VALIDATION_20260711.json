@@ -1,0 +1,55 @@
+{
+  "summary": {
+    "scope": [
+      "回合結束補牌",
+      "本土社團"
+    ],
+    "purpose": "P1 playtest items 11+12: _end_turn used to run faction end-turn draws FIRST, then discard the whole hand and draw a fresh 5 — wiping both kept cards and the 本土社團 bonus draw. Per the reported rule, end-of-turn refill keeps the hand and only tops up to 5 (no draw at 5+), and end-turn ability draws (本土社團/還我河山/民國之心) now happen AFTER the refill so the bonus card survives (hand can reach 6).",
+    "total": 4,
+    "passed": 4,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "keep_hand_and_top_up_to_five",
+      "hand": [
+        "留著1",
+        "留著2",
+        "補10",
+        "補9",
+        "補8"
+      ],
+      "checks": {
+        "hand_size_five": true,
+        "existing_cards_kept": true,
+        "kept_cards_not_discarded": true,
+        "drew_only_three": true
+      },
+      "ok": true
+    },
+    {
+      "name": "five_or_more_cards_no_draw_no_discard",
+      "checks": {
+        "six_cards_kept": true,
+        "no_extra_draw": true
+      },
+      "ok": true
+    },
+    {
+      "name": "local_society_extra_draw_reaches_six",
+      "hand_size": 6,
+      "checks": {
+        "ends_with_six_cards": true,
+        "ability_logged": true
+      },
+      "ok": true
+    },
+    {
+      "name": "no_inner_build_no_extra_draw",
+      "checks": {
+        "exactly_five": true
+      },
+      "ok": true
+    }
+  ]
+}

@@ -4582,10 +4582,13 @@ class Game:
             return
 
         player = self.current_player()
-        self._apply_turn_end_faction_abilities(player)
-        player.discard_hand()
+        # rules.md／playtest 回報：回合結束是「抽牌補足到 5 張」——保留既有手牌，
+        # 不足 5 才補到 5，已有 5 張以上則不抽；不可清空手牌重抽。
         player.reset_turn()
         player.draw_to_five()
+        # 回合結束型能力（本土社團/還我河山/民國之心等「行動階段結束時額外再抽1張」）
+        # 在補滿之後觸發，額外抽的牌不會被補牌流程蓋掉（可達 6 張）。
+        self._apply_turn_end_faction_abilities(player)
         while len(self.purchase_area) < len(self._static_purchase_cards()) + 5:
             drawn = self._draw_purchase_cards(1)
             if not drawn:

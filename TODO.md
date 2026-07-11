@@ -89,16 +89,18 @@
   - 期望：關閉視窗只代表取消／返回，不代表紅軍能力動作已完成；使用者應可重新選擇能力，或再次打開能力選擇視窗。
   - 需檢查：紅軍能力 selection modal 的 close/cancel handler 是否誤呼叫 end action / resolve ability；特別檢查 `紀委` 分支與其他紅軍能力是否一致。
 
-- [todo] Playtest rule/flow bug：回合結束抽牌應補到 5 張，不應清空手牌後抽 5 張。
+- [done] Playtest rule/flow bug：回合結束抽牌應補到 5 張，不應清空手牌後抽 5 張。
   - 2026-07-04 回報規則：每回合最後是抽牌補足到五張牌；如果玩家手上還有手牌，不可以把既有手牌清掉再抽五張。
   - 期望：回合結束／refill hand 時，保留玩家手上的牌；若手牌數少於 5，才從牌庫抽到 5 張；若已經 5 張或更多，則不抽。
   - 需檢查：end turn / discard-refill 流程是否在所有情境都先 discard hand；特別注意事件成功/失敗結算後、紅軍回合、pending choice 完成後的 refill 是否共用同一函式。
+  - 2026-07-12 已修正：`_end_turn` 移除 `discard_hand()`，改為保留手牌、`draw_to_five()` 只補足到 5（已有 5 張以上不抽）；所有回合結束路徑共用 `_end_turn` 一處生效。驗證 `python3 scripts/validate_end_turn_hand_refill.py`（4/4）；proof `docs/records/playtest-flow/END_TURN_HAND_REFILL_VALIDATION_20260711.{json,md}`。
 
-- [todo] Playtest rule/flow bug：臺灣綠線 `本土社團` 觸發後應在回合結束手牌補滿流程之外額外多抽 1 張，不能最後仍只有 5 張。
+- [done] Playtest rule/flow bug：臺灣綠線 `本土社團` 觸發後應在回合結束手牌補滿流程之外額外多抽 1 張，不能最後仍只有 5 張。
   - 2026-07-06 回報情境：第 9 回合玩家 `f` 為台灣綠線，已在 `昆明` 透過 `思想家` 建立組織；log 顯示 `[Turn 9] f triggered 本土社團 and drew 1 card`，但該回合最後仍只讓玩家抽到 5 張卡。
   - 回報 log：`[Turn 9] End of turn for f`; `[Turn 9] f triggered 本土社團 and drew 1 card`; `[Turn 9] f bought 宣傳家`; `[Turn 9] f built organization in 昆明 via 思想家`; `[Turn 9] f played 思想家`; `[Turn 9] f played 擴大戰果`; `[Turn 9] Event drawn: 歲月靜好 (no-op)`。
   - 期望：依 `本土社團`，若本回合曾在牆內建立組織，行動階段結束時應額外抽 1 張；若一般結束流程是補到 5 張，能力觸發後的結果應可達 6 張（或至少不能被後續補牌/棄牌流程覆蓋回 5 張）。
   - 需檢查：`Game.end_turn()` / refill hand 順序、`on_build_draw_inner` / `本土社團` 觸發點、`turn_log['built_towns']`、行動階段結束與購買/END 階段的抽牌時機是否一致；確認 UI 顯示的手牌數與後端實際手牌一致。
+  - 2026-07-12 已修正（與上一項同 commit）：root cause 是 `_end_turn` 先觸發回合結束能力（本土社團加抽進手牌）、再 `discard_hand()` 把整手（含剛加抽的牌）棄掉重抽 5 張。修正後順序為「補滿到 5 → 才觸發回合結束能力」，額外抽的牌保留（可達 6 張）。驗證同上（含牆內建立後 6 張、未建立仍 5 張兩案例）。
 
 - [todo] Playtest UI/flow polish：移動到可移動城鎮前應跳出確認視窗。
   - 2026-07-05 回報情境：進行組織移動時，玩家點到可移動城鎮後，目前可能直接執行移動，容易誤點。
