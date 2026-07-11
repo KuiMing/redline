@@ -420,13 +420,38 @@ class EffectEngine:
 
         # ✅ Move a card bought this turn from discard to deck top (行動預告/行動募資)
         if etype == "topdeck_purchased_this_turn":
+            context = context or {}
             purchased = list(game.turn_log.get('purchased_cards_this_turn') or [])
-            for card in reversed(purchased):
-                if card in player.deck.discard_pile:
-                    player.deck.discard_pile.remove(card)
-                    player.deck.draw_pile.append(card)
-                    game.log(f"{player.name} placed bought card {getattr(card, 'name', str(card))} on deck top")
-                    break
+            candidates = [card for card in purchased if card in player.deck.discard_pile]
+            if not candidates:
+                game.log(f"{player.name} had no card bought this turn to place on deck top")
+                return
+            if len(candidates) == 1:
+                card = candidates[0]
+                player.deck.discard_pile.remove(card)
+                player.deck.draw_pile.append(card)
+                game.log(f"{player.name} placed bought card {getattr(card, 'name', str(card))} on deck top")
+                return
+            # 本回合買了多張：卡面「將本回合購得的1張牌置於牌庫頂」由玩家選擇哪一張
+            source_name = context.get('card_name') or '行動預告'
+            if hasattr(game, '_set_pending_card_choice'):
+                game._set_pending_card_choice(
+                    player,
+                    'topdeck_purchased_choice',
+                    list(candidates),
+                    f'{source_name}：選擇 1 張本回合購得的牌置於牌庫頂。',
+                    source_name=source_name,
+                    context={
+                        'card_name': source_name,
+                        'remaining_effects': list(context.get('remaining_effects') or []),
+                        'end_turn_topdeck_flow': bool(context.get('end_turn_topdeck_flow')),
+                    },
+                )
+                return {'pending_choice': True}
+            card = candidates[-1]
+            player.deck.discard_pile.remove(card)
+            player.deck.draw_pile.append(card)
+            game.log(f"{player.name} placed bought card {getattr(card, 'name', str(card))} on deck top")
             return
 
         # ✅ Temporarily use a face-up purchase-area card (企業人脈)

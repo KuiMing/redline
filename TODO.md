@@ -180,6 +180,7 @@
   - root cause：2026-05-31 事件卡生命週期改為「任務條件達成先 `success_pending`，等全體玩家 ACTION 結束才結算」（TODO 已記錄的刻意設計），但腳本裡的 `settle_round_event()` helper 還停留在舊設計（`advance_turn_phase()` 一次就期待 `settled=True`）；單人 advance 後實際狀態是 `success_pending`＋輪到下一位玩家，不是結算完成。屬於驗證腳本過期，不是 runtime bug。
   - 需修：把 `settle_round_event()` 改成推進到整輪結束（所有玩家含紅軍完成 ACTION）再斷言 `settled`；逐一檢查該檔 20+ 個 test 是否還有其他依賴舊生命週期的斷言。修好前，該腳本的 FAIL 不應被當成 regression 訊號（例如 S3 修正時已另建 `validate_event_deck_draw_twenty.py` 獨立驗證）。
   - 2026-07-11 追加：`scripts/validate_era_effects_runtime.py` 同樣為既有穩定 FAIL（stash 比對確認早於 S2 修正），需一併排查是否同一類生命週期過期問題。
+  - 2026-07-11 追加：`scripts/validate_action_card_end_turn_topdeck_runtime.py` 亦為既有 FAIL（期待單人結束回合直接推進到 EVENT 的過期斷言），同一類問題。
 
 ## 已完成摘要
 
@@ -317,6 +318,13 @@
   - 驗證：新增 `python3 scripts/validate_xinjiang_distance_restriction.py`（4/4：能力正確解析且僅限牆內；思想家對受限玩家完全不提供牆內城鎮、對照陣營（哈薩克）仍可拿到1格外牆內城鎮；組織經驗甲對受限玩家只提供1格內牆內城鎮、遠處牆內被排除、對照陣營不受影響；東洋奧援III級清單對受限玩家與1格內清單完全一致、對照陣營明顯更大）。回歸：`validate_org_supply_limits`、`validate_east_asia_support_taxonomy_fix`、`validate_card_effect_audit_p1`、`validate_enemy_occupancy_rules` 全 PASS（`validate_era_effects_runtime` 為既有 FAIL，stash 比對確認與本次無關，已在 P2 validator hygiene 註記）。
   - proof：`docs/records/rules-audit/XINJIANG_DISTANCE_RESTRICTION_VALIDATION_20260711.{json,md}`。
   - 落差盤點報告已同步更新；`組織經驗甲` 剩餘的「棄4點以上卡牌可重複建立」子句仍待處理（B3）。
+
+- [done] B3 剩餘：`行動預告`／`行動募資` 本回合買多張時沒有頂牌選擇權。
+  - root cause：`topdeck_purchased_this_turn` 效果自動挑「最近購買且仍在棄牌堆」的一張置頂，玩家無選擇；但 `buy_card` 不限每回合購買張數，買 2 張以上是合法情境，卡面「將本回合購得的**1張**牌置於牌庫頂」隱含玩家選擇。
+  - 修正：0 張候選→記 log 不動作（原行為）；恰 1 張→自動置頂（維持一步完成）；2 張以上→開卡牌選擇（`topdeck_purchased_choice`），卡片剩餘效果（+1 資源）以 `remaining_effects` context 在選擇結算後續跑（比照 `optional_trash` 續跑模式）。**連帶修掉一個實作中發現的隱患**：回合結束的「使用行動預告」提示流程（`end_turn_topdeck_action`）原本執行效果時不看回傳值、直接 `_end_turn()`——若效果開出選擇會留下懸空 pending choice 卡住下一位玩家；已改為效果 pending 時延後結束回合，由頂牌選擇結算負責收尾（先頂牌、後補手牌，順序正確）。
+  - 驗證：新增 `python3 scripts/validate_topdeck_purchased_choice.py`（4/4：行動階段買2張時跳選擇、選「先買的」而非舊實作固定的「後買的」證明是真選擇、+1資源在選擇後正確續跑；買1張維持一步自動；買0張 no-op 且資源照給；回合結束流程買2張時選完才結束回合、選中的牌因先頂牌後補手牌而進入新手牌、無懸空選擇）。既有 `validate_action_card_end_turn_topdeck_runtime.py` 為既有 FAIL（「未推進到EVENT」的過期 phase 斷言，stash 比對確認早於本次；其使用情境的卡牌行為檢查全數仍過），已屬 P2 validator hygiene 範圍。
+  - proof：`docs/records/action-cards/TOPDECK_PURCHASED_CHOICE_VALIDATION_20260711.{json,md}`。
+  - 落差盤點報告已同步更新對應項目狀態。
 
 ### 已有完整紀錄的其他模組
 - [done] 情報網 target choice map highlight。

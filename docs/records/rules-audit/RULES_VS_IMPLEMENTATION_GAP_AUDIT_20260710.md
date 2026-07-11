@@ -171,7 +171,7 @@ for text in faction.get('special_rules', []) or []:
 
 - **`組織經驗甲`：問題比 TODO.md 現有記錄的還深，缺了兩整段規則子句**。TODO.md 目前只記錄「缺少確認是否要多花4點以上卡牌」的 UI 流程問題；但實際上 `data/action_cards_structured.v1.1.json` 裡這張卡的結構化效果就只有 `[{"type":"build","range":"ignore_distance"}]` 一步，代表整段規則完全沒有程式對應：(1)「每從手上棄掉1張購買費用4點以上的牌，可重複上述動作1次」——完全沒有任何重複建立的迴圈/邏輯存在；(2)「無法無視距離建立牆內組織者，本牌於牆內建立組織距離為1格」——這是給「本來就不能無視距離建立」的陣營（例如 A2 提到的 `uyghur_munich` 的『新疆社會管控』限制）的例外規則，但 `_card_build_town_choices`（`game.py:1034`）目前只有 `ignore_distance`（全部城鎮皆可）跟一般固定範圍 BFS 兩種分支，沒有針對這張卡特別處理「距離改為1格」的例外。建議把 TODO.md 對應項目的範圍描述更新為涵蓋這兩段，而不只是確認流程。
 
-- **`行動預告` / `行動募資`：本回合買了2張以上的牌時，玩家沒有選擇要把哪張放回牌庫頂，永遠自動選最近買的那張**。兩張卡共用同一個 `topdeck_purchased_this_turn` 實作（`effect_engine.py:422-430`），直接從 `turn_log['purchased_cards_this_turn']` 挑「最近一張還在棄牌堆的牌」，沒有讓玩家選。因為 `buy_card`（`game.py:4519`）本身沒有限制每回合只能買1張，所以「本回合買了2張以上」是完全合法會發生的情況，此時卡面文字「將本回合購得的**1張**牌置於牌庫頂」隱含的玩家選擇被跳過了。
+- **[已修正 2026-07-11]『行動預告』/『行動募資』：本回合買了2張以上的牌時，玩家沒有選擇要把哪張放回牌庫頂，永遠自動選最近買的那張**。（修正記錄：買2張以上改開卡牌選擇、剩餘效果選後續跑；並連帶修掉回合結束提示流程效果 pending 時懸空選擇的隱患。驗證 `python3 scripts/validate_topdeck_purchased_choice.py` 4/4；proof `docs/records/action-cards/TOPDECK_PURCHASED_CHOICE_VALIDATION_20260711.{json,md}`。）兩張卡共用同一個 `topdeck_purchased_this_turn` 實作（`effect_engine.py:422-430`），直接從 `turn_log['purchased_cards_this_turn']` 挑「最近一張還在棄牌堆的牌」，沒有讓玩家選。因為 `buy_card`（`game.py:4519`）本身沒有限制每回合只能買1張，所以「本回合買了2張以上」是完全合法會發生的情況，此時卡面文字「將本回合購得的**1張**牌置於牌庫頂」隱含的玩家選擇被跳過了。
 
 - **[已修正 2026-07-10]『企業人脈』：可借用的牌被限制在隨機購買區，排除了常設購買區的6張牌**。`use_purchase_area_card`（`effect_engine.py:433-465`）的 `prefer_random_market:true` 讓查詢範圍從 `static_count`（常設購買區張數）之後開始算，也就是排除了 `宣傳家/思想家/資助者/資本家/分神/內鬥` 這6張常設購買區的牌。但 CSV 卡面文字是「將購買區面朝上的**任1張**牌暫時移出購買區」，沒有限定只能是隨機購買區，讀起來常設購買區的牌也應該可以被借用。
 

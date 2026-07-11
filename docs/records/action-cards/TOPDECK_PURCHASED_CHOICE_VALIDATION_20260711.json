@@ -1,0 +1,67 @@
+{
+  "summary": {
+    "scope": [
+      "行動預告",
+      "行動募資"
+    ],
+    "purpose": "B3 remainder: topdeck_purchased_this_turn auto-picked the most recently bought card still in discard, with no player choice even though buy_card allows multiple purchases per turn and the card text says the player places \"1張本回合購得的牌\" on top. Now: 0 candidates = logged no-op; exactly 1 = auto (one-shot, unchanged UX); 2+ = pending card choice, and the card's remaining effects (the +1 resource) resume after the choice resolves via the stored remaining_effects context, matching the optional_trash resume pattern.",
+    "total": 4,
+    "passed": 4,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "two_purchases_player_chooses_which_to_topdeck",
+      "checks": {
+        "pending_choice_raised": true,
+        "choice_key": true,
+        "both_offered": true,
+        "resource_not_granted_yet": true,
+        "resolved": true,
+        "chosen_first_purchase_on_top": true,
+        "other_purchase_stays_in_discard": true,
+        "remaining_effect_resumed_propaganda_plus_1": true
+      },
+      "ok": true
+    },
+    {
+      "name": "single_purchase_auto_topdeck_one_shot",
+      "checks": {
+        "no_pending_choice": true,
+        "auto_topdecked": true,
+        "money_plus_1_applied": true
+      },
+      "ok": true
+    },
+    {
+      "name": "no_purchase_noop_still_grants_resource",
+      "checks": {
+        "success_without_choice": true,
+        "resource_still_granted": true,
+        "noop_logged": true
+      },
+      "ok": true
+    },
+    {
+      "name": "end_turn_flow_two_purchases_choice_then_end_turn",
+      "hand": [
+        "先買的牌",
+        "補7",
+        "補6",
+        "補5",
+        "補4"
+      ],
+      "checks": {
+        "end_turn_prompted": true,
+        "use_returns_pending": true,
+        "turn_not_ended_yet": true,
+        "both_offered": true,
+        "resolved": true,
+        "no_dangling_choice": true,
+        "chosen_card_drawn_into_new_hand": true,
+        "resources_reset_by_end_turn": true
+      },
+      "ok": true
+    }
+  ]
+}

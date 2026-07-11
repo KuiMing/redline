@@ -1454,6 +1454,27 @@ class Game:
                 response['pending_choice'] = True
             return response
 
+        if choice_key == 'topdeck_purchased_choice':
+            if chosen not in player.deck.discard_pile:
+                return {'error': 'Chosen card not in discard pile'}
+            player.deck.discard_pile.remove(chosen)
+            player.deck.draw_pile.append(chosen)
+            self.pending_choice = None
+            ctx = choice.get('context') if isinstance(choice.get('context'), dict) else {}
+            source_name = choice.get('source_name') or ctx.get('card_name') or '行動預告'
+            self.log(f"{player.name} placed bought card {getattr(chosen, 'name', str(chosen))} on deck top via {source_name}")
+            # 續跑卡片剩餘效果（例如行動預告/行動募資的 +1 資源）
+            remaining = list(ctx.get('remaining_effects') or [])
+            for idx, effect in enumerate(remaining):
+                ctx['remaining_effects'] = remaining[idx + 1:]
+                result = self.effect_engine.execute(effect, player, self, context=ctx)
+                if isinstance(result, dict) and result.get('pending_choice'):
+                    return {'success': True, 'topdecked_card': getattr(chosen, 'name', str(chosen)), 'pending_choice': True}
+            if ctx.get('end_turn_topdeck_flow'):
+                # 從回合結束提示流程進來：頂牌選完才真正結束回合（先頂牌、後補手牌）
+                self._end_turn()
+            return {'success': True, 'topdecked_card': getattr(chosen, 'name', str(chosen))}
+
         if choice_key == 'guess_ability_bottom_card':
             ctx = choice.get('context') if isinstance(choice.get('context'), dict) else {}
             self.pending_choice = None
@@ -1768,10 +1789,23 @@ class Game:
                 return {'error': 'Chosen action card changed'}
             player.hand.pop(hand_index)
             structured = next((c for c in self.structured_cards if c.get('name') == card_name), None)
-            for effect in list((structured or {}).get('effect') or []):
-                self.effect_engine.execute(effect, player, self, context={'card_name': card_name})
+            effects = list((structured or {}).get('effect') or [])
+            pending_from_effect = False
+            for idx2, effect in enumerate(effects):
+                context = {
+                    'card_name': card_name,
+                    'remaining_effects': effects[idx2 + 1:],
+                    # 本回合買多張時 topdeck 會開選擇；標記讓選擇結算負責收尾 _end_turn
+                    'end_turn_topdeck_flow': True,
+                }
+                result = self.effect_engine.execute(effect, player, self, context=context)
+                if isinstance(result, dict) and result.get('pending_choice'):
+                    pending_from_effect = True
+                    break
             player.deck.discard([played_card])
             self.log(f"{player.name} used {card_name} before drawing new hand")
+            if pending_from_effect:
+                return {'success': True, 'choice_index': index, 'chosen_card': card_name, 'pending_choice': True}
             self._end_turn()
             return {'success': True, 'choice_index': index, 'chosen_card': card_name}
 
