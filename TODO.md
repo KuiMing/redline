@@ -351,6 +351,13 @@
   - 驗證：新增 `python3 scripts/validate_co_winners.py`（4/4：10/14≈71% 達標為共同勝利者且 state 有曝露、9/14≈64% 不達標、紅軍保底獲勝無共同勝利者、紅軍永不為共同勝利者）。回歸：`validate_org_supply_limits`、`validate_enemy_occupancy_rules`、`validate_red_army_special_rules` PASS。
   - proof：`docs/records/rules-audit/CO_WINNERS_VALIDATION_20260711.{json,md}`。
 
+- [done] S5-2：赤鱲角機場規則實作（2026-07-11 使用者裁決語意）。
+  - 裁決語意：「香港可花費 2 次遷移，將位於赤鱲角的香港組織無視距離遷移到任何屬於香港發展空間的牆外城鎮。不可逆向操作。」
+  - 實作：`move_organization` 新增 airport 分支——僅限香港陣營移動**自己的**組織、起點為赤臘角（地圖對「赤鱲角」的拼寫）、終點為牆外且屬香港發展空間；花費 2 移動點；不建立反向通道（牆外→赤臘角仍走一般連線規則）；目的地敵方佔領封鎖等既有檢查照常適用；赤臘角原有的道路/鐵路鄰接移動維持 1 點。前端可移動城鎮高亮尚未涵蓋機場航線，歸入 P1 移動 UI 批次一併處理。
+  - 驗證：新增 `python3 scripts/validate_chek_lap_kok_airport.py`（7/7：跨洋移動成功且花費2點、移動點不足擋下、反向擋下、非香港陣營（粵）擋下、發展空間外（曼谷）擋下、鄰接移動仍1點、敵佔目的地擋下）。回歸：`validate_movement_rules`、`validate_enemy_occupancy_rules`、`validate_org_supply_limits` PASS。
+  - proof：`docs/records/rules-audit/CHEK_LAP_KOK_AIRPORT_VALIDATION_20260711.{json,md}`。
+  - S5 剩餘（仍待確認）：「香港抗爭之烈」vs「香港抗暴之戰」是否同一張事件卡＋事件後根據地免費遷移。
+
 ### 已有完整紀錄的其他模組
 - [done] 情報網 target choice map highlight。
   - 提交：`c690f5b fix: highlight intel network dissolve targets on map`。

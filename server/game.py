@@ -4782,6 +4782,18 @@ class Game:
         legal_move = to_town in neighbors
         if mode == "rail" and not legal_move:
             legal_move = self._rail_reachable_within_three(player, from_town, to_town)
+        # 赤鱲角機場（香港 special_rules，2026-07-11 使用者裁決 S5-2）：
+        # 香港可花費 2 次遷移，將位於赤鱲角（地圖拼寫：赤臘角）的香港組織
+        # 無視距離遷移到任何屬於香港發展空間的牆外城鎮。不可逆向操作。
+        airport_move = (
+            getattr(player, 'faction_id', None) == 'hong_kong'
+            and origin_owner is player
+            and from_town == '赤臘角'
+            and to_town not in set(self._towns_for_region_alias('china'))
+            and self.can_faction_develop_in_town('hong_kong', to_town)
+        )
+        if not legal_move and airport_move:
+            legal_move = True
         if not legal_move and not self._event_modifier_active('ignore_distance'):
             return {"error": f"No {mode} connection"}
         if self._town_blocks_movement_for_player(player, to_town):
@@ -4794,7 +4806,8 @@ class Game:
 
         # Movement points represent movement counts, not distance/cost budget.
         # Every legal organization move consumes one count; cards/effects grant counts.
-        cost = 1
+        # 赤鱲角機場移動花費 2 次遷移。
+        cost = 2 if (airport_move and to_town not in neighbors) else 1
         if player.moves_left < cost:
             return {"error": "Not enough move points"}
 

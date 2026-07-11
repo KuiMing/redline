@@ -1,0 +1,86 @@
+{
+  "summary": {
+    "scope": [
+      "赤鱲角機場（S5-2）"
+    ],
+    "purpose": "S5-2 per 2026-07-11 user ruling: Hong Kong may spend 2 migrations to move a Hong Kong organization located at 赤鱲角 (map spelling: 赤臘角) ignore-distance to any outer-wall town within Hong Kong's development space; the reverse direction is not allowed. Only the hong_kong faction moving its own organization qualifies; normal adjacent moves from the airport still cost 1; enemy-occupied destinations remain blocked. Frontend movement highlighting for airport routes is deferred to the P1 movement-UI batch.",
+    "total": 7,
+    "passed": 7,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "airport_move_to_outer_dev_space_costs_two",
+      "result": {
+        "success": true
+      },
+      "checks": {
+        "move_succeeds": true,
+        "org_arrived_london": true,
+        "cost_two_moves": true
+      },
+      "ok": true
+    },
+    {
+      "name": "insufficient_moves_blocked",
+      "result": {
+        "error": "Not enough move points"
+      },
+      "checks": {
+        "blocked_with_one_move": true
+      },
+      "ok": true
+    },
+    {
+      "name": "reverse_direction_not_allowed",
+      "result": {
+        "error": "No road connection"
+      },
+      "checks": {
+        "reverse_blocked": true
+      },
+      "ok": true
+    },
+    {
+      "name": "non_hong_kong_faction_blocked",
+      "result": {
+        "error": "No road connection"
+      },
+      "checks": {
+        "non_hk_blocked": true
+      },
+      "ok": true
+    },
+    {
+      "name": "outside_hk_dev_space_blocked",
+      "result": {
+        "error": "No road connection"
+      },
+      "checks": {
+        "outside_dev_space_blocked": true
+      },
+      "ok": true
+    },
+    {
+      "name": "normal_adjacent_move_costs_one",
+      "result": {
+        "success": true
+      },
+      "checks": {
+        "adjacent_move_ok": true,
+        "cost_one": true
+      },
+      "ok": true
+    },
+    {
+      "name": "enemy_occupied_destination_blocked",
+      "result": {
+        "error": "Cannot move into enemy organization"
+      },
+      "checks": {
+        "enemy_destination_blocked": true
+      },
+      "ok": true
+    }
+  ]
+}
