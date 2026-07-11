@@ -1,0 +1,80 @@
+{
+  "summary": {
+    "scope": [
+      "organization supply limits (S1)"
+    ],
+    "purpose": "S1 (second-pass audit): rules.md step 4 fixes each anti-communist faction at 22 organization pieces as the hard build maximum; no limit existed anywhere in code. Red Army limit is a flat 40 per user decision on 2026-07-11 (rulebook formula is 8×players +8 with Taiwan; deliberately overridden). Enforcement lives in can_develop_in_town (single funnel for every build path and UI eligibility list), with clear error messages in build_organization, plus a supply check when moving a shared organization owned by another player (ownership transfer = net +1). Own-org moves and dissolves are unaffected; dissolving frees supply.",
+    "anti_communist_limit": 22,
+    "red_army_limit": 40,
+    "total": 6,
+    "passed": 6,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "anti_communist_limit_22",
+      "blocked": {
+        "error": "組織棋已達上限（22），需先瓦解既有組織"
+      },
+      "checks": {
+        "constant_is_22": true,
+        "build_allowed_at_21": true,
+        "build_blocked_at_22": true,
+        "total_stays_22": true
+      },
+      "ok": true
+    },
+    {
+      "name": "red_army_limit_40_user_decision",
+      "blocked": {
+        "error": "組織棋已達上限（40），需先瓦解既有組織"
+      },
+      "checks": {
+        "constant_is_40": true,
+        "red_can_build_past_22": true,
+        "build_allowed_at_39": true,
+        "build_blocked_at_40": true
+      },
+      "ok": true
+    },
+    {
+      "name": "dissolve_frees_supply",
+      "checks": {
+        "blocked_at_limit": true,
+        "allowed_after_dissolve": true
+      },
+      "ok": true
+    },
+    {
+      "name": "ui_eligibility_gate_via_can_develop",
+      "checks": {
+        "develop_gate_false_at_limit": true,
+        "develop_gate_true_below_limit": true
+      },
+      "ok": true
+    },
+    {
+      "name": "shared_org_move_consumes_supply",
+      "blocked": {
+        "error": "組織棋已達上限（22），無法接收共享組織"
+      },
+      "checks": {
+        "shared_move_blocked_at_limit": true,
+        "shared_move_allowed_below_limit": true,
+        "total_after_transfer_at_limit": true
+      },
+      "ok": true
+    },
+    {
+      "name": "own_org_move_free_at_limit",
+      "result": {
+        "success": true
+      },
+      "checks": {
+        "own_move_allowed_at_limit": true,
+        "total_unchanged": true
+      },
+      "ok": true
+    }
+  ]
+}

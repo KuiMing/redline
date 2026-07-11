@@ -301,6 +301,14 @@
   - proof：`docs/records/faction-ui/SETUP_CARDS_SHUFFLED_INTO_DECK_VALIDATION_20260711.{json,md}`、更新後的 `docs/records/purchase/STATIC_PURCHASE_INITIAL_SUPPLY_VALIDATION.{json,md}`。
   - 落差盤點報告已同步更新對應項目狀態。
 
+- [done] S1（第二輪盤點）：組織棋供應上限完全未實作；紅軍上限依使用者決定採固定 40。
+  - root cause：`rules.md` 步驟④明定反共陣營各 22 個組織棋為「可建立組織之最大數量」（紅軍原文為 8×反共人數、有臺灣再+8），但全 `server/game.py` 沒有任何上限檢查，`Player.total_organizations()` 定義後從未被用於任何限制，玩家可無限建立組織，實體桌遊的資源稀缺機制不存在。
+  - 決定：紅軍上限**不採規則書公式**，依使用者 2026-07-11 決定改為**固定 40**（常數 `RED_ARMY_ORG_SUPPLY = 40`）；反共陣營維持規則書的 22（`ANTI_COMMUNIST_ORG_SUPPLY = 22`）。
+  - 修正：新增 `_org_supply_limit()`／`_has_org_supply()`；供應檢查放進 `can_develop_in_town()`——它是所有建立路徑（一般建立、安全屋、卡牌/奧援/事件/時代建立、UI 可建立高亮清單）的共同漏斗，一處生效；`build_organization` 另補中文明確錯誤訊息（「組織棋已達上限（N），需先瓦解既有組織」）；移動**共享組織**（他人所有、移動後轉為自己所有＝總數+1）時也消耗供應、滿編時擋下；自有組織移動（淨變化0）與瓦解（釋放供應）不受影響。
+  - 驗證：新增 `python3 scripts/validate_org_supply_limits.py`（6/6：反共 21→22 可建、滿 22 擋下且訊息明確；紅軍可超過 22 建到 39→40、滿 40 擋下（證明上限是 40 不是 22）；瓦解後供應釋放可再建；`can_develop_in_town` 在滿編時對所有城鎮回 False（UI 清單同步失效）；滿編時接收共享組織被擋、低於上限可接收；滿編時自有組織移動仍可行）。回歸：`validate_enemy_occupancy_rules.py`、`validate_movement_rules.py`、`validate_setup_cards_shuffled_into_deck.py`、`validate_static_purchase_initial_supply.py`、`validate_red_faction_inspect_reorder.py` 全 PASS。
+  - proof：`docs/records/rules-audit/ORG_SUPPLY_LIMITS_VALIDATION_20260711.{json,md}`。
+  - 落差盤點報告已同步更新對應項目狀態。
+
 ### 已有完整紀錄的其他模組
 - [done] 情報網 target choice map highlight。
   - 提交：`c690f5b fix: highlight intel network dissolve targets on map`。

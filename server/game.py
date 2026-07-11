@@ -43,6 +43,12 @@ STATIC_PURCHASE_CARD_NAMES = tuple(STATIC_PURCHASE_CARD_SUPPLY)
 # rules.md 步驟⑦：事件牌庫為混洗後抽出的 20 張
 EVENT_DECK_SIZE = 20
 
+# rules.md 步驟④：反共陣營各 22 個組織棋，此即可建立組織之最大數量。
+# 紅軍上限原文為「反共陣營玩家總人數×8（有臺灣玩家再+8）」；
+# 依使用者 2026-07-11 決定改為固定 40。
+ANTI_COMMUNIST_ORG_SUPPLY = 22
+RED_ARMY_ORG_SUPPLY = 40
+
 
 class GamePhase(str, Enum):
     SETUP = "setup"
@@ -2673,7 +2679,7 @@ class Game:
                 enemy_town = next((town for town, c in (other.organizations or {}).items() if c > 0), None)
                 if enemy_town:
                     result = self.dissolve_organization(player, other, enemy_town, source='support_card')
-                    if result.get('success'):
+                    if result.get('success') and self._has_org_supply(player):
                         player.organizations[enemy_town] = player.organizations.get(enemy_town, 0) + 1
                         built = True
                     break
@@ -3606,7 +3612,16 @@ class Game:
                 queue.append((neighbor, next_distance))
         return False
 
+    def _org_supply_limit(self, player):
+        return RED_ARMY_ORG_SUPPLY if getattr(player, 'faction_id', None) == 'red_army' else ANTI_COMMUNIST_ORG_SUPPLY
+
+    def _has_org_supply(self, player, count=1):
+        return player.total_organizations() + count <= self._org_supply_limit(player)
+
     def can_develop_in_town(self, player, town):
+        # 組織棋供應上限：所有建立路徑（含 UI 可建立清單）都經過這裡
+        if not self._has_org_supply(player):
+            return False
         if self._town_has_shared_org_access(player, town) and self.can_faction_develop_in_town(player.faction_id, town):
             return True
         return self.can_faction_develop_in_town(player.faction_id, town)
@@ -4438,6 +4453,8 @@ class Game:
             return {"error": "No organization in town"}
         if town in set(getattr(self, 'red_army_destroyed_bases', set()) or []) and getattr(player, 'faction_id', None) == 'red_army':
             return {"error": "Red Army base has been destroyed and cannot be rebuilt"}
+        if not self._has_org_supply(player):
+            return {"error": f"組織棋已達上限（{self._org_supply_limit(player)}），需先瓦解既有組織"}
         if not self._can_player_build_in_town(player, town):
             return {"error": "Cannot develop in this town"}
 
@@ -4576,6 +4593,9 @@ class Game:
             return {"error": "Cannot move into enemy organization"}
         if getattr(origin_owner, 'faction_id', None) == 'red_army' and not self.can_faction_develop_in_town('red_army', to_town):
             return {"error": "Red Army organization cannot leave Red Army development space"}
+        # 移動共享組織時，組織會轉為移動者所有（總數 +1），需消耗自己的組織棋供應
+        if origin_owner is not player and not self._has_org_supply(player):
+            return {"error": f"組織棋已達上限（{self._org_supply_limit(player)}），無法接收共享組織"}
 
         # Movement points represent movement counts, not distance/cost budget.
         # Every legal organization move consumes one count; cards/effects grant counts.
