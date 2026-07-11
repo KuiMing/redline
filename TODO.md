@@ -338,6 +338,12 @@
   - 驗證：`python3 scripts/validate_east_asia_support_taxonomy_fix.py` 擴充「只主導臺灣」「只主導北國」兩個單一地區案例（6/6 PASS）；`validate_support_card_effects_runtime.py` 12/12 回歸 PASS。
   - 同批裁決記錄（見第二輪盤點報告「使用者裁決記錄」）：S4 附帶「宣傳卡＝宣傳家」關閉、東洋奧援 III 級降級裁定獲追認關閉；S5-2 赤鱲角機場、C1 雙倍分神、A4 共同勝利已有明確語意待實作；S5-1（香港抗爭之烈 vs 香港抗暴之戰＋事件後根據地遷移）仍待確認。
 
+- [done] C1：內鬥供應耗盡時以雙倍分神替代（2026-07-11 使用者裁決 C1=B），並修掉 `離間`/`情報網A` 憑空創造內鬥的供應違規。
+  - root cause：`rules.md`「放入分神或內鬥：可將內鬥改為雙倍分神」完全未實作；經裁決語意為**供應替代規則**——僅在內鬥供應耗盡時，每張內鬥以 2 張分神替代（分神也不足時有多少放多少、皆空時記 log 不放置）。實作盤查時另發現 `add_internal_conflict` etype（`離間`、`情報網`選項A）**從不扣除 static supply、憑空創造內鬥**，違反專案的 static supply 原則。
+  - 修正：新增中央 helper `_take_internal_conflict_cards(count, reason)`（扣內鬥供應；耗盡時扣分神供應×2 替代），四個放置點全部改走它：政工部 topdeck（含 UI 結果顯示實際放置的牌名）、事件 `_gain_event_card`、`走漏風聲`、`add_internal_conflict` etype（連帶補上供應扣除）。
+  - 驗證：新增 `python3 scripts/validate_double_distraction_substitution.py`（5/5：正常取牌、替代取牌、部分替代與雙空 log、離間扣供應＋中途耗盡混合替代（內鬥+分神×2）、事件與走漏風聲替代）。同步把 `validate_red_army_faction_abilities.py` 的「供應空→不放」舊斷言改為「供應空→替代放2張分神」＋新增「雙空→不放」案例（全 PASS）；`validate_red_army_special_rules`、`validate_leak_card`、`validate_cost_composition_triggers` 回歸 PASS。
+  - proof：`docs/records/rules-audit/DOUBLE_DISTRACTION_SUBSTITUTION_VALIDATION_20260711.{json,md}`、更新後的 `docs/records/event-cards/RED_ARMY_FACTION_ABILITIES_RUNTIME_VALIDATION.{json,md}`。
+
 ### 已有完整紀錄的其他模組
 - [done] 情報網 target choice map highlight。
   - 提交：`c690f5b fix: highlight intel network dissolve targets on map`。

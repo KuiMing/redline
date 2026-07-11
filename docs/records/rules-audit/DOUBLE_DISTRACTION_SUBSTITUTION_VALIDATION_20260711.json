@@ -1,0 +1,60 @@
+{
+  "summary": {
+    "scope": [
+      "C1 雙倍分神替代",
+      "政工部",
+      "離間/情報網A",
+      "走漏風聲",
+      "事件放入內鬥"
+    ],
+    "purpose": "C1 per 2026-07-11 user ruling (option B): whenever an effect places 內鬥 and the 內鬥 static supply is exhausted, substitute 2×分神 per 內鬥 (partial if 分神 supply is short; logged no-op when both are empty). Centralized in _take_internal_conflict_cards and wired into every placement site: 政工部 topdeck, event gains, 走漏風聲, and the add_internal_conflict etype (離間/情報網A) — the last of which previously created 內鬥 out of thin air without consuming supply at all; it now consumes supply too.",
+    "total": 5,
+    "passed": 5,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "helper_normal_and_substitution",
+      "checks": {
+        "normal_two_internal_conflicts": true,
+        "normal_consumed_supply": true,
+        "substituted_two_distractions": true,
+        "distraction_supply_consumed": true
+      },
+      "ok": true
+    },
+    {
+      "name": "helper_partial_and_both_empty",
+      "checks": {
+        "partial_gives_one_distraction": true,
+        "empty_gives_nothing": true,
+        "both_empty_logged": true
+      },
+      "ok": true
+    },
+    {
+      "name": "divide_card_consumes_supply_and_substitutes",
+      "checks": {
+        "target_gained_two_internal_conflicts": true,
+        "supply_consumed": true,
+        "mixed_substitution_when_supply_runs_out_midway": true,
+        "distraction_supply_consumed": true
+      },
+      "ok": true
+    },
+    {
+      "name": "event_gain_internal_conflict_substitutes",
+      "checks": {
+        "gained_two_substitutes": true
+      },
+      "ok": true
+    },
+    {
+      "name": "leak_top_deck_substitutes",
+      "checks": {
+        "top_card_discarded_plus_two_distractions": true
+      },
+      "ok": true
+    }
+  ]
+}

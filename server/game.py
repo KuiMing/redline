@@ -565,7 +565,39 @@ class Game:
                         break
         return {'range_limit': scoped_range or 1, 'target_region': target_region}
 
+    def _take_internal_conflict_cards(self, count, reason=''):
+        """依 rules.md「放入分神或內鬥」與 2026-07-11 裁決（C1=B）：
+        每需放入 1 張內鬥時，若內鬥供應耗盡，改以 2 張分神替代；
+        分神供應也不足時，有多少放多少。回傳實際要放置的卡牌清單並扣除供應。"""
+        cards = []
+        for _ in range(int(count or 1)):
+            ic = int(self.static_purchase_supply.get('內鬥', 0) or 0)
+            if ic > 0:
+                self.static_purchase_supply['內鬥'] = ic - 1
+                cards.append(self._starter_card('內鬥'))
+                continue
+            placed = 0
+            for _ in range(2):
+                ds = int(self.static_purchase_supply.get('分神', 0) or 0)
+                if ds <= 0:
+                    break
+                self.static_purchase_supply['分神'] = ds - 1
+                cards.append(self._starter_card('分神'))
+                placed += 1
+            suffix = f'（{reason}）' if reason else ''
+            if placed:
+                self.log(f"內鬥供應已空：以 {placed} 張分神替代{suffix}")
+            else:
+                self.log(f"內鬥與分神供應皆空，無法放置{suffix}")
+        return cards
+
     def _gain_event_card(self, player, card_name, count=1):
+        if card_name == '內鬥':
+            cards = self._take_internal_conflict_cards(count, reason='event')
+            if cards:
+                player.deck.discard(cards)
+                self.log(f"{player.name} gained {len(cards)} card(s) ({'、'.join(getattr(c, 'name', str(c)) for c in cards)}) from event")
+            return len(cards)
         gained = 0
         for _ in range(int(count or 1)):
             if card_name in STATIC_PURCHASE_CARD_NAMES:
@@ -581,14 +613,22 @@ class Game:
         return gained
 
     def _topdeck_static_purchase_card(self, target_player, card_name, source_name):
+        if card_name == '內鬥':
+            cards = self._take_internal_conflict_cards(1, reason=source_name)
+            if not cards:
+                self.log(f"{source_name}: could not place {card_name} on {target_player.name}'s deck because static supply was empty")
+                return []
+            for card in cards:
+                target_player.deck.draw_pile.append(card)
+            return [getattr(c, 'name', str(c)) for c in cards]
         if card_name in STATIC_PURCHASE_CARD_NAMES:
             supply = int(self.static_purchase_supply.get(card_name, 0) or 0)
             if supply <= 0:
                 self.log(f"{source_name}: could not place {card_name} on {target_player.name}'s deck because static supply was empty")
-                return False
+                return []
             self.static_purchase_supply[card_name] = supply - 1
         target_player.deck.draw_pile.append(self._starter_card(card_name))
-        return True
+        return [card_name]
 
     def _red_player(self):
         return next((p for p in self.players if p.faction_id == 'red_army'), None)
@@ -2123,7 +2163,7 @@ class Game:
             self._track_event_progress('use_faction_ability', player=player)
             self.pending_choice = None
             if added:
-                self.log(f"{player.name} triggered 政工部 and placed {topdecked} on {target_player.name}'s deck")
+                self.log(f"{player.name} triggered 政工部 and placed {'、'.join(added)} on {target_player.name}'s deck")
             else:
                 self.log(f"{player.name} triggered 政工部 but {topdecked} supply was empty")
             return {
@@ -2134,7 +2174,7 @@ class Game:
                 'choice_key': choice_key,
                 'name': '政工部',
                 'target_player_name': getattr(target_player, 'name', str(target_id)),
-                'topdecked_card': topdecked if added else None,
+                'topdecked_card': '、'.join(added) if added else None,
                 'static_supply_empty': not added,
             }
         if choice_key == 'red_army_state_security_target':
@@ -3371,10 +3411,10 @@ class Game:
             self._mark_red_army_action_used(action_name, target.id)
             self._track_event_progress('use_faction_ability', player=player)
             if added:
-                self.log(f"{player.name} triggered 政工部 and placed {topdecked} on {target.name}'s deck")
+                self.log(f"{player.name} triggered 政工部 and placed {'、'.join(added)} on {target.name}'s deck")
             else:
                 self.log(f"{player.name} triggered 政工部 but {topdecked} supply was empty")
-            return {'success': True, 'result': {'name': action_name, 'target_player_name': target.name, 'topdecked_card': topdecked if added else None, 'static_supply_empty': not added}}
+            return {'success': True, 'result': {'name': action_name, 'target_player_name': target.name, 'topdecked_card': '、'.join(added) if added else None, 'static_supply_empty': not added}}
 
         if action_name == '國安部':
             ok, err = self._red_army_can_use_action(player, action_name)

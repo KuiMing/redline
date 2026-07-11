@@ -204,12 +204,11 @@ class EffectEngine:
             cost = game._card_purchase_cost(top_card) if hasattr(game, "_card_purchase_cost") else {}
             total_cost = int(cost.get("money", 0) or 0) + int(cost.get("propaganda", 0) or 0)
             if total_cost >= 1:
-                supply = int(getattr(game, "static_purchase_supply", {}).get("內鬥", 0) or 0)
-                if supply > 0:
-                    from server.cards import Card
-                    game.static_purchase_supply["內鬥"] = supply - 1
-                    target.deck.discard([Card("內鬥", "disruption", {})])
-                    game.log(f"{player.name} used 走漏風聲 on {target.name}: discarded {card_name} and moved 內鬥 from supply to discard")
+                cards = game._take_internal_conflict_cards(1, reason='走漏風聲') if hasattr(game, '_take_internal_conflict_cards') else []
+                if cards:
+                    target.deck.discard(cards)
+                    placed = '、'.join(getattr(c, 'name', str(c)) for c in cards)
+                    game.log(f"{player.name} used 走漏風聲 on {target.name}: discarded {card_name} and moved {placed} from supply to discard")
                 else:
                     game.log(f"{player.name} used 走漏風聲 on {target.name}: discarded {card_name}, but 內鬥 supply was empty")
             else:
@@ -543,9 +542,14 @@ class EffectEngine:
             if not targets:
                 targets = [player]
             for target in targets:
-                cards = [Card("內鬥", "disruption", {}) for _ in range(count)]
-                target.deck.discard(cards)
-                game.log(f"{target.name} gained {count} 內鬥 card(s)")
+                # 依 static supply 原則從供應取牌（內鬥耗盡時依 C1 裁決以雙倍分神替代）
+                if hasattr(game, '_take_internal_conflict_cards'):
+                    cards = game._take_internal_conflict_cards(count, reason=context.get('card_name') or 'add_internal_conflict')
+                else:
+                    cards = [Card("內鬥", "disruption", {}) for _ in range(count)]
+                if cards:
+                    target.deck.discard(cards)
+                    game.log(f"{target.name} gained {len(cards)} card(s): {'、'.join(getattr(c, 'name', str(c)) for c in cards)}")
             return
 
         # ✅ Cancel card (MVP reaction hook: flags are prepared by Game.play_card; draw handled here)

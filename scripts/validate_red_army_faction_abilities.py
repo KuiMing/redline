@@ -65,15 +65,34 @@ def test_propaganda_department_target_choice_and_per_target_limit():
     )
 
 
-def test_propaganda_department_respects_internal_conflict_static_supply_empty():
+def test_propaganda_department_substitutes_double_distraction_when_supply_empty():
+    # 2026-07-11 裁決（C1=B）：內鬥供應耗盡時，以 2 張分神替代
     game, red, a, b = make_red_game()
     game.static_purchase_supply['內鬥'] = 0
+    distraction_before = int(game.static_purchase_supply.get('分神', 0) or 0)
+    a.deck.draw_pile = []
+    result = game._activated_faction_action(red, '政工部', target_player_id=a.id)
+    top_names = [c.name for c in a.deck.draw_pile]
+    return ok(
+        'red_army_propaganda_department_substitutes_double_distraction_when_supply_empty',
+        result.get('success') and not result.get('result', {}).get('static_supply_empty')
+        and top_names == ['分神', '分神']
+        and game.static_purchase_supply.get('內鬥') == 0
+        and game.static_purchase_supply.get('分神') == distraction_before - 2,
+        f'result={result}, draw_pile={top_names}, ic_supply={game.static_purchase_supply.get("內鬥")}, ds_supply={game.static_purchase_supply.get("分神")}',
+    )
+
+
+def test_propaganda_department_noop_when_both_supplies_empty():
+    game, red, a, b = make_red_game()
+    game.static_purchase_supply['內鬥'] = 0
+    game.static_purchase_supply['分神'] = 0
     a.deck.draw_pile = []
     result = game._activated_faction_action(red, '政工部', target_player_id=a.id)
     return ok(
-        'red_army_propaganda_department_does_not_create_internal_conflict_when_supply_empty',
-        result.get('success') and result.get('result', {}).get('static_supply_empty') and not a.deck.draw_pile and game.static_purchase_supply.get('內鬥') == 0,
-        f'result={result}, draw_pile={[c.name for c in a.deck.draw_pile]}, supply={game.static_purchase_supply.get("內鬥")}',
+        'red_army_propaganda_department_noop_when_both_supplies_empty',
+        result.get('success') and result.get('result', {}).get('static_supply_empty') and not a.deck.draw_pile,
+        f'result={result}, draw_pile={[c.name for c in a.deck.draw_pile]}',
     )
 
 
@@ -150,7 +169,8 @@ def main():
     results = [
         test_united_front_draws_once_per_use_until_non_red_limit(),
         test_propaganda_department_target_choice_and_per_target_limit(),
-        test_propaganda_department_respects_internal_conflict_static_supply_empty(),
+        test_propaganda_department_substitutes_double_distraction_when_supply_empty(),
+        test_propaganda_department_noop_when_both_supplies_empty(),
         test_state_security_dissolves_inner_org_within_one_step(),
         test_ccdi_discards_any_number_then_draws_equal(),
         test_non_red_cannot_use_red_army_abilities(),
