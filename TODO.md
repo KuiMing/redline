@@ -179,6 +179,7 @@
   - 2026-07-11 發現：`test_hong_kong_success_static_supply` 起穩定失敗；用 git worktree 往回跑 20+ 個 commit（含 `8191639` 之前）全部 FAIL，證明壞掉已久、沒有人在跑。
   - root cause：2026-05-31 事件卡生命週期改為「任務條件達成先 `success_pending`，等全體玩家 ACTION 結束才結算」（TODO 已記錄的刻意設計），但腳本裡的 `settle_round_event()` helper 還停留在舊設計（`advance_turn_phase()` 一次就期待 `settled=True`）；單人 advance 後實際狀態是 `success_pending`＋輪到下一位玩家，不是結算完成。屬於驗證腳本過期，不是 runtime bug。
   - 需修：把 `settle_round_event()` 改成推進到整輪結束（所有玩家含紅軍完成 ACTION）再斷言 `settled`；逐一檢查該檔 20+ 個 test 是否還有其他依賴舊生命週期的斷言。修好前，該腳本的 FAIL 不應被當成 regression 訊號（例如 S3 修正時已另建 `validate_event_deck_draw_twenty.py` 獨立驗證）。
+  - 2026-07-11 追加：`scripts/validate_era_effects_runtime.py` 同樣為既有穩定 FAIL（stash 比對確認早於 S2 修正），需一併排查是否同一類生命週期過期問題。
 
 ## 已完成摘要
 
@@ -308,6 +309,14 @@
   - 驗證：新增 `python3 scripts/validate_org_supply_limits.py`（6/6：反共 21→22 可建、滿 22 擋下且訊息明確；紅軍可超過 22 建到 39→40、滿 40 擋下（證明上限是 40 不是 22）；瓦解後供應釋放可再建；`can_develop_in_town` 在滿編時對所有城鎮回 False（UI 清單同步失效）；滿編時接收共享組織被擋、低於上限可接收；滿編時自有組織移動仍可行）。回歸：`validate_enemy_occupancy_rules.py`、`validate_movement_rules.py`、`validate_setup_cards_shuffled_into_deck.py`、`validate_static_purchase_initial_supply.py`、`validate_red_faction_inspect_reorder.py` 全 PASS。
   - proof：`docs/records/rules-audit/ORG_SUPPLY_LIMITS_VALIDATION_20260711.{json,md}`。
   - 落差盤點報告已同步更新對應項目狀態。
+
+- [done] S2（第二輪盤點）＋B3子句：`新疆社會管控` 距離限制零實作；`組織經驗甲`「牆內距離1格」降級子句一併補上。
+  - 資料勘誤：第二輪盤點寫「維吾爾慕尼黑」，實際核對 faction JSON 後 **四個維吾爾變體（伊斯坦堡/慕尼黑/華盛頓/阿拉木圖）全部帶有 `新疆社會管控`**（restriction：「無法無視距離建立牆內組織」），本修正對四個變體全部生效。
+  - root cause：全案沒有任何程式碼讀取這個限制；所有無視距離建立路徑（`思想家`、`組織經驗甲`、`東洋奧援`III級、事件 ignore_distance、非互動 fallback）都不會檢查。`組織經驗甲` 卡面明印的「無法無視距離建立牆內組織者，本牌於牆內建立組織距離為1格」降級子句也完全沒有實作（第一輪 B3 已追蹤）。
+  - 修正：新增 `_player_is_distance_restricted()`／`_faction_restricts_ignore_distance_build()`（僅對牆內城鎮生效，牆外無視距離建立不受影響），比照既有時代關卡 `restrict_ignore_distance_build` 的攔截點逐一掛上：①`_card_build_town_choices`（思想家/組織經驗甲的選城清單；`組織經驗甲` 的降級子句以資料驅動方式表達——`data/action_cards_structured.v1.1.json` 效果加 `inner_fallback_range: 1`，受限玩家仍可選己方組織1格內的牆內城鎮）；②安全屋/支援建立的距離檢查；③`東洋奧援`III級互動清單——「牆內任意」對受限玩家**降級為「己方組織1格內」**（實作裁定：比照 `組織經驗甲` 卡面明印的降級慣例；若之後規則書確認應完全禁用可再調整）；④非互動 `build_anywhere_inner` fallback。
+  - 驗證：新增 `python3 scripts/validate_xinjiang_distance_restriction.py`（4/4：能力正確解析且僅限牆內；思想家對受限玩家完全不提供牆內城鎮、對照陣營（哈薩克）仍可拿到1格外牆內城鎮；組織經驗甲對受限玩家只提供1格內牆內城鎮、遠處牆內被排除、對照陣營不受影響；東洋奧援III級清單對受限玩家與1格內清單完全一致、對照陣營明顯更大）。回歸：`validate_org_supply_limits`、`validate_east_asia_support_taxonomy_fix`、`validate_card_effect_audit_p1`、`validate_enemy_occupancy_rules` 全 PASS（`validate_era_effects_runtime` 為既有 FAIL，stash 比對確認與本次無關，已在 P2 validator hygiene 註記）。
+  - proof：`docs/records/rules-audit/XINJIANG_DISTANCE_RESTRICTION_VALIDATION_20260711.{json,md}`。
+  - 落差盤點報告已同步更新；`組織經驗甲` 剩餘的「棄4點以上卡牌可重複建立」子句仍待處理（B3）。
 
 ### 已有完整紀錄的其他模組
 - [done] 情報網 target choice map highlight。

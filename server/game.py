@@ -1072,8 +1072,20 @@ class Game:
                 continue
             if not self._can_player_build_in_town(player, town):
                 continue
-            if build_range == 'ignore_distance' and self._era_restricts_ignore_distance_build(player, town):
-                continue
+            if build_range == 'ignore_distance':
+                if self._era_restricts_ignore_distance_build(player, town):
+                    continue
+                if self._faction_restricts_ignore_distance_build(player, town):
+                    # 組織經驗甲卡面：「無法無視距離建立牆內組織者，本牌於牆內建立組織距離為1格」
+                    fallback = int((effect or {}).get('inner_fallback_range', 0) or 0)
+                    if not fallback:
+                        continue
+                    source_towns = [
+                        t for t, c in (getattr(player, 'organizations', {}) or {}).items()
+                        if int(c or 0) > 0
+                    ]
+                    if not source_towns or town not in self._towns_within_steps(source_towns, max_steps=fallback):
+                        continue
             choices.append({'town': town})
         return choices
 
@@ -2180,6 +2192,10 @@ class Game:
 
     def _interactive_support_build_towns(self, player, near_only=False):
         inner_towns = set(self._towns_for_region_alias('china'))
+        # 新疆社會管控：無法無視距離建立牆內組織——比照組織經驗甲卡面的降級慣例，
+        # 「牆內任意城鎮」清單降級為「己方組織1格內」（實作裁定，見 TODO 記錄）
+        if not near_only and self._player_is_distance_restricted(player):
+            near_only = True
         if near_only:
             reachable = set()
             for origin in list((player.organizations or {}).keys()):
@@ -2632,7 +2648,12 @@ class Game:
                 target.deck.discard(cards)
         elif effect_type == 'build_anywhere_inner':
             inner_towns = self._towns_for_region_alias('china')
-            target_town = next((town for town in inner_towns if self._can_player_build_in_town(player, town)), None)
+            target_town = next(
+                (town for town in inner_towns
+                 if self._can_player_build_in_town(player, town)
+                 and not self._faction_restricts_ignore_distance_build(player, town)),
+                None,
+            )
             if target_town:
                 player.organizations[target_town] = player.organizations.get(target_town, 0) + 1
         elif effect_type == 'build_near_inner':
@@ -2971,6 +2992,15 @@ class Game:
 
     def _player_is_nonviolent(self, player):
         return self._player_has_ability(player, "非暴力")
+
+    def _player_is_distance_restricted(self, player):
+        # 新疆社會管控（維吾爾慕尼黑）：無法無視距離建立牆內組織
+        return self._player_has_ability(player, "新疆社會管控")
+
+    def _faction_restricts_ignore_distance_build(self, player, town):
+        if not self._player_is_distance_restricted(player):
+            return False
+        return town in set(self._towns_for_region_alias("china"))
 
     def _support_taxonomy_entry(self, card_name):
         for entry in self.support_taxonomy:
@@ -4487,7 +4517,7 @@ class Game:
 
         safehouse_bonus = 1 if self._player_has_ability(player, "安全屋") else 0
         max_distance = 1 + int(getattr(player, 'build_range_bonus', 0) or 0) + safehouse_bonus
-        if origin_town != target_town and (not self._event_modifier_active('ignore_distance') or self._era_restricts_ignore_distance_build(player, target_town)):
+        if origin_town != target_town and (not self._event_modifier_active('ignore_distance') or self._era_restricts_ignore_distance_build(player, target_town) or self._faction_restricts_ignore_distance_build(player, target_town)):
             frontier = [(origin_town, 0)]
             seen = {origin_town}
             reached = False

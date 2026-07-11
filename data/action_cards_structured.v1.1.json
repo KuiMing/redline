@@ -27,7 +27,7 @@
     {"id":"transport_a","name":"交通經驗甲","type":"transport","cost":{"money":5,"propaganda":0},"resources":{"money":3},"effect":[{"type":"extra_move","count":6}]},
     {"id":"org_experience_c","name":"組織經驗丙","type":"organization","cost":{"money":2,"propaganda":1},"resources":{"propaganda":1},"effect":[{"type":"build","range":1}]},
     {"id":"org_experience_b","name":"組織經驗乙","type":"organization","cost":{"money":3,"propaganda":2},"resources":{"propaganda":2},"effect":[{"type":"build","range":1},{"type":"build","range":1}]},
-    {"id":"org_experience_a","name":"組織經驗甲","type":"organization","cost":{"money":3,"propaganda":3},"resources":{"money":1,"propaganda":2},"effect":[{"type":"build","range":"ignore_distance"}]},
+    {"id":"org_experience_a","name":"組織經驗甲","type":"organization","cost":{"money":3,"propaganda":3},"resources":{"money":1,"propaganda":2},"effect":[{"type":"build","range":"ignore_distance","inner_fallback_range":1}]},
     {"id":"purge_minor","name":"批判","type":"purge","cost":{"money":0,"propaganda":2},"resources":{"propaganda":1},"effect":[{"type":"trash_from_hand_or_discard","count":1}]},
     {"id":"purge_major","name":"批鬥","type":"purge","cost":{"money":0,"propaganda":4},"resources":{"propaganda":2},"effect":[{"type":"trash_from_hand_or_discard","count":2}]},
     {"id":"expose_scandal","name":"爆料黑幕","type":"propaganda_special","cost":{"money":1,"propaganda":4},"resources":{"propaganda":2},"effect":[{"type":"cancel_card"},{"type":"conditional_draw","condition":"canceled_propaganda_card","count":1}]},
