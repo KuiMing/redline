@@ -344,6 +344,13 @@
   - 驗證：新增 `python3 scripts/validate_double_distraction_substitution.py`（5/5：正常取牌、替代取牌、部分替代與雙空 log、離間扣供應＋中途耗盡混合替代（內鬥+分神×2）、事件與走漏風聲替代）。同步把 `validate_red_army_faction_abilities.py` 的「供應空→不放」舊斷言改為「供應空→替代放2張分神」＋新增「雙空→不放」案例（全 PASS）；`validate_red_army_special_rules`、`validate_leak_card`、`validate_cost_composition_triggers` 回歸 PASS。
   - proof：`docs/records/rules-audit/DOUBLE_DISTRACTION_SUBSTITUTION_VALIDATION_20260711.{json,md}`、更新後的 `docs/records/event-cards/RED_ARMY_FACTION_ABILITIES_RUNTIME_VALIDATION.{json,md}`。
 
+- [done] A4：共同勝利實作（2026-07-11 使用者裁決語意）。
+  - 裁決語意：「在有反共陣營玩家獲得勝利之際，其他反共陣營玩家若已達到所屬陣營勝利條件的 2/3 以上（含），視為共同勝利者。」紅軍獲勝（含第20回合保底）不產生共同勝利者，紅軍也永不為共同勝利者。
+  - root cause：舊 `victory.py` 把「2/3」誤實作成「達成條件**數量**的 2/3」——在每陣營只有 1 條條件的現況下永遠等同「達成唯一條件」，真正的共同勝利語意完全不存在。
+  - 修正：`victory.py` 新增 `condition_progress()`（達成數量/需求數量，跨條件取最大；`count_and_required` 以組織數比例衡量、必含城鎮不另計——簡化，之後可再調整）與 `co_winners()`；舊「條件數 2/3」公式改為標準的「達成任一條件即獲勝」；`game._check_victory` 勝利時計算並記錄 `co_winners`（含 log），state 增加 `co_winners` 欄位。**注意**：目前僅對 15 個結構化條件陣營有效，46 個 text-only 陣營要等 A1 完成後自動涵蓋；勝利/共同勝利的 UI 顯示屬既有 P1「第20回合勝利宣告」項目的範圍，屆時一併處理。
+  - 驗證：新增 `python3 scripts/validate_co_winners.py`（4/4：10/14≈71% 達標為共同勝利者且 state 有曝露、9/14≈64% 不達標、紅軍保底獲勝無共同勝利者、紅軍永不為共同勝利者）。回歸：`validate_org_supply_limits`、`validate_enemy_occupancy_rules`、`validate_red_army_special_rules` PASS。
+  - proof：`docs/records/rules-audit/CO_WINNERS_VALIDATION_20260711.{json,md}`。
+
 ### 已有完整紀錄的其他模組
 - [done] 情報網 target choice map highlight。
   - 提交：`c690f5b fix: highlight intel network dissolve targets on map`。

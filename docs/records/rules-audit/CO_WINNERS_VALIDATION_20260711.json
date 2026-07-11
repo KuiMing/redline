@@ -1,0 +1,49 @@
+{
+  "summary": {
+    "scope": [
+      "A4 共同勝利"
+    ],
+    "purpose": "A4 per 2026-07-11 user ruling: when an anti-communist player wins, every OTHER anti-communist player whose progress toward their own faction's win condition is >= 2/3 (inclusive) is a co-winner. Red Army victories grant no co-winners, and Red Army is never a co-winner. Progress = achieved count / required count (max across a faction's conditions); the old dead formula \"2/3 of the number of conditions\" was replaced by any-one-condition-wins. Currently effective for the 15 structured-condition factions; the 46 text-only factions gain coverage when A1 lands.",
+    "total": 4,
+    "passed": 4,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "co_winner_at_or_above_two_thirds",
+      "co": [
+        "C"
+      ],
+      "checks": {
+        "winner_is_W": true,
+        "C_is_co_winner": true,
+        "state_exposes_co_winners": true
+      },
+      "ok": true
+    },
+    {
+      "name": "below_two_thirds_not_co_winner",
+      "checks": {
+        "winner_is_W": true,
+        "C_not_co_winner": true
+      },
+      "ok": true
+    },
+    {
+      "name": "red_army_victory_no_co_winners",
+      "checks": {
+        "red_wins": true,
+        "no_co_winners_on_red_victory": true
+      },
+      "ok": true
+    },
+    {
+      "name": "red_army_never_co_winner",
+      "checks": {
+        "winner_is_W": true,
+        "red_not_co_winner": true
+      },
+      "ok": true
+    }
+  ]
+}

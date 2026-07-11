@@ -106,6 +106,7 @@ class Game:
         self.game_phase = GamePhase.SETUP
         self.turn_phase = TurnPhase.ACTION
         self.winner = None
+        self.co_winners = []
         self.market_mode = market_mode or "sample_53"
 
         self.map = self._load_json(MAP_PATH)
@@ -4609,6 +4610,11 @@ class Game:
         if win:
             self.game_phase = GamePhase.FINISHED
             self.winner = winner
+            # rules.md 共同勝利（2026-07-11 裁決 A4）：反共玩家獲勝時，
+            # 其他反共玩家達成自身勝利條件 2/3 以上（含）者為共同勝利者
+            self.co_winners = self.victory_engine.co_winners(self, winner)
+            if self.co_winners:
+                self.log(f"共同勝利者：{'、'.join(self.co_winners)}")
 
     def _resolve_pending_build_choice_for_town(self, player, town):
         choice = self.pending_choice or {}
@@ -5591,6 +5597,7 @@ class Game:
             "game_phase": self.game_phase,
             "turn_phase": self.turn_phase,
             "winner": self.winner,
+            "co_winners": list(getattr(self, 'co_winners', []) or []),
             "current_player": self.current_player().name,
             "active_eras": self.era_engine.get_active_eras() if self.era_engine else [],
             "active_era_details": active_era_details,

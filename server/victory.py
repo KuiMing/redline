@@ -56,13 +56,44 @@ class VictoryEngine:
                 # handled globally above
                 continue
 
-        # 共同勝利：達成 2/3 條件
-        if conditions:
-            required = max(1, (len(conditions) * 2) // 3)
-            if met_conditions >= required:
-                return True, player.name
+        # 勝利：達成任一條件即獲勝
+        if conditions and met_conditions >= 1:
+            return True, player.name
 
         return False, None
+
+    def condition_progress(self, player, game):
+        """回傳玩家對自身陣營勝利條件的最高達成比例（0.0~1.0+）。
+        用於 rules.md「共同勝利」：反共玩家獲勝時，其他反共玩家達成比例 >= 2/3 即為共同勝利者
+        （2026-07-11 使用者裁決 A4）。count_and_required 以組織數比例衡量（必含城鎮不另計，
+        屬簡化，若之後裁定需併入可再調整）。"""
+        faction = self.factions.get(getattr(player, 'faction_id', None)) or {}
+        best = 0.0
+        for cond in faction.get("win_conditions", []) or []:
+            cond_type = cond.get("type")
+            required = int(cond.get("count", 0) or 0)
+            if required <= 0:
+                continue
+            if cond_type in {"count_only", "count_and_required"}:
+                best = max(best, self._count_scope(player, cond.get("scope", "牆內"), game) / required)
+            elif cond_type == "map_specific_count":
+                best = max(best, player.total_organizations() / required)
+        return best
+
+    def co_winners(self, game, winner_name):
+        """反共陣營玩家獲勝時，其他反共玩家達成自身條件 2/3 以上（含）者為共同勝利者。
+        紅軍獲勝（含第20回合保底與臺灣壓制）不適用。"""
+        winner_player = next((p for p in game.players if p.name == winner_name), None)
+        if winner_player is None or getattr(winner_player, 'faction_id', None) == 'red_army':
+            return []
+        threshold = 2.0 / 3.0 - 1e-9
+        names = []
+        for p in game.players:
+            if p is winner_player or getattr(p, 'faction_id', None) == 'red_army':
+                continue
+            if self.condition_progress(p, game) >= threshold:
+                names.append(p.name)
+        return names
 
     def _count_scope(self, player, scope, game):
         def shared_count(towns):
