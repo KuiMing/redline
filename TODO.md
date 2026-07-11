@@ -134,6 +134,7 @@
   - 需檢查：`模仿戰術` card effect 定義、pending choice 建立邏輯、可模仿卡牌來源與合法性篩選、`static/app.js` choice/card modal render，以及無合法目標時的 log/提示與 phase gating。
 
 - [todo] Playtest card rule bug：紅軍使用 `離間` 時，`內鬥` 應只放到對方牌堆，不應放到紅軍自己的牌堆。
+  - 2026-07-11 進度註記：`離間` 憑空創造內鬥、不扣供應的部分已隨 C1 修正（commit `9c59dc2`）；**目標選擇 bug 仍在**——`add_internal_conflict` etype 無 target 時 fallback 到 `[player]`（施放者自己），需要補目標玩家選擇流程。
   - 2026-07-06 回報情境：紅軍使用 `離間` 後，效果似乎把 `內鬥` 放到了紅軍自己的牌堆。
   - 期望：`離間` 應只將 `內鬥` 放到指定對方／目標玩家的牌堆；紅軍自己不應成為此效果的放置目標。
   - 需檢查：`離間` card effect 定義、target player selection、`add_internal_conflict` / static supply 消耗、紅軍作為 actor 時的 target/recipient 判定，以及 UI/log 是否正確顯示內鬥進入哪位玩家牌堆。
@@ -142,7 +143,8 @@
   - 2026-07-06 回報情境：玩家使用 `組織經驗甲` 時，目前流程似乎沒有先詢問玩家是否要額外花其他 4 點以上的卡牌來建立組織。
   - 2026-07-11 已修正：連同卡面「棄4點以上可重複建立」子句一併實作，每次建立後跳出明確確認（不再建立／棄1張再建立1次），4點判定使用總購買成本（資金+宣傳），拒絕時不消耗任何東西。詳見「規則資料 vs 程式實作落差修正」區塊的對應條目；驗證 `python3 scripts/validate_org_exp_a_repeat_build.py`（5/5）；proof `docs/records/action-cards/ORG_EXP_A_REPEAT_BUILD_VALIDATION_20260711.{json,md}`。
 
-- [todo] Playtest card rule bug：`點燃熱情` 在本回合曾打出宣傳費用卡牌時應抽 2 張，但實際只拿到 1 張。
+- [done] Playtest card rule bug：`點燃熱情` 在本回合曾打出宣傳費用卡牌時應抽 2 張，但實際只拿到 1 張。
+  - 2026-07-10 已修正（與 `樹立信心` 同根因一起修，commit `7c066fd`）：條件判定由「卡牌種類」改為「實際購買費用組成」；驗證 `python3 scripts/validate_cost_composition_triggers.py`（9/9）。詳見「規則資料 vs 程式實作落差修正」區塊對應條目。
   - 2026-07-06 回報情境：Turn 19 使用 `點燃熱情`，且該回合曾經打出過有宣傳費用的卡牌；log 顯示 `[Turn 19] f played 點燃熱情`、`[Turn 19] f chose 點燃熱情 via 地下黨`，但最終只有拿到 1 張卡牌。
   - 期望：若本回合曾打出有宣傳費用的卡牌，`點燃熱情` 應多抽 1 張，也就是總共抽 2 張；透過 `地下黨` 選擇／取得後使用時也應套用同一條件。
   - 需檢查：`點燃熱情` card effect 條件判定、turn log/旗標是否正確記錄「本回合曾打出有宣傳費用的卡牌」、`地下黨` 觸發或選牌後是否保留/套用 acting card context，以及抽牌數與 UI 手牌顯示是否一致。
