@@ -2124,7 +2124,7 @@ function renderFactionActionPanel(state) {
     return;
   }
 
-  const ethnicRitualFactions = new Set(['dian_zhuang','zhuang','yi','bai','hani','dai','miao','tujia','dong','buyei','yao','li']);
+  const ethnicRitualFactions = new Set(['zhuang','yi','bai','hani','dai','miao','tujia','dong','buyei','yao','li']);
   if (ethnicRitualFactions.has(faction)) {
     showCenteredActionPanel(
       '民族祭儀',
@@ -2235,7 +2235,7 @@ function renderFactionActionResult(state, faction) {
     return {hasResult: false, message: '', html};
   }
 
-  const ethnicRitualFactions = new Set(['dian_zhuang','zhuang','yi','bai','hani','dai','miao','tujia','dong','buyei','yao','li']);
+  const ethnicRitualFactions = new Set(['zhuang','yi','bai','hani','dai','miao','tujia','dong','buyei','yao','li']);
   if (ethnicRitualFactions.has(faction)) {
     const html = '<div class="faction-action-placeholder">發動後會在此直接顯示猜測、翻牌與資源結果。</div>';
     info.innerHTML = html;

@@ -364,6 +364,11 @@
   - 驗證：新增 `python3 scripts/validate_hk_base_relocation.py`（5/5：失敗結算也開窗口且免費遷移不耗移動點、窗口隨新回合關閉、機場路徑花2點且1點被擋、四城限制/敵佔/非己回合/非香港全部擋下、錨定組織與根據地能力隨遷）。回歸：`validate_chek_lap_kok_airport`、`validate_movement_rules`、`validate_event_deck_draw_twenty`、`validate_co_winners` PASS。
   - proof：`docs/records/rules-audit/HK_BASE_RELOCATION_VALIDATION_20260711.{json,md}`。
 
+- [done] 資料修正：刪除 `dian_zhuang`（滇（壯））重複陣營條目（2026-07-11 使用者裁決 B）。
+  - 背景：A1 前置確認時發現 `dian_zhuang` 與 `zhuang`（壯）根據地清單、能力完全相同，僅名稱與分組不同、且勝利條件是佔位文字「待補」——判定為建資料時「壯」同時被收進地域類與少數民族兩份清單造成的重複條目；使用者裁決刪除。
+  - 修正：自 `data/factions/all_faction.integrated.v2.json` 移除該條目（61→60 個陣營）；`static/app.js` 兩處民族祭儀陣營集合同步移除 `dian_zhuang`。歷史來源檔 `data/factions/rebel_authoritative_rebuilt.v1.json` 保留原樣（未被程式載入，僅作原始紀錄）。A1 的資料轉換自此無阻塞（45 個 text-only 陣營待補結構化勝利條件）。
+  - 驗證：Game 正常啟動（60 陣營）；`validate_faction_action_guess_result`、`validate_minyun_gender_revolution_nonviolent`、`validate_co_winners` PASS（`validate_ethnic_ritual_ui_and_engine` 的 FAIL 為需要啟動中伺服器的瀏覽器測試、環境性，引擎部分已另行驗證通過）。
+
 ### 已有完整紀錄的其他模組
 - [done] 情報網 target choice map highlight。
   - 提交：`c690f5b fix: highlight intel network dissolve targets on map`。
