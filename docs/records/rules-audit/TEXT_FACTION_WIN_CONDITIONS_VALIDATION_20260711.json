@@ -1,0 +1,74 @@
+{
+  "summary": {
+    "scope": [
+      "A1：45個 text-only 陣營勝利條件"
+    ],
+    "purpose": "A1: 45 factions had only free-text win_condition_text which no code ever read, so they could never win. All 45 are now structured (9 count_only 牆內14; 34 count_and_required with required towns, incl. republican's inner-scope variant; 2 specials — wan's 宛地 region scope [main-map 南陽 only until the 宛 sub-map is modeled] and chaoxian's required_any_of 平壤/首爾). Migration used exact text-roundtrip verification (rebuild sentence from structure, byte-compare). victory.py gained required_any_of and the 宛地 scope; co-winner progress (A4) automatically covers these factions now.",
+    "total": 7,
+    "passed": 7,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "all_factions_have_structured_conditions",
+      "missing": [],
+      "checks": {
+        "all_60_factions_have_win_conditions": true
+      },
+      "ok": true
+    },
+    {
+      "name": "count_only_inner_liberals_14",
+      "checks": {
+        "thirteen_not_enough": true,
+        "fourteen_wins": true
+      },
+      "ok": true
+    },
+    {
+      "name": "outer_orgs_excluded_from_inner_scope",
+      "checks": {
+        "thirteen_inner_plus_outer_not_win": true
+      },
+      "ok": true
+    },
+    {
+      "name": "count_and_required_yue",
+      "checks": {
+        "missing_required_town_blocks_win": true,
+        "eleven_with_required_wins": true
+      },
+      "ok": true
+    },
+    {
+      "name": "chaoxian_required_any_of",
+      "results": {
+        "平壤": "P",
+        "首爾": "P",
+        "neither": null
+      },
+      "checks": {
+        "pyongyang_branch_wins": true,
+        "seoul_branch_wins": true,
+        "neither_blocks_win": true
+      },
+      "ok": true
+    },
+    {
+      "name": "wan_region_scope",
+      "checks": {
+        "orgs_outside_wan_do_not_count": true,
+        "fourteen_in_nanyang_wins": true
+      },
+      "ok": true
+    },
+    {
+      "name": "co_winner_now_works_for_text_factions",
+      "checks": {
+        "winner": true,
+        "text_faction_co_winner": true
+      },
+      "ok": true
+    }
+  ]
+}

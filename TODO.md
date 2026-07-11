@@ -369,6 +369,14 @@
   - 修正：自 `data/factions/all_faction.integrated.v2.json` 移除該條目（61→60 個陣營）；`static/app.js` 兩處民族祭儀陣營集合同步移除 `dian_zhuang`。歷史來源檔 `data/factions/rebel_authoritative_rebuilt.v1.json` 保留原樣（未被程式載入，僅作原始紀錄）。A1 的資料轉換自此無阻塞（45 個 text-only 陣營待補結構化勝利條件）。
   - 驗證：Game 正常啟動（60 陣營）；`validate_faction_action_guess_result`、`validate_minyun_gender_revolution_nonviolent`、`validate_co_winners` PASS（`validate_ethnic_ritual_ui_and_engine` 的 FAIL 為需要啟動中伺服器的瀏覽器測試、環境性，引擎部分已另行驗證通過）。
 
+- [done] A1：45 個 text-only 陣營的勝利條件結構化並接入勝利判定（第一輪盤點最大項收尾）。
+  - root cause：45 個地域/政治類反賊陣營只有自由文字 `win_condition_text`，全案沒有任何程式讀取，這些陣營永遠無法透過自身條件獲勝（僅剩紅軍第20回合保底）。
+  - 資料轉換：`scripts/migrate_win_conditions.py` 一次性轉換（保留在 repo 供重跑/稽核）——45/45 轉換成功：9 個 `count_only`（牆內≥14）、34 個 `count_and_required`（含 `republican` 的牆內 scope 變體；全部必含城鎮已驗證存在於地圖）、2 個特殊案例（`wan`：自訂 `宛地` scope＝主地圖南陽＋未來宛地圖城鎮，附 note；`chaoxian`：新增 `required_any_of` schema 表達「平壤**或**首爾」）。一般形式全部通過**往返檢查**（由結構化資料重建原句逐字比對），零失真；原 `win_condition_text` 保留供對照。
+  - 程式擴充：`victory.py` 的 `count_and_required` 支援 `required_any_of`（每組至少一城有組織）；`_count_scope` 新增 `宛地` scope（目前計南陽，宛地圖建模後擴充）。A4 共同勝利進度計算自動涵蓋這些陣營。
+  - 驗證：新增 `python3 scripts/validate_text_faction_win_conditions.py`（7/7：60 陣營全有結構化條件；牆內14 的 13→不勝/14→勝；牆外組織不計入牆內 scope；粵的必含城鎮缺一即擋、齊備即勝；朝鮮平壤/首爾兩分支皆勝、皆無則否；宛地外的組織不計入、南陽14勝；text-only 陣營現在也能當共同勝利者）。回歸：`validate_co_winners`、`validate_org_supply_limits`、`validate_hk_base_relocation`、`validate_lobby_family_faction_details`、`validate_minyun_gender_revolution_nonviolent` PASS。
+  - proof：`docs/records/rules-audit/TEXT_FACTION_WIN_CONDITIONS_VALIDATION_20260711.{json,md}`。
+  - **至此兩輪規則盤點的全部項目（A1-A4、B1、B3、S1-S7、C1-C2 裁決範圍）完成或關閉**；剩餘為第四梯隊保養項（C3 購買區校驗、S6 無限行動、死代碼 JSON 清理、3 支過期驗證腳本）與 P1 UI 批次。
+
 ### 已有完整紀錄的其他模組
 - [done] 情報網 target choice map highlight。
   - 提交：`c690f5b fix: highlight intel network dissolve targets on map`。

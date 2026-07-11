@@ -806,7 +806,14 @@
       "abilities_text": [
         "【立場試探】在己方行動階段，可展示牌庫頂牌，若該牌購買費用為奇數，則將其加入手牌；若為偶數，您可選擇是否將其放進己方棄牌堆。"
       ],
-      "win_condition_text": "回合結束時在牆內擁有至少14個有效組織。"
+      "win_condition_text": "回合結束時在牆內擁有至少14個有效組織。",
+      "win_conditions": [
+        {
+          "type": "count_only",
+          "scope": "牆內",
+          "count": 14
+        }
+      ]
     },
     {
       "id": "republican",
@@ -826,7 +833,19 @@
       "special_rules": [
         "遊戲過程中可與藍線臺灣共用組織。"
       ],
-      "win_condition_text": "回合結束時在牆內擁有至少11個有效組織，其中必須包含南京、廣州、重慶。"
+      "win_condition_text": "回合結束時在牆內擁有至少11個有效組織，其中必須包含南京、廣州、重慶。",
+      "win_conditions": [
+        {
+          "type": "count_and_required",
+          "scope": "牆內",
+          "count": 11,
+          "required_locations": [
+            "南京",
+            "廣州",
+            "重慶"
+          ]
+        }
+      ]
     },
     {
       "id": "federalists",
@@ -842,7 +861,14 @@
       "abilities_text": [
         "【商貿組織】當您每回合第1次打出購買費用含資金的牌時，抽1張牌。"
       ],
-      "win_condition_text": "回合結束時在牆內擁有至少14個有效組織。"
+      "win_condition_text": "回合結束時在牆內擁有至少14個有效組織。",
+      "win_conditions": [
+        {
+          "type": "count_only",
+          "scope": "牆內",
+          "count": 14
+        }
+      ]
     },
     {
       "id": "minyun",
@@ -861,7 +887,14 @@
         "【各界資助】在遊戲開始時額外將1張資助者洗入起始牌庫。",
         "【非暴力】禁止持有武裝類卡牌。"
       ],
-      "win_condition_text": "回合結束時在牆內擁有至少14個有效組織。"
+      "win_condition_text": "回合結束時在牆內擁有至少14個有效組織。",
+      "win_conditions": [
+        {
+          "type": "count_only",
+          "scope": "牆內",
+          "count": 14
+        }
+      ]
     },
     {
       "id": "new_left",
@@ -877,7 +910,14 @@
       "abilities_text": [
         "【星星之火】當您每回合第1次打出購買費用含宣傳的牌時，抽1張牌。"
       ],
-      "win_condition_text": "回合結束時在牆內擁有至少14個有效組織。"
+      "win_condition_text": "回合結束時在牆內擁有至少14個有效組織。",
+      "win_conditions": [
+        {
+          "type": "count_only",
+          "scope": "牆內",
+          "count": 14
+        }
+      ]
     },
     {
       "id": "reform_opening",
@@ -893,7 +933,14 @@
       "abilities_text": [
         "【紅軍派系】每回合可檢視1次牌庫頂3張牌，將其以任意順序放回牌庫頂，並抽1張牌。"
       ],
-      "win_condition_text": "回合結束時在牆內擁有至少14個有效組織。"
+      "win_condition_text": "回合結束時在牆內擁有至少14個有效組織。",
+      "win_conditions": [
+        {
+          "type": "count_only",
+          "scope": "牆內",
+          "count": 14
+        }
+      ]
     },
     {
       "id": "falun_gong",
@@ -908,7 +955,14 @@
       "abilities_text": [
         "【華文傳媒】可以用資金支付宣傳。"
       ],
-      "win_condition_text": "回合結束時在牆內擁有至少14個有效組織。"
+      "win_condition_text": "回合結束時在牆內擁有至少14個有效組織。",
+      "win_conditions": [
+        {
+          "type": "count_only",
+          "scope": "牆內",
+          "count": 14
+        }
+      ]
     },
     {
       "id": "underground_church",
@@ -926,7 +980,14 @@
       "special_rules": [
         "遊戲過程中可與綠線臺灣共用組織。"
       ],
-      "win_condition_text": "回合結束時在牆內擁有至少14個有效組織。"
+      "win_condition_text": "回合結束時在牆內擁有至少14個有效組織。",
+      "win_conditions": [
+        {
+          "type": "count_only",
+          "scope": "牆內",
+          "count": 14
+        }
+      ]
     },
     {
       "id": "gender_revolution",
@@ -946,7 +1007,14 @@
       "special_rules": [
         "遊戲過程中可與綠線臺灣共用組織。"
       ],
-      "win_condition_text": "回合結束時在牆內擁有至少14個有效組織。"
+      "win_condition_text": "回合結束時在牆內擁有至少14個有效組織。",
+      "win_conditions": [
+        {
+          "type": "count_only",
+          "scope": "牆內",
+          "count": 14
+        }
+      ]
     },
     {
       "id": "qiong",
@@ -964,7 +1032,18 @@
       "abilities_text": [
         "【展現實力】在己方行動階段打出至少3張不同名稱的非起始牌，則可獲得3點宣傳或3點資金。"
       ],
-      "win_condition_text": "回合結束時在牆內與牆外共擁有至少12個有效組織，其中必須包含海口、三亞。"
+      "win_condition_text": "回合結束時在牆內與牆外共擁有至少12個有效組織，其中必須包含海口、三亞。",
+      "win_conditions": [
+        {
+          "type": "count_and_required",
+          "scope": "牆內與牆外",
+          "count": 12,
+          "required_locations": [
+            "海口",
+            "三亞"
+          ]
+        }
+      ]
     },
     {
       "id": "yue",
@@ -984,7 +1063,19 @@
       "special_rules": [
         "遊戲過程中可與香港共用組織。"
       ],
-      "win_condition_text": "回合結束時在牆內與牆外共擁有至少11個有效組織，其中必須包含廣州、深圳、湛茂。"
+      "win_condition_text": "回合結束時在牆內與牆外共擁有至少11個有效組織，其中必須包含廣州、深圳、湛茂。",
+      "win_conditions": [
+        {
+          "type": "count_and_required",
+          "scope": "牆內與牆外",
+          "count": 11,
+          "required_locations": [
+            "廣州",
+            "深圳",
+            "湛茂"
+          ]
+        }
+      ]
     },
     {
       "id": "aomen",
@@ -1004,7 +1095,17 @@
       "special_rules": [
         "遊戲過程中可與香港共用組織。"
       ],
-      "win_condition_text": "回合結束時在牆內與牆外共擁有至少13個有效組織，其中必須包含澳門。"
+      "win_condition_text": "回合結束時在牆內與牆外共擁有至少13個有效組織，其中必須包含澳門。",
+      "win_conditions": [
+        {
+          "type": "count_and_required",
+          "scope": "牆內與牆外",
+          "count": 13,
+          "required_locations": [
+            "澳門"
+          ]
+        }
+      ]
     },
     {
       "id": "hakka",
@@ -1024,7 +1125,17 @@
       "special_rules": [
         "遊戲過程中可與綠線臺灣共用組織。"
       ],
-      "win_condition_text": "回合結束時在牆內與牆外共擁有至少13個有效組織，其中必須包含梅州。"
+      "win_condition_text": "回合結束時在牆內與牆外共擁有至少13個有效組織，其中必須包含梅州。",
+      "win_conditions": [
+        {
+          "type": "count_and_required",
+          "scope": "牆內與牆外",
+          "count": 13,
+          "required_locations": [
+            "梅州"
+          ]
+        }
+      ]
     },
     {
       "id": "chaoshan",
@@ -1044,7 +1155,17 @@
       "special_rules": [
         "遊戲過程中可與綠線臺灣共用組織。"
       ],
-      "win_condition_text": "回合結束時在牆內與牆外共擁有至少13個有效組織，其中必須包含潮州。"
+      "win_condition_text": "回合結束時在牆內與牆外共擁有至少13個有效組織，其中必須包含潮州。",
+      "win_conditions": [
+        {
+          "type": "count_and_required",
+          "scope": "牆內與牆外",
+          "count": 13,
+          "required_locations": [
+            "潮州"
+          ]
+        }
+      ]
     },
     {
       "id": "gui",
@@ -1062,7 +1183,18 @@
       "abilities_text": [
         "【展現實力】在己方行動階段打出至少3張不同名稱的非起始牌，則可獲得3點宣傳或3點資金。"
       ],
-      "win_condition_text": "回合結束時在牆內與牆外共擁有至少12個有效組織，其中必須包含桂林、南寧。"
+      "win_condition_text": "回合結束時在牆內與牆外共擁有至少12個有效組織，其中必須包含桂林、南寧。",
+      "win_conditions": [
+        {
+          "type": "count_and_required",
+          "scope": "牆內與牆外",
+          "count": 12,
+          "required_locations": [
+            "桂林",
+            "南寧"
+          ]
+        }
+      ]
     },
     {
       "id": "gan",
@@ -1078,7 +1210,17 @@
       "abilities_text": [
         "【展現實力】在己方行動階段打出至少3張不同名稱的非起始牌，則可獲得3點宣傳或3點資金。"
       ],
-      "win_condition_text": "回合結束時在牆內與牆外共擁有至少13個有效組織，其中必須包含南昌。"
+      "win_condition_text": "回合結束時在牆內與牆外共擁有至少13個有效組織，其中必須包含南昌。",
+      "win_conditions": [
+        {
+          "type": "count_and_required",
+          "scope": "牆內與牆外",
+          "count": 13,
+          "required_locations": [
+            "南昌"
+          ]
+        }
+      ]
     },
     {
       "id": "min",
@@ -1100,7 +1242,18 @@
       "special_rules": [
         "遊戲過程中可與綠線臺灣共用組織。"
       ],
-      "win_condition_text": "回合結束時在牆內與牆外共擁有至少12個有效組織，其中必須包含福州、廈門。"
+      "win_condition_text": "回合結束時在牆內與牆外共擁有至少12個有效組織，其中必須包含福州、廈門。",
+      "win_conditions": [
+        {
+          "type": "count_and_required",
+          "scope": "牆內與牆外",
+          "count": 12,
+          "required_locations": [
+            "福州",
+            "廈門"
+          ]
+        }
+      ]
     },
     {
       "id": "wuyue",
@@ -1122,7 +1275,18 @@
       "special_rules": [
         "遊戲過程中可與綠線臺灣共用組織。"
       ],
-      "win_condition_text": "回合結束時在牆內與牆外共擁有至少12個有效組織，其中必須包含杭州、溫州。"
+      "win_condition_text": "回合結束時在牆內與牆外共擁有至少12個有效組織，其中必須包含杭州、溫州。",
+      "win_conditions": [
+        {
+          "type": "count_and_required",
+          "scope": "牆內與牆外",
+          "count": 12,
+          "required_locations": [
+            "杭州",
+            "溫州"
+          ]
+        }
+      ]
     },
     {
       "id": "hu",
@@ -1176,7 +1340,17 @@
       "abilities_text": [
         "【展現實力】在己方行動階段打出至少3張不同名稱的非起始牌，則可獲得3點宣傳或3點資金。"
       ],
-      "win_condition_text": "回合結束時在牆內與牆外共擁有至少13個有效組織，其中必須包含長沙。"
+      "win_condition_text": "回合結束時在牆內與牆外共擁有至少13個有效組織，其中必須包含長沙。",
+      "win_conditions": [
+        {
+          "type": "count_and_required",
+          "scope": "牆內與牆外",
+          "count": 13,
+          "required_locations": [
+            "長沙"
+          ]
+        }
+      ]
     },
     {
       "id": "chu",
@@ -1192,7 +1366,17 @@
       "abilities_text": [
         "【展現實力】在己方行動階段打出至少3張不同名稱的非起始牌，則可獲得3點宣傳或3點資金。"
       ],
-      "win_condition_text": "回合結束時在牆內與牆外共擁有至少13個有效組織，其中必須包含武漢。"
+      "win_condition_text": "回合結束時在牆內與牆外共擁有至少13個有效組織，其中必須包含武漢。",
+      "win_conditions": [
+        {
+          "type": "count_and_required",
+          "scope": "牆內與牆外",
+          "count": 13,
+          "required_locations": [
+            "武漢"
+          ]
+        }
+      ]
     },
     {
       "id": "jianghuai",
@@ -1210,7 +1394,18 @@
       "abilities_text": [
         "【展現實力】在己方行動階段打出至少3張不同名稱的非起始牌，則可獲得3點宣傳或3點資金。"
       ],
-      "win_condition_text": "回合結束時在牆內與牆外共擁有至少12個有效組織，其中必須包含合肥、南京。"
+      "win_condition_text": "回合結束時在牆內與牆外共擁有至少12個有效組織，其中必須包含合肥、南京。",
+      "win_conditions": [
+        {
+          "type": "count_and_required",
+          "scope": "牆內與牆外",
+          "count": 12,
+          "required_locations": [
+            "合肥",
+            "南京"
+          ]
+        }
+      ]
     },
     {
       "id": "wan",
@@ -1229,7 +1424,15 @@
       "special_rules": [
         "此派必須搭配宛地圖使用。"
       ],
-      "win_condition_text": "回合結束時在全宛地（包含主地圖南陽與宛地圖城鎮）擁有至少14個有效組織。"
+      "win_condition_text": "回合結束時在全宛地（包含主地圖南陽與宛地圖城鎮）擁有至少14個有效組織。",
+      "win_conditions": [
+        {
+          "type": "count_only",
+          "scope": "宛地",
+          "count": 14,
+          "note": "全宛地＝主地圖南陽＋宛地圖城鎮（宛地圖尚未建模，目前僅計南陽）"
+        }
+      ]
     },
     {
       "id": "yiluo_yu",
@@ -1245,7 +1448,17 @@
       "abilities_text": [
         "【展現實力】在己方行動階段打出至少3張不同名稱的非起始牌，則可獲得3點宣傳或3點資金。"
       ],
-      "win_condition_text": "回合結束時在牆內與牆外共擁有至少13個有效組織，其中必須包含鄭州。"
+      "win_condition_text": "回合結束時在牆內與牆外共擁有至少13個有效組織，其中必須包含鄭州。",
+      "win_conditions": [
+        {
+          "type": "count_and_required",
+          "scope": "牆內與牆外",
+          "count": 13,
+          "required_locations": [
+            "鄭州"
+          ]
+        }
+      ]
     },
     {
       "id": "youyan",
@@ -1262,7 +1475,19 @@
       "abilities_text": [
         "【展現實力】在己方行動階段打出至少3張不同名稱的非起始牌，則可獲得3點宣傳或3點資金。"
       ],
-      "win_condition_text": "回合結束時在牆內與牆外共擁有至少11個有效組織，其中必須包含北京、天津、石家莊。"
+      "win_condition_text": "回合結束時在牆內與牆外共擁有至少11個有效組織，其中必須包含北京、天津、石家莊。",
+      "win_conditions": [
+        {
+          "type": "count_and_required",
+          "scope": "牆內與牆外",
+          "count": 11,
+          "required_locations": [
+            "北京",
+            "天津",
+            "石家莊"
+          ]
+        }
+      ]
     },
     {
       "id": "jin",
@@ -1278,7 +1503,17 @@
       "abilities_text": [
         "【展現實力】在己方行動階段打出至少3張不同名稱的非起始牌，則可獲得3點宣傳或3點資金。"
       ],
-      "win_condition_text": "回合結束時在牆內與牆外共擁有至少13個有效組織，其中必須包含太原。"
+      "win_condition_text": "回合結束時在牆內與牆外共擁有至少13個有效組織，其中必須包含太原。",
+      "win_conditions": [
+        {
+          "type": "count_and_required",
+          "scope": "牆內與牆外",
+          "count": 13,
+          "required_locations": [
+            "太原"
+          ]
+        }
+      ]
     },
     {
       "id": "qi",
@@ -1296,7 +1531,18 @@
       "abilities_text": [
         "【展現實力】在己方行動階段打出至少3張不同名稱的非起始牌，則可獲得3點宣傳或3點資金。"
       ],
-      "win_condition_text": "回合結束時在牆內與牆外共擁有至少12個有效組織，其中必須包含青島、濟南。"
+      "win_condition_text": "回合結束時在牆內與牆外共擁有至少12個有效組織，其中必須包含青島、濟南。",
+      "win_conditions": [
+        {
+          "type": "count_and_required",
+          "scope": "牆內與牆外",
+          "count": 12,
+          "required_locations": [
+            "青島",
+            "濟南"
+          ]
+        }
+      ]
     },
     {
       "id": "yuba",
@@ -1312,7 +1558,17 @@
       "abilities_text": [
         "【展現實力】在己方行動階段打出至少3張不同名稱的非起始牌，則可獲得3點宣傳或3點資金。"
       ],
-      "win_condition_text": "回合結束時在牆內與牆外共擁有至少13個有效組織，其中必須包含重慶。"
+      "win_condition_text": "回合結束時在牆內與牆外共擁有至少13個有效組織，其中必須包含重慶。",
+      "win_conditions": [
+        {
+          "type": "count_and_required",
+          "scope": "牆內與牆外",
+          "count": 13,
+          "required_locations": [
+            "重慶"
+          ]
+        }
+      ]
     },
     {
       "id": "bashu",
@@ -1329,7 +1585,18 @@
       "abilities_text": [
         "【展現實力】在己方行動階段打出至少3張不同名稱的非起始牌，則可獲得3點宣傳或3點資金。"
       ],
-      "win_condition_text": "回合結束時在牆內與牆外共擁有至少12個有效組織，其中必須包含成都、重慶。"
+      "win_condition_text": "回合結束時在牆內與牆外共擁有至少12個有效組織，其中必須包含成都、重慶。",
+      "win_conditions": [
+        {
+          "type": "count_and_required",
+          "scope": "牆內與牆外",
+          "count": 12,
+          "required_locations": [
+            "成都",
+            "重慶"
+          ]
+        }
+      ]
     },
     {
       "id": "ye_lang_qian",
@@ -1346,7 +1613,17 @@
       "abilities_text": [
         "【展現實力】在己方行動階段打出至少3張不同名稱的非起始牌，則可獲得3點宣傳或3點資金。"
       ],
-      "win_condition_text": "回合結束時在牆內與牆外共擁有至少13個有效組織，其中必須包含貴陽。"
+      "win_condition_text": "回合結束時在牆內與牆外共擁有至少13個有效組織，其中必須包含貴陽。",
+      "win_conditions": [
+        {
+          "type": "count_and_required",
+          "scope": "牆內與牆外",
+          "count": 13,
+          "required_locations": [
+            "貴陽"
+          ]
+        }
+      ]
     },
     {
       "id": "dian",
@@ -1367,7 +1644,19 @@
       "special_rules": [
         "遊戲過程中可與藍線臺灣共用組織。"
       ],
-      "win_condition_text": "回合結束時在牆內與牆外共擁有至少11個有效組織，其中必須包含昆明、德宏、西雙版納。"
+      "win_condition_text": "回合結束時在牆內與牆外共擁有至少11個有效組織，其中必須包含昆明、德宏、西雙版納。",
+      "win_conditions": [
+        {
+          "type": "count_and_required",
+          "scope": "牆內與牆外",
+          "count": 11,
+          "required_locations": [
+            "昆明",
+            "德宏",
+            "西雙版納"
+          ]
+        }
+      ]
     },
     {
       "id": "qin_guanlong",
@@ -1383,7 +1672,17 @@
       "abilities_text": [
         "【展現實力】在己方行動階段打出至少3張不同名稱的非起始牌，則可獲得3點宣傳或3點資金。"
       ],
-      "win_condition_text": "回合結束時在牆內與牆外共擁有至少13個有效組織，其中必須包含西安。"
+      "win_condition_text": "回合結束時在牆內與牆外共擁有至少13個有效組織，其中必須包含西安。",
+      "win_conditions": [
+        {
+          "type": "count_and_required",
+          "scope": "牆內與牆外",
+          "count": 13,
+          "required_locations": [
+            "西安"
+          ]
+        }
+      ]
     },
     {
       "id": "zhaowu_ganqingning",
@@ -1400,7 +1699,19 @@
       "abilities_text": [
         "【展現實力】在己方行動階段打出至少3張不同名稱的非起始牌，則可獲得3點宣傳或3點資金。"
       ],
-      "win_condition_text": "回合結束時在牆內與牆外共擁有至少11個有效組織，其中必須包含蘭州、西寧、銀川。"
+      "win_condition_text": "回合結束時在牆內與牆外共擁有至少11個有效組織，其中必須包含蘭州、西寧、銀川。",
+      "win_conditions": [
+        {
+          "type": "count_and_required",
+          "scope": "牆內與牆外",
+          "count": 11,
+          "required_locations": [
+            "蘭州",
+            "西寧",
+            "銀川"
+          ]
+        }
+      ]
     },
     {
       "id": "zhuang",
@@ -1419,7 +1730,19 @@
       "abilities_text": [
         "【民族祭儀】在己方行動階段，可將1張手牌放進牌庫底，猜牌庫頂牌購買費用奇偶，並展示牌庫頂牌。若猜中可獲得2點宣傳與2點資金，沒猜中則獲得2點宣傳或2點資金。"
       ],
-      "win_condition_text": "回合結束時在牆內與牆外共擁有至少11個有效組織，其中必須包含南寧、昆明、廣州。"
+      "win_condition_text": "回合結束時在牆內與牆外共擁有至少11個有效組織，其中必須包含南寧、昆明、廣州。",
+      "win_conditions": [
+        {
+          "type": "count_and_required",
+          "scope": "牆內與牆外",
+          "count": 11,
+          "required_locations": [
+            "南寧",
+            "昆明",
+            "廣州"
+          ]
+        }
+      ]
     },
     {
       "id": "yi",
@@ -1437,7 +1760,19 @@
       "abilities_text": [
         "【民族祭儀】在己方行動階段，可將1張手牌放進牌庫底，猜牌庫頂牌購買費用奇偶，並展示牌庫頂牌。若猜中可獲得2點宣傳與2點資金，沒猜中則獲得2點宣傳或2點資金。"
       ],
-      "win_condition_text": "回合結束時在牆內與牆外共擁有至少11個有效組織，其中必須包含昆明、成都、貴陽。"
+      "win_condition_text": "回合結束時在牆內與牆外共擁有至少11個有效組織，其中必須包含昆明、成都、貴陽。",
+      "win_conditions": [
+        {
+          "type": "count_and_required",
+          "scope": "牆內與牆外",
+          "count": 11,
+          "required_locations": [
+            "昆明",
+            "成都",
+            "貴陽"
+          ]
+        }
+      ]
     },
     {
       "id": "bai",
@@ -1454,7 +1789,19 @@
       "abilities_text": [
         "【民族祭儀】在己方行動階段，可將1張手牌放進牌庫底，猜牌庫頂牌購買費用奇偶，並展示牌庫頂牌。若猜中可獲得2點宣傳與2點資金，沒猜中則獲得2點宣傳或2點資金。"
       ],
-      "win_condition_text": "回合結束時在牆內與牆外共擁有至少11個有效組織，其中必須包含昆明、貴陽、長沙。"
+      "win_condition_text": "回合結束時在牆內與牆外共擁有至少11個有效組織，其中必須包含昆明、貴陽、長沙。",
+      "win_conditions": [
+        {
+          "type": "count_and_required",
+          "scope": "牆內與牆外",
+          "count": 11,
+          "required_locations": [
+            "昆明",
+            "貴陽",
+            "長沙"
+          ]
+        }
+      ]
     },
     {
       "id": "hani",
@@ -1474,7 +1821,18 @@
       "abilities_text": [
         "【民族祭儀】在己方行動階段，可將1張手牌放進牌庫底，猜牌庫頂牌購買費用奇偶，並展示牌庫頂牌。若猜中可獲得2點宣傳與2點資金，沒猜中則獲得2點宣傳或2點資金。"
       ],
-      "win_condition_text": "回合結束時在牆內與牆外共擁有至少12個有效組織，其中必須包含昆明、西雙版納。"
+      "win_condition_text": "回合結束時在牆內與牆外共擁有至少12個有效組織，其中必須包含昆明、西雙版納。",
+      "win_conditions": [
+        {
+          "type": "count_and_required",
+          "scope": "牆內與牆外",
+          "count": 12,
+          "required_locations": [
+            "昆明",
+            "西雙版納"
+          ]
+        }
+      ]
     },
     {
       "id": "dai",
@@ -1492,7 +1850,18 @@
       "abilities_text": [
         "【民族祭儀】在己方行動階段，可將1張手牌放進牌庫底，猜牌庫頂牌購買費用奇偶，並展示牌庫頂牌。若猜中可獲得2點宣傳與2點資金，沒猜中則獲得2點宣傳或2點資金。"
       ],
-      "win_condition_text": "回合結束時在牆內與牆外共擁有至少12個有效組織，其中必須包含德宏、西雙版納。"
+      "win_condition_text": "回合結束時在牆內與牆外共擁有至少12個有效組織，其中必須包含德宏、西雙版納。",
+      "win_conditions": [
+        {
+          "type": "count_and_required",
+          "scope": "牆內與牆外",
+          "count": 12,
+          "required_locations": [
+            "德宏",
+            "西雙版納"
+          ]
+        }
+      ]
     },
     {
       "id": "miao",
@@ -1513,7 +1882,20 @@
       "abilities_text": [
         "【民族祭儀】在己方行動階段，可將1張手牌放進牌庫底，猜牌庫頂牌購買費用奇偶，並展示牌庫頂牌。若猜中可獲得2點宣傳與2點資金，沒猜中則獲得2點宣傳或2點資金。"
       ],
-      "win_condition_text": "回合結束時在牆內與牆外共擁有至少9個有效組織，其中必須包含貴陽、長沙、昆明、重慶。"
+      "win_condition_text": "回合結束時在牆內與牆外共擁有至少9個有效組織，其中必須包含貴陽、長沙、昆明、重慶。",
+      "win_conditions": [
+        {
+          "type": "count_and_required",
+          "scope": "牆內與牆外",
+          "count": 9,
+          "required_locations": [
+            "貴陽",
+            "長沙",
+            "昆明",
+            "重慶"
+          ]
+        }
+      ]
     },
     {
       "id": "tujia",
@@ -1530,7 +1912,20 @@
       "abilities_text": [
         "【民族祭儀】在己方行動階段，可將1張手牌放進牌庫底，猜牌庫頂牌購買費用奇偶，並展示牌庫頂牌。若猜中可獲得2點宣傳與2點資金，沒猜中則獲得2點宣傳或2點資金。"
       ],
-      "win_condition_text": "回合結束時在牆內與牆外共擁有至少9個有效組織，其中必須包含長沙、武漢、貴陽、重慶。"
+      "win_condition_text": "回合結束時在牆內與牆外共擁有至少9個有效組織，其中必須包含長沙、武漢、貴陽、重慶。",
+      "win_conditions": [
+        {
+          "type": "count_and_required",
+          "scope": "牆內與牆外",
+          "count": 9,
+          "required_locations": [
+            "長沙",
+            "武漢",
+            "貴陽",
+            "重慶"
+          ]
+        }
+      ]
     },
     {
       "id": "dong",
@@ -1547,7 +1942,19 @@
       "abilities_text": [
         "【民族祭儀】在己方行動階段，可將1張手牌放進牌庫底，猜牌庫頂牌購買費用奇偶，並展示牌庫頂牌。若猜中可獲得2點宣傳與2點資金，沒猜中則獲得2點宣傳或2點資金。"
       ],
-      "win_condition_text": "回合結束時在牆內與牆外共擁有至少11個有效組織，其中必須包含貴陽、長沙、桂林。"
+      "win_condition_text": "回合結束時在牆內與牆外共擁有至少11個有效組織，其中必須包含貴陽、長沙、桂林。",
+      "win_conditions": [
+        {
+          "type": "count_and_required",
+          "scope": "牆內與牆外",
+          "count": 11,
+          "required_locations": [
+            "貴陽",
+            "長沙",
+            "桂林"
+          ]
+        }
+      ]
     },
     {
       "id": "buyei",
@@ -1563,7 +1970,18 @@
       "abilities_text": [
         "【民族祭儀】在己方行動階段，可將1張手牌放進牌庫底，猜牌庫頂牌購買費用奇偶，並展示牌庫頂牌。若猜中可獲得2點宣傳與2點資金，沒猜中則獲得2點宣傳或2點資金。"
       ],
-      "win_condition_text": "回合結束時在牆內與牆外共擁有至少12個有效組織，其中必須包含貴陽、昆明。"
+      "win_condition_text": "回合結束時在牆內與牆外共擁有至少12個有效組織，其中必須包含貴陽、昆明。",
+      "win_conditions": [
+        {
+          "type": "count_and_required",
+          "scope": "牆內與牆外",
+          "count": 12,
+          "required_locations": [
+            "貴陽",
+            "昆明"
+          ]
+        }
+      ]
     },
     {
       "id": "yao",
@@ -1582,7 +2000,20 @@
       "abilities_text": [
         "【民族祭儀】在己方行動階段，可將1張手牌放進牌庫底，猜牌庫頂牌購買費用奇偶，並展示牌庫頂牌。若猜中可獲得2點宣傳與2點資金，沒猜中則獲得2點宣傳或2點資金。"
       ],
-      "win_condition_text": "回合結束時在牆內與牆外共擁有至少9個有效組織，其中必須包含桂林、南寧、長沙、廣州。"
+      "win_condition_text": "回合結束時在牆內與牆外共擁有至少9個有效組織，其中必須包含桂林、南寧、長沙、廣州。",
+      "win_conditions": [
+        {
+          "type": "count_and_required",
+          "scope": "牆內與牆外",
+          "count": 9,
+          "required_locations": [
+            "桂林",
+            "南寧",
+            "長沙",
+            "廣州"
+          ]
+        }
+      ]
     },
     {
       "id": "li",
@@ -1598,7 +2029,18 @@
       "abilities_text": [
         "【民族祭儀】在己方行動階段，可將1張手牌放進牌庫底，猜牌庫頂牌購買費用奇偶，並展示牌庫頂牌。若猜中可獲得2點宣傳與2點資金，沒猜中則獲得2點宣傳或2點資金。"
       ],
-      "win_condition_text": "回合結束時在牆內與牆外共擁有至少12個有效組織，其中必須包含海口、三亞。"
+      "win_condition_text": "回合結束時在牆內與牆外共擁有至少12個有效組織，其中必須包含海口、三亞。",
+      "win_conditions": [
+        {
+          "type": "count_and_required",
+          "scope": "牆內與牆外",
+          "count": 12,
+          "required_locations": [
+            "海口",
+            "三亞"
+          ]
+        }
+      ]
     },
     {
       "id": "hui",
@@ -1618,7 +2060,14 @@
       "abilities_text": [
         "【殉道者】每次己方牆內組織被其他玩家成功瓦解時，抽1張牌。"
       ],
-      "win_condition_text": "回合結束時在牆內擁有至少14個有效組織。"
+      "win_condition_text": "回合結束時在牆內擁有至少14個有效組織。",
+      "win_conditions": [
+        {
+          "type": "count_only",
+          "scope": "牆內",
+          "count": 14
+        }
+      ]
     },
     {
       "id": "chaoxian",
@@ -1638,7 +2087,23 @@
       "special_rules": [
         "請覆蓋於滿洲陣營卡，使用滿洲組織棋、發展空間與時代闖卡遊玩。"
       ],
-      "win_condition_text": "回合結束時在牆內擁有至少12個有效組織，其中必須包含延邊，並且在平壤或首爾擁有組織。"
+      "win_condition_text": "回合結束時在牆內擁有至少12個有效組織，其中必須包含延邊，並且在平壤或首爾擁有組織。",
+      "win_conditions": [
+        {
+          "type": "count_and_required",
+          "scope": "牆內",
+          "count": 12,
+          "required_locations": [
+            "延邊"
+          ],
+          "required_any_of": [
+            [
+              "平壤",
+              "首爾"
+            ]
+          ]
+        }
+      ]
     }
   ],
   "sources": {

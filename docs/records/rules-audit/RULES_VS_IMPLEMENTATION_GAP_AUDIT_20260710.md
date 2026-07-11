@@ -40,7 +40,9 @@
 
 ## A. 陣營規則（`all_faction.integrated.v2.json`）落差 —— 本次盤點的重點，發現多項嚴重缺口
 
-### A1.【最高優先】46 / 61 個陣營的勝利條件完全沒有被判定 —— 這些陣營理論上永遠不會自己贏
+### A1.【已修正 2026-07-11】46 / 61 個陣營的勝利條件完全沒有被判定（後修正為 45/60——dian_zhuang 重複條目已刪）
+
+> **修正記錄（2026-07-11）**：45 個陣營全部完成資料轉換（`scripts/migrate_win_conditions.py`，往返檢查零失真）並接入 `victory.py`（新增 `required_any_of` 與 `宛地` scope）。驗證：`python3 scripts/validate_text_faction_win_conditions.py`（7/7）；proof：`docs/records/rules-audit/TEXT_FACTION_WIN_CONDITIONS_VALIDATION_20260711.{json,md}`。
 
 **現況**：`all_faction.integrated.v2.json` 裡的陣營資料有兩種 schema：
 - 15 個陣營（`red_army`、`kazakh`、`hong_kong`、`tibet_dharamsala/dehradun/chogu`、`mongol`、`manchuria`、`taiwan_green/blue`、`uyghur_istanbul/munich/washington/almaty`、`hu`）用結構化的 `win_conditions` 陣列（`type: count_only / count_and_required / taiwan_override / default_survival`）。

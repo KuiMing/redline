@@ -38,8 +38,10 @@ class VictoryEngine:
 
             elif cond_type == "count_and_required":
                 required = set(cond.get("required_locations", []))
+                any_of_groups = cond.get("required_any_of") or []
                 if (self._count_scope(player, cond.get("scope", "牆內"), game) >= cond.get("count", 0)
-                        and all(game._shared_org_count(player, town) > 0 for town in required)):
+                        and all(game._shared_org_count(player, town) > 0 for town in required)
+                        and all(any(game._shared_org_count(player, town) > 0 for town in group) for group in any_of_groups)):
                     met_conditions += 1
 
             elif cond_type == "map_specific_count":
@@ -114,6 +116,10 @@ class VictoryEngine:
             return shared_count(china_towns)
         if scope == "牆內與牆外":
             return shared_count(all_org_towns)
+        if scope == "宛地":
+            # 宛（win_condition：全宛地）＝主地圖南陽＋宛擴充地圖城鎮；
+            # 宛地圖尚未建模，目前僅計南陽（見 faction 資料的 note 欄位）
+            return shared_count({"南陽"})
         return shared_count(all_org_towns)
 
     def _count_taiwan_orgs(self, player, game):
