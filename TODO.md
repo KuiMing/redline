@@ -356,7 +356,13 @@
   - 實作：`move_organization` 新增 airport 分支——僅限香港陣營移動**自己的**組織、起點為赤臘角（地圖對「赤鱲角」的拼寫）、終點為牆外且屬香港發展空間；花費 2 移動點；不建立反向通道（牆外→赤臘角仍走一般連線規則）；目的地敵方佔領封鎖等既有檢查照常適用；赤臘角原有的道路/鐵路鄰接移動維持 1 點。前端可移動城鎮高亮尚未涵蓋機場航線，歸入 P1 移動 UI 批次一併處理。
   - 驗證：新增 `python3 scripts/validate_chek_lap_kok_airport.py`（7/7：跨洋移動成功且花費2點、移動點不足擋下、反向擋下、非香港陣營（粵）擋下、發展空間外（曼谷）擋下、鄰接移動仍1點、敵佔目的地擋下）。回歸：`validate_movement_rules`、`validate_enemy_occupancy_rules`、`validate_org_supply_limits` PASS。
   - proof：`docs/records/rules-audit/CHEK_LAP_KOK_AIRPORT_VALIDATION_20260711.{json,md}`。
-  - S5 剩餘（仍待確認）：「香港抗爭之烈」vs「香港抗暴之戰」是否同一張事件卡＋事件後根據地免費遷移。
+  - S5 剩餘：已於同日由使用者裁決並實作完成，見下一條。
+
+- [done] S5-1：香港根據地遷移兩條特殊規則實作（2026-07-11 使用者裁決）。
+  - 裁決：「香港抗爭之烈」＝事件卡**香港抗暴之戰**。兩條規則：①該事件發生並完成結算後（成功或失敗皆算）、進入下一回合之前，香港可**免費**將根據地遷移至臺北/倫敦/卡加利/多倫多（亦可選擇不遷）；②不論事件是否發生，香港隨時（自己的行動階段）可用赤鱲角機場**花費 2 次遷移**把根據地遷到上述四城。
+  - 實作：`relocate_hong_kong_base(player_id, to_town)` 新方法＋WS action `relocate_base`；事件結算時開啟免費窗口旗標 `hk_free_base_relocation`（state 有曝露）、新回合事件階段開始時自動關閉；目的地限四個 relocatable 根據地城市、敵佔封鎖；根據地錨定組織隨遷、新根據地的在地能力（如倫敦=國際線）動態生效、錨定不可移動規則在新址延續。**前端 UI（遷移按鈕/免費窗口提示）尚未做**，歸入 P1 UI 批次。
+  - 驗證：新增 `python3 scripts/validate_hk_base_relocation.py`（5/5：失敗結算也開窗口且免費遷移不耗移動點、窗口隨新回合關閉、機場路徑花2點且1點被擋、四城限制/敵佔/非己回合/非香港全部擋下、錨定組織與根據地能力隨遷）。回歸：`validate_chek_lap_kok_airport`、`validate_movement_rules`、`validate_event_deck_draw_twenty`、`validate_co_winners` PASS。
+  - proof：`docs/records/rules-audit/HK_BASE_RELOCATION_VALIDATION_20260711.{json,md}`。
 
 ### 已有完整紀錄的其他模組
 - [done] 情報網 target choice map highlight。

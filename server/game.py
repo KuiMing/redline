@@ -107,6 +107,8 @@ class Game:
         self.turn_phase = TurnPhase.ACTION
         self.winner = None
         self.co_winners = []
+        # 香港 special_rules（2026-07-11 裁決 S5-1）：香港抗暴之戰結算後、下一回合開始前的免費根據地遷移窗口
+        self.hk_free_base_relocation = False
         self.market_mode = market_mode or "sample_53"
 
         self.map = self._load_json(MAP_PATH)
@@ -365,6 +367,9 @@ class Game:
         return text
 
     def _start_event_phase(self):
+        if getattr(self, 'hk_free_base_relocation', False):
+            self.hk_free_base_relocation = False
+            self.log('香港免費根據地遷移窗口已隨新回合開始關閉')
         event = self.event_deck.draw() if getattr(self, 'event_deck', None) else None
         self.current_event = dict(event) if event else None
         self.event_modifiers = self._active_event_modifiers()
@@ -884,6 +889,11 @@ class Game:
         self.event_progress['settled'] = True
         self.event_progress['status'] = 'success' if succeeded else 'failure'
         result = self._apply_event_effect(effect or {'type': 'none'}, player, outcome='success' if succeeded else 'failure')
+        # 香港 special_rules（2026-07-11 裁決 S5-1，「香港抗爭之烈」＝本事件）：
+        # 香港抗暴之戰發生並完成結算後、進入下一回合前，香港可免費遷移根據地
+        if event.get('name') == '香港抗暴之戰' and any(getattr(pl, 'faction_id', None) == 'hong_kong' for pl in self.players):
+            self.hk_free_base_relocation = True
+            self.log('香港抗暴之戰已結算：香港可於下一回合開始前免費遷移根據地（臺北/倫敦/卡加利/多倫多）')
         self.event_notification = self._event_display_payload()
         return result
 
@@ -4761,6 +4771,47 @@ class Game:
             "shared_target": target_owner is not defender,
         }
 
+    def _hk_relocatable_base_towns(self):
+        faction = self.faction_by_id.get('hong_kong', {})
+        return [b.get('name') for b in (faction.get('bases') or []) if isinstance(b, dict) and b.get('type') == 'relocatable']
+
+    def relocate_hong_kong_base(self, player_id, to_town):
+        """香港 special_rules（2026-07-11 裁決）：
+        (1) 香港抗暴之戰結算後、下一回合開始前，可免費遷移根據地至臺北/倫敦/卡加利/多倫多；
+        (2) 任何時候（自己的行動階段）可用赤鱲角機場花費 2 次遷移把根據地遷到上述城市。"""
+        player = next((p for p in self.players if getattr(p, 'id', None) == player_id), None)
+        if player is None:
+            return {"error": "Player not found"}
+        if getattr(player, 'faction_id', None) != 'hong_kong':
+            return {"error": "Only Hong Kong can relocate its base"}
+        targets = self._hk_relocatable_base_towns()
+        if to_town not in targets:
+            return {"error": f"根據地只能遷移至：{'、'.join(targets)}"}
+        if to_town == player.base:
+            return {"error": "Base is already there"}
+        if self._town_blocks_movement_for_player(player, to_town):
+            return {"error": "Cannot relocate base into enemy organization"}
+        free_window = bool(getattr(self, 'hk_free_base_relocation', False))
+        if free_window:
+            self.hk_free_base_relocation = False
+            via = '香港抗暴之戰（免費）'
+        else:
+            if self.current_player() is not player or self.turn_phase != TurnPhase.ACTION:
+                return {"error": "Airport base relocation requires your ACTION phase"}
+            if player.moves_left < 2:
+                return {"error": "Not enough move points (airport base relocation costs 2)"}
+            player.moves_left -= 2
+            via = '赤鱲角機場（2次遷移）'
+        old_base = player.base
+        if old_base and player.organizations.get(old_base, 0) > 0:
+            player.organizations[old_base] -= 1
+            if player.organizations[old_base] <= 0:
+                del player.organizations[old_base]
+        player.organizations[to_town] = player.organizations.get(to_town, 0) + 1
+        player.base = to_town
+        self.log(f"{player.name} relocated base from {old_base} to {to_town} via {via}")
+        return {"success": True, "from": old_base, "to": to_town, "free": free_window}
+
     def move_organization(self, from_town, to_town, mode="road"):
         if self.turn_phase != TurnPhase.ACTION:
             return {"error": "Not in ACTION phase"}
@@ -5611,6 +5662,7 @@ class Game:
             "turn_phase": self.turn_phase,
             "winner": self.winner,
             "co_winners": list(getattr(self, 'co_winners', []) or []),
+            "hk_free_base_relocation": bool(getattr(self, 'hk_free_base_relocation', False)),
             "current_player": self.current_player().name,
             "active_eras": self.era_engine.get_active_eras() if self.era_engine else [],
             "active_era_details": active_era_details,

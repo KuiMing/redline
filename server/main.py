@@ -600,6 +600,8 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
                         guess=data.get("guess"),
                         target_player_id=data.get("target_player_id"),
                     )
+            elif action == "relocate_base":
+                result = game.relocate_hong_kong_base(player_id, data.get("town"))
             elif action == "resolve_choice":
                 result = game.resolve_pending_choice(player_id, data.get("index"))
 
