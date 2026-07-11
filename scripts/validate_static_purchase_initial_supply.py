@@ -125,17 +125,21 @@ def run_checks():
     ])
     expected = dict(STATIC_PURCHASE_CARD_SUPPLY)
     expected['宣傳家'] -= 5  # 香港 1 + 達蘭薩拉 2 + 慕尼黑 2
+    # 起始額外卡是「洗入起始牌庫」：應在牌庫或起手牌中，開局棄牌堆必須是空的
+    deck_zone = {p.faction_id: names(p.deck.draw_pile) + names(p.hand) for p in game.players}
     discards = {p.faction_id: names(p.deck.discard_pile) for p in game.players}
     checks.append(check(
         'formal_start_setup_propagandists_decrement_static_supply_once_after_lobby_override',
         game.static_purchase_supply == expected
-        and discards.get('hong_kong', []).count('宣傳家') == 1
-        and discards.get('tibet_dharamsala', []).count('宣傳家') == 2
-        and discards.get('uyghur_munich', []).count('宣傳家') == 2,
+        and deck_zone.get('hong_kong', []).count('宣傳家') == 1
+        and deck_zone.get('tibet_dharamsala', []).count('宣傳家') == 2
+        and deck_zone.get('uyghur_munich', []).count('宣傳家') == 2
+        and all(not cards for cards in discards.values()),
         {
-            'rule': '正式 lobby 開局套用陣營/根據地後，起始額外宣傳家要從常設供應扣除，且不可受 Game() 隨機初始陣營二次影響。',
+            'rule': '正式 lobby 開局套用陣營/根據地後，起始額外宣傳家要從常設供應扣除、洗入起始牌庫（牌庫或起手牌，不在棄牌堆），且不可受 Game() 隨機初始陣營二次影響。',
             'static_purchase_supply': game.static_purchase_supply,
             'expected': expected,
+            'player_deck_zone': deck_zone,
             'player_discards': discards,
         },
     ))
@@ -146,15 +150,18 @@ def run_checks():
     ])
     expected = dict(STATIC_PURCHASE_CARD_SUPPLY)
     expected['資助者'] -= 1
+    deck_zone = {p.faction_id: names(p.deck.draw_pile) + names(p.hand) for p in game.players}
     discards = {p.faction_id: names(p.deck.discard_pile) for p in game.players}
     checks.append(check(
         'formal_start_setup_patron_decrements_static_supply',
         game.static_purchase_supply == expected
-        and discards.get('minyun', []).count('資助者') == 1,
+        and deck_zone.get('minyun', []).count('資助者') == 1
+        and discards.get('minyun', []) == [],
         {
-            'rule': '各界資助起始額外資助者也消耗常設供應。',
+            'rule': '各界資助起始額外資助者也消耗常設供應，並洗入起始牌庫（牌庫或起手牌）。',
             'static_purchase_supply': game.static_purchase_supply,
             'expected': expected,
+            'player_deck_zone': deck_zone,
             'player_discards': discards,
         },
     ))

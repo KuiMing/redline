@@ -1,0 +1,89 @@
+{
+  "summary": {
+    "scope": [
+      "攬炒策略",
+      "達賴救援",
+      "東突厥斯坦政府",
+      "活動家",
+      "各界資助"
+    ],
+    "purpose": "S4 (second-pass audit): setup bonus cards (\"洗入起始牌庫\") were added to the DISCARD pile after the opening hand was already drawn, so they missed the entire first deck cycle. Fixed: _apply_setup_abilities now appends them to the draw pile, returns the drawn opening hand to the deck, reshuffles, and redraws the same hand size — equivalent to building an 11-12 card starting deck before the opening draw. Static-supply decrement behavior unchanged; no-op (and no reshuffle) when nothing was gained.",
+    "total": 6,
+    "passed": 6,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "hong_kong_攬炒策略_shuffled_into_deck",
+      "zones": {
+        "draw": 0,
+        "hand": 1,
+        "discard": 0
+      },
+      "checks": {
+        "one_extra_in_deck_zone": true,
+        "none_in_discard": true,
+        "hand_still_five": true,
+        "deck_total_eleven": true,
+        "supply_decremented_once": true
+      },
+      "ok": true
+    },
+    {
+      "name": "gender_revolution_活動家_shuffled_into_deck",
+      "zones": {
+        "draw": 1,
+        "hand": 1,
+        "discard": 0
+      },
+      "checks": {
+        "two_extras_in_deck_zone": true,
+        "none_in_discard": true,
+        "hand_still_five": true,
+        "deck_total_twelve": true
+      },
+      "ok": true
+    },
+    {
+      "name": "minyun_各界資助_shuffled_into_deck",
+      "zones": {
+        "draw": 0,
+        "hand": 1,
+        "discard": 0
+      },
+      "checks": {
+        "one_patron_in_deck_zone": true,
+        "none_in_discard": true,
+        "supply_decremented_once": true
+      },
+      "ok": true
+    },
+    {
+      "name": "red_army_starter_deck_untouched",
+      "checks": {
+        "red_support_still_in_deck_zone": true,
+        "red_deck_total_eleven": true,
+        "red_discard_empty": true
+      },
+      "ok": true
+    },
+    {
+      "name": "setup_cards_reachable_in_opening_hand",
+      "in_hand_runs": 32,
+      "runs": 40,
+      "checks": {
+        "sometimes_in_opening_hand": true,
+        "not_always_in_opening_hand": true
+      },
+      "ok": true
+    },
+    {
+      "name": "supply_empty_guard_no_reshuffle",
+      "checks": {
+        "no_card_added_when_supply_empty": true,
+        "hand_untouched_without_gain": true
+      },
+      "ok": true
+    }
+  ]
+}

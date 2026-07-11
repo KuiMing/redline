@@ -3415,7 +3415,7 @@ class Game:
             return Card("樂捐者", "money", {"money": 1})
         return Card(name, "command", {})
 
-    def _add_setup_static_card_to_discard(self, player, card_name, count=1):
+    def _add_setup_static_card_to_deck(self, player, card_name, count=1):
         gained = 0
         for _ in range(int(count or 1)):
             if card_name in STATIC_PURCHASE_CARD_NAMES:
@@ -3424,20 +3424,32 @@ class Game:
                     self.log(f"Setup could not add {card_name}: static supply empty")
                     continue
                 self.static_purchase_supply[card_name] = supply - 1
-            player.deck.discard([self._starter_card(card_name)])
+            player.deck.draw_pile.append(self._starter_card(card_name))
             gained += 1
         return gained
 
     def _apply_setup_abilities(self, player):
+        gained = 0
         for ability in self._player_effective_abilities(player):
             if not isinstance(ability, dict):
                 continue
             if ability.get("name") == "攬炒策略":
-                self._add_setup_static_card_to_discard(player, "宣傳家")
+                gained += self._add_setup_static_card_to_deck(player, "宣傳家")
             elif ability.get("name") in {"達賴救援", "東突厥斯坦政府", "活動家"}:
-                self._add_setup_static_card_to_discard(player, "宣傳家", 2)
+                gained += self._add_setup_static_card_to_deck(player, "宣傳家", 2)
             elif ability.get("name") == "各界資助":
-                self._add_setup_static_card_to_discard(player, "資助者")
+                gained += self._add_setup_static_card_to_deck(player, "資助者")
+        if gained:
+            # 能力文字是「洗入起始牌庫」：把已抽的起手牌放回、連同額外卡整副重洗後
+            # 重抽同樣張數——等同開局牌庫就含這些額外卡再抽起手，起手就可能抽到。
+            hand_count = len(player.hand)
+            if hand_count:
+                player.deck.draw_pile.extend(player.hand)
+                player.hand = []
+                random.shuffle(player.deck.draw_pile)
+                player.hand = player.deck.draw(hand_count)
+            else:
+                random.shuffle(player.deck.draw_pile)
 
     def _apply_turn_end_faction_abilities(self, player):
         effective = self._player_effective_abilities(player)

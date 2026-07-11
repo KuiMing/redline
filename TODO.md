@@ -294,6 +294,13 @@
   - proof：`docs/records/faction-ui/FACTION_ACTION_GUESS_RESULT_VALIDATION.{json,md}`（重新產生，7/7 PASS）。
   - 至此 A2（3個能力字串未解析）全部收尾：非暴力、紅軍派系、民族祭儀（含賭徒耳語連帶修正）。
 
+- [done] S4（第二輪盤點）：開局額外卡應「洗入起始牌庫」，而非放進棄牌堆。
+  - root cause：`攬炒策略`（香港+1宣傳家）、`達賴救援`／`東突厥斯坦政府`／`活動家`（各+2宣傳家）、`各界資助`（民運派+1資助者）能力文字都是「洗入起始牌庫」，但 `_apply_setup_abilities` 走 `_add_setup_static_card_to_discard()` 放進棄牌堆；且 `_init_decks()` 先抽完 5 張起手，額外卡要等第一次牌庫耗盡重洗才進循環，整個第一輪牌庫循環（前兩手）都摸不到，開局節奏型能力被實質削弱。
+  - 修正：改為 `_add_setup_static_card_to_deck()`（加入牌庫），`_apply_setup_abilities` 有加牌時把已抽的起手牌放回、整副重洗、重抽同樣張數——等同開局就是 11~12 張牌庫再抽起手，起手就可能抽到額外卡；static supply 扣減與供應耗盡保護行為不變；沒加到牌（供應空／無 setup 能力）時不重洗。「宣傳卡 vs 宣傳家」用語問題（達賴救援/東突厥斯坦政府）與本修正無關，仍列第三梯隊待確認。
+  - 驗證：新增 `python3 scripts/validate_setup_cards_shuffled_into_deck.py`（6/6：香港/性別革命/民運派額外卡都在牌庫或起手且棄牌堆為空、牌庫總數 11/12 正確、紅軍起始牌庫（含紅軍奧援）不受隊友重洗影響、40 局統計證明起手抽得到也不會永遠抽到、供應耗盡時不加牌不重洗）；同步把既有 `scripts/validate_static_purchase_initial_supply.py` 的兩個「setup 卡在棄牌堆」斷言更新為「在牌庫或起手、棄牌堆為空」（PASS）。
+  - proof：`docs/records/faction-ui/SETUP_CARDS_SHUFFLED_INTO_DECK_VALIDATION_20260711.{json,md}`、更新後的 `docs/records/purchase/STATIC_PURCHASE_INITIAL_SUPPLY_VALIDATION.{json,md}`。
+  - 落差盤點報告已同步更新對應項目狀態。
+
 ### 已有完整紀錄的其他模組
 - [done] 情報網 target choice map highlight。
   - 提交：`c690f5b fix: highlight intel network dissolve targets on map`。
