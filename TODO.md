@@ -332,6 +332,12 @@
   - proof：`docs/records/action-cards/ORG_EXP_A_REPEAT_BUILD_VALIDATION_20260711.{json,md}`。
   - 對應的 P1 playtest 項目（「使用組織經驗甲時，應確認是否還要花其他4點以上卡牌來建立組織」）一併完成，見下方 P1 區塊同步標記。
 
+- [done] B1-c：區域門檻奧援卡 II 級門檻由 AND 改為 OR（2026-07-11 使用者裁決）。
+  - 背景：7 張區域門檻奧援卡的 II 級條件在 CSV 各是一組兩個地區；舊實作要求同時主導兩個地區（AND）。經使用者裁決為 OR——主導配對中任一地區即達 II 級。
+  - 修正：`server/game.py:_support_card_tier` 的 II 級判定由「全部命中」改為「任一命中」。
+  - 驗證：`python3 scripts/validate_east_asia_support_taxonomy_fix.py` 擴充「只主導臺灣」「只主導北國」兩個單一地區案例（6/6 PASS）；`validate_support_card_effects_runtime.py` 12/12 回歸 PASS。
+  - 同批裁決記錄（見第二輪盤點報告「使用者裁決記錄」）：S4 附帶「宣傳卡＝宣傳家」關閉、東洋奧援 III 級降級裁定獲追認關閉；S5-2 赤鱲角機場、C1 雙倍分神、A4 共同勝利已有明確語意待實作；S5-1（香港抗爭之烈 vs 香港抗暴之戰＋事件後根據地遷移）仍待確認。
+
 ### 已有完整紀錄的其他模組
 - [done] 情報網 target choice map highlight。
   - 提交：`c690f5b fix: highlight intel network dissolve targets on map`。

@@ -3161,7 +3161,8 @@ class Game:
             tier = 1
             if support_region and support_region in present and region.get("tier_3"):
                 tier = 3
-            elif len(matched) >= len(preferred) and preferred:
+            elif matched:
+                # II 級門檻為 OR：主導配對中任一地區即可（2026-07-11 使用者裁決 B1-c=A）
                 tier = 2
             if tier > best_tier or (tier == best_tier and best_matched == [] and matched):
                 best_tier = tier

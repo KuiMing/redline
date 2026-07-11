@@ -34,6 +34,18 @@ CASES = [
         'expected_effect_type': 'interactive_build_near_inner',
     },
     {
+        'name': 'tier2_taiwan_only_or_semantics',
+        'org_towns': ['臺北'],  # 只主導配對其中一個地區（臺灣）即應達 II 級（2026-07-11 裁決：OR）
+        'expected_tier': 2,
+        'expected_effect_type': 'interactive_build_near_inner',
+    },
+    {
+        'name': 'tier2_northland_only_or_semantics',
+        'org_towns': ['伯力'],  # 只主導北國
+        'expected_tier': 2,
+        'expected_effect_type': 'interactive_build_near_inner',
+    },
+    {
         'name': 'tier1_fallback',
         'org_towns': ['北京'],  # ruler: 牆內 only, none of the above
         'expected_tier': 1,
