@@ -73,12 +73,14 @@
   - 期望：把奧援卡原本的「資源」按鈕直接改成「詳情」；按下去顯示卡牌詳情，不執行資源使用。
   - 需檢查：`static/app.js` 支援卡/奧援卡 render、手牌 action/resource button gating、`/card-presentation` 或 support card presentation catalog 是否已有完整 `effect_text` 可供 modal/detail panel 顯示；若資料不足需回查 `data/raw/support_cards.csv`。
 
-- [todo] Playtest UI polish：地圖已建立組織的城鎮／根據地應直接顯示所屬陣營。
+- [done] Playtest UI polish：地圖已建立組織的城鎮／根據地應直接顯示所屬陣營。
   - 2026-07-04 回報想法：已建立組織的根據地和城鎮，應該在地名後面直接顯示是哪個陣營，避免只靠側欄或點選狀態辨識。
   - 期望：例如地名標籤可顯示 `臺北 1（f）`、`臺北 1（臺灣）` 或其他清楚的陣營文字；實際格式待 UI 設計時統一。
   - 期望：城鎮圓圈內的填色也可以使用該陣營代表色，讓地圖一眼看出各城鎮／根據地歸屬。
   - 需檢查：`static/leaflet_game_map_logic.js` 的 city marker/label render 是否可取得 organization owner/faction；同步確認 base marker 與一般城鎮 marker 樣式一致。
   - 回報截圖：`/Users/benmini/.hermes/image_cache/img_e4a4c7db0c4d.jpg`。
+  - 2026-07-13 調查發現：城鎮圓圈填色其實「早就」寫了陣營配色邏輯（`markerStyleForTown` 的 `controlColor`），但一直是死碼——它直接用 `palette[player.faction]` 查色，`palette` 的 key 是中文陣營大類（`臺灣`／`紅軍`／`香港`…14 類），但 `player.faction` 是伺服器的英文 `faction_id`（如 `taiwan_green`／`red_army`），兩者從未對得上，永遠 fallback 成灰色 `#cbd5e1`。也就是說回報當下地圖確實完全沒有陣營配色可言，不是誤判。
+  - 2026-07-13 已修正並提交：新增 `CAMP_COLOR_KEY`（9 個陣營大類 slug → 中文 palette key 的靜態對照，對應 `data/factions/all_faction.integrated.v2.json` 的 `camp` 欄位分類）與 `loadFactionMeta()`（頁面載入時 fetch 一次 `/factions`，攤平 60 個陣營子系〔含維吾爾/西藏的 family variant_details〕成 `factionId → {camp, label}`，`label` 直接用 `variant ? \`${name}（${variant}）\` : name` 組出，與 `app.js` 既有 `factionDisplayName()` 輸出一致但改為此 iframe 獨立的資料來源，因為地圖是獨立 WS 連線的 iframe，跟 app.js 不共用 window scope）；`markerStyleForTown` 的 `controlColor` 改用新的 `factionCampColor()`（修正配色死碼）；新增 `labelTextForTown()` 統一產生「城鎮名 組織數（陣營標籤）」，取代 `renderMap()`／`applyGameStateToMap()` 兩處原本重複的「城鎮名 組織數」邏輯；無組織的城鎮維持純城鎮名＋灰色，行為不變。驗證 `python3 scripts/validate_map_faction_display.py`（6/6：臺北=臺灣（綠線）陣營標籤與正確藍色配色、未建立組織的鄰近城鎮維持純名稱與灰色、北京=紅軍陣營標籤與正確紅色配色）；既有 `validate_map_no_radial_lines.py`／`validate_movement_rules.py`（13/13）／`validate_wall_crossing_movement.py`（6/6）／`validate_enemy_occupancy_rules.py`（5/5）皆無退化；proof `docs/records/map-ui/MAP_FACTION_DISPLAY_VALIDATION.{json,md}` + `map_faction_display_validation.png`。根據地與一般城鎮共用同一套 marker 渲染邏輯，本來就無需額外處理。
 
 - [todo] Playtest UI polish：大量棄牌選擇／展示區需要可捲動。
   - 2026-07-04 回報情境：觸發 `貿易戰加劇` 的成功條件時，因棄牌數量太多，畫面只看得到一部分棄牌。

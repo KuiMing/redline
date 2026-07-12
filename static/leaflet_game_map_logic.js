@@ -11,6 +11,48 @@ const palette = {
 };
 const typePalette = {"軍火庫":"#ffcf5a","機場":"#93c5fd","default":"#cbd5e1"};
 
+// Player faction ids (e.g. "taiwan_green") don't match the Chinese palette keys above;
+// this maps each faction's data-driven "camp" to the palette key covering its whole camp.
+const CAMP_COLOR_KEY = {
+  red_army: "紅軍", taiwan: "臺灣", hong_kong: "香港", tibet: "藏國",
+  uyghur: "維吾爾", kazakh: "哈薩克", mongol: "蒙古", manchuria: "滿洲", rebel: "反賊"
+};
+let factionMeta = new Map();
+
+async function loadFactionMeta() {
+  try {
+    const res = await fetch('/factions');
+    const data = await res.json();
+    const meta = new Map();
+    const addEntry = (opt) => {
+      if (!opt || !opt.id || !opt.camp) return;
+      meta.set(opt.id, { camp: opt.camp, label: opt.variant ? `${opt.name}（${opt.variant}）` : (opt.name || opt.id) });
+    };
+    (data.categories || []).forEach(category => {
+      (category.options || []).forEach(opt => {
+        addEntry(opt);
+        Object.values(opt.variant_details || {}).forEach(addEntry);
+      });
+    });
+    factionMeta = meta;
+    renderMap();
+    if (lastGameState) applyGameStateToMap(lastGameState);
+  } catch (err) {
+    console.warn('Failed to load faction metadata for map labels', err);
+  }
+}
+
+function factionCampColor(factionId) {
+  const meta = factionMeta.get(factionId);
+  if (!meta) return null;
+  return palette[CAMP_COLOR_KEY[meta.camp]] || null;
+}
+
+function factionLabel(factionId) {
+  const meta = factionMeta.get(factionId);
+  return meta ? meta.label : factionId;
+}
+
 function addOptions(id, arr) {
   const sel = document.getElementById(id);
   arr.forEach(v => {
@@ -342,7 +384,7 @@ function markerStyleForTown(name, zoom = map.getZoom()) {
   const entries = townStateEntries(name);
   const leader = entries.slice().sort((a, b) => (b.count || 0) - (a.count || 0))[0];
   const player = (lastGameState?.players || []).find(p => p.name === leader?.player);
-  const controlColor = player?.faction ? (palette[player.faction] || '#cbd5e1') : '#cbd5e1';
+  const controlColor = player?.faction ? (factionCampColor(player.faction) || '#cbd5e1') : '#cbd5e1';
 
   return {
     radius: Math.max(base.radius + (hasShared ? 3 : 2), hasShared ? 9 : 8),
@@ -384,6 +426,15 @@ function actualTownOwnerName(townName) {
   if (!entries.length) return null;
   const leader = entries.slice().sort((a, b) => (b.count || 0) - (a.count || 0))[0];
   return leader?.player || null;
+}
+
+function labelTextForTown(townName) {
+  const total = totalOrganizationsInTown(townName);
+  if (total <= 0) return townName;
+  const owner = actualTownOwnerName(townName);
+  const player = (lastGameState?.players || []).find(p => p.name === owner);
+  const factionText = player?.faction ? factionLabel(player.faction) : null;
+  return factionText ? `${townName} ${total}（${factionText}）` : `${townName} ${total}`;
 }
 
 function sharedDissolveTargetForTown(townName) {
@@ -805,9 +856,7 @@ function renderMap() {
       selectTownForCurrentMapAction(t.name, { autoFocus: true });
     });
     currentMarkers.set(t.name, marker);
-    const total = totalOrganizationsInTown(t.name);
-    const labelText = total > 0 ? `${t.name} ${total}` : t.name;
-    if (shouldShowLabels()) marker.bindTooltip(labelText, { permanent:true, direction:'top', className:'town-label', offset:[0, -(markerRadius() + 4)] });
+    if (shouldShowLabels()) marker.bindTooltip(labelTextForTown(t.name), { permanent:true, direction:'top', className:'town-label', offset:[0, -(markerRadius() + 4)] });
   });
 
   updateDynamicStyles();
@@ -940,8 +989,7 @@ function applyGameStateToMap(state) {
     if (baseTown) {
       layer.bindPopup(popupHtml(baseTown), { maxWidth: 380 });
       if (layer.getTooltip()) {
-        const total = totalOrganizationsInTown(name);
-        layer.setTooltipContent(total > 0 ? `${name} ${total}` : name);
+        layer.setTooltipContent(labelTextForTown(name));
       }
     }
   });
@@ -1075,3 +1123,4 @@ window.__advanceToActionForTest = function () {
 
 renderMap();
 setTimeout(focusAsia, 100);
+loadFactionMeta();
