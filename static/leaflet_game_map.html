@@ -118,6 +118,11 @@
       </div>
       <div class="note" id="interactionHint" style="margin-top:10px;">連上遊戲後，只有 <span class="hint-strong">當前玩家自己擁有組織</span> 的城鎮可以高亮合法移動。</div>
       <div style="margin-top:10px; display:grid; gap:8px;">
+        <button id="confirmMoveBtn" disabled>確認移動</button>
+        <button id="cancelMoveBtn" disabled>取消</button>
+        <div class="note" id="confirmMoveHint">點選可移動城鎮後，這裡會顯示移動確認。</div>
+      </div>
+      <div style="margin-top:10px; display:grid; gap:8px;">
         <button id="directBuildBtn" disabled>在目前城鎮建立組織</button>
         <div class="note" id="directBuildHint">選取具有自己組織或共享組織可用性的城鎮後，這裡會顯示是否可直接建立。</div>
         <button id="dissolveBtn" disabled>瓦解目前城鎮共享組織</button>
@@ -142,6 +147,6 @@
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="/static/leaflet_game_map_logic.js?v=map-no-radial-lines-20260709"></script>
+<script src="/static/leaflet_game_map_logic.js?v=move-confirm-dialog-20260713"></script>
 </body>
 </html>

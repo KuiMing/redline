@@ -1089,6 +1089,48 @@ def test_setup_enemy_occupancy_proof(payload: dict):
     }
 
 
+@app.post("/test/setup-move-confirmation-proof")
+def test_setup_move_confirmation_proof(payload: dict):
+    game_id = str(uuid.uuid4())
+    players = [(str(uuid.uuid4()), "mover"), (str(uuid.uuid4()), "opponent")]
+    game = Game(players, market_mode="all_cards")
+    mover = game.players[0]
+    opponent = game.players[1]
+
+    mover.faction_id = payload.get("mover_faction", "taiwan_green")
+    mover.base = payload.get("mover_base", "臺北")
+    mover.organizations = {payload.get("mover_town", "臺北"): 1}
+    mover.moves_left = int(payload.get("moves_left", 5) or 5)
+
+    opponent.faction_id = "red_army"
+    opponent.base = "北京"
+    opponent.organizations = {"北京": 1}
+
+    game.current_player_index = 0
+    game.round_start_player_index = 0
+    game.turn_phase = TurnPhase.ACTION
+    game.game_phase = GamePhase.MAIN
+    game.pending_base_choices = {}
+    game.pending_choice = None
+    game.id = game_id
+
+    manager.games[game_id] = game
+    manager.connections[game_id] = manager.connections.get(game_id, {})
+    lobby[game_id] = [(p.id, p.name) for p in game.players]
+    lobby_hosts[game_id] = mover.id
+    lobby_factions[game_id] = {mover.id: mover.faction_id, opponent.id: opponent.faction_id}
+    lobby_bases[game_id] = {mover.id: mover.base, opponent.id: opponent.base}
+    lobby_ready[game_id] = {p.id: True for p in game.players}
+    return {
+        "success": True,
+        "game_id": game_id,
+        "player_id": mover.id,
+        "opponent_player_id": opponent.id,
+        "url": f"/?game_id={game_id}&player_id={mover.id}",
+        "state": game.state(),
+    }
+
+
 @app.post("/test/setup-hu-taiwan-shared")
 def test_setup_hu_taiwan_shared(payload: dict):
     game_id = str(uuid.uuid4())

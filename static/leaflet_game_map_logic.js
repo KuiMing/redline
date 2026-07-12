@@ -101,6 +101,7 @@ let selectedTown = null;
 let selectedMoveTargets = [];
 let selectedBuildTargets = [];
 let pendingMove = null;
+let pendingMoveTarget = null;
 let lastResolvedMove = null;
 let supportChoiceHighlight = null;
 let supportChoiceHighlightFocusKey = null;
@@ -181,6 +182,7 @@ function popupHtml(t) {
 function resetMoveSelection() {
   selectedMoveTargets = [];
   pendingMove = null;
+  pendingMoveTarget = null;
 }
 
 function resetBuildSelection() {
@@ -719,7 +721,27 @@ function sendDissolveAction(defender, townName) {
   return { ok: true };
 }
 
+function refreshMoveConfirmUi() {
+  const confirmBtn = document.getElementById('confirmMoveBtn');
+  const cancelBtn = document.getElementById('cancelMoveBtn');
+  const hint = document.getElementById('confirmMoveHint');
+  if (!confirmBtn || !cancelBtn || !hint) return;
+
+  if (!pendingMoveTarget) {
+    confirmBtn.disabled = true;
+    cancelBtn.disabled = true;
+    hint.innerHTML = '點選可移動城鎮後，這裡會顯示移動確認。';
+    return;
+  }
+
+  confirmBtn.disabled = false;
+  cancelBtn.disabled = false;
+  const modeLabel = pendingMoveTarget.mode === 'rail' ? '鐵路' : '道路';
+  hint.innerHTML = `確認將組織從 <span class="hint-strong">${pendingMoveTarget.from}</span> 移動到 <span class="hint-strong">${pendingMoveTarget.to}</span>（${modeLabel}）？`;
+}
+
 function refreshDirectBuildUi() {
+  refreshMoveConfirmUi();
   const btn = document.getElementById('directBuildBtn');
   const hint = document.getElementById('directBuildHint');
   const dissolveBtn = document.getElementById('dissolveBtn');
@@ -842,8 +864,8 @@ function renderMap() {
     marker.on('click', () => {
       const moveOption = moveOptionForTown(t.name);
       if (selectedTown && moveOption) {
-        const result = sendMoveAction(selectedTown, t.name, moveOption.mode);
-        window.__lastMoveRequest = { from: selectedTown, to: t.name, mode: moveOption.mode, ok: result.ok };
+        pendingMoveTarget = { from: selectedTown, to: t.name, mode: moveOption.mode };
+        refreshMoveConfirmUi();
         return;
       }
 
@@ -912,6 +934,18 @@ document.getElementById('resetFilter').addEventListener('click', () => {
 document.getElementById('fitFiltered').addEventListener('click', fitVisible);
 document.getElementById('fitAll').addEventListener('click', fitAll);
 document.getElementById('focusAsia').addEventListener('click', focusAsia);
+document.getElementById('confirmMoveBtn').addEventListener('click', () => {
+  if (!pendingMoveTarget) return;
+  const { from, to, mode } = pendingMoveTarget;
+  const result = sendMoveAction(from, to, mode);
+  window.__lastMoveRequest = { from, to, mode, ok: result.ok };
+  pendingMoveTarget = null;
+  refreshMoveConfirmUi();
+});
+document.getElementById('cancelMoveBtn').addEventListener('click', () => {
+  pendingMoveTarget = null;
+  refreshMoveConfirmUi();
+});
 document.getElementById('directBuildBtn').addEventListener('click', () => {
   if (!selectedTown) return;
   sendDirectBuildAction(selectedTown);
@@ -1082,6 +1116,32 @@ window.__moveFromToForTest = function (fromTown, toTown) {
   }
   const result = sendMoveAction(fromTown, toTown, option.mode);
   return { ok: !!result.ok, fromTown, toTown, mode: option.mode };
+};
+
+window.__clickMoveTargetForTest = function (townName) {
+  const marker = currentMarkers.get(townName);
+  if (!marker) return { ok: false, reason: 'marker-not-found', townName };
+  marker.fire('click');
+  return { ok: true, townName, pendingMoveTarget: pendingMoveTarget ? { ...pendingMoveTarget } : null };
+};
+window.__confirmPendingMoveForTest = function () {
+  const btn = document.getElementById('confirmMoveBtn');
+  if (!btn || btn.disabled) return { ok: false, reason: 'confirm-disabled' };
+  btn.click();
+  return { ok: true };
+};
+window.__cancelPendingMoveForTest = function () {
+  const btn = document.getElementById('cancelMoveBtn');
+  if (!btn || btn.disabled) return { ok: false, reason: 'cancel-disabled' };
+  btn.click();
+  return { ok: true };
+};
+window.__mapDebugStateForTest = function () {
+  return {
+    selectedTown,
+    pendingMoveTarget: pendingMoveTarget ? { ...pendingMoveTarget } : null,
+    reachableFromSelected: selectedMoveTargets.map(t => t.town),
+  };
 };
 
 window.selectTownForCurrentMapAction = selectTownForCurrentMapAction;

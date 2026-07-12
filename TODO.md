@@ -105,11 +105,12 @@
   - 需檢查：`Game.end_turn()` / refill hand 順序、`on_build_draw_inner` / `本土社團` 觸發點、`turn_log['built_towns']`、行動階段結束與購買/END 階段的抽牌時機是否一致；確認 UI 顯示的手牌數與後端實際手牌一致。
   - 2026-07-12 已修正（與上一項同 commit）：root cause 是 `_end_turn` 先觸發回合結束能力（本土社團加抽進手牌）、再 `discard_hand()` 把整手（含剛加抽的牌）棄掉重抽 5 張。修正後順序為「補滿到 5 → 才觸發回合結束能力」，額外抽的牌保留（可達 6 張）。驗證同上（含牆內建立後 6 張、未建立仍 5 張兩案例）。
 
-- [todo] Playtest UI/flow polish：移動到可移動城鎮前應跳出確認視窗。
+- [done] Playtest UI/flow polish：移動到可移動城鎮前應跳出確認視窗。
   - 2026-07-05 回報情境：進行組織移動時，玩家點到可移動城鎮後，目前可能直接執行移動，容易誤點。
   - 2026-07-09 補充：當玩家先選定某一組織，接著點選可移動的城鎮時，系統應先出現選項詢問是否要移動到該城鎮。
   - 期望：使用者點到可移動城鎮時，先跳出視窗確認是否要移動到該城鎮；確認後才送出移動，取消則保留在移動選擇狀態。
   - 需檢查：`static/leaflet_game_map_logic.js` / `static/app.js` 的 movement highlight click handler、sidebar move action、WebSocket `move` action 送出點；需避免影響事件/卡牌 pending choice 的選點流程。
+  - 2026-07-13 已修正並提交：root cause 是點擊可移動城鎮 marker 的 click handler（`renderMap()` 內）在確認合法目標後直接呼叫 `sendMoveAction()`，完全沒有確認步驟。沿用既有「選取 → 側欄按鈕 → 再按一次才真的執行」模式（與 `#directBuildBtn`/`#dissolveBtn` 一致，不另外發明 modal 系統，避免牽動 `app.js` 的 modal/pending_choice 邏輯）：`static/leaflet_game_map.html` 新增 `#confirmMoveBtn`/`#cancelMoveBtn`/`#confirmMoveHint`；點擊可移動城鎮改為只設定 `pendingMoveTarget`（不送出）並呼叫新的 `refreshMoveConfirmUi()`；按「確認移動」才呼叫既有 `sendMoveAction()`；按「取消」只清空 `pendingMoveTarget`，`selectedTown`／`selectedMoveTargets`／地圖高亮完全不受影響（`resetMoveSelection()` 同步清空 `pendingMoveTarget`，只在使用者主動重新選取城鎮時才觸發）。新增測試 hook `window.__clickMoveTargetForTest`（實際觸發 marker click，取代直接呼叫 `sendMoveAction` 的舊 low-level hook）、`__confirmPendingMoveForTest`、`__cancelPendingMoveForTest`、`__mapDebugStateForTest`（因為地圖 iframe 的 `let` 模組變數不會出現在 `window` 上，需要明確的除錯 hook 才能讓瀏覽器驗證腳本讀到 `pendingMoveTarget`/`selectedTown`）。新增 test-only endpoint `POST /test/setup-move-confirmation-proof`（`server/main.py`，比照既有 `/test/setup-*-proof` 慣例）直接建立可控 `moves_left`／組織位置的對局，避免真實 lobby 流程下新回合 `moves_left=0` 導致測試移動送出必然被伺服器拒絕。驗證 `python3 scripts/validate_move_confirmation.py`（8/8：點擊合法目標不送出 move、確認/取消按鈕正確 enable 並顯示 from/to/mode 提示、取消後選取狀態與可達城鎮清單不變且未送出、確認才送出且 payload 正確、伺服器狀態確實反映移動結果）；proof `docs/records/map-ui/MOVE_CONFIRMATION_VALIDATION.{json,md}` + `move_confirmation_validation.png`。**附帶修正**：過程中意外發現本機開發伺服器因先前一次不當的 `uv run --with uvicorn` 重啟指令，缺少 `websockets`/`wsproto`，導致所有 WebSocket 連線 404（HTTP 路由正常，只有 WS handshake 失敗）；已改用 `uv run --with fastapi --with "uvicorn[standard]" --with websockets` 重新啟動修正，並以既有 lobby／map 驗證腳本回歸確認無殘留影響。
 
 - [done] Playtest rule/flow bug：移動路線需同時檢查翻牆成本與城鎮適用陣營。
   - 2026-07-05 回報情境：玩家剛剛從 `東沙` 移動到 `觀塘`，看起來好像只花 1 次移動。

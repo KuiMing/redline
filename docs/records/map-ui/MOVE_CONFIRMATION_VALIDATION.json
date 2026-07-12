@@ -1,0 +1,347 @@
+{
+  "game_id": "3d335525-34eb-4b48-a5a5-d782f3115f8d",
+  "summary": {
+    "total": 8,
+    "passed": 8,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "setup_succeeded",
+      "ok": true,
+      "detail": {
+        "success": true,
+        "game_id": "3d335525-34eb-4b48-a5a5-d782f3115f8d",
+        "player_id": "e252c786-b088-4223-9242-9dc4be88a39e",
+        "opponent_player_id": "f3e74169-7ccc-425a-ad0b-7e5c44c210e5",
+        "url": "/?game_id=3d335525-34eb-4b48-a5a5-d782f3115f8d&player_id=e252c786-b088-4223-9242-9dc4be88a39e",
+        "state": {
+          "turn": 1,
+          "game_phase": "main",
+          "turn_phase": "action",
+          "winner": null,
+          "co_winners": [],
+          "hk_free_base_relocation": false,
+          "current_player": "mover",
+          "active_eras": [],
+          "active_era_details": [],
+          "era_notification": null,
+          "current_event": {
+            "id": "quiet_times",
+            "name": "歲月靜好",
+            "type": "idle",
+            "trigger": {},
+            "success": {},
+            "failure": {},
+            "effect": {},
+            "progress": {
+              "count": 0,
+              "required": 0,
+              "succeeded": true,
+              "settled": true,
+              "status": "idle"
+            },
+            "status": "idle",
+            "result_text": "本次事件無效果",
+            "trigger_text": "無",
+            "success_text": "無",
+            "failure_text": "無",
+            "effect_text": "無"
+          },
+          "event_deck_count": 19,
+          "red_army_action_count": 0,
+          "red_army_action_limit": 1,
+          "event_discard_count": 1,
+          "event_modifiers": [],
+          "market_mode": "all_cards",
+          "pending_base_choices": {},
+          "pending_choice": null,
+          "faction_action_used": false,
+          "action_log": [
+            "[Turn 1] Event drawn: 歲月靜好 (no-op)"
+          ],
+          "purchase_area": [
+            "宣傳家",
+            "思想家",
+            "資助者",
+            "資本家",
+            "分神",
+            "內鬥",
+            "臺灣奧援",
+            "走漏風聲",
+            "點燃熱情",
+            "英美奧援",
+            "歐洲奧援"
+          ],
+          "purchase_area_costs": [
+            {
+              "money": 0,
+              "propaganda": 3
+            },
+            {
+              "money": 0,
+              "propaganda": 5
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 3,
+              "propaganda": 2
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 1,
+              "propaganda": 2
+            },
+            {
+              "money": 2,
+              "propaganda": 0
+            },
+            {
+              "money": 1,
+              "propaganda": 2
+            },
+            {
+              "money": 1,
+              "propaganda": 2
+            },
+            {
+              "money": 1,
+              "propaganda": 2
+            }
+          ],
+          "purchase_area_affordable": [
+            false,
+            false,
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "static_purchase_supply": {
+            "宣傳家": 15,
+            "思想家": 15,
+            "資助者": 15,
+            "資本家": 15,
+            "分神": 30,
+            "內鬥": 20
+          },
+          "map": {
+            "towns": {
+              "臺北": [
+                {
+                  "player": "mover",
+                  "count": 1
+                }
+              ],
+              "北京": [
+                {
+                  "player": "opponent",
+                  "count": 1
+                }
+              ]
+            },
+            "shared_access": {}
+          },
+          "players": [
+            {
+              "id": "e252c786-b088-4223-9242-9dc4be88a39e",
+              "name": "mover",
+              "faction": "taiwan_green",
+              "base": "新竹",
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "moves_left": 5,
+              "hand": [
+                "追隨者",
+                "追隨者",
+                "追隨者",
+                "樂捐者",
+                "追隨者"
+              ],
+              "deck_count": 6,
+              "discard_count": 0,
+              "discard_pile": [],
+              "orgs": {
+                "臺北": 1
+              }
+            },
+            {
+              "id": "f3e74169-7ccc-425a-ad0b-7e5c44c210e5",
+              "name": "opponent",
+              "faction": "red_army",
+              "base": "北京",
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "moves_left": 0,
+              "hand": [
+                "樂捐者",
+                "追隨者",
+                "追隨者",
+                "追隨者",
+                "樂捐者"
+              ],
+              "deck_count": 5,
+              "discard_count": 0,
+              "discard_pile": [],
+              "orgs": {
+                "北京": 1
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "no_pending_move_before_clicking_a_target",
+      "ok": true,
+      "detail": {
+        "selectedTown": "臺北",
+        "pendingMoveTarget": null,
+        "reachableFromSelected": [
+          "基隆",
+          "桃園",
+          "宜蘭",
+          "新北",
+          "新竹",
+          "花蓮",
+          "苗栗"
+        ]
+      }
+    },
+    {
+      "name": "clicking_a_reachable_town_shows_pending_confirmation_without_sending_move",
+      "ok": true,
+      "detail": {
+        "click_result": {
+          "ok": true,
+          "townName": "基隆",
+          "pendingMoveTarget": {
+            "from": "臺北",
+            "to": "基隆",
+            "mode": "rail"
+          }
+        },
+        "after_click": {
+          "selectedTown": "臺北",
+          "pendingMoveTarget": {
+            "from": "臺北",
+            "to": "基隆",
+            "mode": "rail"
+          },
+          "reachableFromSelected": [
+            "基隆",
+            "桃園",
+            "宜蘭",
+            "新北",
+            "新竹",
+            "花蓮",
+            "苗栗"
+          ]
+        }
+      }
+    },
+    {
+      "name": "confirm_and_cancel_buttons_enabled_with_explanatory_hint",
+      "ok": true,
+      "detail": {
+        "confirmDisabled": false,
+        "cancelDisabled": false,
+        "hintText": "確認將組織從 臺北 移動到 基隆（鐵路）？"
+      }
+    },
+    {
+      "name": "cancel_clears_pending_but_keeps_selection_and_highlight_and_sends_nothing",
+      "ok": true,
+      "detail": {
+        "cancel_result": {
+          "ok": true
+        },
+        "after_cancel": {
+          "selectedTown": "臺北",
+          "pendingMoveTarget": null,
+          "reachableFromSelected": [
+            "基隆",
+            "桃園",
+            "宜蘭",
+            "新北",
+            "新竹",
+            "花蓮",
+            "苗栗"
+          ]
+        }
+      }
+    },
+    {
+      "name": "buttons_disabled_again_after_cancel",
+      "ok": true,
+      "detail": {
+        "confirmDisabled": true,
+        "cancelDisabled": true
+      }
+    },
+    {
+      "name": "confirm_sends_the_move_with_correct_payload_and_clears_pending",
+      "ok": true,
+      "detail": {
+        "confirm_result": {
+          "ok": true
+        },
+        "after_confirm": {
+          "selectedTown": "基隆",
+          "pendingMoveTarget": null,
+          "reachableFromSelected": [
+            "新北",
+            "沖繩",
+            "馬祖",
+            "臺北",
+            "宜蘭",
+            "桃園",
+            "花蓮",
+            "新北",
+            "新竹",
+            "臺東"
+          ]
+        },
+        "move_request": {
+          "from": "臺北",
+          "to": "基隆",
+          "mode": "rail",
+          "ok": true
+        }
+      }
+    },
+    {
+      "name": "server_state_reflects_the_confirmed_move",
+      "ok": true,
+      "detail": {
+        "taipei": [],
+        "keelung": [
+          {
+            "player": "mover",
+            "count": 1
+          }
+        ]
+      }
+    }
+  ],
+  "screenshot": "/Users/benmini/.openclaw/workspace/redline/docs/records/map-ui/move_confirmation_validation.png"
+}
