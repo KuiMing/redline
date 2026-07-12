@@ -44,6 +44,7 @@ def main():
 
     t.resources = {'money': 99, 'propaganda': 99}
     static_supply_before = dict(g.static_purchase_supply)
+    g.turn_phase = TurnPhase.END  # 2026-06-26 起 buy_card 僅限購買（END）階段
     static_buy_result = g.buy_card(0) if g.purchase_area else {'error': 'empty purchase area'}
     static_supply_after = dict(g.static_purchase_supply)
     area_len_after_static_buy = len(g.purchase_area)

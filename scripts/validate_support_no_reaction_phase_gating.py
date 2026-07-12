@@ -57,7 +57,13 @@ def test_support_card_does_not_prompt_cancel_reaction_or_block_purchase():
     assert_true(result.get("success"), f"resource play failed: {result}")
     result = game.play_card(0, "action")
     assert_true(result.get("success"), f"support play failed: {result}")
-    assert_true(not result.get("pending_choice"), f"support card should not prompt cancel reaction: {result}")
+    # 2026-07-11 B1-b 之後：南洋奧援 I 級會開「選 1 張手牌棄掉」的正當選擇；
+    # 本測試要擋的是「取消反應 prompt」，不是所有 pending choice。
+    pending = game.pending_choice or {}
+    assert_true(pending.get("type") != "reaction_choice", f"support card must not prompt cancel reaction: {pending}")
+    if pending.get("choice_key") == "draw_then_discard_choice":
+        resolved = game.resolve_pending_choice(f.id, 0)
+        assert_true(resolved.get("success"), f"discard choice resolve failed: {resolved}")
     assert_true(game.pending_choice is None, f"stale pending choice after support: {game.pending_choice}")
 
     result = game.play_card(0, "resource")

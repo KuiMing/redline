@@ -187,6 +187,7 @@
   - 需修：把 `settle_round_event()` 改成推進到整輪結束（所有玩家含紅軍完成 ACTION）再斷言 `settled`；逐一檢查該檔 20+ 個 test 是否還有其他依賴舊生命週期的斷言。修好前，該腳本的 FAIL 不應被當成 regression 訊號（例如 S3 修正時已另建 `validate_event_deck_draw_twenty.py` 獨立驗證）。
   - 2026-07-11 追加：`scripts/validate_era_effects_runtime.py` 同樣為既有穩定 FAIL（stash 比對確認早於 S2 修正），需一併排查是否同一類生命週期過期問題。
   - 2026-07-11 追加：`scripts/validate_action_card_end_turn_topdeck_runtime.py` 亦為既有 FAIL（期待單人結束回合直接推進到 EVENT 的過期斷言），同一類問題。
+  - 2026-07-12 已修復兩支：`validate_support_no_reaction_phase_gating.py`（南洋奧援 I 級在 B1-b 之後合法開棄牌選擇，斷言改為「不得是 reaction_choice、棄牌選擇需可解決」）與 `validate_support_purchase_deck_runtime.py`（2026-06-26 起 buy_card 僅限購買階段，腳本補設 END phase），兩支恢復全綠。仍待修：`validate_event_cards_runtime.py`、`validate_era_effects_runtime.py`、`validate_action_card_end_turn_topdeck_runtime.py`、`validate_turn_phase_action_gating.py`（5/15，baseline 同）、`validate_faction_abilities_phase5.py` 的華文傳媒案例、`validate_faction_action_guess_result` 已修復（2026-07-11）。
 
 ## 已完成摘要
 
