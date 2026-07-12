@@ -1,0 +1,66 @@
+{
+  "summary": {
+    "scope": [
+      "翻牆移動成本",
+      "目的城鎮陣營適用"
+    ],
+    "purpose": "P1 playtest item (東沙→觀塘 case): move_organization charged a flat cost of 1 and never checked destination faction applicability. Per rules.md 組織遷移: wall-crossing (牆內↔牆外) costs 2 movement points and may only move 1 step (multi-step rail-3 paths can no longer traverse the wall — the BFS is same-side-only), and the destination town must be within the moving faction's development space (taiwan_green cannot enter 觀塘 at all). Same-side moves and the Chek Lap Kok airport path (already 2 moves) are unaffected.",
+    "total": 6,
+    "passed": 6,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "reported_case_dongsha_to_kwuntong_blocked",
+      "result": {
+        "error": "目的城鎮不適用你的陣營，無法遷入"
+      },
+      "checks": {
+        "taiwan_green_blocked_by_faction_applicability": true
+      },
+      "ok": true
+    },
+    {
+      "name": "wall_crossing_costs_two_moves",
+      "checks": {
+        "one_move_not_enough": true,
+        "two_moves_succeed": true,
+        "cost_two_consumed": true
+      },
+      "ok": true
+    },
+    {
+      "name": "reverse_crossing_inner_to_outer_costs_two",
+      "checks": {
+        "inner_to_outer_also_two": true
+      },
+      "ok": true
+    },
+    {
+      "name": "rail_multi_step_cannot_cross_wall",
+      "checks": {
+        "bfs_does_not_cross_wall": true,
+        "two_step_crossing_move_rejected": true
+      },
+      "ok": true
+    },
+    {
+      "name": "direct_rail_crossing",
+      "applicable": false,
+      "result": {
+        "error": "目的城鎮不適用你的陣營，無法遷入"
+      },
+      "checks": {
+        "destination_not_applicable_blocked": true
+      },
+      "ok": true
+    },
+    {
+      "name": "same_side_rail_three_still_costs_one",
+      "checks": {
+        "same_side_rail3_costs_one": true
+      },
+      "ok": true
+    }
+  ]
+}

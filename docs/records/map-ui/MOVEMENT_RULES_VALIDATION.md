@@ -1,6 +1,6 @@
 # MOVEMENT RULES VALIDATION
 
-日期：2026-07-04
+日期：2026-07-12
 
 summary: {'total': 13, 'passed': 13, 'failed': 0}
 
@@ -45,7 +45,7 @@ summary: {'total': 13, 'passed': 13, 'failed': 0}
 - rule: 可跨越己方組織，但不可跨越敵方。
 
 ## rail_move_rejected_when_no_move_count_left — PASS
-- result: {'error': 'Not enough move points'}
+- result: {'error': '目的城鎮不適用你的陣營，無法遷入'}
 - before: {'orgs': {'北京': 1}, 'moves_left': 0, 'base': '香港城'}
 - after: {'orgs': {'北京': 1}, 'moves_left': 0, 'base': '香港城'}
 

@@ -3802,6 +3802,10 @@ class Game:
         return self.can_develop_in_town(player, town)
 
     def _rail_reachable_within_three(self, player, from_town, to_town):
+        # rules.md：鐵路一次最多移動3格，但「翻牆需2次移動且僅移動1格」——
+        # 多格鐵路移動不得跨越牆內/牆外邊界（跨牆只能走 move_organization 的1格跨牆分支）
+        inner_towns = set(self._towns_for_region_alias('china'))
+        origin_side_inner = from_town in inner_towns
         visited = {from_town}
         queue = [(from_town, 0)]
         while queue:
@@ -3810,6 +3814,8 @@ class Game:
                 continue
             for neighbor in self.map.get('towns', {}).get(town, {}).get('rail', []) or []:
                 if neighbor not in self.map.get('towns', {}):
+                    continue
+                if (neighbor in inner_towns) != origin_side_inner:
                     continue
                 next_distance = distance + 1
                 if neighbor == to_town:
@@ -4859,9 +4865,14 @@ class Game:
             return {"error": "Invalid move mode"}
 
         neighbors = self.map["towns"].get(from_town, {}).get(mode, []) or []
+        inner_towns_for_wall = set(self._towns_for_region_alias('china'))
+        wall_crossing = (from_town in inner_towns_for_wall) != (to_town in inner_towns_for_wall)
         legal_move = to_town in neighbors
-        if mode == "rail" and not legal_move:
+        if mode == "rail" and not legal_move and not wall_crossing:
             legal_move = self._rail_reachable_within_three(player, from_town, to_town)
+        # rules.md：翻牆需2次移動且僅移動1格——跨牆只能走直接相鄰連線
+        if wall_crossing and to_town not in neighbors:
+            legal_move = False
         # 赤鱲角機場（香港 special_rules，2026-07-11 使用者裁決 S5-2）：
         # 香港可花費 2 次遷移，將位於赤鱲角（地圖拼寫：赤臘角）的香港組織
         # 無視距離遷移到任何屬於香港發展空間的牆外城鎮。不可逆向操作。
@@ -4880,14 +4891,17 @@ class Game:
             return {"error": "Cannot move into enemy organization"}
         if getattr(origin_owner, 'faction_id', None) == 'red_army' and not self.can_faction_develop_in_town('red_army', to_town):
             return {"error": "Red Army organization cannot leave Red Army development space"}
+        # 目的城鎮必須適用移動者陣營（組織不能存在於非發展空間的城鎮）
+        if not airport_move and not self.can_faction_develop_in_town(getattr(player, 'faction_id', None), to_town):
+            return {"error": "目的城鎮不適用你的陣營，無法遷入"}
         # 移動共享組織時，組織會轉為移動者所有（總數 +1），需消耗自己的組織棋供應
         if origin_owner is not player and not self._has_org_supply(player):
             return {"error": f"組織棋已達上限（{self._org_supply_limit(player)}），無法接收共享組織"}
 
         # Movement points represent movement counts, not distance/cost budget.
         # Every legal organization move consumes one count; cards/effects grant counts.
-        # 赤鱲角機場移動花費 2 次遷移。
-        cost = 2 if (airport_move and to_town not in neighbors) else 1
+        # 翻牆（牆內↔牆外）與赤鱲角機場移動花費 2 次遷移。
+        cost = 2 if (wall_crossing or (airport_move and to_town not in neighbors)) else 1
         if player.moves_left < cost:
             return {"error": "Not enough move points"}
 

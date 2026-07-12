@@ -1,5 +1,5 @@
 {
-  "date": "2026-07-04",
+  "date": "2026-07-12",
   "summary": {
     "total": 13,
     "passed": 13,
@@ -179,7 +179,7 @@
       "passed": true,
       "details": {
         "result": {
-          "error": "Not enough move points"
+          "error": "目的城鎮不適用你的陣營，無法遷入"
         },
         "before": {
           "orgs": {

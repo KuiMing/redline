@@ -108,11 +108,12 @@
   - 期望：使用者點到可移動城鎮時，先跳出視窗確認是否要移動到該城鎮；確認後才送出移動，取消則保留在移動選擇狀態。
   - 需檢查：`static/leaflet_game_map_logic.js` / `static/app.js` 的 movement highlight click handler、sidebar move action、WebSocket `move` action 送出點；需避免影響事件/卡牌 pending choice 的選點流程。
 
-- [todo] Playtest rule/flow bug：移動路線需同時檢查翻牆成本與城鎮適用陣營。
+- [done] Playtest rule/flow bug：移動路線需同時檢查翻牆成本與城鎮適用陣營。
   - 2026-07-05 回報情境：玩家剛剛從 `東沙` 移動到 `觀塘`，看起來好像只花 1 次移動。
   - 2026-07-05 補充：當時玩家陣營是 `台灣綠線`，理應不能從 `東沙` 移動到 `觀塘`；移動路線視覺化與功能都應注意該城鎮／路線的適用陣營。
   - 期望：依 `rules.md`「組織遷移」規則，牆外 ↔ 牆內屬於翻牆，需花費 2 次移動，且僅移動 1 格；若路線或目的城鎮不適用目前陣營，前端不應高亮為可移動，後端也應拒絕移動。
   - 需檢查：`Game.move_organization()` / route cost 計算 / map route metadata 是否正確判斷 `東沙` 到 `觀塘` 為翻牆與台灣綠線不可用路線；同時檢查前端可移動城鎮高亮、路線視覺化與剩餘移動點顯示是否使用相同 faction-aware cost/eligibility。
+  - 2026-07-12 後端已修正：①翻牆（牆內↔牆外）花費 2 次移動且僅能移動 1 格（多步鐵路 BFS 改為同側限定，不得跨牆）；②目的城鎮必須適用移動者陣營（`can_faction_develop_in_town`）——回報案例臺灣綠線 `東沙`→`觀塘` 現在直接被陣營適用擋下。既有 `validate_movement_rules` 兩個情境改用適用陣營後 13/13 全綠；赤鱲角機場（本就2點）不受影響。驗證 `python3 scripts/validate_wall_crossing_movement.py`（6/6）；proof `docs/records/map-ui/WALL_CROSSING_MOVEMENT_VALIDATION_20260712.{json,md}`。**前端可移動高亮／成本顯示尚未 faction/cost-aware**，歸 P1 UI 批次（移動 UI 重做時一併）。
 
 - [todo] Playtest UI polish：顯示目前還有幾個城鎮可以建立組織。
   - 2026-07-05 回報想法：玩家應能直接看到目前還有幾個城鎮可以建立，避免只能靠地圖高亮逐一判斷。

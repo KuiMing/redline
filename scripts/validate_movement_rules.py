@@ -92,6 +92,7 @@ def run_checks():
     ))
 
     game, player = make_game()
+    player.faction_id = 'liberals'  # 2026-07-12 目的城鎮陣營適用規則後：天津不適用香港，改用適用的陣營
     player.organizations = {'北京': 1}
     player.base = '香港城'
     player.moves_left = 1
@@ -108,6 +109,7 @@ def run_checks():
     ))
 
     game, player = make_game()
+    player.faction_id = 'taiwan_green'  # 2026-07-12 臺灣城鎮僅臺灣陣營適用
     player.organizations = {'新北': 1}
     player.base = '香港城'
     player.moves_left = 1
