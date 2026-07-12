@@ -1,0 +1,51 @@
+{
+  "game_id": "94597400-36b7-49df-8fc8-9660851b9a41",
+  "summary": {
+    "total": 5,
+    "passed": 5,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "banner_copy_button_removed",
+      "ok": true,
+      "detail": {}
+    },
+    {
+      "name": "banner_code_is_non_interactive_display",
+      "ok": true,
+      "detail": {
+        "present": true,
+        "tag": "span",
+        "hasOnclick": false
+      }
+    },
+    {
+      "name": "banner_still_displays_room_code",
+      "ok": true,
+      "detail": {
+        "banner_text": "94597400-36b7-49df-8fc8-9660851b9a41",
+        "game_id": "94597400-36b7-49df-8fc8-9660851b9a41"
+      }
+    },
+    {
+      "name": "exactly_one_copy_button_remains",
+      "ok": true,
+      "detail": {
+        "remaining_copy_buttons": [
+          "copyRoomBtn"
+        ]
+      }
+    },
+    {
+      "name": "remaining_copy_button_still_copies_room_code",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "method": "execCommand",
+        "value": "94597400-36b7-49df-8fc8-9660851b9a41"
+      }
+    }
+  ],
+  "screenshot": "/Users/benmini/.openclaw/workspace/redline/docs/records/lobby/lobby_copy_dedup_validation.png"
+}

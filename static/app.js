@@ -228,7 +228,7 @@ function syncLobbyRoomCode() {
   if (banner && bannerCode) {
     banner.style.display = value ? 'flex' : 'none';
     bannerCode.textContent = value;
-    bannerCode.title = value ? `點擊複製房間代碼 ${value}` : '尚未建立作戰室';
+    bannerCode.title = value ? `房間代碼 ${value}` : '尚未建立作戰室';
   }
 }
 

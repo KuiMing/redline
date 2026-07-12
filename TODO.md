@@ -167,11 +167,12 @@
   - 需檢查：`VictoryChecker` / `Game.end_turn()` / round-turn advancement、Turn 20 結束階段判定時機、事件獎懲與勝利判定順序、`winner` state projection、UI 勝利提示/finished modal，以及是否 off-by-one（第 20 回合開始 vs 第 20 回合結束）。
   - 2026-07-12 後端已修正：root cause 是 `_check_victory` 只在 `_end_turn` 開頭執行（此時回合數仍為 20），輪次翻到 21 的當下沒有再判定，遊戲滑進第 21 回合、直到下一位玩家結束回合才宣告。現在 `_end_turn` 在輪次翻頁（`turn += 1`）後立刻判定——第 20 輪完成的瞬間宣告紅軍保底勝利（含 A4 共同勝利者），且不再抽第 21 回合事件。驗證 `python3 scripts/validate_turn20_victory_declaration.py`（3/3：20輪翻頁即宣告且不抽新事件、19→20 不會提早宣告、輪中反共玩家達成條件仍即時宣告）。proof `docs/records/rules-audit/TURN20_VICTORY_DECLARATION_VALIDATION_20260712.{json,md}`。**勝利/共同勝利的 UI 顯示（finished modal）仍屬 P1 UI 批次**。
 
-- [todo] Playtest UI polish：Lobby 房間代碼複製功能保留一個即可，移除最上方重複複製入口。
+- [done] Playtest UI polish：Lobby 房間代碼複製功能保留一個即可，移除最上方重複複製入口。
   - 2026-07-09 回報情境：Lobby 畫面同時在最上方房間代碼橫幅與下方「建立 / 加入房間代碼」輸入列各有一個 `複製` 按鈕，功能重複。
   - 期望：複製功能保留一個就好；最上面的房間代碼橫幅複製入口可以移除，避免 UI 重複與視覺干擾。
   - 需檢查：`static/index.html` lobby room banner / room-code input row、`static/app.js` 的 `copyRoomId()` 綁定與 lobby room banner 顯示邏輯；確認移除上方入口後仍能從保留的複製按鈕成功複製房間代碼。
   - 回報截圖：`/Users/benmini/.hermes/image_cache/img_3c6a990786b4.jpg`。
+  - 2026-07-12 已修正並提交：移除橫幅內重複的 `copyRoomBannerBtn` 按鈕，`lobbyRoomBannerCode` 由可點擊的 `<button onclick="copyRoomId()">` 改為純顯示用的 `<span>`（不再有點擊複製行為），橫幅仍照常顯示房間代碼供辨識/分享；下方輸入列的 `copyRoomBtn` 維持原樣，是目前唯一的複製入口。`style.css` 同步移除 `.lobby-room-banner-copy` 規則、`.lobby-room-banner-code` 拿掉 `cursor:pointer`。驗證 `python3 scripts/validate_lobby_copy_dedup.py`（5/5：橫幅複製按鈕已移除、橫幅代碼為非互動 span、橫幅仍顯示正確房間代碼、頁面上僅剩一個 `copyRoomId()` 按鈕、該按鈕仍可成功複製）＋既有 `python3 scripts/validate_lobby_join_room_code_ui.py`（13/13 無退化）與 `python3 scripts/validate_lobby_polish.py`（3/3 無退化）；proof `docs/records/lobby/LOBBY_COPY_DEDUP_VALIDATION.{json,md}` + `lobby_copy_dedup_validation.png`。
 
 - [todo] 下一步建議：開 LAN 桌測／端到端 playtest，記錄實際遊戲中出現的 UI polish 或規則落差，再回寫成具體 P0/P1 項目。
   - 目前事件／時代 scope 已可 playtest；不要再以 speculative implementation 延伸 P0，除非 playtest 或規則文本指出具體 bug。

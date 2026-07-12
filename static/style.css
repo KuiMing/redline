@@ -142,19 +142,15 @@ body {
   white-space: nowrap;
 }
 
-.lobby-room-banner-code,
-.lobby-room-banner-copy {
+.lobby-room-banner-code {
+  display: inline-block;
   appearance: none;
-  cursor: pointer;
   border: 1px solid rgba(191, 219, 254, 0.52);
   border-radius: 14px;
   background: rgba(3, 7, 18, 0.70);
   color: #eff6ff;
   font-family: 'JetBrains Mono', monospace;
   font-weight: 900;
-}
-
-.lobby-room-banner-code {
   min-width: 360px;
   max-width: 560px;
   padding: 9px 16px;
@@ -164,13 +160,6 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
   user-select: text;
-}
-
-.lobby-room-banner-copy {
-  min-width: 70px;
-  min-height: 38px;
-  padding: 0 12px;
-  font-size: 0.78rem;
 }
 
 #lobby.room-active .lobby-brand {
