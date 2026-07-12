@@ -4306,6 +4306,14 @@ class Game:
 
         if mode == "resource":
             if getattr(played_card, 'card_type', None) == 'support':
+                # 紅軍奧援為紅軍專屬卡：非紅軍以任何形式用掉後都應回紅軍棄牌堆
+                red = self._red_player()
+                if (card_name == '紅軍奧援'
+                        and self.faction_by_id.get(player.faction_id, {}).get('camp') != 'red_army'
+                        and red is not None and red is not player):
+                    red.deck.discard([played_card])
+                    self.log(f"{player.name} played {card_name} as resource; card returned to {red.name}'s discard pile")
+                    return {"success": True, "card_returned_to": red.name}
                 player.deck.discard([played_card])
                 self.log(f"{player.name} played {card_name} as resource (no resources from support card)")
                 return {"success": True}
@@ -4329,6 +4337,14 @@ class Game:
             if support_resolution and support_resolution.get('pending_choice'):
                 self.log(f"{player.name} played {card_name}")
                 return {"success": True, **support_resolution}
+            # 紅軍奧援是紅軍專屬卡：非紅軍陣營（借用/取得後）打出，結算後應回到
+            # 紅軍玩家的棄牌堆，不留在自己的棄牌堆（P1 playtest 回報）
+            current_camp = self.faction_by_id.get(player.faction_id, {}).get('camp')
+            red = self._red_player()
+            if current_camp != 'red_army' and red is not None and red is not player:
+                red.deck.discard([played_card])
+                self.log(f"{player.name} played {card_name}; card returned to {red.name}'s discard pile")
+                return {"success": True, "card_returned_to": red.name}
             player.deck.discard([played_card])
             self.log(f"{player.name} played {card_name}")
             return {"success": True}

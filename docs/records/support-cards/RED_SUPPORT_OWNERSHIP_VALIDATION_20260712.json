@@ -1,0 +1,43 @@
+{
+  "summary": {
+    "scope": [
+      "紅軍奧援 ownership"
+    ],
+    "purpose": "P1 playtest item: when a non-red player played 紅軍奧援 (acquired via the pass mechanic), play_card's special branch discarded it into the CASTER's own pile instead of returning the red-army-exclusive card to the red player's discard. Both action mode and resource mode now return it to the red player; the red player's own play (choose an anti-communist player to receive it) is unchanged.",
+    "total": 3,
+    "passed": 3,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "non_red_action_play_returns_to_red_discard",
+      "checks": {
+        "play_ok": true,
+        "returned_flag": true,
+        "card_in_red_discard": true,
+        "not_in_caster_discard": true,
+        "caster_drew_one": true
+      },
+      "ok": true
+    },
+    {
+      "name": "non_red_resource_play_returns_to_red_discard",
+      "checks": {
+        "play_ok": true,
+        "card_in_red_discard": true,
+        "not_in_caster_discard": true
+      },
+      "ok": true
+    },
+    {
+      "name": "red_play_pass_flow_unchanged",
+      "checks": {
+        "target_choice_opened": true,
+        "resolved": true,
+        "card_in_opponent_discard": true,
+        "not_in_red_discard": true
+      },
+      "ok": true
+    }
+  ]
+}

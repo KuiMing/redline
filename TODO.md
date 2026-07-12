@@ -126,10 +126,11 @@
   - 回報截圖：`/Users/benmini/.hermes/image_cache/img_fe2d5d612086.jpg`。
   - 2026-07-12 已修正：`optional_trash` 對 `誘導虛耗` 的可移除清單改為僅列「剛打出的誘導虛耗本身」＋明確的「不移除本牌」選項（後端也不再接受手牌項）；移除本牌才進入「選 1 位玩家棄 1 張手牌」的後續流程，選擇不移除則本牌照常進棄牌堆、不觸發後續效果（符合卡面「若移除本牌」條件）。驗證 `python3 scripts/validate_bait_exhaustion_self_only.py`（3/3）；proof `docs/records/action-cards/BAIT_EXHAUSTION_SELF_ONLY_VALIDATION_20260711.{json,md}`。
 
-- [todo] Playtest card ownership bug：非紅軍陣營打出 `紅軍奧援` 後，卡牌應回到紅軍棄牌堆。
+- [done] Playtest card ownership bug：非紅軍陣營打出 `紅軍奧援` 後，卡牌應回到紅軍棄牌堆。
   - 2026-07-06 回報情境：非紅軍陣營打出 `紅軍奧援` 後，此卡沒有回到紅軍的棄牌堆。
   - 期望：`紅軍奧援` 屬於紅軍專屬卡；即使因借用／取得／特殊流程由非紅軍玩家打出，結算後也應回到紅軍玩家的棄牌堆，而不是留在非紅軍玩家棄牌堆、消失、或進入錯誤區域。
   - 需檢查：`play_card()` / played-card discard destination、紅軍奧援 ownership/original owner metadata、借用卡牌規則、`_make_support_card('紅軍奧援')` 或起始牌庫歸屬、UI 棄牌堆投影是否使用實際 card owner 而非 acting player。
+  - 2026-07-12 已修正：root cause 是 `play_card` 的紅軍奧援專屬分支對非紅軍玩家 fallback `player.deck.discard()`（進自己棄牌堆）；行動模式與資源模式現在都改為回到紅軍玩家棄牌堆（找不到紅軍玩家才留原地）；紅軍自己打出的「選反共玩家放入其棄牌堆」既有流程不受影響。驗證 `python3 scripts/validate_red_support_ownership.py`（3/3）；proof `docs/records/support-cards/RED_SUPPORT_OWNERSHIP_VALIDATION_20260712.{json,md}`。
 
 - [todo] Playtest card/flow bug：使用 `模仿戰術` 後沒有跳出可使用卡牌的選擇。
   - 2026-07-06 回報情境：玩家使用 `模仿戰術` 後，似乎沒有跳出可讓玩家選擇／使用的卡牌清單。
