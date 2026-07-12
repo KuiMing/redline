@@ -1,7 +1,7 @@
 {
   "summary": {
-    "total": 13,
-    "passed": 13,
+    "total": 12,
+    "passed": 12,
     "failed": 0
   },
   "checks": [
@@ -31,14 +31,9 @@
       "detail": "Pressing join with an empty field should show clear in-page feedback instead of sending an empty request."
     },
     {
-      "name": "top_banner_exists_after_room_created",
+      "name": "no_duplicate_top_room_code_banner",
       "passed": true,
-      "detail": "Lobby must include a top room-code banner so the created room code stays visible above faction selection."
-    },
-    {
-      "name": "top_banner_syncs_from_game_id",
-      "passed": true,
-      "detail": "The banner must sync from the active game id and toggle lobby room-active spacing when a room exists."
+      "detail": "Playtest feedback: a second top banner duplicating the room-code input's display was itself redundant screen space, not just a duplicate copy button — the banner was removed entirely rather than kept as a read-only display."
     },
     {
       "name": "copy_fallback_selects_room_code",
@@ -61,14 +56,14 @@
       "detail": "The copied/manual-select status should stay visible instead of being overwritten by the lobby polling refresh."
     },
     {
-      "name": "banner_is_top_sticky_not_covering_actions",
-      "passed": true,
-      "detail": "The banner must be placed at the top of the lobby and reserve visual space instead of overlapping faction/action controls."
-    },
-    {
       "name": "confirm_faction_bar_remains_clickable",
       "passed": true,
       "detail": "Long faction details should keep the confirm-faction button sticky inside the faction panel instead of under the fixed action bar."
+    },
+    {
+      "name": "faction_panel_stays_bounded_and_scrollable",
+      "passed": true,
+      "detail": "The faction panel and picker must stay height-bounded with internal scroll instead of growing the lobby card unbounded."
     }
   ]
 }

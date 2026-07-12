@@ -220,16 +220,9 @@ function currentRoomCode() {
 function syncLobbyRoomCode() {
   const roomInput = document.getElementById('roomId');
   const lobby = document.getElementById('lobby');
-  const banner = document.getElementById('lobbyRoomBanner');
-  const bannerCode = document.getElementById('lobbyRoomBannerCode');
   const value = currentRoomCode();
   if (roomInput) roomInput.title = value || '貼上房間代碼後按「進入作戰室」，或按「建立作戰室」建立新房間。';
   if (lobby) lobby.classList.toggle('room-active', !!value);
-  if (banner && bannerCode) {
-    banner.style.display = value ? 'flex' : 'none';
-    bannerCode.textContent = value;
-    bannerCode.title = value ? `房間代碼 ${value}` : '尚未建立作戰室';
-  }
 }
 
 function setMarketMode(mode) {
@@ -242,19 +235,10 @@ function setMarketMode(mode) {
 
 function selectRoomCodeForManualCopy(roomIdValue) {
   const roomInput = document.getElementById('roomId');
-  const bannerCode = document.getElementById('lobbyRoomBannerCode');
   if (roomInput) {
     roomInput.focus();
     roomInput.select();
     roomInput.setSelectionRange(0, roomInput.value.length);
-    return;
-  }
-  if (bannerCode) {
-    const range = document.createRange();
-    range.selectNodeContents(bannerCode);
-    const selection = window.getSelection();
-    selection.removeAllRanges();
-    selection.addRange(range);
     return;
   }
   const selection = window.getSelection();

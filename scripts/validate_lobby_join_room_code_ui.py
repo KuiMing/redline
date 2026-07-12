@@ -46,14 +46,9 @@ def main() -> None:
             "detail": "Pressing join with an empty field should show clear in-page feedback instead of sending an empty request.",
         },
         {
-            "name": "top_banner_exists_after_room_created",
-            "passed": "id=\"lobbyRoomBanner\"" in index and "房間代碼" in index and "分享給其他玩家加入" in index,
-            "detail": "Lobby must include a top room-code banner so the created room code stays visible above faction selection.",
-        },
-        {
-            "name": "top_banner_syncs_from_game_id",
-            "passed": "currentRoomCode()" in app and "lobbyRoomBannerCode" in app and "room-active" in app,
-            "detail": "The banner must sync from the active game id and toggle lobby room-active spacing when a room exists.",
+            "name": "no_duplicate_top_room_code_banner",
+            "passed": "lobbyRoomBanner" not in index and "lobbyRoomBannerCode" not in index and "lobby-room-banner" not in style,
+            "detail": "Playtest feedback: a second top banner duplicating the room-code input's display was itself redundant screen space, not just a duplicate copy button — the banner was removed entirely rather than kept as a read-only display.",
         },
         {
             "name": "copy_fallback_selects_room_code",
@@ -76,14 +71,14 @@ def main() -> None:
             "detail": "The copied/manual-select status should stay visible instead of being overwritten by the lobby polling refresh.",
         },
         {
-            "name": "banner_is_top_sticky_not_covering_actions",
-            "passed": "position: sticky" in style and ".lobby-room-banner" in style and "#lobby.room-active .lobby-brand" in style and "max-height: 190px" in style,
-            "detail": "The banner must be placed at the top of the lobby and reserve visual space instead of overlapping faction/action controls.",
-        },
-        {
             "name": "confirm_faction_bar_remains_clickable",
             "passed": "#factionConfirmBar" in style and "bottom: 0" in style and "確認陣營" in index,
             "detail": "Long faction details should keep the confirm-faction button sticky inside the faction panel instead of under the fixed action bar.",
+        },
+        {
+            "name": "faction_panel_stays_bounded_and_scrollable",
+            "passed": ".lobby-faction-panel" in style and "#factionPicker" in style and style.count("max-height: 190px") >= 2,
+            "detail": "The faction panel and picker must stay height-bounded with internal scroll instead of growing the lobby card unbounded.",
         },
     ]
     passed = sum(1 for c in checks if c["passed"])

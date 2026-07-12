@@ -1,5 +1,5 @@
 {
-  "game_id": "94597400-36b7-49df-8fc8-9660851b9a41",
+  "game_id": "00e4038e-e1d4-4e76-9262-791d9dbbf42f",
   "summary": {
     "total": 5,
     "passed": 5,
@@ -7,26 +7,9 @@
   },
   "results": [
     {
-      "name": "banner_copy_button_removed",
+      "name": "top_room_code_banner_fully_removed",
       "ok": true,
       "detail": {}
-    },
-    {
-      "name": "banner_code_is_non_interactive_display",
-      "ok": true,
-      "detail": {
-        "present": true,
-        "tag": "span",
-        "hasOnclick": false
-      }
-    },
-    {
-      "name": "banner_still_displays_room_code",
-      "ok": true,
-      "detail": {
-        "banner_text": "94597400-36b7-49df-8fc8-9660851b9a41",
-        "game_id": "94597400-36b7-49df-8fc8-9660851b9a41"
-      }
     },
     {
       "name": "exactly_one_copy_button_remains",
@@ -38,12 +21,27 @@
       }
     },
     {
+      "name": "room_code_input_shows_the_code",
+      "ok": true,
+      "detail": {
+        "room_input_value": "00e4038e-e1d4-4e76-9262-791d9dbbf42f",
+        "game_id": "00e4038e-e1d4-4e76-9262-791d9dbbf42f"
+      }
+    },
+    {
+      "name": "no_other_element_repeats_the_room_code_as_text",
+      "ok": true,
+      "detail": {
+        "other_visible_room_code_text": []
+      }
+    },
+    {
       "name": "remaining_copy_button_still_copies_room_code",
       "ok": true,
       "detail": {
         "ok": true,
         "method": "execCommand",
-        "value": "94597400-36b7-49df-8fc8-9660851b9a41"
+        "value": "00e4038e-e1d4-4e76-9262-791d9dbbf42f"
       }
     }
   ],

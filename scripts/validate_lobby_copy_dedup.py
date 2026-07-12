@@ -31,37 +31,31 @@ def check_page(page):
     game_id = page.locator('#roomId').input_value()
     page.wait_for_timeout(300)
 
-    banner_copy_button_removed = page.evaluate(
-        "() => document.getElementById('copyRoomBannerBtn') === null"
+    top_banner_removed = page.evaluate(
+        "() => document.getElementById('lobbyRoomBanner') === null && document.getElementById('lobbyRoomBannerCode') === null && document.getElementById('copyRoomBannerBtn') === null"
     )
-    record('banner_copy_button_removed', banner_copy_button_removed)
-
-    banner_code_not_clickable = page.evaluate(
-        """() => {
-          const el = document.getElementById('lobbyRoomBannerCode');
-          if (!el) return { present: false };
-          return {
-            present: true,
-            tag: el.tagName.toLowerCase(),
-            hasOnclick: !!el.getAttribute('onclick'),
-          };
-        }"""
-    )
-    record(
-        'banner_code_is_non_interactive_display',
-        banner_code_not_clickable.get('present') and banner_code_not_clickable.get('tag') == 'span' and not banner_code_not_clickable.get('hasOnclick'),
-        banner_code_not_clickable,
-    )
-
-    banner_shows_room_code = page.evaluate(
-        "() => document.getElementById('lobbyRoomBannerCode')?.textContent || ''"
-    )
-    record('banner_still_displays_room_code', banner_shows_room_code == game_id, {'banner_text': banner_shows_room_code, 'game_id': game_id})
+    record('top_room_code_banner_fully_removed', top_banner_removed)
 
     remaining_copy_buttons = page.evaluate(
         "() => [...document.querySelectorAll('button[onclick=\"copyRoomId()\"]')].map(b => b.id)"
     )
     record('exactly_one_copy_button_remains', remaining_copy_buttons == ['copyRoomBtn'], {'remaining_copy_buttons': remaining_copy_buttons})
+
+    room_input_shows_code = page.locator('#roomId').input_value() == game_id
+    record('room_code_input_shows_the_code', room_input_shows_code, {'room_input_value': page.locator('#roomId').input_value(), 'game_id': game_id})
+
+    other_visible_room_code_text = page.evaluate(
+        """(gameId) => [...document.querySelectorAll('body *')]
+          .filter(el => el.id !== 'roomId' && el.children.length === 0 && (el.textContent || '').trim() === gameId)
+          .map(el => el.id || el.tagName.toLowerCase())"""
+        ,
+        game_id,
+    )
+    record(
+        'no_other_element_repeats_the_room_code_as_text',
+        other_visible_room_code_text == [],
+        {'other_visible_room_code_text': other_visible_room_code_text},
+    )
 
     page.evaluate("() => { window.__lastRoomCopyResult = null; }")
     page.click('#copyRoomBtn')
