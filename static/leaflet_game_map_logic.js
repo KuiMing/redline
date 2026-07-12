@@ -17,6 +17,12 @@ const CAMP_COLOR_KEY = {
   red_army: "紅軍", taiwan: "臺灣", hong_kong: "香港", tibet: "藏國",
   uyghur: "維吾爾", kazakh: "哈薩克", mongol: "蒙古", manchuria: "滿洲", rebel: "反賊"
 };
+// The Taiwan camp shares one palette hue, but the green line / blue line must read as
+// green / blue respectively, so those two factions override the camp colour.
+const FACTION_COLOR_OVERRIDE = {
+  taiwan_green: "#22c55e",  // 綠線 → green
+  taiwan_blue: "#3fb6ff",   // 藍線 → blue
+};
 let factionMeta = new Map();
 
 async function loadFactionMeta() {
@@ -43,6 +49,7 @@ async function loadFactionMeta() {
 }
 
 function factionCampColor(factionId) {
+  if (FACTION_COLOR_OVERRIDE[factionId]) return FACTION_COLOR_OVERRIDE[factionId];
   const meta = factionMeta.get(factionId);
   if (!meta) return null;
   return palette[CAMP_COLOR_KEY[meta.camp]] || null;
@@ -550,12 +557,17 @@ function renderMovementHighlights(townName, options = {}) {
 
   const originMarker = currentMarkers.get(townName);
   if (originMarker) {
-    originMarker.setStyle({
-      color: ownOnly ? '#ffffff' : (sharedOnly ? '#facc15' : '#64748b'),
+    const originStyle = {
+      color: sharedOnly ? '#facc15' : '#ffffff',
       weight: sharedOnly ? 5 : 4,
       fillOpacity: 1,
-      radius: Math.max(10, markerRadius(map.getZoom()) + (sharedOnly ? 3 : 2))
-    });
+      radius: Math.max(10, markerRadius(map.getZoom()) + (sharedOnly ? 3 : 2)),
+    };
+    // A town that has any organisation (own / shared / enemy) keeps its solid faction
+    // fill so ownership stays visible; a selected town with no organisation becomes
+    // solid white.
+    if (totalOrganizationsInTown(townName) <= 0) originStyle.fillColor = '#f8fafc';
+    originMarker.setStyle(originStyle);
   }
 
   if (!canAct) {
@@ -572,9 +584,6 @@ function renderMovementHighlights(townName, options = {}) {
   railLayer.eachLayer(layer => {
     if (layer.setStyle) layer.setStyle({ color:'#ef4444', opacity:0.15, weight:Math.max(2, railWeight(map.getZoom()) - 1), dashArray: railDashArray(map.getZoom()) });
   });
-  markerLayer.eachLayer(layer => {
-    if (layer.setStyle) layer.setStyle({ opacity:1, fillOpacity:0.12, weight: markerStroke(map.getZoom()) });
-  });
 
   for (const toName of opts.road) {
     const target = byName.get(toName);
@@ -583,7 +592,7 @@ function renderMovementHighlights(townName, options = {}) {
     highlightCount += 1;
 
     const marker = currentMarkers.get(toName);
-    if (marker) marker.setStyle({ color: '#ffd166', weight: 5, fillOpacity: 1, radius: Math.max(10, markerRadius(map.getZoom()) + 2) });
+    if (marker) marker.setStyle({ color: '#ffd166', weight: 5, fillColor: '#f8fafc', fillOpacity: 1, radius: Math.max(10, markerRadius(map.getZoom()) + 2) });
   }
 
   for (const toName of opts.rail) {
@@ -593,7 +602,7 @@ function renderMovementHighlights(townName, options = {}) {
     highlightCount += 1;
 
     const marker = currentMarkers.get(toName);
-    if (marker) marker.setStyle({ color: '#67e8f9', weight: 5, fillOpacity: 1, radius: Math.max(10, markerRadius(map.getZoom()) + 2) });
+    if (marker) marker.setStyle({ color: '#67e8f9', weight: 5, fillColor: '#f8fafc', fillOpacity: 1, radius: Math.max(10, markerRadius(map.getZoom()) + 2) });
   }
 
   if (playerHasSafehouse()) {

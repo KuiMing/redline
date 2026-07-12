@@ -1,5 +1,5 @@
 {
-  "game_id": "1e32230c-99c4-4b1e-a025-8beefba5c7c3",
+  "game_id": "a495481d-6121-45b7-b8ae-075ff5a8ea4c",
   "summary": {
     "total": 6,
     "passed": 6,
@@ -13,18 +13,18 @@
         "choose_host": {
           "success": true,
           "factions": {
-            "95c52f16-281f-49ed-97ae-29da5dfd32c8": "red_army"
+            "679c6b48-d77c-4b06-9626-a4900fb49c15": "red_army"
           },
           "bases": {}
         },
         "choose_ally": {
           "success": true,
           "factions": {
-            "95c52f16-281f-49ed-97ae-29da5dfd32c8": "red_army",
-            "5d2409f7-e922-4540-b65f-f11e43a20662": "taiwan_green"
+            "679c6b48-d77c-4b06-9626-a4900fb49c15": "red_army",
+            "1afe6a54-610a-4477-ad14-2709f0282b4f": "taiwan_green"
           },
           "bases": {
-            "5d2409f7-e922-4540-b65f-f11e43a20662": "臺北"
+            "1afe6a54-610a-4477-ad14-2709f0282b4f": "臺北"
           }
         }
       }
@@ -39,7 +39,7 @@
             121.5654
           ],
           "content": "臺北 1（臺灣（綠線））",
-          "fillColor": "#3fb6ff"
+          "fillColor": "#22c55e"
         },
         "near_taipei": [
           {
@@ -48,7 +48,7 @@
               121.5654
             ],
             "content": "臺北 1（臺灣（綠線））",
-            "fillColor": "#3fb6ff"
+            "fillColor": "#22c55e"
           },
           {
             "latlng": [
@@ -87,10 +87,10 @@
       }
     },
     {
-      "name": "taipei_marker_uses_taiwan_camp_color_not_gray_fallback",
+      "name": "taipei_marker_uses_green_line_color_not_gray_fallback",
       "ok": true,
       "detail": {
-        "fillColor": "#3fb6ff"
+        "fillColor": "#22c55e"
       }
     },
     {
