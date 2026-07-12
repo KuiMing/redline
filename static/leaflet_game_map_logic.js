@@ -527,11 +527,6 @@ function renderMovementHighlights(townName, options = {}) {
     const target = byName.get(toName);
     if (!target) continue;
     selectedMoveTargets.push({ town: toName, mode: 'road' });
-    L.polyline([[origin.lat, origin.lon], [target.lat, target.lon]], {
-      color: '#ffd166',
-      weight: 6,
-      opacity: 1
-    }).addTo(highlightLayer);
     highlightCount += 1;
 
     const marker = currentMarkers.get(toName);
@@ -542,12 +537,6 @@ function renderMovementHighlights(townName, options = {}) {
     const target = byName.get(toName);
     if (!target) continue;
     selectedMoveTargets.push({ town: toName, mode: 'rail' });
-    L.polyline([[origin.lat, origin.lon], [target.lat, target.lon]], {
-      color: '#67e8f9',
-      weight: 7,
-      opacity: 1,
-      dashArray: '14 8'
-    }).addTo(highlightLayer);
     highlightCount += 1;
 
     const marker = currentMarkers.get(toName);

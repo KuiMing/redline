@@ -58,12 +58,13 @@
   - root cause：奧援卡效果已經立即結算，但若其他玩家手上有取消反應牌，系統仍把奧援卡當成可取消的行動／指令卡建立 reaction pending_choice；玩家看起來已完成動作，卻被殘留 pending_choice 擋住 phase advance。
   - 2026-07-04 已修正：奧援卡（support card）不再觸發取消反應 prompt；新增 `scripts/validate_support_no_reaction_phase_gating.py` 覆蓋「南洋奧援 + 其他玩家持有爆料黑幕」後仍可進入購買階段。
 
-- [todo] Playtest UI polish：任何移動選擇／移動後可達城鎮高亮都不應畫大量放射狀直線。
+- [done] Playtest UI polish：任何移動選擇／移動後可達城鎮高亮都不應畫大量放射狀直線。
   - 2026-07-04 回報情境：使用 `宣傳家` 後，在 `石家莊` 建立組織；地圖顯示所有可到達城鎮與 `石家莊` 的連線，造成大量放射狀線條。
   - 2026-07-09 補充：這個項目不只適用於 `宣傳家`；只要進入需要移動或顯示可移動城鎮的流程，都應套用同一視覺規則。
   - 期望：只顯示「可以到達的位置」標記/高亮，以及地圖原本就有的鐵路和道路；不要額外畫出從目前城鎮連到所有可達位置的直線。
   - 需檢查：`static/leaflet_game_map_logic.js` 的 movement/build highlight layer 是否把 reachable targets 以 temporary route lines 全部連回 selected town；所有移動來源（卡牌效果、建立組織後移動、一般組織遷移、事件/能力造成的移動）都應保留既有 road/rail layer，移除或限制放射狀可達連線。
   - 回報截圖：`/Users/benmini/.hermes/image_cache/img_4830826f26cd.jpg`。
+  - 2026-07-12 已修正並提交：`renderMovementHighlights()` 移除了 road/rail 高亮各自新增的臨時 `L.polyline`（橘色粗線與青色虛線都連回起點城鎮），只保留城鎮 marker 本身的高亮與地圖既有的道路/鐵路網；適用所有移動來源（同一函式）。驗證 `python3 scripts/validate_map_no_radial_lines.py`（PASS：選取城鎮前後 polyline 總數不變、亮色臨時直線數為 0）；proof `docs/records/map-ui/MAP_NO_RADIAL_LINES_20260712_200103.{json,md,png}`。
 
 - [todo] Playtest UI polish：奧援卡卡面需提供各等級詳情入口，並把原本「資源」按鈕改成「詳情」。
   - 2026-07-04 回報想法：奧援卡每一等級的細節仍應能從卡牌上看到；若因字數太多不適合全部放在卡面，可在卡牌上做一個「詳情」按鈕。

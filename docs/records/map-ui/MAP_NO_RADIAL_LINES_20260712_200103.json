@@ -1,0 +1,127 @@
+{
+  "before": {
+    "total": 471,
+    "bright": 0,
+    "samples": [
+      {
+        "color": "#42667a",
+        "weight": 2.7333333333333334,
+        "opacity": 0.28,
+        "dashArray": "5.3 4.0"
+      },
+      {
+        "color": "#42667a",
+        "weight": 2.7333333333333334,
+        "opacity": 0.28,
+        "dashArray": "5.3 4.0"
+      },
+      {
+        "color": "#7a6030",
+        "weight": 2.466666666666667,
+        "opacity": 0.24,
+        "dashArray": ""
+      },
+      {
+        "color": "#42667a",
+        "weight": 2.7333333333333334,
+        "opacity": 0.28,
+        "dashArray": "5.3 4.0"
+      },
+      {
+        "color": "#42667a",
+        "weight": 2.7333333333333334,
+        "opacity": 0.28,
+        "dashArray": "5.3 4.0"
+      },
+      {
+        "color": "#7a6030",
+        "weight": 2.466666666666667,
+        "opacity": 0.24,
+        "dashArray": ""
+      },
+      {
+        "color": "#7a6030",
+        "weight": 2.466666666666667,
+        "opacity": 0.24,
+        "dashArray": ""
+      },
+      {
+        "color": "#42667a",
+        "weight": 2.7333333333333334,
+        "opacity": 0.28,
+        "dashArray": "5.3 4.0"
+      }
+    ]
+  },
+  "selected": {
+    "ok": true,
+    "town": "臺北",
+    "highlighted": true,
+    "road": 0,
+    "rail": 7,
+    "owns": true,
+    "shared": false,
+    "canAct": true
+  },
+  "after": {
+    "total": 471,
+    "bright": 0,
+    "samples": [
+      {
+        "color": "#ef4444",
+        "weight": 6.3999999999999995,
+        "opacity": 0.15,
+        "dashArray": "12.0 9.0"
+      },
+      {
+        "color": "#ef4444",
+        "weight": 6.3999999999999995,
+        "opacity": 0.15,
+        "dashArray": "12.0 9.0"
+      },
+      {
+        "color": "#d8a04a",
+        "weight": 5.800000000000001,
+        "opacity": 0.12,
+        "dashArray": ""
+      },
+      {
+        "color": "#ef4444",
+        "weight": 6.3999999999999995,
+        "opacity": 0.15,
+        "dashArray": "12.0 9.0"
+      },
+      {
+        "color": "#ef4444",
+        "weight": 6.3999999999999995,
+        "opacity": 0.15,
+        "dashArray": "12.0 9.0"
+      },
+      {
+        "color": "#d8a04a",
+        "weight": 5.800000000000001,
+        "opacity": 0.12,
+        "dashArray": ""
+      },
+      {
+        "color": "#d8a04a",
+        "weight": 5.800000000000001,
+        "opacity": 0.12,
+        "dashArray": ""
+      },
+      {
+        "color": "#ef4444",
+        "weight": 6.3999999999999995,
+        "opacity": 0.15,
+        "dashArray": "12.0 9.0"
+      }
+    ]
+  },
+  "no_new_radial_polylines": true,
+  "cache_busted_script": "http://127.0.0.1:8000/static/leaflet_game_map_logic.js?v=map-no-radial-lines-20260709",
+  "status_selected_town": "臺北",
+  "direct_build_button_text": "在目前城鎮建立組織",
+  "direct_build_disabled": false,
+  "screenshot": "/Users/benmini/.openclaw/workspace/redline/docs/records/map-ui/MAP_NO_RADIAL_LINES_20260712_200103.png",
+  "passed": true
+}
