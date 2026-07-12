@@ -4641,6 +4641,12 @@ class Game:
         self.current_player_index = (self.current_player_index + 1) % len(self.players)
         if self.current_player_index == getattr(self, 'round_start_player_index', 0):
             self.turn += 1
+            # rules.md：第20回合結束前無人勝利→紅軍勝利。整輪結束、回合數推進到21的
+            # 當下立刻判定（P1 playtest 回報：到第20回合沒有直接宣告勝利者），
+            # 不讓遊戲滑進第21回合、也不再抽新事件。
+            self._check_victory()
+            if self.game_phase == GamePhase.FINISHED:
+                return
             self.current_event = None
             self.event_progress = None
             self.event_notification = None

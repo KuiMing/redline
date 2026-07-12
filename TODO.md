@@ -160,10 +160,11 @@
   - 期望：關閉/離開選擇視窗不應清除或破壞後續 target pending choice；玩家應可回到地圖繼續選擇合法己方/敵方組織並完成兩步瓦解，或可明確取消整個效果且不卡住階段。
   - 需檢查：`北國奧援` support tier effect 的兩段式 dissolve pending choice、choice modal close handler、map highlight preservation、`瓦解目前城鎮組織` sidebar action、pending_choice state machine，以及與先前 `情報網` 關閉後仍可地圖瓦解修正是否可共用同一 target-choice close behavior。
 
-- [todo] Playtest victory/flow bug：到第 20 回合時沒有直接宣告勝利者。
+- [done] Playtest victory/flow bug：到第 20 回合時沒有直接宣告勝利者。
   - 2026-07-06 回報情境：遊戲看起來已到第 20 回合，但系統沒有直接宣告勝利者是誰。
   - 期望：依 `rules.md` 勝利條件，第 20 回合結束前無人勝利則紅軍勝利；到達應結算時點時，UI/後端應明確進入 finished 狀態並宣告勝利者，不應讓遊戲繼續停在未結算狀態。
   - 需檢查：`VictoryChecker` / `Game.end_turn()` / round-turn advancement、Turn 20 結束階段判定時機、事件獎懲與勝利判定順序、`winner` state projection、UI 勝利提示/finished modal，以及是否 off-by-one（第 20 回合開始 vs 第 20 回合結束）。
+  - 2026-07-12 後端已修正：root cause 是 `_check_victory` 只在 `_end_turn` 開頭執行（此時回合數仍為 20），輪次翻到 21 的當下沒有再判定，遊戲滑進第 21 回合、直到下一位玩家結束回合才宣告。現在 `_end_turn` 在輪次翻頁（`turn += 1`）後立刻判定——第 20 輪完成的瞬間宣告紅軍保底勝利（含 A4 共同勝利者），且不再抽第 21 回合事件。驗證 `python3 scripts/validate_turn20_victory_declaration.py`（3/3：20輪翻頁即宣告且不抽新事件、19→20 不會提早宣告、輪中反共玩家達成條件仍即時宣告）。proof `docs/records/rules-audit/TURN20_VICTORY_DECLARATION_VALIDATION_20260712.{json,md}`。**勝利/共同勝利的 UI 顯示（finished modal）仍屬 P1 UI 批次**。
 
 - [todo] Playtest UI polish：Lobby 房間代碼複製功能保留一個即可，移除最上方重複複製入口。
   - 2026-07-09 回報情境：Lobby 畫面同時在最上方房間代碼橫幅與下方「建立 / 加入房間代碼」輸入列各有一個 `複製` 按鈕，功能重複。
