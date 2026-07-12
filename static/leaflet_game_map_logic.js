@@ -539,6 +539,11 @@ function buildOptionsForTown(originTown) {
 function renderMovementHighlights(townName, options = {}) {
   const { autoFocus = false } = options;
   highlightLayer.clearLayers();
+  // Reset every marker to its base style first so a prior selection's highlight never
+  // lingers — this call must produce a complete, order-independent visual.
+  currentMarkers.forEach((marker, name) => {
+    if (marker.setStyle) marker.setStyle(markerStyleForTown(name, map.getZoom()));
+  });
   selectedTown = townName;
   selectedMoveTargets = [];
   lastResolvedMove = null;

@@ -24,6 +24,7 @@ COORDS = {
     '基隆': [25.1276, 121.7392],
     '高雄': [22.6273, 120.3014],
     '臺中': [24.1477, 120.6736],
+    '南投': [23.9609, 120.9876],
 }
 
 
@@ -117,6 +118,19 @@ def check_flow(page):
         'other_org_town_returns_to_solid_green_after_reselect',
         taipei_after and taipei_after['fill'] == '#22c55e' and taipei_after['fillOpacity'] >= 0.9,
         {'臺北': taipei_after},
+    )
+
+    # Reported regression: selecting one empty town then another must leave only the
+    # latest one highlighted; the previous empty selection must reset to base style.
+    select_town(page, '南投')
+    select_town(page, '臺中')
+    prev_empty = marker_at(page, *COORDS['南投'])
+    curr_empty = marker_at(page, *COORDS['臺中'])
+    record(
+        'reselecting_a_different_empty_town_resets_the_previous_one',
+        prev_empty and prev_empty['fill'] == '#6b7280' and abs(prev_empty['fillOpacity'] - 0.32) < 0.01
+        and curr_empty and curr_empty['fill'] == '#f8fafc' and curr_empty['fillOpacity'] == 1,
+        {'南投_prev': prev_empty, '臺中_curr': curr_empty},
     )
 
     select_town(page, '臺北')

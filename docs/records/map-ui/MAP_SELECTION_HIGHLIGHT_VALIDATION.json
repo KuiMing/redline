@@ -1,8 +1,8 @@
 {
-  "game_id": "c9220ef5-daae-42b1-ae8d-2d8e4a62c1ea",
+  "game_id": "5eb4e362-4886-4248-950c-413e8e170460",
   "summary": {
-    "total": 6,
-    "passed": 6,
+    "total": 7,
+    "passed": 7,
     "failed": 0
   },
   "results": [
@@ -67,6 +67,22 @@
       "detail": {
         "臺北": {
           "fill": "#22c55e",
+          "fillOpacity": 0.98,
+          "color": "#f8fafc"
+        }
+      }
+    },
+    {
+      "name": "reselecting_a_different_empty_town_resets_the_previous_one",
+      "ok": true,
+      "detail": {
+        "南投_prev": {
+          "fill": "#6b7280",
+          "fillOpacity": 0.32,
+          "color": "#07111f"
+        },
+        "臺中_curr": {
+          "fill": "#f8fafc",
           "fillOpacity": 1,
           "color": "#ffffff"
         }
