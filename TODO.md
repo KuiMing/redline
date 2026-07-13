@@ -126,10 +126,11 @@
   - 需檢查：`Game.move_organization()` / route cost 計算 / map route metadata 是否正確判斷 `東沙` 到 `觀塘` 為翻牆與台灣綠線不可用路線；同時檢查前端可移動城鎮高亮、路線視覺化與剩餘移動點顯示是否使用相同 faction-aware cost/eligibility。
   - 2026-07-12 後端已修正：①翻牆（牆內↔牆外）花費 2 次移動且僅能移動 1 格（多步鐵路 BFS 改為同側限定，不得跨牆）；②目的城鎮必須適用移動者陣營（`can_faction_develop_in_town`）——回報案例臺灣綠線 `東沙`→`觀塘` 現在直接被陣營適用擋下。既有 `validate_movement_rules` 兩個情境改用適用陣營後 13/13 全綠；赤鱲角機場（本就2點）不受影響。驗證 `python3 scripts/validate_wall_crossing_movement.py`（6/6）；proof `docs/records/map-ui/WALL_CROSSING_MOVEMENT_VALIDATION_20260712.{json,md}`。**前端可移動高亮／成本顯示尚未 faction/cost-aware**，歸 P1 UI 批次（移動 UI 重做時一併）。
 
-- [todo] Playtest UI polish：顯示目前還有幾個城鎮可以建立組織。
+- [done] Playtest UI polish：顯示目前還有幾個城鎮可以建立組織。
   - 2026-07-05 回報想法：玩家應能直接看到目前還有幾個城鎮可以建立，避免只能靠地圖高亮逐一判斷。
   - 期望：在建立組織相關 UI 中顯示可建立城鎮數量；若受陣營適用城鎮、牆內/牆外、敵方佔領、事件/卡牌限制影響，數字應跟實際可點擊/可建立名單一致。
   - 需檢查：`static/leaflet_game_map_logic.js` 建立高亮資料、`static/app.js` sidebar/action prompt 顯示、後端 build eligibility/state projection 是否能提供一致的可建立城鎮 count。
+  - 2026-07-13 已修正並提交：建立組織（`宣傳家`／`思想家`／組織經驗甲／事件／時代 build）觸發時，後端 `_card_build_town_choices()` 已算好一份可建立城鎮清單、透過 pending choice 的 `towns` 送到前端、由地圖以橘色外框高亮（`renderSupportChoiceHighlights`），但畫面一直沒把數量寫出來。修正：在地圖左側 `#interactionHint` 的 build 提示前加上「可建立城鎮：N 個」，N＝`bounds.length`（實際渲染上地圖、可點擊的橘圈數，等同可建清單長度，天然與高亮一致，也自動反映陣營適用／牆內外／敵佔／`restrict_build` 事件等所有後端過濾）；非 build 的目標選擇（瓦解等）則顯示「可選目標：N 個」。不動後端規則，資料源就是既有 `towns` 陣列。驗證 `python3 scripts/validate_buildable_town_count.py`（3/3：build 選擇顯示「可建立城鎮：N 個」且 N＝橘圈數、非 build 顯示「可選目標：N 個」且不含「可建立城鎮」字樣）；另以真實出牌端到端確認：`宣傳家`（range 1、組織在臺北）打出後 build 選擇實際可建＝基隆／桃園／臺北 3 城，地圖 hint 顯示「可建立城鎮：3 個」與伺服器清單一致。proof `docs/records/map-ui/BUILDABLE_TOWN_COUNT_VALIDATION.{json,md}` + `.png`。既知既有小瑕疵（非本項）：伺服器 build prompt 已含卡名前綴，故 hint 開頭會出現「宣傳家：宣傳家：」重複，屬另一個文案 polish。
 
 - [done] Playtest card rule bug：`誘導虛耗` 只能移除剛打出的 `誘導虛耗` 本身，不能移除其他卡牌。
   - 2026-07-05 回報情境：使用 `誘導虛耗` 後，UI 顯示「你可以移除剛打出的這張牌，或移除 1 張手牌」，並列出手牌中的 `天方奧援`、`內鬥`、`追隨者`、`樂捐者` 等可移除選項。

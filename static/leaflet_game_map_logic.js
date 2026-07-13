@@ -271,11 +271,17 @@ function renderSupportChoiceHighlights(options = {}) {
   if (bounds.length) {
     const hintEl = document.getElementById('interactionHint');
     if (hintEl) {
+      const isBuildChoice = ['event_build_organization', 'era_red_build_near_target', 'card_build_organization'].includes(supportChoiceHighlight.choiceKey);
       const focusText = supportChoiceHighlight.focusTown ? ` 已聚焦 ${supportChoiceHighlight.focusTown}。` : '';
-      const actionText = ['event_build_organization', 'era_red_build_near_target', 'card_build_organization'].includes(supportChoiceHighlight.choiceKey)
+      const actionText = isBuildChoice
         ? '請點選橘色城鎮，然後使用左側「在目前城鎮建立組織（效果）」按鈕完成建立。'
         : '請點選橘色城鎮，然後使用左側「瓦解目前城鎮（效果）」按鈕完成瓦解；也可回到選擇視窗確認。';
-      hintEl.innerHTML = `${supportChoiceHighlight.sourceName || '當前選擇'}：<span class="hint-strong">${supportChoiceHighlight.prompt || '請依列表選擇目標。'}</span> 地圖上已用橘色外框標出可選城鎮。${focusText}${actionText}`;
+      // bounds.length is the number of orange markers actually placed on the map, i.e. the
+      // exact set of clickable/buildable towns — so the count always matches the highlights.
+      const countText = isBuildChoice
+        ? `<span class="hint-strong">可建立城鎮：${bounds.length} 個</span>。`
+        : `<span class="hint-strong">可選目標：${bounds.length} 個</span>。`;
+      hintEl.innerHTML = `${supportChoiceHighlight.sourceName || '當前選擇'}：<span class="hint-strong">${supportChoiceHighlight.prompt || '請依列表選擇目標。'}</span> ${countText}地圖上已用橘色外框標出可選城鎮。${focusText}${actionText}`;
     }
     if (autoFocus) {
       focusSupportChoiceTargets(focusedBounds || bounds);
