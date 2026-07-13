@@ -1,0 +1,57 @@
+{
+  "summary": {
+    "scope": [
+      "模仿戰術"
+    ],
+    "purpose": "P1 playtest item: playing 模仿戰術 showed no target-selection prompt. The frontend auto-picked the sole opponent (players.length === 1) and silently imitated with no modal; it also did not filter opponents with an empty deck. 模仿戰術 is now driven by a server-side imitate_topdeck_target choice that always opens (even against one opponent), lists only players who actually have a card to reveal (draw pile or, via reshuffle, discard pile), and returns nothing-happened (with a log) when there is no legal target. The card rule: 選擇1位玩家展示其牌庫頂牌，本回合您可以使用該牌，使用後放回擁有者牌庫頂.",
+    "total": 5,
+    "passed": 5,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "single_opponent_still_prompts_a_choice",
+      "checks": {
+        "pending_choice_opened": true,
+        "choice_key_is_imitate": true,
+        "single_opponent_still_listed": true
+      },
+      "ok": true
+    },
+    {
+      "name": "multi_opponent_lists_every_player_with_a_card",
+      "checks": {
+        "both_opponents_listed": true
+      },
+      "ok": true
+    },
+    {
+      "name": "discard_only_opponent_is_a_valid_target",
+      "checks": {
+        "discard_only_opponent_included": true,
+        "fully_empty_opponent_excluded": true
+      },
+      "ok": true
+    },
+    {
+      "name": "no_legal_target_does_not_get_stuck",
+      "checks": {
+        "no_pending_choice": true,
+        "nothing_imitated_to_hand": true
+      },
+      "ok": true
+    },
+    {
+      "name": "resolving_imitates_card_to_hand_and_marks_return",
+      "checks": {
+        "resolve_ok": true,
+        "imitated_card_reported": true,
+        "card_in_my_hand": true,
+        "marked_to_return_to_owner": true,
+        "removed_from_owner_deck": true,
+        "pending_cleared": true
+      },
+      "ok": true
+    }
+  ]
+}

@@ -147,10 +147,12 @@
   - 需檢查：`play_card()` / played-card discard destination、紅軍奧援 ownership/original owner metadata、借用卡牌規則、`_make_support_card('紅軍奧援')` 或起始牌庫歸屬、UI 棄牌堆投影是否使用實際 card owner 而非 acting player。
   - 2026-07-12 已修正：root cause 是 `play_card` 的紅軍奧援專屬分支對非紅軍玩家 fallback `player.deck.discard()`（進自己棄牌堆）；行動模式與資源模式現在都改為回到紅軍玩家棄牌堆（找不到紅軍玩家才留原地）；紅軍自己打出的「選反共玩家放入其棄牌堆」既有流程不受影響。驗證 `python3 scripts/validate_red_support_ownership.py`（3/3）；proof `docs/records/support-cards/RED_SUPPORT_OWNERSHIP_VALIDATION_20260712.{json,md}`。
 
-- [todo] Playtest card/flow bug：使用 `模仿戰術` 後沒有跳出可使用卡牌的選擇。
+- [done] Playtest card/flow bug：使用 `模仿戰術` 後沒有跳出可使用卡牌的選擇。
   - 2026-07-06 回報情境：玩家使用 `模仿戰術` 後，似乎沒有跳出可讓玩家選擇／使用的卡牌清單。
   - 期望：打出 `模仿戰術` 後，若依規則應可選擇某些可模仿／可使用的卡牌，UI 應顯示對應選擇視窗或明確提示沒有合法目標；不能沒有回饋或讓玩家以為流程卡住。
   - 需檢查：`模仿戰術` card effect 定義、pending choice 建立邏輯、可模仿卡牌來源與合法性篩選、`static/app.js` choice/card modal render，以及無合法目標時的 log/提示與 phase gating。
+  - 卡面規則（`data/raw/action_cards.csv`）：「選擇1位玩家展示其牌庫頂牌，本回合您可以使用該牌。使用後將該牌放回擁有者的牌庫頂。」故選擇對象是「玩家」（無法預看對方牌庫），選完展示其頂牌並可於本回合使用。
+  - 2026-07-13 已修正並提交：root cause 是**兩層問題**。①前端 `app.js` 的 `openCardTargetModal` 對 `players.length === 1`（2 人局，測試最常見）會**自動選定唯一對手、完全不跳 modal**，直接送 `play_card` 帶 `target_player_id`——這就是「沒跳出選擇」；②前端選單也沒過濾牌庫全空的對手。②伺服器 `imitate_topdeck` 效果原本直接抓「第一個其他玩家」的頂牌塞進手牌，沒有任何選擇步驟。修法：改為**伺服器統一驅動**選擇——`imitate_topdeck` 在未帶 target 時呼叫新的 `_prompt_imitate_topdeck_target()` 建立 `imitate_topdeck_target` 目標選擇（`type: target_choice`，前端既有 target_choice modal 通用渲染，**單一對手也會跳 modal**）；目標清單 `_imitate_topdeck_targets()` 只列「牌庫堆或棄牌堆任一有牌」的對手（`draw()` 會在 draw_pile 空時重洗棄牌堆，故只有兩堆全空才無牌可展示）；resolve 時 `_perform_imitate_topdeck()` 抽該玩家頂牌進手牌、標記 `_return_to_owner_topdeck`（既有歸還機制）；無合法目標時記 log、不建立 pending、不卡住。前端把 `模仿戰術` 從 `playerTargetCards` 自動選清單移除，改由伺服器處理。驗證 `python3 scripts/validate_imitate_tactics.py`（5/5：單一對手仍跳選擇、多對手全列、只有棄牌堆也算合法目標、全空不卡住、resolve 後模仿到手牌並標記歸還）＋真實出牌瀏覽器 E2E 確認 2 人局也跳出「模仿戰術」選擇 modal（proof `docs/records/action-cards/IMITATE_TACTICS_MODAL_BROWSER.png`、`IMITATE_TACTICS_VALIDATION.{json,md}`）；既有 `validate_red_support_ownership.py`（3/3）、`validate_divide_targets_others_only.py`（2/2）target-choice 回歸無退化。無合法目標的提示目前為戰況紀錄 log（極罕見：需所有對手兩堆全空）；如需更顯眼的 phase notice 可後續加強。
 
 - [done] Playtest card rule bug：紅軍使用 `離間` 時，`內鬥` 應只放到對方牌堆，不應放到紅軍自己的牌堆。
   - 2026-07-11 進度註記：`離間` 憑空創造內鬥、不扣供應的部分已隨 C1 修正（commit `9c59dc2`）。

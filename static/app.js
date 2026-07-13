@@ -1211,12 +1211,14 @@ function playHandCard(index, card, mode) {
     return;
   }
   const payload = {index, mode};
-  const playerTargetCards = new Set(['合作談判', '走漏風聲', '模仿戰術', '武裝者', '武裝小隊', '武裝集團', '派遣間諜', '內應間諜']);
+  // 模仿戰術 selects its target on the server (which filters out players with an empty deck
+  // and always opens a choice, even against a single opponent), so it is intentionally not
+  // in this frontend auto-target set.
+  const playerTargetCards = new Set(['合作談判', '走漏風聲', '武裝者', '武裝小隊', '武裝集團', '派遣間諜', '內應間諜']);
   if (mode === 'action' && playerTargetCards.has(cardName)) {
     const labelMap = {
       '合作談判': '抽牌對象',
       '走漏風聲': '棄牌庫頂牌對象',
-      '模仿戰術': '展示牌庫頂牌對象',
       '武裝者': '攻擊對象',
       '武裝小隊': '攻擊對象',
       '武裝集團': '攻擊對象',

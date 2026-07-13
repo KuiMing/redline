@@ -258,24 +258,15 @@ class EffectEngine:
             return
 
         # ✅ Temporarily use another player's top deck card (模仿戰術)
+        # Card rule: 選擇1位玩家展示其牌庫頂牌，本回合您可以使用該牌。使用後放回擁有者的牌庫頂。
         if etype == "imitate_topdeck":
             context = context or {}
             target_id = context.get("target_player_id") or effect.get("target_player_id")
-            target = None
             if target_id:
-                target = next((p for p in game.players if getattr(p, "id", None) == target_id), None)
-            if target is None:
-                target = next((p for p in game.players if p != player), None)
-            if target is None:
-                return
-            drawn = target.deck.draw(1)
-            if not drawn:
-                return
-            borrowed = drawn[0]
-            setattr(borrowed, '_return_to_owner_topdeck', target.id)
-            player.hand.append(borrowed)
-            game.log(f"{player.name} imitated {target.name}'s top card {getattr(borrowed, 'name', str(borrowed))}")
-            return
+                # A target was already chosen (resumed) — perform the imitate directly.
+                return game._perform_imitate_topdeck(player, target_id)
+            # No target yet: prompt the player to choose which player's top card to imitate.
+            return game._prompt_imitate_topdeck_target(player)
 
         # ✅ Top deck to hand
         if etype == "topdeck_to_hand":

@@ -2252,6 +2252,20 @@ class Game:
                 'moved_to_player_id': getattr(target_player, 'id', None),
                 'moved_to_player_name': getattr(target_player, 'name', str(target_id)),
             }
+        if choice_key == 'imitate_topdeck_target':
+            result = self._perform_imitate_topdeck(player, target_id)
+            self.pending_choice = None
+            if result.get('error'):
+                return result
+            return {
+                'success': True,
+                'choice_index': index,
+                'target_id': target_id,
+                'selected': selected,
+                'choice_key': choice_key,
+                'imitated_card': result.get('imitated_card'),
+                'target_player_name': result.get('target_player_name'),
+            }
         self.pending_choice = None
         return {
             'success': True,
@@ -2753,6 +2767,54 @@ class Game:
             },
         )
         return {'pending_choice': True, 'card_moved_out_of_play': True}
+
+    def _imitate_topdeck_targets(self, player):
+        def has_deck_card(other):
+            deck = getattr(other, 'deck', None)
+            if deck is None:
+                return False
+            # draw() reshuffles the discard pile when the draw pile is empty, so a player with
+            # cards in either pile still has a "牌庫頂牌" to reveal.
+            return bool(getattr(deck, 'draw_pile', None) or getattr(deck, 'discard_pile', None))
+
+        return [
+            {'id': getattr(other, 'id', None), 'label': getattr(other, 'name', str(getattr(other, 'id', '')))}
+            for other in self.players
+            if other is not player and has_deck_card(other)
+        ]
+
+    def _prompt_imitate_topdeck_target(self, player):
+        targets = self._imitate_topdeck_targets(player)
+        if not targets:
+            self.log(f"{player.name} 打出模仿戰術，但目前沒有其他玩家的牌庫頂牌可模仿")
+            return {'success': True, 'no_target': True}
+        self._set_pending_target_choice(
+            player,
+            'imitate_topdeck_target',
+            targets,
+            '模仿戰術：選擇 1 位玩家，展示其牌庫頂牌，本回合可以使用該牌。',
+            source_name='模仿戰術',
+        )
+        return {'pending_choice': True}
+
+    def _perform_imitate_topdeck(self, player, target_id):
+        target = next((p for p in self.players if getattr(p, 'id', None) == target_id), None)
+        if target is None or target is player:
+            return {'error': 'Invalid imitate target'}
+        drawn = target.deck.draw(1)
+        if not drawn:
+            self.log(f"{target.name} 沒有牌庫頂牌可供 {player.name} 模仿")
+            return {'success': True, 'no_target': True}
+        borrowed = drawn[0]
+        setattr(borrowed, '_return_to_owner_topdeck', target.id)
+        player.hand.append(borrowed)
+        self.log(f"{player.name} 模仿了 {target.name} 的牌庫頂牌 {getattr(borrowed, 'name', str(borrowed))}")
+        return {
+            'success': True,
+            'imitated_card': getattr(borrowed, 'name', None),
+            'target_player_id': getattr(target, 'id', None),
+            'target_player_name': getattr(target, 'name', None),
+        }
 
     def _execute_support_card(self, player, card):
         card_name = getattr(card, 'name', str(card))
