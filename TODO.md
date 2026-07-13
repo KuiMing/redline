@@ -173,10 +173,12 @@
   - 期望：若本回合曾打出有宣傳費用的卡牌，`點燃熱情` 應多抽 1 張，也就是總共抽 2 張；透過 `地下黨` 選擇／取得後使用時也應套用同一條件。
   - 需檢查：`點燃熱情` card effect 條件判定、turn log/旗標是否正確記錄「本回合曾打出有宣傳費用的卡牌」、`地下黨` 觸發或選牌後是否保留/套用 acting card context，以及抽牌數與 UI 手牌顯示是否一致。
 
-- [todo] Playtest card/flow bug：紅軍使用 `北國奧援` 觸發先瓦解己方組織、再瓦解敵方組織時，關閉/離開視窗後無法繼續瓦解。
+- [done] Playtest card/flow bug：紅軍使用 `北國奧援` 觸發先瓦解己方組織、再瓦解敵方組織時，關閉/離開視窗後無法繼續瓦解。
   - 2026-07-06 回報情境：紅軍使用 `北國奧援`，觸發「可以瓦解自己組織，再瓦解敵方組織」的流程；按了離開或關閉後，就無法再瓦解組織，畫面無法動彈，即使按 `瓦解目前城鎮組織` 也無法完成。
   - 期望：關閉/離開選擇視窗不應清除或破壞後續 target pending choice；玩家應可回到地圖繼續選擇合法己方/敵方組織並完成兩步瓦解，或可明確取消整個效果且不卡住階段。
   - 需檢查：`北國奧援` support tier effect 的兩段式 dissolve pending choice、choice modal close handler、map highlight preservation、`瓦解目前城鎮組織` sidebar action、pending_choice state machine，以及與先前 `情報網` 關閉後仍可地圖瓦解修正是否可共用同一 target-choice close behavior。
+  - 2026-07-13 調查：`北國奧援` I級（`interactive_dissolve_self_and_enemy`）是 `support_interaction` 兩段流程——step1 `sacrifice_town`（選要犧牲的己方組織）、step2 `target`（選鄰近敵方組織瓦解）。root cause 與 `中紀委` 同一個系統性根因：step1 的 `sacrifice_town` 不是 map-context（`shouldUseMapContextModal` 只在 `step==='target'` 為真），舊版關閉鈕會 `closeChoiceModal()` 只隱藏、不清伺服器 pending，導致卡住——這正是回報症狀。
+  - 2026-07-13 已由 commit `d0fa562`（可取消 pending choice／關閉鈕政策）**順帶修好**：step1 `sacrifice_town` 屬「非可取消且非地圖」的 blocking 選擇，關閉鈕現在**直接隱藏**，無法再靠關閉卡住、必須選 1 個犧牲城鎮才前進；step2 `target` 維持 map-context（保留「關閉」＝保留地圖高亮、可從地圖側欄「瓦解目前城鎮（效果）」完成，比照 `情報網` 既有 pattern）。本次補上專門驗證鎖住此流程。驗證 `python3 scripts/validate_beiguo_two_stage_dissolve.py`（6/6：step1 無關閉鈕不會卡住、選犧牲後前進到 target step、target step 保留關閉鈕、modal 路徑完成瓦解敵方＋犧牲己方、關閉 target modal 後 pending 仍在且地圖側欄瓦解鈕可用、地圖路徑同樣完成）；proof `docs/records/support-cards/BEIGUO_TWO_STAGE_DISSOLVE_VALIDATION.{json,md}` + `beiguo_two_stage_dissolve.png`。至此 **P1 UI 批次全部完成**。
 
 - [done] Playtest victory/flow bug：到第 20 回合時沒有直接宣告勝利者。
   - 2026-07-06 回報情境：遊戲看起來已到第 20 回合，但系統沒有直接宣告勝利者是誰。

@@ -1,0 +1,70 @@
+{
+  "summary": {
+    "total": 6,
+    "passed": 6,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "sacrifice_step_has_no_close_button_so_it_cannot_be_stranded",
+      "ok": true,
+      "detail": {
+        "step1": {
+          "step": "sacrifice_town",
+          "modalVisible": true,
+          "closeVisible": false
+        }
+      }
+    },
+    {
+      "name": "picking_sacrifice_advances_to_enemy_target_step",
+      "ok": true,
+      "detail": {
+        "step2": {
+          "step": "target",
+          "modalVisible": true,
+          "closeVisible": true
+        }
+      }
+    },
+    {
+      "name": "target_step_keeps_a_close_button_for_the_map_path",
+      "ok": true,
+      "detail": {
+        "closeVisible": true
+      }
+    },
+    {
+      "name": "modal_path_dissolves_enemy_and_sacrifices_own_org",
+      "ok": true,
+      "detail": {
+        "enemy": {},
+        "mine": {
+          "巴黎": 1
+        }
+      }
+    },
+    {
+      "name": "closing_target_modal_keeps_pending_and_map_sidebar_can_finish",
+      "ok": true,
+      "detail": {
+        "still_pending": "target",
+        "dissolve_btn": {
+          "text": "瓦解目前城鎮（效果）",
+          "disabled": false
+        }
+      }
+    },
+    {
+      "name": "map_path_dissolves_enemy_and_sacrifices_own_org",
+      "ok": true,
+      "detail": {
+        "enemy": {},
+        "mine": {
+          "巴黎": 1
+        }
+      }
+    }
+  ],
+  "screenshot": "/Users/benmini/.openclaw/workspace/redline/docs/records/support-cards/beiguo_two_stage_dissolve.png"
+}
