@@ -281,7 +281,14 @@ function renderSupportChoiceHighlights(options = {}) {
       const countText = isBuildChoice
         ? `<span class="hint-strong">可建立城鎮：${bounds.length} 個</span>。`
         : `<span class="hint-strong">可選目標：${bounds.length} 個</span>。`;
-      hintEl.innerHTML = `${supportChoiceHighlight.sourceName || '當前選擇'}：<span class="hint-strong">${supportChoiceHighlight.prompt || '請依列表選擇目標。'}</span> ${countText}地圖上已用橘色外框標出可選城鎮。${focusText}${actionText}`;
+      const sourceLabel = supportChoiceHighlight.sourceName || '當前選擇';
+      // The server prompt often already carries a "<source>：" prefix; strip it so the label
+      // isn't printed twice (e.g. "宣傳家：宣傳家：…").
+      let promptText = supportChoiceHighlight.prompt || '請依列表選擇目標。';
+      if (supportChoiceHighlight.sourceName && promptText.startsWith(`${supportChoiceHighlight.sourceName}：`)) {
+        promptText = promptText.slice(`${supportChoiceHighlight.sourceName}：`.length);
+      }
+      hintEl.innerHTML = `${sourceLabel}：<span class="hint-strong">${promptText}</span> ${countText}地圖上已用橘色外框標出可選城鎮。${focusText}${actionText}`;
     }
     if (autoFocus) {
       focusSupportChoiceTargets(focusedBounds || bounds);

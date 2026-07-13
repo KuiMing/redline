@@ -65,7 +65,9 @@ def main() -> None:
         page.goto(URL, wait_until="networkidle")
         page.wait_for_timeout(400)
 
-        build = inject_and_read(page, "card_build_organization", BUILD_TOWNS, "宣傳家", "請選擇要建立組織的城鎮。")
+        # Use a prompt that already carries the "<source>：" prefix, exactly like the real
+        # server build prompt, so the de-duplication behaviour is exercised.
+        build = inject_and_read(page, "card_build_organization", BUILD_TOWNS, "宣傳家", "宣傳家：選擇要建立組織的城鎮。")
         # Each buildable town renders exactly one orange outer ring (the inner marker is
         # off-white), so the orange-ring count is the clickable/buildable town count.
         record(
@@ -77,6 +79,11 @@ def main() -> None:
             "build_count_matches_rendered_orange_markers",
             build["orangeMarkers"] == len(BUILD_TOWNS),
             {"orangeMarkers": build["orangeMarkers"], "towns": len(BUILD_TOWNS)},
+        )
+        record(
+            "build_hint_does_not_duplicate_the_source_prefix",
+            "宣傳家：宣傳家：" not in build["hint"] and build["hint"].startswith("宣傳家：選擇要建立組織的城鎮。"),
+            {"hint": build["hint"]},
         )
 
         target = inject_and_read(page, "support_interaction", TARGET_TOWNS, "天方奧援", "請選擇要瓦解的目標。")

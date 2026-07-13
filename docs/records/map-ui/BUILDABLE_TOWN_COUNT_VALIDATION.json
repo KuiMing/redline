@@ -1,7 +1,7 @@
 {
   "summary": {
-    "total": 3,
-    "passed": 3,
+    "total": 4,
+    "passed": 4,
     "failed": 0
   },
   "results": [
@@ -9,7 +9,7 @@
       "name": "build_choice_shows_buildable_count_matching_towns",
       "ok": true,
       "detail": {
-        "hint": "宣傳家：請選擇要建立組織的城鎮。 可建立城鎮：5 個。地圖上已用橘色外框標出可選城鎮。請點選橘色城鎮，然後使用左側「在目前城鎮建立組織（效果）」按鈕完成建立。",
+        "hint": "宣傳家：選擇要建立組織的城鎮。 可建立城鎮：5 個。地圖上已用橘色外框標出可選城鎮。請點選橘色城鎮，然後使用左側「在目前城鎮建立組織（效果）」按鈕完成建立。",
         "expected": 5
       }
     },
@@ -19,6 +19,13 @@
       "detail": {
         "orangeMarkers": 5,
         "towns": 5
+      }
+    },
+    {
+      "name": "build_hint_does_not_duplicate_the_source_prefix",
+      "ok": true,
+      "detail": {
+        "hint": "宣傳家：選擇要建立組織的城鎮。 可建立城鎮：5 個。地圖上已用橘色外框標出可選城鎮。請點選橘色城鎮，然後使用左側「在目前城鎮建立組織（效果）」按鈕完成建立。"
       }
     },
     {
