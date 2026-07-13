@@ -89,10 +89,11 @@
     - 驗證：更新 `python3 scripts/validate_map_faction_display.py`（6/6，臺北配色斷言改綠 `#22c55e`）＋新增 `python3 scripts/validate_map_selection_highlight.py`（6/6：綠線組織城鎮選取前後皆綠實心、可移動目標實心白、無關城鎮維持 base 樣式未被壓淡、選取空城鎮實心白、重新選取後其他組織城鎮回綠實心）；既有 `validate_map_no_radial_lines.py`／`validate_move_confirmation.py`（8/8）皆無退化；proof `docs/records/map-ui/MAP_SELECTION_HIGHLIGHT_VALIDATION.{json,md}` + `map_selection_highlight_validation.png`。
     - ④ 2026-07-13 再複測回報回歸（本次移除全域 dimming 引入）：連續改選兩個空城鎮（南投→臺中）時兩個都亮、舊選取沒有暗回去。根因是 `selectTownForCurrentMapAction` 重選時先 `renderMap()`（乾淨）再 `applyGameStateToMap()`，而 `applyGameStateToMap` 內部會用**尚未更新的舊 `selectedTown`** 先重跑一次高亮（把南投再點亮），最後才用新城鎮跑第二次；舊版全域 dimming 剛好在第二次呼叫時把南投壓回去而遮住此 bug，移除後就暴露。修法：`renderMovementHighlights` 開頭先用 `currentMarkers.forEach` 把所有 marker 重設回 `markerStyleForTown` base 樣式，使每次呼叫都是完整、與呼叫順序無關的乾淨結果（不論 `applyGameStateToMap` 的舊 `selectedTown` 重跑或新城鎮重跑，最後一次都會把非當前選取的城鎮重置）。驗證新增回歸案例 `reselecting_a_different_empty_town_resets_the_previous_one`（`validate_map_selection_highlight.py` 7/7：南投→臺中後南投回灰 base、臺中實心白）。
 
-- [todo] Playtest UI polish：大量棄牌選擇／展示區需要可捲動。
+- [done] Playtest UI polish：大量棄牌選擇／展示區需要可捲動。
   - 2026-07-04 回報情境：觸發 `貿易戰加劇` 的成功條件時，因棄牌數量太多，畫面只看得到一部分棄牌。
   - 期望：棄牌卡牌區應提供 scrollbar/slider，可滑動查看所有卡牌，避免卡牌超出視窗或被遮住。
   - 需檢查：事件成功條件結算時的 discard selection/display modal 或 panel；可能在 `static/app.js` 的事件結果／棄牌 UI render，或相關 CSS overflow 設定。
+  - 2026-07-13 已修正並提交：root cause 是 `貿易戰加劇` 成功效果 `topdeck_from_discard`（count=1）會建立 `card_choice`、把**整個棄牌堆**列進選擇 modal 的 `#choiceModalCards`（`.choice-card-grid`，3 欄卡片格），但該 grid 沒有 `max-height`／`overflow`，卡片一多就往下撐破固定 720px 的 `.modal-overlay`，底部卡片與「關閉」按鈕被切到畫面外。修正（純 CSS）：`.choice-card-grid` 加 `max-height: 460px` + `overflow-y: auto` + `overscroll-behavior: contain` + 右側 padding 讓捲軸不壓到卡片；標題／說明／關閉按鈕都是 grid 的兄弟節點，故 grid 內捲動時它們維持可見。此修正對所有卡牌選擇 modal 通用（不限貿易戰）。為了驗證新增 test-only endpoint `POST /test/setup-discard-topdeck-choice`（`server/main.py`，`discard_count` 預設 18，直接呼叫 `_apply_event_effect` 產生 `event_topdeck_from_discard` 選擇，免跑買 `英美奧援` 觸發任務的長流程）。驗證 `python3 scripts/validate_discard_choice_scroll.py`（6/6：18 張全列出、grid `overflow-y:auto`、`scrollHeight 1684 > clientHeight 460` 確實可捲、關閉按鈕在 `.modal-overlay` 範圍內未被切、可捲到底露出最後幾張）；proof `docs/records/playtest-flow/DISCARD_CHOICE_SCROLL_VALIDATION.{json,md}` + `.png`。
 
 - [todo] Playtest UI/flow bug：紅軍能力「紀委」視窗關閉不應視為動作結束。
   - 2026-07-04 回報情境：紅軍選擇紅軍能力中的 `紀委` 時，如果使用者關閉能力視窗，目前流程似乎不能重新選能力／或被視為已結束選擇。

@@ -1,0 +1,57 @@
+{
+  "game_id": "779c3046-f921-40fa-8a07-c7c18bc22dff",
+  "summary": {
+    "total": 6,
+    "passed": 6,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "setup_succeeded",
+      "ok": true,
+      "detail": {
+        "discard_count": 18
+      }
+    },
+    {
+      "name": "modal_lists_all_discard_cards",
+      "ok": true,
+      "detail": {
+        "cardCount": 18,
+        "expected_min": 18
+      }
+    },
+    {
+      "name": "card_grid_is_scrollable_overflow_auto",
+      "ok": true,
+      "detail": {
+        "overflowY": "auto"
+      }
+    },
+    {
+      "name": "content_overflows_so_the_grid_actually_scrolls",
+      "ok": true,
+      "detail": {
+        "scrollHeight": 1684,
+        "clientHeight": 460
+      }
+    },
+    {
+      "name": "close_button_stays_within_modal_bounds_not_cut_off",
+      "ok": true,
+      "detail": {
+        "overlayBottom": 760,
+        "closeBtnBottom": 707.515625
+      }
+    },
+    {
+      "name": "grid_can_scroll_to_reveal_the_last_cards",
+      "ok": true,
+      "detail": {
+        "scrollTop": 1224,
+        "maxScroll": 1224
+      }
+    }
+  ],
+  "screenshot": "/Users/benmini/.openclaw/workspace/redline/docs/records/playtest-flow/discard_choice_scroll_validation.png"
+}

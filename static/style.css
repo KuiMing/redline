@@ -1577,6 +1577,12 @@ body {
   gap: 12px;
   justify-content: center;
   margin: 14px 0;
+  /* Large selections (e.g. 貿易戰加劇 topdeck over a big discard pile) must scroll inside
+     the modal instead of overflowing past the viewport and hiding cards / the close button. */
+  max-height: 460px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 2px 6px 2px 2px;
 }
 
 .choice-card-btn {
