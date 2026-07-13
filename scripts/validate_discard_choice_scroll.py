@@ -45,18 +45,19 @@ def check(page):
         """() => {
           const overlay = document.getElementById('choiceModal');
           const grid = document.getElementById('choiceModalCards');
-          const closeBtn = document.getElementById('closeChoiceModal');
+          const glass = overlay.querySelector('.choice-glass, .modal-glass');
           const cs = getComputedStyle(grid);
           const overlayRect = overlay.getBoundingClientRect();
-          const closeRect = closeBtn.getBoundingClientRect();
+          const glassRect = glass.getBoundingClientRect();
           return {
             cardCount: grid.querySelectorAll('.choice-card-btn, .choice-card-btn-multi, button, .modal-choice-btn').length,
             overflowY: cs.overflowY,
             scrollHeight: grid.scrollHeight,
             clientHeight: grid.clientHeight,
             overlayBottom: overlayRect.bottom,
-            closeBtnBottom: closeRect.bottom,
-            closeBtnVisible: closeRect.bottom <= overlayRect.bottom + 1 && closeRect.top >= overlayRect.top - 1,
+            glassBottom: glassRect.bottom,
+            glassTop: glassRect.top,
+            glassFits: glassRect.bottom <= overlayRect.bottom + 1 && glassRect.top >= overlayRect.top - 1,
           };
         }"""
     )
@@ -68,9 +69,9 @@ def check(page):
         {'scrollHeight': metrics['scrollHeight'], 'clientHeight': metrics['clientHeight']},
     )
     record(
-        'close_button_stays_within_modal_bounds_not_cut_off',
-        metrics['closeBtnVisible'],
-        {'overlayBottom': metrics['overlayBottom'], 'closeBtnBottom': metrics['closeBtnBottom']},
+        'whole_modal_stays_within_bounds_not_cut_off',
+        metrics['glassFits'],
+        {'overlayBottom': metrics['overlayBottom'], 'glassBottom': metrics['glassBottom'], 'glassTop': metrics['glassTop']},
     )
 
     # Confirm the last card can actually be reached by scrolling the grid to the bottom.

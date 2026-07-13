@@ -49,6 +49,18 @@ EVENT_DECK_SIZE = 20
 ANTI_COMMUNIST_ORG_SUPPLY = 22
 RED_ARMY_ORG_SUPPLY = 40
 
+# Pending choices that may be cancelled by closing the modal without any side effect.
+# These are voluntary Red Army activated abilities whose ability-use count is only consumed
+# when the choice is RESOLVED (not when it is opened), so cancelling restores the exact
+# pre-activation state. Every other pending choice is either a mandatory settlement/penalty,
+# a mid-card-effect step where the card is already spent, or a map-context choice — those
+# must be resolved (or, for map choices, are dismissed through the map), so they are NOT here.
+CANCELLABLE_CHOICE_KEYS = frozenset({
+    'red_army_ccdi_discard_draw',              # 中紀委
+    'red_army_propaganda_department_target',   # 政工部
+    'red_army_state_security_target',          # 國安部
+})
+
 
 class GamePhase(str, Enum):
     SETUP = "setup"
@@ -2293,6 +2305,21 @@ class Game:
         if followup and followup.get('pending_choice'):
             response['pending_choice'] = True
         return response
+
+    def cancel_pending_choice(self, player_id):
+        choice = self.pending_choice or {}
+        if not choice:
+            return {'error': 'No pending choice'}
+        if choice.get('player_id') != player_id:
+            return {'error': 'Not your pending choice'}
+        if choice.get('choice_key') not in CANCELLABLE_CHOICE_KEYS:
+            return {'error': 'This choice cannot be cancelled'}
+        player = next((p for p in self.players if p.id == player_id), None)
+        # These choices consume nothing until resolved, so clearing them is a clean revert;
+        # the player can re-activate the ability afterwards.
+        self.pending_choice = None
+        self.log(f"{getattr(player, 'name', player_id)} 取消了 {choice.get('source_name') or choice.get('choice_key')}，未消耗能力")
+        return {'success': True, 'cancelled': True, 'choice_key': choice.get('choice_key')}
 
     def resolve_pending_choice(self, player_id, index):
         choice = self.pending_choice or {}
@@ -5728,6 +5755,7 @@ class Game:
             pending_choice = {
                 'type': self.pending_choice.get('type'),
                 'choice_key': self.pending_choice.get('choice_key'),
+                'cancellable': self.pending_choice.get('choice_key') in CANCELLABLE_CHOICE_KEYS,
                 'player_id': self.pending_choice.get('player_id'),
                 'player_name': self.pending_choice.get('player_name'),
                 'prompt': pending_prompt,

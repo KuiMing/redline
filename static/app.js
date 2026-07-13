@@ -1681,8 +1681,22 @@ function renderChoiceModal(state) {
     cards.appendChild(row);
   }
 
-  if (choiceType !== 'reaction_choice') {
+  // Close-button policy: a cancellable choice (voluntary Red Army ability, nothing spent yet)
+  // can be cancelled; a map-context choice closes to finish via the map; every other blocking
+  // choice must be resolved, so it gets no close button (closing used to only hide it
+  // client-side and strand the player behind a dangling server-side pending choice).
+  if (choiceType === 'reaction_choice') {
+    closeBtn.style.display = 'none';
+  } else if (choice.cancellable) {
+    closeBtn.style.display = '';
+    closeBtn.textContent = '取消';
+    closeBtn.onclick = () => { sendAction('cancel_choice'); closeChoiceModal(); };
+  } else if (shouldUseMapContextModal) {
+    closeBtn.style.display = '';
+    closeBtn.textContent = '關閉';
     closeBtn.onclick = () => closeChoiceModal(shouldUseMapContextModal);
+  } else {
+    closeBtn.style.display = 'none';
   }
   overlay.style.display = 'flex';
 }

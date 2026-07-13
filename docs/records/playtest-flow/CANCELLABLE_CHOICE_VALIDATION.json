@@ -1,0 +1,79 @@
+{
+  "summary": {
+    "scope": [
+      "可取消 pending choice"
+    ],
+    "purpose": "P1 playtest item (中紀委視窗關閉): closing a choice modal only hid it client-side and left a dangling server-side pending_choice that blocked everything and could not be re-entered — systemic to the shared closeChoiceModal. Fix: a scoped cancellable-choice mechanism. The three voluntary Red Army activated abilities (中紀委/政工部/國安部), whose use-count is only consumed on RESOLVE, are marked cancellable; the modal close button becomes 取消 and sends cancel_choice, which clears the pending choice without consuming the ability so it can be re-activated. Every other choice is not cancellable (state() reports cancellable=false) and its close button is hidden on the frontend (must resolve; map choices keep their own close-to-map behaviour). \"Confirm 0 cards\" stays distinct from cancel — it consumes.",
+    "browser_proof": [
+      "docs/records/playtest-flow/CANCELLABLE_CHOICE_CCDI_BROWSER.png",
+      "docs/records/playtest-flow/CANCELLABLE_CHOICE_MANDATORY_NOCLOSE_BROWSER.png"
+    ],
+    "total": 7,
+    "passed": 7,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "ccdi_cancel_reverts_cleanly_without_consuming",
+      "checks": {
+        "pending_is_ccdi": true,
+        "state_flag_cancellable": true,
+        "cancel_succeeded": true,
+        "pending_cleared": true,
+        "ability_not_consumed": true,
+        "hand_untouched": true
+      },
+      "ok": true
+    },
+    {
+      "name": "propaganda_and_state_security_are_cancellable",
+      "checks": {
+        "propaganda_key": true,
+        "propaganda_cancellable": true,
+        "state_security_key": true,
+        "state_security_cancellable": true
+      },
+      "ok": true
+    },
+    {
+      "name": "cancelled_ability_can_be_reactivated",
+      "checks": {
+        "re_triggers_pending": true,
+        "still_not_consumed_before_resolve": true
+      },
+      "ok": true
+    },
+    {
+      "name": "confirm_zero_cards_consumes_unlike_cancel",
+      "checks": {
+        "resolve_ok": true,
+        "ability_consumed": true
+      },
+      "ok": true
+    },
+    {
+      "name": "mandatory_choice_cannot_be_cancelled",
+      "checks": {
+        "state_flag_not_cancellable": true,
+        "cancel_rejected": true,
+        "pending_still_present": true
+      },
+      "ok": true
+    },
+    {
+      "name": "cannot_cancel_another_players_choice",
+      "checks": {
+        "rejected_not_your_choice": true,
+        "pending_still_present": true
+      },
+      "ok": true
+    },
+    {
+      "name": "cancellable_set_is_scoped_to_the_three_abilities",
+      "checks": {
+        "exactly_the_three_red_army_abilities": true
+      },
+      "ok": true
+    }
+  ]
+}

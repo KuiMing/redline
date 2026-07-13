@@ -1,5 +1,5 @@
 {
-  "game_id": "779c3046-f921-40fa-8a07-c7c18bc22dff",
+  "game_id": "98a321fc-0587-40df-adcc-43fbc56e8702",
   "summary": {
     "total": 6,
     "passed": 6,
@@ -37,11 +37,12 @@
       }
     },
     {
-      "name": "close_button_stays_within_modal_bounds_not_cut_off",
+      "name": "whole_modal_stays_within_bounds_not_cut_off",
       "ok": true,
       "detail": {
         "overlayBottom": 760,
-        "closeBtnBottom": 707.515625
+        "glassBottom": 704.015625,
+        "glassTop": 95.96875
       }
     },
     {

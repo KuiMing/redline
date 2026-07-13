@@ -604,6 +604,8 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
                 result = game.relocate_hong_kong_base(player_id, data.get("town"))
             elif action == "resolve_choice":
                 result = game.resolve_pending_choice(player_id, data.get("index"))
+            elif action == "cancel_choice":
+                result = game.cancel_pending_choice(player_id)
 
             if result and result.get("error"):
                 error_state = dict(game.state(player_id))
@@ -2552,6 +2554,47 @@ def test_setup_discard_topdeck_choice(payload: dict):
         "player_id": viewer.id,
         "discard_count": discard_count,
         "url": f"/?game_id={game_id}&player_id={viewer.id}",
+        "state": game.state(),
+    }
+
+
+@app.post("/test/setup-ccdi-choice")
+def test_setup_ccdi_choice(payload: dict):
+    """Put a Red Army player straight into the 中紀委 (red_army_ccdi_discard_draw) choice,
+    to exercise the cancellable-choice close/cancel behaviour."""
+    players = [(str(uuid.uuid4()), "red"), (str(uuid.uuid4()), "opp")]
+    game = Game(players, market_mode="all_cards")
+    red = game.players[0]
+    opp = game.players[1]
+    red.faction_id = "red_army"
+    opp.faction_id = "liberals"
+    red.base = "北京"
+    red.organizations = {"北京": 1}
+    opp.base = "臺北"
+    opp.organizations = {"臺北": 1}
+    red.hand = [Card("手牌甲", "command", {}), Card("手牌乙", "command", {}), Card("手牌丙", "command", {})]
+    game.pending_base_choices = []
+    game.game_phase = GamePhase.MAIN
+    game.current_player_index = 0
+    game.turn_phase = TurnPhase.ACTION
+    game.turn_log = game._new_turn_log()
+
+    game._activated_faction_action(red, "中紀委")
+
+    game_id = str(uuid.uuid4())
+    game.id = game_id
+    manager.games[game_id] = game
+    manager.connections[game_id] = manager.connections.get(game_id, {})
+    lobby[game_id] = [(p.id, p.name) for p in game.players]
+    lobby_hosts[game_id] = red.id
+    lobby_factions[game_id] = {p.id: p.faction_id for p in game.players}
+    lobby_bases[game_id] = {p.id: p.base for p in game.players if p.base}
+    lobby_ready[game_id] = {p.id: True for p in game.players}
+    return {
+        "success": True,
+        "game_id": game_id,
+        "player_id": red.id,
+        "url": f"/?game_id={game_id}&player_id={red.id}",
         "state": game.state(),
     }
 
