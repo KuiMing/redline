@@ -52,7 +52,7 @@ def test_political_probe():
 def test_huawen_media_spend_money():
     g = make_game('falun_gong', '紐約')
     p = g.players[0]
-    g.turn_phase = TurnPhase.ACTION
+    g.turn_phase = TurnPhase.END  # buying happens in the END (purchase) phase
     g.purchase_area = [Card('宣傳家', 'propaganda', {'propaganda': 2})]
     p.resources = {'money': 3, 'propaganda': 0}
     result = g.buy_card(0)

@@ -84,10 +84,13 @@ def run_validation():
         'current_player': state_after_setup['current_player'],
         'current_event': state_after_setup.get('current_event'),
     })
-    assert_true(checks, 'game starts first player in event phase after base selection', game.turn == 1 and game.turn_phase == TurnPhase.EVENT, {
+    # Current model: the game opens directly in the first player's ACTION phase with the
+    # round's event already drawn — there is no per-player resting EVENT phase.
+    assert_true(checks, 'game opens first player in ACTION phase with round event drawn', game.turn == 1 and game.turn_phase == TurnPhase.ACTION and bool(state_after_setup.get('current_event')), {
         'turn': game.turn,
         'turn_phase': str(game.turn_phase),
         'current_player': game.current_player().name,
+        'current_event': (state_after_setup.get('current_event') or {}).get('id'),
     })
     assert_true(checks, 'direct engine base selection immediately exposes current event', bool(state_after_setup.get('current_event')), {
         'current_event': state_after_setup.get('current_event'),
@@ -107,7 +110,7 @@ def run_validation():
         'current_event': lobby_state.get('current_event'),
         'event_deck_count': lobby_state.get('event_deck_count'),
     })
-    assert_true(checks, 'formal lobby start immediately exposes current event card', bool(lobby_state.get('current_event')) and lobby_state.get('turn_phase') == 'event', {
+    assert_true(checks, 'formal lobby start immediately exposes current event card in ACTION phase', bool(lobby_state.get('current_event')) and lobby_state.get('turn_phase') == 'action', {
         'start_result': lobby_setup['start_result'],
         'turn_phase': lobby_state.get('turn_phase'),
         'current_event': lobby_state.get('current_event'),
@@ -117,7 +120,9 @@ def run_validation():
     lobby_start_player = lobby_state.get('current_player')
     lobby_round_start_index = getattr(lobby_game, 'round_start_player_index', None)
     lobby_turn_flow = []
-    for step in ['ben_event_to_action', 'ben_action_to_end', 'ben_end_to_red_event', 'red_event_to_action', 'red_action_to_end', 'red_end_to_next_round']:
+    # Current model: each player's turn is ACTION -> END (2 advances), and the round's event
+    # is drawn only when the round wraps back to the starting player.
+    for step in ['first_action_to_end', 'first_end_to_second_action', 'second_action_to_end', 'second_end_to_next_round']:
         before_state = lobby_game.state()
         advance_result = lobby_game.advance_turn_phase()
         step_state = lobby_game.state()
@@ -137,110 +142,92 @@ def run_validation():
             'event_status_after': ((step_state.get('current_event') or {}).get('progress') or {}).get('status'),
         })
     trace.append({
-        'step': 'formal_lobby_round_flow_after_ben_turn',
+        'step': 'formal_lobby_round_flow',
         'round_start_player': lobby_start_player,
         'round_start_player_index': lobby_round_start_index,
         'flow': lobby_turn_flow,
     })
-    ben_end_state = lobby_turn_flow[2]
-    red_end_state = lobby_turn_flow[5]
-    assert_true(checks, 'formal 2p lobby keeps turn 1 when Ben ends and passes to Red Army',
-        ben_end_state.get('turn') == 1 and ben_end_state.get('turn_phase') == 'event' and ben_end_state.get('current_faction') == 'red_army',
-        ben_end_state,
+    passed_to_second = lobby_turn_flow[1]   # first player's END -> second player's ACTION
+    round_wrap_state = lobby_turn_flow[3]   # second player's END -> next round (turn 2)
+    assert_true(checks, 'formal 2p lobby keeps turn 1 when first player ends and passes to the other',
+        passed_to_second.get('turn') == 1 and passed_to_second.get('turn_phase') == 'action' and passed_to_second.get('current_player') != lobby_start_player,
+        passed_to_second,
     )
-    assert_true(checks, 'Ben end does not draw or replace event before Red Army also ends',
-        ben_end_state.get('event_before') == ben_end_state.get('event_after')
-        and ben_end_state.get('event_deck_before') == ben_end_state.get('event_deck_after')
-        and ben_end_state.get('event_discard_before') == ben_end_state.get('event_discard_after'),
-        ben_end_state,
+    assert_true(checks, 'first player end does not draw or replace event before the round wraps',
+        passed_to_second.get('event_before') == passed_to_second.get('event_after')
+        and passed_to_second.get('event_deck_before') == passed_to_second.get('event_deck_after')
+        and passed_to_second.get('event_discard_before') == passed_to_second.get('event_discard_after'),
+        passed_to_second,
     )
-    assert_true(checks, 'formal 2p lobby increments to turn 2 only after Red Army ends',
-        red_end_state.get('turn') == 2 and red_end_state.get('turn_phase') == 'event' and red_end_state.get('current_player') == lobby_start_player,
-        red_end_state,
+    assert_true(checks, 'formal 2p lobby increments to turn 2 only after the full round ends',
+        round_wrap_state.get('turn') == 2 and round_wrap_state.get('turn_phase') == 'action' and round_wrap_state.get('current_player') == lobby_start_player,
+        round_wrap_state,
     )
     assert_true(checks, 'new event is drawn only after the full round ends',
-        red_end_state.get('event_before') != red_end_state.get('event_after')
-        and red_end_state.get('event_deck_after') == red_end_state.get('event_deck_before') - 1
-        and red_end_state.get('event_discard_after') == red_end_state.get('event_discard_before') + 1,
-        red_end_state,
+        round_wrap_state.get('event_deck_after') == round_wrap_state.get('event_deck_before') - 1
+        and round_wrap_state.get('event_discard_after') == round_wrap_state.get('event_discard_before') + 1,
+        round_wrap_state,
     )
 
-    idx, card_name = first_current_player_action_card(game)
-    event_play_result = game.play_card(idx, mode='action') if idx is not None else {'skipped': True}
-    trace.append({
-        'step': 'event_phase_action_attempt',
-        'card': card_name,
-        'result': event_play_result,
-        'turn_phase': game.turn_phase,
-        'current_player': game.current_player().name,
-    })
-    assert_true(checks, 'event phase blocks action card play', isinstance(event_play_result, dict) and event_play_result.get('error') == 'Not in ACTION phase', event_play_result)
-
-    advance_to_action = game.advance_turn_phase()
-    state_action = game.state()
-    trace.append({
-        'step': 'advance_event_to_action',
-        'result': advance_to_action,
-        'turn': state_action['turn'],
-        'turn_phase': state_action['turn_phase'],
-        'current_player': state_action['current_player'],
-        'current_event': state_action.get('current_event'),
-    })
-    assert_true(checks, 'advance from event reaches action for same current player', state_action['turn_phase'] == 'action' and state_action['current_player'] == 'player1', state_action)
-
+    # ACTION phase allows the current player (player1) to play a card.
     idx, card_name = first_current_player_action_card(game)
     action_play_result = game.play_card(idx, mode='resource') if idx is not None else {'skipped': True}
     trace.append({
-        'step': 'action_phase_resource_play',
+        'step': 'action_phase_card_play',
         'card': card_name,
         'result': action_play_result,
-        'turn_phase': game.turn_phase,
+        'turn_phase': str(game.turn_phase),
         'current_player': game.current_player().name,
     })
     assert_true(checks, 'action phase allows current player card play', isinstance(action_play_result, dict) and action_play_result.get('success'), action_play_result)
 
-    to_end = game.advance_turn_phase()
-    to_next_event = game.advance_turn_phase()
-    state_next_event = game.state()
+    # ACTION -> END; the END (purchase) phase blocks action-card play.
+    game.advance_turn_phase()
+    end_idx, end_card = first_current_player_action_card(game)
+    end_play_result = game.play_card(end_idx, mode='action') if end_idx is not None else {'skipped': True}
     trace.append({
-        'step': 'end_turn_to_next_event',
-        'advance_to_end': to_end,
-        'advance_to_next_event': to_next_event,
-        'turn': state_next_event['turn'],
-        'turn_phase': state_next_event['turn_phase'],
-        'current_player': state_next_event['current_player'],
-        'current_event': state_next_event.get('current_event'),
-    })
-    assert_true(checks, 'ending turn advances to next player event phase without drawing a new event',
-        state_next_event['turn_phase'] == 'event'
-        and state_next_event['current_player'] == 'player2'
-        and (state_next_event.get('current_event') or {}).get('id') == (state_action.get('current_event') or {}).get('id')
-        and state_next_event.get('event_deck_count') == state_action.get('event_deck_count')
-        and state_next_event.get('event_discard_count') == state_action.get('event_discard_count'),
-        state_next_event,
-    )
-
-    next_idx, next_card = first_current_player_action_card(game)
-    next_event_play = game.play_card(next_idx, mode='action') if next_idx is not None else {'skipped': True}
-    trace.append({
-        'step': 'next_player_event_phase_action_attempt',
-        'card': next_card,
-        'result': next_event_play,
-        'turn_phase': game.turn_phase,
+        'step': 'end_phase_action_attempt',
+        'card': end_card,
+        'result': end_play_result,
+        'turn_phase': str(game.turn_phase),
         'current_player': game.current_player().name,
     })
-    assert_true(checks, 'next player event phase still blocks action until advanced', isinstance(next_event_play, dict) and next_event_play.get('error') == 'Not in ACTION phase', next_event_play)
+    assert_true(checks, 'end (purchase) phase blocks action card play',
+        game.turn_phase == TurnPhase.END and isinstance(end_play_result, dict) and end_play_result.get('error') == 'Not in ACTION phase',
+        end_play_result)
 
-    next_to_action = game.advance_turn_phase()
-    state_next_action = game.state()
+    # END -> next player's ACTION; still turn 1 and the same round event (no mid-round draw).
+    state_before_pass = game.state()
+    game.advance_turn_phase()
+    state_next = game.state()
     trace.append({
-        'step': 'next_player_advance_event_to_action',
-        'result': next_to_action,
-        'turn': state_next_action['turn'],
-        'turn_phase': state_next_action['turn_phase'],
-        'current_player': state_next_action['current_player'],
+        'step': 'end_passes_to_next_player_action',
+        'turn': state_next['turn'],
+        'turn_phase': state_next['turn_phase'],
+        'current_player': state_next['current_player'],
+        'current_event': (state_next.get('current_event') or {}).get('id'),
     })
-    assert_true(checks, 'next player can advance event to action without changing current player', state_next_action['turn_phase'] == 'action' and state_next_action['current_player'] == 'player2', state_next_action)
+    assert_true(checks, 'ending turn passes to next player in ACTION without drawing a new event mid-round',
+        state_next['turn_phase'] == 'action'
+        and state_next['current_player'] == 'player2'
+        and state_next['turn'] == 1
+        and (state_next.get('current_event') or {}).get('id') == (state_before_pass.get('current_event') or {}).get('id')
+        and state_next.get('event_deck_count') == state_before_pass.get('event_deck_count')
+        and state_next.get('event_discard_count') == state_before_pass.get('event_discard_count'),
+        state_next,
+    )
+
+    # The next player is likewise in ACTION and can play a card.
+    next_idx, next_card = first_current_player_action_card(game)
+    next_play = game.play_card(next_idx, mode='resource') if next_idx is not None else {'skipped': True}
+    trace.append({
+        'step': 'next_player_action_play',
+        'card': next_card,
+        'result': next_play,
+        'turn_phase': str(game.turn_phase),
+        'current_player': game.current_player().name,
+    })
+    assert_true(checks, 'next player is in ACTION and can play a card', isinstance(next_play, dict) and next_play.get('success'), next_play)
 
     red_support_game = Game([('red', '紅軍'), ('ben', 'BEN')], market_mode='all_cards')
     red_player = red_support_game.players[0]

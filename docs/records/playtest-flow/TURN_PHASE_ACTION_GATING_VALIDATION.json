@@ -1,17 +1,18 @@
 {
   "summary": {
     "passed": true,
-    "passed_count": 15,
+    "passed_count": 13,
     "failed_count": 0
   },
   "checks": [
     {
-      "name": "game starts first player in event phase after base selection",
+      "name": "game opens first player in ACTION phase with round event drawn",
       "passed": true,
       "details": {
         "turn": 1,
-        "turn_phase": "TurnPhase.EVENT",
-        "current_player": "player1"
+        "turn_phase": "TurnPhase.ACTION",
+        "current_player": "player1",
+        "current_event": "quiet_times"
       }
     },
     {
@@ -19,348 +20,146 @@
       "passed": true,
       "details": {
         "current_event": {
-          "id": "trade_war",
-          "name": "貿易戰加劇",
-          "type": "mission",
-          "trigger": {
-            "type": "buy_card",
-            "count": 1,
-            "min_cost": 4,
-            "card_names": [
-              "英美奧援"
-            ]
-          },
-          "success": {
-            "type": "topdeck_from_discard",
-            "count": 1
-          },
-          "failure": {
-            "type": "none"
-          },
+          "id": "quiet_times",
+          "name": "歲月靜好",
+          "type": "idle",
+          "trigger": {},
+          "success": {},
+          "failure": {},
+          "effect": {},
           "progress": {
             "count": 0,
-            "required": 1,
-            "succeeded": false,
-            "settled": false,
-            "status": "active"
+            "required": 0,
+            "succeeded": true,
+            "settled": true,
+            "status": "idle"
           },
-          "status": "active",
-          "result_text": "非紅軍任務進行中",
-          "trigger_text": "購買符合條件的卡牌（總費用 4 點以上 / 英美奧援）至少 1 次",
-          "success_text": "從棄牌堆選 1 張置於牌庫頂",
-          "failure_text": "無"
+          "status": "idle",
+          "result_text": "本次事件無效果",
+          "trigger_text": "無",
+          "success_text": "無",
+          "failure_text": "無",
+          "effect_text": "無"
         },
-        "event_deck_count": 24
+        "event_deck_count": 19
       }
     },
     {
-      "name": "formal lobby start immediately exposes current event card",
+      "name": "formal lobby start immediately exposes current event card in ACTION phase",
       "passed": true,
       "details": {
         "start_result": {
           "success": true,
           "market_mode": "sample_53"
         },
-        "turn_phase": "event",
+        "turn_phase": "action",
         "current_event": {
-          "id": "tibet_border_conflict",
-          "name": "藏印邊境軍事對峙",
-          "type": "mission",
-          "trigger": {
-            "type": "build_organization",
-            "count": 1,
-            "scope": "牆內"
-          },
-          "success": {
-            "type": "move",
-            "count": 2
-          },
-          "failure": {
-            "type": "none"
-          },
+          "id": "quiet_times",
+          "name": "歲月靜好",
+          "type": "idle",
+          "trigger": {},
+          "success": {},
+          "failure": {},
+          "effect": {},
           "progress": {
             "count": 0,
-            "required": 1,
-            "succeeded": false,
-            "settled": false,
-            "status": "active"
+            "required": 0,
+            "succeeded": true,
+            "settled": true,
+            "status": "idle"
           },
-          "status": "active",
-          "result_text": "非紅軍任務進行中",
-          "trigger_text": "建立組織（牆內）至少 1 次",
-          "success_text": "獲得 2 次組織遷移",
-          "failure_text": "無"
+          "status": "idle",
+          "result_text": "本次事件無效果",
+          "trigger_text": "無",
+          "success_text": "無",
+          "failure_text": "無",
+          "effect_text": "無"
         },
-        "event_deck_count": 24
+        "event_deck_count": 19
       }
     },
     {
-      "name": "formal 2p lobby keeps turn 1 when Ben ends and passes to Red Army",
+      "name": "formal 2p lobby keeps turn 1 when first player ends and passes to the other",
       "passed": true,
       "details": {
-        "step": "ben_end_to_red_event",
+        "step": "first_end_to_second_action",
         "result": {
           "success": true
         },
         "turn": 1,
-        "turn_phase": "event",
+        "turn_phase": "action",
         "current_player": "host",
         "current_faction": "red_army",
-        "event_before": "tibet_border_conflict",
-        "event_after": "tibet_border_conflict",
-        "event_deck_before": 24,
-        "event_deck_after": 24,
+        "event_before": "quiet_times",
+        "event_after": "quiet_times",
+        "event_deck_before": 19,
+        "event_deck_after": 19,
         "event_discard_before": 1,
         "event_discard_after": 1,
-        "event_status_after": "active"
+        "event_status_after": "idle"
       }
     },
     {
-      "name": "Ben end does not draw or replace event before Red Army also ends",
+      "name": "first player end does not draw or replace event before the round wraps",
       "passed": true,
       "details": {
-        "step": "ben_end_to_red_event",
+        "step": "first_end_to_second_action",
         "result": {
           "success": true
         },
         "turn": 1,
-        "turn_phase": "event",
+        "turn_phase": "action",
         "current_player": "host",
         "current_faction": "red_army",
-        "event_before": "tibet_border_conflict",
-        "event_after": "tibet_border_conflict",
-        "event_deck_before": 24,
-        "event_deck_after": 24,
+        "event_before": "quiet_times",
+        "event_after": "quiet_times",
+        "event_deck_before": 19,
+        "event_deck_after": 19,
         "event_discard_before": 1,
         "event_discard_after": 1,
-        "event_status_after": "active"
+        "event_status_after": "idle"
       }
     },
     {
-      "name": "formal 2p lobby increments to turn 2 only after Red Army ends",
+      "name": "formal 2p lobby increments to turn 2 only after the full round ends",
       "passed": true,
       "details": {
-        "step": "red_end_to_next_round",
+        "step": "second_end_to_next_round",
         "result": {
           "success": true
         },
         "turn": 2,
-        "turn_phase": "event",
+        "turn_phase": "action",
         "current_player": "ally",
         "current_faction": "taiwan_green",
-        "event_before": "tibet_border_conflict",
-        "event_after": "quiet_times",
-        "event_deck_before": 24,
-        "event_deck_after": 23,
+        "event_before": "quiet_times",
+        "event_after": "tibet_border_conflict",
+        "event_deck_before": 19,
+        "event_deck_after": 18,
         "event_discard_before": 1,
         "event_discard_after": 2,
-        "event_status_after": "idle"
+        "event_status_after": "active"
       }
     },
     {
       "name": "new event is drawn only after the full round ends",
       "passed": true,
       "details": {
-        "step": "red_end_to_next_round",
+        "step": "second_end_to_next_round",
         "result": {
           "success": true
         },
         "turn": 2,
-        "turn_phase": "event",
+        "turn_phase": "action",
         "current_player": "ally",
         "current_faction": "taiwan_green",
-        "event_before": "tibet_border_conflict",
-        "event_after": "quiet_times",
-        "event_deck_before": 24,
-        "event_deck_after": 23,
+        "event_before": "quiet_times",
+        "event_after": "tibet_border_conflict",
+        "event_deck_before": 19,
+        "event_deck_after": 18,
         "event_discard_before": 1,
         "event_discard_after": 2,
-        "event_status_after": "idle"
-      }
-    },
-    {
-      "name": "event phase blocks action card play",
-      "passed": true,
-      "details": {
-        "error": "Not in ACTION phase"
-      }
-    },
-    {
-      "name": "advance from event reaches action for same current player",
-      "passed": true,
-      "details": {
-        "turn": 1,
-        "game_phase": "main",
-        "turn_phase": "action",
-        "winner": null,
-        "current_player": "player1",
-        "active_eras": [],
-        "active_era_details": [],
-        "era_notification": null,
-        "current_event": {
-          "id": "trade_war",
-          "name": "貿易戰加劇",
-          "type": "mission",
-          "trigger": {
-            "type": "buy_card",
-            "count": 1,
-            "min_cost": 4,
-            "card_names": [
-              "英美奧援"
-            ]
-          },
-          "success": {
-            "type": "topdeck_from_discard",
-            "count": 1
-          },
-          "failure": {
-            "type": "none"
-          },
-          "progress": {
-            "count": 0,
-            "required": 1,
-            "succeeded": false,
-            "settled": false,
-            "status": "active"
-          },
-          "status": "active",
-          "result_text": "非紅軍任務進行中",
-          "trigger_text": "購買符合條件的卡牌（總費用 4 點以上 / 英美奧援）至少 1 次",
-          "success_text": "從棄牌堆選 1 張置於牌庫頂",
-          "failure_text": "無"
-        },
-        "event_deck_count": 24,
-        "red_army_action_count": 0,
-        "red_army_action_limit": 2,
-        "event_discard_count": 1,
-        "event_modifiers": [],
-        "market_mode": "sample_53",
-        "pending_base_choices": {},
-        "pending_choice": null,
-        "faction_action_used": false,
-        "action_log": [
-          "[Turn 1] Event drawn: 貿易戰加劇",
-          "[Turn 1] player1 played 樂捐者 as resource",
-          "[Turn 1] End of turn for player1"
-        ],
-        "purchase_area": [
-          "宣傳家",
-          "思想家",
-          "資助者",
-          "資本家",
-          "分神",
-          "內鬥",
-          "組織經驗丙",
-          "南洋奧援",
-          "樹立信心",
-          "企畫遊說",
-          "英美奧援"
-        ],
-        "static_purchase_supply": {
-          "宣傳家": 10,
-          "思想家": 10,
-          "資助者": 10,
-          "資本家": 10,
-          "分神": 10,
-          "內鬥": 10
-        },
-        "map": {
-          "towns": {
-            "北京": [
-              {
-                "player": "player1",
-                "count": 1
-              }
-            ],
-            "桂林": [
-              {
-                "player": "player2",
-                "count": 1
-              }
-            ],
-            "臺北": [
-              {
-                "player": "player3",
-                "count": 1
-              }
-            ]
-          },
-          "shared_access": {}
-        },
-        "players": [
-          {
-            "id": "p1",
-            "name": "player1",
-            "faction": "red_army",
-            "base": "北京",
-            "resources": {
-              "money": 1,
-              "propaganda": 0
-            },
-            "moves_left": 0,
-            "hand": [
-              "樂捐者",
-              "追隨者",
-              "樂捐者",
-              "追隨者",
-              "追隨者"
-            ],
-            "deck_count": 6,
-            "discard_count": 0,
-            "discard_pile": [],
-            "orgs": {
-              "北京": 1
-            }
-          },
-          {
-            "id": "p2",
-            "name": "player2",
-            "faction": "yao",
-            "base": "桂林",
-            "resources": {
-              "money": 0,
-              "propaganda": 0
-            },
-            "moves_left": 0,
-            "hand": [
-              "追隨者",
-              "追隨者",
-              "追隨者",
-              "樂捐者",
-              "追隨者"
-            ],
-            "deck_count": 5,
-            "discard_count": 0,
-            "discard_pile": [],
-            "orgs": {
-              "桂林": 1
-            }
-          },
-          {
-            "id": "p3",
-            "name": "player3",
-            "faction": "taiwan_blue",
-            "base": "臺北",
-            "resources": {
-              "money": 0,
-              "propaganda": 0
-            },
-            "moves_left": 0,
-            "hand": [
-              "追隨者",
-              "樂捐者",
-              "追隨者",
-              "追隨者",
-              "追隨者"
-            ],
-            "deck_count": 5,
-            "discard_count": 0,
-            "discard_pile": [],
-            "orgs": {
-              "臺北": 1
-            }
-          }
-        ]
+        "event_status_after": "active"
       }
     },
     {
@@ -371,241 +170,49 @@
       }
     },
     {
-      "name": "ending turn advances to next player event phase without drawing a new event",
-      "passed": true,
-      "details": {
-        "turn": 1,
-        "game_phase": "main",
-        "turn_phase": "event",
-        "winner": null,
-        "current_player": "player2",
-        "active_eras": [],
-        "active_era_details": [],
-        "era_notification": null,
-        "current_event": {
-          "id": "trade_war",
-          "name": "貿易戰加劇",
-          "type": "mission",
-          "trigger": {
-            "type": "buy_card",
-            "count": 1,
-            "min_cost": 4,
-            "card_names": [
-              "英美奧援"
-            ]
-          },
-          "success": {
-            "type": "topdeck_from_discard",
-            "count": 1
-          },
-          "failure": {
-            "type": "none"
-          },
-          "progress": {
-            "count": 0,
-            "required": 1,
-            "succeeded": false,
-            "settled": false,
-            "status": "active"
-          },
-          "status": "active",
-          "result_text": "非紅軍任務進行中",
-          "trigger_text": "購買符合條件的卡牌（總費用 4 點以上 / 英美奧援）至少 1 次",
-          "success_text": "從棄牌堆選 1 張置於牌庫頂",
-          "failure_text": "無"
-        },
-        "event_deck_count": 24,
-        "red_army_action_count": 0,
-        "red_army_action_limit": 2,
-        "event_discard_count": 1,
-        "event_modifiers": [],
-        "market_mode": "sample_53",
-        "pending_base_choices": {},
-        "pending_choice": null,
-        "faction_action_used": false,
-        "action_log": [
-          "[Turn 1] Event drawn: 貿易戰加劇",
-          "[Turn 1] player1 played 樂捐者 as resource",
-          "[Turn 1] End of turn for player1"
-        ],
-        "purchase_area": [
-          "宣傳家",
-          "思想家",
-          "資助者",
-          "資本家",
-          "分神",
-          "內鬥",
-          "組織經驗丙",
-          "南洋奧援",
-          "樹立信心",
-          "企畫遊說",
-          "英美奧援"
-        ],
-        "static_purchase_supply": {
-          "宣傳家": 10,
-          "思想家": 10,
-          "資助者": 10,
-          "資本家": 10,
-          "分神": 10,
-          "內鬥": 10
-        },
-        "map": {
-          "towns": {
-            "北京": [
-              {
-                "player": "player1",
-                "count": 1
-              }
-            ],
-            "桂林": [
-              {
-                "player": "player2",
-                "count": 1
-              }
-            ],
-            "臺北": [
-              {
-                "player": "player3",
-                "count": 1
-              }
-            ]
-          },
-          "shared_access": {}
-        },
-        "players": [
-          {
-            "id": "p1",
-            "name": "player1",
-            "faction": "red_army",
-            "base": "北京",
-            "resources": {
-              "money": 0,
-              "propaganda": 0
-            },
-            "moves_left": 0,
-            "hand": [
-              "追隨者",
-              "追隨者",
-              "紅軍奧援",
-              "追隨者",
-              "追隨者"
-            ],
-            "deck_count": 1,
-            "discard_count": 5,
-            "discard_pile": [
-              "樂捐者",
-              "追隨者",
-              "樂捐者",
-              "追隨者",
-              "追隨者"
-            ],
-            "orgs": {
-              "北京": 1
-            }
-          },
-          {
-            "id": "p2",
-            "name": "player2",
-            "faction": "yao",
-            "base": "桂林",
-            "resources": {
-              "money": 0,
-              "propaganda": 0
-            },
-            "moves_left": 0,
-            "hand": [
-              "追隨者",
-              "追隨者",
-              "追隨者",
-              "樂捐者",
-              "追隨者"
-            ],
-            "deck_count": 5,
-            "discard_count": 0,
-            "discard_pile": [],
-            "orgs": {
-              "桂林": 1
-            }
-          },
-          {
-            "id": "p3",
-            "name": "player3",
-            "faction": "taiwan_blue",
-            "base": "臺北",
-            "resources": {
-              "money": 0,
-              "propaganda": 0
-            },
-            "moves_left": 0,
-            "hand": [
-              "追隨者",
-              "樂捐者",
-              "追隨者",
-              "追隨者",
-              "追隨者"
-            ],
-            "deck_count": 5,
-            "discard_count": 0,
-            "discard_pile": [],
-            "orgs": {
-              "臺北": 1
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "next player event phase still blocks action until advanced",
+      "name": "end (purchase) phase blocks action card play",
       "passed": true,
       "details": {
         "error": "Not in ACTION phase"
       }
     },
     {
-      "name": "next player can advance event to action without changing current player",
+      "name": "ending turn passes to next player in ACTION without drawing a new event mid-round",
       "passed": true,
       "details": {
         "turn": 1,
         "game_phase": "main",
         "turn_phase": "action",
         "winner": null,
+        "co_winners": [],
+        "hk_free_base_relocation": false,
         "current_player": "player2",
         "active_eras": [],
         "active_era_details": [],
         "era_notification": null,
         "current_event": {
-          "id": "trade_war",
-          "name": "貿易戰加劇",
-          "type": "mission",
-          "trigger": {
-            "type": "buy_card",
-            "count": 1,
-            "min_cost": 4,
-            "card_names": [
-              "英美奧援"
-            ]
-          },
-          "success": {
-            "type": "topdeck_from_discard",
-            "count": 1
-          },
-          "failure": {
-            "type": "none"
-          },
+          "id": "quiet_times",
+          "name": "歲月靜好",
+          "type": "idle",
+          "trigger": {},
+          "success": {},
+          "failure": {},
+          "effect": {},
           "progress": {
             "count": 0,
-            "required": 1,
-            "succeeded": false,
-            "settled": false,
-            "status": "active"
+            "required": 0,
+            "succeeded": true,
+            "settled": true,
+            "status": "idle"
           },
-          "status": "active",
-          "result_text": "非紅軍任務進行中",
-          "trigger_text": "購買符合條件的卡牌（總費用 4 點以上 / 英美奧援）至少 1 次",
-          "success_text": "從棄牌堆選 1 張置於牌庫頂",
-          "failure_text": "無"
+          "status": "idle",
+          "result_text": "本次事件無效果",
+          "trigger_text": "無",
+          "success_text": "無",
+          "failure_text": "無",
+          "effect_text": "無"
         },
-        "event_deck_count": 24,
+        "event_deck_count": 19,
         "red_army_action_count": 0,
         "red_army_action_limit": 2,
         "event_discard_count": 1,
@@ -615,9 +222,10 @@
         "pending_choice": null,
         "faction_action_used": false,
         "action_log": [
-          "[Turn 1] Event drawn: 貿易戰加劇",
+          "[Turn 1] Event drawn: 歲月靜好 (no-op)",
           "[Turn 1] player1 played 樂捐者 as resource",
-          "[Turn 1] End of turn for player1"
+          "[Turn 1] End of turn for player1",
+          "[Turn 1] player2 played 追隨者 as resource"
         ],
         "purchase_area": [
           "宣傳家",
@@ -632,13 +240,72 @@
           "企畫遊說",
           "英美奧援"
         ],
+        "purchase_area_costs": [
+          {
+            "money": 0,
+            "propaganda": 3
+          },
+          {
+            "money": 0,
+            "propaganda": 5
+          },
+          {
+            "money": 2,
+            "propaganda": 1
+          },
+          {
+            "money": 3,
+            "propaganda": 2
+          },
+          {
+            "money": 0,
+            "propaganda": 0
+          },
+          {
+            "money": 0,
+            "propaganda": 0
+          },
+          {
+            "money": 2,
+            "propaganda": 1
+          },
+          {
+            "money": 1,
+            "propaganda": 2
+          },
+          {
+            "money": 2,
+            "propaganda": 1
+          },
+          {
+            "money": 1,
+            "propaganda": 2
+          },
+          {
+            "money": 1,
+            "propaganda": 2
+          }
+        ],
+        "purchase_area_affordable": [
+          false,
+          false,
+          false,
+          false,
+          true,
+          true,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
         "static_purchase_supply": {
-          "宣傳家": 10,
-          "思想家": 10,
-          "資助者": 10,
-          "資本家": 10,
-          "分神": 10,
-          "內鬥": 10
+          "宣傳家": 15,
+          "思想家": 15,
+          "資助者": 15,
+          "資本家": 15,
+          "分神": 30,
+          "內鬥": 20
         },
         "map": {
           "towns": {
@@ -676,19 +343,15 @@
             "moves_left": 0,
             "hand": [
               "追隨者",
+              "樂捐者",
               "追隨者",
-              "紅軍奧援",
               "追隨者",
               "追隨者"
             ],
-            "deck_count": 1,
-            "discard_count": 5,
+            "deck_count": 5,
+            "discard_count": 1,
             "discard_pile": [
-              "樂捐者",
-              "追隨者",
-              "樂捐者",
-              "追隨者",
-              "追隨者"
+              "樂捐者"
             ],
             "orgs": {
               "北京": 1
@@ -701,7 +364,7 @@
             "base": "桂林",
             "resources": {
               "money": 0,
-              "propaganda": 0
+              "propaganda": 1
             },
             "moves_left": 0,
             "hand": [
@@ -743,6 +406,13 @@
             }
           }
         ]
+      }
+    },
+    {
+      "name": "next player is in ACTION and can play a card",
+      "passed": true,
+      "details": {
+        "success": true
       }
     },
     {
@@ -779,106 +449,72 @@
         }
       ],
       "turn": 1,
-      "turn_phase": "event",
+      "turn_phase": "action",
       "current_player": "player1",
       "current_event": {
-        "id": "trade_war",
-        "name": "貿易戰加劇",
-        "type": "mission",
-        "trigger": {
-          "type": "buy_card",
-          "count": 1,
-          "min_cost": 4,
-          "card_names": [
-            "英美奧援"
-          ]
-        },
-        "success": {
-          "type": "topdeck_from_discard",
-          "count": 1
-        },
-        "failure": {
-          "type": "none"
-        },
+        "id": "quiet_times",
+        "name": "歲月靜好",
+        "type": "idle",
+        "trigger": {},
+        "success": {},
+        "failure": {},
+        "effect": {},
         "progress": {
           "count": 0,
-          "required": 1,
-          "succeeded": false,
-          "settled": false,
-          "status": "active"
+          "required": 0,
+          "succeeded": true,
+          "settled": true,
+          "status": "idle"
         },
-        "status": "active",
-        "result_text": "非紅軍任務進行中",
-        "trigger_text": "購買符合條件的卡牌（總費用 4 點以上 / 英美奧援）至少 1 次",
-        "success_text": "從棄牌堆選 1 張置於牌庫頂",
-        "failure_text": "無"
+        "status": "idle",
+        "result_text": "本次事件無效果",
+        "trigger_text": "無",
+        "success_text": "無",
+        "failure_text": "無",
+        "effect_text": "無"
       }
     },
     {
       "step": "formal_lobby_start_event_state",
-      "game_id": "1093e74c-87b2-4378-a2b4-b87b7337f30e",
+      "game_id": "f7cfc2a8-238b-4177-84a2-ca79179301ea",
       "start_result": {
         "success": true,
         "market_mode": "sample_53"
       },
       "turn": 1,
-      "turn_phase": "event",
+      "turn_phase": "action",
       "current_player": "ally",
       "current_event": {
-        "id": "tibet_border_conflict",
-        "name": "藏印邊境軍事對峙",
-        "type": "mission",
-        "trigger": {
-          "type": "build_organization",
-          "count": 1,
-          "scope": "牆內"
-        },
-        "success": {
-          "type": "move",
-          "count": 2
-        },
-        "failure": {
-          "type": "none"
-        },
+        "id": "quiet_times",
+        "name": "歲月靜好",
+        "type": "idle",
+        "trigger": {},
+        "success": {},
+        "failure": {},
+        "effect": {},
         "progress": {
           "count": 0,
-          "required": 1,
-          "succeeded": false,
-          "settled": false,
-          "status": "active"
+          "required": 0,
+          "succeeded": true,
+          "settled": true,
+          "status": "idle"
         },
-        "status": "active",
-        "result_text": "非紅軍任務進行中",
-        "trigger_text": "建立組織（牆內）至少 1 次",
-        "success_text": "獲得 2 次組織遷移",
-        "failure_text": "無"
+        "status": "idle",
+        "result_text": "本次事件無效果",
+        "trigger_text": "無",
+        "success_text": "無",
+        "failure_text": "無",
+        "effect_text": "無"
       },
-      "event_deck_count": 24
+      "event_deck_count": 19
     },
     {
-      "step": "formal_lobby_round_flow_after_ben_turn",
+      "step": "formal_lobby_round_flow",
       "round_start_player": "ally",
       "round_start_player_index": 1,
       "flow": [
         {
-          "step": "ben_event_to_action",
-          "result": {
-            "success": true
-          },
-          "turn": 1,
-          "turn_phase": "action",
-          "current_player": "ally",
-          "current_faction": "taiwan_green",
-          "event_before": "tibet_border_conflict",
-          "event_after": "tibet_border_conflict",
-          "event_deck_before": 24,
-          "event_deck_after": 24,
-          "event_discard_before": 1,
-          "event_discard_after": 1,
-          "event_status_after": "active"
-        },
-        {
-          "step": "ben_action_to_end",
+          "step": "first_action_to_end",
           "result": {
             "success": true
           },
@@ -886,33 +522,16 @@
           "turn_phase": "end",
           "current_player": "ally",
           "current_faction": "taiwan_green",
-          "event_before": "tibet_border_conflict",
-          "event_after": "tibet_border_conflict",
-          "event_deck_before": 24,
-          "event_deck_after": 24,
+          "event_before": "quiet_times",
+          "event_after": "quiet_times",
+          "event_deck_before": 19,
+          "event_deck_after": 19,
           "event_discard_before": 1,
           "event_discard_after": 1,
-          "event_status_after": "active"
+          "event_status_after": "idle"
         },
         {
-          "step": "ben_end_to_red_event",
-          "result": {
-            "success": true
-          },
-          "turn": 1,
-          "turn_phase": "event",
-          "current_player": "host",
-          "current_faction": "red_army",
-          "event_before": "tibet_border_conflict",
-          "event_after": "tibet_border_conflict",
-          "event_deck_before": 24,
-          "event_deck_after": 24,
-          "event_discard_before": 1,
-          "event_discard_after": 1,
-          "event_status_after": "active"
-        },
-        {
-          "step": "red_event_to_action",
+          "step": "first_end_to_second_action",
           "result": {
             "success": true
           },
@@ -920,16 +539,16 @@
           "turn_phase": "action",
           "current_player": "host",
           "current_faction": "red_army",
-          "event_before": "tibet_border_conflict",
-          "event_after": "tibet_border_conflict",
-          "event_deck_before": 24,
-          "event_deck_after": 24,
+          "event_before": "quiet_times",
+          "event_after": "quiet_times",
+          "event_deck_before": 19,
+          "event_deck_after": 19,
           "event_discard_before": 1,
           "event_discard_after": 1,
-          "event_status_after": "active"
+          "event_status_after": "idle"
         },
         {
-          "step": "red_action_to_end",
+          "step": "second_action_to_end",
           "result": {
             "success": true
           },
@@ -937,152 +556,65 @@
           "turn_phase": "end",
           "current_player": "host",
           "current_faction": "red_army",
-          "event_before": "tibet_border_conflict",
-          "event_after": "tibet_border_conflict",
-          "event_deck_before": 24,
-          "event_deck_after": 24,
+          "event_before": "quiet_times",
+          "event_after": "quiet_times",
+          "event_deck_before": 19,
+          "event_deck_after": 19,
           "event_discard_before": 1,
           "event_discard_after": 1,
-          "event_status_after": "failure"
+          "event_status_after": "idle"
         },
         {
-          "step": "red_end_to_next_round",
+          "step": "second_end_to_next_round",
           "result": {
             "success": true
           },
           "turn": 2,
-          "turn_phase": "event",
+          "turn_phase": "action",
           "current_player": "ally",
           "current_faction": "taiwan_green",
-          "event_before": "tibet_border_conflict",
-          "event_after": "quiet_times",
-          "event_deck_before": 24,
-          "event_deck_after": 23,
+          "event_before": "quiet_times",
+          "event_after": "tibet_border_conflict",
+          "event_deck_before": 19,
+          "event_deck_after": 18,
           "event_discard_before": 1,
           "event_discard_after": 2,
-          "event_status_after": "idle"
+          "event_status_after": "active"
         }
       ]
     },
     {
-      "step": "event_phase_action_attempt",
-      "card": "樂捐者",
-      "result": {
-        "error": "Not in ACTION phase"
-      },
-      "turn_phase": "event",
-      "current_player": "player1"
-    },
-    {
-      "step": "advance_event_to_action",
-      "result": {
-        "success": true
-      },
-      "turn": 1,
-      "turn_phase": "action",
-      "current_player": "player1",
-      "current_event": {
-        "id": "trade_war",
-        "name": "貿易戰加劇",
-        "type": "mission",
-        "trigger": {
-          "type": "buy_card",
-          "count": 1,
-          "min_cost": 4,
-          "card_names": [
-            "英美奧援"
-          ]
-        },
-        "success": {
-          "type": "topdeck_from_discard",
-          "count": 1
-        },
-        "failure": {
-          "type": "none"
-        },
-        "progress": {
-          "count": 0,
-          "required": 1,
-          "succeeded": false,
-          "settled": false,
-          "status": "active"
-        },
-        "status": "active",
-        "result_text": "非紅軍任務進行中",
-        "trigger_text": "購買符合條件的卡牌（總費用 4 點以上 / 英美奧援）至少 1 次",
-        "success_text": "從棄牌堆選 1 張置於牌庫頂",
-        "failure_text": "無"
-      }
-    },
-    {
-      "step": "action_phase_resource_play",
+      "step": "action_phase_card_play",
       "card": "樂捐者",
       "result": {
         "success": true
       },
-      "turn_phase": "action",
+      "turn_phase": "TurnPhase.ACTION",
       "current_player": "player1"
     },
     {
-      "step": "end_turn_to_next_event",
-      "advance_to_end": {
-        "success": true
-      },
-      "advance_to_next_event": {
-        "success": true
-      },
-      "turn": 1,
-      "turn_phase": "event",
-      "current_player": "player2",
-      "current_event": {
-        "id": "trade_war",
-        "name": "貿易戰加劇",
-        "type": "mission",
-        "trigger": {
-          "type": "buy_card",
-          "count": 1,
-          "min_cost": 4,
-          "card_names": [
-            "英美奧援"
-          ]
-        },
-        "success": {
-          "type": "topdeck_from_discard",
-          "count": 1
-        },
-        "failure": {
-          "type": "none"
-        },
-        "progress": {
-          "count": 0,
-          "required": 1,
-          "succeeded": false,
-          "settled": false,
-          "status": "active"
-        },
-        "status": "active",
-        "result_text": "非紅軍任務進行中",
-        "trigger_text": "購買符合條件的卡牌（總費用 4 點以上 / 英美奧援）至少 1 次",
-        "success_text": "從棄牌堆選 1 張置於牌庫頂",
-        "failure_text": "無"
-      }
-    },
-    {
-      "step": "next_player_event_phase_action_attempt",
+      "step": "end_phase_action_attempt",
       "card": "追隨者",
       "result": {
         "error": "Not in ACTION phase"
       },
-      "turn_phase": "event",
-      "current_player": "player2"
+      "turn_phase": "TurnPhase.END",
+      "current_player": "player1"
     },
     {
-      "step": "next_player_advance_event_to_action",
+      "step": "end_passes_to_next_player_action",
+      "turn": 1,
+      "turn_phase": "action",
+      "current_player": "player2",
+      "current_event": "quiet_times"
+    },
+    {
+      "step": "next_player_action_play",
+      "card": "追隨者",
       "result": {
         "success": true
       },
-      "turn": 1,
-      "turn_phase": "action",
+      "turn_phase": "TurnPhase.ACTION",
       "current_player": "player2"
     },
     {
@@ -1096,7 +628,9 @@
       "pending_choice": {
         "type": "target_choice",
         "choice_key": "red_support_target_player",
+        "cancellable": false,
         "player_id": "red",
+        "player_name": null,
         "prompt": "紅軍奧援：請選擇要將本牌放入哪位反共玩家的棄牌堆。",
         "source_name": "紅軍奧援",
         "count": null,
@@ -1134,43 +668,35 @@
     "game_phase": "main",
     "turn_phase": "action",
     "winner": null,
+    "co_winners": [],
+    "hk_free_base_relocation": false,
     "current_player": "player2",
     "active_eras": [],
     "active_era_details": [],
     "era_notification": null,
     "current_event": {
-      "id": "trade_war",
-      "name": "貿易戰加劇",
-      "type": "mission",
-      "trigger": {
-        "type": "buy_card",
-        "count": 1,
-        "min_cost": 4,
-        "card_names": [
-          "英美奧援"
-        ]
-      },
-      "success": {
-        "type": "topdeck_from_discard",
-        "count": 1
-      },
-      "failure": {
-        "type": "none"
-      },
+      "id": "quiet_times",
+      "name": "歲月靜好",
+      "type": "idle",
+      "trigger": {},
+      "success": {},
+      "failure": {},
+      "effect": {},
       "progress": {
         "count": 0,
-        "required": 1,
-        "succeeded": false,
-        "settled": false,
-        "status": "active"
+        "required": 0,
+        "succeeded": true,
+        "settled": true,
+        "status": "idle"
       },
-      "status": "active",
-      "result_text": "非紅軍任務進行中",
-      "trigger_text": "購買符合條件的卡牌（總費用 4 點以上 / 英美奧援）至少 1 次",
-      "success_text": "從棄牌堆選 1 張置於牌庫頂",
-      "failure_text": "無"
+      "status": "idle",
+      "result_text": "本次事件無效果",
+      "trigger_text": "無",
+      "success_text": "無",
+      "failure_text": "無",
+      "effect_text": "無"
     },
-    "event_deck_count": 24,
+    "event_deck_count": 19,
     "red_army_action_count": 0,
     "red_army_action_limit": 2,
     "event_discard_count": 1,
@@ -1180,9 +706,10 @@
     "pending_choice": null,
     "faction_action_used": false,
     "action_log": [
-      "[Turn 1] Event drawn: 貿易戰加劇",
+      "[Turn 1] Event drawn: 歲月靜好 (no-op)",
       "[Turn 1] player1 played 樂捐者 as resource",
-      "[Turn 1] End of turn for player1"
+      "[Turn 1] End of turn for player1",
+      "[Turn 1] player2 played 追隨者 as resource"
     ],
     "purchase_area": [
       "宣傳家",
@@ -1197,13 +724,72 @@
       "企畫遊說",
       "英美奧援"
     ],
+    "purchase_area_costs": [
+      {
+        "money": 0,
+        "propaganda": 3
+      },
+      {
+        "money": 0,
+        "propaganda": 5
+      },
+      {
+        "money": 2,
+        "propaganda": 1
+      },
+      {
+        "money": 3,
+        "propaganda": 2
+      },
+      {
+        "money": 0,
+        "propaganda": 0
+      },
+      {
+        "money": 0,
+        "propaganda": 0
+      },
+      {
+        "money": 2,
+        "propaganda": 1
+      },
+      {
+        "money": 1,
+        "propaganda": 2
+      },
+      {
+        "money": 2,
+        "propaganda": 1
+      },
+      {
+        "money": 1,
+        "propaganda": 2
+      },
+      {
+        "money": 1,
+        "propaganda": 2
+      }
+    ],
+    "purchase_area_affordable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
     "static_purchase_supply": {
-      "宣傳家": 10,
-      "思想家": 10,
-      "資助者": 10,
-      "資本家": 10,
-      "分神": 10,
-      "內鬥": 10
+      "宣傳家": 15,
+      "思想家": 15,
+      "資助者": 15,
+      "資本家": 15,
+      "分神": 30,
+      "內鬥": 20
     },
     "map": {
       "towns": {
@@ -1241,19 +827,15 @@
         "moves_left": 0,
         "hand": [
           "追隨者",
+          "樂捐者",
           "追隨者",
-          "紅軍奧援",
           "追隨者",
           "追隨者"
         ],
-        "deck_count": 1,
-        "discard_count": 5,
+        "deck_count": 5,
+        "discard_count": 1,
         "discard_pile": [
-          "樂捐者",
-          "追隨者",
-          "樂捐者",
-          "追隨者",
-          "追隨者"
+          "樂捐者"
         ],
         "orgs": {
           "北京": 1
@@ -1266,19 +848,20 @@
         "base": "桂林",
         "resources": {
           "money": 0,
-          "propaganda": 0
+          "propaganda": 1
         },
         "moves_left": 0,
         "hand": [
-          "追隨者",
           "追隨者",
           "追隨者",
           "樂捐者",
           "追隨者"
         ],
         "deck_count": 5,
-        "discard_count": 0,
-        "discard_pile": [],
+        "discard_count": 1,
+        "discard_pile": [
+          "追隨者"
+        ],
         "orgs": {
           "桂林": 1
         }

@@ -103,8 +103,12 @@ def run_use_scenario(card_name: str, choose_index: int) -> Dict[str, Any]:
         failures.append(f"{card_name}: purchased card remained in discard")
     if card_name not in after["discard_pile"]:
         failures.append(f"{card_name}: used action card was not discarded")
-    if after["turn_phase"] != TurnPhase.EVENT:
-        failures.append(f"{card_name}: turn did not advance to EVENT")
+    # After using the card at end of turn, P1's turn completes and passes to the next
+    # player. The exact landing phase depends on the (shuffled) event drawn — EVENT if it
+    # needs interaction, otherwise it auto-advances to ACTION — so the robust invariant is
+    # simply that the turn moved off P1 to the next player.
+    if g.current_player_index != 1:
+        failures.append(f"{card_name}: turn did not pass to the next player (current_player_index={g.current_player_index})")
     if not any(f"used {card_name} before drawing new hand" in line for line in after["action_log_tail"]):
         failures.append(f"{card_name}: missing action log")
 

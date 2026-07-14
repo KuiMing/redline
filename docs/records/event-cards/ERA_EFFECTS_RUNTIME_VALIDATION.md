@@ -1,24 +1,24 @@
 # Era Effects Runtime Validation
 
-- Date: 2026-05-30
+- Date: 2026-07-14
 - Summary: 15/15 passed
 
 ## PASS: mongolia_adds_internal_conflict_with_static_supply_cap
 
 ```json
 {
-  "rule": "蒙古時代關卡 activation effect 將內鬥加入蒙古棄牌堆，但最多消耗既有 static supply。",
+  "rule": "蒙古時代關卡 activation effect 將內鬥加入蒙古棄牌堆，但最多消耗既有 static supply（此處 supply=2 封頂）。",
   "active_eras": [
     "mongolia"
   ],
-  "discard_internal_conflict": 1,
-  "supply_before": 1,
+  "discard_internal_conflict": 2,
+  "supply_before": 2,
   "supply_after": 0,
   "runtime_effects": {
     "red_suppression": {
       "type": "add_static_cards_to_discard",
       "added": {
-        "actor": 1
+        "actor": 4
       }
     },
     "revolution_counterattack": {
@@ -33,17 +33,17 @@
 
 ```json
 {
-  "rule": "臺灣時代關卡觸發時，將內鬥加入臺灣棄牌堆並消耗 static supply。",
+  "rule": "臺灣時代關卡觸發時，將內鬥加入臺灣棄牌堆並消耗 static supply（此處 supply=2 封頂）。",
   "active_eras": [
     "taiwan"
   ],
-  "discard_internal_conflict": 1,
+  "discard_internal_conflict": 2,
   "supply_after": 0,
   "runtime_effects": {
     "red_suppression": {
       "type": "add_static_cards_to_discard",
       "added": {
-        "actor": 1
+        "actor": 4
       }
     },
     "revolution_counterattack": {
@@ -58,17 +58,17 @@
 
 ```json
 {
-  "rule": "滿洲時代關卡 activation effect 將分神加入滿洲棄牌堆並消耗 static supply。",
+  "rule": "滿洲時代關卡 activation effect 將分神加入滿洲棄牌堆並消耗 static supply（此處 supply=2 封頂）。",
   "active_eras": [
     "manchuria"
   ],
-  "discard_distraction": 1,
+  "discard_distraction": 2,
   "supply_after": 0,
   "runtime_effects": {
     "red_suppression": {
       "type": "add_static_cards_to_discard",
       "added": {
-        "actor": 1
+        "actor": 2
       }
     },
     "revolution_counterattack": {
@@ -385,7 +385,7 @@
     "red_suppression": {
       "type": "add_static_cards_to_discard",
       "added": {
-        "actor": 1
+        "actor": 5
       }
     },
     "revolution_counterattack": {
@@ -487,7 +487,7 @@
   "towns": [
     "三亞",
     "上海",
-    "北京"
+    "南京"
   ],
   "build_results": [
     {

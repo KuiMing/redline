@@ -76,23 +76,23 @@ def discard_count(player, name):
 def run_checks():
     checks = []
 
-    # Mongolia red_suppression adds 內鬥 to discard through static supply.
+    # Mongolia red_suppression adds 內鬥 to discard, but never more than the remaining
+    # static supply. Cap the supply below the era's add count to exercise the cap.
     game, actor, _red = make_game('mongol')
-    before_supply = game.static_purchase_supply.get('內鬥')
+    game.static_purchase_supply['內鬥'] = 2
     game.era_engine.activate_era('mongolia')
     runtime_effects = game._apply_era_activation_effects(game.era_engine.get_definition('mongolia'))
     after_supply = game.static_purchase_supply.get('內鬥')
     checks.append(check(
         'mongolia_adds_internal_conflict_with_static_supply_cap',
         'mongolia' in game.era_engine.get_active_eras()
-        and discard_count(actor, '內鬥') == 1
-        and before_supply == 1
+        and discard_count(actor, '內鬥') == 2
         and after_supply == 0,
         {
-            'rule': '蒙古時代關卡 activation effect 將內鬥加入蒙古棄牌堆，但最多消耗既有 static supply。',
+            'rule': '蒙古時代關卡 activation effect 將內鬥加入蒙古棄牌堆，但最多消耗既有 static supply（此處 supply=2 封頂）。',
             'active_eras': game.era_engine.get_active_eras(),
             'discard_internal_conflict': discard_count(actor, '內鬥'),
-            'supply_before': before_supply,
+            'supply_before': 2,
             'supply_after': after_supply,
             'runtime_effects': runtime_effects,
         }
@@ -101,14 +101,15 @@ def run_checks():
     # Taiwan uses the same static-supply path for 內鬥.
     game, actor, _red = make_game('taiwan_green')
     place_orgs(actor, first_towns(game, 'taiwan', 1), count_each=7)
+    game.static_purchase_supply['內鬥'] = 2
     game._check_era_trigger()
     checks.append(check(
         'taiwan_adds_internal_conflict_to_discard',
         'taiwan' in game.era_engine.get_active_eras()
-        and discard_count(actor, '內鬥') == 1
+        and discard_count(actor, '內鬥') == 2
         and game.static_purchase_supply.get('內鬥') == 0,
         {
-            'rule': '臺灣時代關卡觸發時，將內鬥加入臺灣棄牌堆並消耗 static supply。',
+            'rule': '臺灣時代關卡觸發時，將內鬥加入臺灣棄牌堆並消耗 static supply（此處 supply=2 封頂）。',
             'active_eras': game.era_engine.get_active_eras(),
             'discard_internal_conflict': discard_count(actor, '內鬥'),
             'supply_after': game.static_purchase_supply.get('內鬥'),
@@ -118,15 +119,16 @@ def run_checks():
 
     # Manchuria uses the same static-supply path for 分神.
     game, actor, _red = make_game('manchuria')
+    game.static_purchase_supply['分神'] = 2
     game.era_engine.activate_era('manchuria')
     runtime_effects = game._apply_era_activation_effects(game.era_engine.get_definition('manchuria'))
     checks.append(check(
         'manchuria_adds_distraction_to_discard',
         'manchuria' in game.era_engine.get_active_eras()
-        and discard_count(actor, '分神') == 1
+        and discard_count(actor, '分神') == 2
         and game.static_purchase_supply.get('分神') == 0,
         {
-            'rule': '滿洲時代關卡 activation effect 將分神加入滿洲棄牌堆並消耗 static supply。',
+            'rule': '滿洲時代關卡 activation effect 將分神加入滿洲棄牌堆並消耗 static supply（此處 supply=2 封頂）。',
             'active_eras': game.era_engine.get_active_eras(),
             'discard_distraction': discard_count(actor, '分神'),
             'supply_after': game.static_purchase_supply.get('分神'),
@@ -160,6 +162,7 @@ def run_checks():
     # Hong Kong active era reduces armed purchase money cost by 2.
     game, actor, _red = make_game('hong_kong')
     game.era_engine.activate_era('hong_kong')
+    game.turn_phase = TurnPhase.END  # buying happens in the END (purchase) phase
     armed = Card('武裝小隊', 'armed', {'money': 0, 'propaganda': 0})
     game.purchase_area = game._static_purchase_cards() + [armed]
     actor.resources = {'money': 1, 'propaganda': 0}
@@ -381,7 +384,9 @@ def run_checks():
     # Rebel build-count hook: third build in the turn draws once, then only once.
     game, actor, _red = make_game('liberals')
     game.era_engine.activate_era('rebels')
-    china_towns = first_developable_towns(game, actor, 'china', 3)
+    # Exclude towns the Red player occupies (e.g. 北京 is red's base) — can_faction_develop
+    # allows them but an actual build is blocked as enemy-occupied.
+    china_towns = [t for t in first_developable_towns(game, actor, 'china', 12) if t not in (_red.organizations or {})][:3]
     actor.organizations = {town: 1 for town in china_towns}
     hand_before = len(actor.hand)
     results = [game.build_organization(town) for town in china_towns]

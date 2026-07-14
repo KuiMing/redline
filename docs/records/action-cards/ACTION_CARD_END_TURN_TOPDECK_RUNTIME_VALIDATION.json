@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-18T13:54:54",
+  "generated_at": "2026-07-14T10:20:42",
   "total": 3,
   "passed": 3,
   "failed": 0,
@@ -44,14 +44,19 @@
           "combo_reward_triggered": false,
           "guerrilla_triggered": false,
           "faction_action_used": false,
+          "red_army_action_count": 0,
+          "red_army_targeted_actions": {},
           "india_flag_money_triggered": false,
           "purchased_cards_this_turn": [
             "PurchasedCard"
           ],
-          "reaction_prompted_player_ids": []
+          "reaction_prompted_player_ids": [],
+          "red_army_base_dissolves": {}
         },
         "pending_choice": null,
-        "action_log_tail": []
+        "action_log_tail": [
+          "[Turn 1] Event drawn: 一帶一路 南洋 (auto deferred)"
+        ]
       },
       "prompted": {
         "turn_phase": "end",
@@ -80,11 +85,14 @@
           "combo_reward_triggered": false,
           "guerrilla_triggered": false,
           "faction_action_used": false,
+          "red_army_action_count": 0,
+          "red_army_targeted_actions": {},
           "india_flag_money_triggered": false,
           "purchased_cards_this_turn": [
             "PurchasedCard"
           ],
-          "reaction_prompted_player_ids": []
+          "reaction_prompted_player_ids": [],
+          "red_army_base_dissolves": {}
         },
         "pending_choice": {
           "type": "option_choice",
@@ -105,25 +113,26 @@
           ]
         },
         "action_log_tail": [
+          "[Turn 1] Event drawn: 一帶一路 南洋 (auto deferred)",
           "[Turn 1] P1 may use 行動預告/行動募資 before drawing new hand"
         ]
       },
       "after": {
-        "turn_phase": "event",
+        "turn_phase": "action",
         "current_player": "P1",
         "hand": [
+          "Filler",
           "PurchasedCard",
           "Bottom5",
           "Bottom4",
-          "Bottom3",
-          "Bottom2"
+          "Bottom3"
         ],
         "draw_pile": [
-          "Bottom1"
+          "Bottom1",
+          "Bottom2"
         ],
         "discard_pile": [
-          "行動預告",
-          "Filler"
+          "行動預告"
         ],
         "turn_log": {
           "played_money_card": false,
@@ -135,12 +144,16 @@
           "combo_reward_triggered": false,
           "guerrilla_triggered": false,
           "faction_action_used": false,
+          "red_army_action_count": 0,
+          "red_army_targeted_actions": {},
           "india_flag_money_triggered": false,
           "purchased_cards_this_turn": [],
-          "reaction_prompted_player_ids": []
+          "reaction_prompted_player_ids": [],
+          "red_army_base_dissolves": {}
         },
         "pending_choice": null,
         "action_log_tail": [
+          "[Turn 1] Event drawn: 一帶一路 南洋 (auto deferred)",
           "[Turn 1] P1 may use 行動預告/行動募資 before drawing new hand",
           "[Turn 1] P1 placed bought card PurchasedCard on deck top",
           "[Turn 1] P1 used 行動預告 before drawing new hand",
@@ -188,11 +201,14 @@
           "combo_reward_triggered": false,
           "guerrilla_triggered": false,
           "faction_action_used": false,
+          "red_army_action_count": 0,
+          "red_army_targeted_actions": {},
           "india_flag_money_triggered": false,
           "purchased_cards_this_turn": [
             "PurchasedCard"
           ],
-          "reaction_prompted_player_ids": []
+          "reaction_prompted_player_ids": [],
+          "red_army_base_dissolves": {}
         },
         "pending_choice": null,
         "action_log_tail": []
@@ -224,11 +240,14 @@
           "combo_reward_triggered": false,
           "guerrilla_triggered": false,
           "faction_action_used": false,
+          "red_army_action_count": 0,
+          "red_army_targeted_actions": {},
           "india_flag_money_triggered": false,
           "purchased_cards_this_turn": [
             "PurchasedCard"
           ],
-          "reaction_prompted_player_ids": []
+          "reaction_prompted_player_ids": [],
+          "red_army_base_dissolves": {}
         },
         "pending_choice": {
           "type": "option_choice",
@@ -253,21 +272,21 @@
         ]
       },
       "after": {
-        "turn_phase": "event",
+        "turn_phase": "action",
         "current_player": "P1",
         "hand": [
+          "Filler",
           "PurchasedCard",
           "Bottom5",
           "Bottom4",
-          "Bottom3",
-          "Bottom2"
+          "Bottom3"
         ],
         "draw_pile": [
-          "Bottom1"
+          "Bottom1",
+          "Bottom2"
         ],
         "discard_pile": [
-          "行動募資",
-          "Filler"
+          "行動募資"
         ],
         "turn_log": {
           "played_money_card": false,
@@ -279,16 +298,20 @@
           "combo_reward_triggered": false,
           "guerrilla_triggered": false,
           "faction_action_used": false,
+          "red_army_action_count": 0,
+          "red_army_targeted_actions": {},
           "india_flag_money_triggered": false,
           "purchased_cards_this_turn": [],
-          "reaction_prompted_player_ids": []
+          "reaction_prompted_player_ids": [],
+          "red_army_base_dissolves": {}
         },
         "pending_choice": null,
         "action_log_tail": [
           "[Turn 1] P1 may use 行動預告/行動募資 before drawing new hand",
           "[Turn 1] P1 placed bought card PurchasedCard on deck top",
           "[Turn 1] P1 used 行動募資 before drawing new hand",
-          "[Turn 1] End of turn for P1"
+          "[Turn 1] End of turn for P1",
+          "[Turn 1] Event drawn: 全國人大召開"
         ]
       }
     },
@@ -331,11 +354,14 @@
           "combo_reward_triggered": false,
           "guerrilla_triggered": false,
           "faction_action_used": false,
+          "red_army_action_count": 0,
+          "red_army_targeted_actions": {},
           "india_flag_money_triggered": false,
           "purchased_cards_this_turn": [
             "PurchasedCard"
           ],
-          "reaction_prompted_player_ids": []
+          "reaction_prompted_player_ids": [],
+          "red_army_base_dissolves": {}
         },
         "pending_choice": null,
         "action_log_tail": []
@@ -366,11 +392,14 @@
           "combo_reward_triggered": false,
           "guerrilla_triggered": false,
           "faction_action_used": false,
+          "red_army_action_count": 0,
+          "red_army_targeted_actions": {},
           "india_flag_money_triggered": false,
           "purchased_cards_this_turn": [
             "PurchasedCard"
           ],
-          "reaction_prompted_player_ids": []
+          "reaction_prompted_player_ids": [],
+          "red_army_base_dissolves": {}
         },
         "pending_choice": {
           "type": "option_choice",
@@ -395,19 +424,20 @@
         ]
       },
       "after": {
-        "turn_phase": "event",
+        "turn_phase": "action",
         "current_player": "P1",
         "hand": [
+          "行動募資",
           "Draw5",
           "Draw4",
           "Draw3",
-          "Draw2",
+          "Draw2"
+        ],
+        "draw_pile": [
           "Draw1"
         ],
-        "draw_pile": [],
         "discard_pile": [
-          "PurchasedCard",
-          "行動募資"
+          "PurchasedCard"
         ],
         "turn_log": {
           "played_money_card": false,
@@ -419,15 +449,19 @@
           "combo_reward_triggered": false,
           "guerrilla_triggered": false,
           "faction_action_used": false,
+          "red_army_action_count": 0,
+          "red_army_targeted_actions": {},
           "india_flag_money_triggered": false,
           "purchased_cards_this_turn": [],
-          "reaction_prompted_player_ids": []
+          "reaction_prompted_player_ids": [],
+          "red_army_base_dissolves": {}
         },
         "pending_choice": null,
         "action_log_tail": [
           "[Turn 1] P1 may use 行動預告/行動募資 before drawing new hand",
           "[Turn 1] P1 skipped end-turn action topdeck prompt",
-          "[Turn 1] End of turn for P1"
+          "[Turn 1] End of turn for P1",
+          "[Turn 1] Event drawn: 一帶一路 南洋 (auto deferred)"
         ]
       }
     }
