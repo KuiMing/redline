@@ -415,6 +415,18 @@
   - 驗證：新增 `python3 scripts/validate_text_faction_win_conditions.py`（7/7：60 陣營全有結構化條件；牆內14 的 13→不勝/14→勝；牆外組織不計入牆內 scope；粵的必含城鎮缺一即擋、齊備即勝；朝鮮平壤/首爾兩分支皆勝、皆無則否；宛地外的組織不計入、南陽14勝；text-only 陣營現在也能當共同勝利者）。回歸：`validate_co_winners`、`validate_org_supply_limits`、`validate_hk_base_relocation`、`validate_lobby_family_faction_details`、`validate_minyun_gender_revolution_nonviolent` PASS。
   - proof：`docs/records/rules-audit/TEXT_FACTION_WIN_CONDITIONS_VALIDATION_20260711.{json,md}`。
   - **至此兩輪規則盤點的全部項目（A1-A4、B1、B3、S1-S7、C1-C2 裁決範圍）完成或關閉**；剩餘為第四梯隊保養項（C3 購買區校驗、S6 無限行動、死代碼 JSON 清理、3 支過期驗證腳本）與 P1 UI 批次。
+  - 2026-07-15 進度更新：P1 UI 批次（10/10）與 P2 過期驗證腳本（5/5，含挖出並修復事件延後結算真 bug，見 P1 區塊頂部條目）已全部完成；第四梯隊已完成 C3 與死代碼清理（見下兩條），僅剩 C2（歲月靜好難度選項）與 S6（無限行動）待規則書原文。
+
+- [done] C3：購買區組成資料校驗腳本（第四梯隊保養）。
+  - 定位：資料一致性校驗＋現行組成行為鎖定；規則書步驟⑧的偏差列**資訊性報告**（不列失敗，避免把刻意的 MVP 選項永久紅牌）。
+  - 硬性檢查（8/8 全過）：常設供應量與 CSV 一致（宣傳家/思想家/資助者/資本家 15、分神 30、內鬥 20）；常設區恰為 6 種固定卡；起始牌（追隨者/樂捐者）僅存在 CSV、不進牌庫；structured JSON 卡名恰為 CSV 非起始卡集合；support taxonomy 卡名與 support CSV 一致；`sample_53` 牌庫＝18 奧援＋35 一般卡且無常設/起始/紅軍奧援；`all_cards`＝全 pool。
+  - 資訊性偏差報告（記錄於 proof，供之後裁決）：①規則書步驟⑧＝間諜/組織/整肅**全部** 47 張＋隨機 18 奧援＋隨機 35 其它＝100 張，兩種 market_mode 都不是此組成（`sample_53` 為 lobby「53 張核心」刻意 MVP 選項）；②`action_cards_structured.v1.1.json` **沒有張數欄位**，`_initial_purchase_deck` 對每種一般卡 fallback 為 1 份，CSV 張數（批判 8、派遣間諜 5…）不影響牌庫份數；③support CSV 每種奧援兩列各 4 張（合計 8）vs taxonomy 每種 4 張，兩列是「同卡雙資料行」或「各自成卡」待規則書確認；④牌庫用盡的補充實作為重建整份 initial deck（規則書為「從剩餘行動卡任取一疊」，近似）。
+  - 驗證 `python3 scripts/validate_purchase_area_composition.py`（8/8）；proof `docs/records/purchase/PURCHASE_AREA_COMPOSITION_VALIDATION.{json,md}`。
+
+- [done] 死代碼 JSON 宣告清理：`凝聚共識` conditional_bonus／`武裝集團` conditional_draw（第四梯隊保養）。
+  - root cause（第一輪盤點記錄）：兩張卡的 JSON effect 在 pending-choice 步驟後各宣告了一個條件步驟，但兩個 resolve 路徑（`discard_self`、`armed_target_discard`）都**不續跑 remaining_effects**——凝聚共識加成實際走 choice 上的 `grant_propaganda_if_all_non_starter` 旗標、武裝集團抽牌走 `draw_on_success`——JSON 宣告永遠不會執行、只會誤導維護者。
+  - 修正：刪除兩段死宣告（凝聚共識 effect 剩 `draw`+`discard_self`；武裝集團剩 `force_discard`）。刪除前後以行為快照證明完全一致（凝聚共識棄 2 非起始→+2 宣傳一次；武裝集團成功迫棄→發動者抽 1）。`conditional_draw`/`conditional_bonus` handler 保留（`點燃熱情` 等其他卡仍使用 conditional_draw）。
+  - 驗證 `python3 scripts/validate_dead_effect_cleanup.py`（3/3：兩卡行為鎖定＋JSON 無死宣告）；structured-JSON 相關回歸（event_cards_runtime、purchase composition、離間、誘導虛耗、模仿戰術）全綠。proof `docs/records/action-cards/DEAD_EFFECT_CLEANUP_VALIDATION.{json,md}`。
 
 ### 已有完整紀錄的其他模組
 - [done] 情報網 target choice map highlight。
