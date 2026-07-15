@@ -212,13 +212,17 @@
   - 新增 validation reports、proof markdown、screenshots 時，直接放到 `docs/records/<topic>/`。
   - 若新增 validator，確認輸出路徑不是 repo root，且失敗時 exit non-zero。
 
-- [todo] `scripts/validate_event_cards_runtime.py` 已長期失效（stale），需更新至現行事件生命週期後恢復可跑。
+- [done] `scripts/validate_event_cards_runtime.py` 已長期失效（stale），需更新至現行事件生命週期後恢復可跑。
   - 2026-07-11 發現：`test_hong_kong_success_static_supply` 起穩定失敗；用 git worktree 往回跑 20+ 個 commit（含 `8191639` 之前）全部 FAIL，證明壞掉已久、沒有人在跑。
   - root cause：2026-05-31 事件卡生命週期改為「任務條件達成先 `success_pending`，等全體玩家 ACTION 結束才結算」（TODO 已記錄的刻意設計），但腳本裡的 `settle_round_event()` helper 還停留在舊設計（`advance_turn_phase()` 一次就期待 `settled=True`）；單人 advance 後實際狀態是 `success_pending`＋輪到下一位玩家，不是結算完成。屬於驗證腳本過期，不是 runtime bug。
   - 需修：把 `settle_round_event()` 改成推進到整輪結束（所有玩家含紅軍完成 ACTION）再斷言 `settled`；逐一檢查該檔 20+ 個 test 是否還有其他依賴舊生命週期的斷言。修好前，該腳本的 FAIL 不應被當成 regression 訊號（例如 S3 修正時已另建 `validate_event_deck_draw_twenty.py` 獨立驗證）。
   - 2026-07-11 追加：`scripts/validate_era_effects_runtime.py` 同樣為既有穩定 FAIL（stash 比對確認早於 S2 修正），需一併排查是否同一類生命週期過期問題。
   - 2026-07-11 追加：`scripts/validate_action_card_end_turn_topdeck_runtime.py` 亦為既有 FAIL（期待單人結束回合直接推進到 EVENT 的過期斷言），同一類問題。
-  - 2026-07-12 已修復兩支：`validate_support_no_reaction_phase_gating.py`（南洋奧援 I 級在 B1-b 之後合法開棄牌選擇，斷言改為「不得是 reaction_choice、棄牌選擇需可解決」）與 `validate_support_purchase_deck_runtime.py`（2026-06-26 起 buy_card 僅限購買階段，腳本補設 END phase），兩支恢復全綠。仍待修：`validate_event_cards_runtime.py`、`validate_era_effects_runtime.py`、`validate_action_card_end_turn_topdeck_runtime.py`、`validate_turn_phase_action_gating.py`（5/15，baseline 同）、`validate_faction_abilities_phase5.py` 的華文傳媒案例、`validate_faction_action_guess_result` 已修復（2026-07-11）。
+  - 2026-07-12 已修復兩支：`validate_support_no_reaction_phase_gating.py`（南洋奧援 I 級在 B1-b 之後合法開棄牌選擇，斷言改為「不得是 reaction_choice、棄牌選擇需可解決」）與 `validate_support_purchase_deck_runtime.py`（2026-06-26 起 buy_card 僅限購買階段，腳本補設 END phase），兩支恢復全綠。
+  - 2026-07-13 已修復兩支：`validate_faction_abilities_phase5.py`（華文傳媒買牌測試改 END 階段，4/4）、`validate_action_card_end_turn_topdeck_runtime.py`（斷言改為「turn 傳給下一位玩家」而非固定停在 EVENT，3/3）。
+  - 2026-07-13 已修復：`validate_era_effects_runtime.py`（內鬥/分神 static-supply 封頂測試改真的把 supply 設低才測到封頂、香港買牌補 END 階段、反賊建立測試避開敵佔的北京，15/15）與 `validate_turn_phase_action_gating.py`（整支改寫成現行「開局即 ACTION＋回合事件已抽好、每回合 ACTION→END、整輪繞回才抽新事件」模型，取代過期的「每人 EVENT 階段」模型，13/13）。
+  - 2026-07-15 已修復 `validate_event_cards_runtime.py` 本體，過程中**額外挖出一個真的 runtime bug**（非驗證腳本問題）：mission 事件的結算被延後到 `_end_turn()` 之後執行（讓獎懲作用在補牌後的手牌），但若這次 `_end_turn()` 剛好也讓整輪繞回，`_end_turn()` 會先重置 `current_event`/`event_progress`、抽新事件，導致延後的結算讀到「被重置的新事件進度」——本回合已達成的成功獎勵消失、新抽的事件被誤判為失敗並套用懲罰到錯的情境。修法：`advance_turn_phase` 在 `_end_turn()` 前先快照該回合的事件與進度，若偵測到整輪繞回，就對快照結算（結算完再換回新回合事件顯示）。commit `ac77e74`；驗證 `python3 scripts/validate_event_cards_runtime.py`（35/35，連跑 3 次穩定）；server 相關回歸（turn20 victory、end_turn refill、phase gating 13/13、end_turn topdeck、era effects 15/15、faction abilities、support gating、support purchase deck）全綠。
+  - **至此本區塊列出的 5 支過期驗證腳本全數修復完成**（`validate_event_cards_runtime`、`validate_era_effects_runtime`、`validate_action_card_end_turn_topdeck_runtime`、`validate_turn_phase_action_gating`、`validate_faction_abilities_phase5`）；相關 commits：`0f1e7bc`（前 4 支）、`ac77e74`（最後一支＋真 bug 修復）。
 
 ## 已完成摘要
 
