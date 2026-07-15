@@ -4690,9 +4690,29 @@ class Game:
             pending = self._prompt_end_turn_topdeck_action_if_available()
             if pending:
                 return {"success": True, "pending_choice": True}
+            # Snapshot the round's event before _end_turn: when this END also wraps the
+            # round, _end_turn discards current_event/event_progress and draws the next
+            # round's event. Without the snapshot the deferred settlement would settle
+            # that untouched new event instead — dropping the earned success reward and
+            # applying a bogus failure penalty for an event nobody has acted on yet.
+            deferred_event = self.current_event if defer_event_settlement else None
+            deferred_progress = self.event_progress if defer_event_settlement else None
             self._end_turn()
-            if defer_event_settlement and not (self.event_progress or {}).get('settled'):
-                event_result = self._settle_current_event()
+            if defer_event_settlement and deferred_progress is not None and not deferred_progress.get('settled'):
+                wrapped = self.current_event is not deferred_event
+                if wrapped:
+                    next_event = self.current_event
+                    next_progress = self.event_progress
+                    next_notification = self.event_notification
+                    self.current_event = deferred_event
+                    self.event_progress = deferred_progress
+                    event_result = self._settle_current_event()
+                    self.current_event = next_event
+                    self.event_progress = next_progress
+                    # Keep the new round's event on display; the settled outcome is in the log.
+                    self.event_notification = next_notification
+                else:
+                    event_result = self._settle_current_event()
                 if event_result and event_result.get('pending_choice'):
                     return {"success": True, "pending_choice": True}
         return {"success": True}

@@ -41,6 +41,12 @@
   - 若要 LAN playtest：重啟 server 綁 `0.0.0.0:8000` 並確認 `TCP *:8000 (LISTEN)`。
 
 ### P1：LAN / end-to-end playtest feedback
+- [done] 修復 P2 過期驗證腳本時挖出的真 bug：事件延後結算撞上整輪繞回，會對「被重置的事件進度」結算。
+  - 2026-07-15 發現（修 `validate_event_cards_runtime.py` 過期假設時）：mission 事件的結算被 `_should_defer_event_settlement_until_after_refill()` 延後到 `_end_turn()` 之後（設計原意：讓獎懲作用在補牌後的新手牌）。但若「最後一位非紅軍玩家結束回合」的同一次 advance 也讓**整輪繞回**，`_end_turn()` 會重置 `current_event`／`event_progress` 並抽下一輪新事件；延後的 `_settle_current_event()` 於是讀到**被重置的新進度**（succeeded=False）——結果①本回合已達成的成功獎勵直接消失；②新抽的事件被當「失敗」立刻對玩家套失敗懲罰（一張還沒人動過的事件）。觸發條件：任何「非紅軍玩家是繞回前最後一位」的座位排列（例如 3 人以上紅軍坐中間；常見 2 人局紅軍恰好當緩衝所以測不到）。
+  - 2026-07-15 已修正並提交：`advance_turn_phase` 在 `_end_turn()` **之前**先快照該回合的 `current_event`＋`event_progress`（結算目標玩家 id 本就在 `_end_turn` 前 stamp 進 progress）；`_end_turn()` 後偵測是否已繞回（事件物件被換掉），是則暫時把快照換回 `current_event`/`event_progress` 執行 `_settle_current_event()`（結算標記寫在快照上、效果 prompt 顯示正確事件名），結算完換回新回合的事件與 notification（畫面維持顯示當前回合事件，結算結果在戰況 log）。未繞回的路徑行為完全不變。
+  - 驗證：`python3 scripts/validate_event_cards_runtime.py` 修復後 35/35（連跑 3 次穩定）——含香港抗暴之戰成功（正確獲得宣傳家、扣 static supply）與失敗（懲罰給正確玩家）兩路徑；server 相關回歸全綠：turn20 victory、end_turn refill、turn_phase gating（13/13）、end_turn topdeck、era effects（15/15）、faction abilities、support gating、support purchase deck。
+  - 同 commit 一併修復 `validate_event_cards_runtime.py` 的其餘過期假設（皆為腳本問題、非遊戲 bug）：`settle_round_event` helper 改為 advance 至結算或跳出選擇（並追蹤該回合自己的 progress 物件）；買牌測試補進 END 階段；`民主陣線` 測試改用民運派（能力歸屬檢查）；建立/移動測試改用非敵佔且陣營適用的城鎮（北京敵佔、臺灣城鎮不適用反賊）；「隨機棄牌/移除選擇」測試依「結算作用在補牌後手牌」語意控制牌庫（清空或墊 4 張 filler）；紅軍 auto 事件測試的 EVENT 階段斷言改為現行 ACTION 模型。
+
 - [done] Playtest bug：城鎮曾有紅軍組織、紅軍移走後，其他玩家仍無法在該城鎮建立組織。
   - 2026-07-04 回報情境：紅軍曾在 `新北` 建立組織，之後紅軍組織已移到 `新竹`；輪到 `f`（台灣綠線）時，照規則應可在 `新北` 建立，但 UI/系統阻擋建立。
   - 需檢查：`can_develop_in_town` / map state / sidebar selected town / shared-org gating 是否把歷史佔領狀態當成目前佔領狀態。
