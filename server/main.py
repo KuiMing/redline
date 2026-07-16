@@ -110,22 +110,50 @@ def _load_card_presentation_catalog():
         with SUPPORT_CSV_PATH.open(encoding='utf-8') as f:
             reader = csv.reader(f)
             next(reader, None)
-            seen = set()
+            rows_by_name = {}
+            order = []
             for row in reader:
-                if len(row) < 9 or not row[0] or row[0] in seen:
+                if len(row) < 9 or not row[0]:
                     continue
-                seen.add(row[0])
-                catalog[row[0]] = {
-                    'name': row[0],
+                name = row[0]
+                if name not in rows_by_name:
+                    rows_by_name[name] = []
+                    order.append(name)
+                rows_by_name[name].append(row)
+            for name in order:
+                rows = rows_by_name[name]
+                first = rows[0]
+                # 每種奧援卡實體上印有 len(rows) 種不同印刷變體：III級門檻地區與效果、I級效果
+                # 皆相同，只有 II級門檻地區（區域主導者優待）不同，各變體各自的張數見 row[8]。
+                # 兩種變體都要呈現，不能只取第一列或把地區合併成一條（2026-07-16 使用者裁決）。
+                variants = [
+                    {
+                        'tier3_region': r[2],
+                        'tier3_text': r[3],
+                        'tier2_regions': [s.strip() for s in r[4].split('、') if s.strip()],
+                        'tier2_text': r[5],
+                        'tier1_text': r[7],
+                        'copies': r[8] if len(r) > 8 else '',
+                    }
+                    for r in rows
+                ]
+                total_copies = sum(int(v['copies'] or 0) for v in variants)
+                tier2_lines = '\n'.join(
+                    f"II級（{'/'.join(v['tier2_regions'])}其一主導，此變體{v['copies']}張）：{v['tier2_text']}"
+                    for v in variants
+                )
+                catalog[name] = {
+                    'name': name,
                     'color': '奧援',
                     'kind': '奧援',
                     'strength': '特殊',
-                    'cost_text': row[1],
-                    'effect_text': f"III級：{row[3]}\nII級：{row[5]}\nI級：{row[7]}",
+                    'cost_text': first[1],
+                    'effect_text': f"III級（{first[2]}主導）：{first[3]}\n{tier2_lines}\nI級（皆未主導）：{first[7]}",
                     'resource_text': '依效果而定',
                     'position_text': '隨機購買區',
                     'meaning_text': '奧援卡',
-                    'count_text': row[8] if len(row) > 8 else '',
+                    'count_text': str(total_copies),
+                    'support_variants': variants,
                 }
     catalog['紅軍奧援'] = {
         'name': '紅軍奧援',

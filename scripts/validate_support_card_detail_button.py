@@ -56,9 +56,10 @@ def check(browser):
 
     buttons = hand_card_buttons(page, '臺灣奧援')
     record(
-        'support_card_shows_detail_not_resource_button',
+        'support_card_shows_detail_and_discard_not_labeled_resource',
         buttons is not None and any(b['mode'] == 'detail' and b['text'] == '詳情' for b in buttons)
-        and not any(b['mode'] == 'resource' for b in buttons),
+        and any(b['mode'] == 'resource' and b['text'] == '棄置' for b in buttons)
+        and not any(b['text'] == '資源' for b in buttons),
         {'buttons': buttons},
     )
     detail_disabled = next((b['disabled'] for b in (buttons or []) if b['mode'] == 'detail'), None)
@@ -103,8 +104,10 @@ def check(browser):
     page2.wait_for_timeout(300)
     buttons2 = hand_card_buttons(page2, '紅軍奧援')
     record(
-        'red_army_support_card_also_shows_detail_not_resource',
-        buttons2 is not None and any(b['mode'] == 'detail' for b in buttons2) and not any(b['mode'] == 'resource' for b in buttons2),
+        'red_army_support_card_also_shows_detail_and_discard_not_labeled_resource',
+        buttons2 is not None and any(b['mode'] == 'detail' for b in buttons2)
+        and any(b['mode'] == 'resource' and b['text'] == '棄置' for b in buttons2)
+        and not any(b['text'] == '資源' for b in buttons2),
         {'buttons': buttons2},
     )
     page2.close()

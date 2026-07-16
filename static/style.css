@@ -881,6 +881,15 @@ body {
   flex: 0 0 auto;
 }
 
+.hand-card-three-actions .hand-card-actions {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.hand-card-three-actions .hand-card-actions button {
+  padding: 5px 2px;
+  font-size: 0.68rem;
+}
+
 .hand-card-actions button {
   border: 1px solid rgba(147, 197, 253, 0.65);
   border-radius: 999px;

@@ -701,7 +701,20 @@ function liveStaticSupplyForCard(state, cardName) {
   return staticCardCatalogCount(cardName);
 }
 
-function renderCardFace(cardName, zone, isStatic = false, compact = false, countOverride = null) {
+function supportVariantEffectText(info, variantInfo) {
+  const variants = info.support_variants;
+  if (!Array.isArray(variants) || !variants.length) return null;
+  const idx = variantInfo && Number.isInteger(variantInfo.variant_index) ? variantInfo.variant_index : 0;
+  const v = variants[idx] || variants[0];
+  const tier2Regions = (v.tier2_regions || []).join('/');
+  return [
+    `III級（${v.tier3_region}主導）：${v.tier3_text}`,
+    `II級（${tier2Regions}其一主導）：${v.tier2_text}`,
+    `I級（皆未主導）：${v.tier1_text}`,
+  ].join('\n');
+}
+
+function renderCardFace(cardName, zone, isStatic = false, compact = false, countOverride = null, variantInfo = null) {
   const info = cardPresentation(cardName) || {};
   const isSupport = /奧援/.test(cardName);
   const color = info.color || (isSupport ? '奧援' : '灰');
@@ -709,7 +722,11 @@ function renderCardFace(cardName, zone, isStatic = false, compact = false, count
   const colorStyle = styleVars(cardColorStyle(color));
   const typeLabel = zone === 'hand' ? '手牌' : (isStatic ? '常設購買區' : '隨機購買區');
   const headerMeta = [info.kind, info.strength, info.cost_text].filter(Boolean).join(' ・ ');
-  const effectLines = splitEffectLines(info.effect_text || (isSupport ? '奧援卡，依區域主導者判定 I・II・III 級效果。' : '（暫無資料）'));
+  // 這張牌實體只印一組 II 級門檻地區；有 variantInfo（來自 state 的 hand_variants／
+  // purchase_area_variants）時只顯示這張牌自己印的那組，而不是奧援目錄裡兩種變體都列出的
+  // 通用文字（2026-07-16 使用者裁決：一張牌只看/只顯示自己印的那組）。
+  const effectText = supportVariantEffectText(info, variantInfo) || info.effect_text;
+  const effectLines = splitEffectLines(effectText || (isSupport ? '奧援卡，依區域主導者判定 I・II・III 級效果。' : '（暫無資料）'));
   const badgeItems = [];
   if (info.resource_text) badgeItems.push(`資源 ${info.resource_text}`);
   if (info.position_text) badgeItems.push(info.position_text);
@@ -2550,16 +2567,25 @@ async function render(state) {
         const cardArg = escapeHtml(jsSingleQuotedString(card));
         const cardAttr = escapeHtml(card);
         const isSupportCard = /奧援/.test(card);
+        const variantInfo = (me.hand_variants || [])[i] || null;
         const colorName = (cardPresentation(card)?.color) || (isSupportCard ? '奧援' : '灰');
         const colorClass = cardColorClass(colorName);
         const canPlayAction = canPlayHandCardMode(card, 'action');
         const actionDisabledAttr = canPlayAction ? '' : 'disabled aria-disabled="true"';
         const actionTitle = handButtonTitle(card, 'action', canPlayAction);
         // 奧援卡只能當「行動」打出；效果依區域主導者判定 I/II/III 級，本身不提供資源，
-        // 所以不給「資源」按鈕，改為「詳情」——點擊只是把卡面（已完整列出 I/II/III 級文字）
-        // 閃爍聚焦，不會送出任何動作。
-        const firstButtonHtml = isSupportCard
-          ? `<button class="hand-card-action-btn hand-card-detail-btn" type="button" title="效果詳情已列於卡面（I/II/III 級）" data-card-index="${i}" data-card-name="${cardAttr}" data-card-mode="detail">詳情</button>`
+        // 所以不給「資源」按鈕，改為「詳情」（卡面已列出這張牌實際印的 I/II/III 級文字，
+        // 點擊只是閃爍聚焦，不送出任何動作）與「棄置」（不使用這張牌，直接送進棄牌堆——
+        // 沿用 play_card(mode='resource') 對奧援卡原本就有的「不給資源、直接棄置」行為，
+        // 只是重新掛一顆清楚標示用途的按鈕，2026-07-16 使用者需求）。
+        const middleButtonsHtml = isSupportCard
+          ? (() => {
+              const canDiscard = canPlayHandCardMode(card, 'resource');
+              const discardDisabledAttr = canDiscard ? '' : 'disabled aria-disabled="true"';
+              const discardTitle = canDiscard ? '棄置這張奧援卡：直接送進棄牌堆，不使用、不獲得任何效果。' : handButtonTitle(card, 'resource', canDiscard);
+              return `<button class="hand-card-action-btn hand-card-detail-btn" type="button" title="效果詳情已列於卡面（I/II/III 級）" data-card-index="${i}" data-card-name="${cardAttr}" data-card-mode="detail">詳情</button>
+              <button class="hand-card-action-btn" type="button" ${discardDisabledAttr} title="${escapeHtml(discardTitle)}" data-card-index="${i}" data-card-name="${cardAttr}" data-card-mode="resource">棄置</button>`;
+            })()
           : (() => {
               const canPlayResource = canPlayHandCardMode(card, 'resource');
               const resourceDisabledAttr = canPlayResource ? '' : 'disabled aria-disabled="true"';
@@ -2567,10 +2593,10 @@ async function render(state) {
               return `<button class="hand-card-action-btn" type="button" ${resourceDisabledAttr} title="${escapeHtml(resourceTitle)}" data-card-index="${i}" data-card-name="${cardAttr}" data-card-mode="resource">資源</button>`;
             })();
         handDiv.innerHTML += `
-          <div class='card hand-card ${colorClass}' onclick="selectCardDetail(${cardArg},'hand',false)">
-            ${renderCardFace(card, 'hand', false, true)}
+          <div class='card hand-card ${colorClass}${isSupportCard ? ' hand-card-three-actions' : ''}' onclick="selectCardDetail(${cardArg},'hand',false)">
+            ${renderCardFace(card, 'hand', false, true, null, variantInfo)}
             <div class="hand-card-actions">
-              ${firstButtonHtml}
+              ${middleButtonsHtml}
               <button class="hand-card-action-btn" type="button" ${actionDisabledAttr} title="${escapeHtml(actionTitle)}" data-card-index="${i}" data-card-name="${cardAttr}" data-card-mode="action">行動</button>
             </div>
           </div>`;
@@ -2615,9 +2641,10 @@ async function render(state) {
               : !purchaseAffordable
                 ? `資源不足，需要 ${costText}`
                 : `購買此卡（${costText}）`;
+      const variantInfo = (state.purchase_area_variants || [])[i] || null;
       container.innerHTML += `
         <div class='card ${typeClass}${supportClass} ${colorClass}' onclick="selectCardDetail(${JSON.stringify(card)},'purchase',${isStatic})" ${canBuy ? `ondblclick="sendAction('buy_card',{index:${i}})"` : ''}>
-          ${renderCardFace(card, 'purchase', isStatic, true, isStatic ? staticSupply : null)}
+          ${renderCardFace(card, 'purchase', isStatic, true, isStatic ? staticSupply : null, variantInfo)}
           <button class="purchase-card-buy-btn" type="button" ${canBuy ? '' : 'disabled aria-disabled="true"'} title="${escapeHtml(buyTitle)}" onclick="event.stopPropagation(); sendAction('buy_card',{index:${i}})">購買</button>
         </div>`;
     });
