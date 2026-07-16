@@ -1204,27 +1204,12 @@ function bindHandCardActionButtons(container) {
       event.preventDefault();
       event.stopPropagation();
       const mode = btn.dataset.cardMode || '';
-      if (mode === 'detail') {
-        flashCardDetail(btn.closest('.hand-card'));
-        return;
-      }
       const index = Number.parseInt(btn.dataset.cardIndex || '', 10);
       const cardName = btn.dataset.cardName || '';
       if (Number.isNaN(index) || !cardName || !mode) return;
       playHandCard(index, cardName, mode);
     });
   });
-}
-
-function flashCardDetail(cardEl) {
-  if (!cardEl) return;
-  const face = cardEl.querySelector('.card-effect-block');
-  if (face && face.scrollIntoView) face.scrollIntoView({ block: 'nearest' });
-  cardEl.classList.remove('hand-card-detail-flash');
-  // Force reflow so retriggering the animation works on repeat clicks.
-  void cardEl.offsetWidth;
-  cardEl.classList.add('hand-card-detail-flash');
-  setTimeout(() => cardEl.classList.remove('hand-card-detail-flash'), 900);
 }
 
 function playHandCard(index, card, mode) {
@@ -2578,18 +2563,17 @@ async function render(state) {
         const canPlayAction = canPlayHandCardMode(card, 'action');
         const actionDisabledAttr = canPlayAction ? '' : 'disabled aria-disabled="true"';
         const actionTitle = handButtonTitle(card, 'action', canPlayAction);
-        // 奧援卡只能當「行動」打出；效果依區域主導者判定 I/II/III 級，本身不提供資源，
-        // 所以不給「資源」按鈕，改為「詳情」（卡面已列出這張牌實際印的 I/II/III 級文字，
-        // 點擊只是閃爍聚焦，不送出任何動作）與「棄置」（不使用這張牌，直接送進棄牌堆——
-        // 沿用 play_card(mode='resource') 對奧援卡原本就有的「不給資源、直接棄置」行為，
-        // 只是重新掛一顆清楚標示用途的按鈕，2026-07-16 使用者需求）。
-        const middleButtonsHtml = isSupportCard
+        // 奧援卡只能當「行動」打出；效果依區域主導者判定 I/II/III 級（完整文字已列在卡面），
+        // 本身不提供資源，所以第一顆按鈕不是「資源」而是「棄置」——不使用這張牌，直接送進
+        // 棄牌堆，沿用 play_card(mode='resource') 對奧援卡原本就有的「不給資源、直接棄置」
+        // 行為（2026-07-16 使用者需求；原本另有一顆只做閃爍聚焦的「詳情」鈕，卡面文字
+        // 完整顯示後已無存在意義，2026-07-17 移除）。
+        const firstButtonHtml = isSupportCard
           ? (() => {
               const canDiscard = canPlayHandCardMode(card, 'resource');
               const discardDisabledAttr = canDiscard ? '' : 'disabled aria-disabled="true"';
               const discardTitle = canDiscard ? '棄置這張奧援卡：直接送進棄牌堆，不使用、不獲得任何效果。' : handButtonTitle(card, 'resource', canDiscard);
-              return `<button class="hand-card-action-btn hand-card-detail-btn" type="button" title="效果詳情已列於卡面（I/II/III 級）" data-card-index="${i}" data-card-name="${cardAttr}" data-card-mode="detail">詳情</button>
-              <button class="hand-card-action-btn" type="button" ${discardDisabledAttr} title="${escapeHtml(discardTitle)}" data-card-index="${i}" data-card-name="${cardAttr}" data-card-mode="resource">棄置</button>`;
+              return `<button class="hand-card-action-btn" type="button" ${discardDisabledAttr} title="${escapeHtml(discardTitle)}" data-card-index="${i}" data-card-name="${cardAttr}" data-card-mode="resource">棄置</button>`;
             })()
           : (() => {
               const canPlayResource = canPlayHandCardMode(card, 'resource');
@@ -2598,10 +2582,10 @@ async function render(state) {
               return `<button class="hand-card-action-btn" type="button" ${resourceDisabledAttr} title="${escapeHtml(resourceTitle)}" data-card-index="${i}" data-card-name="${cardAttr}" data-card-mode="resource">資源</button>`;
             })();
         handDiv.innerHTML += `
-          <div class='card hand-card ${colorClass}${isSupportCard ? ' hand-card-three-actions' : ''}' onclick="selectCardDetail(${cardArg},'hand',false)">
+          <div class='card hand-card ${colorClass}' onclick="selectCardDetail(${cardArg},'hand',false)">
             ${renderCardFace(card, 'hand', false, true, null, variantInfo)}
             <div class="hand-card-actions">
-              ${middleButtonsHtml}
+              ${firstButtonHtml}
               <button class="hand-card-action-btn" type="button" ${actionDisabledAttr} title="${escapeHtml(actionTitle)}" data-card-index="${i}" data-card-name="${cardAttr}" data-card-mode="action">行動</button>
             </div>
           </div>`;

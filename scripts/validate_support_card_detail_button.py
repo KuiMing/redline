@@ -45,7 +45,11 @@ def check(browser):
     def record(name, ok, detail=None):
         results.append({'name': name, 'ok': bool(ok), 'detail': detail or {}})
 
-    # --- Case 1: a regular support card (臺灣奧援) shows 詳情 instead of 資源 ---
+    # 歷程：奧援卡原本有「資源」按鈕（誤導，實際不給資源），2026-07-16 曾改為「詳情」＋
+    # 「棄置」；卡面完整顯示 I/II/III 級文字後「詳情」已無存在意義（只做閃爍聚焦），
+    # 2026-07-17 移除。最終狀態：奧援卡＝棄置／行動 兩顆按鈕，非奧援卡＝資源／行動。
+
+    # --- Case 1: 一般奧援卡（臺灣奧援）顯示 棄置＋行動，沒有 資源、沒有 詳情 ---
     page = browser.new_context(viewport={'width': 1280, 'height': 900}).new_page()
     setup = post_json('/test/setup-support-proof', {'support_name': '臺灣奧援', 'tier': 2})
     page.goto(f"{BASE_URL}/?game_id={setup['game_id']}&player_id={setup['player_id']}", wait_until='networkidle')
@@ -56,45 +60,59 @@ def check(browser):
 
     buttons = hand_card_buttons(page, '臺灣奧援')
     record(
-        'support_card_shows_detail_and_discard_not_labeled_resource',
-        buttons is not None and any(b['mode'] == 'detail' and b['text'] == '詳情' for b in buttons)
-        and any(b['mode'] == 'resource' and b['text'] == '棄置' for b in buttons)
-        and not any(b['text'] == '資源' for b in buttons),
+        'support_card_shows_discard_and_action_only',
+        buttons is not None
+        and [b['text'] for b in buttons] == ['棄置', '行動']
+        and any(b['mode'] == 'resource' and b['text'] == '棄置' for b in buttons),
         {'buttons': buttons},
     )
-    detail_disabled = next((b['disabled'] for b in (buttons or []) if b['mode'] == 'detail'), None)
-    record('detail_button_is_never_disabled', detail_disabled is False, {'detail_disabled': detail_disabled})
-
-    before_hand = page.evaluate(
-        "(id) => window.lastGameState?.players?.find(p => p.id === id)?.hand || []", setup['player_id']
-    )
-    page.click("#hand .hand-card-detail-btn")
-    page.wait_for_timeout(400)
-    after_hand = page.evaluate(
-        "(id) => window.lastGameState?.players?.find(p => p.id === id)?.hand || []", setup['player_id']
-    )
-    flash_applied = page.evaluate(
-        "() => document.querySelector('#hand .hand-card')?.classList.contains('hand-card-detail-flash')"
-    )
-    record(
-        'clicking_detail_does_not_consume_or_play_the_card',
-        before_hand == ['臺灣奧援'] and after_hand == ['臺灣奧援'],
-        {'before_hand': before_hand, 'after_hand': after_hand},
-    )
-    record('clicking_detail_flashes_the_card_for_feedback', flash_applied is True, {'flash_applied': flash_applied})
 
     page.screenshot(path=str(SCREENSHOT))
 
-    # Full I/II/III effect text is already on the card face (no separate modal needed).
+    # 卡面完整列出三級效果文字（含地區標示），且沒有被固定卡高截斷
     face_text = page.inner_text('#hand .hand-card .card-effect-block')
+    face_metrics = page.eval_on_selector(
+        '#hand .hand-card .card-effect-block', 'el => ({clientH: el.clientHeight, scrollH: el.scrollHeight})'
+    )
     record(
-        'card_face_already_shows_all_three_tier_effect_lines',
+        'card_face_shows_all_three_tier_effect_lines',
         all(tier in face_text for tier in ('III級', 'II級', 'I級')),
         {'face_text': face_text},
     )
+    record(
+        'card_face_effect_text_is_not_clipped',
+        face_metrics['scrollH'] <= face_metrics['clientH'],
+        face_metrics,
+    )
+
+    # --- Case 2: 棄置按鈕把卡送進棄牌堆、不給任何資源 ---
+    before_hand = page.evaluate(
+        "(id) => window.lastGameState?.players?.find(p => p.id === id)?.hand || []", setup['player_id']
+    )
+    before_resources = page.evaluate(
+        "(id) => window.lastGameState?.players?.find(p => p.id === id)?.resources || {}", setup['player_id']
+    )
+    page.click("#hand .hand-card [data-card-mode='resource']")
+    page.wait_for_timeout(500)
+    after_hand = page.evaluate(
+        "(id) => window.lastGameState?.players?.find(p => p.id === id)?.hand || []", setup['player_id']
+    )
+    after_resources = page.evaluate(
+        "(id) => window.lastGameState?.players?.find(p => p.id === id)?.resources || {}", setup['player_id']
+    )
+    after_discard = page.evaluate(
+        "(id) => window.lastGameState?.players?.find(p => p.id === id)?.discard_pile || []", setup['player_id']
+    )
+    record(
+        'discard_button_discards_with_no_resource_gain',
+        before_hand == ['臺灣奧援'] and after_hand == [] and after_discard == ['臺灣奧援']
+        and before_resources == after_resources,
+        {'before_hand': before_hand, 'after_hand': after_hand, 'after_discard': after_discard,
+         'before_resources': before_resources, 'after_resources': after_resources},
+    )
     page.close()
 
-    # --- Case 2: 紅軍奧援 (special support card) also gets 詳情, not 資源 ---
+    # --- Case 3: 紅軍奧援（特殊奧援卡）同樣是 棄置＋行動 ---
     page2 = browser.new_context(viewport={'width': 1280, 'height': 900}).new_page()
     setup2 = post_json('/test/setup-support-proof', {'support_name': '紅軍奧援', 'tier': 1})
     page2.goto(f"{BASE_URL}/?game_id={setup2['game_id']}&player_id={setup2['player_id']}", wait_until='networkidle')
@@ -104,15 +122,13 @@ def check(browser):
     page2.wait_for_timeout(300)
     buttons2 = hand_card_buttons(page2, '紅軍奧援')
     record(
-        'red_army_support_card_also_shows_detail_and_discard_not_labeled_resource',
-        buttons2 is not None and any(b['mode'] == 'detail' for b in buttons2)
-        and any(b['mode'] == 'resource' and b['text'] == '棄置' for b in buttons2)
-        and not any(b['text'] == '資源' for b in buttons2),
+        'red_army_support_card_also_shows_discard_and_action_only',
+        buttons2 is not None and [b['text'] for b in buttons2] == ['棄置', '行動'],
         {'buttons': buttons2},
     )
     page2.close()
 
-    # --- Case 3: a non-support card (regular action card) keeps its normal 資源 button ---
+    # --- Case 4: 非奧援卡（宣傳家）維持 資源／行動 ---
     page3 = browser.new_context(viewport={'width': 1280, 'height': 900}).new_page()
     setup3 = post_json('/test/setup-move-confirmation-proof', {'mover_faction': 'liberals', 'mover_base': '臺北', 'mover_town': '臺北', 'moves_left': 0})
     post_json('/test/setup-card-scenario', {'game_id': setup3['game_id'], 'player_id': setup3['player_id'], 'card_name': '宣傳家'})
@@ -125,7 +141,7 @@ def check(browser):
     record(
         'non_support_card_keeps_the_resource_button',
         buttons3 is not None and any(b['mode'] == 'resource' and b['text'] == '資源' for b in buttons3)
-        and not any(b['mode'] == 'detail' for b in buttons3),
+        and not any(b['text'] in ('詳情', '棄置') for b in buttons3),
         {'buttons': buttons3},
     )
     page3.close()
@@ -150,7 +166,7 @@ def main():
 
     OUT_JSON.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     lines = [
-        '# 奧援卡「資源」按鈕改「詳情」驗證',
+        '# 奧援卡手牌按鈕（棄置／行動）驗證',
         '',
         '可重跑指令：`python3 scripts/validate_support_card_detail_button.py`',
         '',

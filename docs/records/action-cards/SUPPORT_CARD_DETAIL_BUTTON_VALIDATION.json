@@ -1,20 +1,15 @@
 {
   "summary": {
-    "total": 7,
-    "passed": 7,
+    "total": 6,
+    "passed": 6,
     "failed": 0
   },
   "results": [
     {
-      "name": "support_card_shows_detail_and_discard_not_labeled_resource",
+      "name": "support_card_shows_discard_and_action_only",
       "ok": true,
       "detail": {
         "buttons": [
-          {
-            "text": "詳情",
-            "mode": "detail",
-            "disabled": false
-          },
           {
             "text": "棄置",
             "mode": "resource",
@@ -29,48 +24,46 @@
       }
     },
     {
-      "name": "detail_button_is_never_disabled",
-      "ok": true,
-      "detail": {
-        "detail_disabled": false
-      }
-    },
-    {
-      "name": "clicking_detail_does_not_consume_or_play_the_card",
-      "ok": true,
-      "detail": {
-        "before_hand": [
-          "臺灣奧援"
-        ],
-        "after_hand": [
-          "臺灣奧援"
-        ]
-      }
-    },
-    {
-      "name": "clicking_detail_flashes_the_card_for_feedback",
-      "ok": true,
-      "detail": {
-        "flash_applied": true
-      }
-    },
-    {
-      "name": "card_face_already_shows_all_three_tier_effect_lines",
+      "name": "card_face_shows_all_three_tier_effect_lines",
       "ok": true,
       "detail": {
         "face_text": "III級（臺灣主導）：瓦解己方組織1格內的1個對手組織，並在該城鎮建立1個組織\nII級（東洋/南洋其一主導）：瓦解己方組織1格內的1個對手組織。\nI級（皆未主導）：獲得1點宣傳。"
       }
     },
     {
-      "name": "red_army_support_card_also_shows_detail_and_discard_not_labeled_resource",
+      "name": "card_face_effect_text_is_not_clipped",
+      "ok": true,
+      "detail": {
+        "clientH": 192,
+        "scrollH": 192
+      }
+    },
+    {
+      "name": "discard_button_discards_with_no_resource_gain",
+      "ok": true,
+      "detail": {
+        "before_hand": [
+          "臺灣奧援"
+        ],
+        "after_hand": [],
+        "after_discard": [
+          "臺灣奧援"
+        ],
+        "before_resources": {
+          "money": 0,
+          "propaganda": 0
+        },
+        "after_resources": {
+          "money": 0,
+          "propaganda": 0
+        }
+      }
+    },
+    {
+      "name": "red_army_support_card_also_shows_discard_and_action_only",
       "ok": true,
       "detail": {
         "buttons": [
-          {
-            "text": "詳情",
-            "mode": "detail",
-            "disabled": false
-          },
           {
             "text": "棄置",
             "mode": "resource",

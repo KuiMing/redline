@@ -91,6 +91,8 @@
   - 新功能：奧援卡手牌新增「棄置」按鈕（第三顆，`詳情／棄置／行動`），沿用 `play_card(mode='resource')` 對奧援卡本來就有的「不給資源、直接棄置」行為，只是重新掛一顆清楚標示用途的按鈕；`static/style.css` 新增 3 欄按鈕排版 class。
   - 回歸修正：`scripts/validate_support_card_effects_runtime.py`（英美奧援 tier2 情境對到第二種變體，補 `variant_by_tier`）、`scripts/validate_east_asia_support_taxonomy_fix.py`（北國/英美配對情境改標 `variant_index: 1`）、`server/main.py` 兩處 `/test/setup-support-card-play`、`/test/setup-support-proof` 的 `_support_card_tier` 呼叫與 monkey-patch 改吃卡物件、`scripts/tests/test_action_card_regressions.py` 一處同款 monkey-patch同步修正。
   - 驗證：`validate_purchase_area_composition.py`（9/9，新增 `support_taxonomy_copies_match_csv_row_totals` 硬性檢查，原本標成「待規則書確認」的 deviation_3 已解除）、`validate_support_card_effects_runtime.py`（12/12）、`validate_east_asia_support_taxonomy_fix.py`（6/6）、`validate_support_card_detail_button.py`（7/7，改為斷言「詳情＋棄置」而非「只有詳情、沒有資源」）、新增 `scripts/validate_support_card_variant_and_discard.py`（6/6：同一張英美奧援卡的兩種變體地區判定互相獨立、卡面只顯示自己印的那組地區、棄置鈕移除手牌且不給任何資源）、`validate_event_cards_runtime.py`（35/35）、`test_action_card_regressions.py`（跟修正前 24 個既有失敗完全一致，非本次造成，屬既有技術債不在本次範圍）。
+  - 2026-07-17 後續（截圖檢視發現）：天方奧援 I 級文字較長，加上地區標示後被固定卡高（318px）截斷、跟卡面下方「奧援卡」字樣糊在一起。修法：奧援卡卡面省略沒有資訊量的含義行（「奧援卡」）與徽章列（「資源 依效果而定」「隨機購買區」），騰出的空間讓三級文字完整顯示（實測 `clientHeight == scrollHeight`，零截斷）；非奧援卡不受影響。commit `69a8774`。
+  - 2026-07-17 後續（使用者裁決）：卡面完整顯示三級文字後，「詳情」按鈕只剩閃爍聚焦一個功能、已無存在意義，移除。奧援卡最終為「棄置／行動」兩顆按鈕；`flashCardDetail`、`hand-card-detail-flash` 動畫、三欄按鈕排版等相關程式碼一併清除。`validate_support_card_detail_button.py` 改寫為斷言最終狀態（棄置＋行動、無資源無詳情、卡面文字完整且不截斷、棄置直接進棄牌堆零資源、紅軍奧援同款、非奧援卡維持資源／行動，6/6）；`validate_playtest_targeted_browser.py` 第 3 段同步改寫（原本點詳情驗 no-op，改為點棄置驗棄牌）。
 
 - [done] Playtest UI polish：地圖已建立組織的城鎮／根據地應直接顯示所屬陣營。
   - 2026-07-04 回報想法：已建立組織的根據地和城鎮，應該在地名後面直接顯示是哪個陣營，避免只靠側欄或點選狀態辨識。

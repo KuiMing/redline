@@ -852,15 +852,6 @@ body {
   box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.12);
 }
 
-.hand-card-detail-flash {
-  animation: handCardDetailFlash 0.9s ease-out;
-}
-
-@keyframes handCardDetailFlash {
-  0% { box-shadow: inset 0 0 0 2px rgba(250, 204, 21, 0.95), 0 0 18px rgba(250, 204, 21, 0.55); }
-  100% { box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.12); }
-}
-
 #hand .hand-card {
   height: 318px;
   max-height: 318px;
@@ -879,15 +870,6 @@ body {
   grid-template-columns: 1fr 1fr;
   gap: 6px;
   flex: 0 0 auto;
-}
-
-.hand-card-three-actions .hand-card-actions {
-  grid-template-columns: 1fr 1fr 1fr;
-}
-
-.hand-card-three-actions .hand-card-actions button {
-  padding: 5px 2px;
-  font-size: 0.68rem;
 }
 
 .hand-card-actions button {
