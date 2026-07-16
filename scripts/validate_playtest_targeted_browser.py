@@ -220,16 +220,19 @@ def run():
                 {"before_supply": before_supply, "after_supply": st.get("static_purchase_supply", {}).get("宣傳家"), "player": player, "modal": modal},
             )
 
-            # 3. 奧援 action/resource split in ACTION phase.
+            # 3. 奧援卡沒有「資源」按鈕（改「詳情」，點擊不送出任何動作）；ACTION 階段仍可「行動」觸發效果。
+            # P1 playtest 回報：奧援卡卡面應可查看 I/II/III 級詳情，且「資源」按鈕應改為「詳情」
+            # （奧援卡只能當行動使用，不該保留一般卡的資源按鈕）。2026-07-16 修正。
             setup = post_json("/test/setup-support-card-play", {"support_name": "北國奧援", "faction_id": "liberals", "base": "海參崴", "orgs": {"海參崴": 1}, "resources": {"money": 0, "propaganda": 0}})
             st = goto_state(page, scenario_url(setup))
             close_any_modal(page)
             support_card = next(c for c in card_texts(page) if "北國奧援" in c["text"] and "hand-card" in c["cls"])
             action_enabled = any(b["mode"] == "action" and not b["disabled"] for b in support_card["buttons"])
-            resource_enabled = any(b["mode"] == "resource" and not b["disabled"] for b in support_card["buttons"])
-            st_resource = click_hand(page, "北國奧援", "resource")
-            page.screenshot(path=shot_dir / "03_support_resource_noop.png", full_page=True)
-            p_after_resource = current_player(st_resource)
+            has_no_resource_button = not any(b["mode"] == "resource" for b in support_card["buttons"])
+            detail_button = next((b for b in support_card["buttons"] if b["mode"] == "detail"), None)
+            st_detail = click_hand(page, "北國奧援", "detail")
+            page.screenshot(path=shot_dir / "03_support_detail_noop.png", full_page=True)
+            hand_after_detail = (current_player(st_detail) or {}).get("hand")
             setup = post_json("/test/setup-support-card-play", {"support_name": "北國奧援", "faction_id": "liberals", "base": "海參崴", "orgs": {"海參崴": 1}, "resources": {"money": 0, "propaganda": 0}})
             st = goto_state(page, scenario_url(setup))
             close_any_modal(page)
@@ -237,12 +240,14 @@ def run():
             page.screenshot(path=shot_dir / "04_support_action_effect.png", full_page=True)
             assert_true(
                 checks,
-                "奧援卡 ACTION 階段可行動；資源模式不給資源；行動模式才觸發效果",
+                "奧援卡沒有資源按鈕（改詳情，不消耗卡牌）；ACTION 階段行動按鈕仍可觸發效果",
                 action_enabled
-                and resource_enabled
-                and (p_after_resource or {}).get("resources") == {"money": 0, "propaganda": 0}
+                and has_no_resource_button
+                and detail_button is not None
+                and not detail_button["disabled"]
+                and hand_after_detail == ["北國奧援"]
                 and (st_action.get("pending_choice") or st_action.get("last_action_result") or st_action.get("action_log")),
-                {"hand_buttons_before": support_card["buttons"], "resource_player": p_after_resource, "action_pending": st_action.get("pending_choice"), "action_log_tail": (st_action.get("action_log") or [])[-5:]},
+                {"hand_buttons_before": support_card["buttons"], "hand_after_detail_click": hand_after_detail, "action_pending": st_action.get("pending_choice"), "action_log_tail": (st_action.get("action_log") or [])[-5:]},
             )
 
             # 4. 乘勝追擊 pending choice from own discard <= 3 cost.

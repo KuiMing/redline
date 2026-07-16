@@ -72,12 +72,15 @@
   - 回報截圖：`/Users/benmini/.hermes/image_cache/img_4830826f26cd.jpg`。
   - 2026-07-12 已修正並提交：`renderMovementHighlights()` 移除了 road/rail 高亮各自新增的臨時 `L.polyline`（橘色粗線與青色虛線都連回起點城鎮），只保留城鎮 marker 本身的高亮與地圖既有的道路/鐵路網；適用所有移動來源（同一函式）。驗證 `python3 scripts/validate_map_no_radial_lines.py`（PASS：選取城鎮前後 polyline 總數不變、亮色臨時直線數為 0）；proof `docs/records/map-ui/MAP_NO_RADIAL_LINES_20260712_200103.{json,md,png}`。
 
-- [todo] Playtest UI polish：奧援卡卡面需提供各等級詳情入口，並把原本「資源」按鈕改成「詳情」。
+- [done] Playtest UI polish：奧援卡卡面需提供各等級詳情入口，並把原本「資源」按鈕改成「詳情」。
   - 2026-07-04 回報想法：奧援卡每一等級的細節仍應能從卡牌上看到；若因字數太多不適合全部放在卡面，可在卡牌上做一個「詳情」按鈕。
   - 2026-07-04 補充：奧援卡其實只能作為行動使用，才可能透過行動效果產生資源；不應保留一般卡牌的「資源」按鈕。
   - 期望：卡牌本體維持簡潔，但提供可點擊的詳情入口，讓玩家查看 I / II / III 級完整效果文字與條件。
   - 期望：把奧援卡原本的「資源」按鈕直接改成「詳情」；按下去顯示卡牌詳情，不執行資源使用。
   - 需檢查：`static/app.js` 支援卡/奧援卡 render、手牌 action/resource button gating、`/card-presentation` 或 support card presentation catalog 是否已有完整 `effect_text` 可供 modal/detail panel 顯示；若資料不足需回查 `data/raw/support_cards.csv`。
+  - 2026-07-16 調查：`/card-presentation`（`server/main.py` `_load_card_presentation_catalog()`）早就把 support CSV 的 `effect_text` 組成 `"III級：…\nII級：…\nI級：…"` 三行完整文字；`renderCardFace()` 手牌用 `compact=true` 只截前 3 行，而奧援卡效果文字剛好就是 3 行——實測截圖確認**卡面本身已完整顯示 I/II/III 級全文，無截斷**（回報當下的「字數太多看不到」在後續卡面重排時已解決）。真正仍存在的落差只剩「資源」按鈕：手牌任一卡在行動階段目前一律顯示可點的「資源」鈕；伺服器對奧援卡的 resource 模式雖已安全防呆（不給資源、卡片直接棄掉，見 `play_card` 的 `card_type == 'support'` 分支），但按鈕本身存在會誤導玩家以為有作用。
+  - 2026-07-16 已修正並提交：手牌渲染時偵測奧援卡（`/奧援/.test(card)`，含特例 `紅軍奧援`），把「資源」按鈕換成「詳情」按鈕（`data-card-mode="detail"`，**永不 disabled**，不受行動階段限制）；`bindHandCardActionButtons` 對 `mode==='detail'` 改綁 `flashCardDetail()`——不呼叫 `sendAction`/`playHandCard`，只把卡片本身（效果文字已在卡面）做一次 0.9 秒的高亮閃爍聚焦，讓「詳情」有明確互動回饋但不消耗任何動作。非奧援卡的資源按鈕行為完全不變。
+  - 驗證 `python3 scripts/validate_support_card_detail_button.py`（7/7：一般奧援卡顯示詳情非資源、詳情鈕永不 disabled、點擊不消耗卡牌／不觸發任何動作、點擊觸發閃爍回饋、卡面確實完整列出 III/II/I 三級文字、`紅軍奧援`特例同樣顯示詳情、一般非奧援卡的資源按鈕不受影響）；proof `docs/records/action-cards/SUPPORT_CARD_DETAIL_BUTTON_VALIDATION.{json,md}` + 截圖。既有 `scripts/validate_playtest_targeted_browser.py` 第 3 段斷言原本把「奧援卡有資源按鈕、點了無效果」當作預期行為（正是這次回報的問題），已同步改寫為「奧援卡沒有資源按鈕、詳情鈕不消耗卡牌」；該腳本後段有一個跟本次修正無關的既有卡點（購買宣傳家時 `行動階段結束後才能購買` 一直逾時，`git stash` 比對確認修正前後行為一致），不在本次範圍內。相關回歸（模仿戰術、中紀委可取消、北國奧援兩段瓦解、移動確認、可建數量、棄牌捲動）全綠。
 
 - [done] Playtest UI polish：地圖已建立組織的城鎮／根據地應直接顯示所屬陣營。
   - 2026-07-04 回報想法：已建立組織的根據地和城鎮，應該在地名後面直接顯示是哪個陣營，避免只靠側欄或點選狀態辨識。

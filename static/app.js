@@ -1181,13 +1181,28 @@ function bindHandCardActionButtons(container) {
     btn.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopPropagation();
+      const mode = btn.dataset.cardMode || '';
+      if (mode === 'detail') {
+        flashCardDetail(btn.closest('.hand-card'));
+        return;
+      }
       const index = Number.parseInt(btn.dataset.cardIndex || '', 10);
       const cardName = btn.dataset.cardName || '';
-      const mode = btn.dataset.cardMode || '';
       if (Number.isNaN(index) || !cardName || !mode) return;
       playHandCard(index, cardName, mode);
     });
   });
+}
+
+function flashCardDetail(cardEl) {
+  if (!cardEl) return;
+  const face = cardEl.querySelector('.card-effect-block');
+  if (face && face.scrollIntoView) face.scrollIntoView({ block: 'nearest' });
+  cardEl.classList.remove('hand-card-detail-flash');
+  // Force reflow so retriggering the animation works on repeat clicks.
+  void cardEl.offsetWidth;
+  cardEl.classList.add('hand-card-detail-flash');
+  setTimeout(() => cardEl.classList.remove('hand-card-detail-flash'), 900);
 }
 
 function playHandCard(index, card, mode) {
@@ -2534,19 +2549,28 @@ async function render(state) {
       me.hand.forEach((card, i) => {
         const cardArg = escapeHtml(jsSingleQuotedString(card));
         const cardAttr = escapeHtml(card);
-        const colorName = (cardPresentation(card)?.color) || (/奧援/.test(card) ? '奧援' : '灰');
+        const isSupportCard = /奧援/.test(card);
+        const colorName = (cardPresentation(card)?.color) || (isSupportCard ? '奧援' : '灰');
         const colorClass = cardColorClass(colorName);
-        const canPlayResource = canPlayHandCardMode(card, 'resource');
         const canPlayAction = canPlayHandCardMode(card, 'action');
-        const resourceDisabledAttr = canPlayResource ? '' : 'disabled aria-disabled="true"';
         const actionDisabledAttr = canPlayAction ? '' : 'disabled aria-disabled="true"';
-        const resourceTitle = handButtonTitle(card, 'resource', canPlayResource);
         const actionTitle = handButtonTitle(card, 'action', canPlayAction);
+        // 奧援卡只能當「行動」打出；效果依區域主導者判定 I/II/III 級，本身不提供資源，
+        // 所以不給「資源」按鈕，改為「詳情」——點擊只是把卡面（已完整列出 I/II/III 級文字）
+        // 閃爍聚焦，不會送出任何動作。
+        const firstButtonHtml = isSupportCard
+          ? `<button class="hand-card-action-btn hand-card-detail-btn" type="button" title="效果詳情已列於卡面（I/II/III 級）" data-card-index="${i}" data-card-name="${cardAttr}" data-card-mode="detail">詳情</button>`
+          : (() => {
+              const canPlayResource = canPlayHandCardMode(card, 'resource');
+              const resourceDisabledAttr = canPlayResource ? '' : 'disabled aria-disabled="true"';
+              const resourceTitle = handButtonTitle(card, 'resource', canPlayResource);
+              return `<button class="hand-card-action-btn" type="button" ${resourceDisabledAttr} title="${escapeHtml(resourceTitle)}" data-card-index="${i}" data-card-name="${cardAttr}" data-card-mode="resource">資源</button>`;
+            })();
         handDiv.innerHTML += `
           <div class='card hand-card ${colorClass}' onclick="selectCardDetail(${cardArg},'hand',false)">
             ${renderCardFace(card, 'hand', false, true)}
             <div class="hand-card-actions">
-              <button class="hand-card-action-btn" type="button" ${resourceDisabledAttr} title="${escapeHtml(resourceTitle)}" data-card-index="${i}" data-card-name="${cardAttr}" data-card-mode="resource">資源</button>
+              ${firstButtonHtml}
               <button class="hand-card-action-btn" type="button" ${actionDisabledAttr} title="${escapeHtml(actionTitle)}" data-card-index="${i}" data-card-name="${cardAttr}" data-card-mode="action">行動</button>
             </div>
           </div>`;
