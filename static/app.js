@@ -728,10 +728,15 @@ function renderCardFace(cardName, zone, isStatic = false, compact = false, count
   const effectText = supportVariantEffectText(info, variantInfo) || info.effect_text;
   const effectLines = splitEffectLines(effectText || (isSupport ? '奧援卡，依區域主導者判定 I・II・III 級效果。' : '（暫無資料）'));
   const badgeItems = [];
-  if (info.resource_text) badgeItems.push(`資源 ${info.resource_text}`);
-  if (info.position_text) badgeItems.push(info.position_text);
-  else badgeItems.push(typeLabel);
-  const meaning = info.meaning_text ? `<div class="card-meaning">${escapeHtml(info.meaning_text)}</div>` : '';
+  // 奧援卡的含義行（「奧援卡」）與徽章（「資源 依效果而定」「隨機購買區」）沒有資訊量，
+  // 卻佔掉卡面下方空間，導致天方奧援等三級文字較長的卡 I 級文字被截斷；奧援卡一律省略，
+  // 把空間留給完整的 I/II/III 級效果文字。
+  if (!isSupport) {
+    if (info.resource_text) badgeItems.push(`資源 ${info.resource_text}`);
+    if (info.position_text) badgeItems.push(info.position_text);
+    else badgeItems.push(typeLabel);
+  }
+  const meaning = (info.meaning_text && !isSupport) ? `<div class="card-meaning">${escapeHtml(info.meaning_text)}</div>` : '';
   const countText = countOverride != null ? String(countOverride) : info.count_text;
   const count = countText ? `<div class="card-count">剩 ${escapeHtml(countText)}</div>` : '';
   return `
