@@ -3,8 +3,8 @@
     "scope": [
       "C3 購買區組成資料校驗"
     ],
-    "total": 8,
-    "passed": 8,
+    "total": 9,
+    "passed": 9,
     "failed": 0
   },
   "checks": [
@@ -90,10 +90,36 @@
       "name": "all_cards_deck_is_the_full_pool",
       "ok": true,
       "detail": {
-        "total": 70,
-        "expected": 70,
-        "support_pool": 32,
+        "total": 102,
+        "expected": 102,
+        "support_pool": 64,
         "general_pool": 38
+      }
+    },
+    {
+      "name": "support_taxonomy_copies_match_csv_row_totals",
+      "ok": true,
+      "detail": {
+        "csv_totals": {
+          "英美奧援": 8,
+          "東洋奧援": 8,
+          "南洋奧援": 8,
+          "印度奧援": 8,
+          "天方奧援": 8,
+          "歐洲奧援": 8,
+          "北國奧援": 8,
+          "臺灣奧援": 8
+        },
+        "taxonomy": {
+          "英美奧援": 8,
+          "東洋奧援": 8,
+          "南洋奧援": 8,
+          "印度奧援": 8,
+          "天方奧援": 8,
+          "歐洲奧援": 8,
+          "北國奧援": 8,
+          "臺灣奧援": 8
+        }
       }
     }
   ],
@@ -255,8 +281,8 @@
         "deck_builder": 1
       }
     },
-    "deviation_3_support_copies": {
-      "note": "support CSV 每種奧援有兩列（不同區域優待組合）各 4 張、合計 8；taxonomy 每種 4 張。兩列是「同卡雙資料行」或「各自成卡」需規則書確認。",
+    "resolved_2026_07_16_support_copies": {
+      "note": "原 deviation_3：support CSV 每種奧援兩列（各一種實體印刷變體、各印一組不同 II 級地區）各 4 張、合計 8；taxonomy 曾誤記頂層 copies 為 4（只抄一列）。已修正 taxonomy 讓每個 regions[] 項目各自帶 copies:4，頂層加總為 8，且 game.py 的 _support_card_tier 改為只依牌本身的 variant_index 檢查該卡印刷的那組地區，不再把兩種變體地區併查。",
       "csv_totals": {
         "英美奧援": 8,
         "東洋奧援": 8,
@@ -269,14 +295,14 @@
         "紅軍奧援": 1
       },
       "taxonomy": {
-        "英美奧援": 4,
-        "東洋奧援": 4,
-        "南洋奧援": 4,
-        "印度奧援": 4,
-        "天方奧援": 4,
-        "歐洲奧援": 4,
-        "北國奧援": 4,
-        "臺灣奧援": 4,
+        "英美奧援": 8,
+        "東洋奧援": 8,
+        "南洋奧援": 8,
+        "印度奧援": 8,
+        "天方奧援": 8,
+        "歐洲奧援": 8,
+        "北國奧援": 8,
+        "臺灣奧援": 8,
         "紅軍奧援": 1
       }
     },

@@ -1011,10 +1011,15 @@ class Game:
             propaganda = int(p.group(1)) if p else 0
         return {'money': money, 'propaganda': propaganda}
 
-    def _make_support_card(self, support_name):
+    def _make_support_card(self, support_name, variant_index=0):
         entry = self._support_taxonomy_entry(support_name) or {}
         # 奧援卡沒有「資源模式」印刷資源；購買費用由 _support_card_cost 另行計算。
-        return Card(support_name, self._support_card_runtime_type(support_name), {}, effect={'support_taxonomy': entry})
+        card = Card(support_name, self._support_card_runtime_type(support_name), {}, effect={'support_taxonomy': entry})
+        # 每種奧援卡實體上印有兩種不同的 II 級門檻地區組合（見 support_cards.csv 兩列），
+        # 一張實體卡只印其中一組；variant_index 記住這張牌抽到的是哪一組，讓 _support_card_tier
+        # 只檢查該卡實際印刷的那組地區，而不是把兩組地區都算進同一張牌（2026-07-16 使用者裁決）。
+        card.variant_index = variant_index
+        return card
 
     def _static_purchase_cards(self):
         cards = []
@@ -1034,10 +1039,13 @@ class Game:
         support_pool = []
         for entry in self.support_taxonomy:
             name = entry.get('name')
-            copies = int(entry.get('copies') or 0)
-            if not name or copies <= 0 or self._is_starter_support_card(name):
+            if not name or self._is_starter_support_card(name):
                 continue
-            support_pool.extend([self._make_support_card(name) for _ in range(copies)])
+            for variant_index, region in enumerate(entry.get('regions', []) or []):
+                copies = int(region.get('copies') or 0)
+                if copies <= 0:
+                    continue
+                support_pool.extend([self._make_support_card(name, variant_index=variant_index) for _ in range(copies)])
 
         general_pool = []
         excluded = set(STATIC_PURCHASE_CARD_NAMES) | {'追隨者', '樂捐者'}
@@ -2845,7 +2853,7 @@ class Game:
 
     def _execute_support_card(self, player, card):
         card_name = getattr(card, 'name', str(card))
-        tier, region_index, matched = self._support_card_tier(player, card_name)
+        tier, region_index, matched = self._support_card_tier(player, card)
         effect_type, payload = self._resolve_support_card_effect(card_name, tier, region_index)
         interaction_started = self._start_support_interaction(player, card_name, tier, region_index, effect_type, payload)
         if interaction_started:
@@ -3296,29 +3304,52 @@ class Game:
                 rulers.add(ruler)
         return rulers
 
-    def _support_card_tier(self, player, card_name):
+    def _support_card_variant_info(self, card):
+        """Which II 級門檻地區這張特定奧援卡實體印的是哪一組，供前端顯示這張牌實際印的
+        那組地區（而不是同名卡另一種變體的地區）。非奧援卡回傳 None。"""
+        card_name = getattr(card, "name", str(card))
+        entry = self._support_taxonomy_entry(card_name)
+        if not entry:
+            return None
+        regions = entry.get("regions", []) or []
+        if not regions:
+            return None
+        variant_index = getattr(card, "variant_index", 0) or 0
+        if variant_index >= len(regions):
+            variant_index = 0
+        region = regions[variant_index]
+        return {
+            "variant_index": variant_index,
+            "support_region": entry.get("support_region"),
+            "tier2_regions": list(region.get("preferred_rulers", []) or []),
+        }
+
+    def _support_card_tier(self, player, card):
+        card_name = getattr(card, "name", str(card))
         entry = self._support_taxonomy_entry(card_name)
         if not entry:
             return 1, None, []
+        regions = entry.get("regions", []) or []
+        if not regions:
+            return 1, None, []
+        # 每張奧援卡實體只印一組 II 級門檻地區（見 support_cards.csv 兩列），這張牌抽到的是
+        # 哪一組由 _make_support_card 存在 card.variant_index 上；只檢查這張牌自己印的那組，
+        # 不看同名卡另一種印刷變體的地區（2026-07-16 使用者裁決）。
+        variant_index = getattr(card, "variant_index", 0) or 0
+        if variant_index >= len(regions):
+            variant_index = 0
+        region = regions[variant_index]
         present = self._player_ruler_presence(player)
         support_region = entry.get("support_region")
-        best_tier = 1
-        best_idx = 0 if (entry.get("regions", []) or []) else None
-        best_matched = []
-        for idx, region in enumerate(entry.get("regions", []) or []):
-            preferred = region.get("preferred_rulers", []) or []
-            matched = [r for r in preferred if r in present]
-            tier = 1
-            if support_region and support_region in present and region.get("tier_3"):
-                tier = 3
-            elif matched:
-                # II 級門檻為 OR：主導配對中任一地區即可（2026-07-11 使用者裁決 B1-c=A）
-                tier = 2
-            if tier > best_tier or (tier == best_tier and best_matched == [] and matched):
-                best_tier = tier
-                best_idx = idx
-                best_matched = matched
-        return best_tier, best_idx, best_matched
+        preferred = region.get("preferred_rulers", []) or []
+        matched = [r for r in preferred if r in present]
+        tier = 1
+        if support_region and support_region in present and region.get("tier_3"):
+            tier = 3
+        elif matched:
+            # II 級門檻為 OR：主導配對中任一地區即可（2026-07-11 使用者裁決 B1-c=A）
+            tier = 2
+        return tier, variant_index, matched
 
     def _player_has_india_research_room(self, player):
         return self._player_has_ability(player, "印度研究分析室")
@@ -5838,6 +5869,7 @@ class Game:
             "faction_action_used": bool(self.turn_log.get('faction_action_used')),
             "action_log": self.action_log,
             "purchase_area": [getattr(card, 'name', str(card)) for card in self.purchase_area],
+            "purchase_area_variants": [self._support_card_variant_info(card) for card in self.purchase_area],
             "purchase_area_costs": purchase_area_costs,
             "purchase_area_affordable": purchase_area_affordable,
             "static_purchase_supply": dict(getattr(self, 'static_purchase_supply', {})),
@@ -5854,6 +5886,7 @@ class Game:
                     "resources": p.resources,
                     "moves_left": p.moves_left,
                     "hand": [getattr(card, 'name', str(card)) for card in p.hand] if (viewer_player_id is None or p.id == viewer_player_id) else ['未知手牌' for _ in p.hand],
+                    "hand_variants": [self._support_card_variant_info(card) for card in p.hand] if (viewer_player_id is None or p.id == viewer_player_id) else [None for _ in p.hand],
                     "deck_count": len(p.deck.draw_pile) if p.deck else 0,
                     "discard_count": len(p.deck.discard_pile) if p.deck else 0,
                     "discard_pile": [getattr(card, 'name', str(card)) for card in p.deck.discard_pile] if p.deck else [],

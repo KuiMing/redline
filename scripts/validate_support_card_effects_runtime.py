@@ -20,6 +20,10 @@ SUPPORT_CASES = [
             2: ['東京', '臺北'],
             3: ['紐約'],
         },
+        # 英美奧援實體上印有兩種 II 級門檻組合（歐洲/天方、東洋/臺灣），一張牌只印一組；
+        # 這裡的 tier2 城鎮（東京=東洋、臺北=臺灣）對應第二組，需指定 variant_index=1，
+        # 否則預設的第一組（歐洲/天方）不會被這兩個城鎮觸發（2026-07-16 使用者裁決）。
+        'variant_by_tier': {2: 1},
     },
     {
         'card': '歐洲奧援',
@@ -54,7 +58,7 @@ SUPPORT_CASES = [
 ]
 
 
-def _new_game(card_name, org_towns, tier):
+def _new_game(card_name, org_towns, tier, variant_index=0):
     g = Game([('p1', 'player'), ('p2', 'red')])
     player, red = g.players
     player.id = 'p1'
@@ -69,7 +73,7 @@ def _new_game(card_name, org_towns, tier):
     red.deck.discard_pile = []
     g.turn_phase = TurnPhase.ACTION
     g.current_player_index = 0
-    support = g._make_support_card(card_name)
+    support = g._make_support_card(card_name, variant_index=variant_index)
     if card_name == '南洋奧援' and tier == 1:
         player.hand = [support, Card('保留手牌', 'command', {})]
     else:
@@ -87,8 +91,9 @@ def _support_log_contains(g, card_name, expected_tier):
 
 def _run_case(case, tier):
     card_name = case['card']
-    g, player, red = _new_game(card_name, case['tier_setups'][tier], tier)
-    detected_tier, region_index, matched = g._support_card_tier(player, card_name)
+    variant_index = case.get('variant_by_tier', {}).get(tier, 0)
+    g, player, red = _new_game(card_name, case['tier_setups'][tier], tier, variant_index=variant_index)
+    detected_tier, region_index, matched = g._support_card_tier(player, player.hand[0])
     before = {
         'player_hand': len(player.hand),
         'player_discard': len(player.deck.discard_pile),

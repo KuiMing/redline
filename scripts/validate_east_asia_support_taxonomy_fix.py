@@ -29,7 +29,11 @@ CASES = [
     },
     {
         'name': 'tier2_northland_anglo_pair',
-        'org_towns': ['伯力', '紐約'],  # ruler: 北國, 英美 (region index 1; previously unreachable/stuck at tier 1)
+        # ruler: 北國, 英美 (region index 1). 這組地區只印在東洋奧援的第二種實體變體上，
+        # 需指定 variant_index=1 該張牌才會檢查這組地區（2026-07-16 使用者裁決：一張牌只看
+        # 自己印的那組，不再檢查另一種變體的地區）。
+        'org_towns': ['伯力', '紐約'],
+        'variant_index': 1,
         'expected_tier': 2,
         'expected_effect_type': 'interactive_build_near_inner',
     },
@@ -41,7 +45,8 @@ CASES = [
     },
     {
         'name': 'tier2_northland_only_or_semantics',
-        'org_towns': ['伯力'],  # 只主導北國
+        'org_towns': ['伯力'],  # 只主導北國（第二種變體的地區之一，需 variant_index=1）
+        'variant_index': 1,
         'expected_tier': 2,
         'expected_effect_type': 'interactive_build_near_inner',
     },
@@ -54,7 +59,7 @@ CASES = [
 ]
 
 
-def _new_game(org_towns):
+def _new_game(org_towns, variant_index=0):
     g = Game([('p1', 'player'), ('p2', 'red')])
     player, red = g.players
     player.id = 'p1'
@@ -68,7 +73,7 @@ def _new_game(org_towns):
     red.hand = []
     g.turn_phase = TurnPhase.ACTION
     g.current_player_index = 0
-    support = g._make_support_card(CARD)
+    support = g._make_support_card(CARD, variant_index=variant_index)
     player.hand = [support]
     player.deck.draw_pile = [Card(f'補牌{i}', 'command', {}) for i in range(1, 5)]
     player.deck.discard_pile = []
@@ -77,8 +82,8 @@ def _new_game(org_towns):
 
 
 def _run_case(case):
-    g, player, red = _new_game(case['org_towns'])
-    detected_tier, region_index, matched = g._support_card_tier(player, CARD)
+    g, player, red = _new_game(case['org_towns'], variant_index=case.get('variant_index', 0))
+    detected_tier, region_index, matched = g._support_card_tier(player, player.hand[0])
     effect_type, payload = g._resolve_support_card_effect(CARD, detected_tier, region_index)
     before_propaganda = player.resources['propaganda']
     result = g.play_card(0, mode='action')

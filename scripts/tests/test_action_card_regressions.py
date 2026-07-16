@@ -302,10 +302,11 @@ def test_taiwan_support_tier3_requires_target_choice_and_builds_in_same_town_aft
     enemy.deck.discard_pile = []
 
     original_resolver = g._support_card_tier
-    def forced_tier(player, card_name):
+    def forced_tier(player, card):
+        card_name = getattr(card, 'name', str(card))
         if getattr(player, 'id', None) == actor.id and card_name == '臺灣奧援':
             return 3, 0, ['東洋', '南洋']
-        return original_resolver(player, card_name)
+        return original_resolver(player, card)
     g._support_card_tier = forced_tier
 
     result = g.play_card(0, mode='action')

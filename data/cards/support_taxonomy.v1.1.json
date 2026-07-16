@@ -4,9 +4,10 @@
     {
       "name": "英美奧援",
       "cost": "1資金+2宣傳",
-      "copies": "4",
+      "copies": "8",
       "regions": [
         {
+          "copies": "4",
           "preferred_rulers": [
             "歐洲",
             "天方"
@@ -20,6 +21,7 @@
           "tier_1": "獲得1點資金。"
         },
         {
+          "copies": "4",
           "preferred_rulers": [
             "東洋",
             "臺灣"
@@ -52,9 +54,10 @@
     {
       "name": "東洋奧援",
       "cost": "1資金+2宣傳",
-      "copies": "4",
+      "copies": "8",
       "regions": [
         {
+          "copies": "4",
           "preferred_rulers": [
             "臺灣",
             "南洋"
@@ -68,6 +71,7 @@
           "tier_1": "獲得2點宣傳。"
         },
         {
+          "copies": "4",
           "preferred_rulers": [
             "北國",
             "英美"
@@ -100,9 +104,10 @@
     {
       "name": "南洋奧援",
       "cost": "1資金+2宣傳",
-      "copies": "4",
+      "copies": "8",
       "regions": [
         {
+          "copies": "4",
           "preferred_rulers": [
             "臺灣",
             "東洋"
@@ -116,6 +121,7 @@
           "tier_1": "抽1張牌，再從所有手牌中棄掉1張牌。"
         },
         {
+          "copies": "4",
           "preferred_rulers": [
             "印度",
             "天方"
@@ -148,9 +154,10 @@
     {
       "name": "印度奧援",
       "cost": "1資金+2宣傳",
-      "copies": "4",
+      "copies": "8",
       "regions": [
         {
+          "copies": "4",
           "preferred_rulers": [
             "南洋",
             "英美"
@@ -164,6 +171,7 @@
           "tier_1": "將1張分神放進紅軍棄牌堆。"
         },
         {
+          "copies": "4",
           "preferred_rulers": [
             "天方",
             "北國"
@@ -196,9 +204,10 @@
     {
       "name": "天方奧援",
       "cost": "1資金+2宣傳",
-      "copies": "4",
+      "copies": "8",
       "regions": [
         {
+          "copies": "4",
           "preferred_rulers": [
             "印度",
             "南洋"
@@ -212,6 +221,7 @@
           "tier_1": "選擇有組織位在己方組織1格內的玩家，由該玩家選1張手牌棄掉。"
         },
         {
+          "copies": "4",
           "preferred_rulers": [
             "北國",
             "歐洲"
@@ -244,9 +254,10 @@
     {
       "name": "歐洲奧援",
       "cost": "1資金+2宣傳",
-      "copies": "4",
+      "copies": "8",
       "regions": [
         {
+          "copies": "4",
           "preferred_rulers": [
             "北國",
             "天方"
@@ -260,6 +271,7 @@
           "tier_1": "獲得2點宣傳。"
         },
         {
+          "copies": "4",
           "preferred_rulers": [
             "英美",
             "南洋"
@@ -292,9 +304,10 @@
     {
       "name": "北國奧援",
       "cost": "1資金+2宣傳",
-      "copies": "4",
+      "copies": "8",
       "regions": [
         {
+          "copies": "4",
           "preferred_rulers": [
             "歐洲",
             "東洋"
@@ -308,6 +321,7 @@
           "tier_1": "以瓦解1個己方組織為代價，瓦解該組織1格內的1個對手組織。"
         },
         {
+          "copies": "4",
           "preferred_rulers": [
             "天方",
             "印度"
@@ -340,9 +354,10 @@
     {
       "name": "臺灣奧援",
       "cost": "1資金+2宣傳",
-      "copies": "4",
+      "copies": "8",
       "regions": [
         {
+          "copies": "4",
           "preferred_rulers": [
             "東洋",
             "南洋"
@@ -356,6 +371,7 @@
           "tier_1": "獲得1點宣傳。"
         },
         {
+          "copies": "4",
           "preferred_rulers": [
             "英美",
             "歐洲"
@@ -391,6 +407,7 @@
       "copies": "1",
       "regions": [
         {
+          "copies": "1",
           "preferred_rulers": [],
           "preferred_ruler_ids": [],
           "tier_3": null,

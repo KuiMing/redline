@@ -1474,7 +1474,7 @@ def test_setup_support_card_play(payload: dict):
     player.base = payload.get("base", "德拉敦")
     player.organizations = payload.get("orgs") or {player.base: 1}
     player.resources = payload.get("resources") or {"money": 0, "propaganda": 0}
-    player.hand = [game._make_support_card(payload.get("support_name", "印度奧援"))]
+    player.hand = [game._make_support_card(payload.get("support_name", "印度奧援"), variant_index=int(payload.get("variant_index", 0) or 0))]
     player.deck.draw_pile = [Card("補牌A", "command", {}), Card("補牌B", "command", {})]
     player.deck.discard_pile = []
 
@@ -1507,7 +1507,7 @@ def test_setup_support_card_play(payload: dict):
         "turn_phase": game.turn_phase,
         "game_phase": game.game_phase,
         "players": [{"id": p.id, "name": p.name, "faction": p.faction_id} for p in game.players],
-        "support_tier": game._support_card_tier(player, payload.get("support_name", "印度奧援"))[0],
+        "support_tier": game._support_card_tier(player, player.hand[0])[0],
         "state": game.state(),
     }
 
@@ -2186,13 +2186,14 @@ def test_setup_support_proof(payload: dict):
 
     original_resolver = game._support_card_tier
 
-    def forced_tier(target_player, card_name):
+    def forced_tier(target_player, card):
+        card_name = getattr(card, 'name', str(card))
         if getattr(target_player, 'id', None) == player.id and card_name == support_name:
             matched = payload.get('matched_regions')
             if matched is None:
                 matched = default_regions_by_card.get(support_name, {}).get(tier, [])
             return tier, 0, list(matched)
-        return original_resolver(target_player, card_name)
+        return original_resolver(target_player, card)
 
     game._support_card_tier = forced_tier
 

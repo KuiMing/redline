@@ -162,7 +162,23 @@ def main():
          'support_pool': support_pool_size, 'general_pool': general_pool_size},
     )
 
-    # --- Informational report: deviations from rules.md 步驟⑧ (not failed) ---
+    # --- 6. Support card physical copy totals: CSV vs taxonomy (2026-07-16 使用者裁決) ---
+    # support CSV 每種奧援有兩列，各代表一種實體印刷變體（各印一組不同的 II 級門檻地區），
+    # 各 4 張、合計 8 張；taxonomy 的 regions[] 兩個項目對應這兩種變體，且各自帶 copies:4，
+    # 加總後的頂層 copies 應與 CSV 兩列相加後的總數一致。這曾被誤記為「需規則書確認的
+    # ambiguous deviation」，實際上就是單純的加總，已於 2026-07-16 修正 taxonomy 並改為
+    # 強制檢查（原本 taxonomy 頂層 copies 只抄了其中一列的 4，短少一半購買牌庫的奧援卡）。
+    support_csv_totals = {n: sum(v) for n, v in support_rows.items()}
+    taxonomy_copies = {n: int((taxonomy[n] or {}).get('copies') or 0) for n in taxonomy}
+    non_starter_taxonomy_copies = {n: v for n, v in taxonomy_copies.items() if n in non_starter_support}
+    non_starter_csv_totals = {n: v for n, v in support_csv_totals.items() if n in non_starter_support}
+    check(
+        'support_taxonomy_copies_match_csv_row_totals',
+        non_starter_taxonomy_copies == non_starter_csv_totals,
+        {'csv_totals': non_starter_csv_totals, 'taxonomy': non_starter_taxonomy_copies},
+    )
+
+    # --- Informational report: remaining deviations from rules.md 步驟⑧ (not failed) ---
     mandatory_expected = {n: v['copies'] for n, v in csv_cards.items() if v['kind'] in MANDATORY_KINDS}
     mandatory_total = sum(mandatory_expected.values())
     csv_copy_diffs = {
@@ -170,8 +186,6 @@ def main():
         for n, v in csv_cards.items()
         if n in general_names and v['copies'] != 1
     }
-    support_csv_totals = {n: sum(v) for n, v in support_rows.items()}
-    taxonomy_copies = {n: int((taxonomy[n] or {}).get('copies') or 0) for n in taxonomy}
     report = {
         'rulebook_step8_expected_deck': f'間諜/組織/整肅全部 {mandatory_total} 張 + 隨機 {RULEBOOK_SUPPORT_SAMPLE} 張奧援 + 隨機 {RULEBOOK_GENERAL_SAMPLE} 張其它一般卡 = {mandatory_total + RULEBOOK_SUPPORT_SAMPLE + RULEBOOK_GENERAL_SAMPLE} 張',
         'deviation_1_market_modes': (
@@ -183,8 +197,11 @@ def main():
             'CSV 卡牌張數（如 批判 8、派遣間諜 5）目前不影響牌庫內份數。'
         ),
         'deviation_2_affected_cards': csv_copy_diffs,
-        'deviation_3_support_copies': {
-            'note': 'support CSV 每種奧援有兩列（不同區域優待組合）各 4 張、合計 8；taxonomy 每種 4 張。兩列是「同卡雙資料行」或「各自成卡」需規則書確認。',
+        'resolved_2026_07_16_support_copies': {
+            'note': '原 deviation_3：support CSV 每種奧援兩列（各一種實體印刷變體、各印一組不同 II 級地區）各 4 張、'
+                     '合計 8；taxonomy 曾誤記頂層 copies 為 4（只抄一列）。已修正 taxonomy 讓每個 regions[] 項目各自'
+                     '帶 copies:4，頂層加總為 8，且 game.py 的 _support_card_tier 改為只依牌本身的 variant_index 檢查'
+                     '該卡印刷的那組地區，不再把兩種變體地區併查。',
             'csv_totals': support_csv_totals,
             'taxonomy': taxonomy_copies,
         },
