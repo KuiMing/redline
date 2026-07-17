@@ -110,6 +110,11 @@
     - 驗證：更新 `python3 scripts/validate_map_faction_display.py`（6/6，臺北配色斷言改綠 `#22c55e`）＋新增 `python3 scripts/validate_map_selection_highlight.py`（6/6：綠線組織城鎮選取前後皆綠實心、可移動目標實心白、無關城鎮維持 base 樣式未被壓淡、選取空城鎮實心白、重新選取後其他組織城鎮回綠實心）；既有 `validate_map_no_radial_lines.py`／`validate_move_confirmation.py`（8/8）皆無退化；proof `docs/records/map-ui/MAP_SELECTION_HIGHLIGHT_VALIDATION.{json,md}` + `map_selection_highlight_validation.png`。
     - ④ 2026-07-13 再複測回報回歸（本次移除全域 dimming 引入）：連續改選兩個空城鎮（南投→臺中）時兩個都亮、舊選取沒有暗回去。根因是 `selectTownForCurrentMapAction` 重選時先 `renderMap()`（乾淨）再 `applyGameStateToMap()`，而 `applyGameStateToMap` 內部會用**尚未更新的舊 `selectedTown`** 先重跑一次高亮（把南投再點亮），最後才用新城鎮跑第二次；舊版全域 dimming 剛好在第二次呼叫時把南投壓回去而遮住此 bug，移除後就暴露。修法：`renderMovementHighlights` 開頭先用 `currentMarkers.forEach` 把所有 marker 重設回 `markerStyleForTown` base 樣式，使每次呼叫都是完整、與呼叫順序無關的乾淨結果（不論 `applyGameStateToMap` 的舊 `selectedTown` 重跑或新城鎮重跑，最後一次都會把非當前選取的城鎮重置）。驗證新增回歸案例 `reselecting_a_different_empty_town_resets_the_previous_one`（`validate_map_selection_highlight.py` 7/7：南投→臺中後南投回灰 base、臺中實心白）。
 
+- [todo] Playtest UI polish：臺灣北部地圖標籤過密互相重疊蓋字。
+  - 2026-07-13 桌測參考截圖：`docs/records/misc/taiwan-map-label-overlap-reference.jpg`——北臺灣城鎮密集區（臺北/新北/桃園/基隆/宜蘭），加上陣營標籤後「臺北 1（臺灣（綠線））」變長，跟鄰近城鎮標籤互相覆蓋，臺北的字被新北/基隆壓住讀不到。
+  - 方向待定：可能選項包含標籤縮短（陣營標籤只在 zoom 夠近才顯示）、密集區標籤錯位/避讓（collision offset）、或 hover/點選才展開完整標籤。動工前先確認做法。
+  - 需檢查：`static/leaflet_game_map_logic.js` 的 `labelTextForTown()` 與 marker/label 定位邏輯。
+
 - [done] Playtest UI polish：大量棄牌選擇／展示區需要可捲動。
   - 2026-07-04 回報情境：觸發 `貿易戰加劇` 的成功條件時，因棄牌數量太多，畫面只看得到一部分棄牌。
   - 期望：棄牌卡牌區應提供 scrollbar/slider，可滑動查看所有卡牌，避免卡牌超出視窗或被遮住。
