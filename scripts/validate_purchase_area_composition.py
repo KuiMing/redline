@@ -133,8 +133,8 @@ def main():
     non_starter_support = {n for n in support_names if (taxonomy[n] or {}).get('cost') != '起始牌'}
     support_pool_size = sum(int((taxonomy[n] or {}).get('copies') or 0) for n in non_starter_support)
     general_names = expected_structured - set(STATIC_PURCHASE_CARD_SUPPLY)
-    # structured JSON has no copies field, so the deck builder falls back to 1 per card
-    general_pool_size = len(general_names)
+    # 2026-07-17 起 structured JSON 帶 copies 欄位（來源：CSV 卡牌張數），牌庫依實體張數展開
+    general_pool_size = sum(int((structured[n] or {}).get('copies') or 1) for n in general_names)
 
     g53 = Game([('p1', 'a'), ('p2', 'b')], market_mode='sample_53')
     names53 = deck_names(g53) + [getattr(c, 'name', str(c)) for c in g53.purchase_area if getattr(c, 'name', str(c)) not in static_names]
@@ -178,25 +178,32 @@ def main():
         {'csv_totals': non_starter_csv_totals, 'taxonomy': non_starter_taxonomy_copies},
     )
 
+    # --- 7. General card copies: structured JSON must mirror the CSV 卡牌張數 (2026-07-17) ---
+    # 原 deviation_2：structured JSON 沒有張數欄位，牌庫每種一般卡 fallback 1 份（隨機購買區
+    # 實體 181 張只放 38 張）。已補上 copies 欄位（來源 CSV），改為強制檢查。
+    structured_copies = {n: int((structured[n] or {}).get('copies') or 0) for n in general_names}
+    csv_general_copies = {n: v['copies'] for n, v in csv_cards.items() if n in general_names}
+    check(
+        'structured_general_copies_match_csv',
+        structured_copies == csv_general_copies,
+        {'mismatched': {n: {'structured': structured_copies.get(n), 'csv': csv_general_copies.get(n)}
+                        for n in general_names if structured_copies.get(n) != csv_general_copies.get(n)}},
+    )
+
     # --- Informational report: remaining deviations from rules.md 步驟⑧ (not failed) ---
     mandatory_expected = {n: v['copies'] for n, v in csv_cards.items() if v['kind'] in MANDATORY_KINDS}
     mandatory_total = sum(mandatory_expected.values())
-    csv_copy_diffs = {
-        n: {'csv': v['copies'], 'deck_builder': 1}
-        for n, v in csv_cards.items()
-        if n in general_names and v['copies'] != 1
-    }
     report = {
         'rulebook_step8_expected_deck': f'間諜/組織/整肅全部 {mandatory_total} 張 + 隨機 {RULEBOOK_SUPPORT_SAMPLE} 張奧援 + 隨機 {RULEBOOK_GENERAL_SAMPLE} 張其它一般卡 = {mandatory_total + RULEBOOK_SUPPORT_SAMPLE + RULEBOOK_GENERAL_SAMPLE} 張',
         'deviation_1_market_modes': (
             'sample_53（lobby「53 張核心」選項）＝18 奧援＋35 一般卡，未保證間諜/組織/整肅全數入庫；'
             'all_cards（「全部卡牌」）＝整個 pool。兩種模式都不是規則書步驟⑧的組成——sample_53 為刻意的 MVP 精簡選項。'
         ),
-        'deviation_2_structured_json_has_no_copies': (
-            'action_cards_structured.v1.1.json 沒有張數欄位，_initial_purchase_deck 對每種一般卡 fallback 為 1 份；'
-            'CSV 卡牌張數（如 批判 8、派遣間諜 5）目前不影響牌庫內份數。'
+        'resolved_2026_07_17_general_copies': (
+            '原 deviation_2：structured JSON 已補 copies 欄位（來源 CSV 卡牌張數），'
+            '_initial_purchase_deck 依實體張數展開一般卡池（181 張），sample_53 的隨機 35 張'
+            '改為從實體卡池抽出（同名卡可重複，等同實際洗牌）；all_cards 為完整 245 張。'
         ),
-        'deviation_2_affected_cards': csv_copy_diffs,
         'resolved_2026_07_16_support_copies': {
             'note': '原 deviation_3：support CSV 每種奧援兩列（各一種實體印刷變體、各印一組不同 II 級地區）各 4 張、'
                      '合計 8；taxonomy 曾誤記頂層 copies 為 4（只抄一列）。已修正 taxonomy 讓每個 regions[] 項目各自'

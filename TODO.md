@@ -441,6 +441,8 @@
   - 硬性檢查（8/8 全過）：常設供應量與 CSV 一致（宣傳家/思想家/資助者/資本家 15、分神 30、內鬥 20）；常設區恰為 6 種固定卡；起始牌（追隨者/樂捐者）僅存在 CSV、不進牌庫；structured JSON 卡名恰為 CSV 非起始卡集合；support taxonomy 卡名與 support CSV 一致；`sample_53` 牌庫＝18 奧援＋35 一般卡且無常設/起始/紅軍奧援；`all_cards`＝全 pool。
   - 資訊性偏差報告（記錄於 proof，供之後裁決）：①規則書步驟⑧＝間諜/組織/整肅**全部** 47 張＋隨機 18 奧援＋隨機 35 其它＝100 張，兩種 market_mode 都不是此組成（`sample_53` 為 lobby「53 張核心」刻意 MVP 選項）；②`action_cards_structured.v1.1.json` **沒有張數欄位**，`_initial_purchase_deck` 對每種一般卡 fallback 為 1 份，CSV 張數（批判 8、派遣間諜 5…）不影響牌庫份數；③support CSV 每種奧援兩列各 4 張（合計 8）vs taxonomy 每種 4 張，兩列是「同卡雙資料行」或「各自成卡」待規則書確認；④牌庫用盡的補充實作為重建整份 initial deck（規則書為「從剩餘行動卡任取一疊」，近似）。
   - 驗證 `python3 scripts/validate_purchase_area_composition.py`（8/8）；proof `docs/records/purchase/PURCHASE_AREA_COMPOSITION_VALIDATION.{json,md}`。
+  - 2026-07-16/17 後續：偏差 ③（奧援卡張數）與偏差 ②（一般卡張數）已依使用者裁決先後修正並改為硬性檢查——③每種奧援實為兩種印刷變體各 4 張合計 8（見 P1 區塊奧援卡變體條目）；②`action_cards_structured.v1.1.json` 補上 `copies` 欄位（來源 CSV 卡牌張數），`_initial_purchase_deck` 依實體張數展開一般卡池（38 種共 181 張），`sample_53` 的隨機 35 張改為從實體卡池抽出（同名卡可重複，等同實際洗牌），`all_cards` 為完整 64 奧援＋181 一般＝245 張。校驗腳本升至 10/10（新增 `support_taxonomy_copies_match_csv_row_totals`、`structured_general_copies_match_csv` 兩項硬性檢查）。剩餘偏差：①market_mode 組成、④牌庫補充方式。
+  - 2026-07-17 連帶修正：`validate_turn_phase_action_gating.py` 用固定 random seed，購買牌庫變大改變了 RNG 消耗順序、換掉開局抽到的事件，剛好抽到大災難（失敗結算開待選擇）擋住 advance 導致 2 項失敗。該段測試本意只驗回合/階段推進形狀，與事件內容無關，改為固定把該輪事件換成無效果的歲月靜好，讓斷言與「事件運氣」脫鉤（13/13，連跑 3 次穩定）。
 
 - [done] 死代碼 JSON 宣告清理：`凝聚共識` conditional_bonus／`武裝集團` conditional_draw（第四梯隊保養）。
   - root cause（第一輪盤點記錄）：兩張卡的 JSON effect 在 pending-choice 步驟後各宣告了一個條件步驟，但兩個 resolve 路徑（`discard_self`、`armed_target_discard`）都**不續跑 remaining_effects**——凝聚共識加成實際走 choice 上的 `grant_propaganda_if_all_non_starter` 旗標、武裝集團抽牌走 `draw_on_success`——JSON 宣告永遠不會執行、只會誤導維護者。

@@ -1,51 +1,945 @@
 {
   "schema_version": "1.1",
   "cards": [
-
-    {"id":"propagandist","name":"宣傳家","type":"propaganda","cost":{"money":0,"propaganda":3},"resources":{"propaganda":2},"effect":[{"type":"optional_trash"},{"type":"build","range":1},{"type":"move","count":1}]},
-    {"id":"ideologue","name":"思想家","type":"propaganda","cost":{"money":0,"propaganda":5},"resources":{"propaganda":3},"effect":[{"type":"optional_trash"},{"type":"build","range":"ignore_distance"},{"type":"move","count":3}]},
-    {"id":"patron","name":"資助者","type":"money","cost":{"money":2,"propaganda":1},"resources":{"money":2},"effect":[{"type":"optional_trash"},{"type":"gain_resource","money":2,"propaganda":2}]},
-    {"id":"capitalist","name":"資本家","type":"money","cost":{"money":3,"propaganda":2},"resources":{"money":3},"effect":[{"type":"optional_trash"},{"type":"gain_resource","money":3,"propaganda":3}]},
-    {"id":"distraction","name":"分神","type":"disruption","cost":{"money":0,"propaganda":0},"resources":{},"effect":[{"type":"optional_trash"}]},
-    {"id":"internal_conflict","name":"內鬥","type":"disruption","cost":{"money":0,"propaganda":0},"resources":{},"effect":[]},
-    {"id":"leader","name":"領導","type":"command","cost":{"money":0,"propaganda":1},"resources":{"propaganda":1},"effect":[{"type":"draw","count":1}]},
-    {"id":"planning","name":"謀劃","type":"command","cost":{"money":1,"propaganda":1},"resources":{"propaganda":2},"effect":[{"type":"draw","count":2}]},
-    {"id":"strategy","name":"戰略","type":"command","cost":{"money":1,"propaganda":2},"resources":{"propaganda":3},"effect":[{"type":"draw","count":3}]},
-    {"id":"negotiation","name":"合作談判","type":"command","cost":{"money":2,"propaganda":2},"resources":{"propaganda":1},"effect":[{"type":"shared_draw","count":1},{"type":"gain_resource","money":0,"propaganda":2}]},
-    {"id":"efficient_action","name":"高效行動","type":"command","cost":{"money":2,"propaganda":2},"resources":{"money":1,"propaganda":1},"effect":[{"type":"draw","count":3},{"type":"discard_self","count":2}]},
-    {"id":"imitate_tactics","name":"模仿戰術","type":"command","cost":{"money":0,"propaganda":4},"resources":{"propaganda":2},"effect":[{"type":"imitate_topdeck"}]},
-    {"id":"press_advantage","name":"乘勝追擊","type":"command","cost":{"money":2,"propaganda":0},"resources":{"money":1},"effect":[{"type":"gain_from_discard","max_cost":3}]},
-    {"id":"bait_exhaustion","name":"誘導虛耗","type":"command","cost":{"money":0,"propaganda":3},"resources":{"propaganda":1},"effect":[{"type":"draw","count":1},{"type":"optional_trash"},{"type":"force_discard","count":1}]},
-    {"id":"ignite_passion","name":"點燃熱情","type":"command","cost":{"money":1,"propaganda":2},"resources":{"propaganda":1},"effect":[{"type":"draw","count":1},{"type":"conditional_draw","condition":"played_propaganda_card","count":1}]},
-    {"id":"build_confidence","name":"樹立信心","type":"command","cost":{"money":2,"propaganda":1},"resources":{"money":1},"effect":[{"type":"draw","count":1},{"type":"conditional_draw","condition":"played_money_card","count":1}]},
-    {"id":"recruit_talent","name":"網羅人才","type":"command","cost":{"money":3,"propaganda":2},"resources":{"money":1,"propaganda":1},"effect":[{"type":"choose_from_own_deck","include_discard_for_faction":"red_army"}]},
-    {"id":"forge_consensus","name":"凝聚共識","type":"command","cost":{"money":0,"propaganda":5},"resources":{"propaganda":3},"effect":[{"type":"draw","count":3},{"type":"discard_self","count":2}]},
-    {"id":"ideological_work","name":"思想建設","type":"command","cost":{"money":1,"propaganda":1},"resources":{"propaganda":1},"effect":[{"type":"draw","count":1},{"type":"extend_build_range","amount":1}]},
-    {"id":"expand_gains","name":"擴大戰果","type":"command","cost":{"money":4,"propaganda":0},"resources":{"money":2},"effect":[{"type":"gain_any_from_discard"}]},
-    {"id":"transport_c","name":"交通經驗丙","type":"transport","cost":{"money":1,"propaganda":0},"resources":{"money":1},"effect":[{"type":"extra_move","count":2}]},
-    {"id":"transport_b","name":"交通經驗乙","type":"transport","cost":{"money":3,"propaganda":0},"resources":{"money":2},"effect":[{"type":"extra_move","count":4}]},
-    {"id":"transport_a","name":"交通經驗甲","type":"transport","cost":{"money":5,"propaganda":0},"resources":{"money":3},"effect":[{"type":"extra_move","count":6}]},
-    {"id":"org_experience_c","name":"組織經驗丙","type":"organization","cost":{"money":2,"propaganda":1},"resources":{"propaganda":1},"effect":[{"type":"build","range":1}]},
-    {"id":"org_experience_b","name":"組織經驗乙","type":"organization","cost":{"money":3,"propaganda":2},"resources":{"propaganda":2},"effect":[{"type":"build","range":1},{"type":"build","range":1}]},
-    {"id":"org_experience_a","name":"組織經驗甲","type":"organization","cost":{"money":3,"propaganda":3},"resources":{"money":1,"propaganda":2},"effect":[{"type":"build","range":"ignore_distance","inner_fallback_range":1,"repeat_on_discard_min_cost":4}]},
-    {"id":"purge_minor","name":"批判","type":"purge","cost":{"money":0,"propaganda":2},"resources":{"propaganda":1},"effect":[{"type":"trash_from_hand_or_discard","count":1}]},
-    {"id":"purge_major","name":"批鬥","type":"purge","cost":{"money":0,"propaganda":4},"resources":{"propaganda":2},"effect":[{"type":"trash_from_hand_or_discard","count":2}]},
-    {"id":"expose_scandal","name":"爆料黑幕","type":"propaganda_special","cost":{"money":1,"propaganda":4},"resources":{"propaganda":2},"effect":[{"type":"cancel_card"},{"type":"conditional_draw","condition":"canceled_propaganda_card","count":1}]},
-    {"id":"shift_public_opinion","name":"輿論丕變","type":"propaganda_special","cost":{"money":0,"propaganda":3},"resources":{"propaganda":1},"effect":[{"type":"refresh_purchase_area"},{"type":"gain_resource","money":0,"propaganda":1}]},
-    {"id":"announce_action","name":"行動預告","type":"propaganda_special","cost":{"money":1,"propaganda":3},"resources":{"propaganda":2},"effect":[{"type":"topdeck_purchased_this_turn"},{"type":"gain_resource","money":0,"propaganda":1}]},
-    {"id":"field_agent","name":"派遣間諜","type":"spy","cost":{"money":2,"propaganda":1},"resources":{"propaganda":1},"effect":[{"type":"dissolve","range":1,"requires_self_sacrifice":true}]},
-    {"id":"embedded_agent","name":"內應間諜","type":"spy","cost":{"money":3,"propaganda":2},"resources":{"propaganda":2},"effect":[{"type":"dissolve","range":1}]},
-    {"id":"intel_network","name":"情報網","type":"spy","cost":{"money":3,"propaganda":3},"resources":{"money":1,"propaganda":1},"effect":[{"type":"choose_one","default_index":0,"options":[{"label":"在至多3位玩家棄牌堆各放入1張內鬥","effect":[{"type":"add_internal_conflict","count":1}]},{"label":"瓦解己方組織1格內的1個對手組織","effect":[{"type":"dissolve","count":1}]}]}]},
-    {"id":"divide","name":"離間","type":"spy","cost":{"money":0,"propaganda":4},"resources":{"propaganda":2},"effect":[{"type":"add_internal_conflict","count":1,"target_scope":"others","max_targets":3}]},
-    {"id":"leak","name":"走漏風聲","type":"spy","cost":{"money":2,"propaganda":0},"resources":{"propaganda":1},"effect":[{"type":"leak_top_deck"}]},
-    {"id":"underground_party","name":"地下黨","type":"spy","cost":{"money":2,"propaganda":4},"resources":{"money":1,"propaganda":2},"effect":[{"type":"choose_from_purchase_deck","count":3,"choose":1,"destination":"hand","rest":"remove"}]},
-    {"id":"armed_unit_c","name":"武裝者","type":"armed","cost":{"money":2,"propaganda":0},"resources":{"propaganda":1},"effect":[{"type":"force_discard","count":1}]},
-    {"id":"armed_unit_b","name":"武裝小隊","type":"armed","cost":{"money":3,"propaganda":0},"resources":{"money":1,"propaganda":1},"effect":[{"type":"force_discard","count":2}]},
-    {"id":"armed_unit_a","name":"武裝集團","type":"armed","cost":{"money":4,"propaganda":0},"resources":{"money":1,"propaganda":2},"effect":[{"type":"force_discard","count":2}]},
-    {"id":"business_network","name":"企業人脈","type":"money","cost":{"money":4,"propaganda":0},"resources":{"money":1},"effect":[{"type":"use_purchase_area_card","prefer_random_market":false}]},
-    {"id":"industry_infiltration","name":"產業滲透","type":"money","cost":{"money":4,"propaganda":1},"resources":{"money":2},"effect":[{"type":"cancel_card"},{"type":"conditional_draw","condition":"canceled_money_cost_card","count":1}]},
-    {"id":"planning_lobby","name":"企畫遊說","type":"money","cost":{"money":1,"propaganda":2},"resources":{"money":1},"effect":[{"type":"reveal_topdeck_cost_gain","threshold":3,"money_if_at_least":4,"money_otherwise":2}]},
-    {"id":"action_fundraising","name":"行動募資","type":"money","cost":{"money":1,"propaganda":3},"resources":{"money":2},"effect":[{"type":"topdeck_purchased_this_turn"},{"type":"gain_resource","money":1,"propaganda":0}]}
-
+    {
+      "id": "propagandist",
+      "name": "宣傳家",
+      "copies": "15",
+      "type": "propaganda",
+      "cost": {
+        "money": 0,
+        "propaganda": 3
+      },
+      "resources": {
+        "propaganda": 2
+      },
+      "effect": [
+        {
+          "type": "optional_trash"
+        },
+        {
+          "type": "build",
+          "range": 1
+        },
+        {
+          "type": "move",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "ideologue",
+      "name": "思想家",
+      "copies": "15",
+      "type": "propaganda",
+      "cost": {
+        "money": 0,
+        "propaganda": 5
+      },
+      "resources": {
+        "propaganda": 3
+      },
+      "effect": [
+        {
+          "type": "optional_trash"
+        },
+        {
+          "type": "build",
+          "range": "ignore_distance"
+        },
+        {
+          "type": "move",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "id": "patron",
+      "name": "資助者",
+      "copies": "15",
+      "type": "money",
+      "cost": {
+        "money": 2,
+        "propaganda": 1
+      },
+      "resources": {
+        "money": 2
+      },
+      "effect": [
+        {
+          "type": "optional_trash"
+        },
+        {
+          "type": "gain_resource",
+          "money": 2,
+          "propaganda": 2
+        }
+      ]
+    },
+    {
+      "id": "capitalist",
+      "name": "資本家",
+      "copies": "15",
+      "type": "money",
+      "cost": {
+        "money": 3,
+        "propaganda": 2
+      },
+      "resources": {
+        "money": 3
+      },
+      "effect": [
+        {
+          "type": "optional_trash"
+        },
+        {
+          "type": "gain_resource",
+          "money": 3,
+          "propaganda": 3
+        }
+      ]
+    },
+    {
+      "id": "distraction",
+      "name": "分神",
+      "copies": "30",
+      "type": "disruption",
+      "cost": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "resources": {},
+      "effect": [
+        {
+          "type": "optional_trash"
+        }
+      ]
+    },
+    {
+      "id": "internal_conflict",
+      "name": "內鬥",
+      "copies": "20",
+      "type": "disruption",
+      "cost": {
+        "money": 0,
+        "propaganda": 0
+      },
+      "resources": {},
+      "effect": []
+    },
+    {
+      "id": "leader",
+      "name": "領導",
+      "copies": "7",
+      "type": "command",
+      "cost": {
+        "money": 0,
+        "propaganda": 1
+      },
+      "resources": {
+        "propaganda": 1
+      },
+      "effect": [
+        {
+          "type": "draw",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "planning",
+      "name": "謀劃",
+      "copies": "5",
+      "type": "command",
+      "cost": {
+        "money": 1,
+        "propaganda": 1
+      },
+      "resources": {
+        "propaganda": 2
+      },
+      "effect": [
+        {
+          "type": "draw",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "id": "strategy",
+      "name": "戰略",
+      "copies": "3",
+      "type": "command",
+      "cost": {
+        "money": 1,
+        "propaganda": 2
+      },
+      "resources": {
+        "propaganda": 3
+      },
+      "effect": [
+        {
+          "type": "draw",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "id": "negotiation",
+      "name": "合作談判",
+      "copies": "5",
+      "type": "command",
+      "cost": {
+        "money": 2,
+        "propaganda": 2
+      },
+      "resources": {
+        "propaganda": 1
+      },
+      "effect": [
+        {
+          "type": "shared_draw",
+          "count": 1
+        },
+        {
+          "type": "gain_resource",
+          "money": 0,
+          "propaganda": 2
+        }
+      ]
+    },
+    {
+      "id": "efficient_action",
+      "name": "高效行動",
+      "copies": "5",
+      "type": "command",
+      "cost": {
+        "money": 2,
+        "propaganda": 2
+      },
+      "resources": {
+        "money": 1,
+        "propaganda": 1
+      },
+      "effect": [
+        {
+          "type": "draw",
+          "count": 3
+        },
+        {
+          "type": "discard_self",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "id": "imitate_tactics",
+      "name": "模仿戰術",
+      "copies": "5",
+      "type": "command",
+      "cost": {
+        "money": 0,
+        "propaganda": 4
+      },
+      "resources": {
+        "propaganda": 2
+      },
+      "effect": [
+        {
+          "type": "imitate_topdeck"
+        }
+      ]
+    },
+    {
+      "id": "press_advantage",
+      "name": "乘勝追擊",
+      "copies": "5",
+      "type": "command",
+      "cost": {
+        "money": 2,
+        "propaganda": 0
+      },
+      "resources": {
+        "money": 1
+      },
+      "effect": [
+        {
+          "type": "gain_from_discard",
+          "max_cost": 3
+        }
+      ]
+    },
+    {
+      "id": "bait_exhaustion",
+      "name": "誘導虛耗",
+      "copies": "5",
+      "type": "command",
+      "cost": {
+        "money": 0,
+        "propaganda": 3
+      },
+      "resources": {
+        "propaganda": 1
+      },
+      "effect": [
+        {
+          "type": "draw",
+          "count": 1
+        },
+        {
+          "type": "optional_trash"
+        },
+        {
+          "type": "force_discard",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "ignite_passion",
+      "name": "點燃熱情",
+      "copies": "5",
+      "type": "command",
+      "cost": {
+        "money": 1,
+        "propaganda": 2
+      },
+      "resources": {
+        "propaganda": 1
+      },
+      "effect": [
+        {
+          "type": "draw",
+          "count": 1
+        },
+        {
+          "type": "conditional_draw",
+          "condition": "played_propaganda_card",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "build_confidence",
+      "name": "樹立信心",
+      "copies": "5",
+      "type": "command",
+      "cost": {
+        "money": 2,
+        "propaganda": 1
+      },
+      "resources": {
+        "money": 1
+      },
+      "effect": [
+        {
+          "type": "draw",
+          "count": 1
+        },
+        {
+          "type": "conditional_draw",
+          "condition": "played_money_card",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "recruit_talent",
+      "name": "網羅人才",
+      "copies": "3",
+      "type": "command",
+      "cost": {
+        "money": 3,
+        "propaganda": 2
+      },
+      "resources": {
+        "money": 1,
+        "propaganda": 1
+      },
+      "effect": [
+        {
+          "type": "choose_from_own_deck",
+          "include_discard_for_faction": "red_army"
+        }
+      ]
+    },
+    {
+      "id": "forge_consensus",
+      "name": "凝聚共識",
+      "copies": "5",
+      "type": "command",
+      "cost": {
+        "money": 0,
+        "propaganda": 5
+      },
+      "resources": {
+        "propaganda": 3
+      },
+      "effect": [
+        {
+          "type": "draw",
+          "count": 3
+        },
+        {
+          "type": "discard_self",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "id": "ideological_work",
+      "name": "思想建設",
+      "copies": "5",
+      "type": "command",
+      "cost": {
+        "money": 1,
+        "propaganda": 1
+      },
+      "resources": {
+        "propaganda": 1
+      },
+      "effect": [
+        {
+          "type": "draw",
+          "count": 1
+        },
+        {
+          "type": "extend_build_range",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "expand_gains",
+      "name": "擴大戰果",
+      "copies": "5",
+      "type": "command",
+      "cost": {
+        "money": 4,
+        "propaganda": 0
+      },
+      "resources": {
+        "money": 2
+      },
+      "effect": [
+        {
+          "type": "gain_any_from_discard"
+        }
+      ]
+    },
+    {
+      "id": "transport_c",
+      "name": "交通經驗丙",
+      "copies": "7",
+      "type": "transport",
+      "cost": {
+        "money": 1,
+        "propaganda": 0
+      },
+      "resources": {
+        "money": 1
+      },
+      "effect": [
+        {
+          "type": "extra_move",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "id": "transport_b",
+      "name": "交通經驗乙",
+      "copies": "5",
+      "type": "transport",
+      "cost": {
+        "money": 3,
+        "propaganda": 0
+      },
+      "resources": {
+        "money": 2
+      },
+      "effect": [
+        {
+          "type": "extra_move",
+          "count": 4
+        }
+      ]
+    },
+    {
+      "id": "transport_a",
+      "name": "交通經驗甲",
+      "copies": "3",
+      "type": "transport",
+      "cost": {
+        "money": 5,
+        "propaganda": 0
+      },
+      "resources": {
+        "money": 3
+      },
+      "effect": [
+        {
+          "type": "extra_move",
+          "count": 6
+        }
+      ]
+    },
+    {
+      "id": "org_experience_c",
+      "name": "組織經驗丙",
+      "copies": "5",
+      "type": "organization",
+      "cost": {
+        "money": 2,
+        "propaganda": 1
+      },
+      "resources": {
+        "propaganda": 1
+      },
+      "effect": [
+        {
+          "type": "build",
+          "range": 1
+        }
+      ]
+    },
+    {
+      "id": "org_experience_b",
+      "name": "組織經驗乙",
+      "copies": "3",
+      "type": "organization",
+      "cost": {
+        "money": 3,
+        "propaganda": 2
+      },
+      "resources": {
+        "propaganda": 2
+      },
+      "effect": [
+        {
+          "type": "build",
+          "range": 1
+        },
+        {
+          "type": "build",
+          "range": 1
+        }
+      ]
+    },
+    {
+      "id": "org_experience_a",
+      "name": "組織經驗甲",
+      "copies": "3",
+      "type": "organization",
+      "cost": {
+        "money": 3,
+        "propaganda": 3
+      },
+      "resources": {
+        "money": 1,
+        "propaganda": 2
+      },
+      "effect": [
+        {
+          "type": "build",
+          "range": "ignore_distance",
+          "inner_fallback_range": 1,
+          "repeat_on_discard_min_cost": 4
+        }
+      ]
+    },
+    {
+      "id": "purge_minor",
+      "name": "批判",
+      "copies": "8",
+      "type": "purge",
+      "cost": {
+        "money": 0,
+        "propaganda": 2
+      },
+      "resources": {
+        "propaganda": 1
+      },
+      "effect": [
+        {
+          "type": "trash_from_hand_or_discard",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "purge_major",
+      "name": "批鬥",
+      "copies": "4",
+      "type": "purge",
+      "cost": {
+        "money": 0,
+        "propaganda": 4
+      },
+      "resources": {
+        "propaganda": 2
+      },
+      "effect": [
+        {
+          "type": "trash_from_hand_or_discard",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "id": "expose_scandal",
+      "name": "爆料黑幕",
+      "copies": "4",
+      "type": "propaganda_special",
+      "cost": {
+        "money": 1,
+        "propaganda": 4
+      },
+      "resources": {
+        "propaganda": 2
+      },
+      "effect": [
+        {
+          "type": "cancel_card"
+        },
+        {
+          "type": "conditional_draw",
+          "condition": "canceled_propaganda_card",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "shift_public_opinion",
+      "name": "輿論丕變",
+      "copies": "6",
+      "type": "propaganda_special",
+      "cost": {
+        "money": 0,
+        "propaganda": 3
+      },
+      "resources": {
+        "propaganda": 1
+      },
+      "effect": [
+        {
+          "type": "refresh_purchase_area"
+        },
+        {
+          "type": "gain_resource",
+          "money": 0,
+          "propaganda": 1
+        }
+      ]
+    },
+    {
+      "id": "announce_action",
+      "name": "行動預告",
+      "copies": "5",
+      "type": "propaganda_special",
+      "cost": {
+        "money": 1,
+        "propaganda": 3
+      },
+      "resources": {
+        "propaganda": 2
+      },
+      "effect": [
+        {
+          "type": "topdeck_purchased_this_turn"
+        },
+        {
+          "type": "gain_resource",
+          "money": 0,
+          "propaganda": 1
+        }
+      ]
+    },
+    {
+      "id": "field_agent",
+      "name": "派遣間諜",
+      "copies": "5",
+      "type": "spy",
+      "cost": {
+        "money": 2,
+        "propaganda": 1
+      },
+      "resources": {
+        "propaganda": 1
+      },
+      "effect": [
+        {
+          "type": "dissolve",
+          "range": 1,
+          "requires_self_sacrifice": true
+        }
+      ]
+    },
+    {
+      "id": "embedded_agent",
+      "name": "內應間諜",
+      "copies": "3",
+      "type": "spy",
+      "cost": {
+        "money": 3,
+        "propaganda": 2
+      },
+      "resources": {
+        "propaganda": 2
+      },
+      "effect": [
+        {
+          "type": "dissolve",
+          "range": 1
+        }
+      ]
+    },
+    {
+      "id": "intel_network",
+      "name": "情報網",
+      "copies": "3",
+      "type": "spy",
+      "cost": {
+        "money": 3,
+        "propaganda": 3
+      },
+      "resources": {
+        "money": 1,
+        "propaganda": 1
+      },
+      "effect": [
+        {
+          "type": "choose_one",
+          "default_index": 0,
+          "options": [
+            {
+              "label": "在至多3位玩家棄牌堆各放入1張內鬥",
+              "effect": [
+                {
+                  "type": "add_internal_conflict",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "label": "瓦解己方組織1格內的1個對手組織",
+              "effect": [
+                {
+                  "type": "dissolve",
+                  "count": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "divide",
+      "name": "離間",
+      "copies": "5",
+      "type": "spy",
+      "cost": {
+        "money": 0,
+        "propaganda": 4
+      },
+      "resources": {
+        "propaganda": 2
+      },
+      "effect": [
+        {
+          "type": "add_internal_conflict",
+          "count": 1,
+          "target_scope": "others",
+          "max_targets": 3
+        }
+      ]
+    },
+    {
+      "id": "leak",
+      "name": "走漏風聲",
+      "copies": "5",
+      "type": "spy",
+      "cost": {
+        "money": 2,
+        "propaganda": 0
+      },
+      "resources": {
+        "propaganda": 1
+      },
+      "effect": [
+        {
+          "type": "leak_top_deck"
+        }
+      ]
+    },
+    {
+      "id": "underground_party",
+      "name": "地下黨",
+      "copies": "3",
+      "type": "spy",
+      "cost": {
+        "money": 2,
+        "propaganda": 4
+      },
+      "resources": {
+        "money": 1,
+        "propaganda": 2
+      },
+      "effect": [
+        {
+          "type": "choose_from_purchase_deck",
+          "count": 3,
+          "choose": 1,
+          "destination": "hand",
+          "rest": "remove"
+        }
+      ]
+    },
+    {
+      "id": "armed_unit_c",
+      "name": "武裝者",
+      "copies": "8",
+      "type": "armed",
+      "cost": {
+        "money": 2,
+        "propaganda": 0
+      },
+      "resources": {
+        "propaganda": 1
+      },
+      "effect": [
+        {
+          "type": "force_discard",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "armed_unit_b",
+      "name": "武裝小隊",
+      "copies": "5",
+      "type": "armed",
+      "cost": {
+        "money": 3,
+        "propaganda": 0
+      },
+      "resources": {
+        "money": 1,
+        "propaganda": 1
+      },
+      "effect": [
+        {
+          "type": "force_discard",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "id": "armed_unit_a",
+      "name": "武裝集團",
+      "copies": "3",
+      "type": "armed",
+      "cost": {
+        "money": 4,
+        "propaganda": 0
+      },
+      "resources": {
+        "money": 1,
+        "propaganda": 2
+      },
+      "effect": [
+        {
+          "type": "force_discard",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "id": "business_network",
+      "name": "企業人脈",
+      "copies": "5",
+      "type": "money",
+      "cost": {
+        "money": 4,
+        "propaganda": 0
+      },
+      "resources": {
+        "money": 1
+      },
+      "effect": [
+        {
+          "type": "use_purchase_area_card",
+          "prefer_random_market": false
+        }
+      ]
+    },
+    {
+      "id": "industry_infiltration",
+      "name": "產業滲透",
+      "copies": "4",
+      "type": "money",
+      "cost": {
+        "money": 4,
+        "propaganda": 1
+      },
+      "resources": {
+        "money": 2
+      },
+      "effect": [
+        {
+          "type": "cancel_card"
+        },
+        {
+          "type": "conditional_draw",
+          "condition": "canceled_money_cost_card",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "planning_lobby",
+      "name": "企畫遊說",
+      "copies": "7",
+      "type": "money",
+      "cost": {
+        "money": 1,
+        "propaganda": 2
+      },
+      "resources": {
+        "money": 1
+      },
+      "effect": [
+        {
+          "type": "reveal_topdeck_cost_gain",
+          "threshold": 3,
+          "money_if_at_least": 4,
+          "money_otherwise": 2
+        }
+      ]
+    },
+    {
+      "id": "action_fundraising",
+      "name": "行動募資",
+      "copies": "4",
+      "type": "money",
+      "cost": {
+        "money": 1,
+        "propaganda": 3
+      },
+      "resources": {
+        "money": 2
+      },
+      "effect": [
+        {
+          "type": "topdeck_purchased_this_turn"
+        },
+        {
+          "type": "gain_resource",
+          "money": 1,
+          "propaganda": 0
+        }
+      ]
+    }
   ]
 }

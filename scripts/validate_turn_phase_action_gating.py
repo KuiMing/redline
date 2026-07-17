@@ -120,6 +120,13 @@ def run_validation():
     lobby_start_player = lobby_state.get('current_player')
     lobby_round_start_index = getattr(lobby_game, 'round_start_player_index', None)
     lobby_turn_flow = []
+    # 這段只驗「回合/階段推進」的形狀，跟抽到哪張事件無關；固定種子下，其它初始化
+    # （如購買牌庫大小）一變動就會改變 RNG 消耗順序、換掉開局事件——若剛好抽到
+    # 結算會開待選擇的任務事件（如大災難失敗懲罰），advance 會被待選擇擋住，讓
+    # 這段測試因為「事件運氣」而非「階段推進」失敗。改為固定換成無效果的歲月靜好，
+    # 讓回合流程的斷言與事件內容脫鉤（2026-07-17）。
+    lobby_game.current_event = dict(lobby_game._event_by_name('歲月靜好'))
+    lobby_game.event_progress = {'count': 0, 'required': 0, 'succeeded': True, 'settled': True, 'status': 'idle'}
     # Current model: each player's turn is ACTION -> END (2 advances), and the round's event
     # is drawn only when the round wraps back to the starting player.
     for step in ['first_action_to_end', 'first_end_to_second_action', 'second_action_to_end', 'second_end_to_next_round']:
