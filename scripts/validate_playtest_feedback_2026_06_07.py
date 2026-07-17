@@ -23,12 +23,19 @@ def make_game(faction="hong_kong"):
         elif player.name == "Red":
             player.faction_id = "red_army"
     game.turn_phase = TurnPhase.ACTION
+    # 開局隨機抽的事件可能是互動型（如 一帶一路 auto build），會在打牌時插入事件自己的
+    # pending choice 污染這些單元檢查；固定換成無效果的歲月靜好。
+    game.current_event = dict(game._event_by_name("歲月靜好"))
+    game.event_progress = {"count": 0, "required": 0, "succeeded": True, "settled": True, "status": "idle"}
+    game.event_modifiers = []
     return game
 
 
 def check_static_purchase_repeats():
     game = make_game()
     player = game.current_player()
+    # 2026-06-26 起 buy_card 僅限購買（END）階段。
+    game.turn_phase = TurnPhase.END
     idx = game.state()["purchase_area"].index("宣傳家")
     before = game.static_purchase_supply["宣傳家"]
     player.resources = {"money": 0, "propaganda": 30}
@@ -51,11 +58,22 @@ def check_propagandist_action():
     player.hand = [Card("宣傳家", "propaganda", {"propaganda": 2})]
     before_supply = game.static_purchase_supply["宣傳家"]
     result = game.play_card(0, mode="action")
+    # 建組織現在是互動式選城鎮（card_build_organization），選臺北完成建造。
+    build_choice_ok = bool(
+        result.get("pending_choice")
+        and game.pending_choice
+        and game.pending_choice.get("choice_key") == "card_build_organization"
+    )
+    resolve_result = {}
+    if build_choice_ok:
+        towns = [entry["town"] for entry in game.pending_choice.get("towns", [])]
+        if "臺北" in towns:
+            resolve_result = game.resolve_pending_choice(player.id, towns.index("臺北"))
     after_supply = game.static_purchase_supply["宣傳家"]
     return {
-        "name": "propagandist_action_returns_card_builds_and_grants_one_move_without_bait_prompt",
-        "passed": result.get("success") and not result.get("pending_choice") and after_supply == before_supply + 1 and player.organizations.get("臺北") == 2 and player.moves_left == 1,
-        "details": {"result": result, "before_supply": before_supply, "after_supply": after_supply, "orgs": player.organizations, "moves_left": player.moves_left, "pending_choice": game.pending_choice},
+        "name": "propagandist_action_returns_card_then_builds_via_town_choice_and_grants_one_move",
+        "passed": result.get("success") and build_choice_ok and resolve_result.get("success") and after_supply == before_supply + 1 and player.organizations.get("臺北") == 2 and player.moves_left == 1,
+        "details": {"result": result, "resolve_result": resolve_result, "before_supply": before_supply, "after_supply": after_supply, "orgs": player.organizations, "moves_left": player.moves_left, "pending_choice": game.state().get("pending_choice")},
     }
 
 
@@ -84,6 +102,8 @@ def check_support_resource_noop_and_random_buy_removes_slot():
 
     game = make_game()
     player = game.current_player()
+    # buy_card 僅限購買（END）階段。
+    game.turn_phase = TurnPhase.END
     player.resources = {"money": 10, "propaganda": 10}
     game.purchase_area = game._static_purchase_cards() + [game._make_support_card("北國奧援")]
     before_area = game.state()["purchase_area"]

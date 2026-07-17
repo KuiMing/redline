@@ -9,6 +9,16 @@ from server.cards import Card
 from server.game import Game, GamePhase, TurnPhase
 
 
+def pin_noop_event(g):
+    # Game 初始化會隨機抽該輪事件；抽到互動型事件（如 一帶一路 的 auto build）會在打牌時
+    # 插入事件自己的 pending choice，污染這裡的行動卡單元測試。固定換成無效果的歲月靜好，
+    # 讓測試只驗卡片行為、與事件運氣脫鉤。
+    g.current_event = dict(g._event_by_name('歲月靜好'))
+    g.event_progress = {'count': 0, 'required': 0, 'succeeded': True, 'settled': True, 'status': 'idle'}
+    g.event_modifiers = []
+    return g
+
+
 def make_game():
     g = Game([('p1', 'P1'), ('p2', 'P2')])
     g.game_phase = GamePhase.MAIN
@@ -16,7 +26,7 @@ def make_game():
     g.current_player_index = 0
     g.pending_base_choices = {}
     g.players[0].faction_id = 'red_army'
-    return g
+    return pin_noop_event(g)
 
 
 def card(g, name):
@@ -40,6 +50,15 @@ def play_only(g, name):
     result = g.play_card(0, mode='action')
     assert result.get('success'), result
     return p
+
+
+def resolve_build_town(g, player, town):
+    # 建組織效果現在是互動式選城鎮（card_build_organization / town_choice），
+    # 不再自動蓋在當前城鎮；測試用此 helper 選定城鎮完成建造。
+    assert g.pending_choice and g.pending_choice['choice_key'] == 'card_build_organization', g.pending_choice
+    towns = [entry['town'] for entry in g.pending_choice['towns']]
+    assert town in towns, (town, towns)
+    return g.resolve_pending_choice(player.id, towns.index(town))
 
 
 def test_press_advantage_prompts_for_eligible_discard_card_and_leaves_high_cost_cards():
@@ -127,7 +146,10 @@ def test_red_army_recruit_talent_can_select_from_own_deck_or_discard():
     assert any('recruited DiscardChoice from discard via 網羅人才' in entry for entry in g.action_log)
 
 
-def test_red_support_requires_red_army_to_choose_rebel_discard_target_before_resolving_resource_mode():
+def test_red_support_resource_mode_is_a_plain_discard_with_no_resources_for_red_army():
+    # 2026-06-07（457d3a2）起奧援卡的資源模式一律改為「不給資源、直接棄置」；紅軍奧援
+    # 原本的資源模式（給 1/1 並選反共玩家放入其棄牌堆）已被此裁決取代——紅軍自己打
+    # 資源模式就是把牌棄進自己的棄牌堆、不開任何選擇（2026-07-16 起 UI 上這就是「棄置」鈕）。
     g = make_game()
     red = g.current_player()
     rebel = g.players[1]
@@ -138,30 +160,13 @@ def test_red_support_requires_red_army_to_choose_rebel_discard_target_before_res
 
     result = g.play_card(0, mode='resource')
 
-    assert result.get('pending_choice') is True
+    assert result.get('success'), result
+    assert result.get('pending_choice') is None
+    assert g.pending_choice is None
     assert red.resources == {'money': 0, 'propaganda': 0}
     assert names(red.hand) == []
-    assert g.pending_choice and g.pending_choice['type'] == 'target_choice'
-    assert g.pending_choice['choice_key'] == 'red_support_target_player'
-    assert g.pending_choice['player_id'] == red.id
-    assert [entry['label'] for entry in g.pending_choice['targets']] == ['P2']
-
-    state_choice = g.state()['pending_choice']
-    assert state_choice['type'] == 'target_choice'
-    assert state_choice['choice_key'] == 'red_support_target_player'
-    assert state_choice['player_id'] == red.id
-    assert state_choice['targets'] == [{'id': rebel.id, 'label': 'P2'}]
-    assert state_choice['source_name'] == '紅軍奧援'
-    assert state_choice['mode'] == 'resource'
-
-    resolved = g.resolve_pending_choice(red.id, 0)
-
-    assert resolved.get('success'), resolved
-    assert resolved.get('target_player_name') == 'P2'
-    assert red.resources == {'money': 1, 'propaganda': 1}
-    assert names(red.hand) == []
-    assert names(rebel.deck.discard_pile)[-1] == '紅軍奧援'
-    assert g.pending_choice is None
+    assert names(red.deck.discard_pile) == ['紅軍奧援']
+    assert names(rebel.deck.discard_pile) == []
 
 
 def test_red_support_requires_red_army_to_choose_rebel_discard_target_before_resolving_action_mode():
@@ -198,7 +203,10 @@ def test_taiwan_support_tier1_gains_propaganda_without_opening_target_choice():
     actor.faction_id = 'taiwan_green'
     actor.base = '東京'
     actor.organizations = {'東京': 1}
-    actor.hand = [g._make_support_card('臺灣奧援')]
+    # 東京主導東洋；II 級 OR 裁決（2026-07-11）下第一種變體（東洋/南洋）會達 II 級，
+    # 要驗 I 級 fallback 需拿第二種印刷變體（英美/歐洲，2026-07-16 變體裁決）——東洋不在
+    # 這張牌自己印的門檻地區裡，才會落在 I 級。
+    actor.hand = [g._make_support_card('臺灣奧援', variant_index=1)]
     actor.resources = {'money': 0, 'propaganda': 0}
 
     enemy.faction_id = 'red_army'
@@ -212,25 +220,33 @@ def test_taiwan_support_tier1_gains_propaganda_without_opening_target_choice():
     assert g.pending_choice is None
 
 
-def test_north_support_uses_support_region_for_tier3_and_requires_full_pair_for_tier2():
+def test_north_support_tier_detection_follows_or_semantics_and_card_variant():
+    # II 級門檻為 OR（2026-07-11 裁決：主導配對中任一地區即可），且一張牌只看自己
+    # 印的那組地區（2026-07-16 變體裁決：變體 0＝歐洲/東洋、變體 1＝天方/印度）。
     g = make_game()
     actor = g.current_player()
 
     actor.faction_id = 'liberals'
     actor.base = '海參崴'
 
+    variant0 = g._make_support_card('北國奧援', variant_index=0)
+    variant1 = g._make_support_card('北國奧援', variant_index=1)
+
     actor.organizations = {'海參崴': 1}
-    tier3 = g._support_card_tier(actor, '北國奧援')
+    tier3 = g._support_card_tier(actor, variant0)
     assert tier3[0] == 3
     assert g._resolve_support_card_effect('北國奧援', tier3[0], tier3[1]) == ('interactive_dissolve_many_near', {'count': 2})
 
+    # 巴黎主導歐洲：對變體 0（歐洲/東洋）單一地區即達 II 級（OR），對變體 1（天方/印度）不匹配、落 I 級。
     actor.organizations = {'巴黎': 1}
-    tier1 = g._support_card_tier(actor, '北國奧援')
+    tier2_single = g._support_card_tier(actor, variant0)
+    assert tier2_single == (2, 0, ['歐洲'])
+    tier1 = g._support_card_tier(actor, variant1)
     assert tier1[0] == 1
     assert g._resolve_support_card_effect('北國奧援', tier1[0], tier1[1]) == ('interactive_dissolve_self_and_enemy', {'count': 1})
 
     actor.organizations = {'巴黎': 1, '沖繩': 1}
-    tier2 = g._support_card_tier(actor, '北國奧援')
+    tier2 = g._support_card_tier(actor, variant0)
     assert tier2 == (2, 0, ['歐洲', '東洋'])
     assert g._resolve_support_card_effect('北國奧援', tier2[0], tier2[1]) == ('interactive_dissolve_many_near', {'count': 1})
 
@@ -243,7 +259,8 @@ def test_north_support_tier1_sacrifices_the_selected_own_org_before_dissolving_e
     actor.faction_id = 'liberals'
     actor.base = '巴黎'
     actor.organizations = {'巴黎': 1, '日內瓦': 1}
-    actor.hand = [g._make_support_card('北國奧援')]
+    # 巴黎/日內瓦主導歐洲：變體 0 會因 OR 裁決達 II 級，改拿變體 1（天方/印度）才落 I 級。
+    actor.hand = [g._make_support_card('北國奧援', variant_index=1)]
     actor.resources = {'money': 0, 'propaganda': 0}
 
     enemy.faction_id = 'red_army'
@@ -399,7 +416,9 @@ def test_lure_exhaustion_draws_then_prompts_target_choice_after_self_remove():
 
     assert resolved.get('success'), resolved
     assert resolved.get('pending_choice') is True
-    assert names(p1.deck.discard_pile) == ['誘導虛耗']
+    # optional_trash 第 0 項＝「移除剛打出的牌」：誘導虛耗被移出遊戲，不會留在棄牌堆。
+    assert resolved.get('removed_current_card') is True
+    assert names(p1.deck.discard_pile) == []
     assert g.pending_choice and g.pending_choice['type'] == 'target_choice'
     assert g.pending_choice['choice_key'] == 'bait_exhaustion_target'
     assert [entry['label'] for entry in g.pending_choice['targets']] == ['P2']
@@ -476,7 +495,9 @@ def test_imitate_tactics_borrowed_card_returns_to_owner_topdeck_after_action_pla
     assert action_result.get('success'), action_result
     assert names(p2.deck.draw_pile)[-1] == '點燃熱情'
     assert '點燃熱情' not in names(p1.deck.discard_pile)
-    assert names(p1.hand) == ['SecondDraw']
+    # 模仿戰術購買費用含宣傳（宣傳3），構成點燃熱情「本回合曾打出其它購買費用有宣傳的牌」
+    # 條件（2026-07 費用組成修正），借來的點燃熱情因此抽 2 張而非 1 張。
+    assert names(p1.hand) == ['SecondDraw', 'FirstDraw']
 
 
 
@@ -501,9 +522,12 @@ def test_business_network_borrowed_transport_card_grants_its_action_effect_after
     assert result.get('success'), result
     assert g.pending_choice and g.pending_choice['type'] == 'card_choice'
     assert g.pending_choice['choice_key'] == 'use_purchase_area_card'
-    assert [entry['name'] for entry in g.pending_choice['cards']] == ['合作談判', '交通經驗乙', '模仿戰術']
+    # 2026-07-10（19fc9bd）起企業人脈可借整個購買區（含常設 6 張），選單不再只列隨機區。
+    assert [entry['name'] for entry in g.pending_choice['cards']] == [
+        '宣傳家', '思想家', '資助者', '資本家', '分神', '內鬥', '合作談判', '交通經驗乙', '模仿戰術',
+    ]
 
-    resolved = g.resolve_pending_choice(p.id, 1)
+    resolved = g.resolve_pending_choice(p.id, 7)
     assert resolved.get('success'), resolved
     assert resolved.get('chosen_card') == '交通經驗乙'
     assert resolved.get('purchase_index') == 7
@@ -514,23 +538,26 @@ def test_business_network_borrowed_transport_card_grants_its_action_effect_after
 
 
 
-def test_red_support_uses_csv_resource_values_when_played_as_resource():
+def test_red_support_resource_mode_from_rebel_hand_returns_card_to_red_army_discard():
+    # 資源模式對奧援卡是無效果棄置（2026-06-07 裁決）；紅軍奧援是紅軍專屬卡，非紅軍
+    # 玩家以資源模式用掉時，牌應回到紅軍玩家的棄牌堆（2026-07-12 P1 修正），不給任何資源。
     g = make_game()
-    p = g.current_player()
+    red = g.current_player()
     rebel = g.players[1]
     rebel.faction_id = 'hong_kong'
-    p.hand = [g._make_support_card('紅軍奧援')]
-    p.resources = {'money': 0, 'propaganda': 0}
+    g.current_player_index = 1
+    rebel.hand = [g._make_support_card('紅軍奧援')]
+    rebel.resources = {'money': 0, 'propaganda': 0}
+    red.deck.discard_pile = []
+    rebel.deck.discard_pile = []
 
     result = g.play_card(0, mode='resource')
 
     assert result.get('success'), result
-    assert result.get('pending_choice') is True
-    assert p.resources == {'money': 0, 'propaganda': 0}
-    resolved = g.resolve_pending_choice(p.id, 0)
-    assert resolved.get('success'), resolved
-    assert p.resources == {'money': 1, 'propaganda': 1}
-    assert names(rebel.deck.discard_pile)[-1] == '紅軍奧援'
+    assert g.pending_choice is None
+    assert rebel.resources == {'money': 0, 'propaganda': 0}
+    assert names(rebel.deck.discard_pile) == []
+    assert names(red.deck.discard_pile) == ['紅軍奧援']
 
 
 
@@ -595,6 +622,7 @@ def test_intel_network_state_serializes_three_options_for_ui():
     g.turn_phase = TurnPhase.ACTION
     g.current_player_index = 0
     g.pending_base_choices = {}
+    pin_noop_event(g)
     g.players[0].faction_id = 'red_army'
     p1, p2, p3, p4 = g.players
     p1.hand = [card(g, '情報網')]
@@ -611,10 +639,11 @@ def test_intel_network_state_serializes_three_options_for_ui():
     assert state_choice['type'] == 'option_choice'
     assert state_choice['choice_key'] == 'choose_one'
     assert state_choice['source_name'] == '情報網'
+    # 「取消對方行動卡」選項只在反應時機有意義，2026-07（5f50a20）已從自己回合的
+    # choose_one 移除（該用法走獨立的 reaction 流程）；自回合選單只剩兩項。
     assert [opt['label'] for opt in state_choice['options']] == [
         '在至多3位玩家棄牌堆各放入1張內鬥',
         '瓦解己方組織1格內的1個對手組織',
-        '取消1張對方所打出行動卡之能力',
     ]
 
 
@@ -625,6 +654,7 @@ def test_intel_network_first_branch_adds_internal_conflict_without_running_other
     g.turn_phase = TurnPhase.ACTION
     g.current_player_index = 0
     g.pending_base_choices = {}
+    pin_noop_event(g)
     g.players[0].faction_id = 'red_army'
     p1, p2, p3, p4 = g.players
     p1.hand = [card(g, '情報網')]
@@ -674,7 +704,10 @@ def test_intel_network_can_choose_dissolve_branch_instead_of_default_internal_co
 
 
 
-def test_intel_network_can_choose_cancel_branch_without_running_other_branches():
+def test_intel_network_own_turn_choice_has_no_cancel_branch():
+    # 舊第 3 選項「取消對方行動卡」在自己回合本來就永遠無效（context 沒有可取消的牌），
+    # 2026-07（5f50a20）已移除；這裡鎖住「index 2 不再是合法選項」，取消用法由
+    # reaction 流程覆蓋（見 test_intel_network_reaction_cancels_other_player_action...）。
     g = make_game()
     p1, p2 = g.players
     p1.hand = [card(g, '情報網')]
@@ -684,10 +717,10 @@ def test_intel_network_can_choose_cancel_branch_without_running_other_branches()
 
     assert result.get('success'), result
     assert g.pending_choice and g.pending_choice['type'] == 'option_choice'
-    resolved = g.resolve_pending_choice(p1.id, 2)
-    assert resolved.get('success'), resolved
+    assert len(g.pending_choice['options']) == 2
+    rejected = g.resolve_pending_choice(p1.id, 2)
+    assert rejected.get('error') == 'Invalid choice index'
     assert names(p2.deck.discard_pile).count('內鬥') == 0
-    assert g.turn_log.get('canceled_propaganda_card') is None
 
 
 
@@ -875,15 +908,27 @@ def test_tianfang_support_tier3_discards_two_random_cards_from_chosen_target_in_
 
 
 def test_divide_adds_internal_conflict_to_other_players_not_self():
-    g = make_game()
-    p1, p2 = g.players
+    # 卡面「在至多3位玩家棄牌堆各放入1張內鬥」＝每位其他玩家各 1 張、最多 3 位；
+    # 舊斷言「單一目標塞 3 張」不符卡面文字（2026-07-10 7bc0d6b 修正後為現行為）。
+    g = Game([('p1', 'P1'), ('p2', 'P2'), ('p3', 'P3'), ('p4', 'P4')])
+    g.game_phase = GamePhase.MAIN
+    g.turn_phase = TurnPhase.ACTION
+    g.current_player_index = 0
+    g.pending_base_choices = {}
+    pin_noop_event(g)
+    p1, p2, p3, p4 = g.players
+    p1.faction_id = 'red_army'
     p1.hand = [card(g, '離間')]
+    for player in g.players:
+        player.deck.discard_pile = []
 
-    result = g.play_card(0, mode='action', target_player_id=p2.id)
+    result = g.play_card(0, mode='action')
 
     assert result.get('success'), result
     assert names(p1.deck.discard_pile).count('內鬥') == 0
-    assert names(p2.deck.discard_pile).count('內鬥') == 3
+    assert names(p2.deck.discard_pile).count('內鬥') == 1
+    assert names(p3.deck.discard_pile).count('內鬥') == 1
+    assert names(p4.deck.discard_pile).count('內鬥') == 1
 
 
 def test_announce_action_topdecks_latest_card_bought_this_turn_and_gains_propaganda():
@@ -936,7 +981,9 @@ def test_end_turn_prompts_action_announcement_and_draws_purchased_card_after_res
     resolved = g.resolve_pending_choice(p.id, 1)
 
     assert resolved.get('success'), resolved
-    assert g.turn_phase == TurnPhase.EVENT
+    # 現行回合模型（action-first）：回合結束後直接輪到下一位玩家的 ACTION，沒有 EVENT 階段。
+    assert g.turn_phase == TurnPhase.ACTION
+    assert g.current_player().name == 'P2'
     assert 'PurchasedCard' in names(p.hand)
     assert 'PurchasedCard' not in names(p.deck.discard_pile)
     assert '行動預告' in names(p.deck.discard_pile)
@@ -961,7 +1008,9 @@ def test_end_turn_can_skip_action_fundraising_prompt_and_purchased_card_stays_di
     resolved = g.resolve_pending_choice(p.id, 0)
 
     assert resolved.get('success'), resolved
-    assert g.turn_phase == TurnPhase.EVENT
+    # 現行回合模型（action-first）：回合結束後直接輪到下一位玩家的 ACTION，沒有 EVENT 階段。
+    assert g.turn_phase == TurnPhase.ACTION
+    assert g.current_player().name == 'P2'
     assert 'PurchasedCard' not in names(p.hand)
     assert 'PurchasedCard' in names(p.deck.discard_pile)
     assert any('skipped end-turn action topdeck prompt' in line for line in g.action_log)
@@ -985,10 +1034,11 @@ def test_negotiation_draws_actor_and_chosen_other_player_only_and_gains_two_prop
     assert p1.resources['propaganda'] == 2
 
 
-def test_fujian_stance_probe_adds_odd_cost_top_card_to_hand():
+def test_liberals_stance_probe_adds_odd_cost_top_card_to_hand():
     g = make_game()
     p = g.current_player()
-    p.faction_id = 'fujian'
+    # 立場試探現屬自由派（liberals）；舊測試用的 'fujian' 陣營 id 已不存在。
+    p.faction_id = 'liberals'
     p.hand = []
     p.deck.draw_pile = [Card('Bottom', 'command', {}), card(g, '點燃熱情')]
 
@@ -1001,10 +1051,11 @@ def test_fujian_stance_probe_adds_odd_cost_top_card_to_hand():
 
 
 
-def test_fujian_stance_probe_discards_even_cost_top_card():
+def test_liberals_stance_probe_discards_even_cost_top_card():
     g = make_game()
     p = g.current_player()
-    p.faction_id = 'fujian'
+    # 立場試探現屬自由派（liberals）；舊測試用的 'fujian' 陣營 id 已不存在。
+    p.faction_id = 'liberals'
     p.hand = []
     p.deck.draw_pile = [Card('Bottom', 'command', {}), Card('EvenTop', 'command', {'money': 2})]
 
@@ -1017,10 +1068,11 @@ def test_fujian_stance_probe_discards_even_cost_top_card():
 
 
 
-def test_fujian_stance_probe_treats_starter_donor_as_odd_cost_and_adds_it_to_hand():
+def test_liberals_stance_probe_treats_starter_donor_as_odd_cost_and_adds_it_to_hand():
     g = make_game()
     p = g.current_player()
-    p.faction_id = 'fujian'
+    # 立場試探現屬自由派（liberals）；舊測試用的 'fujian' 陣營 id 已不存在。
+    p.faction_id = 'liberals'
     p.hand = [Card('Existing', 'command', {})]
     p.deck.draw_pile = [Card('Bottom', 'command', {}), Card('樂捐者', 'money', {'money': 1})]
     p.deck.discard_pile = []
@@ -1412,39 +1464,52 @@ def test_expand_gains_can_choose_any_card_from_own_discard():
 
 
 
-def test_business_network_borrows_only_from_random_market_and_keeps_market_card_in_place():
+def test_business_network_borrows_from_whole_purchase_area_and_keeps_cards_in_place():
+    # 2026-07-10（19fc9bd）規則盤點修正：卡面「將購買區面朝上的任1張牌」不限隨機區，
+    # 企業人脈的選單涵蓋常設＋隨機整個購買區；牌只是暫借，購買區內容不動。
     g = make_game()
     p = g.current_player()
     p.hand = [card(g, '企業人脈')]
-    static_name = names(g.purchase_area[:6])[0]
-    random_names = names(g.purchase_area[6:])
+    area_names = names(g.purchase_area)
 
     result = g.play_card(0, mode='action')
 
     assert result.get('success'), result
     assert g.pending_choice and g.pending_choice['choice_key'] == 'use_purchase_area_card'
-    assert [entry['name'] for entry in g.pending_choice['cards']] == random_names
-    assert static_name not in [entry['name'] for entry in g.pending_choice['cards']]
-    assert names(g.purchase_area[:6])[0] == static_name
-    assert names(g.purchase_area[6:]) == random_names
+    assert [entry['name'] for entry in g.pending_choice['cards']] == area_names
+    assert names(g.purchase_area) == area_names
 
 
 
-def test_business_network_borrowed_card_returns_to_purchase_area_after_resource_play():
+def test_business_network_choice_auto_plays_borrowed_card_and_returns_it_to_slot():
+    # 企業人脈選定後「視同打出該牌」（行動），沒有再選資源/行動的步驟；打完後牌回到
+    # 購買區原槽位、不留在玩家棄牌堆。購買區釘成固定內容，避免隨機區剛好出現需要
+    # 指定目標的武裝/間諜卡導致自動打出失敗的隨機性。
     g = make_game()
     p = g.current_player()
     p.hand = [card(g, '企業人脈')]
-    random_name = names(g.purchase_area[6:])[0]
+    g.purchase_area = [
+        card(g, '宣傳家'),
+        card(g, '思想家'),
+        card(g, '資助者'),
+        card(g, '資本家'),
+        card(g, '分神'),
+        card(g, '內鬥'),
+        card(g, '領導'),
+    ]
+    p.deck.draw_pile = [Card('DrawA', 'command', {})]
 
     result = g.play_card(0, mode='action')
 
     assert result.get('success'), result
     assert g.pending_choice and g.pending_choice['choice_key'] == 'use_purchase_area_card'
-    resolved = g.resolve_pending_choice(p.id, 0)
+    resolved = g.resolve_pending_choice(p.id, 6)
     assert resolved.get('success'), resolved
-    assert resolved.get('chosen_card') == random_name
-    assert random_name not in names(p.deck.discard_pile)
-    assert names(g.purchase_area[6:])[0] == random_name
+    assert resolved.get('chosen_card') == '領導'
+    # 領導效果（抽1張）由借來的牌發動
+    assert 'DrawA' in names(p.hand)
+    assert '領導' not in names(p.deck.discard_pile)
+    assert names(g.purchase_area)[6] == '領導'
 
 
 
@@ -1469,7 +1534,8 @@ def test_business_network_borrowed_card_returns_to_purchase_area_after_action_pl
 
     assert result.get('success'), result
     assert g.pending_choice and g.pending_choice['choice_key'] == 'use_purchase_area_card'
-    resolved = g.resolve_pending_choice(p.id, 0)
+    # 選單涵蓋整個購買區，手動排的 行動預告 位於 index 6。
+    resolved = g.resolve_pending_choice(p.id, 6)
     assert resolved.get('success'), resolved
     assert resolved.get('chosen_card') == random_name
     assert random_name not in names(p.deck.discard_pile)
@@ -1681,6 +1747,8 @@ def test_strategic_thinker_trashes_self_then_grants_build_and_three_moves():
     result = g.play_card(0, mode='action')
 
     assert result.get('success'), result
+    resolved = resolve_build_town(g, p, '北京')
+    assert resolved.get('success'), resolved
     assert p.organizations.get('北京', 0) == 2
     assert p.moves_left == 3
     assert '思想家' not in names(p.deck.discard_pile)
@@ -1699,6 +1767,8 @@ def test_propagandist_trashes_self_then_grants_build_and_one_move():
     result = g.play_card(0, mode='action')
 
     assert result.get('success'), result
+    resolved = resolve_build_town(g, p, '北京')
+    assert resolved.get('success'), resolved
     assert p.organizations.get('北京', 0) == 2
     assert p.moves_left == 1
     assert '宣傳家' not in names(p.deck.discard_pile)
@@ -1859,7 +1929,7 @@ def test_transport_a_grants_six_moves():
 
 
 
-def test_organization_c_builds_one_in_current_town():
+def test_organization_c_builds_one_via_town_choice():
     g = make_game()
     p = g.current_player()
     p.hand = [card(g, '組織經驗丙')]
@@ -1868,11 +1938,13 @@ def test_organization_c_builds_one_in_current_town():
     result = g.play_card(0, mode='action')
 
     assert result.get('success'), result
+    resolved = resolve_build_town(g, p, '北京')
+    assert resolved.get('success'), resolved
     assert p.organizations.get('北京', 0) == 2
 
 
 
-def test_organization_b_builds_two_in_current_town():
+def test_organization_b_builds_two_via_sequential_town_choices():
     g = make_game()
     p = g.current_player()
     p.hand = [card(g, '組織經驗乙')]
@@ -1881,6 +1953,10 @@ def test_organization_b_builds_two_in_current_town():
     result = g.play_card(0, mode='action')
 
     assert result.get('success'), result
+    first = resolve_build_town(g, p, '北京')
+    assert first.get('success') and first.get('pending_choice'), first
+    second = resolve_build_town(g, p, '北京')
+    assert second.get('success'), second
     assert p.organizations.get('北京', 0) == 3
 
 
@@ -1894,6 +1970,8 @@ def test_organization_a_builds_one_even_with_ignore_distance_flag():
     result = g.play_card(0, mode='action')
 
     assert result.get('success'), result
+    resolved = resolve_build_town(g, p, '北京')
+    assert resolved.get('success'), resolved
     assert p.organizations.get('北京', 0) == 2
 
 
@@ -1994,6 +2072,7 @@ def test_intel_network_first_option_adds_internal_conflict_to_up_to_three_other_
     g.turn_phase = TurnPhase.ACTION
     g.current_player_index = 0
     g.pending_base_choices = {}
+    pin_noop_event(g)
     actor, enemy_a, enemy_b, enemy_c = g.players
     actor.faction_id = 'red_army'
     for player in g.players[1:]:

@@ -20,14 +20,24 @@
       }
     },
     {
-      "name": "propagandist_action_returns_card_builds_and_grants_one_move_without_bait_prompt",
+      "name": "propagandist_action_returns_card_then_builds_via_town_choice_and_grants_one_move",
       "passed": true,
       "details": {
         "result": {
-          "success": true
+          "success": true,
+          "pending_choice": true
         },
-        "before_supply": 15,
-        "after_supply": 16,
+        "resolve_result": {
+          "success": true,
+          "choice_index": 2,
+          "town": "臺北",
+          "selected": {
+            "town": "臺北"
+          },
+          "choice_key": "card_build_organization"
+        },
+        "before_supply": 14,
+        "after_supply": 15,
         "orgs": {
           "臺北": 2
         },
@@ -46,7 +56,9 @@
         "pending_choice": {
           "type": "card_choice",
           "choice_key": "gain_from_discard",
+          "cancellable": false,
           "player_id": "ben",
+          "player_name": null,
           "prompt": "從己方棄牌堆任選1張費用3點以下的牌加入手牌。",
           "source_name": "乘勝追擊",
           "count": null,

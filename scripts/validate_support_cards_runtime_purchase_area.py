@@ -19,7 +19,8 @@ def main():
     o.faction_id = 'red_army'
     o.base = '北京'
     o.organizations = {'北京': 1}
-    g.turn_phase = TurnPhase.ACTION
+    # 2026-06-26 起 buy_card 僅限購買（END）階段；本腳本只驗購買行為，直接設 END。
+    g.turn_phase = TurnPhase.END
     g.current_player_index = 0
 
     purchase_names = [getattr(card, 'name', str(card)) for card in g.purchase_area]
