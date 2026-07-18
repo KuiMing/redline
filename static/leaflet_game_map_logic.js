@@ -321,9 +321,13 @@ function updateStatusPanel() {
   const hintEl = document.getElementById('interactionHint');
 
   if (currentPlayerEl) {
-    currentPlayerEl.textContent = currentPlayerName() || '未連線';
-    // 玩家名稱字色＝其陣營色（2026-07-18 使用者需求）；查不到陣營色時回到預設樣式。
-    const color = factionCampColor(currentPlayerFaction());
+    const curName = currentPlayerName();
+    currentPlayerEl.textContent = curName || '未連線';
+    // 玩家名稱字色＝其陣營色（2026-07-18 使用者需求）；注意 currentPlayerFaction() 回傳的是
+    // 「觀看者自己」的陣營（mapPlayerId），這裡顯示的名字是「當前行動玩家」，必須用該玩家
+    // 自己的陣營查色，否則在對手回合會染成觀看者的顏色（20 回合自動桌測發現的 bug）。
+    const curPlayer = (lastGameState?.players || []).find(p => p.name === curName);
+    const color = curPlayer ? factionCampColor(curPlayer.faction) : null;
     currentPlayerEl.style.color = color || '';
   }
 

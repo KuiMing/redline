@@ -22,3 +22,4 @@ server.log
 /sketches/
 /scripts/debug_analyze_card_ui_report.py
 /scripts/generate_era_structured.py
+playthrough_screens/

@@ -17,10 +17,11 @@
       }
     },
     {
-      "name": "map_sidebar_current_player_name_uses_faction_color",
+      "name": "map_sidebar_current_player_name_uses_that_players_faction_color_on_both_views",
       "ok": true,
       "detail": {
-        "sidebar_color": "rgb(74, 222, 128)",
+        "sidebar_color_ally": "rgb(74, 222, 128)",
+        "sidebar_color_host": "rgb(74, 222, 128)",
         "current_player": "ally",
         "expected": "rgb(74, 222, 128)"
       }

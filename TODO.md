@@ -231,6 +231,13 @@
   - 目前面板位置：右上紅框區，`.event-card-panel` 為 `width: 300px; height: 200px; max-height: 200px; top: 0; right: 24px`。
   - 現有 proof：`docs/records/event-cards/EVENT_CARD_LAYOUT_REDFRAME_300X200_PROOF_2026_05_23.md` 與同名截圖。
 
+### P1.5：2026-07-18 自動桌測（20 回合完整局）發現
+- 執行方式：`scripts/auto_playthrough_20260718.py` 用 Playwright 同控紅軍/綠線兩頁，逐動作截圖（340 張，`playthrough_screens/`，已 gitignore）＋ JSONL 行動紀錄；紅軍 vs 綠線玩滿 20 回合，紅軍第 21 回合結算獲勝（組織 10 vs 5），全程驅動零卡死。
+- [done] 地圖側欄「當前行動玩家」名字染錯色：本日稍早的名字上色改動誤用 `currentPlayerFaction()`（回傳**觀看者**陣營，非當前行動玩家陣營），對手回合時名字會被染成觀看者的顏色（紅軍視角看 GREEN 變紅字）。已修正為以當前行動玩家自身陣營查色；`validate_map_label_zoom_and_base_view.py` 加強為兩個玩家頁面同驗（viewer≠current 那頁必抓得到舊 bug），6/6 連跑 3 次穩定。
+- [todo] 遊戲結束沒有任何勝利畫面：`state.winner` 前端從未渲染——第 21 回合分出勝負後 HUD 仍顯示「購買階段／當前玩家」，玩家完全不知道遊戲已結束、誰贏了。需要一個結束畫面（贏家、勝利條件、最終戰況），樣式待定。
+- [todo] 建房者的「行動代號」輸入被無聲忽略：`createRoom()` POST `/create` 不帶名字、伺服器寫死 `'host'`（`server/main.py` L244），只有加入者的名字生效。修法：/create 帶上 `playerName` 輸入值、伺服器採用（涉及 server 邏輯，待確認後修）。
+- 觀察（非 bug）：簡單策略下購買集中在常設區第一格（40 次購買有 30 次宣傳家），隨機購買區的卡幾乎沒被買——之後若要更深入的自動桌測，驅動策略可改成優先買隨機區。
+
 ### P2：repo hygiene / validator hygiene
 - [todo] 維持 root record-like count = 0。
   - 新增 validation reports、proof markdown、screenshots 時，直接放到 `docs/records/<topic>/`。

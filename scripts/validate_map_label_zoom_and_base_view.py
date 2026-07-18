@@ -97,8 +97,19 @@ def check(browser):
         {'view': view},
     )
 
-    # --- 2. 側欄「當前行動玩家」名字使用陣營色 ---
-    sidebar_color = ally.evaluate(
+    # --- 2. 側欄「當前行動玩家」名字使用「該玩家自己」的陣營色 ---
+    # 必須在兩個玩家的頁面都驗：舊 bug 是用「觀看者」的陣營查色，viewer ≠ current 的那一頁
+    # 會染錯色（例如紅軍視角把 GREEN 的名字染成紅色）；不論起始玩家是誰，兩頁同驗必抓得到。
+    host.click('button.game-tab[data-view="map"]')
+    host.wait_for_timeout(2500)
+    sidebar_color_ally = ally.evaluate(
+        """() => {
+          const f = document.getElementById('strategicMapFrame');
+          const el = f.contentWindow.document.getElementById('statusCurrentPlayer');
+          return el ? el.style.color : null;
+        }"""
+    )
+    sidebar_color_host = host.evaluate(
         """() => {
           const f = document.getElementById('strategicMapFrame');
           const el = f.contentWindow.document.getElementById('statusCurrentPlayer');
@@ -109,9 +120,10 @@ def check(browser):
     # 起始玩家可能是 host（紅軍 #f04f56）或 ally（綠線 #4ade80）
     expected = 'rgb(240, 79, 86)' if current_is_host == 'host' else 'rgb(74, 222, 128)'
     record(
-        'map_sidebar_current_player_name_uses_faction_color',
-        sidebar_color == expected,
-        {'sidebar_color': sidebar_color, 'current_player': current_is_host, 'expected': expected},
+        'map_sidebar_current_player_name_uses_that_players_faction_color_on_both_views',
+        sidebar_color_ally == expected and sidebar_color_host == expected,
+        {'sidebar_color_ally': sidebar_color_ally, 'sidebar_color_host': sidebar_color_host,
+         'current_player': current_is_host, 'expected': expected},
     )
 
     # --- 3. 標籤 zoom 門檻：ally 開局在根據地臺北有 1 個組織；遠 zoom 標籤只有「臺北 1」、
