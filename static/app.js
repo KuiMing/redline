@@ -450,6 +450,19 @@ function factionCategoryOf(factionId) {
   return 'rebel';
 }
 
+// 與地圖 iframe（leaflet_game_map_logic.js 的 palette／FACTION_COLOR_OVERRIDE）一致的陣營代表色，
+// 供玩家名稱字色使用（2026-07-18 使用者需求：使用者名稱字色＝陣營色）。
+const FACTION_CATEGORY_COLOR = {
+  red_army: '#f04f56', taiwan: '#3fb6ff', hong_kong: '#f472b6', tibet: '#eab308',
+  uyghur: '#34d399', kazakh: '#60a5fa', mongol: '#c084fc', manchuria: '#93c5fd', rebel: '#f97316',
+};
+const FACTION_NAME_COLOR_OVERRIDE = { taiwan_green: '#22c55e', taiwan_blue: '#3fb6ff' };
+
+function factionNameColor(factionId) {
+  if (!factionId) return null;
+  return FACTION_NAME_COLOR_OVERRIDE[factionId] || FACTION_CATEGORY_COLOR[factionCategoryOf(factionId)] || null;
+}
+
 function factionDisplayName(factionId) {
   for (const category of availableFactionCategories) {
     for (const opt of (category.options || [])) {
@@ -2405,7 +2418,7 @@ function renderPlayerStatusCards(state) {
         <div class="player-status-top">
           <div class="player-status-avatar">${initial}</div>
           <div class="player-status-id">
-            <div class="player-status-name">${escapeHtml(player.name || '未命名玩家')}</div>
+            <div class="player-status-name"${factionNameColor(player.faction) ? ` style="color:${factionNameColor(player.faction)}"` : ''}>${escapeHtml(player.name || '未命名玩家')}</div>
             <div class="player-status-subtitle">${isCurrent ? '當前行動玩家' : '玩家戰況'}</div>
           </div>
           ${isCurrent ? '<span class="player-status-current">當前玩家</span>' : ''}
@@ -2481,7 +2494,7 @@ async function render(state) {
       <div class="hud-main-row">
         <span class="hud-chip hud-chip-primary">回合 ${state.turn}</span>
         <span class="hud-chip hud-chip-primary">${phaseLabel}階段</span>
-        <span class="hud-chip">當前玩家 ${escapeHtml(state.current_player)}</span>
+        <span class="hud-chip">當前玩家 <span${(() => { const f = (state.players || []).find(p => p.name === state.current_player)?.faction; const c = factionNameColor(f); return c ? ` style="color:${c};font-weight:700"` : ''; })()}>${escapeHtml(state.current_player)}</span></span>
         <span class="hud-chip">手牌 ${myHand}</span>
         <span class="hud-chip hud-chip-resource">資金 ${myMoney}</span>
         <span class="hud-chip hud-chip-resource">宣傳 ${myPropaganda}</span>

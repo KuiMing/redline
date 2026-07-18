@@ -28,6 +28,7 @@ def request_json(path, payload=None):
     return json.loads(urllib.request.urlopen(req, timeout=20).read().decode('utf-8'))
 
 
+# 2026-07-18 起陣營標籤有 zoom 門檻（FACTION_LABEL_MIN_ZOOM=10），本腳本驗證完整標籤時視角需 zoom 10。
 def check_page(host, ally):
     results = []
 
@@ -61,7 +62,7 @@ def check_page(host, ally):
     host.click('button.game-tab[data-view="map"]')
     host.wait_for_timeout(2500)  # let the map iframe's own WS connect and /factions resolve
 
-    host.evaluate("() => { const f = document.getElementById('strategicMapFrame'); f.contentWindow.__redlinePlayableMap.setView([25.033, 121.5654], 9, {animate:false}); }")
+    host.evaluate("() => { const f = document.getElementById('strategicMapFrame'); f.contentWindow.__redlinePlayableMap.setView([25.033, 121.5654], 10, {animate:false}); }")
     host.wait_for_timeout(800)
 
     near_taipei = host.evaluate(
@@ -102,7 +103,7 @@ def check_page(host, ally):
         {'empty_neighbor': empty_neighbor},
     )
 
-    host.evaluate("() => { const f = document.getElementById('strategicMapFrame'); f.contentWindow.__redlinePlayableMap.setView([39.9042, 116.4074], 9, {animate:false}); }")
+    host.evaluate("() => { const f = document.getElementById('strategicMapFrame'); f.contentWindow.__redlinePlayableMap.setView([39.9042, 116.4074], 10, {animate:false}); }")
     host.wait_for_timeout(800)
     near_beijing = host.evaluate(
         """() => {

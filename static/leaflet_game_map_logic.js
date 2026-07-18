@@ -320,6 +320,9 @@ function updateStatusPanel() {
 
   if (currentPlayerEl) {
     currentPlayerEl.textContent = currentPlayerName() || '未連線';
+    // 玩家名稱字色＝其陣營色（2026-07-18 使用者需求）；查不到陣營色時回到預設樣式。
+    const color = factionCampColor(currentPlayerFaction());
+    currentPlayerEl.style.color = color || '';
   }
 
   if (selectedTownEl) {
@@ -450,12 +453,19 @@ function actualTownOwnerName(townName) {
   return leader?.player || null;
 }
 
+// 陣營標籤只在 zoom >= FACTION_LABEL_MIN_ZOOM 時附加：北台灣等城鎮密集區在遠視角下，
+// 長標籤（如「臺北 1（臺灣（綠線））」）會互相覆蓋蓋字（2026-07-18 使用者裁決採 zoom 門檻方案；
+// 遠視角的陣營資訊由圓圈的陣營填色承擔）。實測 zoom 9（開局根據地視角）長標籤仍與新北相疊、
+// zoom 10 才完全散開，故門檻取 10。
+const FACTION_LABEL_MIN_ZOOM = 10;
+
 function labelTextForTown(townName) {
   const total = totalOrganizationsInTown(townName);
   if (total <= 0) return townName;
   const owner = actualTownOwnerName(townName);
   const player = (lastGameState?.players || []).find(p => p.name === owner);
-  const factionText = player?.faction ? factionLabel(player.faction) : null;
+  const showFaction = map.getZoom() >= FACTION_LABEL_MIN_ZOOM;
+  const factionText = showFaction && player?.faction ? factionLabel(player.faction) : null;
   return factionText ? `${townName} ${total}（${factionText}）` : `${townName} ${total}`;
 }
 
@@ -839,6 +849,7 @@ function updateDynamicStyles() {
     }
     if (layer.getTooltip && layer.getTooltip()) {
       layer.getTooltip().options.offset = [0, -(markerRadius(z) + 4)];
+      if (name) layer.setTooltipContent(labelTextForTown(name));
     }
   });
   currentSharedBadges.forEach((badge, townName) => {
@@ -1014,9 +1025,23 @@ window.addEventListener('message', (event) => {
   applySupportChoiceHighlight(data.payload || null);
 });
 
+let initialBaseViewDone = false;
+
+function focusOwnBaseOnFirstState(state) {
+  // 開局預設視角是整個亞洲（focusAsia），玩家每場都要自己 zoom 到根據地；
+  // 改為第一份遊戲狀態進來時直接以觀看者自己的根據地為中心 zoom 9（2026-07-18 使用者需求）。
+  if (initialBaseViewDone || !state || state.error) return;
+  const me = (state.players || []).find(p => p.id === mapPlayerId);
+  const baseTown = me && me.base ? byName.get(me.base) : null;
+  if (!baseTown) return;
+  map.setView([baseTown.lat, baseTown.lon], 9, { animate: false });
+  initialBaseViewDone = true;
+}
+
 function applyGameStateToMap(state) {
   const resolvingMove = pendingMove && !state?.error ? { ...pendingMove } : null;
   lastGameState = state;
+  focusOwnBaseOnFirstState(state);
   window.__lastMapState = state;
   const pendingChoice = state?.pending_choice || null;
   const mapChoiceKeys = ['event_build_organization', 'era_red_build_near_target', 'card_build_organization', 'support_interaction', 'card_dissolve_interaction', 'intel_network_dissolve_target', 'event_red_dissolve', 'red_army_state_security_target', 'era_red_bonus_dissolve_target'];

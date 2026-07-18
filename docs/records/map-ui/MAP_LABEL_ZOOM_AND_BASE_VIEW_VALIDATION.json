@@ -1,0 +1,72 @@
+{
+  "summary": {
+    "total": 6,
+    "passed": 6,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "initial_view_centers_on_own_base_at_zoom_9",
+      "ok": true,
+      "detail": {
+        "view": {
+          "lat": 25.033,
+          "lon": 121.5654,
+          "zoom": 9
+        }
+      }
+    },
+    {
+      "name": "map_sidebar_current_player_name_uses_faction_color",
+      "ok": true,
+      "detail": {
+        "sidebar_color": "rgb(34, 197, 94)",
+        "current_player": "ally",
+        "expected": "rgb(34, 197, 94)"
+      }
+    },
+    {
+      "name": "far_zoom_label_omits_faction_text",
+      "ok": true,
+      "detail": {
+        "has_taipei_org": true,
+        "label_far": "臺北 1"
+      }
+    },
+    {
+      "name": "near_zoom_label_includes_faction_text",
+      "ok": true,
+      "detail": {
+        "label_near": "臺北 1（臺灣（綠線））"
+      }
+    },
+    {
+      "name": "status_overview_names_use_faction_colors",
+      "ok": true,
+      "detail": {
+        "status_colors": [
+          {
+            "name": "host",
+            "color": "rgb(240, 79, 86)"
+          },
+          {
+            "name": "ally",
+            "color": "rgb(34, 197, 94)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "hud_current_player_name_uses_faction_color",
+      "ok": true,
+      "detail": {
+        "hud_color": "rgb(34, 197, 94)",
+        "expected": "rgb(34, 197, 94)"
+      }
+    }
+  ],
+  "screenshots": [
+    "/Users/benmini/.openclaw/workspace/redline/docs/records/map-ui/map_label_far_zoom.png",
+    "/Users/benmini/.openclaw/workspace/redline/docs/records/map-ui/map_label_near_zoom.png"
+  ]
+}
