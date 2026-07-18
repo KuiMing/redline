@@ -22,7 +22,7 @@ const CAMP_COLOR_KEY = {
 // The Taiwan camp shares one palette hue, but the green line / blue line must read as
 // green / blue respectively, so those two factions override the camp colour.
 const FACTION_COLOR_OVERRIDE = {
-  taiwan_green: "#22c55e",  // 綠線 → green
+  taiwan_green: "#4ade80",  // 綠線 → green（2026-07-18 使用者要求再淺一階，拉開與藏國深綠的距離）
   taiwan_blue: "#3fb6ff",   // 藍線 → blue
 };
 let factionMeta = new Map();

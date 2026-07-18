@@ -106,8 +106,8 @@ def check(browser):
         }"""
     )
     current_is_host = ally.evaluate("() => window.lastGameState?.current_player")
-    # 起始玩家可能是 host（紅軍 #f04f56）或 ally（綠線 #22c55e）
-    expected = 'rgb(240, 79, 86)' if current_is_host == 'host' else 'rgb(34, 197, 94)'
+    # 起始玩家可能是 host（紅軍 #f04f56）或 ally（綠線 #4ade80）
+    expected = 'rgb(240, 79, 86)' if current_is_host == 'host' else 'rgb(74, 222, 128)'
     record(
         'map_sidebar_current_player_name_uses_faction_color',
         sidebar_color == expected,
@@ -152,7 +152,7 @@ def check(browser):
     by_name = {entry['name']: entry['color'] for entry in status_colors}
     record(
         'status_overview_names_use_faction_colors',
-        by_name.get('host') == 'rgb(240, 79, 86)' and by_name.get('ally') == 'rgb(34, 197, 94)',
+        by_name.get('host') == 'rgb(240, 79, 86)' and by_name.get('ally') == 'rgb(74, 222, 128)',
         {'status_colors': status_colors},
     )
     hud_color = ally.evaluate(

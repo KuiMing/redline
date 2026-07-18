@@ -93,7 +93,7 @@ def check_page(host, ally):
     )
     record(
         'taipei_marker_uses_green_line_color_not_gray_fallback',
-        bool(taipei) and taipei['fillColor'] == '#22c55e',
+        bool(taipei) and taipei['fillColor'] == '#4ade80',
         {'fillColor': taipei['fillColor'] if taipei else None},
     )
     empty_neighbor = next((o for o in near_taipei if o['content'] == '新北'), None)

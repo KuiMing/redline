@@ -80,7 +80,7 @@ def check_flow(page):
     base_taipei = marker_at(page, *COORDS['臺北'])
     record(
         'green_line_org_town_is_green_before_selection',
-        base_taipei and base_taipei['fill'] == '#22c55e' and base_taipei['fillOpacity'] >= 0.9,
+        base_taipei and base_taipei['fill'] == '#4ade80' and base_taipei['fillOpacity'] >= 0.9,
         {'臺北': base_taipei},
     )
 
@@ -88,7 +88,7 @@ def check_flow(page):
     sel_taipei = marker_at(page, *COORDS['臺北'])
     record(
         'selecting_org_town_keeps_solid_faction_fill',
-        sel_taipei and sel_taipei['fill'] == '#22c55e' and sel_taipei['fillOpacity'] >= 0.9 and sel_taipei['color'] == '#ffffff',
+        sel_taipei and sel_taipei['fill'] == '#4ade80' and sel_taipei['fillOpacity'] >= 0.9 and sel_taipei['color'] == '#ffffff',
         {'臺北': sel_taipei},
     )
 
@@ -116,7 +116,7 @@ def check_flow(page):
     taipei_after = marker_at(page, *COORDS['臺北'])
     record(
         'other_org_town_returns_to_solid_green_after_reselect',
-        taipei_after and taipei_after['fill'] == '#22c55e' and taipei_after['fillOpacity'] >= 0.9,
+        taipei_after and taipei_after['fill'] == '#4ade80' and taipei_after['fillOpacity'] >= 0.9,
         {'臺北': taipei_after},
     )
 

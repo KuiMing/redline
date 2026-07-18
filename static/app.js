@@ -457,7 +457,7 @@ const FACTION_CATEGORY_COLOR = {
   red_army: '#f04f56', taiwan: '#3fb6ff', hong_kong: '#a855f7', tibet: '#15803d',
   uyghur: '#93c5fd', kazakh: '#14b8a6', mongol: '#2563eb', manchuria: '#eab308', rebel: '#f97316',
 };
-const FACTION_NAME_COLOR_OVERRIDE = { taiwan_green: '#22c55e', taiwan_blue: '#3fb6ff' };
+const FACTION_NAME_COLOR_OVERRIDE = { taiwan_green: '#4ade80', taiwan_blue: '#3fb6ff' };
 
 function factionNameColor(factionId) {
   if (!factionId) return null;
