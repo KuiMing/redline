@@ -1,5 +1,5 @@
 {
-  "game_id": "e0969597-84e9-43e1-ad98-b6d462bb16af",
+  "game_id": "73a4325c-debc-4ccb-ac3d-a8d6986f8180",
   "summary": {
     "total": 6,
     "passed": 6,
@@ -13,18 +13,18 @@
         "choose_host": {
           "success": true,
           "factions": {
-            "61cacef2-db5c-42ec-bb01-aed5d5497666": "red_army"
+            "ceea9276-225a-460b-a771-843f951f3d92": "red_army"
           },
           "bases": {}
         },
         "choose_ally": {
           "success": true,
           "factions": {
-            "61cacef2-db5c-42ec-bb01-aed5d5497666": "red_army",
-            "d940cbb0-8433-4666-b043-0694b2840bb8": "taiwan_green"
+            "ceea9276-225a-460b-a771-843f951f3d92": "red_army",
+            "f1c551cb-4e8d-4f50-b623-2c35c62a89fb": "taiwan_green"
           },
           "bases": {
-            "d940cbb0-8433-4666-b043-0694b2840bb8": "臺北"
+            "f1c551cb-4e8d-4f50-b623-2c35c62a89fb": "臺北"
           }
         }
       }

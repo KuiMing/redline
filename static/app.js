@@ -452,9 +452,10 @@ function factionCategoryOf(factionId) {
 
 // 與地圖 iframe（leaflet_game_map_logic.js 的 palette／FACTION_COLOR_OVERRIDE）一致的陣營代表色，
 // 供玩家名稱字色使用（2026-07-18 使用者需求：使用者名稱字色＝陣營色）。
+// 2026-07-18 依使用者提供的原版桌遊陣營色校正（香港紫/蒙古深藍/藏國綠/哈薩克青綠/維吾爾淺藍/滿洲金黃）。
 const FACTION_CATEGORY_COLOR = {
-  red_army: '#f04f56', taiwan: '#3fb6ff', hong_kong: '#f472b6', tibet: '#eab308',
-  uyghur: '#34d399', kazakh: '#60a5fa', mongol: '#c084fc', manchuria: '#93c5fd', rebel: '#f97316',
+  red_army: '#f04f56', taiwan: '#3fb6ff', hong_kong: '#a855f7', tibet: '#16a34a',
+  uyghur: '#93c5fd', kazakh: '#14b8a6', mongol: '#2563eb', manchuria: '#eab308', rebel: '#f97316',
 };
 const FACTION_NAME_COLOR_OVERRIDE = { taiwan_green: '#22c55e', taiwan_blue: '#3fb6ff' };
 

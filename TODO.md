@@ -117,6 +117,7 @@
     - ② 玩家名稱字色＝陣營色：`app.js` 新增 `FACTION_CATEGORY_COLOR`／`FACTION_NAME_COLOR_OVERRIDE`／`factionNameColor()`（與地圖 iframe 的 palette／override 同值），套用於戰況總覽玩家卡名稱與 HUD「當前玩家」名字；地圖側欄「當前行動玩家」同步上色（`updateStatusPanel`）。
     - ③ 開局視角：地圖 iframe 收到第一份遊戲狀態時，以觀看者自己的根據地為中心 `setView(zoom 9)`（`focusOwnBaseOnFirstState`，用 `mapPlayerId` 找 viewer 的 base），取代原本每場都要自己從整個亞洲視角 zoom in。
   - 驗證：新增 `python3 scripts/validate_map_label_zoom_and_base_view.py`（6/6，連跑 3 次穩定：開局視角以臺北為中心 zoom 9、地圖側欄當前玩家名為陣營色、zoom 9 標籤無陣營文字、zoom 10 有、戰況總覽兩位玩家名各為紅軍紅/綠線綠、HUD 當前玩家名陣營色）；proof `docs/records/map-ui/MAP_LABEL_ZOOM_AND_BASE_VIEW_VALIDATION.{json,md}` + `map_label_far_zoom.png`／`map_label_near_zoom.png`。既有 `validate_map_faction_display.py`（6/6）／`validate_map_selection_highlight.py`（7/7）需回歸確認。
+  - 2026-07-18 後續（使用者提供原版桌遊陣營色）：香港紫、蒙古深藍、藏國綠、哈薩克青綠、維吾爾淺藍、滿洲金黃——六色依原版校正（`leaflet_game_map_logic.js` 的 `palette` 與 `app.js` 的 `FACTION_CATEGORY_COLOR` 同步改：香港 #a855f7、蒙古 #2563eb、藏國 #16a34a、哈薩克 #14b8a6、維吾爾 #93c5fd、滿洲 #eab308）。藏國改綠後與臺灣綠線（#22c55e）同色系，取深一階綠做區隔；`palette` 同時是地區統治者的城鎮底色，一併生效（原版本就是地區色＝陣營色）。地圖驗證回歸全綠（label_zoom 6/6、faction_display 6/6、selection_highlight 7/7）。
 
 - [done] Playtest UI polish：大量棄牌選擇／展示區需要可捲動。
   - 2026-07-04 回報情境：觸發 `貿易戰加劇` 的成功條件時，因棄牌數量太多，畫面只看得到一部分棄牌。

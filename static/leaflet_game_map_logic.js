@@ -5,9 +5,11 @@ const rulers = [...new Set(Object.values(MAP_DATA.towns).flatMap(t=>t.ruler||[])
 const camps = [...new Set(Object.values(MAP_DATA.towns).flatMap(t=>t.camp||[]))].sort();
 const types = [...new Set(Object.values(MAP_DATA.towns).map(t=>t.type).filter(Boolean))].sort();
 
+// 2026-07-18 使用者提供原版桌遊陣營色並依此校正：香港=紫、蒙古=深藍、藏國=綠、
+// 哈薩克=青綠、維吾爾=淺藍、滿洲=金黃。藏國取比臺灣綠線（#22c55e）深一階的綠做區隔。
 const palette = {
   "臺灣":"#3fb6ff","紅軍":"#f04f56","東洋":"#a78bfa","北國":"#67e8f9","南洋":"#22c55e","印度":"#f59e0b","天方":"#fb7185",
-  "香港":"#f472b6","藏國":"#eab308","維吾爾":"#34d399","哈薩克":"#60a5fa","蒙古":"#c084fc","滿洲":"#93c5fd","反賊":"#f97316"
+  "香港":"#a855f7","藏國":"#16a34a","維吾爾":"#93c5fd","哈薩克":"#14b8a6","蒙古":"#2563eb","滿洲":"#eab308","反賊":"#f97316"
 };
 const typePalette = {"軍火庫":"#ffcf5a","機場":"#93c5fd","default":"#cbd5e1"};
 
