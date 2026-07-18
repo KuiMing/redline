@@ -132,7 +132,7 @@
   ],
   "rulebook_deviation_report": {
     "rulebook_step8_expected_deck": "間諜/組織/整肅全部 47 張 + 隨機 18 張奧援 + 隨機 35 張其它一般卡 = 100 張",
-    "deviation_1_market_modes": "sample_53（lobby「53 張核心」選項）＝18 奧援＋35 一般卡，未保證間諜/組織/整肅全數入庫；all_cards（「全部卡牌」）＝整個 pool。兩種模式都不是規則書步驟⑧的組成——sample_53 為刻意的 MVP 精簡選項。",
+    "deviation_1_market_modes": "sample_53（lobby「53 張核心」選項）＝18 奧援＋35 一般卡，未保證間諜/組織/整肅全數入庫；all_cards（「全部卡牌」）＝整個 pool。兩種模式都不是規則書步驟⑧的組成——sample_53 為刻意的 MVP 精簡選項。2026-07-18 使用者裁決：先不改；日後若要做規則書 100 張模式（間諜/組織/整肅全數＋隨機18奧援＋隨機35其它），可取代 sample_53 或做成 lobby 第三個選項。",
     "resolved_2026_07_17_general_copies": "原 deviation_2：structured JSON 已補 copies 欄位（來源 CSV 卡牌張數），_initial_purchase_deck 依實體張數展開一般卡池（181 張），sample_53 的隨機 35 張改為從實體卡池抽出（同名卡可重複，等同實際洗牌）；all_cards 為完整 245 張。",
     "resolved_2026_07_16_support_copies": {
       "note": "原 deviation_3：support CSV 每種奧援兩列（各一種實體印刷變體、各印一組不同 II 級地區）各 4 張、合計 8；taxonomy 曾誤記頂層 copies 為 4（只抄一列）。已修正 taxonomy 讓每個 regions[] 項目各自帶 copies:4，頂層加總為 8，且 game.py 的 _support_card_tier 改為只依牌本身的 variant_index 檢查該卡印刷的那組地區，不再把兩種變體地區併查。",
@@ -159,7 +159,7 @@
         "紅軍奧援": 1
       }
     },
-    "deviation_4_deck_refill": "規則書「牌庫用盡時從剩餘行動卡任取一疊補上」；實作為重建整份 initial deck（近似）。",
+    "deviation_4_deck_refill": "規則書「牌庫用盡時從剩餘行動卡任取一疊補上」；實作為重建整份 initial deck（近似，已買走的卡會再次出現）。2026-07-18 使用者裁決：先不改；日後若要做，可把開局未抽進牌庫的卡記成剩卡池、用盡時從中補、剩卡用完即不再補。",
     "mandatory_kind_copies_csv": {
       "派遣間諜": 5,
       "內應間諜": 3,
