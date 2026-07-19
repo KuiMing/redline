@@ -240,6 +240,7 @@
   - 2026-07-19 已修正：前端 `/create` 帶上輸入框的名字，伺服器採用（空值才 fallback `host`）。
   - 兩項驗證：新增 `python3 scripts/validate_victory_screen_and_creator_name.py`（5/5，連跑 3 次穩定：建房者輸入名生效、綠線贏家 modal 名字染綠、陣營/回合/戰況表正確、縮小徽章與重開、`red_army` 贏家解析為紅軍玩家染紅）；proof `docs/records/playtest-flow/VICTORY_SCREEN_AND_CREATOR_NAME_VALIDATION.{json,md}` + `victory_screen.png`。回歸（map label zoom、detail button、faction display 等走 lobby 建房流程的驗證）全綠。
 - 觀察（非 bug）：簡單策略下購買集中在常設區第一格（40 次購買有 30 次宣傳家），隨機購買區的卡幾乎沒被買——之後若要更深入的自動桌測，驅動策略可改成優先買隨機區。
+- 2026-07-19 二輪：驅動參數化（`--preset 2p/4p`、`--turns`、`--buy-strategy first/random-first`、`--label`，commit `1a096de`）後跑 **4 人局**（紅軍/綠線/香港/西藏德拉敦，random-first 購買）：完整 20 回合、紅軍第 21 回合結算勝（組織 4/3/1/4）、691 張截圖（`playthrough_screens/4p_run1/`）。購買覆蓋大幅變廣（80 次購買含 21 張奧援卡與 15+ 種行動卡）；反應時機（`cancel_other_player_action`）被觸發 8 次，並以引擎層重現確認「反應視窗開著時 advance 會被伺服器正確回絕」——驅動記到的 8 個「advance disabled」issue 全是驅動搶拍雜訊，非遊戲 bug。本輪無新遊戲問題。
 
 ### P2：repo hygiene / validator hygiene
 - [todo] 維持 root record-like count = 0。
