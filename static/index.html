@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>REDLINE // STRATEGIC COMMAND</title>
-  <link rel="stylesheet" href="/static/style.css?v=faction-colors-original-20260718" />
+  <link rel="stylesheet" href="/static/style.css?v=victory-screen-creator-name-20260719" />
 </head>
 <body>
 <div id="stageViewport">
@@ -171,6 +171,20 @@
 
 <div id="eraPinnedNotice" style="display:none;"></div>
 
+<div id="victoryModal" class="modal-overlay" style="display:none;">
+  <div class="modal-glass victory-glass">
+    <div class="panel-title">遊戲結束</div>
+    <div id="victoryTitle" class="modal-title-text"></div>
+    <div id="victorySubtitle" class="modal-body-text"></div>
+    <div id="victoryCoWinners" class="modal-body-text" style="display:none;"></div>
+    <div id="victorySummary" class="victory-summary"></div>
+    <div class="era-achievement-actions">
+      <button id="victoryMinimizeBtn" class="modal-choice-btn">檢視最終盤面</button>
+    </div>
+  </div>
+</div>
+<button id="victoryBadge" type="button" style="display:none;"></button>
+
 <div id="gameShell" style="display:none">
   <div id="gameTabs">
     <button class="game-tab active" data-view="command">指揮中心</button>
@@ -239,6 +253,6 @@
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="/static/app.js?v=green-line-lighter-20260718"></script>
+<script src="/static/app.js?v=victory-screen-creator-name-20260719"></script>
 </body>
 </html>

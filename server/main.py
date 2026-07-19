@@ -237,11 +237,14 @@ def card_presentation():
 
 
 @app.post("/create")
-def create_room():
+def create_room(payload: dict = None):
     game_id = manager.create_room()
     host_id = str(uuid.uuid4())
 
-    lobby[game_id] = [(host_id, 'host')]  # host is immediately in lobby
+    # 建房者的「行動代號」以前被無聲忽略（永遠叫 host）；現在採用前端帶來的名字，
+    # 空值才 fallback 成 host（2026-07-18 自動桌測發現，2026-07-19 修正）。
+    host_name = str((payload or {}).get("name") or "").strip() or "host"
+    lobby[game_id] = [(host_id, host_name)]  # host is immediately in lobby
     lobby_hosts[game_id] = host_id
     lobby_factions[game_id] = {}
     lobby_bases[game_id] = {}
@@ -2127,6 +2130,51 @@ def test_setup_spy_proof(payload: dict):
         "enemy_id": enemy.id,
         "card_name": card_name,
         "players": [{"id": p.id, "name": p.name, "faction": p.faction_id, "base": p.base} for p in game.players],
+        "state": game.state(),
+    }
+
+
+@app.post("/test/setup-victory-proof")
+def test_setup_victory_proof(payload: dict):
+    """Test-only：建立一場已分出勝負的 2 人局，供勝利畫面 UI proof 使用。
+
+    payload.winner：'red_army'（紅軍保底勝）或省略（預設綠線玩家名獲勝）。
+    """
+    game_id = str(uuid.uuid4())
+    green_name = payload.get("winner_name", "GREEN")
+    players = [(str(uuid.uuid4()), green_name), (str(uuid.uuid4()), "RED")]
+    game = Game(players)
+    green, red = game.players
+
+    green.faction_id = "taiwan_green"
+    green.base = "臺北"
+    green.organizations = {"臺北": 3, "桃園": 2}
+    green.resources = {"money": 2, "propaganda": 4}
+    red.faction_id = "red_army"
+    red.base = "北京"
+    red.organizations = {"北京": 5, "天津": 2}
+    red.resources = {"money": 1, "propaganda": 0}
+
+    game.game_phase = GamePhase.FINISHED
+    game.turn = int(payload.get("turn", 21) or 21)
+    game.winner = payload.get("winner", green_name)
+    game.co_winners = list(payload.get("co_winners", []) or [])
+    game.pending_base_choices = {}
+    game.id = game_id
+
+    manager.games[game_id] = game
+    manager.connections[game_id] = manager.connections.get(game_id, {})
+    lobby[game_id] = list(zip([p.id for p in game.players], [p.name for p in game.players]))
+    lobby_hosts[game_id] = green.id
+    lobby_factions[game_id] = {green.id: green.faction_id, red.id: red.faction_id}
+    lobby_bases[game_id] = {green.id: green.base, red.id: red.base}
+
+    return {
+        "success": True,
+        "game_id": game_id,
+        "player_id": green.id,
+        "red_player_id": red.id,
+        "winner": game.winner,
         "state": game.state(),
     }
 

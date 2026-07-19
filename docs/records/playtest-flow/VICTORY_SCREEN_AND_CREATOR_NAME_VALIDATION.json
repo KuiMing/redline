@@ -1,0 +1,55 @@
+{
+  "summary": {
+    "total": 5,
+    "passed": 5,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "creator_typed_name_is_used_not_host",
+      "ok": true,
+      "detail": {
+        "roster_name": "測試代號X"
+      }
+    },
+    {
+      "name": "green_winner_modal_shows_name_in_faction_color",
+      "ok": true,
+      "detail": {
+        "visible": true,
+        "title": "GREEN 獲勝",
+        "title_color": "rgb(74, 222, 128)"
+      }
+    },
+    {
+      "name": "modal_shows_faction_turn_and_player_summary",
+      "ok": true,
+      "detail": {
+        "subtitle": "臺灣（綠線）｜第 21 回合結算",
+        "rows": 2,
+        "winner_row": "GREEN 🏆"
+      }
+    },
+    {
+      "name": "minimize_shows_badge_and_badge_reopens_modal",
+      "ok": true,
+      "detail": {
+        "minimized": {
+          "modal": "none",
+          "badge": "block",
+          "badge_text": "遊戲結束：GREEN 獲勝｜點擊查看結果"
+        },
+        "reopened": "flex"
+      }
+    },
+    {
+      "name": "red_army_winner_resolves_to_red_player_in_red",
+      "ok": true,
+      "detail": {
+        "title": "RED 獲勝",
+        "color": "rgb(240, 79, 86)"
+      }
+    }
+  ],
+  "screenshot": "/Users/benmini/.openclaw/workspace/redline/docs/records/playtest-flow/victory_screen.png"
+}

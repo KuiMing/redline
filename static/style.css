@@ -2032,3 +2032,64 @@ body {
 .event-card-progress {
   color: #c6f6d5;
 }
+
+/* 勝利畫面（2026-07-19：20 回合自動桌測發現遊戲結束毫無提示，補上結束畫面） */
+.victory-glass {
+  min-width: 460px;
+  max-width: 560px;
+}
+
+.victory-summary {
+  margin: 12px 0 14px;
+  display: grid;
+  gap: 6px;
+}
+
+.victory-summary-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1.4fr repeat(3, 0.7fr);
+  gap: 8px;
+  align-items: center;
+  padding: 8px 12px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.66);
+  font-size: 0.82rem;
+}
+
+.victory-summary-row.header {
+  background: transparent;
+  border-color: transparent;
+  color: #94a3b8;
+  font-size: 0.72rem;
+  padding: 0 12px;
+}
+
+.victory-summary-row .victory-player-name {
+  font-weight: 800;
+}
+
+.victory-summary-row.winner-row {
+  border-color: rgba(250, 204, 21, 0.55);
+  box-shadow: inset 0 0 14px rgba(250, 204, 21, 0.08);
+}
+
+#victoryBadge {
+  position: absolute;
+  top: 54px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  border: 1px solid rgba(250, 204, 21, 0.6);
+  border-radius: 999px;
+  padding: 6px 16px;
+  background: rgba(15, 23, 42, 0.92);
+  color: #fef3c7;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#victoryBadge:hover {
+  background: rgba(37, 99, 235, 0.85);
+}

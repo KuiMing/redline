@@ -375,7 +375,14 @@ async function loadCardPresentationCatalog() {
 }
 
 async function createRoom() {
-  const res = await fetch('/create', { method: 'POST' });
+  // 建房也要帶「行動代號」：/create 之前不吃名字、建房者永遠叫 host
+  //（2026-07-18 自動桌測發現，2026-07-19 修正）。
+  const creatorName = (document.getElementById('playerName')?.value || '').trim();
+  const res = await fetch('/create', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: creatorName }),
+  });
   const data = await res.json();
   gameId = data.game_id;
   playerId = data.host_id;
@@ -2444,6 +2451,86 @@ function renderPlayerStatusCards(state) {
   }).join('');
 }
 
+// 勝利畫面（2026-07-19）：state.winner 之前從未被前端顯示，遊戲結束毫無提示
+//（20 回合自動桌測發現）。winner 的值是「red_army」或獲勝玩家的名字（見 victory.py）。
+let victoryModalDismissedFor = null;
+
+function renderVictoryModal(state) {
+  const overlay = document.getElementById('victoryModal');
+  const badge = document.getElementById('victoryBadge');
+  if (!overlay || !badge) return;
+  const winner = state.winner;
+  if (!winner) {
+    overlay.style.display = 'none';
+    badge.style.display = 'none';
+    victoryModalDismissedFor = null;
+    return;
+  }
+  const players = state.players || [];
+  const winnerPlayer = players.find(p => p.name === winner)
+    || (winner === 'red_army' ? players.find(p => p.faction === 'red_army') : null);
+  const winnerFaction = winnerPlayer?.faction || (winner === 'red_army' ? 'red_army' : null);
+  const winnerColor = factionNameColor(winnerFaction) || '#e5ecf5';
+  const winnerLabel = escapeHtml(winnerPlayer?.name || winner);
+  const factionText = winnerFaction ? factionDisplayName(winnerFaction) : '';
+
+  if (victoryModalDismissedFor === winner) {
+    overlay.style.display = 'none';
+    badge.style.display = 'block';
+    badge.innerHTML = `遊戲結束：<span style="color:${winnerColor}">${winnerLabel}</span> 獲勝｜點擊查看結果`;
+    return;
+  }
+
+  document.getElementById('victoryTitle').innerHTML =
+    `<span style="color:${winnerColor};font-weight:800">${winnerLabel}</span> 獲勝`;
+  document.getElementById('victorySubtitle').textContent =
+    factionText ? `${factionText}｜第 ${state.turn ?? '?'} 回合結算` : `第 ${state.turn ?? '?'} 回合結算`;
+
+  const coEl = document.getElementById('victoryCoWinners');
+  const coWinners = state.co_winners || [];
+  if (coWinners.length) {
+    coEl.style.display = 'block';
+    coEl.textContent = `共同勝利者：${coWinners.join('、')}`;
+  } else {
+    coEl.style.display = 'none';
+  }
+
+  const summary = document.getElementById('victorySummary');
+  const rows = players.map(p => {
+    const totalOrgs = Object.values(p.orgs || {}).reduce((a, b) => a + b, 0);
+    const color = factionNameColor(p.faction) || '#e5ecf5';
+    const isWinner = winnerPlayer ? p.name === winnerPlayer.name : false;
+    return `
+      <div class="victory-summary-row${isWinner ? ' winner-row' : ''}">
+        <span class="victory-player-name" style="color:${color}">${escapeHtml(p.name)}${isWinner ? '&nbsp;🏆' : ''}</span>
+        <span>${escapeHtml(factionDisplayName(p.faction))}</span>
+        <span>組織 ${totalOrgs}</span>
+        <span>資金 ${p.resources?.money ?? 0}</span>
+        <span>宣傳 ${p.resources?.propaganda ?? 0}</span>
+      </div>`;
+  }).join('');
+  summary.innerHTML = `
+    <div class="victory-summary-row header">
+      <span>玩家</span><span>陣營</span><span>組織</span><span>資金</span><span>宣傳</span>
+    </div>${rows}`;
+
+  badge.style.display = 'none';
+  overlay.style.display = 'flex';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const minimizeBtn = document.getElementById('victoryMinimizeBtn');
+  if (minimizeBtn) minimizeBtn.addEventListener('click', () => {
+    victoryModalDismissedFor = (window.lastGameState || {}).winner || null;
+    if (window.lastGameState) renderVictoryModal(window.lastGameState);
+  });
+  const badge = document.getElementById('victoryBadge');
+  if (badge) badge.addEventListener('click', () => {
+    victoryModalDismissedFor = null;
+    if (window.lastGameState) renderVictoryModal(window.lastGameState);
+  });
+});
+
 async function render(state) {
   if (state.error) {
     alert(state.error);
@@ -2469,6 +2556,7 @@ async function render(state) {
   renderEraAchievement(state);
   renderCurrentEvent(state);
   renderChoiceModal(state);
+  renderVictoryModal(state);
 
   // HUD
   const hud = document.getElementById('hud');
