@@ -242,6 +242,11 @@
 - 觀察（非 bug）：簡單策略下購買集中在常設區第一格（40 次購買有 30 次宣傳家），隨機購買區的卡幾乎沒被買——之後若要更深入的自動桌測，驅動策略可改成優先買隨機區。
 - 2026-07-19 二輪：驅動參數化（`--preset 2p/4p`、`--turns`、`--buy-strategy first/random-first`、`--label`，commit `1a096de`）後跑 **4 人局**（紅軍/綠線/香港/西藏德拉敦，random-first 購買）：完整 20 回合、紅軍第 21 回合結算勝（組織 4/3/1/4）、691 張截圖（`playthrough_screens/4p_run1/`）。購買覆蓋大幅變廣（80 次購買含 21 張奧援卡與 15+ 種行動卡）；反應時機（`cancel_other_player_action`）被觸發 8 次，並以引擎層重現確認「反應視窗開著時 advance 會被伺服器正確回絕」——驅動記到的 8 個「advance disabled」issue 全是驅動搶拍雜訊，非遊戲 bug。本輪無新遊戲問題。
 
+- [done] 區網連線資訊顯示（2026-07-19 使用者需求）：開房的人要能把 IP:port 告訴其他玩家。
+  - 實作：新增 `GET /server-info`（UDP connect 技巧偵測區網 IP、port 取自連線的伺服器 socket；偵測失敗回 null）；lobby ROOM CONTROL 新增「區網連線網址（給其他玩家）」欄位＋複製按鈕（`loadLanInfo()`/`copyLanUrl()`，頁面載入即顯示），附提示「其他玩家在同一個 Wi-Fi／區網下，用瀏覽器打開這個網址，再貼上房間代碼加入」。
+  - 驗證：新增 `python3 scripts/validate_lan_info_display.py`（3/3，連跑 3 次穩定：endpoint 回傳非 127 的 IPv4＋port 8000、lobby 顯示 `http://IP:port`、複製按鈕回報已複製）；proof `docs/records/playtest-flow/LAN_INFO_DISPLAY_VALIDATION.{json,md}` + `lan_info_display.png`。
+  - 注意：伺服器需以 `--host 0.0.0.0` 啟動區網才連得到（現行啟動指令即是）。
+
 ### P2：repo hygiene / validator hygiene
 - [todo] 維持 root record-like count = 0。
   - 新增 validation reports、proof markdown、screenshots 時，直接放到 `docs/records/<topic>/`。

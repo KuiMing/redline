@@ -267,6 +267,43 @@ function copyRoomIdWithExecCommand(roomIdValue) {
   return !!copied;
 }
 
+// 區網連線資訊（2026-07-19 使用者需求：開房的人要能把 IP:port 告訴其他玩家）
+async function loadLanInfo() {
+  const input = document.getElementById('lanUrl');
+  if (!input) return;
+  try {
+    const res = await fetch('/server-info');
+    const data = await res.json();
+    if (data.lan_ip) {
+      input.value = `http://${data.lan_ip}:${data.port}`;
+    } else {
+      input.value = '無法自動偵測（請查本機 IP，網址為 http://<IP>:' + (data.port || location.port || 8000) + '）';
+    }
+  } catch (err) {
+    input.value = '偵測失敗，請確認伺服器狀態。';
+  }
+}
+
+async function copyLanUrl() {
+  const input = document.getElementById('lanUrl');
+  const value = (input?.value || '').trim();
+  if (!value.startsWith('http')) {
+    updateLobbyStatus('尚未取得區網網址，無法複製。');
+    return;
+  }
+  if (copyRoomIdWithExecCommand(value)) {
+    updateLobbyStatus('連線網址已複製，分享給其他玩家後，記得也給他們房間代碼。');
+    return;
+  }
+  try {
+    if (!navigator.clipboard?.writeText) throw new Error('Clipboard API unavailable');
+    await navigator.clipboard.writeText(value);
+    updateLobbyStatus('連線網址已複製，分享給其他玩家後，記得也給他們房間代碼。');
+  } catch (err) {
+    updateLobbyStatus(`自動複製失敗，請手動複製：${value}`);
+  }
+}
+
 async function copyRoomId() {
   const roomIdValue = currentRoomCode();
   if (!roomIdValue) {
@@ -312,6 +349,7 @@ function initLobbyControls() {
     window.addEventListener('resize', resizeStage);
     stageResizeBound = true;
   }
+  loadLanInfo();
   const nameInput = document.getElementById('playerName');
   if (nameInput && nameInput.dataset.bound !== '1') {
     nameInput.dataset.bound = '1';

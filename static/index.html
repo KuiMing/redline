@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>REDLINE // STRATEGIC COMMAND</title>
-  <link rel="stylesheet" href="/static/style.css?v=victory-screen-creator-name-20260719" />
+  <link rel="stylesheet" href="/static/style.css?v=lan-info-20260719" />
 </head>
 <body>
 <div id="stageViewport">
@@ -65,6 +65,15 @@
         <span>你的行動代號</span>
         <input id="playerName" class="lobby-text-input" placeholder="輸入玩家名稱 / 代號" value="host" autocomplete="off">
       </label>
+
+      <div class="lobby-field" id="lanInfoField">
+        <span>區網連線網址（給其他玩家）</span>
+        <div class="lobby-room-row">
+          <input id="lanUrl" class="lobby-code-input" readonly value="偵測中…" autocomplete="off">
+          <button id="copyLanUrlBtn" class="lobby-mini-btn" type="button" onclick="copyLanUrl()">複製</button>
+        </div>
+        <div class="lobby-field-hint">其他玩家在同一個 Wi-Fi／區網下，用瀏覽器打開這個網址，再貼上房間代碼加入。</div>
+      </div>
 
       <div class="lobby-field">
         <span>卡牌模式</span>
@@ -253,6 +262,6 @@
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="/static/app.js?v=victory-screen-creator-name-20260719"></script>
+<script src="/static/app.js?v=lan-info-20260719"></script>
 </body>
 </html>

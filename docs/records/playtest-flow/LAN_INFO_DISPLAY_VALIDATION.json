@@ -1,0 +1,35 @@
+{
+  "summary": {
+    "total": 3,
+    "passed": 3,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "server_info_returns_lan_ip_and_port",
+      "ok": true,
+      "detail": {
+        "info": {
+          "lan_ip": "192.168.10.192",
+          "port": 8000
+        }
+      }
+    },
+    {
+      "name": "lobby_shows_lan_url",
+      "ok": true,
+      "detail": {
+        "lan_url": "http://192.168.10.192:8000",
+        "expected": "http://192.168.10.192:8000"
+      }
+    },
+    {
+      "name": "copy_button_reports_copied",
+      "ok": true,
+      "detail": {
+        "status": "連線網址已複製，分享給其他玩家後，記得也給他們房間代碼。"
+      }
+    }
+  ],
+  "screenshot": "/Users/benmini/.openclaw/workspace/redline/docs/records/playtest-flow/lan_info_display.png"
+}

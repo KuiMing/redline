@@ -1,4 +1,4 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from server.game import Game, TurnPhase, GamePhase, STATIC_PURCHASE_CARD_SUPPLY
@@ -234,6 +234,32 @@ def faction_base_resolved(by_id, faction_id: str):
 @app.get('/card-presentation')
 def card_presentation():
     return {'cards': CARD_PRESENTATION_CATALOG}
+
+
+@app.get("/server-info")
+def server_info(request: Request):
+    """回報主機的區網 IP 與服務 port，供 lobby 顯示「其他玩家連線網址」。
+
+    區網 IP 用 UDP connect 技巧偵測（不實際發包，只取路由後的本機位址）；
+    偵測失敗（無網路介面等）回傳 null，前端顯示提示請玩家自行查詢。
+    port 取自本次連線的伺服器端 socket（scope['server']）。
+    """
+    import socket as _socket
+    lan_ip = None
+    try:
+        probe = _socket.socket(_socket.AF_INET, _socket.SOCK_DGRAM)
+        try:
+            probe.connect(("8.8.8.8", 80))
+            candidate = probe.getsockname()[0]
+            if candidate and not candidate.startswith("127."):
+                lan_ip = candidate
+        finally:
+            probe.close()
+    except OSError:
+        lan_ip = None
+    server_scope = request.scope.get("server") or (None, None)
+    port = server_scope[1] or (request.url.port or 8000)
+    return {"lan_ip": lan_ip, "port": port}
 
 
 @app.post("/create")
