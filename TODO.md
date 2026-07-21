@@ -247,6 +247,10 @@
   - 驗證：新增 `python3 scripts/validate_lan_info_display.py`（3/3，連跑 3 次穩定：endpoint 回傳非 127 的 IPv4＋port 8000、lobby 顯示 `http://IP:port`、複製按鈕回報已複製）；proof `docs/records/playtest-flow/LAN_INFO_DISPLAY_VALIDATION.{json,md}` + `lan_info_display.png`。
   - 注意：伺服器需以 `--host 0.0.0.0` 啟動區網才連得到（現行啟動指令即是）。
 
+- [done] 遊戲畫面「我的陣營」按鈕（2026-07-19 使用者需求）：桌測時常需要查自己陣營的能力/限制/獲勝條件，之前只有 lobby 選陣營時看得到，進遊戲後就查不到了。
+  - 實作：`#gameTabs` 新增「我的陣營」按鈕（`openMyFactionModal()`），彈窗顯示陣營名（陣營色標題）＋根據地／能力／規則與限制／獲勝條件四區塊；資料萃取邏輯與 lobby 的 `renderFactionDetails()` 相同（能力排除 setup/restriction 型並入規則區、根據地專屬能力併入能力區），另外處理了 lobby 版本沒遇過的情況：family variant（如維吾爾/西藏子系）只存在 `variant_details` 內、抓不到頂層 `factionOptionById` 時的 fallback 查找。
+  - 驗證：新增 `python3 scripts/validate_my_faction_modal.py`（5/5，連跑 3 次穩定：按鈕在遊戲畫面可見、點開後標題染陣營色且四區塊皆有內容、根據地區塊顯示實際根據地、關閉按鈕可收起、換一個資料結構不同的陣營〔香港〕同樣正確渲染）；proof `docs/records/playtest-flow/MY_FACTION_MODAL_VALIDATION.{json,md}` + `my_faction_modal.png`／`my_faction_modal_hong_kong.png`。
+
 ### P2：repo hygiene / validator hygiene
 - [todo] 維持 root record-like count = 0。
   - 新增 validation reports、proof markdown、screenshots 時，直接放到 `docs/records/<topic>/`。

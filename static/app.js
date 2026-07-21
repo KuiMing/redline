@@ -2489,6 +2489,74 @@ function renderPlayerStatusCards(state) {
   }).join('');
 }
 
+// 我的陣營（2026-07-19 使用者需求）：遊戲中隨時可查看自己陣營的能力/規則限制/獲勝條件。
+// 資料萃取邏輯與 lobby 的 renderFactionDetails 相同（能力=abilities 排除 setup/restriction 型；
+// 規則與限制=setup_effects+special_rules+restrictions+setup/restriction 型能力；根據地能力併入能力）。
+function openMyFactionModal() {
+  const overlay = document.getElementById('myFactionModal');
+  const titleEl = document.getElementById('myFactionTitle');
+  const bodyEl = document.getElementById('myFactionBody');
+  if (!overlay || !titleEl || !bodyEl) return;
+  const state = window.lastGameState || {};
+  const me = (state.players || []).find(p => p.id === playerId);
+  if (!me || !me.faction) return;
+  const factionId = me.faction;
+  let opt = factionOptionById(factionId);
+  if (!opt) {
+    // family variant 只存在 variant_details 內的情況
+    for (const category of availableFactionCategories) {
+      for (const parent of (category.options || [])) {
+        for (const v of Object.values(parent.variant_details || {})) {
+          if (v && v.id === factionId) { opt = v; break; }
+        }
+      }
+    }
+  }
+  if (!opt) return;
+
+  const baseName = me.base || null;
+  const detailSource = (baseName && opt.variant_details) ? (opt.variant_details[baseName] || null) : null;
+  const detail = detailSource || opt;
+  const selectedBaseData = (detail.bases || []).find(base => base?.name === baseName) || null;
+  const rawAbilities = [
+    ...((detail.abilities_text || detail.abilities || [])),
+    ...((selectedBaseData?.abilities) || []),
+  ];
+  const renderItem = item => typeof item === 'string'
+    ? item
+    : [item.name_override || item.name, item.trigger, item.effect].filter(Boolean).join('：');
+  const abilities = rawAbilities.filter(item => !(typeof item === 'object' && item && ['setup', 'restriction'].includes(item.type)));
+  const rules = [
+    ...(detail.setup_effects || []),
+    ...(detail.special_rules || []),
+    ...(detail.restrictions || []),
+    ...rawAbilities
+      .filter(item => typeof item === 'object' && item && ['setup', 'restriction'].includes(item.type))
+      .map(renderItem),
+  ];
+  const wins = detail.win_condition_text
+    ? [detail.win_condition_text]
+    : (detail.win_conditions || []).map(humanizeWinCondition);
+
+  const color = factionNameColor(factionId) || '#e5ecf5';
+  titleEl.innerHTML = `<span style="color:${color};font-weight:800">${escapeHtml(factionDisplayName(factionId))}</span>`;
+  const section = (label, items) => `
+    <div class="faction-detail-section-title">${label}</div>
+    <ul>${(items.length ? items : ['（暫無資料）']).map(x => `<li>${escapeHtml(x)}</li>`).join('')}</ul>`;
+  bodyEl.innerHTML = [
+    section('根據地', baseName ? [baseDisplayName(baseName)] : []),
+    section('能力', abilities.map(renderItem)),
+    section('規則與限制', rules),
+    section('獲勝條件', wins),
+  ].join('');
+  overlay.style.display = 'flex';
+}
+
+function closeMyFactionModal() {
+  const overlay = document.getElementById('myFactionModal');
+  if (overlay) overlay.style.display = 'none';
+}
+
 // 勝利畫面（2026-07-19）：state.winner 之前從未被前端顯示，遊戲結束毫無提示
 //（20 回合自動桌測發現）。winner 的值是「red_army」或獲勝玩家的名字（見 victory.py）。
 let victoryModalDismissedFor = null;

@@ -2093,3 +2093,34 @@ body {
 #victoryBadge:hover {
   background: rgba(37, 99, 235, 0.85);
 }
+
+/* 我的陣營 modal（2026-07-19） */
+.my-faction-tab {
+  margin-left: auto;
+  border-color: rgba(246, 173, 85, 0.5);
+}
+
+.my-faction-glass {
+  min-width: 440px;
+  max-width: 560px;
+}
+
+.my-faction-body {
+  text-align: left;
+  max-height: 430px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin: 10px 0 14px;
+  padding-right: 6px;
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+.my-faction-body ul {
+  margin: 0 0 12px;
+  padding-left: 18px;
+}
+
+.my-faction-body li {
+  margin-bottom: 4px;
+}

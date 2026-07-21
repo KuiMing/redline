@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>REDLINE // STRATEGIC COMMAND</title>
-  <link rel="stylesheet" href="/static/style.css?v=lan-info-20260719" />
+  <link rel="stylesheet" href="/static/style.css?v=my-faction-modal-20260719" />
 </head>
 <body>
 <div id="stageViewport">
@@ -180,6 +180,15 @@
 
 <div id="eraPinnedNotice" style="display:none;"></div>
 
+<div id="myFactionModal" class="modal-overlay" style="display:none;">
+  <div class="modal-glass my-faction-glass">
+    <div class="panel-title">我的陣營</div>
+    <div id="myFactionTitle" class="modal-title-text"></div>
+    <div id="myFactionBody" class="my-faction-body"></div>
+    <button id="closeMyFactionModal" class="modal-cancel-btn" onclick="closeMyFactionModal()">關閉</button>
+  </div>
+</div>
+
 <div id="victoryModal" class="modal-overlay" style="display:none;">
   <div class="modal-glass victory-glass">
     <div class="panel-title">遊戲結束</div>
@@ -199,6 +208,7 @@
     <button class="game-tab active" data-view="command">指揮中心</button>
     <button class="game-tab" data-view="map">戰略地圖</button>
     <button class="game-tab" data-view="log">戰況紀錄</button>
+    <button id="myFactionBtn" class="game-tab my-faction-tab" type="button" onclick="openMyFactionModal()">我的陣營</button>
   </div>
 
   <div id="commandView" class="game-view active">
@@ -262,6 +272,6 @@
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="/static/app.js?v=lan-info-20260719"></script>
+<script src="/static/app.js?v=my-faction-modal-20260719"></script>
 </body>
 </html>
