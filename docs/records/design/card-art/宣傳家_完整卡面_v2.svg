@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="825" height="1125" viewBox="0 0 825 1125" role="img" aria-labelledby="title desc">
+  <title id="title">宣傳家完整卡面第二版</title>
+  <desc id="desc">灰色宣傳類乙級卡牌。購買費用為三點宣傳，提供兩點宣傳。打出可移除本牌；若移除，可在己方組織一格內建立一個組織，並進行一次組織遷移。</desc>
+  <defs>
+    <linearGradient id="frame" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#626569"/><stop offset=".34" stop-color="#282c2f"/><stop offset=".76" stop-color="#111315"/><stop offset="1" stop-color="#363a3d"/>
+    </linearGradient>
+    <linearGradient id="header" x1="0" y1="0" x2="1" y2="0">
+      <stop stop-color="#121518"/><stop offset=".68" stop-color="#303438"/><stop offset="1" stop-color="#17191b"/>
+    </linearGradient>
+    <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#f2e8d2"/><stop offset="1" stop-color="#d2c09b"/>
+    </linearGradient>
+    <radialGradient id="token" cx="35%" cy="30%" r="75%">
+      <stop stop-color="#d77856"/><stop offset="1" stop-color="#9d392b"/>
+    </radialGradient>
+    <pattern id="grain" width="41" height="43" patternUnits="userSpaceOnUse">
+      <circle cx="6" cy="9" r="1" fill="#fff" opacity=".055"/><circle cx="29" cy="31" r=".9" fill="#000" opacity=".11"/>
+    </pattern>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="170%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="7"/><feOffset dy="7"/>
+      <feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .58 0"/>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <clipPath id="artClip"><rect x="48" y="174" width="729" height="500" rx="14"/></clipPath>
+  </defs>
+
+  <rect width="825" height="1125" rx="44" fill="#08090a"/>
+  <rect x="12" y="12" width="801" height="1101" rx="36" fill="url(#frame)" stroke="#b9b3a6" stroke-width="4"/>
+  <rect x="27" y="27" width="771" height="1071" rx="28" fill="#171a1c" stroke="#d3c197" stroke-width="2"/>
+
+  <!-- Header and identity -->
+  <path d="M39 39h747v122H39z" fill="url(#header)"/>
+  <path d="M40 160h745" stroke="#ddc087" stroke-width="5"/>
+  <g transform="translate(82 99)">
+    <circle r="31" fill="url(#token)" stroke="#f0d095" stroke-width="4"/>
+    <path d="M-16 7C-6-7 7-14 20-19M-7 0l13 12M5-10l12 11" fill="none" stroke="#fff1d1" stroke-width="5" stroke-linecap="round"/>
+  </g>
+  <text x="127" y="117" fill="#f7eedc" font-family="PingFang TC, Noto Sans TC, sans-serif" font-size="59" font-weight="800" letter-spacing="5">宣傳家</text>
+  <text x="500" y="77" fill="#c9ced0" font-family="PingFang TC, Noto Sans TC, sans-serif" font-size="20" font-weight="700" letter-spacing="2">灰｜宣傳</text>
+  <text x="500" y="113" fill="#e6d1a6" font-family="PingFang TC, Noto Sans TC, sans-serif" font-size="27" font-weight="800" letter-spacing="4">乙級</text>
+  <text x="500" y="143" fill="#9ca2a5" font-family="PingFang TC, Noto Sans TC, sans-serif" font-size="15" font-weight="600">常設購買區</text>
+
+  <!-- Purchase cost -->
+  <g transform="translate(726 93)" filter="url(#shadow)">
+    <circle r="49" fill="#191b1d" stroke="#e1c181" stroke-width="4"/>
+    <circle r="40" fill="url(#token)" stroke="#f6d89c" stroke-width="3"/>
+    <text x="0" y="14" text-anchor="middle" fill="#fff5db" font-family="Avenir Next, sans-serif" font-size="47" font-weight="900">3</text>
+  </g>
+  <text x="726" y="155" text-anchor="middle" fill="#e8cc94" font-family="PingFang TC, Noto Sans TC, sans-serif" font-size="14" font-weight="700">購買費用｜宣傳</text>
+
+  <!-- New generated illustration -->
+  <g clip-path="url(#artClip)">
+    <image xlink:href="宣傳家_openai_v2.png" href="宣傳家_openai_v2.png" x="48" y="-68" width="729" height="1094" preserveAspectRatio="xMidYMid slice"/>
+    <rect x="48" y="565" width="729" height="109" fill="#0c0e0f" opacity=".63"/>
+  </g>
+  <rect x="48" y="174" width="729" height="500" rx="14" fill="none" stroke="#ddc087" stroke-width="5"/>
+  <text x="72" y="642" fill="#f4dfae" font-family="PingFang TC, Noto Sans TC, sans-serif" font-size="21" font-weight="700" letter-spacing="2">擅於宣傳的辯士</text>
+
+  <!-- Effect panel -->
+  <rect x="48" y="695" width="729" height="296" rx="18" fill="url(#paper)" stroke="#ead6aa" stroke-width="3"/>
+  <rect x="65" y="712" width="695" height="262" rx="12" fill="none" stroke="#6e6658" stroke-width="2" opacity=".42"/>
+  <g transform="translate(87 747)">
+    <rect width="106" height="34" rx="17" fill="#2a2d2f"/>
+    <text x="53" y="24" text-anchor="middle" fill="#f2deb4" font-family="PingFang TC, Noto Sans TC, sans-serif" font-size="18" font-weight="800" letter-spacing="3">卡牌效果</text>
+  </g>
+  <text x="87" y="824" fill="#252728" font-family="PingFang TC, Noto Sans TC, sans-serif" font-size="30" font-weight="800">打出可移除本牌。</text>
+  <text x="87" y="873" fill="#252728" font-family="PingFang TC, Noto Sans TC, sans-serif" font-size="27" font-weight="650">若移除本牌，可於己方組織 1 格內</text>
+  <text x="87" y="920" fill="#252728" font-family="PingFang TC, Noto Sans TC, sans-serif" font-size="27" font-weight="650">建立 1 個組織，並進行 1 次組織遷移。</text>
+  <path d="M87 943h650" stroke="#8b8069" stroke-width="2" opacity=".55"/>
+  <text x="87" y="967" fill="#635947" font-family="PingFang TC, Noto Sans TC, sans-serif" font-size="18" font-style="italic">聲音化為連結，理念沿著道路傳開。</text>
+
+  <!-- Resource footer -->
+  <rect x="48" y="1011" width="729" height="73" rx="17" fill="#0e1113" stroke="#a99b80" stroke-width="2"/>
+  <text x="75" y="1041" fill="#bfc5c8" font-family="PingFang TC, Noto Sans TC, sans-serif" font-size="17" font-weight="700" letter-spacing="2">提供資源</text>
+  <text x="75" y="1067" fill="#e5d3ae" font-family="PingFang TC, Noto Sans TC, sans-serif" font-size="16" font-weight="600">作為資源打出時獲得</text>
+  <g transform="translate(620 1048)">
+    <circle cx="0" cy="0" r="25" fill="url(#token)" stroke="#f0d095" stroke-width="3"/>
+    <circle cx="57" cy="0" r="25" fill="url(#token)" stroke="#f0d095" stroke-width="3"/>
+    <path d="M-11 6C-4-5 5-10 13-13M46 6c7-11 16-16 24-19" fill="none" stroke="#fff1d1" stroke-width="4" stroke-linecap="round"/>
+  </g>
+  <text x="720" y="1058" fill="#f4dfb0" font-family="PingFang TC, Noto Sans TC, sans-serif" font-size="23" font-weight="800">宣傳 2</text>
+
+  <rect x="12" y="12" width="801" height="1101" rx="36" fill="url(#grain)" pointer-events="none"/>
+</svg>
