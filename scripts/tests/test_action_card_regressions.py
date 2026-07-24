@@ -16,6 +16,7 @@ def pin_noop_event(g):
     g.current_event = dict(g._event_by_name('歲月靜好'))
     g.event_progress = {'count': 0, 'required': 0, 'succeeded': True, 'settled': True, 'status': 'idle'}
     g.event_modifiers = []
+    g.pending_choice = None
     return g
 
 

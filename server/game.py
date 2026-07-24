@@ -5099,16 +5099,20 @@ class Game:
         return {'money': cost_money, 'propaganda': cost_propaganda}
 
     def _player_can_afford_purchase(self, player, card, effective_cost=None):
+        payment = self._purchase_payment_cost(player, card, effective_cost)
+        return (
+            player.resources.get('money', 0) >= payment['money']
+            and player.resources.get('propaganda', 0) >= payment['propaganda']
+        )
+
+    def _purchase_payment_cost(self, player, card, effective_cost=None):
         cost = effective_cost if effective_cost is not None else self._effective_purchase_cost(player, card)
         cost_money = int(cost.get('money', 0) or 0)
         cost_propaganda = int(cost.get('propaganda', 0) or 0)
         card_type = getattr(card, "card_type", None)
         if self._player_has_ability(player, "華文傳媒") and card_type == "propaganda":
-            return player.resources.get('money', 0) >= cost_propaganda
-        return (
-            player.resources.get('money', 0) >= cost_money
-            and player.resources.get('propaganda', 0) >= cost_propaganda
-        )
+            return {'money': cost_propaganda, 'propaganda': 0}
+        return {'money': cost_money, 'propaganda': cost_propaganda}
 
     def _copy_purchase_card(self, card):
         return Card(
@@ -5138,59 +5142,87 @@ class Game:
         self.log(f"{getattr(card, 'name', str(card))} returned to {owner.name}'s deck top")
         return True
 
-    def buy_card(self, index):
+    def buy_cards(self, indices):
         if self.turn_phase != TurnPhase.END:
             return {"error": "Not in PURCHASE phase"}
 
-        player = self.current_player()
-        if index < 0 or index >= len(self.purchase_area):
+        if not isinstance(indices, (list, tuple)) or not indices:
+            return {"error": "No cards selected"}
+        if any(isinstance(index, bool) or not isinstance(index, int) for index in indices):
             return {"error": "Invalid index"}
+        if len(set(indices)) != len(indices):
+            return {"error": "Duplicate purchase index"}
 
-        card = self.purchase_area[index]
-        if not card:
-            return {"error": "No card in slot"}
-        if self._player_is_nonviolent(player) and self._card_is_banned_for_player(player, card):
-            return {"error": "非暴力：不能購買武裝或裝備類卡牌"}
-        ok, err = self._can_player_gain_flag_card(player, card)
-        if not ok:
-            return {"error": err}
-
+        player = self.current_player()
         static_count = len(self._static_purchase_cards())
-        is_static_purchase = index < static_count
-        card_name = getattr(card, 'name', str(card))
-        if is_static_purchase:
-            supply = int(self.static_purchase_supply.get(card_name, 0) or 0)
-            if supply <= 0:
+        selected = []
+        payment_total = {'money': 0, 'propaganda': 0}
+        for index in indices:
+            if index < 0 or index >= len(self.purchase_area):
+                return {"error": "Invalid index"}
+            card = self.purchase_area[index]
+            if not card:
+                return {"error": "No card in slot"}
+            if self._player_is_nonviolent(player) and self._card_is_banned_for_player(player, card):
+                return {"error": "非暴力：不能購買武裝或裝備類卡牌"}
+            ok, err = self._can_player_gain_flag_card(player, card)
+            if not ok:
+                return {"error": err}
+
+            is_static_purchase = index < static_count
+            card_name = getattr(card, 'name', str(card))
+            if is_static_purchase and int(self.static_purchase_supply.get(card_name, 0) or 0) <= 0:
                 return {"error": "Static purchase card is out of supply"}
 
-        card_type = getattr(card, "card_type", None)
-        original_cost = self._card_purchase_cost(card)
-        cost = self._effective_purchase_cost(player, card)
-        cost_money = int(cost.get('money', 0) or 0)
-        cost_propaganda = int(cost.get('propaganda', 0) or 0)
+            original_cost = self._card_purchase_cost(card)
+            effective_cost = self._effective_purchase_cost(player, card)
+            payment = self._purchase_payment_cost(player, card, effective_cost)
+            payment_total['money'] += payment['money']
+            payment_total['propaganda'] += payment['propaganda']
+            selected.append({
+                'index': index,
+                'card': card,
+                'card_name': card_name,
+                'is_static': is_static_purchase,
+                'original_cost': original_cost,
+            })
 
-        if self._player_has_ability(player, "華文傳媒") and card_type == "propaganda":
-            if player.resources['money'] < cost_propaganda:
-                return {"error": "Not enough money for propaganda purchase"}
-            player.resources['money'] -= cost_propaganda
-        else:
-            if not self._player_can_afford_purchase(player, card, cost):
-                return {"error": "Not enough resources"}
-            player.resources['money'] -= cost_money
-            player.resources['propaganda'] -= cost_propaganda
+        if (
+            player.resources.get('money', 0) < payment_total['money']
+            or player.resources.get('propaganda', 0) < payment_total['propaganda']
+        ):
+            return {"error": "Not enough resources"}
 
-        purchased_card = self._copy_purchase_card(card)
-        player.deck.discard([purchased_card])
-        self.turn_log.setdefault('purchased_cards_this_turn', []).append(purchased_card)
-        if is_static_purchase:
-            self.static_purchase_supply[card_name] = int(self.static_purchase_supply.get(card_name, 0) or 0) - 1
-        else:
-            self.purchase_area.pop(index)
-        self.log(f"{player.name} bought {card_name}")
-        event_result = self._track_event_purchase(purchased_card, original_cost=original_cost, player=player)
-        if isinstance(event_result, dict) and event_result.get('pending_choice'):
-            return {"success": True, "pending_choice": True}
-        return {"success": True}
+        player.resources['money'] -= payment_total['money']
+        player.resources['propaganda'] -= payment_total['propaganda']
+        purchased_cards = [self._copy_purchase_card(item['card']) for item in selected]
+        player.deck.discard(purchased_cards)
+        self.turn_log.setdefault('purchased_cards_this_turn', []).extend(purchased_cards)
+
+        for item in selected:
+            if item['is_static']:
+                card_name = item['card_name']
+                self.static_purchase_supply[card_name] = int(self.static_purchase_supply.get(card_name, 0) or 0) - 1
+        for item in sorted((entry for entry in selected if not entry['is_static']), key=lambda entry: entry['index'], reverse=True):
+            self.purchase_area.pop(item['index'])
+
+        pending_choice = False
+        for item, purchased_card in zip(selected, purchased_cards):
+            self.log(f"{player.name} bought {item['card_name']}")
+            event_result = self._track_event_purchase(purchased_card, original_cost=item['original_cost'], player=player)
+            pending_choice = pending_choice or bool(isinstance(event_result, dict) and event_result.get('pending_choice'))
+
+        result = {
+            "success": True,
+            "purchased_cards": [item['card_name'] for item in selected],
+            "payment": payment_total,
+        }
+        if pending_choice:
+            result['pending_choice'] = True
+        return result
+
+    def buy_card(self, index):
+        return self.buy_cards([index])
 
     # ---------- Era Trigger ----------
 
@@ -5841,6 +5873,10 @@ class Game:
             self._effective_purchase_cost(current_player, card)
             for card in self.purchase_area
         ]
+        purchase_area_payments = [
+            self._purchase_payment_cost(current_player, card, purchase_area_costs[idx])
+            for idx, card in enumerate(self.purchase_area)
+        ]
         purchase_area_affordable = [
             self._player_can_afford_purchase(current_player, card, purchase_area_costs[idx])
             for idx, card in enumerate(self.purchase_area)
@@ -5871,6 +5907,7 @@ class Game:
             "purchase_area": [getattr(card, 'name', str(card)) for card in self.purchase_area],
             "purchase_area_variants": [self._support_card_variant_info(card) for card in self.purchase_area],
             "purchase_area_costs": purchase_area_costs,
+            "purchase_area_payments": purchase_area_payments,
             "purchase_area_affordable": purchase_area_affordable,
             "static_purchase_supply": dict(getattr(self, 'static_purchase_supply', {})),
             "map": {

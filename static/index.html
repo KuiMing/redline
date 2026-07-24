@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>REDLINE // STRATEGIC COMMAND</title>
-  <link rel="stylesheet" href="/static/style.css?v=my-faction-modal-20260719" />
+  <link rel="stylesheet" href="/static/style.css?v=batch-purchase-20260724" />
 </head>
 <body>
 <div id="stageViewport">
@@ -189,6 +189,20 @@
   </div>
 </div>
 
+<div id="purchaseConfirmModal" class="modal-overlay" style="display:none;">
+  <div class="modal-glass purchase-confirm-glass">
+    <div class="panel-title">確認購買</div>
+    <div class="modal-title-text">確定購買以下卡牌？</div>
+    <div id="purchaseConfirmCards" class="purchase-confirm-cards"></div>
+    <div id="purchaseConfirmTotal" class="purchase-confirm-total"></div>
+    <div id="purchaseConfirmWarning" class="purchase-confirm-warning" style="display:none;"></div>
+    <div class="purchase-confirm-actions">
+      <button id="confirmPurchaseBtn" class="modal-choice-btn purchase-confirm-submit" type="button" onclick="confirmSelectedPurchase()">確定購買</button>
+      <button class="modal-cancel-btn" type="button" onclick="closePurchaseConfirmModal()">取消</button>
+    </div>
+  </div>
+</div>
+
 <div id="victoryModal" class="modal-overlay" style="display:none;">
   <div class="modal-glass victory-glass">
     <div class="panel-title">遊戲結束</div>
@@ -238,6 +252,11 @@
 
       <div id="randomMarketPanel" class="panel market-panel-wide">
         <div class="panel-title">隨機購買區</div>
+        <div id="purchaseSelectionControls" style="display:none;">
+          <span id="purchaseSelectionSummary">尚未選擇卡牌</span>
+          <button id="clearPurchaseSelectionBtn" class="purchase-selection-clear-btn" type="button" onclick="clearPurchaseSelection()">清除</button>
+          <button id="openPurchaseConfirmBtn" class="purchase-selection-buy-btn" type="button" onclick="openPurchaseConfirmModal()" disabled>購買所選卡牌</button>
+        </div>
         <div id="purchaseRandom" class="purchase-card-grid"></div>
       </div>
 
@@ -272,6 +291,6 @@
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="/static/app.js?v=my-faction-modal-20260719"></script>
+<script src="/static/app.js?v=batch-purchase-20260724"></script>
 </body>
 </html>

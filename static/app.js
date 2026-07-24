@@ -21,6 +21,7 @@ let lobbyTransientStatus = null;
 let activeChoiceModal = null;
 let lastFactionActionResultKey = null;
 let lastSupportChoiceMapHighlightPayload = null;
+const selectedPurchaseIndices = new Set();
 
 function resizeStage() {
   const scale = Math.min(
@@ -790,10 +791,8 @@ function renderCardFace(cardName, zone, isStatic = false, compact = false, count
   // 奧援卡的含義行（「奧援卡」）與徽章（「資源 依效果而定」「隨機購買區」）沒有資訊量，
   // 卻佔掉卡面下方空間，導致天方奧援等三級文字較長的卡 I 級文字被截斷；奧援卡一律省略，
   // 把空間留給完整的 I/II/III 級效果文字。
-  if (!isSupport) {
-    if (info.resource_text) badgeItems.push(`資源 ${info.resource_text}`);
-    if (info.position_text) badgeItems.push(info.position_text);
-    else badgeItems.push(typeLabel);
+  if (!isSupport && info.resource_text) {
+    badgeItems.push(`資源 ${info.resource_text}`);
   }
   const meaning = (info.meaning_text && !isSupport) ? `<div class="card-meaning">${escapeHtml(info.meaning_text)}</div>` : '';
   const countText = countOverride != null ? String(countOverride) : info.count_text;
@@ -1168,6 +1167,112 @@ function sendAction(action, payload = {}) {
     return;
   }
   ws.send(JSON.stringify({action, ...payload}));
+}
+
+function purchaseSelectionDetails(state = window.lastGameState || {}) {
+  const indices = [...selectedPurchaseIndices]
+    .filter(index => Number.isInteger(index) && index >= 0 && index < (state.purchase_area || []).length)
+    .sort((a, b) => a - b);
+  const cards = indices.map(index => {
+    const payment = state.purchase_area_payments?.[index] || state.purchase_area_costs?.[index] || {money: 0, propaganda: 0};
+    return {
+      index,
+      name: state.purchase_area[index],
+      zone: index < 6 ? '常設購買區' : '隨機購買區',
+      money: Number(payment.money || 0),
+      propaganda: Number(payment.propaganda || 0),
+    };
+  });
+  const total = cards.reduce((sum, card) => ({
+    money: sum.money + card.money,
+    propaganda: sum.propaganda + card.propaganda,
+  }), {money: 0, propaganda: 0});
+  const me = (state.players || []).find(player => player.id === playerId) || null;
+  const affordable = !!me
+    && Number(me.resources?.money || 0) >= total.money
+    && Number(me.resources?.propaganda || 0) >= total.propaganda;
+  return {indices, cards, total, me, affordable};
+}
+
+function purchaseCostText(cost) {
+  const parts = [];
+  if (Number(cost.money || 0) > 0) parts.push(`${cost.money} 資金`);
+  if (Number(cost.propaganda || 0) > 0) parts.push(`${cost.propaganda} 宣傳`);
+  return parts.length ? parts.join(' ＋ ') : '免費';
+}
+
+function updatePurchaseSelectionControls(state = window.lastGameState || {}) {
+  const controls = document.getElementById('purchaseSelectionControls');
+  const summary = document.getElementById('purchaseSelectionSummary');
+  const clearBtn = document.getElementById('clearPurchaseSelectionBtn');
+  const buyBtn = document.getElementById('openPurchaseConfirmBtn');
+  if (!controls || !summary || !clearBtn || !buyBtn) return;
+  const isPurchaseTurn = String(state.turn_phase || '').toLowerCase() === 'end' && isMyTurnState(state);
+  controls.style.display = isPurchaseTurn ? 'flex' : 'none';
+  if (!isPurchaseTurn) {
+    selectedPurchaseIndices.clear();
+    closePurchaseConfirmModal();
+    return;
+  }
+  const selection = purchaseSelectionDetails(state);
+  summary.textContent = selection.cards.length
+    ? `已選 ${selection.cards.length} 張｜合計 ${purchaseCostText(selection.total)}`
+    : '請勾選要購買的卡牌';
+  clearBtn.disabled = selection.cards.length === 0;
+  buyBtn.disabled = selection.cards.length === 0 || !selection.affordable;
+  buyBtn.textContent = selection.cards.length ? `購買所選 ${selection.cards.length} 張` : '購買所選卡牌';
+  buyBtn.title = selection.cards.length > 0 && !selection.affordable ? '所選卡牌的合計費用超過目前資源。' : '';
+}
+
+function togglePurchaseSelection(event, index) {
+  event.stopPropagation();
+  if (event.target.checked) selectedPurchaseIndices.add(index);
+  else selectedPurchaseIndices.delete(index);
+  const card = event.target.closest('.card');
+  if (card) card.classList.toggle('purchase-card-selected', event.target.checked);
+  updatePurchaseSelectionControls();
+}
+
+function clearPurchaseSelection() {
+  selectedPurchaseIndices.clear();
+  document.querySelectorAll('.purchase-card-checkbox input').forEach(input => { input.checked = false; });
+  document.querySelectorAll('.purchase-card-selected').forEach(card => card.classList.remove('purchase-card-selected'));
+  updatePurchaseSelectionControls();
+}
+
+function openPurchaseConfirmModal() {
+  const overlay = document.getElementById('purchaseConfirmModal');
+  const cardsEl = document.getElementById('purchaseConfirmCards');
+  const totalEl = document.getElementById('purchaseConfirmTotal');
+  const warningEl = document.getElementById('purchaseConfirmWarning');
+  const confirmBtn = document.getElementById('confirmPurchaseBtn');
+  if (!overlay || !cardsEl || !totalEl || !warningEl || !confirmBtn) return;
+  const selection = purchaseSelectionDetails();
+  if (!selection.cards.length) return;
+  cardsEl.innerHTML = selection.cards.map(card => `
+    <div class="purchase-confirm-card-row">
+      <div><strong>${escapeHtml(card.name)}</strong><span>${escapeHtml(card.zone)}</span></div>
+      <div class="purchase-confirm-card-cost">${escapeHtml(purchaseCostText(card))}</div>
+    </div>`).join('');
+  totalEl.textContent = `共 ${selection.cards.length} 張｜合計 ${purchaseCostText(selection.total)}`;
+  warningEl.style.display = selection.affordable ? 'none' : 'block';
+  warningEl.textContent = selection.affordable ? '' : '資源不足，請取消後調整勾選的卡牌。';
+  confirmBtn.disabled = !selection.affordable;
+  overlay.style.display = 'flex';
+}
+
+function closePurchaseConfirmModal() {
+  const overlay = document.getElementById('purchaseConfirmModal');
+  if (overlay) overlay.style.display = 'none';
+}
+
+function confirmSelectedPurchase() {
+  const selection = purchaseSelectionDetails();
+  if (!selection.cards.length || !selection.affordable) return;
+  closePurchaseConfirmModal();
+  selectedPurchaseIndices.clear();
+  updatePurchaseSelectionControls();
+  sendAction('buy_cards', {indices: selection.indices});
 }
 
 function openCardTargetModal(index, cardName, targetLabel) {
@@ -2821,13 +2926,12 @@ async function render(state) {
       const isMyPurchaseTurn = isMyTurnState(state);
       const hasMyPendingChoice = !!(state.pending_choice && me && state.pending_choice.player_id === me.id);
       const purchaseCost = state.purchase_area_costs?.[i] || {money: 0, propaganda: 0};
-      const purchaseAffordable = !!state.purchase_area_affordable?.[i];
       const costParts = [];
       if (Number(purchaseCost.money || 0) > 0) costParts.push(`${purchaseCost.money}資金`);
       if (Number(purchaseCost.propaganda || 0) > 0) costParts.push(`${purchaseCost.propaganda}宣傳`);
       const costText = costParts.length ? costParts.join(' + ') : '免費';
-      const canBuy = inPurchasePhase && isMyPurchaseTurn && !hasMyPendingChoice && purchaseAffordable && (!isStatic || (staticSupply != null && staticSupply > 0));
-      const buyTitle = !inPurchasePhase
+      const canSelect = inPurchasePhase && isMyPurchaseTurn && !hasMyPendingChoice && (!isStatic || (staticSupply != null && staticSupply > 0));
+      const selectTitle = !inPurchasePhase
         ? '行動階段結束後才能購買。'
         : !isMyPurchaseTurn
           ? '等待當前玩家購買。'
@@ -2835,16 +2939,18 @@ async function render(state) {
             ? '請先處理目前待選擇效果。'
             : isStatic && (staticSupply == null || staticSupply <= 0)
               ? '常設供應已售完'
-              : !purchaseAffordable
-                ? `資源不足，需要 ${costText}`
-                : `購買此卡（${costText}）`;
+              : `勾選此卡（${costText}）`;
       const variantInfo = (state.purchase_area_variants || [])[i] || null;
+      const isSelected = selectedPurchaseIndices.has(i);
       container.innerHTML += `
-        <div class='card ${typeClass}${supportClass} ${colorClass}' onclick="selectCardDetail(${JSON.stringify(card)},'purchase',${isStatic})" ${canBuy ? `ondblclick="sendAction('buy_card',{index:${i}})"` : ''}>
+        <div class='card ${typeClass}${supportClass} ${colorClass}${isSelected ? ' purchase-card-selected' : ''}' onclick="selectCardDetail(${JSON.stringify(card)},'purchase',${isStatic})">
           ${renderCardFace(card, 'purchase', isStatic, true, isStatic ? staticSupply : null, variantInfo)}
-          <button class="purchase-card-buy-btn" type="button" ${canBuy ? '' : 'disabled aria-disabled="true"'} title="${escapeHtml(buyTitle)}" onclick="event.stopPropagation(); sendAction('buy_card',{index:${i}})">購買</button>
+          <label class="purchase-card-checkbox" title="${escapeHtml(selectTitle)}" onclick="event.stopPropagation()">
+            <input type="checkbox" data-purchase-index="${i}" aria-label="勾選 ${escapeHtml(card)}" ${isSelected ? 'checked' : ''} ${canSelect ? '' : 'disabled aria-disabled="true"'} onchange="togglePurchaseSelection(event, ${i})">
+          </label>
         </div>`;
     });
+    updatePurchaseSelectionControls(state);
   }
 
   // Log
