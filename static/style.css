@@ -1655,6 +1655,61 @@ body {
   cursor: not-allowed;
 }
 
+.card-preview-overlay {
+  z-index: 80;
+  cursor: zoom-out;
+  background: rgba(2, 6, 12, 0.72);
+}
+
+.card-preview-content {
+  width: 360px;
+  height: 500px;
+  max-width: calc(100% - 48px);
+  max-height: calc(100% - 48px);
+  border: 1px solid rgba(191, 219, 254, 0.64);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.72), 0 0 0 3px rgba(59, 130, 246, 0.24);
+}
+
+.card-preview-content .card-face {
+  width: 100%;
+  height: 100%;
+  padding: 26px 22px 22px;
+  gap: 15px;
+  border-radius: 19px;
+}
+
+.card-preview-content .purchase-card-title {
+  padding-right: 58px;
+  font-size: 27px;
+}
+
+.card-preview-content .card-count {
+  right: 18px;
+  top: 18px;
+  font-size: 14px;
+}
+
+.card-preview-content .card-face-meta-row {
+  font-size: 15px;
+}
+
+.card-preview-content .purchase-card-body {
+  font-size: 17px;
+  line-height: 1.55;
+}
+
+.card-preview-content .card-meaning {
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.card-preview-content .card-badge {
+  font-size: 13px;
+  padding: 6px 10px;
+}
+
 .era-achievement-glass {
   width: min(640px, calc(100vw - 32px));
 }

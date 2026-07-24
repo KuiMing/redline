@@ -812,8 +812,32 @@ function renderCardFace(cardName, zone, isStatic = false, compact = false, count
     </div>`;
 }
 
-function selectCardDetail(_name, _zone, _isStatic = false) {
+function closeCardPreview() {
+  const overlay = document.getElementById('cardPreviewModal');
+  if (overlay) overlay.style.display = 'none';
 }
+
+function selectCardDetail(cardElement) {
+  const overlay = document.getElementById('cardPreviewModal');
+  const preview = document.getElementById('cardPreviewContent');
+  if (!overlay || !preview || !(cardElement instanceof HTMLElement)) return;
+
+  const cardName = cardElement.dataset.cardName || '';
+  const zone = cardElement.dataset.cardZone || 'purchase';
+  const isStatic = cardElement.dataset.cardStatic === 'true';
+  const countText = cardElement.dataset.cardCount || null;
+  const variantIndex = Number.parseInt(cardElement.dataset.cardVariantIndex || '', 10);
+  const variantInfo = Number.isInteger(variantIndex) ? {variant_index: variantIndex} : null;
+  if (!cardName) return;
+
+  preview.innerHTML = renderCardFace(cardName, zone, isStatic, false, countText, variantInfo);
+  overlay.setAttribute('aria-label', `${cardName} 放大檢視`);
+  overlay.style.display = 'flex';
+}
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') closeCardPreview();
+});
 
 function renderFactionDetails(factionId, selectedBaseName = null, selectedBaseGroupName = null) {
   const panel = document.getElementById('factionDetailPanel');
@@ -2867,7 +2891,6 @@ async function render(state) {
         return '只有當前玩家的行動階段可以打出手牌。';
       };
       me.hand.forEach((card, i) => {
-        const cardArg = escapeHtml(jsSingleQuotedString(card));
         const cardAttr = escapeHtml(card);
         const isSupportCard = /奧援/.test(card);
         const variantInfo = (me.hand_variants || [])[i] || null;
@@ -2895,7 +2918,7 @@ async function render(state) {
               return `<button class="hand-card-action-btn" type="button" ${resourceDisabledAttr} title="${escapeHtml(resourceTitle)}" data-card-index="${i}" data-card-name="${cardAttr}" data-card-mode="resource">資源</button>`;
             })();
         handDiv.innerHTML += `
-          <div class='card hand-card ${colorClass}' onclick="selectCardDetail(${cardArg},'hand',false)">
+          <div class='card hand-card ${colorClass}' data-card-name="${cardAttr}" data-card-zone="hand" data-card-static="false" data-card-variant-index="${variantInfo?.variant_index ?? ''}" onclick="selectCardDetail(event.currentTarget)">
             ${renderCardFace(card, 'hand', false, true, null, variantInfo)}
             <div class="hand-card-actions">
               ${firstButtonHtml}
@@ -2943,7 +2966,7 @@ async function render(state) {
       const variantInfo = (state.purchase_area_variants || [])[i] || null;
       const isSelected = selectedPurchaseIndices.has(i);
       container.innerHTML += `
-        <div class='card ${typeClass}${supportClass} ${colorClass}${isSelected ? ' purchase-card-selected' : ''}' onclick="selectCardDetail(${JSON.stringify(card)},'purchase',${isStatic})">
+        <div class='card ${typeClass}${supportClass} ${colorClass}${isSelected ? ' purchase-card-selected' : ''}' data-card-name="${escapeHtml(card)}" data-card-zone="purchase" data-card-static="${isStatic}" data-card-count="${isStatic && staticSupply != null ? staticSupply : ''}" data-card-variant-index="${variantInfo?.variant_index ?? ''}" onclick="selectCardDetail(event.currentTarget)">
           ${renderCardFace(card, 'purchase', isStatic, true, isStatic ? staticSupply : null, variantInfo)}
           <label class="purchase-card-checkbox" title="${escapeHtml(selectTitle)}" onclick="event.stopPropagation()">
             <input type="checkbox" data-purchase-index="${i}" aria-label="勾選 ${escapeHtml(card)}" ${isSelected ? 'checked' : ''} ${canSelect ? '' : 'disabled aria-disabled="true"'} onchange="togglePurchaseSelection(event, ${i})">
