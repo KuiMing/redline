@@ -775,6 +775,33 @@ function supportVariantEffectText(info, variantInfo) {
   ].join('\n');
 }
 
+const SUPPORT_CARD_ART_FILES = {
+  '英美奧援': ['01_英美奧援_歐洲-天方.png', '02_英美奧援_東洋-臺灣.png'],
+  '東洋奧援': ['03_東洋奧援_臺灣-南洋.png', '04_東洋奧援_北國-英美.png'],
+  '南洋奧援': ['05_南洋奧援_臺灣-東洋.png', '06_南洋奧援_印度-天方.png'],
+  '印度奧援': ['07_印度奧援_南洋-英美.png', '08_印度奧援_天方-北國.png'],
+  '天方奧援': ['09_天方奧援_印度-南洋.png', '10_天方奧援_北國-歐洲.png'],
+  '歐洲奧援': ['11_歐洲奧援_北國-天方.png', '12_歐洲奧援_英美-南洋.png'],
+  '北國奧援': ['13_北國奧援_歐洲-東洋.png', '14_北國奧援_天方-印度.png'],
+  '臺灣奧援': ['15_臺灣奧援_東洋-南洋.png', '16_臺灣奧援_英美-歐洲.png'],
+  '紅軍奧援': ['17_紅軍奧援_起始牌.png'],
+};
+
+function playableCardArtUrl(cardName, variantInfo = null) {
+  const name = String(cardName || '').trim();
+  if (!name || !cardPresentation(name)) return '';
+  if (/奧援/.test(name)) {
+    const files = SUPPORT_CARD_ART_FILES[name];
+    if (!files?.length) return '';
+    const requestedIndex = variantInfo && Number.isInteger(variantInfo.variant_index)
+      ? variantInfo.variant_index
+      : 0;
+    const file = files[requestedIndex] || files[0];
+    return `/static/card-art/support/${encodeURIComponent(file)}`;
+  }
+  return `/static/card-art/actions/${encodeURIComponent(name)}.png`;
+}
+
 function renderCardFace(cardName, zone, isStatic = false, compact = false, countOverride = null, variantInfo = null) {
   const info = cardPresentation(cardName) || {};
   const isSupport = /奧援/.test(cardName);
@@ -796,9 +823,13 @@ function renderCardFace(cardName, zone, isStatic = false, compact = false, count
     badgeItems.push(`資源 ${info.resource_text}`);
   }
   const meaning = (info.meaning_text && !isSupport) ? `<div class="card-meaning">${escapeHtml(info.meaning_text)}</div>` : '';
-  const countText = countOverride != null ? String(countOverride) : info.count_text;
+  // 只在常設購買區顯示即時剩餘供應；手牌與隨機牌庫的目錄張數不是目前供應量，
+  // 而且會遮住完整卡面的購買費用。
+  const countText = isStatic
+    ? (countOverride != null ? String(countOverride) : info.count_text)
+    : null;
   const count = countText ? `<div class="card-count">剩 ${escapeHtml(countText)}</div>` : '';
-  return `
+  const textFace = `
     <div class="card-face ${colorClass}${compact ? ' compact' : ''}" style="${colorStyle}">
       <div class="card-face-top">
         <div class="purchase-card-title">${escapeHtml(cardName)}</div>
@@ -810,6 +841,14 @@ function renderCardFace(cardName, zone, isStatic = false, compact = false, count
       </div>
       ${meaning}
       ${renderBadgeList(badgeItems)}
+    </div>`;
+  const artUrl = playableCardArtUrl(cardName, variantInfo);
+  if (!artUrl) return textFace;
+  return `
+    <div class="card-face card-art-face ${colorClass}${compact ? ' compact' : ''}" style="${colorStyle}">
+      <img class="playable-card-art-image" src="${artUrl}" alt="${escapeHtml(cardName)}完整卡面" decoding="async" onerror="this.parentElement.classList.add('playable-card-art-load-failed')">
+      ${count}
+      <div class="playable-card-art-fallback">${textFace}</div>
     </div>`;
 }
 

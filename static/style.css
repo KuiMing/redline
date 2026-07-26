@@ -1051,6 +1051,44 @@ body {
   background: var(--card-accent, var(--border));
 }
 
+.card-face.card-art-face {
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+  background: #0b0908;
+}
+
+.card-art-face::before {
+  display: none;
+}
+
+.playable-card-art-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+}
+
+.playable-card-art-fallback {
+  display: none;
+  width: 100%;
+  height: 100%;
+}
+
+.card-art-face.playable-card-art-load-failed > .playable-card-art-image,
+.card-art-face.playable-card-art-load-failed > .card-count {
+  display: none;
+}
+
+.card-art-face.playable-card-art-load-failed > .playable-card-art-fallback {
+  display: block;
+}
+
+.card-art-face.playable-card-art-load-failed > .playable-card-art-fallback > .card-face {
+  width: 100%;
+  height: 100%;
+}
+
 .card-face.compact {
   gap: 8px;
 }
@@ -1662,7 +1700,7 @@ body {
 }
 
 .card-preview-content {
-  width: 360px;
+  width: 407px;
   height: 500px;
   max-width: calc(100% - 48px);
   max-height: calc(100% - 48px);
@@ -1678,6 +1716,11 @@ body {
   padding: 26px 22px 22px;
   gap: 15px;
   border-radius: 19px;
+}
+
+.card-preview-content .card-face.card-art-face {
+  padding: 0;
+  gap: 0;
 }
 
 .card-preview-content .purchase-card-title {
