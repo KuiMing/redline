@@ -2207,13 +2207,13 @@ body {
   position: absolute;
   right: 24px;
   top: 0;
-  width: 300px;
-  height: 200px;
-  max-height: 200px;
-  overflow: auto;
+  width: 270px;
+  height: 220px;
+  max-height: 220px;
+  overflow: hidden;
   z-index: 4;
-  padding: 10px;
-  border-radius: 10px;
+  padding: 0;
+  border-radius: 14px;
   margin-bottom: 0;
   border: 1px solid rgba(255, 214, 128, 0.45);
   background: rgba(38, 27, 12, 0.84);
@@ -2267,12 +2267,12 @@ body {
 }
 
 .event-reveal-card {
-  width: 760px;
-  min-height: 470px;
+  width: min(758px, calc(100vw - 72px));
+  min-height: 0;
   max-width: calc(100% - 72px);
   max-height: calc(100% - 56px);
-  overflow: auto;
-  padding: 34px 42px 28px;
+  overflow: hidden;
+  padding: 0;
   border: 2px solid rgba(255, 216, 135, 0.78);
   border-radius: 24px;
   color: #f8e8c5;
@@ -2355,6 +2355,124 @@ body {
   font-weight: 800;
   letter-spacing: 0.08em;
   text-align: center;
+}
+
+/* 完整事件卡卡面：右上角以 270×220 原比例顯示，放大層使用同一張 1350×1100 母版。 */
+.event-card-panel > .panel-title {
+  display: none;
+}
+
+.event-card-art-shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #0b0908;
+}
+
+.event-card-art-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.event-card-art-shell .event-card-art-fallback {
+  display: none;
+}
+
+.event-card-art-shell.event-card-art-load-failed .event-card-art-image,
+.event-card-art-shell.event-card-art-load-failed .event-art-runtime-status,
+.event-card-art-shell.event-card-art-load-failed .event-art-status-chip {
+  display: none;
+}
+
+.event-card-art-shell.event-card-art-load-failed .event-card-art-fallback {
+  display: block;
+  height: 100%;
+  overflow: auto;
+  padding: 10px;
+}
+
+.event-art-status-chip {
+  position: absolute;
+  right: 7px;
+  bottom: 7px;
+  z-index: 2;
+  padding: 4px 8px;
+  border: 1px solid rgba(255, 232, 183, 0.72);
+  border-radius: 999px;
+  color: #fff2cf;
+  background: rgba(5, 9, 14, 0.88);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.5);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.event-card-art-shell > .event-panel-open-hint {
+  position: absolute;
+  left: 7px;
+  bottom: 7px;
+  z-index: 2;
+  margin: 0;
+  padding: 4px 7px;
+  border: 0;
+  border-radius: 999px;
+  color: rgba(255, 242, 207, 0.92);
+  background: rgba(5, 9, 14, 0.82);
+  font-size: 10px;
+}
+
+.event-card-art-shell.expanded {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: auto;
+  max-height: calc(100vh - 56px);
+}
+
+.event-card-art-shell.expanded .event-card-art-image {
+  width: 100%;
+  height: auto;
+  max-height: none;
+  object-fit: initial;
+}
+
+.event-art-runtime-status {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 46px;
+  padding: 9px 16px;
+  color: #f8e8c5;
+  background: rgba(10, 14, 21, 0.98);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.event-art-runtime-status strong {
+  flex: 0 0 auto;
+  color: #ffe09a;
+}
+
+.event-art-runtime-status span:last-child {
+  margin-left: auto;
+  color: #d7e9dc;
+  text-align: right;
+}
+
+.event-card-art-shell.expanded > .event-reveal-dismiss-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  z-index: 3;
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 999px;
+  color: rgba(255, 242, 207, 0.9);
+  background: rgba(5, 9, 14, 0.82);
+  font-size: 11px;
+  transform: translateX(-50%);
 }
 
 @media (prefers-reduced-motion: reduce) {

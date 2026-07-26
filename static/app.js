@@ -1915,13 +1915,36 @@ function renderChoiceModal(state) {
   overlay.style.display = 'flex';
 }
 
+const EVENT_CARD_ART_NAMES = new Set([
+  '歲月靜好',
+  '全國人大召開',
+  '香港抗暴之戰',
+  '重大災難',
+  '藏印邊境軍事對峙',
+  '貿易戰加劇',
+  '東突厥集中營',
+  '北京政爭',
+  '紅軍權貴出逃',
+  '烏魯木齊七五事件',
+  '上海合作組織',
+  '一帶一路 南洋',
+  '一帶一路 天方',
+]);
+
+function eventCardArtUrl(event) {
+  const name = String(event?.name || '').trim();
+  return EVENT_CARD_ART_NAMES.has(name)
+    ? `/static/card-art/events/${encodeURIComponent(name)}.png`
+    : '';
+}
+
 function eventCardMarkup(event, expanded = false) {
   const progress = event.progress || {};
   const current = Number(progress.count || 0);
   const required = Number(progress.required || event.trigger?.count || 0);
   const statusMap = {
     active: '進行中',
-    success_pending: '條件已達成，等全體玩家行動結束後結算',
+    success_pending: '條件已達成，等待結算',
     success: '成功已結算',
     failure: '失敗已結算',
     idle: '無效果',
@@ -1929,6 +1952,10 @@ function eventCardMarkup(event, expanded = false) {
     auto_pending: '等待指定玩家回合發動',
   };
   const typeMap = {idle: '歲月靜好', mission: '任務', auto: '自動'};
+  const statusText = statusMap[event.status] || event.status || '進行中';
+  const progressText = event.type === 'mission' ? `任務進度 ${current}/${required || 0}` : '';
+  const resultText = event.result_text || statusText;
+  const artUrl = eventCardArtUrl(event);
   const autoEffectLine = event.type === 'auto'
     ? `<div class="event-card-line event-card-effect-row"><strong>自動效果：</strong><span>${escapeHtml(event.effect_text || '無')}</span></div>`
     : '';
@@ -1942,15 +1969,27 @@ function eventCardMarkup(event, expanded = false) {
   const dismissHint = expanded
     ? '<div class="event-reveal-dismiss-hint">點擊任意地方關閉</div>'
     : '<div class="event-panel-open-hint">點擊放大查看</div>';
-  return `
+  const textMarkup = `
     <div class="event-card-inner${expanded ? ' expanded' : ''}">
       ${expanded ? '<div class="event-reveal-kicker">本回合事件</div>' : ''}
       <div class="event-card-name">${escapeHtml(event.name || '未知事件')}</div>
-      <div class="event-card-meta">${escapeHtml(typeMap[event.type] || event.type || '未知')}事件｜${escapeHtml(statusMap[event.status] || event.status || '進行中')}</div>
-      <div class="event-card-result"><strong>事件結果：</strong><span>${escapeHtml(event.result_text || statusMap[event.status] || '進行中')}</span></div>
+      <div class="event-card-meta">${escapeHtml(typeMap[event.type] || event.type || '未知')}事件｜${escapeHtml(statusText)}</div>
+      <div class="event-card-result"><strong>事件結果：</strong><span>${escapeHtml(resultText)}</span></div>
       ${autoEffectLine}
       ${missionLines}
       ${dismissHint}
+    </div>`;
+  if (!artUrl) return textMarkup;
+
+  const runtimeStatus = expanded
+    ? `<div class="event-art-runtime-status"><strong>${escapeHtml(statusText)}</strong>${progressText ? `<span>${escapeHtml(progressText)}</span>` : ''}<span>${escapeHtml(resultText)}</span></div>`
+    : `<div class="event-art-status-chip">${escapeHtml(progressText || statusText)}</div>`;
+  return `
+    <div class="event-card-art-shell${expanded ? ' expanded' : ''}">
+      <img class="event-card-art-image" src="${artUrl}" alt="${escapeHtml(event.name || '事件卡')}完整卡面" ${expanded ? '' : 'loading="lazy"'} decoding="async" onerror="this.parentElement.classList.add('event-card-art-load-failed')">
+      ${runtimeStatus}
+      ${dismissHint}
+      <div class="event-card-art-fallback">${textMarkup}</div>
     </div>`;
 }
 

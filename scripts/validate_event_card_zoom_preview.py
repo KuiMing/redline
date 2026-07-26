@@ -40,8 +40,10 @@ def main() -> None:
     js = (BASE / "static/app.js").read_text(encoding="utf-8")
     css = (BASE / "static/style.css").read_text(encoding="utf-8")
     check(checks, "dedicated_event_reveal_overlay_exists", 'id="eventRevealModal"' in html and 'id="eventRevealCard"' in html, "event reveal DOM")
-    check(checks, "plain_text_only_no_art_asset_binding", "eventRevealCard" in js and "card-art" not in js[js.find("function eventCardMarkup"):js.find("function minimizeEraAchievement")], "event renderer does not reference generated art")
-    check(checks, "zoom_animation_and_cache_bust_exist", "@keyframes event-card-zoom-in" in css and "event-zoom-20260726" in html, "zoom keyframes + CSS/JS cache bust")
+    event_art_dir = BASE / "static/card-art/events"
+    event_art_files = sorted(event_art_dir.glob("*.png"))
+    check(checks, "all_event_art_assets_are_bound", len(event_art_files) == 13 and "EVENT_CARD_ART_NAMES" in js and "/static/card-art/events/" in js, [path.name for path in event_art_files])
+    check(checks, "zoom_animation_and_cache_bust_exist", "@keyframes event-card-zoom-in" in css and "event-art-20260726" in html, "zoom keyframes + CSS/JS cache bust")
 
     setup = post_json("/test/setup-event-card-proof", {"event_name": "香港抗暴之戰", "current_event_active": True})
     url = f"{BASE_URL}{setup['url']}&v=event-card-zoom-preview"
@@ -65,6 +67,10 @@ def main() -> None:
             animationName: getComputedStyle(card).animationName,
             text: card.innerText,
             imageCount: card.querySelectorAll('img, picture, svg image').length,
+            image: (() => {
+              const image = card.querySelector('.event-card-art-image');
+              return image ? {src: image.currentSrc || image.src, alt: image.alt, naturalWidth: image.naturalWidth, naturalHeight: image.naturalHeight} : null;
+            })(),
             centerDelta: {
               x: Math.abs((rect.left + rect.width / 2) - window.innerWidth / 2),
               y: Math.abs((rect.top + rect.height / 2) - window.innerHeight / 2),
@@ -84,10 +90,14 @@ def main() -> None:
         )
         check(
             checks,
-            "expanded_preview_shows_current_plain_text_event",
-            all(text in open_state["text"] for text in ["本回合事件", "香港抗暴之戰", "任務條件", "成功獎勵", "失敗／紅軍效果", "點擊任意地方關閉"])
-            and open_state["imageCount"] == 0,
-            {"text": open_state["text"], "imageCount": open_state["imageCount"]},
+            "expanded_preview_shows_complete_event_art_and_runtime_status",
+            all(text in open_state["text"] for text in ["進行中", "任務進度", "點擊任意地方關閉"])
+            and open_state["imageCount"] == 1
+            and open_state["image"] is not None
+            and open_state["image"]["naturalWidth"] == 1350
+            and open_state["image"]["naturalHeight"] == 1100
+            and "香港抗暴之戰完整卡面" == open_state["image"]["alt"],
+            {"text": open_state["text"], "imageCount": open_state["imageCount"], "image": open_state["image"]},
         )
 
         # Clicking the enlarged card itself must dismiss because the user requested click-anywhere dismissal.
@@ -110,7 +120,8 @@ def main() -> None:
         panel.wait_for(state="visible")
         panel_state = page.evaluate("""() => {
           const panel = document.getElementById('eventCardPanel');
-          return {role: panel.getAttribute('role'), tabindex: panel.getAttribute('tabindex'), text: panel.innerText};
+          const image = panel.querySelector('.event-card-art-image');
+          return {role: panel.getAttribute('role'), tabindex: panel.getAttribute('tabindex'), text: panel.innerText, imageLoaded: !!image && image.naturalWidth === 1350};
         }""")
         page.screenshot(path=str(PINNED_SHOT), full_page=True)
         panel.click()
@@ -119,16 +130,18 @@ def main() -> None:
           display: getComputedStyle(document.getElementById('eventRevealModal')).display,
           animation: getComputedStyle(document.getElementById('eventRevealCard')).animationName,
           text: document.getElementById('eventRevealCard').innerText,
+          imageAlt: document.querySelector('#eventRevealCard .event-card-art-image')?.alt || '',
         })""")
         check(
             checks,
             "top_right_event_panel_reopens_preview",
             panel_state["role"] == "button"
             and panel_state["tabindex"] == "0"
+            and panel_state["imageLoaded"]
             and "點擊放大查看" in panel_state["text"]
             and reopened["display"] == "flex"
             and reopened["animation"] == "event-card-zoom-in"
-            and "香港抗暴之戰" in reopened["text"],
+            and reopened["imageAlt"] == "香港抗暴之戰完整卡面",
             {"panel": panel_state, "reopened": reopened},
         )
 
