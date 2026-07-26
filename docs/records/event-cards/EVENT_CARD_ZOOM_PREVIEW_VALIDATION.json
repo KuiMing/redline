@@ -1,0 +1,91 @@
+{
+  "summary": {
+    "total": 9,
+    "passed": 9,
+    "failed": 0
+  },
+  "base_url": "http://127.0.0.1:8000",
+  "event": "香港抗暴之戰",
+  "checks": [
+    {
+      "name": "dedicated_event_reveal_overlay_exists",
+      "passed": true,
+      "details": "event reveal DOM"
+    },
+    {
+      "name": "plain_text_only_no_art_asset_binding",
+      "passed": true,
+      "details": "event renderer does not reference generated art"
+    },
+    {
+      "name": "zoom_animation_and_cache_bust_exist",
+      "passed": true,
+      "details": "zoom keyframes + CSS/JS cache bust"
+    },
+    {
+      "name": "turn_start_auto_opens_centered_zoom_preview",
+      "passed": true,
+      "details": {
+        "overlayDisplay": "flex",
+        "animationName": "event-card-zoom-in",
+        "text": "本回合事件\n香港抗暴之戰\n任務事件｜進行中\n事件結果：\n非紅軍任務進行中\n任務條件：\n打出購買費用含資金的卡牌至少 1 次\n進度：0/1\n成功獎勵：\n非紅軍：獲得 2 張宣傳家\n失敗／紅軍效果：\n紅軍：選 1 張手牌棄掉\n點擊任意地方關閉",
+        "imageCount": 0,
+        "centerDelta": {
+          "x": 0,
+          "y": 0
+        },
+        "cardRect": {
+          "left": 260,
+          "top": 104.703125,
+          "width": 760,
+          "height": 510.59375
+        }
+      }
+    },
+    {
+      "name": "expanded_preview_shows_current_plain_text_event",
+      "passed": true,
+      "details": {
+        "text": "本回合事件\n香港抗暴之戰\n任務事件｜進行中\n事件結果：\n非紅軍任務進行中\n任務條件：\n打出購買費用含資金的卡牌至少 1 次\n進度：0/1\n成功獎勵：\n非紅軍：獲得 2 張宣傳家\n失敗／紅軍效果：\n紅軍：選 1 張手牌棄掉\n點擊任意地方關閉",
+        "imageCount": 0
+      }
+    },
+    {
+      "name": "click_anywhere_closes_without_same_turn_reopen",
+      "passed": true,
+      "details": {
+        "displayAfterRerender": "none"
+      }
+    },
+    {
+      "name": "top_right_event_panel_reopens_preview",
+      "passed": true,
+      "details": {
+        "panel": {
+          "role": "button",
+          "tabindex": "0",
+          "text": "目前事件\n香港抗暴之戰\n任務事件｜進行中\n事件結果：非紅軍任務進行中\n任務條件：打出購買費用含資金的卡牌至少 1 次\n進度：0/1\n成功獎勵：非紅軍：獲得 2 張宣傳家\n失敗／紅軍效果：紅軍：選 1 張手牌棄掉\n點擊放大查看"
+        },
+        "reopened": {
+          "display": "flex",
+          "animation": "event-card-zoom-in",
+          "text": "本回合事件\n香港抗暴之戰\n任務事件｜進行中\n事件結果：\n非紅軍任務進行中\n任務條件：\n打出購買費用含資金的卡牌至少 1 次\n進度：0/1\n成功獎勵：\n非紅軍：獲得 2 張宣傳家\n失敗／紅軍效果：\n紅軍：選 1 張手牌棄掉\n點擊任意地方關閉"
+        }
+      }
+    },
+    {
+      "name": "escape_also_closes_preview",
+      "passed": true,
+      "details": "Escape closed the overlay"
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "passed": true,
+      "details": []
+    }
+  ],
+  "screenshots": [
+    "docs/records/event-cards/event_card_zoom_preview_open.png",
+    "docs/records/event-cards/event_card_zoom_preview_pinned.png"
+  ]
+}

@@ -21,6 +21,7 @@ let lobbyTransientStatus = null;
 let activeChoiceModal = null;
 let lastFactionActionResultKey = null;
 let lastSupportChoiceMapHighlightPayload = null;
+let lastEventRevealKey = null;
 const selectedPurchaseIndices = new Set();
 
 function resizeStage() {
@@ -836,7 +837,10 @@ function selectCardDetail(cardElement) {
 }
 
 document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape') closeCardPreview();
+  if (event.key === 'Escape') {
+    closeCardPreview();
+    closeEventReveal();
+  }
 });
 
 function renderFactionDetails(factionId, selectedBaseName = null, selectedBaseGroupName = null) {
@@ -1911,17 +1915,7 @@ function renderChoiceModal(state) {
   overlay.style.display = 'flex';
 }
 
-function renderCurrentEvent(state) {
-  const panel = document.getElementById('eventCardPanel');
-  const content = document.getElementById('eventCardContent');
-  if (!panel || !content) return;
-  const event = state.current_event || null;
-  if (!event) {
-    panel.style.display = 'none';
-    content.innerHTML = '';
-    return;
-  }
-  panel.style.display = 'block';
+function eventCardMarkup(event, expanded = false) {
   const progress = event.progress || {};
   const current = Number(progress.count || 0);
   const required = Number(progress.required || event.trigger?.count || 0);
@@ -1936,22 +1930,83 @@ function renderCurrentEvent(state) {
   };
   const typeMap = {idle: '歲月靜好', mission: '任務', auto: '自動'};
   const autoEffectLine = event.type === 'auto'
-    ? `<div class="event-card-line"><strong>自動效果：</strong>${escapeHtml(event.effect_text || '無')}</div>`
+    ? `<div class="event-card-line event-card-effect-row"><strong>自動效果：</strong><span>${escapeHtml(event.effect_text || '無')}</span></div>`
     : '';
   const missionLines = event.type === 'mission'
     ? `
-    <div class="event-card-line"><strong>任務條件：</strong>${escapeHtml(event.trigger_text || '無')}</div>
-    <div class="event-card-progress">進度：${current}/${required || 0}</div>
-    <div class="event-card-line"><strong>成功獎勵：</strong>${escapeHtml(event.success_text || '無')}</div>
-    <div class="event-card-line"><strong>失敗／紅軍效果：</strong>${escapeHtml(event.failure_text || '無')}</div>`
+      <div class="event-card-line event-card-effect-row"><strong>任務條件：</strong><span>${escapeHtml(event.trigger_text || '無')}</span></div>
+      <div class="event-card-progress">進度：${current}/${required || 0}</div>
+      <div class="event-card-line event-card-effect-row event-card-success"><strong>成功獎勵：</strong><span>${escapeHtml(event.success_text || '無')}</span></div>
+      <div class="event-card-line event-card-effect-row event-card-failure"><strong>失敗／紅軍效果：</strong><span>${escapeHtml(event.failure_text || '無')}</span></div>`
     : '';
-  content.innerHTML = `
-    <div class="event-card-name">${escapeHtml(event.name || '未知事件')}</div>
-    <div class="event-card-meta">類型：${escapeHtml(typeMap[event.type] || event.type || '未知')}｜狀態：${escapeHtml(statusMap[event.status] || event.status || '進行中')}</div>
-    <div class="event-card-result"><strong>事件結果：</strong>${escapeHtml(event.result_text || statusMap[event.status] || '進行中')}</div>
-    ${autoEffectLine}
-    ${missionLines}
-  `;
+  const dismissHint = expanded
+    ? '<div class="event-reveal-dismiss-hint">點擊任意地方關閉</div>'
+    : '<div class="event-panel-open-hint">點擊放大查看</div>';
+  return `
+    <div class="event-card-inner${expanded ? ' expanded' : ''}">
+      ${expanded ? '<div class="event-reveal-kicker">本回合事件</div>' : ''}
+      <div class="event-card-name">${escapeHtml(event.name || '未知事件')}</div>
+      <div class="event-card-meta">${escapeHtml(typeMap[event.type] || event.type || '未知')}事件｜${escapeHtml(statusMap[event.status] || event.status || '進行中')}</div>
+      <div class="event-card-result"><strong>事件結果：</strong><span>${escapeHtml(event.result_text || statusMap[event.status] || '進行中')}</span></div>
+      ${autoEffectLine}
+      ${missionLines}
+      ${dismissHint}
+    </div>`;
+}
+
+function closeEventReveal() {
+  const overlay = document.getElementById('eventRevealModal');
+  if (overlay) overlay.style.display = 'none';
+}
+
+function openCurrentEventReveal() {
+  const event = window.lastGameState?.current_event || null;
+  const overlay = document.getElementById('eventRevealModal');
+  const card = document.getElementById('eventRevealCard');
+  if (!event || !overlay || !card) return;
+  card.innerHTML = eventCardMarkup(event, true);
+  overlay.setAttribute('aria-label', `${event.name || '目前事件'} 放大檢視`);
+  overlay.style.display = 'flex';
+  // Restart the zoom animation when reopening from the pinned event card.
+  card.classList.remove('event-reveal-animate');
+  void card.offsetWidth;
+  card.classList.add('event-reveal-animate');
+}
+
+function renderCurrentEvent(state) {
+  const panel = document.getElementById('eventCardPanel');
+  const content = document.getElementById('eventCardContent');
+  if (!panel || !content) return;
+  const event = state.current_event || null;
+  if (!event) {
+    panel.style.display = 'none';
+    content.innerHTML = '';
+    closeEventReveal();
+    return;
+  }
+  panel.style.display = 'block';
+  panel.setAttribute('role', 'button');
+  panel.setAttribute('tabindex', '0');
+  panel.setAttribute('aria-label', `${event.name || '目前事件'}，點擊放大查看`);
+  panel.onclick = openCurrentEventReveal;
+  panel.onkeydown = (keyboardEvent) => {
+    if (keyboardEvent.key === 'Enter' || keyboardEvent.key === ' ') {
+      keyboardEvent.preventDefault();
+      openCurrentEventReveal();
+    }
+  };
+  content.innerHTML = eventCardMarkup(event, false);
+
+  const revealCard = document.getElementById('eventRevealCard');
+  const revealOverlay = document.getElementById('eventRevealModal');
+  if (revealOverlay?.style.display === 'flex' && revealCard) {
+    revealCard.innerHTML = eventCardMarkup(event, true);
+  }
+  const revealKey = `${state.turn ?? 0}:${event.id || event.name || 'event'}`;
+  if (lastEventRevealKey !== revealKey) {
+    lastEventRevealKey = revealKey;
+    openCurrentEventReveal();
+  }
 }
 
 function minimizeEraAchievement() {

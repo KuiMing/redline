@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>REDLINE // STRATEGIC COMMAND</title>
-  <link rel="stylesheet" href="/static/style.css?v=batch-purchase-20260724" />
+  <link rel="stylesheet" href="/static/style.css?v=event-zoom-20260726" />
 </head>
 <body>
 <div id="stageViewport">
@@ -203,6 +203,10 @@
   </div>
 </div>
 
+<div id="eventRevealModal" class="modal-overlay event-reveal-overlay" role="dialog" aria-modal="true" style="display:none;" onclick="closeEventReveal()">
+  <div id="eventRevealCard" class="event-reveal-card"></div>
+</div>
+
 <div id="cardPreviewModal" class="modal-overlay card-preview-overlay" role="dialog" aria-modal="true" style="display:none;" onclick="closeCardPreview()">
   <div id="cardPreviewContent" class="card-preview-content"></div>
 </div>
@@ -295,6 +299,6 @@
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="/static/app.js?v=card-preview-20260724"></script>
+<script src="/static/app.js?v=event-zoom-20260726"></script>
 </body>
 </html>

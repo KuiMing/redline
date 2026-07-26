@@ -225,6 +225,12 @@
   - 2026-07-12 使用者複測後指出：即使拿掉複製按鈕，最上方那條橫幅仍整條顯示房間代碼，跟下方輸入列的房間代碼是同一組資料重複顯示（不需捲動即可同時看到兩處），本身就是多餘的顯示區域，不只是複製按鈕重複。裁決：整條橫幅移除（而非保留成唯讀顯示）。
   - 2026-07-12 已修正並提交（最終版）：完全移除 `#lobbyRoomBanner`（含 `lobbyRoomBannerCode`、`lobby-room-banner-*` 全部 CSS 規則、`#lobby.room-active .lobby-brand/.lobby-briefing` 的橫幅讓位偏移）；`syncLobbyRoomCode()`／`selectRoomCodeForManualCopy()` 移除橫幅相關的死路徑。房間代碼現在只在下方「建立 / 加入房間代碼」輸入列顯示，`copyRoomBtn` 是唯一複製入口。驗證 `python3 scripts/validate_lobby_copy_dedup.py`（5/5：橫幅三個元素皆確認不存在、僅剩一個 `copyRoomId()` 按鈕、輸入框正確顯示代碼且無其他元素重複顯示同一組代碼文字）＋更新後的 `python3 scripts/validate_lobby_join_room_code_ui.py`（12/12：移除橫幅存在性斷言、改為斷言橫幅不存在，並把原本夾帶在「橫幅不遮擋操作區」檢查裡的陣營面板可捲動高度斷言拆成獨立檢查保留覆蓋）＋既有 `python3 scripts/validate_lobby_polish.py`（3/3）與 `python3 scripts/validate_multiplayer_lobby_flow.py`（9/9）皆無退化；proof `docs/records/lobby/LOBBY_COPY_DEDUP_VALIDATION.{json,md}` + `lobby_copy_dedup_validation.png`。
 
+- [done] 每回合事件卡 Zoom-in 與右上角重開（2026-07-26 使用者需求）。
+  - 回合首次收到新的 `current_event` 時，以現有純文字資料自動顯示置中的放大事件卡；同一回合關閉後，後續 state 更新不會反覆重開。
+  - 點擊放大卡或遮罩任意位置均可關閉，`Escape` 也可關閉；右上角既有 `.event-card-panel` 改為可點擊／鍵盤操作，隨時重新放大本回合事件。
+  - 暫不接入設計審稿目錄中的圖片卡面；放大層確認沒有圖片節點或 card-art 綁定。
+  - 驗證：`validate_event_card_zoom_preview.py` 9/9、`validate_event_cards_runtime.py` 35/35、`validate_event_effect_text_browser.py` 2/2；proof 位於 `docs/records/event-cards/EVENT_CARD_ZOOM_PREVIEW_VALIDATION.{json,md}` 與兩張正式 UI 截圖。
+
 - [todo] 下一步建議：開 LAN 桌測／端到端 playtest，記錄實際遊戲中出現的 UI polish 或規則落差，再回寫成具體 P0/P1 項目。
   - 目前事件／時代 scope 已可 playtest；不要再以 speculative implementation 延伸 P0，除非 playtest 或規則文本指出具體 bug。
   - 事件面板 polish 待 playtest 後再決定是否需要展開/收合、詳細文字、或事件歷史紀錄。

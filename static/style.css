@@ -2219,6 +2219,15 @@ body {
   background: rgba(38, 27, 12, 0.84);
   box-shadow: 0 16px 38px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(8px);
+  cursor: zoom-in;
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+.event-card-panel:hover,
+.event-card-panel:focus-visible {
+  transform: translateY(2px) scale(1.015);
+  border-color: rgba(255, 226, 156, 0.84);
+  box-shadow: 0 20px 46px rgba(0, 0, 0, 0.46), 0 0 0 2px rgba(255, 214, 128, 0.14);
+  outline: none;
 }
 .event-card-name {
   font-size: 16px;
@@ -2237,6 +2246,119 @@ body {
 }
 .event-card-progress {
   color: #c6f6d5;
+}
+
+.event-panel-open-hint {
+  margin-top: 7px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 214, 128, 0.18);
+  color: rgba(255, 225, 163, 0.72);
+  font-size: 11px;
+  font-weight: 800;
+  text-align: right;
+}
+
+.event-reveal-overlay {
+  z-index: 90;
+  cursor: zoom-out;
+  background: rgba(2, 5, 10, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.event-reveal-card {
+  width: 760px;
+  min-height: 470px;
+  max-width: calc(100% - 72px);
+  max-height: calc(100% - 56px);
+  overflow: auto;
+  padding: 34px 42px 28px;
+  border: 2px solid rgba(255, 216, 135, 0.78);
+  border-radius: 24px;
+  color: #f8e8c5;
+  background:
+    linear-gradient(145deg, rgba(86, 42, 24, 0.96), rgba(24, 17, 17, 0.98) 42%, rgba(11, 16, 25, 0.98)),
+    rgba(19, 15, 14, 0.98);
+  box-shadow: 0 36px 120px rgba(0, 0, 0, 0.82), 0 0 0 4px rgba(119, 61, 31, 0.42), inset 0 1px 0 rgba(255, 245, 214, 0.15);
+  transform-origin: center;
+}
+
+.event-reveal-card.event-reveal-animate {
+  animation: event-card-zoom-in 320ms cubic-bezier(.18, .86, .26, 1.06) both;
+}
+
+@keyframes event-card-zoom-in {
+  from { opacity: 0; transform: scale(0.42) translate(290px, -170px); filter: blur(4px); }
+  70% { opacity: 1; transform: scale(1.025) translate(0, 0); filter: blur(0); }
+  to { opacity: 1; transform: scale(1) translate(0, 0); filter: blur(0); }
+}
+
+.event-reveal-kicker {
+  color: #d8b777;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.event-reveal-card .event-card-name {
+  margin: 6px 0 8px;
+  color: #fff1c9;
+  font-size: 36px;
+  line-height: 1.15;
+  letter-spacing: 0.04em;
+}
+
+.event-reveal-card .event-card-meta {
+  margin: 0 0 18px;
+  color: #d8c6a3;
+  font-size: 15px;
+}
+
+.event-reveal-card .event-card-result,
+.event-reveal-card .event-card-progress,
+.event-reveal-card .event-card-line {
+  margin-top: 10px;
+  font-size: 18px;
+  line-height: 1.55;
+}
+
+.event-reveal-card .event-card-result,
+.event-reveal-card .event-card-effect-row {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+  padding: 13px 16px;
+  border: 1px solid rgba(255, 226, 164, 0.18);
+  border-radius: 13px;
+  background: rgba(5, 9, 14, 0.34);
+}
+
+.event-reveal-card .event-card-effect-row strong,
+.event-reveal-card .event-card-result strong {
+  color: #ffe09a;
+}
+
+.event-reveal-card .event-card-success strong { color: #9ee6c5; }
+.event-reveal-card .event-card-failure strong { color: #f6a39f; }
+.event-reveal-card .event-card-progress {
+  color: #baf0d0;
+  font-weight: 900;
+  text-align: right;
+}
+
+.event-reveal-dismiss-hint {
+  margin-top: 22px;
+  color: rgba(232, 220, 194, 0.62);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .event-reveal-card.event-reveal-animate { animation: none; }
 }
 
 /* 勝利畫面（2026-07-19：20 回合自動桌測發現遊戲結束毫無提示，補上結束畫面） */
