@@ -12,6 +12,7 @@ OUT_JSON = RECORD_DIR / "MY_ERA_STAGE_VIEW_VALIDATION.json"
 OUT_MD = RECORD_DIR / "MY_ERA_STAGE_VIEW_VALIDATION.md"
 PENDING_SCREENSHOT = RECORD_DIR / "my_era_stage_pending.png"
 ACTIVE_SCREENSHOT = RECORD_DIR / "my_era_stage_active.png"
+POSITION_SCREENSHOT = RECORD_DIR / "my_era_stage_entry_position.png"
 
 
 def post_json(path, payload=None):
@@ -37,6 +38,7 @@ def open_game(browser, setup):
       const factionClose = document.getElementById('closeFactionActionModal');
       if (factionClose) factionClose.click();
       if (typeof minimizeEraAchievement === 'function') minimizeEraAchievement();
+      if (typeof closeEventReveal === 'function') closeEventReveal();
     }""")
     page.wait_for_timeout(200)
     return context, page
@@ -60,6 +62,38 @@ def check(browser):
         button.is_visible() and button.inner_text() == "我的時代關卡",
         {"visible": button.is_visible(), "text": button.inner_text()},
     )
+    position_data = pending_page.evaluate("""() => {
+      const rect = selector => document.querySelector(selector)?.getBoundingClientRect();
+      const log = rect('#gameTabs [data-view="log"]');
+      const faction = rect('#myFactionBtn');
+      const era = rect('#myEraStageBtn');
+      const eventPanel = document.querySelector('.event-card-panel');
+      const previousEventDisplay = eventPanel?.style.display;
+      if (eventPanel) eventPanel.style.display = 'block';
+      const event = eventPanel?.getBoundingClientRect();
+      if (eventPanel) eventPanel.style.display = previousEventDisplay;
+      return {
+        logRight: log?.right,
+        factionLeft: faction?.left,
+        factionRight: faction?.right,
+        eraLeft: era?.left,
+        eraRight: era?.right,
+        eventLeft: event?.left,
+        gapAfterLog: faction && log ? faction.left - log.right : null,
+        gapBetweenPersonalTabs: era && faction ? era.left - faction.right : null,
+        noEventOverlap: !!(era && event && era.right < event.left),
+      };
+    }""")
+    record(
+        "personal_info_tabs_sit_next_to_log_without_event_card_overlap",
+        position_data["gapAfterLog"] is not None
+        and 0 <= position_data["gapAfterLog"] <= 16
+        and position_data["gapBetweenPersonalTabs"] is not None
+        and 0 <= position_data["gapBetweenPersonalTabs"] <= 16
+        and position_data["noEventOverlap"],
+        position_data,
+    )
+    pending_page.screenshot(path=str(POSITION_SCREENSHOT), full_page=True)
     faction_button = pending_page.locator("#myFactionBtn")
     faction_button.click()
     pending_page.wait_for_timeout(150)
@@ -155,7 +189,7 @@ def check(browser):
             "failed": sum(1 for result in results if not result["ok"]),
         },
         "results": results,
-        "screenshots": [str(PENDING_SCREENSHOT), str(ACTIVE_SCREENSHOT)],
+        "screenshots": [str(POSITION_SCREENSHOT), str(PENDING_SCREENSHOT), str(ACTIVE_SCREENSHOT)],
         "base_url": BASE_URL,
     }
 

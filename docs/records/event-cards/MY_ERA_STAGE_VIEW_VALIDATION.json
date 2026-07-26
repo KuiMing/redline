@@ -1,7 +1,7 @@
 {
   "summary": {
-    "total": 6,
-    "passed": 6,
+    "total": 7,
+    "passed": 7,
     "failed": 0
   },
   "results": [
@@ -11,6 +11,21 @@
       "detail": {
         "visible": true,
         "text": "我的時代關卡"
+      }
+    },
+    {
+      "name": "personal_info_tabs_sit_next_to_log_without_event_card_overlap",
+      "ok": true,
+      "detail": {
+        "logRight": 317.232421875,
+        "factionLeft": 326.232421875,
+        "factionRight": 419.9765625,
+        "eraLeft": 428.9765625,
+        "eraRight": 552.708984375,
+        "eventLeft": 1075.5,
+        "gapAfterLog": 9,
+        "gapBetweenPersonalTabs": 9,
+        "noEventOverlap": true
       }
     },
     {
@@ -75,8 +90,9 @@
     }
   ],
   "screenshots": [
+    "/Users/benmini/.openclaw/workspace/redline/docs/records/event-cards/my_era_stage_entry_position.png",
     "/Users/benmini/.openclaw/workspace/redline/docs/records/event-cards/my_era_stage_pending.png",
     "/Users/benmini/.openclaw/workspace/redline/docs/records/event-cards/my_era_stage_active.png"
   ],
-  "base_url": "http://127.0.0.1:8012"
+  "base_url": "http://127.0.0.1:8000"
 }
