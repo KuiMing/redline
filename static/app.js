@@ -2741,6 +2741,57 @@ function closeMyFactionModal() {
   if (overlay) overlay.style.display = 'none';
 }
 
+// 我的時代關卡：未達成前也可隨時查看自己的觸發條件與雙方效果。
+// 後端只投影觀看者所屬陣營大類的關卡，避免把其他玩家的個人資訊混進來。
+function openMyEraStageModal() {
+  const overlay = document.getElementById('myEraStageModal');
+  const titleEl = document.getElementById('myEraStageTitle');
+  const statusEl = document.getElementById('myEraStageStatus');
+  const summaryEl = document.getElementById('myEraStageSummary');
+  const bodyEl = document.getElementById('myEraStageBody');
+  if (!overlay || !titleEl || !statusEl || !summaryEl || !bodyEl) return;
+
+  const state = window.lastGameState || {};
+  const me = (state.players || []).find(p => p.id === playerId);
+  const stage = state.my_era_stage || null;
+  const factionColor = factionNameColor(me?.faction) || '#e5ecf5';
+
+  if (!stage) {
+    titleEl.textContent = '無個人時代關卡';
+    statusEl.textContent = '此陣營沒有專屬時代關卡';
+    statusEl.className = 'my-era-stage-status unavailable';
+    summaryEl.textContent = me?.faction === 'red_army'
+      ? '紅軍沒有個人時代關卡；其他陣營達成關卡後，效果仍會顯示於全桌的時代通知。'
+      : '目前找不到這個陣營對應的時代關卡資料。';
+    bodyEl.innerHTML = '';
+    overlay.style.display = 'flex';
+    return;
+  }
+
+  titleEl.innerHTML = `<span style="color:${factionColor};font-weight:800">${escapeHtml(stage.name || '時代關卡')}</span>`;
+  const remainText = stage.remaining == null ? '持續至遊戲結束' : `剩餘 ${stage.remaining} 回合`;
+  statusEl.textContent = stage.active ? `條件已達成｜${remainText}` : '尚未達成';
+  statusEl.className = `my-era-stage-status ${stage.active ? 'active' : 'pending'}`;
+  summaryEl.textContent = stage.summary_text || '';
+  const section = (label, text) => `
+    <section class="my-era-stage-section">
+      <div class="era-achievement-section-title">${label}</div>
+      <div class="modal-body-text">${escapeHtml(text || '（暫無資料）')}</div>
+    </section>`;
+  bodyEl.innerHTML = [
+    section('觸發條件', stage.trigger_text),
+    section('紅軍壓制', stage.success_text),
+    section('革命反撲', stage.fail_text),
+    section('效果期限', stage.duration_text),
+  ].join('');
+  overlay.style.display = 'flex';
+}
+
+function closeMyEraStageModal() {
+  const overlay = document.getElementById('myEraStageModal');
+  if (overlay) overlay.style.display = 'none';
+}
+
 // 勝利畫面（2026-07-19）：state.winner 之前從未被前端顯示，遊戲結束毫無提示
 //（20 回合自動桌測發現）。winner 的值是「red_army」或獲勝玩家的名字（見 victory.py）。
 let victoryModalDismissedFor = null;

@@ -257,6 +257,10 @@
   - 實作：`#gameTabs` 新增「我的陣營」按鈕（`openMyFactionModal()`），彈窗顯示陣營名（陣營色標題）＋根據地／能力／規則與限制／獲勝條件四區塊；資料萃取邏輯與 lobby 的 `renderFactionDetails()` 相同（能力排除 setup/restriction 型並入規則區、根據地專屬能力併入能力區），另外處理了 lobby 版本沒遇過的情況：family variant（如維吾爾/西藏子系）只存在 `variant_details` 內、抓不到頂層 `factionOptionById` 時的 fallback 查找。
   - 驗證：新增 `python3 scripts/validate_my_faction_modal.py`（5/5，連跑 3 次穩定：按鈕在遊戲畫面可見、點開後標題染陣營色且四區塊皆有內容、根據地區塊顯示實際根據地、關閉按鈕可收起、換一個資料結構不同的陣營〔香港〕同樣正確渲染）；proof `docs/records/playtest-flow/MY_FACTION_MODAL_VALIDATION.{json,md}` + `my_faction_modal.png`／`my_faction_modal_hong_kong.png`。
 
+- [done] 遊戲畫面「我的時代關卡」入口（2026-07-26 使用者需求）：讓玩家在關卡達成前後都能隨時查看自己的時代關卡，不再只有達成當下的全桌通知。
+  - 實作：`#gameTabs` 在「我的陣營」旁新增「我的時代關卡」按鈕與文字 modal；後端依 WebSocket viewer 的陣營大類只投影 `my_era_stage`，內容包含簡述、觸發條件、紅軍壓制、革命反撲、效果期限與目前是否達成／剩餘回合。紅軍沒有個人時代關卡，入口會明確說明，不會誤配其他陣營資料。
+  - 驗證：`uv run --with playwright python scripts/validate_my_era_stage_view.py`（6/6：入口可見、相鄰「我的陣營」入口回歸、臺灣未達成關卡全文、關閉、蒙古已達成與剩餘回合、紅軍無個人關卡提示）；proof `docs/records/event-cards/MY_ERA_STAGE_VIEW_VALIDATION.{json,md}` + `my_era_stage_pending.png`／`my_era_stage_active.png`。
+
 ### P2：repo hygiene / validator hygiene
 - [todo] 維持 root record-like count = 0。
   - 新增 validation reports、proof markdown、screenshots 時，直接放到 `docs/records/<topic>/`。

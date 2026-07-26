@@ -189,6 +189,17 @@
   </div>
 </div>
 
+<div id="myEraStageModal" class="modal-overlay" style="display:none;">
+  <div class="modal-glass my-era-stage-glass">
+    <div class="panel-title">我的時代關卡</div>
+    <div id="myEraStageTitle" class="modal-title-text"></div>
+    <div id="myEraStageStatus" class="my-era-stage-status"></div>
+    <div id="myEraStageSummary" class="modal-body-text my-era-stage-summary"></div>
+    <div id="myEraStageBody" class="my-era-stage-body"></div>
+    <button id="closeMyEraStageModal" class="modal-cancel-btn" type="button" onclick="closeMyEraStageModal()">關閉</button>
+  </div>
+</div>
+
 <div id="purchaseConfirmModal" class="modal-overlay" style="display:none;">
   <div class="modal-glass purchase-confirm-glass">
     <div class="panel-title">確認購買</div>
@@ -231,6 +242,7 @@
     <button class="game-tab" data-view="map">戰略地圖</button>
     <button class="game-tab" data-view="log">戰況紀錄</button>
     <button id="myFactionBtn" class="game-tab my-faction-tab" type="button" onclick="openMyFactionModal()">我的陣營</button>
+    <button id="myEraStageBtn" class="game-tab my-era-stage-tab" type="button" onclick="openMyEraStageModal()">我的時代關卡</button>
   </div>
 
   <div id="commandView" class="game-view active">

@@ -5676,10 +5676,12 @@ class Game:
     def _era_notification_payload(self, era):
         era_name = era.get("name", "未知時代")
         row = self._era_card_entry(era_name)
+        summary_text = None
         trigger_text = None
         success_text = None
         fail_text = None
         if row and len(row) >= 5:
+            summary_text = row[1] or None
             trigger_text = row[2] or None
             success_text = row[3] or None
             fail_text = row[4] or None
@@ -5696,6 +5698,7 @@ class Game:
         return {
             "id": era.get("id"),
             "name": era_name,
+            "summary_text": summary_text or "（時代關卡簡述暫缺）",
             "trigger_text": trigger_text or "（條件資料暫缺）",
             "success_text": success_text or "（紅軍壓制效果暫缺）",
             "fail_text": fail_text or "（革命反撲效果暫缺）",
@@ -5703,6 +5706,26 @@ class Game:
             "remaining": None,
             "minimized": False,
         }
+
+    def _era_stage_for_player(self, player, active_era_details=None):
+        if not player or player.faction_id == "red_army":
+            return None
+        active_era_details = active_era_details or []
+        for era in self.structured_eras:
+            trigger = era.get("trigger") or {}
+            if not self._player_matches_era_trigger(player, trigger):
+                continue
+            payload = self._era_notification_payload(era)
+            active = next(
+                (item for item in active_era_details if item.get("id") == era.get("id")),
+                None,
+            )
+            payload["active"] = active is not None
+            if active:
+                payload["remaining"] = active.get("remaining")
+                payload["duration"] = active.get("duration")
+            return payload
+        return None
 
     def _check_era_trigger(self):
         if not hasattr(self, "era_engine"):
@@ -5806,6 +5829,11 @@ class Game:
                     shared_access.setdefault(town, []).append(p.faction_id)
 
         active_era_details = self.era_engine.get_active_era_details() if self.era_engine else []
+        viewer_player = next(
+            (player for player in self.players if player.id == viewer_player_id),
+            None,
+        ) if viewer_player_id is not None else None
+        my_era_stage = self._era_stage_for_player(viewer_player, active_era_details)
         notification = None
         if self.era_notification:
             notification = dict(self.era_notification)
@@ -5892,6 +5920,7 @@ class Game:
             "current_player": self.current_player().name,
             "active_eras": self.era_engine.get_active_eras() if self.era_engine else [],
             "active_era_details": active_era_details,
+            "my_era_stage": my_era_stage,
             "era_notification": notification,
             "current_event": self._event_display_payload(),
             "event_deck_count": len(self.event_deck.draw_pile) if getattr(self, 'event_deck', None) else 0,

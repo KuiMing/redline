@@ -2452,3 +2452,67 @@ body {
 .my-faction-body li {
   margin-bottom: 4px;
 }
+
+/* 我的時代關卡：與「我的陣營」並列的個人資訊入口。 */
+.my-era-stage-tab {
+  border-color: rgba(96, 165, 250, 0.58);
+}
+
+.my-era-stage-glass {
+  width: min(620px, calc(100vw - 32px));
+  max-width: 620px;
+}
+
+.my-era-stage-status {
+  width: fit-content;
+  margin: 8px auto 10px;
+  padding: 5px 12px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  border-radius: 999px;
+  color: #cbd5e1;
+  background: rgba(15, 23, 42, 0.68);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.my-era-stage-status.active {
+  border-color: rgba(74, 222, 128, 0.72);
+  color: #86efac;
+  background: rgba(22, 101, 52, 0.28);
+}
+
+.my-era-stage-status.pending {
+  border-color: rgba(96, 165, 250, 0.68);
+  color: #93c5fd;
+}
+
+.my-era-stage-status.unavailable {
+  border-color: rgba(148, 163, 184, 0.42);
+  color: #94a3b8;
+}
+
+.my-era-stage-summary {
+  margin: 0 0 12px;
+  color: #cbd5e1;
+  line-height: 1.6;
+}
+
+.my-era-stage-body {
+  max-height: 440px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 6px;
+  text-align: left;
+}
+
+.my-era-stage-section {
+  padding: 10px 12px;
+  margin-bottom: 9px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.42);
+}
+
+.my-era-stage-section .era-achievement-section-title {
+  margin-top: 0;
+}
