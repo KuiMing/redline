@@ -1711,7 +1711,56 @@ body {
 }
 
 .era-achievement-glass {
-  width: min(640px, calc(100vw - 32px));
+  width: min(758px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+}
+
+.era-achievement-art {
+  display: none;
+  margin-top: 8px;
+}
+
+.era-achievement-glass.era-card-art-active .era-achievement-art {
+  display: block;
+}
+
+.era-achievement-glass.era-card-art-active > #eraAchievementTitle,
+.era-achievement-glass.era-card-art-active > #eraAchievementCondition,
+.era-achievement-glass.era-card-art-active > #eraAchievementSuccess,
+.era-achievement-glass.era-card-art-active > #eraAchievementFail,
+.era-achievement-glass.era-card-art-active > #eraAchievementDuration,
+.era-achievement-glass.era-card-art-active > .era-achievement-section-title {
+  display: none;
+}
+
+.era-card-art-shell {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid rgba(231, 201, 137, 0.56);
+  border-radius: 16px;
+  background: #0b0908;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.44);
+}
+
+.era-card-art-image {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.era-card-art-fallback {
+  display: none;
+}
+
+.era-card-art-shell.era-card-art-load-failed .era-card-art-image {
+  display: none;
+}
+
+.era-card-art-shell.era-card-art-load-failed .era-card-art-fallback {
+  display: block;
+  padding: 10px;
 }
 
 .modal-overlay.choice-modal-map-context {
@@ -2576,8 +2625,11 @@ body {
 }
 
 .my-era-stage-glass {
-  width: min(620px, calc(100vw - 32px));
-  max-width: 620px;
+  box-sizing: border-box;
+  width: min(700px, calc(100vw - 32px));
+  max-width: 700px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
 }
 
 .my-era-stage-status {
@@ -2620,6 +2672,12 @@ body {
   overscroll-behavior: contain;
   padding-right: 6px;
   text-align: left;
+}
+
+.my-era-stage-body.era-card-art-active {
+  max-height: none;
+  overflow: visible;
+  padding-right: 0;
 }
 
 .my-era-stage-section {

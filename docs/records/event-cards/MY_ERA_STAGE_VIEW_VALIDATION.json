@@ -1,10 +1,26 @@
 {
   "summary": {
-    "total": 7,
-    "passed": 7,
+    "total": 9,
+    "passed": 9,
     "failed": 0
   },
   "results": [
+    {
+      "name": "all_eight_era_art_assets_are_installed",
+      "ok": true,
+      "detail": {
+        "files": [
+          "[反賊]公知世代的終結.png",
+          "[哈薩克]伊塔事件.png",
+          "[滿洲]滿洲地方派系凝聚.png",
+          "[維吾爾]莎車大屠殺.png",
+          "[臺灣]綏靖派反對介入對岸.png",
+          "[蒙古]莫日根事件爆發.png",
+          "[藏國]藏國騷亂.png",
+          "[香港]香港人被自殺.png"
+        ]
+      }
+    },
     {
       "name": "my_era_stage_button_visible_in_game_tabs",
       "ok": true,
@@ -22,7 +38,7 @@
         "factionRight": 419.9765625,
         "eraLeft": 428.9765625,
         "eraRight": 552.708984375,
-        "eventLeft": 1075.5,
+        "eventLeft": 1109.25,
         "gapAfterLog": 9,
         "gapBetweenPersonalTabs": 9,
         "noEventOverlap": true
@@ -37,7 +53,7 @@
       }
     },
     {
-      "name": "pending_taiwan_stage_shows_complete_text_card",
+      "name": "pending_taiwan_stage_shows_complete_art_card",
       "ok": true,
       "detail": {
         "modalVisible": true,
@@ -56,7 +72,12 @@
           "[打擊國內綏靖主義]每當臺灣在臺灣城鎮建立至少1個組織時，獲得1點宣傳。持續2回合。",
           "持續 2 回合"
         ],
-        "imageCount": 0
+        "imageCount": 1,
+        "image": {
+          "alt": "[臺灣]綏靖派反對介入對岸完整卡面",
+          "width": 1350,
+          "height": 1100
+        }
       }
     },
     {
@@ -75,7 +96,25 @@
         "activeClass": true,
         "stateId": "mongolia",
         "stateActive": true,
-        "remaining": 1
+        "remaining": 1,
+        "image": {
+          "alt": "[蒙古]莫日根事件爆發完整卡面",
+          "width": 1350,
+          "height": 1100
+        }
+      }
+    },
+    {
+      "name": "achieved_era_notification_shows_complete_art_card",
+      "ok": true,
+      "detail": {
+        "activeClass": true,
+        "image": {
+          "alt": "[蒙古]莫日根事件爆發完整卡面",
+          "width": 1350,
+          "height": 1100
+        },
+        "minimizeVisible": true
       }
     },
     {
@@ -92,7 +131,8 @@
   "screenshots": [
     "/Users/benmini/.openclaw/workspace/redline/docs/records/event-cards/my_era_stage_entry_position.png",
     "/Users/benmini/.openclaw/workspace/redline/docs/records/event-cards/my_era_stage_pending.png",
-    "/Users/benmini/.openclaw/workspace/redline/docs/records/event-cards/my_era_stage_active.png"
+    "/Users/benmini/.openclaw/workspace/redline/docs/records/event-cards/my_era_stage_active.png",
+    "/Users/benmini/.openclaw/workspace/redline/docs/records/event-cards/era_stage_achievement_art.png"
   ],
   "base_url": "http://127.0.0.1:8000"
 }

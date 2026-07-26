@@ -1938,6 +1938,34 @@ function eventCardArtUrl(event) {
     : '';
 }
 
+const ERA_CARD_ART_NAMES = new Set([
+  '[香港]香港人被自殺',
+  '[蒙古]莫日根事件爆發',
+  '[藏國]藏國騷亂',
+  '[哈薩克]伊塔事件',
+  '[維吾爾]莎車大屠殺',
+  '[滿洲]滿洲地方派系凝聚',
+  '[反賊]公知世代的終結',
+  '[臺灣]綏靖派反對介入對岸',
+]);
+
+function eraCardArtUrl(stage) {
+  const name = String(stage?.name || '').trim();
+  return ERA_CARD_ART_NAMES.has(name)
+    ? `/static/card-art/era/${encodeURIComponent(name)}.png`
+    : '';
+}
+
+function eraCardArtMarkup(stage, fallbackMarkup = '') {
+  const artUrl = eraCardArtUrl(stage);
+  if (!artUrl) return fallbackMarkup;
+  return `
+    <div class="era-card-art-shell">
+      <img class="era-card-art-image" src="${artUrl}" alt="${escapeHtml(stage.name || '時代關卡')}完整卡面" decoding="async" onerror="this.parentElement.classList.add('era-card-art-load-failed');this.closest('.era-achievement-glass')?.classList.remove('era-card-art-active')">
+      <div class="era-card-art-fallback">${fallbackMarkup}</div>
+    </div>`;
+}
+
 function eventCardMarkup(event, expanded = false) {
   const progress = event.progress || {};
   const current = Number(progress.count || 0);
@@ -2054,6 +2082,8 @@ function minimizeEraAchievement() {
 
 function renderEraAchievement(state) {
   const overlay = document.getElementById('eraAchievementModal');
+  const glass = overlay?.querySelector('.era-achievement-glass');
+  const art = document.getElementById('eraAchievementArt');
   const title = document.getElementById('eraAchievementTitle');
   const cond = document.getElementById('eraAchievementCondition');
   const success = document.getElementById('eraAchievementSuccess');
@@ -2061,13 +2091,15 @@ function renderEraAchievement(state) {
   const duration = document.getElementById('eraAchievementDuration');
   const pin = document.getElementById('eraPinnedNotice');
   const minimizeBtn = document.getElementById('eraAchievementMinimizeBtn');
-  if (!overlay || !title || !cond || !success || !fail || !duration || !pin || !minimizeBtn) return;
+  if (!overlay || !glass || !art || !title || !cond || !success || !fail || !duration || !pin || !minimizeBtn) return;
 
   const info = state.era_notification || null;
   const activeDetails = state.active_era_details || [];
 
   if (!info) {
     overlay.style.display = 'none';
+    glass.classList.remove('era-card-art-active');
+    art.innerHTML = '';
     pin.style.display = 'none';
     pin.innerHTML = '';
     lastEraNotificationKey = null;
@@ -2075,6 +2107,9 @@ function renderEraAchievement(state) {
   }
 
   const key = `${info.id}:${info.remaining ?? 'perm'}`;
+  const artUrl = eraCardArtUrl(info);
+  glass.classList.toggle('era-card-art-active', Boolean(artUrl));
+  art.innerHTML = artUrl ? eraCardArtMarkup(info) : '';
   title.textContent = `${info.name}｜條件已達成`;
   cond.textContent = `達成條件：${info.trigger_text || '（暫缺）'}`;
   success.textContent = info.success_text || '（暫缺）';
@@ -2803,6 +2838,7 @@ function openMyEraStageModal() {
       ? '紅軍沒有個人時代關卡；其他陣營達成關卡後，效果仍會顯示於全桌的時代通知。'
       : '目前找不到這個陣營對應的時代關卡資料。';
     bodyEl.innerHTML = '';
+    bodyEl.classList.remove('era-card-art-active');
     overlay.style.display = 'flex';
     return;
   }
@@ -2817,12 +2853,14 @@ function openMyEraStageModal() {
       <div class="era-achievement-section-title">${label}</div>
       <div class="modal-body-text">${escapeHtml(text || '（暫無資料）')}</div>
     </section>`;
-  bodyEl.innerHTML = [
+  const fallbackMarkup = [
     section('觸發條件', stage.trigger_text),
     section('紅軍壓制', stage.success_text),
     section('革命反撲', stage.fail_text),
     section('效果期限', stage.duration_text),
   ].join('');
+  bodyEl.innerHTML = eraCardArtMarkup(stage, fallbackMarkup);
+  bodyEl.classList.toggle('era-card-art-active', Boolean(eraCardArtUrl(stage)));
   overlay.style.display = 'flex';
 }
 

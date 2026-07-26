@@ -13,6 +13,7 @@ OUT_MD = RECORD_DIR / "MY_ERA_STAGE_VIEW_VALIDATION.md"
 PENDING_SCREENSHOT = RECORD_DIR / "my_era_stage_pending.png"
 ACTIVE_SCREENSHOT = RECORD_DIR / "my_era_stage_active.png"
 POSITION_SCREENSHOT = RECORD_DIR / "my_era_stage_entry_position.png"
+ACHIEVEMENT_SCREENSHOT = RECORD_DIR / "era_stage_achievement_art.png"
 
 
 def post_json(path, payload=None):
@@ -49,6 +50,13 @@ def check(browser):
 
     def record(name, ok, detail=None):
         results.append({"name": name, "ok": bool(ok), "detail": detail or {}})
+
+    era_art_files = sorted((ROOT / "static/card-art/era").glob("*.png"))
+    record(
+        "all_eight_era_art_assets_are_installed",
+        len(era_art_files) == 8,
+        {"files": [path.name for path in era_art_files]},
+    )
 
     pending_setup = post_json(
         "/test/setup-support-card-play",
@@ -106,6 +114,7 @@ def check(browser):
     )
     button.click()
     pending_page.wait_for_timeout(200)
+    pending_page.wait_for_function("document.querySelector('#myEraStageModal .era-card-art-image')?.naturalWidth === 1350")
     pending_data = pending_page.evaluate("""() => ({
       modalVisible: document.getElementById('myEraStageModal')?.style.display === 'flex',
       title: document.getElementById('myEraStageTitle')?.textContent,
@@ -114,16 +123,21 @@ def check(browser):
       sections: [...document.querySelectorAll('#myEraStageBody .era-achievement-section-title')].map(el => el.textContent),
       texts: [...document.querySelectorAll('#myEraStageBody .modal-body-text')].map(el => el.textContent),
       imageCount: document.querySelectorAll('#myEraStageModal img').length,
+      image: (() => {
+        const image = document.querySelector('#myEraStageModal .era-card-art-image');
+        return image ? {alt: image.alt, width: image.naturalWidth, height: image.naturalHeight} : null;
+      })(),
     })""")
     record(
-        "pending_taiwan_stage_shows_complete_text_card",
+        "pending_taiwan_stage_shows_complete_art_card",
         pending_data["modalVisible"]
         and "[臺灣]綏靖派反對介入對岸" in (pending_data["title"] or "")
         and pending_data["status"] == "尚未達成"
         and bool(pending_data["summary"])
         and pending_data["sections"] == ["觸發條件", "紅軍壓制", "革命反撲", "效果期限"]
         and all(pending_data["texts"])
-        and pending_data["imageCount"] == 0,
+        and pending_data["imageCount"] == 1
+        and pending_data["image"] == {"alt": "[臺灣]綏靖派反對介入對岸完整卡面", "width": 1350, "height": 1100},
         pending_data,
     )
     pending_page.screenshot(path=str(PENDING_SCREENSHOT), full_page=True)
@@ -139,6 +153,7 @@ def check(browser):
     active_context, active_page = open_game(browser, active_setup)
     active_page.click("#myEraStageBtn")
     active_page.wait_for_timeout(200)
+    active_page.wait_for_function("document.querySelector('#myEraStageModal .era-card-art-image')?.naturalWidth === 1350")
     active_data = active_page.evaluate("""() => ({
       title: document.getElementById('myEraStageTitle')?.textContent,
       status: document.getElementById('myEraStageStatus')?.textContent,
@@ -146,6 +161,10 @@ def check(browser):
       stateId: window.lastGameState?.my_era_stage?.id,
       stateActive: window.lastGameState?.my_era_stage?.active,
       remaining: window.lastGameState?.my_era_stage?.remaining,
+      image: (() => {
+        const image = document.querySelector('#myEraStageModal .era-card-art-image');
+        return image ? {alt: image.alt, width: image.naturalWidth, height: image.naturalHeight} : null;
+      })(),
     })""")
     record(
         "active_mongolia_stage_shows_achieved_status_and_remaining_turns",
@@ -154,10 +173,31 @@ def check(browser):
         and active_data["activeClass"]
         and active_data["stateId"] == "mongolia"
         and active_data["stateActive"] is True
-        and active_data["remaining"] == 1,
+        and active_data["remaining"] == 1
+        and active_data["image"] == {"alt": "[蒙古]莫日根事件爆發完整卡面", "width": 1350, "height": 1100},
         active_data,
     )
     active_page.screenshot(path=str(ACTIVE_SCREENSHOT), full_page=True)
+    active_page.click("#closeMyEraStageModal")
+    active_page.evaluate("lastEraNotificationKey = null; renderEraAchievement(window.lastGameState)")
+    active_page.locator("#eraAchievementModal").wait_for(state="visible")
+    active_page.wait_for_function("document.querySelector('#eraAchievementArt img')?.naturalWidth === 1350")
+    achievement_data = active_page.evaluate("""() => {
+      const image = document.querySelector('#eraAchievementArt .era-card-art-image');
+      return {
+        activeClass: document.querySelector('.era-achievement-glass')?.classList.contains('era-card-art-active'),
+        image: image ? {alt: image.alt, width: image.naturalWidth, height: image.naturalHeight} : null,
+        minimizeVisible: document.getElementById('eraAchievementMinimizeBtn')?.offsetParent !== null,
+      };
+    }""")
+    record(
+        "achieved_era_notification_shows_complete_art_card",
+        achievement_data["activeClass"]
+        and achievement_data["image"] == {"alt": "[蒙古]莫日根事件爆發完整卡面", "width": 1350, "height": 1100}
+        and achievement_data["minimizeVisible"],
+        achievement_data,
+    )
+    active_page.screenshot(path=str(ACHIEVEMENT_SCREENSHOT), full_page=True)
     active_context.close()
 
     red_setup = post_json(
@@ -189,7 +229,7 @@ def check(browser):
             "failed": sum(1 for result in results if not result["ok"]),
         },
         "results": results,
-        "screenshots": [str(POSITION_SCREENSHOT), str(PENDING_SCREENSHOT), str(ACTIVE_SCREENSHOT)],
+        "screenshots": [str(POSITION_SCREENSHOT), str(PENDING_SCREENSHOT), str(ACTIVE_SCREENSHOT), str(ACHIEVEMENT_SCREENSHOT)],
         "base_url": BASE_URL,
     }
 
