@@ -31,9 +31,10 @@
       "passed": true,
       "details": [
         {
-          "name": "宣傳家",
-          "srcFile": "宣傳家.png",
-          "alt": "宣傳家完整卡面",
+          "name": "交通經驗甲",
+          "srcFile": "交通經驗甲.png",
+          "srcQuery": "?v=head-safe-20260726",
+          "alt": "交通經驗甲完整卡面",
           "natural": [
             1100,
             1350
@@ -48,9 +49,10 @@
           ]
         },
         {
-          "name": "情報網",
-          "srcFile": "情報網.png",
-          "alt": "情報網完整卡面",
+          "name": "領導",
+          "srcFile": "領導.png",
+          "srcQuery": "?v=head-safe-20260726",
+          "alt": "領導完整卡面",
           "natural": [
             1100,
             1350
@@ -67,6 +69,7 @@
         {
           "name": "英美奧援",
           "srcFile": "01_英美奧援_歐洲-天方.png",
+          "srcQuery": "",
           "alt": "英美奧援完整卡面",
           "natural": [
             1100,
@@ -101,7 +104,7 @@
       "name": "clicking_card_opens_correct_aspect_ratio_art_preview",
       "passed": true,
       "details": {
-        "srcFile": "宣傳家.png",
+        "srcFile": "交通經驗甲.png",
         "natural": [
           1100,
           1350

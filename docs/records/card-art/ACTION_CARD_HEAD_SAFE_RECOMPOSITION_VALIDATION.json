@@ -1,0 +1,561 @@
+{
+  "summary": {
+    "cards": 46,
+    "passed": 46,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "追隨者",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "宣傳家",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "思想家",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "樂捐者",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "資助者",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "資本家",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "分神",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "內鬥",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "交通經驗丙",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "交通經驗乙",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "交通經驗甲",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "領導",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "謀劃",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "戰略",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "合作談判",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "高效行動",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "模仿戰術",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "乘勝追擊",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "擴大戰果",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "誘導虛耗",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "點燃熱情",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "樹立信心",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "網羅人才",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "凝聚共識",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "思想建設",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "派遣間諜",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "內應間諜",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "情報網",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "離間",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "走漏風聲",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "地下黨",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "組織經驗丙",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "組織經驗乙",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "組織經驗甲",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "批判",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "批鬥",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "武裝者",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "武裝小隊",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "武裝集團",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "爆料黑幕",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "輿論丕變",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "行動預告",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "企業人脈",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "產業滲透",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "企畫遊說",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    },
+    {
+      "name": "行動募資",
+      "passed": true,
+      "checks": {
+        "composed_996x468": true,
+        "full_1100x1350": true,
+        "preview_220x270": true,
+        "runtime_matches_review": true,
+        "svg_uses_explicit_composed_crop": true,
+        "visual_review_passed": true
+      }
+    }
+  ]
+}

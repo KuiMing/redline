@@ -799,7 +799,7 @@ function playableCardArtUrl(cardName, variantInfo = null) {
     const file = files[requestedIndex] || files[0];
     return `/static/card-art/support/${encodeURIComponent(file)}`;
   }
-  return `/static/card-art/actions/${encodeURIComponent(name)}.png`;
+  return `/static/card-art/actions/${encodeURIComponent(name)}.png?v=head-safe-20260726`;
 }
 
 function renderCardFace(cardName, zone, isStatic = false, compact = false, countOverride = null, variantInfo = null) {

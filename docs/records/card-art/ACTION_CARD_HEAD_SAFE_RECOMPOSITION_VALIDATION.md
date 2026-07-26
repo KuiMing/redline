@@ -1,0 +1,52 @@
+# 行動卡頭部安全取景重組驗證
+
+可重跑：`uv run python scripts/validate_action_card_recomposition.py`
+
+- cards: 46 / passed: 46 / failed: 0
+
+- ✅ `追隨者` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `宣傳家` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `思想家` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `樂捐者` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `資助者` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `資本家` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `分神` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `內鬥` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `交通經驗丙` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `交通經驗乙` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `交通經驗甲` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `領導` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `謀劃` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `戰略` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `合作談判` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `高效行動` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `模仿戰術` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `乘勝追擊` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `擴大戰果` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `誘導虛耗` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `點燃熱情` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `樹立信心` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `網羅人才` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `凝聚共識` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `思想建設` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `派遣間諜` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `內應間諜` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `情報網` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `離間` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `走漏風聲` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `地下黨` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `組織經驗丙` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `組織經驗乙` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `組織經驗甲` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `批判` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `批鬥` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `武裝者` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `武裝小隊` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `武裝集團` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `爆料黑幕` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `輿論丕變` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `行動預告` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `企業人脈` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `產業滲透` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `企畫遊說` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}
+- ✅ `行動募資` — {"composed_996x468": true, "full_1100x1350": true, "preview_220x270": true, "runtime_matches_review": true, "svg_uses_explicit_composed_crop": true, "visual_review_passed": true}

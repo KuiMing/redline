@@ -81,7 +81,7 @@ def main() -> None:
 
         setup = post_json(
             "/test/setup-hand-preview",
-            {"hand_names": ["宣傳家", "情報網", "英美奧援"], "faction_id": "taiwan_green", "base": "臺北"},
+            {"hand_names": ["交通經驗甲", "領導", "英美奧援"], "faction_id": "taiwan_green", "base": "臺北"},
         )
         context, page, console_errors = open_game(browser, setup)
         page.wait_for_function("[...document.querySelectorAll('#hand .playable-card-art-image')].length === 3 && [...document.querySelectorAll('#hand .playable-card-art-image')].every(img => img.naturalWidth === 1100 && img.naturalHeight === 1350)")
@@ -92,16 +92,18 @@ def main() -> None:
           return {
             name: card.dataset.cardName,
             srcFile: image ? decodeURIComponent(new URL(image.src).pathname.split('/').pop()) : '',
+            srcQuery: image ? new URL(image.src).search : '',
             alt: image?.alt || '',
             natural: image ? [image.naturalWidth, image.naturalHeight] : null,
             faceRect: rect ? {width: rect.width, height: rect.height} : null,
             buttons: [...card.querySelectorAll('.hand-card-action-btn')].map(btn => btn.textContent.trim()),
           };
         })""")
-        expected_files = {"宣傳家": "宣傳家.png", "情報網": "情報網.png", "英美奧援": "01_英美奧援_歐洲-天方.png"}
+        expected_files = {"交通經驗甲": "交通經驗甲.png", "領導": "領導.png", "英美奧援": "01_英美奧援_歐洲-天方.png"}
         hand_ok = len(hand_data) == 3
         for item in hand_data:
             hand_ok = hand_ok and item["srcFile"] == expected_files[item["name"]]
+            hand_ok = hand_ok and (item["srcQuery"] == "?v=head-safe-20260726" if item["name"] != "英美奧援" else item["srcQuery"] == "")
             hand_ok = hand_ok and item["natural"] == [1100, 1350]
             hand_ok = hand_ok and item["alt"] == f"{item['name']}完整卡面"
             hand_ok = hand_ok and abs((item["faceRect"]["width"] / item["faceRect"]["height"]) - (22 / 27)) < 0.02
@@ -133,7 +135,7 @@ def main() -> None:
         )
         page.screenshot(path=str(HAND_SHOT), full_page=True)
 
-        page.locator("#hand .hand-card[data-card-name='宣傳家']").click(position={"x": 100, "y": 100})
+        page.locator("#hand .hand-card[data-card-name='交通經驗甲']").click(position={"x": 100, "y": 100})
         page.locator("#cardPreviewModal").wait_for(state="visible")
         page.wait_for_function("document.querySelector('#cardPreviewContent .playable-card-art-image')?.naturalWidth === 1100")
         preview_data = page.evaluate("""() => {
@@ -150,7 +152,7 @@ def main() -> None:
         }""")
         record(
             "clicking_card_opens_correct_aspect_ratio_art_preview",
-            preview_data["srcFile"] == "宣傳家.png"
+            preview_data["srcFile"] == "交通經驗甲.png"
             and preview_data["natural"] == [1100, 1350]
             and preview_data["ratioDelta"] < 0.002
             and not preview_data["countBadge"],
