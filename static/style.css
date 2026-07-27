@@ -2299,13 +2299,13 @@ body {
   position: absolute;
   right: 24px;
   top: 0;
-  width: 270px;
-  height: 220px;
-  max-height: 220px;
+  width: 180px;
+  height: 147px;
+  max-height: 147px;
   overflow: hidden;
   z-index: 4;
   padding: 0;
-  border-radius: 14px;
+  border-radius: 10px;
   margin-bottom: 0;
   border: 1px solid rgba(255, 214, 128, 0.45);
   background: rgba(38, 27, 12, 0.84);
@@ -2314,6 +2314,14 @@ body {
   cursor: zoom-in;
   transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
 }
+
+/* 固定 1280×720 舞台縮放到窄視窗時會從右側溢出；將事件縮圖拉回可視範圍。 */
+@media (max-width: 1100px) {
+  .event-card-panel {
+    right: 216px;
+  }
+}
+
 .event-card-panel:hover,
 .event-card-panel:focus-visible {
   transform: translateY(2px) scale(1.015);
@@ -2449,7 +2457,7 @@ body {
   text-align: center;
 }
 
-/* 完整事件卡卡面：右上角以 270×220 原比例顯示，放大層使用同一張 1350×1100 母版。 */
+/* 完整事件卡卡面：右上角以 180×147 等比例縮圖顯示，放大層使用同一張 1350×1100 母版。 */
 .event-card-panel > .panel-title {
   display: none;
 }

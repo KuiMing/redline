@@ -1,6 +1,6 @@
 # Redline TODO
 
-最後更新：2026-07-04
+最後更新：2026-07-28
 
 ## 工作規則
 - 開始新工作前先做 intake：讀 `TODO.md`、跑 `git status --short`、跑 `git log --oneline -5`。
@@ -41,6 +41,12 @@
   - 若要 LAN playtest：重啟 server 綁 `0.0.0.0:8000` 並確認 `TCP *:8000 (LISTEN)`。
 
 ### P1：LAN / end-to-end playtest feedback
+- [done] Playtest UI：縮小右上角固定事件卡，避免遮住戰略地圖工具列。
+  - 2026-07-28 回報：原固定事件卡使用完整 `270×220` 遊戲尺寸，底緣進入戰略地圖區並遮住 `Fit All`／`Focus Asia`／`Export View`。
+  - 修正：固定縮圖改為 `180×147`（維持 1350:1100 原比例）、圓角同步縮小；完整 `1350×1100` 卡面、回合開始置中 Zoom-in、點擊縮圖重開、Escape／點擊任意處關閉及純文字載入失敗備援全部保留。固定 1280×720 舞台在窄視窗會向右溢出，另於 `max-width:1100px` 將縮圖拉回可視範圍。
+  - 驗證：`uv run --with playwright python scripts/validate_event_card_zoom_preview.py` 11/11；1280×720 實測縮圖 `180×147`、底緣 y=147，地圖 toolbar 頂緣 y=226，零重疊；1024×768 實測縮圖完整位於 viewport 且與 toolbar 零重疊；瀏覽器 console 0 error，縮圖仍可重開完整卡面。
+  - proof：`docs/records/event-cards/EVENT_CARD_ZOOM_PREVIEW_VALIDATION.{json,md}`、`EVENT_CARD_COMPACT_MAP_1280_2026_07_28.png`、`EVENT_CARD_COMPACT_MAP_1024_2026_07_28.png`、`EVENT_CARD_ZOOM_PREVIEW_OPEN_2026_07_28.png`。
+
 - [done] 修復 P2 過期驗證腳本時挖出的真 bug：事件延後結算撞上整輪繞回，會對「被重置的事件進度」結算。
   - 2026-07-15 發現（修 `validate_event_cards_runtime.py` 過期假設時）：mission 事件的結算被 `_should_defer_event_settlement_until_after_refill()` 延後到 `_end_turn()` 之後（設計原意：讓獎懲作用在補牌後的新手牌）。但若「最後一位非紅軍玩家結束回合」的同一次 advance 也讓**整輪繞回**，`_end_turn()` 會重置 `current_event`／`event_progress` 並抽下一輪新事件；延後的 `_settle_current_event()` 於是讀到**被重置的新進度**（succeeded=False）——結果①本回合已達成的成功獎勵直接消失；②新抽的事件被當「失敗」立刻對玩家套失敗懲罰（一張還沒人動過的事件）。觸發條件：任何「非紅軍玩家是繞回前最後一位」的座位排列（例如 3 人以上紅軍坐中間；常見 2 人局紅軍恰好當緩衝所以測不到）。
   - 2026-07-15 已修正並提交：`advance_turn_phase` 在 `_end_turn()` **之前**先快照該回合的 `current_event`＋`event_progress`（結算目標玩家 id 本就在 `_end_turn` 前 stamp 進 progress）；`_end_turn()` 後偵測是否已繞回（事件物件被換掉），是則暫時把快照換回 `current_event`/`event_progress` 執行 `_settle_current_event()`（結算標記寫在快照上、效果 prompt 顯示正確事件名），結算完換回新回合的事件與 notification（畫面維持顯示當前回合事件，結算結果在戰況 log）。未繞回的路徑行為完全不變。

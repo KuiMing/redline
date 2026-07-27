@@ -2456,7 +2456,7 @@ def test_setup_event_card_proof(payload: dict):
     event_name = payload.get("event_name") or "香港抗暴之戰"
     players = [(str(uuid.uuid4()), "viewer"), (str(uuid.uuid4()), "red")]
     game = Game(players, market_mode="all_cards")
-    game.players[0].faction_id = "liberals"
+    game.players[0].faction_id = payload.get("viewer_faction") or "liberals"
     game.players[1].faction_id = "red_army"
     game.players[0].base = "臺北"
     game.players[1].base = "北京"

@@ -1,9 +1,10 @@
 # Event Card Zoom Preview Validation
 
-Summary: 9/9 passed
+Summary: 11/11 passed
 
-- Open screenshot: `docs/records/event-cards/event_card_zoom_preview_open.png`
-- Pinned screenshot: `docs/records/event-cards/event_card_zoom_preview_pinned.png`
+- Open screenshot: `docs/records/event-cards/EVENT_CARD_ZOOM_PREVIEW_OPEN_2026_07_28.png`
+- Pinned screenshot: `docs/records/event-cards/EVENT_CARD_COMPACT_MAP_1280_2026_07_28.png`
+- Narrow pinned screenshot: `docs/records/event-cards/EVENT_CARD_COMPACT_MAP_1024_2026_07_28.png`
 
 ## PASS — dedicated_event_reveal_overlay_exists
 
@@ -31,10 +32,10 @@ Summary: 9/9 passed
 ]
 ```
 
-## PASS — zoom_animation_and_cache_bust_exist
+## PASS — zoom_animation_and_compact_panel_cache_bust_exist
 
 ```json
-"zoom keyframes + CSS/JS cache bust"
+"zoom keyframes + compact event panel CSS cache bust"
 ```
 
 ## PASS — turn_start_auto_opens_centered_zoom_preview
@@ -87,6 +88,60 @@ Summary: 9/9 passed
 }
 ```
 
+## PASS — compact_pinned_event_card_does_not_cover_map_toolbar
+
+```json
+{
+  "role": "button",
+  "tabindex": "0",
+  "text": "任務進度 0/1\n點擊放大查看",
+  "imageLoaded": true,
+  "panel": {
+    "left": 1076,
+    "top": 0,
+    "right": 1256,
+    "bottom": 147,
+    "width": 180,
+    "height": 147
+  },
+  "toolbar": {
+    "left": 948,
+    "top": 226,
+    "right": 1252,
+    "bottom": 261,
+    "width": 304,
+    "height": 35
+  },
+  "overlaps": false
+}
+```
+
+## PASS — compact_event_card_stays_clear_at_narrow_viewport
+
+```json
+{
+  "panel": {
+    "left": 835.2000122070312,
+    "top": 96,
+    "right": 979.2000122070312,
+    "bottom": 213.60000610351562,
+    "width": 144,
+    "height": 117.60000610351562
+  },
+  "toolbar": {
+    "left": 886.4000424913539,
+    "top": 276.80000112248564,
+    "right": 1129.600054309626,
+    "bottom": 304.80000357792295
+  },
+  "viewport": {
+    "width": 1024,
+    "height": 768
+  },
+  "overlaps": false
+}
+```
+
 ## PASS — top_right_event_panel_reopens_preview
 
 ```json
@@ -95,7 +150,24 @@ Summary: 9/9 passed
     "role": "button",
     "tabindex": "0",
     "text": "任務進度 0/1\n點擊放大查看",
-    "imageLoaded": true
+    "imageLoaded": true,
+    "panel": {
+      "left": 1076,
+      "top": 0,
+      "right": 1256,
+      "bottom": 147,
+      "width": 180,
+      "height": 147
+    },
+    "toolbar": {
+      "left": 948,
+      "top": 226,
+      "right": 1252,
+      "bottom": 261,
+      "width": 304,
+      "height": 35
+    },
+    "overlaps": false
   },
   "reopened": {
     "display": "flex",
