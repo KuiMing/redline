@@ -27,6 +27,13 @@ def request_json(path, payload):
     return json.loads(urllib.request.urlopen(req, timeout=20).read().decode('utf-8'))
 
 
+def dismiss_event_reveal(page):
+    reveal = page.locator('#eventRevealModal')
+    if reveal.is_visible():
+        reveal.click(position={'x': 8, 'y': 8})
+        reveal.wait_for(state='hidden')
+
+
 def taipei_label(page):
     return page.evaluate(
         """() => {
@@ -78,6 +85,8 @@ def check(browser):
     host.click('#startGameBtn')
     host.wait_for_selector('#gameShell', state='visible', timeout=10000)
     ally.wait_for_selector('#gameShell', state='visible', timeout=10000)
+    dismiss_event_reveal(host)
+    dismiss_event_reveal(ally)
 
     # --- 1. 開局地圖以自己的根據地為中心 zoom 9（用 ally＝臺灣綠線、根據地臺北 驗證） ---
     ally.click('button.game-tab[data-view="map"]')

@@ -376,6 +376,19 @@ function shouldShowLabels() {
   return labelMode === 'on' || (labelMode === 'auto' && map.getZoom() >= 5);
 }
 
+function townLabelOptions(townName, zoom = map.getZoom()) {
+  const distance = markerRadius(zoom) + 4;
+  // 金門與廈門在低／中 zoom 幾乎重疊；兩者都置頂時，後渲染的廈門會蓋住金門。
+  // 將金門固定放到 marker 下方，保留兩個城鎮名稱且不改動任何地理座標。
+  const isKinmen = townName === '金門';
+  return {
+    permanent: true,
+    direction: isKinmen ? 'bottom' : 'top',
+    className: isKinmen ? 'town-label town-label-kinmen' : 'town-label',
+    offset: [0, isKinmen ? distance : -distance],
+  };
+}
+
 function clearLayers() {
   roadLayer.clearLayers();
   railLayer.clearLayers();
@@ -853,9 +866,11 @@ function updateDynamicStyles() {
     if (name && layer.setStyle) {
       layer.setStyle(markerStyleForTown(name, z));
     }
-    if (layer.getTooltip && layer.getTooltip()) {
-      layer.getTooltip().options.offset = [0, -(markerRadius(z) + 4)];
-      if (name) layer.setTooltipContent(labelTextForTown(name));
+    if (layer.getTooltip && layer.getTooltip() && name) {
+      const options = townLabelOptions(name, z);
+      layer.getTooltip().options.direction = options.direction;
+      layer.getTooltip().options.offset = options.offset;
+      layer.setTooltipContent(labelTextForTown(name));
     }
   });
   currentSharedBadges.forEach((badge, townName) => {
@@ -922,7 +937,7 @@ function renderMap() {
       selectTownForCurrentMapAction(t.name, { autoFocus: true });
     });
     currentMarkers.set(t.name, marker);
-    if (shouldShowLabels()) marker.bindTooltip(labelTextForTown(t.name), { permanent:true, direction:'top', className:'town-label', offset:[0, -(markerRadius() + 4)] });
+    if (shouldShowLabels()) marker.bindTooltip(labelTextForTown(t.name), townLabelOptions(t.name));
   });
 
   updateDynamicStyles();

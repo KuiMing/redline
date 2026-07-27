@@ -28,6 +28,13 @@ def request_json(path, payload=None):
     return json.loads(urllib.request.urlopen(req, timeout=20).read().decode('utf-8'))
 
 
+def dismiss_event_reveal(page):
+    reveal = page.locator('#eventRevealModal')
+    if reveal.is_visible():
+        reveal.click(position={'x': 8, 'y': 8})
+        reveal.wait_for(state='hidden')
+
+
 # 2026-07-18 起陣營標籤有 zoom 門檻（FACTION_LABEL_MIN_ZOOM=10），本腳本驗證完整標籤時視角需 zoom 10。
 def check_page(host, ally):
     results = []
@@ -59,6 +66,9 @@ def check_page(host, ally):
     host.wait_for_timeout(400)
     host.click('#startGameBtn')
     host.wait_for_selector('#gameShell', state='visible', timeout=10000)
+    ally.wait_for_selector('#gameShell', state='visible', timeout=10000)
+    dismiss_event_reveal(host)
+    dismiss_event_reveal(ally)
     host.click('button.game-tab[data-view="map"]')
     host.wait_for_timeout(2500)  # let the map iframe's own WS connect and /factions resolve
 

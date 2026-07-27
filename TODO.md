@@ -41,6 +41,13 @@
   - 若要 LAN playtest：重啟 server 綁 `0.0.0.0:8000` 並確認 `TCP *:8000 (LISTEN)`。
 
 ### P1：LAN / end-to-end playtest feedback
+- [done] Playtest UI：修復金門城鎮標籤被廈門標籤遮住。
+  - 2026-07-28 root cause：金門（118.319, 24.432）與廈門（118.0894, 24.4798）地理位置接近；兩個 Leaflet permanent tooltip 原本都固定置於 marker 上方。在 zoom 5／6／7 實測重疊面積分別為 604.5／367.5／170.5 px²，且資料渲染順序較後的廈門蓋在金門上方，造成金門名稱看似消失。
+  - 修正：新增 `townLabelOptions()`，只將金門 tooltip 固定放到 marker 下方並加入獨立 class；其他城鎮維持上方標籤。zoom 動態樣式同步套用相同方向與 offset，不修改金門／廈門座標或道路資料；更新地圖 JS cache bust。
+  - 驗證：新增 `uv run --with playwright python scripts/validate_kinmen_map_label.py`（6/6）：zoom 5／6／7 金門與廈門標籤皆存在、金門使用 bottom placement、三個 zoom 重疊面積均為 0、標籤完整位於地圖內、browser console 0 error。回歸：`validate_map_label_zoom_and_base_view.py` 6/6、`validate_map_faction_display.py` 6/6、`validate_map_selection_highlight.py` 7/7。
+  - 驗證保養：兩支既有 map validator 補上關閉回合開始事件卡 Zoom-in，避免事件遮罩攔截「戰略地圖」Tab 點擊。
+  - proof：`docs/records/map-ui/KINMEN_LABEL_VALIDATION_2026_07_28.{json,md}`、`KINMEN_LABEL_UI_2026_07_28.png`。
+
 - [done] Playtest UI：縮小右上角固定事件卡，避免遮住戰略地圖工具列。
   - 2026-07-28 回報：原固定事件卡使用完整 `270×220` 遊戲尺寸，底緣進入戰略地圖區並遮住 `Fit All`／`Focus Asia`／`Export View`。
   - 修正：固定縮圖改為 `180×147`（維持 1350:1100 原比例）、圓角同步縮小；完整 `1350×1100` 卡面、回合開始置中 Zoom-in、點擊縮圖重開、Escape／點擊任意處關閉及純文字載入失敗備援全部保留。固定 1280×720 舞台在窄視窗會向右溢出，另於 `max-width:1100px` 將縮圖拉回可視範圍。
