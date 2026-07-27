@@ -2914,12 +2914,37 @@ def test_setup_era_notification_proof(payload: dict):
     game.game_phase = GamePhase.MAIN
     game.current_player_index = 0
     game.turn_phase = TurnPhase.ACTION
-    game.era_engine.activate_era(era_id)
-    game.era_notification = game._era_notification_payload(era)
-    game.era_notification["runtime_effects"] = {
-        "red_suppression": (era.get("effects") or {}).get("red_suppression"),
-        "revolution_counterattack": (era.get("effects") or {}).get("revolution_counterattack"),
-    }
+    via_lifecycle = bool(payload.get("via_lifecycle"))
+    if via_lifecycle:
+        region = trigger.get("region")
+        required = int(trigger.get("count", 0) or 0)
+        legal_towns = [
+            town
+            for town in game._towns_for_region_alias(region)
+            if game.can_faction_develop_in_town(viewer.faction_id, town)
+        ]
+        if trigger.get("type") != "count_only" or len(legal_towns) < required:
+            return {"success": False, "error": f"Era cannot use lifecycle proof setup: {era_id}"}
+        viewer.organizations = {town: 1 for town in legal_towns[:required]}
+        game.current_event = {"id": "test-idle", "name": "測試靜止事件", "type": "idle"}
+        game.event_progress = {
+            "count": 0,
+            "required": 0,
+            "succeeded": True,
+            "settled": True,
+            "status": "idle",
+        }
+        game.advance_turn_phase()
+        game.advance_turn_phase()
+        if era_id not in game.era_engine.get_active_eras():
+            return {"success": False, "error": f"Era did not activate through lifecycle: {era_id}"}
+    else:
+        game.era_engine.activate_era(era_id)
+        game.era_notification = game._era_notification_payload(era)
+        game.era_notification["runtime_effects"] = {
+            "red_suppression": (era.get("effects") or {}).get("red_suppression"),
+            "revolution_counterattack": (era.get("effects") or {}).get("revolution_counterattack"),
+        }
 
     game_id = str(uuid.uuid4())
     manager.games[game_id] = game
@@ -2936,6 +2961,8 @@ def test_setup_era_notification_proof(payload: dict):
         "red_player_id": red.id,
         "era_id": era.get("id"),
         "era_name": era.get("name"),
+        "via_lifecycle": via_lifecycle,
+        "viewer_organizations": dict(viewer.organizations),
         "url": f"/?game_id={game_id}&player_id={viewer.id}",
         "state": game.state(),
     }

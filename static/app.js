@@ -2884,8 +2884,10 @@ function openMyEraStageModal() {
 
   titleEl.innerHTML = `<span style="color:${factionColor};font-weight:800">${escapeHtml(stage.name || '時代關卡')}</span>`;
   const remainText = stage.remaining == null ? '持續至遊戲結束' : `剩餘 ${stage.remaining} 回合`;
-  statusEl.textContent = stage.active ? `條件已達成｜${remainText}` : '尚未達成';
-  statusEl.className = `my-era-stage-status ${stage.active ? 'active' : 'pending'}`;
+  statusEl.textContent = stage.active
+    ? `條件已達成｜${remainText}`
+    : (stage.achieved ? '條件已達成｜效果已結束' : '尚未達成');
+  statusEl.className = `my-era-stage-status ${stage.achieved ? 'active' : 'pending'}`;
   summaryEl.textContent = stage.summary_text || '';
   const section = (label, text) => `
     <section class="my-era-stage-section">

@@ -3,10 +3,21 @@ class EraEngine:
         # era_definitions: list of structured era JSON entries
         self.era_defs = {e["id"]: e for e in era_definitions}
         self.active = {}
+        # Era stages are achievements, not recurring effects. Keep activation history
+        # after a timed era expires so a still-true trigger cannot activate it twice.
+        self.activated = set()
+
+    def _activated_ids(self):
+        # Compatibility for games/fixtures created before activation history was
+        # introduced. Any era that is currently active has necessarily activated.
+        if not hasattr(self, "activated"):
+            self.activated = set(self.active.keys())
+        return self.activated
 
     def activate_era(self, era_id):
         era = self.era_defs.get(era_id)
-        if not era:
+        activated = self._activated_ids()
+        if not era or era_id in activated:
             return False
 
         duration = era.get("duration", {})
@@ -22,6 +33,7 @@ class EraEngine:
             "remaining": remaining,
             "definition": era
         }
+        activated.add(era_id)
 
         return True
 
@@ -44,6 +56,9 @@ class EraEngine:
 
     def get_active_eras(self):
         return list(self.active.keys())
+
+    def get_activated_eras(self):
+        return list(self._activated_ids())
 
     def get_active_era_details(self):
         details = []

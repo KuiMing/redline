@@ -1,7 +1,7 @@
 {
   "summary": {
-    "total": 9,
-    "passed": 9,
+    "total": 10,
+    "passed": 10,
     "failed": 0
   },
   "results": [
@@ -88,6 +88,28 @@
       }
     },
     {
+      "name": "taiwan_seven_distinct_organizations_trigger_stage_through_turn_lifecycle",
+      "ok": true,
+      "detail": {
+        "title": "[臺灣]綏靖派反對介入對岸",
+        "status": "條件已達成｜剩餘 2 回合",
+        "activeClass": true,
+        "stateId": "taiwan",
+        "achieved": true,
+        "active": true,
+        "remaining": 2,
+        "organizations": {
+          "南投": 1,
+          "嘉義": 1,
+          "基隆": 1,
+          "宜蘭": 1,
+          "屏東": 1,
+          "彰化": 1,
+          "新北": 1
+        }
+      }
+    },
+    {
       "name": "active_mongolia_stage_shows_achieved_status_and_remaining_turns",
       "ok": true,
       "detail": {
@@ -131,6 +153,7 @@
   "screenshots": [
     "/Users/benmini/.openclaw/workspace/redline/docs/records/event-cards/my_era_stage_entry_position.png",
     "/Users/benmini/.openclaw/workspace/redline/docs/records/event-cards/my_era_stage_pending.png",
+    "/Users/benmini/.openclaw/workspace/redline/docs/records/event-cards/taiwan_era_stage_lifecycle_active.png",
     "/Users/benmini/.openclaw/workspace/redline/docs/records/event-cards/my_era_stage_active.png",
     "/Users/benmini/.openclaw/workspace/redline/docs/records/event-cards/era_stage_achievement_art.png"
   ],

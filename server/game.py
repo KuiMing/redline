@@ -188,6 +188,8 @@ class Game:
         self.event_modifiers = []
         self.event_notification = None
         self.pending_choice = None
+        self._pending_era_activations = []
+        self._deferred_auto_event = False
         self.era_notification = None
         self.red_army_destroyed_bases = set()
         if self.game_phase == GamePhase.MAIN:
@@ -667,6 +669,23 @@ class Game:
             return {'success': True, 'skipped': True}
         if self.event_progress and self.event_progress.get('settled'):
             return {'success': True, 'skipped': True}
+        # Era activation runs first at the action-first turn boundary. Interactive era
+        # effects (Tibet/Manchuria) own pending_choice until resolved; an interactive
+        # auto event must never overwrite that choice. Remember the continuation and
+        # apply the already-drawn event as soon as the era flow is complete.
+        if self.pending_choice or getattr(self, '_pending_era_activations', []):
+            self._deferred_auto_event = True
+            self.event_progress = self.event_progress or {
+                'count': 0,
+                'required': 0,
+                'succeeded': False,
+                'settled': False,
+            }
+            self.event_progress['status'] = 'auto_deferred'
+            self.event_notification = self._event_display_payload()
+            return {'success': True, 'deferred': True}
+
+        self._deferred_auto_event = False
         effect = event.get('effect') or {}
         target_player = self._auto_event_target_player(event)
         current = self.current_player()
@@ -2338,21 +2357,41 @@ class Game:
         player = next((p for p in self.players if p.id == player_id), None)
         if not player:
             return {'error': 'Player not found'}
-        if choice.get('type') == 'card_choice':
-            return self._resolve_card_choice(player, choice, index)
-        if choice.get('type') == 'multi_card_choice':
-            return self._resolve_multi_card_choice(player, choice, index)
-        if choice.get('type') == 'option_choice':
-            return self._resolve_option_choice(player, choice, index)
-        if choice.get('type') == 'town_choice':
-            return self._resolve_town_choice(player, choice, index)
-        if choice.get('type') == 'target_choice':
-            return self._resolve_target_choice(player, choice, index)
-        if choice.get('type') == 'support_flow_choice':
-            return self._resolve_support_flow_choice(player, choice, index)
-        if choice.get('type') == 'reaction_choice':
-            return self._resolve_reaction_choice(player, choice, index)
-        return {'error': 'Unsupported pending choice type'}
+        resolvers = {
+            'card_choice': self._resolve_card_choice,
+            'multi_card_choice': self._resolve_multi_card_choice,
+            'option_choice': self._resolve_option_choice,
+            'town_choice': self._resolve_town_choice,
+            'target_choice': self._resolve_target_choice,
+            'support_flow_choice': self._resolve_support_flow_choice,
+            'reaction_choice': self._resolve_reaction_choice,
+        }
+        choice_type = choice.get('type')
+        if choice_type not in resolvers:
+            return {'error': 'Unsupported pending choice type'}
+        resolver = resolvers[choice_type]
+        result = resolver(player, choice, index)
+        if not result.get('error') and not self.pending_choice:
+            continuation = self._continue_era_and_event_flows()
+            if continuation and continuation.get('pending_choice'):
+                result = {**result, 'pending_choice': True}
+        return result
+
+    def _continue_era_and_event_flows(self):
+        """Finish queued era activations before resuming a deferred auto event."""
+        if self.pending_choice:
+            return None
+        era_result = self._continue_era_activation_queue()
+        if self.pending_choice:
+            return {'success': True, 'pending_choice': True, 'source': 'era'}
+        if era_result and era_result.get('error'):
+            return era_result
+        return self._continue_deferred_auto_event()
+
+    def _continue_deferred_auto_event(self):
+        if not getattr(self, '_deferred_auto_event', False) or self.pending_choice:
+            return None
+        return self._apply_auto_event_if_ready()
 
     def _support_card_effect_text(self, card_name, tier, region_index):
         entry = self._support_taxonomy_entry(card_name)
@@ -4778,6 +4817,12 @@ class Game:
             if self.era_notification and self.era_notification.get("id") in set(expired_eras):
                 self.era_notification = None
 
+        # rules.md event stage step ②, adapted to the action-first lifecycle: this is
+        # the public turn boundary that replaced the obsolete resting EVENT phase.
+        # Run after ticking existing eras so a newly activated duration is not consumed
+        # at the same boundary that created it.
+        self._check_era_trigger()
+
         self.current_player_index = (self.current_player_index + 1) % len(self.players)
         if self.current_player_index == getattr(self, 'round_start_player_index', 0):
             self.turn += 1
@@ -5721,6 +5766,7 @@ class Game:
                 None,
             )
             payload["active"] = active is not None
+            payload["achieved"] = era.get("id") in set(self.era_engine.get_activated_eras())
             if active:
                 payload["remaining"] = active.get("remaining")
                 payload["duration"] = active.get("duration")
@@ -5731,11 +5777,16 @@ class Game:
         if not hasattr(self, "era_engine"):
             return
 
-        active_ids = set(self.era_engine.get_active_eras())
+        activated_ids = set(self.era_engine.get_activated_eras())
+        queue = getattr(self, '_pending_era_activations', None)
+        if queue is None:
+            queue = []
+            self._pending_era_activations = queue
+        queued_ids = set(queue)
 
         for era in self.structured_eras:
             era_id = era.get("id")
-            if era_id in active_ids:
+            if era_id in activated_ids or era_id in queued_ids:
                 continue
 
             trigger = era.get("trigger")
@@ -5743,11 +5794,49 @@ class Game:
                 continue
 
             if self._evaluate_era_trigger(trigger):
-                if self.era_engine.activate_era(era_id):
-                    activation_results = self._apply_era_activation_effects(era)
-                    self.era_notification = self._era_notification_payload(era)
-                    self.era_notification['runtime_effects'] = activation_results
-                    self.log(f"Era triggered: {era.get('name', era_id)}")
+                queue.append(era_id)
+                queued_ids.add(era_id)
+
+        return self._continue_era_activation_queue()
+
+    def _continue_era_activation_queue(self):
+        """Activate qualifying eras serially, pausing for each choice chain.
+
+        Record and dequeue each one-time activation immediately before applying its
+        effects. This gives unexpected partial effect failures at-most-once semantics:
+        continuing the queue cannot apply the same activation effect twice.
+        """
+        queue = getattr(self, '_pending_era_activations', None)
+        if queue is None:
+            queue = []
+            self._pending_era_activations = queue
+        if self.pending_choice:
+            return {'success': True, 'pending_choice': True}
+
+        while queue and not self.pending_choice:
+            era_id = queue[0]
+            if era_id in set(self.era_engine.get_activated_eras()):
+                queue.pop(0)
+                continue
+            era = self.era_engine.get_definition(era_id)
+            if not era:
+                # Keep invalid data queued: do not mark or silently lose an activation
+                # whose effect cannot be found.
+                return {'error': f'Unknown queued era: {era_id}'}
+
+            if not self.era_engine.activate_era(era_id):
+                return {'error': f'Could not activate queued era: {era_id}'}
+            queue.pop(0)
+            activation_results = self._apply_era_activation_effects(era)
+            self.era_notification = self._era_notification_payload(era)
+            self.era_notification['runtime_effects'] = activation_results
+            self.log(f"Era triggered: {era.get('name', era_id)}")
+
+        return {
+            'success': True,
+            'pending_choice': bool(self.pending_choice),
+            'queued': list(queue),
+        }
 
     def _player_matches_era_trigger(self, player, trigger):
         faction_id = trigger.get("faction_id")

@@ -12,6 +12,7 @@ OUT_JSON = RECORD_DIR / "MY_ERA_STAGE_VIEW_VALIDATION.json"
 OUT_MD = RECORD_DIR / "MY_ERA_STAGE_VIEW_VALIDATION.md"
 PENDING_SCREENSHOT = RECORD_DIR / "my_era_stage_pending.png"
 ACTIVE_SCREENSHOT = RECORD_DIR / "my_era_stage_active.png"
+TAIWAN_LIFECYCLE_SCREENSHOT = RECORD_DIR / "taiwan_era_stage_lifecycle_active.png"
 POSITION_SCREENSHOT = RECORD_DIR / "my_era_stage_entry_position.png"
 ACHIEVEMENT_SCREENSHOT = RECORD_DIR / "era_stage_achievement_art.png"
 
@@ -149,6 +150,39 @@ def check(browser):
     )
     pending_context.close()
 
+    taiwan_setup = post_json(
+        "/test/setup-era-notification-proof",
+        {"era_id": "taiwan", "via_lifecycle": True},
+    )
+    taiwan_context, taiwan_page = open_game(browser, taiwan_setup)
+    taiwan_page.click("#myEraStageBtn")
+    taiwan_page.wait_for_timeout(200)
+    taiwan_page.wait_for_function("document.querySelector('#myEraStageModal .era-card-art-image')?.naturalWidth === 1350")
+    taiwan_data = taiwan_page.evaluate("""() => ({
+      title: document.getElementById('myEraStageTitle')?.textContent,
+      status: document.getElementById('myEraStageStatus')?.textContent,
+      activeClass: document.getElementById('myEraStageStatus')?.classList.contains('active'),
+      stateId: window.lastGameState?.my_era_stage?.id,
+      achieved: window.lastGameState?.my_era_stage?.achieved,
+      active: window.lastGameState?.my_era_stage?.active,
+      remaining: window.lastGameState?.my_era_stage?.remaining,
+    })""")
+    record(
+        "taiwan_seven_distinct_organizations_trigger_stage_through_turn_lifecycle",
+        taiwan_setup.get("via_lifecycle") is True
+        and len(taiwan_setup.get("viewer_organizations") or {}) == 7
+        and "[臺灣]綏靖派反對介入對岸" in (taiwan_data["title"] or "")
+        and taiwan_data["status"] == "條件已達成｜剩餘 2 回合"
+        and taiwan_data["activeClass"]
+        and taiwan_data["stateId"] == "taiwan"
+        and taiwan_data["achieved"] is True
+        and taiwan_data["active"] is True
+        and taiwan_data["remaining"] == 2,
+        {**taiwan_data, "organizations": taiwan_setup.get("viewer_organizations")},
+    )
+    taiwan_page.screenshot(path=str(TAIWAN_LIFECYCLE_SCREENSHOT), full_page=True)
+    taiwan_context.close()
+
     active_setup = post_json("/test/setup-era-notification-proof", {"era_id": "mongolia"})
     active_context, active_page = open_game(browser, active_setup)
     active_page.click("#myEraStageBtn")
@@ -229,7 +263,13 @@ def check(browser):
             "failed": sum(1 for result in results if not result["ok"]),
         },
         "results": results,
-        "screenshots": [str(POSITION_SCREENSHOT), str(PENDING_SCREENSHOT), str(ACTIVE_SCREENSHOT), str(ACHIEVEMENT_SCREENSHOT)],
+        "screenshots": [
+            str(POSITION_SCREENSHOT),
+            str(PENDING_SCREENSHOT),
+            str(TAIWAN_LIFECYCLE_SCREENSHOT),
+            str(ACTIVE_SCREENSHOT),
+            str(ACHIEVEMENT_SCREENSHOT),
+        ],
         "base_url": BASE_URL,
     }
 
