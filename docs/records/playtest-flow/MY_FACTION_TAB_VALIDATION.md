@@ -1,0 +1,15 @@
+# 「我的陣營」頁內 Tab 驗證
+
+可重跑指令：`uv run --with playwright python scripts/validate_my_faction_modal.py`
+
+- total: 6 / passed: 6 / failed: 0
+- base URL: http://127.0.0.1:8000
+- screenshots: /Users/benmini/.openclaw/workspace/redline/docs/records/playtest-flow/my_faction_tab.png, /Users/benmini/.openclaw/workspace/redline/docs/records/playtest-flow/my_faction_tab_hong_kong.png
+
+## Results
+- ✅ `my_faction_button_is_a_real_tab` — {"visible": true, "data_view": "myFaction", "onclick": null}
+- ✅ `faction_content_renders_in_main_view_without_modal` — {"viewActive": true, "tabActive": true, "commandActive": false, "modalExists": false, "overlayCount": 0, "title": "臺灣（綠線）", "titleColor": "rgb(74, 222, 128)", "sections": ["根據地", "能力", "規則與限制", "獲勝條件"], "nonEmpty": true, "baseText": "臺北", "panelRect": {"x": 13.5, "y": 281.25, "width": 1413, "height": 560.25, "top": 281.25, "right": 1426.5, "bottom": 841.5, "left": 13.5}, "viewRect": {"x": 0, "y": 267.75, "width": 1440, "height": 587.25, "top": 267.75, "right": 1440, "bottom": 855, "left": 0}}
+- ✅ `faction_title_sections_and_base_are_complete` — {"viewActive": true, "tabActive": true, "commandActive": false, "modalExists": false, "overlayCount": 0, "title": "臺灣（綠線）", "titleColor": "rgb(74, 222, 128)", "sections": ["根據地", "能力", "規則與限制", "獲勝條件"], "nonEmpty": true, "baseText": "臺北", "panelRect": {"x": 13.5, "y": 281.25, "width": 1413, "height": 560.25, "top": 281.25, "right": 1426.5, "bottom": 841.5, "left": 13.5}, "viewRect": {"x": 0, "y": 267.75, "width": 1440, "height": 587.25, "top": 267.75, "right": 1440, "bottom": 855, "left": 0}}
+- ✅ `faction_panel_fits_inside_main_view` — {"viewActive": true, "tabActive": true, "commandActive": false, "modalExists": false, "overlayCount": 0, "title": "臺灣（綠線）", "titleColor": "rgb(74, 222, 128)", "sections": ["根據地", "能力", "規則與限制", "獲勝條件"], "nonEmpty": true, "baseText": "臺北", "panelRect": {"x": 13.5, "y": 281.25, "width": 1413, "height": 560.25, "top": 281.25, "right": 1426.5, "bottom": 841.5, "left": 13.5}, "viewRect": {"x": 0, "y": 267.75, "width": 1440, "height": 587.25, "top": 267.75, "right": 1440, "bottom": 855, "left": 0}}
+- ✅ `switching_tabs_leaves_personal_info_without_close_action` — {"factionActive": false, "commandActive": true}
+- ✅ `hong_kong_faction_structure_renders_in_tab` — {"title": "香港", "abilityCount": 1, "active": true}

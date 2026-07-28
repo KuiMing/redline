@@ -46,12 +46,13 @@ def main() -> None:
     check(checks, "all_event_art_assets_are_bound", len(event_art_files) == 13 and "EVENT_CARD_ART_NAMES" in js and "/static/card-art/events/" in js, [path.name for path in event_art_files])
     check(
         checks,
-        "zoom_animation_and_compact_panel_cache_bust_exist",
+        "zoom_animation_compact_panel_and_current_cache_bust_exist",
         "@keyframes event-card-zoom-in" in css
-        and "event-panel-compact-20260728" in html
+        and "style.css?v=personal-info-tabs-20260728" in html
+        and "app.js?v=personal-info-tabs-20260728" in html
         and "width: 180px" in css
         and "height: 147px" in css,
-        "zoom keyframes + compact event panel CSS cache bust",
+        "zoom keyframes + compact event panel + current static cache bust",
     )
 
     setup = post_json(

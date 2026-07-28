@@ -32,9 +32,9 @@
       ]
     },
     {
-      "name": "zoom_animation_and_compact_panel_cache_bust_exist",
+      "name": "zoom_animation_compact_panel_and_current_cache_bust_exist",
       "passed": true,
-      "details": "zoom keyframes + compact event panel CSS cache bust"
+      "details": "zoom keyframes + compact event panel + current static cache bust"
     },
     {
       "name": "turn_start_auto_opens_centered_zoom_preview",

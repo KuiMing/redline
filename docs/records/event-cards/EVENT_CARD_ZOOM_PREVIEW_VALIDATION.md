@@ -32,10 +32,10 @@ Summary: 11/11 passed
 ]
 ```
 
-## PASS — zoom_animation_and_compact_panel_cache_bust_exist
+## PASS — zoom_animation_compact_panel_and_current_cache_bust_exist
 
 ```json
-"zoom keyframes + compact event panel CSS cache bust"
+"zoom keyframes + compact event panel + current static cache bust"
 ```
 
 ## PASS — turn_start_auto_opens_centered_zoom_preview

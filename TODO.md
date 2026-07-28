@@ -250,7 +250,7 @@
   - 需檢查：城鎮組織唯一性是否由後端 build/move/state invariant 保證；`static/leaflet_game_map_logic.js` 的城鎮側欄、popup、`視覺狀態` 與地圖標籤是否仍依組織 count 組字，並確認截圖中的昆明為何會投影成數量 `2`。
   - 回報截圖：`/Users/benmini/.hermes/image_cache/img_e263a83e5a91.jpg`。
 
-- [todo] Playtest UI polish：右上角事件卡面板太大，遮住地圖操作按鈕。
+- [done] Playtest UI polish：右上角事件卡面板太大，遮住地圖操作按鈕。
   - 回報情境：完整事件卡固定顯示於地圖右上角時，卡片覆蓋 `Fit All`、`Focus Asia`、`Export View` 等地圖按鈕所在區域，妨礙操作與辨識。
   - 期望：縮小事件卡、調整面板位置或提供不遮擋地圖控制列的收合方式；仍需保留點擊卡片重新放大查看完整內容的入口。
   - 需檢查：不同視窗寬度／地圖尺寸下 `.event-card-panel` 與地圖右上控制列的碰撞，並確保調整後卡面可辨識、按鈕可完整點擊。
@@ -277,18 +277,20 @@
   - 需檢查：Leaflet map background click 與 town marker click 的事件冒泡／阻止冒泡，確保點城鎮不會同時觸發取消；取消後需完整清除起點、目的地、高亮、側欄提示及候選 marker，回到一般地圖狀態。
   - 回報截圖：`/Users/benmini/.hermes/image_cache/img_023d43458626.jpg`。
 
-- [todo] Playtest 地圖 UI bug：金門城鎮標示消失。
+- [done] Playtest 地圖 UI bug：金門城鎮標示消失。
   - 回報情境：臺灣海峽局部地圖中可見金門位置的橘色城鎮圓圈，但圓圈上方／周邊沒有顯示「金門」名稱標籤；同畫面的廈門仍正常顯示名稱與狀態。
   - 期望：金門 marker 在一般地圖、移動選取與建立組織候選狀態下，都應持續顯示可辨識的城鎮名稱標籤，且不可被候選樣式、縮放層級或標籤避讓邏輯隱藏。
   - 需檢查：金門資料是否缺少 label/name、marker 與 tooltip 是否建立但被 CSS／pane z-index／碰撞避讓隱藏，以及移動／建立候選樣式重繪時是否漏掉永久標籤。
   - 回報截圖：`/Users/benmini/.hermes/image_cache/img_aa186a54b9c9.jpg`。
 
-- [todo] Playtest 個人資訊 UI polish：「我的陣營」與「我的時代關卡」改為頁內 Tab 內容，不再跳出 modal。
+- [done] Playtest 個人資訊 UI polish：「我的陣營」與「我的時代關卡」改為頁內 Tab 內容，不再跳出 modal。
   - 回報情境：目前點選頂部的「我的陣營」或「我的時代關卡」會開啟覆蓋遊戲畫面的彈出視窗；這兩項本身已位於主功能 Tab 列，互動卻不像「指揮中心／戰略地圖／戰況紀錄」那樣在下方內容區切換，體驗不一致。
   - 期望：點擊後直接在 Tab 下方的主內容區渲染個人陣營與時代關卡資訊，不需另開 modal，也不需遮罩背景或額外關閉操作；切換其他 Tab 即可離開。
   - 實作方向：不強制使用 `<iframe>`。優先評估沿用現有 Tab router／content panel，以原生 DOM component 在同一頁渲染，避免 iframe 的尺寸同步、重複樣式、焦點與狀態傳遞成本；若現有架構確實適合再採 iframe。
   - 需保留：完整卡面或純文字 fallback、目前達成狀態／剩餘回合、紅軍無個人時代關卡提示、陣營能力與限制內容，以及圖片載入失敗時的備援。
   - 需檢查：Tab active 樣式、頁內捲動與響應式高度、事件卡面板重疊、從 modal 遷移後的鍵盤操作，以及既有 `openMyFactionModal()`／時代關卡 modal 邏輯如何去除或重用，避免留下雙重入口。
+  - 2026-07-28 已完成：兩個入口改為標準 `data-view` Tab，內容直接渲染於 `#myFactionView`／`#myEraStageView`；舊 modal DOM、開關函式與關閉按鈕完整移除，切換其他 Tab 即離開。陣營四區、viewer-scoped 時代狀態、紅軍無關卡提示皆保留；時代關卡頁採完整純文字四區與內部捲動，不綁卡面圖片。
+  - 驗證：`validate_my_faction_modal.py` 6/6、`validate_my_era_stage_view.py` 9/9、`validate_event_card_zoom_preview.py` 11/11；正式 proof：`docs/records/playtest-flow/my_faction_tab{,_hong_kong}.png`、`docs/records/event-cards/my_era_stage_tab_{pending,active,red_army}.png`。
   - 回報截圖：`/Users/benmini/.hermes/image_cache/img_431cc7fcb20e.jpg`。
 
 - [done] Playtest bug：臺灣已在牆內擁有 7 個有效組織，仍未觸發時代關卡。
@@ -306,7 +308,7 @@
 2. **S｜修金門標籤**：金門資料與座標皆存在，初步判斷為金門／廈門永久 tooltip 疊位；為兩城共用一套個別 direction/offset，驗證一般／移動／建立狀態及多個 zoom level。
 3. **S｜整理側欄按鈕與取消文字**：把「建立組織」移到「確認移動」上方；現行取消只清除目的地、保留起點，先改成明確的「取消目的地（保留起點）」與提示，避免誤解。
 4. **S–M｜候選 marker 視覺修正**：候選改用不屬於任何陣營的中性色外環／透明填色；不可再用橘色實心 overlay 蓋住既有組織的陣營實心色。與第 3 項可同批實作、同一組 browser proof。
-5. **M–L｜「我的陣營／我的時代關卡」改真正頁內 Tab**：新增兩個 `.game-view` 與 `data-view`，抽出現有 modal renderer 並移除雙重入口；保留完整卡面、文字 fallback、達成狀態、紅軍無關卡提示及頁內捲動。
+5. **DONE｜M–L｜「我的陣營／我的時代關卡」改真正頁內 Tab**：已新增兩個 `.game-view` 與 `data-view`，移除 modal DOM／開關函式與雙重入口；保留 viewer-scoped 狀態、完整純文字、紅軍無關卡提示及頁內捲動。
 6. **DONE｜M–L（P0）｜修臺灣時代關卡不觸發**：已在正常 action-first lifecycle 加入可靠 era trigger 檢查點，並完成多關卡 pending-choice queue、auto event 延後、一次性啟動履歷、到期後 UI 狀態與完整 runtime/browser 回歸。
 7. **M–L｜後端投影合法移動目的地**：不要在 JS 複製陣營規則；把 `move_organization()` 共用的合法性抽成 helper，於 viewer state 提供 legal moves，前端 `movementOptionsForTown()` 只消費後端結果，伺服器仍保留最終拒絕檢查。
 8. **M–L｜聚焦起點／合法目的地＋空白點擊退出**：依賴第 7 項的合法候選；只讓起點與合法目的地保持可互動／強調，新增統一 `exitMovementSelection()`，並處理 marker click 冒泡、pending support choice 例外及完整狀態清理。第 3、4、7、8 項建議視為同一個移動 UI 狀態機批次，但依序落地、分段驗證。
@@ -344,6 +346,7 @@
 
 ### P2：repo hygiene / validator hygiene
 - [todo] 維持 root record-like count = 0。
+  - 2026-07-28：將既有 root `North.md` 移至 `docs/records/map-data/NORTH_RULER_TOWNS.md`；root 再次只保留權威專案文件。
   - 新增 validation reports、proof markdown、screenshots 時，直接放到 `docs/records/<topic>/`。
   - 若新增 validator，確認輸出路徑不是 repo root，且失敗時 exit non-zero。
 

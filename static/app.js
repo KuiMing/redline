@@ -2786,17 +2786,19 @@ function renderPlayerStatusCards(state) {
   }).join('');
 }
 
-// 我的陣營（2026-07-19 使用者需求）：遊戲中隨時可查看自己陣營的能力/規則限制/獲勝條件。
+// 個人資訊頁內 Tab：遊戲中隨時查看自己陣營的能力/規則限制/獲勝條件。
 // 資料萃取邏輯與 lobby 的 renderFactionDetails 相同（能力=abilities 排除 setup/restriction 型；
 // 規則與限制=setup_effects+special_rules+restrictions+setup/restriction 型能力；根據地能力併入能力）。
-function openMyFactionModal() {
-  const overlay = document.getElementById('myFactionModal');
+function renderMyFactionView(state = window.lastGameState || {}) {
   const titleEl = document.getElementById('myFactionTitle');
   const bodyEl = document.getElementById('myFactionBody');
-  if (!overlay || !titleEl || !bodyEl) return;
-  const state = window.lastGameState || {};
+  if (!titleEl || !bodyEl) return;
   const me = (state.players || []).find(p => p.id === playerId);
-  if (!me || !me.faction) return;
+  if (!me || !me.faction) {
+    titleEl.textContent = '尚未選擇陣營';
+    bodyEl.innerHTML = '<div class="personal-info-empty">進入遊戲並選定陣營後，即可在這裡查看完整陣營資訊。</div>';
+    return;
+  }
   const factionId = me.faction;
   let opt = factionOptionById(factionId);
   if (!opt) {
@@ -2809,7 +2811,11 @@ function openMyFactionModal() {
       }
     }
   }
-  if (!opt) return;
+  if (!opt) {
+    titleEl.textContent = factionDisplayName(factionId);
+    bodyEl.innerHTML = '<div class="personal-info-empty">目前找不到這個陣營的詳細資料。</div>';
+    return;
+  }
 
   const baseName = me.base || null;
   const detailSource = (baseName && opt.variant_details) ? (opt.variant_details[baseName] || null) : null;
@@ -2846,25 +2852,17 @@ function openMyFactionModal() {
     section('規則與限制', rules),
     section('獲勝條件', wins),
   ].join('');
-  overlay.style.display = 'flex';
 }
 
-function closeMyFactionModal() {
-  const overlay = document.getElementById('myFactionModal');
-  if (overlay) overlay.style.display = 'none';
-}
-
-// 我的時代關卡：未達成前也可隨時查看自己的觸發條件與雙方效果。
+// 我的時代關卡頁內 Tab：未達成前也可隨時查看自己的觸發條件與雙方效果。
 // 後端只投影觀看者所屬陣營大類的關卡，避免把其他玩家的個人資訊混進來。
-function openMyEraStageModal() {
-  const overlay = document.getElementById('myEraStageModal');
+function renderMyEraStageView(state = window.lastGameState || {}) {
   const titleEl = document.getElementById('myEraStageTitle');
   const statusEl = document.getElementById('myEraStageStatus');
   const summaryEl = document.getElementById('myEraStageSummary');
   const bodyEl = document.getElementById('myEraStageBody');
-  if (!overlay || !titleEl || !statusEl || !summaryEl || !bodyEl) return;
+  if (!titleEl || !statusEl || !summaryEl || !bodyEl) return;
 
-  const state = window.lastGameState || {};
   const me = (state.players || []).find(p => p.id === playerId);
   const stage = state.my_era_stage || null;
   const factionColor = factionNameColor(me?.faction) || '#e5ecf5';
@@ -2877,8 +2875,6 @@ function openMyEraStageModal() {
       ? '紅軍沒有個人時代關卡；其他陣營達成關卡後，效果仍會顯示於全桌的時代通知。'
       : '目前找不到這個陣營對應的時代關卡資料。';
     bodyEl.innerHTML = '';
-    bodyEl.classList.remove('era-card-art-active');
-    overlay.style.display = 'flex';
     return;
   }
 
@@ -2900,14 +2896,8 @@ function openMyEraStageModal() {
     section('革命反撲', stage.fail_text),
     section('效果期限', stage.duration_text),
   ].join('');
-  bodyEl.innerHTML = eraCardArtMarkup(stage, fallbackMarkup);
-  bodyEl.classList.toggle('era-card-art-active', Boolean(eraCardArtUrl(stage)));
-  overlay.style.display = 'flex';
-}
-
-function closeMyEraStageModal() {
-  const overlay = document.getElementById('myEraStageModal');
-  if (overlay) overlay.style.display = 'none';
+  // 頁內個人資訊維持完整純文字，避免卡面圖像改變 Tab 的高度與捲動行為。
+  bodyEl.innerHTML = fallbackMarkup;
 }
 
 // 勝利畫面（2026-07-19）：state.winner 之前從未被前端顯示，遊戲結束毫無提示
@@ -3009,6 +2999,8 @@ async function render(state) {
   const detailFactionId = me?.faction || pendingFactionChoice || null;
   const detailBaseName = me?.base || pendingFactionBaseChoice || null;
   renderFactionDetails(inBaseSelection ? null : detailFactionId, detailBaseName, pendingFactionBaseGroup);
+  renderMyFactionView(state);
+  renderMyEraStageView(state);
   await renderBuildSupport(state);
   renderFactionActionPanel(state);
   renderBaseSelection(state);

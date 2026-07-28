@@ -1,0 +1,224 @@
+{
+  "summary": {
+    "total": 9,
+    "passed": 9,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "personal_info_entries_are_real_adjacent_tabs",
+      "ok": true,
+      "detail": {
+        "era_data_view": "myEraStage",
+        "faction_data_view": "myFaction",
+        "era_onclick": null,
+        "faction_onclick": null
+      }
+    },
+    {
+      "name": "personal_tabs_remain_adjacent_without_event_panel_overlap",
+      "ok": true,
+      "detail": {
+        "gapAfterLog": 9,
+        "gapBetweenPersonalTabs": 9,
+        "noEventOverlap": true
+      }
+    },
+    {
+      "name": "adjacent_faction_tab_still_works",
+      "ok": true,
+      "detail": {
+        "active": true
+      }
+    },
+    {
+      "name": "pending_taiwan_stage_renders_in_main_view_without_modal",
+      "ok": true,
+      "detail": {
+        "viewActive": true,
+        "tabActive": true,
+        "commandActive": false,
+        "modalExists": false,
+        "overlayCount": 0,
+        "title": "[臺灣]綏靖派反對介入對岸",
+        "status": "尚未達成",
+        "statusClass": "my-era-stage-status pending",
+        "summary": "臺灣對共和國滲透日深 紅軍策動臺灣綏靖派阻礙反共工作",
+        "sections": [
+          "觸發條件",
+          "紅軍壓制",
+          "革命反撲",
+          "效果期限"
+        ],
+        "texts": [
+          "[臺灣重建敵後工作]臺灣在牆內擁有至少7個有效組織",
+          "[鼓吹停止挑釁紅軍]將3張內鬥放進臺灣棄牌堆",
+          "[打擊國內綏靖主義]每當臺灣在臺灣城鎮建立至少1個組織時，獲得1點宣傳。持續2回合。",
+          "持續 2 回合"
+        ],
+        "imageCount": 0,
+        "scrollHeight": 362,
+        "clientHeight": 362,
+        "panelFits": true,
+        "stateId": "taiwan",
+        "achieved": false,
+        "active": false,
+        "remaining": null
+      }
+    },
+    {
+      "name": "pending_stage_shows_complete_plain_text_fallback",
+      "ok": true,
+      "detail": {
+        "viewActive": true,
+        "tabActive": true,
+        "commandActive": false,
+        "modalExists": false,
+        "overlayCount": 0,
+        "title": "[臺灣]綏靖派反對介入對岸",
+        "status": "尚未達成",
+        "statusClass": "my-era-stage-status pending",
+        "summary": "臺灣對共和國滲透日深 紅軍策動臺灣綏靖派阻礙反共工作",
+        "sections": [
+          "觸發條件",
+          "紅軍壓制",
+          "革命反撲",
+          "效果期限"
+        ],
+        "texts": [
+          "[臺灣重建敵後工作]臺灣在牆內擁有至少7個有效組織",
+          "[鼓吹停止挑釁紅軍]將3張內鬥放進臺灣棄牌堆",
+          "[打擊國內綏靖主義]每當臺灣在臺灣城鎮建立至少1個組織時，獲得1點宣傳。持續2回合。",
+          "持續 2 回合"
+        ],
+        "imageCount": 0,
+        "scrollHeight": 362,
+        "clientHeight": 362,
+        "panelFits": true,
+        "stateId": "taiwan",
+        "achieved": false,
+        "active": false,
+        "remaining": null
+      }
+    },
+    {
+      "name": "switching_tabs_leaves_era_view_without_close_action",
+      "ok": true,
+      "detail": {
+        "eraActive": false,
+        "logActive": true
+      }
+    },
+    {
+      "name": "active_mongolia_stage_shows_achieved_status_and_remaining_turns",
+      "ok": true,
+      "detail": {
+        "viewActive": true,
+        "tabActive": true,
+        "commandActive": false,
+        "modalExists": false,
+        "overlayCount": 0,
+        "title": "[蒙古]莫日根事件爆發",
+        "status": "條件已達成｜剩餘 1 回合",
+        "statusClass": "my-era-stage-status active",
+        "summary": "為保衛草場而死的牧民 引爆南蒙古學生示威 紅軍要想辦法破壞蒙古人團結",
+        "sections": [
+          "觸發條件",
+          "紅軍壓制",
+          "革命反撲",
+          "效果期限"
+        ],
+        "texts": [
+          "[牧民維權團體成形]蒙古在牆內擁有至少4個有效組織",
+          "[知識分子互相猜疑]將3張內鬥放進蒙古棄牌堆。",
+          "[南蒙古人世代覺醒]蒙古當回合手牌中的每張宣傳類卡牌 用於購買時可額外提供1點宣傳。",
+          "持續 1 回合"
+        ],
+        "imageCount": 0,
+        "scrollHeight": 362,
+        "clientHeight": 362,
+        "panelFits": true,
+        "stateId": "mongolia",
+        "achieved": true,
+        "active": true,
+        "remaining": 1
+      }
+    },
+    {
+      "name": "taiwan_stage_triggered_through_turn_lifecycle_is_projected_to_tab",
+      "ok": true,
+      "detail": {
+        "viewActive": true,
+        "tabActive": true,
+        "commandActive": false,
+        "modalExists": false,
+        "overlayCount": 0,
+        "title": "[臺灣]綏靖派反對介入對岸",
+        "status": "條件已達成｜剩餘 2 回合",
+        "statusClass": "my-era-stage-status active",
+        "summary": "臺灣對共和國滲透日深 紅軍策動臺灣綏靖派阻礙反共工作",
+        "sections": [
+          "觸發條件",
+          "紅軍壓制",
+          "革命反撲",
+          "效果期限"
+        ],
+        "texts": [
+          "[臺灣重建敵後工作]臺灣在牆內擁有至少7個有效組織",
+          "[鼓吹停止挑釁紅軍]將3張內鬥放進臺灣棄牌堆",
+          "[打擊國內綏靖主義]每當臺灣在臺灣城鎮建立至少1個組織時，獲得1點宣傳。持續2回合。",
+          "持續 2 回合"
+        ],
+        "imageCount": 0,
+        "scrollHeight": 362,
+        "clientHeight": 362,
+        "panelFits": true,
+        "stateId": "taiwan",
+        "achieved": true,
+        "active": true,
+        "remaining": 2,
+        "organizations": {
+          "南投": 1,
+          "嘉義": 1,
+          "基隆": 1,
+          "宜蘭": 1,
+          "屏東": 1,
+          "彰化": 1,
+          "新北": 1
+        }
+      }
+    },
+    {
+      "name": "red_army_gets_clear_no_personal_stage_message_in_tab",
+      "ok": true,
+      "detail": {
+        "viewActive": true,
+        "tabActive": true,
+        "commandActive": false,
+        "modalExists": false,
+        "overlayCount": 0,
+        "title": "無個人時代關卡",
+        "status": "此陣營沒有專屬時代關卡",
+        "statusClass": "my-era-stage-status unavailable",
+        "summary": "紅軍沒有個人時代關卡；其他陣營達成關卡後，效果仍會顯示於全桌的時代通知。",
+        "sections": [],
+        "texts": [],
+        "imageCount": 0,
+        "scrollHeight": 362,
+        "clientHeight": 362,
+        "panelFits": true,
+        "stateId": null,
+        "achieved": null,
+        "active": null,
+        "remaining": null,
+        "projected": null
+      }
+    }
+  ],
+  "screenshots": [
+    "/Users/benmini/.openclaw/workspace/redline/docs/records/event-cards/my_era_stage_tab_pending.png",
+    "/Users/benmini/.openclaw/workspace/redline/docs/records/event-cards/my_era_stage_tab_active.png",
+    "/Users/benmini/.openclaw/workspace/redline/docs/records/event-cards/my_era_stage_tab_red_army.png"
+  ],
+  "base_url": "http://127.0.0.1:8000"
+}
