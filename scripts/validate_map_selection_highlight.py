@@ -72,6 +72,7 @@ def check_flow(page):
     })
     page.goto(BASE_URL + setup['url'], wait_until='networkidle')
     page.wait_for_selector('#gameShell', state='visible', timeout=10000)
+    page.evaluate("() => { if (typeof closeEventReveal === 'function') closeEventReveal(); }")
     page.click('button.game-tab[data-view="map"]')
     page.wait_for_timeout(2000)
     page.evaluate("() => { document.getElementById('strategicMapFrame').contentWindow.__redlinePlayableMap.setView([24.6, 121.2], 8, {animate:false}); }")
@@ -94,8 +95,8 @@ def check_flow(page):
 
     target = marker_at(page, *COORDS['基隆'])
     record(
-        'reachable_move_target_is_solid_white_highlight',
-        target and target['fill'] == '#f8fafc' and target['fillOpacity'] == 1 and target['color'] in ('#67e8f9', '#ffd166'),
+        'reachable_move_target_uses_neutral_outline_and_keeps_base_fill',
+        target and target['fill'] == '#6b7280' and abs(target['fillOpacity'] - 0.32) < 0.01 and target['color'] == '#e2e8f0',
         {'基隆': target},
     )
 

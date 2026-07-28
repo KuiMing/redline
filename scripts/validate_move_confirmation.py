@@ -51,6 +51,7 @@ def check_flow(page):
 
     page.goto(BASE_URL + setup['url'], wait_until='networkidle')
     page.wait_for_selector('#gameShell', state='visible', timeout=10000)
+    page.evaluate("() => { if (typeof closeEventReveal === 'function') closeEventReveal(); }")
     page.click('button.game-tab[data-view="map"]')
     page.wait_for_timeout(2000)
 
@@ -69,7 +70,7 @@ def check_flow(page):
     record(
         'clicking_a_reachable_town_shows_pending_confirmation_without_sending_move',
         click_result.get('ok')
-        and after_click['pendingMoveTarget'] == {'from': '臺北', 'to': '基隆', 'mode': 'rail'}
+        and after_click['pendingMoveTarget'] == {'from': '臺北', 'to': '基隆', 'mode': 'rail', 'cost': 1}
         and last_move_request(page) is None,
         {'click_result': click_result, 'after_click': after_click},
     )

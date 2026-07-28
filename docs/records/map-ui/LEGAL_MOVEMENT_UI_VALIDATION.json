@@ -1,20 +1,19 @@
 {
-  "game_id": "c4382733-cce7-47ed-a9ec-426cbe64f1a0",
   "summary": {
-    "total": 8,
-    "passed": 8,
+    "total": 11,
+    "passed": 11,
     "failed": 0
   },
   "results": [
     {
-      "name": "setup_succeeded",
+      "name": "official_test_setup_succeeded",
       "ok": true,
       "detail": {
         "success": true,
-        "game_id": "c4382733-cce7-47ed-a9ec-426cbe64f1a0",
-        "player_id": "cc8e3c66-357e-48e5-a3d0-ebb53e296b8c",
-        "opponent_player_id": "138b4a3f-bb28-473f-8ac1-11ba502ebc07",
-        "url": "/?game_id=c4382733-cce7-47ed-a9ec-426cbe64f1a0&player_id=cc8e3c66-357e-48e5-a3d0-ebb53e296b8c",
+        "game_id": "8686e0aa-8ced-4cd7-8489-0565aa1f4402",
+        "player_id": "133957c3-b2db-4486-bec1-948613f8b641",
+        "opponent_player_id": "2efe646b-4734-4b54-97c4-90908e613fde",
+        "url": "/?game_id=8686e0aa-8ced-4cd7-8489-0565aa1f4402&player_id=133957c3-b2db-4486-bec1-948613f8b641",
         "state": {
           "turn": 1,
           "game_phase": "main",
@@ -45,11 +44,11 @@
             "資本家",
             "分神",
             "內鬥",
-            "誘導虛耗",
-            "凝聚共識",
-            "南洋奧援",
-            "武裝小隊",
-            "批判"
+            "企業人脈",
+            "北國奧援",
+            "北國奧援",
+            "組織經驗甲",
+            "思想建設"
           ],
           "purchase_area_variants": [
             null,
@@ -59,13 +58,20 @@
             null,
             null,
             null,
-            null,
             {
-              "variant_index": 1,
-              "support_region": "南洋",
+              "variant_index": 0,
+              "support_region": "北國",
               "tier2_regions": [
-                "印度",
-                "天方"
+                "歐洲",
+                "東洋"
+              ]
+            },
+            {
+              "variant_index": 0,
+              "support_region": "北國",
+              "tier2_regions": [
+                "歐洲",
+                "東洋"
               ]
             },
             null,
@@ -97,12 +103,12 @@
               "propaganda": 0
             },
             {
-              "money": 0,
-              "propaganda": 3
+              "money": 4,
+              "propaganda": 0
             },
             {
-              "money": 0,
-              "propaganda": 5
+              "money": 1,
+              "propaganda": 2
             },
             {
               "money": 1,
@@ -110,11 +116,11 @@
             },
             {
               "money": 3,
-              "propaganda": 0
+              "propaganda": 3
             },
             {
-              "money": 0,
-              "propaganda": 2
+              "money": 1,
+              "propaganda": 1
             }
           ],
           "purchase_area_payments": [
@@ -143,12 +149,12 @@
               "propaganda": 0
             },
             {
-              "money": 0,
-              "propaganda": 3
+              "money": 4,
+              "propaganda": 0
             },
             {
-              "money": 0,
-              "propaganda": 5
+              "money": 1,
+              "propaganda": 2
             },
             {
               "money": 1,
@@ -156,11 +162,11 @@
             },
             {
               "money": 3,
-              "propaganda": 0
+              "propaganda": 3
             },
             {
-              "money": 0,
-              "propaganda": 2
+              "money": 1,
+              "propaganda": 1
             }
           ],
           "purchase_area_affordable": [
@@ -177,7 +183,7 @@
             false
           ],
           "static_purchase_supply": {
-            "宣傳家": 13,
+            "宣傳家": 15,
             "思想家": 15,
             "資助者": 15,
             "資本家": 15,
@@ -204,7 +210,7 @@
           },
           "players": [
             {
-              "id": "cc8e3c66-357e-48e5-a3d0-ebb53e296b8c",
+              "id": "133957c3-b2db-4486-bec1-948613f8b641",
               "name": "mover",
               "faction": "taiwan_green",
               "base": "新竹",
@@ -214,14 +220,18 @@
               },
               "moves_left": 5,
               "hand": [
-                "追隨者",
+                "紅軍奧援",
                 "追隨者",
                 "追隨者",
                 "追隨者",
                 "追隨者"
               ],
               "hand_variants": [
-                null,
+                {
+                  "variant_index": 0,
+                  "support_region": "紅軍",
+                  "tier2_regions": []
+                },
                 null,
                 null,
                 null,
@@ -235,7 +245,7 @@
               }
             },
             {
-              "id": "138b4a3f-bb28-473f-8ac1-11ba502ebc07",
+              "id": "2efe646b-4734-4b54-97c4-90908e613fde",
               "name": "opponent",
               "faction": "red_army",
               "base": "北京",
@@ -245,11 +255,11 @@
               },
               "moves_left": 0,
               "hand": [
+                "樂捐者",
                 "追隨者",
                 "追隨者",
                 "追隨者",
-                "追隨者",
-                "樂捐者"
+                "追隨者"
               ],
               "hand_variants": [
                 null,
@@ -258,7 +268,7 @@
                 null,
                 null
               ],
-              "deck_count": 7,
+              "deck_count": 5,
               "discard_count": 0,
               "discard_pile": [],
               "orgs": {
@@ -270,7 +280,55 @@
       }
     },
     {
-      "name": "no_pending_move_before_clicking_a_target",
+      "name": "map_candidates_exactly_match_backend_projection_and_exclude_inapplicable_town",
+      "ok": true,
+      "detail": {
+        "reachable": [
+          "基隆",
+          "宜蘭",
+          "新北",
+          "新竹",
+          "桃園",
+          "花蓮",
+          "苗栗"
+        ],
+        "projected": [
+          "基隆",
+          "宜蘭",
+          "新北",
+          "新竹",
+          "桃園",
+          "花蓮",
+          "苗栗"
+        ]
+      }
+    },
+    {
+      "name": "candidate_uses_neutral_outline_without_overwriting_base_fill",
+      "ok": true,
+      "detail": {
+        "color": "#e2e8f0",
+        "fillColor": "#6b7280",
+        "fillOpacity": 0.32
+      }
+    },
+    {
+      "name": "build_control_precedes_move_confirmation_and_cancel_label_is_explicit",
+      "ok": true,
+      "detail": {
+        "directBeforeConfirm": true,
+        "cancelText": "取消目的地（保留起點）"
+      }
+    },
+    {
+      "name": "town_info_uses_presence_not_single_town_organization_count",
+      "ok": true,
+      "detail": {
+        "infoText": "\n    臺北\n    座標：121.565, 25.033\n    靜態統治者：臺灣\n    陣營：臺灣 紅軍 香港 藏國\n    城鎮類型：一般城鎮\n    \n    當前控制者：mover\n    組織狀態：有組織\n    共享可用：無\n    共享說明：無\n    \n    一般道路：無\n    鐵路：基隆 桃園視覺狀態：有組織 無共享"
+      }
+    },
+    {
+      "name": "unrelated_inapplicable_town_is_noninteractive_during_move_selection",
       "ok": true,
       "detail": {
         "selectedTown": "臺北",
@@ -287,20 +345,10 @@
       }
     },
     {
-      "name": "clicking_a_reachable_town_shows_pending_confirmation_without_sending_move",
+      "name": "destination_confirmation_shows_backend_cost_before_sending",
       "ok": true,
       "detail": {
-        "click_result": {
-          "ok": true,
-          "townName": "基隆",
-          "pendingMoveTarget": {
-            "from": "臺北",
-            "to": "基隆",
-            "mode": "rail",
-            "cost": 1
-          }
-        },
-        "after_click": {
+        "debug": {
           "selectedTown": "臺北",
           "pendingMoveTarget": {
             "from": "臺北",
@@ -317,26 +365,15 @@
             "宜蘭",
             "花蓮"
           ]
-        }
-      }
-    },
-    {
-      "name": "confirm_and_cancel_buttons_enabled_with_explanatory_hint",
-      "ok": true,
-      "detail": {
-        "confirmDisabled": false,
-        "cancelDisabled": false,
-        "hintText": "確認將組織從 臺北 移動到 基隆（鐵路，消耗 1 次移動）？"
-      }
-    },
-    {
-      "name": "cancel_clears_pending_but_keeps_selection_and_highlight_and_sends_nothing",
-      "ok": true,
-      "detail": {
-        "cancel_result": {
-          "ok": true
         },
-        "after_cancel": {
+        "hint": "確認將組織從 臺北 移動到 基隆（鐵路，消耗 1 次移動）？"
+      }
+    },
+    {
+      "name": "cancel_destination_keeps_origin_and_legal_candidates",
+      "ok": true,
+      "detail": {
+        "debug": {
           "selectedTown": "臺北",
           "pendingMoveTarget": null,
           "reachableFromSelected": [
@@ -348,61 +385,45 @@
             "宜蘭",
             "花蓮"
           ]
-        }
-      }
-    },
-    {
-      "name": "buttons_disabled_again_after_cancel",
-      "ok": true,
-      "detail": {
-        "confirmDisabled": true,
-        "cancelDisabled": true
-      }
-    },
-    {
-      "name": "confirm_sends_the_move_with_correct_payload_and_clears_pending",
-      "ok": true,
-      "detail": {
-        "confirm_result": {
-          "ok": true
         },
-        "after_confirm": {
-          "selectedTown": "基隆",
+        "hint": "已取消目的地；仍以 臺北 為移動起點，請重新選擇合法目的地。"
+      }
+    },
+    {
+      "name": "blank_map_click_exits_the_entire_movement_selection",
+      "ok": true,
+      "detail": {
+        "debug": {
+          "selectedTown": null,
           "pendingMoveTarget": null,
-          "reachableFromSelected": [
-            "新北",
-            "馬祖",
-            "沖繩",
-            "臺北",
-            "新北",
-            "桃園",
-            "新竹",
-            "宜蘭",
-            "花蓮",
-            "臺東"
-          ]
+          "reachableFromSelected": []
         },
-        "move_request": {
-          "from": "臺北",
-          "to": "基隆",
-          "mode": "rail",
-          "ok": true
+        "info": "尚未選取城鎮點擊自己的組織城鎮查看後端判定的合法移動目的地。"
+      }
+    },
+    {
+      "name": "blank_map_click_also_exits_an_origin_with_zero_legal_destinations",
+      "ok": true,
+      "detail": {
+        "before": {
+          "selectedTown": "新竹",
+          "pendingMoveTarget": null,
+          "reachableFromSelected": []
+        },
+        "after": {
+          "selectedTown": null,
+          "pendingMoveTarget": null,
+          "reachableFromSelected": []
         }
       }
     },
     {
-      "name": "server_state_reflects_the_confirmed_move",
+      "name": "browser_console_has_no_errors",
       "ok": true,
       "detail": {
-        "taipei": [],
-        "keelung": [
-          {
-            "player": "mover",
-            "count": 1
-          }
-        ]
+        "errors": []
       }
     }
   ],
-  "screenshot": "/Users/benmini/.openclaw/workspace/redline/docs/records/map-ui/move_confirmation_validation.png"
+  "screenshot": "docs/records/map-ui/legal_movement_ui.png"
 }

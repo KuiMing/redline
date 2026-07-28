@@ -79,10 +79,14 @@ def main():
               };
             }"""
         )
-        road_and_rail = set(ui_state["movement"]["road"]) | set(ui_state["movement"]["rail"])
+        road_and_rail = {
+            entry["town"]
+            for mode in ("road", "rail")
+            for entry in ui_state["movement"][mode]
+        }
         record(
-            "map_movement_targets_exclude_friendly_and_enemy_occupied_towns",
-            "臺北" not in road_and_rail and "新竹" not in road_and_rail and "新北" in road_and_rail,
+            "map_movement_targets_follow_backend_projection_and_exclude_occupied_towns",
+            "臺北" not in road_and_rail and "新竹" not in road_and_rail,
             {"movement": ui_state["movement"]},
         )
         record(

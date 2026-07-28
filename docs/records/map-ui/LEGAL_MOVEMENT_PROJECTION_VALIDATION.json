@@ -1,0 +1,97 @@
+{
+  "date": "2026-07-28",
+  "summary": {
+    "total": 8,
+    "passed": 8,
+    "failed": 0
+  },
+  "checks": [
+    {
+      "name": "current_player_receives_backend_legal_moves_without_mutation",
+      "ok": true,
+      "detail": {
+        "new_taipei": {
+          "road": {
+            "基隆": 1
+          },
+          "rail": {
+            "基隆": 1,
+            "桃園": 1,
+            "新竹": 1,
+            "苗栗": 1,
+            "宜蘭": 1
+          }
+        },
+        "state_unchanged": true
+      }
+    },
+    {
+      "name": "other_viewer_receives_no_actionable_projection",
+      "ok": true,
+      "detail": {}
+    },
+    {
+      "name": "base_anchor_is_not_a_movable_origin",
+      "ok": true,
+      "detail": {
+        "origins": [
+          "新北"
+        ]
+      }
+    },
+    {
+      "name": "every_projected_move_matches_the_shared_validator_and_cost",
+      "ok": true,
+      "detail": {
+        "projected_count": 6,
+        "all_consistent": true
+      }
+    },
+    {
+      "name": "projection_is_exactly_bidirectionally_equivalent_to_shared_validator",
+      "ok": true,
+      "detail": {
+        "actual_count": 6,
+        "expected_count": 6,
+        "missing": [],
+        "extra": []
+      }
+    },
+    {
+      "name": "zero_move_points_projects_no_destinations",
+      "ok": true,
+      "detail": {}
+    },
+    {
+      "name": "occupied_destination_is_absent_from_projection",
+      "ok": true,
+      "detail": {
+        "road": {
+          "基隆": 1
+        },
+        "rail": {
+          "基隆": 1,
+          "桃園": 1,
+          "新竹": 1,
+          "宜蘭": 1
+        }
+      }
+    },
+    {
+      "name": "faction_inapplicable_destination_is_absent_from_projection",
+      "ok": true,
+      "detail": {
+        "road": {
+          "基隆": 1
+        },
+        "rail": {
+          "基隆": 1,
+          "桃園": 1,
+          "新竹": 1,
+          "苗栗": 1,
+          "宜蘭": 1
+        }
+      }
+    }
+  ]
+}

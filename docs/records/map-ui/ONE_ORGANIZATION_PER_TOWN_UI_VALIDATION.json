@@ -10,10 +10,10 @@
       "ok": true,
       "detail": {
         "success": true,
-        "game_id": "4ceb02b4-eeda-4bb4-806e-03787a3ad6d4",
-        "player_id": "6ae5394b-f462-446f-b87a-29cbb783fa1e",
-        "red_player_id": "3bc099da-d005-4f53-94df-db320c5d7f0b",
-        "url": "/?game_id=4ceb02b4-eeda-4bb4-806e-03787a3ad6d4&player_id=6ae5394b-f462-446f-b87a-29cbb783fa1e",
+        "game_id": "4fc3669a-9361-4b3b-89cb-1b744ca71946",
+        "player_id": "6bd1aec6-225d-4e66-8a87-3ad75a76f04a",
+        "red_player_id": "ee50bbdd-1043-4cd8-a5fe-e7c1548e0fc8",
+        "url": "/?game_id=4fc3669a-9361-4b3b-89cb-1b744ca71946&player_id=6bd1aec6-225d-4e66-8a87-3ad75a76f04a",
         "state": {
           "turn": 1,
           "game_phase": "main",
@@ -44,11 +44,11 @@
             "資本家",
             "分神",
             "內鬥",
-            "臺灣奧援",
-            "派遣間諜",
-            "印度奧援",
-            "派遣間諜",
-            "武裝集團"
+            "模仿戰術",
+            "英美奧援",
+            "擴大戰果",
+            "產業滲透",
+            "組織經驗乙"
           ],
           "purchase_area_variants": [
             null,
@@ -57,23 +57,16 @@
             null,
             null,
             null,
+            null,
             {
-              "variant_index": 0,
-              "support_region": "臺灣",
+              "variant_index": 1,
+              "support_region": "英美",
               "tier2_regions": [
                 "東洋",
-                "南洋"
+                "臺灣"
               ]
             },
             null,
-            {
-              "variant_index": 0,
-              "support_region": "印度",
-              "tier2_regions": [
-                "南洋",
-                "英美"
-              ]
-            },
             null,
             null
           ],
@@ -103,24 +96,24 @@
               "propaganda": 0
             },
             {
-              "money": 1,
-              "propaganda": 2
-            },
-            {
-              "money": 2,
-              "propaganda": 1
+              "money": 0,
+              "propaganda": 4
             },
             {
               "money": 1,
               "propaganda": 2
-            },
-            {
-              "money": 2,
-              "propaganda": 1
             },
             {
               "money": 4,
               "propaganda": 0
+            },
+            {
+              "money": 4,
+              "propaganda": 1
+            },
+            {
+              "money": 3,
+              "propaganda": 2
             }
           ],
           "purchase_area_payments": [
@@ -149,24 +142,24 @@
               "propaganda": 0
             },
             {
-              "money": 1,
-              "propaganda": 2
-            },
-            {
-              "money": 2,
-              "propaganda": 1
+              "money": 0,
+              "propaganda": 4
             },
             {
               "money": 1,
               "propaganda": 2
-            },
-            {
-              "money": 2,
-              "propaganda": 1
             },
             {
               "money": 4,
               "propaganda": 0
+            },
+            {
+              "money": 4,
+              "propaganda": 1
+            },
+            {
+              "money": 3,
+              "propaganda": 2
             }
           ],
           "purchase_area_affordable": [
@@ -205,11 +198,12 @@
                 }
               ]
             },
-            "shared_access": {}
+            "shared_access": {},
+            "legal_organization_moves": {}
           },
           "players": [
             {
-              "id": "6ae5394b-f462-446f-b87a-29cbb783fa1e",
+              "id": "6bd1aec6-225d-4e66-8a87-3ad75a76f04a",
               "name": "f",
               "faction": "hong_kong",
               "base": "香港城",
@@ -232,7 +226,7 @@
               }
             },
             {
-              "id": "3bc099da-d005-4f53-94df-db320c5d7f0b",
+              "id": "ee50bbdd-1043-4cd8-a5fe-e7c1548e0fc8",
               "name": "紅軍",
               "faction": "red_army",
               "base": "北京",
@@ -268,18 +262,12 @@
       }
     },
     {
-      "name": "map_movement_targets_exclude_friendly_and_enemy_occupied_towns",
+      "name": "map_movement_targets_follow_backend_projection_and_exclude_occupied_towns",
       "ok": true,
       "detail": {
         "movement": {
           "road": [],
-          "rail": [
-            "基隆",
-            "桃園",
-            "宜蘭",
-            "新北",
-            "花蓮"
-          ]
+          "rail": []
         }
       }
     },

@@ -1,5 +1,5 @@
 {
-  "game_id": "2b7315ee-99fa-4e95-904c-1e21980797c1",
+  "game_id": "6eedfc8d-9f08-4719-a78a-119985d9f17f",
   "summary": {
     "total": 7,
     "passed": 7,
@@ -29,13 +29,13 @@
       }
     },
     {
-      "name": "reachable_move_target_is_solid_white_highlight",
+      "name": "reachable_move_target_uses_neutral_outline_and_keeps_base_fill",
       "ok": true,
       "detail": {
         "基隆": {
-          "fill": "#f8fafc",
-          "fillOpacity": 1,
-          "color": "#67e8f9"
+          "fill": "#6b7280",
+          "fillOpacity": 0.32,
+          "color": "#e2e8f0"
         }
       }
     },

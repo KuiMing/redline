@@ -3,7 +3,7 @@
 
 Loads the standalone Leaflet map, injects a build-organisation choice highlight (as the
 main app does via a `redline-choice-highlight` postMessage), and asserts the interaction
-hint reports "可建立城鎮：N 個" where N equals the number of orange highlight markers
+hint reports "可建立城鎮：N 個" where N equals the number of neutral highlight markers
 actually rendered. Also checks a non-build target choice reports "可選目標：N 個".
 """
 from __future__ import annotations
@@ -34,17 +34,17 @@ def inject_and_read(page, choice_key, towns, source_name, prompt):
           };
           window.dispatchEvent(new MessageEvent('message', { data: { type: 'redline-choice-highlight', payload } }));
           await new Promise(r => setTimeout(r, 200));
-          // Count orange choice-highlight markers on the map.
-          let orange = 0;
+          // Count neutral outer choice-highlight markers on the map.
+          let neutral = 0;
           window.__redlinePlayableMap.eachLayer(layer => {
             if (layer instanceof L.CircleMarker && layer.options) {
               const c = layer.options.color;
-              if (c === '#f97316' || c === '#facc15') orange += 1;
+              if (c === '#cbd5e1') neutral += 1;
             }
           });
           return {
             hint: document.getElementById('interactionHint')?.textContent || '',
-            orangeMarkers: orange,
+            neutralMarkers: neutral,
           };
         }
         """,
@@ -68,17 +68,17 @@ def main() -> None:
         # Use a prompt that already carries the "<source>：" prefix, exactly like the real
         # server build prompt, so the de-duplication behaviour is exercised.
         build = inject_and_read(page, "card_build_organization", BUILD_TOWNS, "宣傳家", "宣傳家：選擇要建立組織的城鎮。")
-        # Each buildable town renders exactly one orange outer ring (the inner marker is
-        # off-white), so the orange-ring count is the clickable/buildable town count.
+        # Each buildable town renders exactly one neutral outer ring, so the ring count
+        # is the clickable/buildable town count.
         record(
             "build_choice_shows_buildable_count_matching_towns",
             f"可建立城鎮：{len(BUILD_TOWNS)} 個" in build["hint"],
             {"hint": build["hint"], "expected": len(BUILD_TOWNS)},
         )
         record(
-            "build_count_matches_rendered_orange_markers",
-            build["orangeMarkers"] == len(BUILD_TOWNS),
-            {"orangeMarkers": build["orangeMarkers"], "towns": len(BUILD_TOWNS)},
+            "build_count_matches_rendered_neutral_markers",
+            build["neutralMarkers"] == len(BUILD_TOWNS),
+            {"neutralMarkers": build["neutralMarkers"], "towns": len(BUILD_TOWNS)},
         )
         record(
             "build_hint_does_not_duplicate_the_source_prefix",

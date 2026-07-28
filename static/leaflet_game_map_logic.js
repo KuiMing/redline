@@ -180,7 +180,7 @@ function popupHtml(t) {
     <div>城鎮類型：${t.type ? `<span class="pill">${t.type}</span>` : '一般城鎮'}</div>
     <hr style="border-color:#2b385d;border-style:solid;border-width:1px 0 0;margin:10px 0;">
     <div>當前控制者：${controller ? `<span class="pill">${controller}</span>` : '無組織'}</div>
-    <div>當前組織總數：<span class="pill">${total}</span></div>
+    <div>組織狀態：<span class="pill">${total > 0 ? '有組織' : '無組織'}</span></div>
     <div>共享可用：${shared.length ? shared.map(x=>`<span class="pill">${x}</span>`).join(' ') : '無'}</div>
     <div>共享說明：${shared.length ? `<span class="pill">${sharedAccessSummary(t.name)}</span>` : '無'}</div>
     <hr style="border-color:#2b385d;border-style:solid;border-width:1px 0 0;margin:10px 0;">
@@ -192,6 +192,21 @@ function resetMoveSelection() {
   selectedMoveTargets = [];
   pendingMove = null;
   pendingMoveTarget = null;
+}
+
+function exitMovementSelection() {
+  selectedTown = null;
+  resetMoveSelection();
+  resetBuildSelection();
+  highlightLayer.clearLayers();
+  renderMap();
+  applyGameStateToMap(lastGameState);
+  updateStatusPanel();
+  refreshDirectBuildUi();
+  const info = document.getElementById('info');
+  if (info) {
+    info.innerHTML = '<div class="name">尚未選取城鎮</div><div>點擊自己的組織城鎮查看後端判定的合法移動目的地。</div>';
+  }
 }
 
 function resetBuildSelection() {
@@ -253,19 +268,18 @@ function renderSupportChoiceHighlights(options = {}) {
     const isFocused = supportChoiceHighlight.focusTown && supportChoiceHighlight.focusTown === townName;
     const outerMarker = L.circleMarker([town.lat, town.lon], {
       radius: Math.max(isFocused ? 18 : 14, markerRadius(map.getZoom()) + (isFocused ? 10 : 6)),
-      color: isFocused ? '#facc15' : '#f97316',
+      color: isFocused ? '#ffffff' : '#cbd5e1',
       weight: isFocused ? 5 : 4,
-      fillColor: isFocused ? '#fde68a' : '#fb923c',
-      fillOpacity: isFocused ? 0.34 : 0.22,
+      fillColor: '#cbd5e1',
+      fillOpacity: isFocused ? 0.14 : 0.08,
       opacity: 1,
     }).addTo(supportChoiceHighlightLayer).bindPopup(`${supportChoiceHighlight.sourceName || '可選目標'}：${entry?.label || townName}`);
     outerMarker.on('click', () => selectTownForCurrentMapAction(townName, { autoFocus: false }));
     const innerMarker = L.circleMarker([town.lat, town.lon], {
       radius: Math.max(isFocused ? 9 : 7, markerRadius(map.getZoom()) + (isFocused ? 2 : 1)),
-      color: '#fff7ed',
+      color: isFocused ? '#ffffff' : '#e2e8f0',
       weight: 2,
-      fillColor: isFocused ? '#facc15' : '#f97316',
-      fillOpacity: 0.95,
+      fillOpacity: 0,
       opacity: 1,
     }).addTo(supportChoiceHighlightLayer);
     innerMarker.on('click', () => selectTownForCurrentMapAction(townName, { autoFocus: false }));
@@ -276,9 +290,9 @@ function renderSupportChoiceHighlights(options = {}) {
       const isBuildChoice = ['event_build_organization', 'era_red_build_near_target', 'card_build_organization'].includes(supportChoiceHighlight.choiceKey);
       const focusText = supportChoiceHighlight.focusTown ? ` 已聚焦 ${supportChoiceHighlight.focusTown}。` : '';
       const actionText = isBuildChoice
-        ? '請點選橘色城鎮，然後使用左側「在目前城鎮建立組織（效果）」按鈕完成建立。'
-        : '請點選橘色城鎮，然後使用左側「瓦解目前城鎮（效果）」按鈕完成瓦解；也可回到選擇視窗確認。';
-      // bounds.length is the number of orange markers actually placed on the map, i.e. the
+        ? '請點選中性色外框城鎮，然後使用左側「在目前城鎮建立組織（效果）」按鈕完成建立。'
+        : '請點選中性色外框城鎮，然後使用左側「瓦解目前城鎮（效果）」按鈕完成瓦解；也可回到選擇視窗確認。';
+      // bounds.length is the number of neutral candidate markers actually placed on the map,
       // exact set of clickable/buildable towns — so the count always matches the highlights.
       const countText = isBuildChoice
         ? `<span class="hint-strong">可建立城鎮：${bounds.length} 個</span>。`
@@ -290,7 +304,7 @@ function renderSupportChoiceHighlights(options = {}) {
       if (supportChoiceHighlight.sourceName && promptText.startsWith(`${supportChoiceHighlight.sourceName}：`)) {
         promptText = promptText.slice(`${supportChoiceHighlight.sourceName}：`.length);
       }
-      hintEl.innerHTML = `${sourceLabel}：<span class="hint-strong">${promptText}</span> ${countText}地圖上已用橘色外框標出可選城鎮。${focusText}${actionText}`;
+      hintEl.innerHTML = `${sourceLabel}：<span class="hint-strong">${promptText}</span> ${countText}地圖上已用中性色外框標出可選城鎮。${focusText}${actionText}`;
     }
     if (autoFocus) {
       focusSupportChoiceTargets(focusedBounds || bounds);
@@ -350,9 +364,10 @@ function updateStatusPanel() {
       hintEl.innerHTML = `已選取 <span class="hint-strong">${selectedTown}</span>：事件卡效果允許在此建立組織，請使用左側「在目前城鎮建立組織（事件卡）」按鈕完成。`;
     } else if (playerOwnsTown(selectedTown)) {
       const opts = movementOptionsForTown(selectedTown);
+      const destinationCount = new Set([...opts.road, ...opts.rail].map(entry => entry.town)).size;
       const buildOpts = playerHasSafehouse() ? buildOptionsForTown(selectedTown) : [];
       const sharedHint = playerHasSharedAccessToTown(selectedTown) ? ' 此城鎮也處於共享組織狀態。' : '';
-      hintEl.innerHTML = `已選取 <span class="hint-strong">${selectedTown}</span>：可走一般道路 ${opts.road.length} 條、鐵路 ${opts.rail.length} 條` +
+      hintEl.innerHTML = `已選取 <span class="hint-strong">${selectedTown}</span>：合法移動目的地 ${destinationCount} 個` +
         (buildOpts.length ? `，安全屋可建立 ${buildOpts.length} 個目標。` : '。') + sharedHint;
     } else if (playerHasSharedAccessToTown(selectedTown)) {
       hintEl.innerHTML = `已選取 <span class="hint-strong">${selectedTown}</span>：此城鎮對當前玩家具有 <span class="hint-strong">共享組織</span> 可用性，但互動高亮規則尚未完全 shared-aware。`;
@@ -367,7 +382,7 @@ function updateInfoPanel(name) {
   if (!t) return;
   const total = totalOrganizationsInTown(name);
   const shared = sharedAccessForTown(name);
-  const stateBadge = total > 0 ? `有組織（${total}）` : '無組織';
+  const stateBadge = total > 0 ? '有組織' : '無組織';
   const sharedBadge = shared.length ? `共享中（${shared.length}）` : '無共享';
   document.getElementById('info').innerHTML = `${popupHtml(t)}<hr style="border-color:#2b385d;border-style:solid;border-width:1px 0 0;margin:10px 0;"><div>視覺狀態：<span class="pill">${stateBadge}</span> <span class="pill">${sharedBadge}</span></div>`;
 }
@@ -500,49 +515,16 @@ function townHasAnyOrganization(townName) {
 
 function movementOptionsForTown(townName) {
   if (!lastGameState || !townName) return { road: [], rail: [] };
-  const town = MAP_DATA.towns[townName];
-  if (!town) return { road: [], rail: [] };
+  const projected = lastGameState.map?.legal_organization_moves?.[townName];
+  if (!projected) return { road: [], rail: [] };
 
-  if (!canActFromTown(townName)) return { road: [], rail: [] };
-
+  const normalize = entries => (Array.isArray(entries) ? entries : [])
+    .filter(entry => entry && typeof entry.town === 'string')
+    .map(entry => ({ town: entry.town, cost: Number(entry.cost) || 1 }));
   return {
-    road: (town.road || []).filter(n => MAP_DATA.towns[n] && !townHasAnyOrganization(n)),
-    rail: railOptionsWithinThree(townName)
+    road: normalize(projected.road),
+    rail: normalize(projected.rail),
   };
-}
-
-function townHasEnemyOrganization(townName) {
-  const entries = townStateEntries(townName);
-  if (!entries.length) return false;
-  const currentName = currentPlayerName();
-  return entries.some(entry => {
-    if (!entry || (entry.count || 0) <= 0) return false;
-    if (entry.player === currentName) return false;
-    return !playerHasSharedAccessToTown(townName);
-  });
-}
-
-function railOptionsWithinThree(originTown) {
-  const visited = new Set([originTown]);
-  const queue = [[originTown, 0]];
-  const reachable = new Set();
-
-  while (queue.length) {
-    const [townName, distance] = queue.shift();
-    if (distance >= 3) continue;
-    const town = MAP_DATA.towns[townName] || {};
-    for (const nextTown of (town.rail || [])) {
-      if (!MAP_DATA.towns[nextTown]) continue;
-      if (townHasEnemyOrganization(nextTown)) continue;
-      if (!townHasAnyOrganization(nextTown)) reachable.add(nextTown);
-      if (visited.has(nextTown)) continue;
-      visited.add(nextTown);
-      queue.push([nextTown, distance + 1]);
-    }
-  }
-
-  reachable.delete(originTown);
-  return Array.from(reachable);
 }
 
 function currentPlayerState() {
@@ -635,24 +617,37 @@ function renderMovementHighlights(townName, options = {}) {
     if (layer.setStyle) layer.setStyle({ color:'#ef4444', opacity:0.15, weight:Math.max(2, railWeight(map.getZoom()) - 1), dashArray: railDashArray(map.getZoom()) });
   });
 
-  for (const toName of opts.road) {
+  const candidateStyle = (townName, mode) => {
+    const base = markerStyleForTown(townName, map.getZoom());
+    return {
+      ...base,
+      color: '#e2e8f0',
+      weight: 5,
+      dashArray: mode === 'rail' ? '5 4' : null,
+      radius: Math.max(10, (base.radius || markerRadius(map.getZoom())) + 2),
+    };
+  };
+
+  for (const option of opts.road) {
+    const toName = option.town;
     const target = byName.get(toName);
     if (!target) continue;
-    selectedMoveTargets.push({ town: toName, mode: 'road' });
+    selectedMoveTargets.push({ town: toName, mode: 'road', cost: option.cost });
     highlightCount += 1;
 
     const marker = currentMarkers.get(toName);
-    if (marker) marker.setStyle({ color: '#ffd166', weight: 5, fillColor: '#f8fafc', fillOpacity: 1, radius: Math.max(10, markerRadius(map.getZoom()) + 2) });
+    if (marker) marker.setStyle(candidateStyle(toName, 'road'));
   }
 
-  for (const toName of opts.rail) {
+  for (const option of opts.rail) {
+    const toName = option.town;
     const target = byName.get(toName);
     if (!target) continue;
-    selectedMoveTargets.push({ town: toName, mode: 'rail' });
+    selectedMoveTargets.push({ town: toName, mode: 'rail', cost: option.cost });
     highlightCount += 1;
 
     const marker = currentMarkers.get(toName);
-    if (marker) marker.setStyle({ color: '#67e8f9', weight: 5, fillColor: '#f8fafc', fillOpacity: 1, radius: Math.max(10, markerRadius(map.getZoom()) + 2) });
+    if (marker) marker.setStyle(candidateStyle(toName, 'rail'));
   }
 
   if (playerHasSafehouse()) {
@@ -663,10 +658,10 @@ function renderMovementHighlights(townName, options = {}) {
       if (!target) continue;
       L.circleMarker([target.lat, target.lon], {
         radius: Math.max(9, markerRadius(map.getZoom()) + 2),
-        color: '#f472b6',
+        color: '#cbd5e1',
         weight: 3,
-        fillColor: '#ec4899',
-        fillOpacity: 0.28,
+        fillColor: '#cbd5e1',
+        fillOpacity: 0.08,
         opacity: 1,
       }).addTo(buildHighlightLayer).bindPopup(`安全屋可建立：${townName} → ${toName}`);
     }
@@ -796,7 +791,8 @@ function refreshMoveConfirmUi() {
   confirmBtn.disabled = false;
   cancelBtn.disabled = false;
   const modeLabel = pendingMoveTarget.mode === 'rail' ? '鐵路' : '道路';
-  hint.innerHTML = `確認將組織從 <span class="hint-strong">${pendingMoveTarget.from}</span> 移動到 <span class="hint-strong">${pendingMoveTarget.to}</span>（${modeLabel}）？`;
+  const costLabel = `消耗 ${pendingMoveTarget.cost || 1} 次移動`;
+  hint.innerHTML = `確認將組織從 <span class="hint-strong">${pendingMoveTarget.from}</span> 移動到 <span class="hint-strong">${pendingMoveTarget.to}</span>（${modeLabel}，${costLabel}）？`;
 }
 
 function refreshDirectBuildUi() {
@@ -921,9 +917,16 @@ function renderMap() {
       currentSharedBadges.set(t.name, badge);
     }
     marker.on('click', () => {
+      const eventChoice = eventBuildChoiceForTown(t.name);
+      const supportTargetChoice = supportTargetChoiceForTown(t.name);
+      if (eventChoice || supportTargetChoice) {
+        selectTownForCurrentMapAction(t.name, { autoFocus: true });
+        return;
+      }
+
       const moveOption = moveOptionForTown(t.name);
       if (selectedTown && moveOption) {
-        pendingMoveTarget = { from: selectedTown, to: t.name, mode: moveOption.mode };
+        pendingMoveTarget = { from: selectedTown, to: t.name, mode: moveOption.mode, cost: moveOption.cost };
         refreshMoveConfirmUi();
         return;
       }
@@ -931,6 +934,15 @@ function renderMap() {
       if (selectedTown && selectedBuildTargets.includes(t.name) && playerHasSafehouse()) {
         if (!mapWs || mapWs.readyState !== WebSocket.OPEN) return;
         mapWs.send(JSON.stringify({ action: 'build', from: selectedTown, town: t.name }));
+        return;
+      }
+
+      // While choosing a movement destination, unrelated towns are deliberately
+      // non-interactive.  Another own/shared organization may still become a new origin.
+      if (selectedTown && selectedMoveTargets.length) {
+        if (canActFromTown(t.name)) {
+          selectTownForCurrentMapAction(t.name, { autoFocus: true });
+        }
         return;
       }
 
@@ -970,7 +982,11 @@ function focusSelectedTown(townName) {
   const moveOptions = movementOptionsForTown(townName);
   const buildOptions = playerHasSafehouse() ? buildOptionsForTown(townName) : [];
   const pts = [[origin.lat, origin.lon]];
-  [...moveOptions.road, ...moveOptions.rail, ...buildOptions].forEach(name => {
+  [...moveOptions.road, ...moveOptions.rail].forEach(option => {
+    const t = byName.get(option.town);
+    if (t) pts.push([t.lat, t.lon]);
+  });
+  buildOptions.forEach(name => {
     const t = byName.get(name);
     if (t) pts.push([t.lat, t.lon]);
   });
@@ -1004,6 +1020,10 @@ document.getElementById('confirmMoveBtn').addEventListener('click', () => {
 document.getElementById('cancelMoveBtn').addEventListener('click', () => {
   pendingMoveTarget = null;
   refreshMoveConfirmUi();
+  const hint = document.getElementById('confirmMoveHint');
+  if (hint && selectedTown) {
+    hint.innerHTML = `已取消目的地；仍以 <span class="hint-strong">${selectedTown}</span> 為移動起點，請重新選擇合法目的地。`;
+  }
 });
 document.getElementById('directBuildBtn').addEventListener('click', () => {
   if (!selectedTown) return;
@@ -1025,6 +1045,14 @@ map.on('click', (event) => {
   const supportTown = supportChoiceTownNearLatLng(event.latlng);
   if (supportTown) {
     selectTownForCurrentMapAction(supportTown, { autoFocus: false });
+    return;
+  }
+  // Leaflet Canvas clicks can carry propagatedFrom even on blank map pixels.  A real
+  // path/marker click has a non-map sourceTarget; only the map itself may cancel.
+  if (event.sourceTarget && event.sourceTarget !== map) return;
+  const hasPendingMapChoice = Boolean(supportChoiceHighlight);
+  if (selectedTown && !hasPendingMapChoice) {
+    exitMovementSelection();
   }
 });
 map.on('zoom', updateDynamicStyles);

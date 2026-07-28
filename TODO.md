@@ -251,11 +251,9 @@
   - 暫不接入設計審稿目錄中的圖片卡面；放大層確認沒有圖片節點或 card-art 綁定。
   - 驗證：`validate_event_card_zoom_preview.py` 9/9、`validate_event_cards_runtime.py` 35/35、`validate_event_effect_text_browser.py` 2/2；proof 位於 `docs/records/event-cards/EVENT_CARD_ZOOM_PREVIEW_VALIDATION.{json,md}` 與兩張正式 UI 截圖。
 
-- [todo] Playtest UI/rule polish：城鎮只能有一個組織，不需統計或顯示城鎮組織數量。
-  - 回報情境：城鎮資訊側欄與地圖 popup 都顯示 `當前組織總數：2`，側欄底部另顯示 `視覺狀態：有組織（2）`；這些數量資訊重複，且與「一個城鎮只能有一個組織」的規則前提不符。
-  - 期望：城鎮只需顯示是否有組織、目前控制者／所屬陣營，不需統計或顯示組織數量；相關地圖標籤也不應再以數字表示同城組織數。
-  - 需檢查：城鎮組織唯一性是否由後端 build/move/state invariant 保證；`static/leaflet_game_map_logic.js` 的城鎮側欄、popup、`視覺狀態` 與地圖標籤是否仍依組織 count 組字，並確認截圖中的昆明為何會投影成數量 `2`。
-  - 回報截圖：`/Users/benmini/.hermes/image_cache/img_e263a83e5a91.jpg`。
+- [done] Playtest UI/rule polish：城鎮只能有一個組織，不需統計或顯示城鎮組織數量。
+  - 2026-07-28：一城一組織 invariant 完成後，地圖標籤已移除永遠為 1 的數字；本批再移除 popup 的「當前組織總數：N」與側欄「有組織（N）」顯示，改為「組織狀態：有／無組織」並保留控制者／陣營資訊。
+  - 驗證：`validate_one_organization_per_town_ui.py` 7/7、`validate_legal_movement_ui.py` 11/11。
 
 - [done] Playtest UI polish：右上角事件卡面板太大，遮住地圖操作按鈕。
   - 回報情境：完整事件卡固定顯示於地圖右上角時，卡片覆蓋 `Fit All`、`Focus Asia`、`Export View` 等地圖按鈕所在區域，妨礙操作與辨識。
@@ -263,26 +261,20 @@
   - 需檢查：不同視窗寬度／地圖尺寸下 `.event-card-panel` 與地圖右上控制列的碰撞，並確保調整後卡面可辨識、按鈕可完整點擊。
   - 回報截圖：`/Users/benmini/.hermes/image_cache/img_e04e233354e6.jpg`。
 
-- [todo] Playtest UI/rule polish：移動組織時，只顯示該組織實際可合法到達的城鎮。
-  - 回報情境：選取組織準備移動後，地圖仍把玩家陣營不能發展組織的城鎮顯示成可選目標，玩家容易誤按，之後才發現不能移動／發展。
-  - 期望：移動目標提示與可點擊狀態必須先套用完整合法性條件；除了道路／鐵路等可達性，也要排除該玩家陣營不能發展組織的城鎮。地圖只高亮並允許點擊該組織真正可以移入的城鎮，其餘城鎮不應呈現為移動候選。
-  - 需檢查：前端移動候選清單是否只用路網鄰接／距離計算，未共用後端的陣營發展限制與 move legality；候選過濾後仍需涵蓋卡牌效果、特殊移動規則及其他明確例外。
-  - 回報截圖：`/Users/benmini/.hermes/image_cache/img_2ef2c4657f87.jpg`。
+- [done] Playtest UI/rule polish：移動組織時，只顯示該組織實際可合法到達的城鎮。
+  - 2026-07-28：`move_organization()` 的所有前置檢查抽成無副作用 `_validate_organization_move()`；實際執行與 viewer-scoped `map.legal_organization_moves` 共用同一來源，完整涵蓋 phase、移動點、道路／鐵路、翻牆成本、陣營發展空間、佔位、根據地錨定、共享組織供應、紅軍限制、赤臘角機場及 ignore-distance。
+  - 前端 `movementOptionsForTown()` 只消費後端投影，缺少投影即 fail closed，不再自行 BFS 或複製規則；非當前玩家不收到可操作投影。
+  - 驗證：`validate_legal_movement_projection.py` 8/8、`validate_movement_rules.py` 13/13、`validate_wall_crossing_movement.py` 6/6、`validate_enemy_occupancy_rules.py` 5/5。
 
-- [todo] Playtest 地圖／操作 UI polish：區分候選城鎮與既有組織，並整理移動／建立操作按鈕。
-  - 候選顏色：目前建立組織階段大量城鎮以橘色空心圓圈提示，橘色疑似與反賊陣營色衝突；候選城鎮應改用不屬於任何陣營的中性色，避免誤認為陣營控制或組織標記。
-  - 既有組織：玩家已建立組織的城鎮，即使目前正在選擇另一個建立目標，也應持續用該玩家陣營的實心顏色顯示，不可被候選目標樣式覆蓋；需讓玩家一眼分辨「我已有組織」與「目前可建立」。
-  - 按鈕順序：側欄的「在目前城鎮建立組織（效果）」應移到「確認移動」上方，使主要流程與操作優先序更清楚。
-  - 取消用途：目前「取消」按鈕的取消範圍／結果不明，玩家不理解它是取消移動目標、取消本次選取、退出移動模式，或回復到哪個狀態；需釐清實際行為後改成明確標籤與說明，若沒有必要則評估移除。
-  - 需檢查：候選 marker 樣式是否覆寫既有組織 marker、陣營色 palette 與反賊顏色定義，以及側欄各操作的狀態轉移與取消後的復原行為。
-  - 回報截圖：`/Users/benmini/.hermes/image_cache/img_02e0ed68ffb2.jpg`。
+- [done] Playtest 地圖／操作 UI polish：區分候選城鎮與既有組織，並整理移動／建立操作按鈕。
+  - 2026-07-28：移動、建立與效果目標候選統一改成不屬於任何陣營的淺灰中性色外框；候選樣式沿用底層 marker 的 `fillColor/fillOpacity`，不再覆蓋既有組織的陣營實心色，並新增中性色候選圖例。
+  - 「在目前城鎮建立組織」移到「確認移動」上方；「取消」改為「取消目的地（保留起點）」，取消後提示仍保留原起點與合法候選。
+  - 驗證：`validate_map_selection_highlight.py` 7/7、`validate_buildable_town_count.py` 4/4、`validate_legal_movement_ui.py` 11/11；proof：`docs/records/map-ui/legal_movement_ui.png`。
 
-- [todo] Playtest 移動選取 UI polish：進入移動選取後聚焦合法路徑，並支援點擊地圖空白處取消。
-  - 顯示範圍：玩家點選一個有己方組織、且目前可移動的起點城鎮後，移動選取狀態只應顯示／強調原本的起點城鎮與該組織可合法到達的城鎮；其他無關、不可到達或不可合法移入的城鎮不應繼續呈現為可互動目標，以免干擾判讀。
-  - 選定目的地：再點選一個可遷移城鎮時，仍應保留起點與合法可達城鎮的清楚上下文，不要讓其他城鎮標記混入此次移動流程。
-  - 取消手勢：點選己方組織城鎮進入選取後，玩家應可點擊地圖上任一非互動空白位置，立即取消目前的起點／目的地選取並退出移動選取狀態，不必只能依賴側欄「取消」按鈕。
-  - 需檢查：Leaflet map background click 與 town marker click 的事件冒泡／阻止冒泡，確保點城鎮不會同時觸發取消；取消後需完整清除起點、目的地、高亮、側欄提示及候選 marker，回到一般地圖狀態。
-  - 回報截圖：`/Users/benmini/.hermes/image_cache/img_023d43458626.jpg`。
+- [done] Playtest 移動選取 UI polish：進入移動選取後聚焦合法路徑，並支援點擊地圖空白處取消。
+  - 2026-07-28：移動選取期間只允許合法目的地或另一個己方／共享組織作為新起點；其他不合法城鎮維持一般視覺且點擊不改變選取，事件／支援目標選擇仍優先處理，未與既有模式衝突。
+  - 實際點擊地圖空白處會清除起點、pending 目的地、候選高亮與側欄選取資訊；「取消目的地」則只退回已選起點，兩種取消語意明確區分。
+  - 驗證：`validate_legal_movement_ui.py` 11/11（含 Playwright 實際點擊海面退出、非法城鎮不可互動）、`validate_move_confirmation.py` 8/8、`validate_map_selection_highlight.py` 7/7。
 
 - [done] Playtest 地圖 UI bug：金門城鎮標示消失。
   - 回報情境：臺灣海峽局部地圖中可見金門位置的橘色城鎮圓圈，但圓圈上方／周邊沒有顯示「金門」名稱標籤；同畫面的廈門仍正常顯示名稱與狀態。
@@ -311,21 +303,21 @@
 
 ### 2026-07-27 實作規劃（由簡易到困難；依賴優先於表面改字）
 
-1. **S｜縮小／重定位右上事件卡**：先採純 CSS 縮圖與 responsive breakpoint，保留點擊 Zoom-in；改 `static/style.css`，延伸 `validate_event_card_zoom_preview.py`，斷言事件卡與地圖 toolbar bounding boxes 不相交。
-2. **S｜修金門標籤**：金門資料與座標皆存在，初步判斷為金門／廈門永久 tooltip 疊位；為兩城共用一套個別 direction/offset，驗證一般／移動／建立狀態及多個 zoom level。
-3. **S｜整理側欄按鈕與取消文字**：把「建立組織」移到「確認移動」上方；現行取消只清除目的地、保留起點，先改成明確的「取消目的地（保留起點）」與提示，避免誤解。
-4. **S–M｜候選 marker 視覺修正**：候選改用不屬於任何陣營的中性色外環／透明填色；不可再用橘色實心 overlay 蓋住既有組織的陣營實心色。與第 3 項可同批實作、同一組 browser proof。
+1. **DONE｜S｜縮小／重定位右上事件卡**：已縮小且不遮擋地圖 toolbar，保留點擊 Zoom-in 與 responsive 行為。
+2. **DONE｜S｜修金門標籤**：金門／廈門使用個別 tooltip direction/offset，已完成一般／移動／建立與多 zoom 驗證。
+3. **DONE｜S｜整理側欄按鈕與取消文字**：「建立組織」已移到「確認移動」上方；取消明確標示「取消目的地（保留起點）」並保留合法候選上下文。
+4. **DONE｜S–M｜候選 marker 視覺修正**：移動、建立與效果候選採中性色外框／透明填色，不覆蓋既有組織的陣營實心色；browser proof 11/11。
 5. **DONE｜M–L｜個人資訊合併為「我的陣營」單一頁內 Tab**：已保留單一 `myFaction` View，移除獨立時代關卡 Tab／View；左欄渲染陣營四區，右欄渲染 viewer-scoped 時代狀態、完整圖片卡面、純文字載入失敗備援與紅軍無關卡提示。
 6. **DONE｜M–L（P0）｜修臺灣時代關卡不觸發**：已在正常 action-first lifecycle 加入可靠 era trigger 檢查點，並完成多關卡 pending-choice queue、auto event 延後、一次性啟動履歷、到期後 UI 狀態與完整 runtime/browser 回歸。
-7. **M–L｜後端投影合法移動目的地**：不要在 JS 複製陣營規則；把 `move_organization()` 共用的合法性抽成 helper，於 viewer state 提供 legal moves，前端 `movementOptionsForTown()` 只消費後端結果，伺服器仍保留最終拒絕檢查。
-8. **M–L｜聚焦起點／合法目的地＋空白點擊退出**：依賴第 7 項的合法候選；只讓起點與合法目的地保持可互動／強調，新增統一 `exitMovementSelection()`，並處理 marker click 冒泡、pending support choice 例外及完整狀態清理。第 3、4、7、8 項建議視為同一個移動 UI 狀態機批次，但依序落地、分段驗證。
-9. **L–XL｜建立「全場每城最多一個組織」核心 invariant**：這不是單純 UI 問題；現行 build、support、event、era、move、香港根據地遷移與多支測試都允許同城 count 疊加。需先補 canonical 規則裁決，集中所有 placement/move 路徑共用 occupancy helper，並把測試 fixture 的單城 count>1 改成不同城鎮。
-10. **S（但依賴第 9 項）｜移除單城組織數 UI**：待 invariant 完成後，再移除 `當前組織總數：N`、`有組織（N）` 與城鎮標籤數字；保留玩家戰況／供應／勝利條件需要的全局組織總數。不可先只藏 UI，否則會掩蓋目前真實存在的疊加狀態。
+7. **DONE｜M–L｜後端投影合法移動目的地**：`move_organization()` 已抽出共用 `_validate_organization_move()`，viewer state 提供 `legal_organization_moves`，前端只消費後端結果且伺服器保留最終檢查。
+8. **DONE｜M–L｜聚焦起點／合法目的地＋空白點擊退出**：移動狀態只允許合法目的地或其他己方／共享組織成為新起點；統一 `exitMovementSelection()` 完整清理，事件／支援 choice 仍優先處理。
+9. **DONE｜L–XL｜建立「全場每城最多一個組織」核心 invariant**：所有 placement/move/根據地遷移路徑已集中 occupancy 判定，共享組織採單一實體語意；核心 11/11、正式 UI 7/7。
+10. **DONE｜S（依賴第 9 項）｜移除單城組織數 UI**：已移除 popup、側欄及城鎮標籤的單城組織數，只保留有無組織、控制者／陣營與全局統計。
 
-- 建議批次：A＝1；B＝2；C＝3+4；D＝5；E＝6；F＝7+8；G＝9+10。每批都需 runtime assertion＋正式 browser proof；完成 G 後再跑 20 回合 playthrough 掃描每城總組織 `<= 1`。
-- 排序說明：若只看改碼量，第 10 項本身很簡單；但它必須在第 9 項之後執行，否則只是把核心資料錯誤藏起來。P0 的第 6 項雖不是最簡單，實際排程可在前三個 quick wins 後優先處理。
+- 批次 A–G 已完成；本輪追加後端合法移動投影與地圖狀態機正式 E2E（projection 8/8、UI 11/11）。
+- 排序說明保留作歷史紀錄：第 10 項確實在第 9 項 invariant 完成後才落地，未以隱藏 UI 掩蓋資料錯誤。
 
-- [todo] 下一步建議：依上述 A→G 批次實作與驗證；每批完成即回寫本節，不再先擴張 speculative scope。
+- [done] A→G 批次已依序實作、驗證並回寫本節；後續工作回到下方實際 active todo，不再擴張 speculative scope。
 
 ### P1.5：2026-07-18 自動桌測（20 回合完整局）發現
 - 執行方式：`scripts/auto_playthrough_20260718.py` 用 Playwright 同控紅軍/綠線兩頁，逐動作截圖（340 張，`playthrough_screens/`，已 gitignore）＋ JSONL 行動紀錄；紅軍 vs 綠線玩滿 20 回合，紅軍第 21 回合結算獲勝（組織 10 vs 5），全程驅動零卡死。

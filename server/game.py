@@ -5085,7 +5085,14 @@ class Game:
         self.log(f"{player.name} relocated base from {old_base} to {to_town} via {via}")
         return {"success": True, "from": old_base, "to": to_town, "free": free_window}
 
-    def move_organization(self, from_town, to_town, mode="road"):
+    def _validate_organization_move(self, from_town, to_town, mode="road"):
+        """Validate one organization move without mutating game state.
+
+        This is the single legality source for both ``move_organization`` and the
+        viewer-scoped map projection.  Keep every rule here so the browser never
+        has to duplicate faction, occupancy, wall, route, supply, or base-anchor
+        checks.
+        """
         if self.turn_phase != TurnPhase.ACTION:
             return {"error": "Not in ACTION phase"}
 
@@ -5118,7 +5125,7 @@ class Game:
             getattr(player, 'faction_id', None) == 'hong_kong'
             and origin_owner is player
             and from_town == '赤臘角'
-            and to_town not in set(self._towns_for_region_alias('china'))
+            and to_town not in inner_towns_for_wall
             and self.can_faction_develop_in_town('hong_kong', to_town)
         )
         if not legal_move and airport_move:
@@ -5146,6 +5153,39 @@ class Game:
         if from_town == origin_owner.base and origin_owner.organizations.get(from_town, 0) <= 1:
             return {"error": "Base anchor organization cannot move"}
 
+        return {
+            "success": True,
+            "player": player,
+            "origin_owner": origin_owner,
+            "cost": cost,
+            "wall_crossing": wall_crossing,
+            "airport_move": airport_move,
+        }
+
+    def _legal_organization_moves(self):
+        """Return current-player legal destinations grouped by origin and mode."""
+        result = {}
+        player = self.current_player()
+        all_towns = self.map.get("towns", {})
+        for from_town in self._organization_towns_for_player(player):
+            modes = {"road": [], "rail": []}
+            for mode in modes:
+                for to_town in all_towns:
+                    checked = self._validate_organization_move(from_town, to_town, mode)
+                    if checked.get("success"):
+                        modes[mode].append({"town": to_town, "cost": checked["cost"]})
+            if modes["road"] or modes["rail"]:
+                result[from_town] = modes
+        return result
+
+    def move_organization(self, from_town, to_town, mode="road"):
+        checked = self._validate_organization_move(from_town, to_town, mode)
+        if not checked.get("success"):
+            return checked
+
+        player = checked["player"]
+        origin_owner = checked["origin_owner"]
+        cost = checked["cost"]
         origin_owner.organizations[from_town] -= 1
         if origin_owner.organizations[from_town] <= 0:
             del origin_owner.organizations[from_town]
@@ -6030,6 +6070,11 @@ class Game:
             }
 
         current_player = self.current_player()
+        legal_organization_moves = (
+            self._legal_organization_moves()
+            if viewer_player is current_player
+            else {}
+        )
         purchase_area_costs = [
             self._effective_purchase_cost(current_player, card)
             for card in self.purchase_area
@@ -6074,7 +6119,8 @@ class Game:
             "static_purchase_supply": dict(getattr(self, 'static_purchase_supply', {})),
             "map": {
                 "towns": town_control,
-                "shared_access": shared_access
+                "shared_access": shared_access,
+                "legal_organization_moves": legal_organization_moves,
             },
             "players": [
                 {
