@@ -289,8 +289,8 @@
   - 實作方向：不強制使用 `<iframe>`。優先評估沿用現有 Tab router／content panel，以原生 DOM component 在同一頁渲染，避免 iframe 的尺寸同步、重複樣式、焦點與狀態傳遞成本；若現有架構確實適合再採 iframe。
   - 需保留：完整卡面或純文字 fallback、目前達成狀態／剩餘回合、紅軍無個人時代關卡提示、陣營能力與限制內容，以及圖片載入失敗時的備援。
   - 需檢查：Tab active 樣式、頁內捲動與響應式高度、事件卡面板重疊、從 modal 遷移後的鍵盤操作，以及既有 `openMyFactionModal()`／時代關卡 modal 邏輯如何去除或重用，避免留下雙重入口。
-  - 2026-07-28 已完成：兩個入口改為標準 `data-view` Tab，內容直接渲染於 `#myFactionView`／`#myEraStageView`；舊 modal DOM、開關函式與關閉按鈕完整移除，切換其他 Tab 即離開。陣營四區、viewer-scoped 時代狀態、紅軍無關卡提示皆保留；時代關卡頁採完整純文字四區與內部捲動，不綁卡面圖片。
-  - 驗證：`validate_my_faction_modal.py` 6/6、`validate_my_era_stage_view.py` 9/9、`validate_event_card_zoom_preview.py` 11/11；正式 proof：`docs/records/playtest-flow/my_faction_tab{,_hong_kong}.png`、`docs/records/event-cards/my_era_stage_tab_{pending,active,red_army}.png`。
+  - 2026-07-28 已完成：兩個入口改為標準 `data-view` Tab，內容直接渲染於 `#myFactionView`／`#myEraStageView`；舊 modal DOM、開關函式與關閉按鈕完整移除，切換其他 Tab 即離開。陣營四區、viewer-scoped 時代狀態、紅軍無關卡提示皆保留；依使用者後續校正，時代關卡頁以已核准完整圖片卡面為主要內容，狀態顯示於圖片外，圖片載入失敗才切換完整純文字四區備援。
+  - 驗證：`validate_my_faction_modal.py` 6/6、`validate_my_era_stage_view.py` 10/10、`validate_event_card_zoom_preview.py` 11/11；正式 proof：`docs/records/playtest-flow/my_faction_tab{,_hong_kong}.png`、`docs/records/event-cards/my_era_stage_tab_{pending,active,red_army}.png`。
   - 回報截圖：`/Users/benmini/.hermes/image_cache/img_431cc7fcb20e.jpg`。
 
 - [done] Playtest bug：臺灣已在牆內擁有 7 個有效組織，仍未觸發時代關卡。
@@ -308,7 +308,7 @@
 2. **S｜修金門標籤**：金門資料與座標皆存在，初步判斷為金門／廈門永久 tooltip 疊位；為兩城共用一套個別 direction/offset，驗證一般／移動／建立狀態及多個 zoom level。
 3. **S｜整理側欄按鈕與取消文字**：把「建立組織」移到「確認移動」上方；現行取消只清除目的地、保留起點，先改成明確的「取消目的地（保留起點）」與提示，避免誤解。
 4. **S–M｜候選 marker 視覺修正**：候選改用不屬於任何陣營的中性色外環／透明填色；不可再用橘色實心 overlay 蓋住既有組織的陣營實心色。與第 3 項可同批實作、同一組 browser proof。
-5. **DONE｜M–L｜「我的陣營／我的時代關卡」改真正頁內 Tab**：已新增兩個 `.game-view` 與 `data-view`，移除 modal DOM／開關函式與雙重入口；保留 viewer-scoped 狀態、完整純文字、紅軍無關卡提示及頁內捲動。
+5. **DONE｜M–L｜「我的陣營／我的時代關卡」改真正頁內 Tab**：已新增兩個 `.game-view` 與 `data-view`，移除 modal DOM／開關函式與雙重入口；保留 viewer-scoped 狀態、時代關卡完整圖片卡面＋純文字載入失敗備援、紅軍無關卡提示及頁內捲動。
 6. **DONE｜M–L（P0）｜修臺灣時代關卡不觸發**：已在正常 action-first lifecycle 加入可靠 era trigger 檢查點，並完成多關卡 pending-choice queue、auto event 延後、一次性啟動履歷、到期後 UI 狀態與完整 runtime/browser 回歸。
 7. **M–L｜後端投影合法移動目的地**：不要在 JS 複製陣營規則；把 `move_organization()` 共用的合法性抽成 helper，於 viewer state 提供 legal moves，前端 `movementOptionsForTown()` 只消費後端結果，伺服器仍保留最終拒絕檢查。
 8. **M–L｜聚焦起點／合法目的地＋空白點擊退出**：依賴第 7 項的合法候選；只讓起點與合法目的地保持可互動／強調，新增統一 `exitMovementSelection()`，並處理 marker click 冒泡、pending support choice 例外及完整狀態清理。第 3、4、7、8 項建議視為同一個移動 UI 狀態機批次，但依序落地、分段驗證。

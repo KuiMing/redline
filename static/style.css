@@ -2756,6 +2756,23 @@ body {
   text-align: left;
 }
 
+.my-era-stage-body.era-card-art-active {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  overflow-y: auto;
+}
+
+.my-era-stage-body.era-card-art-active .era-card-art-shell {
+  flex: 0 0 auto;
+  width: min(100%, 440px);
+  max-width: 440px;
+}
+
+.my-era-stage-body.era-card-art-active .era-card-art-fallback {
+  text-align: left;
+}
+
 .my-era-stage-section {
   padding: 10px 12px;
   margin-bottom: 9px;

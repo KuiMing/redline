@@ -75,6 +75,25 @@ def inspect_era_tab(page):
         sections: [...document.querySelectorAll('#myEraStageBody .era-achievement-section-title')].map(el => el.textContent),
         texts: [...document.querySelectorAll('#myEraStageBody .modal-body-text')].map(el => el.textContent),
         imageCount: document.querySelectorAll('#myEraStageView img').length,
+        artActive: document.getElementById('myEraStageBody')?.classList.contains('era-card-art-active'),
+        image: (() => {
+          const image = document.querySelector('#myEraStageView .era-card-art-image');
+          const body = document.getElementById('myEraStageBody');
+          if (!image || !body) return null;
+          const rect = image.getBoundingClientRect();
+          const bodyRect = body.getBoundingClientRect();
+          return {
+            alt: image.alt,
+            width: image.naturalWidth,
+            height: image.naturalHeight,
+            rect: {left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom, width: rect.width, height: rect.height},
+            contained: rect.left >= bodyRect.left && rect.right <= bodyRect.right && rect.top >= bodyRect.top && rect.bottom <= bodyRect.bottom + 1,
+          };
+        })(),
+        fallbackVisible: (() => {
+          const fallback = document.querySelector('#myEraStageView .era-card-art-fallback');
+          return fallback ? getComputedStyle(fallback).display !== 'none' : false;
+        })(),
         scrollHeight: document.getElementById('myEraStageBody')?.scrollHeight,
         clientHeight: document.getElementById('myEraStageBody')?.clientHeight,
         panelFits: !!(viewRect && panelRect)
@@ -151,6 +170,7 @@ def check(browser):
     record("adjacent_faction_tab_still_works", faction_active, {"active": faction_active})
 
     era_button.click()
+    pending_page.wait_for_function("document.querySelector('#myEraStageView .era-card-art-image')?.naturalWidth === 1350")
     pending_page.wait_for_timeout(100)
     pending_data = inspect_era_tab(pending_page)
     record(
@@ -164,16 +184,36 @@ def check(browser):
         pending_data,
     )
     record(
-        "pending_stage_shows_complete_plain_text_fallback",
+        "pending_stage_shows_approved_complete_card_art",
         "[臺灣]綏靖派反對介入對岸" in (pending_data["title"] or "")
         and pending_data["status"] == "尚未達成"
         and bool(pending_data["summary"])
         and pending_data["sections"] == ["觸發條件", "紅軍壓制", "革命反撲", "效果期限"]
         and all(pending_data["texts"])
-        and pending_data["imageCount"] == 0,
+        and pending_data["imageCount"] == 1
+        and pending_data["artActive"]
+        and pending_data["image"] == {
+            "alt": "[臺灣]綏靖派反對介入對岸完整卡面",
+            "width": 1350,
+            "height": 1100,
+            "rect": pending_data["image"]["rect"],
+            "contained": True,
+        }
+        and not pending_data["fallbackVisible"],
         pending_data,
     )
     pending_page.screenshot(path=str(PENDING_SCREENSHOT), full_page=True)
+
+    pending_page.evaluate("document.querySelector('#myEraStageView .era-card-art-image').src = '/static/card-art/era/__missing__.png'")
+    pending_page.wait_for_function("document.querySelector('#myEraStageView .era-card-art-shell')?.classList.contains('era-card-art-load-failed')")
+    fallback_data = inspect_era_tab(pending_page)
+    record(
+        "missing_era_art_falls_back_to_complete_text",
+        fallback_data["fallbackVisible"]
+        and fallback_data["sections"] == ["觸發條件", "紅軍壓制", "革命反撲", "效果期限"]
+        and all(fallback_data["texts"]),
+        fallback_data,
+    )
 
     pending_page.click('#gameTabs [data-view="log"]')
     pending_page.wait_for_timeout(100)
@@ -191,6 +231,7 @@ def check(browser):
     active_setup = setup_era("mongolia")
     active_context, active_page = open_game(browser, active_setup)
     active_page.click("#myEraStageBtn")
+    active_page.wait_for_function("document.querySelector('#myEraStageView .era-card-art-image')?.naturalWidth === 1350")
     active_page.wait_for_timeout(100)
     active_data = inspect_era_tab(active_page)
     record(
@@ -202,7 +243,10 @@ def check(browser):
         and active_data["achieved"] is True
         and active_data["active"] is True
         and active_data["remaining"] == 1
-        and active_data["imageCount"] == 0,
+        and active_data["imageCount"] == 1
+        and active_data["image"]["width"] == 1350
+        and active_data["image"]["height"] == 1100
+        and active_data["image"]["contained"],
         active_data,
     )
     active_page.screenshot(path=str(ACTIVE_SCREENSHOT), full_page=True)
@@ -211,6 +255,7 @@ def check(browser):
     lifecycle_setup = setup_era("taiwan", via_lifecycle=True)
     lifecycle_context, lifecycle_page = open_game(browser, lifecycle_setup)
     lifecycle_page.click("#myEraStageBtn")
+    lifecycle_page.wait_for_function("document.querySelector('#myEraStageView .era-card-art-image')?.naturalWidth === 1350")
     lifecycle_page.wait_for_timeout(100)
     lifecycle_data = inspect_era_tab(lifecycle_page)
     record(

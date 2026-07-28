@@ -2875,6 +2875,7 @@ function renderMyEraStageView(state = window.lastGameState || {}) {
       ? '紅軍沒有個人時代關卡；其他陣營達成關卡後，效果仍會顯示於全桌的時代通知。'
       : '目前找不到這個陣營對應的時代關卡資料。';
     bodyEl.innerHTML = '';
+    bodyEl.classList.remove('era-card-art-active');
     return;
   }
 
@@ -2896,8 +2897,8 @@ function renderMyEraStageView(state = window.lastGameState || {}) {
     section('革命反撲', stage.fail_text),
     section('效果期限', stage.duration_text),
   ].join('');
-  // 頁內個人資訊維持完整純文字，避免卡面圖像改變 Tab 的高度與捲動行為。
-  bodyEl.innerHTML = fallbackMarkup;
+  bodyEl.innerHTML = eraCardArtMarkup(stage, fallbackMarkup);
+  bodyEl.classList.toggle('era-card-art-active', Boolean(eraCardArtUrl(stage)));
 }
 
 // 勝利畫面（2026-07-19）：state.winner 之前從未被前端顯示，遊戲結束毫無提示
