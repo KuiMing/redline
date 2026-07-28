@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>REDLINE // STRATEGIC COMMAND</title>
-  <link rel="stylesheet" href="/static/style.css?v=personal-info-tabs-art-20260728" />
+  <link rel="stylesheet" href="/static/style.css?v=merged-personal-info-20260728" />
 </head>
 <body>
 <div id="stageViewport">
@@ -223,7 +223,6 @@
     <button class="game-tab" data-view="map">戰略地圖</button>
     <button class="game-tab" data-view="log">戰況紀錄</button>
     <button id="myFactionBtn" class="game-tab my-faction-tab" type="button" data-view="myFaction">我的陣營</button>
-    <button id="myEraStageBtn" class="game-tab my-era-stage-tab" type="button" data-view="myEraStage">我的時代關卡</button>
   </div>
 
   <div id="commandView" class="game-view active">
@@ -293,25 +292,24 @@
     <section class="panel personal-info-panel" aria-labelledby="myFactionPanelLabel">
       <div id="myFactionPanelLabel" class="panel-title">我的陣營</div>
       <div id="myFactionTitle" class="personal-info-title"></div>
-      <div id="myFactionBody" class="my-faction-body personal-info-scroll"></div>
-    </section>
-  </div>
-
-  <div id="myEraStageView" class="game-view personal-info-view">
-    <section class="panel personal-info-panel era-stage-info-panel" aria-labelledby="myEraStagePanelLabel">
-      <div id="myEraStagePanelLabel" class="panel-title">我的時代關卡</div>
-      <div class="my-era-stage-heading">
-        <div id="myEraStageTitle" class="personal-info-title"></div>
-        <div id="myEraStageStatus" class="my-era-stage-status"></div>
+      <div class="personal-info-columns">
+        <div id="myFactionBody" class="my-faction-body personal-info-scroll"></div>
+        <aside id="myEraStagePane" class="my-era-stage-pane" aria-labelledby="myEraStagePanelLabel">
+          <div id="myEraStagePanelLabel" class="panel-title">時代關卡</div>
+          <div class="my-era-stage-heading">
+            <div id="myEraStageTitle" class="personal-info-title"></div>
+            <div id="myEraStageStatus" class="my-era-stage-status"></div>
+          </div>
+          <div id="myEraStageSummary" class="modal-body-text my-era-stage-summary"></div>
+          <div id="myEraStageBody" class="my-era-stage-body personal-info-scroll"></div>
+        </aside>
       </div>
-      <div id="myEraStageSummary" class="modal-body-text my-era-stage-summary"></div>
-      <div id="myEraStageBody" class="my-era-stage-body personal-info-scroll"></div>
     </section>
   </div>
 </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="/static/app.js?v=personal-info-tabs-art-20260728"></script>
+<script src="/static/app.js?v=merged-personal-info-20260728"></script>
 </body>
 </html>

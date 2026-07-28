@@ -48,8 +48,8 @@ def main() -> None:
         checks,
         "zoom_animation_compact_panel_and_current_cache_bust_exist",
         "@keyframes event-card-zoom-in" in css
-        and "style.css?v=personal-info-tabs-art-20260728" in html
-        and "app.js?v=personal-info-tabs-art-20260728" in html
+        and "style.css?v=merged-personal-info-20260728" in html
+        and "app.js?v=merged-personal-info-20260728" in html
         and "width: 180px" in css
         and "height: 147px" in css,
         "zoom keyframes + compact event panel + current static cache bust",

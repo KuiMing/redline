@@ -58,13 +58,13 @@ def open_game(browser, setup):
 
 def inspect_era_tab(page):
     return page.evaluate("""() => {
-      const view = document.getElementById('myEraStageView');
+      const view = document.getElementById('myFactionView');
       const panel = view?.querySelector('.personal-info-panel');
       const viewRect = view?.getBoundingClientRect();
       const panelRect = panel?.getBoundingClientRect();
       return {
         viewActive: view?.classList.contains('active'),
-        tabActive: document.getElementById('myEraStageBtn')?.classList.contains('active'),
+        tabActive: document.getElementById('myFactionBtn')?.classList.contains('active'),
         commandActive: document.getElementById('commandView')?.classList.contains('active'),
         modalExists: !!document.getElementById('myEraStageModal'),
         overlayCount: view?.querySelectorAll('.modal-overlay').length ?? -1,
@@ -74,10 +74,10 @@ def inspect_era_tab(page):
         summary: document.getElementById('myEraStageSummary')?.textContent,
         sections: [...document.querySelectorAll('#myEraStageBody .era-achievement-section-title')].map(el => el.textContent),
         texts: [...document.querySelectorAll('#myEraStageBody .modal-body-text')].map(el => el.textContent),
-        imageCount: document.querySelectorAll('#myEraStageView img').length,
+        imageCount: document.querySelectorAll('#myFactionView .era-card-art-image').length,
         artActive: document.getElementById('myEraStageBody')?.classList.contains('era-card-art-active'),
         image: (() => {
-          const image = document.querySelector('#myEraStageView .era-card-art-image');
+          const image = document.querySelector('#myFactionView .era-card-art-image');
           const body = document.getElementById('myEraStageBody');
           if (!image || !body) return null;
           const rect = image.getBoundingClientRect();
@@ -91,7 +91,7 @@ def inspect_era_tab(page):
           };
         })(),
         fallbackVisible: (() => {
-          const fallback = document.querySelector('#myEraStageView .era-card-art-fallback');
+          const fallback = document.querySelector('#myFactionView .era-card-art-fallback');
           return fallback ? getComputedStyle(fallback).display !== 'none' : false;
         })(),
         scrollHeight: document.getElementById('myEraStageBody')?.scrollHeight,
@@ -120,21 +120,21 @@ def check(browser):
         {"support_name": "臺灣奧援", "faction_id": "taiwan_green", "base": "臺北"},
     )
     pending_context, pending_page = open_game(browser, pending_setup)
-    era_button = pending_page.locator("#myEraStageBtn")
     faction_button = pending_page.locator("#myFactionBtn")
     record(
-        "personal_info_entries_are_real_adjacent_tabs",
-        era_button.is_visible()
-        and faction_button.is_visible()
-        and era_button.get_attribute("data-view") == "myEraStage"
+        "era_stage_is_merged_into_single_faction_tab",
+        faction_button.is_visible()
         and faction_button.get_attribute("data-view") == "myFaction"
-        and era_button.get_attribute("onclick") is None
-        and faction_button.get_attribute("onclick") is None,
+        and faction_button.get_attribute("onclick") is None
+        and pending_page.locator("#myEraStageBtn").count() == 0
+        and pending_page.locator("#myEraStageView").count() == 0
+        and pending_page.locator("#myFactionView #myEraStagePane").count() == 1,
         {
-            "era_data_view": era_button.get_attribute("data-view"),
             "faction_data_view": faction_button.get_attribute("data-view"),
-            "era_onclick": era_button.get_attribute("onclick"),
             "faction_onclick": faction_button.get_attribute("onclick"),
+            "era_tab_count": pending_page.locator("#myEraStageBtn").count(),
+            "era_view_count": pending_page.locator("#myEraStageView").count(),
+            "merged_pane_count": pending_page.locator("#myFactionView #myEraStagePane").count(),
         },
     )
 
@@ -142,7 +142,6 @@ def check(browser):
       const rect = selector => document.querySelector(selector)?.getBoundingClientRect();
       const log = rect('#gameTabs [data-view="log"]');
       const faction = rect('#myFactionBtn');
-      const era = rect('#myEraStageBtn');
       const eventPanel = document.querySelector('.event-card-panel');
       const oldDisplay = eventPanel?.style.display;
       if (eventPanel) eventPanel.style.display = 'block';
@@ -150,27 +149,19 @@ def check(browser):
       if (eventPanel) eventPanel.style.display = oldDisplay;
       return {
         gapAfterLog: faction && log ? faction.left - log.right : null,
-        gapBetweenPersonalTabs: era && faction ? era.left - faction.right : null,
-        noEventOverlap: !!(era && event && era.right < event.left),
+        noEventOverlap: !!(faction && event && faction.right < event.left),
       };
     }""")
     record(
-        "personal_tabs_remain_adjacent_without_event_panel_overlap",
+        "merged_personal_tab_stays_clear_of_event_panel",
         position["gapAfterLog"] is not None
         and 0 <= position["gapAfterLog"] <= 16
-        and position["gapBetweenPersonalTabs"] is not None
-        and 0 <= position["gapBetweenPersonalTabs"] <= 16
         and position["noEventOverlap"],
         position,
     )
 
     faction_button.click()
-    pending_page.wait_for_timeout(100)
-    faction_active = pending_page.locator("#myFactionView").evaluate("el => el.classList.contains('active')")
-    record("adjacent_faction_tab_still_works", faction_active, {"active": faction_active})
-
-    era_button.click()
-    pending_page.wait_for_function("document.querySelector('#myEraStageView .era-card-art-image')?.naturalWidth === 1350")
+    pending_page.wait_for_function("document.querySelector('#myFactionView .era-card-art-image')?.naturalWidth === 1350")
     pending_page.wait_for_timeout(100)
     pending_data = inspect_era_tab(pending_page)
     record(
@@ -204,8 +195,8 @@ def check(browser):
     )
     pending_page.screenshot(path=str(PENDING_SCREENSHOT), full_page=True)
 
-    pending_page.evaluate("document.querySelector('#myEraStageView .era-card-art-image').src = '/static/card-art/era/__missing__.png'")
-    pending_page.wait_for_function("document.querySelector('#myEraStageView .era-card-art-shell')?.classList.contains('era-card-art-load-failed')")
+    pending_page.evaluate("document.querySelector('#myFactionView .era-card-art-image').src = '/static/card-art/era/__missing__.png'")
+    pending_page.wait_for_function("document.querySelector('#myFactionView .era-card-art-shell')?.classList.contains('era-card-art-load-failed')")
     fallback_data = inspect_era_tab(pending_page)
     record(
         "missing_era_art_falls_back_to_complete_text",
@@ -218,20 +209,20 @@ def check(browser):
     pending_page.click('#gameTabs [data-view="log"]')
     pending_page.wait_for_timeout(100)
     switched = pending_page.evaluate("""() => ({
-      eraActive: document.getElementById('myEraStageView')?.classList.contains('active'),
+      factionActive: document.getElementById('myFactionView')?.classList.contains('active'),
       logActive: document.getElementById('logView')?.classList.contains('active'),
     })""")
     record(
         "switching_tabs_leaves_era_view_without_close_action",
-        not switched["eraActive"] and switched["logActive"],
+        not switched["factionActive"] and switched["logActive"],
         switched,
     )
     pending_context.close()
 
     active_setup = setup_era("mongolia")
     active_context, active_page = open_game(browser, active_setup)
-    active_page.click("#myEraStageBtn")
-    active_page.wait_for_function("document.querySelector('#myEraStageView .era-card-art-image')?.naturalWidth === 1350")
+    active_page.click("#myFactionBtn")
+    active_page.wait_for_function("document.querySelector('#myFactionView .era-card-art-image')?.naturalWidth === 1350")
     active_page.wait_for_timeout(100)
     active_data = inspect_era_tab(active_page)
     record(
@@ -254,8 +245,8 @@ def check(browser):
 
     lifecycle_setup = setup_era("taiwan", via_lifecycle=True)
     lifecycle_context, lifecycle_page = open_game(browser, lifecycle_setup)
-    lifecycle_page.click("#myEraStageBtn")
-    lifecycle_page.wait_for_function("document.querySelector('#myEraStageView .era-card-art-image')?.naturalWidth === 1350")
+    lifecycle_page.click("#myFactionBtn")
+    lifecycle_page.wait_for_function("document.querySelector('#myFactionView .era-card-art-image')?.naturalWidth === 1350")
     lifecycle_page.wait_for_timeout(100)
     lifecycle_data = inspect_era_tab(lifecycle_page)
     record(
@@ -276,7 +267,7 @@ def check(browser):
         {"support_name": "紅軍奧援", "faction_id": "red_army", "base": "北京"},
     )
     red_context, red_page = open_game(browser, red_setup)
-    red_page.click("#myEraStageBtn")
+    red_page.click("#myFactionBtn")
     red_page.wait_for_timeout(100)
     red_data = inspect_era_tab(red_page)
     projected = red_page.evaluate("() => window.lastGameState?.my_era_stage ?? null")
@@ -314,7 +305,7 @@ def main():
 
     OUT_JSON.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     lines = [
-        "# 「我的時代關卡」頁內 Tab 驗證",
+        "# 「我的陣營」合併時代關卡驗證",
         "",
         "可重跑指令：`uv run --with playwright python scripts/validate_my_era_stage_view.py`",
         "",

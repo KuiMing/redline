@@ -2640,7 +2640,7 @@ body {
   background: rgba(37, 99, 235, 0.85);
 }
 
-/* 我的陣營／我的時代關卡：頁內個人資訊 Tab（2026-07-28） */
+/* 我的陣營：陣營資訊與個人時代關卡共用一個頁內 Tab（2026-07-28） */
 .my-faction-tab {
   border-color: rgba(246, 173, 85, 0.5);
 }
@@ -2651,6 +2651,8 @@ body {
 
 .personal-info-panel {
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
   width: 100%;
   height: 498px;
   padding: 14px 18px 16px;
@@ -2679,9 +2681,17 @@ body {
   background: rgba(15, 23, 42, 0.42);
 }
 
-.my-faction-body {
-  text-align: left;
+.personal-info-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(420px, 0.88fr);
   flex: 1;
+  min-height: 0;
+  gap: 18px;
+}
+
+.my-faction-body {
+  min-width: 0;
+  text-align: left;
   margin: 0;
   padding: 0 10px 8px 0;
   font-size: 0.88rem;
@@ -2697,9 +2707,18 @@ body {
   margin-bottom: 4px;
 }
 
-/* 我的時代關卡：與「我的陣營」並列的個人資訊頁內 Tab。 */
-.my-era-stage-tab {
-  border-color: rgba(96, 165, 250, 0.58);
+/* 時代關卡併入「我的陣營」右欄。 */
+.my-era-stage-pane {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding-left: 18px;
+  border-left: 1px solid rgba(96, 165, 250, 0.28);
+}
+
+.my-era-stage-pane > .panel-title {
+  margin-bottom: 4px;
 }
 
 .my-era-stage-heading {
@@ -2756,17 +2775,21 @@ body {
   text-align: left;
 }
 
+.my-era-stage-pane.era-card-art-active .my-era-stage-summary {
+  display: none;
+}
+
 .my-era-stage-body.era-card-art-active {
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .my-era-stage-body.era-card-art-active .era-card-art-shell {
   flex: 0 0 auto;
-  width: min(100%, 440px);
-  max-width: 440px;
+  width: min(100%, 380px);
+  max-width: 380px;
 }
 
 .my-era-stage-body.era-card-art-active .era-card-art-fallback {

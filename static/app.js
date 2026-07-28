@@ -2000,7 +2000,7 @@ function eraCardArtMarkup(stage, fallbackMarkup = '') {
   if (!artUrl) return fallbackMarkup;
   return `
     <div class="era-card-art-shell">
-      <img class="era-card-art-image" src="${artUrl}" alt="${escapeHtml(stage.name || '時代關卡')}完整卡面" decoding="async" onerror="this.parentElement.classList.add('era-card-art-load-failed');this.closest('.era-achievement-glass')?.classList.remove('era-card-art-active')">
+      <img class="era-card-art-image" src="${artUrl}" alt="${escapeHtml(stage.name || '時代關卡')}完整卡面" decoding="async" onerror="this.parentElement.classList.add('era-card-art-load-failed');this.closest('.era-achievement-glass')?.classList.remove('era-card-art-active');this.closest('.my-era-stage-pane')?.classList.remove('era-card-art-active');this.closest('.my-era-stage-body')?.classList.remove('era-card-art-active')">
       <div class="era-card-art-fallback">${fallbackMarkup}</div>
     </div>`;
 }
@@ -2854,14 +2854,15 @@ function renderMyFactionView(state = window.lastGameState || {}) {
   ].join('');
 }
 
-// 我的時代關卡頁內 Tab：未達成前也可隨時查看自己的觸發條件與雙方效果。
+// 「我的陣營」右欄時代關卡：未達成前也可隨時查看自己的完整卡面與雙方效果。
 // 後端只投影觀看者所屬陣營大類的關卡，避免把其他玩家的個人資訊混進來。
 function renderMyEraStageView(state = window.lastGameState || {}) {
+  const paneEl = document.getElementById('myEraStagePane');
   const titleEl = document.getElementById('myEraStageTitle');
   const statusEl = document.getElementById('myEraStageStatus');
   const summaryEl = document.getElementById('myEraStageSummary');
   const bodyEl = document.getElementById('myEraStageBody');
-  if (!titleEl || !statusEl || !summaryEl || !bodyEl) return;
+  if (!paneEl || !titleEl || !statusEl || !summaryEl || !bodyEl) return;
 
   const me = (state.players || []).find(p => p.id === playerId);
   const stage = state.my_era_stage || null;
@@ -2876,6 +2877,7 @@ function renderMyEraStageView(state = window.lastGameState || {}) {
       : '目前找不到這個陣營對應的時代關卡資料。';
     bodyEl.innerHTML = '';
     bodyEl.classList.remove('era-card-art-active');
+    paneEl.classList.remove('era-card-art-active');
     return;
   }
 
@@ -2897,8 +2899,10 @@ function renderMyEraStageView(state = window.lastGameState || {}) {
     section('革命反撲', stage.fail_text),
     section('效果期限', stage.duration_text),
   ].join('');
+  const hasArt = Boolean(eraCardArtUrl(stage));
   bodyEl.innerHTML = eraCardArtMarkup(stage, fallbackMarkup);
-  bodyEl.classList.toggle('era-card-art-active', Boolean(eraCardArtUrl(stage)));
+  bodyEl.classList.toggle('era-card-art-active', hasArt);
+  paneEl.classList.toggle('era-card-art-active', hasArt);
 }
 
 // 勝利畫面（2026-07-19）：state.winner 之前從未被前端顯示，遊戲結束毫無提示

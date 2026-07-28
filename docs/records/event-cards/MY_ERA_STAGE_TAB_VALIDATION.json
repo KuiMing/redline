@@ -1,34 +1,27 @@
 {
   "summary": {
-    "total": 10,
-    "passed": 10,
+    "total": 9,
+    "passed": 9,
     "failed": 0
   },
   "results": [
     {
-      "name": "personal_info_entries_are_real_adjacent_tabs",
+      "name": "era_stage_is_merged_into_single_faction_tab",
       "ok": true,
       "detail": {
-        "era_data_view": "myEraStage",
         "faction_data_view": "myFaction",
-        "era_onclick": null,
-        "faction_onclick": null
+        "faction_onclick": null,
+        "era_tab_count": 0,
+        "era_view_count": 0,
+        "merged_pane_count": 1
       }
     },
     {
-      "name": "personal_tabs_remain_adjacent_without_event_panel_overlap",
+      "name": "merged_personal_tab_stays_clear_of_event_panel",
       "ok": true,
       "detail": {
         "gapAfterLog": 9,
-        "gapBetweenPersonalTabs": 9,
         "noEventOverlap": true
-      }
-    },
-    {
-      "name": "adjacent_faction_tab_still_works",
-      "ok": true,
-      "detail": {
-        "active": true
       }
     },
     {
@@ -63,18 +56,18 @@
           "width": 1350,
           "height": 1100,
           "rect": {
-            "left": 459.5625,
-            "top": 416.302734375,
-            "right": 952.3125,
-            "bottom": 817.787109375,
-            "width": 492.75,
-            "height": 401.484375
+            "left": 873.158203125,
+            "top": 454.5,
+            "right": 1298.408203125,
+            "bottom": 801,
+            "width": 425.25,
+            "height": 346.5
           },
           "contained": true
         },
         "fallbackVisible": false,
-        "scrollHeight": 363,
-        "clientHeight": 362,
+        "scrollHeight": 328,
+        "clientHeight": 328,
         "panelFits": true,
         "stateId": "taiwan",
         "achieved": false,
@@ -114,18 +107,18 @@
           "width": 1350,
           "height": 1100,
           "rect": {
-            "left": 459.5625,
-            "top": 416.302734375,
-            "right": 952.3125,
-            "bottom": 817.787109375,
-            "width": 492.75,
-            "height": 401.484375
+            "left": 873.158203125,
+            "top": 454.5,
+            "right": 1298.408203125,
+            "bottom": 801,
+            "width": 425.25,
+            "height": 346.5
           },
           "contained": true
         },
         "fallbackVisible": false,
-        "scrollHeight": 363,
-        "clientHeight": 362,
+        "scrollHeight": 328,
+        "clientHeight": 328,
         "panelFits": true,
         "stateId": "taiwan",
         "achieved": false,
@@ -159,7 +152,7 @@
           "持續 2 回合"
         ],
         "imageCount": 1,
-        "artActive": true,
+        "artActive": false,
         "image": {
           "alt": "[臺灣]綏靖派反對介入對岸完整卡面",
           "width": 0,
@@ -176,7 +169,7 @@
         },
         "fallbackVisible": true,
         "scrollHeight": 405,
-        "clientHeight": 362,
+        "clientHeight": 293,
         "panelFits": true,
         "stateId": "taiwan",
         "achieved": false,
@@ -188,7 +181,7 @@
       "name": "switching_tabs_leaves_era_view_without_close_action",
       "ok": true,
       "detail": {
-        "eraActive": false,
+        "factionActive": false,
         "logActive": true
       }
     },
@@ -224,18 +217,18 @@
           "width": 1350,
           "height": 1100,
           "rect": {
-            "left": 459.5625,
-            "top": 416.302734375,
-            "right": 952.3125,
-            "bottom": 817.787109375,
-            "width": 492.75,
-            "height": 401.484375
+            "left": 873.158203125,
+            "top": 454.5,
+            "right": 1298.408203125,
+            "bottom": 801,
+            "width": 425.25,
+            "height": 346.5
           },
           "contained": true
         },
         "fallbackVisible": false,
-        "scrollHeight": 363,
-        "clientHeight": 362,
+        "scrollHeight": 328,
+        "clientHeight": 328,
         "panelFits": true,
         "stateId": "mongolia",
         "achieved": true,
@@ -275,18 +268,18 @@
           "width": 1350,
           "height": 1100,
           "rect": {
-            "left": 459.5625,
-            "top": 416.302734375,
-            "right": 952.3125,
-            "bottom": 817.787109375,
-            "width": 492.75,
-            "height": 401.484375
+            "left": 873.158203125,
+            "top": 454.5,
+            "right": 1298.408203125,
+            "bottom": 801,
+            "width": 425.25,
+            "height": 346.5
           },
           "contained": true
         },
         "fallbackVisible": false,
-        "scrollHeight": 363,
-        "clientHeight": 362,
+        "scrollHeight": 328,
+        "clientHeight": 328,
         "panelFits": true,
         "stateId": "taiwan",
         "achieved": true,
@@ -322,8 +315,8 @@
         "artActive": false,
         "image": null,
         "fallbackVisible": false,
-        "scrollHeight": 362,
-        "clientHeight": 362,
+        "scrollHeight": 293,
+        "clientHeight": 293,
         "panelFits": true,
         "stateId": null,
         "achieved": null,

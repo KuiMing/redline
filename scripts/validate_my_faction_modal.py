@@ -66,6 +66,7 @@ def check(browser):
     )
 
     button.click()
+    page.wait_for_function("document.querySelector('#myFactionView .era-card-art-image')?.naturalWidth === 1350")
     page.wait_for_timeout(150)
     data = page.evaluate("""() => ({
       viewActive: document.getElementById('myFactionView')?.classList.contains('active'),
@@ -78,6 +79,19 @@ def check(browser):
       sections: [...document.querySelectorAll('#myFactionBody .faction-detail-section-title')].map(el => el.textContent),
       nonEmpty: [...document.querySelectorAll('#myFactionBody ul')].every(ul => ul.children.length > 0),
       baseText: document.querySelectorAll('#myFactionBody ul')[0]?.textContent,
+      eraTabCount: document.querySelectorAll('#myEraStageBtn').length,
+      eraViewCount: document.querySelectorAll('#myEraStageView').length,
+      eraPaneCount: document.querySelectorAll('#myFactionView #myEraStagePane').length,
+      eraStatus: document.getElementById('myEraStageStatus')?.textContent,
+      eraImage: (() => {
+        const image = document.querySelector('#myFactionView .era-card-art-image');
+        return image ? {width: image.naturalWidth, height: image.naturalHeight} : null;
+      })(),
+      columnsSideBySide: (() => {
+        const faction = document.getElementById('myFactionBody')?.getBoundingClientRect();
+        const era = document.getElementById('myEraStagePane')?.getBoundingClientRect();
+        return !!(faction && era) && faction.right < era.left && Math.abs(faction.top - era.top) < 2;
+      })(),
       panelRect: document.querySelector('#myFactionView .personal-info-panel')?.getBoundingClientRect().toJSON(),
       viewRect: document.getElementById('myFactionView')?.getBoundingClientRect().toJSON(),
     })""")
@@ -97,6 +111,16 @@ def check(browser):
         and data["sections"] == ["根據地", "能力", "規則與限制", "獲勝條件"]
         and data["nonEmpty"]
         and "臺北" in (data["baseText"] or ""),
+        data,
+    )
+    record(
+        "era_stage_is_merged_into_faction_view",
+        data["eraTabCount"] == 0
+        and data["eraViewCount"] == 0
+        and data["eraPaneCount"] == 1
+        and data["eraStatus"] == "尚未達成"
+        and data["eraImage"] == {"width": 1350, "height": 1100}
+        and data["columnsSideBySide"],
         data,
     )
     rect_ok = bool(data["panelRect"] and data["viewRect"]) and (
