@@ -473,9 +473,8 @@ function actualTownOwnerName(townName) {
 }
 
 // 陣營標籤只在 zoom >= FACTION_LABEL_MIN_ZOOM 時附加：北台灣等城鎮密集區在遠視角下，
-// 長標籤（如「臺北 1（臺灣（綠線））」）會互相覆蓋蓋字（2026-07-18 使用者裁決採 zoom 門檻方案；
-// 遠視角的陣營資訊由圓圈的陣營填色承擔）。實測 zoom 9（開局根據地視角）長標籤仍與新北相疊、
-// zoom 10 才完全散開，故門檻取 10。
+// 長標籤（如「臺北（臺灣（綠線））」）會互相覆蓋蓋字；遠視角的陣營資訊由圓圈填色承擔。
+// 一城一組織 invariant 生效後，組織數永遠只能是 1，因此標籤不再顯示冗餘數字。
 const FACTION_LABEL_MIN_ZOOM = 10;
 
 function labelTextForTown(townName) {
@@ -485,7 +484,7 @@ function labelTextForTown(townName) {
   const player = (lastGameState?.players || []).find(p => p.name === owner);
   const showFaction = map.getZoom() >= FACTION_LABEL_MIN_ZOOM;
   const factionText = showFaction && player?.faction ? factionLabel(player.faction) : null;
-  return factionText ? `${townName} ${total}（${factionText}）` : `${townName} ${total}`;
+  return factionText ? `${townName}（${factionText}）` : townName;
 }
 
 function sharedDissolveTargetForTown(townName) {
@@ -493,6 +492,10 @@ function sharedDissolveTargetForTown(townName) {
   const owner = actualTownOwnerName(townName);
   if (!owner || owner === currentPlayerName()) return null;
   return owner;
+}
+
+function townHasAnyOrganization(townName) {
+  return totalOrganizationsInTown(townName) > 0;
 }
 
 function movementOptionsForTown(townName) {
@@ -503,7 +506,7 @@ function movementOptionsForTown(townName) {
   if (!canActFromTown(townName)) return { road: [], rail: [] };
 
   return {
-    road: (town.road || []).filter(n => MAP_DATA.towns[n] && !townHasEnemyOrganization(n)),
+    road: (town.road || []).filter(n => MAP_DATA.towns[n] && !townHasAnyOrganization(n)),
     rail: railOptionsWithinThree(townName)
   };
 }
@@ -531,7 +534,7 @@ function railOptionsWithinThree(originTown) {
     for (const nextTown of (town.rail || [])) {
       if (!MAP_DATA.towns[nextTown]) continue;
       if (townHasEnemyOrganization(nextTown)) continue;
-      reachable.add(nextTown);
+      if (!townHasAnyOrganization(nextTown)) reachable.add(nextTown);
       if (visited.has(nextTown)) continue;
       visited.add(nextTown);
       queue.push([nextTown, distance + 1]);
@@ -575,7 +578,7 @@ function buildOptionsForTown(originTown) {
     }
   }
 
-  return Array.from(reachable).filter(town => MAP_DATA.towns[town]);
+  return Array.from(reachable).filter(town => MAP_DATA.towns[town] && !townHasAnyOrganization(town));
 }
 
 function renderMovementHighlights(townName, options = {}) {
@@ -820,18 +823,15 @@ function refreshDirectBuildUi() {
     hint.innerHTML = `目前選取 <span class="hint-strong">${selectedTown}</span>：目前效果允許在此建立組織；按上方按鈕完成建立。`;
   } else {
     btn.textContent = '在目前城鎮建立組織';
+    btn.disabled = true;
     const sharedOnly = !playerOwnsTown(selectedTown) && playerHasSharedAccessToTown(selectedTown);
     const canAct = canActFromTown(selectedTown);
     if (!canAct) {
-      btn.disabled = true;
       hint.innerHTML = `目前選取 <span class="hint-strong">${selectedTown}</span>，但這不是你的組織或共享組織起點。`;
+    } else if (sharedOnly) {
+      hint.innerHTML = `目前選取 <span class="hint-strong">${selectedTown}</span>：這是一個可用的共享組織起點；每城只能有 1 個組織，請改選空城鎮作為建立目標。`;
     } else {
-      btn.disabled = false;
-      if (sharedOnly) {
-        hint.innerHTML = `目前選取 <span class="hint-strong">${selectedTown}</span>：你可從 <span class="hint-strong">共享組織</span> 直接發展。`;
-      } else {
-        hint.innerHTML = `目前選取 <span class="hint-strong">${selectedTown}</span>：你可從自己的組織直接發展。`;
-      }
+      hint.innerHTML = `目前選取 <span class="hint-strong">${selectedTown}</span>：每城只能有 1 個組織，請改選空城鎮作為建立目標。`;
     }
   }
 

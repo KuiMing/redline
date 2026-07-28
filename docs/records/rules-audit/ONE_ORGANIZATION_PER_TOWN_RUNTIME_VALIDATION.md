@@ -1,0 +1,18 @@
+# 一城一組織 Runtime Validation
+
+- 規則裁決：共用組織代表共同使用同一枚實體組織，不代表可在同城疊放第二枚。
+- total: 11
+- passed: 11
+- failed: 0
+
+- PASS shared_piece_is_access_not_stack_permission
+- PASS central_placement_rejects_own_and_shared_occupancy
+- PASS movement_rejects_own_occupied_destination_atomically
+- PASS movement_rejects_shared_occupied_destination_atomically
+- PASS movement_rejects_enemy_occupied_destination_atomically
+- PASS shared_piece_moves_to_empty_town_as_single_transferred_piece
+- PASS shared_piece_is_origin_for_card_and_event_builds
+- PASS shared_piece_counts_for_era_region_and_ruler_requirements
+- PASS card_build_choices_exclude_every_occupied_town
+- PASS diagnostic_detects_stacks_and_multiple_owners
+- PASS red_army_base_uses_two_hit_counter_not_stacked_pieces

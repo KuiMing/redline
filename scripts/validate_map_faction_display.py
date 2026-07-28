@@ -95,9 +95,9 @@ def check_page(host, ally):
         }"""
     )
     taipei = next((o for o in near_taipei if abs(o['latlng'][0] - 25.033) < 0.001), None)
-    expected_taipei_label = '臺北 1（臺灣（綠線））'
+    expected_taipei_label = '臺北（臺灣（綠線））'
     record(
-        'taipei_label_shows_owner_faction_and_count',
+        'taipei_label_shows_owner_faction_without_redundant_count',
         bool(taipei) and taipei['content'] == expected_taipei_label,
         {'taipei': taipei, 'near_taipei': near_taipei, 'expected': expected_taipei_label},
     )
@@ -136,8 +136,8 @@ def check_page(host, ally):
     )
     beijing = next((o for o in near_beijing if abs(o['latlng'][0] - 39.9042) < 0.001), None)
     record(
-        'beijing_label_shows_red_army_owner_and_count',
-        bool(beijing) and beijing['content'] == '北京 1（紅軍）',
+        'beijing_label_shows_red_army_owner_without_redundant_count',
+        bool(beijing) and beijing['content'] == '北京（紅軍）',
         {'beijing': beijing},
     )
     record(

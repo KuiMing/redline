@@ -488,7 +488,7 @@ class Game:
         return False, 0
 
     def _event_build_towns_near_own(self, player, max_steps=1):
-        origins = [town for town, count in (getattr(player, 'organizations', {}) or {}).items() if count > 0]
+        origins = self._organization_towns_for_player(player)
         if not origins:
             return []
         candidates = set()
@@ -1148,10 +1148,7 @@ class Game:
         if build_range == 'ignore_distance':
             candidates = all_towns
         else:
-            source_towns = [
-                town for town, count in (getattr(player, 'organizations', {}) or {}).items()
-                if int(count or 0) > 0
-            ]
+            source_towns = self._organization_towns_for_player(player)
             if not source_towns:
                 return []
             max_steps = int(build_range or 1) + int(getattr(player, 'build_range_bonus', 0) or 0)
@@ -1170,10 +1167,7 @@ class Game:
                     fallback = int((effect or {}).get('inner_fallback_range', 0) or 0)
                     if not fallback:
                         continue
-                    source_towns = [
-                        t for t, c in (getattr(player, 'organizations', {}) or {}).items()
-                        if int(c or 0) > 0
-                    ]
+                    source_towns = self._organization_towns_for_player(player)
                     if not source_towns or town not in self._towns_within_steps(source_towns, max_steps=fallback):
                         continue
             choices.append({'town': town})
@@ -2014,10 +2008,10 @@ class Game:
             if not self._can_player_build_in_town(player, town):
                 return {'error': 'Cannot build in enemy-occupied or invalid town'}
         if choice_key == 'event_build_organization':
-            player.organizations[town] = player.organizations.get(town, 0) + 1
+            self._place_organization(player, town)
             self.log(f"{player.name} built organization in {town} via event")
         elif choice_key == 'card_build_organization':
-            player.organizations[town] = player.organizations.get(town, 0) + 1
+            self._place_organization(player, town)
             self.turn_log.setdefault("built_towns", []).append(town)
             self._track_event_progress('build_organization', town=town, player=player)
             self._apply_era_build_effects(player, town)
@@ -2061,7 +2055,7 @@ class Game:
                 return {'error': 'No era builds remaining'}
             if player.organizations.get(town, 0) > 0:
                 return {'error': 'Era build town already has your organization'}
-            player.organizations[town] = player.organizations.get(town, 0) + 1
+            self._place_organization(player, town)
             applied_entry = {
                 'era': context.get('era_id'),
                 'type': 'red_discard_to_build_near_target',
@@ -2715,7 +2709,7 @@ class Game:
             town = result.get('town')
             if not town or not self._can_player_build_in_town(player, town):
                 return {'error': 'Invalid build town'}
-            player.organizations[town] = player.organizations.get(town, 0) + 1
+            self._place_organization(player, town)
             self.log(f"{player.name} resolved {card_name} and built in {town}")
             return {'success': True, 'town': town}
         if effect_type == 'interactive_dissolve_self_and_enemy' and choice.get('step') == 'sacrifice_town':
@@ -2763,7 +2757,7 @@ class Game:
             if dissolve_result.get('error'):
                 return dissolve_result
             if effect_type == 'interactive_dissolve_and_build' and self._can_player_build_in_town(player, town):
-                player.organizations[town] = player.organizations.get(town, 0) + 1
+                self._place_organization(player, town)
                 self.log(f"{player.name} resolved {card_name} and built in {town} after dissolve")
             return {'success': True, 'town': town, 'target_player_id': target_player_id}
         if effect_type == 'force_discard_near':
@@ -2970,7 +2964,7 @@ class Game:
                 None,
             )
             if target_town:
-                player.organizations[target_town] = player.organizations.get(target_town, 0) + 1
+                self._place_organization(player, target_town)
         elif effect_type == 'build_near_inner':
             inner_towns = set(self._towns_for_region_alias('china'))
             target_town = None
@@ -2980,7 +2974,7 @@ class Game:
                 if target_town:
                     break
             if target_town:
-                player.organizations[target_town] = player.organizations.get(target_town, 0) + 1
+                self._place_organization(player, target_town)
         elif effect_type == 'dissolve_many_near':
             count = int(payload.get('count', 0) or 0)
             for other in self.players:
@@ -3016,7 +3010,7 @@ class Game:
                 if enemy_town:
                     result = self.dissolve_organization(player, other, enemy_town, source='support_card')
                     if result.get('success') and self._has_org_supply(player):
-                        player.organizations[enemy_town] = player.organizations.get(enemy_town, 0) + 1
+                        self._place_organization(player, enemy_town)
                         built = True
                     break
             if not built:
@@ -3123,7 +3117,12 @@ class Game:
 
     def _compute_pending_base_choices(self):
         pending = {}
-        used_fixed = set()
+        used_fixed = {
+            town
+            for p in self.players
+            for town, count in (p.organizations or {}).items()
+            if count > 0
+        }
         for p in self.players:
             faction = self.faction_by_id.get(p.faction_id)
             if not faction:
@@ -3139,14 +3138,18 @@ class Game:
                 continue
             kind, names = self._classify_base_options(faction)
             candidates = self._candidate_base_names(faction)
-            if kind == "fixed" and len(candidates) == 1:
+            if kind == "fixed" and len(candidates) == 1 and candidates[0] not in used_fixed:
                 p.base = candidates[0]
                 p.organizations = {candidates[0]: 1}
                 used_fixed.add(candidates[0])
             else:
+                available_resolved = {
+                    name: [town for town in self._base_option_to_towns(faction, name) if town not in used_fixed]
+                    for name in names
+                }
                 pending[p.id] = {
                     "labels": names,
-                    "resolved": {name: self._base_option_to_towns(faction, name) for name in names},
+                    "resolved": available_resolved,
                 }
         return pending
 
@@ -3171,7 +3174,7 @@ class Game:
             return {"error": "Invalid base option"}
         if base_name not in resolved.get(label, []):
             return {"error": "Invalid base choice"}
-        if any(p.base == base_name for p in self.players if p.id != player_id):
+        if any(p.base == base_name for p in self.players if p.id != player_id) or self._town_has_physical_organization(base_name):
             return {"error": "Base already taken"}
 
         player = next((p for p in self.players if p.id == player_id), None)
@@ -3917,17 +3920,54 @@ class Game:
                     shared.update(['hong_kong'])
         return shared
 
+    def _organization_entries_at(self, town):
+        return [
+            (player, int((player.organizations or {}).get(town, 0) or 0))
+            for player in self.players
+            if int((player.organizations or {}).get(town, 0) or 0) > 0
+        ]
+
+    def _town_has_physical_organization(self, town):
+        return bool(self._organization_entries_at(town))
+
+    def _organization_towns_for_player(self, player):
+        """Physical organization towns the player may use, including shared access."""
+        if player is None:
+            return []
+        return [
+            town for town in self.map.get('towns', {})
+            if self._shared_org_count(player, town) > 0
+        ]
+
+    def _organization_occupancy_violations(self):
+        violations = []
+        for town in self.map.get('towns', {}):
+            entries = self._organization_entries_at(town)
+            if len(entries) > 1 or any(count != 1 for _, count in entries):
+                violations.append({
+                    'town': town,
+                    'entries': [
+                        {'player_id': getattr(owner, 'id', None), 'player': owner.name, 'count': count}
+                        for owner, count in entries
+                    ],
+                })
+        return violations
+
+    def _place_organization(self, player, town, *, require_supply=True, require_development=True):
+        if town not in self.map.get('towns', {}):
+            return False
+        if self._town_has_physical_organization(town):
+            return False
+        if require_supply and not self._has_org_supply(player):
+            return False
+        if require_development and not self.can_faction_develop_in_town(player.faction_id, town):
+            return False
+        player.organizations[town] = 1
+        return True
+
     def _shared_org_count(self, player, town):
-        count = player.organizations.get(town, 0)
-        shared_with = self._factions_sharing_with(player.faction_id)
-        if not shared_with:
-            return count
-        for other in self.players:
-            if other is player:
-                continue
-            if other.faction_id in shared_with:
-                count += other.organizations.get(town, 0)
-        return count
+        owner = self._shared_origin_owner(player, town)
+        return 1 if owner is not None else 0
 
     def _shared_origin_owner(self, player, town):
         if player.organizations.get(town, 0) > 0:
@@ -3956,8 +3996,6 @@ class Game:
         return False
 
     def _can_player_build_in_town(self, player, town):
-        if self._town_blocks_movement_for_player(player, town):
-            return False
         return self.can_develop_in_town(player, town)
 
     def _rail_reachable_within_three(self, player, from_town, to_town):
@@ -3994,11 +4032,11 @@ class Game:
         return player.total_organizations() + count <= self._org_supply_limit(player)
 
     def can_develop_in_town(self, player, town):
-        # 組織棋供應上限：所有建立路徑（含 UI 可建立清單）都經過這裡
+        # 所有建立路徑都遵守：全場每城最多一個實體組織；共用組織只提供使用權，不提供疊放例外。
+        if self._town_has_physical_organization(town):
+            return False
         if not self._has_org_supply(player):
             return False
-        if self._town_has_shared_org_access(player, town) and self.can_faction_develop_in_town(player.faction_id, town):
-            return True
         return self.can_faction_develop_in_town(player.faction_id, town)
 
     def setup_test_card_scenario(self, player_id, card_name):
@@ -4889,7 +4927,7 @@ class Game:
         if not self._can_player_build_in_town(player, town):
             return {"error": "Cannot develop in this town"}
 
-        player.organizations[town] = player.organizations.get(town, 0) + 1
+        self._place_organization(player, town)
         self.turn_log.setdefault("built_towns", []).append(town)
         self._track_event_progress('build_organization', town=town, player=player)
         self._apply_era_build_effects(player, town)
@@ -4938,7 +4976,7 @@ class Game:
             if not reached:
                 return {"error": "Target out of build range"}
 
-        player.organizations[target_town] = player.organizations.get(target_town, 0) + 1
+        self._place_organization(player, target_town)
         self.turn_log.setdefault("built_towns", []).append(target_town)
         self._track_event_progress('build_organization', town=target_town, player=player)
         self._apply_era_build_effects(player, target_town)
@@ -4948,21 +4986,23 @@ class Game:
 
     def _record_red_army_base_dissolve(self, attacker, target_owner, town):
         if getattr(target_owner, 'faction_id', None) != 'red_army':
-            return
+            return False
         if town != getattr(target_owner, 'base', None):
-            return
+            return False
         counts = self.turn_log.setdefault('red_army_base_dissolves', {})
         attacker_id = getattr(attacker, 'id', getattr(attacker, 'name', 'attacker'))
         key = f'{attacker_id}:{town}'
         counts[key] = int(counts.get(key, 0) or 0) + 1
         if counts[key] < 2:
-            return
+            self.log(f"{attacker.name} damaged Red Army base at {town} (1/2 this turn)")
+            return False
         self.red_army_destroyed_bases.add(town)
         if target_owner.organizations.get(town, 0) > 0:
             del target_owner.organizations[town]
         if getattr(target_owner, 'base', None) == town:
             target_owner.base = None
         self.log(f"{attacker.name} destroyed Red Army base at {town}")
+        return True
 
     def dissolve_organization(self, attacker, defender, town, source="card"):
         if not town:
@@ -4976,10 +5016,15 @@ class Game:
         if not ok:
             return {"error": err}
 
-        target_owner.organizations[town] -= 1
-        if target_owner.organizations[town] <= 0:
-            del target_owner.organizations[town]
-        self._record_red_army_base_dissolve(attacker, target_owner, town)
+        is_red_base = (
+            getattr(target_owner, 'faction_id', None) == 'red_army'
+            and town == getattr(target_owner, 'base', None)
+        )
+        red_base_destroyed = self._record_red_army_base_dissolve(attacker, target_owner, town) if is_red_base else False
+        if not is_red_base:
+            target_owner.organizations[town] -= 1
+            if target_owner.organizations[town] <= 0:
+                del target_owner.organizations[town]
 
         if target_owner is defender:
             self.log(f"{attacker.name} dissolved 1 organization from {defender.name} at {town}")
@@ -4995,6 +5040,8 @@ class Game:
             "success": True,
             "actual_owner": target_owner.name,
             "shared_target": target_owner is not defender,
+            "red_base_hit": is_red_base,
+            "red_base_destroyed": red_base_destroyed,
         }
 
     def _hk_relocatable_base_towns(self):
@@ -5015,8 +5062,8 @@ class Game:
             return {"error": f"根據地只能遷移至：{'、'.join(targets)}"}
         if to_town == player.base:
             return {"error": "Base is already there"}
-        if self._town_blocks_movement_for_player(player, to_town):
-            return {"error": "Cannot relocate base into enemy organization"}
+        if self._town_has_physical_organization(to_town):
+            return {"error": "Cannot relocate base into occupied town"}
         free_window = bool(getattr(self, 'hk_free_base_relocation', False))
         if free_window:
             self.hk_free_base_relocation = False
@@ -5033,7 +5080,7 @@ class Game:
             player.organizations[old_base] -= 1
             if player.organizations[old_base] <= 0:
                 del player.organizations[old_base]
-        player.organizations[to_town] = player.organizations.get(to_town, 0) + 1
+        self._place_organization(player, to_town, require_supply=False, require_development=False)
         player.base = to_town
         self.log(f"{player.name} relocated base from {old_base} to {to_town} via {via}")
         return {"success": True, "from": old_base, "to": to_town, "free": free_window}
@@ -5078,8 +5125,8 @@ class Game:
             legal_move = True
         if not legal_move and not self._event_modifier_active('ignore_distance'):
             return {"error": f"No {mode} connection"}
-        if self._town_blocks_movement_for_player(player, to_town):
-            return {"error": "Cannot move into enemy organization"}
+        if self._town_has_physical_organization(to_town):
+            return {"error": "Cannot move into occupied town"}
         if getattr(origin_owner, 'faction_id', None) == 'red_army' and not self.can_faction_develop_in_town('red_army', to_town):
             return {"error": "Red Army organization cannot leave Red Army development space"}
         # 目的城鎮必須適用移動者陣營（組織不能存在於非發展空間的城鎮）
@@ -5103,7 +5150,7 @@ class Game:
         if origin_owner.organizations[from_town] <= 0:
             del origin_owner.organizations[from_town]
 
-        player.organizations[to_town] = player.organizations.get(to_town, 0) + 1
+        self._place_organization(player, to_town, require_supply=False, require_development=False)
         player.moves_left -= cost
         self._track_event_progress('move_organization', player=player)
         if origin_owner is player:
@@ -5850,11 +5897,8 @@ class Game:
         return True
 
     def _player_region_org_count(self, player, region):
-        region_towns = self._towns_for_region_alias(region)
-        return sum(
-            v for town, v in player.organizations.items()
-            if town in region_towns
-        )
+        region_towns = set(self._towns_for_region_alias(region))
+        return sum(1 for town in self._organization_towns_for_player(player) if town in region_towns)
 
     def _player_requirement_org_count(self, player, requirement):
         if requirement.get("region"):
@@ -5862,7 +5906,7 @@ class Game:
         if requirement.get("ruler"):
             ruler = requirement.get("ruler")
             return sum(
-                v for town, v in player.organizations.items()
+                1 for town in self._organization_towns_for_player(player)
                 if ruler in (self.map.get("towns", {}).get(town, {}).get("ruler") or [])
             )
         return 0

@@ -295,12 +295,14 @@ def test_national_people_congress_failure_red_dissolves_wall_org_only():
 def test_tibet_border_build_wall_org_grants_two_moves():
     game = make_game("藏印邊境軍事對峙")
     player = game.players[0]
-    # 北京 is the red player's occupied base (enemy-occupied towns block builds), so use 天津.
+    # 北京 is the red player's occupied base. Use the Manchuria faction so both the
+    # occupied origin 天津 and empty target 承德 are legal under faction-tag rules.
+    player.faction_id = "manchuria"
     player.organizations = {"天津": 1}
     player.moves_left = 0
     assert_ok(game.advance_turn_phase(), "draw tibet border event")
     assert_ok(game.advance_turn_phase(), "enter action")
-    assert_ok(game.build_organization("天津"), "build wall org")
+    assert_ok(game.build_organization_with_support("天津", "承德"), "build wall org")
     assert game.event_progress["succeeded"] is True
     progress = game.event_progress
     settle_round_event(game, "settle border success at round end")
@@ -416,10 +418,10 @@ def test_elite_defection_trashes_from_hand_after_three_moves():
     game = make_game("紅軍權貴出逃")
     player = game.players[0]
     player.moves_left = 3
-    # liberals (rebel camp) cannot enter Taiwan towns (faction-applicability rule), so use
-    # inner-China rebel-applicable towns; empty the draw pile so the end-turn refill cannot
-    # change the hand before the deferred settlement raises the trash choice.
-    player.organizations = {"天津": 1, "濟南": 1, "青島": 1, "石家莊": 1}
+    # Use one organization moving through three currently empty, rebel-applicable towns.
+    # Under the one-physical-organization-per-town invariant, pre-seeding every
+    # destination would make the old fixture's moves illegal.
+    player.organizations = {"天津": 1}
     player.deck.draw_pile = []
     player.hand = [Card("手牌移除目標", "command", {})]
     # keep the discard empty too: with an empty draw pile the refill reshuffles the discard
@@ -428,9 +430,9 @@ def test_elite_defection_trashes_from_hand_after_three_moves():
 
     assert_ok(game.advance_turn_phase(), "draw elite defection event")
     assert_ok(game.advance_turn_phase(), "enter action")
-    assert_ok(game.move_organization("濟南", "石家莊", mode="rail"), "first move")
-    assert_ok(game.move_organization("青島", "濟南", mode="rail"), "second move")
-    assert_ok(game.move_organization("天津", "濟南", mode="rail"), "third move")
+    assert_ok(game.move_organization("天津", "濟南", mode="rail"), "first move")
+    assert_ok(game.move_organization("濟南", "青島", mode="rail"), "second move")
+    assert_ok(game.move_organization("青島", "南京", mode="road"), "third move")
     assert game.pending_choice is None
     assert game.event_progress["succeeded"] is True
     progress = game.event_progress
@@ -456,10 +458,10 @@ def test_elite_defection_trashes_from_discard_after_three_moves():
     game = make_game("紅軍權貴出逃")
     player = game.players[0]
     player.moves_left = 3
-    # liberals (rebel camp) cannot enter Taiwan towns (faction-applicability rule), so use
-    # inner-China rebel-applicable towns; empty the draw pile so the end-turn refill cannot
-    # change the hand before the deferred settlement raises the trash choice.
-    player.organizations = {"天津": 1, "濟南": 1, "青島": 1, "石家莊": 1}
+    # Use one organization moving through three currently empty, rebel-applicable towns.
+    # Under the one-physical-organization-per-town invariant, pre-seeding every
+    # destination would make the old fixture's moves illegal.
+    player.organizations = {"天津": 1}
     # give the refill enough draw-pile cards that it never reshuffles the discard pile,
     # so the discard-zone target is still in the discard when the trash choice opens.
     player.deck.draw_pile = [Card(f"補牌{i}", "command", {}) for i in range(1, 5)]
@@ -468,9 +470,9 @@ def test_elite_defection_trashes_from_discard_after_three_moves():
 
     assert_ok(game.advance_turn_phase(), "draw elite defection event")
     assert_ok(game.advance_turn_phase(), "enter action")
-    assert_ok(game.move_organization("濟南", "石家莊", mode="rail"), "first move")
-    assert_ok(game.move_organization("青島", "濟南", mode="rail"), "second move")
-    assert_ok(game.move_organization("天津", "濟南", mode="rail"), "third move")
+    assert_ok(game.move_organization("天津", "濟南", mode="rail"), "first move")
+    assert_ok(game.move_organization("濟南", "青島", mode="rail"), "second move")
+    assert_ok(game.move_organization("青島", "南京", mode="road"), "third move")
     settle_round_event(game, "settle elite defection discard-zone success at round end")
     choice = game.state()["pending_choice"]
     assert choice["choice_key"] == "trash_from_hand_or_discard"

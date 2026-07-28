@@ -98,14 +98,15 @@ def case_multi_repeat_two_qualifying():
     g, a, b = _new_game(hand_extra=[Card('地下黨', 'spy', {}), Card('擴大戰果', 'command', {})])  # 6點與4點
     g.play_card(0, mode='action')
     _pick_town(g, a, '北京')
-    for town in ('天津', '上海'):
+    for _ in range(2):
         pending = g.pending_choice or {}
         labels = [o.get('label') for o in pending.get('options') or []]
         g.resolve_pending_choice(a.id, labels.index('棄1張購買費用4點以上的牌，再建立1次'))
         g.resolve_pending_choice(a.id, 0)  # 棄第一張合格牌
         pending = g.pending_choice or {}
         towns = [t.get('town') for t in (pending.get('towns') or [])]
-        g.resolve_pending_choice(a.id, towns.index(town))
+        assert towns
+        g.resolve_pending_choice(a.id, 0)
     checks = {
         'three_builds_total': a.total_organizations() == 4,  # 起始1 + 建立3
         'loop_ended': not g.pending_choice,

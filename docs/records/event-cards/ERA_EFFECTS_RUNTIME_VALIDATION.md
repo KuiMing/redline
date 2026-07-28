@@ -1,6 +1,6 @@
 # Era Effects Runtime Validation
 
-- Date: 2026-07-14
+- Date: 2026-07-28
 - Summary: 15/15 passed
 
 ## PASS: mongolia_adds_internal_conflict_with_static_supply_cap
@@ -116,7 +116,14 @@
 {
   "rule": "香港時代關卡生效時，香港購買武裝類卡牌費用減 2 資金；武裝小隊原價 3 資金，1 資金可購買。",
   "buy_result": {
-    "success": true
+    "success": true,
+    "purchased_cards": [
+      "武裝小隊"
+    ],
+    "payment": {
+      "money": 1,
+      "propaganda": 0
+    }
   },
   "remaining_money": 0,
   "discard_armed": 1,
@@ -459,7 +466,8 @@
 ```json
 {
   "rule": "臺灣反撲效果：在臺灣城鎮建立至少 1 個組織時，獲得 1 宣傳。",
-  "town": "南投",
+  "origin": "南投",
+  "town": "臺中",
   "build_result": {
     "success": true
   },
@@ -473,7 +481,7 @@
       "type": "gain_resource_on_build_in_region",
       "resource": "propaganda",
       "amount": 1,
-      "town": "南投"
+      "town": "臺中"
     }
   ]
 }
@@ -484,10 +492,19 @@
 ```json
 {
   "rule": "反賊反撲效果：回合中建立至少 3 個組織時，當回合抽 1 張；同一回合只觸發一次。",
-  "towns": [
-    "三亞",
-    "上海",
-    "南京"
+  "build_pairs": [
+    [
+      "三亞",
+      "海口"
+    ],
+    [
+      "上海",
+      "南京"
+    ],
+    [
+      "南寧",
+      "湛茂"
+    ]
   ],
   "build_results": [
     {

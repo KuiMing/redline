@@ -20,14 +20,14 @@ def main():
     hk.faction_id = 'hong_kong'
     yue.faction_id = 'yue'
     hk.base = '香港城'
-    yue.base = '廣州'
-    hk.organizations = {'香港城': 1}
-    yue.organizations = {'廣州': 1, '香港城': 1}
+    yue.base = '南寧'
+    hk.organizations = {}
+    yue.organizations = {'廣州': 1}
     g.turn_phase = TurnPhase.ACTION
 
-    can_hk_use_shared = g._town_has_shared_org_access(hk, '香港城')
-    can_yue_use_shared = g._town_has_shared_org_access(yue, '香港城')
-    result = g.build_organization('香港城')
+    can_hk_use_shared = g._town_has_shared_org_access(hk, '廣州')
+    can_yue_use_shared = g._town_has_shared_org_access(yue, '廣州')
+    result = g.build_organization('廣州')
 
     out = {
         'shared_hk': can_hk_use_shared,
@@ -37,8 +37,8 @@ def main():
     }
     summary = {
         'total': 1,
-        'passed': 1 if (can_hk_use_shared and can_yue_use_shared and result.get('success') is True) else 0,
-        'failed': 0 if (can_hk_use_shared and can_yue_use_shared and result.get('success') is True) else 1,
+        'passed': 1 if (can_hk_use_shared and can_yue_use_shared and result.get('error') and g._shared_org_count(hk, '廣州') == 1 and not g._organization_occupancy_violations()) else 0,
+        'failed': 0 if (can_hk_use_shared and can_yue_use_shared and result.get('error') and g._shared_org_count(hk, '廣州') == 1 and not g._organization_occupancy_violations()) else 1,
     }
     payload = {'summary': summary, 'result': out}
     (RECORD_DIR / 'SHARED_ORGANIZATIONS_PHASE6_VALIDATION.json').write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')

@@ -56,7 +56,7 @@ def run_checks():
     checks.append(check(
         'cannot_move_into_enemy_occupied_destination',
         bool(result.get('error'))
-        and result.get('error') == 'Cannot move into enemy organization'
+        and result.get('error') == 'Cannot move into occupied town'
         and before == after,
         {'result': result, 'before': before, 'after': after, 'rule': '敵方組織所在城鎮不可移入。'},
     ))
@@ -103,9 +103,10 @@ def run_checks():
     result = game.build_organization('新北')
     after = snapshot(player, red)
     checks.append(check(
-        'direct_build_allows_town_after_red_moved_out',
-        result.get('success') is True
-        and after['player_orgs'].get('新北') == 2
+        'direct_build_rejects_second_piece_after_red_moved_out',
+        bool(result.get('error'))
+        and after == before
+        and after['player_orgs'].get('新北') == 1
         and after['red_orgs'].get('新北', 0) == 0,
         {'result': result, 'before': before, 'after': after},
     ))

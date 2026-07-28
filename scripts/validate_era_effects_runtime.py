@@ -61,6 +61,32 @@ def first_out_of_range_developable_pair(game, player, region):
     raise AssertionError(f'No out-of-range developable pair for {player.faction_id} in {region}')
 
 
+def first_disjoint_developable_neighbor_pairs(game, player, region, count, excluded=None):
+    region_towns = set(game._towns_for_region_alias(region))
+    excluded = set(excluded or [])
+    used = set(excluded)
+    pairs = []
+    for origin in game._towns_for_region_alias(region):
+        if origin in used or not game.can_faction_develop_in_town(player.faction_id, origin):
+            continue
+        info = game.map.get('towns', {}).get(origin, {})
+        neighbors = list(info.get('road', []) or []) + list(info.get('rail', []) or [])
+        target = next((
+            town for town in neighbors
+            if town in region_towns
+            and town not in used
+            and town != origin
+            and game.can_faction_develop_in_town(player.faction_id, town)
+        ), None)
+        if target is None:
+            continue
+        pairs.append((origin, target))
+        used.update((origin, target))
+        if len(pairs) == count:
+            return pairs
+    raise AssertionError(f'{region} has fewer than {count} disjoint developable neighbor pairs for {player.faction_id}')
+
+
 def place_orgs(player, towns, count_each=1):
     player.organizations = {town: count_each for town in towns}
 
@@ -100,7 +126,7 @@ def run_checks():
 
     # Taiwan uses the same static-supply path for 內鬥.
     game, actor, _red = make_game('taiwan_green')
-    place_orgs(actor, first_towns(game, 'taiwan', 1), count_each=7)
+    place_orgs(actor, first_developable_towns(game, actor, 'taiwan', 7))
     game.static_purchase_supply['內鬥'] = 2
     game._check_era_trigger()
     checks.append(check(
@@ -267,7 +293,7 @@ def run_checks():
     # Uyghur counterattack hook: Uyghur armed card grants 2 propaganda when played.
     game, actor, red = make_game('uyghur_istanbul')
     game.era_engine.activate_era('uyghur')
-    actor.organizations = {'北京': 1}
+    actor.organizations = {'天津': 1}
     red.organizations = {'北京': 1}
     red.hand = [Card('目標手牌', 'money', {'money': 1})]
     actor.hand = [Card('武裝者', 'armed', {'propaganda': 1})]
@@ -365,15 +391,16 @@ def run_checks():
     # Taiwan build hook: building in Taiwan region grants 1 propaganda.
     game, actor, _red = make_game('taiwan_green')
     game.era_engine.activate_era('taiwan')
-    taiwan_town = first_towns(game, 'taiwan', 1)[0]
-    actor.organizations = {taiwan_town: 1}
+    taiwan_origin, taiwan_town = first_disjoint_developable_neighbor_pairs(game, actor, 'taiwan', 1)[0]
+    actor.organizations = {taiwan_origin: 1}
     actor.resources = {'money': 0, 'propaganda': 0}
-    result = game.build_organization(taiwan_town)
+    result = game.build_organization_with_support(taiwan_origin, taiwan_town)
     checks.append(check(
         'taiwan_build_in_taiwan_grants_one_propaganda',
         result.get('success') is True and actor.resources.get('propaganda') == 1,
         {
             'rule': '臺灣反撲效果：在臺灣城鎮建立至少 1 個組織時，獲得 1 宣傳。',
+            'origin': taiwan_origin,
             'town': taiwan_town,
             'build_result': result,
             'resources_after': dict(actor.resources),
@@ -384,12 +411,12 @@ def run_checks():
     # Rebel build-count hook: third build in the turn draws once, then only once.
     game, actor, _red = make_game('liberals')
     game.era_engine.activate_era('rebels')
-    # Exclude towns the Red player occupies (e.g. 北京 is red's base) — can_faction_develop
-    # allows them but an actual build is blocked as enemy-occupied.
-    china_towns = [t for t in first_developable_towns(game, actor, 'china', 12) if t not in (_red.organizations or {})][:3]
-    actor.organizations = {town: 1 for town in china_towns}
+    build_pairs = first_disjoint_developable_neighbor_pairs(
+        game, actor, 'china', 3, excluded=(_red.organizations or {}).keys()
+    )
+    actor.organizations = {origin: 1 for origin, _target in build_pairs}
     hand_before = len(actor.hand)
-    results = [game.build_organization(town) for town in china_towns]
+    results = [game.build_organization_with_support(origin, target) for origin, target in build_pairs]
     hand_after = len(actor.hand)
     checks.append(check(
         'rebels_third_build_draws_one_card_once',
@@ -398,7 +425,7 @@ def run_checks():
         and game.turn_log.get('era_build_count_draw_bonus:rebels') is True,
         {
             'rule': '反賊反撲效果：回合中建立至少 3 個組織時，當回合抽 1 張；同一回合只觸發一次。',
-            'towns': china_towns,
+            'build_pairs': build_pairs,
             'build_results': results,
             'hand_before': hand_before,
             'hand_after': hand_after,

@@ -1,5 +1,5 @@
 {
-  "date": "2026-07-04",
+  "date": "2026-07-28",
   "summary": {
     "total": 5,
     "passed": 5,
@@ -11,7 +11,7 @@
       "passed": true,
       "details": {
         "result": {
-          "error": "Cannot move into enemy organization"
+          "error": "Cannot move into occupied town"
         },
         "before": {
           "player_orgs": {
@@ -39,8 +39,7 @@
       "passed": true,
       "details": {
         "choices_sample": [
-          "新北",
-          "桃園"
+          "新北"
         ],
         "red_orgs": {
           "新竹": 1
@@ -104,11 +103,11 @@
       }
     },
     {
-      "name": "direct_build_allows_town_after_red_moved_out",
+      "name": "direct_build_rejects_second_piece_after_red_moved_out",
       "passed": true,
       "details": {
         "result": {
-          "success": true
+          "error": "Cannot develop in this town"
         },
         "before": {
           "player_orgs": {
@@ -121,7 +120,7 @@
         },
         "after": {
           "player_orgs": {
-            "新北": 2
+            "新北": 1
           },
           "red_orgs": {
             "新竹": 1

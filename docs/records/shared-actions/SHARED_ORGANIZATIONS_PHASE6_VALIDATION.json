@@ -8,10 +8,8 @@
     "shared_hk": true,
     "shared_yue": true,
     "build_result": {
-      "success": true
+      "error": "Cannot develop in this town"
     },
-    "hk_orgs": {
-      "香港城": 2
-    }
+    "hk_orgs": {}
   }
 }

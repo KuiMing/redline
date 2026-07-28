@@ -62,6 +62,12 @@ def resolve_build_town(g, player, town):
     return g.resolve_pending_choice(player.id, towns.index(town))
 
 
+def resolve_first_build_town(g, player):
+    assert g.pending_choice and g.pending_choice['choice_key'] == 'card_build_organization', g.pending_choice
+    town = g.pending_choice['towns'][0]['town']
+    return town, g.resolve_pending_choice(player.id, 0)
+
+
 def test_press_advantage_prompts_for_eligible_discard_card_and_leaves_high_cost_cards():
     g = make_game()
     p = g.current_player()
@@ -265,7 +271,7 @@ def test_north_support_tier1_sacrifices_the_selected_own_org_before_dissolving_e
     actor.resources = {'money': 0, 'propaganda': 0}
 
     enemy.faction_id = 'red_army'
-    enemy.base = '慕尼黑'
+    enemy.base = '北京'
     enemy.organizations = {'慕尼黑': 1}
 
     result = g.play_card(0, mode='action')
@@ -315,7 +321,7 @@ def test_taiwan_support_tier3_requires_target_choice_and_builds_in_same_town_aft
     actor.deck.discard_pile = []
 
     enemy.faction_id = 'red_army'
-    enemy.base = '福州'
+    enemy.base = '北京'
     enemy.organizations = {'福州': 1}
     enemy.deck.discard_pile = []
 
@@ -376,7 +382,7 @@ def test_taiwan_support_tier2_requires_target_choice_without_auto_resolution():
     actor.hand = [g._make_support_card('臺灣奧援')]
 
     enemy.faction_id = 'red_army'
-    enemy.base = '大阪'
+    enemy.base = '北京'
     enemy.organizations = {'大阪': 1}
 
     result = g.play_card(0, mode='action')
@@ -1748,9 +1754,9 @@ def test_strategic_thinker_trashes_self_then_grants_build_and_three_moves():
     result = g.play_card(0, mode='action')
 
     assert result.get('success'), result
-    resolved = resolve_build_town(g, p, '北京')
+    built_town, resolved = resolve_first_build_town(g, p)
     assert resolved.get('success'), resolved
-    assert p.organizations.get('北京', 0) == 2
+    assert p.organizations == {'北京': 1, built_town: 1}
     assert p.moves_left == 3
     assert '思想家' not in names(p.deck.discard_pile)
     assert g.static_purchase_supply.get('思想家', 0) == starting_supply + 1
@@ -1768,9 +1774,9 @@ def test_propagandist_trashes_self_then_grants_build_and_one_move():
     result = g.play_card(0, mode='action')
 
     assert result.get('success'), result
-    resolved = resolve_build_town(g, p, '北京')
+    built_town, resolved = resolve_first_build_town(g, p)
     assert resolved.get('success'), resolved
-    assert p.organizations.get('北京', 0) == 2
+    assert p.organizations == {'北京': 1, built_town: 1}
     assert p.moves_left == 1
     assert '宣傳家' not in names(p.deck.discard_pile)
     assert g.static_purchase_supply.get('宣傳家', 0) == starting_supply + 1
@@ -1939,9 +1945,9 @@ def test_organization_c_builds_one_via_town_choice():
     result = g.play_card(0, mode='action')
 
     assert result.get('success'), result
-    resolved = resolve_build_town(g, p, '北京')
+    built_town, resolved = resolve_first_build_town(g, p)
     assert resolved.get('success'), resolved
-    assert p.organizations.get('北京', 0) == 2
+    assert p.organizations == {'北京': 1, built_town: 1}
 
 
 
@@ -1954,11 +1960,12 @@ def test_organization_b_builds_two_via_sequential_town_choices():
     result = g.play_card(0, mode='action')
 
     assert result.get('success'), result
-    first = resolve_build_town(g, p, '北京')
+    first_town, first = resolve_first_build_town(g, p)
     assert first.get('success') and first.get('pending_choice'), first
-    second = resolve_build_town(g, p, '北京')
+    second_town, second = resolve_first_build_town(g, p)
     assert second.get('success'), second
-    assert p.organizations.get('北京', 0) == 3
+    assert p.organizations == {'北京': 1, first_town: 1, second_town: 1}
+    assert first_town != second_town
 
 
 
@@ -1971,9 +1978,9 @@ def test_organization_a_builds_one_even_with_ignore_distance_flag():
     result = g.play_card(0, mode='action')
 
     assert result.get('success'), result
-    resolved = resolve_build_town(g, p, '北京')
+    built_town, resolved = resolve_first_build_town(g, p)
     assert resolved.get('success'), resolved
-    assert p.organizations.get('北京', 0) == 2
+    assert p.organizations == {'北京': 1, built_town: 1}
 
 
 

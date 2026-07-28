@@ -135,7 +135,7 @@ def check(browser):
          'current_player': current_is_host, 'expected': expected},
     )
 
-    # --- 3. 標籤 zoom 門檻：ally 開局在根據地臺北有 1 個組織；遠 zoom 標籤只有「臺北 1」、
+    # --- 3. 標籤 zoom 門檻：一城一組織後不再顯示冗餘數字；遠 zoom 標籤只有「臺北」，
     # zoom >= 9 才附陣營文字 ---
     ally.wait_for_timeout(300)
     has_taipei_org = ally.evaluate(
@@ -155,12 +155,12 @@ def check(browser):
 
     record(
         'far_zoom_label_omits_faction_text',
-        has_taipei_org and label_far == '臺北 1',
+        has_taipei_org and label_far == '臺北',
         {'has_taipei_org': has_taipei_org, 'label_far': label_far},
     )
     record(
         'near_zoom_label_includes_faction_text',
-        has_taipei_org and label_near == '臺北 1（臺灣（綠線））',
+        has_taipei_org and label_near == '臺北（臺灣（綠線））',
         {'label_near': label_near},
     )
 

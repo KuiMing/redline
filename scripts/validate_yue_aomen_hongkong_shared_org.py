@@ -25,10 +25,10 @@ def _new_game(faction_a, faction_b):
 def _check_pair(owner_faction, viewer_faction, town, expect_shared):
     g, owner, viewer = _new_game(owner_faction, viewer_faction)
     viewer.organizations = {}
-    owner.organizations = {town: 2}
+    owner.organizations = {town: 1}
     count = g._shared_org_count(viewer, town)
     origin = g._shared_origin_owner(viewer, town)
-    ok = (count == (2 if expect_shared else 0)) and (
+    ok = (count == (1 if expect_shared else 0)) and (
         (origin is owner) if expect_shared else (origin is None)
     )
     return {

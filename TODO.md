@@ -17,6 +17,13 @@
 
 ## 目前 active todo
 
+### P0：一城一組織 invariant 與共用組織語義
+- [done] 全場每個城鎮最多 1 個實體組織；香港／粵／澳門共用同一枚組織，不是同城疊放例外。
+  - 2026-07-28：`rules.md` 補上共用組織的建立起點、移動、瓦解、計數與所有權轉移語義；建立、卡牌／事件／時代效果、移動、根據地選擇及香港根據地遷移均統一檢查實體佔位。
+  - 紅軍根據地耐久改用同一行動玩家同回合兩次成功瓦解的命中計數，地圖上仍只有 1 枚組織。
+  - runtime：`validate_one_organization_per_town.py` 11/11、事件卡 35/35、時代效果 15/15、移動 13/13、敵佔規則 5/5、相關 pytest 95/95；正式 UI：`validate_one_organization_per_town_ui.py` 7/7，proof 位於 `docs/records/map-ui/ONE_ORGANIZATION_PER_TOWN_UI_VALIDATION.{json,md}` 與 `one_organization_per_town_ui.png`。
+  - 地圖標籤不再顯示永遠為 1 的組織數；遠視角只顯示城鎮名，zoom 10 起附陣營名稱，組織存在與陣營仍由實心色表示。
+
 ### P0：事件卡完整化規劃（MVP 後下一階段）
 - [done] 事件／時代卡資料盤點與 canonical scope 決定。
   - 2026-05-23：已新增 `scripts/validate_event_card_canonical_scope.py`，產出 `docs/records/event-cards/EVENT_CARD_CANONICAL_SCOPE_AUDIT_2026_05_23.{json,md}`。

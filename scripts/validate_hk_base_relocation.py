@@ -84,7 +84,7 @@ def case_restrictions():
     red2_result = g2.relocate_hong_kong_base(red2.id, '臺北')
     checks = {
         'only_four_cities': '根據地只能遷移至' in str(bad_target.get('error')),
-        'enemy_occupied_blocked': 'enemy organization' in str(enemy_blocked.get('error')),
+        'occupied_destination_blocked': 'occupied town' in str(enemy_blocked.get('error')),
         'airport_requires_own_action_turn': 'ACTION phase' in str(not_turn.get('error')),
         'non_hk_faction_blocked': 'Only Hong Kong' in str(red2_result.get('error')),
     }

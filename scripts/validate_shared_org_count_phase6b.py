@@ -17,8 +17,8 @@ def main():
     church.faction_id = 'underground_church'
     tw.base = '臺北'
     church.base = '北京'
-    tw.organizations = {'北京': 2}
-    church.organizations = {'北京': 3}
+    tw.organizations = {}
+    church.organizations = {'北京': 1}
     g.faction_by_id = {f['id']: f for f in g.factions}
 
     count_tw = g._shared_org_count(tw, '北京')
@@ -26,8 +26,8 @@ def main():
     payload = {
         'summary': {
             'total': 1,
-            'passed': 1 if count_tw == 5 and count_church == 5 else 0,
-            'failed': 0 if count_tw == 5 and count_church == 5 else 1,
+            'passed': 1 if count_tw == 1 and count_church == 1 and not g._organization_occupancy_violations() else 0,
+            'failed': 0 if count_tw == 1 and count_church == 1 and not g._organization_occupancy_violations() else 1,
         },
         'count_tw': count_tw,
         'count_church': count_church,

@@ -368,12 +368,13 @@ class EffectEngine:
                     return {'pending_choice': True}
                 game.log(f"{player.name} had no legal town to build via {source_name}")
                 return
-            target = player.base if player.base and player.organizations.get(player.base, 0) > 0 and game.can_develop_in_town(player, player.base) else None
-            if not target:
-                owned = [town for town, count in player.organizations.items() if count > 0 and game.can_develop_in_town(player, town)]
-                target = owned[0] if owned else None
+            candidate_towns = list(getattr(game, 'map', {}).get('towns', {}).keys())
+            target = next((town for town in candidate_towns if game.can_develop_in_town(player, town)), None)
             if target:
-                player.organizations[target] = player.organizations.get(target, 0) + 1
+                if hasattr(game, '_place_organization'):
+                    game._place_organization(player, target)
+                else:
+                    player.organizations[target] = 1
                 game.log(f"{player.name} built organization in {target} via card effect")
             return
 

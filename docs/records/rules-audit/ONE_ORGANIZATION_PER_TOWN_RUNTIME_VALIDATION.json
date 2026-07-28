@@ -1,0 +1,217 @@
+{
+  "summary": {
+    "scope": [
+      "global one-organization-per-town invariant",
+      "香港/粵/澳門 shared access",
+      "movement",
+      "card build choices",
+      "Red Army base durability"
+    ],
+    "total": 11,
+    "passed": 11,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "shared_piece_is_access_not_stack_permission",
+      "ok": true,
+      "detail": {
+        "result": {
+          "error": "Cannot develop in this town"
+        },
+        "shared_count": 1,
+        "hk_orgs": {},
+        "yue_orgs": {
+          "廣州": 1
+        }
+      }
+    },
+    {
+      "name": "central_placement_rejects_own_and_shared_occupancy",
+      "ok": true,
+      "detail": {
+        "own_build": true,
+        "second_own": false,
+        "second_shared": false,
+        "violations": []
+      }
+    },
+    {
+      "name": "movement_rejects_own_occupied_destination_atomically",
+      "ok": true,
+      "detail": {
+        "result": {
+          "error": "Cannot move into occupied town"
+        },
+        "before": {
+          "hk": {
+            "深圳": 1
+          },
+          "yue": {
+            "廣州": 1
+          },
+          "other": {},
+          "moves": 2
+        },
+        "after": {
+          "hk": {
+            "深圳": 1
+          },
+          "yue": {
+            "廣州": 1
+          },
+          "other": {},
+          "moves": 2
+        }
+      }
+    },
+    {
+      "name": "movement_rejects_shared_occupied_destination_atomically",
+      "ok": true,
+      "detail": {
+        "result": {
+          "error": "Cannot move into occupied town"
+        },
+        "before": {
+          "hk": {},
+          "yue": {
+            "廣州": 1,
+            "深圳": 1
+          },
+          "other": {},
+          "moves": 2
+        },
+        "after": {
+          "hk": {},
+          "yue": {
+            "廣州": 1,
+            "深圳": 1
+          },
+          "other": {},
+          "moves": 2
+        }
+      }
+    },
+    {
+      "name": "movement_rejects_enemy_occupied_destination_atomically",
+      "ok": true,
+      "detail": {
+        "result": {
+          "error": "Cannot move into occupied town"
+        },
+        "before": {
+          "hk": {},
+          "yue": {
+            "廣州": 1
+          },
+          "other": {
+            "深圳": 1
+          },
+          "moves": 2
+        },
+        "after": {
+          "hk": {},
+          "yue": {
+            "廣州": 1
+          },
+          "other": {
+            "深圳": 1
+          },
+          "moves": 2
+        }
+      }
+    },
+    {
+      "name": "shared_piece_moves_to_empty_town_as_single_transferred_piece",
+      "ok": true,
+      "detail": {
+        "result": {
+          "success": true
+        },
+        "hk_orgs": {
+          "深圳": 1
+        },
+        "yue_orgs": {},
+        "violations": []
+      }
+    },
+    {
+      "name": "shared_piece_is_origin_for_card_and_event_builds",
+      "ok": true,
+      "detail": {
+        "card_choices": [
+          "深圳",
+          "澳門"
+        ],
+        "event_choices": [
+          "深圳",
+          "澳門"
+        ]
+      }
+    },
+    {
+      "name": "shared_piece_counts_for_era_region_and_ruler_requirements",
+      "ok": true,
+      "detail": {
+        "china_count": 1,
+        "red_ruler_count": 1
+      }
+    },
+    {
+      "name": "card_build_choices_exclude_every_occupied_town",
+      "ok": true,
+      "detail": {
+        "occupied": [
+          "香港城",
+          "廣州"
+        ],
+        "choice_count": 42
+      }
+    },
+    {
+      "name": "diagnostic_detects_stacks_and_multiple_owners",
+      "ok": true,
+      "detail": {
+        "violations": [
+          {
+            "town": "香港城",
+            "entries": [
+              {
+                "player_id": "hk",
+                "player": "HK",
+                "count": 2
+              },
+              {
+                "player_id": "yue",
+                "player": "Yue",
+                "count": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "red_army_base_uses_two_hit_counter_not_stacked_pieces",
+      "ok": true,
+      "detail": {
+        "first": {
+          "success": true,
+          "actual_owner": "Red",
+          "shared_target": false,
+          "red_base_hit": true,
+          "red_base_destroyed": false
+        },
+        "first_preserved": true,
+        "second": {
+          "success": true,
+          "actual_owner": "Red",
+          "shared_target": false,
+          "red_base_hit": true,
+          "red_base_destroyed": true
+        },
+        "red_orgs": {}
+      }
+    }
+  ]
+}

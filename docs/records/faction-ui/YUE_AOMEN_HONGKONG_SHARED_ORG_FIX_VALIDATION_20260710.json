@@ -17,7 +17,7 @@
       "owner_faction": "hong_kong",
       "town": "廣州",
       "expect_shared": true,
-      "shared_org_count": 2,
+      "shared_org_count": 1,
       "origin_owner_faction": "hong_kong",
       "ok": true
     },
@@ -27,7 +27,7 @@
       "owner_faction": "hong_kong",
       "town": "深圳",
       "expect_shared": true,
-      "shared_org_count": 2,
+      "shared_org_count": 1,
       "origin_owner_faction": "hong_kong",
       "ok": true
     },
@@ -37,7 +37,7 @@
       "owner_faction": "yue",
       "town": "廣州",
       "expect_shared": true,
-      "shared_org_count": 2,
+      "shared_org_count": 1,
       "origin_owner_faction": "yue",
       "ok": true
     },
@@ -47,7 +47,7 @@
       "owner_faction": "aomen",
       "town": "深圳",
       "expect_shared": true,
-      "shared_org_count": 2,
+      "shared_org_count": 1,
       "origin_owner_faction": "aomen",
       "ok": true
     },

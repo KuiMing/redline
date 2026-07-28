@@ -2,4 +2,4 @@
 
 - shared_hk: True
 - shared_yue: True
-- build_result: {"success": true}
+- build_result: {"error": "Cannot develop in this town"}

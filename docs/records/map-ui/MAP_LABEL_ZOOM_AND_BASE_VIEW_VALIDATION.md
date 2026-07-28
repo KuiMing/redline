@@ -8,7 +8,7 @@
 ## Results
 - ✅ `initial_view_centers_on_own_base_at_zoom_9` — {"view": {"lat": 25.033, "lon": 121.5654, "zoom": 9}}
 - ✅ `map_sidebar_current_player_name_uses_that_players_faction_color_on_both_views` — {"sidebar_color_ally": "rgb(74, 222, 128)", "sidebar_color_host": "rgb(74, 222, 128)", "current_player": "ally", "expected": "rgb(74, 222, 128)"}
-- ✅ `far_zoom_label_omits_faction_text` — {"has_taipei_org": true, "label_far": "臺北 1"}
-- ✅ `near_zoom_label_includes_faction_text` — {"label_near": "臺北 1（臺灣（綠線））"}
+- ✅ `far_zoom_label_omits_faction_text` — {"has_taipei_org": true, "label_far": "臺北"}
+- ✅ `near_zoom_label_includes_faction_text` — {"label_near": "臺北（臺灣（綠線））"}
 - ✅ `status_overview_names_use_faction_colors` — {"status_colors": [{"name": "host", "color": "rgb(240, 79, 86)"}, {"name": "ally", "color": "rgb(74, 222, 128)"}]}
 - ✅ `hud_current_player_name_uses_faction_color` — {"hud_color": "rgb(74, 222, 128)", "expected": "rgb(74, 222, 128)"}

@@ -1,6 +1,6 @@
 # MOVEMENT RULES VALIDATION
 
-日期：2026-07-12
+日期：2026-07-28
 
 summary: {'total': 13, 'passed': 13, 'failed': 0}
 

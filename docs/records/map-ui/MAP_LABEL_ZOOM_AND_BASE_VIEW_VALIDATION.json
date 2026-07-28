@@ -31,14 +31,14 @@
       "ok": true,
       "detail": {
         "has_taipei_org": true,
-        "label_far": "臺北 1"
+        "label_far": "臺北"
       }
     },
     {
       "name": "near_zoom_label_includes_faction_text",
       "ok": true,
       "detail": {
-        "label_near": "臺北 1（臺灣（綠線））"
+        "label_near": "臺北（臺灣（綠線））"
       }
     },
     {

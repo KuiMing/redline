@@ -81,7 +81,7 @@ def test_red_army_faction_action_resolves_after_reaction_skip():
 
 def test_one_player_two_successful_dissolves_destroy_red_base_and_block_rebuild():
     game, red, a, b = make_red_game()
-    red.organizations = {'北京': 2}
+    red.organizations = {'北京': 1}
     first = game.dissolve_organization(a, red, '北京', source='card')
     second = game.dissolve_organization(a, red, '北京', source='card')
     destroyed = '北京' in set(getattr(game, 'red_army_destroyed_bases', set()) or [])
@@ -104,7 +104,7 @@ def test_one_player_two_successful_dissolves_destroy_red_base_and_block_rebuild(
 
 def test_red_base_dissolve_counter_is_per_attacker_and_resets_each_turn():
     game, red, a, b = make_red_game()
-    red.organizations = {'北京': 3}
+    red.organizations = {'北京': 1}
     first = game.dissolve_organization(a, red, '北京', source='card')
     game.turn_log = game._new_turn_log()
     second = game.dissolve_organization(a, red, '北京', source='card')

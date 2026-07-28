@@ -45,7 +45,7 @@ def test_count_only_era_trigger_uses_map_ruler_scope():
     game = make_game()
     player = game.players[0]
     player.faction_id = "hong_kong"
-    player.organizations = {"香港城": 10}
+    player.organizations = {town: 1 for town in game._towns_for_region_alias("hong_kong")[:10]}
 
     trigger = {"type": "count_only", "faction_id": "hong_kong", "region": "hong_kong", "count": 10}
 
@@ -55,7 +55,7 @@ def test_count_only_era_trigger_uses_map_ruler_scope():
 def test_red_army_taiwan_override_uses_map_ruler_taiwan_towns():
     game = make_game()
     red_player = next(p for p in game.players if p.faction_id == "red_army")
-    red_player.organizations = {"臺北": 14}
+    red_player.organizations = {town: 1 for town in game._towns_for_region_alias("taiwan")[:14]}
 
     did_win, winner = VictoryEngine(game.factions).evaluate(game)
 

@@ -57,7 +57,7 @@
       "name": "relocation_restrictions",
       "checks": {
         "only_four_cities": true,
-        "enemy_occupied_blocked": true,
+        "occupied_destination_blocked": true,
         "airport_requires_own_action_turn": true,
         "non_hk_faction_blocked": true
       },

@@ -380,6 +380,11 @@ def start_game(payload: dict):
             ],
         },
     })
+    chosen_base_names = [base for player_id, base in chosen_bases.items() if player_id in {p.id for p in game.players} and base]
+    duplicate_bases = sorted({base for base in chosen_base_names if chosen_base_names.count(base) > 1})
+    if duplicate_bases:
+        return {"error": f"Base already taken: {'、'.join(duplicate_bases)}"}
+
     for player in game.players:
         base_name = chosen_bases.get(player.id)
         if not base_name:
