@@ -2,6 +2,36 @@
 
 Redline 是一個以瀏覽器 UI 與 Python WebSocket 伺服器實作的桌遊原型專案。
 
+## 啟動遊戲服務
+
+在專案根目錄執行：
+
+```bash
+cd "$HOME/.openclaw/workspace/redline"
+uv run --with fastapi --with 'uvicorn[standard]' --with websockets \
+  uvicorn server.main:app --host 0.0.0.0 --port 8000
+```
+
+服務啟動後：
+
+- 本機瀏覽器：`http://127.0.0.1:8000`
+- 同一個 Wi-Fi／區網的其他玩家：`http://<這台電腦的區網 IP>:8000`
+- Lobby 會顯示可分享給其他玩家的區網連線網址。
+
+可用以下方式確認服務是否正常：
+
+```bash
+curl -fsS http://127.0.0.1:8000/server-info
+```
+
+成功時會回傳區網 IP 與 port，例如：
+
+```json
+{"lan_ip":"192.168.x.x","port":8000}
+```
+
+前景執行時按 `Ctrl+C` 即可停止服務。請保留單一 Uvicorn worker，因為目前房間與遊戲狀態儲存在該 Python process 的記憶體中。
+
 ## 資料夾結構
 
 - `server/`

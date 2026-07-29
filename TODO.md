@@ -48,6 +48,11 @@
   - 若要 LAN playtest：重啟 server 綁 `0.0.0.0:8000` 並確認 `TCP *:8000 (LISTEN)`。
 
 ### P1：LAN / end-to-end playtest feedback
+- [todo] Playtest UI：紅軍抽到 `一帶一路 南洋` 時，戰略地圖應自動對準南洋區域。
+  - 2026-07-29 回報情境：抽到 `一帶一路 南洋`，輪到紅軍回合並進入「免費在南洋無視距離建立 1 個組織」的自動事件選點流程時，地圖沒有自動對準南洋。
+  - 期望：即使目前是紅軍回合，事件建立選擇出現時仍應自動調整地圖視角，讓南洋合法候選城鎮直接進入可視範圍；玩家不必先手動平移或縮放尋找南洋。
+  - 需檢查：事件 `pending_choice` 的地圖高亮與自動 fit/focus 流程、紅軍回合是否被一般「觀看者根據地／首次狀態」視角邏輯覆蓋，以及 `static/leaflet_game_map_logic.js` 收到 `一帶一路 南洋` build 候選時是否有依候選 bounds 執行視角定位。
+
 - [done] Playtest UI：修復金門城鎮標籤被廈門標籤遮住。
   - 2026-07-28 root cause：金門（118.319, 24.432）與廈門（118.0894, 24.4798）地理位置接近；兩個 Leaflet permanent tooltip 原本都固定置於 marker 上方。在 zoom 5／6／7 實測重疊面積分別為 604.5／367.5／170.5 px²，且資料渲染順序較後的廈門蓋在金門上方，造成金門名稱看似消失。
   - 修正：新增 `townLabelOptions()`，只將金門 tooltip 固定放到 marker 下方並加入獨立 class；其他城鎮維持上方標籤。zoom 動態樣式同步套用相同方向與 offset，不修改金門／廈門座標或道路資料；更新地圖 JS cache bust。
