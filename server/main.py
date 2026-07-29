@@ -2220,6 +2220,59 @@ def test_setup_victory_proof(payload: dict):
     }
 
 
+@app.post("/test/setup-discard-reshuffle-proof")
+def test_setup_discard_reshuffle_proof(payload: dict):
+    scenario = str(payload.get("scenario") or "sufficient")
+    if scenario not in {"sufficient", "exhausted"}:
+        return {"error": "scenario must be sufficient or exhausted"}
+
+    game_id = str(uuid.uuid4())
+    players = [(str(uuid.uuid4()), "紅軍"), (str(uuid.uuid4()), "對手")]
+    game = Game(players)
+    red, opponent = game.players
+    red.faction_id = "red_army"
+    red.base = "北京"
+    red.organizations = {"北京": 1}
+    opponent.faction_id = "taiwan_green"
+    opponent.base = "臺北"
+    opponent.organizations = {"臺北": 1}
+
+    red.hand = [Card(f"保留手牌{i}", "command", {}) for i in range(1, 5)]
+    red.deck.draw_pile = [] if scenario == "exhausted" else [Card("牌庫保留牌", "command", {})]
+    red.deck.discard_pile = [Card("棄牌唯一一張", "command", {})]
+    red.resources = {"money": 0, "propaganda": 0}
+    red.moves_left = 0
+
+    game.game_phase = GamePhase.MAIN
+    game.turn_phase = TurnPhase.END
+    game.current_player_index = 0
+    game.pending_base_choices = {}
+    game.pending_choice = None
+    game._deferred_auto_event = False
+    noop_event = game._event_by_name("歲月靜好")
+    game.current_event = dict(noop_event or {})
+    game.event_progress = {"count": 0, "required": 0, "succeeded": True, "settled": True, "status": "idle"}
+    game.event_modifiers = []
+    game.id = game_id
+
+    manager.games[game_id] = game
+    manager.connections[game_id] = {}
+    lobby[game_id] = [(red.id, red.name), (opponent.id, opponent.name)]
+    lobby_hosts[game_id] = red.id
+    lobby_factions[game_id] = {red.id: red.faction_id, opponent.id: opponent.faction_id}
+    lobby_bases[game_id] = {red.id: red.base, opponent.id: opponent.base}
+    lobby_ready[game_id] = {red.id: True, opponent.id: True}
+
+    return {
+        "success": True,
+        "scenario": scenario,
+        "game_id": game_id,
+        "player_id": red.id,
+        "opponent_id": opponent.id,
+        "state": game.state(red.id),
+    }
+
+
 @app.post("/test/setup-support-proof")
 def test_setup_support_proof(payload: dict):
     support_name = payload.get("support_name", "臺灣奧援")
@@ -2319,6 +2372,12 @@ def test_setup_support_proof(payload: dict):
     game.turn_phase = TurnPhase.EVENT if requested_phase == "event" else TurnPhase.ACTION
     game.game_phase = GamePhase.MAIN
     game.pending_base_choices = {}
+    game.pending_choice = None
+    game._deferred_auto_event = False
+    noop_event = game._event_by_name("歲月靜好")
+    game.current_event = dict(noop_event or {})
+    game.event_progress = {"count": 0, "required": 0, "succeeded": True, "settled": True, "status": "idle"}
+    game.event_modifiers = []
     game.id = game_id
 
     manager.games[game_id] = game

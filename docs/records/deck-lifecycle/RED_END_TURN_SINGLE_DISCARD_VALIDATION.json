@@ -1,0 +1,90 @@
+{
+  "summary": {
+    "total": 2,
+    "passed": 2,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "sufficient",
+      "ok": true,
+      "button_text": "結束回合",
+      "button_enabled": true,
+      "before": {
+        "hand": [
+          "保留手牌1",
+          "保留手牌2",
+          "保留手牌3",
+          "保留手牌4"
+        ],
+        "deck_count": 1,
+        "discard_count": 1,
+        "discard_pile": [
+          "棄牌唯一一張"
+        ]
+      },
+      "after": {
+        "hand": [
+          "保留手牌1",
+          "保留手牌2",
+          "保留手牌3",
+          "保留手牌4",
+          "牌庫保留牌"
+        ],
+        "deck_count": 0,
+        "discard_count": 1,
+        "discard_pile": [
+          "棄牌唯一一張"
+        ]
+      },
+      "total_before": 6,
+      "total_after": 6,
+      "status_text": "紅\n紅軍\n玩家戰況\n陣營：紅軍\n根據地：北京\n組織\n1\n資金\n0\n宣傳\n0\n手牌\n5\n牌庫\n0\n棄牌\n1\n移動\n0\n棄牌堆\n棄牌唯一一張\n對\n對手\n當前行動玩家\n當前玩家\n陣營：臺灣（綠線）\n根據地：臺北\n組織\n1\n資金\n0\n宣傳\n0\n手牌\n5\n牌庫\n5\n棄牌\n0\n移動\n0\n棄牌堆\n無",
+      "action_log": [
+        "[Turn 1] End of turn for 紅軍"
+      ],
+      "console_errors": [],
+      "screenshot": "/Users/benmini/.openclaw/workspace/redline/docs/records/deck-lifecycle/RED_END_TURN_SINGLE_DISCARD_SUFFICIENT.png"
+    },
+    {
+      "name": "exhausted",
+      "ok": true,
+      "button_text": "結束回合",
+      "button_enabled": true,
+      "before": {
+        "hand": [
+          "保留手牌1",
+          "保留手牌2",
+          "保留手牌3",
+          "保留手牌4"
+        ],
+        "deck_count": 0,
+        "discard_count": 1,
+        "discard_pile": [
+          "棄牌唯一一張"
+        ]
+      },
+      "after": {
+        "hand": [
+          "保留手牌1",
+          "保留手牌2",
+          "保留手牌3",
+          "保留手牌4",
+          "棄牌唯一一張"
+        ],
+        "deck_count": 0,
+        "discard_count": 0,
+        "discard_pile": []
+      },
+      "total_before": 5,
+      "total_after": 5,
+      "status_text": "紅\n紅軍\n玩家戰況\n陣營：紅軍\n根據地：北京\n組織\n1\n資金\n0\n宣傳\n0\n手牌\n5\n牌庫\n0\n棄牌\n0\n移動\n0\n棄牌堆\n無\n對\n對手\n當前行動玩家\n當前玩家\n陣營：臺灣（綠線）\n根據地：臺北\n組織\n1\n資金\n0\n宣傳\n0\n手牌\n5\n牌庫\n6\n棄牌\n0\n移動\n0\n棄牌堆\n無",
+      "action_log": [
+        "[Turn 1] 紅軍 牌庫用盡，將棄牌堆 1 張牌洗成新牌庫",
+        "[Turn 1] End of turn for 紅軍"
+      ],
+      "console_errors": [],
+      "screenshot": "/Users/benmini/.openclaw/workspace/redline/docs/records/deck-lifecycle/RED_END_TURN_SINGLE_DISCARD_EXHAUSTED.png"
+    }
+  ]
+}

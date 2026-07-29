@@ -34,6 +34,24 @@ def card_names(cards):
     return [getattr(card, 'name', str(card)) for card in cards]
 
 
+def test_end_turn_logs_reshuffle_only_when_refill_exhausts_draw_pile():
+    enough = make_game()
+    player = enough.current_player()
+    player.hand = [Card(f'保留{i}', 'command', {}) for i in range(4)]
+    player.deck.draw_pile = [Card('牌庫保留牌', 'command', {})]
+    player.deck.discard_pile = [Card('棄牌唯一一張', 'command', {})]
+    enough._end_turn()
+    assert not any('牌庫用盡' in line and '洗牌' in line for line in enough.action_log)
+
+    exhausted = make_game()
+    player = exhausted.current_player()
+    player.hand = [Card(f'保留{i}', 'command', {}) for i in range(4)]
+    player.deck.draw_pile = []
+    player.deck.discard_pile = [Card('棄牌唯一一張', 'command', {})]
+    exhausted._end_turn()
+    assert any('牌庫用盡' in line and '將棄牌堆 1 張牌洗成新牌庫' in line for line in exhausted.action_log)
+
+
 def test_red_end_turn_preserves_discard_when_draw_pile_can_complete_refill():
     game = make_game()
     red = game.current_player()
