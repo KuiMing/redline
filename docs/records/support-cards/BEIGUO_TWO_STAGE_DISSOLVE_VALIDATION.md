@@ -2,11 +2,12 @@
 
 可重跑指令：`python3 scripts/validate_beiguo_two_stage_dissolve.py`
 
-- total: 6 / passed: 6 / failed: 0
+- total: 7 / passed: 7 / failed: 0
 - screenshot: /Users/benmini/.openclaw/workspace/redline/docs/records/support-cards/beiguo_two_stage_dissolve.png
 
 ## Results
-- ✅ `sacrifice_step_has_no_close_button_so_it_cannot_be_stranded` — {"step1": {"step": "sacrifice_town", "modalVisible": true, "closeVisible": false}}
+- ✅ `initial_cancel_restores_card_and_leaves_board_unchanged` — {"hand_count": 1, "mine": {"巴黎": 1, "日內瓦": 1}, "enemy": {"慕尼黑": 1}}
+- ✅ `sacrifice_step_has_cancel_button_before_any_board_mutation` — {"step1": {"step": "sacrifice_town", "modalVisible": true, "closeVisible": true}}
 - ✅ `picking_sacrifice_advances_to_enemy_target_step` — {"step2": {"step": "target", "modalVisible": true, "closeVisible": true}}
 - ✅ `target_step_keeps_a_close_button_for_the_map_path` — {"closeVisible": true}
 - ✅ `modal_path_dissolves_enemy_and_sacrifices_own_org` — {"enemy": {}, "mine": {"巴黎": 1}}

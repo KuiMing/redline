@@ -188,6 +188,9 @@ class Game:
         self.event_modifiers = []
         self.event_notification = None
         self.pending_choice = None
+        # Temporarily holds an unresolved 宣傳家 build entitlement while the player commits
+        # another 宣傳家 and resolves that card's optional-trash pre-step.
+        self._deferred_build_choice = None
         self._pending_era_activations = []
         self._deferred_auto_event = False
         self.era_notification = None
@@ -1249,6 +1252,19 @@ class Game:
                 item = {'town': town}
             if item.get('town'):
                 normalized.append(item)
+        raw_deferred = self._deferred_build_choice
+        deferred = dict(raw_deferred) if isinstance(raw_deferred, dict) else {}
+        if (
+            choice_key == 'card_build_organization'
+            and extra.get('source_name') == '宣傳家'
+            and isinstance(deferred, dict)
+            and deferred.get('choice_key') == 'card_build_organization'
+            and deferred.get('player_id') == player.id
+            and deferred.get('source_name') == '宣傳家'
+        ):
+            extra['remaining_builds'] = max(1, int(deferred.get('remaining_builds', 1) or 1)) + 1
+            self._deferred_build_choice = None
+            prompt = f"宣傳家：選擇要建立組織的城鎮（尚可建立 {extra['remaining_builds']} 個）。"
         self.pending_choice = {
             'type': 'town_choice',
             'choice_key': choice_key,
@@ -2017,8 +2033,9 @@ class Game:
             self._apply_era_build_effects(player, town)
             self._apply_guerrilla_on_build(player, town)
             self.log(f"{player.name} built organization in {town} via {choice.get('source_name') or 'card'}")
-            self.pending_choice = None
             context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
+            remaining_builds = max(1, int(choice.get('remaining_builds', 1) or 1))
+            self.pending_choice = None
             if self._maybe_prompt_org_exp_repeat_build(player, context):
                 return {
                     'success': True,
@@ -2028,7 +2045,8 @@ class Game:
                     'choice_key': choice_key,
                     'pending_choice': True,
                 }
-            remaining_effects = list(context.get('remaining_effects') or [])
+            per_build_remaining_effects = list(context.get('remaining_effects') or [])
+            remaining_effects = list(per_build_remaining_effects)
             for idx, effect in enumerate(remaining_effects):
                 context['remaining_effects'] = remaining_effects[idx + 1:]
                 result = self.effect_engine.execute(effect, player, self, context=context)
@@ -2041,12 +2059,49 @@ class Game:
                         'choice_key': choice_key,
                         'pending_choice': True,
                     }
+            remaining_builds -= 1
+            if remaining_builds > 0:
+                next_context = dict(context)
+                # Every queued 宣傳家 grants its own post-build move; reuse the original
+                # remaining-effects template for each entitlement rather than only the last.
+                next_context['remaining_effects'] = list(per_build_remaining_effects)
+                next_towns = self._card_build_town_choices(player, next_context.get('effect') or {})
+                if next_towns:
+                    self._set_pending_town_choice(
+                        player,
+                        'card_build_organization',
+                        next_towns,
+                        f"宣傳家：選擇要建立組織的城鎮（尚可建立 {remaining_builds} 個）。",
+                        source_name='宣傳家',
+                        remaining_builds=remaining_builds,
+                        context=next_context,
+                    )
+                    return {
+                        'success': True,
+                        'choice_index': index,
+                        'town': town,
+                        'selected': selected,
+                        'choice_key': choice_key,
+                        'pending_choice': True,
+                        'remaining_builds': remaining_builds,
+                    }
+                self.log(f"{player.name} has {remaining_builds} queued 宣傳家 build(s) but no legal town remains")
+                return {
+                    'success': True,
+                    'choice_index': index,
+                    'town': town,
+                    'selected': selected,
+                    'choice_key': choice_key,
+                    'remaining_builds_unresolved': remaining_builds,
+                    'no_more_valid_towns': True,
+                }
             return {
                 'success': True,
                 'choice_index': index,
                 'town': town,
                 'selected': selected,
                 'choice_key': choice_key,
+                'remaining_builds': 0,
             }
         elif choice_key == 'era_red_build_near_target':
             context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
@@ -2333,14 +2388,28 @@ class Game:
             return {'error': 'No pending choice'}
         if choice.get('player_id') != player_id:
             return {'error': 'Not your pending choice'}
-        if choice.get('choice_key') not in CANCELLABLE_CHOICE_KEYS:
+        is_registered_cancellable = choice.get('choice_key') in CANCELLABLE_CHOICE_KEYS
+        if not is_registered_cancellable and not choice.get('cancellable'):
             return {'error': 'This choice cannot be cancelled'}
         player = next((p for p in self.players if p.id == player_id), None)
-        # These choices consume nothing until resolved, so clearing them is a clean revert;
-        # the player can re-activate the ability afterwards.
+        rollback_card = choice.get('rollback_card')
+        if rollback_card is not None:
+            # Initial 北國奧援 choices are transactionally cancellable: no organization has
+            # changed yet, so return the exact card object from discard to its former hand slot
+            # and restore the pre-card combo flags.
+            if player is None or rollback_card not in player.deck.discard_pile:
+                return {'error': 'Support card cannot be restored'}
+            player.deck.discard_pile.remove(rollback_card)
+            hand_index = max(0, min(int(choice.get('rollback_hand_index', len(player.hand))), len(player.hand)))
+            player.hand.insert(hand_index, rollback_card)
+            self.turn_log['played_money_card'] = bool(choice.get('rollback_played_money_card', False))
+            self.turn_log['played_propaganda_card'] = bool(choice.get('rollback_played_propaganda_card', False))
+        # Registered ability choices consume nothing until resolved; transactional support
+        # choices explicitly restore their card and turn flags above.
         self.pending_choice = None
-        self.log(f"{getattr(player, 'name', player_id)} 取消了 {choice.get('source_name') or choice.get('choice_key')}，未消耗能力")
-        return {'success': True, 'cancelled': True, 'choice_key': choice.get('choice_key')}
+        source_name = choice.get('source_name') or choice.get('choice_key')
+        self.log(f"{getattr(player, 'name', player_id)} 取消了 {source_name}，未消耗能力或卡牌")
+        return {'success': True, 'cancelled': True, 'choice_key': choice.get('choice_key'), 'source_name': source_name}
 
     def resolve_pending_choice(self, player_id, index):
         choice = self.pending_choice or {}
@@ -2756,6 +2825,37 @@ class Game:
             dissolve_result = self.dissolve_organization(player, target_player, town, source='support_card')
             if dissolve_result.get('error'):
                 return dissolve_result
+            if effect_type == 'interactive_dissolve_many_near':
+                raw_payload = context.get('effect_payload')
+                payload = dict(raw_payload) if isinstance(raw_payload, dict) else {}
+                remaining_count = max(1, int(context.get('remaining_count', payload.get('count', 1)) or 1)) - 1
+                if remaining_count > 0:
+                    next_targets = self._interactive_support_dissolve_targets(
+                        player,
+                        require_self_sacrifice=False,
+                        max_steps=1,
+                    )
+                    if next_targets:
+                        next_context = {**context, 'remaining_count': remaining_count}
+                        self._set_pending_support_flow_choice(
+                            player,
+                            'support_interaction',
+                            'target',
+                            f'{card_name}：還可瓦解 {remaining_count} 個鄰近敵方組織。',
+                            source_name=card_name,
+                            targets=next_targets,
+                            remaining_count=remaining_count,
+                            context=next_context,
+                        )
+                        self.log(f"{player.name} resolved one {card_name} target; {remaining_count} dissolve(s) remain")
+                        return {
+                            'success': True,
+                            'pending_choice': True,
+                            'town': town,
+                            'target_player_id': target_player_id,
+                            'remaining_count': remaining_count,
+                        }
+                    self.log(f"{player.name} has {remaining_count} {card_name} dissolve(s) remaining but no legal target")
             if effect_type == 'interactive_dissolve_and_build' and self._can_player_build_in_town(player, town):
                 self._place_organization(player, town)
                 self.log(f"{player.name} resolved {card_name} and built in {town} after dissolve")
@@ -4001,13 +4101,15 @@ class Game:
     def _rail_reachable_within_three(self, player, from_town, to_town):
         # rules.md：鐵路一次最多移動3格，但「翻牆需2次移動且僅移動1格」——
         # 多格鐵路移動不得跨越牆內/牆外邊界（跨牆只能走 move_organization 的1格跨牆分支）
+        movement_rules = self.map.get('movement_rules', {}) or {}
+        rail_range = max(1, int(movement_rules.get('rail_range', 3) or 3))
         inner_towns = set(self._towns_for_region_alias('china'))
         origin_side_inner = from_town in inner_towns
         visited = {from_town}
         queue = [(from_town, 0)]
         while queue:
             town, distance = queue.pop(0)
-            if distance >= 3:
+            if distance >= rail_range:
                 continue
             for neighbor in self.map.get('towns', {}).get(town, {}).get('rail', []) or []:
                 if neighbor not in self.map.get('towns', {}):
@@ -4470,6 +4572,19 @@ class Game:
             return {"error": "Invalid index"}
         pending_card = player.hand[index]
         pending_card_name = getattr(pending_card, "name", str(pending_card))
+        stacking_propagandist = bool(
+            self.pending_choice
+            and self.pending_choice.get('player_id') == player.id
+            and self.pending_choice.get('choice_key') == 'card_build_organization'
+            and self.pending_choice.get('source_name') == '宣傳家'
+            and pending_card_name == '宣傳家'
+            and mode == 'action'
+        )
+        if self.pending_choice and not stacking_propagandist:
+            return {"error": "Please resolve the pending choice first"}
+        if stacking_propagandist:
+            self._deferred_build_choice = dict(self.pending_choice or {})
+            self.pending_choice = None
         is_red_support_prep_action = (
             self.turn_phase == TurnPhase.EVENT
             and mode == "action"
@@ -4555,12 +4670,11 @@ class Game:
             effective_type = "propaganda"
 
         # 打出「購買費用有資金/宣傳的牌」類觸發（點燃熱情/樹立信心/商貿組織/基金會·共合會/
-        # 民族調和·星星之火/人同此心）要看實際購買費用組成，不能只看卡牌種類分類
-        # （例如「謀劃」種類是指揮，購買費用卻是資金1+宣傳1）。維持排除奧援卡（support）
-        # 的既有行為不變，只修正非奧援卡的種類/費用不一致問題。
+        # 民族調和·星星之火/人同此心）要看實際購買費用組成，不能只看卡牌種類分類。
+        # 奧援卡同樣有印刷購買費用；依卡面「其它購買費用有…的牌」文字也必須計入。
         purchase_cost = self._card_purchase_cost(played_card) or {}
-        cost_has_money = effective_type != 'support' and int(purchase_cost.get('money', 0) or 0) > 0
-        cost_has_propaganda = effective_type != 'support' and int(purchase_cost.get('propaganda', 0) or 0) > 0
+        cost_has_money = int(purchase_cost.get('money', 0) or 0) > 0
+        cost_has_propaganda = int(purchase_cost.get('propaganda', 0) or 0) > 0
         if self._player_has_ability(player, "國際線") and cost_has_money:
             cost_has_propaganda = True
             cost_has_money = False
@@ -4585,9 +4699,28 @@ class Game:
             action_context['era_followup_discard_choice'] = era_followup_discard_choice
         if target_player_id is not None:
             action_context['target_player_id'] = target_player_id
+
+        # Once the card is committed to play, record both printed purchase-cost components.
+        # Do this before an interactive support flow can return early with pending_choice;
+        # conditional cards still use the pre-card snapshot above, so a card cannot satisfy itself.
+        if cost_has_money:
+            self.turn_log["played_money_card"] = True
+        if cost_has_propaganda:
+            self.turn_log["played_propaganda_card"] = True
+
         if effective_type == 'support':
             support_resolution = self._execute_support_card(player, played_card)
             if support_resolution and support_resolution.get('pending_choice'):
+                if card_name == '北國奧援' and self.pending_choice:
+                    # No 北國奧援 effect has mutated the board at the initial target/sacrifice
+                    # choice, so this first step can be cancelled as an atomic card play.
+                    self.pending_choice.update({
+                        'cancellable': True,
+                        'rollback_card': played_card,
+                        'rollback_hand_index': index,
+                        'rollback_played_money_card': action_context['prior_played_money_card'],
+                        'rollback_played_propaganda_card': action_context['prior_played_propaganda_card'],
+                    })
                 if support_resolution.get('card_moved_out_of_play'):
                     action_context['removed_current_card'] = True
                 if not action_context.get('removed_current_card'):
@@ -4597,10 +4730,6 @@ class Game:
                 return {"success": True, "pending_choice": True, **support_resolution}
             if support_resolution and support_resolution.get('card_moved_out_of_play'):
                 action_context['removed_current_card'] = True
-        elif cost_has_money:
-            self.turn_log["played_money_card"] = True
-        if cost_has_propaganda:
-            self.turn_log["played_propaganda_card"] = True
         if int(purchase_cost.get('money', 0) or 0) > 0:
             self._track_event_progress('play_card_with_money', player=player)
         if int(purchase_cost.get('propaganda', 0) or 0) > 0:
@@ -5146,7 +5275,10 @@ class Game:
         # Movement points represent movement counts, not distance/cost budget.
         # Every legal organization move consumes one count; cards/effects grant counts.
         # 翻牆（牆內↔牆外）與赤鱲角機場移動花費 2 次遷移。
-        cost = 2 if (wall_crossing or (airport_move and to_town not in neighbors)) else 1
+        movement_rules = self.map.get('movement_rules', {}) or {}
+        move_cost = max(1, int(movement_rules.get('move_cost', 1) or 1))
+        wall_crossing_cost = max(1, int(movement_rules.get('wall_crossing_cost', 2) or 2))
+        cost = wall_crossing_cost if wall_crossing else (2 if airport_move and to_town not in neighbors else move_cost)
         if player.moves_left < cost:
             return {"error": "Not enough move points"}
 
@@ -6018,6 +6150,20 @@ class Game:
 
         pending_choice = None
         if self.pending_choice:
+            raw_pending_context = self.pending_choice.get('context')
+            pending_context = dict(raw_pending_context) if isinstance(raw_pending_context, dict) else {}
+            pending_effect_type = pending_context.get('effect_type')
+            pending_is_build = (
+                self.pending_choice.get('choice_key') in {'event_build_organization', 'era_red_build_near_target', 'card_build_organization'}
+                or (
+                    self.pending_choice.get('choice_key') == 'support_interaction'
+                    and self.pending_choice.get('step') == 'town'
+                    and pending_effect_type in {'interactive_build_anywhere_inner', 'interactive_build_near_inner'}
+                )
+            )
+            pending_remaining_builds = self.pending_choice.get('remaining_builds')
+            if pending_is_build and pending_remaining_builds is None:
+                pending_remaining_builds = int((pending_context.get('effect_payload') or {}).get('count', 1) or 1)
             pending_is_reaction = self.pending_choice.get('type') == 'reaction_choice'
             pending_is_for_viewer = viewer_player_id is None or self.pending_choice.get('player_id') == viewer_player_id
             pending_cards = self.pending_choice.get('cards') or []
@@ -6039,7 +6185,9 @@ class Game:
             pending_choice = {
                 'type': self.pending_choice.get('type'),
                 'choice_key': self.pending_choice.get('choice_key'),
-                'cancellable': self.pending_choice.get('choice_key') in CANCELLABLE_CHOICE_KEYS,
+                'interaction_kind': 'build_organization' if pending_is_build else None,
+                'remaining_builds': pending_remaining_builds,
+                'cancellable': bool(self.pending_choice.get('cancellable')) or self.pending_choice.get('choice_key') in CANCELLABLE_CHOICE_KEYS,
                 'player_id': self.pending_choice.get('player_id'),
                 'player_name': self.pending_choice.get('player_name'),
                 'prompt': pending_prompt,
@@ -6135,6 +6283,7 @@ class Game:
                     "deck_count": len(p.deck.draw_pile) if p.deck else 0,
                     "discard_count": len(p.deck.discard_pile) if p.deck else 0,
                     "discard_pile": [getattr(card, 'name', str(card)) for card in p.deck.discard_pile] if p.deck else [],
+                    "discard_variants": [self._support_card_variant_info(card) for card in p.deck.discard_pile] if p.deck else [],
                     "orgs": p.organizations
                 }
                 for p in self.players

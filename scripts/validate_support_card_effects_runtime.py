@@ -73,6 +73,12 @@ def _new_game(card_name, org_towns, tier, variant_index=0):
     red.deck.discard_pile = []
     g.turn_phase = TurnPhase.ACTION
     g.current_player_index = 0
+    g.pending_choice = None
+    g._deferred_auto_event = False
+    noop_event = g._event_by_name('歲月靜好')
+    g.current_event = dict(noop_event or {})
+    g.event_progress = {'count': 0, 'required': 0, 'succeeded': True, 'settled': True, 'status': 'idle'}
+    g.event_modifiers = []
     support = g._make_support_card(card_name, variant_index=variant_index)
     if card_name == '南洋奧援' and tier == 1:
         player.hand = [support, Card('保留手牌', 'command', {})]

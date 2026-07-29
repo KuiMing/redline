@@ -48,6 +48,61 @@
   - 若要 LAN playtest：重啟 server 綁 `0.0.0.0:8000` 並確認 `TCP *:8000 (LISTEN)`。
 
 ### P1：LAN / end-to-end playtest feedback
+- [done] Playtest rule/flow bug：陣營在部分應合法城鎮無法建立組織（紅軍：`廣州`、`金門`；臺灣：`金門`）。
+  - 2026-07-29 回報情境：紅軍嘗試在 `廣州` 建立組織時，UI／系統似乎未提供或拒絕建立；後續也發現紅軍與臺灣似乎都無法在 `金門` 建立組織。
+  - 期望：`廣州` 應允許紅軍建立，`金門` 應同時允許紅軍與臺灣建立；符合一般距離、佔位與效果限制時，前端候選高亮與後端建立驗證都應允許。
+  - 需檢查：兩座城鎮資料中的陣營適用設定（尤其 `金門` 的紅軍／臺灣適用範圍）、`can_faction_develop_in_town`／`can_develop_in_town`、後端 legal build projection，以及地圖建立候選清單是否錯誤排除合法陣營。
+  - 2026-07-29 root cause：陣營標籤與後端陣營合法性均正確；問題是道路／鐵路鄰接資料非對稱（例如 `金門→廈門` 有邊、`廈門→金門` 無反向邊，`廣州→桂林／南寧` 同理），一格建立從缺反向邊的一側出發時會被距離投影排除。全圖掃描另見 12 條 road、21 條 rail 非對稱與 `台東／臺東` 異體字幽靈連線。
+  - 2026-07-29 已修正：以 Leaflet 原有 185 條無向 road／286 條無向 rail 為視覺基準，補齊 canonical `map.json` 缺少的反向 adjacency 並統一 `台東→臺東`；改造前後無向 edge set 完全相同，沒有新增或刪除任何視覺連線。紅軍 `桂林／南寧→廣州`、紅軍與臺灣 `廈門→金門` 的陣營、1 格距離及實際建造候選矩陣均通過。
+  - 地圖單一來源：正式、embed 與 standalone Leaflet 已移除內嵌 `MAP_DATA`／`GEO_COORDS`，統一讀取 `/map-data` 與 `/map-geo-coordinates`。`movement_rules` 明確拆成道路 1 格、鐵路 3 格、一般移動成本 1、翻牆 1 格／成本 2；後端鐵路 range 與移動成本改讀 canonical schema。
+  - 驗證：`test_map_data_single_source.py` 5/5、`validate_map_single_source_browser.py` 8/8（269 城鎮、185 road、286 rail、兩個 canonical API、standalone 選單無重複、console 0 error）、`validate_movement_rules.py` 13/13；正式 UI、可建數、金門標籤、陣營顯示回歸全綠。
+
+- [done] Playtest UI：點選棄牌堆中的卡牌時，應可查看該卡牌的完整卡牌圖片。
+  - 2026-07-29 回報情境：「戰況紀錄」的玩家資訊卡目前以文字籤列出棄牌堆卡名，但無法從這裡查看卡牌圖片。
+  - 期望：棄牌堆中的每張卡牌／卡名都可點選，點擊後開啟該卡牌的完整卡面圖片預覽；應沿用既有卡牌預覽互動與文字 fallback，不改變棄牌堆內容或遊戲狀態。
+  - 需檢查：`static/app.js` 戰況總覽棄牌堆 render、棄牌卡名 click handler、既有完整卡面 preview overlay，以及卡名到 `static/card-art/` 圖片資產的映射。
+  - 回報截圖：`/Users/benmini/.hermes/cache/images/img_3e2ea2cf475f.jpg`。
+  - 2026-07-29 已修正：後端投影 `discard_variants`；卡名改為可點擊按鈕並沿用 `selectCardDetail()`／完整卡面 modal。正式 browser proof 2/2 中的棄牌預覽項通過，包含北國奧援 variant 0 精確卡面。
+
+- [done] Playtest card interaction bug：先打出 `臺灣奧援`，再打出 `點燃熱情`，應可抽 2 張牌。
+  - 2026-07-29 回報情境：玩家先打出 `臺灣奧援`，接著打出 `點燃熱情`，目前似乎沒有正確套用可抽 2 張牌的結果。
+  - 期望：系統應辨識本回合先前已打出的 `臺灣奧援`，使後續 `點燃熱情` 依卡牌互動效果抽 2 張牌；實際手牌、牌庫與戰況紀錄應同步反映。
+  - 需檢查：`點燃熱情` 的抽牌數判定、`臺灣奧援` 的本回合已打出／牌色／類型紀錄、出牌順序追蹤，以及抽牌與棄牌堆結算時機。
+  - 2026-07-29 已修正：購買費用 trigger 改依 `_card_purchase_cost()`，不再排除 support 卡；費用旗標在互動奧援提前返回前即記錄，且 `點燃熱情` 仍使用打出自己前的旗標快照。focused regression PASS。
+
+- [done] Playtest UI/flow：建立組織流程應顯示目前還可建立幾個組織。
+  - 2026-07-29 回報情境：玩家可能一口氣使用多張 `宣傳家`，再集中處理建立組織；目前畫面缺少「剩餘可建立組織數」提示，容易不知道還有幾次建立待處理。
+  - 期望：建立組織選點流程除了顯示可建立城鎮數，也要清楚顯示本批／目前尚可建立的組織數量，並在每次成功建立後即時遞減，直到所有累積建立效果處理完畢。
+  - 需檢查：多張 `宣傳家` 的效果累積與 pending-choice queue、剩餘建立次數的後端狀態投影、`static/app.js`／戰略地圖的建立提示，以及連續建立後的流程推進與計數同步。
+  - 2026-07-29 已修正：建立 choice 投影 `interaction_kind=build_organization`／`remaining_builds`；允許未結算建立時繼續打出宣傳家並累積 entitlement；每次建立後重新計算候選、遞減次數，且每張宣傳家各自給 1 移動。focused regression 驗證連打 2 張、連建 2 次、移動累積為 2。
+
+- [done] Playtest UI/flow：使用 `東洋奧援` 建立組織時，應直接在戰略地圖顯示合法城鎮，而不是跳出城鎮選單。
+  - 2026-07-29 回報情境：`東洋奧援` 進入建立組織選擇時，目前以選單列出城鎮。
+  - 期望：系統應自動切換／聚焦戰略地圖，直接高亮所有可建立組織的合法城鎮，讓玩家在地圖上點選；提示應顯示可建立城鎮數與該效果剩餘建立數，不再出現重複的城鎮選單。
+  - 需檢查：`東洋奧援` 各級效果的 pending choice 類型與建立數量、support-card build choice 的前端 routing、戰略地圖 legal target projection／高亮，以及選點完成後的連續建立流程。
+  - 2026-07-29 已修正：`support_interaction` 的 town step 以 semantic build payload 導向戰略地圖，不顯示重複選單；正式 browser proof 驗證後端 34 個候選與 34 個中性 marker 一致，並顯示「尚可建立組織：1 個」。
+
+- [done] Playtest UI/flow：使用 `北國奧援` 時，在尚未選擇／結算目標前可取消使用。
+  - 2026-07-29 回報情境：玩家進入該奧援卡的使用／目標選擇流程後，目前似乎無法取消並返回。
+  - 期望：效果尚未實際結算前應提供明確的「取消使用」入口；取消後不消耗卡牌、不執行效果、不留下 pending choice，並讓玩家回到可重新選擇行動的狀態。
+  - 需檢查：`北國奧援` 各級效果的 pending-choice 建立與結算時點、support card 出牌是否過早移出手牌、choice cancellable policy、前端取消按鈕，以及取消後的卡牌／行動／階段狀態還原。
+  - 2026-07-29 已修正：初始選擇可交易式取消，還原卡牌位置、購買費用旗標與 pending；第一個目標結算後取消即關閉。同步修正 III 級 `count:2` 連續瓦解。unit 7/7 與 browser `BEIGUO_TWO_STAGE_DISSOLVE_VALIDATION` 7/7。
+
+- [done] Playtest deck lifecycle investigation：紅軍結束回合時棄牌堆似乎會被直接清空，且可能沒有正確洗回牌庫。
+  - 2026-07-29 回報情境：紅軍只要結束回合，畫面上的紅軍棄牌堆就直接變空；同時懷疑這些牌沒有經過洗牌進入新的抽牌堆。
+  - 期望：結束回合不應無條件清空棄牌堆；棄牌應持續保留，只有抽牌堆需要補充時才依規則將棄牌堆洗牌後轉成新的抽牌堆，且所有卡牌總數與區域歸屬必須守恆。
+  - 需檢查：紅軍 `_end_turn`／補牌流程、`Deck.draw()` 的棄牌重洗邏輯、紅軍專屬牌與借用卡的棄牌目的地、state 序列化的 discard projection，以及 UI 是否只是錯誤隱藏而非後端真的清空。
+  - 2026-07-29 結論：runtime 非 bug。抽牌堆足夠時棄牌保持；抽牌堆不足才將完整棄牌洗回，卡牌身分與總數守恆。UI 戰況紀錄新增「牌庫」張數，讓棄牌變空時可理解為已洗回而非消失。
+
+#### 2026-07-29 本批修正順序（source-backed triage）
+1. **牌堆生命週期／卡牌守恆（P0，M）**：先用紅軍回合結束的真實路徑確認「抽牌堆未空時棄牌保留、抽牌堆空時才洗回」與總卡數守恆；這是最可能造成卡牌永久遺失的項目，先排除資料破壞，再處理其他卡牌互動。
+2. **`臺灣奧援` → `點燃熱情` 抽 2（P1，S）**：已定位 `play_card()` 明確把 support 排除於購買費用含宣傳／資金的回合旗標之外，但卡面條件只寫「其它購買費用有宣傳的牌」；修正共用費用判定並補 action-card regression。
+3. **合法建立城鎮（P1，M）**：`map.json` 已確認 `廣州` 含紅軍標籤、`金門` 含紅軍與臺灣標籤，故不能只改資料；需以實際建立來源重現並修正 backend legal projection／距離／佔位判定，避免 UI 與後端分歧。
+4. **棄牌堆卡牌圖片預覽（P2，S）**：既有 `selectCardDetail()`／`cardPreviewModal` 可直接重用，將文字籤改成可點擊卡牌元素並補 browser proof；與規則狀態無依賴，可作為前面後端修正後的快速 UI 項目。
+5. **`東洋奧援` 改走地圖選點（P1，S～M）**：後端 `support_interaction` 已提供 `towns`，前端目前只把一般 card/event build town choice 導向地圖；擴充共用 routing，並與第 3 項共用合法候選驗證。
+6. **顯示／支援累積剩餘建立數（P1，L）**：不只是文案；現行單一 `pending_choice` 會阻止連打多張 `宣傳家`，需先定義並實作建立效果 queue／remaining count，再投影到地圖提示。依賴第 3、5 項的共用合法建立流程。
+7. **`北國奧援` 可取消使用（P1，L）**：卡片目前可能在建立 pending choice 時已移出手牌，取消需要交易式 rollback（卡牌、已完成步驟、pending、行動狀態）；最後處理以避免和 support 地圖流程重做互相衝突。
+
 - [done] Playtest UI：紅軍抽到 `一帶一路 南洋` 時，戰略地圖應自動對準南洋區域。
   - 2026-07-29 回報情境：抽到 `一帶一路 南洋`，輪到紅軍回合並進入「免費在南洋無視距離建立 1 個組織」的自動事件選點流程時，地圖沒有自動對準南洋。
   - root cause：事件 build highlight 先依 11 個南洋候選執行 `fitBounds`，但地圖 iframe 隨後收到第一份 WebSocket state 時，`focusOwnBaseOnFirstState()` 又把視角覆寫回觀看者根據地北京；同一 highlight key 後續不會重複自動對焦，因此候選外框存在、視角卻停在北京。

@@ -699,6 +699,14 @@ def get_town_coordinates():
 def map_test():
     return FileResponse("static/map_test.html")
 
+@app.get("/map-geo-coordinates")
+def get_map_geo_coordinates():
+    from pathlib import Path
+    import json
+    path = Path(__file__).resolve().parent.parent / "data" / "map_geo_coordinates.v1.json"
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
+
 @app.get("/map-data")
 def get_map_data():
     from pathlib import Path

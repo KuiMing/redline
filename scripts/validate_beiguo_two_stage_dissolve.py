@@ -32,7 +32,7 @@ def start_flow(page):
     page.goto(f'{BASE_URL}/?game_id={gid}&player_id={pid}', wait_until='networkidle')
     page.wait_for_selector('#gameShell', state='visible', timeout=10000)
     page.wait_for_timeout(900)
-    page.evaluate("() => { const b=document.getElementById('closeFactionActionModal'); if(b) b.click(); }")
+    page.evaluate("() => { if (typeof closeEventReveal === 'function') closeEventReveal(); const b=document.getElementById('closeFactionActionModal'); if(b) b.click(); }")
     page.wait_for_timeout(200)
     page.click('button.hand-card-action-btn[data-card-name="北國奧援"][data-card-mode="action"]')
     page.wait_for_timeout(800)
@@ -61,13 +61,36 @@ def check(browser):
     def record(name, ok, detail=None):
         results.append({'name': name, 'ok': bool(ok), 'detail': detail or {}})
 
+    # --- Path 0: cancel before choosing the sacrificed organization ---
+    cancel_page = browser.new_context(viewport={'width': 1280, 'height': 800}).new_page()
+    cancel_pid = start_flow(cancel_page)
+    cancel_page.click('#closeChoiceModal')
+    cancel_page.wait_for_timeout(800)
+    cancel_state = cancel_page.evaluate("() => window.lastGameState")
+    cancel_me = next((p for p in cancel_state.get('players', []) if p.get('id') == cancel_pid), {})
+    cancel_hand_count = len(cancel_me.get('hand') or [])
+    cancel_enemy_orgs = next((p.get('orgs') for p in cancel_state.get('players', []) if p.get('faction') == 'red_army'), None)
+    record(
+        'initial_cancel_restores_card_and_leaves_board_unchanged',
+        cancel_state.get('pending_choice') is None
+        and cancel_hand_count == 1
+        and sum((cancel_me.get('orgs') or {}).values()) == 2
+        and sum((cancel_enemy_orgs or {}).values()) == 1,
+        {
+            'hand_count': cancel_hand_count,
+            'mine': cancel_me.get('orgs'),
+            'enemy': cancel_enemy_orgs,
+        },
+    )
+    cancel_page.close()
+
     # --- Path A: complete both stages through the modal ---
     page = browser.new_context(viewport={'width': 1280, 'height': 800}).new_page()
     pid = start_flow(page)
     s1 = step_info(page)
     record(
-        'sacrifice_step_has_no_close_button_so_it_cannot_be_stranded',
-        s1['step'] == 'sacrifice_town' and s1['modalVisible'] and not s1['closeVisible'],
+        'sacrifice_step_has_cancel_button_before_any_board_mutation',
+        s1['step'] == 'sacrifice_town' and s1['modalVisible'] and s1['closeVisible'],
         {'step1': s1},
     )
     page.click('#choiceModalCards .modal-choice-btn')  # pick the own org to sacrifice

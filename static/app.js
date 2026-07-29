@@ -1603,11 +1603,18 @@ window.addEventListener('message', (event) => {
 });
 
 function eventBuildChoiceMapPayload(choice, sourceName = '', resolvedTitle = '') {
-  if (!choice || !['event_build_organization', 'era_red_build_near_target', 'card_build_organization'].includes(choice.choice_key)) return null;
+  const isStandardBuildChoice = choice?.interaction_kind === 'build_organization'
+    || ['event_build_organization', 'era_red_build_near_target', 'card_build_organization'].includes(choice?.choice_key);
+  const isOrientSupportBuildChoice = choice?.choice_key === 'support_interaction'
+    && choice?.step === 'town'
+    && (choice?.source_name || sourceName) === '東洋奧援';
+  if (!choice || (!isStandardBuildChoice && !isOrientSupportBuildChoice)) return null;
   const towns = (choice.towns || []).filter(entry => entry?.town);
   if (!towns.length) return null;
   return {
     mode: 'support-targets',
+    actionKind: 'build',
+    remainingBuilds: Math.max(1, Number(choice.remaining_builds || 1)),
     choiceKey: choice.choice_key,
     sourceName: sourceName || choice.source_name || resolvedTitle || '建立組織',
     prompt: choice.prompt || '事件卡效果：請在戰略地圖選擇可建立組織的城鎮。',
@@ -1708,7 +1715,10 @@ function renderChoiceModal(state) {
   const choiceKey = choice.choice_key || '';
   const sourceName = choice.source_name || choiceKey || '';
 
-  if (['event_build_organization', 'era_red_build_near_target', 'card_build_organization'].includes(choiceKey) && (choiceType === 'town_choice' || choice.step === 'town')) {
+  const isMapBuildChoice = choice.interaction_kind === 'build_organization'
+    || ['event_build_organization', 'era_red_build_near_target', 'card_build_organization'].includes(choiceKey)
+    || (choiceKey === 'support_interaction' && choice.step === 'town' && sourceName === '東洋奧援');
+  if (isMapBuildChoice && (choiceType === 'town_choice' || choice.step === 'town')) {
     const payload = eventBuildChoiceMapPayload(choice, sourceName, sourceName);
     overlay.style.display = 'none';
     overlay.classList.remove('choice-modal-map-context');
@@ -2746,10 +2756,16 @@ function renderPlayerStatusCards(state) {
     const money = player.resources?.money ?? 0;
     const propaganda = player.resources?.propaganda ?? 0;
     const handCount = player.hand?.length ?? 0;
+    const deckCount = player.deck_count ?? 0;
     const discardPile = player.discard_pile || [];
+    const discardVariants = player.discard_variants || [];
     const discardCount = player.discard_count ?? discardPile.length;
     const discardPreview = discardPile.length
-      ? discardPile.map(card => `<span class="player-status-discard-card">${escapeHtml(card)}</span>`).join('')
+      ? discardPile.map((card, index) => {
+          const variantIndex = Number.parseInt(discardVariants[index]?.variant_index, 10);
+          const variantAttr = Number.isInteger(variantIndex) ? ` data-card-variant-index="${variantIndex}"` : '';
+          return `<button type="button" class="player-status-discard-card" data-card-name="${escapeHtml(card)}" data-card-zone="discard"${variantAttr} aria-label="查看 ${escapeHtml(card)} 完整卡面">${escapeHtml(card)}</button>`;
+        }).join('')
       : '<span class="player-status-discard-empty">無</span>';
     const moves = player.moves_left ?? 0;
     const isCurrent = state.current_player === player.name;
@@ -2775,6 +2791,7 @@ function renderPlayerStatusCards(state) {
           <div class="player-status-stat"><span>資金</span><strong>${money}</strong></div>
           <div class="player-status-stat"><span>宣傳</span><strong>${propaganda}</strong></div>
           <div class="player-status-stat"><span>手牌</span><strong>${handCount}</strong></div>
+          <div class="player-status-stat"><span>牌庫</span><strong>${deckCount}</strong></div>
           <div class="player-status-stat"><span>棄牌</span><strong>${discardCount}</strong></div>
           <div class="player-status-stat"><span>移動</span><strong>${moves}</strong></div>
         </div>
@@ -2784,6 +2801,10 @@ function renderPlayerStatusCards(state) {
         </div>
       </article>`;
   }).join('');
+
+  target.querySelectorAll('.player-status-discard-card[data-card-name]').forEach(cardButton => {
+    cardButton.addEventListener('click', () => selectCardDetail(cardButton));
+  });
 }
 
 // 個人資訊頁內 Tab：遊戲中隨時查看自己陣營的能力/規則限制/獲勝條件。
@@ -3095,8 +3116,13 @@ async function render(state) {
     if (me && me.hand) {
       const rawPhase = String(state.turn_phase || '').toLowerCase();
       const hasMyPendingChoice = !!(state.pending_choice && state.pending_choice.player_id === me.id);
+      const canStackPropagandist = (cardName, mode) => hasMyPendingChoice
+        && state.pending_choice?.interaction_kind === 'build_organization'
+        && state.pending_choice?.source_name === '宣傳家'
+        && cardName === '宣傳家'
+        && mode === 'action';
       const canPlayHandCardMode = (cardName, mode) => {
-        if (!isMyTurn || hasMyPendingChoice) return false;
+        if (!isMyTurn || (hasMyPendingChoice && !canStackPropagandist(cardName, mode))) return false;
         if (rawPhase === 'action') return true;
         return rawPhase === 'event' && mode === 'action' && cardName === '紅軍奧援' && me.faction === 'red_army';
       };

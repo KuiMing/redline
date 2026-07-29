@@ -2288,6 +2288,22 @@ body {
   border: 1px solid rgba(248, 113, 113, 0.42);
 }
 
+button.player-status-discard-card {
+  appearance: none;
+  font-family: inherit;
+  line-height: 1.2;
+  cursor: zoom-in;
+}
+
+button.player-status-discard-card:hover,
+button.player-status-discard-card:focus-visible {
+  color: #fff7ed;
+  background: rgba(185, 28, 28, 0.78);
+  border-color: rgba(254, 202, 202, 0.82);
+  outline: 2px solid rgba(251, 191, 36, 0.7);
+  outline-offset: 1px;
+}
+
 .player-status-discard-empty {
   color: #94a3b8;
   background: rgba(15, 23, 42, 0.72);

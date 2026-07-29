@@ -1,0 +1,34 @@
+{
+  "summary": {
+    "total": 2,
+    "passed": 2,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "east_support_uses_map_and_shows_remaining_builds",
+      "ok": true,
+      "detail": {
+        "choice_key": "support_interaction",
+        "interaction_kind": "build_organization",
+        "remaining_builds": 1,
+        "server_town_count": 34,
+        "candidate_marker_count": 34,
+        "hint": "東洋奧援：選擇 1 個建立組織的牆內城鎮。 可建立城鎮：34 個。尚可建立組織：1 個。地圖上已用中性色外框標出可選城鎮。請點選中性色外框城鎮，然後使用左側「在目前城鎮建立組織（效果）」按鈕完成建立。",
+        "choice_modal_display": "none"
+      },
+      "screenshot": "/Users/benmini/.openclaw/workspace/redline/docs/records/playtest-20260729/east_support_map_build.png"
+    },
+    {
+      "name": "discard_card_opens_exact_full_card_preview",
+      "ok": true,
+      "detail": {
+        "modal_display": "flex",
+        "preview_label": "北國奧援 放大檢視",
+        "preview_image_src": "/static/card-art/support/13_%E5%8C%97%E5%9C%8B%E5%A5%A7%E6%8F%B4_%E6%AD%90%E6%B4%B2-%E6%9D%B1%E6%B4%8B.png",
+        "discard_variant_index": "0"
+      },
+      "screenshot": "/Users/benmini/.openclaw/workspace/redline/docs/records/playtest-20260729/discard_card_preview.png"
+    }
+  ]
+}

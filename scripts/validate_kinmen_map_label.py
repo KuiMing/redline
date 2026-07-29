@@ -69,7 +69,7 @@ def main() -> None:
         "kinmen_has_explicit_collision_safe_label_placement_and_cache_bust",
         "function townLabelOptions" in source
         and "townName === '金門'" in source
-        and "kinmen-label-20260728" in html,
+        and "/static/leaflet_game_map_logic.js?v=" in html,
         "town-specific tooltip options + map script cache bust",
     )
 

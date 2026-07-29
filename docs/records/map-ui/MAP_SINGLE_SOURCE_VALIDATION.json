@@ -1,0 +1,42 @@
+{
+  "summary": {
+    "total": 8,
+    "passed": 8,
+    "failed": 0
+  },
+  "checks": {
+    "loads_map_data_endpoint": true,
+    "loads_geo_endpoint": true,
+    "renders_269_towns": true,
+    "preserves_185_visual_roads": true,
+    "preserves_286_visual_rails": true,
+    "movement_schema_matches_rules": true,
+    "standalone_filters_are_not_duplicated": true,
+    "console_zero_errors": true
+  },
+  "detail": {
+    "counts": {
+      "towns": 269,
+      "roads": 185,
+      "rails": 286
+    },
+    "canonicalTownCount": 269,
+    "geoTownCount": 269,
+    "movementRules": {
+      "road_range": 1,
+      "rail_range": 3,
+      "move_cost": 1,
+      "wall_crossing_range": 1,
+      "wall_crossing_cost": 2
+    },
+    "standaloneFilterOptionCounts": {
+      "rulers": 10,
+      "camps": 10,
+      "types": 3
+    },
+    "requestedMapData": true,
+    "requestedGeoCoordinates": true,
+    "consoleErrors": []
+  },
+  "screenshot": "/Users/benmini/.openclaw/workspace/redline/docs/records/map-ui/MAP_SINGLE_SOURCE_UI.png"
+}

@@ -357,6 +357,7 @@
         "choice_key": "draw_then_discard_choice"
       },
       "action_log_tail": [
+        "[Turn 1] Event drawn: 歲月靜好 (no-op)",
         "[Turn 1] player played 南洋奧援",
         "[Turn 1] player discarded 補牌4 via 南洋奧援"
       ],
@@ -415,7 +416,6 @@
         "success": true
       },
       "action_log_tail": [
-        "[Turn 1] Event drawn: 貿易戰加劇",
         "[Turn 1] player resolved 南洋奧援 at tier 2 (matched rulers: 臺灣, 東洋)",
         "[Turn 1] player played 南洋奧援"
       ],
@@ -524,6 +524,7 @@
         "success": true
       },
       "action_log_tail": [
+        "[Turn 1] Event drawn: 歲月靜好 (no-op)",
         "[Turn 1] player resolved 印度奧援 at tier 1 (matched rulers: none)",
         "[Turn 1] player played 印度奧援"
       ],
@@ -635,7 +636,6 @@
         "success": true
       },
       "action_log_tail": [
-        "[Turn 1] Event drawn: 貿易戰加劇",
         "[Turn 1] player resolved 印度奧援 at tier 3 (matched rulers: none)",
         "[Turn 1] player played 印度奧援"
       ],

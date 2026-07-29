@@ -1,18 +1,32 @@
 {
   "summary": {
-    "total": 6,
-    "passed": 6,
+    "total": 7,
+    "passed": 7,
     "failed": 0
   },
   "results": [
     {
-      "name": "sacrifice_step_has_no_close_button_so_it_cannot_be_stranded",
+      "name": "initial_cancel_restores_card_and_leaves_board_unchanged",
+      "ok": true,
+      "detail": {
+        "hand_count": 1,
+        "mine": {
+          "巴黎": 1,
+          "日內瓦": 1
+        },
+        "enemy": {
+          "慕尼黑": 1
+        }
+      }
+    },
+    {
+      "name": "sacrifice_step_has_cancel_button_before_any_board_mutation",
       "ok": true,
       "detail": {
         "step1": {
           "step": "sacrifice_town",
           "modalVisible": true,
-          "closeVisible": false
+          "closeVisible": true
         }
       }
     },
