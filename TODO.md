@@ -48,10 +48,12 @@
   - 若要 LAN playtest：重啟 server 綁 `0.0.0.0:8000` 並確認 `TCP *:8000 (LISTEN)`。
 
 ### P1：LAN / end-to-end playtest feedback
-- [todo] Playtest UI：紅軍抽到 `一帶一路 南洋` 時，戰略地圖應自動對準南洋區域。
+- [done] Playtest UI：紅軍抽到 `一帶一路 南洋` 時，戰略地圖應自動對準南洋區域。
   - 2026-07-29 回報情境：抽到 `一帶一路 南洋`，輪到紅軍回合並進入「免費在南洋無視距離建立 1 個組織」的自動事件選點流程時，地圖沒有自動對準南洋。
-  - 期望：即使目前是紅軍回合，事件建立選擇出現時仍應自動調整地圖視角，讓南洋合法候選城鎮直接進入可視範圍；玩家不必先手動平移或縮放尋找南洋。
-  - 需檢查：事件 `pending_choice` 的地圖高亮與自動 fit/focus 流程、紅軍回合是否被一般「觀看者根據地／首次狀態」視角邏輯覆蓋，以及 `static/leaflet_game_map_logic.js` 收到 `一帶一路 南洋` build 候選時是否有依候選 bounds 執行視角定位。
+  - root cause：事件 build highlight 先依 11 個南洋候選執行 `fitBounds`，但地圖 iframe 隨後收到第一份 WebSocket state 時，`focusOwnBaseOnFirstState()` 又把視角覆寫回觀看者根據地北京；同一 highlight key 後續不會重複自動對焦，因此候選外框存在、視角卻停在北京。
+  - 2026-07-29 已修正：集中定義會接管地圖視角的 map-choice keys；第一份 state 若已有地圖 pending choice，就將該候選視角視為初始視角並略過根據地自動聚焦。一般無 pending choice 的開局仍維持聚焦自己的根據地。同步更新地圖 JS cache bust。
+  - 驗證：新增 `uv run --with playwright python scripts/validate_belt_road_nanyang_map_focus.py`（7/7）：紅軍 ACTION 的 `event_build_organization` 候選為 11 個南洋城鎮、UI 自動切到戰略地圖、中心由北京改至南洋、11 個合法候選全部在 viewport 內、提示數量一致、非行動玩家仍保留自己的根據地初始視角、console 0 error。回歸：`validate_map_label_zoom_and_base_view.py` 6/6、`validate_buildable_town_count.py` 4/4、`validate_event_card_zoom_preview.py` 11/11、JS/Python syntax 與 `git diff --check` PASS。
+  - proof：`docs/records/event-cards/BELT_ROAD_NANYANG_MAP_FOCUS_VALIDATION.{json,md}`、`BELT_ROAD_NANYANG_MAP_FOCUS.png`。
 
 - [done] Playtest UI：修復金門城鎮標籤被廈門標籤遮住。
   - 2026-07-28 root cause：金門（118.319, 24.432）與廈門（118.0894, 24.4798）地理位置接近；兩個 Leaflet permanent tooltip 原本都固定置於 marker 上方。在 zoom 5／6／7 實測重疊面積分別為 604.5／367.5／170.5 px²，且資料渲染順序較後的廈門蓋在金門上方，造成金門名稱看似消失。

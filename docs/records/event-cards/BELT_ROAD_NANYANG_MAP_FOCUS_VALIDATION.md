@@ -1,0 +1,211 @@
+# 一帶一路南洋地圖自動對焦驗證
+
+Summary: 7/7 passed
+
+- Screenshot: `docs/records/event-cards/BELT_ROAD_NANYANG_MAP_FOCUS.png`
+- Re-run: `uv run --with playwright python scripts/validate_belt_road_nanyang_map_focus.py`
+
+## PASS — red_turn_has_nanyang_event_build_choice
+
+```json
+{
+  "current_player": "紅軍",
+  "turn_phase": "action",
+  "choice_key": "event_build_organization",
+  "region": "southeast_asia",
+  "candidate_names": [
+    "仰光",
+    "佬沃",
+    "吉隆坡",
+    "新加坡",
+    "曼谷",
+    "老街",
+    "芒賽",
+    "賀猛",
+    "邦康",
+    "雅加達",
+    "馬尼拉"
+  ]
+}
+```
+
+## PASS — event_choice_opens_strategic_map
+
+```json
+{
+  "activeView": "map",
+  "center": {
+    "lat": 8.407168163601076,
+    "lng": 108.63281250000001
+  },
+  "zoom": 3,
+  "bounds": {
+    "north": 47.635783590864854,
+    "south": -35.02999636902567,
+    "east": 189.14062500000003,
+    "west": 28.125000000000004
+  },
+  "candidateVisibility": [
+    {
+      "lat": 16.8661,
+      "lng": 96.1561,
+      "visible": true
+    },
+    {
+      "lat": 18.196,
+      "lng": 120.5927,
+      "visible": true
+    },
+    {
+      "lat": 3.139,
+      "lng": 101.6869,
+      "visible": true
+    },
+    {
+      "lat": 1.3521,
+      "lng": 103.8198,
+      "visible": true
+    },
+    {
+      "lat": 13.7563,
+      "lng": 100.5018,
+      "visible": true
+    },
+    {
+      "lat": 22.4856,
+      "lng": 103.9707,
+      "visible": true
+    },
+    {
+      "lat": 21.7,
+      "lng": 101.3,
+      "visible": true
+    },
+    {
+      "lat": 20.05,
+      "lng": 98.8,
+      "visible": true
+    },
+    {
+      "lat": 22.17,
+      "lng": 99.2,
+      "visible": true
+    },
+    {
+      "lat": -6.2088,
+      "lng": 106.8456,
+      "visible": true
+    },
+    {
+      "lat": 14.5995,
+      "lng": 120.9842,
+      "visible": true
+    }
+  ],
+  "hint": "一帶一路 南洋：在指定區域免費建立 1 個組織。 可建立城鎮：11 個。地圖上已用中性色外框標出可選城鎮。請點選中性色外框城鎮，然後使用左側「在目前城鎮建立組織（效果）」按鈕完成建立。"
+}
+```
+
+## PASS — map_auto_focuses_nanyang_instead_of_beijing_base
+
+```json
+{
+  "center": {
+    "lat": 8.407168163601076,
+    "lng": 108.63281250000001
+  },
+  "zoom": 3,
+  "bounds": {
+    "north": 47.635783590864854,
+    "south": -35.02999636902567,
+    "east": 189.14062500000003,
+    "west": 28.125000000000004
+  }
+}
+```
+
+## PASS — all_legal_nanyang_candidates_are_visible
+
+```json
+[
+  {
+    "lat": 16.8661,
+    "lng": 96.1561,
+    "visible": true
+  },
+  {
+    "lat": 18.196,
+    "lng": 120.5927,
+    "visible": true
+  },
+  {
+    "lat": 3.139,
+    "lng": 101.6869,
+    "visible": true
+  },
+  {
+    "lat": 1.3521,
+    "lng": 103.8198,
+    "visible": true
+  },
+  {
+    "lat": 13.7563,
+    "lng": 100.5018,
+    "visible": true
+  },
+  {
+    "lat": 22.4856,
+    "lng": 103.9707,
+    "visible": true
+  },
+  {
+    "lat": 21.7,
+    "lng": 101.3,
+    "visible": true
+  },
+  {
+    "lat": 20.05,
+    "lng": 98.8,
+    "visible": true
+  },
+  {
+    "lat": 22.17,
+    "lng": 99.2,
+    "visible": true
+  },
+  {
+    "lat": -6.2088,
+    "lng": 106.8456,
+    "visible": true
+  },
+  {
+    "lat": 14.5995,
+    "lng": 120.9842,
+    "visible": true
+  }
+]
+```
+
+## PASS — map_hint_matches_event_candidates
+
+```json
+"一帶一路 南洋：在指定區域免費建立 1 個組織。 可建立城鎮：11 個。地圖上已用中性色外框標出可選城鎮。請點選中性色外框城鎮，然後使用左側「在目前城鎮建立組織（效果）」按鈕完成建立。"
+```
+
+## PASS — non_acting_viewer_keeps_own_base_initial_focus
+
+```json
+{
+  "center": {
+    "lat": 25.033,
+    "lng": 121.5654
+  },
+  "zoom": 9
+}
+```
+
+## PASS — browser_console_has_no_errors
+
+```json
+[]
+```

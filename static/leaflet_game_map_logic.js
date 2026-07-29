@@ -1076,10 +1076,35 @@ window.addEventListener('message', (event) => {
 
 let initialBaseViewDone = false;
 
+const INITIAL_VIEW_MAP_CHOICE_KEYS = new Set([
+  'event_build_organization',
+  'era_red_build_near_target',
+  'card_build_organization',
+  'support_interaction',
+  'card_dissolve_interaction',
+  'intel_network_dissolve_target',
+  'event_red_dissolve',
+  'red_army_state_security_target',
+  'era_red_bonus_dissolve_target',
+]);
+
+function pendingChoiceOwnsInitialMapView(state) {
+  const choice = state?.pending_choice || null;
+  const choiceKey = choice?.choice_key || '';
+  return !!(choice && choice.player_id === mapPlayerId && INITIAL_VIEW_MAP_CHOICE_KEYS.has(choiceKey));
+}
+
 function focusOwnBaseOnFirstState(state) {
   // 開局預設視角是整個亞洲（focusAsia），玩家每場都要自己 zoom 到根據地；
   // 改為第一份遊戲狀態進來時直接以觀看者自己的根據地為中心 zoom 9（2026-07-18 使用者需求）。
   if (initialBaseViewDone || !state || state.error) return;
+  // A map-target choice can arrive before the iframe's first WebSocket state. Its candidate
+  // bounds have already become the meaningful initial view, so do not overwrite that focus
+  // with the viewer's base (e.g. 北京 replacing 一帶一路 南洋 candidates).
+  if (pendingChoiceOwnsInitialMapView(state)) {
+    initialBaseViewDone = true;
+    return;
+  }
   const me = (state.players || []).find(p => p.id === mapPlayerId);
   const baseTown = me && me.base ? byName.get(me.base) : null;
   if (!baseTown) return;
@@ -1093,8 +1118,7 @@ function applyGameStateToMap(state) {
   focusOwnBaseOnFirstState(state);
   window.__lastMapState = state;
   const pendingChoice = state?.pending_choice || null;
-  const mapChoiceKeys = ['event_build_organization', 'era_red_build_near_target', 'card_build_organization', 'support_interaction', 'card_dissolve_interaction', 'intel_network_dissolve_target', 'event_red_dissolve', 'red_army_state_security_target', 'era_red_bonus_dissolve_target'];
-  if (!pendingChoice || !mapChoiceKeys.includes(pendingChoice.choice_key)) {
+  if (!pendingChoice || !INITIAL_VIEW_MAP_CHOICE_KEYS.has(pendingChoice.choice_key)) {
     applySupportChoiceHighlight(null);
   }
   if (resolvingMove) {
