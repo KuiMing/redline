@@ -1775,8 +1775,12 @@ class Game:
             if choice.get('grant_propaganda_if_all_non_starter') and len(non_starters) == len(selected_cards):
                 player.resources['propaganda'] += int(choice.get('grant_propaganda_if_all_non_starter'))
             self.pending_choice = None
-            self.log(f"{player.name} discarded {len(selected_cards)} chosen card(s)")
-            return {'success': True, 'chosen_cards': [getattr(card, 'name', str(card)) for card in selected_cards]}
+            chosen_names = [getattr(card, 'name', str(card)) for card in selected_cards]
+            self.log(
+                f"{player.name} discarded {len(selected_cards)} chosen card(s): {', '.join(chosen_names)} "
+                f"(hand {len(player.hand)}, deck {len(player.deck.draw_pile)}, discard {len(player.deck.discard_pile)})"
+            )
+            return {'success': True, 'chosen_cards': chosen_names}
 
         if choice_key in {'armed_target_discard', 'era_bonus_discard_on_red_card'}:
             for card in selected_cards:

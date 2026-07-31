@@ -115,11 +115,107 @@ def run_scenario(browser, scenario):
     }
 
 
+def run_elite_defection_scenario(browser):
+    fixture = post_json('/test/setup-elite-defection-discard-proof', {})
+    context = browser.new_context(viewport={'width': 1440, 'height': 1000})
+    page = context.new_page()
+    console_errors = []
+    page.on('console', lambda message: console_errors.append(message.text) if message.type == 'error' else None)
+    page.goto(
+        f"{BASE_URL}/?game_id={fixture['game_id']}&player_id={fixture['player_id']}",
+        wait_until='networkidle',
+    )
+    page.wait_for_selector('#gameShell', state='visible', timeout=10000)
+    page.wait_for_function('window.lastGameState && window.lastGameState.turn_phase === "end"')
+    page.evaluate("""() => {
+      if (typeof closeEventReveal === 'function') closeEventReveal();
+      const factionClose = document.getElementById('closeFactionActionModal');
+      if (factionClose) factionClose.click();
+    }""")
+    before = player_snapshot(page.evaluate('() => window.lastGameState'), fixture['player_id'])
+    page.click('#advanceStepBtn')
+    page.wait_for_function(
+        '() => window.lastGameState?.pending_choice?.choice_key === "event_discard_self"',
+        timeout=10000,
+    )
+    pending_state = page.evaluate('() => window.lastGameState')
+    pending = player_snapshot(pending_state, fixture['player_id'])
+    donor_choice = page.locator('#choiceModalCards .choice-card-btn-multi').filter(has_text='樂捐者').first
+    donor_choice.click()
+    page.locator('#choiceModalCards button.modal-choice-btn', has_text='確認選擇').click()
+    page.wait_for_function('() => window.lastGameState && !window.lastGameState.pending_choice', timeout=10000)
+    page.wait_for_timeout(400)
+    after_state = page.evaluate('() => window.lastGameState')
+    after = player_snapshot(after_state, fixture['player_id'])
+    action_log = list(after_state.get('action_log') or [])
+
+    red_page = context.new_page()
+    red_page.goto(
+        f"{BASE_URL}/?game_id={fixture['game_id']}&player_id={fixture['red_player_id']}",
+        wait_until='networkidle',
+    )
+    red_page.wait_for_function('window.lastGameState?.current_player === "hostda"')
+    red_page.evaluate("""() => {
+      if (typeof closeEventReveal === 'function') closeEventReveal();
+      const factionClose = document.getElementById('closeFactionActionModal');
+      if (factionClose) factionClose.click();
+    }""")
+    red_page.click('#advanceStepBtn')
+    red_page.wait_for_function('() => window.lastGameState?.turn_phase === "end"')
+    red_page.click('#advanceStepBtn')
+    page.wait_for_function(
+        '() => window.lastGameState?.current_player === "host" && window.lastGameState?.current_event?.name === "上海合作組織"',
+        timeout=10000,
+    )
+    page.wait_for_timeout(400)
+    next_round_state = page.evaluate('() => window.lastGameState')
+    after_red_turn = player_snapshot(next_round_state, fixture['player_id'])
+    next_round_log = list(next_round_state.get('action_log') or [])
+    page.evaluate("if (typeof closeEventReveal === 'function') closeEventReveal()")
+    page.click('button.game-tab[data-view="log"]')
+    page.wait_for_timeout(300)
+    screenshot = OUT_DIR / 'RED_ELITE_DEFECTION_SINGLE_DISCARD.png'
+    page.screenshot(path=str(screenshot), full_page=True)
+    context.close()
+
+    ok = (
+        before['deck_count'] == 3
+        and before['discard_count'] == 10
+        and len(pending['hand']) == 5
+        and pending['deck_count'] == 8
+        and pending['discard_count'] == 0
+        and len(after['hand']) == 4
+        and after['deck_count'] == 8
+        and after['discard_count'] == 1
+        and after['discard_pile'] == ['樂捐者']
+        and after_red_turn == after
+        and any('host discarded 1 chosen card(s): 樂捐者 (hand 4, deck 8, discard 1)' in line for line in action_log)
+        and any('Event drawn: 上海合作組織' in line for line in next_round_log)
+        and not console_errors
+    )
+    return {
+        'name': 'elite_defection_failure_discards_exactly_one_after_refill',
+        'ok': ok,
+        'before': before,
+        'pending_after_refill': pending,
+        'after': after,
+        'after_red_turn_and_shanghai_event': after_red_turn,
+        'action_log': action_log,
+        'next_round_log': next_round_log,
+        'console_errors': console_errors,
+        'screenshot': str(screenshot),
+    }
+
+
 def main():
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=True)
-        results = [run_scenario(browser, 'sufficient'), run_scenario(browser, 'exhausted')]
+        results = [
+            run_scenario(browser, 'sufficient'),
+            run_scenario(browser, 'exhausted'),
+            run_elite_defection_scenario(browser),
+        ]
         browser.close()
     payload = {
         'summary': {

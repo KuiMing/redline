@@ -2220,6 +2220,60 @@ def test_setup_victory_proof(payload: dict):
     }
 
 
+@app.post("/test/setup-elite-defection-discard-proof")
+def test_setup_elite_defection_discard_proof(payload: dict):
+    game_id = str(uuid.uuid4())
+    game = Game([(str(uuid.uuid4()), "host"), (str(uuid.uuid4()), "hostda")])
+    host, red = game.players
+    host.faction_id = "taiwan_green"
+    host.base = "臺北"
+    host.organizations = {"臺北": 2}
+    red.faction_id = "red_army"
+    red.base = "北京"
+    red.organizations = {"北京": 1}
+
+    selected_donor = Card("樂捐者", "resource", {"money": 1})
+    played_donor = Card("樂捐者", "resource", {"money": 1})
+    host.hand = []
+    host.deck.draw_pile = [Card("牌庫甲", "command", {}), Card("牌庫乙", "command", {}), selected_donor]
+    host.deck.discard_pile = [played_donor] + [Card(f"既有棄牌{i}", "command", {}) for i in range(9)]
+    red.hand = [Card(f"紅軍手牌{i}", "command", {}) for i in range(5)]
+
+    game.game_phase = GamePhase.MAIN
+    game.turn_phase = TurnPhase.END
+    game.current_player_index = 0
+    game.round_start_player_index = 0
+    game.pending_base_choices = {}
+    game.pending_choice = None
+    game.current_event = game._event_by_name("紅軍權貴出逃")
+    game.event_progress = {
+        "count": 0,
+        "required": 3,
+        "succeeded": False,
+        "settled": False,
+        "status": "active",
+        "last_actor_id": host.id,
+    }
+    game.event_deck.draw_pile = [game._event_by_name("上海合作組織")]
+    game.event_deck.discard_pile = []
+    game.id = game_id
+
+    manager.games[game_id] = game
+    manager.connections[game_id] = {}
+    lobby[game_id] = [(host.id, host.name), (red.id, red.name)]
+    lobby_hosts[game_id] = host.id
+    lobby_factions[game_id] = {host.id: host.faction_id, red.id: red.faction_id}
+    lobby_bases[game_id] = {host.id: host.base, red.id: red.base}
+    lobby_ready[game_id] = {host.id: True, red.id: True}
+    return {
+        "success": True,
+        "game_id": game_id,
+        "player_id": host.id,
+        "red_player_id": red.id,
+        "state": game.state(host.id),
+    }
+
+
 @app.post("/test/setup-discard-reshuffle-proof")
 def test_setup_discard_reshuffle_proof(payload: dict):
     scenario = str(payload.get("scenario") or "sufficient")

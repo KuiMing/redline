@@ -34,6 +34,52 @@ def card_names(cards):
     return [getattr(card, 'name', str(card)) for card in cards]
 
 
+def test_elite_defection_failure_after_refill_discards_exactly_one_named_card():
+    game = Game([('host', 'host'), ('red', 'hostda')])
+    host, red = game.players
+    host.faction_id = 'taiwan_green'
+    red.faction_id = 'red_army'
+    game.current_player_index = 0
+    game.round_start_player_index = 0
+    game.game_phase = GamePhase.MAIN
+    game.turn_phase = TurnPhase.END
+    game.pending_base_choices = {}
+    game.pending_choice = None
+
+    selected_donor = Card('樂捐者', 'resource', {'money': 1})
+    played_donor = Card('樂捐者', 'resource', {'money': 1})
+    host.hand = []
+    host.deck.draw_pile = [Card('牌庫甲', 'command', {}), Card('牌庫乙', 'command', {}), selected_donor]
+    host.deck.discard_pile = [played_donor] + [Card(f'既有棄牌{i}', 'command', {}) for i in range(9)]
+    red.hand = [Card(f'紅軍手牌{i}', 'command', {}) for i in range(5)]
+
+    game.current_event = game._event_by_name('紅軍權貴出逃')
+    game.event_progress = {
+        'count': 0,
+        'required': 3,
+        'succeeded': False,
+        'settled': False,
+        'status': 'active',
+        'last_actor_id': host.id,
+    }
+
+    result = game.advance_turn_phase()
+    assert result.get('pending_choice') is True
+    assert len(host.hand) == 5
+    assert len(host.deck.draw_pile) == 8
+    assert host.deck.discard_pile == []
+    donor_index = next(i for i, card in enumerate(game.pending_choice['cards']) if card is selected_donor)
+
+    resolved = game.resolve_pending_choice(host.id, [donor_index])
+    assert resolved.get('success') is True
+    assert resolved.get('chosen_cards') == ['樂捐者']
+    assert len(host.hand) == 4
+    assert len(host.deck.draw_pile) == 8
+    assert host.deck.discard_pile == [selected_donor]
+    assert played_donor in host.deck.draw_pile
+    assert any('host discarded 1 chosen card(s): 樂捐者' in line for line in game.action_log)
+
+
 def test_end_turn_logs_reshuffle_only_when_refill_exhausts_draw_pile():
     enough = make_game()
     player = enough.current_player()

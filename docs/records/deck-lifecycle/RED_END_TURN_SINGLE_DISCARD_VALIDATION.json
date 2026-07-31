@@ -1,7 +1,7 @@
 {
   "summary": {
-    "total": 2,
-    "passed": 2,
+    "total": 3,
+    "passed": 3,
     "failed": 0
   },
   "results": [
@@ -85,6 +85,81 @@
       ],
       "console_errors": [],
       "screenshot": "/Users/benmini/.openclaw/workspace/redline/docs/records/deck-lifecycle/RED_END_TURN_SINGLE_DISCARD_EXHAUSTED.png"
+    },
+    {
+      "name": "elite_defection_failure_discards_exactly_one_after_refill",
+      "ok": true,
+      "before": {
+        "hand": [],
+        "deck_count": 3,
+        "discard_count": 10,
+        "discard_pile": [
+          "樂捐者",
+          "既有棄牌0",
+          "既有棄牌1",
+          "既有棄牌2",
+          "既有棄牌3",
+          "既有棄牌4",
+          "既有棄牌5",
+          "既有棄牌6",
+          "既有棄牌7",
+          "既有棄牌8"
+        ]
+      },
+      "pending_after_refill": {
+        "hand": [
+          "樂捐者",
+          "牌庫乙",
+          "牌庫甲",
+          "既有棄牌2",
+          "既有棄牌8"
+        ],
+        "deck_count": 8,
+        "discard_count": 0,
+        "discard_pile": []
+      },
+      "after": {
+        "hand": [
+          "牌庫乙",
+          "牌庫甲",
+          "既有棄牌2",
+          "既有棄牌8"
+        ],
+        "deck_count": 8,
+        "discard_count": 1,
+        "discard_pile": [
+          "樂捐者"
+        ]
+      },
+      "after_red_turn_and_shanghai_event": {
+        "hand": [
+          "牌庫乙",
+          "牌庫甲",
+          "既有棄牌2",
+          "既有棄牌8"
+        ],
+        "deck_count": 8,
+        "discard_count": 1,
+        "discard_pile": [
+          "樂捐者"
+        ]
+      },
+      "action_log": [
+        "[Turn 1] host 牌庫用盡，將棄牌堆 10 張牌洗成新牌庫",
+        "[Turn 1] End of turn for host",
+        "[Turn 1] Event failure: host must discard 1 hand card(s)",
+        "[Turn 1] host discarded 1 chosen card(s): 樂捐者 (hand 4, deck 8, discard 1)"
+      ],
+      "next_round_log": [
+        "[Turn 1] host 牌庫用盡，將棄牌堆 10 張牌洗成新牌庫",
+        "[Turn 1] End of turn for host",
+        "[Turn 1] Event failure: host must discard 1 hand card(s)",
+        "[Turn 1] host discarded 1 chosen card(s): 樂捐者 (hand 4, deck 8, discard 1)",
+        "[Turn 1] End of turn for hostda",
+        "[Turn 2] Event drawn: 上海合作組織 (auto deferred)"
+      ],
+      "console_errors": [],
+      "screenshot": "/Users/benmini/.openclaw/workspace/redline/docs/records/deck-lifecycle/RED_ELITE_DEFECTION_SINGLE_DISCARD.png"
     }
   ]
 }
