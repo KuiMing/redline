@@ -37,8 +37,13 @@ def test_business_network_resolve_choice_websocket_broadcasts_last_action_result
         ws.send_json({'action': 'play_card', 'index': 0, 'mode': 'action'})
         pending_state = ws.receive_json()
         assert pending_state['pending_choice']['choice_key'] == 'use_purchase_area_card'
+        choice_index = next(
+            index
+            for index, entry in enumerate(pending_state['pending_choice']['cards'])
+            if entry.get('name') == '交通經驗乙'
+        )
 
-        ws.send_json({'action': 'resolve_choice', 'index': 1})
+        ws.send_json({'action': 'resolve_choice', 'index': choice_index})
         resolved_state = ws.receive_json()
 
     me = next(player for player in resolved_state['players'] if player['id'] == player_id)

@@ -2604,6 +2604,27 @@ class Game:
             })
         return targets
 
+    def _can_replace_dissolved_org_with_own(self, player, target_player, town):
+        if target_player is None or not town or not self._has_org_supply(player):
+            return False
+        if (target_player.organizations or {}).get(town, 0) <= 0:
+            return False
+        if (
+            getattr(target_player, 'faction_id', None) == 'red_army'
+            and town == getattr(target_player, 'base', None)
+            and town not in set(getattr(self, 'red_army_destroyed_bases', set()) or [])
+        ):
+            return False
+        original_count = target_player.organizations[town]
+        try:
+            if original_count <= 1:
+                del target_player.organizations[town]
+            else:
+                target_player.organizations[town] = original_count - 1
+            return self._can_player_build_in_town(player, town)
+        finally:
+            target_player.organizations[town] = original_count
+
     def _interactive_support_sacrifice_towns(self, player, max_steps=1, target_players=None, target_region=None):
         towns = []
         for town, count in (player.organizations or {}).items():
@@ -2742,6 +2763,15 @@ class Game:
             return {'pending_choice': True, **result}
         if effect_type == 'interactive_dissolve_and_build':
             targets = self._interactive_support_dissolve_targets(player, require_self_sacrifice=False)
+            targets = [
+                entry
+                for entry in targets
+                if self._can_replace_dissolved_org_with_own(
+                    player,
+                    next((p for p in self.players if getattr(p, 'id', None) == entry.get('player_id')), None),
+                    entry.get('town'),
+                )
+            ]
             if not targets:
                 return None
             result = self._set_pending_support_flow_choice(
@@ -2780,7 +2810,14 @@ class Game:
         choice_key = (choice or {}).get('choice_key')
         if effect_type in {'interactive_build_anywhere_inner', 'interactive_build_near_inner'}:
             town = result.get('town')
-            if not town or not self._can_player_build_in_town(player, town):
+            valid_towns = {
+                entry.get('town')
+                for entry in self._interactive_support_build_towns(
+                    player,
+                    near_only=(effect_type == 'interactive_build_near_inner'),
+                )
+            }
+            if not town or town not in valid_towns:
                 return {'error': 'Invalid build town'}
             self._place_organization(player, town)
             self.log(f"{player.name} resolved {card_name} and built in {town}")
@@ -2826,6 +2863,20 @@ class Game:
                     return {'error': 'Missing sacrificed organization'}
                 if town not in self._towns_within_steps([sacrifice_town], max_steps=1):
                     return {'error': 'Target organization is not within range of sacrificed organization'}
+            else:
+                current_targets = self._interactive_support_dissolve_targets(
+                    player,
+                    require_self_sacrifice=False,
+                    max_steps=1,
+                )
+                target_still_legal = any(
+                    entry.get('player_id') == target_player_id and entry.get('town') == town
+                    for entry in current_targets
+                )
+                if not target_still_legal:
+                    return {'error': 'Target organization is no longer within range'}
+                if effect_type == 'interactive_dissolve_and_build' and not self._can_replace_dissolved_org_with_own(player, target_player, town):
+                    return {'error': 'Target cannot be replaced with an organization'}
             dissolve_result = self.dissolve_organization(player, target_player, town, source='support_card')
             if dissolve_result.get('error'):
                 return dissolve_result
@@ -2860,7 +2911,9 @@ class Game:
                             'remaining_count': remaining_count,
                         }
                     self.log(f"{player.name} has {remaining_count} {card_name} dissolve(s) remaining but no legal target")
-            if effect_type == 'interactive_dissolve_and_build' and self._can_player_build_in_town(player, town):
+            if effect_type == 'interactive_dissolve_and_build':
+                if not self._can_player_build_in_town(player, town):
+                    return {'error': 'Target could not be replaced after dissolve'}
                 self._place_organization(player, town)
                 self.log(f"{player.name} resolved {card_name} and built in {town} after dissolve")
             return {'success': True, 'town': town, 'target_player_id': target_player_id}
@@ -2872,7 +2925,7 @@ class Game:
                 return {'error': 'Invalid discard target'}
             if not getattr(target_player, 'hand', None):
                 return {'error': 'Target player has no hand cards'}
-            if choice_key == 'intel_network_dissolve_target' and not self._player_has_org_within_steps_of_player(player, target_player, max_steps=1):
+            if not self._player_has_org_within_steps_of_player(player, target_player, max_steps=1):
                 return {'error': 'Target player is not within range'}
             count = int(context.get('effect_payload', {}).get('count', 0) or 0)
             random_pick = bool(context.get('effect_payload', {}).get('random'))
@@ -2996,6 +3049,23 @@ class Game:
         if interaction_started:
             self.log(f"{player.name} started interactive support resolution for {card_name} at tier {tier}")
             return {'tier': tier, 'matched_rulers': matched, 'effect_type': effect_type, 'effect_text': self._support_card_effect_text(card_name, tier, region_index), 'pending_choice': True}
+        interactive_effect_types = {
+            'interactive_build_anywhere_inner',
+            'interactive_build_near_inner',
+            'interactive_dissolve_many_near',
+            'interactive_dissolve_self_and_enemy',
+            'interactive_dissolve_and_build',
+            'force_discard_near',
+        }
+        if effect_type in interactive_effect_types:
+            self.log(f"{card_name} had no legal target; no interactive effect was applied")
+            return {
+                'tier': tier,
+                'matched_rulers': matched,
+                'effect_type': effect_type,
+                'effect_text': self._support_card_effect_text(card_name, tier, region_index),
+                'no_legal_target': True,
+            }
         if effect_type == 'gain_resource':
             player.resources['money'] += int(payload.get('money', 0) or 0)
             player.resources['propaganda'] += int(payload.get('propaganda', 0) or 0)
@@ -3059,72 +3129,6 @@ class Game:
             if target:
                 cards = [Card('分神', 'disruption', {}) for _ in range(count)]
                 target.deck.discard(cards)
-        elif effect_type == 'build_anywhere_inner':
-            inner_towns = self._towns_for_region_alias('china')
-            target_town = next(
-                (town for town in inner_towns
-                 if self._can_player_build_in_town(player, town)
-                 and not self._faction_restricts_ignore_distance_build(player, town)),
-                None,
-            )
-            if target_town:
-                self._place_organization(player, target_town)
-        elif effect_type == 'build_near_inner':
-            inner_towns = set(self._towns_for_region_alias('china'))
-            target_town = None
-            for origin in list(player.organizations.keys()):
-                neighbors = set(self.map.get('towns', {}).get(origin, {}).get('road', []) or []) | set(self.map.get('towns', {}).get(origin, {}).get('rail', []) or [])
-                target_town = next((town for town in neighbors if town in inner_towns and self._can_player_build_in_town(player, town)), None)
-                if target_town:
-                    break
-            if target_town:
-                self._place_organization(player, target_town)
-        elif effect_type == 'dissolve_many_near':
-            count = int(payload.get('count', 0) or 0)
-            for other in self.players:
-                if other is player:
-                    continue
-                enemy_towns = [town for town, c in (other.organizations or {}).items() if c > 0]
-                while count > 0 and enemy_towns:
-                    town = enemy_towns.pop(0)
-                    result = self.dissolve_organization(player, other, town, source='support_card')
-                    if result.get('success'):
-                        count -= 1
-                    else:
-                        break
-        elif effect_type == 'dissolve_self_and_enemy':
-            own_town = next((town for town, c in (player.organizations or {}).items() if c > 0), None)
-            if own_town:
-                player.organizations[own_town] -= 1
-                if player.organizations[own_town] <= 0:
-                    del player.organizations[own_town]
-            for other in self.players:
-                if other is player:
-                    continue
-                enemy_town = next((town for town, c in (other.organizations or {}).items() if c > 0), None)
-                if enemy_town:
-                    self.dissolve_organization(player, other, enemy_town, source='support_card')
-                    break
-        elif effect_type == 'dissolve_and_build':
-            built = False
-            for other in self.players:
-                if other is player:
-                    continue
-                enemy_town = next((town for town, c in (other.organizations or {}).items() if c > 0), None)
-                if enemy_town:
-                    result = self.dissolve_organization(player, other, enemy_town, source='support_card')
-                    if result.get('success') and self._has_org_supply(player):
-                        self._place_organization(player, enemy_town)
-                        built = True
-                    break
-            if not built:
-                pass
-        elif effect_type == 'force_discard_near':
-            # This effect is always interactive. Reaching this branch means there was no
-            # player with hand cards within one step of the actor's organizations. Do not
-            # fall back to an arbitrary opponent: that bypasses range and (at tier 1)
-            # silently discards the first card without the target's required choice.
-            self.log(f"{card_name} had no legal target within 1 step; no card was discarded")
         self.log(f"{player.name} resolved {card_name} at tier {tier} (matched rulers: {', '.join(matched) if matched else 'none'})")
         return {'tier': tier, 'matched_rulers': matched, 'effect_type': effect_type, 'effect_text': self._support_card_effect_text(card_name, tier, region_index)}
 
@@ -4607,11 +4611,13 @@ class Game:
             range_context = self._event_card_range_context(player, pending_card)
             if not self._player_has_org_within_steps_of_player(player, target, max_steps=range_context['range_limit'], target_region=range_context['target_region']):
                 return {"error": "Target player has no organization within range"}
-        if mode == "action" and pending_card_name in {"派遣間諜", "內應間諜"} and target_player_id is not None:
-            target = next((p for p in self.players if getattr(p, "id", None) == target_player_id), None)
-            if target is None or target == player:
+            if not getattr(target, 'hand', None):
+                return {"error": "Target player has no hand cards"}
+        if mode == "action" and pending_card_name in {"派遣間諜", "內應間諜"}:
+            target = next((p for p in self.players if getattr(p, "id", None) == target_player_id), None) if target_player_id is not None else None
+            if target_player_id is not None and (target is None or target == player):
                 return {"error": "間諜卡必須指定其他玩家"}
-            target_players = [target]
+            target_players = [target] if target is not None else self._target_players_for_interaction(player)
             range_context = self._event_card_range_context(player, pending_card)
             if pending_card_name == "派遣間諜":
                 valid = bool(self._interactive_support_sacrifice_towns(player, max_steps=range_context['range_limit'], target_players=target_players, target_region=range_context['target_region']))
@@ -4731,6 +4737,16 @@ class Game:
                 return {"success": True, "pending_choice": True, **support_resolution}
             if support_resolution and support_resolution.get('card_moved_out_of_play'):
                 action_context['removed_current_card'] = True
+            if support_resolution and support_resolution.get('no_legal_target'):
+                player.hand.insert(index, played_card)
+                self.turn_log['played_money_card'] = action_context['prior_played_money_card']
+                self.turn_log['played_propaganda_card'] = action_context['prior_played_propaganda_card']
+                self.log(f"{player.name} could not play {card_name}: no legal target")
+                return {
+                    "error": "No legal target for interactive support card",
+                    "no_legal_target": True,
+                    "card_name": card_name,
+                }
         if int(purchase_cost.get('money', 0) or 0) > 0:
             self._track_event_progress('play_card_with_money', player=player)
         if int(purchase_cost.get('propaganda', 0) or 0) > 0:

@@ -18,5 +18,5 @@
 ## elite_defection_failure_discards_exactly_one_after_refill
 - PASS：True
 - Before：`{'hand': [], 'deck_count': 3, 'discard_count': 10, 'discard_pile': ['樂捐者', '既有棄牌0', '既有棄牌1', '既有棄牌2', '既有棄牌3', '既有棄牌4', '既有棄牌5', '既有棄牌6', '既有棄牌7', '既有棄牌8']}`
-- After：`{'hand': ['牌庫乙', '牌庫甲', '既有棄牌0', '既有棄牌4'], 'deck_count': 8, 'discard_count': 1, 'discard_pile': ['樂捐者']}`
+- After：`{'hand': ['牌庫乙', '牌庫甲', '既有棄牌6', '樂捐者'], 'deck_count': 8, 'discard_count': 1, 'discard_pile': ['樂捐者']}`
 - Screenshot：`/Users/benmini/.openclaw/workspace/redline/docs/records/deck-lifecycle/RED_ELITE_DEFECTION_SINGLE_DISCARD.png`

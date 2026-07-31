@@ -86,13 +86,20 @@ class EffectEngine:
                 game.log(f"{player.name} used {source_name} to ask {target.name} to choose {choice_count} discard(s)")
                 return {'pending_choice': True}
             if not targets:
-                targets = [other for other in game.players if other != player]
+                label = source_name or 'force_discard'
+                game.log(f"{label} had no explicit discard target; no cards were discarded")
+                return {'no_target': True}
             discarded_any = False
             for other in targets:
+                discarded_names = []
                 for _ in range(min(count, len(other.hand))):
                     card = other.hand.pop()
                     other.deck.discard([card])
+                    discarded_names.append(getattr(card, 'name', str(card)))
                     discarded_any = True
+                if discarded_names:
+                    label = source_name or 'force_discard'
+                    game.log(f"{label} forced {other.name} to discard {'、'.join(discarded_names)}")
             if discarded_any:
                 game.turn_log["successful_discard"] = True
             return
@@ -324,8 +331,15 @@ class EffectEngine:
                         'label': getattr(other, 'name', str(getattr(other, 'id', '目標玩家'))),
                     }
                     for other in getattr(game, 'players', [])
-                    if other != player and getattr(other, 'id', None) is not None
+                    if (
+                        other != player
+                        and getattr(other, 'id', None) is not None
+                        and (source_name != '誘導虛耗' or bool(getattr(other, 'hand', None)))
+                    )
                 ]
+                if source_name == '誘導虛耗' and not targets:
+                    game.log('誘導虛耗 had no player with hand cards to target; optional trash was skipped')
+                    return {'no_target': True}
                 followup_target_choice = None
                 if source_name == '誘導虛耗':
                     followup_target_choice = {
@@ -587,7 +601,11 @@ class EffectEngine:
             target = None
             if target_id:
                 target = next((p for p in game.players if getattr(p, "id", None) == target_id), None)
-            opponents = [target] if target is not None and target != player else [other for other in game.players if other != player]
+            if target is None or target == player:
+                label = context.get('card_name') or 'dissolve'
+                game.log(f"{label} had no explicit dissolve target; no organization was dissolved")
+                return {'no_target': True}
+            opponents = [target]
             range_limit = int(effect.get("range", 1) or 1)
             if effect.get("requires_self_sacrifice"):
                 owned = [town for town, count in player.organizations.items() if count > 0]

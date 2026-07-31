@@ -155,24 +155,34 @@ def run_elite_defection_scenario(browser):
         wait_until='networkidle',
     )
     red_page.wait_for_function('window.lastGameState?.current_player === "hostda"')
+    red_before_tianfang = player_snapshot(red_page.evaluate('() => window.lastGameState'), fixture['red_player_id'])
     red_page.evaluate("""() => {
       if (typeof closeEventReveal === 'function') closeEventReveal();
       const factionClose = document.getElementById('closeFactionActionModal');
       if (factionClose) factionClose.click();
     }""")
     red_page.click('button.hand-card-action-btn[data-card-name="天方奧援"][data-card-mode="action"]')
-    red_page.wait_for_function(
-        '() => (window.lastGameState?.action_log || []).some(line => line.includes("天方奧援 had no legal target within 1 step"))',
-        timeout=10000,
+    red_page.wait_for_timeout(500)
+    proof_page = context.new_page()
+    proof_page.goto(
+        f"{BASE_URL}/?game_id={fixture['game_id']}&player_id={fixture['red_player_id']}",
+        wait_until='networkidle',
     )
-    page.wait_for_function(
-        '() => (window.lastGameState?.action_log || []).some(line => line.includes("天方奧援 had no legal target within 1 step"))',
-        timeout=10000,
-    )
+    proof_page.wait_for_function('window.lastGameState?.current_player === "hostda"')
+    proof_state = proof_page.evaluate('() => window.lastGameState')
+    red_after_tianfang = player_snapshot(proof_state, fixture['red_player_id'])
+    assert proof_state.get('pending_choice') is None
+    red_page = proof_page
+    red_page.evaluate("if (typeof closeEventReveal === 'function') closeEventReveal()")
     after_tianfang_state = page.evaluate('() => window.lastGameState')
     after_tianfang = player_snapshot(after_tianfang_state, fixture['player_id'])
-    red_page.click('#advanceStepBtn')
-    red_page.wait_for_function('() => window.lastGameState?.turn_phase === "end"')
+    for _ in range(3):
+        current_phase = red_page.evaluate('() => window.lastGameState?.turn_phase')
+        if current_phase == 'end':
+            break
+        red_page.click('#advanceStepBtn')
+        red_page.wait_for_function('(phase) => window.lastGameState?.turn_phase !== phase', arg=current_phase)
+    assert red_page.evaluate('() => window.lastGameState?.turn_phase') == 'end'
     red_page.click('#advanceStepBtn')
     page.wait_for_function(
         '() => window.lastGameState?.current_player === "host" && window.lastGameState?.current_event?.name === "上海合作組織"',
@@ -200,9 +210,10 @@ def run_elite_defection_scenario(browser):
         and after['discard_count'] == 1
         and after['discard_pile'] == ['樂捐者']
         and after_tianfang == after
+        and red_after_tianfang == red_before_tianfang
+        and '天方奧援' in red_after_tianfang['hand']
         and after_red_turn == after
         and any('host discarded 1 chosen card(s): 樂捐者 (hand 4, deck 8, discard 1)' in line for line in action_log)
-        and any('天方奧援 had no legal target within 1 step; no card was discarded' in line for line in next_round_log)
         and any('Event drawn: 上海合作組織' in line for line in next_round_log)
         and not console_errors
     )
@@ -213,6 +224,8 @@ def run_elite_defection_scenario(browser):
         'pending_after_refill': pending,
         'after': after,
         'after_tianfang_no_legal_target': after_tianfang,
+        'red_before_tianfang': red_before_tianfang,
+        'red_after_rejected_tianfang': red_after_tianfang,
         'after_red_turn_and_shanghai_event': after_red_turn,
         'action_log': action_log,
         'next_round_log': next_round_log,

@@ -78,9 +78,8 @@
       },
       "total_before": 5,
       "total_after": 5,
-      "status_text": "紅\n紅軍\n玩家戰況\n陣營：紅軍\n根據地：北京\n組織\n1\n資金\n0\n宣傳\n0\n手牌\n5\n牌庫\n0\n棄牌\n0\n移動\n0\n棄牌堆\n無\n對\n對手\n當前行動玩家\n當前玩家\n陣營：臺灣（綠線）\n根據地：臺北\n組織\n1\n資金\n0\n宣傳\n0\n手牌\n5\n牌庫\n5\n棄牌\n0\n移動\n0\n棄牌堆\n無",
+      "status_text": "紅\n紅軍\n玩家戰況\n陣營：紅軍\n根據地：北京\n組織\n1\n資金\n0\n宣傳\n0\n手牌\n5\n牌庫\n0\n棄牌\n0\n移動\n0\n棄牌堆\n無\n對\n對手\n當前行動玩家\n當前玩家\n陣營：臺灣（綠線）\n根據地：臺北\n組織\n1\n資金\n0\n宣傳\n0\n手牌\n5\n牌庫\n6\n棄牌\n0\n移動\n0\n棄牌堆\n無",
       "action_log": [
-        "[Turn 1] Event drawn: 貿易戰加劇",
         "[Turn 1] 紅軍 牌庫用盡，將棄牌堆 1 張牌洗成新牌庫",
         "[Turn 1] End of turn for 紅軍"
       ],
@@ -112,8 +111,8 @@
           "樂捐者",
           "牌庫乙",
           "牌庫甲",
-          "既有棄牌0",
-          "既有棄牌4"
+          "既有棄牌6",
+          "樂捐者"
         ],
         "deck_count": 8,
         "discard_count": 0,
@@ -123,8 +122,8 @@
         "hand": [
           "牌庫乙",
           "牌庫甲",
-          "既有棄牌0",
-          "既有棄牌4"
+          "既有棄牌6",
+          "樂捐者"
         ],
         "deck_count": 8,
         "discard_count": 1,
@@ -136,8 +135,8 @@
         "hand": [
           "牌庫乙",
           "牌庫甲",
-          "既有棄牌0",
-          "既有棄牌4"
+          "既有棄牌6",
+          "樂捐者"
         ],
         "deck_count": 8,
         "discard_count": 1,
@@ -145,12 +144,36 @@
           "樂捐者"
         ]
       },
+      "red_before_tianfang": {
+        "hand": [
+          "天方奧援",
+          "紅軍手牌0",
+          "紅軍手牌1",
+          "紅軍手牌2",
+          "紅軍手牌3"
+        ],
+        "deck_count": 6,
+        "discard_count": 0,
+        "discard_pile": []
+      },
+      "red_after_rejected_tianfang": {
+        "hand": [
+          "天方奧援",
+          "紅軍手牌0",
+          "紅軍手牌1",
+          "紅軍手牌2",
+          "紅軍手牌3"
+        ],
+        "deck_count": 6,
+        "discard_count": 0,
+        "discard_pile": []
+      },
       "after_red_turn_and_shanghai_event": {
         "hand": [
           "牌庫乙",
           "牌庫甲",
-          "既有棄牌0",
-          "既有棄牌4"
+          "既有棄牌6",
+          "樂捐者"
         ],
         "deck_count": 8,
         "discard_count": 1,
@@ -169,9 +192,8 @@
         "[Turn 1] End of turn for host",
         "[Turn 1] Event failure: host must discard 1 hand card(s)",
         "[Turn 1] host discarded 1 chosen card(s): 樂捐者 (hand 4, deck 8, discard 1)",
-        "[Turn 1] 天方奧援 had no legal target within 1 step; no card was discarded",
-        "[Turn 1] hostda resolved 天方奧援 at tier 1 (matched rulers: none)",
-        "[Turn 1] hostda played 天方奧援",
+        "[Turn 1] 天方奧援 had no legal target; no interactive effect was applied",
+        "[Turn 1] hostda could not play 天方奧援: no legal target",
         "[Turn 1] End of turn for hostda",
         "[Turn 2] Event drawn: 上海合作組織 (auto deferred)"
       ],

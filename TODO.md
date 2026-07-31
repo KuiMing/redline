@@ -97,6 +97,7 @@
   - 2026-07-31 新回報：`host` 打出 1 張樂捐者後，10 張棄牌在回合結束補牌時洗回；`紅軍權貴出逃`失敗再選擇棄 1 張，但下一輪 `上海合作組織`開始時 UI 顯示手牌 3／牌庫 8／棄牌 2，兩張皆為樂捐者。這與 action log 的單次 chosen discard 不一致。
   - 精確重現初期未失敗：同樣的手牌 0／牌庫 3／棄牌 10、延後結算紅軍權貴出逃、選擇樂捐者、紅軍回合結束、下一輪上海合作組織路徑本身只產生手牌 4／牌庫 8／棄牌 1；藉此排除事件重複結算。
   - 2026-07-31 root cause／修正：第二張其實由 `hostda` 隨後打出的 `天方奧援`造成。當紅軍一格內沒有合法、有手牌的目標時，interactive flow 回傳無目標，但 `_execute_support_card()` 又錯誤進入舊 fallback，忽略距離、任取其他玩家並靜默 `pop(0)`；因此把 host 手牌第一張樂捐者移入棄牌堆且沒有明確 log。已刪除任意玩家 fallback；無合法目標時不棄任何牌並記錄 no-target。合法目標的正常互動選擇／隨機棄牌保持不變。天方奧援 regression 3/3、完整正式 UI deck lifecycle 3/3、backend focused 14/14，console 0 error。
+  - 2026-07-31 同型錯誤擴大稽核／修正：所有 interactive-only 奧援無合法目標時統一 fail closed，並交易式把奧援卡放回原手牌位置、還原本回合費用旗標；移除 `build_anywhere_inner`、`build_near_inner`、`dissolve_many_near`、`dissolve_self_and_enemy`、`dissolve_and_build` 的舊自動 fallback。`EffectEngine.force_discard`／`dissolve` 未指定明確玩家時不再退回所有對手。`派遣間諜`／`內應間諜`改為移出手牌前先確認至少一個合法目標，避免回錯誤後卡牌從所有 zone 消失。resolver 結算時重新驗證東洋建立、北國／臺灣瓦解、天方棄牌的距離；臺灣奧援 III 僅列出能完整「瓦解並同城建立」的目標，禁止只做前半段。武裝牌不再允許空手目標；誘導虛耗不再列出空手玩家。backend 136/136、support runtime 12/12、current playtest UI 2/2、deck lifecycle UI 3/3。
 
 #### 2026-07-29 本批修正順序（source-backed triage）
 1. **牌堆生命週期／卡牌守恆（P0，M）**：先用紅軍回合結束的真實路徑確認「抽牌堆未空時棄牌保留、抽牌堆空時才洗回」與總卡數守恆；這是最可能造成卡牌永久遺失的項目，先排除資料破壞，再處理其他卡牌互動。

@@ -6,6 +6,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from server.cards import Card
+from server.effect_engine import EffectEngine
 from server.game import Game, GamePhase, TurnPhase
 
 
@@ -466,6 +467,26 @@ def test_lure_exhaustion_draws_then_prompts_target_choice_after_self_remove():
     assert g.turn_log.get('successful_discard') is True
 
 
+def test_lure_exhaustion_skips_optional_trash_when_no_other_player_has_cards():
+    g = make_game()
+    p1, p2 = g.players
+    bait = card(g, '誘導虛耗')
+    p1.hand = [bait]
+    p1.deck.draw_pile = [Card('DrawnCard', 'command', {})]
+    p2.hand = []
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    assert not result.get('pending_choice')
+    assert g.pending_choice is None
+    assert names(p1.hand) == ['DrawnCard']
+    assert names(p1.deck.discard_pile) == ['誘導虛耗']
+    assert p2.hand == []
+    assert p2.deck.discard_pile == []
+    assert any('optional trash was skipped' in line for line in g.action_log)
+
+
 def test_imitate_tactics_uses_target_player_top_card_not_own_top_card():
     g = make_game()
     p1, p2 = g.players
@@ -838,10 +859,189 @@ def test_cancel_reaction_prompt_can_select_one_reaction_card_to_cancel_action():
     assert g.turn_log.get('canceled_card') is True
 
 
+def test_dissolve_without_explicit_target_does_not_fall_back_to_all_opponents():
+    g = make_game()
+    actor, target = g.players
+    actor.organizations = {'北京': 1}
+    target.organizations = {'天津': 1}
+    before_actor_orgs = dict(actor.organizations)
+    before_target_orgs = dict(target.organizations)
+
+    result = EffectEngine().execute(
+        {'type': 'dissolve', 'range': 1},
+        actor,
+        g,
+        context={'card_name': '無目標瓦解探針'},
+    )
+
+    assert result == {'no_target': True}
+    assert actor.organizations == before_actor_orgs
+    assert target.organizations == before_target_orgs
+    assert any('無目標瓦解探針 had no explicit dissolve target' in line for line in g.action_log)
+
+
+def test_force_discard_without_explicit_target_does_not_fall_back_to_all_opponents():
+    g = make_game()
+    actor, target = g.players
+    target.hand = [Card('不得被靜默棄掉', 'command', {})]
+    before_hand = list(target.hand)
+    before_discard = list(target.deck.discard_pile)
+
+    result = EffectEngine().execute(
+        {'type': 'force_discard', 'count': 1},
+        actor,
+        g,
+        context={'card_name': '無目標效果探針'},
+    )
+
+    assert result == {'no_target': True}
+    assert target.hand == before_hand
+    assert target.deck.discard_pile == before_discard
+    assert any('無目標效果探針 had no explicit discard target' in line for line in g.action_log)
+
+
+def test_all_interactive_support_effects_stop_cleanly_when_no_legal_target():
+    cases = [
+        ('interactive_build_anywhere_inner', {'count': 1}),
+        ('interactive_build_near_inner', {'count': 1}),
+        ('interactive_dissolve_many_near', {'count': 2}),
+        ('interactive_dissolve_self_and_enemy', {'count': 1}),
+        ('interactive_dissolve_and_build', {'count': 1}),
+        ('force_discard_near', {'count': 1, 'random': False}),
+    ]
+    for effect_type, payload in cases:
+        g = make_game()
+        actor, target = g.players
+        actor.organizations = {'北京': 1}
+        target.organizations = {'臺北': 1}
+        target.hand = [Card('不得被移動', 'command', {})]
+        target.deck.discard_pile = [Card('既有棄牌', 'command', {})]
+        before_actor_orgs = dict(actor.organizations)
+        before_target_orgs = dict(target.organizations)
+        before_hand = list(target.hand)
+        before_discard = list(target.deck.discard_pile)
+        g._support_card_tier = lambda player, card: (1, 0, [])
+        g._resolve_support_card_effect = lambda card_name, tier, region_index, et=effect_type, ep=payload: (et, dict(ep))
+        g._start_support_interaction = lambda *args, **kwargs: None
+
+        result = g._execute_support_card(actor, Card('互動效果探針', 'support', {}))
+
+        assert result.get('no_legal_target') is True, (effect_type, result)
+        assert g.pending_choice is None
+        assert actor.organizations == before_actor_orgs
+        assert target.organizations == before_target_orgs
+        assert target.hand == before_hand
+        assert target.deck.discard_pile == before_discard
+
+
+def test_support_resolver_rejects_stale_out_of_range_targets_before_mutation():
+    g = make_game()
+    actor, target = g.players
+    actor.faction_id = 'red_army'
+    target.faction_id = 'taiwan_green'
+    actor.organizations = {'臺北': 1}
+    target.organizations = {'天津': 1}
+    target_card = Card('不得被棄掉', 'command', {})
+    target.hand = [target_card]
+
+    build_result = g._resolve_support_interaction_result(
+        actor,
+        {'town': '天津'},
+        {
+            'choice_key': 'support_interaction',
+            'context': {'card_name': '東洋奧援', 'effect_type': 'interactive_build_near_inner'},
+        },
+    )
+    assert build_result.get('error') == 'Invalid build town'
+    assert actor.organizations == {'臺北': 1}
+
+    for effect_type, card_name in (
+        ('interactive_dissolve_many_near', '北國奧援'),
+        ('force_discard_near', '天方奧援'),
+    ):
+        result = g._resolve_support_interaction_result(
+            actor,
+            {'selected': {'player_id': target.id, 'town': '天津'}},
+            {
+                'choice_key': 'support_interaction',
+                'context': {
+                    'card_name': card_name,
+                    'effect_type': effect_type,
+                    'effect_payload': {'count': 1, 'random': True},
+                },
+            },
+        )
+        assert result.get('error'), (effect_type, result)
+        assert target.organizations == {'天津': 1}
+        assert target.hand == [target_card]
+        assert target.deck.discard_pile == []
+
+
+def test_taiwan_support_tier3_with_no_build_supply_does_not_partially_dissolve():
+    g = make_game()
+    actor, target = g.players
+    actor.faction_id = 'taiwan_green'
+    target.faction_id = 'red_army'
+    actor.organizations = {'臺北': 1, '供應占用': 21}
+    target.organizations = {'基隆': 1}
+    support_card = g._make_support_card('臺灣奧援')
+    actor.hand = [support_card]
+    setattr(g, '_support_card_tier', lambda player, card: (3, 0, []))
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('error') == 'No legal target for interactive support card', result
+    assert actor.hand == [support_card]
+    assert actor.deck.discard_pile == []
+    assert actor.organizations == {'臺北': 1, '供應占用': 21}
+    assert target.organizations == {'基隆': 1}
+    assert g.pending_choice is None
+
+
+def test_play_card_rolls_back_interactive_support_when_no_legal_target():
+    cases = [
+        'interactive_build_anywhere_inner',
+        'interactive_build_near_inner',
+        'interactive_dissolve_many_near',
+        'interactive_dissolve_self_and_enemy',
+        'interactive_dissolve_and_build',
+        'force_discard_near',
+    ]
+    for effect_type in cases:
+        g = make_game()
+        actor, target = g.players
+        before_card = Card('前一張', 'command', {})
+        support_card = Card('互動奧援探針', 'support', {})
+        after_card = Card('後一張', 'command', {})
+        actor.hand = [before_card, support_card, after_card]
+        target.hand = [Card('不得被移動', 'command', {})]
+        target.deck.discard_pile = [Card('既有棄牌', 'command', {})]
+        g.turn_log['played_money_card'] = True
+        g.turn_log['played_propaganda_card'] = False
+        before_target_hand = list(target.hand)
+        before_target_discard = list(target.deck.discard_pile)
+        g._support_card_tier = lambda player, card: (1, 0, [])
+        setattr(g, '_resolve_support_card_effect', lambda card_name, tier, region_index, et=effect_type: (et, {'count': 1}))
+        g._start_support_interaction = lambda *args, **kwargs: None
+
+        result = g.play_card(1, mode='action')
+
+        assert result.get('error') == 'No legal target for interactive support card', (effect_type, result)
+        assert result.get('no_legal_target') is True
+        assert actor.hand == [before_card, support_card, after_card]
+        assert actor.deck.discard_pile == []
+        assert target.hand == before_target_hand
+        assert target.deck.discard_pile == before_target_discard
+        assert g.turn_log['played_money_card'] is True
+        assert g.turn_log['played_propaganda_card'] is False
+        assert g.pending_choice is None
+
+
 def test_tianfang_support_with_no_in_range_target_does_not_silently_discard():
     g = make_game()
     actor, target = g.players
-    actor.hand = [g._make_support_card('天方奧援')]
+    support_card = g._make_support_card('天方奧援')
+    actor.hand = [support_card]
     actor.organizations = {'北京': 1}
     target.organizations = {'臺北': 1}
     first_donor = Card('樂捐者', 'resource', {'money': 1})
@@ -852,12 +1052,15 @@ def test_tianfang_support_with_no_in_range_target_does_not_silently_discard():
 
     result = g.play_card(0, mode='action')
 
-    assert result.get('success'), result
+    assert result.get('error') == 'No legal target for interactive support card', result
+    assert result.get('no_legal_target') is True
+    assert actor.hand == [support_card]
+    assert actor.deck.discard_pile == []
     assert not result.get('pending_choice')
     assert names(target.hand) == ['樂捐者', '其他手牌']
     assert len(target.deck.draw_pile) == 8
     assert names(target.deck.discard_pile) == ['樂捐者']
-    assert any('天方奧援 had no legal target within 1 step' in line for line in g.action_log)
+    assert any('天方奧援 had no legal target; no interactive effect was applied' in line for line in g.action_log)
 
 
 def test_tianfang_support_tier1_prompts_actor_target_choice_then_target_discard_choice():
@@ -1150,9 +1353,33 @@ def test_field_agent_requires_target_org_within_one_step_of_sacrificed_org():
 
 
 
+def test_spy_cards_with_no_legal_target_are_rejected_before_leaving_hand():
+    for card_name in ('派遣間諜', '內應間諜'):
+        g = make_game()
+        actor, target = g.players
+        target.faction_id = 'taiwan_green'
+        spy_card = card(g, card_name)
+        actor.hand = [Card('前一張', 'command', {}), spy_card, Card('後一張', 'command', {})]
+        actor.organizations = {'北京': 1}
+        target.organizations = {'臺北': 1}
+        before_actor_orgs = dict(actor.organizations)
+        before_target_orgs = dict(target.organizations)
+
+        result = g.play_card(1, mode='action')
+
+        assert result.get('error') == 'No target organization within range', (card_name, result)
+        assert actor.hand[1] is spy_card
+        assert names(actor.hand) == ['前一張', card_name, '後一張']
+        assert actor.deck.discard_pile == []
+        assert actor.organizations == before_actor_orgs
+        assert target.organizations == before_target_orgs
+        assert g.pending_choice is None
+
+
 def test_field_agent_prompts_sacrifice_then_target_org_like_north_support():
     g = make_game()
     p1, p2 = g.players
+    p2.faction_id = 'taiwan_green'
     p1.hand = [card(g, '派遣間諜')]
     p1.organizations = {'北京': 1, '上海': 1}
     p2.organizations = {'天津': 1, '杭州': 1, '香港城': 1}
@@ -1255,6 +1482,23 @@ def test_armed_c_requires_target_player_with_org_within_one_step_of_self_org():
     assert names(p2.hand) == ['Enemy1']
     assert names(p2.deck.discard_pile) == []
 
+
+
+def test_armed_card_rejects_in_range_player_with_empty_hand_before_consuming_card():
+    g = make_game()
+    p1, p2 = g.players
+    armed = card(g, '武裝者')
+    p1.hand = [armed]
+    p1.organizations = {'北京': 1}
+    p2.organizations = {'天津': 1}
+    p2.hand = []
+
+    result = g.play_card(0, mode='action', target_player_id=p2.id)
+
+    assert result.get('error') == 'Target player has no hand cards', result
+    assert p1.hand == [armed]
+    assert p1.deck.discard_pile == []
+    assert g.pending_choice is None
 
 
 def test_armed_c_target_player_chooses_one_discard_when_in_range():
