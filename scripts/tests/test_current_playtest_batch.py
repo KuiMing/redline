@@ -76,7 +76,9 @@ def test_elite_defection_failure_after_refill_discards_exactly_one_named_card():
     assert len(host.hand) == 4
     assert len(host.deck.draw_pile) == 8
     assert host.deck.discard_pile == [selected_donor]
-    assert played_donor in host.deck.draw_pile
+    remaining_non_discard = host.hand + host.deck.draw_pile
+    assert played_donor in remaining_non_discard
+    assert sum(card is played_donor for card in remaining_non_discard) == 1
     assert any('host discarded 1 chosen card(s): 樂捐者' in line for line in game.action_log)
 
 

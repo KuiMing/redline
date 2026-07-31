@@ -838,6 +838,28 @@ def test_cancel_reaction_prompt_can_select_one_reaction_card_to_cancel_action():
     assert g.turn_log.get('canceled_card') is True
 
 
+def test_tianfang_support_with_no_in_range_target_does_not_silently_discard():
+    g = make_game()
+    actor, target = g.players
+    actor.hand = [g._make_support_card('天方奧援')]
+    actor.organizations = {'北京': 1}
+    target.organizations = {'臺北': 1}
+    first_donor = Card('樂捐者', 'resource', {'money': 1})
+    second_donor = Card('樂捐者', 'resource', {'money': 1})
+    target.hand = [first_donor, Card('其他手牌', 'command', {})]
+    target.deck.draw_pile = [Card(f'牌庫{i}', 'command', {}) for i in range(8)]
+    target.deck.discard_pile = [second_donor]
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    assert not result.get('pending_choice')
+    assert names(target.hand) == ['樂捐者', '其他手牌']
+    assert len(target.deck.draw_pile) == 8
+    assert names(target.deck.discard_pile) == ['樂捐者']
+    assert any('天方奧援 had no legal target within 1 step' in line for line in g.action_log)
+
+
 def test_tianfang_support_tier1_prompts_actor_target_choice_then_target_discard_choice():
     g = make_game()
     p1, p2 = g.players

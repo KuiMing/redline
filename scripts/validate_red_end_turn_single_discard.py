@@ -160,6 +160,17 @@ def run_elite_defection_scenario(browser):
       const factionClose = document.getElementById('closeFactionActionModal');
       if (factionClose) factionClose.click();
     }""")
+    red_page.click('button.hand-card-action-btn[data-card-name="天方奧援"][data-card-mode="action"]')
+    red_page.wait_for_function(
+        '() => (window.lastGameState?.action_log || []).some(line => line.includes("天方奧援 had no legal target within 1 step"))',
+        timeout=10000,
+    )
+    page.wait_for_function(
+        '() => (window.lastGameState?.action_log || []).some(line => line.includes("天方奧援 had no legal target within 1 step"))',
+        timeout=10000,
+    )
+    after_tianfang_state = page.evaluate('() => window.lastGameState')
+    after_tianfang = player_snapshot(after_tianfang_state, fixture['player_id'])
     red_page.click('#advanceStepBtn')
     red_page.wait_for_function('() => window.lastGameState?.turn_phase === "end"')
     red_page.click('#advanceStepBtn')
@@ -188,8 +199,10 @@ def run_elite_defection_scenario(browser):
         and after['deck_count'] == 8
         and after['discard_count'] == 1
         and after['discard_pile'] == ['樂捐者']
+        and after_tianfang == after
         and after_red_turn == after
         and any('host discarded 1 chosen card(s): 樂捐者 (hand 4, deck 8, discard 1)' in line for line in action_log)
+        and any('天方奧援 had no legal target within 1 step; no card was discarded' in line for line in next_round_log)
         and any('Event drawn: 上海合作組織' in line for line in next_round_log)
         and not console_errors
     )
@@ -199,6 +212,7 @@ def run_elite_defection_scenario(browser):
         'before': before,
         'pending_after_refill': pending,
         'after': after,
+        'after_tianfang_no_legal_target': after_tianfang,
         'after_red_turn_and_shanghai_event': after_red_turn,
         'action_log': action_log,
         'next_round_log': next_round_log,

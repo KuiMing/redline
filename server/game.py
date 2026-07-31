@@ -3120,14 +3120,11 @@ class Game:
             if not built:
                 pass
         elif effect_type == 'force_discard_near':
-            count = int(payload.get('count', 0) or 0)
-            random_pick = bool(payload.get('random'))
-            target = next((other for other in self.players if other is not player and other.hand), None)
-            if target:
-                for _ in range(min(count, len(target.hand))):
-                    idx = 0 if not random_pick else random.randrange(len(target.hand))
-                    discarded = target.hand.pop(idx)
-                    target.deck.discard([discarded])
+            # This effect is always interactive. Reaching this branch means there was no
+            # player with hand cards within one step of the actor's organizations. Do not
+            # fall back to an arbitrary opponent: that bypasses range and (at tier 1)
+            # silently discards the first card without the target's required choice.
+            self.log(f"{card_name} had no legal target within 1 step; no card was discarded")
         self.log(f"{player.name} resolved {card_name} at tier {tier} (matched rulers: {', '.join(matched) if matched else 'none'})")
         return {'tier': tier, 'matched_rulers': matched, 'effect_type': effect_type, 'effect_text': self._support_card_effect_text(card_name, tier, region_index)}
 

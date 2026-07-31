@@ -2237,7 +2237,7 @@ def test_setup_elite_defection_discard_proof(payload: dict):
     host.hand = []
     host.deck.draw_pile = [Card("牌庫甲", "command", {}), Card("牌庫乙", "command", {}), selected_donor]
     host.deck.discard_pile = [played_donor] + [Card(f"既有棄牌{i}", "command", {}) for i in range(9)]
-    red.hand = [Card(f"紅軍手牌{i}", "command", {}) for i in range(5)]
+    red.hand = [game._make_support_card("天方奧援")] + [Card(f"紅軍手牌{i}", "command", {}) for i in range(4)]
 
     game.game_phase = GamePhase.MAIN
     game.turn_phase = TurnPhase.END
