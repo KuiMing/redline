@@ -188,9 +188,11 @@ class Game:
         self.event_modifiers = []
         self.event_notification = None
         self.pending_choice = None
-        # Temporarily holds an unresolved 宣傳家 build entitlement while the player commits
-        # another 宣傳家 and resolves that card's optional-trash pre-step.
+        # While a card-build choice is active, another build-capable action card may be
+        # committed. Preserve the active choice while that card resolves any prerequisite
+        # choice, and queue each resulting build with its own range/effect continuation.
         self._deferred_build_choice = None
+        self._queued_card_build_choices = []
         self._pending_era_activations = []
         self._deferred_auto_event = False
         self.era_notification = None
@@ -1251,6 +1253,78 @@ class Game:
         }
         return {'pending_choice': True}
 
+    def _card_can_queue_build(self, card):
+        card_name = getattr(card, 'name', str(card))
+        engine = getattr(self, 'action_engine', None)
+        cards = getattr(engine, 'cards', {}) if engine is not None else {}
+        card_def = cards.get(card_name)
+        return bool(
+            card_def
+            and any(isinstance(effect, dict) and effect.get('type') == 'build' for effect in (card_def.get('effect') or []))
+        )
+
+    def _build_choice_entitlement_count(self, choice):
+        if not isinstance(choice, dict) or choice.get('choice_key') != 'card_build_organization':
+            return 0
+        context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
+        later_builds = sum(
+            1
+            for effect in (context.get('remaining_effects') or [])
+            if isinstance(effect, dict) and effect.get('type') == 'build'
+        )
+        return 1 + later_builds
+
+    def _remaining_card_build_entitlements(self):
+        total = self._build_choice_entitlement_count(self.pending_choice)
+        total += sum(self._build_choice_entitlement_count(choice) for choice in self._queued_card_build_choices)
+        return total
+
+    def _refresh_card_build_choice_projection(self):
+        choice = self.pending_choice
+        if not isinstance(choice, dict) or choice.get('choice_key') != 'card_build_organization':
+            return 0
+        remaining = self._remaining_card_build_entitlements()
+        source_name = choice.get('source_name') or '建立組織卡'
+        choice['remaining_builds'] = remaining
+        choice['prompt'] = f"{source_name}：選擇要建立組織的城鎮（尚可建立 {remaining} 個）。"
+        return remaining
+
+    def _activate_next_queued_card_build(self, player):
+        unresolved = 0
+        while self._queued_card_build_choices:
+            choice = self._queued_card_build_choices.pop(0)
+            unresolved += self._build_choice_entitlement_count(choice)
+            context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
+            towns = self._card_build_town_choices(player, context.get('effect') or {})
+            if not towns:
+                self.log(f"{player.name} had no legal town for queued build via {choice.get('source_name') or 'card'}")
+                continue
+            choice['towns'] = list(towns)
+            self.pending_choice = choice
+            unresolved -= self._build_choice_entitlement_count(choice)
+            remaining = self._refresh_card_build_choice_projection()
+            return {'success': True, 'pending_choice': True, 'remaining_builds': remaining}
+        if unresolved:
+            return {
+                'success': True,
+                'no_more_valid_towns': True,
+                'remaining_builds_unresolved': unresolved,
+                'remaining_builds': 0,
+            }
+        return {'success': True, 'remaining_builds': 0}
+
+    def _resume_card_build_queue_if_idle(self, player):
+        if self.pending_choice:
+            return None
+        if isinstance(self._deferred_build_choice, dict):
+            self.pending_choice = self._deferred_build_choice
+            self._deferred_build_choice = None
+            remaining = self._refresh_card_build_choice_projection()
+            return {'success': True, 'pending_choice': True, 'remaining_builds': remaining}
+        if self._queued_card_build_choices:
+            return self._activate_next_queued_card_build(player)
+        return None
+
     def _set_pending_town_choice(self, player, choice_key, towns, prompt, **extra):
         normalized = []
         for town in list(towns or []):
@@ -1260,20 +1334,7 @@ class Game:
                 item = {'town': town}
             if item.get('town'):
                 normalized.append(item)
-        raw_deferred = self._deferred_build_choice
-        deferred = dict(raw_deferred) if isinstance(raw_deferred, dict) else {}
-        if (
-            choice_key == 'card_build_organization'
-            and extra.get('source_name') == '宣傳家'
-            and isinstance(deferred, dict)
-            and deferred.get('choice_key') == 'card_build_organization'
-            and deferred.get('player_id') == player.id
-            and deferred.get('source_name') == '宣傳家'
-        ):
-            extra['remaining_builds'] = max(1, int(deferred.get('remaining_builds', 1) or 1)) + 1
-            self._deferred_build_choice = None
-            prompt = f"宣傳家：選擇要建立組織的城鎮（尚可建立 {extra['remaining_builds']} 個）。"
-        self.pending_choice = {
+        new_choice = {
             'type': 'town_choice',
             'choice_key': choice_key,
             'player_id': player.id,
@@ -1281,6 +1342,22 @@ class Game:
             'prompt': prompt,
             **extra,
         }
+        deferred = self._deferred_build_choice
+        if (
+            choice_key == 'card_build_organization'
+            and isinstance(deferred, dict)
+            and deferred.get('choice_key') == 'card_build_organization'
+            and deferred.get('player_id') == player.id
+        ):
+            self._queued_card_build_choices.append(new_choice)
+            self.pending_choice = deferred
+            self._deferred_build_choice = None
+            remaining = self._refresh_card_build_choice_projection()
+            return {'pending_choice': True, 'remaining_builds': remaining}
+        self.pending_choice = new_choice
+        if choice_key == 'card_build_organization':
+            remaining = self._refresh_card_build_choice_projection()
+            return {'pending_choice': True, 'remaining_builds': remaining}
         return {'pending_choice': True}
 
     def _set_pending_target_choice(self, player, choice_key, targets, prompt, **extra):
@@ -2039,6 +2116,7 @@ class Game:
             self._place_organization(player, town)
             self.log(f"{player.name} built organization in {town} via event")
         elif choice_key == 'card_build_organization':
+            remaining_before = self._remaining_card_build_entitlements()
             self._place_organization(player, town)
             self.turn_log.setdefault("built_towns", []).append(town)
             self._track_event_progress('build_organization', town=town, player=player)
@@ -2046,7 +2124,6 @@ class Game:
             self._apply_guerrilla_on_build(player, town)
             self.log(f"{player.name} built organization in {town} via {choice.get('source_name') or 'card'}")
             context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
-            remaining_builds = max(1, int(choice.get('remaining_builds', 1) or 1))
             self.pending_choice = None
             if self._maybe_prompt_org_exp_repeat_build(player, context):
                 return {
@@ -2056,13 +2133,17 @@ class Game:
                     'selected': selected,
                     'choice_key': choice_key,
                     'pending_choice': True,
+                    'remaining_builds': max(0, remaining_before - 1),
                 }
-            per_build_remaining_effects = list(context.get('remaining_effects') or [])
-            remaining_effects = list(per_build_remaining_effects)
+            remaining_effects = list(context.get('remaining_effects') or [])
             for idx, effect in enumerate(remaining_effects):
                 context['remaining_effects'] = remaining_effects[idx + 1:]
                 result = self.effect_engine.execute(effect, player, self, context=context)
                 if isinstance(result, dict) and result.get('pending_choice'):
+                    if self.pending_choice and self.pending_choice.get('choice_key') == 'card_build_organization':
+                        remaining = self._refresh_card_build_choice_projection()
+                    else:
+                        remaining = self._remaining_card_build_entitlements()
                     return {
                         'success': True,
                         'choice_index': index,
@@ -2070,51 +2151,20 @@ class Game:
                         'selected': selected,
                         'choice_key': choice_key,
                         'pending_choice': True,
+                        'remaining_builds': remaining,
                     }
-            remaining_builds -= 1
-            if remaining_builds > 0:
-                next_context = dict(context)
-                # Every queued 宣傳家 grants its own post-build move; reuse the original
-                # remaining-effects template for each entitlement rather than only the last.
-                next_context['remaining_effects'] = list(per_build_remaining_effects)
-                next_towns = self._card_build_town_choices(player, next_context.get('effect') or {})
-                if next_towns:
-                    self._set_pending_town_choice(
-                        player,
-                        'card_build_organization',
-                        next_towns,
-                        f"宣傳家：選擇要建立組織的城鎮（尚可建立 {remaining_builds} 個）。",
-                        source_name='宣傳家',
-                        remaining_builds=remaining_builds,
-                        context=next_context,
-                    )
-                    return {
-                        'success': True,
-                        'choice_index': index,
-                        'town': town,
-                        'selected': selected,
-                        'choice_key': choice_key,
-                        'pending_choice': True,
-                        'remaining_builds': remaining_builds,
-                    }
-                self.log(f"{player.name} has {remaining_builds} queued 宣傳家 build(s) but no legal town remains")
-                return {
-                    'success': True,
-                    'choice_index': index,
-                    'town': town,
-                    'selected': selected,
-                    'choice_key': choice_key,
-                    'remaining_builds_unresolved': remaining_builds,
-                    'no_more_valid_towns': True,
-                }
-            return {
+            continuation = self._resume_card_build_queue_if_idle(player)
+            response = {
                 'success': True,
                 'choice_index': index,
                 'town': town,
                 'selected': selected,
                 'choice_key': choice_key,
-                'remaining_builds': 0,
+                'remaining_builds': self._remaining_card_build_entitlements(),
             }
+            if continuation:
+                response.update(continuation)
+            return response
         elif choice_key == 'era_red_build_near_target':
             context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
             remaining_builds = max(0, int(context.get('remaining_builds', 1) or 1))
@@ -2451,6 +2501,10 @@ class Game:
             return {'error': 'Unsupported pending choice type'}
         resolver = resolvers[choice_type]
         result = resolver(player, choice, index)
+        if not result.get('error') and not self.pending_choice:
+            build_continuation = self._resume_card_build_queue_if_idle(player)
+            if build_continuation:
+                result = {**result, **build_continuation}
         if not result.get('error') and not self.pending_choice:
             continuation = self._continue_era_and_event_flows()
             if continuation and continuation.get('pending_choice'):
@@ -4635,17 +4689,16 @@ class Game:
             return {"error": "Invalid index"}
         pending_card = player.hand[index]
         pending_card_name = getattr(pending_card, "name", str(pending_card))
-        stacking_propagandist = bool(
+        queueing_build_card = bool(
             self.pending_choice
             and self.pending_choice.get('player_id') == player.id
             and self.pending_choice.get('choice_key') == 'card_build_organization'
-            and self.pending_choice.get('source_name') == '宣傳家'
-            and pending_card_name == '宣傳家'
+            and self._card_can_queue_build(pending_card)
             and mode == 'action'
         )
-        if self.pending_choice and not stacking_propagandist:
+        if self.pending_choice and not queueing_build_card:
             return {"error": "Please resolve the pending choice first"}
-        if stacking_propagandist:
+        if queueing_build_card:
             self._deferred_build_choice = dict(self.pending_choice or {})
             self.pending_choice = None
         is_red_support_prep_action = (
@@ -4907,12 +4960,16 @@ class Game:
                     player.resources["money"] += 3
                     self.log(f"{player.name} triggered 展現實力 and gained 3 money")
 
+        build_continuation = self._resume_card_build_queue_if_idle(player)
         if self.pending_choice:
             if not action_context.get('removed_current_card'):
                 if not self._return_borrowed_card_to_owner_topdeck(played_card):
                     player.deck.discard([played_card])
             self.log(f"{player.name} played {card_name}")
-            return {"success": True, "pending_choice": True}
+            response = {"success": True, "pending_choice": True}
+            if build_continuation:
+                response.update(build_continuation)
+            return response
 
         if not action_context.get('removed_current_card'):
             self._apply_era_play_card_effects(player, played_card)
@@ -6269,7 +6326,9 @@ class Game:
                 )
             )
             pending_remaining_builds = self.pending_choice.get('remaining_builds')
-            if pending_is_build and pending_remaining_builds is None:
+            if self.pending_choice.get('choice_key') == 'card_build_organization':
+                pending_remaining_builds = self._remaining_card_build_entitlements()
+            elif pending_is_build and pending_remaining_builds is None:
                 pending_remaining_builds = int((pending_context.get('effect_payload') or {}).get('count', 1) or 1)
             pending_is_reaction = self.pending_choice.get('type') == 'reaction_choice'
             pending_is_for_viewer = viewer_player_id is None or self.pending_choice.get('player_id') == viewer_player_id
@@ -6294,6 +6353,15 @@ class Game:
                 'choice_key': self.pending_choice.get('choice_key'),
                 'interaction_kind': 'build_organization' if pending_is_build else None,
                 'remaining_builds': pending_remaining_builds,
+                'queueable_card_names': [
+                    getattr(card, 'name', str(card))
+                    for card in (getattr(viewer_player, 'hand', []) or [])
+                    if (
+                        self.pending_choice.get('choice_key') == 'card_build_organization'
+                        and self.pending_choice.get('player_id') == getattr(viewer_player, 'id', None)
+                        and self._card_can_queue_build(card)
+                    )
+                ],
                 'cancellable': bool(self.pending_choice.get('cancellable')) or self.pending_choice.get('choice_key') in CANCELLABLE_CHOICE_KEYS,
                 'player_id': self.pending_choice.get('player_id'),
                 'player_name': self.pending_choice.get('player_name'),

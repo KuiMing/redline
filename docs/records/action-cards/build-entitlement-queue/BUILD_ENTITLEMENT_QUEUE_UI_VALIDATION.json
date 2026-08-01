@@ -1,0 +1,91 @@
+{
+  "generated_at": "2026-08-01T08:53:29.219439+00:00",
+  "base_url": "http://127.0.0.1:8000",
+  "status": "passed",
+  "checks_passed": 10,
+  "checks_total": 10,
+  "checks": [
+    {
+      "name": "fixture_has_two_different_build_cards",
+      "ok": true,
+      "detail": [
+        "組織經驗丙",
+        "組織經驗乙"
+      ]
+    },
+    {
+      "name": "first_build_card_keeps_formal_ui_in_command_center",
+      "ok": true,
+      "detail": true
+    },
+    {
+      "name": "second_build_card_action_remains_enabled",
+      "ok": true,
+      "detail": {
+        "visible": true,
+        "enabled": true
+      }
+    },
+    {
+      "name": "formal_leaflet_map_shows_three_remaining_builds",
+      "ok": true,
+      "detail": "組織經驗丙：選擇要建立組織的城鎮（尚可建立 3 個）。 可建立城鎮：1 個。尚可建立組織：3 個。地圖上已用中性色外框標出可選城鎮。請點選中性色外框城鎮，然後使用左側「在目前城鎮建立組織（效果）」按鈕完成建立。"
+    },
+    {
+      "name": "three_builds_resolve_through_leaflet_selection_and_visible_build_button",
+      "ok": true,
+      "detail": [
+        "澳門",
+        "廣州",
+        "南寧"
+      ]
+    },
+    {
+      "name": "remaining_builds_decrements_three_two_one_zero",
+      "ok": true,
+      "detail": [
+        2,
+        1,
+        0
+      ]
+    },
+    {
+      "name": "authoritative_state_has_base_plus_three_new_organizations",
+      "ok": true,
+      "detail": {
+        "香港城": 1,
+        "澳門": 1,
+        "廣州": 1,
+        "南寧": 1
+      }
+    },
+    {
+      "name": "both_cards_commit_to_discard_and_queue_clears",
+      "ok": true,
+      "detail": {
+        "hand": [],
+        "discard": [
+          "組織經驗丙",
+          "組織經驗乙"
+        ],
+        "pending": null
+      }
+    },
+    {
+      "name": "formal_log_records_each_card_build",
+      "ok": true,
+      "detail": "[Turn 1] viewer built organization in 南寧 via 組織經驗乙\n[Turn 1] viewer built organization in 廣州 via 組織經驗乙\n[Turn 1] viewer built organization in 澳門 via 組織經驗丙\n[Turn 1] viewer played 組織經驗乙\n[Turn 1] viewer played 組織經驗丙"
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "ok": true,
+      "detail": []
+    }
+  ],
+  "console_errors": [],
+  "screenshots": [
+    "docs/records/action-cards/build-entitlement-queue/build-queue-collecting.png",
+    "docs/records/action-cards/build-entitlement-queue/build-queue-three-remaining.png",
+    "docs/records/action-cards/build-entitlement-queue/build-queue-resolved.png"
+  ]
+}

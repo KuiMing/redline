@@ -761,6 +761,56 @@ def test_set_hand(payload: dict):
     }
 
 
+@app.post("/test/setup-build-queue-proof")
+def test_setup_build_queue_proof(payload: dict):
+    game_id = str(uuid.uuid4())
+    players = [(str(uuid.uuid4()), "viewer"), (str(uuid.uuid4()), "red")]
+    game = Game(players)
+    viewer, red = game.players
+
+    viewer.faction_id = payload.get("faction_id", "liberals")
+    viewer.base = payload.get("base", "香港城")
+    viewer.organizations = dict(payload.get("organizations") or {viewer.base: 1})
+    red.faction_id = "red_army"
+    red.base = "北京"
+    red.organizations = {"北京": 1}
+
+    card_names = list(payload.get("cards") or ["組織經驗丙", "組織經驗乙"])
+    viewer.hand = []
+    for name in card_names:
+        card_def = next((card for card in game.structured_cards if card.get("name") == name), None)
+        if card_def is None:
+            return {"error": f"Unknown action card: {name}"}
+        viewer.hand.append(Card(card_def["name"], card_def.get("type", "test"), card_def.get("resources", {})))
+    viewer.deck.discard_pile = []
+
+    game.current_player_index = 0
+    game.game_phase = GamePhase.MAIN
+    game.turn_phase = TurnPhase.ACTION
+    game.pending_base_choices = {}
+    game.pending_choice = None
+    noop_event = game._event_by_name("歲月靜好")
+    game.current_event = dict(noop_event or {})
+    game.event_progress = {"count": 0, "required": 0, "succeeded": True, "settled": True, "status": "idle"}
+    game.event_notification = game._event_display_payload()
+    game.event_modifiers = []
+    game.id = game_id
+
+    manager.games[game_id] = game
+    manager.connections[game_id] = manager.connections.get(game_id, {})
+    lobby[game_id] = [(player.id, player.name) for player in game.players]
+    lobby_hosts[game_id] = viewer.id
+    lobby_factions[game_id] = {player.id: player.faction_id for player in game.players}
+    lobby_bases[game_id] = {player.id: player.base for player in game.players}
+
+    return {
+        "success": True,
+        "game_id": game_id,
+        "player_id": viewer.id,
+        "state": game.state(viewer.id),
+    }
+
+
 @app.post("/test/setup-card-scenario")
 def test_setup_card_scenario(payload: dict):
     game_id = payload.get("game_id")

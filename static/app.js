@@ -1464,7 +1464,15 @@ function playHandCard(index, card, mode) {
     setPhaseActionNotice(message);
     return;
   }
-  if (state.pending_choice && me && state.pending_choice.player_id === me.id) {
+  const canQueueBuildCard = !!(
+    state.pending_choice
+    && me
+    && state.pending_choice.player_id === me.id
+    && state.pending_choice.interaction_kind === 'build_organization'
+    && (state.pending_choice.queueable_card_names || []).includes(cardName)
+    && mode === 'action'
+  );
+  if (state.pending_choice && me && state.pending_choice.player_id === me.id && !canQueueBuildCard) {
     setPhaseActionNotice('請先處理目前待選擇效果。');
     return;
   }
@@ -1747,9 +1755,15 @@ function renderChoiceModal(state) {
     activeChoiceModal = null;
     if (payload) {
       lastSupportChoiceMapHighlightPayload = payload;
-      setActiveGameView('map')
-        .then(() => syncChoiceModalMapHighlight(payload))
-        .catch(err => console.warn('Failed to focus strategic map for event build choice', err));
+      const canQueueMoreBuildCards = choiceKey === 'card_build_organization'
+        && (choice.queueable_card_names || []).length > 0;
+      if (canQueueMoreBuildCards) {
+        syncChoiceModalMapHighlight(payload);
+      } else {
+        setActiveGameView('map')
+          .then(() => syncChoiceModalMapHighlight(payload))
+          .catch(err => console.warn('Failed to focus strategic map for event build choice', err));
+      }
     } else {
       syncChoiceModalMapHighlight(null);
     }
@@ -3154,13 +3168,12 @@ async function render(state) {
     if (me && me.hand) {
       const rawPhase = String(state.turn_phase || '').toLowerCase();
       const hasMyPendingChoice = !!(state.pending_choice && state.pending_choice.player_id === me.id);
-      const canStackPropagandist = (cardName, mode) => hasMyPendingChoice
+      const canQueueBuildCard = (cardName, mode) => hasMyPendingChoice
         && state.pending_choice?.interaction_kind === 'build_organization'
-        && state.pending_choice?.source_name === '宣傳家'
-        && cardName === '宣傳家'
+        && (state.pending_choice?.queueable_card_names || []).includes(cardName)
         && mode === 'action';
       const canPlayHandCardMode = (cardName, mode) => {
-        if (!isMyTurn || (hasMyPendingChoice && !canStackPropagandist(cardName, mode))) return false;
+        if (!isMyTurn || (hasMyPendingChoice && !canQueueBuildCard(cardName, mode))) return false;
         if (rawPhase === 'action') return true;
         return rawPhase === 'event' && mode === 'action' && cardName === '紅軍奧援' && me.faction === 'red_army';
       };

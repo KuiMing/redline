@@ -18,7 +18,7 @@
 ## 目前 active todo
 
 ### P1：多張建立組織卡可累積後在地圖一次結算
-- [todo] 玩家可能連續打出多張「可以建立組織」的卡牌；系統應先累積各張卡提供的待建立次數，再讓玩家於戰略地圖連續完成全部組織建立，而不是第一張卡產生 pending choice 後就阻止後續建立卡出牌。此能力需通用支援所有建立組織卡，不只特判 `宣傳家`。每建立一次後都要重新計算合法城鎮與組織棋供應，地圖顯示剩餘建立數，並保留各張卡其他效果及其正確結算順序。（2026-07-31 操作流程回報）
+- [done] 已將原本只允許多張 `宣傳家` 的特判改為通用 build-entitlement FIFO；所有具印刷 `build` effect 的行動卡（`宣傳家`、`思想家`、`組織經驗甲／乙／丙`）都可在既有 `card_build_organization` 尚未結算時繼續以行動打出。queue entry 保留各卡自己的 range、ignore-distance、後續移動／repeat／其餘 effects與結算順序；每次建立後重新計算合法城鎮與組織棋供應，無合法目標或供應耗盡時安全跳過未能使用的 entitlement。state以 viewer-scoped `queueable_card_names`控制正式手牌按鈕，`remaining_builds`計入 active effect、同卡尚未執行的 build effects與後續queued cards；指揮中心會在仍有可加入的建立牌時留在手牌區，最後一張加入後才自動切正式Leaflet地圖集中建立。新增5卡admission matrix、異質 `丙＋乙=3` FIFO、範圍差異、候選重算、供應耗盡、甲repeat continuation、後續移動與非建立牌阻擋共12項；focused pytest 12/12、action/build affected pytest 119/119、逐檔完整可收集pytest 175 passed、單卡建立runtime 5/5、action card recomposition 46/46、正式 Chromium／WebSocket／Leaflet UI proof 10/10且console 0。人工截圖確認第二張卡行動按鈕可用、地圖顯示尚可建立3個及中性候選、最後3次建立與兩卡棄牌紀錄。證據位於 `docs/records/action-cards/build-entitlement-queue/`。（2026-08-01 完成）
 
 ### P1：所有奧援卡的事件任務進度稽核
 - [done] 已確認 `東突厥集中營` canonical任務條件為「打出至少1張購買費用有宣傳的卡牌」，8種一般奧援卡的印刷購買費用皆為 `1資金＋2宣傳`，因此全部應計入；`紅軍奧援`是無購買費用的起始牌，不計入。root cause是需要後續選擇的互動奧援在 `play_card()`建立 pending choice後提早 return，跳過位於其後的事件進度hook。現改為合法奧援通過目標preflight後、pending return前依原始印刷購買費用記錄事件進度；無合法目標退回卡牌時不計，北國奧援於初始步驟取消時連同卡牌、turn flags、事件進度與事件通知一起transactional rollback。新增8種一般奧援matrix、臺灣奧援II級pending、no-target、北國取消與紅軍奧援負例共12項；affected pytest 133/133、事件runtime 35/35、奧援runtime 12/12、北國7/7、南洋2/2、正式臺灣奧援UI proof 8/8且console 0。證據位於 `docs/records/event-cards/support-event-progress/`。（2026-08-01 完成）
