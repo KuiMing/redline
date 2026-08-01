@@ -36,7 +36,7 @@
 - [done] 已確認裁切存在於 runtime 原始 PNG，而非瀏覽器 DOM／CSS。重新以 canonical 事件文字與既有插圖排版 `上海合作組織`完整卡面，將無標點長句改為 22 字安全寬度硬換行；任務文字現完整留在白色內容框內，右側安全區無深色文字像素。新增專用 validator，覆蓋 1350×1100 資產、runtime 綁定、右側安全區、放大卡比例、視窗邊界、狀態列及 console error，正式 UI proof 10/10 passed。（2026-08-01 完成）
 
 ### P2：遊戲區域寬度與卡牌邊界裁切
-- [todo] 手牌區與隨機購買區的可用寬度再加寬，避免部分視窗尺寸或卡牌排列下，最外側卡牌剛好被容器邊界裁切；常設購買區可稍微縮窄，將版面寬度讓給手牌與隨機購買區。後續需以正式 UI 在常見桌面寬度與臨界寬度檢查最左／最右卡牌完整可見、控制按鈕不被截斷，且不得產生不必要的水平捲動。（2026-07-31 UI 回報）
+- [done] 指揮中心三欄由 `312 / 460 / 460px`調整為 `284 / 474 / 474px`：常設購買區縮窄，隨機購買區與手牌區各加寬，兩張 220px 卡牌加 12px gap 可完整落在 panel 內容寬度內，`purchaseRandom`與 `hand`均由 `client/scroll 442/452`修正為 `456/456`。另修正 1280×720 固定舞台在 1024 viewport 以中心縮放後整體右偏 128px 的問題，改由 `resizeStage()`計算縮放後 left/top 並以左上為 transform origin；移除已過時的窄視窗事件卡左移 workaround。新增 1280×720 與 1024×768 正式 browser geometry／截圖 proof，覆蓋欄寬、卡牌與按鈕邊界、zone/document overflow、viewport containment、卡面載入及 console，20/20 passed；證據位於 `docs/records/game-area-width/`。（2026-08-01 完成）
 
 ### P2：所有玩家可見英文提示全面中文化
 - [done] 已建立共用 `static/player_messages_zh_tw.js` 翻譯邊界，接入 lobby REST error、WebSocket error、原生 dialog、行動提示、pending choice/modal 與正式戰略地圖；未知英文操作錯誤使用繁中安全 fallback，內部 key／protocol identifier 不直接作 UI fallback。後端 125 條固定 error inventory 全數具專用翻譯或受控規則；`Target player has no organization within range`正式顯示為「目標玩家在範圍內沒有組織。」。另將地圖工具列及 road/rail/shared-dissolve 等殘留英文中文化，錯誤提示改為 5 秒 sticky 並避開事件卡縮圖；action log 與地圖動態提示補 HTML escape。靜態 regression 24/24、正式 browser proof 10/10、相鄰 backend tests 115/115 通過，證據位於 `docs/records/player-message-localization/`。（2026-08-01 完成）

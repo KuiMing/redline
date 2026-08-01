@@ -32,6 +32,8 @@ function resizeStage() {
     window.innerHeight / 720
   );
   document.documentElement.style.setProperty('--stage-scale', String(scale));
+  document.documentElement.style.setProperty('--stage-left', `${Math.max(0, (window.innerWidth - 1280 * scale) / 2)}px`);
+  document.documentElement.style.setProperty('--stage-top', `${Math.max(0, (window.innerHeight - 720 * scale) / 2)}px`);
 }
 
 function playerInitialFromInput(name) {

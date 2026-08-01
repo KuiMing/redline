@@ -1,0 +1,824 @@
+{
+  "status": "passed",
+  "generated_at": "2026-08-01T12:11:28.443557+08:00",
+  "base_url": "http://127.0.0.1:8000",
+  "checks_passed": 20,
+  "checks_total": 20,
+  "results": [
+    {
+      "viewport": "1280x720",
+      "passed": true,
+      "checks": {
+        "static_panel_is_narrower_than_wide_panels": true,
+        "columns_match_target_distribution": true,
+        "all_cards_inside_panel_bounds": true,
+        "no_zone_horizontal_overflow": true,
+        "hand_controls_inside_cards": true,
+        "no_document_horizontal_overflow": true,
+        "command_grid_inside_viewport": true,
+        "all_panels_inside_viewport": true,
+        "expected_card_inventory_visible": true,
+        "browser_console_has_no_errors": true
+      },
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "stageScale": "1",
+        "commandGrid": {
+          "left": 0,
+          "right": 1280,
+          "top": 198,
+          "bottom": 720,
+          "width": 1280,
+          "height": 522
+        },
+        "panels": {
+          "controlPanel": {
+            "left": 12,
+            "right": 296,
+            "top": 210,
+            "bottom": 708,
+            "width": 284,
+            "height": 498
+          },
+          "randomMarketPanel": {
+            "left": 308,
+            "right": 782,
+            "top": 210,
+            "bottom": 708,
+            "width": 474,
+            "height": 498
+          },
+          "handPanel": {
+            "left": 794,
+            "right": 1268,
+            "top": 210,
+            "bottom": 708,
+            "width": 474,
+            "height": 498
+          }
+        },
+        "staticZone": {
+          "id": "purchaseStatic",
+          "clientWidth": 266,
+          "scrollWidth": 266,
+          "hasHorizontalOverflow": false,
+          "zoneRect": {
+            "left": 21,
+            "right": 287,
+            "top": 250,
+            "bottom": 699,
+            "width": 266,
+            "height": 449
+          },
+          "panelRect": {
+            "left": 12,
+            "right": 296,
+            "top": 210,
+            "bottom": 708,
+            "width": 284,
+            "height": 498
+          },
+          "cardCount": 6,
+          "cards": [
+            {
+              "name": "宣傳家",
+              "left": 21,
+              "right": 241,
+              "top": 250,
+              "bottom": 520,
+              "width": 220,
+              "height": 270,
+              "buttons": []
+            },
+            {
+              "name": "思想家",
+              "left": 21,
+              "right": 241,
+              "top": 532,
+              "bottom": 802,
+              "width": 220,
+              "height": 270,
+              "buttons": []
+            },
+            {
+              "name": "資助者",
+              "left": 21,
+              "right": 241,
+              "top": 814,
+              "bottom": 1084,
+              "width": 220,
+              "height": 270,
+              "buttons": []
+            },
+            {
+              "name": "資本家",
+              "left": 21,
+              "right": 241,
+              "top": 1096,
+              "bottom": 1366,
+              "width": 220,
+              "height": 270,
+              "buttons": []
+            },
+            {
+              "name": "分神",
+              "left": 21,
+              "right": 241,
+              "top": 1378,
+              "bottom": 1648,
+              "width": 220,
+              "height": 270,
+              "buttons": []
+            },
+            {
+              "name": "內鬥",
+              "left": 21,
+              "right": 241,
+              "top": 1660,
+              "bottom": 1930,
+              "width": 220,
+              "height": 270,
+              "buttons": []
+            }
+          ],
+          "cardsInsidePanel": true,
+          "controlsInsideCards": true
+        },
+        "randomZone": {
+          "id": "purchaseRandom",
+          "clientWidth": 456,
+          "scrollWidth": 456,
+          "hasHorizontalOverflow": false,
+          "zoneRect": {
+            "left": 317,
+            "right": 773,
+            "top": 250,
+            "bottom": 699,
+            "width": 456,
+            "height": 449
+          },
+          "panelRect": {
+            "left": 308,
+            "right": 782,
+            "top": 210,
+            "bottom": 708,
+            "width": 474,
+            "height": 498
+          },
+          "cardCount": 5,
+          "cards": [
+            {
+              "name": "武裝者",
+              "left": 317,
+              "right": 537,
+              "top": 250,
+              "bottom": 520,
+              "width": 220,
+              "height": 270,
+              "buttons": []
+            },
+            {
+              "name": "天方奧援",
+              "left": 549,
+              "right": 769,
+              "top": 250,
+              "bottom": 520,
+              "width": 220,
+              "height": 270,
+              "buttons": []
+            },
+            {
+              "name": "派遣間諜",
+              "left": 317,
+              "right": 537,
+              "top": 532,
+              "bottom": 802,
+              "width": 220,
+              "height": 270,
+              "buttons": []
+            },
+            {
+              "name": "交通經驗丙",
+              "left": 549,
+              "right": 769,
+              "top": 532,
+              "bottom": 802,
+              "width": 220,
+              "height": 270,
+              "buttons": []
+            },
+            {
+              "name": "武裝者",
+              "left": 317,
+              "right": 537,
+              "top": 814,
+              "bottom": 1084,
+              "width": 220,
+              "height": 270,
+              "buttons": []
+            }
+          ],
+          "cardsInsidePanel": true,
+          "controlsInsideCards": true
+        },
+        "handZone": {
+          "id": "hand",
+          "clientWidth": 456,
+          "scrollWidth": 456,
+          "hasHorizontalOverflow": false,
+          "zoneRect": {
+            "left": 803,
+            "right": 1259,
+            "top": 242,
+            "bottom": 699,
+            "width": 456,
+            "height": 457
+          },
+          "panelRect": {
+            "left": 794,
+            "right": 1268,
+            "top": 210,
+            "bottom": 708,
+            "width": 474,
+            "height": 498
+          },
+          "cardCount": 5,
+          "cards": [
+            {
+              "name": "交通經驗甲",
+              "left": 803,
+              "right": 1023,
+              "top": 242,
+              "bottom": 560,
+              "width": 220,
+              "height": 318,
+              "buttons": [
+                {
+                  "text": "資源",
+                  "left": 812,
+                  "right": 910,
+                  "top": 523,
+                  "bottom": 551,
+                  "width": 98,
+                  "height": 28
+                },
+                {
+                  "text": "行動",
+                  "left": 916,
+                  "right": 1014,
+                  "top": 523,
+                  "bottom": 551,
+                  "width": 98,
+                  "height": 28
+                }
+              ]
+            },
+            {
+              "name": "領導",
+              "left": 1035,
+              "right": 1255,
+              "top": 242,
+              "bottom": 560,
+              "width": 220,
+              "height": 318,
+              "buttons": [
+                {
+                  "text": "資源",
+                  "left": 1044,
+                  "right": 1142,
+                  "top": 523,
+                  "bottom": 551,
+                  "width": 98,
+                  "height": 28
+                },
+                {
+                  "text": "行動",
+                  "left": 1148,
+                  "right": 1246,
+                  "top": 523,
+                  "bottom": 551,
+                  "width": 98,
+                  "height": 28
+                }
+              ]
+            },
+            {
+              "name": "英美奧援",
+              "left": 803,
+              "right": 1023,
+              "top": 572,
+              "bottom": 890,
+              "width": 220,
+              "height": 318,
+              "buttons": [
+                {
+                  "text": "棄置",
+                  "left": 812,
+                  "right": 910,
+                  "top": 853,
+                  "bottom": 881,
+                  "width": 98,
+                  "height": 28
+                },
+                {
+                  "text": "行動",
+                  "left": 916,
+                  "right": 1014,
+                  "top": 853,
+                  "bottom": 881,
+                  "width": 98,
+                  "height": 28
+                }
+              ]
+            },
+            {
+              "name": "宣傳家",
+              "left": 1035,
+              "right": 1255,
+              "top": 572,
+              "bottom": 890,
+              "width": 220,
+              "height": 318,
+              "buttons": [
+                {
+                  "text": "資源",
+                  "left": 1044,
+                  "right": 1142,
+                  "top": 853,
+                  "bottom": 881,
+                  "width": 98,
+                  "height": 28
+                },
+                {
+                  "text": "行動",
+                  "left": 1148,
+                  "right": 1246,
+                  "top": 853,
+                  "bottom": 881,
+                  "width": 98,
+                  "height": 28
+                }
+              ]
+            },
+            {
+              "name": "資助者",
+              "left": 803,
+              "right": 1023,
+              "top": 902,
+              "bottom": 1220,
+              "width": 220,
+              "height": 318,
+              "buttons": [
+                {
+                  "text": "資源",
+                  "left": 812,
+                  "right": 910,
+                  "top": 1183,
+                  "bottom": 1211,
+                  "width": 98,
+                  "height": 28
+                },
+                {
+                  "text": "行動",
+                  "left": 916,
+                  "right": 1014,
+                  "top": 1183,
+                  "bottom": 1211,
+                  "width": 98,
+                  "height": 28
+                }
+              ]
+            }
+          ],
+          "cardsInsidePanel": true,
+          "controlsInsideCards": true
+        },
+        "documentHorizontalOverflow": false,
+        "purchaseControls": {
+          "display": "none",
+          "rect": {
+            "left": 0,
+            "right": 0,
+            "top": 0,
+            "bottom": 0,
+            "width": 0,
+            "height": 0
+          }
+        }
+      }
+    },
+    {
+      "viewport": "1024x768",
+      "passed": true,
+      "checks": {
+        "static_panel_is_narrower_than_wide_panels": true,
+        "columns_match_target_distribution": true,
+        "all_cards_inside_panel_bounds": true,
+        "no_zone_horizontal_overflow": true,
+        "hand_controls_inside_cards": true,
+        "no_document_horizontal_overflow": true,
+        "command_grid_inside_viewport": true,
+        "all_panels_inside_viewport": true,
+        "expected_card_inventory_visible": true,
+        "browser_console_has_no_errors": true
+      },
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 768
+        },
+        "stageScale": "0.8",
+        "commandGrid": {
+          "left": 0,
+          "right": 1024,
+          "top": 254.40000915527344,
+          "bottom": 671.9999847412109,
+          "width": 1024,
+          "height": 417.5999755859375
+        },
+        "panels": {
+          "controlPanel": {
+            "left": 9.600000381469727,
+            "right": 236.7999973297119,
+            "top": 264,
+            "bottom": 662.4000244140625,
+            "width": 227.1999969482422,
+            "height": 398.4000244140625
+          },
+          "randomMarketPanel": {
+            "left": 246.40000915527344,
+            "right": 625.6000213623047,
+            "top": 264,
+            "bottom": 662.4000244140625,
+            "width": 379.20001220703125,
+            "height": 398.4000244140625
+          },
+          "handPanel": {
+            "left": 635.2000122070312,
+            "right": 1014.4000244140625,
+            "top": 264,
+            "bottom": 662.4000244140625,
+            "width": 379.20001220703125,
+            "height": 398.4000244140625
+          }
+        },
+        "staticZone": {
+          "id": "purchaseStatic",
+          "clientWidth": 266,
+          "scrollWidth": 266,
+          "hasHorizontalOverflow": false,
+          "zoneRect": {
+            "left": 16.80000114440918,
+            "right": 229.600004196167,
+            "top": 296,
+            "bottom": 655.2000122070312,
+            "width": 212.8000030517578,
+            "height": 359.20001220703125
+          },
+          "panelRect": {
+            "left": 9.600000381469727,
+            "right": 236.7999973297119,
+            "top": 264,
+            "bottom": 662.4000244140625,
+            "width": 227.1999969482422,
+            "height": 398.4000244140625
+          },
+          "cardCount": 6,
+          "cards": [
+            {
+              "name": "宣傳家",
+              "left": 16.80000114440918,
+              "right": 192.80000114440918,
+              "top": 296,
+              "bottom": 512,
+              "width": 176,
+              "height": 216,
+              "buttons": []
+            },
+            {
+              "name": "思想家",
+              "left": 16.80000114440918,
+              "right": 192.80000114440918,
+              "top": 521.5999755859375,
+              "bottom": 737.6000366210938,
+              "width": 176,
+              "height": 216.00006103515625,
+              "buttons": []
+            },
+            {
+              "name": "資助者",
+              "left": 16.80000114440918,
+              "right": 192.80000114440918,
+              "top": 747.2000122070312,
+              "bottom": 963.2000122070312,
+              "width": 176,
+              "height": 216,
+              "buttons": []
+            },
+            {
+              "name": "資本家",
+              "left": 16.80000114440918,
+              "right": 192.80000114440918,
+              "top": 972.7999877929688,
+              "bottom": 1188.800048828125,
+              "width": 176,
+              "height": 216.00006103515625,
+              "buttons": []
+            },
+            {
+              "name": "分神",
+              "left": 16.80000114440918,
+              "right": 192.80000114440918,
+              "top": 1198.4000244140625,
+              "bottom": 1414.4000244140625,
+              "width": 176,
+              "height": 216,
+              "buttons": []
+            },
+            {
+              "name": "內鬥",
+              "left": 16.80000114440918,
+              "right": 192.80000114440918,
+              "top": 1424,
+              "bottom": 1640,
+              "width": 176,
+              "height": 216,
+              "buttons": []
+            }
+          ],
+          "cardsInsidePanel": true,
+          "controlsInsideCards": true
+        },
+        "randomZone": {
+          "id": "purchaseRandom",
+          "clientWidth": 456,
+          "scrollWidth": 456,
+          "hasHorizontalOverflow": false,
+          "zoneRect": {
+            "left": 253.60000610351562,
+            "right": 618.4000244140625,
+            "top": 296,
+            "bottom": 655.2000122070312,
+            "width": 364.8000183105469,
+            "height": 359.20001220703125
+          },
+          "panelRect": {
+            "left": 246.40000915527344,
+            "right": 625.6000213623047,
+            "top": 264,
+            "bottom": 662.4000244140625,
+            "width": 379.20001220703125,
+            "height": 398.4000244140625
+          },
+          "cardCount": 5,
+          "cards": [
+            {
+              "name": "英美奧援",
+              "left": 253.60000610351562,
+              "right": 429.6000061035156,
+              "top": 296,
+              "bottom": 512,
+              "width": 176,
+              "height": 216,
+              "buttons": []
+            },
+            {
+              "name": "離間",
+              "left": 439.20001220703125,
+              "right": 615.2000122070312,
+              "top": 296,
+              "bottom": 512,
+              "width": 176,
+              "height": 216,
+              "buttons": []
+            },
+            {
+              "name": "北國奧援",
+              "left": 253.60000610351562,
+              "right": 429.6000061035156,
+              "top": 521.5999755859375,
+              "bottom": 737.6000366210938,
+              "width": 176,
+              "height": 216.00006103515625,
+              "buttons": []
+            },
+            {
+              "name": "北國奧援",
+              "left": 439.20001220703125,
+              "right": 615.2000122070312,
+              "top": 521.5999755859375,
+              "bottom": 737.6000366210938,
+              "width": 176,
+              "height": 216.00006103515625,
+              "buttons": []
+            },
+            {
+              "name": "行動募資",
+              "left": 253.60000610351562,
+              "right": 429.6000061035156,
+              "top": 747.2000122070312,
+              "bottom": 963.2000122070312,
+              "width": 176,
+              "height": 216,
+              "buttons": []
+            }
+          ],
+          "cardsInsidePanel": true,
+          "controlsInsideCards": true
+        },
+        "handZone": {
+          "id": "hand",
+          "clientWidth": 456,
+          "scrollWidth": 456,
+          "hasHorizontalOverflow": false,
+          "zoneRect": {
+            "left": 642.4000244140625,
+            "right": 1007.2000122070312,
+            "top": 289.6000061035156,
+            "bottom": 655.2000122070312,
+            "width": 364.79998779296875,
+            "height": 365.6000061035156
+          },
+          "panelRect": {
+            "left": 635.2000122070312,
+            "right": 1014.4000244140625,
+            "top": 264,
+            "bottom": 662.4000244140625,
+            "width": 379.20001220703125,
+            "height": 398.4000244140625
+          },
+          "cardCount": 5,
+          "cards": [
+            {
+              "name": "交通經驗甲",
+              "left": 642.4000244140625,
+              "right": 818.4000244140625,
+              "top": 289.6000061035156,
+              "bottom": 544,
+              "width": 176,
+              "height": 254.39999389648438,
+              "buttons": [
+                {
+                  "text": "資源",
+                  "left": 649.6000366210938,
+                  "right": 728,
+                  "top": 514.4000244140625,
+                  "bottom": 536.800048828125,
+                  "width": 78.39996337890625,
+                  "height": 22.4000244140625
+                },
+                {
+                  "text": "行動",
+                  "left": 732.7999877929688,
+                  "right": 811.2000122070312,
+                  "top": 514.4000244140625,
+                  "bottom": 536.800048828125,
+                  "width": 78.4000244140625,
+                  "height": 22.4000244140625
+                }
+              ]
+            },
+            {
+              "name": "領導",
+              "left": 828,
+              "right": 1004,
+              "top": 289.6000061035156,
+              "bottom": 544,
+              "width": 176,
+              "height": 254.39999389648438,
+              "buttons": [
+                {
+                  "text": "資源",
+                  "left": 835.2000122070312,
+                  "right": 913.6000366210938,
+                  "top": 514.4000244140625,
+                  "bottom": 536.800048828125,
+                  "width": 78.4000244140625,
+                  "height": 22.4000244140625
+                },
+                {
+                  "text": "行動",
+                  "left": 918.4000244140625,
+                  "right": 996.7999877929688,
+                  "top": 514.4000244140625,
+                  "bottom": 536.800048828125,
+                  "width": 78.39996337890625,
+                  "height": 22.4000244140625
+                }
+              ]
+            },
+            {
+              "name": "英美奧援",
+              "left": 642.4000244140625,
+              "right": 818.4000244140625,
+              "top": 553.5999755859375,
+              "bottom": 808,
+              "width": 176,
+              "height": 254.4000244140625,
+              "buttons": [
+                {
+                  "text": "棄置",
+                  "left": 649.6000366210938,
+                  "right": 728,
+                  "top": 778.4000244140625,
+                  "bottom": 800.7999877929688,
+                  "width": 78.39996337890625,
+                  "height": 22.39996337890625
+                },
+                {
+                  "text": "行動",
+                  "left": 732.7999877929688,
+                  "right": 811.2000122070312,
+                  "top": 778.4000244140625,
+                  "bottom": 800.7999877929688,
+                  "width": 78.4000244140625,
+                  "height": 22.39996337890625
+                }
+              ]
+            },
+            {
+              "name": "宣傳家",
+              "left": 828,
+              "right": 1004,
+              "top": 553.5999755859375,
+              "bottom": 808,
+              "width": 176,
+              "height": 254.4000244140625,
+              "buttons": [
+                {
+                  "text": "資源",
+                  "left": 835.2000122070312,
+                  "right": 913.6000366210938,
+                  "top": 778.4000244140625,
+                  "bottom": 800.7999877929688,
+                  "width": 78.4000244140625,
+                  "height": 22.39996337890625
+                },
+                {
+                  "text": "行動",
+                  "left": 918.4000244140625,
+                  "right": 996.7999877929688,
+                  "top": 778.4000244140625,
+                  "bottom": 800.7999877929688,
+                  "width": 78.39996337890625,
+                  "height": 22.39996337890625
+                }
+              ]
+            },
+            {
+              "name": "資助者",
+              "left": 642.4000244140625,
+              "right": 818.4000244140625,
+              "top": 817.6000366210938,
+              "bottom": 1072,
+              "width": 176,
+              "height": 254.39996337890625,
+              "buttons": [
+                {
+                  "text": "資源",
+                  "left": 649.6000366210938,
+                  "right": 728,
+                  "top": 1042.4000244140625,
+                  "bottom": 1064.800048828125,
+                  "width": 78.39996337890625,
+                  "height": 22.4000244140625
+                },
+                {
+                  "text": "行動",
+                  "left": 732.7999877929688,
+                  "right": 811.2000122070312,
+                  "top": 1042.4000244140625,
+                  "bottom": 1064.800048828125,
+                  "width": 78.4000244140625,
+                  "height": 22.4000244140625
+                }
+              ]
+            }
+          ],
+          "cardsInsidePanel": true,
+          "controlsInsideCards": true
+        },
+        "documentHorizontalOverflow": false,
+        "purchaseControls": {
+          "display": "none",
+          "rect": {
+            "left": 0,
+            "right": 0,
+            "top": 0,
+            "bottom": 0,
+            "width": 0,
+            "height": 0
+          }
+        }
+      }
+    }
+  ],
+  "console_errors": [],
+  "screenshots": [
+    "docs/records/game-area-width/game-area-width-1280x720.png",
+    "docs/records/game-area-width/game-area-width-1024x768.png"
+  ]
+}

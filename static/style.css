@@ -20,6 +20,8 @@
   --stage-w: 1280px;
   --stage-h: 720px;
   --stage-scale: 1;
+  --stage-left: 0px;
+  --stage-top: 0px;
 }
 
 * { box-sizing: border-box; }
@@ -41,8 +43,6 @@ body {
 #stageViewport {
   position: fixed;
   inset: 0;
-  display: grid;
-  place-items: center;
   overflow: hidden;
   background-color: #05080C;
   background-image: url('/static/war_background.jpg');
@@ -71,10 +71,12 @@ body {
 #designStage {
   width: var(--stage-w);
   height: var(--stage-h);
-  position: relative;
+  position: absolute;
+  left: var(--stage-left);
+  top: var(--stage-top);
   overflow: hidden;
   transform: scale(var(--stage-scale));
-  transform-origin: center center;
+  transform-origin: top left;
   background: transparent;
   z-index: 1;
 }
@@ -788,7 +790,7 @@ body {
   width: 1280px;
   height: 522px;
   display: grid;
-  grid-template-columns: 312px 460px 460px;
+  grid-template-columns: 284px 474px 474px;
   gap: 12px;
   padding: 12px;
   align-items: stretch;
@@ -2330,13 +2332,6 @@ button.player-status-discard-card:focus-visible {
   backdrop-filter: blur(8px);
   cursor: zoom-in;
   transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
-}
-
-/* 固定 1280×720 舞台縮放到窄視窗時會從右側溢出；將事件縮圖拉回可視範圍。 */
-@media (max-width: 1100px) {
-  .event-card-panel {
-    right: 216px;
-  }
 }
 
 .event-card-panel:hover,
