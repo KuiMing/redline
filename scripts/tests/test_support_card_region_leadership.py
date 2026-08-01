@@ -5,13 +5,16 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from server.game import Game
+from server.cards import Card
+from server.game import Game, TurnPhase
 
 
 def make_game(player_count=3):
     players = [(f'p{i}', f'P{i}') for i in range(player_count)]
     game = Game(players)
-    for player in game.players:
+    deterministic_factions = ['red_army', 'liberals', 'taiwan_green', 'tibet_dehradun']
+    for index, player in enumerate(game.players):
+        player.faction_id = deterministic_factions[index]
         player.organizations = {}
     return game
 
@@ -119,3 +122,46 @@ def test_shared_physical_organization_counts_for_each_sharing_player_region_lead
 
     assert game._organization_towns_for_player(actor) == ['巴黎']
     assert game._support_card_tier(actor, card) == (2, 0, ['歐洲'])
+
+
+def test_purchased_support_card_keeps_variant_through_discard_shuffle_and_draw():
+    game = make_game()
+    actor = game.current_player()
+    actor.organizations = {'東京': 1}
+    game.players[1].organizations = {}
+    game.players[2].organizations = {}
+    actor.resources = {'money': 5, 'propaganda': 5}
+    actor.hand = []
+    actor.deck.draw_pile = []
+    actor.deck.discard_pile = []
+    game.turn_phase = TurnPhase.END
+
+    static_cards = game._static_purchase_cards()
+    market_card = game._make_support_card('英美奧援', variant_index=1)  # II：東洋／臺灣
+    game.purchase_area = static_cards + [market_card]
+
+    result = game.buy_cards([len(static_cards)])
+
+    assert result.get('success'), result
+    purchased = actor.deck.discard_pile[-1]
+    assert getattr(purchased, 'variant_index', None) == 1
+    assert game._support_card_variant_info(purchased)['tier2_regions'] == ['東洋', '臺灣']
+
+    drawn = actor.deck.draw(1)
+    assert len(drawn) == 1
+    actor.hand.extend(drawn)
+    assert getattr(actor.hand[0], 'variant_index', None) == 1
+    assert game._support_card_tier(actor, actor.hand[0]) == (2, 1, ['東洋'])
+
+
+def test_purchase_area_copy_preserves_support_variant_without_adding_it_to_normal_cards():
+    game = make_game()
+    support = game._make_support_card('北國奧援', variant_index=1)
+    borrowed_copy = game._copy_purchase_card(support)
+
+    assert getattr(borrowed_copy, 'variant_index', None) == 1
+    assert game._support_card_variant_info(borrowed_copy)['tier2_regions'] == ['天方', '印度']
+
+    normal = Card('一般牌', 'command', {'money': 1})
+    normal_copy = game._copy_purchase_card(normal)
+    assert not hasattr(normal_copy, 'variant_index')

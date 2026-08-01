@@ -5423,12 +5423,15 @@ class Game:
         return {'money': cost_money, 'propaganda': cost_propaganda}
 
     def _copy_purchase_card(self, card):
-        return Card(
+        copied = Card(
             getattr(card, 'name', str(card)),
             getattr(card, 'card_type', None),
             dict(getattr(card, 'resources', {}) or {}),
             getattr(card, 'effect', None),
         )
+        if hasattr(card, 'variant_index'):
+            setattr(copied, 'variant_index', getattr(card, 'variant_index'))
+        return copied
 
     def _return_borrowed_card_to_owner_topdeck(self, card):
         purchase_index = getattr(card, '_return_to_purchase_area_index', None)
