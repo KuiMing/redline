@@ -3442,14 +3442,35 @@ class Game:
         return False
 
     def _player_ruler_presence(self, player):
-        rulers = set()
-        for town, count in (player.organizations or {}).items():
-            if count <= 0:
-                continue
+        return set(self._player_ruler_organization_counts(player))
+
+    def _player_ruler_organization_counts(self, player):
+        """Count organizations by ruler region, including organizations shared with player."""
+        counts = {}
+        for town in self._organization_towns_for_player(player):
             town_data = self.map.get("towns", {}).get(town, {})
             for ruler in (town_data.get("ruler", []) or []):
-                rulers.add(ruler)
-        return rulers
+                counts[ruler] = counts.get(ruler, 0) + 1
+        return counts
+
+    def _player_ruler_leadership(self, player):
+        """Regions where player has a positive count tied for the most organizations."""
+        counts_by_player = {
+            other.id: self._player_ruler_organization_counts(other)
+            for other in self.players
+        }
+        own_counts = counts_by_player.get(player.id, {})
+        leaders = set()
+        for ruler, own_count in own_counts.items():
+            if own_count <= 0:
+                continue
+            maximum = max(
+                (counts.get(ruler, 0) for counts in counts_by_player.values()),
+                default=0,
+            )
+            if own_count == maximum:
+                leaders.add(ruler)
+        return leaders
 
     def _support_card_variant_info(self, card):
         """Which II 級門檻地區這張特定奧援卡實體印的是哪一組，供前端顯示這張牌實際印的
@@ -3486,15 +3507,15 @@ class Game:
         if variant_index >= len(regions):
             variant_index = 0
         region = regions[variant_index]
-        present = self._player_ruler_presence(player)
+        leading = self._player_ruler_leadership(player)
         support_region = entry.get("support_region")
         preferred = region.get("preferred_rulers", []) or []
-        matched = [r for r in preferred if r in present]
+        matched = [r for r in preferred if r in leading]
         tier = 1
-        if support_region and support_region in present and region.get("tier_3"):
+        if support_region and support_region in leading and region.get("tier_3"):
             tier = 3
         elif matched:
-            # II 級門檻為 OR：主導配對中任一地區即可（2026-07-11 使用者裁決 B1-c=A）
+            # II 級門檻為 OR：印刷配對中任一地區並列擁有最多組織即可。
             tier = 2
         return tier, variant_index, matched
 

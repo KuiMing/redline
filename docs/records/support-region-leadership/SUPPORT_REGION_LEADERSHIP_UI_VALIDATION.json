@@ -1,0 +1,76 @@
+{
+  "generated_at": "2026-08-01T12:41:05.162539+08:00",
+  "base_url": "http://127.0.0.1:8000",
+  "status": "passed",
+  "checks_passed": 9,
+  "checks_total": 9,
+  "checks": [
+    {
+      "name": "fixture_actor_has_one_europe_organization",
+      "ok": true,
+      "detail": {
+        "巴黎": 1
+      }
+    },
+    {
+      "name": "fixture_enemy_has_two_europe_organizations",
+      "ok": true,
+      "detail": {
+        "北京": 1,
+        "日內瓦": 1,
+        "慕尼黑": 1
+      }
+    },
+    {
+      "name": "authoritative_setup_downgrades_presence_to_tier_one",
+      "ok": true,
+      "detail": 1
+    },
+    {
+      "name": "formal_card_face_uses_variant_zero_regions",
+      "ok": true,
+      "detail": {
+        "variantIndex": "0",
+        "imagePath": "/static/card-art/support/01_英美奧援_歐洲-天方.png"
+      }
+    },
+    {
+      "name": "formal_action_resolves_tier_one_money_gain",
+      "ok": true,
+      "detail": {
+        "money": 1,
+        "propaganda": 0
+      }
+    },
+    {
+      "name": "support_card_moves_from_hand_to_discard",
+      "ok": true,
+      "detail": {
+        "hand": [],
+        "discard_pile": [
+          "英美奧援"
+        ]
+      }
+    },
+    {
+      "name": "formal_action_log_records_tier_one",
+      "ok": true,
+      "detail": "[Turn 1] player played 英美奧援\n[Turn 1] player resolved 英美奧援 at tier 1 (matched rulers: none)"
+    },
+    {
+      "name": "formal_action_log_does_not_claim_tier_two",
+      "ok": true,
+      "detail": "[Turn 1] player played 英美奧援\n[Turn 1] player resolved 英美奧援 at tier 1 (matched rulers: none)"
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "ok": true,
+      "detail": []
+    }
+  ],
+  "console_errors": [],
+  "screenshots": [
+    "/Users/benmini/.openclaw/workspace/redline/docs/records/support-region-leadership/support-region-leadership-before.png",
+    "/Users/benmini/.openclaw/workspace/redline/docs/records/support-region-leadership/support-region-leadership-tier1-after.png"
+  ]
+}

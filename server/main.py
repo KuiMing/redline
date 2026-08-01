@@ -1550,9 +1550,9 @@ def test_setup_support_card_play(payload: dict):
     player.deck.draw_pile = [Card("補牌A", "command", {}), Card("補牌B", "command", {})]
     player.deck.discard_pile = []
 
-    red.faction_id = "red_army"
-    red.base = "北京"
-    red.organizations = {"北京": 1}
+    red.faction_id = payload.get("enemy_faction_id", "red_army")
+    red.base = payload.get("enemy_base", "北京")
+    red.organizations = payload.get("enemy_orgs") or {"北京": 1}
     red.hand = []
     red.deck.draw_pile = [Card("紅軍抽牌A", "command", {})]
     red.deck.discard_pile = []

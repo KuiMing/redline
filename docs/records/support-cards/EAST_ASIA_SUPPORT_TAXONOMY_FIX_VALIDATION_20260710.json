@@ -21,7 +21,12 @@
       "expected_effect_type": "interactive_build_anywhere_inner",
       "actual_effect_type": "interactive_build_anywhere_inner",
       "result": {
-        "success": true
+        "success": true,
+        "pending_choice": true,
+        "tier": 3,
+        "matched_rulers": [],
+        "effect_type": "interactive_build_anywhere_inner",
+        "effect_text": "在牆內無視距離於己方發展空間建立1個組織。"
       },
       "checks": {
         "play_card_success": true,
@@ -46,7 +51,15 @@
       "expected_effect_type": "interactive_build_near_inner",
       "actual_effect_type": "interactive_build_near_inner",
       "result": {
-        "success": true
+        "success": true,
+        "pending_choice": true,
+        "tier": 2,
+        "matched_rulers": [
+          "臺灣",
+          "南洋"
+        ],
+        "effect_type": "interactive_build_near_inner",
+        "effect_text": "在牆內於己方組織1格內建立1個組織。"
       },
       "checks": {
         "play_card_success": true,
@@ -71,7 +84,15 @@
       "expected_effect_type": "interactive_build_near_inner",
       "actual_effect_type": "interactive_build_near_inner",
       "result": {
-        "success": true
+        "success": true,
+        "pending_choice": true,
+        "tier": 2,
+        "matched_rulers": [
+          "北國",
+          "英美"
+        ],
+        "effect_type": "interactive_build_near_inner",
+        "effect_text": "在牆內於己方組織1格內建立1個組織。"
       },
       "checks": {
         "play_card_success": true,
@@ -94,7 +115,14 @@
       "expected_effect_type": "interactive_build_near_inner",
       "actual_effect_type": "interactive_build_near_inner",
       "result": {
-        "success": true
+        "success": true,
+        "pending_choice": true,
+        "tier": 2,
+        "matched_rulers": [
+          "臺灣"
+        ],
+        "effect_type": "interactive_build_near_inner",
+        "effect_text": "在牆內於己方組織1格內建立1個組織。"
       },
       "checks": {
         "play_card_success": true,
@@ -117,7 +145,14 @@
       "expected_effect_type": "interactive_build_near_inner",
       "actual_effect_type": "interactive_build_near_inner",
       "result": {
-        "success": true
+        "success": true,
+        "pending_choice": true,
+        "tier": 2,
+        "matched_rulers": [
+          "北國"
+        ],
+        "effect_type": "interactive_build_near_inner",
+        "effect_text": "在牆內於己方組織1格內建立1個組織。"
       },
       "checks": {
         "play_card_success": true,
