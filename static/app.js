@@ -22,6 +22,8 @@ let activeChoiceModal = null;
 let lastFactionActionResultKey = null;
 let lastSupportChoiceMapHighlightPayload = null;
 let lastEventRevealKey = null;
+let stickyPlayerErrorNotice = '';
+let stickyPlayerErrorTimer = null;
 const selectedPurchaseIndices = new Set();
 
 function resizeStage() {
@@ -169,7 +171,7 @@ async function refreshLobbyState(statusText = null) {
   const res = await fetch(`/lobby/${gameId}`);
   const lobbyRes = await res.json();
   if (lobbyRes.error) {
-    updateLobbyStatus(lobbyRes.error);
+    updateLobbyStatus(playerMessageZhTw(lobbyRes.error));
     return null;
   }
   await loadFactions();
@@ -208,7 +210,7 @@ async function toggleReady() {
   });
   const data = await res.json();
   if (data.error) {
-    updateLobbyStatus(data.error === 'Choose faction before ready' ? '請先選擇陣營與根據地，再按準備。' : data.error);
+    updateLobbyStatus(playerMessageZhTw(data.error));
     await refreshLobbyState();
     return;
   }
@@ -477,7 +479,7 @@ async function confirmFactionChoice() {
   });
   const data = await res.json();
   if (data.error) {
-    alert(data.error);
+    updateLobbyStatus(playerMessageZhTw(data.error));
     return;
   }
   pendingFactionChoice = null;
@@ -1104,7 +1106,7 @@ async function joinRoom() {
 
   const data = await res.json();
   if (data.error) {
-    alert(data.error);
+    updateLobbyStatus(playerMessageZhTw(data.error));
     return;
   }
 
@@ -1125,7 +1127,7 @@ async function startGame() {
 
   const data = await res.json();
   if (data.error) {
-    updateLobbyStatus(data.error === 'All players must be ready before start' ? '所有玩家都需要先按下準備。' : data.error);
+    updateLobbyStatus(playerMessageZhTw(data.error));
     await refreshLobbyState();
     return;
   }
@@ -1419,12 +1421,13 @@ function pendingChoiceWaitText(state = window.lastGameState) {
   if (isSatisfiedStaleEventBuildChoice(state)) return '';
   const me = (state.players || []).find(p => p.id === playerId) || null;
   const targetName = choice.player_name || (state.players || []).find(p => p.id === choice.player_id)?.name || '指定玩家';
+  const localizedPrompt = playerMessageZhTw(choice.prompt, '');
   if (choice.type === 'reaction_choice') {
     const cardName = choice.played_card_name || '這張牌';
-    if (me && choice.player_id === me.id) return `${choice.prompt || `是否要取消 ${cardName}？`}（請選擇「不取消」或使用取消牌）`;
+    if (me && choice.player_id === me.id) return `${localizedPrompt || `是否要取消 ${cardName}？`}（請選擇「不取消」或使用取消牌）`;
     return `等待 ${targetName} 回應是否取消 ${cardName}；若 10 秒內未回應，系統會自動視同不取消。`;
   }
-  if (me && choice.player_id === me.id) return choice.prompt || '請先處理目前待選擇效果。';
+  if (me && choice.player_id === me.id) return localizedPrompt || '請先處理目前待選擇效果。';
   return `等待 ${targetName} 處理待選擇效果。`;
 }
 
@@ -1594,6 +1597,19 @@ function syncChoiceModalMapHighlight(payload) {
   }
 }
 
+function syncPlayerErrorToStrategicMap(message) {
+  const frame = document.getElementById('strategicMapFrame');
+  if (!frame || !frame.contentWindow || !message) return;
+  try {
+    frame.contentWindow.postMessage({
+      type: 'redline-player-error',
+      message: playerMessageZhTw(message),
+    }, window.location.origin);
+  } catch (err) {
+    console.warn('Failed to sync player error to map', err);
+  }
+}
+
 window.addEventListener('message', (event) => {
   if (event.origin !== window.location.origin) return;
   const data = event.data || {};
@@ -1617,7 +1633,7 @@ function eventBuildChoiceMapPayload(choice, sourceName = '', resolvedTitle = '')
     remainingBuilds: Math.max(1, Number(choice.remaining_builds || 1)),
     choiceKey: choice.choice_key,
     sourceName: sourceName || choice.source_name || resolvedTitle || '建立組織',
-    prompt: choice.prompt || '事件卡效果：請在戰略地圖選擇可建立組織的城鎮。',
+    prompt: playerMessageZhTw(choice.prompt, '') || '事件卡效果：請在戰略地圖選擇可建立組織的城鎮。',
     towns: towns.map((entry, index) => ({
       town: entry.town,
       label: entry.label || entry.town,
@@ -1713,7 +1729,8 @@ function renderChoiceModal(state) {
 
   const choiceType = choice.type;
   const choiceKey = choice.choice_key || '';
-  const sourceName = choice.source_name || choiceKey || '';
+  const rawSourceName = choice.source_name || choiceKey || '';
+  const sourceName = playerMessageZhTw(rawSourceName, '卡牌效果');
 
   const isMapBuildChoice = choice.interaction_kind === 'build_organization'
     || ['event_build_organization', 'era_red_build_near_target', 'card_build_organization'].includes(choiceKey)
@@ -1757,7 +1774,8 @@ function renderChoiceModal(state) {
       : (choiceType === 'underground_party' ? '地下黨' : (sourceName || '卡牌選擇')));
   activeChoiceModal = choiceType;
   title.textContent = resolvedTitle;
-  desc.innerHTML = `${escapeHtml(businessNetworkModalHeader?.desc || choice.prompt || '請進行選擇。')}${businessNetworkModalHeader?.helperHtml || ''}`;
+  const localizedChoicePrompt = playerMessageZhTw(choice.prompt, '請進行選擇。');
+  desc.innerHTML = `${escapeHtml(businessNetworkModalHeader?.desc || localizedChoicePrompt)}${businessNetworkModalHeader?.helperHtml || ''}`;
   cards.innerHTML = businessNetworkState.html || '';
 
   let mapHighlightPayload = null;
@@ -1769,7 +1787,7 @@ function renderChoiceModal(state) {
       mapHighlightPayload = {
         mode: 'support-targets',
         sourceName: sourceName || resolvedTitle,
-        prompt: choice.prompt || '',
+        prompt: playerMessageZhTw(choice.prompt, '請選擇合法目標。'),
         towns: targets.map((entry, index) => ({
           town: entry.town,
           label: entry.label || entry.town,
@@ -1797,7 +1815,8 @@ function renderChoiceModal(state) {
         sendAction('resolve_choice', { index });
         closeChoiceModal();
       };
-      const zoneLabel = cardEntry && typeof cardEntry === 'object' ? cardEntry.zone_label : '';
+      const rawZoneLabel = cardEntry && typeof cardEntry === 'object' ? cardEntry.zone_label : '';
+      const zoneLabel = playerMessageZhTw(rawZoneLabel, '卡牌區域');
       const canBorrowLabel = sourceName === '企業人脈' ? '<div class="choice-card-action-tag">可借用</div>' : '';
       if (zoneLabel) {
         const zoneBadge = `<div class="choice-card-zone-label">${escapeHtml(zoneLabel)}</div>`;
@@ -1867,7 +1886,8 @@ function renderChoiceModal(state) {
         updateSummary();
       };
       if (cardEntry && typeof cardEntry === 'object' && cardEntry.zone_label) {
-        const zoneBadge = `<div class="choice-card-zone-label">${escapeHtml(cardEntry.zone_label)}</div>`;
+        const zoneLabel = playerMessageZhTw(cardEntry.zone_label, '卡牌區域');
+        const zoneBadge = `<div class="choice-card-zone-label">${escapeHtml(zoneLabel)}</div>`;
         wrapper.innerHTML = `${zoneBadge}${renderCardFace(cardName, 'choice', false, true)}`;
       } else {
         wrapper.innerHTML = renderCardFace(cardName, 'choice', false, true);
@@ -1881,7 +1901,8 @@ function renderChoiceModal(state) {
       const btn = document.createElement('button');
       btn.className = 'modal-choice-btn';
       btn.type = 'button';
-      btn.textContent = option?.label || `選項 ${index + 1}`;
+      const optionLabel = option?.label || '';
+      btn.textContent = playerMessageZhTw(optionLabel, `選項 ${index + 1}`) || `選項 ${index + 1}`;
       btn.onclick = () => {
         sendAction('resolve_choice', { index });
       };
@@ -1921,7 +1942,8 @@ function renderChoiceModal(state) {
       btn.className = 'modal-choice-btn';
       btn.type = 'button';
       const town = entry?.town || `城鎮 ${index + 1}`;
-      const meta = entry?.label ? `｜${entry.label}` : '';
+      const localizedTownLabel = entry?.label ? playerMessageZhTw(entry.label, '') : '';
+      const meta = localizedTownLabel ? `｜${localizedTownLabel}` : '';
       btn.textContent = `${town}${meta}`;
       btn.onclick = () => {
         sendAction('resolve_choice', { index });
@@ -1935,7 +1957,11 @@ function renderChoiceModal(state) {
       const btn = document.createElement('button');
       btn.className = 'modal-choice-btn';
       btn.type = 'button';
-      btn.textContent = entry?.label || entry?.town || entry?.id || `目標 ${index + 1}`;
+      const rawTargetLabel = entry?.label || entry?.town || '';
+      const isPlayerName = (state.players || []).some(player => player.name === rawTargetLabel);
+      btn.textContent = isPlayerName
+        ? rawTargetLabel
+        : (playerMessageZhTw(rawTargetLabel, '') || `目標 ${index + 1}`);
       btn.onclick = () => {
         sendAction('resolve_choice', { index });
       };
@@ -2538,6 +2564,18 @@ function setPhaseActionNotice(message = '') {
   notice.classList.toggle('visible', !!message);
 }
 
+function showStickyPlayerErrorNotice(message, durationMs = 5000) {
+  stickyPlayerErrorNotice = message || '';
+  if (stickyPlayerErrorTimer) clearTimeout(stickyPlayerErrorTimer);
+  setPhaseActionNotice(stickyPlayerErrorNotice);
+  stickyPlayerErrorTimer = setTimeout(() => {
+    if (stickyPlayerErrorNotice !== message) return;
+    stickyPlayerErrorNotice = '';
+    stickyPlayerErrorTimer = null;
+    setPhaseActionNotice('');
+  }, durationMs);
+}
+
 function formatFactionActionResult(result) {
   if (!result || !result.name) return '';
   const cardName = result.revealed_card || '未知卡牌';
@@ -3007,9 +3045,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function render(state) {
-  if (state.error) {
-    alert(state.error);
-  }
+  const playerError = state.error ? playerMessageZhTw(state.error) : '';
   await Promise.all([loadCardPresentationCatalog(), loadFactions()]);
 
   const me = state.players?.find(p => p.id === playerId) || null;
@@ -3228,13 +3264,21 @@ async function render(state) {
   const logTargets = [document.getElementById('log'), document.getElementById('logViewContent')].filter(Boolean);
   if (logTargets.length) {
     const entries = state.action_log || state.log || [];
-    const html = entries.slice().reverse().map(entry => `<div>${entry}</div>`).join('');
+    const html = entries.slice().reverse().map(entry => `<div>${escapeHtml(entry)}</div>`).join('');
     const businessNetworkLog = businessNetworkState.type === 'resolved'
       ? `<div class="business-network-log-highlight">${escapeHtml(businessNetworkState.message)}</div>`
       : '';
     logTargets.forEach(target => {
       target.innerHTML = `${businessNetworkLog}${html}`;
     });
+  }
+
+  if (playerError) {
+    showStickyPlayerErrorNotice(playerError);
+    syncPlayerErrorToStrategicMap(playerError);
+    alert(playerError);
+  } else if (stickyPlayerErrorNotice) {
+    setPhaseActionNotice(stickyPlayerErrorNotice);
   }
 
 }

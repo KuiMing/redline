@@ -125,10 +125,20 @@ let selectedBuildTargets = [];
 let pendingMove = null;
 let pendingMoveTarget = null;
 let lastResolvedMove = null;
+let stickyPlayerErrorMessage = '';
+let stickyPlayerErrorTimer = null;
 let supportChoiceHighlight = null;
 let supportChoiceHighlightFocusKey = null;
 
 function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
 function zoomProgress(z = map.getZoom()) { return clamp((z - 2) / 6, 0, 1); }
 function roadWeight(z = map.getZoom()) { return 1.6 + zoomProgress(z) * 5.2; }
 function railWeight(z = map.getZoom()) { return 1.8 + zoomProgress(z) * 5.6; }
@@ -293,7 +303,7 @@ function renderSupportChoiceHighlights(options = {}) {
       fillColor: '#cbd5e1',
       fillOpacity: isFocused ? 0.14 : 0.08,
       opacity: 1,
-    }).addTo(supportChoiceHighlightLayer).bindPopup(`${supportChoiceHighlight.sourceName || '可選目標'}：${entry?.label || townName}`);
+    }).addTo(supportChoiceHighlightLayer).bindPopup(`${escapeHtml(supportChoiceHighlight.sourceName || '可選目標')}：${escapeHtml(entry?.label || townName)}`);
     outerMarker.on('click', () => selectTownForCurrentMapAction(townName, { autoFocus: false }));
     const innerMarker = L.circleMarker([town.lat, town.lon], {
       radius: Math.max(isFocused ? 9 : 7, markerRadius(map.getZoom()) + (isFocused ? 2 : 1)),
@@ -317,14 +327,14 @@ function renderSupportChoiceHighlights(options = {}) {
       const countText = isBuildChoice
         ? `<span class="hint-strong">可建立城鎮：${bounds.length} 個</span>。<span class="hint-strong">尚可建立組織：${Math.max(1, Number(supportChoiceHighlight.remainingBuilds || 1))} 個</span>。`
         : `<span class="hint-strong">可選目標：${bounds.length} 個</span>。`;
-      const sourceLabel = supportChoiceHighlight.sourceName || '當前選擇';
+      const sourceLabel = escapeHtml(supportChoiceHighlight.sourceName || '當前選擇');
       // The server prompt often already carries a "<source>：" prefix; strip it so the label
       // isn't printed twice (e.g. "宣傳家：宣傳家：…").
       let promptText = supportChoiceHighlight.prompt || '請依列表選擇目標。';
       if (supportChoiceHighlight.sourceName && promptText.startsWith(`${supportChoiceHighlight.sourceName}：`)) {
         promptText = promptText.slice(`${supportChoiceHighlight.sourceName}：`.length);
       }
-      hintEl.innerHTML = `${sourceLabel}：<span class="hint-strong">${promptText}</span> ${countText}地圖上已用中性色外框標出可選城鎮。${focusText}${actionText}`;
+      hintEl.innerHTML = `${sourceLabel}：<span class="hint-strong">${escapeHtml(promptText)}</span> ${countText}地圖上已用中性色外框標出可選城鎮。${escapeHtml(focusText)}${actionText}`;
     }
     if (autoFocus) {
       focusSupportChoiceTargets(focusedBounds || bounds);
@@ -370,10 +380,12 @@ function updateStatusPanel() {
   }
 
   if (hintEl) {
-    if (pendingMove) {
+    if (stickyPlayerErrorMessage) {
+      hintEl.innerHTML = `操作失敗：<span class="hint-strong">${escapeHtml(stickyPlayerErrorMessage)}</span>`;
+    } else if (pendingMove) {
       hintEl.innerHTML = pendingMove.error
-        ? `移動失敗：<span class="hint-strong">${pendingMove.error}</span>`
-        : `正在移動 <span class="hint-strong">${pendingMove.from}</span> → <span class="hint-strong">${pendingMove.to}</span>（${pendingMove.mode}）`; 
+        ? `移動失敗：<span class="hint-strong">${escapeHtml(pendingMove.error)}</span>`
+        : `正在移動 <span class="hint-strong">${escapeHtml(pendingMove.from)}</span> → <span class="hint-strong">${escapeHtml(pendingMove.to)}</span>（${pendingMove.mode === 'rail' ? '鐵路' : '道路'}）`;
     } else if (lastResolvedMove) {
       hintEl.innerHTML = `已完成移動：<span class="hint-strong">${lastResolvedMove.from}</span> → <span class="hint-strong">${lastResolvedMove.to}</span>`;
     } else if (!selectedTown) {
@@ -390,11 +402,24 @@ function updateStatusPanel() {
       hintEl.innerHTML = `已選取 <span class="hint-strong">${selectedTown}</span>：合法移動目的地 ${destinationCount} 個` +
         (buildOpts.length ? `，安全屋可建立 ${buildOpts.length} 個目標。` : '。') + sharedHint;
     } else if (playerHasSharedAccessToTown(selectedTown)) {
-      hintEl.innerHTML = `已選取 <span class="hint-strong">${selectedTown}</span>：此城鎮對當前玩家具有 <span class="hint-strong">共享組織</span> 可用性，但互動高亮規則尚未完全 shared-aware。`;
+      hintEl.innerHTML = `已選取 <span class="hint-strong">${escapeHtml(selectedTown)}</span>：此城鎮對當前玩家具有 <span class="hint-strong">共享組織</span> 可用性，但互動高亮規則尚未完全支援共享組織狀態。`;
     } else {
       hintEl.innerHTML = `已選取 <span class="hint-strong">${selectedTown}</span>：這不是當前玩家可操作的城鎮。`;
     }
   }
+}
+
+function showStickyMapPlayerError(message, durationMs = 5000) {
+  const localizedMessage = playerMessageZhTw(message);
+  stickyPlayerErrorMessage = localizedMessage;
+  if (stickyPlayerErrorTimer) clearTimeout(stickyPlayerErrorTimer);
+  updateStatusPanel();
+  stickyPlayerErrorTimer = setTimeout(() => {
+    if (stickyPlayerErrorMessage !== localizedMessage) return;
+    stickyPlayerErrorMessage = '';
+    stickyPlayerErrorTimer = null;
+    updateStatusPanel();
+  }, durationMs);
 }
 
 function updateInfoPanel(name) {
@@ -713,7 +738,7 @@ function moveOptionForTown(townName) {
 
 function sendMoveAction(fromTown, toTown, mode) {
   if (!mapWs || mapWs.readyState !== WebSocket.OPEN) {
-    pendingMove = { from: fromTown, to: toTown, mode, error: 'WebSocket 尚未連線' };
+    pendingMove = { from: fromTown, to: toTown, mode, error: '遊戲連線尚未建立。' };
     updateStatusPanel();
     return { ok: false, reason: 'socket-not-open' };
   }
@@ -861,7 +886,7 @@ function refreshDirectBuildUi() {
     const dissolveTarget = sharedDissolveTargetForTown(selectedTown);
     if (!dissolveTarget) {
       dissolveBtn.disabled = true;
-      dissolveHint.innerHTML = `目前選取 <span class="hint-strong">${selectedTown}</span>：沒有可用的 shared dissolve 目標。`;
+      dissolveHint.innerHTML = `目前選取 <span class="hint-strong">${escapeHtml(selectedTown)}</span>：沒有可瓦解的共享組織目標。`;
     } else {
       dissolveBtn.disabled = false;
       dissolveHint.innerHTML = `目前選取 <span class="hint-strong">${selectedTown}</span>：可瓦解實際擁有者 <span class="hint-strong">${dissolveTarget}</span> 的共享組織。`;
@@ -912,7 +937,8 @@ function renderMap() {
     const style = link.type === 'road'
       ? { color:'#7a6030', weight:roadWeight(), opacity:0.24 }
       : { color:'#42667a', weight:railWeight(), opacity:0.28, dashArray: railDashArray(), lineCap:'round' };
-    const poly = L.polyline(latlngs, style).bindPopup(`${link.type.toUpperCase()}：${link.source} ↔ ${link.target}`);
+    const linkTypeLabel = link.type === 'rail' ? '鐵路' : '道路';
+    const poly = L.polyline(latlngs, style).bindPopup(`${linkTypeLabel}：${escapeHtml(link.source)} ↔ ${escapeHtml(link.target)}`);
     if (link.type === 'road' && showRoad) poly.addTo(roadLayer);
     if (link.type === 'rail' && showRail) poly.addTo(railLayer);
   }
@@ -1147,8 +1173,7 @@ function applyGameStateToMap(state) {
   updateStatusPanel();
   if (!state || state.error) {
     if (state?.error) {
-      pendingMove = { ...(pendingMove || {}), error: state.error };
-      updateStatusPanel();
+      showStickyMapPlayerError(state.error);
     }
     return;
   }
@@ -1188,6 +1213,10 @@ function applyGameStateToMap(state) {
 
 window.addEventListener('message', (event) => {
   if (!event.data) return;
+  if (event.data.type === 'redline-player-error') {
+    showStickyMapPlayerError(event.data.message);
+    return;
+  }
   if (event.data.type === 'redline-state') {
     applyGameStateToMap(event.data.state);
     return;
@@ -1339,6 +1368,7 @@ async function bootstrapCanonicalGameMap() {
 window.__redlineMapDataReady = bootstrapCanonicalGameMap().catch(error => {
   console.error('Failed to initialize canonical Redline map data', error);
   const hint = document.getElementById('interactionHint');
-  if (hint) hint.textContent = `地圖資料載入失敗：${error.message}`;
+  const detail = playerMessageZhTw(error?.message, '請重新整理頁面後再試。');
+  if (hint) hint.textContent = `地圖資料載入失敗：${detail}`;
   throw error;
 });

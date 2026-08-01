@@ -38,8 +38,8 @@
 ### P2：遊戲區域寬度與卡牌邊界裁切
 - [todo] 手牌區與隨機購買區的可用寬度再加寬，避免部分視窗尺寸或卡牌排列下，最外側卡牌剛好被容器邊界裁切；常設購買區可稍微縮窄，將版面寬度讓給手牌與隨機購買區。後續需以正式 UI 在常見桌面寬度與臨界寬度檢查最左／最右卡牌完整可見、控制按鈕不被截斷，且不得產生不必要的水平捲動。（2026-07-31 UI 回報）
 
-### P2：無合法鄰近組織提示中文化
-- [todo] 武裝牌等需要選擇鄰近組織目標的操作，當目標玩家附近沒有合法組織時，將瀏覽器提示 `Target player has no organization within range` 改成清楚的繁體中文；參考文案：「目標玩家沒有位於範圍內的組織。」（2026-07-31 截圖回報）
+### P2：所有玩家可見英文提示全面中文化
+- [done] 已建立共用 `static/player_messages_zh_tw.js` 翻譯邊界，接入 lobby REST error、WebSocket error、原生 dialog、行動提示、pending choice/modal 與正式戰略地圖；未知英文操作錯誤使用繁中安全 fallback，內部 key／protocol identifier 不直接作 UI fallback。後端 125 條固定 error inventory 全數具專用翻譯或受控規則；`Target player has no organization within range`正式顯示為「目標玩家在範圍內沒有組織。」。另將地圖工具列及 road/rail/shared-dissolve 等殘留英文中文化，錯誤提示改為 5 秒 sticky 並避開事件卡縮圖；action log 與地圖動態提示補 HTML escape。靜態 regression 24/24、正式 browser proof 10/10、相鄰 backend tests 115/115 通過，證據位於 `docs/records/player-message-localization/`。（2026-08-01 完成）
 
 ### P0：一城一組織 invariant 與共用組織語義
 - [done] 全場每個城鎮最多 1 個實體組織；香港／粵／澳門共用同一枚組織，不是同城疊放例外。

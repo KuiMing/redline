@@ -1,0 +1,68 @@
+{
+  "status": "passed",
+  "generated_at": "2026-08-01T12:00:15.493625+08:00",
+  "base_url": "http://127.0.0.1:8000",
+  "checks_passed": 10,
+  "checks_total": 10,
+  "results": [
+    {
+      "name": "lobby_missing_game_is_zh_tw",
+      "passed": true,
+      "detail": "找不到遊戲房間。"
+    },
+    {
+      "name": "lobby_missing_game_has_no_raw_english",
+      "passed": true,
+      "detail": "找不到遊戲房間。"
+    },
+    {
+      "name": "range_setup_created",
+      "passed": true,
+      "detail": "已建立 2 人 deterministic range fixture"
+    },
+    {
+      "name": "range_card_prepared",
+      "passed": true,
+      "detail": "行動玩家手牌已固定為武裝者"
+    },
+    {
+      "name": "reported_range_error_is_zh_tw",
+      "passed": true,
+      "detail": "{\"notice\": \"目標玩家在範圍內沒有組織。\", \"dialogs\": [\"目標玩家在範圍內沒有組織。\"], \"runtime_error\": \"\"}"
+    },
+    {
+      "name": "reported_range_dialog_is_zh_tw",
+      "passed": true,
+      "detail": "[\"目標玩家在範圍內沒有組織。\"]"
+    },
+    {
+      "name": "reported_range_error_has_no_raw_english",
+      "passed": true,
+      "detail": "目標玩家在範圍內沒有組織。"
+    },
+    {
+      "name": "map_range_error_is_zh_tw",
+      "passed": true,
+      "detail": "操作失敗：目標玩家在範圍內沒有組織。"
+    },
+    {
+      "name": "map_range_error_has_no_raw_english",
+      "passed": true,
+      "detail": "操作失敗：目標玩家在範圍內沒有組織。"
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "passed": true,
+      "detail": "[]"
+    }
+  ],
+  "dialogs": [
+    "目標玩家在範圍內沒有組織。"
+  ],
+  "console_errors": [],
+  "screenshots": [
+    "docs/records/player-message-localization/player-message-lobby-zh-tw.png",
+    "docs/records/player-message-localization/player-message-range-error-zh-tw.png",
+    "docs/records/player-message-localization/player-message-map-error-zh-tw.png"
+  ]
+}
