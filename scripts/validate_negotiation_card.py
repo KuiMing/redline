@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
 """Rule-level validator for 合作談判.
 
-Raw card text:
-選擇任1位玩家，您與該玩家各抽1張牌。您獲得2點宣傳。
-
-This validator protects both behavior layers:
-1. If no explicit target is provided, the engine uses a deterministic fallback
-   target instead of incorrectly drawing all players.
-2. In 4-player games, callers can explicitly choose the draw target.
+Canonical rule used by the live game:
+Choose any one OTHER player, including an enemy. The actor and chosen target
+each draw 1 card; no third player draws; the actor gains 2 propaganda.
+Invalid, missing, or self targets must fail before any card/resource mutation.
 """
 from __future__ import annotations
 
@@ -25,28 +22,37 @@ from server.game import Game, GamePhase, TurnPhase
 RECORD_DIR = ROOT / "docs" / "records" / "shared-actions"
 OUT_JSON = RECORD_DIR / "NEGOTIATION_CARD_VALIDATION.json"
 OUT_MD = RECORD_DIR / "NEGOTIATION_CARD_VALIDATION.md"
+EXPECTED_ERROR = "合作談判必須指定任意一名其他玩家"
 
 
-def make_game(player_count=3):
-    game = Game([(f"p{i}", f"P{i}") for i in range(1, player_count + 1)])
+def make_game():
+    game = Game([
+        ("actor", "Actor"),
+        ("ally", "Ally"),
+        ("enemy", "Enemy"),
+        ("observer", "Observer"),
+    ])
+    actor, ally, enemy, observer = game.players
+    actor.faction_id = "liberals"
+    ally.faction_id = "hong_kong"
+    enemy.faction_id = "red_army"
+    observer.faction_id = "taiwan_green"
     game.current_player_index = 0
     game.turn_phase = TurnPhase.ACTION
     game.game_phase = GamePhase.MAIN
     game.pending_base_choices = {}
-    # Keep this focused on card text, not faction bonus side effects.
+    game.pending_choice = None
     game._player_effective_abilities = lambda player: []
 
-    card_def = next(c for c in game.structured_cards if c["name"] == "合作談判")
-    actor = game.players[0]
+    card_def = next(card for card in game.structured_cards if card["name"] == "合作談判")
     actor.hand = [Card("合作談判", card_def["type"], card_def.get("resources", {}))]
-    actor.deck.draw_pile = [Card("actor_bottom", "test", {}), Card("actor_draw", "test", {})]
-    for idx, player in enumerate(game.players[1:], start=2):
-        player.hand = []
-        player.deck.draw_pile = [
-            Card(f"p{idx}_bottom", "test", {}),
-            Card(f"p{idx}_draw", "test", {}),
-        ]
+    actor.deck.draw_pile = [Card("actor_draw", "test", {})]
+    ally.deck.draw_pile = [Card("ally_draw", "test", {})]
+    enemy.deck.draw_pile = [Card("enemy_draw", "test", {})]
+    observer.deck.draw_pile = [Card("observer_draw", "test", {})]
     for player in game.players:
+        if player is not actor:
+            player.hand = []
         player.deck.discard_pile = []
         player.resources = {"money": 0, "propaganda": 0}
     return game
@@ -54,86 +60,77 @@ def make_game(player_count=3):
 
 def snapshot(game):
     return {
-        "hands": {p.id: [c.name for c in p.hand] for p in game.players},
-        "decks": {p.id: [c.name for c in p.deck.draw_pile] for p in game.players},
-        "resources": {p.id: dict(p.resources) for p in game.players},
-        "discard": {p.id: [c.name for c in p.deck.discard_pile] for p in game.players},
-        "action_log_tail": game.action_log[-8:],
+        "hands": {player.id: [card.name for card in player.hand] for player in game.players},
+        "decks": {player.id: [card.name for card in player.deck.draw_pile] for player in game.players},
+        "resources": {player.id: dict(player.resources) for player in game.players},
+        "discard": {player.id: [card.name for card in player.deck.discard_pile] for player in game.players},
+        "pending_choice": game.pending_choice,
+        "action_log": list(game.action_log),
     }
 
 
-def run_default_target_validation():
-    game = make_game(player_count=3)
-    result = game.play_card(0, mode="action")
+def enemy_target_check():
+    game = make_game()
+    result = game.play_card(0, mode="action", target_player_id="enemy")
     details = {"result": result, **snapshot(game)}
     passed = (
         result.get("success") is True
-        and details["hands"]["p1"] == ["actor_draw"]
-        and details["hands"]["p2"] == ["p2_draw"]
-        and details["hands"]["p3"] == []
-        and details["decks"]["p3"] == ["p3_bottom", "p3_draw"]
-        and details["resources"]["p1"] == {"money": 0, "propaganda": 2}
-        and details["discard"]["p1"] == ["合作談判"]
+        and details["hands"]["actor"] == ["actor_draw"]
+        and details["hands"]["enemy"] == ["enemy_draw"]
+        and details["hands"]["ally"] == []
+        and details["hands"]["observer"] == []
+        and details["decks"]["ally"] == ["ally_draw"]
+        and details["decks"]["observer"] == ["observer_draw"]
+        and details["resources"]["actor"] == {"money": 0, "propaganda": 2}
+        and details["resources"]["enemy"] == {"money": 0, "propaganda": 0}
+        and details["discard"]["actor"] == ["合作談判"]
     )
     return {
-        "name": "negotiation_default_target_does_not_draw_all_players_and_grants_2_propaganda",
+        "name": "enemy_is_a_legal_target_and_only_actor_and_enemy_draw",
         "passed": passed,
         "details": details,
     }
 
 
-def run_explicit_target_validation():
-    game = make_game(player_count=4)
-    target_id = "p4"
-    result = game.play_card(0, mode="action", target_player_id=target_id)
-    details = {"result": result, "target_player_id": target_id, **snapshot(game)}
-    passed = (
-        result.get("success") is True
-        and details["hands"]["p1"] == ["actor_draw"]
-        and details["hands"]["p2"] == []
-        and details["hands"]["p3"] == []
-        and details["hands"]["p4"] == ["p4_draw"]
-        and details["decks"]["p2"] == ["p2_bottom", "p2_draw"]
-        and details["decks"]["p3"] == ["p3_bottom", "p3_draw"]
-        and details["resources"]["p1"] == {"money": 0, "propaganda": 2}
-        and details["discard"]["p1"] == ["合作談判"]
-    )
+def invalid_target_check(name, target_player_id):
+    game = make_game()
+    before = snapshot(game)
+    result = game.play_card(0, mode="action", target_player_id=target_player_id)
+    after = snapshot(game)
     return {
-        "name": "negotiation_can_choose_draw_target_in_four_player_game",
-        "passed": passed,
-        "details": details,
+        "name": name,
+        "passed": result.get("error") == EXPECTED_ERROR and after == before,
+        "details": {"target_player_id": target_player_id, "result": result, "before": before, "after": after},
     }
 
 
 def main():
     RECORD_DIR.mkdir(parents=True, exist_ok=True)
-    checks = [run_default_target_validation(), run_explicit_target_validation()]
+    checks = [
+        enemy_target_check(),
+        invalid_target_check("missing_target_is_rejected_without_mutation", None),
+        invalid_target_check("self_target_is_rejected_without_mutation", "actor"),
+        invalid_target_check("unknown_target_is_rejected_without_mutation", "missing-player"),
+    ]
     summary = {
         "total": len(checks),
-        "passed": sum(1 for c in checks if c["passed"]),
-        "failed": sum(1 for c in checks if not c["passed"]),
+        "passed": sum(1 for check in checks if check["passed"]),
+        "failed": sum(1 for check in checks if not check["passed"]),
     }
     report = {"summary": summary, "checks": checks}
-    OUT_JSON.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    OUT_JSON.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
     lines = [
-        "# Negotiation Card Validation",
+        "# 合作談判規則驗證",
         "",
-        f"- total: {summary['total']}",
-        f"- passed: {summary['passed']}",
-        f"- failed: {summary['failed']}",
+        f"- 結果：**{summary['passed']}/{summary['total']} passed**",
+        "- 規則：可指定任意其他玩家，包含敵對玩家；行動者與指定者各抽1張，行動者獲得2宣傳。",
+        "- Fail closed：缺少、自身或不存在的目標在卡牌／牌庫／資源變動前拒絕。",
         "",
+        "## Checks",
     ]
-    for check in checks:
-        status = "PASS" if check["passed"] else "FAIL"
-        lines.extend([
-            f"## {status} — {check['name']}",
-            "",
-            "```json",
-            json.dumps(check["details"], ensure_ascii=False, indent=2),
-            "```",
-            "",
-        ])
+    lines.extend(f"- {'PASS' if check['passed'] else 'FAIL'} `{check['name']}`" for check in checks)
+    lines.append("")
     OUT_MD.write_text("\n".join(lines), encoding="utf-8")
     print(json.dumps({"summary": summary}, ensure_ascii=False))
     return 0 if summary["failed"] == 0 else 1

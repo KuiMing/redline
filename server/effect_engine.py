@@ -411,6 +411,9 @@ class EffectEngine:
                 target = next((p for p in game.players if p != player), None)
             if target is not None:
                 self._draw(target, count)
+                if hasattr(game, 'log'):
+                    source_name = context.get('card_name') or 'shared draw'
+                    game.log(f"{player.name} and {target.name} each drew {count} via {source_name}")
             return
 
         # ✅ Choose one branch via pending choice (情報網)

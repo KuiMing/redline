@@ -1,127 +1,398 @@
 {
   "summary": {
-    "total": 2,
-    "passed": 2,
+    "total": 4,
+    "passed": 4,
     "failed": 0
   },
   "checks": [
     {
-      "name": "negotiation_default_target_does_not_draw_all_players_and_grants_2_propaganda",
+      "name": "enemy_is_a_legal_target_and_only_actor_and_enemy_draw",
       "passed": true,
       "details": {
         "result": {
           "success": true
         },
         "hands": {
-          "p1": [
+          "actor": [
             "actor_draw"
           ],
-          "p2": [
-            "p2_draw"
+          "ally": [],
+          "enemy": [
+            "enemy_draw"
           ],
-          "p3": []
+          "observer": []
         },
         "decks": {
-          "p1": [
-            "actor_bottom"
+          "actor": [],
+          "ally": [
+            "ally_draw"
           ],
-          "p2": [
-            "p2_bottom"
-          ],
-          "p3": [
-            "p3_bottom",
-            "p3_draw"
+          "enemy": [],
+          "observer": [
+            "observer_draw"
           ]
         },
         "resources": {
-          "p1": {
+          "actor": {
             "money": 0,
             "propaganda": 2
           },
-          "p2": {
+          "ally": {
             "money": 0,
             "propaganda": 0
           },
-          "p3": {
+          "enemy": {
+            "money": 0,
+            "propaganda": 0
+          },
+          "observer": {
             "money": 0,
             "propaganda": 0
           }
         },
         "discard": {
-          "p1": [
+          "actor": [
             "合作談判"
           ],
-          "p2": [],
-          "p3": []
+          "ally": [],
+          "enemy": [],
+          "observer": []
         },
-        "action_log_tail": [
-          "[Turn 1] P1 played 合作談判"
+        "pending_choice": null,
+        "action_log": [
+          "[Turn 1] Actor and Enemy each drew 1 via 合作談判",
+          "[Turn 1] Actor played 合作談判"
         ]
       }
     },
     {
-      "name": "negotiation_can_choose_draw_target_in_four_player_game",
+      "name": "missing_target_is_rejected_without_mutation",
       "passed": true,
       "details": {
+        "target_player_id": null,
         "result": {
-          "success": true
+          "error": "合作談判必須指定任意一名其他玩家"
         },
-        "target_player_id": "p4",
-        "hands": {
-          "p1": [
-            "actor_draw"
-          ],
-          "p2": [],
-          "p3": [],
-          "p4": [
-            "p4_draw"
-          ]
-        },
-        "decks": {
-          "p1": [
-            "actor_bottom"
-          ],
-          "p2": [
-            "p2_bottom",
-            "p2_draw"
-          ],
-          "p3": [
-            "p3_bottom",
-            "p3_draw"
-          ],
-          "p4": [
-            "p4_bottom"
-          ]
-        },
-        "resources": {
-          "p1": {
-            "money": 0,
-            "propaganda": 2
+        "before": {
+          "hands": {
+            "actor": [
+              "合作談判"
+            ],
+            "ally": [],
+            "enemy": [],
+            "observer": []
           },
-          "p2": {
-            "money": 0,
-            "propaganda": 0
+          "decks": {
+            "actor": [
+              "actor_draw"
+            ],
+            "ally": [
+              "ally_draw"
+            ],
+            "enemy": [
+              "enemy_draw"
+            ],
+            "observer": [
+              "observer_draw"
+            ]
           },
-          "p3": {
-            "money": 0,
-            "propaganda": 0
+          "resources": {
+            "actor": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "ally": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "enemy": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "observer": {
+              "money": 0,
+              "propaganda": 0
+            }
           },
-          "p4": {
-            "money": 0,
-            "propaganda": 0
-          }
+          "discard": {
+            "actor": [],
+            "ally": [],
+            "enemy": [],
+            "observer": []
+          },
+          "pending_choice": null,
+          "action_log": []
         },
-        "discard": {
-          "p1": [
-            "合作談判"
-          ],
-          "p2": [],
-          "p3": [],
-          "p4": []
+        "after": {
+          "hands": {
+            "actor": [
+              "合作談判"
+            ],
+            "ally": [],
+            "enemy": [],
+            "observer": []
+          },
+          "decks": {
+            "actor": [
+              "actor_draw"
+            ],
+            "ally": [
+              "ally_draw"
+            ],
+            "enemy": [
+              "enemy_draw"
+            ],
+            "observer": [
+              "observer_draw"
+            ]
+          },
+          "resources": {
+            "actor": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "ally": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "enemy": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "observer": {
+              "money": 0,
+              "propaganda": 0
+            }
+          },
+          "discard": {
+            "actor": [],
+            "ally": [],
+            "enemy": [],
+            "observer": []
+          },
+          "pending_choice": null,
+          "action_log": []
+        }
+      }
+    },
+    {
+      "name": "self_target_is_rejected_without_mutation",
+      "passed": true,
+      "details": {
+        "target_player_id": "actor",
+        "result": {
+          "error": "合作談判必須指定任意一名其他玩家"
         },
-        "action_log_tail": [
-          "[Turn 1] P1 played 合作談判"
-        ]
+        "before": {
+          "hands": {
+            "actor": [
+              "合作談判"
+            ],
+            "ally": [],
+            "enemy": [],
+            "observer": []
+          },
+          "decks": {
+            "actor": [
+              "actor_draw"
+            ],
+            "ally": [
+              "ally_draw"
+            ],
+            "enemy": [
+              "enemy_draw"
+            ],
+            "observer": [
+              "observer_draw"
+            ]
+          },
+          "resources": {
+            "actor": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "ally": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "enemy": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "observer": {
+              "money": 0,
+              "propaganda": 0
+            }
+          },
+          "discard": {
+            "actor": [],
+            "ally": [],
+            "enemy": [],
+            "observer": []
+          },
+          "pending_choice": null,
+          "action_log": []
+        },
+        "after": {
+          "hands": {
+            "actor": [
+              "合作談判"
+            ],
+            "ally": [],
+            "enemy": [],
+            "observer": []
+          },
+          "decks": {
+            "actor": [
+              "actor_draw"
+            ],
+            "ally": [
+              "ally_draw"
+            ],
+            "enemy": [
+              "enemy_draw"
+            ],
+            "observer": [
+              "observer_draw"
+            ]
+          },
+          "resources": {
+            "actor": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "ally": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "enemy": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "observer": {
+              "money": 0,
+              "propaganda": 0
+            }
+          },
+          "discard": {
+            "actor": [],
+            "ally": [],
+            "enemy": [],
+            "observer": []
+          },
+          "pending_choice": null,
+          "action_log": []
+        }
+      }
+    },
+    {
+      "name": "unknown_target_is_rejected_without_mutation",
+      "passed": true,
+      "details": {
+        "target_player_id": "missing-player",
+        "result": {
+          "error": "合作談判必須指定任意一名其他玩家"
+        },
+        "before": {
+          "hands": {
+            "actor": [
+              "合作談判"
+            ],
+            "ally": [],
+            "enemy": [],
+            "observer": []
+          },
+          "decks": {
+            "actor": [
+              "actor_draw"
+            ],
+            "ally": [
+              "ally_draw"
+            ],
+            "enemy": [
+              "enemy_draw"
+            ],
+            "observer": [
+              "observer_draw"
+            ]
+          },
+          "resources": {
+            "actor": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "ally": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "enemy": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "observer": {
+              "money": 0,
+              "propaganda": 0
+            }
+          },
+          "discard": {
+            "actor": [],
+            "ally": [],
+            "enemy": [],
+            "observer": []
+          },
+          "pending_choice": null,
+          "action_log": []
+        },
+        "after": {
+          "hands": {
+            "actor": [
+              "合作談判"
+            ],
+            "ally": [],
+            "enemy": [],
+            "observer": []
+          },
+          "decks": {
+            "actor": [
+              "actor_draw"
+            ],
+            "ally": [
+              "ally_draw"
+            ],
+            "enemy": [
+              "enemy_draw"
+            ],
+            "observer": [
+              "observer_draw"
+            ]
+          },
+          "resources": {
+            "actor": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "ally": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "enemy": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "observer": {
+              "money": 0,
+              "propaganda": 0
+            }
+          },
+          "discard": {
+            "actor": [],
+            "ally": [],
+            "enemy": [],
+            "observer": []
+          },
+          "pending_choice": null,
+          "action_log": []
+        }
       }
     }
   ]

@@ -4711,6 +4711,10 @@ class Game:
             return {"error": "Not in ACTION phase"}
         if mode == "action" and self._card_is_banned_for_player(player, pending_card):
             return {"error": "非暴力：不能打出武裝或裝備類卡牌"}
+        if mode == "action" and pending_card_name == "合作談判":
+            target = next((p for p in self.players if getattr(p, "id", None) == target_player_id), None) if target_player_id is not None else None
+            if target is None or target == player:
+                return {"error": "合作談判必須指定任意一名其他玩家"}
         if mode == "action" and pending_card_name == "走漏風聲" and target_player_id is not None:
             target = next((p for p in self.players if getattr(p, "id", None) == target_player_id), None)
             if target is None or target == player:
