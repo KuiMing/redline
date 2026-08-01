@@ -12,6 +12,9 @@ server.log
 .idea/
 .vscode/
 
+# Runtime card art is generated/integrated separately; existing tracked assets remain tracked.
+/static/card-art/
+
 # Root-level ad-hoc screenshots/previews should be moved to docs/records/<topic>/
 /*.png
 /*.webp
