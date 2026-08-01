@@ -1,0 +1,46 @@
+{
+  "summary": {
+    "total": 10,
+    "passed": 10,
+    "failed": 0
+  },
+  "checks": {
+    "runtime_asset_is_1350x1100": true,
+    "mission_text_respects_right_safety_strip": true,
+    "modal_is_visible": true,
+    "correct_runtime_asset_is_bound": true,
+    "image_alt_is_meaningful": true,
+    "browser_loaded_native_dimensions": true,
+    "rendered_ratio_is_preserved": true,
+    "rendered_card_stays_inside_viewport": true,
+    "runtime_status_is_present": true,
+    "console_has_no_errors": true
+  },
+  "asset": {
+    "path": "static/card-art/events/上海合作組織.png",
+    "size": [
+      1350,
+      1100
+    ],
+    "right_safety_strip_dark_pixels": 0
+  },
+  "browser": {
+    "modalVisible": true,
+    "imageSrc": "http://127.0.0.1:8000/static/card-art/events/%E4%B8%8A%E6%B5%B7%E5%90%88%E4%BD%9C%E7%B5%84%E7%B9%94.png",
+    "imageAlt": "上海合作組織完整卡面",
+    "naturalWidth": 1350,
+    "naturalHeight": 1100,
+    "renderedWidth": 754,
+    "renderedHeight": 614.359375,
+    "renderedRatio": 1.2272946921335741,
+    "viewportWidth": 1280,
+    "viewportHeight": 720,
+    "insideViewport": true,
+    "statusText": "進行中\n進行中\n點擊任意地方關閉"
+  },
+  "console_errors": [],
+  "effective_console_errors": [],
+  "http_errors": [],
+  "unexpected_http_errors": [],
+  "screenshot": "docs/records/event-cards/SHANGHAI_COOPERATION_TEXT_SAFE_20260731.png"
+}

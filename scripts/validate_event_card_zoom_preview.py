@@ -11,6 +11,7 @@ from playwright.sync_api import sync_playwright
 BASE = Path(__file__).resolve().parent.parent
 BASE_URL = os.environ.get("REDLINE_BASE_URL", "http://127.0.0.1:8000")
 RECORD_DIR = BASE / "docs/records/event-cards"
+CHROME = Path("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
 JSON_PATH = RECORD_DIR / "EVENT_CARD_ZOOM_PREVIEW_VALIDATION.json"
 MD_PATH = RECORD_DIR / "EVENT_CARD_ZOOM_PREVIEW_VALIDATION.md"
 OPEN_SHOT = RECORD_DIR / "EVENT_CARD_ZOOM_PREVIEW_OPEN_2026_07_28.png"
@@ -48,8 +49,8 @@ def main() -> None:
         checks,
         "zoom_animation_compact_panel_and_current_cache_bust_exist",
         "@keyframes event-card-zoom-in" in css
-        and "style.css?v=merged-personal-info-20260728" in html
-        and "app.js?v=merged-personal-info-20260728" in html
+        and "style.css?v=playtest-batch2-20260729" in html
+        and "app.js?v=playtest-batch2-20260729" in html
         and "width: 180px" in css
         and "height: 147px" in css,
         "zoom keyframes + compact event panel + current static cache bust",
@@ -62,7 +63,7 @@ def main() -> None:
     url = f"{BASE_URL}{setup['url']}&v=event-card-zoom-preview"
 
     with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(headless=True)
+        browser = playwright.chromium.launch(headless=True, executable_path=str(CHROME))
         page = browser.new_page(viewport={"width": 1280, "height": 720})
         console_errors: list[str] = []
         page.on("console", lambda message: console_errors.append(message.text) if message.type == "error" else None)
