@@ -1,0 +1,140 @@
+{
+  "generated_at": "2026-08-01T06:21:57.961326+00:00",
+  "base_url": "http://127.0.0.1:8000",
+  "status": "passed",
+  "checks_passed": 8,
+  "checks_total": 8,
+  "checks": [
+    {
+      "name": "fixture_uses_canonical_east_turkestan_mission",
+      "ok": true,
+      "detail": {
+        "id": "east_turkestan_camp",
+        "name": "東突厥集中營",
+        "type": "mission",
+        "trigger": {
+          "type": "play_card_with_propaganda",
+          "count": 1
+        },
+        "success": {
+          "type": "gain_card",
+          "card": "宣傳家",
+          "count": 1
+        },
+        "failure": {
+          "type": "discard_random",
+          "count": 1
+        },
+        "effect": {},
+        "progress": {
+          "count": 0,
+          "required": 1,
+          "succeeded": false,
+          "settled": false,
+          "status": "active"
+        },
+        "status": "active",
+        "result_text": "非紅軍任務進行中",
+        "trigger_text": "打出購買費用含宣傳的卡牌至少 1 次",
+        "success_text": "非紅軍：獲得 1 張宣傳家",
+        "failure_text": "紅軍：被隨機棄掉 1 張手牌",
+        "effect_text": "無"
+      }
+    },
+    {
+      "name": "fixture_starts_with_zero_event_progress",
+      "ok": true,
+      "detail": {
+        "count": 0,
+        "required": 1,
+        "succeeded": false,
+        "settled": false,
+        "status": "active"
+      }
+    },
+    {
+      "name": "formal_hand_action_commits_taiwan_support_before_target_resolution",
+      "ok": true,
+      "detail": {
+        "pending_choice": {
+          "type": "support_flow_choice",
+          "choice_key": "support_interaction",
+          "interaction_kind": null,
+          "remaining_builds": null,
+          "cancellable": false,
+          "player_id": "202a0c98-72a9-4d9c-a0b7-f4c2f7bf71ea",
+          "player_name": null,
+          "prompt": "臺灣奧援：選擇 1 個要瓦解的鄰近敵方組織。",
+          "source_name": "臺灣奧援",
+          "count": null,
+          "min_count": null,
+          "mode": null,
+          "acting_player_id": null,
+          "acting_player_name": null,
+          "played_card_name": null,
+          "region": null,
+          "free": null,
+          "ignore_distance": null,
+          "cards": [],
+          "options": [],
+          "towns": [],
+          "targets": [
+            {
+              "id": "0d8c641d-0725-421f-9a08-57aee5ef2ffb::福州",
+              "label": "紅軍｜福州",
+              "player_id": "0d8c641d-0725-421f-9a08-57aee5ef2ffb",
+              "town": "福州",
+              "requires_self_sacrifice": false
+            }
+          ],
+          "step": "target"
+        },
+        "hand": [],
+        "discard": [
+          "臺灣奧援"
+        ]
+      }
+    },
+    {
+      "name": "authoritative_event_progress_is_success_while_support_target_is_pending",
+      "ok": true,
+      "detail": {
+        "count": 1,
+        "required": 1,
+        "succeeded": true,
+        "settled": false,
+        "status": "success_pending",
+        "last_actor_id": "202a0c98-72a9-4d9c-a0b7-f4c2f7bf71ea",
+        "last_actor_name": "見證者"
+      }
+    },
+    {
+      "name": "formal_ui_shows_taiwan_support_pending_choice",
+      "ok": true,
+      "detail": "卡牌選擇\n臺灣奧援\n臺灣奧援：選擇 1 個要瓦解的鄰近敵方組織。\n地圖會同步高亮可選目標；主操作仍以此處列表為準。你也可以切到「戰略地圖」查看對應城鎮外框。\n紅軍｜福州\n關閉"
+    },
+    {
+      "name": "formal_pinned_event_ui_shows_completed_progress",
+      "ok": true,
+      "detail": {
+        "aria_label": "東突厥集中營，點擊放大查看",
+        "visible_text": "任務進度 1/1\n點擊放大查看"
+      }
+    },
+    {
+      "name": "formal_event_reveal_shows_success_and_one_of_one",
+      "ok": true,
+      "detail": "條件已達成，等待結算\n任務進度 1/1\n非紅軍任務條件已達成，等待全體玩家行動結束後結算\n點擊任意地方關閉"
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "ok": true,
+      "detail": []
+    }
+  ],
+  "console_errors": [],
+  "screenshots": [
+    "docs/records/event-cards/support-event-progress/taiwan-support-event-progress-pending.png",
+    "docs/records/event-cards/support-event-progress/east-turkestan-event-success.png"
+  ]
+}

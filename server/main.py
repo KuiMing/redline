@@ -2429,9 +2429,25 @@ def test_setup_support_proof(payload: dict):
     game.pending_base_choices = {}
     game.pending_choice = None
     game._deferred_auto_event = False
-    noop_event = game._event_by_name("歲月靜好")
-    game.current_event = dict(noop_event or {})
-    game.event_progress = {"count": 0, "required": 0, "succeeded": True, "settled": True, "status": "idle"}
+    event_name = payload.get("event_name")
+    if event_name:
+        selected_event = game._event_by_name(event_name)
+        if selected_event is None:
+            return {"error": f"Unknown event: {event_name}"}
+        game.current_event = dict(selected_event)
+        required = int((game.current_event.get("trigger") or {}).get("count", 1) or 1)
+        game.event_progress = {
+            "count": 0,
+            "required": required,
+            "succeeded": False,
+            "settled": False,
+            "status": "active",
+        }
+    else:
+        noop_event = game._event_by_name("歲月靜好")
+        game.current_event = dict(noop_event or {})
+        game.event_progress = {"count": 0, "required": 0, "succeeded": True, "settled": True, "status": "idle"}
+    game.event_notification = game._event_display_payload()
     game.event_modifiers = []
     game.id = game_id
 

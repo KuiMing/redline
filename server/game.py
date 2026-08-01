@@ -2416,6 +2416,11 @@ class Game:
             player.hand.insert(hand_index, rollback_card)
             self.turn_log['played_money_card'] = bool(choice.get('rollback_played_money_card', False))
             self.turn_log['played_propaganda_card'] = bool(choice.get('rollback_played_propaganda_card', False))
+            if 'rollback_event_progress' in choice:
+                snapshot = choice.get('rollback_event_progress')
+                self.event_progress = dict(snapshot) if isinstance(snapshot, dict) else snapshot
+                notification = choice.get('rollback_event_notification')
+                self.event_notification = dict(notification) if isinstance(notification, dict) else notification
         # Registered ability choices consume nothing until resolved; transactional support
         # choices explicitly restore their card and turn flags above.
         self.pending_choice = None
@@ -4750,6 +4755,8 @@ class Game:
             'cost_has_propaganda': cost_has_propaganda,
             'prior_played_money_card': self.turn_log.get('played_money_card', False),
             'prior_played_propaganda_card': self.turn_log.get('played_propaganda_card', False),
+            'prior_event_progress': dict(self.event_progress) if isinstance(self.event_progress, dict) else self.event_progress,
+            'prior_event_notification': dict(self.event_notification) if isinstance(self.event_notification, dict) else self.event_notification,
         }
         era_followup_target_choice = self._era_followup_target_choice_for_play_card(player, played_card)
         if era_followup_target_choice:
@@ -4770,24 +4777,6 @@ class Game:
 
         if effective_type == 'support':
             support_resolution = self._execute_support_card(player, played_card)
-            if support_resolution and support_resolution.get('pending_choice'):
-                if card_name == '北國奧援' and self.pending_choice:
-                    # No 北國奧援 effect has mutated the board at the initial target/sacrifice
-                    # choice, so this first step can be cancelled as an atomic card play.
-                    self.pending_choice.update({
-                        'cancellable': True,
-                        'rollback_card': played_card,
-                        'rollback_hand_index': index,
-                        'rollback_played_money_card': action_context['prior_played_money_card'],
-                        'rollback_played_propaganda_card': action_context['prior_played_propaganda_card'],
-                    })
-                if support_resolution.get('card_moved_out_of_play'):
-                    action_context['removed_current_card'] = True
-                if not action_context.get('removed_current_card'):
-                    if not self._return_borrowed_card_to_owner_topdeck(played_card):
-                        player.deck.discard([played_card])
-                self.log(f"{player.name} played {card_name}")
-                return {"success": True, "pending_choice": True, **support_resolution}
             if support_resolution and support_resolution.get('card_moved_out_of_play'):
                 action_context['removed_current_card'] = True
             if support_resolution and support_resolution.get('no_legal_target'):
@@ -4800,10 +4789,35 @@ class Game:
                     "no_legal_target": True,
                     "card_name": card_name,
                 }
-        if int(purchase_cost.get('money', 0) or 0) > 0:
-            self._track_event_progress('play_card_with_money', player=player)
-        if int(purchase_cost.get('propaganda', 0) or 0) > 0:
-            self._track_event_progress('play_card_with_propaganda', player=player)
+            # Legal support cards are committed even when their printed effect continues through
+            # a pending choice, so cost-based mission progress must precede that early return.
+            if int(purchase_cost.get('money', 0) or 0) > 0:
+                self._track_event_progress('play_card_with_money', player=player)
+            if int(purchase_cost.get('propaganda', 0) or 0) > 0:
+                self._track_event_progress('play_card_with_propaganda', player=player)
+            if support_resolution and support_resolution.get('pending_choice'):
+                if card_name == '北國奧援' and self.pending_choice:
+                    # No 北國奧援 effect has mutated the board at the initial target/sacrifice
+                    # choice, so this first step can be cancelled as an atomic card play.
+                    self.pending_choice.update({
+                        'cancellable': True,
+                        'rollback_card': played_card,
+                        'rollback_hand_index': index,
+                        'rollback_played_money_card': action_context['prior_played_money_card'],
+                        'rollback_played_propaganda_card': action_context['prior_played_propaganda_card'],
+                        'rollback_event_progress': action_context['prior_event_progress'],
+                        'rollback_event_notification': action_context['prior_event_notification'],
+                    })
+                if not action_context.get('removed_current_card'):
+                    if not self._return_borrowed_card_to_owner_topdeck(played_card):
+                        player.deck.discard([played_card])
+                self.log(f"{player.name} played {card_name}")
+                return {"success": True, "pending_choice": True, **support_resolution}
+        else:
+            if int(purchase_cost.get('money', 0) or 0) > 0:
+                self._track_event_progress('play_card_with_money', player=player)
+            if int(purchase_cost.get('propaganda', 0) or 0) > 0:
+                self._track_event_progress('play_card_with_propaganda', player=player)
         if self._player_has_india_research_room(player) and self._is_india_flag_card(played_card) and not self.turn_log.get("india_flag_money_triggered"):
             self.turn_log["india_flag_money_triggered"] = True
             player.resources["money"] += 2
