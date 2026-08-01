@@ -162,7 +162,8 @@ def main():
         and first_preserved
         and second.get("success") and second.get("red_base_destroyed")
         and red.organizations.get("北京", 0) == 0
-        and red.base is None,
+        and red.base == "北京"
+        and "北京" in set(red_game.turn_log.get("red_army_base_build_blocks", []) or []),
         first=first,
         first_preserved=first_preserved,
         second=second,

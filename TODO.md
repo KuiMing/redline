@@ -1,6 +1,6 @@
 # Redline TODO
 
-最後更新：2026-07-28
+最後更新：2026-08-01
 
 ## 工作規則
 - 開始新工作前先做 intake：讀 `TODO.md`、跑 `git status --short`、跑 `git log --oneline -5`。
@@ -27,7 +27,7 @@
 - [todo] `合作談判`的指定對象不受陣營、陣營關係或敵我限制；行動玩家可以選擇任意一名其他玩家，包含敵對玩家。後續需確認候選投影、後端 target validation 與 UI 玩家選單皆不會排除敵對玩家，並維持只有行動玩家與被選中的玩家各抽 1 張牌。（2026-07-31 規則回報）
 
 ### P1：根據地瓦解與紅軍根據地失效規則
-- [todo] 一般陣營的根據地不可被瓦解；紅軍根據地是唯一例外，可以成為瓦解目標。只有當「同一名玩家」在「同一回合」對紅軍根據地成功瓦解累計兩次，紅軍才不能再於該根據地建立組織。後續需逐項核對瓦解合法目標、成功次數歸屬、跨玩家／跨回合重置，以及所有建立來源是否共同封鎖該根據地。（2026-07-31 規則回報）
+- [done] 一般陣營根據地已從所有瓦解候選投影排除，中央 `dissolve_organization()`亦 fail closed；紅軍北京根據地保留為唯一例外。同一玩家同一回合第一次成功只記 `1/2`並保留組織，第二次才移除組織、保留北京根據地位置，並以當回合 `turn_log`封鎖紅軍在北京的所有建立來源；不同玩家、不同回合命中不合併，下一回合可重建。建立封鎖集中於 `_place_organization()`，移動既有組織明確豁免；自我犧牲不可選自己的根據地，legacy effect先確認合法敵方目標才支付犧牲，避免直接 mutation繞過。focused pytest 7/7、affected runtime pytest 121/121、完整可收集 pytest 152 passed（另2個未修改舊 UI validator FakePage測試因 API drift失敗）、紅軍 runtime 6/6、一城一組織 11/11、北國兩階段 7/7、奧援 runtime 12/12、正式 Leaflet/WebSocket UI proof 9/9且 console 0。證據位於 `docs/records/base-dissolve/`。（2026-08-01 完成）
 
 ### P1：奧援卡 II／III 級的「最多組織」門檻
 - [done] 已將所有 8 種一般奧援卡、每種 2 個印刷 variant 的 II／III 級判定由「指定地區至少有 1 個己方組織」改為「指定地區組織數並列全場最多且大於 0」；平手視為共同最多，全員 0 不算。III 級先比較該卡自身奧援地區，II 級仍只檢查該實體卡印刷的兩個指定地區並維持 OR 語義；`matched_rulers`只回傳真正領先的地區。區域計數統一經實體組織城鎮與共用關係計算，依 `rules.md`讓共用組織對每個共享玩家各計 1，但同一玩家不重複計算同一實體。另修正市場購買／借用 copy 遺失 `variant_index`，確保 variant 1 經購買、棄牌、洗牌與抽回後仍使用原卡面及 II 級指定地區，普通卡不新增 variant metadata。新增 8 卡 × 2 variants matrix，涵蓋有 1 但落後、並列最多、自身地區 III 級、零組織、OR、共用組織及 variant 生命週期；focused pytest 6/6、affected pytest 121/121、奧援 runtime 12/12、東洋互動 6/6、南洋 2/2、北國 7/7、一城一組織 11/11、正式 UI proof 9/9。UI 證據位於 `docs/records/support-region-leadership/`。（2026-08-01 完成）

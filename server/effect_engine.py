@@ -608,18 +608,35 @@ class EffectEngine:
             opponents = [target]
             range_limit = int(effect.get("range", 1) or 1)
             if effect.get("requires_self_sacrifice"):
-                owned = [town for town, count in player.organizations.items() if count > 0]
+                owned = [
+                    town for town, count in player.organizations.items()
+                    if count > 0 and town != getattr(player, 'base', None)
+                ]
                 valid_sacrifice = None
+                target_town = None
                 for town in owned:
                     reachable = game._towns_within_steps([town], max_steps=range_limit)
-                    if any(any(c > 0 and otown in reachable for otown, c in other.organizations.items()) for other in opponents):
-                        valid_sacrifice = town
+                    for other in opponents:
+                        for otown, count in other.organizations.items():
+                            if (
+                                count > 0
+                                and otown in reachable
+                                and game._can_dissolve_base_target(other, otown)[0]
+                            ):
+                                valid_sacrifice = town
+                                target_town = otown
+                                break
+                        if target_town:
+                            break
+                    if target_town:
                         break
                 if valid_sacrifice is None:
-                    return
+                    return {'no_target': True}
                 player.organizations[valid_sacrifice] -= 1
                 if player.organizations[valid_sacrifice] <= 0:
                     del player.organizations[valid_sacrifice]
+                result = game.dissolve_organization(player, target, target_town, source="card")
+                return result
             for other in opponents:
                 if other is None:
                     continue

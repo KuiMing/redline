@@ -149,8 +149,10 @@ def test_taiwan_support_counts_as_prior_propaganda_cost_card_for_ignite_passion(
 def test_north_support_initial_choice_can_be_cancelled_without_spending_card_or_mutating_board():
     game = make_game()
     red, opponent = game.players
-    red.organizations = {'北京': 1}
-    opponent.organizations = {'天津': 1}
+    red.base = '北京'
+    red.organizations = {'北京': 1, '承德': 1}
+    opponent.base = '臺北'
+    opponent.organizations = {'臺北': 1, '天津': 1}
     north_support = game._make_support_card('北國奧援', variant_index=0)
     red.hand = [north_support]
     red.deck.discard_pile = []
@@ -162,8 +164,8 @@ def test_north_support_initial_choice_can_be_cancelled_without_spending_card_or_
     assert game.state(red.id)['pending_choice']['cancellable'] is True
     assert red.hand == []
     assert red.deck.discard_pile == [north_support]
-    assert red.organizations == {'北京': 1}
-    assert opponent.organizations == {'天津': 1}
+    assert red.organizations == {'北京': 1, '承德': 1}
+    assert opponent.organizations == {'臺北': 1, '天津': 1}
 
     cancel_result = game.cancel_pending_choice(red.id)
 
@@ -171,8 +173,8 @@ def test_north_support_initial_choice_can_be_cancelled_without_spending_card_or_
     assert game.pending_choice is None
     assert red.hand == [north_support]
     assert red.deck.discard_pile == []
-    assert red.organizations == {'北京': 1}
-    assert opponent.organizations == {'天津': 1}
+    assert red.organizations == {'北京': 1, '承德': 1}
+    assert opponent.organizations == {'臺北': 1, '天津': 1}
     assert game.turn_log['played_money_card'] is False
     assert game.turn_log['played_propaganda_card'] is False
 

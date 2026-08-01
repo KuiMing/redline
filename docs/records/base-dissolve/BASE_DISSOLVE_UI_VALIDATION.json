@@ -1,0 +1,194 @@
+{
+  "status": "passed",
+  "generated_at": "2026-08-01T06:08:29.541855+00:00",
+  "base_url": "http://127.0.0.1:8000",
+  "checks_passed": 9,
+  "checks_total": 9,
+  "checks": [
+    {
+      "name": "formal_pending_targets_exclude_non_red_base",
+      "ok": true,
+      "detail": {
+        "target_towns": [
+          "北京",
+          "朝陽"
+        ],
+        "excluded_non_red_base": "天津"
+      }
+    },
+    {
+      "name": "formal_map_non_red_base_is_not_clickable_dissolve_target",
+      "ok": true,
+      "detail": {
+        "candidate_info": {
+          "targetTowns": [
+            "北京",
+            "朝陽"
+          ],
+          "highlightLayerCount": 4,
+          "hint": "情報網：選擇 1 個要瓦解的鄰近敵方組織。 可選目標：2 個。地圖上已用中性色外框標出可選城鎮。請點選中性色外框城鎮，然後使用左側「瓦解目前城鎮（效果）」按鈕完成瓦解；也可回到選擇視窗確認。"
+        },
+        "button_disabled": true,
+        "hint": "目前選取 天津：沒有可瓦解的共享組織目標。"
+      }
+    },
+    {
+      "name": "formal_map_proof_is_unobscured",
+      "ok": true,
+      "detail": {
+        "choice_modal_display": "none"
+      }
+    },
+    {
+      "name": "formal_map_red_base_is_clickable_dissolve_target",
+      "ok": true,
+      "detail": {
+        "selected_town": "北京",
+        "button_text": "瓦解目前城鎮（效果）"
+      }
+    },
+    {
+      "name": "first_red_base_hit_keeps_physical_organization",
+      "ok": true,
+      "detail": {
+        "red_player": {
+          "id": "9bcaffe6-4674-4554-b34a-a48b15a54cbe",
+          "name": "enemyA",
+          "faction": "red_army",
+          "base": "北京",
+          "resources": {
+            "money": 0,
+            "propaganda": 0
+          },
+          "moves_left": 0,
+          "hand": [
+            "未知手牌",
+            "未知手牌"
+          ],
+          "hand_variants": [
+            null,
+            null
+          ],
+          "deck_count": 6,
+          "discard_count": 0,
+          "discard_pile": [],
+          "discard_variants": [],
+          "orgs": {
+            "北京": 1
+          }
+        },
+        "log_tail": [
+          "[Turn 1] viewer played 情報網",
+          "[Turn 1] viewer resolved choose_one option 1",
+          "[Turn 1] viewer 本回合第 1 次成功瓦解北京紅軍根據地（1/2）；根據地組織仍保留"
+        ]
+      }
+    },
+    {
+      "name": "red_base_remains_targetable_for_second_hit",
+      "ok": true,
+      "detail": {
+        "target_towns": [
+          "北京",
+          "朝陽"
+        ]
+      }
+    },
+    {
+      "name": "second_hit_removes_org_keeps_base_and_blocks_rebuild_this_turn",
+      "ok": true,
+      "detail": {
+        "red_player": {
+          "id": "9bcaffe6-4674-4554-b34a-a48b15a54cbe",
+          "name": "enemyA",
+          "faction": "red_army",
+          "base": "北京",
+          "resources": {
+            "money": 0,
+            "propaganda": 0
+          },
+          "moves_left": 0,
+          "hand": [
+            "未知手牌",
+            "未知手牌"
+          ],
+          "hand_variants": [
+            null,
+            null
+          ],
+          "deck_count": 6,
+          "discard_count": 0,
+          "discard_pile": [],
+          "discard_variants": [],
+          "orgs": {}
+        },
+        "youyan_player": {
+          "id": "4dde34ee-cf13-44b7-b67b-0b39ec768560",
+          "name": "enemyB",
+          "faction": "youyan",
+          "base": "天津",
+          "resources": {
+            "money": 0,
+            "propaganda": 0
+          },
+          "moves_left": 0,
+          "hand": [
+            "未知手牌",
+            "未知手牌"
+          ],
+          "hand_variants": [
+            null,
+            null
+          ],
+          "deck_count": 5,
+          "discard_count": 0,
+          "discard_pile": [],
+          "discard_variants": [],
+          "orgs": {
+            "天津": 1,
+            "朝陽": 1
+          }
+        },
+        "build_blocks": [
+          "北京"
+        ],
+        "log_tail": [
+          "[Turn 1] viewer played 情報網",
+          "[Turn 1] viewer resolved choose_one option 1",
+          "[Turn 1] viewer 本回合第 1 次成功瓦解北京紅軍根據地（1/2）；根據地組織仍保留",
+          "[Turn 1] viewer played 情報網",
+          "[Turn 1] viewer resolved choose_one option 1",
+          "[Turn 1] viewer 本回合第 2 次成功瓦解北京紅軍根據地（2/2）；移除根據地組織，紅軍本回合不能在該地建立組織"
+        ]
+      }
+    },
+    {
+      "name": "formal_log_shows_second_hit_and_current_turn_build_block",
+      "ok": true,
+      "detail": {
+        "log_tail": [
+          "[Turn 1] viewer 本回合第 2 次成功瓦解北京紅軍根據地（2/2）；移除根據地組織，紅軍本回合不能在該地建立組織",
+          "[Turn 1] viewer resolved choose_one option 1",
+          "[Turn 1] viewer played 情報網",
+          "[Turn 1] viewer 本回合第 1 次成功瓦解北京紅軍根據地（1/2）；根據地組織仍保留",
+          "[Turn 1] viewer resolved choose_one option 1",
+          "[Turn 1] viewer played 情報網"
+        ]
+      }
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "ok": true,
+      "detail": {
+        "console_errors": []
+      }
+    }
+  ],
+  "console_errors": [],
+  "screenshots": [
+    "docs/records/base-dissolve/base-dissolve-legal-targets.png",
+    "docs/records/base-dissolve/base-dissolve-map-targets.png",
+    "docs/records/base-dissolve/base-dissolve-disabled-controls.png",
+    "docs/records/base-dissolve/red-base-second-hit.png"
+  ]
+}

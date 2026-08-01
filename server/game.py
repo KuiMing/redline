@@ -194,7 +194,6 @@ class Game:
         self._pending_era_activations = []
         self._deferred_auto_event = False
         self.era_notification = None
-        self.red_army_destroyed_bases = set()
         if self.game_phase == GamePhase.MAIN:
             self._start_event_phase()
 
@@ -796,7 +795,11 @@ class Game:
                     if other is red:
                         continue
                     for town, n in (other.organizations or {}).items():
-                        if n > 0 and self._event_trigger_matches_scope({'scope': effect.get('scope')}, town=town):
+                        if (
+                            n > 0
+                            and self._event_trigger_matches_scope({'scope': effect.get('scope')}, town=town)
+                            and self._can_dissolve_base_target(other, town)[0]
+                        ):
                             targets.append({'id': f'{other.id}:{town}', 'player_id': other.id, 'town': town, 'label': f'{other.name}｜{town}'})
                 if targets:
                     self._set_pending_target_choice(red, 'event_red_dissolve', targets, f"{self.current_event.get('name')}：紅軍選擇要瓦解的組織。", source_name=self.current_event.get('name'))
@@ -1158,7 +1161,7 @@ class Game:
             candidates = self._towns_within_steps(source_towns, max_steps=max_steps)
         choices = []
         for town in sorted(candidates):
-            if town in set(getattr(self, 'red_army_destroyed_bases', set()) or []) and getattr(player, 'faction_id', None) == 'red_army':
+            if self._red_army_base_build_blocked(getattr(player, 'faction_id', None), town):
                 continue
             if not self._can_player_build_in_town(player, town):
                 continue
@@ -1194,7 +1197,12 @@ class Game:
             return None
         reachable = self._towns_within_steps(source_towns, max_steps=max_steps)
         for town, count in (getattr(target_player, 'organizations', {}) or {}).items():
-            if count > 0 and town in reachable and self._town_matches_region_alias(town, target_region):
+            if (
+                count > 0
+                and town in reachable
+                and self._town_matches_region_alias(town, target_region)
+                and self._can_dissolve_base_target(target_player, town)[0]
+            ):
                 return town
         return None
 
@@ -2560,6 +2568,8 @@ class Game:
             for town, count in (other.organizations or {}).items():
                 if count <= 0 or town not in reachable or not self._town_matches_region_alias(town, target_region):
                     continue
+                if not self._can_dissolve_base_target(other, town)[0]:
+                    continue
                 targets.append({
                     'id': f'{getattr(other, "id", other.name)}::{town}',
                     'label': f'{other.name}｜{town}',
@@ -2578,6 +2588,8 @@ class Game:
                 continue
             for town, count in (other.organizations or {}).items():
                 if count <= 0 or town not in reachable or not self._town_matches_region_alias(town, target_region):
+                    continue
+                if not self._can_dissolve_base_target(other, town)[0]:
                     continue
                 targets.append({
                     'id': f'{getattr(other, "id", other.name)}::{town}',
@@ -2609,10 +2621,11 @@ class Game:
             return False
         if (target_player.organizations or {}).get(town, 0) <= 0:
             return False
+        if not self._can_dissolve_base_target(target_player, town)[0]:
+            return False
         if (
             getattr(target_player, 'faction_id', None) == 'red_army'
             and town == getattr(target_player, 'base', None)
-            and town not in set(getattr(self, 'red_army_destroyed_bases', set()) or [])
         ):
             return False
         original_count = target_player.organizations[town]
@@ -2629,6 +2642,8 @@ class Game:
         towns = []
         for town, count in (player.organizations or {}).items():
             if count <= 0:
+                continue
+            if town == getattr(player, 'base', None):
                 continue
             targets = self._interactive_support_dissolve_targets_near_town(
                 player,
@@ -2826,6 +2841,8 @@ class Game:
             sacrifice_town = result.get('town')
             if not sacrifice_town or (player.organizations or {}).get(sacrifice_town, 0) <= 0:
                 return {'error': 'Invalid own organization to sacrifice'}
+            if sacrifice_town == getattr(player, 'base', None):
+                return {'error': 'Base organization cannot be sacrificed'}
             targets = self._interactive_support_dissolve_targets_near_town(
                 player,
                 sacrifice_town,
@@ -3335,6 +3352,7 @@ class Game:
             "purchased_cards_this_turn": [],
             "reaction_prompted_player_ids": [],
             "red_army_base_dissolves": {},
+            "red_army_base_build_blocks": [],
         }
 
     def _resolve_ability_ref(self, ability):
@@ -3639,7 +3657,12 @@ class Game:
             if not ok:
                 continue
             for town, count in (other.organizations or {}).items():
-                if count > 0 and town in inner_towns and town in reachable:
+                if (
+                    count > 0
+                    and town in inner_towns
+                    and town in reachable
+                    and self._can_dissolve_base_target(other, town)[0]
+                ):
                     targets.append({
                         'id': f'{getattr(other, "id", other.name)}::{town}',
                         'label': f'{other.name}｜{town}',
@@ -3994,6 +4017,12 @@ class Game:
     def _camp_token_for_player(self, player):
         return self._camp_token_for_faction_id(player.faction_id)
 
+    def _red_army_base_build_blocked(self, faction_id, town):
+        return (
+            faction_id == 'red_army'
+            and town in set((getattr(self, 'turn_log', {}) or {}).get('red_army_base_build_blocks', []) or [])
+        )
+
     def can_faction_develop_in_town(self, faction_id, town):
         town_data = self.map.get("towns", {}).get(town)
         if not town_data:
@@ -4002,9 +4031,10 @@ class Game:
         camp_tags = town_data.get("camp", []) or []
         faction_token = self._camp_token_for_faction_id(faction_id)
 
-        # Red Army can only develop where explicit red camp tag exists, and destroyed Red Army bases cannot be rebuilt.
+        # Red Army can only develop where explicit red camp tag exists. A base that
+        # suffered two successful dissolves by one attacker is blocked only this turn.
         if faction_id == "red_army":
-            if town in set(getattr(self, 'red_army_destroyed_bases', set()) or []):
+            if self._red_army_base_build_blocked(faction_id, town):
                 return False
             return "紅軍" in camp_tags
 
@@ -4079,8 +4109,10 @@ class Game:
                 })
         return violations
 
-    def _place_organization(self, player, town, *, require_supply=True, require_development=True):
+    def _place_organization(self, player, town, *, require_supply=True, require_development=True, enforce_base_build_block=True):
         if town not in self.map.get('towns', {}):
+            return False
+        if enforce_base_build_block and self._red_army_base_build_blocked(getattr(player, 'faction_id', None), town):
             return False
         if self._town_has_physical_organization(town):
             return False
@@ -5093,8 +5125,8 @@ class Game:
             return {"error": "Invalid town"}
         if not self._town_has_shared_org_access(player, town):
             return {"error": "No organization in town"}
-        if town in set(getattr(self, 'red_army_destroyed_bases', set()) or []) and getattr(player, 'faction_id', None) == 'red_army':
-            return {"error": "Red Army base has been destroyed and cannot be rebuilt"}
+        if self._red_army_base_build_blocked(getattr(player, 'faction_id', None), town):
+            return {"error": "Red Army cannot rebuild this base during the current turn"}
         if not self._has_org_supply(player):
             return {"error": f"組織棋已達上限（{self._org_supply_limit(player)}），需先瓦解既有組織"}
         if not self._can_player_build_in_town(player, town):
@@ -5122,8 +5154,8 @@ class Game:
         origin_owner = self._shared_origin_owner(player, origin_town)
         if not origin_owner:
             return {"error": "No organization in origin"}
-        if target_town in set(getattr(self, 'red_army_destroyed_bases', set()) or []) and getattr(player, 'faction_id', None) == 'red_army':
-            return {"error": "Red Army base has been destroyed and cannot be rebuilt"}
+        if self._red_army_base_build_blocked(getattr(player, 'faction_id', None), target_town):
+            return {"error": "Red Army cannot rebuild this base during the current turn"}
         if not self._can_player_build_in_town(player, target_town):
             return {"error": "Cannot develop in this town"}
 
@@ -5167,15 +5199,22 @@ class Game:
         key = f'{attacker_id}:{town}'
         counts[key] = int(counts.get(key, 0) or 0) + 1
         if counts[key] < 2:
-            self.log(f"{attacker.name} damaged Red Army base at {town} (1/2 this turn)")
+            self.log(f"{attacker.name} 本回合第 1 次成功瓦解{town}紅軍根據地（1/2）；根據地組織仍保留")
             return False
-        self.red_army_destroyed_bases.add(town)
+        blocked = self.turn_log.setdefault('red_army_base_build_blocks', [])
+        if town not in blocked:
+            blocked.append(town)
         if target_owner.organizations.get(town, 0) > 0:
             del target_owner.organizations[town]
-        if getattr(target_owner, 'base', None) == town:
-            target_owner.base = None
-        self.log(f"{attacker.name} destroyed Red Army base at {town}")
+        self.log(f"{attacker.name} 本回合第 2 次成功瓦解{town}紅軍根據地（2/2）；移除根據地組織，紅軍本回合不能在該地建立組織")
         return True
+
+    def _can_dissolve_base_target(self, target_owner, town):
+        if town != getattr(target_owner, 'base', None):
+            return True, None
+        if getattr(target_owner, 'faction_id', None) == 'red_army':
+            return True, None
+        return False, "Non-Red-Army bases cannot be dissolved"
 
     def dissolve_organization(self, attacker, defender, town, source="card"):
         if not town:
@@ -5184,6 +5223,10 @@ class Game:
         target_owner = self._shared_origin_owner(defender, town)
         if not target_owner:
             return {"error": "No organization in target town"}
+
+        ok, err = self._can_dissolve_base_target(target_owner, town)
+        if not ok:
+            return {"error": err}
 
         ok, err = self._can_target_org_with_dissolve(attacker, target_owner, source=source)
         if not ok:
@@ -5199,10 +5242,11 @@ class Game:
             if target_owner.organizations[town] <= 0:
                 del target_owner.organizations[town]
 
-        if target_owner is defender:
-            self.log(f"{attacker.name} dissolved 1 organization from {defender.name} at {town}")
-        else:
-            self.log(f"{attacker.name} dissolved 1 shared organization via {defender.name} from {target_owner.name} at {town}")
+        if not is_red_base:
+            if target_owner is defender:
+                self.log(f"{attacker.name} dissolved 1 organization from {defender.name} at {town}")
+            else:
+                self.log(f"{attacker.name} dissolved 1 shared organization via {defender.name} from {target_owner.name} at {town}")
 
         inner_towns = set(self._towns_for_region_alias("china"))
         if town in inner_towns and any(self._player_has_ability(target_owner, n) for n in {"殉道者", "青山里"}):
@@ -5253,7 +5297,7 @@ class Game:
             player.organizations[old_base] -= 1
             if player.organizations[old_base] <= 0:
                 del player.organizations[old_base]
-        self._place_organization(player, to_town, require_supply=False, require_development=False)
+        self._place_organization(player, to_town, require_supply=False, require_development=False, enforce_base_build_block=False)
         player.base = to_town
         self.log(f"{player.name} relocated base from {old_base} to {to_town} via {via}")
         return {"success": True, "from": old_base, "to": to_town, "free": free_window}
@@ -5366,7 +5410,7 @@ class Game:
         if origin_owner.organizations[from_town] <= 0:
             del origin_owner.organizations[from_town]
 
-        self._place_organization(player, to_town, require_supply=False, require_development=False)
+        self._place_organization(player, to_town, require_supply=False, require_development=False, enforce_base_build_block=False)
         player.moves_left -= cost
         self._track_event_progress('move_organization', player=player)
         if origin_owner is player:
@@ -5774,6 +5818,8 @@ class Game:
                 continue
             for town, count in (getattr(other, 'organizations', {}) or {}).items():
                 if count <= 0 or town not in reachable:
+                    continue
+                if not self._can_dissolve_base_target(other, town)[0]:
                     continue
                 targets.append({
                     'id': f'{getattr(other, "id", other.name)}::{town}',
@@ -6299,6 +6345,7 @@ class Game:
             "event_deck_count": len(self.event_deck.draw_pile) if getattr(self, 'event_deck', None) else 0,
             "red_army_action_count": self.turn_log.get('red_army_action_count', 0),
             "red_army_action_limit": self._red_army_action_limit(),
+            "red_army_base_build_blocks": list(self.turn_log.get('red_army_base_build_blocks', []) or []),
             "event_discard_count": len(self.event_deck.discard_pile) if getattr(self, 'event_deck', None) else 0,
             "event_modifiers": list(getattr(self, 'event_modifiers', []) or []),
             "market_mode": self.market_mode,

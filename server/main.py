@@ -837,8 +837,9 @@ def test_setup_intel_network_proof(payload: dict):
 
     viewer.faction_id = payload.get("viewer_faction", "red_army")
     viewer.base = payload.get("viewer_base", "北京")
-    viewer.organizations = {"北京": 1}
-    viewer.hand = [Card("情報網", "command", {})]
+    viewer.organizations = dict(payload.get("viewer_organizations") or {"北京": 1})
+    intel_card_count = max(1, int(payload.get("intel_card_count", 1) or 1))
+    viewer.hand = [Card("情報網", "command", {}) for _ in range(intel_card_count)]
 
     enemy_a.faction_id = payload.get("enemy_a_faction", "hong_kong")
     enemy_a.base = payload.get("enemy_a_base", "香港城")
@@ -848,12 +849,12 @@ def test_setup_intel_network_proof(payload: dict):
 
     enemy_b.faction_id = payload.get("enemy_b_faction", "taiwan_green")
     enemy_b.base = payload.get("enemy_b_base", "臺北")
-    enemy_b.organizations = {"臺北": 1}
+    enemy_b.organizations = dict(payload.get("enemy_b_organizations") or {"臺北": 1})
     enemy_b.hand = [Card("敵方手牌B1", "command", {}), Card("敵方手牌B2", "command", {})]
 
     enemy_c.faction_id = payload.get("enemy_c_faction", "minyun")
     enemy_c.base = payload.get("enemy_c_base", "巴黎")
-    enemy_c.organizations = {"巴黎": 1, "上海": 1}
+    enemy_c.organizations = dict(payload.get("enemy_c_organizations") or {"巴黎": 1, "上海": 1})
     enemy_c.hand = [Card("敵方手牌C1", "command", {}), Card("敵方手牌C2", "command", {})]
 
     game.current_player_index = 0

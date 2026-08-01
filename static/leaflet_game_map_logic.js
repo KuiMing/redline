@@ -551,6 +551,8 @@ function sharedDissolveTargetForTown(townName) {
   if (!playerHasSharedAccessToTown(townName)) return null;
   const owner = actualTownOwnerName(townName);
   if (!owner || owner === currentPlayerName()) return null;
+  const ownerPlayer = (lastGameState?.players || []).find(player => player.name === owner);
+  if (ownerPlayer?.base === townName && ownerPlayer?.faction !== 'red_army') return null;
   return owner;
 }
 

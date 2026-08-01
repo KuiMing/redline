@@ -1381,6 +1381,7 @@ def test_field_agent_prompts_sacrifice_then_target_org_like_north_support():
     p1, p2 = g.players
     p2.faction_id = 'taiwan_green'
     p1.hand = [card(g, '派遣間諜')]
+    p1.base = '北京'
     p1.organizations = {'北京': 1, '上海': 1}
     p2.organizations = {'天津': 1, '杭州': 1, '香港城': 1}
 
@@ -1391,12 +1392,12 @@ def test_field_agent_prompts_sacrifice_then_target_org_like_north_support():
     assert g.pending_choice['choice_key'] == 'card_dissolve_interaction'
     assert g.pending_choice['step'] == 'sacrifice_town'
     assert g.pending_choice['source_name'] == '派遣間諜'
+    assert p1.base == '北京'
     assert g.pending_choice['towns'] == [
-        {'town': '北京', 'label': '北京（可瓦解鄰近敵方組織）', 'target_count': 1},
         {'town': '上海', 'label': '上海（可瓦解鄰近敵方組織）', 'target_count': 1},
     ]
 
-    sacrificed = g.resolve_pending_choice(p1.id, 1)
+    sacrificed = g.resolve_pending_choice(p1.id, 0)
 
     assert sacrificed.get('success'), sacrificed
     assert sacrificed.get('pending_choice') is True

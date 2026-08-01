@@ -79,26 +79,46 @@ def test_red_army_faction_action_resolves_after_reaction_skip():
     )
 
 
-def test_one_player_two_successful_dissolves_destroy_red_base_and_block_rebuild():
+def test_non_red_base_is_not_a_legal_dissolve_target():
+    game, red, a, b = make_red_game()
+    b.faction_id = 'taiwan_green'
+    b.base = '臺北'
+    b.organizations = {'臺北': 1, '大阪': 1}
+    rejected = game.dissolve_organization(a, b, '臺北', source='card')
+    targets = game._interactive_support_dissolve_targets(a, max_steps=99, target_players=[red, b])
+    pairs = {(entry.get('player_id'), entry.get('town')) for entry in targets}
+
+    return ok(
+        'non_red_base_is_not_a_legal_dissolve_target',
+        rejected.get('error') == 'Non-Red-Army bases cannot be dissolved'
+        and b.organizations.get('臺北') == 1
+        and (b.id, '臺北') not in pairs
+        and (b.id, '大阪') in pairs
+        and (red.id, '北京') in pairs,
+        f'rejected={rejected}, pairs={sorted(pairs)}, b_orgs={b.organizations}',
+    )
+
+
+def test_one_player_two_successful_dissolves_disable_red_base_build_only_this_turn():
     game, red, a, b = make_red_game()
     red.organizations = {'北京': 1}
     first = game.dissolve_organization(a, red, '北京', source='card')
     second = game.dissolve_organization(a, red, '北京', source='card')
-    destroyed = '北京' in set(getattr(game, 'red_army_destroyed_bases', set()) or [])
-    base_after = red.base
-    red.organizations['北京'] = 1
-    game.current_player_index = 0
-    rebuild = game.build_organization('北京')
+    blocked = '北京' in set(game.turn_log.get('red_army_base_build_blocks', []) or [])
+    blocked_placement = game._place_organization(red, '北京', require_development=False)
+    game.turn_log = game._new_turn_log()
+    next_turn_placement = game._place_organization(red, '北京')
 
     return ok(
-        'one_player_two_successful_dissolves_destroy_red_base_and_block_rebuild',
+        'one_player_two_successful_dissolves_disable_red_base_build_only_this_turn',
         first.get('success')
         and second.get('success')
-        and destroyed
-        and base_after != '北京'
-        and rebuild.get('error')
-        and 'Red Army base' in rebuild.get('error', ''),
-        f'first={first}, second={second}, destroyed={getattr(game, "red_army_destroyed_bases", None)}, base_after={base_after}, rebuild={rebuild}, red_orgs={red.organizations}',
+        and blocked
+        and red.base == '北京'
+        and not blocked_placement
+        and next_turn_placement
+        and red.organizations.get('北京') == 1,
+        f'first={first}, second={second}, blocked={blocked}, base={red.base}, blocked_placement={blocked_placement}, next_turn_placement={next_turn_placement}, red_orgs={red.organizations}',
     )
 
 
@@ -109,12 +129,12 @@ def test_red_base_dissolve_counter_is_per_attacker_and_resets_each_turn():
     game.turn_log = game._new_turn_log()
     second = game.dissolve_organization(a, red, '北京', source='card')
     b_dissolve = game.dissolve_organization(b, red, '北京', source='card')
-    destroyed = '北京' in set(getattr(game, 'red_army_destroyed_bases', set()) or [])
+    blocked = bool(game.turn_log.get('red_army_base_build_blocks'))
 
     return ok(
         'red_base_dissolve_counter_is_per_attacker_and_resets_each_turn',
-        first.get('success') and second.get('success') and b_dissolve.get('success') and not destroyed and red.base == '北京',
-        f'first={first}, second={second}, b_dissolve={b_dissolve}, destroyed={getattr(game, "red_army_destroyed_bases", None)}, turn_log={game.turn_log}, base={red.base}',
+        first.get('success') and second.get('success') and b_dissolve.get('success') and not blocked and red.base == '北京',
+        f'first={first}, second={second}, b_dissolve={b_dissolve}, blocked={blocked}, turn_log={game.turn_log}, base={red.base}',
     )
 
 
@@ -136,7 +156,8 @@ def main():
     results = [
         test_red_army_faction_action_can_be_reaction_canceled_before_effect(),
         test_red_army_faction_action_resolves_after_reaction_skip(),
-        test_one_player_two_successful_dissolves_destroy_red_base_and_block_rebuild(),
+        test_non_red_base_is_not_a_legal_dissolve_target(),
+        test_one_player_two_successful_dissolves_disable_red_base_build_only_this_turn(),
         test_red_base_dissolve_counter_is_per_attacker_and_resets_each_turn(),
         test_red_army_organization_cannot_move_outside_red_development_space(),
     ]
