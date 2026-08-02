@@ -248,7 +248,6 @@ class EffectEngine:
                     'recruit_talent',
                     cards,
                     '網羅人才：從己方牌庫或棄牌堆任選1張加入手牌，而後將牌庫洗牌。' if effect.get('include_discard_for_faction') == player.faction_id else '網羅人才：從己方牌庫任選1張加入手牌，而後將牌庫洗牌。',
-                    source_cards=cards[:],
                     card_zones=card_zones,
                 )
             else:
@@ -257,7 +256,6 @@ class EffectEngine:
                     'choice_key': 'recruit_talent',
                     'player_id': player.id,
                     'cards': cards,
-                    'source_cards': cards[:],
                     'card_zones': card_zones,
                     'prompt': '網羅人才：從己方牌庫或棄牌堆任選1張加入手牌，而後將牌庫洗牌。' if effect.get('include_discard_for_faction') == player.faction_id else '網羅人才：從己方牌庫任選1張加入手牌，而後將牌庫洗牌。'
                 }

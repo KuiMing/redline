@@ -119,7 +119,35 @@ def test_recruit_talent_selects_any_card_from_own_deck_not_topdeck_only():
     assert resolved.get('success'), resolved
     assert 'DesiredCard' in names(p.hand)
     assert 'TopCard' not in names(p.hand)
+    # 卡面規則是「任選 1 張加入手牌，而後將牌庫洗牌」——沒被選中的 MiddleCard／TopCard
+    # 應該留在牌庫裡被洗牌，不能連同 DesiredCard 一起憑空消失（2026-08-03 稽核修正：
+    # 舊版程式碼會把候選清單裡除了被選中那張以外的每一張都從牌庫／棄牌堆刪除）。
+    assert sorted(names(p.deck.draw_pile)) == ['MiddleCard', 'TopCard']
     assert 'DiscardOnly' in names(p.deck.discard_pile)
+
+
+def test_recruit_talent_does_not_destroy_the_rest_of_the_deck_it_only_moves_the_chosen_card():
+    """2026-08-03 playtest 回報：紅軍使用網羅人才時有時只顯示棄牌堆，漏掉己方牌庫。
+    根本原因不是候選投影或畫面顯示，而是 `_resolve_card_choice` 的 `recruit_talent`
+    分支把候選清單裡「除了被選中那張以外」的每一張牌都從牌庫／棄牌堆刪除，等同銷毀
+    玩家整副牌庫——上一次使用就已經把牌庫清空了，導致下一次自然只剩棄牌堆有候選。
+    這裡直接對照修正前／修正後的牌庫總量，確認沒被選中的候選牌全部原地保留。"""
+    g = make_game()
+    p = g.current_player()
+    p.faction_id = 'red_army'
+    p.hand = [card(g, '網羅人才')]
+    p.deck.draw_pile = [Card('DrawA', 'command', {}), Card('DrawB', 'command', {}), Card('DrawC', 'command', {})]
+    p.deck.discard_pile = [Card('DiscardX', 'command', {}), Card('DiscardY', 'command', {})]
+
+    g.play_card(0, mode='action')
+    resolved = g.resolve_pending_choice(p.id, 0)  # choose DrawA (first candidate)
+
+    assert resolved.get('success'), resolved
+    assert names(p.hand) == ['DrawA']
+    # 五張候選（DrawA/B/C + DiscardX/Y）除了被選走加入手牌的 DrawA，其餘四張都應該
+    # 還在牌庫或棄牌堆裡，沒有一張憑空消失。（棄牌堆裡另外多一張是打出的網羅人才本身。）
+    assert sorted(names(p.deck.draw_pile)) == ['DrawB', 'DrawC']
+    assert sorted(names(p.deck.discard_pile)) == ['DiscardX', 'DiscardY', '網羅人才']
 
 
 def test_red_army_recruit_talent_can_select_from_own_deck_or_discard():
@@ -148,10 +176,39 @@ def test_red_army_recruit_talent_can_select_from_own_deck_or_discard():
     assert resolved.get('source_zone') == 'discard_pile'
     assert names(p.hand) == ['DiscardChoice']
     assert names(p.deck.discard_pile) == ['網羅人才']
-    assert 'DeckChoiceA' not in names(p.deck.draw_pile)
-    assert 'DeckChoiceB' not in names(p.deck.draw_pile)
+    # 沒被選中的 DeckChoiceA／DeckChoiceB 是牌庫候選，選了棄牌堆裡的牌之後，這兩張
+    # 應該留在牌庫裡（後面會被洗牌），不能被一併刪除（2026-08-03 稽核修正）。
+    assert sorted(names(p.deck.draw_pile)) == ['DeckChoiceA', 'DeckChoiceB']
     assert g.pending_choice is None
     assert any('recruited DiscardChoice from discard via 網羅人才' in entry for entry in g.action_log)
+
+
+def test_red_army_recruit_talent_still_shows_deck_candidates_on_a_second_use():
+    """直接重現 2026-08-03 playtest 回報的症狀：紅軍第二次使用網羅人才時，候選清單裡
+    只剩棄牌堆、漏掉了牌庫。用兩張網羅人才連續使用來重現——第一次選牌庫裡的牌，
+    第二次應該同時看到「牌庫剩下的牌」與「棄牌堆的牌」，而不是只剩棄牌堆。"""
+    g = make_game()
+    p = g.current_player()
+    p.faction_id = 'red_army'
+    p.hand = [card(g, '網羅人才'), card(g, '網羅人才')]
+    p.deck.draw_pile = [Card('DeckA', 'command', {}), Card('DeckB', 'command', {})]
+    p.deck.discard_pile = [Card('DiscardA', 'command', {})]
+
+    g.play_card(0, mode='action')
+    first_candidates = names(g.pending_choice['cards'])
+    assert first_candidates == ['DeckA', 'DeckB', 'DiscardA']
+    resolved_first = g.resolve_pending_choice(p.id, 0)  # pick DeckA
+    assert resolved_first.get('success'), resolved_first
+    assert resolved_first.get('chosen_card') == 'DeckA'
+
+    g.play_card(0, mode='action')
+    second_candidates = sorted(names(g.pending_choice['cards']))
+    # DeckB 是牌庫剩下唯一一張，一定要出現在候選裡；棄牌堆則有原本的 DiscardA 加上
+    # 第一次打出的網羅人才本身。只要 DeckB 出現，就證明牌庫候選沒有被上一次使用清空。
+    assert 'DeckB' in second_candidates, (
+        'second use should still show DeckB from the deck, not just the discard pile'
+    )
+    assert second_candidates == ['DeckB', 'DiscardA', '網羅人才']
 
 
 def test_red_support_resource_mode_is_a_plain_discard_with_no_resources_for_red_army():

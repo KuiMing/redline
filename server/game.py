@@ -1438,7 +1438,6 @@ class Game:
         choice_key = choice.get('choice_key')
 
         if choice_key == 'recruit_talent':
-            source_cards = choice.get('source_cards') or []
             chosen_entry = chosen if isinstance(chosen, dict) else None
             chosen_card = chosen_entry.get('card') if chosen_entry else chosen
             source_zone = None
@@ -1448,13 +1447,12 @@ class Game:
                 source_zone = 'discard_pile'
             elif chosen_card in player.deck.draw_pile:
                 source_zone = 'draw_pile'
-            for card in list(source_cards):
-                if card is chosen_card:
-                    continue
-                if card in player.deck.draw_pile:
-                    player.deck.draw_pile.remove(card)
-                if card in player.deck.discard_pile:
-                    player.deck.discard_pile.remove(card)
+            # 卡面規則只說「任選 1 張加入手牌，而後將牌庫洗牌」——沒被選中的候選牌（不論
+            # 原本在牌庫還是棄牌堆）都應該原地保留，只是牌庫最後會被洗牌。先前這裡誤把
+            # 「候選清單裡除了被選中那張以外的每一張」全部從牌庫／棄牌堆移除，等同直接
+            # 銷毀玩家整副牌庫——這正是 playtest 回報「紅軍再次使用網羅人才時有時只顯示
+            # 棄牌堆，漏掉己方牌庫」的根本原因：上一次使用就已經把牌庫清空了，不是候選
+            # 投影或畫面顯示的問題（2026-08-03 稽核修正）。
             if chosen_card in player.deck.draw_pile:
                 player.deck.draw_pile.remove(chosen_card)
                 source_zone = source_zone or 'draw_pile'
