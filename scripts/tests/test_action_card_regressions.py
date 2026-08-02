@@ -2368,4 +2368,130 @@ def test_intel_network_first_option_adds_internal_conflict_to_up_to_three_other_
     assert names(enemy_a.deck.discard_pile) == ['內鬥']
     assert names(enemy_b.deck.discard_pile) == ['內鬥']
     assert names(enemy_c.deck.discard_pile) == ['內鬥']
+
+
+def _advance_one_full_turn(g):
+    """Drive ACTION -> END -> next player's ACTION via the real turn-phase state
+    machine (not manual field pokes). A round wrap draws a real random event, which
+    can itself inject an unrelated pending_choice (e.g. an interactive event prompt)
+    before we get a chance to look — re-pin the no-op event and clear it immediately
+    after, rather than asserting pending_choice is None first."""
+    assert g.turn_phase == TurnPhase.ACTION
+    assert g.advance_turn_phase().get('success')
+    assert g.turn_phase == TurnPhase.END
+    g.advance_turn_phase()
+    pin_noop_event(g)
+    assert g.turn_phase == TurnPhase.ACTION
+
+
+def test_產業滲透_reaction_prompt_reappears_on_a_later_turn_after_being_used():
+    """2026-08-02 playtest 更正項：`產業滲透`第一次成功取消後，下一回合對手再打出可取消的
+    卡牌時，觀察者懷疑取消詢問不再出現。透過真正的 `advance_turn_phase()`（而非手動改
+    `current_player_index`）跑完一整輪回合，驗證：(a) reactor 的 `reaction_prompted_player_ids`
+    只在「同一回合內」抑制重複詢問（既有行為，見
+    `test_first_other_player_action_prompts_cancel_reaction_once_with_all_available_cards`），
+    (b) 換到下一回合（`turn_log` 透過 `_end_turn()` 重建）後，只要 reactor 手上仍有一張
+    `產業滲透`，取消詢問會正確地再次出現——排除「reaction_prompted_player_ids 或 turn_log
+    未正確跨回合重置」的假設；playtest 觀察到的現象實際成因是第一張牌用掉後被棄置，
+    需要重新抽到／購買新一張才有牌可用，並非程式錯誤。"""
+    g = make_game()
+    actor, reactor = g.players
+    actor.hand = [card(g, '點燃熱情')]
+    reactor.hand = [card(g, '產業滲透')]
+
+    first = g.play_card(0, mode='action')
+    assert first.get('pending_choice') is True, first
+    assert [entry['name'] for entry in g.pending_choice['cards']] == ['產業滲透']
+
+    resolved = g.resolve_pending_choice(reactor.id, 1)
+    assert resolved.get('success'), resolved
+    assert resolved.get('reaction_card') == '產業滲透'
+    # 點燃熱情 有資金費用 -> 產業滲透 的 conditional_draw(canceled_money_cost_card) 會讓
+    # reactor 額外抽 1 張牌，因此手牌不會直接歸零；真正要驗證的不變量是「用掉的那張
+    # 產業滲透本身」離開手牌、進了棄牌堆，而不是手牌總數。
+    assert '產業滲透' not in names(reactor.hand)
+    assert names(reactor.deck.discard_pile)[-1] == '產業滲透'
+
+    # Simulate drawing/buying a fresh copy for the reactor's next opportunity —
+    # the reaction-gating logic under test doesn't own the purchase economy.
+    reactor.hand = list(reactor.hand) + [card(g, '產業滲透')]
+
+    _advance_one_full_turn(g)  # actor's turn ends -> reactor's turn begins
+    assert g.current_player_index == g.players.index(reactor)
+    _advance_one_full_turn(g)  # reactor's turn ends -> wraps back to actor
+    assert g.current_player_index == g.players.index(actor)
+
+    actor.hand = [card(g, '點燃熱情')]
+    second = g.play_card(0, mode='action')
+
+    assert second.get('pending_choice') is True, second
+    assert g.pending_choice and g.pending_choice['type'] == 'reaction_choice'
+    assert '產業滲透' in [entry['name'] for entry in g.pending_choice['cards']]
+
+    reaction_entry = next(e for e in g.pending_choice['cards'] if e['name'] == '產業滲透')
+    second_resolved = g.resolve_pending_choice(reactor.id, g.pending_choice['cards'].index(reaction_entry) + 1)
+    assert second_resolved.get('success'), second_resolved
+    assert second_resolved.get('reaction_card') == '產業滲透'
+    assert '產業滲透' not in names(reactor.hand)
+
+
+def test_爆料黑幕_reaction_prompt_reappears_on_a_later_turn_after_being_used():
+    """同上一項，換成 `爆料黑幕`（取消條件恆真，不要求被取消的牌有資金費用）——確認
+    這兩張常被一起討論的取消反應卡，重置行為是共用同一段程式碼、結果一致。"""
+    g = make_game()
+    actor, reactor = g.players
+    actor.hand = [card(g, '領導')]
+    reactor.hand = [card(g, '爆料黑幕')]
+
+    first = g.play_card(0, mode='action')
+    assert first.get('pending_choice') is True, first
+    assert [entry['name'] for entry in g.pending_choice['cards']] == ['爆料黑幕']
+
+    resolved = g.resolve_pending_choice(reactor.id, 1)
+    assert resolved.get('success'), resolved
+    assert resolved.get('reaction_card') == '爆料黑幕'
+    # 領導有宣傳費用 -> 爆料黑幕的 conditional_draw(canceled_propaganda_card) 會讓 reactor
+    # 額外抽 1 張牌；真正要驗證的不變量是用掉的那張爆料黑幕離開手牌、進了棄牌堆。
+    assert '爆料黑幕' not in names(reactor.hand)
+    assert names(reactor.deck.discard_pile)[-1] == '爆料黑幕'
+
+    reactor.hand = list(reactor.hand) + [card(g, '爆料黑幕')]
+
+    _advance_one_full_turn(g)
+    assert g.current_player_index == g.players.index(reactor)
+    _advance_one_full_turn(g)
+    assert g.current_player_index == g.players.index(actor)
+
+    actor.hand = [card(g, '領導')]
+    second = g.play_card(0, mode='action')
+
+    assert second.get('pending_choice') is True, second
+    assert '爆料黑幕' in [entry['name'] for entry in g.pending_choice['cards']]
+
+    reaction_entry = next(e for e in g.pending_choice['cards'] if e['name'] == '爆料黑幕')
+    second_resolved = g.resolve_pending_choice(reactor.id, g.pending_choice['cards'].index(reaction_entry) + 1)
+    assert second_resolved.get('success'), second_resolved
+    assert second_resolved.get('reaction_card') == '爆料黑幕'
+    assert '爆料黑幕' not in names(reactor.hand)
+
+
+def test_reaction_prompted_player_ids_only_suppresses_within_the_same_turn_not_forever():
+    """`reaction_prompted_player_ids`（`server/game.py` 的 `_reaction_prompt_candidates`）
+    只應在單一回合內抑制對同一 reactor 的重複詢問；不能變成「這局遊戲對這個玩家只問一次」
+    的永久旗標。直接檢查 `turn_log` 物件在 `_end_turn()` 後被整個換新，而非原地修改。"""
+    g = make_game()
+    actor, reactor = g.players
+    actor.hand = [card(g, '點燃熱情')]
+    reactor.hand = [card(g, '產業滲透')]
+
+    g.play_card(0, mode='action')
+    g.resolve_pending_choice(reactor.id, 1)
+    assert reactor.id in g.turn_log.get('reaction_prompted_player_ids', [])
+    turn_log_before = g.turn_log
+
+    _advance_one_full_turn(g)
+    _advance_one_full_turn(g)
+
+    assert g.turn_log is not turn_log_before
+    assert g.turn_log.get('reaction_prompted_player_ids') == []
     assert g.pending_choice is None
