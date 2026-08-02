@@ -17,6 +17,9 @@
 
 ## 目前 active todo
 
+### P2：連續建立組織時保留地圖鏡頭，不在每次建立後zoom out
+- [todo] 玩家累積多張可建立組織的卡牌並在戰略地圖連續建立時，每成功建立一個組織後應暫時保留使用者當下的Leaflet `center`與`zoom`，只更新組織marker、合法候選與剩餘建立數，不要重新 `fitBounds`、reset view或zoom out；因為下一個目標很可能就在相鄰城鎮。後續需區分「首次進入建立流程可自動定位」與「同一pending build queue內後續重繪必須保留viewport」，並涵蓋候選重算、相鄰／遠距下一目標、最後一次建立、iframe重新render、桌面／行動版及正式Leaflet UI proof。（2026-08-02 playtest建議）
+
 ### P1：臺灣時代關卡錯把臺灣地區組織計為「牆內組織」
 - [todo] 臺灣時代關卡的「7個牆內組織」達成判定有誤：playtest中臺灣玩家只是在臺灣地區建立到8個組織，並沒有在牆內建立7個組織，畫面卻顯示條件已達成。`牆內`的authoritative定義應為「目前統治者／控制者是紅軍的城鎮」，不以地理區域名稱、組織擁有者陣營或臺灣玩家的組織總數判斷；位於這些紅軍統治城鎮中的任何陣營組織都應計入，位於非紅軍統治城鎮的組織則一律不計。玩家戰況目前只顯示組織總數（截圖中為紅軍11、臺灣8），應在每名玩家的「組織」統計格內或緊鄰位置同步顯示 `牆內 X／牆外 Y`，且 `X + Y`必須等於該玩家組織總數，讓所有玩家能直接核對時代關卡進度。後續需建立共用town-controller／inside-wall helper，讓時代判定與玩家戰況使用同一份canonical動態分類；涵蓋任意陣營組織、臺灣地區負例、統治者改變、恰好6／7、總數守恆、玩家可見進度與正式地圖／WebSocket時代達成proof。playtest證據保存於 `docs/records/era-cards/taiwan-inside-wall-achievement-miscount.jpg`及`docs/records/era-cards/player-status-inside-outside-org-counts.jpg`。（2026-08-02 playtest回報與UI補充）
 
