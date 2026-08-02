@@ -791,7 +791,15 @@ def test_intel_network_reaction_does_not_trigger_on_resource_play():
     assert g.turn_log.get('canceled_card') is None
 
 
-def test_first_other_player_action_prompts_cancel_reaction_once_with_all_available_cards():
+def test_every_other_player_action_prompts_cancel_reaction_while_reactor_holds_eligible_cards():
+    """2026-08-02 使用者更正：`情報網`／`爆料黑幕`／`產業滲透` 這三張牌只要還在手上，
+    對手「每一次」符合取消條件的行動都要跳出取消詢問——不是這回合問過這個人一次、
+    之後同一回合就不再問了。舊版此測試（`test_first_other_player_action_prompts_
+    cancel_reaction_once_with_all_available_cards`）斷言「第二張牌不再跳出詢問」，
+    那其實是把一次性的 per-turn 節流當成正確行為，是誤解卡面規則後刻意做出來的
+    （2026-05-17 commit 2aa6b0d "prompt cancel reactions on first action"）。這裡改為
+    斷言：reactor 選擇不取消第一張牌後，第二張牌一樣會再跳出詢問，而且這次選擇取消
+    也能正常生效。"""
     g = make_game()
     actor, reactor = g.players
     actor.hand = [card(g, '點燃熱情')]
@@ -824,14 +832,62 @@ def test_first_other_player_action_prompts_cancel_reaction_once_with_all_availab
     assert names(reactor.hand) == ['情報網', '爆料黑幕', '產業滲透']
 
     actor.hand = [card(g, '領導')]
-    actor.deck.draw_pile = [Card('ShouldDrawWithoutSecondPrompt', 'command', {})]
+    actor.deck.draw_pile = [Card('ShouldNotDrawEitherSincePendingCancel', 'command', {})]
     second = g.play_card(0, mode='action')
 
-    assert second.get('success'), second
-    assert not second.get('pending_choice')
+    assert second.get('pending_choice') is True, second
+    assert g.pending_choice and g.pending_choice['type'] == 'reaction_choice'
+    assert g.pending_choice['played_card_name'] == '領導'
+    # 領導的購買費用是宣傳1、資金0，`產業滲透` 的取消條件要求被取消的牌有資金費用，
+    # 因此這裡正確地不包含 產業滲透——候選名單仍是逐次出牌各自重算，不是沿用第一次的名單。
+    assert [entry['name'] for entry in g.pending_choice['cards']] == ['情報網', '爆料黑幕']
+
+    canceled = g.resolve_pending_choice(reactor.id, 2)  # index 2 -> 爆料黑幕
+    assert canceled.get('success'), canceled
+    assert canceled.get('reaction_card') == '爆料黑幕'
+    assert canceled.get('canceled_card') == '領導'
     assert g.pending_choice is None
-    assert names(actor.hand) == ['ShouldDrawWithoutSecondPrompt']
-    assert names(reactor.hand) == ['情報網', '爆料黑幕', '產業滲透']
+    assert names(actor.hand) == []
+    assert names(actor.deck.draw_pile) == ['ShouldNotDrawEitherSincePendingCancel']
+    assert names(actor.deck.discard_pile) == ['點燃熱情', '領導']
+    assert '爆料黑幕' not in names(reactor.hand)
+
+
+def test_reaction_candidate_who_declines_lets_the_next_eligible_reactor_react_to_the_same_card():
+    """三人局：actor 打出一張牌時，若有兩位對手都持有可取消的反應卡，第一位選擇不取消
+    後，應該接著問第二位（而不是第一位一謝絕，這張牌就直接結算掉，讓第二位永遠沒機會
+    對這一次出牌反應）。"""
+    g = Game([('p1', 'P1'), ('p2', 'P2'), ('p3', 'P3')])
+    g.game_phase = GamePhase.MAIN
+    g.turn_phase = TurnPhase.ACTION
+    g.current_player_index = 0
+    g.pending_base_choices = {}
+    pin_noop_event(g)
+    g.players[0].faction_id = 'red_army'
+    actor, first_reactor, second_reactor = g.players
+    actor.hand = [card(g, '點燃熱情')]
+    first_reactor.hand = [card(g, '產業滲透')]
+    second_reactor.hand = [card(g, '爆料黑幕')]
+
+    result = g.play_card(0, mode='action')
+    assert result.get('pending_choice') is True, result
+    assert g.pending_choice['player_id'] == first_reactor.id
+    assert [entry['name'] for entry in g.pending_choice['cards']] == ['產業滲透']
+
+    skipped = g.resolve_pending_choice(first_reactor.id, 0)
+    assert skipped.get('success'), skipped
+    assert skipped.get('skipped_reaction') is True
+    assert g.pending_choice is not None, 'second eligible reactor must still get a turn'
+    assert g.pending_choice['type'] == 'reaction_choice'
+    assert g.pending_choice['player_id'] == second_reactor.id
+    assert [entry['name'] for entry in g.pending_choice['cards']] == ['爆料黑幕']
+
+    canceled = g.resolve_pending_choice(second_reactor.id, 1)
+    assert canceled.get('success'), canceled
+    assert canceled.get('reaction_card') == '爆料黑幕'
+    assert canceled.get('canceled_card') == '點燃熱情'
+    assert g.pending_choice is None
+    assert '爆料黑幕' not in names(second_reactor.hand)
 
 
 def test_cancel_reaction_prompt_can_select_one_reaction_card_to_cancel_action():
@@ -2475,23 +2531,22 @@ def test_爆料黑幕_reaction_prompt_reappears_on_a_later_turn_after_being_used
     assert '爆料黑幕' not in names(reactor.hand)
 
 
-def test_reaction_prompted_player_ids_only_suppresses_within_the_same_turn_not_forever():
-    """`reaction_prompted_player_ids`（`server/game.py` 的 `_reaction_prompt_candidates`）
-    只應在單一回合內抑制對同一 reactor 的重複詢問；不能變成「這局遊戲對這個玩家只問一次」
-    的永久旗標。直接檢查 `turn_log` 物件在 `_end_turn()` 後被整個換新，而非原地修改。"""
+def test_reaction_prompt_no_longer_throttled_by_any_per_turn_bookkeeping():
+    """2026-08-02 使用者更正後移除了 `reaction_prompted_player_ids` 這個 per-turn 節流欄位
+    （原本讓同一位 reactor 這回合只會被問一次，是對卡面規則的誤解）。這裡直接確認
+    `_new_turn_log()` 不再產生這個欄位，且同一回合內連續兩次出牌都會各自完整詢問一次。"""
     g = make_game()
+    assert 'reaction_prompted_player_ids' not in g.turn_log
+
     actor, reactor = g.players
     actor.hand = [card(g, '點燃熱情')]
     reactor.hand = [card(g, '產業滲透')]
-
     g.play_card(0, mode='action')
+    assert g.pending_choice is not None
     g.resolve_pending_choice(reactor.id, 1)
-    assert reactor.id in g.turn_log.get('reaction_prompted_player_ids', [])
-    turn_log_before = g.turn_log
+    assert 'reaction_prompted_player_ids' not in g.turn_log
 
-    _advance_one_full_turn(g)
-    _advance_one_full_turn(g)
-
-    assert g.turn_log is not turn_log_before
-    assert g.turn_log.get('reaction_prompted_player_ids') == []
-    assert g.pending_choice is None
+    reactor.hand = [card(g, '產業滲透')]
+    actor.hand = [card(g, '點燃熱情')]
+    second = g.play_card(0, mode='action')
+    assert second.get('pending_choice') is True, second

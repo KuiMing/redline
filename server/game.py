@@ -3434,7 +3434,6 @@ class Game:
             "red_army_targeted_actions": {},
             "india_flag_money_triggered": False,
             "purchased_cards_this_turn": [],
-            "reaction_prompted_player_ids": [],
             "red_army_base_dissolves": {},
             "red_army_base_build_blocks": [],
         }
@@ -4449,8 +4448,6 @@ class Game:
         for player in self.players:
             if player is acting_player:
                 continue
-            if player.id in set(self.turn_log.get('reaction_prompted_player_ids') or []):
-                continue
             cards = []
             for hand_index, hand_card in enumerate(getattr(player, 'hand', []) or []):
                 name = getattr(hand_card, 'name', str(hand_card))
@@ -4549,10 +4546,12 @@ class Game:
         self.log(f"{player.name} played {card_name}")
         return {"success": True}
 
-    def _set_pending_reaction_choice(self, reacting_player, acting_player, played_card, card_name, candidates, effective_type, action_context, support_resolution=None):
-        prompted = self.turn_log.setdefault('reaction_prompted_player_ids', [])
-        if reacting_player.id not in prompted:
-            prompted.append(reacting_player.id)
+    def _set_pending_reaction_choice(self, reacting_player, acting_player, played_card, card_name, candidates, effective_type, action_context, support_resolution=None, remaining_candidates=None):
+        # 2026-08-02 使用者更正：只要持有卡牌，對手「每一次」符合條件的行動都要問是否取消，
+        # 不是「這回合問過這個人一次就不再問」。因此這裡不再記錄／檢查 per-turn 的
+        # 已詢問名單；`remaining_candidates` 改為承載「這一次出牌」還沒問過的其他候選人，
+        # 供 `_resolve_reaction_choice` 在目前這位玩家選擇不取消時，接著問下一位候選人
+        # ——而不是問過第一位就直接讓行動結算。
         self.pending_choice = {
             'type': 'reaction_choice',
             'choice_key': 'cancel_other_player_action',
@@ -4567,6 +4566,7 @@ class Game:
             'action_context': dict(action_context or {}),
             'support_resolution': support_resolution,
             'cards': list(candidates),
+            'remaining_candidates': list(remaining_candidates or []),
             'prompt': f'{acting_player.name} 打出 {card_name}。是否要取消對方的行動？',
             'source_name': '取消反應',
         }
@@ -4578,6 +4578,25 @@ class Game:
         if index is None:
             return {'error': 'Invalid choice index'}
         if index == 0:
+            remaining = list(choice.get('remaining_candidates') or [])
+            if remaining:
+                next_candidate = remaining[0]
+                self.pending_choice = None
+                result = self._set_pending_reaction_choice(
+                    next_candidate['player'],
+                    choice.get('acting_player'),
+                    choice.get('played_card'),
+                    choice.get('played_card_name'),
+                    next_candidate['cards'],
+                    choice.get('effective_type'),
+                    choice.get('action_context'),
+                    support_resolution=choice.get('support_resolution'),
+                    remaining_candidates=remaining[1:],
+                )
+                result['success'] = True
+                result['skipped_reaction'] = True
+                result['next_reactor_id'] = next_candidate['player'].id
+                return result
             self.pending_choice = None
             result = self._resume_reaction_pending_action(choice, reaction_context=None)
             result['skipped_reaction'] = True
@@ -4656,6 +4675,7 @@ class Game:
                 'red_army_action_name': action_name,
                 'red_army_action_kwargs': dict(kwargs or {}),
             },
+            remaining_candidates=reaction_candidates[1:],
         )
 
     def _resolve_reaction_context(self, reaction_context):
@@ -4924,6 +4944,7 @@ class Game:
                     effective_type,
                     action_context,
                     support_resolution=support_resolution,
+                    remaining_candidates=reaction_candidates[1:],
                 )
 
         if reaction_context is not None:

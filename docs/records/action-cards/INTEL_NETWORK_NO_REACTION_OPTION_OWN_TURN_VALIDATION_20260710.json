@@ -42,8 +42,14 @@
         "played_card_name": "領導",
         "effective_type": "command",
         "action_context": {
-          "current_card": "<server.cards.Card object at 0x1095b6370>",
-          "card_name": "領導"
+          "current_card": "<server.cards.Card object at 0x109d777f0>",
+          "card_name": "領導",
+          "cost_has_money": false,
+          "cost_has_propaganda": true,
+          "prior_played_money_card": false,
+          "prior_played_propaganda_card": false,
+          "prior_event_progress": null,
+          "prior_event_notification": null
         },
         "support_resolution": null,
         "cards": [
@@ -52,6 +58,7 @@
             "card_index": 0
           }
         ],
+        "remaining_candidates": [],
         "prompt": "player 打出 領導。是否要取消對方的行動？",
         "source_name": "取消反應"
       },
