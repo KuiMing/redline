@@ -126,7 +126,7 @@ def run_checks():
 
     # Taiwan uses the same static-supply path for 內鬥.
     game, actor, _red = make_game('taiwan_green')
-    place_orgs(actor, first_developable_towns(game, actor, 'taiwan', 7))
+    place_orgs(actor, first_developable_towns(game, actor, 'china', 7))
     game.static_purchase_supply['內鬥'] = 2
     game._check_era_trigger()
     checks.append(check(

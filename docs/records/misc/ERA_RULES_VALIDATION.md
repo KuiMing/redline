@@ -1,6 +1,6 @@
 # Era Rules Validation
 
-Generated: 2026-05-14
+Generated: 2026-08-02
 
 Summary: 5/5 passed
 
@@ -20,9 +20,20 @@ Summary: 5/5 passed
   "rule": "香港時代條件文字是「香港在牆內擁有至少10個有效組織」；應限定香港陣營，而非任意玩家。",
   "actor_faction": "taiwan_green",
   "actor_orgs": {
-    "三亞": 10
+    "三亞": 1,
+    "上海": 1,
+    "上粉沙打": 1,
+    "丹東": 1,
+    "九龍城": 1,
+    "伊寧": 1,
+    "佳木斯": 1,
+    "元朗": 1,
+    "克孜勒蘇": 1,
+    "克拉瑪依": 1
   },
-  "active_eras": []
+  "active_eras": [
+    "taiwan"
+  ]
 }
 ```
 
@@ -30,10 +41,19 @@ Summary: 5/5 passed
 
 ```json
 {
-  "rule": "香港陣營在香港區達到10組織時，香港時代應觸發。",
+  "rule": "香港陣營在10個不同牆內城鎮擁有有效組織時，香港時代應觸發。",
   "actor_faction": "hong_kong",
   "actor_orgs": {
-    "三亞": 10
+    "三亞": 1,
+    "上海": 1,
+    "上粉沙打": 1,
+    "丹東": 1,
+    "九龍城": 1,
+    "伊寧": 1,
+    "佳木斯": 1,
+    "元朗": 1,
+    "克孜勒蘇": 1,
+    "克拉瑪依": 1
   },
   "active_eras": [
     "hong_kong"
@@ -41,12 +61,23 @@ Summary: 5/5 passed
   "notification": {
     "id": "hong_kong",
     "name": "[香港]香港人被自殺",
+    "summary_text": "紅軍用不會受國際譴責的方式出兵鎮壓香港：讓警察和武警潛入民宅姦殺抗爭者",
     "trigger_text": "[香港抗爭遍地開花]香港在牆內擁有至少10個有效組織",
     "success_text": "[新型態的血腥鎮壓]紅軍每次對香港使用間諜類卡牌時，可再隨機棄掉香港1張手牌。持續2回合。",
     "fail_text": "[沉冤待雪香港報仇]香港購買每張武裝類卡牌之費用額外減少2點資金。持續2回合。",
     "duration_text": "持續 2 回合",
     "remaining": null,
-    "minimized": false
+    "minimized": false,
+    "runtime_effects": {
+      "red_suppression": {
+        "type": "bonus_discard_on_red_card",
+        "status": "active_modifier_or_pending_runtime"
+      },
+      "revolution_counterattack": {
+        "type": "reduce_purchase_cost",
+        "status": "active_modifier_or_pending_runtime"
+      }
+    }
   }
 }
 ```

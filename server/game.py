@@ -945,6 +945,31 @@ class Game:
             towns.sort()
         return grouped
 
+    def _is_inside_wall_town(self, town):
+        """Classify a town by canonical map ruler, not runtime controller."""
+        town_data = (self.map.get("towns", {}) or {}).get(town, {})
+        return "紅軍" in (town_data.get("ruler") or [])
+
+    def _player_organization_scope_counts(self, player, *, include_shared=False):
+        """Split owned or effective organizations into inside/outside-wall counts."""
+        if player is None:
+            return {"total": 0, "inside_wall": 0, "outside_wall": 0}
+        if include_shared:
+            entries = [(town, 1) for town in self._organization_towns_for_player(player)]
+        else:
+            entries = [
+                (town, int(count or 0))
+                for town, count in (getattr(player, "organizations", {}) or {}).items()
+                if int(count or 0) > 0
+            ]
+        inside = sum(count for town, count in entries if self._is_inside_wall_town(town))
+        total = sum(count for _, count in entries)
+        return {
+            "total": total,
+            "inside_wall": inside,
+            "outside_wall": total - inside,
+        }
+
     def _towns_for_region_alias(self, region):
         alias_to_ruler = {
             "china": "紅軍",
@@ -6237,6 +6262,8 @@ class Game:
         return True
 
     def _player_region_org_count(self, player, region):
+        if region in {"china", "牆內"}:
+            return self._player_organization_scope_counts(player, include_shared=True)["inside_wall"]
         region_towns = set(self._towns_for_region_alias(region))
         return sum(1 for town in self._organization_towns_for_player(player) if town in region_towns)
 
@@ -6464,6 +6491,7 @@ class Game:
                     "discard_count": len(p.deck.discard_pile) if p.deck else 0,
                     "discard_pile": [getattr(card, 'name', str(card)) for card in p.deck.discard_pile] if p.deck else [],
                     "discard_variants": [self._support_card_variant_info(card) for card in p.deck.discard_pile] if p.deck else [],
+                    "organization_counts": self._player_organization_scope_counts(p),
                     "orgs": p.organizations
                 }
                 for p in self.players

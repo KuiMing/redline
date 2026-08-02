@@ -23,8 +23,8 @@
 ### P2：連續建立組織時保留地圖鏡頭，不在每次建立後zoom out
 - [todo] 玩家累積多張可建立組織的卡牌並在戰略地圖連續建立時，每成功建立一個組織後應暫時保留使用者當下的Leaflet `center`與`zoom`，只更新組織marker、合法候選與剩餘建立數，不要重新 `fitBounds`、reset view或zoom out；因為下一個目標很可能就在相鄰城鎮。後續需區分「首次進入建立流程可自動定位」與「同一pending build queue內後續重繪必須保留viewport」，並涵蓋候選重算、相鄰／遠距下一目標、最後一次建立、iframe重新render、桌面／行動版及正式Leaflet UI proof。（2026-08-02 playtest建議）
 
-### P1：臺灣時代關卡錯把臺灣地區組織計為「牆內組織」
-- [todo] 臺灣時代關卡的「7個牆內組織」達成判定有誤：playtest中臺灣玩家只是在臺灣地區建立到8個組織，並沒有在牆內建立7個組織，畫面卻顯示條件已達成。`牆內`的authoritative定義應為「目前統治者／控制者是紅軍的城鎮」，不以地理區域名稱、組織擁有者陣營或臺灣玩家的組織總數判斷；位於這些紅軍統治城鎮中的任何陣營組織都應計入，位於非紅軍統治城鎮的組織則一律不計。玩家戰況目前只顯示組織總數（截圖中為紅軍11、臺灣8），應在每名玩家的「組織」統計格內或緊鄰位置同步顯示 `牆內 X／牆外 Y`，且 `X + Y`必須等於該玩家組織總數，讓所有玩家能直接核對時代關卡進度。後續需建立共用town-controller／inside-wall helper，讓時代判定與玩家戰況使用同一份canonical動態分類；涵蓋任意陣營組織、臺灣地區負例、統治者改變、恰好6／7、總數守恆、玩家可見進度與正式地圖／WebSocket時代達成proof。playtest證據保存於 `docs/records/era-cards/taiwan-inside-wall-achievement-miscount.jpg`及`docs/records/era-cards/player-status-inside-outside-org-counts.jpg`。（2026-08-02 playtest回報與UI補充）
+### P1：臺灣時代關卡牆內組織判定與玩家戰況拆分
+- [done] 已確認root cause是canonical卡面寫「臺灣在牆內擁有至少7個有效組織」，但 `era_structured.v1.1.json`誤編成 `region: taiwan`；現已修正為 `region: china`。牆內SSOT為canonical `map.json`城鎮 `ruler`清單包含`紅軍`，與組織擁有者陣營及Leaflet runtime「當前控制者」無關。新增 `_is_inside_wall_town()`與 `_player_organization_scope_counts()`共用helper：時代／勝利條件以含合法共享組織的有效視角計數，玩家戰況則拆分實際擁有組織並投影 `organization_counts`，正式UI顯示 `組織總數`及`牆內 X／牆外 Y`，且X＋Y恆等於總數。新增臺灣地區8個不達成、牆內6／7邊界、任意陣營擁有者、共享有效組織、state總數守恆共6項focused matrix；focused＋era lifecycle 14/14、map相鄰16/16、完整可收集pytest 185 passed、era規則5/5、效果runtime15/15、canonical scope 0 failures、正式Chromium/WebSocket UI proof 11/11且console 0。證據位於 `docs/records/era-cards/inside-wall-counts/`，原playtest截圖保留於同級era-cards records。（2026-08-02 完成）
 
 ### P1：`產業滲透`首次取消後，後續回合似乎不再發動
 - [todo] 更正playtest重現：目前觀察到的是 `產業滲透`第一次成功取消對手的卡牌能力後，到了下一回合，對手再次使用卡牌能力時似乎不會再出現取消詢問；尚不能據此斷定同一回合內只有第一次可取消。後續需先依canonical卡面確認效果持續期限，再稽核首次取消時是否錯誤永久消耗／移除了reaction entitlement，而不是只結束當次反應；建立跨回合「首次取消→下一回合再次出牌」為主的regression，並另外確認當次選擇不取消、同回合連續出牌、資源模式、不同玩家、效果正確到期與正式WebSocket UI反應流程。（2026-08-02 playtest更正）

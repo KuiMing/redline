@@ -2806,7 +2806,11 @@ function renderPlayerStatusCards(state) {
   }
 
   target.innerHTML = players.map(player => {
-    const totalOrgs = Object.values(player.orgs || {}).reduce((a, b) => a + b, 0);
+    const derivedTotalOrgs = Object.values(player.orgs || {}).reduce((a, b) => a + b, 0);
+    const organizationCounts = player.organization_counts || {};
+    const totalOrgs = organizationCounts.total ?? derivedTotalOrgs;
+    const insideWallOrgs = organizationCounts.inside_wall ?? 0;
+    const outsideWallOrgs = organizationCounts.outside_wall ?? (totalOrgs - insideWallOrgs);
     const money = player.resources?.money ?? 0;
     const propaganda = player.resources?.propaganda ?? 0;
     const handCount = player.hand?.length ?? 0;
@@ -2841,7 +2845,11 @@ function renderPlayerStatusCards(state) {
           <span class="player-status-badge">根據地：${escapeHtml(baseName)}</span>
         </div>
         <div class="player-status-stats">
-          <div class="player-status-stat"><span>組織</span><strong>${totalOrgs}</strong></div>
+          <div class="player-status-stat player-status-stat-organizations">
+            <span>組織</span>
+            <strong>${totalOrgs}</strong>
+            <small>牆內 ${insideWallOrgs}／牆外 ${outsideWallOrgs}</small>
+          </div>
           <div class="player-status-stat"><span>資金</span><strong>${money}</strong></div>
           <div class="player-status-stat"><span>宣傳</span><strong>${propaganda}</strong></div>
           <div class="player-status-stat"><span>手牌</span><strong>${handCount}</strong></div>

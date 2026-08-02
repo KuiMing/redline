@@ -206,7 +206,7 @@
       "trigger": {
         "type": "count_only",
         "camp": "taiwan",
-        "region": "taiwan",
+        "region": "china",
         "count": 7
       },
       "duration": { "type": "turns", "value": 2 },

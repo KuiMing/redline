@@ -2247,6 +2247,16 @@ body {
   font-family: 'JetBrains Mono', monospace;
 }
 
+.player-status-stat-organizations small {
+  display: block;
+  margin-top: 4px;
+  color: #c8d7ee;
+  font-size: 8px;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
 .player-status-empty {
   padding: 12px;
   color: #9fb0ca;

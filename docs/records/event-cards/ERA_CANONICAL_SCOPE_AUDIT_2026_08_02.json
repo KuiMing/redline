@@ -1,0 +1,378 @@
+{
+  "generated_at": "2026-08-02",
+  "status": "passed",
+  "summary": {
+    "raw_era_rows": 8,
+    "structured_era_rows": 8,
+    "raw_era_rows_represented_as_era_stage": 8,
+    "raw_bracketed_era_rows_in_event_deck": 0,
+    "legacy_event_like_adaptations_still_present": {
+      "[反賊]公知世代的終結": false,
+      "[臺灣]綏靖派反對介入對岸": false
+    },
+    "structured_effect_rows": 8,
+    "failures": []
+  },
+  "canonical_decision": {
+    "scope": "The 8 raw era-stage rows are canonical era-stage mechanics, not event-deck cards.",
+    "reason": "Raw source labels these rows under 時代關卡名稱 and current UI/runtime already has EraEngine plus era achievement modal/pinned HUD.",
+    "next_runtime_step": "Apply the declared red_suppression and revolution_counterattack effects through EraEngine with deterministic validators and focused UI proof."
+  },
+  "entries": [
+    {
+      "name": "[香港]香港人被自殺",
+      "description": "紅軍用不會受國際譴責的方式出兵鎮壓香港：讓警察和武警潛入民宅姦殺抗爭者",
+      "trigger_text": "[香港抗爭遍地開花]香港在牆內擁有至少10個有效組織",
+      "red_suppression_text": "[新型態的血腥鎮壓]紅軍每次對香港使用間諜類卡牌時，可再隨機棄掉香港1張手牌。持續2回合。",
+      "revolution_counterattack_text": "[沉冤待雪香港報仇]香港購買每張武裝類卡牌之費用額外減少2點資金。持續2回合。",
+      "copies": 1,
+      "structured": {
+        "id": "hong_kong",
+        "name": "[香港]香港人被自殺",
+        "trigger": {
+          "type": "count_only",
+          "camp": "hong_kong",
+          "region": "hong_kong",
+          "count": 10
+        },
+        "duration": {
+          "type": "turns",
+          "value": 2
+        },
+        "effects": {
+          "red_suppression": {
+            "type": "bonus_discard_on_red_card",
+            "player_faction": "red_army",
+            "target_camp": "hong_kong",
+            "card_types": [
+              "spy"
+            ],
+            "discard_count": 1,
+            "duration": 2
+          },
+          "revolution_counterattack": {
+            "type": "reduce_purchase_cost",
+            "target_camp": "hong_kong",
+            "card_types": [
+              "armed"
+            ],
+            "resource": "money",
+            "amount": 2,
+            "duration": 2
+          }
+        }
+      },
+      "runtime_status": "structured_effects_declared",
+      "canonical_decision": "era_stage_mechanic_not_event_deck_card",
+      "needs_runtime_followup": true
+    },
+    {
+      "name": "[蒙古]莫日根事件爆發",
+      "description": "為保衛草場而死的牧民 引爆南蒙古學生示威 紅軍要想辦法破壞蒙古人團結",
+      "trigger_text": "[牧民維權團體成形]蒙古在牆內擁有至少4個有效組織",
+      "red_suppression_text": "[知識分子互相猜疑]將3張內鬥放進蒙古棄牌堆。",
+      "revolution_counterattack_text": "[南蒙古人世代覺醒]蒙古當回合手牌中的每張宣傳類卡牌 用於購買時可額外提供1點宣傳。",
+      "copies": 1,
+      "structured": {
+        "id": "mongolia",
+        "name": "[蒙古]莫日根事件爆發",
+        "trigger": {
+          "type": "count_only",
+          "camp": "mongol",
+          "region": "mongolian_plateau",
+          "count": 4
+        },
+        "duration": {
+          "type": "turns",
+          "value": 1
+        },
+        "effects": {
+          "red_suppression": {
+            "type": "add_static_cards_to_discard",
+            "target_camp": "mongol",
+            "card": "內鬥",
+            "count": 3,
+            "consume_static_supply": true
+          },
+          "revolution_counterattack": {
+            "type": "hand_card_resource_bonus",
+            "target_camp": "mongol",
+            "card_types": [
+              "propaganda"
+            ],
+            "resource": "propaganda",
+            "amount": 1,
+            "duration": 1
+          }
+        }
+      },
+      "runtime_status": "structured_effects_declared",
+      "canonical_decision": "era_stage_mechanic_not_event_deck_card",
+      "needs_runtime_followup": true
+    },
+    {
+      "name": "[藏國]藏國騷亂",
+      "description": "衛藏、康、安多接連爆發藏人示威與暴動 紅軍順著青藏鐵路迅速出兵鎮壓",
+      "trigger_text": "[藏人完成示威準備]藏國在牆內擁有至少7個有效組織",
+      "red_suppression_text": "[青藏鐵路運兵鎮壓]紅軍當回合可棄掉任意張數手牌，無視距離在藏國有效組織１格內建立與張數同數量的組織。",
+      "revolution_counterattack_text": "[心向法王達賴喇嘛]藏國當回合手牌中的每張宣傳類卡牌 用於購買時可額外提供1點宣傳。",
+      "copies": 1,
+      "structured": {
+        "id": "tibet",
+        "name": "[藏國]藏國騷亂",
+        "trigger": {
+          "type": "count_only",
+          "camp": "tibet",
+          "region": "tibet_region",
+          "count": 7
+        },
+        "duration": {
+          "type": "turns",
+          "value": 1
+        },
+        "effects": {
+          "red_suppression": {
+            "type": "red_discard_to_build_near_target",
+            "player_faction": "red_army",
+            "target_camp": "tibet",
+            "target_region": "tibet_region",
+            "max_steps": 1,
+            "builds_per_discard": 1,
+            "free": true,
+            "ignore_distance": true,
+            "duration": 1
+          },
+          "revolution_counterattack": {
+            "type": "hand_card_resource_bonus",
+            "target_camp": "tibet",
+            "card_types": [
+              "propaganda"
+            ],
+            "resource": "propaganda",
+            "amount": 1,
+            "duration": 1
+          }
+        }
+      },
+      "runtime_status": "structured_effects_declared",
+      "canonical_decision": "era_stage_mechanic_not_event_deck_card",
+      "needs_runtime_followup": true
+    },
+    {
+      "name": "[哈薩克]伊塔事件",
+      "description": "哈薩克人掌控準噶爾盆地各口岸的兩側  祕密幫助大量哈薩克與維吾爾人西逃",
+      "trigger_text": "[三玉茲與三區革命]哈薩克在北國擁有至少7個有效組織，在牆內擁有至少3個有效組織",
+      "red_suppression_text": "[紅軍提防哈薩克人]哈薩克此後無法再無視距離建立牆內組織。",
+      "revolution_counterattack_text": "[出逃同胞加入隊伍]當回合哈薩克立即額外抽2張牌。",
+      "copies": 1,
+      "structured": {
+        "id": "kazakh",
+        "name": "[哈薩克]伊塔事件",
+        "trigger": {
+          "type": "count_and_required",
+          "camp": "kazakh",
+          "requirements": [
+            {
+              "ruler": "北國",
+              "count": 7
+            },
+            {
+              "region": "china",
+              "count": 3
+            }
+          ]
+        },
+        "duration": {
+          "type": "permanent"
+        },
+        "effects": {
+          "red_suppression": {
+            "type": "restrict_ignore_distance_build",
+            "target_camp": "kazakh",
+            "scope": "china",
+            "duration": "permanent"
+          },
+          "revolution_counterattack": {
+            "type": "draw",
+            "target_camp": "kazakh",
+            "count": 2,
+            "immediate": true
+          }
+        }
+      },
+      "runtime_status": "structured_effects_declared",
+      "canonical_decision": "era_stage_mechanic_not_event_deck_card",
+      "needs_runtime_followup": true
+    },
+    {
+      "name": "[維吾爾]莎車大屠殺",
+      "description": "由於懷疑居民窩藏東突厥游擊隊員 紅軍在開齋夜屠殺了數千名維吾爾婦孺",
+      "trigger_text": "[突厥戰士踏遍七城]維吾爾在牆內擁有至少7個有效組織",
+      "red_suppression_text": "[武力清剿叛軍基地]紅軍每次對維吾爾使用武裝類卡牌時，可再瓦解己方組織1格內的1個維吾爾組織。持續2回合。",
+      "revolution_counterattack_text": "[壯士去兮弔民伐罪]維吾爾每打出1張武裝類卡牌，獲得2點宣傳。持續2回合。",
+      "copies": 1,
+      "structured": {
+        "id": "uyghur",
+        "name": "[維吾爾]莎車大屠殺",
+        "trigger": {
+          "type": "count_only",
+          "camp": "uyghur",
+          "region": "turkestan",
+          "count": 7
+        },
+        "duration": {
+          "type": "turns",
+          "value": 2
+        },
+        "effects": {
+          "red_suppression": {
+            "type": "bonus_dissolve_on_red_card_near_self",
+            "player_faction": "red_army",
+            "target_camp": "uyghur",
+            "card_types": [
+              "armed"
+            ],
+            "max_steps": 1,
+            "dissolve_count": 1,
+            "duration": 2
+          },
+          "revolution_counterattack": {
+            "type": "gain_resource_on_play_card",
+            "target_camp": "uyghur",
+            "card_types": [
+              "armed"
+            ],
+            "resource": "propaganda",
+            "amount": 2,
+            "duration": 2
+          }
+        }
+      },
+      "runtime_status": "structured_effects_declared",
+      "canonical_decision": "era_stage_mechanic_not_event_deck_card",
+      "needs_runtime_followup": true
+    },
+    {
+      "name": "[滿洲]滿洲地方派系凝聚",
+      "description": "滿洲當地紅軍幹部勾結本土勢力架空中央 迫使紅軍中央出手干預地方情勢",
+      "trigger_text": "[山海關外故國甦生]滿洲在牆內擁有至少10個有效組織",
+      "red_suppression_text": "[試圖清洗地方勢力]將5張分神放進滿洲棄牌堆。",
+      "revolution_counterattack_text": "[行政資源固守地盤]滿洲當回合可檢視己方牌庫頂7張牌，將其中2張牌移到牌庫最頂，其餘順序不變。",
+      "copies": 1,
+      "structured": {
+        "id": "manchuria",
+        "name": "[滿洲]滿洲地方派系凝聚",
+        "trigger": {
+          "type": "count_only",
+          "camp": "manchuria",
+          "region": "manchuria",
+          "count": 10
+        },
+        "duration": {
+          "type": "turns",
+          "value": 1
+        },
+        "effects": {
+          "red_suppression": {
+            "type": "add_static_cards_to_discard",
+            "target_camp": "manchuria",
+            "card": "分神",
+            "count": 5,
+            "consume_static_supply": true
+          },
+          "revolution_counterattack": {
+            "type": "inspect_deck_top_and_reorder",
+            "target_camp": "manchuria",
+            "look_count": 7,
+            "top_count": 2,
+            "immediate": true
+          }
+        }
+      },
+      "runtime_status": "structured_effects_declared",
+      "canonical_decision": "era_stage_mechanic_not_event_deck_card",
+      "needs_runtime_followup": true
+    },
+    {
+      "name": "[反賊]公知世代的終結",
+      "description": "言論相對自由的十年結束了 新的領導人要求網信辦嚴控網路輿論",
+      "trigger_text": "[寒冬將至新芽始生]反賊在牆內擁有至少4個有效組織",
+      "red_suppression_text": "[互聯網管控全面化]反賊此後無法再無視距離建立牆內組織。",
+      "revolution_counterattack_text": "[反賊結社潛入地下]反賊在回合中建立至少3個組織，則當回合可再抽1張牌。持續至遊戲結束。",
+      "copies": 1,
+      "structured": {
+        "id": "rebels",
+        "name": "[反賊]公知世代的終結",
+        "trigger": {
+          "type": "count_only",
+          "camp": "rebel",
+          "region": "china",
+          "count": 4
+        },
+        "duration": {
+          "type": "permanent"
+        },
+        "effects": {
+          "red_suppression": {
+            "type": "restrict_ignore_distance_build",
+            "target_camp": "rebel",
+            "scope": "china",
+            "duration": "permanent"
+          },
+          "revolution_counterattack": {
+            "type": "build_count_draw_bonus",
+            "target_camp": "rebel",
+            "build_count": 3,
+            "draw_count": 1,
+            "duration": "permanent"
+          }
+        }
+      },
+      "runtime_status": "structured_effects_declared",
+      "canonical_decision": "era_stage_mechanic_not_event_deck_card",
+      "needs_runtime_followup": true
+    },
+    {
+      "name": "[臺灣]綏靖派反對介入對岸",
+      "description": "臺灣對共和國滲透日深 紅軍策動臺灣綏靖派阻礙反共工作",
+      "trigger_text": "[臺灣重建敵後工作]臺灣在牆內擁有至少7個有效組織",
+      "red_suppression_text": "[鼓吹停止挑釁紅軍]將3張內鬥放進臺灣棄牌堆",
+      "revolution_counterattack_text": "[打擊國內綏靖主義]每當臺灣在臺灣城鎮建立至少1個組織時，獲得1點宣傳。持續2回合。",
+      "copies": 1,
+      "structured": {
+        "id": "taiwan",
+        "name": "[臺灣]綏靖派反對介入對岸",
+        "trigger": {
+          "type": "count_only",
+          "camp": "taiwan",
+          "region": "china",
+          "count": 7
+        },
+        "duration": {
+          "type": "turns",
+          "value": 2
+        },
+        "effects": {
+          "red_suppression": {
+            "type": "add_static_cards_to_discard",
+            "target_camp": "taiwan",
+            "card": "內鬥",
+            "count": 3,
+            "consume_static_supply": true
+          },
+          "revolution_counterattack": {
+            "type": "gain_resource_on_build_in_region",
+            "target_camp": "taiwan",
+            "region": "taiwan",
+            "resource": "propaganda",
+            "amount": 1,
+            "duration": 2
+          }
+        }
+      },
+      "runtime_status": "structured_effects_declared",
+      "canonical_decision": "era_stage_mechanic_not_event_deck_card",
+      "needs_runtime_followup": true
+    }
+  ]
+}

@@ -112,6 +112,11 @@ class VictoryEngine:
         }
 
         if scope == "牆內":
+            scope_counts = getattr(game, "_player_organization_scope_counts", None)
+            if callable(scope_counts):
+                counts = scope_counts(player, include_shared=True)
+                if isinstance(counts, dict):
+                    return int(counts.get("inside_wall", 0) or 0)
             china_towns = self._towns_for_ruler(game, "紅軍")
             return shared_count(china_towns)
         if scope == "牆內與牆外":

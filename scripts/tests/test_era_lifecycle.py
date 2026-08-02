@@ -48,20 +48,24 @@ def _advance_current_player_turn(game):
     assert game.turn_phase == TurnPhase.ACTION
 
 
-def test_taiwan_era_triggers_at_seven_distinct_legal_region_organizations_via_phase_lifecycle():
-    game, taiwan, _red = _make_game()
-    legal_taiwan_towns = [
+def _legal_inside_wall_towns(game, player):
+    return [
         town
-        for town in game._towns_for_region_alias("taiwan")
-        if game.can_faction_develop_in_town(taiwan.faction_id, town)
+        for town in game._towns_for_region_alias("china")
+        if game.can_faction_develop_in_town(player.faction_id, town)
     ]
-    assert len(legal_taiwan_towns) >= 7
 
-    taiwan.organizations = {town: 1 for town in legal_taiwan_towns[:6]}
+
+def test_taiwan_era_triggers_at_seven_distinct_inside_wall_organizations_via_phase_lifecycle():
+    game, taiwan, _red = _make_game()
+    legal_inside_towns = _legal_inside_wall_towns(game, taiwan)
+    assert len(legal_inside_towns) >= 7
+
+    taiwan.organizations = {town: 1 for town in legal_inside_towns[:6]}
     _advance_current_player_turn(game)
     assert "taiwan" not in game.era_engine.get_active_eras()
 
-    taiwan.organizations[legal_taiwan_towns[6]] = 1
+    taiwan.organizations[legal_inside_towns[6]] = 1
     _advance_current_player_turn(game)
     assert "taiwan" in game.era_engine.get_active_eras()
     assert game.era_engine.get_active_era_details()[0]["remaining"] == 2
@@ -69,12 +73,8 @@ def test_taiwan_era_triggers_at_seven_distinct_legal_region_organizations_via_ph
 
 def test_timed_era_is_not_consumed_on_activation_boundary_or_reactivated_after_expiry():
     game, taiwan, _red = _make_game()
-    legal_taiwan_towns = [
-        town
-        for town in game._towns_for_region_alias("taiwan")
-        if game.can_faction_develop_in_town(taiwan.faction_id, town)
-    ]
-    taiwan.organizations = {town: 1 for town in legal_taiwan_towns[:7]}
+    legal_inside_towns = _legal_inside_wall_towns(game, taiwan)
+    taiwan.organizations = {town: 1 for town in legal_inside_towns[:7]}
 
     _advance_current_player_turn(game)
     assert game.era_engine.get_active_era_details()[0]["remaining"] == 2
@@ -98,12 +98,8 @@ def test_timed_era_is_not_consumed_on_activation_boundary_or_reactivated_after_e
 
 def test_expired_one_time_era_is_achieved_but_not_active_in_viewer_public_state():
     game, taiwan, _red = _make_game()
-    legal_taiwan_towns = [
-        town
-        for town in game._towns_for_region_alias("taiwan")
-        if game.can_faction_develop_in_town(taiwan.faction_id, town)
-    ]
-    taiwan.organizations = {town: 1 for town in legal_taiwan_towns[:7]}
+    legal_inside_towns = _legal_inside_wall_towns(game, taiwan)
+    taiwan.organizations = {town: 1 for town in legal_inside_towns[:7]}
     _advance_current_player_turn(game)
     game.era_engine.tick()
     game.era_engine.tick()
@@ -136,12 +132,8 @@ def test_era_engine_without_activation_history_treats_active_eras_as_activated()
 
 def test_era_activation_effect_failure_is_not_retried_after_partial_mutation():
     game, taiwan, _red = _make_game()
-    legal_taiwan_towns = [
-        town
-        for town in game._towns_for_region_alias("taiwan")
-        if game.can_faction_develop_in_town(taiwan.faction_id, town)
-    ]
-    taiwan.organizations = {town: 1 for town in legal_taiwan_towns[:7]}
+    legal_inside_towns = _legal_inside_wall_towns(game, taiwan)
+    taiwan.organizations = {town: 1 for town in legal_inside_towns[:7]}
     apply_calls = []
 
     def fail_after_partial_mutation(era):

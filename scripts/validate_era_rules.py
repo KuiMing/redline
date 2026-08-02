@@ -72,10 +72,10 @@ def run_checks():
         }
     ))
 
-    # 2. Hong Kong era should not trigger from the wrong faction even with enough orgs in Hong Kong.
+    # 2. Hong Kong era should not trigger from the wrong faction even with ten distinct inside-wall organizations.
     game, actor, red = make_game()
     actor.faction_id = 'taiwan_green'
-    place_orgs(actor, first_towns(game, 'hong_kong', 1), count_each=10)
+    place_orgs(actor, first_towns(game, 'china', 10))
     game._check_era_trigger()
     checks.append(check(
         'hong_kong_era_requires_hong_kong_faction',
@@ -88,16 +88,16 @@ def run_checks():
         }
     ))
 
-    # 3. Hong Kong era should trigger when Hong Kong faction satisfies its count.
+    # 3. Hong Kong era should trigger when Hong Kong faction has ten distinct inside-wall organizations.
     game, actor, red = make_game()
     actor.faction_id = 'hong_kong'
-    place_orgs(actor, first_towns(game, 'hong_kong', 1), count_each=10)
+    place_orgs(actor, first_towns(game, 'china', 10))
     game._check_era_trigger()
     checks.append(check(
         'hong_kong_era_triggers_for_hong_kong_faction',
         'hong_kong' in game.era_engine.get_active_eras(),
         {
-            'rule': '香港陣營在香港區達到10組織時，香港時代應觸發。',
+            'rule': '香港陣營在10個不同牆內城鎮擁有有效組織時，香港時代應觸發。',
             'actor_faction': actor.faction_id,
             'actor_orgs': dict(actor.organizations),
             'active_eras': game.era_engine.get_active_eras(),
