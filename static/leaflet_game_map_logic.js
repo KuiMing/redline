@@ -302,29 +302,32 @@ function renderSupportChoiceHighlights(options = {}) {
     }
     const isFocused = supportChoiceHighlight.focusTown && supportChoiceHighlight.focusTown === townName;
     if (isDissolveChoice) {
-      // 瓦解目標：後端判定的合法目標直接以 💀 標示，點擊即完成瓦解，不需要先選取城鎮
-      // 再到側欄按「瓦解目前城鎮（效果）」（2026-08-02 playtest 建議）。紅色暈圈只是放大
-      // 點擊熱區與提高可見度，實際判定仍以後端投影的候選清單為準。
-      const resolveClick = () => sendDissolveAction(null, townName);
+      // 瓦解目標：後端判定的合法目標以 💀 標示，但點擊只會「選取」該城鎮
+      // （與建立組織候選城鎮的既有互動一致），必須再按左側「瓦解目前城鎮（效果）」
+      // 按鈕才會真正執行瓦解。2026-08-02 使用者回饋：單擊直接瓦解對新手太危險——
+      // 玩家常只是想點點看，不該不小心觸發不可逆動作，因此改為選取＋明確按鈕確認
+      // 兩步驟，選中的目標會以 dissolve-target-badge-armed 樣式標示為「已選取待確認」。
+      const selectClick = () => selectTownForCurrentMapAction(townName, { autoFocus: false });
+      const isArmed = selectedTown === townName;
       const hitArea = L.circleMarker([town.lat, town.lon], {
         radius: Math.max(isFocused ? 20 : 16, markerRadius(map.getZoom()) + (isFocused ? 12 : 8)),
-        color: isFocused ? '#fecaca' : '#f87171',
-        weight: isFocused ? 3 : 2,
+        color: isArmed ? '#fde68a' : (isFocused ? '#fecaca' : '#f87171'),
+        weight: isArmed ? 4 : (isFocused ? 3 : 2),
         fillColor: '#ef4444',
         fillOpacity: isFocused ? 0.3 : 0.16,
         opacity: 1,
       }).addTo(supportChoiceHighlightLayer)
-        .bindPopup(`${escapeHtml(supportChoiceHighlight.sourceName || '可瓦解目標')}：${escapeHtml(entry?.label || townName)}（點擊完成瓦解）`);
-      hitArea.on('click', resolveClick);
+        .bindPopup(`${escapeHtml(supportChoiceHighlight.sourceName || '可瓦解目標')}：${escapeHtml(entry?.label || townName)}（點擊選取，再按左側按鈕確認瓦解）`);
+      hitArea.on('click', selectClick);
       const skullMarker = L.marker([town.lat, town.lon], {
         icon: L.divIcon({
           className: 'dissolve-target-badge-wrap',
-          html: `<div class="dissolve-target-badge${isFocused ? ' dissolve-target-badge-focused' : ''}">💀</div>`,
+          html: `<div class="dissolve-target-badge${isFocused ? ' dissolve-target-badge-focused' : ''}${isArmed ? ' dissolve-target-badge-armed' : ''}">💀</div>`,
           iconSize: [26, 26],
           iconAnchor: [13, 13],
         }),
       }).addTo(supportChoiceHighlightLayer);
-      skullMarker.on('click', resolveClick);
+      skullMarker.on('click', selectClick);
       return;
     }
     const outerMarker = L.circleMarker([town.lat, town.lon], {
@@ -353,7 +356,7 @@ function renderSupportChoiceHighlights(options = {}) {
       const actionText = isBuildChoice
         ? '請點選中性色外框城鎮，然後使用左側「在目前城鎮建立組織（效果）」按鈕完成建立。'
         : isDissolveChoice
-          ? '請直接點選 💀 標示的組織完成瓦解。'
+          ? '請點選 💀 標示的組織，再使用左側「瓦解目前城鎮（效果）」按鈕確認完成瓦解。'
           : '請點選中性色外框城鎮，然後使用左側「瓦解目前城鎮（效果）」按鈕完成瓦解；也可回到選擇視窗確認。';
       // bounds.length is the number of neutral candidate markers actually placed on the map,
       // exact set of clickable/buildable towns — so the count always matches the highlights.
@@ -367,7 +370,7 @@ function renderSupportChoiceHighlights(options = {}) {
       if (supportChoiceHighlight.sourceName && promptText.startsWith(`${supportChoiceHighlight.sourceName}：`)) {
         promptText = promptText.slice(`${supportChoiceHighlight.sourceName}：`.length);
       }
-      const markerDescText = isDissolveChoice ? '地圖上已用 💀 標出可瓦解的合法目標。' : '地圖上已用中性色外框標出可選城鎮。';
+      const markerDescText = isDissolveChoice ? '地圖上已用 💀 標出可瓦解的合法目標，點選後請於左側按鈕確認。' : '地圖上已用中性色外框標出可選城鎮。';
       hintEl.innerHTML = `${sourceLabel}：<span class="hint-strong">${escapeHtml(promptText)}</span> ${countText}${markerDescText}${escapeHtml(focusText)}${actionText}`;
     }
     if (autoFocus) {
@@ -656,6 +659,10 @@ function renderMovementHighlights(townName, options = {}) {
   selectedMoveTargets = [];
   lastResolvedMove = null;
   resetBuildSelection();
+  // renderMap() 呼叫 renderSupportChoiceHighlights() 的時間點早於這裡設定 selectedTown，
+  // 因此瓦解 💀 標記的「已選取待確認」樣式需要在這裡再刷新一次，才能反映最新選取
+  // （2026-08-02：瓦解確認流程改為選取＋按鈕兩步驟後新增）。
+  renderSupportChoiceHighlights();
   updateStatusPanel();
   refreshDirectBuildUi();
   if (!townName) return false;
@@ -915,8 +922,8 @@ function refreshDirectBuildUi() {
   const supportTargetChoice = supportTargetChoiceForTown(selectedTown);
   if (supportTargetChoice) {
     dissolveBtn.disabled = false;
-    dissolveBtn.textContent = '瓦解目前城鎮（效果）';
-    dissolveHint.innerHTML = `目前選取 <span class="hint-strong">${selectedTown}</span>：${supportChoiceHighlight.sourceName || '目前效果'} 允許選擇此目標；按上方按鈕完成瓦解。`;
+    dissolveBtn.textContent = '確認瓦解此組織';
+    dissolveHint.innerHTML = `確認瓦解 <span class="hint-strong">${selectedTown}</span> 的組織？（${supportChoiceHighlight.sourceName || '目前效果'}）點擊地圖上其他 💀 目標可改選，按上方按鈕才會真正執行。`;
   } else {
     dissolveBtn.textContent = '瓦解目前城鎮組織';
     const dissolveTarget = sharedDissolveTargetForTown(selectedTown);

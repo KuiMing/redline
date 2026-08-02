@@ -87,7 +87,8 @@ def check(browser):
     cancel_page.close()
 
     # --- Path A: sacrifice stays modal-based; target step auto-switches to the map with a
-    # 💀 marker and resolves on a single click (2026-08-02 playtest 建議) ---
+    # 💀 marker and requires clicking the marker (select) then a sidebar confirm button
+    # (2026-08-02：新增瓦解前確認步驟，避免玩家單擊探索時誤觸不可逆動作) ---
     page = browser.new_context(viewport={'width': 1280, 'height': 800}).new_page()
     pid = start_flow(page)
     s1 = step_info(page)
@@ -111,9 +112,24 @@ def check(browser):
     record('target_step_marks_the_legal_enemy_organization_with_a_skull', skull_count == 1, {'skull_count': skull_count})
     page.screenshot(path=str(SCREENSHOT))
     page.frame_locator('#strategicMapFrame').locator('.dissolve-target-badge').click()
+    page.wait_for_timeout(400)
+    armed_count = page.frame_locator('#strategicMapFrame').locator('.dissolve-target-badge-armed').count()
+    confirm_btn_state = page.frame_locator('#strategicMapFrame').locator('#dissolveBtn').evaluate(
+        "(el) => ({ disabled: el.disabled, text: el.textContent })"
+    )
+    record(
+        'clicking_the_skull_only_arms_the_target_and_does_not_dissolve_yet',
+        armed_count == 1
+        and not confirm_btn_state['disabled']
+        and '確認' in confirm_btn_state['text']
+        and page.evaluate("() => window.lastGameState?.pending_choice") is not None
+        and orgs(page, pid, 'red_army') != {},
+        {'armed_count': armed_count, 'confirm_btn_state': confirm_btn_state},
+    )
+    page.frame_locator('#strategicMapFrame').locator('#dissolveBtn').click()
     page.wait_for_timeout(800)
     record(
-        'clicking_the_skull_marker_dissolves_enemy_and_sacrifices_own_org_in_one_click',
+        'confirming_via_sidebar_button_dissolves_enemy_and_sacrifices_own_org',
         page.evaluate("() => window.lastGameState?.pending_choice") is None
         and orgs(page, pid, 'red_army') == {}
         and orgs(page, pid) == {'巴黎': 1},

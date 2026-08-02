@@ -1,0 +1,88 @@
+{
+  "success": true,
+  "summary": {
+    "total": 5,
+    "passed": 5,
+    "failed": 0
+  },
+  "checks": [
+    {
+      "name": "情報網瓦解選項建立 target pending choice 並標記 interaction_kind",
+      "passed": true,
+      "details": {
+        "pending_choice": {
+          "type": "target_choice",
+          "choice_key": "intel_network_dissolve_target",
+          "interaction_kind": "dissolve_organization",
+          "remaining_builds": null,
+          "queueable_card_names": [],
+          "cancellable": false,
+          "player_id": "ea79b8c7-e4ec-4a44-8850-953884809396",
+          "player_name": null,
+          "prompt": "情報網：選擇 1 個要瓦解的鄰近敵方組織。",
+          "source_name": "情報網",
+          "count": null,
+          "min_count": null,
+          "mode": null,
+          "acting_player_id": null,
+          "acting_player_name": null,
+          "played_card_name": null,
+          "region": null,
+          "free": null,
+          "ignore_distance": null,
+          "cards": [],
+          "options": [],
+          "towns": [],
+          "targets": [
+            {
+              "id": "e69a4e45-1558-401e-b83c-76274a701433::天津",
+              "label": "enemyA｜天津",
+              "player_id": "e69a4e45-1558-401e-b83c-76274a701433",
+              "town": "天津",
+              "requires_self_sacrifice": false
+            }
+          ],
+          "step": null
+        }
+      }
+    },
+    {
+      "name": "建立 pending choice 後自動隱藏選擇 modal 並切到戰略地圖",
+      "passed": true,
+      "details": {
+        "modal_hidden": true,
+        "active_view": "mapView"
+      }
+    },
+    {
+      "name": "合法瓦解目標以 💀 標示，且數量與後端投影的候選一致",
+      "passed": true,
+      "details": {
+        "skull_count": 1,
+        "target_count": 1
+      }
+    },
+    {
+      "name": "點擊 💀 標記僅選取目標並啟用確認按鈕，尚未真正瓦解",
+      "passed": true,
+      "details": {
+        "armed_count": 1,
+        "still_pending": true
+      }
+    },
+    {
+      "name": "按下側欄確認按鈕才真正完成瓦解，pending choice 清除",
+      "passed": true,
+      "details": {
+        "enemyA_orgs": {
+          "香港城": 1,
+          "廣州": 1
+        }
+      }
+    }
+  ],
+  "screenshots": [
+    "/Users/benmini/.openclaw/workspace/redline/docs/records/action-cards/intel-network-map-close-20260802_162945/map_with_skull_marker.png",
+    "/Users/benmini/.openclaw/workspace/redline/docs/records/action-cards/intel-network-map-close-20260802_162945/after_skull_click_dissolved.png"
+  ]
+}

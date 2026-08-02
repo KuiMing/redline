@@ -1,6 +1,6 @@
 {
   "status": "passed",
-  "generated_at": "2026-08-02T07:59:29.535028+00:00",
+  "generated_at": "2026-08-02T08:30:06.984280+00:00",
   "base_url": "http://127.0.0.1:8000",
   "checks_passed": 9,
   "checks_total": 9,
@@ -26,7 +26,7 @@
             "朝陽"
           ],
           "highlightLayerCount": 4,
-          "hint": "情報網：選擇 1 個要瓦解的鄰近敵方組織。 可選目標：2 個。地圖上已用 💀 標出可瓦解的合法目標。請直接點選 💀 標示的組織完成瓦解。"
+          "hint": "情報網：選擇 1 個要瓦解的鄰近敵方組織。 可選目標：2 個。地圖上已用 💀 標出可瓦解的合法目標，點選後請於左側按鈕確認。請點選 💀 標示的組織，再使用左側「瓦解目前城鎮（效果）」按鈕確認完成瓦解。"
         },
         "button_disabled": true,
         "hint": "目前選取 天津：沒有可瓦解的共享組織目標。"
@@ -44,7 +44,7 @@
       "ok": true,
       "detail": {
         "selected_town": "北京",
-        "button_text": "瓦解目前城鎮（效果）"
+        "button_text": "確認瓦解此組織"
       }
     },
     {
@@ -52,7 +52,7 @@
       "ok": true,
       "detail": {
         "red_player": {
-          "id": "82f41dcf-ad98-49d5-870d-061f26bab5ba",
+          "id": "58b686c0-9d97-4f6a-989a-4d56e8aad179",
           "name": "enemyA",
           "faction": "red_army",
           "base": "北京",
@@ -69,7 +69,7 @@
             null,
             null
           ],
-          "deck_count": 5,
+          "deck_count": 6,
           "discard_count": 0,
           "discard_pile": [],
           "discard_variants": [],
@@ -104,7 +104,7 @@
       "ok": true,
       "detail": {
         "red_player": {
-          "id": "82f41dcf-ad98-49d5-870d-061f26bab5ba",
+          "id": "58b686c0-9d97-4f6a-989a-4d56e8aad179",
           "name": "enemyA",
           "faction": "red_army",
           "base": "北京",
@@ -121,7 +121,7 @@
             null,
             null
           ],
-          "deck_count": 5,
+          "deck_count": 6,
           "discard_count": 0,
           "discard_pile": [],
           "discard_variants": [],
@@ -133,7 +133,7 @@
           "orgs": {}
         },
         "youyan_player": {
-          "id": "f489e9c1-5ee5-445c-aec6-0cef1adef34f",
+          "id": "66cb0200-fa47-439e-b417-f7a1aaa3f9c6",
           "name": "enemyB",
           "faction": "youyan",
           "base": "天津",

@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
-"""Browser proof: 情報網 dissolve target auto-switches to the map and resolves on a single
-💀-marker click (2026-08-02 playtest 建議). This validator previously tested a "close the
+"""Browser proof: 情報網 dissolve target auto-switches to the map and marks legal targets
+with a 💀 marker (2026-08-02 playtest 建議). This validator previously tested a "close the
 modal, then use the map sidebar button" fallback path; that path no longer exists because
 the choice modal is never shown for a dissolve-target step at all — see the
-`interaction_kind: 'dissolve_organization'` unification in server/game.py:state()."""
+`interaction_kind: 'dissolve_organization'` unification in server/game.py:state(). Clicking
+a 💀 marker now only *arms* it (selects the target and enables the sidebar confirm button);
+the actual dissolve only fires after an explicit `#dissolveBtn` click — added 2026-08-02 in
+response to playtest feedback that a single accidental click on a skull was too easy to
+trigger by someone just exploring the map."""
 import json
 import subprocess
 import sys
@@ -88,11 +92,21 @@ def main():
         ))
 
         skull.first.click()
+        page.wait_for_timeout(400)
+        armed_count = page.frame_locator('#strategicMapFrame').locator('.dissolve-target-badge-armed').count()
+        still_pending = page.evaluate("window.lastGameState?.pending_choice") is not None
+        checks.append(check(
+            '點擊 💀 標記僅選取目標並啟用確認按鈕，尚未真正瓦解',
+            armed_count == 1 and still_pending,
+            {'armed_count': armed_count, 'still_pending': still_pending},
+        ))
+
+        page.frame_locator('#strategicMapFrame').locator('#dissolveBtn').click()
         page.wait_for_function("!window.lastGameState.pending_choice")
         final_state = page.evaluate("window.lastGameState")
         enemy_a = next(ply for ply in final_state['players'] if ply['name'] == 'enemyA')
         checks.append(check(
-            '點擊 💀 標記單一步驟完成瓦解，pending choice 清除',
+            '按下側欄確認按鈕才真正完成瓦解，pending choice 清除',
             final_state.get('pending_choice') is None and enemy_a['orgs'].get('天津', 0) == 0,
             {'enemyA_orgs': enemy_a['orgs']},
         ))

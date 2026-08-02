@@ -1,7 +1,7 @@
 {
   "summary": {
-    "total": 6,
-    "passed": 6,
+    "total": 9,
+    "passed": 9,
     "failed": 0
   },
   "results": [
@@ -16,7 +16,7 @@
           "remaining_builds": null,
           "queueable_card_names": [],
           "cancellable": false,
-          "player_id": "0b969527-390b-4cd0-9b51-45de0f259f0f",
+          "player_id": "8cce6808-ccfc-4533-a43d-5aaea7a097d8",
           "player_name": null,
           "prompt": "內應間諜：選擇 1 個要瓦解的鄰近敵方組織。",
           "source_name": "內應間諜",
@@ -34,9 +34,9 @@
           "towns": [],
           "targets": [
             {
-              "id": "42f3e794-0b87-44a1-8f67-38e614e2c48a::天津",
+              "id": "83201f28-bdce-4696-9577-9bef26cc617c::天津",
               "label": "enemy｜天津",
-              "player_id": "42f3e794-0b87-44a1-8f67-38e614e2c48a",
+              "player_id": "83201f28-bdce-4696-9577-9bef26cc617c",
               "town": "天津",
               "requires_self_sacrifice": false
             }
@@ -57,7 +57,19 @@
       }
     },
     {
-      "name": "single_click_resolves_the_dissolve_and_returns_to_no_pending_state",
+      "name": "clicking_the_skull_only_arms_the_target_without_dissolving",
+      "ok": true,
+      "detail": {
+        "armed_count": 1,
+        "still_pending_after_arm": true,
+        "enemy_orgs_before_confirm": {
+          "天津": 1,
+          "香港城": 1
+        }
+      }
+    },
+    {
+      "name": "confirm_button_click_resolves_the_dissolve_and_returns_to_no_pending_state",
       "ok": true,
       "detail": {
         "before_hand": [],
@@ -77,7 +89,7 @@
           "remaining_builds": null,
           "queueable_card_names": [],
           "cancellable": true,
-          "player_id": "0b7eae62-61f4-4059-a6a0-10353b76b03d",
+          "player_id": "a8ea2296-d3a7-4695-b480-16eeab2cd66a",
           "player_name": null,
           "prompt": "北國奧援：選擇 1 個要瓦解的鄰近敵方組織。",
           "source_name": "北國奧援",
@@ -95,16 +107,16 @@
           "towns": [],
           "targets": [
             {
-              "id": "764e921f-0340-4782-af45-0bf3cb866ec2::新北",
+              "id": "fc4ca17d-e8b1-44a2-9c06-3b01ee73b388::新北",
               "label": "red｜新北",
-              "player_id": "764e921f-0340-4782-af45-0bf3cb866ec2",
+              "player_id": "fc4ca17d-e8b1-44a2-9c06-3b01ee73b388",
               "town": "新北",
               "requires_self_sacrifice": false
             },
             {
-              "id": "764e921f-0340-4782-af45-0bf3cb866ec2::桃園",
+              "id": "fc4ca17d-e8b1-44a2-9c06-3b01ee73b388::桃園",
               "label": "red｜桃園",
-              "player_id": "764e921f-0340-4782-af45-0bf3cb866ec2",
+              "player_id": "fc4ca17d-e8b1-44a2-9c06-3b01ee73b388",
               "town": "桃園",
               "requires_self_sacrifice": false
             }
@@ -115,7 +127,19 @@
       }
     },
     {
-      "name": "first_click_dissolves_one_target_and_round2_shows_only_the_remaining_legal_target",
+      "name": "round1_clicking_a_skull_only_arms_it_without_dissolving",
+      "ok": true,
+      "detail": {
+        "armed_count_r1": 1,
+        "still_pending_r1": true,
+        "enemy_orgs_before_confirm_r1": {
+          "新北": 1,
+          "桃園": 1
+        }
+      }
+    },
+    {
+      "name": "confirming_round1_dissolves_one_target_and_round2_shows_only_the_remaining_legal_target",
       "ok": true,
       "detail": {
         "pending_choice_round2": {
@@ -125,7 +149,7 @@
           "remaining_builds": null,
           "queueable_card_names": [],
           "cancellable": false,
-          "player_id": "0b7eae62-61f4-4059-a6a0-10353b76b03d",
+          "player_id": "a8ea2296-d3a7-4695-b480-16eeab2cd66a",
           "player_name": null,
           "prompt": "北國奧援：還可瓦解 1 個鄰近敵方組織。",
           "source_name": "北國奧援",
@@ -143,9 +167,9 @@
           "towns": [],
           "targets": [
             {
-              "id": "764e921f-0340-4782-af45-0bf3cb866ec2::桃園",
+              "id": "fc4ca17d-e8b1-44a2-9c06-3b01ee73b388::桃園",
               "label": "red｜桃園",
-              "player_id": "764e921f-0340-4782-af45-0bf3cb866ec2",
+              "player_id": "fc4ca17d-e8b1-44a2-9c06-3b01ee73b388",
               "town": "桃園",
               "requires_self_sacrifice": false
             }
@@ -157,7 +181,14 @@
       }
     },
     {
-      "name": "both_sequential_dissolves_complete_and_view_stays_on_map_after_full_settlement",
+      "name": "round2_clicking_the_last_skull_also_only_arms_it_first",
+      "ok": true,
+      "detail": {
+        "armed_count_r2": 1
+      }
+    },
+    {
+      "name": "both_sequential_dissolves_complete_after_explicit_confirms_and_view_stays_on_map",
       "ok": true,
       "detail": {
         "enemy_orgs_final": {},

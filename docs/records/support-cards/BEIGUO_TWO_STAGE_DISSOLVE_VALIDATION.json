@@ -1,7 +1,7 @@
 {
   "summary": {
-    "total": 5,
-    "passed": 5,
+    "total": 6,
+    "passed": 6,
     "failed": 0
   },
   "results": [
@@ -53,7 +53,18 @@
       }
     },
     {
-      "name": "clicking_the_skull_marker_dissolves_enemy_and_sacrifices_own_org_in_one_click",
+      "name": "clicking_the_skull_only_arms_the_target_and_does_not_dissolve_yet",
+      "ok": true,
+      "detail": {
+        "armed_count": 1,
+        "confirm_btn_state": {
+          "disabled": false,
+          "text": "確認瓦解此組織"
+        }
+      }
+    },
+    {
+      "name": "confirming_via_sidebar_button_dissolves_enemy_and_sacrifices_own_org",
       "ok": true,
       "detail": {
         "enemy": {},
