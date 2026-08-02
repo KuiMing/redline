@@ -17,6 +17,9 @@
 
 ## 目前 active todo
 
+### P1：紅軍使用`網羅人才`時有時只顯示棄牌堆，漏掉己方牌庫
+- [todo] canonical卡面規則為：一般玩家從己方牌庫任選1張加入手牌；若為紅軍，則應在效果結算當下同時看到己方牌庫與己方棄牌堆中的所有可選卡牌，並從兩區聯集任選1張。playtest發現紅軍有時只能看到棄牌堆，牌庫中的卡牌未出現在候選。後續需稽核 `choose_from_own_deck`的candidate generation、牌庫／棄牌堆zone metadata、抽牌堆洗牌／重建時機及viewer-scoped projection；涵蓋牌庫與棄牌堆皆有牌、其中一區為空、重名卡、選中後從正確來源移除、其餘牌庫洗牌、非紅軍不得看到棄牌候選，以及正式WebSocket UI選單同時呈現兩區完整卡牌。（2026-08-02 playtest回報）
+
 ### P2：連續建立組織時保留地圖鏡頭，不在每次建立後zoom out
 - [todo] 玩家累積多張可建立組織的卡牌並在戰略地圖連續建立時，每成功建立一個組織後應暫時保留使用者當下的Leaflet `center`與`zoom`，只更新組織marker、合法候選與剩餘建立數，不要重新 `fitBounds`、reset view或zoom out；因為下一個目標很可能就在相鄰城鎮。後續需區分「首次進入建立流程可自動定位」與「同一pending build queue內後續重繪必須保留viewport」，並涵蓋候選重算、相鄰／遠距下一目標、最後一次建立、iframe重新render、桌面／行動版及正式Leaflet UI proof。（2026-08-02 playtest建議）
 
