@@ -239,13 +239,23 @@ function resetBuildSelection() {
 
 function supportChoiceHighlightKey(payload) {
   if (!payload || payload.mode !== 'support-targets') return null;
-  const towns = Array.isArray(payload.towns) ? payload.towns : [];
+  // 這個 key 只用來判斷「是不是同一個互動 session 的延續」，藉此決定要不要重新
+  // fitBounds／setView 搶奪使用者當下的地圖鏡頭。刻意排除 towns／prompt／focusTown／
+  // sourceName——同一個 session 內（連續建立多個組織、或連續瓦解多個目標）這幾個欄位
+  // 本來就會隨每次成功動作而改變：例如 card_build_organization 的 prompt 會嵌入
+  // 「尚可建立 N 個」；更關鍵的是，玩家疊加打出「多張」不同的建立組織卡（例如先組織
+  // 經驗丙、再組織經驗乙）時，伺服器會把兩者的建立額度合併成同一個連續 session，但
+  // 目前正在作用中的那一批額度用完、換下一批接手時，`source_name` 會從第一張牌的
+  // 名字換成第二張牌的名字（同一個 session、同一個 choiceKey，只是 sourceName 換了）
+  // ——這正是 2026-08-02 實測抓到的成因：若把 sourceName 也算進 key，換牌那一刻會被
+  // 誤判成「新的 session」而重新搶鏡頭，把玩家剛手動調整好的視角沖掉。只有
+  // mode/actionKind/choiceKey 這三個在整個連續 session 內保證不變的欄位才代表
+  // 「這是不是同一次互動」；session 真正結束時 payload 會變成 null（見
+  // applySupportChoiceHighlight），下一個 session 開始時 key 自然會與 null 不同而重新聚焦。
   return JSON.stringify({
     mode: payload.mode,
-    sourceName: payload.sourceName || '',
-    prompt: payload.prompt || '',
-    focusTown: payload.focusTown || '',
-    towns: towns.map(entry => entry?.town || '').filter(Boolean).sort(),
+    actionKind: payload.actionKind || '',
+    choiceKey: payload.choiceKey || '',
   });
 }
 
