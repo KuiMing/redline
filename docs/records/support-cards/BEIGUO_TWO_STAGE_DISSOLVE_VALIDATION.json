@@ -1,7 +1,7 @@
 {
   "summary": {
-    "total": 7,
-    "passed": 7,
+    "total": 5,
+    "passed": 5,
     "failed": 0
   },
   "results": [
@@ -20,57 +20,40 @@
       }
     },
     {
-      "name": "sacrifice_step_has_cancel_button_before_any_board_mutation",
+      "name": "sacrifice_step_stays_modal_based_with_cancel_button",
       "ok": true,
       "detail": {
         "step1": {
           "step": "sacrifice_town",
+          "interactionKind": null,
           "modalVisible": true,
-          "closeVisible": true
+          "closeVisible": true,
+          "activeView": "commandView"
         }
       }
     },
     {
-      "name": "picking_sacrifice_advances_to_enemy_target_step",
+      "name": "picking_sacrifice_auto_switches_to_map_with_dissolve_interaction_kind",
       "ok": true,
       "detail": {
         "step2": {
           "step": "target",
-          "modalVisible": true,
-          "closeVisible": true
+          "interactionKind": "dissolve_organization",
+          "modalVisible": false,
+          "closeVisible": true,
+          "activeView": "mapView"
         }
       }
     },
     {
-      "name": "target_step_keeps_a_close_button_for_the_map_path",
+      "name": "target_step_marks_the_legal_enemy_organization_with_a_skull",
       "ok": true,
       "detail": {
-        "closeVisible": true
+        "skull_count": 1
       }
     },
     {
-      "name": "modal_path_dissolves_enemy_and_sacrifices_own_org",
-      "ok": true,
-      "detail": {
-        "enemy": {},
-        "mine": {
-          "巴黎": 1
-        }
-      }
-    },
-    {
-      "name": "closing_target_modal_keeps_pending_and_map_sidebar_can_finish",
-      "ok": true,
-      "detail": {
-        "still_pending": "target",
-        "dissolve_btn": {
-          "text": "瓦解目前城鎮（效果）",
-          "disabled": false
-        }
-      }
-    },
-    {
-      "name": "map_path_dissolves_enemy_and_sacrifices_own_org",
+      "name": "clicking_the_skull_marker_dissolves_enemy_and_sacrifices_own_org_in_one_click",
       "ok": true,
       "detail": {
         "enemy": {},

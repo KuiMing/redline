@@ -6356,6 +6356,29 @@ class Game:
                     and pending_effect_type in {'interactive_build_anywhere_inner', 'interactive_build_near_inner'}
                 )
             )
+            # 統一各瓦解來源的 interaction_kind（2026-08-02 playtest 建議）：不論來自奧援卡
+            # （北國/臺灣奧援等）、間諜卡瓦解互動、情報網、事件紅軍瓦解、時代加成瓦解或國安部，
+            # 只要當前 pending choice 是「選擇一個組織來瓦解」，就統一標記，讓前端能一致地
+            # 自動切換到戰略地圖並以 💀 標示合法目標，不必為每個 choice_key 各自硬編一次。
+            # 排除 support_interaction 的 force_discard_near（同樣 step=='target' 但選的是玩家
+            # 手牌目標，不是要瓦解的組織）。
+            pending_is_dissolve = (
+                self.pending_choice.get('choice_key') in {
+                    'intel_network_dissolve_target',
+                    'event_red_dissolve',
+                    'era_red_bonus_dissolve_target',
+                    'red_army_state_security_target',
+                }
+                or (
+                    self.pending_choice.get('choice_key') in {'support_interaction', 'card_dissolve_interaction'}
+                    and self.pending_choice.get('step') == 'target'
+                    and pending_effect_type in {
+                        'interactive_dissolve_many_near',
+                        'interactive_dissolve_and_build',
+                        'interactive_dissolve_self_and_enemy',
+                    }
+                )
+            )
             pending_remaining_builds = self.pending_choice.get('remaining_builds')
             if self.pending_choice.get('choice_key') == 'card_build_organization':
                 pending_remaining_builds = self._remaining_card_build_entitlements()
@@ -6382,7 +6405,11 @@ class Game:
             pending_choice = {
                 'type': self.pending_choice.get('type'),
                 'choice_key': self.pending_choice.get('choice_key'),
-                'interaction_kind': 'build_organization' if pending_is_build else None,
+                'interaction_kind': (
+                    'build_organization' if pending_is_build
+                    else 'dissolve_organization' if pending_is_dissolve
+                    else None
+                ),
                 'remaining_builds': pending_remaining_builds,
                 'queueable_card_names': [
                     getattr(card, 'name', str(card))

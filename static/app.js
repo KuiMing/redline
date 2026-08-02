@@ -1770,10 +1770,46 @@ function renderChoiceModal(state) {
     return;
   }
 
-  const targetChoicesWithMapHighlight = new Set(['support_interaction', 'card_dissolve_interaction', 'intel_network_dissolve_target', 'event_red_dissolve', 'red_army_state_security_target', 'era_red_bonus_dissolve_target']);
-  const shouldHighlightTargetChoices = targetChoicesWithMapHighlight.has(choiceKey)
-    && (choice.step === 'target' || choiceType === 'target_choice');
-  const shouldUseMapContextModal = shouldHighlightTargetChoices;
+  // 瓦解選目標（北國/臺灣奧援、間諜卡瓦解互動、情報網、事件紅軍瓦解、時代加成瓦解、國安部）：
+  // 建立 pending choice 後自動切到戰略地圖，只在合法瓦解目標的組織 marker 上以 💀 標示，玩家
+  // 可直接點選完成瓦解，不必先在指揮中心或這個通用 choice modal 裡找目標
+  // （2026-08-02 playtest 建議）。`interaction_kind` 由後端 state() 統一計算，涵蓋所有瓦解來源，
+  // 前端不必為每個 choice_key 各自硬編判斷條件。
+  const isMapDissolveChoice = choice.interaction_kind === 'dissolve_organization';
+  if (isMapDissolveChoice) {
+    const targets = (choice.targets || []).filter(entry => entry?.town);
+    overlay.style.display = 'none';
+    overlay.classList.remove('choice-modal-map-context');
+    mapHint.style.display = 'none';
+    mapHint.textContent = '';
+    cards.innerHTML = '';
+    activeChoiceModal = null;
+    if (targets.length) {
+      const payload = {
+        mode: 'support-targets',
+        actionKind: 'dissolve',
+        choiceKey,
+        sourceName: sourceName || choiceKey || '瓦解組織',
+        prompt: playerMessageZhTw(choice.prompt, '請在戰略地圖點選要瓦解的組織。'),
+        towns: targets.map((entry, index) => ({
+          town: entry.town,
+          label: entry.label || entry.town,
+          index,
+        })),
+      };
+      lastSupportChoiceMapHighlightPayload = payload;
+      setActiveGameView('map')
+        .then(() => syncChoiceModalMapHighlight(payload))
+        .catch(err => console.warn('Failed to focus strategic map for dissolve choice', err));
+    } else {
+      syncChoiceModalMapHighlight(null);
+    }
+    return;
+  }
+
+  // 瓦解類 pending choice 已在上方 isMapDissolveChoice 分支處理完畢，不會落到這裡；
+  // 此變數只保留給尚未升級的其它 target choice（如玩家目標選擇）沿用既有無地圖情境的樣式。
+  const shouldUseMapContextModal = false;
   overlay.classList.toggle('choice-modal-map-context', shouldUseMapContextModal);
   const maxChoiceCount = Math.max(0, Number(choice.count || 1));
   const minChoiceCount = choice.min_count === 0 ? 0 : Math.max(1, Number(choice.min_count ?? maxChoiceCount));
@@ -1794,32 +1830,9 @@ function renderChoiceModal(state) {
   desc.innerHTML = `${escapeHtml(businessNetworkModalHeader?.desc || localizedChoicePrompt)}${businessNetworkModalHeader?.helperHtml || ''}`;
   cards.innerHTML = businessNetworkState.html || '';
 
-  let mapHighlightPayload = null;
-  if (shouldHighlightTargetChoices) {
-    const targets = (choice.targets || []).filter(entry => entry?.town);
-    if (targets.length) {
-      mapHint.style.display = 'block';
-      mapHint.textContent = '地圖會同步高亮可選目標；主操作仍以此處列表為準。你也可以切到「戰略地圖」查看對應城鎮外框。';
-      mapHighlightPayload = {
-        mode: 'support-targets',
-        sourceName: sourceName || resolvedTitle,
-        prompt: playerMessageZhTw(choice.prompt, '請選擇合法目標。'),
-        towns: targets.map((entry, index) => ({
-          town: entry.town,
-          label: entry.label || entry.town,
-          index,
-        })),
-      };
-      ensureStrategicMapMounted().catch(err => console.warn('Failed to mount strategic map for choice highlight', err));
-    } else {
-      mapHint.style.display = 'none';
-      mapHint.textContent = '';
-    }
-  } else {
-    mapHint.style.display = 'none';
-    mapHint.textContent = '';
-  }
-  syncChoiceModalMapHighlight(mapHighlightPayload);
+  mapHint.style.display = 'none';
+  mapHint.textContent = '';
+  syncChoiceModalMapHighlight(null);
 
   if (choiceType === 'card_choice' || choiceType === 'underground_party') {
     (choice.cards || []).forEach((cardEntry, index) => {

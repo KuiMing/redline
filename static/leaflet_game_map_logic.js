@@ -279,6 +279,10 @@ function isBuildSupportChoiceHighlight() {
   );
 }
 
+function isDissolveSupportChoiceHighlight() {
+  return !!supportChoiceHighlight && supportChoiceHighlight.actionKind === 'dissolve';
+}
+
 function renderSupportChoiceHighlights(options = {}) {
   const { autoFocus = false } = options;
   supportChoiceHighlightLayer.clearLayers();
@@ -286,6 +290,7 @@ function renderSupportChoiceHighlights(options = {}) {
   const towns = Array.isArray(supportChoiceHighlight.towns) ? supportChoiceHighlight.towns : [];
   const bounds = [];
   let focusedBounds = null;
+  const isDissolveChoice = isDissolveSupportChoiceHighlight();
   towns.forEach(entry => {
     const townName = entry?.town;
     const town = byName.get(townName);
@@ -296,6 +301,32 @@ function renderSupportChoiceHighlights(options = {}) {
       focusedBounds = [townBounds];
     }
     const isFocused = supportChoiceHighlight.focusTown && supportChoiceHighlight.focusTown === townName;
+    if (isDissolveChoice) {
+      // 瓦解目標：後端判定的合法目標直接以 💀 標示，點擊即完成瓦解，不需要先選取城鎮
+      // 再到側欄按「瓦解目前城鎮（效果）」（2026-08-02 playtest 建議）。紅色暈圈只是放大
+      // 點擊熱區與提高可見度，實際判定仍以後端投影的候選清單為準。
+      const resolveClick = () => sendDissolveAction(null, townName);
+      const hitArea = L.circleMarker([town.lat, town.lon], {
+        radius: Math.max(isFocused ? 20 : 16, markerRadius(map.getZoom()) + (isFocused ? 12 : 8)),
+        color: isFocused ? '#fecaca' : '#f87171',
+        weight: isFocused ? 3 : 2,
+        fillColor: '#ef4444',
+        fillOpacity: isFocused ? 0.3 : 0.16,
+        opacity: 1,
+      }).addTo(supportChoiceHighlightLayer)
+        .bindPopup(`${escapeHtml(supportChoiceHighlight.sourceName || '可瓦解目標')}：${escapeHtml(entry?.label || townName)}（點擊完成瓦解）`);
+      hitArea.on('click', resolveClick);
+      const skullMarker = L.marker([town.lat, town.lon], {
+        icon: L.divIcon({
+          className: 'dissolve-target-badge-wrap',
+          html: `<div class="dissolve-target-badge${isFocused ? ' dissolve-target-badge-focused' : ''}">💀</div>`,
+          iconSize: [26, 26],
+          iconAnchor: [13, 13],
+        }),
+      }).addTo(supportChoiceHighlightLayer);
+      skullMarker.on('click', resolveClick);
+      return;
+    }
     const outerMarker = L.circleMarker([town.lat, town.lon], {
       radius: Math.max(isFocused ? 18 : 14, markerRadius(map.getZoom()) + (isFocused ? 10 : 6)),
       color: isFocused ? '#ffffff' : '#cbd5e1',
@@ -321,7 +352,9 @@ function renderSupportChoiceHighlights(options = {}) {
       const focusText = supportChoiceHighlight.focusTown ? ` 已聚焦 ${supportChoiceHighlight.focusTown}。` : '';
       const actionText = isBuildChoice
         ? '請點選中性色外框城鎮，然後使用左側「在目前城鎮建立組織（效果）」按鈕完成建立。'
-        : '請點選中性色外框城鎮，然後使用左側「瓦解目前城鎮（效果）」按鈕完成瓦解；也可回到選擇視窗確認。';
+        : isDissolveChoice
+          ? '請直接點選 💀 標示的組織完成瓦解。'
+          : '請點選中性色外框城鎮，然後使用左側「瓦解目前城鎮（效果）」按鈕完成瓦解；也可回到選擇視窗確認。';
       // bounds.length is the number of neutral candidate markers actually placed on the map,
       // exact set of clickable/buildable towns — so the count always matches the highlights.
       const countText = isBuildChoice
@@ -334,7 +367,8 @@ function renderSupportChoiceHighlights(options = {}) {
       if (supportChoiceHighlight.sourceName && promptText.startsWith(`${supportChoiceHighlight.sourceName}：`)) {
         promptText = promptText.slice(`${supportChoiceHighlight.sourceName}：`.length);
       }
-      hintEl.innerHTML = `${sourceLabel}：<span class="hint-strong">${escapeHtml(promptText)}</span> ${countText}地圖上已用中性色外框標出可選城鎮。${escapeHtml(focusText)}${actionText}`;
+      const markerDescText = isDissolveChoice ? '地圖上已用 💀 標出可瓦解的合法目標。' : '地圖上已用中性色外框標出可選城鎮。';
+      hintEl.innerHTML = `${sourceLabel}：<span class="hint-strong">${escapeHtml(promptText)}</span> ${countText}${markerDescText}${escapeHtml(focusText)}${actionText}`;
     }
     if (autoFocus) {
       focusSupportChoiceTargets(focusedBounds || bounds);

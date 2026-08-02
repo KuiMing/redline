@@ -1,0 +1,80 @@
+{
+  "success": true,
+  "summary": {
+    "total": 4,
+    "passed": 4,
+    "failed": 0
+  },
+  "checks": [
+    {
+      "name": "情報網瓦解選項建立 target pending choice 並標記 interaction_kind",
+      "passed": true,
+      "details": {
+        "pending_choice": {
+          "type": "target_choice",
+          "choice_key": "intel_network_dissolve_target",
+          "interaction_kind": "dissolve_organization",
+          "remaining_builds": null,
+          "queueable_card_names": [],
+          "cancellable": false,
+          "player_id": "8cb8e3f2-0d84-435c-96bb-a8158abe3e01",
+          "player_name": null,
+          "prompt": "情報網：選擇 1 個要瓦解的鄰近敵方組織。",
+          "source_name": "情報網",
+          "count": null,
+          "min_count": null,
+          "mode": null,
+          "acting_player_id": null,
+          "acting_player_name": null,
+          "played_card_name": null,
+          "region": null,
+          "free": null,
+          "ignore_distance": null,
+          "cards": [],
+          "options": [],
+          "towns": [],
+          "targets": [
+            {
+              "id": "9e23895b-4f04-4a24-881c-80b6767c7b57::天津",
+              "label": "enemyA｜天津",
+              "player_id": "9e23895b-4f04-4a24-881c-80b6767c7b57",
+              "town": "天津",
+              "requires_self_sacrifice": false
+            }
+          ],
+          "step": null
+        }
+      }
+    },
+    {
+      "name": "建立 pending choice 後自動隱藏選擇 modal 並切到戰略地圖",
+      "passed": true,
+      "details": {
+        "modal_hidden": true,
+        "active_view": "mapView"
+      }
+    },
+    {
+      "name": "合法瓦解目標以 💀 標示，且數量與後端投影的候選一致",
+      "passed": true,
+      "details": {
+        "skull_count": 1,
+        "target_count": 1
+      }
+    },
+    {
+      "name": "點擊 💀 標記單一步驟完成瓦解，pending choice 清除",
+      "passed": true,
+      "details": {
+        "enemyA_orgs": {
+          "香港城": 1,
+          "廣州": 1
+        }
+      }
+    }
+  ],
+  "screenshots": [
+    "/Users/benmini/.openclaw/workspace/redline/docs/records/action-cards/intel-network-map-close-20260802_155924/map_with_skull_marker.png",
+    "/Users/benmini/.openclaw/workspace/redline/docs/records/action-cards/intel-network-map-close-20260802_155924/after_skull_click_dissolved.png"
+  ]
+}

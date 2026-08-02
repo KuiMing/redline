@@ -1,6 +1,6 @@
 {
   "status": "passed",
-  "generated_at": "2026-08-01T06:08:29.541855+00:00",
+  "generated_at": "2026-08-02T07:59:29.535028+00:00",
   "base_url": "http://127.0.0.1:8000",
   "checks_passed": 9,
   "checks_total": 9,
@@ -26,7 +26,7 @@
             "朝陽"
           ],
           "highlightLayerCount": 4,
-          "hint": "情報網：選擇 1 個要瓦解的鄰近敵方組織。 可選目標：2 個。地圖上已用中性色外框標出可選城鎮。請點選中性色外框城鎮，然後使用左側「瓦解目前城鎮（效果）」按鈕完成瓦解；也可回到選擇視窗確認。"
+          "hint": "情報網：選擇 1 個要瓦解的鄰近敵方組織。 可選目標：2 個。地圖上已用 💀 標出可瓦解的合法目標。請直接點選 💀 標示的組織完成瓦解。"
         },
         "button_disabled": true,
         "hint": "目前選取 天津：沒有可瓦解的共享組織目標。"
@@ -52,7 +52,7 @@
       "ok": true,
       "detail": {
         "red_player": {
-          "id": "9bcaffe6-4674-4554-b34a-a48b15a54cbe",
+          "id": "82f41dcf-ad98-49d5-870d-061f26bab5ba",
           "name": "enemyA",
           "faction": "red_army",
           "base": "北京",
@@ -69,10 +69,15 @@
             null,
             null
           ],
-          "deck_count": 6,
+          "deck_count": 5,
           "discard_count": 0,
           "discard_pile": [],
           "discard_variants": [],
+          "organization_counts": {
+            "total": 1,
+            "inside_wall": 1,
+            "outside_wall": 0
+          },
           "orgs": {
             "北京": 1
           }
@@ -99,7 +104,7 @@
       "ok": true,
       "detail": {
         "red_player": {
-          "id": "9bcaffe6-4674-4554-b34a-a48b15a54cbe",
+          "id": "82f41dcf-ad98-49d5-870d-061f26bab5ba",
           "name": "enemyA",
           "faction": "red_army",
           "base": "北京",
@@ -116,14 +121,19 @@
             null,
             null
           ],
-          "deck_count": 6,
+          "deck_count": 5,
           "discard_count": 0,
           "discard_pile": [],
           "discard_variants": [],
+          "organization_counts": {
+            "total": 0,
+            "inside_wall": 0,
+            "outside_wall": 0
+          },
           "orgs": {}
         },
         "youyan_player": {
-          "id": "4dde34ee-cf13-44b7-b67b-0b39ec768560",
+          "id": "f489e9c1-5ee5-445c-aec6-0cef1adef34f",
           "name": "enemyB",
           "faction": "youyan",
           "base": "天津",
@@ -144,6 +154,11 @@
           "discard_count": 0,
           "discard_pile": [],
           "discard_variants": [],
+          "organization_counts": {
+            "total": 2,
+            "inside_wall": 2,
+            "outside_wall": 0
+          },
           "orgs": {
             "天津": 1,
             "朝陽": 1

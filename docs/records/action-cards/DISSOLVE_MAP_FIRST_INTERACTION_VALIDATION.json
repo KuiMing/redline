@@ -1,0 +1,172 @@
+{
+  "summary": {
+    "total": 6,
+    "passed": 6,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "spy_card_dissolve_interaction_gets_unified_interaction_kind_and_auto_switches_to_map",
+      "ok": true,
+      "detail": {
+        "pending_choice": {
+          "type": "support_flow_choice",
+          "choice_key": "card_dissolve_interaction",
+          "interaction_kind": "dissolve_organization",
+          "remaining_builds": null,
+          "queueable_card_names": [],
+          "cancellable": false,
+          "player_id": "0b969527-390b-4cd0-9b51-45de0f259f0f",
+          "player_name": null,
+          "prompt": "內應間諜：選擇 1 個要瓦解的鄰近敵方組織。",
+          "source_name": "內應間諜",
+          "count": null,
+          "min_count": null,
+          "mode": null,
+          "acting_player_id": null,
+          "acting_player_name": null,
+          "played_card_name": null,
+          "region": null,
+          "free": null,
+          "ignore_distance": null,
+          "cards": [],
+          "options": [],
+          "towns": [],
+          "targets": [
+            {
+              "id": "42f3e794-0b87-44a1-8f67-38e614e2c48a::天津",
+              "label": "enemy｜天津",
+              "player_id": "42f3e794-0b87-44a1-8f67-38e614e2c48a",
+              "town": "天津",
+              "requires_self_sacrifice": false
+            }
+          ],
+          "step": "target"
+        },
+        "modal_visible": false,
+        "active_view": "mapView"
+      }
+    },
+    {
+      "name": "skull_marker_count_matches_backend_projected_legal_targets_distance_filtered",
+      "ok": true,
+      "detail": {
+        "skull_count": 1,
+        "target_count": 1,
+        "enemy_total_orgs": 3
+      }
+    },
+    {
+      "name": "single_click_resolves_the_dissolve_and_returns_to_no_pending_state",
+      "ok": true,
+      "detail": {
+        "before_hand": [],
+        "enemy_orgs_after": {
+          "香港城": 1
+        }
+      }
+    },
+    {
+      "name": "support_interaction_multi_dissolve_round1_shows_both_legal_targets",
+      "ok": true,
+      "detail": {
+        "pending_choice_round1": {
+          "type": "support_flow_choice",
+          "choice_key": "support_interaction",
+          "interaction_kind": "dissolve_organization",
+          "remaining_builds": null,
+          "queueable_card_names": [],
+          "cancellable": true,
+          "player_id": "0b7eae62-61f4-4059-a6a0-10353b76b03d",
+          "player_name": null,
+          "prompt": "北國奧援：選擇 1 個要瓦解的鄰近敵方組織。",
+          "source_name": "北國奧援",
+          "count": null,
+          "min_count": null,
+          "mode": null,
+          "acting_player_id": null,
+          "acting_player_name": null,
+          "played_card_name": null,
+          "region": null,
+          "free": null,
+          "ignore_distance": null,
+          "cards": [],
+          "options": [],
+          "towns": [],
+          "targets": [
+            {
+              "id": "764e921f-0340-4782-af45-0bf3cb866ec2::新北",
+              "label": "red｜新北",
+              "player_id": "764e921f-0340-4782-af45-0bf3cb866ec2",
+              "town": "新北",
+              "requires_self_sacrifice": false
+            },
+            {
+              "id": "764e921f-0340-4782-af45-0bf3cb866ec2::桃園",
+              "label": "red｜桃園",
+              "player_id": "764e921f-0340-4782-af45-0bf3cb866ec2",
+              "town": "桃園",
+              "requires_self_sacrifice": false
+            }
+          ],
+          "step": "target"
+        },
+        "skull_count_round1": 2
+      }
+    },
+    {
+      "name": "first_click_dissolves_one_target_and_round2_shows_only_the_remaining_legal_target",
+      "ok": true,
+      "detail": {
+        "pending_choice_round2": {
+          "type": "support_flow_choice",
+          "choice_key": "support_interaction",
+          "interaction_kind": "dissolve_organization",
+          "remaining_builds": null,
+          "queueable_card_names": [],
+          "cancellable": false,
+          "player_id": "0b7eae62-61f4-4059-a6a0-10353b76b03d",
+          "player_name": null,
+          "prompt": "北國奧援：還可瓦解 1 個鄰近敵方組織。",
+          "source_name": "北國奧援",
+          "count": null,
+          "min_count": null,
+          "mode": null,
+          "acting_player_id": null,
+          "acting_player_name": null,
+          "played_card_name": null,
+          "region": null,
+          "free": null,
+          "ignore_distance": null,
+          "cards": [],
+          "options": [],
+          "towns": [],
+          "targets": [
+            {
+              "id": "764e921f-0340-4782-af45-0bf3cb866ec2::桃園",
+              "label": "red｜桃園",
+              "player_id": "764e921f-0340-4782-af45-0bf3cb866ec2",
+              "town": "桃園",
+              "requires_self_sacrifice": false
+            }
+          ],
+          "step": "target"
+        },
+        "skull_count_round2": 1,
+        "view_between_rounds": "mapView"
+      }
+    },
+    {
+      "name": "both_sequential_dissolves_complete_and_view_stays_on_map_after_full_settlement",
+      "ok": true,
+      "detail": {
+        "enemy_orgs_final": {},
+        "view_after_settlement": "mapView"
+      }
+    }
+  ],
+  "screenshots": [
+    "/Users/benmini/.openclaw/workspace/redline/docs/records/action-cards/dissolve_map_first_spy_card.png",
+    "/Users/benmini/.openclaw/workspace/redline/docs/records/action-cards/dissolve_map_first_multi_target.png"
+  ]
+}

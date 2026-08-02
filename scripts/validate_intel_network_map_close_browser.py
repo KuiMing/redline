@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Browser proof: 情報網 dissolve target can be completed from the map after closing the modal."""
+"""Browser proof: 情報網 dissolve target auto-switches to the map and resolves on a single
+💀-marker click (2026-08-02 playtest 建議). This validator previously tested a "close the
+modal, then use the map sidebar button" fallback path; that path no longer exists because
+the choice modal is never shown for a dissolve-target step at all — see the
+`interaction_kind: 'dissolve_organization'` unification in server/game.py:state()."""
 import json
 import subprocess
 import sys
@@ -49,55 +53,50 @@ def main():
         page.wait_for_function("window.lastGameState?.pending_choice?.choice_key === 'choose_one'")
         page.get_by_role('button', name='瓦解己方組織1格內的1個對手組織').click()
         page.wait_for_function("window.lastGameState?.pending_choice?.choice_key === 'intel_network_dissolve_target'")
-        pending_before_close = page.evaluate("window.lastGameState.pending_choice")
+        pending_after_choice = page.evaluate("window.lastGameState.pending_choice")
         checks.append(check(
-            '情報網瓦解選項建立 target pending choice',
-            pending_before_close.get('choice_key') == 'intel_network_dissolve_target' and len(pending_before_close.get('targets') or []) > 0,
-            {'pending_choice': pending_before_close},
+            '情報網瓦解選項建立 target pending choice 並標記 interaction_kind',
+            pending_after_choice.get('choice_key') == 'intel_network_dissolve_target'
+            and pending_after_choice.get('interaction_kind') == 'dissolve_organization'
+            and len(pending_after_choice.get('targets') or []) > 0,
+            {'pending_choice': pending_after_choice},
         ))
 
-        before = SHOT_DIR / 'before_closing_choice_modal.png'
+        # The dissolve-target step now hides the generic choice modal entirely and jumps
+        # straight to the strategic map — no modal to close, no side-panel button needed.
+        page.wait_for_timeout(400)
+        modal_hidden = page.evaluate("document.getElementById('choiceModal').style.display === 'none'")
+        active_view = page.evaluate("document.querySelector('.game-view.active')?.id")
+        checks.append(check(
+            '建立 pending choice 後自動隱藏選擇 modal 並切到戰略地圖',
+            modal_hidden and active_view == 'mapView',
+            {'modal_hidden': modal_hidden, 'active_view': active_view},
+        ))
+
+        before = SHOT_DIR / 'map_with_skull_marker.png'
         page.screenshot(path=str(before), full_page=True)
         screenshots.append(str(before))
 
-        page.locator('#closeChoiceModal').click()
-        page.wait_for_function("document.querySelector('#choiceModal').style.display === 'none'")
-        after_close_choice = page.evaluate("window.lastGameState.pending_choice")
-        page.get_by_role('button', name='戰略地圖').click()
         frame_el = page.locator('#strategicMapFrame')
         expect(frame_el).to_be_visible()
-        frame_handle = frame_el.element_handle()
-        frame = frame_handle.content_frame() if frame_handle else None
-        assert frame is not None
-        frame.wait_for_function("window.__redlinePlayableMap && window.__lastMapState?.pending_choice?.choice_key === 'intel_network_dissolve_target'")
-        # Click the highlighted target by converting its town coordinates to an actual screen point.
-        point = frame.evaluate("""
-        () => {
-          const choice = window.__lastMapState.pending_choice;
-          const target = choice.targets.find(t => t.town) || choice.targets[0];
-          const town = target.town;
-          window.selectTownForCurrentMapAction?.(town, { autoFocus: false });
-          const data = MAP_DATA.towns[town];
-          const coords = GEO_COORDS[town];
-          const pt = window.__redlinePlayableMap.latLngToContainerPoint([coords[1], coords[0]]);
-          return { town, x: pt.x, y: pt.y };
-        }
-        """)
-        frame.locator('#dissolveBtn').click()
+        skull = page.frame_locator('#strategicMapFrame').locator('.dissolve-target-badge')
+        skull_count = skull.count()
+        checks.append(check(
+            '合法瓦解目標以 💀 標示，且數量與後端投影的候選一致',
+            skull_count == len(pending_after_choice.get('targets') or []),
+            {'skull_count': skull_count, 'target_count': len(pending_after_choice.get('targets') or [])},
+        ))
+
+        skull.first.click()
         page.wait_for_function("!window.lastGameState.pending_choice")
         final_state = page.evaluate("window.lastGameState")
         enemy_a = next(ply for ply in final_state['players'] if ply['name'] == 'enemyA')
         checks.append(check(
-            '關閉 modal 後仍可用地圖效果按鈕完成瓦解',
-            after_close_choice.get('choice_key') == 'intel_network_dissolve_target' and enemy_a['orgs'].get('天津', 0) == 0,
-            {'selected_town': point['town'], 'enemyA_orgs': enemy_a['orgs'], 'pending_after_close': after_close_choice},
+            '點擊 💀 標記單一步驟完成瓦解，pending choice 清除',
+            final_state.get('pending_choice') is None and enemy_a['orgs'].get('天津', 0) == 0,
+            {'enemyA_orgs': enemy_a['orgs']},
         ))
-        checks.append(check(
-            '瓦解後 pending choice 清除，可繼續流程',
-            final_state.get('pending_choice') is None,
-            {'turn_phase': final_state.get('turn_phase'), 'log_tail': final_state.get('action_log', [])[-5:]},
-        ))
-        after = SHOT_DIR / 'after_map_dissolve_modal_closed.png'
+        after = SHOT_DIR / 'after_skull_click_dissolved.png'
         page.screenshot(path=str(after), full_page=True)
         screenshots.append(str(after))
         browser.close()

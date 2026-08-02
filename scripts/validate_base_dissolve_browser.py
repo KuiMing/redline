@@ -82,10 +82,12 @@ def main():
             return page.evaluate("window.lastGameState.pending_choice")
 
         def open_map():
-            page.locator('#closeChoiceModal').click()
+            # 瓦解 target 選擇（interaction_kind='dissolve_organization'）建立 pending choice
+            # 後會自動隱藏 choice modal 並切到戰略地圖，不再需要（也點不到）手動關閉 modal
+            # 或手動切分頁（2026-08-02：見 server/game.py 的 interaction_kind 統一與
+            # app.js 的 isMapDissolveChoice 分支）。
             page.wait_for_function("document.querySelector('#choiceModal').style.display === 'none'")
-            map_tab = page.locator(".game-tab[data-view='map']")
-            map_tab.click(force=True)
+            page.wait_for_function("document.querySelector('#mapView')?.classList.contains('active')")
             frame_el = page.locator('#strategicMapFrame')
             frame_el.wait_for(state='visible')
             frame_handle = frame_el.element_handle()
@@ -113,14 +115,7 @@ def main():
           const coords = GEO_COORDS['北京'];
           window.__redlinePlayableMap.setView([coords[1], coords[0]], 7, {animate: false});
         }""")
-        page.evaluate("""() => {
-          document.getElementById('closeChoiceModal')?.click();
-          const modal = document.getElementById('choiceModal');
-          if (modal) {
-            modal.style.display = 'none';
-            modal.style.pointerEvents = 'none';
-          }
-        }""")
+        # modal 在 open_map() 階段已自動隱藏，不需要再手動關閉。
         page.wait_for_function("getComputedStyle(document.querySelector('#choiceModal')).display === 'none'")
         non_red_base_disabled = frame.locator('#dissolveBtn').is_disabled()
         non_red_hint = frame.locator('#dissolveHint').inner_text()

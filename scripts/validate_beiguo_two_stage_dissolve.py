@@ -43,8 +43,10 @@ def step_info(page):
     return page.evaluate(
         """() => ({
           step: window.lastGameState?.pending_choice?.step,
+          interactionKind: window.lastGameState?.pending_choice?.interaction_kind,
           modalVisible: (()=>{const o=document.getElementById('choiceModal');return o&&getComputedStyle(o).display!=='none';})(),
           closeVisible: (()=>{const b=document.getElementById('closeChoiceModal');return b&&getComputedStyle(b).display!=='none';})(),
+          activeView: document.querySelector('.game-view.active')?.id,
         })"""
     )
 
@@ -84,70 +86,40 @@ def check(browser):
     )
     cancel_page.close()
 
-    # --- Path A: complete both stages through the modal ---
+    # --- Path A: sacrifice stays modal-based; target step auto-switches to the map with a
+    # 💀 marker and resolves on a single click (2026-08-02 playtest 建議) ---
     page = browser.new_context(viewport={'width': 1280, 'height': 800}).new_page()
     pid = start_flow(page)
     s1 = step_info(page)
     record(
-        'sacrifice_step_has_cancel_button_before_any_board_mutation',
-        s1['step'] == 'sacrifice_town' and s1['modalVisible'] and s1['closeVisible'],
+        'sacrifice_step_stays_modal_based_with_cancel_button',
+        s1['step'] == 'sacrifice_town' and s1['modalVisible'] and s1['closeVisible'] and s1['interactionKind'] is None,
         {'step1': s1},
     )
     page.click('#choiceModalCards .modal-choice-btn')  # pick the own org to sacrifice
-    page.wait_for_timeout(800)
+    page.wait_for_timeout(900)
     s2 = step_info(page)
     record(
-        'picking_sacrifice_advances_to_enemy_target_step',
-        s2['step'] == 'target' and s2['modalVisible'],
+        'picking_sacrifice_auto_switches_to_map_with_dissolve_interaction_kind',
+        s2['step'] == 'target'
+        and s2['interactionKind'] == 'dissolve_organization'
+        and not s2['modalVisible']
+        and s2['activeView'] == 'mapView',
         {'step2': s2},
     )
-    record(
-        'target_step_keeps_a_close_button_for_the_map_path',
-        s2['closeVisible'],
-        {'closeVisible': s2['closeVisible']},
-    )
+    skull_count = page.frame_locator('#strategicMapFrame').locator('.dissolve-target-badge').count()
+    record('target_step_marks_the_legal_enemy_organization_with_a_skull', skull_count == 1, {'skull_count': skull_count})
     page.screenshot(path=str(SCREENSHOT))
-    page.click('#choiceModalCards .modal-choice-btn')  # pick the enemy target
+    page.frame_locator('#strategicMapFrame').locator('.dissolve-target-badge').click()
     page.wait_for_timeout(800)
     record(
-        'modal_path_dissolves_enemy_and_sacrifices_own_org',
+        'clicking_the_skull_marker_dissolves_enemy_and_sacrifices_own_org_in_one_click',
         page.evaluate("() => window.lastGameState?.pending_choice") is None
         and orgs(page, pid, 'red_army') == {}
         and orgs(page, pid) == {'巴黎': 1},
         {'enemy': orgs(page, pid, 'red_army'), 'mine': orgs(page, pid)},
     )
     page.close()
-
-    # --- Path B: close the target modal and finish via the map sidebar ---
-    page2 = browser.new_context(viewport={'width': 1280, 'height': 800}).new_page()
-    pid2 = start_flow(page2)
-    page2.click('#choiceModalCards .modal-choice-btn')  # pick sacrifice
-    page2.wait_for_timeout(800)
-    page2.evaluate("() => document.getElementById('closeChoiceModal').click()")  # close target modal (map-context)
-    page2.wait_for_timeout(400)
-    still_pending = page2.evaluate("() => window.lastGameState?.pending_choice?.step")
-    page2.click('button.game-tab[data-view="map"]')
-    page2.wait_for_timeout(1400)
-    page2.evaluate("() => document.getElementById('strategicMapFrame').contentWindow.selectTownForCurrentMapAction('慕尼黑', {autoFocus:true})")
-    page2.wait_for_timeout(400)
-    btn = page2.evaluate(
-        "() => { const b=document.getElementById('strategicMapFrame').contentDocument.getElementById('dissolveBtn'); return { text: b?.textContent, disabled: b?.disabled }; }"
-    )
-    record(
-        'closing_target_modal_keeps_pending_and_map_sidebar_can_finish',
-        still_pending == 'target' and btn and not btn['disabled'],
-        {'still_pending': still_pending, 'dissolve_btn': btn},
-    )
-    page2.evaluate("() => document.getElementById('strategicMapFrame').contentDocument.getElementById('dissolveBtn').click()")
-    page2.wait_for_timeout(800)
-    record(
-        'map_path_dissolves_enemy_and_sacrifices_own_org',
-        page2.evaluate("() => window.lastGameState?.pending_choice") is None
-        and orgs(page2, pid2, 'red_army') == {}
-        and orgs(page2, pid2) == {'巴黎': 1},
-        {'enemy': orgs(page2, pid2, 'red_army'), 'mine': orgs(page2, pid2)},
-    )
-    page2.close()
 
     return {
         'summary': {
