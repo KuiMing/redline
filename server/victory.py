@@ -50,7 +50,7 @@ class VictoryEngine:
                     met_conditions += 1
 
             elif cond_type == "taiwan_override":
-                if player.faction_id == "red_army":
+                if player.faction_id == "red_army" and self._taiwan_faction_present(game):
                     if self._count_taiwan_orgs(player, game) >= 14:
                         return True, "red_army"
 
@@ -99,10 +99,7 @@ class VictoryEngine:
 
     def _count_scope(self, player, scope, game):
         def shared_count(towns):
-            total = 0
-            for town in towns:
-                total += game._shared_org_count(player, town)
-            return total
+            return sum(1 for town in towns if game._shared_org_count(player, town) > 0)
 
         all_org_towns = {
             town
@@ -127,6 +124,12 @@ class VictoryEngine:
             return shared_count({"南陽"})
         return shared_count(all_org_towns)
 
+    def _taiwan_faction_present(self, game):
+        return any(
+            (self.factions.get(getattr(player, "faction_id", None)) or {}).get("camp") == "taiwan"
+            for player in game.players
+        )
+
     def _count_taiwan_orgs(self, player, game):
         taiwan_towns = self._towns_for_ruler(game, "臺灣")
-        return sum(v for t, v in player.organizations.items() if t in taiwan_towns)
+        return sum(1 for town, count in player.organizations.items() if town in taiwan_towns and count > 0)

@@ -1,3 +1,3 @@
 # SHARED VICTORY PHASE8 VALIDATION
 
-- count: 16
+- count: 14

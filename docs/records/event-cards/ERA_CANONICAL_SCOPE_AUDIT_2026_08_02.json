@@ -11,6 +11,7 @@
       "[臺灣]綏靖派反對介入對岸": false
     },
     "structured_effect_rows": 8,
+    "canonical_trigger_matches": 8,
     "failures": []
   },
   "canonical_decision": {
@@ -32,7 +33,7 @@
         "trigger": {
           "type": "count_only",
           "camp": "hong_kong",
-          "region": "hong_kong",
+          "region": "china",
           "count": 10
         },
         "duration": {
@@ -63,6 +64,13 @@
         }
       },
       "runtime_status": "structured_effects_declared",
+      "expected_trigger": {
+        "type": "count_only",
+        "camp": "hong_kong",
+        "region": "china",
+        "count": 10
+      },
+      "trigger_matches_canonical": true,
       "canonical_decision": "era_stage_mechanic_not_event_deck_card",
       "needs_runtime_followup": true
     },
@@ -79,7 +87,7 @@
         "trigger": {
           "type": "count_only",
           "camp": "mongol",
-          "region": "mongolian_plateau",
+          "region": "china",
           "count": 4
         },
         "duration": {
@@ -107,6 +115,13 @@
         }
       },
       "runtime_status": "structured_effects_declared",
+      "expected_trigger": {
+        "type": "count_only",
+        "camp": "mongol",
+        "region": "china",
+        "count": 4
+      },
+      "trigger_matches_canonical": true,
       "canonical_decision": "era_stage_mechanic_not_event_deck_card",
       "needs_runtime_followup": true
     },
@@ -123,7 +138,7 @@
         "trigger": {
           "type": "count_only",
           "camp": "tibet",
-          "region": "tibet_region",
+          "region": "china",
           "count": 7
         },
         "duration": {
@@ -155,6 +170,13 @@
         }
       },
       "runtime_status": "structured_effects_declared",
+      "expected_trigger": {
+        "type": "count_only",
+        "camp": "tibet",
+        "region": "china",
+        "count": 7
+      },
+      "trigger_matches_canonical": true,
       "canonical_decision": "era_stage_mechanic_not_event_deck_card",
       "needs_runtime_followup": true
     },
@@ -201,6 +223,21 @@
         }
       },
       "runtime_status": "structured_effects_declared",
+      "expected_trigger": {
+        "type": "count_and_required",
+        "camp": "kazakh",
+        "requirements": [
+          {
+            "ruler": "北國",
+            "count": 7
+          },
+          {
+            "region": "china",
+            "count": 3
+          }
+        ]
+      },
+      "trigger_matches_canonical": true,
       "canonical_decision": "era_stage_mechanic_not_event_deck_card",
       "needs_runtime_followup": true
     },
@@ -217,7 +254,7 @@
         "trigger": {
           "type": "count_only",
           "camp": "uyghur",
-          "region": "turkestan",
+          "region": "china",
           "count": 7
         },
         "duration": {
@@ -249,6 +286,13 @@
         }
       },
       "runtime_status": "structured_effects_declared",
+      "expected_trigger": {
+        "type": "count_only",
+        "camp": "uyghur",
+        "region": "china",
+        "count": 7
+      },
+      "trigger_matches_canonical": true,
       "canonical_decision": "era_stage_mechanic_not_event_deck_card",
       "needs_runtime_followup": true
     },
@@ -265,7 +309,7 @@
         "trigger": {
           "type": "count_only",
           "camp": "manchuria",
-          "region": "manchuria",
+          "region": "china",
           "count": 10
         },
         "duration": {
@@ -290,6 +334,13 @@
         }
       },
       "runtime_status": "structured_effects_declared",
+      "expected_trigger": {
+        "type": "count_only",
+        "camp": "manchuria",
+        "region": "china",
+        "count": 10
+      },
+      "trigger_matches_canonical": true,
       "canonical_decision": "era_stage_mechanic_not_event_deck_card",
       "needs_runtime_followup": true
     },
@@ -329,6 +380,13 @@
         }
       },
       "runtime_status": "structured_effects_declared",
+      "expected_trigger": {
+        "type": "count_only",
+        "camp": "rebel",
+        "region": "china",
+        "count": 4
+      },
+      "trigger_matches_canonical": true,
       "canonical_decision": "era_stage_mechanic_not_event_deck_card",
       "needs_runtime_followup": true
     },
@@ -371,6 +429,13 @@
         }
       },
       "runtime_status": "structured_effects_declared",
+      "expected_trigger": {
+        "type": "count_only",
+        "camp": "taiwan",
+        "region": "china",
+        "count": 7
+      },
+      "trigger_matches_canonical": true,
       "canonical_decision": "era_stage_mechanic_not_event_deck_card",
       "needs_runtime_followup": true
     }

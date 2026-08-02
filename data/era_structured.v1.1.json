@@ -7,7 +7,7 @@
       "trigger": {
         "type": "count_only",
         "camp": "hong_kong",
-        "region": "hong_kong",
+        "region": "china",
         "count": 10
       },
       "duration": { "type": "turns", "value": 2 },
@@ -36,7 +36,7 @@
       "trigger": {
         "type": "count_only",
         "camp": "mongol",
-        "region": "mongolian_plateau",
+        "region": "china",
         "count": 4
       },
       "duration": { "type": "turns", "value": 1 },
@@ -64,7 +64,7 @@
       "trigger": {
         "type": "count_only",
         "camp": "tibet",
-        "region": "tibet_region",
+        "region": "china",
         "count": 7
       },
       "duration": { "type": "turns", "value": 1 },
@@ -123,7 +123,7 @@
       "trigger": {
         "type": "count_only",
         "camp": "uyghur",
-        "region": "turkestan",
+        "region": "china",
         "count": 7
       },
       "duration": { "type": "turns", "value": 2 },
@@ -153,7 +153,7 @@
       "trigger": {
         "type": "count_only",
         "camp": "manchuria",
-        "region": "manchuria",
+        "region": "china",
         "count": 10
       },
       "duration": { "type": "turns", "value": 1 },

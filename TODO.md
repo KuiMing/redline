@@ -23,6 +23,12 @@
 ### P2：連續建立組織時保留地圖鏡頭，不在每次建立後zoom out
 - [todo] 玩家累積多張可建立組織的卡牌並在戰略地圖連續建立時，每成功建立一個組織後應暫時保留使用者當下的Leaflet `center`與`zoom`，只更新組織marker、合法候選與剩餘建立數，不要重新 `fitBounds`、reset view或zoom out；因為下一個目標很可能就在相鄰城鎮。後續需區分「首次進入建立流程可自動定位」與「同一pending build queue內後續重繪必須保留viewport」，並涵蓋候選重算、相鄰／遠距下一目標、最後一次建立、iframe重新render、桌面／行動版及正式Leaflet UI proof。（2026-08-02 playtest建議）
 
+### P1：全陣營時代關卡與勝利條件scope稽核
+- [done] 使用者指出牆內scope問題不應只檢查臺灣後，已逐條對照8張canonical時代卡、60個runtime陣營勝利條件與正式WebSocket/UI。發現香港、蒙古、藏國、維吾爾、滿洲5張時代卡的structured trigger未正規化為 `region: china`；其中蒙古／藏國／滿洲會實際漏觸發牆內達標，香港／維吾爾則只是靠region alias碰巧等價。現已將7張count-only牆內時代（香港10、蒙古4、藏國7、維吾爾7、滿洲10、反賊4、臺灣7）全部正規化為同一canonical helper，哈薩克保留北國7＋牆內3；不改各卡觸發後的效果地區。勝利條件方面修正紅軍臺灣14特殊勝利缺少「場上有臺灣玩家」gate，並讓所有勝利scope每城最多計1個有效組織，非法同城疊放不再灌高進度；牆內、牆內外、必須城鎮、required_any_of、共享組織、共同勝利與13/14邊界均已涵蓋。宛的全宛地14仍因宛擴充地圖未建模而保持fail-closed，只將南陽計為1個有效城鎮，不虛構可達成。新增全時代16項、全勝利27項matrix；focused 61/61、完整可收集pytest 228 passed、canonical era trigger 8/8、text faction victory 7/7、shared victory 3/3、正式Chromium/WebSocket跨陣營proof 31/31且console 0。證據位於 `docs/records/rules-audit/canonical-scopes/`。（2026-08-02 完成）
+
+### P2：建模宛擴充地圖，使宛的全宛地14個有效組織勝利條件可達成
+- [todo] `all_faction.integrated.v2.json`的宛勝利條件為「主地圖南陽＋宛擴充地圖城鎮共14個有效組織」，但目前正式地圖尚未包含宛擴充城鎮。runtime現採fail-closed：全圖其他組織不計、南陽每城最多只計1，非法將14個組織疊在南陽也不會勝利。後續必須先取得／確認宛地圖canonical城鎮、道路／鐵路、統治者、發展限制與視覺拓撲，再加入正式Leaflet及勝利scope；不得以暫時把全圖組織或南陽疊放當作替代。（2026-08-02 全勝利條件稽核）
+
 ### P1：臺灣時代關卡牆內組織判定與玩家戰況拆分
 - [done] 已確認root cause是canonical卡面寫「臺灣在牆內擁有至少7個有效組織」，但 `era_structured.v1.1.json`誤編成 `region: taiwan`；現已修正為 `region: china`。牆內SSOT為canonical `map.json`城鎮 `ruler`清單包含`紅軍`，與組織擁有者陣營及Leaflet runtime「當前控制者」無關。新增 `_is_inside_wall_town()`與 `_player_organization_scope_counts()`共用helper：時代／勝利條件以含合法共享組織的有效視角計數，玩家戰況則拆分實際擁有組織並投影 `organization_counts`，正式UI顯示 `組織總數`及`牆內 X／牆外 Y`，且X＋Y恆等於總數。新增臺灣地區8個不達成、牆內6／7邊界、任意陣營擁有者、共享有效組織、state總數守恆共6項focused matrix；focused＋era lifecycle 14/14、map相鄰16/16、完整可收集pytest 185 passed、era規則5/5、效果runtime15/15、canonical scope 0 failures、正式Chromium/WebSocket UI proof 11/11且console 0。證據位於 `docs/records/era-cards/inside-wall-counts/`，原playtest截圖保留於同級era-cards records。（2026-08-02 完成）
 

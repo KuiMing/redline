@@ -17,6 +17,23 @@ OUT_MD = RECORD_DIR / f"ERA_CANONICAL_SCOPE_AUDIT_{STAMP}.md"
 
 EXPECTED_RAW_ERA_COUNT = 8
 STATIC_SUPPLY_CARDS = {"內鬥", "分神"}
+EXPECTED_TRIGGERS = {
+    "[香港]香港人被自殺": {"type": "count_only", "camp": "hong_kong", "region": "china", "count": 10},
+    "[蒙古]莫日根事件爆發": {"type": "count_only", "camp": "mongol", "region": "china", "count": 4},
+    "[藏國]藏國騷亂": {"type": "count_only", "camp": "tibet", "region": "china", "count": 7},
+    "[哈薩克]伊塔事件": {
+        "type": "count_and_required",
+        "camp": "kazakh",
+        "requirements": [
+            {"ruler": "北國", "count": 7},
+            {"region": "china", "count": 3},
+        ],
+    },
+    "[維吾爾]莎車大屠殺": {"type": "count_only", "camp": "uyghur", "region": "china", "count": 7},
+    "[滿洲]滿洲地方派系凝聚": {"type": "count_only", "camp": "manchuria", "region": "china", "count": 10},
+    "[反賊]公知世代的終結": {"type": "count_only", "camp": "rebel", "region": "china", "count": 4},
+    "[臺灣]綏靖派反對介入對岸": {"type": "count_only", "camp": "taiwan", "region": "china", "count": 7},
+}
 
 
 def load_json(path):
@@ -101,6 +118,14 @@ def build_audit():
             entries.append({**raw, "structured": None, "runtime_status": "missing"})
             continue
         effects = era.get("effects") or {}
+        expected_trigger = EXPECTED_TRIGGERS.get(raw["name"])
+        trigger_matches = era.get("trigger") == expected_trigger
+        if not expected_trigger:
+            failures.append(f"missing expected canonical trigger declaration for {raw['name']}")
+        elif not trigger_matches:
+            failures.append(
+                f"trigger mismatch for {raw['name']}: expected {expected_trigger}, got {era.get('trigger')}"
+            )
         if "red_suppression" not in effects or "revolution_counterattack" not in effects:
             failures.append(f"missing two-sided effects for {raw['name']}")
         static_supply_problems.extend(validate_static_supply_effect(era))
@@ -114,6 +139,8 @@ def build_audit():
                 "effects": effects,
             },
             "runtime_status": classify_runtime_status(era),
+            "expected_trigger": expected_trigger,
+            "trigger_matches_canonical": trigger_matches,
             "canonical_decision": "era_stage_mechanic_not_event_deck_card",
             "needs_runtime_followup": True,
         })
@@ -135,6 +162,7 @@ def build_audit():
             "raw_bracketed_era_rows_in_event_deck": sum(1 for raw in raw_rows if raw["name"] in event_names),
             "legacy_event_like_adaptations_still_present": unbracketed_event_adaptations,
             "structured_effect_rows": sum(1 for e in entries if e.get("runtime_status") == "structured_effects_declared"),
+            "canonical_trigger_matches": sum(1 for e in entries if e.get("trigger_matches_canonical") is True),
             "failures": failures,
         },
         "canonical_decision": {
@@ -184,6 +212,8 @@ def write_reports(payload):
         if structured:
             effects = structured.get("effects") or {}
             lines.append(f"- structured_id: {structured.get('id')}")
+            lines.append(f"- structured_trigger: `{json.dumps(structured.get('trigger'), ensure_ascii=False)}`")
+            lines.append(f"- trigger_matches_canonical: `{entry.get('trigger_matches_canonical')}`")
             lines.append(f"- red_suppression_effect: `{(effects.get('red_suppression') or {}).get('type')}`")
             lines.append(f"- revolution_counterattack_effect: `{(effects.get('revolution_counterattack') or {}).get('type')}`")
         lines.append("")

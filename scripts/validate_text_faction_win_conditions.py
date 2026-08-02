@@ -90,14 +90,18 @@ def case_chaoxian_any_of():
 
 
 def case_wan_region_scope():
-    g, a, b = _new_game('wan')  # 全宛地（目前僅南陽）>= 14
-    a.organizations = {t: 1 for t in _inner(g, 14, exclude={'南陽'})}  # 14個但都不在宛地
+    g, a, b = _new_game('wan')  # 全宛地14；宛擴充地圖尚未建模，必須fail-closed
+    a.organizations = {t: 1 for t in _inner(g, 14, exclude={'南陽'})}
     g._check_victory()
     spread_no_win = g.winner is None
-    a.organizations = {'南陽': 14}
+    a.organizations = {'南陽': 14}  # 非法疊放也只能視為1個有效城鎮
     g._check_victory()
-    checks = {'orgs_outside_wan_do_not_count': spread_no_win, 'fourteen_in_nanyang_wins': g.winner == 'P'}
-    return {'name': 'wan_region_scope', 'checks': checks, 'ok': all(checks.values())}
+    checks = {
+        'orgs_outside_wan_do_not_count': spread_no_win,
+        'stacked_nanyang_fails_closed': g.winner is None,
+        'nanyang_counts_as_one_effective_town': g.victory_engine._count_scope(a, '宛地', g) == 1,
+    }
+    return {'name': 'wan_region_scope_fails_closed_until_expansion_map_exists', 'checks': checks, 'ok': all(checks.values())}
 
 
 def case_co_winner_for_text_faction():
@@ -135,8 +139,8 @@ def main():
             'A1: 45 factions had only free-text win_condition_text which no code ever read, '
             'so they could never win. All 45 are now structured (9 count_only 牆內14; 34 '
             'count_and_required with required towns, incl. republican\'s inner-scope variant; '
-            '2 specials — wan\'s 宛地 region scope [main-map 南陽 only until the 宛 sub-map is '
-            'modeled] and chaoxian\'s required_any_of 平壤/首爾). Migration used exact '
+            '2 specials — wan\'s 宛地 region scope [fails closed with main-map 南陽 counting as one '
+            'effective town until the 宛 sub-map is modeled] and chaoxian\'s required_any_of 平壤/首爾). Migration used exact '
             'text-roundtrip verification (rebuild sentence from structure, byte-compare). '
             'victory.py gained required_any_of and the 宛地 scope; co-winner progress (A4) '
             'automatically covers these factions now.'

@@ -3,7 +3,7 @@
     "scope": [
       "A1：45個 text-only 陣營勝利條件"
     ],
-    "purpose": "A1: 45 factions had only free-text win_condition_text which no code ever read, so they could never win. All 45 are now structured (9 count_only 牆內14; 34 count_and_required with required towns, incl. republican's inner-scope variant; 2 specials — wan's 宛地 region scope [main-map 南陽 only until the 宛 sub-map is modeled] and chaoxian's required_any_of 平壤/首爾). Migration used exact text-roundtrip verification (rebuild sentence from structure, byte-compare). victory.py gained required_any_of and the 宛地 scope; co-winner progress (A4) automatically covers these factions now.",
+    "purpose": "A1: 45 factions had only free-text win_condition_text which no code ever read, so they could never win. All 45 are now structured (9 count_only 牆內14; 34 count_and_required with required towns, incl. republican's inner-scope variant; 2 specials — wan's 宛地 region scope [fails closed with main-map 南陽 counting as one effective town until the 宛 sub-map is modeled] and chaoxian's required_any_of 平壤/首爾). Migration used exact text-roundtrip verification (rebuild sentence from structure, byte-compare). victory.py gained required_any_of and the 宛地 scope; co-winner progress (A4) automatically covers these factions now.",
     "total": 7,
     "passed": 7,
     "failed": 0
@@ -55,10 +55,11 @@
       "ok": true
     },
     {
-      "name": "wan_region_scope",
+      "name": "wan_region_scope_fails_closed_until_expansion_map_exists",
       "checks": {
         "orgs_outside_wan_do_not_count": true,
-        "fourteen_in_nanyang_wins": true
+        "stacked_nanyang_fails_closed": true,
+        "nanyang_counts_as_one_effective_town": true
       },
       "ok": true
     },

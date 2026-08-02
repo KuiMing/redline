@@ -134,7 +134,7 @@
       "trigger": {
         "type": "count_only",
         "camp": "hong_kong",
-        "region": "hong_kong",
+        "region": "china",
         "count": 10
       },
       "duration": {

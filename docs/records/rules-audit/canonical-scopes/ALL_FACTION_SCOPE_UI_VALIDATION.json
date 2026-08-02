@@ -1,0 +1,254 @@
+{
+  "generated_at": "2026-08-02T03:02:13.888368+00:00",
+  "status": "passed",
+  "checks_passed": 31,
+  "checks_total": 31,
+  "checks": [
+    {
+      "name": "mongolia_outside_server_counts",
+      "ok": true,
+      "detail": {
+        "total": 4,
+        "inside_wall": 0,
+        "outside_wall": 4
+      }
+    },
+    {
+      "name": "mongolia_outside_count_conservation",
+      "ok": true,
+      "detail": {
+        "total": 4,
+        "inside_wall": 0,
+        "outside_wall": 4
+      }
+    },
+    {
+      "name": "mongolia_outside_era_result",
+      "ok": true,
+      "detail": {
+        "actual": false,
+        "expected": false
+      }
+    },
+    {
+      "name": "mongolia_outside_victory_result",
+      "ok": true,
+      "detail": {
+        "actual": null,
+        "expected": null
+      }
+    },
+    {
+      "name": "mongolia_outside_formal_status_split",
+      "ok": true,
+      "detail": "A\nActor\n當前行動玩家\n當前玩家\n陣營：蒙古\n根據地：亞巴坎\n組織\n4\n牆內 0／牆外 4\n資金\n0\n宣傳\n0\n手牌\n0\n牌庫\n6\n棄牌\n0\n移動\n0\n棄牌堆\n無"
+    },
+    {
+      "name": "mongolia_inside_server_counts",
+      "ok": true,
+      "detail": {
+        "total": 4,
+        "inside_wall": 4,
+        "outside_wall": 0
+      }
+    },
+    {
+      "name": "mongolia_inside_count_conservation",
+      "ok": true,
+      "detail": {
+        "total": 4,
+        "inside_wall": 4,
+        "outside_wall": 0
+      }
+    },
+    {
+      "name": "mongolia_inside_era_result",
+      "ok": true,
+      "detail": {
+        "actual": true,
+        "expected": true
+      }
+    },
+    {
+      "name": "mongolia_inside_victory_result",
+      "ok": true,
+      "detail": {
+        "actual": null,
+        "expected": null
+      }
+    },
+    {
+      "name": "mongolia_inside_formal_status_split",
+      "ok": true,
+      "detail": "A\nActor\n當前行動玩家\n當前玩家\n陣營：蒙古\n根據地：延邊\n組織\n4\n牆內 4／牆外 0\n資金\n0\n宣傳\n0\n手牌\n0\n牌庫\n5\n棄牌\n3\n移動\n0\n棄牌堆\n內鬥\n內鬥\n內鬥"
+    },
+    {
+      "name": "hong_kong_outside_victory_server_counts",
+      "ok": true,
+      "detail": {
+        "total": 14,
+        "inside_wall": 0,
+        "outside_wall": 14
+      }
+    },
+    {
+      "name": "hong_kong_outside_victory_count_conservation",
+      "ok": true,
+      "detail": {
+        "total": 14,
+        "inside_wall": 0,
+        "outside_wall": 14
+      }
+    },
+    {
+      "name": "hong_kong_outside_victory_era_result",
+      "ok": true,
+      "detail": {
+        "actual": false,
+        "expected": false
+      }
+    },
+    {
+      "name": "hong_kong_outside_victory_victory_result",
+      "ok": true,
+      "detail": {
+        "actual": null,
+        "expected": null
+      }
+    },
+    {
+      "name": "hong_kong_outside_victory_formal_status_split",
+      "ok": true,
+      "detail": "A\nActor\n當前行動玩家\n當前玩家\n陣營：香港\n根據地：臺北\n組織\n14\n牆內 0／牆外 14\n資金\n0\n宣傳\n0\n手牌\n0\n牌庫\n5\n棄牌\n0\n移動\n0\n棄牌堆\n無"
+    },
+    {
+      "name": "hong_kong_inside_victory_server_counts",
+      "ok": true,
+      "detail": {
+        "total": 14,
+        "inside_wall": 14,
+        "outside_wall": 0
+      }
+    },
+    {
+      "name": "hong_kong_inside_victory_count_conservation",
+      "ok": true,
+      "detail": {
+        "total": 14,
+        "inside_wall": 14,
+        "outside_wall": 0
+      }
+    },
+    {
+      "name": "hong_kong_inside_victory_era_result",
+      "ok": true,
+      "detail": {
+        "actual": true,
+        "expected": true
+      }
+    },
+    {
+      "name": "hong_kong_inside_victory_victory_result",
+      "ok": true,
+      "detail": {
+        "actual": "Actor",
+        "expected": "Actor"
+      }
+    },
+    {
+      "name": "hong_kong_inside_victory_formal_victory_modal",
+      "ok": true,
+      "detail": "遊戲結束\nActor 獲勝\n香港｜第 1 回合結算\n玩家\n陣營\n組織\n資金\n宣傳\nActor 🏆\n香港\n組織 14\n資金 0\n宣傳 0\nOpponent\n紅軍\n組織 0\n資金 0\n宣傳 0\n檢視最終盤面"
+    },
+    {
+      "name": "red_taiwan_without_taiwan_server_counts",
+      "ok": true,
+      "detail": {
+        "total": 14,
+        "inside_wall": 0,
+        "outside_wall": 14
+      }
+    },
+    {
+      "name": "red_taiwan_without_taiwan_count_conservation",
+      "ok": true,
+      "detail": {
+        "total": 14,
+        "inside_wall": 0,
+        "outside_wall": 14
+      }
+    },
+    {
+      "name": "red_taiwan_without_taiwan_era_result",
+      "ok": true,
+      "detail": {
+        "actual": null,
+        "expected": null
+      }
+    },
+    {
+      "name": "red_taiwan_without_taiwan_victory_result",
+      "ok": true,
+      "detail": {
+        "actual": null,
+        "expected": null
+      }
+    },
+    {
+      "name": "red_taiwan_without_taiwan_formal_status_split",
+      "ok": true,
+      "detail": "A\nActor\n當前行動玩家\n當前玩家\n陣營：紅軍\n根據地：北京\n組織\n14\n牆內 0／牆外 14\n資金\n0\n宣傳\n0\n手牌\n0\n牌庫\n6\n棄牌\n0\n移動\n0\n棄牌堆\n無"
+    },
+    {
+      "name": "red_taiwan_with_taiwan_server_counts",
+      "ok": true,
+      "detail": {
+        "total": 14,
+        "inside_wall": 0,
+        "outside_wall": 14
+      }
+    },
+    {
+      "name": "red_taiwan_with_taiwan_count_conservation",
+      "ok": true,
+      "detail": {
+        "total": 14,
+        "inside_wall": 0,
+        "outside_wall": 14
+      }
+    },
+    {
+      "name": "red_taiwan_with_taiwan_era_result",
+      "ok": true,
+      "detail": {
+        "actual": null,
+        "expected": null
+      }
+    },
+    {
+      "name": "red_taiwan_with_taiwan_victory_result",
+      "ok": true,
+      "detail": {
+        "actual": "red_army",
+        "expected": "red_army"
+      }
+    },
+    {
+      "name": "red_taiwan_with_taiwan_formal_victory_modal",
+      "ok": true,
+      "detail": "遊戲結束\nActor 獲勝\n紅軍｜第 1 回合結算\n玩家\n陣營\n組織\n資金\n宣傳\nActor 🏆\n紅軍\n組織 14\n資金 0\n宣傳 0\nOpponent\n自由派\n組織 0\n資金 0\n宣傳 0\nTaiwan\n臺灣（綠線）\n組織 0\n資金 0\n宣傳 0\n檢視最終盤面"
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "ok": true,
+      "detail": []
+    }
+  ],
+  "console_errors": [],
+  "screenshots": [
+    "docs/records/rules-audit/canonical-scopes/mongolia_outside.png",
+    "docs/records/rules-audit/canonical-scopes/mongolia_inside.png",
+    "docs/records/rules-audit/canonical-scopes/hong_kong_inside_victory.png",
+    "docs/records/rules-audit/canonical-scopes/red_taiwan_with_taiwan.png"
+  ]
+}

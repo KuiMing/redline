@@ -186,9 +186,9 @@ def _configure_same_boundary_auto_discard_event(game):
 
 def test_tibet_activation_choice_completes_before_same_boundary_auto_event_choice():
     game, tibet, red = _make_game("tibet_dharamsala")
-    tibet_towns = game._towns_for_region_alias("tibet_region")
-    assert len(tibet_towns) >= 7
-    tibet.organizations = {town: 1 for town in tibet_towns[:7]}
+    inside_towns = [town for town in _legal_inside_wall_towns(game, tibet) if game._shared_org_count(red, town) == 0]
+    assert len(inside_towns) >= 7
+    tibet.organizations = {town: 1 for town in inside_towns[:7]}
     _configure_same_boundary_auto_discard_event(game)
 
     _advance_current_player_turn(game)
@@ -214,9 +214,9 @@ def test_tibet_activation_choice_completes_before_same_boundary_auto_event_choic
 
 def test_manchuria_activation_choice_completes_before_same_boundary_auto_event_choice():
     game, manchuria, _red = _make_game("manchuria")
-    manchuria_towns = game._towns_for_region_alias("manchuria")
-    assert len(manchuria_towns) >= 10
-    manchuria.organizations = {town: 1 for town in manchuria_towns[:10]}
+    inside_towns = [town for town in _legal_inside_wall_towns(game, manchuria) if game._shared_org_count(_red, town) == 0]
+    assert len(inside_towns) >= 10
+    manchuria.organizations = {town: 1 for town in inside_towns[:10]}
     _configure_same_boundary_auto_discard_event(game)
 
     _advance_current_player_turn(game)
@@ -248,8 +248,9 @@ def test_simultaneous_tibet_and_manchuria_eras_serialize_before_auto_event():
         player.name = player_id
         player.faction_id = faction_id
         player.organizations = {}
-    tibet.organizations = {town: 1 for town in game._towns_for_region_alias("tibet_region")[:7]}
-    manchuria.organizations = {town: 1 for town in game._towns_for_region_alias("manchuria")[:10]}
+    inside_towns = [town for town in _legal_inside_wall_towns(game, tibet) if town != "北京"]
+    tibet.organizations = {town: 1 for town in inside_towns[:7]}
+    manchuria.organizations = {town: 1 for town in inside_towns[7:17]}
     red.organizations = {"北京": 1}
     game.current_player_index = 2
     game.round_start_player_index = 0

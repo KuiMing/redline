@@ -48,6 +48,8 @@ def test_any_inner_resolution_ignores_legacy_board_regions_shadow_attr():
 def test_victory_engine_constructor_no_longer_requires_board_regions_argument():
     game = make_game()
     red_player = next(p for p in game.players if p.faction_id == "red_army")
+    taiwan_player = next(p for p in game.players if p is not red_player)
+    taiwan_player.faction_id = "taiwan_green"
     red_player.organizations = {town: 1 for town in game._towns_for_region_alias("taiwan")[:14]}
 
     did_win, winner = VictoryEngine(game.factions).evaluate(game)

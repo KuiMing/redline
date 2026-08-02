@@ -11,6 +11,7 @@ Status: passed
 - raw_bracketed_era_rows_in_event_deck: 0
 - legacy_event_like_adaptations_still_present: {"[反賊]公知世代的終結": false, "[臺灣]綏靖派反對介入對岸": false}
 - structured_effect_rows: 8
+- canonical_trigger_matches: 8
 - failures: []
 
 ## Canonical decision
@@ -29,6 +30,8 @@ Status: passed
 - 紅軍壓制: [新型態的血腥鎮壓]紅軍每次對香港使用間諜類卡牌時，可再隨機棄掉香港1張手牌。持續2回合。
 - 革命反撲: [沉冤待雪香港報仇]香港購買每張武裝類卡牌之費用額外減少2點資金。持續2回合。
 - structured_id: hong_kong
+- structured_trigger: `{"type": "count_only", "camp": "hong_kong", "region": "china", "count": 10}`
+- trigger_matches_canonical: `True`
 - red_suppression_effect: `bonus_discard_on_red_card`
 - revolution_counterattack_effect: `reduce_purchase_cost`
 
@@ -40,6 +43,8 @@ Status: passed
 - 紅軍壓制: [知識分子互相猜疑]將3張內鬥放進蒙古棄牌堆。
 - 革命反撲: [南蒙古人世代覺醒]蒙古當回合手牌中的每張宣傳類卡牌 用於購買時可額外提供1點宣傳。
 - structured_id: mongolia
+- structured_trigger: `{"type": "count_only", "camp": "mongol", "region": "china", "count": 4}`
+- trigger_matches_canonical: `True`
 - red_suppression_effect: `add_static_cards_to_discard`
 - revolution_counterattack_effect: `hand_card_resource_bonus`
 
@@ -51,6 +56,8 @@ Status: passed
 - 紅軍壓制: [青藏鐵路運兵鎮壓]紅軍當回合可棄掉任意張數手牌，無視距離在藏國有效組織１格內建立與張數同數量的組織。
 - 革命反撲: [心向法王達賴喇嘛]藏國當回合手牌中的每張宣傳類卡牌 用於購買時可額外提供1點宣傳。
 - structured_id: tibet
+- structured_trigger: `{"type": "count_only", "camp": "tibet", "region": "china", "count": 7}`
+- trigger_matches_canonical: `True`
 - red_suppression_effect: `red_discard_to_build_near_target`
 - revolution_counterattack_effect: `hand_card_resource_bonus`
 
@@ -62,6 +69,8 @@ Status: passed
 - 紅軍壓制: [紅軍提防哈薩克人]哈薩克此後無法再無視距離建立牆內組織。
 - 革命反撲: [出逃同胞加入隊伍]當回合哈薩克立即額外抽2張牌。
 - structured_id: kazakh
+- structured_trigger: `{"type": "count_and_required", "camp": "kazakh", "requirements": [{"ruler": "北國", "count": 7}, {"region": "china", "count": 3}]}`
+- trigger_matches_canonical: `True`
 - red_suppression_effect: `restrict_ignore_distance_build`
 - revolution_counterattack_effect: `draw`
 
@@ -73,6 +82,8 @@ Status: passed
 - 紅軍壓制: [武力清剿叛軍基地]紅軍每次對維吾爾使用武裝類卡牌時，可再瓦解己方組織1格內的1個維吾爾組織。持續2回合。
 - 革命反撲: [壯士去兮弔民伐罪]維吾爾每打出1張武裝類卡牌，獲得2點宣傳。持續2回合。
 - structured_id: uyghur
+- structured_trigger: `{"type": "count_only", "camp": "uyghur", "region": "china", "count": 7}`
+- trigger_matches_canonical: `True`
 - red_suppression_effect: `bonus_dissolve_on_red_card_near_self`
 - revolution_counterattack_effect: `gain_resource_on_play_card`
 
@@ -84,6 +95,8 @@ Status: passed
 - 紅軍壓制: [試圖清洗地方勢力]將5張分神放進滿洲棄牌堆。
 - 革命反撲: [行政資源固守地盤]滿洲當回合可檢視己方牌庫頂7張牌，將其中2張牌移到牌庫最頂，其餘順序不變。
 - structured_id: manchuria
+- structured_trigger: `{"type": "count_only", "camp": "manchuria", "region": "china", "count": 10}`
+- trigger_matches_canonical: `True`
 - red_suppression_effect: `add_static_cards_to_discard`
 - revolution_counterattack_effect: `inspect_deck_top_and_reorder`
 
@@ -95,6 +108,8 @@ Status: passed
 - 紅軍壓制: [互聯網管控全面化]反賊此後無法再無視距離建立牆內組織。
 - 革命反撲: [反賊結社潛入地下]反賊在回合中建立至少3個組織，則當回合可再抽1張牌。持續至遊戲結束。
 - structured_id: rebels
+- structured_trigger: `{"type": "count_only", "camp": "rebel", "region": "china", "count": 4}`
+- trigger_matches_canonical: `True`
 - red_suppression_effect: `restrict_ignore_distance_build`
 - revolution_counterattack_effect: `build_count_draw_bonus`
 
@@ -106,5 +121,7 @@ Status: passed
 - 紅軍壓制: [鼓吹停止挑釁紅軍]將3張內鬥放進臺灣棄牌堆
 - 革命反撲: [打擊國內綏靖主義]每當臺灣在臺灣城鎮建立至少1個組織時，獲得1點宣傳。持續2回合。
 - structured_id: taiwan
+- structured_trigger: `{"type": "count_only", "camp": "taiwan", "region": "china", "count": 7}`
+- trigger_matches_canonical: `True`
 - red_suppression_effect: `add_static_cards_to_discard`
 - revolution_counterattack_effect: `gain_resource_on_build_in_region`
