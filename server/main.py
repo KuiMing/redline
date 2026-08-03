@@ -3330,6 +3330,11 @@ def test_setup_era_notification_proof(payload: dict):
             "settled": True,
             "status": "idle",
         }
+        # Era trigger detection now runs only at the round-wrap boundary (after every
+        # player incl. Red Army has acted). Advance from Red Army's seat (the last
+        # seat) so ending its turn wraps the round and detection activates the era —
+        # ending the viewer's own turn mid-round no longer triggers detection.
+        game.current_player_index = game.players.index(red)
         game.advance_turn_phase()
         game.advance_turn_phase()
         if era_id not in game.era_engine.get_active_eras():
