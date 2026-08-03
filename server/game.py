@@ -5106,7 +5106,11 @@ class Game:
         if self.pending_choice and not self._recover_stale_event_build_choice_if_satisfied():
             return {"error": "Resolve pending choice before advancing phase"}
         if self.turn_phase == TurnPhase.EVENT:
-            self._check_era_trigger()
+            # Only drain already-queued (possibly interactive) era activations here;
+            # do NOT run trigger detection mid-round. New eras become eligible only at
+            # the round-wrap boundary in _end_turn(), after every player incl. Red Army
+            # has acted (see _detect_era_triggers).
+            self._continue_era_activation_queue()
             if not self.current_event:
                 self._start_event_phase()
                 return {"success": True}
@@ -5194,11 +5198,12 @@ class Game:
             if self.era_notification and self.era_notification.get("id") in set(expired_eras):
                 self.era_notification = None
 
-        # rules.md event stage step ②, adapted to the action-first lifecycle: this is
-        # the public turn boundary that replaced the obsolete resting EVENT phase.
-        # Run after ticking existing eras so a newly activated duration is not consumed
-        # at the same boundary that created it.
-        self._check_era_trigger()
+        # Keep draining any in-flight (interactive) era activation every turn so a
+        # pending choice from an already-triggered era is not stalled. Trigger
+        # *detection* is NOT run here — it is deferred to the round-wrap boundary
+        # below so Red Army's turn this round can still invalidate a condition
+        # before an era is judged as met (P1: 時代關卡觸發時機應等整輪含紅軍行動完).
+        self._continue_era_activation_queue()
 
         self.current_player_index = (self.current_player_index + 1) % len(self.players)
         if self.current_player_index == getattr(self, 'round_start_player_index', 0):
@@ -5212,6 +5217,13 @@ class Game:
             self.current_event = None
             self.event_progress = None
             self.event_notification = None
+            # Round wrap: every player (Red Army included) has now acted this round.
+            # This is the only point era trigger detection runs — a condition that
+            # briefly looked satisfied mid-round but was undone by a later Red Army
+            # action is correctly no longer detected. Runs after era_engine.tick()
+            # above so a duration created here is not consumed at the same boundary.
+            self._detect_era_triggers()
+            self._continue_era_activation_queue()
         self.turn_phase = TurnPhase.ACTION
         if not self.current_event:
             self._start_event_phase()
@@ -6219,7 +6231,22 @@ class Game:
             return payload
         return None
 
-    def _check_era_trigger(self):
+    def _detect_era_triggers(self):
+        """Scan for newly-qualifying eras and enqueue them for activation.
+
+        This is the trigger-*detection* half of era handling. Per the round-wrap
+        rule (P1 playtest: 時代關卡觸發時機應該等整輪含紅軍都行動完才判定), this must
+        only run once a full round has completed — after every player, Red Army
+        included, has taken their turn — because Red Army may act later in the
+        same round (e.g. dissolve an organization) and invalidate a condition
+        that looked satisfied earlier in the round. It is therefore called only
+        at the round-wrap boundary in _end_turn(), never per player-turn.
+
+        Detection is deliberately separate from _continue_era_activation_queue():
+        the queue continuation must keep running every turn / every choice
+        resolution so an in-flight interactive era activation is not stalled,
+        whereas detection is the part that must be deferred to the round wrap.
+        """
         if not hasattr(self, "era_engine"):
             return
 
@@ -6243,6 +6270,18 @@ class Game:
                 queue.append(era_id)
                 queued_ids.add(era_id)
 
+    def _check_era_trigger(self):
+        """Detect newly-qualifying eras, then drain the activation queue.
+
+        Retained as the combined detect+continue entry point used by the
+        `/test/*` scenario-setup endpoints and era validators/tests that force an
+        immediate check. Normal turn flow does NOT call this per player-turn:
+        detection is deferred to the round-wrap boundary (see _detect_era_triggers)
+        while _continue_era_activation_queue keeps draining every turn.
+        """
+        if not hasattr(self, "era_engine"):
+            return
+        self._detect_era_triggers()
         return self._continue_era_activation_queue()
 
     def _continue_era_activation_queue(self):

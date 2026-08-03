@@ -76,9 +76,25 @@ def test_timed_era_is_not_consumed_on_activation_boundary_or_reactivated_after_e
     legal_inside_towns = _legal_inside_wall_towns(game, taiwan)
     taiwan.organizations = {town: 1 for town in legal_inside_towns[:7]}
 
+    # Era trigger detection only runs once a full round wraps (after every player,
+    # Red Army included, has acted). Start with Red Army (the last seat) as the
+    # current player so a single advance ends its turn and wraps the round,
+    # triggering detection — the era must NOT activate on the non-red seat's own
+    # turn-end mid-round.
+    game.current_player_index = 1
     _advance_current_player_turn(game)
     assert game.era_engine.get_active_era_details()[0]["remaining"] == 2
     activation_discard_count = len(taiwan.deck.discard_pile)
+    # The round wrap drew a fresh real event; keep it idle so the following turn
+    # ends don't settle it and prompt a choice (unrelated to era duration ticking).
+    game.current_event = {"id": "next-idle", "name": "next idle", "type": "idle"}
+    game.event_progress = {
+        "count": 0,
+        "required": 0,
+        "succeeded": True,
+        "settled": True,
+        "status": "idle",
+    }
 
     _advance_current_player_turn(game)
     assert game.era_engine.get_active_era_details()[0]["remaining"] == 1
@@ -100,6 +116,9 @@ def test_expired_one_time_era_is_achieved_but_not_active_in_viewer_public_state(
     game, taiwan, _red = _make_game()
     legal_inside_towns = _legal_inside_wall_towns(game, taiwan)
     taiwan.organizations = {town: 1 for town in legal_inside_towns[:7]}
+    # Detection runs at the round-wrap boundary; advancing Red Army (last seat)
+    # completes the round and activates the era.
+    game.current_player_index = 1
     _advance_current_player_turn(game)
     game.era_engine.tick()
     game.era_engine.tick()
@@ -283,3 +302,99 @@ def test_simultaneous_tibet_and_manchuria_eras_serialize_before_auto_event():
     assert game.pending_choice["choice_key"] == "event_discard_self"
     assert game.pending_choice["player_id"] == tibet.id
     assert game.event_progress["settled"] is True
+
+
+def test_era_detection_deferred_to_round_wrap_so_red_army_can_still_invalidate_it():
+    """P1 regression（時代關卡觸發時機應等整輪含紅軍行動完才判定）.
+
+    A non-red player satisfies an era's org-count trigger on its own turn, but
+    before the round wraps Red Army dissolves one of that player's organizations,
+    dropping it back below the threshold. Because trigger *detection* is deferred
+    to the round-wrap boundary (after every player incl. Red Army has acted), the
+    era must NOT activate — neither mid-round on the non-red turn, nor at the wrap.
+    """
+    game, taiwan, _red = _make_game()
+    legal_inside_towns = _legal_inside_wall_towns(game, taiwan)
+    assert len(legal_inside_towns) >= 7
+    taiwan.organizations = {town: 1 for town in legal_inside_towns[:7]}
+
+    # Taiwan (seat 0) opens the round already holding 7 inside-wall orgs — the
+    # taiwan era's exact trigger condition. Ending its own turn must NOT activate
+    # the era: the round has not wrapped and Red Army has not yet acted.
+    game.current_player_index = 0
+    _advance_current_player_turn(game)
+    assert "taiwan" not in game.era_engine.get_active_eras()
+    assert "taiwan" not in game.era_engine.get_activated_eras()
+    assert game._pending_era_activations == []
+
+    # Red Army acts later in the SAME round and dissolves one of Taiwan's
+    # inside-wall organizations, dropping Taiwan to 6 before the round wraps.
+    del taiwan.organizations[legal_inside_towns[6]]
+
+    # Ending Red Army's turn wraps the round; detection runs now and sees only 6
+    # orgs, so the era must not be (retro-)activated.
+    _advance_current_player_turn(game)
+    assert game.current_player_index == game.round_start_player_index  # round wrapped
+    assert "taiwan" not in game.era_engine.get_active_eras()
+    assert "taiwan" not in game.era_engine.get_activated_eras()
+    assert game._pending_era_activations == []
+
+
+def test_era_activates_at_round_wrap_when_condition_survives_red_army_turn():
+    """Positive path: the same trigger condition still holds after Red Army's turn,
+    so the era DOES activate — but only at the round-wrap boundary, not on the
+    non-red player's own mid-round turn."""
+    game, taiwan, _red = _make_game()
+    legal_inside_towns = _legal_inside_wall_towns(game, taiwan)
+    assert len(legal_inside_towns) >= 7
+    taiwan.organizations = {town: 1 for town in legal_inside_towns[:7]}
+
+    game.current_player_index = 0
+    _advance_current_player_turn(game)
+    # Deferred: not detected on Taiwan's own turn mid-round.
+    assert "taiwan" not in game.era_engine.get_active_eras()
+
+    # Red Army acts but leaves the condition intact; ending its turn wraps the
+    # round and detection finally activates the era.
+    _advance_current_player_turn(game)
+    assert game.current_player_index == game.round_start_player_index
+    assert "taiwan" in game.era_engine.get_active_eras()
+
+
+def test_queued_interactive_era_keeps_draining_without_a_new_round_wrap():
+    """Queue continuation must run independently of the deferred detection scan.
+
+    An era already queued (as if detection enqueued it on a previous round wrap)
+    with an interactive activation is drained and resolves across several actions
+    on ordinary, non-wrapping turns — it must NOT stall waiting for another round
+    to wrap. This is why detection and _continue_era_activation_queue are split.
+    """
+    game, tibet, red = _make_game("tibet_dharamsala")
+    inside_towns = [t for t in _legal_inside_wall_towns(game, tibet) if game._shared_org_count(red, t) == 0]
+    assert len(inside_towns) >= 7
+    tibet.organizations = {t: 1 for t in inside_towns[:7]}
+
+    # Pre-queue the tibet activation directly, as detection would have on a prior
+    # round wrap, but leave it un-activated/mid-flight.
+    game._pending_era_activations = ["tibet"]
+    # Seat 0 ends -> index 1: NOT a round wrap, so detection does not run. The
+    # only thing that can advance the queue here is continuation.
+    game.current_player_index = 0
+    game.round_start_player_index = 0
+
+    _advance_current_player_turn(game)
+    assert game.current_player_index != game.round_start_player_index  # no wrap occurred
+    # Continuation drained & activated the queued era on this non-wrapping turn,
+    # leaving its interactive red-army activation mid-flight.
+    assert "tibet" in game.era_engine.get_activated_eras()
+    assert game.pending_choice is not None
+    assert game.pending_choice["choice_key"] == "era_red_discard_to_build_near_target"
+
+    # The mid-flight interactive activation resolves across subsequent actions with
+    # no further round wrap required.
+    first = game.resolve_pending_choice(red.id, [0])
+    assert first.get("pending_choice") is True
+    assert game.pending_choice["choice_key"] == "era_red_build_near_target"
+    game.resolve_pending_choice(red.id, 0)
+    assert game._pending_era_activations == []
+    assert game.current_player_index != game.round_start_player_index  # still no new wrap
