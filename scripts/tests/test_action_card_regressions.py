@@ -428,6 +428,102 @@ def test_taiwan_support_tier3_requires_target_choice_and_builds_in_same_town_aft
     assert g.pending_choice is None
 
 
+def test_taiwan_support_tier3_can_replace_red_army_base_after_second_dissolve_hit():
+    """2026-08-04 使用者裁決：紅軍根據地被真正瓦解移除後，臺灣奧援等瓦解＋補位效果應該
+    比照瓦解紅軍其他組織城鎮一樣可以直接補上自己的組織，不再永久排除根據地
+    （`_can_replace_dissolved_org_with_own` 原本對紅軍根據地的排除已移除）。這裡沿用
+    既有「同一攻擊者同一回合需 2 次命中才真正移除」的耐久規則——先預先記一次命中
+    （模擬本回合稍早已經瓦解過一次根據地），讓這次透過臺灣奧援的瓦解成為第 2 次命中，
+    正確移除根據地組織後才驗證補位成功。"""
+    g = make_game()
+    actor = g.current_player()
+    enemy = g.players[1]
+
+    actor.faction_id = 'taiwan_green'
+    actor.base = '佬沃'
+    actor.organizations = {'天津': 1, '佬沃': 1, '馬祖': 1}
+    actor.hand = [g._make_support_card('臺灣奧援')]
+    actor.resources = {'money': 0, 'propaganda': 0}
+    actor.deck.draw_pile = []
+    actor.deck.discard_pile = []
+
+    enemy.faction_id = 'red_army'
+    enemy.base = '北京'
+    enemy.organizations = {'北京': 1}
+    enemy.deck.discard_pile = []
+
+    g.turn_log['red_army_base_dissolves'] = {f'{actor.id}:北京': 1}
+
+    original_resolver = g._support_card_tier
+    def forced_tier(player, card):
+        card_name = getattr(card, 'name', str(card))
+        if getattr(player, 'id', None) == actor.id and card_name == '臺灣奧援':
+            return 3, 0, ['東洋', '南洋']
+        return original_resolver(player, card)
+    g._support_card_tier = forced_tier
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('pending_choice') is True, result
+    assert result.get('effect_type') == 'interactive_dissolve_and_build'
+    assert g.pending_choice['targets'] == [{
+        'id': f'{enemy.id}::北京',
+        'label': 'P2｜北京',
+        'player_id': enemy.id,
+        'town': '北京',
+        'requires_self_sacrifice': False,
+    }]
+
+    resolved = g.resolve_pending_choice(actor.id, 0)
+
+    assert resolved.get('success'), resolved
+    assert enemy.organizations.get('北京', 0) == 0
+    assert actor.organizations['北京'] == 1
+    assert g.pending_choice is None
+    assert '北京' in g.turn_log.get('red_army_base_build_blocks', [])
+
+
+def test_taiwan_support_tier3_cannot_replace_red_army_base_on_first_dissolve_hit():
+    """同上一項的另一半：如果這是本回合對紅軍根據地的第 1 次命中（尚未真正移除），
+    即使 `_can_replace_dissolved_org_with_own` 的預先篩選把根據地當成候選目標放行，
+    `_resolve_support_interaction_result()` 在真正呼叫 `dissolve_organization()` 之後
+    對 `_can_player_build_in_town()` 的即時複查仍要正確擋下補位——耐久規則本身沒有被
+    這次放寬影響。"""
+    g = make_game()
+    actor = g.current_player()
+    enemy = g.players[1]
+
+    actor.faction_id = 'taiwan_green'
+    actor.base = '佬沃'
+    actor.organizations = {'天津': 1, '佬沃': 1, '馬祖': 1}
+    actor.hand = [g._make_support_card('臺灣奧援')]
+    actor.resources = {'money': 0, 'propaganda': 0}
+    actor.deck.draw_pile = []
+    actor.deck.discard_pile = []
+
+    enemy.faction_id = 'red_army'
+    enemy.base = '北京'
+    enemy.organizations = {'北京': 1}
+    enemy.deck.discard_pile = []
+
+    original_resolver = g._support_card_tier
+    def forced_tier(player, card):
+        card_name = getattr(card, 'name', str(card))
+        if getattr(player, 'id', None) == actor.id and card_name == '臺灣奧援':
+            return 3, 0, ['東洋', '南洋']
+        return original_resolver(player, card)
+    g._support_card_tier = forced_tier
+
+    result = g.play_card(0, mode='action')
+    assert result.get('pending_choice') is True, result
+
+    resolved = g.resolve_pending_choice(actor.id, 0)
+
+    assert resolved.get('error') == 'Target could not be replaced after dissolve', resolved
+    assert enemy.organizations.get('北京', 0) == 1
+    assert '北京' not in (actor.organizations or {})
+    assert g.turn_log.get('red_army_base_dissolves', {}).get(f'{actor.id}:北京') == 1
+
 
 def test_taiwan_support_tier2_requires_target_choice_without_auto_resolution():
     g = make_game()
@@ -2607,3 +2703,35 @@ def test_reaction_prompt_no_longer_throttled_by_any_per_turn_bookkeeping():
     actor.hand = [card(g, '點燃熱情')]
     second = g.play_card(0, mode='action')
     assert second.get('pending_choice') is True, second
+
+
+def test_red_army_aid_draw_is_logged_with_the_specific_card_name():
+    """2026-08-04 使用者需求：抽牌類效果（含紅軍奧援）的紀錄要寫出因為使用什麼卡牌、
+    實際抽到哪些牌，而不是只有「抽了1張牌」這種不具名的訊息。"""
+    g = make_game()
+    actor, red = g.players
+    actor.faction_id = 'liberals'
+    red.faction_id = 'red_army'
+    actor.hand = [g._make_support_card('紅軍奧援')]
+    actor.deck.draw_pile = [Card('SpecificDrawnCard', 'command', {})]
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    assert 'SpecificDrawnCard' in names(actor.hand)
+    assert any('因紅軍奧援抽到：SpecificDrawnCard' in entry for entry in g.action_log), g.action_log
+
+
+def test_standard_draw_effect_card_logs_the_specific_drawn_card_name():
+    """同上一項，換成一般透過 `effect_engine.py` 的 `draw` 效果型別（例如『領導』）觸發的
+    抽牌，確認也會寫出具體卡名，不只有紅軍奧援這個特判路徑才有。"""
+    g = make_game()
+    p = g.current_player()
+    p.hand = [card(g, '領導')]
+    p.deck.draw_pile = [Card('SpecificDrawnCard', 'command', {})]
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    assert 'SpecificDrawnCard' in names(p.hand)
+    assert any('因領導抽到：SpecificDrawnCard' in entry for entry in g.action_log), g.action_log

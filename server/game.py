@@ -515,11 +515,23 @@ class Game:
             if self._can_player_build_in_town(player, town)
         ]
 
-    def _draw_player_cards(self, player, count=1, source='effect'):
+    def _draw_player_cards(self, player, count=1, source='effect', trigger_name=None):
         drawn = player.deck.draw(int(count or 1))
         player.hand.extend(drawn)
         if source not in {'refill', 'era'} and drawn:
             self._track_event_progress('draw', amount=len(drawn), player=player)
+        # 2026-08-04 使用者需求：抽牌類效果（含紅軍奧援）的紀錄要寫出實際抽到哪些牌，
+        # 不能只有「抽了 N 張」這種不具名的訊息，方便之後能直接從 log 診斷牌庫相關回報。
+        # `trigger_name` 由呼叫端傳入觸發的卡名/效果名稱；沒傳時對 era 效果給通用說法，
+        # 其餘沿用最簡潔的「抽到：...」。
+        if drawn:
+            names = '、'.join(getattr(c, 'name', str(c)) for c in drawn)
+            if trigger_name:
+                self.log(f"{player.name} 因{trigger_name}抽到：{names}")
+            elif source == 'era':
+                self.log(f"{player.name} 因時代關卡效果抽到：{names}")
+            else:
+                self.log(f"{player.name} 抽到：{names}")
         return drawn
 
     def _active_event_modifiers(self):
@@ -2705,11 +2717,14 @@ class Game:
             return False
         if not self._can_dissolve_base_target(target_player, town)[0]:
             return False
-        if (
-            getattr(target_player, 'faction_id', None) == 'red_army'
-            and town == getattr(target_player, 'base', None)
-        ):
-            return False
+        # 2026-08-04 使用者裁決：紅軍根據地不再永久排除瓦解＋補位組合——只要根據地真的被
+        # 瓦解移除（沿用既有 2 次命中才移除的耐久規則，見 `dissolve_organization()`／
+        # `_can_dissolve_base_target()`），其他陣營的瓦解＋補位效果應該跟瓦解紅軍任何其他
+        # 組織城鎮一樣可以補上自己的組織。這裡只是預先模擬「移除 1 個組織後能不能建立」的
+        # 篩選，不知道耐久計數；真正的把關在 `_resolve_support_interaction_result()` 呼叫
+        # `dissolve_organization()` 之後，對 `_can_player_build_in_town()` 的即時複查
+        # （約 game.py:3013-3015）——如果這次只是根據地的第 1 次命中、組織其實還在，那個
+        # 即時複查會正確擋下建立，不受這裡放寬的影響。
         original_count = target_player.organizations[town]
         try:
             if original_count <= 1:
@@ -3169,7 +3184,7 @@ class Game:
             player.resources['money'] += int(payload.get('money', 0) or 0)
             player.resources['propaganda'] += int(payload.get('propaganda', 0) or 0)
         elif effect_type == 'red_support_draw_and_pass':
-            self._draw_player_cards(player, int(payload.get('draw', 0) or 0))
+            self._draw_player_cards(player, int(payload.get('draw', 0) or 0), trigger_name=card_name)
             current_faction = self.faction_by_id.get(player.faction_id, {})
             current_camp = current_faction.get('camp')
             pending_red_target = self._resolve_red_support_target_choice(player, card, mode='action')
@@ -3199,11 +3214,11 @@ class Game:
                     'card_moved_out_of_play': True,
                 }
         elif effect_type == 'draw':
-            self._draw_player_cards(player, int(payload.get('count', 0) or 0))
+            self._draw_player_cards(player, int(payload.get('count', 0) or 0), trigger_name=card_name)
         elif effect_type == 'draw_then_discard':
             draw_count = int(payload.get('draw', 0) or 0)
             discard_count = int(payload.get('discard', 0) or 0)
-            self._draw_player_cards(player, draw_count)
+            self._draw_player_cards(player, draw_count, trigger_name=card_name)
             # 卡面文字是「再從所有手牌中棄掉1張牌」，玩家可以自己選要棄哪一張（包含
             # 剛抽到的那張），不是寫死棄掉手牌最後一張（那樣等於抽了又立刻棄掉同一張，
             # 淨效果變成沒抽沒棄）。
@@ -4511,11 +4526,11 @@ class Game:
             name = ability.get("name")
             if name == "商貿組織" and trigger_cost_has_money and not self.turn_log.get("faction_first_money_triggered"):
                 self.turn_log["faction_first_money_triggered"] = True
-                self._draw_player_cards(player, 1)
+                self._draw_player_cards(player, 1, trigger_name="商貿組織")
                 self.log(f"{player.name} triggered 商貿組織 and drew 1 card")
             elif name in {"民族調和", "星星之火"} and trigger_cost_has_propaganda and not self.turn_log.get("faction_first_propaganda_triggered"):
                 self.turn_log["faction_first_propaganda_triggered"] = True
-                self._draw_player_cards(player, 1)
+                self._draw_player_cards(player, 1, trigger_name=name)
                 self.log(f"{player.name} triggered {name} and drew 1 card")
             elif name == "人同此心" and trigger_cost_has_propaganda and not self.turn_log.get("faction_first_prop_gain_triggered"):
                 self.turn_log["faction_first_prop_gain_triggered"] = True
@@ -4815,7 +4830,7 @@ class Game:
 
         effective_type = getattr(played_card, "card_type", None)
         if getattr(played_card, 'name', str(played_card)) == '紅軍奧援' and mode == "action":
-            self._draw_player_cards(player, 1)
+            self._draw_player_cards(player, 1, trigger_name='紅軍奧援')
             support_resolution = self._resolve_red_support_target_choice(player, played_card, mode='action')
             if support_resolution and support_resolution.get('pending_choice'):
                 self.log(f"{player.name} played {card_name}")

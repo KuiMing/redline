@@ -17,17 +17,40 @@
 
 ## 目前 active todo
 
+### P1：使用者回報牌庫感覺越來越少——已完成徹底稽核
+- [done] 使用者貼出實際對局 action log（dfa 玩家，回合10→12），觀察到 Turn 11 結束牌庫用盡、棄牌堆僅7張重洗，緊接著 Turn 12 又用盡、棄牌堆僅剩4張重洗；懷疑與『網羅人才』有關，且提到「上一次也觀察到類似現象」，要求本輪深入調查（2026-08-04 使用者回報並要求深入調查，非僅記錄）。
+  - **已完成的徹底稽核**：逐一排查 `_execute_support_card()` 與東洋奧援/臺灣奧援的建立流程（`interactive_build_anywhere_inner`/`interactive_build_near_inner`/`interactive_dissolve_and_build`）——只呼叫 `_place_organization`，不碰 `player.hand`/`player.deck`，無洩漏；所有 `draw_pile =`/`discard_pile =` 重新賦值（非 `.remove()`，共11處）全部只存在於 `setup_test_card_scenario`（`game.py:4283`，掛在 `/test/setup-card-scenario` debug endpoint，正常遊戲流程不會呼叫到）；`recruit_talent` 候選清單 (`effect_engine.py` 的 `cards = list(player.deck.draw_pile)`) 確認是真正的淺拷貝，不會被其他地方的操作牽連修改；`Deck._reshuffle()` 完整搬移棄牌堆進牌庫，不篩選不遺失；`draw_to_five()`/`discard_hand()` 也都無過濾；另外逐一追過 `trash_from_hand_or_discard`、`optional_trash`、`armed_target_discard`、`org_exp_repeat_discard`、`draw_then_discard_choice`、`bait_exhaustion_target_discard`、`red_army_ccdi_discard_draw`、`discard_self`、`guess_ability_bottom_card`、`topdeck_purchased_choice`、`event_topdeck_from_discard`、`era_inspect_deck_top_and_reorder` 等所有「從自己牌庫/棄牌堆/手牌選1張」的 `card_choice`/`multi_card_choice`，全部都是1:1對應，沒有第二個「銷毀未選中候選」的同類型 bug。
+  - **結論**：本輪徹底稽核沒有找到本次會話已修的『網羅人才』銷毀牌庫 bug（commit `d40bed4`，即上方「紅軍使用網羅人才時有時只顯示棄牌堆」項目）以外的任何額外卡牌洩漏路徑。使用者貼的 log 高度吻合舊 bug 的行為模式（回合11→12密集用了2次網羅人才、2次臺灣奧援瓦解補位），很可能是在該修正**之前**打的。建議使用者用目前版本重測幾回合；如果還發生，請回報「手牌+牌庫+棄牌堆總張數」而非只看牌庫剩幾張（牌庫/棄牌堆本來就會正常來回循環，只看其中一堆的張數容易誤判是流失）。
+  - **順帶發現（不在本輪修，列入待查）**：`build_organization`/`build_organization_with_support`/`dissolve_organization`/`relocate_hong_kong_base`/`move_organization` 這5個函式完全沒有 `pending_choice` 守門檢查，與 `play_card()`/`advance_turn_phase()` 不一致——理論上能在開著選擇視窗（例如網羅人才候選還沒選完）時插入這些動作。逐行確認過這5個函式都只動 `organizations`/`moves_left`/`resources`，不碰 `hand`/`deck`，所以**不會**造成卡牌流失，只是既有架構不一致，值得之後補上同樣的守門判斷。
+
+### P1：抽牌類效果的紀錄應該寫出實際抽到哪些牌（含紅軍奧援）
+- [done] 使用者需求：抽牌類卡牌效果的 action log 應該寫出「因為使用了什麼卡牌，抽中了哪些卡牌」，而不是只有「抽了1張牌」這種不具名的紀錄，方便之後直接從 log 診斷牌庫相關回報（2026-08-04 使用者提出）。
+  - 實作：`server/game.py` 的 `_draw_player_cards()` 新增 `trigger_name` 參數，抽到牌時一律記一行「{player} 因{trigger_name/來源}抽到：{卡名...}」；紅軍奧援（`play_card()` 特判區塊）、`_execute_support_card()` 的 `red_support_draw_and_pass`/`draw`/`draw_then_discard`、商貿組織／民族調和／星星之火等陣營能力都已傳入具體的觸發卡名/能力名稱。`server/effect_engine.py` 的 `_draw()` 同步新增 `game`/`card_name` 選填參數並補上同樣格式的 log，涵蓋一般行動卡的 `draw`/`conditional_draw`/`shared_draw` 效果型別（例如樹立信心、領導這類最常見的抽牌卡）。時代效果（`source='era'`）沒有具體卡名時，退回「因時代關卡效果抽到」的通用說法；其餘未特別傳入觸發名稱的呼叫點仍會記「抽到：{卡名}」，至少卡名本身一律可見。
+  - 新增 `test_red_army_aid_draw_is_logged_with_the_specific_card_name`／`test_standard_draw_effect_card_logs_the_specific_drawn_card_name`（`scripts/tests/test_action_card_regressions.py`），分別驗證紅軍奧援特判路徑與一般 `effect_engine.py` 的 `draw` 效果路徑都會記錄具體抽到的卡名。完整 pytest 239/241（2個既有無關 FakePage API drift 失敗），確認沒有既有測試斷言舊的「抽了N張牌」無具名格式而被打壞。
+
+### P1：紅軍以外玩家組織建立後可遷移至任意城鎮
+- [todo] 使用者回報：紅軍以外的玩家，組織建立完成後，似乎可以遷移到任意城鎮，不受道路／鐵路相鄰關係限制。（2026-08-04 使用者回報，先記錄，尚未調查）
+
+### P2：玩家在軍火庫城鎮擁有組織可減免武裝類卡牌購買費用
+- [todo] 使用者回報規則：玩家在軍火庫城鎮每擁有1個組織，該陣營購買每張武裝類卡牌所需支付的費用減少1點資金（至多可藉軍火庫減少3點資金）。（2026-08-04 使用者回報，先記錄，尚未確認現有實作是否已涵蓋此規則）
+
 ### P1：宣布勝利時機應該等整輪（含紅軍）都行動完才公布
 - [todo] 使用者提出：宣布勝利也應該要等這一輪所有玩家（包含紅軍）都行動完才公布，因為紅軍有可能在同一輪稍後行動，把其他玩家的組織瓦解掉，改變原本的勝負結果。（2026-08-03 使用者提出，先記錄，尚未稽核）
+  - 初步檢查：`_check_victory()` 呼叫點在 `_end_turn()` 約5147行（每位玩家自己回合結束就檢查，一但判定就直接 `return`、不再推進 `current_player_index`／補牌，等同立刻中止整輪剩餘玩家的行動）與約5194行（第20回合保底判定，本來就在整輪wrap的區塊內）。紅軍座位由 `_assign_factions()` 隨機洗牌決定、不保證排在整輪最後（`random.shuffle`），所以確實存在「非紅玩家一回合結束就判定勝利、紅軍當輪還沒行動」的情況，與使用者描述的疑慮相符。
+  - **2026-08-04 使用者裁決**：與上方『時代關卡觸發時機』一起評估後暫緩不動——原因與風險同上（牽動20幾條已個別稽核過的勝利條件，且不確定 canonical 規則書是否規定整輪結束才判定），維持現狀記錄待之後深入稽核。
 
 ### P1：事件卡『北京政爭』用網羅人才選到樹立信心應算任務成功；另網羅人才選完似乎沒有立即洗牌
 - [todo] 使用者playtest回報兩點，先記錄，尚未稽核：(1) 事件卡『北京政爭』，使用網羅人才、選到樹立信心，應該要算成功達成任務才對。(2) 同一回合內第二次使用網羅人才時，可選的候選卡牌只有一張——代表第一次使用網羅人才時，並沒有馬上直接把牌庫洗牌（卡面：「...而後將牌庫洗牌」）。（2026-08-03 使用者回報）
+  - **(2) 已釐清，非bug**：`_resolve_card_choice()` 的 `recruit_talent` 分支在選完後會立刻同步呼叫 `random.shuffle(player.deck.draw_pile)`，沒有任何延遲；`Deck._reshuffle()` 也是立即、完整地把棄牌堆搬進牌庫，不篩選、不遺失。同一回合第二次候選只剩1張，最可能只是牌庫在那個當下本來就只剩很少張（小牌庫循環的正常現象），不是洗牌沒生效。
+  - **(1) 仍是待修的真缺口，但比原本想的更大**：稽核 `_track_event_progress()` 發現，`'draw'` 這個事件觸發類型目前**只有** `_draw_player_cards()`（`server/game.py:518`，紅軍奧援／各奧援卡／時代效果等呼叫的抽牌路徑）會呼叫 `_track_event_progress('draw', ...)`；一般透過 `effect_engine.py` 的 `draw`/`conditional_draw`/`shared_draw` 效果型別（也就是絕大多數一般行動卡的抽牌，例如樹立信心、領導、點燃熱情）都走 `effect_engine.py` 自己的 `_draw()`，完全沒有呼叫 `_track_event_progress`。也就是說：**不管是直接打出樹立信心，還是透過網羅人才把樹立信心加入手牌，目前都不會讓『北京政爭』這類 `trigger:{"type":"draw"}` 的事件任務推進**——網羅人才只是剛好也不算數的其中一種途徑，不是唯一漏掉的。全部門檢查過 `data/events_structured.v1.1.json`，只有『北京政爭』與2張『全國人大召開』（副本）用到 `draw` 型別（後兩張是拿來當 success 條件，trigger 是另一種），影響範圍不大。
+  - **本輪決策（2026-08-04）**：使用者要求先不修這項，只記錄調查發現；不在這輪動 `_track_event_progress`/`effect_engine.py` 的抽牌事件追蹤邏輯。之後要修的話，方向是讓 `effect_engine.py` 的 `_draw()`（連同 `game.py:_draw_player_cards()`）都統一呼叫 `_track_event_progress('draw', ...)`，並重跑涉及『北京政爭』／『全國人大召開』的既有 event regression 確認沒有讓這兩張的判定變得太容易觸發。
 
 ### P1：時代關卡觸發時機應該等整輪（含紅軍）都行動完才判定
 - [todo] 使用者提出：時代關卡的觸發判定不應該在某位玩家自己回合一開始就檢查，而應該要等這一輪所有陣營（包含紅軍）都輪完該回合的行動後才算數——因為紅軍在同一輪稍後可能還會有行動（例如瓦解組織），可能讓原本符合的條件在紅軍行動後不再成立，若太早判定觸發就可能誤判。（2026-08-03 使用者提出，先記錄，尚未深入稽核）
   - 初步檢查：`_check_era_trigger()`（`server/game.py:6207`）目前在 `advance_turn_phase()` 的 `TurnPhase.EVENT` 分支（約行 5094，也就是每位玩家自己回合開始、進入行動階段之前）與 `_end_turn()` 尾聲（約行 5186）都會呼叫，屬於「每個玩家自己回合開始/結束時各檢查一次」的逐回合判定，不是等整輪（所有玩家皆行動完）才判定一次。
   - 值得注意的既有先例：事件卡的「任務結算」已經有類似的整輪延後機制（`_is_final_non_red_turn_before_round_wrap()`／`_should_defer_event_settlement_until_after_refill()`），會特意延後到「這一輪最後一位非紅軍玩家結算完」才處理，正是為了避免在紅軍行動之前就提早判定。時代關卡觸發目前似乎沒有套用類似的延後邏輯。
   - 待確認：(1) 這是否真的是canonical規則書規定的時機（「整輪結束才判定」），或只是使用者對「感覺應該公平一點」的直覺；(2) 若要修，是否所有時代關卡都要延後到整輪結束，還是只有「紅軍行動可能影響判定結果」的那些關卡（例如牆內組織數、與紅軍相關的勝負條件）才需要；(3) 延後判定與現有「一次性啟動」佇列（`_pending_era_activations`／`_continue_era_activation_queue()`）如何共存，避免同一輪內因為延後而漏判或重複判定；(4) 需要找到或建立可以重現「紅軍行動改變結果」情境的 regression（例如某玩家回合一開始就達成關卡條件，接著紅軍瓦解掉關鍵組織，驗證關卡不應該仍判定為已達成）。
+  - **2026-08-04 使用者裁決**：連同下面『宣布勝利時機』一起評估過風險後，暫緩不動。`_check_era_trigger()` 同時驅動 `_continue_era_activation_queue()`（已在跑的互動式時代啟動流程，不能整批延後、否則會卡住既有 pending choice 鏈），`_check_victory()` 牽動全陣營20幾條已個別稽核過的勝利條件（見下方「P1：全陣營時代關卡與勝利條件scope稽核」106項`[done]`）。這是本輪調查裡影響範圍最大、風險最高的一項，貿然把判定時機整套搬到整輪結束有牽一髮動全身的風險，且不確定 canonical 規則書是否真的規定「整輪結束才判定」——維持現狀，待之後另外找時間深入稽核（可能需要先去對照 canonical 規則書原文，或採用「只延後新觸發的偵測、不影響既有佇列續跑」的局部方案）。
 
 ### P1：連續使用建立組織效果時，後續建立候選城鎮沒有反映玩家移動後的位置
 - [todo] 使用者playtest回報：先打出`宣傳家`（效果含 `build range:1` 與 `move count:1`）與`組織經驗丙`（效果含 `build range:1`），到地圖頁面後先在桃園建立第一個組織，接著移動到彰化，再要建立第二個組織時，預期候選城鎮應該考慮彰化附近（因為已經移動過去），但實際看到的候選仍是臺北附近的城鎮。（2026-08-03 使用者回報，先記錄，尚未深入稽核／未重現）
@@ -35,14 +58,17 @@
   - 後續需要：先寫一支重現腳本（打兩張牌進入連續建立、解決第一次建立、呼叫正常移動 API 把組織移到遠處、再檢查第二次候選清單的城鎮組成），確認是否真的過期；若確認，修法方向是讓候選城鎮清單在「即將呈現給玩家解決」的那一刻才重新投影，而不是在佇列批次啟動當下就固定。
 
 ### P1：`臺灣奧援`瓦解紅軍根據地後應該可以直接補上自己的組織（待確認是否為既有規則限制）
-- [todo] 使用者playtest回報：臺灣陣營在天津有組織（與北京相鄰），且在臺灣地區擁有最多組織（研判可達成較高級別），認為理應可以用`臺灣奧援`瓦解北京的組織並建立自己的組織。（2026-08-03 使用者回報，先記錄，尚未確認是否為bug）
+- [done] 使用者playtest回報：臺灣陣營在天津有組織（與北京相鄰），且在臺灣地區擁有最多組織（研判可達成較高級別），認為理應可以用`臺灣奧援`瓦解北京的組織並建立自己的組織。（2026-08-03 使用者回報，先記錄，尚未確認是否為bug）
   - 初步檢查：`_can_replace_dissolved_org_with_own()`（`server/game.py:2701`）明確擋下「目標玩家是紅軍、且目標城鎮就是該玩家的根據地」這個組合——瓦解紅軍根據地本身是允許的（沿用既有 2 次命中才移除的耐久規則），但「瓦解＋直接補上自己的組織」這個 `interactive_dissolve_and_build`（臺灣奧援 III 級效果）明確排除紅軍根據地城鎮。天津—北京確實相鄰（rail），距離不是問題；卡在的是這條紅軍根據地保護規則。
-  - 待確認：這條限制是否真的對應canonical卡面／規則書（例如「根據地不可被直接取代」的既有裁決，本repo在P1「根據地瓦解與紅軍根據地失效規則」項目已有類似的根據地保護裁決先例），還是範圍畫得太寬、不小心把「臺灣奧援瓦解＋建立」也一併擋住了。需要對照canonical規則書原文與先前根據地保護裁決的完整脈絡，確認`_can_replace_dissolved_org_with_own()`這條紅軍根據地排除是否應該保留、放寬（例如允許非紅軍根據地以外的所有紅軍組織城鎮）、或維持現狀但需要在卡面/UI提示玩家「根據地無法被直接取代」，避免玩家誤以為是bug。
+  - **2026-08-04 使用者裁決：放寬限制，允許補位**。移除 `_can_replace_dissolved_org_with_own()` 裡「目標玩家是紅軍且目標城鎮是其根據地」的排除條件，讓紅軍根據地與紅軍其他組織城鎮走同一套判斷。既有「2次命中才真正移除」的耐久規則完全不受影響——這個函式只是「預先篩選要不要把這個目標顯示成候選」用的模擬，真正的把關在 `_resolve_support_interaction_result()` 呼叫 `dissolve_organization()` 之後對 `_can_player_build_in_town()` 的即時複查（`game.py` 約3013-3015行）：如果這次只是根據地的第1次命中、組織其實還在，那個即時複查會正確擋下建立，不受這次放寬影響。
+  - 新增 `test_taiwan_support_tier3_can_replace_red_army_base_after_second_dissolve_hit`（模擬本回合已經先對根據地命中1次，這次臺灣奧援瓦解是第2次命中，正確移除根據地組織後補上自己的組織）與 `test_taiwan_support_tier3_cannot_replace_red_army_base_on_first_dissolve_hit`（驗證只中1次時，即使候選階段放行，真正解決時仍會被即時複查正確擋下，耐久規則不受影響）。`scripts/tests/test_action_card_regressions.py` 全數106項通過；`scripts/validate_base_dissolve_browser.py`（涵蓋非紅軍根據地保護、紅軍根據地2次命中等既有案例）9/9 通過；完整 pytest 239/241（2個既有無關 FakePage API drift 失敗）。
 
 ### P1：`紅軍奧援`不論哪一方打出，應該都要能抽1張牌
-- [todo] 使用者提出疑問：`紅軍奧援`（起始牌，卡面「提供資源：1資金+1宣傳。卡牌效果：抽1張牌。若您為紅軍，打出後將本牌放進任一反共陣營玩家棄牌堆；若您為反共陣營玩家，打出後將本牌放進紅軍棄牌堆。」）不管是紅軍還是反共陣營玩家打出，都應該可以抽到那 1 張牌才對；懷疑目前實作可能有一方（或某種取得/打出方式）漏抽。（2026-08-03 使用者提出，先記錄，尚未深入稽核）
+- [done] 使用者提出疑問：`紅軍奧援`（起始牌，卡面「提供資源：1資金+1宣傳。卡牌效果：抽1張牌。若您為紅軍，打出後將本牌放進任一反共陣營玩家棄牌堆；若您為反共陣營玩家，打出後將本牌放進紅軍棄牌堆。」）不管是紅軍還是反共陣營玩家打出，都應該可以抽到那 1 張牌才對；懷疑目前實作可能有一方（或某種取得/打出方式）漏抽。（2026-08-03 使用者提出，先記錄，尚未深入稽核）
   - 初步快速檢查（未完整稽核，僅供下一次接手起點）：`server/game.py` 的 `play_card()` 對卡名字面等於「紅軍奧援」、`mode=="action"` 有獨立的特判區塊（約行 4816 起），會呼叫 `self._draw_player_cards(player, 1)`，且判斷式沒有限定陣營——用 `red_army` 與 `liberals` 兩種陣營各跑一次最小重現腳本，兩者在 `mode='action'` 下都確實抽到了牌，尚未直接重現使用者觀察到的漏抽。
   - 已知這個特判區塊會在 `effective_type == 'support'` 的一般奧援卡通用派送（`_execute_support_card()`，內有另一份 `red_support_draw_and_pass` 效果邏輯，行約 3171）之前就 `return`，導致「紅軍奧援」實際上永遠不會走到通用奧援卡派送——`_execute_support_card()` 裡的那份 `red_support_draw_and_pass` 目前疑似死代碼，需確認是否真的有任何呼叫路徑（例如經由企業人脈/模仿戰術借用、或紅軍在 EVENT 階段的 prep-action 特殊時機 `is_red_support_prep_action`）會繞過 `play_card()` 的特判、改走 `_execute_support_card()`，而該路徑是否也正確抽牌。
+  - **2026-08-04 深入稽核結論：沒有程式錯誤，行為已經對稱**。逐一追過 `mode='action'`（特判區塊，任何陣營都抽）、`mode='resource'`（support卡在資源模式本來就不觸發卡牌效果，這是所有支援卡的共同規則，不是紅軍奧援獨有）、EVENT階段紅軍 prep-action（`is_red_support_prep_action` 只放寬 phase 檢查，實際執行仍走同一個特判區塊）、模仿戰術借用（借來的牌一樣透過同一個 `play_card()` mode='action' 路徑打出）——所有實際可達的路徑都會正確抽牌，紅軍與反共陣營玩家沒有差異。`_execute_support_card()` 裡的 `red_support_draw_and_pass` 確認是死代碼（唯一呼叫點在 `effective_type=='support'` 分支，但紅軍奧援的特判永遠先 `return`，不可能落到那裡）——先保留不清，之後想清理再處理，不影響正確性。
+  - **本輪動作**：只釐清結論，不改任何程式碼。
   - 後續需要：(1) 確認使用者實際觀察到漏抽的具體情境（哪個陣營、用什麼方式取得/打出這張卡、mode='action' 還是 'resource'、是否透過反應/借用/模仿等間接管道）；(2) 稽核 `mode='resource'` 分支是否也該抽牌（卡面「卡牌效果：抽1張牌」比對規則書判斷是否只在打出「效果」而非「資源」時才抽）；(3) 確認 `_execute_support_card()` 裡的 `red_support_draw_and_pass` 是否為死代碼，若是則整併或刪除避免維護混淆；(4) 補齊涵蓋紅軍／各反共陣營、直接打出／借用／模仿取得、action／resource 兩種 mode 的 regression。
 
 ### P1：紅軍使用`網羅人才`時有時只顯示棄牌堆，漏掉己方牌庫

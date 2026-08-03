@@ -4,8 +4,19 @@ class EffectEngine:
     Now implements core executable effect types.
     """
 
-    def _draw(self, player, count):
-        player.hand.extend(player.deck.draw(count))
+    def _draw(self, player, count, game=None, card_name=None):
+        # 2026-08-04 使用者需求：抽牌類效果的紀錄要寫出實際抽到哪些牌，而不是只有一行
+        # 「打出了 X」看不到抽了什麼。`game`/`card_name` 是選填——`shared_draw` 自己組合
+        # 兩位玩家的合併訊息，因此故意不在這裡自動記錄，避免重複寫兩行。
+        drawn = player.deck.draw(count)
+        player.hand.extend(drawn)
+        if game is not None and drawn:
+            names = '、'.join(getattr(c, 'name', str(c)) for c in drawn)
+            if card_name:
+                game.log(f"{player.name} 因{card_name}抽到：{names}")
+            else:
+                game.log(f"{player.name} 抽到：{names}")
+        return drawn
 
     def _starter_names(self):
         return {"追隨者", "樂捐者"}
@@ -16,7 +27,7 @@ class EffectEngine:
         # ✅ Draw cards
         if etype == "draw":
             count = effect.get("count", 1)
-            self._draw(player, count)
+            self._draw(player, count, game=game, card_name=(context or {}).get('card_name'))
             return
 
         # ✅ Discard self
@@ -399,7 +410,7 @@ class EffectEngine:
         # ✅ Shared draw with one selected target (MVP default: first other player)
         if etype == "shared_draw":
             count = effect.get("count", 1)
-            self._draw(player, count)
+            drawn_self = self._draw(player, count)
             context = context or {}
             target_id = context.get("target_player_id") or effect.get("target_player_id")
             target = None
@@ -408,10 +419,15 @@ class EffectEngine:
             if target is None:
                 target = next((p for p in game.players if p != player), None)
             if target is not None:
-                self._draw(target, count)
+                drawn_target = self._draw(target, count)
                 if hasattr(game, 'log'):
                     source_name = context.get('card_name') or 'shared draw'
-                    game.log(f"{player.name} and {target.name} each drew {count} via {source_name}")
+                    self_names = '、'.join(getattr(c, 'name', str(c)) for c in drawn_self)
+                    target_names = '、'.join(getattr(c, 'name', str(c)) for c in drawn_target)
+                    game.log(
+                        f"{player.name} 與 {target.name} 因 {source_name} 各抽 {count} 張："
+                        f"{player.name}抽到 {self_names}；{target.name}抽到 {target_names}"
+                    )
             return
 
         # ✅ Choose one branch via pending choice (情報網)
@@ -543,7 +559,7 @@ class EffectEngine:
             elif condition == "canceled_money_cost_card":
                 should_draw = bool(game.turn_log.get("canceled_money_cost_card"))
             if should_draw:
-                self._draw(player, effect.get("count", 1))
+                self._draw(player, effect.get("count", 1), game=game, card_name=ctx.get('card_name'))
             return
 
         # ✅ Add internal conflict cards (MVP: add named disruption cards to discard pile)
