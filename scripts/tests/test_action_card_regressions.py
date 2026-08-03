@@ -2735,3 +2735,51 @@ def test_standard_draw_effect_card_logs_the_specific_drawn_card_name():
     assert result.get('success'), result
     assert 'SpecificDrawnCard' in names(p.hand)
     assert any('因領導抽到：SpecificDrawnCard' in entry for entry in g.action_log), g.action_log
+
+
+def test_card_build_organization_candidates_refresh_live_after_a_move_between_builds():
+    """2026-08-04 playtest 回報：先打出宣傳家／組織經驗丙這類牌，在桃園建立第一個組織，
+    接著把組織移動到別的城鎮，第二次建立候選卻仍是移動前、臺北附近的舊清單。根因是
+    `card_build_organization` 的候選城鎮只在佇列批次啟動當下（`_activate_next_queued_
+    card_build`）算一次就固定存進 `choice['towns']`，之後即使玩家移動了組織，只要這批
+    額度還沒被解決，候選清單就不會重新投影。這裡直接用真正的 `play_card()`／
+    `resolve_pending_choice()`／`move_organization()`（不是走任何測試專用捷徑）重現
+    「建立→移動→建立」序列，確認第二次候選會即時反映移動後的位置。"""
+    g = make_game()
+    actor = g.current_player()
+    actor.faction_id = 'taiwan_green'
+    actor.base = '臺北'
+    actor.organizations = {'臺北': 1}
+    actor.hand = [card(g, '組織經驗丙'), card(g, '組織經驗乙')]
+    actor.moves_left = 10
+    actor.resources = {'money': 0, 'propaganda': 0}
+
+    g.play_card(0, mode='action')  # 組織經驗丙：range 1，先進入 card_build_organization
+    g.play_card(0, mode='action')  # 組織經驗乙：疊加進同一個連續建立 session，共3個額度
+    assert g.pending_choice['choice_key'] == 'card_build_organization'
+    assert g._remaining_card_build_entitlements() == 3
+    first_towns = sorted(t['town'] for t in g.pending_choice['towns'])
+    assert first_towns == ['基隆', '新北', '桃園']  # 範圍1格內都是臺北的鄰居
+
+    build_index = next(i for i, t in enumerate(g.pending_choice['towns']) if t['town'] == '桃園')
+    resolved = g.resolve_pending_choice(actor.id, build_index)
+    assert resolved.get('success'), resolved
+    assert actor.organizations == {'臺北': 1, '桃園': 1}
+
+    move_result = g.move_organization('桃園', '新竹', mode='rail')
+    assert move_result.get('success'), move_result
+    assert actor.organizations == {'臺北': 1, '新竹': 1}
+
+    # 舊行為：候選清單仍停留在「桃園建立完當下」算好的舊快照（基隆／宜蘭／新北／新竹）。
+    # 修正後：state() 序列化與 resolve 都會用目前的組織位置重新即時投影，新竹的鄰居
+    # 苗栗要出現在候選裡；已經被移走、目前是空城的桃園要重新變回合法候選；已經不再
+    # 鄰接任何己方組織的宜蘭則不該再出現。
+    live_towns_from_state = sorted(t['town'] for t in g.state()['pending_choice']['towns'])
+    assert live_towns_from_state == ['基隆', '新北', '桃園', '苗栗']
+    assert '宜蘭' not in live_towns_from_state
+
+    second_index = next(i for i, t in enumerate(g.pending_choice['towns']) if t['town'] == '苗栗')
+    second_resolved = g.resolve_pending_choice(actor.id, second_index)
+    assert second_resolved.get('success'), second_resolved
+    assert actor.organizations == {'臺北': 1, '新竹': 1, '苗栗': 1}
+    assert g._remaining_card_build_entitlements() == 1

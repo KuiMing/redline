@@ -2120,7 +2120,32 @@ class Game:
         )
         return {'pending_choice': True}
 
+    def _live_pending_town_choices(self, player, choice):
+        """`card_build_organization`／`era_red_build_near_target` 這類連續多次建立的候選
+        城鎮清單，過去只在佇列批次「啟動」的當下算一次、之後就固定存在 `choice['towns']`
+        裡沿用，直到玩家解決掉才會換下一批。這代表如果玩家在兩次建立之間先移動了組織，
+        候選清單不會反映移動後的新位置——2026-08-04 playtest 回報：先在桃園建立，移動到
+        彰化後，第二次建立候選仍是移動前、臺北附近的城鎮。修法是不要相信儲存的舊清單，
+        每次要呈現給玩家（`state()` 序列化）或要解析玩家的選擇（`_resolve_town_choice()`）
+        時都用 `choice['context']['effect']` 重新即時投影一次。回傳 `None` 表示這個
+        choice_key 不適用即時投影，呼叫端應該繼續沿用 `choice.get('towns')`。"""
+        choice_key = choice.get('choice_key')
+        context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
+        if choice_key == 'card_build_organization':
+            return self._card_build_town_choices(player, context.get('effect') or {})
+        if choice_key == 'era_red_build_near_target':
+            effect = context.get('effect') if isinstance(context.get('effect'), dict) else {}
+            built_towns = set(context.get('built_towns') or [])
+            return [
+                entry for entry in self._era_build_towns_near_target(player, effect)
+                if entry.get('town') not in built_towns
+            ]
+        return None
+
     def _resolve_town_choice(self, player, choice, index):
+        live_towns = self._live_pending_town_choices(player, choice)
+        if live_towns is not None:
+            choice['towns'] = live_towns
         towns = choice.get('towns') or []
         if index is None or index < 0 or index >= len(towns):
             return {'error': 'Invalid choice index'}
@@ -6436,6 +6461,16 @@ class Game:
                 ]
                 pending_prompt = self.pending_choice.get('prompt')
                 pending_source_name = self.pending_choice.get('source_name')
+            # 連續多次建立的候選城鎮清單即時投影（見 `_live_pending_town_choices()`）——不要
+            # 相信 `self.pending_choice['towns']` 裡儲存的舊清單，每次序列化都用該效果的
+            # 擁有者（不是目前這次 state() 呼叫的 viewer）當下的組織位置重新投影一次。
+            pending_choice_owner = next(
+                (p for p in self.players if getattr(p, 'id', None) == self.pending_choice.get('player_id')),
+                None,
+            )
+            pending_live_towns = self._live_pending_town_choices(pending_choice_owner, self.pending_choice) if pending_choice_owner else None
+            if pending_live_towns is not None:
+                self.pending_choice['towns'] = pending_live_towns
             pending_choice = {
                 'type': self.pending_choice.get('type'),
                 'choice_key': self.pending_choice.get('choice_key'),
