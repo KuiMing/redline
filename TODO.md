@@ -17,6 +17,12 @@
 
 ## 目前 active todo
 
+### P1：`紅軍奧援`不論哪一方打出，應該都要能抽1張牌
+- [todo] 使用者提出疑問：`紅軍奧援`（起始牌，卡面「提供資源：1資金+1宣傳。卡牌效果：抽1張牌。若您為紅軍，打出後將本牌放進任一反共陣營玩家棄牌堆；若您為反共陣營玩家，打出後將本牌放進紅軍棄牌堆。」）不管是紅軍還是反共陣營玩家打出，都應該可以抽到那 1 張牌才對；懷疑目前實作可能有一方（或某種取得/打出方式）漏抽。（2026-08-03 使用者提出，先記錄，尚未深入稽核）
+  - 初步快速檢查（未完整稽核，僅供下一次接手起點）：`server/game.py` 的 `play_card()` 對卡名字面等於「紅軍奧援」、`mode=="action"` 有獨立的特判區塊（約行 4816 起），會呼叫 `self._draw_player_cards(player, 1)`，且判斷式沒有限定陣營——用 `red_army` 與 `liberals` 兩種陣營各跑一次最小重現腳本，兩者在 `mode='action'` 下都確實抽到了牌，尚未直接重現使用者觀察到的漏抽。
+  - 已知這個特判區塊會在 `effective_type == 'support'` 的一般奧援卡通用派送（`_execute_support_card()`，內有另一份 `red_support_draw_and_pass` 效果邏輯，行約 3171）之前就 `return`，導致「紅軍奧援」實際上永遠不會走到通用奧援卡派送——`_execute_support_card()` 裡的那份 `red_support_draw_and_pass` 目前疑似死代碼，需確認是否真的有任何呼叫路徑（例如經由企業人脈/模仿戰術借用、或紅軍在 EVENT 階段的 prep-action 特殊時機 `is_red_support_prep_action`）會繞過 `play_card()` 的特判、改走 `_execute_support_card()`，而該路徑是否也正確抽牌。
+  - 後續需要：(1) 確認使用者實際觀察到漏抽的具體情境（哪個陣營、用什麼方式取得/打出這張卡、mode='action' 還是 'resource'、是否透過反應/借用/模仿等間接管道）；(2) 稽核 `mode='resource'` 分支是否也該抽牌（卡面「卡牌效果：抽1張牌」比對規則書判斷是否只在打出「效果」而非「資源」時才抽）；(3) 確認 `_execute_support_card()` 裡的 `red_support_draw_and_pass` 是否為死代碼，若是則整併或刪除避免維護混淆；(4) 補齊涵蓋紅軍／各反共陣營、直接打出／借用／模仿取得、action／resource 兩種 mode 的 regression。
+
 ### P1：紅軍使用`網羅人才`時有時只顯示棄牌堆，漏掉己方牌庫
 - [done] canonical卡面規則為：一般玩家從己方牌庫任選1張加入手牌；若為紅軍，則應在效果結算當下同時看到己方牌庫與己方棄牌堆中的所有可選卡牌，並從兩區聯集任選1張。playtest發現紅軍有時只能看到棄牌堆，牌庫中的卡牌未出現在候選。後續需稽核 `choose_from_own_deck`的candidate generation、牌庫／棄牌堆zone metadata、抽牌堆洗牌／重建時機及viewer-scoped projection；涵蓋牌庫與棄牌堆皆有牌、其中一區為空、重名卡、選中後從正確來源移除、其餘牌庫洗牌、非紅軍不得看到棄牌候選，以及正式WebSocket UI選單同時呈現兩區完整卡牌。（2026-08-02 playtest回報）
   - 根因（比候選投影嚴重得多）：`server/game.py` 的 `_resolve_card_choice()` 在 `choice_key == 'recruit_talent'` 分支裡，有一段從實作第一天（2026-05-11 commit `695872e`）就存在的迴圈——`for card in list(source_cards): if card is chosen_card: continue; ... player.deck.draw_pile.remove(card); ... player.deck.discard_pile.remove(card)`——把候選清單裡「除了被選中那張以外」的每一張牌都從牌庫／棄牌堆直接刪除。卡面規則其實是「任選 1 張加入手牌，而後將牌庫洗牌」，沒被選中的候選牌應該原地保留，只是牌庫最後會被洗牌；這段迴圈等同每次使用網羅人才就銷毀玩家整副牌庫（只留被選中的那 1 張）。playtest 回報的「紅軍再次使用時只顯示棄牌堆」正是這個副作用：上一次使用就已經把牌庫清空了，第二次自然只剩之後累積的棄牌堆有候選，不是候選投影或畫面顯示的問題。連既有測試 `test_red_army_recruit_talent_can_select_from_own_deck_or_discard` 都把這個被刪除的錯誤行為當成預期結果寫進斷言（`'DeckChoiceA' not in names(p.deck.draw_pile)`），從一開始就沒被抓到。
