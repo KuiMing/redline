@@ -2939,3 +2939,96 @@ def test_armory_discount_applies_to_the_actual_purchase_charge_not_just_the_disp
     assert result.get('success'), result
     assert p.resources['money'] == 0  # 印刷費用4 - 軍火庫折扣2 = 2，剛好用完手上的2資金
     assert '武裝集團' in names(p.deck.discard_pile)
+
+
+def test_npc_progresses_on_turn_end_inner_build_draw_ability():
+    """2026-08-05 使用者playtest回報：事件卡『全國人大召開』（trigger:
+    {"type": "use_faction_ability", "count": 1}）——臺灣綠線用東洋奧援在牆內建立組織，
+    回合結束時觸發本土社團（牆內建組織→多抽1張），這個特殊能力發動本身就應該滿足
+    『全國人大召開』的成功條件。稽核發現根因比單一事件更大：`use_faction_ability` 追蹤
+    先前只掛在「玩家主動按下的陣營行動」（紅軍統戰部/政工部…以及非紅軍的立場試探/民族
+    祭儀等），而「自動觸發型」的陣營能力——回合結束牆內建組織抽牌（本土社團/選我河山/
+    還我河山/民國之心）與出牌後首張帶資金/宣傳費用的觸發（商貿組織/民族調和/星星之火/
+    人同此心/基金會/共合會/展現實力）——發動時完全沒呼叫 `_track_event_progress`，
+    所以任何靠 `use_faction_ability` 判定的事件都不會被這些能力推進。這裡走真正的
+    `_end_turn()` 流程（本土社團就是在補牌後於 `_apply_turn_end_faction_abilities` 觸發），
+    `built_towns` 依實際建造在牆內城鎮的結果填入，確認事件被判定成功、而不是失敗。"""
+    g = make_game()
+    actor = g.current_player()
+    actor.faction_id = 'taiwan_green'
+    pin_active_mission_event(g, '全國人大召開')
+    # 本回合在牆內城鎮（南寧、廣州）建立組織——與東洋奧援建組織後 build_organization
+    # 寫入 turn_log['built_towns'] 的結果一致。
+    g.turn_log['built_towns'] = ['南寧', '廣州']
+
+    g._end_turn()
+
+    assert g.event_progress['succeeded'] is True
+    assert g.event_progress['status'] == 'success_pending'
+
+
+def test_npc_progresses_on_first_money_cost_trigger_ability_immediate_play():
+    """涵蓋重複的「本回合首張帶資金/宣傳費用」觸發區塊之一：`play_card()` 直接出牌路徑
+    （game.py 內以 `cost_has_money` 為守衛的那份）。聯邦派擁有商貿組織（首張帶資金費用的
+    牌→多抽1張）；打出帶資金購買費用的牌讓商貿組織發動，同樣要計入『全國人大召開』。"""
+    g = make_game()
+    actor, other = g.players
+    actor.faction_id = 'federalists'
+    other.faction_id = 'liberals'
+    other.hand = []  # 對手無手牌→不觸發取消反應詢問，直接走即時出牌區塊
+    pin_active_mission_event(g, '全國人大召開')
+    actor.hand = [card(g, '樹立信心')]  # 購買費用含資金
+    actor.resources = {'money': 10, 'propaganda': 10}
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    assert g.turn_log.get('faction_first_money_triggered') is True
+    assert g.event_progress['succeeded'] is True
+    assert g.event_progress['status'] == 'success_pending'
+
+
+def test_npc_progresses_on_first_money_cost_trigger_ability_deferred_reaction_resume():
+    """涵蓋重複的「首張帶資金費用」觸發區塊的另一份：延後反應（deferred reaction）結算後
+    的 `_resume_reaction_pending_action()` 路徑（以 `trigger_cost_has_money` 為守衛）。
+    這份與即時出牌那份幾乎逐行重複，若日後只還原其中一份，這個測試會抓到。設定：聯邦派
+    打出帶資金費用的牌時，對手手上握有『情報網』會跳出取消詢問→出牌延後；對手選擇不取消
+    後，行動在 resume 路徑結算，商貿組織才發動，同樣要計入『全國人大召開』。"""
+    g = make_game()
+    actor, reactor = g.players
+    actor.faction_id = 'federalists'
+    reactor.faction_id = 'liberals'
+    pin_active_mission_event(g, '全國人大召開')
+    actor.hand = [card(g, '樹立信心')]  # 購買費用含資金
+    actor.resources = {'money': 10, 'propaganda': 10}
+    reactor.hand = [card(g, '情報網')]  # 握有取消卡→出牌會先跳出取消反應詢問
+
+    result = g.play_card(0, mode='action')
+    assert result.get('pending_choice') is True, result
+    assert g.pending_choice['choice_key'] == 'cancel_other_player_action'
+    # 尚未結算，商貿組織還沒發動，事件也還沒成功
+    assert g.event_progress['succeeded'] is False
+
+    skipped = g.resolve_pending_choice(reactor.id, 0)  # 選擇不取消→走 resume 路徑
+
+    assert skipped.get('success'), skipped
+    assert g.turn_log.get('faction_first_money_triggered') is True
+    assert g.event_progress['succeeded'] is True
+    assert g.event_progress['status'] == 'success_pending'
+
+
+def test_npc_ignores_red_army_own_faction_ability():
+    """確認這次修法沒有放寬『非紅軍』的既有限制——`_event_trigger_actor_allowed()` 仍排除
+    紅軍。紅軍發動自己的陣營行動（統戰部）雖然也會呼叫 `_track_event_progress(
+    'use_faction_ability')`，但因為行動者是紅軍，不應該讓『全國人大召開』被判定成功。"""
+    g = make_game()
+    actor, other = g.players
+    actor.faction_id = 'red_army'
+    other.faction_id = 'liberals'  # 需有非紅軍玩家，紅軍行動額度才 >0
+    pin_active_mission_event(g, '全國人大召開')
+
+    result = g._activated_faction_action(actor, '統戰部')
+
+    assert result.get('success'), result
+    assert g.event_progress['succeeded'] is False
+    assert g.event_progress['count'] == 0
