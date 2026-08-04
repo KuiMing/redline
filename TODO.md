@@ -17,12 +17,18 @@
 
 ## 目前 active todo
 
+### P2：雙方都持有情報網／爆料黑幕時，被取消的一方應該也能反過來取消對方的『取消』
+- [todo] 使用者回報：當雙方同時各自有『情報網』和『爆料黑幕』，任一方行動的時候，被另一方取消行動，前者應該也要可以取消對方的『取消』。（2026-08-05 使用者回報，先記錄，尚未調查）
+
 ### P2：事件卡『全國人大召開』搭配台灣綠線東洋奧援建立組織觸發特殊能力，任務卻判定失敗
 - [done] 使用者回報：事件卡『全國人大召開』，台灣綠線陣營使用東洋奧援，在牆內城鎮建立組織，應該會觸發台灣綠線的特殊能力（本土社團：回合結束抽卡環節多抽一張卡），這個特殊能力發動本身就直接觸發『全國人大召開』的成功條件（trigger `use_faction_ability`, count 1），讓台灣陣營抽一張卡。但實際上任務被判定失敗。（2026-08-05 使用者回報）
   - **根因比原本想的更大（與『北京政爭』如出一轍）**：稽核 `_track_event_progress()`（`server/game.py:430`）與 `_event_trigger_actor_allowed()`（`server/game.py:425`，只排除紅軍、對其他陣營放行）後，門檢查全庫 10 個 `_track_event_progress('use_faction_ability', player=player)` 呼叫點，全部都掛在「玩家**主動按下**的陣營行動」路徑——其中 6 個是紅軍專屬（統戰部/政工部/國安部/中紀委，`server/game.py:1826,2394,2426,3854,3865,3885`，因紅軍被 `_event_trigger_actor_allowed` 排除、依設計本來就不計入，維持不動），另 4 個是**非紅軍的主動啟動能力**（民主陣線/紅軍派系/立場試探（自由派）/賭徒耳語/民族祭儀（傣・苗），`server/game.py:3912,3922,3943,3968`，這些對非紅軍其實**早就正常計入**）。真正的漏洞是**自動觸發型**的陣營能力發動時，完全沒有呼叫 `_track_event_progress`：(a) 回合結束「本回合曾在牆內建組織→多抽1張」的本土社團/選我河山/還我河山/民國之心（`_apply_turn_end_faction_abilities`，`server/game.py:4108`），(b) 出牌後「本回合首張帶資金/宣傳購買費用的牌」觸發的商貿組織/民族調和/星星之火/人同此心/基金會/共合會/展現實力——這段程式碼**幾乎逐行重複兩份**：延後反應結算後的 `_resume_reaction_pending_action`（`server/game.py:4548`）與 `play_card()` 即時出牌（`server/game.py:5025`）。本土社團正是 (a) 類，所以透過東洋奧援在牆內建組織、回合結束觸發本土社團時完全不會推進事件，任務直接落到失敗結算。修正前對 `use_faction_ability` 的既有理解須更正：它**並非**對所有非紅軍完全失效，主動啟動能力早已計入；失效的只有「自動觸發型」能力這一整類，橫跨所有用到它的能力、不只『全國人大召開』一張事件。
   - 修法：在上述三處自動觸發能力**實際發動的每個分支**補上 `self._track_event_progress('use_faction_ability', player=player)`——`_apply_turn_end_faction_abilities` 的本土社團/選我河山/還我河山與民國之心兩個分支（`server/game.py:4112-4118`）；兩份重複的首張帶費用觸發區塊（`_resume_reaction_pending_action` 與 `play_card()`）的商貿組織/民族調和・星星之火/人同此心/基金會・共合會/展現實力五個分支各自補上，**兩份都改**以免日後只還原其中一份又壞掉。紅軍排除行為完全不動（`_event_trigger_actor_allowed` 的紅軍排除保留、既有 6 個紅軍專屬呼叫點不加不減），確認符合設計原意。
   - 新增回歸（`scripts/tests/test_action_card_regressions.py`，比照 `pin_active_mission_event` 與『北京政爭』三支的風格與嚴謹度）：`test_npc_progresses_on_turn_end_inner_build_draw_ability`（走真正的 `_end_turn()` 流程，`built_towns` 填入牆內城鎮，本土社團在補牌後觸發→事件判定成功，即使用者原始情境）、`test_npc_progresses_on_first_money_cost_trigger_ability_immediate_play`（聯邦派打出帶資金費用的牌→商貿組織發動，涵蓋 `play_card()` 即時出牌那份重複區塊）、`test_npc_progresses_on_first_money_cost_trigger_ability_deferred_reaction_resume`（對手握有情報網→出牌先跳出取消詢問、對手不取消後於 `_resume_reaction_pending_action` resume 路徑結算→商貿組織發動，涵蓋**另一份**重複區塊，日後只還原一份會被抓到）、`test_npc_ignores_red_army_own_faction_ability`（紅軍發動統戰部雖也呼叫 `use_faction_ability` 追蹤，但因行動者是紅軍不應推進事件，證明未放寬 `_event_trigger_actor_allowed` 的紅軍排除）。
   - 驗證：新增 4 支全綠；完整 pytest（同 baseline 的 ignore 清單）**255→259 passed, 0 failed**（恰為新增 4 支）。`python3 scripts/validate_event_outcome_timing_audit.py` 仍 `{"total": 28, "passed": 28, "failed": 0}`（其重生的 `docs/records/event-cards/EVENT_OUTCOME_TIMING_AUDIT.json` diff 混入其他 feature 未落地的 `pending_choice` 欄位/香港抗暴之戰結算 log 漂移，與本次修正無關，已 `git checkout --` 還原、不納入 commit）。
+
+### P2：先使用宣傳家再使用東洋奧援，第二次爆料黑幕沒有跳出通知
+- [todo] 使用者回報：先使用『宣傳家』，此時對方有跳出『爆料黑幕』的通知；接著再使用『東洋奧援』，對方這次卻沒有跳出『爆料黑幕』的通知。（2026-08-05 使用者回報，先記錄，尚未調查）
 
 ### P1：使用者回報牌庫感覺越來越少——已完成徹底稽核
 - [done] 使用者貼出實際對局 action log（dfa 玩家，回合10→12），觀察到 Turn 11 結束牌庫用盡、棄牌堆僅7張重洗，緊接著 Turn 12 又用盡、棄牌堆僅剩4張重洗；懷疑與『網羅人才』有關，且提到「上一次也觀察到類似現象」，要求本輪深入調查（2026-08-04 使用者回報並要求深入調查，非僅記錄）。
