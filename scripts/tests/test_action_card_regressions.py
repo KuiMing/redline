@@ -2783,3 +2783,43 @@ def test_card_build_organization_candidates_refresh_live_after_a_move_between_bu
     assert second_resolved.get('success'), second_resolved
     assert actor.organizations == {'臺北': 1, '新竹': 1, '苗栗': 1}
     assert g._remaining_card_build_entitlements() == 1
+
+
+def test_non_red_army_movement_is_not_restricted_by_build_development_space():
+    """2026-08-04 playtest 回報＋更正：使用者先回報「紅軍以外玩家組織建立後可遷移至任意
+    城鎮」，接著澄清：建立組織才受「發展空間」限制，遷移只要城鎮相鄰（含翻牆規則）、
+    移動次數足夠就該成功，即使目的地不是該陣營可以建立組織的城鎮。這推翻了更早一次
+    playtest（`scripts/validate_wall_crossing_movement.py` 的 `case_reported_dongsha_
+    kwuntong`）錯誤回報的「應該擋下」判斷——使用者確認那次回報本身就錯了：翻牆本來就
+    有獨立的2次移動成本限制，不需要再疊加發展空間限制。這裡直接用真正的
+    `move_organization()` 重現東沙（牆外）→觀塘（牆內，不適用臺灣陣營）成功遷移。"""
+    g = make_game()
+    actor = g.current_player()
+    actor.faction_id = 'taiwan_green'
+    actor.base = '臺北'
+    actor.organizations = {'臺北': 1, '東沙': 1}
+    actor.moves_left = 5
+    assert g.can_faction_develop_in_town('taiwan_green', '觀塘') is False
+
+    result = g.move_organization('東沙', '觀塘', mode='road')
+
+    assert result.get('success'), result
+    assert actor.organizations == {'臺北': 1, '觀塘': 1}
+
+
+def test_red_army_movement_still_restricted_to_red_army_development_space():
+    """同上一項的對照組：紅軍自己的發展空間限制是獨立的一條檢查
+    （`_validate_organization_move` 裡的 red_army 專屬分支），不受上面那項放寬影響——
+    使用者的回報明確是「紅軍以外」的玩家，紅軍本身的遷移限制維持不變。"""
+    g = make_game()
+    actor = g.current_player()
+    actor.faction_id = 'red_army'
+    actor.base = '北京'
+    actor.organizations = {'北京': 1, '沖繩': 1}
+    actor.moves_left = 5
+    assert g.can_faction_develop_in_town('red_army', '福岡') is False
+
+    result = g.move_organization('沖繩', '福岡', mode='road')
+
+    assert result.get('error') == 'Red Army organization cannot leave Red Army development space', result
+    assert actor.organizations == {'北京': 1, '沖繩': 1}

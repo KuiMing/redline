@@ -24,11 +24,17 @@ def _new_game(faction_id, orgs, moves):
 
 
 def case_reported_dongsha_kwuntong():
-    # playtest 回報案例：臺灣綠線 東沙→觀塘 只花1次移動——觀塘不適用臺灣陣營，應直接擋下
+    # 2026-08-04 使用者更正：原本這裡的playtest回報（觀塘不適用臺灣陣營、應直接擋下）
+    # 判斷錯誤——「發展空間」只限制建立組織，不限制遷移；翻牆已經有獨立的2次移動成本
+    # 限制，不需要再疊加發展空間限制。東沙→觀塘只要相鄰、移動次數足夠（翻牆需2次）
+    # 就應該成功，即使觀塘不是臺灣陣營可以建立組織的城鎮。
     g, a, b = _new_game('taiwan_green', {'東沙': 1}, 2)
     result = g.move_organization('東沙', '觀塘', mode='road')
-    checks = {'taiwan_green_blocked_by_faction_applicability': '不適用你的陣營' in str(result.get('error'))}
-    return {'name': 'reported_case_dongsha_to_kwuntong_blocked', 'result': result, 'checks': checks, 'ok': all(checks.values())}
+    checks = {
+        'not_blocked_by_faction_applicability': result.get('success') is True,
+        'wall_crossing_cost_two_consumed': a.moves_left == 0,
+    }
+    return {'name': 'dongsha_to_kwuntong_allowed_despite_faction_inapplicability', 'result': result, 'checks': checks, 'ok': all(checks.values())}
 
 
 def case_crossing_costs_two():
@@ -65,15 +71,12 @@ def case_rail_three_cannot_cross():
 
 
 def case_direct_rail_crossing_allowed_at_two():
-    # 直接相鄰的跨牆鐵路（平壤—丹東）仍可走，花2次
+    # 直接相鄰的跨牆鐵路（平壤—丹東）仍可走，花2次；發展空間不限制遷移，不論丹東是否
+    # 適用朝鮮陣營都應該成功（2026-08-04 使用者更正）。
     g, a, b = _new_game('chaoxian', {'平壤': 1}, 2)
     applicable = g.can_faction_develop_in_town('chaoxian', '丹東')
     result = g.move_organization('平壤', '丹東', mode='rail')
-    checks = (
-        {'adjacent_rail_crossing_costs_two': result.get('success') is True and a.moves_left == 0}
-        if applicable else
-        {'destination_not_applicable_blocked': '不適用你的陣營' in str(result.get('error'))}
-    )
+    checks = {'adjacent_rail_crossing_costs_two': result.get('success') is True and a.moves_left == 0}
     return {'name': 'direct_rail_crossing', 'applicable': applicable, 'result': result, 'checks': checks, 'ok': all(checks.values())}
 
 
@@ -94,15 +97,21 @@ def main():
         case_same_side_moves_still_one(),
     ]
     summary = {
-        'scope': ['翻牆移動成本', '目的城鎮陣營適用'],
+        'scope': ['翻牆移動成本'],
         'purpose': (
-            'P1 playtest item (東沙→觀塘 case): move_organization charged a flat cost of 1 '
-            'and never checked destination faction applicability. Per rules.md 組織遷移: '
-            'wall-crossing (牆內↔牆外) costs 2 movement points and may only move 1 step '
-            '(multi-step rail-3 paths can no longer traverse the wall — the BFS is '
-            'same-side-only), and the destination town must be within the moving faction\'s '
-            'development space (taiwan_green cannot enter 觀塘 at all). Same-side moves and '
-            'the Chek Lap Kok airport path (already 2 moves) are unaffected.'
+            'P1 playtest item (東沙→觀塘 case), corrected 2026-08-04: an earlier playtest '
+            'report claimed move_organization should block movement into a town outside the '
+            'mover\'s faction development space (「發展空間」), and a dedicated check was '
+            'added for that. The user later confirmed that earlier report was itself mistaken '
+            '— 發展空間 only restricts BUILDING a new organization, not MOVING an existing '
+            'one; rules.md 組織遷移 lists no development-space restriction at all, only '
+            'wall-crossing cost (2 movement points, 1 step only), pass-through-own-not-enemy, '
+            'rail range 3, road range 1. The destination-applicability check has been removed '
+            'from _validate_organization_move (Red Army keeps its own separate development-'
+            'space check, unaffected by this fix — see TODO.md). This validator now asserts '
+            'movement succeeds into a faction-inapplicable town as long as it is reachable '
+            'and move points suffice; wall-crossing cost/step-limit mechanics (unrelated to '
+            'the removed check) are re-verified unchanged.'
         ),
         'total': len(results),
         'passed': sum(1 for r in results if r['ok']),

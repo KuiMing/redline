@@ -5535,9 +5535,14 @@ class Game:
             return {"error": "Cannot move into occupied town"}
         if getattr(origin_owner, 'faction_id', None) == 'red_army' and not self.can_faction_develop_in_town('red_army', to_town):
             return {"error": "Red Army organization cannot leave Red Army development space"}
-        # 目的城鎮必須適用移動者陣營（組織不能存在於非發展空間的城鎮）
-        if not airport_move and not self.can_faction_develop_in_town(getattr(player, 'faction_id', None), to_town):
-            return {"error": "目的城鎮不適用你的陣營，無法遷入"}
+        # 2026-08-04 使用者裁決：「發展空間」（`can_faction_develop_in_town`）是建立組織
+        # 專屬的限制，rules.md「組織遷移」一節（翻牆2次移動、鐵路3格、一般1格、可跨越己方
+        # 不可跨越敵方）完全沒有提到目的地要屬於移動者陣營的發展空間；紅軍以外的玩家只要
+        # 城鎮相鄰（或鐵路3格內）、目的地未被佔用、移動次數足夠，就應該可以把組織遷移過去，
+        # 即使那座城鎮不是該陣營可以「建立」新組織的城鎮——建立與遷移是兩種不同動作，只有
+        # 建立才受發展空間限制。紅軍根據地規則不同，紅軍組織仍受上面那條紅軍專屬檢查限制，
+        # 不受本次放寬影響。原本這裡還有一條套用在所有陣營身上的發展空間檢查
+        # （`目的城鎮不適用你的陣營，無法遷入`），已移除。
         # 移動共享組織時，組織會轉為移動者所有（總數 +1），需消耗自己的組織棋供應
         if origin_owner is not player and not self._has_org_supply(player):
             return {"error": f"組織棋已達上限（{self._org_supply_limit(player)}），無法接收共享組織"}

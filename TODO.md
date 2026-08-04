@@ -29,7 +29,13 @@
   - 新增 `test_red_army_aid_draw_is_logged_with_the_specific_card_name`／`test_standard_draw_effect_card_logs_the_specific_drawn_card_name`（`scripts/tests/test_action_card_regressions.py`），分別驗證紅軍奧援特判路徑與一般 `effect_engine.py` 的 `draw` 效果路徑都會記錄具體抽到的卡名。完整 pytest 239/241（2個既有無關 FakePage API drift 失敗），確認沒有既有測試斷言舊的「抽了N張牌」無具名格式而被打壞。
 
 ### P1：紅軍以外玩家組織建立後可遷移至任意城鎮
-- [todo] 使用者回報：紅軍以外的玩家，組織建立完成後，似乎可以遷移到任意城鎮，不受道路／鐵路相鄰關係限制。（2026-08-04 使用者回報，先記錄，尚未調查）
+- [done] 使用者回報：紅軍以外的玩家，組織建立完成後，似乎可以遷移到任意城鎮，不受道路／鐵路相鄰關係限制。（2026-08-04 使用者回報，先記錄，尚未調查）
+  - 澄清：使用者後續說明「不受限制」實際意思是——建立組織只能在該陣營可建立組織的城鎮建立（受「發展空間」限制），但建立完之後，只要城鎮相鄰、移動次數足夠，即使目的地不是該陣營可建立組織的城鎮也應該能遷移過去；不是完全無視道路／鐵路相鄰關係（相鄰性檢查本身經直接測試確認正常，`_rail_reachable_within_three` 的3格鐵路上限與地圖資料也都正常，無異常）。
+  - 稽核發現：`_validate_organization_move()`（`server/game.py`）除了紅軍專屬的發展空間檢查外，還有一條套用在**所有**陣營身上的通用檢查——`if not airport_move and not self.can_faction_develop_in_town(...): return {"error": "目的城鎮不適用你的陣營，無法遷入"}`。這條檢查會擋下移動到「相鄰但不屬於該陣營發展空間」的城鎮，此即使用者觀察到的限制來源。
+  - **關鍵衝突與釐清**：這條通用檢查並非一直存在，而是**之前一次 playtest 回報後才特地加上的**（`scripts/validate_wall_crossing_movement.py` 的 `case_reported_dongsha_kwuntong`，案例正好也是臺灣綠線「東沙→觀塘」——東沙在牆外、觀塘在牆內，是一次翻牆移動），當時回報「移動到不適用陣營的城鎮」是bug才修的。這次使用者明確**推翻**了那次回報：「翻牆需要兩次移動次數，所以之前是我錯了，現在對的規則是：移動目的地不受發展空間限制」——翻牆本身已經有獨立的2次移動成本限制（rules.md「組織遷移」：翻牆需2次移動且僅移動1格），不需要再疊加發展空間限制；rules.md「組織遷移」一節完整列出的限制也確實只有翻牆成本、可跨越己方不可跨越敵方、鐵路3格、一般1格，沒有提到目的地要屬於移動者陣營的發展空間。
+  - 修法：移除 `_validate_organization_move()` 裡套用在所有陣營身上的通用發展空間檢查，只保留紅軍專屬的那一條（`"Red Army organization cannot leave Red Army development space"`，使用者明確是「紅軍以外」的回報，紅軍本身的限制不變）。赤鱲角機場（香港特殊規則 S5-2）內部用來界定「機場路線終點必須在香港發展空間內」的 `can_faction_develop_in_town('hong_kong', to_town)` 判斷是機場規則自己的範圍限定，與這次移除的通用檢查是兩回事，未受影響。
+  - 直接以 `move_organization()` 重現：臺灣綠線從東沙移動到觀塘（相鄰、翻牆、觀塘不適用臺灣陣營）現在正確成功；紅軍從沖繩移動到福岡（相鄰但不適用紅軍發展空間）仍正確被擋下，確認紅軍限制不受影響。
+  - 更新了 `scripts/validate_wall_crossing_movement.py`（原本兩個案例斷言「應該擋下」，已改為斷言「應該成功」並更新 purpose 說明兩次回報的來龍去脈，6/6 全過）；新增 `test_non_red_army_movement_is_not_restricted_by_build_development_space`／`test_red_army_movement_still_restricted_to_red_army_development_space`（`scripts/tests/test_action_card_regressions.py`）。完整 pytest 248/250（2個既有無關失敗）；`validate_movement_rules.py`（13/13）、`validate_enemy_occupancy_rules.py`（5/5）、`validate_one_organization_per_town.py`（11/11）、`validate_red_army_special_rules.py`（6/6，含紅軍移動限制案例）、`validate_hk_base_relocation.py`（5/5）、`validate_chek_lap_kok_airport.py`／`validate_org_supply_limits.py`（各自既有的無關失敗案例確認在改動前的 baseline 上就已存在，不列入本次回歸範圍）皆已重跑確認無新增回歸。
 
 ### P2：玩家在軍火庫城鎮擁有組織可減免武裝類卡牌購買費用
 - [todo] 使用者回報規則：玩家在軍火庫城鎮每擁有1個組織，該陣營購買每張武裝類卡牌所需支付的費用減少1點資金（至多可藉軍火庫減少3點資金）。（2026-08-04 使用者回報，先記錄，尚未確認現有實作是否已涵蓋此規則）

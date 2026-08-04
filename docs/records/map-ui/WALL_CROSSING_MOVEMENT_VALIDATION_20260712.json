@@ -1,22 +1,22 @@
 {
   "summary": {
     "scope": [
-      "翻牆移動成本",
-      "目的城鎮陣營適用"
+      "翻牆移動成本"
     ],
-    "purpose": "P1 playtest item (東沙→觀塘 case): move_organization charged a flat cost of 1 and never checked destination faction applicability. Per rules.md 組織遷移: wall-crossing (牆內↔牆外) costs 2 movement points and may only move 1 step (multi-step rail-3 paths can no longer traverse the wall — the BFS is same-side-only), and the destination town must be within the moving faction's development space (taiwan_green cannot enter 觀塘 at all). Same-side moves and the Chek Lap Kok airport path (already 2 moves) are unaffected.",
+    "purpose": "P1 playtest item (東沙→觀塘 case), corrected 2026-08-04: an earlier playtest report claimed move_organization should block movement into a town outside the mover's faction development space (「發展空間」), and a dedicated check was added for that. The user later confirmed that earlier report was itself mistaken — 發展空間 only restricts BUILDING a new organization, not MOVING an existing one; rules.md 組織遷移 lists no development-space restriction at all, only wall-crossing cost (2 movement points, 1 step only), pass-through-own-not-enemy, rail range 3, road range 1. The destination-applicability check has been removed from _validate_organization_move (Red Army keeps its own separate development-space check, unaffected by this fix — see TODO.md). This validator now asserts movement succeeds into a faction-inapplicable town as long as it is reachable and move points suffice; wall-crossing cost/step-limit mechanics (unrelated to the removed check) are re-verified unchanged.",
     "total": 6,
     "passed": 6,
     "failed": 0
   },
   "results": [
     {
-      "name": "reported_case_dongsha_to_kwuntong_blocked",
+      "name": "dongsha_to_kwuntong_allowed_despite_faction_inapplicability",
       "result": {
-        "error": "目的城鎮不適用你的陣營，無法遷入"
+        "success": true
       },
       "checks": {
-        "taiwan_green_blocked_by_faction_applicability": true
+        "not_blocked_by_faction_applicability": true,
+        "wall_crossing_cost_two_consumed": true
       },
       "ok": true
     },
@@ -48,10 +48,10 @@
       "name": "direct_rail_crossing",
       "applicable": false,
       "result": {
-        "error": "目的城鎮不適用你的陣營，無法遷入"
+        "success": true
       },
       "checks": {
-        "destination_not_applicable_blocked": true
+        "adjacent_rail_crossing_costs_two": true
       },
       "ok": true
     },
