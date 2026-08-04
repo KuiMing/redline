@@ -3,7 +3,7 @@
     "scope": [
       "第20回合勝利宣告時機"
     ],
-    "purpose": "P1 playtest item: the red-army turn-20 survival victory (turn > 20) was only checked at the START of _end_turn, so when round 20 completed and the turn counter rolled to 21, no declaration fired — the game silently drew a round-21 event and only declared after the next player ended their turn. _end_turn now runs _check_victory immediately after the round rollover increments the turn, declaring the winner (and A4 co-winners via the same path) at the exact moment round 20 completes, without drawing a round-21 event. Victory-screen display remains a P1 UI item.",
+    "purpose": "P1 playtest item: the red-army turn-20 survival victory (turn > 20) was only checked at the START of _end_turn, so when round 20 completed and the turn counter rolled to 21, no declaration fired — the game silently drew a round-21 event and only declared after the next player ended their turn. _end_turn now runs _check_victory immediately after the round rollover increments the turn, declaring the winner (and A4 co-winners via the same path) at the exact moment round 20 completes, without drawing a round-21 event. Victory-screen display remains a P1 UI item. P1 (宣布勝利時機應等整輪含紅軍行動完才公布): victory is now judged ONLY at the round-wrap boundary — a non-red player meeting a condition on its own mid-round turn is no longer declared immediately; it is declared at the wrap once every player incl. Red Army has acted and the condition still holds.",
     "total": 3,
     "passed": 3,
     "failed": 0
@@ -28,9 +28,11 @@
       "ok": true
     },
     {
-      "name": "mid_round_player_victory_unaffected",
+      "name": "mid_round_player_victory_deferred_to_round_wrap",
       "checks": {
-        "anti_communist_win_still_declared_mid_round": true
+        "not_declared_on_own_mid_round_turn": true,
+        "declared_at_round_wrap_after_red_army_acted": true,
+        "round_wrapped": true
       },
       "ok": true
     }

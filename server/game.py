@@ -5188,7 +5188,13 @@ class Game:
         return {"success": True}
 
     def _end_turn(self):
-        self._check_victory()
+        # Victory *detection* is NOT run per player-turn. It is deferred to the
+        # round-wrap boundary below so Red Army's turn this round can still
+        # invalidate a condition (e.g. dissolve an organization propping up an
+        # org-count victory) before a winner is declared — mirrors the era-trigger
+        # round-wrap rule (P1: 宣布勝利時機應等整輪含紅軍行動完才公布). The guard
+        # below stays as a defensive no-op in case _end_turn is re-entered after
+        # the game already finished at a prior round wrap.
         if self.game_phase == GamePhase.FINISHED:
             return
 
@@ -5233,6 +5239,11 @@ class Game:
         self.current_player_index = (self.current_player_index + 1) % len(self.players)
         if self.current_player_index == getattr(self, 'round_start_player_index', 0):
             self.turn += 1
+            # Round wrap: every player (Red Army included) has now acted this round.
+            # This is the ONLY point victory is judged — a condition that briefly
+            # looked satisfied earlier in the round but was undone by a later Red
+            # Army action is correctly no longer declared a win (P1: 宣布勝利時機
+            # 應等整輪含紅軍行動完才公布).
             # rules.md：第20回合結束前無人勝利→紅軍勝利。整輪結束、回合數推進到21的
             # 當下立刻判定（P1 playtest 回報：到第20回合沒有直接宣告勝利者），
             # 不讓遊戲滑進第21回合、也不再抽新事件。

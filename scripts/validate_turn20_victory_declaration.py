@@ -52,21 +52,33 @@ def case_no_premature_declaration_at_19():
     return {'name': 'no_premature_declaration_entering_round_20', 'checks': checks, 'ok': all(checks.values())}
 
 
-def case_mid_round_player_win_unaffected():
+def case_mid_round_player_win_deferred_to_round_wrap():
+    # P1（宣布勝利時機應等整輪含紅軍行動完才公布）：非本輪最後一位玩家在自己回合
+    # 結束時達成勝利條件，不應立即宣告——必須等整輪（含紅軍）都行動完、繞回起點的
+    # round-wrap 邊界才判定。此案例先驗證非 wrap 回合不宣告，再驗證條件在紅軍行動後
+    # 仍成立時、於整輪 wrap 邊界才正確宣告。
     g, a, b = _new_game(10)
     inner = sorted(g.towns_by_ruler.get('紅軍', []))
-    a.organizations = {t: 1 for t in inner[:14]}  # 自由派 牆內14 → 勝
-    g.current_player_index = 0  # 非本輪最後一位
+    a.organizations = {t: 1 for t in inner[:14]}  # 自由派 牆內14 → 條件達成
+    g.current_player_index = 0  # 非本輪最後一位：結束後只前進到 index 1，不 wrap
     g._end_turn()
-    checks = {'anti_communist_win_still_declared_mid_round': g.winner == 'A' and g.game_phase == GamePhase.FINISHED}
-    return {'name': 'mid_round_player_victory_unaffected', 'checks': checks, 'ok': all(checks.values())}
+    mid_round_not_declared = g.winner is None and g.game_phase != GamePhase.FINISHED
+    # 紅軍（本輪最後一位，index 1）行動完後 current_player_index 繞回 round_start(0)
+    # 觸發整輪 wrap，條件在紅軍行動後仍成立 → 此刻才宣告 A 勝利。
+    g._end_turn()
+    checks = {
+        'not_declared_on_own_mid_round_turn': mid_round_not_declared,
+        'declared_at_round_wrap_after_red_army_acted': g.winner == 'A' and g.game_phase == GamePhase.FINISHED,
+        'round_wrapped': g.current_player_index == g.round_start_player_index,
+    }
+    return {'name': 'mid_round_player_victory_deferred_to_round_wrap', 'checks': checks, 'ok': all(checks.values())}
 
 
 def main():
     results = [
         case_declared_at_round20_rollover(),
         case_no_premature_declaration_at_19(),
-        case_mid_round_player_win_unaffected(),
+        case_mid_round_player_win_deferred_to_round_wrap(),
     ]
     summary = {
         'scope': ['第20回合勝利宣告時機'],
@@ -78,7 +90,10 @@ def main():
             'runs _check_victory immediately after the round rollover increments the turn, '
             'declaring the winner (and A4 co-winners via the same path) at the exact moment '
             'round 20 completes, without drawing a round-21 event. Victory-screen display '
-            'remains a P1 UI item.'
+            'remains a P1 UI item. P1 (宣布勝利時機應等整輪含紅軍行動完才公布): victory is now '
+            'judged ONLY at the round-wrap boundary — a non-red player meeting a condition on '
+            'its own mid-round turn is no longer declared immediately; it is declared at the '
+            'wrap once every player incl. Red Army has acted and the condition still holds.'
         ),
         'total': len(results),
         'passed': sum(1 for r in results if r['ok']),
