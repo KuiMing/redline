@@ -2823,3 +2823,54 @@ def test_red_army_movement_still_restricted_to_red_army_development_space():
 
     assert result.get('error') == 'Red Army organization cannot leave Red Army development space', result
     assert actor.organizations == {'北京': 1, '沖繩': 1}
+
+
+def test_armory_town_organizations_reduce_armed_card_purchase_cost():
+    """2026-08-04 使用者回報規則：玩家在軍火庫城鎮每擁有1個組織，購買每張武裝類卡牌
+    所需支付的費用減少1點資金，至多可藉軍火庫減少3點資金。「一城一組織」invariant下
+    每座軍火庫城鎮最多只會計1個組織，所以實際上是數「擁有幾座不同的軍火庫城鎮」。"""
+    g = make_game()
+    p = g.current_player()
+    p.faction_id = 'taiwan_green'
+    armed_card = card(g, '武裝集團')  # 印刷購買費用 資金4
+    assert g._card_purchase_cost(armed_card) == {'money': 4, 'propaganda': 0}
+
+    p.organizations = {}
+    assert g._effective_purchase_cost(p, armed_card) == {'money': 4, 'propaganda': 0}
+
+    p.organizations = {'佬沃': 1}
+    assert g._effective_purchase_cost(p, armed_card) == {'money': 3, 'propaganda': 0}
+
+    p.organizations = {'佬沃': 1, '美斯樂': 1}
+    assert g._effective_purchase_cost(p, armed_card) == {'money': 2, 'propaganda': 0}
+
+    p.organizations = {'佬沃': 1, '美斯樂': 1, '賀猛': 1}
+    assert g._effective_purchase_cost(p, armed_card) == {'money': 1, 'propaganda': 0}
+
+    # 第4座軍火庫城鎮不再繼續減免，維持3點上限。
+    p.organizations = {'佬沃': 1, '美斯樂': 1, '賀猛': 1, '芒賽': 1}
+    assert g._effective_purchase_cost(p, armed_card) == {'money': 1, 'propaganda': 0}
+
+    # 非武裝類卡牌完全不受影響。
+    non_armed_card = card(g, '領導')
+    assert g._effective_purchase_cost(p, non_armed_card) == g._card_purchase_cost(non_armed_card)
+
+
+def test_armory_discount_applies_to_the_actual_purchase_charge_not_just_the_display():
+    """確認折扣不是只有顯示用——真的用 buy_cards() 購買時，實際扣款也要反映折扣後金額，
+    而不是印刷原價。"""
+    g = make_game()
+    g.turn_phase = TurnPhase.END
+    p = g.current_player()
+    p.faction_id = 'taiwan_green'
+    p.organizations = {'佬沃': 1, '美斯樂': 1}
+    p.resources = {'money': 2, 'propaganda': 0}
+    p.purchased_this_turn = []
+    g.purchase_area[0] = card(g, '武裝集團')
+    g.static_purchase_supply['武裝集團'] = 1
+
+    result = g.buy_cards([0])
+
+    assert result.get('success'), result
+    assert p.resources['money'] == 0  # 印刷費用4 - 軍火庫折扣2 = 2，剛好用完手上的2資金
+    assert '武裝集團' in names(p.deck.discard_pile)

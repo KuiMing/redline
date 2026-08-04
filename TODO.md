@@ -38,7 +38,10 @@
   - 更新了 `scripts/validate_wall_crossing_movement.py`（原本兩個案例斷言「應該擋下」，已改為斷言「應該成功」並更新 purpose 說明兩次回報的來龍去脈，6/6 全過）；新增 `test_non_red_army_movement_is_not_restricted_by_build_development_space`／`test_red_army_movement_still_restricted_to_red_army_development_space`（`scripts/tests/test_action_card_regressions.py`）。完整 pytest 248/250（2個既有無關失敗）；`validate_movement_rules.py`（13/13）、`validate_enemy_occupancy_rules.py`（5/5）、`validate_one_organization_per_town.py`（11/11）、`validate_red_army_special_rules.py`（6/6，含紅軍移動限制案例）、`validate_hk_base_relocation.py`（5/5）、`validate_chek_lap_kok_airport.py`／`validate_org_supply_limits.py`（各自既有的無關失敗案例確認在改動前的 baseline 上就已存在，不列入本次回歸範圍）皆已重跑確認無新增回歸。
 
 ### P2：玩家在軍火庫城鎮擁有組織可減免武裝類卡牌購買費用
-- [todo] 使用者回報規則：玩家在軍火庫城鎮每擁有1個組織，該陣營購買每張武裝類卡牌所需支付的費用減少1點資金（至多可藉軍火庫減少3點資金）。（2026-08-04 使用者回報，先記錄，尚未確認現有實作是否已涵蓋此規則）
+- [done] 使用者回報規則：玩家在軍火庫城鎮每擁有1個組織，該陣營購買每張武裝類卡牌所需支付的費用減少1點資金（至多可藉軍火庫減少3點資金）。（2026-08-04 使用者回報，先記錄；同日使用者要求開始處理）
+  - 稽核：`data/map.json` 共16座 `type=='軍火庫'` 城鎮（佬沃、美斯樂、賀猛、芒賽、邦康、老街、密支那、達杭丹、列城、吉爾吉特、費札巴德、喀布爾、霍斯特、米蘭沙阿、伊德利卜、阿勒坡）；`data/action_cards_structured.v1.1.json` 共3張 `card_type=='armed'`（武裝類）卡：武裝者（資金2）、武裝小隊（資金3）、武裝集團（資金4）。既有「一城一組織」invariant下，每座軍火庫城鎮最多只會計1個組織，所以規則實際上是「擁有幾座不同的軍火庫城鎮」，非「軍火庫城鎮內組織數」（那永遠是0或1）。
+  - 修法：`_effective_purchase_cost()`（`server/game.py`，購買費用的單一入口，`buy_cards()` 實際扣款與 `state()` UI 顯示都共用這個函式）在既有的事件全域折扣、時代關卡折扣之後，新增第三段折扣鏈——`_armory_purchase_cost_reduction(player, card)`：非 `armed` 類卡牌回傳0；`armed` 類卡牌數玩家目前有組織的軍火庫城鎮數量，夾到3點上限後直接從資金費用扣除。
+  - 新增 `test_armory_town_organizations_reduce_armed_card_purchase_cost`（驗證0/1/2/3/4座軍火庫城鎮分別對應折扣0/1/2/3/3，且非武裝類卡牌完全不受影響）／`test_armory_discount_applies_to_the_actual_purchase_charge_not_just_the_display`（驗證折扣不只影響顯示，`buy_cards()` 實際扣款也反映折扣後金額）（`scripts/tests/test_action_card_regressions.py`）。完整 pytest 250/252（2個既有無關 FakePage API drift 失敗，非本次改動範圍）。
 
 ### P1：宣布勝利時機應該等整輪（含紅軍）都行動完才公布
 - [done] 使用者提出：宣布勝利也應該要等這一輪所有玩家（包含紅軍）都行動完才公布，因為紅軍有可能在同一輪稍後行動，把其他玩家的組織瓦解掉，改變原本的勝負結果。（2026-08-03 使用者提出）

@@ -5635,7 +5635,24 @@ class Game:
         era_reduction = self._era_purchase_cost_reduction(player, card)
         cost_money = max(0, cost_money - int(era_reduction.get('money', 0) or 0))
         cost_propaganda = max(0, cost_propaganda - int(era_reduction.get('propaganda', 0) or 0))
+
+        cost_money = max(0, cost_money - self._armory_purchase_cost_reduction(player, card))
         return {'money': cost_money, 'propaganda': cost_propaganda}
+
+    def _armory_purchase_cost_reduction(self, player, card):
+        # 2026-08-04 使用者回報規則：玩家在軍火庫城鎮每擁有1個組織，購買每張武裝類卡牌
+        # 所需支付的費用減少1點資金，至多可藉軍火庫減少3點資金。「一城一組織」invariant
+        # 下每座軍火庫城鎮最多只會計1個組織，因此這裡直接數玩家目前有多少座「不同的」
+        # 軍火庫城鎮擁有組織（不是城鎮內組織數，那永遠是0或1），再夾到3點上限。
+        if getattr(card, 'card_type', None) != 'armed':
+            return 0
+        towns = self.map.get('towns', {}) or {}
+        armory_towns_owned = sum(
+            1
+            for town, count in (getattr(player, 'organizations', {}) or {}).items()
+            if count > 0 and (towns.get(town) or {}).get('type') == '軍火庫'
+        )
+        return min(3, armory_towns_owned)
 
     def _player_can_afford_purchase(self, player, card, effective_cost=None):
         payment = self._purchase_payment_cost(player, card, effective_cost)
