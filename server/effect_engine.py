@@ -4,18 +4,26 @@ class EffectEngine:
     Now implements core executable effect types.
     """
 
-    def _draw(self, player, count, game=None, card_name=None):
+    def _draw(self, player, count, game=None, card_name=None, log=True):
         # 2026-08-04 使用者需求：抽牌類效果的紀錄要寫出實際抽到哪些牌，而不是只有一行
         # 「打出了 X」看不到抽了什麼。`game`/`card_name` 是選填——`shared_draw` 自己組合
-        # 兩位玩家的合併訊息，因此故意不在這裡自動記錄，避免重複寫兩行。
+        # 兩位玩家的合併訊息，因此傳 `log=False` 略過這裡的單行紀錄，避免重複寫兩行。
+        #
+        # 2026-08-04 修『北京政爭』（`trigger:{"type":"draw"}`）事件任務追蹤缺口：
+        # 一般行動卡（樹立信心、領導等）的抽牌效果都是走這裡，先前完全沒有呼叫
+        # `_track_event_progress`，只有 `game.py:_draw_player_cards()`（紅軍奧援／各奧援卡／
+        # 時代效果）那條路徑有追蹤，導致絕大多數抽牌卡打出後任務都不會推進。
         drawn = player.deck.draw(count)
         player.hand.extend(drawn)
         if game is not None and drawn:
-            names = '、'.join(getattr(c, 'name', str(c)) for c in drawn)
-            if card_name:
-                game.log(f"{player.name} 因{card_name}抽到：{names}")
-            else:
-                game.log(f"{player.name} 抽到：{names}")
+            if log:
+                names = '、'.join(getattr(c, 'name', str(c)) for c in drawn)
+                if card_name:
+                    game.log(f"{player.name} 因{card_name}抽到：{names}")
+                else:
+                    game.log(f"{player.name} 抽到：{names}")
+            if hasattr(game, '_track_event_progress'):
+                game._track_event_progress('draw', amount=len(drawn), player=player)
         return drawn
 
     def _starter_names(self):
@@ -410,7 +418,7 @@ class EffectEngine:
         # ✅ Shared draw with one selected target (MVP default: first other player)
         if etype == "shared_draw":
             count = effect.get("count", 1)
-            drawn_self = self._draw(player, count)
+            drawn_self = self._draw(player, count, game=game, log=False)
             context = context or {}
             target_id = context.get("target_player_id") or effect.get("target_player_id")
             target = None
@@ -419,7 +427,7 @@ class EffectEngine:
             if target is None:
                 target = next((p for p in game.players if p != player), None)
             if target is not None:
-                drawn_target = self._draw(target, count)
+                drawn_target = self._draw(target, count, game=game, log=False)
                 if hasattr(game, 'log'):
                     source_name = context.get('card_name') or 'shared draw'
                     self_names = '、'.join(getattr(c, 'name', str(c)) for c in drawn_self)

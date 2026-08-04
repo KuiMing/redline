@@ -2737,6 +2737,71 @@ def test_standard_draw_effect_card_logs_the_specific_drawn_card_name():
     assert any('因領導抽到：SpecificDrawnCard' in entry for entry in g.action_log), g.action_log
 
 
+def pin_active_mission_event(g, event_name):
+    g.current_event = dict(g._event_by_name(event_name))
+    trigger = g.current_event.get('trigger') or {}
+    required = int(trigger.get('count', 0) or 0)
+    g.event_progress = {'count': 0, 'required': required, 'succeeded': False, 'settled': False, 'status': 'active'}
+    g.event_modifiers = []
+    g.pending_choice = None
+    return g
+
+
+def test_beijing_power_struggle_progresses_on_ordinary_draw_effect_card():
+    """2026-08-03 使用者playtest回報：事件卡『北京政爭』（trigger: {"type": "draw", "count": 1}）
+    用網羅人才選到樹立信心，應該算任務成功。稽核發現根因比原本想的更大：`effect_engine.py`
+    的 `_draw()`（一般行動卡如樹立信心／領導的 draw 效果都走這裡）完全沒呼叫
+    `_track_event_progress`，只有 `game.py:_draw_player_cards()`（紅軍奧援／各奧援卡／時代
+    效果）那條路徑有追蹤——不管直接打出樹立信心還是透過網羅人才拿到它再打出，都不會讓
+    『北京政爭』推進，網羅人才本身不是唯一漏掉的途徑。"""
+    g = make_game()
+    actor = g.current_player()
+    actor.faction_id = 'taiwan_green'
+    pin_active_mission_event(g, '北京政爭')
+    actor.hand = [card(g, '樹立信心')]
+    actor.resources = {'money': 10, 'propaganda': 10}
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    assert g.event_progress['succeeded'] is True
+    assert g.event_progress['status'] == 'success_pending'
+
+
+def test_beijing_power_struggle_progresses_on_shared_draw_effect_card():
+    """同上一項，換成 `shared_draw` 效果型別（例如『合作談判』），確認兩位玩家各自的抽牌
+    也都會計入事件任務進度，不是只有單純 `draw` 型別才被追蹤到。"""
+    g = make_game()
+    actor, other = g.players
+    actor.faction_id = 'taiwan_green'
+    other.faction_id = 'liberals'
+    pin_active_mission_event(g, '北京政爭')
+    actor.hand = [card(g, '合作談判')]
+    actor.resources = {'money': 10, 'propaganda': 10}
+
+    result = g.play_card(0, mode='action', target_player_id=other.id)
+
+    assert result.get('success'), result
+    assert g.event_progress['succeeded'] is True
+
+
+def test_beijing_power_struggle_ignores_red_army_draws():
+    """確認這次修法沒有連帶放寬『非紅軍』的既有限制——`_event_trigger_actor_allowed()` 仍然
+    排除紅軍，紅軍玩家自己的抽牌不應該讓『北京政爭』被判定成功。"""
+    g = make_game()
+    actor = g.current_player()
+    actor.faction_id = 'red_army'
+    pin_active_mission_event(g, '北京政爭')
+    actor.hand = [card(g, '樹立信心')]
+    actor.resources = {'money': 10, 'propaganda': 10}
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('success'), result
+    assert g.event_progress['succeeded'] is False
+    assert g.event_progress['count'] == 0
+
+
 def test_card_build_organization_candidates_refresh_live_after_a_move_between_builds():
     """2026-08-04 playtest 回報：先打出宣傳家／組織經驗丙這類牌，在桃園建立第一個組織，
     接著把組織移動到別的城鎮，第二次建立候選卻仍是移動前、臺北附近的舊清單。根因是
