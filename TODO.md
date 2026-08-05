@@ -18,7 +18,10 @@
 ## 目前 active todo
 
 ### P2：建立組織時點選城鎮後，建立組織按鈕應該亮起來
-- [todo] 使用者回報：建立組織時，點選城鎮後，應該要讓建立組織的按鈕亮起來。（2026-08-05 使用者回報，先記錄，尚未調查）
+- [done] 使用者回報：建立組織時，點選城鎮後，應該要讓建立組織的按鈕亮起來。（2026-08-05 使用者回報；同日使用者要求處理）
+  - 根因：純 CSS 問題，不是邏輯 bug。`#directBuildBtn`（`static/leaflet_game_map.html`）在選取合法候選城鎮後，`refreshDirectBuildUi()`（`static/leaflet_game_map_logic.js:896`）確實會正確把 `btn.disabled` 設成 `false`——啟用/停用的判斷邏輯本身沒有問題。但這個地圖 iframe 的全域按鈕樣式（`static/leaflet_game_map.html` 內 `<style>`）只有 `button { background:#1c2a49; }` 與 `button:hover`，完全沒有 `:disabled` 的視覺區分，也沒有任何「可操作」的高亮樣式，導致啟用/停用兩種狀態在深色背景上幾乎看不出差異，玩家自然會覺得「按鈕沒有亮起來」。
+  - 修法：在 `static/leaflet_game_map.html` 的全域樣式新增 `button:disabled { cursor:not-allowed; opacity:.45; }`（讓停用狀態明顯變暗，套用到這個 iframe 內所有動作按鈕，屬於低風險的一般性修正），並新增 `#directBuildBtn:not(:disabled)` 專屬樣式（金色系背景/邊框/光暈，沿用既有的 💀 瓦解目標高亮已經在用的琥珀色語彙 `rgba(216,160,74,...)`，與 `--road:#d8a04a` 一致），讓啟用時的「建立組織」按鈕清楚亮起來，和停用狀態形成明顯對比。
+  - 驗證：透過 Playwright 對真實瀏覽器（`/test/setup-build-queue-proof` 起手牌含組織經驗丙/乙 → 實際 `playHandCard()` 打出組織經驗丙觸發 `card_build_organization` pending choice → 點選候選城鎮 澳門）截圖比對——選取前按鈕維持一般深色、選取合法候選城鎮後按鈕變成金色高亮，且 `#directBuildBtn.disabled` 由 `true` 正確變為 `false`。純 CSS／前端變更，不影響任何後端邏輯；完整 pytest 269/269 全過（無變動，本來就與這次改動無關）。
 
 ### P2：行動預告的按鈕似乎可以 disable
 - [todo] 使用者回報：行動預告看起來是被動觸發的，所以感覺行動的按鈕可以 disable。（2026-08-05 使用者回報，先記錄，尚未調查）
