@@ -1036,11 +1036,16 @@ function renderMap() {
         return;
       }
 
-      // While choosing a movement destination, unrelated towns are deliberately
-      // non-interactive.  Another own/shared organization may still become a new origin.
+      // While choosing a movement destination, clicking an unrelated town is treated the
+      // same as clicking empty map background: cancel the whole selection (2026-08-05
+      // 使用者需求，「點地圖其他任意地方就取消」，比照 map.on('click') 對空白背景已有的
+      // exitMovementSelection() 行為，讓「哪裡算取消」保持一致，不分背景或不相關城鎮).
+      // Another own/shared organization may still become a new origin instead of a cancel.
       if (selectedTown && selectedMoveTargets.length) {
         if (canActFromTown(t.name)) {
           selectTownForCurrentMapAction(t.name, { autoFocus: true });
+        } else {
+          exitMovementSelection();
         }
         return;
       }
