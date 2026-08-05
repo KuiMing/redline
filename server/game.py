@@ -2832,6 +2832,37 @@ class Game:
         )
         return {'pending_choice': True, **result}
 
+    def _support_interaction_targets(self, player, effect_type, payload):
+        # Single source of truth for an interactive support card's legal targets. Returns
+        # the list of build towns / dissolve targets (an empty list means "no legal
+        # target"), or None for non-interactive effect types (which always resolve).
+        # Shared by _start_support_interaction (which opens the pending choice) and
+        # _support_card_has_legal_target (the non-mutating pre-check in play_card) so the
+        # two can never disagree about whether a play is legal.
+        if effect_type in ('interactive_build_anywhere_inner', 'interactive_build_near_inner'):
+            return self._interactive_support_build_towns(
+                player,
+                near_only=(effect_type == 'interactive_build_near_inner'),
+            )
+        if effect_type == 'interactive_dissolve_many_near':
+            return self._interactive_support_dissolve_targets(player, require_self_sacrifice=False)
+        if effect_type == 'interactive_dissolve_self_and_enemy':
+            return self._interactive_support_sacrifice_towns(player)
+        if effect_type == 'interactive_dissolve_and_build':
+            targets = self._interactive_support_dissolve_targets(player, require_self_sacrifice=False)
+            return [
+                entry
+                for entry in targets
+                if self._can_replace_dissolved_org_with_own(
+                    player,
+                    next((p for p in self.players if getattr(p, 'id', None) == entry.get('player_id')), None),
+                    entry.get('town'),
+                )
+            ]
+        if effect_type == 'force_discard_near':
+            return self._interactive_support_discard_targets_near(player)
+        return None
+
     def _start_support_interaction(self, player, card_name, tier, region_index, effect_type, payload):
         effect_text = self._support_card_effect_text(card_name, tier, region_index)
         base_context = {
@@ -2842,38 +2873,33 @@ class Game:
             'effect_payload': dict(payload or {}),
             'effect_text': effect_text,
         }
+        targets = self._support_interaction_targets(player, effect_type, payload)
+        if not targets:
+            # None => not an interactive effect type; [] => no legal target.
+            return None
         if effect_type == 'interactive_build_anywhere_inner':
-            towns = self._interactive_support_build_towns(player, near_only=False)
-            if not towns:
-                return None
             result = self._set_pending_support_flow_choice(
                 player,
                 'support_interaction',
                 'town',
                 f'{card_name}：選擇 1 個建立組織的牆內城鎮。',
                 source_name=card_name,
-                towns=towns,
+                towns=targets,
                 context=base_context,
             )
             return {'pending_choice': True, **result}
         if effect_type == 'interactive_build_near_inner':
-            towns = self._interactive_support_build_towns(player, near_only=True)
-            if not towns:
-                return None
             result = self._set_pending_support_flow_choice(
                 player,
                 'support_interaction',
                 'town',
                 f'{card_name}：選擇 1 個己方組織 1 格內的牆內城鎮建立組織。',
                 source_name=card_name,
-                towns=towns,
+                towns=targets,
                 context=base_context,
             )
             return {'pending_choice': True, **result}
         if effect_type == 'interactive_dissolve_many_near':
-            targets = self._interactive_support_dissolve_targets(player, require_self_sacrifice=False)
-            if not targets:
-                return None
             result = self._set_pending_support_flow_choice(
                 player,
                 'support_interaction',
@@ -2885,32 +2911,17 @@ class Game:
             )
             return {'pending_choice': True, **result}
         if effect_type == 'interactive_dissolve_self_and_enemy':
-            towns = self._interactive_support_sacrifice_towns(player)
-            if not towns:
-                return None
             result = self._set_pending_support_flow_choice(
                 player,
                 'support_interaction',
                 'sacrifice_town',
                 f'{card_name}：先選擇 1 個要瓦解的己方組織。',
                 source_name=card_name,
-                towns=towns,
+                towns=targets,
                 context=base_context,
             )
             return {'pending_choice': True, **result}
         if effect_type == 'interactive_dissolve_and_build':
-            targets = self._interactive_support_dissolve_targets(player, require_self_sacrifice=False)
-            targets = [
-                entry
-                for entry in targets
-                if self._can_replace_dissolved_org_with_own(
-                    player,
-                    next((p for p in self.players if getattr(p, 'id', None) == entry.get('player_id')), None),
-                    entry.get('town'),
-                )
-            ]
-            if not targets:
-                return None
             result = self._set_pending_support_flow_choice(
                 player,
                 'support_interaction',
@@ -2922,9 +2933,6 @@ class Game:
             )
             return {'pending_choice': True, **result}
         if effect_type == 'force_discard_near':
-            targets = self._interactive_support_discard_targets_near(player)
-            if not targets:
-                return None
             count = int((payload or {}).get('count', 0) or 0)
             random_pick = bool((payload or {}).get('random'))
             discard_text = f'隨機棄 {count} 張手牌' if random_pick else '選 1 張手牌棄掉'
@@ -4477,11 +4485,15 @@ class Game:
             return True
         return False
 
-    def _reaction_prompt_candidates(self, acting_player, played_card):
-        # 奧援卡是 support card, not a cancelable action/command card.
-        # Prompting a cancellation reaction after support effects have already
-        # resolved leaves a stale pending_choice that blocks phase advance.
-        if getattr(played_card, 'card_type', None) == 'support':
+    def _reaction_prompt_candidates(self, acting_player, played_card, include_support=False):
+        # 奧援卡是 support card. Historically we returned no candidates for support cards
+        # because their effect resolved eagerly inside play_card, so offering a late
+        # cancel prompt left a stale pending_choice that blocked phase advance. Support
+        # plays now defer their board effect until *after* the reaction window closes
+        # (see play_card's support branch and _resume_reaction_pending_action), so the
+        # deferred-support path passes include_support=True to get real candidates while
+        # every other caller keeps the safe no-support default.
+        if not include_support and getattr(played_card, 'card_type', None) == 'support':
             return []
         cost = self._card_purchase_cost(played_card) or {}
         candidates = []
@@ -4499,6 +4511,54 @@ class Game:
             if cards:
                 candidates.append({'player': player, 'cards': cards})
         return candidates
+
+    def _support_card_has_legal_target(self, player, card):
+        # Non-mutating legal-target pre-check, sharing _support_interaction_targets (the
+        # single source of truth) with _start_support_interaction so the two can never
+        # disagree. Lets play_card reject an illegal interactive support play — and decide
+        # whether to open a cancel-reaction window — *before* mutating the board or setting
+        # up the support card's own interactive pending choice. Non-interactive support
+        # effects (gain_resource / draw / draw_then_discard / add_internal_conflict) always
+        # resolve, so _support_interaction_targets returns None for them.
+        card_name = getattr(card, 'name', str(card))
+        tier, region_index, _ = self._support_card_tier(player, card)
+        effect_type, payload = self._resolve_support_card_effect(card_name, tier, region_index)
+        targets = self._support_interaction_targets(player, effect_type, payload)
+        if targets is None:
+            return True
+        return bool(targets)
+
+    def _commit_support_card_play(self, player, played_card, card_name, action_context):
+        # Resolve a support card's board effect after its cancel-reaction window has
+        # closed without a cancellation. Shared by play_card (no eligible reactor) and
+        # _resume_reaction_pending_action (reactor declined). Returns a response dict when
+        # the play must stop here (the support card opened its own interactive pending
+        # choice), or None to let the caller run the shared post-play tail (faction
+        # ability triggers + discard), mirroring the non-interactive support path.
+        support_resolution = self._execute_support_card(player, played_card)
+        action_context['support_resolution'] = support_resolution
+        if support_resolution and support_resolution.get('card_moved_out_of_play'):
+            action_context['removed_current_card'] = True
+        if support_resolution and support_resolution.get('pending_choice'):
+            if card_name == '北國奧援' and self.pending_choice and action_context.get('hand_index') is not None:
+                # No 北國奧援 effect has mutated the board at the initial target/sacrifice
+                # choice, so this first step can still be cancelled as an atomic card play
+                # (the player's own rollback, distinct from the opponent's reaction).
+                self.pending_choice.update({
+                    'cancellable': True,
+                    'rollback_card': played_card,
+                    'rollback_hand_index': action_context.get('hand_index'),
+                    'rollback_played_money_card': action_context.get('prior_played_money_card'),
+                    'rollback_played_propaganda_card': action_context.get('prior_played_propaganda_card'),
+                    'rollback_event_progress': action_context.get('prior_event_progress'),
+                    'rollback_event_notification': action_context.get('prior_event_notification'),
+                })
+            if not action_context.get('removed_current_card'):
+                if not self._return_borrowed_card_to_owner_topdeck(played_card):
+                    player.deck.discard([played_card])
+            self.log(f"{player.name} played {card_name}")
+            return {"success": True, "pending_choice": True, **support_resolution}
+        return None
 
     def _resume_reaction_pending_action(self, choice, reaction_context=None):
         player = choice.get('acting_player')
@@ -4522,6 +4582,25 @@ class Game:
         if reaction_context is not None:
             action_context['reaction_context'] = reaction_context
             action_context['card_canceled'] = True
+
+        if effective_type == 'support':
+            if action_context.get('card_canceled'):
+                # An opponent used a reaction card to cancel this support play: resolve
+                # the reaction (its own effect + discard), discard the canceled support
+                # card, and do NOT run the support card's board effect.
+                self._resolve_reaction_context(reaction_context)
+                if not action_context.get('removed_current_card'):
+                    if not self._return_borrowed_card_to_owner_topdeck(played_card):
+                        player.deck.discard([played_card])
+                self.log(f"{player.name}'s {card_name} was canceled by reaction")
+                return {"success": True, "canceled": True}
+            # Not canceled: resolve the deferred support effect now. If it opens its own
+            # interactive pending choice, stop here; otherwise fall through to the shared
+            # tail (reaction_context is None, so faction ability triggers + discard run
+            # exactly as on the immediate no-reactor support play path).
+            support_response = self._commit_support_card_play(player, played_card, card_name, action_context)
+            if support_response is not None:
+                return support_response
 
         if effective_type != 'support':
             if card_name in getattr(self.action_engine, 'cards', {}):
@@ -4923,10 +5002,11 @@ class Game:
             self.turn_log["played_propaganda_card"] = True
 
         if effective_type == 'support':
-            support_resolution = self._execute_support_card(player, played_card)
-            if support_resolution and support_resolution.get('card_moved_out_of_play'):
-                action_context['removed_current_card'] = True
-            if support_resolution and support_resolution.get('no_legal_target'):
+            action_context['hand_index'] = index
+            # Reject an illegal interactive support play up front — before committing any
+            # board mutation or spending an opponent's reaction card on it. This mirrors
+            # the range pre-validation the command-card path does before hand.pop.
+            if not self._support_card_has_legal_target(player, played_card):
                 player.hand.insert(index, played_card)
                 self.turn_log['played_money_card'] = action_context['prior_played_money_card']
                 self.turn_log['played_propaganda_card'] = action_context['prior_played_propaganda_card']
@@ -4936,30 +5016,45 @@ class Game:
                     "no_legal_target": True,
                     "card_name": card_name,
                 }
-            # Legal support cards are committed even when their printed effect continues through
-            # a pending choice, so cost-based mission progress must precede that early return.
+            # Legal support cards are committed even when their printed effect continues
+            # through a pending choice (or gets canceled by a reaction), so cost-based
+            # mission progress fires here, on the act of playing — matching the command
+            # card path, where a later cancellation does not undo cost-trigger progress.
             if int(purchase_cost.get('money', 0) or 0) > 0:
                 self._track_event_progress('play_card_with_money', player=player)
             if int(purchase_cost.get('propaganda', 0) or 0) > 0:
                 self._track_event_progress('play_card_with_propaganda', player=player)
-            if support_resolution and support_resolution.get('pending_choice'):
-                if card_name == '北國奧援' and self.pending_choice:
-                    # No 北國奧援 effect has mutated the board at the initial target/sacrifice
-                    # choice, so this first step can be cancelled as an atomic card play.
-                    self.pending_choice.update({
-                        'cancellable': True,
-                        'rollback_card': played_card,
-                        'rollback_hand_index': index,
-                        'rollback_played_money_card': action_context['prior_played_money_card'],
-                        'rollback_played_propaganda_card': action_context['prior_played_propaganda_card'],
-                        'rollback_event_progress': action_context['prior_event_progress'],
-                        'rollback_event_notification': action_context['prior_event_notification'],
-                    })
-                if not action_context.get('removed_current_card'):
-                    if not self._return_borrowed_card_to_owner_topdeck(played_card):
-                        player.deck.discard([played_card])
-                self.log(f"{player.name} played {card_name}")
-                return {"success": True, "pending_choice": True, **support_resolution}
+            # A support card counts toward 展現實力's played-card combo on the act of
+            # playing (even if a reaction later cancels it), exactly like a command card,
+            # whose name is recorded before its own reaction window below. Recording it
+            # here keeps that semantic on the deferred path; the idempotent block after
+            # this branch is then a no-op for support cards.
+            played_names = self.turn_log.setdefault("played_nonstarter_names", [])
+            if card_name not in played_names:
+                played_names.append(card_name)
+            # Open the cancel-reaction window BEFORE the support card mutates the board or
+            # opens its own interactive choice, mirroring the deferred command-card path.
+            # If a reactor holds an eligible card, defer _execute_support_card into
+            # _resume_reaction_pending_action; otherwise resolve it right away.
+            if reaction is None:
+                reaction_candidates = self._reaction_prompt_candidates(player, played_card, include_support=True)
+                if reaction_candidates:
+                    first_candidate = reaction_candidates[0]
+                    return self._set_pending_reaction_choice(
+                        first_candidate['player'],
+                        player,
+                        played_card,
+                        card_name,
+                        first_candidate['cards'],
+                        effective_type,
+                        action_context,
+                        support_resolution=None,
+                        remaining_candidates=reaction_candidates[1:],
+                    )
+            support_response = self._commit_support_card_play(player, played_card, card_name, action_context)
+            if support_response is not None:
+                return support_response
+            support_resolution = action_context.get('support_resolution')
         else:
             if int(purchase_cost.get('money', 0) or 0) > 0:
                 self._track_event_progress('play_card_with_money', player=player)
