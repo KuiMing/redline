@@ -1043,6 +1043,133 @@ def test_reaction_candidate_who_declines_lets_the_next_eligible_reactor_react_to
     assert '爆料黑幕' not in names(second_reactor.hand)
 
 
+def test_support_card_now_prompts_cancel_reaction_and_cancel_prevents_build():
+    """2026-08-05 P2：先前『奧援卡（support card）不觸發取消反應』是刻意的 workaround
+    ——因為奧援卡效果在 play_card 內即時結算，事後才跳取消詢問會留下 stale pending_choice。
+    現在改為在奧援卡結算「之前」就開取消視窗（把 _execute_support_card 延後到
+    _resume_reaction_pending_action），所以奧援卡也會正常跳取消詢問；取消成功時，被延後的
+    建組織效果完全不會執行。此測試以東洋奧援 III 級（interactive_build_anywhere_inner）驗證。"""
+    g = make_game()
+    actor, reactor = g.players
+    actor.faction_id = 'red_army'
+    actor.organizations = {'北京': 1, '供應占用': 0}
+    reactor.hand = [card(g, '爆料黑幕')]
+    g._support_card_tier = lambda player, cardobj: (3, 0, [])
+    actor.hand = [g._make_support_card('東洋奧援')]
+    orgs_before = dict(actor.organizations)
+
+    result = g.play_card(0, mode='action')
+    assert result.get('pending_choice') is True, result
+    assert g.pending_choice['type'] == 'reaction_choice', g.pending_choice
+    assert g.pending_choice['player_id'] == reactor.id
+    assert g.pending_choice['played_card_name'] == '東洋奧援'
+    assert [entry['name'] for entry in g.pending_choice['cards']] == ['爆料黑幕']
+    # 反應視窗開在建組織之前——此時尚未有任何 support_interaction / 城鎮選擇 pending
+    assert g.pending_choice['choice_key'] == 'cancel_other_player_action'
+
+    canceled = g.resolve_pending_choice(reactor.id, 1)  # 用爆料黑幕取消
+    assert canceled.get('success'), canceled
+    assert canceled.get('canceled') is True, canceled
+    assert g.pending_choice is None, g.pending_choice
+    assert actor.organizations == orgs_before, '取消後不應建立任何組織'
+    assert '爆料黑幕' in names(reactor.deck.discard_pile)
+    assert '東洋奧援' in names(actor.deck.discard_pile)
+
+
+def test_support_card_cancel_reaction_declined_lets_the_build_resolve():
+    """對手不取消時，東洋奧援的建組織互動照常開啟、可完成建造（沒有被延後機制吃掉效果）。"""
+    g = make_game()
+    actor, reactor = g.players
+    actor.faction_id = 'red_army'
+    actor.organizations = {'北京': 1, '供應占用': 0}
+    reactor.hand = [card(g, '爆料黑幕')]
+    g._support_card_tier = lambda player, cardobj: (3, 0, [])
+    actor.hand = [g._make_support_card('東洋奧援')]
+
+    result = g.play_card(0, mode='action')
+    assert g.pending_choice['type'] == 'reaction_choice', g.pending_choice
+
+    skipped = g.resolve_pending_choice(reactor.id, 0)  # 不取消
+    assert skipped.get('success'), skipped
+    assert g.pending_choice and g.pending_choice['choice_key'] == 'support_interaction', g.pending_choice
+    town = g.pending_choice['towns'][0]['town']
+    built = g.resolve_pending_choice(actor.id, 0)
+    assert built.get('success'), built
+    assert actor.organizations.get(town, 0) >= 1, (town, actor.organizations)
+    assert '爆料黑幕' in names(reactor.hand), '不取消時反應卡應保留在手'
+
+
+def test_noninteractive_support_cancel_reaction_prevents_effect():
+    """非互動型奧援（歐洲奧援 III 級＝獲得 4 宣傳）同樣會跳取消詢問；取消成功時效果不發生。"""
+    g = make_game()
+    actor, reactor = g.players
+    actor.faction_id = 'federalists'
+    actor.resources = {'money': 0, 'propaganda': 0}
+    reactor.hand = [card(g, '情報網')]
+    g._support_card_tier = lambda player, cardobj: (3, 0, [])
+    actor.hand = [g._make_support_card('歐洲奧援')]
+
+    result = g.play_card(0, mode='action')
+    assert g.pending_choice['type'] == 'reaction_choice', g.pending_choice
+    assert [entry['name'] for entry in g.pending_choice['cards']] == ['情報網']
+
+    canceled = g.resolve_pending_choice(reactor.id, 1)  # 情報網取消
+    assert canceled.get('canceled') is True, canceled
+    assert g.pending_choice is None
+    assert actor.resources['propaganda'] == 0, '取消後不應獲得宣傳'
+    assert '歐洲奧援' in names(actor.deck.discard_pile)
+    assert '情報網' not in names(reactor.hand)
+
+
+def test_command_then_support_card_each_prompt_cancel_reaction():
+    """使用者原始情境（P2）：先打宣傳家（command）對手跳出爆料黑幕詢問；接著打東洋奧援
+    （support）對手『這次也要』跳出爆料黑幕詢問——舊行為第二次完全不跳，是本項要修的 bug。"""
+    g = make_game()
+    actor, reactor = g.players
+    actor.faction_id = 'red_army'
+    actor.organizations = {'北京': 1, '供應占用': 0}
+    reactor.hand = [card(g, '爆料黑幕'), card(g, '爆料黑幕')]
+
+    actor.hand = [card(g, '宣傳家')]
+    first = g.play_card(0, mode='action')
+    assert first.get('pending_choice') is True, first
+    assert g.pending_choice['type'] == 'reaction_choice', g.pending_choice
+    assert g.pending_choice['played_card_name'] == '宣傳家'
+    g.resolve_pending_choice(reactor.id, 0)  # 不取消宣傳家
+    while g.pending_choice:  # 完成宣傳家自己的建組織/移動流程
+        g.resolve_pending_choice(actor.id, 0)
+
+    g._support_card_tier = lambda player, cardobj: (3, 0, [])
+    actor.hand = [g._make_support_card('東洋奧援')]
+    second = g.play_card(0, mode='action')
+    assert second.get('pending_choice') is True, second
+    assert g.pending_choice['type'] == 'reaction_choice', g.pending_choice
+    assert g.pending_choice['played_card_name'] == '東洋奧援', '第二次（奧援卡）也必須跳出取消詢問'
+    # 對手第一次沒取消，兩張爆料黑幕都還在手上，故第二次仍以兩張為候選
+    assert [entry['name'] for entry in g.pending_choice['cards']] == ['爆料黑幕', '爆料黑幕']
+
+
+def test_illegal_support_card_is_rejected_before_cancel_reaction_window():
+    """無合法目標的互動型奧援必須在開取消視窗『之前』就被打回手牌，不能白白讓對手花掉
+    一張反應卡去取消一個本來就不合法的出牌。"""
+    g = make_game()
+    actor, reactor = g.players
+    actor.faction_id = 'red_army'
+    reactor.hand = [card(g, '爆料黑幕')]
+    g._support_card_tier = lambda player, cardobj: (3, 0, [])
+    support_card = g._make_support_card('東洋奧援')
+    actor.hand = [support_card]
+    # 以共用的 target source of truth 直接令其無合法目標
+    g._support_interaction_targets = lambda *args, **kwargs: []
+
+    result = g.play_card(0, mode='action')
+    assert result.get('no_legal_target') is True, result
+    assert result.get('error') == 'No legal target for interactive support card', result
+    assert g.pending_choice is None, g.pending_choice
+    assert actor.hand == [support_card], '不合法出牌應原樣退回手牌'
+    assert names(reactor.hand) == ['爆料黑幕'], '對手的反應卡不該被消耗'
+
+
 def test_cancel_reaction_prompt_can_select_one_reaction_card_to_cancel_action():
     g = make_game()
     actor, reactor = g.players
@@ -1231,7 +1358,11 @@ def test_play_card_rolls_back_interactive_support_when_no_legal_target():
         before_target_discard = list(target.deck.discard_pile)
         g._support_card_tier = lambda player, card: (1, 0, [])
         setattr(g, '_resolve_support_card_effect', lambda card_name, tier, region_index, et=effect_type: (et, {'count': 1}))
-        g._start_support_interaction = lambda *args, **kwargs: None
+        # play_card now decides "no legal target" up front via the shared
+        # _support_interaction_targets pre-check (before any mutation / reaction window),
+        # so force *that* to report no targets rather than the downstream
+        # _start_support_interaction opener.
+        g._support_interaction_targets = lambda *args, **kwargs: []
 
         result = g.play_card(1, mode='action')
 
@@ -1269,7 +1400,10 @@ def test_tianfang_support_with_no_in_range_target_does_not_silently_discard():
     assert names(target.hand) == ['樂捐者', '其他手牌']
     assert len(target.deck.draw_pile) == 8
     assert names(target.deck.discard_pile) == ['樂捐者']
-    assert any('天方奧援 had no legal target; no interactive effect was applied' in line for line in g.action_log)
+    # play_card now detects "no legal target" via the shared _support_interaction_targets
+    # pre-check before _execute_support_card runs (so no board/reaction-card is spent on an
+    # illegal play), so the rejection log comes from play_card's own message.
+    assert any('could not play 天方奧援: no legal target' in line for line in g.action_log)
 
 
 def test_tianfang_support_tier1_prompts_actor_target_choice_then_target_discard_choice():
