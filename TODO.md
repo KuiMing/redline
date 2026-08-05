@@ -17,6 +17,12 @@
 
 ## 目前 active todo
 
+### P2：建立組織時點選城鎮後，建立組織按鈕應該亮起來
+- [todo] 使用者回報：建立組織時，點選城鎮後，應該要讓建立組織的按鈕亮起來。（2026-08-05 使用者回報，先記錄，尚未調查）
+
+### P2：行動預告的按鈕似乎可以 disable
+- [todo] 使用者回報：行動預告看起來是被動觸發的，所以感覺行動的按鈕可以 disable。（2026-08-05 使用者回報，先記錄，尚未調查）
+
 ### P0：第11回合抽到『上海合作組織』，非紅軍陣營完成回合後雙方卡住無法執行任何步驟（疑似真 soft-lock）
 - [done] 使用者playtest回報（本 session 最高嚴重度）：到了第十一回合，事件卡抽到『上海合作組織』，當非紅軍陣營完成回合時，雙方都卡住，無法執行任何步驟。2 人局（非紅軍座位「dafdsaf」＋紅軍）。附的 action_log 顯示『上海合作組織』先成功 auto 套用過一次，之後又被重抽一次並停在 `(auto deferred)`，遊戲此後再也推不動。（2026-08-05 使用者回報，直接從回報進入調查與修正）
   - 根因（先重現、後定論；已用真流程重現）：**事件機制本身沒問題**。`上海合作組織`（`data/events_structured.v1.1.json`，`type: auto`、`effect.player_faction: red_army`、`scoped_card_range`）在紅軍不是當前玩家時會走 `_apply_auto_event_if_ready()`（`server/game.py`）的 `auto_pending` 分支延後，而這個延後**已經**會在紅軍成為當前玩家時經由 `_end_turn()` 尾端（`current_event` 非空→`_apply_auto_event_if_ready()` 重評）自動套用——純事件情境用 2 人局兩種座位順序都跑過，皆能自解、不會卡（推翻「auto 事件本身缺 resumption」的假設）。真正卡死的是**同一輪 round-wrap 一起觸發的時代關卡『藏國騷亂』（`tibet`）的紅軍壓制效果 `red_discard_to_build_near_target`**——一個互動式時代效果。時代偵測依既有「整輪結束才判定」規則排在 round-wrap（此時當前玩家是該輪起始玩家；本局起始是非紅軍的藏國）。舊行為在 round-wrap 當下就啟動這個時代、把 `pending_choice`（`era_red_discard_to_build_near_target`）掛在**紅軍**身上；但當前玩家是**非紅軍**，於是：非紅軍當前玩家的所有動作（`advance_turn_phase()`／`play_card()`…）都被 `self.pending_choice` 全域擋下（`server/game.py:5377` 等），而紅軍又不是當前玩家、其客戶端不會被當成 active，雙方都動不了；抽到的『上海合作組織』只是因為當下存在 pending_choice 而被記成 `auto_deferred`（表象，非肇因）。後端其實允許紅軍越回合解自己的 choice（`server/main.py:600` `bypass_turn_check`＋`renderChoiceModal` app.js:1728 對 owner 顯示），一旦紅軍解掉就會解鎖，但當前的非紅軍玩家在自己回合完全無法自救——即使用者回報的「雙方卡住」。此死結**僅在該輪起始玩家不是紅軍**時發生（紅軍當起始玩家時，時代在 round-wrap 當下 current==紅軍，choice 就是當前玩家的、可正常解，不卡）。
