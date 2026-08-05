@@ -1039,8 +1039,208 @@ def test_reaction_candidate_who_declines_lets_the_next_eligible_reactor_react_to
     assert canceled.get('success'), canceled
     assert canceled.get('reaction_card') == '爆料黑幕'
     assert canceled.get('canceled_card') == '點燃熱情'
-    assert g.pending_choice is None
     assert '爆料黑幕' not in names(second_reactor.hand)
+    # 2026-08-05 反制鏈：second_reactor 打出的 爆料黑幕 本身也是一次可被反制的出牌。
+    # first_reactor 手上還留著 產業滲透（爆料黑幕的購買費用含資金1，符合產業滲透取消條件），
+    # 因此系統正確地又跳出一層取消視窗，問 first_reactor 是否反制。這裡讓它謝絕，
+    # 這條鏈就停在深度2（點燃熱情被取消、爆料黑幕生效），與加入反制鏈前的最終結果一致。
+    assert canceled.get('opened_counter_layer') is True
+    assert g.pending_choice is not None
+    assert g.pending_choice['player_id'] == first_reactor.id
+    assert g.pending_choice['acting_player_id'] == second_reactor.id
+    assert g.pending_choice['played_card_name'] == '爆料黑幕'
+    assert [entry['name'] for entry in g.pending_choice['cards']] == ['產業滲透']
+
+    settled = g.resolve_pending_choice(first_reactor.id, 0)
+    assert settled.get('success'), settled
+    assert g.pending_choice is None
+    assert names(actor.deck.discard_pile) == ['點燃熱情']  # 原始牌被取消、直接進棄牌堆
+    assert names(second_reactor.deck.discard_pile) == ['爆料黑幕']
+    assert names(first_reactor.hand) == ['產業滲透']  # 謝絕反制，卡留手上
+
+
+def test_counter_cancel_depth3_lets_original_action_resolve():
+    """2026-08-05 P2『被取消的一方應該也能反過來取消對方的取消』深度3：A 出 領導，
+    B 用 情報網 取消，A 再用手上的 爆料黑幕 反制 B 的 情報網。結果應等同 A 的 領導
+    從未被取消過——領導的抽牌效果正常執行，B 的 情報網 效果完全不發生（不放內鬥／
+    不瓦解），A 的 爆料黑幕 因為成功取消了 情報網（其購買費用含宣傳3）而拿到 bonus 抽牌。"""
+    g = make_game()
+    actor, reactor = g.players
+    actor.hand = [card(g, '領導'), card(g, '爆料黑幕')]
+    actor.deck.draw_pile = [Card('D1', 'command', {}), Card('D2', 'command', {})]
+    reactor.hand = [card(g, '情報網')]
+
+    result = g.play_card(0, mode='action')
+    assert result.get('pending_choice') is True, result
+    assert g.pending_choice['player_id'] == reactor.id
+    assert g.pending_choice['played_card_name'] == '領導'
+    assert [entry['name'] for entry in g.pending_choice['cards']] == ['情報網']
+
+    canceled = g.resolve_pending_choice(reactor.id, 1)  # B 用 情報網 取消 領導
+    assert canceled.get('success'), canceled
+    assert canceled.get('reaction_card') == '情報網'
+    assert canceled.get('canceled_card') == '領導'
+    assert canceled.get('opened_counter_layer') is True
+    assert g.pending_choice is not None
+    assert g.pending_choice['player_id'] == actor.id
+    assert g.pending_choice['acting_player_id'] == reactor.id
+    assert g.pending_choice['played_card_name'] == '情報網'
+    assert [entry['name'] for entry in g.pending_choice['cards']] == ['爆料黑幕']
+    # 反制層開啟前，領導的抽牌效果尚未執行（deferred resolution：先問完整條鏈再結算）；
+    # actor 手上還留著尚未打出的 爆料黑幕（等一下要用來反制）。
+    assert names(actor.hand) == ['爆料黑幕']
+    assert names(actor.deck.draw_pile) == ['D1', 'D2']
+
+    countered = g.resolve_pending_choice(actor.id, 1)  # A 用 爆料黑幕 反制 情報網
+    assert countered.get('success'), countered
+    assert countered.get('reaction_card') == '爆料黑幕'
+    assert countered.get('canceled_card') == '情報網'
+    assert g.pending_choice is None, '沒有第三方候選人，整條鏈應直接結算完畢'
+
+    # 領導的效果正常生效（抽1張），且爆料黑幕成功取消 情報網（購買費用含宣傳3）拿到 bonus 抽牌
+    assert sorted(names(actor.hand)) == ['D1', 'D2']
+    assert names(actor.deck.draw_pile) == []
+    assert names(actor.deck.discard_pile) == ['爆料黑幕', '領導']
+    assert names(reactor.deck.discard_pile) == ['情報網']
+    assert names(reactor.hand) == []
+
+
+def test_counter_cancel_depth3_with_bystander_who_always_declines():
+    """三人局：C 全程持有可取消卡但每一層都選擇不取消，結果應與只有 A、B 兩人時完全
+    一樣——C 手握合格反應卡這件事本身不該改變任何結算，只是多一次詢問。"""
+    g = Game([('p1', 'P1'), ('p2', 'P2'), ('p3', 'P3')])
+    g.game_phase = GamePhase.MAIN
+    g.turn_phase = TurnPhase.ACTION
+    g.current_player_index = 0
+    g.pending_base_choices = {}
+    pin_noop_event(g)
+    g.players[0].faction_id = 'red_army'
+    actor, b, c = g.players
+    actor.hand = [card(g, '領導'), card(g, '爆料黑幕')]
+    actor.deck.draw_pile = [Card('D1', 'command', {}), Card('D2', 'command', {})]
+    b.hand = [card(g, '情報網')]
+    c.hand = [card(g, '爆料黑幕')]  # 全程候選人，但每次都選擇不取消
+
+    result = g.play_card(0, mode='action')
+    assert result.get('pending_choice') is True, result
+    # 最初這層：B、C 都持合格卡，先問 B（players 順序）
+    assert g.pending_choice['player_id'] == b.id
+    assert [entry['name'] for entry in g.pending_choice['remaining_candidates'][0]['cards']] == ['爆料黑幕']
+
+    canceled = g.resolve_pending_choice(b.id, 1)  # B 用 情報網 取消 領導（C 沒被問到，因為 B 先取消了）
+    assert canceled.get('success'), canceled
+    assert canceled.get('opened_counter_layer') is True
+    # 反制層：候選人是 A（自己的爆料黑幕）與 C（爆料黑幕），排除剛出牌的 B。players 順序 A 先問。
+    assert g.pending_choice['player_id'] == actor.id
+    assert g.pending_choice['remaining_candidates'] and g.pending_choice['remaining_candidates'][0]['player'] is c
+
+    countered = g.resolve_pending_choice(actor.id, 1)  # A 反制
+    assert countered.get('success'), countered
+    assert g.pending_choice is not None, 'C 仍是候選人，其反應卡對 A 的爆料黑幕也合格'
+    assert g.pending_choice['player_id'] == c.id
+    assert [entry['name'] for entry in g.pending_choice['cards']] == ['爆料黑幕']
+
+    declined = g.resolve_pending_choice(c.id, 0)  # C 選擇不取消
+    assert declined.get('success'), declined
+    assert g.pending_choice is None
+
+    assert sorted(names(actor.hand)) == ['D1', 'D2']
+    assert names(actor.deck.discard_pile) == ['爆料黑幕', '領導']
+    assert names(b.deck.discard_pile) == ['情報網']
+    assert names(c.hand) == ['爆料黑幕']  # C 從未出牌，卡還在手上
+    assert names(c.deck.discard_pile) == []
+
+
+def test_counter_cancel_depth4_third_player_joins_chain_and_recancels_original():
+    """使用者確認的產品設計：A 出牌、B 取消、A 反制、C 也能加入反制鏈再取消 A 的反制——
+    使 A 的原始牌最終還是被取消（堆疊上方存活的取消次數為偶數→翻回取消）。"""
+    g = Game([('p1', 'P1'), ('p2', 'P2'), ('p3', 'P3')])
+    g.game_phase = GamePhase.MAIN
+    g.turn_phase = TurnPhase.ACTION
+    g.current_player_index = 0
+    g.pending_base_choices = {}
+    pin_noop_event(g)
+    g.players[0].faction_id = 'red_army'
+    actor, b, c = g.players
+    actor.hand = [card(g, '領導'), card(g, '爆料黑幕')]
+    actor.deck.draw_pile = [Card('D1', 'command', {}), Card('D2', 'command', {})]
+    b.hand = [card(g, '情報網')]
+    c.hand = [card(g, '產業滲透')]  # 爆料黑幕購買費用含資金1，符合產業滲透取消條件
+
+    result = g.play_card(0, mode='action')
+    assert result.get('pending_choice') is True, result
+    assert g.pending_choice['player_id'] == b.id
+
+    step1 = g.resolve_pending_choice(b.id, 1)  # B 用 情報網 取消 A 的 領導
+    assert step1.get('success'), step1
+    assert g.pending_choice['player_id'] == actor.id
+    assert [entry['name'] for entry in g.pending_choice['cards']] == ['爆料黑幕']
+
+    step2 = g.resolve_pending_choice(actor.id, 1)  # A 用 爆料黑幕 反制 B 的 情報網
+    assert step2.get('success'), step2
+    assert step2.get('opened_counter_layer') is True
+    assert g.pending_choice is not None, 'C 手上的 產業滲透 對 A 的 爆料黑幕（含資金費用1）合格，應繼續開新層'
+    assert g.pending_choice['player_id'] == c.id
+    assert g.pending_choice['acting_player_id'] == actor.id
+    assert g.pending_choice['played_card_name'] == '爆料黑幕'
+    assert [entry['name'] for entry in g.pending_choice['cards']] == ['產業滲透']
+
+    step3 = g.resolve_pending_choice(c.id, 1)  # C 用 產業滲透 反制 A 的 爆料黑幕
+    assert step3.get('success'), step3
+    assert step3.get('reaction_card') == '產業滲透'
+    assert step3.get('canceled_card') == '爆料黑幕'
+    assert g.pending_choice is None, '沒有更多候選人（B、A 手牌已空），整條深度4的鏈直接結算'
+
+    # 交替結算：stack = [領導, 情報網(B), 爆料黑幕(A), 產業滲透(C)]，n=3（奇數）
+    # resolved[3]=True（頂端，沒人能取消它）→ resolved[2]=not resolved[3]=False（A 的爆料黑幕
+    # 被取消）→ resolved[1]=not resolved[2]=True（B 的情報網翻回生效）→
+    # resolved[0]=not resolved[1]=False（A 的領導最終仍是被取消）。
+    assert names(actor.hand) == []  # 領導被取消，沒有抽牌
+    assert names(actor.deck.draw_pile) == ['D1', 'D2']  # 沒人動用這副牌，領導的抽牌效果從未執行
+    # actor 打出的兩張牌（領導＝原始牌、爆料黑幕＝反制用掉的反應卡）都被消耗進自己的棄牌堆，
+    # 即使各自的效果都沒有生效（領導被取消；爆料黑幕本身也被 C 取消，沒有 bonus 抽牌）。
+    assert names(actor.deck.discard_pile) == ['爆料黑幕', '領導']
+    # 情報網翻回生效：`_resolve_reaction_context` 對『作為反應卡使用』的情報網固定只執行
+    # cancel_card（不會走它印刷的 choose_one／放內鬥效果——那是情報網當作自己回合行動卡時
+    # 才有的分支，2026-08-02 的既有規則），所以這裡只驗證它已從 B 手上消耗並進棄牌堆。
+    assert names(b.deck.discard_pile) == ['情報網']
+    # 產業滲透生效：取消的是 爆料黑幕（購買費用含資金1）→ 觸發 canceled_money_cost_card bonus 抽牌
+    assert names(c.deck.discard_pile) == ['產業滲透']
+
+
+def test_counter_cancel_chain_cannot_ask_same_reactor_twice_with_one_card():
+    """終止性檢查：B 手上只有一張 爆料黑幕；B 在最初一層取消 A 的牌之後，即使 A 反制、
+    鏈條繼續，B 也不該被『再問一次』——因為那張唯一的反應卡在第一次打出時就已經從手上
+    移除。用一場「B 只有一張反應卡、A 反制後鏈條自然終止（B 沒有第二張可用）」的深度3
+    情境驗證：手牌真的空了，且從未再次出現在任何一層的候選名單中。"""
+    g = make_game()
+    actor, b = g.players
+    actor.hand = [card(g, '領導'), card(g, '爆料黑幕')]
+    # 領導最終會生效（抽1），爆料黑幕反制情報網成功也會有 bonus 抽牌（見深度3測試的交替結算）
+    # ——備兩張抽牌堆卡片，避免因抽牌堆耗盡觸發洗牌，讓斷言與這次終止性檢查無關的細節脫鉤。
+    actor.deck.draw_pile = [Card('D1', 'command', {}), Card('D2', 'command', {})]
+    b.hand = [card(g, '情報網')]  # B 唯一一張合格反應卡
+
+    result = g.play_card(0, mode='action')
+    assert result.get('pending_choice') is True, result
+    assert g.pending_choice['player_id'] == b.id
+
+    step1 = g.resolve_pending_choice(b.id, 1)  # B 用僅有的 情報網 取消
+    assert step1.get('success'), step1
+    assert names(b.hand) == [], 'B 唯一的反應卡打出後手牌應為空'
+    # 反制層的候選人只計算 A（B 已經沒有合格卡，且遞迴排除了剛出牌的 B 本人）
+    assert g.pending_choice['player_id'] == actor.id
+    assert not g.pending_choice.get('remaining_candidates')
+
+    step2 = g.resolve_pending_choice(actor.id, 1)  # A 反制
+    assert step2.get('success'), step2
+    assert g.pending_choice is None, 'B 手上已無合格卡，不應再被問一次；鏈條在此自然結束'
+    assert names(b.hand) == []
+    assert names(b.deck.discard_pile) == ['情報網']
+    # 附帶驗證整條鏈仍照交替規則正確結算（與深度3測試同一種牌組合）：領導效果生效、
+    # 爆料黑幕成功取消情報網並拿到 bonus 抽牌。
+    assert sorted(names(actor.hand)) == ['D1', 'D2']
+    assert names(actor.deck.discard_pile) == ['爆料黑幕', '領導']
 
 
 def test_support_card_now_prompts_cancel_reaction_and_cancel_prevents_build():

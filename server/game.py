@@ -4560,7 +4560,13 @@ class Game:
             return {"success": True, "pending_choice": True, **support_resolution}
         return None
 
-    def _resume_reaction_pending_action(self, choice, reaction_context=None):
+    def _resume_reaction_pending_action(self, choice, reaction_context=None, skip_reaction_resolution=False):
+        # skip_reaction_resolution: when a multi-layer counter-cancel chain resolves via
+        # _finalize_reaction_stack, that walker already resolves every reaction card's own
+        # effect (bonus draw / discard). In that case reaction_context is still passed to
+        # signal "the original play was canceled" (so it is NOT executed), but the direct
+        # canceller's reaction card must NOT be re-resolved here — the walker did it. The
+        # default (False) preserves the legacy single-cancellation path exactly.
         player = choice.get('acting_player')
         played_card = choice.get('played_card')
         card_name = choice.get('played_card_name')
@@ -4569,7 +4575,8 @@ class Game:
         red_army_action_name = action_context.get('red_army_action_name')
         if red_army_action_name:
             if reaction_context is not None:
-                self._resolve_reaction_context(reaction_context)
+                if not skip_reaction_resolution:
+                    self._resolve_reaction_context(reaction_context)
                 self.log(f"{player.name}'s {red_army_action_name} was canceled by reaction")
                 return {"success": True, "canceled": True}
             red_kwargs = dict(action_context.get('red_army_action_kwargs') or {})
@@ -4588,7 +4595,8 @@ class Game:
                 # An opponent used a reaction card to cancel this support play: resolve
                 # the reaction (its own effect + discard), discard the canceled support
                 # card, and do NOT run the support card's board effect.
-                self._resolve_reaction_context(reaction_context)
+                if not skip_reaction_resolution:
+                    self._resolve_reaction_context(reaction_context)
                 if not action_context.get('removed_current_card'):
                     if not self._return_borrowed_card_to_owner_topdeck(played_card):
                         player.deck.discard([played_card])
@@ -4613,7 +4621,8 @@ class Game:
                         self.log(f"{player.name} played {card_name}")
                         return {"success": True, "pending_choice": True}
 
-        self._resolve_reaction_context(reaction_context)
+        if not skip_reaction_resolution:
+            self._resolve_reaction_context(reaction_context)
 
         # Deferred-reaction path never used to set these (only the immediate play_card
         # path did), so a card that triggered a reaction prompt — even one the reactor
@@ -4670,12 +4679,30 @@ class Game:
         self.log(f"{player.name} played {card_name}")
         return {"success": True}
 
-    def _set_pending_reaction_choice(self, reacting_player, acting_player, played_card, card_name, candidates, effective_type, action_context, support_resolution=None, remaining_candidates=None):
+    def _set_pending_reaction_choice(self, reacting_player, acting_player, played_card, card_name, candidates, effective_type, action_context, support_resolution=None, remaining_candidates=None, resolution_stack=None):
         # 2026-08-02 使用者更正：只要持有卡牌，對手「每一次」符合條件的行動都要問是否取消，
         # 不是「這回合問過這個人一次就不再問」。因此這裡不再記錄／檢查 per-turn 的
         # 已詢問名單；`remaining_candidates` 改為承載「這一次出牌」還沒問過的其他候選人，
         # 供 `_resolve_reaction_choice` 在目前這位玩家選擇不取消時，接著問下一位候選人
         # ——而不是問過第一位就直接讓行動結算。
+        #
+        # 2026-08-05 反制鏈（counter-cancel）：`resolution_stack` 承載「這條取消鏈」由下往上
+        # 的每一層 frame——stack[0] 是最初的出牌（kind='original'），stack[k>=1] 是第 k 次
+        # 打出的反應卡（kind='reaction'）。第一層（對最初出牌的反應）由本函式自動建立
+        # stack=[original_frame]；更深層由 `_resolve_reaction_choice` 取消分支 push 反應 frame
+        # 後帶入。任何一層的候選池全部謝絕時，`_finalize_reaction_stack` 依交替規則一次結算。
+        if resolution_stack is None:
+            resolution_stack = [{
+                'kind': 'original',
+                'choice': {
+                    'acting_player': acting_player,
+                    'played_card': played_card,
+                    'played_card_name': card_name,
+                    'effective_type': effective_type,
+                    'action_context': dict(action_context or {}),
+                    'support_resolution': support_resolution,
+                },
+            }]
         self.pending_choice = {
             'type': 'reaction_choice',
             'choice_key': 'cancel_other_player_action',
@@ -4691,6 +4718,7 @@ class Game:
             'support_resolution': support_resolution,
             'cards': list(candidates),
             'remaining_candidates': list(remaining_candidates or []),
+            'resolution_stack': resolution_stack,
             'prompt': f'{acting_player.name} 打出 {card_name}。是否要取消對方的行動？',
             'source_name': '取消反應',
         }
@@ -4701,7 +4729,12 @@ class Game:
         cards = choice.get('cards') or []
         if index is None:
             return {'error': 'Invalid choice index'}
+        resolution_stack = list(choice.get('resolution_stack') or [])
         if index == 0:
+            # Decline at this layer. The flat `remaining_candidates` chain is orthogonal to
+            # the counter-cancel stack: first hand this layer's card to any other eligible
+            # candidate; only when the whole candidate pool of THIS layer declines is the
+            # current top card left uncanceled → walk the stack and settle every layer.
             remaining = list(choice.get('remaining_candidates') or [])
             if remaining:
                 next_candidate = remaining[0]
@@ -4716,13 +4749,14 @@ class Game:
                     choice.get('action_context'),
                     support_resolution=choice.get('support_resolution'),
                     remaining_candidates=remaining[1:],
+                    resolution_stack=resolution_stack,
                 )
                 result['success'] = True
                 result['skipped_reaction'] = True
                 result['next_reactor_id'] = next_candidate['player'].id
                 return result
             self.pending_choice = None
-            result = self._resume_reaction_pending_action(choice, reaction_context=None)
+            result = self._finalize_reaction_stack(resolution_stack)
             result['skipped_reaction'] = True
             return result
         card_choice_index = index - 1
@@ -4738,11 +4772,116 @@ class Game:
         )
         if reaction_context is None:
             return {'error': 'Invalid reaction card'}
+        # This reactor cancelled the current top card by playing their own reaction card:
+        # push it as a new stack frame, then treat that play itself as a fresh action that
+        # opens its own reaction window (computed exactly like any other card play, keyed on
+        # the reaction card's printed cost, excluding only the player who just played it).
+        # Anyone still holding a qualifying card — the original actor, a bystander who
+        # declined earlier, or even a player who already spent a different card in this chain
+        # — may counter-cancel. If nobody can (or the frontend is not driving the loop),
+        # settle the whole stack now.
+        resolution_stack.append({'kind': 'reaction', 'reaction_context': reaction_context})
         self.pending_choice = None
-        result = self._resume_reaction_pending_action(choice, reaction_context=reaction_context)
-        result['reaction_card'] = reaction_context.get('reaction_card_name')
+        reaction_card = reaction_context['reaction_card']
+        reaction_card_name = reaction_context['reaction_card_name']
+        counter_candidates = self._reaction_prompt_candidates(player, reaction_card)
+        if counter_candidates:
+            first = counter_candidates[0]
+            result = self._set_pending_reaction_choice(
+                first['player'],
+                player,
+                reaction_card,
+                reaction_card_name,
+                first['cards'],
+                getattr(reaction_card, 'card_type', None),
+                {},
+                support_resolution=None,
+                remaining_candidates=counter_candidates[1:],
+                resolution_stack=resolution_stack,
+            )
+            result['success'] = True
+            result['opened_counter_layer'] = True
+        else:
+            result = self._finalize_reaction_stack(resolution_stack)
+        result['reaction_card'] = reaction_card_name
         result['canceled_card'] = reaction_context.get('canceled_card_name')
         return result
+
+    def _apply_reaction_cancel_flags(self, reaction_context):
+        # Set the bonus-draw turn_log flags for ONE reaction card, based on the printed cost
+        # of the exact card it directly cancels. In a multi-layer chain each layer targets a
+        # different card, so these flags must be (re)set per frame right before that frame's
+        # reaction card resolves — the value the flag held when the context was first built
+        # (possibly overwritten by a deeper layer) is not authoritative. Mirrors the flag
+        # logic in _build_reaction_context so the single-cancellation path is unchanged.
+        cost = reaction_context.get('canceled_card_cost') or {}
+        name = reaction_context.get('reaction_card_name')
+        if name == '爆料黑幕':
+            self.turn_log['canceled_propaganda_card'] = int(cost.get('propaganda', 0) or 0) > 0
+        elif name == '產業滲透':
+            self.turn_log['canceled_money_cost_card'] = int(cost.get('money', 0) or 0) > 0
+
+    def _discard_consumed_reaction_card(self, reaction_context):
+        # A reaction card that was itself cancelled by a counter-cancel above it is still
+        # consumed (already popped from hand in _build_reaction_context) but produces NO
+        # effect and NO bonus draw — just move it to discard (or back to its owner's topdeck
+        # if borrowed), mirroring _resolve_reaction_context's discard tail without the effect.
+        card = reaction_context.get('reaction_card')
+        reactor = reaction_context.get('reacting_player')
+        if card is None or reactor is None:
+            return
+        if not self._return_borrowed_card_to_owner_topdeck(card):
+            if card not in reactor.deck.discard_pile:
+                reactor.deck.discard([card])
+        self.log(f"{reactor.name}'s {reaction_context.get('reaction_card_name')} was itself canceled by a counter-reaction")
+
+    def _finalize_reaction_stack(self, resolution_stack):
+        # Settle a completed counter-cancel chain. `resolution_stack` is bottom-to-top:
+        #   stack[0]  = the original card play              (kind='original')
+        #   stack[k]  = the k-th reaction card, cancels k-1 (kind='reaction'), k>=1
+        # Every frame is a REAL cancellation of the one below it (a mere decline never
+        # creates a frame — it only advances the flat remaining_candidates within a layer),
+        # so resolution is a clean alternation from the top: the top card always takes effect
+        # (nothing above it to cancel it), and each card below takes effect iff the card
+        # directly above it did NOT. Equivalently, frame k resolves iff its distance from the
+        # top (n - k) is even, where n = len(stack) - 1 = number of reaction cards.
+        #   depth 1 (n=0): original resolves.                         (nobody cancelled)
+        #   depth 2 (n=1): original cancelled, reaction[1] resolves.  (single cancel)
+        #   depth 3 (n=2): original resolves, [2] resolves, [1] dead. (counter-cancel)
+        #   depth 4 (n=3): original cancelled, [3]&[1] resolve, [2] dead. (counter-counter)
+        stack = list(resolution_stack or [])
+        if not stack:
+            return {'success': True}
+        n = len(stack) - 1
+        # Resolve the reaction cards top-down so each bonus draw / cancel effect fires in the
+        # order they were played (outermost first). frame[1] (the direct canceller of the
+        # original) is handled by _resume_reaction_pending_action below when the original is
+        # cancelled, so skip it here in that case to avoid double-resolving it.
+        original_resolves = (n % 2 == 0)
+        for k in range(n, 0, -1):
+            if not original_resolves and k == 1:
+                continue
+            ctx = stack[k].get('reaction_context')
+            if ctx is None:
+                continue
+            if (n - k) % 2 == 0:
+                self._apply_reaction_cancel_flags(ctx)
+                self._resolve_reaction_context(ctx)
+            else:
+                self._discard_consumed_reaction_card(ctx)
+        orig_choice = stack[0].get('choice') or {}
+        if original_resolves:
+            return self._resume_reaction_pending_action(orig_choice, reaction_context=None)
+        # Original was cancelled by frame[1]; let _resume_reaction_pending_action run its
+        # canceled path (discard original, no execute) and resolve frame[1]'s own effect,
+        # while skip_reaction_resolution keeps it from touching any deeper frame.
+        direct_canceller = stack[1].get('reaction_context')
+        self._apply_reaction_cancel_flags(direct_canceller)
+        return self._resume_reaction_pending_action(
+            orig_choice,
+            reaction_context=direct_canceller,
+            skip_reaction_resolution=False,
+        )
 
     def _build_reaction_context(self, player, played_card, card_name, mode, reaction):
         if mode != 'action' or not reaction:
