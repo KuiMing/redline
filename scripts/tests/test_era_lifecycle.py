@@ -203,32 +203,61 @@ def _configure_same_boundary_auto_discard_event(game):
     game.round_start_player_index = 0
 
 
-def test_tibet_activation_choice_completes_before_same_boundary_auto_event_choice():
+def test_tibet_red_suppression_defers_to_red_turn_instead_of_blocking_non_red_actor():
+    """Deadlock regression（playtest 回報：上海合作組織＋藏國騷亂 同輪，非紅軍陣營回合結束後雙方卡死）.
+
+    藏國騷亂的紅軍壓制是互動效果（紅軍選牌棄掉後建組織）。時代關卡在整輪結束的 round-wrap
+    才偵測，此時當前玩家是該輪起始玩家——本例是非紅軍的藏國。舊行為會在此刻直接啟動、把
+    pending_choice 掛在紅軍身上：當前的非紅軍玩家被這個「別人的」待選擇卡死整個回合
+    （advance_turn_phase／play_card 都被 pending_choice 擋下），而紅軍又不是當前玩家，雙方卡死。
+    修法：互動對象非當前玩家的時代啟動延後到該對象自己的回合（比照紅軍事件 auto_pending 的
+    延後機制），紅軍在自己的回合處理自己的選擇；同輪抽到的紅軍事件維持 auto_deferred，等時代
+    壓制解完才真正套用（事件仍序列在時代之後）。
+    """
     game, tibet, red = _make_game("tibet_dharamsala")
     inside_towns = [town for town in _legal_inside_wall_towns(game, tibet) if game._shared_org_count(red, town) == 0]
     assert len(inside_towns) >= 7
     tibet.organizations = {town: 1 for town in inside_towns[:7]}
     _configure_same_boundary_auto_discard_event(game)
 
+    # Round wrap: current becomes the non-red round-start player (Tibet). The era is
+    # detected but its interactive choice belongs to Red Army, so activation is DEFERRED
+    # (left queued) rather than stranding a choice on the non-red actor.
     _advance_current_player_turn(game)
-    assert "tibet" in game.era_engine.get_active_eras()
+    assert game.current_player() is tibet
+    assert "tibet" not in game.era_engine.get_activated_eras()
+    assert game._pending_era_activations == ["tibet"]
+    assert game.pending_choice is None
+    assert game.event_progress["status"] == "auto_deferred"
+    # The non-red actor is NOT blocked — the deadlock is gone.
+    assert game.advance_turn_phase() == {"success": True}
+
+    # Tibet finishes their turn; Red Army takes the seat and the deferred era now
+    # activates as Red Army's OWN, resolvable choice.
+    game.turn_phase = TurnPhase.ACTION
+    _advance_current_player_turn(game)
+    assert game.current_player() is red
+    assert "tibet" in game.era_engine.get_activated_eras()
     pending = game.pending_choice
     assert pending is not None
     assert pending["choice_key"] == "era_red_discard_to_build_near_target"
+    assert pending["player_id"] == red.id
     assert game.event_progress["status"] == "auto_deferred"
 
+    # Red Army resolves the suppression on its own turn; only THEN does the auto event
+    # apply — the era still serializes before the event.
     first = game.resolve_pending_choice(red.id, [0])
     assert first.get("pending_choice") is True
-    pending = game.pending_choice
-    assert pending is not None
-    assert pending["choice_key"] == "era_red_build_near_target"
+    assert game.pending_choice["choice_key"] == "era_red_build_near_target"
     second = game.resolve_pending_choice(red.id, 0)
     assert second.get("pending_choice") is True
     pending = game.pending_choice
     assert pending is not None
     assert pending["choice_key"] == "event_discard_self"
-    assert pending["player_id"] == tibet.id
+    # Auto event now resolves on Red Army's turn (current player at application time).
+    assert pending["player_id"] == red.id
     assert game.event_progress["settled"] is True
+    assert game.resolve_pending_choice(red.id, [0]).get("success") is True
 
 
 def test_manchuria_activation_choice_completes_before_same_boundary_auto_event_choice():
@@ -280,27 +309,55 @@ def test_simultaneous_tibet_and_manchuria_eras_serialize_before_auto_event():
     _configure_same_boundary_auto_discard_event(game)
     game.current_player_index = 2
 
+    # Round wrap: current becomes the non-red round-start player (Tibet). BOTH detected
+    # eras are interactive and target a player who is not Tibet (Red Army for the Tibet
+    # suppression, Manchuria for the Manchuria reorder), so both activations are DEFERRED.
+    # No pending_choice is stranded on Tibet — the deadlock is gone.
     _advance_current_player_turn(game)
-    assert game.era_engine.get_activated_eras() == ["tibet"]
-    assert game._pending_era_activations == ["manchuria"]
-    assert game.pending_choice["choice_key"] == "era_red_discard_to_build_near_target"
+    assert game.current_player() is tibet
+    assert game.era_engine.get_activated_eras() == []
+    assert game._pending_era_activations == ["tibet", "manchuria"]
+    assert game.pending_choice is None
     assert game.event_progress["status"] == "auto_deferred"
+    assert game.advance_turn_phase() == {"success": True}
+
+    # Each era activates on its own target's turn. Tibet ends → Manchuria takes the seat
+    # and the Manchuria reorder activates as Manchuria's own choice; the Tibet suppression
+    # stays queued (its target, Red Army, has not acted yet).
+    game.turn_phase = TurnPhase.ACTION
+    _advance_current_player_turn(game)
+    assert game.current_player() is manchuria
+    assert game.era_engine.get_activated_eras() == ["manchuria"]
+    assert game._pending_era_activations == ["tibet"]
+    assert game.pending_choice["choice_key"] == "era_inspect_deck_top_and_reorder"
+    assert game.pending_choice["player_id"] == manchuria.id
+    assert game.event_progress["status"] == "auto_deferred"
+
+    manchuria_result = game.resolve_pending_choice(manchuria.id, [0, 1])
+    assert manchuria_result.get("success") is True
+    assert game.pending_choice is None
+    # Tibet suppression still deferred until Red Army's turn; auto event still not applied.
+    assert game._pending_era_activations == ["tibet"]
+    assert game.event_progress["status"] == "auto_deferred"
+
+    # Manchuria ends → Red Army takes the seat and the Tibet suppression finally activates
+    # as Red Army's own choice.
+    game.turn_phase = TurnPhase.ACTION
+    _advance_current_player_turn(game)
+    assert game.current_player() is red
+    assert set(game.era_engine.get_activated_eras()) == {"tibet", "manchuria"}
+    assert game._pending_era_activations == []
+    assert game.pending_choice["choice_key"] == "era_red_discard_to_build_near_target"
+    assert game.pending_choice["player_id"] == red.id
 
     first_tibet = game.resolve_pending_choice(red.id, [0])
     assert first_tibet.get("pending_choice") is True
     assert game.pending_choice["choice_key"] == "era_red_build_near_target"
-    assert "manchuria" not in game.era_engine.get_activated_eras()
-
     second_tibet = game.resolve_pending_choice(red.id, 0)
     assert second_tibet.get("pending_choice") is True
-    assert set(game.era_engine.get_activated_eras()) == {"tibet", "manchuria"}
-    assert game._pending_era_activations == []
-    assert game.pending_choice["choice_key"] == "era_inspect_deck_top_and_reorder"
-
-    manchuria_result = game.resolve_pending_choice(manchuria.id, [0, 1])
-    assert manchuria_result.get("pending_choice") is True
+    # Only after BOTH eras have resolved does the auto event apply (on Red Army's turn).
     assert game.pending_choice["choice_key"] == "event_discard_self"
-    assert game.pending_choice["player_id"] == tibet.id
+    assert game.pending_choice["player_id"] == red.id
     assert game.event_progress["settled"] is True
 
 

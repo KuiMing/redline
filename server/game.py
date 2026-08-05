@@ -5506,6 +5506,17 @@ class Game:
             # above so a duration created here is not consumed at the same boundary.
             self._detect_era_triggers()
             self._continue_era_activation_queue()
+        # An interactive era detected at the round wrap may target a player who is
+        # NOT the round-start player now taking the seat (e.g. a red-suppression era
+        # while a non-red player leads the round). Its activation was deferred in
+        # _continue_era_activation_queue so it would not strand a pending_choice the
+        # current player cannot resolve — hard-blocking their whole turn and
+        # deadlocking the game (playtest 回報：上海合作組織＋藏國騷亂 同輪，非紅軍陣營
+        # 回合結束後雙方卡住). Drain again now that current_player points at whoever just
+        # took the seat: an era targeting THEM activates as their own resolvable
+        # choice; one targeting a later player stays queued until that player's turn.
+        # Idempotent after the round-wrap drain above (early-returns on pending_choice).
+        self._continue_era_activation_queue()
         self.turn_phase = TurnPhase.ACTION
         if not self.current_event:
             self._start_event_phase()
@@ -6588,12 +6599,63 @@ class Game:
         self._detect_era_triggers()
         return self._continue_era_activation_queue()
 
+    def _era_activation_interactive_target(self, era):
+        """Return the Player who would OWN an interactive pending_choice created by
+        activating this era, or None when activation needs no interactive input.
+
+        Only returns a player when activation would ACTUALLY create the choice — the
+        same preconditions the start-flows guard on (target has hand cards / valid
+        build towns / enough deck cards). When the choice would not be created, the
+        era's non-interactive side-effects should still apply at the normal boundary,
+        so we return None (no deferral).
+
+        Used to defer an interactive era whose choice belongs to a player other than
+        the current actor until it is actually that player's turn. Activating such an
+        era at the round-wrap boundary while a different player leads the round
+        strands a pending_choice the current player cannot resolve, hard-blocking
+        their entire turn and deadlocking the game (playtest 回報：上海合作組織＋藏國
+        騷亂 同輪觸發，非紅軍陣營回合結束後雙方卡住無法操作). Mirrors how a red-targeted
+        auto event defers via `auto_pending` until Red Army's own turn.
+        """
+        effects = (era or {}).get('effects') or {}
+        for effect in effects.values():
+            etype = (effect or {}).get('type')
+            if etype == 'red_discard_to_build_near_target':
+                red = self._red_player()
+                if red is None or not getattr(red, 'hand', None):
+                    continue
+                if not self._era_build_towns_near_target(red, effect):
+                    continue
+                if int((effect or {}).get('builds_per_discard', 1) or 1) * len(red.hand) <= 0:
+                    continue
+                return red
+            if etype == 'inspect_deck_top_and_reorder':
+                targets = self._era_effect_target_players(effect)
+                if not targets:
+                    continue
+                player = targets[0]
+                deck = getattr(player, 'deck', None)
+                if deck is None:
+                    continue
+                look_count = int((effect or {}).get('look_count', 1) or 1)
+                top_count = int((effect or {}).get('top_count', 1) or 1)
+                if len(deck.draw_pile[-look_count:]) < top_count:
+                    continue
+                return player
+        return None
+
     def _continue_era_activation_queue(self):
         """Activate qualifying eras serially, pausing for each choice chain.
 
         Record and dequeue each one-time activation immediately before applying its
         effects. This gives unexpected partial effect failures at-most-once semantics:
         continuing the queue cannot apply the same activation effect twice.
+
+        An interactive era whose choice would be owned by a player who is NOT the
+        current actor is *deferred* (left queued): activating it now would strand a
+        pending_choice the current player cannot resolve, deadlocking their turn. It
+        activates later, once its target becomes the current player — see the
+        post-advance drain in _end_turn and _era_activation_interactive_target.
         """
         queue = getattr(self, '_pending_era_activations', None)
         if queue is None:
@@ -6602,20 +6664,36 @@ class Game:
         if self.pending_choice:
             return {'success': True, 'pending_choice': True}
 
-        while queue and not self.pending_choice:
-            era_id = queue[0]
-            if era_id in set(self.era_engine.get_activated_eras()):
-                queue.pop(0)
-                continue
-            era = self.era_engine.get_definition(era_id)
-            if not era:
-                # Keep invalid data queued: do not mark or silently lose an activation
-                # whose effect cannot be found.
-                return {'error': f'Unknown queued era: {era_id}'}
+        while not self.pending_choice:
+            activated_ids = set(self.era_engine.get_activated_eras())
+            current = self.current_player()
+            pick = None
+            for index, era_id in enumerate(queue):
+                if era_id in activated_ids:
+                    pick = index
+                    break
+                era = self.era_engine.get_definition(era_id)
+                if not era:
+                    # Keep invalid data queued: do not mark or silently lose an
+                    # activation whose effect cannot be found.
+                    return {'error': f'Unknown queued era: {era_id}'}
+                target = self._era_activation_interactive_target(era)
+                if target is not None and current is not None and target.id != current.id:
+                    # Interactive choice belongs to another player: defer to their turn.
+                    continue
+                pick = index
+                break
+            if pick is None:
+                break
 
+            era_id = queue[pick]
+            if era_id in activated_ids:
+                queue.pop(pick)
+                continue
             if not self.era_engine.activate_era(era_id):
                 return {'error': f'Could not activate queued era: {era_id}'}
-            queue.pop(0)
+            era = self.era_engine.get_definition(era_id)
+            queue.pop(pick)
             activation_results = self._apply_era_activation_effects(era)
             self.era_notification = self._era_notification_payload(era)
             self.era_notification['runtime_effects'] = activation_results

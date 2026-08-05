@@ -3366,3 +3366,86 @@ def test_npc_ignores_red_army_own_faction_ability():
     assert result.get('success'), result
     assert g.event_progress['succeeded'] is False
     assert g.event_progress['count'] == 0
+
+
+def _force_event_deck(g, event_name):
+    """Force the event deck to always draw `event_name` (survives reshuffles)."""
+    event = g._event_by_name(event_name)
+
+    class _AlwaysDraw:
+        def __init__(self):
+            self.draw_pile = [dict(event)]
+            self.discard_pile = []
+
+        def draw(self):
+            return dict(event)
+
+    g.event_deck = _AlwaysDraw()
+
+
+def test_shanghai_cooperation_org_at_round_wrap_does_not_deadlock_non_red_actor():
+    """Playtest 回報（最高嚴重度）：第 11 回合抽到『上海合作組織』，非紅軍陣營完成回合後，
+    雙方都卡住無法執行任何步驟。
+
+    根因不在事件機制本身（紅軍目標事件的 auto_pending 會在紅軍回合經 _end_turn 自動套用），
+    而在同輪 round-wrap 觸發的『藏國騷亂』紅軍壓制——一個互動時代效果：舊行為在 round-wrap
+    當下（當前玩家是非紅軍起始玩家）就把 pending_choice 掛在紅軍身上，非紅軍當前玩家因此被
+    這個別人的待選擇卡死（advance_turn_phase／play_card 皆被擋），紅軍又不是當前玩家，雙方卡死；
+    抽到的『上海合作組織』只是被記成 auto_deferred 的表象。修法：互動對象非當前玩家的時代啟動
+    延後到該對象自己的回合，非紅軍玩家不再被卡，紅軍在自己的回合處理壓制、事件隨後套用。
+    """
+    g = Game([('actor', 'dafdsaf'), ('red', 'RED')])
+    g.game_phase = GamePhase.MAIN
+    g.pending_base_choices = {}
+    g.pending_choice = None
+    # players[0] = non-red round-start faction (Tibet), players[1] = Red Army.
+    g.players[0].faction_id = 'tibet'
+    g.players[1].faction_id = 'red_army'
+    tibet, red = g.players
+
+    # Tibet holds 7 organizations inside the wall (also Tibet-region towns) so 藏國騷亂
+    # qualifies at the round wrap, and Red Army can build near them.
+    china_towns = g._towns_for_region_alias('china')
+    tibet.organizations = {town: 1 for town in china_towns[:7]}
+    tibet_region_towns = g._towns_for_region_alias('tibet_region')
+    tibet.organizations[tibet_region_towns[0]] = 1
+    red.hand = [Card('追隨者', 'propaganda', {'propaganda': 1}) for _ in range(3)]
+
+    _force_event_deck(g, '上海合作組織')
+    g.current_event = None
+    g.event_progress = None
+
+    # Drive the round wrap: Red Army (index 1) ends their turn, wrapping back to the
+    # non-red round-start player (index 0).
+    g.turn = 10
+    g.current_player_index = 1
+    g.round_start_player_index = 0
+    g.turn_phase = TurnPhase.ACTION
+    g._end_turn()
+
+    # The non-red actor is now current. The era was detected but DEFERRED (its choice
+    # belongs to Red Army), so no foreign pending_choice strands the actor.
+    assert g.current_player() is tibet
+    assert g.pending_choice is None
+    assert g._pending_era_activations == ['tibet']
+    assert (g.event_progress or {}).get('status') == 'auto_deferred'
+    # Regression assertion: the non-red actor can actually take their turn (no deadlock).
+    assert g.advance_turn_phase() == {'success': True}
+
+    # Tibet finishes; Red Army takes the seat and the deferred suppression activates as
+    # Red Army's own, resolvable choice.
+    g.turn_phase = TurnPhase.ACTION
+    assert g.advance_turn_phase() == {'success': True}   # ACTION -> END
+    assert g.advance_turn_phase() == {'success': True}   # END -> _end_turn -> Red Army
+    assert g.current_player() is red
+    assert g.pending_choice is not None
+    assert g.pending_choice['choice_key'] == 'era_red_discard_to_build_near_target'
+    assert g.pending_choice['player_id'] == red.id
+
+    # Red Army resolves the suppression on its own turn; only then does 上海合作組織 apply.
+    g.resolve_pending_choice(red.id, [0])
+    while g.pending_choice is not None:
+        g.resolve_pending_choice(g.pending_choice['player_id'], 0)
+    assert (g.event_progress or {}).get('status') == 'auto'
+    assert g.event_progress.get('settled') is True
+    assert any('上海合作組織' in line and 'scoped_card_range' in line for line in g.action_log)
