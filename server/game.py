@@ -4954,6 +4954,20 @@ class Game:
             'canceled_card_name': card_name,
             'canceled_card_cost': cost,
         }
+        # 2026-08-06 使用者回報：playing 爆料黑幕/產業滲透/情報網 *reactively* never counted
+        # toward cost-based mission triggers (play_card_with_money/play_card_with_propaganda
+        # — e.g. 重大災難「打出購買費用有宣傳的卡牌」), because that tracking only ever lived
+        # in play_card()'s own active-play flow, never in this reactive-resolution path. All
+        # three reaction cards have both a money and a propaganda cost, so a reactive play is
+        # itself a "played card with this cost" event exactly like an active play — tracked
+        # here, once, on the act of spending the reaction card (mirrors play_card()'s existing
+        # "the act of playing counts even if the card's own effect is later negated/canceled"
+        # semantics: a reaction card that itself gets counter-cancelled still counts).
+        reaction_played_cost = self._card_purchase_cost(reaction_played) or {}
+        if int(reaction_played_cost.get('money', 0) or 0) > 0:
+            self._track_event_progress('play_card_with_money', player=reaction_player)
+        if int(reaction_played_cost.get('propaganda', 0) or 0) > 0:
+            self._track_event_progress('play_card_with_propaganda', player=reaction_player)
         self.turn_log['canceled_card'] = True
         has_propaganda_cost = int(cost.get('propaganda', 0) or 0) > 0
         has_money_cost = int(cost.get('money', 0) or 0) > 0

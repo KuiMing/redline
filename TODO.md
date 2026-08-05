@@ -17,6 +17,13 @@
 
 ## 目前 active todo
 
+### P1：反應性打出爆料黑幕/產業滲透/情報網完全不會計入「打出購買費用有資金/宣傳的牌」事件任務
+- [done] 使用者回報：所有事件卡應該也要在所有人該回合結束的時候再結算，因為有些動作或卡牌，要敵軍有所行動才會發動。例如爆料黑幕，要對方動作之後，才有機會發動，才能算使用有宣傳的卡牌，就能解重大災難的任務。（2026-08-06 使用者回報並要求處理）
+  - **釐清使用者描述的機制與實際根因的落差**：使用者的描述是「事件應該延後到整輪結束才結算」，但稽核確認**任務型事件的結算本來就已經是整輪結束才做**（`advance_turn_phase()` 的 `TurnPhase.END` 分支，`server/game.py:5460-5461`：只有 `_is_final_non_red_turn_before_round_wrap()` 判定為本輪最後一位非紅軍玩家時才會呼叫 `_settle_current_event()`），這部分沒有問題、不需要再改動時機。真正的根因是另一件事：**反應性地打出爆料黑幕/產業滲透/情報網（透過取消對手行動的機制），完全不會呼叫任何 `_track_event_progress()`**——`play_card_with_money`/`play_card_with_propaganda` 這類「打出購買費用有資金/宣傳的卡牌」的追蹤，只存在於 `play_card()` 自己的主動出牌流程裡（`server/game.py` 三處：奧援卡分支、一般分支、以及第三處），反應結算的整條路徑（`_build_reaction_context`／`_resolve_reaction_choice`／`_resolve_reaction_context`／`_finalize_reaction_stack`）從未呼叫過這個追蹤。爆料黑幕印刷購買費用是資金1＋宣傳4，三張反應卡都同時有資金與宣傳費用——反應性地打出任何一張，本身就該算一次「打出購買費用有資金/宣傳的牌」，但過去完全不會，導致『重大災難』（trigger `play_card_with_propaganda`）、『東突厥集中營』（同）、『香港抗暴之戰』（trigger `play_card_with_money`）這幾個事件永遠沒辦法透過「反應性使用」這幾張卡達成，只能靠主動在自己回合打出（但這幾張卡設計上就是被動反應卡，主動打出的時機很有限）。
+  - 修法：在 `_build_reaction_context()`（`server/game.py`，反應卡真正從手上 `pop` 出來、確定要花掉的那一刻）新增：計算反應卡自己的印刷購買費用（`_card_purchase_cost(reaction_played)`），依有無資金/宣傳費用呼叫 `_track_event_progress('play_card_with_money'/'play_card_with_propaganda', player=reaction_player)`。時機點刻意選在「花掉反應卡」當下、不等它是否真的成功取消——比照 `play_card()` 既有的「出牌本身就計入，之後被反制取消也不會撤銷」語意（多層反制鏈中，即使這張反應卡後來又被別人反制、它自己的取消效果沒生效，出牌這個動作本身仍然計入）。
+  - 新增回歸（`scripts/tests/test_action_card_regressions.py`）：`test_reactively_played_reaction_card_counts_toward_its_own_cost_based_event_trigger`（重現使用者情境：釘住『重大災難』，被取消的牌刻意選資金2/宣傳0，確保進度只可能來自爆料黑幕反應性出牌本身，不是被取消那張牌自己的費用，確認事件成功）、`test_reactively_played_reaction_card_counting_is_unaffected_by_being_counter_canceled`（三人局，A 的牌被 B 的爆料黑幕取消，B 的爆料黑幕又被 C 的爆料黑幕反制，確認 B 那次「打出」依然計入，不受它自己被反制影響）。
+  - 驗證：完整 pytest（同 baseline ignore 清單）**273→275 passed, 0 failed**（恰為新增2支）。另重跑 `validate_event_outcome_timing_audit.py`（28/28），確認事件結算時機相關邏輯無回歸。
+
 ### P2：「取消目的地（保留起點）」按鈕可以移除了
 - [done] 使用者回報：取消目的地的按鈕可以取消了（因應「點地圖其他地方取消移動」已上線，`#cancelMoveBtn` 現在多餘）。（2026-08-05 使用者回報；同日使用者要求移除）
   - 移除範圍：`static/leaflet_game_map.html`（`#cancelMoveBtn` 按鈕本身，`#confirmMoveHint` 提示文字改為「…點地圖其他地方可取消」）；`static/leaflet_game_map_logic.js`（`refreshMoveConfirmUi()` 移除 `cancelBtn` 的啟用/停用邏輯、移除該按鈕的 `click` 事件監聽、移除測試專用的 `window.__cancelPendingMoveForTest` helper——後續驗證改直接呼叫既有的 `__clickMoveTargetForTest` 觸發真正的「點不相關城鎮」行為，不需要專屬 helper）。

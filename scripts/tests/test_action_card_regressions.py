@@ -2503,6 +2503,66 @@ def test_red_army_aid_cancel_reaction_still_returns_borrowed_card_to_red_discard
     assert '紅軍奧援' in names(red.deck.discard_pile), '取消後仍應歸還紅軍棄牌堆'
 
 
+def test_reactively_played_reaction_card_counts_toward_its_own_cost_based_event_trigger():
+    """2026-08-06 使用者回報：反應性地打出爆料黑幕（或產業滲透/情報網）取消對手的牌時，
+    完全不會計入「打出購買費用有資金/宣傳的卡牌」這類事件任務進度（例如『重大災難』：
+    trigger `play_card_with_propaganda`）——根因是這個追蹤只存在於 play_card() 自己的
+    主動出牌流程裡，反應結算路徑（_build_reaction_context／_resolve_reaction_choice）
+    從未呼叫過。爆料黑幕印刷購買費用是資金1＋宣傳4，兩者都>0，反應性地打出它本身就該
+    算一次「打出購買費用有資金/有宣傳的牌」，不管它有沒有真的成功取消對方的牌。這裡刻意
+    讓被取消的牌（乘勝追擊，資金2、宣傳0）本身完全不含宣傳費用，確保進度只可能來自
+    爆料黑幕這次反應性出牌，不是被取消的牌自己的費用。"""
+    g = make_game()
+    actor, reactor = g.players
+    actor.faction_id = 'taiwan_green'
+    reactor.faction_id = 'liberals'
+    pin_active_mission_event(g, '重大災難')
+    actor.hand = [card(g, '乘勝追擊')]
+    reactor.hand = [card(g, '爆料黑幕')]
+
+    result = g.play_card(0, mode='action')
+    assert result.get('pending_choice') is True, result
+
+    canceled = g.resolve_pending_choice(reactor.id, 1)
+
+    assert canceled.get('success'), canceled
+    assert g.event_progress['succeeded'] is True
+    assert g.event_progress['count'] >= 1
+
+
+def test_reactively_played_reaction_card_counting_is_unaffected_by_being_counter_canceled():
+    """反應卡本身被算入「打出購買費用有…的牌」的時機是「花掉這張卡去反應」那個當下，
+    跟它後續有沒有被反制、真正的取消效果有沒有生效無關——比照 play_card() 既有的「出牌
+    本身就計入，之後被取消也不會撤銷」語意。這裡讓 A 用爆料黑幕（宣傳4）取消 B 的牌，
+    A 自己的爆料黑幕又被 C 用另一張爆料黑幕反制（B 的原始效果最終翻回生效），確認 A 的
+    爆料黑幕仍然計入宣傳費用觸發的任務進度。"""
+    g = Game([('p1', 'P1'), ('p2', 'P2'), ('p3', 'P3')])
+    g.game_phase = GamePhase.MAIN
+    g.turn_phase = TurnPhase.ACTION
+    g.current_player_index = 0
+    g.pending_base_choices = {}
+    pin_noop_event(g)
+    g.players[0].faction_id = 'red_army'
+    actor, b, c = g.players
+    actor.faction_id = 'taiwan_green'
+    b.faction_id = 'liberals'
+    c.faction_id = 'hong_kong'
+    pin_active_mission_event(g, '重大災難')
+    actor.hand = [card(g, '乘勝追擊')]
+    b.hand = [card(g, '爆料黑幕')]
+    c.hand = [card(g, '爆料黑幕')]
+
+    result = g.play_card(0, mode='action')
+    assert result.get('pending_choice') is True, result
+    step1 = g.resolve_pending_choice(b.id, 1)  # B 用爆料黑幕取消 A 的乘勝追擊
+    assert step1.get('opened_counter_layer') is True, step1
+    step2 = g.resolve_pending_choice(c.id, 1)  # C 用爆料黑幕反制 B 的爆料黑幕
+    assert step2.get('success'), step2
+    assert g.pending_choice is None
+
+    assert g.event_progress['succeeded'] is True
+
+
 def test_industry_infiltration_requires_an_actual_action_card_target_to_cancel():
     g = make_game()
     p1, p2 = g.players
