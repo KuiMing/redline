@@ -79,39 +79,42 @@ def check_flow(page):
         """() => {
           const doc = document.getElementById('strategicMapFrame').contentDocument;
           const confirmBtn = doc.getElementById('confirmMoveBtn');
-          const cancelBtn = doc.getElementById('cancelMoveBtn');
           const hint = doc.getElementById('confirmMoveHint');
-          return { confirmDisabled: confirmBtn.disabled, cancelDisabled: cancelBtn.disabled, hintText: hint.textContent };
+          return { confirmDisabled: confirmBtn.disabled, hintText: hint.textContent };
         }"""
     )
     record(
-        'confirm_and_cancel_buttons_enabled_with_explanatory_hint',
-        not button_state['confirmDisabled'] and not button_state['cancelDisabled']
+        'confirm_button_enabled_with_explanatory_hint',
+        not button_state['confirmDisabled']
         and '臺北' in button_state['hintText'] and '基隆' in button_state['hintText'],
         button_state,
     )
 
-    cancel_result = page.evaluate("() => document.getElementById('strategicMapFrame').contentWindow.__cancelPendingMoveForTest()")
+    # 2026-08-05 使用者需求：「取消目的地（保留起點）」按鈕已移除，改為「點地圖其他地方
+    # 直接取消整個選擇」。點擊一個不相關、玩家也無法從該城鎮行動、也不是本次移動合法目的
+    # 地的城鎮（臺中）現在會取消整個選擇（含起點），不再只是清空目的地。
+    cancel_result = page.evaluate("() => document.getElementById('strategicMapFrame').contentWindow.__clickMoveTargetForTest('臺中')")
     after_cancel = map_debug(page)
     record(
-        'cancel_clears_pending_but_keeps_selection_and_highlight_and_sends_nothing',
+        'clicking_an_unrelated_town_cancels_the_whole_selection_and_sends_nothing',
         cancel_result.get('ok') and after_cancel['pendingMoveTarget'] is None and last_move_request(page) is None
-        and after_cancel['selectedTown'] == '臺北' and '基隆' in after_cancel['reachableFromSelected'],
+        and after_cancel['selectedTown'] is None and after_cancel['reachableFromSelected'] == [],
         {'cancel_result': cancel_result, 'after_cancel': after_cancel},
     )
 
     button_state_after_cancel = page.evaluate(
         """() => {
           const doc = document.getElementById('strategicMapFrame').contentDocument;
-          return { confirmDisabled: doc.getElementById('confirmMoveBtn').disabled, cancelDisabled: doc.getElementById('cancelMoveBtn').disabled };
+          return { confirmDisabled: doc.getElementById('confirmMoveBtn').disabled };
         }"""
     )
     record(
-        'buttons_disabled_again_after_cancel',
-        button_state_after_cancel['confirmDisabled'] and button_state_after_cancel['cancelDisabled'],
+        'confirm_button_disabled_again_after_cancel',
+        button_state_after_cancel['confirmDisabled'],
         button_state_after_cancel,
     )
 
+    page.evaluate("() => document.getElementById('strategicMapFrame').contentWindow.__selectTownForTest('臺北')")
     page.evaluate("() => document.getElementById('strategicMapFrame').contentWindow.__clickMoveTargetForTest('基隆')")
     page.wait_for_timeout(200)
     confirm_result = page.evaluate("() => document.getElementById('strategicMapFrame').contentWindow.__confirmPendingMoveForTest()")

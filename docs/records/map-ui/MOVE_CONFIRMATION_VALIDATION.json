@@ -1,5 +1,5 @@
 {
-  "game_id": "c4382733-cce7-47ed-a9ec-426cbe64f1a0",
+  "game_id": "65c74dde-be2b-4ff0-a762-0a6210e7938f",
   "summary": {
     "total": 8,
     "passed": 8,
@@ -11,10 +11,10 @@
       "ok": true,
       "detail": {
         "success": true,
-        "game_id": "c4382733-cce7-47ed-a9ec-426cbe64f1a0",
-        "player_id": "cc8e3c66-357e-48e5-a3d0-ebb53e296b8c",
-        "opponent_player_id": "138b4a3f-bb28-473f-8ac1-11ba502ebc07",
-        "url": "/?game_id=c4382733-cce7-47ed-a9ec-426cbe64f1a0&player_id=cc8e3c66-357e-48e5-a3d0-ebb53e296b8c",
+        "game_id": "65c74dde-be2b-4ff0-a762-0a6210e7938f",
+        "player_id": "55d2c76b-41e7-458f-8413-952c7442cda8",
+        "opponent_player_id": "8eddcd53-5be1-4149-890e-4e005db074e9",
+        "url": "/?game_id=65c74dde-be2b-4ff0-a762-0a6210e7938f&player_id=55d2c76b-41e7-458f-8413-952c7442cda8",
         "state": {
           "turn": 1,
           "game_phase": "main",
@@ -31,6 +31,7 @@
           "event_deck_count": 20,
           "red_army_action_count": 0,
           "red_army_action_limit": 1,
+          "red_army_base_build_blocks": [],
           "event_discard_count": 0,
           "event_modifiers": [],
           "market_mode": "all_cards",
@@ -45,11 +46,11 @@
             "資本家",
             "分神",
             "內鬥",
-            "誘導虛耗",
-            "凝聚共識",
-            "南洋奧援",
-            "武裝小隊",
-            "批判"
+            "交通經驗丙",
+            "武裝者",
+            "批判",
+            "交通經驗甲",
+            "北國奧援"
           ],
           "purchase_area_variants": [
             null,
@@ -60,16 +61,16 @@
             null,
             null,
             null,
+            null,
+            null,
             {
               "variant_index": 1,
-              "support_region": "南洋",
+              "support_region": "北國",
               "tier2_regions": [
-                "印度",
-                "天方"
+                "天方",
+                "印度"
               ]
-            },
-            null,
-            null
+            }
           ],
           "purchase_area_costs": [
             {
@@ -97,23 +98,23 @@
               "propaganda": 0
             },
             {
-              "money": 0,
-              "propaganda": 3
-            },
-            {
-              "money": 0,
-              "propaganda": 5
-            },
-            {
               "money": 1,
-              "propaganda": 2
+              "propaganda": 0
             },
             {
-              "money": 3,
+              "money": 2,
               "propaganda": 0
             },
             {
               "money": 0,
+              "propaganda": 2
+            },
+            {
+              "money": 5,
+              "propaganda": 0
+            },
+            {
+              "money": 1,
               "propaganda": 2
             }
           ],
@@ -143,23 +144,23 @@
               "propaganda": 0
             },
             {
-              "money": 0,
-              "propaganda": 3
-            },
-            {
-              "money": 0,
-              "propaganda": 5
-            },
-            {
               "money": 1,
-              "propaganda": 2
+              "propaganda": 0
             },
             {
-              "money": 3,
+              "money": 2,
               "propaganda": 0
             },
             {
               "money": 0,
+              "propaganda": 2
+            },
+            {
+              "money": 5,
+              "propaganda": 0
+            },
+            {
+              "money": 1,
               "propaganda": 2
             }
           ],
@@ -177,7 +178,7 @@
             false
           ],
           "static_purchase_supply": {
-            "宣傳家": 13,
+            "宣傳家": 15,
             "思想家": 15,
             "資助者": 15,
             "資本家": 15,
@@ -204,7 +205,7 @@
           },
           "players": [
             {
-              "id": "cc8e3c66-357e-48e5-a3d0-ebb53e296b8c",
+              "id": "55d2c76b-41e7-458f-8413-952c7442cda8",
               "name": "mover",
               "faction": "taiwan_green",
               "base": "新竹",
@@ -215,7 +216,7 @@
               "moves_left": 5,
               "hand": [
                 "追隨者",
-                "追隨者",
+                "樂捐者",
                 "追隨者",
                 "追隨者",
                 "追隨者"
@@ -227,15 +228,21 @@
                 null,
                 null
               ],
-              "deck_count": 6,
+              "deck_count": 5,
               "discard_count": 0,
               "discard_pile": [],
+              "discard_variants": [],
+              "organization_counts": {
+                "total": 1,
+                "inside_wall": 0,
+                "outside_wall": 1
+              },
               "orgs": {
                 "臺北": 1
               }
             },
             {
-              "id": "138b4a3f-bb28-473f-8ac1-11ba502ebc07",
+              "id": "8eddcd53-5be1-4149-890e-4e005db074e9",
               "name": "opponent",
               "faction": "red_army",
               "base": "北京",
@@ -246,21 +253,31 @@
               "moves_left": 0,
               "hand": [
                 "追隨者",
+                "樂捐者",
                 "追隨者",
                 "追隨者",
-                "追隨者",
-                "樂捐者"
+                "紅軍奧援"
               ],
               "hand_variants": [
                 null,
                 null,
                 null,
                 null,
-                null
+                {
+                  "variant_index": 0,
+                  "support_region": "紅軍",
+                  "tier2_regions": []
+                }
               ],
-              "deck_count": 7,
+              "deck_count": 6,
               "discard_count": 0,
               "discard_pile": [],
+              "discard_variants": [],
+              "organization_counts": {
+                "total": 1,
+                "inside_wall": 1,
+                "outside_wall": 0
+              },
               "orgs": {
                 "北京": 1
               }
@@ -321,42 +338,34 @@
       }
     },
     {
-      "name": "confirm_and_cancel_buttons_enabled_with_explanatory_hint",
+      "name": "confirm_button_enabled_with_explanatory_hint",
       "ok": true,
       "detail": {
         "confirmDisabled": false,
-        "cancelDisabled": false,
         "hintText": "確認將組織從 臺北 移動到 基隆（鐵路，消耗 1 次移動）？"
       }
     },
     {
-      "name": "cancel_clears_pending_but_keeps_selection_and_highlight_and_sends_nothing",
+      "name": "clicking_an_unrelated_town_cancels_the_whole_selection_and_sends_nothing",
       "ok": true,
       "detail": {
         "cancel_result": {
-          "ok": true
+          "ok": true,
+          "townName": "臺中",
+          "pendingMoveTarget": null
         },
         "after_cancel": {
-          "selectedTown": "臺北",
+          "selectedTown": null,
           "pendingMoveTarget": null,
-          "reachableFromSelected": [
-            "新北",
-            "基隆",
-            "桃園",
-            "新竹",
-            "苗栗",
-            "宜蘭",
-            "花蓮"
-          ]
+          "reachableFromSelected": []
         }
       }
     },
     {
-      "name": "buttons_disabled_again_after_cancel",
+      "name": "confirm_button_disabled_again_after_cancel",
       "ok": true,
       "detail": {
-        "confirmDisabled": true,
-        "cancelDisabled": true
+        "confirmDisabled": true
       }
     },
     {
@@ -372,6 +381,7 @@
           "reachableFromSelected": [
             "新北",
             "馬祖",
+            "金門",
             "沖繩",
             "臺北",
             "新北",

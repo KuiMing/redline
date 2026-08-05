@@ -875,19 +875,16 @@ function sendDissolveAction(defender, townName) {
 
 function refreshMoveConfirmUi() {
   const confirmBtn = document.getElementById('confirmMoveBtn');
-  const cancelBtn = document.getElementById('cancelMoveBtn');
   const hint = document.getElementById('confirmMoveHint');
-  if (!confirmBtn || !cancelBtn || !hint) return;
+  if (!confirmBtn || !hint) return;
 
   if (!pendingMoveTarget) {
     confirmBtn.disabled = true;
-    cancelBtn.disabled = true;
     hint.innerHTML = '點選可移動城鎮後，這裡會顯示移動確認。';
     return;
   }
 
   confirmBtn.disabled = false;
-  cancelBtn.disabled = false;
   const modeLabel = pendingMoveTarget.mode === 'rail' ? '鐵路' : '道路';
   const costLabel = `消耗 ${pendingMoveTarget.cost || 1} 次移動`;
   hint.innerHTML = `確認將組織從 <span class="hint-strong">${pendingMoveTarget.from}</span> 移動到 <span class="hint-strong">${pendingMoveTarget.to}</span>（${modeLabel}，${costLabel}）？`;
@@ -1121,14 +1118,6 @@ document.getElementById('confirmMoveBtn').addEventListener('click', () => {
   pendingMoveTarget = null;
   refreshMoveConfirmUi();
 });
-document.getElementById('cancelMoveBtn').addEventListener('click', () => {
-  pendingMoveTarget = null;
-  refreshMoveConfirmUi();
-  const hint = document.getElementById('confirmMoveHint');
-  if (hint && selectedTown) {
-    hint.innerHTML = `已取消目的地；仍以 <span class="hint-strong">${selectedTown}</span> 為移動起點，請重新選擇合法目的地。`;
-  }
-});
 document.getElementById('directBuildBtn').addEventListener('click', () => {
   if (!selectedTown) return;
   sendDirectBuildAction(selectedTown);
@@ -1359,12 +1348,6 @@ window.__clickMoveTargetForTest = function (townName) {
 window.__confirmPendingMoveForTest = function () {
   const btn = document.getElementById('confirmMoveBtn');
   if (!btn || btn.disabled) return { ok: false, reason: 'confirm-disabled' };
-  btn.click();
-  return { ok: true };
-};
-window.__cancelPendingMoveForTest = function () {
-  const btn = document.getElementById('cancelMoveBtn');
-  if (!btn || btn.disabled) return { ok: false, reason: 'cancel-disabled' };
   btn.click();
   return { ok: true };
 };

@@ -18,7 +18,10 @@
 ## 目前 active todo
 
 ### P2：「取消目的地（保留起點）」按鈕可以移除了
-- [todo] 使用者回報：取消目的地的按鈕可以取消了（因應「點地圖其他地方取消移動」已上線，`#cancelMoveBtn` 現在多餘）。（2026-08-05 使用者回報，先記錄，尚未處理）
+- [done] 使用者回報：取消目的地的按鈕可以取消了（因應「點地圖其他地方取消移動」已上線，`#cancelMoveBtn` 現在多餘）。（2026-08-05 使用者回報；同日使用者要求移除）
+  - 移除範圍：`static/leaflet_game_map.html`（`#cancelMoveBtn` 按鈕本身，`#confirmMoveHint` 提示文字改為「…點地圖其他地方可取消」）；`static/leaflet_game_map_logic.js`（`refreshMoveConfirmUi()` 移除 `cancelBtn` 的啟用/停用邏輯、移除該按鈕的 `click` 事件監聽、移除測試專用的 `window.__cancelPendingMoveForTest` helper——後續驗證改直接呼叫既有的 `__clickMoveTargetForTest` 觸發真正的「點不相關城鎮」行為，不需要專屬 helper）。
+  - **順帶抓到一個先前遺漏的回歸**：上一輪「點地圖其他地方取消移動」（commit `3cac604`）落地時，只跑過 `pytest`（無變動），沒有重新跑 `scripts/validate_legal_movement_ui.py`——這支既有 validator 原本斷言「點擊不相關城鎮是死點擊、維持原本選取」，這正是 `3cac604` 刻意改掉的舊行為，導致合併之後這支 validator 其實已經是 3/11 失敗的回歸狀態、直到這次才發現並修正。已改寫 `unrelated_inapplicable_town_is_noninteractive_during_move_selection`→`clicking_an_unrelated_town_cancels_the_whole_movement_selection`（斷言點擊後整個選擇被清空，不再是維持原狀）與後續依賴該狀態的兩支測試（`destination_confirmation_shows_backend_cost_before_sending` 補上重新選取起點的步驟；`cancel_destination_keeps_origin_and_legal_candidates`→`clicking_elsewhere_with_a_pending_destination_cancels_the_whole_selection`，斷言鎖定目的地後點擊不相關城鎮一樣會整個取消，不是只清目的地）。另外移除 `build_control_precedes_move_confirmation_and_cancel_label_is_explicit` 裡對 `cancelText` 的斷言（按鈕已不存在），簡化為 `build_control_precedes_move_confirmation_button`。`scripts/validate_move_confirmation.py` 同步改寫：`confirm_and_cancel_buttons_enabled_with_explanatory_hint`→`confirm_button_enabled_with_explanatory_hint`（移除 cancel 按鈕斷言）、原本呼叫 `__cancelPendingMoveForTest()` 的取消流程改為點擊不相關城鎮（臺中）觸發取消，並斷言整個選擇（含起點）都被清空、`last_move_request` 仍是 `None`（沒有誤送移動請求）。
+  - 驗證：`scripts/validate_legal_movement_ui.py` 11/11、`scripts/validate_move_confirmation.py` 8/8，皆全綠（含這次順帶修好的既有回歸）。完整 pytest 273/273 全過（無變動，純前端變更）。
 
 ### P2：打出宣傳家時，產業滲透不會自動觸發取消反應；紅軍奧援也有同樣情況
 - [done] 使用者回報：我發現打出宣傳家時，產業滲透不會自動觸發效果。紅軍奧援也有同樣的情況。（2026-08-05 使用者回報；同日使用者要求「先解決產業滲透的問題，並且檢查到底有哪些卡牌不會自動觸發取消反應」）

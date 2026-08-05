@@ -95,14 +95,12 @@ def main():
               });
               const direct = doc.getElementById('directBuildBtn');
               const confirm = doc.getElementById('confirmMoveBtn');
-              const cancel = doc.getElementById('cancelMoveBtn');
               const infoText = doc.getElementById('info')?.textContent || '';
               return {
                 debug,
                 projection,
                 keelung,
                 directBeforeConfirm: !!(direct.compareDocumentPosition(confirm) & Node.DOCUMENT_POSITION_FOLLOWING),
-                cancelText: cancel.textContent,
                 infoText,
               };
             }"""
@@ -127,9 +125,9 @@ def main():
             initial['keelung'],
         )
         record(
-            'build_control_precedes_move_confirmation_and_cancel_label_is_explicit',
-            initial['directBeforeConfirm'] and initial['cancelText'] == '取消目的地（保留起點）',
-            {'directBeforeConfirm': initial['directBeforeConfirm'], 'cancelText': initial['cancelText']},
+            'build_control_precedes_move_confirmation_button',
+            initial['directBeforeConfirm'],
+            {'directBeforeConfirm': initial['directBeforeConfirm']},
         )
         record(
             'town_info_uses_presence_not_single_town_organization_count',
@@ -139,6 +137,10 @@ def main():
             {'infoText': initial['infoText']},
         )
 
+        # 2026-08-05 使用者需求：「取消目的地（保留起點）」按鈕已移除，改為「點地圖其他
+        # 地方直接取消整個選擇」（比照點空白背景既有的 exitMovementSelection() 行為）。
+        # 點擊一個不相關的城鎮（不是合法移動目的地，玩家也無法從該城鎮行動）現在會取消
+        # 整個選擇，不再是原本「維持選取、單純不理會這次點擊」的死點擊。
         unrelated_click = page.evaluate(
             """() => {
               const win = document.getElementById('strategicMapFrame').contentWindow;
@@ -147,13 +149,15 @@ def main():
             }"""
         )
         record(
-            'unrelated_inapplicable_town_is_noninteractive_during_move_selection',
-            unrelated_click['selectedTown'] == '臺北'
+            'clicking_an_unrelated_town_cancels_the_whole_movement_selection',
+            unrelated_click['selectedTown'] is None
             and unrelated_click['pendingMoveTarget'] is None
-            and '基隆' in unrelated_click['reachableFromSelected'],
+            and unrelated_click['reachableFromSelected'] == [],
             unrelated_click,
         )
 
+        # 上一次點擊已經把整個選擇清空，重新選取起點才能繼續測試鎖定目的地的情境。
+        page.evaluate("() => document.getElementById('strategicMapFrame').contentWindow.__selectTownForTest('臺北')")
         pending = page.evaluate(
             """() => {
               const frame = document.getElementById('strategicMapFrame');
@@ -177,7 +181,7 @@ def main():
             """() => {
               const frame = document.getElementById('strategicMapFrame');
               const win = frame.contentWindow;
-              win.__cancelPendingMoveForTest();
+              win.__clickMoveTargetForTest('臺中');
               return {
                 debug: win.__mapDebugStateForTest(),
                 hint: frame.contentDocument.getElementById('confirmMoveHint').textContent,
@@ -185,11 +189,11 @@ def main():
             }"""
         )
         record(
-            'cancel_destination_keeps_origin_and_legal_candidates',
+            'clicking_elsewhere_with_a_pending_destination_cancels_the_whole_selection',
             cancelled['debug']['pendingMoveTarget'] is None
-            and cancelled['debug']['selectedTown'] == '臺北'
-            and '基隆' in cancelled['debug']['reachableFromSelected']
-            and '仍以 臺北 為移動起點' in cancelled['hint'],
+            and cancelled['debug']['selectedTown'] is None
+            and cancelled['debug']['reachableFromSelected'] == []
+            and cancelled['hint'] == '點選可移動城鎮後，這裡會顯示移動確認。',
             cancelled,
         )
 
