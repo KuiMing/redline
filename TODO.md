@@ -17,6 +17,20 @@
 
 ## 目前 active todo
 
+### P2：「取消目的地（保留起點）」按鈕可以移除了
+- [todo] 使用者回報：取消目的地的按鈕可以取消了（因應「點地圖其他地方取消移動」已上線，`#cancelMoveBtn` 現在多餘）。（2026-08-05 使用者回報，先記錄，尚未處理）
+
+### P2：打出宣傳家時，產業滲透不會自動觸發取消反應；紅軍奧援也有同樣情況
+- [done] 使用者回報：我發現打出宣傳家時，產業滲透不會自動觸發效果。紅軍奧援也有同樣的情況。（2026-08-05 使用者回報；同日使用者要求「先解決產業滲透的問題，並且檢查到底有哪些卡牌不會自動觸發取消反應」）
+  - **(1) 產業滲透根因**：`_reaction_card_cancel_predicate()`（`server/game.py`）把「產業滲透能不能取消這張牌」本身也綁在「被取消的牌購買費用有資金」上——`宣傳家` 購買費用是宣傳3、資金0，因此完全不會被列為候選。比對卡面原文（`data/raw/action_cards.csv`）：產業滲透「其他玩家行動時打出，取消1張對方所打出行動卡之能力。**若被取消的牌購買費用有資金，抽1張牌**」——能不能取消是**無條件**的，資金費用只決定「取消後有沒有 bonus 抽牌」，跟爆料黑幕（依宣傳費用給 bonus 抽牌，但一樣無條件可取消）完全對稱。**修法**：把 `_reaction_card_cancel_predicate()` 改成三張反應卡（爆料黑幕／產業滲透／情報網）統一無條件可取消，資金/宣傳費用只留在既有的 bonus 抽牌判斷（`_apply_reaction_cancel_flags`/`_build_reaction_context`）裡，不受影響。
+  - **(2) 全面稽核「哪些卡牌不會自動觸發取消反應」**：逐一追過 `play_card()` 從函式開頭到反應視窗檢查點之間的每一個 `return`，找到唯一一處在真正打出卡牌後、完全跳過反應系統就直接 `return` 成功的分支——**紅軍奧援**（action 模式）。它有自己一套獨立於一般奧援卡（`_execute_support_card`）的結算邏輯（`_resolve_red_support_target_choice` 決定要不要問「放進哪位反共玩家的棄牌堆」），過去整段寫死在 `play_card()` 裡，從未檢查過反應候選——跟東洋奧援等一般奧援卡在上一輪 `9e2c6e9` 修好之前的情況一模一樣（`9e2c6e9` 的 commit message 就明確寫著「紅軍奧援 stays out of scope」）。修法：新增 `_commit_red_support_card_play()`（抽出「真正結算紅軍奧援」那段：抽牌＋`_resolve_red_support_target_choice`＋依規則歸位棄牌堆），`play_card()` 的紅軍奧援分支比照一般奧援卡的延後模式——先用 `_reaction_prompt_candidates(player, played_card, include_support=True)` 檢查候選，有候選就用 `action_context={'is_red_support_card': True}` 開反應視窗延後結算；沒有候選才立即呼叫 `_commit_red_support_card_play()`（行為與修正前一致）。`_resume_reaction_pending_action()` 新增對應分支：被取消時完全不抽牌、不問目標，只依既有的「非紅軍打出結算後應歸還紅軍棄牌堆」規則把卡牌放到正確棄牌堆；未被取消才呼叫 `_commit_red_support_card_play()`。
+  - **稽核範圍之外、發現但本輪不動的既有設計（需另外討論，不是同類 bug）**：`_activated_faction_action()`（`server/game.py:3837`）目前只有紅軍的 4 個專屬動作（統戰部/政工部/國安部/中紀委）會經過 `_red_army_action_reaction_prompt()` 檢查反應候選；**其他所有非紅軍陣營的啟動式特殊能力**（民主陣線/紅軍派系/立場試探/賭徒耳語/民族祭儀…等，透過按鈕直接啟動、不是「打出一張卡」）完全不會走反應系統，這是程式裡明確寫死的 `red_army_actions = {'統戰部','政工部','國安部','中紀委'}` 這個集合造成的，而非疏漏——卡面原文「取消1張對方所打出行動卡之**能力**」講的是「打出的卡」，陣營特殊能力是按鈕啟動、沒有卡牌被打出，是否也該納入反應系統是一個更大的產品設計問題（例如是否要把紅軍的特例待遇也套用到其他陣營），不在這次「產業滲透」與「紅軍奧援」的回報範圍內，需要使用者另外拍板才動。
+  - 新增回歸（`scripts/tests/test_action_card_regressions.py`）：`test_industry_infiltration_is_offered_as_a_candidate_for_propaganda_only_static_card`（重現使用者原始情境：宣傳家＋產業滲透）、`test_red_army_aid_now_prompts_cancel_reaction_and_cancel_prevents_draw`（紅軍自己打出紅軍奧援被取消，抽牌效果完全不執行）、`test_red_army_aid_cancel_reaction_declined_lets_the_draw_and_pass_resolve`（非紅軍打出＋不取消，照常抽牌並歸還紅軍棄牌堆）、`test_red_army_aid_cancel_reaction_still_returns_borrowed_card_to_red_discard`（非紅軍打出＋取消，紙牌仍正確歸還紅軍棄牌堆，沒有被延後機制打壞既有的借用牌歸位規則）。另外改寫兩支把舊 bug 行為當預期的既有測試：`test_every_other_player_action_prompts_cancel_reaction_while_reactor_holds_eligible_cards`（原本斷言「領導沒有資金費用所以產業滲透不列入候選」，已改為斷言正確納入）與 `test_industry_infiltration_does_not_draw_when_canceled_card_has_no_money_only_cost`（更名為 `test_industry_infiltration_cancels_a_no_money_cost_card_but_gets_no_bonus_draw`，原本斷言「產業滲透無法取消」，已改為斷言「成功取消、只是沒有 bonus 抽牌」）。
+  - 驗證：完整 pytest（同 baseline ignore 清單）**269→273 passed, 0 failed**（4 支新增，2 支既有測試改寫非新增，其餘無變動）。另重跑 `validate_support_no_reaction_phase_gating.py`（2/2）、`validate_cancellable_choice.py`（7/7）、`validate_intel_network_no_reaction_option_own_turn.py`（2/2），皆無回歸。
+
+### P2：企排很多時，事件紀錄的空間會被壓縮，應該要能滑動查看
+- [todo] 使用者回報：我發現當企排很多時，事件記錄的空間會被壓縮到，但我覺得應該要讓使用者可以滑動看到事件紀錄。（2026-08-05 使用者回報，先記錄，尚未調查）
+
 ### P2：建立組織時點選城鎮後，建立組織按鈕應該亮起來
 - [done] 使用者回報：建立組織時，點選城鎮後，應該要讓建立組織的按鈕亮起來。（2026-08-05 使用者回報；同日使用者要求處理）
   - 根因：純 CSS 問題，不是邏輯 bug。`#directBuildBtn`（`static/leaflet_game_map.html`）在選取合法候選城鎮後，`refreshDirectBuildUi()`（`static/leaflet_game_map_logic.js:896`）確實會正確把 `btn.disabled` 設成 `false`——啟用/停用的判斷邏輯本身沒有問題。但這個地圖 iframe 的全域按鈕樣式（`static/leaflet_game_map.html` 內 `<style>`）只有 `button { background:#1c2a49; }` 與 `button:hover`，完全沒有 `:disabled` 的視覺區分，也沒有任何「可操作」的高亮樣式，導致啟用/停用兩種狀態在深色背景上幾乎看不出差異，玩家自然會覺得「按鈕沒有亮起來」。

@@ -991,9 +991,11 @@ def test_every_other_player_action_prompts_cancel_reaction_while_reactor_holds_e
     assert second.get('pending_choice') is True, second
     assert g.pending_choice and g.pending_choice['type'] == 'reaction_choice'
     assert g.pending_choice['played_card_name'] == '領導'
-    # 領導的購買費用是宣傳1、資金0，`產業滲透` 的取消條件要求被取消的牌有資金費用，
-    # 因此這裡正確地不包含 產業滲透——候選名單仍是逐次出牌各自重算，不是沿用第一次的名單。
-    assert [entry['name'] for entry in g.pending_choice['cards']] == ['情報網', '爆料黑幕']
+    # 2026-08-05 修正：產業滲透能不能取消是無條件的（卡面「取消1張對方所打出行動卡之能力」
+    # 沒有費用限制），資金費用只影響取消後有沒有 bonus 抽牌（「若被取消的牌購買費用有資金，
+    # 抽1張牌」）。領導購買費用是宣傳1、資金0，產業滲透一樣要被列為候選——候選名單仍是逐次
+    # 出牌各自重算，不是沿用第一次的名單，只是這裡不再排除產業滲透。
+    assert [entry['name'] for entry in g.pending_choice['cards']] == ['情報網', '爆料黑幕', '產業滲透']
 
     canceled = g.resolve_pending_choice(reactor.id, 2)  # index 2 -> 爆料黑幕
     assert canceled.get('success'), canceled
@@ -2380,7 +2382,14 @@ def test_industry_infiltration_can_cancel_target_action_card_and_draw_when_cance
 
 
 
-def test_industry_infiltration_does_not_draw_when_canceled_card_has_no_money_only_cost():
+def test_industry_infiltration_cancels_a_no_money_cost_card_but_gets_no_bonus_draw():
+    """2026-08-05 修正：產業滲透能不能取消一張牌是無條件的（卡面「取消1張對方所打出行動卡
+    之能力」沒有費用限制）；「若被取消的牌購買費用有資金，抽1張牌」只影響取消後的 bonus
+    抽牌，不影響能不能取消。凝聚共識購買費用是宣傳5、資金0——產業滲透一樣能成功取消它
+    （p1 的抽3棄2效果完全不執行），只是取消後沒有 bonus 抽牌（p2 手牌沒有多抽任何牌）。
+    這支測試原本斷言「產業滲透無法取消、p1 的牌正常生效」，那是舊版 `_reaction_card_
+    cancel_predicate` 誤把 bonus 抽牌的費用條件當成取消資格本身的 bug；已改寫為斷言
+    正確行為。"""
     g = make_game()
     p1, p2 = g.players
     p1.hand = [card(g, '凝聚共識')]
@@ -2391,10 +2400,107 @@ def test_industry_infiltration_does_not_draw_when_canceled_card_has_no_money_onl
     result = g.play_card(0, mode='action', reaction={'player_id': p2.id, 'card_index': 0})
 
     assert result.get('success'), result
+    # 產業滲透成功取消凝聚共識：p1 的抽3棄2效果完全不執行。
+    assert names(p1.hand) == []
+    assert names(p1.deck.draw_pile) == ['Bottom', 'WouldHaveDrawn']
+    assert names(p1.deck.discard_pile) == ['凝聚共識']
+    # 產業滲透本身被消耗，但因為被取消的牌沒有資金費用，沒有 bonus 抽牌。
     assert 'ReactionDraw' not in names(p2.hand)
-    assert g.turn_log.get('canceled_money_cost_card') is None
-    assert 'WouldHaveDrawn' in names(p1.hand)
+    assert names(p2.deck.discard_pile) == ['產業滲透']
+    assert g.turn_log.get('canceled_money_cost_card') is False
 
+
+def test_industry_infiltration_is_offered_as_a_candidate_for_propaganda_only_static_card():
+    """使用者原始回報：打出宣傳家（常設購買區靜態卡，購買費用只有宣傳3、資金0）時，
+    產業滲透完全不會被列為候選反應卡。直接重現：對手手上只有產業滲透，打出宣傳家後
+    應該正確跳出取消詢問。"""
+    g = make_game()
+    actor, reactor = g.players
+    actor.hand = [card(g, '宣傳家')]
+    reactor.hand = [card(g, '產業滲透')]
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('pending_choice') is True, result
+    assert g.pending_choice['played_card_name'] == '宣傳家'
+    assert [entry['name'] for entry in g.pending_choice['cards']] == ['產業滲透']
+
+
+def test_red_army_aid_now_prompts_cancel_reaction_and_cancel_prevents_draw():
+    """2026-08-05 使用者回報：打出紅軍奧援時，對手的爆料黑幕/產業滲透/情報網完全不會
+    自動跳出取消詢問——紅軍奧援有自己一套獨立於一般奧援卡的結算邏輯
+    （_resolve_red_support_target_choice），過去整段在 play_card() 裡直接執行完畢並
+    return，從未檢查過反應候選，跟東洋奧援等一般奧援卡在 9e2c6e9 修好之前的情況一樣。
+    這裡重現紅軍自己打出紅軍奧援、對手用爆料黑幕取消：抽牌效果完全不執行，紅軍奧援
+    直接進紅軍自己的棄牌堆（紅軍自己打出，不是「非紅軍借用」情境，不觸發歸還邏輯）。"""
+    g = make_game()
+    red, other = g.players
+    red.faction_id = 'red_army'
+    other.faction_id = 'liberals'
+    red.hand = [g._make_support_card('紅軍奧援')]
+    red.deck.draw_pile = [Card('ShouldNotDraw', 'command', {})]
+    other.hand = [card(g, '爆料黑幕')]
+
+    result = g.play_card(0, mode='action')
+
+    assert result.get('pending_choice') is True, result
+    assert g.pending_choice['player_id'] == other.id
+    assert g.pending_choice['played_card_name'] == '紅軍奧援'
+    assert [entry['name'] for entry in g.pending_choice['cards']] == ['爆料黑幕']
+
+    canceled = g.resolve_pending_choice(other.id, 1)
+
+    assert canceled.get('success'), canceled
+    assert canceled.get('canceled') is True, canceled
+    assert names(red.hand) == [], '取消後不應抽牌'
+    assert names(red.deck.draw_pile) == ['ShouldNotDraw']
+    assert names(red.deck.discard_pile) == ['紅軍奧援']
+    assert '爆料黑幕' not in names(other.hand)
+
+
+def test_red_army_aid_cancel_reaction_declined_lets_the_draw_and_pass_resolve():
+    """對手不取消時，紅軍奧援照常結算（抽1張牌＋依規則歸還到正確棄牌堆），沒有被延後
+    機制吃掉效果。此情境是非紅軍玩家（借用/取得後）打出紅軍奧援，結算後應歸還紅軍
+    棄牌堆——確認延後結算不影響既有的「借用牌歸位」規則。"""
+    g = make_game()
+    p1, red = g.players
+    p1.faction_id = 'liberals'
+    red.faction_id = 'red_army'
+    g.current_player_index = 0
+    p1.hand = [g._make_support_card('紅軍奧援')]
+    p1.deck.draw_pile = [Card('ShouldDraw', 'command', {})]
+    red.hand = [card(g, '爆料黑幕')]
+
+    result = g.play_card(0, mode='action')
+    assert g.pending_choice['type'] == 'reaction_choice', g.pending_choice
+
+    skipped = g.resolve_pending_choice(red.id, 0)
+
+    assert skipped.get('success'), skipped
+    assert names(p1.hand) == ['ShouldDraw']
+    assert names(red.deck.discard_pile) == ['紅軍奧援']
+    assert '爆料黑幕' in names(red.hand), '不取消時反應卡應保留在手'
+
+
+def test_red_army_aid_cancel_reaction_still_returns_borrowed_card_to_red_discard():
+    """非紅軍玩家打出紅軍奧援被取消時，紙牌歸位規則不變——即使效果被取消，紅軍奧援本身
+    仍要回到紅軍棄牌堆（既有「借用牌歸位」規則），不是留在打出者自己的棄牌堆。"""
+    g = make_game()
+    p1, red = g.players
+    p1.faction_id = 'liberals'
+    red.faction_id = 'red_army'
+    g.current_player_index = 0
+    p1.hand = [g._make_support_card('紅軍奧援')]
+    p1.deck.draw_pile = [Card('ShouldNotDraw', 'command', {})]
+    red.hand = [card(g, '爆料黑幕')]
+
+    g.play_card(0, mode='action')
+    canceled = g.resolve_pending_choice(red.id, 1)
+
+    assert canceled.get('canceled') is True, canceled
+    assert names(p1.hand) == [], '取消後不應抽牌'
+    assert names(p1.deck.discard_pile) == [], '紅軍奧援不留在打出者自己的棄牌堆'
+    assert '紅軍奧援' in names(red.deck.discard_pile), '取消後仍應歸還紅軍棄牌堆'
 
 
 def test_industry_infiltration_requires_an_actual_action_card_target_to_cancel():

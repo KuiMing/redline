@@ -4477,13 +4477,15 @@ class Game:
             self.action_log.pop(0)
 
     def _reaction_card_cancel_predicate(self, reaction_card_name, canceled_cost):
-        if reaction_card_name == '爆料黑幕':
-            return True
-        if reaction_card_name == '產業滲透':
-            return int((canceled_cost or {}).get('money', 0) or 0) > 0
-        if reaction_card_name == '情報網':
-            return True
-        return False
+        # 2026-08-05 使用者回報：打出宣傳家（購買費用只有宣傳、無資金）時，產業滲透完全
+        # 不會被列為候選反應卡。根因：這裡曾經把「產業滲透能不能取消這張牌」本身也綁在
+        # 「被取消的牌購買費用有資金」上，但卡面原文（data/raw/action_cards.csv）是「其他
+        # 玩家行動時打出，取消1張對方所打出行動卡之能力。若被取消的牌購買費用有資金，
+        # 抽1張牌」——能不能取消是無條件的，資金費用只決定「取消後有沒有 bonus 抽牌」；
+        # 爆料黑幕（依宣傳費用給 bonus 抽牌）與情報網都已經是無條件可取消，產業滲透應該
+        # 對稱，三張反應卡因此統一無條件可取消；bonus 抽牌的費用條件維持在
+        # `_apply_reaction_cancel_flags`/`_build_reaction_context` 另外判斷，不受影響。
+        return reaction_card_name in {'爆料黑幕', '產業滲透', '情報網'}
 
     def _reaction_prompt_candidates(self, acting_player, played_card, include_support=False):
         # 奧援卡是 support card. Historically we returned no candidates for support cards
@@ -4560,6 +4562,30 @@ class Game:
             return {"success": True, "pending_choice": True, **support_resolution}
         return None
 
+    def _commit_red_support_card_play(self, player, played_card, card_name):
+        # 2026-08-05 使用者回報：打出紅軍奧援時，對手的爆料黑幕/產業滲透/情報網完全不會
+        # 跳出取消詢問——紅軍奧援有自己一套獨立於一般奧援卡（_execute_support_card）的
+        # 結算邏輯（_resolve_red_support_target_choice 決定要不要問「放進哪位反共玩家的
+        # 棄牌堆」），過去整段直接寫死在 play_card() 裡、從未檢查過反應候選。這裡把「真正
+        # 結算紅軍奧援」抽成獨立函式，讓 play_card 與 _resume_reaction_pending_action 共用，
+        # 比照一般奧援卡在 9e2c6e9 已經做過的「先開反應視窗、再結算效果」延後模式。
+        self._draw_player_cards(player, 1, trigger_name='紅軍奧援')
+        support_resolution = self._resolve_red_support_target_choice(player, played_card, mode='action')
+        if support_resolution and support_resolution.get('pending_choice'):
+            self.log(f"{player.name} played {card_name}")
+            return {"success": True, **support_resolution}
+        # 紅軍奧援是紅軍專屬卡：非紅軍陣營（借用/取得後）打出，結算後應回到
+        # 紅軍玩家的棄牌堆，不留在自己的棄牌堆（P1 playtest 回報）
+        current_camp = self.faction_by_id.get(player.faction_id, {}).get('camp')
+        red = self._red_player()
+        if current_camp != 'red_army' and red is not None and red is not player:
+            red.deck.discard([played_card])
+            self.log(f"{player.name} played {card_name}; card returned to {red.name}'s discard pile")
+            return {"success": True, "card_returned_to": red.name}
+        player.deck.discard([played_card])
+        self.log(f"{player.name} played {card_name}")
+        return {"success": True}
+
     def _resume_reaction_pending_action(self, choice, reaction_context=None, skip_reaction_resolution=False):
         # skip_reaction_resolution: when a multi-layer counter-cancel chain resolves via
         # _finalize_reaction_stack, that walker already resolves every reaction card's own
@@ -4582,6 +4608,23 @@ class Game:
             red_kwargs = dict(action_context.get('red_army_action_kwargs') or {})
             red_kwargs['_skip_reaction_prompt'] = True
             return self._activated_faction_action(player, red_army_action_name, **red_kwargs)
+        if action_context.get('is_red_support_card'):
+            if reaction_context is not None:
+                if not skip_reaction_resolution:
+                    self._resolve_reaction_context(reaction_context)
+                # 比照一般奧援卡被取消時的處理：不執行紅軍奧援的效果，只把卡牌放到正確的
+                # 棄牌堆（非紅軍玩家手上的紅軍奧援結算後一律歸還紅軍棄牌堆，紅軍自己打出
+                # 則留在自己棄牌堆），與 _commit_red_support_card_play 未被取消時的歸位規則一致。
+                current_camp = self.faction_by_id.get(player.faction_id, {}).get('camp')
+                red = self._red_player()
+                if current_camp != 'red_army' and red is not None and red is not player:
+                    red.deck.discard([played_card])
+                    self.log(f"{player.name}'s {card_name} was canceled by reaction; card returned to {red.name}'s discard pile")
+                else:
+                    player.deck.discard([played_card])
+                    self.log(f"{player.name}'s {card_name} was canceled by reaction")
+                return {"success": True, "canceled": True}
+            return self._commit_red_support_card_play(player, played_card, card_name)
         action_context['current_card'] = played_card
         action_context['card_name'] = card_name
         support_resolution = choice.get('support_resolution')
@@ -5080,22 +5123,27 @@ class Game:
 
         effective_type = getattr(played_card, "card_type", None)
         if getattr(played_card, 'name', str(played_card)) == '紅軍奧援' and mode == "action":
-            self._draw_player_cards(player, 1, trigger_name='紅軍奧援')
-            support_resolution = self._resolve_red_support_target_choice(player, played_card, mode='action')
-            if support_resolution and support_resolution.get('pending_choice'):
-                self.log(f"{player.name} played {card_name}")
-                return {"success": True, **support_resolution}
-            # 紅軍奧援是紅軍專屬卡：非紅軍陣營（借用/取得後）打出，結算後應回到
-            # 紅軍玩家的棄牌堆，不留在自己的棄牌堆（P1 playtest 回報）
-            current_camp = self.faction_by_id.get(player.faction_id, {}).get('camp')
-            red = self._red_player()
-            if current_camp != 'red_army' and red is not None and red is not player:
-                red.deck.discard([played_card])
-                self.log(f"{player.name} played {card_name}; card returned to {red.name}'s discard pile")
-                return {"success": True, "card_returned_to": red.name}
-            player.deck.discard([played_card])
-            self.log(f"{player.name} played {card_name}")
-            return {"success": True}
+            # 2026-08-05 使用者回報：打出紅軍奧援時，對手的爆料黑幕/產業滲透/情報網完全
+            # 不會跳出取消詢問——紅軍奧援有自己獨立於一般奧援卡的結算路徑，過去整段在
+            # 進到這裡之前就直接執行完畢並 return，從未檢查過反應候選。比照一般奧援卡
+            # 在 9e2c6e9 已經做過的「先開反應視窗、再結算效果」延後模式：有候選就延後
+            # 呼叫 _commit_red_support_card_play，沒有候選才立即結算（行為與修正前一致）。
+            if reaction is None:
+                reaction_candidates = self._reaction_prompt_candidates(player, played_card, include_support=True)
+                if reaction_candidates:
+                    first_candidate = reaction_candidates[0]
+                    return self._set_pending_reaction_choice(
+                        first_candidate['player'],
+                        player,
+                        played_card,
+                        card_name,
+                        first_candidate['cards'],
+                        effective_type,
+                        {'is_red_support_card': True},
+                        support_resolution=None,
+                        remaining_candidates=reaction_candidates[1:],
+                    )
+            return self._commit_red_support_card_play(player, played_card, card_name)
         if self._player_has_ability(player, "國際線") and getattr(played_card, "card_type", None) == "money":
             effective_type = "propaganda"
 
