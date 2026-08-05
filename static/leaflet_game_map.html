@@ -24,13 +24,17 @@
   button { cursor:pointer; background:#1c2a49; transition:.15s; }
   button:hover { background:#26375e; }
   button:disabled { cursor:not-allowed; opacity:.45; }
-  #directBuildBtn:not(:disabled) {
+  #directBuildBtn:not(:disabled),
+  #confirmMoveBtn:not(:disabled),
+  #dissolveBtn:not(:disabled) {
     background:#3a2f10;
     border-color:#d8a04a;
     color:#ffe9b8;
     box-shadow:0 0 10px rgba(216,160,74,.55);
   }
-  #directBuildBtn:not(:disabled):hover { background:#4a3b14; }
+  #directBuildBtn:not(:disabled):hover,
+  #confirmMoveBtn:not(:disabled):hover,
+  #dissolveBtn:not(:disabled):hover { background:#4a3b14; }
   .row { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
   .stats { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
   .stat { background:#0d1426; border:1px solid #27375d; padding:10px; border-radius:12px; }
