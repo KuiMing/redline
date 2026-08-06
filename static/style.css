@@ -2662,39 +2662,42 @@ button.player-status-discard-card:focus-visible {
   background: rgba(37, 99, 235, 0.85);
 }
 
-/* 其他玩家動態通知（2026-08-06 使用者需求）：其他玩家使用能力/卡牌時跳出小視窗，
-   顯示卡牌圖片；不想看可以縮到左下角變成一個小徽章，比照勝利畫面 modal/badge 的既有模式。 */
+/* 其他玩家動態通知（2026-08-06 使用者需求，2026-08-06 依使用者回饋改版）：其他玩家使用
+   能力/卡牌時，預設是一個顯眼的大型跳出視窗（不是小卡片）；使用者主動按縮小才會收進
+   左下角變成一個小徽章。展開與縮小固定共用同一個左下角錨點，縮小是「原地收起」而不是
+   從別的角落跳過來。 */
 .peer-action-notice {
   position: fixed;
-  right: 20px;
-  bottom: 20px;
+  left: 24px;
+  bottom: 24px;
   z-index: 55;
-  width: 260px;
-  background: rgba(15, 23, 42, 0.95);
-  border: 1px solid rgba(58, 123, 213, 0.45);
-  border-radius: 14px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+  width: 420px;
+  max-width: calc(100vw - 48px);
+  background: rgba(10, 16, 32, 0.97);
+  border: 2px solid rgba(58, 123, 213, 0.7);
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55), 0 0 0 6px rgba(58, 123, 213, 0.12);
   overflow: hidden;
-  animation: peer-action-notice-in 0.2s ease-out;
+  animation: peer-action-notice-in 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes peer-action-notice-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(24px) scale(0.94); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .peer-action-notice-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  padding: 8px 10px;
-  background: rgba(58, 123, 213, 0.16);
-  border-bottom: 1px solid rgba(58, 123, 213, 0.3);
+  gap: 10px;
+  padding: 12px 16px;
+  background: rgba(58, 123, 213, 0.22);
+  border-bottom: 1px solid rgba(58, 123, 213, 0.35);
 }
 
 .peer-action-notice-player {
-  font-size: 0.82rem;
+  font-size: 1.05rem;
   font-weight: 800;
 }
 
@@ -2703,11 +2706,11 @@ button.player-status-discard-card:focus-visible {
   border-radius: 6px;
   background: rgba(15, 23, 42, 0.6);
   color: #cbd5e1;
-  width: 22px;
-  height: 22px;
+  width: 28px;
+  height: 28px;
   line-height: 1;
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: 1rem;
   flex: none;
 }
 
@@ -2718,21 +2721,22 @@ button.player-status-discard-card:focus-visible {
 
 .peer-action-notice-body {
   display: flex;
-  gap: 10px;
-  padding: 10px;
+  gap: 16px;
+  padding: 16px;
   align-items: center;
 }
 
 .peer-action-notice-art {
-  width: 64px;
-  height: 64px;
+  width: 108px;
+  height: 108px;
   flex: none;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
   background: rgba(148, 163, 184, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
 }
 
 .peer-action-notice-art-image {
@@ -2749,21 +2753,21 @@ button.player-status-discard-card:focus-visible {
 
 .peer-action-notice-art.peer-action-notice-art-empty::after {
   content: '🎴';
-  font-size: 1.4rem;
+  font-size: 2.4rem;
   opacity: 0.5;
 }
 
 .peer-action-notice-text {
-  font-size: 0.78rem;
-  line-height: 1.5;
+  font-size: 0.95rem;
+  line-height: 1.55;
   color: #e2e8f0;
   word-break: break-word;
 }
 
 .peer-action-notice-badge {
   position: fixed;
-  left: 20px;
-  bottom: 20px;
+  left: 24px;
+  bottom: 24px;
   z-index: 55;
   width: 46px;
   height: 46px;

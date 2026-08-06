@@ -27,6 +27,8 @@
   - 新增標記（`static/index.html`）：`#peerActionNotice`（面板，含 `#peerActionNoticePlayer`／`#peerActionNoticeMinimizeBtn`／`#peerActionNoticeArt`／`#peerActionNoticeText`）與 `#peerActionNoticeBadge`（縮小後的圓形徽章，📣圖示，比照使用者「縮到左下角」的明確要求，刻意放在畫面左下角，與 `victoryBadge` 的右下角區隔不會重疊）。
   - 新增樣式（`static/style.css`）：獨立的 `.peer-action-notice*` 區塊（含 `-art-empty`/`-art-load-failed` 的 🎴 佔位狀態、`.peer-action-notice-badge-pulse` 新內容脈動動畫＋`prefers-reduced-motion` 尊重使用者設定），主色刻意選用 `--accent-blue`（`#3A7BD5`）與勝利彈窗的金色 (`rgba(250,204,21,...)`) 區隔，避免兩種彈窗視覺混淆。
   - 驗證：Playwright 對真實瀏覽器雙分頁（`/test/setup-support-card-play`，玩家A與紅軍B各自連線同一局）——A 打出「印度奧援」（行動模式）後，B 的畫面即時跳出通知面板，正確顯示玩家名稱、log 文字「player played 印度奧援」、對應卡牌圖片；點擊縮小鈕確認面板收起、左下角徽章正確顯示；點擊徽章確認正確展開回完整面板。三張截圖（展開／縮小／還原）皆為真實 browser UI 截圖，非假 DOM/CSS proof。完整 pytest（同 baseline ignore 清單）**280/280 全過**（無變動，純前端新增功能不影響任何既有後端邏輯）。
+  - **2026-08-06 使用者截圖驗收後回饋並修正**：使用者指出第一版做反了——原始需求是「直接跳出視窗」（預設就該是顯眼的大通知），只有使用者主動縮小才變成小卡片；第一版卻預設就已經是小卡片（`width:260px`，右下角），且展開／縮小分別錨定在右下角與左下角、縮小時視覺上是從右下角跳到左下角，不是「原地收起」。修正（`static/style.css` `.peer-action-notice*`）：展開面板改為 `width:420px`、卡牌圖片 `64px→108px`、字級全面放大、邊框加粗＋加上外層光暈（`box-shadow` 疊加 `--accent-blue` 光暈），視覺上明確是「跳出視窗」而非小卡片；展開與縮小徽章的定位錨點統一改成 `left:24px; bottom:24px`（原本展開面板在 `right:20px`），兩者共用同一個左下角座標，縮小/展開變成同一位置的原地伸縮，不會跳來跳去。`static/app.js` 邏輯完全未變動（純 CSS 修正）。
+  - 驗證（修正後）：重跑同一支 Playwright 雙分頁腳本，行為斷言（面板顯示/隱藏、徽章顯示/隱藏、文字與卡名）全部依舊通過；重新截圖確認展開狀態明顯是大型跳出視窗、且與縮小後的徽章位於同一左下角錨點。完整 pytest 280/280 全過（無變動，純 CSS）。
 
 ### P2：產業滲透取消紅軍能力後，該次紅軍能力應算已使用
 - [done] 使用者回報：使用產業滲透阻止紅軍能力後，紅軍能力應該就要算他已經用了該次能力。（2026-08-06 使用者回報；同日使用者要求處理，與爆料黑幕一併修正）
