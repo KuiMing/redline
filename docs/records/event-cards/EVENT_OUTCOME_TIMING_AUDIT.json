@@ -110,6 +110,7 @@
         },
         "log": [
           "[Turn 1] End of turn for ally",
+          "[Turn 1] ally 抽到：補牌1",
           "[Turn 1] Event success resolved: 全國人大召開 / draw"
         ],
         "pending_choice": null,
@@ -235,7 +236,12 @@
         "pending_choice": {
           "type": "target_choice",
           "choice_key": "event_red_dissolve",
+          "interaction_kind": "dissolve_organization",
+          "remaining_builds": null,
+          "queueable_card_names": [],
+          "cancellable": false,
           "player_id": "red-id",
+          "player_name": null,
           "prompt": "全國人大召開：紅軍選擇要瓦解的組織。",
           "source_name": "全國人大召開",
           "count": null,
@@ -387,7 +393,8 @@
         "log": [
           "[Turn 1] End of turn for ally",
           "[Turn 1] ally gained 2 宣傳家 from event",
-          "[Turn 1] Event success resolved: 香港抗暴之戰 / gain_card"
+          "[Turn 1] Event success resolved: 香港抗暴之戰 / gain_card",
+          "[Turn 1] 香港抗暴之戰已結算：香港可於下一回合開始前免費遷移根據地（臺北/倫敦/卡加利/多倫多）"
         ],
         "pending_choice": null,
         "event_progress": {
@@ -508,12 +515,18 @@
         },
         "log": [
           "[Turn 1] End of turn for ally",
-          "[Turn 1] Event failure: ally must discard 1 hand card(s)"
+          "[Turn 1] Event failure: ally must discard 1 hand card(s)",
+          "[Turn 1] 香港抗暴之戰已結算：香港可於下一回合開始前免費遷移根據地（臺北/倫敦/卡加利/多倫多）"
         ],
         "pending_choice": {
           "type": "multi_card_choice",
           "choice_key": "event_discard_self",
+          "interaction_kind": null,
+          "remaining_builds": null,
+          "queueable_card_names": [],
+          "cancellable": false,
           "player_id": "ally-id",
+          "player_name": null,
           "prompt": "香港抗暴之戰：請選擇 1 張手牌棄掉。",
           "source_name": "香港抗暴之戰",
           "count": 1,
@@ -783,7 +796,12 @@
         "pending_choice": {
           "type": "multi_card_choice",
           "choice_key": "event_discard_self",
+          "interaction_kind": null,
+          "remaining_builds": null,
+          "queueable_card_names": [],
+          "cancellable": false,
           "player_id": "ally-id",
+          "player_name": null,
           "prompt": "重大災難：請選擇 1 張手牌棄掉。",
           "source_name": "重大災難",
           "count": 1,
@@ -1171,7 +1189,12 @@
         "pending_choice": {
           "type": "card_choice",
           "choice_key": "event_topdeck_from_discard",
+          "interaction_kind": null,
+          "remaining_builds": null,
+          "queueable_card_names": [],
+          "cancellable": false,
           "player_id": "ally-id",
+          "player_name": null,
           "prompt": "貿易戰加劇：從棄牌堆選 1 張牌置於牌庫頂。",
           "source_name": "貿易戰加劇",
           "count": null,
@@ -1526,12 +1549,12 @@
             "hand": [
               "ally補牌5",
               "ally補牌4",
-              "ally補牌2",
-              "ally補牌1"
+              "ally補牌3",
+              "ally補牌2"
             ],
             "draw": [],
             "discard": [
-              "ally補牌3"
+              "ally補牌1"
             ],
             "moves_left": 0,
             "orgs": {
@@ -1679,6 +1702,7 @@
         },
         "log": [
           "[Turn 1] End of turn for ally",
+          "[Turn 1] ally 抽到：補牌1",
           "[Turn 1] Event success resolved: 北京政爭 / draw"
         ],
         "pending_choice": null,
@@ -1928,7 +1952,12 @@
         "pending_choice": {
           "type": "card_choice",
           "choice_key": "trash_from_hand_or_discard",
+          "interaction_kind": null,
+          "remaining_builds": null,
+          "queueable_card_names": [],
+          "cancellable": false,
           "player_id": "ally-id",
+          "player_name": null,
           "prompt": "紅軍權貴出逃：請從己方手牌或棄牌堆中移除 1 張牌。",
           "source_name": "紅軍權貴出逃",
           "count": 1,
@@ -2100,7 +2129,12 @@
         "pending_choice": {
           "type": "multi_card_choice",
           "choice_key": "event_discard_self",
+          "interaction_kind": null,
+          "remaining_builds": null,
+          "queueable_card_names": [],
+          "cancellable": false,
           "player_id": "ally-id",
+          "player_name": null,
           "prompt": "紅軍權貴出逃：請選擇 1 張手牌棄掉。",
           "source_name": "紅軍權貴出逃",
           "count": 1,
@@ -2139,127 +2173,14 @@
       }
     },
     {
-      "name": "烏魯木齊七五事件 success build after refill",
+      "name": "烏魯木齊七五事件 success build after full round wrap",
       "passed": true,
       "details": {
-        "result": {
-          "success": true,
-          "pending_choice": true
-        },
-        "before": {
-          "viewer": {
-            "hand": [],
-            "draw": [
-              "viewer補牌1",
-              "viewer補牌2",
-              "viewer補牌3",
-              "viewer補牌4",
-              "viewer補牌5"
-            ],
-            "discard": [],
-            "moves_left": 0,
-            "orgs": {
-              "臺北": 1
-            }
-          },
-          "ally": {
-            "hand": [],
-            "draw": [
-              "ally補牌1",
-              "ally補牌2",
-              "ally補牌3",
-              "ally補牌4",
-              "ally補牌5"
-            ],
-            "discard": [],
-            "moves_left": 0,
-            "orgs": {
-              "香港城": 1
-            }
-          },
-          "red": {
-            "hand": [],
-            "draw": [
-              "red補牌1",
-              "red補牌2",
-              "red補牌3",
-              "red補牌4",
-              "red補牌5"
-            ],
-            "discard": [],
-            "moves_left": 0,
-            "orgs": {
-              "北京": 1
-            }
-          }
-        },
-        "after": {
-          "viewer": {
-            "hand": [],
-            "draw": [
-              "viewer補牌1",
-              "viewer補牌2",
-              "viewer補牌3",
-              "viewer補牌4",
-              "viewer補牌5"
-            ],
-            "discard": [],
-            "moves_left": 0,
-            "orgs": {
-              "臺北": 1
-            }
-          },
-          "ally": {
-            "hand": [
-              "ally補牌5",
-              "ally補牌4",
-              "ally補牌3",
-              "ally補牌2",
-              "ally補牌1"
-            ],
-            "draw": [],
-            "discard": [],
-            "moves_left": 0,
-            "orgs": {
-              "香港城": 1
-            }
-          },
-          "red": {
-            "hand": [],
-            "draw": [
-              "red補牌1",
-              "red補牌2",
-              "red補牌3",
-              "red補牌4",
-              "red補牌5"
-            ],
-            "discard": [],
-            "moves_left": 0,
-            "orgs": {
-              "北京": 1
-            }
-          }
-        },
-        "log": [
-          "[Turn 1] End of turn for ally"
-        ],
+        "deferred_ok": true,
         "pending_choice": {
           "type": "town_choice",
           "choice_key": "event_build_organization",
           "player_id": "ally-id",
-          "prompt": "烏魯木齊七五事件：在己方組織 1 格內免費建立 1 個組織。",
-          "source_name": "烏魯木齊七五事件",
-          "count": 1,
-          "min_count": null,
-          "mode": null,
-          "acting_player_id": null,
-          "acting_player_name": null,
-          "played_card_name": null,
-          "region": null,
-          "free": null,
-          "ignore_distance": null,
-          "cards": [],
-          "options": [],
           "towns": [
             {
               "town": "九龍城"
@@ -2274,147 +2195,30 @@
               "town": "赤柱"
             }
           ],
-          "targets": [],
-          "step": null
-        },
-        "event_progress": {
-          "count": 999,
-          "required": 1,
-          "succeeded": true,
-          "settled": true,
-          "status": "success",
-          "last_actor_id": "ally-id",
-          "last_actor_name": "ally",
-          "settlement_target_player_id": "ally-id"
-        },
-        "current_player": "red",
-        "phase": "TurnPhase.ACTION"
-      }
-    },
-    {
-      "name": "烏魯木齊七五事件 failure discard_random after refill",
-      "passed": true,
-      "details": {
-        "result": {
-          "success": true
-        },
-        "before": {
-          "viewer": {
-            "hand": [
-              "viewer既有手牌"
-            ],
-            "draw": [
-              "viewer補牌1",
-              "viewer補牌2",
-              "viewer補牌3",
-              "viewer補牌4",
-              "viewer補牌5"
-            ],
-            "discard": [],
-            "moves_left": 0,
-            "orgs": {
-              "臺北": 1
-            }
-          },
-          "ally": {
-            "hand": [],
-            "draw": [
-              "ally補牌1",
-              "ally補牌2",
-              "ally補牌3",
-              "ally補牌4",
-              "ally補牌5"
-            ],
-            "discard": [],
-            "moves_left": 0,
-            "orgs": {
-              "臺北": 1
-            }
-          },
-          "red": {
-            "hand": [],
-            "draw": [
-              "red補牌1",
-              "red補牌2",
-              "red補牌3",
-              "red補牌4",
-              "red補牌5"
-            ],
-            "discard": [],
-            "moves_left": 0,
-            "orgs": {
-              "北京": 1
-            }
-          }
-        },
-        "after": {
-          "viewer": {
-            "hand": [],
-            "draw": [
-              "viewer補牌1",
-              "viewer補牌2",
-              "viewer補牌3",
-              "viewer補牌4",
-              "viewer補牌5"
-            ],
-            "discard": [
-              "viewer既有手牌"
-            ],
-            "moves_left": 0,
-            "orgs": {
-              "臺北": 1
-            }
-          },
-          "ally": {
-            "hand": [
-              "ally補牌5",
-              "ally補牌4",
-              "ally補牌2",
-              "ally補牌1"
-            ],
-            "draw": [],
-            "discard": [
-              "ally補牌3"
-            ],
-            "moves_left": 0,
-            "orgs": {
-              "臺北": 1
-            }
-          },
-          "red": {
-            "hand": [],
-            "draw": [
-              "red補牌1",
-              "red補牌2",
-              "red補牌3",
-              "red補牌4",
-              "red補牌5"
-            ],
-            "discard": [],
-            "moves_left": 0,
-            "orgs": {
-              "北京": 1
-            }
-          }
+          "prompt": "烏魯木齊七五事件：在己方組織 1 格內免費建立 1 個組織。",
+          "source_name": "烏魯木齊七五事件",
+          "count": 1
         },
         "log": [
           "[Turn 1] End of turn for ally",
-          "[Turn 1] Event failure: viewer discarded 1 random hand card(s); ally discarded 1 random hand card(s)",
-          "[Turn 1] Event failure resolved: 烏魯木齊七五事件 / discard_random"
-        ],
-        "pending_choice": null,
-        "event_progress": {
-          "count": 0,
-          "required": 1,
-          "succeeded": false,
-          "settled": true,
-          "status": "failure",
-          "last_actor_id": "ally-id",
-          "last_actor_name": "ally",
-          "settlement_target_player_id": "ally-id"
-        },
-        "current_player": "red",
-        "phase": "TurnPhase.ACTION"
+          "[Turn 1] End of turn for red",
+          "[Turn 2] Event drawn: 一帶一路 天方 (auto deferred)"
+        ]
+      }
+    },
+    {
+      "name": "烏魯木齊七五事件 failure discard_random after full round wrap",
+      "passed": true,
+      "details": {
+        "deferred_ok": true,
+        "ally_hand": 4,
+        "log": [
+          "[Turn 1] End of turn for ally",
+          "[Turn 1] End of turn for red",
+          "[Turn 2] Event drawn: 全國人大召開",
+          "[Turn 2] Event failure: viewer discarded 1 random hand card(s); ally discarded 1 random hand card(s)",
+          "[Turn 2] Event failure resolved: 烏魯木齊七五事件 / discard_random"
+        ]
       }
     },
     {
@@ -2649,7 +2453,12 @@
         "pending_choice": {
           "type": "multi_card_choice",
           "choice_key": "event_discard_self",
+          "interaction_kind": null,
+          "remaining_builds": null,
+          "queueable_card_names": [],
+          "cancellable": false,
           "player_id": "ally-id",
+          "player_name": null,
           "prompt": "重大災難（副本）：請選擇 1 張手牌棄掉。",
           "source_name": "重大災難（副本）",
           "count": 1,
@@ -2792,6 +2601,7 @@
         },
         "log": [
           "[Turn 1] End of turn for ally",
+          "[Turn 1] ally 抽到：補牌1",
           "[Turn 1] Event success resolved: 全國人大召開（副本） / draw"
         ],
         "pending_choice": null,
@@ -2917,7 +2727,12 @@
         "pending_choice": {
           "type": "target_choice",
           "choice_key": "event_red_dissolve",
+          "interaction_kind": "dissolve_organization",
+          "remaining_builds": null,
+          "queueable_card_names": [],
+          "cancellable": false,
           "player_id": "red-id",
+          "player_name": null,
           "prompt": "全國人大召開（副本）：紅軍選擇要瓦解的組織。",
           "source_name": "全國人大召開（副本）",
           "count": null,
@@ -3072,7 +2887,12 @@
         "pending_choice": {
           "type": "card_choice",
           "choice_key": "event_topdeck_from_discard",
+          "interaction_kind": null,
+          "remaining_builds": null,
+          "queueable_card_names": [],
+          "cancellable": false,
           "player_id": "ally-id",
+          "player_name": null,
           "prompt": "貿易戰加劇（副本）：從棄牌堆選 1 張牌置於牌庫頂。",
           "source_name": "貿易戰加劇（副本）",
           "count": null,
@@ -3578,7 +3398,12 @@
         "pending_choice": {
           "type": "card_choice",
           "choice_key": "trash_from_hand_or_discard",
+          "interaction_kind": null,
+          "remaining_builds": null,
+          "queueable_card_names": [],
+          "cancellable": false,
           "player_id": "ally-id",
+          "player_name": null,
           "prompt": "紅軍權貴出逃（副本）：請從己方手牌或棄牌堆中移除 1 張牌。",
           "source_name": "紅軍權貴出逃（副本）",
           "count": 1,
@@ -3750,7 +3575,12 @@
         "pending_choice": {
           "type": "multi_card_choice",
           "choice_key": "event_discard_self",
+          "interaction_kind": null,
+          "remaining_builds": null,
+          "queueable_card_names": [],
+          "cancellable": false,
           "player_id": "ally-id",
+          "player_name": null,
           "prompt": "紅軍權貴出逃（副本）：請選擇 1 張手牌棄掉。",
           "source_name": "紅軍權貴出逃（副本）",
           "count": 1,
