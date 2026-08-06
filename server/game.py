@@ -4603,6 +4603,13 @@ class Game:
             if reaction_context is not None:
                 if not skip_reaction_resolution:
                     self._resolve_reaction_context(reaction_context)
+                # 2026-08-06 使用者回報：用產業滲透/爆料黑幕取消紅軍能力後，該次能力額度
+                # 完全沒有被標記為已使用——紅軍可以在同一回合對同一目標再試一次，等於白白
+                # 浪費對手一張反應卡也擋不住。比照本次會話對「打出卡牌」的既有結論（出牌/
+                # 發動能力這個動作本身就算數，之後被取消不會撤銷額度），取消時仍要呼叫
+                # `_mark_red_army_action_used()`。
+                red_kwargs = dict(action_context.get('red_army_action_kwargs') or {})
+                self._mark_red_army_action_used(red_army_action_name, red_kwargs.get('target_player_id'))
                 self.log(f"{player.name}'s {red_army_action_name} was canceled by reaction")
                 return {"success": True, "canceled": True}
             red_kwargs = dict(action_context.get('red_army_action_kwargs') or {})

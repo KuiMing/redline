@@ -2563,6 +2563,46 @@ def test_reactively_played_reaction_card_counting_is_unaffected_by_being_counter
     assert g.event_progress['succeeded'] is True
 
 
+def test_canceled_red_army_action_still_counts_as_used_this_turn():
+    """2026-08-06 使用者回報：用產業滲透/爆料黑幕取消紅軍能力後，該次能力額度完全沒有
+    被標記為已使用——紅軍可以在同一回合再試一次，等於白白浪費對手一張反應卡也擋不住。
+    這裡重現：紅軍發動統戰部被產業滲透取消，確認 `red_army_action_count` 仍然遞增，
+    同一回合再次嘗試任何紅軍陣營行動都會被「本回合已達上限」擋下。"""
+    g = make_game()
+    red, other = g.players
+    red.faction_id = 'red_army'
+    other.faction_id = 'liberals'
+    other.hand = [card(g, '產業滲透')]
+
+    before_count = g.turn_log.get('red_army_action_count', 0)
+    result = g._activated_faction_action(red, '統戰部')
+    assert result.get('pending_choice') is True, result
+
+    canceled = g.resolve_pending_choice(other.id, 1)
+    assert canceled.get('canceled') is True, canceled
+    assert g.turn_log.get('red_army_action_count', 0) == before_count + 1
+
+    retry = g._activated_faction_action(red, '統戰部')
+    assert retry.get('error') == 'Red Army faction action limit reached this turn', retry
+
+
+def test_canceled_targeted_red_army_action_marks_that_target_as_used():
+    """政工部/國安部是「每回合對同一目標各一次」的額度——取消後這個目標專屬的標記也
+    要正確設定，不能讓紅軍對同一目標重複騷擾對手的反應卡。"""
+    g = make_game()
+    red, other = g.players
+    red.faction_id = 'red_army'
+    other.faction_id = 'liberals'
+    other.hand = [card(g, '爆料黑幕')]
+
+    result = g._activated_faction_action(red, '政工部', target_player_id=other.id)
+    assert result.get('pending_choice') is True, result
+
+    canceled = g.resolve_pending_choice(other.id, 1)
+    assert canceled.get('canceled') is True, canceled
+    assert g.turn_log.get('red_army_targeted_actions', {}).get('政工部:' + other.id) is True
+
+
 def test_industry_infiltration_requires_an_actual_action_card_target_to_cancel():
     g = make_game()
     p1, p2 = g.players

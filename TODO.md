@@ -17,6 +17,22 @@
 
 ## 目前 active todo
 
+### P2：最後結算畫面應顯示牆內/牆外組織數量，並依勝利陣營呈現華麗客製化結局敘事
+- [todo] 使用者需求：最後結算畫面，應該要直接顯示牆內和牆外組織數量。我需要華麗一點的畫面，比如說，紅軍贏了，其他陣營生靈塗炭；台灣綠線陣營贏了，台灣人民自由民主進步富裕。台灣藍線陣營贏了，開始規劃反攻大陸。蒙古贏了，連內蒙古都囊括其中。諸如此類的東西。（2026-08-06 使用者提出，先記錄，尚未調查）
+
+### P2：其他玩家使用能力/卡牌時，應該跳出可縮小的通知視窗，顯示卡牌圖片
+- [todo] 使用者需求：當某一玩家使用能力和卡牌時，其他玩家應該也要直接跳出視窗，看到其他人正在做什麼，使用什麼能力和卡牌，卡牌的圖片要秀出來。不想看可以縮到左下角，變一個小視窗。（2026-08-06 使用者提出，先記錄，尚未調查）
+
+### P2：產業滲透取消紅軍能力後，該次紅軍能力應算已使用
+- [done] 使用者回報：使用產業滲透阻止紅軍能力後，紅軍能力應該就要算他已經用了該次能力。（2026-08-06 使用者回報；同日使用者要求處理，與爆料黑幕一併修正）
+  - 根因：`_resume_reaction_pending_action()`（`server/game.py`）的 `red_army_action_name` 分支裡，當紅軍能力被反應卡（爆料黑幕/產業滲透/情報網）成功取消時（`reaction_context is not None`），只有記 log 跟 return，完全沒有呼叫 `_mark_red_army_action_used()`——導致紅軍該次能力的額度（`turn_log['red_army_action_count']`，以及政工部/國安部的「每回合對同一目標各一次」專屬標記 `turn_log['red_army_targeted_actions']`）完全沒被消耗，紅軍可以在同一回合對同一目標再試一次，等於白白浪費對手一張反應卡也擋不住。
+  - 修法：在該分支被取消時補上 `self._mark_red_army_action_used(red_army_action_name, red_kwargs.get('target_player_id'))`，比照本次會話對「打出卡牌」的既有結論——動作/能力本身這個「使用」的事實就算數，之後被反應卡取消不會撤銷額度消耗。此路徑同時涵蓋單次取消與多層反制鏈（`_finalize_reaction_stack` 判定原始能力最終仍被取消時，也會走到同一段程式碼）。
+  - 新增回歸（`scripts/tests/test_action_card_regressions.py`）：`test_canceled_red_army_action_still_counts_as_used_this_turn`（統戰部被產業滲透取消後，`red_army_action_count` 仍遞增，同回合再次嘗試任何紅軍陣營行動都被「本回合已達上限」擋下）、`test_canceled_targeted_red_army_action_marks_that_target_as_used`（政工部被爆料黑幕取消後，該目標專屬的已使用標記仍正確設定）。
+  - 驗證：完整 pytest（同 baseline ignore 清單）**275→277 passed, 0 failed**（恰為新增2支）。另重跑 `validate_cancellable_choice.py`（7/7），確認與既有「玩家主動關閉 pending choice 視窗不消耗額度」（一個完全不同的『取消』概念，來自對方反應卡的取消不受影響）機制沒有衝突。
+
+### P2：烏魯木齊七五事件也應該要所有人都輪過該回合才結算
+- [todo] 使用者回報：烏魯木齊七五事件也是啊～～所有事件卡都應該要所有人都輪過該回合才結算。（2026-08-06 使用者回報，先記錄，尚未調查）
+
 ### P1：反應性打出爆料黑幕/產業滲透/情報網完全不會計入「打出購買費用有資金/宣傳的牌」事件任務
 - [done] 使用者回報：所有事件卡應該也要在所有人該回合結束的時候再結算，因為有些動作或卡牌，要敵軍有所行動才會發動。例如爆料黑幕，要對方動作之後，才有機會發動，才能算使用有宣傳的卡牌，就能解重大災難的任務。（2026-08-06 使用者回報並要求處理）
   - **釐清使用者描述的機制與實際根因的落差**：使用者的描述是「事件應該延後到整輪結束才結算」，但稽核確認**任務型事件的結算本來就已經是整輪結束才做**（`advance_turn_phase()` 的 `TurnPhase.END` 分支，`server/game.py:5460-5461`：只有 `_is_final_non_red_turn_before_round_wrap()` 判定為本輪最後一位非紅軍玩家時才會呼叫 `_settle_current_event()`），這部分沒有問題、不需要再改動時機。真正的根因是另一件事：**反應性地打出爆料黑幕/產業滲透/情報網（透過取消對手行動的機制），完全不會呼叫任何 `_track_event_progress()`**——`play_card_with_money`/`play_card_with_propaganda` 這類「打出購買費用有資金/宣傳的卡牌」的追蹤，只存在於 `play_card()` 自己的主動出牌流程裡（`server/game.py` 三處：奧援卡分支、一般分支、以及第三處），反應結算的整條路徑（`_build_reaction_context`／`_resolve_reaction_choice`／`_resolve_reaction_context`／`_finalize_reaction_stack`）從未呼叫過這個追蹤。爆料黑幕印刷購買費用是資金1＋宣傳4，三張反應卡都同時有資金與宣傳費用——反應性地打出任何一張，本身就該算一次「打出購買費用有資金/宣傳的牌」，但過去完全不會，導致『重大災難』（trigger `play_card_with_propaganda`）、『東突厥集中營』（同）、『香港抗暴之戰』（trigger `play_card_with_money`）這幾個事件永遠沒辦法透過「反應性使用」這幾張卡達成，只能靠主動在自己回合打出（但這幾張卡設計上就是被動反應卡，主動打出的時機很有限）。
