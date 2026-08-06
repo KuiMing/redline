@@ -3005,6 +3005,62 @@ function renderMyEraStageView(state = window.lastGameState || {}) {
 //（20 回合自動桌測發現）。winner 的值是「red_army」或獲勝玩家的名字（見 victory.py）。
 let victoryModalDismissedFor = null;
 
+// 結局敘事（2026-08-06 使用者需求）：依勝利陣營呈現客製化的「大局勢」文字，把牆內/牆外
+// 組織總數直接寫進敘事本身。優先用完整 faction_id（例如 taiwan_green/taiwan_blue 各自
+// 獨立一段），沒有專屬敘事的陣營則退回 factionCategoryOf() 分類（tibet/uyghur 的多個
+// 流亡據點共用同一段、rebel 分類的十幾個地方勢力共用同一套樣板並帶入陣營名稱）。
+const VICTORY_ENDING_NARRATIVES = {
+  red_army: (ctx) => ({
+    title: '紅色鐵幕，籠罩天下',
+    body: `紅軍以絕對優勢碾碎了最後的反抗。牆內組織僅剩 ${ctx.insideWallTotal} 個苟延殘喘，${ctx.outsideWallTotal} 個殘部倉皇退守牆外——但那裡也不再安全。廣播裡只剩一種聲音，街頭只剩一種顏色。這是一個沒有異議、沒有光的年代，其他陣營生靈塗炭，只能在陰影裡等待下一次機會。`,
+  }),
+  taiwan_green: (ctx) => ({
+    title: '自由之島，燈火通明',
+    body: `本土社團遍地開花，牆內 ${ctx.insideWallTotal} 個組織已經紮根、牆外 ${ctx.outsideWallTotal} 個持續在海外串聯。臺灣人民用選票與街頭守住了得來不易的民主——言論自由、公民社會、經濟活力，一樣不缺。這座島嶼證明了：自由與繁榮，從來不是紅色政權能夠恩賜的東西。`,
+  }),
+  taiwan_blue: (ctx) => ({
+    title: '光復大陸，指日可待',
+    body: `自由中國的旗幟重新升起。牆內已滲透 ${ctx.insideWallTotal} 個組織、牆外還有 ${ctx.outsideWallTotal} 個作為後援，反攻大陸的作戰計畫正式啟動——這一次，不再是紙上談兵。街頭巷尾開始流傳同一句話：山河終將光復，只是時間問題。`,
+  }),
+  hong_kong: (ctx) => ({
+    title: '獅子山下，重見天日',
+    body: `牆外 ${ctx.outsideWallTotal} 個組織撐住了最艱難的歲月，牆內 ${ctx.insideWallTotal} 個火種也終於燒了起來。石屎森林裡重新響起熟悉的廣東話與自由的歌聲，這座曾經被高牆包圍的城市，終於等到了屬於自己的黎明。`,
+  }),
+  uyghur: (ctx) => ({
+    title: '東突厥斯坦，重獲自由',
+    body: `牆內 ${ctx.insideWallTotal} 個組織裡的同胞終於走出鐵絲網，牆外 ${ctx.outsideWallTotal} 個離散的聲音也終於被世界聽見。天山南北重新飄揚起屬於自己的旗幟，那些被抹去的語言、信仰與名字，一件一件被找回來。`,
+  }),
+  tibet: (ctx) => ({
+    title: '雪域高原，經幡再揚',
+    body: `牆內 ${ctx.insideWallTotal} 個組織守住了寺院與村莊，牆外 ${ctx.outsideWallTotal} 個流亡多年的聲音終於等到歸鄉的消息。雪山之巔重新掛起五色經幡，誦經聲隨風傳遍整片高原——雪域重光，不再只是一句口號。`,
+  }),
+  manchuria: (ctx) => ({
+    title: '白山黑水，滿洲復國',
+    body: `牆內 ${ctx.insideWallTotal} 個組織、牆外 ${ctx.outsideWallTotal} 個海外力量終於等到這一天。白山黑水之間重新立起屬於滿洲的旗幟，那段被刻意遺忘的歷史，終於有人願意重新提起、重新書寫。`,
+  }),
+  mongol: (ctx) => ({
+    title: '長生天下，重歸一統',
+    body: `牆內 ${ctx.insideWallTotal} 個組織一路串聯到了內蒙古的每一座敖包，牆外 ${ctx.outsideWallTotal} 個力量也隨之呼應——大蒙古的版圖不再只存在於史書裡。草原重新連成一片，連內蒙古都一併囊括其中，長生天下，終於再次一統。`,
+  }),
+  kazakh: (ctx) => ({
+    title: '伊犁河畔，重見天日',
+    body: `牆內 ${ctx.insideWallTotal} 個組織撐過了最漫長的寒冬，牆外 ${ctx.outsideWallTotal} 個力量隨即呼應而來。伊犁河谷重新響起哈薩克的牧歌，那些消失在集中營裡的名字，終於一個一個被找回、被記得。`,
+  }),
+  // 使用者要求（2026-08-06）：反賊分類底下十幾個地方勢力（滇/苗/傣/晉/齊/吳越/粵…等）
+  // 不需要各自獨立一段敘事，統一用「反賊大團結」的角度呈現——以實際獲勝的那個陣營為
+  // 號召者，但強調是全體反抗勢力聯合的成果，不是單一地方勢力獨吞天下。
+  rebel: (ctx) => ({
+    title: '烽火燎原，反賊大團結',
+    body: `牆內 ${ctx.insideWallTotal} 個地下組織、牆外 ${ctx.outsideWallTotal} 個海外力量紛紛響應——以${ctx.winnerFactionName}為首，各地反抗勢力放下彼此的歧異，結成統一戰線。從西南到東北，烽火在紅色版圖上連成一片，紅軍再也無法各個擊破。這是屬於全體反賊的勝利，不是任何一方的獨吞。`,
+  }),
+};
+
+function victoryEndingNarrative(factionId, ctx) {
+  if (!factionId) return null;
+  const template = VICTORY_ENDING_NARRATIVES[factionId] || VICTORY_ENDING_NARRATIVES[factionCategoryOf(factionId)];
+  return template ? template(ctx) : null;
+}
+
 function renderVictoryModal(state) {
   const overlay = document.getElementById('victoryModal');
   const badge = document.getElementById('victoryBadge');
@@ -3045,9 +3101,37 @@ function renderVictoryModal(state) {
     coEl.style.display = 'none';
   }
 
+  // 牆內/牆外組織總數（2026-08-06 使用者需求）：彙整全體玩家的 organization_counts
+  // （既有欄位，server/game.py 的 _player_organization_scope_counts()），直接寫進結局
+  // 敘事本身，而不只是列在表格裡。
+  const insideWallTotal = players.reduce((sum, p) => sum + (p.organization_counts?.inside_wall ?? 0), 0);
+  const outsideWallTotal = players.reduce((sum, p) => sum + (p.organization_counts?.outside_wall ?? 0), 0);
+
+  const endingEl = document.getElementById('victoryEnding');
+  const endingTitleEl = document.getElementById('victoryEndingTitle');
+  const endingBodyEl = document.getElementById('victoryEndingBody');
+  if (endingEl && endingTitleEl && endingBodyEl) {
+    const ending = victoryEndingNarrative(winnerFaction, {
+      insideWallTotal,
+      outsideWallTotal,
+      winnerFactionName: factionText,
+    });
+    if (ending) {
+      endingEl.style.display = 'block';
+      endingEl.style.setProperty('--victory-ending-accent', winnerColor);
+      endingTitleEl.textContent = ending.title;
+      endingBodyEl.textContent = ending.body;
+    } else {
+      endingEl.style.display = 'none';
+    }
+  }
+
   const summary = document.getElementById('victorySummary');
   const rows = players.map(p => {
-    const totalOrgs = Object.values(p.orgs || {}).reduce((a, b) => a + b, 0);
+    const orgCounts = p.organization_counts || {};
+    const totalOrgs = orgCounts.total ?? Object.values(p.orgs || {}).reduce((a, b) => a + b, 0);
+    const insideWall = orgCounts.inside_wall ?? 0;
+    const outsideWall = orgCounts.outside_wall ?? Math.max(0, totalOrgs - insideWall);
     const color = factionNameColor(p.faction) || '#e5ecf5';
     const isWinner = winnerPlayer ? p.name === winnerPlayer.name : false;
     return `
@@ -3055,13 +3139,15 @@ function renderVictoryModal(state) {
         <span class="victory-player-name" style="color:${color}">${escapeHtml(p.name)}${isWinner ? '&nbsp;🏆' : ''}</span>
         <span>${escapeHtml(factionDisplayName(p.faction))}</span>
         <span>組織 ${totalOrgs}</span>
+        <span>牆內 ${insideWall}</span>
+        <span>牆外 ${outsideWall}</span>
         <span>資金 ${p.resources?.money ?? 0}</span>
         <span>宣傳 ${p.resources?.propaganda ?? 0}</span>
       </div>`;
   }).join('');
   summary.innerHTML = `
     <div class="victory-summary-row header">
-      <span>玩家</span><span>陣營</span><span>組織</span><span>資金</span><span>宣傳</span>
+      <span>玩家</span><span>陣營</span><span>組織</span><span>牆內</span><span>牆外</span><span>資金</span><span>宣傳</span>
     </div>${rows}`;
 
   badge.style.display = 'none';

@@ -2604,7 +2604,31 @@ button.player-status-discard-card:focus-visible {
 /* 勝利畫面（2026-07-19：20 回合自動桌測發現遊戲結束毫無提示，補上結束畫面） */
 .victory-glass {
   min-width: 460px;
-  max-width: 560px;
+  max-width: 660px;
+}
+
+/* 結局敘事（2026-08-06 使用者需求）：依勝利陣營呈現客製化的「大局勢」文字，把牆內/牆外
+   組織總數直接寫進敘事本身，比照卡牌遊戲常見的史詩感 epilogue 呈現。 */
+.victory-ending {
+  margin: 4px 0 14px;
+  padding: 14px 16px;
+  border-left: 3px solid var(--victory-ending-accent, rgba(250, 204, 21, 0.7));
+  border-radius: 6px;
+  background: linear-gradient(90deg, rgba(148, 163, 184, 0.08), transparent);
+}
+
+.victory-ending-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--victory-ending-accent, #fef3c7);
+  margin-bottom: 6px;
+  letter-spacing: 0.02em;
+}
+
+.victory-ending-body {
+  font-size: 0.88rem;
+  line-height: 1.7;
+  color: #dbe4f0;
 }
 
 .victory-summary {
@@ -2615,14 +2639,14 @@ button.player-status-discard-card:focus-visible {
 
 .victory-summary-row {
   display: grid;
-  grid-template-columns: 1.2fr 1.4fr repeat(3, 0.7fr);
+  grid-template-columns: 1.1fr 1.25fr repeat(5, 0.6fr);
   gap: 8px;
   align-items: center;
   padding: 8px 12px;
   border: 1px solid rgba(148, 163, 184, 0.22);
   border-radius: 10px;
   background: rgba(15, 23, 42, 0.66);
-  font-size: 0.82rem;
+  font-size: 0.8rem;
 }
 
 .victory-summary-row.header {
