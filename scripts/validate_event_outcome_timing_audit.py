@@ -96,9 +96,31 @@ def check_failure_discard_self(event_name):
 def check_failure_discard_random(event_name):
     game, viewer, ally, red = make_game(event_name, succeeded=False)
     viewer.hand = [card('viewer既有手牌')]
-    if '烏魯木齊七五事件' in event_name:
+    is_urumqi = '烏魯木齊七五事件' in event_name
+    if is_urumqi:
+        # Outside-the-wall org (臺北 is 臺灣, not 牆內): the own_organization_in_scope live
+        # check fails at settlement -> discard_random failure penalty.
         ally.organizations = {'臺北': 1}
     r = run_end(game)
+    if is_urumqi:
+        # 烏魯木齊七五事件 is the sole `end_turn_state` (live-state) mission: it settles only
+        # at the TRUE round-wrap boundary (after Red Army's own turn too), so after the final
+        # non-red player's END it is still UNSETTLED. Drive Red Army's turn + the wrap.
+        deferred_ok = r['current_player'] == 'red' and not r['event_progress'].get('settled')
+        game.turn_phase = TurnPhase.ACTION
+        game.advance_turn_phase()   # ACTION -> END
+        game.advance_turn_phase()   # END -> _end_turn wraps round -> deferred settlement
+        passed = (
+            deferred_ok
+            and len(ally.hand) == 4
+            and len(ally.deck.discard_pile) == 1
+            and any('烏魯木齊七五事件' in line and 'failure' in line for line in game.action_log)
+        )
+        return {
+            'name': f'{event_name} failure discard_random after full round wrap',
+            'passed': passed,
+            'details': {'deferred_ok': deferred_ok, 'ally_hand': len(ally.hand), 'log': list(game.action_log)},
+        }
     return {
         'name': f'{event_name} failure discard_random after refill',
         'passed': r['current_player'] == 'red' and len(game.players[1].hand) == 4 and len(game.players[1].deck.discard_pile) == 1 and len(red.hand) == 0,
@@ -186,14 +208,22 @@ def check_success_trash(event_name):
 
 
 def check_success_build_near(event_name):
+    # 烏魯木齊七五事件 is the sole `end_turn_state` (live-state) mission. Its state check must
+    # be judged at the TRUE round-wrap boundary (after Red Army's own turn too), not at the
+    # final non-red turn — so unlike count-based missions it stays UNSETTLED after the last
+    # non-red player's END and only settles once Red Army has also acted and the round wraps.
     game, viewer, ally, red = make_game(event_name, succeeded=True)
     ally.organizations = {'香港城': 1}
-    r = run_end(game)
-    choice = r['pending_choice'] or {}
+    r = run_end(game)   # ally (final non-red) END -> Red Army seat; must NOT settle yet
+    deferred_ok = r['current_player'] == 'red' and not r['event_progress'].get('settled')
+    game.turn_phase = TurnPhase.ACTION
+    game.advance_turn_phase()   # ACTION -> END
+    game.advance_turn_phase()   # END -> _end_turn wraps round -> deferred settlement
+    choice = game.pending_choice or {}
     return {
-        'name': f'{event_name} success build after refill',
-        'passed': r['current_player'] == 'red' and choice.get('choice_key') == 'event_build_organization' and choice.get('player_id') == ally.id and len(ally.hand) == 5,
-        'details': r,
+        'name': f'{event_name} success build after full round wrap',
+        'passed': deferred_ok and choice.get('choice_key') == 'event_build_organization' and choice.get('player_id') == ally.id and len(ally.hand) == 5,
+        'details': {'deferred_ok': deferred_ok, 'pending_choice': choice, 'log': list(game.action_log)},
     }
 
 

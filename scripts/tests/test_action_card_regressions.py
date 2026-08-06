@@ -3655,3 +3655,120 @@ def test_shanghai_cooperation_org_at_round_wrap_does_not_deadlock_non_red_actor(
     assert (g.event_progress or {}).get('status') == 'auto'
     assert g.event_progress.get('settled') is True
     assert any('上海合作組織' in line and 'scoped_card_range' in line for line in g.action_log)
+
+
+def _urumqi_round_wrap_game():
+    """[non-red round-start player (index 0), Red Army LAST (index 1)] with 烏魯木齊七五事件
+    active and the non-red player holding one inside-the-wall organization.
+
+    Red Army goes last so its own turn happens AFTER the old (final-non-red) settlement
+    point — the exact ordering the stale-snapshot bug needs. make_game() is not reused
+    here because it seats Red Army first (index 0), where Red Army acts *before* the
+    settlement point and the bug cannot manifest.
+    """
+    g = Game([('p1', 'P1'), ('p2', 'P2')])
+    g.game_phase = GamePhase.MAIN
+    g.pending_base_choices = {}
+    g.pending_choice = None
+    g.players[0].faction_id = 'tibet'
+    g.players[1].faction_id = 'red_army'
+    b, red = g.players
+    inner = g._towns_for_region_alias('china')[0]
+    b.organizations = {inner: 1}
+    b.hand = [Card('追隨者', 'propaganda', {'propaganda': 1}) for _ in range(5)]
+    red.hand = [Card('追隨者', 'propaganda', {'propaganda': 1}) for _ in range(3)]
+    pin_active_mission_event(g, '烏魯木齊七五事件')
+    g.turn = 5
+    g.current_player_index = 0
+    g.round_start_player_index = 0
+    g.turn_phase = TurnPhase.ACTION
+    return g, b, red, inner
+
+
+def test_urumqi_state_trigger_settles_after_red_army_turn_not_before():
+    """Playtest 回報：『烏魯木齊七五事件也是啊～～所有事件卡都應該要所有人都輪過該回合才結算』。
+    根因：`烏魯木齊七五事件`（data/events_structured.v1.1.json，唯一使用 `trigger.type ==
+    "end_turn_state"` 的事件）是「回合結束時活狀態檢查」，不是累積計數。舊碼在
+    advance_turn_phase() 的 TurnPhase.END 於「最後一位非紅軍玩家」（紅軍回合之前）就結算，
+    對 own_organization_in_scope 這種活狀態用了紅軍行動前的過期快照——紅軍緊接著的回合把牆內
+    組織瓦解掉，任務卻已用舊快照判成功。修法：只有 end_turn_state 觸發改到真正的 round-wrap
+    邊界（整輪含紅軍都行動完）結算，計數型觸發維持原點不動。這裡驗證：非紅軍玩家回合結束時
+    事件『尚未結算』，等紅軍瓦解組織、整輪結束後才判定為失敗（discard_random 罰非紅軍持有者）。
+    """
+    g, b, red, inner = _urumqi_round_wrap_game()
+
+    # Non-red player's turn ends. Under the old code the end_turn_state mission settled
+    # HERE (before Red Army acted). Now it must stay unsettled, with the settlement target
+    # already captured as the non-red owner.
+    assert g.advance_turn_phase() == {'success': True}   # ACTION -> END
+    assert g.advance_turn_phase() == {'success': True}   # END -> _end_turn -> Red Army seat
+    assert g.current_player() is red
+    assert not (g.event_progress or {}).get('settled')
+    assert (g.event_progress or {}).get('settlement_target_player_id') == b.id
+
+    # Red Army dissolves the inside-the-wall org on its own turn; then the round wraps.
+    b.organizations = {}
+    b_hand_before = len(b.hand)
+    g.turn_phase = TurnPhase.ACTION
+    assert g.advance_turn_phase() == {'success': True}   # ACTION -> END
+    assert g.advance_turn_phase() == {'success': True}   # END -> _end_turn wraps -> settle
+
+    # Condition (own inside-wall org) no longer holds after Red Army's turn -> failure,
+    # judged against the FINAL state of the round, not the stale pre-Red snapshot.
+    assert any('烏魯木齊七五事件' in line and 'failure' in line for line in g.action_log)
+    assert not any('烏魯木齊七五事件' in line and 'success' in line for line in g.action_log)
+    assert len(b.hand) == b_hand_before - 1   # discard_random penalty hit the non-red owner
+    assert b.organizations == {}              # no bogus success build occurred
+
+
+def test_urumqi_state_trigger_succeeds_when_org_survives_full_round():
+    """Counterpart to the failure case: when Red Army does NOT dissolve the inside-the-wall
+    org, the same end_turn_state mission is judged a SUCCESS — but still only at the true
+    round-wrap boundary (after Red Army), never at the earlier final-non-red point."""
+    g, b, red, inner = _urumqi_round_wrap_game()
+
+    assert g.advance_turn_phase() == {'success': True}   # ACTION -> END
+    assert g.advance_turn_phase() == {'success': True}   # END -> Red Army seat
+    assert g.current_player() is red
+    assert not (g.event_progress or {}).get('settled')   # not judged before Red Army acts
+
+    # Red Army leaves the org intact; round wraps with the condition still satisfied.
+    g.turn_phase = TurnPhase.ACTION
+    assert g.advance_turn_phase() == {'success': True}   # ACTION -> END
+    assert g.advance_turn_phase() == {'success': True}   # END -> wrap -> settle
+    assert any('烏魯木齊七五事件' in line and 'success' in line for line in g.action_log)
+    assert b.organizations.get(inner, 0) == 1            # owning org preserved through the round
+
+
+def test_count_based_mission_still_settles_at_final_non_red_turn():
+    """Guardrail for the 烏魯木齊 fix: it must move ONLY end_turn_state settlement. A
+    count-based mission (北京政爭, trigger {"type": "draw"}) must still settle at the final
+    non-red turn — i.e. right after the last non-red player's END, BEFORE Red Army's own
+    turn — exactly as before. Same [non-red, Red-last] seating as the urumqi tests so the
+    contrast is apples-to-apples: urumqi is unsettled at this point, this one is settled."""
+    g = Game([('p1', 'P1'), ('p2', 'P2')])
+    g.game_phase = GamePhase.MAIN
+    g.pending_base_choices = {}
+    g.pending_choice = None
+    g.players[0].faction_id = 'tibet'
+    g.players[1].faction_id = 'red_army'
+    b, red = g.players
+    b.hand = [Card('追隨者', 'propaganda', {'propaganda': 1}) for _ in range(5)]
+    red.hand = [Card('追隨者', 'propaganda', {'propaganda': 1}) for _ in range(3)]
+    pin_active_mission_event(g, '北京政爭')
+    g.event_progress['count'] = 1
+    g.event_progress['succeeded'] = True
+    g.event_progress['status'] = 'success_pending'
+    g.event_progress['last_actor_id'] = b.id
+    g.turn = 5
+    g.current_player_index = 0
+    g.round_start_player_index = 0
+    g.turn_phase = TurnPhase.ACTION
+
+    assert g.advance_turn_phase() == {'success': True}   # ACTION -> END
+    assert g.advance_turn_phase() == {'success': True}   # END -> _end_turn -> Red Army seat
+    assert g.current_player() is red
+    # Count-based trigger is settled BEFORE Red Army's turn, unchanged by the fix.
+    assert (g.event_progress or {}).get('settled') is True
+    assert (g.event_progress or {}).get('status') == 'success'
+    assert any('北京政爭' in line and 'success resolved' in line for line in g.action_log)

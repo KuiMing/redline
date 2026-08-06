@@ -20,8 +20,8 @@
 - ✅ 北京政爭 failure none after refill no-op
 - ✅ 紅軍權貴出逃 success trash hand/discard after refill
 - ✅ 紅軍權貴出逃 failure discard_self after refill
-- ✅ 烏魯木齊七五事件 success build after refill
-- ✅ 烏魯木齊七五事件 failure discard_random after refill
+- ✅ 烏魯木齊七五事件 success build after full round wrap
+- ✅ 烏魯木齊七五事件 failure discard_random after full round wrap
 - ✅ 重大災難（副本） success gain_card after refill
 - ✅ 重大災難（副本） failure discard_self after refill
 - ✅ 全國人大召開（副本） success draw after refill

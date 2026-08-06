@@ -5465,10 +5465,26 @@ class Game:
             # purchase step, so buy_card triggers have a chance to progress.
             next_player_index = (self.current_player_index + 1) % len(self.players)
             is_round_final_action = self._is_final_non_red_turn_before_round_wrap(next_player_index)
-            defer_event_settlement = is_round_final_action and self._should_defer_event_settlement_until_after_refill()
+            # A live `end_turn_state` trigger (e.g. 烏魯木齊七五事件's own_organization_in_scope)
+            # is a FRESH state check at settlement, not an accumulated counter. It must be
+            # judged only once the WHOLE round — Red Army included — has acted, because Red
+            # Army's own turn this round can still dissolve the organization that satisfies
+            # it (playtest 回報：所有事件卡都應該要所有人都輪過該回合才結算). Count-based
+            # triggers stay at the final non-red turn (before Red Army-only turns) because
+            # Red Army never progresses their counter and failure penalties belong to the
+            # non-red actor; only the state check needs the true round-wrap boundary, which
+            # mirrors the era-trigger / victory-declaration rule (P1: 判定時機應等整輪含紅軍
+            # 行動完). The settlement target is still captured at the final non-red boundary
+            # below and persists in event_progress until the wrap, so a later Red-Army seat
+            # never becomes the target.
+            trigger_type = ((self.current_event or {}).get('trigger') or {}).get('type')
+            event_is_state_triggered = trigger_type == 'end_turn_state'
+            is_true_round_wrap = next_player_index == getattr(self, 'round_start_player_index', 0)
+            settle_boundary = is_true_round_wrap if event_is_state_triggered else is_round_final_action
+            defer_event_settlement = settle_boundary and self._should_defer_event_settlement_until_after_refill()
             if is_round_final_action and self.event_progress is not None:
                 self.event_progress['settlement_target_player_id'] = self._mission_settlement_target_id()
-            if is_round_final_action and not defer_event_settlement and not (self.event_progress or {}).get('settled'):
+            if settle_boundary and not defer_event_settlement and not (self.event_progress or {}).get('settled'):
                 event_result = self._settle_current_event()
                 if event_result and event_result.get('pending_choice'):
                     return {"success": True, "pending_choice": True}
