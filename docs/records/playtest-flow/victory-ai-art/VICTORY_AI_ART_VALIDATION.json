@@ -1,7 +1,7 @@
 {
   "summary": {
-    "total": 22,
-    "passed": 22,
+    "total": 24,
+    "passed": 24,
     "failed": 0
   },
   "results": [
@@ -96,12 +96,21 @@
       }
     },
     {
+      "name": "asset_red_army_triumph_is_landscape_png",
+      "ok": true,
+      "detail": {
+        "path": "/Users/benmini/.openclaw/workspace/redline/static/victory-art/red_army_triumph.png",
+        "width": 1672,
+        "height": 941
+      }
+    },
+    {
       "name": "browser_red_army_fills_stage_with_results_panel",
       "ok": true,
       "detail": {
         "overlayDisplay": "flex",
-        "sceneClass": "victory-ending-scene victory-ending-scene--red_army victory-ending-scene-loaded",
-        "imageSrc": "http://127.0.0.1:8000/static/victory-art/red_army.png?v=20260806-ai-v2",
+        "sceneClass": "victory-ending-scene victory-ending-scene--red_army_triumph victory-ending-scene-loaded",
+        "imageSrc": "http://127.0.0.1:8000/static/victory-art/red_army_triumph.png?v=20260806-ai-v3",
         "imageNaturalWidth": 1672,
         "imageNaturalHeight": 941,
         "overlay": {
@@ -117,19 +126,19 @@
           "height": 720
         },
         "image": {
-          "x": -8.44384765625,
-          "y": -4.749664306640625,
-          "width": 1296.8876953125,
-          "height": 729.499267578125
+          "x": -8.4510498046875,
+          "y": -4.75372314453125,
+          "width": 1296.902099609375,
+          "height": 729.5074462890625
         },
         "glass": {
           "x": 32,
-          "y": 28,
+          "y": 376.203125,
           "width": 1216,
           "height": 315.796875,
-          "bottom": 343.796875
+          "bottom": 692
         },
-        "expectedClass": "victory-ending-scene--red_army"
+        "expectedClass": "victory-ending-scene--red_army_triumph"
       }
     },
     {
@@ -138,7 +147,7 @@
       "detail": {
         "overlayDisplay": "flex",
         "sceneClass": "victory-ending-scene victory-ending-scene--taiwan_green victory-ending-scene-loaded",
-        "imageSrc": "http://127.0.0.1:8000/static/victory-art/taiwan_green.png?v=20260806-ai-v2",
+        "imageSrc": "http://127.0.0.1:8000/static/victory-art/taiwan_green.png?v=20260806-ai-v3",
         "imageNaturalWidth": 1672,
         "imageNaturalHeight": 941,
         "overlay": {
@@ -154,10 +163,10 @@
           "height": 720
         },
         "image": {
-          "x": -7.843505859375,
-          "y": -4.411956787109375,
-          "width": 1295.68701171875,
-          "height": 728.823974609375
+          "x": -7.8262939453125,
+          "y": -4.402313232421875,
+          "width": 1295.652587890625,
+          "height": 728.8046875
         },
         "glass": {
           "x": 32,
@@ -175,7 +184,7 @@
       "detail": {
         "overlayDisplay": "flex",
         "sceneClass": "victory-ending-scene victory-ending-scene--taiwan_blue victory-ending-scene-loaded",
-        "imageSrc": "http://127.0.0.1:8000/static/victory-art/taiwan_blue.png?v=20260806-ai-v2",
+        "imageSrc": "http://127.0.0.1:8000/static/victory-art/taiwan_blue.png?v=20260806-ai-v3",
         "imageNaturalWidth": 1672,
         "imageNaturalHeight": 941,
         "overlay": {
@@ -191,10 +200,10 @@
           "height": 720
         },
         "image": {
-          "x": -7.47509765625,
-          "y": -4.20477294921875,
-          "width": 1294.9501953125,
-          "height": 728.4095458984375
+          "x": -7.2362060546875,
+          "y": -4.070343017578125,
+          "width": 1294.472412109375,
+          "height": 728.140625
         },
         "glass": {
           "x": 32,
@@ -212,7 +221,7 @@
       "detail": {
         "overlayDisplay": "flex",
         "sceneClass": "victory-ending-scene victory-ending-scene--hong_kong victory-ending-scene-loaded",
-        "imageSrc": "http://127.0.0.1:8000/static/victory-art/hong_kong.png?v=20260806-ai-v2",
+        "imageSrc": "http://127.0.0.1:8000/static/victory-art/hong_kong.png?v=20260806-ai-v3",
         "imageNaturalWidth": 1672,
         "imageNaturalHeight": 941,
         "overlay": {
@@ -228,10 +237,10 @@
           "height": 720
         },
         "image": {
-          "x": -6.76513671875,
-          "y": -3.805389404296875,
-          "width": 1293.5302734375,
-          "height": 727.61083984375
+          "x": -6.7021484375,
+          "y": -3.769927978515625,
+          "width": 1293.404296875,
+          "height": 727.539794921875
         },
         "glass": {
           "x": 32,
@@ -249,7 +258,7 @@
       "detail": {
         "overlayDisplay": "flex",
         "sceneClass": "victory-ending-scene victory-ending-scene--uyghur victory-ending-scene-loaded",
-        "imageSrc": "http://127.0.0.1:8000/static/victory-art/uyghur.png?v=20260806-ai-v2",
+        "imageSrc": "http://127.0.0.1:8000/static/victory-art/uyghur.png?v=20260806-ai-v3",
         "imageNaturalWidth": 1672,
         "imageNaturalHeight": 941,
         "overlay": {
@@ -265,10 +274,10 @@
           "height": 720
         },
         "image": {
-          "x": -6.066162109375,
-          "y": -3.412200927734375,
-          "width": 1292.13232421875,
-          "height": 726.824462890625
+          "x": -6.1014404296875,
+          "y": -3.43206787109375,
+          "width": 1292.202880859375,
+          "height": 726.8641357421875
         },
         "glass": {
           "x": 32,
@@ -286,7 +295,7 @@
       "detail": {
         "overlayDisplay": "flex",
         "sceneClass": "victory-ending-scene victory-ending-scene--tibet victory-ending-scene-loaded",
-        "imageSrc": "http://127.0.0.1:8000/static/victory-art/tibet.png?v=20260806-ai-v2",
+        "imageSrc": "http://127.0.0.1:8000/static/victory-art/tibet.png?v=20260806-ai-v3",
         "imageNaturalWidth": 1672,
         "imageNaturalHeight": 941,
         "overlay": {
@@ -302,10 +311,10 @@
           "height": 720
         },
         "image": {
-          "x": -5.44622802734375,
-          "y": -3.063507080078125,
-          "width": 1290.892578125,
-          "height": 726.126953125
+          "x": -5.5906982421875,
+          "y": -3.144744873046875,
+          "width": 1291.181396484375,
+          "height": 726.28955078125
         },
         "glass": {
           "x": 32,
@@ -323,7 +332,7 @@
       "detail": {
         "overlayDisplay": "flex",
         "sceneClass": "victory-ending-scene victory-ending-scene--manchuria victory-ending-scene-loaded",
-        "imageSrc": "http://127.0.0.1:8000/static/victory-art/manchuria.png?v=20260806-ai-v2",
+        "imageSrc": "http://127.0.0.1:8000/static/victory-art/manchuria.png?v=20260806-ai-v3",
         "imageNaturalWidth": 1672,
         "imageNaturalHeight": 941,
         "overlay": {
@@ -339,10 +348,10 @@
           "height": 720
         },
         "image": {
-          "x": -4.874267578125,
-          "y": -2.74176025390625,
-          "width": 1289.74853515625,
-          "height": 725.4835205078125
+          "x": -5.0125732421875,
+          "y": -2.819580078125,
+          "width": 1290.025146484375,
+          "height": 725.63916015625
         },
         "glass": {
           "x": 32,
@@ -360,7 +369,7 @@
       "detail": {
         "overlayDisplay": "flex",
         "sceneClass": "victory-ending-scene victory-ending-scene--mongol victory-ending-scene-loaded",
-        "imageSrc": "http://127.0.0.1:8000/static/victory-art/mongol.png?v=20260806-ai-v2",
+        "imageSrc": "http://127.0.0.1:8000/static/victory-art/mongol.png?v=20260806-ai-v3",
         "imageNaturalWidth": 1672,
         "imageNaturalHeight": 941,
         "overlay": {
@@ -376,10 +385,10 @@
           "height": 720
         },
         "image": {
-          "x": -4.368408203125,
-          "y": -2.457244873046875,
-          "width": 1288.73681640625,
-          "height": 724.91455078125
+          "x": -4.53125,
+          "y": -2.548828125,
+          "width": 1289.0625,
+          "height": 725.09765625
         },
         "glass": {
           "x": 32,
@@ -397,7 +406,7 @@
       "detail": {
         "overlayDisplay": "flex",
         "sceneClass": "victory-ending-scene victory-ending-scene--kazakh victory-ending-scene-loaded",
-        "imageSrc": "http://127.0.0.1:8000/static/victory-art/kazakh.png?v=20260806-ai-v2",
+        "imageSrc": "http://127.0.0.1:8000/static/victory-art/kazakh.png?v=20260806-ai-v3",
         "imageNaturalWidth": 1672,
         "imageNaturalHeight": 941,
         "overlay": {
@@ -413,10 +422,10 @@
           "height": 720
         },
         "image": {
-          "x": -3.79327392578125,
-          "y": -2.133697509765625,
-          "width": 1287.58642578125,
-          "height": 724.267333984375
+          "x": -3.9952392578125,
+          "y": -2.247314453125,
+          "width": 1287.990478515625,
+          "height": 724.49462890625
         },
         "glass": {
           "x": 32,
@@ -434,7 +443,7 @@
       "detail": {
         "overlayDisplay": "flex",
         "sceneClass": "victory-ending-scene victory-ending-scene--rebel victory-ending-scene-loaded",
-        "imageSrc": "http://127.0.0.1:8000/static/victory-art/rebel.png?v=20260806-ai-v2",
+        "imageSrc": "http://127.0.0.1:8000/static/victory-art/rebel.png?v=20260806-ai-v3",
         "imageNaturalWidth": 1672,
         "imageNaturalHeight": 941,
         "overlay": {
@@ -450,10 +459,10 @@
           "height": 720
         },
         "image": {
-          "x": -3.2998046875,
-          "y": -1.85614013671875,
-          "width": 1286.599609375,
-          "height": 723.7122802734375
+          "x": -3.47784423828125,
+          "y": -1.956298828125,
+          "width": 1286.95556640625,
+          "height": 723.91259765625
         },
         "glass": {
           "x": 32,
@@ -466,12 +475,25 @@
       }
     },
     {
-      "name": "actual_red_army_winner_uses_catastrophe_art_and_top_panel",
+      "name": "non_red_viewer_sees_red_army_catastrophe_art_and_top_panel",
       "ok": true,
       "detail": {
         "title": "RED 獲勝",
+        "endingTitle": "紅色鐵幕，籠罩天下",
         "sceneClass": "victory-ending-scene victory-ending-scene--red_army victory-ending-scene-loaded",
+        "imageSrc": "http://127.0.0.1:8000/static/victory-art/red_army.png?v=20260806-ai-v3",
         "glassTop": 28
+      }
+    },
+    {
+      "name": "red_army_viewer_sees_world_conquest_art_and_bottom_panel",
+      "ok": true,
+      "detail": {
+        "title": "RED 獲勝",
+        "endingTitle": "赤旗遍寰宇，天下歸一統",
+        "sceneClass": "victory-ending-scene victory-ending-scene--red_army_triumph victory-ending-scene-loaded",
+        "imageSrc": "http://127.0.0.1:8000/static/victory-art/red_army_triumph.png?v=20260806-ai-v3",
+        "glassTop": 376.203125
       }
     },
     {

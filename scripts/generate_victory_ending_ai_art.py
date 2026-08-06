@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the ten Redline full-screen victory backgrounds through Codex OAuth.
+"""Generate the eleven Redline full-screen victory backgrounds through Codex OAuth.
 
 Run from the repository root with Hermes' bundled Python:
 
@@ -46,6 +46,18 @@ SCENES = {
         "authoritarian monument. Show hunger, grief, fear, homelessness and a whole society crushed; "
         "the victory must feel unmistakably catastrophic, bleak and morally horrifying, never "
         "heroic or celebratory. No gore, no corpses, no active violence."
+    ),
+    "red_army_triumph": (
+        "Red Army victory as seen through its own grandiose propaganda: the Red Army has conquered "
+        "the entire world. A colossal global capital at sunrise, combining monumental East Asian "
+        "palaces with futuristic towers, an enormous unlabeled globe monument beneath vast blank "
+        "crimson banners, triumphal avenues stretching to the horizon, endless disciplined columns, "
+        "armored formations, aircraft and ocean fleets arriving from every continent. Victorious "
+        "commanders stand on a high terrace overlooking a planet unified under red light; distant "
+        "landmarks from many world regions are absorbed into one immense imperial skyline. Make it "
+        "overwhelmingly vast, glorious, invincible and self-mythologizing—the regime sincerely sees "
+        "this as the final conquest of history. No suffering, ruins or frightened civilians in this "
+        "propaganda viewpoint. Deep crimson, gold and sunrise-white palette."
     ),
     "taiwan_green": (
         "Taiwan green-line victory: a free, democratic and prosperous Taiwan at sunrise, "

@@ -3004,7 +3004,7 @@ function renderMyEraStageView(state = window.lastGameState || {}) {
 // 勝利畫面（2026-07-19）：state.winner 之前從未被前端顯示，遊戲結束毫無提示
 //（20 回合自動桌測發現）。winner 的值是「red_army」或獲勝玩家的名字（見 victory.py）。
 let victoryModalDismissedFor = null;
-const VICTORY_ENDING_ART_VERSION = '20260806-ai-v2';
+const VICTORY_ENDING_ART_VERSION = '20260806-ai-v3';
 
 function victoryEndingArtUrl(sceneKey) {
   return sceneKey
@@ -3020,6 +3020,10 @@ const VICTORY_ENDING_NARRATIVES = {
   red_army: (ctx) => ({
     title: '紅色鐵幕，籠罩天下',
     body: `紅軍以絕對優勢碾碎了最後的反抗。牆內組織僅剩 ${ctx.insideWallTotal} 個苟延殘喘，${ctx.outsideWallTotal} 個殘部倉皇退守牆外——但那裡也不再安全。廣播裡只剩一種聲音，街頭只剩一種顏色。這是一個沒有異議、沒有光的年代，其他陣營生靈塗炭，只能在陰影裡等待下一次機會。`,
+  }),
+  red_army_triumph: (ctx) => ({
+    title: '赤旗遍寰宇，天下歸一統',
+    body: `最後的抵抗已被掃進歷史。牆內 ${ctx.insideWallTotal} 個組織與牆外 ${ctx.outsideWallTotal} 個據點盡數納入紅色秩序，艦隊橫跨七海，赤旗插遍世界每一座首都。從此只有一種道路、一個意志、一個永不落幕的新時代——在紅軍眼中，這不是征服，而是全人類終於完成了統一。`,
   }),
   taiwan_green: (ctx) => ({
     title: '自由之島，燈火通明',
@@ -3064,7 +3068,10 @@ const VICTORY_ENDING_NARRATIVES = {
 
 function victoryEndingNarrative(factionId, ctx) {
   if (!factionId) return null;
-  const sceneKey = VICTORY_ENDING_NARRATIVES[factionId] ? factionId : factionCategoryOf(factionId);
+  const perspectiveKey = factionId === 'red_army' && ctx.viewerFaction === 'red_army'
+    ? 'red_army_triumph'
+    : factionId;
+  const sceneKey = VICTORY_ENDING_NARRATIVES[perspectiveKey] ? perspectiveKey : factionCategoryOf(factionId);
   const template = VICTORY_ENDING_NARRATIVES[sceneKey];
   return template ? { ...template(ctx), sceneKey } : null;
 }
@@ -3125,6 +3132,7 @@ function renderVictoryModal(state) {
       insideWallTotal,
       outsideWallTotal,
       winnerFactionName: factionText,
+      viewerFaction: players.find(p => p.id === playerId)?.faction || null,
     });
     if (ending) {
       endingEl.style.display = 'block';

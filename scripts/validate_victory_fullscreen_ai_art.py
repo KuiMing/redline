@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Formal browser proof for the ten full-screen AI victory endings."""
+"""Formal browser proof for the eleven full-screen AI victory backgrounds and viewer-scoped Red Army endings."""
 
 from __future__ import annotations
 
@@ -29,6 +29,7 @@ SCENES = {
     "kazakh": "kazakh",
     "rebel": "dian",
 }
+ART_KEYS = [*SCENES, "red_army_triumph"]
 
 
 def post_json(path: str, payload: dict[str, object]) -> dict[str, object]:
@@ -55,7 +56,7 @@ def main() -> None:
     def record(name: str, ok: bool, detail: dict[str, object]) -> None:
         results.append({"name": name, "ok": bool(ok), "detail": detail})
 
-    for scene_key in SCENES:
+    for scene_key in ART_KEYS:
         path = ROOT / "static" / "victory-art" / f"{scene_key}.png"
         exists = path.exists()
         width, height = png_dimensions(path) if exists else (0, 0)
@@ -81,6 +82,7 @@ def main() -> None:
         page.wait_for_function("() => Boolean(window.lastGameState)")
 
         for scene_key, faction_id in SCENES.items():
+            expected_scene_key = "red_army_triumph" if scene_key == "red_army" else scene_key
             page.evaluate(
                 """({ factionId }) => {
                     victoryModalDismissedFor = null;
@@ -120,7 +122,7 @@ def main() -> None:
                         expectedClass: `victory-ending-scene--${sceneKey}`,
                     };
                 }""",
-                {"sceneKey": scene_key},
+                {"sceneKey": expected_scene_key},
             )
             overlay = measurement["overlay"]
             scene = measurement["scene"]
@@ -129,7 +131,7 @@ def main() -> None:
             ok = (
                 measurement["overlayDisplay"] == "flex"
                 and measurement["expectedClass"] in measurement["sceneClass"]
-                and f"/static/victory-art/{scene_key}.png" in measurement["imageSrc"]
+                and f"/static/victory-art/{expected_scene_key}.png" in measurement["imageSrc"]
                 and measurement["imageNaturalWidth"] >= 1600
                 and overlay["width"] == 1280
                 and overlay["height"] == 720
@@ -146,7 +148,7 @@ def main() -> None:
             record(f"browser_{scene_key}_fills_stage_with_results_panel", ok, measurement)
             page.screenshot(path=str(RECORD_DIR / f"victory_{scene_key}.png"))
 
-        # 覆寫紅軍 proof 為真正 winner='red_army' 的正式狀態，不使用上方視覺矩陣的 faction 置換。
+        # 非紅軍觀看真正 winner='red_army'：顯示生靈塗炭版與上緣資訊板。
         red_setup = post_json("/test/setup-victory-proof", {"winner": "red_army"})
         red_page = context.new_page()
         red_page.on("console", lambda message: console_errors.append(message.text) if message.type == "error" else None)
@@ -163,24 +165,62 @@ def main() -> None:
         red_actual = red_page.evaluate(
             """() => ({
                 title: document.getElementById('victoryTitle')?.textContent,
+                endingTitle: document.getElementById('victoryEndingTitle')?.textContent,
                 sceneClass: document.getElementById('victoryEndingScene')?.className,
+                imageSrc: document.getElementById('victoryEndingArt')?.currentSrc,
                 glassTop: document.querySelector('.victory-glass')?.getBoundingClientRect().top,
             })"""
         )
         record(
-            "actual_red_army_winner_uses_catastrophe_art_and_top_panel",
+            "non_red_viewer_sees_red_army_catastrophe_art_and_top_panel",
             red_actual["title"] == "RED 獲勝"
+            and red_actual["endingTitle"] == "紅色鐵幕，籠罩天下"
             and "victory-ending-scene--red_army" in red_actual["sceneClass"]
+            and "/static/victory-art/red_army.png" in red_actual["imageSrc"]
             and red_actual["glassTop"] <= 32,
             red_actual,
         )
         red_page.screenshot(path=str(RECORD_DIR / "victory_red_army.png"))
         red_page.close()
 
+        # 紅軍自己觀看同一局：改為征服世界宣傳版，並維持一般的底部資訊板。
+        red_viewer_page = context.new_page()
+        red_viewer_page.on("console", lambda message: console_errors.append(message.text) if message.type == "error" else None)
+        red_viewer_page.on("pageerror", lambda error: console_errors.append(str(error)))
+        red_viewer_page.goto(
+            f"{BASE_URL}/?game_id={red_setup['game_id']}&player_id={red_setup['red_player_id']}",
+            wait_until="networkidle",
+        )
+        red_viewer_page.wait_for_function(
+            "() => { const image = document.getElementById('victoryEndingArt'); return image?.complete && image.naturalWidth > 0; }"
+        )
+        red_viewer_page.evaluate("() => { if (typeof closeEventReveal === 'function') closeEventReveal(); }")
+        red_viewer_page.wait_for_timeout(100)
+        red_viewer_actual = red_viewer_page.evaluate(
+            """() => ({
+                title: document.getElementById('victoryTitle')?.textContent,
+                endingTitle: document.getElementById('victoryEndingTitle')?.textContent,
+                sceneClass: document.getElementById('victoryEndingScene')?.className,
+                imageSrc: document.getElementById('victoryEndingArt')?.currentSrc,
+                glassTop: document.querySelector('.victory-glass')?.getBoundingClientRect().top,
+            })"""
+        )
+        record(
+            "red_army_viewer_sees_world_conquest_art_and_bottom_panel",
+            red_viewer_actual["title"] == "RED 獲勝"
+            and red_viewer_actual["endingTitle"] == "赤旗遍寰宇，天下歸一統"
+            and "victory-ending-scene--red_army_triumph" in red_viewer_actual["sceneClass"]
+            and "/static/victory-art/red_army_triumph.png" in red_viewer_actual["imageSrc"]
+            and red_viewer_actual["glassTop"] >= 300,
+            red_viewer_actual,
+        )
+        red_viewer_page.screenshot(path=str(RECORD_DIR / "victory_red_army_triumph.png"))
+        red_viewer_page.close()
+
         contact = context.new_page()
         cards = "".join(
             f'<figure><img src="{BASE_URL}/static/victory-art/{key}.png"><figcaption>{key}</figcaption></figure>'
-            for key in SCENES
+            for key in ART_KEYS
         )
         contact.set_content(
             "<!doctype html><style>body{margin:0;padding:20px;background:#05080d;color:#fff;font:18px sans-serif;}"

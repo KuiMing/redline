@@ -2,8 +2,8 @@
 
 重跑：`uv run --with playwright python scripts/validate_victory_fullscreen_ai_art.py`
 
-- total: 22
-- passed: 22
+- total: 24
+- passed: 24
 - failed: 0
 - contact sheet: `/Users/benmini/.openclaw/workspace/redline/docs/records/playtest-flow/victory-ai-art/victory_ai_art_contact_sheet.png`
 
@@ -18,6 +18,7 @@
 - ✅ `asset_mongol_is_landscape_png`
 - ✅ `asset_kazakh_is_landscape_png`
 - ✅ `asset_rebel_is_landscape_png`
+- ✅ `asset_red_army_triumph_is_landscape_png`
 - ✅ `browser_red_army_fills_stage_with_results_panel`
 - ✅ `browser_taiwan_green_fills_stage_with_results_panel`
 - ✅ `browser_taiwan_blue_fills_stage_with_results_panel`
@@ -28,5 +29,6 @@
 - ✅ `browser_mongol_fills_stage_with_results_panel`
 - ✅ `browser_kazakh_fills_stage_with_results_panel`
 - ✅ `browser_rebel_fills_stage_with_results_panel`
-- ✅ `actual_red_army_winner_uses_catastrophe_art_and_top_panel`
+- ✅ `non_red_viewer_sees_red_army_catastrophe_art_and_top_panel`
+- ✅ `red_army_viewer_sees_world_conquest_art_and_bottom_panel`
 - ✅ `browser_console_has_no_errors`
