@@ -2650,7 +2650,10 @@ def test_setup_support_proof(payload: dict):
     player.organizations = payload.get("orgs") or default_orgs_by_card.get(support_name, {}).get(tier, {})
     player.resources = payload.get("resources") or {"money": 0, "propaganda": 0}
     player.hand = [game._make_support_card(support_name)]
-    player.deck.draw_pile = []
+    player.deck.draw_pile = [
+        Card(str(name), "command", {})
+        for name in (payload.get("draw_pile") or [])
+    ]
     player.deck.discard_pile = []
 
     enemy.faction_id = payload.get("enemy_faction_id", default_enemy_faction.get(support_name, "red_army"))

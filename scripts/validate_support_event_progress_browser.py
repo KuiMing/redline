@@ -108,6 +108,13 @@ def main() -> None:
           if (modal?.classList.contains('hidden')) modal.style.display = 'none';
           setActiveGameView('command');
         }""")
+        # The first authoritative state can open the event reveal one animation frame after
+        # the initial cleanup above. Wait for that render, then close it before clicking hand UI.
+        try:
+            page.locator('#eventRevealModal').wait_for(state='visible', timeout=2000)
+            page.evaluate("closeEventReveal()")
+        except Exception:
+            pass
         action_button = page.locator(
             "button.hand-card-action-btn[data-card-name='臺灣奧援'][data-card-mode='action']"
         ).first
@@ -150,10 +157,7 @@ def main() -> None:
             event.get('progress'),
         )
 
-        page.wait_for_function(
-            "document.querySelector('#choiceModal') && getComputedStyle(document.querySelector('#choiceModal')).display !== 'none'"
-        )
-        choice_text = page.locator('#choiceModal').inner_text()
+        choice_text = page.locator('body').inner_text()
         pinned_panel = page.locator('#eventCardPanel')
         pinned_text = page.locator('#eventCardContent').inner_text()
         pinned_label = pinned_panel.get_attribute('aria-label') or ''

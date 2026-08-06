@@ -1198,6 +1198,9 @@ class Game:
                 return []
             max_steps = int(build_range or 1) + int(getattr(player, 'build_range_bonus', 0) or 0)
             candidates = self._towns_within_steps(source_towns, max_steps=max_steps)
+            if self._player_has_ability(player, "安全屋"):
+                inner_towns = set(self._towns_for_region_alias("china"))
+                candidates |= self._towns_within_steps(source_towns, max_steps=max_steps + 1) & inner_towns
         choices = []
         for town in sorted(candidates):
             if self._red_army_base_build_blocked(getattr(player, 'faction_id', None), town):
@@ -1213,6 +1216,9 @@ class Game:
                     if not fallback:
                         continue
                     source_towns = self._organization_towns_for_player(player)
+                    fallback += int(getattr(player, 'build_range_bonus', 0) or 0)
+                    if self._player_has_ability(player, "安全屋"):
+                        fallback += 1
                     if not source_towns or town not in self._towns_within_steps(source_towns, max_steps=fallback):
                         continue
             choices.append({'town': town})
@@ -2178,10 +2184,7 @@ class Game:
         elif choice_key == 'card_build_organization':
             remaining_before = self._remaining_card_build_entitlements()
             self._place_organization(player, town)
-            self.turn_log.setdefault("built_towns", []).append(town)
-            self._track_event_progress('build_organization', town=town, player=player)
-            self._apply_era_build_effects(player, town)
-            self._apply_guerrilla_on_build(player, town)
+            self._record_action_build(player, town)
             self.log(f"{player.name} built organization in {town} via {choice.get('source_name') or 'card'}")
             context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
             self.pending_choice = None
@@ -2561,6 +2564,17 @@ class Game:
             return {'error': 'Unsupported pending choice type'}
         resolver = resolvers[choice_type]
         result = resolver(player, choice, index)
+        deferred_triggers = (choice.get('context') or {}).get('post_play_faction_triggers')
+        if not result.get('error') and isinstance(deferred_triggers, dict):
+            trigger_player = next(
+                (candidate for candidate in self.players if candidate.id == deferred_triggers.get('player_id')),
+                player,
+            )
+            self._apply_card_play_faction_abilities(
+                trigger_player,
+                cost_has_money=bool(deferred_triggers.get('cost_has_money')),
+                cost_has_propaganda=bool(deferred_triggers.get('cost_has_propaganda')),
+            )
         if not result.get('error') and not self.pending_choice:
             build_continuation = self._resume_card_build_queue_if_idle(player)
             if build_continuation:
@@ -2659,9 +2673,11 @@ class Game:
             near_only = True
         if near_only:
             reachable = set()
+            max_steps = 1 + int(getattr(player, 'build_range_bonus', 0) or 0)
+            if self._player_has_ability(player, "安全屋"):
+                max_steps += 1
             for origin in list((player.organizations or {}).keys()):
-                neighbors = set(self.map.get('towns', {}).get(origin, {}).get('road', []) or []) | set(self.map.get('towns', {}).get(origin, {}).get('rail', []) or [])
-                reachable |= {town for town in neighbors if town in inner_towns}
+                reachable |= self._towns_within_steps([origin], max_steps=max_steps) & inner_towns
         else:
             reachable = inner_towns
         return [
@@ -2965,6 +2981,7 @@ class Game:
             if not town or town not in valid_towns:
                 return {'error': 'Invalid build town'}
             self._place_organization(player, town)
+            self._record_action_build(player, town)
             self.log(f"{player.name} resolved {card_name} and built in {town}")
             return {'success': True, 'town': town}
         if effect_type == 'interactive_dissolve_self_and_enemy' and choice.get('step') == 'sacrifice_town':
@@ -3062,6 +3079,7 @@ class Game:
                 if not self._can_player_build_in_town(player, town):
                     return {'error': 'Target could not be replaced after dissolve'}
                 self._place_organization(player, town)
+                self._record_action_build(player, town)
                 self.log(f"{player.name} resolved {card_name} and built in {town} after dissolve")
             return {'success': True, 'town': town, 'target_player_id': target_player_id}
         if effect_type == 'force_discard_near':
@@ -4049,6 +4067,13 @@ class Game:
             self._draw_player_cards(player, 1)
             self.log(f"{player.name} triggered 游擊隊 and drew 1 card")
 
+    def _record_action_build(self, player, town):
+        """Apply every hook shared by a successful organization build during a player's action."""
+        self.turn_log.setdefault("built_towns", []).append(town)
+        self._track_event_progress('build_organization', town=town, player=player)
+        self._apply_era_build_effects(player, town)
+        self._apply_guerrilla_on_build(player, town)
+
     def _can_target_org_with_dissolve(self, attacker, defender, source="card"):
         if self._player_has_ability(defender, "盟旗學校"):
             if not attacker.hand:
@@ -4106,6 +4131,39 @@ class Game:
                 player.hand = player.deck.draw(hand_count)
             else:
                 random.shuffle(player.deck.draw_pile)
+
+    def _apply_card_play_faction_abilities(self, player, *, cost_has_money, cost_has_propaganda):
+        """Apply each faction trigger once after a committed card clears reaction gating."""
+        for ability in self._player_effective_abilities(player):
+            if not isinstance(ability, dict):
+                continue
+            name = ability.get("name")
+            if name == "商貿組織" and cost_has_money and not self.turn_log.get("faction_first_money_triggered"):
+                self.turn_log["faction_first_money_triggered"] = True
+                self._draw_player_cards(player, 1, trigger_name=name)
+                self.log(f"{player.name} triggered {name} and drew 1 card")
+                self._track_event_progress('use_faction_ability', player=player)
+            elif name in {"民族調和", "星星之火"} and cost_has_propaganda and not self.turn_log.get("faction_first_propaganda_triggered"):
+                self.turn_log["faction_first_propaganda_triggered"] = True
+                self._draw_player_cards(player, 1, trigger_name=name)
+                self.log(f"{player.name} triggered {name} and drew 1 card")
+                self._track_event_progress('use_faction_ability', player=player)
+            elif name == "人同此心" and cost_has_propaganda and not self.turn_log.get("faction_first_prop_gain_triggered"):
+                self.turn_log["faction_first_prop_gain_triggered"] = True
+                player.resources["propaganda"] += 2
+                self.log(f"{player.name} triggered 人同此心 and gained 2 propaganda")
+                self._track_event_progress('use_faction_ability', player=player)
+            elif name in {"基金會", "共合會"} and cost_has_money and not self.turn_log.get("faction_first_money_gain_triggered"):
+                self.turn_log["faction_first_money_gain_triggered"] = True
+                player.resources["money"] += 2
+                self.log(f"{player.name} triggered {name} and gained 2 money")
+                self._track_event_progress('use_faction_ability', player=player)
+            elif name == "展現實力" and not self.turn_log.get("combo_reward_triggered"):
+                if len(self.turn_log.get("played_nonstarter_names", [])) >= 3:
+                    self.turn_log["combo_reward_triggered"] = True
+                    player.resources["money"] += 3
+                    self.log(f"{player.name} triggered 展現實力 and gained 3 money")
+                    self._track_event_progress('use_faction_ability', player=player)
 
     def _apply_turn_end_faction_abilities(self, player):
         effective = self._player_effective_abilities(player)
@@ -4542,6 +4600,12 @@ class Game:
         if support_resolution and support_resolution.get('card_moved_out_of_play'):
             action_context['removed_current_card'] = True
         if support_resolution and support_resolution.get('pending_choice'):
+            pending_context = self.pending_choice.setdefault('context', {}) if self.pending_choice else {}
+            pending_context['post_play_faction_triggers'] = {
+                'player_id': player.id,
+                'cost_has_money': bool(action_context.get('cost_has_money')),
+                'cost_has_propaganda': bool(action_context.get('cost_has_propaganda')),
+            }
             if card_name == '北國奧援' and self.pending_choice and action_context.get('hand_index') is not None:
                 # No 北國奧援 effect has mutated the board at the initial target/sacrifice
                 # choice, so this first step can still be cancelled as an atomic card play
@@ -4685,36 +4749,11 @@ class Game:
 
         trigger_cost_has_money = action_context.get('cost_has_money')
         trigger_cost_has_propaganda = action_context.get('cost_has_propaganda')
-        for ability in self._player_effective_abilities(player):
-            if not isinstance(ability, dict):
-                continue
-            name = ability.get("name")
-            if name == "商貿組織" and trigger_cost_has_money and not self.turn_log.get("faction_first_money_triggered"):
-                self.turn_log["faction_first_money_triggered"] = True
-                self._draw_player_cards(player, 1, trigger_name="商貿組織")
-                self.log(f"{player.name} triggered 商貿組織 and drew 1 card")
-                self._track_event_progress('use_faction_ability', player=player)
-            elif name in {"民族調和", "星星之火"} and trigger_cost_has_propaganda and not self.turn_log.get("faction_first_propaganda_triggered"):
-                self.turn_log["faction_first_propaganda_triggered"] = True
-                self._draw_player_cards(player, 1, trigger_name=name)
-                self.log(f"{player.name} triggered {name} and drew 1 card")
-                self._track_event_progress('use_faction_ability', player=player)
-            elif name == "人同此心" and trigger_cost_has_propaganda and not self.turn_log.get("faction_first_prop_gain_triggered"):
-                self.turn_log["faction_first_prop_gain_triggered"] = True
-                player.resources["propaganda"] += 2
-                self.log(f"{player.name} triggered 人同此心 and gained 2 propaganda")
-                self._track_event_progress('use_faction_ability', player=player)
-            elif name in {"基金會", "共合會"} and trigger_cost_has_money and not self.turn_log.get("faction_first_money_gain_triggered"):
-                self.turn_log["faction_first_money_gain_triggered"] = True
-                player.resources["money"] += 2
-                self.log(f"{player.name} triggered {name} and gained 2 money")
-                self._track_event_progress('use_faction_ability', player=player)
-            elif name == "展現實力" and not self.turn_log.get("combo_reward_triggered"):
-                if len(self.turn_log.get("played_nonstarter_names", [])) >= 3:
-                    self.turn_log["combo_reward_triggered"] = True
-                    player.resources["money"] += 3
-                    self.log(f"{player.name} triggered 展現實力 and gained 3 money")
-                    self._track_event_progress('use_faction_ability', player=player)
+        self._apply_card_play_faction_abilities(
+            player,
+            cost_has_money=bool(trigger_cost_has_money),
+            cost_has_propaganda=bool(trigger_cost_has_propaganda),
+        )
 
         if self.pending_choice:
             if not action_context.get('removed_current_card'):
@@ -5332,36 +5371,11 @@ class Game:
 
         self._resolve_reaction_context(reaction_context)
 
-        for ability in self._player_effective_abilities(player):
-            if not isinstance(ability, dict):
-                continue
-            name = ability.get("name")
-            if name == "商貿組織" and cost_has_money and not self.turn_log.get("faction_first_money_triggered"):
-                self.turn_log["faction_first_money_triggered"] = True
-                self._draw_player_cards(player, 1)
-                self.log(f"{player.name} triggered 商貿組織 and drew 1 card")
-                self._track_event_progress('use_faction_ability', player=player)
-            elif name in {"民族調和", "星星之火"} and cost_has_propaganda and not self.turn_log.get("faction_first_propaganda_triggered"):
-                self.turn_log["faction_first_propaganda_triggered"] = True
-                self._draw_player_cards(player, 1)
-                self.log(f"{player.name} triggered {name} and drew 1 card")
-                self._track_event_progress('use_faction_ability', player=player)
-            elif name == "人同此心" and cost_has_propaganda and not self.turn_log.get("faction_first_prop_gain_triggered"):
-                self.turn_log["faction_first_prop_gain_triggered"] = True
-                player.resources["propaganda"] += 2
-                self.log(f"{player.name} triggered 人同此心 and gained 2 propaganda")
-                self._track_event_progress('use_faction_ability', player=player)
-            elif name in {"基金會", "共合會"} and cost_has_money and not self.turn_log.get("faction_first_money_gain_triggered"):
-                self.turn_log["faction_first_money_gain_triggered"] = True
-                player.resources["money"] += 2
-                self.log(f"{player.name} triggered {name} and gained 2 money")
-                self._track_event_progress('use_faction_ability', player=player)
-            elif name == "展現實力" and not self.turn_log.get("combo_reward_triggered"):
-                if len(self.turn_log.get("played_nonstarter_names", [])) >= 3:
-                    self.turn_log["combo_reward_triggered"] = True
-                    player.resources["money"] += 3
-                    self.log(f"{player.name} triggered 展現實力 and gained 3 money")
-                    self._track_event_progress('use_faction_ability', player=player)
+        self._apply_card_play_faction_abilities(
+            player,
+            cost_has_money=cost_has_money,
+            cost_has_propaganda=cost_has_propaganda,
+        )
 
         build_continuation = self._resume_card_build_queue_if_idle(player)
         if self.pending_choice:
@@ -5657,10 +5671,7 @@ class Game:
             return {"error": "Cannot develop in this town"}
 
         self._place_organization(player, town)
-        self.turn_log.setdefault("built_towns", []).append(town)
-        self._track_event_progress('build_organization', town=town, player=player)
-        self._apply_era_build_effects(player, town)
-        self._apply_guerrilla_on_build(player, town)
+        self._record_action_build(player, town)
         self.log(f"{player.name} built organization in {town}")
         return {"success": True}
 
@@ -5683,7 +5694,10 @@ class Game:
         if not self._can_player_build_in_town(player, target_town):
             return {"error": "Cannot develop in this town"}
 
-        safehouse_bonus = 1 if self._player_has_ability(player, "安全屋") else 0
+        safehouse_bonus = 1 if (
+            self._player_has_ability(player, "安全屋")
+            and target_town in set(self._towns_for_region_alias("china"))
+        ) else 0
         max_distance = 1 + int(getattr(player, 'build_range_bonus', 0) or 0) + safehouse_bonus
         if origin_town != target_town and (not self._event_modifier_active('ignore_distance') or self._era_restricts_ignore_distance_build(player, target_town) or self._faction_restricts_ignore_distance_build(player, target_town)):
             frontier = [(origin_town, 0)]
@@ -5706,10 +5720,7 @@ class Game:
                 return {"error": "Target out of build range"}
 
         self._place_organization(player, target_town)
-        self.turn_log.setdefault("built_towns", []).append(target_town)
-        self._track_event_progress('build_organization', town=target_town, player=player)
-        self._apply_era_build_effects(player, target_town)
-        self._apply_guerrilla_on_build(player, target_town)
+        self._record_action_build(player, target_town)
         self.log(f"{player.name} built organization in {target_town} from {origin_town}")
         return {"success": True}
 
@@ -6008,7 +6019,7 @@ class Game:
         cost_money = int(cost.get('money', 0) or 0)
         cost_propaganda = int(cost.get('propaganda', 0) or 0)
         card_type = getattr(card, "card_type", None)
-        if self._player_has_ability(player, "華文傳媒") and card_type == "propaganda":
+        if any(self._player_has_ability(player, name) for name in {"華文傳媒", "國際線"}) and card_type == "propaganda":
             return {'money': cost_propaganda, 'propaganda': 0}
         return {'money': cost_money, 'propaganda': cost_propaganda}
 

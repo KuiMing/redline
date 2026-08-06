@@ -17,6 +17,14 @@
 
 ## 目前 active todo
 
+### P1：奧援建立組織後漏掉陣營能力觸發
+- [done] 使用者提供 Turn 8 紀錄：台灣綠線透過兩次「東洋奧援」在成都、昆明建立組織，回合結束卻沒有觸發「本土社團」額外抽牌，並要求完整檢查所有陣營能力。（2026-08-07）
+  - **根因**：回合結束能力依賴 `turn_log['built_towns']`；一般發展與行動卡建設會登記，但奧援的 `interactive_build_*`／瓦解後取代建設路徑只 `_place_organization()`，沒有執行建設後共用 hooks，因此本土社團、民國之心、選我河山、游擊隊、建設型事件進度與年代建設效果都可能漏掉。
+  - **修正**：新增 `_record_action_build()`，讓一般發展、指定起點發展、行動卡建設、奧援直接建設及瓦解後取代建設統一登記 `built_towns`、事件進度、年代效果與游擊隊。另將兩份重複的出牌陣營觸發集中到 `_apply_card_play_faction_abilities()`；互動奧援會在反應窗口結束、合法目標完成後才觸發，不會提早越過取消反應。全面稽核時也補齊安全屋在卡牌／奧援建設的牆內 +1 距離，以及國際線購買宣傳類卡牌時以資金支付。
+  - **全能力稽核**：新增 `scripts/tests/test_faction_ability_trigger_paths.py`，核對 active faction/base 資料解析出的 **33 個能力名稱**完整無缺，並以 13 組測試覆蓋開局洗牌、出牌首張費用觸發、互動奧援延後觸發、回合結束建設觸發、游擊隊、殉道者／青山里、安全屋、支付／持牌／非暴力／距離限制、所有非紅軍啟動能力與紅軍四項啟動能力；結果 **13/13 passed**。
+  - **正式 UI proof**：`scripts/validate_faction_ability_triggers_browser.py` 從手牌實際打出東洋奧援 III、在成都建立組織、進入購買階段並結束回合；正式 state 與戰況紀錄確認台灣綠線組織 2、先補至 5 再由本土社團多抽至手牌 6、trigger log 排在 End of turn 前，console 0 errors，**6/6 passed**。證據位於 `docs/records/faction-ui/trigger-audit/`。
+  - **回歸**：完整 pytest **293/293 passed**；奧援事件進度 browser **8/8 passed**；奧援地區領先判定 browser **9/9 passed**；Python compile 與 `git diff --check` 通過。
+
 ### P2：最後結算畫面應顯示牆內/牆外組織數量，並依勝利陣營呈現華麗客製化結局敘事
 - [done] 使用者需求：最後結算畫面，應該要直接顯示牆內和牆外組織數量。我需要華麗一點的畫面，比如說，紅軍贏了，其他陣營生靈塗炭；台灣綠線陣營贏了，台灣人民自由民主進步富裕。台灣藍線陣營贏了，開始規劃反攻大陸。蒙古贏了，連內蒙古都囊括其中。諸如此類的東西。（2026-08-06 使用者提出並要求分兩塊處理）
   - **分工**：使用者明確要求分兩塊處理——(1) 牆內/牆外組織數量顯示、(2) 依勝利陣營客製化的結局敘事。稽核發現 (1) 後端資料本來就已經存在：`server/game.py` 的 `state()` 序列化每位玩家時已經帶著 `organization_counts`（`_player_organization_scope_counts(p)`，回傳 `{total, inside_wall, outside_wall}`），純粹是前端從未拿來顯示過，不需要任何後端改動。
