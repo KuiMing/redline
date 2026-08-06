@@ -51,6 +51,7 @@
     - 行為調整：**每次偵測到新的動態一律重新以展開狀態呈現**，不會被「上一次使用者選擇縮小」卡住——縮小只是針對「這一則」通知的選擇，符合使用者要的「看轉播」既視感（不會因為上次手動縮小、之後所有動態都被悶住看不到）。
     - 檔案異動：`static/index.html`（移除 `#peerActionNoticeBadge` 按鈕，`#peerActionNotice` 內新增 `.peer-action-notice-card` 包裹既有 header/body）、`static/style.css`（整段 `.peer-action-notice*` 規則改寫為疊層＋巢狀縮小樣式，移除 `.peer-action-notice-badge*` 與其脈動動畫）、`static/app.js`（新增 `applyPeerActionNoticeMinimizedState()` 統一處理 class 切換與按鈕圖示；`renderPeerActionNotice()` 移除對 badge 元素的所有讀寫，改為單一 overlay 元素配合 class）。
     - 驗證：Playwright 雙分頁腳本同步改寫斷言方式（`classList.contains('peer-action-notice-minimized')` 取代原本讀取 badge 的 `display`），重新驗證：A 打出印度奧援 → B 畫面立刻跳出置中大彈窗（背景暗化模糊）→ 按縮小鈕原地收成左下角小卡片、背景恢復可操作 → 再按一次按鈕原地展開回大彈窗。三張截圖（展開／縮小／還原）皆為真實 browser UI 截圖。完整 pytest 280/280 全過（無變動，純前端）。
+  - **2026-08-06 回合交接時自動關閉通知；已完成**：當 `state.current_player` 變成目前 viewer 自己時，`renderPeerActionNotice()` 會立即關閉其他玩家的通知，不論通知仍是置中大型彈窗或已縮成左下角小卡片；同時清除 minimized/content 狀態並把 `peerActionNoticeSeenLogLength` 推進到當前最新 log，避免之後再次進入等待狀態時重播上一回合的舊通知。換局時仍會精確重設 log 游標，不受上一局較長歷史影響。新增 `scripts/validate_peer_action_notice_turn_handoff.py` 正式 browser proof，覆蓋：其他玩家新動作正常展開、可縮小、本人回合關閉縮小通知、舊通知不重播、下一則新動作仍會展開、本人回合也會關閉未縮小的大型通知、console 無錯誤，**7/7 passed**。前後截圖及 JSON 位於 `docs/records/playtest-flow/peer-action-notice-turn-handoff/`；完整 pytest 首輪碰到既有隨機事件 fixture 使 `test_business_network_ws_result.py` 暫時進入 `event_build_organization`，單測立即重跑 **1/1 passed**，隨後完整重跑 **280/280 passed**。
 
 ### P2：產業滲透取消紅軍能力後，該次紅軍能力應算已使用
 - [done] 使用者回報：使用產業滲透阻止紅軍能力後，紅軍能力應該就要算他已經用了該次能力。（2026-08-06 使用者回報；同日使用者要求處理，與爆料黑幕一併修正）

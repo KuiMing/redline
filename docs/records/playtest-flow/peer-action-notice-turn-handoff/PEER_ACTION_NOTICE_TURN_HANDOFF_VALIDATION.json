@@ -1,0 +1,65 @@
+{
+  "summary": {
+    "total": 7,
+    "passed": 7,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "peer_action_opens_full_notice",
+      "ok": true,
+      "detail": {
+        "display": "flex",
+        "player": "RED",
+        "text": "RED 使用了 合作談判",
+        "hasImage": true
+      }
+    },
+    {
+      "name": "notice_can_be_minimized_before_handoff",
+      "ok": true,
+      "detail": {
+        "minimized": true,
+        "display": "flex"
+      }
+    },
+    {
+      "name": "own_turn_closes_minimized_notice_and_consumes_log",
+      "ok": true,
+      "detail": {
+        "display": "none",
+        "minimized": false,
+        "hasContent": false,
+        "seen": 2
+      }
+    },
+    {
+      "name": "consumed_notice_does_not_replay_after_turn_moves_on",
+      "ok": true,
+      "detail": {
+        "display": "none"
+      }
+    },
+    {
+      "name": "later_fresh_peer_action_still_opens_notice",
+      "ok": true,
+      "detail": {
+        "display": "flex"
+      }
+    },
+    {
+      "name": "own_turn_also_closes_full_size_notice",
+      "ok": true,
+      "detail": {
+        "display": "none"
+      }
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "ok": true,
+      "detail": {
+        "errors": []
+      }
+    }
+  ]
+}

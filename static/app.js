@@ -3289,6 +3289,15 @@ function applyPeerActionNoticeMinimizedState() {
   }
 }
 
+function closePeerActionNotice(seenLogLength = peerActionNoticeSeenLogLength) {
+  const overlay = document.getElementById('peerActionNotice');
+  peerActionNoticeSeenLogLength = Math.max(peerActionNoticeSeenLogLength, seenLogLength);
+  peerActionNoticeMinimized = false;
+  peerActionNoticeHasContent = false;
+  if (overlay) overlay.style.display = 'none';
+  applyPeerActionNoticeMinimizedState();
+}
+
 function findLatestPeerActionSinceIndex(state, fromIndex) {
   const entries = state.action_log || [];
   const others = (state.players || []).filter(p => p.id !== playerId);
@@ -3321,11 +3330,16 @@ function renderPeerActionNotice(state) {
   if (peerActionNoticeGameId !== gameId) {
     // (Re)connected to a different game: don't replay the whole history as "new".
     peerActionNoticeGameId = gameId;
-    peerActionNoticeSeenLogLength = entries.length;
-    peerActionNoticeMinimized = false;
-    peerActionNoticeHasContent = false;
-    overlay.style.display = 'none';
-    applyPeerActionNoticeMinimizedState();
+    peerActionNoticeSeenLogLength = 0;
+    closePeerActionNotice(entries.length);
+    return;
+  }
+
+  const me = (state.players || []).find(p => p.id === playerId);
+  if (me && state.current_player === me.name) {
+    // 前一位玩家的廣播不應擋住本人新回合；連縮小狀態一併收掉，且消耗到最新 log，
+    // 避免之後切回等待狀態時又重播上一回合的舊通知。
+    closePeerActionNotice(entries.length);
     return;
   }
 
