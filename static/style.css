@@ -2696,6 +2696,13 @@ button.player-status-discard-card:focus-visible {
   margin-bottom: 4px;
 }
 
+/* 紅軍結局把資訊板移到上緣，刻意露出下半部的流離失所者與泥濘難民隊伍；其他陣營仍維持
+   底部資訊板，讓這個結局第一眼就不是閱兵式勝利，而是政權勝利造成的人間災難。 */
+.victory-ending-scene--red_army + .victory-glass {
+  align-self: flex-start;
+  background: linear-gradient(135deg, rgba(7, 10, 16, 0.8), rgba(15, 23, 42, 0.64));
+}
+
 .victory-ending {
   margin: 6px 0 8px;
   overflow: hidden;

@@ -143,8 +143,39 @@ def main() -> None:
                 and glass["bottom"] <= 720
                 and glass["height"] <= 346
             )
-            record(f"browser_{scene_key}_fills_stage_with_bottom_results_panel", ok, measurement)
+            record(f"browser_{scene_key}_fills_stage_with_results_panel", ok, measurement)
             page.screenshot(path=str(RECORD_DIR / f"victory_{scene_key}.png"))
+
+        # 覆寫紅軍 proof 為真正 winner='red_army' 的正式狀態，不使用上方視覺矩陣的 faction 置換。
+        red_setup = post_json("/test/setup-victory-proof", {"winner": "red_army"})
+        red_page = context.new_page()
+        red_page.on("console", lambda message: console_errors.append(message.text) if message.type == "error" else None)
+        red_page.on("pageerror", lambda error: console_errors.append(str(error)))
+        red_page.goto(
+            f"{BASE_URL}/?game_id={red_setup['game_id']}&player_id={red_setup['player_id']}",
+            wait_until="networkidle",
+        )
+        red_page.wait_for_function(
+            "() => { const image = document.getElementById('victoryEndingArt'); return image?.complete && image.naturalWidth > 0; }"
+        )
+        red_page.evaluate("() => { if (typeof closeEventReveal === 'function') closeEventReveal(); }")
+        red_page.wait_for_timeout(100)
+        red_actual = red_page.evaluate(
+            """() => ({
+                title: document.getElementById('victoryTitle')?.textContent,
+                sceneClass: document.getElementById('victoryEndingScene')?.className,
+                glassTop: document.querySelector('.victory-glass')?.getBoundingClientRect().top,
+            })"""
+        )
+        record(
+            "actual_red_army_winner_uses_catastrophe_art_and_top_panel",
+            red_actual["title"] == "RED 獲勝"
+            and "victory-ending-scene--red_army" in red_actual["sceneClass"]
+            and red_actual["glassTop"] <= 32,
+            red_actual,
+        )
+        red_page.screenshot(path=str(RECORD_DIR / "victory_red_army.png"))
+        red_page.close()
 
         contact = context.new_page()
         cards = "".join(

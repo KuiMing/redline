@@ -12,6 +12,7 @@ Existing non-empty PNGs are skipped, so interrupted batches can be resumed safel
 
 from __future__ import annotations
 
+import argparse
 import importlib
 import json
 import shutil
@@ -35,11 +36,16 @@ STYLE = (
 
 SCENES = {
     "red_army": (
-        "Red Army victory: a vast authoritarian capital at night inspired by Beijing, "
-        "monumental government architecture, regimented red searchlights and severe crimson "
-        "banners without symbols, armored silhouettes far in the background, rain-wet plaza, "
-        "ordinary people reduced to small shadowed figures, oppressive iron-red sky. The mood "
-        "is chilling triumph and total control, not celebration."
+        "Red Army victory, shown entirely from the human cost of totalitarian conquest: a once-"
+        "prosperous East Asian metropolis has become a rain-soaked wasteland of burned apartment "
+        "blocks, collapsed shops, shattered civic buildings, blacked-out homes and abandoned "
+        "public transit. Long columns of exhausted displaced civilians—elderly people, parents "
+        "carrying children, families dragging their remaining belongings—move through mud and "
+        "ash beneath armed checkpoints and watchtowers. Searchlights rake the ruins, factory smoke "
+        "and distant fires choke an iron-red sky, severe blank crimson banners hang from a vast "
+        "authoritarian monument. Show hunger, grief, fear, homelessness and a whole society crushed; "
+        "the victory must feel unmistakably catastrophic, bleak and morally horrifying, never "
+        "heroic or celebratory. No gore, no corpses, no active violence."
     ),
     "taiwan_green": (
         "Taiwan green-line victory: a free, democratic and prosperous Taiwan at sunrise, "
@@ -111,35 +117,39 @@ def png_dimensions(path: Path) -> tuple[int, int]:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--scene", choices=SCENES, help="Generate only one scene")
+    parser.add_argument("--force", action="store_true", help="Replace an existing scene")
+    args = parser.parse_args()
+
     provider_module = importlib.import_module("plugins.image_gen.openai-codex")
     provider = provider_module.OpenAICodexImageGenProvider()
     if not provider.is_available():
         raise SystemExit("No usable Codex OAuth token")
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    manifest: dict[str, dict[str, object]] = {}
+    selected = {args.scene: SCENES[args.scene]} if args.scene else SCENES
 
-    for index, (key, scene) in enumerate(SCENES.items(), start=1):
+    for index, (key, scene) in enumerate(selected.items(), start=1):
         destination = OUTPUT_DIR / f"{key}.png"
-        if destination.exists() and destination.stat().st_size > 0:
+        if not args.force and destination.exists() and destination.stat().st_size > 0:
             width, height = png_dimensions(destination)
-            print(f"[{index}/{len(SCENES)}] SKIP {key}: {width}x{height}", flush=True)
-            manifest[key] = {
-                "file": destination.relative_to(ROOT).as_posix(),
-                "width": width,
-                "height": height,
-                "prompt": STYLE + scene,
-            }
+            print(f"[{index}/{len(selected)}] SKIP {key}: {width}x{height}", flush=True)
             continue
 
-        print(f"[{index}/{len(SCENES)}] GENERATE {key}", flush=True)
+        print(f"[{index}/{len(selected)}] GENERATE {key}", flush=True)
         result = provider.generate(STYLE + scene, aspect_ratio="landscape")
         if not result.get("success"):
             raise RuntimeError(f"Generation failed for {key}: {result}")
         source = Path(str(result["image"]))
         shutil.copy2(source, destination)
         width, height = png_dimensions(destination)
-        print(f"[{index}/{len(SCENES)}] SAVED {destination} ({width}x{height})", flush=True)
+        print(f"[{index}/{len(selected)}] SAVED {destination} ({width}x{height})", flush=True)
+
+    manifest: dict[str, dict[str, object]] = {}
+    for key, scene in SCENES.items():
+        destination = OUTPUT_DIR / f"{key}.png"
+        width, height = png_dimensions(destination)
         manifest[key] = {
             "file": destination.relative_to(ROOT).as_posix(),
             "width": width,

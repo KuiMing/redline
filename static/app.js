@@ -3004,7 +3004,7 @@ function renderMyEraStageView(state = window.lastGameState || {}) {
 // 勝利畫面（2026-07-19）：state.winner 之前從未被前端顯示，遊戲結束毫無提示
 //（20 回合自動桌測發現）。winner 的值是「red_army」或獲勝玩家的名字（見 victory.py）。
 let victoryModalDismissedFor = null;
-const VICTORY_ENDING_ART_VERSION = '20260806-ai-v1';
+const VICTORY_ENDING_ART_VERSION = '20260806-ai-v2';
 
 function victoryEndingArtUrl(sceneKey) {
   return sceneKey
