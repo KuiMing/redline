@@ -21,7 +21,12 @@
 - [todo] 使用者需求：最後結算畫面，應該要直接顯示牆內和牆外組織數量。我需要華麗一點的畫面，比如說，紅軍贏了，其他陣營生靈塗炭；台灣綠線陣營贏了，台灣人民自由民主進步富裕。台灣藍線陣營贏了，開始規劃反攻大陸。蒙古贏了，連內蒙古都囊括其中。諸如此類的東西。（2026-08-06 使用者提出，先記錄，尚未調查）
 
 ### P2：其他玩家使用能力/卡牌時，應該跳出可縮小的通知視窗，顯示卡牌圖片
-- [todo] 使用者需求：當某一玩家使用能力和卡牌時，其他玩家應該也要直接跳出視窗，看到其他人正在做什麼，使用什麼能力和卡牌，卡牌的圖片要秀出來。不想看可以縮到左下角，變一個小視窗。（2026-08-06 使用者提出，先記錄，尚未調查）
+- [done] 使用者需求：當某一玩家使用能力和卡牌時，其他玩家應該也要直接跳出視窗，看到其他人正在做什麼，使用什麼能力和卡牌，卡牌的圖片要秀出來。不想看可以縮到左下角，變一個小視窗。（2026-08-06 使用者提出並要求處理）
+  - 設計：純前端實作，完全不改後端。既有 `state.action_log` 本來就會廣播給所有玩家，且逐行稽核過 `server/game.py` 幾乎每一條玩家歸屬的 log 都固定以 `{player.name}` 開頭；既有 `/card-presentation` 目錄（`cardPresentationCatalog`，每次 `render()` 都會載入）已收錄全部卡牌的名稱/顏色/種類，`playableCardArtUrl()` 也已經是既有、可重用的卡牌圖片 URL 解析器。UI 結構直接比照既有 `victoryModal`/`victoryBadge` 的「可縮小成左下角小徽章」模式（`static/index.html` 207-219 行、`static/app.js` `renderVictoryModal`），沿用同一套展開/縮小機制。
+  - 實作（`static/app.js`）：新增 `findLatestPeerActionSinceIndex(state, fromIndex)`——由新到舊掃描 `action_log`，找出第一行「開頭是別的玩家名字（排除自己）」的紀錄，再掃過 `cardPresentationCatalog` 全部卡名、取內文中「最長的相符字串」判斷這行提到哪張卡（避免短卡名誤判成另一張長卡名的子字串，例如「情報」誤判成「情報網」以外的東西）；新增 `renderPeerActionNotice(state)`——換局（`gameId` 改變）時重置狀態、不會把整個歷史 log 誤判成「新事件」全部跳出來；偵測到 `action_log` 變長就找出最新一則別人的動作，填入玩家名稱（依 `factionNameColor` 上色）、原始 log 文字、卡牌圖片（無法辨識卡名或圖片載入失敗時顯示 🎴 佔位圖示，不會顯示破圖）；依目前是否縮小狀態決定顯示完整面板或只讓左下角徽章觸發一次脈動動畫提示。`render(state)` 主流程裡緊接在既有 `renderVictoryModal(state)` 之後呼叫。
+  - 新增標記（`static/index.html`）：`#peerActionNotice`（面板，含 `#peerActionNoticePlayer`／`#peerActionNoticeMinimizeBtn`／`#peerActionNoticeArt`／`#peerActionNoticeText`）與 `#peerActionNoticeBadge`（縮小後的圓形徽章，📣圖示，比照使用者「縮到左下角」的明確要求，刻意放在畫面左下角，與 `victoryBadge` 的右下角區隔不會重疊）。
+  - 新增樣式（`static/style.css`）：獨立的 `.peer-action-notice*` 區塊（含 `-art-empty`/`-art-load-failed` 的 🎴 佔位狀態、`.peer-action-notice-badge-pulse` 新內容脈動動畫＋`prefers-reduced-motion` 尊重使用者設定），主色刻意選用 `--accent-blue`（`#3A7BD5`）與勝利彈窗的金色 (`rgba(250,204,21,...)`) 區隔，避免兩種彈窗視覺混淆。
+  - 驗證：Playwright 對真實瀏覽器雙分頁（`/test/setup-support-card-play`，玩家A與紅軍B各自連線同一局）——A 打出「印度奧援」（行動模式）後，B 的畫面即時跳出通知面板，正確顯示玩家名稱、log 文字「player played 印度奧援」、對應卡牌圖片；點擊縮小鈕確認面板收起、左下角徽章正確顯示；點擊徽章確認正確展開回完整面板。三張截圖（展開／縮小／還原）皆為真實 browser UI 截圖，非假 DOM/CSS proof。完整 pytest（同 baseline ignore 清單）**280/280 全過**（無變動，純前端新增功能不影響任何既有後端邏輯）。
 
 ### P2：產業滲透取消紅軍能力後，該次紅軍能力應算已使用
 - [done] 使用者回報：使用產業滲透阻止紅軍能力後，紅軍能力應該就要算他已經用了該次能力。（2026-08-06 使用者回報；同日使用者要求處理，與爆料黑幕一併修正）

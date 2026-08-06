@@ -3079,7 +3079,110 @@ document.addEventListener('DOMContentLoaded', () => {
     victoryModalDismissedFor = null;
     if (window.lastGameState) renderVictoryModal(window.lastGameState);
   });
+
+  const peerMinimizeBtn = document.getElementById('peerActionNoticeMinimizeBtn');
+  if (peerMinimizeBtn) peerMinimizeBtn.addEventListener('click', () => {
+    peerActionNoticeMinimized = true;
+    const overlay = document.getElementById('peerActionNotice');
+    const peerBadge = document.getElementById('peerActionNoticeBadge');
+    if (overlay) overlay.style.display = 'none';
+    if (peerBadge && peerActionNoticeHasContent) peerBadge.style.display = 'flex';
+  });
+  const peerBadge = document.getElementById('peerActionNoticeBadge');
+  if (peerBadge) peerBadge.addEventListener('click', () => {
+    peerActionNoticeMinimized = false;
+    const overlay = document.getElementById('peerActionNotice');
+    if (peerBadge) peerBadge.style.display = 'none';
+    if (overlay && peerActionNoticeHasContent) overlay.style.display = 'flex';
+  });
 });
+
+// 其他玩家動態通知（2026-08-06 使用者需求）：其他玩家使用能力/卡牌時，直接跳出小視窗顯示
+// 是誰、做了什麼、卡牌圖片；不想看可以縮到左下角變成一個小徽章。純前端從既有 action_log
+// 逐行比對「這行是不是某個非本人玩家開頭 + 內文含哪張已知卡名」，不需要後端額外欄位——
+// 每一行 log 訊息（server/game.py 的 self.log(...)）約定俗成都是以 `{player.name}` 開頭，
+// 卡名出現的位置不固定，所以用「掃過 cardPresentationCatalog 全部卡名、取內文中最長的
+// 相符字串」來避免短卡名誤判成另一張長卡名的子字串。
+let peerActionNoticeSeenLogLength = 0;
+let peerActionNoticeGameId = null;
+let peerActionNoticeMinimized = false;
+let peerActionNoticeHasContent = false;
+
+function findLatestPeerActionSinceIndex(state, fromIndex) {
+  const entries = state.action_log || [];
+  const others = (state.players || []).filter(p => p.id !== playerId);
+  if (!others.length) return null;
+  for (let i = entries.length - 1; i >= fromIndex; i--) {
+    const raw = entries[i];
+    if (typeof raw !== 'string') continue;
+    const stripped = raw.replace(/^\[Turn \d+\]\s*/, '');
+    const actor = others.find(p => p.name && stripped.startsWith(p.name));
+    if (!actor) continue;
+    let cardName = null;
+    let bestLength = 0;
+    const catalog = cardPresentationCatalog || {};
+    for (const name of Object.keys(catalog)) {
+      if (name.length > bestLength && stripped.includes(name)) {
+        cardName = name;
+        bestLength = name.length;
+      }
+    }
+    return { actor, text: stripped, cardName };
+  }
+  return null;
+}
+
+function renderPeerActionNotice(state) {
+  const overlay = document.getElementById('peerActionNotice');
+  const badge = document.getElementById('peerActionNoticeBadge');
+  if (!overlay || !badge) return;
+  const entries = state.action_log || [];
+
+  if (peerActionNoticeGameId !== gameId) {
+    // (Re)connected to a different game: don't replay the whole history as "new".
+    peerActionNoticeGameId = gameId;
+    peerActionNoticeSeenLogLength = entries.length;
+    peerActionNoticeMinimized = false;
+    peerActionNoticeHasContent = false;
+    overlay.style.display = 'none';
+    badge.style.display = 'none';
+    return;
+  }
+
+  if (entries.length <= peerActionNoticeSeenLogLength) return;
+  const found = findLatestPeerActionSinceIndex(state, peerActionNoticeSeenLogLength);
+  peerActionNoticeSeenLogLength = entries.length;
+  if (!found) return;
+  peerActionNoticeHasContent = true;
+
+  const playerEl = document.getElementById('peerActionNoticePlayer');
+  const textEl = document.getElementById('peerActionNoticeText');
+  const artEl = document.getElementById('peerActionNoticeArt');
+  if (playerEl) {
+    const color = factionNameColor(found.actor.faction) || '#e5ecf5';
+    playerEl.innerHTML = `<span style="color:${color}">${escapeHtml(found.actor.name)}</span>`;
+  }
+  if (textEl) textEl.textContent = found.text;
+  if (artEl) {
+    const artUrl = found.cardName ? playableCardArtUrl(found.cardName) : '';
+    artEl.classList.remove('peer-action-notice-art-load-failed');
+    artEl.classList.toggle('peer-action-notice-art-empty', !artUrl);
+    artEl.innerHTML = artUrl
+      ? `<img class="peer-action-notice-art-image" src="${artUrl}" alt="${escapeHtml(found.cardName)}" onerror="this.parentElement.classList.add('peer-action-notice-art-load-failed')">`
+      : '';
+  }
+
+  if (peerActionNoticeMinimized) {
+    overlay.style.display = 'none';
+    badge.style.display = 'flex';
+    badge.classList.remove('peer-action-notice-badge-pulse');
+    void badge.offsetWidth;
+    badge.classList.add('peer-action-notice-badge-pulse');
+  } else {
+    badge.style.display = 'none';
+    overlay.style.display = 'flex';
+  }
+}
 
 async function render(state) {
   const playerError = state.error ? playerMessageZhTw(state.error) : '';
@@ -3107,6 +3210,7 @@ async function render(state) {
   renderCurrentEvent(state);
   renderChoiceModal(state);
   renderVictoryModal(state);
+  renderPeerActionNotice(state);
 
   // HUD
   const hud = document.getElementById('hud');
