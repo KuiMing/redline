@@ -3082,31 +3082,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const peerMinimizeBtn = document.getElementById('peerActionNoticeMinimizeBtn');
   if (peerMinimizeBtn) peerMinimizeBtn.addEventListener('click', () => {
-    peerActionNoticeMinimized = true;
-    const overlay = document.getElementById('peerActionNotice');
-    const peerBadge = document.getElementById('peerActionNoticeBadge');
-    if (overlay) overlay.style.display = 'none';
-    if (peerBadge && peerActionNoticeHasContent) peerBadge.style.display = 'flex';
-  });
-  const peerBadge = document.getElementById('peerActionNoticeBadge');
-  if (peerBadge) peerBadge.addEventListener('click', () => {
-    peerActionNoticeMinimized = false;
-    const overlay = document.getElementById('peerActionNotice');
-    if (peerBadge) peerBadge.style.display = 'none';
-    if (overlay && peerActionNoticeHasContent) overlay.style.display = 'flex';
+    peerActionNoticeMinimized = !peerActionNoticeMinimized;
+    applyPeerActionNoticeMinimizedState();
   });
 });
 
-// 其他玩家動態通知（2026-08-06 使用者需求）：其他玩家使用能力/卡牌時，直接跳出小視窗顯示
-// 是誰、做了什麼、卡牌圖片；不想看可以縮到左下角變成一個小徽章。純前端從既有 action_log
-// 逐行比對「這行是不是某個非本人玩家開頭 + 內文含哪張已知卡名」，不需要後端額外欄位——
-// 每一行 log 訊息（server/game.py 的 self.log(...)）約定俗成都是以 `{player.name}` 開頭，
-// 卡名出現的位置不固定，所以用「掃過 cardPresentationCatalog 全部卡名、取內文中最長的
-// 相符字串」來避免短卡名誤判成另一張長卡名的子字串。
+// 其他玩家動態通知（2026-08-06 使用者需求；2026-08-06 兩輪依使用者回饋改版為「預設是
+// 真正擋住畫面的大型跳出視窗，主動縮小才變成左下角小卡片」，不是一開始就縮成小卡片、
+// 也沒有另一個圓形徽章狀態）。純前端從既有 action_log 逐行比對「這行是不是某個非本人
+// 玩家開頭 + 內文含哪張已知卡名」，不需要後端額外欄位——每一行 log 訊息
+// （server/game.py 的 self.log(...)）約定俗成都是以 `{player.name}` 開頭，卡名出現的
+// 位置不固定，所以用「掃過 cardPresentationCatalog 全部卡名、取內文中最長的相符字串」
+// 來避免短卡名誤判成另一張長卡名的子字串。
 let peerActionNoticeSeenLogLength = 0;
 let peerActionNoticeGameId = null;
 let peerActionNoticeMinimized = false;
 let peerActionNoticeHasContent = false;
+
+function applyPeerActionNoticeMinimizedState() {
+  const overlay = document.getElementById('peerActionNotice');
+  const btn = document.getElementById('peerActionNoticeMinimizeBtn');
+  if (overlay) overlay.classList.toggle('peer-action-notice-minimized', peerActionNoticeMinimized);
+  if (btn) {
+    btn.textContent = peerActionNoticeMinimized ? '⤢' : '—';
+    btn.title = peerActionNoticeMinimized ? '展開通知' : '縮小到左下角';
+    btn.setAttribute('aria-label', btn.title);
+  }
+}
 
 function findLatestPeerActionSinceIndex(state, fromIndex) {
   const entries = state.action_log || [];
@@ -3134,8 +3136,7 @@ function findLatestPeerActionSinceIndex(state, fromIndex) {
 
 function renderPeerActionNotice(state) {
   const overlay = document.getElementById('peerActionNotice');
-  const badge = document.getElementById('peerActionNoticeBadge');
-  if (!overlay || !badge) return;
+  if (!overlay) return;
   const entries = state.action_log || [];
 
   if (peerActionNoticeGameId !== gameId) {
@@ -3145,7 +3146,7 @@ function renderPeerActionNotice(state) {
     peerActionNoticeMinimized = false;
     peerActionNoticeHasContent = false;
     overlay.style.display = 'none';
-    badge.style.display = 'none';
+    applyPeerActionNoticeMinimizedState();
     return;
   }
 
@@ -3172,16 +3173,11 @@ function renderPeerActionNotice(state) {
       : '';
   }
 
-  if (peerActionNoticeMinimized) {
-    overlay.style.display = 'none';
-    badge.style.display = 'flex';
-    badge.classList.remove('peer-action-notice-badge-pulse');
-    void badge.offsetWidth;
-    badge.classList.add('peer-action-notice-badge-pulse');
-  } else {
-    badge.style.display = 'none';
-    overlay.style.display = 'flex';
-  }
+  // Every fresh action re-surfaces as the full "broadcast" view, even if the
+  // previous notice had been minimized — minimizing only dismisses that one instance.
+  peerActionNoticeMinimized = false;
+  overlay.style.display = 'flex';
+  applyPeerActionNoticeMinimizedState();
 }
 
 async function render(state) {

@@ -2662,43 +2662,82 @@ button.player-status-discard-card:focus-visible {
   background: rgba(37, 99, 235, 0.85);
 }
 
-/* 其他玩家動態通知（2026-08-06 使用者需求，2026-08-06 依使用者回饋改版）：其他玩家使用
-   能力/卡牌時，預設是一個顯眼的大型跳出視窗（不是小卡片）；使用者主動按縮小才會收進
-   左下角變成一個小徽章。展開與縮小固定共用同一個左下角錨點，縮小是「原地收起」而不是
-   從別的角落跳過來。 */
+/* 其他玩家動態通知（2026-08-06 使用者需求；2026-08-06 兩輪依使用者回饋改版）：其他玩家
+   使用能力/卡牌時，預設是真正擋住畫面一大塊的跳出視窗（暗化背景＋置中大卡片），像是在
+   看轉播一樣看到別人正在做什麼；使用者主動按縮小才會收進左下角變成一張小卡片——沒有
+   額外的圓形徽章狀態，縮小後看到的就是原本這張卡片本身縮小版，同一個元素原地伸縮。
+   每次偵測到新的動態都會重新以「展開」狀態呈現（不會被上一次的縮小選擇卡住）。 */
 .peer-action-notice {
   position: fixed;
-  left: 24px;
-  bottom: 24px;
+  inset: 0;
   z-index: 55;
-  width: 420px;
-  max-width: calc(100vw - 48px);
-  background: rgba(10, 16, 32, 0.97);
-  border: 2px solid rgba(58, 123, 213, 0.7);
-  border-radius: 18px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55), 0 0 0 6px rgba(58, 123, 213, 0.12);
-  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(4, 8, 14, 0.62);
+  backdrop-filter: blur(8px) saturate(120%);
+  -webkit-backdrop-filter: blur(8px) saturate(120%);
   animation: peer-action-notice-in 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+.peer-action-notice.peer-action-notice-minimized {
+  inset: auto;
+  left: 24px;
+  bottom: 24px;
+  width: auto;
+  height: auto;
+  padding: 0;
+  justify-content: flex-start;
+  align-items: flex-start;
+  background: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  animation: none;
+}
+
 @keyframes peer-action-notice-in {
-  from { opacity: 0; transform: translateY(24px) scale(0.94); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.peer-action-notice-card {
+  width: min(640px, calc(100vw - 48px));
+  background: rgba(10, 16, 32, 0.97);
+  border: 2px solid rgba(58, 123, 213, 0.7);
+  border-radius: 20px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 0 8px rgba(58, 123, 213, 0.14);
+  overflow: hidden;
+}
+
+.peer-action-notice-minimized .peer-action-notice-card {
+  width: 360px;
+  max-width: calc(100vw - 48px);
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 0 4px rgba(58, 123, 213, 0.1);
 }
 
 .peer-action-notice-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  padding: 12px 16px;
+  gap: 12px;
+  padding: 16px 20px;
   background: rgba(58, 123, 213, 0.22);
   border-bottom: 1px solid rgba(58, 123, 213, 0.35);
 }
 
+.peer-action-notice-minimized .peer-action-notice-header {
+  padding: 10px 14px;
+}
+
 .peer-action-notice-player {
-  font-size: 1.05rem;
+  font-size: 1.2rem;
   font-weight: 800;
+}
+
+.peer-action-notice-minimized .peer-action-notice-player {
+  font-size: 0.88rem;
 }
 
 .peer-action-notice-minimize {
@@ -2706,12 +2745,18 @@ button.player-status-discard-card:focus-visible {
   border-radius: 6px;
   background: rgba(15, 23, 42, 0.6);
   color: #cbd5e1;
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   line-height: 1;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 1.05rem;
   flex: none;
+}
+
+.peer-action-notice-minimized .peer-action-notice-minimize {
+  width: 24px;
+  height: 24px;
+  font-size: 0.85rem;
 }
 
 .peer-action-notice-minimize:hover {
@@ -2721,22 +2766,33 @@ button.player-status-discard-card:focus-visible {
 
 .peer-action-notice-body {
   display: flex;
-  gap: 16px;
-  padding: 16px;
+  gap: 20px;
+  padding: 22px;
   align-items: center;
 }
 
+.peer-action-notice-minimized .peer-action-notice-body {
+  gap: 12px;
+  padding: 12px 14px;
+}
+
 .peer-action-notice-art {
-  width: 108px;
-  height: 108px;
+  width: 180px;
+  height: 180px;
   flex: none;
-  border-radius: 12px;
+  border-radius: 14px;
   overflow: hidden;
   background: rgba(148, 163, 184, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
+}
+
+.peer-action-notice-minimized .peer-action-notice-art {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
 }
 
 .peer-action-notice-art-image {
@@ -2753,56 +2809,28 @@ button.player-status-discard-card:focus-visible {
 
 .peer-action-notice-art.peer-action-notice-art-empty::after {
   content: '🎴';
-  font-size: 2.4rem;
+  font-size: 3.4rem;
   opacity: 0.5;
 }
 
+.peer-action-notice-minimized .peer-action-notice-art.peer-action-notice-art-empty::after {
+  font-size: 1.4rem;
+}
+
 .peer-action-notice-text {
-  font-size: 0.95rem;
-  line-height: 1.55;
+  font-size: 1.15rem;
+  line-height: 1.6;
   color: #e2e8f0;
   word-break: break-word;
 }
 
-.peer-action-notice-badge {
-  position: fixed;
-  left: 24px;
-  bottom: 24px;
-  z-index: 55;
-  width: 46px;
-  height: 46px;
-  border-radius: 999px;
-  border: 1px solid rgba(58, 123, 213, 0.6);
-  background: rgba(15, 23, 42, 0.92);
-  color: #cbd5e1;
-  font-size: 1.2rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.peer-action-notice-badge::after {
-  content: '📣';
-}
-
-.peer-action-notice-badge:hover {
-  background: rgba(58, 123, 213, 0.85);
-  color: #fff;
-}
-
-.peer-action-notice-badge-pulse {
-  animation: peer-action-notice-pulse 0.9s ease-in-out;
-}
-
-@keyframes peer-action-notice-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(58, 123, 213, 0.55); }
-  50% { box-shadow: 0 0 0 8px rgba(58, 123, 213, 0); }
+.peer-action-notice-minimized .peer-action-notice-text {
+  font-size: 0.8rem;
+  line-height: 1.5;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .peer-action-notice { animation: none; }
-  .peer-action-notice-badge-pulse { animation: none; }
 }
 
 /* 我的陣營：陣營資訊與個人時代關卡共用一個頁內 Tab（2026-07-28） */
