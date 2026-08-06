@@ -64,7 +64,7 @@ def main() -> None:
         peer_state = {
             "players": players,
             "current_player": red["name"],
-            "action_log": [f"{red['name']} 使用了 合作談判"],
+            "action_log": [f"{red['name']} played 合作談判"],
         }
         page.evaluate("state => renderPeerActionNotice(state)", peer_state)
         opened = page.evaluate(
@@ -79,9 +79,40 @@ def main() -> None:
             "peer_action_opens_full_notice",
             opened["display"] == "flex"
             and red["name"] in opened["player"]
-            and "合作談判" in opened["text"]
+            and opened["text"] == f"{red['name']} 使用了合作談判"
+            and not any(word in opened["text"].lower() for word in ("played", "triggered", "drew", "gained"))
             and opened["hasImage"],
             opened,
+        )
+
+        translation_matrix = page.evaluate(
+            """() => {
+                const actor = { name: 'RED' };
+                const playerNames = ['RED', 'GREEN'];
+                const cases = [
+                    ['RED played 合作談判', 'RED 使用了合作談判'],
+                    ['RED triggered 統戰部 and drew 2 card(s)', 'RED 發動統戰部並抽了2張牌'],
+                    ['RED built organization in 北京', 'RED 在北京建立了組織'],
+                    ['RED moved 1 organization from 北京 to 天津 via road', 'RED 經由道路將1個組織從北京移到天津'],
+                    ['RED bought 思想家', 'RED 購買了思想家'],
+                    ['RED used 分神 to force GREEN to discard 追隨者', 'RED 使用分神迫使GREEN棄掉追隨者'],
+                    ['RED reacted with 產業滲透 to cancel 合作談判', 'RED 打出產業滲透取消合作談判'],
+                    ["RED's 合作談判 was canceled by reaction", 'RED 的合作談判被反應卡取消'],
+                    ['RED may use 行動預告 before drawing new hand', 'RED 可在補充新手牌前使用行動預告'],
+                    ['RED triggered 民主陣線 and gained a removed card proxy', 'RED 完成了一項行動'],
+                    ['RED performed obscure backend action', 'RED 完成了一項行動'],
+                ];
+                return cases.map(([raw, expected]) => {
+                    const actual = localizePeerActionNoticeText({ actor, text: raw, playerNames });
+                    const residual = actual.replaceAll('RED', '').replaceAll('GREEN', '');
+                    return { raw, expected, actual, noEnglish: !/[A-Za-z]{3,}/.test(residual), ok: actual === expected };
+                });
+            }"""
+        )
+        record(
+            "peer_action_english_patterns_are_localized_to_traditional_chinese",
+            all(item["ok"] and item["noEnglish"] for item in translation_matrix),
+            {"cases": translation_matrix},
         )
         page.wait_for_timeout(400)
         page.screenshot(path=str(RECORD_DIR / "peer_action_notice_before_turn_handoff.png"))

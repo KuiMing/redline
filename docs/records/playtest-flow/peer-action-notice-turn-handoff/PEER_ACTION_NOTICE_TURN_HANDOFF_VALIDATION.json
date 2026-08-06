@@ -1,7 +1,7 @@
 {
   "summary": {
-    "total": 7,
-    "passed": 7,
+    "total": 8,
+    "passed": 8,
     "failed": 0
   },
   "results": [
@@ -11,8 +11,93 @@
       "detail": {
         "display": "flex",
         "player": "RED",
-        "text": "RED 使用了 合作談判",
+        "text": "RED 使用了合作談判",
         "hasImage": true
+      }
+    },
+    {
+      "name": "peer_action_english_patterns_are_localized_to_traditional_chinese",
+      "ok": true,
+      "detail": {
+        "cases": [
+          {
+            "raw": "RED played 合作談判",
+            "expected": "RED 使用了合作談判",
+            "actual": "RED 使用了合作談判",
+            "noEnglish": true,
+            "ok": true
+          },
+          {
+            "raw": "RED triggered 統戰部 and drew 2 card(s)",
+            "expected": "RED 發動統戰部並抽了2張牌",
+            "actual": "RED 發動統戰部並抽了2張牌",
+            "noEnglish": true,
+            "ok": true
+          },
+          {
+            "raw": "RED built organization in 北京",
+            "expected": "RED 在北京建立了組織",
+            "actual": "RED 在北京建立了組織",
+            "noEnglish": true,
+            "ok": true
+          },
+          {
+            "raw": "RED moved 1 organization from 北京 to 天津 via road",
+            "expected": "RED 經由道路將1個組織從北京移到天津",
+            "actual": "RED 經由道路將1個組織從北京移到天津",
+            "noEnglish": true,
+            "ok": true
+          },
+          {
+            "raw": "RED bought 思想家",
+            "expected": "RED 購買了思想家",
+            "actual": "RED 購買了思想家",
+            "noEnglish": true,
+            "ok": true
+          },
+          {
+            "raw": "RED used 分神 to force GREEN to discard 追隨者",
+            "expected": "RED 使用分神迫使GREEN棄掉追隨者",
+            "actual": "RED 使用分神迫使GREEN棄掉追隨者",
+            "noEnglish": true,
+            "ok": true
+          },
+          {
+            "raw": "RED reacted with 產業滲透 to cancel 合作談判",
+            "expected": "RED 打出產業滲透取消合作談判",
+            "actual": "RED 打出產業滲透取消合作談判",
+            "noEnglish": true,
+            "ok": true
+          },
+          {
+            "raw": "RED's 合作談判 was canceled by reaction",
+            "expected": "RED 的合作談判被反應卡取消",
+            "actual": "RED 的合作談判被反應卡取消",
+            "noEnglish": true,
+            "ok": true
+          },
+          {
+            "raw": "RED may use 行動預告 before drawing new hand",
+            "expected": "RED 可在補充新手牌前使用行動預告",
+            "actual": "RED 可在補充新手牌前使用行動預告",
+            "noEnglish": true,
+            "ok": true
+          },
+          {
+            "raw": "RED triggered 民主陣線 and gained a removed card proxy",
+            "expected": "RED 完成了一項行動",
+            "actual": "RED 完成了一項行動",
+            "noEnglish": true,
+            "ok": true
+          },
+          {
+            "raw": "RED performed obscure backend action",
+            "expected": "RED 完成了一項行動",
+            "actual": "RED 完成了一項行動",
+            "noEnglish": true,
+            "ok": true
+          }
+        ]
       }
     },
     {

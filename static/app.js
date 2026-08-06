@@ -3298,6 +3298,56 @@ function closePeerActionNotice(seenLogLength = peerActionNoticeSeenLogLength) {
   applyPeerActionNoticeMinimizedState();
 }
 
+function localizePeerActionNoticeText({ actor, text, playerNames = [] }) {
+  const actorName = actor?.name || '';
+  const detail = text.startsWith(actorName) ? text.slice(actorName.length).trim() : text.trim();
+  if (!/[A-Za-z]{3,}/.test(detail)) return text;
+
+  const finish = (localizedDetail) => {
+    const residual = [actorName, ...playerNames]
+      .filter(Boolean)
+      .sort((a, b) => b.length - a.length)
+      .reduce((value, name) => value.split(name).join(''), localizedDetail);
+    return `${actorName} ${/[A-Za-z]{3,}/.test(residual) ? '完成了一項行動' : localizedDetail}`;
+  };
+
+  const patterns = [
+    [/^played (.+?) as resource(?: \(no resources from support card\))?$/i, m => `將${m[1]}作為資源使用`],
+    [/^played (.+?); waiting up to \d+ seconds for (.+?) to choose cancel reaction$/i, m => `使用了${m[1]}，等待${m[2]}決定是否取消`],
+    [/^played (.+?); card returned to (.+?)'s discard pile$/i, m => `使用了${m[1]}，卡牌回到${m[2]}的棄牌堆`],
+    [/^played (.+)$/i, m => `使用了${m[1]}`],
+    [/^triggered (.+?) and drew (\d+) card\(s\)$/i, m => `發動${m[1]}並抽了${m[2]}張牌`],
+    [/^triggered (.+?) and gained (\d+) money$/i, m => `發動${m[1]}並獲得${m[2]}資金`],
+    [/^triggered (.+?) and gained (\d+) propaganda$/i, m => `發動${m[1]}並獲得${m[2]}宣傳`],
+    [/^triggered (.+)$/i, m => `發動了${m[1]}`],
+    [/^built organization in (.+?) from (.+)$/i, m => `從${m[2]}在${m[1]}建立了組織`],
+    [/^built organization in (.+?)(?: via .+)?$/i, m => `在${m[1]}建立了組織`],
+    [/^moved 1 organization from (.+?) to (.+?) via (road|rail)$/i, m => `經由${m[3].toLowerCase() === 'rail' ? '鐵路' : '道路'}將1個組織從${m[1]}移到${m[2]}`],
+    [/^moved 1 shared organization from (.+?) to (.+?) via (road|rail)$/i, m => `經由${m[3].toLowerCase() === 'rail' ? '鐵路' : '道路'}將1個共同組織從${m[1]}移到${m[2]}`],
+    [/^dissolved 1 organization from (.+?) at (.+)$/i, m => `在${m[2]}瓦解了${m[1]}的1個組織`],
+    [/^dissolved 1 shared organization via (.+?) from (.+?) at (.+)$/i, m => `在${m[3]}經由${m[1]}瓦解了${m[2]}的1個共同組織`],
+    [/^bought (.+)$/i, m => `購買了${m[1]}`],
+    [/^discarded (.+?) via (.+)$/i, m => `因${m[2]}棄掉${m[1]}`],
+    [/^used (.+?) to force (.+?) to discard (.+)$/i, m => `使用${m[1]}迫使${m[2]}棄掉${m[3]}`],
+    [/^used (.+?) before drawing new hand$/i, m => `在補充新手牌前使用了${m[1]}`],
+    [/^reacted with (.+?) to cancel (.+)$/i, m => `打出${m[1]}取消${m[2]}`],
+    [/^'s (.+?) was canceled by reaction(?:; card returned to (.+?)'s discard pile)?$/i, m => `的${m[1]}被反應卡取消${m[2] ? `，卡牌回到${m[2]}的棄牌堆` : ''}`],
+    [/^resolved (.+?) and built in (.+)$/i, m => `結算${m[1]}並在${m[2]}建立組織`],
+    [/^resolved (.+?) targeting (.+?) and discarded (\d+) random card\(s\)$/i, m => `結算${m[1]}，使${m[2]}隨機棄掉${m[3]}張牌`],
+    [/^started interactive support resolution for (.+?) at tier (\d+)$/i, m => `開始結算${m[1]}第${m[2]}級效果`],
+    [/^may use (.+?) before drawing new hand$/i, m => `可在補充新手牌前使用${m[1]}`],
+    [/^could not play (.+?): no legal target$/i, m => `無法使用${m[1]}：沒有合法目標`],
+    [/^End of turn$/i, () => '結束回合'],
+  ];
+  for (const [pattern, render] of patterns) {
+    const match = detail.match(pattern);
+    if (match) return finish(render(match));
+  }
+
+  const localized = playerMessageZhTw(detail, '');
+  return finish(localized || '完成了一項行動');
+}
+
 function findLatestPeerActionSinceIndex(state, fromIndex) {
   const entries = state.action_log || [];
   const others = (state.players || []).filter(p => p.id !== playerId);
@@ -3317,7 +3367,7 @@ function findLatestPeerActionSinceIndex(state, fromIndex) {
         bestLength = name.length;
       }
     }
-    return { actor, text: stripped, cardName };
+    return { actor, text: stripped, cardName, playerNames: (state.players || []).map(p => p.name) };
   }
   return null;
 }
@@ -3356,7 +3406,7 @@ function renderPeerActionNotice(state) {
     const color = factionNameColor(found.actor.faction) || '#e5ecf5';
     playerEl.innerHTML = `<span style="color:${color}">${escapeHtml(found.actor.name)}</span>`;
   }
-  if (textEl) textEl.textContent = found.text;
+  if (textEl) textEl.textContent = localizePeerActionNoticeText(found);
   if (artEl) {
     const artUrl = found.cardName ? playableCardArtUrl(found.cardName) : '';
     artEl.classList.remove('peer-action-notice-art-load-failed');
