@@ -1,7 +1,7 @@
 {
   "summary": {
-    "total": 8,
-    "passed": 8,
+    "total": 12,
+    "passed": 12,
     "failed": 0
   },
   "results": [
@@ -115,7 +115,7 @@
         "display": "none",
         "minimized": false,
         "hasContent": false,
-        "seen": 2
+        "snapshotLength": 2
       }
     },
     {
@@ -137,6 +137,48 @@
       "ok": true,
       "detail": {
         "display": "none"
+      }
+    },
+    {
+      "name": "capped_100_entry_log_detects_same_length_sliding_window",
+      "ok": true,
+      "detail": {
+        "display": "flex",
+        "text": "RED 使用了分神",
+        "snapshotLength": 100
+      }
+    },
+    {
+      "name": "identical_capped_log_state_does_not_replay_notice",
+      "ok": true,
+      "detail": {
+        "display": "none"
+      }
+    },
+    {
+      "name": "peer_notice_survives_30_consecutive_capped_log_slides",
+      "ok": true,
+      "detail": {
+        "firstSlide": {
+          "display": "flex",
+          "text": "RED 使用了分神",
+          "snapshotLength": 100
+        },
+        "identicalReplayDisplay": "none",
+        "misses": [],
+        "finalText": "RED 使用了合作談判",
+        "finalSnapshotLength": 100
+      }
+    },
+    {
+      "name": "mobile_capped_log_notice_is_visible_with_loaded_card_art",
+      "ok": true,
+      "detail": {
+        "snapshotLength": 100,
+        "display": "flex",
+        "text": "RED 使用了合作談判",
+        "imageLoaded": true,
+        "withinViewport": true
       }
     },
     {

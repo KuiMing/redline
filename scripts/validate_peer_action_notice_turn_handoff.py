@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Browser proof: peer-action notices close when the viewer's turn begins."""
+"""Browser proof for peer-action notice localization, handoff, and capped-log longevity."""
 
 from __future__ import annotations
 
@@ -51,10 +51,10 @@ def main() -> None:
                 document.getElementById('victoryModal').style.display = 'none';
                 document.getElementById('victoryBadge').style.display = 'none';
                 peerActionNoticeGameId = gameId;
-                peerActionNoticeSeenLogLength = 0;
+                peerActionNoticeLogSnapshot = [];
                 peerActionNoticeMinimized = false;
                 peerActionNoticeHasContent = false;
-                closePeerActionNotice(0);
+                closePeerActionNotice();
             }"""
         )
 
@@ -137,7 +137,7 @@ def main() -> None:
                 display: getComputedStyle(document.getElementById('peerActionNotice')).display,
                 minimized: document.getElementById('peerActionNotice').classList.contains('peer-action-notice-minimized'),
                 hasContent: peerActionNoticeHasContent,
-                seen: peerActionNoticeSeenLogLength,
+                snapshotLength: peerActionNoticeLogSnapshot.length,
             })"""
         )
         record(
@@ -145,7 +145,7 @@ def main() -> None:
             closed_minimized["display"] == "none"
             and not closed_minimized["minimized"]
             and not closed_minimized["hasContent"]
-            and closed_minimized["seen"] == 2,
+            and closed_minimized["snapshotLength"] == 2,
             closed_minimized,
         )
         page.screenshot(path=str(RECORD_DIR / "peer_action_notice_after_turn_handoff.png"))
@@ -165,6 +165,103 @@ def main() -> None:
         page.evaluate("state => renderPeerActionNotice(state)", {**fresh_peer_state, "current_player": green["name"]})
         full_closed = page.evaluate("() => getComputedStyle(document.getElementById('peerActionNotice')).display")
         record("own_turn_also_closes_full_size_notice", full_closed == "none", {"display": full_closed})
+
+        capped_window = page.evaluate(
+            """({ players, greenName, redName }) => {
+                const overlay = document.getElementById('peerActionNotice');
+                let logs = Array.from({ length: 100 }, (_, index) => `[Turn ${index + 1}] 系統紀錄 ${index + 1}`);
+                renderPeerActionNotice({ players, current_player: greenName, action_log: logs });
+
+                logs = [...logs.slice(1), `[Turn 101] ${redName} played 分神`];
+                renderPeerActionNotice({ players, current_player: redName, action_log: logs });
+                const firstSlide = {
+                    display: getComputedStyle(overlay).display,
+                    text: document.getElementById('peerActionNoticeText').textContent,
+                    snapshotLength: peerActionNoticeLogSnapshot.length,
+                };
+
+                closePeerActionNotice();
+                renderPeerActionNotice({ players, current_player: redName, action_log: logs });
+                const identicalReplayDisplay = getComputedStyle(overlay).display;
+
+                const misses = [];
+                const texts = [];
+                for (let index = 0; index < 30; index++) {
+                    closePeerActionNotice();
+                    const cardName = index % 2 ? '合作談判' : '分神';
+                    logs = [...logs.slice(1), `[Turn ${102 + index}] ${redName} played ${cardName}`];
+                    renderPeerActionNotice({ players, current_player: redName, action_log: logs });
+                    const display = getComputedStyle(overlay).display;
+                    const text = document.getElementById('peerActionNoticeText').textContent;
+                    if (display !== 'flex') misses.push({ index, display, text });
+                    texts.push(text);
+                }
+                return {
+                    firstSlide,
+                    identicalReplayDisplay,
+                    misses,
+                    finalText: texts.at(-1),
+                    finalSnapshotLength: peerActionNoticeLogSnapshot.length,
+                };
+            }""",
+            {"players": players, "greenName": green["name"], "redName": red["name"]},
+        )
+        record(
+            "capped_100_entry_log_detects_same_length_sliding_window",
+            capped_window["firstSlide"]["display"] == "flex"
+            and capped_window["firstSlide"]["text"] == f"{red['name']} 使用了分神"
+            and capped_window["firstSlide"]["snapshotLength"] == 100,
+            capped_window["firstSlide"],
+        )
+        record(
+            "identical_capped_log_state_does_not_replay_notice",
+            capped_window["identicalReplayDisplay"] == "none",
+            {"display": capped_window["identicalReplayDisplay"]},
+        )
+        record(
+            "peer_notice_survives_30_consecutive_capped_log_slides",
+            not capped_window["misses"]
+            and capped_window["finalSnapshotLength"] == 100
+            and capped_window["finalText"] == f"{red['name']} 使用了合作談判",
+            capped_window,
+        )
+
+        page.set_viewport_size({"width": 390, "height": 844})
+        mobile_state = page.evaluate(
+            """({ players, greenName, redName }) => {
+                const baseline = Array.from({ length: 100 }, (_, index) => `[Turn ${index + 201}] 系統紀錄 ${index + 201}`);
+                renderPeerActionNotice({ players, current_player: greenName, action_log: baseline });
+                const logs = [...baseline.slice(1), `[Turn 301] ${redName} played 合作談判`];
+                renderPeerActionNotice({ players, current_player: redName, action_log: logs });
+                return { snapshotLength: peerActionNoticeLogSnapshot.length };
+            }""",
+            {"players": players, "greenName": green["name"], "redName": red["name"]},
+        )
+        page.wait_for_timeout(400)
+        mobile_notice = page.evaluate(
+            """() => {
+                const overlay = document.getElementById('peerActionNotice');
+                const card = overlay.querySelector('.peer-action-notice-card');
+                const image = overlay.querySelector('img');
+                const rect = card.getBoundingClientRect();
+                return {
+                    display: getComputedStyle(overlay).display,
+                    text: document.getElementById('peerActionNoticeText').textContent,
+                    imageLoaded: Boolean(image && image.complete && image.naturalWidth > 0),
+                    withinViewport: rect.left >= 0 && rect.right <= innerWidth && rect.top >= 0 && rect.bottom <= innerHeight,
+                };
+            }"""
+        )
+        record(
+            "mobile_capped_log_notice_is_visible_with_loaded_card_art",
+            mobile_state["snapshotLength"] == 100
+            and mobile_notice["display"] == "flex"
+            and mobile_notice["text"] == f"{red['name']} 使用了合作談判"
+            and mobile_notice["imageLoaded"]
+            and mobile_notice["withinViewport"],
+            {**mobile_state, **mobile_notice},
+        )
+        page.screenshot(path=str(RECORD_DIR / "peer_action_notice_capped_log_mobile.png"))
 
         browser.close()
 

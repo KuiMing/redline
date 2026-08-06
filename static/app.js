@@ -3273,7 +3273,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // （server/game.py 的 self.log(...)）約定俗成都是以 `{player.name}` 開頭，卡名出現的
 // 位置不固定，所以用「掃過 cardPresentationCatalog 全部卡名、取內文中最長的相符字串」
 // 來避免短卡名誤判成另一張長卡名的子字串。
-let peerActionNoticeSeenLogLength = 0;
+let peerActionNoticeLogSnapshot = [];
 let peerActionNoticeGameId = null;
 let peerActionNoticeMinimized = false;
 let peerActionNoticeHasContent = false;
@@ -3289,9 +3289,28 @@ function applyPeerActionNoticeMinimizedState() {
   }
 }
 
-function closePeerActionNotice(seenLogLength = peerActionNoticeSeenLogLength) {
+function rememberPeerActionLog(entries) {
+  if (Array.isArray(entries)) peerActionNoticeLogSnapshot = entries.slice();
+}
+
+function peerActionNoticeNewEntryStart(entries) {
+  const previous = peerActionNoticeLogSnapshot;
+  if (!previous.length) return 0;
+  if (previous.length === entries.length && previous.every((entry, index) => entry === entries[index])) {
+    return entries.length;
+  }
+  for (let overlap = Math.min(previous.length, entries.length); overlap > 0; overlap--) {
+    const previousStart = previous.length - overlap;
+    if (entries.slice(0, overlap).every((entry, index) => entry === previous[previousStart + index])) {
+      return overlap;
+    }
+  }
+  return 0;
+}
+
+function closePeerActionNotice(entries = null) {
   const overlay = document.getElementById('peerActionNotice');
-  peerActionNoticeSeenLogLength = Math.max(peerActionNoticeSeenLogLength, seenLogLength);
+  if (Array.isArray(entries)) rememberPeerActionLog(entries);
   peerActionNoticeMinimized = false;
   peerActionNoticeHasContent = false;
   if (overlay) overlay.style.display = 'none';
@@ -3380,8 +3399,8 @@ function renderPeerActionNotice(state) {
   if (peerActionNoticeGameId !== gameId) {
     // (Re)connected to a different game: don't replay the whole history as "new".
     peerActionNoticeGameId = gameId;
-    peerActionNoticeSeenLogLength = 0;
-    closePeerActionNotice(entries.length);
+    peerActionNoticeLogSnapshot = [];
+    closePeerActionNotice(entries);
     return;
   }
 
@@ -3389,13 +3408,14 @@ function renderPeerActionNotice(state) {
   if (me && state.current_player === me.name) {
     // 前一位玩家的廣播不應擋住本人新回合；連縮小狀態一併收掉，且消耗到最新 log，
     // 避免之後切回等待狀態時又重播上一回合的舊通知。
-    closePeerActionNotice(entries.length);
+    closePeerActionNotice(entries);
     return;
   }
 
-  if (entries.length <= peerActionNoticeSeenLogLength) return;
-  const found = findLatestPeerActionSinceIndex(state, peerActionNoticeSeenLogLength);
-  peerActionNoticeSeenLogLength = entries.length;
+  const newEntryStart = peerActionNoticeNewEntryStart(entries);
+  rememberPeerActionLog(entries);
+  if (newEntryStart >= entries.length) return;
+  const found = findLatestPeerActionSinceIndex(state, newEntryStart);
   if (!found) return;
   peerActionNoticeHasContent = true;
 
