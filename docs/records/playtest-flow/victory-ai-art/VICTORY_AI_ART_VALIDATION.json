@@ -1,0 +1,477 @@
+{
+  "summary": {
+    "total": 21,
+    "passed": 21,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "asset_red_army_is_landscape_png",
+      "ok": true,
+      "detail": {
+        "path": "/Users/benmini/.openclaw/workspace/redline/static/victory-art/red_army.png",
+        "width": 1672,
+        "height": 941
+      }
+    },
+    {
+      "name": "asset_taiwan_green_is_landscape_png",
+      "ok": true,
+      "detail": {
+        "path": "/Users/benmini/.openclaw/workspace/redline/static/victory-art/taiwan_green.png",
+        "width": 1672,
+        "height": 941
+      }
+    },
+    {
+      "name": "asset_taiwan_blue_is_landscape_png",
+      "ok": true,
+      "detail": {
+        "path": "/Users/benmini/.openclaw/workspace/redline/static/victory-art/taiwan_blue.png",
+        "width": 1672,
+        "height": 941
+      }
+    },
+    {
+      "name": "asset_hong_kong_is_landscape_png",
+      "ok": true,
+      "detail": {
+        "path": "/Users/benmini/.openclaw/workspace/redline/static/victory-art/hong_kong.png",
+        "width": 1672,
+        "height": 941
+      }
+    },
+    {
+      "name": "asset_uyghur_is_landscape_png",
+      "ok": true,
+      "detail": {
+        "path": "/Users/benmini/.openclaw/workspace/redline/static/victory-art/uyghur.png",
+        "width": 1672,
+        "height": 941
+      }
+    },
+    {
+      "name": "asset_tibet_is_landscape_png",
+      "ok": true,
+      "detail": {
+        "path": "/Users/benmini/.openclaw/workspace/redline/static/victory-art/tibet.png",
+        "width": 1672,
+        "height": 941
+      }
+    },
+    {
+      "name": "asset_manchuria_is_landscape_png",
+      "ok": true,
+      "detail": {
+        "path": "/Users/benmini/.openclaw/workspace/redline/static/victory-art/manchuria.png",
+        "width": 1672,
+        "height": 941
+      }
+    },
+    {
+      "name": "asset_mongol_is_landscape_png",
+      "ok": true,
+      "detail": {
+        "path": "/Users/benmini/.openclaw/workspace/redline/static/victory-art/mongol.png",
+        "width": 1672,
+        "height": 941
+      }
+    },
+    {
+      "name": "asset_kazakh_is_landscape_png",
+      "ok": true,
+      "detail": {
+        "path": "/Users/benmini/.openclaw/workspace/redline/static/victory-art/kazakh.png",
+        "width": 1672,
+        "height": 941
+      }
+    },
+    {
+      "name": "asset_rebel_is_landscape_png",
+      "ok": true,
+      "detail": {
+        "path": "/Users/benmini/.openclaw/workspace/redline/static/victory-art/rebel.png",
+        "width": 1672,
+        "height": 941
+      }
+    },
+    {
+      "name": "browser_red_army_fills_stage_with_bottom_results_panel",
+      "ok": true,
+      "detail": {
+        "overlayDisplay": "flex",
+        "sceneClass": "victory-ending-scene victory-ending-scene--red_army victory-ending-scene-loaded",
+        "imageSrc": "http://127.0.0.1:8000/static/victory-art/red_army.png?v=20260806-ai-v1",
+        "imageNaturalWidth": 1672,
+        "imageNaturalHeight": 941,
+        "overlay": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 720
+        },
+        "scene": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 720
+        },
+        "image": {
+          "x": -8.4034423828125,
+          "y": -4.726959228515625,
+          "width": 1296.806884765625,
+          "height": 729.453857421875
+        },
+        "glass": {
+          "x": 32,
+          "y": 376.203125,
+          "width": 1216,
+          "height": 315.796875,
+          "bottom": 692
+        },
+        "expectedClass": "victory-ending-scene--red_army"
+      }
+    },
+    {
+      "name": "browser_taiwan_green_fills_stage_with_bottom_results_panel",
+      "ok": true,
+      "detail": {
+        "overlayDisplay": "flex",
+        "sceneClass": "victory-ending-scene victory-ending-scene--taiwan_green victory-ending-scene-loaded",
+        "imageSrc": "http://127.0.0.1:8000/static/victory-art/taiwan_green.png?v=20260806-ai-v1",
+        "imageNaturalWidth": 1672,
+        "imageNaturalHeight": 941,
+        "overlay": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 720
+        },
+        "scene": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 720
+        },
+        "image": {
+          "x": -7.796630859375,
+          "y": -4.3856201171875,
+          "width": 1295.59326171875,
+          "height": 728.771240234375
+        },
+        "glass": {
+          "x": 32,
+          "y": 376.203125,
+          "width": 1216,
+          "height": 315.796875,
+          "bottom": 692
+        },
+        "expectedClass": "victory-ending-scene--taiwan_green"
+      }
+    },
+    {
+      "name": "browser_taiwan_blue_fills_stage_with_bottom_results_panel",
+      "ok": true,
+      "detail": {
+        "overlayDisplay": "flex",
+        "sceneClass": "victory-ending-scene victory-ending-scene--taiwan_blue victory-ending-scene-loaded",
+        "imageSrc": "http://127.0.0.1:8000/static/victory-art/taiwan_blue.png?v=20260806-ai-v1",
+        "imageNaturalWidth": 1672,
+        "imageNaturalHeight": 941,
+        "overlay": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 720
+        },
+        "scene": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 720
+        },
+        "image": {
+          "x": -7.1884765625,
+          "y": -4.04351806640625,
+          "width": 1294.376953125,
+          "height": 728.0870361328125
+        },
+        "glass": {
+          "x": 32,
+          "y": 395.140625,
+          "width": 1216,
+          "height": 296.859375,
+          "bottom": 692
+        },
+        "expectedClass": "victory-ending-scene--taiwan_blue"
+      }
+    },
+    {
+      "name": "browser_hong_kong_fills_stage_with_bottom_results_panel",
+      "ok": true,
+      "detail": {
+        "overlayDisplay": "flex",
+        "sceneClass": "victory-ending-scene victory-ending-scene--hong_kong victory-ending-scene-loaded",
+        "imageSrc": "http://127.0.0.1:8000/static/victory-art/hong_kong.png?v=20260806-ai-v1",
+        "imageNaturalWidth": 1672,
+        "imageNaturalHeight": 941,
+        "overlay": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 720
+        },
+        "scene": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 720
+        },
+        "image": {
+          "x": -6.54345703125,
+          "y": -3.6806640625,
+          "width": 1293.0869140625,
+          "height": 727.361328125
+        },
+        "glass": {
+          "x": 32,
+          "y": 395.140625,
+          "width": 1216,
+          "height": 296.859375,
+          "bottom": 692
+        },
+        "expectedClass": "victory-ending-scene--hong_kong"
+      }
+    },
+    {
+      "name": "browser_uyghur_fills_stage_with_bottom_results_panel",
+      "ok": true,
+      "detail": {
+        "overlayDisplay": "flex",
+        "sceneClass": "victory-ending-scene victory-ending-scene--uyghur victory-ending-scene-loaded",
+        "imageSrc": "http://127.0.0.1:8000/static/victory-art/uyghur.png?v=20260806-ai-v1",
+        "imageNaturalWidth": 1672,
+        "imageNaturalHeight": 941,
+        "overlay": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 720
+        },
+        "scene": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 720
+        },
+        "image": {
+          "x": -5.9295654296875,
+          "y": -3.33538818359375,
+          "width": 1291.859130859375,
+          "height": 726.6707763671875
+        },
+        "glass": {
+          "x": 32,
+          "y": 395.140625,
+          "width": 1216,
+          "height": 296.859375,
+          "bottom": 692
+        },
+        "expectedClass": "victory-ending-scene--uyghur"
+      }
+    },
+    {
+      "name": "browser_tibet_fills_stage_with_bottom_results_panel",
+      "ok": true,
+      "detail": {
+        "overlayDisplay": "flex",
+        "sceneClass": "victory-ending-scene victory-ending-scene--tibet victory-ending-scene-loaded",
+        "imageSrc": "http://127.0.0.1:8000/static/victory-art/tibet.png?v=20260806-ai-v1",
+        "imageNaturalWidth": 1672,
+        "imageNaturalHeight": 941,
+        "overlay": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 720
+        },
+        "scene": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 720
+        },
+        "image": {
+          "x": -5.32928466796875,
+          "y": -2.997711181640625,
+          "width": 1290.65869140625,
+          "height": 725.995361328125
+        },
+        "glass": {
+          "x": 32,
+          "y": 395.140625,
+          "width": 1216,
+          "height": 296.859375,
+          "bottom": 692
+        },
+        "expectedClass": "victory-ending-scene--tibet"
+      }
+    },
+    {
+      "name": "browser_manchuria_fills_stage_with_bottom_results_panel",
+      "ok": true,
+      "detail": {
+        "overlayDisplay": "flex",
+        "sceneClass": "victory-ending-scene victory-ending-scene--manchuria victory-ending-scene-loaded",
+        "imageSrc": "http://127.0.0.1:8000/static/victory-art/manchuria.png?v=20260806-ai-v1",
+        "imageNaturalWidth": 1672,
+        "imageNaturalHeight": 941,
+        "overlay": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 720
+        },
+        "scene": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 720
+        },
+        "image": {
+          "x": -4.923583984375,
+          "y": -2.769500732421875,
+          "width": 1289.84716796875,
+          "height": 725.5390625
+        },
+        "glass": {
+          "x": 32,
+          "y": 395.140625,
+          "width": 1216,
+          "height": 296.859375,
+          "bottom": 692
+        },
+        "expectedClass": "victory-ending-scene--manchuria"
+      }
+    },
+    {
+      "name": "browser_mongol_fills_stage_with_bottom_results_panel",
+      "ok": true,
+      "detail": {
+        "overlayDisplay": "flex",
+        "sceneClass": "victory-ending-scene victory-ending-scene--mongol victory-ending-scene-loaded",
+        "imageSrc": "http://127.0.0.1:8000/static/victory-art/mongol.png?v=20260806-ai-v1",
+        "imageNaturalWidth": 1672,
+        "imageNaturalHeight": 941,
+        "overlay": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 720
+        },
+        "scene": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 720
+        },
+        "image": {
+          "x": -4.2386474609375,
+          "y": -2.384246826171875,
+          "width": 1288.477294921875,
+          "height": 724.7685546875
+        },
+        "glass": {
+          "x": 32,
+          "y": 395.140625,
+          "width": 1216,
+          "height": 296.859375,
+          "bottom": 692
+        },
+        "expectedClass": "victory-ending-scene--mongol"
+      }
+    },
+    {
+      "name": "browser_kazakh_fills_stage_with_bottom_results_panel",
+      "ok": true,
+      "detail": {
+        "overlayDisplay": "flex",
+        "sceneClass": "victory-ending-scene victory-ending-scene--kazakh victory-ending-scene-loaded",
+        "imageSrc": "http://127.0.0.1:8000/static/victory-art/kazakh.png?v=20260806-ai-v1",
+        "imageNaturalWidth": 1672,
+        "imageNaturalHeight": 941,
+        "overlay": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 720
+        },
+        "scene": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 720
+        },
+        "image": {
+          "x": -3.6058349609375,
+          "y": -2.02825927734375,
+          "width": 1287.211669921875,
+          "height": 724.0565185546875
+        },
+        "glass": {
+          "x": 32,
+          "y": 395.140625,
+          "width": 1216,
+          "height": 296.859375,
+          "bottom": 692
+        },
+        "expectedClass": "victory-ending-scene--kazakh"
+      }
+    },
+    {
+      "name": "browser_rebel_fills_stage_with_bottom_results_panel",
+      "ok": true,
+      "detail": {
+        "overlayDisplay": "flex",
+        "sceneClass": "victory-ending-scene victory-ending-scene--rebel victory-ending-scene-loaded",
+        "imageSrc": "http://127.0.0.1:8000/static/victory-art/rebel.png?v=20260806-ai-v1",
+        "imageNaturalWidth": 1672,
+        "imageNaturalHeight": 941,
+        "overlay": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 720
+        },
+        "scene": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 720
+        },
+        "image": {
+          "x": -3.05419921875,
+          "y": -1.717987060546875,
+          "width": 1286.1083984375,
+          "height": 723.43603515625
+        },
+        "glass": {
+          "x": 32,
+          "y": 376.203125,
+          "width": 1216,
+          "height": 315.796875,
+          "bottom": 692
+        },
+        "expectedClass": "victory-ending-scene--rebel"
+      }
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "ok": true,
+      "detail": {
+        "errors": []
+      }
+    }
+  ],
+  "contact_sheet": "/Users/benmini/.openclaw/workspace/redline/docs/records/playtest-flow/victory-ai-art/victory_ai_art_contact_sheet.png"
+}

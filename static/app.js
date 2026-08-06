@@ -3004,6 +3004,13 @@ function renderMyEraStageView(state = window.lastGameState || {}) {
 // 勝利畫面（2026-07-19）：state.winner 之前從未被前端顯示，遊戲結束毫無提示
 //（20 回合自動桌測發現）。winner 的值是「red_army」或獲勝玩家的名字（見 victory.py）。
 let victoryModalDismissedFor = null;
+const VICTORY_ENDING_ART_VERSION = '20260806-ai-v1';
+
+function victoryEndingArtUrl(sceneKey) {
+  return sceneKey
+    ? `/static/victory-art/${encodeURIComponent(sceneKey)}.png?v=${VICTORY_ENDING_ART_VERSION}`
+    : '';
+}
 
 // 結局敘事（2026-08-06 使用者需求）：依勝利陣營呈現客製化的「大局勢」文字，把牆內/牆外
 // 組織總數直接寫進敘事本身。優先用完整 faction_id（例如 taiwan_green/taiwan_blue 各自
@@ -3110,6 +3117,7 @@ function renderVictoryModal(state) {
 
   const endingEl = document.getElementById('victoryEnding');
   const endingSceneEl = document.getElementById('victoryEndingScene');
+  const endingArtEl = document.getElementById('victoryEndingArt');
   const endingTitleEl = document.getElementById('victoryEndingTitle');
   const endingBodyEl = document.getElementById('victoryEndingBody');
   if (endingEl && endingTitleEl && endingBodyEl) {
@@ -3125,6 +3133,15 @@ function renderVictoryModal(state) {
       endingBodyEl.textContent = ending.body;
       if (endingSceneEl) {
         endingSceneEl.className = 'victory-ending-scene' + (ending.sceneKey ? ` victory-ending-scene--${ending.sceneKey}` : '');
+      }
+      if (endingArtEl) {
+        const artUrl = victoryEndingArtUrl(ending.sceneKey);
+        endingArtEl.onload = () => endingSceneEl?.classList.add('victory-ending-scene-loaded');
+        endingArtEl.onerror = () => endingSceneEl?.classList.add('victory-ending-scene-error');
+        if (endingArtEl.getAttribute('src') !== artUrl) endingArtEl.setAttribute('src', artUrl);
+        if (endingArtEl.complete && endingArtEl.naturalWidth > 0) {
+          endingSceneEl?.classList.add('victory-ending-scene-loaded');
+        }
       }
     } else {
       endingEl.style.display = 'none';

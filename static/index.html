@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>REDLINE // STRATEGIC COMMAND</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="/static/style.css?v=game-area-width-20260801" />
+  <link rel="stylesheet" href="/static/style.css?v=victory-ai-art-20260806" />
 </head>
 <body>
 <div id="stageViewport">
@@ -204,19 +204,16 @@
   <div id="cardPreviewContent" class="card-preview-content"></div>
 </div>
 
-<div id="victoryModal" class="modal-overlay" style="display:none;">
+<div id="victoryModal" class="modal-overlay victory-overlay" style="display:none;">
+  <div id="victoryEndingScene" class="victory-ending-scene" aria-hidden="true">
+    <img id="victoryEndingArt" class="victory-ending-art" alt="" />
+  </div>
   <div class="modal-glass victory-glass">
     <div class="panel-title">遊戲結束</div>
     <div id="victoryTitle" class="modal-title-text"></div>
     <div id="victorySubtitle" class="modal-body-text"></div>
     <div id="victoryCoWinners" class="modal-body-text" style="display:none;"></div>
     <div id="victoryEnding" class="victory-ending" style="display:none;">
-      <div id="victoryEndingScene" class="victory-ending-scene">
-        <div class="victory-ending-scene-sky"></div>
-        <div class="victory-ending-scene-sun"></div>
-        <div class="victory-ending-scene-ground"></div>
-        <div class="victory-ending-scene-texture"></div>
-      </div>
       <div class="victory-ending-copy">
         <div id="victoryEndingTitle" class="victory-ending-title"></div>
         <div id="victoryEndingBody" class="victory-ending-body"></div>
@@ -337,6 +334,6 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/static/player_messages_zh_tw.js?v=player-message-i18n-20260801"></script>
-<script src="/static/app.js?v=game-area-width-20260801"></script>
+<script src="/static/app.js?v=victory-ai-art-20260806"></script>
 </body>
 </html>
