@@ -3057,8 +3057,9 @@ const VICTORY_ENDING_NARRATIVES = {
 
 function victoryEndingNarrative(factionId, ctx) {
   if (!factionId) return null;
-  const template = VICTORY_ENDING_NARRATIVES[factionId] || VICTORY_ENDING_NARRATIVES[factionCategoryOf(factionId)];
-  return template ? template(ctx) : null;
+  const sceneKey = VICTORY_ENDING_NARRATIVES[factionId] ? factionId : factionCategoryOf(factionId);
+  const template = VICTORY_ENDING_NARRATIVES[sceneKey];
+  return template ? { ...template(ctx), sceneKey } : null;
 }
 
 function renderVictoryModal(state) {
@@ -3108,6 +3109,7 @@ function renderVictoryModal(state) {
   const outsideWallTotal = players.reduce((sum, p) => sum + (p.organization_counts?.outside_wall ?? 0), 0);
 
   const endingEl = document.getElementById('victoryEnding');
+  const endingSceneEl = document.getElementById('victoryEndingScene');
   const endingTitleEl = document.getElementById('victoryEndingTitle');
   const endingBodyEl = document.getElementById('victoryEndingBody');
   if (endingEl && endingTitleEl && endingBodyEl) {
@@ -3121,6 +3123,9 @@ function renderVictoryModal(state) {
       endingEl.style.setProperty('--victory-ending-accent', winnerColor);
       endingTitleEl.textContent = ending.title;
       endingBodyEl.textContent = ending.body;
+      if (endingSceneEl) {
+        endingSceneEl.className = 'victory-ending-scene' + (ending.sceneKey ? ` victory-ending-scene--${ending.sceneKey}` : '');
+      }
     } else {
       endingEl.style.display = 'none';
     }

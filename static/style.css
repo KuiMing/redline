@@ -2608,13 +2608,40 @@ button.player-status-discard-card:focus-visible {
 }
 
 /* 結局敘事（2026-08-06 使用者需求）：依勝利陣營呈現客製化的「大局勢」文字，把牆內/牆外
-   組織總數直接寫進敘事本身，比照卡牌遊戲常見的史詩感 epilogue 呈現。 */
+   組織總數直接寫進敘事本身，比照卡牌遊戲常見的史詩感 epilogue 呈現。
+   2026-08-06 使用者進一步要求「每個陣營都要有自己的畫面」——目前沒有圖片生成工具可用
+   （scripts/generate_all_*_ai_art.py 依賴的 plugins.image_gen.openai-codex provider 在
+   這個環境找不到），改用純 CSS 疊層（漸層天空＋剪影地形＋光源）做出風格化場景，10 種
+   陣營各一組配色與地形剪影，不是真的插畫但至少每個陣營畫面不同。之後若有真的插畫，
+   可以直接在 .victory-ending-scene 裡疊一張 <img>／background-image 覆蓋，不用改結構。 */
 .victory-ending {
   margin: 4px 0 14px;
-  padding: 14px 16px;
+  overflow: hidden;
   border-left: 3px solid var(--victory-ending-accent, rgba(250, 204, 21, 0.7));
   border-radius: 6px;
-  background: linear-gradient(90deg, rgba(148, 163, 184, 0.08), transparent);
+  background: rgba(148, 163, 184, 0.06);
+}
+
+.victory-ending-scene {
+  position: relative;
+  height: 130px;
+  overflow: hidden;
+}
+
+.victory-ending-scene-sky,
+.victory-ending-scene-ground,
+.victory-ending-scene-texture {
+  position: absolute;
+  inset: 0;
+}
+
+.victory-ending-scene-sun {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.victory-ending-copy {
+  padding: 12px 16px 14px;
 }
 
 .victory-ending-title {
@@ -2629,6 +2656,160 @@ button.player-status-discard-card:focus-visible {
   font-size: 0.88rem;
   line-height: 1.7;
   color: #dbe4f0;
+}
+
+/* 紅軍：紅色鐵幕，籠罩天下——冷色探照燈＋鋸齒圍牆剪影＋鐵絲網紋理 */
+.victory-ending-scene--red_army .victory-ending-scene-sky {
+  background: linear-gradient(180deg, #1a0505 0%, #3b0a0a 55%, #7a1220 100%);
+}
+.victory-ending-scene--red_army .victory-ending-scene-sun {
+  top: 12%; left: 74%; width: 22px; height: 22px;
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 0 30px 12px rgba(255, 255, 255, 0.25);
+}
+.victory-ending-scene--red_army .victory-ending-scene-ground {
+  background: #0d0605;
+  clip-path: polygon(0% 100%, 0% 60%, 8% 60%, 8% 40%, 16% 40%, 16% 60%, 24% 60%, 24% 40%, 32% 40%, 32% 60%, 40% 60%, 40% 40%, 48% 40%, 48% 60%, 56% 60%, 56% 40%, 64% 40%, 64% 60%, 72% 60%, 72% 40%, 80% 40%, 80% 60%, 88% 60%, 88% 40%, 96% 40%, 96% 60%, 100% 60%, 100% 100%);
+}
+.victory-ending-scene--red_army .victory-ending-scene-texture {
+  top: 34%; height: 3px; bottom: auto;
+  background: repeating-linear-gradient(115deg, transparent 0 8px, rgba(255, 255, 255, 0.14) 8px 9px);
+  opacity: 0.6;
+}
+
+/* 臺灣綠線：自由之島，燈火通明——暖色日出＋城市天際線 */
+.victory-ending-scene--taiwan_green .victory-ending-scene-sky {
+  background: linear-gradient(180deg, #0b2a3a 0%, #1c5d6b 40%, #f0b84d 75%, #ffe1a8 100%);
+}
+.victory-ending-scene--taiwan_green .victory-ending-scene-sun {
+  top: 48%; left: 58%; width: 46px; height: 46px;
+  background: #ffd873;
+  box-shadow: 0 0 40px 16px rgba(255, 216, 115, 0.4);
+}
+.victory-ending-scene--taiwan_green .victory-ending-scene-ground {
+  background: #082430;
+  clip-path: polygon(0% 100%, 0% 55%, 6% 55%, 6% 70%, 14% 70%, 14% 45%, 22% 45%, 22% 65%, 30% 65%, 30% 35%, 38% 35%, 38% 60%, 46% 60%, 46% 50%, 54% 50%, 54% 68%, 62% 68%, 62% 40%, 70% 40%, 70% 62%, 78% 62%, 78% 48%, 86% 48%, 86% 66%, 94% 66%, 94% 58%, 100% 58%, 100% 100%);
+}
+
+/* 臺灣藍線：光復大陸，指日可待——深藍轉暮紅＋遠方山稜（對岸）剪影 */
+.victory-ending-scene--taiwan_blue .victory-ending-scene-sky {
+  background: linear-gradient(180deg, #0c1b3a 0%, #17306b 45%, #7a1f2b 85%, #b23a2f 100%);
+}
+.victory-ending-scene--taiwan_blue .victory-ending-scene-sun {
+  top: 42%; left: 66%; width: 34px; height: 34px;
+  background: #e0453f;
+  box-shadow: 0 0 34px 14px rgba(224, 69, 63, 0.4);
+}
+.victory-ending-scene--taiwan_blue .victory-ending-scene-ground {
+  background: #08122a;
+  clip-path: polygon(0% 100%, 0% 70%, 10% 55%, 20% 68%, 30% 45%, 40% 62%, 50% 40%, 60% 60%, 70% 48%, 80% 65%, 90% 50%, 100% 66%, 100% 100%);
+}
+
+/* 香港：獅子山下，重見天日——晨曦粉金＋維港天際線 */
+.victory-ending-scene--hong_kong .victory-ending-scene-sky {
+  background: linear-gradient(180deg, #12203a 0%, #3a4d78 40%, #e8a3a0 75%, #ffd9b0 100%);
+}
+.victory-ending-scene--hong_kong .victory-ending-scene-sun {
+  top: 50%; left: 20%; width: 40px; height: 40px;
+  background: #ffe6b0;
+  box-shadow: 0 0 36px 14px rgba(255, 230, 176, 0.4);
+}
+.victory-ending-scene--hong_kong .victory-ending-scene-ground {
+  background: #0a1730;
+  clip-path: polygon(0% 100%, 0% 50%, 5% 50%, 5% 72%, 12% 72%, 12% 38%, 18% 38%, 18% 60%, 25% 60%, 25% 30%, 32% 30%, 32% 55%, 39% 55%, 39% 42%, 46% 42%, 46% 65%, 53% 65%, 53% 35%, 60% 35%, 60% 58%, 67% 58%, 67% 45%, 74% 45%, 74% 68%, 81% 68%, 81% 40%, 88% 40%, 88% 62%, 95% 62%, 95% 50%, 100% 50%, 100% 100%);
+}
+
+/* 維吾爾：東突厥斯坦，重獲自由——湖水綠松石天空＋沙丘與圓頂剪影 */
+.victory-ending-scene--uyghur .victory-ending-scene-sky {
+  background: linear-gradient(180deg, #062a33 0%, #0e5f6b 45%, #2fb6c4 80%, #bdeef0 100%);
+}
+.victory-ending-scene--uyghur .victory-ending-scene-sun {
+  top: 22%; left: 50%; width: 26px; height: 26px;
+  background: #eafcff;
+  box-shadow: 0 0 30px 12px rgba(234, 252, 255, 0.35);
+}
+.victory-ending-scene--uyghur .victory-ending-scene-ground {
+  background: #04181d;
+  clip-path: polygon(0% 100%, 0% 75%, 15% 60%, 30% 72%, 45% 55%, 50% 50%, 55% 55%, 70% 68%, 85% 58%, 100% 72%, 100% 100%);
+}
+
+/* 西藏：雪域高原，經幡再揚——酒紅轉金天空＋雪峰鋸齒剪影 */
+.victory-ending-scene--tibet .victory-ending-scene-sky {
+  background: linear-gradient(180deg, #3a0f14 0%, #6b1c24 40%, #c9832f 75%, #f2c14e 100%);
+}
+.victory-ending-scene--tibet .victory-ending-scene-sun {
+  top: 16%; left: 30%; width: 30px; height: 30px;
+  background: #fff6da;
+  box-shadow: 0 0 32px 14px rgba(255, 246, 218, 0.35);
+}
+.victory-ending-scene--tibet .victory-ending-scene-ground {
+  background: #2a0a10;
+  clip-path: polygon(0% 100%, 0% 65%, 8% 40%, 16% 60%, 24% 30%, 32% 58%, 40% 20%, 48% 55%, 56% 35%, 64% 60%, 72% 25%, 80% 58%, 88% 38%, 96% 62%, 100% 50%, 100% 100%);
+}
+
+/* 滿洲：白山黑水，滿洲復國——淡金晨光＋森林山脈剪影 */
+.victory-ending-scene--manchuria .victory-ending-scene-sky {
+  background: linear-gradient(180deg, #14202a 0%, #2c4a52 45%, #7c9a6e 75%, #d9c98a 100%);
+}
+.victory-ending-scene--manchuria .victory-ending-scene-sun {
+  top: 20%; left: 78%; width: 24px; height: 24px;
+  background: #eef0d0;
+  box-shadow: 0 0 26px 10px rgba(238, 240, 208, 0.3);
+}
+.victory-ending-scene--manchuria .victory-ending-scene-ground {
+  background: #0c1a16;
+  clip-path: polygon(0% 100%, 0% 68%, 12% 50%, 25% 64%, 38% 42%, 50% 60%, 62% 46%, 75% 62%, 88% 48%, 100% 64%, 100% 100%);
+}
+
+/* 蒙古：長生天下，重歸一統——遼闊藍天大太陽＋起伏草原剪影 */
+.victory-ending-scene--mongol .victory-ending-scene-sky {
+  background: linear-gradient(180deg, #123a5e 0%, #2f75a8 45%, #8fd0e6 80%, #eaf7ee 100%);
+}
+.victory-ending-scene--mongol .victory-ending-scene-sun {
+  top: 24%; left: 68%; width: 52px; height: 52px;
+  background: #ffe28a;
+  box-shadow: 0 0 44px 18px rgba(255, 226, 138, 0.4);
+}
+.victory-ending-scene--mongol .victory-ending-scene-ground {
+  background: #1c3a1a;
+  clip-path: polygon(0% 100%, 0% 78%, 20% 68%, 40% 76%, 60% 66%, 80% 74%, 100% 68%, 100% 100%);
+}
+
+/* 哈薩克：伊犁河畔，重見天日——藍調河谷＋山稜與河面反光 */
+.victory-ending-scene--kazakh .victory-ending-scene-sky {
+  background: linear-gradient(180deg, #0d2b4a 0%, #1f5a86 45%, #4fa0c9 75%, #cde8d8 100%);
+}
+.victory-ending-scene--kazakh .victory-ending-scene-sun {
+  top: 20%; left: 22%; width: 28px; height: 28px;
+  background: #fff3c4;
+  box-shadow: 0 0 30px 12px rgba(255, 243, 196, 0.35);
+}
+.victory-ending-scene--kazakh .victory-ending-scene-ground {
+  background: #0a1f30;
+  clip-path: polygon(0% 100%, 0% 70%, 14% 52%, 28% 66%, 42% 48%, 56% 64%, 70% 50%, 84% 66%, 100% 54%, 100% 100%);
+}
+.victory-ending-scene--kazakh .victory-ending-scene-texture {
+  top: auto; bottom: 0; height: 14%;
+  background: linear-gradient(180deg, rgba(207, 235, 255, 0.28), rgba(207, 235, 255, 0.05));
+}
+
+/* 反賊：烽火燎原，反賊大團結——赤陶暖天＋破碎多峰剪影＋多面小旗紋理 */
+.victory-ending-scene--rebel .victory-ending-scene-sky {
+  background: linear-gradient(180deg, #241407 0%, #6b3a12 45%, #c97a2c 75%, #f2c268 100%);
+}
+.victory-ending-scene--rebel .victory-ending-scene-sun {
+  top: 18%; left: 44%; width: 30px; height: 30px;
+  background: #ffe9c2;
+  box-shadow: 0 0 34px 14px rgba(255, 233, 194, 0.35);
+}
+.victory-ending-scene--rebel .victory-ending-scene-ground {
+  background: #170d05;
+  clip-path: polygon(0% 100%, 0% 80%, 6% 55%, 12% 75%, 18% 45%, 24% 70%, 30% 50%, 36% 78%, 42% 40%, 48% 68%, 54% 52%, 60% 75%, 66% 42%, 72% 66%, 78% 48%, 84% 72%, 90% 45%, 96% 68%, 100% 58%, 100% 100%);
+}
+.victory-ending-scene--rebel .victory-ending-scene-texture {
+  top: 38%; height: 46%; bottom: auto;
+  background: repeating-linear-gradient(90deg, transparent 0 38px, rgba(255, 214, 150, 0.3) 38px 39px);
+  opacity: 0.7;
 }
 
 .victory-summary {
