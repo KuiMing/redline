@@ -181,6 +181,33 @@ def main() -> None:
             red_actual,
         )
         red_page.screenshot(path=str(RECORD_DIR / "victory_red_army.png"))
+        red_page.locator("#victoryEndingScene").click(position={"x": 640, "y": 520})
+        red_page.wait_for_function("() => document.getElementById('victoryArtViewer')?.getAttribute('aria-hidden') === 'false'")
+        non_red_full_art = red_page.evaluate(
+            """() => {
+                const viewer = document.getElementById('victoryArtViewer').getBoundingClientRect();
+                const image = document.getElementById('victoryArtViewerImage');
+                const box = image.getBoundingClientRect();
+                return {
+                    src: image.currentSrc,
+                    natural: [image.naturalWidth, image.naturalHeight],
+                    box: { x: box.x, y: box.y, width: box.width, height: box.height },
+                    viewer: { width: viewer.width, height: viewer.height },
+                };
+            }"""
+        )
+        record(
+            "non_red_viewer_can_open_complete_catastrophe_art",
+            "/static/victory-art/red_army.png" in non_red_full_art["src"]
+            and non_red_full_art["natural"] == [1672, 941]
+            and non_red_full_art["box"]["x"] >= 0
+            and non_red_full_art["box"]["y"] >= 0
+            and non_red_full_art["box"]["x"] + non_red_full_art["box"]["width"] <= 1280
+            and non_red_full_art["box"]["y"] + non_red_full_art["box"]["height"] <= 720,
+            non_red_full_art,
+        )
+        red_page.screenshot(path=str(RECORD_DIR / "victory_red_army_full_art.png"))
+        red_page.locator("#victoryArtViewerClose").click()
         red_page.close()
 
         # 紅軍自己觀看同一局：改為征服世界宣傳版，並維持一般的底部資訊板。
@@ -215,6 +242,95 @@ def main() -> None:
             red_viewer_actual,
         )
         red_viewer_page.screenshot(path=str(RECORD_DIR / "victory_red_army_triumph.png"))
+
+        red_viewer_page.evaluate("() => document.querySelector('.victory-glass').click()")
+        glass_click_hidden = red_viewer_page.get_attribute("#victoryArtViewer", "aria-hidden")
+        record(
+            "results_panel_click_does_not_open_full_art",
+            glass_click_hidden == "true",
+            {"ariaHidden": glass_click_hidden},
+        )
+
+        scene = red_viewer_page.locator("#victoryEndingScene")
+        scene.click(position={"x": 640, "y": 160})
+        red_viewer_page.wait_for_function("() => document.getElementById('victoryArtViewer')?.getAttribute('aria-hidden') === 'false'")
+        full_art = red_viewer_page.evaluate(
+            """() => {
+                const viewer = document.getElementById('victoryArtViewer').getBoundingClientRect();
+                const image = document.getElementById('victoryArtViewerImage');
+                const box = image.getBoundingClientRect();
+                return {
+                    display: getComputedStyle(document.getElementById('victoryArtViewer')).display,
+                    fit: getComputedStyle(image).objectFit,
+                    src: image.currentSrc,
+                    alt: image.alt,
+                    natural: [image.naturalWidth, image.naturalHeight],
+                    box: { x: box.x, y: box.y, width: box.width, height: box.height },
+                    viewer: { width: viewer.width, height: viewer.height },
+                };
+            }"""
+        )
+        natural_ratio = full_art["natural"][0] / full_art["natural"][1]
+        rendered_ratio = full_art["box"]["width"] / full_art["box"]["height"]
+        record(
+            "red_army_viewer_full_art_is_contained_without_crop",
+            full_art["display"] == "flex"
+            and full_art["fit"] == "contain"
+            and "/static/victory-art/red_army_triumph.png" in full_art["src"]
+            and full_art["natural"] == [1672, 941]
+            and abs(natural_ratio - rendered_ratio) < 0.01
+            and full_art["box"]["x"] >= 0
+            and full_art["box"]["y"] >= 0
+            and full_art["box"]["x"] + full_art["box"]["width"] <= 1280
+            and full_art["box"]["y"] + full_art["box"]["height"] <= 720,
+            full_art,
+        )
+        red_viewer_page.keyboard.press("Tab")
+        tab_focus = red_viewer_page.evaluate("() => document.activeElement?.id")
+        record(
+            "full_art_tab_focus_stays_on_close_button",
+            tab_focus == "victoryArtViewerClose",
+            {"activeId": tab_focus},
+        )
+        red_viewer_page.screenshot(path=str(RECORD_DIR / "victory_red_army_triumph_full_art.png"))
+
+        red_viewer_page.keyboard.press("Escape")
+        escape_state = red_viewer_page.evaluate(
+            """() => ({
+                ariaHidden: document.getElementById('victoryArtViewer').getAttribute('aria-hidden'),
+                activeId: document.activeElement?.id,
+            })"""
+        )
+        record(
+            "full_art_escape_closes_and_restores_focus",
+            escape_state["ariaHidden"] == "true" and escape_state["activeId"] == "victoryEndingScene",
+            escape_state,
+        )
+
+        scene.press("Enter")
+        red_viewer_page.wait_for_function("() => document.getElementById('victoryArtViewer')?.getAttribute('aria-hidden') === 'false'")
+        red_viewer_page.locator("#victoryArtViewerClose").click()
+        close_button_state = red_viewer_page.evaluate(
+            """() => ({
+                ariaHidden: document.getElementById('victoryArtViewer').getAttribute('aria-hidden'),
+                activeId: document.activeElement?.id,
+            })"""
+        )
+        record(
+            "keyboard_open_and_close_button_restore_scene_focus",
+            close_button_state["ariaHidden"] == "true" and close_button_state["activeId"] == "victoryEndingScene",
+            close_button_state,
+        )
+
+        scene.click(position={"x": 640, "y": 160})
+        red_viewer_page.wait_for_function("() => document.getElementById('victoryArtViewer')?.getAttribute('aria-hidden') === 'false'")
+        red_viewer_page.locator("#victoryArtViewer").click(position={"x": 5, "y": 5})
+        backdrop_hidden = red_viewer_page.get_attribute("#victoryArtViewer", "aria-hidden")
+        record(
+            "full_art_backdrop_click_closes_viewer",
+            backdrop_hidden == "true",
+            {"ariaHidden": backdrop_hidden},
+        )
         red_viewer_page.close()
 
         contact = context.new_page()

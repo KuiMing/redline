@@ -2620,7 +2620,13 @@ button.player-status-discard-card:focus-visible {
   inset: 0;
   z-index: 0;
   overflow: hidden;
+  cursor: zoom-in;
   background: radial-gradient(circle at 72% 35%, #27364d 0%, #101827 45%, #05080d 100%);
+}
+
+.victory-ending-scene:focus-visible {
+  outline: 3px solid rgba(147, 197, 253, 0.92);
+  outline-offset: -7px;
 }
 
 .victory-ending-scene::after {
@@ -2651,6 +2657,70 @@ button.player-status-discard-card:focus-visible {
 
 .victory-ending-scene-error .victory-ending-art {
   display: none;
+}
+
+.victory-art-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 44px 56px;
+  background: rgba(0, 0, 0, 0.96);
+  cursor: zoom-out;
+}
+
+.victory-art-viewer-image {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  box-shadow: 0 24px 90px rgba(0, 0, 0, 0.72);
+  cursor: default;
+}
+
+.victory-art-viewer-close {
+  position: fixed;
+  top: 18px;
+  right: 22px;
+  z-index: 1;
+  width: 46px;
+  height: 46px;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(8, 12, 20, 0.78);
+  font: 300 32px/40px system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.victory-art-viewer-close:hover,
+.victory-art-viewer-close:focus-visible {
+  border-color: #fff;
+  background: rgba(185, 28, 28, 0.88);
+  outline: 3px solid rgba(255, 255, 255, 0.72);
+  outline-offset: 2px;
+}
+
+.victory-art-viewer-hint {
+  position: fixed;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  padding: 7px 13px;
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.82);
+  background: rgba(8, 12, 20, 0.72);
+  font-size: 13px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+body.victory-art-viewer-open {
+  overflow: hidden;
 }
 
 .victory-glass {
@@ -3121,4 +3191,26 @@ button.player-status-discard-card:focus-visible {
 
 .my-era-stage-section .era-achievement-section-title {
   margin-top: 0;
+}
+
+@media (max-width: 720px) {
+  .victory-art-viewer {
+    padding: 50px 12px 56px;
+  }
+
+  .victory-art-viewer-close {
+    top: 10px;
+    right: 12px;
+    width: 40px;
+    height: 40px;
+    font-size: 28px;
+    line-height: 34px;
+  }
+
+  .victory-art-viewer-hint {
+    width: calc(100% - 32px);
+    box-sizing: border-box;
+    text-align: center;
+    white-space: normal;
+  }
 }

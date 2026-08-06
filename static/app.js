@@ -3012,6 +3012,38 @@ function victoryEndingArtUrl(sceneKey) {
     : '';
 }
 
+let victoryArtViewerReturnFocus = null;
+
+function victoryArtViewerIsOpen() {
+  return document.getElementById('victoryArtViewer')?.getAttribute('aria-hidden') === 'false';
+}
+
+function openVictoryArtViewer() {
+  const viewer = document.getElementById('victoryArtViewer');
+  const viewerImage = document.getElementById('victoryArtViewerImage');
+  const sourceImage = document.getElementById('victoryEndingArt');
+  const closeButton = document.getElementById('victoryArtViewerClose');
+  if (!viewer || !viewerImage || !sourceImage?.complete || !sourceImage.naturalWidth) return;
+
+  victoryArtViewerReturnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  viewerImage.src = sourceImage.currentSrc || sourceImage.src;
+  viewerImage.alt = `${document.getElementById('victoryEndingTitle')?.textContent || '勝利結局'}完整插畫`;
+  viewer.style.display = 'flex';
+  viewer.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('victory-art-viewer-open');
+  requestAnimationFrame(() => closeButton?.focus());
+}
+
+function closeVictoryArtViewer(restoreFocus = true) {
+  const viewer = document.getElementById('victoryArtViewer');
+  if (!viewer || !victoryArtViewerIsOpen()) return;
+  viewer.style.display = 'none';
+  viewer.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('victory-art-viewer-open');
+  if (restoreFocus && victoryArtViewerReturnFocus?.isConnected) victoryArtViewerReturnFocus.focus();
+  victoryArtViewerReturnFocus = null;
+}
+
 // 結局敘事（2026-08-06 使用者需求）：依勝利陣營呈現客製化的「大局勢」文字，把牆內/牆外
 // 組織總數直接寫進敘事本身。優先用完整 faction_id（例如 taiwan_green/taiwan_blue 各自
 // 獨立一段），沒有專屬敘事的陣營則退回 factionCategoryOf() 分類（tibet/uyghur 的多個
@@ -3082,6 +3114,7 @@ function renderVictoryModal(state) {
   if (!overlay || !badge) return;
   const winner = state.winner;
   if (!winner) {
+    closeVictoryArtViewer(false);
     overlay.style.display = 'none';
     badge.style.display = 'none';
     victoryModalDismissedFor = null;
@@ -3096,6 +3129,7 @@ function renderVictoryModal(state) {
   const factionText = winnerFaction ? factionDisplayName(winnerFaction) : '';
 
   if (victoryModalDismissedFor === winner) {
+    closeVictoryArtViewer(false);
     overlay.style.display = 'none';
     badge.style.display = 'block';
     badge.innerHTML = `遊戲結束：<span style="color:${winnerColor}">${winnerLabel}</span> 獲勝｜點擊查看結果`;
@@ -3141,6 +3175,7 @@ function renderVictoryModal(state) {
       endingBodyEl.textContent = ending.body;
       if (endingSceneEl) {
         endingSceneEl.className = 'victory-ending-scene' + (ending.sceneKey ? ` victory-ending-scene--${ending.sceneKey}` : '');
+        endingSceneEl.setAttribute('aria-label', `查看「${ending.title}」完整插畫`);
       }
       if (endingArtEl) {
         const artUrl = victoryEndingArtUrl(ending.sceneKey);
@@ -3185,8 +3220,36 @@ function renderVictoryModal(state) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  const endingScene = document.getElementById('victoryEndingScene');
+  if (endingScene) {
+    endingScene.addEventListener('click', openVictoryArtViewer);
+    endingScene.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      openVictoryArtViewer();
+    });
+  }
+
+  const artViewer = document.getElementById('victoryArtViewer');
+  if (artViewer) artViewer.addEventListener('click', (event) => {
+    if (event.target === artViewer) closeVictoryArtViewer();
+  });
+  document.getElementById('victoryArtViewerImage')?.addEventListener('click', event => event.stopPropagation());
+  document.getElementById('victoryArtViewerClose')?.addEventListener('click', () => closeVictoryArtViewer());
+  document.addEventListener('keydown', (event) => {
+    if (!victoryArtViewerIsOpen()) return;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeVictoryArtViewer();
+    } else if (event.key === 'Tab') {
+      event.preventDefault();
+      document.getElementById('victoryArtViewerClose')?.focus();
+    }
+  });
+
   const minimizeBtn = document.getElementById('victoryMinimizeBtn');
   if (minimizeBtn) minimizeBtn.addEventListener('click', () => {
+    closeVictoryArtViewer(false);
     victoryModalDismissedFor = (window.lastGameState || {}).winner || null;
     if (window.lastGameState) renderVictoryModal(window.lastGameState);
   });

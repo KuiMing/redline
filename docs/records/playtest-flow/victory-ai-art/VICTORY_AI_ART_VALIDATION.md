@@ -2,8 +2,8 @@
 
 重跑：`uv run --with playwright python scripts/validate_victory_fullscreen_ai_art.py`
 
-- total: 24
-- passed: 24
+- total: 31
+- passed: 31
 - failed: 0
 - contact sheet: `/Users/benmini/.openclaw/workspace/redline/docs/records/playtest-flow/victory-ai-art/victory_ai_art_contact_sheet.png`
 
@@ -30,5 +30,12 @@
 - ✅ `browser_kazakh_fills_stage_with_results_panel`
 - ✅ `browser_rebel_fills_stage_with_results_panel`
 - ✅ `non_red_viewer_sees_red_army_catastrophe_art_and_top_panel`
+- ✅ `non_red_viewer_can_open_complete_catastrophe_art`
 - ✅ `red_army_viewer_sees_world_conquest_art_and_bottom_panel`
+- ✅ `results_panel_click_does_not_open_full_art`
+- ✅ `red_army_viewer_full_art_is_contained_without_crop`
+- ✅ `full_art_tab_focus_stays_on_close_button`
+- ✅ `full_art_escape_closes_and_restores_focus`
+- ✅ `keyboard_open_and_close_button_restore_scene_focus`
+- ✅ `full_art_backdrop_click_closes_viewer`
 - ✅ `browser_console_has_no_errors`

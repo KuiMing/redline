@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>REDLINE // STRATEGIC COMMAND</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="/static/style.css?v=victory-ai-art-red-20260806" />
+  <link rel="stylesheet" href="/static/style.css?v=victory-art-viewer-20260806" />
 </head>
 <body>
 <div id="stageViewport">
@@ -205,7 +205,7 @@
 </div>
 
 <div id="victoryModal" class="modal-overlay victory-overlay" style="display:none;">
-  <div id="victoryEndingScene" class="victory-ending-scene" aria-hidden="true">
+  <div id="victoryEndingScene" class="victory-ending-scene" role="button" tabindex="0" aria-label="查看完整勝利插畫">
     <img id="victoryEndingArt" class="victory-ending-art" alt="" />
   </div>
   <div class="modal-glass victory-glass">
@@ -226,6 +226,12 @@
   </div>
 </div>
 <button id="victoryBadge" type="button" style="display:none;"></button>
+
+<div id="victoryArtViewer" class="victory-art-viewer" role="dialog" aria-modal="true" aria-label="完整勝利插畫" aria-hidden="true" style="display:none;">
+  <button id="victoryArtViewerClose" class="victory-art-viewer-close" type="button" aria-label="關閉完整勝利插畫">×</button>
+  <img id="victoryArtViewerImage" class="victory-art-viewer-image" alt="" />
+  <div class="victory-art-viewer-hint">按 Esc、背景或右上角 × 返回結算畫面</div>
+</div>
 
 <div id="peerActionNotice" class="peer-action-notice" style="display:none;">
   <div class="peer-action-notice-card">
@@ -334,6 +340,6 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/static/player_messages_zh_tw.js?v=player-message-i18n-20260801"></script>
-<script src="/static/app.js?v=victory-red-perspective-20260806"></script>
+<script src="/static/app.js?v=victory-art-viewer-20260806"></script>
 </body>
 </html>

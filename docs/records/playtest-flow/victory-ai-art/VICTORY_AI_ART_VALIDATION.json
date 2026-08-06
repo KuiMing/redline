@@ -1,7 +1,7 @@
 {
   "summary": {
-    "total": 24,
-    "passed": 24,
+    "total": 31,
+    "passed": 31,
     "failed": 0
   },
   "results": [
@@ -126,10 +126,10 @@
           "height": 720
         },
         "image": {
-          "x": -8.4510498046875,
-          "y": -4.75372314453125,
-          "width": 1296.902099609375,
-          "height": 729.5074462890625
+          "x": -8.404296875,
+          "y": -4.7274169921875,
+          "width": 1296.80859375,
+          "height": 729.454833984375
         },
         "glass": {
           "x": 32,
@@ -163,10 +163,10 @@
           "height": 720
         },
         "image": {
-          "x": -7.8262939453125,
-          "y": -4.402313232421875,
-          "width": 1295.652587890625,
-          "height": 728.8046875
+          "x": -7.8050537109375,
+          "y": -4.39031982421875,
+          "width": 1295.610107421875,
+          "height": 728.7806396484375
         },
         "glass": {
           "x": 32,
@@ -200,10 +200,10 @@
           "height": 720
         },
         "image": {
-          "x": -7.2362060546875,
-          "y": -4.070343017578125,
-          "width": 1294.472412109375,
-          "height": 728.140625
+          "x": -7.2000732421875,
+          "y": -4.050048828125,
+          "width": 1294.400146484375,
+          "height": 728.10009765625
         },
         "glass": {
           "x": 32,
@@ -237,10 +237,10 @@
           "height": 720
         },
         "image": {
-          "x": -6.7021484375,
-          "y": -3.769927978515625,
-          "width": 1293.404296875,
-          "height": 727.539794921875
+          "x": -6.6961669921875,
+          "y": -3.7666015625,
+          "width": 1293.392333984375,
+          "height": 727.533203125
         },
         "glass": {
           "x": 32,
@@ -274,10 +274,10 @@
           "height": 720
         },
         "image": {
-          "x": -6.1014404296875,
-          "y": -3.43206787109375,
-          "width": 1292.202880859375,
-          "height": 726.8641357421875
+          "x": -6.072509765625,
+          "y": -3.415802001953125,
+          "width": 1292.14501953125,
+          "height": 726.83154296875
         },
         "glass": {
           "x": 32,
@@ -311,10 +311,10 @@
           "height": 720
         },
         "image": {
-          "x": -5.5906982421875,
-          "y": -3.144744873046875,
-          "width": 1291.181396484375,
-          "height": 726.28955078125
+          "x": -5.498046875,
+          "y": -3.0926513671875,
+          "width": 1290.99609375,
+          "height": 726.185302734375
         },
         "glass": {
           "x": 32,
@@ -348,10 +348,10 @@
           "height": 720
         },
         "image": {
-          "x": -5.0125732421875,
-          "y": -2.819580078125,
-          "width": 1290.025146484375,
-          "height": 725.63916015625
+          "x": -4.85540771484375,
+          "y": -2.731170654296875,
+          "width": 1289.7109375,
+          "height": 725.46240234375
         },
         "glass": {
           "x": 32,
@@ -385,10 +385,10 @@
           "height": 720
         },
         "image": {
-          "x": -4.53125,
-          "y": -2.548828125,
-          "width": 1289.0625,
-          "height": 725.09765625
+          "x": -4.44586181640625,
+          "y": -2.50079345703125,
+          "width": 1288.8916015625,
+          "height": 725.0015869140625
         },
         "glass": {
           "x": 32,
@@ -422,10 +422,10 @@
           "height": 720
         },
         "image": {
-          "x": -3.9952392578125,
-          "y": -2.247314453125,
-          "width": 1287.990478515625,
-          "height": 724.49462890625
+          "x": -3.79302978515625,
+          "y": -2.133575439453125,
+          "width": 1287.5859375,
+          "height": 724.26708984375
         },
         "glass": {
           "x": 32,
@@ -459,10 +459,10 @@
           "height": 720
         },
         "image": {
-          "x": -3.47784423828125,
-          "y": -1.956298828125,
-          "width": 1286.95556640625,
-          "height": 723.91259765625
+          "x": -3.22723388671875,
+          "y": -1.8153076171875,
+          "width": 1286.45458984375,
+          "height": 723.630615234375
         },
         "glass": {
           "x": 32,
@@ -486,6 +486,27 @@
       }
     },
     {
+      "name": "non_red_viewer_can_open_complete_catastrophe_art",
+      "ok": true,
+      "detail": {
+        "src": "http://127.0.0.1:8000/static/victory-art/red_army.png?v=20260806-ai-v3",
+        "natural": [
+          1672,
+          941
+        ],
+        "box": {
+          "x": 78.515625,
+          "y": 44,
+          "width": 1122.953125,
+          "height": 631.984375
+        },
+        "viewer": {
+          "width": 1280,
+          "height": 720
+        }
+      }
+    },
+    {
       "name": "red_army_viewer_sees_world_conquest_art_and_bottom_panel",
       "ok": true,
       "detail": {
@@ -494,6 +515,67 @@
         "sceneClass": "victory-ending-scene victory-ending-scene--red_army_triumph victory-ending-scene-loaded",
         "imageSrc": "http://127.0.0.1:8000/static/victory-art/red_army_triumph.png?v=20260806-ai-v3",
         "glassTop": 376.203125
+      }
+    },
+    {
+      "name": "results_panel_click_does_not_open_full_art",
+      "ok": true,
+      "detail": {
+        "ariaHidden": "true"
+      }
+    },
+    {
+      "name": "red_army_viewer_full_art_is_contained_without_crop",
+      "ok": true,
+      "detail": {
+        "display": "flex",
+        "fit": "contain",
+        "src": "http://127.0.0.1:8000/static/victory-art/red_army_triumph.png?v=20260806-ai-v3",
+        "alt": "赤旗遍寰宇，天下歸一統完整插畫",
+        "natural": [
+          1672,
+          941
+        ],
+        "box": {
+          "x": 78.515625,
+          "y": 44,
+          "width": 1122.953125,
+          "height": 631.984375
+        },
+        "viewer": {
+          "width": 1280,
+          "height": 720
+        }
+      }
+    },
+    {
+      "name": "full_art_tab_focus_stays_on_close_button",
+      "ok": true,
+      "detail": {
+        "activeId": "victoryArtViewerClose"
+      }
+    },
+    {
+      "name": "full_art_escape_closes_and_restores_focus",
+      "ok": true,
+      "detail": {
+        "ariaHidden": "true",
+        "activeId": "victoryEndingScene"
+      }
+    },
+    {
+      "name": "keyboard_open_and_close_button_restore_scene_focus",
+      "ok": true,
+      "detail": {
+        "ariaHidden": "true",
+        "activeId": "victoryEndingScene"
+      }
+    },
+    {
+      "name": "full_art_backdrop_click_closes_viewer",
+      "ok": true,
+      "detail": {
+        "ariaHidden": "true"
       }
     },
     {
