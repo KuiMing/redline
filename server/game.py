@@ -2375,7 +2375,9 @@ class Game:
                 source_towns = [src for src, count in (getattr(player, 'organizations', {}) or {}).items() if count > 0]
                 if town not in self._towns_within_steps(source_towns, max_steps=max_steps):
                     return {'error': 'Target organization is not within era range'}
-            result = self.dissolve_organization(player, target_player, town, source='card')
+            result = self.dissolve_organization(
+                player, target_player, town, source='card', _from_pending_choice=True
+            )
             if result.get('error'):
                 return result
             self.pending_choice = None
@@ -2434,7 +2436,9 @@ class Game:
             ok, err = self._red_army_can_use_action(player, '國安部', target_player.id)
             if not ok:
                 return {'error': err}
-            result = self.dissolve_organization(player, target_player, town, source='faction_action')
+            result = self.dissolve_organization(
+                player, target_player, town, source='faction_action', _from_pending_choice=True
+            )
             if result.get('error'):
                 return result
             self._mark_red_army_action_used('國安部', target_player.id)
@@ -3173,7 +3177,9 @@ class Game:
                     return {'error': 'Target organization is no longer within range'}
                 if effect_type == 'interactive_dissolve_and_build' and not self._can_replace_dissolved_org_with_own(player, target_player, town):
                     return {'error': 'Target cannot be replaced with an organization'}
-            dissolve_result = self.dissolve_organization(player, target_player, town, source='support_card')
+            dissolve_result = self.dissolve_organization(
+                player, target_player, town, source='support_card', _from_pending_choice=True
+            )
             if dissolve_result.get('error'):
                 return dissolve_result
             if effect_type == 'interactive_dissolve_many_near':
@@ -5823,19 +5829,32 @@ class Game:
             if self.co_winners:
                 self.log(f"共同勝利者：{'、'.join(self.co_winners)}")
 
+    def _pending_board_action_error(self, allowed_choice_keys=None):
+        """Reject a new board mutation while the game is waiting for a required choice.
+
+        ``card_build_organization`` intentionally permits movement between queued builds so
+        the next build range can refresh from the organization's new location. Callers must
+        opt into that narrow exception explicitly; every other pending choice stays locked.
+        """
+        choice = self.pending_choice or {}
+        allowed = set(allowed_choice_keys or [])
+        if choice and choice.get('choice_key') not in allowed:
+            return {"error": "請先完成目前的選擇"}
+        return None
+
     def _resolve_pending_build_choice_for_town(self, player, town):
         choice = self.pending_choice or {}
         if not choice:
             return None
         if choice.get('player_id') != getattr(player, 'id', None):
-            return {"error": "Resolve pending choice before building"}
+            return self._pending_board_action_error()
         if choice.get('choice_key') not in {'event_build_organization', 'era_red_build_near_target', 'card_build_organization'}:
-            return {"error": "Resolve pending choice before building"}
+            return self._pending_board_action_error()
         towns = choice.get('towns') or []
         for index, entry in enumerate(towns):
             if (entry or {}).get('town') == town:
                 return self.resolve_pending_choice(player.id, index)
-        return {"error": "Resolve pending build choice before building elsewhere"}
+        return self._pending_board_action_error()
 
     def build_organization(self, town):
         player = self.current_player()
@@ -5866,6 +5885,9 @@ class Game:
         return {"success": True}
 
     def build_organization_with_support(self, origin_town, target_town):
+        pending_error = self._pending_board_action_error()
+        if pending_error:
+            return pending_error
         if self.turn_phase != TurnPhase.ACTION:
             return {"error": "Not in ACTION phase"}
 
@@ -5941,7 +5963,11 @@ class Game:
             return True, None
         return False, "Non-Red-Army bases cannot be dissolved"
 
-    def dissolve_organization(self, attacker, defender, town, source="card"):
+    def dissolve_organization(self, attacker, defender, town, source="card", _from_pending_choice=False):
+        if not _from_pending_choice:
+            pending_error = self._pending_board_action_error()
+            if pending_error:
+                return pending_error
         if not town:
             return {"error": "No organization in target town"}
 
@@ -5994,6 +6020,9 @@ class Game:
         """香港 special_rules（2026-07-11 裁決）：
         (1) 香港抗暴之戰結算後、下一回合開始前，可免費遷移根據地至臺北/倫敦/卡加利/多倫多；
         (2) 任何時候（自己的行動階段）可用赤鱲角機場花費 2 次遷移把根據地遷到上述城市。"""
+        pending_error = self._pending_board_action_error()
+        if pending_error:
+            return pending_error
         player = next((p for p in self.players if getattr(p, 'id', None) == player_id), None)
         if player is None:
             return {"error": "Player not found"}
@@ -6035,6 +6064,11 @@ class Game:
         has to duplicate faction, occupancy, wall, route, supply, or base-anchor
         checks.
         """
+        pending_error = self._pending_board_action_error(
+            allowed_choice_keys={'card_build_organization'}
+        )
+        if pending_error:
+            return pending_error
         if self.turn_phase != TurnPhase.ACTION:
             return {"error": "Not in ACTION phase"}
 

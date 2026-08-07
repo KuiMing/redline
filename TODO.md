@@ -34,6 +34,12 @@
   - **2026-08-07 後續裁決｜紅軍奧援資源模式**：使用者確認紅軍奧援應可用「資源」方式取得 **1資金＋1宣傳**，覆蓋 2026-06-07 對一般奧援「資源模式只棄置」的舊裁決；紅軍奧援是唯一例外。Runtime 將「印刷資源 1/1」與「起始牌購買費用 0/0」分離：資源模式不抽牌；紅軍使用後仍選擇任一反共玩家棄牌堆，反共玩家使用後則回紅軍棄牌堆。正式 UI 第一顆按鈕由「棄置」改為「資源」，普通奧援維持「棄置」。新增紅軍／反共 × 行動／資源四象限測試與正式 Browser proof。
   - **資料層備註**：`support_taxonomy.v1.1.json` 的 `tier_*_kind` 只是摘要，尚不足以單獨表達抽後棄牌、先犧牲後瓦解、瓦解後同地建立等複合效果；runtime mapping 已按完整卡面實作並通過稽核。若未來要讓 taxonomy 可直接執行，需另做 schema 升級。
 
+### P1：等待必要選擇時封鎖無關盤面操作
+- [done] 後端盤點確認 `build_organization_with_support`、`move_organization`、`dissolve_organization`、`relocate_hong_kong_base` 未統一阻擋既有 `pending_choice`，理論上可在網羅人才選牌、反應詢問或其他必要選擇尚未完成時插入建立、移動、瓦解或搬遷根據地。（2026-08-07 使用者確認處理）
+  - **修正**：新增集中式 `_pending_board_action_error()`，所有無關盤面 mutation 一律回傳「請先完成目前的選擇」且不改動組織、資源、移動次數、根據地、log 或 pending choice。`build_organization()` 保留用同一入口完成目前合法建立候選；內部 era／紅軍能力／奧援瓦解 resolve 明確使用 `_from_pending_choice=True`，不會把真正正在完成的選擇誤擋。
+  - **刻意保留的既有例外**：多張建立卡的 `card_build_organization` 連續建立 session 允許兩次建立之間先移動組織，讓下一次合法建立範圍依新位置即時重算；只有 move validator 明確允許這一個 choice key，其他 pending choice 仍全面封鎖。
+  - **驗證**：新增 `scripts/tests/test_pending_choice_board_action_guards.py`，驗證網羅人才選牌期間五類操作全部被拒絕且狀態完全不變，並確認合法 pending build 仍可由既有入口完成。正式 Chromium/WebSocket proof 直接從瀏覽器送出五類非法操作，選牌 modal 持續存在、每次均收到繁中錯誤、盤面不變、console 0 errors，**8/8 passed**；證據位於 `docs/records/state-guards/pending-choice-board-actions/`。
+
 ### P2：最後結算畫面應顯示牆內/牆外組織數量，並依勝利陣營呈現華麗客製化結局敘事
 - [done] 使用者需求：最後結算畫面，應該要直接顯示牆內和牆外組織數量。我需要華麗一點的畫面，比如說，紅軍贏了，其他陣營生靈塗炭；台灣綠線陣營贏了，台灣人民自由民主進步富裕。台灣藍線陣營贏了，開始規劃反攻大陸。蒙古贏了，連內蒙古都囊括其中。諸如此類的東西。（2026-08-06 使用者提出並要求分兩塊處理）
   - **分工**：使用者明確要求分兩塊處理——(1) 牆內/牆外組織數量顯示、(2) 依勝利陣營客製化的結局敘事。稽核發現 (1) 後端資料本來就已經存在：`server/game.py` 的 `state()` 序列化每位玩家時已經帶著 `organization_counts`（`_player_organization_scope_counts(p)`，回傳 `{total, inside_wall, outside_wall}`），純粹是前端從未拿來顯示過，不需要任何後端改動。

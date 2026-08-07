@@ -1370,6 +1370,66 @@ def test_setup_hong_kong_safehouse(payload: dict):
     }
 
 
+@app.post("/test/setup-pending-choice-board-guard")
+def test_setup_pending_choice_board_guard():
+    game_id = str(uuid.uuid4())
+    players = [(str(uuid.uuid4()), "player"), (str(uuid.uuid4()), "red")]
+    game = Game(players, market_mode="all_cards")
+    actor, red = game.players
+
+    actor.faction_id = "taiwan_green"
+    actor.base = "臺北"
+    actor.organizations = {"臺北": 1, "桃園": 1}
+    actor.moves_left = 3
+    actor.resources = {"money": 0, "propaganda": 0}
+    actor.hand = []
+
+    red.faction_id = "red_army"
+    red.base = "北京"
+    red.organizations = {"北京": 1, "上海": 1}
+    red.hand = []
+
+    game.current_player_index = 0
+    game.round_start_player_index = 0
+    game.turn_phase = TurnPhase.ACTION
+    game.game_phase = GamePhase.MAIN
+    game.pending_base_choices = {}
+    legal_moves = game._legal_organization_moves()
+    move_origin = next(town for town in legal_moves if town != actor.base)
+    move_mode, move_options = next(
+        (mode, options) for mode, options in legal_moves[move_origin].items() if options
+    )
+    game.pending_choice = {
+        "type": "card_choice",
+        "choice_key": "recruit_talent",
+        "player_id": actor.id,
+        "cards": [Card("候選牌", "command", {})],
+        "prompt": "網羅人才：請選擇一張牌。",
+    }
+    game.id = game_id
+
+    manager.games[game_id] = game
+    manager.connections[game_id] = manager.connections.get(game_id, {})
+    lobby[game_id] = [(p.id, p.name) for p in game.players]
+    lobby_hosts[game_id] = actor.id
+    lobby_factions[game_id] = {actor.id: actor.faction_id, red.id: red.faction_id}
+    lobby_bases[game_id] = {actor.id: actor.base, red.id: red.base}
+    lobby_ready[game_id] = {p.id: True for p in game.players}
+    return {
+        "success": True,
+        "game_id": game_id,
+        "player_id": actor.id,
+        "red_player_id": red.id,
+        "url": f"/?game_id={game_id}&player_id={actor.id}",
+        "move": {
+            "from": move_origin,
+            "to": move_options[0]["town"],
+            "mode": move_mode,
+        },
+        "state": game.state(actor.id),
+    }
+
+
 @app.post("/test/setup-enemy-occupancy-proof")
 def test_setup_enemy_occupancy_proof(payload: dict):
     game_id = str(uuid.uuid4())

@@ -1,0 +1,122 @@
+{
+  "generated_at": "2026-08-07T13:44:11.818710+00:00",
+  "base_url": "http://192.168.10.192:8000",
+  "status": "passed",
+  "checks_passed": 8,
+  "checks_total": 8,
+  "checks": [
+    {
+      "name": "required_card_choice_remains_visible",
+      "ok": true,
+      "detail": {
+        "prompt": "網羅人才：請選擇一張牌。"
+      }
+    },
+    {
+      "name": "direct_build_is_blocked_with_clear_message",
+      "ok": true,
+      "detail": {
+        "dialogs": [
+          "請先完成目前的選擇"
+        ],
+        "payload": {
+          "action": "build",
+          "town": "臺北"
+        }
+      }
+    },
+    {
+      "name": "supported_build_is_blocked_with_clear_message",
+      "ok": true,
+      "detail": {
+        "dialogs": [
+          "請先完成目前的選擇"
+        ],
+        "payload": {
+          "action": "build",
+          "from": "臺北",
+          "town": "桃園"
+        }
+      }
+    },
+    {
+      "name": "move_is_blocked_with_clear_message",
+      "ok": true,
+      "detail": {
+        "dialogs": [
+          "請先完成目前的選擇"
+        ],
+        "payload": {
+          "action": "move",
+          "from": "桃園",
+          "to": "宜蘭",
+          "mode": "road"
+        }
+      }
+    },
+    {
+      "name": "dissolve_is_blocked_with_clear_message",
+      "ok": true,
+      "detail": {
+        "dialogs": [
+          "請先完成目前的選擇"
+        ],
+        "payload": {
+          "action": "dissolve",
+          "defender": "3682ef48-4da2-4ca4-8279-0345d770e361",
+          "town": "上海"
+        }
+      }
+    },
+    {
+      "name": "relocate_base_is_blocked_with_clear_message",
+      "ok": true,
+      "detail": {
+        "dialogs": [
+          "請先完成目前的選擇"
+        ],
+        "payload": {
+          "action": "relocate_base",
+          "town": "倫敦"
+        }
+      }
+    },
+    {
+      "name": "blocked_actions_leave_board_and_pending_choice_unchanged",
+      "ok": true,
+      "detail": {
+        "before": {
+          "town_control": null,
+          "actor_resources": {
+            "money": 0,
+            "propaganda": 0
+          },
+          "actor_moves": 3,
+          "actor_base": "臺北",
+          "red_base": "北京",
+          "pending_choice_key": "recruit_talent",
+          "pending_player_id": "edec42f9-f180-4ed4-9963-23fe8bfb2a7b"
+        },
+        "after": {
+          "town_control": null,
+          "actor_resources": {
+            "money": 0,
+            "propaganda": 0
+          },
+          "actor_moves": 3,
+          "actor_base": "臺北",
+          "red_base": "北京",
+          "pending_choice_key": "recruit_talent",
+          "pending_player_id": "edec42f9-f180-4ed4-9963-23fe8bfb2a7b"
+        }
+      }
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "ok": true,
+      "detail": []
+    }
+  ],
+  "console_errors": [],
+  "screenshot": "docs/records/state-guards/pending-choice-board-actions/pending_choice_blocks_board_actions.png"
+}
