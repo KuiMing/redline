@@ -1734,15 +1734,11 @@ class Game:
             ctx = choice.get('context') if isinstance(choice.get('context'), dict) else {}
             source_name = choice.get('source_name') or ctx.get('card_name') or '行動預告'
             self.log(f"{player.name} placed bought card {getattr(chosen, 'name', str(chosen))} on deck top via {source_name}")
-            # 續跑卡片剩餘效果（例如行動預告/行動募資的 +1 資源）
-            remaining = list(ctx.get('remaining_effects') or [])
-            for idx, effect in enumerate(remaining):
-                ctx['remaining_effects'] = remaining[idx + 1:]
-                result = self.effect_engine.execute(effect, player, self, context=ctx)
-                if isinstance(result, dict) and result.get('pending_choice'):
-                    return {'success': True, 'topdecked_card': getattr(chosen, 'name', str(chosen)), 'pending_choice': True}
             if ctx.get('end_turn_topdeck_flow'):
-                # 從回合結束提示流程進來：頂牌選完才真正結束回合（先頂牌、後補手牌）
+                # 從回合結束的 drain 流程進來：先處理完剩餘頂牌權利，才真正結束回合
+                pending = self._prompt_end_turn_topdeck_action_if_available()
+                if pending and pending.get('pending_choice'):
+                    return {'success': True, 'topdecked_card': getattr(chosen, 'name', str(chosen)), 'pending_choice': True}
                 self._end_turn()
             return {'success': True, 'topdecked_card': getattr(chosen, 'name', str(chosen))}
 
@@ -2068,42 +2064,6 @@ class Game:
                 'label': selected.get('label'),
                 **({'pending_choice': True} if isinstance(result, dict) and result.get('pending_choice') else {}),
             }
-
-        if choice_key == 'end_turn_topdeck_action':
-            selected = options[index]
-            self.pending_choice = None
-            if selected.get('action') == 'skip':
-                self.log(f"{player.name} skipped end-turn action topdeck prompt")
-                self._end_turn()
-                return {'success': True, 'choice_index': index, 'skipped': True}
-            hand_index = selected.get('hand_index')
-            card_name = selected.get('card_name')
-            if hand_index is None or hand_index < 0 or hand_index >= len(player.hand):
-                return {'error': 'Chosen action card not in hand'}
-            played_card = player.hand[hand_index]
-            if getattr(played_card, 'name', str(played_card)) != card_name:
-                return {'error': 'Chosen action card changed'}
-            player.hand.pop(hand_index)
-            structured = next((c for c in self.structured_cards if c.get('name') == card_name), None)
-            effects = list((structured or {}).get('effect') or [])
-            pending_from_effect = False
-            for idx2, effect in enumerate(effects):
-                context = {
-                    'card_name': card_name,
-                    'remaining_effects': effects[idx2 + 1:],
-                    # 本回合買多張時 topdeck 會開選擇；標記讓選擇結算負責收尾 _end_turn
-                    'end_turn_topdeck_flow': True,
-                }
-                result = self.effect_engine.execute(effect, player, self, context=context)
-                if isinstance(result, dict) and result.get('pending_choice'):
-                    pending_from_effect = True
-                    break
-            player.deck.discard([played_card])
-            self.log(f"{player.name} used {card_name} before drawing new hand")
-            if pending_from_effect:
-                return {'success': True, 'choice_index': index, 'chosen_card': card_name, 'pending_choice': True}
-            self._end_turn()
-            return {'success': True, 'choice_index': index, 'chosen_card': card_name}
 
         return {'error': 'Unsupported pending choice type'}
 
@@ -3669,6 +3629,7 @@ class Game:
             "purchased_cards_this_turn": [],
             "red_army_base_dissolves": {},
             "red_army_base_build_blocks": [],
+            "pending_topdeck_uses": 0,
         }
 
     def _resolve_ability_ref(self, ability):
@@ -5307,6 +5268,13 @@ class Game:
             return {"error": "Not in ACTION phase"}
         if mode == "action" and self._card_is_banned_for_player(player, pending_card):
             return {"error": "非暴力：不能打出武裝或裝備類卡牌"}
+        if mode == "action" and pending_card_name in {"爆料黑幕", "產業滲透"}:
+            # 這兩張卡的「行動」效果只有 cancel_card + conditional_draw，沒有像情報網
+            # 那樣的 choose_one 主動分支；只能在對方打出可取消的牌時，透過反應視窗
+            # （_set_pending_reaction_choice／_resolve_reaction_choice）被動觸發，不會
+            # 走 play_card()。自己回合主動點「行動」在這裡執行只會取消不存在的目標、
+            # 白白浪費這張卡，因此直接擋下，比照其他需要合法對象才能打出的卡片。
+            return {"error": f"{pending_card_name}的取消能力只能被動觸發：當其他玩家打出可取消的卡牌時會自動跳出反應視窗。"}
         if mode == "action" and pending_card_name == "合作談判":
             target = next((p for p in self.players if getattr(p, "id", None) == target_player_id), None) if target_player_id is not None else None
             if target is None or target == player:
@@ -5591,30 +5559,60 @@ class Game:
         self.log(f"{player.name} played {card_name}")
         return {"success": True}
 
-    def _available_purchased_cards_for_end_turn_topdeck(self, player):
+    def _available_purchased_cards_for_topdeck(self, player):
         purchased = list(self.turn_log.get('purchased_cards_this_turn') or [])
         return [card for card in purchased if card in player.deck.discard_pile]
 
+    def _consume_one_pending_topdeck_use(self, player, *, end_turn_flow):
+        remaining = self.turn_log.get('pending_topdeck_uses', 0)
+        if remaining <= 0:
+            return {'no_rights': True}
+        candidates = self._available_purchased_cards_for_topdeck(player)
+        if not candidates:
+            return {'no_candidates': True}
+        self.turn_log['pending_topdeck_uses'] = remaining - 1
+        if len(candidates) == 1:
+            card = candidates[0]
+            player.deck.discard_pile.remove(card)
+            player.deck.draw_pile.append(card)
+            self.log(f"{player.name} 使用頂牌權利，將 {getattr(card, 'name', str(card))} 置於牌庫頂")
+            return {'auto_placed': True}
+        # 本回合買了多張：由玩家選擇要頂哪一張
+        self._set_pending_card_choice(
+            player,
+            'topdeck_purchased_choice',
+            list(candidates),
+            '行動預告／行動募資：選擇 1 張本回合購得的牌置於牌庫頂。',
+            source_name='行動預告／行動募資',
+            context={'end_turn_topdeck_flow': bool(end_turn_flow)},
+        )
+        return {'pending_choice': True}
+
+    def use_pending_topdeck_right(self):
+        player = self.current_player()
+        if self.pending_choice:
+            return {'error': 'Resolve pending choice before using a topdeck right'}
+        result = self._consume_one_pending_topdeck_use(player, end_turn_flow=False)
+        if result.get('no_rights'):
+            return {'error': 'No pending topdeck right available'}
+        if result.get('no_candidates'):
+            return {'error': 'No purchased card available to topdeck yet'}
+        return {'success': True, **({'pending_choice': True} if result.get('pending_choice') else {})}
+
     def _prompt_end_turn_topdeck_action_if_available(self):
         player = self.current_player()
-        if not self._available_purchased_cards_for_end_turn_topdeck(player):
+        result = self._consume_one_pending_topdeck_use(player, end_turn_flow=True)
+        if result.get('pending_choice'):
+            self.log(f"{player.name} may resolve remaining 行動預告/行動募資 topdeck rights before drawing new hand")
+            return {'pending_choice': True}
+        if result.get('no_candidates') and self.turn_log.get('pending_topdeck_uses', 0) > 0:
+            dropped = self.turn_log.get('pending_topdeck_uses', 0)
+            self.turn_log['pending_topdeck_uses'] = 0
+            self.log(f"{player.name} 有 {dropped} 次頂牌權利本回合沒有可頂的牌，作廢")
             return None
-        eligible_names = {'行動預告', '行動募資'}
-        options = [{'label': '不使用', 'action': 'skip'}]
-        for idx, card in enumerate(list(player.hand)):
-            card_name = getattr(card, 'name', str(card))
-            if card_name in eligible_names:
-                options.append({'label': f'使用 {card_name}', 'action': 'use', 'card_name': card_name, 'hand_index': idx})
-        if len(options) <= 1:
-            return None
-        self._set_pending_option_choice(
-            player,
-            'end_turn_topdeck_action',
-            options,
-            '回合結束前：你本回合有購得的牌，可使用行動預告／行動募資將其中 1 張置於牌庫頂，接著補牌時抽上手。',
-        )
-        self.log(f"{player.name} may use 行動預告/行動募資 before drawing new hand")
-        return {'pending_choice': True}
+        if result.get('auto_placed'):
+            return self._prompt_end_turn_topdeck_action_if_available()
+        return None
 
     def _mission_settlement_target_id(self):
         if self.event_progress and self.event_progress.get('last_actor_id'):
@@ -7271,6 +7269,8 @@ class Game:
             "red_army_action_count": self.turn_log.get('red_army_action_count', 0),
             "red_army_action_limit": self._red_army_action_limit(),
             "red_army_base_build_blocks": list(self.turn_log.get('red_army_base_build_blocks', []) or []),
+            "pending_topdeck_uses": self.turn_log.get('pending_topdeck_uses', 0),
+            "topdeck_candidates_count": len(self._available_purchased_cards_for_topdeck(self.current_player())),
             "event_discard_count": len(self.event_deck.discard_pile) if getattr(self, 'event_deck', None) else 0,
             "event_modifiers": list(getattr(self, 'event_modifiers', []) or []),
             "market_mode": self.market_mode,

@@ -4,23 +4,33 @@
       "行動預告",
       "行動募資"
     ],
-    "purpose": "B3 remainder: topdeck_purchased_this_turn auto-picked the most recently bought card still in discard, with no player choice even though buy_card allows multiple purchases per turn and the card text says the player places \"1張本回合購得的牌\" on top. Now: 0 candidates = logged no-op; exactly 1 = auto (one-shot, unchanged UX); 2+ = pending card choice, and the card's remaining effects (the +1 resource) resume after the choice resolves via the stored remaining_effects context, matching the optional_trash resume pattern.",
-    "total": 4,
-    "passed": 4,
+    "purpose": "2026-08-07 使用者要求改版：打出行動預告/行動募資時立刻拿到宣傳/資金（本回合可花用），頂牌對象改為玩家主動觸發的獨立動作（use_pending_topdeck_right），可在購買後、回合結束前任何時間點使用；同回合打出多張各自累積成獨立的頂牌權利，可分次使用；沒手動用掉的權利在結束回合時自動逐一跳出選擇，沒有候選牌時則作廢、不卡住回合。",
+    "total": 7,
+    "passed": 7,
     "failed": 0
   },
   "results": [
+    {
+      "name": "playing_card_banks_right_and_grants_resource_immediately",
+      "checks": {
+        "no_pending_choice_at_play_time": true,
+        "resource_granted_immediately": true,
+        "right_banked": true,
+        "purchases_untouched": true
+      },
+      "ok": true
+    },
     {
       "name": "two_purchases_player_chooses_which_to_topdeck",
       "checks": {
         "pending_choice_raised": true,
         "choice_key": true,
         "both_offered": true,
-        "resource_not_granted_yet": true,
+        "right_already_spent": true,
         "resolved": true,
         "chosen_first_purchase_on_top": true,
         "other_purchase_stays_in_discard": true,
-        "remaining_effect_resumed_propaganda_plus_1": true
+        "turn_not_ended_by_manual_use": true
       },
       "ok": true
     },
@@ -29,37 +39,60 @@
       "checks": {
         "no_pending_choice": true,
         "auto_topdecked": true,
-        "money_plus_1_applied": true
+        "money_plus_1_applied_at_play_time": true,
+        "right_consumed": true
       },
       "ok": true
     },
     {
-      "name": "no_purchase_noop_still_grants_resource",
+      "name": "no_purchase_use_errors_right_still_banked",
       "checks": {
-        "success_without_choice": true,
+        "play_success_without_choice": true,
         "resource_still_granted": true,
-        "noop_logged": true
+        "manual_use_errors": true,
+        "right_not_consumed": true
       },
       "ok": true
     },
     {
-      "name": "end_turn_flow_two_purchases_choice_then_end_turn",
+      "name": "two_cards_played_stack_independent_topdeck_rights",
+      "checks": {
+        "two_rights_banked": true,
+        "two_propaganda_granted": true,
+        "first_use_placed_chosen_card": true,
+        "one_right_remaining": true,
+        "second_use_auto_placed_last_candidate": true,
+        "second_use_placed_remaining_card": true,
+        "no_rights_remaining": true
+      },
+      "ok": true
+    },
+    {
+      "name": "end_turn_auto_drains_unused_right_with_two_purchases",
       "hand": [
+        "Filler",
         "先買的牌",
         "補7",
         "補6",
-        "補5",
-        "補4"
+        "補5"
       ],
       "checks": {
-        "end_turn_prompted": true,
-        "use_returns_pending": true,
-        "turn_not_ended_yet": true,
+        "end_turn_auto_prompted": true,
+        "choice_key": true,
         "both_offered": true,
         "resolved": true,
         "no_dangling_choice": true,
         "chosen_card_drawn_into_new_hand": true,
-        "resources_reset_by_end_turn": true
+        "turn_passed_to_next_player": true
+      },
+      "ok": true
+    },
+    {
+      "name": "end_turn_drops_right_with_no_candidates_without_blocking_turn",
+      "checks": {
+        "no_pending_choice": true,
+        "turn_still_completes": true,
+        "dropped_right_logged": true
       },
       "ok": true
     }

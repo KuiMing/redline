@@ -1,5 +1,11 @@
 # 行動預告／行動募資 end-turn UI screenshots
 
+> **本檔已過時**——2026-08-07 使用者要求改版：打出行動預告/行動募資時立刻拿到宣傳/資金，
+> 頂牌改為玩家主動觸發的獨立動作（頂牌按鈕），不再是「留在手上、回合結束前跳出
+> `end_turn_topdeck_action` 選項讓你決定要不要整張打出」。本檔記錄的流程與截圖僅供歷史參考；
+> 新流程的驗證見 `ACTION_CARD_END_TURN_TOPDECK_RUNTIME_VALIDATION.{md,json}` 與
+> `TOPDECK_PURCHASED_CHOICE_VALIDATION_20260711.{md,json}`。
+
 Generated at: `2026-05-18`
 
 ## Scope

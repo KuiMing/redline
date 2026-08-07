@@ -951,6 +951,37 @@ def test_intel_network_reaction_does_not_trigger_on_resource_play():
     assert g.turn_log.get('canceled_card') is None
 
 
+def test_expose_scandal_and_industry_infiltration_action_mode_blocked_on_own_turn():
+    """2026-08-07 使用者指出這兩張牌的取消能力感覺是被動觸發的——確認屬實：兩張卡的
+    `effect` 只有 `cancel_card` + `conditional_draw`，沒有像情報網那樣的 choose_one
+    主動分支，只能透過反應視窗（`_set_pending_reaction_choice`）在對方出牌時被動觸發，
+    不會經過 `play_card()`。自己回合主動點「行動」等於取消不存在的目標、白白浪費這張
+    卡，因此在 `play_card()` 擋下，比照其他需要合法對象才能打出的卡片。資源模式（打出
+    拿卡面印的宣傳/資金）不受影響，仍可正常使用。"""
+    g = make_game()
+    p = g.current_player()
+    p.hand = [card(g, '爆料黑幕'), card(g, '產業滲透')]
+    p.resources = {'money': 0, 'propaganda': 0}
+
+    scandal_action = g.play_card(0, mode='action')
+    assert scandal_action.get('error'), scandal_action
+    assert names(p.hand) == ['爆料黑幕', '產業滲透']  # 卡沒被消耗
+
+    infiltration_action = g.play_card(1, mode='action')
+    assert infiltration_action.get('error'), infiltration_action
+    assert names(p.hand) == ['爆料黑幕', '產業滲透']
+
+    scandal_resource = g.play_card(0, mode='resource')
+    assert scandal_resource.get('success'), scandal_resource
+    assert p.resources['propaganda'] == 2
+    assert names(p.hand) == ['產業滲透']
+
+    infiltration_resource = g.play_card(0, mode='resource')
+    assert infiltration_resource.get('success'), infiltration_resource
+    assert p.resources['money'] == 2
+    assert names(p.hand) == []
+
+
 def test_every_other_player_action_prompts_cancel_reaction_while_reactor_holds_eligible_cards():
     """2026-08-02 使用者更正：`情報網`／`爆料黑幕`／`產業滲透` 這三張牌只要還在手上，
     對手「每一次」符合取消條件的行動都要跳出取消詢問——不是這回合問過這個人一次、
@@ -1715,7 +1746,7 @@ def test_divide_adds_internal_conflict_to_other_players_not_self():
     assert names(p4.deck.discard_pile).count('內鬥') == 1
 
 
-def test_announce_action_topdecks_latest_card_bought_this_turn_and_gains_propaganda():
+def test_announce_action_banks_topdeck_right_and_grants_propaganda_immediately():
     g = make_game()
     p = g.current_player()
     bought = Card('PurchasedCard', 'command', {})
@@ -1724,12 +1755,21 @@ def test_announce_action_topdecks_latest_card_bought_this_turn_and_gains_propaga
 
     p = play_only(g, '行動預告')
 
+    # 打出當下立刻拿到宣傳，但頂牌只是銀行化成 1 次權利，購得的牌仍留在棄牌堆。
     assert p.resources['propaganda'] == 1
+    assert g.turn_log['pending_topdeck_uses'] == 1
+    assert 'PurchasedCard' in names(p.deck.discard_pile)
+    assert not p.deck.draw_pile or names(p.deck.draw_pile)[-1] != 'PurchasedCard'
+
+    used = g.use_pending_topdeck_right()
+
+    assert used.get('success'), used
+    assert g.turn_log['pending_topdeck_uses'] == 0
     assert names(p.deck.draw_pile)[-1] == 'PurchasedCard'
     assert 'PurchasedCard' not in names(p.deck.discard_pile)
 
 
-def test_action_fundraising_topdecks_latest_card_bought_this_turn_and_gains_money():
+def test_action_fundraising_banks_topdeck_right_and_grants_money_immediately():
     g = make_game()
     p = g.current_player()
     bought = Card('PurchasedCard', 'command', {})
@@ -1739,65 +1779,122 @@ def test_action_fundraising_topdecks_latest_card_bought_this_turn_and_gains_mone
     p = play_only(g, '行動募資')
 
     assert p.resources['money'] == 1
+    assert g.turn_log['pending_topdeck_uses'] == 1
+    assert 'PurchasedCard' in names(p.deck.discard_pile)
+
+    used = g.use_pending_topdeck_right()
+
+    assert used.get('success'), used
     assert names(p.deck.draw_pile)[-1] == 'PurchasedCard'
     assert 'PurchasedCard' not in names(p.deck.discard_pile)
 
 
+def test_use_topdeck_right_before_any_purchase_errors_without_consuming_the_right():
+    g = make_game()
+    p = play_only(g, '行動預告')
 
-def test_end_turn_prompts_action_announcement_and_draws_purchased_card_after_resolution():
+    result = g.use_pending_topdeck_right()
+
+    assert result.get('error'), result
+    assert g.turn_log['pending_topdeck_uses'] == 1
+
+
+def test_use_topdeck_right_with_two_purchases_lets_player_choose():
+    g = make_game()
+    p = play_only(g, '行動預告')
+    bought1, bought2 = Card('先買的牌', 'command', {}), Card('後買的牌', 'command', {})
+    p.deck.discard_pile = [bought1, bought2]
+    g.turn_log['purchased_cards_this_turn'] = [bought1, bought2]
+
+    used = g.use_pending_topdeck_right()
+
+    assert used.get('pending_choice') is True
+    assert g.pending_choice['choice_key'] == 'topdeck_purchased_choice'
+    offered = names(g.pending_choice['cards'])
+    assert sorted(offered) == ['先買的牌', '後買的牌']
+
+    resolved = g.resolve_pending_choice(p.id, offered.index('先買的牌'))
+
+    assert resolved.get('success'), resolved
+    assert not g.pending_choice
+    assert names(p.deck.draw_pile)[-1] == '先買的牌'
+    assert '後買的牌' in names(p.deck.discard_pile)
+    assert g.turn_log['pending_topdeck_uses'] == 0
+
+
+def test_two_announce_action_plays_bank_two_independent_topdeck_rights():
     g = make_game()
     p = g.current_player()
-    bought = Card('PurchasedCard', 'command', {})
-    p.hand = [card(g, '行動預告'), Card('Filler', 'command', {})]
-    p.deck.draw_pile = [Card('Bottom1', 'command', {}), Card('Bottom2', 'command', {}), Card('Bottom3', 'command', {}), Card('Bottom4', 'command', {}), Card('Bottom5', 'command', {})]
-    p.deck.discard_pile = [bought]
-    g.turn_log['purchased_cards_this_turn'] = [bought]
+    p.hand = [card(g, '行動預告'), card(g, '行動預告')]
+    p.resources = {'money': 0, 'propaganda': 0}
+
+    assert g.play_card(0, mode='action').get('success')
+    assert g.play_card(0, mode='action').get('success')
+
+    assert p.resources['propaganda'] == 2
+    assert g.turn_log['pending_topdeck_uses'] == 2
+
+    bought1, bought2 = Card('先買的牌', 'command', {}), Card('後買的牌', 'command', {})
+    p.deck.discard_pile = [bought1, bought2]
+    g.turn_log['purchased_cards_this_turn'] = [bought1, bought2]
+
+    first = g.use_pending_topdeck_right()
+    assert first.get('pending_choice') is True
+    offered = names(g.pending_choice['cards'])
+    g.resolve_pending_choice(p.id, offered.index('先買的牌'))
+    assert g.turn_log['pending_topdeck_uses'] == 1
+    assert names(p.deck.draw_pile)[-1] == '先買的牌'
+
+    second = g.use_pending_topdeck_right()
+    assert second.get('success') and not second.get('pending_choice')
+    assert g.turn_log['pending_topdeck_uses'] == 0
+    assert names(p.deck.draw_pile)[-1] == '後買的牌'
+
+
+def test_end_turn_auto_drains_unused_topdeck_right_with_two_purchases_before_refill():
+    g = make_game()
+    p = g.current_player()
+    bought1, bought2 = Card('先買的牌', 'command', {}), Card('後買的牌', 'command', {})
+    p.hand = [Card('Filler', 'command', {})]
+    p.deck.draw_pile = [Card(f'Bottom{i}', 'command', {}) for i in range(1, 8)]
+    p.deck.discard_pile = [bought1, bought2]
+    g.turn_log['purchased_cards_this_turn'] = [bought1, bought2]
+    g.turn_log['pending_topdeck_uses'] = 1
     g.turn_phase = TurnPhase.END
 
     result = g.advance_turn_phase()
 
     assert result.get('pending_choice') is True
-    assert g.pending_choice and g.pending_choice['type'] == 'option_choice'
-    assert g.pending_choice['choice_key'] == 'end_turn_topdeck_action'
-    assert [option['label'] for option in g.pending_choice['options']] == ['不使用', '使用 行動預告']
-    assert names(p.hand) == ['行動預告', 'Filler']
+    assert g.pending_choice['choice_key'] == 'topdeck_purchased_choice'
+    offered = names(g.pending_choice['cards'])
+    assert sorted(offered) == ['先買的牌', '後買的牌']
 
-    resolved = g.resolve_pending_choice(p.id, 1)
+    resolved = g.resolve_pending_choice(p.id, offered.index('先買的牌'))
 
     assert resolved.get('success'), resolved
     # 現行回合模型（action-first）：回合結束後直接輪到下一位玩家的 ACTION，沒有 EVENT 階段。
     assert g.turn_phase == TurnPhase.ACTION
     assert g.current_player().name == 'P2'
-    assert 'PurchasedCard' in names(p.hand)
-    assert 'PurchasedCard' not in names(p.deck.discard_pile)
-    assert '行動預告' in names(p.deck.discard_pile)
-    assert any('used 行動預告 before drawing new hand' in line for line in g.action_log)
+    assert '先買的牌' in names(p.hand)
+    assert '後買的牌' in names(p.deck.discard_pile)
 
 
-
-def test_end_turn_can_skip_action_fundraising_prompt_and_purchased_card_stays_discarded():
+def test_end_turn_drops_pending_topdeck_right_with_no_candidates_without_blocking_turn():
     g = make_game()
     p = g.current_player()
-    bought = Card('PurchasedCard', 'command', {})
-    p.hand = [card(g, '行動募資')]
-    p.deck.draw_pile = [Card('Draw1', 'command', {}), Card('Draw2', 'command', {}), Card('Draw3', 'command', {}), Card('Draw4', 'command', {}), Card('Draw5', 'command', {})]
-    p.deck.discard_pile = [bought]
-    g.turn_log['purchased_cards_this_turn'] = [bought]
+    p.hand = [Card('Filler', 'command', {})]
+    p.deck.draw_pile = [Card(f'Bottom{i}', 'command', {}) for i in range(1, 8)]
+    p.deck.discard_pile = []
+    g.turn_log['purchased_cards_this_turn'] = []
+    g.turn_log['pending_topdeck_uses'] = 1
     g.turn_phase = TurnPhase.END
 
     result = g.advance_turn_phase()
 
-    assert result.get('pending_choice') is True
-    assert [option['label'] for option in g.pending_choice['options']] == ['不使用', '使用 行動募資']
-    resolved = g.resolve_pending_choice(p.id, 0)
-
-    assert resolved.get('success'), resolved
-    # 現行回合模型（action-first）：回合結束後直接輪到下一位玩家的 ACTION，沒有 EVENT 階段。
+    assert not result.get('pending_choice')
     assert g.turn_phase == TurnPhase.ACTION
     assert g.current_player().name == 'P2'
-    assert 'PurchasedCard' not in names(p.hand)
-    assert 'PurchasedCard' in names(p.deck.discard_pile)
-    assert any('skipped end-turn action topdeck prompt' in line for line in g.action_log)
+    assert any('沒有可頂的牌，作廢' in line for line in g.action_log)
 
 
 

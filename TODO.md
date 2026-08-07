@@ -17,6 +17,18 @@
 
 ## 目前 active todo
 
+### P2：爆料黑幕／產業滲透自己回合點「行動」應該擋下，取消能力只能被動觸發
+- [done] 使用者提問確認：使用者觀察到爆料黑幕／產業滲透感覺是被動觸發的卡牌，稽核後確認屬實——兩張卡的 `effect`（`data/action_cards_structured.v1.1.json`）只有 `cancel_card` + `conditional_draw`，不像情報網有 `choose_one` 主動分支；取消能力只能透過反應視窗（`server/game.py` `_set_pending_reaction_choice`／`_resolve_reaction_choice`，對方打出可取消的牌時自動跳出）被動觸發，完全不經過 `play_card()`。自己回合主動點「行動」在舊行為下會直接執行 `cancel_card`（`server/effect_engine.py`），因為沒有真正的取消對象，只會記一筆「canceled unknown card」的無意義紀錄、白白浪費這張卡，且前端 `canPlayHandCardMode`（`static/app.js`）先前並未針對這兩張卡擋掉「行動」按鈕。（2026-08-07 使用者提出並要求修正）
+  - 修法：`server/game.py` `play_card()` 新增守門，`mode == "action"` 且卡名為爆料黑幕／產業滲透時直接回傳錯誤（比照合作談判／武裝卡等既有「需要合法對象」的守門模式），卡不會被消耗；反應流程完全走獨立的 `_resolve_reaction_choice`，從不呼叫 `play_card()`，因此不受影響。前端同步在 `canPlayHandCardMode`／`handButtonTitle` 擋掉「行動」按鈕並顯示原因，資源模式（`資源` 按鈕，拿卡面印的宣傳/資金）不受影響。刻意排除情報網——情報網的行動效果是真正的主動 `choose_one`（內鬥／瓦解鄰近組織），維持可打。
+  - 驗證：新增 `scripts/tests/test_action_card_regressions.py::test_expose_scandal_and_industry_infiltration_action_mode_blocked_on_own_turn`，確認自己回合對兩張卡點「行動」都回錯誤且卡不消耗、資源模式仍正常運作。完整 pytest（同 baseline ignore 清單）**323/323 全過**（+1 為新增回歸；同批確認 `test_taiwan_support_counts_as_prior_propaganda_cost_card_for_ignite_passion` 偶發失敗與本次改動無關，單獨重跑與連續 3 次完整重跑皆穩定全過，屬既有測試順序相關的既有 flaky，非本次引入）。
+
+### P2：行動預告／行動募資的頂牌應改為玩家主動觸發，不要卡在回合結束前才拿資源
+- [done] 使用者需求：使用者指出舊行為（打出後留在手上，靠回合結束前的提示才整張打出）會讓宣傳/資金要到回合結束前才拿到，這回合已經沒機會花掉；希望改成打出時立刻拿到宣傳/資金，頂牌（選哪張本回合購得的牌置頂）則變成一個可以在購買完卡牌之後、結束回合之前任何時間點自己主動點選的獨立動作。（2026-08-07 使用者提出）
+  - **確認多次觸發與未觸發時的處理**：用 `AskUserQuestion` 確認兩點——(1) 若一直沒手動點頂牌，按下「結束回合」時系統自動跳出提示逐一處理剩餘權利（而非視為放棄作廢）；(2) 同一回合打出兩張以上行動預告/行動募資，各自獨立累積成頂牌權利，可分次使用。使用者兩項皆選推薦選項。
+  - **實作**：`server/effect_engine.py` 的 `topdeck_purchased_this_turn` 效果改為只把 `turn_log['pending_topdeck_uses']` 累加 1（銀行化 1 次頂牌權利），不再立刻碰牌庫/棄牌堆；緊接的 `gain_resource` 因此在同一次 `play_card` 呼叫中同步執行，宣傳/資金當回合立刻可花用。`server/game.py` 新增共用的 `_consume_one_pending_topdeck_use()`（候選 0 張回錯誤/不消耗權利、1 張自動置頂、2+ 張開 `topdeck_purchased_choice` 選擇）、玩家主動觸發的 `use_pending_topdeck_right()`（新 websocket action `use_topdeck_right`，`server/main.py`）、以及重寫後的 `_prompt_end_turn_topdeck_action_if_available()`（結束回合時的 drain 迴圈：每次消耗 1 個權利，選完/自動放完就遞迴檢查下一個，沒有候選牌時把剩餘權利直接歸零並記錄「作廢」，都不卡住回合推進）。刪除舊的 `end_turn_topdeck_action`（留在手上、回合結束前整張打出）流程與其結算分支，避免與新機制並存造成混淆。新增 `state()` 欄位 `pending_topdeck_uses`／`topdeck_candidates_count` 供前端顯示。
+  - 前端（`static/index.html`／`static/app.js`）：`phaseActionControls` 新增「頂牌 (N)」按鈕（比照既有 `redArmyAbilityBtn` 的 show/disable 模式），有銀行化的權利且本回合有候選購得牌時才可點擊，點擊呼叫 `use_topdeck_right`；候選牌 2+ 張時走既有通用 `card_choice` pending-choice 渲染器彈出選擇視窗，不需要額外 UI。
+  - 驗證：改寫 `scripts/validate_topdeck_purchased_choice.py`（7/7：打牌立刻銀行化並發資源、手動使用單/多候選、買牌前使用回錯誤且不消耗權利、兩張卡各自累積可分次使用、結束回合自動 drain、無候選時作廢不卡回合）與 `scripts/validate_action_card_end_turn_topdeck_runtime.py`（5/5，改寫為驗證新流程），並改寫 `scripts/tests/test_action_card_regressions.py` 中對應的 4 支舊測試為 7 支新測試（含 2 張卡堆疊、結束回合 drain、無候選作廢）。完整 pytest（同 baseline ignore 清單）**322/322 全過**。另外用 Playwright 對真實瀏覽器透過 `/test/setup-end-turn-topdeck-proof`（已同步改版支援 `pending_topdeck_uses`／`phase`／`bought_cards` 參數）驗證：打完卡宣傳已顯示在 HUD、頂牌按鈕正確顯示次數與可點擊狀態、單候選點擊後自動置頂且按鈕消失、多候選點擊後彈出「行動預告／行動募資」選擇視窗並列出兩張候選、結束回合在只剩自動放置候選時正確換手到下一位玩家，共 6 項檢查全過（含 5 張截圖）。舊版截圖記錄 `docs/records/action-cards/ACTION_CARD_END_TURN_TOPDECK_UI_SCREENSHOTS_2026_05_18.md` 已加註已過時說明並指向新驗證文件。
+
 ### P1：奧援建立組織後漏掉陣營能力觸發
 - [done] 使用者提供 Turn 8 紀錄：台灣綠線透過兩次「東洋奧援」在成都、昆明建立組織，回合結束卻沒有觸發「本土社團」額外抽牌，並要求完整檢查所有陣營能力。（2026-08-07）
   - **根因**：回合結束能力依賴 `turn_log['built_towns']`；一般發展與行動卡建設會登記，但奧援的 `interactive_build_*`／瓦解後取代建設路徑只 `_place_organization()`，沒有執行建設後共用 hooks，因此本土社團、民國之心、選我河山、游擊隊、建設型事件進度與年代建設效果都可能漏掉。

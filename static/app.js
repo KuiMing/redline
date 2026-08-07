@@ -25,6 +25,9 @@ let lastEventRevealKey = null;
 let stickyPlayerErrorNotice = '';
 let stickyPlayerErrorTimer = null;
 const selectedPurchaseIndices = new Set();
+// 這兩張卡的取消能力只能被動觸發（其他玩家打出可取消的卡牌時自動跳出反應視窗），
+// 自己回合主動點「行動」不會取消任何東西，白白浪費這張卡，因此手牌區直接 disable。
+const REACTION_ONLY_ACTION_CARDS = new Set(['爆料黑幕', '產業滲透']);
 
 function resizeStage() {
   const scale = Math.min(
@@ -3544,6 +3547,17 @@ async function render(state) {
       redArmyBtn.textContent = `紅軍能力 ${usedCount}/${limitCount}`;
       redArmyBtn.disabled = !canShowRedArmyButton || usedUp || hasMyPendingChoice;
     }
+    const topdeckBtn = document.getElementById('topdeckRightBtn');
+    if (topdeckBtn) {
+      const pendingUses = Number(state.pending_topdeck_uses || 0);
+      const candidateCount = Number(state.topdeck_candidates_count || 0);
+      const hasMyPendingChoice = !!(state.pending_choice && me && state.pending_choice.player_id === me.id);
+      const canShowTopdeckButton = isMyTurn && pendingUses > 0;
+      topdeckBtn.style.display = canShowTopdeckButton ? 'inline-flex' : 'none';
+      topdeckBtn.textContent = `頂牌 (${pendingUses})`;
+      topdeckBtn.disabled = !canShowTopdeckButton || candidateCount === 0 || hasMyPendingChoice;
+      topdeckBtn.title = candidateCount === 0 ? '本回合尚未購買可頂的牌' : '';
+    }
   }
 
   // ✅ 地圖節點不在 render 中重建
@@ -3566,12 +3580,16 @@ async function render(state) {
         && (state.pending_choice?.queueable_card_names || []).includes(cardName)
         && mode === 'action';
       const canPlayHandCardMode = (cardName, mode) => {
+        if (mode === 'action' && REACTION_ONLY_ACTION_CARDS.has(cardName)) return false;
         if (!isMyTurn || (hasMyPendingChoice && !canQueueBuildCard(cardName, mode))) return false;
         if (rawPhase === 'action') return true;
         return rawPhase === 'event' && mode === 'action' && cardName === '紅軍奧援' && me.faction === 'red_army';
       };
       const handButtonTitle = (cardName, mode, canPlay) => {
         if (canPlay) return '打出這張手牌';
+        if (mode === 'action' && REACTION_ONLY_ACTION_CARDS.has(cardName)) {
+          return `${cardName}的取消能力只能被動觸發：當其他玩家打出可取消的卡牌時會自動跳出反應視窗。`;
+        }
         if (hasMyPendingChoice) return '請先處理目前待選擇效果。';
         if (rawPhase === 'end') return '目前是購買階段；不能再打出手牌。';
         if (rawPhase === 'event') {

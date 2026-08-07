@@ -617,6 +617,8 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
 
             if action == "advance":
                 result = game.advance_turn_phase()
+            elif action == "use_topdeck_right":
+                result = game.use_pending_topdeck_right()
             elif action == "play_card":
                 result = game.play_card(data.get("index"), mode=data.get("mode"), target_player_id=data.get("target_player_id"))
             elif action == "buy_card":
@@ -2051,6 +2053,10 @@ def test_setup_hand_preview(payload: dict):
 
 @app.post("/test/setup-end-turn-topdeck-proof")
 def test_setup_end_turn_topdeck_proof(payload: dict):
+    """Proof setup for the 行動預告/行動募資 topdeck-right flow (2026-08-07 改版):
+    the viewer already played the card (right banked, resource already granted) and has a
+    purchased card sitting in discard — either to drive the manual "頂牌" button (default
+    ACTION phase) or the auto-drain-on-end-turn path (phase="end")."""
     game_id = str(uuid.uuid4())
     players = [(str(uuid.uuid4()), "viewer"), (str(uuid.uuid4()), "red")]
     game = Game(players)
@@ -2059,8 +2065,10 @@ def test_setup_end_turn_topdeck_proof(payload: dict):
     red = game.players[1]
 
     card_name = payload.get("card_name", "行動預告")
-    bought_card_name = payload.get("bought_card", "本回合購得牌")
+    bought_card_names = payload.get("bought_cards") or [payload.get("bought_card", "本回合購得牌")]
     extra_hand = payload.get("extra_hand") or ["Filler"]
+    pending_topdeck_uses = payload.get("pending_topdeck_uses", 1)
+    phase = payload.get("phase", "action")
 
     def proof_card(name):
         card_def = next((c for c in game.structured_cards if c.get("name") == name), None)
@@ -2068,15 +2076,18 @@ def test_setup_end_turn_topdeck_proof(payload: dict):
             return Card(card_def["name"], card_def.get("type", "command"), dict(card_def.get("resources", {}) or {}))
         return Card(name, "command", {})
 
-    bought_card = proof_card(bought_card_name)
+    bought_cards = [proof_card(name) for name in bought_card_names]
+    resource_key = "propaganda" if card_name == "行動預告" else "money"
+    default_resources = {"money": 0, "propaganda": 0}
+    default_resources[resource_key] = pending_topdeck_uses
 
     viewer.faction_id = payload.get("faction_id", "tibet_dehradun")
     viewer.base = payload.get("base", "德拉敦")
     viewer.organizations = {viewer.base: 1}
-    viewer.resources = payload.get("resources") or {"money": 0, "propaganda": 0}
-    viewer.hand = [proof_card(card_name)] + [proof_card(name) for name in extra_hand]
+    viewer.resources = payload.get("resources") or default_resources
+    viewer.hand = [proof_card(name) for name in extra_hand]
     viewer.deck.draw_pile = [proof_card(name) for name in (payload.get("draw_pile") or ["補牌1", "補牌2", "補牌3", "補牌4", "補牌5"])]
-    viewer.deck.discard_pile = [bought_card]
+    viewer.deck.discard_pile = list(bought_cards)
 
     red.faction_id = "red_army"
     red.base = "北京"
@@ -2084,12 +2095,13 @@ def test_setup_end_turn_topdeck_proof(payload: dict):
     red.hand = []
 
     game.current_player_index = 0
-    game.turn_phase = TurnPhase.END
+    game.turn_phase = TurnPhase.END if phase == "end" else TurnPhase.ACTION
     game.game_phase = GamePhase.MAIN
     game.pending_base_choices = {}
-    game.turn_log["purchased_cards_this_turn"] = [bought_card]
+    game.turn_log["purchased_cards_this_turn"] = list(bought_cards)
+    game.turn_log["pending_topdeck_uses"] = pending_topdeck_uses
     game.id = game_id
-    game.log(f"UI proof setup: viewer has {card_name}; bought card {bought_card_name} is in discard before end-turn refill.")
+    game.log(f"UI proof setup: viewer already played {card_name} ({pending_topdeck_uses} banked right); bought cards {bought_card_names} are in discard.")
 
     manager.games[game_id] = game
     manager.connections[game_id] = manager.connections.get(game_id, {})
@@ -2103,7 +2115,7 @@ def test_setup_end_turn_topdeck_proof(payload: dict):
         "game_id": game_id,
         "player_id": viewer.id,
         "card_name": card_name,
-        "bought_card": bought_card_name,
+        "bought_cards": bought_card_names,
         "state": game.state(),
     }
 
