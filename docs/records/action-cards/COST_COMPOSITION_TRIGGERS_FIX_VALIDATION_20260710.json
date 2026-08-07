@@ -8,7 +8,7 @@
       "民族調和/星星之火",
       "人同此心"
     ],
-    "purpose": "These 2 cards and 4 faction abilities all key off whether the played card's purchase cost includes a money/propaganda component (\"購買費用有資金/宣傳的牌\"), but server/game.py used to check the card's own category (card_type / effective_type) instead — a poor proxy, since many command/spy/organization/armed/transport-category cards have mixed money+propaganda costs (e.g. 謀劃: category=指揮, cost=資金1+宣傳1). Fixed by deriving cost_has_money/cost_has_propaganda from actual purchase cost via _card_purchase_cost, threaded through both the immediate play_card path and the deferred reaction-resume path (action_context), while preserving the pre-existing exclusion of support cards.",
+    "purpose": "These 2 cards and 4 faction abilities all key off whether the played card's purchase cost includes a money/propaganda component (\"購買費用有資金/宣傳的牌\"), but server/game.py used to check the card's own category (card_type / effective_type) instead — a poor proxy, since many command/spy/organization/armed/transport-category cards have mixed money+propaganda costs (e.g. 謀劃: category=指揮, cost=資金1+宣傳1). Fixed by deriving cost_has_money/cost_has_propaganda from actual purchase cost via _card_purchase_cost, threaded through both the immediate play_card path and the deferred reaction-resume path (action_context); ordinary support cards count by their printed purchase cost, while starter 紅軍奧援 has zero purchase cost.",
     "mismatch_card_used": "謀劃",
     "total": 9,
     "passed": 9,
@@ -49,14 +49,14 @@
       }
     },
     {
-      "name": "support_card_still_excluded_from_cost_triggers",
+      "name": "support_card_counts_for_printed_purchase_cost_triggers",
       "checks": {
         "play_success": true,
-        "drew_only_1_card": true
+        "drew_2_cards_with_bonus": true
       },
       "ok": true,
       "detail": {
-        "drawn": 1
+        "drawn": 2
       }
     },
     {

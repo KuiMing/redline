@@ -483,12 +483,9 @@ def test_taiwan_support_tier3_can_replace_red_army_base_after_second_dissolve_hi
     assert '北京' in g.turn_log.get('red_army_base_build_blocks', [])
 
 
-def test_taiwan_support_tier3_cannot_replace_red_army_base_on_first_dissolve_hit():
-    """同上一項的另一半：如果這是本回合對紅軍根據地的第 1 次命中（尚未真正移除），
-    即使 `_can_replace_dissolved_org_with_own` 的預先篩選把根據地當成候選目標放行，
-    `_resolve_support_interaction_result()` 在真正呼叫 `dissolve_organization()` 之後
-    對 `_can_player_build_in_town()` 的即時複查仍要正確擋下補位——耐久規則本身沒有被
-    這次放寬影響。"""
+def test_taiwan_support_tier3_first_red_army_base_hit_succeeds_without_building():
+    """紅軍根據地第 1 次命中尚未移除組織，因此不能補位；但瓦解命中本身已成功，
+    API 應回傳成功且明確標示 built=False，而不是在部分結算後誤報整個效果失敗。"""
     g = make_game()
     actor = g.current_player()
     enemy = g.players[1]
@@ -519,7 +516,10 @@ def test_taiwan_support_tier3_cannot_replace_red_army_base_on_first_dissolve_hit
 
     resolved = g.resolve_pending_choice(actor.id, 0)
 
-    assert resolved.get('error') == 'Target could not be replaced after dissolve', resolved
+    assert resolved.get('success') is True, resolved
+    assert resolved.get('red_base_hit') is True
+    assert resolved.get('red_base_destroyed') is False
+    assert resolved.get('built') is False
     assert enemy.organizations.get('北京', 0) == 1
     assert '北京' not in (actor.organizations or {})
     assert g.turn_log.get('red_army_base_dissolves', {}).get(f'{actor.id}:北京') == 1

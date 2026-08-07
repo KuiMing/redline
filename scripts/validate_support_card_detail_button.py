@@ -14,7 +14,7 @@ except ModuleNotFoundError:
 
 ROOT = Path(__file__).resolve().parent.parent
 RECORD_DIR = ROOT / 'docs' / 'records' / 'action-cards'
-BASE_URL = 'http://127.0.0.1:8000'
+BASE_URL = os.environ.get('REDLINE_BASE_URL', 'http://127.0.0.1:8000').rstrip('/')
 OUT_JSON = RECORD_DIR / 'SUPPORT_CARD_DETAIL_BUTTON_VALIDATION.json'
 OUT_MD = RECORD_DIR / 'SUPPORT_CARD_DETAIL_BUTTON_VALIDATION.md'
 SCREENSHOT = RECORD_DIR / 'support_card_detail_button.png'
@@ -29,7 +29,9 @@ def post_json(path, payload=None):
 def hand_card_buttons(page, card_name):
     return page.evaluate(
         """(name) => {
-          const card = [...document.querySelectorAll('#hand .hand-card')].find(c => c.innerText.includes(name));
+          const action = [...document.querySelectorAll('#hand .hand-card .hand-card-action-btn')]
+            .find(button => button.dataset.cardName === name);
+          const card = action?.closest('.hand-card');
           if (!card) return null;
           return [...card.querySelectorAll('.hand-card-action-btn')].map(b => ({
             text: b.textContent.trim(), mode: b.dataset.cardMode, disabled: b.disabled,
@@ -55,7 +57,11 @@ def check(browser):
     page.goto(f"{BASE_URL}/?game_id={setup['game_id']}&player_id={setup['player_id']}", wait_until='networkidle')
     page.wait_for_selector('#gameShell', state='visible', timeout=10000)
     page.wait_for_timeout(900)
-    page.evaluate("() => { const b = document.getElementById('closeFactionActionModal'); if (b) b.click(); }")
+    page.evaluate("""() => {
+      document.getElementById('closeFactionActionModal')?.click();
+      if (typeof closeEventReveal === 'function') closeEventReveal();
+      if (typeof minimizeEraAchievement === 'function') minimizeEraAchievement();
+    }""")
     page.wait_for_timeout(300)
 
     buttons = hand_card_buttons(page, '臺灣奧援')

@@ -1,6 +1,6 @@
 # Redline TODO
 
-最後更新：2026-08-01
+最後更新：2026-08-07
 
 ## 工作規則
 - 開始新工作前先做 intake：讀 `TODO.md`、跑 `git status --short`、跑 `git log --oneline -5`。
@@ -24,6 +24,14 @@
   - **全能力稽核**：新增 `scripts/tests/test_faction_ability_trigger_paths.py`，核對 active faction/base 資料解析出的 **33 個能力名稱**完整無缺，並以 13 組測試覆蓋開局洗牌、出牌首張費用觸發、互動奧援延後觸發、回合結束建設觸發、游擊隊、殉道者／青山里、安全屋、支付／持牌／非暴力／距離限制、所有非紅軍啟動能力與紅軍四項啟動能力；結果 **13/13 passed**。
   - **正式 UI proof**：`scripts/validate_faction_ability_triggers_browser.py` 從手牌實際打出東洋奧援 III、在成都建立組織、進入購買階段並結束回合；正式 state 與戰況紀錄確認台灣綠線組織 2、先補至 5 再由本土社團多抽至手牌 6、trigger log 排在 End of turn 前，console 0 errors，**6/6 passed**。證據位於 `docs/records/faction-ui/trigger-audit/`。
   - **回歸**：完整 pytest **293/293 passed**；奧援事件進度 browser **8/8 passed**；奧援地區領先判定 browser **9/9 passed**；Python compile 與 `git diff --check` 通過。
+
+### P1：全部奧援生命週期與共用 hooks 深度稽核
+- [done] 使用者要求充分檢查英美、東洋、南洋、印度、天方、歐洲、北國、臺灣、紅軍全部奧援，確認是否還有與「東洋奧援建立後漏掉共用 hook」相似的問題。（2026-08-07）
+  - **範圍**：依 `rules.md` 與 canonical 卡面，逐卡追 `play_card → reaction → commit/cancel → pending choice → resolve → discard/return`，另查事件、陣營能力、年代、建設／瓦解、共用組織、固定供應、借用牌、卡牌區域與正式 UI。
+  - **確認並修正 9 類缺陷**：(1) 印度奧援憑空建立分神、未扣固定供應；(2) 印度研究分析室漏掉延後反應且未推進 `use_faction_ability`；(3) 取消北國奧援未恢復 `played_nonstarter_names`；(4) 借用北國奧援已回原持有者牌庫頂後無法取消回手；(5) 東洋／天方／北國／臺灣效果未完整把共用組織視為起點、目標或犧牲對象；(6) 臺灣奧援 III 首次命中紅軍根據地已部分成功卻回傳整體錯誤；(7) 互動奧援 resolve-time 目標失效會消耗流程並可能卡住；(8) 起始牌紅軍奧援被誤算為 1資金＋1宣傳購買費用，導致取消 bonus 判斷錯誤；(9) 正式 UI 的其他玩家動態疊層會遮住有時限的取消反應視窗。
+  - **核心修正**：集中固定購買供應 helper；印度旗幟能力移入 committed-card hook；北國取消跨 zone 還原實體借用牌與所有出牌快照；奧援距離／目標統一使用 `_organization_towns_for_player()`／`_shared_origin_owner()`；stale choice 重算候選；臺灣首次紅軍根據地命中回傳 `success/built=False`；紅軍奧援購買費用歸零；pending reaction 優先於通知轉播。
+  - **驗證**：新增 `scripts/tests/test_support_card_hook_audit.py`，涵蓋九系列 hook、印度供應與事件、取消提交、共用組織、借用北國回滾、stale target、紅軍奧援零費用等；完整 pytest 最終全綠。正式雙玩家 Browser proof 驗證印度奧援 III、紅軍取消詢問／不取消、有限分神供應、印度研究分析室、事件進度、卡牌只棄置一次及反應視窗不被遮住，**9/9 passed**。費用組成 validator **9/9 passed**；JS syntax、Python compile、`git diff --check` 通過。完整矩陣與證據位於 `docs/records/support-cards/hook-audit/`。
+  - **資料層備註**：`support_taxonomy.v1.1.json` 的 `tier_*_kind` 只是摘要，尚不足以單獨表達抽後棄牌、先犧牲後瓦解、瓦解後同地建立等複合效果；runtime mapping 已按完整卡面實作並通過稽核。若未來要讓 taxonomy 可直接執行，需另做 schema 升級。
 
 ### P2：最後結算畫面應顯示牆內/牆外組織數量，並依勝利陣營呈現華麗客製化結局敘事
 - [done] 使用者需求：最後結算畫面，應該要直接顯示牆內和牆外組織數量。我需要華麗一點的畫面，比如說，紅軍贏了，其他陣營生靈塗炭；台灣綠線陣營贏了，台灣人民自由民主進步富裕。台灣藍線陣營贏了，開始規劃反攻大陸。蒙古贏了，連內蒙古都囊括其中。諸如此類的東西。（2026-08-06 使用者提出並要求分兩塊處理）

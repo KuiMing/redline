@@ -3412,6 +3412,15 @@ function renderPeerActionNotice(state) {
     return;
   }
 
+  const pendingReactionForViewer = state.pending_choice?.type === 'reaction_choice'
+    && state.pending_choice?.player_id === playerId;
+  if (pendingReactionForViewer) {
+    // 取消反應是有時限、必須立即操作的正式 choice；不可再用「其他玩家動態」大型轉播
+    // 疊層蓋住它。消耗這次 log 並關閉通知，待反應結束後也不重播同一則出牌紀錄。
+    closePeerActionNotice(entries);
+    return;
+  }
+
   const newEntryStart = peerActionNoticeNewEntryStart(entries);
   rememberPeerActionLog(entries);
   if (newEntryStart >= entries.length) return;

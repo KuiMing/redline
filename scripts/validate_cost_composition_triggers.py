@@ -82,9 +82,9 @@ def test_ignite_passion_no_bonus_without_qualifying_play():
     }
 
 
-def test_support_card_still_excluded():
-    # 英美奧援 cost = 1資金+2宣傳 (has both), but support cards must NOT count toward
-    # played_money_card / played_propaganda_card (pre-existing, unchanged behavior).
+def test_support_card_counts_by_printed_purchase_cost():
+    # 普通奧援印刷購買費用為 1資金+2宣傳，因此必須同時登記兩種費用組成；
+    # 後續點燃熱情看見先前已打出宣傳費用卡，應抽本身 1 張再加成 1 張。
     g, a, b = _new_game([Card('英美奧援', 'support', {}), Card('點燃熱情', 'command', {'propaganda': 1})])
     a.resources = {'money': 1, 'propaganda': 2}
     g.play_card(0, mode='action')
@@ -92,12 +92,12 @@ def test_support_card_still_excluded():
     result = g.play_card(0, mode='action')
     drawn = len(a.hand) - before + 1
     return {
-        'name': 'support_card_still_excluded_from_cost_triggers',
+        'name': 'support_card_counts_for_printed_purchase_cost_triggers',
         'checks': {
             'play_success': result.get('success') is True,
-            'drew_only_1_card': drawn == 1,
+            'drew_2_cards_with_bonus': drawn == 2,
         },
-        'ok': result.get('success') is True and drawn == 1,
+        'ok': result.get('success') is True and drawn == 2,
         'detail': {'drawn': drawn},
     }
 
@@ -230,7 +230,7 @@ def main():
         test_ignite_passion_bonus_after_mismatched_category_card,
         test_build_confidence_bonus_after_mismatched_category_card,
         test_ignite_passion_no_bonus_without_qualifying_play,
-        test_support_card_still_excluded,
+        test_support_card_counts_by_printed_purchase_cost,
         test_faction_ability_money_draw_triggers_on_mismatched_card,
         test_faction_ability_money_gain_triggers_on_mismatched_card,
         test_faction_ability_propaganda_draw_triggers_on_mismatched_card,
@@ -250,7 +250,8 @@ def main():
             'category=指揮, cost=資金1+宣傳1). Fixed by deriving cost_has_money/'
             'cost_has_propaganda from actual purchase cost via _card_purchase_cost, threaded '
             'through both the immediate play_card path and the deferred reaction-resume path '
-            '(action_context), while preserving the pre-existing exclusion of support cards.'
+            '(action_context); ordinary support cards count by their printed purchase cost, '
+            'while starter 紅軍奧援 has zero purchase cost.'
         ),
         'mismatch_card_used': MISMATCH_CARD,
         'total': len(results),

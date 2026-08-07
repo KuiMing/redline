@@ -17,11 +17,11 @@ def names(cards):
 def main():
     RECORD_DIR.mkdir(parents=True, exist_ok=True)
     random.seed(20260510)
-    g = Game([('p1', 'Tibet'), ('p2', 'Red')])
+    g = Game([('p1', 'Buyer'), ('p2', 'Red')])
     t, r = g.players
-    t.faction_id = 'tibet_dehradun'
-    t.base = '德拉敦'
-    t.organizations = {'德拉敦': 1}
+    t.faction_id = 'liberals'
+    t.base = '臺北'
+    t.organizations = {'臺北': 1}
     r.faction_id = 'red_army'
     r.base = '北京'
     r.organizations = {'北京': 1}

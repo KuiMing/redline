@@ -627,6 +627,20 @@ class Game:
                 self.log(f"內鬥與分神供應皆空，無法放置{suffix}")
         return cards
 
+    def _take_static_purchase_cards(self, card_name, count=1, reason=''):
+        """Take up to count physical cards from the shared static purchase supply."""
+        cards = []
+        for _ in range(int(count or 1)):
+            if card_name in STATIC_PURCHASE_CARD_NAMES:
+                supply = int(self.static_purchase_supply.get(card_name, 0) or 0)
+                if supply <= 0:
+                    prefix = f'{reason}：' if reason else ''
+                    self.log(f"{prefix}{card_name}供應已空，無法再放置")
+                    break
+                self.static_purchase_supply[card_name] = supply - 1
+            cards.append(self._starter_card(card_name))
+        return cards
+
     def _gain_event_card(self, player, card_name, count=1):
         if card_name == '內鬥':
             cards = self._take_internal_conflict_cards(count, reason='event')
@@ -634,19 +648,11 @@ class Game:
                 player.deck.discard(cards)
                 self.log(f"{player.name} gained {len(cards)} card(s) ({'、'.join(getattr(c, 'name', str(c)) for c in cards)}) from event")
             return len(cards)
-        gained = 0
-        for _ in range(int(count or 1)):
-            if card_name in STATIC_PURCHASE_CARD_NAMES:
-                supply = int(self.static_purchase_supply.get(card_name, 0) or 0)
-                if supply <= 0:
-                    self.log(f"Event could not gain {card_name}: static supply empty")
-                    continue
-                self.static_purchase_supply[card_name] = supply - 1
-            player.deck.discard([self._starter_card(card_name)])
-            gained += 1
-        if gained:
-            self.log(f"{player.name} gained {gained} {card_name} from event")
-        return gained
+        cards = self._take_static_purchase_cards(card_name, count, reason='Event')
+        if cards:
+            player.deck.discard(cards)
+            self.log(f"{player.name} gained {len(cards)} {card_name} from event")
+        return len(cards)
 
     def _topdeck_static_purchase_card(self, target_player, card_name, source_name):
         if card_name == '內鬥':
@@ -1059,8 +1065,6 @@ class Game:
         return mapping.get(name, 'support')
 
     def _support_card_cost(self, support_name):
-        if support_name == '紅軍奧援':
-            return {'money': 1, 'propaganda': 1}
         entry = self._support_taxonomy_entry(support_name) or {}
         text = entry.get('cost', '')
         if text == '起始牌':
@@ -1225,11 +1229,11 @@ class Game:
         return choices
 
     def _player_has_org_within_steps_of_player(self, source_player, target_player, max_steps=1, target_region=None):
-        source_towns = [town for town, count in (getattr(source_player, 'organizations', {}) or {}).items() if count > 0]
+        source_towns = self._organization_towns_for_player(source_player)
         target_towns = {
             town
-            for town, count in (getattr(target_player, 'organizations', {}) or {}).items()
-            if count > 0 and self._town_matches_region_alias(town, target_region)
+            for town in self._organization_towns_for_player(target_player)
+            if self._town_matches_region_alias(town, target_region)
         }
         if not source_towns or not target_towns:
             return False
@@ -1237,16 +1241,17 @@ class Game:
         return bool(reachable & target_towns)
 
     def _find_target_town_within_steps_of_player(self, source_player, target_player, max_steps=1, target_region=None):
-        source_towns = [town for town, count in (getattr(source_player, 'organizations', {}) or {}).items() if count > 0]
+        source_towns = self._organization_towns_for_player(source_player)
         if not source_towns:
             return None
         reachable = self._towns_within_steps(source_towns, max_steps=max_steps)
-        for town, count in (getattr(target_player, 'organizations', {}) or {}).items():
+        for town in self._organization_towns_for_player(target_player):
+            target_owner = self._shared_origin_owner(target_player, town)
             if (
-                count > 0
+                target_owner is not None
                 and town in reachable
                 and self._town_matches_region_alias(town, target_region)
-                and self._can_dissolve_base_target(target_player, town)[0]
+                and self._can_dissolve_base_target(target_owner, town)[0]
             ):
                 return town
         return None
@@ -2488,6 +2493,63 @@ class Game:
             'choice_key': choice_key,
         }
 
+    def _refresh_support_flow_choice_after_stale_result(self, player, choice):
+        """Refresh an interactive support choice after resolve-time legality changed."""
+        context = dict(choice.get('context') or {})
+        effect_type = context.get('effect_type')
+        step = choice.get('step')
+        refreshed = dict(choice)
+        if step == 'town':
+            near_only = effect_type == 'interactive_build_near_inner'
+            towns = self._interactive_support_build_towns(player, near_only=near_only)
+            refreshed['towns'] = towns
+            if towns:
+                self.pending_choice = refreshed
+                return True
+            return False
+        if step == 'sacrifice_town':
+            towns = self._interactive_support_sacrifice_towns(
+                player,
+                max_steps=int((context.get('effect_payload') or {}).get('range', 1) or 1),
+                target_players=self._target_players_for_interaction(player, context.get('target_player_id')),
+            )
+            refreshed['towns'] = towns
+            if towns:
+                self.pending_choice = refreshed
+                return True
+            return False
+        if step != 'target':
+            return False
+
+        if effect_type == 'interactive_dissolve_self_and_enemy' and context.get('sacrifice_town'):
+            targets = self._interactive_support_dissolve_targets_near_town(
+                player,
+                context.get('sacrifice_town'),
+                max_steps=int((context.get('effect_payload') or {}).get('range', 1) or 1),
+                target_players=self._target_players_for_interaction(player, context.get('target_player_id')),
+            )
+        elif effect_type == 'interactive_dissolve_and_build':
+            targets = [
+                entry
+                for entry in self._interactive_support_dissolve_targets(player, require_self_sacrifice=False)
+                if self._can_replace_dissolved_org_with_own(
+                    player,
+                    next((p for p in self.players if getattr(p, 'id', None) == entry.get('player_id')), None),
+                    entry.get('town'),
+                )
+            ]
+        elif effect_type == 'interactive_dissolve_many_near':
+            targets = self._interactive_support_dissolve_targets(player, require_self_sacrifice=False)
+        elif effect_type == 'force_discard_near':
+            targets = self._interactive_support_discard_targets_near(player)
+        else:
+            targets = []
+        refreshed['targets'] = targets
+        if targets:
+            self.pending_choice = refreshed
+            return True
+        return False
+
     def _resolve_support_flow_choice(self, player, choice, index):
         step = choice.get('step')
         if step in {'town', 'sacrifice_town'}:
@@ -2499,7 +2561,18 @@ class Game:
         if result.get('error'):
             return result
         response = self._resolve_support_interaction_result(player, result, choice)
-        if not isinstance(response, dict) or response.get('error') or response.get('pending_choice'):
+        if isinstance(response, dict) and response.get('error'):
+            if self._refresh_support_flow_choice_after_stale_result(player, choice):
+                return {**response, 'pending_choice': True, 'retryable': True}
+            self.pending_choice = None
+            self.log(f"{player.name} 的 {choice.get('source_name', '奧援')} 因結算時已無合法目標而結束")
+            return {
+                'success': True,
+                'effect_fizzled': True,
+                'reason': response.get('error'),
+                'source_name': choice.get('source_name'),
+            }
+        if not isinstance(response, dict) or response.get('pending_choice'):
             return response
         context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
         followup = self._start_era_followup_discard_choice(context.get('era_followup_discard_choice'))
@@ -2520,15 +2593,41 @@ class Game:
         rollback_card = choice.get('rollback_card')
         if rollback_card is not None:
             # Initial 北國奧援 choices are transactionally cancellable: no organization has
-            # changed yet, so return the exact card object from discard to its former hand slot
-            # and restore the pre-card combo flags.
-            if player is None or rollback_card not in player.deck.discard_pile:
+            # changed yet, so return the exact card object to its former hand slot. Borrowed
+            # cards may already have been returned to their owner's deck top by the common
+            # support discard path; remove that exact object and restore its return marker.
+            if player is None:
                 return {'error': 'Support card cannot be restored'}
-            player.deck.discard_pile.remove(rollback_card)
+
+            removed_from_zone = False
+            for zone_owner in self.players:
+                zones = [zone_owner.hand, zone_owner.deck.draw_pile, zone_owner.deck.discard_pile]
+                for zone in zones:
+                    for zone_index, candidate in enumerate(zone):
+                        if candidate is rollback_card:
+                            zone.pop(zone_index)
+                            removed_from_zone = True
+                            break
+                    if removed_from_zone:
+                        break
+                if removed_from_zone:
+                    break
+
+            borrowed_purchase_index = choice.get('rollback_borrowed_purchase_area_index')
+            if not removed_from_zone and borrowed_purchase_index is None:
+                return {'error': 'Support card cannot be restored'}
+
+            borrowed_owner_id = choice.get('rollback_borrowed_owner_id')
+            if borrowed_owner_id:
+                setattr(rollback_card, '_return_to_owner_topdeck', borrowed_owner_id)
+            if borrowed_purchase_index is not None:
+                setattr(rollback_card, '_return_to_purchase_area_index', borrowed_purchase_index)
+
             hand_index = max(0, min(int(choice.get('rollback_hand_index', len(player.hand))), len(player.hand)))
             player.hand.insert(hand_index, rollback_card)
             self.turn_log['played_money_card'] = bool(choice.get('rollback_played_money_card', False))
             self.turn_log['played_propaganda_card'] = bool(choice.get('rollback_played_propaganda_card', False))
+            self.turn_log['played_nonstarter_names'] = list(choice.get('rollback_played_nonstarter_names', []))
             if 'rollback_event_progress' in choice:
                 snapshot = choice.get('rollback_event_progress')
                 self.event_progress = dict(snapshot) if isinstance(snapshot, dict) else snapshot
@@ -2574,6 +2673,7 @@ class Game:
                 trigger_player,
                 cost_has_money=bool(deferred_triggers.get('cost_has_money')),
                 cost_has_propaganda=bool(deferred_triggers.get('cost_has_propaganda')),
+                played_card=deferred_triggers.get('played_card'),
             )
         if not result.get('error') and not self.pending_choice:
             build_continuation = self._resume_card_build_queue_if_idle(player)
@@ -2676,7 +2776,7 @@ class Game:
             max_steps = 1 + int(getattr(player, 'build_range_bonus', 0) or 0)
             if self._player_has_ability(player, "安全屋"):
                 max_steps += 1
-            for origin in list((player.organizations or {}).keys()):
+            for origin in self._organization_towns_for_player(player):
                 reachable |= self._towns_within_steps([origin], max_steps=max_steps) & inner_towns
         else:
             reachable = inner_towns
@@ -2694,17 +2794,27 @@ class Game:
 
     def _interactive_support_dissolve_targets(self, player, require_self_sacrifice=False, max_steps=1, target_players=None, target_region=None):
         targets = []
+        seen_physical_targets = set()
         opponents = list(target_players) if target_players is not None else [other for other in self.players if other is not player]
-        source_towns = [town for town, count in (player.organizations or {}).items() if count > 0]
+        source_towns = self._organization_towns_for_player(player)
         reachable = self._towns_within_steps(source_towns, max_steps=max_steps)
         for other in opponents:
             if other is None or other is player:
                 continue
-            for town, count in (other.organizations or {}).items():
-                if count <= 0 or town not in reachable or not self._town_matches_region_alias(town, target_region):
+            for town in self._organization_towns_for_player(other):
+                target_owner = self._shared_origin_owner(other, town)
+                target_key = (getattr(target_owner, 'id', None), town)
+                if (
+                    target_owner is None
+                    or target_owner is player
+                    or target_key in seen_physical_targets
+                    or town not in reachable
+                    or not self._town_matches_region_alias(town, target_region)
+                ):
                     continue
-                if not self._can_dissolve_base_target(other, town)[0]:
+                if not self._can_dissolve_base_target(target_owner, town)[0]:
                     continue
+                seen_physical_targets.add(target_key)
                 targets.append({
                     'id': f'{getattr(other, "id", other.name)}::{town}',
                     'label': f'{other.name}｜{town}',
@@ -2717,15 +2827,25 @@ class Game:
     def _interactive_support_dissolve_targets_near_town(self, player, origin_town, max_steps=1, target_players=None, target_region=None):
         reachable = self._towns_within_steps([origin_town], max_steps=max_steps)
         targets = []
+        seen_physical_targets = set()
         opponents = list(target_players) if target_players is not None else [other for other in self.players if other is not player]
         for other in opponents:
             if other is None or other is player:
                 continue
-            for town, count in (other.organizations or {}).items():
-                if count <= 0 or town not in reachable or not self._town_matches_region_alias(town, target_region):
+            for town in self._organization_towns_for_player(other):
+                target_owner = self._shared_origin_owner(other, town)
+                target_key = (getattr(target_owner, 'id', None), town)
+                if (
+                    target_owner is None
+                    or target_owner is player
+                    or target_key in seen_physical_targets
+                    or town not in reachable
+                    or not self._town_matches_region_alias(town, target_region)
+                ):
                     continue
-                if not self._can_dissolve_base_target(other, town)[0]:
+                if not self._can_dissolve_base_target(target_owner, town)[0]:
                     continue
+                seen_physical_targets.add(target_key)
                 targets.append({
                     'id': f'{getattr(other, "id", other.name)}::{town}',
                     'label': f'{other.name}｜{town}',
@@ -2752,10 +2872,13 @@ class Game:
         return targets
 
     def _can_replace_dissolved_org_with_own(self, player, target_player, town):
-        if target_player is None or not town or not self._has_org_supply(player):
+        """Non-mutating preflight for 臺灣奧援 III's dissolve-then-build target."""
+        if not player or not target_player or not town or not self._has_org_supply(player):
             return False
-        if (target_player.organizations or {}).get(town, 0) <= 0:
+        target_owner = self._shared_origin_owner(target_player, town)
+        if target_owner is None:
             return False
+        target_player = target_owner
         if not self._can_dissolve_base_target(target_player, town)[0]:
             return False
         # 2026-08-04 使用者裁決：紅軍根據地不再永久排除瓦解＋補位組合——只要根據地真的被
@@ -2778,10 +2901,11 @@ class Game:
 
     def _interactive_support_sacrifice_towns(self, player, max_steps=1, target_players=None, target_region=None):
         towns = []
-        for town, count in (player.organizations or {}).items():
-            if count <= 0:
+        for town in self._organization_towns_for_player(player):
+            target_owner = self._shared_origin_owner(player, town)
+            if target_owner is None:
                 continue
-            if town == getattr(player, 'base', None):
+            if town == getattr(target_owner, 'base', None):
                 continue
             targets = self._interactive_support_dissolve_targets_near_town(
                 player,
@@ -2986,9 +3110,10 @@ class Game:
             return {'success': True, 'town': town}
         if effect_type == 'interactive_dissolve_self_and_enemy' and choice.get('step') == 'sacrifice_town':
             sacrifice_town = result.get('town')
-            if not sacrifice_town or (player.organizations or {}).get(sacrifice_town, 0) <= 0:
+            sacrifice_owner = self._shared_origin_owner(player, sacrifice_town) if sacrifice_town else None
+            if not sacrifice_town or sacrifice_owner is None:
                 return {'error': 'Invalid own organization to sacrifice'}
-            if sacrifice_town == getattr(player, 'base', None):
+            if sacrifice_town == getattr(sacrifice_owner, 'base', None):
                 return {'error': 'Base organization cannot be sacrificed'}
             targets = self._interactive_support_dissolve_targets_near_town(
                 player,
@@ -2998,10 +3123,11 @@ class Game:
             )
             if not targets:
                 return {'error': 'No enemy organization within range of sacrificed organization'}
-            player.organizations[sacrifice_town] -= 1
-            if player.organizations[sacrifice_town] <= 0:
-                del player.organizations[sacrifice_town]
-            self.log(f"{player.name} dissolved 1 own organization at {sacrifice_town} for {card_name}")
+            sacrifice_owner.organizations[sacrifice_town] -= 1
+            if sacrifice_owner.organizations[sacrifice_town] <= 0:
+                del sacrifice_owner.organizations[sacrifice_town]
+            shared_text = f"（實體屬於{sacrifice_owner.name}）" if sacrifice_owner is not player else ''
+            self.log(f"{player.name} dissolved 1 own organization at {sacrifice_town}{shared_text} for {card_name}")
             next_context = dict(context)
             next_context['sacrifice_town'] = sacrifice_town
             self._set_pending_support_flow_choice(
@@ -3077,10 +3203,28 @@ class Game:
                     self.log(f"{player.name} has {remaining_count} {card_name} dissolve(s) remaining but no legal target")
             if effect_type == 'interactive_dissolve_and_build':
                 if not self._can_player_build_in_town(player, town):
+                    if dissolve_result.get('red_base_hit') and not dissolve_result.get('red_base_destroyed'):
+                        self.log(f"{player.name} resolved {card_name}: {town}紅軍根據地僅完成第 1 次瓦解命中，組織尚未移除，故不建立")
+                        return {
+                            'success': True,
+                            'town': town,
+                            'target_player_id': target_player_id,
+                            'red_base_hit': True,
+                            'red_base_destroyed': False,
+                            'built': False,
+                        }
                     return {'error': 'Target could not be replaced after dissolve'}
                 self._place_organization(player, town)
                 self._record_action_build(player, town)
                 self.log(f"{player.name} resolved {card_name} and built in {town} after dissolve")
+                return {
+                    'success': True,
+                    'town': town,
+                    'target_player_id': target_player_id,
+                    'red_base_hit': bool(dissolve_result.get('red_base_hit')),
+                    'red_base_destroyed': bool(dissolve_result.get('red_base_destroyed')),
+                    'built': True,
+                }
             return {'success': True, 'town': town, 'target_player_id': target_player_id}
         if effect_type == 'force_discard_near':
             selected = result.get('selected') or {}
@@ -3292,8 +3436,11 @@ class Game:
             count = int(payload.get('count', 0) or 0)
             target = next((p for p in self.players if p.faction_id == 'red_army'), None)
             if target:
-                cards = [Card('分神', 'disruption', {}) for _ in range(count)]
-                target.deck.discard(cards)
+                cards = self._take_static_purchase_cards('分神', count, reason=card_name)
+                if cards:
+                    target.deck.discard(cards)
+                if len(cards) < count:
+                    self.log(f"{player.name} resolved {card_name}: 分神供應僅能放置 {len(cards)}/{count} 張")
         self.log(f"{player.name} resolved {card_name} at tier {tier} (matched rulers: {', '.join(matched) if matched else 'none'})")
         return {'tier': tier, 'matched_rulers': matched, 'effect_type': effect_type, 'effect_text': self._support_card_effect_text(card_name, tier, region_index)}
 
@@ -4132,7 +4279,7 @@ class Game:
             else:
                 random.shuffle(player.deck.draw_pile)
 
-    def _apply_card_play_faction_abilities(self, player, *, cost_has_money, cost_has_propaganda):
+    def _apply_card_play_faction_abilities(self, player, *, cost_has_money, cost_has_propaganda, played_card=None):
         """Apply each faction trigger once after a committed card clears reaction gating."""
         for ability in self._player_effective_abilities(player):
             if not isinstance(ability, dict):
@@ -4164,6 +4311,17 @@ class Game:
                     player.resources["money"] += 3
                     self.log(f"{player.name} triggered 展現實力 and gained 3 money")
                     self._track_event_progress('use_faction_ability', player=player)
+
+        if (
+            played_card is not None
+            and self._player_has_india_research_room(player)
+            and self._is_india_flag_card(played_card)
+            and not self.turn_log.get("india_flag_money_triggered")
+        ):
+            self.turn_log["india_flag_money_triggered"] = True
+            player.resources["money"] += 2
+            self.log(f"{player.name} triggered 印度研究分析室 and gained 2 money")
+            self._track_event_progress('use_faction_ability', player=player)
 
     def _apply_turn_end_faction_abilities(self, player):
         effective = self._player_effective_abilities(player)
@@ -4605,6 +4763,7 @@ class Game:
                 'player_id': player.id,
                 'cost_has_money': bool(action_context.get('cost_has_money')),
                 'cost_has_propaganda': bool(action_context.get('cost_has_propaganda')),
+                'played_card': played_card,
             }
             if card_name == '北國奧援' and self.pending_choice and action_context.get('hand_index') is not None:
                 # No 北國奧援 effect has mutated the board at the initial target/sacrifice
@@ -4616,6 +4775,9 @@ class Game:
                     'rollback_hand_index': action_context.get('hand_index'),
                     'rollback_played_money_card': action_context.get('prior_played_money_card'),
                     'rollback_played_propaganda_card': action_context.get('prior_played_propaganda_card'),
+                    'rollback_played_nonstarter_names': list(action_context.get('prior_played_nonstarter_names', [])),
+                    'rollback_borrowed_owner_id': action_context.get('borrowed_owner_id'),
+                    'rollback_borrowed_purchase_area_index': action_context.get('borrowed_purchase_area_index'),
                     'rollback_event_progress': action_context.get('prior_event_progress'),
                     'rollback_event_notification': action_context.get('prior_event_notification'),
                 })
@@ -4753,6 +4915,7 @@ class Game:
             player,
             cost_has_money=bool(trigger_cost_has_money),
             cost_has_propaganda=bool(trigger_cost_has_propaganda),
+            played_card=played_card,
         )
 
         if self.pending_choice:
@@ -5228,6 +5391,9 @@ class Game:
             'cost_has_propaganda': cost_has_propaganda,
             'prior_played_money_card': self.turn_log.get('played_money_card', False),
             'prior_played_propaganda_card': self.turn_log.get('played_propaganda_card', False),
+            'prior_played_nonstarter_names': list(self.turn_log.get('played_nonstarter_names', [])),
+            'borrowed_owner_id': getattr(played_card, '_return_to_owner_topdeck', None),
+            'borrowed_purchase_area_index': getattr(played_card, '_return_to_purchase_area_index', None),
             'prior_event_progress': dict(self.event_progress) if isinstance(self.event_progress, dict) else self.event_progress,
             'prior_event_notification': dict(self.event_notification) if isinstance(self.event_notification, dict) else self.event_notification,
         }
@@ -5307,11 +5473,6 @@ class Game:
                 self._track_event_progress('play_card_with_money', player=player)
             if int(purchase_cost.get('propaganda', 0) or 0) > 0:
                 self._track_event_progress('play_card_with_propaganda', player=player)
-        if self._player_has_india_research_room(player) and self._is_india_flag_card(played_card) and not self.turn_log.get("india_flag_money_triggered"):
-            self.turn_log["india_flag_money_triggered"] = True
-            player.resources["money"] += 2
-            self.log(f"{player.name} triggered 印度研究分析室 and gained 2 money")
-
         if card_name not in {"追隨者", "樂捐者"}:
             played_names = self.turn_log.setdefault("played_nonstarter_names", [])
             if card_name not in played_names:
@@ -5375,6 +5536,7 @@ class Game:
             player,
             cost_has_money=cost_has_money,
             cost_has_propaganda=cost_has_propaganda,
+            played_card=played_card,
         )
 
         build_continuation = self._resume_card_build_queue_if_idle(player)
