@@ -31,6 +31,7 @@
   - **確認並修正 9 類缺陷**：(1) 印度奧援憑空建立分神、未扣固定供應；(2) 印度研究分析室漏掉延後反應且未推進 `use_faction_ability`；(3) 取消北國奧援未恢復 `played_nonstarter_names`；(4) 借用北國奧援已回原持有者牌庫頂後無法取消回手；(5) 東洋／天方／北國／臺灣效果未完整把共用組織視為起點、目標或犧牲對象；(6) 臺灣奧援 III 首次命中紅軍根據地已部分成功卻回傳整體錯誤；(7) 互動奧援 resolve-time 目標失效會消耗流程並可能卡住；(8) 起始牌紅軍奧援被誤算為 1資金＋1宣傳購買費用，導致取消 bonus 判斷錯誤；(9) 正式 UI 的其他玩家動態疊層會遮住有時限的取消反應視窗。
   - **核心修正**：集中固定購買供應 helper；印度旗幟能力移入 committed-card hook；北國取消跨 zone 還原實體借用牌與所有出牌快照；奧援距離／目標統一使用 `_organization_towns_for_player()`／`_shared_origin_owner()`；stale choice 重算候選；臺灣首次紅軍根據地命中回傳 `success/built=False`；紅軍奧援購買費用歸零；pending reaction 優先於通知轉播。
   - **驗證**：新增 `scripts/tests/test_support_card_hook_audit.py`，涵蓋九系列 hook、印度供應與事件、取消提交、共用組織、借用北國回滾、stale target、紅軍奧援零費用等；完整 pytest 最終全綠。正式雙玩家 Browser proof 驗證印度奧援 III、紅軍取消詢問／不取消、有限分神供應、印度研究分析室、事件進度、卡牌只棄置一次及反應視窗不被遮住，**9/9 passed**。費用組成 validator **9/9 passed**；JS syntax、Python compile、`git diff --check` 通過。完整矩陣與證據位於 `docs/records/support-cards/hook-audit/`。
+  - **2026-08-07 後續裁決｜紅軍奧援資源模式**：使用者確認紅軍奧援應可用「資源」方式取得 **1資金＋1宣傳**，覆蓋 2026-06-07 對一般奧援「資源模式只棄置」的舊裁決；紅軍奧援是唯一例外。Runtime 將「印刷資源 1/1」與「起始牌購買費用 0/0」分離：資源模式不抽牌；紅軍使用後仍選擇任一反共玩家棄牌堆，反共玩家使用後則回紅軍棄牌堆。正式 UI 第一顆按鈕由「棄置」改為「資源」，普通奧援維持「棄置」。新增紅軍／反共 × 行動／資源四象限測試與正式 Browser proof。
   - **資料層備註**：`support_taxonomy.v1.1.json` 的 `tier_*_kind` 只是摘要，尚不足以單獨表達抽後棄牌、先犧牲後瓦解、瓦解後同地建立等複合效果；runtime mapping 已按完整卡面實作並通過稽核。若未來要讓 taxonomy 可直接執行，需另做 schema 升級。
 
 ### P2：最後結算畫面應顯示牆內/牆外組織數量，並依勝利陣營呈現華麗客製化結局敘事

@@ -322,12 +322,90 @@ def test_stale_support_target_refreshes_choice_instead_of_consuming_interaction(
     assert game.pending_choice is None
 
 
-def test_red_army_support_is_a_zero_purchase_cost_starter_card():
+def test_red_army_support_separates_printed_resources_from_zero_purchase_cost():
     game, _, red = make_game("liberals")
     support = game._make_support_card("紅軍奧援")
 
     assert game._is_starter_support_card("紅軍奧援") is True
+    assert support.resources == {"money": 1, "propaganda": 1}
     assert game._card_purchase_cost(support) == {"money": 0, "propaganda": 0}
+
+
+def test_red_player_can_use_red_army_support_as_resource_and_choose_anti_red_discard():
+    game, anti_red, red = make_game("liberals")
+    game.current_player_index = 1
+    red.hand = [game._make_support_card("紅軍奧援")]
+    red.resources = {"money": 0, "propaganda": 0}
+    red.deck.draw_pile = [Card("不應抽到", "command", {})]
+    anti_red.deck.discard_pile = []
+    game.turn_log = game._new_turn_log()
+
+    prompted = game.play_card(0, mode="resource")
+
+    assert prompted.get("pending_choice") is True
+    assert game.pending_choice.get("choice_key") == "red_support_target_player"
+    assert game.pending_choice.get("mode") == "resource"
+    assert red.resources == {"money": 0, "propaganda": 0}
+
+    resolved = game.resolve_pending_choice(red.id, 0)
+
+    assert resolved.get("success") is True
+    assert red.resources == {"money": 1, "propaganda": 1}
+    assert [card.name for card in red.deck.draw_pile] == ["不應抽到"]
+    assert [card.name for card in anti_red.deck.discard_pile] == ["紅軍奧援"]
+    assert game.pending_choice is None
+
+
+def test_anti_red_player_can_use_red_army_support_as_resource_and_return_it_to_red_discard():
+    game, anti_red, red = make_game("liberals")
+    anti_red.hand = [game._make_support_card("紅軍奧援")]
+    anti_red.resources = {"money": 0, "propaganda": 0}
+    anti_red.deck.draw_pile = [Card("不應抽到", "command", {})]
+    red.deck.discard_pile = []
+
+    result = game.play_card(0, mode="resource")
+
+    assert result.get("success") is True
+    assert anti_red.resources == {"money": 1, "propaganda": 1}
+    assert [card.name for card in anti_red.deck.draw_pile] == ["不應抽到"]
+    assert [card.name for card in red.deck.discard_pile] == ["紅軍奧援"]
+    assert game.pending_choice is None
+
+
+def test_red_player_action_mode_draws_but_does_not_gain_red_support_resources():
+    game, anti_red, red = make_game("liberals")
+    game.current_player_index = 1
+    red.hand = [game._make_support_card("紅軍奧援")]
+    red.resources = {"money": 0, "propaganda": 0}
+    red.deck.draw_pile = [Card("行動抽牌", "command", {})]
+    anti_red.hand = []
+    anti_red.deck.discard_pile = []
+    game.turn_log = game._new_turn_log()
+
+    prompted = game.play_card(0, mode="action")
+    assert prompted.get("pending_choice") is True
+    resolved = game.resolve_pending_choice(red.id, 0)
+
+    assert resolved.get("success") is True
+    assert red.resources == {"money": 0, "propaganda": 0}
+    assert [card.name for card in red.hand] == ["行動抽牌"]
+    assert [card.name for card in anti_red.deck.discard_pile] == ["紅軍奧援"]
+
+
+def test_anti_red_player_action_mode_draws_and_returns_red_support_without_resources():
+    game, anti_red, red = make_game("liberals")
+    anti_red.hand = [game._make_support_card("紅軍奧援")]
+    anti_red.resources = {"money": 0, "propaganda": 0}
+    anti_red.deck.draw_pile = [Card("行動抽牌", "command", {})]
+    red.hand = []
+    red.deck.discard_pile = []
+
+    result = game.play_card(0, mode="action")
+
+    assert result.get("success") is True
+    assert anti_red.resources == {"money": 0, "propaganda": 0}
+    assert [card.name for card in anti_red.hand] == ["行動抽牌"]
+    assert [card.name for card in red.deck.discard_pile] == ["紅軍奧援"]
 
 
 def test_canceling_red_army_support_does_not_grant_purchase_cost_bonus_draw():

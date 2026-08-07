@@ -75,19 +75,41 @@ def check(browser):
 
     page.screenshot(path=str(SCREENSHOT))
 
-    # 卡面完整列出三級效果文字（含地區標示），且沒有被固定卡高截斷
-    face_text = page.inner_text('#hand .hand-card .card-effect-block')
+    # 完整卡面圖片直接顯示；隱藏 fallback 仍須保留三級文字。幾何檢查改驗證實際圖片已載入且
+    # 完整落在 card-art-face 內，不能再用 display:none 的 fallback clientHeight=0 假通過。
+    face_text = page.text_content('#hand .hand-card .playable-card-art-fallback .card-effect-block') or ''
     face_metrics = page.eval_on_selector(
-        '#hand .hand-card .card-effect-block', 'el => ({clientH: el.clientHeight, scrollH: el.scrollHeight})'
+        '#hand .hand-card .playable-card-art-image',
+        """img => {
+          const image = img.getBoundingClientRect();
+          const face = img.closest('.card-art-face')?.getBoundingClientRect();
+          return {
+            naturalW: img.naturalWidth,
+            naturalH: img.naturalHeight,
+            imageW: image.width,
+            imageH: image.height,
+            faceW: face?.width || 0,
+            faceH: face?.height || 0,
+            contained: !!face
+              && image.left >= face.left - 1
+              && image.top >= face.top - 1
+              && image.right <= face.right + 1
+              && image.bottom <= face.bottom + 1,
+          };
+        }""",
     )
     record(
         'card_face_shows_all_three_tier_effect_lines',
         all(tier in face_text for tier in ('III級', 'II級', 'I級')),
-        {'face_text': face_text},
+        {'face_text': face_text.strip()},
     )
     record(
-        'card_face_effect_text_is_not_clipped',
-        face_metrics['scrollH'] <= face_metrics['clientH'],
+        'card_face_art_is_loaded_and_contained',
+        face_metrics['naturalW'] > 0
+        and face_metrics['naturalH'] > 0
+        and face_metrics['imageW'] > 0
+        and face_metrics['imageH'] > 0
+        and face_metrics['contained'] is True,
         face_metrics,
     )
 
@@ -118,7 +140,7 @@ def check(browser):
     )
     page.close()
 
-    # --- Case 3: 紅軍奧援（特殊奧援卡）同樣是 棄置＋行動 ---
+    # --- Case 3: 紅軍奧援是唯一可用資源模式的奧援，顯示 資源＋行動 ---
     page2 = browser.new_context(viewport={'width': 1280, 'height': 900}).new_page()
     setup2 = post_json('/test/setup-support-proof', {'support_name': '紅軍奧援', 'tier': 1})
     page2.goto(f"{BASE_URL}/?game_id={setup2['game_id']}&player_id={setup2['player_id']}", wait_until='networkidle')
@@ -128,8 +150,8 @@ def check(browser):
     page2.wait_for_timeout(300)
     buttons2 = hand_card_buttons(page2, '紅軍奧援')
     record(
-        'red_army_support_card_also_shows_discard_and_action_only',
-        buttons2 is not None and [b['text'] for b in buttons2] == ['棄置', '行動'],
+        'red_army_support_card_shows_resource_and_action',
+        buttons2 is not None and [b['text'] for b in buttons2] == ['資源', '行動'],
         {'buttons': buttons2},
     )
     page2.close()

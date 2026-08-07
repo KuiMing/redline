@@ -27,15 +27,20 @@
       "name": "card_face_shows_all_three_tier_effect_lines",
       "ok": true,
       "detail": {
-        "face_text": "III級（臺灣主導）：瓦解己方組織1格內的1個對手組織，並在該城鎮建立1個組織\nII級（東洋/南洋其一主導）：瓦解己方組織1格內的1個對手組織。\nI級（皆未主導）：獲得1點宣傳。"
+        "face_text": "III級（臺灣主導）：瓦解己方組織1格內的1個對手組織，並在該城鎮建立1個組織II級（東洋/南洋其一主導）：瓦解己方組織1格內的1個對手組織。I級（皆未主導）：獲得1點宣傳。"
       }
     },
     {
-      "name": "card_face_effect_text_is_not_clipped",
+      "name": "card_face_art_is_loaded_and_contained",
       "ok": true,
       "detail": {
-        "clientH": 192,
-        "scrollH": 192
+        "naturalW": 1100,
+        "naturalH": 1350,
+        "imageW": 218,
+        "imageH": 272,
+        "faceW": 218,
+        "faceH": 272,
+        "contained": true
       }
     },
     {
@@ -60,12 +65,12 @@
       }
     },
     {
-      "name": "red_army_support_card_also_shows_discard_and_action_only",
+      "name": "red_army_support_card_shows_resource_and_action",
       "ok": true,
       "detail": {
         "buttons": [
           {
-            "text": "棄置",
+            "text": "資源",
             "mode": "resource",
             "disabled": false
           },

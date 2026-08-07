@@ -3590,17 +3590,20 @@ async function render(state) {
         const canPlayAction = canPlayHandCardMode(card, 'action');
         const actionDisabledAttr = canPlayAction ? '' : 'disabled aria-disabled="true"';
         const actionTitle = handButtonTitle(card, 'action', canPlayAction);
-        // 奧援卡只能當「行動」打出；效果依區域主導者判定 I/II/III 級（完整文字已列在卡面），
-        // 本身不提供資源，所以第一顆按鈕不是「資源」而是「棄置」——不使用這張牌，直接送進
-        // 棄牌堆，沿用 play_card(mode='resource') 對奧援卡原本就有的「不給資源、直接棄置」
-        // 行為（2026-07-16 使用者需求；原本另有一顆只做閃爍聚焦的「詳情」鈕，卡面文字
-        // 完整顯示後已無存在意義，2026-07-17 移除）。
+        // 普通奧援只能當「行動」使用，第一顆按鈕維持「棄置」。紅軍奧援是唯一例外：
+        // canonical 明載可作為資源取得 1資金＋1宣傳，因此必須顯示真正的「資源」按鈕。
         const firstButtonHtml = isSupportCard
           ? (() => {
-              const canDiscard = canPlayHandCardMode(card, 'resource');
-              const discardDisabledAttr = canDiscard ? '' : 'disabled aria-disabled="true"';
-              const discardTitle = canDiscard ? '棄置這張奧援卡：直接送進棄牌堆，不使用、不獲得任何效果。' : handButtonTitle(card, 'resource', canDiscard);
-              return `<button class="hand-card-action-btn" type="button" ${discardDisabledAttr} title="${escapeHtml(discardTitle)}" data-card-index="${i}" data-card-name="${cardAttr}" data-card-mode="resource">棄置</button>`;
+              const canUseResourceMode = canPlayHandCardMode(card, 'resource');
+              const resourceDisabledAttr = canUseResourceMode ? '' : 'disabled aria-disabled="true"';
+              const isRedSupport = card === '紅軍奧援';
+              const resourceTitle = canUseResourceMode
+                ? (isRedSupport
+                    ? '使用紅軍奧援作為資源：取得1資金與1宣傳，不執行抽牌效果。'
+                    : '棄置這張奧援卡：直接送進棄牌堆，不使用、不獲得任何效果。')
+                : handButtonTitle(card, 'resource', canUseResourceMode);
+              const resourceLabel = isRedSupport ? '資源' : '棄置';
+              return `<button class="hand-card-action-btn" type="button" ${resourceDisabledAttr} title="${escapeHtml(resourceTitle)}" data-card-index="${i}" data-card-name="${cardAttr}" data-card-mode="resource">${resourceLabel}</button>`;
             })()
           : (() => {
               const canPlayResource = canPlayHandCardMode(card, 'resource');

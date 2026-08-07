@@ -211,27 +211,34 @@ def test_red_army_recruit_talent_still_shows_deck_candidates_on_a_second_use():
     assert second_candidates == ['DeckB', 'DiscardA', '網羅人才']
 
 
-def test_red_support_resource_mode_is_a_plain_discard_with_no_resources_for_red_army():
-    # 2026-06-07（457d3a2）起奧援卡的資源模式一律改為「不給資源、直接棄置」；紅軍奧援
-    # 原本的資源模式（給 1/1 並選反共玩家放入其棄牌堆）已被此裁決取代——紅軍自己打
-    # 資源模式就是把牌棄進自己的棄牌堆、不開任何選擇（2026-07-16 起 UI 上這就是「棄置」鈕）。
+def test_red_support_resource_mode_grants_resources_and_requires_red_discard_target_choice():
+    # 2026-08-07 使用者最新裁決覆蓋 2026-06-07 的一般奧援棄置規則：紅軍奧援是唯一例外，
+    # 可作為資源取得 1資金＋1宣傳；紅軍使用後仍須選擇一位反共玩家的棄牌堆。
     g = make_game()
     red = g.current_player()
     rebel = g.players[1]
     rebel.faction_id = 'hong_kong'
-    red.hand = [Card('紅軍奧援', 'support', {'money': 1, 'propaganda': 1})]
+    # Even a legacy/debug object without resources metadata must use the canonical printed 1/1.
+    red.hand = [Card('紅軍奧援', 'support', {})]
     red.resources = {'money': 0, 'propaganda': 0}
     rebel.deck.discard_pile = []
 
     result = g.play_card(0, mode='resource')
 
     assert result.get('success'), result
-    assert result.get('pending_choice') is None
-    assert g.pending_choice is None
+    assert result.get('pending_choice') is True
+    assert g.pending_choice and g.pending_choice['choice_key'] == 'red_support_target_player'
+    assert g.pending_choice['mode'] == 'resource'
     assert red.resources == {'money': 0, 'propaganda': 0}
+
+    resolved = g.resolve_pending_choice(red.id, 0)
+
+    assert resolved.get('success'), resolved
+    assert red.resources == {'money': 1, 'propaganda': 1}
     assert names(red.hand) == []
-    assert names(red.deck.discard_pile) == ['紅軍奧援']
-    assert names(rebel.deck.discard_pile) == []
+    assert names(red.deck.discard_pile) == []
+    assert names(rebel.deck.discard_pile) == ['紅軍奧援']
+    assert g.pending_choice is None
 
 
 def test_red_support_requires_red_army_to_choose_rebel_discard_target_before_resolving_action_mode():
@@ -719,9 +726,9 @@ def test_business_network_borrowed_transport_card_grants_its_action_effect_after
 
 
 
-def test_red_support_resource_mode_from_rebel_hand_returns_card_to_red_army_discard():
-    # 資源模式對奧援卡是無效果棄置（2026-06-07 裁決）；紅軍奧援是紅軍專屬卡，非紅軍
-    # 玩家以資源模式用掉時，牌應回到紅軍玩家的棄牌堆（2026-07-12 P1 修正），不給任何資源。
+def test_red_support_resource_mode_from_rebel_hand_grants_resources_and_returns_to_red_discard():
+    # 紅軍奧援是普通奧援「資源模式只棄置」的唯一例外。反共玩家使用時取得印刷的 1/1，
+    # 不抽牌，並把牌放回紅軍玩家棄牌堆。
     g = make_game()
     red = g.current_player()
     rebel = g.players[1]
@@ -736,7 +743,7 @@ def test_red_support_resource_mode_from_rebel_hand_returns_card_to_red_army_disc
 
     assert result.get('success'), result
     assert g.pending_choice is None
-    assert rebel.resources == {'money': 0, 'propaganda': 0}
+    assert rebel.resources == {'money': 1, 'propaganda': 1}
     assert names(rebel.deck.discard_pile) == []
     assert names(red.deck.discard_pile) == ['紅軍奧援']
 

@@ -1081,8 +1081,15 @@ class Game:
 
     def _make_support_card(self, support_name, variant_index=0):
         entry = self._support_taxonomy_entry(support_name) or {}
-        # 奧援卡沒有「資源模式」印刷資源；購買費用由 _support_card_cost 另行計算。
-        card = Card(support_name, self._support_card_runtime_type(support_name), {}, effect={'support_taxonomy': entry})
+        # 普通奧援沒有資源模式印刷產出；紅軍奧援是 canonical 明載的唯一例外：
+        # 它是零購買費用的起始牌，但可作為資源取得 1資金＋1宣傳。兩者不可混用。
+        printed_resources = {'money': 1, 'propaganda': 1} if support_name == '紅軍奧援' else {}
+        card = Card(
+            support_name,
+            self._support_card_runtime_type(support_name),
+            printed_resources,
+            effect={'support_taxonomy': entry},
+        )
         # 每種奧援卡實體上印有兩種不同的 II 級門檻地區組合（見 support_cards.csv 兩列），
         # 一張實體卡只印其中一組；variant_index 記住這張牌抽到的是哪一組，讓 _support_card_tier
         # 只檢查該卡實際印刷的那組地區，而不是把兩組地區都算進同一張牌（2026-07-16 使用者裁決）。
@@ -2453,13 +2460,12 @@ class Game:
             if card is None:
                 return {'error': 'Support card context missing'}
             if mode == 'resource':
-                for key, value in getattr(card, 'resources', {}).items():
-                    player.resources[key] += value
+                self._gain_red_support_printed_resources(player, card)
             elif mode != 'action':
                 return {'error': 'Invalid support mode'}
             target_player.deck.discard([card])
             self.pending_choice = None
-            self.log(f"{player.name} passed 紅軍奧援 to {target_player.name}'s discard pile")
+            self.log(f"{player.name} 將紅軍奧援放入 {target_player.name} 的棄牌堆")
             return {
                 'success': True,
                 'choice_index': index,
@@ -3274,6 +3280,16 @@ class Game:
                 'target_player_name': getattr(target_player, 'name', str(target_player_id)),
             }
         return {'error': 'Unsupported support interaction result'}
+
+    def _gain_red_support_printed_resources(self, player, card):
+        """Apply 紅軍奧援's printed 1資金＋1宣傳 without treating it as purchase cost."""
+        # Use the canonical fixed output rather than trusting an old/debug Card object that
+        # may have been constructed before `_make_support_card()` learned this exception.
+        card.resources = {'money': 1, 'propaganda': 1}
+        player.resources['money'] += 1
+        player.resources['propaganda'] += 1
+        self._apply_era_resource_card_bonus(player, card)
+        self.log(f"{player.name} 使用紅軍奧援作為資源，取得1資金與1宣傳")
 
     def _resolve_red_support_target_choice(self, player, card, mode):
         current_faction = self.faction_by_id.get(player.faction_id, {})
@@ -5320,14 +5336,26 @@ class Game:
 
         if mode == "resource":
             if getattr(played_card, 'card_type', None) == 'support':
-                # 紅軍奧援為紅軍專屬卡：非紅軍以任何形式用掉後都應回紅軍棄牌堆
-                red = self._red_player()
-                if (card_name == '紅軍奧援'
-                        and self.faction_by_id.get(player.faction_id, {}).get('camp') != 'red_army'
-                        and red is not None and red is not player):
-                    red.deck.discard([played_card])
-                    self.log(f"{player.name} played {card_name} as resource; card returned to {red.name}'s discard pile")
-                    return {"success": True, "card_returned_to": red.name}
+                if card_name == '紅軍奧援':
+                    # Canonical distinction: 紅軍奧援 is a zero-purchase-cost starter card,
+                    # but uniquely prints a resource output of 1資金＋1宣傳. Red players must
+                    # still choose an anti-Red discard destination in resource mode; anti-Red
+                    # users gain the resources immediately and return it to the Red discard.
+                    support_resolution = self._resolve_red_support_target_choice(player, played_card, mode='resource')
+                    if support_resolution and support_resolution.get('pending_choice'):
+                        self.log(f"{player.name} 使用紅軍奧援作為資源，等待選擇反共玩家棄牌堆")
+                        return {"success": True, **support_resolution}
+                    self._gain_red_support_printed_resources(player, played_card)
+                    red = self._red_player()
+                    if (self.faction_by_id.get(player.faction_id, {}).get('camp') != 'red_army'
+                            and red is not None and red is not player):
+                        red.deck.discard([played_card])
+                        self.log(f"{player.name} 使用紅軍奧援作為資源；卡牌放入{red.name}棄牌堆")
+                        return {"success": True, "card_returned_to": red.name}
+                    player.deck.discard([played_card])
+                    self.log(f"{player.name} 使用紅軍奧援作為資源")
+                    return {"success": True}
+
                 player.deck.discard([played_card])
                 self.log(f"{player.name} played {card_name} as resource (no resources from support card)")
                 return {"success": True}

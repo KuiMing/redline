@@ -1,0 +1,81 @@
+{
+  "generated_at": "2026-08-07T09:14:24.364814+00:00",
+  "base_url": "http://192.168.10.192:8000",
+  "status": "passed",
+  "checks_passed": 5,
+  "checks_total": 5,
+  "checks": [
+    {
+      "name": "formal_ui_shows_enabled_resource_button_for_red_support",
+      "ok": true,
+      "detail": {
+        "text": "資源",
+        "title": "使用紅軍奧援作為資源：取得1資金與1宣傳，不執行抽牌效果。",
+        "disabled": false
+      }
+    },
+    {
+      "name": "resource_mode_preserves_red_discard_target_choice",
+      "ok": true,
+      "detail": {
+        "type": "target_choice",
+        "choice_key": "red_support_target_player",
+        "interaction_kind": null,
+        "remaining_builds": null,
+        "queueable_card_names": [],
+        "cancellable": false,
+        "player_id": "f044e9ab-039e-40af-899a-e728cc077784",
+        "player_name": null,
+        "prompt": "紅軍奧援：請選擇要將本牌放入哪位反共玩家的棄牌堆。",
+        "source_name": "紅軍奧援",
+        "count": null,
+        "min_count": null,
+        "mode": "resource",
+        "acting_player_id": null,
+        "acting_player_name": null,
+        "played_card_name": null,
+        "region": null,
+        "free": null,
+        "ignore_distance": null,
+        "cards": [],
+        "options": [],
+        "towns": [],
+        "targets": [
+          {
+            "id": "3c63602c-4f3d-4196-af03-e48724a150a4",
+            "label": "red"
+          }
+        ],
+        "step": null
+      }
+    },
+    {
+      "name": "resource_mode_grants_exactly_one_money_and_one_propaganda_without_draw",
+      "ok": true,
+      "detail": {
+        "resources": {
+          "money": 1,
+          "propaganda": 1
+        },
+        "hand": []
+      }
+    },
+    {
+      "name": "red_support_moves_to_selected_anti_red_discard",
+      "ok": true,
+      "detail": {
+        "actor_discard": [],
+        "target_discard": [
+          "紅軍奧援"
+        ]
+      }
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "ok": true,
+      "detail": []
+    }
+  ],
+  "console_errors": [],
+  "screenshot": "docs/records/support-cards/red-support-resource/red_support_resource.png"
+}
