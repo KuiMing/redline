@@ -1916,23 +1916,26 @@ def test_setup_hand_preview(payload: dict):
     viewer.organizations = payload.get("orgs") or {viewer.base: 1}
     viewer.resources = payload.get("resources") or {"money": 4, "propaganda": 3}
 
-    hand_names = payload.get("hand_names") or ["宣傳家", "印度奧援", "東洋奧援"]
-    hand_cards = []
-    for name in hand_names:
+    def preview_card(name):
         support_entry = game._support_taxonomy_entry(name)
         if support_entry:
-            hand_cards.append(game._make_support_card(name))
-            continue
+            return game._make_support_card(name)
         card_def = next((c for c in game.structured_cards if c.get("name") == name), None)
         if card_def:
-            hand_cards.append(Card(card_def["name"], card_def["type"], card_def.get("resources", {})))
-        else:
-            hand_cards.append(Card(name, "command", {}))
-    viewer.hand = hand_cards
+            return Card(card_def["name"], card_def["type"], card_def.get("resources", {}))
+        return Card(name, "command", {})
+
+    hand_names = payload.get("hand_names") or ["宣傳家", "印度奧援", "東洋奧援"]
+    viewer.hand = [preview_card(name) for name in hand_names]
+    viewer.deck.discard_pile = [preview_card(name) for name in payload.get("viewer_discard_names", [])]
 
     red.faction_id = "red_army"
     red.base = "北京"
     red.organizations = {"北京": 1}
+    red.deck.discard_pile = [preview_card(name) for name in payload.get("red_discard_names", [])]
+
+    if "action_log" in payload:
+        game.action_log = [str(entry) for entry in payload.get("action_log", [])]
 
     while len(game.purchase_area) < 11:
         drawn = game._draw_purchase_cards(1)

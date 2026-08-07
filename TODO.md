@@ -100,8 +100,12 @@
   - 新增回歸（`scripts/tests/test_action_card_regressions.py`）：`test_industry_infiltration_is_offered_as_a_candidate_for_propaganda_only_static_card`（重現使用者原始情境：宣傳家＋產業滲透）、`test_red_army_aid_now_prompts_cancel_reaction_and_cancel_prevents_draw`（紅軍自己打出紅軍奧援被取消，抽牌效果完全不執行）、`test_red_army_aid_cancel_reaction_declined_lets_the_draw_and_pass_resolve`（非紅軍打出＋不取消，照常抽牌並歸還紅軍棄牌堆）、`test_red_army_aid_cancel_reaction_still_returns_borrowed_card_to_red_discard`（非紅軍打出＋取消，紙牌仍正確歸還紅軍棄牌堆，沒有被延後機制打壞既有的借用牌歸位規則）。另外改寫兩支把舊 bug 行為當預期的既有測試：`test_every_other_player_action_prompts_cancel_reaction_while_reactor_holds_eligible_cards`（原本斷言「領導沒有資金費用所以產業滲透不列入候選」，已改為斷言正確納入）與 `test_industry_infiltration_does_not_draw_when_canceled_card_has_no_money_only_cost`（更名為 `test_industry_infiltration_cancels_a_no_money_cost_card_but_gets_no_bonus_draw`，原本斷言「產業滲透無法取消」，已改為斷言「成功取消、只是沒有 bonus 抽牌」）。
   - 驗證：完整 pytest（同 baseline ignore 清單）**269→273 passed, 0 failed**（4 支新增，2 支既有測試改寫非新增，其餘無變動）。另重跑 `validate_support_no_reaction_phase_gating.py`（2/2）、`validate_cancellable_choice.py`（7/7）、`validate_intel_network_no_reaction_option_own_turn.py`（2/2），皆無回歸。
 
-### P2：企排很多時，事件紀錄的空間會被壓縮，應該要能滑動查看
-- [todo] 使用者回報：我發現當企排很多時，事件記錄的空間會被壓縮到，但我覺得應該要讓使用者可以滑動看到事件紀錄。（2026-08-05 使用者回報，先記錄，尚未調查）
+### P2：棄牌很多時，事件紀錄空間會被壓縮，應可滑動查看
+- [done] 使用者回報：當棄牌很多時，事件紀錄的空間會被壓縮；應讓使用者仍可滑動查看事件紀錄。（2026-08-05 先記錄；2026-08-07 開始處理並完成）
+  - **根因**：`#logViewPanel` 是固定高度的直向 flex panel，但 `.player-status-overview` 原本為 `flex: 0 0 auto`，每位玩家的 `.player-status-discard-list` 又會無限制換行增高。兩位玩家各 64 張棄牌的正式 UI 重現中，戰況總覽高度膨脹到 635.6px，事件紀錄只剩 12px 高，且標題與紀錄整塊被推到固定 panel 下方、遭 `overflow:hidden` 裁掉。
+  - **修正**（`static/style.css`）：戰況總覽固定保留 280px 並可垂直捲動；棄牌籤清單上限 76px、獨立垂直捲動，不再隨棄牌數無限撐高玩家卡。玩家統計改為 4 欄，組織統計橫跨 2 欄，使全部主要資料與棄牌區可在固定高度內清楚呈現。事件紀錄設為可伸縮但至少保留 140px，既有 `overflow-y:auto` 捲動保持不變；標題、紀錄區與玩家卡均維持在正式 panel 邊界內。`static/index.html` 同步更新 CSS cache-bust。
+  - **正式 UI proof**：新增 `scripts/validate_discard_log_scroll_layout.py`，透過正式 WebSocket state 建立兩位玩家各 64 張棄牌、80 筆事件紀錄，於 1280×720 與 1024×768 驗證棄牌清單可捲、玩家卡不超出總覽區、事件紀錄設計高度至少 140px、事件紀錄可實際捲動、標題與紀錄均在 panel 內、console 0 errors，合計 **12/12 passed**。截圖與 JSON 位於 `docs/records/layout-ui/discard-log-scroll/`。
+  - **回歸**：主分頁與戰況卡 browser **7/7 passed**；完整 pytest **293/293 passed**；JS syntax、Python compile 與 `git diff --check` 通過。
 
 ### P2：建立組織時點選城鎮後，建立組織按鈕應該亮起來
 - [done] 使用者回報：建立組織時，點選城鎮後，應該要讓建立組織的按鈕亮起來。（2026-08-05 使用者回報；同日使用者要求處理）

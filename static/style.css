@@ -2042,8 +2042,18 @@ body {
   top: 12px;
   width: 1256px;
   height: 498px;
+  min-height: 0;
   overflow: hidden;
   background: rgba(17, 22, 29, 0.96);
+}
+
+.log-only-panel > .panel-title {
+  flex: 0 0 auto;
+}
+
+.log-only-panel #logViewContent {
+  flex: 1 1 auto;
+  min-height: 140px;
 }
 
 .map-only-panel {
@@ -2090,8 +2100,11 @@ body {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
-  flex: 0 0 auto;
+  flex: 0 0 280px;
+  max-height: 280px;
   min-height: 0;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
   margin-bottom: 2px;
 }
 
@@ -2219,8 +2232,12 @@ body {
 
 .player-status-stats {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 5px;
+}
+
+.player-status-stat-organizations {
+  grid-column: span 2;
 }
 
 .player-status-stat {
@@ -2284,7 +2301,13 @@ body {
 .player-status-discard-list {
   display: flex;
   flex-wrap: wrap;
+  align-content: flex-start;
   gap: 6px;
+  max-height: 76px;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  padding-right: 2px;
 }
 
 .player-status-discard-card,

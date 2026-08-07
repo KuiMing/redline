@@ -1,0 +1,580 @@
+{
+  "summary": {
+    "total": 12,
+    "passed": 12,
+    "failed": 0
+  },
+  "runs": [
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "setup": {
+        "game_id": "b9df0e2b-34bf-4015-ac31-2fa50e7666e6",
+        "player_id": "7bfde6d0-f3d7-4159-a07b-48e99d6bbae3"
+      },
+      "summary": {
+        "total": 6,
+        "passed": 6,
+        "failed": 0
+      },
+      "results": [
+        {
+          "name": "discard_piles_are_independently_scrollable",
+          "ok": true,
+          "detail": {
+            "before": 0,
+            "after": 334,
+            "lists": [
+              {
+                "left": 40,
+                "top": 457.59375,
+                "right": 300.25,
+                "bottom": 533.59375,
+                "width": 260.25,
+                "height": 76,
+                "clientHeight": 76,
+                "scrollHeight": 410,
+                "overflowY": "auto"
+              },
+              {
+                "left": 348.25,
+                "top": 457.59375,
+                "right": 608.5,
+                "bottom": 533.59375,
+                "width": 260.25,
+                "height": 76,
+                "clientHeight": 76,
+                "scrollHeight": 410,
+                "overflowY": "auto"
+              }
+            ]
+          }
+        },
+        {
+          "name": "player_status_cards_remain_inside_scroll_region",
+          "ok": true,
+          "detail": {
+            "overview": {
+              "left": 21,
+              "top": 242,
+              "right": 1259,
+              "bottom": 522,
+              "width": 1238,
+              "height": 280
+            },
+            "status_cards": [
+              {
+                "left": 21,
+                "top": 242,
+                "right": 319.25,
+                "bottom": 522,
+                "width": 298.25,
+                "height": 280
+              },
+              {
+                "left": 329.25,
+                "top": 242,
+                "right": 627.5,
+                "bottom": 522,
+                "width": 298.25,
+                "height": 280
+              }
+            ]
+          }
+        },
+        {
+          "name": "event_log_keeps_usable_height_with_large_discards",
+          "ok": true,
+          "detail": {
+            "design_height": 140.0,
+            "geometry": {
+              "stageScale": 1,
+              "panel": {
+                "left": 12,
+                "top": 210,
+                "right": 1268,
+                "bottom": 708,
+                "width": 1256,
+                "height": 498
+              },
+              "overview": {
+                "left": 21,
+                "top": 242,
+                "right": 1259,
+                "bottom": 522,
+                "width": 1238,
+                "height": 280
+              },
+              "statusCards": [
+                {
+                  "left": 21,
+                  "top": 242,
+                  "right": 319.25,
+                  "bottom": 522,
+                  "width": 298.25,
+                  "height": 280
+                },
+                {
+                  "left": 329.25,
+                  "top": 242,
+                  "right": 627.5,
+                  "bottom": 522,
+                  "width": 298.25,
+                  "height": 280
+                }
+              ],
+              "eventTitle": {
+                "left": 21,
+                "top": 538,
+                "right": 1259,
+                "bottom": 555,
+                "width": 1238,
+                "height": 17
+              },
+              "log": {
+                "left": 21,
+                "top": 561,
+                "right": 1259,
+                "bottom": 701,
+                "width": 1238,
+                "height": 140,
+                "clientHeight": 140,
+                "scrollHeight": 1372,
+                "overflowY": "auto"
+              },
+              "discardLists": [
+                {
+                  "left": 40,
+                  "top": 457.59375,
+                  "right": 300.25,
+                  "bottom": 533.59375,
+                  "width": 260.25,
+                  "height": 76,
+                  "clientHeight": 76,
+                  "scrollHeight": 410,
+                  "overflowY": "auto"
+                },
+                {
+                  "left": 348.25,
+                  "top": 457.59375,
+                  "right": 608.5,
+                  "bottom": 533.59375,
+                  "width": 260.25,
+                  "height": 76,
+                  "clientHeight": 76,
+                  "scrollHeight": 410,
+                  "overflowY": "auto"
+                }
+              ],
+              "statusCardsInsideOverview": true,
+              "logInsidePanel": true,
+              "titleVisibleAboveLog": true
+            }
+          }
+        },
+        {
+          "name": "event_log_remains_scrollable",
+          "ok": true,
+          "detail": {
+            "before": 0,
+            "after": 1232,
+            "log": {
+              "left": 21,
+              "top": 561,
+              "right": 1259,
+              "bottom": 701,
+              "width": 1238,
+              "height": 140,
+              "clientHeight": 140,
+              "scrollHeight": 1372,
+              "overflowY": "auto"
+            }
+          }
+        },
+        {
+          "name": "event_log_and_title_remain_inside_panel",
+          "ok": true,
+          "detail": {
+            "stageScale": 1,
+            "panel": {
+              "left": 12,
+              "top": 210,
+              "right": 1268,
+              "bottom": 708,
+              "width": 1256,
+              "height": 498
+            },
+            "overview": {
+              "left": 21,
+              "top": 242,
+              "right": 1259,
+              "bottom": 522,
+              "width": 1238,
+              "height": 280
+            },
+            "statusCards": [
+              {
+                "left": 21,
+                "top": 242,
+                "right": 319.25,
+                "bottom": 522,
+                "width": 298.25,
+                "height": 280
+              },
+              {
+                "left": 329.25,
+                "top": 242,
+                "right": 627.5,
+                "bottom": 522,
+                "width": 298.25,
+                "height": 280
+              }
+            ],
+            "eventTitle": {
+              "left": 21,
+              "top": 538,
+              "right": 1259,
+              "bottom": 555,
+              "width": 1238,
+              "height": 17
+            },
+            "log": {
+              "left": 21,
+              "top": 561,
+              "right": 1259,
+              "bottom": 701,
+              "width": 1238,
+              "height": 140,
+              "clientHeight": 140,
+              "scrollHeight": 1372,
+              "overflowY": "auto"
+            },
+            "discardLists": [
+              {
+                "left": 40,
+                "top": 457.59375,
+                "right": 300.25,
+                "bottom": 533.59375,
+                "width": 260.25,
+                "height": 76,
+                "clientHeight": 76,
+                "scrollHeight": 410,
+                "overflowY": "auto"
+              },
+              {
+                "left": 348.25,
+                "top": 457.59375,
+                "right": 608.5,
+                "bottom": 533.59375,
+                "width": 260.25,
+                "height": 76,
+                "clientHeight": 76,
+                "scrollHeight": 410,
+                "overflowY": "auto"
+              }
+            ],
+            "statusCardsInsideOverview": true,
+            "logInsidePanel": true,
+            "titleVisibleAboveLog": true
+          }
+        },
+        {
+          "name": "browser_console_has_no_errors",
+          "ok": true,
+          "detail": {
+            "console_errors": [],
+            "page_errors": []
+          }
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "setup": {
+        "game_id": "d00a7760-fa74-4b2b-85d9-3f48329760d7",
+        "player_id": "fab75d7b-2d18-4ceb-9e72-d47abab137a7"
+      },
+      "summary": {
+        "total": 6,
+        "passed": 6,
+        "failed": 0
+      },
+      "results": [
+        {
+          "name": "discard_piles_are_independently_scrollable",
+          "ok": true,
+          "detail": {
+            "before": 0,
+            "after": 334,
+            "lists": [
+              {
+                "left": 32,
+                "top": 462.07501220703125,
+                "right": 240.1999969482422,
+                "bottom": 522.875,
+                "width": 208.1999969482422,
+                "height": 60.79998779296875,
+                "clientHeight": 76,
+                "scrollHeight": 410,
+                "overflowY": "auto"
+              },
+              {
+                "left": 278.6000061035156,
+                "top": 462.07501220703125,
+                "right": 486.8000183105469,
+                "bottom": 522.875,
+                "width": 208.20001220703125,
+                "height": 60.79998779296875,
+                "clientHeight": 76,
+                "scrollHeight": 410,
+                "overflowY": "auto"
+              }
+            ]
+          }
+        },
+        {
+          "name": "player_status_cards_remain_inside_scroll_region",
+          "ok": true,
+          "detail": {
+            "overview": {
+              "left": 16.80000114440918,
+              "top": 289.6000061035156,
+              "right": 1007.2000255584717,
+              "bottom": 513.5999755859375,
+              "width": 990.4000244140625,
+              "height": 223.99996948242188
+            },
+            "status_cards": [
+              {
+                "left": 16.80000114440918,
+                "top": 289.6000061035156,
+                "right": 255.4000072479248,
+                "bottom": 513.5999755859375,
+                "width": 238.60000610351562,
+                "height": 223.99996948242188
+              },
+              {
+                "left": 263.3999938964844,
+                "top": 289.6000061035156,
+                "right": 502,
+                "bottom": 513.5999755859375,
+                "width": 238.60000610351562,
+                "height": 223.99996948242188
+              }
+            ]
+          }
+        },
+        {
+          "name": "event_log_keeps_usable_height_with_large_discards",
+          "ok": true,
+          "detail": {
+            "design_height": 139.9999237060547,
+            "geometry": {
+              "stageScale": 0.8,
+              "panel": {
+                "left": 9.600000381469727,
+                "top": 264,
+                "right": 1014.4000492095947,
+                "bottom": 662.4000244140625,
+                "width": 1004.800048828125,
+                "height": 398.4000244140625
+              },
+              "overview": {
+                "left": 16.80000114440918,
+                "top": 289.6000061035156,
+                "right": 1007.2000255584717,
+                "bottom": 513.5999755859375,
+                "width": 990.4000244140625,
+                "height": 223.99996948242188
+              },
+              "statusCards": [
+                {
+                  "left": 16.80000114440918,
+                  "top": 289.6000061035156,
+                  "right": 255.4000072479248,
+                  "bottom": 513.5999755859375,
+                  "width": 238.60000610351562,
+                  "height": 223.99996948242188
+                },
+                {
+                  "left": 263.3999938964844,
+                  "top": 289.6000061035156,
+                  "right": 502,
+                  "bottom": 513.5999755859375,
+                  "width": 238.60000610351562,
+                  "height": 223.99996948242188
+                }
+              ],
+              "eventTitle": {
+                "left": 16.80000114440918,
+                "top": 526.4000244140625,
+                "right": 1007.2000255584717,
+                "bottom": 540,
+                "width": 990.4000244140625,
+                "height": 13.5999755859375
+              },
+              "log": {
+                "left": 16.80000114440918,
+                "top": 544.800048828125,
+                "right": 1007.2000255584717,
+                "bottom": 656.7999877929688,
+                "width": 990.4000244140625,
+                "height": 111.99993896484375,
+                "clientHeight": 140,
+                "scrollHeight": 1372,
+                "overflowY": "auto"
+              },
+              "discardLists": [
+                {
+                  "left": 32,
+                  "top": 462.07501220703125,
+                  "right": 240.1999969482422,
+                  "bottom": 522.875,
+                  "width": 208.1999969482422,
+                  "height": 60.79998779296875,
+                  "clientHeight": 76,
+                  "scrollHeight": 410,
+                  "overflowY": "auto"
+                },
+                {
+                  "left": 278.6000061035156,
+                  "top": 462.07501220703125,
+                  "right": 486.8000183105469,
+                  "bottom": 522.875,
+                  "width": 208.20001220703125,
+                  "height": 60.79998779296875,
+                  "clientHeight": 76,
+                  "scrollHeight": 410,
+                  "overflowY": "auto"
+                }
+              ],
+              "statusCardsInsideOverview": true,
+              "logInsidePanel": true,
+              "titleVisibleAboveLog": true
+            }
+          }
+        },
+        {
+          "name": "event_log_remains_scrollable",
+          "ok": true,
+          "detail": {
+            "before": 0,
+            "after": 1232,
+            "log": {
+              "left": 16.80000114440918,
+              "top": 544.800048828125,
+              "right": 1007.2000255584717,
+              "bottom": 656.7999877929688,
+              "width": 990.4000244140625,
+              "height": 111.99993896484375,
+              "clientHeight": 140,
+              "scrollHeight": 1372,
+              "overflowY": "auto"
+            }
+          }
+        },
+        {
+          "name": "event_log_and_title_remain_inside_panel",
+          "ok": true,
+          "detail": {
+            "stageScale": 0.8,
+            "panel": {
+              "left": 9.600000381469727,
+              "top": 264,
+              "right": 1014.4000492095947,
+              "bottom": 662.4000244140625,
+              "width": 1004.800048828125,
+              "height": 398.4000244140625
+            },
+            "overview": {
+              "left": 16.80000114440918,
+              "top": 289.6000061035156,
+              "right": 1007.2000255584717,
+              "bottom": 513.5999755859375,
+              "width": 990.4000244140625,
+              "height": 223.99996948242188
+            },
+            "statusCards": [
+              {
+                "left": 16.80000114440918,
+                "top": 289.6000061035156,
+                "right": 255.4000072479248,
+                "bottom": 513.5999755859375,
+                "width": 238.60000610351562,
+                "height": 223.99996948242188
+              },
+              {
+                "left": 263.3999938964844,
+                "top": 289.6000061035156,
+                "right": 502,
+                "bottom": 513.5999755859375,
+                "width": 238.60000610351562,
+                "height": 223.99996948242188
+              }
+            ],
+            "eventTitle": {
+              "left": 16.80000114440918,
+              "top": 526.4000244140625,
+              "right": 1007.2000255584717,
+              "bottom": 540,
+              "width": 990.4000244140625,
+              "height": 13.5999755859375
+            },
+            "log": {
+              "left": 16.80000114440918,
+              "top": 544.800048828125,
+              "right": 1007.2000255584717,
+              "bottom": 656.7999877929688,
+              "width": 990.4000244140625,
+              "height": 111.99993896484375,
+              "clientHeight": 140,
+              "scrollHeight": 1372,
+              "overflowY": "auto"
+            },
+            "discardLists": [
+              {
+                "left": 32,
+                "top": 462.07501220703125,
+                "right": 240.1999969482422,
+                "bottom": 522.875,
+                "width": 208.1999969482422,
+                "height": 60.79998779296875,
+                "clientHeight": 76,
+                "scrollHeight": 410,
+                "overflowY": "auto"
+              },
+              {
+                "left": 278.6000061035156,
+                "top": 462.07501220703125,
+                "right": 486.8000183105469,
+                "bottom": 522.875,
+                "width": 208.20001220703125,
+                "height": 60.79998779296875,
+                "clientHeight": 76,
+                "scrollHeight": 410,
+                "overflowY": "auto"
+              }
+            ],
+            "statusCardsInsideOverview": true,
+            "logInsidePanel": true,
+            "titleVisibleAboveLog": true
+          }
+        },
+        {
+          "name": "browser_console_has_no_errors",
+          "ok": true,
+          "detail": {
+            "console_errors": [],
+            "page_errors": []
+          }
+        }
+      ]
+    }
+  ],
+  "screenshot": "/Users/benmini/.openclaw/workspace/redline/docs/records/layout-ui/discard-log-scroll/discard_log_scroll_1280x720.png"
+}
