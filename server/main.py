@@ -24,14 +24,24 @@ reaction_timeout_tasks = {}
 
 
 async def broadcast_game_state(game_id, game, last_action_result=None):
-    for pid, ws in manager.connections.get(game_id, {}).items():
+    dead_connections = []
+    for pid, ws in list(manager.connections.get(game_id, {}).items()):
         state = game.state(pid)
         if last_action_result:
             if last_action_result.get("pending_choice"):
                 state["pending_choice"] = game.state(pid).get("pending_choice")
             else:
                 state["last_action_result"] = last_action_result
-        await ws.send_json(state)
+        try:
+            await ws.send_json(state)
+        except Exception as exc:
+            # 某個玩家的連線已死，不可以讓例外往上冒到「正在送出動作的那位玩家」的
+            # WebSocket handler，否則對方的 socket 會被連帶關掉；戰略地圖 iframe 一旦
+            # 被這樣關掉就再也不會重連，左側按鈕還亮著卻怎麼按都沒反應。
+            print("WS BROADCAST ERROR:", pid, exc)
+            dead_connections.append((pid, ws))
+    for pid, ws in dead_connections:
+        manager.remove_connection(game_id, pid, ws)
 
 
 def schedule_reaction_timeout(game_id, game):
@@ -686,7 +696,7 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
 
     except Exception as e:
         print("WS ERROR:", e)
-        manager.remove_connection(game_id, player_id)
+        manager.remove_connection(game_id, player_id, websocket)
 
 
 @app.get("/town-coordinates")

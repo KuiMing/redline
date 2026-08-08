@@ -127,6 +127,7 @@ let pendingMoveTarget = null;
 let lastResolvedMove = null;
 let stickyPlayerErrorMessage = '';
 let stickyPlayerErrorTimer = null;
+const MAP_SOCKET_DISCONNECTED_MESSAGE = '與伺服器的連線已中斷，正在自動重新連線；連上後請再按一次。';
 let supportChoiceHighlight = null;
 let supportChoiceHighlightFocusKey = null;
 
@@ -469,6 +470,23 @@ function showStickyMapPlayerError(message, durationMs = 5000) {
   }, durationMs);
 }
 
+function clearStickyMapPlayerError() {
+  if (stickyPlayerErrorTimer) {
+    clearTimeout(stickyPlayerErrorTimer);
+    stickyPlayerErrorTimer = null;
+  }
+  stickyPlayerErrorMessage = '';
+  updateStatusPanel();
+}
+
+/** 送出任何盤面動作前的連線守門：連線已斷時不再靜默 return，而是明確告知玩家並立刻重連。 */
+function requireOpenMapSocket() {
+  if (mapSocketIsOpen()) return true;
+  showStickyMapPlayerError(MAP_SOCKET_DISCONNECTED_MESSAGE, 8000);
+  reconnectMapSocketNow();
+  return false;
+}
+
 function updateInfoPanel(name) {
   const t = byName.get(name);
   if (!t) return;
@@ -790,8 +808,8 @@ function moveOptionForTown(townName) {
 }
 
 function sendMoveAction(fromTown, toTown, mode) {
-  if (!mapWs || mapWs.readyState !== WebSocket.OPEN) {
-    pendingMove = { from: fromTown, to: toTown, mode, error: '遊戲連線尚未建立。' };
+  if (!requireOpenMapSocket()) {
+    pendingMove = { from: fromTown, to: toTown, mode, error: MAP_SOCKET_DISCONNECTED_MESSAGE };
     updateStatusPanel();
     return { ok: false, reason: 'socket-not-open' };
   }
@@ -848,7 +866,7 @@ function supportChoiceTownNearLatLng(latlng, maxPixels = 28) {
 }
 
 function sendDirectBuildAction(townName) {
-  if (!mapWs || mapWs.readyState !== WebSocket.OPEN) {
+  if (!requireOpenMapSocket()) {
     return { ok: false, reason: 'socket-not-open' };
   }
   const eventChoice = eventBuildChoiceForTown(townName);
@@ -861,7 +879,7 @@ function sendDirectBuildAction(townName) {
 }
 
 function sendDissolveAction(defender, townName) {
-  if (!mapWs || mapWs.readyState !== WebSocket.OPEN) {
+  if (!requireOpenMapSocket()) {
     return { ok: false, reason: 'socket-not-open' };
   }
   const supportTargetChoice = supportTargetChoiceForTown(townName);
@@ -1028,7 +1046,7 @@ function renderMap() {
       }
 
       if (selectedTown && selectedBuildTargets.includes(t.name) && playerHasSafehouse()) {
-        if (!mapWs || mapWs.readyState !== WebSocket.OPEN) return;
+        if (!requireOpenMapSocket()) return;
         mapWs.send(JSON.stringify({ action: 'build', from: selectedTown, town: t.name }));
         return;
       }
@@ -1276,10 +1294,56 @@ window.addEventListener('message', (event) => {
 let mapWs = null;
 let mapGameId = null;
 let mapPlayerId = null;
+let mapSocketReconnectTimer = null;
+let mapSocketReconnectAttempts = 0;
+let mapSocketLifecycleBound = false;
 
-window.connectGameMap = function ({ gameId: gid, playerId: pid }) {
-  mapGameId = gid;
-  mapPlayerId = pid;
+function mapSocketIsOpen() {
+  return !!mapWs && mapWs.readyState === WebSocket.OPEN;
+}
+
+// 戰略地圖 iframe 自己維持一條 WebSocket。它過去完全沒有 onclose／重連，只要連線斷過一次
+// （伺服器重啟、筆電睡眠喚醒、網路閃斷，或伺服器端 broadcast 對某個已死連線丟出例外時
+// 連帶關掉本連線），這條 socket 就永遠是 CLOSED。此時父頁 app.js 仍有自己的 scheduleReconnect
+// 會重連，指揮中心看起來一切正常，選擇提示也照樣 postMessage 進地圖 → 候選城鎮亮著、
+// 「在目前城鎮建立組織（效果）」按鈕也照樣 enabled，但按下去只會走到 sendDirectBuildAction()
+// 的 socket-not-open 分支靜默 return，玩家完全看不到任何錯誤。
+// （2026-08-08 playtest 回報：組織經驗丙選好廈門、按鈕亮著，按下去卻沒有建立組織。）
+function scheduleMapSocketReconnect(reason = 'closed') {
+  if (!mapGameId || !mapPlayerId) return;
+  if (mapSocketReconnectTimer) return;
+  if (mapWs && [WebSocket.OPEN, WebSocket.CONNECTING].includes(mapWs.readyState)) return;
+  const delay = Math.min(8000, 500 * (2 ** Math.min(mapSocketReconnectAttempts, 4)));
+  mapSocketReconnectAttempts += 1;
+  console.warn(`戰略地圖連線${reason}，${delay}ms 後自動重連`);
+  mapSocketReconnectTimer = setTimeout(() => {
+    mapSocketReconnectTimer = null;
+    openMapSocket();
+  }, delay);
+}
+
+function reconnectMapSocketNow() {
+  if (mapSocketReconnectTimer) {
+    clearTimeout(mapSocketReconnectTimer);
+    mapSocketReconnectTimer = null;
+  }
+  mapSocketReconnectAttempts = 0;
+  return openMapSocket();
+}
+
+function bindMapSocketLifecycle() {
+  if (mapSocketLifecycleBound) return;
+  mapSocketLifecycleBound = true;
+  window.addEventListener('online', () => reconnectMapSocketNow());
+  window.addEventListener('pageshow', () => {
+    if (!mapSocketIsOpen()) reconnectMapSocketNow();
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && !mapSocketIsOpen()) reconnectMapSocketNow();
+  });
+}
+
+function openMapSocket() {
   if (!mapGameId || !mapPlayerId) return { ok: false, reason: 'missing-ids' };
   if (mapWs && [WebSocket.OPEN, WebSocket.CONNECTING].includes(mapWs.readyState)) {
     return { ok: true, reused: true };
@@ -1288,8 +1352,16 @@ window.connectGameMap = function ({ gameId: gid, playerId: pid }) {
     try { mapWs.close(); } catch {}
   }
 
-  mapWs = new WebSocket(`ws://${location.host}/ws/${mapGameId}/${mapPlayerId}`);
-  mapWs.onmessage = (event) => {
+  const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const socket = new WebSocket(`${wsProtocol}//${location.host}/ws/${mapGameId}/${mapPlayerId}`);
+  mapWs = socket;
+  socket.onopen = () => {
+    mapSocketReconnectAttempts = 0;
+    if (stickyPlayerErrorMessage === MAP_SOCKET_DISCONNECTED_MESSAGE) {
+      clearStickyMapPlayerError();
+    }
+  };
+  socket.onmessage = (event) => {
     const state = JSON.parse(event.data);
     window.lastGameState = state;
     applyGameStateToMap(state);
@@ -1299,8 +1371,22 @@ window.connectGameMap = function ({ gameId: gid, playerId: pid }) {
       console.warn('Failed to sync map state to parent', err);
     }
   };
-
+  socket.onclose = () => {
+    if (mapWs === socket) mapWs = null;
+    scheduleMapSocketReconnect('中斷');
+  };
+  socket.onerror = () => {
+    try { socket.close(); } catch {}
+  };
+  bindMapSocketLifecycle();
   return { ok: true };
+}
+
+window.connectGameMap = function ({ gameId: gid, playerId: pid }) {
+  mapGameId = gid;
+  mapPlayerId = pid;
+  if (!mapGameId || !mapPlayerId) return { ok: false, reason: 'missing-ids' };
+  return openMapSocket();
 };
 
 window.__selectTownForTest = function (townName) {
@@ -1391,7 +1477,7 @@ window.__directBuildForTest = function (townName) {
 };
 
 window.__advanceToActionForTest = function () {
-  if (!mapWs || mapWs.readyState !== WebSocket.OPEN) return { ok: false, reason: 'socket-not-open' };
+  if (!mapSocketIsOpen()) return { ok: false, reason: 'socket-not-open' };
   mapWs.send(JSON.stringify({ action: 'advance' }));
   return { ok: true };
 };

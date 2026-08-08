@@ -1,0 +1,71 @@
+{
+  "generated_at": "2026-08-08T11:32:05.282271+00:00",
+  "base_url": "http://127.0.0.1:8000",
+  "status": "passed",
+  "checks_passed": 7,
+  "checks_total": 7,
+  "checks": [
+    {
+      "name": "xiamen_is_a_legal_card_build_candidate",
+      "ok": true,
+      "detail": [
+        "南昌",
+        "廈門",
+        "溫州",
+        "馬祖"
+      ]
+    },
+    {
+      "name": "strategic_map_socket_reconnects_after_a_drop",
+      "ok": true,
+      "detail": {
+        "readyState": 1,
+        "legend": "0=CONNECTING 1=OPEN 2=CLOSING 3=CLOSED, null=已被清成 null 且未重連"
+      }
+    },
+    {
+      "name": "build_button_arms_for_xiamen_after_reconnect",
+      "ok": true,
+      "detail": {
+        "selected": "廈門",
+        "text": "在目前城鎮建立組織（效果）",
+        "disabled": false,
+        "hint": "目前選取 廈門：目前效果允許在此建立組織；按上方按鈕完成建立。"
+      }
+    },
+    {
+      "name": "authoritative_state_shows_the_organization_in_xiamen",
+      "ok": true,
+      "detail": {
+        "福州": 1,
+        "廈門": 1
+      }
+    },
+    {
+      "name": "card_is_committed_to_discard_and_choice_clears",
+      "ok": true,
+      "detail": {
+        "hand": [],
+        "pending": null
+      }
+    },
+    {
+      "name": "reconnected_map_iframe_also_sees_the_new_organization",
+      "ok": true,
+      "detail": {
+        "福州": 1,
+        "廈門": 1
+      }
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "ok": true,
+      "detail": []
+    }
+  ],
+  "console_errors": [],
+  "screenshots": [
+    "docs/records/map-ui/socket-reconnect/map-socket-reconnect-xiamen-armed.png",
+    "docs/records/map-ui/socket-reconnect/map-socket-reconnect-xiamen-built.png"
+  ]
+}
