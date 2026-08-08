@@ -2419,14 +2419,9 @@ class Game:
             if target_player is None:
                 return {'error': 'Target player not found'}
             context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
-            mode = choice.get('mode') or context.get('mode')
             card = context.get('card')
             if card is None:
                 return {'error': 'Support card context missing'}
-            if mode == 'resource':
-                self._gain_red_support_printed_resources(player, card)
-            elif mode != 'action':
-                return {'error': 'Invalid support mode'}
             target_player.deck.discard([card])
             self.pending_choice = None
             self.log(f"{player.name} 將紅軍奧援放入 {target_player.name} 的棄牌堆")
@@ -3257,7 +3252,9 @@ class Game:
         self._apply_era_resource_card_bonus(player, card)
         self.log(f"{player.name} 使用紅軍奧援作為資源，取得1資金與1宣傳")
 
-    def _resolve_red_support_target_choice(self, player, card, mode):
+    def _resolve_red_support_target_choice(self, player, card):
+        # 只有行動模式會走到這裡（資源模式 2026-08-08 起直接取得資源、卡片入自己棄牌堆，
+        # 不再問要放進誰的棄牌堆，見 play_card 的資源模式分支）。
         current_faction = self.faction_by_id.get(player.faction_id, {})
         current_camp = current_faction.get('camp')
         if current_camp != 'red_army':
@@ -3275,10 +3272,8 @@ class Game:
             targets,
             '紅軍奧援：請選擇要將本牌放入哪位反共玩家的棄牌堆。',
             source_name='紅軍奧援',
-            mode=mode,
             context={
                 'card_name': '紅軍奧援',
-                'mode': mode,
                 'card': card,
             },
         )
@@ -3364,7 +3359,7 @@ class Game:
             self._draw_player_cards(player, int(payload.get('draw', 0) or 0), trigger_name=card_name)
             current_faction = self.faction_by_id.get(player.faction_id, {})
             current_camp = current_faction.get('camp')
-            pending_red_target = self._resolve_red_support_target_choice(player, card, mode='action')
+            pending_red_target = self._resolve_red_support_target_choice(player, card)
             if pending_red_target and pending_red_target.get('pending_choice'):
                 return {
                     'tier': tier,
@@ -4779,7 +4774,7 @@ class Game:
         # 結算紅軍奧援」抽成獨立函式，讓 play_card 與 _resume_reaction_pending_action 共用，
         # 比照一般奧援卡在 9e2c6e9 已經做過的「先開反應視窗、再結算效果」延後模式。
         self._draw_player_cards(player, 1, trigger_name='紅軍奧援')
-        support_resolution = self._resolve_red_support_target_choice(player, played_card, mode='action')
+        support_resolution = self._resolve_red_support_target_choice(player, played_card)
         if support_resolution and support_resolution.get('pending_choice'):
             self.log(f"{player.name} played {card_name}")
             return {"success": True, **support_resolution}
@@ -5311,14 +5306,10 @@ class Game:
         if mode == "resource":
             if getattr(played_card, 'card_type', None) == 'support':
                 if card_name == '紅軍奧援':
-                    # Canonical distinction: 紅軍奧援 is a zero-purchase-cost starter card,
-                    # but uniquely prints a resource output of 1資金＋1宣傳. Red players must
-                    # still choose an anti-Red discard destination in resource mode; anti-Red
-                    # users gain the resources immediately and return it to the Red discard.
-                    support_resolution = self._resolve_red_support_target_choice(player, played_card, mode='resource')
-                    if support_resolution and support_resolution.get('pending_choice'):
-                        self.log(f"{player.name} 使用紅軍奧援作為資源，等待選擇反共玩家棄牌堆")
-                        return {"success": True, **support_resolution}
+                    # 2026-08-08 使用者更正：選擇反共玩家棄牌堆只是行動模式的效果（把牌
+                    # 傳給對手），資源模式跟一般資源卡一樣直接取得資源、卡片入自己棄牌堆，
+                    # 不該問要放進誰的棄牌堆。紅軍奧援是零購買費用的起始牌，但唯一印有
+                    # 資源模式產出（1資金＋1宣傳）；非紅軍用掉後仍照既有規則歸還紅軍棄牌堆。
                     self._gain_red_support_printed_resources(player, played_card)
                     red = self._red_player()
                     if (self.faction_by_id.get(player.faction_id, {}).get('camp') != 'red_army'

@@ -3,9 +3,9 @@
     "scope": [
       "紅軍奧援 ownership"
     ],
-    "purpose": "P1 playtest item: when a non-red player played 紅軍奧援 (acquired via the pass mechanic), play_card's special branch discarded it into the CASTER's own pile instead of returning the red-army-exclusive card to the red player's discard. Both action mode and resource mode now return it to the red player; the red player's own play (choose an anti-communist player to receive it) is unchanged.",
-    "total": 3,
-    "passed": 3,
+    "purpose": "P1 playtest item: when a non-red player played 紅軍奧援 (acquired via the pass mechanic), play_card's special branch discarded it into the CASTER's own pile instead of returning the red-army-exclusive card to the red player's discard. Both action mode and resource mode now return it to the red player. 2026-08-08 update: red player's own RESOURCE-mode play no longer opens the anti-communist target-choice prompt (that only applies to action mode) — resource mode now grants resources immediately and discards to red's own pile, matching a normal resource card.",
+    "total": 4,
+    "passed": 4,
     "failed": 0
   },
   "results": [
@@ -26,6 +26,17 @@
         "play_ok": true,
         "card_in_red_discard": true,
         "not_in_caster_discard": true
+      },
+      "ok": true
+    },
+    {
+      "name": "red_resource_play_stays_in_own_discard_no_target_choice",
+      "checks": {
+        "play_ok": true,
+        "no_pending_choice": true,
+        "resources_granted": true,
+        "card_in_own_discard": true,
+        "not_in_opponent_discard": true
       },
       "ok": true
     },

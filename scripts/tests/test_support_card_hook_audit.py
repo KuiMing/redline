@@ -331,29 +331,27 @@ def test_red_army_support_separates_printed_resources_from_zero_purchase_cost():
     assert game._card_purchase_cost(support) == {"money": 0, "propaganda": 0}
 
 
-def test_red_player_can_use_red_army_support_as_resource_and_choose_anti_red_discard():
+def test_red_player_can_use_red_army_support_as_resource_without_choosing_target():
+    # 2026-08-08 使用者更正：紅軍自己用紅軍奧援當資源時，直接取得資源、卡片進自己棄牌堆，
+    # 不問要放進哪位反共玩家的棄牌堆（那是行動模式才有的效果）。
     game, anti_red, red = make_game("liberals")
     game.current_player_index = 1
     red.hand = [game._make_support_card("紅軍奧援")]
     red.resources = {"money": 0, "propaganda": 0}
     red.deck.draw_pile = [Card("不應抽到", "command", {})]
+    red.deck.discard_pile = []
     anti_red.deck.discard_pile = []
     game.turn_log = game._new_turn_log()
 
-    prompted = game.play_card(0, mode="resource")
+    result = game.play_card(0, mode="resource")
 
-    assert prompted.get("pending_choice") is True
-    assert game.pending_choice.get("choice_key") == "red_support_target_player"
-    assert game.pending_choice.get("mode") == "resource"
-    assert red.resources == {"money": 0, "propaganda": 0}
-
-    resolved = game.resolve_pending_choice(red.id, 0)
-
-    assert resolved.get("success") is True
+    assert result.get("success") is True
+    assert not result.get("pending_choice")
+    assert game.pending_choice is None
     assert red.resources == {"money": 1, "propaganda": 1}
     assert [card.name for card in red.deck.draw_pile] == ["不應抽到"]
-    assert [card.name for card in anti_red.deck.discard_pile] == ["紅軍奧援"]
-    assert game.pending_choice is None
+    assert [card.name for card in red.deck.discard_pile] == ["紅軍奧援"]
+    assert anti_red.deck.discard_pile == []
 
 
 def test_anti_red_player_can_use_red_army_support_as_resource_and_return_it_to_red_discard():

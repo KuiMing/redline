@@ -211,9 +211,10 @@ def test_red_army_recruit_talent_still_shows_deck_candidates_on_a_second_use():
     assert second_candidates == ['DeckB', 'DiscardA', '網羅人才']
 
 
-def test_red_support_resource_mode_grants_resources_and_requires_red_discard_target_choice():
-    # 2026-08-07 使用者最新裁決覆蓋 2026-06-07 的一般奧援棄置規則：紅軍奧援是唯一例外，
-    # 可作為資源取得 1資金＋1宣傳；紅軍使用後仍須選擇一位反共玩家的棄牌堆。
+def test_red_support_resource_mode_grants_resources_immediately_without_target_choice():
+    # 2026-08-08 使用者更正：選擇反共玩家棄牌堆只是行動模式的效果（把牌傳給對手）；
+    # 資源模式跟一般資源卡一樣，直接取得資源、卡片進自己棄牌堆，不問要放進誰的棄牌堆
+    # （覆蓋 2026-08-07 曾經誤把行動模式的目標選擇也套用到資源模式的行為）。
     g = make_game()
     red = g.current_player()
     rebel = g.players[1]
@@ -226,19 +227,12 @@ def test_red_support_resource_mode_grants_resources_and_requires_red_discard_tar
     result = g.play_card(0, mode='resource')
 
     assert result.get('success'), result
-    assert result.get('pending_choice') is True
-    assert g.pending_choice and g.pending_choice['choice_key'] == 'red_support_target_player'
-    assert g.pending_choice['mode'] == 'resource'
-    assert red.resources == {'money': 0, 'propaganda': 0}
-
-    resolved = g.resolve_pending_choice(red.id, 0)
-
-    assert resolved.get('success'), resolved
+    assert not result.get('pending_choice')
+    assert g.pending_choice is None
     assert red.resources == {'money': 1, 'propaganda': 1}
     assert names(red.hand) == []
-    assert names(red.deck.discard_pile) == []
-    assert names(rebel.deck.discard_pile) == ['紅軍奧援']
-    assert g.pending_choice is None
+    assert names(red.deck.discard_pile) == ['紅軍奧援']
+    assert names(rebel.deck.discard_pile) == []
 
 
 def test_red_support_requires_red_army_to_choose_rebel_discard_target_before_resolving_action_mode():
@@ -256,7 +250,6 @@ def test_red_support_requires_red_army_to_choose_rebel_discard_target_before_res
     assert names(red.hand) == ['DrawnCard']
     assert names(red.deck.draw_pile) == []
     assert g.pending_choice and g.pending_choice['choice_key'] == 'red_support_target_player'
-    assert g.pending_choice['mode'] == 'action'
 
     resolved = g.resolve_pending_choice(red.id, 0)
 

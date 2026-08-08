@@ -1,6 +1,6 @@
 # Redline TODO
 
-最後更新：2026-08-07
+最後更新：2026-08-08
 
 ## 工作規則
 - 開始新工作前先做 intake：讀 `TODO.md`、跑 `git status --short`、跑 `git log --oneline -5`。
@@ -16,6 +16,12 @@
 - 若回到奧援卡，先確認指定卡名與級別；不要用北國奧援 I級規則推測 II級。
 
 ## 目前 active todo
+
+### P1：紅軍奧援作為資源使用時不該問要放進誰的棄牌堆，只有行動模式才需要
+- [done] 使用者 playtest 回報：紅軍自己用紅軍奧援當資源時，遊戲會問要放進哪位反共玩家的棄牌堆——使用者指出這是錯的，選擇對象只該是行動模式的效果，資源模式應該跟一般資源卡一樣直接拿資源、卡片進自己棄牌堆。（2026-08-08 使用者 playtest 回報並指出正確規則）
+  - 根因：`server/game.py` `play_card()` 資源模式分支裡，2026-08-07 commit `863bc58`（讓紅軍奧援可作為資源使用）新增紅軍奧援資源模式支援時，誤把行動模式專屬的 `_resolve_red_support_target_choice(mode='resource')` 也套用到資源模式，導致紅軍自己資源模式打出時會卡在等待選擇反共玩家棄牌堆的 pending choice。既有 validator `scripts/validate_red_support_ownership.py` 從未涵蓋「紅軍自己資源模式打出」這個情境（只測了非紅軍資源模式、以及紅軍行動模式），才讓這個回歸沒被抓到。
+  - 修法：`play_card()` 資源模式分支移除對 `_resolve_red_support_target_choice` 的呼叫，紅軍自己資源模式打出直接 `_gain_red_support_printed_resources` 拿資源、卡片進自己棄牌堆；非紅軍資源模式打出仍照既有規則歸還紅軍棄牌堆（不變）。連帶把 `_resolve_red_support_target_choice` 的 `mode` 參數移除（此後只會被行動模式呼叫，`mode` 變成恆為 `'action'` 的死參數），並簡化 `red_support_target_player` 選擇結算分支（`server/game.py` 2417 行附近），不再需要依 `mode` 分岔判斷是否要補發資源。
+  - 驗證：改寫 `scripts/tests/test_action_card_regressions.py`（`test_red_support_resource_mode_grants_resources_immediately_without_target_choice`、`test_red_support_requires_red_army_to_choose_rebel_discard_target_before_resolving_action_mode` 移除已失效的 `mode` 欄位斷言）與 `scripts/tests/test_support_card_hook_audit.py`（`test_red_player_can_use_red_army_support_as_resource_without_choosing_target`）共 3 支既有測試；`scripts/validate_red_support_ownership.py` 新增 `case_red_resource_play_stays_in_own_discard_no_target_choice` 補上這個先前完全沒被涵蓋的情境，4/4 全過。完整 pytest（同 baseline ignore 清單）**323/323 全過**。另外用 Playwright 對真實瀏覽器透過 `/test/setup-red-support-proof`（既有端點，未修改）驗證：紅軍點「資源」不再跳出反共玩家選擇視窗、資金/宣傳立即到手（HUD 顯示 資金1／宣傳1）；紅軍點「行動」仍正常跳出選擇視窗（迴歸未受影響）。
 
 ### P2：爆料黑幕／產業滲透自己回合點「行動」應該擋下，取消能力只能被動觸發
 - [done] 使用者提問確認：使用者觀察到爆料黑幕／產業滲透感覺是被動觸發的卡牌，稽核後確認屬實——兩張卡的 `effect`（`data/action_cards_structured.v1.1.json`）只有 `cancel_card` + `conditional_draw`，不像情報網有 `choose_one` 主動分支；取消能力只能透過反應視窗（`server/game.py` `_set_pending_reaction_choice`／`_resolve_reaction_choice`，對方打出可取消的牌時自動跳出）被動觸發，完全不經過 `play_card()`。自己回合主動點「行動」在舊行為下會直接執行 `cancel_card`（`server/effect_engine.py`），因為沒有真正的取消對象，只會記一筆「canceled unknown card」的無意義紀錄、白白浪費這張卡，且前端 `canPlayHandCardMode`（`static/app.js`）先前並未針對這兩張卡擋掉「行動」按鈕。（2026-08-07 使用者提出並要求修正）

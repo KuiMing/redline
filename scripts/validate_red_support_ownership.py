@@ -53,6 +53,21 @@ def case_non_red_resource_returns_to_red():
     return {'name': 'non_red_resource_play_returns_to_red_discard', 'checks': checks, 'ok': all(checks.values())}
 
 
+def case_red_resource_play_stays_in_own_discard_no_target_choice():
+    # 2026-08-08 使用者更正：紅軍自己用紅軍奧援當資源時，直接取得資源、卡片進自己棄牌堆，
+    # 不問要放進哪位反共玩家的棄牌堆（那是行動模式才有的效果）。
+    g, red, other = _new_game('red_army')
+    result = g.play_card(0, mode='resource')
+    checks = {
+        'play_ok': result.get('success') is True,
+        'no_pending_choice': not result.get('pending_choice') and g.pending_choice is None,
+        'resources_granted': red.resources.get('money') == 1 and red.resources.get('propaganda') == 1,
+        'card_in_own_discard': '紅軍奧援' in _names(red.deck.discard_pile),
+        'not_in_opponent_discard': '紅軍奧援' not in _names(other.deck.discard_pile),
+    }
+    return {'name': 'red_resource_play_stays_in_own_discard_no_target_choice', 'checks': checks, 'ok': all(checks.values())}
+
+
 def case_red_play_passes_to_opponent_unchanged():
     # 紅軍自己打出：既有「選一位反共玩家、放入其棄牌堆」流程不受影響
     g, red, other = _new_game('red_army')
@@ -76,6 +91,7 @@ def main():
     results = [
         case_non_red_action_returns_to_red(),
         case_non_red_resource_returns_to_red(),
+        case_red_resource_play_stays_in_own_discard_no_target_choice(),
         case_red_play_passes_to_opponent_unchanged(),
     ]
     summary = {
@@ -84,8 +100,11 @@ def main():
             'P1 playtest item: when a non-red player played 紅軍奧援 (acquired via the pass '
             'mechanic), play_card\'s special branch discarded it into the CASTER\'s own pile '
             'instead of returning the red-army-exclusive card to the red player\'s discard. '
-            'Both action mode and resource mode now return it to the red player; the red '
-            'player\'s own play (choose an anti-communist player to receive it) is unchanged.'
+            'Both action mode and resource mode now return it to the red player. 2026-08-08 '
+            'update: red player\'s own RESOURCE-mode play no longer opens the anti-communist '
+            'target-choice prompt (that only applies to action mode) — resource mode now '
+            'grants resources immediately and discards to red\'s own pile, matching a normal '
+            'resource card.'
         ),
         'total': len(results),
         'passed': sum(1 for r in results if r['ok']),
