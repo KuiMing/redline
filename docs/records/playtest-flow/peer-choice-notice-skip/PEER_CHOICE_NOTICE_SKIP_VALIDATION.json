@@ -1,0 +1,26 @@
+{
+  "generated_at": "2026-08-09T18:47:31",
+  "total": 3,
+  "passed": 3,
+  "failed": 0,
+  "results": [
+    {
+      "name": "武裝小隊_viewer_goes_straight_to_choice",
+      "status": "passed",
+      "failures": [],
+      "screenshot": "docs/records/playtest-flow/peer-choice-notice-skip/武裝小隊-viewer-sees-choice-directly.png"
+    },
+    {
+      "name": "武裝者_viewer_goes_straight_to_choice",
+      "status": "passed",
+      "failures": [],
+      "screenshot": "docs/records/playtest-flow/peer-choice-notice-skip/武裝者-viewer-sees-choice-directly.png"
+    },
+    {
+      "name": "武裝集團_viewer_goes_straight_to_choice",
+      "status": "passed",
+      "failures": [],
+      "screenshot": "docs/records/playtest-flow/peer-choice-notice-skip/武裝集團-viewer-sees-choice-directly.png"
+    }
+  ]
+}

@@ -17,6 +17,12 @@
 
 ## 目前 active todo
 
+### P2：武裝系列等卡牌要求對方互動時，對方要先縮小通知畫面才能操作選擇視窗
+- [done] 使用者需求：武裝系列卡牌（武裝者/武裝小隊/武裝集團）要求對方選擇要棄掉哪些手牌時，對方畫面會先顯示「其他玩家動態」大型轉播通知，要先手動縮小通知才能看到並操作選擇視窗；使用者希望這種情況直接讓對方進入選擇，不要多一道縮小通知的步驟。（2026-08-09 使用者提出）
+  - 根因：`static/app.js` `renderPeerActionNotice()` 先前只針對 `state.pending_choice.type === 'reaction_choice'`（取消反應，有 10 秒時限）跳過通知直接讓玩家操作；其他所有 pending choice（包含武裝系列的 `armed_target_discard`）仍會被通知疊層蓋住。
+  - 修法：把跳過通知的條件從「限定 `reaction_choice` 型別」放寬成「只要 `pending_choice.player_id` 是自己，不論是哪種 choice 型別／`choice_key`，一律跳過通知直接讓玩家操作」，涵蓋武裝系列與未來任何要求對方互動的卡牌。
+  - 驗證：新增 server-side proof endpoint `/test/setup-peer-choice-notice-proof`（`server/main.py`，直接建立 `armed_target_discard` pending choice，略過武裝卡本身的合法目標檢查，聚焦驗證通知是否被正確跳過）與正式 browser proof `scripts/validate_peer_choice_notice_skip.py`：以「對方」玩家身分連線，確認畫面直接顯示選擇視窗（卡牌選擇卡面＋提示文字），`#peerActionNotice` 通知疊層未顯示，涵蓋武裝者/武裝小隊/武裝集團三張卡牌，**3/3 全過**（重跑 3 次穩定）。完整 pytest（同 baseline ignore 清單）**327/327 全過**（純前端條件放寬，未動任何後端規則邏輯）。
+
 ### P0：陣營能力發動過一次後，打其他不相關的牌會一直跳出「本回合已發動陣營能力」擋畫面
 - [done] 使用者 playtest 回報：澳門猜完奇偶（賭徒耳語）之後，只要按手牌上的「資源」按鈕，就會一直跳出「本回合已發動陣營能力」的提示。（2026-08-09 使用者 playtest 回報）
   - 根因：`static/app.js` `renderFactionActionPanel()` 對澳門／改革開放派／自由派／民族祭儀各族，先前一律呼叫 `showCenteredActionPanel(...)`，這個輔助函式**不看任何前置條件**就無條件執行 `modalOverlay.style.display = 'flex'`，把置中彈窗強制打開。由於這個函式在**每一次** `render(state)`（也就是幾乎每一次動作之後）都會執行一次，只要本回合已經發動過能力（`state.faction_action_used` 恆為 true），之後不管做什麼完全不相關的操作（例如打出手牌拿資源），觸發的 re-render 都會把這個彈窗連同「本回合已發動陣營能力」的文字重新蓋回畫面上。紅軍陣營的對應分支（同一函式裡更早的 `faction === 'red_army'` 分支）其實已經用另一種正確寫法——本回合用完就直接把小面板隱藏、完全不去動置中彈窗，彈窗只在玩家主動點按鈕時才由 `openRedArmyAbilityModal()` 個別打開——只是這個正確模式沒有套用到其他五個陣營分支。

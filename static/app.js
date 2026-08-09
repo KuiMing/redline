@@ -3383,11 +3383,14 @@ function renderPeerActionNotice(state) {
     return;
   }
 
-  const pendingReactionForViewer = state.pending_choice?.type === 'reaction_choice'
-    && state.pending_choice?.player_id === playerId;
-  if (pendingReactionForViewer) {
-    // 取消反應是有時限、必須立即操作的正式 choice；不可再用「其他玩家動態」大型轉播
-    // 疊層蓋住它。消耗這次 log 並關閉通知，待反應結束後也不重播同一則出牌紀錄。
+  const hasPendingChoiceForViewer = !!(state.pending_choice && state.pending_choice.player_id === playerId);
+  if (hasPendingChoiceForViewer) {
+    // 2026-08-09 使用者回報並要求：武裝系列等卡牌會要求對方立即互動（例如選擇要棄掉
+    // 哪些手牌），先前只有「取消反應」這種有時限的 choice 才會跳過通知直接讓玩家操作，
+    // 其他 pending choice（例如武裝小隊的 armed_target_discard）仍會被「其他玩家動態」
+    // 大型轉播疊層蓋住，玩家得先手動縮小通知才能看到、操作選擇視窗。使用者要求只要是
+    // 輪到自己要處理的 pending choice，一律直接讓玩家操作，不要再多一道縮小通知的步驟。
+    // 消耗這次 log 並關閉通知，待選擇結束後也不重播同一則出牌紀錄。
     closePeerActionNotice(entries);
     return;
   }
