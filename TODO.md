@@ -17,6 +17,11 @@
 
 ## 目前 active todo
 
+### P2：香港陣營 special_rules 移除多餘的 OCR 不穩備註
+- [done] 使用者要求：香港陣營說明裡有一條「卡面另有一條推測規則文字，但 OCR 不穩，未納入正式欄位。」，使用者認為多餘，要求移除。（2026-08-09 使用者提出）
+  - 這條備註原本是資料整理階段留下的內部註記（並非正式規則），會被原樣顯示在玩家看到的陣營說明裡。從 `data/factions/hong_kong.v1.1.json`、`data/factions/all_faction.integrated.v2.json`（伺服器實際載入的來源，`server/game.py` `FACTIONS_PATH`）、`data/factions/all_faction.json` 三份資料檔的香港 `special_rules` 陣列中移除這一項，其餘三條正式規則不變。
+  - 驗證：三份 JSON 皆確認仍是合法 JSON；完整 pytest（同 baseline ignore 清單）**327/327 全過**；直接呼叫正式啟動中伺服器的 `/factions` API 確認香港的 `special_rules` 現在只剩 3 條、不再包含這條備註。既有 proof record `docs/records/faction-ui/FACTION_PICKER_COMBINATION_VALIDATION.json` 因為其產生腳本 `scripts/validate_faction_picker_combinations.py` 依賴的舊版大廳按鈕文字「JOIN OPERATION」早已不存在（現行大廳是「建立作戰室」/「進入作戰室」，與這次改動無關的既有 staleness）而無法重新產生，此為**與本次修改無關的既有 pre-existing 問題**、未在本次一併修復；該份紀錄目前仍殘留舊文字，之後若有人要重跑那支 validator 前需先修好它的大廳流程選擇器。
+
 ### P2：武裝系列等卡牌要求對方互動時，對方要先縮小通知畫面才能操作選擇視窗
 - [done] 使用者需求：武裝系列卡牌（武裝者/武裝小隊/武裝集團）要求對方選擇要棄掉哪些手牌時，對方畫面會先顯示「其他玩家動態」大型轉播通知，要先手動縮小通知才能看到並操作選擇視窗；使用者希望這種情況直接讓對方進入選擇，不要多一道縮小通知的步驟。（2026-08-09 使用者提出）
   - 根因：`static/app.js` `renderPeerActionNotice()` 先前只針對 `state.pending_choice.type === 'reaction_choice'`（取消反應，有 10 秒時限）跳過通知直接讓玩家操作；其他所有 pending choice（包含武裝系列的 `armed_target_discard`）仍會被通知疊層蓋住。
