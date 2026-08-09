@@ -253,3 +253,116 @@ def test_north_support_tier_three_resolves_two_targets_and_only_initial_step_is_
     assert second_result.get('success') is True, second_result
     assert game.pending_choice is None
     assert opponent.organizations == {}
+
+
+def _era_restriction_game(faction_id, era_id=None, origin='上海'):
+    """建立一個「時代關卡已生效」的對局：時代關卡的無視距離限制只是 active modifier，
+    直接 activate_era 即可，不需要真的打到觸發條件。"""
+    game = Game([('actor', 'Actor'), ('red', 'Red')])
+    actor, red = game.players
+    actor.faction_id = faction_id
+    red.faction_id = 'red_army'
+    actor.organizations = {origin: 1}
+    red.organizations = {}
+    game.game_phase = GamePhase.MAIN
+    game.turn_phase = TurnPhase.ACTION
+    game.current_player_index = 0
+    game.pending_base_choices = {}
+    game.turn_log = game._new_turn_log()
+    if era_id:
+        assert game.era_engine.activate_era(era_id)
+    return game, actor
+
+
+def _build_effect(game, card_name):
+    definition = next(card for card in game.structured_cards if card['name'] == card_name)
+    return next(effect for effect in definition['effect'] if effect.get('type') == 'build')
+
+
+def _card_build_towns(game, player, card_name):
+    return {entry['town'] for entry in game._card_build_town_choices(player, _build_effect(game, card_name))}
+
+
+def test_ideologue_card_data_carries_inner_fallback_range():
+    # 思想家過去沒有 inner_fallback_range，導致受距離限制時整片牆內被排除（無法建立），
+    # 而非卡面規則的「退回 1 格」。比照姊妹牌組織經驗甲補上。
+    game = Game([('a', 'A'), ('b', 'B')])
+    assert _build_effect(game, '思想家').get('inner_fallback_range') == 1
+    assert _build_effect(game, '組織經驗甲').get('inner_fallback_range') == 1
+
+
+def test_rebels_era_downgrades_ignore_distance_card_builds_to_one_step_inside_wall():
+    game, actor = _era_restriction_game('liberals', era_id='rebels')
+    inner_towns = set(game._towns_for_region_alias('china'))
+    near_inner = game._towns_within_steps(['上海'], max_steps=1) & inner_towns
+
+    baseline, baseline_actor = _era_restriction_game('liberals')
+    for card_name in ('思想家', '組織經驗甲'):
+        towns = _card_build_towns(game, actor, card_name)
+        inner_offered = towns & inner_towns
+        assert inner_offered, card_name
+        assert inner_offered <= near_inner, (card_name, sorted(inner_offered))
+        # 牆外仍維持無視距離
+        assert (towns - inner_towns) - game._towns_within_steps(['上海'], max_steps=1)
+        # 對照組：時代關卡未觸發時可拿到遠方牆內城鎮
+        assert (_card_build_towns(baseline, baseline_actor, card_name) & inner_towns) - near_inner
+
+
+def test_kazakh_era_applies_the_same_ignore_distance_restriction():
+    game, actor = _era_restriction_game('kazakh', era_id='kazakh', origin='烏魯木齊')
+    inner_towns = set(game._towns_for_region_alias('china'))
+    near_inner = game._towns_within_steps(['烏魯木齊'], max_steps=1) & inner_towns
+    inner_offered = _card_build_towns(game, actor, '思想家') & inner_towns
+    assert inner_offered and inner_offered <= near_inner
+
+
+def test_era_ignore_distance_fallback_extends_with_build_range_bonus():
+    game, actor = _era_restriction_game('liberals', era_id='rebels')
+    actor.build_range_bonus = 1
+    inner_towns = set(game._towns_for_region_alias('china'))
+    near_1 = game._towns_within_steps(['上海'], max_steps=1) & inner_towns
+    near_2 = game._towns_within_steps(['上海'], max_steps=2) & inner_towns
+    inner_offered = _card_build_towns(game, actor, '思想家') & inner_towns
+    assert inner_offered - near_1
+    assert inner_offered <= near_2
+
+
+def test_rebels_era_downgrades_east_asia_support_tier_three_to_near_inner():
+    game, actor = _era_restriction_game('liberals', era_id='rebels')
+    anywhere = {entry['town'] for entry in game._interactive_support_build_towns(actor, near_only=False)}
+    near = {entry['town'] for entry in game._interactive_support_build_towns(actor, near_only=True)}
+    assert anywhere == near
+
+    baseline, baseline_actor = _era_restriction_game('liberals')
+    baseline_anywhere = {
+        entry['town'] for entry in baseline._interactive_support_build_towns(baseline_actor, near_only=False)
+    }
+    assert len(baseline_anywhere) > len(near)
+
+
+def test_era_ignore_distance_restriction_does_not_leak_to_other_camps():
+    game, actor = _era_restriction_game('kazakh', era_id='rebels', origin='烏魯木齊')
+    inner_towns = set(game._towns_for_region_alias('china'))
+    near_inner = game._towns_within_steps(['烏魯木齊'], max_steps=1) & inner_towns
+    assert (_card_build_towns(game, actor, '思想家') & inner_towns) - near_inner
+    anywhere = {entry['town'] for entry in game._interactive_support_build_towns(actor, near_only=False)}
+    near = {entry['town'] for entry in game._interactive_support_build_towns(actor, near_only=True)}
+    assert len(anywhere) > len(near)
+
+
+def test_active_era_details_carry_full_explanation_for_every_viewer():
+    """時代關卡達成浮窗縮小後，任何玩家都要能再點釘選卡片看完整說明，因此每個生效中的
+    時代都必須帶著達成條件／紅軍壓制／革命反撲／期限文字，而不是只有 era_notification。"""
+    game, actor = _era_restriction_game('liberals', era_id='rebels')
+    opponent = game.players[1]
+    game.era_notification = game._era_notification_payload(game.era_engine.get_definition('rebels'))
+    for viewer in (actor, opponent):
+        state = game.state(viewer_player_id=viewer.id)
+        details = state['active_era_details']
+        assert details, viewer.name
+        item = next(d for d in details if d['id'] == 'rebels')
+        for field in ('name', 'trigger_text', 'success_text', 'fail_text', 'duration_text'):
+            assert item.get(field), (viewer.name, field)
+        assert item['name'] == '[反賊]公知世代的終結'
+        # 觸發通知本身也是全域廣播，不是只給觸發者
+        assert state['era_notification']['id'] == 'rebels', viewer.name

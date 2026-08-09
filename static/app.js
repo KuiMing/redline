@@ -14,6 +14,8 @@ let cachedFullMapData = null;
 let activeFactionActionModal = null;
 let cardPresentationCatalog = null;
 let lastEraNotificationKey = null;
+let eraAchievementDetailsById = {};   // 生效中的時代關卡說明，供釘選卡片重新點開使用
+let eraAchievementViewId = null;      // 時代關卡浮窗目前顯示的時代 id
 let stageResizeBound = false;
 let lobbySyncTimer = null;
 let latestLobbyState = null;
@@ -2187,7 +2189,7 @@ function minimizeEraAchievement() {
   closeEraAchievementModal();
 }
 
-function renderEraAchievement(state) {
+function fillEraAchievementModal(info) {
   const overlay = document.getElementById('eraAchievementModal');
   const glass = overlay?.querySelector('.era-achievement-glass');
   const art = document.getElementById('eraAchievementArt');
@@ -2196,24 +2198,7 @@ function renderEraAchievement(state) {
   const success = document.getElementById('eraAchievementSuccess');
   const fail = document.getElementById('eraAchievementFail');
   const duration = document.getElementById('eraAchievementDuration');
-  const pin = document.getElementById('eraPinnedNotice');
-  const minimizeBtn = document.getElementById('eraAchievementMinimizeBtn');
-  if (!overlay || !glass || !art || !title || !cond || !success || !fail || !duration || !pin || !minimizeBtn) return;
-
-  const info = state.era_notification || null;
-  const activeDetails = state.active_era_details || [];
-
-  if (!info) {
-    overlay.style.display = 'none';
-    glass.classList.remove('era-card-art-active');
-    art.innerHTML = '';
-    pin.style.display = 'none';
-    pin.innerHTML = '';
-    lastEraNotificationKey = null;
-    return;
-  }
-
-  const key = `${info.id}:${info.remaining ?? 'perm'}`;
+  if (!overlay || !glass || !art || !title || !cond || !success || !fail || !duration || !info) return false;
   const artUrl = eraCardArtUrl(info);
   glass.classList.toggle('era-card-art-active', Boolean(artUrl));
   art.innerHTML = artUrl ? eraCardArtMarkup(info) : '';
@@ -2222,18 +2207,78 @@ function renderEraAchievement(state) {
   success.textContent = info.success_text || '（暫缺）';
   fail.textContent = info.fail_text || '（暫缺）';
   duration.textContent = `效果期限：${info.duration_text || '（暫缺）'}${info.remaining == null ? '' : `｜剩餘 ${info.remaining} 回合`}`;
+  eraAchievementViewId = info.id ?? null;
+  return true;
+}
+
+// 縮小後任何玩家（不只觸發者）都要能點右上角的釘選卡片，重新看到該時代關卡的完整說明。
+function openEraAchievementById(eraId) {
+  const info = eraAchievementDetailsById[eraId];
+  if (!info) return false;
+  if (!fillEraAchievementModal(info)) return false;
+  const overlay = document.getElementById('eraAchievementModal');
+  if (overlay) overlay.style.display = 'flex';
+  return true;
+}
+
+function renderEraAchievement(state) {
+  const overlay = document.getElementById('eraAchievementModal');
+  const glass = overlay?.querySelector('.era-achievement-glass');
+  const art = document.getElementById('eraAchievementArt');
+  const pin = document.getElementById('eraPinnedNotice');
+  const minimizeBtn = document.getElementById('eraAchievementMinimizeBtn');
+  if (!overlay || !glass || !art || !pin || !minimizeBtn) return;
+
+  const info = state.era_notification || null;
+  const activeDetails = state.active_era_details || [];
+
+  eraAchievementDetailsById = {};
+  activeDetails.forEach(item => {
+    if (item && item.id != null) eraAchievementDetailsById[item.id] = item;
+  });
+  if (info && info.id != null && !eraAchievementDetailsById[info.id]) {
+    eraAchievementDetailsById[info.id] = info;
+  }
+
+  if (!info && !activeDetails.length) {
+    overlay.style.display = 'none';
+    glass.classList.remove('era-card-art-active');
+    art.innerHTML = '';
+    pin.style.display = 'none';
+    pin.innerHTML = '';
+    lastEraNotificationKey = null;
+    eraAchievementViewId = null;
+    return;
+  }
+
   minimizeBtn.onclick = minimizeEraAchievement;
 
-  const activeHtml = activeDetails.map(item => {
+  const pinnedHtml = activeDetails.map(item => {
     const remainText = item.remaining == null ? '持續中' : `剩餘 ${item.remaining} 回合`;
-    const activeClass = item.id === info.id ? ' active' : '';
-    return `<div class="era-pin-card${activeClass}"><div class="era-pin-title">${escapeHtml(item.name)}</div><div class="era-pin-meta">條件已達成｜${escapeHtml(remainText)}</div></div>`;
+    const activeClass = info && item.id === info.id ? ' active' : '';
+    return `<button type="button" class="era-pin-card${activeClass}" title="點擊查看完整時代關卡說明" onclick="openEraAchievementById('${escapeHtml(String(item.id))}')"><div class="era-pin-title">${escapeHtml(item.name)}</div><div class="era-pin-meta">條件已達成｜${escapeHtml(remainText)}</div><div class="era-pin-hint">點擊查看完整說明</div></button>`;
   }).join('');
-  pin.innerHTML = activeHtml;
-  pin.style.display = activeHtml ? 'flex' : 'none';
+  pin.innerHTML = pinnedHtml;
+  pin.style.display = pinnedHtml ? 'flex' : 'none';
+
+  if (!info) {
+    // 通知已結束（時代到期）但仍有其他生效中的時代：浮窗不自動彈出，釘選卡片仍可點開。
+    lastEraNotificationKey = null;
+    if (overlay.style.display !== 'flex') eraAchievementViewId = null;
+    return;
+  }
+
+  const key = `${info.id}:${info.remaining ?? 'perm'}`;
+  const isOpen = overlay.style.display === 'flex';
+  // 浮窗開著、而且玩家是自己點釘選卡片看別的時代時，不要被最新通知蓋掉內容。
+  const viewing = isOpen && eraAchievementViewId && eraAchievementViewId !== info.id
+    ? eraAchievementDetailsById[eraAchievementViewId]
+    : info;
+  fillEraAchievementModal(viewing || info);
 
   if (lastEraNotificationKey !== key) {
     overlay.style.display = 'flex';
+    fillEraAchievementModal(info);
     lastEraNotificationKey = key;
   }
 }

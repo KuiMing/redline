@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>REDLINE // STRATEGIC COMMAND</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="/static/style.css?v=discard-log-scroll-20260807" />
+  <link rel="stylesheet" href="/static/style.css?v=era-achievement-reopen-20260809" />
 </head>
 <body>
 <div id="stageViewport">
@@ -155,7 +155,12 @@
 
 <div id="eraAchievementModal" class="modal-overlay" style="display:none;">
   <div class="modal-glass era-achievement-glass">
-    <div class="panel-title">時代關卡達成</div>
+    <div class="era-achievement-header">
+      <div class="panel-title">時代關卡達成</div>
+      <div class="era-achievement-actions">
+        <button id="eraAchievementMinimizeBtn" class="modal-choice-btn era-achievement-minimize-btn">縮到右上角</button>
+      </div>
+    </div>
     <div id="eraAchievementArt" class="era-achievement-art"></div>
     <div id="eraAchievementTitle" class="modal-title-text">[香港]香港人被自殺</div>
     <div id="eraAchievementCondition" class="modal-body-text"></div>
@@ -164,9 +169,7 @@
     <div class="era-achievement-section-title">革命反撲</div>
     <div id="eraAchievementFail" class="modal-body-text"></div>
     <div id="eraAchievementDuration" class="modal-body-text" style="margin-top:6px;"></div>
-    <div class="era-achievement-actions">
-      <button id="eraAchievementMinimizeBtn" class="modal-choice-btn">縮到右上角</button>
-    </div>
+    <div id="eraAchievementReopenHint" class="era-achievement-reopen-hint">縮小後可隨時點右上角的時代關卡卡片，重新叫出完整說明。</div>
   </div>
 </div>
 
@@ -335,6 +338,6 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/static/player_messages_zh_tw.js?v=player-message-i18n-20260801"></script>
-<script src="/static/app.js?v=safehouse-passive-no-button-20260809"></script>
+<script src="/static/app.js?v=era-achievement-reopen-20260809"></script>
 </body>
 </html>

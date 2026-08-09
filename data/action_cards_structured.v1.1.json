@@ -45,7 +45,8 @@
         },
         {
           "type": "build",
-          "range": "ignore_distance"
+          "range": "ignore_distance",
+          "inner_fallback_range": 1
         },
         {
           "type": "move",

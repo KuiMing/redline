@@ -1212,26 +1212,23 @@ class Game:
             if self._player_has_ability(player, "安全屋"):
                 inner_towns = set(self._towns_for_region_alias("china"))
                 candidates |= self._towns_within_steps(source_towns, max_steps=max_steps + 1) & inner_towns
+        # 組織經驗甲卡面：「無法無視距離建立牆內組織者，本牌於牆內建立組織距離為1格」。
+        # 思想家亦比照同一條退回規則（卡面資料的 inner_fallback_range）。限制來源包含
+        # 陣營能力（新疆社會管控）與時代關卡（restrict_ignore_distance_build），兩者共用。
+        fallback_towns = None
+        if build_range == 'ignore_distance':
+            fallback_towns = self._restricted_build_fallback_towns(
+                player, (effect or {}).get('inner_fallback_range', 0)
+            )
         choices = []
         for town in sorted(candidates):
             if self._red_army_base_build_blocked(getattr(player, 'faction_id', None), town):
                 continue
             if not self._can_player_build_in_town(player, town):
                 continue
-            if build_range == 'ignore_distance':
-                if self._era_restricts_ignore_distance_build(player, town):
+            if build_range == 'ignore_distance' and self._ignore_distance_build_restricted(player, town):
+                if town not in fallback_towns:
                     continue
-                if self._faction_restricts_ignore_distance_build(player, town):
-                    # 組織經驗甲卡面：「無法無視距離建立牆內組織者，本牌於牆內建立組織距離為1格」
-                    fallback = int((effect or {}).get('inner_fallback_range', 0) or 0)
-                    if not fallback:
-                        continue
-                    source_towns = self._organization_towns_for_player(player)
-                    fallback += int(getattr(player, 'build_range_bonus', 0) or 0)
-                    if self._player_has_ability(player, "安全屋"):
-                        fallback += 1
-                    if not source_towns or town not in self._towns_within_steps(source_towns, max_steps=fallback):
-                        continue
             choices.append({'town': town})
         return choices
 
@@ -2732,19 +2729,21 @@ class Game:
 
     def _interactive_support_build_towns(self, player, near_only=False):
         inner_towns = set(self._towns_for_region_alias('china'))
-        # 新疆社會管控：無法無視距離建立牆內組織——比照組織經驗甲卡面的降級慣例，
-        # 「牆內任意城鎮」清單降級為「己方組織1格內」（實作裁定，見 TODO 記錄）
-        if not near_only and self._player_is_distance_restricted(player):
-            near_only = True
+        # 無法無視距離建立牆內組織者（陣營能力「新疆社會管控」，或時代關卡的
+        # restrict_ignore_distance_build 紅色壓制，如[反賊]公知世代的終結、[哈薩克]伊塔事件）：
+        # 比照組織經驗甲卡面的降級慣例，「牆內任意城鎮」清單降級為「己方組織1格內」
+        # （若另有增加建立距離的能力則為2格；實作裁定，見 TODO 記錄）。
+        near_towns = self._restricted_build_fallback_towns(player, 1)
         if near_only:
-            reachable = set()
-            max_steps = 1 + int(getattr(player, 'build_range_bonus', 0) or 0)
-            if self._player_has_ability(player, "安全屋"):
-                max_steps += 1
-            for origin in self._organization_towns_for_player(player):
-                reachable |= self._towns_within_steps([origin], max_steps=max_steps) & inner_towns
+            reachable = near_towns & inner_towns
         else:
-            reachable = inner_towns
+            # 逐城鎮判定，才能同時支援 scope 不是整個牆內的時代關卡效果；
+            # 未受限制的城鎮仍維持「無視距離」。
+            reachable = {
+                town
+                for town in inner_towns
+                if town in near_towns or not self._ignore_distance_build_restricted(player, town)
+            }
         return [
             {'town': town}
             for town in sorted(reachable)
@@ -3714,6 +3713,39 @@ class Game:
         if not self._player_is_distance_restricted(player):
             return False
         return town in set(self._towns_for_region_alias("china"))
+
+    def _ignore_distance_build_restricted(self, player, town):
+        """該玩家在這個城鎮是否「無法無視距離建立組織」。
+
+        目前有兩種來源，兩者的處理方式必須一致：
+        1. 陣營能力「新疆社會管控」（維吾爾）——固定限制牆內。
+        2. 時代關卡的 `restrict_ignore_distance_build` 紅色壓制（[反賊]公知世代的終結、
+           [哈薩克]伊塔事件……），依 `target_camp`／`scope` 判定。任何未來新增同型效果
+           的時代關卡都會自動沿用同一套處理。
+
+        兩者都只是「不能無視距離」，不是「完全不能建立」：呼叫端應改用近距離退回範圍
+        （見 `_restricted_build_fallback_towns()`），而不是直接把城鎮排除掉。
+        """
+        if self._faction_restricts_ignore_distance_build(player, town):
+            return True
+        return self._era_restricts_ignore_distance_build(player, town)
+
+    def _restricted_build_fallback_towns(self, player, fallback_range):
+        """受距離限制時可退回的建立範圍：卡面基礎格數 ＋ 建立距離加成 ＋ 安全屋 +1。
+
+        例：組織經驗甲卡面「本牌於牆內建立組織距離為1格」＝ fallback_range 1；若該玩家
+        另有增加建立距離的能力（安全屋／build_range_bonus），則放寬為 2 格。
+        """
+        fallback_range = int(fallback_range or 0)
+        if fallback_range <= 0:
+            return set()
+        source_towns = self._organization_towns_for_player(player)
+        if not source_towns:
+            return set()
+        max_steps = fallback_range + int(getattr(player, 'build_range_bonus', 0) or 0)
+        if self._player_has_ability(player, "安全屋"):
+            max_steps += 1
+        return self._towns_within_steps(source_towns, max_steps=max_steps)
 
     def _support_taxonomy_entry(self, card_name):
         for entry in self.support_taxonomy:
@@ -7109,6 +7141,13 @@ class Game:
             None,
         ) if viewer_player_id is not None else None
         my_era_stage = self._era_stage_for_player(viewer_player, active_era_details)
+        # 前端「時代關卡達成」浮窗被縮小之後，任何玩家都要能再點右上角的釘選卡片重新叫出
+        # 完整說明，因此每個生效中的時代都要附上達成條件／紅軍壓制／革命反撲／期限文字，
+        # 而不是只有觸發當下那一個 era_notification 才有。
+        active_era_details = [
+            {**self._era_notification_payload(detail), **detail}
+            for detail in active_era_details
+        ]
         notification = None
         if self.era_notification:
             notification = dict(self.era_notification)
