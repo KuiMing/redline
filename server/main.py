@@ -3915,8 +3915,12 @@ def test_setup_era_restrict_ignore_distance_proof(payload: dict):
       origin: 觸發方既有組織所在城鎮，預設 "上海"。
       card: 選填，發一張指定行動卡到觸發方手上（例：思想家）。
       build_range_bonus: 選填整數，用來驗證退回距離會加成到 2 格。
+      extra_eras: 選填的時代 id 陣列，與 era 一併啟用——用來驗證四人局可能同時有多個
+        時代關卡生效時，指揮中心提示列與釘選卡片能各自對應正確的時代（2026-08-09
+        使用者回報：分頁上方的提示列比右上角釘選卡片更該是點擊入口）。
     """
     era_id = payload.get("era", "rebels")
+    extra_era_ids = payload.get("extra_eras") or []
     faction_id = payload.get("faction", "liberals")
     origin = payload.get("origin", "上海")
 
@@ -3962,6 +3966,11 @@ def test_setup_era_restrict_ignore_distance_proof(payload: dict):
         era_def = game.era_engine.get_definition(era_id)
         game._apply_era_activation_effects(era_def)
         game.era_notification = game._era_notification_payload(era_def)
+    for extra_era_id in extra_era_ids:
+        if not game.era_engine.activate_era(extra_era_id):
+            return {"error": f"時代關卡無法啟用：{extra_era_id}"}
+        extra_era_def = game.era_engine.get_definition(extra_era_id)
+        game._apply_era_activation_effects(extra_era_def)
 
     manager.games[game_id] = game
     manager.connections[game_id] = manager.connections.get(game_id, {})

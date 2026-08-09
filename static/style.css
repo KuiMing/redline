@@ -711,9 +711,18 @@ body {
   border-radius: 999px;
   padding: 5px 10px;
   font-size: 0.72rem;
+  font-family: inherit;
   background: rgba(180, 83, 9, 0.2);
   border: 1px solid rgba(246, 173, 85, 0.38);
   color: #fff7ed;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.hud-era-pill:hover,
+.hud-era-pill:focus-visible {
+  background: rgba(180, 83, 9, 0.34);
+  border-color: rgba(246, 173, 85, 0.6);
 }
 
 .hud-chip-market {

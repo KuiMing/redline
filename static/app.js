@@ -3443,7 +3443,11 @@ async function render(state) {
     const phaseLabel = String(state.turn_phase || '').toLowerCase() === 'action' ? '行動' : String(state.turn_phase || '').toLowerCase() === 'event' ? '事件結算' : String(state.turn_phase || '').toLowerCase() === 'end' ? '購買' : state.turn_phase;
     const eraStatus = (state.active_era_details || []).map(item => {
       const remainText = item.remaining == null ? '持續中' : `剩餘 ${item.remaining} 回合`;
-      return `<span class="hud-era-pill">${escapeHtml(item.name)}｜條件已達成｜${escapeHtml(remainText)}</span>`;
+      // 2026-08-09 使用者回報：指揮中心／戰略地圖分頁上方本來就有的時代關卡提示列
+      // 比右上角釘選卡片更顯眼、更直覺，應該直接點這裡看完整說明；四人局最多可能
+      // 同時有 3 個時代關卡生效，每個提示各自對應自己的時代（依 item.id 開啟），
+      // 不會互相蓋掉。
+      return `<button type="button" class="hud-era-pill" title="點擊查看完整時代關卡說明" onclick="openEraAchievementById('${escapeHtml(String(item.id))}')">${escapeHtml(item.name)}｜條件已達成｜${escapeHtml(remainText)}</button>`;
     }).join('');
 
     const marketModeLabel = state.market_mode === 'all_cards' ? '全部卡牌' : '53 張卡牌';
@@ -3464,6 +3468,26 @@ async function render(state) {
 
     const phaseActionBar = document.getElementById('phaseActionBar');
     if (phaseActionBar) phaseActionBar.style.display = state.game_phase === 'main' ? 'flex' : 'none';
+    // 2026-08-09 使用者回報：#phaseActionBar／#gameShell（分頁列＋內容區）原本整條都是
+    // 用寫死的 top 絕對定位堆疊（topBar 48px → hud 42px → phaseActionBar 60px →
+    // gameShell 從 150px 開始），只夠容納「HUD 剛好單行」的假設。只要 .hud-era-row 出現
+    // （任何時代關卡生效中，哪怕只有 1 個），HUD 就會多長出一整行，但下面每一層都還疊在
+    // 原本假設的固定高度上——不只 phaseActionBar 會蓋住時代關卡提示列本身，往下一層的
+    // #gameShell／分頁列也會反過來蓋住 phaseActionBar 的按鈕。畫面上「好像」有東西、
+    // 實際上被蓋住完全點不到，正是使用者會困惑「所以我要點擊哪裡」的根本原因，而且這是
+    // 這次以前就存在的既有 bug，不是這次新增按鈕造成的。改成每次重繪都依實際量到的高度
+    // 逐層動態推算，不論有幾行時代關卡（.hud-era-row 本身也會自動換行）都不會再互相重疊。
+    const gameShell = document.getElementById('gameShell');
+    if (phaseActionBar && hud) {
+      const barTop = hud.offsetTop + hud.offsetHeight + 8;
+      phaseActionBar.style.top = `${barTop}px`;
+      if (gameShell) {
+        const barBottom = state.game_phase === 'main'
+          ? barTop + phaseActionBar.offsetHeight + 8
+          : barTop + 8;
+        gameShell.style.top = `${Math.max(barBottom, 150)}px`;
+      }
+    }
     const phaseActionMeta = document.getElementById('phaseActionMeta');
     const advanceBtn = document.getElementById('advanceStepBtn');
     const redArmyBtn = document.getElementById('redArmyAbilityBtn');

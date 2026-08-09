@@ -1,0 +1,19 @@
+{
+  "generated_at": "2026-08-09T23:37:07",
+  "total": 2,
+  "passed": 2,
+  "failed": 0,
+  "results": [
+    {
+      "name": "three_simultaneous_eras_hud_row_each_independently_clickable",
+      "status": "passed",
+      "failures": [],
+      "screenshot": "docs/records/era-restrict-ignore-distance/hud-row-three-eras.png"
+    },
+    {
+      "name": "single_era_phase_action_bar_still_reachable",
+      "status": "passed",
+      "failures": []
+    }
+  ]
+}
