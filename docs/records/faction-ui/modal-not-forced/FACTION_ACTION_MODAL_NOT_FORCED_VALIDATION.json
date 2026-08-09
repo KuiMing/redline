@@ -1,0 +1,38 @@
+{
+  "generated_at": "2026-08-09T14:13:29",
+  "total": 5,
+  "passed": 5,
+  "failed": 0,
+  "results": [
+    {
+      "name": "aomen_not_used_shows_panel_not_modal",
+      "status": "passed",
+      "failures": [],
+      "screenshot": "docs/records/faction-ui/modal-not-forced/aomen-not-used-panel.png"
+    },
+    {
+      "name": "aomen_already_used_modal_does_not_reopen",
+      "status": "passed",
+      "failures": [],
+      "screenshot": "docs/records/faction-ui/modal-not-forced/aomen-after-unrelated-resource-click.png"
+    },
+    {
+      "name": "reform_opening_already_used_modal_does_not_reopen",
+      "status": "passed",
+      "failures": [],
+      "screenshot": "docs/records/faction-ui/modal-not-forced/reform_opening-after-unrelated-resource-click.png"
+    },
+    {
+      "name": "liberals_not_used_shows_panel_not_modal",
+      "status": "passed",
+      "failures": [],
+      "screenshot": "docs/records/faction-ui/modal-not-forced/liberals-not-used-panel.png"
+    },
+    {
+      "name": "zhuang_already_used_modal_does_not_reopen",
+      "status": "passed",
+      "failures": [],
+      "screenshot": "docs/records/faction-ui/modal-not-forced/zhuang-after-unrelated-resource-click.png"
+    }
+  ]
+}

@@ -17,6 +17,12 @@
 
 ## 目前 active todo
 
+### P0：陣營能力發動過一次後，打其他不相關的牌會一直跳出「本回合已發動陣營能力」擋畫面
+- [done] 使用者 playtest 回報：澳門猜完奇偶（賭徒耳語）之後，只要按手牌上的「資源」按鈕，就會一直跳出「本回合已發動陣營能力」的提示。（2026-08-09 使用者 playtest 回報）
+  - 根因：`static/app.js` `renderFactionActionPanel()` 對澳門／改革開放派／自由派／民族祭儀各族，先前一律呼叫 `showCenteredActionPanel(...)`，這個輔助函式**不看任何前置條件**就無條件執行 `modalOverlay.style.display = 'flex'`，把置中彈窗強制打開。由於這個函式在**每一次** `render(state)`（也就是幾乎每一次動作之後）都會執行一次，只要本回合已經發動過能力（`state.faction_action_used` 恆為 true），之後不管做什麼完全不相關的操作（例如打出手牌拿資源），觸發的 re-render 都會把這個彈窗連同「本回合已發動陣營能力」的文字重新蓋回畫面上。紅軍陣營的對應分支（同一函式裡更早的 `faction === 'red_army'` 分支）其實已經用另一種正確寫法——本回合用完就直接把小面板隱藏、完全不去動置中彈窗，彈窗只在玩家主動點按鈕時才由 `openRedArmyAbilityModal()` 個別打開——只是這個正確模式沒有套用到其他五個陣營分支。
+  - 修法：把澳門／改革開放派／自由派／民族祭儀四個分支改成比照紅軍既有的小面板模式（新輔助函式 `showActionPanel`）：尚未發動時顯示不會擋畫面的小面板＋「發動 X」按鈕；本回合已發動後面板直接收起，不再強制彈出置中 modal。置中彈窗（`factionActionModal`）現在只保留給真正需要玩家輸入的猜奇偶子流程（`openGamblerGuessModal`／`openEthnicRitualGuessModal`），由玩家主動點擊「發動」才打開，不會被其他不相關操作意外重新叫出來。刪除變成死碼的舊輔助函式 `showCenteredActionPanel`。
+  - 驗證：新增 server-side proof endpoint `/test/setup-faction-action-used-proof`（`server/main.py`，可指定陣營與是否已發動，固定釘無效果的歲月靜好事件避免隨機互動事件污染）與正式 browser proof `scripts/validate_faction_action_modal_not_forced.py`：涵蓋澳門/自由派「尚未發動」正確顯示小面板與按鈕、澳門/改革開放派/民族祭儀「已發動」後點擊不相關手牌資源按鈕彈窗不再重新彈出、不再出現「本回合已發動陣營能力」文字、資源動作確實成功，共 **5/5 全過**（重跑 3 次穩定）。完整 pytest（同 baseline ignore 清單）**327/327 全過**（純前端修正，未動任何後端規則邏輯）。
+
 ### P0：立場試探／賭徒耳語／民族祭儀猜的其實是印刷資源，不是卡面文字寫的「購買費用」
 - [done] 使用者 playtest 回報：澳門陣營發動賭徒耳語，猜偶數，翻到起始牌「樂捐者」——使用者指出這個能力應該是猜牌庫頂牌的「購買點數（購買費用）」奇偶，不是「資源點數」；樂捐者購買費用為 0（偶數），猜偶數應該算猜中。（2026-08-09 使用者 playtest 回報並指出正確規則）
   - 根因：`server/game.py` `_top_card_cost_total(card)` 從實作之初（`947ee68`「Implement faction abilities phase 5」）就寫反了——優先讀 `card.resources` 算資源總和，只有在 `resources` 不是 dict 時才 fallback 去查真正的購買費用 `_purchase_area_card_cost_total()`。但每張 `Card` 物件依 `server/cards.py` 的建構子預設一定有 `resources`（`resources or {"money": 0, "propaganda": 0}`），fallback 分支形同從未被執行過的死碼。三個能力的文字（`_resolve_ability_text` 裡的說明）都明講「猜購買費用奇偶」，卻全部誤用了印刷資源。對「追隨者」「樂捐者」這類起始牌影響最大：起始牌從未真正在購買區出現、規則上沒有購買費用（正確值為 0＝偶數），但樂捐者印刷資源為 1 資金，被誤判成奇數。既有測試也複製了這個誤解：`scripts/tests/test_action_card_regressions.py` 有一支測試的**名稱本身**就叫 `..._treats_starter_donor_as_odd_cost_and_adds_it_to_hand`，把這個錯誤行為當正確答案寫死；`scripts/validate_faction_action_guess_result.py` 則是用亂編卡名＋任意資源字典驅動，那些假卡名查不到購買費用只會 fallback 成 0，讓新舊兩種（錯誤／正確）邏輯剛好巧合出一樣的結果，測不出這個回歸。

@@ -2493,98 +2493,66 @@ function renderFactionActionPanel(state) {
 
   if (!inAction || !isMine || hasActivePendingChoice) return;
 
-  const showCenteredActionPanel = (title, message, buildButtons, hint = '', resultHtml = '') => {
-    panel.style.display = 'none';
-    panel.classList.remove('overlay-active');
-    info.textContent = '';
-    buttons.innerHTML = '';
-    modalOverlay.style.display = 'flex';
-    modalTitle.textContent = title;
-    modalDesc.textContent = factionActionUsed ? '本回合已發動陣營能力。' : message;
-    modalHint.innerHTML = resultHtml || escapeHtml(factionActionUsed ? '請進行其他行動，或結束目前行動階段。' : hint);
-    modalChoices.innerHTML = '';
-    modalChoices.classList.remove('red-army-action-choices');
-    if (oddBtn) oddBtn.style.display = 'none';
-    if (evenBtn) evenBtn.style.display = 'none';
-    if (!factionActionUsed) buildButtons(modalChoices);
-    closeBtn.onclick = closeFactionActionModal;
+  // 2026-08-09 使用者 playtest 回報：這幾個陣營（澳門／改革開放派／自由派／民族祭儀
+  // 各族）先前用「置中彈窗」呈現能力狀態，但彈窗是在*每一次* render 都被無條件強制
+  // 打開（`modalOverlay.style.display = 'flex'` 不看任何前置條件），只要本回合已發動
+  // 過能力，之後不管做什麼不相關操作（例如打出手牌拿資源）觸發任何一次 render，都會
+  // 把「本回合已發動陣營能力」的彈窗重新蓋回畫面上。改比照紅軍既有的作法（下方
+  // `red_army` 分支）：平常用不會擋畫面的小面板顯示「可發動」，本回合已用掉後面板
+  // 直接收起，不再強制彈窗；彈窗（`factionActionModal`）只保留給真正需要玩家輸入的
+  // 猜奇偶子流程（`openGamblerGuessModal`／`openEthnicRitualGuessModal`），由玩家主動
+  // 點擊「發動」才打開，不會被其他操作意外重新叫出來。
+  const showActionPanel = (message, buttonLabel, onActivate) => {
+    if (factionActionUsed || hasResult) {
+      panel.style.display = 'none';
+      panel.classList.remove('overlay-active');
+      info.textContent = '';
+      buttons.innerHTML = '';
+      return;
+    }
+    panel.style.display = 'block';
+    info.innerHTML = `<div class="faction-action-placeholder">${escapeHtml(message)}</div>`;
+    const btn = document.createElement('button');
+    btn.className = 'base-choice-btn';
+    btn.type = 'button';
+    btn.textContent = buttonLabel;
+    btn.onclick = onActivate;
+    buttons.appendChild(btn);
   };
 
   if (faction === 'aomen') {
-    showCenteredActionPanel(
-      '賭徒耳語',
-      hasResult ? '本回合發動結果如下。' : '澳門可在行動階段發動一次賭徒耳語，請先選擇猜奇或猜偶。',
-      (target) => {
-        const btn = document.createElement('button');
-        btn.className = 'modal-choice-btn';
-        btn.type = 'button';
-        btn.textContent = '發動 賭徒耳語';
-        btn.onclick = openGamblerGuessModal;
-        target.appendChild(btn);
-      },
-      '將 1 張手牌放進牌庫底，猜牌庫頂牌購買費用奇偶；若猜中獲得 3 點宣傳與 3 點資金。',
-      factionResult.html
+    showActionPanel(
+      '澳門可在行動階段發動一次賭徒耳語：將 1 張手牌放進牌庫底，猜牌庫頂牌購買費用奇偶；若猜中獲得 3 點宣傳與 3 點資金。',
+      '發動 賭徒耳語',
+      openGamblerGuessModal
     );
     return;
   }
 
-
   if (faction === 'reform_opening') {
-    showCenteredActionPanel(
-      '紅軍派系',
-      hasResult ? '本回合發動結果如下。' : '改革開放派可在行動階段發動一次紅軍派系。',
-      (target) => {
-        const btn = document.createElement('button');
-        btn.className = 'modal-choice-btn';
-        btn.type = 'button';
-        btn.textContent = '發動 紅軍派系';
-        btn.onclick = () => {
-          sendAction('faction_action', { name: '紅軍派系' });
-          closeFactionActionModal();
-        };
-        target.appendChild(btn);
-      },
-      '檢視牌庫頂 3 張牌，以任意順序放回牌庫頂，然後抽 1 張牌。',
-      factionResult.html
+    showActionPanel(
+      '改革開放派可在行動階段發動一次紅軍派系：檢視牌庫頂 3 張牌，以任意順序放回牌庫頂，然後抽 1 張牌。',
+      '發動 紅軍派系',
+      () => sendAction('faction_action', { name: '紅軍派系' })
     );
     return;
   }
 
   if (faction === 'liberals') {
-    showCenteredActionPanel(
-      '立場試探',
-      hasResult ? '本回合發動結果如下；若仍可操作，可再次查看效果說明。' : '自由派可在行動階段發動一次立場試探。',
-      (target) => {
-        const btn = document.createElement('button');
-        btn.className = 'modal-choice-btn';
-        btn.type = 'button';
-        btn.textContent = '發動 立場試探';
-        btn.onclick = () => {
-          sendAction('faction_action', { name: '立場試探' });
-        };
-        target.appendChild(btn);
-      },
-      '展示牌庫頂牌；若購買費用為奇數則加入手牌，若為偶數則放入棄牌堆。',
-      factionResult.html
+    showActionPanel(
+      '自由派可在行動階段發動一次立場試探：展示牌庫頂牌；若購買費用為奇數則加入手牌，若為偶數則放入棄牌堆。',
+      '發動 立場試探',
+      () => sendAction('faction_action', { name: '立場試探' })
     );
     return;
   }
 
   const ethnicRitualFactions = new Set(['zhuang','yi','bai','hani','dai','miao','tujia','dong','buyei','yao','li']);
   if (ethnicRitualFactions.has(faction)) {
-    showCenteredActionPanel(
-      '民族祭儀',
-      hasResult ? '本回合發動結果如下。' : '可在行動階段發動一次民族祭儀，請先猜奇偶。',
-      (target) => {
-        const btn = document.createElement('button');
-        btn.className = 'modal-choice-btn';
-        btn.type = 'button';
-        btn.textContent = '發動 民族祭儀';
-        btn.onclick = openEthnicRitualGuessModal;
-        target.appendChild(btn);
-      },
-      '猜中可獲得 2 點宣傳與 2 點資金；沒猜中則獲得 2 點宣傳或 2 點資金（二選一）。',
-      factionResult.html
+    showActionPanel(
+      '可在行動階段發動一次民族祭儀：猜中可獲得 2 點宣傳與 2 點資金；沒猜中則獲得 2 點宣傳或 2 點資金（二選一）。',
+      '發動 民族祭儀',
+      openEthnicRitualGuessModal
     );
   }
 }
