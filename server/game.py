@@ -5878,6 +5878,15 @@ class Game:
         return {"success": True}
 
     def build_organization_with_support(self, origin_town, target_town):
+        """內部輔助：以 origin_town 為起點、在距離內的 target_town 建立組織。
+
+        注意：這**不是**玩家可直接操作的動作，前端與 WebSocket 都不再有入口。
+        建立組織只能經由卡牌／奧援／事件／年代效果產生的待決選擇來完成
+        （見 `_card_build_town_choices()`、`_interactive_support_build_towns()`、
+        `build_organization()`）。這個方法只保留給年代／事件／占領規則的驗證腳本
+        當作佈局工具使用，因此**不得**在此套用安全屋（或任何陣營被動）的距離加成——
+        安全屋「建立牆內組織時距離 +1」只該在上述卡牌觸發的候選清單裡生效。
+        """
         pending_error = self._pending_board_action_error()
         if pending_error:
             return pending_error
@@ -5901,11 +5910,7 @@ class Game:
         if not self._can_player_build_in_town(player, target_town):
             return {"error": "Cannot develop in this town"}
 
-        safehouse_bonus = 1 if (
-            self._player_has_ability(player, "安全屋")
-            and target_town in set(self._towns_for_region_alias("china"))
-        ) else 0
-        max_distance = 1 + int(getattr(player, 'build_range_bonus', 0) or 0) + safehouse_bonus
+        max_distance = 1 + int(getattr(player, 'build_range_bonus', 0) or 0)
         if origin_town != target_town and (not self._event_modifier_active('ignore_distance') or self._era_restricts_ignore_distance_build(player, target_town) or self._faction_restricts_ignore_distance_build(player, target_town)):
             frontier = [(origin_town, 0)]
             seen = {origin_town}

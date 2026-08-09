@@ -2351,92 +2351,7 @@ async function getFullMapData() {
 }
 
 let pendingBaseSelectionLabel = null;
-let pendingBuildOrigin = null;
 let lastBusinessNetworkResultKey = null;
-
-async function renderBuildSupport(state) {
-  const panel = document.getElementById('buildSupportPanel');
-  const info = document.getElementById('buildSupportInfo');
-  const originsEl = document.getElementById('buildSupportOrigins');
-  const targetsEl = document.getElementById('buildSupportTargets');
-  if (!panel || !info || !originsEl || !targetsEl) return;
-
-  const me = state.players?.find(p => p.id === playerId) || null;
-  const myFaction = me?.faction || null;
-  const owned = Object.keys(me?.orgs || {});
-  const isSafehouse = myFaction === 'hong_kong' && owned.some(t => ['香港城', '臺北'].includes(t));
-  const inAction = String(state.turn_phase).toLowerCase() === 'action';
-  const isMine = state.current_player && me && state.current_player === me.name;
-
-  panel.style.display = isSafehouse && inAction && isMine ? 'block' : 'none';
-  if (!(isSafehouse && inAction && isMine)) {
-    pendingBuildOrigin = null;
-    originsEl.innerHTML = '';
-    targetsEl.innerHTML = '';
-    info.textContent = '';
-    return;
-  }
-
-  const mapData = await getFullMapData();
-  const towns = mapData?.towns || {};
-  originsEl.innerHTML = '';
-  targetsEl.innerHTML = '';
-
-  info.textContent = pendingBuildOrigin
-    ? `起點：${pendingBuildOrigin}，牆內距離 2 內／牆外距離 1 內可作為建立目標`
-    : '安全屋只在建立牆內組織時，距離額外 +1。請先選擇建立起點。';
-
-  owned.forEach(origin => {
-    const btn = document.createElement('button');
-    btn.className = `base-choice-btn${pendingBuildOrigin === origin ? ' active' : ''}`;
-    btn.textContent = origin;
-    btn.onclick = async () => {
-      pendingBuildOrigin = origin;
-      await renderBuildSupport(state);
-    };
-    originsEl.appendChild(btn);
-  });
-
-  if (!pendingBuildOrigin) return;
-
-  // 安全屋卡面「建立牆內組織時，距離額外+1」只對牆內目標生效：牆內距離上限 2、
-  // 牆外仍是基礎距離 1，不能因為玩家持有安全屋就整個放寬成 2（比照後端
-  // Game._is_inside_wall_town()：牆內＝地圖資料 ruler 含紅軍）。
-  const baseDistance = 1;
-  const safehouseDistance = 2;
-  const maxDistance = Math.max(baseDistance, safehouseDistance);
-  const visited = new Set([pendingBuildOrigin]);
-  let frontier = [[pendingBuildOrigin, 0]];
-  const reachable = new Map();
-  while (frontier.length) {
-    const [town, dist] = frontier.shift();
-    if (dist >= maxDistance) continue;
-    const data = towns[town] || {};
-    const nexts = new Set([...(data.road || []), ...(data.rail || [])]);
-    for (const nxt of nexts) {
-      if (visited.has(nxt)) continue;
-      visited.add(nxt);
-      reachable.set(nxt, dist + 1);
-      frontier.push([nxt, dist + 1]);
-    }
-  }
-
-  Array.from(reachable.entries())
-    .filter(([town, dist]) => {
-      const isInsideWall = (towns[town]?.ruler || []).includes('紅軍');
-      const allowedDistance = isInsideWall ? safehouseDistance : baseDistance;
-      return dist <= allowedDistance;
-    })
-    .map(([town]) => town)
-    .sort()
-    .forEach(target => {
-      const btn = document.createElement('button');
-      btn.className = 'base-choice-btn';
-      btn.textContent = target;
-      btn.onclick = () => sendAction('build', { from: pendingBuildOrigin, town: target });
-      targetsEl.appendChild(btn);
-    });
-}
 
 function renderFactionActionPanel(state) {
   const panel = document.getElementById('factionActionPanel');
@@ -3458,7 +3373,6 @@ async function render(state) {
   renderFactionDetails(inBaseSelection ? null : detailFactionId, detailBaseName, pendingFactionBaseGroup);
   renderMyFactionView(state);
   renderMyEraStageView(state);
-  await renderBuildSupport(state);
   renderFactionActionPanel(state);
   renderBaseSelection(state);
   renderEraAchievement(state);

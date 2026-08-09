@@ -638,10 +638,13 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
             elif action == "set_base":
                 result = game.set_base_choice(player_id, data.get("town"))
             elif action == "build":
-                if data.get("from") and data.get("town"):
-                    result = game.build_organization_with_support(data.get("from"), data.get("town"))
-                else:
-                    result = game.build_organization(data.get("town"))
+                # 建立組織一律走 build_organization()：它會先把玩家目前的待決建立選擇
+                # （卡牌／奧援／事件／年代效果產生的 pending choice）在該城鎮上結算。
+                # 舊的 `from` 分支會呼叫 build_organization_with_support()，等於給玩家一個
+                # 「不用出牌、每回合免費指定起點跨距離建組織」的動作；回合流程（
+                # data/turn_flow.v1.1.json 行動階段）並沒有這種動作，它只是安全屋被誤做成
+                # 主動按鈕時的後端入口，已隨前端面板一併移除。
+                result = game.build_organization(data.get("town"))
             elif action == "move":
                 result = game.move_organization(
                     data.get("from"),
@@ -3833,10 +3836,15 @@ def test_setup_peer_choice_notice_proof(payload: dict):
 
 @app.post("/test/setup-safehouse-range-proof")
 def test_setup_safehouse_range_proof(payload: dict):
-    """Proof setup for the 2026-08-09 playtest bug: 安全屋's +1 build distance should only
-    apply to targets INSIDE the wall (牆內); the frontend candidate list (both the 支援建立
-    side panel and the map's build highlighting) was unconditionally extending to 2 steps in
-    every direction, offering illegal outside-the-wall targets too."""
+    """Proof setup for the 2026-08-09 playtest bug: 安全屋 是被動能力（passive），
+    不該有任何專屬按鈕／面板／地圖捷徑；它唯一的表現方式，是玩家用正常方式（打出帶
+    build 效果的行動卡）建立組織時，牆內目標的可建立距離 +1。
+
+    payload:
+      base: "臺北"（預設）或 "香港城"，兩個都是帶安全屋的香港根據地。
+      card: 選填，發一張指定的行動卡到 viewer 手上，用來證明「卡牌觸發的建立候選
+            清單仍然含有 2 格外的牆內城鎮」（正面案例，例：組織經驗丙）。
+    """
     game_id = str(uuid.uuid4())
     players = [(str(uuid.uuid4()), "viewer"), (str(uuid.uuid4()), "opponent")]
     game = Game(players)
@@ -3852,6 +3860,13 @@ def test_setup_safehouse_range_proof(payload: dict):
     viewer.hand = []
     viewer.deck.draw_pile = []
     viewer.deck.discard_pile = []
+
+    card_name = payload.get("card")
+    if card_name:
+        card_def = next((c for c in game.structured_cards if c.get("name") == card_name), None)
+        if not card_def:
+            return {"error": f"找不到卡牌：{card_name}"}
+        viewer.hand = [Card(card_def["name"], card_def["type"], card_def.get("resources", {}) or {})]
 
     opponent.faction_id = "red_army"
     opponent.base = "北京"

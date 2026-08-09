@@ -1,19 +1,63 @@
 {
-  "generated_at": "2026-08-09T20:45:58",
-  "total": 2,
-  "passed": 2,
+  "generated_at": "2026-08-09T21:07:29",
+  "total": 4,
+  "passed": 4,
   "failed": 0,
   "results": [
     {
-      "name": "support_panel_taipei_outside_wall_targets_capped_at_1_step",
+      "name": "no_safehouse_button_at_game_start_base_臺北",
       "status": "passed",
       "failures": [],
-      "screenshot": "docs/records/safehouse/support-panel-taipei-targets.png"
+      "screenshot": "docs/records/safehouse/safehouse-no-button-at-game-start-臺北.png",
+      "probe": {
+        "leftover_dom_ids": [],
+        "render_fn_still_defined": false,
+        "clickable_safehouse_labels": [],
+        "page_mentions_support_panel": false,
+        "page_mentions_safehouse": false,
+        "turn_phase": "action",
+        "pending_choice": null
+      }
     },
     {
-      "name": "map_build_options_taipei_outside_wall_targets_capped_at_1_step",
+      "name": "no_safehouse_button_at_game_start_base_香港城",
       "status": "passed",
-      "failures": []
+      "failures": [],
+      "screenshot": "docs/records/safehouse/safehouse-no-button-at-game-start-香港城.png",
+      "probe": {
+        "leftover_dom_ids": [],
+        "render_fn_still_defined": false,
+        "clickable_safehouse_labels": [],
+        "page_mentions_support_panel": false,
+        "page_mentions_safehouse": false,
+        "turn_phase": "action",
+        "pending_choice": null
+      }
+    },
+    {
+      "name": "map_has_no_safehouse_build_shortcut",
+      "status": "passed",
+      "failures": [],
+      "screenshot": "docs/records/safehouse/safehouse-map-no-shortcut.png"
+    },
+    {
+      "name": "card_triggered_build_still_offers_two_step_inner_town",
+      "status": "passed",
+      "failures": [],
+      "screenshot": "docs/records/safehouse/safehouse-card-build-choice-includes-two-step-inner.png",
+      "choice_towns": [
+        "九龍城",
+        "廣州",
+        "柴灣",
+        "沙田",
+        "油尖旺",
+        "澳門",
+        "葵青",
+        "西貢",
+        "觀塘",
+        "赤柱",
+        "赤臘角"
+      ]
     }
   ]
 }

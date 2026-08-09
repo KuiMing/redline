@@ -112,7 +112,6 @@ const roadLayer = L.layerGroup().addTo(map);
 const railLayer = L.layerGroup().addTo(map);
 const markerLayer = L.layerGroup().addTo(map);
 const highlightLayer = L.layerGroup().addTo(map);
-const buildHighlightLayer = L.layerGroup().addTo(map);
 const supportChoiceHighlightLayer = L.layerGroup().addTo(map);
 let labelMode = 'auto', showRoad = true, showRail = true;
 let currentMarkers = new Map();
@@ -121,7 +120,6 @@ let currentVisible = towns.map(t=>t.name);
 let lastGameState = null;
 let selectedTown = null;
 let selectedMoveTargets = [];
-let selectedBuildTargets = [];
 let pendingMove = null;
 let pendingMoveTarget = null;
 let lastResolvedMove = null;
@@ -221,7 +219,6 @@ function resetMoveSelection() {
 function exitMovementSelection() {
   selectedTown = null;
   resetMoveSelection();
-  resetBuildSelection();
   highlightLayer.clearLayers();
   renderMap();
   applyGameStateToMap(lastGameState);
@@ -231,11 +228,6 @@ function exitMovementSelection() {
   if (info) {
     info.innerHTML = '<div class="name">尚未選取城鎮</div><div>點擊自己的組織城鎮查看後端判定的合法移動目的地。</div>';
   }
-}
-
-function resetBuildSelection() {
-  selectedBuildTargets = [];
-  buildHighlightLayer.clearLayers();
 }
 
 function supportChoiceHighlightKey(payload) {
@@ -273,7 +265,6 @@ function selectTownForCurrentMapAction(townName, options = {}) {
   const { autoFocus = true } = options;
   updateInfoPanel(townName);
   resetMoveSelection();
-  resetBuildSelection();
   renderMap();
   applyGameStateToMap(lastGameState);
   const didHighlight = renderMovementHighlights(townName, { autoFocus });
@@ -437,18 +428,14 @@ function updateStatusPanel() {
     } else if (lastResolvedMove) {
       hintEl.innerHTML = `已完成移動：<span class="hint-strong">${lastResolvedMove.from}</span> → <span class="hint-strong">${lastResolvedMove.to}</span>`;
     } else if (!selectedTown) {
-      hintEl.innerHTML = playerHasSafehouse()
-        ? '連上遊戲後，點選自己的香港組織城鎮，可同時查看移動與 <span class="hint-strong">安全屋建立範圍</span>。若城鎮有共享組織，會以 <span class="hint-strong">金色外框與 S 標記</span> 顯示。'
-        : '連上遊戲後，只有 <span class="hint-strong">當前玩家自己擁有組織</span> 的城鎮可以高亮合法移動；若城鎮具有共享組織，會以 <span class="hint-strong">金色外框與 S 標記</span> 顯示。';
+      hintEl.innerHTML = '連上遊戲後，只有 <span class="hint-strong">當前玩家自己擁有組織</span> 的城鎮可以高亮合法移動；若城鎮具有共享組織，會以 <span class="hint-strong">金色外框與 S 標記</span> 顯示。';
     } else if (eventBuildChoiceForTown(selectedTown)) {
       hintEl.innerHTML = `已選取 <span class="hint-strong">${selectedTown}</span>：事件卡效果允許在此建立組織，請使用左側「在目前城鎮建立組織（事件卡）」按鈕完成。`;
     } else if (playerOwnsTown(selectedTown)) {
       const opts = movementOptionsForTown(selectedTown);
       const destinationCount = new Set([...opts.road, ...opts.rail].map(entry => entry.town)).size;
-      const buildOpts = playerHasSafehouse() ? buildOptionsForTown(selectedTown) : [];
       const sharedHint = playerHasSharedAccessToTown(selectedTown) ? ' 此城鎮也處於共享組織狀態。' : '';
-      hintEl.innerHTML = `已選取 <span class="hint-strong">${selectedTown}</span>：合法移動目的地 ${destinationCount} 個` +
-        (buildOpts.length ? `，安全屋可建立 ${buildOpts.length} 個目標。` : '。') + sharedHint;
+      hintEl.innerHTML = `已選取 <span class="hint-strong">${selectedTown}</span>：合法移動目的地 ${destinationCount} 個。` + sharedHint;
     } else if (playerHasSharedAccessToTown(selectedTown)) {
       hintEl.innerHTML = `已選取 <span class="hint-strong">${escapeHtml(selectedTown)}</span>：此城鎮對當前玩家具有 <span class="hint-strong">共享組織</span> 可用性，但互動高亮規則尚未完全支援共享組織狀態。`;
     } else {
@@ -621,10 +608,6 @@ function sharedDissolveTargetForTown(townName) {
   return owner;
 }
 
-function townHasAnyOrganization(townName) {
-  return totalOrganizationsInTown(townName) > 0;
-}
-
 function movementOptionsForTown(townName) {
   if (!lastGameState || !townName) return { road: [], rail: [] };
   const projected = lastGameState.map?.legal_organization_moves?.[townName];
@@ -644,51 +627,11 @@ function currentPlayerState() {
   return (lastGameState.players || []).find(p => p.id === mapPlayerId) || null;
 }
 
-function playerHasSafehouse() {
-  const player = currentPlayerState();
-  if (!player || player.faction !== 'hong_kong') return false;
-  return ['香港城', '臺北'].some(t => (player.orgs || {})[t] > 0);
-}
-
-function isInsideWallTown(townName) {
-  // 比照後端 Game._is_inside_wall_town()：牆內＝地圖資料的 ruler 含紅軍，不是玩家目前
-  // 控制狀態。安全屋卡面「建立牆內組織時，距離額外+1」只對牆內目標生效，牆外目標仍是
-  // 基礎距離 1，不能因為玩家有安全屋就整個放寬成 2。
-  return ((MAP_DATA.towns[townName] || {}).ruler || []).includes('紅軍');
-}
-
-function buildOptionsForTown(originTown) {
-  if (!lastGameState || !originTown || !playerHasSafehouse()) return [];
-  if (!canActFromTown(originTown)) return [];
-
-  const baseDistance = 1;
-  const safehouseDistance = 2; // 僅牆內目標適用
-  const maxDistance = Math.max(baseDistance, safehouseDistance);
-  const visited = new Set([originTown]);
-  const queue = [[originTown, 0]];
-  const reachable = new Map(); // town -> 最短距離
-
-  while (queue.length) {
-    const [town, dist] = queue.shift();
-    if (dist >= maxDistance) continue;
-    const data = MAP_DATA.towns[town] || {};
-    const neighbors = new Set([...(data.road || []), ...(data.rail || [])]);
-    for (const nxt of neighbors) {
-      if (visited.has(nxt)) continue;
-      visited.add(nxt);
-      reachable.set(nxt, dist + 1);
-      queue.push([nxt, dist + 1]);
-    }
-  }
-
-  return Array.from(reachable.entries())
-    .filter(([town, dist]) => {
-      if (!MAP_DATA.towns[town] || townHasAnyOrganization(town)) return false;
-      const allowedDistance = isInsideWallTown(town) ? safehouseDistance : baseDistance;
-      return dist <= allowedDistance;
-    })
-    .map(([town]) => town);
-}
+// 安全屋是被動能力（資料 type: "passive"），只會在「玩家用正常方式建立組織時」把可建立
+// 距離 +1，不該有自己的按鈕、面板或地圖高亮捷徑。原本這裡的 playerHasSafehouse()／
+// buildOptionsForTown() 會在香港玩家點選自己城鎮時直接標出額外候選、點下去就免出牌建組織，
+// 等於把被動能力做成主動動作，已整組移除；安全屋的 +1 只保留在後端卡牌／奧援建立候選清單
+// （Game._card_build_town_choices()／_interactive_support_build_towns()）。
 
 function renderMovementHighlights(townName, options = {}) {
   const { autoFocus = false } = options;
@@ -701,7 +644,6 @@ function renderMovementHighlights(townName, options = {}) {
   selectedTown = townName;
   selectedMoveTargets = [];
   lastResolvedMove = null;
-  resetBuildSelection();
   // renderMap() 呼叫 renderSupportChoiceHighlights() 的時間點早於這裡設定 selectedTown，
   // 因此瓦解 💀 標記的「已選取待確認」樣式需要在這裡再刷新一次，才能反映最新選取
   // （2026-08-02：瓦解確認流程改為選取＋按鈕兩步驟後新增）。
@@ -781,23 +723,6 @@ function renderMovementHighlights(townName, options = {}) {
     if (marker) marker.setStyle(candidateStyle(toName, 'rail'));
   }
 
-  if (playerHasSafehouse()) {
-    const buildTargets = buildOptionsForTown(townName);
-    selectedBuildTargets = buildTargets.slice();
-    for (const toName of buildTargets) {
-      const target = byName.get(toName);
-      if (!target) continue;
-      L.circleMarker([target.lat, target.lon], {
-        radius: Math.max(9, markerRadius(map.getZoom()) + 2),
-        color: '#cbd5e1',
-        weight: 3,
-        fillColor: '#cbd5e1',
-        fillOpacity: 0.08,
-        opacity: 1,
-      }).addTo(buildHighlightLayer).bindPopup(`安全屋可建立：${townName} → ${toName}`);
-    }
-  }
-
   if (sharedOnly) {
     L.circleMarker([origin.lat, origin.lon], {
       radius: Math.max(12, markerRadius(map.getZoom()) + 5),
@@ -815,7 +740,7 @@ function renderMovementHighlights(townName, options = {}) {
   refreshDirectBuildUi();
   updateStatusPanel();
   renderSupportChoiceHighlights();
-  return highlightCount > 0 || sharedOnly || selectedBuildTargets.length > 0;
+  return highlightCount > 0 || sharedOnly;
 }
 
 function moveOptionForTown(townName) {
@@ -1060,12 +985,6 @@ function renderMap() {
         return;
       }
 
-      if (selectedTown && selectedBuildTargets.includes(t.name) && playerHasSafehouse()) {
-        if (!requireOpenMapSocket()) return;
-        mapWs.send(JSON.stringify({ action: 'build', from: selectedTown, town: t.name }));
-        return;
-      }
-
       // While choosing a movement destination, clicking an unrelated town is treated the
       // same as clicking empty map background: cancel the whole selection (2026-08-05
       // 使用者需求，「點地圖其他任意地方就取消」，比照 map.on('click') 對空白背景已有的
@@ -1114,14 +1033,9 @@ function focusSelectedTown(townName) {
   if (!origin || !map) return;
 
   const moveOptions = movementOptionsForTown(townName);
-  const buildOptions = playerHasSafehouse() ? buildOptionsForTown(townName) : [];
   const pts = [[origin.lat, origin.lon]];
   [...moveOptions.road, ...moveOptions.rail].forEach(option => {
     const t = byName.get(option.town);
-    if (t) pts.push([t.lat, t.lon]);
-  });
-  buildOptions.forEach(name => {
-    const t = byName.get(name);
     if (t) pts.push([t.lat, t.lon]);
   });
 
