@@ -17,6 +17,13 @@
 
 ## 目前 active todo
 
+### P1：安全屋建立距離 +1 不分牆內牆外一律放寬，前端一開始就能看到超距候選
+- [done] 使用者 playtest 回報：『安全屋：建立牆內組織時，可建立組織距離額外增加1格』，使用者指出這應該只有建立牆內組織時才生效，但實際上一開始就出現一個「安全屋」相關的建立面板，要求選擇建立起點，感覺本末倒置；並要求順便檢查攬炒策略是否做對。（2026-08-09 使用者 playtest 回報並要求修正）
+  - **安全屋根因**：後端 `server/game.py` 有 4 處會套用安全屋加成，其中 `build_organization_with_support()`（第 5901 行附近）與 `_card_build_town_choices()`（卡牌觸發建組織的候選清單）都正確地只對牆內（`_is_inside_wall_town`／ruler 含紅軍）目標套用 +1，行為本身沒錯。真正的問題在**前端有兩處各自重算候選城鎮的距離**、完全沒有牆內/牆外之分：`static/app.js` 的「支援建立」側欄（`renderBuildSupport`）與 `static/leaflet_game_map_logic.js` 地圖點選建組織高亮（`buildOptionsForTown`），兩處都用寫死的 2 步 BFS，只要玩家持有安全屋，選任何一座自己的城鎮當起點就會立刻把 2 步內所有城鎮（不分牆內牆外）都列為候選——這正是使用者「一開始就能發動」的實際感受來源：不是能力真的被動觸發早了，是候選清單一律放寬、看起來像隨時可用。「支援建立」本身是既有、獨立於卡牌的正常建組織board action（可比照瓦解/移動，任何玩家本回合都能用，不是安全屋專屬），問題純粹在距離計算沒有分牆內外。
+  - **安全屋修法**：兩處前端候選計算都改成「牆內目標距離上限 2、牆外目標距離上限 1」（比照後端 `_is_inside_wall_town`：地圖資料 ruler 含紅軍即牆內），不再因為玩家持有安全屋就整個放寬。同時修正「支援建立」面板的提示文字，明講只有牆內才 +1。順手發現並修正 `build_organization_with_support()` 缺少 `_has_org_supply` 組織棋供應上限檢查（既有的 `build_organization()`／plain 版本有這個檢查，support 版本漏掉了，屬於這次順帶查到的獨立小缺陷，一併補上）。
+  - **攬炒策略檢查結果：實作正確，未發現問題**。查證：`type: "setup"`（遊戲開始時觸發一次，非被動/非每回合），在 `Game.__init__` 於 `_assign_factions` 之後、`static_purchase_supply` 初始化之後才呼叫 `_apply_setup_abilities`，且攬炒策略掛在陣營層級（非根據地層級），不受根據地是否已選定影響；正確從 `STATIC_PURCHASE_CARD_SUPPLY`（固定供應池）扣減宣傳家、供應為 0 時正確跳過不硬塞；「洗入起始牌庫」語意正確——把已抽的起手牌收回、連新卡整副重洗、重抽同張數，讓新卡真的可能出現在起手牌。既有 validator `scripts/validate_setup_cards_shuffled_into_deck.py` 已涵蓋攬炒策略等 5 個 setup 型能力，6/6 全過（本次重跑確認未受影響）。
+  - 驗證：完整 pytest（同 baseline ignore 清單）**327/327 全過**（含 `test_taiwan_support_counts_as_prior_propaganda_cost_card_for_ignite_passion` 既有 flaky 測試單獨重跑穩定通過，與本次改動無關）；既有 `scripts/validate_safehouse_build_range.py`（後端距離邏輯）不受影響、依舊通過。新增 `scripts/validate_safehouse_range_frontend.py`：以正式啟動中伺服器＋真實瀏覽器分別驅動「支援建立」側欄與戰略地圖 `buildOptionsForTown()`（直接呼叫地圖 iframe 內的正式函式，非假 DOM/CSS proof），從臺北出發確認牆外候選正確收斂為 1 步（基隆/新北/桃園），先前會誤出現的牆外 2 步城鎮（宜蘭/新竹/沖繩/金門/馬祖）都不再出現，**2/2 全過**（重跑 3 次穩定）。
+
 ### P2：香港陣營 special_rules 移除多餘的 OCR 不穩備註
 - [done] 使用者要求：香港陣營說明裡有一條「卡面另有一條推測規則文字，但 OCR 不穩，未納入正式欄位。」，使用者認為多餘，要求移除。（2026-08-09 使用者提出）
   - 這條備註原本是資料整理階段留下的內部註記（並非正式規則），會被原樣顯示在玩家看到的陣營說明裡。從 `data/factions/hong_kong.v1.1.json`、`data/factions/all_faction.integrated.v2.json`（伺服器實際載入的來源，`server/game.py` `FACTIONS_PATH`）、`data/factions/all_faction.json` 三份資料檔的香港 `special_rules` 陣列中移除這一項，其餘三條正式規則不變。

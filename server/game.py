@@ -5896,6 +5896,8 @@ class Game:
             return {"error": "No organization in origin"}
         if self._red_army_base_build_blocked(getattr(player, 'faction_id', None), target_town):
             return {"error": "Red Army cannot rebuild this base during the current turn"}
+        if not self._has_org_supply(player):
+            return {"error": f"組織棋已達上限（{self._org_supply_limit(player)}），需先瓦解既有組織"}
         if not self._can_player_build_in_town(player, target_town):
             return {"error": "Cannot develop in this town"}
 

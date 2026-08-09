@@ -1,0 +1,19 @@
+{
+  "generated_at": "2026-08-09T20:45:58",
+  "total": 2,
+  "passed": 2,
+  "failed": 0,
+  "results": [
+    {
+      "name": "support_panel_taipei_outside_wall_targets_capped_at_1_step",
+      "status": "passed",
+      "failures": [],
+      "screenshot": "docs/records/safehouse/support-panel-taipei-targets.png"
+    },
+    {
+      "name": "map_build_options_taipei_outside_wall_targets_capped_at_1_step",
+      "status": "passed",
+      "failures": []
+    }
+  ]
+}

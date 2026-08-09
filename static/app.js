@@ -2383,8 +2383,8 @@ async function renderBuildSupport(state) {
   targetsEl.innerHTML = '';
 
   info.textContent = pendingBuildOrigin
-    ? `起點：${pendingBuildOrigin}，請選擇距離 2 內的建立目標`
-    : '安全屋可讓你建立距離 +1。請先選擇建立起點。';
+    ? `起點：${pendingBuildOrigin}，牆內距離 2 內／牆外距離 1 內可作為建立目標`
+    : '安全屋只在建立牆內組織時，距離額外 +1。請先選擇建立起點。';
 
   owned.forEach(origin => {
     const btn = document.createElement('button');
@@ -2399,10 +2399,15 @@ async function renderBuildSupport(state) {
 
   if (!pendingBuildOrigin) return;
 
-  const maxDistance = 2;
+  // 安全屋卡面「建立牆內組織時，距離額外+1」只對牆內目標生效：牆內距離上限 2、
+  // 牆外仍是基礎距離 1，不能因為玩家持有安全屋就整個放寬成 2（比照後端
+  // Game._is_inside_wall_town()：牆內＝地圖資料 ruler 含紅軍）。
+  const baseDistance = 1;
+  const safehouseDistance = 2;
+  const maxDistance = Math.max(baseDistance, safehouseDistance);
   const visited = new Set([pendingBuildOrigin]);
   let frontier = [[pendingBuildOrigin, 0]];
-  const reachable = new Set();
+  const reachable = new Map();
   while (frontier.length) {
     const [town, dist] = frontier.shift();
     if (dist >= maxDistance) continue;
@@ -2411,18 +2416,26 @@ async function renderBuildSupport(state) {
     for (const nxt of nexts) {
       if (visited.has(nxt)) continue;
       visited.add(nxt);
-      reachable.add(nxt);
+      reachable.set(nxt, dist + 1);
       frontier.push([nxt, dist + 1]);
     }
   }
 
-  Array.from(reachable).sort().forEach(target => {
-    const btn = document.createElement('button');
-    btn.className = 'base-choice-btn';
-    btn.textContent = target;
-    btn.onclick = () => sendAction('build', { from: pendingBuildOrigin, town: target });
-    targetsEl.appendChild(btn);
-  });
+  Array.from(reachable.entries())
+    .filter(([town, dist]) => {
+      const isInsideWall = (towns[town]?.ruler || []).includes('紅軍');
+      const allowedDistance = isInsideWall ? safehouseDistance : baseDistance;
+      return dist <= allowedDistance;
+    })
+    .map(([town]) => town)
+    .sort()
+    .forEach(target => {
+      const btn = document.createElement('button');
+      btn.className = 'base-choice-btn';
+      btn.textContent = target;
+      btn.onclick = () => sendAction('build', { from: pendingBuildOrigin, town: target });
+      targetsEl.appendChild(btn);
+    });
 }
 
 function renderFactionActionPanel(state) {

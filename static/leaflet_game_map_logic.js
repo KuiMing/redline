@@ -650,14 +650,23 @@ function playerHasSafehouse() {
   return ['香港城', '臺北'].some(t => (player.orgs || {})[t] > 0);
 }
 
+function isInsideWallTown(townName) {
+  // 比照後端 Game._is_inside_wall_town()：牆內＝地圖資料的 ruler 含紅軍，不是玩家目前
+  // 控制狀態。安全屋卡面「建立牆內組織時，距離額外+1」只對牆內目標生效，牆外目標仍是
+  // 基礎距離 1，不能因為玩家有安全屋就整個放寬成 2。
+  return ((MAP_DATA.towns[townName] || {}).ruler || []).includes('紅軍');
+}
+
 function buildOptionsForTown(originTown) {
   if (!lastGameState || !originTown || !playerHasSafehouse()) return [];
   if (!canActFromTown(originTown)) return [];
 
-  const maxDistance = 2;
+  const baseDistance = 1;
+  const safehouseDistance = 2; // 僅牆內目標適用
+  const maxDistance = Math.max(baseDistance, safehouseDistance);
   const visited = new Set([originTown]);
   const queue = [[originTown, 0]];
-  const reachable = new Set();
+  const reachable = new Map(); // town -> 最短距離
 
   while (queue.length) {
     const [town, dist] = queue.shift();
@@ -667,12 +676,18 @@ function buildOptionsForTown(originTown) {
     for (const nxt of neighbors) {
       if (visited.has(nxt)) continue;
       visited.add(nxt);
-      reachable.add(nxt);
+      reachable.set(nxt, dist + 1);
       queue.push([nxt, dist + 1]);
     }
   }
 
-  return Array.from(reachable).filter(town => MAP_DATA.towns[town] && !townHasAnyOrganization(town));
+  return Array.from(reachable.entries())
+    .filter(([town, dist]) => {
+      if (!MAP_DATA.towns[town] || townHasAnyOrganization(town)) return false;
+      const allowedDistance = isInsideWallTown(town) ? safehouseDistance : baseDistance;
+      return dist <= allowedDistance;
+    })
+    .map(([town]) => town);
 }
 
 function renderMovementHighlights(townName, options = {}) {

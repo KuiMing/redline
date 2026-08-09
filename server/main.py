@@ -3829,3 +3829,55 @@ def test_setup_peer_choice_notice_proof(payload: dict):
         "viewer_player_id": viewer.id,
         "state": game.state(),
     }
+
+
+@app.post("/test/setup-safehouse-range-proof")
+def test_setup_safehouse_range_proof(payload: dict):
+    """Proof setup for the 2026-08-09 playtest bug: 安全屋's +1 build distance should only
+    apply to targets INSIDE the wall (牆內); the frontend candidate list (both the 支援建立
+    side panel and the map's build highlighting) was unconditionally extending to 2 steps in
+    every direction, offering illegal outside-the-wall targets too."""
+    game_id = str(uuid.uuid4())
+    players = [(str(uuid.uuid4()), "viewer"), (str(uuid.uuid4()), "opponent")]
+    game = Game(players)
+
+    viewer = game.players[0]
+    opponent = game.players[1]
+
+    base = payload.get("base", "臺北")
+
+    viewer.faction_id = "hong_kong"
+    viewer.base = base
+    viewer.organizations = {base: 1}
+    viewer.hand = []
+    viewer.deck.draw_pile = []
+    viewer.deck.discard_pile = []
+
+    opponent.faction_id = "red_army"
+    opponent.base = "北京"
+    opponent.organizations = {"北京": 1}
+    opponent.hand = []
+
+    game.current_player_index = 0
+    game.turn_phase = TurnPhase.ACTION
+    game.game_phase = GamePhase.MAIN
+    game.pending_base_choices = {}
+    noop_event = game._event_by_name("歲月靜好")
+    game.current_event = dict(noop_event or {})
+    game.event_progress = {"count": 0, "required": 0, "succeeded": True, "settled": True, "status": "idle"}
+    game.event_modifiers = []
+    game.id = game_id
+
+    manager.games[game_id] = game
+    manager.connections[game_id] = manager.connections.get(game_id, {})
+    lobby[game_id] = list(zip([p.id for p in game.players], [p.name for p in game.players]))
+    lobby_hosts[game_id] = viewer.id
+    lobby_factions[game_id] = {viewer.id: viewer.faction_id, opponent.id: opponent.faction_id}
+    lobby_bases[game_id] = {viewer.id: viewer.base, opponent.id: opponent.base}
+
+    return {
+        "success": True,
+        "game_id": game_id,
+        "player_id": viewer.id,
+        "state": game.state(),
+    }
