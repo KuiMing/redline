@@ -1926,23 +1926,31 @@ def test_liberals_stance_probe_adds_odd_cost_top_card_to_hand():
 
 
 def test_liberals_stance_probe_discards_even_cost_top_card():
+    # 2026-08-09 改用真實購買區卡牌（乘勝追擊，購買費用 2=偶數）而非亂編名稱＋任意資源
+    # 字典：能力猜的是「購買費用」，不是印刷資源，用假卡名只會巧合湊出偶數、掩蓋不了
+    # `_top_card_cost_total` 曾經優先看資源、購買費用查詢分支形同 dead code 的問題。
     g = make_game()
     p = g.current_player()
     # 立場試探現屬自由派（liberals）；舊測試用的 'fujian' 陣營 id 已不存在。
     p.faction_id = 'liberals'
     p.hand = []
-    p.deck.draw_pile = [Card('Bottom', 'command', {}), Card('EvenTop', 'command', {'money': 2})]
+    p.deck.draw_pile = [Card('Bottom', 'command', {}), card(g, '乘勝追擊')]
 
     result = g._activated_faction_action(p, '立場試探')
 
     assert result.get('success'), result
     assert names(p.hand) == []
-    assert names(p.deck.discard_pile) == ['EvenTop']
+    assert names(p.deck.discard_pile) == ['乘勝追擊']
     assert g.turn_log.get('faction_action_used') is True
 
 
 
-def test_liberals_stance_probe_treats_starter_donor_as_odd_cost_and_adds_it_to_hand():
+def test_liberals_stance_probe_treats_starter_donor_as_even_cost_and_discards_it():
+    # 2026-08-09 使用者 playtest 回報並更正：立場試探／賭徒耳語／民族祭儀猜的是牌庫頂牌
+    # 的「購買費用」，不是印刷資源；樂捐者是起始牌，從未在購買區出現，真正購買費用是 0
+    # （偶數）。舊實作優先讀 card.resources（樂捐者印 1 資金）誤判成奇數，這支測試先前
+    # 名稱與斷言把這個錯誤行為當成正確答案寫死，現在改成驗證正確結果：偶數費用應該被
+    # 放入棄牌堆，不是加入手牌。
     g = make_game()
     p = g.current_player()
     # 立場試探現屬自由派（liberals）；舊測試用的 'fujian' 陣營 id 已不存在。
@@ -1954,9 +1962,9 @@ def test_liberals_stance_probe_treats_starter_donor_as_odd_cost_and_adds_it_to_h
     result = g._activated_faction_action(p, '立場試探')
 
     assert result.get('success'), result
-    assert names(p.hand) == ['Existing', '樂捐者']
-    assert names(p.deck.discard_pile) == []
-    assert g.action_log[-1] == '[Turn 1] P1 triggered 立場試探 and added 樂捐者 to hand'
+    assert names(p.hand) == ['Existing']
+    assert names(p.deck.discard_pile) == ['樂捐者']
+    assert g.action_log[-1] == '[Turn 1] P1 triggered 立場試探 and discarded 樂捐者'
 
 
 

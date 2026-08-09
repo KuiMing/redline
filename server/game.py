@@ -3869,9 +3869,13 @@ class Game:
         return 0
 
     def _top_card_cost_total(self, card):
-        resources = getattr(card, 'resources', None)
-        if isinstance(resources, dict):
-            return self._resource_total(resources)
+        # 2026-08-09 使用者 playtest 回報：立場試探／賭徒耳語／民族祭儀三個能力的文字都
+        # 明講是猜「購買費用」奇偶（購買區標價，不是打出後拿到的資源），但這裡先前優先看
+        # card.resources——而每張 Card 物件永遠有 resources 屬性（見 server/cards.py 的
+        # `resources or {"money": 0, "propaganda": 0}` 預設），所以下面的購買費用查詢分支
+        # 其實從未被真正執行過。對追隨者／樂捐者這類起始牌影響最大：它們沒有真正的購買
+        # 價格（規則書：起始牌不會在遊戲中被購買），正確費用應為 0（偶數），但舊邏輯誤用
+        # 印刷資源（例如樂捐者資源為1資金，被誤判成奇數）。
         return self._purchase_area_card_cost_total(card)
 
     def _non_red_players(self):

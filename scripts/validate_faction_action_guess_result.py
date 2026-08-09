@@ -10,14 +10,24 @@ from server.cards import Card
 from server.game import Game
 
 
-def run_guess_case(action_name, faction_id, revealed_card, revealed_resources, guess,
+def _structured_card(game, name):
+    entry = next(c for c in game.structured_cards if c['name'] == name)
+    return Card(entry['name'], entry['type'], dict(entry.get('resources', {})))
+
+
+def run_guess_case(action_name, faction_id, revealed_card, expected_cost_total, guess,
                    expected_hit, expected_reward, miss_reward_index=None,
                    extra_hand=None, bottom_card_name=None):
+    # 2026-08-09 使用者 playtest 回報並更正：這三個能力猜的是牌庫頂牌的「購買費用」
+    # （購買區標價），不是打出後拿到的印刷資源；改用真實購買區卡牌（購買費用與印刷
+    # 資源刻意不同奇偶，見下方 main() 的選牌註解）驅動，不再用亂編卡名＋任意資源
+    # 字典湊出奇偶——那樣寫法即使 `_top_card_cost_total` 曾經誤看資源而非購買費用，
+    # 也會因為亂編卡名查無購買費用（fallback 為 0）而巧合通過，測不出真正的回歸。
     game = Game([('p1', 'P1'), ('p2', 'P2')])
     player = game.players[0]
     player.faction_id = faction_id
     player.hand = [Card('墊牌', 'money', {'money': 1})] + [Card(n, 'command', {}) for n in (extra_hand or [])]
-    player.deck.draw_pile = [Card(revealed_card, 'money', revealed_resources)]
+    player.deck.draw_pile = [Card('Bottom', 'command', {}), _structured_card(game, revealed_card)]
     player.deck.discard_pile = []
     expected_bottom = bottom_card_name or '墊牌'
     before_hand_count = len(player.hand)
@@ -43,7 +53,7 @@ def run_guess_case(action_name, faction_id, revealed_card, revealed_resources, g
         'success': result.get('success') is True,
         'result_name': payload.get('name') == action_name,
         'revealed_card': payload.get('revealed_card') == revealed_card,
-        'cost_total': payload.get('cost_total') == sum(revealed_resources.values()),
+        'cost_total': payload.get('cost_total') == expected_cost_total,
         'guess': payload.get('guess') == guess,
         'hit': payload.get('hit') is expected_hit,
         'reward': payload.get('reward') == expected_reward,
@@ -96,13 +106,16 @@ def check_static_result_text():
 
 def main():
     RECORD_DIR.mkdir(parents=True, exist_ok=True)
+    # 宣傳家：購買費用 0+3=3（奇數），印刷資源 2（偶數）——刻意選一張購買費用與印刷資源
+    # 奇偶不同的牌，才能真正測出「猜的是購買費用」而不是不小心測到印刷資源。
+    # 乘勝追擊：購買費用 2+0=2（偶數），印刷資源 1（奇數），同理。
     tests = [
-        run_guess_case('賭徒耳語', 'aomen', '奇數牌', {'money': 1}, 'odd', True, {'money': 3, 'propaganda': 3}),
-        run_guess_case('賭徒耳語', 'aomen', '偶數牌', {'money': 2}, 'odd', False, {'money': 0, 'propaganda': 0}),
-        run_guess_case('民族祭儀', 'zhuang', '偶數牌', {'money': 2}, 'even', True, {'money': 2, 'propaganda': 2}),
-        run_guess_case('民族祭儀', 'zhuang', '奇數牌', {'money': 1}, 'even', False, {'money': 0, 'propaganda': 2}, miss_reward_index=0),
-        run_guess_case('民族祭儀', 'zhuang', '奇數牌', {'money': 1}, 'even', False, {'money': 2, 'propaganda': 0}, miss_reward_index=1),
-        run_guess_case('賭徒耳語', 'aomen', '奇數牌', {'money': 1}, 'odd', True, {'money': 3, 'propaganda': 3},
+        run_guess_case('賭徒耳語', 'aomen', '宣傳家', 3, 'odd', True, {'money': 3, 'propaganda': 3}),
+        run_guess_case('賭徒耳語', 'aomen', '乘勝追擊', 2, 'odd', False, {'money': 0, 'propaganda': 0}),
+        run_guess_case('民族祭儀', 'zhuang', '乘勝追擊', 2, 'even', True, {'money': 2, 'propaganda': 2}),
+        run_guess_case('民族祭儀', 'zhuang', '宣傳家', 3, 'even', False, {'money': 0, 'propaganda': 2}, miss_reward_index=0),
+        run_guess_case('民族祭儀', 'zhuang', '宣傳家', 3, 'even', False, {'money': 2, 'propaganda': 0}, miss_reward_index=1),
+        run_guess_case('賭徒耳語', 'aomen', '宣傳家', 3, 'odd', True, {'money': 3, 'propaganda': 3},
                        extra_hand=['要墊底的牌'], bottom_card_name='要墊底的牌'),
         check_static_result_text(),
     ]
@@ -126,7 +139,8 @@ def main():
         f"- passed: {payload['summary']['passed']}",
         f"- failed: {payload['summary']['failed']}",
         '',
-        '驗證賭徒耳語與民族祭儀：墊底手牌由玩家選擇、展示的頂牌放回牌庫頂、民族祭儀沒猜中提供「2宣傳或2資金」二選一，並回傳可供 UI 顯示的結果。',
+        '驗證賭徒耳語與民族祭儀：猜的是牌庫頂牌的購買費用（不是印刷資源）、墊底手牌由玩家選擇、'
+        '展示的頂牌放回牌庫頂、民族祭儀沒猜中提供「2宣傳或2資金」二選一，並回傳可供 UI 顯示的結果。',
         '',
     ]
     for test in tests:

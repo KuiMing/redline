@@ -6,7 +6,7 @@
   },
   "tests": [
     {
-      "name": "賭徒耳語_odd_奇數牌",
+      "name": "賭徒耳語_odd_宣傳家",
       "passed": true,
       "checks": {
         "success": true,
@@ -28,8 +28,8 @@
         "success": true,
         "result": {
           "name": "賭徒耳語",
-          "revealed_card": "奇數牌",
-          "cost_total": 1,
+          "revealed_card": "宣傳家",
+          "cost_total": 3,
           "guess": "odd",
           "hit": true,
           "bottom_card": "墊牌",
@@ -46,12 +46,13 @@
       },
       "deck_pile": [
         "墊牌",
-        "奇數牌"
+        "Bottom",
+        "宣傳家"
       ],
       "discard_pile": []
     },
     {
-      "name": "賭徒耳語_odd_偶數牌",
+      "name": "賭徒耳語_odd_乘勝追擊",
       "passed": true,
       "checks": {
         "success": true,
@@ -73,7 +74,7 @@
         "success": true,
         "result": {
           "name": "賭徒耳語",
-          "revealed_card": "偶數牌",
+          "revealed_card": "乘勝追擊",
           "cost_total": 2,
           "guess": "odd",
           "hit": false,
@@ -91,12 +92,13 @@
       },
       "deck_pile": [
         "墊牌",
-        "偶數牌"
+        "Bottom",
+        "乘勝追擊"
       ],
       "discard_pile": []
     },
     {
-      "name": "民族祭儀_even_偶數牌",
+      "name": "民族祭儀_even_乘勝追擊",
       "passed": true,
       "checks": {
         "success": true,
@@ -118,7 +120,7 @@
         "success": true,
         "result": {
           "name": "民族祭儀",
-          "revealed_card": "偶數牌",
+          "revealed_card": "乘勝追擊",
           "cost_total": 2,
           "guess": "even",
           "hit": true,
@@ -136,12 +138,13 @@
       },
       "deck_pile": [
         "墊牌",
-        "偶數牌"
+        "Bottom",
+        "乘勝追擊"
       ],
       "discard_pile": []
     },
     {
-      "name": "民族祭儀_even_奇數牌_missidx0",
+      "name": "民族祭儀_even_宣傳家_missidx0",
       "passed": true,
       "checks": {
         "success": true,
@@ -164,8 +167,8 @@
         "success": true,
         "result": {
           "name": "民族祭儀",
-          "revealed_card": "奇數牌",
-          "cost_total": 1,
+          "revealed_card": "宣傳家",
+          "cost_total": 3,
           "guess": "even",
           "hit": false,
           "bottom_card": "墊牌",
@@ -182,12 +185,13 @@
       },
       "deck_pile": [
         "墊牌",
-        "奇數牌"
+        "Bottom",
+        "宣傳家"
       ],
       "discard_pile": []
     },
     {
-      "name": "民族祭儀_even_奇數牌_missidx1",
+      "name": "民族祭儀_even_宣傳家_missidx1",
       "passed": true,
       "checks": {
         "success": true,
@@ -210,8 +214,8 @@
         "success": true,
         "result": {
           "name": "民族祭儀",
-          "revealed_card": "奇數牌",
-          "cost_total": 1,
+          "revealed_card": "宣傳家",
+          "cost_total": 3,
           "guess": "even",
           "hit": false,
           "bottom_card": "墊牌",
@@ -228,12 +232,13 @@
       },
       "deck_pile": [
         "墊牌",
-        "奇數牌"
+        "Bottom",
+        "宣傳家"
       ],
       "discard_pile": []
     },
     {
-      "name": "賭徒耳語_odd_奇數牌_bottom-要墊底的牌",
+      "name": "賭徒耳語_odd_宣傳家_bottom-要墊底的牌",
       "passed": true,
       "checks": {
         "success": true,
@@ -257,8 +262,8 @@
         "success": true,
         "result": {
           "name": "賭徒耳語",
-          "revealed_card": "奇數牌",
-          "cost_total": 1,
+          "revealed_card": "宣傳家",
+          "cost_total": 3,
           "guess": "odd",
           "hit": true,
           "bottom_card": "要墊底的牌",
@@ -275,7 +280,8 @@
       },
       "deck_pile": [
         "要墊底的牌",
-        "奇數牌"
+        "Bottom",
+        "宣傳家"
       ],
       "discard_pile": []
     },

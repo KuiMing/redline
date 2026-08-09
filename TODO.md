@@ -1,6 +1,6 @@
 # Redline TODO
 
-最後更新：2026-08-08
+最後更新：2026-08-09
 
 ## 工作規則
 - 開始新工作前先做 intake：讀 `TODO.md`、跑 `git status --short`、跑 `git log --oneline -5`。
@@ -16,6 +16,12 @@
 - 若回到奧援卡，先確認指定卡名與級別；不要用北國奧援 I級規則推測 II級。
 
 ## 目前 active todo
+
+### P0：立場試探／賭徒耳語／民族祭儀猜的其實是印刷資源，不是卡面文字寫的「購買費用」
+- [done] 使用者 playtest 回報：澳門陣營發動賭徒耳語，猜偶數，翻到起始牌「樂捐者」——使用者指出這個能力應該是猜牌庫頂牌的「購買點數（購買費用）」奇偶，不是「資源點數」；樂捐者購買費用為 0（偶數），猜偶數應該算猜中。（2026-08-09 使用者 playtest 回報並指出正確規則）
+  - 根因：`server/game.py` `_top_card_cost_total(card)` 從實作之初（`947ee68`「Implement faction abilities phase 5」）就寫反了——優先讀 `card.resources` 算資源總和，只有在 `resources` 不是 dict 時才 fallback 去查真正的購買費用 `_purchase_area_card_cost_total()`。但每張 `Card` 物件依 `server/cards.py` 的建構子預設一定有 `resources`（`resources or {"money": 0, "propaganda": 0}`），fallback 分支形同從未被執行過的死碼。三個能力的文字（`_resolve_ability_text` 裡的說明）都明講「猜購買費用奇偶」，卻全部誤用了印刷資源。對「追隨者」「樂捐者」這類起始牌影響最大：起始牌從未真正在購買區出現、規則上沒有購買費用（正確值為 0＝偶數），但樂捐者印刷資源為 1 資金，被誤判成奇數。既有測試也複製了這個誤解：`scripts/tests/test_action_card_regressions.py` 有一支測試的**名稱本身**就叫 `..._treats_starter_donor_as_odd_cost_and_adds_it_to_hand`，把這個錯誤行為當正確答案寫死；`scripts/validate_faction_action_guess_result.py` 則是用亂編卡名＋任意資源字典驅動，那些假卡名查不到購買費用只會 fallback 成 0，讓新舊兩種（錯誤／正確）邏輯剛好巧合出一樣的結果，測不出這個回歸。
+  - 修法：`_top_card_cost_total` 改成永遠回傳 `_purchase_area_card_cost_total(card)`（依卡名查 `structured_cards`／奧援稅則的真實購買費用；查無資料的起始牌／debug 卡回傳 0）。此函式同時是 `立場試探`／`賭徒耳語`／`民族祭儀` 三個能力共用的核心邏輯，一次修好全部三個。
+  - 驗證：改寫 `test_liberals_stance_probe_treats_starter_donor_as_odd_cost_and_adds_it_to_hand`→`..._as_even_cost_and_discards_it`（斷言樂捐者現在正確被判定偶數費用、放入棄牌堆而非加入手牌）；`test_liberals_stance_probe_discards_even_cost_top_card` 改用真實購買區卡牌（乘勝追擊，購買費用2）取代亂編卡名，避免巧合通過掩蓋問題。改寫 `scripts/validate_faction_action_guess_result.py`：全面改用真實購買區卡牌（宣傳家：購買費用3／印刷資源2；乘勝追擊：購買費用2／印刷資源1——刻意選購買費用與印刷資源奇偶不同的牌，才能真正測出「猜的是購買費用」），7/7 全過。完整 pytest（同 baseline ignore 清單）**327/327 全過**（無新增/減少支數，2 支既有測試改寫）。另外用完全比照使用者回報場景的腳本直接重現（澳門、賭徒耳語、牌庫頂為樂捐者、猜偶數）確認修正後 `cost_total=0`、`hit=True`、正確拿到 3 資金 + 3 宣傳。純後端邏輯修正，未變動任何前端／UI，`validate_faction_abilities_phase5.py`（4/4）、`validate_red_faction_inspect_reorder.py`（5/5）等既有 monkeypatch 型 validator 不受影響、依舊全綠。
 
 ### P0：組織經驗丙選好廈門後「建立組織」按鈕亮著卻按不動——戰略地圖連線斷了不會重連
 - [done] 使用者 playtest 回報：打出行動卡「組織經驗丙」，在戰略地圖上可以正常選到「廈門」，左側「建立組織」按鈕也確實亮起可按，但按下去完全沒有建立組織，也沒有出現任何錯誤訊息。（2026-08-08 使用者 playtest 回報）
