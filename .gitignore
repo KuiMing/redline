@@ -30,3 +30,6 @@ playthrough_screens/
 # Full auto-playthrough proof runs (scripts/validate_browser_full_playthrough.py) generate a
 # fresh, large batch of screenshots every run; keep them local instead of committing each run.
 /docs/records/full-playthrough/
+
+# Card-art design review assets (large image sets, never meant for version control).
+/docs/records/design/card-art/
