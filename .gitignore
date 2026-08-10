@@ -26,3 +26,7 @@ server.log
 /scripts/debug_analyze_card_ui_report.py
 /scripts/generate_era_structured.py
 playthrough_screens/
+
+# Full auto-playthrough proof runs (scripts/validate_browser_full_playthrough.py) generate a
+# fresh, large batch of screenshots every run; keep them local instead of committing each run.
+/docs/records/full-playthrough/
