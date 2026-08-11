@@ -1,8 +1,10 @@
 import json
+import random
 import re
 import sys
 import time
 import hashlib
+import urllib.request
 from datetime import datetime
 from pathlib import Path
 
@@ -12,12 +14,35 @@ BASE = Path(__file__).resolve().parent.parent
 RECORD_DIR = BASE / "docs" / "records" / "full-playthrough"
 BASE_URL = "http://127.0.0.1:8765"
 
-FACTION_PLAN = [
-    ("A", "紅軍"),
-    ("B", "臺灣"),
-    ("C", "香港"),
-    ("D", "蒙古"),
-]
+PLAYER_SLOTS = ["A", "B", "C", "D"]
+RED_ARMY_LABEL = "紅軍"
+
+
+def fetch_faction_category_labels():
+    # Read the live lobby category list from the server (server/main.py's
+    # /factions route) instead of hardcoding it, so this stays in sync if
+    # categories are ever added/renamed/removed there.
+    with urllib.request.urlopen(BASE_URL + "/factions", timeout=10) as resp:
+        data = json.loads(resp.read().decode("utf-8"))
+    return [c["label"] for c in data.get("categories", []) if c.get("label")]
+
+
+def build_random_faction_plan():
+    # 紅軍 (Red Army) is the game's fixed opposing power: every match needs
+    # exactly one Red Army player for the game to function, so that slot is
+    # guaranteed while every player's faction (including which slot plays
+    # Red Army) is otherwise randomized each run.
+    labels = fetch_faction_category_labels()
+    non_red_labels = [label for label in labels if label != RED_ARMY_LABEL]
+
+    slots = list(PLAYER_SLOTS)
+    random.shuffle(slots)
+    red_slot, other_slots = slots[0], slots[1:]
+    other_labels = random.sample(non_red_labels, len(other_slots))
+
+    plan = {red_slot: RED_ARMY_LABEL}
+    plan.update(dict(zip(other_slots, other_labels)))
+    return [(slot, plan[slot]) for slot in PLAYER_SLOTS]
 
 STATIC_COSTS = {
     0: {"name": "宣傳家", "money": 0, "propaganda": 3},
@@ -98,10 +123,10 @@ def setup_faction(page, label, trace):
     page.wait_for_timeout(500)
 
 
-def setup_lobby(browser, trace, screenshot_dir):
+def setup_lobby(browser, trace, screenshot_dir, faction_plan):
     pages = {}
     console_errors = []
-    for name, _ in FACTION_PLAN:
+    for name, _ in faction_plan:
         page = browser.new_page(viewport={"width": 1280, "height": 720})
         page.on("console", lambda msg, n=name: console_errors.append({"player": n, "type": msg.type, "text": msg.text}) if msg.type in {"error", "warning"} else None)
         page.on("pageerror", lambda exc, n=name: console_errors.append({"player": n, "type": "pageerror", "text": str(exc)}))
@@ -122,7 +147,7 @@ def setup_lobby(browser, trace, screenshot_dir):
         page.wait_for_selector("#factionPicker", state="visible", timeout=15000)
         trace.append({"step": "join_room", "player": name})
 
-    for name, label in FACTION_PLAN:
+    for name, label in faction_plan:
         setup_faction(pages[name], label, trace)
 
     for name, page in pages.items():
@@ -158,7 +183,7 @@ def summarize_state(state):
 def summarize_choice(choice):
     if not choice:
         return None
-    return {k: choice.get(k) for k in ["type", "choice_key", "player_id", "source", "step", "count", "min", "max"] if k in choice}
+    return {k: choice.get(k) for k in ["type", "choice_key", "interaction_kind", "player_id", "source", "step", "count", "min", "max"] if k in choice}
 
 
 def page_for_current_player(pages, state):
@@ -184,6 +209,23 @@ def page_for_player_id(pages, state, player_id):
 
 
 def handle_modal_or_pending(pages, state, trace):
+    # The per-turn event-card reveal ("目前事件" 放大檢視, #eventRevealModal) is a
+    # click-anywhere-to-dismiss overlay with no button inside it at all; app.js only
+    # closes it via a click on the overlay or the Escape key (see its keydown
+    # handler). It auto-reopens on every new event, on any player's screen, so it
+    # can end up covering whatever the bot tries to click next. Dismiss it first,
+    # via the same Escape path the app already supports, before anything else.
+    for page_name, page in pages.items():
+        try:
+            overlay = page.locator("#eventRevealModal")
+            if overlay.count() and overlay.is_visible(timeout=150):
+                page.keyboard.press("Escape")
+                page.wait_for_timeout(150)
+                trace.append({"step": "close_event_reveal_overlay_ui", "player_page": page_name})
+                return True
+        except Exception:
+            continue
+
     choice = state.get("pending_choice") if state else None
     target_page = None
     if choice and choice.get("player_id"):
@@ -191,11 +233,19 @@ def handle_modal_or_pending(pages, state, trace):
     if not target_page:
         target_page = page_for_current_player(pages, state)
 
-    # Event/era build choices are intentionally handled on the strategic map UI
-    # instead of a modal. Select the first highlighted town in the iframe, then
-    # click the map panel's direct-build button.
-    if choice and choice.get("choice_key") in {"event_build_organization", "era_red_build_near_target"}:
-        towns = choice.get("towns") or []
+    # Build AND dissolve choices are intentionally handled on the strategic map UI
+    # instead of a modal (see app.js's isMapBuildChoice/isMapDissolveChoice, which hide
+    # #choiceModal entirely for these and highlight targets on the map instead). Select
+    # the first highlighted town/target in the iframe, then click the map panel's
+    # direct-build or dissolve button. interaction_kind === 'dissolve_organization'
+    # covers every dissolve source generically (event/intel-network/era/etc.), matching
+    # how the frontend itself dispatches on that field rather than choice_key.
+    is_map_build_choice = bool(choice) and choice.get("choice_key") in {"event_build_organization", "era_red_build_near_target", "card_build_organization"}
+    is_map_dissolve_choice = bool(choice) and choice.get("interaction_kind") == "dissolve_organization"
+    if is_map_build_choice or is_map_dissolve_choice:
+        action_kind = "dissolve" if is_map_dissolve_choice else "build"
+        button_id = "dissolveBtn" if is_map_dissolve_choice else "directBuildBtn"
+        towns = (choice.get("targets") if is_map_dissolve_choice else choice.get("towns")) or []
         first = next((entry for entry in towns if entry.get("town")), None)
         if first:
             town = first["town"]
@@ -210,9 +260,10 @@ def handle_modal_or_pending(pages, state, trace):
                     frame.wait_for_function("window.lastGameState && typeof window.selectTownForCurrentMapAction === 'function'", timeout=8000)
                     payload = {
                         "mode": "support-targets",
+                        "actionKind": action_kind,
                         "choiceKey": choice.get("choice_key"),
-                        "sourceName": choice.get("source_name") or choice.get("choice_key") or "建立組織",
-                        "prompt": choice.get("prompt") or "事件卡效果：請在戰略地圖選擇可建立組織的城鎮。",
+                        "sourceName": choice.get("source_name") or choice.get("choice_key") or ("瓦解組織" if is_map_dissolve_choice else "建立組織"),
+                        "prompt": choice.get("prompt") or ("請在戰略地圖點選要瓦解的組織。" if is_map_dissolve_choice else "事件卡效果：請在戰略地圖選擇可建立組織的城鎮。"),
                         "towns": [
                             {"town": entry.get("town"), "label": entry.get("label") or entry.get("town"), "index": idx}
                             for idx, entry in enumerate(towns)
@@ -221,13 +272,51 @@ def handle_modal_or_pending(pages, state, trace):
                     }
                     frame.evaluate("payload => window.applySupportChoiceHighlight && window.applySupportChoiceHighlight(payload)", payload)
                     frame.evaluate("town => window.selectTownForCurrentMapAction(town, {autoFocus:false})", town)
-                    frame.wait_for_function("!document.querySelector('#directBuildBtn').disabled", timeout=3000)
-                    frame.locator("#directBuildBtn").click(timeout=3000)
+                    frame.wait_for_function(f"!document.querySelector('#{button_id}').disabled", timeout=3000)
+                    frame.locator(f"#{button_id}").click(timeout=3000)
                     target_page.wait_for_timeout(250)
-                    trace.append({"step": "resolve_event_build_on_map_ui", "choice": summarize_choice(choice), "town": town})
+                    trace.append({"step": "resolve_map_choice_ui", "action_kind": action_kind, "choice": summarize_choice(choice), "town": town})
                     return True
             except Exception as exc:
-                trace.append({"step": "event_build_map_ui_failed", "choice": summarize_choice(choice), "town": town, "error": str(exc)})
+                trace.append({"step": "map_choice_ui_failed", "action_kind": action_kind, "choice": summarize_choice(choice), "town": town, "error": str(exc)})
+
+    # multi_card_choice needs cards toggled first, then a separate submit button
+    # clicked (#choiceModal .modal-choice-btn, disabled until the required count is
+    # selected) — see app.js's multi_card_choice renderer. The generic "click first
+    # enabled button" fallback below only ever hits the first card's toggle button,
+    # which just selects/deselects it forever without ever reaching submit.
+    if choice and choice.get("type") == "multi_card_choice":
+        try:
+            needed = choice.get("count")
+            if needed is None:
+                needed = choice.get("min") or 1
+            card_buttons = target_page.locator("#choiceModal .choice-card-btn-multi")
+            total = card_buttons.count()
+            selected_count = target_page.locator("#choiceModal .choice-card-btn-multi.selected").count()
+            picked = False
+            for i in range(total):
+                if selected_count >= needed:
+                    break
+                btn = card_buttons.nth(i)
+                classes = btn.get_attribute("class") or ""
+                if "selected" in classes.split():
+                    continue
+                if btn.is_visible(timeout=200) and btn.is_enabled(timeout=200):
+                    btn.click(timeout=1200)
+                    target_page.wait_for_timeout(120)
+                    selected_count += 1
+                    picked = True
+            submit_btn = target_page.locator("#choiceModal .modal-choice-btn:visible:not([disabled])")
+            if submit_btn.count():
+                submit_btn.first.click(timeout=1200)
+                target_page.wait_for_timeout(180)
+                trace.append({"step": "resolve_multi_card_choice_ui", "choice": summarize_choice(choice), "needed": needed})
+                return True
+            if picked:
+                trace.append({"step": "select_multi_card_choice_ui", "choice": summarize_choice(choice), "needed": needed, "selected_count": selected_count})
+                return True
+        except Exception as exc:
+            trace.append({"step": "multi_card_choice_failed", "choice": summarize_choice(choice), "error": str(exc)})
 
     # General pending-choice modal.
     if choice:
@@ -365,11 +454,16 @@ def run_playthrough(max_steps=1800):
     stamp = now_stamp()
     screenshot_dir = RECORD_DIR / stamp
     screenshot_dir.mkdir(parents=True, exist_ok=True)
-    trace = [{"step": "rules_loaded", "rules": read_rules_fingerprint()}]
+    faction_plan = build_random_faction_plan()
+    trace = [
+        {"step": "rules_loaded", "rules": read_rules_fingerprint()},
+        {"step": "faction_plan", "plan": faction_plan},
+    ]
+    print(json.dumps({"faction_plan": faction_plan}, ensure_ascii=False))
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
-        pages, room_id, console_errors = setup_lobby(browser, trace, screenshot_dir)
+        pages, room_id, console_errors = setup_lobby(browser, trace, screenshot_dir, faction_plan)
         pages["B"].screenshot(path=screenshot_dir / "02_game_start_current_player.png", full_page=True)
 
         last_key = None
@@ -414,6 +508,7 @@ def run_playthrough(max_steps=1800):
 
     result = {
         "passed": bool(final_state and final_state.get("game_phase") == "finished" and final_state.get("winner")) and not [e for e in console_errors if e.get("type") in {"error", "pageerror"}],
+        "faction_plan": faction_plan,
         "room_id": room_id,
         "screenshots": [str(p) for p in sorted(screenshot_dir.glob("*.png"))],
         "trace": trace,
@@ -425,7 +520,7 @@ def run_playthrough(max_steps=1800):
     md_path = RECORD_DIR / f"BROWSER_FULL_PLAYTHROUGH_{stamp}.md"
     json_path.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    important = [item for item in trace if item["step"] in {"create_room", "choose_faction", "ready", "start_game_clicked", "finished_detected", "stagnant_state_break", "pending_choice_unresolved", "advance_button_unavailable"}]
+    important = [item for item in trace if item["step"] in {"faction_plan", "create_room", "choose_faction", "ready", "start_game_clicked", "finished_detected", "stagnant_state_break", "pending_choice_unresolved", "advance_button_unavailable"}]
     lines = [
         "# Browser Full Playthrough Validation",
         "",
@@ -444,7 +539,7 @@ def run_playthrough(max_steps=1800):
         lines.append(f"- {path}")
     md_path.write_text("\n".join(lines), encoding="utf-8")
 
-    print(json.dumps({"passed": result["passed"], "json": str(json_path), "md": str(md_path), "screenshots": result["screenshots"], "final_state_summary": result["final_state_summary"], "console_errors": console_errors[-10:]}, ensure_ascii=False, indent=2))
+    print(json.dumps({"passed": result["passed"], "faction_plan": faction_plan, "json": str(json_path), "md": str(md_path), "screenshots": result["screenshots"], "final_state_summary": result["final_state_summary"], "console_errors": console_errors[-10:]}, ensure_ascii=False, indent=2))
     if not result["passed"]:
         raise SystemExit(1)
 
