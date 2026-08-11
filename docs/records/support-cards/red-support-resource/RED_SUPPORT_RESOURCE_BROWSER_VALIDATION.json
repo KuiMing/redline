@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-07T09:14:24.364814+00:00",
+  "generated_at": "2026-08-11T14:06:02.312190+00:00",
   "base_url": "http://192.168.10.192:8000",
   "status": "passed",
   "checks_passed": 5,
@@ -15,38 +15,10 @@
       }
     },
     {
-      "name": "resource_mode_preserves_red_discard_target_choice",
+      "name": "resource_mode_finishes_without_discard_target_choice",
       "ok": true,
       "detail": {
-        "type": "target_choice",
-        "choice_key": "red_support_target_player",
-        "interaction_kind": null,
-        "remaining_builds": null,
-        "queueable_card_names": [],
-        "cancellable": false,
-        "player_id": "f044e9ab-039e-40af-899a-e728cc077784",
-        "player_name": null,
-        "prompt": "紅軍奧援：請選擇要將本牌放入哪位反共玩家的棄牌堆。",
-        "source_name": "紅軍奧援",
-        "count": null,
-        "min_count": null,
-        "mode": "resource",
-        "acting_player_id": null,
-        "acting_player_name": null,
-        "played_card_name": null,
-        "region": null,
-        "free": null,
-        "ignore_distance": null,
-        "cards": [],
-        "options": [],
-        "towns": [],
-        "targets": [
-          {
-            "id": "3c63602c-4f3d-4196-af03-e48724a150a4",
-            "label": "red"
-          }
-        ],
-        "step": null
+        "pending_choice": null
       }
     },
     {
@@ -61,13 +33,13 @@
       }
     },
     {
-      "name": "red_support_moves_to_selected_anti_red_discard",
+      "name": "resource_mode_discards_red_support_to_its_users_own_discard",
       "ok": true,
       "detail": {
-        "actor_discard": [],
-        "target_discard": [
+        "actor_discard": [
           "紅軍奧援"
-        ]
+        ],
+        "target_discard": []
       }
     },
     {

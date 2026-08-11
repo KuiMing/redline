@@ -88,23 +88,6 @@ def main() -> None:
         )
 
         resource_button.click()
-        page.wait_for_function(
-            """() => window.lastGameState?.pending_choice?.choice_key === 'red_support_target_player'
-              && window.lastGameState?.pending_choice?.mode === 'resource'""",
-            timeout=10000,
-        )
-        pending = page.evaluate("window.lastGameState.pending_choice")
-        record(
-            "resource_mode_preserves_red_discard_target_choice",
-            pending.get("type") == "target_choice"
-            and pending.get("player_id") == setup["player_id"]
-            and len(pending.get("targets") or []) == 1,
-            pending,
-        )
-
-        target_button = page.locator("#choiceModalCards .modal-choice-btn").first
-        target_button.wait_for(state="visible", timeout=10000)
-        target_button.click()
         actor_id_json = json.dumps(setup["player_id"])
         page.wait_for_function(
             f"""() => {{
@@ -122,15 +105,20 @@ def main() -> None:
         actor = next(player for player in state["players"] if player["id"] == setup["player_id"])
         target = next(player for player in state["players"] if player["id"] == setup["red_player_id"])
         record(
+            "resource_mode_finishes_without_discard_target_choice",
+            state.get("pending_choice") is None,
+            {"pending_choice": state.get("pending_choice")},
+        )
+        record(
             "resource_mode_grants_exactly_one_money_and_one_propaganda_without_draw",
             actor.get("resources") == {"money": 1, "propaganda": 1}
             and actor.get("hand") == [],
             {"resources": actor.get("resources"), "hand": actor.get("hand")},
         )
         record(
-            "red_support_moves_to_selected_anti_red_discard",
-            target.get("discard_pile") == ["紅軍奧援"]
-            and actor.get("discard_pile") == [],
+            "resource_mode_discards_red_support_to_its_users_own_discard",
+            actor.get("discard_pile") == ["紅軍奧援"]
+            and target.get("discard_pile") == [],
             {"actor_discard": actor.get("discard_pile"), "target_discard": target.get("discard_pile")},
         )
 

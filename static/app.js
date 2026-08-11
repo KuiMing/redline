@@ -806,7 +806,8 @@ function playableCardArtUrl(cardName, variantInfo = null) {
       ? variantInfo.variant_index
       : 0;
     const file = files[requestedIndex] || files[0];
-    return `/static/card-art/support/${encodeURIComponent(file)}`;
+    const version = name === '紅軍奧援' ? '?v=action-card-layout-20260811' : '';
+    return `/static/card-art/support/${encodeURIComponent(file)}${version}`;
   }
   return `/static/card-art/actions/${encodeURIComponent(name)}.png?v=head-safe-20260726`;
 }

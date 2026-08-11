@@ -1,0 +1,81 @@
+{
+  "generated_at": "2026-08-11T14:06:00.155586+00:00",
+  "base_url": "http://192.168.10.192:8000",
+  "status": "passed",
+  "checks_passed": 5,
+  "checks_total": 5,
+  "checks": [
+    {
+      "name": "red_support_uses_cache_busted_action_layout_art",
+      "ok": true,
+      "detail": {
+        "src": "http://192.168.10.192:8000/static/card-art/support/17_%E7%B4%85%E8%BB%8D%E5%A5%A7%E6%8F%B4_%E8%B5%B7%E5%A7%8B%E7%89%8C.png?v=action-card-layout-20260811"
+      }
+    },
+    {
+      "name": "red_support_art_has_canonical_full_resolution",
+      "ok": true,
+      "detail": {
+        "src": "http://192.168.10.192:8000/static/card-art/support/17_%E7%B4%85%E8%BB%8D%E5%A5%A7%E6%8F%B4_%E8%B5%B7%E5%A7%8B%E7%89%8C.png?v=action-card-layout-20260811",
+        "naturalWidth": 1100,
+        "naturalHeight": 1350,
+        "renderedWidth": 245.25,
+        "renderedHeight": 306,
+        "contained": true,
+        "buttons": [
+          {
+            "text": "資源",
+            "mode": "resource"
+          },
+          {
+            "text": "行動",
+            "mode": "action"
+          }
+        ]
+      }
+    },
+    {
+      "name": "red_support_art_is_fully_contained_in_hand_card",
+      "ok": true,
+      "detail": {
+        "src": "http://192.168.10.192:8000/static/card-art/support/17_%E7%B4%85%E8%BB%8D%E5%A5%A7%E6%8F%B4_%E8%B5%B7%E5%A7%8B%E7%89%8C.png?v=action-card-layout-20260811",
+        "naturalWidth": 1100,
+        "naturalHeight": 1350,
+        "renderedWidth": 245.25,
+        "renderedHeight": 306,
+        "contained": true,
+        "buttons": [
+          {
+            "text": "資源",
+            "mode": "resource"
+          },
+          {
+            "text": "行動",
+            "mode": "action"
+          }
+        ]
+      }
+    },
+    {
+      "name": "red_support_keeps_resource_and_action_modes",
+      "ok": true,
+      "detail": [
+        {
+          "text": "資源",
+          "mode": "resource"
+        },
+        {
+          "text": "行動",
+          "mode": "action"
+        }
+      ]
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "ok": true,
+      "detail": []
+    }
+  ],
+  "console_errors": [],
+  "screenshot": "docs/records/support-cards/red-support-action-art/red_support_action_card_ui.png"
+}
