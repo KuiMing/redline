@@ -1,6 +1,7 @@
 import json
 import random
 import re
+import shutil
 import sys
 import time
 import hashlib
@@ -56,6 +57,30 @@ BUY_ATTEMPTS = set()
 
 def now_stamp():
     return datetime.now().strftime("%Y%m%d_%H%M%S")
+
+
+def prune_previous_runs():
+    # Screenshotting every step (see run_playthrough) makes each run ~380-470MB;
+    # keep only the latest run on disk instead of accumulating unbounded local
+    # history. Wipe everything already in RECORD_DIR before starting a new run.
+    if not RECORD_DIR.exists():
+        return
+    for entry in RECORD_DIR.iterdir():
+        if entry.name.startswith('.'):
+            continue
+        if entry.is_dir():
+            shutil.rmtree(entry, ignore_errors=True)
+        else:
+            entry.unlink(missing_ok=True)
+
+
+def screenshot_step(pages, state, screenshot_dir, seq, trace_entry):
+    page = page_for_current_player(pages, state)
+    step_name = re.sub(r"[^0-9A-Za-z_]+", "_", str(trace_entry.get("step") or "step"))
+    try:
+        page.screenshot(path=screenshot_dir / f"{seq:04d}_{step_name}.png", full_page=True)
+    except Exception:
+        pass
 
 
 def read_rules_fingerprint():
@@ -451,6 +476,7 @@ def advance_phase(page, state, trace):
 
 
 def run_playthrough(max_steps=1800):
+    prune_previous_runs()
     stamp = now_stamp()
     screenshot_dir = RECORD_DIR / stamp
     screenshot_dir.mkdir(parents=True, exist_ok=True)
@@ -469,6 +495,7 @@ def run_playthrough(max_steps=1800):
         last_key = None
         stagnant = 0
         final_state = None
+        action_seq = 0
         for step in range(1, max_steps + 1):
             # Pick any page with state; states are broadcast to all connected pages.
             state = js_state(next(iter(pages.values())))
@@ -480,14 +507,19 @@ def run_playthrough(max_steps=1800):
             stagnant = stagnant + 1 if key == last_key else 0
             last_key = key
 
-            if step in {20, 120, 240, 360}:
-                page_for_current_player(pages, state).screenshot(path=screenshot_dir / f"{step:03d}_progress.png", full_page=True)
-
             if state.get("game_phase") == "finished" or state.get("winner"):
                 trace.append({"step": "finished_detected", "iteration": step, "state": summarize_state(state)})
                 break
 
+            # Screenshot every actual player action/step (not just a handful of fixed
+            # checkpoints), keyed off whether the call below actually appended a new
+            # trace entry — pure no-ops (nothing clickable this iteration) don't count.
+            trace_len_before = len(trace)
+
             if handle_modal_or_pending(pages, state, trace):
+                if len(trace) > trace_len_before:
+                    action_seq += 1
+                    screenshot_step(pages, state, screenshot_dir, action_seq, trace[-1])
                 continue
 
             page = page_for_current_player(pages, state)
@@ -496,6 +528,10 @@ def run_playthrough(max_steps=1800):
                 play_action_phase(page, state, trace)
             else:
                 advance_phase(page, state, trace)
+
+            if len(trace) > trace_len_before:
+                action_seq += 1
+                screenshot_step(pages, state, screenshot_dir, action_seq, trace[-1])
 
             # Avoid endless loops on a non-changing state.
             if stagnant > 30:
@@ -534,12 +570,14 @@ def run_playthrough(max_steps=1800):
     for item in important[-80:]:
         lines.append(f"- {json.dumps(item, ensure_ascii=False)}")
     lines.append("")
-    lines.append("## Screenshots")
-    for path in result["screenshots"]:
+    all_screenshots = result["screenshots"]
+    lines.append(f"## Screenshots ({len(all_screenshots)} total, one per resolved step)")
+    preview_screenshots = all_screenshots[:5] + (["…"] if len(all_screenshots) > 10 else []) + all_screenshots[-5:]
+    for path in preview_screenshots:
         lines.append(f"- {path}")
     md_path.write_text("\n".join(lines), encoding="utf-8")
 
-    print(json.dumps({"passed": result["passed"], "faction_plan": faction_plan, "json": str(json_path), "md": str(md_path), "screenshots": result["screenshots"], "final_state_summary": result["final_state_summary"], "console_errors": console_errors[-10:]}, ensure_ascii=False, indent=2))
+    print(json.dumps({"passed": result["passed"], "faction_plan": faction_plan, "json": str(json_path), "md": str(md_path), "screenshot_count": len(all_screenshots), "screenshot_dir": str(screenshot_dir), "final_state_summary": result["final_state_summary"], "console_errors": console_errors[-10:]}, ensure_ascii=False, indent=2))
     if not result["passed"]:
         raise SystemExit(1)
 
