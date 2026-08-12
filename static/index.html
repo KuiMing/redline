@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>REDLINE // STRATEGIC COMMAND</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="/static/style.css?v=era-achievement-reopen-20260809" />
+  <link rel="stylesheet" href="/static/style.css?v=emergency-new-game-20260813" />
 </head>
 <body>
 <div id="stageViewport">
@@ -15,6 +15,7 @@
 <div id="topBar">
   <div class="title">逆統戰指揮中心</div>
   <div id="statusBar"></div>
+  <a id="emergencyNewGameBtn" href="/?new_game=1" onclick="return confirm('確定要離開目前遊戲並回到新遊戲大廳嗎？')">開新遊戲</a>
 </div>
 
 <div id="hud"></div>
@@ -338,6 +339,6 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/static/player_messages_zh_tw.js?v=player-message-i18n-20260801"></script>
-<script src="/static/app.js?v=session-map-auth-20260813"></script>
+<script src="/static/app.js?v=emergency-new-game-20260813"></script>
 </body>
 </html>

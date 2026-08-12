@@ -441,7 +441,16 @@ async function resumeStoredGame() {
 
 async function initLobbyControls() {
   resizeStage();
-  if (initProofSessionFromUrl()) return;
+  const params = new URLSearchParams(window.location.search || '');
+  const startFresh = params.get('new_game') === '1';
+  if (startFresh) {
+    history.replaceState(null, '', window.location.pathname);
+    gameId = null;
+    playerId = null;
+    resumeToken = null;
+  } else if (initProofSessionFromUrl()) {
+    return;
+  }
   if (!stageResizeBound) {
     window.addEventListener('resize', resizeStage);
     stageResizeBound = true;
@@ -465,7 +474,7 @@ async function initLobbyControls() {
   updateLobbyStatus();
   updateLobbyActionControls();
   syncLobbyRoomCode();
-  await resumeStoredGame();
+  if (!startFresh) await resumeStoredGame();
 }
 
 async function setActiveGameView(view) {
