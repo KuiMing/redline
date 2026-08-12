@@ -1223,6 +1223,7 @@ window.addEventListener('message', (event) => {
 let mapWs = null;
 let mapGameId = null;
 let mapPlayerId = null;
+let mapResumeToken = null;
 let mapSocketReconnectTimer = null;
 let mapSocketReconnectAttempts = 0;
 let mapSocketLifecycleBound = false;
@@ -1282,7 +1283,8 @@ function openMapSocket() {
   }
 
   const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const socket = new WebSocket(`${wsProtocol}//${location.host}/ws/${mapGameId}/${mapPlayerId}`);
+  const socketUrl = `${wsProtocol}//${location.host}/ws/${mapGameId}/${mapPlayerId}`;
+  const socket = mapResumeToken ? new WebSocket(socketUrl, mapResumeToken) : new WebSocket(socketUrl);
   mapWs = socket;
   socket.onopen = () => {
     mapSocketReconnectAttempts = 0;
@@ -1311,9 +1313,10 @@ function openMapSocket() {
   return { ok: true };
 }
 
-window.connectGameMap = function ({ gameId: gid, playerId: pid }) {
+window.connectGameMap = function ({ gameId: gid, playerId: pid, resumeToken: token = null }) {
   mapGameId = gid;
   mapPlayerId = pid;
+  mapResumeToken = token;
   if (!mapGameId || !mapPlayerId) return { ok: false, reason: 'missing-ids' };
   return openMapSocket();
 };
@@ -1371,6 +1374,8 @@ window.__mapDebugStateForTest = function () {
     selectedTown,
     pendingMoveTarget: pendingMoveTarget ? { ...pendingMoveTarget } : null,
     reachableFromSelected: selectedMoveTargets.map(t => t.town),
+    socketOpen: mapSocketIsOpen(),
+    reconnectAttempts: mapSocketReconnectAttempts,
   };
 };
 

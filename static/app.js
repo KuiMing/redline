@@ -1244,8 +1244,7 @@ async function startGame() {
 
 function websocketUrl() {
   const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  const auth = resumeToken ? `?resume_token=${encodeURIComponent(resumeToken)}` : '';
-  return `${protocol}://${location.host}/ws/${gameId}/${playerId}${auth}`;
+  return `${protocol}://${location.host}/ws/${gameId}/${playerId}`;
 }
 
 function setSocketDebug(text) {
@@ -1281,7 +1280,7 @@ function connect(options = {}) {
     clearTimeout(wsReconnectTimer);
     wsReconnectTimer = null;
   }
-  ws = new WebSocket(websocketUrl());
+  ws = resumeToken ? new WebSocket(websocketUrl(), resumeToken) : new WebSocket(websocketUrl());
 
   ws.onopen = () => {
     wsReconnectAttempts = 0;
@@ -2430,7 +2429,7 @@ function connectStrategicMapFrame() {
   if (!frame || !frame.contentWindow || !gameId || !playerId) return;
   try {
     if (typeof frame.contentWindow.connectGameMap === 'function') {
-      frame.contentWindow.connectGameMap({ gameId, playerId });
+      frame.contentWindow.connectGameMap({ gameId, playerId, resumeToken });
     }
   } catch (err) {
     console.error('Failed to connect strategic map frame', err);

@@ -3,7 +3,7 @@ import uuid
 class GameManager:
     def __init__(self):
         self.games = {}              # {game_id: Game}
-        self.connections = {}        # {game_id: {player_id: websocket}}
+        self.connections = {}        # {game_id: {player_id: [websocket, ...]}}
 
     def create_room(self):
         game_id = str(uuid.uuid4())
@@ -30,7 +30,9 @@ class GameManager:
         # 該玩家從此收不到任何盤面更新。
         if player_id not in current and len(current) >= 4:
             return False
-        current[player_id] = websocket
+        sockets = current.setdefault(player_id, [])
+        if websocket not in sockets:
+            sockets.append(websocket)
         return True
 
     def remove_connection(self, game_id, player_id, websocket=None):
@@ -38,12 +40,23 @@ class GameManager:
         避免舊連線的 handler 收尾時，把該玩家後來建立的新連線一起踢掉。"""
         if game_id not in self.connections:
             return
-        if websocket is not None and self.connections[game_id].get(player_id) is not websocket:
+        sockets = self.connections[game_id].get(player_id) or []
+        if websocket is None:
+            self.connections[game_id].pop(player_id, None)
             return
-        self.connections[game_id].pop(player_id, None)
+        if websocket not in sockets:
+            return
+        sockets.remove(websocket)
+        if not sockets:
+            self.connections[game_id].pop(player_id, None)
 
     async def broadcast(self, game_id, game):
         if game_id not in self.connections:
             return
-        for player_id, ws in self.connections[game_id].items():
-            await ws.send_json(game.project_state(player_id))
+        for player_id, sockets in list(self.connections[game_id].items()):
+            state = game.project_state(player_id)
+            for ws in list(sockets):
+                try:
+                    await ws.send_json(state)
+                except Exception:
+                    self.remove_connection(game_id, player_id, ws)

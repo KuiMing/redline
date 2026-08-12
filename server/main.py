@@ -27,21 +27,20 @@ reaction_timeout_tasks = {}
 
 async def broadcast_game_state(game_id, game, last_action_result=None):
     dead_connections = []
-    for pid, ws in list(manager.connections.get(game_id, {}).items()):
+    for pid, sockets in list(manager.connections.get(game_id, {}).items()):
         state = game.state(pid)
         if last_action_result:
             if last_action_result.get("pending_choice"):
                 state["pending_choice"] = game.state(pid).get("pending_choice")
             else:
                 state["last_action_result"] = last_action_result
-        try:
-            await ws.send_json(state)
-        except Exception as exc:
-            # 某個玩家的連線已死，不可以讓例外往上冒到「正在送出動作的那位玩家」的
-            # WebSocket handler，否則對方的 socket 會被連帶關掉；戰略地圖 iframe 一旦
-            # 被這樣關掉就再也不會重連，左側按鈕還亮著卻怎麼按都沒反應。
-            print("WS BROADCAST ERROR:", pid, exc)
-            dead_connections.append((pid, ws))
+        for ws in list(sockets):
+            try:
+                await ws.send_json(state)
+            except Exception as exc:
+                # 一條父頁或地圖連線失效時，只移除該連線。其他連線繼續接收盤面。
+                print("WS BROADCAST ERROR:", pid, exc)
+                dead_connections.append((pid, ws))
     for pid, ws in dead_connections:
         manager.remove_connection(game_id, pid, ws)
 
@@ -627,11 +626,11 @@ def lobby_state(game_id: str):
 
 @app.websocket("/ws/{game_id}/{player_id}")
 async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str):
-    await websocket.accept()
+    supplied_token = websocket.headers.get("sec-websocket-protocol", "").split(",", 1)[0].strip()
+    await websocket.accept(subprotocol=supplied_token or None)
 
     credential = lobby_player_credentials.get(game_id, {}).get(player_id)
     if credential:
-        supplied_token = websocket.query_params.get("resume_token", "")
         if not supplied_token or not secrets.compare_digest(
             supplied_token, str(credential.get("resume_token") or "")
         ):

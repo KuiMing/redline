@@ -48,7 +48,7 @@ def test_register_connection_allows_same_player_to_reconnect_when_table_is_full(
 
     reconnected = _FakeSocket()
     assert gm.register_connection(game_id, "player0", reconnected) is True
-    assert gm.connections[game_id]["player0"] is reconnected
+    assert gm.connections[game_id]["player0"] == [sockets["player0"], reconnected]
     assert len(gm.connections[game_id]) == 4
 
     # 第 5 位「不同」玩家仍然要被擋下來。
@@ -65,7 +65,7 @@ def test_remove_connection_does_not_evict_a_newer_socket_for_the_same_player():
 
     # 舊連線的 handler 收尾：不可以把後來登記的新連線一起移除。
     gm.remove_connection(game_id, "player0", old_socket)
-    assert gm.connections[game_id].get("player0") is new_socket
+    assert gm.connections[game_id].get("player0") == [new_socket]
 
     gm.remove_connection(game_id, "player0", new_socket)
     assert "player0" not in gm.connections[game_id]
@@ -77,14 +77,14 @@ def test_broadcast_survives_a_dead_peer_and_still_reaches_the_live_socket():
     live = _FakeSocket()
     dead = _FakeSocket(alive=False)
     manager.connections[game_id] = {
-        game.players[0].id: live,
-        game.players[1].id: dead,
+        game.players[0].id: [live],
+        game.players[1].id: [dead],
     }
     try:
         asyncio.run(broadcast_game_state(game_id, game))
         assert len(live.sent) == 1, "存活的連線仍必須收到完整盤面"
         assert game.players[1].id not in manager.connections[game_id], "已死的連線要被清掉"
-        assert manager.connections[game_id][game.players[0].id] is live, "存活的連線不可被連帶移除"
+        assert manager.connections[game_id][game.players[0].id] == [live], "存活的連線不可被連帶移除"
     finally:
         manager.connections.pop(game_id, None)
 

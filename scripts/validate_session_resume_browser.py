@@ -113,6 +113,23 @@ def main():
             and started_state['me'].get('faction') == 'red_army',
             started_state,
         )
+        map_tab = page.locator('.game-tab[data-view="map"]')
+        page.evaluate("() => window.closeEventReveal?.()")
+        map_tab.click()
+        page.wait_for_function(
+            "() => typeof document.getElementById('strategicMapFrame')?.contentWindow?.__mapDebugStateForTest === 'function'",
+            timeout=15000,
+        )
+        map_socket_state = page.evaluate("""async () => {
+          const frame = document.getElementById('strategicMapFrame');
+          for (let attempt = 0; attempt < 50; attempt += 1) {
+            const debug = frame?.contentWindow?.__mapDebugStateForTest?.();
+            if (debug?.socketOpen) return debug;
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
+          return frame?.contentWindow?.__mapDebugStateForTest?.() || null;
+        }""")
+        record('strategic_map_authenticated_socket_is_open', bool(map_socket_state and map_socket_state.get('socketOpen')), map_socket_state)
         page.screenshot(path=str(SCREENSHOT), full_page=True)
         browser.close()
 
