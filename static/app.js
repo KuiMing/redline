@@ -4,6 +4,9 @@ let wsReconnectAttempts = 0;
 let pendingOutboundActions = [];
 let gameId = null;
 let playerId = null;
+let resumeToken = null;
+const REDLINE_DEVICE_ID_KEY = 'redline.device_id.v1';
+const REDLINE_SESSIONS_KEY = 'redline.sessions.v1';
 let previousEras = [];
 let availableFactionCategories = [];
 let pendingFactionCategory = null;
@@ -44,6 +47,49 @@ function resizeStage() {
 function playerInitialFromInput(name) {
   const trimmed = (name || '').trim();
   return (trimmed[0] || 'H').toUpperCase();
+}
+
+function redlineDeviceId() {
+  let value = localStorage.getItem(REDLINE_DEVICE_ID_KEY);
+  if (!value) {
+    value = globalThis.crypto?.randomUUID?.() || `device-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    localStorage.setItem(REDLINE_DEVICE_ID_KEY, value);
+  }
+  return value;
+}
+
+function storedRedlineSessions() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(REDLINE_SESSIONS_KEY) || '{}');
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch (_) {
+    return {};
+  }
+}
+
+function saveRedlineSession(name = '') {
+  if (!gameId || !playerId || !resumeToken) return;
+  const sessions = storedRedlineSessions();
+  sessions[gameId] = {
+    game_id: gameId,
+    player_id: playerId,
+    resume_token: resumeToken,
+    name: String(name || document.getElementById('playerName')?.value || '').trim(),
+    saved_at: Date.now(),
+  };
+  localStorage.setItem(REDLINE_SESSIONS_KEY, JSON.stringify(sessions));
+}
+
+function latestRedlineSession() {
+  return Object.values(storedRedlineSessions())
+    .filter(session => session?.game_id && session?.player_id && session?.resume_token)
+    .sort((a, b) => Number(b.saved_at || 0) - Number(a.saved_at || 0))[0] || null;
+}
+
+function removeRedlineSession(roomId) {
+  const sessions = storedRedlineSessions();
+  delete sessions[roomId];
+  localStorage.setItem(REDLINE_SESSIONS_KEY, JSON.stringify(sessions));
 }
 
 function updateLobbyStatus(statusText = null) {
@@ -349,11 +395,51 @@ function initProofSessionFromUrl() {
   if (!proofGameId || !proofPlayerId) return false;
   gameId = proofGameId;
   playerId = proofPlayerId;
+  resumeToken = params.get('resume_token') || null;
   connect();
   return true;
 }
 
-function initLobbyControls() {
+async function resumeStoredGame() {
+  const saved = latestRedlineSession();
+  if (!saved) return false;
+  const res = await fetch('/resume', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      game_id: saved.game_id,
+      player_id: saved.player_id,
+      resume_token: saved.resume_token,
+      device_id: redlineDeviceId(),
+    }),
+  });
+  const data = await res.json();
+  if (data.error) {
+    if (data.error === 'Game not found' || data.error === 'Player not found in lobby') {
+      removeRedlineSession(saved.game_id);
+    }
+    return false;
+  }
+  gameId = data.game_id;
+  playerId = data.player_id;
+  resumeToken = data.resume_token;
+  const roomInput = document.getElementById('roomId');
+  const nameInput = document.getElementById('playerName');
+  if (roomInput) roomInput.value = gameId;
+  if (nameInput && data.name) nameInput.value = data.name;
+  saveRedlineSession(data.name);
+  if (data.started) {
+    connect({reconnect: true});
+  } else {
+    await loadFactions();
+    startLobbySync();
+    await renderFactionPicker();
+    await refreshLobbyState('已恢復原本的作戰席位。');
+  }
+  return true;
+}
+
+async function initLobbyControls() {
   resizeStage();
   if (initProofSessionFromUrl()) return;
   if (!stageResizeBound) {
@@ -379,6 +465,7 @@ function initLobbyControls() {
   updateLobbyStatus();
   updateLobbyActionControls();
   syncLobbyRoomCode();
+  await resumeStoredGame();
 }
 
 async function setActiveGameView(view) {
@@ -430,11 +517,13 @@ async function createRoom() {
   const res = await fetch('/create', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name: creatorName }),
+    body: JSON.stringify({ name: creatorName, device_id: redlineDeviceId() }),
   });
   const data = await res.json();
   gameId = data.game_id;
   playerId = data.host_id;
+  resumeToken = data.resume_token;
+  saveRedlineSession(creatorName);
   const roomInput = document.getElementById('roomId');
   if (roomInput) {
     roomInput.value = gameId;
@@ -1101,9 +1190,14 @@ async function joinRoom() {
   }
   const name = document.getElementById('playerName').value;
 
-  const payload = {game_id: gameId, name};
-  if (playerId) {
+  const savedSession = storedRedlineSessions()[gameId] || null;
+  const payload = {game_id: gameId, name, device_id: redlineDeviceId()};
+  if (savedSession?.player_id && savedSession?.resume_token) {
+    payload.player_id = savedSession.player_id;
+    payload.resume_token = savedSession.resume_token;
+  } else if (playerId && resumeToken) {
     payload.player_id = playerId;
+    payload.resume_token = resumeToken;
   }
 
   const res = await fetch('/join', {
@@ -1119,6 +1213,8 @@ async function joinRoom() {
   }
 
   playerId = data.player_id;
+  resumeToken = data.resume_token;
+  saveRedlineSession(name);
   await loadFactions();
   startLobbySync();
   await renderFactionPicker();
@@ -1148,7 +1244,8 @@ async function startGame() {
 
 function websocketUrl() {
   const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  return `${protocol}://${location.host}/ws/${gameId}/${playerId}`;
+  const auth = resumeToken ? `?resume_token=${encodeURIComponent(resumeToken)}` : '';
+  return `${protocol}://${location.host}/ws/${gameId}/${playerId}${auth}`;
 }
 
 function setSocketDebug(text) {

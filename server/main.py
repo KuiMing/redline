@@ -7,6 +7,7 @@ from server.game_manager import GameManager
 import uuid
 import asyncio
 import csv
+import secrets
 from pathlib import Path
 
 app = FastAPI()
@@ -19,6 +20,7 @@ lobby_factions = {}  # {game_id: {player_id: faction_id}}
 lobby_bases = {}  # {game_id: {player_id: base_name}}
 lobby_ready = {}  # {game_id: {player_id: bool}}
 lobby_market_mode = {}  # {game_id: "sample_53" | "all_cards"}
+lobby_player_credentials = {}  # {game_id: {player_id: {device_id, resume_token}}}
 REACTION_RESPONSE_TIMEOUT_SECONDS = 10
 reaction_timeout_tasks = {}
 
@@ -286,15 +288,22 @@ def create_room(payload: dict = None):
     lobby_bases[game_id] = {}
     lobby_ready[game_id] = {host_id: False}
     lobby_market_mode[game_id] = "sample_53"
+    device_id = str((payload or {}).get("device_id") or "").strip()
+    resume_token = secrets.token_urlsafe(32)
+    lobby_player_credentials[game_id] = {
+        host_id: {"device_id": device_id, "resume_token": resume_token}
+    }
 
-    return {"game_id": game_id, "host_id": host_id}
+    return {"game_id": game_id, "host_id": host_id, "resume_token": resume_token}
 
 
 @app.post("/join")
 def join_game(payload: dict):
     game_id = payload.get("game_id")
-    name = payload.get("name")
-    requested_player_id = payload.get("player_id")
+    name = str(payload.get("name") or "").strip()
+    requested_player_id = str(payload.get("player_id") or "").strip()
+    device_id = str(payload.get("device_id") or "").strip()
+    requested_resume_token = str(payload.get("resume_token") or "").strip()
 
     if game_id not in lobby:
         return {"error": "Game not found"}
@@ -302,23 +311,65 @@ def join_game(payload: dict):
     if not name:
         return {"error": "Name required"}
 
-    # Reuse reserved/known player id when provided (e.g. room host)
+    credentials = lobby_player_credentials.setdefault(game_id, {})
     if requested_player_id:
         for idx, (pid, _) in enumerate(lobby[game_id]):
-            if pid == requested_player_id:
-                lobby[game_id][idx] = (requested_player_id, name)
-                lobby_ready.setdefault(game_id, {}).setdefault(requested_player_id, False)
-                return {"player_id": requested_player_id}
-        player_id = requested_player_id
-    else:
-        player_id = str(uuid.uuid4())
+            if pid != requested_player_id:
+                continue
+            credential = credentials.get(pid) or {}
+            token_matches = bool(requested_resume_token) and secrets.compare_digest(
+                requested_resume_token, str(credential.get("resume_token") or "")
+            )
+            device_matches = bool(device_id) and device_id == credential.get("device_id")
+            if credential and not (token_matches or device_matches):
+                return {"error": "Resume authentication failed"}
+            lobby[game_id][idx] = (requested_player_id, name)
+            lobby_ready.setdefault(game_id, {}).setdefault(requested_player_id, False)
+            return {
+                "player_id": requested_player_id,
+                "resume_token": credential.get("resume_token"),
+                "resumed": True,
+            }
 
     if len(lobby[game_id]) >= 4:
         return {"error": "Room full"}
 
+    player_id = str(uuid.uuid4())
+    resume_token = secrets.token_urlsafe(32)
     lobby[game_id].append((player_id, name))
     lobby_ready.setdefault(game_id, {})[player_id] = False
-    return {"player_id": player_id}
+    credentials[player_id] = {"device_id": device_id, "resume_token": resume_token}
+    return {"player_id": player_id, "resume_token": resume_token, "resumed": False}
+
+
+@app.post("/resume")
+def resume_game(payload: dict):
+    game_id = str(payload.get("game_id") or "").strip()
+    player_id = str(payload.get("player_id") or "").strip()
+    device_id = str(payload.get("device_id") or "").strip()
+    resume_token = str(payload.get("resume_token") or "").strip()
+    if game_id not in lobby:
+        return {"error": "Game not found"}
+    seat = next(((pid, name) for pid, name in lobby[game_id] if pid == player_id), None)
+    if seat is None:
+        return {"error": "Player not found in lobby"}
+    credential = lobby_player_credentials.get(game_id, {}).get(player_id) or {}
+    token_matches = bool(resume_token) and secrets.compare_digest(
+        resume_token, str(credential.get("resume_token") or "")
+    )
+    device_matches = bool(device_id) and device_id == credential.get("device_id")
+    if not credential or not (token_matches or device_matches):
+        return {"error": "Resume authentication failed"}
+    return {
+        "success": True,
+        "game_id": game_id,
+        "player_id": player_id,
+        "name": seat[1],
+        "resume_token": credential.get("resume_token"),
+        "started": manager.games.get(game_id) is not None,
+        "faction_id": lobby_factions.get(game_id, {}).get(player_id),
+        "base": lobby_bases.get(game_id, {}).get(player_id),
+    }
 
 
 @app.post("/start")
@@ -577,6 +628,16 @@ def lobby_state(game_id: str):
 @app.websocket("/ws/{game_id}/{player_id}")
 async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str):
     await websocket.accept()
+
+    credential = lobby_player_credentials.get(game_id, {}).get(player_id)
+    if credential:
+        supplied_token = websocket.query_params.get("resume_token", "")
+        if not supplied_token or not secrets.compare_digest(
+            supplied_token, str(credential.get("resume_token") or "")
+        ):
+            await websocket.send_json({"error": "Resume authentication failed"})
+            await websocket.close(code=1008)
+            return
 
     manager.register_connection(game_id, player_id, websocket)
 

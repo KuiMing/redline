@@ -1,0 +1,102 @@
+{
+  "base_url": "http://192.168.10.192:8000",
+  "status": "passed",
+  "checks_passed": 6,
+  "checks_total": 6,
+  "checks": [
+    {
+      "name": "identity_saved_in_browser",
+      "ok": true,
+      "detail": {
+        "game_id": "da8f7c9a-620d-4557-a3a6-d509b9369722",
+        "player_id": "159699e7-94bf-4c57-afce-c829c1a79ca3",
+        "resume_token": "[REDACTED]",
+        "name": "續戰玩家"
+      }
+    },
+    {
+      "name": "reload_restores_room_and_name",
+      "ok": true,
+      "detail": {
+        "room": "da8f7c9a-620d-4557-a3a6-d509b9369722",
+        "name": "續戰玩家",
+        "roster": "續\n續戰玩家\n房主 / 你｜已準備｜紅軍｜北京\n+\n等待玩家加入\n分享房間代碼邀請下一位玩家\n+\n空席位\n最多 4 位玩家\n+\n空席位\n最多 4 位玩家",
+        "status": "已恢復原本的作戰席位。"
+      }
+    },
+    {
+      "name": "reload_restores_same_faction_and_ready_state",
+      "ok": true,
+      "detail": {
+        "room": "da8f7c9a-620d-4557-a3a6-d509b9369722",
+        "name": "續戰玩家",
+        "roster": "續\n續戰玩家\n房主 / 你｜已準備｜紅軍｜北京\n+\n等待玩家加入\n分享房間代碼邀請下一位玩家\n+\n空席位\n最多 4 位玩家\n+\n空席位\n最多 4 位玩家",
+        "status": "已恢復原本的作戰席位。"
+      }
+    },
+    {
+      "name": "reload_keeps_same_player_id",
+      "ok": true,
+      "detail": {
+        "game_id": "da8f7c9a-620d-4557-a3a6-d509b9369722",
+        "player_id": "159699e7-94bf-4c57-afce-c829c1a79ca3"
+      }
+    },
+    {
+      "name": "reload_reconnects_started_game_with_same_faction",
+      "ok": true,
+      "detail": {
+        "lobbyDisplay": "none",
+        "shellDisplay": "block",
+        "me": {
+          "id": "159699e7-94bf-4c57-afce-c829c1a79ca3",
+          "name": "續戰玩家",
+          "faction": "red_army",
+          "base": "北京",
+          "resources": {
+            "money": 0,
+            "propaganda": 0
+          },
+          "moves_left": 0,
+          "hand": [
+            "樂捐者",
+            "追隨者",
+            "紅軍奧援",
+            "追隨者",
+            "樂捐者"
+          ],
+          "hand_variants": [
+            null,
+            null,
+            {
+              "variant_index": 0,
+              "support_region": "紅軍",
+              "tier2_regions": []
+            },
+            null,
+            null
+          ],
+          "deck_count": 6,
+          "discard_count": 0,
+          "discard_pile": [],
+          "discard_variants": [],
+          "organization_counts": {
+            "total": 1,
+            "inside_wall": 1,
+            "outside_wall": 0
+          },
+          "orgs": {
+            "北京": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "ok": true,
+      "detail": []
+    }
+  ],
+  "console_errors": [],
+  "screenshot": "docs/records/session-resume/session_resumed_game.png"
+}
