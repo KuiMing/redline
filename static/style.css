@@ -478,7 +478,7 @@ body {
   align-items: center;
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.8rem;
-  z-index: 10000;
+  z-index: 2;
   backdrop-filter: blur(8px);
   box-shadow: 0 10px 26px rgba(0, 0, 0, 0.18);
 }
@@ -490,18 +490,16 @@ body {
 }
 
 #emergencyNewGameBtn {
-  position: fixed;
-  top: 9px;
-  right: 14px;
-  z-index: 10050;
+  margin-left: auto;
   color: #fecaca;
   border: 1px solid rgba(248, 113, 113, 0.42);
   border-radius: 8px;
-  padding: 5px 10px;
+  padding: 7px 12px;
   background: rgba(127, 29, 29, 0.42);
   text-decoration: none;
   font-weight: 700;
   white-space: nowrap;
+  font-family: 'JetBrains Mono', monospace;
 }
 
 #emergencyNewGameBtn:hover {

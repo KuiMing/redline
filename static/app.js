@@ -58,6 +58,17 @@ function redlineDeviceId() {
   return value;
 }
 
+function startEmergencyNewGame(event) {
+  event?.preventDefault();
+  if (!window.confirm('確定要離開目前遊戲並回到新遊戲大廳嗎？')) return false;
+  try {
+    sessionStorage.setItem('redline.start_fresh_once', '1');
+    if (ws) ws.close();
+  } catch (_) {}
+  window.location.replace('/');
+  return false;
+}
+
 function storedRedlineSessions() {
   try {
     const parsed = JSON.parse(localStorage.getItem(REDLINE_SESSIONS_KEY) || '{}');
@@ -442,8 +453,9 @@ async function resumeStoredGame() {
 async function initLobbyControls() {
   resizeStage();
   const params = new URLSearchParams(window.location.search || '');
-  const startFresh = params.get('new_game') === '1';
+  const startFresh = params.get('new_game') === '1' || sessionStorage.getItem('redline.start_fresh_once') === '1';
   if (startFresh) {
+    sessionStorage.removeItem('redline.start_fresh_once');
     history.replaceState(null, '', window.location.pathname);
     gameId = null;
     playerId = null;

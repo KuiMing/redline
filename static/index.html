@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>REDLINE // STRATEGIC COMMAND</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="/static/style.css?v=emergency-new-game-20260813" />
+  <link rel="stylesheet" href="/static/style.css?v=emergency-new-game-tab-20260813" />
 </head>
 <body>
 <div id="stageViewport">
@@ -15,7 +15,6 @@
 <div id="topBar">
   <div class="title">逆統戰指揮中心</div>
   <div id="statusBar"></div>
-  <a id="emergencyNewGameBtn" href="/?new_game=1" onclick="return confirm('確定要離開目前遊戲並回到新遊戲大廳嗎？')">開新遊戲</a>
 </div>
 
 <div id="hud"></div>
@@ -257,6 +256,7 @@
     <button class="game-tab" data-view="map">戰略地圖</button>
     <button class="game-tab" data-view="log">戰況紀錄</button>
     <button id="myFactionBtn" class="game-tab my-faction-tab" type="button" data-view="myFaction">我的陣營</button>
+    <a id="emergencyNewGameBtn" href="/?new_game=1" onclick="return startEmergencyNewGame(event)">開新遊戲</a>
   </div>
 
   <div id="commandView" class="game-view active">
@@ -339,6 +339,6 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/static/player_messages_zh_tw.js?v=player-message-i18n-20260801"></script>
-<script src="/static/app.js?v=emergency-new-game-20260813"></script>
+<script src="/static/app.js?v=emergency-new-game-tab-20260813"></script>
 </body>
 </html>

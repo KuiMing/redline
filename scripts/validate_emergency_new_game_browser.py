@@ -23,6 +23,27 @@ def main():
         page.click('#createRoomBtn')
         page.wait_for_function("() => localStorage.getItem('redline.sessions.v1')")
         old_session = page.evaluate("() => Object.values(JSON.parse(localStorage.getItem('redline.sessions.v1')))[0]")
+        started = page.evaluate("""async ({gameId, hostId, deviceId}) => {
+          await fetch('/choose-faction', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({game_id:gameId, player_id:hostId, faction_id:'red_army', base_name:'北京'})});
+          await fetch('/ready', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({game_id:gameId, player_id:hostId, ready:true})});
+          const guest = await fetch('/join', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({game_id:gameId, name:'逃生對手', device_id:`${deviceId}-guest`})}).then(r => r.json());
+          await fetch('/choose-faction', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({game_id:gameId, player_id:guest.player_id, faction_id:'hong_kong', base_name:'香港城'})});
+          await fetch('/ready', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({game_id:gameId, player_id:guest.player_id, ready:true})});
+          return fetch('/start', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({game_id:gameId, player_id:hostId})}).then(r => r.json());
+        }""", {'gameId': old_session['game_id'], 'hostId': old_session['player_id'], 'deviceId': page.evaluate("() => localStorage.getItem('redline.device_id.v1')")})
+        if not started.get('success'):
+            raise RuntimeError(started)
+        page.reload(wait_until='domcontentloaded')
+        page.locator('#gameShell').wait_for(state='visible', timeout=15000)
+        page.evaluate("() => window.closeEventReveal?.()")
+        geometry = page.evaluate("""() => {
+          const faction = document.getElementById('myFactionBtn').getBoundingClientRect();
+          const fresh = document.getElementById('emergencyNewGameBtn').getBoundingClientRect();
+          const eventPanel = document.getElementById('eventCardPanel').getBoundingClientRect();
+          return {faction:{left:faction.left,right:faction.right,top:faction.top,bottom:faction.bottom}, fresh:{left:fresh.left,right:fresh.right,top:fresh.top,bottom:fresh.bottom}, eventPanel:{left:eventPanel.left,right:eventPanel.right,top:eventPanel.top,bottom:eventPanel.bottom}};
+        }""")
+        record('button_is_right_of_my_faction_and_inside_tab_row', geometry['fresh']['left'] > geometry['faction']['right'] and geometry['fresh']['right'] <= 1280 and abs(geometry['fresh']['top'] - geometry['faction']['top']) < 4, geometry)
+        record('button_does_not_overlap_event_card', geometry['fresh']['top'] >= geometry['eventPanel']['bottom'] or geometry['fresh']['bottom'] <= geometry['eventPanel']['top'] or geometry['fresh']['left'] >= geometry['eventPanel']['right'] or geometry['fresh']['right'] <= geometry['eventPanel']['left'], geometry)
 
         page.on('dialog', lambda dialog: dialog.accept())
         page.click('#emergencyNewGameBtn')
@@ -45,7 +66,7 @@ def main():
         browser.close()
 
     result = {'status': 'passed' if all(check['ok'] for check in checks) else 'failed', 'checks': checks}
-    print(json.dumps({'status': result['status'], 'checks_passed': sum(c['ok'] for c in checks), 'checks_total': len(checks)}, ensure_ascii=False))
+    print(json.dumps({'status': result['status'], 'checks_passed': sum(c['ok'] for c in checks), 'checks_total': len(checks), 'checks': checks}, ensure_ascii=False))
     if result['status'] != 'passed':
         raise SystemExit(1)
 
