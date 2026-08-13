@@ -44,6 +44,8 @@ def main():
         }""")
         record('button_is_right_of_my_faction_and_inside_tab_row', geometry['fresh']['left'] > geometry['faction']['right'] and geometry['fresh']['right'] <= 1280 and abs(geometry['fresh']['top'] - geometry['faction']['top']) < 4, geometry)
         record('button_does_not_overlap_event_card', geometry['fresh']['top'] >= geometry['eventPanel']['bottom'] or geometry['fresh']['bottom'] <= geometry['eventPanel']['top'] or geometry['fresh']['left'] >= geometry['eventPanel']['right'] or geometry['fresh']['right'] <= geometry['eventPanel']['left'], geometry)
+        fallback = page.evaluate("""() => ({href: document.getElementById('emergencyNewGameBtn').getAttribute('href'), bound: document.getElementById('emergencyNewGameBtn').dataset.bound})""")
+        record('button_has_server_navigation_fallback_and_listener', fallback['href'] == '/new-game' and fallback['bound'] == '1', fallback)
 
         page.on('dialog', lambda dialog: dialog.accept())
         page.click('#emergencyNewGameBtn')

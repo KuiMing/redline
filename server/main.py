@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from server.game import Game, TurnPhase, GamePhase, STATIC_PURCHASE_CARD_SUPPLY
 from server.cards import Card
@@ -3016,7 +3016,17 @@ def test_setup_manchuria_era_reorder_proof(payload: dict):
 
 @app.get("/")
 def index():
-    return FileResponse("static/index.html")
+    return FileResponse(
+        "static/index.html",
+        headers={"Cache-Control": "no-store, no-cache, must-revalidate", "Pragma": "no-cache"},
+    )
+
+
+@app.get("/new-game")
+def new_game_entry():
+    response = RedirectResponse(url="/?new_game=1", status_code=303)
+    response.headers["Cache-Control"] = "no-store"
+    return response
 
 
 @app.post("/test/setup-event-card-proof")

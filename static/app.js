@@ -58,15 +58,19 @@ function redlineDeviceId() {
   return value;
 }
 
-function startEmergencyNewGame(event) {
-  event?.preventDefault();
-  if (!window.confirm('確定要離開目前遊戲並回到新遊戲大廳嗎？')) return false;
-  try {
-    sessionStorage.setItem('redline.start_fresh_once', '1');
-    if (ws) ws.close();
-  } catch (_) {}
-  window.location.replace('/');
-  return false;
+function initEmergencyNewGameButton() {
+  const button = document.getElementById('emergencyNewGameBtn');
+  if (!button || button.dataset.bound === '1') return;
+  button.dataset.bound = '1';
+  button.addEventListener('click', event => {
+    event.preventDefault();
+    if (!window.confirm('確定要離開目前遊戲並回到新遊戲大廳嗎？')) return;
+    try {
+      sessionStorage.setItem('redline.start_fresh_once', '1');
+      if (ws) ws.close();
+    } catch (_) {}
+    window.location.assign(button.href);
+  });
 }
 
 function storedRedlineSessions() {
@@ -452,6 +456,7 @@ async function resumeStoredGame() {
 
 async function initLobbyControls() {
   resizeStage();
+  initEmergencyNewGameButton();
   const params = new URLSearchParams(window.location.search || '');
   const startFresh = params.get('new_game') === '1' || sessionStorage.getItem('redline.start_fresh_once') === '1';
   if (startFresh) {
