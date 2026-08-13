@@ -44,11 +44,15 @@ def main():
         }""")
         record('button_is_right_of_my_faction_and_inside_tab_row', geometry['fresh']['left'] > geometry['faction']['right'] and geometry['fresh']['right'] <= 1280 and abs(geometry['fresh']['top'] - geometry['faction']['top']) < 4, geometry)
         record('button_does_not_overlap_event_card', geometry['fresh']['top'] >= geometry['eventPanel']['bottom'] or geometry['fresh']['bottom'] <= geometry['eventPanel']['top'] or geometry['fresh']['left'] >= geometry['eventPanel']['right'] or geometry['fresh']['right'] <= geometry['eventPanel']['left'], geometry)
-        fallback = page.evaluate("""() => ({href: document.getElementById('emergencyNewGameBtn').getAttribute('href'), bound: document.getElementById('emergencyNewGameBtn').dataset.bound})""")
-        record('button_has_server_navigation_fallback_and_listener', fallback['href'] == '/new-game' and fallback['bound'] == '1', fallback)
+        fallback = page.evaluate("""() => ({href: document.getElementById('emergencyNewGameBtn').getAttribute('href'), zIndex: getComputedStyle(document.getElementById('emergencyNewGameBtn')).zIndex})""")
+        record('button_has_server_navigation_fallback_and_top_layer', fallback['href'] == '/new-game' and int(fallback['zIndex']) > 50, fallback)
+        page.evaluate("""() => { const blocker = document.createElement('div'); blocker.id='simulatedBrokenGameOverlay'; blocker.className='modal-overlay'; document.getElementById('stageViewport').appendChild(blocker); }""")
+        click_point = {'x': (geometry['fresh']['left'] + geometry['fresh']['right']) / 2, 'y': (geometry['fresh']['top'] + geometry['fresh']['bottom']) / 2}
+        hit_target = page.evaluate("({x,y}) => document.elementFromPoint(x,y)?.id", click_point)
+        record('button_remains_clickable_above_broken_game_overlay', hit_target == 'emergencyNewGameBtn', {'hit_target': hit_target, 'point': click_point})
 
-        page.on('dialog', lambda dialog: dialog.accept())
-        page.click('#emergencyNewGameBtn')
+        with page.expect_navigation(wait_until='domcontentloaded', timeout=15000):
+            page.mouse.click(click_point['x'], click_point['y'])
         page.wait_for_load_state('networkidle')
         lobby = page.evaluate("""() => ({
           lobby: getComputedStyle(document.getElementById('lobby')).display,

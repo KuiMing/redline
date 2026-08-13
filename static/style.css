@@ -490,7 +490,13 @@ body {
 }
 
 #emergencyNewGameBtn {
-  margin-left: auto;
+  display: none;
+  position: fixed;
+  top: 158px;
+  left: 1174px;
+  z-index: 2147483647;
+  transform-origin: top left;
+  pointer-events: auto;
   color: #fecaca;
   border: 1px solid rgba(248, 113, 113, 0.42);
   border-radius: 8px;

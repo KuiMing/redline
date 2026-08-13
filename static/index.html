@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>REDLINE // STRATEGIC COMMAND</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="/static/style.css?v=emergency-new-game-tab-20260813" />
+  <link rel="stylesheet" href="/static/style.css?v=emergency-fixed-link-20260813" />
 </head>
 <body>
 <div id="stageViewport">
@@ -256,7 +256,6 @@
     <button class="game-tab" data-view="map">戰略地圖</button>
     <button class="game-tab" data-view="log">戰況紀錄</button>
     <button id="myFactionBtn" class="game-tab my-faction-tab" type="button" data-view="myFaction">我的陣營</button>
-    <a id="emergencyNewGameBtn" href="/new-game">開新遊戲</a>
   </div>
 
   <div id="commandView" class="game-view active">
@@ -336,9 +335,10 @@
   </div>
 </div>
 </div>
+<a id="emergencyNewGameBtn" href="/new-game" target="_self">開新遊戲</a>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/static/player_messages_zh_tw.js?v=player-message-i18n-20260801"></script>
-<script src="/static/app.js?v=emergency-new-game-navigation-20260813"></script>
+<script src="/static/app.js?v=emergency-fixed-link-20260813"></script>
 </body>
 </html>

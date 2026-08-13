@@ -42,6 +42,15 @@ function resizeStage() {
   document.documentElement.style.setProperty('--stage-scale', String(scale));
   document.documentElement.style.setProperty('--stage-left', `${Math.max(0, (window.innerWidth - 1280 * scale) / 2)}px`);
   document.documentElement.style.setProperty('--stage-top', `${Math.max(0, (window.innerHeight - 720 * scale) / 2)}px`);
+  const emergencyButton = document.getElementById('emergencyNewGameBtn');
+  if (emergencyButton) {
+    const stageLeft = Math.max(0, (window.innerWidth - 1280 * scale) / 2);
+    const stageTop = Math.max(0, (window.innerHeight - 720 * scale) / 2);
+    emergencyButton.style.left = `${stageLeft + 1174 * scale}px`;
+    const logicalTop = Number.parseFloat(emergencyButton.dataset.logicalTop || '158');
+    emergencyButton.style.top = `${stageTop + logicalTop * scale}px`;
+    emergencyButton.style.transform = `scale(${scale})`;
+  }
 }
 
 function playerInitialFromInput(name) {
@@ -56,21 +65,6 @@ function redlineDeviceId() {
     localStorage.setItem(REDLINE_DEVICE_ID_KEY, value);
   }
   return value;
-}
-
-function initEmergencyNewGameButton() {
-  const button = document.getElementById('emergencyNewGameBtn');
-  if (!button || button.dataset.bound === '1') return;
-  button.dataset.bound = '1';
-  button.addEventListener('click', event => {
-    event.preventDefault();
-    if (!window.confirm('確定要離開目前遊戲並回到新遊戲大廳嗎？')) return;
-    try {
-      sessionStorage.setItem('redline.start_fresh_once', '1');
-      if (ws) ws.close();
-    } catch (_) {}
-    window.location.assign(button.href);
-  });
 }
 
 function storedRedlineSessions() {
@@ -456,7 +450,6 @@ async function resumeStoredGame() {
 
 async function initLobbyControls() {
   resizeStage();
-  initEmergencyNewGameButton();
   const params = new URLSearchParams(window.location.search || '');
   const startFresh = params.get('new_game') === '1' || sessionStorage.getItem('redline.start_fresh_once') === '1';
   if (startFresh) {
@@ -1334,6 +1327,8 @@ function connect(options = {}) {
   document.getElementById('lobby').style.display = 'none';
   const shell = document.getElementById('gameShell');
   if (shell) shell.style.display = 'block';
+  const emergencyNewGameBtn = document.getElementById('emergencyNewGameBtn');
+  if (emergencyNewGameBtn) emergencyNewGameBtn.style.display = 'block';
   const picker = document.getElementById('factionPicker');
   if (picker) picker.style.display = 'none';
   resizeStage();
@@ -3609,6 +3604,14 @@ async function render(state) {
           ? barTop + phaseActionBar.offsetHeight + 8
           : barTop + 8;
         gameShell.style.top = `${Math.max(barBottom, 150)}px`;
+        const freshGameButton = document.getElementById('emergencyNewGameBtn');
+        if (freshGameButton) {
+          const scale = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--stage-scale')) || 1;
+          const stageTop = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--stage-top')) || 0;
+          const logicalTop = Math.max(barBottom, 150) + 8;
+          freshGameButton.dataset.logicalTop = String(logicalTop);
+          freshGameButton.style.top = `${stageTop + logicalTop * scale}px`;
+        }
       }
     }
     const phaseActionMeta = document.getElementById('phaseActionMeta');
