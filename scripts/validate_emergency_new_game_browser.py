@@ -42,7 +42,7 @@ def main():
           const eventPanel = document.getElementById('eventCardPanel').getBoundingClientRect();
           return {faction:{left:faction.left,right:faction.right,top:faction.top,bottom:faction.bottom}, fresh:{left:fresh.left,right:fresh.right,top:fresh.top,bottom:fresh.bottom}, eventPanel:{left:eventPanel.left,right:eventPanel.right,top:eventPanel.top,bottom:eventPanel.bottom}};
         }""")
-        record('button_is_right_of_my_faction_and_inside_tab_row', geometry['fresh']['left'] > geometry['faction']['right'] and geometry['fresh']['right'] <= 1280 and abs(geometry['fresh']['top'] - geometry['faction']['top']) < 4, geometry)
+        record('button_is_right_of_my_faction_and_inside_tab_row', geometry['fresh']['left'] > geometry['faction']['right'] and geometry['fresh']['right'] <= 1280 and abs(geometry['fresh']['top'] - geometry['faction']['top']) <= 1 and abs(geometry['fresh']['bottom'] - geometry['faction']['bottom']) <= 1, geometry)
         record('button_does_not_overlap_event_card', geometry['fresh']['top'] >= geometry['eventPanel']['bottom'] or geometry['fresh']['bottom'] <= geometry['eventPanel']['top'] or geometry['fresh']['left'] >= geometry['eventPanel']['right'] or geometry['fresh']['right'] <= geometry['eventPanel']['left'], geometry)
         fallback = page.evaluate("""() => ({href: document.getElementById('emergencyNewGameBtn').getAttribute('href'), zIndex: getComputedStyle(document.getElementById('emergencyNewGameBtn')).zIndex})""")
         record('button_has_server_navigation_fallback_and_top_layer', fallback['href'] == '/new-game' and int(fallback['zIndex']) > 50, fallback)

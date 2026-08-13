@@ -34,6 +34,20 @@ const selectedPurchaseIndices = new Set();
 // 自己回合主動點「行動」不會取消任何東西，白白浪費這張卡，因此手牌區直接 disable。
 const REACTION_ONLY_ACTION_CARDS = new Set(['爆料黑幕', '產業滲透']);
 
+function alignEmergencyNewGameButton(scale = null) {
+  const button = document.getElementById('emergencyNewGameBtn');
+  const factionButton = document.getElementById('myFactionBtn');
+  const tabs = document.getElementById('gameTabs');
+  if (!button || !factionButton || !tabs || getComputedStyle(factionButton).display === 'none') return;
+  const activeScale = scale || Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--stage-scale')) || 1;
+  const factionRect = factionButton.getBoundingClientRect();
+  const tabsRect = tabs.getBoundingClientRect();
+  button.style.height = `${factionButton.offsetHeight}px`;
+  button.style.left = `${tabsRect.right - 16 * activeScale - button.offsetWidth * activeScale}px`;
+  button.style.top = `${factionRect.top}px`;
+  button.style.transform = `scale(${activeScale})`;
+}
+
 function resizeStage() {
   const scale = Math.min(
     window.innerWidth / 1280,
@@ -43,14 +57,7 @@ function resizeStage() {
   document.documentElement.style.setProperty('--stage-left', `${Math.max(0, (window.innerWidth - 1280 * scale) / 2)}px`);
   document.documentElement.style.setProperty('--stage-top', `${Math.max(0, (window.innerHeight - 720 * scale) / 2)}px`);
   const emergencyButton = document.getElementById('emergencyNewGameBtn');
-  if (emergencyButton) {
-    const stageLeft = Math.max(0, (window.innerWidth - 1280 * scale) / 2);
-    const stageTop = Math.max(0, (window.innerHeight - 720 * scale) / 2);
-    emergencyButton.style.left = `${stageLeft + 1174 * scale}px`;
-    const logicalTop = Number.parseFloat(emergencyButton.dataset.logicalTop || '158');
-    emergencyButton.style.top = `${stageTop + logicalTop * scale}px`;
-    emergencyButton.style.transform = `scale(${scale})`;
-  }
+  if (emergencyButton) alignEmergencyNewGameButton(scale);
 }
 
 function playerInitialFromInput(name) {
@@ -1328,7 +1335,10 @@ function connect(options = {}) {
   const shell = document.getElementById('gameShell');
   if (shell) shell.style.display = 'block';
   const emergencyNewGameBtn = document.getElementById('emergencyNewGameBtn');
-  if (emergencyNewGameBtn) emergencyNewGameBtn.style.display = 'block';
+  if (emergencyNewGameBtn) {
+    emergencyNewGameBtn.style.display = 'flex';
+    requestAnimationFrame(() => alignEmergencyNewGameButton());
+  }
   const picker = document.getElementById('factionPicker');
   if (picker) picker.style.display = 'none';
   resizeStage();
@@ -3605,13 +3615,7 @@ async function render(state) {
           : barTop + 8;
         gameShell.style.top = `${Math.max(barBottom, 150)}px`;
         const freshGameButton = document.getElementById('emergencyNewGameBtn');
-        if (freshGameButton) {
-          const scale = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--stage-scale')) || 1;
-          const stageTop = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--stage-top')) || 0;
-          const logicalTop = Math.max(barBottom, 150) + 8;
-          freshGameButton.dataset.logicalTop = String(logicalTop);
-          freshGameButton.style.top = `${stageTop + logicalTop * scale}px`;
-        }
+        if (freshGameButton) requestAnimationFrame(() => alignEmergencyNewGameButton());
       }
     }
     const phaseActionMeta = document.getElementById('phaseActionMeta');

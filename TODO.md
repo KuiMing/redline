@@ -5,7 +5,7 @@
 ## 近期完成
 
 ### P1：關閉網頁後恢復原本遊戲席位
-- [done] 全域逃生入口：遊戲分頁列的「我的陣營」右側、靠畫面右邊顯示「開新遊戲」。按鈕不再覆蓋事件卡。真正根因是按鈕位於經 transform 的 `designStage` stacking context；即使設定高 `z-index`，全頁 modal 仍可攔截點擊。現已把純 `/new-game` 連結移到 `designStage` 外，以 fixed 最高層顯示，並依舞台縮放動態對齊原位置。測試會實際插入故障 overlay，使用 `elementFromPoint()` 與真實滑鼠座標確認命中按鈕。正式 Browser proof **8/8 passed**。
+- [done] 全域逃生入口：遊戲分頁列的「我的陣營」右側、靠畫面右邊顯示「開新遊戲」。按鈕位於 `designStage` 外，以 fixed 最高層顯示，因此故障遮罩不會攔截點擊。位置不再使用固定 `top` 猜測；每次渲染及縮放都直接讀取「我的陣營」與分頁列的實際 `getBoundingClientRect()`，使上下邊界及高度精確對齊。正式 Browser proof **8/8 passed**，上下邊界誤差均為 0 px。
 - [done] 瀏覽器為每台裝置建立穩定 `device_id`，並為每個房間保存 `game_id`、`player_id`、隨機 `resume_token` 與玩家名稱。重新開啟同一網址時，前端自動呼叫 `/resume`；遊戲已開始則直接用原 `player_id` 重建 WebSocket，遊戲未開始則回到原大廳席位。原陣營、根據地、手牌、資源、組織、棄牌與回合成果都沿用同一個玩家物件。
 - [done] 安全守門：房間代碼與公開 `player_id` 不足以接管席位；恢復與 WebSocket 連線必須通過該席位的 `resume_token`。同裝置的 `device_id` 可作恢復輔助。伺服器重啟後記憶體內房間仍會消失；持久化到磁碟屬另一項工作。
 - [done] 驗證：API 單元 **3/3 passed**；正式 Chromium reload proof **7/7 passed**，確認名字、房間、陣營、準備狀態與 `player_id` 不變，且已開始的遊戲會直接回到原陣營主畫面；父頁與戰略地圖的授權 WebSocket 均保持連線，console 0 errors。證據位於 `docs/records/session-resume/`。
