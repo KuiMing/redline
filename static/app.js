@@ -32,6 +32,7 @@ let stickyPlayerErrorTimer = null;
 const selectedPurchaseIndices = new Set();
 // 這兩張卡的取消能力只能被動觸發（其他玩家打出可取消的卡牌時自動跳出反應視窗），
 // 自己回合主動點「行動」不會取消任何東西，白白浪費這張卡，因此手牌區直接 disable。
+let emergencyButtonAlignmentTimer = null;
 const REACTION_ONLY_ACTION_CARDS = new Set(['爆料黑幕', '產業滲透']);
 
 function alignEmergencyNewGameButton(scale = null) {
@@ -46,6 +47,16 @@ function alignEmergencyNewGameButton(scale = null) {
   button.style.left = `${tabsRect.right - 16 * activeScale - button.offsetWidth * activeScale}px`;
   button.style.top = `${factionRect.top}px`;
   button.style.transform = `scale(${activeScale})`;
+}
+
+function keepEmergencyNewGameButtonAligned() {
+  if (emergencyButtonAlignmentTimer) return;
+  alignEmergencyNewGameButton();
+  emergencyButtonAlignmentTimer = window.setInterval(() => {
+    const button = document.getElementById('emergencyNewGameBtn');
+    if (!button || getComputedStyle(button).display === 'none') return;
+    alignEmergencyNewGameButton();
+  }, 100);
 }
 
 function resizeStage() {
@@ -1355,6 +1366,7 @@ function connect(options = {}) {
   if (emergencyNewGameBtn) {
     emergencyNewGameBtn.style.display = 'flex';
     requestAnimationFrame(() => alignEmergencyNewGameButton());
+    keepEmergencyNewGameButtonAligned();
   }
   const picker = document.getElementById('factionPicker');
   if (picker) picker.style.display = 'none';
