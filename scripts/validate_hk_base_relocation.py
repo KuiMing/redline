@@ -55,37 +55,33 @@ def case_window_closes_at_next_round():
     return {'name': 'window_closes_when_next_round_starts', 'result': result, 'checks': checks, 'ok': all(checks.values())}
 
 
-def case_airport_relocation_costs_two_moves():
+def case_airport_is_not_paid_base_relocation():
     g, hk, red = _new_game()
     hk.moves_left = 2
     result = g.relocate_hong_kong_base(hk.id, '臺北')
     checks = {
-        'relocation_succeeds': result.get('success') is True and result.get('free') is False,
-        'costs_two_moves': hk.moves_left == 0,
-        'base_moved': hk.base == '臺北' and hk.organizations.get('臺北', 0) == 1,
+        'relocation_blocked_without_event_window': '香港抗暴之戰尚未完成結算' in str(result.get('error')),
+        'moves_not_spent': hk.moves_left == 2,
+        'base_unchanged': hk.base == '香港城' and hk.organizations.get('香港城', 0) == 1,
     }
-    one = _new_game()
-    g2, hk2, red2 = one
-    hk2.moves_left = 1
-    blocked = g2.relocate_hong_kong_base(hk2.id, '臺北')
-    checks['blocked_with_one_move'] = 'Not enough move points' in str(blocked.get('error'))
-    return {'name': 'airport_base_relocation_costs_two', 'result': result, 'checks': checks, 'ok': all(checks.values())}
+    return {'name': 'airport_is_not_paid_base_relocation', 'result': result, 'checks': checks, 'ok': all(checks.values())}
 
 
 def case_restrictions():
     g, hk, red = _new_game()
-    hk.moves_left = 2
+    g.hk_free_base_relocation = True
     bad_target = g.relocate_hong_kong_base(hk.id, '曼谷')
     red.organizations = {'倫敦': 1}
     enemy_blocked = g.relocate_hong_kong_base(hk.id, '倫敦')
-    g.current_player_index = 1  # 輪到紅軍
-    not_turn = g.relocate_hong_kong_base(hk.id, '臺北')
+    g.current_player_index = 1  # 免費前移窗口不要求輪到香港
+    out_of_turn_free = g.relocate_hong_kong_base(hk.id, '臺北')
     g2, hk2, red2 = _new_game()
+    g2.hk_free_base_relocation = True
     red2_result = g2.relocate_hong_kong_base(red2.id, '臺北')
     checks = {
         'only_four_cities': '根據地只能遷移至' in str(bad_target.get('error')),
         'occupied_destination_blocked': 'occupied town' in str(enemy_blocked.get('error')),
-        'airport_requires_own_action_turn': 'ACTION phase' in str(not_turn.get('error')),
+        'free_window_allows_hk_choice_out_of_turn': out_of_turn_free.get('success') is True,
         'non_hk_faction_blocked': 'Only Hong Kong' in str(red2_result.get('error')),
     }
     return {'name': 'relocation_restrictions', 'checks': checks, 'ok': all(checks.values())}
@@ -93,7 +89,7 @@ def case_restrictions():
 
 def case_base_anchor_moves_and_new_base_ability():
     g, hk, red = _new_game()
-    hk.moves_left = 2
+    g.hk_free_base_relocation = True
     g.relocate_hong_kong_base(hk.id, '倫敦')
     has_intl = g._player_has_ability(hk, '國際線')  # 倫敦根據地能力
     checks = {
@@ -107,21 +103,19 @@ def main():
     results = [
         case_free_window_after_event_settlement(),
         case_window_closes_at_next_round(),
-        case_airport_relocation_costs_two_moves(),
+        case_airport_is_not_paid_base_relocation(),
         case_restrictions(),
         case_base_anchor_moves_and_new_base_ability(),
     ]
     summary = {
         'scope': ['香港根據地遷移（S5-1 + 機場根據地用途）'],
         'purpose': (
-            'Per 2026-07-11 user rulings: (1) 「香港抗爭之烈」 refers to the 香港抗暴之戰 event '
-            'card — after it occurs and settles (success or failure), Hong Kong may relocate '
-            'its base for FREE to 臺北/倫敦/卡加利/多倫多 before the next round begins (window '
-            'closes at the next event phase); (2) independently of the event, Hong Kong may '
-            'use the Chek Lap Kok airport at any time during its own ACTION phase to relocate '
-            'its base to those four cities for 2 migrations. The base anchor organization '
-            'moves with the base, the new base\'s local ability (e.g. 倫敦=國際線) activates '
-            'automatically, and enemy-occupied destinations are blocked.'
+            'Event card 香港抗暴之戰 opens a one-time free base-forward window after settlement '
+            '(success or failure). Hong Kong may move its base to 臺北/倫敦/卡加利/多倫多 '
+            'before the next round begins, or keep the current base and consume the window. '
+            'The separate 赤鱲角 airport rule moves a Hong Kong organization for 2 migrations; '
+            'it is not a paid base-relocation method. The base anchor organization moves with '
+            'the base, the new base ability activates, and occupied destinations are blocked.'
         ),
         'total': len(results),
         'passed': sum(1 for r in results if r['ok']),

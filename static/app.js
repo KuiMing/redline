@@ -1023,6 +1023,21 @@ document.addEventListener('keydown', (event) => {
   }
 });
 
+function factionAbilityText(item) {
+  return typeof item === 'string'
+    ? item
+    : [item?.name_override || item?.name, item?.trigger, item?.effect].filter(Boolean).join('：');
+}
+
+function hongKongBaseOverviewItems(faction, currentBase = null) {
+  if (!faction || faction.id !== 'hong_kong') return [];
+  return (faction.bases || []).map(base => {
+    const marker = base.name === currentBase ? '（目前根據地）' : (base.type === 'initial' ? '（初始根據地）' : '（可前移根據地）');
+    const abilities = (base.abilities || []).map(factionAbilityText).join('；') || '無特殊能力';
+    return `${baseDisplayName(base.name)}${marker}：${abilities}`;
+  });
+}
+
 function renderFactionDetails(factionId, selectedBaseName = null, selectedBaseGroupName = null) {
   const panel = document.getElementById('factionDetailPanel');
   const title = document.getElementById('factionDetailTitle');
@@ -1076,9 +1091,12 @@ function renderFactionDetails(factionId, selectedBaseName = null, selectedBaseGr
     : (detail.win_conditions || []).map(humanizeWinCondition);
 
   title.textContent = detailSource ? `${opt.name || factionDisplayName(factionId)}（${detailSource.variant || activeDetailBase}）` : factionDisplayName(factionId);
-  basesEl.innerHTML = activeDetailBase
-    ? `<div class="faction-detail-section-title">根據地</div><ul><li>${baseDisplayName(activeDetailBase)}</li></ul>`
-    : (activeDetailBaseGroup ? `<div class="faction-detail-section-title">根據地類別</div><ul><li>${baseDisplayName(activeDetailBaseGroup)}</li></ul>` : '');
+  const hkBaseOverview = hongKongBaseOverviewItems(detail, activeDetailBase);
+  basesEl.innerHTML = hkBaseOverview.length
+    ? `<div class="faction-detail-section-title">根據地遷移與能力</div><ul>${hkBaseOverview.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`
+    : activeDetailBase
+      ? `<div class="faction-detail-section-title">根據地</div><ul><li>${baseDisplayName(activeDetailBase)}</li></ul>`
+      : (activeDetailBaseGroup ? `<div class="faction-detail-section-title">根據地類別</div><ul><li>${baseDisplayName(activeDetailBaseGroup)}</li></ul>` : '');
   abilitiesEl.innerHTML = `<div class="faction-detail-section-title">能力</div><ul>${abilities.map(a => `<li>${renderFactionDetailItem(a)}</li>`).join('') || '<li>（暫無資料）</li>'}</ul>`;
   rulesEl.innerHTML = `<div class="faction-detail-section-title">規則</div><ul>${rules.map(r => `<li>${r}</li>`).join('') || '<li>（暫無資料）</li>'}</ul>`;
   winEl.innerHTML = `<div class="faction-detail-section-title">獲勝條件</div><ul>${wins.map(w => `<li>${w}</li>`).join('') || '<li>（暫無資料）</li>'}</ul>`;
@@ -2991,6 +3009,12 @@ function renderMyFactionView(state = window.lastGameState || {}) {
   const bodyEl = document.getElementById('myFactionBody');
   if (!titleEl || !bodyEl) return;
   const me = (state.players || []).find(p => p.id === playerId);
+  const myFactionTab = document.getElementById('myFactionBtn');
+  if (myFactionTab) {
+    const canRelocate = me?.faction === 'hong_kong' && !!state.hk_free_base_relocation;
+    myFactionTab.textContent = canRelocate ? '我的陣營（可前移）' : '我的陣營';
+    myFactionTab.classList.toggle('attention', canRelocate);
+  }
   if (!me || !me.faction) {
     titleEl.textContent = '尚未選擇陣營';
     bodyEl.innerHTML = '<div class="personal-info-empty">進入遊戲並選定陣營後，即可在這裡查看完整陣營資訊。</div>';
@@ -3043,12 +3067,43 @@ function renderMyFactionView(state = window.lastGameState || {}) {
   const section = (label, items) => `
     <div class="faction-detail-section-title">${label}</div>
     <ul>${(items.length ? items : ['（暫無資料）']).map(x => `<li>${escapeHtml(x)}</li>`).join('')}</ul>`;
+  const hkBaseOverview = hongKongBaseOverviewItems(detail, baseName);
+  const occupiedTowns = new Set((state.players || []).flatMap(player =>
+    Object.entries(player.orgs || {}).filter(([, count]) => Number(count) > 0).map(([town]) => town)
+  ));
+  const hkRelocationTargets = factionId === 'hong_kong'
+    ? (detail.bases || []).filter(base => base?.type === 'relocatable')
+    : [];
+  const hkRelocationPanel = factionId === 'hong_kong' && state.hk_free_base_relocation
+    ? `<section class="hk-base-relocation-panel">
+        <div class="faction-detail-section-title">香港抗暴之戰：免費前移根據地</div>
+        <p>請選擇一個新根據地；亦可維留目前的 ${escapeHtml(baseDisplayName(baseName))}。</p>
+        <div class="hk-base-relocation-actions">
+          ${hkRelocationTargets.map(base => {
+            const occupied = occupiedTowns.has(base.name);
+            return `<button type="button" class="base-choice-btn" data-hk-relocate-town="${escapeHtml(base.name)}" ${occupied ? 'disabled' : ''}>前移至${escapeHtml(baseDisplayName(base.name))}${occupied ? '（已有組織）' : ''}</button>`;
+          }).join('')}
+          <button type="button" class="base-choice-btn" data-hk-keep-base="1">維留${escapeHtml(baseDisplayName(baseName))}</button>
+        </div>
+      </section>`
+    : '';
   bodyEl.innerHTML = [
-    section('根據地', baseName ? [baseDisplayName(baseName)] : []),
-    section('能力', abilities.map(renderItem)),
+    hkRelocationPanel,
+    hkBaseOverview.length ? section('根據地遷移與能力', hkBaseOverview) : section('根據地', baseName ? [baseDisplayName(baseName)] : []),
+    section('目前生效能力', abilities.map(renderItem)),
     section('規則與限制', rules),
     section('獲勝條件', wins),
   ].join('');
+  bodyEl.querySelectorAll('[data-hk-relocate-town]').forEach(button => {
+    button.addEventListener('click', () => {
+      button.disabled = true;
+      sendAction('relocate_base', {town: button.dataset.hkRelocateTown});
+    });
+  });
+  bodyEl.querySelector('[data-hk-keep-base]')?.addEventListener('click', event => {
+    event.currentTarget.disabled = true;
+    sendAction('keep_hong_kong_base');
+  });
 }
 
 // 「我的陣營」右欄時代關卡：未達成前也可隨時查看自己的完整卡面與雙方效果。

@@ -75,7 +75,7 @@
     {
       "name": "enemy_occupied_destination_blocked",
       "result": {
-        "error": "Cannot move into enemy organization"
+        "error": "Cannot move into occupied town"
       },
       "checks": {
         "enemy_destination_blocked": true

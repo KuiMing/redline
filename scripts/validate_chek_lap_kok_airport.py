@@ -85,7 +85,7 @@ def case_enemy_occupied_destination_blocked():
     a.organizations = {AIRPORT: 1, '香港城': 1}
     b.organizations = {'倫敦': 1}
     result = g.move_organization(AIRPORT, '倫敦', mode='road')
-    checks = {'enemy_destination_blocked': 'Cannot move into enemy organization' in str(result.get('error'))}
+    checks = {'enemy_destination_blocked': 'Cannot move into occupied town' in str(result.get('error'))}
     return {'name': 'enemy_occupied_destination_blocked', 'result': result, 'checks': checks, 'ok': all(checks.values())}
 
 

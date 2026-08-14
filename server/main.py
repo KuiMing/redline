@@ -759,6 +759,8 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
                     )
             elif action == "relocate_base":
                 result = game.relocate_hong_kong_base(player_id, data.get("town"))
+            elif action == "keep_hong_kong_base":
+                result = game.keep_hong_kong_base(player_id)
             elif action == "resolve_choice":
                 result = game.resolve_pending_choice(player_id, data.get("index"))
             elif action == "cancel_choice":
@@ -3054,9 +3056,9 @@ def test_setup_event_card_proof(payload: dict):
     game = Game(players, market_mode="all_cards")
     game.players[0].faction_id = payload.get("viewer_faction") or "liberals"
     game.players[1].faction_id = "red_army"
-    game.players[0].base = "臺北"
+    game.players[0].base = "香港城" if game.players[0].faction_id == "hong_kong" else "臺北"
     game.players[1].base = "北京"
-    game.players[0].organizations = {"臺北": 1}
+    game.players[0].organizations = {game.players[0].base: 1}
     game.players[1].organizations = {"北京": 1}
     game.pending_base_choices = []
     game.game_phase = GamePhase.MAIN
@@ -3065,7 +3067,20 @@ def test_setup_event_card_proof(payload: dict):
     game.players[0].hand = [Card("合作談判", "command", {}), Card("追隨者", "propaganda", {"propaganda": 1})]
     game.players[0].deck.discard_pile = []
     event = game._event_by_name(event_name) or game._event_by_name("香港抗暴之戰")
-    if payload.get("current_event_active") and event:
+    if payload.get("hk_free_relocation") and event:
+        game.current_event = event
+        game.event_progress = {
+            "count": int(event.get("trigger", {}).get("count", 1) or 1),
+            "required": int(event.get("trigger", {}).get("count", 1) or 1),
+            "succeeded": True,
+            "settled": False,
+            "status": "success_pending",
+        }
+        game._settle_current_event()
+        game.event_deck.draw_pile = []
+        game.event_deck.discard_pile = []
+        game.turn_phase = TurnPhase.ACTION
+    elif payload.get("current_event_active") and event:
         game.current_event = event
         game.event_progress = {
             "count": 0,

@@ -3,7 +3,7 @@
     "scope": [
       "香港根據地遷移（S5-1 + 機場根據地用途）"
     ],
-    "purpose": "Per 2026-07-11 user rulings: (1) 「香港抗爭之烈」 refers to the 香港抗暴之戰 event card — after it occurs and settles (success or failure), Hong Kong may relocate its base for FREE to 臺北/倫敦/卡加利/多倫多 before the next round begins (window closes at the next event phase); (2) independently of the event, Hong Kong may use the Chek Lap Kok airport at any time during its own ACTION phase to relocate its base to those four cities for 2 migrations. The base anchor organization moves with the base, the new base's local ability (e.g. 倫敦=國際線) activates automatically, and enemy-occupied destinations are blocked.",
+    "purpose": "Event card 香港抗暴之戰 opens a one-time free base-forward window after settlement (success or failure). Hong Kong may move its base to 臺北/倫敦/卡加利/多倫多 before the next round begins, or keep the current base and consume the window. The separate 赤鱲角 airport rule moves a Hong Kong organization for 2 migrations; it is not a paid base-relocation method. The base anchor organization moves with the base, the new base ability activates, and occupied destinations are blocked.",
     "total": 5,
     "passed": 5,
     "failed": 0
@@ -29,7 +29,7 @@
     {
       "name": "window_closes_when_next_round_starts",
       "result": {
-        "error": "Not enough move points (airport base relocation costs 2)"
+        "error": "香港抗暴之戰尚未完成結算，沒有免費前移根據地的機會"
       },
       "checks": {
         "window_closed": true,
@@ -38,18 +38,14 @@
       "ok": true
     },
     {
-      "name": "airport_base_relocation_costs_two",
+      "name": "airport_is_not_paid_base_relocation",
       "result": {
-        "success": true,
-        "from": "香港城",
-        "to": "臺北",
-        "free": false
+        "error": "香港抗暴之戰尚未完成結算，沒有免費前移根據地的機會"
       },
       "checks": {
-        "relocation_succeeds": true,
-        "costs_two_moves": true,
-        "base_moved": true,
-        "blocked_with_one_move": true
+        "relocation_blocked_without_event_window": true,
+        "moves_not_spent": true,
+        "base_unchanged": true
       },
       "ok": true
     },
@@ -58,7 +54,7 @@
       "checks": {
         "only_four_cities": true,
         "occupied_destination_blocked": true,
-        "airport_requires_own_action_turn": true,
+        "free_window_allows_hk_choice_out_of_turn": true,
         "non_hk_faction_blocked": true
       },
       "ok": true

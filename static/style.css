@@ -489,6 +489,12 @@ body {
   text-shadow: 0 0 14px rgba(96, 165, 250, 0.22);
 }
 
+.game-tab.my-faction-tab.attention {
+  border-color: #facc15;
+  color: #fef08a;
+  box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.3), 0 0 14px rgba(250, 204, 21, 0.2);
+}
+
 #emergencyNewGameBtn {
   display: none;
   position: fixed;
@@ -3174,6 +3180,30 @@ body.victory-art-viewer-open {
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
+}
+
+.hk-base-relocation-panel {
+  margin-bottom: 16px;
+  padding: 14px;
+  border: 1px solid rgba(250, 204, 21, 0.65);
+  border-radius: 12px;
+  background: rgba(113, 63, 18, 0.24);
+}
+
+.hk-base-relocation-panel p {
+  margin: 8px 0 12px;
+  color: #fde68a;
+}
+
+.hk-base-relocation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.hk-base-relocation-actions .base-choice-btn:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
 }
 
 .personal-info-empty {
