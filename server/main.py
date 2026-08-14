@@ -371,6 +371,16 @@ def resume_game(payload: dict):
     }
 
 
+def _required_faction_for_player(game_id: str, player_id: str):
+    """Return the faction forced by the remaining-seat rule, if any."""
+    players = lobby.get(game_id, [])
+    chosen = lobby_factions.get(game_id, {})
+    has_red_army = any(fid == 'red_army' for fid in chosen.values())
+    if len(players) == 4 and not has_red_army and players[-1][0] == player_id:
+        return 'red_army'
+    return None
+
+
 @app.post("/start")
 def start_game(payload: dict):
     game_id = payload.get("game_id")
@@ -405,7 +415,7 @@ def start_game(payload: dict):
     if len(chosen) != len(player_list):
         return {"error": "All players must choose factions first"}
     if sum(1 for fid in chosen.values() if fid == 'red_army') != 1:
-        return {"error": "Exactly one player must choose red_army"}
+        return {"error": "必須有且只能有一名玩家選擇紅軍，才能啟動行動"}
 
     game = Game(player_list, market_mode=lobby_market_mode.get(game_id, "sample_53"))
     # override randomized faction assignment with chosen factions
@@ -566,6 +576,9 @@ def choose_faction(payload: dict):
     # prevent duplicate category selection (主陣營唯一)
     taken = lobby_factions.get(game_id, {})
     wanted_category = faction_category(faction_id)
+    required_faction = _required_faction_for_player(game_id, player_id)
+    if required_faction and faction_id != required_faction:
+        return {"error": "房間尚無紅軍；最後一個席位只能選擇紅軍"}
     if any(pid != player_id and faction_category(fid) == wanted_category for pid, fid in taken.items()):
         return {"error": "Faction category already taken"}
 
@@ -621,6 +634,11 @@ def lobby_state(game_id: str):
         "ready": ready,
         "started": manager.games.get(game_id) is not None,
         "market_mode": lobby_market_mode.get(game_id, "sample_53"),
+        "required_faction_by_player": {
+            pid: required
+            for pid, _ in lobby[game_id]
+            if (required := _required_faction_for_player(game_id, pid))
+        },
     }
 
 

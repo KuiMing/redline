@@ -130,6 +130,8 @@ function deriveLobbyHint(lobbyRes) {
   const ready = lobbyRes?.ready || {};
   const everyoneChose = players.length > 0 && Object.keys(chosen).length === players.length;
   const everyoneReady = players.length > 0 && players.every(([pid]) => ready[pid]);
+  const hasRedArmy = Object.values(chosen).includes('red_army');
+  if (everyoneChose && everyoneReady && !hasRedArmy) return '房間必須有一名紅軍玩家，才能啟動行動。';
   if (everyoneChose && everyoneReady) return '所有玩家已準備；房主可以啟動行動。';
   if (everyoneChose) return '玩家陣營已選定；等待所有玩家按下準備。';
   return `已進入 ${players.length}/4 人作戰室；等待玩家選擇陣營。`;
@@ -200,7 +202,8 @@ function lobbyReadiness(lobbyRes = latestLobbyState) {
   const enoughPlayers = players.length >= 2;
   const everyoneChose = enoughPlayers && Object.keys(chosen).length === players.length;
   const everyoneReady = enoughPlayers && players.every(([pid]) => ready[pid]);
-  return {players, chosen, ready, hasRoom, isHost, meChose, meReady, enoughPlayers, everyoneChose, everyoneReady};
+  const hasRedArmy = Object.values(chosen).includes('red_army');
+  return {players, chosen, ready, hasRoom, isHost, meChose, meReady, enoughPlayers, everyoneChose, everyoneReady, hasRedArmy};
 }
 
 function updateLobbyActionControls(lobbyRes = latestLobbyState) {
@@ -219,7 +222,7 @@ function updateLobbyActionControls(lobbyRes = latestLobbyState) {
   }
 
   if (startBtn) {
-    startBtn.disabled = !(status.isHost && status.everyoneChose && status.everyoneReady);
+    startBtn.disabled = !(status.isHost && status.everyoneChose && status.everyoneReady && status.hasRedArmy);
     startBtn.title = !status.hasRoom
       ? '請先建立作戰室'
       : !status.isHost
@@ -230,7 +233,9 @@ function updateLobbyActionControls(lobbyRes = latestLobbyState) {
             ? '所有玩家都需要先選擇陣營'
             : !status.everyoneReady
               ? '所有玩家都需要按下準備'
-              : '所有玩家已準備，可以啟動行動';
+              : !status.hasRedArmy
+                ? '房間必須有一名紅軍玩家，才能啟動行動'
+                : '所有玩家已準備，可以啟動行動';
   }
 }
 
@@ -1093,9 +1098,18 @@ async function renderFactionPicker() {
   const activeChoice = pendingFactionChoice || confirmed;
   const activeBase = pendingFactionBaseChoice || confirmedBase;
   const activeBaseGroup = pendingFactionBaseGroup || null;
-  info.textContent = activeChoice
-    ? `目前陣營：${factionDisplayName(activeChoice)}${activeBase ? `｜根據地：${baseDisplayName(activeBase)}` : (activeBaseGroup ? `｜根據地類別：${baseDisplayName(activeBaseGroup)}` : '')}`
-    : '請先選擇你的陣營';
+  const requiredFaction = (lobbyRes.required_faction_by_player || {})[playerId] || null;
+  if (requiredFaction === 'red_army' && activeChoice && activeChoice !== 'red_army') {
+    pendingFactionCategory = null;
+    pendingFactionChoice = null;
+    pendingFactionBaseChoice = null;
+    pendingFactionBaseGroup = null;
+  }
+  info.textContent = requiredFaction === 'red_army'
+    ? '房間尚無紅軍；你是最後一個席位，只能選擇紅軍陣營。'
+    : activeChoice
+      ? `目前陣營：${factionDisplayName(activeChoice)}${activeBase ? `｜根據地：${baseDisplayName(activeBase)}` : (activeBaseGroup ? `｜根據地類別：${baseDisplayName(activeBaseGroup)}` : '')}`
+      : '請先選擇你的陣營';
 
   list.innerHTML = '';
   variants.innerHTML = '';
@@ -1104,7 +1118,7 @@ async function renderFactionPicker() {
   bases.style.display = 'none';
   const currentActiveOption = activeChoice ? factionOptionById(activeChoice) : null;
   const needsBaseChoice = !!(activeChoice && currentActiveOption?.base_options?.length);
-  const readyForConfirm = !!activeChoice && (!needsBaseChoice || !!activeBase);
+  const readyForConfirm = !!activeChoice && (!requiredFaction || activeChoice === requiredFaction) && (!needsBaseChoice || !!activeBase);
   confirmBar.style.display = readyForConfirm ? 'block' : 'none';
   confirmBtn.disabled = !readyForConfirm;
   confirmBtn.onclick = confirmFactionChoice;
@@ -1121,7 +1135,10 @@ async function renderFactionPicker() {
     const isSelectedCategory = activeChoice && factionCategoryOf(activeChoice) === category.id;
     btn.className = `faction-choice-btn faction-primary-btn${isSelectedCategory ? ' active' : ''}`;
     btn.textContent = category.label;
-    btn.disabled = takenCategories.has(category.id);
+    btn.disabled = takenCategories.has(category.id) || (!!requiredFaction && category.id !== factionCategoryOf(requiredFaction));
+    btn.title = requiredFaction && category.id !== factionCategoryOf(requiredFaction)
+      ? '房間尚無紅軍；最後一個席位只能選擇紅軍'
+      : '';
     btn.onclick = async () => {
       pendingFactionCategory = category;
       pendingFactionChoice = category.mode === 'direct' ? category.options[0].id : null;
