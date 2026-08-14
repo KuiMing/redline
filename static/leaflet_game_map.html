@@ -81,6 +81,18 @@
   .shared-badge.shared-badge-multi {
     background:linear-gradient(135deg, rgba(250,204,21,.98), rgba(251,146,60,.98));
   }
+  .armory-badge-wrap { background:transparent; border:none; }
+  .armory-badge {
+    width:24px;
+    height:24px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:17px;
+    line-height:1;
+    pointer-events:none;
+    filter:drop-shadow(0 2px 5px rgba(0,0,0,.9)) drop-shadow(0 0 3px rgba(251,191,36,.55));
+  }
   /* 瓦解目標 💀 標示（2026-08-02）：點選即選取該目標，須再按側欄「確認瓦解此組織」
      按鈕才會真正執行，避免玩家單擊探索時不小心觸發不可逆動作。 */
   .dissolve-target-badge-wrap { background:transparent; border:none; }
@@ -183,6 +195,6 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/static/player_messages_zh_tw.js?v=player-message-i18n-20260801"></script>
 <script src="/static/map_data_loader.js?v=map-ssot2-20260729"></script>
-<script src="/static/leaflet_game_map_logic.js?v=session-auth-sync-20260813"></script>
+<script src="/static/leaflet_game_map_logic.js?v=armory-town-badges-v3-20260814"></script>
 </body>
 </html>

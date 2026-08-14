@@ -111,11 +111,13 @@ let currentBasemap = 'cartoDark';
 const roadLayer = L.layerGroup().addTo(map);
 const railLayer = L.layerGroup().addTo(map);
 const markerLayer = L.layerGroup().addTo(map);
+const armoryBadgeLayer = L.layerGroup().addTo(map);
 const highlightLayer = L.layerGroup().addTo(map);
 const supportChoiceHighlightLayer = L.layerGroup().addTo(map);
 let labelMode = 'auto', showRoad = true, showRail = true;
 let currentMarkers = new Map();
 let currentSharedBadges = new Map();
+let currentArmoryBadges = new Map();
 let currentVisible = towns.map(t=>t.name);
 let lastGameState = null;
 let selectedTown = null;
@@ -322,6 +324,7 @@ function renderSupportChoiceHighlights(options = {}) {
         .bindPopup(`${escapeHtml(supportChoiceHighlight.sourceName || '可瓦解目標')}：${escapeHtml(entry?.label || townName)}（點擊選取，再按左側按鈕確認瓦解）`);
       hitArea.on('click', selectClick);
       const skullMarker = L.marker([town.lat, town.lon], {
+        zIndexOffset: 1000,
         icon: L.divIcon({
           className: 'dissolve-target-badge-wrap',
           html: `<div class="dissolve-target-badge${isFocused ? ' dissolve-target-badge-focused' : ''}${isArmed ? ' dissolve-target-badge-armed' : ''}">💀</div>`,
@@ -505,12 +508,14 @@ function clearLayers() {
   roadLayer.clearLayers();
   railLayer.clearLayers();
   markerLayer.clearLayers();
+  armoryBadgeLayer.clearLayers();
   highlightLayer.clearLayers();
   currentSharedBadges.forEach(marker => {
     try { map.removeLayer(marker); } catch {}
   });
   currentMarkers = new Map();
   currentSharedBadges = new Map();
+  currentArmoryBadges = new Map();
 }
 
 function markerStyleForTown(name, zoom = map.getZoom()) {
@@ -927,6 +932,11 @@ function updateDynamicStyles() {
     if (!town || !badge.setLatLng || !badge.getElement) return;
     badge.setLatLng([town.lat, town.lon]);
   });
+  currentArmoryBadges.forEach((badge, townName) => {
+    const town = byName.get(townName);
+    if (!town || !badge.setLatLng) return;
+    badge.setLatLng([town.lat, town.lon]);
+  });
   renderSupportChoiceHighlights();
 }
 
@@ -969,6 +979,22 @@ function renderMap() {
         })
       }).addTo(map);
       currentSharedBadges.set(t.name, badge);
+    }
+    if (t.type === '軍火庫' && !currentArmoryBadges.has(t.name)) {
+      const armoryBadge = L.marker([t.lat, t.lon], {
+        interactive: false,
+        keyboard: false,
+        zIndexOffset: 600,
+        icon: L.divIcon({
+          className: 'armory-badge-wrap',
+          html: `<div class="armory-badge" data-armory-town="${escapeHtml(t.name)}" title="${escapeHtml(t.name)}：軍火庫">🧨</div>`,
+          iconSize: [24, 24],
+          // Keep 🧨 above-right of the town. Dissolve 💀 remains centred, so both
+          // permanent town type and temporary target state stay visible together.
+          iconAnchor: [-3, 25],
+        })
+      }).addTo(armoryBadgeLayer);
+      currentArmoryBadges.set(t.name, armoryBadge);
     }
     marker.on('click', () => {
       const eventChoice = eventBuildChoiceForTown(t.name);
@@ -1312,6 +1338,37 @@ function openMapSocket() {
   bindMapSocketLifecycle();
   return { ok: true };
 }
+
+window.__armoryBadgeDiagnosticsForTest = function () {
+  return [...currentArmoryBadges.entries()].map(([townName, badge]) => {
+    const town = byName.get(townName);
+    const latLng = badge.getLatLng();
+    const townPoint = map.latLngToContainerPoint([town.lat, town.lon]);
+    const element = badge.getElement();
+    const rect = element?.getBoundingClientRect();
+    const mapRect = map.getContainer().getBoundingClientRect();
+    return {
+      town: townName,
+      zoom: map.getZoom(),
+      townLat: town.lat,
+      townLon: town.lon,
+      badgeLat: latLng.lat,
+      badgeLon: latLng.lng,
+      screenOffsetX: rect ? (rect.left + rect.width / 2) - (mapRect.left + townPoint.x) : null,
+      screenOffsetY: rect ? (rect.top + rect.height / 2) - (mapRect.top + townPoint.y) : null,
+    };
+  });
+};
+window.__armoryDissolveCoexistenceForTest = function (townName) {
+  const armory = document.querySelector(`[data-armory-town="${CSS.escape(townName)}"]`);
+  const skull = document.querySelector('.dissolve-target-badge');
+  return {
+    armoryVisible: !!armory && getComputedStyle(armory).visibility !== 'hidden',
+    skullVisible: !!skull && getComputedStyle(skull).visibility !== 'hidden',
+    armoryText: armory?.textContent || '',
+    skullText: skull?.textContent || '',
+  };
+};
 
 window.connectGameMap = function ({ gameId: gid, playerId: pid, resumeToken: token = null }) {
   mapGameId = gid;
