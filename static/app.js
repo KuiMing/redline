@@ -1937,7 +1937,12 @@ function renderChoiceModal(state) {
       lastSupportChoiceMapHighlightPayload = payload;
       const canQueueMoreBuildCards = choiceKey === 'card_build_organization'
         && (choice.queueable_card_names || []).length > 0;
-      if (canQueueMoreBuildCards) {
+      // 宣傳家只有在移除自身後才取得本次建立權。玩家此時最需要先看見「己方組織
+      // 1 格內」的實際合法範圍，不能因手上還有其他可排隊的建立牌就停留在指揮中心。
+      // 排隊功能仍然保留：玩家可手動回到指揮中心繼續打牌；其他建立牌維持既有的
+      // 連續收集體驗，避免改變已驗證的多張建立牌流程。
+      const shouldKeepCollectingBuildCards = canQueueMoreBuildCards && sourceName !== '宣傳家';
+      if (shouldKeepCollectingBuildCards) {
         syncChoiceModalMapHighlight(payload);
       } else {
         setActiveGameView('map')
