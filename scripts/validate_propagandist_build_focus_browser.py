@@ -133,6 +133,63 @@ def main() -> None:
             queued_action.is_visible() and queued_action.is_enabled(),
             {'visible': queued_action.is_visible(), 'enabled': queued_action.is_enabled()},
         )
+
+        # 重現使用者的「新遊戲第一次開地圖」時序：choice 先抵達，/map-data 與座標資料
+        # 晚 700ms 才完成。舊版會先把 choice 標成已聚焦，資料到齊後又被 focusAsia 沖回
+        # 亞洲全圖。這個獨立頁面證明初始化完成後會重試並停在合法城鎮。
+        race_page = context.new_page()
+        race_page.add_init_script("""() => {
+          const nativeFetch = window.fetch.bind(window);
+          window.fetch = (input, init) => {
+            const url = String(input || '');
+            if (url.includes('/map-data') || url.includes('/map-geo-coordinates')) {
+              return new Promise((resolve, reject) => {
+                setTimeout(() => nativeFetch(input, init).then(resolve, reject), 700);
+              });
+            }
+            return nativeFetch(input, init);
+          };
+        }""")
+        race_page.goto(
+            f"{BASE_URL}/static/leaflet_game_map.html?v=propagandist-focus-race-proof",
+            wait_until='domcontentloaded',
+        )
+        race_page.evaluate("""() => window.postMessage({
+          type: 'redline-choice-highlight',
+          payload: {
+            mode: 'support-targets',
+            actionKind: 'build',
+            choiceKey: 'card_build_organization',
+            sourceName: '宣傳家',
+            prompt: '宣傳家：選擇要建立組織的城鎮。',
+            towns: [{town: '澳門', label: '澳門', index: 0}],
+          },
+        }, window.location.origin)""")
+        race_page.wait_for_function("() => window.__redlineMapDataReady != null", timeout=5000)
+        race_page.evaluate("() => window.__redlineMapDataReady")
+        race_page.wait_for_timeout(350)
+        race_focus = race_page.evaluate("""() => {
+          const center = map.getCenter();
+          const target = byName.get('澳門');
+          return {
+            zoom: map.getZoom(),
+            center: {lat: center.lat, lon: center.lng},
+            target: target ? {lat: target.lat, lon: target.lon} : null,
+            sourceName: supportChoiceHighlight?.sourceName || null,
+          };
+        }""")
+        race_centered = bool(
+            race_focus['target']
+            and abs(race_focus['center']['lat'] - race_focus['target']['lat']) < 0.001
+            and abs(race_focus['center']['lon'] - race_focus['target']['lon']) < 0.001
+        )
+        record(
+            'first_map_load_retries_focus_after_delayed_map_data',
+            race_focus['zoom'] >= 8 and race_centered and race_focus['sourceName'] == '宣傳家',
+            race_focus,
+        )
+        race_page.close()
+
         record('browser_console_has_no_errors', not console_errors, console_errors)
         context.close()
         browser.close()

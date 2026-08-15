@@ -1,7 +1,7 @@
 {
   "status": "passed",
-  "checks_passed": 5,
-  "checks_total": 5,
+  "checks_passed": 6,
+  "checks_total": 6,
   "base_url": "http://192.168.10.192:8000",
   "screenshot": "docs/records/action-cards/propagandist-build-focus/propagandist-build-focus.png",
   "checks": [
@@ -40,6 +40,22 @@
       "detail": {
         "visible": true,
         "enabled": true
+      }
+    },
+    {
+      "name": "first_map_load_retries_focus_after_delayed_map_data",
+      "passed": true,
+      "detail": {
+        "zoom": 8,
+        "center": {
+          "lat": 22.1987,
+          "lon": 113.5439
+        },
+        "target": {
+          "lat": 22.1987,
+          "lon": 113.5439
+        },
+        "sourceName": "宣傳家"
       }
     },
     {

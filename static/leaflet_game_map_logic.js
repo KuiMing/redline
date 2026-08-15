@@ -257,7 +257,8 @@ function supportChoiceHighlightKey(payload) {
 function focusSupportChoiceTargets(bounds) {
   if (!bounds.length) return;
   if (bounds.length === 1) {
-    map.setView(bounds[0], Math.max(map.getZoom(), 8), { animate: false });
+    const currentZoom = Number(map.getZoom());
+    map.setView(bounds[0], Math.max(Number.isFinite(currentZoom) ? currentZoom : 4, 8), { animate: false });
     return;
   }
   map.fitBounds(bounds, { padding: [110, 110], maxZoom: 8 });
@@ -290,7 +291,7 @@ function isDissolveSupportChoiceHighlight() {
 function renderSupportChoiceHighlights(options = {}) {
   const { autoFocus = false } = options;
   supportChoiceHighlightLayer.clearLayers();
-  if (!supportChoiceHighlight || supportChoiceHighlight.mode !== 'support-targets') return;
+  if (!supportChoiceHighlight || supportChoiceHighlight.mode !== 'support-targets') return false;
   const towns = Array.isArray(supportChoiceHighlight.towns) ? supportChoiceHighlight.towns : [];
   const bounds = [];
   let focusedBounds = null;
@@ -380,16 +381,21 @@ function renderSupportChoiceHighlights(options = {}) {
     }
     if (autoFocus) {
       focusSupportChoiceTargets(focusedBounds || bounds);
+      return true;
     }
   }
+  return false;
 }
 
 function applySupportChoiceHighlight(payload) {
   const nextKey = supportChoiceHighlightKey(payload);
   const shouldAutoFocus = !!nextKey && nextKey !== supportChoiceHighlightFocusKey;
   supportChoiceHighlight = payload || null;
-  supportChoiceHighlightFocusKey = nextKey;
-  renderSupportChoiceHighlights({ autoFocus: shouldAutoFocus });
+  if (!nextKey) supportChoiceHighlightFocusKey = null;
+  const didAutoFocus = renderSupportChoiceHighlights({ autoFocus: shouldAutoFocus });
+  // 只有實際找到地圖座標並完成 setView／fitBounds 後才記錄已聚焦。若 choice 比
+  // /map-data 更早抵達，保留 null，讓地圖資料完成初始化時再試一次。
+  if (didAutoFocus) supportChoiceHighlightFocusKey = nextKey;
 }
 
 function finalizeMoveSelection(fromTown, toTown) {
@@ -1478,7 +1484,17 @@ async function bootstrapCanonicalGameMap() {
   initializeCanonicalMapData(bundle.mapData, bundle.geoCoordinates);
   renderMap();
   if (lastGameState) applyGameStateToMap(lastGameState);
-  setTimeout(focusAsia, 100);
+  // 新遊戲首次開啟戰略地圖時，choice 可能比地圖資料先抵達。地圖資料完成後要重新
+  // 嘗試一次候選範圍聚焦；預設亞洲視角只能在沒有待處理地圖 choice 時執行，否則
+  // 延遲的 focusAsia 會把剛完成的宣傳家 setView 沖掉。
+  applySupportChoiceHighlight(supportChoiceHighlight);
+  setTimeout(() => {
+    if (supportChoiceHighlight) {
+      applySupportChoiceHighlight(supportChoiceHighlight);
+    } else {
+      focusAsia();
+    }
+  }, 100);
   await loadFactionMeta();
   return { towns: towns.length, links: links.length };
 }
