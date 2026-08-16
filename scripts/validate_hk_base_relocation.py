@@ -20,6 +20,7 @@ def _new_game():
     g.turn_phase = TurnPhase.ACTION
     g.current_player_index = 0
     g.turn_log = g._new_turn_log()
+    g.pending_choice = None
     g.hk_free_base_relocation = False
     return g, hk, red
 

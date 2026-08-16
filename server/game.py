@@ -949,8 +949,12 @@ class Game:
         # 香港 special_rules：事件卡「香港抗暴之戰」發生並完成結算後，
         # 不論任務成功或失敗，香港可在下一回合開始前免費前移一次根據地。
         if event.get('name') == '香港抗暴之戰' and any(getattr(pl, 'faction_id', None) == 'hong_kong' for pl in self.players):
-            self.hk_free_base_relocation = True
-            self.log('香港抗暴之戰已結算：香港可於下一回合開始前免費遷移根據地（臺北/倫敦/卡加利/多倫多）')
+            if result and result.get('pending_choice') and self.pending_choice:
+                context = dict(self.pending_choice.get('context') or {})
+                context['open_hk_free_base_relocation_after_resolution'] = True
+                self.pending_choice['context'] = context
+            else:
+                self._open_hong_kong_base_relocation_window()
         self.event_notification = self._event_display_payload()
         return result
 
@@ -1908,12 +1912,15 @@ class Game:
                 player.deck.discard([card])
             if choice.get('grant_propaganda_if_all_non_starter') and len(non_starters) == len(selected_cards):
                 player.resources['propaganda'] += int(choice.get('grant_propaganda_if_all_non_starter'))
+            context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
             self.pending_choice = None
             chosen_names = [getattr(card, 'name', str(card)) for card in selected_cards]
             self.log(
                 f"{player.name} discarded {len(selected_cards)} chosen card(s): {', '.join(chosen_names)} "
                 f"(hand {len(player.hand)}, deck {len(player.deck.draw_pile)}, discard {len(player.deck.discard_pile)})"
             )
+            if context.get('open_hk_free_base_relocation_after_resolution'):
+                self._open_hong_kong_base_relocation_window()
             return {'success': True, 'chosen_cards': chosen_names}
 
         if choice_key in {'armed_target_discard', 'era_bonus_discard_on_red_card'}:
@@ -6081,6 +6088,10 @@ class Game:
     def _hk_relocatable_base_towns(self):
         faction = self.faction_by_id.get('hong_kong', {})
         return [b.get('name') for b in (faction.get('bases') or []) if isinstance(b, dict) and b.get('type') == 'relocatable']
+
+    def _open_hong_kong_base_relocation_window(self):
+        self.hk_free_base_relocation = True
+        self.log('香港抗暴之戰已結算：香港可於下一回合開始前免費遷移根據地（臺北/倫敦/卡加利/多倫多）')
 
     def relocate_hong_kong_base(self, player_id, to_town):
         """Use the one-time free forward-base window opened by 香港抗暴之戰."""

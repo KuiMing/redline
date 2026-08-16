@@ -25,6 +25,7 @@
 - [done] 已分離兩種規則：事件負責免費前移根據地；赤鱲角機場只負責花費 2 次遷移移動香港組織，不能再被誤用為付費遷移根據地。
 - [done] 大廳陣營選擇與遊戲內「我的陣營」均會列出香港城、臺北、倫敦、卡加利及多倫多的能力、目前根據地、可遷移根據地、解鎖事件及遷移後能力切換。
 - [done] 事件窗口開啟時，「我的陣營（可前移）」會亮起，並提供四個前移按鈕及維留按鈕。Browser proof **9/9 passed**；單元與 board-action 聚焦回歸 **8/8 passed**；規則 validator **5/5 passed**。
+- [done] 修正「香港抗暴之戰」任務失敗時，必要棄牌尚未完成卻提前顯示根據地按鈕，導致所有目的地都回覆「請先完成目前的選擇」。現在先完成事件要求的棄牌，再開啟根據地遷移窗口。臺北、倫敦、卡加利及多倫多四個目的地 Browser proof **15/15 passed**；截圖證據位於 `docs/records/faction-ui/hong-kong-base-relocation/`。
 - [done] 「全國人大召開」期間，香港以安全屋能力在牆內建立組織會計為「使用或觸發陣營特殊能力」；香港遷至不具安全屋的根據地後不會誤算。
 - [done] 完成全部陣營特殊能力的 `use_faction_ability` 追蹤稽核。補上游擊隊、殉道者／青山里、盟旗學校、華文傳媒／國際線、赤鱲角機場，並將紅軍派系、賭徒耳語、民族祭儀改為待決效果完成後才計入。能力聚焦測試 **25/25 passed**；正式 Browser proof **7/7 passed**；完整 pytest **360/360 passed**。完整矩陣見 `docs/records/factions/FACTION_ABILITY_EVENT_TRACKING_AUDIT.md`。
 

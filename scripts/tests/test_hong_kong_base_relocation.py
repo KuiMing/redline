@@ -5,7 +5,7 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from server.game import Game, TurnPhase
+from server.game import Card, Game, TurnPhase
 
 
 def make_game():
@@ -19,6 +19,7 @@ def make_game():
     game.current_player_index = 0
     game.turn_phase = TurnPhase.ACTION
     game.turn_log = game._new_turn_log()
+    game.pending_choice = None
     game.hk_free_base_relocation = False
     return game, hk, red
 
@@ -53,6 +54,32 @@ def test_exact_hong_kong_event_name_opens_free_window_on_success_and_failure():
     assert failure_game.hk_free_base_relocation is True
     assert success_game.hk_free_base_relocation is True
     assert old_wrong_name_game.hk_free_base_relocation is False
+
+
+def test_failed_event_opens_relocation_only_after_required_discard_resolves():
+    game, hk, _ = make_game()
+    hk.hand = [Card('合作談判', 'command', {}), Card('追隨者', 'propaganda', {'propaganda': 1})]
+    game.current_event = game._event_by_name('香港抗暴之戰')
+    game.event_progress = {
+        'count': 0,
+        'required': 1,
+        'succeeded': False,
+        'settled': False,
+        'status': 'active',
+    }
+
+    settlement = game._settle_current_event()
+
+    assert settlement.get('pending_choice') is True
+    assert game.pending_choice.get('choice_key') == 'event_discard_self'
+    assert game.hk_free_base_relocation is False
+
+    resolved = game.resolve_pending_choice(hk.id, [0])
+
+    assert resolved.get('success') is True
+    assert game.pending_choice is None
+    assert game.hk_free_base_relocation is True
+    assert game.relocate_hong_kong_base(hk.id, '倫敦').get('success') is True
 
 
 def test_free_forward_base_move_consumes_window_without_spending_moves_and_switches_ability():
