@@ -35,5 +35,9 @@ Playwright 實際開一局（A=紅軍、B=臺灣），切到戰略地圖聚焦�
 粗細基礎上再加粗 1px（沒有共享組織的情況下）；有共享組織時仍優先顯示黃色提示，語意
 不變。
 
-驗證：`base_badge_faction_colored_outline.png`——聚焦北京，圓圈外框正確顯示紅軍陣營色
-且比修改前明顯加粗。完整 pytest 366/366 passed。
+驗證：程式化讀取 `markerStyleForTown()` 的實際回傳值確認三個陣營各自的根據地城鎮：
+紅軍（北京）`#f04f56`、香港（香港城）`#a855f7`、臺灣綠線（臺北）`#4ade80`，皆與
+`palette` 定義一致，且粗細比修改前多 1px。另外用 Playwright 對戰略地圖各自的根據地
+城鎮貼近裁切放大截圖，肉眼也能明顯分辨三種顏色（`base_badge_outline_red_army_beijing.png`、
+`base_badge_outline_hong_kong.png`、`base_badge_outline_taiwan.png`）。完整 pytest
+366/366 passed。
