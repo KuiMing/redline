@@ -95,6 +95,34 @@ def case_restrictions():
     return {'name': 'relocation_restrictions', 'checks': checks, 'ok': all(checks.values())}
 
 
+def case_turn_handoff_waits_for_hong_kong_decision():
+    g, hk, red = _new_game()
+    g.current_event = g._event_by_name('香港抗暴之戰')
+    g.event_progress = {
+        'count': 1,
+        'required': 1,
+        'succeeded': True,
+        'settled': False,
+        'status': 'success_pending',
+        'settlement_target_player_id': hk.id,
+    }
+    g.turn_phase = TurnPhase.END
+    ended = g.advance_turn_phase()
+    waits_for_decision = (
+        ended.get('pending_hk_relocation') is True
+        and g.current_player() is hk
+        and g.turn_phase == TurnPhase.END
+        and g.hk_free_base_relocation is True
+    )
+    kept = g.keep_hong_kong_base(hk.id)
+    checks = {
+        'end_turn_pauses_before_handoff': waits_for_decision,
+        'keep_decision_consumes_window': kept.get('success') is True and g.hk_free_base_relocation is False,
+        'next_player_starts_after_decision': g.current_player() is red and g.turn_phase == TurnPhase.ACTION,
+    }
+    return {'name': 'turn_handoff_waits_for_hong_kong_decision', 'checks': checks, 'ok': all(checks.values())}
+
+
 def case_base_anchor_moves_and_new_base_ability():
     g, hk, red = _new_game()
     g.hk_free_base_relocation = True
@@ -113,14 +141,16 @@ def main():
         case_window_closes_at_next_round(),
         case_airport_is_not_paid_base_relocation(),
         case_restrictions(),
+        case_turn_handoff_waits_for_hong_kong_decision(),
         case_base_anchor_moves_and_new_base_ability(),
     ]
     summary = {
         'scope': ['香港根據地遷移（S5-1 + 機場根據地用途）'],
         'purpose': (
             'Event card 香港抗暴之戰 opens a one-time free base-forward window after settlement '
-            '(success or failure). Hong Kong may move its base to 臺北/倫敦/卡加利/多倫多 '
-            'before the next round begins, or keep the current base and consume the window. '
+            '(success or failure). End-turn refill and event effects resolve first; the current seat '
+            'then pauses until Hong Kong chooses relocation or keep, and only then passes to the next player. '
+            'Hong Kong may move its base to 臺北/倫敦/卡加利/多倫多, or keep the current base. '
             'The separate 赤鱲角 airport rule moves a Hong Kong organization for 2 migrations; '
             'it is not a paid base-relocation method. For an empty destination, the base anchor '
             'organization moves with the base. An existing Hong Kong organization at the destination '

@@ -2,7 +2,7 @@
 
 可重跑指令：`python3 scripts/validate_hk_base_relocation.py`
 
-- total: 5 / passed: 5 / failed: 0
+- total: 6 / passed: 6 / failed: 0
 
 ## Results
 
@@ -10,4 +10,5 @@
 - PASS window_closes_when_next_round_starts: checks={"window_closed": true, "no_free_relocation_after_close": true}
 - PASS airport_is_not_paid_base_relocation: checks={"relocation_blocked_without_event_window": true, "moves_not_spent": true, "base_unchanged": true}
 - PASS relocation_restrictions: checks={"only_four_cities": true, "other_faction_occupied_destination_blocked": true, "own_organization_destination_allowed": true, "free_window_allows_hk_choice_out_of_turn": true, "non_hk_faction_blocked": true}
+- PASS turn_handoff_waits_for_hong_kong_decision: checks={"end_turn_pauses_before_handoff": true, "keep_decision_consumes_window": true, "next_player_starts_after_decision": true}
 - PASS base_anchor_and_base_ability_follow_relocation: checks={"new_base_ability_active": true, "anchor_cannot_move_from_new_base": true}

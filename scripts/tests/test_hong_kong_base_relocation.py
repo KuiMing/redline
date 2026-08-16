@@ -82,6 +82,71 @@ def test_failed_event_opens_relocation_only_after_required_discard_resolves():
     assert game.relocate_hong_kong_base(hk.id, '倫敦').get('success') is True
 
 
+def test_end_turn_waits_for_hong_kong_relocation_decision_before_next_player_starts():
+    game, hk, red = make_game()
+    hk.hand = [Card('合作談判', 'command', {})]
+    game.current_event = game._event_by_name('香港抗暴之戰')
+    game.event_progress = {
+        'count': 0,
+        'required': 1,
+        'succeeded': False,
+        'settled': False,
+        'status': 'active',
+        'settlement_target_player_id': hk.id,
+    }
+    game.turn_phase = TurnPhase.END
+
+    ended = game.advance_turn_phase()
+
+    assert ended.get('pending_choice') is True
+    assert game.current_player() is hk
+    assert game.turn_phase == TurnPhase.END
+    assert game.pending_choice.get('choice_key') == 'event_discard_self'
+    assert game.hk_free_base_relocation is False
+
+    discarded = game.resolve_pending_choice(hk.id, [0])
+
+    assert discarded.get('success') is True
+    assert game.current_player() is hk
+    assert game.hk_free_base_relocation is True
+
+    relocated = game.relocate_hong_kong_base(hk.id, '臺北')
+
+    assert relocated.get('success') is True
+    assert game.current_player() is red
+    assert game.turn_phase == TurnPhase.ACTION
+
+
+def test_successful_event_also_waits_for_keep_decision_before_next_player_starts():
+    game, hk, red = make_game()
+    game.current_event = game._event_by_name('香港抗暴之戰')
+    game.event_progress = {
+        'count': 1,
+        'required': 1,
+        'succeeded': True,
+        'settled': False,
+        'status': 'success_pending',
+        'settlement_target_player_id': hk.id,
+    }
+    game.turn_phase = TurnPhase.END
+
+    ended = game.advance_turn_phase()
+
+    assert ended.get('pending_hk_relocation') is True
+    assert game.current_player() is hk
+    assert game.turn_phase == TurnPhase.END
+    assert game.hk_free_base_relocation is True
+    assert game.advance_turn_phase() == {
+        'error': '請先決定香港根據地要遷移至何處，或選擇留在目前根據地'
+    }
+
+    kept = game.keep_hong_kong_base(hk.id)
+
+    assert kept == {'success': True, 'kept': '香港城'}
+    assert game.current_player() is red
+    assert game.turn_phase == TurnPhase.ACTION
+
+
 def test_free_relocation_to_existing_own_organization_promotes_it_to_base_without_removing_old_organization():
     game, hk, _ = make_game()
     hk.organizations = {'香港城': 1, '臺北': 1}

@@ -1598,10 +1598,17 @@ function isSatisfiedStaleEventBuildChoice(state = window.lastGameState) {
 }
 
 function pendingChoiceWaitText(state = window.lastGameState) {
+  const me = (state?.players || []).find(p => p.id === playerId) || null;
+  if (state?.hk_free_base_relocation) {
+    const hongKongPlayer = (state.players || []).find(p => p.faction === 'hong_kong') || null;
+    if (me && hongKongPlayer && me.id === hongKongPlayer.id) {
+      return '請先決定香港根據地要遷移至何處，或選擇留在目前根據地。';
+    }
+    return `等待 ${hongKongPlayer?.name || '香港玩家'} 決定是否遷移根據地。`;
+  }
   const choice = state?.pending_choice || null;
   if (!choice) return '';
   if (isSatisfiedStaleEventBuildChoice(state)) return '';
-  const me = (state.players || []).find(p => p.id === playerId) || null;
   const targetName = choice.player_name || (state.players || []).find(p => p.id === choice.player_id)?.name || '指定玩家';
   const localizedPrompt = playerMessageZhTw(choice.prompt, '');
   if (choice.type === 'reaction_choice') {

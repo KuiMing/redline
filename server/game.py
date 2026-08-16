@@ -121,6 +121,8 @@ class Game:
         self.co_winners = []
         # 香港 special_rules（2026-07-11 裁決 S5-1）：香港抗暴之戰結算後、下一回合開始前的免費根據地遷移窗口
         self.hk_free_base_relocation = False
+        # 事件在回合結束補牌後結算時，先凍結換人；香港完成「遷移／留在」後才交棒。
+        self.hk_relocation_blocks_turn_handoff = False
         self.market_mode = market_mode or "sample_53"
 
         self.map = self._load_json(MAP_PATH)
@@ -5720,6 +5722,8 @@ class Game:
     def advance_turn_phase(self):
         if self.pending_choice and not self._recover_stale_event_build_choice_if_satisfied():
             return {"error": "Resolve pending choice before advancing phase"}
+        if getattr(self, 'hk_relocation_blocks_turn_handoff', False):
+            return {"error": "請先決定香港根據地要遷移至何處，或選擇留在目前根據地"}
         if self.turn_phase == TurnPhase.EVENT:
             # Only drain already-queued (possibly interactive) era activations here;
             # do NOT run trigger detection mid-round. New eras become eligible only at
@@ -5773,6 +5777,25 @@ class Game:
             # applying a bogus failure penalty for an event nobody has acted on yet.
             deferred_event = self.current_event if defer_event_settlement else None
             deferred_progress = self.event_progress if defer_event_settlement else None
+            hong_kong_must_decide_before_handoff = bool(
+                defer_event_settlement
+                and (deferred_event or {}).get('name') == '香港抗暴之戰'
+                and any(getattr(pl, 'faction_id', None) == 'hong_kong' for pl in self.players)
+            )
+            if hong_kong_must_decide_before_handoff:
+                # 先完成本回合的補牌與回合結束能力，但不要把席位交給下一位玩家。
+                # 香港事件的成功／失敗效果仍維持「補牌後結算」；必要棄牌完成後再開遷移窗口。
+                self.hk_relocation_blocks_turn_handoff = True
+                self._end_turn(advance_player=False)
+                event_result = self._settle_current_event()
+                if event_result and event_result.get('pending_choice'):
+                    return {"success": True, "pending_choice": True}
+                if self.hk_free_base_relocation:
+                    return {"success": True, "pending_hk_relocation": True}
+                self.hk_relocation_blocks_turn_handoff = False
+                self._finish_end_turn_handoff()
+                return {"success": True}
+
             self._end_turn()
             if defer_event_settlement and deferred_progress is not None and not deferred_progress.get('settled'):
                 wrapped = self.current_event is not deferred_event
@@ -5793,7 +5816,7 @@ class Game:
                     return {"success": True, "pending_choice": True}
         return {"success": True}
 
-    def _end_turn(self):
+    def _end_turn(self, advance_player=True):
         # Victory *detection* is NOT run per player-turn. It is deferred to the
         # round-wrap boundary below so Red Army's turn this round can still
         # invalidate a condition (e.g. dissolve an organization propping up an
@@ -5842,6 +5865,11 @@ class Game:
         # before an era is judged as met (P1: 時代關卡觸發時機應等整輪含紅軍行動完).
         self._continue_era_activation_queue()
 
+        if advance_player:
+            self._finish_end_turn_handoff()
+
+    def _finish_end_turn_handoff(self):
+        """Advance the seat after all end-turn effects and mandatory decisions finish."""
         self.current_player_index = (self.current_player_index + 1) % len(self.players)
         if self.current_player_index == getattr(self, 'round_start_player_index', 0):
             self.turn += 1
@@ -6093,6 +6121,12 @@ class Game:
         self.hk_free_base_relocation = True
         self.log('香港抗暴之戰已結算：香港可於下一回合開始前免費遷移根據地（臺北/倫敦/卡加利/多倫多）')
 
+    def _complete_hong_kong_relocation_turn_handoff(self):
+        if not getattr(self, 'hk_relocation_blocks_turn_handoff', False):
+            return
+        self.hk_relocation_blocks_turn_handoff = False
+        self._finish_end_turn_handoff()
+
     def relocate_hong_kong_base(self, player_id, to_town):
         """Use the one-time free forward-base window opened by 香港抗暴之戰."""
         pending_error = self._pending_board_action_error()
@@ -6129,6 +6163,7 @@ class Game:
             self._place_organization(player, to_town, require_supply=False, require_development=False, enforce_base_build_block=False)
         player.base = to_town
         self.log(f"{player.name} relocated base from {old_base} to {to_town} via {via}")
+        self._complete_hong_kong_relocation_turn_handoff()
         return {"success": True, "from": old_base, "to": to_town, "free": free_window}
 
     def keep_hong_kong_base(self, player_id):
@@ -6144,6 +6179,7 @@ class Game:
             return {"error": "目前沒有免費遷移根據地的機會"}
         self.hk_free_base_relocation = False
         self.log(f"{player.name} chose to keep the Hong Kong base at {player.base}")
+        self._complete_hong_kong_relocation_turn_handoff()
         return {"success": True, "kept": player.base}
 
     def _validate_organization_move(self, from_town, to_town, mode="road"):

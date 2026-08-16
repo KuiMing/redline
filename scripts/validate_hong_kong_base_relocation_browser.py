@@ -14,6 +14,7 @@ SCREENSHOT = RECORD_DIR / 'hong_kong_base_relocation_ui.png'
 FAILURE_READY_SCREENSHOT = RECORD_DIR / 'failed_event_relocation_ready.png'
 FAILURE_SUCCESS_SCREENSHOT = RECORD_DIR / 'failed_event_relocation_success.png'
 OWN_ORG_BASE_MAP_SCREENSHOT = RECORD_DIR / 'own_organization_relocation_and_base_markers.png'
+END_TURN_DECISION_SCREENSHOT = RECORD_DIR / 'end_turn_relocation_decision_before_handoff.png'
 
 
 def post_json(path, payload):
@@ -189,50 +190,87 @@ def main():
                 page.click('#myFactionBtn') if not page.locator('#myFactionView').evaluate("el => el.classList.contains('active')") else None
                 page.screenshot(path=str(FAILURE_SUCCESS_SCREENSHOT), full_page=True)
 
-        # Exact playtest regression: Hong Kong may use the relocation window during another
-        # player's turn, and an existing Hong Kong organization may become the new base.
+        # Exact playtest regression: pressing End Turn must pause the handoff until Hong Kong
+        # completes the event discard and then chooses relocation or keep.
         occupied_setup = post_json('/test/setup-event-card-proof', {
             'event_name': '香港抗暴之戰',
             'viewer_faction': 'hong_kong',
-            'hk_free_relocation': True,
+            'hk_end_turn_relocation_timing': True,
             'viewer_orgs': {'香港城': 1, '臺北': 1},
             'red_orgs': {'北京': 1},
-            'current_player_index': 1,
         })
-        page.goto(f"{BASE_URL}{occupied_setup['url']}&v=hk-own-org-relocation", wait_until='domcontentloaded')
+        page.goto(f"{BASE_URL}{occupied_setup['url']}&v=hk-end-turn-relocation-timing", wait_until='domcontentloaded')
         page.wait_for_function(
-            "window.lastGameState?.current_player === 'red' && window.lastGameState?.hk_free_base_relocation === true",
+            "window.lastGameState?.current_player === 'viewer' && window.lastGameState?.turn_phase === 'end'",
             timeout=15000,
         )
         if page.locator('#eventRevealModal').is_visible():
             page.locator('#eventRevealModal').click(position={'x': 5, 'y': 5})
             page.locator('#eventRevealModal').wait_for(state='hidden', timeout=5000)
+        page.click('#advanceStepBtn')
+        page.wait_for_function(
+            "window.lastGameState?.pending_choice?.choice_key === 'event_discard_self'",
+            timeout=10000,
+        )
+        end_turn_pending = page.evaluate('window.lastGameState')
+        record(
+            'end_turn_keeps_hong_kong_seat_during_required_event_discard',
+            end_turn_pending.get('current_player') == 'viewer'
+            and end_turn_pending.get('turn_phase') == 'end'
+            and end_turn_pending.get('hk_free_base_relocation') is False,
+            {
+                'current_player': end_turn_pending.get('current_player'),
+                'turn_phase': end_turn_pending.get('turn_phase'),
+                'pending_choice': end_turn_pending.get('pending_choice', {}).get('choice_key'),
+            },
+        )
+        page.locator('#choiceModal .choice-card-btn-multi').first.click()
+        page.locator('#choiceModalCards .modal-choice-btn').click()
+        page.wait_for_function(
+            "window.lastGameState?.pending_choice == null && window.lastGameState?.hk_free_base_relocation === true",
+            timeout=10000,
+        )
+        relocation_ready = page.evaluate('window.lastGameState')
+        record(
+            'hong_kong_relocation_decision_opens_before_turn_handoff',
+            relocation_ready.get('current_player') == 'viewer'
+            and relocation_ready.get('turn_phase') == 'end',
+            {'current_player': relocation_ready.get('current_player'), 'turn_phase': relocation_ready.get('turn_phase')},
+        )
+        record(
+            'end_turn_button_waits_for_relocation_decision',
+            page.locator('#advanceStepBtn').is_disabled()
+            and '請先決定香港根據地' in page.locator('#phaseActionMeta').inner_text(),
+            {
+                'disabled': page.locator('#advanceStepBtn').is_disabled(),
+                'message': page.locator('#phaseActionMeta').inner_text(),
+            },
+        )
         page.click('#myFactionBtn')
         own_taipei_button = page.locator('[data-hk-relocate-town="臺北"]')
         own_taipei_button.wait_for(state='visible', timeout=10000)
         record(
-            'own_organization_destination_is_enabled_during_other_player_turn',
+            'own_organization_destination_is_enabled_before_turn_handoff',
             own_taipei_button.is_enabled()
             and own_taipei_button.inner_text() == '遷移至臺北（已有香港組織）',
-            {
-                'current_player': page.evaluate('window.lastGameState.current_player'),
-                'button': own_taipei_button.inner_text(),
-                'enabled': own_taipei_button.is_enabled(),
-            },
+            {'button': own_taipei_button.inner_text(), 'enabled': own_taipei_button.is_enabled()},
         )
+        END_TURN_DECISION_SCREENSHOT.parent.mkdir(parents=True, exist_ok=True)
+        page.screenshot(path=str(END_TURN_DECISION_SCREENSHOT), full_page=True)
         own_taipei_button.click()
         page.wait_for_function(
-            "window.lastGameState?.players?.some(p => p.faction === 'hong_kong' && p.base === '臺北')",
+            "window.lastGameState?.current_player === 'red' && window.lastGameState?.players?.some(p => p.faction === 'hong_kong' && p.base === '臺北')",
             timeout=10000,
         )
         occupied_after = page.evaluate('window.lastGameState')
         occupied_hk = next(player for player in occupied_after['players'] if player['faction'] == 'hong_kong')
         record(
-            'out_of_turn_websocket_action_relocates_base_to_existing_own_organization',
+            'next_player_starts_only_after_hong_kong_relocation_decision',
             occupied_after.get('current_player') == 'red'
+            and occupied_after.get('turn_phase') == 'action'
             and occupied_hk.get('base') == '臺北'
             and occupied_after.get('hk_free_base_relocation') is False,
-            {'current_player': occupied_after.get('current_player'), 'base': occupied_hk.get('base')},
+            {'current_player': occupied_after.get('current_player'), 'turn_phase': occupied_after.get('turn_phase'), 'base': occupied_hk.get('base')},
         )
         record(
             'own_destination_becomes_base_without_removing_old_organization',
@@ -285,6 +323,7 @@ def main():
             str(FAILURE_READY_SCREENSHOT.relative_to(ROOT)),
             str(FAILURE_SUCCESS_SCREENSHOT.relative_to(ROOT)),
             str(OWN_ORG_BASE_MAP_SCREENSHOT.relative_to(ROOT)),
+            str(END_TURN_DECISION_SCREENSHOT.relative_to(ROOT)),
         ],
         'checks': checks,
     }

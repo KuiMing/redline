@@ -1,13 +1,14 @@
 {
   "status": "passed",
-  "checks_passed": 20,
-  "checks_total": 20,
+  "checks_passed": 23,
+  "checks_total": 23,
   "base_url": "[REDACTED]",
   "screenshots": [
     "docs/records/faction-ui/hong-kong-base-relocation/hong_kong_base_relocation_ui.png",
     "docs/records/faction-ui/hong-kong-base-relocation/failed_event_relocation_ready.png",
     "docs/records/faction-ui/hong-kong-base-relocation/failed_event_relocation_success.png",
-    "docs/records/faction-ui/hong-kong-base-relocation/own_organization_relocation_and_base_markers.png"
+    "docs/records/faction-ui/hong-kong-base-relocation/own_organization_relocation_and_base_markers.png",
+    "docs/records/faction-ui/hong-kong-base-relocation/end_turn_relocation_decision_before_handoff.png"
   ],
   "checks": [
     {
@@ -132,19 +133,44 @@
       }
     },
     {
-      "name": "own_organization_destination_is_enabled_during_other_player_turn",
+      "name": "end_turn_keeps_hong_kong_seat_during_required_event_discard",
       "passed": true,
       "detail": {
-        "current_player": "red",
+        "current_player": "viewer",
+        "turn_phase": "end",
+        "pending_choice": "event_discard_self"
+      }
+    },
+    {
+      "name": "hong_kong_relocation_decision_opens_before_turn_handoff",
+      "passed": true,
+      "detail": {
+        "current_player": "viewer",
+        "turn_phase": "end"
+      }
+    },
+    {
+      "name": "end_turn_button_waits_for_relocation_decision",
+      "passed": true,
+      "detail": {
+        "disabled": true,
+        "message": "請先決定香港根據地要遷移至何處，或選擇留在目前根據地。"
+      }
+    },
+    {
+      "name": "own_organization_destination_is_enabled_before_turn_handoff",
+      "passed": true,
+      "detail": {
         "button": "遷移至臺北（已有香港組織）",
         "enabled": true
       }
     },
     {
-      "name": "out_of_turn_websocket_action_relocates_base_to_existing_own_organization",
+      "name": "next_player_starts_only_after_hong_kong_relocation_decision",
       "passed": true,
       "detail": {
         "current_player": "red",
+        "turn_phase": "action",
         "base": "臺北"
       }
     },

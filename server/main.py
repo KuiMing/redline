@@ -3067,7 +3067,21 @@ def test_setup_event_card_proof(payload: dict):
     game.players[0].hand = [Card("合作談判", "command", {}), Card("追隨者", "propaganda", {"propaganda": 1})]
     game.players[0].deck.discard_pile = []
     event = game._event_by_name(event_name) or game._event_by_name("香港抗暴之戰")
-    if payload.get("hk_failed_relocation") and event:
+    if payload.get("hk_end_turn_relocation_timing") and event:
+        game.current_event = event
+        game.event_progress = {
+            "count": 0,
+            "required": int(event.get("trigger", {}).get("count", 1) or 1),
+            "succeeded": False,
+            "settled": False,
+            "status": "active",
+            "settlement_target_player_id": game.players[0].id,
+        }
+        game.event_notification = game._event_display_payload()
+        game.event_deck.draw_pile = []
+        game.event_deck.discard_pile = []
+        game.turn_phase = TurnPhase.END
+    elif payload.get("hk_failed_relocation") and event:
         game.current_event = event
         game.event_progress = {
             "count": 0,
