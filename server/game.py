@@ -853,7 +853,7 @@ class Game:
                     ignore_distance=bool(effect.get('ignore_distance', True)),
                 )
                 return {'success': True, 'pending_choice': True}
-            self.log(f"Event {outcome}: {player.name} has no valid town in {region} to build")
+            self.log(f"{self.current_event.get('name')}：{player.name} 在指定區域內沒有合法的城鎮可以建立組織")
         elif t == 'build_organization_near_own':
             max_steps = int(effect.get('max_steps', 1) or 1)
             towns = self._event_build_towns_near_own(player, max_steps=max_steps)
@@ -867,7 +867,7 @@ class Game:
                     count=min(count, len(towns)),
                 )
                 return {'success': True, 'pending_choice': True}
-            self.log(f"Event {outcome}: {player.name} has no valid nearby town to build")
+            self.log(f"{self.current_event.get('name')}：{player.name} 在己方組織附近沒有合法的城鎮可以建立組織")
         elif t == 'topdeck_from_discard':
             cards = list(player.deck.discard_pile)
             if cards:
@@ -1311,15 +1311,29 @@ class Game:
         }
         return {'pending_choice': True}
 
-    def _card_can_queue_build(self, card):
+    def _card_build_effects(self, card):
         card_name = getattr(card, 'name', str(card))
         engine = getattr(self, 'action_engine', None)
         cards = getattr(engine, 'cards', {}) if engine is not None else {}
-        card_def = cards.get(card_name)
-        return bool(
-            card_def
-            and any(isinstance(effect, dict) and effect.get('type') == 'build' for effect in (card_def.get('effect') or []))
-        )
+        card_def = cards.get(card_name) or {}
+        return [
+            effect
+            for effect in (card_def.get('effect') or [])
+            if isinstance(effect, dict) and effect.get('type') == 'build'
+        ]
+
+    def _card_action_legality(self, player, card):
+        build_effects = self._card_build_effects(card)
+        if build_effects and not self._card_build_town_choices(player, build_effects[0]):
+            return {
+                'playable': False,
+                'reason': '目前沒有城鎮可以建立組織。',
+                'no_legal_build_town': True,
+            }
+        return {'playable': True}
+
+    def _card_can_queue_build(self, card):
+        return bool(self._card_build_effects(card))
 
     def _build_choice_entitlement_count(self, choice):
         if not isinstance(choice, dict) or choice.get('choice_key') != 'card_build_organization':
@@ -1355,7 +1369,7 @@ class Game:
             context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
             towns = self._card_build_town_choices(player, context.get('effect') or {})
             if not towns:
-                self.log(f"{player.name} had no legal town for queued build via {choice.get('source_name') or 'card'}")
+                self.log(f"{player.name} 有排隊中的建立組織額度（來自{choice.get('source_name') or '卡牌'}），但目前沒有合法的城鎮可以建立")
                 continue
             choice['towns'] = list(towns)
             self.pending_choice = choice
@@ -1713,10 +1727,10 @@ class Game:
             player.hand.remove(chosen)
             player.deck.discard([chosen])
             self.pending_choice = None
-            self.log(f"{player.name} discarded {getattr(chosen, 'name', str(chosen))} to repeat build via {source_name}")
+            self.log(f"{player.name} 棄掉{getattr(chosen, 'name', str(chosen))}以透過{source_name}重複建立組織")
             towns = self._card_build_town_choices(player, ctx.get('effect') or {})
             if not towns:
-                self.log(f"{player.name} had no legal town for repeated build via {source_name}")
+                self.log(f"{player.name} 透過{source_name}重複建立組織，但目前沒有合法的城鎮可以建立")
                 return {'success': True, 'discarded_card': getattr(chosen, 'name', str(chosen)), 'no_build_town': True}
             self._set_pending_town_choice(
                 player,
@@ -5323,9 +5337,6 @@ class Game:
         )
         if self.pending_choice and not queueing_build_card:
             return {"error": "Please resolve the pending choice first"}
-        if queueing_build_card:
-            self._deferred_build_choice = dict(self.pending_choice or {})
-            self.pending_choice = None
         is_red_support_prep_action = (
             self.turn_phase == TurnPhase.EVENT
             and mode == "action"
@@ -5336,6 +5347,17 @@ class Game:
             return {"error": "Not in ACTION phase"}
         if mode == "action" and self._card_is_banned_for_player(player, pending_card):
             return {"error": "非暴力：不能打出武裝或裝備類卡牌"}
+        if mode == "action":
+            action_legality = self._card_action_legality(player, pending_card)
+            if not action_legality.get('playable', True):
+                return {
+                    'error': action_legality.get('reason') or '目前無法使用這張卡牌。',
+                    **({'no_legal_build_town': True} if action_legality.get('no_legal_build_town') else {}),
+                    'card_name': pending_card_name,
+                }
+        if queueing_build_card:
+            self._deferred_build_choice = dict(self.pending_choice or {})
+            self.pending_choice = None
         if mode == "action" and pending_card_name in {"爆料黑幕", "產業滲透"}:
             # 這兩張卡的「行動」效果只有 cancel_card + conditional_draw，沒有像情報網
             # 那樣的 choose_one 主動分支；只能在對方打出可取消的牌時，透過反應視窗
@@ -7454,6 +7476,7 @@ class Game:
                     "moves_left": p.moves_left,
                     "hand": [getattr(card, 'name', str(card)) for card in p.hand] if (viewer_player_id is None or p.id == viewer_player_id) else ['未知手牌' for _ in p.hand],
                     "hand_variants": [self._support_card_variant_info(card) for card in p.hand] if (viewer_player_id is None or p.id == viewer_player_id) else [None for _ in p.hand],
+                    "hand_action_legality": [self._card_action_legality(p, card) for card in p.hand] if (viewer_player_id is None or p.id == viewer_player_id) else [None for _ in p.hand],
                     "deck_count": len(p.deck.draw_pile) if p.deck else 0,
                     "discard_count": len(p.deck.discard_pile) if p.deck else 0,
                     "discard_pile": [getattr(card, 'name', str(card)) for card in p.deck.discard_pile] if p.deck else [],

@@ -163,7 +163,7 @@ def test_static_thinker_build_queues_with_its_own_followup_move():
     assert actor.moves_left == 3
 
 
-def test_stacked_card_with_no_legal_build_restores_original_active_choice():
+def test_stacked_card_with_no_legal_build_is_rejected_and_keeps_original_active_choice():
     game, actor = make_game()
     actor.hand = [action_card(game, '組織經驗甲'), action_card(game, '組織經驗丙')]
     near_effect = {'type': 'build', 'range': 1}
@@ -178,11 +178,16 @@ def test_stacked_card_with_no_legal_build_restores_original_active_choice():
 
     second = game.play_card(0, mode='action')
 
-    assert second.get('pending_choice') is True, second
+    assert second == {
+        'error': '目前沒有城鎮可以建立組織。',
+        'no_legal_build_town': True,
+        'card_name': '組織經驗丙',
+    }
     assert game.pending_choice['source_name'] == '組織經驗甲'
     assert game.state(actor.id)['pending_choice']['remaining_builds'] == 1
     assert [entry['town'] for entry in game.pending_choice['towns']] == original_towns
-    assert [card.name for card in actor.deck.discard_pile] == ['組織經驗甲', '組織經驗丙']
+    assert [card.name for card in actor.hand] == ['組織經驗丙']
+    assert [card.name for card in actor.deck.discard_pile] == ['組織經驗甲']
 
 
 def test_org_experience_a_repeat_prompt_resumes_later_queued_card_when_declined():

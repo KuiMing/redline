@@ -73,13 +73,16 @@ def make_formal_game():
     create = post_json("/create")
     game_id = create["game_id"]
     host_id = create["host_id"]
+    hk_join = post_json("/join", {"game_id": game_id, "name": "hk"})
+    tibet_join = post_json("/join", {"game_id": game_id, "name": "tibet"})
+    uyghur_join = post_json("/join", {"game_id": game_id, "name": "uyghur"})
     players = [
-        ("host", host_id, "red_army", "北京"),
-        ("hk", post_json("/join", {"game_id": game_id, "name": "hk"})["player_id"], "hong_kong", "香港城"),
-        ("tibet", post_json("/join", {"game_id": game_id, "name": "tibet"})["player_id"], "tibet_dharamsala", "達蘭薩拉"),
-        ("uyghur", post_json("/join", {"game_id": game_id, "name": "uyghur"})["player_id"], "uyghur_munich", "慕尼黑"),
+        ("host", host_id, create["resume_token"], "red_army", "北京"),
+        ("hk", hk_join["player_id"], hk_join["resume_token"], "hong_kong", "香港城"),
+        ("tibet", tibet_join["player_id"], tibet_join["resume_token"], "tibet_dharamsala", "達蘭薩拉"),
+        ("uyghur", uyghur_join["player_id"], uyghur_join["resume_token"], "uyghur_munich", "慕尼黑"),
     ]
-    for name, pid, faction_id, base_name in players:
+    for name, pid, _token, faction_id, base_name in players:
         result = post_json("/choose-faction", {
             "game_id": game_id,
             "player_id": pid,
@@ -94,12 +97,46 @@ def make_formal_game():
     start = post_json("/start", {"game_id": game_id, "player_id": host_id, "market_mode": "sample_53"})
     if start.get("error"):
         raise AssertionError(start)
-    return game_id, {name: pid for name, pid, *_ in players}
+    return (
+        game_id,
+        {name: pid for name, pid, *_ in players},
+        {name: token for name, _pid, token, *_ in players},
+    )
+
+
+def open_authenticated_game(page, game_id, player_id, resume_token, player_name, cache_key):
+    page.goto(BASE_URL + "/", wait_until="domcontentloaded")
+    page.evaluate(
+        """session => {
+            localStorage.setItem('redline.sessions.v1', JSON.stringify({
+                [session.game_id]: {
+                    game_id: session.game_id,
+                    player_id: session.player_id,
+                    resume_token: session.resume_token,
+                    name: session.name,
+                    saved_at: Date.now(),
+                },
+            }));
+        }""",
+        {
+            "game_id": game_id,
+            "player_id": player_id,
+            "resume_token": resume_token,
+            "name": player_name,
+        },
+    )
+    url = f"{BASE_URL}/?v={cache_key}"
+    page.goto(url, wait_until="domcontentloaded")
+    return url
 
 
 def wait_state(page):
     page.wait_for_function("window.lastGameState && window.lastGameState.players && window.lastGameState.players.length >= 2", timeout=15000)
     page.wait_for_timeout(300)
+    event_reveal = page.locator("#eventRevealModal")
+    if event_reveal.is_visible():
+        event_reveal.click(position={"x": 5, "y": 5})
+        event_reveal.wait_for(state="hidden", timeout=5000)
     return page.evaluate("window.lastGameState")
 
 
@@ -142,7 +179,7 @@ def choose_build_town_via_map(page, preferred=None):
     }
 
 
-def validate_card(page, game_id, player_id, card_name, expected, screenshot_dir, stamp):
+def validate_card(page, game_id, player_id, resume_token, card_name, expected, screenshot_dir, stamp):
     prepared = post_json("/test/set-hand", {
         "game_id": game_id,
         "player_id": player_id,
@@ -152,8 +189,14 @@ def validate_card(page, game_id, player_id, card_name, expected, screenshot_dir,
     })
     if prepared.get("error"):
         raise AssertionError(prepared)
-    url = f"{BASE_URL}/?game_id={game_id}&player_id={player_id}&v=card-build-browser-{stamp}-{card_name}"
-    page.goto(url, wait_until="domcontentloaded")
+    url = open_authenticated_game(
+        page,
+        game_id,
+        player_id,
+        resume_token,
+        "hk",
+        f"card-build-browser-{stamp}-{card_name}",
+    )
     state_before = wait_state(page)
     before_hk = hk_from(state_before, player_id)
     before_orgs = org_count(before_hk)
@@ -216,6 +259,73 @@ def validate_card(page, game_id, player_id, card_name, expected, screenshot_dir,
     }
 
 
+def validate_no_legal_build_state(page, game_id, player_id, resume_token, screenshot_dir, stamp):
+    card_names = list(BUILD_CARDS)
+    prepared = post_json("/test/set-hand", {
+        "game_id": game_id,
+        "player_id": player_id,
+        "cards": card_names,
+        "turn_phase": "action",
+        "set_current_player": True,
+        "restrict_build": True,
+    })
+    if prepared.get("error"):
+        raise AssertionError(prepared)
+    url = open_authenticated_game(
+        page,
+        game_id,
+        player_id,
+        resume_token,
+        "hk",
+        f"no-legal-build-{stamp}",
+    )
+    state = wait_state(page)
+    me = hk_from(state, player_id)
+    button_checks = []
+    for index, card_name in enumerate(card_names):
+        card_el = page.locator(".hand-card").filter(has_text=card_name).first
+        action_button = card_el.locator("button[data-card-mode='action']")
+        resource_button = card_el.locator("button[data-card-mode='resource']")
+        action_button.wait_for(state="visible", timeout=10000)
+        legality = (me.get("hand_action_legality") or [])[index]
+        button_checks.append({
+            "card": card_name,
+            "action_disabled": action_button.is_disabled(),
+            "action_text": action_button.inner_text(),
+            "action_title": action_button.get_attribute("title") or "",
+            "resource_enabled": resource_button.is_enabled(),
+            "legality": legality,
+        })
+    upper_screenshot = screenshot_dir / "03_no_legal_build_cards_disabled_upper.png"
+    page.screenshot(path=str(upper_screenshot), full_page=True)
+    last_card = page.locator(".hand-card").filter(has_text=card_names[-1]).first
+    last_card.scroll_into_view_if_needed()
+    page.wait_for_timeout(200)
+    lower_screenshot = screenshot_dir / "04_no_legal_build_cards_disabled_lower.png"
+    page.screenshot(path=str(lower_screenshot), full_page=True)
+    expected_reason = "目前沒有城鎮可以建立組織。"
+    ok = all(
+        item["action_disabled"]
+        and item["action_text"] == "無城鎮可建立"
+        and item["action_title"] == expected_reason
+        and item["resource_enabled"]
+        and item["legality"] == {
+            "playable": False,
+            "reason": expected_reason,
+            "no_legal_build_town": True,
+        }
+        for item in button_checks
+    )
+    return {
+        "card": "全部建立組織行動卡（無合法城鎮）",
+        "ok": ok,
+        "url": url,
+        "button_checks": button_checks,
+        "hand_unchanged": me.get("hand") == card_names,
+        "screenshots": [str(path.relative_to(BASE)) for path in (upper_screenshot, lower_screenshot)],
+    }
+
+
 def main():
     RECORD_DIR.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -223,13 +333,18 @@ def main():
     screenshot_dir.mkdir(parents=True, exist_ok=True)
     server_proc = ensure_server()
     reports = []
+    console_errors = []
     try:
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
             page = browser.new_page(viewport={"width": 1440, "height": 900})
+            page.on("console", lambda msg: console_errors.append(msg.text) if msg.type == "error" else None)
+            page.on("pageerror", lambda error: console_errors.append(str(error)))
             for card_name, expected in BUILD_CARDS.items():
-                game_id, ids = make_formal_game()
-                reports.append(validate_card(page, game_id, ids["hk"], card_name, expected, screenshot_dir, stamp))
+                game_id, ids, tokens = make_formal_game()
+                reports.append(validate_card(page, game_id, ids["hk"], tokens["hk"], card_name, expected, screenshot_dir, stamp))
+            game_id, ids, tokens = make_formal_game()
+            reports.append(validate_no_legal_build_state(page, game_id, ids["hk"], tokens["hk"], screenshot_dir, stamp))
             browser.close()
     finally:
         if server_proc:
@@ -238,8 +353,9 @@ def main():
         "total": len(reports),
         "passed": sum(1 for item in reports if item["ok"]),
         "failed": sum(1 for item in reports if not item["ok"]),
+        "console_error_count": len(console_errors),
     }
-    output = {"summary": summary, "reports": reports}
+    output = {"summary": summary, "reports": reports, "console_errors": console_errors}
     json_path = RECORD_DIR / f"ACTION_CARD_BUILD_BROWSER_{stamp}.json"
     md_path = RECORD_DIR / f"ACTION_CARD_BUILD_BROWSER_{stamp}.md"
     json_path.write_text(json.dumps(output, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -252,8 +368,9 @@ def main():
         "summary": summary,
         "reports": [str(json_path), str(md_path)],
         "screenshots": [str(path) for path in sorted(screenshot_dir.glob("*.png"))],
+        "console_errors": console_errors,
     }, ensure_ascii=False, indent=2))
-    if summary["failed"]:
+    if summary["failed"] or console_errors:
         raise SystemExit(1)
 
 

@@ -397,7 +397,7 @@ class EffectEngine:
                         },
                     )
                     return {'pending_choice': True}
-                game.log(f"{player.name} had no legal town to build via {source_name}")
+                game.log(f"{player.name} 打出{source_name}，但目前沒有合法的城鎮可以建立組織")
                 return
             candidate_towns = list(getattr(game, 'map', {}).get('towns', {}).keys())
             target = next((town for town in candidate_towns if game.can_develop_in_town(player, town)), None)

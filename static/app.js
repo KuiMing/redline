@@ -3779,13 +3779,19 @@ async function render(state) {
         && state.pending_choice?.interaction_kind === 'build_organization'
         && (state.pending_choice?.queueable_card_names || []).includes(cardName)
         && mode === 'action';
-      const canPlayHandCardMode = (cardName, mode) => {
+      const handActionLegality = me.hand_action_legality || [];
+      const cardActionLegality = (cardIndex) => handActionLegality[cardIndex] || {playable: true};
+      const canPlayHandCardMode = (cardName, mode, cardIndex = null) => {
         if (mode === 'action' && REACTION_ONLY_ACTION_CARDS.has(cardName)) return false;
+        if (mode === 'action' && cardIndex !== null && cardActionLegality(cardIndex).playable === false) return false;
         if (!isMyTurn || (hasMyPendingChoice && !canQueueBuildCard(cardName, mode))) return false;
         if (rawPhase === 'action') return true;
         return rawPhase === 'event' && mode === 'action' && cardName === '紅軍奧援' && me.faction === 'red_army';
       };
-      const handButtonTitle = (cardName, mode, canPlay) => {
+      const handButtonTitle = (cardName, mode, canPlay, cardIndex = null) => {
+        if (mode === 'action' && cardIndex !== null && cardActionLegality(cardIndex).playable === false) {
+          return cardActionLegality(cardIndex).reason || '目前無法使用這張卡牌。';
+        }
         if (canPlay) return '打出這張手牌';
         if (mode === 'action' && REACTION_ONLY_ACTION_CARDS.has(cardName)) {
           return `${cardName}的取消能力只能被動觸發：當其他玩家打出可取消的卡牌時會自動跳出反應視窗。`;
@@ -3805,9 +3811,10 @@ async function render(state) {
         const variantInfo = (me.hand_variants || [])[i] || null;
         const colorName = (cardPresentation(card)?.color) || (isSupportCard ? '奧援' : '灰');
         const colorClass = cardColorClass(colorName);
-        const canPlayAction = canPlayHandCardMode(card, 'action');
+        const canPlayAction = canPlayHandCardMode(card, 'action', i);
         const actionDisabledAttr = canPlayAction ? '' : 'disabled aria-disabled="true"';
-        const actionTitle = handButtonTitle(card, 'action', canPlayAction);
+        const actionTitle = handButtonTitle(card, 'action', canPlayAction, i);
+        const actionLabel = cardActionLegality(i).no_legal_build_town ? '無城鎮可建立' : '行動';
         // 普通奧援只能當「行動」使用，第一顆按鈕維持「棄置」。紅軍奧援是唯一例外：
         // canonical 明載可作為資源取得 1資金＋1宣傳，因此必須顯示真正的「資源」按鈕。
         const firstButtonHtml = isSupportCard
@@ -3834,7 +3841,7 @@ async function render(state) {
             ${renderCardFace(card, 'hand', false, true, null, variantInfo)}
             <div class="hand-card-actions">
               ${firstButtonHtml}
-              <button class="hand-card-action-btn" type="button" ${actionDisabledAttr} title="${escapeHtml(actionTitle)}" data-card-index="${i}" data-card-name="${cardAttr}" data-card-mode="action">行動</button>
+              <button class="hand-card-action-btn" type="button" ${actionDisabledAttr} title="${escapeHtml(actionTitle)}" data-card-index="${i}" data-card-name="${cardAttr}" data-card-mode="action">${actionLabel}</button>
             </div>
           </div>`;
       });

@@ -2521,6 +2521,10 @@ def test_industry_infiltration_is_offered_as_a_candidate_for_propaganda_only_sta
     應該正確跳出取消詢問。"""
     g = make_game()
     actor, reactor = g.players
+    # 紅軍起始根據地只有北京這個選項，明確指定以避免依賴 make_game() 的預設值——
+    # 宣傳家有建立組織效果，_card_action_legality() 現在會先檢查合法城鎮，若這裡
+    # 依賴預設狀態、剛好沒有起始據點，會在測到反應視窗之前就先被擋下來。
+    actor.organizations = {'北京': 1}
     actor.hand = [card(g, '宣傳家')]
     reactor.hand = [card(g, '產業滲透')]
 
@@ -2862,6 +2866,52 @@ def test_thought_building_draws_one_and_extends_build_range_this_turn():
     assert names(p.hand) == ['DrawnCard']
     assert p.build_range_bonus == 1
 
+
+
+def test_build_action_cards_are_unusable_when_no_town_can_receive_an_organization():
+    build_cards = ['宣傳家', '思想家', '組織經驗丙', '組織經驗乙', '組織經驗甲']
+    for card_name in build_cards:
+        g = make_game()
+        p = g.current_player()
+        p.hand = [card(g, card_name)]
+        p.organizations = {'北京': 1}
+        p.moves_left = 0
+        g.event_modifiers = [{'type': 'restrict_build', 'remaining_turns': 1}]
+        hand_before = list(p.hand)
+        discard_before = list(p.deck.discard_pile)
+
+        result = g.play_card(0, mode='action')
+
+        assert result == {
+            'error': '目前沒有城鎮可以建立組織。',
+            'no_legal_build_town': True,
+            'card_name': card_name,
+        }
+        assert p.hand == hand_before
+        assert p.deck.discard_pile == discard_before
+        assert p.moves_left == 0
+        assert g.pending_choice is None
+
+
+def test_state_projects_no_legal_build_reason_for_each_build_card_only():
+    g = make_game()
+    p = g.current_player()
+    p.hand = [
+        card(g, '宣傳家'),
+        card(g, '思想家'),
+        card(g, '組織經驗丙'),
+        card(g, '資助者'),
+    ]
+    g.event_modifiers = [{'type': 'restrict_build', 'remaining_turns': 1}]
+
+    legality = g.state(p.id)['players'][0]['hand_action_legality']
+
+    assert legality[:3] == [
+        {'playable': False, 'reason': '目前沒有城鎮可以建立組織。', 'no_legal_build_town': True},
+        {'playable': False, 'reason': '目前沒有城鎮可以建立組織。', 'no_legal_build_town': True},
+        {'playable': False, 'reason': '目前沒有城鎮可以建立組織。', 'no_legal_build_town': True},
+    ]
+    assert legality[3] == {'playable': True}
 
 
 def test_strategic_thinker_trashes_self_then_grants_build_and_three_moves():

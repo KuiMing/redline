@@ -817,6 +817,7 @@ def test_set_hand(payload: dict):
     cards = payload.get("cards", [])
     turn_phase = payload.get("turn_phase")
     set_current_player = bool(payload.get("set_current_player"))
+    restrict_build = bool(payload.get("restrict_build"))
 
     game = manager.get_game(game_id)
     if not game:
@@ -840,6 +841,14 @@ def test_set_hand(payload: dict):
         game.turn_phase = TurnPhase.EVENT
     elif turn_phase == "end":
         game.turn_phase = TurnPhase.END
+
+    if restrict_build:
+        game.event_modifiers = [{"type": "restrict_build", "remaining_turns": 1}]
+    else:
+        game.event_modifiers = [
+            modifier for modifier in (game.event_modifiers or [])
+            if (modifier or {}).get("type") != "restrict_build"
+        ]
 
     if set_current_player:
         for idx, candidate in enumerate(game.players):
