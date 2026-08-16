@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-08-06T23:23:39.626328+00:00",
-  "base_url": "http://127.0.0.1:8011",
+  "generated_at": "2026-08-16T00:59:54.210659+00:00",
+  "base_url": "http://192.168.10.192:8000",
   "status": "passed",
-  "checks_passed": 6,
-  "checks_total": 6,
+  "checks_passed": 7,
+  "checks_total": 7,
   "checks": [
     {
       "name": "east_support_formally_builds_wall_inner_organization",
@@ -31,7 +31,8 @@
         "補牌四",
         "補牌三",
         "補牌二",
-        "補牌一"
+        "補牌一",
+        "東洋奧援"
       ]
     },
     {
@@ -43,13 +44,23 @@
         "[Turn 1] 台灣綠線 resolved 東洋奧援 and built in 成都",
         "[Turn 1] 台灣綠線 抽到：補牌一",
         "[Turn 1] 台灣綠線 triggered 本土社團 and drew 1 card",
-        "[Turn 1] End of turn for 台灣綠線"
+        "[Turn 1] End of turn for 台灣綠線",
+        "[Turn 1] 台灣綠線 抽到：東洋奧援",
+        "[Turn 1] Event success resolved: 全國人大召開 / draw"
       ]
+    },
+    {
+      "name": "national_people_congress_counts_triggered_faction_ability",
+      "ok": true,
+      "detail": {
+        "event_progress": {},
+        "success_logged": true
+      }
     },
     {
       "name": "official_battle_log_ui_shows_native_society_trigger",
       "ok": true,
-      "detail": "逆統戰\n逆統戰指揮中心\n回合 1\n行動階段\n當前玩家\n紅軍\n手牌 6\n資金 0\n宣傳 0\n移動 0\n牌庫模式 53 張卡牌\n台灣綠線 組織 2\n紅軍 組織 1\n目前：行動｜等待 紅軍 操作\n開始購買階段\n無效果\n點擊放大查看\n指揮中心\n戰略地圖\n戰況紀錄\n我的陣營\n戰況總覽\n台\n台灣綠線\n玩家戰況\n陣營：臺灣（綠線）\n根據地：臺北\n組織\n2\n牆內 1／牆外 1\n資金\n0\n宣傳\n0\n手牌\n6\n牌庫\n0\n棄牌\n1\n移動\n0\n棄牌堆\n東洋奧援\n紅\n紅軍\n當前行動玩家\n當前玩家\n陣營：紅軍\n根據地：北京\n組織\n1\n牆內 1／牆外 0\n資金\n0\n宣傳\n0\n手牌\n0\n牌庫\n0\n棄牌\n0\n移動\n0\n棄牌堆\n無\n事件紀錄\n[Turn 1] End of turn for 台灣綠線\n[Turn 1] 台灣綠線 triggered 本土社團 and drew 1 card\n[Turn 1] 台灣綠線 抽到：補牌一\n[Turn 1] 台灣綠線 resolved 東洋奧援 and built in 成都\n[Turn 1] 台灣綠線 played 東洋奧援\n[Turn 1] 台灣綠線 started interactive support resolution for 東洋奧援 at tier 3"
+      "detail": "逆統戰\n逆統戰指揮中心\n回合 1\n行動階段\n當前玩家\n紅軍\n手牌 7\n資金 0\n宣傳 0\n移動 0\n牌庫模式 53 張卡牌\n台灣綠線 組織 2\n紅軍 組織 1\n目前：行動｜等待 紅軍 操作\n開始購買階段\n任務進度 1/1\n點擊放大查看\n指揮中心\n戰略地圖\n戰況紀錄\n我的陣營\n戰況總覽\n台\n台灣綠線\n玩家戰況\n陣營：臺灣（綠線）\n根據地：臺北\n組織\n2\n牆內 1／牆外 1\n資金\n0\n宣傳\n0\n手牌\n7\n牌庫\n0\n棄牌\n0\n移動\n0\n棄牌堆\n無\n紅\n紅軍\n當前行動玩家\n當前玩家\n陣營：紅軍\n根據地：北京\n組織\n1\n牆內 1／牆外 0\n資金\n0\n宣傳\n0\n手牌\n0\n牌庫\n0\n棄牌\n0\n移動\n0\n棄牌堆\n無\n事件紀錄\n[Turn 1] Event success resolved: 全國人大召開 / draw\n[Turn 1] 台灣綠線 抽到：東洋奧援\n[Turn 1] End of turn for 台灣綠線\n[Turn 1] 台灣綠線 triggered 本土社團 and drew 1 card\n[Turn 1] 台灣綠線 抽到：補牌一\n[Turn 1] 台灣綠線 resolved 東洋奧援 and built in 成都\n[Turn 1] 台灣綠線 played 東洋奧援\n[Turn 1] 台灣綠線 started interactive support resolution for 東洋奧援 at tier 3\n開新遊戲"
     },
     {
       "name": "browser_console_has_no_errors",

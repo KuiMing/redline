@@ -59,6 +59,7 @@ def main() -> None:
             "draw_pile": ["補牌一", "補牌二", "補牌三", "補牌四", "補牌五", "本土社團加抽"],
             "player_name": "台灣綠線",
             "enemy_name": "紅軍",
+            "event_name": "全國人大召開",
         },
     )
     if not setup.get("success"):
@@ -134,8 +135,9 @@ def main() -> None:
                   const state = window.lastGameState;
                   const actor = state?.players?.find(player => player.id === id);
                   return state?.current_player !== '台灣綠線'
-                    && actor?.hand?.length === 6
-                    && state?.action_log?.some(entry => entry.includes('triggered 本土社團 and drew 1 card'));
+                    && actor?.hand?.length >= 6
+                    && state?.action_log?.some(entry => entry.includes('triggered 本土社團 and drew 1 card'))
+                    && state?.action_log?.some(entry => entry.includes('Event success resolved: 全國人大召開'));
                 }""",
                 arg=setup["player_id"],
                 timeout=15000,
@@ -150,6 +152,18 @@ def main() -> None:
                 "pending_choice": state.get("pending_choice"),
             }, ensure_ascii=False, indent=2))
             raise
+        page.wait_for_timeout(500)
+        page.wait_for_function(
+            """(id) => {
+              const state = window.lastGameState;
+              const actor = state?.players?.find(player => player.id === id);
+              return actor?.hand?.length >= 6
+                && state?.action_log?.some(entry => entry.includes('triggered 本土社團 and drew 1 card'))
+                && state?.action_log?.some(entry => entry.includes('Event success resolved: 全國人大召開'));
+            }""",
+            arg=setup["player_id"],
+            timeout=5000,
+        )
         final_state = page.evaluate("window.lastGameState")
         actor = next(player for player in final_state["players"] if player["id"] == setup["player_id"])
         action_log = final_state.get("action_log", [])
@@ -163,13 +177,22 @@ def main() -> None:
         )
         record(
             "taiwan_green_native_society_draws_after_refill",
-            len(actor.get("hand", [])) == 6 and "本土社團加抽" in actor.get("hand", []),
+            len(actor.get("hand", [])) >= 6 and "本土社團加抽" in actor.get("hand", []),
             actor.get("hand"),
         )
         record(
             "native_society_trigger_occurs_before_turn_closes",
             0 <= trigger_index < end_index,
             action_log[-10:],
+        )
+        event_progress = final_state.get("event_progress") or {}
+        event_success_logged = any(
+            "Event success resolved: 全國人大召開" in entry for entry in action_log
+        )
+        record(
+            "national_people_congress_counts_triggered_faction_ability",
+            event_progress.get("succeeded") is True or event_success_logged,
+            {"event_progress": event_progress, "success_logged": event_success_logged},
         )
 
         page.get_by_role("button", name="戰況紀錄", exact=True).click()

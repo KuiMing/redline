@@ -1884,6 +1884,9 @@ class Game:
                 drawn = self._draw_player_cards(player, draw_after)
                 drawn_names = [getattr(card, 'name', str(card)) for card in drawn]
                 self.log(f"{player.name} drew {len(drawn)} card(s) after reordering via {source_name}")
+            if context.get('faction_action_name'):
+                self.turn_log['faction_action_used'] = True
+                self._track_event_progress('use_faction_ability', player=player)
             return {
                 'success': True,
                 'choice_key': choice_key,
@@ -2636,6 +2639,7 @@ class Game:
                 cost_has_money=bool(deferred_triggers.get('cost_has_money')),
                 cost_has_propaganda=bool(deferred_triggers.get('cost_has_propaganda')),
                 played_card=deferred_triggers.get('played_card'),
+                used_faction_ability_names=deferred_triggers.get('used_faction_ability_names'),
             )
         if not result.get('error') and not self.pending_choice:
             build_continuation = self._resume_card_build_queue_if_idle(player)
@@ -4105,8 +4109,6 @@ class Game:
             if look <= 0:
                 return {"error": "Deck empty"}
             inspected = list(reversed(player.deck.draw_pile[-look:]))
-            self.turn_log['faction_action_used'] = True
-            self._track_event_progress('use_faction_ability', player=player)
             self._set_pending_multi_card_choice(
                 player,
                 'era_inspect_deck_top_and_reorder',
@@ -4116,7 +4118,7 @@ class Game:
                 top_count=look,
                 look_count=look,
                 source_name='紅軍派系',
-                context={'draw_after_reorder': 1},
+                context={'draw_after_reorder': 1, 'faction_action_name': action_name},
             )
             self.log(f"{player.name} triggered 紅軍派系 and inspected top {look} card(s)")
             return {'success': True, 'pending_choice': True, 'result': {'name': action_name, 'inspected_count': look}}
@@ -4151,8 +4153,6 @@ class Game:
             guess = kwargs.get('guess')
             if guess not in {'odd', 'even'}:
                 return {"error": "Guess required"}
-            self.turn_log['faction_action_used'] = True
-            self._track_event_progress('use_faction_ability', player=player)
             # 能力文字：「將1張手牌放進牌庫底」——由玩家選擇要墊哪一張；只有一張時不用問
             if len(player.hand) == 1:
                 return self._resolve_guess_ability_with_bottom_card(player, action_name, guess, player.hand[0])
@@ -4171,6 +4171,8 @@ class Game:
     def _resolve_guess_ability_with_bottom_card(self, player, action_name, guess, bottom_card):
         if bottom_card not in player.hand:
             return {'error': 'Chosen card not in hand'}
+        self.turn_log['faction_action_used'] = True
+        self._track_event_progress('use_faction_ability', player=player)
         player.hand.remove(bottom_card)
         player.deck.draw_pile.insert(0, bottom_card)
         card = player.deck.draw_pile.pop()
@@ -4227,6 +4229,7 @@ class Game:
         else:
             self._draw_player_cards(player, 1)
             self.log(f"{player.name} triggered 游擊隊 and drew 1 card")
+        self._track_event_progress('use_faction_ability', player=player)
 
     def _record_action_build(self, player, town):
         """Apply every hook shared by a successful organization build during a player's action."""
@@ -4247,6 +4250,8 @@ class Game:
 
     def _can_target_org_with_dissolve(self, attacker, defender, source="card"):
         if self._player_has_ability(defender, "盟旗學校"):
+            self.log(f"{defender.name} triggered 盟旗學校 against {attacker.name}")
+            self._track_event_progress('use_faction_ability', player=defender)
             if not attacker.hand:
                 return False, "盟旗學校：須先棄1張手牌，才可以瓦解蒙古組織"
             discarded = attacker.hand.pop()
@@ -4303,8 +4308,19 @@ class Game:
             else:
                 random.shuffle(player.deck.draw_pile)
 
-    def _apply_card_play_faction_abilities(self, player, *, cost_has_money, cost_has_propaganda, played_card=None):
+    def _apply_card_play_faction_abilities(
+        self,
+        player,
+        *,
+        cost_has_money,
+        cost_has_propaganda,
+        played_card=None,
+        used_faction_ability_names=None,
+    ):
         """Apply each faction trigger once after a committed card clears reaction gating."""
+        for used_name in list(used_faction_ability_names or []):
+            self.log(f"{player.name} triggered {used_name} while playing a card")
+            self._track_event_progress('use_faction_ability', player=player)
         for ability in self._player_effective_abilities(player):
             if not isinstance(ability, dict):
                 continue
@@ -4788,6 +4804,7 @@ class Game:
                 'cost_has_money': bool(action_context.get('cost_has_money')),
                 'cost_has_propaganda': bool(action_context.get('cost_has_propaganda')),
                 'played_card': played_card,
+                'used_faction_ability_names': list(action_context.get('used_faction_ability_names') or []),
             }
             if card_name == '北國奧援' and self.pending_choice and action_context.get('hand_index') is not None:
                 # No 北國奧援 effect has mutated the board at the initial target/sacrifice
@@ -4940,6 +4957,7 @@ class Game:
             cost_has_money=bool(trigger_cost_has_money),
             cost_has_propaganda=bool(trigger_cost_has_propaganda),
             played_card=played_card,
+            used_faction_ability_names=action_context.get('used_faction_ability_names'),
         )
 
         if self.pending_choice:
@@ -5415,7 +5433,8 @@ class Game:
         purchase_cost = self._card_purchase_cost(played_card) or {}
         cost_has_money = int(purchase_cost.get('money', 0) or 0) > 0
         cost_has_propaganda = int(purchase_cost.get('propaganda', 0) or 0) > 0
-        if self._player_has_ability(player, "國際線") and cost_has_money:
+        international_line_used = self._player_has_ability(player, "國際線") and cost_has_money
+        if international_line_used:
             cost_has_propaganda = True
             cost_has_money = False
 
@@ -5435,6 +5454,9 @@ class Game:
             'borrowed_purchase_area_index': getattr(played_card, '_return_to_purchase_area_index', None),
             'prior_event_progress': dict(self.event_progress) if isinstance(self.event_progress, dict) else self.event_progress,
             'prior_event_notification': dict(self.event_notification) if isinstance(self.event_notification, dict) else self.event_notification,
+            'used_faction_ability_names': (
+                ['國際線'] if international_line_used else []
+            ),
         }
         era_followup_target_choice = self._era_followup_target_choice_for_play_card(player, played_card)
         if era_followup_target_choice:
@@ -5576,6 +5598,7 @@ class Game:
             cost_has_money=cost_has_money,
             cost_has_propaganda=cost_has_propaganda,
             played_card=played_card,
+            used_faction_ability_names=action_context.get('used_faction_ability_names'),
         )
 
         build_continuation = self._resume_card_build_queue_if_idle(player)
@@ -6045,6 +6068,7 @@ class Game:
         if town in inner_towns and any(self._player_has_ability(target_owner, n) for n in {"殉道者", "青山里"}):
             self._draw_player_cards(target_owner, 1)
             self.log(f"{target_owner.name} triggered martyr-style ability and drew 1 card")
+            self._track_event_progress('use_faction_ability', player=target_owner)
 
         return {
             "success": True,
@@ -6226,6 +6250,9 @@ class Game:
         self._place_organization(player, to_town, require_supply=False, require_development=False, enforce_base_build_block=False)
         player.moves_left -= cost
         self._track_event_progress('move_organization', player=player)
+        if checked.get("airport_move") and to_town not in (self.map["towns"].get(from_town, {}).get(mode, []) or []):
+            self.log(f"{player.name} triggered 赤鱲角機場 to move from {from_town} to {to_town}")
+            self._track_event_progress('use_faction_ability', player=player)
         if origin_owner is player:
             self.log(f"{player.name} moved 1 organization from {from_town} to {to_town} via {mode}")
         else:
@@ -6362,6 +6389,18 @@ class Game:
             original_cost = self._card_purchase_cost(card)
             effective_cost = self._effective_purchase_cost(player, card)
             payment = self._purchase_payment_cost(player, card, effective_cost)
+            payment_ability_name = next(
+                (
+                    name for name in ("華文傳媒", "國際線")
+                    if self._player_has_ability(player, name)
+                ),
+                None,
+            )
+            used_payment_ability = bool(
+                payment_ability_name
+                and getattr(card, "card_type", None) == "propaganda"
+                and int(effective_cost.get("propaganda", 0) or 0) > 0
+            )
             payment_total['money'] += payment['money']
             payment_total['propaganda'] += payment['propaganda']
             selected.append({
@@ -6370,6 +6409,7 @@ class Game:
                 'card_name': card_name,
                 'is_static': is_static_purchase,
                 'original_cost': original_cost,
+                'payment_ability_name': payment_ability_name if used_payment_ability else None,
             })
 
         if (
@@ -6394,6 +6434,10 @@ class Game:
         pending_choice = False
         for item, purchased_card in zip(selected, purchased_cards):
             self.log(f"{player.name} bought {item['card_name']}")
+            payment_ability_name = item.get('payment_ability_name')
+            if payment_ability_name:
+                self.log(f"{player.name} triggered {payment_ability_name} to pay propaganda with money")
+                self._track_event_progress('use_faction_ability', player=player)
             event_result = self._track_event_purchase(purchased_card, original_cost=item['original_cost'], player=player)
             pending_choice = pending_choice or bool(isinstance(event_result, dict) and event_result.get('pending_choice'))
 
