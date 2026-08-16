@@ -58,7 +58,14 @@ def main():
             all(text in lobby_detail for text in expected_relocatable_labels) and '可前移根據地' not in lobby_detail,
             lobby_detail,
         )
-        record('lobby_uses_correct_event_name_and_rule', '香港抗暴之戰' in lobby_detail and '香港抗爭之烈' not in lobby_detail and '免費前移一次根據地' in lobby_detail, lobby_detail)
+        record(
+            'lobby_uses_correct_event_name_and_rule',
+            '香港抗暴之戰' in lobby_detail
+            and '香港抗爭之烈' not in lobby_detail
+            and '免費遷移一次根據地' in lobby_detail
+            and '亦可留在香港城' in lobby_detail,
+            lobby_detail,
+        )
 
         # Runtime proof: event settlement exposes the free relocation controls in My Faction.
         setup = post_json('/test/setup-event-card-proof', {
@@ -77,8 +84,17 @@ def main():
         panel_text = page.locator('.hk-base-relocation-panel').inner_text()
         tab_text = page.locator('#myFactionBtn').inner_text()
         buttons = page.locator('.hk-base-relocation-actions button').all_inner_texts()
-        record('settled_event_marks_my_faction_tab', '可前移' in tab_text, tab_text)
-        record('free_relocation_panel_has_four_targets_and_keep', all(text in '｜'.join(buttons) for text in ['臺北', '倫敦', '卡加利', '多倫多', '維留香港城']) and '香港抗暴之戰' in panel_text, {'panel': panel_text, 'buttons': buttons})
+        expected_buttons = ['遷移至臺北', '遷移至倫敦', '遷移至卡加利', '遷移至多倫多', '留在香港城']
+        record('settled_event_marks_my_faction_tab', '可遷移' in tab_text and '可前移' not in tab_text, tab_text)
+        record(
+            'free_relocation_panel_has_four_targets_and_keep',
+            buttons == expected_buttons
+            and '香港抗暴之戰：免費遷移根據地' in panel_text
+            and '亦可留在目前的 香港城' in panel_text
+            and '前移' not in panel_text
+            and '維留' not in panel_text,
+            {'panel': panel_text, 'buttons': buttons},
+        )
 
         SCREENSHOT.parent.mkdir(parents=True, exist_ok=True)
         page.screenshot(path=str(SCREENSHOT), full_page=True)

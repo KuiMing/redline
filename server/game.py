@@ -947,7 +947,7 @@ class Game:
         self.event_progress['status'] = 'success' if succeeded else 'failure'
         result = self._apply_event_effect(effect or {'type': 'none'}, player, outcome='success' if succeeded else 'failure')
         # 香港 special_rules：事件卡「香港抗暴之戰」發生並完成結算後，
-        # 不論任務成功或失敗，香港可在下一回合開始前免費前移一次根據地。
+        # 不論任務成功或失敗，香港可在下一回合開始前免費遷移一次根據地。
         if event.get('name') == '香港抗暴之戰' and any(getattr(pl, 'faction_id', None) == 'hong_kong' for pl in self.players):
             if result and result.get('pending_choice') and self.pending_choice:
                 context = dict(self.pending_choice.get('context') or {})
@@ -6112,7 +6112,7 @@ class Game:
             return {"error": "Cannot relocate base into occupied town"}
         free_window = bool(getattr(self, 'hk_free_base_relocation', False))
         if not free_window:
-            return {"error": "香港抗暴之戰尚未完成結算，沒有免費前移根據地的機會"}
+            return {"error": "香港抗暴之戰尚未完成結算，沒有免費遷移根據地的機會"}
         self.hk_free_base_relocation = False
         via = '香港抗暴之戰（免費）'
         old_base = player.base
@@ -6135,7 +6135,7 @@ class Game:
         if getattr(player, 'faction_id', None) != 'hong_kong':
             return {"error": "Only Hong Kong can decide its base relocation"}
         if not getattr(self, 'hk_free_base_relocation', False):
-            return {"error": "目前沒有免費前移根據地的機會"}
+            return {"error": "目前沒有免費遷移根據地的機會"}
         self.hk_free_base_relocation = False
         self.log(f"{player.name} chose to keep the Hong Kong base at {player.base}")
         return {"success": True, "kept": player.base}

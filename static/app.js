@@ -3018,7 +3018,7 @@ function renderMyFactionView(state = window.lastGameState || {}) {
   const myFactionTab = document.getElementById('myFactionBtn');
   if (myFactionTab) {
     const canRelocate = me?.faction === 'hong_kong' && !!state.hk_free_base_relocation;
-    myFactionTab.textContent = canRelocate ? '我的陣營（可前移）' : '我的陣營';
+    myFactionTab.textContent = canRelocate ? '我的陣營（可遷移）' : '我的陣營';
     myFactionTab.classList.toggle('attention', canRelocate);
   }
   if (!me || !me.faction) {
@@ -3082,14 +3082,14 @@ function renderMyFactionView(state = window.lastGameState || {}) {
     : [];
   const hkRelocationPanel = factionId === 'hong_kong' && state.hk_free_base_relocation
     ? `<section class="hk-base-relocation-panel">
-        <div class="faction-detail-section-title">香港抗暴之戰：免費前移根據地</div>
-        <p>請選擇一個新根據地；亦可維留目前的 ${escapeHtml(baseDisplayName(baseName))}。</p>
+        <div class="faction-detail-section-title">香港抗暴之戰：免費遷移根據地</div>
+        <p>請選擇一個新根據地；亦可留在目前的 ${escapeHtml(baseDisplayName(baseName))}。</p>
         <div class="hk-base-relocation-actions">
           ${hkRelocationTargets.map(base => {
             const occupied = occupiedTowns.has(base.name);
-            return `<button type="button" class="base-choice-btn" data-hk-relocate-town="${escapeHtml(base.name)}" ${occupied ? 'disabled' : ''}>前移至${escapeHtml(baseDisplayName(base.name))}${occupied ? '（已有組織）' : ''}</button>`;
+            return `<button type="button" class="base-choice-btn" data-hk-relocate-town="${escapeHtml(base.name)}" ${occupied ? 'disabled' : ''}>遷移至${escapeHtml(baseDisplayName(base.name))}${occupied ? '（已有組織）' : ''}</button>`;
           }).join('')}
-          <button type="button" class="base-choice-btn" data-hk-keep-base="1">維留${escapeHtml(baseDisplayName(baseName))}</button>
+          <button type="button" class="base-choice-btn" data-hk-keep-base="1">留在${escapeHtml(baseDisplayName(baseName))}</button>
         </div>
       </section>`
     : '';

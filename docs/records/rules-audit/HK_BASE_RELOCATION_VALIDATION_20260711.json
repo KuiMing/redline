@@ -29,7 +29,7 @@
     {
       "name": "window_closes_when_next_round_starts",
       "result": {
-        "error": "香港抗暴之戰尚未完成結算，沒有免費前移根據地的機會"
+        "error": "香港抗暴之戰尚未完成結算，沒有免費遷移根據地的機會"
       },
       "checks": {
         "window_closed": true,
@@ -40,7 +40,7 @@
     {
       "name": "airport_is_not_paid_base_relocation",
       "result": {
-        "error": "香港抗暴之戰尚未完成結算，沒有免費前移根據地的機會"
+        "error": "香港抗暴之戰尚未完成結算，沒有免費遷移根據地的機會"
       },
       "checks": {
         "relocation_blocked_without_event_window": true,

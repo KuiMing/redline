@@ -104,7 +104,7 @@ def test_airport_cannot_be_used_as_paid_base_relocation_without_event_window():
 
     result = game.relocate_hong_kong_base(hk.id, '臺北')
 
-    assert result == {'error': '香港抗暴之戰尚未完成結算，沒有免費前移根據地的機會'}
+    assert result == {'error': '香港抗暴之戰尚未完成結算，沒有免費遷移根據地的機會'}
     assert hk.base == '香港城'
     assert hk.organizations == {'香港城': 1}
     assert hk.moves_left == 9
@@ -142,4 +142,4 @@ def test_free_window_closes_when_next_round_event_starts():
     result = game.relocate_hong_kong_base(hk.id, '卡加利')
 
     assert game.hk_free_base_relocation is False
-    assert result == {'error': '香港抗暴之戰尚未完成結算，沒有免費前移根據地的機會'}
+    assert result == {'error': '香港抗暴之戰尚未完成結算，沒有免費遷移根據地的機會'}

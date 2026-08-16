@@ -74,7 +74,7 @@ def case_restrictions():
     bad_target = g.relocate_hong_kong_base(hk.id, '曼谷')
     red.organizations = {'倫敦': 1}
     enemy_blocked = g.relocate_hong_kong_base(hk.id, '倫敦')
-    g.current_player_index = 1  # 免費前移窗口不要求輪到香港
+    g.current_player_index = 1  # 免費遷移窗口不要求輪到香港
     out_of_turn_free = g.relocate_hong_kong_base(hk.id, '臺北')
     g2, hk2, red2 = _new_game()
     g2.hk_free_base_relocation = True
