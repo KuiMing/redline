@@ -43,7 +43,16 @@ def main():
         page.wait_for_function("() => document.getElementById('factionDetailPanel')?.innerText.includes('多倫多')", timeout=5000)
         lobby_detail = page.locator('#factionDetailPanel').inner_text()
         expected_base_text = ['香港城', '臺北', '倫敦', '卡加利', '多倫多', '安全屋', '國際線', '商貿組織']
+        expected_relocatable_labels = [
+            f'{town}（可遷移根據地）'
+            for town in ['臺北', '倫敦', '卡加利', '多倫多']
+        ]
         record('lobby_hong_kong_details_list_all_bases_and_abilities', all(text in lobby_detail for text in expected_base_text), lobby_detail)
+        record(
+            'lobby_uses_relocatable_base_label_without_old_typo',
+            all(text in lobby_detail for text in expected_relocatable_labels) and '可前移根據地' not in lobby_detail,
+            lobby_detail,
+        )
         record('lobby_uses_correct_event_name_and_rule', '香港抗暴之戰' in lobby_detail and '香港抗爭之烈' not in lobby_detail and '免費前移一次根據地' in lobby_detail, lobby_detail)
 
         # Runtime proof: event settlement exposes the free relocation controls in My Faction.

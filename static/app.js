@@ -1032,7 +1032,7 @@ function factionAbilityText(item) {
 function hongKongBaseOverviewItems(faction, currentBase = null) {
   if (!faction || faction.id !== 'hong_kong') return [];
   return (faction.bases || []).map(base => {
-    const marker = base.name === currentBase ? '（目前根據地）' : (base.type === 'initial' ? '（初始根據地）' : '（可前移根據地）');
+    const marker = base.name === currentBase ? '（目前根據地）' : (base.type === 'initial' ? '（初始根據地）' : '（可遷移根據地）');
     const abilities = (base.abilities || []).map(factionAbilityText).join('；') || '無特殊能力';
     return `${baseDisplayName(base.name)}${marker}：${abilities}`;
   });
