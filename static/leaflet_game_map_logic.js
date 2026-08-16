@@ -562,18 +562,23 @@ function markerStyleForTown(name, zoom = map.getZoom()) {
   const player = (lastGameState?.players || []).find(p => p.name === leader?.player);
   const controlColor = player?.faction ? (factionCampColor(player.faction) || '#cbd5e1') : '#cbd5e1';
 
-  // 根據地城鎮的圓圈外框改用該根據地陣營的代表色（比一般擁有/中性外框再加粗一點），
-  // 讓根據地在地圖上比其他一般城鎮更醒目；有共享組織可用時仍優先顯示黃色提示。
+  // 根據地城鎮的圓圈外框改用該根據地陣營的代表色，讓根據地在地圖上比其他一般城鎮更
+  // 醒目；有共享組織可用時仍優先顯示黃色提示。2026-08-17 使用者實測回饋：光是換色／
+  // 加粗外框看不太出來，因為根據地標示（🏕，28px 方形背景，見
+  // renderParticipatingFactionBaseBadges）幾乎跟圓圈同大甚至更大，會整個蓋住外框——
+  // 真正有效的做法是加大圓圈半徑，讓外框整圈清楚露在 28px 標示背景之外；標示本身大小
+  // 與外框粗細都維持不變。
   const baseFactionId = baseFactionIdForTown(name);
   const baseColor = baseFactionId ? factionCampColor(baseFactionId) : null;
+  const baseRadiusBoost = (baseColor && !hasShared) ? 8 : 0;
   const strokeWeight = hasShared
     ? Math.max(base.weight + 2.5, 3.5)
     : (ownedByCurrent ? Math.max(base.weight + 1.5, 3) : Math.max(base.weight + 0.5, 2));
 
   return {
-    radius: Math.max(base.radius + (hasShared ? 3 : 2), hasShared ? 9 : 8),
+    radius: Math.max(base.radius + (hasShared ? 3 : 2), hasShared ? 9 : 8) + baseRadiusBoost,
     color: hasShared ? '#facc15' : (baseColor || (ownedByCurrent ? '#f8fafc' : '#cbd5e1')),
-    weight: baseColor && !hasShared ? strokeWeight + 1 : strokeWeight,
+    weight: strokeWeight,
     fillColor: controlColor,
     fillOpacity: ownedByCurrent ? 0.98 : 0.88,
     opacity: 1,

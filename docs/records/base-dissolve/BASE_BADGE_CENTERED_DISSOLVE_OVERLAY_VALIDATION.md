@@ -41,3 +41,20 @@ Playwright 實際開一局（A=紅軍、B=臺灣），切到戰略地圖聚焦�
 城鎮貼近裁切放大截圖，肉眼也能明顯分辨三種顏色（`base_badge_outline_red_army_beijing.png`、
 `base_badge_outline_hong_kong.png`、`base_badge_outline_taiwan.png`）。完整 pytest
 366/366 passed。
+
+## 再次調整（同日）：改為放大圓圈，而非只換色加粗
+
+使用者實測回饋：換色＋加粗還是看不太出來。根因其實是根據地標示（🏕，28px 見方的
+`base-badge` 方形背景，見 `renderParticipatingFactionBaseBadges()`）跟圓圈半徑幾乎同大
+甚至更大，方形背景會整個蓋住外框圈——不管外框多粗、顏色多鮮豔，只要被蓋住就是看不到。
+
+改成放大圓圈半徑（`baseRadiusBoost = 8`），讓外框整圈清楚露在 28px 標示背景之外；
+標示本身大小與外框粗細都改回原本數值不變（單純加粗、不放大圓圈，效果有限）。
+
+驗證：三個陣營貼近裁切截圖（`base_badge_outline_*.png` 已更新為放大後版本）外框都清楚
+可見一整圈色環；`base_badge_enlarged_ring_wide_view.png`——正常縮放的「聚焦亞洲」視角
+下，三個根據地的色環仍清楚可辨、不會顯得突兀或蓋住太多地圖細節；
+`base_badge_dissolve_skull_overlay.png`——瓦解互動中 💀 仍正確蓋住放大後的根據地標示。
+完整 pytest 366/366 passed（另外這次重跑時抓到一個無關的既有不穩定測試
+`test_business_network_resolve_choice_websocket_broadcasts_last_action_result_and_effect`，
+跟本次改動無關——本次只動了前端 JS，重跑 3 次皆通過）。
