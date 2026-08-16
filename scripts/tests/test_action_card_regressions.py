@@ -3603,34 +3603,6 @@ def test_npc_progresses_when_hong_kong_safe_house_triggers_on_inner_build():
     assert any('triggered 安全屋 while building in 南寧' in entry for entry in g.action_log)
 
 
-def test_npc_progresses_when_hong_kong_uses_propagandist_from_keelung_to_build_taipei():
-    """使用者實際流程：香港在基隆有組織，以宣傳家在臺北建立，安全屋應完成全國人大召開。"""
-    g = make_game()
-    actor = g.current_player()
-    actor.faction_id = 'hong_kong'
-    actor.base = '香港城'
-    actor.organizations = {'香港城': 1, '基隆': 1}
-    actor.hand = [g._starter_card('宣傳家')]
-    actor.deck.draw_pile = [Card(f'補牌{i}', 'command', {}) for i in range(6)]
-    pin_active_mission_event(g, '全國人大召開')
-
-    started = g.play_card(0, mode='action')
-    assert started.get('success') is True
-    assert g.pending_choice and g.pending_choice.get('choice_key') == 'card_build_organization'
-    taipei_index = next(
-        index for index, item in enumerate(g.pending_choice.get('towns') or [])
-        if item.get('town') == '臺北'
-    )
-
-    resolved = g.resolve_pending_choice(actor.id, taipei_index)
-
-    assert resolved.get('success') is True
-    assert actor.organizations.get('臺北') == 1
-    assert g.event_progress['succeeded'] is True
-    assert g.event_progress['status'] == 'success_pending'
-    assert any('triggered 安全屋 while building in 臺北' in entry for entry in g.action_log)
-
-
 def test_npc_does_not_count_safe_house_when_hong_kong_base_no_longer_has_it():
     """遷到倫敦後目前能力是國際線；牆內建立不能再冒算安全屋。"""
     g = make_game()
@@ -3641,7 +3613,6 @@ def test_npc_does_not_count_safe_house_when_hong_kong_base_no_longer_has_it():
 
     assert g._player_has_ability(actor, '安全屋') is False
     g._record_action_build(actor, '南寧')
-    g._record_action_build(actor, '臺北')
 
     assert g.event_progress['succeeded'] is False
     assert g.event_progress['count'] == 0

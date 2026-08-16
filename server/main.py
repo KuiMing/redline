@@ -2103,32 +2103,12 @@ def test_setup_hand_preview(payload: dict):
 
     hand_names = payload.get("hand_names") or ["宣傳家", "印度奧援", "東洋奧援"]
     viewer.hand = [preview_card(name) for name in hand_names]
-    if "draw_pile" in payload:
-        viewer.deck.draw_pile = [preview_card(name) for name in payload.get("draw_pile", [])]
     viewer.deck.discard_pile = [preview_card(name) for name in payload.get("viewer_discard_names", [])]
 
     red.faction_id = "red_army"
     red.base = "北京"
     red.organizations = {"北京": 1}
-    red.hand = [preview_card(name) for name in payload.get("red_hand_names", [])]
     red.deck.discard_pile = [preview_card(name) for name in payload.get("red_discard_names", [])]
-
-    event_name = payload.get("event_name")
-    if event_name:
-        selected_event = game._event_by_name(event_name)
-        if selected_event is None:
-            return {"error": f"Unknown event: {event_name}"}
-        game.current_event = dict(selected_event)
-        required = int((game.current_event.get("trigger") or {}).get("count", 1) or 1)
-        game.event_progress = {
-            "count": 0,
-            "required": required,
-            "succeeded": False,
-            "settled": False,
-            "status": "active",
-        }
-        game.event_modifiers = []
-        game.event_notification = None
 
     if "action_log" in payload:
         game.action_log = [str(entry) for entry in payload.get("action_log", [])]

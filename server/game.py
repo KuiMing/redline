@@ -1210,8 +1210,8 @@ class Game:
             max_steps = int(build_range or 1) + int(getattr(player, 'build_range_bonus', 0) or 0)
             candidates = self._towns_within_steps(source_towns, max_steps=max_steps)
             if self._player_has_ability(player, "安全屋"):
-                safehouse_towns = self._safehouse_build_scope_towns()
-                candidates |= self._towns_within_steps(source_towns, max_steps=max_steps + 1) & safehouse_towns
+                inner_towns = set(self._towns_for_region_alias("china"))
+                candidates |= self._towns_within_steps(source_towns, max_steps=max_steps + 1) & inner_towns
         # 組織經驗甲卡面：「無法無視距離建立牆內組織者，本牌於牆內建立組織距離為1格」。
         # 思想家亦比照同一條退回規則（卡面資料的 inner_fallback_range）。限制來源包含
         # 陣營能力（新疆社會管控）與時代關卡（restrict_ignore_distance_build），兩者共用。
@@ -3706,17 +3706,6 @@ class Game:
     def _player_has_ability(self, player, name):
         return any(isinstance(a, dict) and a.get("name") == name for a in self._player_effective_abilities(player))
 
-    def _safehouse_build_scope_towns(self):
-        """安全屋的建立／觸發範圍：牆內與臺灣。
-
-        2026-08-16 使用者裁決確認香港以宣傳家由基隆在臺北建立時，安全屋應觸發。
-        將臺灣納入同一共用範圍，避免合法性加成與事件追蹤採用不同判定。
-        """
-        return (
-            set(self._towns_for_region_alias("china"))
-            | set(self._towns_for_region_alias("taiwan"))
-        )
-
     def _player_is_nonviolent(self, player):
         return self._player_has_ability(player, "非暴力")
 
@@ -4246,13 +4235,13 @@ class Game:
         """Apply every hook shared by a successful organization build during a player's action."""
         self.turn_log.setdefault("built_towns", []).append(town)
         self._track_event_progress('build_organization', town=town, player=player)
-        # 安全屋不是單純的陣營說明文字；香港在牆內或臺灣建立時，其「建立距離 +1」被動能力
+        # 安全屋不是單純的陣營說明文字；香港在牆內建立時，其「建立距離 +1」被動能力
         # 實際進入合法城鎮判定。事件卡「全國人大召開」的條件明列「使用或觸發陣營
-        # 特殊能力」，因此成功在其範圍建立組織時必須把安全屋記為一次已觸發能力。移到倫敦／
+        # 特殊能力」，因此成功建立牆內組織時必須把安全屋記為一次已觸發能力。移到倫敦／
         # 卡加利／多倫多後，安全屋已不在有效能力中，`_player_has_ability` 會自然排除。
         if (
             self._player_has_ability(player, "安全屋")
-            and town in self._safehouse_build_scope_towns()
+            and town in set(self._towns_for_region_alias("china"))
         ):
             self.log(f"{player.name} triggered 安全屋 while building in {town}")
             self._track_event_progress('use_faction_ability', player=player)
