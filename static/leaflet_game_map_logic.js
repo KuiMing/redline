@@ -971,8 +971,10 @@ function renderParticipatingFactionBaseBadges() {
           className: 'base-badge-wrap',
           html: `<div class="base-badge" data-base-faction="${escapeHtml(player.faction)}" data-base-town="${escapeHtml(townName)}" title="${escapeHtml(tooltip)}">🏕</div>`,
           iconSize: [28, 28],
-          // 根據地放在城鎮左上；軍火庫 🧨 維持右上，瓦解 💀 維持中央。
-          iconAnchor: [28 + index * 24, 25],
+          // 根據地置中疊在城鎮圓圈正中央（軍火庫 🧨 維持右上）；瓦解 💀 的 zIndexOffset
+          // （1000）高於這裡的 800+index，兩者座標重合時 💀 會直接蓋過根據地標示——
+          // 這正是「北京可被瓦解時要用 💀 蓋過根據地圖示」要的效果，不需要另外處理。
+          iconAnchor: [14 + index * 10, 14],
         })
       }).bindTooltip(tooltip, { direction: 'top', offset: [0, -18] }).addTo(baseBadgeLayer);
       badge.__redlineBaseTown = townName;
