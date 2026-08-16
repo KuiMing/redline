@@ -112,12 +112,14 @@ const roadLayer = L.layerGroup().addTo(map);
 const railLayer = L.layerGroup().addTo(map);
 const markerLayer = L.layerGroup().addTo(map);
 const armoryBadgeLayer = L.layerGroup().addTo(map);
+const baseBadgeLayer = L.layerGroup().addTo(map);
 const highlightLayer = L.layerGroup().addTo(map);
 const supportChoiceHighlightLayer = L.layerGroup().addTo(map);
 let labelMode = 'auto', showRoad = true, showRail = true;
 let currentMarkers = new Map();
 let currentSharedBadges = new Map();
 let currentArmoryBadges = new Map();
+let currentBaseBadges = new Map();
 let currentVisible = towns.map(t=>t.name);
 let lastGameState = null;
 let selectedTown = null;
@@ -515,6 +517,7 @@ function clearLayers() {
   railLayer.clearLayers();
   markerLayer.clearLayers();
   armoryBadgeLayer.clearLayers();
+  baseBadgeLayer.clearLayers();
   highlightLayer.clearLayers();
   currentSharedBadges.forEach(marker => {
     try { map.removeLayer(marker); } catch {}
@@ -522,6 +525,7 @@ function clearLayers() {
   currentMarkers = new Map();
   currentSharedBadges = new Map();
   currentArmoryBadges = new Map();
+  currentBaseBadges = new Map();
 }
 
 function markerStyleForTown(name, zoom = map.getZoom()) {
@@ -946,6 +950,37 @@ function updateDynamicStyles() {
   renderSupportChoiceHighlights();
 }
 
+function renderParticipatingFactionBaseBadges() {
+  const basePlayersByTown = new Map();
+  for (const player of (lastGameState?.players || [])) {
+    if (!player?.base || !player?.faction || !byName.has(player.base)) continue;
+    if (!basePlayersByTown.has(player.base)) basePlayersByTown.set(player.base, []);
+    basePlayersByTown.get(player.base).push(player);
+  }
+
+  basePlayersByTown.forEach((playersAtBase, townName) => {
+    const town = byName.get(townName);
+    playersAtBase.forEach((player, index) => {
+      const factionName = factionLabel(player.faction) || player.faction;
+      const tooltip = `${factionName}根據地：${townName}`;
+      const badge = L.marker([town.lat, town.lon], {
+        interactive: true,
+        keyboard: false,
+        zIndexOffset: 800 + index,
+        icon: L.divIcon({
+          className: 'base-badge-wrap',
+          html: `<div class="base-badge" data-base-faction="${escapeHtml(player.faction)}" data-base-town="${escapeHtml(townName)}" title="${escapeHtml(tooltip)}">🏕</div>`,
+          iconSize: [28, 28],
+          // 根據地放在城鎮左上；軍火庫 🧨 維持右上，瓦解 💀 維持中央。
+          iconAnchor: [28 + index * 24, 25],
+        })
+      }).bindTooltip(tooltip, { direction: 'top', offset: [0, -18] }).addTo(baseBadgeLayer);
+      badge.__redlineBaseTown = townName;
+      currentBaseBadges.set(player.id || `${player.faction}:${townName}:${index}`, badge);
+    });
+  });
+}
+
 function renderMap() {
   clearLayers();
   updateStatusPanel();
@@ -1037,6 +1072,7 @@ function renderMap() {
     if (shouldShowLabels()) marker.bindTooltip(labelTextForTown(t.name), townLabelOptions(t.name));
   });
 
+  renderParticipatingFactionBaseBadges();
   updateDynamicStyles();
   if (selectedTown) {
     renderMovementHighlights(selectedTown, { autoFocus: false });

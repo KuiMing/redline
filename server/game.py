@@ -6108,7 +6108,12 @@ class Game:
             return {"error": f"根據地只能遷移至：{'、'.join(targets)}"}
         if to_town == player.base:
             return {"error": "Base is already there"}
-        if self._town_has_physical_organization(to_town):
+        destination_entries = self._organization_entries_at(to_town)
+        destination_has_own_organization = player.organizations.get(to_town, 0) > 0
+        if destination_entries and not (
+            destination_has_own_organization
+            and all(owner is player for owner, _count in destination_entries)
+        ):
             return {"error": "Cannot relocate base into occupied town"}
         free_window = bool(getattr(self, 'hk_free_base_relocation', False))
         if not free_window:
@@ -6116,11 +6121,12 @@ class Game:
         self.hk_free_base_relocation = False
         via = '香港抗暴之戰（免費）'
         old_base = player.base
-        if old_base and player.organizations.get(old_base, 0) > 0:
-            player.organizations[old_base] -= 1
-            if player.organizations[old_base] <= 0:
-                del player.organizations[old_base]
-        self._place_organization(player, to_town, require_supply=False, require_development=False, enforce_base_build_block=False)
+        if not destination_has_own_organization:
+            if old_base and player.organizations.get(old_base, 0) > 0:
+                player.organizations[old_base] -= 1
+                if player.organizations[old_base] <= 0:
+                    del player.organizations[old_base]
+            self._place_organization(player, to_town, require_supply=False, require_development=False, enforce_base_build_block=False)
         player.base = to_town
         self.log(f"{player.name} relocated base from {old_base} to {to_town} via {via}")
         return {"success": True, "from": old_base, "to": to_town, "free": free_window}

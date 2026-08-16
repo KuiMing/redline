@@ -3,7 +3,7 @@
     "scope": [
       "香港根據地遷移（S5-1 + 機場根據地用途）"
     ],
-    "purpose": "Event card 香港抗暴之戰 opens a one-time free base-forward window after settlement (success or failure). Hong Kong may move its base to 臺北/倫敦/卡加利/多倫多 before the next round begins, or keep the current base and consume the window. The separate 赤鱲角 airport rule moves a Hong Kong organization for 2 migrations; it is not a paid base-relocation method. The base anchor organization moves with the base, the new base ability activates, and occupied destinations are blocked.",
+    "purpose": "Event card 香港抗暴之戰 opens a one-time free base-forward window after settlement (success or failure). Hong Kong may move its base to 臺北/倫敦/卡加利/多倫多 before the next round begins, or keep the current base and consume the window. The separate 赤鱲角 airport rule moves a Hong Kong organization for 2 migrations; it is not a paid base-relocation method. For an empty destination, the base anchor organization moves with the base. An existing Hong Kong organization at the destination becomes the base while the old-base organization remains. Other-faction occupied destinations stay blocked, and the new base ability activates.",
     "total": 5,
     "passed": 5,
     "failed": 0
@@ -53,7 +53,8 @@
       "name": "relocation_restrictions",
       "checks": {
         "only_four_cities": true,
-        "occupied_destination_blocked": true,
+        "other_faction_occupied_destination_blocked": true,
+        "own_organization_destination_allowed": true,
         "free_window_allows_hk_choice_out_of_turn": true,
         "non_hk_faction_blocked": true
       },

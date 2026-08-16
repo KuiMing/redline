@@ -82,6 +82,21 @@ def test_failed_event_opens_relocation_only_after_required_discard_resolves():
     assert game.relocate_hong_kong_base(hk.id, '倫敦').get('success') is True
 
 
+def test_free_relocation_to_existing_own_organization_promotes_it_to_base_without_removing_old_organization():
+    game, hk, _ = make_game()
+    hk.organizations = {'香港城': 1, '臺北': 1}
+    settle_event(game)
+    before_total = hk.total_organizations()
+
+    result = game.relocate_hong_kong_base(hk.id, '臺北')
+
+    assert result == {'success': True, 'from': '香港城', 'to': '臺北', 'free': True}
+    assert hk.base == '臺北'
+    assert hk.organizations == {'香港城': 1, '臺北': 1}
+    assert hk.total_organizations() == before_total
+    assert game.hk_free_base_relocation is False
+
+
 def test_free_forward_base_move_consumes_window_without_spending_moves_and_switches_ability():
     game, hk, _ = make_game()
     settle_event(game)

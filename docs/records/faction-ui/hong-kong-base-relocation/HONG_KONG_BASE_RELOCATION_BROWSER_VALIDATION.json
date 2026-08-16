@@ -1,12 +1,13 @@
 {
   "status": "passed",
-  "checks_passed": 15,
-  "checks_total": 15,
+  "checks_passed": 20,
+  "checks_total": 20,
   "base_url": "[REDACTED]",
   "screenshots": [
     "docs/records/faction-ui/hong-kong-base-relocation/hong_kong_base_relocation_ui.png",
     "docs/records/faction-ui/hong-kong-base-relocation/failed_event_relocation_ready.png",
-    "docs/records/faction-ui/hong-kong-base-relocation/failed_event_relocation_success.png"
+    "docs/records/faction-ui/hong-kong-base-relocation/failed_event_relocation_success.png",
+    "docs/records/faction-ui/hong-kong-base-relocation/own_organization_relocation_and_base_markers.png"
   ],
   "checks": [
     {
@@ -129,6 +130,70 @@
         },
         "moves_left": 0
       }
+    },
+    {
+      "name": "own_organization_destination_is_enabled_during_other_player_turn",
+      "passed": true,
+      "detail": {
+        "current_player": "red",
+        "button": "遷移至臺北（已有香港組織）",
+        "enabled": true
+      }
+    },
+    {
+      "name": "out_of_turn_websocket_action_relocates_base_to_existing_own_organization",
+      "passed": true,
+      "detail": {
+        "current_player": "red",
+        "base": "臺北"
+      }
+    },
+    {
+      "name": "own_destination_becomes_base_without_removing_old_organization",
+      "passed": true,
+      "detail": {
+        "orgs": {
+          "香港城": 1,
+          "臺北": 1
+        },
+        "counts": {
+          "total": 2,
+          "inside_wall": 1,
+          "outside_wall": 1
+        }
+      }
+    },
+    {
+      "name": "map_marks_every_participating_faction_current_base",
+      "passed": true,
+      "detail": [
+        {
+          "faction": "hong_kong",
+          "town": "臺北",
+          "text": "🏕"
+        },
+        {
+          "faction": "red_army",
+          "town": "北京",
+          "text": "🏕"
+        }
+      ]
+    },
+    {
+      "name": "focus_asia_shows_all_participating_base_badges_in_viewport",
+      "passed": true,
+      "detail": [
+        {
+          "faction": "hong_kong",
+          "town": "臺北",
+          "visible": true
+        },
+        {
+          "faction": "red_army",
+          "town": "北京",
+          "visible": true
+        }
+      ]
     },
     {
       "name": "browser_console_has_no_errors",

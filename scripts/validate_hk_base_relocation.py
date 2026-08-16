@@ -79,9 +79,16 @@ def case_restrictions():
     g2, hk2, red2 = _new_game()
     g2.hk_free_base_relocation = True
     red2_result = g2.relocate_hong_kong_base(red2.id, '臺北')
+    g3, hk3, _ = _new_game()
+    hk3.organizations = {'香港城': 1, '臺北': 1}
+    g3.hk_free_base_relocation = True
+    own_destination = g3.relocate_hong_kong_base(hk3.id, '臺北')
     checks = {
         'only_four_cities': '根據地只能遷移至' in str(bad_target.get('error')),
-        'occupied_destination_blocked': 'occupied town' in str(enemy_blocked.get('error')),
+        'other_faction_occupied_destination_blocked': 'occupied town' in str(enemy_blocked.get('error')),
+        'own_organization_destination_allowed': own_destination.get('success') is True
+        and hk3.base == '臺北'
+        and hk3.organizations == {'香港城': 1, '臺北': 1},
         'free_window_allows_hk_choice_out_of_turn': out_of_turn_free.get('success') is True,
         'non_hk_faction_blocked': 'Only Hong Kong' in str(red2_result.get('error')),
     }
@@ -115,8 +122,10 @@ def main():
             '(success or failure). Hong Kong may move its base to 臺北/倫敦/卡加利/多倫多 '
             'before the next round begins, or keep the current base and consume the window. '
             'The separate 赤鱲角 airport rule moves a Hong Kong organization for 2 migrations; '
-            'it is not a paid base-relocation method. The base anchor organization moves with '
-            'the base, the new base ability activates, and occupied destinations are blocked.'
+            'it is not a paid base-relocation method. For an empty destination, the base anchor '
+            'organization moves with the base. An existing Hong Kong organization at the destination '
+            'becomes the base while the old-base organization remains. Other-faction occupied '
+            'destinations stay blocked, and the new base ability activates.'
         ),
         'total': len(results),
         'passed': sum(1 for r in results if r['ok']),

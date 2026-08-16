@@ -2502,7 +2502,7 @@ function openEthnicRitualGuessModal() {
 
 function strategicMapUrl() {
   const url = new URL('/static/leaflet_game_map.html', window.location.origin);
-  url.searchParams.set('v', 'faction-filter-focus-20260816');
+  url.searchParams.set('v', 'base-camp-markers-20260816');
   if (gameId) url.searchParams.set('gameId', gameId);
   if (playerId) url.searchParams.set('playerId', playerId);
   return url.toString();
@@ -3077,6 +3077,9 @@ function renderMyFactionView(state = window.lastGameState || {}) {
   const occupiedTowns = new Set((state.players || []).flatMap(player =>
     Object.entries(player.orgs || {}).filter(([, count]) => Number(count) > 0).map(([town]) => town)
   ));
+  const ownOrganizationTowns = new Set(
+    Object.entries(me.orgs || {}).filter(([, count]) => Number(count) > 0).map(([town]) => town)
+  );
   const hkRelocationTargets = factionId === 'hong_kong'
     ? (detail.bases || []).filter(base => base?.type === 'relocatable')
     : [];
@@ -3087,7 +3090,12 @@ function renderMyFactionView(state = window.lastGameState || {}) {
         <div class="hk-base-relocation-actions">
           ${hkRelocationTargets.map(base => {
             const occupied = occupiedTowns.has(base.name);
-            return `<button type="button" class="base-choice-btn" data-hk-relocate-town="${escapeHtml(base.name)}" ${occupied ? 'disabled' : ''}>遷移至${escapeHtml(baseDisplayName(base.name))}${occupied ? '（已有組織）' : ''}</button>`;
+            const occupiedByOwnOrganization = ownOrganizationTowns.has(base.name);
+            const blockedByOtherOrganization = occupied && !occupiedByOwnOrganization;
+            const occupancyLabel = blockedByOtherOrganization
+              ? '（已有其他陣營組織）'
+              : (occupiedByOwnOrganization ? '（已有香港組織）' : '');
+            return `<button type="button" class="base-choice-btn" data-hk-relocate-town="${escapeHtml(base.name)}" ${blockedByOtherOrganization ? 'disabled' : ''}>遷移至${escapeHtml(baseDisplayName(base.name))}${occupancyLabel}</button>`;
           }).join('')}
           <button type="button" class="base-choice-btn" data-hk-keep-base="1">留在${escapeHtml(baseDisplayName(baseName))}</button>
         </div>

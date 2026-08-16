@@ -682,7 +682,7 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
                 await broadcast_game_state(game_id, game)
                 continue
 
-            bypass_turn_check = False
+            bypass_turn_check = action in {"relocate_base", "keep_hong_kong_base"}
             if action == "resolve_choice":
                 pending_choice = getattr(game, "pending_choice", None) or {}
                 bypass_turn_check = pending_choice.get("player_id") == player_id
@@ -3058,8 +3058,8 @@ def test_setup_event_card_proof(payload: dict):
     game.players[1].faction_id = "red_army"
     game.players[0].base = "香港城" if game.players[0].faction_id == "hong_kong" else "臺北"
     game.players[1].base = "北京"
-    game.players[0].organizations = {game.players[0].base: 1}
-    game.players[1].organizations = {"北京": 1}
+    game.players[0].organizations = dict(payload.get("viewer_orgs") or {game.players[0].base: 1})
+    game.players[1].organizations = dict(payload.get("red_orgs") or {"北京": 1})
     game.pending_base_choices = []
     game.game_phase = GamePhase.MAIN
     game.current_player_index = 0
@@ -3109,6 +3109,10 @@ def test_setup_event_card_proof(payload: dict):
     else:
         game.event_deck.draw_pile = [event] if event else []
         game.event_deck.discard_pile = []
+
+    requested_current_player_index = int(payload.get("current_player_index", game.current_player_index) or 0)
+    if 0 <= requested_current_player_index < len(game.players):
+        game.current_player_index = requested_current_player_index
 
     game_id = str(uuid.uuid4())
     manager.games[game_id] = game

@@ -13,6 +13,7 @@ REPORT = RECORD_DIR / 'HONG_KONG_BASE_RELOCATION_BROWSER_VALIDATION.json'
 SCREENSHOT = RECORD_DIR / 'hong_kong_base_relocation_ui.png'
 FAILURE_READY_SCREENSHOT = RECORD_DIR / 'failed_event_relocation_ready.png'
 FAILURE_SUCCESS_SCREENSHOT = RECORD_DIR / 'failed_event_relocation_success.png'
+OWN_ORG_BASE_MAP_SCREENSHOT = RECORD_DIR / 'own_organization_relocation_and_base_markers.png'
 
 
 def post_json(path, payload):
@@ -188,6 +189,89 @@ def main():
                 page.click('#myFactionBtn') if not page.locator('#myFactionView').evaluate("el => el.classList.contains('active')") else None
                 page.screenshot(path=str(FAILURE_SUCCESS_SCREENSHOT), full_page=True)
 
+        # Exact playtest regression: Hong Kong may use the relocation window during another
+        # player's turn, and an existing Hong Kong organization may become the new base.
+        occupied_setup = post_json('/test/setup-event-card-proof', {
+            'event_name': '香港抗暴之戰',
+            'viewer_faction': 'hong_kong',
+            'hk_free_relocation': True,
+            'viewer_orgs': {'香港城': 1, '臺北': 1},
+            'red_orgs': {'北京': 1},
+            'current_player_index': 1,
+        })
+        page.goto(f"{BASE_URL}{occupied_setup['url']}&v=hk-own-org-relocation", wait_until='domcontentloaded')
+        page.wait_for_function(
+            "window.lastGameState?.current_player === 'red' && window.lastGameState?.hk_free_base_relocation === true",
+            timeout=15000,
+        )
+        if page.locator('#eventRevealModal').is_visible():
+            page.locator('#eventRevealModal').click(position={'x': 5, 'y': 5})
+            page.locator('#eventRevealModal').wait_for(state='hidden', timeout=5000)
+        page.click('#myFactionBtn')
+        own_taipei_button = page.locator('[data-hk-relocate-town="臺北"]')
+        own_taipei_button.wait_for(state='visible', timeout=10000)
+        record(
+            'own_organization_destination_is_enabled_during_other_player_turn',
+            own_taipei_button.is_enabled()
+            and own_taipei_button.inner_text() == '遷移至臺北（已有香港組織）',
+            {
+                'current_player': page.evaluate('window.lastGameState.current_player'),
+                'button': own_taipei_button.inner_text(),
+                'enabled': own_taipei_button.is_enabled(),
+            },
+        )
+        own_taipei_button.click()
+        page.wait_for_function(
+            "window.lastGameState?.players?.some(p => p.faction === 'hong_kong' && p.base === '臺北')",
+            timeout=10000,
+        )
+        occupied_after = page.evaluate('window.lastGameState')
+        occupied_hk = next(player for player in occupied_after['players'] if player['faction'] == 'hong_kong')
+        record(
+            'out_of_turn_websocket_action_relocates_base_to_existing_own_organization',
+            occupied_after.get('current_player') == 'red'
+            and occupied_hk.get('base') == '臺北'
+            and occupied_after.get('hk_free_base_relocation') is False,
+            {'current_player': occupied_after.get('current_player'), 'base': occupied_hk.get('base')},
+        )
+        record(
+            'own_destination_becomes_base_without_removing_old_organization',
+            occupied_hk.get('orgs', {}).get('香港城') == 1
+            and occupied_hk.get('orgs', {}).get('臺北') == 1
+            and occupied_hk.get('organization_counts', {}).get('total') == 2,
+            {'orgs': occupied_hk.get('orgs'), 'counts': occupied_hk.get('organization_counts')},
+        )
+
+        page.click('button.game-tab[data-view="map"]')
+        map_frame = page.frame_locator('#strategicMapFrame')
+        map_frame.locator('.base-badge').first.wait_for(state='visible', timeout=15000)
+        base_badges = map_frame.locator('.base-badge').evaluate_all(
+            "nodes => nodes.map(node => ({faction: node.dataset.baseFaction, town: node.dataset.baseTown, text: node.textContent}))"
+        )
+        badge_pairs = {(badge['faction'], badge['town']) for badge in base_badges}
+        record(
+            'map_marks_every_participating_faction_current_base',
+            len(base_badges) == len(occupied_after['players'])
+            and ('hong_kong', '臺北') in badge_pairs
+            and ('red_army', '北京') in badge_pairs
+            and ('hong_kong', '香港城') not in badge_pairs
+            and all(badge['text'] == '🏕' for badge in base_badges),
+            base_badges,
+        )
+        map_frame.locator('#focusAsia').click()
+        page.wait_for_timeout(500)
+        base_badge_visibility = map_frame.locator('.base-badge').evaluate_all(
+            "nodes => nodes.map(node => { const r = node.getBoundingClientRect(); return {faction: node.dataset.baseFaction, town: node.dataset.baseTown, visible: r.right > 0 && r.bottom > 0 && r.left < innerWidth && r.top < innerHeight}; })"
+        )
+        record(
+            'focus_asia_shows_all_participating_base_badges_in_viewport',
+            len(base_badge_visibility) == len(occupied_after['players'])
+            and all(item['visible'] for item in base_badge_visibility),
+            base_badge_visibility,
+        )
+        OWN_ORG_BASE_MAP_SCREENSHOT.parent.mkdir(parents=True, exist_ok=True)
+        page.screenshot(path=str(OWN_ORG_BASE_MAP_SCREENSHOT), full_page=True)
+
         record('browser_console_has_no_errors', not console_errors, console_errors)
         browser.close()
 
@@ -200,6 +284,7 @@ def main():
             str(SCREENSHOT.relative_to(ROOT)),
             str(FAILURE_READY_SCREENSHOT.relative_to(ROOT)),
             str(FAILURE_SUCCESS_SCREENSHOT.relative_to(ROOT)),
+            str(OWN_ORG_BASE_MAP_SCREENSHOT.relative_to(ROOT)),
         ],
         'checks': checks,
     }
