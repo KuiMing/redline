@@ -3586,6 +3586,38 @@ def test_armory_discount_applies_to_the_actual_purchase_charge_not_just_the_disp
     assert '武裝集團' in names(p.deck.discard_pile)
 
 
+def test_npc_progresses_when_hong_kong_safe_house_triggers_on_inner_build():
+    """安全屋是香港目前根據地提供的被動陣營能力；牆內建立成功即算觸發能力。"""
+    g = make_game()
+    actor = g.current_player()
+    actor.faction_id = 'hong_kong'
+    actor.base = '香港城'
+    pin_active_mission_event(g, '全國人大召開')
+
+    assert g._player_has_ability(actor, '安全屋') is True
+    assert '南寧' in set(g._towns_for_region_alias('china'))
+    g._record_action_build(actor, '南寧')
+
+    assert g.event_progress['succeeded'] is True
+    assert g.event_progress['status'] == 'success_pending'
+    assert any('triggered 安全屋 while building in 南寧' in entry for entry in g.action_log)
+
+
+def test_npc_does_not_count_safe_house_when_hong_kong_base_no_longer_has_it():
+    """遷到倫敦後目前能力是國際線；牆內建立不能再冒算安全屋。"""
+    g = make_game()
+    actor = g.current_player()
+    actor.faction_id = 'hong_kong'
+    actor.base = '倫敦'
+    pin_active_mission_event(g, '全國人大召開')
+
+    assert g._player_has_ability(actor, '安全屋') is False
+    g._record_action_build(actor, '南寧')
+
+    assert g.event_progress['succeeded'] is False
+    assert g.event_progress['count'] == 0
+
+
 def test_npc_progresses_on_turn_end_inner_build_draw_ability():
     """2026-08-05 使用者playtest回報：事件卡『全國人大召開』（trigger:
     {"type": "use_faction_ability", "count": 1}）——臺灣綠線用東洋奧援在牆內建立組織，

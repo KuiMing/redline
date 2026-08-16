@@ -4232,6 +4232,16 @@ class Game:
         """Apply every hook shared by a successful organization build during a player's action."""
         self.turn_log.setdefault("built_towns", []).append(town)
         self._track_event_progress('build_organization', town=town, player=player)
+        # 安全屋不是單純的陣營說明文字；香港在牆內建立時，其「建立距離 +1」被動能力
+        # 實際進入合法城鎮判定。事件卡「全國人大召開」的條件明列「使用或觸發陣營
+        # 特殊能力」，因此成功建立牆內組織時必須把安全屋記為一次已觸發能力。移到倫敦／
+        # 卡加利／多倫多後，安全屋已不在有效能力中，`_player_has_ability` 會自然排除。
+        if (
+            self._player_has_ability(player, "安全屋")
+            and town in set(self._towns_for_region_alias("china"))
+        ):
+            self.log(f"{player.name} triggered 安全屋 while building in {town}")
+            self._track_event_progress('use_faction_ability', player=player)
         self._apply_era_build_effects(player, town)
         self._apply_guerrilla_on_build(player, town)
 
