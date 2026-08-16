@@ -250,9 +250,10 @@ def main():
         own_taipei_button = page.locator('[data-hk-relocate-town="臺北"]')
         own_taipei_button.wait_for(state='visible', timeout=10000)
         record(
-            'own_organization_destination_is_enabled_before_turn_handoff',
+            'own_organization_destination_is_enabled_without_redundant_label',
             own_taipei_button.is_enabled()
-            and own_taipei_button.inner_text() == '遷移至臺北（已有香港組織）',
+            and own_taipei_button.inner_text() == '遷移至臺北'
+            and '已有香港組織' not in page.locator('.hk-base-relocation-panel').inner_text(),
             {'button': own_taipei_button.inner_text(), 'enabled': own_taipei_button.is_enabled()},
         )
         END_TURN_DECISION_SCREENSHOT.parent.mkdir(parents=True, exist_ok=True)

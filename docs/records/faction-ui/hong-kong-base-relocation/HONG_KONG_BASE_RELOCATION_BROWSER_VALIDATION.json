@@ -158,10 +158,10 @@
       }
     },
     {
-      "name": "own_organization_destination_is_enabled_before_turn_handoff",
+      "name": "own_organization_destination_is_enabled_without_redundant_label",
       "passed": true,
       "detail": {
-        "button": "遷移至臺北（已有香港組織）",
+        "button": "遷移至臺北",
         "enabled": true
       }
     },
