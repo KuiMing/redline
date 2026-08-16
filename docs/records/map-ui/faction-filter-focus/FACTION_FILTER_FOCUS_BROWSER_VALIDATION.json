@@ -1,0 +1,304 @@
+{
+  "generated_at": "2026-08-16T02:09:25.534592+00:00",
+  "base_url": "http://192.168.10.192:8000",
+  "status": "passed",
+  "checks_passed": 10,
+  "checks_total": 10,
+  "checks": [
+    {
+      "name": "faction_filter_反賊_visibly_focuses",
+      "ok": true,
+      "detail": {
+        "camp": "反賊",
+        "filtered_count": 62,
+        "before": {
+          "zoom": 4,
+          "center": {
+            "lat": 29.20905008277816,
+            "lng": 106.5
+          }
+        },
+        "after": {
+          "zoom": 4,
+          "center": {
+            "lat": 25.72925,
+            "lng": 110.3107
+          },
+          "audit": {
+            "faction": "反賊",
+            "resultCount": 62,
+            "strategy": "median-cluster",
+            "targetCenter": [
+              25.72925,
+              110.3107
+            ],
+            "targetZoom": 4
+          }
+        }
+      }
+    },
+    {
+      "name": "faction_filter_哈薩克_visibly_focuses",
+      "ok": true,
+      "detail": {
+        "camp": "哈薩克",
+        "filtered_count": 43,
+        "before": {
+          "zoom": 4,
+          "center": {
+            "lat": 28.7186852379813,
+            "lng": 107.0807175
+          }
+        },
+        "after": {
+          "zoom": 4,
+          "center": {
+            "lat": 47.45780853075031,
+            "lng": 80.41992187500001
+          },
+          "audit": {
+            "faction": "哈薩克",
+            "resultCount": 43,
+            "strategy": "median-cluster",
+            "targetCenter": [
+              47.467,
+              80.434
+            ],
+            "targetZoom": 4
+          }
+        }
+      }
+    },
+    {
+      "name": "faction_filter_滿洲_visibly_focuses",
+      "ok": true,
+      "detail": {
+        "camp": "滿洲",
+        "filtered_count": 31,
+        "before": {
+          "zoom": 4,
+          "center": {
+            "lat": 32.51559257026779,
+            "lng": 102.26292609375001
+          }
+        },
+        "after": {
+          "zoom": 4,
+          "center": {
+            "lat": 43.83452678223684,
+            "lng": 124.36523437500001
+          },
+          "audit": {
+            "faction": "滿洲",
+            "resultCount": 31,
+            "strategy": "median-cluster",
+            "targetCenter": [
+              43.8378,
+              124.3547
+            ],
+            "targetZoom": 4
+          }
+        }
+      }
+    },
+    {
+      "name": "faction_filter_紅軍_visibly_focuses",
+      "ok": true,
+      "detail": {
+        "camp": "紅軍",
+        "filtered_count": 176,
+        "before": {
+          "zoom": 4,
+          "center": {
+            "lat": 31.699585765207335,
+            "lng": 109.32131671875
+          }
+        },
+        "after": {
+          "zoom": 4,
+          "center": {
+            "lat": 31.952162238024975,
+            "lng": 113.02734375000001
+          },
+          "audit": {
+            "faction": "紅軍",
+            "resultCount": 176,
+            "strategy": "median-cluster",
+            "targetCenter": [
+              31.97965,
+              113.03569999999999
+            ],
+            "targetZoom": 4
+          }
+        }
+      }
+    },
+    {
+      "name": "faction_filter_維吾爾_visibly_focuses",
+      "ok": true,
+      "detail": {
+        "camp": "維吾爾",
+        "filtered_count": 41,
+        "before": {
+          "zoom": 4,
+          "center": {
+            "lat": 29.643726104306534,
+            "lng": 107.50256156250003
+          }
+        },
+        "after": {
+          "zoom": 4,
+          "center": {
+            "lat": 41.244772343082076,
+            "lng": 79.18945312500001
+          },
+          "audit": {
+            "faction": "維吾爾",
+            "resultCount": 41,
+            "strategy": "median-cluster",
+            "targetCenter": [
+              41.215,
+              79.224
+            ],
+            "targetZoom": 4
+          }
+        }
+      }
+    },
+    {
+      "name": "faction_filter_臺灣_visibly_focuses",
+      "ok": true,
+      "detail": {
+        "camp": "臺灣",
+        "filtered_count": 70,
+        "before": {
+          "zoom": 4,
+          "center": {
+            "lat": 31.269536507162076,
+            "lng": 102.14999999999999
+          }
+        },
+        "after": {
+          "zoom": 4,
+          "center": {
+            "lat": 25.005972656239187,
+            "lng": 116.63085937500001
+          },
+          "audit": {
+            "faction": "臺灣",
+            "resultCount": 70,
+            "strategy": "median-cluster",
+            "targetCenter": [
+              25.0028,
+              116.67465
+            ],
+            "targetZoom": 4
+          }
+        }
+      }
+    },
+    {
+      "name": "faction_filter_蒙古_visibly_focuses",
+      "ok": true,
+      "detail": {
+        "camp": "蒙古",
+        "filtered_count": 38,
+        "before": {
+          "zoom": 4,
+          "center": {
+            "lat": 28.550661132884464,
+            "lng": 108.17313046875
+          }
+        },
+        "after": {
+          "zoom": 4,
+          "center": {
+            "lat": 44.902577996288876,
+            "lng": 106.87500000000001
+          },
+          "audit": {
+            "faction": "蒙古",
+            "resultCount": 38,
+            "strategy": "median-cluster",
+            "targetCenter": [
+              44.8935,
+              106.86535
+            ],
+            "targetZoom": 4
+          }
+        }
+      }
+    },
+    {
+      "name": "faction_filter_藏國_visibly_focuses",
+      "ok": true,
+      "detail": {
+        "camp": "藏國",
+        "filtered_count": 39,
+        "before": {
+          "zoom": 4,
+          "center": {
+            "lat": 31.793360979763747,
+            "lng": 106.576363125
+          }
+        },
+        "after": {
+          "zoom": 4,
+          "center": {
+            "lat": 29.99300228455108,
+            "lng": 92.02148437500001
+          },
+          "audit": {
+            "faction": "藏國",
+            "resultCount": 39,
+            "strategy": "median-cluster",
+            "targetCenter": [
+              29.98,
+              92.06
+            ],
+            "targetZoom": 4
+          }
+        }
+      }
+    },
+    {
+      "name": "faction_filter_香港_visibly_focuses",
+      "ok": true,
+      "detail": {
+        "camp": "香港",
+        "filtered_count": 27,
+        "before": {
+          "zoom": 4,
+          "center": {
+            "lat": 29.351536486791222,
+            "lng": 104.203125
+          }
+        },
+        "after": {
+          "zoom": 4,
+          "center": {
+            "lat": 22.350075806124867,
+            "lng": 114.16992187500001
+          },
+          "audit": {
+            "faction": "香港",
+            "resultCount": 27,
+            "strategy": "median-cluster",
+            "targetCenter": [
+              22.354,
+              114.163
+            ],
+            "targetZoom": 4
+          }
+        }
+      }
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "ok": true,
+      "detail": []
+    }
+  ],
+  "console_errors": [],
+  "screenshot": "docs/records/map-ui/faction-filter-focus/hong_kong_filter_focus.png"
+}

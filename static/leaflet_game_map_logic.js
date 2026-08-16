@@ -1044,9 +1044,48 @@ function renderMap() {
   renderSupportChoiceHighlights();
 }
 
+function medianNumber(values) {
+  if (!values.length) return null;
+  const sorted = [...values].sort((a, b) => a - b);
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2
+    ? sorted[middle]
+    : (sorted[middle - 1] + sorted[middle]) / 2;
+}
+
 function fitVisible() {
-  const pts = currentVisible.map(n => byName.get(n)).filter(Boolean).map(t => [t.lat, t.lon]);
+  const visibleTowns = currentVisible.map(n => byName.get(n)).filter(Boolean);
+  const pts = visibleTowns.map(t => [t.lat, t.lon]);
   if (!pts.length) return;
+
+  const faction = document.getElementById('campFilter').value;
+  if (faction) {
+    // 陣營發展範圍通常含少數海外據點。直接 fitBounds 會被離群點拉回亞洲
+    // 全圖，讓「聚焦結果」看起來完全沒有反應。以結果座標中位數聚焦主要群集，
+    // 並保證至少 zoom 4；篩選結果仍保留，玩家可平移查看海外據點。
+    const bounds = L.latLngBounds(pts);
+    const fittedZoom = map.getBoundsZoom(bounds, false, L.point(30, 30));
+    const targetZoom = Math.min(9, Math.max(4, Number.isFinite(fittedZoom) ? fittedZoom : 4));
+    const targetCenter = [
+      medianNumber(visibleTowns.map(t => t.lat)),
+      medianNumber(visibleTowns.map(t => t.lon)),
+    ];
+    window.__lastFilterFocus = {
+      faction,
+      resultCount: visibleTowns.length,
+      strategy: 'median-cluster',
+      targetCenter,
+      targetZoom,
+    };
+    map.flyTo(targetCenter, targetZoom, { animate: true, duration: 0.45 });
+    return;
+  }
+
+  window.__lastFilterFocus = {
+    faction: null,
+    resultCount: visibleTowns.length,
+    strategy: 'fit-all-results',
+  };
   map.fitBounds(pts, { padding:[30,30] });
 }
 
