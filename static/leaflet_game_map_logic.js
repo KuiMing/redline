@@ -1109,6 +1109,25 @@ function medianNumber(values) {
     : (sorted[middle - 1] + sorted[middle]) / 2;
 }
 
+function coreClusterTowns(entries) {
+  // 2026-08-18 使用者回饋：陣營篩選（例如香港）聚焦後中心點雖然對了，縮放程度還是不夠
+  // 近——因為縮放層級沿用「全部篩選結果」（含河內／胡志明／臺灣等同樣合法但明顯偏遠的
+  // 據點）算出來的 bounds。篩選結果本身仍要完整保留（使用者要求河內/胡志明/臺灣不能被
+  // 排除在外），只是聚焦計算要更看重主要群集：以座標中位數為聚焦中心，用「與中心的距離
+  // 中位數」代表主要群集的典型半徑（對離群點本身就穩健，不會被單一極端離群點——例如
+  // 曾經實測到的「倫敦」——拉歪），距離超過典型半徑一定倍數的城鎮視為明顯偏遠據點，
+  // 聚焦計算時排除，但仍完整顯示在地圖上供玩家平移查看。城鎮本來就分布均勻、切不出明顯
+  // 主要群集時，篩選結果會全部落在門檻內，等同於沿用全部結果，不會強行拆分。
+  if (entries.length <= 2) return entries;
+  const centerLat = medianNumber(entries.map(t => t.lat));
+  const centerLon = medianNumber(entries.map(t => t.lon));
+  const withDist = entries.map(t => ({ town: t, dist: Math.hypot(t.lat - centerLat, t.lon - centerLon) }));
+  const typicalRadius = medianNumber(withDist.map(e => e.dist)) || 0;
+  const threshold = Math.max(typicalRadius * 4, 0.5);
+  const core = withDist.filter(e => e.dist <= threshold).map(e => e.town);
+  return core.length ? core : entries;
+}
+
 function fitVisible() {
   const visibleTowns = currentVisible.map(n => byName.get(n)).filter(Boolean);
   const pts = visibleTowns.map(t => [t.lat, t.lon]);
@@ -1117,18 +1136,22 @@ function fitVisible() {
   const faction = document.getElementById('campFilter').value;
   if (faction) {
     // 陣營發展範圍通常含少數海外據點。直接 fitBounds 會被離群點拉回亞洲
-    // 全圖，讓「聚焦結果」看起來完全沒有反應。以結果座標中位數聚焦主要群集，
-    // 並保證至少 zoom 4；篩選結果仍保留，玩家可平移查看海外據點。
-    const bounds = L.latLngBounds(pts);
+    // 全圖，讓「聚焦結果」看起來完全沒有反應。聚焦中心與縮放層級都只依主要群集
+    // （coreClusterTowns）計算，並保證至少 zoom 4；篩選結果（含離群據點）仍完整
+    // 保留在地圖上，玩家可平移查看。
+    const coreTowns = coreClusterTowns(visibleTowns);
+    const corePts = coreTowns.map(t => [t.lat, t.lon]);
+    const bounds = L.latLngBounds(corePts);
     const fittedZoom = map.getBoundsZoom(bounds, false, L.point(30, 30));
     const targetZoom = Math.min(9, Math.max(4, Number.isFinite(fittedZoom) ? fittedZoom : 4));
     const targetCenter = [
-      medianNumber(visibleTowns.map(t => t.lat)),
-      medianNumber(visibleTowns.map(t => t.lon)),
+      medianNumber(coreTowns.map(t => t.lat)),
+      medianNumber(coreTowns.map(t => t.lon)),
     ];
     window.__lastFilterFocus = {
       faction,
       resultCount: visibleTowns.length,
+      coreCount: coreTowns.length,
       strategy: 'median-cluster',
       targetCenter,
       targetZoom,
