@@ -1,0 +1,18 @@
+.git/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.log
+server.log
+.DS_Store
+.idea/
+.vscode/
+
+# 開發／驗證用，執行期不需要（見 README.md「資料夾結構」）。docs/records 尤其
+# 累積了大量截圖證據，體積很大，會拖慢 docker build 的 context 上傳。
+docs/
+scripts/
+sketches/
+
+Dockerfile
+.dockerignore

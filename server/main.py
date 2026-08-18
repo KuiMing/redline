@@ -249,28 +249,63 @@ def card_presentation():
 
 @app.get("/server-info")
 def server_info(request: Request):
-    """回報主機的區網 IP 與服務 port，供 lobby 顯示「其他玩家連線網址」。
+    """回報這次請求實際連線用的網址，供 lobby 顯示「其他玩家連線網址」。
 
-    區網 IP 用 UDP connect 技巧偵測（不實際發包，只取路由後的本機位址）；
-    偵測失敗（無網路介面等）回傳 null，前端顯示提示請玩家自行查詢。
-    port 取自本次連線的伺服器端 socket（scope['server']）。
+    優先直接採用這次 HTTP 請求本身的 Host（反向代理常見的
+    X-Forwarded-Host / X-Forwarded-Proto 優先，其次 request.headers['host']）
+    ——而不是靠伺服器自己猜區網 IP。猜測法（UDP connect 技巧，不實際發包、只取
+    路由後的本機位址）在直接跑 `uv run` 於主機上時沒問題，但在 Docker（container
+    自己的橋接網路 IP，跟主機真正的區網 IP 是兩回事）、或部署到 Render 這類
+    PaaS（網域名稱，猜 IP 完全沒有意義）都會給出連不到的位址；「這次請求本來
+    就是怎麼連過來的」在這些情境下永遠是對的。
+    只有 Host 明顯是 loopback（127.0.0.1／localhost，例如開發者在主機本地
+    直接開瀏覽器檢查）且沒有反向代理標頭時，才退回舊的 UDP 探測法——這種情況
+    下 Host header 對「該給其他玩家什麼網址」沒有意義，但探測法在裸機環境還是
+    能正確測到本機區網 IP（在容器裡就測不到主機的區網 IP，只能測到容器自己的
+    橋接位址，所以不在容器情境下使用這個 fallback）。
     """
-    import socket as _socket
-    lan_ip = None
-    try:
-        probe = _socket.socket(_socket.AF_INET, _socket.SOCK_DGRAM)
+    from urllib.parse import urlsplit
+
+    forwarded_proto = request.headers.get("x-forwarded-proto")
+    forwarded_host = request.headers.get("x-forwarded-host")
+    host_header = forwarded_host or request.headers.get("host")
+    scheme = forwarded_proto or request.url.scheme
+
+    hostname = None
+    port = None
+    if host_header:
+        split = urlsplit(f"//{host_header}")
+        hostname = split.hostname
+        port = split.port
+
+    if hostname in (None, "127.0.0.1", "localhost", "::1", "0.0.0.0") and not forwarded_host:
+        import socket as _socket
         try:
-            probe.connect(("8.8.8.8", 80))
-            candidate = probe.getsockname()[0]
-            if candidate and not candidate.startswith("127."):
-                lan_ip = candidate
-        finally:
-            probe.close()
-    except OSError:
-        lan_ip = None
-    server_scope = request.scope.get("server") or (None, None)
-    port = server_scope[1] or (request.url.port or 8000)
-    return {"lan_ip": lan_ip, "port": port}
+            probe = _socket.socket(_socket.AF_INET, _socket.SOCK_DGRAM)
+            try:
+                probe.connect(("8.8.8.8", 80))
+                candidate = probe.getsockname()[0]
+                if candidate and not candidate.startswith("127."):
+                    hostname = candidate
+            finally:
+                probe.close()
+        except OSError:
+            pass
+
+    if port is None and not forwarded_host:
+        # 只有在「沒有反向代理」時才補上伺服器自己實際監聽的 port——有反向代理
+        # 卻沒有明講 port（Render 這類 PaaS 的公開網域本來就不帶 port），代表
+        # 對外其實是走 scheme 的預設 port（https→443／http→80），不能拿容器內部
+        # 監聽的 port（例如 8000）冒充對外的 port。
+        server_scope = request.scope.get("server") or (None, None)
+        port = server_scope[1] or (request.url.port or 8000)
+
+    default_port = 443 if scheme == "https" else 80
+    base_url = None
+    if hostname:
+        base_url = f"{scheme}://{hostname}" if port in (None, default_port) else f"{scheme}://{hostname}:{port}"
+
+    return {"base_url": base_url, "lan_ip": hostname, "port": port}
 
 
 @app.post("/create")

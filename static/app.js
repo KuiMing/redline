@@ -363,7 +363,12 @@ async function loadLanInfo() {
   try {
     const res = await fetch('/server-info');
     const data = await res.json();
-    if (data.lan_ip) {
+    if (data.base_url) {
+      // base_url 是後端依這次請求實際連線方式（Host header／反向代理標頭）組出來的
+      // 完整網址，部署到 Docker 發布 port 或 Render 這類網域後面時都是對的；
+      // 舊的 lan_ip+port 只在裸機直接 uv run 時才靠猜測法補上（見 server-info 註解）。
+      input.value = data.base_url;
+    } else if (data.lan_ip) {
       input.value = `http://${data.lan_ip}:${data.port}`;
     } else {
       input.value = '無法自動偵測（請查本機 IP，網址為 http://<IP>:' + (data.port || location.port || 8000) + '）';
