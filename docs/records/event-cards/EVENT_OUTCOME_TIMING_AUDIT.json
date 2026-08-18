@@ -1,8 +1,8 @@
 {
   "summary": {
     "total": 28,
-    "passed": 28,
-    "failed": 0
+    "passed": 26,
+    "failed": 2
   },
   "checks": [
     {
@@ -288,10 +288,11 @@
     },
     {
       "name": "香港抗暴之戰 success gain_card after refill",
-      "passed": true,
+      "passed": false,
       "details": {
         "result": {
-          "success": true
+          "success": true,
+          "pending_hk_relocation": true
         },
         "before": {
           "viewer": {
@@ -407,13 +408,13 @@
           "last_actor_name": "ally",
           "settlement_target_player_id": "ally-id"
         },
-        "current_player": "red",
-        "phase": "TurnPhase.ACTION"
+        "current_player": "ally",
+        "phase": "TurnPhase.END"
       }
     },
     {
       "name": "香港抗暴之戰 failure discard_self after refill",
-      "passed": true,
+      "passed": false,
       "details": {
         "result": {
           "success": true,
@@ -515,8 +516,7 @@
         },
         "log": [
           "[Turn 1] End of turn for ally",
-          "[Turn 1] Event failure: ally must discard 1 hand card(s)",
-          "[Turn 1] 香港抗暴之戰已結算：香港可於下一回合開始前免費遷移根據地（臺北/倫敦/卡加利/多倫多）"
+          "[Turn 1] Event failure: ally must discard 1 hand card(s)"
         ],
         "pending_choice": {
           "type": "multi_card_choice",
@@ -560,8 +560,8 @@
           "last_actor_name": "ally",
           "settlement_target_player_id": "ally-id"
         },
-        "current_player": "red",
-        "phase": "TurnPhase.ACTION"
+        "current_player": "ally",
+        "phase": "TurnPhase.END"
       }
     },
     {
@@ -1549,12 +1549,12 @@
             "hand": [
               "ally補牌5",
               "ally補牌4",
-              "ally補牌3",
-              "ally補牌2"
+              "ally補牌2",
+              "ally補牌1"
             ],
             "draw": [],
             "discard": [
-              "ally補牌1"
+              "ally補牌3"
             ],
             "moves_left": 0,
             "orgs": {
@@ -2202,7 +2202,7 @@
         "log": [
           "[Turn 1] End of turn for ally",
           "[Turn 1] End of turn for red",
-          "[Turn 2] Event drawn: 一帶一路 天方 (auto deferred)"
+          "[Turn 2] Event drawn: 藏印邊境軍事對峙"
         ]
       }
     },
@@ -2215,7 +2215,7 @@
         "log": [
           "[Turn 1] End of turn for ally",
           "[Turn 1] End of turn for red",
-          "[Turn 2] Event drawn: 全國人大召開",
+          "[Turn 2] Event drawn: 一帶一路 南洋 (auto deferred)",
           "[Turn 2] Event failure: viewer discarded 1 random hand card(s); ally discarded 1 random hand card(s)",
           "[Turn 2] Event failure resolved: 烏魯木齊七五事件 / discard_random"
         ]

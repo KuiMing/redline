@@ -55,7 +55,9 @@ def setup_game() -> tuple[Game, Player, Player]:
 
 def advance_to_red_auto_build(game: Game):
     results = []
-    for label in ["draw_event", "to_action", "to_purchase", "to_red_turn"]:
+    # 出牌與購買已合併為單一行動階段：EVENT 抽事件 -> EVENT 進 ACTION -> 一次
+    # 「結束行動階段」就把席位交給紅軍（不再有獨立的購買階段 advance）。
+    for label in ["draw_event", "to_action", "to_red_turn"]:
         result = game.advance_turn_phase()
         results.append({
             "label": label,
@@ -111,7 +113,9 @@ def run_case(mode: str):
     assert after_build["pending_choice"] is None, after_build
     assert after_build["red_bangkok_orgs"] == 1, after_build
     assert advance_result.get("success") and not advance_result.get("error"), advance_result
-    assert game.turn_phase == TurnPhase.END, after_advance
+    # 合併後：紅軍按下「結束行動階段」直接結束回合並跨輪，回到下一位玩家的 ACTION。
+    assert game.turn_phase == TurnPhase.ACTION, after_advance
+    assert game.current_player() is not red, after_advance
 
     return {
         "mode": mode,
@@ -145,7 +149,7 @@ def main() -> None:
         "- generic build fallback path: passed\n"
         "- stale visual-build recovery path: passed\n"
         "- stale advance-button recovery path: passed\n"
-        "- Verified: 建立曼谷後 pending_choice 清空，按開始購買階段可進入 TurnPhase.END。\n",
+        "- Verified: 建立曼谷後 pending_choice 清空，按結束行動階段可正常結束紅軍回合。\n",
         encoding="utf-8",
     )
     print(json.dumps(report, ensure_ascii=False, indent=2))

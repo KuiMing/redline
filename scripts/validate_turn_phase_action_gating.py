@@ -127,9 +127,9 @@ def run_validation():
     # 讓回合流程的斷言與事件內容脫鉤（2026-07-17）。
     lobby_game.current_event = dict(lobby_game._event_by_name('歲月靜好'))
     lobby_game.event_progress = {'count': 0, 'required': 0, 'succeeded': True, 'settled': True, 'status': 'idle'}
-    # Current model: each player's turn is ACTION -> END (2 advances), and the round's event
-    # is drawn only when the round wraps back to the starting player.
-    for step in ['first_action_to_end', 'first_end_to_second_action', 'second_action_to_end', 'second_end_to_next_round']:
+    # Current model: 出牌與購買同屬一個行動階段，每位玩家的回合只需要一次
+    # 「結束行動階段」（1 advance），而該輪的事件只在整輪繞回起始玩家時才重抽。
+    for step in ['first_player_action_phase_end', 'second_player_action_phase_end_wraps_round']:
         before_state = lobby_game.state()
         advance_result = lobby_game.advance_turn_phase()
         step_state = lobby_game.state()
@@ -154,8 +154,8 @@ def run_validation():
         'round_start_player_index': lobby_round_start_index,
         'flow': lobby_turn_flow,
     })
-    passed_to_second = lobby_turn_flow[1]   # first player's END -> second player's ACTION
-    round_wrap_state = lobby_turn_flow[3]   # second player's END -> next round (turn 2)
+    passed_to_second = lobby_turn_flow[0]   # first player ends their action phase -> second player's ACTION
+    round_wrap_state = lobby_turn_flow[1]   # second player ends their action phase -> next round (turn 2)
     assert_true(checks, 'formal 2p lobby keeps turn 1 when first player ends and passes to the other',
         passed_to_second.get('turn') == 1 and passed_to_second.get('turn_phase') == 'action' and passed_to_second.get('current_player') != lobby_start_player,
         passed_to_second,
@@ -188,22 +188,7 @@ def run_validation():
     })
     assert_true(checks, 'action phase allows current player card play', isinstance(action_play_result, dict) and action_play_result.get('success'), action_play_result)
 
-    # ACTION -> END; the END (purchase) phase blocks action-card play.
-    game.advance_turn_phase()
-    end_idx, end_card = first_current_player_action_card(game)
-    end_play_result = game.play_card(end_idx, mode='action') if end_idx is not None else {'skipped': True}
-    trace.append({
-        'step': 'end_phase_action_attempt',
-        'card': end_card,
-        'result': end_play_result,
-        'turn_phase': str(game.turn_phase),
-        'current_player': game.current_player().name,
-    })
-    assert_true(checks, 'end (purchase) phase blocks action card play',
-        game.turn_phase == TurnPhase.END and isinstance(end_play_result, dict) and end_play_result.get('error') == 'Not in ACTION phase',
-        end_play_result)
-
-    # END -> next player's ACTION; still turn 1 and the same round event (no mid-round draw).
+    # 結束行動階段 -> next player's ACTION; still turn 1 and the same round event (no mid-round draw).
     state_before_pass = game.state()
     game.advance_turn_phase()
     state_next = game.state()
@@ -235,6 +220,77 @@ def run_validation():
         'current_player': game.current_player().name,
     })
     assert_true(checks, 'next player is in ACTION and can play a card', isinstance(next_play, dict) and next_play.get('success'), next_play)
+
+    # 合併後的核心正面驗證（使用者回報的流程）：同一位玩家在完全不呼叫
+    # advance_turn_phase() 的情況下，出牌 -> 購買 -> 再出牌 -> 再購買 全部成功，
+    # turn_phase 全程維持 ACTION、current_player 不變；最後單次 advance 才補牌換人。
+    interleave_game = Game([('a', 'alpha'), ('b', 'bravo')])
+    choose_all_bases(interleave_game)
+    interleave_actor = interleave_game.current_player()
+    interleave_steps = []
+
+    def interleave_play():
+        idx, name = first_current_player_action_card(interleave_game)
+        outcome = interleave_game.play_card(idx, mode='resource') if idx is not None else {'skipped': True}
+        interleave_steps.append({
+            'op': 'play_card',
+            'card': name,
+            'result': outcome,
+            'turn_phase': str(interleave_game.turn_phase),
+            'current_player': interleave_game.current_player().name,
+        })
+        return outcome
+
+    def interleave_buy():
+        # 資源另外補足，讓這個檢查只針對「階段閘門」而不受經濟數值影響。
+        interleave_actor.resources['money'] = 50
+        interleave_actor.resources['propaganda'] = 50
+        outcome = interleave_game.buy_cards([0])
+        interleave_steps.append({
+            'op': 'buy_cards',
+            'result': outcome,
+            'turn_phase': str(interleave_game.turn_phase),
+            'current_player': interleave_game.current_player().name,
+        })
+        return outcome
+
+    interleaved_results = [interleave_play(), interleave_buy(), interleave_play(), interleave_buy()]
+    interleave_ok = all(isinstance(item, dict) and item.get('success') for item in interleaved_results)
+    interleave_stable = all(
+        item['turn_phase'] == str(TurnPhase.ACTION) and item['current_player'] == interleave_actor.name
+        for item in interleave_steps
+    )
+    trace.append({
+        'step': 'action_phase_allows_free_interleaving_of_play_and_buy',
+        'actor': interleave_actor.name,
+        'steps': interleave_steps,
+    })
+    assert_true(checks, 'play and buy freely interleave inside one action phase without advancing',
+        interleave_ok and interleave_stable,
+        {'results': interleaved_results, 'steps': interleave_steps},
+    )
+
+    interleave_advance = interleave_game.advance_turn_phase()
+    interleave_after = interleave_game.state()
+    trace.append({
+        'step': 'single_advance_ends_action_phase_and_passes_seat',
+        'result': interleave_advance,
+        'turn_phase': interleave_after.get('turn_phase'),
+        'current_player': interleave_after.get('current_player'),
+        'actor_hand_size': len(interleave_actor.hand),
+    })
+    assert_true(checks, 'one advance ends the action phase: hand refilled to 5 and seat passed on',
+        isinstance(interleave_advance, dict) and interleave_advance.get('success')
+        and len(interleave_actor.hand) == 5
+        and interleave_game.current_player() is not interleave_actor
+        and interleave_after.get('turn_phase') == 'action',
+        {
+            'result': interleave_advance,
+            'actor_hand_size': len(interleave_actor.hand),
+            'current_player': interleave_after.get('current_player'),
+            'turn_phase': interleave_after.get('turn_phase'),
+        },
+    )
 
     red_support_game = Game([('red', '紅軍'), ('ben', 'BEN')], market_mode='all_cards')
     red_player = red_support_game.players[0]

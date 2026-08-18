@@ -1,13 +1,13 @@
 # Event outcome timing audit
 
 - total: `28`
-- passed: `28`
-- failed: `0`
+- passed: `26`
+- failed: `2`
 
 - ✅ 全國人大召開 success draw after refill
 - ✅ 全國人大召開 failure red_dissolve after refill
-- ✅ 香港抗暴之戰 success gain_card after refill
-- ✅ 香港抗暴之戰 failure discard_self after refill
+- ❌ 香港抗暴之戰 success gain_card after refill
+- ❌ 香港抗暴之戰 failure discard_self after refill
 - ✅ 重大災難 success gain_card after refill
 - ✅ 重大災難 failure discard_self after refill
 - ✅ 藏印邊境軍事對峙 success move after reset/refill

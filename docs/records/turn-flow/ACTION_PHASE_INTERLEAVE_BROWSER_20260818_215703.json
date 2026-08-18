@@ -1,0 +1,112 @@
+{
+  "summary": {
+    "total": 8,
+    "passed": 8,
+    "failed": 0
+  },
+  "checks": [
+    {
+      "name": "01_action_phase_starts_with_end_action_button_and_selectable_purchase",
+      "passed": true,
+      "details": {
+        "turn_phase": "action",
+        "advance_text": "結束行動階段",
+        "buy_selectable": true
+      }
+    },
+    {
+      "name": "02_playing_hand_cards_grants_resources_and_stays_in_action",
+      "passed": true,
+      "details": {
+        "turn_phase": "action",
+        "resources_before": {
+          "money": 0,
+          "propaganda": 0
+        },
+        "resources_after": {
+          "money": 0,
+          "propaganda": 3
+        }
+      }
+    },
+    {
+      "name": "03_first_purchase_succeeds_without_leaving_action_phase",
+      "passed": true,
+      "details": {
+        "turn_phase": "action",
+        "discard_pile": [
+          "追隨者",
+          "追隨者",
+          "追隨者",
+          "宣傳家"
+        ],
+        "supply_before": 14,
+        "supply_after": 13
+      }
+    },
+    {
+      "name": "04_can_play_hand_card_again_after_buying",
+      "passed": true,
+      "details": {
+        "turn_phase": "action",
+        "hand_before": 5,
+        "hand_after": 4,
+        "notice": ""
+      }
+    },
+    {
+      "name": "05_second_purchase_after_second_play_succeeds",
+      "passed": true,
+      "details": {
+        "turn_phase": "action",
+        "supply_before": 13,
+        "supply_after": 12,
+        "discard_pile": [
+          "追隨者",
+          "追隨者",
+          "追隨者",
+          "宣傳家",
+          "追隨者",
+          "追隨者",
+          "追隨者",
+          "宣傳家"
+        ]
+      }
+    },
+    {
+      "name": "06_faction_ability_entry_available_during_merged_action_phase",
+      "passed": true,
+      "details": {
+        "faction_panel_visible": false,
+        "faction_buttons": 0,
+        "my_faction_tab_enabled": true
+      }
+    },
+    {
+      "name": "07_single_end_action_phase_refills_hand_and_passes_seat",
+      "passed": true,
+      "details": {
+        "before_player": "ally",
+        "after_player": "host",
+        "turn_phase": "action",
+        "hand_size": 5
+      }
+    },
+    {
+      "name": "08_no_console_errors",
+      "passed": true,
+      "details": {
+        "console_errors": []
+      }
+    }
+  ],
+  "screenshots": [
+    "docs/records/turn-flow/action-phase-interleave-20260818_215703/01_action_phase_start_buy_already_selectable.png",
+    "docs/records/turn-flow/action-phase-interleave-20260818_215703/02_after_first_hand_cards.png",
+    "docs/records/turn-flow/action-phase-interleave-20260818_215703/03_after_first_purchase_still_action.png",
+    "docs/records/turn-flow/action-phase-interleave-20260818_215703/04_play_hand_card_after_purchase.png",
+    "docs/records/turn-flow/action-phase-interleave-20260818_215703/05_second_purchase_after_second_play.png",
+    "docs/records/turn-flow/action-phase-interleave-20260818_215703/06_faction_ability_entry_available.png",
+    "docs/records/turn-flow/action-phase-interleave-20260818_215703/07_after_single_end_action_phase.png"
+  ]
+}

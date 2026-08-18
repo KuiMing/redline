@@ -18,7 +18,7 @@
             "succeeded": false,
             "settled": false,
             "status": "auto_pending",
-            "auto_target_player_id": "5626ea4f-c5c6-4300-a83d-16cf4c148610",
+            "auto_target_player_id": "17a3c1fb-a459-43bb-bfd7-08723bd58632",
             "auto_target_player_name": "紅軍",
             "auto_target_faction": "red_army"
           }
@@ -37,26 +37,7 @@
             "succeeded": false,
             "settled": false,
             "status": "auto_pending",
-            "auto_target_player_id": "5626ea4f-c5c6-4300-a83d-16cf4c148610",
-            "auto_target_player_name": "紅軍",
-            "auto_target_faction": "red_army"
-          }
-        },
-        {
-          "label": "to_purchase",
-          "result": {
-            "success": true
-          },
-          "current_player": "BEN",
-          "turn_phase": "TurnPhase.END",
-          "pending_choice": null,
-          "event_progress": {
-            "count": 0,
-            "required": 0,
-            "succeeded": false,
-            "settled": false,
-            "status": "auto_pending",
-            "auto_target_player_id": "5626ea4f-c5c6-4300-a83d-16cf4c148610",
+            "auto_target_player_id": "17a3c1fb-a459-43bb-bfd7-08723bd58632",
             "auto_target_player_name": "紅軍",
             "auto_target_faction": "red_army"
           }
@@ -75,16 +56,16 @@
             "succeeded": true,
             "settled": true,
             "status": "auto",
-            "auto_target_player_id": "5626ea4f-c5c6-4300-a83d-16cf4c148610",
+            "auto_target_player_id": "17a3c1fb-a459-43bb-bfd7-08723bd58632",
             "auto_target_player_name": "紅軍",
             "auto_target_faction": "red_army",
-            "settlement_target_player_id": "4a685177-7a83-4d6c-a069-ba06b729d465"
+            "settlement_target_player_id": "0335aacb-df37-4113-b687-c69d7f6805b1"
           }
         }
       ],
       "choice_before": {
         "choice_key": "event_build_organization",
-        "player_id": "5626ea4f-c5c6-4300-a83d-16cf4c148610",
+        "player_id": "17a3c1fb-a459-43bb-bfd7-08723bd58632",
         "town_count": 11,
         "bangkok_index": 4,
         "prompt": "一帶一路 南洋：在指定區域免費建立 1 個組織。"
@@ -109,10 +90,10 @@
           "succeeded": true,
           "settled": true,
           "status": "auto",
-          "auto_target_player_id": "5626ea4f-c5c6-4300-a83d-16cf4c148610",
+          "auto_target_player_id": "17a3c1fb-a459-43bb-bfd7-08723bd58632",
           "auto_target_player_name": "紅軍",
           "auto_target_faction": "red_army",
-          "settlement_target_player_id": "4a685177-7a83-4d6c-a069-ba06b729d465"
+          "settlement_target_player_id": "0335aacb-df37-4113-b687-c69d7f6805b1"
         },
         "log_tail": [
           "[Turn 1] Event drawn: 一帶一路 南洋 (auto deferred)",
@@ -124,13 +105,15 @@
         "advance_result": {
           "success": true
         },
-        "turn_phase": "TurnPhase.END",
+        "turn_phase": "TurnPhase.ACTION",
         "pending_choice": null,
         "red_bangkok_orgs": 1,
         "log_tail": [
           "[Turn 1] Event drawn: 一帶一路 南洋 (auto deferred)",
           "[Turn 1] End of turn for BEN",
-          "[Turn 1] 紅軍 built organization in 曼谷 via event"
+          "[Turn 1] 紅軍 built organization in 曼谷 via event",
+          "[Turn 1] End of turn for 紅軍",
+          "[Turn 2] Event drawn: 一帶一路 南洋 (auto deferred)"
         ]
       }
     },
@@ -151,7 +134,7 @@
             "succeeded": false,
             "settled": false,
             "status": "auto_pending",
-            "auto_target_player_id": "260bf8fc-7236-4489-8562-426e93c30142",
+            "auto_target_player_id": "fd81ed48-eee9-47b3-af39-c582e76c43ca",
             "auto_target_player_name": "紅軍",
             "auto_target_faction": "red_army"
           }
@@ -170,26 +153,7 @@
             "succeeded": false,
             "settled": false,
             "status": "auto_pending",
-            "auto_target_player_id": "260bf8fc-7236-4489-8562-426e93c30142",
-            "auto_target_player_name": "紅軍",
-            "auto_target_faction": "red_army"
-          }
-        },
-        {
-          "label": "to_purchase",
-          "result": {
-            "success": true
-          },
-          "current_player": "BEN",
-          "turn_phase": "TurnPhase.END",
-          "pending_choice": null,
-          "event_progress": {
-            "count": 0,
-            "required": 0,
-            "succeeded": false,
-            "settled": false,
-            "status": "auto_pending",
-            "auto_target_player_id": "260bf8fc-7236-4489-8562-426e93c30142",
+            "auto_target_player_id": "fd81ed48-eee9-47b3-af39-c582e76c43ca",
             "auto_target_player_name": "紅軍",
             "auto_target_faction": "red_army"
           }
@@ -208,16 +172,16 @@
             "succeeded": true,
             "settled": true,
             "status": "auto",
-            "auto_target_player_id": "260bf8fc-7236-4489-8562-426e93c30142",
+            "auto_target_player_id": "fd81ed48-eee9-47b3-af39-c582e76c43ca",
             "auto_target_player_name": "紅軍",
             "auto_target_faction": "red_army",
-            "settlement_target_player_id": "1be2c0b8-bdd0-44cd-8869-7be56f5e4ea9"
+            "settlement_target_player_id": "7743faf5-4dc8-4bb3-aba5-0262e69d64f2"
           }
         }
       ],
       "choice_before": {
         "choice_key": "event_build_organization",
-        "player_id": "260bf8fc-7236-4489-8562-426e93c30142",
+        "player_id": "fd81ed48-eee9-47b3-af39-c582e76c43ca",
         "town_count": 11,
         "bangkok_index": 4,
         "prompt": "一帶一路 南洋：在指定區域免費建立 1 個組織。"
@@ -242,10 +206,10 @@
           "succeeded": true,
           "settled": true,
           "status": "auto",
-          "auto_target_player_id": "260bf8fc-7236-4489-8562-426e93c30142",
+          "auto_target_player_id": "fd81ed48-eee9-47b3-af39-c582e76c43ca",
           "auto_target_player_name": "紅軍",
           "auto_target_faction": "red_army",
-          "settlement_target_player_id": "1be2c0b8-bdd0-44cd-8869-7be56f5e4ea9"
+          "settlement_target_player_id": "7743faf5-4dc8-4bb3-aba5-0262e69d64f2"
         },
         "log_tail": [
           "[Turn 1] Event drawn: 一帶一路 南洋 (auto deferred)",
@@ -257,13 +221,15 @@
         "advance_result": {
           "success": true
         },
-        "turn_phase": "TurnPhase.END",
+        "turn_phase": "TurnPhase.ACTION",
         "pending_choice": null,
         "red_bangkok_orgs": 1,
         "log_tail": [
           "[Turn 1] Event drawn: 一帶一路 南洋 (auto deferred)",
           "[Turn 1] End of turn for BEN",
-          "[Turn 1] 紅軍 built organization in 曼谷 via event"
+          "[Turn 1] 紅軍 built organization in 曼谷 via event",
+          "[Turn 1] End of turn for 紅軍",
+          "[Turn 2] Event drawn: 一帶一路 南洋 (auto deferred)"
         ]
       }
     },
@@ -284,7 +250,7 @@
             "succeeded": false,
             "settled": false,
             "status": "auto_pending",
-            "auto_target_player_id": "06de9027-68d8-43d0-8735-1e5d4d412fa2",
+            "auto_target_player_id": "948f8504-b910-45c4-90e4-17337f59bf7c",
             "auto_target_player_name": "紅軍",
             "auto_target_faction": "red_army"
           }
@@ -303,26 +269,7 @@
             "succeeded": false,
             "settled": false,
             "status": "auto_pending",
-            "auto_target_player_id": "06de9027-68d8-43d0-8735-1e5d4d412fa2",
-            "auto_target_player_name": "紅軍",
-            "auto_target_faction": "red_army"
-          }
-        },
-        {
-          "label": "to_purchase",
-          "result": {
-            "success": true
-          },
-          "current_player": "BEN",
-          "turn_phase": "TurnPhase.END",
-          "pending_choice": null,
-          "event_progress": {
-            "count": 0,
-            "required": 0,
-            "succeeded": false,
-            "settled": false,
-            "status": "auto_pending",
-            "auto_target_player_id": "06de9027-68d8-43d0-8735-1e5d4d412fa2",
+            "auto_target_player_id": "948f8504-b910-45c4-90e4-17337f59bf7c",
             "auto_target_player_name": "紅軍",
             "auto_target_faction": "red_army"
           }
@@ -341,16 +288,16 @@
             "succeeded": true,
             "settled": true,
             "status": "auto",
-            "auto_target_player_id": "06de9027-68d8-43d0-8735-1e5d4d412fa2",
+            "auto_target_player_id": "948f8504-b910-45c4-90e4-17337f59bf7c",
             "auto_target_player_name": "紅軍",
             "auto_target_faction": "red_army",
-            "settlement_target_player_id": "8896cd35-46ed-4304-a320-9ce4e3509d14"
+            "settlement_target_player_id": "d83129b8-d260-4670-8e48-0356ac41afef"
           }
         }
       ],
       "choice_before": {
         "choice_key": "event_build_organization",
-        "player_id": "06de9027-68d8-43d0-8735-1e5d4d412fa2",
+        "player_id": "948f8504-b910-45c4-90e4-17337f59bf7c",
         "town_count": 11,
         "bangkok_index": 4,
         "prompt": "一帶一路 南洋：在指定區域免費建立 1 個組織。"
@@ -376,13 +323,12 @@
           "succeeded": true,
           "settled": true,
           "status": "auto",
-          "auto_target_player_id": "06de9027-68d8-43d0-8735-1e5d4d412fa2",
+          "auto_target_player_id": "948f8504-b910-45c4-90e4-17337f59bf7c",
           "auto_target_player_name": "紅軍",
           "auto_target_faction": "red_army",
-          "settlement_target_player_id": "8896cd35-46ed-4304-a320-9ce4e3509d14"
+          "settlement_target_player_id": "d83129b8-d260-4670-8e48-0356ac41afef"
         },
         "log_tail": [
-          "[Turn 1] Event drawn: 紅軍權貴出逃",
           "[Turn 1] Event drawn: 一帶一路 南洋 (auto deferred)",
           "[Turn 1] End of turn for BEN",
           "[Turn 1] 紅軍 already had organization in 曼谷; consumed stale event build choice"
@@ -392,14 +338,15 @@
         "advance_result": {
           "success": true
         },
-        "turn_phase": "TurnPhase.END",
+        "turn_phase": "TurnPhase.ACTION",
         "pending_choice": null,
         "red_bangkok_orgs": 1,
         "log_tail": [
-          "[Turn 1] Event drawn: 紅軍權貴出逃",
           "[Turn 1] Event drawn: 一帶一路 南洋 (auto deferred)",
           "[Turn 1] End of turn for BEN",
-          "[Turn 1] 紅軍 already had organization in 曼谷; consumed stale event build choice"
+          "[Turn 1] 紅軍 already had organization in 曼谷; consumed stale event build choice",
+          "[Turn 1] End of turn for 紅軍",
+          "[Turn 2] Event drawn: 一帶一路 南洋 (auto deferred)"
         ]
       }
     },
@@ -420,7 +367,7 @@
             "succeeded": false,
             "settled": false,
             "status": "auto_pending",
-            "auto_target_player_id": "025a9be0-7f13-4669-861e-b0048754143e",
+            "auto_target_player_id": "335bf1e1-6785-4654-8dc0-eadfeb8b71fd",
             "auto_target_player_name": "紅軍",
             "auto_target_faction": "red_army"
           }
@@ -439,26 +386,7 @@
             "succeeded": false,
             "settled": false,
             "status": "auto_pending",
-            "auto_target_player_id": "025a9be0-7f13-4669-861e-b0048754143e",
-            "auto_target_player_name": "紅軍",
-            "auto_target_faction": "red_army"
-          }
-        },
-        {
-          "label": "to_purchase",
-          "result": {
-            "success": true
-          },
-          "current_player": "BEN",
-          "turn_phase": "TurnPhase.END",
-          "pending_choice": null,
-          "event_progress": {
-            "count": 0,
-            "required": 0,
-            "succeeded": false,
-            "settled": false,
-            "status": "auto_pending",
-            "auto_target_player_id": "025a9be0-7f13-4669-861e-b0048754143e",
+            "auto_target_player_id": "335bf1e1-6785-4654-8dc0-eadfeb8b71fd",
             "auto_target_player_name": "紅軍",
             "auto_target_faction": "red_army"
           }
@@ -477,16 +405,16 @@
             "succeeded": true,
             "settled": true,
             "status": "auto",
-            "auto_target_player_id": "025a9be0-7f13-4669-861e-b0048754143e",
+            "auto_target_player_id": "335bf1e1-6785-4654-8dc0-eadfeb8b71fd",
             "auto_target_player_name": "紅軍",
             "auto_target_faction": "red_army",
-            "settlement_target_player_id": "88ab3361-0aa5-4ae3-9a6b-3b01b8df99bf"
+            "settlement_target_player_id": "4ca550ed-e8ef-422e-adcc-0d76b837541b"
           }
         }
       ],
       "choice_before": {
         "choice_key": "event_build_organization",
-        "player_id": "025a9be0-7f13-4669-861e-b0048754143e",
+        "player_id": "335bf1e1-6785-4654-8dc0-eadfeb8b71fd",
         "town_count": 11,
         "bangkok_index": 4,
         "prompt": "一帶一路 南洋：在指定區域免費建立 1 個組織。"
@@ -497,35 +425,38 @@
       "after_build": {
         "pending_choice": null,
         "red_bangkok_orgs": 1,
-        "turn_phase": "TurnPhase.END",
+        "turn_phase": "TurnPhase.ACTION",
         "event_progress": {
           "count": 0,
           "required": 0,
-          "succeeded": true,
-          "settled": true,
-          "status": "auto",
-          "auto_target_player_id": "025a9be0-7f13-4669-861e-b0048754143e",
+          "succeeded": false,
+          "settled": false,
+          "status": "auto_pending",
+          "auto_target_player_id": "335bf1e1-6785-4654-8dc0-eadfeb8b71fd",
           "auto_target_player_name": "紅軍",
-          "auto_target_faction": "red_army",
-          "settlement_target_player_id": "88ab3361-0aa5-4ae3-9a6b-3b01b8df99bf"
+          "auto_target_faction": "red_army"
         },
         "log_tail": [
           "[Turn 1] Event drawn: 一帶一路 南洋 (auto deferred)",
           "[Turn 1] End of turn for BEN",
-          "[Turn 1] 紅軍 already had organization in 曼谷; auto-cleared stale event build choice"
+          "[Turn 1] 紅軍 already had organization in 曼谷; auto-cleared stale event build choice",
+          "[Turn 1] End of turn for 紅軍",
+          "[Turn 2] Event drawn: 一帶一路 南洋 (auto deferred)"
         ]
       },
       "after_advance": {
         "advance_result": {
           "success": true
         },
-        "turn_phase": "TurnPhase.END",
+        "turn_phase": "TurnPhase.ACTION",
         "pending_choice": null,
         "red_bangkok_orgs": 1,
         "log_tail": [
           "[Turn 1] Event drawn: 一帶一路 南洋 (auto deferred)",
           "[Turn 1] End of turn for BEN",
-          "[Turn 1] 紅軍 already had organization in 曼谷; auto-cleared stale event build choice"
+          "[Turn 1] 紅軍 already had organization in 曼谷; auto-cleared stale event build choice",
+          "[Turn 1] End of turn for 紅軍",
+          "[Turn 2] Event drawn: 一帶一路 南洋 (auto deferred)"
         ]
       }
     }

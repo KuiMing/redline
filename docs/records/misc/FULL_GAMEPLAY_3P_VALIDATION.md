@@ -15,65 +15,21 @@
 
 ## init
 - turn: 1
-- turn_phase: TurnPhase.EVENT
+- turn_phase: TurnPhase.ACTION
 - current_player: player1
 - base_validation: {'rows': [{'player': 'player1', 'faction': 'qi', 'base': '青島', 'orgs': {'青島': 1}, 'single_base_org': True, 'base_allowed': True, 'allowed_sample': ['仙臺', '倫敦', '卡加利', '多倫多', '大阪', '札幌', '東京', '沖繩', '洛杉磯', '溫哥華', '濟南', '福岡']}, {'player': 'player2', 'faction': 'reform_opening', 'base': '三亞', 'orgs': {'三亞': 1}, 'single_base_org': True, 'base_allowed': True, 'allowed_sample': ['三亞', '上海', '上粉沙打', '丹東', '九龍城', '伊寧', '佳木斯', '倫敦', '元朗', '克孜勒蘇', '克拉瑪依', '包頭']}, {'player': 'player3', 'faction': 'red_army', 'base': '北京', 'orgs': {'北京': 1}, 'single_base_org': True, 'base_allowed': True, 'allowed_sample': ['北京']}], 'unique_bases': True}
 
 ## cycle_1_advance_to_action_before
 - turn: 1
-- turn_phase: TurnPhase.EVENT
+- turn_phase: TurnPhase.ACTION
 - current_player: player1
 
 ## cycle_1_advance_to_action_after
 - turn: 1
 - turn_phase: TurnPhase.ACTION
-- current_player: player1
+- current_player: player2
 
 ## cycle_1_play_card
-- player: player1
-- faction: qi
-- hand_before: ['追隨者', '樂捐者', '追隨者', '追隨者', '追隨者']
-- hand_after: ['樂捐者', '追隨者', '追隨者', '追隨者']
-- result: {'success': True}
-- resources: {'money': 0, 'propaganda': 0}
-- moves_left: 0
-
-## cycle_1_move
-- player: player1
-- move_detail: None
-- result: {'skipped': True, 'reason': 'no move points'}
-- orgs_after: {'青島': 1}
-- moves_left_after: 0
-
-## cycle_1_advance_to_end
-- turn: 1
-- turn_phase: TurnPhase.END
-- current_player: player1
-
-## cycle_1_end_turn
-- turn: 1
-- turn_phase: TurnPhase.EVENT
-- current_player: player2
-
-## cycle_2_advance_to_action_before
-- turn: 1
-- turn_phase: TurnPhase.EVENT
-- current_player: player2
-
-## cycle_2_advance_to_action_after
-- turn: 1
-- turn_phase: TurnPhase.EVENT
-- current_player: player2
-
-## cycle_2_after_advance_to_action_resolve_pending_choices
-- resolved: [{'player_id': 'p3', 'choice_type': 'town_choice', 'choice_key': 'event_build_organization', 'index': 0, 'result': {'success': True, 'choice_index': 0, 'town': '吉爾吉特', 'selected': {'town': '吉爾吉特', 'region': 'middle_east'}, 'choice_key': 'event_build_organization'}, 'turn': 1, 'turn_phase': <TurnPhase.EVENT: 'event'>, 'current_player': 'player2'}]
-
-## cycle_2_advance_to_action_after_pending_resolution
-- turn: 1
-- turn_phase: TurnPhase.ACTION
-- current_player: player2
-
-## cycle_2_play_card
 - player: player2
 - faction: reform_opening
 - hand_before: ['追隨者', '追隨者', '追隨者', '追隨者', '追隨者']
@@ -82,30 +38,66 @@
 - resources: {'money': 0, 'propaganda': 0}
 - moves_left: 0
 
-## cycle_2_move
+## cycle_1_move
 - player: player2
 - move_detail: None
 - result: {'skipped': True, 'reason': 'no move points'}
 - orgs_after: {'三亞': 1}
 - moves_left_after: 0
 
-## cycle_2_advance_to_end
+## cycle_1_action_phase_done
 - turn: 1
-- turn_phase: TurnPhase.END
+- turn_phase: TurnPhase.ACTION
 - current_player: player2
 
-## cycle_2_end_turn
+## cycle_1_end_turn
 - turn: 1
-- turn_phase: TurnPhase.EVENT
+- turn_phase: TurnPhase.ACTION
 - current_player: player3
+
+## cycle_2_advance_to_action_before
+- turn: 1
+- turn_phase: TurnPhase.ACTION
+- current_player: player3
+
+## cycle_2_advance_to_action_after
+- turn: 2
+- turn_phase: TurnPhase.ACTION
+- current_player: player1
+
+## cycle_2_play_card
+- player: player1
+- faction: qi
+- hand_before: ['追隨者', '樂捐者', '追隨者', '追隨者', '追隨者']
+- hand_after: ['樂捐者', '追隨者', '追隨者', '追隨者']
+- result: {'success': True}
+- resources: {'money': 0, 'propaganda': 0}
+- moves_left: 0
+
+## cycle_2_move
+- player: player1
+- move_detail: None
+- result: {'skipped': True, 'reason': 'no move points'}
+- orgs_after: {'青島': 1}
+- moves_left_after: 0
+
+## cycle_2_action_phase_done
+- turn: 2
+- turn_phase: TurnPhase.ACTION
+- current_player: player1
+
+## cycle_2_end_turn
+- turn: 2
+- turn_phase: TurnPhase.ACTION
+- current_player: player2
 
 ## cycle_3_advance_to_action_before
-- turn: 1
-- turn_phase: TurnPhase.EVENT
-- current_player: player3
+- turn: 2
+- turn_phase: TurnPhase.ACTION
+- current_player: player2
 
 ## cycle_3_advance_to_action_after
-- turn: 1
+- turn: 2
 - turn_phase: TurnPhase.ACTION
 - current_player: player3
 
@@ -122,73 +114,70 @@
 - player: player3
 - move_detail: None
 - result: {'skipped': True, 'reason': 'no move points'}
-- orgs_after: {'北京': 1, '吉爾吉特': 1}
+- orgs_after: {'北京': 1}
 - moves_left_after: 0
 
-## cycle_3_advance_to_end
-- turn: 1
+## cycle_3_action_phase_done
+- turn: 2
 - turn_phase: TurnPhase.ACTION
 - current_player: player3
 
 ## cycle_3_end_turn
-- turn: 1
+- turn: 3
 - turn_phase: TurnPhase.ACTION
-- current_player: player3
+- current_player: player1
 
 ## cycle_4_advance_to_action_before
-- turn: 1
+- turn: 3
 - turn_phase: TurnPhase.ACTION
-- current_player: player3
+- current_player: player1
 
 ## cycle_4_advance_to_action_after
-- turn: 1
+- turn: 3
 - turn_phase: TurnPhase.ACTION
-- current_player: player3
-
-## cycle_4_after_advance_to_action_resolve_pending_choices
-- resolved: [{'player_id': 'p3', 'choice_type': 'target_choice', 'choice_key': 'event_red_dissolve', 'index': 0, 'result': {'success': True, 'choice_index': 0, 'target_id': 'p1:青島', 'selected': {'id': 'p1:青島', 'player_id': 'p1', 'town': '青島', 'label': 'player1｜青島'}, 'choice_key': 'event_red_dissolve', 'target_player_name': 'player1', 'town': '青島'}, 'turn': 1, 'turn_phase': <TurnPhase.ACTION: 'action'>, 'current_player': 'player3'}]
+- current_player: player2
 
 ## cycle_4_play_card
-- player: player3
-- faction: red_army
-- hand_before: ['樂捐者', '追隨者', '樂捐者', '追隨者']
-- hand_after: ['追隨者', '樂捐者', '追隨者']
+- player: player2
+- faction: reform_opening
+- hand_before: ['追隨者', '追隨者', '追隨者', '追隨者', '追隨者']
+- hand_after: ['追隨者', '追隨者', '追隨者', '追隨者']
 - result: {'success': True}
 - resources: {'money': 0, 'propaganda': 0}
 - moves_left: 0
 
 ## cycle_4_move
-- player: player3
+- player: player2
 - move_detail: None
 - result: {'skipped': True, 'reason': 'no move points'}
-- orgs_after: {'北京': 1, '吉爾吉特': 1}
+- orgs_after: {'三亞': 1}
 - moves_left_after: 0
 
-## cycle_4_advance_to_end
-- turn: 1
-- turn_phase: TurnPhase.END
-- current_player: player3
+## cycle_4_action_phase_done
+- turn: 3
+- turn_phase: TurnPhase.ACTION
+- current_player: player2
 
 ## cycle_4_end_turn
-- turn: 2
-- turn_phase: TurnPhase.EVENT
-- current_player: player1
+- turn: 3
+- turn_phase: TurnPhase.ACTION
+- current_player: player3
 
 ## cycle_5_advance_to_action_before
-- turn: 2
-- turn_phase: TurnPhase.EVENT
-- current_player: player1
+- turn: 3
+- turn_phase: TurnPhase.ACTION
+- current_player: player3
 
 ## cycle_5_advance_to_action_after
-- turn: 2
+- turn: 4
 - turn_phase: TurnPhase.ACTION
 - current_player: player1
 
 ## cycle_5_play_card
 - player: player1
 - faction: qi
-- hand_before: ['追隨者', '樂捐者', '追隨者', '追隨者', '樂捐者']
-- hand_after: ['樂捐者', '追隨者', '追隨者', '樂捐者']
+- hand_before: ['樂捐者', '追隨者', '追隨者', '追隨者', '追隨者']
+- hand_after: ['追隨者', '追隨者', '追隨者', '追隨者']
 - result: {'success': True}
 - resources: {'money': 0, 'propaganda': 0}
 - moves_left: 0
@@ -197,73 +186,73 @@
 - player: player1
 - move_detail: None
 - result: {'skipped': True, 'reason': 'no move points'}
-- orgs_after: {}
+- orgs_after: {'青島': 1}
 - moves_left_after: 0
 
-## cycle_5_advance_to_end
-- turn: 2
-- turn_phase: TurnPhase.END
+## cycle_5_action_phase_done
+- turn: 4
+- turn_phase: TurnPhase.ACTION
 - current_player: player1
 
 ## cycle_5_end_turn
-- turn: 2
-- turn_phase: TurnPhase.EVENT
-- current_player: player2
-
-## cycle_6_advance_to_action_before
-- turn: 2
-- turn_phase: TurnPhase.EVENT
-- current_player: player2
-
-## cycle_6_advance_to_action_after
-- turn: 2
+- turn: 4
 - turn_phase: TurnPhase.ACTION
 - current_player: player2
 
+## cycle_6_advance_to_action_before
+- turn: 4
+- turn_phase: TurnPhase.ACTION
+- current_player: player2
+
+## cycle_6_advance_to_action_after
+- turn: 4
+- turn_phase: TurnPhase.ACTION
+- current_player: player3
+
 ## cycle_6_play_card
-- player: player2
-- faction: reform_opening
-- hand_before: ['追隨者', '追隨者', '樂捐者', '樂捐者', '樂捐者']
-- hand_after: ['追隨者', '樂捐者', '樂捐者', '樂捐者']
+- player: player3
+- faction: red_army
+- hand_before: ['樂捐者', '追隨者', '樂捐者', '追隨者', '追隨者']
+- hand_after: ['追隨者', '樂捐者', '追隨者', '追隨者']
 - result: {'success': True}
 - resources: {'money': 0, 'propaganda': 0}
 - moves_left: 0
 
 ## cycle_6_move
-- player: player2
+- player: player3
 - move_detail: None
 - result: {'skipped': True, 'reason': 'no move points'}
-- orgs_after: {'三亞': 1}
+- orgs_after: {'北京': 1}
 - moves_left_after: 0
 
-## cycle_6_advance_to_end
-- turn: 2
-- turn_phase: TurnPhase.END
-- current_player: player2
-
-## cycle_6_end_turn
-- turn: 2
-- turn_phase: TurnPhase.EVENT
+## cycle_6_action_phase_done
+- turn: 4
+- turn_phase: TurnPhase.ACTION
 - current_player: player3
 
+## cycle_6_end_turn
+- turn: 5
+- turn_phase: TurnPhase.ACTION
+- current_player: player1
+
 ## before_forced_victory_check
-- candidate: player3
-- faction: red_army
-- org_count: 2
-- forced_red_survival: True
-- turn: 21
-- turn_phase: TurnPhase.EVENT
+- candidate: player1
+- faction: qi
+- org_count: 12
+- forced_red_survival: False
+- turn: 5
+- turn_phase: TurnPhase.ACTION
 
 ## after_forced_victory_check
 - did_win: True
 - game_phase: GamePhase.FINISHED
-- winner: red_army
-- turn: 21
-- turn_phase: TurnPhase.EVENT
+- winner: player1
+- turn: 5
+- turn_phase: TurnPhase.ACTION
 
 ## final_state
-- turn: 21
-- turn_phase: TurnPhase.EVENT
+- turn: 5
+- turn_phase: TurnPhase.ACTION
 - game_phase: GamePhase.FINISHED
-- current_player: player3
-- winner: red_army
+- current_player: player1
+- winner: player1

@@ -1,5 +1,5 @@
 {
-  "date": "2026-05-19",
+  "date": "2026-08-18",
   "summary": {
     "total": 6,
     "passed": 6,
@@ -37,38 +37,36 @@
           "moves_left": 0
         },
         "result": {
-          "action_to_end": {
-            "success": true
-          },
-          "end_to_next": {
+          "end_action_phase": {
             "success": true
           }
         },
         "after": {
           "hand": [
+            "H1",
+            "H2",
+            "H3",
             "D4",
-            "D3",
-            "D2",
-            "D1",
-            "X1"
+            "D3"
           ],
           "draw_pile": [
-            "H1",
-            "X2",
-            "H2",
-            "H3"
+            "D1",
+            "D2"
           ],
-          "discard_pile": [],
+          "discard_pile": [
+            "X1",
+            "X2"
+          ],
           "hand_count": 5,
-          "draw_count": 4,
-          "discard_count": 0,
+          "draw_count": 2,
+          "discard_count": 2,
           "total_cards": 9,
           "resources": {
             "money": 0,
             "propaganda": 0
           },
           "moves_left": 0,
-          "turn_phase": "event",
+          "turn_phase": "action",
           "current_player": "other"
         },
         "rule": "回合結束：棄掉當前手牌、重置資源與移動點為 0、補到 5 張且總牌數守恆。"
@@ -97,8 +95,8 @@
         "drawn": [
           "D2",
           "D1",
-          "R3",
-          "R1"
+          "R1",
+          "R3"
         ],
         "after": {
           "hand": [],
@@ -222,17 +220,24 @@
             "資本家",
             "分神",
             "內鬥",
-            "組織經驗甲",
-            "凝聚共識",
-            "離間",
-            "批鬥",
-            "樹立信心"
+            "東洋奧援",
+            "印度奧援",
+            "領導",
+            "歐洲奧援",
+            "行動募資"
           ],
           "buy_index": 6,
-          "card_to_buy": "組織經驗甲"
+          "card_to_buy": "東洋奧援"
         },
         "result": {
-          "success": true
+          "success": true,
+          "purchased_cards": [
+            "東洋奧援"
+          ],
+          "payment": {
+            "money": 1,
+            "propaganda": 2
+          }
         },
         "after": {
           "hand": [
@@ -250,15 +255,15 @@
             "樂捐者"
           ],
           "discard_pile": [
-            "組織經驗甲"
+            "東洋奧援"
           ],
           "hand_count": 5,
           "draw_count": 5,
           "discard_count": 1,
           "total_cards": 11,
           "resources": {
-            "money": 96,
-            "propaganda": 96
+            "money": 98,
+            "propaganda": 97
           },
           "purchase_area_count": 10,
           "purchase_area": [
@@ -268,10 +273,10 @@
             "資本家",
             "分神",
             "內鬥",
-            "凝聚共識",
-            "離間",
-            "批鬥",
-            "樹立信心"
+            "印度奧援",
+            "領導",
+            "歐洲奧援",
+            "行動募資"
           ]
         },
         "rule": "購買隨機市場牌後，該牌進玩家棄牌堆，並從購買區移除；補市場由回合結束流程處理。"
@@ -283,10 +288,7 @@
       "details": {
         "before_market_count": 10,
         "result": {
-          "action_to_end": {
-            "success": true
-          },
-          "end_to_next": {
+          "end_action_phase": {
             "success": true
           }
         },
@@ -298,11 +300,11 @@
           "資本家",
           "分神",
           "內鬥",
-          "凝聚共識",
-          "離間",
-          "批鬥",
-          "樹立信心",
-          "組織經驗乙"
+          "印度奧援",
+          "領導",
+          "歐洲奧援",
+          "行動募資",
+          "模仿戰術"
         ],
         "rule": "回合結束時購買區補回常設 6 張 + 隨機 5 張。"
       }

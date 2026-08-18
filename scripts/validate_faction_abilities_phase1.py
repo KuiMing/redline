@@ -52,9 +52,8 @@ def test_taiwan_green_build_draw():
     player.hand = []
     player.deck.draw_pile = [Card('補牌1', 'money', {'money': 1})]
     g.build_organization('臺北')
-    g.advance_turn_phase()  # ACTION -> END
     before = len(player.hand)
-    g.advance_turn_phase()  # END -> _end_turn
+    g.advance_turn_phase()  # 結束行動階段 -> _end_turn
     after = len(player.hand)
     return ok('taiwan_green_end_turn_draw', after >= before + 1 or after >= 1, f'before={before}, after={after}')
 
@@ -66,7 +65,6 @@ def test_taiwan_blue_build_draw():
     player.hand = []
     player.deck.draw_pile = [Card('補牌1', 'money', {'money': 1})]
     g.build_organization('臺北')
-    g.advance_turn_phase()
     before = len(player.hand)
     g.advance_turn_phase()
     after = len(player.hand)

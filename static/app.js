@@ -1458,7 +1458,10 @@ function updatePurchaseSelectionControls(state = window.lastGameState || {}) {
   const clearBtn = document.getElementById('clearPurchaseSelectionBtn');
   const buyBtn = document.getElementById('openPurchaseConfirmBtn');
   if (!controls || !summary || !clearBtn || !buyBtn) return;
-  const isPurchaseTurn = String(state.turn_phase || '').toLowerCase() === 'end' && isMyTurnState(state);
+  // 出牌與購買同屬一個行動階段：整個 action 階段都能勾選購買；end 只是結束行動階段的
+  // 內部結算標記（香港根據地遷移等待窗口會停在該狀態），一併保留為可購買。
+  const rawPhase = String(state.turn_phase || '').toLowerCase();
+  const isPurchaseTurn = (rawPhase === 'action' || rawPhase === 'end') && isMyTurnState(state);
   controls.style.display = isPurchaseTurn ? 'flex' : 'none';
   if (!isPurchaseTurn) {
     selectedPurchaseIndices.clear();
@@ -1644,7 +1647,7 @@ function playHandCard(index, card, mode) {
   const isRedSupportPrepAction = phase === 'event' && mode === 'action' && cardName === '紅軍奧援' && me?.faction === 'red_army';
   if (phase !== 'action' && !isRedSupportPrepAction) {
     const message = phase === 'end'
-      ? '目前是購買階段；不能再打出手牌，請購買卡牌或結束回合。'
+      ? '行動階段已結束，不能再打出手牌。'
       : cardName === '紅軍奧援' && mode === 'resource'
         ? '事件結算中可先發動紅軍奧援的「行動」，資源需等行動階段。'
         : '目前不能打出一般手牌；請先處理事件結算或等待行動階段。';
@@ -3726,7 +3729,7 @@ async function render(state) {
     const redArmyBtn = document.getElementById('redArmyAbilityBtn');
     const isMyTurn = isMyTurnState(state);
     const waitText = pendingChoiceWaitText(state);
-    const stepLabel = phaseLabel === '事件結算' ? '開始行動階段' : phaseLabel === '行動' ? '開始購買階段' : phaseLabel === '購買' ? '結束回合' : '結束目前步驟';
+    const stepLabel = phaseLabel === '事件結算' ? '開始行動階段' : phaseLabel === '行動' ? '結束行動階段' : phaseLabel === '購買' ? '結束回合' : '結束目前步驟';
     if (phaseActionMeta) {
       phaseActionMeta.textContent = waitText || (isMyTurn ? `目前：${phaseLabel}｜下一步：${stepLabel}` : `目前：${phaseLabel}｜等待 ${state.current_player} 操作`);
     }
@@ -3797,7 +3800,7 @@ async function render(state) {
           return `${cardName}的取消能力只能被動觸發：當其他玩家打出可取消的卡牌時會自動跳出反應視窗。`;
         }
         if (hasMyPendingChoice) return '請先處理目前待選擇效果。';
-        if (rawPhase === 'end') return '目前是購買階段；不能再打出手牌。';
+        if (rawPhase === 'end') return '行動階段已結束，不能再打出手牌。';
         if (rawPhase === 'event') {
           return (cardName === '紅軍奧援' && mode === 'resource')
             ? '事件結算中可先發動紅軍奧援的「行動」，資源需等行動階段。'
@@ -3864,7 +3867,8 @@ async function render(state) {
       const colorName = (cardPresentation(card)?.color) || (isSupport ? '奧援' : '灰');
       const colorClass = cardColorClass(colorName);
       const staticSupply = isStatic ? liveStaticSupplyForCard(state, card) : null;
-      const inPurchasePhase = String(state.turn_phase || '').toLowerCase() === 'end';
+      const purchasePhase = String(state.turn_phase || '').toLowerCase();
+      const inPurchasePhase = purchasePhase === 'action' || purchasePhase === 'end';
       const isMyPurchaseTurn = isMyTurnState(state);
       const hasMyPendingChoice = !!(state.pending_choice && me && state.pending_choice.player_id === me.id);
       const purchaseCost = state.purchase_area_costs?.[i] || {money: 0, propaganda: 0};
@@ -3874,7 +3878,7 @@ async function render(state) {
       const costText = costParts.length ? costParts.join(' + ') : '免費';
       const canSelect = inPurchasePhase && isMyPurchaseTurn && !hasMyPendingChoice && (!isStatic || (staticSupply != null && staticSupply > 0));
       const selectTitle = !inPurchasePhase
-        ? '行動階段結束後才能購買。'
+        ? '目前不是行動階段，無法購買。'
         : !isMyPurchaseTurn
           ? '等待當前玩家購買。'
           : hasMyPendingChoice

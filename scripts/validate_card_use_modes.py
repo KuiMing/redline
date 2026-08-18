@@ -143,8 +143,7 @@ def check_resources_clear_at_end_turn():
     player.hand = []
     player.resources = {"money": 3, "propaganda": 4}
     player.moves_left = 2
-    game.advance_turn_phase()  # ACTION -> END
-    game.advance_turn_phase()  # END -> next player's EVENT
+    game.advance_turn_phase()  # 結束行動階段 -> _end_turn -> next player
 
     return check(
         "unspent_resources_clear_at_end_turn",

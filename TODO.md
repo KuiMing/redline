@@ -4,6 +4,38 @@
 
 ## 待辦
 
+### P1：合併行動階段與購買階段（出牌／購買可自由交錯）
+- [done] 使用者回報：「出牌 → 結束行動 → 購買 → 無法再出牌」。使用者明確要求不要把 Action 與
+  Purchase 設計成兩個不可逆的循序 phase，應視為同一個行動階段裡的三種操作（出牌／購買／陣營
+  能力），在結束行動階段前可自由交錯；只有「結束行動階段」是不可逆的狀態切換，之後才補手牌到
+  5 張、換下一位玩家。
+- [done] 根因：`server/game.py` 把兩件事實作成循序的 `TurnPhase.ACTION` → `TurnPhase.END`。
+  `buy_cards()` 只在 `END` 放行（否則回 `"Not in PURCHASE phase"`），`play_card` /
+  `build_organization` / 移動只在 `ACTION` 放行，`advance_turn_phase()` 需要按兩次才結束一個回合，
+  中間那次不可逆。這其實偏離 `rules.md:91-129`——文件從頭到尾只描述一個連續的行動階段，從未
+  獨立命名「購買階段」。
+- [done] 修法：把 `advance_turn_phase()` 的 `TurnPhase.END` 分支（事件結算時機／頂牌流程／香港根據地
+  遷移／`_end_turn()` 等時機敏感邏輯）**逐字**抽成新方法 `Game._finish_action_phase()`，一行都沒有
+  改動或重排；`EVENT` 分支完全不動，其餘情況一律設 `TurnPhase.END` 後立刻呼叫該方法並回傳其結果，
+  「結束行動階段」因此成為唯一一次不可逆的動作。`buy_cards()` 是唯一放寬的閘門
+  （`turn_phase not in (ACTION, END)` 才拒絕，沿用既有錯誤字串 `"Not in ACTION phase"`）；
+  `play_card` / `_validate_organization_move` / `build_organization` 的 `ACTION` 閘門刻意維持不變，
+  因為 `TurnPhase.END` 仍是真的會停留的狀態（香港「香港抗暴之戰」免費根據地遷移等待窗口停在那裡，
+  該閘門是唯一擋住玩家用剛補到的新手牌繼續出牌的機制）。前端 advance 按鈕文字改為「結束行動階段」，
+  購買勾選面板／購買區在 `action` 與 `end` 皆可用；手牌出牌的判斷邏輯完全不動（只更新過時文案），
+  保留 validator 的逐字字串比對。`server/main.py` 三個 `/test/*` 端點的 advance 次數同步收斂。
+- [done] 驗證結果：完整 pytest **366/366 passed**（排除 4 個需真實 ws/lobby 的檔案）。
+  `test_hong_kong_base_relocation.py` **10/10 passed** 且只改前置設定、沒有動任何斷言——這是抽取是否
+  忠實原邏輯的準繩。`validate_turn_phase_action_gating.py` **14/14 passed**（含新增的正面驗證：同一位
+  玩家不呼叫 advance 就能「出牌 → 購買 → 出牌 → 購買」全部成功，`turn_phase` 全程 `ACTION`）。
+  全部非瀏覽器 validator 與改動前逐一比對沒有任何一支由通過轉為失敗，另有 5 支本來被
+  `"Not in PURCHASE phase"` 擋住的購買測試由失敗轉為通過（含 `validate_deck_lifecycle` 3/6 → 6/6）。
+  真實瀏覽器驗收 `validate_action_phase_interleave_browser.py` **8/8 passed**（含「購買後再打出一張
+  手牌」這個修正前必定失敗的步驟，console 0 errors），另 `validate_action_first_phase_browser.py` 6/6、
+  `validate_purchase_affordance_browser.py` 3/3、`validate_faction_ability_triggers_browser.py` 7/7、
+  `validate_hong_kong_base_relocation_browser.py` 23/23。截圖與說明見
+  `docs/records/turn-flow/ACTION_PHASE_MERGED_WITH_PURCHASE_2026_08_18.md`。
+
 ### P2：戰略地圖「聚焦結果」選陣營篩選時聚焦程度不夠
 - [done] 使用者回報：戰略地圖選「陣營」篩選為香港後按「聚焦結果」，畫面不會真的 zoom in
   到香港地區。使用者要求：篩選結果仍要包含河內、胡志明市、臺灣（甚至實測發現還有廣州、

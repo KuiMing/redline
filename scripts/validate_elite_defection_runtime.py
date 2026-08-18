@@ -68,7 +68,7 @@ def main():
         'details': {'turn_phase': game.turn_phase.value, 'event': game.current_event.get('name') if game.current_event else None},
     })
 
-    assert_ok(game.advance_turn_phase(), 'enter purchase')
+    # 出牌與購買合併後，只需一次「結束行動階段」就補牌、結算並把席位交給紅軍。
     result = assert_ok(game.advance_turn_phase(), 'refill then settle failure before red turn')
     choice = game.state().get('pending_choice') or {}
     checks.append({

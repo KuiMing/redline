@@ -94,7 +94,6 @@ def test_end_turn_waits_for_hong_kong_relocation_decision_before_next_player_sta
         'status': 'active',
         'settlement_target_player_id': hk.id,
     }
-    game.turn_phase = TurnPhase.END
 
     ended = game.advance_turn_phase()
 
@@ -128,7 +127,6 @@ def test_successful_event_also_waits_for_keep_decision_before_next_player_starts
         'status': 'success_pending',
         'settlement_target_player_id': hk.id,
     }
-    game.turn_phase = TurnPhase.END
 
     ended = game.advance_turn_phase()
 

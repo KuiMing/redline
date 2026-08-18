@@ -41,9 +41,8 @@ def _make_game(actor_faction="taiwan_green"):
 
 
 def _advance_current_player_turn(game):
+    # 出牌與購買同屬一個行動階段，只需一次「結束行動階段」就換到下一位玩家。
     assert game.turn_phase == TurnPhase.ACTION
-    assert game.advance_turn_phase() == {"success": True}
-    assert game.turn_phase == TurnPhase.END
     assert game.advance_turn_phase() == {"success": True}
     assert game.turn_phase == TurnPhase.ACTION
 
@@ -229,13 +228,12 @@ def test_tibet_red_suppression_defers_to_red_turn_instead_of_blocking_non_red_ac
     assert game._pending_era_activations == ["tibet"]
     assert game.pending_choice is None
     assert game.event_progress["status"] == "auto_deferred"
-    # The non-red actor is NOT blocked — the deadlock is gone.
+    # The non-red actor is NOT blocked — the deadlock is gone. That single
+    # 結束行動階段 also finishes Tibet's turn; Red Army takes the seat and the deferred
+    # era now activates as Red Army's OWN, resolvable choice.
     assert game.advance_turn_phase() == {"success": True}
+    assert game.turn_phase == TurnPhase.ACTION
 
-    # Tibet finishes their turn; Red Army takes the seat and the deferred era now
-    # activates as Red Army's OWN, resolvable choice.
-    game.turn_phase = TurnPhase.ACTION
-    _advance_current_player_turn(game)
     assert game.current_player() is red
     assert "tibet" in game.era_engine.get_activated_eras()
     pending = game.pending_choice
@@ -319,13 +317,11 @@ def test_simultaneous_tibet_and_manchuria_eras_serialize_before_auto_event():
     assert game._pending_era_activations == ["tibet", "manchuria"]
     assert game.pending_choice is None
     assert game.event_progress["status"] == "auto_deferred"
-    assert game.advance_turn_phase() == {"success": True}
-
     # Each era activates on its own target's turn. Tibet ends → Manchuria takes the seat
     # and the Manchuria reorder activates as Manchuria's own choice; the Tibet suppression
     # stays queued (its target, Red Army, has not acted yet).
-    game.turn_phase = TurnPhase.ACTION
-    _advance_current_player_turn(game)
+    assert game.advance_turn_phase() == {"success": True}
+
     assert game.current_player() is manchuria
     assert game.era_engine.get_activated_eras() == ["manchuria"]
     assert game._pending_era_activations == ["tibet"]

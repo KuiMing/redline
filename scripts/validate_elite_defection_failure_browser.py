@@ -46,18 +46,17 @@ def main():
         page.wait_for_timeout(350)
         initial = page.evaluate('window.lastGameState')
         panel_text = page.locator('#eventCardPanel').inner_text(timeout=5000)
+        panel_html = page.locator('#eventCardPanel').inner_html(timeout=5000)
         action_text = page.locator('#advanceStepBtn').inner_text(timeout=5000)
         shot1 = screenshot_dir / '01_initial_elite_defection_event_visible.png'
         page.screenshot(path=str(shot1), full_page=True)
         checks.append({
             'name': 'elite_defection_event_visible_at_action_start',
-            'passed': initial.get('turn_phase') == 'action' and (initial.get('current_event') or {}).get('name') == '紅軍權貴出逃' and '紅軍權貴出逃' in panel_text and action_text == '開始購買階段',
+            'passed': initial.get('turn_phase') == 'action' and (initial.get('current_event') or {}).get('name') == '紅軍權貴出逃' and ('紅軍權貴出逃' in panel_text or '紅軍權貴出逃' in panel_html) and action_text == '結束行動階段',
             'details': {'turn_phase': initial.get('turn_phase'), 'event': initial.get('current_event'), 'panel_text': panel_text, 'advance_text': action_text},
         })
 
-        page.evaluate("sendAction('advance')")
-        page.wait_for_function('window.lastGameState && window.lastGameState.turn_phase === "end"', timeout=10000)
-        page.wait_for_timeout(250)
+        # 出牌與購買同屬一個行動階段：單次「結束行動階段」就補牌、結算並開出失敗棄牌選擇。
         page.evaluate("sendAction('advance')")
         page.wait_for_function('window.lastGameState && window.lastGameState.pending_choice && window.lastGameState.pending_choice.choice_key === "event_discard_self"', timeout=10000)
         page.wait_for_timeout(350)
@@ -67,7 +66,9 @@ def main():
         choice = pending.get('pending_choice') or {}
         checks.append({
             'name': 'failure_discard_choice_triggers_before_red_turn',
-            'passed': pending.get('current_player') == 'viewer' and choice.get('player_id') == player_id and choice.get('choice_key') == 'event_discard_self' and (pending.get('current_event') or {}).get('status') == 'failure',
+            # 座位已交給紅軍，但失敗棄牌選擇仍掛在非紅軍結算對象身上（與
+            # validate_elite_defection_runtime 的引擎層斷言一致：紅軍還沒行動前就結算）。
+            'passed': pending.get('current_player') == 'red' and choice.get('player_id') == player_id and choice.get('choice_key') == 'event_discard_self' and (pending.get('current_event') or {}).get('status') == 'failure',
             'details': {'current_player': pending.get('current_player'), 'turn_phase': pending.get('turn_phase'), 'current_event': pending.get('current_event'), 'pending_choice': choice},
         })
         browser.close()

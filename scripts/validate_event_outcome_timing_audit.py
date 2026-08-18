@@ -108,8 +108,7 @@ def check_failure_discard_random(event_name):
         # non-red player's END it is still UNSETTLED. Drive Red Army's turn + the wrap.
         deferred_ok = r['current_player'] == 'red' and not r['event_progress'].get('settled')
         game.turn_phase = TurnPhase.ACTION
-        game.advance_turn_phase()   # ACTION -> END
-        game.advance_turn_phase()   # END -> _end_turn wraps round -> deferred settlement
+        game.advance_turn_phase()   # 結束行動階段 -> _end_turn wraps round -> deferred settlement
         passed = (
             deferred_ok
             and len(ally.hand) == 4
@@ -217,8 +216,7 @@ def check_success_build_near(event_name):
     r = run_end(game)   # ally (final non-red) END -> Red Army seat; must NOT settle yet
     deferred_ok = r['current_player'] == 'red' and not r['event_progress'].get('settled')
     game.turn_phase = TurnPhase.ACTION
-    game.advance_turn_phase()   # ACTION -> END
-    game.advance_turn_phase()   # END -> _end_turn wraps round -> deferred settlement
+    game.advance_turn_phase()   # 結束行動階段 -> _end_turn wraps round -> deferred settlement
     choice = game.pending_choice or {}
     return {
         'name': f'{event_name} success build after full round wrap',

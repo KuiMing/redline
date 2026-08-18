@@ -126,9 +126,8 @@ def main() -> None:
             built_state.get("action_log", [])[-8:],
         )
 
-        page.get_by_role("button", name="開始購買階段", exact=True).click()
-        page.wait_for_function("window.lastGameState?.turn_phase === 'end'", timeout=10000)
-        page.get_by_role("button", name="結束回合", exact=True).click()
+        # 出牌與購買同屬一個行動階段：只按一次「結束行動階段」就結束回合。
+        page.get_by_role("button", name="結束行動階段", exact=True).click()
         try:
             page.wait_for_function(
                 """(id) => {

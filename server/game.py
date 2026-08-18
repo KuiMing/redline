@@ -5759,83 +5759,97 @@ class Game:
             if auto_result and auto_result.get('pending_choice'):
                 return {"success": True, "pending_choice": True}
             self.turn_phase = TurnPhase.ACTION
-        elif self.turn_phase == TurnPhase.ACTION:
+        else:
+            # 行動階段（出牌／購買／陣營能力可自由交錯）只有一個不可逆的結束動作：
+            # 按下「結束行動階段」→ 補牌至5張、換下一位玩家。TurnPhase.END 保留為
+            # 這段結算流程的內部標記（香港根據地遷移等待窗口會停在這裡），不再是
+            # 玩家需要按第二次按鈕才能離開的獨立階段。
             self.turn_phase = TurnPhase.END
-        elif self.turn_phase == TurnPhase.END:
-            # Mission events are round-wide: resolve after the final player's
-            # purchase step, so buy_card triggers have a chance to progress.
-            next_player_index = (self.current_player_index + 1) % len(self.players)
-            is_round_final_action = self._is_final_non_red_turn_before_round_wrap(next_player_index)
-            # A live `end_turn_state` trigger (e.g. 烏魯木齊七五事件's own_organization_in_scope)
-            # is a FRESH state check at settlement, not an accumulated counter. It must be
-            # judged only once the WHOLE round — Red Army included — has acted, because Red
-            # Army's own turn this round can still dissolve the organization that satisfies
-            # it (playtest 回報：所有事件卡都應該要所有人都輪過該回合才結算). Count-based
-            # triggers stay at the final non-red turn (before Red Army-only turns) because
-            # Red Army never progresses their counter and failure penalties belong to the
-            # non-red actor; only the state check needs the true round-wrap boundary, which
-            # mirrors the era-trigger / victory-declaration rule (P1: 判定時機應等整輪含紅軍
-            # 行動完). The settlement target is still captured at the final non-red boundary
-            # below and persists in event_progress until the wrap, so a later Red-Army seat
-            # never becomes the target.
-            trigger_type = ((self.current_event or {}).get('trigger') or {}).get('type')
-            event_is_state_triggered = trigger_type == 'end_turn_state'
-            is_true_round_wrap = next_player_index == getattr(self, 'round_start_player_index', 0)
-            settle_boundary = is_true_round_wrap if event_is_state_triggered else is_round_final_action
-            defer_event_settlement = settle_boundary and self._should_defer_event_settlement_until_after_refill()
-            if is_round_final_action and self.event_progress is not None:
-                self.event_progress['settlement_target_player_id'] = self._mission_settlement_target_id()
-            if settle_boundary and not defer_event_settlement and not (self.event_progress or {}).get('settled'):
-                event_result = self._settle_current_event()
-                if event_result and event_result.get('pending_choice'):
-                    return {"success": True, "pending_choice": True}
-            pending = self._prompt_end_turn_topdeck_action_if_available()
-            if pending:
-                return {"success": True, "pending_choice": True}
-            # Snapshot the round's event before _end_turn: when this END also wraps the
-            # round, _end_turn discards current_event/event_progress and draws the next
-            # round's event. Without the snapshot the deferred settlement would settle
-            # that untouched new event instead — dropping the earned success reward and
-            # applying a bogus failure penalty for an event nobody has acted on yet.
-            deferred_event = self.current_event if defer_event_settlement else None
-            deferred_progress = self.event_progress if defer_event_settlement else None
-            hong_kong_must_decide_before_handoff = bool(
-                defer_event_settlement
-                and (deferred_event or {}).get('name') == '香港抗暴之戰'
-                and any(getattr(pl, 'faction_id', None) == 'hong_kong' for pl in self.players)
-            )
-            if hong_kong_must_decide_before_handoff:
-                # 先完成本回合的補牌與回合結束能力，但不要把席位交給下一位玩家。
-                # 香港事件的成功／失敗效果仍維持「補牌後結算」；必要棄牌完成後再開遷移窗口。
-                self.hk_relocation_blocks_turn_handoff = True
-                self._end_turn(advance_player=False)
-                event_result = self._settle_current_event()
-                if event_result and event_result.get('pending_choice'):
-                    return {"success": True, "pending_choice": True}
-                if self.hk_free_base_relocation:
-                    return {"success": True, "pending_hk_relocation": True}
-                self.hk_relocation_blocks_turn_handoff = False
-                self._finish_end_turn_handoff()
-                return {"success": True}
+            return self._finish_action_phase()
+        return {"success": True}
 
-            self._end_turn()
-            if defer_event_settlement and deferred_progress is not None and not deferred_progress.get('settled'):
-                wrapped = self.current_event is not deferred_event
-                if wrapped:
-                    next_event = self.current_event
-                    next_progress = self.event_progress
-                    next_notification = self.event_notification
-                    self.current_event = deferred_event
-                    self.event_progress = deferred_progress
-                    event_result = self._settle_current_event()
-                    self.current_event = next_event
-                    self.event_progress = next_progress
-                    # Keep the new round's event on display; the settled outcome is in the log.
-                    self.event_notification = next_notification
-                else:
-                    event_result = self._settle_current_event()
-                if event_result and event_result.get('pending_choice'):
-                    return {"success": True, "pending_choice": True}
+    def _finish_action_phase(self):
+        """結束目前玩家的行動階段：在正確時機結算本輪事件、清空待用的頂牌權利、
+        補手牌到5張／補滿購買區、時代關卡 tick、把席位交給下一位玩家。
+        呼叫前 self.turn_phase 必須已經是 TurnPhase.END。
+        正常完成回傳 {"success": True}；卡在必要決定（事件結算選擇／香港根據地
+        遷移）時回傳帶 pending_choice / pending_hk_relocation 的 dict，此時席位
+        不會交出去。
+        """
+        # Mission events are round-wide: resolve after the final player's
+        # purchase step, so buy_card triggers have a chance to progress.
+        next_player_index = (self.current_player_index + 1) % len(self.players)
+        is_round_final_action = self._is_final_non_red_turn_before_round_wrap(next_player_index)
+        # A live `end_turn_state` trigger (e.g. 烏魯木齊七五事件's own_organization_in_scope)
+        # is a FRESH state check at settlement, not an accumulated counter. It must be
+        # judged only once the WHOLE round — Red Army included — has acted, because Red
+        # Army's own turn this round can still dissolve the organization that satisfies
+        # it (playtest 回報：所有事件卡都應該要所有人都輪過該回合才結算). Count-based
+        # triggers stay at the final non-red turn (before Red Army-only turns) because
+        # Red Army never progresses their counter and failure penalties belong to the
+        # non-red actor; only the state check needs the true round-wrap boundary, which
+        # mirrors the era-trigger / victory-declaration rule (P1: 判定時機應等整輪含紅軍
+        # 行動完). The settlement target is still captured at the final non-red boundary
+        # below and persists in event_progress until the wrap, so a later Red-Army seat
+        # never becomes the target.
+        trigger_type = ((self.current_event or {}).get('trigger') or {}).get('type')
+        event_is_state_triggered = trigger_type == 'end_turn_state'
+        is_true_round_wrap = next_player_index == getattr(self, 'round_start_player_index', 0)
+        settle_boundary = is_true_round_wrap if event_is_state_triggered else is_round_final_action
+        defer_event_settlement = settle_boundary and self._should_defer_event_settlement_until_after_refill()
+        if is_round_final_action and self.event_progress is not None:
+            self.event_progress['settlement_target_player_id'] = self._mission_settlement_target_id()
+        if settle_boundary and not defer_event_settlement and not (self.event_progress or {}).get('settled'):
+            event_result = self._settle_current_event()
+            if event_result and event_result.get('pending_choice'):
+                return {"success": True, "pending_choice": True}
+        pending = self._prompt_end_turn_topdeck_action_if_available()
+        if pending:
+            return {"success": True, "pending_choice": True}
+        # Snapshot the round's event before _end_turn: when this END also wraps the
+        # round, _end_turn discards current_event/event_progress and draws the next
+        # round's event. Without the snapshot the deferred settlement would settle
+        # that untouched new event instead — dropping the earned success reward and
+        # applying a bogus failure penalty for an event nobody has acted on yet.
+        deferred_event = self.current_event if defer_event_settlement else None
+        deferred_progress = self.event_progress if defer_event_settlement else None
+        hong_kong_must_decide_before_handoff = bool(
+            defer_event_settlement
+            and (deferred_event or {}).get('name') == '香港抗暴之戰'
+            and any(getattr(pl, 'faction_id', None) == 'hong_kong' for pl in self.players)
+        )
+        if hong_kong_must_decide_before_handoff:
+            # 先完成本回合的補牌與回合結束能力，但不要把席位交給下一位玩家。
+            # 香港事件的成功／失敗效果仍維持「補牌後結算」；必要棄牌完成後再開遷移窗口。
+            self.hk_relocation_blocks_turn_handoff = True
+            self._end_turn(advance_player=False)
+            event_result = self._settle_current_event()
+            if event_result and event_result.get('pending_choice'):
+                return {"success": True, "pending_choice": True}
+            if self.hk_free_base_relocation:
+                return {"success": True, "pending_hk_relocation": True}
+            self.hk_relocation_blocks_turn_handoff = False
+            self._finish_end_turn_handoff()
+            return {"success": True}
+
+        self._end_turn()
+        if defer_event_settlement and deferred_progress is not None and not deferred_progress.get('settled'):
+            wrapped = self.current_event is not deferred_event
+            if wrapped:
+                next_event = self.current_event
+                next_progress = self.event_progress
+                next_notification = self.event_notification
+                self.current_event = deferred_event
+                self.event_progress = deferred_progress
+                event_result = self._settle_current_event()
+                self.current_event = next_event
+                self.event_progress = next_progress
+                # Keep the new round's event on display; the settled outcome is in the log.
+                self.event_notification = next_notification
+            else:
+                event_result = self._settle_current_event()
+            if event_result and event_result.get('pending_choice'):
+                return {"success": True, "pending_choice": True}
         return {"success": True}
 
     def _end_turn(self, advance_player=True):
@@ -6430,8 +6444,10 @@ class Game:
         return True
 
     def buy_cards(self, indices):
-        if self.turn_phase != TurnPhase.END:
-            return {"error": "Not in PURCHASE phase"}
+        # 行動階段內可自由交錯出牌與購買；TurnPhase.END 仍接受，因為現在只是
+        # advance_turn_phase 內部的結算標記（香港根據地遷移等待窗口會停在該狀態）。
+        if self.turn_phase not in (TurnPhase.ACTION, TurnPhase.END):
+            return {"error": "Not in ACTION phase"}
 
         if not isinstance(indices, (list, tuple)) or not indices:
             return {"error": "No cards selected"}

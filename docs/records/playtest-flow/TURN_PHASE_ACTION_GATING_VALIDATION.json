@@ -1,7 +1,7 @@
 {
   "summary": {
     "passed": true,
-    "passed_count": 13,
+    "passed_count": 14,
     "failed_count": 0
   },
   "checks": [
@@ -101,7 +101,7 @@
       "name": "formal 2p lobby keeps turn 1 when first player ends and passes to the other",
       "passed": true,
       "details": {
-        "step": "first_end_to_second_action",
+        "step": "first_player_action_phase_end",
         "result": {
           "success": true
         },
@@ -122,7 +122,7 @@
       "name": "first player end does not draw or replace event before the round wraps",
       "passed": true,
       "details": {
-        "step": "first_end_to_second_action",
+        "step": "first_player_action_phase_end",
         "result": {
           "success": true
         },
@@ -143,7 +143,7 @@
       "name": "formal 2p lobby increments to turn 2 only after the full round ends",
       "passed": true,
       "details": {
-        "step": "second_end_to_next_round",
+        "step": "second_player_action_phase_end_wraps_round",
         "result": {
           "success": true
         },
@@ -164,7 +164,7 @@
       "name": "new event is drawn only after the full round ends",
       "passed": true,
       "details": {
-        "step": "second_end_to_next_round",
+        "step": "second_player_action_phase_end_wraps_round",
         "result": {
           "success": true
         },
@@ -189,13 +189,6 @@
       }
     },
     {
-      "name": "end (purchase) phase blocks action card play",
-      "passed": true,
-      "details": {
-        "error": "Not in ACTION phase"
-      }
-    },
-    {
       "name": "ending turn passes to next player in ACTION without drawing a new event mid-round",
       "passed": true,
       "details": {
@@ -208,6 +201,7 @@
         "current_player": "player2",
         "active_eras": [],
         "active_era_details": [],
+        "my_era_stage": null,
         "era_notification": null,
         "current_event": {
           "id": "tibet_border_conflict",
@@ -243,6 +237,9 @@
         "event_deck_count": 19,
         "red_army_action_count": 0,
         "red_army_action_limit": 2,
+        "red_army_base_build_blocks": [],
+        "pending_topdeck_uses": 0,
+        "topdeck_candidates_count": 0,
         "event_discard_count": 1,
         "event_modifiers": [],
         "market_mode": "sample_53",
@@ -341,6 +338,52 @@
             "propaganda": 0
           }
         ],
+        "purchase_area_payments": [
+          {
+            "money": 0,
+            "propaganda": 3
+          },
+          {
+            "money": 0,
+            "propaganda": 5
+          },
+          {
+            "money": 2,
+            "propaganda": 1
+          },
+          {
+            "money": 3,
+            "propaganda": 2
+          },
+          {
+            "money": 0,
+            "propaganda": 0
+          },
+          {
+            "money": 0,
+            "propaganda": 0
+          },
+          {
+            "money": 1,
+            "propaganda": 2
+          },
+          {
+            "money": 1,
+            "propaganda": 3
+          },
+          {
+            "money": 1,
+            "propaganda": 2
+          },
+          {
+            "money": 2,
+            "propaganda": 2
+          },
+          {
+            "money": 2,
+            "propaganda": 0
+          }
+        ],
         "purchase_area_affordable": [
           false,
           false,
@@ -383,7 +426,8 @@
               }
             ]
           },
-          "shared_access": {}
+          "shared_access": {},
+          "legal_organization_moves": {}
         },
         "players": [
           {
@@ -410,11 +454,36 @@
               null,
               null
             ],
+            "hand_action_legality": [
+              {
+                "playable": true
+              },
+              {
+                "playable": true
+              },
+              {
+                "playable": true
+              },
+              {
+                "playable": true
+              },
+              {
+                "playable": true
+              }
+            ],
             "deck_count": 5,
             "discard_count": 1,
             "discard_pile": [
               "樂捐者"
             ],
+            "discard_variants": [
+              null
+            ],
+            "organization_counts": {
+              "total": 1,
+              "inside_wall": 1,
+              "outside_wall": 0
+            },
             "orgs": {
               "北京": 1
             }
@@ -443,9 +512,32 @@
               null,
               null
             ],
+            "hand_action_legality": [
+              {
+                "playable": true
+              },
+              {
+                "playable": true
+              },
+              {
+                "playable": true
+              },
+              {
+                "playable": true
+              },
+              {
+                "playable": true
+              }
+            ],
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
+            "discard_variants": [],
+            "organization_counts": {
+              "total": 1,
+              "inside_wall": 1,
+              "outside_wall": 0
+            },
             "orgs": {
               "桂林": 1
             }
@@ -474,9 +566,32 @@
               null,
               null
             ],
+            "hand_action_legality": [
+              {
+                "playable": true
+              },
+              {
+                "playable": true
+              },
+              {
+                "playable": true
+              },
+              {
+                "playable": true
+              },
+              {
+                "playable": true
+              }
+            ],
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
+            "discard_variants": [],
+            "organization_counts": {
+              "total": 1,
+              "inside_wall": 0,
+              "outside_wall": 1
+            },
             "orgs": {
               "臺北": 1
             }
@@ -489,6 +604,102 @@
       "passed": true,
       "details": {
         "success": true
+      }
+    },
+    {
+      "name": "play and buy freely interleave inside one action phase without advancing",
+      "passed": true,
+      "details": {
+        "results": [
+          {
+            "success": true
+          },
+          {
+            "success": true,
+            "purchased_cards": [
+              "宣傳家"
+            ],
+            "payment": {
+              "money": 0,
+              "propaganda": 3
+            }
+          },
+          {
+            "success": true
+          },
+          {
+            "success": true,
+            "purchased_cards": [
+              "宣傳家"
+            ],
+            "payment": {
+              "money": 0,
+              "propaganda": 3
+            }
+          }
+        ],
+        "steps": [
+          {
+            "op": "play_card",
+            "card": "樂捐者",
+            "result": {
+              "success": true
+            },
+            "turn_phase": "TurnPhase.ACTION",
+            "current_player": "alpha"
+          },
+          {
+            "op": "buy_cards",
+            "result": {
+              "success": true,
+              "purchased_cards": [
+                "宣傳家"
+              ],
+              "payment": {
+                "money": 0,
+                "propaganda": 3
+              }
+            },
+            "turn_phase": "TurnPhase.ACTION",
+            "current_player": "alpha"
+          },
+          {
+            "op": "play_card",
+            "card": "樂捐者",
+            "result": {
+              "success": true
+            },
+            "turn_phase": "TurnPhase.ACTION",
+            "current_player": "alpha"
+          },
+          {
+            "op": "buy_cards",
+            "result": {
+              "success": true,
+              "purchased_cards": [
+                "宣傳家"
+              ],
+              "payment": {
+                "money": 0,
+                "propaganda": 3
+              }
+            },
+            "turn_phase": "TurnPhase.ACTION",
+            "current_player": "alpha"
+          }
+        ]
+      }
+    },
+    {
+      "name": "one advance ends the action phase: hand refilled to 5 and seat passed on",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true
+        },
+        "actor_hand_size": 5,
+        "current_player": "bravo",
+        "turn_phase": "action"
       }
     },
     {
@@ -561,7 +772,7 @@
     },
     {
       "step": "formal_lobby_start_event_state",
-      "game_id": "96163030-111d-401f-863a-bd0163cebe8d",
+      "game_id": "e2494d0e-ca7d-49fd-9fa0-c827beb17c0a",
       "start_result": {
         "success": true,
         "market_mode": "sample_53"
@@ -609,24 +820,7 @@
       "round_start_player_index": 1,
       "flow": [
         {
-          "step": "first_action_to_end",
-          "result": {
-            "success": true
-          },
-          "turn": 1,
-          "turn_phase": "end",
-          "current_player": "ally",
-          "current_faction": "taiwan_green",
-          "event_before": "quiet_times",
-          "event_after": "quiet_times",
-          "event_deck_before": 19,
-          "event_deck_after": 19,
-          "event_discard_before": 1,
-          "event_discard_after": 1,
-          "event_status_after": "idle"
-        },
-        {
-          "step": "first_end_to_second_action",
+          "step": "first_player_action_phase_end",
           "result": {
             "success": true
           },
@@ -643,24 +837,7 @@
           "event_status_after": "idle"
         },
         {
-          "step": "second_action_to_end",
-          "result": {
-            "success": true
-          },
-          "turn": 1,
-          "turn_phase": "end",
-          "current_player": "host",
-          "current_faction": "red_army",
-          "event_before": "quiet_times",
-          "event_after": "quiet_times",
-          "event_deck_before": 19,
-          "event_deck_after": 19,
-          "event_discard_before": 1,
-          "event_discard_after": 1,
-          "event_status_after": "idle"
-        },
-        {
-          "step": "second_end_to_next_round",
+          "step": "second_player_action_phase_end_wraps_round",
           "result": {
             "success": true
           },
@@ -688,15 +865,6 @@
       "current_player": "player1"
     },
     {
-      "step": "end_phase_action_attempt",
-      "card": "追隨者",
-      "result": {
-        "error": "Not in ACTION phase"
-      },
-      "turn_phase": "TurnPhase.END",
-      "current_player": "player1"
-    },
-    {
       "step": "end_passes_to_next_player_action",
       "turn": 1,
       "turn_phase": "action",
@@ -713,6 +881,69 @@
       "current_player": "player2"
     },
     {
+      "step": "action_phase_allows_free_interleaving_of_play_and_buy",
+      "actor": "alpha",
+      "steps": [
+        {
+          "op": "play_card",
+          "card": "樂捐者",
+          "result": {
+            "success": true
+          },
+          "turn_phase": "TurnPhase.ACTION",
+          "current_player": "alpha"
+        },
+        {
+          "op": "buy_cards",
+          "result": {
+            "success": true,
+            "purchased_cards": [
+              "宣傳家"
+            ],
+            "payment": {
+              "money": 0,
+              "propaganda": 3
+            }
+          },
+          "turn_phase": "TurnPhase.ACTION",
+          "current_player": "alpha"
+        },
+        {
+          "op": "play_card",
+          "card": "樂捐者",
+          "result": {
+            "success": true
+          },
+          "turn_phase": "TurnPhase.ACTION",
+          "current_player": "alpha"
+        },
+        {
+          "op": "buy_cards",
+          "result": {
+            "success": true,
+            "purchased_cards": [
+              "宣傳家"
+            ],
+            "payment": {
+              "money": 0,
+              "propaganda": 3
+            }
+          },
+          "turn_phase": "TurnPhase.ACTION",
+          "current_player": "alpha"
+        }
+      ]
+    },
+    {
+      "step": "single_advance_ends_action_phase_and_passes_seat",
+      "result": {
+        "success": true
+      },
+      "turn_phase": "action",
+      "current_player": "bravo",
+      "actor_hand_size": 5
+    },
+    {
       "step": "red_support_event_phase_action_before_purchase",
       "result": {
         "success": true,
@@ -723,6 +954,9 @@
       "pending_choice": {
         "type": "target_choice",
         "choice_key": "red_support_target_player",
+        "interaction_kind": null,
+        "remaining_builds": null,
+        "queueable_card_names": [],
         "cancellable": false,
         "player_id": "red",
         "player_name": null,
@@ -730,7 +964,7 @@
         "source_name": "紅軍奧援",
         "count": null,
         "min_count": null,
-        "mode": "action",
+        "mode": null,
         "acting_player_id": null,
         "acting_player_name": null,
         "played_card_name": null,
@@ -768,6 +1002,7 @@
     "current_player": "player2",
     "active_eras": [],
     "active_era_details": [],
+    "my_era_stage": null,
     "era_notification": null,
     "current_event": {
       "id": "tibet_border_conflict",
@@ -803,6 +1038,9 @@
     "event_deck_count": 19,
     "red_army_action_count": 0,
     "red_army_action_limit": 2,
+    "red_army_base_build_blocks": [],
+    "pending_topdeck_uses": 0,
+    "topdeck_candidates_count": 0,
     "event_discard_count": 1,
     "event_modifiers": [],
     "market_mode": "sample_53",
@@ -901,6 +1139,52 @@
         "propaganda": 0
       }
     ],
+    "purchase_area_payments": [
+      {
+        "money": 0,
+        "propaganda": 3
+      },
+      {
+        "money": 0,
+        "propaganda": 5
+      },
+      {
+        "money": 2,
+        "propaganda": 1
+      },
+      {
+        "money": 3,
+        "propaganda": 2
+      },
+      {
+        "money": 0,
+        "propaganda": 0
+      },
+      {
+        "money": 0,
+        "propaganda": 0
+      },
+      {
+        "money": 1,
+        "propaganda": 2
+      },
+      {
+        "money": 1,
+        "propaganda": 3
+      },
+      {
+        "money": 1,
+        "propaganda": 2
+      },
+      {
+        "money": 2,
+        "propaganda": 2
+      },
+      {
+        "money": 2,
+        "propaganda": 0
+      }
+    ],
     "purchase_area_affordable": [
       false,
       false,
@@ -943,7 +1227,8 @@
           }
         ]
       },
-      "shared_access": {}
+      "shared_access": {},
+      "legal_organization_moves": {}
     },
     "players": [
       {
@@ -970,11 +1255,36 @@
           null,
           null
         ],
+        "hand_action_legality": [
+          {
+            "playable": true
+          },
+          {
+            "playable": true
+          },
+          {
+            "playable": true
+          },
+          {
+            "playable": true
+          },
+          {
+            "playable": true
+          }
+        ],
         "deck_count": 5,
         "discard_count": 1,
         "discard_pile": [
           "樂捐者"
         ],
+        "discard_variants": [
+          null
+        ],
+        "organization_counts": {
+          "total": 1,
+          "inside_wall": 1,
+          "outside_wall": 0
+        },
         "orgs": {
           "北京": 1
         }
@@ -1001,11 +1311,33 @@
           null,
           null
         ],
+        "hand_action_legality": [
+          {
+            "playable": true
+          },
+          {
+            "playable": true
+          },
+          {
+            "playable": true
+          },
+          {
+            "playable": true
+          }
+        ],
         "deck_count": 5,
         "discard_count": 1,
         "discard_pile": [
           "追隨者"
         ],
+        "discard_variants": [
+          null
+        ],
+        "organization_counts": {
+          "total": 1,
+          "inside_wall": 1,
+          "outside_wall": 0
+        },
         "orgs": {
           "桂林": 1
         }
@@ -1034,9 +1366,32 @@
           null,
           null
         ],
+        "hand_action_legality": [
+          {
+            "playable": true
+          },
+          {
+            "playable": true
+          },
+          {
+            "playable": true
+          },
+          {
+            "playable": true
+          },
+          {
+            "playable": true
+          }
+        ],
         "deck_count": 5,
         "discard_count": 0,
         "discard_pile": [],
+        "discard_variants": [],
+        "organization_counts": {
+          "total": 1,
+          "inside_wall": 0,
+          "outside_wall": 1
+        },
         "orgs": {
           "臺北": 1
         }

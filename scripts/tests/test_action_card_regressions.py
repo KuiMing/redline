@@ -3038,7 +3038,8 @@ def test_leadership_reshuffles_discard_to_draw_after_reaction_skip_and_can_advan
     assert names(actor.deck.discard_pile) == ['領導']
     advanced = g.advance_turn_phase()
     assert advanced.get('success'), advanced
-    assert g.turn_phase == TurnPhase.END
+    assert g.turn_phase == TurnPhase.ACTION
+    assert g.current_player() is not actor
 
 
 
@@ -3275,15 +3276,13 @@ def test_intel_network_first_option_adds_internal_conflict_to_up_to_three_other_
 
 
 def _advance_one_full_turn(g):
-    """Drive ACTION -> END -> next player's ACTION via the real turn-phase state
-    machine (not manual field pokes). A round wrap draws a real random event, which
-    can itself inject an unrelated pending_choice (e.g. an interactive event prompt)
-    before we get a chance to look — re-pin the no-op event and clear it immediately
-    after, rather than asserting pending_choice is None first."""
+    """Drive one player's whole action phase to the next player's ACTION via the real
+    turn-phase state machine (not manual field pokes). A round wrap draws a real random
+    event, which can itself inject an unrelated pending_choice (e.g. an interactive event
+    prompt) before we get a chance to look — re-pin the no-op event and clear it
+    immediately after, rather than asserting pending_choice is None first."""
     assert g.turn_phase == TurnPhase.ACTION
     assert g.advance_turn_phase().get('success')
-    assert g.turn_phase == TurnPhase.END
-    g.advance_turn_phase()
     pin_noop_event(g)
     assert g.turn_phase == TurnPhase.ACTION
 
@@ -3823,13 +3822,9 @@ def test_shanghai_cooperation_org_at_round_wrap_does_not_deadlock_non_red_actor(
     assert g._pending_era_activations == ['tibet']
     assert (g.event_progress or {}).get('status') == 'auto_deferred'
     # Regression assertion: the non-red actor can actually take their turn (no deadlock).
-    assert g.advance_turn_phase() == {'success': True}
-
     # Tibet finishes; Red Army takes the seat and the deferred suppression activates as
     # Red Army's own, resolvable choice.
-    g.turn_phase = TurnPhase.ACTION
-    assert g.advance_turn_phase() == {'success': True}   # ACTION -> END
-    assert g.advance_turn_phase() == {'success': True}   # END -> _end_turn -> Red Army
+    assert g.advance_turn_phase() == {'success': True}   # 結束行動階段 -> _end_turn -> Red Army
     assert g.current_player() is red
     assert g.pending_choice is not None
     assert g.pending_choice['choice_key'] == 'era_red_discard_to_build_near_target'
@@ -3887,8 +3882,7 @@ def test_urumqi_state_trigger_settles_after_red_army_turn_not_before():
     # Non-red player's turn ends. Under the old code the end_turn_state mission settled
     # HERE (before Red Army acted). Now it must stay unsettled, with the settlement target
     # already captured as the non-red owner.
-    assert g.advance_turn_phase() == {'success': True}   # ACTION -> END
-    assert g.advance_turn_phase() == {'success': True}   # END -> _end_turn -> Red Army seat
+    assert g.advance_turn_phase() == {'success': True}   # 結束行動階段 -> _end_turn -> Red Army seat
     assert g.current_player() is red
     assert not (g.event_progress or {}).get('settled')
     assert (g.event_progress or {}).get('settlement_target_player_id') == b.id
@@ -3896,9 +3890,7 @@ def test_urumqi_state_trigger_settles_after_red_army_turn_not_before():
     # Red Army dissolves the inside-the-wall org on its own turn; then the round wraps.
     b.organizations = {}
     b_hand_before = len(b.hand)
-    g.turn_phase = TurnPhase.ACTION
-    assert g.advance_turn_phase() == {'success': True}   # ACTION -> END
-    assert g.advance_turn_phase() == {'success': True}   # END -> _end_turn wraps -> settle
+    assert g.advance_turn_phase() == {'success': True}   # 結束行動階段 -> _end_turn wraps -> settle
 
     # Condition (own inside-wall org) no longer holds after Red Army's turn -> failure,
     # judged against the FINAL state of the round, not the stale pre-Red snapshot.
@@ -3914,15 +3906,12 @@ def test_urumqi_state_trigger_succeeds_when_org_survives_full_round():
     round-wrap boundary (after Red Army), never at the earlier final-non-red point."""
     g, b, red, inner = _urumqi_round_wrap_game()
 
-    assert g.advance_turn_phase() == {'success': True}   # ACTION -> END
-    assert g.advance_turn_phase() == {'success': True}   # END -> Red Army seat
+    assert g.advance_turn_phase() == {'success': True}   # 結束行動階段 -> Red Army seat
     assert g.current_player() is red
     assert not (g.event_progress or {}).get('settled')   # not judged before Red Army acts
 
     # Red Army leaves the org intact; round wraps with the condition still satisfied.
-    g.turn_phase = TurnPhase.ACTION
-    assert g.advance_turn_phase() == {'success': True}   # ACTION -> END
-    assert g.advance_turn_phase() == {'success': True}   # END -> wrap -> settle
+    assert g.advance_turn_phase() == {'success': True}   # 結束行動階段 -> wrap -> settle
     assert any('烏魯木齊七五事件' in line and 'success' in line for line in g.action_log)
     assert b.organizations.get(inner, 0) == 1            # owning org preserved through the round
 
@@ -3952,8 +3941,7 @@ def test_count_based_mission_still_settles_at_final_non_red_turn():
     g.round_start_player_index = 0
     g.turn_phase = TurnPhase.ACTION
 
-    assert g.advance_turn_phase() == {'success': True}   # ACTION -> END
-    assert g.advance_turn_phase() == {'success': True}   # END -> _end_turn -> Red Army seat
+    assert g.advance_turn_phase() == {'success': True}   # 結束行動階段 -> _end_turn -> Red Army seat
     assert g.current_player() is red
     # Count-based trigger is settled BEFORE Red Army's turn, unchanged by the fix.
     assert (g.event_progress or {}).get('settled') is True

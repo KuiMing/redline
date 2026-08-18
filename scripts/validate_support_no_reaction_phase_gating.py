@@ -86,7 +86,9 @@ def test_support_card_prompts_cancel_reaction_then_declined_does_not_block_purch
     assert_true(result.get("success"), f"post-support resource play failed: {result}")
     result = game.advance_turn_phase()
     assert_true(result.get("success"), f"phase advance blocked after support: {result}")
-    assert_true(game.turn_phase == TurnPhase.END, f"expected purchase/END phase, got {game.turn_phase}")
+    # 出牌與購買已合併：購買全程可用，advance 就是唯一一次「結束行動階段」，
+    # 沒有殘留 pending_choice 時它會乾淨地結束回合並把席位交出去。
+    assert_true(game.turn_phase == TurnPhase.ACTION, f"expected next player ACTION phase, got {game.turn_phase}")
 
 
 def test_support_card_cancel_reaction_prevents_effect_and_does_not_block_purchase():
@@ -110,7 +112,9 @@ def test_support_card_cancel_reaction_prevents_effect_and_does_not_block_purchas
 
     result = game.advance_turn_phase()
     assert_true(result.get("success"), f"phase advance blocked after cancel: {result}")
-    assert_true(game.turn_phase == TurnPhase.END, f"expected purchase/END phase, got {game.turn_phase}")
+    # 出牌與購買已合併：購買全程可用，advance 就是唯一一次「結束行動階段」，
+    # 沒有殘留 pending_choice 時它會乾淨地結束回合並把席位交出去。
+    assert_true(game.turn_phase == TurnPhase.ACTION, f"expected next player ACTION phase, got {game.turn_phase}")
 
 
 def main():

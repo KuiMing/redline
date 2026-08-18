@@ -1,12 +1,12 @@
 # FACTION ABILITY PHASE1 VALIDATION
 
 - total: 6
-- passed: 6
-- failed: 0
+- passed: 2
+- failed: 4
 
-- PASS hong_kong_lam_chau_setup: ['宣傳家']
-- PASS hong_kong_international_line: {'played_money_card': False, 'played_propaganda_card': True, 'non_starter_discard': False, 'successful_discard': False, 'built_towns': [], 'played_nonstarter_names': ['測試金錢牌'], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': False, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': [], 'reaction_prompted_player_ids': []}
+- FAIL hong_kong_lam_chau_setup: []
+- FAIL hong_kong_international_line: {'played_money_card': False, 'played_propaganda_card': False, 'non_starter_discard': False, 'successful_discard': False, 'built_towns': [], 'played_nonstarter_names': ['測試金錢牌'], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': False, 'red_army_action_count': 0, 'red_army_targeted_actions': {}, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': [], 'red_army_base_dissolves': {}, 'red_army_base_build_blocks': [], 'pending_topdeck_uses': 0}
 - PASS taiwan_green_end_turn_draw: before=0, after=1
 - PASS taiwan_blue_end_turn_draw: before=0, after=1
-- PASS mongol_develop_legality: allow_mongol=True, allow_uncamped=True, block_other=True, result={'success': True}
-- PASS kazakh_first_propaganda_draw: before=1, after=1, log={'played_money_card': False, 'played_propaganda_card': True, 'non_starter_discard': False, 'successful_discard': False, 'built_towns': [], 'played_nonstarter_names': ['宣傳測試'], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': False, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': [], 'reaction_prompted_player_ids': [], 'faction_first_propaganda_triggered': True}
+- FAIL mongol_develop_legality: allow_mongol=False, allow_uncamped=False, block_other=True, result={'error': 'Cannot develop in this town'}
+- FAIL kazakh_first_propaganda_draw: before=1, after=0, log={'played_money_card': False, 'played_propaganda_card': False, 'non_starter_discard': False, 'successful_discard': False, 'built_towns': [], 'played_nonstarter_names': ['宣傳測試'], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': False, 'red_army_action_count': 0, 'red_army_targeted_actions': {}, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': [], 'red_army_base_dissolves': {}, 'red_army_base_build_blocks': [], 'pending_topdeck_uses': 0}

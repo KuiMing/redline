@@ -69,10 +69,8 @@ def check(name, passed, details):
 
 
 def end_turn_from_action(game):
-    # ACTION -> END -> next player's EVENT
-    action_to_end = game.advance_turn_phase()
-    end_to_next = game.advance_turn_phase()
-    return {'action_to_end': action_to_end, 'end_to_next': end_to_next}
+    # 出牌與購買同屬一個行動階段：單次「結束行動階段」就補牌並交棒給下一位玩家。
+    return {'end_action_phase': game.advance_turn_phase()}
 
 
 def run_checks():
@@ -92,13 +90,12 @@ def run_checks():
     after = player_zone_snapshot(player) | {'resources': dict(player.resources), 'moves_left': player.moves_left, 'turn_phase': game.turn_phase.value, 'current_player': game.current_player().name}
     checks.append(check(
         'end_turn_discards_hand_resets_and_draws_to_five',
-        result['action_to_end'].get('success') is True
-        and result['end_to_next'].get('success') is True
+        result['end_action_phase'].get('success') is True
         and after['hand_count'] == 5
         and after['total_cards'] == before['total_cards']
         and after['resources'] == {'money': 0, 'propaganda': 0}
         and after['moves_left'] == 0
-        and after['turn_phase'] == TurnPhase.EVENT.value
+        and after['turn_phase'] == TurnPhase.ACTION.value
         and after['current_player'] == 'other'
         and set(after['hand']).issubset(set(before['hand'] + before['draw_pile'] + before['discard_pile'])),
         {'before': before, 'result': result, 'after': after, 'rule': '回合結束：棄掉當前手牌、重置資源與移動點為 0、補到 5 張且總牌數守恆。'},
@@ -195,8 +192,7 @@ def run_checks():
     after_market = card_names(game.purchase_area)
     checks.append(check(
         'end_turn_refills_random_market_to_static_plus_five',
-        refill_result['action_to_end'].get('success') is True
-        and refill_result['end_to_next'].get('success') is True
+        refill_result['end_action_phase'].get('success') is True
         and before_market_count == static_count + 4
         and len(after_market) == static_count + 5,
         {'before_market_count': before_market_count, 'result': refill_result, 'after_market_count': len(after_market), 'after_market': after_market, 'rule': '回合結束時購買區補回常設 6 張 + 隨機 5 張。'},

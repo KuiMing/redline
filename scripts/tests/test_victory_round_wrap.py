@@ -52,23 +52,21 @@ def _make_game(actor_faction="taiwan_green"):
 
 
 def _advance_current_player_turn(game):
-    """Drive one player's ACTION -> END -> (next player's) ACTION, asserting the
-    game did NOT finish on this turn (so the phase returns to ACTION)."""
+    """Drive one player's whole action phase to its end (single 結束行動階段), asserting
+    the game did NOT finish on this turn (so the phase returns to ACTION)."""
     assert game.turn_phase == TurnPhase.ACTION
-    assert game.advance_turn_phase() == {"success": True}
-    assert game.turn_phase == TurnPhase.END
     assert game.advance_turn_phase() == {"success": True}
     assert game.turn_phase == TurnPhase.ACTION
 
 
 def _advance_expecting_finish(game):
-    """Drive the last player's ACTION -> END -> _end_turn where victory is expected
-    to be declared at the round wrap; _end_turn returns early on FINISHED so the
-    phase never returns to ACTION."""
+    """Drive the last player's action phase to _end_turn where victory is expected to
+    be declared at the round wrap; _end_turn returns early on FINISHED so the phase
+    never returns to ACTION."""
     assert game.turn_phase == TurnPhase.ACTION
     assert game.advance_turn_phase() == {"success": True}
+    assert game.game_phase == GamePhase.FINISHED
     assert game.turn_phase == TurnPhase.END
-    assert game.advance_turn_phase() == {"success": True}
 
 
 def _inside_wall_count_only_condition(game, player):

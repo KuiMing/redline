@@ -192,9 +192,7 @@ def main():
             'moves_left_after': player.moves_left,
         })
 
-        game.advance_turn_phase()
-        trace.append({'step': f'cycle_{cycle}_advance_to_end', 'turn': game.turn, 'turn_phase': game.turn_phase, 'current_player': game.current_player().name})
-
+        # 出牌與購買同屬一個行動階段：一次「結束行動階段」就結束回合並交棒。
         game.advance_turn_phase()
         trace.append({'step': f'cycle_{cycle}_end_turn', 'turn': game.turn, 'turn_phase': game.turn_phase, 'current_player': game.current_player().name})
 

@@ -43,7 +43,12 @@
         "pending_choice": {
           "type": "multi_card_choice",
           "choice_key": "event_discard_self",
+          "interaction_kind": null,
+          "remaining_builds": null,
+          "queueable_card_names": [],
+          "cancellable": false,
           "player_id": "viewer-id",
+          "player_name": null,
           "prompt": "紅軍權貴出逃：請選擇 1 張手牌棄掉。",
           "source_name": "紅軍權貴出逃",
           "count": 1,

@@ -356,7 +356,6 @@ def test_trade_war_purchase_trigger_topdecks_from_discard():
 
     assert_ok(game.advance_turn_phase(), "draw trade war event")
     assert_ok(game.advance_turn_phase(), "enter action")
-    assert_ok(game.advance_turn_phase(), "enter purchase (END) phase")
     result = assert_ok(game.buy_card(static_count), "buy total-cost-4 card")
     assert not result.get("pending_choice"), result
     assert game.event_progress["succeeded"] is True
@@ -383,7 +382,6 @@ def test_trade_war_purchase_trigger_ignores_low_cost_non_anglo_support():
 
     assert_ok(game.advance_turn_phase(), "draw trade war event")
     assert_ok(game.advance_turn_phase(), "enter action")
-    assert_ok(game.advance_turn_phase(), "enter purchase (END) phase")
     assert_ok(game.buy_card(static_count), "buy low-cost non-support card")
     assert game.event_progress["succeeded"] is False
     assert game.pending_choice is None
@@ -402,7 +400,6 @@ def test_trade_war_purchase_trigger_accepts_anglo_support_by_name():
 
     assert_ok(game.advance_turn_phase(), "draw trade war event")
     assert_ok(game.advance_turn_phase(), "enter action")
-    assert_ok(game.advance_turn_phase(), "enter purchase (END) phase")
     result = assert_ok(game.buy_card(static_count), "buy 英美奧援 by name")
     assert not result.get("pending_choice"), result
     assert game.event_progress["succeeded"] is True
@@ -804,7 +801,6 @@ def test_belt_road_southeast_waits_until_red_turn_then_builds_in_region():
 
     assert_ok(game.advance_turn_phase(), "non-red enters action without resolving red effect")
     assert game.turn_phase == TurnPhase.ACTION
-    assert_ok(game.advance_turn_phase(), "non-red enters end")
     assert_ok(game.advance_turn_phase(), "non-red ends turn and red event effect becomes pending")
     assert game.current_player() is red
     # Current model: the turn opens in ACTION; the deferred red auto-effect is applied via

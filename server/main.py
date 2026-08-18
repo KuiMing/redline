@@ -3495,7 +3495,8 @@ def test_setup_belt_road_red_turn_proof(payload: dict):
     initial_state = game.state()
     advance_results = []
     if payload.get("advance_to_red", False):
-        for _ in range(3):
+        # EVENT -> ACTION，再一次「結束行動階段」就把席位交給紅軍（合併後不再需要第三次）。
+        for _ in range(2):
             advance_results.append(game.advance_turn_phase())
             if game.current_player_index == 1 and game.turn_phase == TurnPhase.EVENT:
                 break
@@ -3640,8 +3641,8 @@ def test_setup_era_notification_proof(payload: dict):
         # player incl. Red Army has acted). Advance from Red Army's seat (the last
         # seat) so ending its turn wraps the round and detection activates the era —
         # ending the viewer's own turn mid-round no longer triggers detection.
+        # 出牌與購買已合併為單一行動階段：一次 advance 現在就會結束紅軍回合並跨輪。
         game.current_player_index = game.players.index(red)
-        game.advance_turn_phase()
         game.advance_turn_phase()
         if era_id not in game.era_engine.get_active_eras():
             return {"success": False, "error": f"Era did not activate through lifecycle: {era_id}"}
