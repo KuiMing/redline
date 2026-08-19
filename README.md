@@ -2,6 +2,8 @@
 
 Redline 是一個以瀏覽器 UI 與 Python WebSocket 伺服器實作的桌遊原型專案。
 
+**不會玩、想知道畫面上要點哪裡？** 請看配有真實截圖的 [`docs/PLAYER_GUIDE.md`](docs/PLAYER_GUIDE.md)（玩家手冊）。
+
 ## 啟動遊戲服務
 
 在專案根目錄執行：
@@ -31,6 +33,24 @@ curl -fsS http://127.0.0.1:8000/server-info
 ```
 
 前景執行時按 `Ctrl+C` 即可停止服務。請保留單一 Uvicorn worker，因為目前房間與遊戲狀態儲存在該 Python process 的記憶體中。
+
+### 用 Docker 啟動
+
+也可以用 `Dockerfile` build 出 image 再跑：
+
+```bash
+cd "$HOME/.openclaw/workspace/redline"
+docker build -t redline .
+docker run -d --name redline -p 8000:8000 redline
+```
+
+跟直接跑 `uv run` 一樣只保留單一 worker（同一個限制：房間與遊戲狀態存在單一 process
+的記憶體中，不能跑多個 replica）。`/server-info`（因此 lobby 顯示的「區網連線網址」）
+會依照瀏覽器實際連線時用的 Host 自動判斷正確的網址，不論是直接跑在主機上、Docker
+發布 port、還是之後部署到 Render 這類網域後面的 PaaS，都不需要另外設定。
+
+`static/card-art/` 的卡牌美術（約 78MB）已經是 git 追蹤的既有檔案，`docker build`
+會照常包進 image；不需要額外處理。
 
 ## 資料夾結構
 
