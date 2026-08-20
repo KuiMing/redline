@@ -264,6 +264,7 @@ def server_info(request: Request):
     能正確測到本機區網 IP（在容器裡就測不到主機的區網 IP，只能測到容器自己的
     橋接位址，所以不在容器情境下使用這個 fallback）。
     """
+    from ipaddress import ip_address
     from urllib.parse import urlsplit
 
     forwarded_proto = request.headers.get("x-forwarded-proto")
@@ -292,18 +293,32 @@ def server_info(request: Request):
         except OSError:
             pass
 
-    if port is None and not forwarded_host:
-        # 只有在「沒有反向代理」時才補上伺服器自己實際監聽的 port——有反向代理
-        # 卻沒有明講 port（Render 這類 PaaS 的公開網域本來就不帶 port），代表
-        # 對外其實是走 scheme 的預設 port（https→443／http→80），不能拿容器內部
-        # 監聽的 port（例如 8000）冒充對外的 port。
+    hostname_is_ip = False
+    if hostname:
+        try:
+            ip_address(hostname)
+            hostname_is_ip = True
+        except ValueError:
+            pass
+
+    if port is None and not forwarded_host and (
+        hostname_is_ip or hostname in {"localhost", "0.0.0.0"}
+    ):
+        # 只有直接連到 IP（或本機開發用 hostname）時，才補上伺服器實際監聽的 port。
+        # 網域沒有明講 port 時，代表對外使用 scheme 的預設 port；不能把容器內部的
+        # 8000 加到 Render 等公開網址後面。反向代理提供的 host 也一律以原值為準。
         server_scope = request.scope.get("server") or (None, None)
         port = server_scope[1] or (request.url.port or 8000)
 
     default_port = 443 if scheme == "https" else 80
     base_url = None
     if hostname:
-        base_url = f"{scheme}://{hostname}" if port in (None, default_port) else f"{scheme}://{hostname}:{port}"
+        display_hostname = f"[{hostname}]" if ":" in hostname else hostname
+        base_url = (
+            f"{scheme}://{display_hostname}"
+            if port in (None, default_port)
+            else f"{scheme}://{display_hostname}:{port}"
+        )
 
     return {"base_url": base_url, "lan_ip": hostname, "port": port}
 

@@ -1,7 +1,7 @@
 {
   "summary": {
-    "total": 3,
-    "passed": 3,
+    "total": 6,
+    "passed": 6,
     "failed": 0
   },
   "results": [
@@ -10,8 +10,9 @@
       "ok": true,
       "detail": {
         "info": {
+          "base_url": "http://192.168.10.192:8765",
           "lan_ip": "192.168.10.192",
-          "port": 8000
+          "port": 8765
         }
       }
     },
@@ -19,8 +20,8 @@
       "name": "lobby_shows_lan_url",
       "ok": true,
       "detail": {
-        "lan_url": "http://192.168.10.192:8000",
-        "expected": "http://192.168.10.192:8000"
+        "lan_url": "http://192.168.10.192:8765",
+        "expected": "http://192.168.10.192:8765"
       }
     },
     {
@@ -29,7 +30,37 @@
       "detail": {
         "status": "連線網址已複製，分享給其他玩家後，記得也給他們房間代碼。"
       }
+    },
+    {
+      "name": "server_info_domain_omits_internal_port",
+      "ok": true,
+      "detail": {
+        "info": {
+          "base_url": "https://redline.example.com",
+          "lan_ip": "redline.example.com",
+          "port": null
+        },
+        "expected": "https://redline.example.com"
+      }
+    },
+    {
+      "name": "lobby_shows_domain_without_internal_port",
+      "ok": true,
+      "detail": {
+        "lan_url": "https://redline.example.com",
+        "expected": "https://redline.example.com"
+      }
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "ok": true,
+      "detail": {
+        "errors": []
+      }
     }
   ],
-  "screenshot": "/Users/benmini/.openclaw/workspace/redline/docs/records/playtest-flow/lan_info_display.png"
+  "screenshots": [
+    "docs/records/playtest-flow/lan_info_display.png",
+    "docs/records/playtest-flow/lan_info_domain_without_internal_port.png"
+  ]
 }

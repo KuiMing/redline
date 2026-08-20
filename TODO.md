@@ -1,8 +1,13 @@
 # Redline TODO
 
-最後更新：2026-08-18
+最後更新：2026-08-20
 
 ## 待辦
+
+### P1：公開網域連線網址不可附加容器內部 `:8000`
+- [done] 使用者回報公開部署網址被錯誤附加 `:8000`。根因是請求只有 `X-Forwarded-Proto`、沒有 `X-Forwarded-Host` 時，`/server-info` 把 Uvicorn／容器的內部監聽 port 8000 補到公開網域後面。
+- [done] 現在只有直接偵測到 IP 位址或本機開發 hostname 時，才補上服務監聽 port。未明確指定 port 的公開網域使用 `http`／`https` 預設 port；明確指定的網域 port 仍保留。IPv6 位址同時改用正確的方括號格式。
+- [done] 驗證：`test_server_info.py` **4/4 passed**；正式大廳 Browser proof **6/6 passed**，console 0 errors；完整 pytest **370/370 passed**；Docker image build 成功，實際 container 回傳不含 `:8000` 的 HTTPS 公開網域且 `port: null`。修正後截圖：`docs/records/playtest-flow/lan_info_domain_without_internal_port.png`。
 
 ### P1：合併行動階段與購買階段（出牌／購買可自由交錯）
 - [done] 使用者回報：「出牌 → 結束行動 → 購買 → 無法再出牌」。使用者明確要求不要把 Action 與
