@@ -7,17 +7,19 @@ class VictoryEngine:
         return set(towns_by_ruler.get(ruler, []))
 
     def evaluate(self, game):
-        # 1. Red Army default survival (turn 20 rule)
-        if game.turn > 20:
-            red_player = next((p for p in game.players if p.faction_id == "red_army"), None)
-            if red_player:
-                return True, "red_army"
-
-        # 2. Evaluate each player's faction conditions
+        # 1. Evaluate explicit faction conditions first. The turn-20 Red Army rule
+        # is a survival fallback, not a priority override: if a non-red faction
+        # still satisfies its condition at the round-wrap check, that faction wins.
         for player in game.players:
             win, winner = self._check_player_conditions(player, game)
             if win:
                 return True, winner
+
+        # 2. Red Army default survival (turn 20 rule)
+        if game.turn > 20:
+            red_player = next((p for p in game.players if p.faction_id == "red_army"), None)
+            if red_player:
+                return True, "red_army"
 
         return False, None
 

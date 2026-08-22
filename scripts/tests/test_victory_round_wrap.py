@@ -143,6 +143,24 @@ def test_victory_declared_at_round_wrap_when_condition_survives_red_army_turn():
     assert game.winner == actor.name
 
 
+def test_turn20_completed_kazakh_condition_wins_before_red_survival_fallback():
+    game, actor, _red = _make_game("kazakh")
+    condition = game.faction_by_id["kazakh"]["win_conditions"][0]
+    required_locations = list(condition["required_locations"])
+    winning_towns = list(dict.fromkeys(required_locations + list(game.map["towns"])))[: condition["count"]]
+    assert len(winning_towns) == 19
+    actor.organizations = {town: 1 for town in winning_towns}
+    game.turn = 20
+    game.current_player_index = 0
+
+    _advance_current_player_turn(game)
+    assert game.game_phase != GamePhase.FINISHED
+
+    _advance_expecting_finish(game)
+    assert game.turn == 21
+    assert game.winner == actor.name
+
+
 def test_turn20_red_army_fallback_still_declared_at_round_wrap():
     """The existing turn-20 fallback (Red Army survives to turn 21) is judged at
     the same round-wrap _check_victory() call, which this change does not touch."""

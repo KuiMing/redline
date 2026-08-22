@@ -65,6 +65,32 @@ def test_red_survival_after_turn_20():
     )
 
 
+def test_kazakh_completed_condition_precedes_red_survival():
+    g = make_game()
+    kazakh, red = g.players
+    kazakh.name = 'Ben'
+    kazakh.faction_id = 'kazakh'
+    red.faction_id = 'red_army'
+    condition = g.faction_by_id['kazakh']['win_conditions'][0]
+    towns = list(dict.fromkeys(condition['required_locations'] + list(g.map['towns'])))[:condition['count']]
+    kazakh.organizations = {town: 1 for town in towns}
+    red.organizations = {'北京': 1}
+    g.turn = 21
+    phase, winner = evaluate(g)
+    return ok(
+        'kazakh_completed_condition_precedes_red_survival',
+        phase == GamePhase.FINISHED and winner == kazakh.name,
+        {
+            'phase': phase,
+            'winner': winner,
+            'turn': g.turn,
+            'organization_count': sum(kazakh.organizations.values()),
+            'required_locations': condition['required_locations'],
+            'has_required_locations': all(town in kazakh.organizations for town in condition['required_locations']),
+        },
+    )
+
+
 def test_red_taiwan_14_orgs_early_win():
     g = make_game()
     anti, red = g.players
@@ -136,6 +162,7 @@ def main():
     RECORD_DIR.mkdir(parents=True, exist_ok=True)
     results = [
         test_red_survival_after_turn_20(),
+        test_kazakh_completed_condition_precedes_red_survival(),
         test_red_taiwan_14_orgs_early_win(),
         test_non_red_china_14_orgs_win(),
         test_shared_orgs_count_for_non_red_victory(),

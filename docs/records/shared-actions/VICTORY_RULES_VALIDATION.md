@@ -2,11 +2,15 @@
 
 日期：2026-05-09
 
-summary: {'total': 5, 'passed': 5, 'failed': 0}
+summary: {'total': 6, 'passed': 6, 'failed': 0}
 
 ## red_survival_after_turn_20
 - result: PASS
 - detail: {"phase": "finished", "winner": "red_army", "turn": 21}
+
+## kazakh_completed_condition_precedes_red_survival
+- result: PASS
+- detail: {"phase": "finished", "winner": "Ben", "turn": 21, "organization_count": 19, "required_locations": ["阿勒泰", "塔城", "伊寧"], "has_required_locations": true}
 
 ## red_taiwan_14_orgs_early_win
 - result: PASS

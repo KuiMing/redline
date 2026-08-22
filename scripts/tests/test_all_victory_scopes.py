@@ -155,6 +155,23 @@ def test_every_global_count_and_required_victory_honors_count_and_required_locat
         assert local.victory_engine._check_player_conditions(actor, local)[0] is False, faction_id
 
 
+def test_kazakh_completed_condition_precedes_turn20_red_survival_fallback():
+    game, actor, _red = make_game("kazakh")
+    condition = faction(game, "kazakh")["win_conditions"][0]
+    assert condition == {
+        "type": "count_and_required",
+        "scope": "牆內與牆外",
+        "count": 19,
+        "required_locations": ["阿勒泰", "塔城", "伊寧"],
+    }
+    winning = fill_distinct(condition["required_locations"], list(game.map["towns"]), condition["count"])
+    set_orgs(actor, winning)
+    game.turn = 21
+
+    assert game.victory_engine._check_player_conditions(actor, game) == (True, actor.name)
+    assert game.victory_engine.evaluate(game) == (True, actor.name)
+
+
 def test_red_taiwan_override_requires_taiwan_player_and_fourteen_taiwan_organizations():
     game, _actor, red = make_game(include_taiwan=False)
     taiwan_towns = list(game.towns_by_ruler["臺灣"])
