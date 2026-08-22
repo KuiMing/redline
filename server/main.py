@@ -3635,6 +3635,52 @@ def test_setup_tibet_era_red_build_proof(payload: dict):
     }
 
 
+@app.post("/test/setup-era-event-layout-proof")
+def test_setup_era_event_layout_proof(payload: dict):
+    game_id = str(payload.get("game_id") or "")
+    game = manager.games.get(game_id)
+    if not game:
+        return {"success": False, "error": "Game not found"}
+
+    requested_era_ids = payload.get("era_ids")
+    era_ids = [str(item) for item in requested_era_ids] if isinstance(requested_era_ids, list) and requested_era_ids else [str(payload.get("era_id") or "hong_kong")]
+    eras = []
+    for era_id in era_ids:
+        era = game.era_engine.get_definition(era_id)
+        if not era:
+            return {"success": False, "error": f"Unknown era: {era_id}"}
+        game.era_engine.activate_era(era_id)
+        eras.append(era)
+    era = eras[0]
+    game.era_notification = game._era_notification_payload(era)
+    game.era_notification["runtime_effects"] = {
+        "red_suppression": (era.get("effects") or {}).get("red_suppression"),
+        "revolution_counterattack": (era.get("effects") or {}).get("revolution_counterattack"),
+    }
+
+    event_name = str(payload.get("event_name") or "歲月靜好")
+    event = game._event_by_name(event_name)
+    if not event:
+        return {"success": False, "error": f"Unknown event: {event_name}"}
+    game.current_event = event
+    game.event_progress = {
+        "count": 0,
+        "required": int((event.get("trigger") or {}).get("count", 0) or 0),
+        "succeeded": True,
+        "settled": True,
+        "status": "idle",
+    }
+    game.event_notification = game._event_display_payload()
+    game.event_deck.draw_pile = []
+    game.event_deck.discard_pile = []
+    return {
+        "success": True,
+        "game_id": game_id,
+        "era_ids": era_ids,
+        "event_name": event_name,
+    }
+
+
 @app.post("/test/setup-era-notification-proof")
 def test_setup_era_notification_proof(payload: dict):
     era_id = payload.get("era_id") or payload.get("id") or "mongolia"

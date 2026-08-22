@@ -2413,7 +2413,7 @@ function fillEraAchievementModal(info) {
   return true;
 }
 
-// 縮小後任何玩家（不只觸發者）都要能點右上角的釘選卡片，重新看到該時代關卡的完整說明。
+// 縮小後任何玩家（不只觸發者）都能點分頁列中的時代關卡，重新看到完整說明。
 function openEraAchievementById(eraId) {
   const info = eraAchievementDetailsById[eraId];
   if (!info) return false;
@@ -2427,9 +2427,9 @@ function renderEraAchievement(state) {
   const overlay = document.getElementById('eraAchievementModal');
   const glass = overlay?.querySelector('.era-achievement-glass');
   const art = document.getElementById('eraAchievementArt');
-  const pin = document.getElementById('eraPinnedNotice');
+  const tabs = document.getElementById('activeEraTabs');
   const minimizeBtn = document.getElementById('eraAchievementMinimizeBtn');
-  if (!overlay || !glass || !art || !pin || !minimizeBtn) return;
+  if (!overlay || !glass || !art || !tabs || !minimizeBtn) return;
 
   const info = state.era_notification || null;
   const activeDetails = state.active_era_details || [];
@@ -2446,8 +2446,7 @@ function renderEraAchievement(state) {
     overlay.style.display = 'none';
     glass.classList.remove('era-card-art-active');
     art.innerHTML = '';
-    pin.style.display = 'none';
-    pin.innerHTML = '';
+    tabs.innerHTML = '';
     lastEraNotificationKey = null;
     eraAchievementViewId = null;
     return;
@@ -2455,16 +2454,16 @@ function renderEraAchievement(state) {
 
   minimizeBtn.onclick = minimizeEraAchievement;
 
-  const pinnedHtml = activeDetails.map(item => {
+  const eraTabsHtml = activeDetails.map(item => {
     const remainText = item.remaining == null ? '持續中' : `剩餘 ${item.remaining} 回合`;
-    const activeClass = info && item.id === info.id ? ' active' : '';
-    return `<button type="button" class="era-pin-card${activeClass}" title="點擊查看完整時代關卡說明" onclick="openEraAchievementById('${escapeHtml(String(item.id))}')"><div class="era-pin-title">${escapeHtml(item.name)}</div><div class="era-pin-meta">條件已達成｜${escapeHtml(remainText)}</div><div class="era-pin-hint">點擊查看完整說明</div></button>`;
+    const notifiedClass = info && item.id === info.id ? ' is-notified' : '';
+    const eraId = escapeHtml(String(item.id));
+    return `<button type="button" class="game-tab era-stage-tab${notifiedClass}" data-era-id="${eraId}" title="${escapeHtml(item.name)}｜條件已達成｜${escapeHtml(remainText)}" aria-label="查看 ${escapeHtml(item.name)} 完整說明" onclick="openEraAchievementById('${eraId}')"><span class="era-stage-tab-name">${escapeHtml(item.name)}</span><span class="era-stage-tab-remaining">${escapeHtml(remainText)}</span></button>`;
   }).join('');
-  pin.innerHTML = pinnedHtml;
-  pin.style.display = pinnedHtml ? 'flex' : 'none';
+  tabs.innerHTML = eraTabsHtml;
 
   if (!info) {
-    // 通知已結束（時代到期）但仍有其他生效中的時代：浮窗不自動彈出，釘選卡片仍可點開。
+    // 通知已結束（時代到期）但仍有其他生效中的時代：浮窗不自動彈出，分頁仍可點開。
     lastEraNotificationKey = null;
     if (overlay.style.display !== 'flex') eraAchievementViewId = null;
     return;
@@ -2472,7 +2471,7 @@ function renderEraAchievement(state) {
 
   const key = `${info.id}:${info.remaining ?? 'perm'}`;
   const isOpen = overlay.style.display === 'flex';
-  // 浮窗開著、而且玩家是自己點釘選卡片看別的時代時，不要被最新通知蓋掉內容。
+  // 浮窗開著，而且玩家正透過分頁查看其他時代時，不要被最新通知蓋掉內容。
   const viewing = isOpen && eraAchievementViewId && eraAchievementViewId !== info.id
     ? eraAchievementDetailsById[eraAchievementViewId]
     : info;
@@ -3687,15 +3686,6 @@ async function render(state) {
     const myMoves = me?.moves_left ?? 0;
     const myHand = me?.hand?.length ?? 0;
     const phaseLabel = String(state.turn_phase || '').toLowerCase() === 'action' ? '行動' : String(state.turn_phase || '').toLowerCase() === 'event' ? '事件結算' : String(state.turn_phase || '').toLowerCase() === 'end' ? '購買' : state.turn_phase;
-    const eraStatus = (state.active_era_details || []).map(item => {
-      const remainText = item.remaining == null ? '持續中' : `剩餘 ${item.remaining} 回合`;
-      // 2026-08-09 使用者回報：指揮中心／戰略地圖分頁上方本來就有的時代關卡提示列
-      // 比右上角釘選卡片更顯眼、更直覺，應該直接點這裡看完整說明；四人局最多可能
-      // 同時有 3 個時代關卡生效，每個提示各自對應自己的時代（依 item.id 開啟），
-      // 不會互相蓋掉。
-      return `<button type="button" class="hud-era-pill" title="點擊查看完整時代關卡說明" onclick="openEraAchievementById('${escapeHtml(String(item.id))}')">${escapeHtml(item.name)}｜條件已達成｜${escapeHtml(remainText)}</button>`;
-    }).join('');
-
     const marketModeLabel = state.market_mode === 'all_cards' ? '全部卡牌' : '53 張卡牌';
     hud.innerHTML = `
       <div class="hud-main-row">
@@ -3709,20 +3699,11 @@ async function render(state) {
         <span class="hud-chip hud-chip-market">牌庫模式 ${marketModeLabel}</span>
         ${orgInfo}
       </div>
-      ${eraStatus ? `<div class="hud-era-row">${eraStatus}</div>` : ''}
     `;
 
     const phaseActionBar = document.getElementById('phaseActionBar');
     if (phaseActionBar) phaseActionBar.style.display = state.game_phase === 'main' ? 'flex' : 'none';
-    // 2026-08-09 使用者回報：#phaseActionBar／#gameShell（分頁列＋內容區）原本整條都是
-    // 用寫死的 top 絕對定位堆疊（topBar 48px → hud 42px → phaseActionBar 60px →
-    // gameShell 從 150px 開始），只夠容納「HUD 剛好單行」的假設。只要 .hud-era-row 出現
-    // （任何時代關卡生效中，哪怕只有 1 個），HUD 就會多長出一整行，但下面每一層都還疊在
-    // 原本假設的固定高度上——不只 phaseActionBar 會蓋住時代關卡提示列本身，往下一層的
-    // #gameShell／分頁列也會反過來蓋住 phaseActionBar 的按鈕。畫面上「好像」有東西、
-    // 實際上被蓋住完全點不到，正是使用者會困惑「所以我要點擊哪裡」的根本原因，而且這是
-    // 這次以前就存在的既有 bug，不是這次新增按鈕造成的。改成每次重繪都依實際量到的高度
-    // 逐層動態推算，不論有幾行時代關卡（.hud-era-row 本身也會自動換行）都不會再互相重疊。
+    // 依 HUD 的實際高度定位行動列與遊戲區，避免狀態內容換行後互相重疊。
     const gameShell = document.getElementById('gameShell');
     if (phaseActionBar && hud) {
       const barTop = hud.offsetTop + hud.offsetHeight + 8;
