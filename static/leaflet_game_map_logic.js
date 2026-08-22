@@ -137,6 +137,11 @@ let stickyPlayerErrorTimer = null;
 const MAP_SOCKET_DISCONNECTED_MESSAGE = '與伺服器的連線已中斷，正在自動重新連線；連上後請再按一次。';
 let supportChoiceHighlight = null;
 let supportChoiceHighlightFocusKey = null;
+// The first build-card choice in a loaded game may frame all legal targets so the player can
+// discover the interaction. After that, the player's current center/zoom is authoritative across
+// separate build-card sessions. Candidate markers still refresh, but a later card must not fit all
+// geographically distant targets (for example 香港城 + 洛杉磯) and zoom back out to the world.
+let buildChoiceViewportInitialized = false;
 
 function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 function escapeHtml(value) {
@@ -396,13 +401,19 @@ function renderSupportChoiceHighlights(options = {}) {
 
 function applySupportChoiceHighlight(payload) {
   const nextKey = supportChoiceHighlightKey(payload);
-  const shouldAutoFocus = !!nextKey && nextKey !== supportChoiceHighlightFocusKey;
   supportChoiceHighlight = payload || null;
+  const isBuildChoice = isBuildSupportChoiceHighlight();
+  const shouldAutoFocus = !!nextKey
+    && nextKey !== supportChoiceHighlightFocusKey
+    && (!isBuildChoice || !buildChoiceViewportInitialized);
   if (!nextKey) supportChoiceHighlightFocusKey = null;
   const didAutoFocus = renderSupportChoiceHighlights({ autoFocus: shouldAutoFocus });
   // 只有實際找到地圖座標並完成 setView／fitBounds 後才記錄已聚焦。若 choice 比
   // /map-data 更早抵達，保留 null，讓地圖資料完成初始化時再試一次。
-  if (didAutoFocus) supportChoiceHighlightFocusKey = nextKey;
+  if (didAutoFocus) {
+    supportChoiceHighlightFocusKey = nextKey;
+    if (isBuildChoice) buildChoiceViewportInitialized = true;
+  }
 }
 
 function finalizeMoveSelection(fromTown, toTown) {
@@ -1495,6 +1506,13 @@ window.__armoryDissolveCoexistenceForTest = function (townName) {
 };
 
 window.connectGameMap = function ({ gameId: gid, playerId: pid, resumeToken: token = null }) {
+  const isDifferentGameOrPlayer = mapGameId !== gid || mapPlayerId !== pid;
+  if (isDifferentGameOrPlayer) {
+    supportChoiceHighlight = null;
+    supportChoiceHighlightFocusKey = null;
+    buildChoiceViewportInitialized = false;
+    initialBaseViewDone = false;
+  }
   mapGameId = gid;
   mapPlayerId = pid;
   mapResumeToken = token;

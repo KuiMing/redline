@@ -1,0 +1,112 @@
+{
+  "summary": {
+    "total": 6,
+    "passed": 6,
+    "failed": 0
+  },
+  "service": "http://127.0.0.1:8000",
+  "session": "formal create/join/start/restore; credentials [REDACTED]",
+  "checks": [
+    {
+      "name": "first_build_card_completes_its_own_session",
+      "passed": true,
+      "details": {
+        "center": {
+          "lat": 36.92876661228876,
+          "lng": -4.788400000000015
+        },
+        "zoom": 2
+      }
+    },
+    {
+      "name": "player_selected_los_angeles_view_before_next_card",
+      "passed": true,
+      "details": {
+        "center": {
+          "lat": 34.0522,
+          "lng": -118.2437
+        },
+        "zoom": 8
+      }
+    },
+    {
+      "name": "new_build_card_session_preserves_previous_center_and_zoom",
+      "passed": true,
+      "details": {
+        "before": {
+          "center": {
+            "lat": 34.0522,
+            "lng": -118.2437
+          },
+          "zoom": 8
+        },
+        "after": {
+          "center": {
+            "lat": 34.0522,
+            "lng": -118.2437
+          },
+          "zoom": 8
+        }
+      }
+    },
+    {
+      "name": "remote_los_angeles_target_remains_available_without_forced_zoom_out",
+      "passed": true,
+      "details": {
+        "contains_los_angeles": true,
+        "candidate_count": 3
+      }
+    },
+    {
+      "name": "second_card_two_builds_also_preserve_view",
+      "passed": true,
+      "details": [
+        {
+          "expected_remaining": 1,
+          "before": {
+            "center": {
+              "lat": 34.0522,
+              "lng": -118.2437
+            },
+            "zoom": 8
+          },
+          "after": {
+            "center": {
+              "lat": 34.0522,
+              "lng": -118.2437
+            },
+            "zoom": 8
+          },
+          "preserved": true
+        },
+        {
+          "expected_remaining": 0,
+          "before": {
+            "center": {
+              "lat": 34.0522,
+              "lng": -118.2437
+            },
+            "zoom": 8
+          },
+          "after": {
+            "center": {
+              "lat": 34.0522,
+              "lng": -118.2437
+            },
+            "zoom": 8
+          },
+          "preserved": true
+        }
+      ]
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "passed": true,
+      "details": []
+    }
+  ],
+  "screenshots": [
+    "docs/records/action-cards/build-session-viewport/los_angeles_view_before_second_build_card_20260822.png",
+    "docs/records/action-cards/build-session-viewport/los_angeles_view_preserved_after_second_build_card_20260822.png"
+  ]
+}
