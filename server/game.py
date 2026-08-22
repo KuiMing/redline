@@ -4955,6 +4955,18 @@ class Game:
                 if not action_context.get('card_canceled'):
                     action_result = self.action_engine.execute(card_name, player, self, context=action_context, include_resources=False)
                     if isinstance(action_result, dict) and action_result.get('pending_choice'):
+                        # A declined reaction resumes the same committed card play, but this
+                        # branch used to return before the shared purchase-cost faction
+                        # triggers below. Mirror the direct path for every command/
+                        # organization card that continues through a pending choice.
+                        self._apply_era_play_card_effects(player, played_card)
+                        self._apply_card_play_faction_abilities(
+                            player,
+                            cost_has_money=bool(action_context.get('cost_has_money')),
+                            cost_has_propaganda=bool(action_context.get('cost_has_propaganda')),
+                            played_card=played_card,
+                            used_faction_ability_names=action_context.get('used_faction_ability_names'),
+                        )
                         if not action_context.get('removed_current_card'):
                             if not self._return_borrowed_card_to_owner_topdeck(played_card):
                                 player.deck.discard([played_card])
@@ -5603,6 +5615,18 @@ class Game:
                         extra_context={'era_followup_discard_choice': action_context.get('era_followup_discard_choice')} if action_context.get('era_followup_discard_choice') else None,
                     )
                     if spy_result and spy_result.get('pending_choice'):
+                        # The card is already committed: legality and reaction gating both
+                        # passed, and its dissolve interaction now waits for a town choice.
+                        # Returning here used to skip every purchase-cost faction trigger
+                        # (民族調和／星星之火／商貿組織／基金會／人同此心). Apply the shared
+                        # post-play hook before handing control to the pending interaction.
+                        self._apply_card_play_faction_abilities(
+                            player,
+                            cost_has_money=cost_has_money,
+                            cost_has_propaganda=cost_has_propaganda,
+                            played_card=played_card,
+                            used_faction_ability_names=action_context.get('used_faction_ability_names'),
+                        )
                         if not action_context.get('removed_current_card'):
                             if not self._return_borrowed_card_to_owner_topdeck(played_card):
                                 player.deck.discard([played_card])
@@ -5614,6 +5638,19 @@ class Game:
                     action_result = self.action_engine.execute(card_name, player, self, context=action_context, include_resources=False)
                     if isinstance(action_result, dict) and action_result.get('pending_choice'):
                         self._apply_era_play_card_effects(player, played_card)
+                        # Command/organization cards whose effect opens a pending choice
+                        # returned before the common tail below. They therefore never
+                        # triggered abilities based on the played card's printed purchase
+                        # cost. This includes both builds of 組織經驗乙. The play is already
+                        # committed at this point, so run the same hook used by immediate
+                        # cards exactly once before returning the pending choice.
+                        self._apply_card_play_faction_abilities(
+                            player,
+                            cost_has_money=cost_has_money,
+                            cost_has_propaganda=cost_has_propaganda,
+                            played_card=played_card,
+                            used_faction_ability_names=action_context.get('used_faction_ability_names'),
+                        )
                         if not action_context.get('removed_current_card') and not self._pending_choice_holds_current_card():
                             if not self._return_borrowed_card_to_owner_topdeck(played_card):
                                 player.deck.discard([played_card])

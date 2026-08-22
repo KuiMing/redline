@@ -6,6 +6,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
+import pytest
+
 from server.cards import Card
 from server.game import Game, Player, TurnPhase
 
@@ -199,6 +201,92 @@ def test_card_play_triggered_abilities_fire_once_for_each_ability_family():
             assert first_resources["propaganda"] == before_resources["propaganda"] + 2
             assert player.resources == first_resources
         assert sum(f"triggered {ability}" in entry for entry in game.action_log) == 1
+
+
+@pytest.mark.parametrize(
+    ("faction_id", "base", "ability", "reward"),
+    [
+        ("kazakh", "阿拉木圖", "民族調和", "draw"),
+        ("new_left", "成都", "星星之火", "draw"),
+        ("federalists", "成都", "商貿組織", "draw"),
+        ("uyghur_munich", "慕尼黑", "基金會", "money"),
+        ("gender_revolution", "成都", "人同此心", "propaganda"),
+    ],
+)
+def test_pending_organization_experience_b_fires_each_cost_trigger_family_once(
+    faction_id,
+    base,
+    ability,
+    reward,
+):
+    game, player, red = make_game(faction_id, base)
+    if faction_id == "uyghur_munich":
+        # Keep the fixed base so all printed abilities remain active, but provide a
+        # wall-inner organization from which the distance-restricted build can originate.
+        player.organizations = {"烏魯木齊": 1}
+    red.hand = []
+    player.hand = [Card("組織經驗乙", "organization", {"propaganda": 2})]
+    player.deck.draw_pile = [Card(f"{ability}加抽", "command", {})]
+    before_resources = dict(player.resources)
+    pin_national_people_congress(game)
+
+    played = game.play_card(0, mode="action")
+
+    assert played.get("pending_choice") is True
+    assert game.pending_choice["choice_key"] == "card_build_organization"
+    assert game.event_progress["succeeded"] is True, ability
+    if reward == "draw":
+        assert [card.name for card in player.hand] == [f"{ability}加抽"]
+    elif reward == "money":
+        assert player.resources["money"] == before_resources["money"] + 2
+    else:
+        assert player.resources["propaganda"] == before_resources["propaganda"] + 2
+    reward_snapshot = (list(player.hand), dict(player.resources))
+
+    for _ in range(2):
+        assert game.pending_choice and game.pending_choice["choice_key"] == "card_build_organization"
+        resolved = game.resolve_pending_choice(player.id, 0)
+        assert resolved.get("success") is True
+
+    assert (list(player.hand), dict(player.resources)) == reward_snapshot
+    assert sum(f"triggered {ability}" in entry for entry in game.action_log) == 1
+
+
+def test_pending_spy_interaction_fires_kazakh_cost_trigger_once():
+    game, player, red = make_game("kazakh", "成都")
+    red.hand = []
+    nearby = sorted(game._towns_within_steps(["成都"], max_steps=1) - {"成都"})
+    assert nearby
+    red.organizations = {nearby[0]: 1}
+    player.hand = [Card("內應間諜", "spy", {"propaganda": 2})]
+    player.deck.draw_pile = [Card("民族調和間諜加抽", "command", {})]
+
+    played = game.play_card(0, mode="action", target_player_id=red.id)
+
+    assert played.get("pending_choice") is True
+    assert [card.name for card in player.hand] == ["民族調和間諜加抽"]
+    assert game.turn_log["faction_first_propaganda_triggered"] is True
+    assert sum("triggered 民族調和" in entry for entry in game.action_log) == 1
+
+
+def test_declined_reaction_then_pending_build_still_fires_kazakh_trigger_once():
+    game, player, red = make_game("kazakh", "阿拉木圖")
+    player.hand = [Card("組織經驗乙", "organization", {"propaganda": 2})]
+    player.deck.draw_pile = [Card("民族調和反應後加抽", "command", {})]
+    red.hand = [Card("爆料黑幕", "reaction", {})]
+
+    offered = game.play_card(0, mode="action")
+    assert offered.get("pending_choice") is True
+    assert game.pending_choice["choice_key"] == "cancel_other_player_action"
+    assert not game.turn_log.get("faction_first_propaganda_triggered")
+
+    declined = game.resolve_pending_choice(red.id, 0)
+
+    assert declined.get("pending_choice") is True
+    assert game.pending_choice["choice_key"] == "card_build_organization"
+    assert [card.name for card in player.hand] == ["民族調和反應後加抽"]
+    assert game.turn_log["faction_first_propaganda_triggered"] is True
+    assert sum("triggered 民族調和" in entry for entry in game.action_log) == 1
 
 
 def test_npc_counts_every_card_trigger_ability_family():

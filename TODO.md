@@ -11,10 +11,10 @@
 - [done] 驗證：哈薩克 19 個組織且包含阿勒泰、塔城、伊寧，在第 21 回合會判定哈薩克玩家 `Ben` 獲勝；勝利規則 validator **6/6 passed**，round-wrap 勝利測試 **4/4 passed**，共同勝利 validator **3/3 passed**，完整 pytest **372/372 passed**。
 
 ### P1：建立組織的卡牌效果可能漏觸發陣營能力
-- [todo] 回報情境：哈薩克使用「組織經驗乙」建立組織時，應同步觸發哈薩克的陣營能力；目前實際流程疑似沒有觸發。
-- [todo] 風險範圍：問題可能不只存在於「組織經驗乙」。凡是透過卡牌效果、免費建立、連續建立、排隊式 pending choice 或其他特殊路徑建立組織的卡牌，都可能繞過共用的陣營能力觸發點。
-- [todo] 需檢查：盤點所有會建立組織的行動卡與特殊效果；逐一確認每次成功建立都走同一套建立後觸發流程。需覆蓋「組織經驗乙」的兩次建立、部分建立成功、無合法目標、建立被取消、效果受到距離限制，以及其他具有「建立組織時」陣營能力的陣營。
-- [todo] 驗證要求：先加入哈薩克＋「組織經驗乙」的失敗回歸測試，再建立卡牌效果 × 陣營能力觸發路徑的稽核表與參數化測試，避免只修單一卡名。
+- [done] 回報情境：哈薩克使用「組織經驗乙」時，應依該牌的印刷購買費用含宣傳，觸發每回合第一次的「民族調和」並抽 1 張牌；實際流程沒有觸發。
+- [done] 根因：不是建立組織後觸發，而是打出購買費用含宣傳的牌時觸發。`play_card()` 對立即完成的卡牌會執行共用 `_apply_card_play_faction_abilities()`；但組織經驗乙、間諜卡及其他會開啟 pending choice 的行動卡在共用尾端以前提前 `return`，所以跳過所有購買費用型陣營能力。反應視窗結束後再進入 pending choice 的路徑也有相同問題。
+- [done] 修正：所有已通過合法性與反應守門、且已正式打出的 pending action card，會在返回選擇流程以前執行同一套購買費用型陣營能力觸發。涵蓋一般指令／組織卡、間諜互動及對手放棄取消後才開啟的 pending choice。兩次建立只會觸發一次，不會在每次選擇城鎮時重複觸發。
+- [done] 稽核與測試：加入「組織經驗乙」× 民族調和、星星之火、商貿組織、基金會、人同此心的參數化測試，並覆蓋間諜 pending path、反應視窗放棄取消、連續兩次建立、全國人大召開事件進度及單回合只觸發一次。能力觸發測試 **32/32 passed**；正式 session Browser proof **6/6 passed**；完整 pytest **379/379 passed**；Browser console 0 errors。報告：`docs/records/faction-ui/trigger-audit/KAZAKH_ORG_EXPERIENCE_B_TRIGGER_VALIDATION.json`；截圖：`docs/records/faction-ui/trigger-audit/kazakh_org_experience_b_triggers_national_harmony_20260822.png`。
 
 ### P2：事件卡底部控制項遮住卡面內容
 - [done] 根因：事件卡縮圖把「點擊放大查看」與「無效果／進行中」狀態做成絕對定位的 overlay，直接疊在 180×147 卡面底部。

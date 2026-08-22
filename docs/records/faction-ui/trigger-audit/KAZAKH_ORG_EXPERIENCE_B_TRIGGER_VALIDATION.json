@@ -1,0 +1,55 @@
+{
+  "summary": {
+    "total": 6,
+    "passed": 6,
+    "failed": 0
+  },
+  "service": "http://127.0.0.1:8000",
+  "session": "formal create/join/start/restore; credentials [REDACTED]",
+  "checks": [
+    {
+      "name": "organization_experience_b_opens_first_build_choice",
+      "passed": true,
+      "details": null
+    },
+    {
+      "name": "national_harmony_draws_immediately_after_committed_play",
+      "passed": true,
+      "details": [
+        "抽牌D"
+      ]
+    },
+    {
+      "name": "national_harmony_triggers_once_on_card_play",
+      "passed": true,
+      "details": [
+        "[Turn 1] 哈薩克 triggered 民族調和 and drew 1 card"
+      ]
+    },
+    {
+      "name": "two_build_resolutions_do_not_duplicate_trigger",
+      "passed": true,
+      "details": {
+        "trigger_logs": [
+          "[Turn 1] 哈薩克 triggered 民族調和 and drew 1 card"
+        ],
+        "organization_counts": {
+          "total": 3,
+          "inside_wall": 0,
+          "outside_wall": 3
+        }
+      }
+    },
+    {
+      "name": "battle_log_ui_shows_national_harmony_trigger",
+      "passed": true,
+      "details": null
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "passed": true,
+      "details": []
+    }
+  ],
+  "screenshot": "docs/records/faction-ui/trigger-audit/kazakh_org_experience_b_triggers_national_harmony_20260822.png"
+}
