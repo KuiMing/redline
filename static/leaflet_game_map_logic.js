@@ -268,14 +268,17 @@ function supportChoiceHighlightKey(payload) {
 
 function focusSupportChoiceTargets(bounds) {
   if (!bounds.length) return;
-  // 一帶一路南洋有 11 個合法目標，從緬北延伸到雅加達與馬尼拉。把所有點連同
-  // 110px padding 一起 fitBounds 會縮到 zoom 3，畫面包含印度、中國與澳洲大片區域，
-  // 反而看不清主要南洋城鎮。此事件首次開啟地圖時固定聚焦南洋核心；所有候選 marker
-  // 仍完整保留，玩家可平移至雅加達、馬尼拉或北部邊緣目標。
+  // 「一帶一路 南洋」必須聚焦於紅軍當下實際可以建立組織的城鎮。
+  // 不使用固定中心，也不把範圍外的南洋城鎮納入計算。依目前 pending choice
+  // 的合法候選動態計算 bounds；窄螢幕可自動降低 zoom，候選較少時最多放大到 6。
   if (isBeltRoadNanyangSupportChoice()) {
-    map.setView([8, 104], 5, { animate: false });
+    const legalBounds = L.latLngBounds(bounds);
+    map.invalidateSize({ pan: false });
+    const legalZoom = Math.min(6, map.getBoundsZoom(legalBounds, false, L.point(24, 24)));
+    map.setView(legalBounds.getCenter(), legalZoom, { animate: false });
     return;
   }
+
   if (bounds.length === 1) {
     const currentZoom = Number(map.getZoom());
     map.setView(bounds[0], Math.max(Number.isFinite(currentZoom) ? currentZoom : 4, 8), { animate: false });

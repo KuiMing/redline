@@ -35,15 +35,15 @@ Summary: 7/7 passed
 {
   "activeView": "map",
   "center": {
-    "lat": 8,
-    "lng": 104
+    "lat": 8.1384,
+    "lng": 108.57015
   },
-  "zoom": 5,
+  "zoom": 4,
   "bounds": {
-    "north": 19.145168196205297,
-    "south": -3.425691524418062,
-    "east": 124.14550781250001,
-    "west": 83.89160156250001
+    "north": 29.6880527498568,
+    "south": -14.604847155053898,
+    "east": 148.79882812500003,
+    "west": 68.29101562500001
   },
   "candidateVisibility": [
     {
@@ -74,27 +74,27 @@ Summary: 7/7 passed
     {
       "lat": 22.4856,
       "lng": 103.9707,
-      "visible": false
+      "visible": true
     },
     {
       "lat": 21.7,
       "lng": 101.3,
-      "visible": false
+      "visible": true
     },
     {
       "lat": 20.05,
       "lng": 98.8,
-      "visible": false
+      "visible": true
     },
     {
       "lat": 22.17,
       "lng": 99.2,
-      "visible": false
+      "visible": true
     },
     {
       "lat": -6.2088,
       "lng": 106.8456,
-      "visible": false
+      "visible": true
     },
     {
       "lat": 14.5995,
@@ -111,83 +111,79 @@ Summary: 7/7 passed
 ```json
 {
   "center": {
-    "lat": 8,
-    "lng": 104
+    "lat": 8.1384,
+    "lng": 108.57015
   },
-  "zoom": 5,
+  "zoom": 4,
   "bounds": {
-    "north": 19.145168196205297,
-    "south": -3.425691524418062,
-    "east": 124.14550781250001,
-    "west": 83.89160156250001
+    "north": 29.6880527498568,
+    "south": -14.604847155053898,
+    "east": 148.79882812500003,
+    "west": 68.29101562500001
   }
 }
 ```
 
-## PASS — nanyang_core_candidates_are_visible_without_forcing_all_edges_into_view
+## PASS — all_current_legal_nanyang_build_towns_are_visible
 
 ```json
-{
-  "visible": 6,
-  "total": 11,
-  "candidates": [
-    {
-      "lat": 16.8661,
-      "lng": 96.1561,
-      "visible": true
-    },
-    {
-      "lat": 18.196,
-      "lng": 120.5927,
-      "visible": true
-    },
-    {
-      "lat": 3.139,
-      "lng": 101.6869,
-      "visible": true
-    },
-    {
-      "lat": 1.3521,
-      "lng": 103.8198,
-      "visible": true
-    },
-    {
-      "lat": 13.7563,
-      "lng": 100.5018,
-      "visible": true
-    },
-    {
-      "lat": 22.4856,
-      "lng": 103.9707,
-      "visible": false
-    },
-    {
-      "lat": 21.7,
-      "lng": 101.3,
-      "visible": false
-    },
-    {
-      "lat": 20.05,
-      "lng": 98.8,
-      "visible": false
-    },
-    {
-      "lat": 22.17,
-      "lng": 99.2,
-      "visible": false
-    },
-    {
-      "lat": -6.2088,
-      "lng": 106.8456,
-      "visible": false
-    },
-    {
-      "lat": 14.5995,
-      "lng": 120.9842,
-      "visible": true
-    }
-  ]
-}
+[
+  {
+    "lat": 16.8661,
+    "lng": 96.1561,
+    "visible": true
+  },
+  {
+    "lat": 18.196,
+    "lng": 120.5927,
+    "visible": true
+  },
+  {
+    "lat": 3.139,
+    "lng": 101.6869,
+    "visible": true
+  },
+  {
+    "lat": 1.3521,
+    "lng": 103.8198,
+    "visible": true
+  },
+  {
+    "lat": 13.7563,
+    "lng": 100.5018,
+    "visible": true
+  },
+  {
+    "lat": 22.4856,
+    "lng": 103.9707,
+    "visible": true
+  },
+  {
+    "lat": 21.7,
+    "lng": 101.3,
+    "visible": true
+  },
+  {
+    "lat": 20.05,
+    "lng": 98.8,
+    "visible": true
+  },
+  {
+    "lat": 22.17,
+    "lng": 99.2,
+    "visible": true
+  },
+  {
+    "lat": -6.2088,
+    "lng": 106.8456,
+    "visible": true
+  },
+  {
+    "lat": 14.5995,
+    "lng": 120.9842,
+    "visible": true
+  }
+]
 ```
 
 ## PASS — map_hint_matches_event_candidates

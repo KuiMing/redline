@@ -2524,7 +2524,7 @@ function openEthnicRitualGuessModal() {
 
 function strategicMapUrl() {
   const url = new URL('/static/leaflet_game_map.html', window.location.origin);
-  url.searchParams.set('v', 'belt-road-nanyang-focus-20260822');
+  url.searchParams.set('v', 'nanyang-legal-build-bounds-20260822');
   if (gameId) url.searchParams.set('gameId', gameId);
   if (playerId) url.searchParams.set('playerId', playerId);
   return url.toString();

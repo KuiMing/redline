@@ -152,11 +152,11 @@ def main() -> None:
         page.evaluate("closeEventReveal?.()")
         page.wait_for_function("document.getElementById('eventRevealModal')?.style.display === 'none'")
         geometry = frame.evaluate(
-            """primaryTowns => {
+            """input => {
               const map = window.__redlinePlayableMap;
               const center = map.getCenter();
               const bounds = map.getBounds();
-              const named = Object.fromEntries(primaryTowns.map(name => {
+              const named = Object.fromEntries(input.primaryTowns.map(name => {
                 const town = byName.get(name);
                 return [name, town ? {
                   lat: town.lat,
@@ -164,24 +164,44 @@ def main() -> None:
                   visible: bounds.contains([town.lat, town.lon]),
                 } : null];
               }));
+              const legalPoints = input.candidateNames
+                .map(name => byName.get(name))
+                .filter(Boolean)
+                .map(town => [town.lat, town.lon]);
+              const legalBounds = L.latLngBounds(legalPoints);
               return {
                 center: {lat: center.lat, lng: center.lng},
                 zoom: map.getZoom(),
                 bounds: {north: bounds.getNorth(), south: bounds.getSouth(), east: bounds.getEast(), west: bounds.getWest()},
                 primary: named,
+                legalVisibility: Object.fromEntries(input.candidateNames.map(name => {
+                  const town = byName.get(name);
+                  return [name, !!town && bounds.contains([town.lat, town.lon])];
+                })),
+                legalBounds: {
+                  center: {lat: legalBounds.getCenter().lat, lng: legalBounds.getCenter().lng},
+                  north: legalBounds.getNorth(), south: legalBounds.getSouth(),
+                  east: legalBounds.getEast(), west: legalBounds.getWest(),
+                },
+                legalFitZoom: Object.fromEntries([0, 8, 12, 16, 24, 32, 48, 110].map(padding => [
+                  String(padding), map.getBoundsZoom(legalBounds, false, L.point(padding, padding)),
+                ])),
                 hint: document.getElementById('interactionHint')?.textContent || '',
               };
             }""",
-            primary_towns,
+            {"primaryTowns": primary_towns, "candidateNames": candidate_names},
         )
         page.screenshot(path=str(SCREENSHOT), full_page=True)
 
         center = geometry["center"]
+        expected_center = geometry["legalBounds"]["center"]
+        expected_zoom = min(6, geometry["legalFitZoom"]["24"])
         record(
-            "nanyang_focus_uses_concentrated_region_view",
-            geometry["zoom"] >= 5
-            and -1 <= center["lat"] <= 18
-            and 98 <= center["lng"] <= 112,
+            "nanyang_focus_matches_current_legal_build_town_bounds",
+            geometry["zoom"] == expected_zoom
+            and abs(center["lat"] - expected_center["lat"]) < 0.1
+            and abs(center["lng"] - expected_center["lng"]) < 0.1
+            and all(geometry["legalVisibility"].values()),
             geometry,
         )
         record(

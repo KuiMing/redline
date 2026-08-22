@@ -140,21 +140,23 @@ def main() -> None:
         console_errors.extend(observer_errors)
         browser.close()
 
-    visible_candidate_count = sum(item["visible"] for item in geometry["candidateVisibility"])
+    all_candidates_visible = bool(geometry["candidateVisibility"]) and all(
+        item["visible"] for item in geometry["candidateVisibility"]
+    )
     center = geometry["center"]
     center_in_nanyang = -10 <= center["lat"] <= 25 and 90 <= center["lng"] <= 130
     record(checks, "event_choice_opens_strategic_map", geometry["activeView"] == "map", geometry)
     record(
         checks,
         "map_auto_focuses_nanyang_instead_of_beijing_base",
-        center_in_nanyang and geometry["zoom"] >= 5,
+        center_in_nanyang and 4 <= geometry["zoom"] <= 6,
         {"center": center, "zoom": geometry["zoom"], "bounds": geometry["bounds"]},
     )
     record(
         checks,
-        "nanyang_core_candidates_are_visible_without_forcing_all_edges_into_view",
-        visible_candidate_count >= 6,
-        {"visible": visible_candidate_count, "total": len(geometry["candidateVisibility"]), "candidates": geometry["candidateVisibility"]},
+        "all_current_legal_nanyang_build_towns_are_visible",
+        all_candidates_visible,
+        geometry["candidateVisibility"],
     )
     record(
         checks,

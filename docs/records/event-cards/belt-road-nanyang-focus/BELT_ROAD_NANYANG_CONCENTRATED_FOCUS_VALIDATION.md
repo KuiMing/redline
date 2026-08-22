@@ -39,20 +39,20 @@ Summary: **7/7 passed**
 }
 ```
 
-## PASS — nanyang_focus_uses_concentrated_region_view
+## PASS — nanyang_focus_matches_current_legal_build_town_bounds
 
 ```json
 {
   "center": {
-    "lat": 8,
-    "lng": 104
+    "lat": 8.1384,
+    "lng": 108.57015
   },
-  "zoom": 5,
+  "zoom": 4,
   "bounds": {
-    "north": 19.145168196205297,
-    "south": -3.425691524418062,
-    "east": 124.14550781250001,
-    "west": 83.89160156250001
+    "north": 29.6880527498568,
+    "south": -14.604847155053898,
+    "east": 148.79882812500003,
+    "west": 68.29101562500001
   },
   "primary": {
     "曼谷": {
@@ -70,6 +70,39 @@ Summary: **7/7 passed**
       "lng": 103.8198,
       "visible": true
     }
+  },
+  "legalVisibility": {
+    "仰光": true,
+    "佬沃": true,
+    "吉隆坡": true,
+    "新加坡": true,
+    "曼谷": true,
+    "老街": true,
+    "芒賽": true,
+    "賀猛": true,
+    "邦康": true,
+    "雅加達": true,
+    "馬尼拉": true
+  },
+  "legalBounds": {
+    "center": {
+      "lat": 8.1384,
+      "lng": 108.57015
+    },
+    "north": 22.4856,
+    "south": -6.2088,
+    "east": 120.9842,
+    "west": 96.1561
+  },
+  "legalFitZoom": {
+    "0": 4,
+    "8": 4,
+    "12": 4,
+    "16": 4,
+    "24": 4,
+    "32": 4,
+    "48": 4,
+    "110": 4
   },
   "hint": "一帶一路 南洋：在指定區域免費建立 1 個組織。 可建立城鎮：11 個。尚可建立組織：1 個。地圖上已用中性色外框標出可選城鎮。請點選中性色外框城鎮，然後使用左側「在目前城鎮建立組織（效果）」按鈕完成建立。"
 }
