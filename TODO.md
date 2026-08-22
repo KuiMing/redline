@@ -28,9 +28,10 @@
 - [todo] 規則已確認：紅軍勝利敘事中的牆內／牆外「殘部」數字只統計非紅軍陣營的組織，不包含紅軍自己的組織。需同步驗證勝利摘要表、各觀看陣營視角、共同勝利情境及零組織邊界。
 
 ### P1：實際遊戲仍把時代關卡顯示在右上角
-- [todo] 2026-08-22 最新回報：實際遊戲畫面中的「[哈薩克]伊塔事件」仍以右上角浮動卡片顯示，並直接覆蓋事件卡。畫面上沒有出現在主分頁列。回報截圖：`docs/records/playtest-flow/era-stage-still-pinned-over-event-card_20260822.jpg`。
-- [todo] 期望：生效中的時代關卡只能出現在主分頁列的動態 Tab；右上角不得再產生 `#eraPinnedNotice`／`.era-pin-card` 或同等浮動提示。需確認實際服務版本、靜態資源 cache bust、瀏覽器快取／Service Worker、部署 commit，以及 WebSocket 重繪是否仍載入舊模板或舊 JavaScript。
-- [todo] 驗證要求：直接使用回報發生的實際網址與 session 重現，不只驗證本地測試服務。需在時代關卡與事件卡同時存在時確認：右上角只有事件卡、時代關卡位於主分頁列、三個同時生效仍為三個 Tab，重新整理與 session 恢復後也不會回到右上角。
+- [done] 2026-08-22 最新回報：實際遊戲畫面中的「[哈薩克]伊塔事件」與第二次遊戲的香港時代關卡仍以右上角浮動卡片顯示，直接覆蓋事件卡。回報截圖：`docs/records/playtest-flow/era-stage-still-pinned-over-event-card_20260822.jpg`。
+- [done] 根因：玩家使用的 `:8000` 服務仍由 2026-08-18 建置的舊 `redline:latest` container 提供。實際 `/` 回傳 `style.css?v=hk-base-relocation-20260814`、`app.js?v=no-legal-build-card-guard-20260816` 與 `#eraPinnedNotice`；Git `origin/main` 雖已有 Tab 修正，但執行中的 container 從未更新，所以與瀏覽器快取或陣營無關。
+- [done] 修正：為避免中斷正在進行的遊戲及清除記憶體內房間，沒有重啟 container；直接將最新版 `index.html`、`app.js`、`style.css` 更新到執行中的 `/app/static/`。實際 `:8000` 現在回傳 `active-era-tabs-20260820` 資源、包含 `#activeEraTabs`，且不再包含 `#eraPinnedNotice`。另已重新建置 `redline:latest`，確保下次重啟不會退回舊版。
+- [done] 驗證：直接對實際 `http://127.0.0.1:8000` 使用正式 create／join／start／session restore 流程，三個時代關卡 Tab Browser proof **4/4 passed**；涵蓋香港、哈薩克、滿洲、1280×720、1024×768、每個 Tab 開啟正確說明及 console 0 errors。右上角只剩事件卡。報告：`docs/records/playtest-flow/LIVE_ERA_TABS_FORMAL_SESSION_VALIDATION.json`；截圖：`docs/records/playtest-flow/live_three_era_tabs_1280x720_20260822.png`、`docs/records/playtest-flow/live_three_era_tabs_1024x768_20260822.png`。
 
 ### P2：生效中的時代關卡改用獨立 Tab
 - [done] 設計調整：不再使用右上角釘選提示，也不再將時代關卡狀態放在 HUD。每個生效中的時代關卡會在主分頁列產生一個獨立 Tab；四人局同時生效 3 個時代關卡時，會顯示 3 個 Tab。

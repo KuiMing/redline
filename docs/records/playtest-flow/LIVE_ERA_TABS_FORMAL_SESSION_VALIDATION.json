@@ -1,0 +1,205 @@
+{
+  "summary": {
+    "total": 4,
+    "passed": 4,
+    "failed": 0
+  },
+  "service": "http://127.0.0.1:8000",
+  "session": "formal create/join/start/restore; credentials [REDACTED]",
+  "checks": [
+    {
+      "name": "live_service_three_tabs_at_1280x720",
+      "passed": true,
+      "details": {
+        "tabs": [
+          {
+            "id": "hong_kong",
+            "text": "[香港]香港人被自殺剩餘 2 回合",
+            "title": "[香港]香港人被自殺｜條件已達成｜剩餘 2 回合",
+            "rect": {
+              "left": 381.3125,
+              "top": 174.5,
+              "right": 557.3125,
+              "bottom": 208.5,
+              "width": 176,
+              "height": 34
+            }
+          },
+          {
+            "id": "kazakh",
+            "text": "[哈薩克]伊塔事件持續中",
+            "title": "[哈薩克]伊塔事件｜條件已達成｜持續中",
+            "rect": {
+              "left": 565.3125,
+              "top": 174.5,
+              "right": 741.3125,
+              "bottom": 208.5,
+              "width": 176,
+              "height": 34
+            }
+          },
+          {
+            "id": "manchuria",
+            "text": "[滿洲]滿洲地方派系凝聚剩餘 1 回合",
+            "title": "[滿洲]滿洲地方派系凝聚｜條件已達成｜剩餘 1 回合",
+            "rect": {
+              "left": 749.3125,
+              "top": 174.5,
+              "right": 925.3125,
+              "bottom": 208.5,
+              "width": 176,
+              "height": 34
+            }
+          }
+        ],
+        "tabBar": {
+          "left": 0,
+          "top": 168,
+          "right": 1280,
+          "bottom": 216,
+          "width": 1280,
+          "height": 48
+        },
+        "eraGroup": {
+          "left": 381.3125,
+          "top": 174.5,
+          "right": 925.3125,
+          "bottom": 208.5,
+          "width": 544,
+          "height": 34
+        },
+        "event": {
+          "left": 1076,
+          "top": 0,
+          "right": 1256,
+          "bottom": 147,
+          "width": 180,
+          "height": 147
+        },
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "eventTabOverlap": false,
+        "oldPinnedNoticeCount": 0,
+        "oldPinnedNoticeDisplay": "absent",
+        "duplicateHudPillCount": 0
+      }
+    },
+    {
+      "name": "live_service_each_tab_opens_matching_era",
+      "passed": true,
+      "details": {
+        "results": [
+          {
+            "eraId": "hong_kong",
+            "tab": "[香港]香港人被自殺",
+            "modalTitle": "[香港]香港人被自殺｜條件已達成",
+            "matched": true
+          },
+          {
+            "eraId": "kazakh",
+            "tab": "[哈薩克]伊塔事件",
+            "modalTitle": "[哈薩克]伊塔事件｜條件已達成",
+            "matched": true
+          },
+          {
+            "eraId": "manchuria",
+            "tab": "[滿洲]滿洲地方派系凝聚",
+            "modalTitle": "[滿洲]滿洲地方派系凝聚｜條件已達成",
+            "matched": true
+          }
+        ],
+        "passed": true
+      }
+    },
+    {
+      "name": "live_service_three_tabs_at_1024x768",
+      "passed": true,
+      "details": {
+        "tabs": [
+          {
+            "id": "hong_kong",
+            "text": "[香港]香港人被自殺剩餘 2 回合",
+            "title": "[香港]香港人被自殺｜條件已達成｜剩餘 2 回合",
+            "rect": {
+              "left": 305.0500183105469,
+              "top": 235.60000610351562,
+              "right": 445.8500061035156,
+              "bottom": 262.79998779296875,
+              "width": 140.79998779296875,
+              "height": 27.199981689453125
+            }
+          },
+          {
+            "id": "kazakh",
+            "text": "[哈薩克]伊塔事件持續中",
+            "title": "[哈薩克]伊塔事件｜條件已達成｜持續中",
+            "rect": {
+              "left": 452.25,
+              "top": 235.60000610351562,
+              "right": 593.0499877929688,
+              "bottom": 262.79998779296875,
+              "width": 140.79998779296875,
+              "height": 27.199981689453125
+            }
+          },
+          {
+            "id": "manchuria",
+            "text": "[滿洲]滿洲地方派系凝聚剩餘 1 回合",
+            "title": "[滿洲]滿洲地方派系凝聚｜條件已達成｜剩餘 1 回合",
+            "rect": {
+              "left": 599.4500122070312,
+              "top": 235.60000610351562,
+              "right": 740.25,
+              "bottom": 262.79998779296875,
+              "width": 140.79998779296875,
+              "height": 27.199981689453125
+            }
+          }
+        ],
+        "tabBar": {
+          "left": 0,
+          "top": 230.40000915527344,
+          "right": 1024,
+          "bottom": 268.79998779296875,
+          "width": 1024,
+          "height": 38.39997863769531
+        },
+        "eraGroup": {
+          "left": 305.0500183105469,
+          "top": 235.60000610351562,
+          "right": 740.25,
+          "bottom": 262.79998779296875,
+          "width": 435.1999816894531,
+          "height": 27.199981689453125
+        },
+        "event": {
+          "left": 860.7999877929688,
+          "top": 96,
+          "right": 1004.7999877929688,
+          "bottom": 213.60000610351562,
+          "width": 144,
+          "height": 117.60000610351562
+        },
+        "viewport": {
+          "width": 1024,
+          "height": 768
+        },
+        "eventTabOverlap": false,
+        "oldPinnedNoticeCount": 0,
+        "oldPinnedNoticeDisplay": "absent",
+        "duplicateHudPillCount": 0
+      }
+    },
+    {
+      "name": "live_service_console_has_no_errors",
+      "passed": true,
+      "details": []
+    }
+  ],
+  "screenshots": [
+    "docs/records/playtest-flow/live_three_era_tabs_1280x720_20260822.png",
+    "docs/records/playtest-flow/live_three_era_tabs_1024x768_20260822.png"
+  ]
+}
