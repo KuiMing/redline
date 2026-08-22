@@ -35,15 +35,15 @@ Summary: 7/7 passed
 {
   "activeView": "map",
   "center": {
-    "lat": 8.407168163601076,
-    "lng": 108.63281250000001
+    "lat": 8,
+    "lng": 104
   },
-  "zoom": 3,
+  "zoom": 5,
   "bounds": {
-    "north": 47.635783590864854,
-    "south": -35.02999636902567,
-    "east": 189.14062500000003,
-    "west": 28.125000000000004
+    "north": 19.145168196205297,
+    "south": -3.425691524418062,
+    "east": 124.14550781250001,
+    "west": 83.89160156250001
   },
   "candidateVisibility": [
     {
@@ -74,27 +74,27 @@ Summary: 7/7 passed
     {
       "lat": 22.4856,
       "lng": 103.9707,
-      "visible": true
+      "visible": false
     },
     {
       "lat": 21.7,
       "lng": 101.3,
-      "visible": true
+      "visible": false
     },
     {
       "lat": 20.05,
       "lng": 98.8,
-      "visible": true
+      "visible": false
     },
     {
       "lat": 22.17,
       "lng": 99.2,
-      "visible": true
+      "visible": false
     },
     {
       "lat": -6.2088,
       "lng": 106.8456,
-      "visible": true
+      "visible": false
     },
     {
       "lat": 14.5995,
@@ -102,7 +102,7 @@ Summary: 7/7 passed
       "visible": true
     }
   ],
-  "hint": "一帶一路 南洋：在指定區域免費建立 1 個組織。 可建立城鎮：11 個。地圖上已用中性色外框標出可選城鎮。請點選中性色外框城鎮，然後使用左側「在目前城鎮建立組織（效果）」按鈕完成建立。"
+  "hint": "一帶一路 南洋：在指定區域免費建立 1 個組織。 可建立城鎮：11 個。尚可建立組織：1 個。地圖上已用中性色外框標出可選城鎮。請點選中性色外框城鎮，然後使用左側「在目前城鎮建立組織（效果）」按鈕完成建立。"
 }
 ```
 
@@ -111,85 +111,89 @@ Summary: 7/7 passed
 ```json
 {
   "center": {
-    "lat": 8.407168163601076,
-    "lng": 108.63281250000001
+    "lat": 8,
+    "lng": 104
   },
-  "zoom": 3,
+  "zoom": 5,
   "bounds": {
-    "north": 47.635783590864854,
-    "south": -35.02999636902567,
-    "east": 189.14062500000003,
-    "west": 28.125000000000004
+    "north": 19.145168196205297,
+    "south": -3.425691524418062,
+    "east": 124.14550781250001,
+    "west": 83.89160156250001
   }
 }
 ```
 
-## PASS — all_legal_nanyang_candidates_are_visible
+## PASS — nanyang_core_candidates_are_visible_without_forcing_all_edges_into_view
 
 ```json
-[
-  {
-    "lat": 16.8661,
-    "lng": 96.1561,
-    "visible": true
-  },
-  {
-    "lat": 18.196,
-    "lng": 120.5927,
-    "visible": true
-  },
-  {
-    "lat": 3.139,
-    "lng": 101.6869,
-    "visible": true
-  },
-  {
-    "lat": 1.3521,
-    "lng": 103.8198,
-    "visible": true
-  },
-  {
-    "lat": 13.7563,
-    "lng": 100.5018,
-    "visible": true
-  },
-  {
-    "lat": 22.4856,
-    "lng": 103.9707,
-    "visible": true
-  },
-  {
-    "lat": 21.7,
-    "lng": 101.3,
-    "visible": true
-  },
-  {
-    "lat": 20.05,
-    "lng": 98.8,
-    "visible": true
-  },
-  {
-    "lat": 22.17,
-    "lng": 99.2,
-    "visible": true
-  },
-  {
-    "lat": -6.2088,
-    "lng": 106.8456,
-    "visible": true
-  },
-  {
-    "lat": 14.5995,
-    "lng": 120.9842,
-    "visible": true
-  }
-]
+{
+  "visible": 6,
+  "total": 11,
+  "candidates": [
+    {
+      "lat": 16.8661,
+      "lng": 96.1561,
+      "visible": true
+    },
+    {
+      "lat": 18.196,
+      "lng": 120.5927,
+      "visible": true
+    },
+    {
+      "lat": 3.139,
+      "lng": 101.6869,
+      "visible": true
+    },
+    {
+      "lat": 1.3521,
+      "lng": 103.8198,
+      "visible": true
+    },
+    {
+      "lat": 13.7563,
+      "lng": 100.5018,
+      "visible": true
+    },
+    {
+      "lat": 22.4856,
+      "lng": 103.9707,
+      "visible": false
+    },
+    {
+      "lat": 21.7,
+      "lng": 101.3,
+      "visible": false
+    },
+    {
+      "lat": 20.05,
+      "lng": 98.8,
+      "visible": false
+    },
+    {
+      "lat": 22.17,
+      "lng": 99.2,
+      "visible": false
+    },
+    {
+      "lat": -6.2088,
+      "lng": 106.8456,
+      "visible": false
+    },
+    {
+      "lat": 14.5995,
+      "lng": 120.9842,
+      "visible": true
+    }
+  ]
+}
 ```
 
 ## PASS — map_hint_matches_event_candidates
 
 ```json
-"一帶一路 南洋：在指定區域免費建立 1 個組織。 可建立城鎮：11 個。地圖上已用中性色外框標出可選城鎮。請點選中性色外框城鎮，然後使用左側「在目前城鎮建立組織（效果）」按鈕完成建立。"
+"一帶一路 南洋：在指定區域免費建立 1 個組織。 可建立城鎮：11 個。尚可建立組織：1 個。地圖上已用中性色外框標出可選城鎮。請點選中性色外框城鎮，然後使用左側「在目前城鎮建立組織（效果）」按鈕完成建立。"
 ```
 
 ## PASS — non_acting_viewer_keeps_own_base_initial_focus

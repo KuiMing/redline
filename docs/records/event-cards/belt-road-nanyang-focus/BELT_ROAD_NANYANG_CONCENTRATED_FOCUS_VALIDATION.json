@@ -1,0 +1,137 @@
+{
+  "summary": {
+    "total": 7,
+    "passed": 7,
+    "failed": 0
+  },
+  "service": "http://127.0.0.1:8000",
+  "session": "formal create/join/start/restore; credentials [REDACTED]",
+  "checks": [
+    {
+      "name": "prior_build_session_and_player_view_are_established",
+      "passed": true,
+      "details": {
+        "center": {
+          "lat": 39.9042,
+          "lng": 116.4074
+        },
+        "zoom": 9
+      }
+    },
+    {
+      "name": "formal_red_turn_has_nanyang_event_choice",
+      "passed": true,
+      "details": {
+        "choice_key": "event_build_organization",
+        "region": "southeast_asia",
+        "candidate_names": [
+          "仰光",
+          "佬沃",
+          "吉隆坡",
+          "新加坡",
+          "曼谷",
+          "老街",
+          "芒賽",
+          "賀猛",
+          "邦康",
+          "雅加達",
+          "馬尼拉"
+        ]
+      }
+    },
+    {
+      "name": "nanyang_focus_uses_concentrated_region_view",
+      "passed": true,
+      "details": {
+        "center": {
+          "lat": 8,
+          "lng": 104
+        },
+        "zoom": 5,
+        "bounds": {
+          "north": 19.145168196205297,
+          "south": -3.425691524418062,
+          "east": 124.14550781250001,
+          "west": 83.89160156250001
+        },
+        "primary": {
+          "曼谷": {
+            "lat": 13.7563,
+            "lng": 100.5018,
+            "visible": true
+          },
+          "吉隆坡": {
+            "lat": 3.139,
+            "lng": 101.6869,
+            "visible": true
+          },
+          "新加坡": {
+            "lat": 1.3521,
+            "lng": 103.8198,
+            "visible": true
+          }
+        },
+        "hint": "一帶一路 南洋：在指定區域免費建立 1 個組織。 可建立城鎮：11 個。尚可建立組織：1 個。地圖上已用中性色外框標出可選城鎮。請點選中性色外框城鎮，然後使用左側「在目前城鎮建立組織（效果）」按鈕完成建立。"
+      }
+    },
+    {
+      "name": "primary_nanyang_towns_are_visible",
+      "passed": true,
+      "details": {
+        "曼谷": {
+          "lat": 13.7563,
+          "lng": 100.5018,
+          "visible": true
+        },
+        "吉隆坡": {
+          "lat": 3.139,
+          "lng": 101.6869,
+          "visible": true
+        },
+        "新加坡": {
+          "lat": 1.3521,
+          "lng": 103.8198,
+          "visible": true
+        }
+      }
+    },
+    {
+      "name": "all_legal_targets_remain_in_choice_and_hint",
+      "passed": true,
+      "details": {
+        "candidate_count": 11,
+        "candidate_names": [
+          "仰光",
+          "佬沃",
+          "吉隆坡",
+          "新加坡",
+          "曼谷",
+          "老街",
+          "芒賽",
+          "賀猛",
+          "邦康",
+          "雅加達",
+          "馬尼拉"
+        ],
+        "hint": "一帶一路 南洋：在指定區域免費建立 1 個組織。 可建立城鎮：11 個。尚可建立組織：1 個。地圖上已用中性色外框標出可選城鎮。請點選中性色外框城鎮，然後使用左側「在目前城鎮建立組織（效果）」按鈕完成建立。"
+      }
+    },
+    {
+      "name": "non_acting_viewer_keeps_own_base_focus",
+      "passed": true,
+      "details": {
+        "center": {
+          "lat": 25.033,
+          "lng": 121.5654
+        },
+        "zoom": 9
+      }
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "passed": true,
+      "details": []
+    }
+  ],
+  "screenshot": "docs/records/event-cards/belt-road-nanyang-focus/belt_road_nanyang_concentrated_focus_20260822.png"
+}

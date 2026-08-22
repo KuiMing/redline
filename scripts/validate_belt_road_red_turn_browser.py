@@ -57,6 +57,8 @@ def run_case(browser, screenshot_dir: Path, *, stale_visual_build: bool, recover
     )
     before = page.evaluate("window.lastGameState")
     page.frame_locator("iframe").locator("body").wait_for(timeout=15000)
+    page.evaluate("closeEventReveal?.()")
+    page.wait_for_function("document.getElementById('eventRevealModal')?.style.display === 'none'")
     if recovery_action == "advance":
         page.locator("#advanceStepBtn").click()
     else:
@@ -66,17 +68,21 @@ def run_case(browser, screenshot_dir: Path, *, stale_visual_build: bool, recover
         timeout=15000,
     )
     after_build = page.evaluate("window.lastGameState")
-    if after_build.get("turn_phase") != "end":
+    if after_build.get("current_player") != "BEN":
+        page.evaluate("closeEventReveal?.()")
         page.locator("#advanceStepBtn").click()
-    page.wait_for_function("window.lastGameState && window.lastGameState.turn_phase === 'end'", timeout=15000)
+    page.wait_for_function(
+        "window.lastGameState && window.lastGameState.current_player === 'BEN' && !window.lastGameState.pending_choice",
+        timeout=15000,
+    )
     after_advance = page.evaluate("window.lastGameState")
-    screenshot_path = screenshot_dir / f"{case_name}_after_bangkok_build_purchase_phase.png"
+    screenshot_path = screenshot_dir / f"{case_name}_after_bangkok_build_turn_advanced.png"
     page.screenshot(path=str(screenshot_path), full_page=True)
     page.close()
 
     return {
         "case": case_name,
-        "url": url,
+        "url": "[REDACTED]",
         "screenshot": str(screenshot_path),
         "before": {
             "turn_phase": before.get("turn_phase"),
@@ -94,7 +100,7 @@ def run_case(browser, screenshot_dir: Path, *, stale_visual_build: bool, recover
         "after_advance": {
             "turn_phase": after_advance.get("turn_phase"),
             "pending_choice": after_advance.get("pending_choice"),
-            "phase_label": "購買" if after_advance.get("turn_phase") == "end" else after_advance.get("turn_phase"),
+            "phase_label": after_advance.get("turn_phase"),
             "log_tail": after_advance.get("action_log", [])[-4:],
         },
     }

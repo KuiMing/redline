@@ -268,6 +268,14 @@ function supportChoiceHighlightKey(payload) {
 
 function focusSupportChoiceTargets(bounds) {
   if (!bounds.length) return;
+  // 一帶一路南洋有 11 個合法目標，從緬北延伸到雅加達與馬尼拉。把所有點連同
+  // 110px padding 一起 fitBounds 會縮到 zoom 3，畫面包含印度、中國與澳洲大片區域，
+  // 反而看不清主要南洋城鎮。此事件首次開啟地圖時固定聚焦南洋核心；所有候選 marker
+  // 仍完整保留，玩家可平移至雅加達、馬尼拉或北部邊緣目標。
+  if (isBeltRoadNanyangSupportChoice()) {
+    map.setView([8, 104], 5, { animate: false });
+    return;
+  }
   if (bounds.length === 1) {
     const currentZoom = Number(map.getZoom());
     map.setView(bounds[0], Math.max(Number.isFinite(currentZoom) ? currentZoom : 4, 8), { animate: false });
@@ -294,6 +302,13 @@ function isBuildSupportChoiceHighlight() {
     supportChoiceHighlight.actionKind === 'build'
     || ['event_build_organization', 'era_red_build_near_target', 'card_build_organization'].includes(supportChoiceHighlight.choiceKey)
   );
+}
+
+function isBeltRoadNanyangSupportChoice() {
+  return supportChoiceHighlight?.actionKind === 'build'
+    && supportChoiceHighlight?.choiceKey === 'event_build_organization'
+    && supportChoiceHighlight?.region === 'southeast_asia'
+    && supportChoiceHighlight?.sourceName === '一帶一路 南洋';
 }
 
 function isDissolveSupportChoiceHighlight() {
@@ -405,7 +420,7 @@ function applySupportChoiceHighlight(payload) {
   const isBuildChoice = isBuildSupportChoiceHighlight();
   const shouldAutoFocus = !!nextKey
     && nextKey !== supportChoiceHighlightFocusKey
-    && (!isBuildChoice || !buildChoiceViewportInitialized);
+    && (!isBuildChoice || !buildChoiceViewportInitialized || isBeltRoadNanyangSupportChoice());
   if (!nextKey) supportChoiceHighlightFocusKey = null;
   const didAutoFocus = renderSupportChoiceHighlights({ autoFocus: shouldAutoFocus });
   // 只有實際找到地圖座標並完成 setView／fitBounds 後才記錄已聚焦。若 choice 比

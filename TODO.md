@@ -44,9 +44,9 @@
 - [done] 驗證：先以正式 session 重現第二張卡將洛杉磯 `zoom 8` 重設為跨洲 `zoom 2`；修正後正式 create／join／start／session restore Browser proof **6/6 passed**。第二張「組織經驗乙」開始後，中心仍為洛杉磯、zoom 仍為 8，洛杉磯仍在 3 個合法候選中；該卡後續兩次建立也不改變視角。既有同 session 鏡頭 proof **5/5 passed**；宣傳家首次建立自動聚焦 proof **6/6 passed**；完整 pytest 重跑 **379/379 passed**；Browser console 0 errors。報告：`docs/records/action-cards/build-session-viewport/NEW_BUILD_SESSION_PRESERVES_MAP_VIEWPORT_VALIDATION.json`；截圖：`docs/records/action-cards/build-session-viewport/los_angeles_view_before_second_build_card_20260822.png`、`docs/records/action-cards/build-session-viewport/los_angeles_view_preserved_after_second_build_card_20260822.png`。
 
 ### P2：一帶一路南洋在紅軍階段發動時，地圖聚焦不夠集中
-- [todo] 回報情境：紅軍在紅軍階段發動「一帶一路南洋」時，戰略地圖雖然會切到相關區域，但 zoom in 程度似乎不足，畫面沒有集中在南洋範圍。
-- [todo] 期望：效果發動後，地圖應自動聚焦南洋的合法目標或效果範圍；主要南洋城鎮需清楚可見，不應讓範圍外城鎮把視角拉得過遠。
-- [todo] 需檢查：紅軍階段的一帶一路 pending choice／地圖互動投影、南洋區域城鎮集合、初次 `fitBounds`／zoom 上下限，以及延遲地圖初始化是否覆蓋效果聚焦。
+- [done] 根因：紅軍進入「一帶一路 南洋」建立流程時，地圖沿用所有 11 個合法目標的通用 `fitBounds`，並加入 `[110, 110]` padding。目標從緬北延伸至雅加達與馬尼拉，結果被縮到 `zoom 3`，可視範圍西至經度 28、東至 189、北至緯度 47、南至 -35，包含大量印度、中國與澳洲周邊區域，主要南洋城鎮顯示過小。
+- [done] 修正：建立互動 payload 現在保留 canonical `region`。當互動同時符合 `event_build_organization`、`region: southeast_asia` 與來源「一帶一路 南洋」時，地圖使用南洋專用中心 `[8, 104]` 與 `zoom 5`。曼谷、吉隆坡、新加坡等核心城鎮會清楚可見；全部 11 個合法候選 marker 與提示仍完整保留，玩家可平移至雅加達、馬尼拉或北部邊緣目標。此事件具有專用聚焦優先權，即使玩家先前已完成其他建立 session，事件發動時仍會從原視角切至南洋；非行動玩家仍保留自己的根據地視角。
+- [done] 驗證：正式 create／join／start／session restore proof 先完成一個既有建立 session，將地圖手動設為北京 `zoom 9`，再發動事件；地圖正確切至南洋 `[8, 104]`、`zoom 5`。集中聚焦 Browser proof **7/7 passed**；既有南洋地圖 proof **7/7 passed**；紅軍回合事件建立／過期候選復原 Browser regression 成功；跨建立 session 視角 proof **6/6 passed**；完整 pytest **379/379 passed**；Browser console 0 errors。報告：`docs/records/event-cards/belt-road-nanyang-focus/BELT_ROAD_NANYANG_CONCENTRATED_FOCUS_VALIDATION.json`；截圖：`docs/records/event-cards/belt-road-nanyang-focus/belt_road_nanyang_concentrated_focus_20260822.png`。
 
 ### P1：公開網域連線網址不可附加容器內部 `:8000`
 - [done] 使用者回報公開部署網址被錯誤附加 `:8000`。根因是請求只有 `X-Forwarded-Proto`、沒有 `X-Forwarded-Host` 時，`/server-info` 把 Uvicorn／容器的內部監聽 port 8000 補到公開網域後面。

@@ -1837,6 +1837,7 @@ function eventBuildChoiceMapPayload(choice, sourceName = '', resolvedTitle = '')
     actionKind: 'build',
     remainingBuilds: Math.max(1, Number(choice.remaining_builds || 1)),
     choiceKey: choice.choice_key,
+    region: choice.region || '',
     sourceName: sourceName || choice.source_name || resolvedTitle || '建立組織',
     prompt: playerMessageZhTw(choice.prompt, '') || '事件卡效果：請在戰略地圖選擇可建立組織的城鎮。',
     towns: towns.map((entry, index) => ({
@@ -2523,7 +2524,7 @@ function openEthnicRitualGuessModal() {
 
 function strategicMapUrl() {
   const url = new URL('/static/leaflet_game_map.html', window.location.origin);
-  url.searchParams.set('v', 'build-session-view-persistence-20260822');
+  url.searchParams.set('v', 'belt-road-nanyang-focus-20260822');
   if (gameId) url.searchParams.set('gameId', gameId);
   if (playerId) url.searchParams.set('playerId', playerId);
   return url.toString();

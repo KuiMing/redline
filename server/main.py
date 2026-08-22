@@ -3577,11 +3577,25 @@ def test_setup_elite_defection_event_proof(payload: dict):
 
 
 @app.post("/test/setup-belt-road-red-turn-proof")
-def test_setup_belt_road_red_turn_proof(payload: dict):
-    players = [(str(uuid.uuid4()), "BEN"), (str(uuid.uuid4()), "紅軍")]
-    game = Game(players, market_mode="all_cards")
-    viewer = game.players[0]
-    red = game.players[1]
+async def test_setup_belt_road_red_turn_proof(payload: dict):
+    requested_game_id = str(payload.get("game_id") or "")
+    game = manager.games.get(requested_game_id) if requested_game_id else None
+    if game:
+        viewer_id = str(payload.get("player_id") or "")
+        red_id = str(payload.get("red_player_id") or "")
+        viewer = next((player for player in game.players if player.id == viewer_id), None)
+        red = next((player for player in game.players if player.id == red_id), None)
+        if not viewer or not red or viewer is red:
+            return {"success": False, "error": "Formal proof players not found"}
+        if game.players.index(viewer) != 0 or game.players.index(red) != 1:
+            return {"success": False, "error": "Formal proof requires viewer seat 0 and red seat 1"}
+        game_id = requested_game_id
+    else:
+        players = [(str(uuid.uuid4()), "BEN"), (str(uuid.uuid4()), "紅軍")]
+        game = Game(players, market_mode="all_cards")
+        viewer = game.players[0]
+        red = game.players[1]
+        game_id = str(uuid.uuid4())
     viewer.faction_id = payload.get("viewer_faction", "liberals")
     red.faction_id = "red_army"
     viewer.base = payload.get("viewer_base", "臺北")
@@ -3617,7 +3631,6 @@ def test_setup_belt_road_red_turn_proof(payload: dict):
         if game.pending_choice and game.pending_choice.get("choice_key") == "event_build_organization":
             red.organizations[stale_town] = max(1, red.organizations.get(stale_town, 0))
 
-    game_id = str(uuid.uuid4())
     manager.games[game_id] = game
     manager.connections[game_id] = manager.connections.get(game_id, {})
     lobby[game_id] = [(p.id, p.name) for p in game.players]
@@ -3625,6 +3638,8 @@ def test_setup_belt_road_red_turn_proof(payload: dict):
     lobby_factions[game_id] = {p.id: p.faction_id for p in game.players}
     lobby_bases[game_id] = {p.id: p.base for p in game.players if p.base}
     lobby_ready[game_id] = {p.id: True for p in game.players}
+    if requested_game_id:
+        await broadcast_game_state(game_id, game)
     return {
         "success": True,
         "game_id": game_id,
