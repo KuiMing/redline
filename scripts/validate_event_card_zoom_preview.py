@@ -14,9 +14,10 @@ RECORD_DIR = BASE / "docs/records/event-cards"
 CHROME = Path("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
 JSON_PATH = RECORD_DIR / "EVENT_CARD_ZOOM_PREVIEW_VALIDATION.json"
 MD_PATH = RECORD_DIR / "EVENT_CARD_ZOOM_PREVIEW_VALIDATION.md"
-OPEN_SHOT = RECORD_DIR / "EVENT_CARD_ZOOM_PREVIEW_OPEN_2026_07_28.png"
-PINNED_SHOT = RECORD_DIR / "EVENT_CARD_COMPACT_MAP_1280_2026_07_28.png"
-PINNED_NARROW_SHOT = RECORD_DIR / "EVENT_CARD_COMPACT_MAP_1024_2026_07_28.png"
+OPEN_SHOT = RECORD_DIR / "EVENT_CARD_ZOOM_PREVIEW_OPEN_2026_08_20.png"
+PINNED_SHOT = RECORD_DIR / "EVENT_CARD_COMPACT_MAP_1280_2026_08_20.png"
+PINNED_NARROW_SHOT = RECORD_DIR / "EVENT_CARD_COMPACT_MAP_1024_2026_08_20.png"
+IDLE_UNOBSTRUCTED_SHOT = RECORD_DIR / "EVENT_CARD_IDLE_UNOBSTRUCTED_2026_08_20.png"
 
 
 def post_json(path: str, payload: dict) -> dict:
@@ -47,13 +48,13 @@ def main() -> None:
     check(checks, "all_event_art_assets_are_bound", len(event_art_files) == 13 and "EVENT_CARD_ART_NAMES" in js and "/static/card-art/events/" in js, [path.name for path in event_art_files])
     check(
         checks,
-        "zoom_animation_compact_panel_and_current_cache_bust_exist",
+        "zoom_animation_compact_panel_and_cache_busting_exist",
         "@keyframes event-card-zoom-in" in css
-        and "style.css?v=playtest-batch2-20260729" in html
-        and "app.js?v=playtest-batch2-20260729" in html
+        and 'href="/static/style.css?v=' in html
+        and 'src="/static/app.js?v=' in html
         and "width: 180px" in css
         and "height: 147px" in css,
-        "zoom keyframes + compact event panel + current static cache bust",
+        "zoom keyframes + compact event panel + semantic cache-busting references",
     )
 
     setup = post_json(
@@ -169,11 +170,24 @@ def main() -> None:
             panelBox.bottom <= toolbar.top ||
             panelBox.top >= toolbar.bottom
           );
+          const imageRect = image?.getBoundingClientRect();
+          const controls = [...panel.querySelectorAll('.event-panel-open-hint, .event-art-status-chip')].map(control => {
+            const rect = control.getBoundingClientRect();
+            const visible = getComputedStyle(control).display !== 'none' && rect.width > 0 && rect.height > 0;
+            const overlapsImage = Boolean(visible && imageRect && !(
+              rect.right <= imageRect.left || rect.left >= imageRect.right ||
+              rect.bottom <= imageRect.top || rect.top >= imageRect.bottom
+            ));
+            return {className: control.className, visible, overlapsImage};
+          });
           return {
             role: panel.getAttribute('role'),
             tabindex: panel.getAttribute('tabindex'),
+            ariaLabel: panel.getAttribute('aria-label'),
+            title: panel.getAttribute('title'),
             text: panel.innerText,
             imageLoaded: !!image && image.naturalWidth === 1350,
+            controls,
             panel: panelBox,
             toolbar,
             overlaps,
@@ -187,6 +201,19 @@ def main() -> None:
             and panel_state["panel"]["bottom"] <= panel_state["toolbar"]["top"]
             and not panel_state["overlaps"],
             panel_state,
+        )
+        check(
+            checks,
+            "compact_event_card_has_no_controls_over_artwork",
+            panel_state["imageLoaded"]
+            and not any(control["visible"] for control in panel_state["controls"])
+            and "點擊放大查看" in (panel_state["ariaLabel"] or "")
+            and "進行中" in (panel_state["ariaLabel"] or ""),
+            {
+                "controls": panel_state["controls"],
+                "ariaLabel": panel_state["ariaLabel"],
+                "title": panel_state["title"],
+            },
         )
         page.screenshot(path=str(PINNED_SHOT), full_page=True)
 
@@ -247,7 +274,7 @@ def main() -> None:
             panel_state["role"] == "button"
             and panel_state["tabindex"] == "0"
             and panel_state["imageLoaded"]
-            and "點擊放大查看" in panel_state["text"]
+            and "點擊放大查看" in (panel_state["ariaLabel"] or "")
             and reopened["display"] == "flex"
             and reopened["animation"] == "event-card-zoom-in"
             and reopened["imageAlt"] == "香港抗暴之戰完整卡面",
@@ -257,6 +284,42 @@ def main() -> None:
         page.keyboard.press("Escape")
         page.wait_for_function("getComputedStyle(document.getElementById('eventRevealModal')).display === 'none'")
         check(checks, "escape_also_closes_preview", True, "Escape closed the overlay")
+
+        idle_setup = post_json(
+            "/test/setup-event-card-proof",
+            {"event_name": "歲月靜好", "current_event_active": True, "event_status": "idle", "viewer_faction": "taiwan"},
+        )
+        idle_url = f"{BASE_URL}{idle_setup['url']}&v=event-card-idle-unobstructed"
+        page.goto(idle_url, wait_until="domcontentloaded")
+        page.wait_for_function("window.lastGameState && window.lastGameState.current_event", timeout=15000)
+        page.locator("#eventRevealModal").wait_for(state="visible", timeout=8000)
+        page.keyboard.press("Escape")
+        page.locator('#gameTabs [data-view="map"]').click()
+        page.wait_for_timeout(250)
+        idle_panel_state = page.evaluate("""() => {
+          const panel = document.getElementById('eventCardPanel');
+          const image = panel.querySelector('.event-card-art-image');
+          const controls = [...panel.querySelectorAll('.event-panel-open-hint, .event-art-status-chip')].map(control => ({
+            className: control.className,
+            display: getComputedStyle(control).display,
+          }));
+          return {
+            ariaLabel: panel.getAttribute('aria-label'),
+            title: panel.getAttribute('title'),
+            imageLoaded: image?.naturalWidth === 1350 && image?.naturalHeight === 1100,
+            controls,
+          };
+        }""")
+        check(
+            checks,
+            "idle_event_thumbnail_keeps_no_effect_status_off_the_artwork",
+            idle_panel_state["imageLoaded"]
+            and not idle_panel_state["controls"]
+            and "無效果" in (idle_panel_state["ariaLabel"] or "")
+            and "點擊放大查看" in (idle_panel_state["ariaLabel"] or ""),
+            idle_panel_state,
+        )
+        page.screenshot(path=str(IDLE_UNOBSTRUCTED_SHOT), full_page=True)
         check(checks, "browser_console_has_no_errors", not console_errors, console_errors)
         browser.close()
 
@@ -274,6 +337,7 @@ def main() -> None:
             str(OPEN_SHOT.relative_to(BASE)),
             str(PINNED_SHOT.relative_to(BASE)),
             str(PINNED_NARROW_SHOT.relative_to(BASE)),
+            str(IDLE_UNOBSTRUCTED_SHOT.relative_to(BASE)),
         ],
     }
     JSON_PATH.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -285,6 +349,7 @@ def main() -> None:
         f"- Open screenshot: `{OPEN_SHOT.relative_to(BASE)}`",
         f"- Pinned screenshot: `{PINNED_SHOT.relative_to(BASE)}`",
         f"- Narrow pinned screenshot: `{PINNED_NARROW_SHOT.relative_to(BASE)}`",
+        f"- Idle unobstructed screenshot: `{IDLE_UNOBSTRUCTED_SHOT.relative_to(BASE)}`",
         "",
     ]
     for item in checks:

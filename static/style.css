@@ -2494,16 +2494,6 @@ button.player-status-discard-card:focus-visible {
   color: #c6f6d5;
 }
 
-.event-panel-open-hint {
-  margin-top: 7px;
-  padding-top: 6px;
-  border-top: 1px solid rgba(255, 214, 128, 0.18);
-  color: rgba(255, 225, 163, 0.72);
-  font-size: 11px;
-  font-weight: 800;
-  text-align: right;
-}
-
 .event-reveal-overlay {
   z-index: 90;
   cursor: zoom-out;
@@ -2628,8 +2618,7 @@ button.player-status-discard-card:focus-visible {
 }
 
 .event-card-art-shell.event-card-art-load-failed .event-card-art-image,
-.event-card-art-shell.event-card-art-load-failed .event-art-runtime-status,
-.event-card-art-shell.event-card-art-load-failed .event-art-status-chip {
+.event-card-art-shell.event-card-art-load-failed .event-art-runtime-status {
   display: none;
 }
 
@@ -2638,35 +2627,6 @@ button.player-status-discard-card:focus-visible {
   height: 100%;
   overflow: auto;
   padding: 10px;
-}
-
-.event-art-status-chip {
-  position: absolute;
-  right: 7px;
-  bottom: 7px;
-  z-index: 2;
-  padding: 4px 8px;
-  border: 1px solid rgba(255, 232, 183, 0.72);
-  border-radius: 999px;
-  color: #fff2cf;
-  background: rgba(5, 9, 14, 0.88);
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.5);
-  font-size: 11px;
-  font-weight: 900;
-}
-
-.event-card-art-shell > .event-panel-open-hint {
-  position: absolute;
-  left: 7px;
-  bottom: 7px;
-  z-index: 2;
-  margin: 0;
-  padding: 4px 7px;
-  border: 0;
-  border-radius: 999px;
-  color: rgba(255, 242, 207, 0.92);
-  background: rgba(5, 9, 14, 0.82);
-  font-size: 10px;
 }
 
 .event-card-art-shell.expanded {

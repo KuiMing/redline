@@ -1,10 +1,11 @@
 # Event Card Zoom Preview Validation
 
-Summary: 11/11 passed
+Summary: 13/13 passed
 
-- Open screenshot: `docs/records/event-cards/EVENT_CARD_ZOOM_PREVIEW_OPEN_2026_07_28.png`
-- Pinned screenshot: `docs/records/event-cards/EVENT_CARD_COMPACT_MAP_1280_2026_07_28.png`
-- Narrow pinned screenshot: `docs/records/event-cards/EVENT_CARD_COMPACT_MAP_1024_2026_07_28.png`
+- Open screenshot: `docs/records/event-cards/EVENT_CARD_ZOOM_PREVIEW_OPEN_2026_08_20.png`
+- Pinned screenshot: `docs/records/event-cards/EVENT_CARD_COMPACT_MAP_1280_2026_08_20.png`
+- Narrow pinned screenshot: `docs/records/event-cards/EVENT_CARD_COMPACT_MAP_1024_2026_08_20.png`
+- Idle unobstructed screenshot: `docs/records/event-cards/EVENT_CARD_IDLE_UNOBSTRUCTED_2026_08_20.png`
 
 ## PASS — dedicated_event_reveal_overlay_exists
 
@@ -32,10 +33,10 @@ Summary: 11/11 passed
 ]
 ```
 
-## PASS — zoom_animation_compact_panel_and_current_cache_bust_exist
+## PASS — zoom_animation_compact_panel_and_cache_busting_exist
 
 ```json
-"zoom keyframes + compact event panel + current static cache bust"
+"zoom keyframes + compact event panel + semantic cache-busting references"
 ```
 
 ## PASS — turn_start_auto_opens_centered_zoom_preview
@@ -47,7 +48,7 @@ Summary: 11/11 passed
   "text": "進行中\n任務進度 0/1\n非紅軍任務進行中\n點擊任意地方關閉",
   "imageCount": 1,
   "image": {
-    "src": "http://127.0.0.1:8000/static/card-art/events/%E9%A6%99%E6%B8%AF%E6%8A%97%E6%9A%B4%E4%B9%8B%E6%88%B0.png",
+    "src": "http://127.0.0.1:8767/static/card-art/events/%E9%A6%99%E6%B8%AF%E6%8A%97%E6%9A%B4%E4%B9%8B%E6%88%B0.png",
     "alt": "香港抗暴之戰完整卡面",
     "naturalWidth": 1350,
     "naturalHeight": 1100
@@ -72,7 +73,7 @@ Summary: 11/11 passed
   "text": "進行中\n任務進度 0/1\n非紅軍任務進行中\n點擊任意地方關閉",
   "imageCount": 1,
   "image": {
-    "src": "http://127.0.0.1:8000/static/card-art/events/%E9%A6%99%E6%B8%AF%E6%8A%97%E6%9A%B4%E4%B9%8B%E6%88%B0.png",
+    "src": "http://127.0.0.1:8767/static/card-art/events/%E9%A6%99%E6%B8%AF%E6%8A%97%E6%9A%B4%E4%B9%8B%E6%88%B0.png",
     "alt": "香港抗暴之戰完整卡面",
     "naturalWidth": 1350,
     "naturalHeight": 1100
@@ -94,8 +95,11 @@ Summary: 11/11 passed
 {
   "role": "button",
   "tabindex": "0",
-  "text": "任務進度 0/1\n點擊放大查看",
+  "ariaLabel": "香港抗暴之戰，進行中，點擊放大查看",
+  "title": "香港抗暴之戰｜進行中｜點擊放大查看",
+  "text": "",
   "imageLoaded": true,
+  "controls": [],
   "panel": {
     "left": 1076,
     "top": 0,
@@ -106,13 +110,23 @@ Summary: 11/11 passed
   },
   "toolbar": {
     "left": 948,
-    "top": 226,
+    "top": 244,
     "right": 1252,
-    "bottom": 261,
+    "bottom": 283,
     "width": 304,
-    "height": 35
+    "height": 39
   },
   "overlaps": false
+}
+```
+
+## PASS — compact_event_card_has_no_controls_over_artwork
+
+```json
+{
+  "controls": [],
+  "ariaLabel": "香港抗暴之戰，進行中，點擊放大查看",
+  "title": "香港抗暴之戰｜進行中｜點擊放大查看"
 }
 ```
 
@@ -121,18 +135,18 @@ Summary: 11/11 passed
 ```json
 {
   "panel": {
-    "left": 835.2000122070312,
+    "left": 860.7999877929688,
     "top": 96,
-    "right": 979.2000122070312,
+    "right": 1004.7999877929688,
     "bottom": 213.60000610351562,
     "width": 144,
     "height": 117.60000610351562
   },
   "toolbar": {
-    "left": 886.4000424913539,
-    "top": 276.80000112248564,
-    "right": 1129.600054309626,
-    "bottom": 304.80000357792295
+    "left": 758.400036769308,
+    "top": 291.20002366573874,
+    "right": 1001.6000485875803,
+    "bottom": 322.4000218416996
   },
   "viewport": {
     "width": 1024,
@@ -149,8 +163,11 @@ Summary: 11/11 passed
   "panel": {
     "role": "button",
     "tabindex": "0",
-    "text": "任務進度 0/1\n點擊放大查看",
+    "ariaLabel": "香港抗暴之戰，進行中，點擊放大查看",
+    "title": "香港抗暴之戰｜進行中｜點擊放大查看",
+    "text": "",
     "imageLoaded": true,
+    "controls": [],
     "panel": {
       "left": 1076,
       "top": 0,
@@ -161,11 +178,11 @@ Summary: 11/11 passed
     },
     "toolbar": {
       "left": 948,
-      "top": 226,
+      "top": 244,
       "right": 1252,
-      "bottom": 261,
+      "bottom": 283,
       "width": 304,
-      "height": 35
+      "height": 39
     },
     "overlaps": false
   },
@@ -182,6 +199,17 @@ Summary: 11/11 passed
 
 ```json
 "Escape closed the overlay"
+```
+
+## PASS — idle_event_thumbnail_keeps_no_effect_status_off_the_artwork
+
+```json
+{
+  "ariaLabel": "歲月靜好，無效果，點擊放大查看",
+  "title": "歲月靜好｜無效果｜點擊放大查看",
+  "imageLoaded": true,
+  "controls": []
+}
 ```
 
 ## PASS — browser_console_has_no_errors

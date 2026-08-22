@@ -3168,12 +3168,13 @@ def test_setup_event_card_proof(payload: dict):
         game.turn_phase = TurnPhase.ACTION
     elif payload.get("current_event_active") and event:
         game.current_event = event
+        forced_status = str(payload.get("event_status") or "active")
         game.event_progress = {
             "count": 0,
             "required": int(event.get("trigger", {}).get("count", 1) or 1),
-            "succeeded": False,
-            "settled": False,
-            "status": "active",
+            "succeeded": forced_status == "success",
+            "settled": forced_status in {"idle", "success", "failure", "auto"},
+            "status": forced_status,
         }
         game.event_notification = game._event_display_payload()
         game.turn_phase = TurnPhase.ACTION

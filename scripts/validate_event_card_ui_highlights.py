@@ -24,8 +24,8 @@ def main() -> None:
     failures: list[str] = []
     checks = [
         {
-            "name": "event build town choices are routed out of modal into the strategic map",
-            "needle": "if (choiceKey === 'event_build_organization' && (choiceType === 'town_choice' || choice.step === 'town'))",
+            "name": "event build town choices are routed through the unified build-map helper",
+            "needle": "const isStandardBuildChoice = choice?.interaction_kind === 'build_organization'",
             "text": app,
         },
         {
@@ -34,8 +34,8 @@ def main() -> None:
             "text": app,
         },
         {
-            "name": "event build payload is tagged for map-side direct build resolution",
-            "needle": "choiceKey: 'event_build_organization'",
+            "name": "unified build-map helper includes event build pending choices",
+            "needle": "['event_build_organization', 'era_red_build_near_target', 'card_build_organization'].includes(choice?.choice_key)",
             "text": app,
         },
         {

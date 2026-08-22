@@ -2270,21 +2270,26 @@ function eraCardArtMarkup(stage, fallbackMarkup = '') {
     </div>`;
 }
 
+const EVENT_STATUS_TEXT = {
+  active: '進行中',
+  success_pending: '條件已達成，等待結算',
+  success: '成功已結算',
+  failure: '失敗已結算',
+  idle: '無效果',
+  auto: '自動效果已套用',
+  auto_pending: '等待指定玩家回合發動',
+};
+
+function eventStatusText(event) {
+  return EVENT_STATUS_TEXT[event?.status] || event?.status || '進行中';
+}
+
 function eventCardMarkup(event, expanded = false) {
   const progress = event.progress || {};
   const current = Number(progress.count || 0);
   const required = Number(progress.required || event.trigger?.count || 0);
-  const statusMap = {
-    active: '進行中',
-    success_pending: '條件已達成，等待結算',
-    success: '成功已結算',
-    failure: '失敗已結算',
-    idle: '無效果',
-    auto: '自動效果已套用',
-    auto_pending: '等待指定玩家回合發動',
-  };
   const typeMap = {idle: '歲月靜好', mission: '任務', auto: '自動'};
-  const statusText = statusMap[event.status] || event.status || '進行中';
+  const statusText = eventStatusText(event);
   const progressText = event.type === 'mission' ? `任務進度 ${current}/${required || 0}` : '';
   const resultText = event.result_text || statusText;
   const artUrl = eventCardArtUrl(event);
@@ -2300,7 +2305,7 @@ function eventCardMarkup(event, expanded = false) {
     : '';
   const dismissHint = expanded
     ? '<div class="event-reveal-dismiss-hint">點擊任意地方關閉</div>'
-    : '<div class="event-panel-open-hint">點擊放大查看</div>';
+    : '';
   const textMarkup = `
     <div class="event-card-inner${expanded ? ' expanded' : ''}">
       ${expanded ? '<div class="event-reveal-kicker">本回合事件</div>' : ''}
@@ -2315,7 +2320,7 @@ function eventCardMarkup(event, expanded = false) {
 
   const runtimeStatus = expanded
     ? `<div class="event-art-runtime-status"><strong>${escapeHtml(statusText)}</strong>${progressText ? `<span>${escapeHtml(progressText)}</span>` : ''}<span>${escapeHtml(resultText)}</span></div>`
-    : `<div class="event-art-status-chip">${escapeHtml(progressText || statusText)}</div>`;
+    : '';
   return `
     <div class="event-card-art-shell${expanded ? ' expanded' : ''}">
       <img class="event-card-art-image" src="${artUrl}" alt="${escapeHtml(event.name || '事件卡')}完整卡面" ${expanded ? '' : 'loading="lazy"'} decoding="async" onerror="this.parentElement.classList.add('event-card-art-load-failed')">
@@ -2358,7 +2363,9 @@ function renderCurrentEvent(state) {
   panel.style.display = 'block';
   panel.setAttribute('role', 'button');
   panel.setAttribute('tabindex', '0');
-  panel.setAttribute('aria-label', `${event.name || '目前事件'}，點擊放大查看`);
+  const statusText = eventStatusText(event);
+  panel.setAttribute('aria-label', `${event.name || '目前事件'}，${statusText}，點擊放大查看`);
+  panel.setAttribute('title', `${event.name || '目前事件'}｜${statusText}｜點擊放大查看`);
   panel.onclick = openCurrentEventReveal;
   panel.onkeydown = (keyboardEvent) => {
     if (keyboardEvent.key === 'Enter' || keyboardEvent.key === ' ') {

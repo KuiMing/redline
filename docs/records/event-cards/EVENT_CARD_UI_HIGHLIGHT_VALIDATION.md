@@ -2,9 +2,9 @@
 
 Status: passed
 
-- passed: event build town choices are routed out of modal into the strategic map
+- passed: event build town choices are routed through the unified build-map helper
 - passed: event build town choices use existing support-targets highlight payload
-- passed: event build payload is tagged for map-side direct build resolution
+- passed: unified build-map helper includes event build pending choices
 - passed: event build town choices read pending choice towns with indices
 - passed: event build map flow reuses the strategic map tab instead of a two-step modal
 - passed: map side recognizes event build highlighted towns

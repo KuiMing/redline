@@ -5,10 +5,9 @@
 ## 待辦
 
 ### P2：事件卡底部控制項遮住卡面內容
-- [todo] 回報情境：事件卡顯示時，卡片底部的「點擊放大查看」與「無效果」控制項直接疊在卡面上，遮住最下方的內容區域。
-- [todo] 期望：放大控制與效果狀態不能覆蓋事件卡內容。應移到卡面外的獨立控制列，或為控制項保留固定布局空間；不同 viewport 下都需完整顯示卡面與控制項。
-- [todo] 需檢查：事件卡 artwork 容器的 overlay 定位、底部 padding／保留高度、效果徽章與放大按鈕的排列，以及窄螢幕縮放後的裁切與重疊。
-- [todo] 回報截圖：`docs/records/playtest-flow/event-card-bottom-controls-overlap_20260820.jpg`
+- [done] 根因：事件卡縮圖把「點擊放大查看」與「無效果／進行中」狀態做成絕對定位的 overlay，直接疊在 180×147 卡面底部。
+- [done] 修正：事件卡縮圖不再渲染這兩個重複覆蓋標示，完整卡面維持原尺寸。整張縮圖仍可點擊或用鍵盤開啟放大檢視；事件名稱、目前狀態與「點擊放大查看」保留在 `aria-label` 與 `title`，放大檢視中的 runtime 狀態列不變。
+- [done] 驗證：事件卡 Browser proof **13/13 passed**，涵蓋 1280×720、1024×768、任務事件及「歲月靜好／無效果」事件，console 0 errors；事件卡地圖高亮 validator **10/10 passed**；完整 pytest **370/370 passed**。修正後截圖：`docs/records/event-cards/EVENT_CARD_IDLE_UNOBSTRUCTED_2026_08_20.png`。原始回報：`docs/records/playtest-flow/event-card-bottom-controls-overlap_20260820.jpg`。
 
 ### P2：紅軍勝利敘事的牆內／牆外數字語意需釐清
 - [todo] 回報情境：紅軍勝利敘事顯示「牆內組織僅剩 14 個苟延殘喘，8 個殘部倉皇退守牆外」，但畫面沒有說明 14 與 8 的計算來源，看起來像任意填入的數字。
