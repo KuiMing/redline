@@ -1,0 +1,75 @@
+{
+  "summary": {
+    "total": 7,
+    "passed": 7,
+    "failed": 0
+  },
+  "service": "http://127.0.0.1:8000",
+  "session": "formal create/join/start/restore; credentials [REDACTED]",
+  "checks": [
+    {
+      "name": "anti_view_red_narrative_counts_only_non_red_organizations",
+      "passed": true,
+      "details": {
+        "title": "紅色鐵幕，籠罩天下",
+        "body": "紅軍以絕對優勢碾碎了最後的反抗。牆內組織僅剩 5 個苟延殘喘，5 個殘部倉皇退守牆外——但那裡也不再安全。廣播裡只剩一種聲音，街頭只剩一種顏色。這是一個沒有異議、沒有光的年代，其他陣營生靈塗炭，只能在陰影裡等待下一次機會。",
+        "coWinners": "",
+        "summary": "\n    \n      玩家陣營組織牆內牆外資金宣傳\n    \n      \n        紅軍 🏆\n        紅軍\n        組織 22\n        牆內 14\n        牆外 8\n        資金 0\n        宣傳 0\n      \n      \n        臺灣\n        臺灣（綠線）\n        組織 7\n        牆內 3\n        牆外 4\n        資金 0\n        宣傳 0\n      \n      \n        香港\n        香港\n        組織 3\n        牆內 2\n        牆外 1\n        資金 0\n        宣傳 0\n      "
+      }
+    },
+    {
+      "name": "summary_keeps_real_per_player_organization_counts",
+      "passed": true,
+      "details": "\n    \n      玩家陣營組織牆內牆外資金宣傳\n    \n      \n        紅軍 🏆\n        紅軍\n        組織 22\n        牆內 14\n        牆外 8\n        資金 0\n        宣傳 0\n      \n      \n        臺灣\n        臺灣（綠線）\n        組織 7\n        牆內 3\n        牆外 4\n        資金 0\n        宣傳 0\n      \n      \n        香港\n        香港\n        組織 3\n        牆內 2\n        牆外 1\n        資金 0\n        宣傳 0\n      "
+    },
+    {
+      "name": "co_winner_display_does_not_change_non_red_filter",
+      "passed": true,
+      "details": {
+        "title": "紅色鐵幕，籠罩天下",
+        "body": "紅軍以絕對優勢碾碎了最後的反抗。牆內組織僅剩 5 個苟延殘喘，5 個殘部倉皇退守牆外——但那裡也不再安全。廣播裡只剩一種聲音，街頭只剩一種顏色。這是一個沒有異議、沒有光的年代，其他陣營生靈塗炭，只能在陰影裡等待下一次機會。",
+        "coWinners": "共同勝利者：香港",
+        "summary": "\n    \n      玩家陣營組織牆內牆外資金宣傳\n    \n      \n        紅軍 🏆\n        紅軍\n        組織 22\n        牆內 14\n        牆外 8\n        資金 0\n        宣傳 0\n      \n      \n        臺灣\n        臺灣（綠線）\n        組織 7\n        牆內 3\n        牆外 4\n        資金 0\n        宣傳 0\n      \n      \n        香港\n        香港\n        組織 3\n        牆內 2\n        牆外 1\n        資金 0\n        宣傳 0\n      "
+      }
+    },
+    {
+      "name": "zero_non_red_organizations_render_as_zero",
+      "passed": true,
+      "details": {
+        "title": "紅色鐵幕，籠罩天下",
+        "body": "紅軍以絕對優勢碾碎了最後的反抗。牆內組織僅剩 0 個苟延殘喘，0 個殘部倉皇退守牆外——但那裡也不再安全。廣播裡只剩一種聲音，街頭只剩一種顏色。這是一個沒有異議、沒有光的年代，其他陣營生靈塗炭，只能在陰影裡等待下一次機會。",
+        "coWinners": "共同勝利者：香港",
+        "summary": "\n    \n      玩家陣營組織牆內牆外資金宣傳\n    \n      \n        紅軍 🏆\n        紅軍\n        組織 22\n        牆內 14\n        牆外 8\n        資金 0\n        宣傳 0\n      \n      \n        臺灣\n        臺灣（綠線）\n        組織 0\n        牆內 0\n        牆外 0\n        資金 0\n        宣傳 0\n      \n      \n        香港\n        香港\n        組織 0\n        牆內 0\n        牆外 0\n        資金 0\n        宣傳 0\n      "
+      }
+    },
+    {
+      "name": "non_red_winner_keeps_existing_all_player_totals",
+      "passed": true,
+      "details": {
+        "title": "自由之島，燈火通明",
+        "body": "本土社團遍地開花，牆內 19 個組織已經紮根、牆外 13 個持續在海外串聯。臺灣人民用選票與街頭守住了得來不易的民主——言論自由、公民社會、經濟活力，一樣不缺。這座島嶼證明了：自由與繁榮，從來不是紅色政權能夠恩賜的東西。",
+        "coWinners": "共同勝利者：香港",
+        "summary": "\n    \n      玩家陣營組織牆內牆外資金宣傳\n    \n      \n        紅軍\n        紅軍\n        組織 22\n        牆內 14\n        牆外 8\n        資金 0\n        宣傳 0\n      \n      \n        臺灣 🏆\n        臺灣（綠線）\n        組織 7\n        牆內 3\n        牆外 4\n        資金 0\n        宣傳 0\n      \n      \n        香港\n        香港\n        組織 3\n        牆內 2\n        牆外 1\n        資金 0\n        宣傳 0\n      "
+      }
+    },
+    {
+      "name": "red_view_triumph_narrative_also_counts_only_non_red_organizations",
+      "passed": true,
+      "details": {
+        "title": "赤旗遍寰宇，天下歸一統",
+        "body": "最後的抵抗已被掃進歷史。牆內 5 個組織與牆外 5 個據點盡數納入紅色秩序，艦隊橫跨七海，赤旗插遍世界每一座首都。從此只有一種道路、一個意志、一個永不落幕的新時代——在紅軍眼中，這不是征服，而是全人類終於完成了統一。",
+        "coWinners": "",
+        "summary": "\n    \n      玩家陣營組織牆內牆外資金宣傳\n    \n      \n        紅軍 🏆\n        紅軍\n        組織 22\n        牆內 14\n        牆外 8\n        資金 0\n        宣傳 0\n      \n      \n        臺灣\n        臺灣（綠線）\n        組織 7\n        牆內 3\n        牆外 4\n        資金 0\n        宣傳 0\n      \n      \n        香港\n        香港\n        組織 3\n        牆內 2\n        牆外 1\n        資金 0\n        宣傳 0\n      "
+      }
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "passed": true,
+      "details": []
+    }
+  ],
+  "screenshots": [
+    "docs/records/playtest-flow/red_victory_non_red_totals_anti_view_20260822.png",
+    "docs/records/playtest-flow/red_victory_non_red_totals_red_view_20260822.png"
+  ]
+}

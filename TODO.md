@@ -21,11 +21,10 @@
 - [done] 修正：事件卡縮圖不再渲染這兩個重複覆蓋標示，完整卡面維持原尺寸。整張縮圖仍可點擊或用鍵盤開啟放大檢視；事件名稱、目前狀態與「點擊放大查看」保留在 `aria-label` 與 `title`，放大檢視中的 runtime 狀態列不變。
 - [done] 驗證：事件卡 Browser proof **13/13 passed**，涵蓋 1280×720、1024×768、任務事件及「歲月靜好／無效果」事件，console 0 errors；事件卡地圖高亮 validator **10/10 passed**；完整 pytest **370/370 passed**。修正後截圖：`docs/records/event-cards/EVENT_CARD_IDLE_UNOBSTRUCTED_2026_08_20.png`。原始回報：`docs/records/playtest-flow/event-card-bottom-controls-overlap_20260820.jpg`。
 
-### P2：紅軍勝利敘事的牆內／牆外數字語意需釐清
-- [todo] 回報情境：紅軍勝利敘事顯示「牆內組織僅剩 14 個苟延殘喘，8 個殘部倉皇退守牆外」，但畫面沒有說明 14 與 8 的計算來源，看起來像任意填入的數字。
-- [todo] 已確認來源：數字不是隨機產生。`renderVictoryModal()` 會把所有玩家的 `organization_counts.inside_wall` 與 `outside_wall` 分別加總，再帶入敘事。因此目前的 14／8 是結算當下全體玩家在牆內／牆外的組織總數。
-- [todo] 語意問題：目前加總包含紅軍自己的組織，但「苟延殘喘」與「殘部倉皇退守」讀起來像只在描述落敗的其他陣營，數字與文案語意不一致。
-- [todo] 規則已確認：紅軍勝利敘事中的牆內／牆外「殘部」數字只統計非紅軍陣營的組織，不包含紅軍自己的組織。需同步驗證勝利摘要表、各觀看陣營視角、共同勝利情境及零組織邊界。
+### P2：紅軍勝利敘事的牆內／牆外數字只統計非紅軍
+- [done] 根因：`renderVictoryModal()` 原本會把所有玩家的 `organization_counts.inside_wall` 與 `outside_wall` 分別加總，所以「苟延殘喘／殘部」數字錯誤包含紅軍自己的組織。
+- [done] 修正：紅軍獲勝時，敘事統計會排除 `faction === 'red_army'` 的玩家。非紅軍觀看者的「紅色鐵幕」與紅軍觀看者的「赤旗遍寰宇」均使用相同的非紅軍組織總數。下方逐玩家摘要表仍顯示所有玩家的真實數字；非紅軍獲勝時維持原本的全場統計語意。
+- [done] 驗證：正式 create／join／start／session restore Browser proof **7/7 passed**，涵蓋非紅軍視角、紅軍視角、共同勝利、非紅軍組織為零、非紅軍勝利回歸及摘要表原始數字；完整 pytest **379/379 passed**；勝利聚焦測試 **32/32 passed**；Browser console 0 errors。報告：`docs/records/playtest-flow/RED_VICTORY_NON_RED_ORGANIZATION_TOTALS_VALIDATION.json`；截圖：`docs/records/playtest-flow/red_victory_non_red_totals_anti_view_20260822.png`、`docs/records/playtest-flow/red_victory_non_red_totals_red_view_20260822.png`。
 
 ### P1：實際遊戲仍把時代關卡顯示在右上角
 - [done] 2026-08-22 最新回報：實際遊戲畫面中的「[哈薩克]伊塔事件」與第二次遊戲的香港時代關卡仍以右上角浮動卡片顯示，直接覆蓋事件卡。回報截圖：`docs/records/playtest-flow/era-stage-still-pinned-over-event-card_20260822.jpg`。

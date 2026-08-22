@@ -3297,6 +3297,21 @@ function victoryEndingNarrative(factionId, ctx) {
   return template ? { ...template(ctx), sceneKey } : null;
 }
 
+function victoryNarrativeOrganizationTotals(players, winnerFaction) {
+  // 紅軍結局中的「苟延殘喘／殘部」只描述落敗的非紅軍陣營。紅軍自己的組織仍
+  // 保留在下方逐玩家摘要表，但不能混進這兩個敘事數字。紅軍觀看者會使用另一套
+  // triumph 文案，仍然是在描述被納入紅色秩序的抵抗組織，因此沿用同一組非紅軍
+  // 數字。其他陣營的既有結局敘事維持原本的全場統計語意。
+  const narrativePlayers = winnerFaction === 'red_army'
+    ? (players || []).filter(player => player?.faction !== 'red_army')
+    : (players || []);
+  return narrativePlayers.reduce((totals, player) => {
+    totals.insideWallTotal += Number(player?.organization_counts?.inside_wall ?? 0) || 0;
+    totals.outsideWallTotal += Number(player?.organization_counts?.outside_wall ?? 0) || 0;
+    return totals;
+  }, { insideWallTotal: 0, outsideWallTotal: 0 });
+}
+
 function renderVictoryModal(state) {
   const overlay = document.getElementById('victoryModal');
   const badge = document.getElementById('victoryBadge');
@@ -3339,11 +3354,9 @@ function renderVictoryModal(state) {
     coEl.style.display = 'none';
   }
 
-  // 牆內/牆外組織總數（2026-08-06 使用者需求）：彙整全體玩家的 organization_counts
-  // （既有欄位，server/game.py 的 _player_organization_scope_counts()），直接寫進結局
-  // 敘事本身，而不只是列在表格裡。
-  const insideWallTotal = players.reduce((sum, p) => sum + (p.organization_counts?.inside_wall ?? 0), 0);
-  const outsideWallTotal = players.reduce((sum, p) => sum + (p.organization_counts?.outside_wall ?? 0), 0);
+  // 紅軍勝利只統計非紅軍陣營的牆內／牆外組織；其他勝利者維持既有全場總數。
+  // 逐玩家摘要表仍顯示每位玩家的真實數字，不受敘事篩選影響。
+  const { insideWallTotal, outsideWallTotal } = victoryNarrativeOrganizationTotals(players, winnerFaction);
 
   const endingEl = document.getElementById('victoryEnding');
   const endingSceneEl = document.getElementById('victoryEndingScene');
