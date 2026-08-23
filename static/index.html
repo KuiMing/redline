@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>REDLINE // STRATEGIC COMMAND</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="/static/style.css?v=victory-summary-density-20260823" />
+  <link rel="stylesheet" href="/static/style.css?v=unavailable-action-modal-20260823" />
 </head>
 <body>
 <div id="stageViewport">
@@ -147,6 +147,17 @@
     </div>
     <div id="factionActionModalRewardHint" class="modal-body-text" style="margin-top:4px; margin-bottom:12px;">猜中可獲得資金與宣傳；沒猜中則獲得較少獎勵。</div>
     <button id="closeFactionActionModal" class="modal-cancel-btn">取消</button>
+  </div>
+</div>
+
+<div id="unavailableActionModal" class="modal-overlay unavailable-action-modal" role="dialog" aria-modal="true" aria-labelledby="unavailableActionTitle" aria-describedby="unavailableActionMessage" aria-hidden="true" style="display:none;" onclick="if (event.target === this) closeUnavailableActionModal()">
+  <div class="modal-glass unavailable-action-glass">
+    <div class="panel-title">行動提示</div>
+    <div id="unavailableActionTitle" class="modal-title-text">無法發動能力</div>
+    <div id="unavailableActionMessage" class="modal-body-text"></div>
+    <div class="unavailable-action-actions">
+      <button id="closeUnavailableActionModalBtn" type="button" class="modal-choice-btn" onclick="closeUnavailableActionModal()">知道了</button>
+    </div>
   </div>
 </div>
 
@@ -338,6 +349,6 @@
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/static/player_messages_zh_tw.js?v=player-message-i18n-20260801"></script>
-<script src="/static/app.js?v=victory-summary-density-20260823"></script>
+<script src="/static/app.js?v=unavailable-action-modal-20260823"></script>
 </body>
 </html>

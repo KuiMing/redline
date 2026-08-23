@@ -66,29 +66,47 @@ def main() -> None:
             page.locator("#factionActionModalChoices .modal-choice-btn", has_text=f"發動 {ability_name}").click()
             page.wait_for_timeout(700)
             state = page.evaluate(
-                """() => ({
-                  notice: document.getElementById('phaseActionNotice')?.textContent.trim() || '',
-                  noticeTitle: document.getElementById('phaseActionNotice')?.title || '',
-                  noticeVisible: document.getElementById('phaseActionNotice')?.classList.contains('visible') || false,
-                  pendingChoice: window.lastGameState?.pending_choice?.choice_key || null,
-                  usedCount: Number(window.lastGameState?.red_army_action_count || 0),
-                  result: window.lastGameState?.last_action_result || null,
-                })"""
+                """() => {
+                  const modal = document.getElementById('unavailableActionModal');
+                  const glass = modal?.querySelector('.unavailable-action-glass');
+                  const rect = glass?.getBoundingClientRect();
+                  return {
+                    notice: document.getElementById('phaseActionNotice')?.textContent.trim() || '',
+                    noticeVisible: document.getElementById('phaseActionNotice')?.classList.contains('visible') || false,
+                    modalVisible: modal?.style.display === 'flex' && modal?.getAttribute('aria-hidden') === 'false',
+                    modalTitle: document.getElementById('unavailableActionTitle')?.textContent.trim() || '',
+                    modalMessage: document.getElementById('unavailableActionMessage')?.textContent.trim() || '',
+                    focusedId: document.activeElement?.id || '',
+                    modalRect: rect ? {left:rect.left, top:rect.top, right:rect.right, bottom:rect.bottom, width:rect.width, height:rect.height} : null,
+                    pendingChoice: window.lastGameState?.pending_choice?.choice_key || null,
+                    usedCount: Number(window.lastGameState?.red_army_action_count || 0),
+                    result: window.lastGameState?.last_action_result || null,
+                  };
+                }"""
             )
             record(
-                f"{ability_name}_shows_in_page_unavailable_notice",
-                state["noticeVisible"] and expected_text in state["notice"] and state["noticeTitle"] == state["notice"] and state["pendingChoice"] is None and state["usedCount"] == 0,
+                f"{ability_name}_shows_blocking_unavailable_modal_without_hud_notice",
+                state["modalVisible"] and state["modalTitle"] == f"{ability_name}無法發動" and expected_text in state["modalMessage"] and not state["noticeVisible"] and not state["notice"] and state["focusedId"] == "closeUnavailableActionModalBtn" and state["pendingChoice"] is None and state["usedCount"] == 0,
                 state,
             )
             if ability_name == "國安部":
                 page.screenshot(path=str(SCREENSHOT), full_page=True)
+                if state["modalVisible"]:
+                    page.locator("#closeUnavailableActionModalBtn").click()
+                    page.wait_for_function("document.getElementById('unavailableActionModal')?.style.display === 'none'")
+                record(
+                    "unavailable_modal_can_be_closed_without_creating_hud_notice",
+                    state["modalVisible"] and page.evaluate("document.getElementById('unavailableActionModal')?.style.display === 'none' && !document.getElementById('phaseActionNotice')?.classList.contains('visible') && !document.getElementById('phaseActionNotice')?.textContent.trim()"),
+                    {"modalWasVisible": state["modalVisible"]},
+                )
+                page.evaluate("message => showUnavailableActionModal('國安部', message)", state["modalMessage"])
                 page.set_viewport_size({"width": 1024, "height": 768})
                 page.wait_for_timeout(150)
                 page.screenshot(path=str(SCREENSHOT_1024), full_page=True)
             page.close()
         browser.close()
 
-    record("unavailable_abilities_do_not_use_blocking_alert", not dialogs, dialogs)
+    record("unavailable_abilities_do_not_use_browser_native_dialog", not dialogs, dialogs)
     record("browser_console_has_no_errors", not console_errors, console_errors)
     summary = {"total": len(checks), "passed": sum(1 for check in checks if check["passed"]), "failed": sum(1 for check in checks if not check["passed"])}
     report = {

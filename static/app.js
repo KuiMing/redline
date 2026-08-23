@@ -29,6 +29,7 @@ let lastSupportChoiceMapHighlightPayload = null;
 let lastEventRevealKey = null;
 let stickyPlayerErrorNotice = '';
 let stickyPlayerErrorTimer = null;
+let unavailableActionModalReturnFocus = null;
 const selectedPurchaseIndices = new Set();
 // 這兩張卡的取消能力只能被動觸發（其他玩家打出可取消的卡牌時自動跳出反應視窗），
 // 自己回合主動點「行動」不會取消任何東西，白白浪費這張卡，因此手牌區直接 disable。
@@ -2753,6 +2754,44 @@ function setPhaseActionNotice(message = '') {
   notice.classList.toggle('visible', !!message);
 }
 
+function clearStickyPlayerErrorNotice() {
+  if (stickyPlayerErrorTimer) clearTimeout(stickyPlayerErrorTimer);
+  stickyPlayerErrorNotice = '';
+  stickyPlayerErrorTimer = null;
+  setPhaseActionNotice('');
+}
+
+function showUnavailableActionModal(actionName, message) {
+  const modal = document.getElementById('unavailableActionModal');
+  const title = document.getElementById('unavailableActionTitle');
+  const body = document.getElementById('unavailableActionMessage');
+  if (!modal || !title || !body) return;
+  clearStickyPlayerErrorNotice();
+  unavailableActionModalReturnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  title.textContent = actionName ? `${actionName}無法發動` : '無法發動能力';
+  body.textContent = message || '目前沒有合法目標，未發動能力。';
+  modal.style.display = 'flex';
+  modal.setAttribute('aria-hidden', 'false');
+  requestAnimationFrame(() => document.getElementById('closeUnavailableActionModalBtn')?.focus());
+}
+
+function closeUnavailableActionModal() {
+  const modal = document.getElementById('unavailableActionModal');
+  if (!modal || modal.style.display === 'none') return;
+  modal.style.display = 'none';
+  modal.setAttribute('aria-hidden', 'true');
+  if (unavailableActionModalReturnFocus?.isConnected) unavailableActionModalReturnFocus.focus();
+  unavailableActionModalReturnFocus = null;
+}
+
+document.addEventListener('keydown', event => {
+  if (event.key !== 'Escape') return;
+  const modal = document.getElementById('unavailableActionModal');
+  if (modal?.style.display !== 'flex') return;
+  event.preventDefault();
+  closeUnavailableActionModal();
+});
+
 function showStickyPlayerErrorNotice(message, durationMs = 5000) {
   stickyPlayerErrorNotice = message || '';
   if (stickyPlayerErrorTimer) clearTimeout(stickyPlayerErrorTimer);
@@ -2816,9 +2855,13 @@ function renderFactionActionResult(state, faction) {
     const resultKey = JSON.stringify(result);
     if (lastFactionActionResultKey !== resultKey) {
       lastFactionActionResultKey = resultKey;
-      showStickyPlayerErrorNotice(message);
+      if (result.unavailable) {
+        showUnavailableActionModal(result.name, message);
+      } else {
+        showStickyPlayerErrorNotice(message);
+      }
     }
-    const html = `<div class="faction-action-result">${escapeHtml(message)}</div>`;
+    const html = result.unavailable ? '' : `<div class="faction-action-result">${escapeHtml(message)}</div>`;
     info.innerHTML = html;
     return {hasResult: true, message, html};
   }
