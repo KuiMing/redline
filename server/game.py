@@ -182,6 +182,7 @@ class Game:
 
         self.turn_log = self._new_turn_log()
         self.action_log = []
+        self._action_log_visibility = []
         self.purchase_deck = self._initial_purchase_deck()
         self.purchase_area = self._initial_purchase_area()
         self.event_deck = EventDeck(self._draw_event_deck_cards())
@@ -527,13 +528,7 @@ class Game:
         # `trigger_name` 由呼叫端傳入觸發的卡名/效果名稱；沒傳時對 era 效果給通用說法，
         # 其餘沿用最簡潔的「抽到：...」。
         if drawn:
-            names = '、'.join(getattr(c, 'name', str(c)) for c in drawn)
-            if trigger_name:
-                self.log(f"{player.name} 因{trigger_name}抽到：{names}")
-            elif source == 'era':
-                self.log(f"{player.name} 因時代關卡效果抽到：{names}")
-            else:
-                self.log(f"{player.name} 抽到：{names}")
+            self.log_private_draw(player, drawn, source=source, trigger_name=trigger_name)
         return drawn
 
     def _active_event_modifiers(self):
@@ -4772,6 +4767,7 @@ class Game:
         self.turn_phase = TurnPhase.ACTION
         self.turn_log = self._new_turn_log()
         self.action_log = []
+        self._action_log_visibility = []
         self.purchase_deck = self._initial_purchase_deck()
         self.purchase_area = self._initial_purchase_area()
 
@@ -4897,10 +4893,81 @@ class Game:
             return next_player_index == round_start
         return self.current_player_index == non_red_in_round_order[-1]
 
-    def log(self, message):
-        self.action_log.append(f"[Turn {self.turn}] {message}")
+    def log(self, message, *, private_messages=None, public_message=None):
+        prefix = f"[Turn {self.turn}] "
+        self.action_log.append(prefix + str(message))
+        visibility = None
+        if private_messages or public_message is not None:
+            visibility = {
+                'private_messages': {
+                    str(player_id): prefix + str(private_message)
+                    for player_id, private_message in (private_messages or {}).items()
+                },
+                'public_message': prefix + str(public_message if public_message is not None else message),
+            }
+        self._action_log_visibility.append(visibility)
         if len(self.action_log) > 100:
             self.action_log.pop(0)
+            self._action_log_visibility.pop(0)
+
+    def log_private_draw(self, player, drawn, *, source='effect', trigger_name=None):
+        drawn = list(drawn or [])
+        if not drawn:
+            return
+        count = len(drawn)
+        names = '、'.join(getattr(card, 'name', str(card)) for card in drawn)
+        if trigger_name:
+            private_message = f"{player.name} 因{trigger_name}抽到：{names}"
+            public_message = f"{player.name} 因{trigger_name}抽了 {count} 張牌"
+        elif source == 'era':
+            private_message = f"{player.name} 因時代關卡效果抽到：{names}"
+            public_message = f"{player.name} 因時代關卡效果抽了 {count} 張牌"
+        else:
+            private_message = f"{player.name} 抽到：{names}"
+            public_message = f"{player.name} 抽了 {count} 張牌"
+        self.log(
+            private_message,
+            private_messages={player.id: private_message},
+            public_message=public_message,
+        )
+
+    def log_private_shared_draw(self, first_player, first_drawn, second_player, second_drawn, *, source_name):
+        first_drawn = list(first_drawn or [])
+        second_drawn = list(second_drawn or [])
+        count = max(len(first_drawn), len(second_drawn))
+        first_names = '、'.join(getattr(card, 'name', str(card)) for card in first_drawn)
+        second_names = '、'.join(getattr(card, 'name', str(card)) for card in second_drawn)
+        public_message = f"{first_player.name} 與 {second_player.name} 因{source_name}各抽了 {count} 張牌"
+        first_message = f"{public_message}：{first_player.name}抽到：{first_names}；{second_player.name}抽了 {len(second_drawn)} 張牌"
+        second_message = f"{public_message}：{first_player.name}抽了 {len(first_drawn)} 張牌；{second_player.name}抽到：{second_names}"
+        diagnostic_message = (
+            f"{public_message}：{first_player.name}抽到：{first_names}；"
+            f"{second_player.name}抽到：{second_names}"
+        )
+        self.log(
+            diagnostic_message,
+            private_messages={
+                first_player.id: first_message,
+                second_player.id: second_message,
+            },
+            public_message=public_message,
+        )
+
+    def _project_action_log(self, viewer_player_id=None):
+        if viewer_player_id is None:
+            return list(self.action_log)
+        visibility = list(getattr(self, '_action_log_visibility', []) or [])
+        if len(visibility) < len(self.action_log):
+            visibility = [None] * (len(self.action_log) - len(visibility)) + visibility
+        elif len(visibility) > len(self.action_log):
+            visibility = visibility[-len(self.action_log):]
+        viewer_key = str(viewer_player_id)
+        return [
+            ((rule.get('private_messages') or {}).get(viewer_key) or rule.get('public_message') or entry)
+            if isinstance(rule, dict)
+            else entry
+            for entry, rule in zip(self.action_log, visibility)
+        ]
 
     def _reaction_card_cancel_predicate(self, reaction_card_name, canceled_cost):
         # 2026-08-05 使用者回報：打出宣傳家（購買費用只有宣傳、無資金）時，產業滲透完全
@@ -7670,7 +7737,7 @@ class Game:
             "pending_base_choices": self.pending_base_choices,
             "pending_choice": pending_choice,
             "faction_action_used": bool(self.turn_log.get('faction_action_used')),
-            "action_log": self.action_log,
+            "action_log": self._project_action_log(viewer_player_id),
             "purchase_area": [getattr(card, 'name', str(card)) for card in self.purchase_area],
             "purchase_area_variants": [self._support_card_variant_info(card) for card in self.purchase_area],
             "purchase_area_costs": purchase_area_costs,

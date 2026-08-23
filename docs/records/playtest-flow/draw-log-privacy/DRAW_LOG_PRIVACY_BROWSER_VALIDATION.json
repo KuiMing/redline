@@ -1,0 +1,81 @@
+{
+  "summary": {
+    "total": 8,
+    "passed": 8,
+    "failed": 0
+  },
+  "service": "http://127.0.0.1:8769",
+  "scenario": "三位玩家；哈薩克因時代關卡抽 2 張；憑證與識別碼 [REDACTED]",
+  "checks": [
+    {
+      "name": "drawing_player_sees_exact_card_names",
+      "passed": true,
+      "details": {
+        "owner_log": "[Turn 1] 哈薩克 因時代關卡效果抽到：追隨者、樂捐者"
+      }
+    },
+    {
+      "name": "red_army_log_sees_count_without_card_names",
+      "passed": true,
+      "details": {
+        "red_log": "[Turn 1] 哈薩克 因時代關卡效果抽了 2 張牌"
+      }
+    },
+    {
+      "name": "third_player_log_sees_count_without_card_names",
+      "passed": true,
+      "details": {
+        "observer_log": "[Turn 1] 哈薩克 因時代關卡效果抽了 2 張牌"
+      }
+    },
+    {
+      "name": "red_army_peer_notice_does_not_leak_card_names",
+      "passed": true,
+      "details": {
+        "notice": "哈薩克 因時代關卡效果抽了 2 張牌"
+      }
+    },
+    {
+      "name": "third_player_peer_notice_does_not_leak_card_names",
+      "passed": true,
+      "details": {
+        "notice": "哈薩克 因時代關卡效果抽了 2 張牌"
+      }
+    },
+    {
+      "name": "drawing_players_own_turn_has_no_peer_overlay",
+      "passed": true,
+      "details": {
+        "display": "none"
+      }
+    },
+    {
+      "name": "private_hand_projection_matches_log_privacy",
+      "passed": true,
+      "details": {
+        "red_view": [
+          "未知手牌",
+          "未知手牌"
+        ],
+        "owner_view": [
+          "追隨者",
+          "樂捐者"
+        ],
+        "observer_view": [
+          "未知手牌",
+          "未知手牌"
+        ]
+      }
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "passed": true,
+      "details": []
+    }
+  ],
+  "screenshots": [
+    "docs/records/playtest-flow/draw-log-privacy/red_view_draw_count_without_card_names_20260823.png",
+    "docs/records/playtest-flow/draw-log-privacy/kazakh_view_own_draw_card_names_20260823.png",
+    "docs/records/playtest-flow/draw-log-privacy/observer_view_draw_count_without_card_names_20260823.png"
+  ]
+}

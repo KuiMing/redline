@@ -1219,9 +1219,12 @@
 - Proof：`docs/records/event-cards/belt-road-middle-east-focus/BELT_ROAD_MIDDLE_EAST_CONCENTRATED_FOCUS_VALIDATION.{json,md}`、`docs/records/event-cards/belt-road-middle-east-focus/belt_road_middle_east_concentrated_focus_20260823.png`。
 
 ### P1：其他玩家看到抽到的牌名，洩漏隱藏資訊
-- [todo] 截圖顯示紅軍視角收到：`哈薩克 因時代關卡效果抽到：樂捐者、追隨者`。其他玩家不應知道哈薩克實際抽到哪些牌。
-- [todo] 抽牌玩家可以看到自己抽到的牌名；紅軍與其他玩家只能看到公開資訊，例如「哈薩克因時代關卡效果抽了 2 張牌」，不可顯示牌名。
-- [todo] 後續需稽核時代關卡、事件卡、陣營能力與一般抽牌的 peer-action notice／戰況紀錄投影，確保私人手牌資訊只投影給牌的擁有者。
+- [done] 抽牌玩家可在自己的戰況紀錄與手牌中看到實際牌名；紅軍與其他玩家只收到「玩家因來源效果抽了 N 張牌」，不收到牌名。
+- [done] 修正在後端 `Game.state(viewer_player_id)` 的觀看者投影層完成，不只隱藏前端 DOM。內部診斷用 `action_log` 仍保留實際牌名；WebSocket 對每位玩家廣播時，依 viewer 投影本人私訊或公開張數訊息。
+- [done] 已稽核四類抽牌來源：時代關卡、事件卡／奧援／陣營能力共用 `_draw_player_cards()`；一般與條件抽牌共用 `EffectEngine._draw()`；`shared_draw` 會讓每位參與者只看到自己的牌名，第三位玩家只看到雙方抽牌張數；其他直接抽牌路徑只記張數或不產生公開牌名紀錄。
+- root cause：`action_log` 原本是所有 viewer 共用的單一字串陣列。2026-08-04 為方便診斷而加入實際抽牌牌名後，未同步增加 viewer scope，導致 peer-action notice 與戰況紀錄直接廣播私人牌名。
+- 驗證：抽牌隱私單元測試 5/5；抽牌／紅軍奧援相關回歸 26/26；隱私聚焦 7/7；三位玩家雙觀看者 Browser proof 8/8；完整主 pytest 398/398；console 0 error。
+- Proof：`docs/records/playtest-flow/draw-log-privacy/DRAW_LOG_PRIVACY_BROWSER_VALIDATION.{json,md}`；紅軍、哈薩克本人與第三位玩家三張正式截圖位於同目錄。
 - 原始證據：`docs/records/playtest-flow/peer-draw-card-names-leaked-to-red-army_20260823.jpg`。
 
 ### P1：勝利敘述的統計數字未依獲勝方計算

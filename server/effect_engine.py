@@ -17,11 +17,7 @@ class EffectEngine:
         player.hand.extend(drawn)
         if game is not None and drawn:
             if log:
-                names = '、'.join(getattr(c, 'name', str(c)) for c in drawn)
-                if card_name:
-                    game.log(f"{player.name} 因{card_name}抽到：{names}")
-                else:
-                    game.log(f"{player.name} 抽到：{names}")
+                game.log_private_draw(player, drawn, trigger_name=card_name)
             if hasattr(game, '_track_event_progress'):
                 game._track_event_progress('draw', amount=len(drawn), player=player)
         return drawn
@@ -430,11 +426,12 @@ class EffectEngine:
                 drawn_target = self._draw(target, count, game=game, log=False)
                 if hasattr(game, 'log'):
                     source_name = context.get('card_name') or 'shared draw'
-                    self_names = '、'.join(getattr(c, 'name', str(c)) for c in drawn_self)
-                    target_names = '、'.join(getattr(c, 'name', str(c)) for c in drawn_target)
-                    game.log(
-                        f"{player.name} 與 {target.name} 因 {source_name} 各抽 {count} 張："
-                        f"{player.name}抽到 {self_names}；{target.name}抽到 {target_names}"
+                    game.log_private_shared_draw(
+                        player,
+                        drawn_self,
+                        target,
+                        drawn_target,
+                        source_name=source_name,
                     )
             return
 

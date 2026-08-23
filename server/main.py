@@ -960,6 +960,7 @@ async def test_setup_build_view_persistence_proof(payload: dict):
         game.pending_choice = None
         game.turn_log = game._new_turn_log()
         game.action_log = []
+        game._action_log_visibility = []
         game.current_event = None
         game.event_progress = {}
         game.event_notification = None
@@ -2250,6 +2251,7 @@ def test_setup_hand_preview(payload: dict):
 
     if "action_log" in payload:
         game.action_log = [str(entry) for entry in payload.get("action_log", [])]
+        game._action_log_visibility = [None for _ in game.action_log]
 
     while len(game.purchase_area) < 11:
         drawn = game._draw_purchase_cards(1)
@@ -2799,6 +2801,69 @@ def test_setup_victory_proof(payload: dict):
         "winner": game.winner,
         "state": game.state(),
     }
+
+
+@app.post("/test/setup-draw-privacy-proof")
+def test_setup_draw_privacy_proof():
+    """建立三位玩家的抽牌隱私 Browser proof，初始狀態不含抽牌紀錄。"""
+    game_id = str(uuid.uuid4())
+    game = Game([
+        (str(uuid.uuid4()), "紅軍"),
+        (str(uuid.uuid4()), "哈薩克"),
+        (str(uuid.uuid4()), "旁觀玩家"),
+    ])
+    red, kazakh, observer = game.players
+    for player, faction_id, base in (
+        (red, "red_army", "北京"),
+        (kazakh, "kazakh", "阿拉木圖"),
+        (observer, "hong_kong", "香港城"),
+    ):
+        player.faction_id = faction_id
+        player.base = base
+        player.organizations = {base: 1}
+        player.hand = []
+        player.deck.draw_pile = []
+        player.deck.discard_pile = []
+
+    game.game_phase = GamePhase.MAIN
+    game.turn_phase = TurnPhase.ACTION
+    game.current_player_index = game.players.index(kazakh)
+    game.pending_base_choices = {}
+    game.pending_choice = None
+    game.action_log = []
+    game._action_log_visibility = []
+    game.id = game_id
+
+    manager.games[game_id] = game
+    manager.connections[game_id] = {}
+    lobby[game_id] = [(player.id, player.name) for player in game.players]
+    lobby_hosts[game_id] = red.id
+    lobby_factions[game_id] = {player.id: player.faction_id for player in game.players}
+    lobby_bases[game_id] = {player.id: player.base for player in game.players}
+    lobby_ready[game_id] = {player.id: True for player in game.players}
+    return {
+        "success": True,
+        "game_id": game_id,
+        "red_player_id": red.id,
+        "kazakh_player_id": kazakh.id,
+        "observer_player_id": observer.id,
+    }
+
+
+@app.post("/test/trigger-draw-privacy-proof")
+async def test_trigger_draw_privacy_proof(payload: dict):
+    game_id = str(payload.get("game_id") or "")
+    game = manager.games.get(game_id)
+    if game is None:
+        return {"error": "Game not found"}
+    kazakh = next((player for player in game.players if player.faction_id == "kazakh"), None)
+    if kazakh is None:
+        return {"error": "Kazakh player not found"}
+    kazakh.deck.draw_pile = [Card("樂捐者", "starter", {}), Card("追隨者", "starter", {})]
+    kazakh.deck.discard_pile = []
+    game._draw_player_cards(kazakh, 2, source="era")
+    await broadcast_game_state(game_id, game)
+    return {"success": True, "draw_count": 2}
 
 
 @app.post("/test/setup-elite-defection-discard-proof")
