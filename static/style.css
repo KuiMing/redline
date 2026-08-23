@@ -222,6 +222,10 @@ body {
   z-index: 1;
 }
 
+.lobby-room-column {
+  z-index: 3;
+}
+
 .lobby-section-title {
   margin-bottom: 16px;
 }
@@ -315,6 +319,7 @@ body {
 }
 
 .lobby-market-option {
+  position: relative;
   min-height: 44px;
   border: 1px solid rgba(148, 163, 184, 0.24);
   border-radius: 13px;
@@ -322,6 +327,49 @@ body {
   color: rgba(207, 219, 235, 0.86);
   font-size: 0.78rem;
   font-weight: 700;
+}
+
+.lobby-market-option:disabled {
+  cursor: not-allowed;
+  filter: saturate(0.55) brightness(0.72);
+  opacity: 0.74;
+}
+
+.lobby-market-option::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 0;
+  top: calc(100% + 9px);
+  z-index: 40;
+  width: 440px;
+  box-sizing: border-box;
+  border: 1px solid rgba(251, 191, 36, 0.42);
+  border-radius: 10px;
+  padding: 9px 11px;
+  background: rgba(3, 7, 18, 0.97);
+  color: #e5edf8;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.48);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 500;
+  line-height: 1.55;
+  text-align: left;
+  white-space: normal;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.lobby-market-option:last-child::after {
+  right: 0;
+  left: auto;
+}
+
+.lobby-market-option:hover::after,
+.lobby-market-option:focus-visible::after {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .lobby-market-option.active {
@@ -447,7 +495,7 @@ body {
 
 .lobby-mini-btn:hover,
 .lobby-action-btn:not(:disabled):hover,
-.lobby-market-option:hover {
+.lobby-market-option:not(:disabled):hover {
   transform: translateY(-1px);
   filter: brightness(1.06);
 }

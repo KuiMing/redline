@@ -431,6 +431,25 @@ def _required_faction_for_player(game_id: str, player_id: str):
     return None
 
 
+@app.post("/market-mode")
+def set_lobby_market_mode(payload: dict):
+    game_id = payload.get("game_id")
+    player_id = payload.get("player_id")
+    market_mode = payload.get("market_mode")
+
+    if game_id not in lobby:
+        return {"error": "Game not found"}
+    if lobby_hosts.get(game_id) != player_id:
+        return {"error": "Only host can change game difficulty"}
+    if manager.games.get(game_id) is not None:
+        return {"error": "Game already started"}
+    if market_mode not in {"sample_53", "all_cards"}:
+        return {"error": "Invalid game difficulty"}
+
+    lobby_market_mode[game_id] = market_mode
+    return {"success": True, "market_mode": market_mode}
+
+
 @app.post("/start")
 def start_game(payload: dict):
     game_id = payload.get("game_id")

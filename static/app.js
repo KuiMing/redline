@@ -194,6 +194,19 @@ function updateLobbyActionControls(lobbyRes = latestLobbyState) {
   const startBtn = document.getElementById('startGameBtn');
   const readyBtn = document.getElementById('toggleReadyBtn');
   const status = lobbyReadiness(lobbyRes);
+  const marketMode = lobbyRes?.market_mode || document.getElementById('marketModeSelect')?.value || 'sample_53';
+  applyMarketMode(marketMode);
+  document.querySelectorAll('.lobby-market-option').forEach(button => {
+    button.disabled = !status.isHost;
+    button.setAttribute('aria-disabled', String(!status.isHost));
+    const cardCounts = button.dataset.cardCounts || '';
+    const hostNote = status.isHost
+      ? ''
+      : status.hasRoom
+        ? ' 只有房主可以切換遊戲難易度。'
+        : ' 建立房間後，只有房主可以切換遊戲難易度。';
+    button.dataset.tooltip = `${cardCounts}${hostNote}`.trim();
+  });
 
   if (readyBtn) {
     readyBtn.disabled = !status.hasRoom || !status.meChose;
@@ -287,12 +300,34 @@ function syncLobbyRoomCode() {
   if (lobby) lobby.classList.toggle('room-active', !!value);
 }
 
-function setMarketMode(mode) {
+function applyMarketMode(mode) {
   const select = document.getElementById('marketModeSelect');
   if (select) select.value = mode;
   document.querySelectorAll('.lobby-market-option').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.marketMode === mode);
   });
+}
+
+async function setMarketMode(mode) {
+  const status = lobbyReadiness();
+  if (!status.isHost) {
+    updateLobbyStatus(status.hasRoom ? '只有房主可以切換遊戲難易度。' : '請先建立作戰室。');
+    updateLobbyActionControls();
+    return;
+  }
+  const res = await fetch('/market-mode', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({game_id: gameId, player_id: playerId, market_mode: mode}),
+  });
+  const data = await res.json();
+  if (data.error) {
+    updateLobbyStatus(data.error === 'Only host can change game difficulty' ? '只有房主可以切換遊戲難易度。' : playerMessageZhTw(data.error));
+    await refreshLobbyState();
+    return;
+  }
+  applyMarketMode(data.market_mode || mode);
+  await refreshLobbyState(data.market_mode === 'all_cards' ? '遊戲難易度已改為一般模式。' : '遊戲難易度已改為簡單模式。');
 }
 
 function selectRoomCodeForManualCopy(roomIdValue) {
@@ -481,7 +516,7 @@ async function initLobbyControls() {
     roomInput.addEventListener('input', syncLobbyRoomCode);
   }
   const select = document.getElementById('marketModeSelect');
-  setMarketMode(select?.value || 'sample_53');
+  applyMarketMode(select?.value || 'sample_53');
   updateLobbyStatus();
   updateLobbyActionControls();
   syncLobbyRoomCode();
@@ -551,7 +586,7 @@ async function createRoom() {
     syncLobbyRoomCode();
   }
   const marketSelect = document.getElementById('marketModeSelect');
-  if (marketSelect) setMarketMode('sample_53');
+  if (marketSelect) applyMarketMode('sample_53');
   lobbyTransientStatus = '作戰室已建立；請選擇陣營，或分享房間代碼。';
   await loadFactions();
   startLobbySync();

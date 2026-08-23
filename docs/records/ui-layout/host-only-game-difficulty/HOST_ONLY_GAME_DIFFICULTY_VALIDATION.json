@@ -1,0 +1,113 @@
+{
+  "summary": {
+    "total": 8,
+    "passed": 8,
+    "failed": 0
+  },
+  "service": "http://127.0.0.1:8768",
+  "scenario": "房主與訪客 lobby；識別碼 [REDACTED]",
+  "checks": [
+    {
+      "name": "difficulty_copy_replaces_card_mode_copy",
+      "passed": true,
+      "details": {
+        "subtitle": "建立房間・選擇遊戲難易度・等待玩家就緒",
+        "label": "遊戲難易度",
+        "aria": "遊戲難易度",
+        "labels": [
+          "簡單模式",
+          "一般模式"
+        ],
+        "disabled": [
+          true,
+          true
+        ]
+      }
+    },
+    {
+      "name": "difficulty_is_locked_before_room_creation",
+      "passed": true,
+      "details": [
+        true,
+        true
+      ]
+    },
+    {
+      "name": "host_can_change_difficulty_after_creating_room",
+      "passed": true,
+      "details": {
+        "disabled": [
+          false,
+          false
+        ],
+        "active": "sample_53"
+      }
+    },
+    {
+      "name": "hover_tooltips_explain_card_type_counts",
+      "passed": true,
+      "details": [
+        {
+          "text": "共53張：奧援卡18張、一般卡35張（一般卡類型隨機抽取）。",
+          "pseudoContent": "\"共53張：奧援卡18張、一般卡35張（一般卡類型隨機抽取）。\"",
+          "pseudoOpacity": "1",
+          "expected": [
+            "共53張",
+            "奧援卡18張",
+            "一般卡35張"
+          ]
+        },
+        {
+          "text": "共245張：奧援64張、指揮68張、間諜24張、資金20張、武裝16張、交通15張、特殊宣傳15張、整肅12張、組織11張。",
+          "pseudoContent": "\"共245張：奧援64張、指揮68張、間諜24張、資金20張、武裝16張、交通15張、特殊宣傳15張、整肅12張、組織11張。\"",
+          "pseudoOpacity": "1",
+          "expected": [
+            "共245張",
+            "奧援64張",
+            "指揮68張",
+            "組織11張"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "non_host_difficulty_buttons_are_disabled",
+      "passed": true,
+      "details": {
+        "disabled": [
+          true,
+          true
+        ],
+        "active": "sample_53",
+        "tooltip": "共245張：奧援64張、指揮68張、間諜24張、資金20張、武裝16張、交通15張、特殊宣傳15張、整肅12張、組織11張。 只有房主可以切換遊戲難易度。"
+      }
+    },
+    {
+      "name": "server_rejects_non_host_difficulty_change",
+      "passed": true,
+      "details": {
+        "status": 200,
+        "body": {
+          "error": "Only host can change game difficulty"
+        }
+      }
+    },
+    {
+      "name": "host_choice_syncs_to_server_and_guest",
+      "passed": true,
+      "details": {
+        "serverMode": "all_cards",
+        "guestMode": "all_cards"
+      }
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "passed": true,
+      "details": []
+    }
+  ],
+  "screenshots": [
+    "docs/records/ui-layout/host-only-game-difficulty/host_game_difficulty_1280x720_20260823.png",
+    "docs/records/ui-layout/host-only-game-difficulty/guest_game_difficulty_disabled_1280x720_20260823.png"
+  ]
+}

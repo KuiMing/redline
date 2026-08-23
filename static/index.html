@@ -31,7 +31,7 @@
   <div class="lobby-brand">
     <div class="lobby-kicker">REDLINE COMMAND LOBBY</div>
     <div class="lobby-title">作戰準備室</div>
-    <div class="lobby-subtitle">建立房間・選擇卡牌模式・等待玩家就緒</div>
+    <div class="lobby-subtitle">建立房間・選擇遊戲難易度・等待玩家就緒</div>
   </div>
 
   <div class="lobby-briefing" aria-hidden="true">
@@ -71,15 +71,15 @@
         <div class="lobby-field-hint">其他玩家在同一個 Wi-Fi／區網下，用瀏覽器打開這個網址，再貼上房間代碼加入。</div>
       </div>
 
-      <div class="lobby-field">
-        <span>卡牌模式</span>
-        <select id="marketModeSelect" class="lobby-hidden-select" aria-label="卡牌模式">
-          <option value="sample_53">53 張卡牌</option>
-          <option value="all_cards">全部卡牌</option>
+      <div class="lobby-field" id="difficultyField">
+        <span>遊戲難易度</span>
+        <select id="marketModeSelect" class="lobby-hidden-select" aria-label="遊戲難易度">
+          <option value="sample_53">簡單模式</option>
+          <option value="all_cards">一般模式</option>
         </select>
-        <div class="lobby-market-toggle" role="group" aria-label="卡牌模式">
-          <button class="lobby-market-option active" type="button" data-market-mode="sample_53" onclick="setMarketMode('sample_53')">53 張核心</button>
-          <button class="lobby-market-option" type="button" data-market-mode="all_cards" onclick="setMarketMode('all_cards')">全部卡牌</button>
+        <div class="lobby-market-toggle" role="group" aria-label="遊戲難易度">
+          <button class="lobby-market-option active" type="button" data-market-mode="sample_53" data-card-counts="共53張：奧援卡18張、一般卡35張（一般卡類型隨機抽取）。" data-tooltip="共53張：奧援卡18張、一般卡35張（一般卡類型隨機抽取）。" onclick="setMarketMode('sample_53')" disabled>簡單模式</button>
+          <button class="lobby-market-option" type="button" data-market-mode="all_cards" data-card-counts="共245張：奧援64張、指揮68張、間諜24張、資金20張、武裝16張、交通15張、特殊宣傳15張、整肅12張、組織11張。" data-tooltip="共245張：奧援64張、指揮68張、間諜24張、資金20張、武裝16張、交通15張、特殊宣傳15張、整肅12張、組織11張。" onclick="setMarketMode('all_cards')" disabled>一般模式</button>
         </div>
       </div>
     </div>
@@ -335,6 +335,6 @@
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/static/player_messages_zh_tw.js?v=player-message-i18n-20260801"></script>
-<script src="/static/app.js?v=fullscreen-status-header-20260823"></script>
+<script src="/static/app.js?v=host-only-game-difficulty-20260823"></script>
 </body>
 </html>

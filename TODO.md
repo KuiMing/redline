@@ -1260,6 +1260,15 @@
 - Proof：`docs/records/ui-layout/fullscreen-status-header/FULLSCREEN_STATUS_HEADER_VALIDATION.{json,md}`，含 1280×720 與 1024×768 正式截圖。
 - 原始證據：`docs/records/ui-layout/fullscreen-status-header/request_fullscreen_status_header_20260823.jpg`。
 
+### P1：房主專屬遊戲難易度
+- [done] Lobby 的 `卡牌模式` 改為 `遊戲難易度`；`53 張核心` 改為 `簡單模式`；`全部卡牌` 改為 `一般模式`。Lobby 副標題與 accessibility label 使用相同詞彙。
+- [done] 滑鼠移到難易度按鈕時顯示卡牌數量 tooltip：簡單模式為奧援卡 18 張＋一般卡 35 張，共 53 張；一般模式為奧援 64、指揮 68、間諜 24、資金 20、武裝 16、交通 15、特殊宣傳 15、整肅 12、組織 11，共 245 張。單元測試直接用 runtime card pool 驗證數量。
+- [done] 建房前兩個按鈕鎖定；建房後只有房主可切換。訪客按鈕為 disabled，但仍顯示房主選定的模式與 tooltip。新增 `/market-mode` 後端驗證；非房主要求會回傳 `Only host can change game difficulty`，無法只靠前端繞過。
+- [done] 房主切換後立即寫入 lobby state，並在所有玩家的定期 lobby sync 中同步選取狀態。`/start` 仍依已保存的 `market_mode` 建立遊戲。
+- 驗證：修正前 Browser proof 1/8；修正後房主／訪客 Browser proof 8/8；host-only 及 runtime 卡牌池單元測試 3/3；完整主 pytest 401/401；console 0 error。
+- Proof：`docs/records/ui-layout/host-only-game-difficulty/HOST_ONLY_GAME_DIFFICULTY_VALIDATION.{json,md}`，含房主 tooltip 與訪客 disabled 截圖。
+- 原始證據：`docs/records/ui-layout/host-only-game-difficulty/request_host_only_game_difficulty_20260823.jpg`。
+
 ### P1：多張建立／瓦解卡在第一張後過早切到地圖
 - [done] 同一玩家手上有多張 `宣傳家` 時，第一張產生建立選擇後留在指揮中心；第二張及其餘可排隊卡牌的「行動」按鈕維持可用。所有可排隊卡牌按完後才自動切到戰略地圖。
 - [done] 建立卡、瓦解卡與當下等級具有地圖效果的奧援卡共用 FIFO 地圖效果佇列。行動卡涵蓋 `宣傳家`、`思想家`、`組織經驗甲／乙／丙`、`派遣間諜`、`內應間諜`及`情報網`瓦解分支；奧援卡涵蓋 `東洋奧援`（II／III級建立）、`北國奧援`（I／II／III級瓦解）及 `臺灣奧援`（II／III級瓦解或瓦解後建立）。異名建立、瓦解及行動卡／奧援卡混排皆依打出順序結算。`東洋奧援`與`臺灣奧援`的 I 級只有資源效果，因此不列入地圖佇列。
