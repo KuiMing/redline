@@ -335,7 +335,7 @@ function renderSupportChoiceHighlights(options = {}) {
     const townName = entry?.town;
     const town = byName.get(townName);
     if (!town) return;
-    const townBounds = [town.lat, town.lon];
+    const townBounds = townDisplayLatLng(town);
     bounds.push(townBounds);
     if (supportChoiceHighlight.focusTown && supportChoiceHighlight.focusTown === townName) {
       focusedBounds = [townBounds];
@@ -349,7 +349,7 @@ function renderSupportChoiceHighlights(options = {}) {
       // 兩步驟，選中的目標會以 dissolve-target-badge-armed 樣式標示為「已選取待確認」。
       const selectClick = () => selectTownForCurrentMapAction(townName, { autoFocus: false });
       const isArmed = selectedTown === townName;
-      const hitArea = L.circleMarker([town.lat, town.lon], {
+      const hitArea = L.circleMarker(townDisplayLatLng(town), {
         radius: Math.max(isFocused ? 20 : 16, markerRadius(map.getZoom()) + (isFocused ? 12 : 8)),
         color: isArmed ? '#fde68a' : (isFocused ? '#fecaca' : '#f87171'),
         weight: isArmed ? 4 : (isFocused ? 3 : 2),
@@ -359,7 +359,7 @@ function renderSupportChoiceHighlights(options = {}) {
       }).addTo(supportChoiceHighlightLayer)
         .bindPopup(`${escapeHtml(supportChoiceHighlight.sourceName || '可瓦解目標')}：${escapeHtml(entry?.label || townName)}（點擊選取，再按左側按鈕確認瓦解）`);
       hitArea.on('click', selectClick);
-      const skullMarker = L.marker([town.lat, town.lon], {
+      const skullMarker = L.marker(townDisplayLatLng(town), {
         zIndexOffset: 1000,
         icon: L.divIcon({
           className: 'dissolve-target-badge-wrap',
@@ -371,7 +371,7 @@ function renderSupportChoiceHighlights(options = {}) {
       skullMarker.on('click', selectClick);
       return;
     }
-    const outerMarker = L.circleMarker([town.lat, town.lon], {
+    const outerMarker = L.circleMarker(townDisplayLatLng(town), {
       radius: Math.max(isFocused ? 18 : 14, markerRadius(map.getZoom()) + (isFocused ? 10 : 6)),
       color: isFocused ? '#ffffff' : '#cbd5e1',
       weight: isFocused ? 5 : 4,
@@ -380,7 +380,7 @@ function renderSupportChoiceHighlights(options = {}) {
       opacity: 1,
     }).addTo(supportChoiceHighlightLayer).bindPopup(`${escapeHtml(supportChoiceHighlight.sourceName || '可選目標')}：${escapeHtml(entry?.label || townName)}`);
     outerMarker.on('click', () => selectTownForCurrentMapAction(townName, { autoFocus: false }));
-    const innerMarker = L.circleMarker([town.lat, town.lon], {
+    const innerMarker = L.circleMarker(townDisplayLatLng(town), {
       radius: Math.max(isFocused ? 9 : 7, markerRadius(map.getZoom()) + (isFocused ? 2 : 1)),
       color: isFocused ? '#ffffff' : '#e2e8f0',
       weight: 2,
@@ -538,16 +538,37 @@ function shouldShowLabels() {
   return labelMode === 'on' || (labelMode === 'auto' && map.getZoom() >= 5);
 }
 
+function townDisplayLatLng(town) {
+  const latLng = L.latLng(town.lat, town.lon);
+  if (town.name !== '黑河' && town.name !== '海蘭泡') return latLng;
+  if (!map._loaded) return latLng;
+  // 黑河與海蘭泡隔江相對，真實座標在亞洲視角只差不到一個像素。
+  // 使用固定像素偏移分開兩個 marker；只改 Leaflet 顯示位置，不改地圖資料、
+  // 鐵路拓撲、距離或合法目標。黑河南移，海蘭泡北移，方向也符合地理位置。
+  const point = map.latLngToLayerPoint(latLng);
+  const yOffset = town.name === '黑河' ? 12 : -12;
+  return map.layerPointToLatLng(L.point(point.x, point.y + yOffset));
+}
+
 function townLabelOptions(townName, zoom = map.getZoom()) {
   const distance = markerRadius(zoom) + 4;
-  // 金門與廈門在低／中 zoom 幾乎重疊；兩者都置頂時，後渲染的廈門會蓋住金門。
-  // 將金門固定放到 marker 下方，保留兩個城鎮名稱且不改動任何地理座標。
-  const isKinmen = townName === '金門';
+  // 金門／廈門與黑河／海蘭泡在低／中 zoom 幾乎重疊。將每組的其中一個
+  // 標籤放到 marker 下方，並讓標籤本身可點擊。玩家點海蘭泡文字時，
+  // Leaflet 會把事件交給海蘭泡 marker，而不是落到下方重疊的黑河 marker。
+  const usesBottomLabel = townName === '金門' || townName === '黑河';
+  const collisionClass = townName === '金門'
+    ? ' town-label-kinmen'
+    : townName === '黑河'
+      ? ' town-label-heihe'
+      : townName === '海蘭泡'
+        ? ' town-label-hailanpao'
+        : '';
   return {
     permanent: true,
-    direction: isKinmen ? 'bottom' : 'top',
-    className: isKinmen ? 'town-label town-label-kinmen' : 'town-label',
-    offset: [0, isKinmen ? distance : -distance],
+    interactive: true,
+    direction: usesBottomLabel ? 'bottom' : 'top',
+    className: `town-label${collisionClass}`,
+    offset: [0, usesBottomLabel ? distance : -distance],
   };
 }
 
@@ -791,7 +812,7 @@ function renderMovementHighlights(townName, options = {}) {
   }
 
   if (sharedOnly) {
-    L.circleMarker([origin.lat, origin.lon], {
+    L.circleMarker(townDisplayLatLng(origin), {
       radius: Math.max(12, markerRadius(map.getZoom()) + 5),
       color: '#facc15',
       weight: 3,
@@ -863,7 +884,7 @@ function supportChoiceTownNearLatLng(latlng, maxPixels = 28) {
     const townName = entry?.town;
     const town = byName.get(townName);
     if (!town) return;
-    const point = map.latLngToContainerPoint([town.lat, town.lon]);
+    const point = map.latLngToContainerPoint(townDisplayLatLng(town));
     const distance = clickPoint.distanceTo(point);
     if (distance <= maxPixels && (!nearest || distance < nearest.distance)) {
       nearest = { town: townName, distance };
@@ -992,12 +1013,12 @@ function updateDynamicStyles() {
   currentSharedBadges.forEach((badge, townName) => {
     const town = byName.get(townName);
     if (!town || !badge.setLatLng || !badge.getElement) return;
-    badge.setLatLng([town.lat, town.lon]);
+    badge.setLatLng(townDisplayLatLng(town));
   });
   currentArmoryBadges.forEach((badge, townName) => {
     const town = byName.get(townName);
     if (!town || !badge.setLatLng) return;
-    badge.setLatLng([town.lat, town.lon]);
+    badge.setLatLng(townDisplayLatLng(town));
   });
   renderSupportChoiceHighlights();
 }
@@ -1015,7 +1036,7 @@ function renderParticipatingFactionBaseBadges() {
     playersAtBase.forEach((player, index) => {
       const factionName = factionLabel(player.faction) || player.faction;
       const tooltip = `${factionName}根據地：${townName}`;
-      const badge = L.marker([town.lat, town.lon], {
+      const badge = L.marker(townDisplayLatLng(town), {
         interactive: true,
         keyboard: false,
         zIndexOffset: 800 + index,
@@ -1046,7 +1067,7 @@ function renderMap() {
   for (const link of links) {
     if (!visibleSet.has(link.source) || !visibleSet.has(link.target)) continue;
     const a = byName.get(link.source), b = byName.get(link.target);
-    const latlngs = [[a.lat, a.lon], [b.lat, b.lon]];
+    const latlngs = [townDisplayLatLng(a), townDisplayLatLng(b)];
     const style = link.type === 'road'
       ? { color:'#7a6030', weight:roadWeight(), opacity:0.24 }
       : { color:'#42667a', weight:railWeight(), opacity:0.28, dashArray: railDashArray(), lineCap:'round' };
@@ -1057,12 +1078,12 @@ function renderMap() {
   }
 
   visibleTowns.forEach(t => {
-    const marker = L.circleMarker([t.lat, t.lon], markerStyleForTown(t.name)).addTo(markerLayer);
+    const marker = L.circleMarker(townDisplayLatLng(t), markerStyleForTown(t.name)).addTo(markerLayer);
     marker.bindPopup(popupHtml(t), { maxWidth:380 });
 
     const shared = sharedAccessForTown(t.name);
     if (shared.length) {
-      const badge = L.marker([t.lat, t.lon], {
+      const badge = L.marker(townDisplayLatLng(t), {
         interactive: false,
         keyboard: false,
         zIndexOffset: 700,
@@ -1076,7 +1097,7 @@ function renderMap() {
       currentSharedBadges.set(t.name, badge);
     }
     if (t.type === '軍火庫' && !currentArmoryBadges.has(t.name)) {
-      const armoryBadge = L.marker([t.lat, t.lon], {
+      const armoryBadge = L.marker(townDisplayLatLng(t), {
         interactive: false,
         keyboard: false,
         zIndexOffset: 600,
@@ -1123,7 +1144,22 @@ function renderMap() {
       selectTownForCurrentMapAction(t.name, { autoFocus: true });
     });
     currentMarkers.set(t.name, marker);
-    if (shouldShowLabels()) marker.bindTooltip(labelTextForTown(t.name), townLabelOptions(t.name));
+    if (shouldShowLabels()) {
+      if (t.name === '黑河' || t.name === '海蘭泡') {
+        marker.on('tooltipopen', event => {
+          const labelElement = event.tooltip?.getElement();
+          if (!labelElement || labelElement.dataset.townSelectionBound === 'true') return;
+          labelElement.dataset.townSelectionBound = 'true';
+          L.DomEvent.disableClickPropagation(labelElement);
+          labelElement.addEventListener('click', clickEvent => {
+            clickEvent.preventDefault();
+            clickEvent.stopPropagation();
+            marker.fire('click');
+          });
+        });
+      }
+      marker.bindTooltip(labelTextForTown(t.name), townLabelOptions(t.name));
+    }
   });
 
   renderParticipatingFactionBaseBadges();
@@ -1501,7 +1537,7 @@ window.__armoryBadgeDiagnosticsForTest = function () {
   return [...currentArmoryBadges.entries()].map(([townName, badge]) => {
     const town = byName.get(townName);
     const latLng = badge.getLatLng();
-    const townPoint = map.latLngToContainerPoint([town.lat, town.lon]);
+    const townPoint = map.latLngToContainerPoint(townDisplayLatLng(town));
     const element = badge.getElement();
     const rect = element?.getBoundingClientRect();
     const mapRect = map.getContainer().getBoundingClientRect();

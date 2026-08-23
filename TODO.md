@@ -4,6 +4,15 @@
 
 ## 待辦
 
+### P1：黑河與海蘭泡重疊，點海蘭泡卻選到黑河
+- [done] 回報情境：戰略地圖上的「黑河」與「海蘭泡」使用相隔約 1.6 公里的真實座標；在亞洲視角兩個 marker 與標籤近乎完全重疊。點擊海蘭泡位置時，Leaflet 可能把事件交給黑河，因此左側資訊錯誤顯示「黑河」。修正前專用 Browser proof **2/4 passed**：兩個標籤重疊面積 `656 px²`，點海蘭泡標籤沒有選中海蘭泡。
+- [done] 保留「黑河」與「海蘭泡」兩個獨立 canonical 城鎮；沒有更名或修改 `data/map.json`、地理座標、統治者、陣營、鐵路鄰接、距離及合法候選。
+- [done] 在 Leaflet 顯示層把黑河 marker 固定向南偏移 12 px，把海蘭泡 marker 固定向北偏移 12 px；所有鐵路線、組織／根據地／軍火庫標記及合法目標 highlight 使用相同顯示座標，因此 marker 與線段保持連接。
+- [done] 黑河標籤移到 marker 下方；海蘭泡標籤保留在上方。兩個標籤改為可點擊，點標籤會觸發對應城鎮 marker，不會落到另一個重疊城鎮。
+- [done] 加入 `scripts/validate_heihe_hailanpao_selection.py`。修正後驗證 marker 間距 `25 px`、標籤重疊面積 `0 px²`、點海蘭泡 marker 與標籤都會選中海蘭泡、左側資訊以「海蘭泡」起首、Browser console 0 errors，1280×720 與 1024×768 合計 **7/7 passed**。
+- [done] 回歸：金門／廈門標籤 **6/6 passed**、canonical map 單一來源 **8/8 passed**、地圖選取 highlight **7/7 passed**、瓦解地圖互動 **9/9 passed**、一帶一路南洋 **7/7 passed**、一帶一路天方 **7/7 passed**、完整 pytest **406/406 passed**。
+- [done] 證據：`docs/records/map-ui/heihe-hailanpao-selection/`；保留原始回報圖、1280×720／1024×768 修正後截圖及結構化驗證報告。
+
 ### P1：紅軍能力沒有可執行內容時缺少提示
 - [done] 回報情境：按下「國安部」時，如果紅軍組織 1 格內沒有可以瓦解的牆內組織，畫面沒有留下清楚提示。原始廣泛 Browser proof 只有 **1/6 passed**。
 - [done] 規則更正：統戰部抽牌堆空時會洗回棄牌堆再抽牌，不屬於「無目標」能力；政工部必定有其他玩家，不需要「沒有目標玩家」分支。已移除這兩個錯誤假設，並新增統戰部洗牌後正常抽 1 張的回歸測試。

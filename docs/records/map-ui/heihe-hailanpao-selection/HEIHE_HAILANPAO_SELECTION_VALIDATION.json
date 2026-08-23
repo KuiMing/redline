@@ -1,0 +1,213 @@
+{
+  "summary": {
+    "total": 7,
+    "passed": 7,
+    "failed": 0
+  },
+  "base_url": "http://127.0.0.1:8000",
+  "checks": [
+    {
+      "name": "both_labels_are_visible",
+      "passed": true,
+      "details": {
+        "labels": {
+          "黑河": {
+            "left": 914,
+            "top": 218.6666717529297,
+            "right": 946,
+            "bottom": 239.1666717529297,
+            "width": 32,
+            "height": 20.5,
+            "pointerEvents": "auto",
+            "classes": [
+              "leaflet-tooltip",
+              "town-label",
+              "town-label-heihe",
+              "leaflet-zoom-animated",
+              "leaflet-tooltip-bottom"
+            ]
+          },
+          "海蘭泡": {
+            "left": 908,
+            "top": 165.3333282470703,
+            "right": 951,
+            "bottom": 185.8333282470703,
+            "width": 43,
+            "height": 20.5,
+            "pointerEvents": "auto",
+            "classes": [
+              "leaflet-tooltip",
+              "town-label",
+              "town-label-hailanpao",
+              "leaflet-zoom-animated",
+              "leaflet-tooltip-top"
+            ]
+          }
+        },
+        "markers": {
+          "黑河": {
+            "x": 929,
+            "y": 214
+          },
+          "海蘭泡": {
+            "x": 930,
+            "y": 190
+          }
+        },
+        "markerDistance": 24.020824298928627,
+        "overlapArea": 0
+      }
+    },
+    {
+      "name": "nearby_labels_do_not_overlap",
+      "passed": true,
+      "details": {
+        "labels": {
+          "黑河": {
+            "left": 914,
+            "top": 218.6666717529297,
+            "right": 946,
+            "bottom": 239.1666717529297,
+            "width": 32,
+            "height": 20.5,
+            "pointerEvents": "auto",
+            "classes": [
+              "leaflet-tooltip",
+              "town-label",
+              "town-label-heihe",
+              "leaflet-zoom-animated",
+              "leaflet-tooltip-bottom"
+            ]
+          },
+          "海蘭泡": {
+            "left": 908,
+            "top": 165.3333282470703,
+            "right": 951,
+            "bottom": 185.8333282470703,
+            "width": 43,
+            "height": 20.5,
+            "pointerEvents": "auto",
+            "classes": [
+              "leaflet-tooltip",
+              "town-label",
+              "town-label-hailanpao",
+              "leaflet-zoom-animated",
+              "leaflet-tooltip-top"
+            ]
+          }
+        },
+        "markers": {
+          "黑河": {
+            "x": 929,
+            "y": 214
+          },
+          "海蘭泡": {
+            "x": 930,
+            "y": 190
+          }
+        },
+        "markerDistance": 24.020824298928627,
+        "overlapArea": 0
+      }
+    },
+    {
+      "name": "nearby_markers_have_distinct_click_targets",
+      "passed": true,
+      "details": {
+        "labels": {
+          "黑河": {
+            "left": 914,
+            "top": 218.6666717529297,
+            "right": 946,
+            "bottom": 239.1666717529297,
+            "width": 32,
+            "height": 20.5,
+            "pointerEvents": "auto",
+            "classes": [
+              "leaflet-tooltip",
+              "town-label",
+              "town-label-heihe",
+              "leaflet-zoom-animated",
+              "leaflet-tooltip-bottom"
+            ]
+          },
+          "海蘭泡": {
+            "left": 908,
+            "top": 165.3333282470703,
+            "right": 951,
+            "bottom": 185.8333282470703,
+            "width": 43,
+            "height": 20.5,
+            "pointerEvents": "auto",
+            "classes": [
+              "leaflet-tooltip",
+              "town-label",
+              "town-label-hailanpao",
+              "leaflet-zoom-animated",
+              "leaflet-tooltip-top"
+            ]
+          }
+        },
+        "markers": {
+          "黑河": {
+            "x": 929,
+            "y": 214
+          },
+          "海蘭泡": {
+            "x": 930,
+            "y": 190
+          }
+        },
+        "markerDistance": 24.020824298928627,
+        "overlapArea": 0
+      }
+    },
+    {
+      "name": "clicking_hailanpao_marker_selects_hailanpao",
+      "passed": true,
+      "details": {
+        "selectedTown": "海蘭泡",
+        "infoText": "海蘭泡\n座標：127.533, 50.260\n靜態統治者：北國\n陣營：滿洲\n城鎮類型：一般城鎮\n當前控制者：無組織\n組織狀態：無組織\n共享可用：無\n共享說明：無\n一般道路：無\n鐵路：赤塔 黑河 伯力\n視覺狀態：無組織 無共享"
+      }
+    },
+    {
+      "name": "clicking_hailanpao_label_selects_hailanpao",
+      "passed": true,
+      "details": {
+        "selectedTown": "海蘭泡",
+        "infoText": "海蘭泡\n座標：127.533, 50.260\n靜態統治者：北國\n陣營：滿洲\n城鎮類型：一般城鎮\n當前控制者：無組織\n組織狀態：無組織\n共享可用：無\n共享說明：無\n一般道路：無\n鐵路：赤塔 黑河 伯力\n視覺狀態：無組織 無共享"
+      }
+    },
+    {
+      "name": "compact_view_keeps_hailanpao_selected_and_labels_separate",
+      "passed": true,
+      "details": {
+        "selectedTown": "海蘭泡",
+        "boxes": {
+          "黑河": {
+            "left": 666,
+            "top": 415.0666809082031,
+            "right": 698,
+            "bottom": 435.5666809082031
+          },
+          "海蘭泡": {
+            "left": 660,
+            "top": 330.9333190917969,
+            "right": 703,
+            "bottom": 351.4333190917969
+          }
+        },
+        "overlap": 0
+      }
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "passed": true,
+      "details": []
+    }
+  ],
+  "screenshots": [
+    "docs/records/map-ui/heihe-hailanpao-selection/hailanpao_selected_1280x720_20260823.png",
+    "docs/records/map-ui/heihe-hailanpao-selection/hailanpao_selected_1024x768_20260823.png"
+  ]
+}
