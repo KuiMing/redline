@@ -3801,15 +3801,14 @@ async function render(state) {
       const hasMyPendingChoice = !!(state.pending_choice && me && state.pending_choice.player_id === me.id);
       const canShowTopdeckButton = isMyTurn && pendingUses > 0;
       topdeckBtn.style.display = canShowTopdeckButton ? 'inline-flex' : 'none';
-      topdeckBtn.textContent = `頂牌 (${pendingUses})`;
+      topdeckBtn.textContent = `卡牌置頂 (${pendingUses})`;
       topdeckBtn.disabled = !canShowTopdeckButton || candidateCount === 0 || hasMyPendingChoice;
       topdeckBtn.title = candidateCount === 0 ? '本回合尚未購買可頂的牌' : '';
     }
 
     const phaseNotice = document.getElementById('phaseActionNotice');
     const showSecondaryBar = state.game_phase === 'main' && Boolean(
-      topdeckBtn?.style.display !== 'none'
-      || phaseNotice?.classList.contains('visible')
+      phaseNotice?.classList.contains('visible')
     );
     if (phaseActionBar) phaseActionBar.style.display = showSecondaryBar ? 'flex' : 'none';
     if (phaseActionBar && hud) {

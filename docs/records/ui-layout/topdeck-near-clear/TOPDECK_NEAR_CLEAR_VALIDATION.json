@@ -1,0 +1,200 @@
+{
+  "summary": {
+    "total": 6,
+    "passed": 6,
+    "failed": 0
+  },
+  "service": "http://127.0.0.1:8000",
+  "scenario": "識別碼 [REDACTED]",
+  "checks": [
+    {
+      "name": "1280x720_topdeck_is_renamed_and_next_to_clear",
+      "passed": true,
+      "details": {
+        "text": "卡牌置頂 (1)",
+        "title": "",
+        "disabled": false,
+        "parentId": "purchaseSelectionControls",
+        "previousId": "clearPurchaseSelectionBtn",
+        "nextId": "openPurchaseConfirmBtn",
+        "controls": {
+          "left": 317,
+          "top": 151,
+          "right": 773,
+          "bottom": 186,
+          "width": 456,
+          "height": 35
+        },
+        "clear": {
+          "left": 503.875,
+          "top": 151,
+          "right": 554.203125,
+          "bottom": 186,
+          "width": 50.328125,
+          "height": 35
+        },
+        "topdeck": {
+          "left": 562.203125,
+          "top": 151,
+          "right": 666.03125,
+          "bottom": 186,
+          "width": 103.828125,
+          "height": 35
+        },
+        "buy": {
+          "left": 674.03125,
+          "top": 151,
+          "right": 773,
+          "bottom": 186,
+          "width": 98.96875,
+          "height": 35
+        },
+        "hud": {
+          "left": 0,
+          "top": 0,
+          "right": 1280,
+          "bottom": 48,
+          "width": 1280,
+          "height": 48
+        },
+        "shell": {
+          "left": 0,
+          "top": 56,
+          "right": 1280,
+          "bottom": 720,
+          "width": 1280,
+          "height": 664
+        },
+        "secondaryDisplay": "none",
+        "position": "static"
+      }
+    },
+    {
+      "name": "1280x720_topdeck_no_longer_creates_secondary_row",
+      "passed": true,
+      "details": {
+        "secondaryDisplay": "none",
+        "hud": {
+          "left": 0,
+          "top": 0,
+          "right": 1280,
+          "bottom": 48,
+          "width": 1280,
+          "height": 48
+        },
+        "shell": {
+          "left": 0,
+          "top": 56,
+          "right": 1280,
+          "bottom": 720,
+          "width": 1280,
+          "height": 664
+        },
+        "scale": 1.0
+      }
+    },
+    {
+      "name": "card_topdeck_button_keeps_existing_choice_flow",
+      "passed": true,
+      "details": {
+        "choiceKey": "topdeck_purchased_choice",
+        "pendingUses": 0
+      }
+    },
+    {
+      "name": "1024x768_topdeck_is_renamed_and_next_to_clear",
+      "passed": true,
+      "details": {
+        "text": "卡牌置頂 (1)",
+        "title": "",
+        "disabled": false,
+        "parentId": "purchaseSelectionControls",
+        "previousId": "clearPurchaseSelectionBtn",
+        "nextId": "openPurchaseConfirmBtn",
+        "controls": {
+          "left": 253.60000610351562,
+          "top": 216.8000030517578,
+          "right": 618.4000244140625,
+          "bottom": 244.8000030517578,
+          "width": 364.8000183105469,
+          "height": 28
+        },
+        "clear": {
+          "left": 403.1000061035156,
+          "top": 216.8000030517578,
+          "right": 443.3625183105469,
+          "bottom": 244.8000030517578,
+          "width": 40.26251220703125,
+          "height": 28
+        },
+        "topdeck": {
+          "left": 449.76251220703125,
+          "top": 216.8000030517578,
+          "right": 532.8250122070312,
+          "bottom": 244.8000030517578,
+          "width": 83.0625,
+          "height": 28
+        },
+        "buy": {
+          "left": 539.2250366210938,
+          "top": 216.8000030517578,
+          "right": 618.4000244140625,
+          "bottom": 244.8000030517578,
+          "width": 79.17498779296875,
+          "height": 28
+        },
+        "hud": {
+          "left": 0,
+          "top": 96,
+          "right": 1024,
+          "bottom": 134.39999389648438,
+          "width": 1024,
+          "height": 38.399993896484375
+        },
+        "shell": {
+          "left": 0,
+          "top": 140.8000030517578,
+          "right": 1024,
+          "bottom": 672.0000152587891,
+          "width": 1024,
+          "height": 531.2000122070312
+        },
+        "secondaryDisplay": "none",
+        "position": "static"
+      }
+    },
+    {
+      "name": "1024x768_topdeck_no_longer_creates_secondary_row",
+      "passed": true,
+      "details": {
+        "secondaryDisplay": "none",
+        "hud": {
+          "left": 0,
+          "top": 96,
+          "right": 1024,
+          "bottom": 134.39999389648438,
+          "width": 1024,
+          "height": 38.399993896484375
+        },
+        "shell": {
+          "left": 0,
+          "top": 140.8000030517578,
+          "right": 1024,
+          "bottom": 672.0000152587891,
+          "width": 1024,
+          "height": 531.2000122070312
+        },
+        "scale": 0.8
+      }
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "passed": true,
+      "details": []
+    }
+  ],
+  "screenshots": [
+    "docs/records/ui-layout/topdeck-near-clear/topdeck_near_clear_1280x720_20260823.png",
+    "docs/records/ui-layout/topdeck-near-clear/topdeck_near_clear_1024x768_20260823.png"
+  ]
+}
