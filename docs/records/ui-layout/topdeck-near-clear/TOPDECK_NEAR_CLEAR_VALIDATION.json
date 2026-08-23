@@ -8,15 +8,15 @@
   "scenario": "識別碼 [REDACTED]",
   "checks": [
     {
-      "name": "1280x720_topdeck_is_renamed_and_next_to_clear",
+      "name": "1280x720_topdeck_is_renamed_and_left_of_clear",
       "passed": true,
       "details": {
         "text": "卡牌置頂 (1)",
         "title": "",
         "disabled": false,
         "parentId": "purchaseSelectionControls",
-        "previousId": "clearPurchaseSelectionBtn",
-        "nextId": "openPurchaseConfirmBtn",
+        "previousId": "purchaseSelectionSummary",
+        "nextId": "clearPurchaseSelectionBtn",
         "controls": {
           "left": 317,
           "top": 151,
@@ -26,17 +26,17 @@
           "height": 35
         },
         "clear": {
-          "left": 503.875,
+          "left": 615.703125,
           "top": 151,
-          "right": 554.203125,
+          "right": 666.03125,
           "bottom": 186,
           "width": 50.328125,
           "height": 35
         },
         "topdeck": {
-          "left": 562.203125,
+          "left": 503.875,
           "top": 151,
-          "right": 666.03125,
+          "right": 607.703125,
           "bottom": 186,
           "width": 103.828125,
           "height": 35
@@ -102,15 +102,15 @@
       }
     },
     {
-      "name": "1024x768_topdeck_is_renamed_and_next_to_clear",
+      "name": "1024x768_topdeck_is_renamed_and_left_of_clear",
       "passed": true,
       "details": {
         "text": "卡牌置頂 (1)",
         "title": "",
         "disabled": false,
         "parentId": "purchaseSelectionControls",
-        "previousId": "clearPurchaseSelectionBtn",
-        "nextId": "openPurchaseConfirmBtn",
+        "previousId": "purchaseSelectionSummary",
+        "nextId": "clearPurchaseSelectionBtn",
         "controls": {
           "left": 253.60000610351562,
           "top": 216.8000030517578,
@@ -120,17 +120,17 @@
           "height": 28
         },
         "clear": {
-          "left": 403.1000061035156,
+          "left": 492.5625,
           "top": 216.8000030517578,
-          "right": 443.3625183105469,
+          "right": 532.8250122070312,
           "bottom": 244.8000030517578,
           "width": 40.26251220703125,
           "height": 28
         },
         "topdeck": {
-          "left": 449.76251220703125,
+          "left": 403.1000061035156,
           "top": 216.8000030517578,
-          "right": 532.8250122070312,
+          "right": 486.1625061035156,
           "bottom": 244.8000030517578,
           "width": 83.0625,
           "height": 28

@@ -67,8 +67,8 @@ def main() -> None:
             )
             scale = layout["hud"]["width"] / 1280
             same_row = abs(layout["clear"]["top"] - layout["topdeck"]["top"]) <= 1 and abs(layout["clear"]["height"] - layout["topdeck"]["height"]) <= 1
-            adjacent = layout["topdeck"]["left"] >= layout["clear"]["right"] and layout["topdeck"]["left"] - layout["clear"]["right"] <= 16 * scale
-            record(f"{width}x{height}_topdeck_is_renamed_and_next_to_clear", layout["text"] == "卡牌置頂 (1)" and layout["parentId"] == "purchaseSelectionControls" and layout["previousId"] == "clearPurchaseSelectionBtn" and layout["nextId"] == "openPurchaseConfirmBtn" and same_row and adjacent and layout["position"] == "static", layout)
+            adjacent = layout["clear"]["left"] >= layout["topdeck"]["right"] and layout["clear"]["left"] - layout["topdeck"]["right"] <= 16 * scale
+            record(f"{width}x{height}_topdeck_is_renamed_and_left_of_clear", layout["text"] == "卡牌置頂 (1)" and layout["parentId"] == "purchaseSelectionControls" and layout["previousId"] == "purchaseSelectionSummary" and layout["nextId"] == "clearPurchaseSelectionBtn" and same_row and adjacent and layout["position"] == "static", layout)
             record(f"{width}x{height}_topdeck_no_longer_creates_secondary_row", layout["secondaryDisplay"] == "none" and layout["shell"]["top"] <= layout["hud"]["bottom"] + 10 * scale, {"secondaryDisplay": layout["secondaryDisplay"], "hud": layout["hud"], "shell": layout["shell"], "scale": scale})
 
             screenshot = OUT / f"topdeck_near_clear_{width}x{height}_20260823.png"
