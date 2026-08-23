@@ -2,7 +2,7 @@
 """行動階段合併驗收（真實瀏覽器）。
 
 對應使用者回報的錯誤流程：「出牌 → 結束行動 → 購買 → 無法再出牌」。
-合併後出牌／購買／陣營能力同屬一個行動階段，可自由交錯，只有「結束行動階段」
+合併後出牌／購買／陣營能力同屬一個行動階段，可自由交錯，只有「結束行動」
 是不可逆的動作（補手牌到 5 張、換下一位玩家）。
 
 用法：先啟動伺服器，再以 REDLINE_BASE_URL 指向它：
@@ -103,14 +103,14 @@ def main():
         page.wait_for_timeout(400)
         dismiss_overlays(page)
 
-        # 1. 行動階段一開始就顯示「結束行動階段」，且購買區已可勾選。
+        # 1. 行動階段一開始就顯示「結束行動」，且購買區已可勾選。
         state0 = page.evaluate('window.lastGameState')
         advance_text = page.locator('#advanceStepBtn').inner_text(timeout=5000)
         buy_selectable = not page.locator('#purchaseStatic .purchase-card-checkbox input').first.is_disabled()
         page.screenshot(path=str(shots_dir / '01_action_phase_start_buy_already_selectable.png'), full_page=True)
         checks.append({
             'name': '01_action_phase_starts_with_end_action_button_and_selectable_purchase',
-            'passed': state0.get('turn_phase') == 'action' and advance_text == '結束行動階段' and buy_selectable,
+            'passed': state0.get('turn_phase') == 'action' and advance_text == '結束行動' and buy_selectable,
             'details': {'turn_phase': state0.get('turn_phase'), 'advance_text': advance_text, 'buy_selectable': buy_selectable},
         })
 
@@ -179,7 +179,7 @@ def main():
             'details': {'faction_panel_visible': faction_panel_visible, 'faction_buttons': faction_buttons, 'my_faction_tab_enabled': my_faction_tab_enabled},
         })
 
-        # 7. 按一次「結束行動階段」→ 補手牌到 5 張、換下一位玩家、回到 action。
+        # 7. 按一次「結束行動」→ 補手牌到 5 張、換下一位玩家、回到 action。
         before_player = state4.get('current_player')
         page.locator('#advanceStepBtn').click(timeout=5000)
         page.wait_for_function('(name) => window.lastGameState && window.lastGameState.current_player !== name', arg=before_player, timeout=15000)

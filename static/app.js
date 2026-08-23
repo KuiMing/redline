@@ -3717,7 +3717,7 @@ async function render(state) {
     const redArmyBtn = document.getElementById('redArmyAbilityBtn');
     const isMyTurn = isMyTurnState(state);
     const waitText = pendingChoiceWaitText(state);
-    const stepLabel = phaseLabel === '事件結算' ? '開始行動階段' : phaseLabel === '行動' ? '結束行動階段' : phaseLabel === '購買' ? '結束回合' : '結束目前步驟';
+    const stepLabel = phaseLabel === '事件結算' ? '開始行動階段' : phaseLabel === '行動' ? '結束行動' : phaseLabel === '購買' ? '結束回合' : '結束目前步驟';
     if (phaseActionMeta) {
       phaseActionMeta.textContent = waitText || (isMyTurn ? `目前：${phaseLabel}｜下一步：${stepLabel}` : `目前：${phaseLabel}｜等待 ${state.current_player} 操作`);
     }

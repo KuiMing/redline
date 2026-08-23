@@ -95,13 +95,13 @@ def main():
         initial_propagandist_supply = int((state.get('static_purchase_supply') or {}).get('宣傳家', 0) or 0)
         meta = page.locator('#phaseActionMeta').inner_text(timeout=5000)
         advance_text = page.locator('#advanceStepBtn').inner_text(timeout=5000)
-        phase_bar_display = page.locator('#phaseActionBar').evaluate('el => getComputedStyle(el).display')
+        advance_display = page.locator('#advanceStepBtn').evaluate('el => getComputedStyle(el).display')
         shot1 = screenshot_dir / '01_initial_action_phase_no_continue_button.png'
         page.screenshot(path=str(shot1), full_page=True)
         checks.append({
-            'name': 'initial_action_phase_offers_single_end_action_phase_button',
-            'passed': state.get('turn_phase') == 'action' and '繼續行動階段' not in meta and advance_text == '結束行動階段' and phase_bar_display != 'none',
-            'details': {'turn_phase': state.get('turn_phase'), 'meta': meta, 'advance_text': advance_text, 'phase_bar_display': phase_bar_display, 'screenshot': str(shot1.relative_to(BASE))},
+            'name': 'initial_action_phase_offers_single_end_action_button',
+            'passed': state.get('turn_phase') == 'action' and '繼續行動階段' not in meta and advance_text == '結束行動' and advance_display != 'none',
+            'details': {'turn_phase': state.get('turn_phase'), 'meta': meta, 'advance_text': advance_text, 'advance_display': advance_display, 'screenshot': str(shot1.relative_to(BASE))},
         })
 
         # 出牌與購買同屬一個行動階段：不必先按 advance，購買勾選框在 action 就已可用；
