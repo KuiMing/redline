@@ -674,8 +674,15 @@ body {
   display: block;
 }
 
-#phaseActionMeta {
+#phaseActionMetaWrap {
+  position: relative;
+  flex: 0 1 330px;
+  min-width: 0;
   max-width: 330px;
+}
+
+#phaseActionMeta {
+  max-width: 100%;
   overflow: hidden;
   color: #fbbf24;
   font-family: 'JetBrains Mono', monospace;
@@ -686,6 +693,56 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
   text-shadow: 0 0 12px rgba(245, 158, 11, 0.18);
+  outline: none;
+}
+
+#phaseActionMetaWrap.is-overflowing #phaseActionMeta {
+  cursor: help;
+}
+
+#phaseActionMetaWrap.is-overflowing #phaseActionMeta:focus-visible {
+  border-radius: 4px;
+  box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.55);
+}
+
+#phaseActionMetaTooltip {
+  display: none;
+  position: absolute;
+  top: calc(100% + 11px);
+  right: 0;
+  z-index: 60;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: min(560px, calc(100vw - 40px));
+  padding: 10px 12px;
+  color: #fef3c7;
+  border: 1px solid rgba(251, 191, 36, 0.58);
+  border-radius: 9px;
+  background: rgba(24, 16, 6, 0.97);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.44), inset 0 0 0 1px rgba(251, 191, 36, 0.08);
+  font-family: 'JetBrains Mono', 'Noto Sans TC', monospace;
+  font-size: 0.82rem;
+  font-weight: 650;
+  line-height: 1.55;
+  letter-spacing: 0.01em;
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  pointer-events: none;
+}
+
+#phaseActionMetaTooltip::before {
+  content: '';
+  position: absolute;
+  right: 18px;
+  bottom: 100%;
+  border: 7px solid transparent;
+  border-bottom-color: rgba(251, 191, 36, 0.58);
+}
+
+#phaseActionMetaWrap.is-overflowing:hover #phaseActionMetaTooltip,
+#phaseActionMetaWrap.is-overflowing:focus-within #phaseActionMetaTooltip {
+  display: block;
 }
 
 .phase-action-btn {

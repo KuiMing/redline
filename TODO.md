@@ -5,11 +5,12 @@
 ## 待辦
 
 ### P2：金色階段提示 hover 時顯示完整說明
-- [ ] 回報情境：HUD 的金色階段提示可能因文字過長而無法完整顯示，例如「七五事件」的說明。
-- [ ] 需求：保留目前精簡的單行提示；滑鼠移到提示上時，顯示完整、不截斷的說明文字。
-- [ ] 驗收：長文字可以完整閱讀；提示不得遮住「重新開始」或主要操作控制；1280×720 與 1024×768 均需驗證。
-- [ ] 需求圖：`docs/records/ui-layout/phase-guidance-hover-full-text/request_phase_guidance_hover_full_text_20260823.jpg`。
-- [ ] 本次只記錄需求；尚未修改功能。
+- [done] 回報情境：HUD 的金色階段提示可能因文字過長而無法完整顯示，例如「烏魯木齊七五事件」的說明。
+- [done] 保留目前精簡的單行省略提示；只有文字實際溢出時才顯示 help 游標，滑鼠移入後以金色深色 tooltip 顯示完整、不截斷的說明。
+- [done] 鍵盤 focus 也會顯示相同 tooltip；短文字不建立不必要的 tooltip 操作焦點。tooltip 與 `aria-describedby`／`role="tooltip"` 同步。
+- [done] Tooltip 顯示在 HUD 下方，不遮住「重新開始」，並限制在畫面內。1280×720 與 1024×768 Browser proof 合計 **12/12 passed**，console 0 errors。
+- [done] 回歸：全畫面狀態列 **10/10 passed**、command header **10/10 passed**、完整 pytest **406/406 passed**。
+- [done] 證據：`docs/records/ui-layout/phase-guidance-hover-full-text/`；保留原始需求圖、兩種解析度截圖及結構化驗證報告。
 
 ### P1：黑河與海蘭泡重疊，點海蘭泡卻選到黑河
 - [done] 回報情境：戰略地圖上的「黑河」與「海蘭泡」使用相隔約 1.6 公里的真實座標；在亞洲視角兩個 marker 與標籤近乎完全重疊。點擊海蘭泡位置時，Leaflet 可能把事件交給黑河，因此左側資訊錯誤顯示「黑河」。修正前專用 Browser proof **2/4 passed**：兩個標籤重疊面積 `656 px²`，點海蘭泡標籤沒有選中海蘭泡。

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>REDLINE // STRATEGIC COMMAND</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="/static/style.css?v=red-army-action-adjacency-20260823" />
+  <link rel="stylesheet" href="/static/style.css?v=phase-meta-full-tooltip-20260823" />
 </head>
 <body>
 <div id="stageViewport">
@@ -15,7 +15,10 @@
 <div id="hud">
   <div id="hudMainRow" class="hud-main-row"></div>
   <div id="hudStatusActions">
-    <div id="phaseActionMeta" aria-live="polite"></div>
+    <div id="phaseActionMetaWrap">
+      <div id="phaseActionMeta" aria-live="polite" tabindex="0" aria-describedby="phaseActionMetaTooltip"></div>
+      <div id="phaseActionMetaTooltip" role="tooltip" aria-hidden="true"></div>
+    </div>
     <a id="emergencyNewGameBtn" href="/new-game" target="_self">重新開始</a>
   </div>
 </div>
@@ -335,6 +338,6 @@
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/static/player_messages_zh_tw.js?v=player-message-i18n-20260801"></script>
-<script src="/static/app.js?v=host-only-game-difficulty-20260823"></script>
+<script src="/static/app.js?v=phase-meta-full-tooltip-20260823"></script>
 </body>
 </html>

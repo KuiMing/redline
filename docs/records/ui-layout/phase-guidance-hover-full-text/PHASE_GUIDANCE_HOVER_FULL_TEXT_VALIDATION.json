@@ -1,0 +1,167 @@
+{
+  "summary": {
+    "total": 12,
+    "passed": 12,
+    "failed": 0
+  },
+  "base_url": "http://127.0.0.1:8000",
+  "long_text": "烏魯木齊七五事件：探聽東突厥的現況；回合結束時至少有 1 個己方組織在牆內。成功：免費在己方組織 1 格內建立 1 個組織。失敗：被紅軍隨機棄掉 1 張手牌。",
+  "checks": [
+    {
+      "name": "long_text_is_visually_truncated_1280x720",
+      "passed": true,
+      "details": {
+        "clientWidth": 330,
+        "scrollWidth": 994,
+        "text": "烏魯木齊七五事件：探聽東突厥的現況；回合結束時至少有 1 個己方組織在牆內。成功：免費在己方組織 1 格內建立 1 個組織。失敗：被紅軍隨機棄掉 1 張手牌。",
+        "tabIndex": 0
+      }
+    },
+    {
+      "name": "overflow_state_is_enabled_1280x720",
+      "passed": true,
+      "details": {
+        "class": "is-overflowing",
+        "clientWidth": 330,
+        "scrollWidth": 994,
+        "text": "烏魯木齊七五事件：探聽東突厥的現況；回合結束時至少有 1 個己方組織在牆內。成功：免費在己方組織 1 格內建立 1 個組織。失敗：被紅軍隨機棄掉 1 張手牌。",
+        "tabIndex": 0
+      }
+    },
+    {
+      "name": "hover_shows_complete_text_1280x720",
+      "passed": true,
+      "details": {
+        "text": "烏魯木齊七五事件：探聽東突厥的現況；回合結束時至少有 1 個己方組織在牆內。成功：免費在己方組織 1 格內建立 1 個組織。失敗：被紅軍隨機棄掉 1 張手牌。",
+        "display": "block",
+        "ariaHidden": "false",
+        "rect": {
+          "left": 616.796875,
+          "top": 43.5,
+          "right": 1176.796875,
+          "bottom": 106.1875,
+          "width": 560,
+          "height": 62.6875
+        }
+      }
+    },
+    {
+      "name": "tooltip_is_inside_view_and_avoids_restart_1280x720",
+      "passed": true,
+      "details": {
+        "tooltip": {
+          "left": 616.796875,
+          "top": 43.5,
+          "right": 1176.796875,
+          "bottom": 106.1875,
+          "width": 560,
+          "height": 62.6875
+        },
+        "restart": {
+          "left": 1188.796875,
+          "top": 7.5,
+          "right": 1264,
+          "bottom": 39.5
+        },
+        "viewport": {
+          "left": 0,
+          "top": 0,
+          "right": 1280,
+          "bottom": 720
+        }
+      }
+    },
+    {
+      "name": "keyboard_focus_also_shows_tooltip_1280x720",
+      "passed": true,
+      "details": "block"
+    },
+    {
+      "name": "long_text_is_visually_truncated_1024x768",
+      "passed": true,
+      "details": {
+        "clientWidth": 330,
+        "scrollWidth": 994,
+        "text": "烏魯木齊七五事件：探聽東突厥的現況；回合結束時至少有 1 個己方組織在牆內。成功：免費在己方組織 1 格內建立 1 個組織。失敗：被紅軍隨機棄掉 1 張手牌。",
+        "tabIndex": 0
+      }
+    },
+    {
+      "name": "overflow_state_is_enabled_1024x768",
+      "passed": true,
+      "details": {
+        "class": "is-overflowing",
+        "clientWidth": 330,
+        "scrollWidth": 994,
+        "text": "烏魯木齊七五事件：探聽東突厥的現況；回合結束時至少有 1 個己方組織在牆內。成功：免費在己方組織 1 格內建立 1 個組織。失敗：被紅軍隨機棄掉 1 張手牌。",
+        "tabIndex": 0
+      }
+    },
+    {
+      "name": "hover_shows_complete_text_1024x768",
+      "passed": true,
+      "details": {
+        "text": "烏魯木齊七五事件：探聽東突厥的現況；回合結束時至少有 1 個己方組織在牆內。成功：免費在己方組織 1 格內建立 1 個組織。失敗：被紅軍隨機棄掉 1 張手牌。",
+        "display": "block",
+        "ariaHidden": "false",
+        "rect": {
+          "left": 493.4375,
+          "top": 130.8000030517578,
+          "right": 941.4375,
+          "bottom": 180.95001220703125,
+          "width": 448,
+          "height": 50.15000915527344
+        }
+      }
+    },
+    {
+      "name": "tooltip_is_inside_view_and_avoids_restart_1024x768",
+      "passed": true,
+      "details": {
+        "tooltip": {
+          "left": 493.4375,
+          "top": 130.8000030517578,
+          "right": 941.4375,
+          "bottom": 180.95001220703125,
+          "width": 448,
+          "height": 50.15000915527344
+        },
+        "restart": {
+          "left": 951.0375366210938,
+          "top": 102,
+          "right": 1011.2000122070312,
+          "bottom": 127.5999984741211
+        },
+        "viewport": {
+          "left": 0,
+          "top": 0,
+          "right": 1024,
+          "bottom": 768
+        }
+      }
+    },
+    {
+      "name": "keyboard_focus_also_shows_tooltip_1024x768",
+      "passed": true,
+      "details": "block"
+    },
+    {
+      "name": "short_text_does_not_open_unneeded_tooltip",
+      "passed": true,
+      "details": {
+        "overflowing": false,
+        "tabIndex": -1,
+        "ariaHidden": "true"
+      }
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "passed": true,
+      "details": []
+    }
+  ],
+  "screenshots": [
+    "docs/records/ui-layout/phase-guidance-hover-full-text/phase_guidance_hover_full_text_1280x720_20260823.png",
+    "docs/records/ui-layout/phase-guidance-hover-full-text/phase_guidance_hover_full_text_1024x768_20260823.png"
+  ]
+}

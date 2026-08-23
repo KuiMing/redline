@@ -2715,6 +2715,36 @@ function renderFactionActionPanel(state) {
   }
 }
 
+function syncPhaseActionMetaOverflow() {
+  const meta = document.getElementById('phaseActionMeta');
+  const wrap = document.getElementById('phaseActionMetaWrap');
+  const tooltip = document.getElementById('phaseActionMetaTooltip');
+  if (!meta || !wrap || !tooltip) return;
+  const fullText = meta.textContent || '';
+  const isOverflowing = Boolean(fullText) && meta.scrollWidth > meta.clientWidth + 1;
+  wrap.classList.toggle('is-overflowing', isOverflowing);
+  meta.tabIndex = isOverflowing ? 0 : -1;
+  if (isOverflowing) {
+    meta.setAttribute('aria-describedby', 'phaseActionMetaTooltip');
+  } else {
+    meta.removeAttribute('aria-describedby');
+  }
+  tooltip.setAttribute('aria-hidden', isOverflowing ? 'false' : 'true');
+}
+
+function setPhaseActionMeta(message = '') {
+  const meta = document.getElementById('phaseActionMeta');
+  const tooltip = document.getElementById('phaseActionMetaTooltip');
+  if (!meta) return;
+  const fullText = message || '';
+  meta.textContent = fullText;
+  meta.title = tooltip ? '' : fullText;
+  if (tooltip) tooltip.textContent = fullText;
+  requestAnimationFrame(syncPhaseActionMetaOverflow);
+}
+
+window.addEventListener('resize', () => requestAnimationFrame(syncPhaseActionMetaOverflow));
+
 function setPhaseActionNotice(message = '') {
   const notice = document.getElementById('phaseActionNotice');
   if (!notice) return;
@@ -3688,15 +3718,13 @@ async function render(state) {
 
     const phaseActionBar = document.getElementById('phaseActionBar');
     const gameShell = document.getElementById('gameShell');
-    const phaseActionMeta = document.getElementById('phaseActionMeta');
     const advanceBtn = document.getElementById('advanceStepBtn');
     const redArmyBtn = document.getElementById('redArmyAbilityBtn');
     const isMyTurn = isMyTurnState(state);
     const waitText = pendingChoiceWaitText(state);
     const stepLabel = phaseLabel === '事件結算' ? '開始行動階段' : phaseLabel === '行動' ? '結束行動' : phaseLabel === '購買' ? '結束回合' : '結束目前步驟';
-    if (phaseActionMeta) {
-      phaseActionMeta.textContent = waitText || (isMyTurn ? `目前：${phaseLabel}｜下一步：${stepLabel}` : `目前：${phaseLabel}｜等待 ${state.current_player} 操作`);
-    }
+    const phaseMetaText = waitText || (isMyTurn ? `目前：${phaseLabel}｜下一步：${stepLabel}` : `目前：${phaseLabel}｜等待 ${state.current_player} 操作`);
+    setPhaseActionMeta(phaseMetaText);
     if (advanceBtn) {
       advanceBtn.style.display = state.game_phase === 'main' ? 'inline-flex' : 'none';
       advanceBtn.textContent = stepLabel;

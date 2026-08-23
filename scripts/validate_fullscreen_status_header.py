@@ -77,6 +77,7 @@ def main() -> None:
                 hud: rect(hud), meta: rect(meta), restart: rect(restart), shell: rect(shell), grid: rect(grid),
                 restartParent: restart.parentElement?.id || '',
                 metaParent: meta.parentElement?.id || '',
+                metaStatusParent: meta.closest('#hudStatusActions')?.id || '',
                 restartText: restart.textContent.trim(),
                 restartHref: restart.getAttribute('href'),
                 metaText: meta.textContent.trim(),
@@ -97,11 +98,11 @@ def main() -> None:
         same_row = abs((geometry["meta"]["top"] + geometry["meta"]["bottom"]) / 2 - (geometry["restart"]["top"] + geometry["restart"]["bottom"]) / 2) <= 2
         record(
             "gold_phase_hint_is_left_of_restart_in_status_row",
-            geometry["metaParent"] == geometry["restartParent"] == "hudStatusActions"
+            geometry["metaStatusParent"] == geometry["restartParent"] == "hudStatusActions"
             and geometry["meta"]["right"] <= geometry["restart"]["left"]
             and same_row
             and geometry["metaColor"] in {"rgb(251, 191, 36)", "rgb(253, 230, 138)"},
-            {key: geometry[key] for key in ["meta", "restart", "metaParent", "restartParent", "metaColor", "metaText"]},
+            {key: geometry[key] for key in ["meta", "restart", "metaParent", "metaStatusParent", "restartParent", "metaColor", "metaText"]},
         )
         before = page.evaluate("getComputedStyle(document.getElementById('emergencyNewGameBtn')).color")
         page.locator("#emergencyNewGameBtn").hover()
