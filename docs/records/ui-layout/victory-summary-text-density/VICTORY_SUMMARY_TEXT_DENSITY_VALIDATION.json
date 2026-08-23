@@ -1,0 +1,592 @@
+{
+  "summary": {
+    "total": 15,
+    "passed": 15,
+    "failed": 0
+  },
+  "base_url": "http://127.0.0.1:8000",
+  "checks": [
+    {
+      "name": "two_player_1280x720_uses_larger_readable_type",
+      "passed": true,
+      "details": {
+        "fonts": {
+          "title": 24.8,
+          "subtitle": 14.72,
+          "endingTitle": 17.28,
+          "endingBody": 14.4,
+          "row": 14.08,
+          "header": 12.16,
+          "button": 14.4
+        },
+        "scale": 1.0
+      }
+    },
+    {
+      "name": "two_player_1280x720_content_stays_available_inside_panel",
+      "passed": true,
+      "details": {
+        "glass": {
+          "left": 32,
+          "top": 372.1875,
+          "right": 1248,
+          "bottom": 692,
+          "width": 1216,
+          "height": 319.8125
+        },
+        "overlay": {
+          "left": 0,
+          "top": 0,
+          "right": 1280,
+          "bottom": 720,
+          "width": 1280,
+          "height": 720
+        },
+        "image": {
+          "left": -8.500244140625,
+          "top": -4.7813720703125,
+          "right": 1288.500244140625,
+          "bottom": 724.7813720703125,
+          "width": 1297.00048828125,
+          "height": 729.562744140625
+        },
+        "summary": {
+          "left": 541,
+          "top": 395.1875,
+          "right": 1219,
+          "bottom": 669,
+          "width": 678,
+          "height": 273.8125
+        },
+        "button": {
+          "left": 61,
+          "top": 629,
+          "right": 181.40625,
+          "bottom": 669,
+          "width": 120.40625,
+          "height": 40
+        },
+        "glassClientHeight": 318,
+        "glassScrollHeight": 318,
+        "overflowY": "auto",
+        "classes": [
+          "modal-glass",
+          "victory-glass"
+        ],
+        "rowCount": 2,
+        "fonts": {
+          "title": 24.8,
+          "subtitle": 14.72,
+          "endingTitle": 17.28,
+          "endingBody": 14.4,
+          "row": 14.08,
+          "header": 12.16,
+          "button": 14.4
+        },
+        "rowHeights": [
+          44,
+          44
+        ],
+        "clippedElements": []
+      }
+    },
+    {
+      "name": "two_player_1280x720_summary_uses_panel_height",
+      "passed": true,
+      "details": {
+        "density": 0.8561657221027946,
+        "summary": {
+          "left": 541,
+          "top": 395.1875,
+          "right": 1219,
+          "bottom": 669,
+          "width": 678,
+          "height": 273.8125
+        },
+        "glass": {
+          "left": 32,
+          "top": 372.1875,
+          "right": 1248,
+          "bottom": 692,
+          "width": 1216,
+          "height": 319.8125
+        },
+        "rowHeights": [
+          44,
+          44
+        ],
+        "scale": 1.0
+      }
+    },
+    {
+      "name": "long_copy_1280x720_uses_larger_readable_type",
+      "passed": true,
+      "details": {
+        "fonts": {
+          "title": 24.8,
+          "subtitle": 14.72,
+          "endingTitle": 17.28,
+          "endingBody": 13.44,
+          "row": 14.08,
+          "header": 12.16,
+          "button": 14.4
+        },
+        "scale": 1.0
+      }
+    },
+    {
+      "name": "long_copy_1280x720_content_stays_available_inside_panel",
+      "passed": true,
+      "details": {
+        "glass": {
+          "left": 32,
+          "top": 365.8125,
+          "right": 1248,
+          "bottom": 692,
+          "width": 1216,
+          "height": 326.1875
+        },
+        "overlay": {
+          "left": 0,
+          "top": 0,
+          "right": 1280,
+          "bottom": 720,
+          "width": 1280,
+          "height": 720
+        },
+        "image": {
+          "left": -7.7784423828125,
+          "top": -4.375396728515625,
+          "right": 1287.7784423828125,
+          "bottom": 724.3753356933594,
+          "width": 1295.556884765625,
+          "height": 728.750732421875
+        },
+        "summary": {
+          "left": 541,
+          "top": 388.8125,
+          "right": 1219,
+          "bottom": 669,
+          "width": 678,
+          "height": 280.1875
+        },
+        "button": {
+          "left": 61,
+          "top": 629,
+          "right": 181.40625,
+          "bottom": 669,
+          "width": 120.40625,
+          "height": 40
+        },
+        "glassClientHeight": 324,
+        "glassScrollHeight": 324,
+        "overflowY": "auto",
+        "classes": [
+          "modal-glass",
+          "victory-glass",
+          "victory-ending-copy-long"
+        ],
+        "rowCount": 2,
+        "fonts": {
+          "title": 24.8,
+          "subtitle": 14.72,
+          "endingTitle": 17.28,
+          "endingBody": 13.44,
+          "row": 14.08,
+          "header": 12.16,
+          "button": 14.4
+        },
+        "rowHeights": [
+          44,
+          44
+        ],
+        "clippedElements": []
+      }
+    },
+    {
+      "name": "many_players_1280x720_uses_larger_readable_type",
+      "passed": true,
+      "details": {
+        "fonts": {
+          "title": 24.8,
+          "subtitle": 14.72,
+          "endingTitle": 17.28,
+          "endingBody": 14.4,
+          "row": 12.48,
+          "header": 11.2,
+          "button": 14.4
+        },
+        "scale": 1.0
+      }
+    },
+    {
+      "name": "many_players_1280x720_content_stays_available_inside_panel",
+      "passed": true,
+      "details": {
+        "glass": {
+          "left": 32,
+          "top": 333.453125,
+          "right": 1248,
+          "bottom": 692,
+          "width": 1216,
+          "height": 358.546875
+        },
+        "overlay": {
+          "left": 0,
+          "top": 0,
+          "right": 1280,
+          "bottom": 720,
+          "width": 1280,
+          "height": 720
+        },
+        "image": {
+          "left": -7.42071533203125,
+          "top": -4.174163818359375,
+          "right": 1287.4205932617188,
+          "bottom": 724.1742248535156,
+          "width": 1294.84130859375,
+          "height": 728.348388671875
+        },
+        "summary": {
+          "left": 541,
+          "top": 356.453125,
+          "right": 1219,
+          "bottom": 682.984375,
+          "width": 678,
+          "height": 326.53125
+        },
+        "button": {
+          "left": 61,
+          "top": 642.984375,
+          "right": 181.40625,
+          "bottom": 682.984375,
+          "width": 120.40625,
+          "height": 40
+        },
+        "glassClientHeight": 357,
+        "glassScrollHeight": 371,
+        "overflowY": "auto",
+        "classes": [
+          "modal-glass",
+          "victory-glass",
+          "victory-summary-many-players"
+        ],
+        "rowCount": 6,
+        "fonts": {
+          "title": 24.8,
+          "subtitle": 14.72,
+          "endingTitle": 17.28,
+          "endingBody": 14.4,
+          "row": 12.48,
+          "header": 11.2,
+          "button": 14.4
+        },
+        "rowHeights": [
+          34,
+          34,
+          34,
+          34,
+          34,
+          34
+        ],
+        "clippedElements": []
+      }
+    },
+    {
+      "name": "two_player_1024x768_uses_larger_readable_type",
+      "passed": true,
+      "details": {
+        "fonts": {
+          "title": 24.8,
+          "subtitle": 14.72,
+          "endingTitle": 17.28,
+          "endingBody": 14.4,
+          "row": 14.08,
+          "header": 12.16,
+          "button": 14.4
+        },
+        "scale": 0.8
+      }
+    },
+    {
+      "name": "two_player_1024x768_content_stays_available_inside_panel",
+      "passed": true,
+      "details": {
+        "glass": {
+          "left": 25.600000381469727,
+          "top": 393.75,
+          "right": 998.4000492095947,
+          "bottom": 649.6000366210938,
+          "width": 972.800048828125,
+          "height": 255.85003662109375
+        },
+        "overlay": {
+          "left": 0,
+          "top": 96,
+          "right": 1024,
+          "bottom": 672,
+          "width": 1024,
+          "height": 576
+        },
+        "image": {
+          "left": -5.645215034484863,
+          "top": 92.8245849609375,
+          "right": 1029.6453123092651,
+          "bottom": 675.1754150390625,
+          "width": 1035.29052734375,
+          "height": 582.350830078125
+        },
+        "summary": {
+          "left": 432.8000183105469,
+          "top": 412.1499938964844,
+          "right": 975.2000427246094,
+          "bottom": 631.2000122070312,
+          "width": 542.4000244140625,
+          "height": 219.05001831054688
+        },
+        "button": {
+          "left": 48.79999923706055,
+          "top": 599.2000122070312,
+          "right": 145.12499618530273,
+          "bottom": 631.2000122070312,
+          "width": 96.32499694824219,
+          "height": 32
+        },
+        "glassClientHeight": 318,
+        "glassScrollHeight": 318,
+        "overflowY": "auto",
+        "classes": [
+          "modal-glass",
+          "victory-glass"
+        ],
+        "rowCount": 2,
+        "fonts": {
+          "title": 24.8,
+          "subtitle": 14.72,
+          "endingTitle": 17.28,
+          "endingBody": 14.4,
+          "row": 14.08,
+          "header": 12.16,
+          "button": 14.4
+        },
+        "rowHeights": [
+          35.20001220703125,
+          35.199951171875
+        ],
+        "clippedElements": []
+      }
+    },
+    {
+      "name": "two_player_1024x768_summary_uses_panel_height",
+      "passed": true,
+      "details": {
+        "density": 0.8561656711230157,
+        "summary": {
+          "left": 432.8000183105469,
+          "top": 412.1499938964844,
+          "right": 975.2000427246094,
+          "bottom": 631.2000122070312,
+          "width": 542.4000244140625,
+          "height": 219.05001831054688
+        },
+        "glass": {
+          "left": 25.600000381469727,
+          "top": 393.75,
+          "right": 998.4000492095947,
+          "bottom": 649.6000366210938,
+          "width": 972.800048828125,
+          "height": 255.85003662109375
+        },
+        "rowHeights": [
+          35.20001220703125,
+          35.199951171875
+        ],
+        "scale": 0.8
+      }
+    },
+    {
+      "name": "long_copy_1024x768_uses_larger_readable_type",
+      "passed": true,
+      "details": {
+        "fonts": {
+          "title": 24.8,
+          "subtitle": 14.72,
+          "endingTitle": 17.28,
+          "endingBody": 13.44,
+          "row": 14.08,
+          "header": 12.16,
+          "button": 14.4
+        },
+        "scale": 0.8
+      }
+    },
+    {
+      "name": "long_copy_1024x768_content_stays_available_inside_panel",
+      "passed": true,
+      "details": {
+        "glass": {
+          "left": 25.600000381469727,
+          "top": 388.6499938964844,
+          "right": 998.4000492095947,
+          "bottom": 649.6000366210938,
+          "width": 972.800048828125,
+          "height": 260.9500427246094
+        },
+        "overlay": {
+          "left": 0,
+          "top": 96,
+          "right": 1024,
+          "bottom": 672,
+          "width": 1024,
+          "height": 576
+        },
+        "image": {
+          "left": -5.14453125,
+          "top": 93.106201171875,
+          "right": 1029.14453125,
+          "bottom": 674.893798828125,
+          "width": 1034.2890625,
+          "height": 581.78759765625
+        },
+        "summary": {
+          "left": 432.8000183105469,
+          "top": 407.0500183105469,
+          "right": 975.2000427246094,
+          "bottom": 631.2000122070312,
+          "width": 542.4000244140625,
+          "height": 224.14999389648438
+        },
+        "button": {
+          "left": 48.79999923706055,
+          "top": 599.2000122070312,
+          "right": 145.12499618530273,
+          "bottom": 631.2000122070312,
+          "width": 96.32499694824219,
+          "height": 32
+        },
+        "glassClientHeight": 324,
+        "glassScrollHeight": 324,
+        "overflowY": "auto",
+        "classes": [
+          "modal-glass",
+          "victory-glass",
+          "victory-ending-copy-long"
+        ],
+        "rowCount": 2,
+        "fonts": {
+          "title": 24.8,
+          "subtitle": 14.72,
+          "endingTitle": 17.28,
+          "endingBody": 13.44,
+          "row": 14.08,
+          "header": 12.16,
+          "button": 14.4
+        },
+        "rowHeights": [
+          35.199981689453125,
+          35.20001220703125
+        ],
+        "clippedElements": []
+      }
+    },
+    {
+      "name": "many_players_1024x768_uses_larger_readable_type",
+      "passed": true,
+      "details": {
+        "fonts": {
+          "title": 24.8,
+          "subtitle": 14.72,
+          "endingTitle": 17.28,
+          "endingBody": 14.4,
+          "row": 12.48,
+          "header": 11.2,
+          "button": 14.4
+        },
+        "scale": 0.8
+      }
+    },
+    {
+      "name": "many_players_1024x768_content_stays_available_inside_panel",
+      "passed": true,
+      "details": {
+        "glass": {
+          "left": 25.600000381469727,
+          "top": 362.76251220703125,
+          "right": 998.4000492095947,
+          "bottom": 649.6000366210938,
+          "width": 972.800048828125,
+          "height": 286.8375244140625
+        },
+        "overlay": {
+          "left": 0,
+          "top": 96,
+          "right": 1024,
+          "bottom": 672,
+          "width": 1024,
+          "height": 576
+        },
+        "image": {
+          "left": -4.869580268859863,
+          "top": 93.2608642578125,
+          "right": 1028.8695554733276,
+          "bottom": 674.7391967773438,
+          "width": 1033.7391357421875,
+          "height": 581.4783325195312
+        },
+        "summary": {
+          "left": 432.8000183105469,
+          "top": 381.1625061035156,
+          "right": 975.2000427246094,
+          "bottom": 642.3875122070312,
+          "width": 542.4000244140625,
+          "height": 261.2250061035156
+        },
+        "button": {
+          "left": 48.79999923706055,
+          "top": 610.3875122070312,
+          "right": 145.12499618530273,
+          "bottom": 642.3875122070312,
+          "width": 96.32499694824219,
+          "height": 32
+        },
+        "glassClientHeight": 357,
+        "glassScrollHeight": 371,
+        "overflowY": "auto",
+        "classes": [
+          "modal-glass",
+          "victory-glass",
+          "victory-summary-many-players"
+        ],
+        "rowCount": 6,
+        "fonts": {
+          "title": 24.8,
+          "subtitle": 14.72,
+          "endingTitle": 17.28,
+          "endingBody": 14.4,
+          "row": 12.48,
+          "header": 11.2,
+          "button": 14.4
+        },
+        "rowHeights": [
+          27.199981689453125,
+          27.20001220703125,
+          27.20001220703125,
+          27.199951171875,
+          27.2000732421875,
+          27.199951171875
+        ],
+        "clippedElements": []
+      }
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "passed": true,
+      "details": []
+    }
+  ],
+  "screenshots": [
+    "docs/records/ui-layout/victory-summary-text-density/victory_summary_text_density_1280x720_20260823.png",
+    "docs/records/ui-layout/victory-summary-text-density/victory_summary_text_density_1024x768_20260823.png"
+  ],
+  "identifiers": "[REDACTED]"
+}

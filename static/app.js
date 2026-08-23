@@ -3425,6 +3425,14 @@ function renderVictoryModal(state) {
       <span>玩家</span><span>陣營</span><span>組織</span><span>牆內</span><span>牆外</span><span>資金</span><span>宣傳</span>
     </div>${rows}`;
 
+  const victoryGlass = overlay.querySelector('.victory-glass');
+  if (victoryGlass) {
+    victoryGlass.classList.toggle('victory-summary-many-players', players.length >= 5);
+    const endingCopyLength = endingEl?.style.display !== 'none' ? (endingBodyEl?.textContent || '').length : 0;
+    victoryGlass.classList.toggle('victory-ending-copy-long', endingCopyLength >= 90);
+    victoryGlass.scrollTop = 0;
+  }
+
   badge.style.display = 'none';
   overlay.style.display = 'flex';
 }

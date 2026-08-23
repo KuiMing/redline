@@ -2892,10 +2892,10 @@ body.victory-art-viewer-open {
   width: 100%;
   min-width: 0;
   max-width: none;
-  max-height: 48%;
+  max-height: 54%;
   overflow-y: auto;
   box-sizing: border-box;
-  padding: 18px 22px;
+  padding: 22px 28px;
   border-color: rgba(226, 232, 240, 0.24);
   border-radius: 20px;
   background: linear-gradient(135deg, rgba(7, 12, 20, 0.86), rgba(15, 23, 42, 0.7));
@@ -2911,12 +2911,25 @@ body.victory-art-viewer-open {
     'cowinners summary'
     'ending summary'
     'actions summary';
-  column-gap: 22px;
+  column-gap: 28px;
   align-items: start;
 }
 
-.victory-glass > .panel-title { grid-area: label; }
-.victory-glass > #victoryTitle { grid-area: title; }
+.victory-glass > .panel-title {
+  grid-area: label;
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+}
+.victory-glass > #victoryTitle {
+  grid-area: title;
+  font-size: 1.55rem;
+  line-height: 1.3;
+}
+.victory-glass > #victorySubtitle,
+.victory-glass > #victoryCoWinners {
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
 .victory-glass > #victorySubtitle { grid-area: subtitle; }
 .victory-glass > #victoryCoWinners { grid-area: cowinners; }
 .victory-glass > #victoryEnding { grid-area: ending; }
@@ -2933,11 +2946,12 @@ body.victory-art-viewer-open {
    底部資訊板，讓這個結局第一眼就不是閱兵式勝利，而是政權勝利造成的人間災難。 */
 .victory-ending-scene--red_army + .victory-glass {
   align-self: flex-start;
+  max-height: 48%;
   background: linear-gradient(135deg, rgba(7, 10, 16, 0.8), rgba(15, 23, 42, 0.64));
 }
 
 .victory-ending {
-  margin: 6px 0 8px;
+  margin: 8px 0 11px;
   overflow: hidden;
   border-left: 3px solid var(--victory-ending-accent, rgba(250, 204, 21, 0.7));
   border-radius: 0 10px 10px 0;
@@ -2945,11 +2959,11 @@ body.victory-art-viewer-open {
 }
 
 .victory-ending-copy {
-  padding: 10px 13px 11px;
+  padding: 13px 16px 14px;
 }
 
 .victory-ending-title {
-  font-size: 0.98rem;
+  font-size: 1.08rem;
   font-weight: 800;
   color: var(--victory-ending-accent, #fef3c7);
   margin-bottom: 6px;
@@ -2957,15 +2971,17 @@ body.victory-art-viewer-open {
 }
 
 .victory-ending-body {
-  font-size: 0.8rem;
-  line-height: 1.48;
+  font-size: 0.9rem;
+  line-height: 1.58;
   color: #dbe4f0;
 }
 
 .victory-summary {
   margin: 0;
   display: grid;
-  gap: 6px;
+  align-self: stretch;
+  align-content: center;
+  gap: 8px;
 }
 
 .victory-summary-row {
@@ -2973,19 +2989,23 @@ body.victory-art-viewer-open {
   grid-template-columns: 1.1fr 1.25fr repeat(5, 0.6fr);
   gap: 8px;
   align-items: center;
-  padding: 8px 12px;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 10px 12px;
   border: 1px solid rgba(148, 163, 184, 0.22);
   border-radius: 10px;
   background: rgba(15, 23, 42, 0.66);
-  font-size: 0.8rem;
+  font-size: 0.88rem;
+  line-height: 1.3;
 }
 
 .victory-summary-row.header {
+  min-height: 24px;
   background: transparent;
   border-color: transparent;
   color: #94a3b8;
-  font-size: 0.72rem;
-  padding: 0 12px;
+  font-size: 0.76rem;
+  padding: 2px 12px;
 }
 
 .victory-summary-row .victory-player-name {
@@ -2995,6 +3015,42 @@ body.victory-art-viewer-open {
 .victory-summary-row.winner-row {
   border-color: rgba(250, 204, 21, 0.55);
   box-shadow: inset 0 0 14px rgba(250, 204, 21, 0.08);
+}
+
+.victory-glass > .era-achievement-actions {
+  margin-top: 4px;
+}
+
+.victory-glass > .era-achievement-actions .modal-choice-btn {
+  min-height: 38px;
+  padding: 9px 16px;
+  font-size: 0.9rem;
+}
+
+/* 多人局或特別長的結局文案改用緊湊尺寸，確保結果仍可完整捲動閱讀。 */
+.victory-glass.victory-summary-many-players .victory-summary {
+  gap: 5px;
+}
+
+.victory-glass.victory-summary-many-players .victory-summary-row {
+  min-height: 34px;
+  padding: 6px 9px;
+  font-size: 0.78rem;
+}
+
+.victory-glass.victory-summary-many-players .victory-summary-row.header {
+  min-height: 20px;
+  padding-block: 0;
+  font-size: 0.7rem;
+}
+
+.victory-glass.victory-ending-copy-long .victory-ending-copy {
+  padding-block: 10px 11px;
+}
+
+.victory-glass.victory-ending-copy-long .victory-ending-body {
+  font-size: 0.84rem;
+  line-height: 1.5;
 }
 
 #victoryBadge {
