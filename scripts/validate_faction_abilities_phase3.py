@@ -47,7 +47,7 @@ def test_nonviolence_buy_block():
     return ok('nonviolence_buy_block', result.get('error') == '非暴力：不能購買武裝類卡牌', str(result))
 
 
-def test_guerrilla_forces_red_discard():
+def test_guerrilla_can_choose_red_discard():
     g = make_game('uyghur_istanbul', '伊斯坦堡')
     p = g.players[0]
     red = g.players[1]
@@ -55,7 +55,13 @@ def test_guerrilla_forces_red_discard():
     red.hand = [Card('紅軍手牌', 'money', {'money': 1})]
     before = len(red.hand)
     g._apply_guerrilla_on_build(p, '北京')
-    return ok('guerrilla_forces_red_discard', len(red.hand) == before - 1, f"red_hand={len(red.hand)}")
+    choice_created = bool(g.pending_choice and g.pending_choice.get('choice_key') == 'guerrilla_reward')
+    result = g.resolve_pending_choice(p.id, 1)
+    return ok(
+        'guerrilla_can_choose_red_discard',
+        choice_created and result.get('choice') == 'red_discard' and len(red.hand) == before - 1,
+        f"choice_created={choice_created}, choice={result.get('choice')}, red_hand={len(red.hand)}",
+    )
 
 
 def test_guerrilla_draw_if_red_empty():
@@ -75,7 +81,7 @@ def main():
     results = [
         test_nonviolence_play_block(),
         test_nonviolence_buy_block(),
-        test_guerrilla_forces_red_discard(),
+        test_guerrilla_can_choose_red_discard(),
         test_guerrilla_draw_if_red_empty(),
     ]
     summary = {

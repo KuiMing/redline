@@ -127,6 +127,7 @@ class Game:
         self.era_blocks_turn_handoff = False
         # 若紅軍正好是整輪最後一席，時代效果必須記在新回合；交棒時不可再次增加回合數。
         self._era_turn_preincremented = False
+        self._pending_guerrilla_players = []
         self.market_mode = market_mode or "sample_53"
 
         self.map = self._load_json(MAP_PATH)
@@ -2169,6 +2170,22 @@ class Game:
             self.log(f"{player.name} chose 民族祭儀 miss reward: {'2 money' if index == 1 else '2 propaganda'}")
             return {'success': True, 'result': {**base_result, 'reward': reward}}
 
+        if choice_key == 'guerrilla_reward':
+            red_player_id = (choice.get('context') or {}).get('red_player_id')
+            red_player = next((candidate for candidate in self.players if candidate.id == red_player_id), None)
+            self.pending_choice = None
+            if index == 0:
+                drawn = self._draw_player_cards(player, 1)
+                self.log(f"{player.name} triggered 游擊隊 and chose to draw 1 card")
+                return {'success': True, 'choice_key': choice_key, 'choice': 'draw', 'drawn': len(drawn)}
+            if red_player is None or not red_player.hand:
+                return {'error': '紅軍目前沒有手牌可以棄置'}
+            discarded = red_player.hand.pop()
+            red_player.deck.discard([discarded])
+            card_name = getattr(discarded, 'name', str(discarded))
+            self.log(f"{player.name} triggered 游擊隊 and chose to force {red_player.name} to discard {card_name}")
+            return {'success': True, 'choice_key': choice_key, 'choice': 'red_discard', 'discarded': card_name}
+
         if choice_key == 'choose_one':
             selected = options[index]
             context = dict(choice.get('context') or {})
@@ -2805,12 +2822,17 @@ class Game:
             continuation = self._continue_era_and_event_flows()
             if continuation and continuation.get('pending_choice'):
                 result = {**result, 'pending_choice': True}
+        if not result.get('error') and self.pending_choice:
+            result = {**result, 'pending_choice': True}
         return result
 
     def _continue_era_and_event_flows(self):
-        """Finish queued era activations before resuming a deferred auto event."""
+        """Finish queued faction, era, and event choices in their required order."""
         if self.pending_choice:
             return None
+        guerrilla_result = self._continue_guerrilla_choice_queue()
+        if self.pending_choice:
+            return guerrilla_result
         era_result = self._continue_era_activation_queue()
         if self.pending_choice:
             return {'success': True, 'pending_choice': True, 'source': 'era'}
@@ -4442,13 +4464,38 @@ class Game:
         self.turn_log["guerrilla_triggered"] = True
         red_player = next((p for p in self.players if p.faction_id == "red_army"), None)
         if red_player and red_player.hand:
-            discarded = red_player.hand.pop()
-            red_player.deck.discard([discarded])
-            self.log(f"{player.name} triggered 游擊隊 and forced {red_player.name} to discard {getattr(discarded, 'name', str(discarded))}")
+            self._pending_guerrilla_players.append(player.id)
+            self.log(f"{player.name} triggered 游擊隊 and must choose to draw 1 card or force {red_player.name} to discard 1 card")
+            if not self.pending_choice:
+                self._continue_guerrilla_choice_queue()
         else:
             self._draw_player_cards(player, 1)
             self.log(f"{player.name} triggered 游擊隊 and drew 1 card")
         self._track_event_progress('use_faction_ability', player=player)
+
+    def _continue_guerrilla_choice_queue(self):
+        if self.pending_choice:
+            return None
+        while self._pending_guerrilla_players:
+            player_id = self._pending_guerrilla_players.pop(0)
+            player = next((candidate for candidate in self.players if candidate.id == player_id), None)
+            if player is None:
+                continue
+            red_player = next((candidate for candidate in self.players if candidate.faction_id == 'red_army'), None)
+            if red_player is None or not red_player.hand:
+                self._draw_player_cards(player, 1)
+                self.log(f"{player.name} triggered 游擊隊 and drew 1 card because Red Army had no hand cards")
+                continue
+            self._set_pending_option_choice(
+                player,
+                'guerrilla_reward',
+                [{'label': '抽 1 張牌'}, {'label': '令紅軍棄 1 張手牌'}],
+                '游擊隊：請選擇抽 1 張牌，或令紅軍棄 1 張手牌。',
+                source_name='游擊隊',
+                context={'red_player_id': red_player.id},
+            )
+            return {'success': True, 'pending_choice': True, 'source': 'guerrilla'}
+        return None
 
     def _record_action_build(self, player, town):
         """Apply every hook shared by a successful organization build during a player's action."""
@@ -6334,7 +6381,7 @@ class Game:
         self._place_organization(player, town)
         self._record_action_build(player, town)
         self.log(f"{player.name} built organization in {town}")
-        return {"success": True}
+        return {"success": True, **({"pending_choice": True} if self.pending_choice else {})}
 
     def build_organization_with_support(self, origin_town, target_town):
         """內部輔助：以 origin_town 為起點、在距離內的 target_town 建立組織。
@@ -6393,7 +6440,7 @@ class Game:
         self._place_organization(player, target_town)
         self._record_action_build(player, target_town)
         self.log(f"{player.name} built organization in {target_town} from {origin_town}")
-        return {"success": True}
+        return {"success": True, **({"pending_choice": True} if self.pending_choice else {})}
 
     def _record_red_army_base_dissolve(self, attacker, target_owner, town):
         if getattr(target_owner, 'faction_id', None) != 'red_army':

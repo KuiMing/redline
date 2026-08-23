@@ -124,9 +124,10 @@ def test_npc_counts_each_turn_end_build_trigger_family():
         assert len(player.hand) == 6
 
 
-def test_support_build_runs_guerrilla_once():
+def test_support_build_prompts_guerrilla_choice_once():
     game, player, red = make_game("tibet_dehradun", "德拉敦")
     red.hand = [Card("紅軍手牌甲", "command", {}), Card("紅軍手牌乙", "command", {})]
+    player.deck.draw_pile = [Card("游擊隊抽牌", "command", {})]
 
     result = game._resolve_support_interaction_result(
         player,
@@ -134,10 +135,60 @@ def test_support_build_runs_guerrilla_once():
         {"context": {"effect_type": "interactive_build_anywhere_inner", "card_name": "東洋奧援"}},
     )
     assert result.get("success") is True
-    assert len(red.hand) == 1
+    assert len(red.hand) == 2
+    assert game.pending_choice is not None
+    assert game.pending_choice["choice_key"] == "guerrilla_reward"
+    assert [option["label"] for option in game.pending_choice["options"]] == ["抽 1 張牌", "令紅軍棄 1 張手牌"]
+
+    resolved = game.resolve_pending_choice(player.id, 0)
+    assert resolved.get("success") is True
+    assert resolved.get("choice") == "draw"
+    assert any(getattr(card, "name", "") == "游擊隊抽牌" for card in player.hand)
+    assert len(red.hand) == 2
+
     game._record_action_build(player, "昆明")
-    assert len(red.hand) == 1
+    assert game.pending_choice is None
+    assert len(red.hand) == 2
     assert game.turn_log["guerrilla_triggered"] is True
+
+
+def test_guerrilla_owner_can_choose_to_force_red_discard():
+    game, player, red = make_game("tibet_dehradun", "德拉敦")
+    red.hand = [Card("紅軍手牌甲", "command", {}), Card("紅軍手牌乙", "command", {})]
+
+    game._record_action_build(player, "拉薩")
+    assert len(red.hand) == 2
+    assert game.pending_choice is not None
+    result = game.resolve_pending_choice(player.id, 1)
+
+    assert result.get("success") is True
+    assert result.get("choice") == "red_discard"
+    assert len(red.hand) == 1
+    assert [getattr(card, "name", "") for card in red.deck.discard_pile][-1] == "紅軍手牌乙"
+    assert any("chose to force 紅軍 to discard 紅軍手牌乙" in entry for entry in game.action_log)
+
+
+def test_guerrilla_choice_waits_until_existing_build_choice_finishes():
+    game, player, red = make_game("uyghur_istanbul", "伊斯坦堡")
+    red.hand = [Card("紅軍手牌", "command", {})]
+    game.pending_choice = {
+        "type": "town_choice",
+        "choice_key": "card_build_organization",
+        "player_id": player.id,
+        "towns": [{"town": "拉薩"}],
+        "prompt": "先完成建立",
+        "context": {},
+    }
+
+    game._apply_guerrilla_on_build(player, "拉薩")
+    assert game.pending_choice["choice_key"] == "card_build_organization"
+    assert game._pending_guerrilla_players == [player.id]
+    game.pending_choice = None
+
+    result = game._continue_era_and_event_flows()
+    assert result == {"success": True, "pending_choice": True, "source": "guerrilla"}
+    assert game.pending_choice["choice_key"] == "guerrilla_reward"
+    assert len(red.hand) == 1
 
 
 def test_npc_counts_guerrilla_when_inner_build_triggers_it():

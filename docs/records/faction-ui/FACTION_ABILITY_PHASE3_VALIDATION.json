@@ -8,17 +8,17 @@
     {
       "name": "nonviolence_play_block",
       "ok": true,
-      "detail": "{'error': '非暴力：不能打出武裝或裝備類卡牌'}"
+      "detail": "{'error': '非暴力：不能打出武裝類卡牌'}"
     },
     {
       "name": "nonviolence_buy_block",
       "ok": true,
-      "detail": "{'error': '非暴力：不能購買武裝或裝備類卡牌'}"
+      "detail": "{'error': '非暴力：不能購買武裝類卡牌'}"
     },
     {
-      "name": "guerrilla_forces_red_discard",
+      "name": "guerrilla_can_choose_red_discard",
       "ok": true,
-      "detail": "red_hand=0"
+      "detail": "choice_created=True, choice=red_discard, red_hand=0"
     },
     {
       "name": "guerrilla_draw_if_red_empty",
