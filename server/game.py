@@ -123,6 +123,10 @@ class Game:
         self.hk_free_base_relocation = False
         # 事件在回合結束補牌後結算時，先凍結換人；香港完成「遷移／留在」後才交棒。
         self.hk_relocation_blocks_turn_handoff = False
+        # 紅軍回合結束後觸發互動式時代關卡時，先讓紅軍完成該關卡，再將席位交給下一位。
+        self.era_blocks_turn_handoff = False
+        # 若紅軍正好是整輪最後一席，時代效果必須記在新回合；交棒時不可再次增加回合數。
+        self._era_turn_preincremented = False
         self.market_mode = market_mode or "sample_53"
 
         self.map = self._load_json(MAP_PATH)
@@ -2812,7 +2816,16 @@ class Game:
             return {'success': True, 'pending_choice': True, 'source': 'era'}
         if era_result and era_result.get('error'):
             return era_result
-        return self._continue_deferred_auto_event()
+        event_result = self._continue_deferred_auto_event()
+        if self.pending_choice:
+            return {'success': True, 'pending_choice': True, 'source': 'event'}
+        if getattr(self, 'era_blocks_turn_handoff', False):
+            self.era_blocks_turn_handoff = False
+            self._finish_end_turn_handoff()
+            if self.pending_choice:
+                return {'success': True, 'pending_choice': True, 'source': 'turn_handoff'}
+            return event_result or {'success': True, 'turn_handoff': True}
+        return event_result
 
     def _continue_deferred_auto_event(self):
         if not getattr(self, '_deferred_auto_event', False) or self.pending_choice:
@@ -6203,11 +6216,25 @@ class Game:
                 self.era_notification = None
 
         # Keep draining any in-flight (interactive) era activation every turn so a
-        # pending choice from an already-triggered era is not stalled. Trigger
-        # *detection* is NOT run here — it is deferred to the round-wrap boundary
-        # below so Red Army's turn this round can still invalidate a condition
-        # before an era is judged as met (P1: 時代關卡觸發時機應等整輪含紅軍行動完).
+        # pending choice from an already-triggered era is not stalled.
         self._continue_era_activation_queue()
+
+        # 時代關卡只在紅軍完成自己的回合後判定。不能在最後一位非紅軍玩家結束時
+        # 先把關卡排入佇列，否則紅軍尚未獲得本回合瓦解組織的機會，下一次輪到紅軍
+        # 就會立即觸發舊快照（playtest：第 13 回合藏國騷亂應等紅軍行動完，於第 14
+        # 回合正式觸發）。若紅軍是整輪最後一席，先增加回合數，讓觸發與效果紀錄
+        # 使用新回合編號；真正交棒時再略過重複增加。
+        if getattr(player, 'faction_id', None) == 'red_army':
+            next_player_index = (self.current_player_index + 1) % len(self.players)
+            wraps_round = next_player_index == getattr(self, 'round_start_player_index', 0)
+            if wraps_round and not self._era_turn_preincremented:
+                self.turn += 1
+                self._era_turn_preincremented = True
+            self._detect_era_triggers()
+            self._continue_era_activation_queue()
+            if self.pending_choice:
+                self.era_blocks_turn_handoff = bool(advance_player)
+                return
 
         if advance_player:
             self._finish_end_turn_handoff()
@@ -6216,7 +6243,10 @@ class Game:
         """Advance the seat after all end-turn effects and mandatory decisions finish."""
         self.current_player_index = (self.current_player_index + 1) % len(self.players)
         if self.current_player_index == getattr(self, 'round_start_player_index', 0):
-            self.turn += 1
+            if self._era_turn_preincremented:
+                self._era_turn_preincremented = False
+            else:
+                self.turn += 1
             # Round wrap: every player (Red Army included) has now acted this round.
             # This is the ONLY point victory is judged — a condition that briefly
             # looked satisfied earlier in the round but was undone by a later Red
@@ -6231,23 +6261,8 @@ class Game:
             self.current_event = None
             self.event_progress = None
             self.event_notification = None
-            # Round wrap: every player (Red Army included) has now acted this round.
-            # This is the only point era trigger detection runs — a condition that
-            # briefly looked satisfied mid-round but was undone by a later Red Army
-            # action is correctly no longer detected. Runs after era_engine.tick()
-            # above so a duration created here is not consumed at the same boundary.
-            self._detect_era_triggers()
-            self._continue_era_activation_queue()
-        # An interactive era detected at the round wrap may target a player who is
-        # NOT the round-start player now taking the seat (e.g. a red-suppression era
-        # while a non-red player leads the round). Its activation was deferred in
-        # _continue_era_activation_queue so it would not strand a pending_choice the
-        # current player cannot resolve — hard-blocking their whole turn and
-        # deadlocking the game (playtest 回報：上海合作組織＋藏國騷亂 同輪，非紅軍陣營
-        # 回合結束後雙方卡住). Drain again now that current_player points at whoever just
-        # took the seat: an era targeting THEM activates as their own resolvable
-        # choice; one targeting a later player stays queued until that player's turn.
-        # Idempotent after the round-wrap drain above (early-returns on pending_choice).
+        # 既有存檔可能仍帶有尚未完成的時代佇列；交棒後繼續排空，但新關卡的
+        # 偵測只會在紅軍回合結束時發生。
         self._continue_era_activation_queue()
         self.turn_phase = TurnPhase.ACTION
         if not self.current_event:
@@ -7361,18 +7376,15 @@ class Game:
     def _detect_era_triggers(self):
         """Scan for newly-qualifying eras and enqueue them for activation.
 
-        This is the trigger-*detection* half of era handling. Per the round-wrap
-        rule (P1 playtest: 時代關卡觸發時機應該等整輪含紅軍都行動完才判定), this must
-        only run once a full round has completed — after every player, Red Army
-        included, has taken their turn — because Red Army may act later in the
-        same round (e.g. dissolve an organization) and invalidate a condition
-        that looked satisfied earlier in the round. It is therefore called only
-        at the round-wrap boundary in _end_turn(), never per player-turn.
+        This is the trigger-*detection* half of era handling. Normal turn flow calls
+        it only after Red Army ends its turn. This gives Red Army its full opportunity
+        to dissolve an organization and invalidate a condition reached by a non-red
+        player earlier in the same numbered turn.
 
         Detection is deliberately separate from _continue_era_activation_queue():
         the queue continuation must keep running every turn / every choice
         resolution so an in-flight interactive era activation is not stalled,
-        whereas detection is the part that must be deferred to the round wrap.
+        whereas detection is the part that must wait for Red Army's turn end.
         """
         if not hasattr(self, "era_engine"):
             return
@@ -7402,9 +7414,9 @@ class Game:
 
         Retained as the combined detect+continue entry point used by the
         `/test/*` scenario-setup endpoints and era validators/tests that force an
-        immediate check. Normal turn flow does NOT call this per player-turn:
-        detection is deferred to the round-wrap boundary (see _detect_era_triggers)
-        while _continue_era_activation_queue keeps draining every turn.
+        immediate check. Normal turn flow does NOT call this per non-red player-turn:
+        detection waits for Red Army's turn end while
+        _continue_era_activation_queue keeps draining every turn.
         """
         if not hasattr(self, "era_engine"):
             return

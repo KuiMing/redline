@@ -3815,23 +3815,26 @@ def test_shanghai_cooperation_org_at_round_wrap_does_not_deadlock_non_red_actor(
     g.turn_phase = TurnPhase.ACTION
     g._end_turn()
 
-    # The non-red actor is now current. The era was detected but DEFERRED (its choice
-    # belongs to Red Army), so no foreign pending_choice strands the actor.
-    assert g.current_player() is tibet
-    assert g.pending_choice is None
-    assert g._pending_era_activations == ['tibet']
-    assert (g.event_progress or {}).get('status') == 'auto_deferred'
-    # Regression assertion: the non-red actor can actually take their turn (no deadlock).
-    # Tibet finishes; Red Army takes the seat and the deferred suppression activates as
-    # Red Army's own, resolvable choice.
-    assert g.advance_turn_phase() == {'success': True}   # 結束行動階段 -> _end_turn -> Red Army
+    # 紅軍回合結束後立即判定藏國騷亂。先保留紅軍席位完成自己的時代選擇，
+    # 再交棒給非紅軍玩家；這樣不會把別人的 pending_choice 掛在 Tibet 身上。
     assert g.current_player() is red
+    assert g.turn == 11
     assert g.pending_choice is not None
     assert g.pending_choice['choice_key'] == 'era_red_discard_to_build_near_target'
     assert g.pending_choice['player_id'] == red.id
 
-    # Red Army resolves the suppression on its own turn; only then does 上海合作組織 apply.
     g.resolve_pending_choice(red.id, [0])
+    while g.pending_choice is not None and g.pending_choice.get('choice_key', '').startswith('era_'):
+        g.resolve_pending_choice(g.pending_choice['player_id'], 0)
+
+    assert g.current_player() is tibet
+    assert g.turn_phase == TurnPhase.ACTION
+    assert g.pending_choice is None
+    assert (g.event_progress or {}).get('status') == 'auto_pending'
+
+    # Tibet 可正常完成回合。換到紅軍後，上海合作組織才套用，雙方皆不會卡死。
+    assert g.advance_turn_phase() == {'success': True}
+    assert g.current_player() is red
     while g.pending_choice is not None:
         g.resolve_pending_choice(g.pending_choice['player_id'], 0)
     assert (g.event_progress or {}).get('status') == 'auto'

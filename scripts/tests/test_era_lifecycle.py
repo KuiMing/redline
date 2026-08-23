@@ -55,6 +55,57 @@ def _legal_inside_wall_towns(game, player):
     ]
 
 
+def test_tibet_era_waits_for_red_turn_end_and_uses_next_turn_number():
+    game, tibet, red = _make_game("tibet_dharamsala")
+    inside_towns = [
+        town for town in _legal_inside_wall_towns(game, tibet)
+        if game._shared_org_count(red, town) == 0
+    ]
+    tibet.organizations = {town: 1 for town in inside_towns[:7]}
+    red.hand = []
+    game.turn = 13
+
+    # 藏國在自己的第 13 回合已達 7 個牆內組織。此時只換到紅軍行動，不能先觸發。
+    _advance_current_player_turn(game)
+    assert game.current_player() is red
+    assert "tibet" not in game.era_engine.get_activated_eras()
+    assert game._pending_era_activations == []
+    assert not any("Era triggered: [藏國]藏國騷亂" in line for line in game.action_log)
+
+    # 紅軍保留完整第 13 回合。紅軍結束後才進入第 14 回合並正式觸發。
+    result = game.advance_turn_phase()
+    assert result == {"success": True}
+    assert game.turn_phase == TurnPhase.END
+    assert game.turn == 14
+    assert game.current_player() is red
+    assert "tibet" in game.era_engine.get_activated_eras()
+    assert game.pending_choice is not None
+    assert game.pending_choice["player_id"] == red.id
+    assert any(line == "[Turn 14] Era triggered: [藏國]藏國騷亂" for line in game.action_log)
+
+
+def test_red_can_invalidate_tibet_era_condition_before_ending_its_turn():
+    game, tibet, red = _make_game("tibet_dharamsala")
+    inside_towns = [
+        town for town in _legal_inside_wall_towns(game, tibet)
+        if game._shared_org_count(red, town) == 0
+    ]
+    tibet.organizations = {town: 1 for town in inside_towns[:7]}
+    game.turn = 13
+
+    _advance_current_player_turn(game)
+    assert game.current_player() is red
+    # 代表紅軍在第 13 回合成功瓦解其中一個藏國組織。
+    tibet.organizations.pop(inside_towns[0])
+    _advance_current_player_turn(game)
+
+    assert game.turn == 14
+    assert "tibet" not in game.era_engine.get_activated_eras()
+    assert game._pending_era_activations == []
+    assert game.pending_choice is None
+    assert not any("藏國騷亂" in line for line in game.action_log)
+
+
 def test_taiwan_era_triggers_at_seven_distinct_inside_wall_organizations_via_phase_lifecycle():
     game, taiwan, _red = _make_game()
     legal_inside_towns = _legal_inside_wall_towns(game, taiwan)
@@ -202,60 +253,39 @@ def _configure_same_boundary_auto_discard_event(game):
     game.round_start_player_index = 0
 
 
-def test_tibet_red_suppression_defers_to_red_turn_instead_of_blocking_non_red_actor():
-    """Deadlock regression（playtest 回報：上海合作組織＋藏國騷亂 同輪，非紅軍陣營回合結束後雙方卡死）.
-
-    藏國騷亂的紅軍壓制是互動效果（紅軍選牌棄掉後建組織）。時代關卡在整輪結束的 round-wrap
-    才偵測，此時當前玩家是該輪起始玩家——本例是非紅軍的藏國。舊行為會在此刻直接啟動、把
-    pending_choice 掛在紅軍身上：當前的非紅軍玩家被這個「別人的」待選擇卡死整個回合
-    （advance_turn_phase／play_card 都被 pending_choice 擋下），而紅軍又不是當前玩家，雙方卡死。
-    修法：互動對象非當前玩家的時代啟動延後到該對象自己的回合（比照紅軍事件 auto_pending 的
-    延後機制），紅軍在自己的回合處理自己的選擇；同輪抽到的紅軍事件維持 auto_deferred，等時代
-    壓制解完才真正套用（事件仍序列在時代之後）。
-    """
+def test_tibet_red_suppression_resolves_at_red_turn_end_before_handoff():
+    """紅軍回合結束時先處理藏國騷亂，再把席位交給下一位玩家。"""
     game, tibet, red = _make_game("tibet_dharamsala")
     inside_towns = [town for town in _legal_inside_wall_towns(game, tibet) if game._shared_org_count(red, town) == 0]
     assert len(inside_towns) >= 7
     tibet.organizations = {town: 1 for town in inside_towns[:7]}
     _configure_same_boundary_auto_discard_event(game)
 
-    # Round wrap: current becomes the non-red round-start player (Tibet). The era is
-    # detected but its interactive choice belongs to Red Army, so activation is DEFERRED
-    # (left queued) rather than stranding a choice on the non-red actor.
-    _advance_current_player_turn(game)
-    assert game.current_player() is tibet
-    assert "tibet" not in game.era_engine.get_activated_eras()
-    assert game._pending_era_activations == ["tibet"]
-    assert game.pending_choice is None
-    assert game.event_progress["status"] == "auto_deferred"
-    # The non-red actor is NOT blocked — the deadlock is gone. That single
-    # 結束行動階段 also finishes Tibet's turn; Red Army takes the seat and the deferred
-    # era now activates as Red Army's OWN, resolvable choice.
+    # 紅軍是整輪最後一席。結束後先進入新回合編號並啟動自己的時代選擇，
+    # 此時席位仍保留給紅軍，不會把下一位非紅軍玩家卡在別人的選擇上。
     assert game.advance_turn_phase() == {"success": True}
-    assert game.turn_phase == TurnPhase.ACTION
-
+    assert game.turn == 2
     assert game.current_player() is red
+    assert game.turn_phase == TurnPhase.END
     assert "tibet" in game.era_engine.get_activated_eras()
+    assert game._pending_era_activations == []
     pending = game.pending_choice
     assert pending is not None
     assert pending["choice_key"] == "era_red_discard_to_build_near_target"
     assert pending["player_id"] == red.id
-    assert game.event_progress["status"] == "auto_deferred"
 
-    # Red Army resolves the suppression on its own turn; only THEN does the auto event
-    # apply — the era still serializes before the event.
     first = game.resolve_pending_choice(red.id, [0])
     assert first.get("pending_choice") is True
     assert game.pending_choice["choice_key"] == "era_red_build_near_target"
     second = game.resolve_pending_choice(red.id, 0)
     assert second.get("pending_choice") is True
-    pending = game.pending_choice
-    assert pending is not None
-    assert pending["choice_key"] == "event_discard_self"
-    # Auto event now resolves on Red Army's turn (current player at application time).
-    assert pending["player_id"] == red.id
+
+    # 時代完成後才正式交棒、抽新事件；事件選擇屬於新回合的當前玩家 Tibet。
+    assert game.current_player() is tibet
+    assert game.turn_phase == TurnPhase.ACTION
+    assert game.pending_choice["choice_key"] == "event_discard_self"
+    assert game.pending_choice["player_id"] == tibet.id
     assert game.event_progress["settled"] is True
-    assert game.resolve_pending_choice(red.id, [0]).get("success") is True
 
 
 def test_manchuria_activation_choice_completes_before_same_boundary_auto_event_choice():
@@ -307,42 +337,13 @@ def test_simultaneous_tibet_and_manchuria_eras_serialize_before_auto_event():
     _configure_same_boundary_auto_discard_event(game)
     game.current_player_index = 2
 
-    # Round wrap: current becomes the non-red round-start player (Tibet). BOTH detected
-    # eras are interactive and target a player who is not Tibet (Red Army for the Tibet
-    # suppression, Manchuria for the Manchuria reorder), so both activations are DEFERRED.
-    # No pending_choice is stranded on Tibet — the deadlock is gone.
-    _advance_current_player_turn(game)
-    assert game.current_player() is tibet
-    assert game.era_engine.get_activated_eras() == []
-    assert game._pending_era_activations == ["tibet", "manchuria"]
-    assert game.pending_choice is None
-    assert game.event_progress["status"] == "auto_deferred"
-    # Each era activates on its own target's turn. Tibet ends → Manchuria takes the seat
-    # and the Manchuria reorder activates as Manchuria's own choice; the Tibet suppression
-    # stays queued (its target, Red Army, has not acted yet).
+    # 紅軍回合結束後一次偵測兩個關卡。藏國騷亂由目前的紅軍先處理；
+    # 滿洲關卡保留在佇列，等目標玩家滿洲取得席位後再處理。
     assert game.advance_turn_phase() == {"success": True}
-
-    assert game.current_player() is manchuria
-    assert game.era_engine.get_activated_eras() == ["manchuria"]
-    assert game._pending_era_activations == ["tibet"]
-    assert game.pending_choice["choice_key"] == "era_inspect_deck_top_and_reorder"
-    assert game.pending_choice["player_id"] == manchuria.id
-    assert game.event_progress["status"] == "auto_deferred"
-
-    manchuria_result = game.resolve_pending_choice(manchuria.id, [0, 1])
-    assert manchuria_result.get("success") is True
-    assert game.pending_choice is None
-    # Tibet suppression still deferred until Red Army's turn; auto event still not applied.
-    assert game._pending_era_activations == ["tibet"]
-    assert game.event_progress["status"] == "auto_deferred"
-
-    # Manchuria ends → Red Army takes the seat and the Tibet suppression finally activates
-    # as Red Army's own choice.
-    game.turn_phase = TurnPhase.ACTION
-    _advance_current_player_turn(game)
     assert game.current_player() is red
-    assert set(game.era_engine.get_activated_eras()) == {"tibet", "manchuria"}
-    assert game._pending_era_activations == []
+    assert game.turn_phase == TurnPhase.END
+    assert game.era_engine.get_activated_eras() == ["tibet"]
+    assert game._pending_era_activations == ["manchuria"]
     assert game.pending_choice["choice_key"] == "era_red_discard_to_build_near_target"
     assert game.pending_choice["player_id"] == red.id
 
@@ -350,10 +351,28 @@ def test_simultaneous_tibet_and_manchuria_eras_serialize_before_auto_event():
     assert first_tibet.get("pending_choice") is True
     assert game.pending_choice["choice_key"] == "era_red_build_near_target"
     second_tibet = game.resolve_pending_choice(red.id, 0)
-    assert second_tibet.get("pending_choice") is True
-    # Only after BOTH eras have resolved does the auto event apply (on Red Army's turn).
+    assert second_tibet.get("success") is True
+
+    # 藏國騷亂完成後交棒給 Tibet。新事件已抽出但延後，不能越過尚未完成的滿洲關卡。
+    assert game.current_player() is tibet
+    assert game.turn_phase == TurnPhase.ACTION
+    assert game.pending_choice is None
+    assert game._pending_era_activations == ["manchuria"]
+    assert game.event_progress["status"] == "auto_deferred"
+
+    # Tibet 結束後，滿洲取得席位並處理自己的關卡。
+    assert game.advance_turn_phase() == {"success": True}
+    assert game.current_player() is manchuria
+    assert set(game.era_engine.get_activated_eras()) == {"tibet", "manchuria"}
+    assert game._pending_era_activations == []
+    assert game.pending_choice["choice_key"] == "era_inspect_deck_top_and_reorder"
+    assert game.pending_choice["player_id"] == manchuria.id
+
+    manchuria_result = game.resolve_pending_choice(manchuria.id, [0, 1])
+    assert manchuria_result.get("pending_choice") is True
+    # 兩個時代關卡都完成後，才套用延後的自動事件。
     assert game.pending_choice["choice_key"] == "event_discard_self"
-    assert game.pending_choice["player_id"] == red.id
+    assert game.pending_choice["player_id"] == manchuria.id
     assert game.event_progress["settled"] is True
 
 
