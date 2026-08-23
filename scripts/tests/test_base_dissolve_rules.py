@@ -5,7 +5,7 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from server.game import Game
+from server.game import Game, GamePhase, TurnPhase
 
 
 def make_game():
@@ -65,6 +65,29 @@ def test_same_attacker_second_red_base_hit_removes_org_keeps_base_and_blocks_bui
     assert red.base == '北京'
     assert game.can_faction_develop_in_town('red_army', '北京') is False
     assert game._place_organization(red, '北京', require_development=False) is False
+
+
+def test_mongol_can_move_from_zhangjiakou_to_beijing_after_second_red_base_hit():
+    game, red, attacker, _ = make_game()
+    attacker.faction_id = 'mongol'
+    attacker.base = '烏蘭巴托'
+    attacker.organizations = {'烏蘭巴托': 1, '張家口': 1}
+    attacker.moves_left = 3
+    game.current_player_index = 1
+    game.game_phase = GamePhase.MAIN
+    game.turn_phase = TurnPhase.ACTION
+
+    game.dissolve_organization(attacker, red, '北京', source='card')
+    destroyed = game.dissolve_organization(attacker, red, '北京', source='card')
+    legal = game._legal_organization_moves()
+
+    assert destroyed.get('red_base_destroyed') is True
+    assert '北京' not in red.organizations
+    assert any(move.get('town') == '北京' and move.get('cost') == 1 for move in legal['張家口']['rail'])
+
+    moved = game.move_organization('張家口', '北京', mode='rail')
+    assert moved.get('success') is True
+    assert attacker.organizations.get('北京') == 1
 
 
 def test_red_base_build_block_resets_at_turn_boundary():

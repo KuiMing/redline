@@ -1,0 +1,215 @@
+{
+  "summary": {
+    "total": 8,
+    "passed": 8,
+    "failed": 0
+  },
+  "service": "http://127.0.0.1:8768",
+  "scenario": "識別碼 [REDACTED]",
+  "checks": [
+    {
+      "name": "intact_red_base_still_shows_beijing_base_marker",
+      "passed": true,
+      "details": {
+        "beijingBadge": 1,
+        "mongolBadge": 1,
+        "beijingBaseFaction": "red_army"
+      }
+    },
+    {
+      "name": "1280x720_destroyed_beijing_has_no_base_marker",
+      "passed": true,
+      "details": {
+        "beijingBadge": 0,
+        "mongolBadge": 1,
+        "beijingBaseFaction": null,
+        "redBase": "北京",
+        "redOrganizations": {},
+        "railTargets": [
+          "赤峰",
+          "承德",
+          "朝陽",
+          "北京",
+          "天津",
+          "烏蘭察布",
+          "錫林郭勒",
+          "呼和浩特",
+          "包頭",
+          "瀋陽",
+          "通遼",
+          "興安",
+          "太原",
+          "石家莊",
+          "濟南",
+          "鄭州",
+          "西安"
+        ],
+        "roadTargets": []
+      }
+    },
+    {
+      "name": "1280x720_other_active_base_marker_remains",
+      "passed": true,
+      "details": {
+        "beijingBadge": 0,
+        "mongolBadge": 1,
+        "beijingBaseFaction": null,
+        "redBase": "北京",
+        "redOrganizations": {},
+        "railTargets": [
+          "赤峰",
+          "承德",
+          "朝陽",
+          "北京",
+          "天津",
+          "烏蘭察布",
+          "錫林郭勒",
+          "呼和浩特",
+          "包頭",
+          "瀋陽",
+          "通遼",
+          "興安",
+          "太原",
+          "石家莊",
+          "濟南",
+          "鄭州",
+          "西安"
+        ],
+        "roadTargets": []
+      }
+    },
+    {
+      "name": "1280x720_beijing_is_empty_and_legal_from_zhangjiakou",
+      "passed": true,
+      "details": {
+        "beijingBadge": 0,
+        "mongolBadge": 1,
+        "beijingBaseFaction": null,
+        "redBase": "北京",
+        "redOrganizations": {},
+        "railTargets": [
+          "赤峰",
+          "承德",
+          "朝陽",
+          "北京",
+          "天津",
+          "烏蘭察布",
+          "錫林郭勒",
+          "呼和浩特",
+          "包頭",
+          "瀋陽",
+          "通遼",
+          "興安",
+          "太原",
+          "石家莊",
+          "濟南",
+          "鄭州",
+          "西安"
+        ],
+        "roadTargets": []
+      }
+    },
+    {
+      "name": "1024x768_destroyed_beijing_has_no_base_marker",
+      "passed": true,
+      "details": {
+        "beijingBadge": 0,
+        "mongolBadge": 1,
+        "beijingBaseFaction": null,
+        "redBase": "北京",
+        "redOrganizations": {},
+        "railTargets": [
+          "赤峰",
+          "承德",
+          "朝陽",
+          "北京",
+          "天津",
+          "烏蘭察布",
+          "錫林郭勒",
+          "呼和浩特",
+          "包頭",
+          "瀋陽",
+          "通遼",
+          "興安",
+          "太原",
+          "石家莊",
+          "濟南",
+          "鄭州",
+          "西安"
+        ],
+        "roadTargets": []
+      }
+    },
+    {
+      "name": "1024x768_other_active_base_marker_remains",
+      "passed": true,
+      "details": {
+        "beijingBadge": 0,
+        "mongolBadge": 1,
+        "beijingBaseFaction": null,
+        "redBase": "北京",
+        "redOrganizations": {},
+        "railTargets": [
+          "赤峰",
+          "承德",
+          "朝陽",
+          "北京",
+          "天津",
+          "烏蘭察布",
+          "錫林郭勒",
+          "呼和浩特",
+          "包頭",
+          "瀋陽",
+          "通遼",
+          "興安",
+          "太原",
+          "石家莊",
+          "濟南",
+          "鄭州",
+          "西安"
+        ],
+        "roadTargets": []
+      }
+    },
+    {
+      "name": "1024x768_beijing_is_empty_and_legal_from_zhangjiakou",
+      "passed": true,
+      "details": {
+        "beijingBadge": 0,
+        "mongolBadge": 1,
+        "beijingBaseFaction": null,
+        "redBase": "北京",
+        "redOrganizations": {},
+        "railTargets": [
+          "赤峰",
+          "承德",
+          "朝陽",
+          "北京",
+          "天津",
+          "烏蘭察布",
+          "錫林郭勒",
+          "呼和浩特",
+          "包頭",
+          "瀋陽",
+          "通遼",
+          "興安",
+          "太原",
+          "石家莊",
+          "濟南",
+          "鄭州",
+          "西安"
+        ],
+        "roadTargets": []
+      }
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "passed": true,
+      "details": []
+    }
+  ],
+  "screenshots": [
+    "docs/records/map-ui/destroyed-red-base-marker/destroyed_red_base_marker_1280x720_20260823.png",
+    "docs/records/map-ui/destroyed-red-base-marker/destroyed_red_base_marker_1024x768_20260823.png"
+  ]
+}

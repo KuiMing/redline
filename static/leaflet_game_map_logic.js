@@ -62,8 +62,16 @@ function factionLabel(factionId) {
   return meta ? meta.label : factionId;
 }
 
+function playerHasActiveBaseOrganization(player) {
+  if (!player?.base) return false;
+  const organizations = player?.orgs || player?.organizations || {};
+  return Number(organizations[player.base] || 0) > 0;
+}
+
 function baseFactionIdForTown(name) {
-  const owner = (lastGameState?.players || []).find(p => p?.base === name);
+  const owner = (lastGameState?.players || []).find(
+    p => p?.base === name && playerHasActiveBaseOrganization(p)
+  );
   return owner?.faction || null;
 }
 
@@ -1026,7 +1034,7 @@ function updateDynamicStyles() {
 function renderParticipatingFactionBaseBadges() {
   const basePlayersByTown = new Map();
   for (const player of (lastGameState?.players || [])) {
-    if (!player?.base || !player?.faction || !byName.has(player.base)) continue;
+    if (!player?.faction || !byName.has(player?.base) || !playerHasActiveBaseOrganization(player)) continue;
     if (!basePlayersByTown.has(player.base)) basePlayersByTown.set(player.base, []);
     basePlayersByTown.get(player.base).push(player);
   }
