@@ -59,7 +59,7 @@ def main() -> None:
             const box = element.getBoundingClientRect();
             return {left: box.left, top: box.top, right: box.right, bottom: box.bottom, width: box.width, height: box.height, display: getComputedStyle(element).display};
           };
-          const top = rect('topBar');
+          const top = rect('hud');
           const tabs = rect('gameTabs');
           const meta = rect('phaseActionMeta');
           const fresh = rect('emergencyNewGameBtn');
@@ -67,7 +67,7 @@ def main() -> None:
           const eventTab = rect('eventCardTab');
           const inside = (child, parent, pad = 0) => Boolean(child && parent && child.left >= parent.left + pad && child.right <= parent.right - pad && child.top >= parent.top && child.bottom <= parent.bottom);
           return {
-            titleExists: Boolean(document.querySelector('#topBar .title')),
+            titleExists: Boolean(document.querySelector('#topBar')),
             hudText: document.getElementById('hud')?.innerText || '',
             eventPanelExists: Boolean(document.getElementById('eventCardPanel')),
             eventTabText: document.getElementById('eventCardTab')?.innerText || '',
@@ -84,8 +84,8 @@ def main() -> None:
         record('yellow_header_title_removed', not state['titleExists'], state['titleExists'])
         record('yellow_hand_chip_removed', '手牌 ' not in state['hudText'], state['hudText'])
         record('yellow_market_mode_chip_removed', '牌庫模式' not in state['hudText'], state['hudText'])
-        record('phase_description_moved_inside_top_bar', state['metaInsideTop'], {'meta': state['meta'], 'top': state['top']})
-        record('new_game_moved_to_top_right', state['freshInsideTop'] and state['freshRightGap'] is not None and state['freshRightGap'] <= 24, {'button': state['fresh'], 'top': state['top'], 'rightGap': state['freshRightGap']})
+        record('phase_description_moved_inside_status_bar', state['metaInsideTop'], {'meta': state['meta'], 'status': state['top']})
+        record('restart_moved_to_status_right', state['freshInsideTop'] and state['freshRightGap'] is not None and state['freshRightGap'] <= 24, {'button': state['fresh'], 'status': state['top'], 'rightGap': state['freshRightGap']})
         record('advance_button_uses_old_new_game_tab_position', state['advanceInsideTabs'] and state['advanceRightGap'] is not None and state['advanceRightGap'] <= 24, {'button': state['advance'], 'tabs': state['tabs'], 'rightGap': state['advanceRightGap']})
         record('event_card_is_a_visible_tab', not state['eventPanelExists'] and state['eventTabInsideTabs'] and '事件卡' in state['eventTabText'] and '紅軍權貴出逃' in state['eventTabText'], state)
         page.screenshot(path=str(SHOT_1280), full_page=True)
@@ -103,7 +103,7 @@ def main() -> None:
         page.set_viewport_size({'width': 1024, 'height': 768})
         page.wait_for_timeout(300)
         narrow = page.evaluate("""() => {
-          const ids = ['topBar', 'phaseActionMeta', 'emergencyNewGameBtn', 'gameTabs', 'eventCardTab', 'advanceStepBtn'];
+          const ids = ['hud', 'phaseActionMeta', 'emergencyNewGameBtn', 'gameTabs', 'eventCardTab', 'advanceStepBtn'];
           return Object.fromEntries(ids.map(id => {
             const element = document.getElementById(id);
             if (!element) return [id, null];

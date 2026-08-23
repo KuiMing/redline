@@ -32,31 +32,7 @@ let stickyPlayerErrorTimer = null;
 const selectedPurchaseIndices = new Set();
 // 這兩張卡的取消能力只能被動觸發（其他玩家打出可取消的卡牌時自動跳出反應視窗），
 // 自己回合主動點「行動」不會取消任何東西，白白浪費這張卡，因此手牌區直接 disable。
-let emergencyButtonAlignmentTimer = null;
 const REACTION_ONLY_ACTION_CARDS = new Set(['爆料黑幕', '產業滲透']);
-
-function alignEmergencyNewGameButton(scale = null) {
-  const button = document.getElementById('emergencyNewGameBtn');
-  const topBar = document.getElementById('topBar');
-  if (!button || !topBar) return;
-  const activeScale = scale || Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--stage-scale')) || 1;
-  const topRect = topBar.getBoundingClientRect();
-  const inset = 12 * activeScale;
-  button.style.height = `${32}px`;
-  button.style.left = `${topRect.right - inset - button.offsetWidth * activeScale}px`;
-  button.style.top = `${topRect.top + 8 * activeScale}px`;
-  button.style.transform = `scale(${activeScale})`;
-}
-
-function keepEmergencyNewGameButtonAligned() {
-  if (emergencyButtonAlignmentTimer) return;
-  alignEmergencyNewGameButton();
-  emergencyButtonAlignmentTimer = window.setInterval(() => {
-    const button = document.getElementById('emergencyNewGameBtn');
-    if (!button || getComputedStyle(button).display === 'none') return;
-    alignEmergencyNewGameButton();
-  }, 100);
-}
 
 function resizeStage() {
   const scale = Math.min(
@@ -66,8 +42,6 @@ function resizeStage() {
   document.documentElement.style.setProperty('--stage-scale', String(scale));
   document.documentElement.style.setProperty('--stage-left', `${Math.max(0, (window.innerWidth - 1280 * scale) / 2)}px`);
   document.documentElement.style.setProperty('--stage-top', `${Math.max(0, (window.innerHeight - 720 * scale) / 2)}px`);
-  const emergencyButton = document.getElementById('emergencyNewGameBtn');
-  if (emergencyButton) alignEmergencyNewGameButton(scale);
 }
 
 function playerInitialFromInput(name) {
@@ -1383,14 +1357,11 @@ function connect(options = {}) {
   };
 
   document.getElementById('lobby').style.display = 'none';
+  const gameHud = document.getElementById('hud');
+  if (gameHud) gameHud.style.display = 'flex';
   const shell = document.getElementById('gameShell');
   if (shell) shell.style.display = 'block';
-  const emergencyNewGameBtn = document.getElementById('emergencyNewGameBtn');
-  if (emergencyNewGameBtn) {
-    emergencyNewGameBtn.style.display = 'flex';
-    requestAnimationFrame(() => alignEmergencyNewGameButton());
-    keepEmergencyNewGameButtonAligned();
-  }
+
   const picker = document.getElementById('factionPicker');
   if (picker) picker.style.display = 'none';
   resizeStage();
@@ -3655,7 +3626,8 @@ async function render(state) {
 
   // HUD
   const hud = document.getElementById('hud');
-  if (hud) {
+  const hudMainRow = document.getElementById('hudMainRow');
+  if (hud && hudMainRow) {
     const players = state.players || [];
     const orgInfo = players.map(p => {
       const total = Object.values(p.orgs || {}).reduce((a,b)=>a+b,0);
@@ -3667,16 +3639,13 @@ async function render(state) {
     const myPropaganda = me?.resources?.propaganda ?? 0;
     const myMoves = me?.moves_left ?? 0;
     const phaseLabel = String(state.turn_phase || '').toLowerCase() === 'action' ? '行動' : String(state.turn_phase || '').toLowerCase() === 'event' ? '事件結算' : String(state.turn_phase || '').toLowerCase() === 'end' ? '購買' : state.turn_phase;
-    hud.innerHTML = `
-      <div class="hud-main-row">
-        <span class="hud-chip hud-chip-primary">回合 ${state.turn}</span>
-        <span class="hud-chip">當前玩家 <span${(() => { const f = (state.players || []).find(p => p.name === state.current_player)?.faction; const c = factionNameColor(f); return c ? ` style="color:${c};font-weight:700"` : ''; })()}>${escapeHtml(state.current_player)}</span></span>
-        <span class="hud-chip hud-chip-resource">資金 ${myMoney}</span>
-        <span class="hud-chip hud-chip-resource">宣傳 ${myPropaganda}</span>
-        <span class="hud-chip">移動 ${myMoves}</span>
-
-        ${orgInfo}
-      </div>
+    hudMainRow.innerHTML = `
+      <span class="hud-chip hud-chip-primary">回合 ${state.turn}</span>
+      <span class="hud-chip">當前玩家 <span${(() => { const f = (state.players || []).find(p => p.name === state.current_player)?.faction; const c = factionNameColor(f); return c ? ` style="color:${c};font-weight:700"` : ''; })()}>${escapeHtml(state.current_player)}</span></span>
+      <span class="hud-chip hud-chip-resource">資金 ${myMoney}</span>
+      <span class="hud-chip hud-chip-resource">宣傳 ${myPropaganda}</span>
+      <span class="hud-chip">移動 ${myMoves}</span>
+      ${orgInfo}
     `;
 
     const phaseActionBar = document.getElementById('phaseActionBar');
@@ -3735,8 +3704,6 @@ async function render(state) {
         gameShell.style.height = `${Math.max(0, 720 - contentTop)}px`;
       }
     }
-    const freshGameButton = document.getElementById('emergencyNewGameBtn');
-    if (freshGameButton) requestAnimationFrame(() => alignEmergencyNewGameButton());
   }
 
   // ✅ 地圖節點不在 render 中重建

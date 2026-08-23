@@ -464,29 +464,6 @@ body {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 14px 32px rgba(0, 0, 0, 0.22);
 }
 
-#topBar {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 1280px;
-  height: 48px;
-  background: rgba(5, 8, 12, 0.58);
-  border-bottom: 1px solid rgba(130, 170, 255, 0.16);
-  padding: 10px 20px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.8rem;
-  z-index: 2;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.18);
-}
-
-#statusBar {
-  display: none;
-}
-
 .game-tab.my-faction-tab.attention {
   border-color: #facc15;
   color: #fef08a;
@@ -494,52 +471,66 @@ body {
 }
 
 #emergencyNewGameBtn {
-  display: none;
-  position: fixed;
-  top: 8px;
-  left: 1174px;
-  z-index: 2147483647;
-  transform-origin: top left;
+  display: inline-flex;
+  position: static;
+  flex: 0 0 auto;
   pointer-events: auto;
   box-sizing: border-box;
-  display: none;
   align-items: center;
   justify-content: center;
-  color: #fecaca;
-  border: 1px solid rgba(248, 113, 113, 0.42);
+  min-height: 30px;
+  color: rgba(148, 163, 184, 0.58);
+  border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: 8px;
-  padding: 7px 12px;
-  background: rgba(127, 29, 29, 0.42);
+  padding: 6px 11px;
+  background: rgba(30, 41, 59, 0.20);
   text-decoration: none;
   font-weight: 700;
   white-space: nowrap;
   font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  transition: color 140ms ease, border-color 140ms ease, background 140ms ease, box-shadow 140ms ease;
 }
 
 #emergencyNewGameBtn:hover {
-  background: rgba(153, 27, 27, 0.72);
+  color: #e2e8f0;
+  border-color: rgba(203, 213, 225, 0.52);
+  background: rgba(51, 65, 85, 0.58);
+  box-shadow: 0 0 14px rgba(148, 163, 184, 0.14);
 }
 
 #hud {
   position: absolute;
   left: 0;
-  top: 48px;
+  top: 0;
   width: 1280px;
-  min-height: 42px;
+  height: 48px;
   padding: 8px 16px;
   background: rgba(5, 8, 12, 0.50);
   border-bottom: 1px solid rgba(130, 170, 255, 0.16);
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.76rem;
+  font-size: 0.8rem;
   color: #dbe7f3;
   z-index: 2;
   backdrop-filter: blur(8px);
+  display: none;
+  align-items: center;
+  gap: 12px;
+}
+
+#hudStatusActions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+  min-width: 0;
 }
 
 #phaseActionBar {
   position: absolute;
   left: 0;
-  top: 90px;
+  top: 48px;
   width: 1280px;
   min-height: 48px;
   padding: 6px 16px;
@@ -636,15 +627,17 @@ body {
 }
 
 #phaseActionMeta {
-  max-width: 760px;
+  max-width: 330px;
   overflow: hidden;
-  color: #cbd5e1;
+  color: #fbbf24;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
+  font-weight: 700;
   letter-spacing: 0.02em;
-  text-align: center;
+  text-align: right;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-shadow: 0 0 12px rgba(245, 158, 11, 0.18);
 }
 
 .phase-action-btn {
@@ -744,9 +737,12 @@ body {
 
 .hud-main-row {
   display: flex;
-  flex-wrap: wrap;
+  flex: 1 1 auto;
+  flex-wrap: nowrap;
   gap: 8px;
   align-items: center;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .hud-chip {
@@ -782,9 +778,9 @@ body {
 #gameShell {
   position: absolute;
   left: 0;
-  top: 150px;
+  top: 56px;
   width: 1280px;
-  height: 570px;
+  height: 664px;
   display: none;
   z-index: 2;
 }
@@ -813,6 +809,7 @@ body {
   padding: 8px 14px;
   border-radius: 8px;
   font-family: 'JetBrains Mono', monospace;
+  font-size: 0.86rem;
   cursor: pointer;
 }
 
@@ -888,7 +885,7 @@ body {
   left: 0;
   top: 48px;
   width: 1280px;
-  height: 522px;
+  height: calc(100% - 48px);
 }
 
 .game-view.active {
@@ -904,7 +901,7 @@ body {
   left: 0;
   top: 0;
   width: 1280px;
-  height: 522px;
+  height: 100%;
   display: grid;
   grid-template-columns: 284px 474px 474px;
   gap: 12px;
@@ -930,7 +927,7 @@ body {
 
 .panel-title {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.75rem;
+  font-size: 0.82rem;
   color: #60a5fa;
   margin-bottom: 6px;
   text-shadow: 0 0 10px rgba(96, 165, 250, 0.24);
@@ -942,7 +939,7 @@ body {
   flex: 1;
   background: #05080C;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   overflow-y: auto;
   padding: 6px;
 }
@@ -987,7 +984,7 @@ body {
 
 .purchase-subtitle {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.72rem;
+  font-size: 0.76rem;
   color: #93c5fd;
   margin-top: 4px;
 }
@@ -2147,7 +2144,7 @@ body {
 #logView {
   position: relative;
   width: 1280px;
-  height: 522px;
+  height: calc(100% - 48px);
   overflow: hidden;
 }
 
@@ -2156,7 +2153,7 @@ body {
   left: 12px;
   top: 12px;
   width: 1256px;
-  height: 498px;
+  height: calc(100% - 24px);
   min-height: 0;
   overflow: hidden;
   background: rgba(17, 22, 29, 0.96);
@@ -2176,7 +2173,7 @@ body {
   left: 12px;
   top: 12px;
   width: 1256px;
-  height: 498px;
+  height: calc(100% - 24px);
   overflow: hidden;
   background: rgba(17, 22, 29, 0.96);
   padding: 0;
@@ -2190,12 +2187,7 @@ body {
 #mapPanel {
   position: relative;
   z-index: 2;
-  height: 100%;
-}
-
-#statusBar {
-  min-width: 120px;
-  text-align: right;
+  height: calc(100% - 24px);
 }
 
 #strategicMapFrame {
@@ -3105,7 +3097,7 @@ body.victory-art-viewer-open {
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 498px;
+  height: 100%;
   padding: 14px 18px 16px;
   background: linear-gradient(135deg, rgba(8, 15, 27, 0.9), rgba(8, 12, 20, 0.72));
 }

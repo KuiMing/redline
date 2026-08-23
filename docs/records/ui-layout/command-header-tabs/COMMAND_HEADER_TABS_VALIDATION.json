@@ -11,27 +11,27 @@
     {
       "name": "yellow_hand_chip_removed",
       "ok": true,
-      "detail": "回合 1\n行動階段\n當前玩家\nviewer\n資金 0\n宣傳 0\n移動 0\nviewer 組織 1\nred 組織 1"
+      "detail": "回合 1\n當前玩家\nviewer\n資金 0\n宣傳 0\n移動 0\nviewer 組織 1\nred 組織 1\n目前：行動｜下一步：結束行動\n重新開始"
     },
     {
       "name": "yellow_market_mode_chip_removed",
       "ok": true,
-      "detail": "回合 1\n行動階段\n當前玩家\nviewer\n資金 0\n宣傳 0\n移動 0\nviewer 組織 1\nred 組織 1"
+      "detail": "回合 1\n當前玩家\nviewer\n資金 0\n宣傳 0\n移動 0\nviewer 組織 1\nred 組織 1\n目前：行動｜下一步：結束行動\n重新開始"
     },
     {
-      "name": "phase_description_moved_inside_top_bar",
+      "name": "phase_description_moved_inside_status_bar",
       "ok": true,
       "detail": {
         "meta": {
-          "left": 538.15625,
-          "top": 15,
-          "right": 741.84375,
-          "bottom": 32,
-          "width": 203.6875,
-          "height": 17,
+          "left": 989.4375,
+          "top": 14.5,
+          "right": 1176.796875,
+          "bottom": 32.5,
+          "width": 187.359375,
+          "height": 18,
           "display": "block"
         },
-        "top": {
+        "status": {
           "left": 0,
           "top": 0,
           "right": 1280,
@@ -43,19 +43,19 @@
       }
     },
     {
-      "name": "new_game_moved_to_top_right",
+      "name": "restart_moved_to_status_right",
       "ok": true,
       "detail": {
         "button": {
-          "left": 1178,
-          "top": 8,
-          "right": 1268,
-          "bottom": 40,
-          "width": 90,
+          "left": 1188.796875,
+          "top": 7.5,
+          "right": 1264,
+          "bottom": 39.5,
+          "width": 75.203125,
           "height": 32,
           "display": "flex"
         },
-        "top": {
+        "status": {
           "left": 0,
           "top": 0,
           "right": 1280,
@@ -64,7 +64,7 @@
           "height": 48,
           "display": "flex"
         },
-        "rightGap": 12
+        "rightGap": 16
       }
     },
     {
@@ -72,19 +72,19 @@
       "ok": true,
       "detail": {
         "button": {
-          "left": 1155.265625,
-          "top": 105.5,
+          "left": 1181.515625,
+          "top": 61.5,
           "right": 1264,
-          "bottom": 141.5,
-          "width": 108.734375,
+          "bottom": 97.5,
+          "width": 82.484375,
           "height": 36,
           "display": "flex"
         },
         "tabs": {
           "left": 0,
-          "top": 100,
+          "top": 56,
           "right": 1280,
-          "bottom": 148,
+          "bottom": 104,
           "width": 1280,
           "height": 48,
           "display": "flex"
@@ -97,10 +97,10 @@
       "ok": true,
       "detail": {
         "titleExists": false,
-        "hudText": "回合 1\n行動階段\n當前玩家\nviewer\n資金 0\n宣傳 0\n移動 0\nviewer 組織 1\nred 組織 1",
+        "hudText": "回合 1\n當前玩家\nviewer\n資金 0\n宣傳 0\n移動 0\nviewer 組織 1\nred 組織 1\n目前：行動｜下一步：結束行動\n重新開始",
         "eventPanelExists": false,
         "eventTabText": "事件卡｜紅軍權貴出逃",
-        "advanceText": "結束行動階段",
+        "advanceText": "結束行動",
         "top": {
           "left": 0,
           "top": 0,
@@ -112,54 +112,54 @@
         },
         "tabs": {
           "left": 0,
-          "top": 100,
+          "top": 56,
           "right": 1280,
-          "bottom": 148,
+          "bottom": 104,
           "width": 1280,
           "height": 48,
           "display": "flex"
         },
         "meta": {
-          "left": 538.15625,
-          "top": 15,
-          "right": 741.84375,
-          "bottom": 32,
-          "width": 203.6875,
-          "height": 17,
+          "left": 989.4375,
+          "top": 14.5,
+          "right": 1176.796875,
+          "bottom": 32.5,
+          "width": 187.359375,
+          "height": 18,
           "display": "block"
         },
         "fresh": {
-          "left": 1178,
-          "top": 8,
-          "right": 1268,
-          "bottom": 40,
-          "width": 90,
+          "left": 1188.796875,
+          "top": 7.5,
+          "right": 1264,
+          "bottom": 39.5,
+          "width": 75.203125,
           "height": 32,
           "display": "flex"
         },
         "advance": {
-          "left": 1155.265625,
-          "top": 105.5,
+          "left": 1181.515625,
+          "top": 61.5,
           "right": 1264,
-          "bottom": 141.5,
-          "width": 108.734375,
+          "bottom": 97.5,
+          "width": 82.484375,
           "height": 36,
           "display": "flex"
         },
         "eventTab": {
-          "left": 381.3125,
-          "top": 105,
-          "right": 544.625,
-          "bottom": 142,
-          "width": 163.3125,
-          "height": 37,
+          "left": 388.1875,
+          "top": 60.5,
+          "right": 555.796875,
+          "bottom": 98.5,
+          "width": 167.609375,
+          "height": 38,
           "display": "flex"
         },
         "metaInsideTop": true,
         "freshInsideTop": true,
         "advanceInsideTabs": true,
         "eventTabInsideTabs": true,
-        "freshRightGap": 12,
+        "freshRightGap": 16,
         "advanceRightGap": 16
       }
     },
@@ -172,7 +172,7 @@
       "name": "narrow_layout_keeps_header_controls_inside_viewport",
       "ok": true,
       "detail": {
-        "topBar": {
+        "hud": {
           "left": 0,
           "top": 96,
           "right": 1024,
@@ -181,44 +181,44 @@
           "height": 38.399993896484375
         },
         "phaseActionMeta": {
-          "left": 430.5249938964844,
-          "top": 108,
-          "right": 593.4750366210938,
-          "bottom": 121.5999984741211,
-          "width": 162.95004272460938,
-          "height": 13.599998474121094
+          "left": 791.5499877929688,
+          "top": 107.5999984741211,
+          "right": 941.4375,
+          "bottom": 122,
+          "width": 149.88751220703125,
+          "height": 14.400001525878906
         },
         "emergencyNewGameBtn": {
-          "left": 942.390625,
-          "top": 102.390625,
-          "right": 1014.390625,
-          "bottom": 127.9906234741211,
-          "width": 72,
+          "left": 951.0375366210938,
+          "top": 102,
+          "right": 1011.2000122070312,
+          "bottom": 127.5999984741211,
+          "width": 60.1624755859375,
           "height": 25.599998474121094
         },
         "gameTabs": {
           "left": 0,
-          "top": 176,
+          "top": 140.8000030517578,
           "right": 1024,
-          "bottom": 214.39999389648438,
+          "bottom": 179.20001220703125,
           "width": 1024,
-          "height": 38.399993896484375
+          "height": 38.40000915527344
         },
         "eventCardTab": {
-          "left": 305.0500183105469,
-          "top": 180,
-          "right": 435.70001220703125,
-          "bottom": 209.60000610351562,
-          "width": 130.64999389648438,
-          "height": 29.600006103515625
+          "left": 310.5500183105469,
+          "top": 144.39999389648438,
+          "right": 444.63751220703125,
+          "bottom": 174.8000030517578,
+          "width": 134.08749389648438,
+          "height": 30.400009155273438
         },
         "advanceStepBtn": {
-          "left": 924.2125244140625,
-          "top": 180.39999389648438,
+          "left": 945.2125244140625,
+          "top": 145.1999969482422,
           "right": 1011.2000122070312,
-          "bottom": 209.20001220703125,
-          "width": 86.98748779296875,
-          "height": 28.800018310546875
+          "bottom": 174,
+          "width": 65.98748779296875,
+          "height": 28.800003051757812
         }
       }
     },

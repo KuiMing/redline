@@ -1251,6 +1251,15 @@
 - Proof：`docs/records/ui-layout/remove-redundant-phase-and-red-army-panel/REMOVE_REDUNDANT_PHASE_AND_RED_ARMY_PANEL_VALIDATION.{json,md}`，含 1280×720 與 1024×768 正式截圖。
 - 原始證據：`docs/records/ui-layout/remove-redundant-phase-and-red-army-panel/request_remove_phase_chip_and_red_army_panel_20260823.jpg`。
 
+### P1：狀態列整合與全畫面延展
+- [done] 將右上角 `開新遊戲` 改名為 `重新開始`，並移入 HUD 狀態列最右側。按鈕平時使用低亮度灰色字體、邊框與背景；hover 時提高字體、邊框、背景及光暈亮度。`/new-game` 行為保持不變。
+- [done] 將「目前：…｜下一步：…」提示移到 `重新開始` 左側並改成金色；移除原本獨立的 48px 最上方列。狀態 chip、提示與重新開始控制現在共用同一列。
+- [done] `gameShell` 依 HUD 與次要行動列的實際底部動態延展至 720px 舞台底部；指揮中心、戰略地圖、戰況紀錄及我的陣營四個 view 同步使用可用高度。1280×720 不再保留原頂列或底部空白。
+- [done] 小幅放大 HUD、階段提示、分頁、panel title、戰況紀錄與購買區輔助文字。卡牌本體尺寸保持不變：購買卡 220×270，手牌卡 220×318。
+- 驗證：修正前 Browser proof 3/9；修正後擴充 proof 10/10。1280×720 與 1024×768 位置、hover、全高、四個 view、無頁面 overflow 及卡牌尺寸通過；command-header-tabs 10/10；紅軍能力入口 6/6；精簡紅軍介面 7/7；完整主 pytest 398/398；console 0 error。
+- Proof：`docs/records/ui-layout/fullscreen-status-header/FULLSCREEN_STATUS_HEADER_VALIDATION.{json,md}`，含 1280×720 與 1024×768 正式截圖。
+- 原始證據：`docs/records/ui-layout/fullscreen-status-header/request_fullscreen_status_header_20260823.jpg`。
+
 ### P1：多張建立／瓦解卡在第一張後過早切到地圖
 - [done] 同一玩家手上有多張 `宣傳家` 時，第一張產生建立選擇後留在指揮中心；第二張及其餘可排隊卡牌的「行動」按鈕維持可用。所有可排隊卡牌按完後才自動切到戰略地圖。
 - [done] 建立卡、瓦解卡與當下等級具有地圖效果的奧援卡共用 FIFO 地圖效果佇列。行動卡涵蓋 `宣傳家`、`思想家`、`組織經驗甲／乙／丙`、`派遣間諜`、`內應間諜`及`情報網`瓦解分支；奧援卡涵蓋 `東洋奧援`（II／III級建立）、`北國奧援`（I／II／III級瓦解）及 `臺灣奧援`（II／III級瓦解或瓦解後建立）。異名建立、瓦解及行動卡／奧援卡混排皆依打出順序結算。`東洋奧援`與`臺灣奧援`的 I 級只有資源效果，因此不列入地圖佇列。

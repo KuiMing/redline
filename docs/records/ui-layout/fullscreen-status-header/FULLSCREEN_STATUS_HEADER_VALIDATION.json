@@ -1,0 +1,215 @@
+{
+  "summary": {
+    "total": 10,
+    "passed": 10,
+    "failed": 0
+  },
+  "service": "http://127.0.0.1:8000",
+  "scenario": "紅軍行動階段；識別碼 [REDACTED]",
+  "checks": [
+    {
+      "name": "restart_label_and_route_are_preserved",
+      "passed": true,
+      "details": {
+        "text": "重新開始",
+        "href": "/new-game"
+      }
+    },
+    {
+      "name": "obsolete_top_row_is_removed",
+      "passed": true,
+      "details": {
+        "topBarExists": false,
+        "hud": {
+          "left": 0,
+          "top": 0,
+          "right": 1280,
+          "bottom": 48,
+          "width": 1280,
+          "height": 48
+        }
+      }
+    },
+    {
+      "name": "gold_phase_hint_is_left_of_restart_in_status_row",
+      "passed": true,
+      "details": {
+        "meta": {
+          "left": 989.4375,
+          "top": 14.5,
+          "right": 1176.796875,
+          "bottom": 32.5,
+          "width": 187.359375,
+          "height": 18
+        },
+        "restart": {
+          "left": 1188.796875,
+          "top": 7.5,
+          "right": 1264,
+          "bottom": 39.5,
+          "width": 75.203125,
+          "height": 32
+        },
+        "metaParent": "hudStatusActions",
+        "restartParent": "hudStatusActions",
+        "metaColor": "rgb(251, 191, 36)",
+        "metaText": "目前：行動｜下一步：結束行動"
+      }
+    },
+    {
+      "name": "restart_is_dim_until_hover",
+      "passed": true,
+      "details": {
+        "before": "rgba(148, 163, 184, 0.58)",
+        "after": "rgba(224, 230, 238, 0.98)"
+      }
+    },
+    {
+      "name": "game_shell_and_command_grid_extend_to_stage_bottom",
+      "passed": true,
+      "details": {
+        "hud": {
+          "left": 0,
+          "top": 0,
+          "right": 1280,
+          "bottom": 48,
+          "width": 1280,
+          "height": 48
+        },
+        "shell": {
+          "left": 0,
+          "top": 56,
+          "right": 1280,
+          "bottom": 720,
+          "width": 1280,
+          "height": 664
+        },
+        "grid": {
+          "left": 0,
+          "top": 104,
+          "right": 1280,
+          "bottom": 720,
+          "width": 1280,
+          "height": 616
+        }
+      }
+    },
+    {
+      "name": "card_dimensions_remain_unchanged",
+      "passed": true,
+      "details": {
+        "static": {
+          "left": 21,
+          "top": 157,
+          "right": 241,
+          "bottom": 427,
+          "width": 220,
+          "height": 270
+        },
+        "random": {
+          "left": 317,
+          "top": 194,
+          "right": 537,
+          "bottom": 464,
+          "width": 220,
+          "height": 270
+        },
+        "hand": {
+          "left": 803,
+          "top": 149,
+          "right": 1023,
+          "bottom": 467,
+          "width": 220,
+          "height": 318
+        }
+      }
+    },
+    {
+      "name": "non_card_ui_fonts_are_slightly_larger",
+      "passed": true,
+      "details": {
+        "tabFont": 13.76,
+        "panelTitleFont": 13.12
+      }
+    },
+    {
+      "name": "map_log_and_personal_views_extend_with_the_shell",
+      "passed": true,
+      "details": {
+        "map": {
+          "left": 12,
+          "top": 116,
+          "right": 1268,
+          "bottom": 708,
+          "width": 1256,
+          "height": 592
+        },
+        "log": {
+          "left": 12,
+          "top": 116,
+          "right": 1268,
+          "bottom": 708,
+          "width": 1256,
+          "height": 592
+        },
+        "myFaction": {
+          "left": 12,
+          "top": 116,
+          "right": 1268,
+          "bottom": 708,
+          "width": 1256,
+          "height": 592
+        }
+      }
+    },
+    {
+      "name": "narrow_view_has_no_clipping_or_page_scroll",
+      "passed": true,
+      "details": {
+        "rects": {
+          "hud": {
+            "left": 0,
+            "top": 96,
+            "right": 1024,
+            "bottom": 134.39999389648438
+          },
+          "phaseActionMeta": {
+            "left": 791.5499877929688,
+            "top": 107.5999984741211,
+            "right": 941.4375,
+            "bottom": 122
+          },
+          "emergencyNewGameBtn": {
+            "left": 951.0375366210938,
+            "top": 102,
+            "right": 1011.2000122070312,
+            "bottom": 127.5999984741211
+          },
+          "gameShell": {
+            "left": 0,
+            "top": 140.8000030517578,
+            "right": 1024,
+            "bottom": 672.0000152587891
+          },
+          "commandGrid": {
+            "left": 0,
+            "top": 179.20001220703125,
+            "right": 1024,
+            "bottom": 672
+          }
+        },
+        "scrollWidth": 1024,
+        "scrollHeight": 768
+      }
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "passed": true,
+      "details": []
+    }
+  ],
+  "screenshots": [
+    "docs/records/ui-layout/fullscreen-status-header/fullscreen_status_header_1280x720_20260823.png",
+    "docs/records/ui-layout/fullscreen-status-header/fullscreen_status_header_1024x768_20260823.png"
+  ]
+}

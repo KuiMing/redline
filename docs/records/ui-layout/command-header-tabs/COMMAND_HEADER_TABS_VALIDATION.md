@@ -5,8 +5,8 @@
 - PASS `yellow_header_title_removed`
 - PASS `yellow_hand_chip_removed`
 - PASS `yellow_market_mode_chip_removed`
-- PASS `phase_description_moved_inside_top_bar`
-- PASS `new_game_moved_to_top_right`
+- PASS `phase_description_moved_inside_status_bar`
+- PASS `restart_moved_to_status_right`
 - PASS `advance_button_uses_old_new_game_tab_position`
 - PASS `event_card_is_a_visible_tab`
 - PASS `event_tab_opens_complete_event_card`
