@@ -1243,6 +1243,12 @@
 - 驗證：修正前 Browser proof 2/6；修正後 6/6。1280×720 與 1024×768 幾何／截圖驗證通過；既有 command-header-tabs 10/10；完整主 pytest 398/398；console 0 error。
 - Proof：`docs/records/ui-layout/red-army-ability-next-to-end-action/RED_ARMY_ABILITY_NEXT_TO_END_ACTION_VALIDATION.{json,md}`，含 1280×720 與 1024×768 正式截圖。
 
+### P1：移除重複的階段 chip 與紅軍陣營能力區塊（先記錄，未實作）
+- [todo] 移除 HUD 頂列中位於 `回合 N` 右側的 `行動階段` chip。上方中央已有「目前：行動｜下一步：結束行動」，不需要重複顯示階段。
+- [todo] 移除指揮中心左下角的紅軍「陣營能力」區塊，包括說明文字、`本回合已用 N/M 次`狀態與區塊內的 `紅軍能力（N/M）`按鈕。
+- [todo] 保留分頁列右側、位於 `結束行動` 左邊的 `紅軍能力 N/M` 按鈕，作為唯一的紅軍能力入口；能力規則、使用次數、disabled 狀態與 modal 行為不變。
+- 原始證據：`docs/records/ui-layout/remove-redundant-phase-and-red-army-panel/request_remove_phase_chip_and_red_army_panel_20260823.jpg`。
+
 ### P1：多張建立／瓦解卡在第一張後過早切到地圖
 - [done] 同一玩家手上有多張 `宣傳家` 時，第一張產生建立選擇後留在指揮中心；第二張及其餘可排隊卡牌的「行動」按鈕維持可用。所有可排隊卡牌按完後才自動切到戰略地圖。
 - [done] 建立卡、瓦解卡與當下等級具有地圖效果的奧援卡共用 FIFO 地圖效果佇列。行動卡涵蓋 `宣傳家`、`思想家`、`組織經驗甲／乙／丙`、`派遣間諜`、`內應間諜`及`情報網`瓦解分支；奧援卡涵蓋 `東洋奧援`（II／III級建立）、`北國奧援`（I／II／III級瓦解）及 `臺灣奧援`（II／III級瓦解或瓦解後建立）。異名建立、瓦解及行動卡／奧援卡混排皆依打出順序結算。`東洋奧援`與`臺灣奧援`的 I 級只有資源效果，因此不列入地圖佇列。
