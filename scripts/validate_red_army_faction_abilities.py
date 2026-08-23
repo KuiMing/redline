@@ -91,7 +91,11 @@ def test_propaganda_department_noop_when_both_supplies_empty():
     result = game._activated_faction_action(red, '政工部', target_player_id=a.id)
     return ok(
         'red_army_propaganda_department_noop_when_both_supplies_empty',
-        result.get('success') and result.get('result', {}).get('static_supply_empty') and not a.deck.draw_pile,
+        not result.get('success')
+        and result.get('result', {}).get('unavailable') is True
+        and result.get('result', {}).get('reason') == 'no_topdeck_supply'
+        and game._red_army_action_count() == 0
+        and not a.deck.draw_pile,
         f'result={result}, draw_pile={[c.name for c in a.deck.draw_pile]}',
     )
 
@@ -139,14 +143,14 @@ def test_frontend_exposes_red_army_buttons_and_choice_helpers():
     required = [
         "id=\"redArmyAbilityBtn\"",
         "openRedArmyAbilityModal",
-        "紅軍能力不再自動彈出",
+        "紅軍能力只使用分頁列",
         "faction === 'red_army' && isMine && (phase === 'event' || phase === 'action')",
         "rawPhase === 'event' || rawPhase === 'action'",
         "'統戰部'",
         "'政工部'",
         "'國安部'",
         "'中紀委'",
-        "red_army_state_security_target",
+        "result.name === '國安部'",
         "red_army_ccdi_discard_draw",
         "<strong>統戰部：</strong>抽 1 張牌。",
         "<strong>政工部：</strong>選擇 1 名非紅軍玩家，將 1 張內鬥放到其牌庫頂；同一目標每回合限 1 次。",

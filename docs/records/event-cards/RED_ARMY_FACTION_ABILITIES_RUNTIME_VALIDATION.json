@@ -8,7 +8,7 @@
     {
       "name": "red_army_united_front_draws_until_non_red_limit",
       "ok": true,
-      "detail": "first={'success': True, 'result': {'name': '統戰部', 'drawn': 1}}, second={'success': True, 'result': {'name': '統戰部', 'drawn': 1}}, third={'error': 'Red Army faction action limit reached this turn'}, hand=['補牌2', '補牌1'], turn_log={'played_money_card': False, 'played_propaganda_card': False, 'non_starter_discard': False, 'successful_discard': False, 'built_towns': [], 'played_nonstarter_names': [], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': True, 'red_army_action_count': 2, 'red_army_targeted_actions': {}, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': [], 'reaction_prompted_player_ids': [], 'red_army_base_dissolves': {}}"
+      "detail": "first={'success': True, 'result': {'name': '統戰部', 'drawn': 1}}, second={'success': True, 'result': {'name': '統戰部', 'drawn': 1}}, third={'error': 'Red Army faction action limit reached this turn'}, hand=['補牌2', '補牌1'], turn_log={'played_money_card': False, 'played_propaganda_card': False, 'non_starter_discard': False, 'successful_discard': False, 'built_towns': [], 'played_nonstarter_names': [], 'combo_reward_triggered': False, 'guerrilla_triggered': False, 'faction_action_used': True, 'red_army_action_count': 2, 'red_army_targeted_actions': {}, 'india_flag_money_triggered': False, 'purchased_cards_this_turn': [], 'red_army_base_dissolves': {}, 'red_army_base_build_blocks': [], 'pending_topdeck_uses': 0}"
     },
     {
       "name": "red_army_propaganda_department_topdecks_internal_conflict_and_limits_same_target",
@@ -23,7 +23,7 @@
     {
       "name": "red_army_propaganda_department_noop_when_both_supplies_empty",
       "ok": true,
-      "detail": "result={'success': True, 'result': {'name': '政工部', 'target_player_name': 'A', 'topdecked_card': None, 'static_supply_empty': True}}, draw_pile=[]"
+      "detail": "result={'success': False, 'result': {'name': '政工部', 'unavailable': True, 'reason': 'no_topdeck_supply', 'message': '政工部：內鬥與分神供應皆空，目前沒有可放到目標牌庫頂的卡牌，未發動能力。'}}, draw_pile=[]"
     },
     {
       "name": "red_army_state_security_dissolves_one_inner_org_within_one_step",
@@ -33,7 +33,7 @@
     {
       "name": "red_army_ccdi_discards_any_number_and_draws_equal",
       "ok": true,
-      "detail": "start={'pending_choice': True}, serialized={'type': 'multi_card_choice', 'choice_key': 'red_army_ccdi_discard_draw', 'player_id': 'red', 'player_name': None, 'prompt': '中紀委：可棄掉任意張手牌，然後抽等量的牌。', 'source_name': '中紀委', 'count': 2, 'min_count': 0, 'mode': None, 'acting_player_id': None, 'acting_player_name': None, 'played_card_name': None, 'region': None, 'free': None, 'ignore_distance': None, 'cards': ['手牌1', '手牌2'], 'options': [], 'towns': [], 'targets': [], 'step': None}, resolved={'success': True, 'name': '中紀委', 'chosen_cards': ['手牌1', '手牌2'], 'discarded': 2, 'drawn': 2, 'choice_key': 'red_army_ccdi_discard_draw'}, hand=['補牌2', '補牌1'], discard=['手牌1', '手牌2']"
+      "detail": "start={'pending_choice': True}, serialized={'type': 'multi_card_choice', 'choice_key': 'red_army_ccdi_discard_draw', 'interaction_kind': None, 'remaining_builds': None, 'queueable_card_names': [], 'cancellable': True, 'player_id': 'red', 'player_name': None, 'prompt': '中紀委：可棄掉任意張手牌，然後抽等量的牌。', 'source_name': '中紀委', 'count': 2, 'min_count': 0, 'mode': None, 'acting_player_id': None, 'acting_player_name': None, 'played_card_name': None, 'region': None, 'free': None, 'ignore_distance': None, 'cards': ['手牌1', '手牌2'], 'options': [], 'towns': [], 'targets': [], 'step': None}, resolved={'success': True, 'name': '中紀委', 'chosen_cards': ['手牌1', '手牌2'], 'discarded': 2, 'drawn': 2, 'choice_key': 'red_army_ccdi_discard_draw'}, hand=['補牌2', '補牌1'], discard=['手牌1', '手牌2']"
     },
     {
       "name": "non_red_cannot_use_red_army_abilities",

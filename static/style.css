@@ -656,7 +656,7 @@ body {
   position: absolute;
   right: 220px;
   z-index: 8;
-  max-width: 360px;
+  max-width: min(720px, calc(100vw - 260px));
   color: #fde68a;
   border: 1px solid rgba(245, 158, 11, 0.36);
   background: rgba(120, 53, 15, 0.30);

@@ -83,7 +83,7 @@
     'Target organization is not within era range': '目標組織不在時代效果範圍內。',
     'No target organization within range': '範圍內沒有可選擇的目標組織。',
     'No valid target': '目前沒有合法目標。',
-    'No valid State Security target': '目前沒有國安部可選擇的合法目標。',
+    'No valid State Security target': '國安部：目前沒有可以瓦解的組織（僅限紅軍組織 1 格內的牆內組織）。',
     'Invalid target': '目標無效。',
     'Invalid discard target': '棄牌目標無效。',
     'Invalid dissolve target': '瓦解目標無效。',

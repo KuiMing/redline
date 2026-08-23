@@ -1,0 +1,76 @@
+{
+  "summary": {
+    "total": 5,
+    "passed": 5,
+    "failed": 0
+  },
+  "service": "http://127.0.0.1:8768",
+  "scenario": "紅軍需要合法目標或可用供應的能力均無可執行內容；識別碼 [REDACTED]",
+  "checks": [
+    {
+      "name": "政工部_shows_in_page_unavailable_notice",
+      "passed": true,
+      "details": {
+        "notice": "政工部：內鬥與分神供應皆空，目前沒有可放到目標牌庫頂的卡牌，未發動能力。",
+        "noticeTitle": "政工部：內鬥與分神供應皆空，目前沒有可放到目標牌庫頂的卡牌，未發動能力。",
+        "noticeVisible": true,
+        "pendingChoice": null,
+        "usedCount": 0,
+        "result": {
+          "name": "政工部",
+          "unavailable": true,
+          "reason": "no_topdeck_supply",
+          "message": "政工部：內鬥與分神供應皆空，目前沒有可放到目標牌庫頂的卡牌，未發動能力。"
+        }
+      }
+    },
+    {
+      "name": "國安部_shows_in_page_unavailable_notice",
+      "passed": true,
+      "details": {
+        "notice": "國安部：目前沒有可以瓦解的組織（僅限紅軍組織 1 格內的牆內組織），未發動能力。",
+        "noticeTitle": "國安部：目前沒有可以瓦解的組織（僅限紅軍組織 1 格內的牆內組織），未發動能力。",
+        "noticeVisible": true,
+        "pendingChoice": null,
+        "usedCount": 0,
+        "result": {
+          "name": "國安部",
+          "unavailable": true,
+          "reason": "no_dissolve_target",
+          "message": "國安部：目前沒有可以瓦解的組織（僅限紅軍組織 1 格內的牆內組織），未發動能力。"
+        }
+      }
+    },
+    {
+      "name": "中紀委_shows_in_page_unavailable_notice",
+      "passed": true,
+      "details": {
+        "notice": "中紀委：目前沒有手牌可以棄掉，無法進行抽換，未發動能力。",
+        "noticeTitle": "中紀委：目前沒有手牌可以棄掉，無法進行抽換，未發動能力。",
+        "noticeVisible": true,
+        "pendingChoice": null,
+        "usedCount": 0,
+        "result": {
+          "name": "中紀委",
+          "unavailable": true,
+          "reason": "no_hand_cards",
+          "message": "中紀委：目前沒有手牌可以棄掉，無法進行抽換，未發動能力。"
+        }
+      }
+    },
+    {
+      "name": "unavailable_abilities_do_not_use_blocking_alert",
+      "passed": true,
+      "details": []
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "passed": true,
+      "details": []
+    }
+  ],
+  "screenshots": [
+    "docs/records/playtest-flow/red-army-empty-ability-feedback/red_army_no_dissolve_target_notice_1280x720_20260823.png",
+    "docs/records/playtest-flow/red-army-empty-ability-feedback/red_army_no_dissolve_target_notice_1024x768_20260823.png"
+  ]
+}

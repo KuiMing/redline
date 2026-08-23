@@ -1,8 +1,17 @@
 # Redline TODO
 
-最後更新：2026-08-22
+最後更新：2026-08-23
 
 ## 待辦
+
+### P1：紅軍能力沒有可執行內容時缺少提示
+- [done] 回報情境：按下「國安部」時，如果紅軍組織 1 格內沒有可以瓦解的牆內組織，畫面沒有留下清楚提示。原始廣泛 Browser proof 只有 **1/6 passed**。
+- [done] 規則更正：統戰部抽牌堆空時會洗回棄牌堆再抽牌，不屬於「無目標」能力；政工部必定有其他玩家，不需要「沒有目標玩家」分支。已移除這兩個錯誤假設，並新增統戰部洗牌後正常抽 1 張的回歸測試。
+- [done] 盤點需要無內容提示的實際分支：政工部內鬥與分神供應皆空；國安部沒有合法瓦解組織；中紀委沒有手牌。這些情況現在都在取消反應視窗與 pending choice 以前完成 preflight。
+- [done] 無可執行內容時回傳統一的 `unavailable` 結果與具體繁體中文訊息。能力不扣次數、不記錄事件進度、不消耗卡牌或供應、不開啟取消反應、不建立空選擇，也不留下 modal 或地圖 targeting 狀態。
+- [done] 修正共用提示路徑：`renderBaseSelection()` 不再於非根據地階段清除其他功能的提示；陣營能力結果改用 5 秒 sticky notice。此修正同時涵蓋統戰部、政工部、國安部、中紀委、立場試探、賭徒耳語與民族祭儀。提示支援完整 `title`，並將桌面最大寬度提高到 720px。
+- [done] 其他合法目標流程稽核：建立卡、互動奧援、間諜卡、範圍內組織、時代建立與通用 target error 均已有出牌前合法性守門、繁體中文映射及 sticky error notice；既有無目標 action-card regression 保持通過。另將國安部的 fallback error 文案改成「目前沒有可以瓦解的組織」。
+- [done] 驗證：規則更正後單元測試 **5/5 passed**（含統戰部洗回棄牌堆後抽牌）；紅軍能力正常與無供應流程 **8/8 passed**；無內容 Browser proof **5/5 passed**；玩家訊息 Browser proof **10/10 passed**；紅軍按鈕位置 **6/6 passed**；精簡紅軍 UI **7/7 passed**；command header **10/10 passed**；全畫面狀態列 **10/10 passed**；完整 pytest **406/406 passed**；Browser console 0 errors。證據：`docs/records/playtest-flow/red-army-empty-ability-feedback/`。
 
 ### P1：哈薩克達成勝利條件卻被紅軍第 20 回合生存勝利覆蓋
 - [done] 回報情境：哈薩克已有阿勒泰、塔城、伊寧，牆內外共有 19 個組織；第 21 回合結算仍判定紅軍獲勝。回報截圖：`docs/records/playtest-flow/kazakh-victory-preempted-by-red-survival_20260822.jpg`。

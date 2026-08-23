@@ -4109,6 +4109,44 @@ class Game:
             used[self._red_army_targeted_action_key(action_name, target_player_id)] = True
         self.turn_log['faction_action_used'] = self._red_army_action_count() >= self._red_army_action_limit()
 
+    def _red_army_unavailable_result(self, action_name, reason, message):
+        """Return visible no-op feedback without consuming a Red Army action use."""
+        return {
+            'success': False,
+            'result': {
+                'name': action_name,
+                'unavailable': True,
+                'reason': reason,
+                'message': message,
+            },
+        }
+
+    def _red_army_action_preflight(self, player, action_name, target_player_id=None):
+        if action_name == '政工部':
+            internal_conflict = int(self.static_purchase_supply.get('內鬥', 0) or 0)
+            distraction = int(self.static_purchase_supply.get('分神', 0) or 0)
+            if internal_conflict <= 0 and distraction <= 0:
+                return self._red_army_unavailable_result(
+                    action_name,
+                    'no_topdeck_supply',
+                    '政工部：內鬥與分神供應皆空，目前沒有可放到目標牌庫頂的卡牌，未發動能力。',
+                )
+
+        if action_name == '國安部' and not self._red_army_state_security_targets(player):
+            return self._red_army_unavailable_result(
+                action_name,
+                'no_dissolve_target',
+                '國安部：目前沒有可以瓦解的組織（僅限紅軍組織 1 格內的牆內組織），未發動能力。',
+            )
+
+        if action_name == '中紀委' and not list(getattr(player, 'hand', None) or []):
+            return self._red_army_unavailable_result(
+                action_name,
+                'no_hand_cards',
+                '中紀委：目前沒有手牌可以棄掉，無法進行抽換，未發動能力。',
+            )
+        return None
+
     def _red_army_target_players(self, action_name):
         targets = []
         for other in self._non_red_players():
@@ -4197,6 +4235,9 @@ class Game:
             ok, err = self._red_army_can_use_action(player, action_name, target_player_id)
             if not ok:
                 return {'error': err}
+            unavailable = self._red_army_action_preflight(player, action_name, target_player_id)
+            if unavailable:
+                return unavailable
             prompt = self._red_army_action_reaction_prompt(player, action_name, kwargs)
             if prompt:
                 return prompt

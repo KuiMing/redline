@@ -2719,6 +2719,7 @@ function setPhaseActionNotice(message = '') {
   const notice = document.getElementById('phaseActionNotice');
   if (!notice) return;
   notice.textContent = message || '';
+  notice.title = message || '';
   notice.classList.toggle('visible', !!message);
 }
 
@@ -2736,6 +2737,9 @@ function showStickyPlayerErrorNotice(message, durationMs = 5000) {
 
 function formatFactionActionResult(result) {
   if (!result || !result.name) return '';
+  if (result.unavailable) {
+    return result.message || `${result.name}：目前沒有可執行的目標或卡牌，未發動能力。`;
+  }
   const cardName = result.revealed_card || '未知卡牌';
   const costText = Number.isFinite(result.cost_total) ? `（費用 ${result.cost_total}）` : '';
   if (result.name === '立場試探') {
@@ -2782,7 +2786,7 @@ function renderFactionActionResult(state, faction) {
     const resultKey = JSON.stringify(result);
     if (lastFactionActionResultKey !== resultKey) {
       lastFactionActionResultKey = resultKey;
-      setPhaseActionNotice(message);
+      showStickyPlayerErrorNotice(message);
     }
     const html = `<div class="faction-action-result">${escapeHtml(message)}</div>`;
     info.innerHTML = html;
@@ -2790,7 +2794,7 @@ function renderFactionActionResult(state, faction) {
   }
 
   lastFactionActionResultKey = null;
-  setPhaseActionNotice('');
+  if (!stickyPlayerErrorNotice) setPhaseActionNotice('');
 
   if (faction === 'liberals') {
     const html = '<div class="faction-action-placeholder">發動後會在此直接顯示翻到的卡牌與去向。</div>';
@@ -2836,7 +2840,6 @@ function renderBaseSelection(state) {
     pendingBaseSelectionLabel = null;
     choicesEl.innerHTML = '';
     info.textContent = '';
-    setPhaseActionNotice('');
     return;
   }
 

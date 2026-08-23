@@ -2669,7 +2669,9 @@ def test_setup_red_support_proof(payload: dict):
 
 
 @app.post("/test/setup-red-army-abilities-proof")
-def test_setup_red_army_abilities_proof():
+def test_setup_red_army_abilities_proof(payload: dict | None = None):
+    payload = payload or {}
+    empty_actions = bool(payload.get("empty_actions"))
     game_id = str(uuid.uuid4())
     players = [("red-proof", "紅軍"), ("lib-proof", "自由派"), ("hk-proof", "香港")]
     game = Game(players, market_mode="all_cards")
@@ -2691,6 +2693,17 @@ def test_setup_red_army_abilities_proof():
     hong_kong.faction_id = "hong_kong"
     hong_kong.base = "香港城"
     hong_kong.organizations = {"上海": 1}
+
+    if empty_actions:
+        red.hand = []
+        red.deck.draw_pile = []
+        red.deck.discard_pile = []
+        liberals.hand = []
+        liberals.organizations = {}
+        hong_kong.hand = []
+        hong_kong.organizations = {}
+        game.static_purchase_supply["內鬥"] = 0
+        game.static_purchase_supply["分神"] = 0
 
     game.current_player_index = 0
     game.turn_phase = TurnPhase.ACTION
