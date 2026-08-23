@@ -1629,6 +1629,13 @@ window.__clickMoveTargetForTest = function (townName) {
   marker.fire('click');
   return { ok: true, townName, pendingMoveTarget: pendingMoveTarget ? { ...pendingMoveTarget } : null };
 };
+window.__openTownPopupForTest = function (townName) {
+  const marker = currentMarkers.get(townName);
+  if (!marker) return { ok: false, reason: 'marker-not-found', townName };
+  marker.bindPopup(popupHtml(byName.get(townName)), { maxWidth: 380 });
+  marker.openPopup();
+  return { ok: true, townName };
+};
 window.__confirmPendingMoveForTest = function () {
   const btn = document.getElementById('confirmMoveBtn');
   if (!btn || btn.disabled) return { ok: false, reason: 'confirm-disabled' };

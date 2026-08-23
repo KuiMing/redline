@@ -1,7 +1,7 @@
 {
   "summary": {
-    "total": 8,
-    "passed": 8,
+    "total": 10,
+    "passed": 10,
     "failed": 0
   },
   "service": "http://127.0.0.1:8768",
@@ -110,6 +110,47 @@
       }
     },
     {
+      "name": "1280x720_mongol_organization_moves_into_beijing_without_restoring_red_base_marker",
+      "passed": true,
+      "details": {
+        "selected": {
+          "ok": true,
+          "town": "張家口",
+          "highlighted": true,
+          "road": 0,
+          "rail": 17,
+          "owns": true,
+          "shared": false,
+          "canAct": true
+        },
+        "clicked": {
+          "ok": true,
+          "townName": "北京",
+          "pendingMoveTarget": {
+            "from": "張家口",
+            "to": "北京",
+            "mode": "rail",
+            "cost": 1
+          }
+        },
+        "confirmed": {
+          "ok": true
+        },
+        "state": {
+          "beijing": [
+            {
+              "player": "mongol",
+              "count": 1
+            }
+          ],
+          "zhangjiakou": [],
+          "movesLeft": 2,
+          "beijingBadge": 0,
+          "beijingBaseFaction": null
+        }
+      }
+    },
+    {
       "name": "1024x768_destroyed_beijing_has_no_base_marker",
       "passed": true,
       "details": {
@@ -203,13 +244,54 @@
       }
     },
     {
+      "name": "1024x768_mongol_organization_moves_into_beijing_without_restoring_red_base_marker",
+      "passed": true,
+      "details": {
+        "selected": {
+          "ok": true,
+          "town": "張家口",
+          "highlighted": true,
+          "road": 0,
+          "rail": 17,
+          "owns": true,
+          "shared": false,
+          "canAct": true
+        },
+        "clicked": {
+          "ok": true,
+          "townName": "北京",
+          "pendingMoveTarget": {
+            "from": "張家口",
+            "to": "北京",
+            "mode": "rail",
+            "cost": 1
+          }
+        },
+        "confirmed": {
+          "ok": true
+        },
+        "state": {
+          "beijing": [
+            {
+              "player": "mongol",
+              "count": 1
+            }
+          ],
+          "zhangjiakou": [],
+          "movesLeft": 2,
+          "beijingBadge": 0,
+          "beijingBaseFaction": null
+        }
+      }
+    },
+    {
       "name": "browser_console_has_no_errors",
       "passed": true,
       "details": []
     }
   ],
   "screenshots": [
-    "docs/records/map-ui/destroyed-red-base-marker/destroyed_red_base_marker_1280x720_20260823.png",
-    "docs/records/map-ui/destroyed-red-base-marker/destroyed_red_base_marker_1024x768_20260823.png"
+    "docs/records/map-ui/destroyed-red-base-marker/mongol_moved_to_beijing_1280x720_20260823.png",
+    "docs/records/map-ui/destroyed-red-base-marker/mongol_moved_to_beijing_1024x768_20260823.png"
   ]
 }

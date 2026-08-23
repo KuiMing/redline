@@ -93,11 +93,53 @@ def main() -> None:
             record(f"{width}x{height}_destroyed_beijing_has_no_base_marker", state["beijingBadge"] == 0 and state["beijingBaseFaction"] is None, state)
             record(f"{width}x{height}_other_active_base_marker_remains", state["mongolBadge"] == 1, state)
             record(f"{width}x{height}_beijing_is_empty_and_legal_from_zhangjiakou", state["redBase"] == "北京" and "北京" not in state["redOrganizations"] and "北京" in state["railTargets"], state)
+
+            selected = page.evaluate("() => document.getElementById('strategicMapFrame').contentWindow.__selectTownForTest('張家口')")
+            clicked = page.evaluate("() => document.getElementById('strategicMapFrame').contentWindow.__clickMoveTargetForTest('北京')")
+            confirmed = page.evaluate("() => document.getElementById('strategicMapFrame').contentWindow.__confirmPendingMoveForTest()")
+            page.wait_for_function(
+                """() => (window.lastGameState?.map?.towns?.['北京'] || []).some(entry => entry.player === 'mongol' && Number(entry.count || 0) > 0)""",
+                timeout=15000,
+            )
+            page.wait_for_function(
+                """() => (document.getElementById('strategicMapFrame').contentWindow.lastGameState?.map?.towns?.['北京'] || []).some(entry => entry.player === 'mongol' && Number(entry.count || 0) > 0)""",
+                timeout=15000,
+            )
+            moved_state = page.evaluate(
+                """() => {
+                  const frame = document.getElementById('strategicMapFrame').contentWindow;
+                  return {
+                    beijing: window.lastGameState.map.towns['北京'] || [],
+                    zhangjiakou: window.lastGameState.map.towns['張家口'] || [],
+                    movesLeft: window.lastGameState.players.find(player => player.faction === 'mongol')?.moves_left,
+                    beijingBadge: frame.document.querySelectorAll('.base-badge[data-base-town="北京"]').length,
+                    beijingBaseFaction: frame.baseFactionIdForTown('北京'),
+                  };
+                }"""
+            )
+            record(
+                f"{width}x{height}_mongol_organization_moves_into_beijing_without_restoring_red_base_marker",
+                bool(selected and clicked.get("ok") and confirmed.get("ok"))
+                and any(entry.get("player") == "mongol" and int(entry.get("count") or 0) > 0 for entry in moved_state["beijing"])
+                and not any(entry.get("player") == "mongol" and int(entry.get("count") or 0) > 0 for entry in moved_state["zhangjiakou"])
+                and moved_state["movesLeft"] == 2
+                and moved_state["beijingBadge"] == 0
+                and moved_state["beijingBaseFaction"] is None,
+                {"selected": selected, "clicked": clicked, "confirmed": confirmed, "state": moved_state},
+            )
             frame = page.frame_locator("#strategicMapFrame")
             frame.locator("#searchBox").fill("北京")
             frame.locator("#fitFiltered").click()
+            page.evaluate(
+                """() => {
+                  const frame = document.getElementById('strategicMapFrame').contentWindow;
+                  frame.document.querySelector('.leaflet-popup-close-button')?.click();
+                  frame.__selectTownForTest('北京');
+                  frame.__openTownPopupForTest('北京');
+                }"""
+            )
             page.wait_for_timeout(300)
-            screenshot = OUT / f"destroyed_red_base_marker_{width}x{height}_20260823.png"
+            screenshot = OUT / f"mongol_moved_to_beijing_{width}x{height}_20260823.png"
             page.screenshot(path=str(screenshot), full_page=True)
             screenshots.append(str(screenshot.relative_to(ROOT)))
             page.close()
