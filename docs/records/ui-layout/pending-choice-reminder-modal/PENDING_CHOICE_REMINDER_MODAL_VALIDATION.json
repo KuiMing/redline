@@ -1,0 +1,75 @@
+{
+  "summary": {
+    "total": 6,
+    "passed": 6,
+    "failed": 0
+  },
+  "service": "http://127.0.0.1:8000",
+  "checks": [
+    {
+      "name": "owner_reopens_actionable_choice_modal",
+      "passed": true,
+      "details": {
+        "modalVisible": true,
+        "title": "游擊隊",
+        "desc": "游擊隊：請選擇抽 1 張牌，或令紅軍棄 1 張手牌。",
+        "options": [
+          "抽 1 張牌",
+          "令紅軍棄 1 張手牌"
+        ]
+      }
+    },
+    {
+      "name": "other_player_wait_uses_custom_modal",
+      "passed": true,
+      "details": {
+        "modalVisible": true,
+        "title": "等待其他玩家處理效果",
+        "message": "等待 自由派 處理待選擇效果。",
+        "ownerName": "自由派",
+        "focusedId": "closeUnavailableActionModalBtn",
+        "hudNotice": "",
+        "rect": {
+          "left": 425,
+          "top": 264.828125,
+          "right": 855,
+          "bottom": 455.15625
+        }
+      }
+    },
+    {
+      "name": "modal_fits_1280x720",
+      "passed": true,
+      "details": {
+        "left": 425,
+        "top": 264.828125,
+        "right": 855,
+        "bottom": 455.15625
+      }
+    },
+    {
+      "name": "modal_fits_1024x768",
+      "passed": true,
+      "details": {
+        "left": 340,
+        "top": 308.26251220703125,
+        "right": 684,
+        "bottom": 459.7250061035156
+      }
+    },
+    {
+      "name": "pending_choice_prompt_uses_no_native_dialog",
+      "passed": true,
+      "details": []
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "passed": true,
+      "details": []
+    }
+  ],
+  "screenshots": [
+    "docs/records/ui-layout/pending-choice-reminder-modal/pending_choice_reminder_1280x720_20260824.png",
+    "docs/records/ui-layout/pending-choice-reminder-modal/pending_choice_reminder_1024x768_20260824.png"
+  ]
+}

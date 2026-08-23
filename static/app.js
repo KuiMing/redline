@@ -1675,7 +1675,7 @@ function playHandCard(index, card, mode) {
     && mode === 'action'
   );
   if (state.pending_choice && me && state.pending_choice.player_id === me.id && !canQueueMapCard) {
-    setPhaseActionNotice('請先處理目前待選擇效果。');
+    showPendingChoiceReminderModal(state);
     return;
   }
   const payload = {index, mode};
@@ -2761,18 +2761,52 @@ function clearStickyPlayerErrorNotice() {
   setPhaseActionNotice('');
 }
 
-function showUnavailableActionModal(actionName, message) {
+function showActionMessageModal(titleText, message) {
   const modal = document.getElementById('unavailableActionModal');
   const title = document.getElementById('unavailableActionTitle');
   const body = document.getElementById('unavailableActionMessage');
   if (!modal || !title || !body) return;
   clearStickyPlayerErrorNotice();
   unavailableActionModalReturnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-  title.textContent = actionName ? `${actionName}無法發動` : '無法發動能力';
-  body.textContent = message || '目前沒有合法目標，未發動能力。';
+  title.textContent = titleText || '操作提示';
+  body.textContent = message || '請先完成目前的待選效果。';
   modal.style.display = 'flex';
   modal.setAttribute('aria-hidden', 'false');
   requestAnimationFrame(() => document.getElementById('closeUnavailableActionModalBtn')?.focus());
+}
+
+function showUnavailableActionModal(actionName, message) {
+  showActionMessageModal(
+    actionName ? `${actionName}無法發動` : '無法發動能力',
+    message || '目前沒有合法目標，未發動能力。',
+  );
+}
+
+function showPendingChoiceReminderModal(state = window.lastGameState || {}) {
+  const choice = state.pending_choice || null;
+  if (!choice) return false;
+  const me = (state.players || []).find(player => player.id === playerId) || null;
+  const owner = (state.players || []).find(player => player.id === choice.player_id) || null;
+  const isMine = !!(me && choice.player_id === me.id);
+
+  if (isMine) {
+    renderChoiceModal(state);
+    const choiceModal = document.getElementById('choiceModal');
+    if (choiceModal?.style.display === 'flex') return true;
+  }
+
+  const prompt = pendingChoiceWaitText(state)
+    || (isMine
+      ? playerMessageZhTw(choice.prompt, '請先完成目前的待選效果。')
+      : `等待 ${owner?.name || '指定玩家'} 處理待選效果。`);
+  const mapSuffix = isMine && ['build_organization', 'dissolve_organization'].includes(choice.interaction_kind)
+    ? ' 請前往戰略地圖完成選擇。'
+    : '';
+  showActionMessageModal(
+    isMine ? '請完成待選效果' : '等待其他玩家處理效果',
+    `${prompt}${mapSuffix}`,
+  );
+  return true;
 }
 
 function closeUnavailableActionModal() {
@@ -3973,9 +4007,15 @@ async function render(state) {
   }
 
   if (playerError) {
-    showStickyPlayerErrorNotice(playerError);
-    syncPlayerErrorToStrategicMap(playerError);
-    alert(playerError);
+    const isPendingChoiceError = !!state.pending_choice && /待選擇效果|待選效果|pending choice/i.test(playerError);
+    if (isPendingChoiceError) {
+      showPendingChoiceReminderModal(state);
+      syncPlayerErrorToStrategicMap(pendingChoiceWaitText(state) || playerError);
+    } else {
+      showStickyPlayerErrorNotice(playerError);
+      syncPlayerErrorToStrategicMap(playerError);
+      alert(playerError);
+    }
   } else if (stickyPlayerErrorNotice) {
     setPhaseActionNotice(stickyPlayerErrorNotice);
   }
