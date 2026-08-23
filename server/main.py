@@ -991,12 +991,30 @@ def test_setup_build_queue_proof(payload: dict):
     red.organizations = dict(payload.get("enemy_organizations") or {red.base: 1})
 
     card_names = list(payload.get("cards") or ["組織經驗丙", "組織經驗乙"])
+    support_names = {entry.get("name") for entry in game.support_taxonomy}
     viewer.hand = []
     for name in card_names:
+        if name in support_names:
+            viewer.hand.append(game._make_support_card(name))
+            continue
         card_def = next((card for card in game.structured_cards if card.get("name") == name), None)
         if card_def is None:
             return {"error": f"Unknown action card: {name}"}
         viewer.hand.append(Card(card_def["name"], card_def.get("type", "test"), card_def.get("resources", {})))
+    forced_support_tiers = {
+        str(name): int(tier)
+        for name, tier in dict(payload.get("support_tiers") or {}).items()
+    }
+    if forced_support_tiers:
+        original_support_card_tier = game._support_card_tier
+
+        def proof_support_card_tier(player, card):
+            card_name = getattr(card, "name", str(card))
+            if card_name in forced_support_tiers:
+                return forced_support_tiers[card_name], int(getattr(card, "variant_index", 0) or 0), []
+            return original_support_card_tier(player, card)
+
+        game._support_card_tier = proof_support_card_tier
     viewer.deck.discard_pile = []
 
     game.current_player_index = 0

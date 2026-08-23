@@ -202,6 +202,177 @@ def test_queued_field_agent_finishes_sacrifice_step_before_joining_fifo():
     assert game.pending_choice is None
 
 
+def test_east_support_map_tier_queues_behind_active_build_choice():
+    game, actor = make_game()
+    actor.hand = [action_card(game, '組織經驗丙'), game._make_support_card('東洋奧援')]
+    game._support_card_tier = lambda _player, card: (3, 0, []) if card.name == '東洋奧援' else (1, 0, [])
+
+    assert game.play_card(0, mode='action').get('pending_choice') is True
+    state = game.state(actor.id)
+    assert '東洋奧援' in state['pending_choice']['queueable_card_names']
+
+    queued = game.play_card(0, mode='action')
+
+    assert queued.get('pending_choice') is True, queued
+    assert game.pending_choice['choice_key'] == 'card_build_organization'
+    assert game.state(actor.id)['pending_choice']['remaining_builds'] == 2
+    assert len(game._queued_card_build_choices) == 1
+    assert game._queued_card_build_choices[0]['source_name'] == '東洋奧援'
+
+    _, first_result = choose_town(game, actor)
+    assert first_result.get('pending_choice') is True, first_result
+    assert game.pending_choice['source_name'] == '東洋奧援'
+    assert game.pending_choice['step'] == 'town'
+    _, final_result = choose_town(game, actor)
+    assert final_result.get('success') is True, final_result
+    assert game.pending_choice is None
+
+
+def test_north_support_map_tier_queues_dissolve_behind_active_build_choice():
+    game, actor = make_game()
+    enemy = game.players[1]
+    enemy.organizations = {'北京': 1, '赤柱': 1}
+    actor.hand = [action_card(game, '組織經驗丙'), game._make_support_card('北國奧援')]
+    game._support_card_tier = lambda _player, card: (2, 0, []) if card.name == '北國奧援' else (1, 0, [])
+
+    assert game.play_card(0, mode='action').get('pending_choice') is True
+    assert '北國奧援' in game.state(actor.id)['pending_choice']['queueable_card_names']
+
+    queued = game.play_card(0, mode='action')
+
+    assert queued.get('pending_choice') is True, queued
+    assert game.pending_choice['choice_key'] == 'card_build_organization'
+    assert len(game._queued_card_build_choices) == 1
+    north_choice = game._queued_card_build_choices[0]
+    assert north_choice['source_name'] == '北國奧援'
+    assert north_choice['context']['effect_type'] == 'interactive_dissolve_many_near'
+    assert 'post_play_faction_triggers' in north_choice['context']
+    assert north_choice['cancellable'] is True
+    assert 'post_play_faction_triggers' not in (game.pending_choice.get('context') or {})
+
+    _, first_result = choose_town(game, actor)
+    assert first_result.get('pending_choice') is True, first_result
+    assert game.pending_choice['source_name'] == '北國奧援'
+    _, final_result = choose_target(game, actor, '赤柱')
+    assert final_result.get('success') is True, final_result
+    assert '赤柱' not in enemy.organizations
+    assert game.pending_choice is None
+
+
+def test_taiwan_support_tier_three_queues_atomic_dissolve_and_build_choice():
+    game, actor = make_game()
+    enemy = game.players[1]
+    actor.organizations = {'北京': 1, '廣州': 1}
+    enemy.organizations = {'天津': 1, '深圳': 1}
+    actor.hand = [action_card(game, '內應間諜'), game._make_support_card('臺灣奧援')]
+    game._support_card_tier = lambda _player, card: (3, 0, []) if card.name == '臺灣奧援' else (1, 0, [])
+
+    assert game.play_card(0, mode='action', target_player_id=enemy.id).get('pending_choice') is True
+    assert '臺灣奧援' in game.state(actor.id)['pending_choice']['queueable_card_names']
+    queued = game.play_card(0, mode='action')
+
+    assert queued.get('pending_choice') is True, queued
+    assert game.pending_choice['choice_key'] == 'card_dissolve_interaction'
+    assert len(game._queued_card_build_choices) == 1
+    queued_choice = game._queued_card_build_choices[0]
+    assert queued_choice['source_name'] == '臺灣奧援'
+    assert queued_choice['context']['effect_type'] == 'interactive_dissolve_and_build'
+
+    _, first_result = choose_target(game, actor, '深圳')
+    assert first_result.get('pending_choice') is True, first_result
+    assert game.pending_choice['source_name'] == '臺灣奧援'
+    _, final_result = choose_target(game, actor, '天津')
+    assert final_result.get('success') is True, final_result
+    assert enemy.organizations.get('天津', 0) == 0
+    assert actor.organizations.get('天津', 0) == 1
+    assert game.pending_choice is None
+
+
+def test_queued_support_reaction_decline_preserves_fifo_and_support_metadata():
+    game, actor = make_game()
+    reactor = game.players[1]
+    reactor.organizations = {'北京': 1, '赤柱': 1}
+    actor.hand = [action_card(game, '組織經驗丙'), game._make_support_card('北國奧援')]
+    game._support_card_tier = lambda _player, card: (2, 0, []) if card.name == '北國奧援' else (1, 0, [])
+
+    assert game.play_card(0, mode='action').get('pending_choice') is True
+    reactor.hand = [action_card(game, '爆料黑幕')]
+    offered = game.play_card(0, mode='action')
+    assert offered.get('pending_choice') is True, offered
+    assert game.pending_choice['choice_key'] == 'cancel_other_player_action'
+
+    declined = game.resolve_pending_choice(reactor.id, 0)
+
+    assert declined.get('pending_choice') is True, declined
+    assert game.pending_choice['choice_key'] == 'card_build_organization'
+    assert len(game._queued_card_build_choices) == 1
+    queued_support = game._queued_card_build_choices[0]
+    assert queued_support['source_name'] == '北國奧援'
+    assert queued_support['cancellable'] is True
+    assert 'post_play_faction_triggers' in queued_support['context']
+
+
+def test_queued_support_reaction_cancel_restores_fifo_without_support_entry():
+    game, actor = make_game()
+    reactor = game.players[1]
+    reactor.organizations = {'北京': 1, '赤柱': 1}
+    actor.hand = [action_card(game, '組織經驗丙'), game._make_support_card('北國奧援')]
+    game._support_card_tier = lambda _player, card: (2, 0, []) if card.name == '北國奧援' else (1, 0, [])
+
+    assert game.play_card(0, mode='action').get('pending_choice') is True
+    reactor.hand = [action_card(game, '爆料黑幕')]
+    assert game.play_card(0, mode='action').get('pending_choice') is True
+
+    cancelled = game.resolve_pending_choice(reactor.id, 1)
+
+    assert cancelled.get('success') is True, cancelled
+    assert game.pending_choice['choice_key'] == 'card_build_organization'
+    assert game._queued_card_build_choices == []
+    assert [card.name for card in actor.deck.discard_pile][-1] == '北國奧援'
+    assert [card.name for card in reactor.deck.discard_pile] == ['爆料黑幕']
+
+
+def test_non_map_support_tier_is_not_queueable_during_active_map_choice():
+    for support_name in ('東洋奧援', '臺灣奧援'):
+        game, actor = make_game()
+        actor.hand = [action_card(game, '組織經驗丙'), game._make_support_card(support_name)]
+        game._support_card_tier = lambda _player, _card: (1, 0, [])
+
+        assert game.play_card(0, mode='action').get('pending_choice') is True
+        state = game.state(actor.id)
+        assert support_name not in state['pending_choice']['queueable_card_names']
+        blocked = game.play_card(0, mode='action')
+        assert blocked.get('error') == 'Please resolve the pending choice first'
+        assert [card.name for card in actor.hand] == [support_name]
+        assert game.pending_choice['choice_key'] == 'card_build_organization'
+
+
+def test_canceling_queued_north_support_sacrifice_restores_original_fifo_head():
+    game, actor = make_game()
+    enemy = game.players[1]
+    actor.base = '成都'
+    actor.organizations = {'北京': 1}
+    enemy.organizations = {'天津': 1, '巴黎': 1}
+    north = game._make_support_card('北國奧援')
+    actor.hand = [action_card(game, '內應間諜'), north]
+    game._support_card_tier = lambda _player, card: (1, 0, []) if card.name == '北國奧援' else (1, 0, [])
+
+    assert game.play_card(0, mode='action', target_player_id=enemy.id).get('pending_choice') is True
+    started = game.play_card(0, mode='action')
+    assert started.get('pending_choice') is True, started
+    assert game.pending_choice['source_name'] == '北國奧援'
+    assert game.pending_choice['step'] == 'sacrifice_town'
+    assert game.pending_choice['cancellable'] is True
+
+    cancelled = game.cancel_pending_choice(actor.id)
+
+    assert cancelled.get('success') is True, cancelled
+    assert [card.name for card in actor.hand] == ['北國奧援']
+    assert game.pending_choice['choice_key'] == 'card_dissolve_interaction'
+    assert game._deferred_build_choice is None
+    assert game._queued_card_build_choices == []
+
+
 def test_build_and_dissolve_cards_share_one_fifo_map_queue():
     game, actor = make_game()
     enemy = game.players[1]

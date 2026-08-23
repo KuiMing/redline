@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-08-23T01:27:29.560888+00:00",
+  "generated_at": "2026-08-23T02:37:54.187175+00:00",
   "base_url": "http://127.0.0.1:8767",
   "status": "passed",
-  "checks_passed": 16,
-  "checks_total": 16,
+  "checks_passed": 18,
+  "checks_total": 18,
   "checks": [
     {
       "name": "fixture_has_two_different_build_cards",
@@ -113,6 +113,69 @@
       "detail": null
     },
     {
+      "name": "all_three_map_support_actions_remain_enabled",
+      "ok": true,
+      "detail": {
+        "東洋奧援": {
+          "visible": true,
+          "enabled": true
+        },
+        "北國奧援": {
+          "visible": true,
+          "enabled": true
+        },
+        "臺灣奧援": {
+          "visible": true,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "name": "east_north_taiwan_supports_queue_before_map_switch",
+      "ok": true,
+      "detail": {
+        "type": "support_flow_choice",
+        "choice_key": "card_dissolve_interaction",
+        "interaction_kind": "dissolve_organization",
+        "remaining_builds": null,
+        "queueable_card_names": [],
+        "cancellable": false,
+        "player_id": "[REDACTED]",
+        "player_name": null,
+        "prompt": "內應間諜：選擇 1 個要瓦解的鄰近敵方組織。",
+        "source_name": "內應間諜",
+        "count": null,
+        "min_count": null,
+        "mode": null,
+        "acting_player_id": "[REDACTED]",
+        "acting_player_name": null,
+        "played_card_name": null,
+        "region": null,
+        "free": null,
+        "ignore_distance": null,
+        "cards": [],
+        "options": [],
+        "towns": [],
+        "targets": [
+          {
+            "id": "[REDACTED]::天津",
+            "label": "red｜天津",
+            "player_id": "[REDACTED]",
+            "town": "天津",
+            "requires_self_sacrifice": false
+          },
+          {
+            "id": "[REDACTED]::深圳",
+            "label": "red｜深圳",
+            "player_id": "[REDACTED]",
+            "town": "深圳",
+            "requires_self_sacrifice": false
+          }
+        ],
+        "step": "target"
+      }
+    },
+    {
       "name": "browser_console_has_no_errors",
       "ok": true,
       "detail": []
@@ -126,6 +189,8 @@
     "docs/records/action-cards/build-entitlement-queue/duplicate-propagandists-collecting.png",
     "docs/records/action-cards/build-entitlement-queue/duplicate-propagandists-map.png",
     "docs/records/action-cards/build-entitlement-queue/duplicate-dissolve-cards-collecting.png",
-    "docs/records/action-cards/build-entitlement-queue/duplicate-dissolve-cards-map.png"
+    "docs/records/action-cards/build-entitlement-queue/duplicate-dissolve-cards-map.png",
+    "docs/records/action-cards/build-entitlement-queue/support-map-cards-collecting.png",
+    "docs/records/action-cards/build-entitlement-queue/support-map-cards-map.png"
   ]
 }

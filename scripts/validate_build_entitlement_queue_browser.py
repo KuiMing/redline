@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
@@ -21,7 +22,23 @@ PROMOTER_COLLECT_SHOT = RECORD_DIR / 'duplicate-propagandists-collecting.png'
 PROMOTER_MAP_SHOT = RECORD_DIR / 'duplicate-propagandists-map.png'
 DISSOLVE_COLLECT_SHOT = RECORD_DIR / 'duplicate-dissolve-cards-collecting.png'
 DISSOLVE_MAP_SHOT = RECORD_DIR / 'duplicate-dissolve-cards-map.png'
+SUPPORT_COLLECT_SHOT = RECORD_DIR / 'support-map-cards-collecting.png'
+SUPPORT_MAP_SHOT = RECORD_DIR / 'support-map-cards-map.png'
 BASE_URL = os.environ.get('REDLINE_BASE_URL', 'http://127.0.0.1:8000').rstrip('/')
+UUID_RE = re.compile(r'\b[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}\b', re.IGNORECASE)
+
+
+def sanitize_proof(value):
+    if isinstance(value, dict):
+        return {
+            key: ('[REDACTED]' if key in {'game_id', 'player_id', 'acting_player_id'} else sanitize_proof(item))
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [sanitize_proof(item) for item in value]
+    if isinstance(value, str):
+        return UUID_RE.sub('[REDACTED]', value)
+    return value
 
 
 def post_json(path: str, payload: dict) -> dict:
@@ -237,6 +254,8 @@ def main() -> None:
           if (typeof minimizeEraAchievement === 'function') minimizeEraAchievement();
           setActiveGameView('command');
         }""")
+        page.wait_for_timeout(700)
+        page.evaluate("() => typeof closeEventReveal === 'function' && closeEventReveal()")
         promoter_button = page.locator(
             "button.hand-card-action-btn[data-card-name='宣傳家'][data-card-mode='action']"
         ).first
@@ -287,6 +306,8 @@ def main() -> None:
           if (typeof minimizeEraAchievement === 'function') minimizeEraAchievement();
           setActiveGameView('command');
         }""")
+        page.wait_for_timeout(700)
+        page.evaluate("() => typeof closeEventReveal === 'function' && closeEventReveal()")
         spy_button = page.locator(
             "button.hand-card-action-btn[data-card-name='內應間諜'][data-card-mode='action']"
         ).first
@@ -317,6 +338,73 @@ def main() -> None:
         )
         record('duplicate_dissolve_cards_switch_to_map_only_after_all_actions', True, None)
         page.screenshot(path=str(DISSOLVE_MAP_SHOT), full_page=True)
+
+        support_setup = post_json('/test/setup-build-queue-proof', {
+            'cards': ['內應間諜', '東洋奧援', '北國奧援', '臺灣奧援'],
+            'organizations': {'北京': 1, '廣州': 1},
+            'enemy_organizations': {'天津': 1, '深圳': 1},
+            'support_tiers': {'東洋奧援': 3, '北國奧援': 3, '臺灣奧援': 3},
+        })
+        page.goto(
+            f"{BASE_URL}/?game_id={support_setup['game_id']}&player_id={support_setup['player_id']}",
+            wait_until='domcontentloaded',
+        )
+        page.locator('#gameShell').wait_for(state='visible', timeout=15000)
+        page.wait_for_function(
+            "(id) => window.lastGameState?.players?.find(player => player.id === id)?.hand?.length === 4",
+            arg=support_setup['player_id'], timeout=15000,
+        )
+        page.evaluate("""() => {
+          if (typeof closeEventReveal === 'function') closeEventReveal();
+          if (typeof minimizeEraAchievement === 'function') minimizeEraAchievement();
+          setActiveGameView('command');
+        }""")
+        page.wait_for_timeout(700)
+        page.evaluate("() => typeof closeEventReveal === 'function' && closeEventReveal()")
+        page.locator("button.hand-card-action-btn[data-card-name='內應間諜'][data-card-mode='action']").click()
+        page.wait_for_function(
+            """() => ['東洋奧援', '北國奧援', '臺灣奧援'].every(
+              name => window.lastGameState?.pending_choice?.queueable_card_names?.includes(name)
+            )""",
+            timeout=10000,
+        )
+        support_buttons = {
+            name: page.locator(f"button.hand-card-action-btn[data-card-name='{name}'][data-card-mode='action']")
+            for name in ('東洋奧援', '北國奧援', '臺灣奧援')
+        }
+        record(
+            'all_three_map_support_actions_remain_enabled',
+            all(button.is_visible() and button.is_enabled() for button in support_buttons.values()),
+            {name: {'visible': button.is_visible(), 'enabled': button.is_enabled()} for name, button in support_buttons.items()},
+        )
+        support_buttons['東洋奧援'].click()
+        page.wait_for_function(
+            "() => !window.lastGameState?.pending_choice?.queueable_card_names?.includes('東洋奧援')",
+            timeout=10000,
+        )
+        page.locator("button.hand-card-action-btn[data-card-name='北國奧援'][data-card-mode='action']").click()
+        page.wait_for_function(
+            "() => !window.lastGameState?.pending_choice?.queueable_card_names?.includes('北國奧援')",
+            timeout=10000,
+        )
+        page.screenshot(path=str(SUPPORT_COLLECT_SHOT), full_page=True)
+        page.locator("button.hand-card-action-btn[data-card-name='臺灣奧援'][data-card-mode='action']").click()
+        page.wait_for_function(
+            "() => window.lastGameState?.pending_choice?.queueable_card_names?.length === 0",
+            timeout=10000,
+        )
+        page.wait_for_function(
+            "document.querySelector(\".game-tab[data-view='map']\")?.classList.contains('active')",
+            timeout=10000,
+        )
+        final_support_state = page.evaluate('() => window.lastGameState.pending_choice')
+        record(
+            'east_north_taiwan_supports_queue_before_map_switch',
+            final_support_state.get('interaction_kind') == 'dissolve_organization'
+            and final_support_state.get('queueable_card_names') == [],
+            final_support_state,
+        )
+        page.screenshot(path=str(SUPPORT_MAP_SHOT), full_page=True)
         context.close()
         browser.close()
 
@@ -338,8 +426,11 @@ def main() -> None:
             str(PROMOTER_MAP_SHOT.relative_to(ROOT)),
             str(DISSOLVE_COLLECT_SHOT.relative_to(ROOT)),
             str(DISSOLVE_MAP_SHOT.relative_to(ROOT)),
+            str(SUPPORT_COLLECT_SHOT.relative_to(ROOT)),
+            str(SUPPORT_MAP_SHOT.relative_to(ROOT)),
         ],
     }
+    payload = sanitize_proof(payload)
     REPORT_JSON.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     lines = [
         '# 多張建立牌累積結算 UI Validation', '',
@@ -357,7 +448,9 @@ def main() -> None:
         f'- `{PROMOTER_COLLECT_SHOT.relative_to(ROOT)}`',
         f'- `{PROMOTER_MAP_SHOT.relative_to(ROOT)}`',
         f'- `{DISSOLVE_COLLECT_SHOT.relative_to(ROOT)}`',
-        f'- `{DISSOLVE_MAP_SHOT.relative_to(ROOT)}`', '',
+        f'- `{DISSOLVE_MAP_SHOT.relative_to(ROOT)}`',
+        f'- `{SUPPORT_COLLECT_SHOT.relative_to(ROOT)}`',
+        f'- `{SUPPORT_MAP_SHOT.relative_to(ROOT)}`', '',
     ])
     REPORT_MD.write_text('\n'.join(lines), encoding='utf-8')
     print(json.dumps({'status': payload['status'], 'checks_passed': passed, 'checks_total': len(checks)}, ensure_ascii=False))
