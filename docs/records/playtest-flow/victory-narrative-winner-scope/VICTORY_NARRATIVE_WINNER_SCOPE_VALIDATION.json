@@ -1,0 +1,179 @@
+{
+  "summary": {
+    "total": 13,
+    "passed": 13,
+    "failed": 0
+  },
+  "service": "http://127.0.0.1:8000",
+  "scenario": "9 種非紅軍敘述＋共同勝利者＋紅軍雙視角；識別碼 [REDACTED]",
+  "checks": [
+    {
+      "name": "taiwan_green_narrative_uses_only_primary_winner",
+      "passed": true,
+      "details": {
+        "faction": "taiwan_green",
+        "totals": {
+          "insideWallTotal": 3,
+          "outsideWallTotal": 16
+        },
+        "body": "本土社團遍地開花，牆內 3 個組織已經紮根、牆外 16 個持續在海外串聯。臺灣人民用選票與街頭守住了得來不易的民主——言論自由、公民社會、經濟活力，一樣不缺。這座島嶼證明了：自由與繁榮，從來不是紅色政權能夠恩賜的東西。",
+        "coWinners": "共同勝利者：共同勝利者-0",
+        "summary": "\n    \n      玩家陣營組織牆內牆外資金宣傳\n    \n      \n        勝者-taiwan_green 🏆\n        臺灣（綠線）\n        組織 19\n        牆內 3\n        牆外 16\n        資金 4\n        宣傳 5\n      \n      \n        紅軍-0\n        紅軍\n        組織 5\n        牆內 2\n        牆外 3\n        資金 0\n        宣傳 0\n      \n      \n        共同勝利者-0\n        香港\n        組織 15\n        牆內 7\n        牆外 8\n        資金 1\n        宣傳 2\n      "
+      }
+    },
+    {
+      "name": "taiwan_blue_narrative_uses_only_primary_winner",
+      "passed": true,
+      "details": {
+        "faction": "taiwan_blue",
+        "totals": {
+          "insideWallTotal": 3,
+          "outsideWallTotal": 16
+        },
+        "body": "自由中國的旗幟重新升起。牆內已滲透 3 個組織、牆外還有 16 個作為後援，反攻大陸的作戰計畫正式啟動——這一次，不再是紙上談兵。街頭巷尾開始流傳同一句話：山河終將光復，只是時間問題。",
+        "coWinners": "共同勝利者：共同勝利者-1",
+        "summary": "\n    \n      玩家陣營組織牆內牆外資金宣傳\n    \n      \n        勝者-taiwan_blue 🏆\n        臺灣（藍線）\n        組織 19\n        牆內 3\n        牆外 16\n        資金 4\n        宣傳 5\n      \n      \n        紅軍-1\n        紅軍\n        組織 5\n        牆內 2\n        牆外 3\n        資金 0\n        宣傳 0\n      \n      \n        共同勝利者-1\n        香港\n        組織 15\n        牆內 7\n        牆外 8\n        資金 1\n        宣傳 2\n      "
+      }
+    },
+    {
+      "name": "hong_kong_narrative_uses_only_primary_winner",
+      "passed": true,
+      "details": {
+        "faction": "hong_kong",
+        "totals": {
+          "insideWallTotal": 3,
+          "outsideWallTotal": 16
+        },
+        "body": "牆外 16 個組織撐住了最艱難的歲月，牆內 3 個火種也終於燒了起來。石屎森林裡重新響起熟悉的廣東話與自由的歌聲，這座曾經被高牆包圍的城市，終於等到了屬於自己的黎明。",
+        "coWinners": "共同勝利者：共同勝利者-2",
+        "summary": "\n    \n      玩家陣營組織牆內牆外資金宣傳\n    \n      \n        勝者-hong_kong 🏆\n        香港\n        組織 19\n        牆內 3\n        牆外 16\n        資金 4\n        宣傳 5\n      \n      \n        紅軍-2\n        紅軍\n        組織 5\n        牆內 2\n        牆外 3\n        資金 0\n        宣傳 0\n      \n      \n        共同勝利者-2\n        香港\n        組織 15\n        牆內 7\n        牆外 8\n        資金 1\n        宣傳 2\n      "
+      }
+    },
+    {
+      "name": "uyghur_narrative_uses_only_primary_winner",
+      "passed": true,
+      "details": {
+        "faction": "uyghur",
+        "totals": {
+          "insideWallTotal": 3,
+          "outsideWallTotal": 16
+        },
+        "body": "牆內 3 個組織裡的同胞終於走出鐵絲網，牆外 16 個離散的聲音也終於被世界聽見。天山南北重新飄揚起屬於自己的旗幟，那些被抹去的語言、信仰與名字，一件一件被找回來。",
+        "coWinners": "共同勝利者：共同勝利者-3",
+        "summary": "\n    \n      玩家陣營組織牆內牆外資金宣傳\n    \n      \n        勝者-uyghur 🏆\n        uyghur\n        組織 19\n        牆內 3\n        牆外 16\n        資金 4\n        宣傳 5\n      \n      \n        紅軍-3\n        紅軍\n        組織 5\n        牆內 2\n        牆外 3\n        資金 0\n        宣傳 0\n      \n      \n        共同勝利者-3\n        香港\n        組織 15\n        牆內 7\n        牆外 8\n        資金 1\n        宣傳 2\n      "
+      }
+    },
+    {
+      "name": "tibet_narrative_uses_only_primary_winner",
+      "passed": true,
+      "details": {
+        "faction": "tibet",
+        "totals": {
+          "insideWallTotal": 3,
+          "outsideWallTotal": 16
+        },
+        "body": "牆內 3 個組織守住了寺院與村莊，牆外 16 個流亡多年的聲音終於等到歸鄉的消息。雪山之巔重新掛起五色經幡，誦經聲隨風傳遍整片高原——雪域重光，不再只是一句口號。",
+        "coWinners": "共同勝利者：共同勝利者-4",
+        "summary": "\n    \n      玩家陣營組織牆內牆外資金宣傳\n    \n      \n        勝者-tibet 🏆\n        tibet\n        組織 19\n        牆內 3\n        牆外 16\n        資金 4\n        宣傳 5\n      \n      \n        紅軍-4\n        紅軍\n        組織 5\n        牆內 2\n        牆外 3\n        資金 0\n        宣傳 0\n      \n      \n        共同勝利者-4\n        香港\n        組織 15\n        牆內 7\n        牆外 8\n        資金 1\n        宣傳 2\n      "
+      }
+    },
+    {
+      "name": "manchuria_narrative_uses_only_primary_winner",
+      "passed": true,
+      "details": {
+        "faction": "manchuria",
+        "totals": {
+          "insideWallTotal": 3,
+          "outsideWallTotal": 16
+        },
+        "body": "牆內 3 個組織、牆外 16 個海外力量終於等到這一天。白山黑水之間重新立起屬於滿洲的旗幟，那段被刻意遺忘的歷史，終於有人願意重新提起、重新書寫。",
+        "coWinners": "共同勝利者：共同勝利者-5",
+        "summary": "\n    \n      玩家陣營組織牆內牆外資金宣傳\n    \n      \n        勝者-manchuria 🏆\n        滿洲\n        組織 19\n        牆內 3\n        牆外 16\n        資金 4\n        宣傳 5\n      \n      \n        紅軍-5\n        紅軍\n        組織 5\n        牆內 2\n        牆外 3\n        資金 0\n        宣傳 0\n      \n      \n        共同勝利者-5\n        香港\n        組織 15\n        牆內 7\n        牆外 8\n        資金 1\n        宣傳 2\n      "
+      }
+    },
+    {
+      "name": "mongol_narrative_uses_only_primary_winner",
+      "passed": true,
+      "details": {
+        "faction": "mongol",
+        "totals": {
+          "insideWallTotal": 3,
+          "outsideWallTotal": 16
+        },
+        "body": "牆內 3 個組織一路串聯到了內蒙古的每一座敖包，牆外 16 個力量也隨之呼應——大蒙古的版圖不再只存在於史書裡。草原重新連成一片，連內蒙古都一併囊括其中，長生天下，終於再次一統。",
+        "coWinners": "共同勝利者：共同勝利者-6",
+        "summary": "\n    \n      玩家陣營組織牆內牆外資金宣傳\n    \n      \n        勝者-mongol 🏆\n        蒙古\n        組織 19\n        牆內 3\n        牆外 16\n        資金 4\n        宣傳 5\n      \n      \n        紅軍-6\n        紅軍\n        組織 5\n        牆內 2\n        牆外 3\n        資金 0\n        宣傳 0\n      \n      \n        共同勝利者-6\n        香港\n        組織 15\n        牆內 7\n        牆外 8\n        資金 1\n        宣傳 2\n      "
+      }
+    },
+    {
+      "name": "kazakh_narrative_uses_only_primary_winner",
+      "passed": true,
+      "details": {
+        "faction": "kazakh",
+        "totals": {
+          "insideWallTotal": 3,
+          "outsideWallTotal": 16
+        },
+        "body": "牆內 3 個組織撐過了最漫長的寒冬，牆外 16 個力量隨即呼應而來。伊犁河谷重新響起哈薩克的牧歌，那些消失在集中營裡的名字，終於一個一個被找回、被記得。",
+        "coWinners": "共同勝利者：共同勝利者-7",
+        "summary": "\n    \n      玩家陣營組織牆內牆外資金宣傳\n    \n      \n        勝者-kazakh 🏆\n        哈薩克\n        組織 19\n        牆內 3\n        牆外 16\n        資金 4\n        宣傳 5\n      \n      \n        紅軍-7\n        紅軍\n        組織 5\n        牆內 2\n        牆外 3\n        資金 0\n        宣傳 0\n      \n      \n        共同勝利者-7\n        香港\n        組織 15\n        牆內 7\n        牆外 8\n        資金 1\n        宣傳 2\n      "
+      }
+    },
+    {
+      "name": "dian_narrative_uses_only_primary_winner",
+      "passed": true,
+      "details": {
+        "faction": "dian",
+        "totals": {
+          "insideWallTotal": 3,
+          "outsideWallTotal": 16
+        },
+        "body": "牆內 3 個地下組織、牆外 16 個海外力量紛紛響應——以滇為首，各地反抗勢力放下彼此的歧異，結成統一戰線。從西南到東北，烽火在紅色版圖上連成一片，紅軍再也無法各個擊破。這是屬於全體反賊的勝利，不是任何一方的獨吞。",
+        "coWinners": "共同勝利者：共同勝利者-8",
+        "summary": "\n    \n      玩家陣營組織牆內牆外資金宣傳\n    \n      \n        勝者-dian 🏆\n        滇\n        組織 19\n        牆內 3\n        牆外 16\n        資金 4\n        宣傳 5\n      \n      \n        紅軍-8\n        紅軍\n        組織 5\n        牆內 2\n        牆外 3\n        資金 0\n        宣傳 0\n      \n      \n        共同勝利者-8\n        香港\n        組織 15\n        牆內 7\n        牆外 8\n        資金 1\n        宣傳 2\n      "
+      }
+    },
+    {
+      "name": "kazakh_ui_text_is_3_inside_16_outside_not_aggregate",
+      "passed": true,
+      "details": {
+        "body": "牆內 3 個組織撐過了最漫長的寒冬，牆外 16 個力量隨即呼應而來。伊犁河谷重新響起哈薩克的牧歌，那些消失在集中營裡的名字，終於一個一個被找回、被記得。"
+      }
+    },
+    {
+      "name": "red_catastrophe_keeps_non_red_remnant_scope",
+      "passed": true,
+      "details": {
+        "totals": {
+          "insideWallTotal": 5,
+          "outsideWallTotal": 5
+        },
+        "title": "紅色鐵幕，籠罩天下",
+        "body": "紅軍以絕對優勢碾碎了最後的反抗。牆內組織僅剩 5 個苟延殘喘，5 個殘部倉皇退守牆外——但那裡也不再安全。廣播裡只剩一種聲音，街頭只剩一種顏色。這是一個沒有異議、沒有光的年代，其他陣營生靈塗炭，只能在陰影裡等待下一次機會。",
+        "summary": "\n    \n      玩家陣營組織牆內牆外資金宣傳\n    \n      \n        紅軍 🏆\n        紅軍\n        組織 22\n        牆內 14\n        牆外 8\n        資金 0\n        宣傳 0\n      \n      \n        臺灣\n        臺灣（綠線）\n        組織 7\n        牆內 3\n        牆外 4\n        資金 0\n        宣傳 0\n      \n      \n        香港\n        香港\n        組織 3\n        牆內 2\n        牆外 1\n        資金 0\n        宣傳 0\n      "
+      }
+    },
+    {
+      "name": "red_triumph_keeps_same_non_red_totals",
+      "passed": true,
+      "details": {
+        "totals": {
+          "insideWallTotal": 5,
+          "outsideWallTotal": 5
+        },
+        "title": "赤旗遍寰宇，天下歸一統",
+        "body": "最後的抵抗已被掃進歷史。牆內 5 個組織與牆外 5 個據點盡數納入紅色秩序，艦隊橫跨七海，赤旗插遍世界每一座首都。從此只有一種道路、一個意志、一個永不落幕的新時代——在紅軍眼中，這不是征服，而是全人類終於完成了統一。"
+      }
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "passed": true,
+      "details": []
+    }
+  ],
+  "screenshots": [
+    "docs/records/playtest-flow/victory-narrative-winner-scope/kazakh_winner_only_totals_20260823.png",
+    "docs/records/playtest-flow/victory-narrative-winner-scope/red_victory_non_red_remnants_20260823.png",
+    "docs/records/playtest-flow/victory-narrative-winner-scope/red_victory_triumph_non_red_totals_20260823.png"
+  ]
+}

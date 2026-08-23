@@ -7,7 +7,7 @@
 - PASS: summary_keeps_real_per_player_organization_counts
 - PASS: co_winner_display_does_not_change_non_red_filter
 - PASS: zero_non_red_organizations_render_as_zero
-- PASS: non_red_winner_keeps_existing_all_player_totals
+- PASS: non_red_winner_counts_only_primary_winner
 - PASS: red_view_triumph_narrative_also_counts_only_non_red_organizations
 - PASS: browser_console_has_no_errors
 

@@ -1228,10 +1228,13 @@
 - 原始證據：`docs/records/playtest-flow/peer-draw-card-names-leaked-to-red-army_20260823.jpg`。
 
 ### P1：勝利敘述的統計數字未依獲勝方計算
-- [todo] 截圖中哈薩克獲勝。玩家表顯示哈薩克共有 19 個組織，其中牆內 3、牆外 16；紅軍另有 5 個組織，其中牆內 2、牆外 3。勝利敘述卻寫成「牆內 5 個組織…牆外 19 個力量據點」，表示敘述錯誤加總了哈薩克與紅軍，而不是只計算獲勝方哈薩克。
-- [todo] 此情境的正確敘述數字應只使用哈薩克的統計：牆內 3、牆外 16、合計 19。
-- [todo] 後續修正前需檢查所有陣營的勝利敘述模板與數字來源。一般陣營獲勝時，敘述中的組織、牆內、牆外、資源與其他統計必須依實際獲勝方計算；不得加總其他玩家。共同勝利時，需明確區分主獲勝方與共同勝利者，不可默認加總。
-- [todo] 紅軍結局需維持既有 viewer-perspective 規則；若敘述提及反共「殘部」，只統計非紅軍。逐玩家摘要表仍顯示每位玩家的實際數值，不受敘述 scope 修正影響。
+- [done] 一般陣營勝利時，結局敘述只使用主獲勝玩家本人的 `organization_counts`。哈薩克案例已修正為牆內 3、牆外 16、合計 19；紅軍的牆內 2／牆外 3 不再混入。
+- [done] 共同勝利者仍在「共同勝利者」欄位獨立列出，不會默認加總到主獲勝方敘述。逐玩家摘要表維持每位玩家的真實組織、牆內、牆外與資源數值。
+- [done] 已檢查 9 套非紅軍敘述模板：臺灣綠線、臺灣藍線、香港、維吾爾、西藏、滿洲、蒙古、哈薩克及反賊共用模板。各模板均使用主獲勝方範圍。
+- [done] 紅軍 viewer-perspective 規則維持不變。非紅軍觀看者仍看到「紅色鐵幕」殘部敘述；紅軍觀看者仍看到「赤旗遍寰宇」凱旋敘述。兩者的數字都只統計非紅軍組織。
+- root cause：`victoryNarrativeOrganizationTotals()` 原本僅為紅軍結局套用非紅軍篩選；所有非紅軍結局則直接 reduce 全部玩家，因此主獲勝者、紅軍與共同勝利者都被加總。
+- 驗證：修正前 winner-scope Browser proof 1/13；修正後 13/13。既有紅軍雙視角回歸 7/7；完整主 pytest 398/398；console 0 error。
+- Proof：`docs/records/playtest-flow/victory-narrative-winner-scope/VICTORY_NARRATIVE_WINNER_SCOPE_VALIDATION.{json,md}`，含哈薩克、紅軍非紅軍視角與紅軍凱旋視角三張正式截圖。
 - 原始證據：`docs/records/playtest-flow/victory-narrative-counts-all-players-instead-of-winner_20260823.jpg`。
 
 ### P1：多張建立／瓦解卡在第一張後過早切到地圖

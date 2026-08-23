@@ -191,8 +191,11 @@ def main() -> None:
             winner="臺灣",
         )
         record(
-            "non_red_winner_keeps_existing_all_player_totals",
-            "牆內 19 個組織" in non_red_win["body"] and "牆外 13 個" in non_red_win["body"],
+            "non_red_winner_counts_only_primary_winner",
+            "牆內 3 個組織" in non_red_win["body"]
+            and "牆外 4 個" in non_red_win["body"]
+            and "牆內 19 個組織" not in non_red_win["body"]
+            and "牆外 13 個" not in non_red_win["body"],
             non_red_win,
         )
         render_scenario(anti_page, red_session["player_id"], taiwan_session["player_id"])
