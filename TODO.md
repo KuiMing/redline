@@ -1208,6 +1208,18 @@
 - [done] pending-choice / modal / UI 系統層：multi-card choice、card choice completion guard、option/town/target/reaction/modal 基礎流程。
 - [done] 奧援/支援卡多數 runtime/UI 驗證：英美、歐洲、南洋、印度、東洋、北國、臺灣、天方、紅軍奧援。
 
+## 2026-08-23 Playtest 新紀錄（僅記錄，尚未實作）
+
+### P1：一帶一路天方沒有直接聚焦天方
+- [todo] 抽到／發動 `一帶一路 天方` 時，戰略地圖應直接 zoom in 到天方區域，不應沿用一般地圖視角或聚焦到其他區域。
+- [todo] 後續實作前需依事件卡的實際合法建立城鎮確認聚焦範圍；天方事件的初始 viewport 必須讓當下合法的天方城鎮清楚可見。
+
+### P1：其他玩家看到抽到的牌名，洩漏隱藏資訊
+- [todo] 截圖顯示紅軍視角收到：`哈薩克 因時代關卡效果抽到：樂捐者、追隨者`。其他玩家不應知道哈薩克實際抽到哪些牌。
+- [todo] 抽牌玩家可以看到自己抽到的牌名；紅軍與其他玩家只能看到公開資訊，例如「哈薩克因時代關卡效果抽了 2 張牌」，不可顯示牌名。
+- [todo] 後續需稽核時代關卡、事件卡、陣營能力與一般抽牌的 peer-action notice／戰況紀錄投影，確保私人手牌資訊只投影給牌的擁有者。
+- 原始證據：`docs/records/playtest-flow/peer-draw-card-names-leaked-to-red-army_20260823.jpg`。
+
 ## note（不是 active todo）
 - 事件卡目前應以「MVP 可 playtest」理解；若 playtest 先於完整化，也可以直接測目前版本，再把發現寫回 P0/P1。
 - `search_files` 在此 repo 曾對檔名列舉回傳 0；盤點檔案時可用 Python `Path.rglob()` 交叉確認。
