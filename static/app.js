@@ -3755,8 +3755,7 @@ async function render(state) {
 
     const phaseNotice = document.getElementById('phaseActionNotice');
     const showSecondaryBar = state.game_phase === 'main' && Boolean(
-      redArmyBtn?.style.display !== 'none'
-      || topdeckBtn?.style.display !== 'none'
+      topdeckBtn?.style.display !== 'none'
       || phaseNotice?.classList.contains('visible')
     );
     if (phaseActionBar) phaseActionBar.style.display = showSecondaryBar ? 'flex' : 'none';

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>REDLINE // STRATEGIC COMMAND</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="/static/style.css?v=command-header-tabs-20260823" />
+  <link rel="stylesheet" href="/static/style.css?v=red-army-action-adjacency-20260823" />
 </head>
 <body>
 <div id="stageViewport">
@@ -21,7 +21,6 @@
 <div id="phaseActionBar" style="display:none;">
   <div id="phaseActionControls">
     <div id="phaseActionNotice" aria-live="polite"></div>
-    <button id="redArmyAbilityBtn" class="phase-secondary-btn phase-red-army-btn" type="button" style="display:none;" onclick="openRedArmyAbilityModal()">紅軍能力</button>
     <button id="topdeckRightBtn" class="phase-secondary-btn" type="button" style="display:none;" onclick="sendAction('use_topdeck_right')">頂牌</button>
   </div>
 </div>
@@ -250,7 +249,10 @@
     <button id="myFactionBtn" class="game-tab my-faction-tab" type="button" data-view="myFaction">我的陣營</button>
     <button id="eventCardTab" class="game-tab event-card-tab" type="button" style="display:none;" onclick="openCurrentEventReveal()">事件卡</button>
     <div id="activeEraTabs" class="active-era-tabs" role="group" aria-label="生效中的時代關卡"></div>
-    <button id="advanceStepBtn" class="phase-action-btn" type="button" onclick="sendAction('advance')">結束目前步驟</button>
+    <div id="turnActionButtons" role="group" aria-label="回合行動控制">
+      <button id="redArmyAbilityBtn" class="phase-red-army-btn" type="button" style="display:none;" onclick="openRedArmyAbilityModal()">紅軍能力</button>
+      <button id="advanceStepBtn" class="phase-action-btn" type="button" onclick="sendAction('advance')">結束目前步驟</button>
+    </div>
   </div>
 
   <div id="commandView" class="game-view active">
@@ -334,6 +336,6 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/static/player_messages_zh_tw.js?v=player-message-i18n-20260801"></script>
-<script src="/static/app.js?v=victory-narrative-winner-scope-20260823"></script>
+<script src="/static/app.js?v=red-army-action-adjacency-20260823"></script>
 </body>
 </html>

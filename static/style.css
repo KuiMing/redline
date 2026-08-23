@@ -650,7 +650,7 @@ body {
 .phase-action-btn {
   position: static;
   flex: 0 0 auto;
-  margin-left: auto;
+  margin-left: 0;
   transform: none;
   appearance: none;
   border-radius: 10px;
@@ -663,6 +663,42 @@ body {
   background: linear-gradient(180deg, rgba(245,158,11,0.94), rgba(180,83,9,0.94));
   color: #11161d;
   box-shadow: 0 0 0 1px rgba(251,191,36,0.14), 0 10px 24px rgba(180,83,9,0.24);
+}
+
+#turnActionButtons {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.phase-red-army-btn {
+  position: static;
+  flex: 0 0 auto;
+  appearance: none;
+  border-radius: 10px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border: 1px solid rgba(248, 113, 113, 0.62);
+  background: linear-gradient(180deg, rgba(127, 29, 29, 0.96), rgba(69, 10, 10, 0.96));
+  color: #fee2e2;
+  box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.14), 0 10px 24px rgba(127, 29, 29, 0.24);
+}
+
+.phase-red-army-btn:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.phase-red-army-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: grayscale(0.1);
+  transform: none;
 }
 
 .phase-action-btn:hover {

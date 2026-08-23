@@ -1237,6 +1237,12 @@
 - Proof：`docs/records/playtest-flow/victory-narrative-winner-scope/VICTORY_NARRATIVE_WINNER_SCOPE_VALIDATION.{json,md}`，含哈薩克、紅軍非紅軍視角與紅軍凱旋視角三張正式截圖。
 - 原始證據：`docs/records/playtest-flow/victory-narrative-counts-all-players-instead-of-winner_20260823.jpg`。
 
+### P1：紅軍能力按鈕移到「結束行動」左側
+- [done] 將回合列的 `紅軍能力 N/M` 按鈕移到 `結束行動` 左側，兩個按鈕放進同一個 `turnActionButtons` 控制群組，固定以 8px 間距相鄰並垂直對齊。
+- [done] 紅軍能力按鈕不再單獨撐開次要行動列；頂牌與階段通知仍依原規則使用次要行動列。按鈕可見性、使用次數、disabled 狀態及能力 modal 行為不變。
+- 驗證：修正前 Browser proof 2/6；修正後 6/6。1280×720 與 1024×768 幾何／截圖驗證通過；既有 command-header-tabs 10/10；完整主 pytest 398/398；console 0 error。
+- Proof：`docs/records/ui-layout/red-army-ability-next-to-end-action/RED_ARMY_ABILITY_NEXT_TO_END_ACTION_VALIDATION.{json,md}`，含 1280×720 與 1024×768 正式截圖。
+
 ### P1：多張建立／瓦解卡在第一張後過早切到地圖
 - [done] 同一玩家手上有多張 `宣傳家` 時，第一張產生建立選擇後留在指揮中心；第二張及其餘可排隊卡牌的「行動」按鈕維持可用。所有可排隊卡牌按完後才自動切到戰略地圖。
 - [done] 建立卡、瓦解卡與當下等級具有地圖效果的奧援卡共用 FIFO 地圖效果佇列。行動卡涵蓋 `宣傳家`、`思想家`、`組織經驗甲／乙／丙`、`派遣間諜`、`內應間諜`及`情報網`瓦解分支；奧援卡涵蓋 `東洋奧援`（II／III級建立）、`北國奧援`（I／II／III級瓦解）及 `臺灣奧援`（II／III級瓦解或瓦解後建立）。異名建立、瓦解及行動卡／奧援卡混排皆依打出順序結算。`東洋奧援`與`臺灣奧援`的 I 級只有資源效果，因此不列入地圖佇列。

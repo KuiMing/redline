@@ -1,0 +1,125 @@
+{
+  "summary": {
+    "total": 6,
+    "passed": 6,
+    "failed": 0
+  },
+  "service": "http://127.0.0.1:8768",
+  "scenario": "紅軍行動階段；識別碼 [REDACTED]",
+  "checks": [
+    {
+      "name": "red_army_button_is_immediately_left_of_end_action",
+      "passed": true,
+      "details": {
+        "red": {
+          "left": 1059.546875,
+          "top": 105.5,
+          "right": 1173.515625,
+          "bottom": 141.5,
+          "width": 113.96875,
+          "height": 36,
+          "display": "flex",
+          "parentId": "turnActionButtons"
+        },
+        "advance": {
+          "left": 1181.515625,
+          "top": 105.5,
+          "right": 1264,
+          "bottom": 141.5,
+          "width": 82.484375,
+          "height": 36,
+          "display": "flex",
+          "parentId": "turnActionButtons"
+        },
+        "tabs": {
+          "left": 0,
+          "top": 100,
+          "right": 1280,
+          "bottom": 148,
+          "width": 1280,
+          "height": 48,
+          "display": "flex",
+          "parentId": "gameShell"
+        },
+        "redText": "紅軍能力 0/2",
+        "advanceText": "結束行動",
+        "gap": 8,
+        "verticalDelta": 0,
+        "phaseBarDisplay": "none"
+      }
+    },
+    {
+      "name": "red_army_button_keeps_expected_labels",
+      "passed": true,
+      "details": {
+        "red": "紅軍能力 0/2",
+        "advance": "結束行動"
+      }
+    },
+    {
+      "name": "red_army_button_no_longer_opens_secondary_bar_by_itself",
+      "passed": true,
+      "details": {
+        "phaseBarDisplay": "none"
+      }
+    },
+    {
+      "name": "moved_button_still_opens_red_army_ability_modal",
+      "passed": true,
+      "details": {
+        "display": "flex",
+        "title": "紅軍能力"
+      }
+    },
+    {
+      "name": "narrow_view_keeps_adjacent_buttons_inside_viewport",
+      "passed": true,
+      "details": {
+        "red": {
+          "left": 847.6375122070312,
+          "top": 180.39999389648438,
+          "right": 938.8125,
+          "bottom": 209.20001220703125,
+          "width": 91.17498779296875,
+          "height": 28.800018310546875,
+          "display": "flex",
+          "parentId": "turnActionButtons"
+        },
+        "advance": {
+          "left": 945.2125244140625,
+          "top": 180.39999389648438,
+          "right": 1011.2000122070312,
+          "bottom": 209.20001220703125,
+          "width": 65.98748779296875,
+          "height": 28.800018310546875,
+          "display": "flex",
+          "parentId": "turnActionButtons"
+        },
+        "tabs": {
+          "left": 0,
+          "top": 176,
+          "right": 1024,
+          "bottom": 214.39999389648438,
+          "width": 1024,
+          "height": 38.399993896484375,
+          "display": "flex",
+          "parentId": "gameShell"
+        },
+        "redText": "紅軍能力 0/2",
+        "advanceText": "結束行動",
+        "gap": 6.4000244140625,
+        "verticalDelta": 0,
+        "phaseBarDisplay": "none"
+      }
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "passed": true,
+      "details": []
+    }
+  ],
+  "screenshots": [
+    "docs/records/ui-layout/red-army-ability-next-to-end-action/red_army_ability_next_to_end_action_1280x720_20260823.png",
+    "docs/records/ui-layout/red-army-ability-next-to-end-action/red_army_ability_next_to_end_action_1024x768_20260823.png"
+  ]
+}
