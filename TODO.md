@@ -1211,8 +1211,12 @@
 ## 2026-08-23 Playtest 新紀錄（僅記錄，尚未實作）
 
 ### P1：一帶一路天方沒有直接聚焦天方
-- [todo] 抽到／發動 `一帶一路 天方` 時，戰略地圖應直接 zoom in 到天方區域，不應沿用一般地圖視角或聚焦到其他區域。
-- [todo] 後續實作前需依事件卡的實際合法建立城鎮確認聚焦範圍；天方事件的初始 viewport 必須讓當下合法的天方城鎮清楚可見。
+- [done] 抽到／發動 `一帶一路 天方` 時，戰略地圖會直接聚焦紅軍當下可合法建立組織的天方城鎮，不沿用先前建立流程或北京的 viewport。
+- [done] 聚焦範圍只使用 `pending_choice.towns` 的實際合法候選動態計算。本次正式流程候選為吉爾吉特、喀布爾、拉瓦爾品第、米蘭沙阿、費札巴德、霍斯特，共 6 個；不加入固定中心或區域內非法城鎮。
+- root cause：地圖已為 `一帶一路 南洋` 保留強制重新聚焦，但判斷硬編碼南洋事件與 `southeast_asia`。玩家先前已完成其他建立地圖流程時，`buildChoiceViewportInitialized` 會阻止天方事件重新接管 viewport，因此地圖留在北京或舊視角。
+- 修正：將例外提升為資料配對的一帶一路區域事件判斷，明確支援 `一帶一路 南洋 → southeast_asia` 與 `一帶一路 天方 → middle_east`；兩者都依當下合法候選 bounds 聚焦，其他建立卡維持不搶回玩家手動視角。
+- 驗證：天方正式 Browser proof 7/7（先完成其他建立並把地圖移到北京，再發動天方事件）；南洋既有集中聚焦 proof 7/7；候選數 proof 4/4；地圖 SSOT／區域／socket pytest 13/13；console 0 error。
+- Proof：`docs/records/event-cards/belt-road-middle-east-focus/BELT_ROAD_MIDDLE_EAST_CONCENTRATED_FOCUS_VALIDATION.{json,md}`、`docs/records/event-cards/belt-road-middle-east-focus/belt_road_middle_east_concentrated_focus_20260823.png`。
 
 ### P1：其他玩家看到抽到的牌名，洩漏隱藏資訊
 - [todo] 截圖顯示紅軍視角收到：`哈薩克 因時代關卡效果抽到：樂捐者、追隨者`。其他玩家不應知道哈薩克實際抽到哪些牌。

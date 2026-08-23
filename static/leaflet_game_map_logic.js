@@ -268,10 +268,10 @@ function supportChoiceHighlightKey(payload) {
 
 function focusSupportChoiceTargets(bounds) {
   if (!bounds.length) return;
-  // 「一帶一路 南洋」必須聚焦於紅軍當下實際可以建立組織的城鎮。
-  // 不使用固定中心，也不把範圍外的南洋城鎮納入計算。依目前 pending choice
+  // 「一帶一路」必須聚焦於紅軍當下實際可以建立組織的城鎮。
+  // 不使用固定中心，也不把範圍外的同區域城鎮納入計算。依目前 pending choice
   // 的合法候選動態計算 bounds；窄螢幕可自動降低 zoom，候選較少時最多放大到 6。
-  if (isBeltRoadNanyangSupportChoice()) {
+  if (isBeltRoadRegionalSupportChoice()) {
     const legalBounds = L.latLngBounds(bounds);
     map.invalidateSize({ pan: false });
     const legalZoom = Math.min(6, map.getBoundsZoom(legalBounds, false, L.point(24, 24)));
@@ -307,11 +307,16 @@ function isBuildSupportChoiceHighlight() {
   );
 }
 
-function isBeltRoadNanyangSupportChoice() {
+function isBeltRoadRegionalSupportChoice() {
+  const expectedRegionBySource = {
+    '一帶一路 南洋': 'southeast_asia',
+    '一帶一路 天方': 'middle_east',
+  };
+  const expectedRegion = expectedRegionBySource[supportChoiceHighlight?.sourceName];
   return supportChoiceHighlight?.actionKind === 'build'
     && supportChoiceHighlight?.choiceKey === 'event_build_organization'
-    && supportChoiceHighlight?.region === 'southeast_asia'
-    && supportChoiceHighlight?.sourceName === '一帶一路 南洋';
+    && !!expectedRegion
+    && supportChoiceHighlight?.region === expectedRegion;
 }
 
 function isDissolveSupportChoiceHighlight() {
@@ -423,7 +428,7 @@ function applySupportChoiceHighlight(payload) {
   const isBuildChoice = isBuildSupportChoiceHighlight();
   const shouldAutoFocus = !!nextKey
     && nextKey !== supportChoiceHighlightFocusKey
-    && (!isBuildChoice || !buildChoiceViewportInitialized || isBeltRoadNanyangSupportChoice());
+    && (!isBuildChoice || !buildChoiceViewportInitialized || isBeltRoadRegionalSupportChoice());
   if (!nextKey) supportChoiceHighlightFocusKey = null;
   const didAutoFocus = renderSupportChoiceHighlights({ autoFocus: shouldAutoFocus });
   // 只有實際找到地圖座標並完成 setView／fitBounds 後才記錄已聚焦。若 choice 比
