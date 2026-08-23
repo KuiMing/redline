@@ -474,7 +474,7 @@ body {
   border-bottom: 1px solid rgba(130, 170, 255, 0.16);
   padding: 10px 20px;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.8rem;
@@ -483,10 +483,8 @@ body {
   box-shadow: 0 10px 26px rgba(0, 0, 0, 0.18);
 }
 
-#topBar .title {
-  color: rgba(238, 246, 255, 0.96);
-  letter-spacing: 0.02em;
-  text-shadow: 0 0 14px rgba(96, 165, 250, 0.22);
+#statusBar {
+  display: none;
 }
 
 .game-tab.my-faction-tab.attention {
@@ -498,7 +496,7 @@ body {
 #emergencyNewGameBtn {
   display: none;
   position: fixed;
-  top: 158px;
+  top: 8px;
   left: 1174px;
   z-index: 2147483647;
   transform-origin: top left;
@@ -543,24 +541,26 @@ body {
   left: 0;
   top: 90px;
   width: 1280px;
-  min-height: 60px;
-  padding: 10px 16px;
+  min-height: 48px;
+  padding: 6px 16px;
   background: rgba(8, 12, 18, 0.56);
   border-bottom: 1px solid rgba(255, 255, 255, 0.10);
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 16px;
   z-index: 2;
   backdrop-filter: blur(8px);
 }
 
 #phaseActionControls {
+  position: relative;
+  width: 100%;
+  min-height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
-  min-width: 0;
 }
 
 #purchaseSelectionControls {
@@ -636,22 +636,28 @@ body {
 }
 
 #phaseActionMeta {
+  max-width: 760px;
+  overflow: hidden;
   color: #cbd5e1;
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.78rem;
   letter-spacing: 0.02em;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .phase-action-btn {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  position: static;
+  flex: 0 0 auto;
+  margin-left: auto;
+  transform: none;
   appearance: none;
-  border-radius: 12px;
-  padding: 12px 18px;
+  border-radius: 10px;
+  padding: 8px 14px;
   cursor: pointer;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   font-weight: 700;
   border: 1px solid rgba(245, 158, 11, 0.6);
   background: linear-gradient(180deg, rgba(245,158,11,0.94), rgba(180,83,9,0.94));
@@ -661,14 +667,14 @@ body {
 
 .phase-action-btn:hover {
   filter: brightness(1.05);
-  transform: translateX(-50%) translateY(-1px);
+  transform: translateY(-1px);
 }
 
 .phase-action-btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
   filter: grayscale(0.1);
-  transform: translateX(-50%);
+  transform: none;
 }
 
 .phase-secondary-btn {
@@ -772,6 +778,15 @@ body {
   border-radius: 8px;
   font-family: 'JetBrains Mono', monospace;
   cursor: pointer;
+}
+
+.event-card-tab {
+  max-width: 260px;
+  overflow: hidden;
+  border-color: rgba(255, 214, 128, 0.52);
+  color: #ffe1a3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .game-tab.active {
@@ -2409,41 +2424,6 @@ button.player-status-discard-card:focus-visible {
   background: rgba(15, 23, 42, 0.72);
   border-color: rgba(148, 163, 184, 0.24);
 }
-
-
-#designStage.event-card-active #topBar,
-#designStage.event-card-active #hud,
-#designStage.event-card-active #phaseActionBar {
-  width: 920px;
-}
-
-.event-card-panel {
-  position: absolute;
-  right: 24px;
-  top: 0;
-  width: 320px;
-  height: 147px;
-  max-height: 147px;
-  overflow: hidden;
-  z-index: 4;
-  padding: 0;
-  border-radius: 10px;
-  margin-bottom: 0;
-  border: 1px solid rgba(255, 214, 128, 0.45);
-  background: rgba(38, 27, 12, 0.84);
-  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(8px);
-  cursor: zoom-in;
-  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
-}
-
-.event-card-panel:hover,
-.event-card-panel:focus-visible {
-  transform: translateY(2px) scale(1.015);
-  border-color: rgba(255, 226, 156, 0.84);
-  box-shadow: 0 20px 46px rgba(0, 0, 0, 0.46), 0 0 0 2px rgba(255, 214, 128, 0.14);
-  outline: none;
-}
 .event-card-name {
   font-size: 16px;
   font-weight: 800;
@@ -2562,57 +2542,7 @@ button.player-status-discard-card:focus-visible {
   text-align: center;
 }
 
-/* 完整事件卡卡面：右上角以卡面與獨立進度區並排顯示，放大層使用同一張 1350×1100 母版。 */
-.event-card-panel > .panel-title {
-  display: none;
-}
-
-#eventCardContent {
-  width: 100%;
-  height: 100%;
-}
-
-.event-card-compact-layout {
-  display: flex;
-  flex-direction: row-reverse;
-  gap: 2px;
-  width: 100%;
-  height: 100%;
-}
-
-.event-card-compact-layout > .event-card-art-shell {
-  flex: 0 0 178px;
-  width: 178px;
-  height: 100%;
-}
-
-.event-card-compact-status {
-  flex: 1 1 140px;
-  min-width: 0;
-  height: 100%;
-  padding: 14px 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 8px;
-  border-right: 1px solid rgba(255, 214, 128, 0.34);
-  background: rgba(25, 18, 10, 0.96);
-  color: #f5dfbd;
-  cursor: zoom-in;
-}
-
-.event-card-compact-status strong {
-  color: #baf0d0;
-  font-size: 14px;
-  line-height: 1.35;
-}
-
-.event-card-compact-status span {
-  color: #ffe09a;
-  font-size: 12px;
-  font-weight: 800;
-}
+/* 完整事件卡卡面：放大層使用 1350×1100 卡面母版，狀態列置於卡面下方。 */
 
 .event-card-art-shell {
   position: relative;

@@ -1236,6 +1236,15 @@
 - [done] 驗證：`test_build_entitlement_queue.py` 26/26、聚焦 action-card regression 35/35、反應／陣營能力 34/34、Browser proof 18/18、完整 pytest 393/393；`node --check`、`py_compile`、`git diff --check` 通過。
 - Proof：`docs/records/action-cards/build-entitlement-queue/BUILD_ENTITLEMENT_QUEUE_UI_VALIDATION.{json,md}`，含多張宣傳家、多張瓦解卡，以及東洋／北國／臺灣奧援混排時的指揮中心／地圖截圖。
 
+### P1：指揮中心頂列與事件卡布局精簡
+- [done] 移除頂列「逆統戰指揮中心」說明，以及 HUD 的「手牌」與「牌庫模式」chip；手牌內容與牌庫模式規則本身不變。
+- [done] 將「目前／下一步」階段說明移到最上方中央；「開新遊戲」移到畫面最右上角。
+- [done] 將「結束行動階段／開始行動階段／結束回合」主按鈕移到原「開新遊戲」所在的分頁列最右側位置。
+- [done] 移除右上角浮動事件卡；目前事件改為 `事件卡｜事件名稱` 分頁。點擊分頁會開啟完整事件卡，但不切走目前的指揮中心或戰略地圖。
+- [done] 空白行動列在沒有紅軍能力、頂牌或通知時自動收合；需要次要操作時才顯示，並為遊戲內容保留空間。
+- [done] 驗證：頂列 Browser proof 10/10、事件卡分頁／放大 proof 9/9、三個時代分頁共存 proof 4/4、完整 pytest 393/393；1280×720 與 1024×768 視覺檢查無重疊或裁切。
+- Proof：`docs/records/ui-layout/command-header-tabs/COMMAND_HEADER_TABS_VALIDATION.{json,md}`、`docs/records/event-cards/EVENT_CARD_ZOOM_PREVIEW_VALIDATION.{json,md}`。
+
 ## note（不是 active todo）
 - 事件卡目前應以「MVP 可 playtest」理解；若 playtest 先於完整化，也可以直接測目前版本，再把發現寫回 P0/P1。
 - `search_files` 在此 repo 曾對檔名列舉回傳 0；盤點檔案時可用 Python `Path.rglob()` 交叉確認。

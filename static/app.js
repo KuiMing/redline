@@ -37,15 +37,14 @@ const REACTION_ONLY_ACTION_CARDS = new Set(['爆料黑幕', '產業滲透']);
 
 function alignEmergencyNewGameButton(scale = null) {
   const button = document.getElementById('emergencyNewGameBtn');
-  const factionButton = document.getElementById('myFactionBtn');
-  const tabs = document.getElementById('gameTabs');
-  if (!button || !factionButton || !tabs || getComputedStyle(factionButton).display === 'none') return;
+  const topBar = document.getElementById('topBar');
+  if (!button || !topBar) return;
   const activeScale = scale || Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--stage-scale')) || 1;
-  const factionRect = factionButton.getBoundingClientRect();
-  const tabsRect = tabs.getBoundingClientRect();
-  button.style.height = `${factionButton.offsetHeight}px`;
-  button.style.left = `${tabsRect.right - 16 * activeScale - button.offsetWidth * activeScale}px`;
-  button.style.top = `${factionRect.top}px`;
+  const topRect = topBar.getBoundingClientRect();
+  const inset = 12 * activeScale;
+  button.style.height = `${32}px`;
+  button.style.left = `${topRect.right - inset - button.offsetWidth * activeScale}px`;
+  button.style.top = `${topRect.top + 8 * activeScale}px`;
   button.style.transform = `scale(${activeScale})`;
 }
 
@@ -533,6 +532,7 @@ function initTabs() {
   if (!tabs.length || !views.length) return;
 
   tabs.forEach(tab => {
+    if (!tab.dataset.view) return;
     if (tab.dataset.bound === '1') return;
     tab.dataset.bound = '1';
     tab.addEventListener('click', async () => {
@@ -2358,33 +2358,21 @@ function openCurrentEventReveal() {
 }
 
 function renderCurrentEvent(state) {
-  const panel = document.getElementById('eventCardPanel');
-  const content = document.getElementById('eventCardContent');
-  const designStage = document.getElementById('designStage');
-  if (!panel || !content) return;
+  const tab = document.getElementById('eventCardTab');
+  if (!tab) return;
   const event = state.current_event || null;
   if (!event) {
-    panel.style.display = 'none';
-    designStage?.classList.remove('event-card-active');
-    content.innerHTML = '';
+    tab.style.display = 'none';
+    tab.textContent = '事件卡';
+    tab.removeAttribute('title');
     closeEventReveal();
     return;
   }
-  designStage?.classList.add('event-card-active');
-  panel.style.display = 'block';
-  panel.setAttribute('role', 'button');
-  panel.setAttribute('tabindex', '0');
   const statusText = eventStatusText(event);
-  panel.setAttribute('aria-label', `${event.name || '目前事件'}，${statusText}，點擊放大查看`);
-  panel.setAttribute('title', `${event.name || '目前事件'}｜${statusText}｜點擊放大查看`);
-  panel.onclick = openCurrentEventReveal;
-  panel.onkeydown = (keyboardEvent) => {
-    if (keyboardEvent.key === 'Enter' || keyboardEvent.key === ' ') {
-      keyboardEvent.preventDefault();
-      openCurrentEventReveal();
-    }
-  };
-  content.innerHTML = eventCardMarkup(event, false);
+  tab.style.display = 'inline-flex';
+  tab.textContent = `事件卡｜${event.name || '目前事件'}`;
+  tab.setAttribute('aria-label', `${event.name || '目前事件'}，${statusText}，點擊查看完整事件卡`);
+  tab.setAttribute('title', `${event.name || '目前事件'}｜${statusText}｜點擊查看完整事件卡`);
 
   const revealCard = document.getElementById('eventRevealCard');
   const revealOverlay = document.getElementById('eventRevealModal');
@@ -3708,39 +3696,22 @@ async function render(state) {
     const myMoney = me?.resources?.money ?? 0;
     const myPropaganda = me?.resources?.propaganda ?? 0;
     const myMoves = me?.moves_left ?? 0;
-    const myHand = me?.hand?.length ?? 0;
     const phaseLabel = String(state.turn_phase || '').toLowerCase() === 'action' ? '行動' : String(state.turn_phase || '').toLowerCase() === 'event' ? '事件結算' : String(state.turn_phase || '').toLowerCase() === 'end' ? '購買' : state.turn_phase;
-    const marketModeLabel = state.market_mode === 'all_cards' ? '全部卡牌' : '53 張卡牌';
     hud.innerHTML = `
       <div class="hud-main-row">
         <span class="hud-chip hud-chip-primary">回合 ${state.turn}</span>
         <span class="hud-chip hud-chip-primary">${phaseLabel}階段</span>
         <span class="hud-chip">當前玩家 <span${(() => { const f = (state.players || []).find(p => p.name === state.current_player)?.faction; const c = factionNameColor(f); return c ? ` style="color:${c};font-weight:700"` : ''; })()}>${escapeHtml(state.current_player)}</span></span>
-        <span class="hud-chip">手牌 ${myHand}</span>
         <span class="hud-chip hud-chip-resource">資金 ${myMoney}</span>
         <span class="hud-chip hud-chip-resource">宣傳 ${myPropaganda}</span>
         <span class="hud-chip">移動 ${myMoves}</span>
-        <span class="hud-chip hud-chip-market">牌庫模式 ${marketModeLabel}</span>
+
         ${orgInfo}
       </div>
     `;
 
     const phaseActionBar = document.getElementById('phaseActionBar');
-    if (phaseActionBar) phaseActionBar.style.display = state.game_phase === 'main' ? 'flex' : 'none';
-    // 依 HUD 的實際高度定位行動列與遊戲區，避免狀態內容換行後互相重疊。
     const gameShell = document.getElementById('gameShell');
-    if (phaseActionBar && hud) {
-      const barTop = hud.offsetTop + hud.offsetHeight + 8;
-      phaseActionBar.style.top = `${barTop}px`;
-      if (gameShell) {
-        const barBottom = state.game_phase === 'main'
-          ? barTop + phaseActionBar.offsetHeight + 8
-          : barTop + 8;
-        gameShell.style.top = `${Math.max(barBottom, 150)}px`;
-        const freshGameButton = document.getElementById('emergencyNewGameBtn');
-        if (freshGameButton) requestAnimationFrame(() => alignEmergencyNewGameButton());
-      }
-    }
     const phaseActionMeta = document.getElementById('phaseActionMeta');
     const advanceBtn = document.getElementById('advanceStepBtn');
     const redArmyBtn = document.getElementById('redArmyAbilityBtn');
@@ -3751,6 +3722,7 @@ async function render(state) {
       phaseActionMeta.textContent = waitText || (isMyTurn ? `目前：${phaseLabel}｜下一步：${stepLabel}` : `目前：${phaseLabel}｜等待 ${state.current_player} 操作`);
     }
     if (advanceBtn) {
+      advanceBtn.style.display = state.game_phase === 'main' ? 'inline-flex' : 'none';
       advanceBtn.textContent = stepLabel;
       advanceBtn.disabled = !isMyTurn || !!waitText;
       advanceBtn.title = waitText || '';
@@ -3778,6 +3750,25 @@ async function render(state) {
       topdeckBtn.disabled = !canShowTopdeckButton || candidateCount === 0 || hasMyPendingChoice;
       topdeckBtn.title = candidateCount === 0 ? '本回合尚未購買可頂的牌' : '';
     }
+
+    const phaseNotice = document.getElementById('phaseActionNotice');
+    const showSecondaryBar = state.game_phase === 'main' && Boolean(
+      redArmyBtn?.style.display !== 'none'
+      || topdeckBtn?.style.display !== 'none'
+      || phaseNotice?.classList.contains('visible')
+    );
+    if (phaseActionBar) phaseActionBar.style.display = showSecondaryBar ? 'flex' : 'none';
+    if (phaseActionBar && hud) {
+      const barTop = hud.offsetTop + hud.offsetHeight + 8;
+      phaseActionBar.style.top = `${barTop}px`;
+      if (gameShell) {
+        const contentTop = showSecondaryBar ? barTop + phaseActionBar.offsetHeight + 8 : barTop;
+        gameShell.style.top = `${contentTop}px`;
+        gameShell.style.height = `${Math.max(0, 720 - contentTop)}px`;
+      }
+    }
+    const freshGameButton = document.getElementById('emergencyNewGameBtn');
+    if (freshGameButton) requestAnimationFrame(() => alignEmergencyNewGameButton());
   }
 
   // ✅ 地圖節點不在 render 中重建

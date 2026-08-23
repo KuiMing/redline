@@ -95,7 +95,7 @@ def open_authenticated_game(page, game_id: str, player_id: str, resume_token: st
         }"""
     )
     page.wait_for_function(
-        "document.querySelector('#eventCardPanel .event-card-art-image')?.naturalWidth === 1350",
+        "getComputedStyle(document.getElementById('eventCardTab')).display !== 'none'",
         timeout=10000,
     )
     page.wait_for_timeout(250)
@@ -124,7 +124,8 @@ def inspect_layout(page) -> dict:
           }));
           const tabBar = toRect(document.getElementById('gameTabs'));
           const eraGroup = toRect(document.getElementById('activeEraTabs'));
-          const event = toRect(document.getElementById('eventCardPanel'));
+          const event = toRect(document.getElementById('eventCardTab'));
+          const advance = toRect(document.getElementById('advanceStepBtn'));
           const overlaps = (a, b) => !!(a && b)
             && a.left < b.right
             && a.right > b.left
@@ -135,6 +136,7 @@ def inspect_layout(page) -> dict:
             tabBar,
             eraGroup,
             event,
+            advance,
             viewport: {width: innerWidth, height: innerHeight},
             eventTabOverlap: tabs.some(tab => overlaps(tab.rect, event)),
             oldPinnedNoticeCount: document.querySelectorAll('#eraPinnedNotice .era-pin-card').length,
@@ -153,14 +155,18 @@ def layout_passes(data: dict) -> bool:
     tab_bar = data.get("tabBar")
     era_group = data.get("eraGroup")
     event = data.get("event")
-    if len(tabs) != 3 or not tab_bar or not era_group or not event:
+    advance = data.get("advance")
+    if len(tabs) != 3 or not tab_bar or not era_group or not event or not advance:
         return False
     return bool(
         [tab["id"] for tab in tabs] == ERA_IDS
         and all(tab["rect"]["left"] >= tab_bar["left"] and tab["rect"]["right"] <= tab_bar["right"] for tab in tabs)
-        and era_group["right"] <= tab_bar["right"] - 12
+        and era_group["right"] <= advance["left"] - 8
         and not data.get("eventTabOverlap")
-        and tab_bar["top"] >= event["bottom"]
+        and event["left"] >= tab_bar["left"]
+        and event["right"] <= tab_bar["right"]
+        and event["top"] >= tab_bar["top"]
+        and event["bottom"] <= tab_bar["bottom"]
         and data.get("oldPinnedNoticeCount") == 0
         and data.get("oldPinnedNoticeDisplay") in {"none", "absent"}
         and data.get("duplicateHudPillCount") == 0

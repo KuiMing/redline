@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>REDLINE // STRATEGIC COMMAND</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="/static/style.css?v=event-progress-rail-20260823" />
+  <link rel="stylesheet" href="/static/style.css?v=command-header-tabs-20260823" />
 </head>
 <body>
 <div id="stageViewport">
@@ -13,23 +13,17 @@
 <div id="warTitle">逆統戰</div>
 
 <div id="topBar">
-  <div class="title">逆統戰指揮中心</div>
+  <div id="phaseActionMeta" aria-live="polite"></div>
   <div id="statusBar"></div>
 </div>
 
 <div id="hud"></div>
 <div id="phaseActionBar" style="display:none;">
-  <div id="phaseActionMeta"></div>
   <div id="phaseActionControls">
     <div id="phaseActionNotice" aria-live="polite"></div>
     <button id="redArmyAbilityBtn" class="phase-secondary-btn phase-red-army-btn" type="button" style="display:none;" onclick="openRedArmyAbilityModal()">紅軍能力</button>
     <button id="topdeckRightBtn" class="phase-secondary-btn" type="button" style="display:none;" onclick="sendAction('use_topdeck_right')">頂牌</button>
-    <button id="advanceStepBtn" class="phase-action-btn" onclick="sendAction('advance')">結束目前步驟</button>
   </div>
-</div>
-<div id="eventCardPanel" class="event-card-panel" style="display:none;">
-  <div class="panel-title">目前事件</div>
-  <div id="eventCardContent"></div>
 </div>
 <div id="debugSocketState" style="display:none"></div>
 
@@ -254,7 +248,9 @@
     <button class="game-tab" data-view="map">戰略地圖</button>
     <button class="game-tab" data-view="log">戰況紀錄</button>
     <button id="myFactionBtn" class="game-tab my-faction-tab" type="button" data-view="myFaction">我的陣營</button>
+    <button id="eventCardTab" class="game-tab event-card-tab" type="button" style="display:none;" onclick="openCurrentEventReveal()">事件卡</button>
     <div id="activeEraTabs" class="active-era-tabs" role="group" aria-label="生效中的時代關卡"></div>
+    <button id="advanceStepBtn" class="phase-action-btn" type="button" onclick="sendAction('advance')">結束目前步驟</button>
   </div>
 
   <div id="commandView" class="game-view active">
@@ -338,6 +334,6 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/static/player_messages_zh_tw.js?v=player-message-i18n-20260801"></script>
-<script src="/static/app.js?v=multi-map-card-queue-20260823"></script>
+<script src="/static/app.js?v=command-header-tabs-20260823"></script>
 </body>
 </html>
