@@ -15,7 +15,11 @@ def make_game():
     game.turn_phase = TurnPhase.ACTION
     game.current_player_index = 0
     game.players[0].faction_id = 'red_army'
+    game.players[0].base = '北京'
+    game.players[0].organizations = {'北京': 1}
     game.players[1].faction_id = 'taiwan_green'
+    game.players[1].base = '臺北'
+    game.players[1].organizations = {'臺北': 1}
     game.pending_base_choices = {}
     noop_event = game._event_by_name('歲月靜好')
     game.current_event = dict(noop_event or {})

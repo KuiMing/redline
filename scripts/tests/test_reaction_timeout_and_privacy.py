@@ -17,6 +17,9 @@ def make_game():
     g.turn_phase = TurnPhase.ACTION
     g.current_player_index = 0
     g.pending_base_choices = {}
+    # Game initialization may randomly draw an interactive event and create its own
+    # pending choice. Reaction privacy tests must start from a neutral action state.
+    g.pending_choice = None
     return g
 
 

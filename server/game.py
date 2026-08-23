@@ -5618,7 +5618,7 @@ class Game:
         if self.turn_phase != TurnPhase.ACTION and not is_red_support_prep_action:
             return {"error": "Not in ACTION phase"}
         if mode == "action" and self._card_is_banned_for_player(player, pending_card):
-            return {"error": "非暴力：不能打出武裝或裝備類卡牌"}
+            return {"error": "非暴力：不能打出武裝類卡牌"}
         if mode == "action":
             action_legality = self._card_action_legality(player, pending_card)
             if not action_legality.get('playable', True):
@@ -6775,7 +6775,7 @@ class Game:
             if not card:
                 return {"error": "No card in slot"}
             if self._player_is_nonviolent(player) and self._card_is_banned_for_player(player, card):
-                return {"error": "非暴力：不能購買武裝或裝備類卡牌"}
+                return {"error": "非暴力：不能購買武裝類卡牌"}
             ok, err = self._can_player_gain_flag_card(player, card)
             if not ok:
                 return {"error": err}

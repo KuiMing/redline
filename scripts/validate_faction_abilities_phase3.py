@@ -35,7 +35,7 @@ def test_nonviolence_play_block():
     g.turn_phase = TurnPhase.ACTION
     p.hand = [Card('武裝測試', 'armed', {'money': 0})]
     result = g.play_card(0, mode='action')
-    return ok('nonviolence_play_block', result.get('error') == '非暴力：不能打出武裝或裝備類卡牌', str(result))
+    return ok('nonviolence_play_block', result.get('error') == '非暴力：不能打出武裝類卡牌', str(result))
 
 
 def test_nonviolence_buy_block():
@@ -44,7 +44,7 @@ def test_nonviolence_buy_block():
     g.turn_phase = TurnPhase.ACTION
     g.purchase_area = [Card('武裝者', 'armed', {'propaganda': 1})]
     result = g.buy_card(0)
-    return ok('nonviolence_buy_block', result.get('error') == '非暴力：不能購買武裝或裝備類卡牌', str(result))
+    return ok('nonviolence_buy_block', result.get('error') == '非暴力：不能購買武裝類卡牌', str(result))
 
 
 def test_guerrilla_forces_red_discard():

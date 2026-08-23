@@ -46,7 +46,7 @@ def test_faction_blocked_from_playing_armed_card(faction_id):
     g, player, red = _new_game(faction_id)
     result = g.play_card(0, mode='action')
     checks = {
-        'play_blocked': result.get('error') == '非暴力：不能打出武裝或裝備類卡牌',
+        'play_blocked': result.get('error') == '非暴力：不能打出武裝類卡牌',
         'card_still_in_hand': any(getattr(c, 'name', str(c)) == ARMED_CARD for c in player.hand),
     }
     return {
@@ -64,7 +64,7 @@ def test_faction_blocked_from_buying_armed_card(faction_id):
     g.purchase_area = [Card(ARMED_CARD, 'armed', {})]
     result = g.buy_card(0)
     checks = {
-        'buy_blocked': result.get('error') == '非暴力：不能購買武裝或裝備類卡牌',
+        'buy_blocked': result.get('error') == '非暴力：不能購買武裝類卡牌',
     }
     return {
         'name': f'{faction_id}_blocked_from_buying_armed_card',
