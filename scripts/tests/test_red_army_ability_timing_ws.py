@@ -38,13 +38,15 @@ def test_red_army_ability_can_be_triggered_during_event_before_purchase_phase_vi
     assert game.turn_phase == TurnPhase.EVENT
 
 
-def test_red_army_ability_button_ui_is_not_auto_modal_and_is_available_before_purchase():
+def test_red_army_ability_button_ui_uses_single_tab_row_entry_before_purchase():
     app_js = (ROOT / 'static' / 'app.js').read_text(encoding='utf-8')
     index_html = (ROOT / 'static' / 'index.html').read_text(encoding='utf-8')
 
-    assert 'id="redArmyAbilityBtn"' in index_html
+    assert index_html.count('id="redArmyAbilityBtn"') == 1
+    assert 'id="turnActionButtons"' in index_html
+    assert index_html.index('id="redArmyAbilityBtn"') < index_html.index('id="advanceStepBtn"')
     assert 'onclick="openRedArmyAbilityModal()"' in index_html
     assert "openRedArmyAbilityModal" in app_js
-    assert "紅軍能力不再自動彈出" in app_js
+    assert "紅軍能力不再自動彈出" not in app_js
     assert "faction === 'red_army' && isMine && (phase === 'event' || phase === 'action')" in app_js
     assert "rawPhase === 'event' || rawPhase === 'action'" in app_js

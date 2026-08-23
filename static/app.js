@@ -2638,30 +2638,8 @@ function renderFactionActionPanel(state) {
   const hasResult = factionResult.hasResult;
 
   if (faction === 'red_army' && isMine && (phase === 'event' || phase === 'action')) {
-    const usedCount = Number(state.red_army_action_count || 0);
-    const limitCount = Number(state.red_army_action_limit || 0);
-    const usedUp = limitCount > 0 && usedCount >= limitCount;
-    if (usedUp || hasResult) {
-      panel.style.display = 'none';
-      panel.classList.remove('overlay-active');
-      info.textContent = '';
-      buttons.innerHTML = '';
-      return;
-    }
-    panel.style.display = 'block';
-    info.innerHTML = `
-      <div class="faction-action-placeholder">
-        <div>紅軍能力不再自動彈出；可在開始行動階段前，按上方或此處的「紅軍能力」按鈕自行選擇時機。</div>
-        <div>本回合已用 ${usedCount}/${limitCount} 次。</div>
-      </div>`;
-    const btn = document.createElement('button');
-    btn.className = 'base-choice-btn';
-    btn.type = 'button';
-    btn.textContent = `紅軍能力（${usedCount}/${limitCount}）`;
-    btn.disabled = usedUp || hasActivePendingChoice;
-    btn.setAttribute('aria-disabled', btn.disabled ? 'true' : 'false');
-    btn.onclick = () => openRedArmyAbilityModal(state);
-    buttons.appendChild(btn);
+    // 紅軍能力只使用分頁列「結束行動」左側的入口。共用 factionActionPanel
+    // 仍保留給其他陣營能力，但不再為紅軍渲染重複的說明、次數與按鈕。
     return;
   }
 
@@ -2821,18 +2799,8 @@ function renderFactionActionResult(state, faction) {
   }
 
   if (faction === 'red_army') {
-    const html = `
-      <div class="faction-action-placeholder">
-        <div>紅軍可在此發動統戰部、政工部、國安部或中紀委；結果會直接顯示於此。</div>
-        <ul class="red-army-action-help-list">
-          <li><strong>統戰部：</strong>抽 1 張牌。</li>
-          <li><strong>政工部：</strong>選擇 1 名非紅軍玩家，將 1 張內鬥放到其牌庫頂；同一目標每回合限 1 次。</li>
-          <li><strong>國安部：</strong>選擇其他玩家在紅軍組織 1 格內的 1 個牆內組織瓦解；同一目標每回合限 1 次。</li>
-          <li><strong>中紀委：</strong>可棄掉任意張手牌，然後抽等量的牌。</li>
-        </ul>
-      </div>`;
-    info.innerHTML = html;
-    return {hasResult: false, message: '', html};
+    info.textContent = '';
+    return {hasResult: false, message: '', html: ''};
   }
 
   const ethnicRitualFactions = new Set(['zhuang','yi','bai','hani','dai','miao','tujia','dong','buyei','yao','li']);
@@ -3702,7 +3670,6 @@ async function render(state) {
     hud.innerHTML = `
       <div class="hud-main-row">
         <span class="hud-chip hud-chip-primary">回合 ${state.turn}</span>
-        <span class="hud-chip hud-chip-primary">${phaseLabel}階段</span>
         <span class="hud-chip">當前玩家 <span${(() => { const f = (state.players || []).find(p => p.name === state.current_player)?.faction; const c = factionNameColor(f); return c ? ` style="color:${c};font-weight:700"` : ''; })()}>${escapeHtml(state.current_player)}</span></span>
         <span class="hud-chip hud-chip-resource">資金 ${myMoney}</span>
         <span class="hud-chip hud-chip-resource">宣傳 ${myPropaganda}</span>

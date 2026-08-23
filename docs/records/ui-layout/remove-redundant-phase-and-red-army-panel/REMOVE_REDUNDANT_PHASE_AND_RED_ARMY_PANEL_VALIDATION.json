@@ -1,0 +1,112 @@
+{
+  "summary": {
+    "total": 7,
+    "passed": 7,
+    "failed": 0
+  },
+  "service": "http://127.0.0.1:8000",
+  "scenario": "紅軍行動階段；識別碼 [REDACTED]",
+  "checks": [
+    {
+      "name": "hud_removes_redundant_action_phase_chip",
+      "passed": true,
+      "details": {
+        "chipTexts": [
+          "回合 1",
+          "當前玩家 紅軍",
+          "資金 0",
+          "宣傳 0",
+          "移動 0",
+          "紅軍 組織 1",
+          "自由派 組織 1",
+          "香港 組織 1"
+        ]
+      }
+    },
+    {
+      "name": "red_army_faction_action_panel_is_removed",
+      "passed": true,
+      "details": {
+        "display": "none",
+        "text": ""
+      }
+    },
+    {
+      "name": "tab_row_red_army_button_remains_the_only_entry",
+      "passed": true,
+      "details": {
+        "chipTexts": [
+          "回合 1",
+          "當前玩家 紅軍",
+          "資金 0",
+          "宣傳 0",
+          "移動 0",
+          "紅軍 組織 1",
+          "自由派 組織 1",
+          "香港 組織 1"
+        ],
+        "panelDisplay": "none",
+        "panelText": "",
+        "topButtonDisplay": "flex",
+        "topButtonText": "紅軍能力 0/2",
+        "advanceText": "結束行動",
+        "topButtonParent": "turnActionButtons",
+        "gap": 8
+      }
+    },
+    {
+      "name": "remaining_red_army_button_still_opens_modal",
+      "passed": true,
+      "details": {
+        "display": "flex",
+        "title": "紅軍能力"
+      }
+    },
+    {
+      "name": "non_red_faction_action_panels_are_not_removed",
+      "passed": true,
+      "details": {
+        "display": "block",
+        "text": "陣營能力\n          自由派可在行動階段發動一次立場試探：展示牌庫頂牌；若購買費用為奇數則加入手牌，若為偶數則放入棄牌堆。\n          發動 立場試探"
+      }
+    },
+    {
+      "name": "narrow_view_keeps_simplified_layout_inside_viewport",
+      "passed": true,
+      "details": {
+        "red": {
+          "left": 847.6375122070312,
+          "right": 938.8125,
+          "top": 180.39999389648438,
+          "bottom": 209.20001220703125
+        },
+        "advance": {
+          "left": 945.2125244140625,
+          "right": 1011.2000122070312,
+          "top": 180.39999389648438,
+          "bottom": 209.20001220703125
+        },
+        "panelDisplay": "none",
+        "chipTexts": [
+          "回合 1",
+          "當前玩家 紅軍",
+          "資金 0",
+          "宣傳 0",
+          "移動 0",
+          "紅軍 組織 1",
+          "自由派 組織 1",
+          "香港 組織 1"
+        ]
+      }
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "passed": true,
+      "details": []
+    }
+  ],
+  "screenshots": [
+    "docs/records/ui-layout/remove-redundant-phase-and-red-army-panel/red_army_command_center_simplified_1280x720_20260823.png",
+    "docs/records/ui-layout/remove-redundant-phase-and-red-army-panel/red_army_command_center_simplified_1024x768_20260823.png"
+  ]
+}

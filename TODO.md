@@ -1243,10 +1243,12 @@
 - 驗證：修正前 Browser proof 2/6；修正後 6/6。1280×720 與 1024×768 幾何／截圖驗證通過；既有 command-header-tabs 10/10；完整主 pytest 398/398；console 0 error。
 - Proof：`docs/records/ui-layout/red-army-ability-next-to-end-action/RED_ARMY_ABILITY_NEXT_TO_END_ACTION_VALIDATION.{json,md}`，含 1280×720 與 1024×768 正式截圖。
 
-### P1：移除重複的階段 chip 與紅軍陣營能力區塊（先記錄，未實作）
-- [todo] 移除 HUD 頂列中位於 `回合 N` 右側的 `行動階段` chip。上方中央已有「目前：行動｜下一步：結束行動」，不需要重複顯示階段。
-- [todo] 移除指揮中心左下角的紅軍「陣營能力」區塊，包括說明文字、`本回合已用 N/M 次`狀態與區塊內的 `紅軍能力（N/M）`按鈕。
-- [todo] 保留分頁列右側、位於 `結束行動` 左邊的 `紅軍能力 N/M` 按鈕，作為唯一的紅軍能力入口；能力規則、使用次數、disabled 狀態與 modal 行為不變。
+### P1：移除重複的階段 chip 與紅軍陣營能力區塊
+- [done] 移除 HUD 頂列中位於 `回合 N` 右側的階段 chip。上方中央的「目前／下一步」維持為唯一階段提示。
+- [done] 紅軍視角不再渲染指揮中心左下角的「陣營能力」區塊、說明文字、使用次數與區塊內按鈕；共用 `factionActionPanel` 仍保留給自由派、澳門、改革開放派及民族祭儀等其他陣營。
+- [done] 分頁列右側、位於 `結束行動` 左邊的 `紅軍能力 N/M` 按鈕維持為唯一紅軍能力入口。能力規則、使用次數、disabled 狀態、事件／行動階段可用性與 modal 行為不變。
+- 驗證：修正前 Browser proof 4/7；修正後 7/7。1280×720 與 1024×768 視覺／幾何通過；紅軍能力相鄰按鈕回歸 6/6；其他陣營能力面板保留；command-header-tabs 10/10；完整主 pytest 398/398；console 0 error。
+- Proof：`docs/records/ui-layout/remove-redundant-phase-and-red-army-panel/REMOVE_REDUNDANT_PHASE_AND_RED_ARMY_PANEL_VALIDATION.{json,md}`，含 1280×720 與 1024×768 正式截圖。
 - 原始證據：`docs/records/ui-layout/remove-redundant-phase-and-red-army-panel/request_remove_phase_chip_and_red_army_panel_20260823.jpg`。
 
 ### P1：多張建立／瓦解卡在第一張後過早切到地圖
