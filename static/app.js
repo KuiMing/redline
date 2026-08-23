@@ -1659,15 +1659,15 @@ function playHandCard(index, card, mode) {
     setPhaseActionNotice(message);
     return;
   }
-  const canQueueBuildCard = !!(
+  const canQueueMapCard = !!(
     state.pending_choice
     && me
     && state.pending_choice.player_id === me.id
-    && state.pending_choice.interaction_kind === 'build_organization'
+    && ['build_organization', 'dissolve_organization'].includes(state.pending_choice.interaction_kind)
     && (state.pending_choice.queueable_card_names || []).includes(cardName)
     && mode === 'action'
   );
-  if (state.pending_choice && me && state.pending_choice.player_id === me.id && !canQueueBuildCard) {
+  if (state.pending_choice && me && state.pending_choice.player_id === me.id && !canQueueMapCard) {
     setPhaseActionNotice('請先處理目前待選擇效果。');
     return;
   }
@@ -1951,13 +1951,7 @@ function renderChoiceModal(state) {
     activeChoiceModal = null;
     if (payload) {
       lastSupportChoiceMapHighlightPayload = payload;
-      const canQueueMoreBuildCards = choiceKey === 'card_build_organization'
-        && (choice.queueable_card_names || []).length > 0;
-      // 宣傳家只有在移除自身後才取得本次建立權。玩家此時最需要先看見「己方組織
-      // 1 格內」的實際合法範圍，不能因手上還有其他可排隊的建立牌就停留在指揮中心。
-      // 排隊功能仍然保留：玩家可手動回到指揮中心繼續打牌；其他建立牌維持既有的
-      // 連續收集體驗，避免改變已驗證的多張建立牌流程。
-      const shouldKeepCollectingBuildCards = canQueueMoreBuildCards && sourceName !== '宣傳家';
+      const shouldKeepCollectingBuildCards = (choice.queueable_card_names || []).length > 0;
       if (shouldKeepCollectingBuildCards) {
         syncChoiceModalMapHighlight(payload);
       } else {
@@ -1999,9 +1993,13 @@ function renderChoiceModal(state) {
         })),
       };
       lastSupportChoiceMapHighlightPayload = payload;
-      setActiveGameView('map')
-        .then(() => syncChoiceModalMapHighlight(payload))
-        .catch(err => console.warn('Failed to focus strategic map for dissolve choice', err));
+      if ((choice.queueable_card_names || []).length > 0) {
+        syncChoiceModalMapHighlight(payload);
+      } else {
+        setActiveGameView('map')
+          .then(() => syncChoiceModalMapHighlight(payload))
+          .catch(err => console.warn('Failed to focus strategic map for dissolve choice', err));
+      }
     } else {
       syncChoiceModalMapHighlight(null);
     }
@@ -3797,8 +3795,8 @@ async function render(state) {
     if (me && me.hand) {
       const rawPhase = String(state.turn_phase || '').toLowerCase();
       const hasMyPendingChoice = !!(state.pending_choice && state.pending_choice.player_id === me.id);
-      const canQueueBuildCard = (cardName, mode) => hasMyPendingChoice
-        && state.pending_choice?.interaction_kind === 'build_organization'
+      const canQueueMapCard = (cardName, mode) => hasMyPendingChoice
+        && ['build_organization', 'dissolve_organization'].includes(state.pending_choice?.interaction_kind)
         && (state.pending_choice?.queueable_card_names || []).includes(cardName)
         && mode === 'action';
       const handActionLegality = me.hand_action_legality || [];
@@ -3806,7 +3804,7 @@ async function render(state) {
       const canPlayHandCardMode = (cardName, mode, cardIndex = null) => {
         if (mode === 'action' && REACTION_ONLY_ACTION_CARDS.has(cardName)) return false;
         if (mode === 'action' && cardIndex !== null && cardActionLegality(cardIndex).playable === false) return false;
-        if (!isMyTurn || (hasMyPendingChoice && !canQueueBuildCard(cardName, mode))) return false;
+        if (!isMyTurn || (hasMyPendingChoice && !canQueueMapCard(cardName, mode))) return false;
         if (rawPhase === 'action') return true;
         return rawPhase === 'event' && mode === 'action' && cardName === '紅軍奧援' && me.faction === 'red_army';
       };

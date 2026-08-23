@@ -45,6 +45,185 @@ def choose_town(game, player, town=None):
     return chosen, result
 
 
+def choose_target(game, player, town=None):
+    choices = game.pending_choice['targets']
+    index = 0 if town is None else next(i for i, entry in enumerate(choices) if entry['town'] == town)
+    chosen = choices[index]['town']
+    result = game.resolve_pending_choice(player.id, index)
+    return chosen, result
+
+
+def make_dissolve_game():
+    game, actor = make_game()
+    actor.faction_id = 'taiwan'
+    actor.base = '臺北'
+    actor.organizations = {'臺北': 1}
+    enemy = game.players[1]
+    enemy.organizations = {'北京': 1, '新北': 1, '桃園': 1}
+    return game, actor, enemy
+
+
+def test_two_internal_spies_queue_before_map_and_resolve_fifo():
+    game, actor, enemy = make_dissolve_game()
+    actor.hand = [action_card(game, '內應間諜'), action_card(game, '內應間諜')]
+
+    first = game.play_card(0, mode='action', target_player_id=enemy.id)
+    assert first.get('pending_choice') is True, first
+    projected = game.state(actor.id)['pending_choice']
+    assert projected['interaction_kind'] == 'dissolve_organization'
+    assert projected['queueable_card_names'] == ['內應間諜']
+
+    second = game.play_card(0, mode='action', target_player_id=enemy.id)
+    assert second.get('pending_choice') is True, second
+    assert actor.hand == []
+    assert game.pending_choice['source_name'] == '內應間諜'
+    assert len(game._queued_card_build_choices) == 1
+
+    first_town, first_result = choose_target(game, actor, '新北')
+    assert first_town == '新北'
+    assert first_result.get('pending_choice') is True, first_result
+    second_town, second_result = choose_target(game, actor, '桃園')
+    assert second_town == '桃園'
+    assert second_result.get('success') is True, second_result
+    assert game.pending_choice is None
+    assert '新北' not in enemy.organizations
+    assert '桃園' not in enemy.organizations
+
+
+def test_two_intel_network_dissolves_collect_options_before_map():
+    game, actor, enemy = make_dissolve_game()
+    actor.hand = [action_card(game, '情報網'), action_card(game, '情報網')]
+
+    assert game.play_card(0, mode='action').get('pending_choice') is True
+    assert game.pending_choice['choice_key'] == 'choose_one'
+    assert game.resolve_pending_choice(actor.id, 1).get('pending_choice') is True
+    assert game.state(actor.id)['pending_choice']['queueable_card_names'] == ['情報網']
+
+    assert game.play_card(0, mode='action').get('pending_choice') is True
+    assert game.pending_choice['choice_key'] == 'choose_one'
+    queued = game.resolve_pending_choice(actor.id, 1)
+    assert queued.get('pending_choice') is True, queued
+    assert game.pending_choice['choice_key'] == 'intel_network_dissolve_target'
+    assert len(game._queued_card_build_choices) == 1
+
+    _, first_result = choose_target(game, actor, '新北')
+    assert first_result.get('pending_choice') is True, first_result
+    _, second_result = choose_target(game, actor, '桃園')
+    assert second_result.get('success') is True, second_result
+    assert game.pending_choice is None
+
+
+def test_non_map_option_on_queued_intel_network_restores_original_dissolve_choice():
+    game, actor, enemy = make_dissolve_game()
+    actor.hand = [action_card(game, '內應間諜'), action_card(game, '情報網')]
+
+    assert game.play_card(0, mode='action', target_player_id=enemy.id).get('pending_choice') is True
+    assert game.play_card(0, mode='action').get('pending_choice') is True
+    assert game.pending_choice['choice_key'] == 'choose_one'
+
+    resolved = game.resolve_pending_choice(actor.id, 0)
+
+    assert resolved.get('pending_choice') is True, resolved
+    assert game.pending_choice['choice_key'] == 'card_dissolve_interaction'
+    assert game._deferred_build_choice is None
+    assert game._queued_card_build_choices == []
+    assert [card.name for card in actor.hand] == []
+
+
+def test_queued_map_card_reaction_decline_adds_card_once_and_restores_fifo_head():
+    game, actor = make_game()
+    reactor = game.players[1]
+    actor.hand = [action_card(game, '組織經驗丙'), action_card(game, '組織經驗丙')]
+
+    assert game.play_card(0, mode='action').get('pending_choice') is True
+    reactor.hand = [action_card(game, '爆料黑幕')]
+    offered = game.play_card(0, mode='action')
+    assert offered.get('pending_choice') is True, offered
+    assert game.pending_choice['choice_key'] == 'cancel_other_player_action'
+
+    declined = game.resolve_pending_choice(reactor.id, 0)
+
+    assert declined.get('pending_choice') is True, declined
+    assert game.pending_choice['choice_key'] == 'card_build_organization'
+    assert game.state(actor.id)['pending_choice']['remaining_builds'] == 2
+    assert len(game._queued_card_build_choices) == 1
+
+
+def test_queued_map_card_reaction_cancel_restores_fifo_head_without_new_entry():
+    game, actor = make_game()
+    reactor = game.players[1]
+    actor.hand = [action_card(game, '組織經驗丙'), action_card(game, '組織經驗丙')]
+
+    assert game.play_card(0, mode='action').get('pending_choice') is True
+    reactor.hand = [action_card(game, '爆料黑幕')]
+    assert game.play_card(0, mode='action').get('pending_choice') is True
+
+    cancelled = game.resolve_pending_choice(reactor.id, 1)
+
+    assert cancelled.get('success') is True, cancelled
+    assert game.pending_choice['choice_key'] == 'card_build_organization'
+    assert game.state(actor.id)['pending_choice']['remaining_builds'] == 1
+    assert game._queued_card_build_choices == []
+    assert [card.name for card in actor.hand] == []
+
+
+def test_queued_field_agent_finishes_sacrifice_step_before_joining_fifo():
+    game, actor = make_game()
+    enemy = game.players[1]
+    actor.base = '北京'
+    actor.organizations = {'北京': 1, '上海': 1}
+    enemy.organizations = {'天津': 1, '杭州': 1, '香港城': 1}
+    actor.hand = [action_card(game, '內應間諜'), action_card(game, '派遣間諜')]
+
+    assert game.play_card(0, mode='action', target_player_id=enemy.id).get('pending_choice') is True
+    second = game.play_card(0, mode='action', target_player_id=enemy.id)
+    assert second.get('pending_choice') is True, second
+    assert game.pending_choice['choice_key'] == 'card_dissolve_interaction'
+    assert game.pending_choice['step'] == 'sacrifice_town'
+    assert game._deferred_build_choice is not None
+
+    sacrificed = game.resolve_pending_choice(actor.id, 0)
+
+    assert sacrificed.get('pending_choice') is True, sacrificed
+    assert actor.organizations == {'北京': 1}
+    assert game.pending_choice['choice_key'] == 'card_dissolve_interaction'
+    assert game.pending_choice['step'] == 'target'
+    assert game._deferred_build_choice is None
+    assert len(game._queued_card_build_choices) == 1
+
+    first_town = next(entry['town'] for entry in game.pending_choice['targets'])
+    _, first_result = choose_target(game, actor, first_town)
+    assert first_result.get('pending_choice') is True, first_result
+    assert game.pending_choice['source_name'] == '派遣間諜'
+    assert game.pending_choice['step'] == 'target'
+    final_town = game.pending_choice['targets'][0]['town']
+    _, final_result = choose_target(game, actor, final_town)
+    assert final_result.get('success') is True, final_result
+    assert game.pending_choice is None
+
+
+def test_build_and_dissolve_cards_share_one_fifo_map_queue():
+    game, actor = make_game()
+    enemy = game.players[1]
+    enemy.organizations = {'北京': 1, '赤柱': 1}
+    actor.hand = [action_card(game, '組織經驗丙'), action_card(game, '內應間諜')]
+
+    assert game.play_card(0, mode='action').get('pending_choice') is True
+    queued = game.play_card(0, mode='action', target_player_id=enemy.id)
+    assert queued.get('pending_choice') is True, queued
+    projected = game.state(actor.id)['pending_choice']
+    assert projected['interaction_kind'] == 'build_organization'
+    assert projected['queueable_card_names'] == []
+
+    _, build_result = choose_town(game, actor)
+    assert build_result.get('pending_choice') is True, build_result
+    projected = game.state(actor.id)['pending_choice']
+    assert projected['interaction_kind'] == 'dissolve_organization'
+    _, dissolve_result = choose_target(game, actor, '赤柱')
+    assert dissolve_result.get('success') is True, dissolve_result
+    assert game.pending_choice is None
+
+
 @pytest.mark.parametrize(
     ('second_name', 'expected_builds'),
     [

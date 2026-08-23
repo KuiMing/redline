@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-08-01T08:53:29.219439+00:00",
-  "base_url": "http://127.0.0.1:8000",
+  "generated_at": "2026-08-23T01:27:29.560888+00:00",
+  "base_url": "http://127.0.0.1:8767",
   "status": "passed",
-  "checks_passed": 10,
-  "checks_total": 10,
+  "checks_passed": 16,
+  "checks_total": 16,
   "checks": [
     {
       "name": "fixture_has_two_different_build_cards",
@@ -77,6 +77,42 @@
       "detail": "[Turn 1] viewer built organization in 南寧 via 組織經驗乙\n[Turn 1] viewer built organization in 廣州 via 組織經驗乙\n[Turn 1] viewer built organization in 澳門 via 組織經驗丙\n[Turn 1] viewer played 組織經驗乙\n[Turn 1] viewer played 組織經驗丙"
     },
     {
+      "name": "first_propagandist_keeps_command_center_active",
+      "ok": true,
+      "detail": true
+    },
+    {
+      "name": "second_propagandist_action_remains_enabled",
+      "ok": true,
+      "detail": {
+        "visible": true,
+        "enabled": true
+      }
+    },
+    {
+      "name": "duplicate_propagandists_switch_to_map_only_after_all_actions",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "first_dissolve_card_keeps_command_center_active",
+      "ok": true,
+      "detail": true
+    },
+    {
+      "name": "second_dissolve_card_action_remains_enabled",
+      "ok": true,
+      "detail": {
+        "visible": true,
+        "enabled": true
+      }
+    },
+    {
+      "name": "duplicate_dissolve_cards_switch_to_map_only_after_all_actions",
+      "ok": true,
+      "detail": null
+    },
+    {
       "name": "browser_console_has_no_errors",
       "ok": true,
       "detail": []
@@ -86,6 +122,10 @@
   "screenshots": [
     "docs/records/action-cards/build-entitlement-queue/build-queue-collecting.png",
     "docs/records/action-cards/build-entitlement-queue/build-queue-three-remaining.png",
-    "docs/records/action-cards/build-entitlement-queue/build-queue-resolved.png"
+    "docs/records/action-cards/build-entitlement-queue/build-queue-resolved.png",
+    "docs/records/action-cards/build-entitlement-queue/duplicate-propagandists-collecting.png",
+    "docs/records/action-cards/build-entitlement-queue/duplicate-propagandists-map.png",
+    "docs/records/action-cards/build-entitlement-queue/duplicate-dissolve-cards-collecting.png",
+    "docs/records/action-cards/build-entitlement-queue/duplicate-dissolve-cards-map.png"
   ]
 }

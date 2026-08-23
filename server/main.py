@@ -987,8 +987,8 @@ def test_setup_build_queue_proof(payload: dict):
     viewer.base = payload.get("base", "香港城")
     viewer.organizations = dict(payload.get("organizations") or {viewer.base: 1})
     red.faction_id = "red_army"
-    red.base = "北京"
-    red.organizations = {"北京": 1}
+    red.base = payload.get("enemy_base", "北京")
+    red.organizations = dict(payload.get("enemy_organizations") or {red.base: 1})
 
     card_names = list(payload.get("cards") or ["組織經驗丙", "組織經驗乙"])
     viewer.hand = []

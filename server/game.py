@@ -1322,6 +1322,49 @@ class Game:
             if isinstance(effect, dict) and effect.get('type') == 'build'
         ]
 
+    def _card_dissolve_effects(self, card):
+        card_name = getattr(card, 'name', str(card))
+        engine = getattr(self, 'action_engine', None)
+        cards = getattr(engine, 'cards', {}) if engine is not None else {}
+        card_def = cards.get(card_name) or {}
+        found = []
+
+        def collect(value):
+            if isinstance(value, dict):
+                if value.get('type') == 'dissolve':
+                    found.append(value)
+                for nested in value.values():
+                    collect(nested)
+            elif isinstance(value, list):
+                for nested in value:
+                    collect(nested)
+
+        collect(card_def.get('effect') or [])
+        return found
+
+    def _card_can_queue_map_action(self, card):
+        return bool(self._card_build_effects(card) or self._card_dissolve_effects(card))
+
+    def _choice_is_card_map_interaction(self, choice):
+        if not isinstance(choice, dict):
+            return False
+        if choice.get('choice_key') == 'card_build_organization':
+            return True
+        context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
+        effect_type = context.get('effect_type')
+        return bool(
+            choice.get('choice_key') == 'intel_network_dissolve_target'
+            or (
+                choice.get('choice_key') in {'support_interaction', 'card_dissolve_interaction'}
+                and choice.get('step') == 'target'
+                and effect_type in {
+                    'interactive_dissolve_many_near',
+                    'interactive_dissolve_and_build',
+                    'interactive_dissolve_self_and_enemy',
+                }
+            )
+        )
+
     def _card_action_legality(self, player, card):
         build_effects = self._card_build_effects(card)
         if build_effects and not self._card_build_town_choices(player, build_effects[0]):
@@ -1361,21 +1404,40 @@ class Game:
         choice['prompt'] = f"{source_name}：選擇要建立組織的城鎮（尚可建立 {remaining} 個）。"
         return remaining
 
+    def _refresh_queued_card_map_choice(self, player, choice):
+        if choice.get('choice_key') == 'card_build_organization':
+            context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
+            towns = self._card_build_town_choices(player, context.get('effect') or {})
+            if not towns:
+                return False
+            choice['towns'] = list(towns)
+            return True
+        if choice.get('choice_key') == 'intel_network_dissolve_target':
+            targets = self._interactive_support_dissolve_targets(player, require_self_sacrifice=False)
+            if not targets:
+                return False
+            choice['targets'] = list(targets)
+            return True
+        if self._choice_is_card_map_interaction(choice):
+            self.pending_choice = None
+            return self._refresh_support_flow_choice_after_stale_result(player, choice)
+        return False
+
     def _activate_next_queued_card_build(self, player):
         unresolved = 0
         while self._queued_card_build_choices:
             choice = self._queued_card_build_choices.pop(0)
             unresolved += self._build_choice_entitlement_count(choice)
-            context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
-            towns = self._card_build_town_choices(player, context.get('effect') or {})
-            if not towns:
-                self.log(f"{player.name} 有排隊中的建立組織額度（來自{choice.get('source_name') or '卡牌'}），但目前沒有合法的城鎮可以建立")
+            if not self._refresh_queued_card_map_choice(player, choice):
+                self.log(f"{player.name} 有排隊中的地圖卡牌效果（來自{choice.get('source_name') or '卡牌'}），但目前沒有合法目標")
                 continue
-            choice['towns'] = list(towns)
             self.pending_choice = choice
             unresolved -= self._build_choice_entitlement_count(choice)
             remaining = self._refresh_card_build_choice_projection()
-            return {'success': True, 'pending_choice': True, 'remaining_builds': remaining}
+            response = {'success': True, 'pending_choice': True}
+            if remaining:
+                response['remaining_builds'] = remaining
+            return response
         if unresolved:
             return {
                 'success': True,
@@ -1392,10 +1454,30 @@ class Game:
             self.pending_choice = self._deferred_build_choice
             self._deferred_build_choice = None
             remaining = self._refresh_card_build_choice_projection()
-            return {'success': True, 'pending_choice': True, 'remaining_builds': remaining}
+            response = {'success': True, 'pending_choice': True}
+            if remaining:
+                response['remaining_builds'] = remaining
+            return response
         if self._queued_card_build_choices:
             return self._activate_next_queued_card_build(player)
         return None
+
+    def _queue_new_card_map_choice_behind_deferred(self, player, new_choice):
+        deferred = self._deferred_build_choice
+        if not (
+            isinstance(deferred, dict)
+            and deferred.get('player_id') == player.id
+            and self._choice_is_card_map_interaction(new_choice)
+        ):
+            return None
+        self._queued_card_build_choices.append(new_choice)
+        self.pending_choice = deferred
+        self._deferred_build_choice = None
+        remaining = self._refresh_card_build_choice_projection()
+        response = {'pending_choice': True}
+        if remaining:
+            response['remaining_builds'] = remaining
+        return response
 
     def _set_pending_town_choice(self, player, choice_key, towns, prompt, **extra):
         normalized = []
@@ -1414,18 +1496,9 @@ class Game:
             'prompt': prompt,
             **extra,
         }
-        deferred = self._deferred_build_choice
-        if (
-            choice_key == 'card_build_organization'
-            and isinstance(deferred, dict)
-            and deferred.get('choice_key') == 'card_build_organization'
-            and deferred.get('player_id') == player.id
-        ):
-            self._queued_card_build_choices.append(new_choice)
-            self.pending_choice = deferred
-            self._deferred_build_choice = None
-            remaining = self._refresh_card_build_choice_projection()
-            return {'pending_choice': True, 'remaining_builds': remaining}
+        queued = self._queue_new_card_map_choice_behind_deferred(player, new_choice)
+        if queued:
+            return queued
         self.pending_choice = new_choice
         if choice_key == 'card_build_organization':
             remaining = self._refresh_card_build_choice_projection()
@@ -1441,7 +1514,7 @@ class Game:
                 item = {'id': str(target), 'label': str(target)}
             if item.get('id') is not None:
                 normalized.append(item)
-        self.pending_choice = {
+        new_choice = {
             'type': 'target_choice',
             'choice_key': choice_key,
             'player_id': player.id,
@@ -1449,10 +1522,14 @@ class Game:
             'prompt': prompt,
             **extra,
         }
+        queued = self._queue_new_card_map_choice_behind_deferred(player, new_choice)
+        if queued:
+            return queued
+        self.pending_choice = new_choice
         return {'pending_choice': True}
 
     def _set_pending_support_flow_choice(self, player, choice_key, step, prompt, **extra):
-        self.pending_choice = {
+        new_choice = {
             'type': 'support_flow_choice',
             'choice_key': choice_key,
             'player_id': player.id,
@@ -1460,6 +1537,10 @@ class Game:
             'prompt': prompt,
             **extra,
         }
+        queued = self._queue_new_card_map_choice_behind_deferred(player, new_choice)
+        if queued:
+            return queued
+        self.pending_choice = new_choice
         return {'pending_choice': True}
 
     def _resolve_underground_party(self, player, count=3):
@@ -2500,6 +2581,7 @@ class Game:
                 player,
                 max_steps=int((context.get('effect_payload') or {}).get('range', 1) or 1),
                 target_players=self._target_players_for_interaction(player, context.get('target_player_id')),
+                target_region=(context.get('effect_payload') or {}).get('target_region'),
             )
             refreshed['towns'] = towns
             if towns:
@@ -2515,6 +2597,7 @@ class Game:
                 context.get('sacrifice_town'),
                 max_steps=int((context.get('effect_payload') or {}).get('range', 1) or 1),
                 target_players=self._target_players_for_interaction(player, context.get('target_player_id')),
+                target_region=(context.get('effect_payload') or {}).get('target_region'),
             )
         elif effect_type == 'interactive_dissolve_and_build':
             targets = [
@@ -2527,7 +2610,13 @@ class Game:
                 )
             ]
         elif effect_type == 'interactive_dissolve_many_near':
-            targets = self._interactive_support_dissolve_targets(player, require_self_sacrifice=False)
+            targets = self._interactive_support_dissolve_targets(
+                player,
+                require_self_sacrifice=False,
+                max_steps=int((context.get('effect_payload') or {}).get('range', 1) or 1),
+                target_players=self._target_players_for_interaction(player, context.get('target_player_id')),
+                target_region=(context.get('effect_payload') or {}).get('target_region'),
+            )
         elif effect_type == 'force_discard_near':
             targets = self._interactive_support_discard_targets_near(player)
         else:
@@ -5340,14 +5429,14 @@ class Game:
             return {"error": "Invalid index"}
         pending_card = player.hand[index]
         pending_card_name = getattr(pending_card, "name", str(pending_card))
-        queueing_build_card = bool(
+        queueing_map_card = bool(
             self.pending_choice
             and self.pending_choice.get('player_id') == player.id
-            and self.pending_choice.get('choice_key') == 'card_build_organization'
-            and self._card_can_queue_build(pending_card)
+            and self._choice_is_card_map_interaction(self.pending_choice)
+            and self._card_can_queue_map_action(pending_card)
             and mode == 'action'
         )
-        if self.pending_choice and not queueing_build_card:
+        if self.pending_choice and not queueing_map_card:
             return {"error": "Please resolve the pending choice first"}
         is_red_support_prep_action = (
             self.turn_phase == TurnPhase.EVENT
@@ -5367,9 +5456,6 @@ class Game:
                     **({'no_legal_build_town': True} if action_legality.get('no_legal_build_town') else {}),
                     'card_name': pending_card_name,
                 }
-        if queueing_build_card:
-            self._deferred_build_choice = dict(self.pending_choice or {})
-            self.pending_choice = None
         if mode == "action" and pending_card_name in {"爆料黑幕", "產業滲透"}:
             # 這兩張卡的「行動」效果只有 cancel_card + conditional_draw，沒有像情報網
             # 那樣的 choose_one 主動分支；只能在對方打出可取消的牌時，透過反應視窗
@@ -5407,6 +5493,9 @@ class Game:
             if not valid:
                 return {"error": "No target organization within range"}
 
+        if queueing_map_card:
+            self._deferred_build_choice = dict(self.pending_choice or {})
+            self.pending_choice = None
         played_card = player.hand.pop(index)
         card_name = pending_card_name
 
@@ -7428,9 +7517,9 @@ class Game:
                     getattr(card, 'name', str(card))
                     for card in (getattr(viewer_player, 'hand', []) or [])
                     if (
-                        self.pending_choice.get('choice_key') == 'card_build_organization'
+                        self._choice_is_card_map_interaction(self.pending_choice)
                         and self.pending_choice.get('player_id') == getattr(viewer_player, 'id', None)
-                        and self._card_can_queue_build(card)
+                        and self._card_can_queue_map_action(card)
                     )
                 ],
                 'cancellable': bool(self.pending_choice.get('cancellable')) or self.pending_choice.get('choice_key') in CANCELLABLE_CHOICE_KEYS,

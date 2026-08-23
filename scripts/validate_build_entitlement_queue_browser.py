@@ -17,6 +17,10 @@ REPORT_MD = RECORD_DIR / 'BUILD_ENTITLEMENT_QUEUE_UI_VALIDATION.md'
 COLLECT_SHOT = RECORD_DIR / 'build-queue-collecting.png'
 MAP_SHOT = RECORD_DIR / 'build-queue-three-remaining.png'
 FINAL_SHOT = RECORD_DIR / 'build-queue-resolved.png'
+PROMOTER_COLLECT_SHOT = RECORD_DIR / 'duplicate-propagandists-collecting.png'
+PROMOTER_MAP_SHOT = RECORD_DIR / 'duplicate-propagandists-map.png'
+DISSOLVE_COLLECT_SHOT = RECORD_DIR / 'duplicate-dissolve-cards-collecting.png'
+DISSOLVE_MAP_SHOT = RECORD_DIR / 'duplicate-dissolve-cards-map.png'
 BASE_URL = os.environ.get('REDLINE_BASE_URL', 'http://127.0.0.1:8000').rstrip('/')
 
 
@@ -217,6 +221,102 @@ def main() -> None:
             log_text,
         )
         page.screenshot(path=str(FINAL_SHOT), full_page=True)
+
+        promoter_setup = post_json('/test/setup-build-queue-proof', {'cards': ['宣傳家', '宣傳家']})
+        page.goto(
+            f"{BASE_URL}/?game_id={promoter_setup['game_id']}&player_id={promoter_setup['player_id']}",
+            wait_until='domcontentloaded',
+        )
+        page.locator('#gameShell').wait_for(state='visible', timeout=15000)
+        page.wait_for_function(
+            "(id) => window.lastGameState?.players?.find(player => player.id === id)?.hand?.length === 2",
+            arg=promoter_setup['player_id'], timeout=15000,
+        )
+        page.evaluate("""() => {
+          if (typeof closeEventReveal === 'function') closeEventReveal();
+          if (typeof minimizeEraAchievement === 'function') minimizeEraAchievement();
+          setActiveGameView('command');
+        }""")
+        promoter_button = page.locator(
+            "button.hand-card-action-btn[data-card-name='宣傳家'][data-card-mode='action']"
+        ).first
+        promoter_button.click()
+        page.wait_for_function(
+            """() => window.lastGameState?.pending_choice?.choice_key === 'card_build_organization'
+              && window.lastGameState.pending_choice.queueable_card_names?.includes('宣傳家')""",
+            timeout=10000,
+        )
+        promoter_command_active = 'active' in (page.locator(".game-tab[data-view='command']").get_attribute('class') or '').split()
+        second_promoter = page.locator(
+            "button.hand-card-action-btn[data-card-name='宣傳家'][data-card-mode='action']"
+        ).first
+        record('first_propagandist_keeps_command_center_active', promoter_command_active, promoter_command_active)
+        record('second_propagandist_action_remains_enabled', second_promoter.is_visible() and second_promoter.is_enabled(), {
+            'visible': second_promoter.is_visible(), 'enabled': second_promoter.is_enabled(),
+        })
+        page.screenshot(path=str(PROMOTER_COLLECT_SHOT), full_page=True)
+        second_promoter.click()
+        page.wait_for_function(
+            """() => window.lastGameState?.pending_choice?.choice_key === 'card_build_organization'
+              && window.lastGameState.pending_choice.queueable_card_names?.length === 0""",
+            timeout=10000,
+        )
+        page.wait_for_function(
+            "document.querySelector(\".game-tab[data-view='map']\")?.classList.contains('active')",
+            timeout=10000,
+        )
+        record('duplicate_propagandists_switch_to_map_only_after_all_actions', True, None)
+        page.screenshot(path=str(PROMOTER_MAP_SHOT), full_page=True)
+
+        dissolve_setup = post_json('/test/setup-build-queue-proof', {
+            'cards': ['內應間諜', '內應間諜'],
+            'organizations': {'香港城': 1},
+            'enemy_organizations': {'北京': 1, '澳門': 1, '赤柱': 1},
+        })
+        page.goto(
+            f"{BASE_URL}/?game_id={dissolve_setup['game_id']}&player_id={dissolve_setup['player_id']}",
+            wait_until='domcontentloaded',
+        )
+        page.locator('#gameShell').wait_for(state='visible', timeout=15000)
+        page.wait_for_function(
+            "(id) => window.lastGameState?.players?.find(player => player.id === id)?.hand?.length === 2",
+            arg=dissolve_setup['player_id'], timeout=15000,
+        )
+        page.evaluate("""() => {
+          if (typeof closeEventReveal === 'function') closeEventReveal();
+          if (typeof minimizeEraAchievement === 'function') minimizeEraAchievement();
+          setActiveGameView('command');
+        }""")
+        spy_button = page.locator(
+            "button.hand-card-action-btn[data-card-name='內應間諜'][data-card-mode='action']"
+        ).first
+        spy_button.click()
+        page.wait_for_function(
+            """() => window.lastGameState?.pending_choice?.interaction_kind === 'dissolve_organization'
+              && window.lastGameState.pending_choice.queueable_card_names?.includes('內應間諜')""",
+            timeout=10000,
+        )
+        dissolve_command_active = 'active' in (page.locator(".game-tab[data-view='command']").get_attribute('class') or '').split()
+        second_spy = page.locator(
+            "button.hand-card-action-btn[data-card-name='內應間諜'][data-card-mode='action']"
+        ).first
+        record('first_dissolve_card_keeps_command_center_active', dissolve_command_active, dissolve_command_active)
+        record('second_dissolve_card_action_remains_enabled', second_spy.is_visible() and second_spy.is_enabled(), {
+            'visible': second_spy.is_visible(), 'enabled': second_spy.is_enabled(),
+        })
+        page.screenshot(path=str(DISSOLVE_COLLECT_SHOT), full_page=True)
+        second_spy.click()
+        page.wait_for_function(
+            """() => window.lastGameState?.pending_choice?.interaction_kind === 'dissolve_organization'
+              && window.lastGameState.pending_choice.queueable_card_names?.length === 0""",
+            timeout=10000,
+        )
+        page.wait_for_function(
+            "document.querySelector(\".game-tab[data-view='map']\")?.classList.contains('active')",
+            timeout=10000,
+        )
+        record('duplicate_dissolve_cards_switch_to_map_only_after_all_actions', True, None)
+        page.screenshot(path=str(DISSOLVE_MAP_SHOT), full_page=True)
         context.close()
         browser.close()
 
@@ -234,6 +334,10 @@ def main() -> None:
             str(COLLECT_SHOT.relative_to(ROOT)),
             str(MAP_SHOT.relative_to(ROOT)),
             str(FINAL_SHOT.relative_to(ROOT)),
+            str(PROMOTER_COLLECT_SHOT.relative_to(ROOT)),
+            str(PROMOTER_MAP_SHOT.relative_to(ROOT)),
+            str(DISSOLVE_COLLECT_SHOT.relative_to(ROOT)),
+            str(DISSOLVE_MAP_SHOT.relative_to(ROOT)),
         ],
     }
     REPORT_JSON.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
@@ -249,7 +353,11 @@ def main() -> None:
         '', '## Screenshots',
         f'- `{COLLECT_SHOT.relative_to(ROOT)}`',
         f'- `{MAP_SHOT.relative_to(ROOT)}`',
-        f'- `{FINAL_SHOT.relative_to(ROOT)}`', '',
+        f'- `{FINAL_SHOT.relative_to(ROOT)}`',
+        f'- `{PROMOTER_COLLECT_SHOT.relative_to(ROOT)}`',
+        f'- `{PROMOTER_MAP_SHOT.relative_to(ROOT)}`',
+        f'- `{DISSOLVE_COLLECT_SHOT.relative_to(ROOT)}`',
+        f'- `{DISSOLVE_MAP_SHOT.relative_to(ROOT)}`', '',
     ])
     REPORT_MD.write_text('\n'.join(lines), encoding='utf-8')
     print(json.dumps({'status': payload['status'], 'checks_passed': passed, 'checks_total': len(checks)}, ensure_ascii=False))

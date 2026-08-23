@@ -1227,6 +1227,15 @@
 - [todo] 紅軍結局需維持既有 viewer-perspective 規則；若敘述提及反共「殘部」，只統計非紅軍。逐玩家摘要表仍顯示每位玩家的實際數值，不受敘述 scope 修正影響。
 - 原始證據：`docs/records/playtest-flow/victory-narrative-counts-all-players-instead-of-winner_20260823.jpg`。
 
+### P1：多張建立／瓦解卡在第一張後過早切到地圖
+- [done] 同一玩家手上有多張 `宣傳家` 時，第一張產生建立選擇後留在指揮中心；第二張及其餘可排隊卡牌的「行動」按鈕維持可用。所有可排隊卡牌按完後才自動切到戰略地圖。
+- [done] 建立卡與瓦解卡共用 FIFO 地圖效果佇列。涵蓋 `宣傳家`、`思想家`、`組織經驗甲／乙／丙`、`派遣間諜`、`內應間諜`及`情報網`瓦解分支；異名建立與建立／瓦解混排亦依打出順序結算。
+- [done] 每筆排隊效果啟用時重新計算合法城鎮／瓦解目標；失效效果乾淨結束，不覆寫其他 pending choice。非法出牌不消耗卡牌。
+- [done] `情報網`先完成二選一；非瓦解分支恢復原 FIFO 首位，瓦解分支才入列。`派遣間諜`先完成不可取消的自我犧牲，再把該牌的瓦解目標排入 FIFO；犧牲與後續瓦解保持同一卡牌原子流程。
+- [done] 取消反應已驗證：放行時新地圖效果只入列一次；取消時不新增效果，原 FIFO 首位與建立額度完整恢復。其他 viewer 的 `queueable_card_names` 保持空陣列。
+- [done] 驗證：`test_build_entitlement_queue.py` 19/19、聚焦 action-card regression 35/35、反應／陣營能力 34/34、Browser proof 16/16、完整 pytest 386/386；`node --check`、`py_compile`、`git diff --check` 通過。
+- Proof：`docs/records/action-cards/build-entitlement-queue/BUILD_ENTITLEMENT_QUEUE_UI_VALIDATION.{json,md}`，含多張宣傳家與多張瓦解卡的指揮中心／地圖截圖。
+
 ## note（不是 active todo）
 - 事件卡目前應以「MVP 可 playtest」理解；若 playtest 先於完整化，也可以直接測目前版本，再把發現寫回 P0/P1。
 - `search_files` 在此 repo 曾對檔名列舉回傳 0；盤點檔案時可用 Python `Path.rglob()` 交叉確認。

@@ -1,6 +1,6 @@
 # 多張建立牌累積結算 UI Validation
 
-- 結果：**10/10 passed**
+- 結果：**16/16 passed**
 - 正式流程：先在指揮中心依序打出組織經驗丙、組織經驗乙，再由正式Leaflet地圖連續建立3次。
 - 驗證：第二張按鈕在首張pending期間仍可用；剩餘數1→3→2→1→0；每次重新投影合法城鎮。
 
@@ -14,9 +14,19 @@
 - PASS `authoritative_state_has_base_plus_three_new_organizations`
 - PASS `both_cards_commit_to_discard_and_queue_clears`
 - PASS `formal_log_records_each_card_build`
+- PASS `first_propagandist_keeps_command_center_active`
+- PASS `second_propagandist_action_remains_enabled`
+- PASS `duplicate_propagandists_switch_to_map_only_after_all_actions`
+- PASS `first_dissolve_card_keeps_command_center_active`
+- PASS `second_dissolve_card_action_remains_enabled`
+- PASS `duplicate_dissolve_cards_switch_to_map_only_after_all_actions`
 - PASS `browser_console_has_no_errors`
 
 ## Screenshots
 - `docs/records/action-cards/build-entitlement-queue/build-queue-collecting.png`
 - `docs/records/action-cards/build-entitlement-queue/build-queue-three-remaining.png`
 - `docs/records/action-cards/build-entitlement-queue/build-queue-resolved.png`
+- `docs/records/action-cards/build-entitlement-queue/duplicate-propagandists-collecting.png`
+- `docs/records/action-cards/build-entitlement-queue/duplicate-propagandists-map.png`
+- `docs/records/action-cards/build-entitlement-queue/duplicate-dissolve-cards-collecting.png`
+- `docs/records/action-cards/build-entitlement-queue/duplicate-dissolve-cards-map.png`
