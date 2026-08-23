@@ -3738,6 +3738,15 @@ def test_setup_era_event_layout_proof(payload: dict):
 
     requested_era_ids = payload.get("era_ids")
     era_ids = [str(item) for item in requested_era_ids] if isinstance(requested_era_ids, list) and requested_era_ids else [str(payload.get("era_id") or "hong_kong")]
+    present_factions = {str(getattr(player, "faction_id", "") or "") for player in game.players}
+    missing_factions = [era_id for era_id in era_ids if era_id not in present_factions]
+    if missing_factions:
+        return {
+            "success": False,
+            "error": "Era layout proof requires one matching player faction per active era",
+            "missing_factions": missing_factions,
+            "player_count": len(game.players),
+        }
     eras = []
     for era_id in era_ids:
         era = game.era_engine.get_definition(era_id)

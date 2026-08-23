@@ -1242,7 +1242,7 @@
 - [done] 將「結束行動階段／開始行動階段／結束回合」主按鈕移到原「開新遊戲」所在的分頁列最右側位置。
 - [done] 移除右上角浮動事件卡；目前事件改為 `事件卡｜事件名稱` 分頁。點擊分頁會開啟完整事件卡，但不切走目前的指揮中心或戰略地圖。
 - [done] 空白行動列在沒有紅軍能力、頂牌或通知時自動收合；需要次要操作時才顯示，並為遊戲內容保留空間。
-- [done] 驗證：頂列 Browser proof 10/10、事件卡分頁／放大 proof 9/9、三個時代分頁共存 proof 4/4、完整 pytest 393/393；1280×720 與 1024×768 視覺檢查無重疊或裁切。
+- [done] 驗證：頂列 Browser proof 10/10、事件卡分頁／放大 proof 9/9、四位玩家（紅軍＋香港＋哈薩克＋滿洲）與三個對應時代分頁共存 proof 4/4、完整 pytest 393/393；1280×720 與 1024×768 視覺檢查無重疊或裁切。
 - Proof：`docs/records/ui-layout/command-header-tabs/COMMAND_HEADER_TABS_VALIDATION.{json,md}`、`docs/records/event-cards/EVENT_CARD_ZOOM_PREVIEW_VALIDATION.{json,md}`。
 
 ## note（不是 active todo）

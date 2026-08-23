@@ -89,7 +89,25 @@
         "eventTabOverlap": false,
         "oldPinnedNoticeCount": 0,
         "oldPinnedNoticeDisplay": "absent",
-        "duplicateHudPillCount": 0
+        "duplicateHudPillCount": 0,
+        "players": [
+          {
+            "name": "host",
+            "faction": "red_army"
+          },
+          {
+            "name": "香港",
+            "faction": "hong_kong"
+          },
+          {
+            "name": "哈薩克",
+            "faction": "kazakh"
+          },
+          {
+            "name": "滿洲",
+            "faction": "manchuria"
+          }
+        ]
       }
     },
     {
@@ -203,7 +221,25 @@
         "eventTabOverlap": false,
         "oldPinnedNoticeCount": 0,
         "oldPinnedNoticeDisplay": "absent",
-        "duplicateHudPillCount": 0
+        "duplicateHudPillCount": 0,
+        "players": [
+          {
+            "name": "host",
+            "faction": "red_army"
+          },
+          {
+            "name": "香港",
+            "faction": "hong_kong"
+          },
+          {
+            "name": "哈薩克",
+            "faction": "kazakh"
+          },
+          {
+            "name": "滿洲",
+            "faction": "manchuria"
+          }
+        ]
       }
     },
     {
@@ -213,7 +249,7 @@
     }
   ],
   "screenshots": [
-    "docs/records/playtest-flow/three_era_tabs_clear_of_event_card_1280x720_20260820.png",
-    "docs/records/playtest-flow/three_era_tabs_clear_of_event_card_1024x768_20260820.png"
+    "docs/records/playtest-flow/four_players_three_era_tabs_1280x720_20260823.png",
+    "docs/records/playtest-flow/four_players_three_era_tabs_1024x768_20260823.png"
   ]
 }

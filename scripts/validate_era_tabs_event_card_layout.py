@@ -14,8 +14,8 @@ BASE_URL = os.environ.get("REDLINE_BASE_URL", "http://127.0.0.1:8767").rstrip("/
 RECORD_DIR = ROOT / "docs" / "records" / "playtest-flow"
 JSON_PATH = RECORD_DIR / "ERA_TABS_EVENT_CARD_LAYOUT_VALIDATION.json"
 MD_PATH = RECORD_DIR / "ERA_TABS_EVENT_CARD_LAYOUT_VALIDATION.md"
-WIDE_SHOT = RECORD_DIR / "three_era_tabs_clear_of_event_card_1280x720_20260820.png"
-NARROW_SHOT = RECORD_DIR / "three_era_tabs_clear_of_event_card_1024x768_20260820.png"
+WIDE_SHOT = RECORD_DIR / "four_players_three_era_tabs_1280x720_20260823.png"
+NARROW_SHOT = RECORD_DIR / "four_players_three_era_tabs_1024x768_20260823.png"
 ERA_IDS = ["hong_kong", "kazakh", "manchuria"]
 
 
@@ -33,10 +33,14 @@ def post_json(path: str, payload: dict | None = None) -> dict:
 
 def make_formal_game() -> tuple[str, str, str]:
     create = post_json("/create")
-    join = post_json("/join", {"game_id": create["game_id"], "name": "香港"})
+    hong_kong = post_json("/join", {"game_id": create["game_id"], "name": "香港"})
+    kazakh = post_json("/join", {"game_id": create["game_id"], "name": "哈薩克"})
+    manchuria = post_json("/join", {"game_id": create["game_id"], "name": "滿洲"})
     players = [
         (create["host_id"], "red_army", "北京"),
-        (join["player_id"], "hong_kong", "香港城"),
+        (hong_kong["player_id"], "hong_kong", "香港城"),
+        (kazakh["player_id"], "kazakh", "阿拉木圖"),
+        (manchuria["player_id"], "manchuria", "東京"),
     ]
     for player_id, faction_id, base_name in players:
         chosen = post_json(
@@ -62,7 +66,7 @@ def make_formal_game() -> tuple[str, str, str]:
     )
     if started.get("error"):
         raise AssertionError(started)
-    return create["game_id"], join["player_id"], join["resume_token"]
+    return create["game_id"], hong_kong["player_id"], hong_kong["resume_token"]
 
 
 def open_authenticated_game(page, game_id: str, player_id: str, resume_token: str) -> None:
@@ -145,6 +149,7 @@ def inspect_layout(page) -> dict:
               return notice ? getComputedStyle(notice).display : 'absent';
             })(),
             duplicateHudPillCount: document.querySelectorAll('.hud-era-pill').length,
+            players: (window.lastGameState?.players || []).map(player => ({name: player.name, faction: player.faction})),
           };
         }"""
     )
@@ -159,7 +164,9 @@ def layout_passes(data: dict) -> bool:
     if len(tabs) != 3 or not tab_bar or not era_group or not event or not advance:
         return False
     return bool(
-        [tab["id"] for tab in tabs] == ERA_IDS
+        len(data.get("players") or []) == 4
+        and {player["faction"] for player in data.get("players") or []} == {"red_army", "hong_kong", "kazakh", "manchuria"}
+        and [tab["id"] for tab in tabs] == ERA_IDS
         and all(tab["rect"]["left"] >= tab_bar["left"] and tab["rect"]["right"] <= tab_bar["right"] for tab in tabs)
         and era_group["right"] <= advance["left"] - 8
         and not data.get("eventTabOverlap")
