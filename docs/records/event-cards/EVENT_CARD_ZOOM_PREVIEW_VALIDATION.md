@@ -1,6 +1,6 @@
 # Event Card Zoom Preview Validation
 
-Summary: 13/13 passed
+Summary: 14/14 passed
 
 - Open screenshot: `docs/records/event-cards/EVENT_CARD_ZOOM_PREVIEW_OPEN_2026_08_20.png`
 - Pinned screenshot: `docs/records/event-cards/EVENT_CARD_COMPACT_MAP_1280_2026_08_20.png`
@@ -45,13 +45,35 @@ Summary: 13/13 passed
 {
   "overlayDisplay": "flex",
   "animationName": "event-card-zoom-in",
-  "text": "進行中\n任務進度 0/1\n非紅軍任務進行中\n點擊任意地方關閉",
+  "text": "進行中\n達成次數 0 / 3\n非紅軍任務進行中\n點擊任意地方關閉",
   "imageCount": 1,
   "image": {
-    "src": "http://127.0.0.1:8767/static/card-art/events/%E9%A6%99%E6%B8%AF%E6%8A%97%E6%9A%B4%E4%B9%8B%E6%88%B0.png",
-    "alt": "香港抗暴之戰完整卡面",
+    "src": "http://127.0.0.1:8767/static/card-art/events/%E7%B4%85%E8%BB%8D%E6%AC%8A%E8%B2%B4%E5%87%BA%E9%80%83.png",
+    "alt": "紅軍權貴出逃完整卡面",
     "naturalWidth": 1350,
     "naturalHeight": 1100
+  },
+  "runtimeStatus": {
+    "text": "進行中\n達成次數 0 / 3\n非紅軍任務進行中",
+    "rect": {
+      "left": 263,
+      "top": 644.359375,
+      "right": 1017,
+      "bottom": 690.359375,
+      "width": 754,
+      "height": 46
+    },
+    "fullyInsideCard": true,
+    "fullyInsideViewport": true,
+    "overlapsArtwork": false
+  },
+  "artworkRect": {
+    "left": 263,
+    "top": 30,
+    "right": 1017,
+    "bottom": 644.359375,
+    "width": 754,
+    "height": 614.359375
   },
   "centerDelta": {
     "x": 0,
@@ -70,13 +92,48 @@ Summary: 13/13 passed
 
 ```json
 {
-  "text": "進行中\n任務進度 0/1\n非紅軍任務進行中\n點擊任意地方關閉",
+  "text": "進行中\n達成次數 0 / 3\n非紅軍任務進行中\n點擊任意地方關閉",
   "imageCount": 1,
   "image": {
-    "src": "http://127.0.0.1:8767/static/card-art/events/%E9%A6%99%E6%B8%AF%E6%8A%97%E6%9A%B4%E4%B9%8B%E6%88%B0.png",
-    "alt": "香港抗暴之戰完整卡面",
+    "src": "http://127.0.0.1:8767/static/card-art/events/%E7%B4%85%E8%BB%8D%E6%AC%8A%E8%B2%B4%E5%87%BA%E9%80%83.png",
+    "alt": "紅軍權貴出逃完整卡面",
     "naturalWidth": 1350,
     "naturalHeight": 1100
+  }
+}
+```
+
+## PASS — expanded_runtime_progress_is_visible_below_not_over_artwork
+
+```json
+{
+  "runtimeStatus": {
+    "text": "進行中\n達成次數 0 / 3\n非紅軍任務進行中",
+    "rect": {
+      "left": 263,
+      "top": 644.359375,
+      "right": 1017,
+      "bottom": 690.359375,
+      "width": 754,
+      "height": 46
+    },
+    "fullyInsideCard": true,
+    "fullyInsideViewport": true,
+    "overlapsArtwork": false
+  },
+  "artworkRect": {
+    "left": 263,
+    "top": 30,
+    "right": 1017,
+    "bottom": 644.359375,
+    "width": 754,
+    "height": 614.359375
+  },
+  "cardRect": {
+    "left": 261,
+    "top": 28,
+    "width": 758,
+    "height": 664
   }
 }
 ```
@@ -89,30 +146,80 @@ Summary: 13/13 passed
 }
 ```
 
-## PASS — compact_pinned_event_card_does_not_cover_map_toolbar
+## PASS — compact_event_card_uses_reserved_rail_without_covering_game_ui
 
 ```json
 {
   "role": "button",
   "tabindex": "0",
-  "ariaLabel": "香港抗暴之戰，進行中，點擊放大查看",
-  "title": "香港抗暴之戰｜進行中｜點擊放大查看",
-  "text": "",
+  "ariaLabel": "紅軍權貴出逃，進行中，點擊放大查看",
+  "title": "紅軍權貴出逃｜進行中｜點擊放大查看",
+  "text": "達成次數 0 / 3\n進行中",
   "imageLoaded": true,
   "controls": [],
+  "compactStatus": {
+    "text": "達成次數 0 / 3\n進行中",
+    "rect": {
+      "left": 937,
+      "top": 1,
+      "right": 1075,
+      "bottom": 146
+    },
+    "fullyInsidePanel": true,
+    "overlapsArtwork": false
+  },
+  "gameShell": {
+    "left": 0,
+    "top": 203,
+    "right": 1280,
+    "bottom": 773
+  },
+  "overlapsGameShell": false,
+  "protectedUi": [
+    {
+      "id": "topBar",
+      "rect": {
+        "left": 0,
+        "top": 0,
+        "right": 920,
+        "bottom": 48
+      },
+      "overlaps": false
+    },
+    {
+      "id": "hud",
+      "rect": {
+        "left": 0,
+        "top": 48,
+        "right": 920,
+        "bottom": 127
+      },
+      "overlaps": false
+    },
+    {
+      "id": "phaseActionBar",
+      "rect": {
+        "left": 0,
+        "top": 135,
+        "right": 920,
+        "bottom": 195
+      },
+      "overlaps": false
+    }
+  ],
   "panel": {
-    "left": 1076,
+    "left": 936,
     "top": 0,
     "right": 1256,
     "bottom": 147,
-    "width": 180,
+    "width": 320,
     "height": 147
   },
   "toolbar": {
     "left": 948,
-    "top": 244,
+    "top": 279,
     "right": 1252,
-    "bottom": 283,
+    "bottom": 318,
     "width": 304,
     "height": 39
   },
@@ -120,13 +227,24 @@ Summary: 13/13 passed
 }
 ```
 
-## PASS — compact_event_card_has_no_controls_over_artwork
+## PASS — compact_event_progress_is_visible_outside_artwork
 
 ```json
 {
   "controls": [],
-  "ariaLabel": "香港抗暴之戰，進行中，點擊放大查看",
-  "title": "香港抗暴之戰｜進行中｜點擊放大查看"
+  "compactStatus": {
+    "text": "達成次數 0 / 3\n進行中",
+    "rect": {
+      "left": 937,
+      "top": 1,
+      "right": 1075,
+      "bottom": 146
+    },
+    "fullyInsidePanel": true,
+    "overlapsArtwork": false
+  },
+  "ariaLabel": "紅軍權貴出逃，進行中，點擊放大查看",
+  "title": "紅軍權貴出逃｜進行中｜點擊放大查看"
 }
 ```
 
@@ -135,19 +253,27 @@ Summary: 13/13 passed
 ```json
 {
   "panel": {
-    "left": 860.7999877929688,
+    "left": 748.7999877929688,
     "top": 96,
     "right": 1004.7999877929688,
     "bottom": 213.60000610351562,
-    "width": 144,
+    "width": 256,
     "height": 117.60000610351562
   },
   "toolbar": {
     "left": 758.400036769308,
-    "top": 291.20002366573874,
+    "top": 319.20002366573874,
     "right": 1001.6000485875803,
-    "bottom": 322.4000218416996
+    "bottom": 350.4000218416996
   },
+  "status": {
+    "text": "達成次數 0 / 3\n進行中",
+    "left": 749.6000366210938,
+    "top": 96.80000305175781,
+    "right": 860,
+    "bottom": 212.8000030517578
+  },
+  "protectedOverlaps": false,
   "viewport": {
     "width": 1024,
     "height": 768
@@ -163,24 +289,74 @@ Summary: 13/13 passed
   "panel": {
     "role": "button",
     "tabindex": "0",
-    "ariaLabel": "香港抗暴之戰，進行中，點擊放大查看",
-    "title": "香港抗暴之戰｜進行中｜點擊放大查看",
-    "text": "",
+    "ariaLabel": "紅軍權貴出逃，進行中，點擊放大查看",
+    "title": "紅軍權貴出逃｜進行中｜點擊放大查看",
+    "text": "達成次數 0 / 3\n進行中",
     "imageLoaded": true,
     "controls": [],
+    "compactStatus": {
+      "text": "達成次數 0 / 3\n進行中",
+      "rect": {
+        "left": 937,
+        "top": 1,
+        "right": 1075,
+        "bottom": 146
+      },
+      "fullyInsidePanel": true,
+      "overlapsArtwork": false
+    },
+    "gameShell": {
+      "left": 0,
+      "top": 203,
+      "right": 1280,
+      "bottom": 773
+    },
+    "overlapsGameShell": false,
+    "protectedUi": [
+      {
+        "id": "topBar",
+        "rect": {
+          "left": 0,
+          "top": 0,
+          "right": 920,
+          "bottom": 48
+        },
+        "overlaps": false
+      },
+      {
+        "id": "hud",
+        "rect": {
+          "left": 0,
+          "top": 48,
+          "right": 920,
+          "bottom": 127
+        },
+        "overlaps": false
+      },
+      {
+        "id": "phaseActionBar",
+        "rect": {
+          "left": 0,
+          "top": 135,
+          "right": 920,
+          "bottom": 195
+        },
+        "overlaps": false
+      }
+    ],
     "panel": {
-      "left": 1076,
+      "left": 936,
       "top": 0,
       "right": 1256,
       "bottom": 147,
-      "width": 180,
+      "width": 320,
       "height": 147
     },
     "toolbar": {
       "left": 948,
-      "top": 244,
+      "top": 279,
       "right": 1252,
-      "bottom": 283,
+      "bottom": 318,
       "width": 304,
       "height": 39
     },
@@ -189,8 +365,8 @@ Summary: 13/13 passed
   "reopened": {
     "display": "flex",
     "animation": "event-card-zoom-in",
-    "text": "進行中\n任務進度 0/1\n非紅軍任務進行中\n點擊任意地方關閉",
-    "imageAlt": "香港抗暴之戰完整卡面"
+    "text": "進行中\n達成次數 0 / 3\n非紅軍任務進行中\n點擊任意地方關閉",
+    "imageAlt": "紅軍權貴出逃完整卡面"
   }
 }
 ```

@@ -2291,7 +2291,7 @@ function eventCardMarkup(event, expanded = false) {
   const required = Number(progress.required || event.trigger?.count || 0);
   const typeMap = {idle: '歲月靜好', mission: '任務', auto: '自動'};
   const statusText = eventStatusText(event);
-  const progressText = event.type === 'mission' ? `任務進度 ${current}/${required || 0}` : '';
+  const progressText = event.type === 'mission' ? `達成次數 ${current} / ${required || 0}` : '';
   const resultText = event.result_text || statusText;
   const artUrl = eventCardArtUrl(event);
   const autoEffectLine = event.type === 'auto'
@@ -2319,12 +2319,21 @@ function eventCardMarkup(event, expanded = false) {
     </div>`;
   if (!artUrl) return textMarkup;
 
-  const runtimeStatus = expanded
-    ? `<div class="event-art-runtime-status"><strong>${escapeHtml(statusText)}</strong>${progressText ? `<span>${escapeHtml(progressText)}</span>` : ''}<span>${escapeHtml(resultText)}</span></div>`
-    : '';
+  const runtimeStatus = `<div class="event-art-runtime-status"><strong>${escapeHtml(statusText)}</strong>${progressText ? `<span>${escapeHtml(progressText)}</span>` : ''}<span>${escapeHtml(resultText)}</span></div>`;
+  if (!expanded) {
+    const compactPrimary = progressText || statusText;
+    return `
+      <div class="event-card-compact-layout">
+        <div class="event-card-art-shell">
+          <img class="event-card-art-image" src="${artUrl}" alt="${escapeHtml(event.name || '事件卡')}完整卡面" loading="lazy" decoding="async" onerror="this.parentElement.classList.add('event-card-art-load-failed')">
+          <div class="event-card-art-fallback">${textMarkup}</div>
+        </div>
+        <div class="event-card-compact-status"><strong>${escapeHtml(compactPrimary)}</strong><span>${escapeHtml(statusText)}</span></div>
+      </div>`;
+  }
   return `
-    <div class="event-card-art-shell${expanded ? ' expanded' : ''}">
-      <img class="event-card-art-image" src="${artUrl}" alt="${escapeHtml(event.name || '事件卡')}完整卡面" ${expanded ? '' : 'loading="lazy"'} decoding="async" onerror="this.parentElement.classList.add('event-card-art-load-failed')">
+    <div class="event-card-art-shell expanded">
+      <img class="event-card-art-image" src="${artUrl}" alt="${escapeHtml(event.name || '事件卡')}完整卡面" decoding="async" onerror="this.parentElement.classList.add('event-card-art-load-failed')">
       ${runtimeStatus}
       ${dismissHint}
       <div class="event-card-art-fallback">${textMarkup}</div>
@@ -2353,14 +2362,17 @@ function openCurrentEventReveal() {
 function renderCurrentEvent(state) {
   const panel = document.getElementById('eventCardPanel');
   const content = document.getElementById('eventCardContent');
+  const designStage = document.getElementById('designStage');
   if (!panel || !content) return;
   const event = state.current_event || null;
   if (!event) {
     panel.style.display = 'none';
+    designStage?.classList.remove('event-card-active');
     content.innerHTML = '';
     closeEventReveal();
     return;
   }
+  designStage?.classList.add('event-card-active');
   panel.style.display = 'block';
   panel.setAttribute('role', 'button');
   panel.setAttribute('tabindex', '0');

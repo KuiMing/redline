@@ -52,14 +52,15 @@ def main() -> None:
         "@keyframes event-card-zoom-in" in css
         and 'href="/static/style.css?v=' in html
         and 'src="/static/app.js?v=' in html
-        and "width: 180px" in css
-        and "height: 147px" in css,
+        and "width: 320px" in css
+        and "height: 147px" in css
+        and ".event-card-compact-status" in css,
         "zoom keyframes + compact event panel + semantic cache-busting references",
     )
 
     setup = post_json(
         "/test/setup-event-card-proof",
-        {"event_name": "香港抗暴之戰", "current_event_active": True, "viewer_faction": "taiwan"},
+        {"event_name": "紅軍權貴出逃", "current_event_active": True, "viewer_faction": "taiwan"},
     )
     url = f"{BASE_URL}{setup['url']}&v=event-card-zoom-preview"
 
@@ -77,15 +78,26 @@ def main() -> None:
           const overlay = document.getElementById('eventRevealModal');
           const card = document.getElementById('eventRevealCard');
           const rect = card.getBoundingClientRect();
+          const image = card.querySelector('.event-card-art-image');
+          const status = card.querySelector('.event-art-runtime-status');
+          const imageRect = image?.getBoundingClientRect();
+          const statusRect = status?.getBoundingClientRect();
           return {
             overlayDisplay: getComputedStyle(overlay).display,
             animationName: getComputedStyle(card).animationName,
             text: card.innerText,
             imageCount: card.querySelectorAll('img, picture, svg image').length,
             image: (() => {
-              const image = card.querySelector('.event-card-art-image');
               return image ? {src: image.currentSrc || image.src, alt: image.alt, naturalWidth: image.naturalWidth, naturalHeight: image.naturalHeight} : null;
             })(),
+            runtimeStatus: statusRect ? {
+              text: status.innerText,
+              rect: {left: statusRect.left, top: statusRect.top, right: statusRect.right, bottom: statusRect.bottom, width: statusRect.width, height: statusRect.height},
+              fullyInsideCard: statusRect.top >= rect.top && statusRect.bottom <= rect.bottom,
+              fullyInsideViewport: statusRect.top >= 0 && statusRect.bottom <= window.innerHeight,
+              overlapsArtwork: Boolean(imageRect && statusRect.top < imageRect.bottom && statusRect.bottom > imageRect.top),
+            } : null,
+            artworkRect: imageRect ? {left: imageRect.left, top: imageRect.top, right: imageRect.right, bottom: imageRect.bottom, width: imageRect.width, height: imageRect.height} : null,
             centerDelta: {
               x: Math.abs((rect.left + rect.width / 2) - window.innerWidth / 2),
               y: Math.abs((rect.top + rect.height / 2) - window.innerHeight / 2),
@@ -106,13 +118,23 @@ def main() -> None:
         check(
             checks,
             "expanded_preview_shows_complete_event_art_and_runtime_status",
-            all(text in open_state["text"] for text in ["進行中", "任務進度", "點擊任意地方關閉"])
+            all(text in open_state["text"] for text in ["進行中", "達成次數", "點擊任意地方關閉"])
             and open_state["imageCount"] == 1
             and open_state["image"] is not None
             and open_state["image"]["naturalWidth"] == 1350
             and open_state["image"]["naturalHeight"] == 1100
-            and "香港抗暴之戰完整卡面" == open_state["image"]["alt"],
+            and "紅軍權貴出逃完整卡面" == open_state["image"]["alt"],
             {"text": open_state["text"], "imageCount": open_state["imageCount"], "image": open_state["image"]},
+        )
+        check(
+            checks,
+            "expanded_runtime_progress_is_visible_below_not_over_artwork",
+            open_state["runtimeStatus"] is not None
+            and "達成次數" in open_state["runtimeStatus"]["text"]
+            and open_state["runtimeStatus"]["fullyInsideCard"]
+            and open_state["runtimeStatus"]["fullyInsideViewport"]
+            and not open_state["runtimeStatus"]["overlapsArtwork"],
+            {"runtimeStatus": open_state["runtimeStatus"], "artworkRect": open_state["artworkRect"], "cardRect": open_state["cardRect"]},
         )
 
         # Clicking the enlarged card itself must dismiss because the user requested click-anywhere dismissal.
@@ -142,7 +164,16 @@ def main() -> None:
         panel_state = page.evaluate("""() => {
           const panel = document.getElementById('eventCardPanel');
           const image = panel.querySelector('.event-card-art-image');
+          const compactStatus = panel.querySelector('.event-card-compact-status');
           const panelRect = panel.getBoundingClientRect();
+          const gameShellRect = document.getElementById('gameShell').getBoundingClientRect();
+          const protectedUi = ['topBar', 'hud', 'phaseActionBar'].map(id => {
+            const element = document.getElementById(id);
+            if (!element || getComputedStyle(element).display === 'none') return null;
+            const box = element.getBoundingClientRect();
+            const overlaps = !(panelRect.right <= box.left || panelRect.left >= box.right || panelRect.bottom <= box.top || panelRect.top >= box.bottom);
+            return {id, rect: {left: box.left, top: box.top, right: box.right, bottom: box.bottom}, overlaps};
+          }).filter(Boolean);
           const frame = document.getElementById('strategicMapFrame');
           const frameRect = frame.getBoundingClientRect();
           const scaleX = frameRect.width / frame.clientWidth;
@@ -180,6 +211,19 @@ def main() -> None:
             ));
             return {className: control.className, visible, overlapsImage};
           });
+          const compactStatusRect = compactStatus?.getBoundingClientRect();
+          const compactStatusState = compactStatusRect ? {
+            text: compactStatus.innerText,
+            rect: {left: compactStatusRect.left, top: compactStatusRect.top, right: compactStatusRect.right, bottom: compactStatusRect.bottom},
+            fullyInsidePanel: compactStatusRect.left >= panelRect.left && compactStatusRect.right <= panelRect.right && compactStatusRect.top >= panelRect.top && compactStatusRect.bottom <= panelRect.bottom,
+            overlapsArtwork: Boolean(imageRect &&
+              Math.min(compactStatusRect.right, imageRect.right) - Math.max(compactStatusRect.left, imageRect.left) > 1 &&
+              Math.min(compactStatusRect.bottom, imageRect.bottom) - Math.max(compactStatusRect.top, imageRect.top) > 1),
+          } : null;
+          const overlapsGameShell = !(
+            panelRect.right <= gameShellRect.left || panelRect.left >= gameShellRect.right ||
+            panelRect.bottom <= gameShellRect.top || panelRect.top >= gameShellRect.bottom
+          );
           return {
             role: panel.getAttribute('role'),
             tabindex: panel.getAttribute('tabindex'),
@@ -188,6 +232,10 @@ def main() -> None:
             text: panel.innerText,
             imageLoaded: !!image && image.naturalWidth === 1350,
             controls,
+            compactStatus: compactStatusState,
+            gameShell: {left: gameShellRect.left, top: gameShellRect.top, right: gameShellRect.right, bottom: gameShellRect.bottom},
+            overlapsGameShell,
+            protectedUi,
             panel: panelBox,
             toolbar,
             overlaps,
@@ -195,22 +243,28 @@ def main() -> None:
         }""")
         check(
             checks,
-            "compact_pinned_event_card_does_not_cover_map_toolbar",
-            panel_state["panel"]["width"] <= 181
-            and panel_state["panel"]["height"] <= 148
-            and panel_state["panel"]["bottom"] <= panel_state["toolbar"]["top"]
+            "compact_event_card_uses_reserved_rail_without_covering_game_ui",
+            panel_state["panel"]["width"] <= 321
+            and panel_state["panel"]["height"] <= 205
+            and not panel_state["overlapsGameShell"]
+            and not any(item["overlaps"] for item in panel_state["protectedUi"])
             and not panel_state["overlaps"],
             panel_state,
         )
         check(
             checks,
-            "compact_event_card_has_no_controls_over_artwork",
+            "compact_event_progress_is_visible_outside_artwork",
             panel_state["imageLoaded"]
             and not any(control["visible"] for control in panel_state["controls"])
+            and panel_state["compactStatus"] is not None
+            and "達成次數" in panel_state["compactStatus"]["text"]
+            and panel_state["compactStatus"]["fullyInsidePanel"]
+            and not panel_state["compactStatus"]["overlapsArtwork"]
             and "點擊放大查看" in (panel_state["ariaLabel"] or "")
             and "進行中" in (panel_state["ariaLabel"] or ""),
             {
                 "controls": panel_state["controls"],
+                "compactStatus": panel_state["compactStatus"],
                 "ariaLabel": panel_state["ariaLabel"],
                 "title": panel_state["title"],
             },
@@ -221,6 +275,14 @@ def main() -> None:
         page.wait_for_timeout(300)
         narrow_state = page.evaluate("""() => {
           const panelRect = document.getElementById('eventCardPanel').getBoundingClientRect();
+          const status = document.querySelector('#eventCardPanel .event-card-compact-status');
+          const statusRect = status?.getBoundingClientRect();
+          const protectedOverlaps = ['topBar', 'hud', 'phaseActionBar'].some(id => {
+            const element = document.getElementById(id);
+            if (!element || getComputedStyle(element).display === 'none') return false;
+            const box = element.getBoundingClientRect();
+            return !(panelRect.right <= box.left || panelRect.left >= box.right || panelRect.bottom <= box.top || panelRect.top >= box.bottom);
+          });
           const frame = document.getElementById('strategicMapFrame');
           const frameRect = frame.getBoundingClientRect();
           const scaleX = frameRect.width / frame.clientWidth;
@@ -243,6 +305,8 @@ def main() -> None:
           return {
             panel,
             toolbar,
+            status: statusRect ? {text: status.innerText, left: statusRect.left, top: statusRect.top, right: statusRect.right, bottom: statusRect.bottom} : null,
+            protectedOverlaps,
             viewport: {width: window.innerWidth, height: window.innerHeight},
             overlaps: !(panel.right <= toolbar.left || panel.left >= toolbar.right || panel.bottom <= toolbar.top || panel.top >= toolbar.bottom),
           };
@@ -252,6 +316,11 @@ def main() -> None:
             "compact_event_card_stays_clear_at_narrow_viewport",
             not narrow_state["overlaps"]
             and narrow_state["panel"]["bottom"] <= narrow_state["toolbar"]["top"]
+            and not narrow_state["protectedOverlaps"]
+            and narrow_state["status"] is not None
+            and "達成次數 0 / 3" in narrow_state["status"]["text"]
+            and narrow_state["status"]["left"] >= narrow_state["panel"]["left"]
+            and narrow_state["status"]["right"] <= narrow_state["panel"]["right"]
             and narrow_state["panel"]["left"] >= 0
             and narrow_state["panel"]["right"] <= narrow_state["viewport"]["width"],
             narrow_state,
@@ -277,7 +346,7 @@ def main() -> None:
             and "點擊放大查看" in (panel_state["ariaLabel"] or "")
             and reopened["display"] == "flex"
             and reopened["animation"] == "event-card-zoom-in"
-            and reopened["imageAlt"] == "香港抗暴之戰完整卡面",
+            and reopened["imageAlt"] == "紅軍權貴出逃完整卡面",
             {"panel": panel_state, "reopened": reopened},
         )
 
