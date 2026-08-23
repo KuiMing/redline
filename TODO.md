@@ -1220,6 +1220,13 @@
 - [todo] 後續需稽核時代關卡、事件卡、陣營能力與一般抽牌的 peer-action notice／戰況紀錄投影，確保私人手牌資訊只投影給牌的擁有者。
 - 原始證據：`docs/records/playtest-flow/peer-draw-card-names-leaked-to-red-army_20260823.jpg`。
 
+### P1：勝利敘述的統計數字未依獲勝方計算
+- [todo] 截圖中哈薩克獲勝。玩家表顯示哈薩克共有 19 個組織，其中牆內 3、牆外 16；紅軍另有 5 個組織，其中牆內 2、牆外 3。勝利敘述卻寫成「牆內 5 個組織…牆外 19 個力量據點」，表示敘述錯誤加總了哈薩克與紅軍，而不是只計算獲勝方哈薩克。
+- [todo] 此情境的正確敘述數字應只使用哈薩克的統計：牆內 3、牆外 16、合計 19。
+- [todo] 後續修正前需檢查所有陣營的勝利敘述模板與數字來源。一般陣營獲勝時，敘述中的組織、牆內、牆外、資源與其他統計必須依實際獲勝方計算；不得加總其他玩家。共同勝利時，需明確區分主獲勝方與共同勝利者，不可默認加總。
+- [todo] 紅軍結局需維持既有 viewer-perspective 規則；若敘述提及反共「殘部」，只統計非紅軍。逐玩家摘要表仍顯示每位玩家的實際數值，不受敘述 scope 修正影響。
+- 原始證據：`docs/records/playtest-flow/victory-narrative-counts-all-players-instead-of-winner_20260823.jpg`。
+
 ## note（不是 active todo）
 - 事件卡目前應以「MVP 可 playtest」理解；若 playtest 先於完整化，也可以直接測目前版本，再把發現寫回 P0/P1。
 - `search_files` 在此 repo 曾對檔名列舉回傳 0；盤點檔案時可用 Python `Path.rglob()` 交叉確認。
