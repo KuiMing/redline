@@ -389,14 +389,49 @@ def test_interactive_support_defers_card_trigger_until_target_resolves():
     assert [card.name for card in player.hand] == ["商貿組織加抽"]
 
 
-def test_show_strength_triggers_once_after_three_unique_nonstarter_cards():
+def test_show_strength_triggers_once_after_three_unique_nonstarter_cards_and_player_chooses_reward():
+    for choice_index, expected_reward in [(0, {"propaganda": 3, "money": 0}), (1, {"propaganda": 0, "money": 3})]:
+        game, player, _ = make_game("manchuria", "東京")
+        game.turn_log["played_nonstarter_names"] = ["甲", "乙", "丙"]
+
+        game._apply_card_play_faction_abilities(player, cost_has_money=False, cost_has_propaganda=False)
+
+        assert game.pending_choice["choice_key"] == "show_strength_reward"
+        assert [option["label"] for option in game.pending_choice["options"]] == ["獲得 3 點宣傳", "獲得 3 點資金"]
+        assert player.resources == {"money": 0, "propaganda": 0}
+        resolved = game.resolve_pending_choice(player.id, choice_index)
+        assert resolved.get("success") is True
+        assert resolved["reward"] == expected_reward
+        assert player.resources["money"] == expected_reward["money"]
+        assert player.resources["propaganda"] == expected_reward["propaganda"]
+
+        game._apply_card_play_faction_abilities(player, cost_has_money=False, cost_has_propaganda=False)
+        assert game.pending_choice is None
+        assert game.turn_log["combo_reward_triggered"] is True
+
+
+def test_show_strength_reward_waits_for_an_existing_pending_choice_and_continues_after_resolution():
     game, player, _ = make_game("manchuria", "東京")
+    player.hand = []
+    player.deck.draw_pile = [Card("游擊隊先行抽牌", "command", {})]
+    game._set_pending_option_choice(
+        player,
+        "guerrilla_reward",
+        [{"label": "抽 1 張牌"}, {"label": "令紅軍棄 1 張手牌"}],
+        "先處理游擊隊選擇",
+        source_name="游擊隊",
+    )
     game.turn_log["played_nonstarter_names"] = ["甲", "乙", "丙"]
+
     game._apply_card_play_faction_abilities(player, cost_has_money=False, cost_has_propaganda=False)
-    assert player.resources["money"] == 3
-    game._apply_card_play_faction_abilities(player, cost_has_money=False, cost_has_propaganda=False)
-    assert player.resources["money"] == 3
-    assert game.turn_log["combo_reward_triggered"] is True
+
+    assert game.pending_choice["choice_key"] == "guerrilla_reward"
+    assert game._pending_show_strength_players == [player.id]
+    resolved = game.resolve_pending_choice(player.id, 0)
+    assert resolved.get("success") is True
+    assert [card.name for card in player.hand] == ["游擊隊先行抽牌"]
+    assert game.pending_choice["choice_key"] == "show_strength_reward"
+    assert game._pending_show_strength_players == []
 
 
 def test_martyr_and_green_hill_draw_when_wall_inner_organization_is_dissolved():

@@ -1070,9 +1070,20 @@ document.addEventListener('keydown', (event) => {
 });
 
 function factionAbilityText(item) {
-  return typeof item === 'string'
-    ? item
-    : [item?.name_override || item?.name, item?.trigger, item?.effect].filter(Boolean).join('：');
+  if (typeof item === 'string') {
+    if (item.startsWith('【展現實力】')) {
+      return item
+        .replace(/^【展現實力】/, '展現實力：')
+        .replace('，則可獲得', '，獲得')
+        .replace(/。$/, '');
+    }
+    return item;
+  }
+  const name = item?.name_override || item?.name;
+  if (name === '展現實力') {
+    return `${name}：${item?.trigger || ''}，${item?.effect || ''}`.replace(/，+$/, '');
+  }
+  return [name, item?.trigger, item?.effect].filter(Boolean).join('：');
 }
 
 function hongKongBaseOverviewItems(faction, currentBase = null) {
@@ -1091,7 +1102,8 @@ function renderFactionDetails(factionId, selectedBaseName = null, selectedBaseGr
   const abilitiesEl = document.getElementById('factionDetailAbilities');
   const rulesEl = document.getElementById('factionDetailRules');
   const winEl = document.getElementById('factionDetailWin');
-  if (!panel || !title || !basesEl || !abilitiesEl || !rulesEl || !winEl) return;
+  const eraEl = document.getElementById('factionDetailEra');
+  if (!panel || !title || !basesEl || !abilitiesEl || !rulesEl || !winEl || !eraEl) return;
 
   if (!factionId) {
     panel.style.display = 'block';
@@ -1100,6 +1112,7 @@ function renderFactionDetails(factionId, selectedBaseName = null, selectedBaseGr
     abilitiesEl.innerHTML = '<div class="faction-detail-empty">能力與觸發條件會完整顯示在這裡。</div>';
     rulesEl.innerHTML = '<div class="faction-detail-empty">特殊規則與限制會分開列出，方便選擇前比較。</div>';
     winEl.innerHTML = '<div class="faction-detail-empty">同時顯示該陣營的獲勝條件。</div>';
+    eraEl.innerHTML = '<div class="faction-detail-empty">同時顯示該陣營的時代關卡與雙方效果。</div>';
     return;
   }
 
@@ -1120,9 +1133,7 @@ function renderFactionDetails(factionId, selectedBaseName = null, selectedBaseGr
     ...((detail.abilities_text || detail.abilities || [])),
     ...((selectedBaseData?.abilities) || []),
   ];
-  const renderFactionDetailItem = item => typeof item === 'string'
-    ? item
-    : [item.name_override || item.name, item.trigger, item.effect].filter(Boolean).join('：');
+  const renderFactionDetailItem = factionAbilityText;
   const abilities = rawAbilities.filter(item => !(typeof item === 'object' && item && ['setup', 'restriction'].includes(item.type)));
   const rules = [
     ...(detail.setup_effects || []),
@@ -1145,7 +1156,18 @@ function renderFactionDetails(factionId, selectedBaseName = null, selectedBaseGr
       : (activeDetailBaseGroup ? `<div class="faction-detail-section-title">根據地類別</div><ul><li>${baseDisplayName(activeDetailBaseGroup)}</li></ul>` : '');
   abilitiesEl.innerHTML = `<div class="faction-detail-section-title">能力</div><ul>${abilities.map(a => `<li>${renderFactionDetailItem(a)}</li>`).join('') || '<li>（暫無資料）</li>'}</ul>`;
   rulesEl.innerHTML = `<div class="faction-detail-section-title">規則</div><ul>${rules.map(r => `<li>${r}</li>`).join('') || '<li>（暫無資料）</li>'}</ul>`;
-  winEl.innerHTML = `<div class="faction-detail-section-title">獲勝條件</div><ul>${wins.map(w => `<li>${w}</li>`).join('') || '<li>（暫無資料）</li>'}</ul>`;
+  winEl.innerHTML = `<div class="faction-detail-section-title">獲勝條件</div><ul>${wins.map(w => `<li>${escapeHtml(w)}</li>`).join('') || '<li>（暫無資料）</li>'}</ul>`;
+  const eraStage = detail.era_stage || opt.era_stage || null;
+  eraEl.innerHTML = eraStage
+    ? `<div class="faction-detail-section-title faction-detail-era-heading">時代關卡</div>
+       <article class="faction-picker-era-card">
+         <div class="faction-picker-era-name">${escapeHtml(eraStage.name || '時代關卡')}</div>
+         ${eraStage.summary_text ? `<div class="faction-picker-era-summary">${escapeHtml(eraStage.summary_text)}</div>` : ''}
+         <div><strong>觸發條件：</strong>${escapeHtml(eraStage.trigger_text || '（暫無資料）')}</div>
+         <div><strong>紅軍壓制：</strong>${escapeHtml(eraStage.success_text || '（暫無資料）')}</div>
+         <div><strong>革命反撲：</strong>${escapeHtml(eraStage.fail_text || '（暫無資料）')}</div>
+       </article>`
+    : `<div class="faction-detail-section-title faction-detail-era-heading">時代關卡</div><div class="faction-detail-empty">此陣營沒有個人時代關卡。</div>`;
   panel.style.display = 'block';
 }
 
@@ -1207,6 +1229,12 @@ async function renderFactionPicker() {
   panel.setAttribute('aria-hidden', factionPickerModalOpen ? 'false' : 'true');
   const chosen = lobbyRes.factions || {};
   const chosenBases = lobbyRes.bases || {};
+  const occupiedBases = new Set(
+    Object.entries(chosenBases)
+      .filter(([pid]) => pid !== playerId)
+      .map(([, baseName]) => baseName)
+      .filter(Boolean)
+  );
   renderLobbyRoster(lobbyRes);
   const confirmed = chosen[playerId] || null;
   const confirmedBase = chosenBases[playerId] || null;
@@ -1220,7 +1248,10 @@ async function renderFactionPicker() {
       : null)
     : null;
   const activeBase = pendingFactionBaseChoice || confirmedBase || impliedBase;
-  const activeBaseGroup = pendingFactionBaseGroup || (impliedBase ? impliedBaseOptions[0] : null);
+  const inferredBaseGroup = activeBase
+    ? impliedBaseOptions.find(baseName => (impliedBaseResolved[baseName] || [baseName]).includes(activeBase)) || null
+    : null;
+  const activeBaseGroup = pendingFactionBaseGroup || inferredBaseGroup || (impliedBase ? impliedBaseOptions[0] : null);
   const requiredFaction = (lobbyRes.required_faction_by_player || {})[playerId] || null;
   if (requiredFaction === 'red_army' && activeChoice && activeChoice !== 'red_army') {
     pendingFactionCategory = null;
@@ -1228,10 +1259,11 @@ async function renderFactionPicker() {
     pendingFactionBaseChoice = null;
     pendingFactionBaseGroup = null;
   }
+  const activeBaseTaken = !!activeBase && occupiedBases.has(activeBase);
   info.textContent = requiredFaction === 'red_army'
     ? '房間尚無紅軍；你是最後一個席位，只能選擇紅軍陣營。'
     : activeChoice
-      ? `目前陣營：${factionDisplayName(activeChoice)}${activeBase ? `｜根據地：${baseDisplayName(activeBase)}` : (activeBaseGroup ? `｜根據地類別：${baseDisplayName(activeBaseGroup)}` : '')}`
+      ? `目前陣營：${factionDisplayName(activeChoice)}${activeBase ? `｜根據地：${baseDisplayName(activeBase)}${activeBaseTaken ? '（已被其他玩家選擇）' : ''}` : (activeBaseGroup ? `｜根據地類別：${baseDisplayName(activeBaseGroup)}` : '')}`
       : '請先選擇你的陣營';
 
   list.innerHTML = '';
@@ -1241,7 +1273,7 @@ async function renderFactionPicker() {
   bases.style.display = 'none';
   const currentActiveOption = activeOptionForSelection;
   const needsBaseChoice = !!(activeChoice && currentActiveOption?.base_options?.length);
-  const readyForConfirm = !!activeChoice && (!requiredFaction || activeChoice === requiredFaction) && (!needsBaseChoice || !!activeBase);
+  const readyForConfirm = !!activeChoice && (!requiredFaction || activeChoice === requiredFaction) && (!needsBaseChoice || (!!activeBase && !activeBaseTaken));
   confirmBar.style.display = readyForConfirm ? 'block' : 'none';
   confirmBtn.disabled = !readyForConfirm;
   confirmBtn.onclick = confirmFactionChoice;
@@ -1297,49 +1329,31 @@ async function renderFactionPicker() {
       bases.innerHTML = '';
       bases.style.display = 'flex';
 
-      if (pendingFactionBaseGroup) {
-        const back = document.createElement('button');
-        back.className = 'base-choice-btn';
-        back.textContent = '← 返回根據地類別';
-        back.onclick = async () => {
-          pendingFactionBaseGroup = null;
-          pendingFactionBaseChoice = null;
+      const directBaseChoices = [];
+      const seenTowns = new Set();
+      baseOptions.forEach(baseGroup => {
+        const resolvedTowns = baseResolved[baseGroup] || [baseGroup];
+        resolvedTowns.forEach(town => {
+          if (seenTowns.has(town)) return;
+          seenTowns.add(town);
+          directBaseChoices.push({baseGroup, town});
+        });
+      });
+
+      directBaseChoices.forEach(({baseGroup, town}) => {
+        const bbtn = document.createElement('button');
+        const isSelectedTown = activeBase === town;
+        bbtn.className = `base-choice-btn${isSelectedTown ? ' active' : ''}`;
+        bbtn.textContent = baseDisplayName(town);
+        bbtn.disabled = occupiedBases.has(town);
+        bbtn.title = bbtn.disabled ? '此根據地已被其他玩家選擇' : '';
+        bbtn.onclick = async () => {
+          pendingFactionBaseGroup = baseGroup;
+          pendingFactionBaseChoice = town;
           await renderFactionPicker();
         };
-        bases.appendChild(back);
-
-        const towns = baseResolved[pendingFactionBaseGroup] || [];
-        towns.forEach(town => {
-          const bbtn = document.createElement('button');
-          const isSelectedTown = activeBase === town;
-          bbtn.className = `base-choice-btn${isSelectedTown ? ' active' : ''}`;
-          bbtn.textContent = baseDisplayName(town);
-          bbtn.onclick = async () => {
-            pendingFactionBaseChoice = town;
-            await renderFactionPicker();
-          };
-          bases.appendChild(bbtn);
-        });
-      } else {
-        baseOptions.forEach(baseName => {
-          const resolvedTowns = baseResolved[baseName] || [baseName];
-          const isSelectedBase = activeBaseGroup === baseName || (resolvedTowns.length === 1 && activeBase === resolvedTowns[0]);
-          const bbtn = document.createElement('button');
-          bbtn.className = `base-choice-btn${isSelectedBase ? ' active' : ''}`;
-          bbtn.textContent = baseDisplayName(baseName);
-          bbtn.onclick = async () => {
-            if (resolvedTowns.length > 1) {
-              pendingFactionBaseGroup = baseName;
-              pendingFactionBaseChoice = null;
-            } else {
-              pendingFactionBaseGroup = baseName;
-              pendingFactionBaseChoice = resolvedTowns[0];
-            }
-            await renderFactionPicker();
-          };
-          bases.appendChild(bbtn);
-        });
-      }
+        bases.appendChild(bbtn);
+      });
     }
   }
 }

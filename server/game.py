@@ -128,6 +128,7 @@ class Game:
         # 若紅軍正好是整輪最後一席，時代效果必須記在新回合；交棒時不可再次增加回合數。
         self._era_turn_preincremented = False
         self._pending_guerrilla_players = []
+        self._pending_show_strength_players = []
         self.market_mode = market_mode or "sample_53"
 
         self.map = self._load_json(MAP_PATH)
@@ -2186,6 +2187,19 @@ class Game:
             self.log(f"{player.name} triggered 游擊隊 and chose to force {red_player.name} to discard {card_name}")
             return {'success': True, 'choice_key': choice_key, 'choice': 'red_discard', 'discarded': card_name}
 
+        if choice_key == 'show_strength_reward':
+            self.pending_choice = None
+            if index == 0:
+                player.resources['propaganda'] += 3
+                reward = {'propaganda': 3, 'money': 0}
+                reward_name = '3 propaganda'
+            else:
+                player.resources['money'] += 3
+                reward = {'propaganda': 0, 'money': 3}
+                reward_name = '3 money'
+            self.log(f"{player.name} triggered 展現實力 and chose {reward_name}")
+            return {'success': True, 'choice_key': choice_key, 'reward': reward}
+
         if choice_key == 'choose_one':
             selected = options[index]
             context = dict(choice.get('context') or {})
@@ -2830,6 +2844,9 @@ class Game:
         """Finish queued faction, era, and event choices in their required order."""
         if self.pending_choice:
             return None
+        show_strength_result = self._continue_show_strength_choice_queue()
+        if self.pending_choice:
+            return show_strength_result
         guerrilla_result = self._continue_guerrilla_choice_queue()
         if self.pending_choice:
             return guerrilla_result
@@ -4473,6 +4490,24 @@ class Game:
             self.log(f"{player.name} triggered 游擊隊 and drew 1 card")
         self._track_event_progress('use_faction_ability', player=player)
 
+    def _continue_show_strength_choice_queue(self):
+        if self.pending_choice:
+            return None
+        while self._pending_show_strength_players:
+            player_id = self._pending_show_strength_players.pop(0)
+            player = next((candidate for candidate in self.players if candidate.id == player_id), None)
+            if player is None:
+                continue
+            self._set_pending_option_choice(
+                player,
+                'show_strength_reward',
+                [{'label': '獲得 3 點宣傳'}, {'label': '獲得 3 點資金'}],
+                '展現實力：請選擇獲得 3 點宣傳或 3 點資金。',
+                source_name='展現實力',
+            )
+            return {'success': True, 'pending_choice': True, 'source': 'show_strength'}
+        return None
+
     def _continue_guerrilla_choice_queue(self):
         if self.pending_choice:
             return None
@@ -4614,8 +4649,10 @@ class Game:
             elif name == "展現實力" and not self.turn_log.get("combo_reward_triggered"):
                 if len(self.turn_log.get("played_nonstarter_names", [])) >= 3:
                     self.turn_log["combo_reward_triggered"] = True
-                    player.resources["money"] += 3
-                    self.log(f"{player.name} triggered 展現實力 and gained 3 money")
+                    self._pending_show_strength_players.append(player.id)
+                    self.log(f"{player.name} triggered 展現實力 and must choose 3 propaganda or 3 money")
+                    if not self.pending_choice:
+                        self._continue_show_strength_choice_queue()
                     self._track_event_progress('use_faction_ability', player=player)
 
         if (

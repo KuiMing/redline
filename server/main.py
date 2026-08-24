@@ -8,6 +8,8 @@ import uuid
 import asyncio
 import csv
 import secrets
+import json
+from functools import lru_cache
 from pathlib import Path
 
 app = FastAPI()
@@ -198,10 +200,22 @@ def faction_category(faction_id: str):
     return 'rebel'
 
 
+@lru_cache(maxsize=1)
+def canonical_inside_wall_towns():
+    path = Path(__file__).resolve().parent.parent / "data" / "map.json"
+    with open(path, encoding="utf-8") as f:
+        map_data = json.load(f)
+    return tuple(
+        town
+        for town, info in (map_data.get("towns", {}) or {}).items()
+        if "紅軍" in (info.get("ruler") or [])
+    )
+
+
 def semantic_base_pool(option_name: str):
     pools = {
-        '任意牆內': [],
-        '任意牆內城鎮': [],
+        '任意牆內': list(canonical_inside_wall_towns()),
+        '任意牆內城鎮': list(canonical_inside_wall_towns()),
         '任意英美城鎮': ['華盛頓', '紐約', '多倫多', '卡加利', '溫哥華', '舊金山', '洛杉磯', '倫敦'],
         '任意南洋': ['曼谷', '吉隆坡', '新加坡', '雅加達', '河內', '胡志明市', '仰光'],
         '任意南洋城鎮': ['曼谷', '吉隆坡', '新加坡', '雅加達', '河內', '胡志明市', '仰光'],
@@ -568,6 +582,32 @@ def list_factions():
     rebels = [x for x in factions if x.get("camp") == "rebel"]
     ability_templates = data.get("ability_templates", {})
 
+    era_path = Path(__file__).resolve().parent.parent / "data" / "era_structured.v1.1.json"
+    era_card_path = Path(__file__).resolve().parent.parent / "data" / "cards" / "event_and_era_cards.v1.1.json"
+    with open(era_path, encoding="utf-8") as f:
+        era_rows = json.load(f).get("eras", [])
+    with open(era_card_path, encoding="utf-8") as f:
+        era_card_rows = json.load(f)
+    era_cards_by_name = {
+        row[0]: row
+        for row in era_card_rows
+        if isinstance(row, list) and len(row) >= 5 and isinstance(row[0], str) and row[0].startswith("[")
+    }
+    era_stage_by_camp = {}
+    for era in era_rows:
+        camp = (era.get("trigger") or {}).get("camp")
+        if not camp:
+            continue
+        card_row = era_cards_by_name.get(era.get("name"), [])
+        era_stage_by_camp[camp] = {
+            "id": era.get("id"),
+            "name": era.get("name"),
+            "summary_text": card_row[1] if len(card_row) > 1 else "",
+            "trigger_text": card_row[2] if len(card_row) > 2 else "",
+            "success_text": card_row[3] if len(card_row) > 3 else "",
+            "fail_text": card_row[4] if len(card_row) > 4 else "",
+        }
+
     def resolve_ui_faction(faction):
         resolved = dict(faction)
         resolved_abilities = []
@@ -582,6 +622,8 @@ def list_factions():
             else:
                 resolved_abilities.append(ability)
         resolved["abilities"] = resolved_abilities
+        if faction.get("camp") in era_stage_by_camp:
+            resolved["era_stage"] = dict(era_stage_by_camp[faction.get("camp")])
         return resolved
 
     def resolve_family_ui_faction(family_id, name, camp, variant_ids):
@@ -594,13 +636,16 @@ def list_factions():
             if base_name:
                 bases.append({"name": base_name, "variant_faction": variant_id})
                 variant_details[base_name] = variant
-        return {
+        result = {
             "id": family_id,
             "name": name,
             "camp": camp,
             "bases": bases,
             "variant_details": variant_details,
         }
+        if camp in era_stage_by_camp:
+            result["era_stage"] = dict(era_stage_by_camp[camp])
+        return result
 
     categories = [
         {"id": "red_army", "label": "紅軍", "mode": "direct", "options": [resolve_ui_faction(by_id["red_army"])]},
@@ -657,6 +702,9 @@ def choose_faction(payload: dict):
         valid_towns = {town for towns in resolved_bases.values() for town in towns}
         if base_name not in valid_towns:
             return {"error": "Invalid base option"}
+        occupied_bases = lobby_bases.get(game_id, {})
+        if any(pid != player_id and chosen_base == base_name for pid, chosen_base in occupied_bases.items()):
+            return {"error": "Base already taken"}
 
     lobby_factions.setdefault(game_id, {})[player_id] = faction_id
     lobby_ready.setdefault(game_id, {})[player_id] = False
@@ -4241,6 +4289,49 @@ def test_setup_faction_action_used_proof(payload: dict):
         "player_id": viewer.id,
         "resource_card_name": resource_card_name,
         "state": game.state(),
+    }
+
+
+@app.post("/test/setup-show-strength-choice-proof")
+def test_setup_show_strength_choice_proof(payload: dict):
+    """建立「展現實力」已達成且等待能力擁有者選擇獎勵的 Browser proof。"""
+    game_id = str(uuid.uuid4())
+    players = [(str(uuid.uuid4()), "滿洲玩家"), (str(uuid.uuid4()), "紅軍玩家")]
+    game = Game(players)
+    player, red = game.players
+
+    player.faction_id = "manchuria"
+    player.base = "東京"
+    player.organizations = {"東京": 1}
+    player.resources = {"money": 0, "propaganda": 0}
+    red.faction_id = "red_army"
+    red.base = "北京"
+    red.organizations = {"北京": 1}
+    game.current_player_index = 0
+    game.game_phase = GamePhase.MAIN
+    game.turn_phase = TurnPhase.ACTION
+    game.pending_base_choices = {}
+    game.turn_log = game._new_turn_log()
+    game.turn_log["played_nonstarter_names"] = ["甲", "乙", "丙"]
+    game.current_event = None
+    game.event_progress = {}
+    game.event_modifiers = []
+    game.id = game_id
+
+    game._apply_card_play_faction_abilities(player, cost_has_money=False, cost_has_propaganda=False)
+
+    manager.games[game_id] = game
+    manager.connections[game_id] = manager.connections.get(game_id, {})
+    lobby[game_id] = [(candidate.id, candidate.name) for candidate in game.players]
+    lobby_hosts[game_id] = player.id
+    lobby_factions[game_id] = {player.id: player.faction_id, red.id: red.faction_id}
+    lobby_bases[game_id] = {player.id: player.base, red.id: red.base}
+    return {
+        "success": True,
+        "game_id": game_id,
+        "player_id": player.id,
+        "pending_choice": game.pending_choice,
+        "resources": dict(player.resources),
     }
 
 

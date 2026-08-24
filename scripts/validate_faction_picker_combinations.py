@@ -33,8 +33,13 @@ def humanize_win_condition(w):
 
 def render_ability(a):
     if isinstance(a, str):
+        if a.startswith('【展現實力】'):
+            return a.replace('【展現實力】', '展現實力：', 1).replace('，則可獲得', '，獲得').removesuffix('。')
         return a
-    return '：'.join([x for x in [a.get('name_override') or a.get('name'), a.get('trigger'), a.get('effect')] if x])
+    name = a.get('name_override') or a.get('name')
+    if name == '展現實力':
+        return f"{name}：{a.get('trigger', '')}，{a.get('effect', '')}".rstrip('，')
+    return '：'.join([x for x in [name, a.get('trigger'), a.get('effect')] if x])
 
 
 def is_rule_like_ability(a):
@@ -96,8 +101,8 @@ def escape_regex_text(text):
     return re.escape(text)
 
 
-def validate_combo(page, combo):
-    page.goto(BASE_URL, wait_until='domcontentloaded')
+def prepare_option(page, combo):
+    page.goto(BASE_URL + '/new-game', wait_until='domcontentloaded')
     page.fill('#playerName', 'host')
     page.locator('#createRoomBtn').click()
     page.wait_for_function("document.getElementById('factionPicker')?.style.display === 'flex'")
@@ -109,12 +114,15 @@ def validate_combo(page, combo):
         page.locator('#factionVariantList .faction-choice-btn', has_text=re.compile(f'^{escape_regex_text(combo["option_label"])}$')).first.click()
         page.wait_for_timeout(150)
 
-    if combo['base_group']:
-        page.locator('#factionBaseList .base-choice-btn', has_text=re.compile(f'^{escape_regex_text(combo["base_group"])}$')).first.click()
-        page.wait_for_timeout(150)
-        if combo['base_town'] != combo['base_group']:
-            page.locator('#factionBaseList .base-choice-btn', has_text=re.compile(f'^{escape_regex_text(combo["base_town"])}$')).first.click()
-            page.wait_for_timeout(150)
+
+def validate_combo(page, combo):
+    if combo['base_town']:
+        page.locator('#factionBaseList .base-choice-btn', has_text=re.compile(f'^{escape_regex_text(combo["base_town"])}$')).first.click()
+        page.wait_for_function(
+            """town => document.querySelector('#factionBaseList .active')?.textContent.trim() === town
+              && document.getElementById('factionDetailBases')?.textContent.includes(town)""",
+            arg=combo['base_town'],
+        )
 
     info = text_of(page.locator('#factionPickerInfo'))
     title = text_of(page.locator('#factionDetailTitle'))
@@ -211,7 +219,12 @@ def main():
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         page = browser.new_page(viewport={'width': 1440, 'height': 1800})
+        prepared_option = None
         for idx, combo in enumerate(combos, 1):
+            option_key = (combo['category_id'], combo['option_id'])
+            if option_key != prepared_option:
+                prepare_option(page, combo)
+                prepared_option = option_key
             result = validate_combo(page, combo)
             result['index'] = idx
             results.append(result)

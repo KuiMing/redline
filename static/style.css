@@ -1607,6 +1607,28 @@ body {
   overflow: auto;
 }
 
+#factionPicker .faction-picker-selection-pane {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#factionPicker #factionList {
+  flex: 0 0 auto;
+  max-height: 96px;
+}
+
+#factionPicker #factionVariantList {
+  flex: 0 1 104px;
+  max-height: 104px;
+}
+
+#factionPicker #factionBaseList {
+  flex: 1 1 96px;
+  min-height: 80px;
+  max-height: none;
+}
+
 #factionVariantList,
 #factionBaseList {
   margin-top: 8px;
@@ -1685,13 +1707,45 @@ body {
 #factionPicker #factionDetailBases,
 #factionPicker #factionDetailAbilities,
 #factionPicker #factionDetailRules,
-#factionPicker #factionDetailWin {
+#factionPicker #factionDetailWin,
+#factionPicker #factionDetailEra {
   font-size: 0.9rem;
   line-height: 1.65;
 }
 
 #factionPicker .faction-detail-section-title {
   font-size: 0.84rem;
+}
+
+#factionPicker .faction-detail-era-heading {
+  margin-top: 18px;
+}
+
+.faction-picker-era-card {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 14px 16px;
+  border: 1px solid rgba(245, 158, 11, 0.48);
+  border-radius: 12px;
+  background: linear-gradient(145deg, rgba(69, 35, 8, 0.34), rgba(15, 23, 42, 0.72));
+  color: #dbe7f3;
+}
+
+.faction-picker-era-card strong {
+  color: #fbbf24;
+}
+
+.faction-picker-era-name {
+  color: #fff7ed;
+  font-size: 1.02rem;
+  font-weight: 900;
+}
+
+.faction-picker-era-summary {
+  color: #b8c6d8;
+  font-size: 0.82rem;
+  line-height: 1.55;
 }
 
 #factionPicker .faction-detail-empty {

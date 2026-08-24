@@ -864,6 +864,8 @@ def test_intel_network_first_branch_adds_internal_conflict_without_running_other
 def test_intel_network_can_choose_dissolve_branch_instead_of_default_internal_conflict():
     g = make_game()
     p1, p2 = g.players
+    # 此案例只驗證情報網的瓦解分支；固定為無盟旗學校的陣營，避免隨機蒙古能力改變前置條件。
+    p2.faction_id = 'hong_kong'
     p1.hand = [card(g, '情報網')]
     p1.organizations = {'北京': 1}
     p2.organizations = {'天津': 1}

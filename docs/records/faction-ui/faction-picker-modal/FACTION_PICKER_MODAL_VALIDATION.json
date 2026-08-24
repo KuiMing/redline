@@ -1,10 +1,10 @@
 {
   "summary": {
-    "total": 10,
-    "passed": 10,
+    "total": 16,
+    "passed": 16,
     "failed": 0
   },
-  "service": "http://127.0.0.1:8000",
+  "service": "http://127.0.0.1:8769",
   "checks": [
     {
       "name": "create_room_auto_opens_large_picker",
@@ -23,7 +23,7 @@
           "哈薩克",
           "反賊"
         ],
-        "detailPlaceholder": "陣營資訊\n          選擇陣營以查看完整資訊\n          左側選擇陣營後，這裡會顯示可用根據地。\n          能力與觸發條件會完整顯示在這裡。\n          特殊規則與限制會分開列出，方便選擇前比較。\n          同時顯示該陣營的獲勝條件。",
+        "detailPlaceholder": "陣營資訊\n          選擇陣營以查看完整資訊\n          左側選擇陣營後，這裡會顯示可用根據地。\n          能力與觸發條件會完整顯示在這裡。\n          特殊規則與限制會分開列出，方便選擇前比較。\n          同時顯示該陣營的獲勝條件。\n          同時顯示該陣營的時代關卡與雙方效果。",
         "focusedId": "closeFactionPickerBtn",
         "rect": {
           "left": 60,
@@ -56,10 +56,77 @@
       }
     },
     {
+      "name": "bases_are_directly_switchable_without_category_back_button",
+      "passed": true,
+      "details": {
+        "labels": [
+          "杭州",
+          "溫州",
+          "東京",
+          "大阪",
+          "福岡",
+          "札幌",
+          "仙臺",
+          "沖繩",
+          "首爾",
+          "釜山",
+          "曼谷",
+          "吉隆坡",
+          "新加坡",
+          "雅加達",
+          "河內",
+          "胡志明市",
+          "仰光",
+          "華盛頓",
+          "紐約",
+          "多倫多",
+          "卡加利",
+          "溫哥華",
+          "舊金山",
+          "洛杉磯",
+          "倫敦"
+        ],
+        "activeBase": "倫敦",
+        "detailBase": "根據地倫敦"
+      }
+    },
+    {
+      "name": "direct_base_list_remains_operable_at_1024x768",
+      "passed": true,
+      "details": {
+        "listTop": 473.9875183105469,
+        "listBottom": 566.4000244140625,
+        "listHeight": 92.41250610351562,
+        "paneTop": 227.58750915527344,
+        "paneBottom": 582.4000091552734
+      }
+    },
+    {
+      "name": "any_inside_wall_expands_to_real_towns",
+      "passed": true,
+      "details": {
+        "count": 147,
+        "sample": [
+          "延邊",
+          "丹東",
+          "牡丹江",
+          "佳木斯",
+          "赤峰",
+          "承德",
+          "朝陽",
+          "阜新",
+          "北京",
+          "天津",
+          "張家口",
+          "烏蘭察布"
+        ]
+      }
+    },
+    {
       "name": "selected_faction_shows_ability_restriction_and_win_condition",
       "passed": true,
       "details": {
-        "detail": "陣營資訊\n          維吾爾（伊斯坦堡）\n          根據地伊斯坦堡\n          能力游擊隊：在您建立至少1個牆內組織後：您可以抽1張牌，或令紅軍棄1張手牌；每回合限1次\n          規則新疆社會管控：無法無視距離建立牆內組織。\n          獲勝條件回合結束時在牆內擁有至少 14 個有效組織。",
+        "detail": "陣營資訊\n          維吾爾（伊斯坦堡）\n          根據地伊斯坦堡\n          能力游擊隊：在您建立至少1個牆內組織後：您可以抽1張牌，或令紅軍棄1張手牌；每回合限1次\n          規則新疆社會管控：無法無視距離建立牆內組織。\n          獲勝條件回合結束時在牆內擁有至少 14 個有效組織。\n          時代關卡\n       \n         [維吾爾]莎車大屠殺\n         由於懷疑居民窩藏東突厥游擊隊員 紅軍在開齋夜屠殺了數千名維吾爾婦孺\n         觸發條件：[突厥戰士踏遍七城]維吾爾在牆內擁有至少7個有效組織\n         紅軍壓制：[武力清剿叛軍基地]紅軍每次對維吾爾使用武裝類卡牌時，可再瓦解己方組織1格內的1個維吾爾組織。持續2回合。\n         革命反撲：[壯士去兮弔民伐罪]維吾爾每打出1張武裝類卡牌，獲得2點宣傳。持續2回合。",
         "info": "目前陣營：維吾爾｜根據地：伊斯坦堡",
         "confirmText": "確認陣營與根據地",
         "activeCategory": "維吾爾",
@@ -98,10 +165,21 @@
       }
     },
     {
-      "name": "escape_returns_to_lobby",
+      "name": "show_strength_uses_requested_wording_and_player_choice_copy",
+      "passed": true,
+      "details": "能力展現實力：在己方行動階段打出至少3張不同名稱的非起始牌，獲得3點宣傳或3點資金"
+    },
+    {
+      "name": "selected_faction_shows_era_stage_before_confirmation",
+      "passed": true,
+      "details": "時代關卡\n       \n         [滿洲]滿洲地方派系凝聚\n         滿洲當地紅軍幹部勾結本土勢力架空中央 迫使紅軍中央出手干預地方情勢\n         觸發條件：[山海關外故國甦生]滿洲在牆內擁有至少10個有效組織\n         紅軍壓制：[試圖清洗地方勢力]將5張分神放進滿洲棄牌堆。\n         革命反撲：[行政資源固守地盤]滿洲當回合可檢視己方牌庫頂7張牌，將其中2張牌移到牌庫最頂，其餘順序不變。"
+    },
+    {
+      "name": "updated_manchuria_base_returns_to_lobby",
       "passed": true,
       "details": {
-        "display": "none"
+        "display": "none",
+        "base": "東京"
       }
     },
     {
@@ -114,6 +192,20 @@
       }
     },
     {
+      "name": "occupied_base_is_disabled_and_server_rejects_race",
+      "passed": true,
+      "details": {
+        "ui": {
+          "tokyoDisabled": true,
+          "tokyoTitle": "此根據地已被其他玩家選擇",
+          "newYorkDisabled": false
+        },
+        "server": {
+          "error": "Base already taken"
+        }
+      }
+    },
+    {
       "name": "browser_console_has_no_errors",
       "passed": true,
       "details": []
@@ -121,6 +213,10 @@
   ],
   "screenshots": [
     "docs/records/faction-ui/faction-picker-modal/uyghur_faction_picker_1280x720_20260824.png",
-    "docs/records/faction-ui/faction-picker-modal/uyghur_faction_picker_1024x768_20260824.png"
+    "docs/records/faction-ui/faction-picker-modal/uyghur_faction_picker_1024x768_20260824.png",
+    "docs/records/faction-ui/faction-picker-modal/manchuria_era_stage_1280x720_20260824.png",
+    "docs/records/faction-ui/faction-picker-modal/manchuria_era_stage_1024x768_20260824.png",
+    "docs/records/faction-ui/faction-picker-modal/direct_base_selection_1280x720_20260824.png",
+    "docs/records/faction-ui/faction-picker-modal/direct_base_selection_1024x768_20260824.png"
   ]
 }
