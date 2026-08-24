@@ -1,10 +1,10 @@
 {
   "summary": {
-    "total": 7,
-    "passed": 7,
+    "total": 8,
+    "passed": 8,
     "failed": 0
   },
-  "service": "http://127.0.0.1:8000",
+  "service": "http://127.0.0.1:8769",
   "scenario": "紅軍行動階段；識別碼 [REDACTED]",
   "checks": [
     {
@@ -55,6 +55,17 @@
       }
     },
     {
+      "name": "successful_red_army_ability_does_not_create_result_row",
+      "passed": true,
+      "details": {
+        "phaseBarDisplay": "none",
+        "noticeVisible": false,
+        "noticeText": "",
+        "actionInfo": "",
+        "abilityText": "紅軍能力 1/2"
+      }
+    },
+    {
       "name": "remaining_red_army_button_still_opens_modal",
       "passed": true,
       "details": {
@@ -77,14 +88,14 @@
         "red": {
           "left": 847.6375122070312,
           "right": 938.8125,
-          "top": 180.39999389648438,
-          "bottom": 209.20001220703125
+          "top": 145.1999969482422,
+          "bottom": 174
         },
         "advance": {
           "left": 945.2125244140625,
           "right": 1011.2000122070312,
-          "top": 180.39999389648438,
-          "bottom": 209.20001220703125
+          "top": 145.1999969482422,
+          "bottom": 174
         },
         "panelDisplay": "none",
         "chipTexts": [

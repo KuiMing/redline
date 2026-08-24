@@ -96,7 +96,34 @@ def main() -> None:
             and 0 <= state["gap"] <= 12,
             state,
         )
+        successful_result = page.evaluate(
+            """async () => {
+              const synthetic = structuredClone(window.lastGameState);
+              synthetic.last_action_result = {name: '統戰部', drawn: 1};
+              synthetic.red_army_action_count = 1;
+              await render(synthetic);
+              await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+              const notice = document.getElementById('phaseActionNotice');
+              return {
+                phaseBarDisplay: getComputedStyle(document.getElementById('phaseActionBar')).display,
+                noticeVisible: notice.classList.contains('visible'),
+                noticeText: notice.textContent.trim(),
+                actionInfo: document.getElementById('factionActionInfo')?.textContent.trim() || '',
+                abilityText: document.getElementById('redArmyAbilityBtn')?.textContent.trim() || '',
+              };
+            }"""
+        )
+        record(
+            "successful_red_army_ability_does_not_create_result_row",
+            successful_result["phaseBarDisplay"] == "none"
+            and not successful_result["noticeVisible"]
+            and not successful_result["noticeText"]
+            and not successful_result["actionInfo"]
+            and successful_result["abilityText"] == "紅軍能力 1/2",
+            successful_result,
+        )
         page.screenshot(path=str(SHOT_1280), full_page=True)
+        page.evaluate("render(window.lastGameState)")
 
         page.locator("#redArmyAbilityBtn").click()
         page.wait_for_function("getComputedStyle(document.getElementById('factionActionModal')).display !== 'none'")

@@ -2982,7 +2982,15 @@ function renderFactionActionResult(state, faction) {
 
   const result = state.last_action_result || null;
   const message = formatFactionActionResult(result);
-  const resultActionNames = new Set(['立場試探', '賭徒耳語', '民族祭儀', '統戰部', '政工部', '國安部', '中紀委']);
+  const redArmyActionNames = new Set(['統戰部', '政工部', '國安部', '中紀委']);
+  if (faction === 'red_army' && redArmyActionNames.has(result?.name) && !result.unavailable) {
+    // Successful Red Army abilities already update the hand, deck, organizations, and
+    // remaining-use counter. Do not create a redundant HUD result row or panel message.
+    lastFactionActionResultKey = JSON.stringify(result);
+    info.textContent = '';
+    return {hasResult: false, message: '', html: ''};
+  }
+  const resultActionNames = new Set(['立場試探', '賭徒耳語', '民族祭儀', ...redArmyActionNames]);
   if (resultActionNames.has(result?.name) && message) {
     const resultKey = JSON.stringify(result);
     if (lastFactionActionResultKey !== resultKey) {
