@@ -14,10 +14,11 @@ except ModuleNotFoundError:
 
 ROOT = Path(__file__).resolve().parent.parent
 RECORD_DIR = ROOT / 'docs' / 'records' / 'map-ui'
-BASE_URL = 'http://127.0.0.1:8000'
+BASE_URL = os.environ.get('REDLINE_BASE_URL', 'http://127.0.0.1:8000')
 OUT_JSON = RECORD_DIR / 'MAP_SELECTION_HIGHLIGHT_VALIDATION.json'
 OUT_MD = RECORD_DIR / 'MAP_SELECTION_HIGHLIGHT_VALIDATION.md'
 SCREENSHOT = RECORD_DIR / 'map_selection_highlight_validation.png'
+PARIS_DETAIL_SCREENSHOT = RECORD_DIR / 'paris_selection_detail_sync_20260824.png'
 
 COORDS = {
     '臺北': [25.033, 121.5654],
@@ -134,6 +135,31 @@ def check_flow(page):
         {'南投_prev': prev_empty, '臺中_curr': curr_empty},
     )
 
+    # A stale Leaflet popup previously overwrote the detail panel after the selected-town
+    # status had changed. Reproduce the reported 日內瓦 → 巴黎 sequence.
+    page.evaluate("() => document.getElementById('strategicMapFrame').contentWindow.__clickTownMarkerForTest('日內瓦')")
+    page.wait_for_timeout(400)
+    page.evaluate("() => document.getElementById('strategicMapFrame').contentWindow.__clickTownMarkerForTest('巴黎')")
+    page.wait_for_timeout(400)
+    town_detail_state = page.evaluate(
+        """() => {
+          const doc = document.getElementById('strategicMapFrame').contentDocument;
+          return {
+            selected: doc.getElementById('statusSelectedTown')?.textContent.trim() || '',
+            detailName: doc.querySelector('#info .name')?.textContent.trim() || '',
+            detailText: doc.getElementById('info')?.textContent || '',
+          };
+        }"""
+    )
+    record(
+        'paris_selection_keeps_paris_detail_and_omits_visual_status',
+        town_detail_state['selected'] == '巴黎'
+        and town_detail_state['detailName'] == '巴黎'
+        and '視覺狀態' not in town_detail_state['detailText'],
+        town_detail_state,
+    )
+    page.screenshot(path=str(PARIS_DETAIL_SCREENSHOT))
+
     select_town(page, '臺北')
     page.evaluate("() => { document.getElementById('strategicMapFrame').contentWindow.__redlinePlayableMap.setView([24.6, 121.2], 8, {animate:false}); }")
     page.wait_for_timeout(400)
@@ -147,6 +173,7 @@ def check_flow(page):
         },
         'results': results,
         'screenshot': str(SCREENSHOT),
+        'paris_detail_screenshot': str(PARIS_DETAIL_SCREENSHOT),
     }
 
 
@@ -167,6 +194,7 @@ def main():
         f"- passed: {payload['summary']['passed']}",
         f"- failed: {payload['summary']['failed']}",
         f"- screenshot: {payload['screenshot']}",
+        f"- paris detail screenshot: {payload['paris_detail_screenshot']}",
         '',
         '## Results',
     ]

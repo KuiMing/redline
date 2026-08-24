@@ -4,6 +4,12 @@
 
 ## 待辦
 
+### P1：同步地圖城鎮選取與說明
+- [done] 點選新城鎮時，先更新 authoritative `selectedTown`，再重繪 Leaflet marker 與 popup，避免舊 popup 覆蓋新城鎮說明。
+- [done] `popupopen` 只可更新目前已選城鎮，日內瓦 → 巴黎的實際 marker click 流程會保持「目前地圖選取城鎮」與說明標題同為巴黎。
+- [done] 移除重複且沒有操作價值的「視覺狀態」說明；組織狀態與共享資訊仍保留在正式城鎮資料內。
+- [done] 地圖選取與高亮 Browser proof **8/8 passed**；JavaScript 語法與 Python validator compile 通過。
+
 ### P1：根據地改為直接自由選擇
 - [done] 移除「返回根據地類別」與泛稱根據地類別按鈕；「任意牆內」依正式地圖統治者展開為真實牆內城鎮，選擇陣營後直接列出所有合法城鎮。
 - [done] 玩家可直接在不同城鎮之間反覆切換；目前選取狀態、Lobby 摘要與右側根據地說明會立即同步更新。

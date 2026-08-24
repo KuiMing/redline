@@ -297,6 +297,9 @@ function focusSupportChoiceTargets(bounds) {
 
 function selectTownForCurrentMapAction(townName, options = {}) {
   const { autoFocus = true } = options;
+  // Make the selected town authoritative before any redraw. renderMap() can open or
+  // replace Leaflet popups; those events must never restore details for the previous town.
+  selectedTown = townName;
   updateInfoPanel(townName);
   resetMoveSelection();
   renderMap();
@@ -535,11 +538,7 @@ function requireOpenMapSocket() {
 function updateInfoPanel(name) {
   const t = byName.get(name);
   if (!t) return;
-  const total = totalOrganizationsInTown(name);
-  const shared = sharedAccessForTown(name);
-  const stateBadge = total > 0 ? '有組織' : '無組織';
-  const sharedBadge = shared.length ? `共享中（${shared.length}）` : '無共享';
-  document.getElementById('info').innerHTML = `${popupHtml(t)}<hr style="border-color:#2b385d;border-style:solid;border-width:1px 0 0;margin:10px 0;"><div>視覺狀態：<span class="pill">${stateBadge}</span> <span class="pill">${sharedBadge}</span></div>`;
+  document.getElementById('info').innerHTML = popupHtml(t);
 }
 
 function shouldShowLabels() {
@@ -1332,7 +1331,9 @@ map.on('zoomend', () => {
 });
 map.on('popupopen', e => {
   const node = [...currentMarkers.entries()].find(([name, marker]) => marker === e.popup._source);
-  if (node) updateInfoPanel(node[0]);
+  // Marker clicks already select the town and update the panel. Ignore a popup from a
+  // previous marker so an asynchronous popupopen cannot overwrite the new selection.
+  if (node && node[0] === selectedTown) updateInfoPanel(node[0]);
 });
 
 window.addEventListener('message', (event) => {
@@ -1587,17 +1588,17 @@ window.connectGameMap = function ({ gameId: gid, playerId: pid, resumeToken: tok
   return openMapSocket();
 };
 
+window.__clickTownMarkerForTest = function (townName) {
+  const marker = currentMarkers.get(townName);
+  if (!marker) return { ok: false, reason: 'marker-not-found' };
+  marker.fire('click');
+  return { ok: true, town: townName };
+};
+
 window.__selectTownForTest = function (townName) {
   const marker = currentMarkers.get(townName);
   if (!marker) return { ok: false, reason: 'marker-not-found' };
-  updateInfoPanel(townName);
-  resetMoveSelection();
-  renderMap();
-  applyGameStateToMap(lastGameState);
-  const didHighlight = renderMovementHighlights(townName, { autoFocus: true });
-  refreshDirectBuildUi();
-  window.__lastSelectedTown = townName;
-  window.__lastHighlightSuccess = didHighlight;
+  const didHighlight = selectTownForCurrentMapAction(townName, { autoFocus: true });
   return {
     ok: true,
     town: townName,
