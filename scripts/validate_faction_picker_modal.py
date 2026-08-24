@@ -19,6 +19,7 @@ ERA_SCREENSHOT_1280 = OUT / "manchuria_era_stage_1280x720_20260824.png"
 ERA_SCREENSHOT_1024 = OUT / "manchuria_era_stage_1024x768_20260824.png"
 DIRECT_BASE_SCREENSHOT = OUT / "direct_base_selection_1280x720_20260824.png"
 DIRECT_BASE_SCREENSHOT_1024 = OUT / "direct_base_selection_1024x768_20260824.png"
+BEIJING_BUTTON_SCREENSHOT = OUT / "beijing_base_button_1280x720_20260824.png"
 
 
 def main() -> None:
@@ -69,6 +70,16 @@ def main() -> None:
         focus_trap = host.evaluate("document.activeElement?.closest('#factionPicker')?.id === 'factionPicker'")
         record("keyboard_focus_stays_inside_picker", focus_trap, {"focusedId": host.evaluate("document.activeElement?.id || ''"), "insidePicker": focus_trap})
         host.locator("#closeFactionPickerBtn").focus()
+
+        host.locator("#factionList button", has_text="紅軍").click()
+        host.wait_for_function("document.querySelector('#factionBaseList button')?.textContent.trim() === '北京'")
+        beijing_rect = host.locator("#factionBaseList button", has_text="北京").bounding_box() or {}
+        record(
+            "single_base_button_keeps_normal_height",
+            bool(beijing_rect) and 36 <= beijing_rect["height"] <= 80 and beijing_rect["width"] <= 180,
+            beijing_rect,
+        )
+        host.screenshot(path=str(BEIJING_BUTTON_SCREENSHOT), full_page=True)
 
         host.locator("#factionList button", has_text="反賊").click()
         host.locator("#factionVariantList button", has_text="吳越").click()

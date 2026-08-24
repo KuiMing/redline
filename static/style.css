@@ -1602,6 +1602,8 @@ body {
 #factionBaseList {
   display: flex;
   flex-wrap: wrap;
+  align-content: flex-start;
+  align-items: flex-start;
   gap: 6px;
   max-height: 260px;
   overflow: auto;

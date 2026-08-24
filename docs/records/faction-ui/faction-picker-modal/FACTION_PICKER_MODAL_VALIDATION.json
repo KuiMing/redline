@@ -1,10 +1,10 @@
 {
   "summary": {
-    "total": 16,
-    "passed": 16,
+    "total": 17,
+    "passed": 17,
     "failed": 0
   },
-  "service": "http://127.0.0.1:8769",
+  "service": "http://127.0.0.1:8768",
   "checks": [
     {
       "name": "create_room_auto_opens_large_picker",
@@ -53,6 +53,16 @@
       "details": {
         "focusedId": "",
         "insidePicker": true
+      }
+    },
+    {
+      "name": "single_base_button_keeps_normal_height",
+      "passed": true,
+      "details": {
+        "x": 92,
+        "y": 369.484375,
+        "width": 52.25,
+        "height": 40
       }
     },
     {
