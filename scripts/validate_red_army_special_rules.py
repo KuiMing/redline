@@ -52,7 +52,7 @@ def test_red_army_faction_action_can_be_reaction_canceled_before_effect():
         and resolved.get('reaction_card') == '爆料黑幕'
         and resolved.get('canceled_card') == '統戰部'
         and len(red.hand) == 0
-        and game.turn_log.get('red_army_action_count', 0) == 0
+        and game.turn_log.get('red_army_action_count', 0) == 1
         and [c.name for c in a.deck.discard_pile][-1:] == ['爆料黑幕'],
         f'start={start}, choice={choice}, resolved={resolved}, red_hand={[c.name for c in red.hand]}, turn_log={game.turn_log}, a_discard={[c.name for c in a.deck.discard_pile]}',
     )

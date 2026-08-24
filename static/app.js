@@ -32,6 +32,9 @@ let lastEventRevealKey = null;
 let stickyPlayerErrorNotice = '';
 let stickyPlayerErrorTimer = null;
 let unavailableActionModalReturnFocus = null;
+let lastRedArmyReactionWaitKey = null;
+let lastRedArmyReactionCancelKey = null;
+let redArmyReactionWaitContext = null;
 const selectedPurchaseIndices = new Set();
 // 這兩張卡的取消能力只能被動觸發（其他玩家打出可取消的卡牌時自動跳出反應視窗），
 // 自己回合主動點「行動」不會取消任何東西，白白浪費這張卡，因此手牌區直接 disable。
@@ -2859,18 +2862,97 @@ function clearStickyPlayerErrorNotice() {
   setPhaseActionNotice('');
 }
 
-function showActionMessageModal(titleText, message) {
+function showActionMessageModal(titleText, message, options = {}) {
   const modal = document.getElementById('unavailableActionModal');
   const title = document.getElementById('unavailableActionTitle');
   const body = document.getElementById('unavailableActionMessage');
   if (!modal || !title || !body) return;
   clearStickyPlayerErrorNotice();
-  unavailableActionModalReturnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  if (modal.style.display !== 'flex') {
+    unavailableActionModalReturnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  }
   title.textContent = titleText || '操作提示';
   body.textContent = message || '請先完成目前的待選效果。';
+  modal.classList.toggle('reaction-close-only', !!options.iconCloseOnly);
   modal.style.display = 'flex';
   modal.setAttribute('aria-hidden', 'false');
-  requestAnimationFrame(() => document.getElementById('closeUnavailableActionModalBtn')?.focus());
+  const focusTargetId = options.iconCloseOnly ? 'closeUnavailableActionModalIcon' : 'closeUnavailableActionModalBtn';
+  requestAnimationFrame(() => document.getElementById(focusTargetId)?.focus());
+}
+
+const RED_ARMY_REACTION_ACTION_NAMES = new Set(['統戰部', '政工部', '國安部', '中紀委']);
+
+function redArmyReactionActorName(state, reactionCard, canceledAction) {
+  const marker = ` reacted with ${reactionCard} to cancel ${canceledAction}`;
+  const entries = Array.isArray(state.action_log) ? state.action_log : [];
+  for (let index = entries.length - 1; index >= 0; index--) {
+    const text = String(entries[index] || '').replace(/^\[Turn \d+\]\s*/, '');
+    if (!text.includes(marker)) continue;
+    const actorName = text.slice(0, text.indexOf(marker)).trim();
+    if (actorName) return actorName;
+  }
+  return redArmyReactionWaitContext?.reactorName || '對方玩家';
+}
+
+function renderRedArmyReactionMessages(state, me) {
+  const choice = state.pending_choice || null;
+  const waitingAction = choice?.played_card_name || '';
+  const isWaitingForOpponent = !!(
+    me
+    && me.faction === 'red_army'
+    && choice?.type === 'reaction_choice'
+    && choice.acting_player_id === me.id
+    && choice.player_id !== me.id
+    && RED_ARMY_REACTION_ACTION_NAMES.has(waitingAction)
+  );
+
+  if (isWaitingForOpponent) {
+    const reactor = (state.players || []).find(player => player.id === choice.player_id);
+    const reactorName = reactor?.name || choice.player_name || '對方玩家';
+    const waitKey = [state.turn_number, state.red_army_action_count, choice.player_id, waitingAction].join('|');
+    redArmyReactionWaitContext = {waitKey, reactorName, actionName: waitingAction};
+    if (lastRedArmyReactionWaitKey !== waitKey) {
+      lastRedArmyReactionWaitKey = waitKey;
+      showActionMessageModal(
+        '等待取消反應',
+        `等待 ${reactorName} 回應是否取消${waitingAction}；若 10 秒內未回應，系統會自動視同不取消。`,
+        {iconCloseOnly: true},
+      );
+    }
+    return;
+  }
+
+  const result = state.last_action_result || null;
+  const canceledAction = result?.canceled_card || '';
+  const reactionCard = result?.reaction_card || '';
+  const isCanceledRedArmyAction = !!(
+    me
+    && me.faction === 'red_army'
+    && result?.canceled
+    && reactionCard
+    && RED_ARMY_REACTION_ACTION_NAMES.has(canceledAction)
+  );
+
+  if (isCanceledRedArmyAction) {
+    const cancelKey = [state.turn_number, state.red_army_action_count, reactionCard, canceledAction].join('|');
+    if (lastRedArmyReactionCancelKey !== cancelKey) {
+      lastRedArmyReactionCancelKey = cancelKey;
+      const reactorName = redArmyReactionActorName(state, reactionCard, canceledAction);
+      showActionMessageModal(
+        '紅軍能力已被取消',
+        `${reactorName}打出${reactionCard}，${canceledAction}已被取消。`,
+        {iconCloseOnly: true},
+      );
+    }
+    redArmyReactionWaitContext = null;
+    return;
+  }
+
+  if (redArmyReactionWaitContext) {
+    const title = document.getElementById('unavailableActionTitle')?.textContent || '';
+    if (title === '等待取消反應') closeUnavailableActionModal();
+    redArmyReactionWaitContext = null;
+  }
 }
 
 function showUnavailableActionModal(actionName, message) {
@@ -3883,6 +3965,7 @@ async function render(state) {
   renderEraAchievement(state);
   renderCurrentEvent(state);
   renderChoiceModal(state);
+  renderRedArmyReactionMessages(state, me);
   renderVictoryModal(state);
   renderPeerActionNotice(state);
 

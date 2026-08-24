@@ -16,6 +16,8 @@ JSON_PATH = OUT / "REMOVE_REDUNDANT_PHASE_AND_RED_ARMY_PANEL_VALIDATION.json"
 MD_PATH = OUT / "REMOVE_REDUNDANT_PHASE_AND_RED_ARMY_PANEL_VALIDATION.md"
 SHOT_1280 = OUT / "red_army_command_center_simplified_1280x720_20260823.png"
 SHOT_1024 = OUT / "red_army_command_center_simplified_1024x768_20260823.png"
+WAITING_REACTION_SHOT = OUT / "red_army_waiting_reaction_modal_1280x720_20260824.png"
+CANCELED_REACTION_SHOT = OUT / "red_army_canceled_reaction_modal_1280x720_20260824.png"
 
 
 def post_json(path: str, payload: dict | None = None) -> dict:
@@ -125,6 +127,107 @@ def main() -> None:
         page.screenshot(path=str(SHOT_1280), full_page=True)
         page.evaluate("render(window.lastGameState)")
 
+        waiting_reaction = page.evaluate(
+            """async () => {
+              const synthetic = structuredClone(window.lastGameState);
+              const me = synthetic.players.find(player => player.id === playerId);
+              const reactor = synthetic.players.find(player => player.id !== playerId);
+              synthetic.last_action_result = null;
+              synthetic.pending_choice = {
+                type: 'reaction_choice',
+                choice_key: 'cancel_other_player_action',
+                player_id: reactor.id,
+                player_name: reactor.name,
+                acting_player_id: me.id,
+                acting_player_name: me.name,
+                played_card_name: '統戰部',
+              };
+              window.__redArmyReactionProofState = synthetic;
+              await render(synthetic);
+              await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+              const modal = document.getElementById('unavailableActionModal');
+              return {
+                reactorName: reactor.name,
+                visible: modal.style.display === 'flex',
+                title: document.getElementById('unavailableActionTitle')?.textContent.trim() || '',
+                message: document.getElementById('unavailableActionMessage')?.textContent.trim() || '',
+                iconCloseVisible: getComputedStyle(document.getElementById('closeUnavailableActionModalIcon')).display !== 'none',
+                buttonActionsDisplay: getComputedStyle(document.querySelector('.unavailable-action-actions')).display,
+                focusedId: document.activeElement?.id || '',
+                phaseBarDisplay: getComputedStyle(document.getElementById('phaseActionBar')).display,
+              };
+            }"""
+        )
+        expected_waiting = f"等待 {waiting_reaction['reactorName']} 回應是否取消統戰部；若 10 秒內未回應，系統會自動視同不取消。"
+        record(
+            "red_army_waiting_reaction_uses_closable_modal",
+            waiting_reaction["visible"]
+            and waiting_reaction["title"] == "等待取消反應"
+            and waiting_reaction["message"] == expected_waiting
+            and waiting_reaction["iconCloseVisible"]
+            and waiting_reaction["buttonActionsDisplay"] == "none"
+            and waiting_reaction["focusedId"] == "closeUnavailableActionModalIcon"
+            and waiting_reaction["phaseBarDisplay"] == "none",
+            waiting_reaction,
+        )
+        page.screenshot(path=str(WAITING_REACTION_SHOT), full_page=True)
+        page.locator("#closeUnavailableActionModalIcon").click()
+        page.evaluate("render(window.__redArmyReactionProofState)")
+        page.wait_for_timeout(150)
+        waiting_closed = page.evaluate("document.getElementById('unavailableActionModal').style.display === 'none'")
+        record("closed_waiting_modal_does_not_reopen_for_same_reaction", waiting_closed, {"closed": waiting_closed})
+
+        canceled_reaction = page.evaluate(
+            """async () => {
+              const synthetic = structuredClone(window.lastGameState);
+              const reactor = synthetic.players.find(player => player.id !== playerId);
+              synthetic.pending_choice = null;
+              synthetic.red_army_action_count = 1;
+              synthetic.last_action_result = {
+                success: true,
+                canceled: true,
+                reaction_card: '爆料黑幕',
+                canceled_card: '統戰部',
+              };
+              synthetic.action_log = [
+                ...(synthetic.action_log || []),
+                `[Turn 1] ${reactor.name} reacted with 爆料黑幕 to cancel 統戰部`,
+              ];
+              await render(synthetic);
+              await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+              const modal = document.getElementById('unavailableActionModal');
+              return {
+                reactorName: reactor.name,
+                visible: modal.style.display === 'flex',
+                title: document.getElementById('unavailableActionTitle')?.textContent.trim() || '',
+                message: document.getElementById('unavailableActionMessage')?.textContent.trim() || '',
+                iconCloseVisible: getComputedStyle(document.getElementById('closeUnavailableActionModalIcon')).display !== 'none',
+                buttonActionsDisplay: getComputedStyle(document.querySelector('.unavailable-action-actions')).display,
+                focusedId: document.activeElement?.id || '',
+                phaseBarDisplay: getComputedStyle(document.getElementById('phaseActionBar')).display,
+                abilityText: document.getElementById('redArmyAbilityBtn')?.textContent.trim() || '',
+              };
+            }"""
+        )
+        expected_canceled = f"{canceled_reaction['reactorName']}打出爆料黑幕，統戰部已被取消。"
+        record(
+            "red_army_canceled_reaction_uses_closable_modal",
+            canceled_reaction["visible"]
+            and canceled_reaction["title"] == "紅軍能力已被取消"
+            and canceled_reaction["message"] == expected_canceled
+            and canceled_reaction["iconCloseVisible"]
+            and canceled_reaction["buttonActionsDisplay"] == "none"
+            and canceled_reaction["focusedId"] == "closeUnavailableActionModalIcon"
+            and canceled_reaction["phaseBarDisplay"] == "none"
+            and canceled_reaction["abilityText"] == "紅軍能力 1/2",
+            canceled_reaction,
+        )
+        page.screenshot(path=str(CANCELED_REACTION_SHOT), full_page=True)
+        page.locator("#closeUnavailableActionModalIcon").click()
+        canceled_closed = page.evaluate("document.getElementById('unavailableActionModal').style.display === 'none'")
+        record("canceled_reaction_modal_can_be_closed", canceled_closed, {"closed": canceled_closed})
+        page.evaluate("render(window.lastGameState)")
+
         page.locator("#redArmyAbilityBtn").click()
         page.wait_for_function("getComputedStyle(document.getElementById('factionActionModal')).display !== 'none'")
         modal = page.evaluate(
@@ -195,7 +298,12 @@ def main() -> None:
         "service": BASE_URL,
         "scenario": "紅軍行動階段；識別碼 [REDACTED]",
         "checks": checks,
-        "screenshots": [str(SHOT_1280.relative_to(ROOT)), str(SHOT_1024.relative_to(ROOT))],
+        "screenshots": [
+            str(SHOT_1280.relative_to(ROOT)),
+            str(SHOT_1024.relative_to(ROOT)),
+            str(WAITING_REACTION_SHOT.relative_to(ROOT)),
+            str(CANCELED_REACTION_SHOT.relative_to(ROOT)),
+        ],
     }
     JSON_PATH.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     MD_PATH.write_text("\n".join([

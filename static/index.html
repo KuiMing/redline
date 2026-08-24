@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>REDLINE // STRATEGIC COMMAND</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="/static/style.css?v=uniform-base-panel-20260824" />
+  <link rel="stylesheet" href="/static/style.css?v=red-army-reaction-modals-20260824" />
 </head>
 <body>
 <div id="stageViewport">
@@ -170,6 +170,7 @@
 
 <div id="unavailableActionModal" class="modal-overlay unavailable-action-modal" role="dialog" aria-modal="true" aria-labelledby="unavailableActionTitle" aria-describedby="unavailableActionMessage" aria-hidden="true" style="display:none;" onclick="if (event.target === this) closeUnavailableActionModal()">
   <div class="modal-glass unavailable-action-glass">
+    <button id="closeUnavailableActionModalIcon" type="button" class="unavailable-action-close-icon" aria-label="關閉提示視窗" onclick="closeUnavailableActionModal()">×</button>
     <div class="panel-title">行動提示</div>
     <div id="unavailableActionTitle" class="modal-title-text">無法發動能力</div>
     <div id="unavailableActionMessage" class="modal-body-text"></div>
@@ -368,6 +369,6 @@
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/static/player_messages_zh_tw.js?v=player-message-i18n-20260801"></script>
-<script src="/static/app.js?v=hide-red-army-success-result-20260824"></script>
+<script src="/static/app.js?v=red-army-reaction-modals-20260824"></script>
 </body>
 </html>

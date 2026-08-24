@@ -1,7 +1,7 @@
 {
   "summary": {
-    "total": 8,
-    "passed": 8,
+    "total": 12,
+    "passed": 12,
     "failed": 0
   },
   "service": "http://127.0.0.1:8769",
@@ -66,6 +66,49 @@
       }
     },
     {
+      "name": "red_army_waiting_reaction_uses_closable_modal",
+      "passed": true,
+      "details": {
+        "reactorName": "自由派",
+        "visible": true,
+        "title": "等待取消反應",
+        "message": "等待 自由派 回應是否取消統戰部；若 10 秒內未回應，系統會自動視同不取消。",
+        "iconCloseVisible": true,
+        "buttonActionsDisplay": "none",
+        "focusedId": "closeUnavailableActionModalIcon",
+        "phaseBarDisplay": "none"
+      }
+    },
+    {
+      "name": "closed_waiting_modal_does_not_reopen_for_same_reaction",
+      "passed": true,
+      "details": {
+        "closed": true
+      }
+    },
+    {
+      "name": "red_army_canceled_reaction_uses_closable_modal",
+      "passed": true,
+      "details": {
+        "reactorName": "自由派",
+        "visible": true,
+        "title": "紅軍能力已被取消",
+        "message": "自由派打出爆料黑幕，統戰部已被取消。",
+        "iconCloseVisible": true,
+        "buttonActionsDisplay": "none",
+        "focusedId": "closeUnavailableActionModalIcon",
+        "phaseBarDisplay": "none",
+        "abilityText": "紅軍能力 1/2"
+      }
+    },
+    {
+      "name": "canceled_reaction_modal_can_be_closed",
+      "passed": true,
+      "details": {
+        "closed": true
+      }
+    },
+    {
       "name": "remaining_red_army_button_still_opens_modal",
       "passed": true,
       "details": {
@@ -118,6 +161,8 @@
   ],
   "screenshots": [
     "docs/records/ui-layout/remove-redundant-phase-and-red-army-panel/red_army_command_center_simplified_1280x720_20260823.png",
-    "docs/records/ui-layout/remove-redundant-phase-and-red-army-panel/red_army_command_center_simplified_1024x768_20260823.png"
+    "docs/records/ui-layout/remove-redundant-phase-and-red-army-panel/red_army_command_center_simplified_1024x768_20260823.png",
+    "docs/records/ui-layout/remove-redundant-phase-and-red-army-panel/red_army_waiting_reaction_modal_1280x720_20260824.png",
+    "docs/records/ui-layout/remove-redundant-phase-and-red-army-panel/red_army_canceled_reaction_modal_1280x720_20260824.png"
   ]
 }
