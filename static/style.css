@@ -1626,9 +1626,10 @@ body {
 }
 
 #factionPicker #factionBaseList {
-  flex: 1 1 96px;
-  min-height: 80px;
-  max-height: none;
+  flex: 0 0 116px;
+  height: 116px;
+  min-height: 116px;
+  max-height: 116px;
 }
 
 #factionVariantList,

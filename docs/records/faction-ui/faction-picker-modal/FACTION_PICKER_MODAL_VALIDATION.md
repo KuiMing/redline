@@ -1,12 +1,13 @@
 # 大型陣營與根據地選擇視窗 Browser 驗證
 
-Summary: **17/17 passed**
+Summary: **18/18 passed**
 
 - PASS: `create_room_auto_opens_large_picker`
 - PASS: `picker_fits_1280x720`
 - PASS: `keyboard_focus_stays_inside_picker`
 - PASS: `single_base_button_keeps_normal_height`
 - PASS: `bases_are_directly_switchable_without_category_back_button`
+- PASS: `all_factions_use_rebel_base_panel_height`
 - PASS: `direct_base_list_remains_operable_at_1024x768`
 - PASS: `any_inside_wall_expands_to_real_towns`
 - PASS: `selected_faction_shows_ability_restriction_and_win_condition`

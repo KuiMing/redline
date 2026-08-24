@@ -74,10 +74,11 @@ def main() -> None:
         host.locator("#factionList button", has_text="紅軍").click()
         host.wait_for_function("document.querySelector('#factionBaseList button')?.textContent.trim() === '北京'")
         beijing_rect = host.locator("#factionBaseList button", has_text="北京").bounding_box() or {}
+        red_base_panel_rect = host.locator("#factionBaseList").bounding_box() or {}
         record(
             "single_base_button_keeps_normal_height",
-            bool(beijing_rect) and 36 <= beijing_rect["height"] <= 80 and beijing_rect["width"] <= 180,
-            beijing_rect,
+            bool(beijing_rect) and bool(red_base_panel_rect) and 36 <= beijing_rect["height"] <= 80 and beijing_rect["width"] <= 180 and 112 <= red_base_panel_rect["height"] <= 120,
+            {"button": beijing_rect, "panel": red_base_panel_rect},
         )
         host.screenshot(path=str(BEIJING_BUTTON_SCREENSHOT), full_page=True)
 
@@ -101,6 +102,12 @@ def main() -> None:
             "東京" in base_labels and "倫敦" in base_labels and "任意東洋" not in base_labels and "任意英美城鎮" not in base_labels and not any("返回根據地類別" in label for label in direct_base_state["labels"]) and direct_base_state["activeBase"] == "倫敦" and "倫敦" in direct_base_state["detailBase"] and "東京" not in direct_base_state["detailBase"],
             direct_base_state,
         )
+        rebel_base_panel_rect = host.locator("#factionBaseList").bounding_box() or {}
+        record(
+            "all_factions_use_rebel_base_panel_height",
+            bool(red_base_panel_rect) and bool(rebel_base_panel_rect) and abs(red_base_panel_rect["height"] - rebel_base_panel_rect["height"]) <= 1 and 112 <= rebel_base_panel_rect["height"] <= 120,
+            {"redArmy": red_base_panel_rect, "rebel": rebel_base_panel_rect},
+        )
         host.screenshot(path=str(DIRECT_BASE_SCREENSHOT), full_page=True)
         host.set_viewport_size({"width": 1024, "height": 768})
         host.wait_for_timeout(120)
@@ -108,12 +115,12 @@ def main() -> None:
             """() => {
               const list = document.getElementById('factionBaseList')?.getBoundingClientRect();
               const pane = document.querySelector('.faction-picker-selection-pane')?.getBoundingClientRect();
-              return list && pane ? {listTop:list.top,listBottom:list.bottom,listHeight:list.height,paneTop:pane.top,paneBottom:pane.bottom}:null;
+              return list && pane ? {listTop:list.top,listBottom:list.bottom,listHeight:list.height,listOffsetHeight:document.getElementById('factionBaseList').offsetHeight,paneTop:pane.top,paneBottom:pane.bottom}:null;
             }"""
         )
         record(
             "direct_base_list_remains_operable_at_1024x768",
-            bool(direct_base_rect) and direct_base_rect["listTop"] >= direct_base_rect["paneTop"] and direct_base_rect["listBottom"] <= direct_base_rect["paneBottom"] and direct_base_rect["listHeight"] >= 80,
+            bool(direct_base_rect) and direct_base_rect["listTop"] >= direct_base_rect["paneTop"] and direct_base_rect["listBottom"] <= direct_base_rect["paneBottom"] and direct_base_rect["listOffsetHeight"] == 116,
             direct_base_rect,
         )
         host.screenshot(path=str(DIRECT_BASE_SCREENSHOT_1024), full_page=True)

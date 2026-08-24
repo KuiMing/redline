@@ -1,7 +1,7 @@
 {
   "summary": {
-    "total": 17,
-    "passed": 17,
+    "total": 18,
+    "passed": 18,
     "failed": 0
   },
   "service": "http://127.0.0.1:8768",
@@ -59,10 +59,18 @@
       "name": "single_base_button_keeps_normal_height",
       "passed": true,
       "details": {
-        "x": 92,
-        "y": 369.484375,
-        "width": 52.25,
-        "height": 40
+        "button": {
+          "x": 92,
+          "y": 369.484375,
+          "width": 52.25,
+          "height": 40
+        },
+        "panel": {
+          "x": 83,
+          "y": 360.484375,
+          "width": 476.09375,
+          "height": 116
+        }
       }
     },
     {
@@ -101,12 +109,31 @@
       }
     },
     {
+      "name": "all_factions_use_rebel_base_panel_height",
+      "passed": true,
+      "details": {
+        "redArmy": {
+          "x": 83,
+          "y": 360.484375,
+          "width": 476.09375,
+          "height": 116
+        },
+        "rebel": {
+          "x": 83,
+          "y": 472,
+          "width": 476.09375,
+          "height": 116
+        }
+      }
+    },
+    {
       "name": "direct_base_list_remains_operable_at_1024x768",
       "passed": true,
       "details": {
-        "listTop": 473.9875183105469,
+        "listTop": 473.6000061035156,
         "listBottom": 566.4000244140625,
-        "listHeight": 92.41250610351562,
+        "listHeight": 92.80001831054688,
+        "listOffsetHeight": 116,
         "paneTop": 227.58750915527344,
         "paneBottom": 582.4000091552734
       }
