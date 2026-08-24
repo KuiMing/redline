@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>REDLINE // STRATEGIC COMMAND</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="/static/style.css?v=topdeck-left-of-clear-20260823" />
+  <link rel="stylesheet" href="/static/style.css?v=faction-picker-modal-20260824" />
 </head>
 <body>
 <div id="stageViewport">
@@ -107,32 +107,50 @@
       <div id="lobbyStatusHint" class="lobby-status-hint">先建立作戰室，或貼上房間代碼後進入。</div>
     </div>
 
-    <div id="factionPicker" class="lobby-faction-panel" style="display:none;">
-      <div class="panel-title">陣營選擇</div>
-      <div id="factionPickerInfo"></div>
-      <div id="factionList"></div>
-      <div id="factionVariantList" style="display:none; margin-top:8px;"></div>
-      <div id="factionBaseList" style="display:none; margin-top:8px;"></div>
-      <div id="factionDetailPanel" style="display:none; margin-top:10px;">
-        <div class="panel-title">陣營資訊</div>
-        <div id="factionDetailTitle"></div>
-        <div id="factionDetailBases"></div>
-        <div id="factionDetailAbilities"></div>
-        <div id="factionDetailRules"></div>
-        <div id="factionDetailWin"></div>
-      </div>
-      <div id="factionConfirmBar" style="display:none; margin-top:10px;">
-        <button id="confirmFactionBtn">確認陣營</button>
-      </div>
-    </div>
-
     <div class="lobby-actions">
       <button id="createRoomBtn" class="lobby-action-btn" type="button" onclick="createRoom()">建立作戰室</button>
       <button id="joinRoomBtn" class="lobby-action-btn" type="button" onclick="joinRoom()">進入作戰室</button>
+      <button id="openFactionPickerBtn" class="lobby-action-btn faction-picker-open-btn" type="button" onclick="openFactionPickerModal()" disabled>選擇陣營與根據地</button>
       <button id="toggleReadyBtn" class="lobby-action-btn" type="button" onclick="toggleReady()" disabled>我已準備</button>
       <button id="startGameBtn" class="lobby-action-btn primary" type="button" onclick="startGame()" disabled>啟動行動</button>
     </div>
   </section>
+
+  <div id="factionPicker" class="faction-picker-overlay" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="factionPickerTitle" aria-hidden="true">
+    <div class="faction-picker-dialog">
+      <header class="faction-picker-header">
+        <div>
+          <div class="panel-title">FACTION & BASE SELECTION</div>
+          <div id="factionPickerTitle" class="faction-picker-title">選擇陣營與根據地</div>
+          <div id="factionPickerInfo"></div>
+        </div>
+        <button id="closeFactionPickerBtn" class="faction-picker-close-btn" type="button" onclick="closeFactionPickerModal()" aria-label="返回作戰室">返回作戰室</button>
+      </header>
+      <div class="faction-picker-content">
+        <section class="faction-picker-selection-pane" aria-label="陣營與根據地選項">
+          <div class="faction-picker-step-title">1. 選擇陣營</div>
+          <div id="factionList"></div>
+          <div id="factionVariantList" style="display:none; margin-top:8px;"></div>
+          <div class="faction-picker-step-title faction-base-step-title">2. 選擇根據地</div>
+          <div id="factionBaseList" style="display:none; margin-top:8px;"></div>
+        </section>
+        <section id="factionDetailPanel" class="faction-picker-detail-pane" style="display:none;" aria-label="所選陣營完整資訊">
+          <div class="panel-title">陣營資訊</div>
+          <div id="factionDetailTitle"></div>
+          <div id="factionDetailBases"></div>
+          <div id="factionDetailAbilities"></div>
+          <div id="factionDetailRules"></div>
+          <div id="factionDetailWin"></div>
+        </section>
+      </div>
+      <footer class="faction-picker-footer">
+        <div class="faction-picker-footer-hint">確認前可反覆比較陣營、能力、限制與獲勝條件。</div>
+        <div id="factionConfirmBar" style="display:none;">
+          <button id="confirmFactionBtn">確認陣營與根據地</button>
+        </div>
+      </footer>
+    </div>
+  </div>
 </div>
 
 <div id="factionActionModal" class="modal-overlay" style="display:none;">
@@ -349,6 +367,6 @@
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/static/player_messages_zh_tw.js?v=player-message-i18n-20260801"></script>
-<script src="/static/app.js?v=pending-choice-reminder-modal-20260824"></script>
+<script src="/static/app.js?v=faction-picker-modal-20260824"></script>
 </body>
 </html>

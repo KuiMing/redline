@@ -64,6 +64,8 @@ def main() -> None:
         host.locator("#playerName").fill("房主")
         host.locator("#createRoomBtn").click()
         host.wait_for_function("document.querySelector('#roomId')?.value?.length > 10", timeout=10000)
+        host.wait_for_function("document.getElementById('factionPicker')?.style.display === 'flex'", timeout=10000)
+        host.locator("#closeFactionPickerBtn").click()
         room_id = host.locator("#roomId").input_value()
         host.wait_for_function("typeof latestLobbyState !== 'undefined' && latestLobbyState?.host_id && document.querySelectorAll('.lobby-market-option:not(:disabled)').length === 2", timeout=10000)
         host_state = host.evaluate(
@@ -101,6 +103,8 @@ def main() -> None:
         guest.locator("#roomId").fill(room_id)
         guest.locator("#joinRoomBtn").click()
         guest.wait_for_function("typeof latestLobbyState !== 'undefined' && latestLobbyState?.host_id && latestLobbyState?.players?.length === 2", timeout=10000)
+        guest.wait_for_function("document.getElementById('factionPicker')?.style.display === 'flex'", timeout=10000)
+        guest.locator("#closeFactionPickerBtn").click()
         guest_state = guest.evaluate(
             """() => ({
               disabled: [...document.querySelectorAll('.lobby-market-option')].map(button => button.disabled),

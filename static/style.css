@@ -500,16 +500,9 @@ body {
   filter: brightness(1.06);
 }
 
-.lobby-faction-panel {
-  position: relative;
-  z-index: 2;
-  grid-column: 1 / -1;
-  align-self: end;
-  max-height: 190px;
-  overflow: auto;
-  border-color: rgba(245, 158, 11, 0.34) !important;
-  background: rgba(8, 13, 22, 0.80) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 14px 32px rgba(0, 0, 0, 0.22);
+.faction-picker-open-btn {
+  border-color: rgba(245, 158, 11, 0.58);
+  color: #fde68a;
 }
 
 .game-tab.my-faction-tab.attention {
@@ -1423,18 +1416,112 @@ body {
 
 
 #factionPicker {
-  border: 1px solid var(--border);
-  background: rgba(10, 13, 18, 0.88);
-  border-radius: 8px;
-  padding: 8px;
-  max-height: 190px;
-  max-width: 1220px;
-  overflow: auto;
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+  background: rgba(2, 6, 12, 0.86);
+  backdrop-filter: blur(10px);
+}
+
+.faction-picker-dialog {
+  width: min(1160px, calc(100% - 24px));
+  height: min(650px, calc(100% - 24px));
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+  border: 1px solid rgba(245, 158, 11, 0.56);
+  border-radius: 22px;
+  background: linear-gradient(145deg, rgba(9, 14, 22, 0.98), rgba(13, 22, 35, 0.98));
+  box-shadow: 0 34px 100px rgba(0, 0, 0, 0.72), inset 0 1px 0 rgba(255, 255, 255, 0.09);
+}
+
+.faction-picker-header,
+.faction-picker-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 18px 22px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(6, 10, 17, 0.78);
+}
+
+.faction-picker-footer {
+  border-top: 1px solid rgba(148, 163, 184, 0.18);
+  border-bottom: 0;
+  padding-block: 14px;
+}
+
+.faction-picker-title {
+  margin: 3px 0 5px;
+  color: #fff7ed;
+  font-family: 'Noto Sans TC', sans-serif;
+  font-size: 1.65rem;
+  font-weight: 900;
+}
+
+.faction-picker-close-btn {
+  appearance: none;
+  flex: 0 0 auto;
+  border: 1px solid rgba(148, 163, 184, 0.42);
+  border-radius: 10px;
+  padding: 9px 14px;
+  background: rgba(15, 23, 42, 0.9);
+  color: #dbe7f3;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+}
+
+.faction-picker-content {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(360px, 0.9fr) minmax(0, 1.1fr);
+  gap: 0;
+}
+
+.faction-picker-selection-pane,
+.faction-picker-detail-pane {
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 20px 22px;
+}
+
+.faction-picker-selection-pane {
+  border-right: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(4, 9, 16, 0.56);
+}
+
+.faction-picker-detail-pane {
+  background: rgba(11, 17, 27, 0.72);
+}
+
+.faction-picker-step-title {
+  margin-bottom: 10px;
+  color: #fbbf24;
+  font-family: 'Noto Sans TC', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 900;
+}
+
+.faction-base-step-title {
+  margin-top: 18px;
+}
+
+.faction-picker-footer-hint {
+  color: #aebed3;
+  font-size: 0.8rem;
+  line-height: 1.45;
 }
 
 #factionPickerInfo {
-  font-size: 0.8rem;
-  margin-bottom: 8px;
+  font-size: 0.84rem;
+  line-height: 1.45;
   color: #cbd5e1;
 }
 
@@ -1485,16 +1572,23 @@ body {
   background: linear-gradient(180deg, rgba(18, 22, 28, 0), rgba(18, 22, 28, 0.96) 34%);
 }
 
+.faction-picker-footer #factionConfirmBar {
+  position: static;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+
 #confirmFactionBtn {
   appearance: none;
   border: 1px solid #f6ad55;
   background: linear-gradient(180deg, #f6ad55, #dd6b20);
   color: #11161D;
-  padding: 8px 14px;
-  border-radius: 8px;
+  padding: 10px 18px;
+  border-radius: 9px;
   cursor: pointer;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.78rem;
+  font-size: 0.86rem;
   font-weight: 700;
 }
 
@@ -1525,11 +1619,12 @@ body {
 .faction-choice-btn {
   appearance: none;
   color: var(--text-main);
-  padding: 6px 10px;
-  border-radius: 6px;
+  padding: 9px 12px;
+  min-height: 40px;
+  border-radius: 8px;
   cursor: pointer;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.75rem;
+  font-size: 0.82rem;
   transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
 }
 
@@ -1568,6 +1663,45 @@ body {
   background: linear-gradient(180deg, #2563eb, #1d4ed8);
   color: #ffffff;
   box-shadow: 0 0 0 1px rgba(147, 197, 253, 0.28), 0 0 18px rgba(37, 99, 235, 0.24);
+}
+
+#factionPicker .base-choice-btn {
+  min-height: 40px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+}
+
+#factionPicker #factionDetailPanel {
+  border: 0;
+  border-radius: 0;
+  padding: 20px 24px;
+}
+
+#factionPicker #factionDetailTitle {
+  font-size: 1.3rem;
+}
+
+#factionPicker #factionDetailBases,
+#factionPicker #factionDetailAbilities,
+#factionPicker #factionDetailRules,
+#factionPicker #factionDetailWin {
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+
+#factionPicker .faction-detail-section-title {
+  font-size: 0.84rem;
+}
+
+#factionPicker .faction-detail-empty {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid rgba(96, 165, 250, 0.14);
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.46);
+  color: #9fb0c5;
+  line-height: 1.55;
 }
 
 .base-choice-btn.active {

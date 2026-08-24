@@ -1,7 +1,7 @@
 # FACTION PICKER COMBINATION VALIDATION
 
-- total: 459
-- passed: 459
+- total: 454
+- passed: 454
 - failed: 0
 
 ## Result

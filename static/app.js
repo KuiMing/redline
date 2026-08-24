@@ -23,6 +23,8 @@ let stageResizeBound = false;
 let lobbySyncTimer = null;
 let latestLobbyState = null;
 let lobbyTransientStatus = null;
+let factionPickerModalOpen = false;
+let factionPickerReturnFocus = null;
 let activeChoiceModal = null;
 let lastFactionActionResultKey = null;
 let lastSupportChoiceMapHighlightPayload = null;
@@ -194,6 +196,7 @@ function lobbyReadiness(lobbyRes = latestLobbyState) {
 function updateLobbyActionControls(lobbyRes = latestLobbyState) {
   const startBtn = document.getElementById('startGameBtn');
   const readyBtn = document.getElementById('toggleReadyBtn');
+  const factionPickerBtn = document.getElementById('openFactionPickerBtn');
   const status = lobbyReadiness(lobbyRes);
   const marketMode = lobbyRes?.market_mode || document.getElementById('marketModeSelect')?.value || 'sample_53';
   applyMarketMode(marketMode);
@@ -208,6 +211,14 @@ function updateLobbyActionControls(lobbyRes = latestLobbyState) {
         : ' 建立房間後，只有房主可以切換遊戲難易度。';
     button.dataset.tooltip = `${cardCounts}${hostNote}`.trim();
   });
+
+  if (factionPickerBtn) {
+    factionPickerBtn.disabled = !status.hasRoom;
+    factionPickerBtn.textContent = status.meChose ? '變更陣營與根據地' : '選擇陣營與根據地';
+    factionPickerBtn.title = status.hasRoom
+      ? (status.meChose ? '重新開啟選擇視窗並變更陣營或根據地' : '開啟陣營與根據地選擇視窗')
+      : '請先建立或進入作戰室';
+  }
 
   if (readyBtn) {
     readyBtn.disabled = !status.hasRoom || !status.meChose;
@@ -479,8 +490,10 @@ async function resumeStoredGame() {
   } else {
     await loadFactions();
     startLobbySync();
-    await renderFactionPicker();
-    await refreshLobbyState('已恢復原本的作戰席位。');
+    const lobbyRes = await refreshLobbyState('已恢復原本的作戰席位。');
+    if (!(lobbyRes?.factions || {})[playerId]) {
+      await openFactionPickerModal();
+    }
   }
   return true;
 }
@@ -580,6 +593,7 @@ async function createRoom() {
   gameId = data.game_id;
   playerId = data.host_id;
   resumeToken = data.resume_token;
+  latestLobbyState = null;
   saveRedlineSession(creatorName);
   const roomInput = document.getElementById('roomId');
   if (roomInput) {
@@ -591,7 +605,7 @@ async function createRoom() {
   lobbyTransientStatus = '作戰室已建立；請選擇陣營，或分享房間代碼。';
   await loadFactions();
   startLobbySync();
-  await renderFactionPicker();
+  await openFactionPickerModal();
   updateLobbyStatus(lobbyTransientStatus);
 }
 
@@ -639,6 +653,7 @@ async function confirmFactionChoice() {
   pendingFactionBaseChoice = null;
   pendingFactionBaseGroup = null;
   pendingFactionCategory = null;
+  closeFactionPickerModal();
   await refreshLobbyState('陣營已確認，請按下準備。');
   await renderFactionPicker();
 }
@@ -1032,9 +1047,25 @@ function selectCardDetail(cardElement) {
 }
 
 document.addEventListener('keydown', (event) => {
+  if (factionPickerModalOpen && event.key === 'Tab') {
+    const focusable = Array.from(document.querySelectorAll('#factionPicker button:not([disabled]), #factionPicker [href], #factionPicker [tabindex]:not([tabindex="-1"])'))
+      .filter(element => element instanceof HTMLElement && element.offsetParent !== null);
+    if (focusable.length) {
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+  }
   if (event.key === 'Escape') {
     closeCardPreview();
     closeEventReveal();
+    if (factionPickerModalOpen) closeFactionPickerModal();
   }
 });
 
@@ -1063,12 +1094,12 @@ function renderFactionDetails(factionId, selectedBaseName = null, selectedBaseGr
   if (!panel || !title || !basesEl || !abilitiesEl || !rulesEl || !winEl) return;
 
   if (!factionId) {
-    panel.style.display = 'none';
-    title.textContent = '';
-    basesEl.innerHTML = '';
-    abilitiesEl.innerHTML = '';
-    rulesEl.innerHTML = '';
-    winEl.innerHTML = '';
+    panel.style.display = 'block';
+    title.textContent = '選擇陣營以查看完整資訊';
+    basesEl.innerHTML = '<div class="faction-detail-empty">左側選擇陣營後，這裡會顯示可用根據地。</div>';
+    abilitiesEl.innerHTML = '<div class="faction-detail-empty">能力與觸發條件會完整顯示在這裡。</div>';
+    rulesEl.innerHTML = '<div class="faction-detail-empty">特殊規則與限制會分開列出，方便選擇前比較。</div>';
+    winEl.innerHTML = '<div class="faction-detail-empty">同時顯示該陣營的獲勝條件。</div>';
     return;
   }
 
@@ -1118,6 +1149,45 @@ function renderFactionDetails(factionId, selectedBaseName = null, selectedBaseGr
   panel.style.display = 'block';
 }
 
+async function openFactionPickerModal() {
+  if (!gameId || !playerId) return false;
+  factionPickerReturnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  await loadFactions();
+  const lobbyRes = latestLobbyState || await refreshLobbyState();
+  if (!lobbyRes || lobbyRes.error) return false;
+
+  const confirmedFaction = (lobbyRes.factions || {})[playerId] || null;
+  const confirmedBase = (lobbyRes.bases || {})[playerId] || null;
+  if (!pendingFactionChoice && confirmedFaction) pendingFactionChoice = confirmedFaction;
+  if (!pendingFactionBaseChoice && confirmedBase) pendingFactionBaseChoice = confirmedBase;
+  if (!pendingFactionCategory && pendingFactionChoice) {
+    pendingFactionCategory = availableFactionCategories.find(category =>
+      (category.options || []).some(option => option.id === pendingFactionChoice)
+    ) || null;
+  }
+
+  factionPickerModalOpen = true;
+  await renderFactionPicker();
+  const panel = document.getElementById('factionPicker');
+  if (panel) {
+    panel.style.display = 'flex';
+    panel.setAttribute('aria-hidden', 'false');
+  }
+  requestAnimationFrame(() => document.getElementById('closeFactionPickerBtn')?.focus());
+  return true;
+}
+
+function closeFactionPickerModal() {
+  factionPickerModalOpen = false;
+  const panel = document.getElementById('factionPicker');
+  if (panel) {
+    panel.style.display = 'none';
+    panel.setAttribute('aria-hidden', 'true');
+  }
+  if (factionPickerReturnFocus?.isConnected) factionPickerReturnFocus.focus();
+  factionPickerReturnFocus = null;
+}
+
 async function renderFactionPicker() {
   const panel = document.getElementById('factionPicker');
   const info = document.getElementById('factionPickerInfo');
@@ -1133,15 +1203,24 @@ async function renderFactionPicker() {
     loadFactions(),
   ]);
 
-  panel.style.display = 'block';
+  panel.style.display = factionPickerModalOpen ? 'flex' : 'none';
+  panel.setAttribute('aria-hidden', factionPickerModalOpen ? 'false' : 'true');
   const chosen = lobbyRes.factions || {};
   const chosenBases = lobbyRes.bases || {};
   renderLobbyRoster(lobbyRes);
   const confirmed = chosen[playerId] || null;
   const confirmedBase = chosenBases[playerId] || null;
   const activeChoice = pendingFactionChoice || confirmed;
-  const activeBase = pendingFactionBaseChoice || confirmedBase;
-  const activeBaseGroup = pendingFactionBaseGroup || null;
+  const activeOptionForSelection = activeChoice ? factionOptionById(activeChoice) : null;
+  const impliedBaseOptions = activeOptionForSelection?.base_options || [];
+  const impliedBaseResolved = activeOptionForSelection?.base_resolved || {};
+  const impliedBase = impliedBaseOptions.length === 1
+    ? ((impliedBaseResolved[impliedBaseOptions[0]] || [impliedBaseOptions[0]]).length === 1
+      ? (impliedBaseResolved[impliedBaseOptions[0]] || [impliedBaseOptions[0]])[0]
+      : null)
+    : null;
+  const activeBase = pendingFactionBaseChoice || confirmedBase || impliedBase;
+  const activeBaseGroup = pendingFactionBaseGroup || (impliedBase ? impliedBaseOptions[0] : null);
   const requiredFaction = (lobbyRes.required_faction_by_player || {})[playerId] || null;
   if (requiredFaction === 'red_army' && activeChoice && activeChoice !== 'red_army') {
     pendingFactionCategory = null;
@@ -1160,13 +1239,13 @@ async function renderFactionPicker() {
   variants.style.display = 'none';
   bases.innerHTML = '';
   bases.style.display = 'none';
-  const currentActiveOption = activeChoice ? factionOptionById(activeChoice) : null;
+  const currentActiveOption = activeOptionForSelection;
   const needsBaseChoice = !!(activeChoice && currentActiveOption?.base_options?.length);
   const readyForConfirm = !!activeChoice && (!requiredFaction || activeChoice === requiredFaction) && (!needsBaseChoice || !!activeBase);
   confirmBar.style.display = readyForConfirm ? 'block' : 'none';
   confirmBtn.disabled = !readyForConfirm;
   confirmBtn.onclick = confirmFactionChoice;
-  renderFactionDetails(readyForConfirm ? activeChoice : null, activeBase, activeBaseGroup);
+  renderFactionDetails(activeChoice, activeBase, activeBaseGroup);
 
   const takenCategories = new Set(
     Object.entries(chosen)
@@ -1301,10 +1380,11 @@ async function joinRoom() {
 
   playerId = data.player_id;
   resumeToken = data.resume_token;
+  latestLobbyState = null;
   saveRedlineSession(name);
   await loadFactions();
   startLobbySync();
-  await renderFactionPicker();
+  await openFactionPickerModal();
   updateLobbyStatus('已進入作戰室；請選擇你的陣營與根據地。');
 }
 
@@ -1398,8 +1478,12 @@ function connect(options = {}) {
   const shell = document.getElementById('gameShell');
   if (shell) shell.style.display = 'block';
 
+  factionPickerModalOpen = false;
   const picker = document.getElementById('factionPicker');
-  if (picker) picker.style.display = 'none';
+  if (picker) {
+    picker.style.display = 'none';
+    picker.setAttribute('aria-hidden', 'true');
+  }
   resizeStage();
   if (!stageResizeBound) {
     window.addEventListener('resize', resizeStage);
@@ -3760,9 +3844,12 @@ async function render(state) {
   if (businessNetworkState.type === 'idle') {
     lastBusinessNetworkResultKey = null;
   }
-  const showLobbyFactionPicker = !inBaseSelection && !ws;
+  const showLobbyFactionPicker = !inBaseSelection && !ws && factionPickerModalOpen;
   const factionPicker = document.getElementById('factionPicker');
-  if (factionPicker) factionPicker.style.display = showLobbyFactionPicker ? 'block' : 'none';
+  if (factionPicker) {
+    factionPicker.style.display = showLobbyFactionPicker ? 'flex' : 'none';
+    factionPicker.setAttribute('aria-hidden', showLobbyFactionPicker ? 'false' : 'true');
+  }
 
   const detailFactionId = me?.faction || pendingFactionChoice || null;
   const detailBaseName = me?.base || pendingFactionBaseChoice || null;

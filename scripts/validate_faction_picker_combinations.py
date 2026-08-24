@@ -1,4 +1,5 @@
 import json
+import os
 import re
 from pathlib import Path
 from playwright.sync_api import sync_playwright
@@ -7,7 +8,7 @@ ROOT = Path(__file__).resolve().parent.parent
 RECORD_DIR = ROOT / 'docs' / 'records' / 'faction-ui'
 OUT_JSON = RECORD_DIR / 'FACTION_PICKER_COMBINATION_VALIDATION.json'
 OUT_MD = RECORD_DIR / 'FACTION_PICKER_COMBINATION_VALIDATION.md'
-BASE_URL = 'http://127.0.0.1:8000'
+BASE_URL = os.environ.get('REDLINE_BASE_URL', 'http://127.0.0.1:8000').rstrip('/')
 
 
 def humanize_win_condition(w):
@@ -97,28 +98,23 @@ def escape_regex_text(text):
 
 def validate_combo(page, combo):
     page.goto(BASE_URL, wait_until='domcontentloaded')
-    create = page.evaluate("""async () => (await (await fetch('/create', {method:'POST'})).json())""")
-    room = create['game_id']
-    host_id = create['host_id']
-    page.fill('#roomId', room)
     page.fill('#playerName', 'host')
-    page.evaluate(f"playerId={json.dumps(host_id)}")
-    page.get_by_text('JOIN OPERATION').click()
-    page.wait_for_timeout(120)
+    page.locator('#createRoomBtn').click()
+    page.wait_for_function("document.getElementById('factionPicker')?.style.display === 'flex'")
 
     page.locator('#factionList .faction-choice-btn', has_text=re.compile(f'^{escape_regex_text(combo["category"])}$')).first.click()
-    page.wait_for_timeout(60)
+    page.wait_for_timeout(150)
 
     if combo['mode'] != 'direct':
         page.locator('#factionVariantList .faction-choice-btn', has_text=re.compile(f'^{escape_regex_text(combo["option_label"])}$')).first.click()
-        page.wait_for_timeout(60)
+        page.wait_for_timeout(150)
 
     if combo['base_group']:
         page.locator('#factionBaseList .base-choice-btn', has_text=re.compile(f'^{escape_regex_text(combo["base_group"])}$')).first.click()
-        page.wait_for_timeout(60)
+        page.wait_for_timeout(150)
         if combo['base_town'] != combo['base_group']:
             page.locator('#factionBaseList .base-choice-btn', has_text=re.compile(f'^{escape_regex_text(combo["base_town"])}$')).first.click()
-            page.wait_for_timeout(60)
+            page.wait_for_timeout(150)
 
     info = text_of(page.locator('#factionPickerInfo'))
     title = text_of(page.locator('#factionDetailTitle'))
@@ -132,7 +128,10 @@ def validate_combo(page, combo):
     if combo['base_town'] and combo['option'].get('variant_details'):
         detail_option = combo['option']['variant_details'].get(combo['base_town'], detail_option)
 
-    all_expected_abilities = detail_option.get('abilities', []) or detail_option.get('abilities_text', [])
+    all_expected_abilities = list(detail_option.get('abilities', []) or detail_option.get('abilities_text', []))
+    selected_base = next((base for base in (detail_option.get('bases', []) or []) if isinstance(base, dict) and base.get('name') == combo['base_town']), None)
+    if selected_base:
+        all_expected_abilities.extend(selected_base.get('abilities', []) or [])
     expected_abilities = [render_ability(a) for a in all_expected_abilities if not is_rule_like_ability(a)]
     expected_rules = [
         *(detail_option.get('setup_effects', []) or []),
