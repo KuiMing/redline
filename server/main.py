@@ -18,6 +18,13 @@ from server.faction_presentation import (
     semantic_base_pool,
 )
 from server.game_manager import GameManager
+from server.map_data_routes import (
+    get_map_data,
+    get_map_geo_coordinates,
+    get_town_coordinates,
+    map_test,
+    router as map_data_router,
+)
 import uuid
 import asyncio
 import secrets
@@ -26,6 +33,7 @@ from pathlib import Path
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
+app.include_router(map_data_router)
 
 manager = GameManager()
 lobby = {}        # {game_id: [(player_id, name)]}
@@ -659,34 +667,6 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
         print("WS ERROR:", e)
         manager.remove_connection(game_id, player_id, websocket)
 
-
-@app.get("/town-coordinates")
-def get_town_coordinates():
-    from pathlib import Path
-    import json
-    path = Path(__file__).resolve().parent.parent / "data" / "town_coordinates.v1.json"
-    with open(path, encoding="utf-8") as f:
-        return json.load(f)
-
-@app.get("/map-test")
-def map_test():
-    return FileResponse("static/map_test.html")
-
-@app.get("/map-geo-coordinates")
-def get_map_geo_coordinates():
-    from pathlib import Path
-    import json
-    path = Path(__file__).resolve().parent.parent / "data" / "map_geo_coordinates.v1.json"
-    with open(path, encoding="utf-8") as f:
-        return json.load(f)
-
-@app.get("/map-data")
-def get_map_data():
-    from pathlib import Path
-    import json
-    path = Path(__file__).resolve().parent.parent / "data" / "map.json"
-    with open(path, encoding="utf-8") as f:
-        return json.load(f)
 
 @app.post("/test/set-hand")
 def test_set_hand(payload: dict):
