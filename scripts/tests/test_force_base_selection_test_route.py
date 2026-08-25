@@ -120,6 +120,10 @@ def test_force_base_selection_sets_base_selection_phase_when_choices_remain(
     monkeypatch,
 ):
     class PendingGame(Game):
+        def __init__(self, players):
+            super().__init__(players)
+            self.current_player_index = 7
+
         def _compute_pending_base_choices(self):
             return {self.players[0].id: {"labels": ["北京"]}}
 
@@ -138,6 +142,7 @@ def test_force_base_selection_sets_base_selection_phase_when_choices_remain(
     }
     assert result["game_phase"] == GamePhase.BASE_SELECTION
     assert game.game_phase == GamePhase.BASE_SELECTION
+    assert game.current_player_index == 7
 
 
 def test_force_base_selection_sets_first_non_red_player_when_no_choices(
@@ -163,6 +168,59 @@ def test_force_base_selection_sets_first_non_red_player_when_no_choices(
     assert result["pending_base_choices"] == {}
     assert result["game_phase"] == GamePhase.MAIN
     assert game.current_player_index == 1
+
+
+def test_force_base_selection_preserves_mismatched_name_and_faction_lengths(
+    monkeypatch,
+):
+    class NoPendingGame(Game):
+        def __init__(self, players):
+            super().__init__(players)
+            self.initial_faction_ids = [
+                player.faction_id for player in self.players
+            ]
+
+        def _compute_pending_base_choices(self):
+            return {}
+
+    monkeypatch.setattr(force_base_selection, "Game", NoPendingGame)
+
+    short_runtime = _runtime()
+    short_result = ForceBaseSelectionTestRoutes(
+        lambda: short_runtime
+    ).test_force_base_selection(
+        {
+            "faction_ids": ["red_army", "hong_kong", "taiwan_green"],
+            "player_names": ["Red", "HK"],
+        }
+    )
+    short_game = short_runtime.manager.games[short_result["game_id"]]
+    assert [player.name for player in short_game.players] == ["Red", "HK"]
+    assert [player.faction_id for player in short_game.players] == [
+        "red_army",
+        "hong_kong",
+    ]
+
+    long_runtime = _runtime()
+    long_result = ForceBaseSelectionTestRoutes(
+        lambda: long_runtime
+    ).test_force_base_selection(
+        {
+            "faction_ids": ["red_army", "hong_kong"],
+            "player_names": ["Red", "HK", "Unassigned"],
+        }
+    )
+    long_game = long_runtime.manager.games[long_result["game_id"]]
+    assert [player.name for player in long_game.players] == [
+        "Red",
+        "HK",
+        "Unassigned",
+    ]
+    assert [player.faction_id for player in long_game.players[:2]] == [
+        "red_army",
+        "hong_kong",
+    ]
+    assert long_game.players[2].faction_id == long_game.initial_faction_ids[2]
 
 
 def test_force_base_selection_preserves_chosen_base_success_path(monkeypatch):
@@ -200,6 +258,44 @@ def test_force_base_selection_preserves_chosen_base_success_path(monkeypatch):
     }
 
 
+def test_force_base_selection_preserves_name_then_id_base_precedence(
+    monkeypatch,
+):
+    selections = []
+
+    class SelectableGame(Game):
+        def _compute_pending_base_choices(self):
+            return {player.id: {} for player in self.players}
+
+        def choose_base(self, player_id, base_name):
+            selections.append((player_id, base_name))
+            self.pending_base_choices.pop(player_id, None)
+            return {"success": True}
+
+    ids = [uuid.UUID(int=value) for value in range(1, 101)]
+    monkeypatch.setattr(force_base_selection, "Game", SelectableGame)
+    monkeypatch.setattr(force_base_selection.uuid, "uuid4", iter(ids).__next__)
+    runtime = _runtime()
+
+    ForceBaseSelectionTestRoutes(lambda: runtime).test_force_base_selection(
+        {
+            "faction_ids": ["red_army", "hong_kong"],
+            "player_names": ["Red", "HK"],
+            "chosen_bases": {
+                "Red": "名稱優先基地",
+                str(ids[1]): "ID 不應勝出",
+                "HK": "",
+                str(ids[2]): "ID fallback 基地",
+            },
+        }
+    )
+
+    assert selections == [
+        (str(ids[1]), "名稱優先基地"),
+        (str(ids[2]), "ID fallback 基地"),
+    ]
+
+
 def test_force_base_selection_preserves_choose_base_error_and_store_order(
     monkeypatch,
 ):
@@ -229,7 +325,11 @@ def test_force_base_selection_preserves_choose_base_error_and_store_order(
         "base_name": "錯誤基地",
     }
     assert runtime.manager.games == {}
+    assert runtime.manager.connections == {}
     assert runtime.lobby == {}
+    assert runtime.lobby_hosts == {}
+    assert runtime.lobby_factions == {}
+    assert runtime.lobby_bases == {}
 
 
 def test_force_base_selection_preserves_missing_choose_base_failure():
@@ -247,6 +347,11 @@ def test_force_base_selection_preserves_missing_choose_base_failure():
         )
 
     assert runtime.manager.games == {}
+    assert runtime.manager.connections == {}
+    assert runtime.lobby == {}
+    assert runtime.lobby_hosts == {}
+    assert runtime.lobby_factions == {}
+    assert runtime.lobby_bases == {}
 
 
 def test_main_force_base_selection_uses_rebound_runtime(monkeypatch):
@@ -275,6 +380,17 @@ def test_main_force_base_selection_uses_rebound_runtime(monkeypatch):
     assert game_id in lobby_bases
     assert callable(main.test_force_base_selection)
 
+    direct_result = main.test_force_base_selection(
+        {"faction_ids": ["red_army", "hong_kong"]}
+    )
+    direct_game_id = direct_result["game_id"]
+    assert direct_game_id != game_id
+    assert direct_game_id in manager.games
+    assert direct_game_id in lobby
+    assert direct_game_id in lobby_hosts
+    assert direct_game_id in lobby_factions
+    assert direct_game_id in lobby_bases
+
 
 def test_force_base_selection_uuid_order_is_stable(monkeypatch):
     ids = [uuid.UUID(int=value) for value in range(1, 101)]
@@ -284,14 +400,51 @@ def test_force_base_selection_uuid_order_is_stable(monkeypatch):
     result = ForceBaseSelectionTestRoutes(
         lambda: runtime
     ).test_force_base_selection(
-        {"faction_ids": ["red_army", "hong_kong"]}
+        {
+            "game_id": "caller-supplied-id",
+            "faction_ids": ["red_army", "hong_kong"],
+        }
     )
 
     assert result["game_id"] == str(ids[0])
+    assert result["game_id"] != "caller-supplied-id"
     assert [player.id for player in runtime.manager.games[result["game_id"]].players] == [
         str(ids[1]),
         str(ids[2]),
     ]
+
+
+@pytest.mark.parametrize(
+    "payload_overrides",
+    [
+        {},
+        {"player_names": None, "chosen_bases": None},
+        {"player_names": [], "chosen_bases": {}},
+    ],
+)
+def test_force_base_selection_preserves_empty_payload_fallbacks(
+    payload_overrides,
+):
+    runtime = _runtime()
+    payload = {"faction_ids": ["red_army", "hong_kong"], **payload_overrides}
+
+    result = ForceBaseSelectionTestRoutes(
+        lambda: runtime
+    ).test_force_base_selection(payload)
+    game = runtime.manager.games[result["game_id"]]
+
+    assert [player.name for player in game.players] == ["player1", "player2"]
+
+
+def test_force_base_selection_preserves_null_faction_ids_exception():
+    runtime = _runtime()
+
+    with pytest.raises(TypeError, match="has no len"):
+        ForceBaseSelectionTestRoutes(
+            lambda: runtime
+        ).test_force_base_selection({"faction_ids": None})
+
+    assert runtime.manager.games == {}
 
 
 def test_force_base_selection_request_and_openapi_contracts_are_stable():
@@ -299,6 +452,11 @@ def test_force_base_selection_request_and_openapi_contracts_are_stable():
     path = "/test/force-base-selection"
 
     assert client.post(path).status_code == 422
+    empty_payload_response = client.post(path, json={})
+    assert empty_payload_response.status_code == 200
+    assert empty_payload_response.json() == {
+        "error": "Need at least 2 faction ids"
+    }
 
     operation = main.app.openapi()["paths"][path]["post"]
     assert operation["summary"] == "Test Force Base Selection"
