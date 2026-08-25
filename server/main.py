@@ -25,6 +25,7 @@ from server.map_data_routes import (
     map_test,
     router as map_data_router,
 )
+from server.test_routes.build_queue import BuildQueueRuntime, BuildQueueTestRoutes
 from server.test_routes.build_view_persistence import BuildViewPersistenceTestRoutes
 from server.test_routes.card_scenario import CardScenarioTestRoutes
 from server.test_routes.hand_preview import HandPreviewRuntime, HandPreviewTestRoutes
@@ -687,72 +688,19 @@ test_setup_build_view_persistence_proof = (
 )
 
 
-@app.post("/test/setup-build-queue-proof")
-def test_setup_build_queue_proof(payload: dict):
-    game_id = str(uuid.uuid4())
-    players = [(str(uuid.uuid4()), "viewer"), (str(uuid.uuid4()), "red")]
-    game = Game(players)
-    viewer, red = game.players
-
-    viewer.faction_id = payload.get("faction_id", "liberals")
-    viewer.base = payload.get("base", "香港城")
-    viewer.organizations = dict(payload.get("organizations") or {viewer.base: 1})
-    red.faction_id = "red_army"
-    red.base = payload.get("enemy_base", "北京")
-    red.organizations = dict(payload.get("enemy_organizations") or {red.base: 1})
-
-    card_names = list(payload.get("cards") or ["組織經驗丙", "組織經驗乙"])
-    support_names = {entry.get("name") for entry in game.support_taxonomy}
-    viewer.hand = []
-    for name in card_names:
-        if name in support_names:
-            viewer.hand.append(game._make_support_card(name))
-            continue
-        card_def = next((card for card in game.structured_cards if card.get("name") == name), None)
-        if card_def is None:
-            return {"error": f"Unknown action card: {name}"}
-        viewer.hand.append(Card(card_def["name"], card_def.get("type", "test"), card_def.get("resources", {})))
-    forced_support_tiers = {
-        str(name): int(tier)
-        for name, tier in dict(payload.get("support_tiers") or {}).items()
-    }
-    if forced_support_tiers:
-        original_support_card_tier = game._support_card_tier
-
-        def proof_support_card_tier(player, card):
-            card_name = getattr(card, "name", str(card))
-            if card_name in forced_support_tiers:
-                return forced_support_tiers[card_name], int(getattr(card, "variant_index", 0) or 0), []
-            return original_support_card_tier(player, card)
-
-        game._support_card_tier = proof_support_card_tier
-    viewer.deck.discard_pile = []
-
-    game.current_player_index = 0
-    game.game_phase = GamePhase.MAIN
-    game.turn_phase = TurnPhase.ACTION
-    game.pending_base_choices = {}
-    game.pending_choice = None
-    noop_event = game._event_by_name("歲月靜好")
-    game.current_event = dict(noop_event or {})
-    game.event_progress = {"count": 0, "required": 0, "succeeded": True, "settled": True, "status": "idle"}
-    game.event_notification = game._event_display_payload()
-    game.event_modifiers = []
-    game.id = game_id
-
-    manager.games[game_id] = game
-    manager.connections[game_id] = manager.connections.get(game_id, {})
-    lobby[game_id] = [(player.id, player.name) for player in game.players]
-    lobby_hosts[game_id] = viewer.id
-    lobby_factions[game_id] = {player.id: player.faction_id for player in game.players}
-    lobby_bases[game_id] = {player.id: player.base for player in game.players}
-
-    return {
-        "success": True,
-        "game_id": game_id,
-        "player_id": viewer.id,
-        "state": game.state(viewer.id),
-    }
+_build_queue_test_routes = BuildQueueTestRoutes(
+    lambda: BuildQueueRuntime(
+        manager=manager,
+        lobby=lobby,
+        lobby_hosts=lobby_hosts,
+        lobby_factions=lobby_factions,
+        lobby_bases=lobby_bases,
+    )
+)
+app.include_router(_build_queue_test_routes.router)
+test_setup_build_queue_proof = (
+    _build_queue_test_routes.test_setup_build_queue_proof
+)
 
 
 @app.post("/test/setup-negotiation-proof")
