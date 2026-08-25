@@ -2,6 +2,8 @@ import uuid
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+import pydantic
+import pytest
 
 from server import main
 from server.game import GamePhase, TurnPhase
@@ -116,15 +118,24 @@ def test_inside_wall_route_uses_canonical_inside_and_outside_towns():
     )
     game = runtime.manager.games[result["game_id"]]
     taiwan = game.players[0]
-    inside = set(game._towns_for_region_alias("china"))
-    outside = set(game._towns_for_region_alias("taiwan"))
-    organization_towns = set(taiwan.organizations)
+    eligible_inside = [
+        town
+        for town in game._towns_for_region_alias("china")
+        if game.can_faction_develop_in_town(taiwan.faction_id, town)
+    ]
+    eligible_outside = [
+        town
+        for town in game._towns_for_region_alias("taiwan")
+        if game.can_faction_develop_in_town(taiwan.faction_id, town)
+    ]
 
     assert result["inside_count"] == 2
     assert result["outside_count"] == 3
-    assert len(organization_towns & inside) == 2
-    assert len(organization_towns & outside) == 3
-    assert len(organization_towns) == 5
+    assert list(taiwan.organizations) == eligible_inside[:2] + eligible_outside[:3]
+    assert taiwan.organizations == {
+        town: 1 for town in eligible_inside[:2] + eligible_outside[:3]
+    }
+    assert taiwan.base == eligible_outside[0]
 
 
 def test_inside_wall_route_clamps_negative_counts():
@@ -137,6 +148,78 @@ def test_inside_wall_route_clamps_negative_counts():
     assert result["inside_count"] == 0
     assert result["outside_count"] == 0
     assert game.players[0].organizations == {}
+
+
+@pytest.mark.parametrize(
+    ("payload", "expected_inside", "expected_outside"),
+    [
+        ({"inside_count": "2", "outside_count": "3"}, 2, 3),
+        ({"inside_count": 2.9, "outside_count": 3.9}, 2, 3),
+        ({"inside_count": None, "outside_count": None}, 0, 0),
+        ({"inside_count": True, "outside_count": False}, 1, 0),
+    ],
+)
+def test_inside_wall_route_preserves_count_coercion(
+    payload, expected_inside, expected_outside
+):
+    runtime = _runtime()
+    result = InsideWallTestRoutes(lambda: runtime).test_setup_inside_wall_proof(
+        payload
+    )
+
+    assert result["inside_count"] == expected_inside
+    assert result["outside_count"] == expected_outside
+
+
+def test_inside_wall_route_preserves_invalid_count_exception():
+    runtime = _runtime()
+
+    with pytest.raises(ValueError, match="invalid literal for int"):
+        InsideWallTestRoutes(lambda: runtime).test_setup_inside_wall_proof(
+            {"inside_count": "not-an-integer"}
+        )
+
+    assert runtime.manager.games == {}
+
+
+def test_inside_wall_sets_game_id_before_era_check_and_stores_after(
+    monkeypatch,
+):
+    runtime = _runtime()
+    observations = []
+    original_game = inside_wall.Game
+
+    class EraOrderGame(original_game):
+        def _check_era_trigger(self):
+            observations.append(
+                {
+                    "game_id": self.id,
+                    "games": dict(runtime.manager.games),
+                    "lobby": dict(runtime.lobby),
+                    "hosts": dict(runtime.lobby_hosts),
+                    "factions": dict(runtime.lobby_factions),
+                    "bases": dict(runtime.lobby_bases),
+                }
+            )
+            return super()._check_era_trigger()
+
+    monkeypatch.setattr(inside_wall, "Game", EraOrderGame)
+
+    result = InsideWallTestRoutes(lambda: runtime).test_setup_inside_wall_proof(
+        {"inside_count": 7, "outside_count": 0}
+    )
+
+    assert observations == [
+        {
+            "game_id": result["game_id"],
+            "games": {},
+            "lobby": {},
+            "hosts": {},
+            "factions": {},
+            "bases": {},
+        }
+    ]
+    assert result["game_id"] in runtime.manager.games
 
 
 def test_inside_wall_route_preserves_insufficient_towns_error():
@@ -203,7 +286,11 @@ def test_inside_wall_request_and_openapi_contracts_are_stable():
     path = "/test/setup-inside-wall-proof"
 
     assert client.post(path).status_code == 422
-    assert client.post(path, json=[]).status_code == 422
+    list_response = client.post(path, json=[])
+    if int(pydantic.VERSION.split(".", 1)[0]) == 1:
+        assert list_response.status_code == 200
+    else:
+        assert list_response.status_code == 422
 
     operation = main.app.openapi()["paths"][path]["post"]
     assert operation["summary"] == "Test Setup Inside Wall Proof"
