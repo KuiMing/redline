@@ -81,6 +81,16 @@ def test_build_queue_route_constructs_default_proof_state():
     assert game.event_notification == game._event_display_payload()
     assert game.event_modifiers == []
     assert payload["state"] == game.state(viewer.id)
+    scoped_players = {
+        player_state["id"]: player_state for player_state in payload["state"]["players"]
+    }
+    unscoped_players = {
+        player_state["id"]: player_state for player_state in game.state()["players"]
+    }
+    assert scoped_players[viewer.id]["hand"] == ["組織經驗丙", "組織經驗乙"]
+    assert scoped_players[red.id]["hand"] == ["未知手牌"] * len(red.hand)
+    assert unscoped_players[red.id]["hand"] == [card.name for card in red.hand]
+    assert scoped_players[red.id]["hand"] != unscoped_players[red.id]["hand"]
     assert runtime.manager.connections[game_id] == {}
     assert runtime.lobby[game_id] == [(viewer.id, "viewer"), (red.id, "red")]
     assert runtime.lobby_hosts[game_id] == viewer.id
@@ -104,7 +114,7 @@ def test_build_queue_route_preserves_custom_cards_and_forced_support_tier():
             "organizations": {"香港城": 2, "九龍": 1},
             "enemy_base": "廣州",
             "enemy_organizations": {"廣州": 2},
-            "cards": ["印度奧援", "組織經驗丙"],
+            "cards": ["印度奧援", "東洋奧援", "組織經驗丙"],
             "support_tiers": {"印度奧援": "3"},
         },
     )
@@ -113,7 +123,7 @@ def test_build_queue_route_preserves_custom_cards_and_forced_support_tier():
     payload = response.json()
     game = runtime.manager.games[payload["game_id"]]
     viewer, red = game.players
-    support_card, action_card = viewer.hand
+    support_card, fallback_support_card, action_card = viewer.hand
     assert viewer.faction_id == "hong_kong"
     assert viewer.organizations == {"香港城": 2, "九龍": 1}
     assert red.base == "廣州"
@@ -121,13 +131,60 @@ def test_build_queue_route_preserves_custom_cards_and_forced_support_tier():
     assert support_card.name == "印度奧援"
     assert support_card.card_type == "support"
     assert support_card.effect["support_taxonomy"]["support_region"] == "印度"
+    assert fallback_support_card.name == "東洋奧援"
+    assert fallback_support_card.card_type == "support"
     assert action_card.name == "組織經驗丙"
     assert action_card.card_type == "organization"
+    canonical_action = next(
+        card for card in game.structured_cards if card.get("name") == "組織經驗丙"
+    )
+    assert action_card.resources == canonical_action.get("resources", {})
+    assert action_card.resources is canonical_action["resources"]
     assert game._support_card_tier(viewer, support_card) == (
         3,
         int(getattr(support_card, "variant_index", 0) or 0),
         [],
     )
+
+    control_runtime = _runtime()
+    control_result = BuildQueueTestRoutes(
+        lambda: control_runtime
+    ).test_setup_build_queue_proof(
+        {
+            "faction_id": "hong_kong",
+            "base": "香港城",
+            "organizations": {"香港城": 2, "九龍": 1},
+            "cards": ["東洋奧援"],
+        }
+    )
+    control_game = control_runtime.manager.games[control_result["game_id"]]
+    control_viewer = control_game.players[0]
+    assert "_support_card_tier" in game.__dict__
+    assert "_support_card_tier" not in control_game.__dict__
+    assert game._support_card_tier(viewer, fallback_support_card) == (
+        control_game._support_card_tier(control_viewer, control_viewer.hand[0])
+    )
+
+
+def test_build_queue_route_copies_organization_mappings():
+    organizations = {"香港城": 2}
+    enemy_organizations = {"北京": 2}
+    runtime = _runtime()
+    result = BuildQueueTestRoutes(lambda: runtime).test_setup_build_queue_proof(
+        {
+            "organizations": organizations,
+            "enemy_organizations": enemy_organizations,
+        }
+    )
+    game = runtime.manager.games[result["game_id"]]
+
+    organizations["香港城"] = 99
+    enemy_organizations["北京"] = 99
+
+    assert game.players[0].organizations == {"香港城": 2}
+    assert game.players[1].organizations == {"北京": 2}
+    assert game.players[0].organizations is not organizations
+    assert game.players[1].organizations is not enemy_organizations
 
 
 def test_build_queue_route_preserves_unknown_card_error():
@@ -165,6 +222,15 @@ def test_main_build_queue_route_uses_rebound_runtime(monkeypatch):
     assert game_id in lobby_factions
     assert game_id in lobby_bases
     assert callable(main.test_setup_build_queue_proof)
+
+    direct_result = main.test_setup_build_queue_proof({})
+    direct_game_id = direct_result["game_id"]
+    assert direct_game_id != game_id
+    assert direct_game_id in manager.games
+    assert direct_game_id in lobby
+    assert direct_game_id in lobby_hosts
+    assert direct_game_id in lobby_factions
+    assert direct_game_id in lobby_bases
 
 
 def test_build_queue_uuid_order_is_stable(monkeypatch):
