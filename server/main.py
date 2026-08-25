@@ -28,6 +28,7 @@ from server.map_data_routes import (
 from server.test_routes.build_queue import BuildQueueRuntime, BuildQueueTestRoutes
 from server.test_routes.build_view_persistence import BuildViewPersistenceTestRoutes
 from server.test_routes.card_scenario import CardScenarioTestRoutes
+from server.test_routes.force_base_selection import ForceBaseSelectionTestRoutes
 from server.test_routes.hand_preview import HandPreviewRuntime, HandPreviewTestRoutes
 from server.test_routes.inside_wall import InsideWallTestRoutes
 from server.test_routes.runtime import GameSetupRuntime
@@ -864,52 +865,19 @@ app.include_router(_card_scenario_test_routes.router)
 test_setup_card_scenario = _card_scenario_test_routes.test_setup_card_scenario
 
 
-@app.post("/test/force-base-selection")
-def test_force_base_selection(payload: dict):
-    game_id = payload.get("game_id")
-    faction_ids = payload.get("faction_ids", [])
-    player_names = payload.get("player_names") or [f"player{i+1}" for i in range(len(faction_ids))]
-    chosen_bases = payload.get("chosen_bases") or {}
-
-    if len(faction_ids) < 2:
-        return {"error": "Need at least 2 faction ids"}
-
-    game_id = str(uuid.uuid4())
-    players = [(str(uuid.uuid4()), name) for name in player_names]
-    game = Game(players)
-    for player, faction_id in zip(game.players, faction_ids):
-        player.faction_id = faction_id
-
-    game.pending_base_choices = game._compute_pending_base_choices()
-    for player in game.players:
-        base_name = chosen_bases.get(player.name) or chosen_bases.get(player.id)
-        if not base_name:
-            continue
-        result = game.choose_base(player.id, base_name)
-        if result.get("error"):
-            return {"error": result["error"], "player": player.name, "base_name": base_name}
-
-    if game.pending_base_choices:
-        game.game_phase = GamePhase.BASE_SELECTION
-    else:
-        game.game_phase = GamePhase.MAIN
-        first_non_red = next((idx for idx, player in enumerate(game.players) if player.faction_id != 'red_army'), 0)
-        game.current_player_index = first_non_red
-
-    manager.games[game_id] = game
-    manager.connections[game_id] = manager.connections.get(game_id, {})
-    lobby[game_id] = list(zip([p.id for p in game.players], [p.name for p in game.players]))
-    lobby_hosts[game_id] = game.players[0].id
-    lobby_factions[game_id] = {p.id: p.faction_id for p in game.players}
-    lobby_bases[game_id] = {p.id: p.base for p in game.players if p.base}
-
-    return {
-        "success": True,
-        "game_id": game_id,
-        "players": [{"id": p.id, "name": p.name, "faction": p.faction_id, "base": p.base} for p in game.players],
-        "pending_base_choices": game.pending_base_choices,
-        "game_phase": game.game_phase,
-    }
+_force_base_selection_test_routes = ForceBaseSelectionTestRoutes(
+    lambda: GameSetupRuntime(
+        manager=manager,
+        lobby=lobby,
+        lobby_hosts=lobby_hosts,
+        lobby_factions=lobby_factions,
+        lobby_bases=lobby_bases,
+    )
+)
+app.include_router(_force_base_selection_test_routes.router)
+test_force_base_selection = (
+    _force_base_selection_test_routes.test_force_base_selection
+)
 
 
 @app.post("/test/setup-intel-network-proof")
