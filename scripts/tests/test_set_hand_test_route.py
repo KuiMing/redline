@@ -117,6 +117,23 @@ def test_set_hand_route_removes_only_restrict_build_modifier():
     assert game.current_player_index == 0
 
 
+def test_set_hand_route_maps_action_and_event_turn_phases():
+    for phase, expected in [
+        ("action", TurnPhase.ACTION),
+        ("event", TurnPhase.EVENT),
+    ]:
+        game = FakeGame()
+        game.turn_phase = TurnPhase.END
+        response = TestClient(_make_app(lambda: FakeManager(game))).post(
+            "/test/set-hand",
+            json={"game_id": "g1", "player_id": "p1", "turn_phase": phase},
+        )
+
+        assert response.status_code == 200
+        assert game.turn_phase == expected
+        assert response.json()["turn_phase"] == phase
+
+
 def test_set_hand_route_preserves_existing_error_contracts():
     missing_game = TestClient(_make_app(lambda: FakeManager())).post(
         "/test/set-hand",
