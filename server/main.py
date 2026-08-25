@@ -26,6 +26,7 @@ from server.map_data_routes import (
     router as map_data_router,
 )
 from server.test_routes.card_scenario import CardScenarioTestRoutes
+from server.test_routes.set_hand import SetHandTestRoutes
 import uuid
 import asyncio
 import secrets
@@ -669,59 +670,9 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
         manager.remove_connection(game_id, player_id, websocket)
 
 
-@app.post("/test/set-hand")
-def test_set_hand(payload: dict):
-    game_id = payload.get("game_id")
-    player_id = payload.get("player_id")
-    cards = payload.get("cards", [])
-    turn_phase = payload.get("turn_phase")
-    set_current_player = bool(payload.get("set_current_player"))
-    restrict_build = bool(payload.get("restrict_build"))
-
-    game = manager.get_game(game_id)
-    if not game:
-        return {"error": "Game not found"}
-
-    player = next((p for p in game.players if p.id == player_id), None)
-    if not player:
-        return {"error": "Player not found"}
-
-    player.hand = []
-    for name in cards:
-        card_def = next((c for c in game.structured_cards if c.get("name") == name), None)
-        if card_def:
-            player.hand.append(Card(card_def["name"], card_def.get("type", "test"), card_def.get("resources", {})))
-        else:
-            player.hand.append(game._starter_card(name))
-
-    if turn_phase == "action":
-        game.turn_phase = TurnPhase.ACTION
-    elif turn_phase == "event":
-        game.turn_phase = TurnPhase.EVENT
-    elif turn_phase == "end":
-        game.turn_phase = TurnPhase.END
-
-    if restrict_build:
-        game.event_modifiers = [{"type": "restrict_build", "remaining_turns": 1}]
-    else:
-        game.event_modifiers = [
-            modifier for modifier in (game.event_modifiers or [])
-            if (modifier or {}).get("type") != "restrict_build"
-        ]
-
-    if set_current_player:
-        for idx, candidate in enumerate(game.players):
-            if candidate.id == player_id:
-                game.current_player_index = idx
-                break
-
-    return {
-        "success": True,
-        "hand": [c.name for c in player.hand],
-        "turn_phase": game.turn_phase,
-        "current_player": game.current_player().name if game.current_player() else None,
-        "current_player_id": game.current_player().id if game.current_player() else None,
-    }
+_set_hand_test_routes = SetHandTestRoutes(lambda: manager)
+app.include_router(_set_hand_test_routes.router)
+test_set_hand = _set_hand_test_routes.test_set_hand
 
 
 @app.post("/test/setup-build-view-persistence-proof")
