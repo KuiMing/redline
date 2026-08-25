@@ -25,6 +25,7 @@ from server.map_data_routes import (
     map_test,
     router as map_data_router,
 )
+from server.test_routes.card_scenario import CardScenarioTestRoutes
 import uuid
 import asyncio
 import secrets
@@ -1056,17 +1057,9 @@ def test_setup_inside_wall_proof(payload: dict):
     }
 
 
-@app.post("/test/setup-card-scenario")
-def test_setup_card_scenario(payload: dict):
-    game_id = payload.get("game_id")
-    player_id = payload.get("player_id")
-    card_name = payload.get("card_name")
-
-    game = manager.get_game(game_id)
-    if not game:
-        return {"error": "Game not found"}
-
-    return game.setup_test_card_scenario(player_id, card_name)
+_card_scenario_test_routes = CardScenarioTestRoutes(lambda: manager)
+app.include_router(_card_scenario_test_routes.router)
+test_setup_card_scenario = _card_scenario_test_routes.test_setup_card_scenario
 
 
 @app.post("/test/force-base-selection")
