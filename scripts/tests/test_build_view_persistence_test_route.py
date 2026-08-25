@@ -106,8 +106,11 @@ def test_first_build_view_stage_resets_proof_state():
     assert viewer.faction_id == "liberals"
     assert viewer.base == "香港城"
     assert viewer.deck.discard_pile == []
+    assert isinstance(viewer.hand[0], Card)
     assert viewer.hand[0].card_type == "action"
     assert viewer.hand[0].resources == {"money": 1}
+    assert viewer.hand[0].resources is game.structured_cards[0]["resources"]
+    assert viewer.hand[0].effect is None
     assert red.hand == []
     assert red.base == "北京"
     assert red.organizations == {"北京": 1}
@@ -147,9 +150,26 @@ def test_second_build_view_stage_broadcasts_without_resetting_board():
         "organizations": {"舊基地": 2},
         "turn_phase": "end",
     }
+    assert isinstance(game.players[0].hand[0], Card)
     assert game.players[0].hand[0].resources == {"money": 2}
+    assert game.players[0].hand[0].resources is game.structured_cards[1]["resources"]
+    assert game.players[0].hand[0].effect is None
+    assert game.players[0].faction_id == "other"
+    assert game.players[0].base == "舊基地"
+    assert [card.name for card in game.players[0].deck.discard_pile] == ["舊棄牌"]
+    assert [card.name for card in game.players[1].hand] == ["舊手牌"]
+    assert [card.name for card in game.players[2].hand] == ["舊手牌"]
     assert game.game_phase == "stale"
     assert game.current_player_index == 2
+    assert game.pending_base_choices == {"stale": True}
+    assert game.pending_choice is None
+    assert game.turn_log == {"stale": True}
+    assert game.action_log == ["stale"]
+    assert game._action_log_visibility == ["viewer"]
+    assert game.current_event == {"name": "stale"}
+    assert game.event_progress == {"stale": True}
+    assert game.event_notification == {"stale": True}
+    assert game.event_modifiers == [{"type": "stale"}]
     assert broadcast.calls == [("g2", game)]
 
 
@@ -178,6 +198,39 @@ def test_build_view_route_preserves_error_contracts():
             _make_app(lambda manager=manager: manager, lambda: BroadcastSpy())
         ).post("/test/setup-build-view-persistence-proof", json=payload)
         assert response.status_code == 200
+        assert response.json() == {"error": error}
+
+
+def test_build_view_route_preserves_competing_error_priority():
+    pending_without_cards = FakeGame()
+    pending_without_cards.structured_cards = []
+    cases = [
+        (
+            FakeManager(),
+            {"game_id": "missing", "player_id": "missing", "stage": "other"},
+            "Game not found",
+        ),
+        (
+            FakeManager(FakeGame()),
+            {"game_id": "g1", "player_id": "missing", "stage": "other"},
+            "Player not found",
+        ),
+        (
+            FakeManager(FakeGame()),
+            {"game_id": "g1", "player_id": "viewer", "stage": "other"},
+            "Unknown build-view proof stage",
+        ),
+        (
+            FakeManager(pending_without_cards),
+            {"game_id": "g1", "player_id": "viewer", "stage": "second"},
+            "First build session is still pending",
+        ),
+    ]
+
+    for manager, payload, error in cases:
+        response = TestClient(
+            _make_app(lambda manager=manager: manager, lambda: BroadcastSpy())
+        ).post("/test/setup-build-view-persistence-proof", json=payload)
         assert response.json() == {"error": error}
 
 
