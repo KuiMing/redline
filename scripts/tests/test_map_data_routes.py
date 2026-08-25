@@ -49,8 +49,19 @@ def test_main_keeps_map_route_compatibility_exports():
 
 def test_each_map_route_is_registered_once():
     router_paths = [getattr(route, "path", None) for route in map_data_router.routes]
-    app_paths = [getattr(route, "path", None) for route in main.app.routes]
+    included_routers = [
+        route
+        for route in main.app.routes
+        if getattr(route, "original_router", None) is map_data_router
+    ]
+    set_hand_routes = [
+        route
+        for route in main.app.routes
+        if getattr(route, "path", None) == "/test/set-hand"
+    ]
 
+    assert len(included_routers) == 1
     for path in [*MAP_ENDPOINTS, "/map-test"]:
         assert router_paths.count(path) == 1
-    assert app_paths.count("/test/set-hand") == 1
+    assert len(set_hand_routes) == 1
+    assert getattr(set_hand_routes[0], "methods", None) == {"POST"}
