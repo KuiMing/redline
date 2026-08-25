@@ -29,6 +29,8 @@ from server.test_routes.build_queue import BuildQueueRuntime, BuildQueueTestRout
 from server.test_routes.build_view_persistence import BuildViewPersistenceTestRoutes
 from server.test_routes.card_scenario import CardScenarioTestRoutes
 from server.test_routes.hand_preview import HandPreviewRuntime, HandPreviewTestRoutes
+from server.test_routes.inside_wall import InsideWallTestRoutes
+from server.test_routes.runtime import GameSetupRuntime
 from server.test_routes.set_hand import SetHandTestRoutes
 import uuid
 import asyncio
@@ -842,68 +844,19 @@ def test_setup_scope_audit_proof(payload: dict):
     }
 
 
-@app.post("/test/setup-inside-wall-proof")
-def test_setup_inside_wall_proof(payload: dict):
-    game_id = str(uuid.uuid4())
-    players = [(str(uuid.uuid4()), "Taiwan"), (str(uuid.uuid4()), "Red")]
-    game = Game(players)
-    taiwan, red = game.players
-    taiwan.faction_id = "taiwan_green"
-    red.faction_id = "red_army"
-
-    inside_count = max(0, int(payload.get("inside_count", 0) or 0))
-    outside_count = max(0, int(payload.get("outside_count", 8) or 0))
-    inside_towns = [
-        town for town in game._towns_for_region_alias("china")
-        if game.can_faction_develop_in_town(taiwan.faction_id, town)
-    ]
-    outside_towns = [
-        town for town in game._towns_for_region_alias("taiwan")
-        if game.can_faction_develop_in_town(taiwan.faction_id, town)
-    ]
-    if len(inside_towns) < inside_count or len(outside_towns) < outside_count:
-        return {"error": "Not enough canonical towns for inside-wall proof"}
-
-    taiwan.base = outside_towns[0]
-    red.base = "北京"
-    taiwan.organizations = {
-        town: 1
-        for town in inside_towns[:inside_count] + outside_towns[:outside_count]
-    }
-    red.organizations = {}
-    for player in game.players:
-        player.hand = []
-        player.deck.discard_pile = []
-        player.resources = {"money": 0, "propaganda": 0}
-
-    game.current_player_index = 0
-    game.game_phase = GamePhase.MAIN
-    game.turn_phase = TurnPhase.ACTION
-    game.pending_base_choices = {}
-    game.pending_choice = None
-    noop_event = game._event_by_name("歲月靜好")
-    game.current_event = dict(noop_event or {})
-    game.event_progress = {"count": 0, "required": 0, "succeeded": True, "settled": True, "status": "idle"}
-    game.event_notification = game._event_display_payload()
-    game.event_modifiers = []
-    game.id = game_id
-    game._check_era_trigger()
-
-    manager.games[game_id] = game
-    manager.connections[game_id] = manager.connections.get(game_id, {})
-    lobby[game_id] = [(player.id, player.name) for player in game.players]
-    lobby_hosts[game_id] = taiwan.id
-    lobby_factions[game_id] = {player.id: player.faction_id for player in game.players}
-    lobby_bases[game_id] = {}
-
-    return {
-        "success": True,
-        "game_id": game_id,
-        "player_id": taiwan.id,
-        "inside_count": inside_count,
-        "outside_count": outside_count,
-        "state": game.state(taiwan.id),
-    }
+_inside_wall_test_routes = InsideWallTestRoutes(
+    lambda: GameSetupRuntime(
+        manager=manager,
+        lobby=lobby,
+        lobby_hosts=lobby_hosts,
+        lobby_factions=lobby_factions,
+        lobby_bases=lobby_bases,
+    )
+)
+app.include_router(_inside_wall_test_routes.router)
+test_setup_inside_wall_proof = (
+    _inside_wall_test_routes.test_setup_inside_wall_proof
+)
 
 
 _card_scenario_test_routes = CardScenarioTestRoutes(lambda: manager)
