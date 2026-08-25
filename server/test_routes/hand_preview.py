@@ -1,23 +1,16 @@
 """Test-only route for constructing the hand-preview proof state."""
 
 from collections.abc import Callable
-from dataclasses import dataclass
-from typing import Any
 import uuid
 
 from fastapi import APIRouter
 
 from server.cards import Card
 from server.game import Game, GamePhase, TurnPhase
+from server.test_routes.runtime import GameSetupRuntime
 
 
-@dataclass(frozen=True)
-class HandPreviewRuntime:
-    manager: Any
-    lobby: dict
-    lobby_hosts: dict
-    lobby_factions: dict
-    lobby_bases: dict
+HandPreviewRuntime = GameSetupRuntime
 
 
 class HandPreviewTestRoutes:
