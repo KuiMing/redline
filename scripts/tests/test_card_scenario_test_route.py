@@ -26,10 +26,11 @@ class FakeManager:
 
 def test_card_scenario_route_delegates_to_current_manager():
     first_game = FakeGame()
-    holder = {"manager": FakeManager(first_game)}
+    holder = {"manager": FakeManager()}
     routes = CardScenarioTestRoutes(lambda: holder["manager"])
     app = FastAPI()
     app.include_router(routes.router)
+    holder["manager"] = FakeManager(first_game)
 
     response = TestClient(app).post(
         "/test/setup-card-scenario",
@@ -48,35 +49,74 @@ def test_card_scenario_route_delegates_to_current_manager():
 
 def test_card_scenario_route_returns_existing_missing_game_error():
     routes = CardScenarioTestRoutes(lambda: FakeManager())
+    app = FastAPI()
+    app.include_router(routes.router)
 
-    assert routes.test_setup_card_scenario({"game_id": "missing"}) == {
-        "error": "Game not found"
-    }
+    response = TestClient(app).post(
+        "/test/setup-card-scenario",
+        json={"game_id": "missing"},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"error": "Game not found"}
 
 
-def test_main_compatibility_export_uses_rebound_manager(monkeypatch):
+def test_main_http_route_uses_rebound_manager(monkeypatch):
     game = FakeGame()
     manager = FakeManager(game)
     monkeypatch.setattr(main, "manager", manager)
 
-    result = main.test_setup_card_scenario(
-        {"game_id": "g2", "player_id": "p2", "card_name": "另一張卡"}
+    response = TestClient(main.app).post(
+        "/test/setup-card-scenario",
+        json={"game_id": "g2", "player_id": "p2", "card_name": "另一張卡"},
     )
 
-    assert result["success"] is True
+    assert response.status_code == 200
+    assert response.json()["success"] is True
+    assert callable(main.test_setup_card_scenario)
     assert manager.game_ids == ["g2"]
     assert game.calls == [("p2", "另一張卡")]
 
 
-def test_main_registers_card_scenario_router_once():
-    included = [
+def _effective_app_routes():
+    for route in main.app.routes:
+        original_router = getattr(route, "original_router", None)
+        if original_router is not None:
+            yield from original_router.routes
+        else:
+            yield route
+
+
+def test_main_registers_card_scenario_route_once():
+    routes = [
         route
-        for route in main.app.routes
-        if getattr(route, "original_router", None)
-        is main._card_scenario_test_routes.router
+        for route in _effective_app_routes()
+        if getattr(route, "path", None) == "/test/setup-card-scenario"
     ]
 
-    assert len(included) == 1
-    route = main._card_scenario_test_routes.router.routes[0]
-    assert getattr(route, "path", None) == "/test/setup-card-scenario"
-    assert getattr(route, "methods", None) == {"POST"}
+    assert len(routes) == 1
+    assert getattr(routes[0], "methods", None) == {"POST"}
+
+
+def test_card_scenario_request_parsing_contract():
+    routes = CardScenarioTestRoutes(lambda: FakeManager())
+    app = FastAPI()
+    app.include_router(routes.router)
+    client = TestClient(app)
+
+    assert client.post("/test/setup-card-scenario").status_code == 422
+    assert client.post("/test/setup-card-scenario", json=[]).status_code == 422
+    response = client.post("/test/setup-card-scenario", json={})
+    assert response.status_code == 200
+    assert response.json() == {"error": "Game not found"}
+
+
+def test_card_scenario_openapi_contract_is_stable():
+    operation = main.app.openapi()["paths"]["/test/setup-card-scenario"]["post"]
+
+    assert operation["summary"] == "Test Setup Card Scenario"
+    assert operation["operationId"] == (
+        "test_setup_card_scenario_test_setup_card_scenario_post"
+    )
+    assert operation["requestBody"]["required"] is True
+    assert set(operation["responses"]) == {"200", "422"}
