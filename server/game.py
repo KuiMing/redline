@@ -6293,12 +6293,6 @@ class Game:
         self.event_notification = self._event_display_payload()
         self.turn_log = self._new_turn_log()
 
-        # ✅ Tick active eras at end of full turn
-        if self.era_engine:
-            expired_eras = self.era_engine.tick()
-            if self.era_notification and self.era_notification.get("id") in set(expired_eras):
-                self.era_notification = None
-
         # Keep draining any in-flight (interactive) era activation every turn so a
         # pending choice from an already-triggered era is not stalled.
         self._continue_era_activation_queue()
@@ -6309,6 +6303,16 @@ class Game:
         # 回合正式觸發）。若紅軍是整輪最後一席，先增加回合數，讓觸發與效果紀錄
         # 使用新回合編號；真正交棒時再略過重複增加。
         if getattr(player, 'faction_id', None) == 'red_army':
+            # 「持續 N 回合」按完整輪次計算，不按每位玩家的個別行動回合計算。
+            # 紅軍回合結束是既有時代關卡判定邊界：先扣除已生效關卡的期限，
+            # 再偵測新關卡，避免新觸發的 2 回合效果立即被扣成 1 回合。
+            if self.era_engine:
+                expired_eras = self.era_engine.tick()
+                if (
+                    self.era_notification
+                    and self.era_notification.get("id") in set(expired_eras)
+                ):
+                    self.era_notification = None
             next_player_index = (self.current_player_index + 1) % len(self.players)
             wraps_round = next_player_index == getattr(self, 'round_start_player_index', 0)
             if wraps_round and not self._era_turn_preincremented:

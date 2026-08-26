@@ -121,22 +121,111 @@ def test_taiwan_era_triggers_at_seven_distinct_inside_wall_organizations_via_pha
     assert game.era_engine.get_active_era_details()[0]["remaining"] == 2
 
 
-def test_timed_era_is_not_consumed_on_activation_boundary_or_reactivated_after_expiry():
+def test_timed_era_ticks_once_per_round_and_rewards_two_owner_turns():
     game, taiwan, _red = _make_game()
     legal_inside_towns = _legal_inside_wall_towns(game, taiwan)
     taiwan.organizations = {town: 1 for town in legal_inside_towns[:7]}
 
     # Era trigger detection only runs once a full round wraps (after every player,
     # Red Army included, has acted). Start with Red Army (the last seat) as the
-    # current player so a single advance ends its turn and wraps the round,
-    # triggering detection — the era must NOT activate on the non-red seat's own
-    # turn-end mid-round.
+    # current player so a single advance ends its turn and wraps the round.
     game.current_player_index = 1
     _advance_current_player_turn(game)
     assert game.era_engine.get_active_era_details()[0]["remaining"] == 2
+    activation_stage = game.state(viewer_player_id=taiwan.id)["my_era_stage"]
+    assert activation_stage["active"] is True
+    assert activation_stage["remaining"] == 2
     activation_discard_count = len(taiwan.deck.discard_pile)
-    # The round wrap drew a fresh real event; keep it idle so the following turn
-    # ends don't settle it and prompt a choice (unrelated to era duration ticking).
+    taiwan_town = game._towns_for_region_alias("taiwan")[0]
+
+    # First Taiwan turn: the effect is active for the complete turn. Ending the
+    # Taiwan seat must not consume a round of duration.
+    taiwan.resources["propaganda"] = 0
+    first_applied = game._apply_era_build_effects(taiwan, taiwan_town)
+    assert taiwan.resources["propaganda"] == 1
+    assert first_applied[0]["era"] == "taiwan"
+    game.current_event = {"id": "next-idle", "name": "next idle", "type": "idle"}
+    game.event_progress = {
+        "count": 0,
+        "required": 0,
+        "succeeded": True,
+        "settled": True,
+        "status": "idle",
+    }
+    _advance_current_player_turn(game)
+    assert game.era_engine.get_active_era_details()[0]["remaining"] == 2
+
+    # The Red Army boundary completes one full round and consumes one duration.
+    _advance_current_player_turn(game)
+    assert game.era_engine.get_active_era_details()[0]["remaining"] == 1
+    second_turn_stage = game.state(viewer_player_id=taiwan.id)["my_era_stage"]
+    assert second_turn_stage["active"] is True
+    assert second_turn_stage["remaining"] == 1
+
+    # Second Taiwan turn still receives the printed reward.
+    game.current_event = {"id": "next-idle", "name": "next idle", "type": "idle"}
+    game.event_progress = {
+        "count": 0,
+        "required": 0,
+        "succeeded": True,
+        "settled": True,
+        "status": "idle",
+    }
+    taiwan.resources["propaganda"] = 0
+    second_applied = game._apply_era_build_effects(taiwan, taiwan_town)
+    assert taiwan.resources["propaganda"] == 1
+    assert second_applied[0]["era"] == "taiwan"
+    _advance_current_player_turn(game)
+    assert game.era_engine.get_active_era_details()[0]["remaining"] == 1
+
+    # The following Red Army boundary ends the second full round and expires it.
+    _advance_current_player_turn(game)
+    assert "taiwan" not in game.era_engine.get_active_eras()
+    assert "taiwan" in game.era_engine.get_activated_eras()
+    expired_stage = game.state(viewer_player_id=taiwan.id)["my_era_stage"]
+    assert expired_stage["achieved"] is True
+    assert expired_stage["active"] is False
+    assert expired_stage["remaining"] is None
+    assert len(taiwan.deck.discard_pile) == activation_discard_count
+
+
+def test_timed_era_duration_is_independent_of_player_count():
+    random.seed(20260826)
+    game = Game(
+        [
+            ("taiwan", "Taiwan"),
+            ("ally", "Ally"),
+            ("observer", "Observer"),
+            ("red", "Red"),
+        ],
+        market_mode="all_cards",
+    )
+    taiwan, ally, observer, red = game.players
+    taiwan.faction_id = "taiwan_green"
+    ally.faction_id = "hong_kong"
+    observer.faction_id = "liberals"
+    red.faction_id = "red_army"
+    red.organizations = {"北京": 1}
+    game.current_player_index = 3
+    game.round_start_player_index = 0
+    game.game_phase = GamePhase.MAIN
+    game.turn_phase = TurnPhase.ACTION
+    game.winner = None
+    game.pending_choice = None
+    game.current_event = {"id": "test-idle", "name": "test idle", "type": "idle"}
+    game.event_progress = {
+        "count": 0,
+        "required": 0,
+        "succeeded": True,
+        "settled": True,
+        "status": "idle",
+    }
+    legal_inside_towns = _legal_inside_wall_towns(game, taiwan)
+    taiwan.organizations = {town: 1 for town in legal_inside_towns[:7]}
+
+    _advance_current_player_turn(game)
+    assert game.current_player() is taiwan
+    assert game.era_engine.get_active_era_details()[0]["remaining"] == 2
     game.current_event = {"id": "next-idle", "name": "next idle", "type": "idle"}
     game.event_progress = {
         "count": 0,
@@ -146,20 +235,14 @@ def test_timed_era_is_not_consumed_on_activation_boundary_or_reactivated_after_e
         "status": "idle",
     }
 
+    for expected_next in (ally, observer, red):
+        _advance_current_player_turn(game)
+        assert game.current_player() is expected_next
+        assert game.era_engine.get_active_era_details()[0]["remaining"] == 2
+
     _advance_current_player_turn(game)
+    assert game.current_player() is taiwan
     assert game.era_engine.get_active_era_details()[0]["remaining"] == 1
-    game.current_event = {"id": "next-idle", "name": "next idle", "type": "idle"}
-    game.event_progress = {
-        "count": 0,
-        "required": 0,
-        "succeeded": True,
-        "settled": True,
-        "status": "idle",
-    }
-    _advance_current_player_turn(game)
-    assert "taiwan" not in game.era_engine.get_active_eras()
-    assert "taiwan" in game.era_engine.get_activated_eras()
-    assert len(taiwan.deck.discard_pile) == activation_discard_count
 
 
 def test_expired_one_time_era_is_achieved_but_not_active_in_viewer_public_state():
