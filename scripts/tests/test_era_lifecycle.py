@@ -194,19 +194,21 @@ def test_timed_era_duration_is_independent_of_player_count():
     game = Game(
         [
             ("taiwan", "Taiwan"),
+            ("red", "Red"),
             ("ally", "Ally"),
             ("observer", "Observer"),
-            ("red", "Red"),
         ],
         market_mode="all_cards",
     )
-    taiwan, ally, observer, red = game.players
+    taiwan, red, ally, observer = game.players
     taiwan.faction_id = "taiwan_green"
+    red.faction_id = "red_army"
     ally.faction_id = "hong_kong"
     observer.faction_id = "liberals"
-    red.faction_id = "red_army"
     red.organizations = {"北京": 1}
-    game.current_player_index = 3
+    # Red Army is deliberately not the last seat. Era duration still follows one
+    # Red-Army-to-Red-Army cycle and must not depend on the round-wrap seat.
+    game.current_player_index = 1
     game.round_start_player_index = 0
     game.game_phase = GamePhase.MAIN
     game.turn_phase = TurnPhase.ACTION
@@ -224,7 +226,7 @@ def test_timed_era_duration_is_independent_of_player_count():
     taiwan.organizations = {town: 1 for town in legal_inside_towns[:7]}
 
     _advance_current_player_turn(game)
-    assert game.current_player() is taiwan
+    assert game.current_player() is ally
     assert game.era_engine.get_active_era_details()[0]["remaining"] == 2
     game.current_event = {"id": "next-idle", "name": "next idle", "type": "idle"}
     game.event_progress = {
@@ -235,13 +237,13 @@ def test_timed_era_duration_is_independent_of_player_count():
         "status": "idle",
     }
 
-    for expected_next in (ally, observer, red):
+    for expected_next in (observer, taiwan, red):
         _advance_current_player_turn(game)
         assert game.current_player() is expected_next
         assert game.era_engine.get_active_era_details()[0]["remaining"] == 2
 
     _advance_current_player_turn(game)
-    assert game.current_player() is taiwan
+    assert game.current_player() is ally
     assert game.era_engine.get_active_era_details()[0]["remaining"] == 1
 
 
