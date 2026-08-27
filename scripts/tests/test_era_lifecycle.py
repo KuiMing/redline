@@ -122,7 +122,10 @@ def test_taiwan_era_triggers_at_seven_distinct_inside_wall_organizations_via_pha
 
 
 def test_timed_era_ticks_once_per_round_and_rewards_two_owner_turns():
-    game, taiwan, _red = _make_game()
+    game, taiwan, red = _make_game()
+    taiwan.name = "host"
+    red.name = "host"
+    assert taiwan.name == red.name
     legal_inside_towns = _legal_inside_wall_towns(game, taiwan)
     taiwan.organizations = {town: 1 for town in legal_inside_towns[:7]}
 
@@ -144,9 +147,10 @@ def test_timed_era_ticks_once_per_round_and_rewards_two_owner_turns():
     # First Taiwan turn: the effect is active for the complete turn. Ending the
     # Taiwan seat must not consume a round of duration.
     taiwan.resources["propaganda"] = 0
-    first_applied = game._apply_era_build_effects(taiwan, taiwan_town)
+    game._record_action_build(taiwan, taiwan_town)
     assert taiwan.resources["propaganda"] == 1
-    assert first_applied[0]["era"] == "taiwan"
+    assert game.turn_log["built_towns"][-1] == taiwan_town
+    assert game.turn_log["era_effects_applied"][-1]["era"] == "taiwan"
     game.current_event = {"id": "next-idle", "name": "next idle", "type": "idle"}
     game.event_progress = {
         "count": 0,
@@ -179,9 +183,10 @@ def test_timed_era_ticks_once_per_round_and_rewards_two_owner_turns():
         "status": "idle",
     }
     taiwan.resources["propaganda"] = 0
-    second_applied = game._apply_era_build_effects(taiwan, taiwan_town)
+    game._record_action_build(taiwan, taiwan_town)
     assert taiwan.resources["propaganda"] == 1
-    assert second_applied[0]["era"] == "taiwan"
+    assert game.turn_log["built_towns"][-1] == taiwan_town
+    assert game.turn_log["era_effects_applied"][-1]["era"] == "taiwan"
     assert any(
         line.startswith(
             "[Turn 14] Era [臺灣]綏靖派反對介入對岸: "
