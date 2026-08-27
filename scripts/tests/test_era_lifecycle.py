@@ -130,7 +130,10 @@ def test_timed_era_ticks_once_per_round_and_rewards_two_owner_turns():
     # Red Army included, has acted). Start with Red Army (the last seat) as the
     # current player so a single advance ends its turn and wraps the round.
     game.current_player_index = 1
+    game.turn = 12
     _advance_current_player_turn(game)
+    assert game.turn == 13
+    assert game.current_player() is taiwan
     assert game.era_engine.get_active_era_details()[0]["remaining"] == 2
     activation_stage = game.state(viewer_player_id=taiwan.id)["my_era_stage"]
     assert activation_stage["active"] is True
@@ -153,10 +156,14 @@ def test_timed_era_ticks_once_per_round_and_rewards_two_owner_turns():
         "status": "idle",
     }
     _advance_current_player_turn(game)
+    assert game.turn == 13
+    assert game.current_player().faction_id == "red_army"
     assert game.era_engine.get_active_era_details()[0]["remaining"] == 2
 
     # The Red Army boundary completes one full round and consumes one duration.
     _advance_current_player_turn(game)
+    assert game.turn == 14
+    assert game.current_player() is taiwan
     assert game.era_engine.get_active_era_details()[0]["remaining"] == 1
     second_turn_stage = game.state(viewer_player_id=taiwan.id)["my_era_stage"]
     assert second_turn_stage["active"] is True
@@ -175,6 +182,13 @@ def test_timed_era_ticks_once_per_round_and_rewards_two_owner_turns():
     second_applied = game._apply_era_build_effects(taiwan, taiwan_town)
     assert taiwan.resources["propaganda"] == 1
     assert second_applied[0]["era"] == "taiwan"
+    assert any(
+        line.startswith(
+            "[Turn 14] Era [臺灣]綏靖派反對介入對岸: "
+        )
+        and "gained 1 propaganda" in line
+        for line in game.action_log
+    )
     _advance_current_player_turn(game)
     assert game.era_engine.get_active_era_details()[0]["remaining"] == 1
 
