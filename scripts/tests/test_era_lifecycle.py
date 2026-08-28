@@ -121,11 +121,13 @@ def test_taiwan_era_triggers_at_seven_distinct_inside_wall_organizations_via_pha
     assert game.era_engine.get_active_era_details()[0]["remaining"] == 2
 
 
-def test_timed_era_ticks_once_per_round_and_rewards_two_owner_turns():
+def test_reported_host_test_flow_keeps_taiwan_era_through_turn_fourteen():
     game, taiwan, red = _make_game()
-    taiwan.name = "host"
+    taiwan.name = "test"
     red.name = "host"
-    assert taiwan.name == red.name
+    assert taiwan.name == "test"
+    assert red.name == "host"
+    assert taiwan.id != red.id
     legal_inside_towns = _legal_inside_wall_towns(game, taiwan)
     taiwan.organizations = {town: 1 for town in legal_inside_towns[:7]}
 
@@ -190,8 +192,8 @@ def test_timed_era_ticks_once_per_round_and_rewards_two_owner_turns():
     assert any(
         line.startswith(
             "[Turn 14] Era [臺灣]綏靖派反對介入對岸: "
+            "test gained 1 propaganda"
         )
-        and "gained 1 propaganda" in line
         for line in game.action_log
     )
     _advance_current_player_turn(game)
