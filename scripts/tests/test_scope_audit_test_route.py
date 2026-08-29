@@ -44,6 +44,28 @@ def _effective_app_routes():
             yield route
 
 
+CANONICAL_PREFIXES = {
+    "mongolia_outside": ["亞巴坎", "伊爾庫次克", "克孜勒", "喬巴山"],
+    "mongolia_inside": ["延邊", "丹東", "牡丹江", "佳木斯"],
+    "hong_kong_outside_victory": [
+        "臺北", "新北", "基隆", "桃園", "新竹", "苗栗", "彰化",
+        "臺中", "南投", "雲林", "嘉義", "臺南", "高雄", "屏東",
+    ],
+    "hong_kong_inside_victory": [
+        "延邊", "丹東", "牡丹江", "佳木斯", "赤峰", "承德", "朝陽",
+        "阜新", "北京", "天津", "張家口", "烏蘭察布", "錫林郭勒", "呼和浩特",
+    ],
+    "red_taiwan_without_taiwan": [
+        "南投", "嘉義", "基隆", "宜蘭", "屏東", "彰化", "新北",
+        "新竹", "東沙", "桃園", "澎湖", "臺中", "臺北", "臺南",
+    ],
+    "red_taiwan_with_taiwan": [
+        "南投", "嘉義", "基隆", "宜蘭", "屏東", "彰化", "新北",
+        "新竹", "東沙", "桃園", "澎湖", "臺中", "臺北", "臺南",
+    ],
+}
+
+
 SCENARIOS = [
     ("mongolia_outside", 2, "mongol", "red_army", 4, 0, 4, False, None),
     ("mongolia_inside", 2, "mongol", "red_army", 4, 4, 0, True, None),
@@ -167,32 +189,7 @@ def test_scope_audit_scenarios_preserve_canonical_state_and_results(
     assert (stage.get("achieved") if stage else None) is era_achieved
     assert result["state"].get("winner") == winner
 
-    inside = [
-        town
-        for town in game.map.get("towns", {})
-        if game._is_inside_wall_town(town)
-    ]
-    outside = [
-        town
-        for town in game.map.get("towns", {})
-        if not game._is_inside_wall_town(town)
-    ]
-    mongolia_outside = [
-        town
-        for town in game._towns_for_region_alias("mongolian_plateau")
-        if not game._is_inside_wall_town(town)
-    ]
-    taiwan_towns = list(game._towns_for_region_alias("taiwan"))
-    if scenario == "mongolia_outside":
-        expected_towns = mongolia_outside[:4]
-    elif scenario == "mongolia_inside":
-        expected_towns = inside[:4]
-    elif scenario == "hong_kong_outside_victory":
-        expected_towns = outside[:14]
-    elif scenario == "hong_kong_inside_victory":
-        expected_towns = inside[:14]
-    else:
-        expected_towns = taiwan_towns[:14]
+    expected_towns = CANONICAL_PREFIXES[scenario]
     assert list(actor.organizations) == expected_towns
     assert actor.organizations == {town: 1 for town in expected_towns}
     assert actor.base == (
@@ -279,20 +276,29 @@ def test_scope_audit_preserves_insufficient_mongolia_and_taiwan_errors(monkeypat
         ).test_setup_scope_audit_proof({"scenario": scenario})
         assert result == {"error": message}
         assert runtime.manager.games == {}
+        assert runtime.manager.connections == {}
         assert runtime.lobby == {}
+        assert runtime.lobby_hosts == {}
+        assert runtime.lobby_factions == {}
+        assert runtime.lobby_bases == {}
 
 
 def test_scope_audit_preserves_hook_and_store_order(monkeypatch):
     events = []
 
+    class RecordingDict(dict):
+        def __init__(self, label):
+            super().__init__()
+            self.label = label
+
+        def __setitem__(self, key, value):
+            events.append(("store", self.label, key))
+            super().__setitem__(key, value)
+
     class OrderedManager(FakeManager):
         def __init__(self):
-            self._games = {}
-            self.connections = {}
-
-        @property
-        def games(self):
-            return self._games
+            self.games = RecordingDict("games")
+            self.connections = RecordingDict("connections")
 
     class OrderedGame(Game):
         def _check_era_trigger(self):
@@ -308,19 +314,33 @@ def test_scope_audit_preserves_hook_and_store_order(monkeypatch):
             return super().state(viewer_player_id)
 
     monkeypatch.setattr(scope_audit, "Game", OrderedGame)
-    runtime = _runtime(OrderedManager())
+    runtime = GameSetupRuntime(
+        manager=OrderedManager(),
+        lobby=RecordingDict("lobby"),
+        lobby_hosts=RecordingDict("lobby_hosts"),
+        lobby_factions=RecordingDict("lobby_factions"),
+        lobby_bases=RecordingDict("lobby_bases"),
+    )
     result = ScopeAuditTestRoutes(lambda: runtime).test_setup_scope_audit_proof(
         {"scenario": "mongolia_outside"}
     )
     game = runtime.manager.games[result["game_id"]]
 
-    relevant = [event for event in events if event[0] in {"era", "victory", "state"}]
-    initial_hook_id = relevant[-3][1]
+    relevant = [
+        event for event in events if event[0] in {"era", "victory", "store", "state"}
+    ]
+    initial_hook_id = relevant[-9][1]
     assert initial_hook_id
     assert initial_hook_id != result["game_id"]
-    assert relevant[-3:] == [
+    assert relevant[-9:] == [
         ("era", initial_hook_id, GamePhase.MAIN, TurnPhase.ACTION),
         ("victory", initial_hook_id, GamePhase.MAIN, TurnPhase.ACTION),
+        ("store", "games", result["game_id"]),
+        ("store", "connections", result["game_id"]),
+        ("store", "lobby", result["game_id"]),
+        ("store", "lobby_hosts", result["game_id"]),
+        ("store", "lobby_factions", result["game_id"]),
+        ("store", "lobby_bases", result["game_id"]),
         ("state", result["game_id"], game.players[0].id),
     ]
 
@@ -403,19 +423,29 @@ def test_scope_audit_route_is_registered_once_at_original_position():
     assert paths[index + 1] == "/test/setup-inside-wall-proof"
 
 
-def test_scope_audit_player_ids_keep_route_owned_uuid_prefix(monkeypatch):
+@pytest.mark.parametrize(
+    ("scenario", "expected_player_indexes", "expected_game_index"),
+    [
+        ("mongolia_outside", [0, 1], 5),
+        ("red_taiwan_with_taiwan", [0, 1, 2], 7),
+    ],
+)
+def test_scope_audit_uuid_order_is_stable(
+    monkeypatch,
+    scenario,
+    expected_player_indexes,
+    expected_game_index,
+):
     ids = [uuid.UUID(int=value) for value in range(1, 1000)]
     monkeypatch.setattr(scope_audit.uuid, "uuid4", iter(ids).__next__)
     runtime = _runtime()
 
     result = ScopeAuditTestRoutes(lambda: runtime).test_setup_scope_audit_proof(
-        {"scenario": "red_taiwan_with_taiwan"}
+        {"scenario": scenario}
     )
     game = runtime.manager.games[result["game_id"]]
 
     assert [player.id for player in game.players] == [
-        str(ids[0]),
-        str(ids[1]),
-        str(ids[2]),
+        str(ids[index]) for index in expected_player_indexes
     ]
-    assert result["game_id"] not in {str(ids[0]), str(ids[1]), str(ids[2])}
+    assert result["game_id"] == str(ids[expected_game_index])
