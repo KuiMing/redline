@@ -31,6 +31,7 @@ from server.test_routes.card_scenario import CardScenarioTestRoutes
 from server.test_routes.force_base_selection import ForceBaseSelectionTestRoutes
 from server.test_routes.hand_preview import HandPreviewRuntime, HandPreviewTestRoutes
 from server.test_routes.inside_wall import InsideWallTestRoutes
+from server.test_routes.intel_network import IntelNetworkTestRoutes
 from server.test_routes.runtime import GameSetupRuntime
 from server.test_routes.scope_audit import ScopeAuditTestRoutes
 from server.test_routes.set_hand import SetHandTestRoutes
@@ -813,61 +814,19 @@ test_force_base_selection = (
 )
 
 
-@app.post("/test/setup-intel-network-proof")
-def test_setup_intel_network_proof(payload: dict):
-    game_id = str(uuid.uuid4())
-    players = [
-        (str(uuid.uuid4()), "viewer"),
-        (str(uuid.uuid4()), "enemyA"),
-        (str(uuid.uuid4()), "enemyB"),
-        (str(uuid.uuid4()), "enemyC"),
-    ]
-    game = Game(players)
-
-    viewer, enemy_a, enemy_b, enemy_c = game.players
-
-    viewer.faction_id = payload.get("viewer_faction", "red_army")
-    viewer.base = payload.get("viewer_base", "北京")
-    viewer.organizations = dict(payload.get("viewer_organizations") or {"北京": 1})
-    intel_card_count = max(1, int(payload.get("intel_card_count", 1) or 1))
-    viewer.hand = [Card("情報網", "command", {}) for _ in range(intel_card_count)]
-
-    enemy_a.faction_id = payload.get("enemy_a_faction", "hong_kong")
-    enemy_a.base = payload.get("enemy_a_base", "香港城")
-    enemy_a_organizations = payload.get("enemy_a_organizations") or {"天津": 1, "香港城": 1, "廣州": 1}
-    enemy_a.organizations = dict(enemy_a_organizations)
-    enemy_a.hand = [Card("敵方手牌A1", "command", {}), Card("敵方手牌A2", "command", {})]
-
-    enemy_b.faction_id = payload.get("enemy_b_faction", "taiwan_green")
-    enemy_b.base = payload.get("enemy_b_base", "臺北")
-    enemy_b.organizations = dict(payload.get("enemy_b_organizations") or {"臺北": 1})
-    enemy_b.hand = [Card("敵方手牌B1", "command", {}), Card("敵方手牌B2", "command", {})]
-
-    enemy_c.faction_id = payload.get("enemy_c_faction", "minyun")
-    enemy_c.base = payload.get("enemy_c_base", "巴黎")
-    enemy_c.organizations = dict(payload.get("enemy_c_organizations") or {"巴黎": 1, "上海": 1})
-    enemy_c.hand = [Card("敵方手牌C1", "command", {}), Card("敵方手牌C2", "command", {})]
-
-    game.current_player_index = 0
-    game.turn_phase = TurnPhase.ACTION
-    game.game_phase = GamePhase.MAIN
-    game.pending_base_choices = {}
-    game.id = game_id
-
-    manager.games[game_id] = game
-    manager.connections[game_id] = manager.connections.get(game_id, {})
-    lobby[game_id] = list(zip([p.id for p in game.players], [p.name for p in game.players]))
-    lobby_hosts[game_id] = viewer.id
-    lobby_factions[game_id] = {p.id: p.faction_id for p in game.players}
-    lobby_bases[game_id] = {p.id: p.base for p in game.players}
-
-    return {
-        "success": True,
-        "game_id": game_id,
-        "player_id": viewer.id,
-        "players": [{"id": p.id, "name": p.name, "faction": p.faction_id} for p in game.players],
-        "state": game.state(),
-    }
+_intel_network_test_routes = IntelNetworkTestRoutes(
+    lambda: GameSetupRuntime(
+        manager=manager,
+        lobby=lobby,
+        lobby_hosts=lobby_hosts,
+        lobby_factions=lobby_factions,
+        lobby_bases=lobby_bases,
+    )
+)
+app.include_router(_intel_network_test_routes.router)
+test_setup_intel_network_proof = (
+    _intel_network_test_routes.test_setup_intel_network_proof
+)
 
 
 @app.post("/test/setup-press-advantage-proof")
