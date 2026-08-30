@@ -44,6 +44,7 @@ from server.test_routes.era_event_layout import EraEventLayoutTestRoutes
 from server.test_routes.era_notification import EraNotificationTestRoutes
 from server.test_routes.event_card import EventCardTestRoutes
 from server.test_routes.expand_results import ExpandResultsTestRoutes
+from server.test_routes.faction_action_used import FactionActionUsedTestRoutes
 from server.test_routes.force_base_selection import ForceBaseSelectionTestRoutes
 from server.test_routes.hand_preview import HandPreviewRuntime, HandPreviewTestRoutes
 from server.test_routes.hong_kong_era_red_discard import HongKongEraRedDiscardTestRoutes
@@ -1540,71 +1541,19 @@ test_setup_urumqi_event_proof = (
 )
 
 
-@app.post("/test/setup-faction-action-used-proof")
-def test_setup_faction_action_used_proof(payload: dict):
-    """Proof setup for the 2026-08-09 playtest bug: a faction with a one-per-turn activated
-    ability (澳門/賭徒耳語 by default) that has ALREADY used it this turn should not have the
-    centred faction-action modal keep force-reopening every time an unrelated action (e.g.
-    playing a hand card as a resource) triggers a re-render."""
-    game_id = str(uuid.uuid4())
-    players = [(str(uuid.uuid4()), "viewer"), (str(uuid.uuid4()), "opponent")]
-    game = Game(players)
-
-    viewer = game.players[0]
-    opponent = game.players[1]
-
-    faction_id = payload.get("faction_id", "aomen")
-    resource_card_name = payload.get("resource_card_name", "領導")
-    faction_action_used = payload.get("faction_action_used", True)
-
-    def proof_card(name):
-        entry = next((c for c in game.structured_cards if c.get("name") == name), None)
-        if entry:
-            return Card(entry["name"], entry.get("type", "command"), dict(entry.get("resources", {}) or {}))
-        return Card(name, "command", {})
-
-    viewer.faction_id = faction_id
-    viewer.base = payload.get("base", "澳門城")
-    viewer.organizations = {viewer.base: 1}
-    viewer.resources = {"money": 0, "propaganda": 0}
-    viewer.hand = [proof_card(resource_card_name)]
-    viewer.deck.draw_pile = [proof_card(name) for name in (payload.get("draw_pile") or ["補牌1", "補牌2"])]
-    viewer.deck.discard_pile = []
-
-    opponent.faction_id = "red_army"
-    opponent.base = "北京"
-    opponent.organizations = {"北京": 1}
-    opponent.hand = []
-
-    game.current_player_index = 0
-    game.turn_phase = TurnPhase.ACTION
-    game.game_phase = GamePhase.MAIN
-    game.pending_base_choices = {}
-    game.pending_choice = None
-    # 固定換成無效果的歲月靜好，避免隨機抽到互動型事件在 setup 當下就掛一個 pending_choice，
-    # 讓這支 proof 端點的行為與初始 Game() 建構時抽到什麼事件脫鉤、可穩定重跑。
-    noop_event = game._event_by_name("歲月靜好")
-    game.current_event = dict(noop_event or {})
-    game.event_progress = {"count": 0, "required": 0, "succeeded": True, "settled": True, "status": "idle"}
-    game.event_modifiers = []
-    game.turn_log["faction_action_used"] = bool(faction_action_used)
-    game.id = game_id
-    game.log(f"UI proof setup: viewer already used this turn's faction action ({faction_id}).")
-
-    manager.games[game_id] = game
-    manager.connections[game_id] = manager.connections.get(game_id, {})
-    lobby[game_id] = list(zip([p.id for p in game.players], [p.name for p in game.players]))
-    lobby_hosts[game_id] = viewer.id
-    lobby_factions[game_id] = {viewer.id: viewer.faction_id, opponent.id: opponent.faction_id}
-    lobby_bases[game_id] = {viewer.id: viewer.base, opponent.id: opponent.base}
-
-    return {
-        "success": True,
-        "game_id": game_id,
-        "player_id": viewer.id,
-        "resource_card_name": resource_card_name,
-        "state": game.state(),
-    }
+_faction_action_used_test_routes = FactionActionUsedTestRoutes(
+    lambda: GameSetupRuntime(
+        manager=manager,
+        lobby=lobby,
+        lobby_hosts=lobby_hosts,
+        lobby_factions=lobby_factions,
+        lobby_bases=lobby_bases,
+    )
+)
+app.include_router(_faction_action_used_test_routes.router)
+test_setup_faction_action_used_proof = (
+    _faction_action_used_test_routes.test_setup_faction_action_used_proof
+)
 
 
 @app.post("/test/setup-show-strength-choice-proof")
