@@ -59,6 +59,7 @@ from server.test_routes.spy import SpyTestRoutes
 from server.test_routes.support_card_play import SupportCardPlayTestRoutes
 from server.test_routes.trash_choice_ui import TrashChoiceUiTestRoutes
 from server.test_routes.underground_party import UndergroundPartyTestRoutes
+from server.test_routes.victory import VictoryTestRoutes
 import uuid
 import asyncio
 import secrets
@@ -1175,49 +1176,17 @@ app.include_router(_spy_test_routes.router)
 test_setup_spy_proof = _spy_test_routes.test_setup_spy_proof
 
 
-@app.post("/test/setup-victory-proof")
-def test_setup_victory_proof(payload: dict):
-    """Test-only：建立一場已分出勝負的 2 人局，供勝利畫面 UI proof 使用。
-
-    payload.winner：'red_army'（紅軍保底勝）或省略（預設綠線玩家名獲勝）。
-    """
-    game_id = str(uuid.uuid4())
-    green_name = payload.get("winner_name", "GREEN")
-    players = [(str(uuid.uuid4()), green_name), (str(uuid.uuid4()), "RED")]
-    game = Game(players)
-    green, red = game.players
-
-    green.faction_id = "taiwan_green"
-    green.base = "臺北"
-    green.organizations = {"臺北": 3, "桃園": 2}
-    green.resources = {"money": 2, "propaganda": 4}
-    red.faction_id = "red_army"
-    red.base = "北京"
-    red.organizations = {"北京": 5, "天津": 2}
-    red.resources = {"money": 1, "propaganda": 0}
-
-    game.game_phase = GamePhase.FINISHED
-    game.turn = int(payload.get("turn", 21) or 21)
-    game.winner = payload.get("winner", green_name)
-    game.co_winners = list(payload.get("co_winners", []) or [])
-    game.pending_base_choices = {}
-    game.id = game_id
-
-    manager.games[game_id] = game
-    manager.connections[game_id] = manager.connections.get(game_id, {})
-    lobby[game_id] = list(zip([p.id for p in game.players], [p.name for p in game.players]))
-    lobby_hosts[game_id] = green.id
-    lobby_factions[game_id] = {green.id: green.faction_id, red.id: red.faction_id}
-    lobby_bases[game_id] = {green.id: green.base, red.id: red.base}
-
-    return {
-        "success": True,
-        "game_id": game_id,
-        "player_id": green.id,
-        "red_player_id": red.id,
-        "winner": game.winner,
-        "state": game.state(),
-    }
+_victory_test_routes = VictoryTestRoutes(
+    lambda: GameSetupRuntime(
+        manager=manager,
+        lobby=lobby,
+        lobby_hosts=lobby_hosts,
+        lobby_factions=lobby_factions,
+        lobby_bases=lobby_bases,
+    )
+)
+app.include_router(_victory_test_routes.router)
+test_setup_victory_proof = _victory_test_routes.test_setup_victory_proof
 
 
 @app.post("/test/setup-draw-privacy-proof")
