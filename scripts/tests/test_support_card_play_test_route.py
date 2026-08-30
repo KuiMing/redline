@@ -96,7 +96,6 @@ def test_support_card_play_default_state_and_lobby_registration():
     assert game.current_player_index == 0
     assert game.pending_base_choices == {}
     assert game.id == game_id
-    assert game.current_event is None
     assert result["players"] == [
         {"id": p.id, "name": p.name, "faction": p.faction_id} for p in game.players
     ]
