@@ -14,7 +14,7 @@
 - PASS `ally_and_observer_do_not_draw`
 - PASS `actor_gains_two_propaganda_only`
 - PASS `negotiation_commits_to_discard_and_clears_pending`
-- PASS `formal_log_names_actor_enemy_and_negotiation`
+- PASS `formal_traditional_chinese_log_names_actor_enemy_and_negotiation`
 - PASS `browser_console_has_no_errors`
 
 ## Screenshots

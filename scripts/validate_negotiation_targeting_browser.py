@@ -152,7 +152,11 @@ def main() -> None:
         page.locator(".game-tab[data-view='log']").click()
         page.locator('#logView').wait_for(state='visible', timeout=5000)
         log_text = page.locator('#logViewContent').inner_text()
-        record('formal_log_names_actor_enemy_and_negotiation', 'Actor and Enemy each drew 1 via 合作談判' in log_text, log_text)
+        record(
+            'formal_traditional_chinese_log_names_actor_enemy_and_negotiation',
+            'Actor 與 Enemy 因合作談判各抽了 1 張牌' in log_text,
+            log_text,
+        )
         page.screenshot(path=str(RESULT_SHOT), full_page=True)
         context.close()
         browser.close()
