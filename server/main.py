@@ -71,6 +71,7 @@ from server.test_routes.runtime import GameSetupRuntime
 from server.test_routes.scope_audit import ScopeAuditTestRoutes
 from server.test_routes.set_hand import SetHandTestRoutes
 from server.test_routes.shared_dissolve import SharedDissolveTestRoutes
+from server.test_routes.show_strength_choice import ShowStrengthChoiceTestRoutes
 from server.test_routes.spy import SpyTestRoutes
 from server.test_routes.support import SupportTestRoutes
 from server.test_routes.support_card_play import SupportCardPlayTestRoutes
@@ -1556,47 +1557,19 @@ test_setup_faction_action_used_proof = (
 )
 
 
-@app.post("/test/setup-show-strength-choice-proof")
-def test_setup_show_strength_choice_proof(payload: dict):
-    """建立「展現實力」已達成且等待能力擁有者選擇獎勵的 Browser proof。"""
-    game_id = str(uuid.uuid4())
-    players = [(str(uuid.uuid4()), "滿洲玩家"), (str(uuid.uuid4()), "紅軍玩家")]
-    game = Game(players)
-    player, red = game.players
-
-    player.faction_id = "manchuria"
-    player.base = "東京"
-    player.organizations = {"東京": 1}
-    player.resources = {"money": 0, "propaganda": 0}
-    red.faction_id = "red_army"
-    red.base = "北京"
-    red.organizations = {"北京": 1}
-    game.current_player_index = 0
-    game.game_phase = GamePhase.MAIN
-    game.turn_phase = TurnPhase.ACTION
-    game.pending_base_choices = {}
-    game.turn_log = game._new_turn_log()
-    game.turn_log["played_nonstarter_names"] = ["甲", "乙", "丙"]
-    game.current_event = None
-    game.event_progress = {}
-    game.event_modifiers = []
-    game.id = game_id
-
-    game._apply_card_play_faction_abilities(player, cost_has_money=False, cost_has_propaganda=False)
-
-    manager.games[game_id] = game
-    manager.connections[game_id] = manager.connections.get(game_id, {})
-    lobby[game_id] = [(candidate.id, candidate.name) for candidate in game.players]
-    lobby_hosts[game_id] = player.id
-    lobby_factions[game_id] = {player.id: player.faction_id, red.id: red.faction_id}
-    lobby_bases[game_id] = {player.id: player.base, red.id: red.base}
-    return {
-        "success": True,
-        "game_id": game_id,
-        "player_id": player.id,
-        "pending_choice": game.pending_choice,
-        "resources": dict(player.resources),
-    }
+_show_strength_choice_test_routes = ShowStrengthChoiceTestRoutes(
+    lambda: GameSetupRuntime(
+        manager=manager,
+        lobby=lobby,
+        lobby_hosts=lobby_hosts,
+        lobby_factions=lobby_factions,
+        lobby_bases=lobby_bases,
+    )
+)
+app.include_router(_show_strength_choice_test_routes.router)
+test_setup_show_strength_choice_proof = (
+    _show_strength_choice_test_routes.test_setup_show_strength_choice_proof
+)
 
 
 @app.post("/test/setup-peer-choice-notice-proof")
