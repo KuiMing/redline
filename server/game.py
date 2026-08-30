@@ -3827,7 +3827,6 @@ class Game:
             "共合會": {"ref": "first_money_gain2", "name_override": "共合會"},
             "本土社團": {"ref": "on_build_draw_inner", "name_override": "本土社團"},
             "民國之心": {"ref": "on_build_draw_inner_or_nanyang", "name_override": "民國之心"},
-            "選我河山": {"ref": "on_build_draw", "name_override": "選我河山"},
             "還我河山": {"ref": "on_build_draw", "name_override": "還我河山"},
         }
         mapped = mapping.get(name)
@@ -4632,7 +4631,7 @@ class Game:
             if not isinstance(ability, dict):
                 continue
             name = ability.get("name")
-            if name in {"本土社團", "選我河山", "還我河山"} and built_in_china:
+            if name in {"本土社團", "還我河山"} and built_in_china:
                 self._draw_player_cards(player, 1)
                 self.log(f"{player.name} triggered {name} and drew 1 card")
                 self._track_event_progress('use_faction_ability', player=player)

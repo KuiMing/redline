@@ -11,7 +11,7 @@
   ],
   "factions": [
     {"id":"liberals","name":"自由派","group":"政治類陣營","side":"rebel","camp":"rebel","parent_faction":"rebel","bases":["任意牆內城鎮"],"abilities_text":["【立場試探】在己方行動階段，可展示牌庫頂牌，若該牌購買費用為奇數，則將其加入手牌；若為偶數，您可選擇是否將其放進己方棄牌堆。"],"win_condition_text":"回合結束時在牆內擁有至少14個有效組織。"},
-    {"id":"republican","name":"民國派","group":"政治類陣營","side":"rebel","camp":"rebel","parent_faction":"rebel","bases":["任意牆內","任意南洋","任意英美城鎮"],"abilities_text":["【選我河山】若您在回合中曾於牆內建立至少1個組織，您可以在己方行動階段結束時額外再抽1張牌。"],"special_rules":["遊戲過程中可與藍線臺灣共用組織。"],"win_condition_text":"回合結束時在牆內擁有至少11個有效組織，其中必須包含南京、廣州、重慶。"},
+    {"id":"republican","name":"民國派","group":"政治類陣營","side":"rebel","camp":"rebel","parent_faction":"rebel","bases":["任意牆內","任意南洋","任意英美城鎮"],"abilities_text":["【還我河山】若您在回合中曾於牆內建立至少1個組織，您可以在己方行動階段結束時額外再抽1張牌。"],"special_rules":["遊戲過程中可與藍線臺灣共用組織。"],"win_condition_text":"回合結束時在牆內擁有至少11個有效組織，其中必須包含南京、廣州、重慶。"},
     {"id":"federalists","name":"聯邦派","group":"政治類陣營","side":"rebel","camp":"rebel","parent_faction":"rebel","bases":["任意牆內","任意英美城鎮"],"abilities_text":["【商貿組織】當您每回合第1次打出購買費用含資金的牌時，抽1張牌。"],"win_condition_text":"回合結束時在牆內擁有至少14個有效組織。"},
     {"id":"minyun","name":"民運派","group":"政治類陣營","side":"rebel","camp":"rebel","parent_faction":"rebel","bases":["巴黎","任意東洋","任意英美城鎮"],"abilities_text":["【民主陣線】您可以用2點任意資源購買已被移除的任1張牌。","【各界資助】在遊戲開始時額外將1張資助者洗入起始牌庫。","【非暴力】禁止持有武裝類卡牌。"],"win_condition_text":"回合結束時在牆內擁有至少14個有效組織。"},
     {"id":"new_left","name":"新左派","group":"政治類陣營","side":"rebel","camp":"rebel","parent_faction":"rebel","bases":["任意牆內","任意南洋城鎮"],"abilities_text":["【星星之火】當您每回合第1次打出購買費用含宣傳的牌時，抽1張牌。"],"win_condition_text":"回合結束時在牆內擁有至少14個有效組織。"},
