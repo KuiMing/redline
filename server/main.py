@@ -71,6 +71,7 @@ from server.test_routes.spy import SpyTestRoutes
 from server.test_routes.support import SupportTestRoutes
 from server.test_routes.support_card_play import SupportCardPlayTestRoutes
 from server.test_routes.taiwan_support import TaiwanSupportTestRoutes
+from server.test_routes.tibet_era_red_build import TibetEraRedBuildTestRoutes
 from server.test_routes.trade_war_event import TradeWarEventTestRoutes
 from server.test_routes.trash_choice_ui import TrashChoiceUiTestRoutes
 from server.test_routes.underground_party import UndergroundPartyTestRoutes
@@ -1447,61 +1448,20 @@ test_setup_belt_road_red_turn_proof = (
 )
 
 
-@app.post("/test/setup-tibet-era-red-build-proof")
-def test_setup_tibet_era_red_build_proof(payload: dict):
-    players = [(str(uuid.uuid4()), "藏國"), (str(uuid.uuid4()), "紅軍")]
-    game = Game(players, market_mode="all_cards")
-    actor = game.players[0]
-    red = game.players[1]
-    actor.faction_id = "tibet"
-    red.faction_id = "red_army"
-    actor.base = "拉薩"
-    red.base = "北京"
-    actor.resources = {"money": 0, "propaganda": 0}
-    red.resources = {"money": 0, "propaganda": 0}
-    tibet_town = "列城"
-    actor.organizations = {tibet_town: 1}
-    red.organizations = {"北京": 1}
-    red.hand = [
-        Card("紅軍棄牌 UI proof 一", "money", {"money": 1}),
-        Card("紅軍棄牌 UI proof 二", "propaganda", {"propaganda": 1}),
-        Card("紅軍保留 UI proof", "money", {"money": 1}),
-    ]
-    red.deck.discard_pile = []
-    game.pending_base_choices = []
-    game.game_phase = GamePhase.MAIN
-    game.current_player_index = 1
-    game.turn_phase = TurnPhase.ACTION
-    game.era_engine.activate_era("tibet")
-    era = game.era_engine.get_definition("tibet")
-    runtime_effects = game._apply_era_activation_effects(era)
-    discard_result = None
-    if payload.get("resolve_discard", True):
-        discard_indices = payload.get("discard_indices")
-        if discard_indices is None:
-            discard_indices = [0, 1]
-        discard_result = game.resolve_pending_choice(red.id, discard_indices)
-
-    game_id = str(uuid.uuid4())
-    manager.games[game_id] = game
-    manager.connections[game_id] = manager.connections.get(game_id, {})
-    lobby[game_id] = [(p.id, p.name) for p in game.players]
-    lobby_hosts[game_id] = actor.id
-    lobby_factions[game_id] = {p.id: p.faction_id for p in game.players}
-    lobby_bases[game_id] = {p.id: p.base for p in game.players if p.base}
-    lobby_ready[game_id] = {p.id: True for p in game.players}
-    return {
-        "success": True,
-        "game_id": game_id,
-        "player_id": red.id,
-        "actor_player_id": actor.id,
-        "tibet_town": tibet_town,
-        "runtime_effects": runtime_effects,
-        "discard_result": discard_result,
-        "pending_choice": game.pending_choice,
-        "url": f"/?game_id={game_id}&player_id={red.id}",
-        "state": game.state(),
-    }
+_tibet_era_red_build_test_routes = TibetEraRedBuildTestRoutes(
+    lambda: GameSetupRuntime(
+        manager=manager,
+        lobby=lobby,
+        lobby_hosts=lobby_hosts,
+        lobby_factions=lobby_factions,
+        lobby_bases=lobby_bases,
+        lobby_ready=lobby_ready,
+    )
+)
+app.include_router(_tibet_era_red_build_test_routes.router)
+test_setup_tibet_era_red_build_proof = (
+    _tibet_era_red_build_test_routes.test_setup_tibet_era_red_build_proof
+)
 
 
 @app.post("/test/setup-era-event-layout-proof")
