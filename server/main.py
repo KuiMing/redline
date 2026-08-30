@@ -32,6 +32,7 @@ from server.test_routes.business_network_transport import BusinessNetworkTranspo
 from server.test_routes.card_scenario import CardScenarioTestRoutes
 from server.test_routes.destroyed_red_base_marker import DestroyedRedBaseMarkerTestRoutes
 from server.test_routes.discard_reshuffle import DiscardReshuffleTestRoutes
+from server.test_routes.discard_topdeck_choice import DiscardTopdeckChoiceTestRoutes
 from server.test_routes.draw_privacy import DrawPrivacyTestRoutes
 from server.test_routes.elite_defection_discard import EliteDefectionDiscardTestRoutes
 from server.test_routes.end_turn_topdeck import EndTurnTopdeckTestRoutes
@@ -1380,56 +1381,20 @@ test_setup_trade_war_event_proof = (
 )
 
 
-@app.post("/test/setup-discard-topdeck-choice")
-def test_setup_discard_topdeck_choice(payload: dict):
-    """Put the viewer straight into a 貿易戰加劇 topdeck-from-discard card choice over a
-    large discard pile, to exercise the scrollable choice grid."""
-    discard_count = int(payload.get("discard_count", 18) or 18)
-    players = [(str(uuid.uuid4()), "viewer"), (str(uuid.uuid4()), "red")]
-    game = Game(players, market_mode="all_cards")
-    viewer = game.players[0]
-    red = game.players[1]
-    viewer.faction_id = "liberals"
-    red.faction_id = "red_army"
-    viewer.base = "臺北"
-    red.base = "北京"
-    viewer.organizations = {"臺北": 1}
-    red.organizations = {"北京": 1}
-    viewer.resources = {"money": 0, "propaganda": 0}
-    viewer.hand = [Card("追隨者", "propaganda", {"propaganda": 1})]
-    viewer.deck.draw_pile = [Card("原牌庫頂下方", "command", {})]
-    viewer.deck.discard_pile = [Card(f"棄牌{i + 1:02d}", "command", {}) for i in range(discard_count)]
-
-    game.pending_base_choices = []
-    game.game_phase = GamePhase.MAIN
-    game.current_player_index = 0
-    game.turn_phase = TurnPhase.ACTION
-    event = game._event_by_name("貿易戰加劇")
-    game.current_event = event
-    game.event_notification = game._event_display_payload()
-    game.event_deck.draw_pile = []
-    game.event_deck.discard_pile = []
-
-    # Trigger the success effect directly so the topdeck-from-discard card choice is pending.
-    game._apply_event_effect({"type": "topdeck_from_discard", "count": 1}, viewer)
-
-    game_id = str(uuid.uuid4())
-    game.id = game_id
-    manager.games[game_id] = game
-    manager.connections[game_id] = manager.connections.get(game_id, {})
-    lobby[game_id] = [(p.id, p.name) for p in game.players]
-    lobby_hosts[game_id] = viewer.id
-    lobby_factions[game_id] = {p.id: p.faction_id for p in game.players}
-    lobby_bases[game_id] = {p.id: p.base for p in game.players if p.base}
-    lobby_ready[game_id] = {p.id: True for p in game.players}
-    return {
-        "success": True,
-        "game_id": game_id,
-        "player_id": viewer.id,
-        "discard_count": discard_count,
-        "url": f"/?game_id={game_id}&player_id={viewer.id}",
-        "state": game.state(),
-    }
+_discard_topdeck_choice_test_routes = DiscardTopdeckChoiceTestRoutes(
+    lambda: GameSetupRuntime(
+        manager=manager,
+        lobby=lobby,
+        lobby_hosts=lobby_hosts,
+        lobby_factions=lobby_factions,
+        lobby_bases=lobby_bases,
+        lobby_ready=lobby_ready,
+    )
+)
+app.include_router(_discard_topdeck_choice_test_routes.router)
+test_setup_discard_topdeck_choice = (
+    _discard_topdeck_choice_test_routes.test_setup_discard_topdeck_choice
+)
 
 
 @app.post("/test/setup-ccdi-choice")
