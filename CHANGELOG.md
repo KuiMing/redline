@@ -6,6 +6,22 @@
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-08-31
+
+### Added
+
+- 新增 `pyproject.toml` 與 `uv.lock`，提供可重現的 Python 相依套件安裝基準。
+
+### Changed
+
+- Docker 建置與本機啟動流程改用 uv，並在 image 建置時以 frozen lockfile 安裝執行期相依套件。
+
+### Fixed
+
+- 修正臺灣時代效果過早結束，現在會維持完整整輪。
+- 修正東洋奧援沒有合法目標時使用非正式提示的問題；現在會顯示正式 modal，並確認既有的拒絕出牌與卡牌保留行為不變。
+- 修正陣營能力名稱：`盟族學校` 改為 `盟旗學校`，`選我河山` 改為 `還我河山`。
+
 ## [0.1.0] - 2026-08-25
 
 這是 REDLINE 第一個版本化發布。此版本整理自專案建立以來完成的遊戲系統、介面與規則修正。
@@ -46,5 +62,6 @@
 - 修正陣營選擇、根據地按鈕高度、面板尺寸、HUD 排列與小型 viewport 裁切。
 - 修正抽牌資訊外洩，避免其他玩家看到不應公開的卡牌名稱。
 
-[Unreleased]: https://github.com/KuiMing/redline/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/KuiMing/redline/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/KuiMing/redline/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/KuiMing/redline/releases/tag/v0.1.0
