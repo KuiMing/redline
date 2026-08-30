@@ -32,6 +32,7 @@ from server.test_routes.force_base_selection import ForceBaseSelectionTestRoutes
 from server.test_routes.hand_preview import HandPreviewRuntime, HandPreviewTestRoutes
 from server.test_routes.inside_wall import InsideWallTestRoutes
 from server.test_routes.intel_network import IntelNetworkTestRoutes
+from server.test_routes.press_advantage import PressAdvantageTestRoutes
 from server.test_routes.runtime import GameSetupRuntime
 from server.test_routes.scope_audit import ScopeAuditTestRoutes
 from server.test_routes.set_hand import SetHandTestRoutes
@@ -829,60 +830,19 @@ test_setup_intel_network_proof = (
 )
 
 
-@app.post("/test/setup-press-advantage-proof")
-def test_setup_press_advantage_proof(payload: dict):
-    game_id = str(uuid.uuid4())
-    players = [
-        (str(uuid.uuid4()), "viewer"),
-        (str(uuid.uuid4()), "enemy"),
-    ]
-    game = Game(players)
-    viewer, enemy = game.players
-
-    def proof_card(name):
-        card_def = next((c for c in game.structured_cards if c.get("name") == name), None)
-        if card_def:
-            return Card(card_def["name"], card_def.get("type", "command"), dict(card_def.get("resources", {}) or {}))
-        return Card(name, "command", {})
-
-    viewer.faction_id = payload.get("viewer_faction", "red_army")
-    viewer.base = payload.get("viewer_base", "北京")
-    viewer.organizations = {viewer.base: 1}
-    viewer.hand = [proof_card("乘勝追擊")]
-    viewer.deck.draw_pile = [proof_card(name) for name in payload.get("draw_pile", ["抽牌A", "抽牌B"])]
-    discard_names = payload.get("discard_pile") or ["宣傳家", "合作談判", "走漏風聲"]
-    viewer.deck.discard_pile = [proof_card(name) for name in discard_names]
-    viewer.resources = {"money": 0, "propaganda": 0}
-
-    enemy.faction_id = payload.get("enemy_faction", "hong_kong")
-    enemy.base = payload.get("enemy_base", "香港城")
-    enemy.organizations = {enemy.base: 1}
-    enemy.hand = [proof_card("對手手牌A")]
-    enemy.deck.draw_pile = [proof_card("對手抽牌A")]
-    enemy.deck.discard_pile = []
-    enemy.resources = {"money": 0, "propaganda": 0}
-
-    game.current_player_index = 0
-    game.turn_phase = TurnPhase.ACTION
-    game.game_phase = GamePhase.MAIN
-    game.pending_base_choices = {}
-    game.id = game_id
-    game.log("UI proof setup: viewer has 乘勝追擊; discard pile contains 宣傳家 / 合作談判 / 走漏風聲.")
-
-    manager.games[game_id] = game
-    manager.connections[game_id] = manager.connections.get(game_id, {})
-    lobby[game_id] = list(zip([p.id for p in game.players], [p.name for p in game.players]))
-    lobby_hosts[game_id] = viewer.id
-    lobby_factions[game_id] = {p.id: p.faction_id for p in game.players}
-    lobby_bases[game_id] = {p.id: p.base for p in game.players}
-
-    return {
-        "success": True,
-        "game_id": game_id,
-        "player_id": viewer.id,
-        "players": [{"id": p.id, "name": p.name, "faction": p.faction_id, "base": p.base} for p in game.players],
-        "state": game.state(),
-    }
+_press_advantage_test_routes = PressAdvantageTestRoutes(
+    lambda: GameSetupRuntime(
+        manager=manager,
+        lobby=lobby,
+        lobby_hosts=lobby_hosts,
+        lobby_factions=lobby_factions,
+        lobby_bases=lobby_bases,
+    )
+)
+app.include_router(_press_advantage_test_routes.router)
+test_setup_press_advantage_proof = (
+    _press_advantage_test_routes.test_setup_press_advantage_proof
+)
 
 
 @app.post("/test/setup-expand-results-proof")
