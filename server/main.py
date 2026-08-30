@@ -25,6 +25,7 @@ from server.map_data_routes import (
     map_test,
     router as map_data_router,
 )
+from server.test_routes.bait_exhaustion_ui import BaitExhaustionUiTestRoutes
 from server.test_routes.build_queue import BuildQueueRuntime, BuildQueueTestRoutes
 from server.test_routes.build_view_persistence import BuildViewPersistenceTestRoutes
 from server.test_routes.business_network_transport import BusinessNetworkTransportTestRoutes
@@ -1266,54 +1267,19 @@ test_setup_taiwan_support_proof = (
 )
 
 
-@app.post("/test/setup-bait-exhaustion-ui")
-def test_setup_bait_exhaustion_ui(payload: dict):
-    game_id = str(uuid.uuid4())
-    players = [(str(uuid.uuid4()), "viewer"), (str(uuid.uuid4()), "red")]
-    game = Game(players)
-
-    viewer = game.players[0]
-    red = game.players[1]
-
-    viewer.faction_id = payload.get("faction_id", "red_army")
-    viewer.base = payload.get("base", "北京")
-    viewer.organizations = payload.get("orgs") or {viewer.base: 1}
-    viewer.resources = payload.get("resources") or {"money": 0, "propaganda": 0}
-    viewer.hand = [
-        Card("誘導虛耗", "command", {"propaganda": 1}),
-        Card("可移除手牌", "command", {}),
-    ]
-    top_card_name = payload.get("draw_top_card", "宣傳家")
-    viewer.deck.draw_pile = [Card(top_card_name, "propaganda", {"propaganda": 1})]
-    viewer.deck.discard_pile = []
-
-    red.faction_id = "hong_kong"
-    red.base = "香港城"
-    red.organizations = {"香港城": 1}
-    red.hand = [Card("對手被棄牌", "command", {})]
-    red.deck.draw_pile = [Card("對手抽牌A", "command", {})]
-    red.deck.discard_pile = []
-
-    game.current_player_index = 0
-    game.turn_phase = TurnPhase.ACTION
-    game.game_phase = GamePhase.MAIN
-    game.pending_base_choices = {}
-    game.id = game_id
-
-    manager.games[game_id] = game
-    manager.connections[game_id] = manager.connections.get(game_id, {})
-    lobby[game_id] = list(zip([p.id for p in game.players], [p.name for p in game.players]))
-    lobby_hosts[game_id] = viewer.id
-    lobby_factions[game_id] = {viewer.id: viewer.faction_id, red.id: red.faction_id}
-    lobby_bases[game_id] = {viewer.id: viewer.base, red.id: red.base}
-
-    return {
-        'success': True,
-        'game_id': game_id,
-        'player_id': viewer.id,
-        'state': game.state(),
-        'players': [{'id': p.id, 'name': p.name, 'faction': p.faction_id} for p in game.players],
-    }
+_bait_exhaustion_ui_test_routes = BaitExhaustionUiTestRoutes(
+    lambda: GameSetupRuntime(
+        manager=manager,
+        lobby=lobby,
+        lobby_hosts=lobby_hosts,
+        lobby_factions=lobby_factions,
+        lobby_bases=lobby_bases,
+    )
+)
+app.include_router(_bait_exhaustion_ui_test_routes.router)
+test_setup_bait_exhaustion_ui = (
+    _bait_exhaustion_ui_test_routes.test_setup_bait_exhaustion_ui
+)
 
 
 @app.post("/test/setup-manchuria-era-reorder-proof")
