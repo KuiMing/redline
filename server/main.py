@@ -26,6 +26,7 @@ from server.map_data_routes import (
     router as map_data_router,
 )
 from server.test_routes.bait_exhaustion_ui import BaitExhaustionUiTestRoutes
+from server.test_routes.belt_road_red_turn import BeltRoadRedTurnTestRoutes
 from server.test_routes.build_queue import BuildQueueRuntime, BuildQueueTestRoutes
 from server.test_routes.build_view_persistence import BuildViewPersistenceTestRoutes
 from server.test_routes.business_network_transport import BusinessNetworkTransportTestRoutes
@@ -1429,82 +1430,21 @@ test_setup_elite_defection_event_proof = (
 )
 
 
-@app.post("/test/setup-belt-road-red-turn-proof")
-async def test_setup_belt_road_red_turn_proof(payload: dict):
-    requested_game_id = str(payload.get("game_id") or "")
-    game = manager.games.get(requested_game_id) if requested_game_id else None
-    if game:
-        viewer_id = str(payload.get("player_id") or "")
-        red_id = str(payload.get("red_player_id") or "")
-        viewer = next((player for player in game.players if player.id == viewer_id), None)
-        red = next((player for player in game.players if player.id == red_id), None)
-        if not viewer or not red or viewer is red:
-            return {"success": False, "error": "Formal proof players not found"}
-        if game.players.index(viewer) != 0 or game.players.index(red) != 1:
-            return {"success": False, "error": "Formal proof requires viewer seat 0 and red seat 1"}
-        game_id = requested_game_id
-    else:
-        players = [(str(uuid.uuid4()), "BEN"), (str(uuid.uuid4()), "紅軍")]
-        game = Game(players, market_mode="all_cards")
-        viewer = game.players[0]
-        red = game.players[1]
-        game_id = str(uuid.uuid4())
-    viewer.faction_id = payload.get("viewer_faction", "liberals")
-    red.faction_id = "red_army"
-    viewer.base = payload.get("viewer_base", "臺北")
-    red.base = "北京"
-    viewer.organizations = {viewer.base: 1}
-    red.organizations = {"北京": 1}
-    viewer.hand = [Card("BEN 保留手牌", "money", {"money": 1})]
-    red.hand = [Card("紅軍保留手牌", "propaganda", {"propaganda": 1})]
-    game.pending_base_choices = {}
-    game.game_phase = GamePhase.MAIN
-    game.current_player_index = 0
-    game.round_start_player_index = 0
-    game.turn_phase = TurnPhase.EVENT
-    event_name = payload.get("event_name", "一帶一路 南洋")
-    event = game._event_by_name(event_name)
-    game.event_deck.draw_pile = [event] if event else []
-    game.event_deck.discard_pile = []
-    game.current_event = None
-    game.event_progress = None
-    game.event_notification = None
-    game.pending_choice = None
-    draw_result = game.advance_turn_phase()
-    initial_state = game.state()
-    advance_results = []
-    if payload.get("advance_to_red", False):
-        # EVENT -> ACTION，再一次「結束行動階段」就把席位交給紅軍（合併後不再需要第三次）。
-        for _ in range(2):
-            advance_results.append(game.advance_turn_phase())
-            if game.current_player_index == 1 and game.turn_phase == TurnPhase.EVENT:
-                break
-    if payload.get("stale_visual_build", False):
-        stale_town = payload.get("stale_town", "曼谷")
-        if game.pending_choice and game.pending_choice.get("choice_key") == "event_build_organization":
-            red.organizations[stale_town] = max(1, red.organizations.get(stale_town, 0))
-
-    manager.games[game_id] = game
-    manager.connections[game_id] = manager.connections.get(game_id, {})
-    lobby[game_id] = [(p.id, p.name) for p in game.players]
-    lobby_hosts[game_id] = viewer.id
-    lobby_factions[game_id] = {p.id: p.faction_id for p in game.players}
-    lobby_bases[game_id] = {p.id: p.base for p in game.players if p.base}
-    lobby_ready[game_id] = {p.id: True for p in game.players}
-    if requested_game_id:
-        await broadcast_game_state(game_id, game)
-    return {
-        "success": True,
-        "game_id": game_id,
-        "player_id": viewer.id,
-        "red_player_id": red.id,
-        "event_name": event_name,
-        "draw_result": draw_result,
-        "advance_results": advance_results,
-        "initial_state": initial_state,
-        "url": f"/?game_id={game_id}&player_id={red.id}",
-        "state": game.state(),
-    }
+_belt_road_red_turn_test_routes = BeltRoadRedTurnTestRoutes(
+    lambda: GameSetupRuntime(
+        manager=manager,
+        lobby=lobby,
+        lobby_hosts=lobby_hosts,
+        lobby_factions=lobby_factions,
+        lobby_bases=lobby_bases,
+        lobby_ready=lobby_ready,
+    ),
+    lambda: broadcast_game_state,
+)
+app.include_router(_belt_road_red_turn_test_routes.router)
+test_setup_belt_road_red_turn_proof = (
+    _belt_road_red_turn_test_routes.test_setup_belt_road_red_turn_proof
+)
 
 
 @app.post("/test/setup-tibet-era-red-build-proof")
