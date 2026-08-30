@@ -78,6 +78,7 @@ from server.test_routes.tibet_era_red_build import TibetEraRedBuildTestRoutes
 from server.test_routes.trade_war_event import TradeWarEventTestRoutes
 from server.test_routes.trash_choice_ui import TrashChoiceUiTestRoutes
 from server.test_routes.underground_party import UndergroundPartyTestRoutes
+from server.test_routes.urumqi_event import UrumqiEventTestRoutes
 from server.test_routes.uyghur_era_red_dissolve import UyghurEraRedDissolveTestRoutes
 from server.test_routes.victory import VictoryTestRoutes
 import uuid
@@ -1523,59 +1524,20 @@ test_setup_uyghur_era_red_dissolve_proof = (
 )
 
 
-@app.post("/test/setup-urumqi-event-proof")
-def test_setup_urumqi_event_proof(payload: dict):
-    players = [(str(uuid.uuid4()), "viewer"), (str(uuid.uuid4()), "red")]
-    game = Game(players, market_mode="all_cards")
-    viewer = game.players[0]
-    red = game.players[1]
-    viewer.faction_id = "taiwan_green"
-    red.faction_id = "red_army"
-    viewer.base = "臺北"
-    red.base = "北京"
-    viewer.organizations = {"北京": 1}
-    red.organizations = {"北京": 1}
-    viewer.resources = {"money": 0, "propaganda": 0}
-    viewer.hand = [Card("保留手牌", "command", {})]
-    viewer.deck.draw_pile = [Card("牌庫保留", "command", {})]
-    viewer.deck.discard_pile = []
-    game.pending_base_choices = []
-    game.game_phase = GamePhase.MAIN
-    game.current_player_index = 0
-    game.turn_phase = TurnPhase.ACTION
-    event = game._event_by_name("烏魯木齊七五事件")
-    game.current_event = event
-    game.event_progress = {
-        "count": 0,
-        "required": int((event or {}).get("trigger", {}).get("count", 1) or 1),
-        "succeeded": False,
-        "settled": False,
-        "status": "active",
-    }
-    game.event_notification = game._event_display_payload()
-    game.event_deck.draw_pile = []
-    game.event_deck.discard_pile = []
-
-    if payload.get("settle", True):
-        game.advance_turn_phase()
-
-    game_id = str(uuid.uuid4())
-    manager.games[game_id] = game
-    manager.connections[game_id] = manager.connections.get(game_id, {})
-    lobby[game_id] = [(p.id, p.name) for p in game.players]
-    lobby_hosts[game_id] = viewer.id
-    lobby_factions[game_id] = {p.id: p.faction_id for p in game.players}
-    lobby_bases[game_id] = {p.id: p.base for p in game.players if p.base}
-    lobby_ready[game_id] = {p.id: True for p in game.players}
-    return {
-        "success": True,
-        "game_id": game_id,
-        "player_id": viewer.id,
-        "red_player_id": red.id,
-        "event_name": event.get("name") if event else None,
-        "url": f"/?game_id={game_id}&player_id={viewer.id}",
-        "state": game.state(),
-    }
+_urumqi_event_test_routes = UrumqiEventTestRoutes(
+    lambda: GameSetupRuntime(
+        manager=manager,
+        lobby=lobby,
+        lobby_hosts=lobby_hosts,
+        lobby_factions=lobby_factions,
+        lobby_bases=lobby_bases,
+        lobby_ready=lobby_ready,
+    )
+)
+app.include_router(_urumqi_event_test_routes.router)
+test_setup_urumqi_event_proof = (
+    _urumqi_event_test_routes.test_setup_urumqi_event_proof
+)
 
 
 @app.post("/test/setup-faction-action-used-proof")
