@@ -1,0 +1,154 @@
+{
+  "generated_at": "2026-08-30T13:48:46.776618+00:00",
+  "scenario": "東洋奧援 tier 3；臺北反共組織供應已達 22，無合法建立目標",
+  "service": "http://127.0.0.1:8769",
+  "status": "passed",
+  "summary": {
+    "passed": 11,
+    "total": 11,
+    "failed": 0
+  },
+  "checks": [
+    {
+      "name": "raw_server_error_received",
+      "passed": true,
+      "details": "No legal target for interactive support card"
+    },
+    {
+      "name": "modal_visible_with_east_support_title_and_localized_message",
+      "passed": true,
+      "details": {
+        "visible": true,
+        "title": "東洋奧援無法使用",
+        "message": "這張奧援卡目前沒有合法目標。",
+        "hudText": "",
+        "hudVisible": false,
+        "rect": {
+          "left": 340,
+          "top": 308.26251220703125,
+          "right": 684,
+          "bottom": 459.7250061035156
+        }
+      }
+    },
+    {
+      "name": "hud_notice_remains_empty_and_invisible",
+      "passed": true,
+      "details": {
+        "text": "",
+        "visible": false
+      }
+    },
+    {
+      "name": "rejected_play_retains_card_discard_and_pending_state",
+      "passed": true,
+      "details": {
+        "before": {
+          "rawError": "",
+          "hand": [
+            "東洋奧援"
+          ],
+          "discard": [],
+          "discardCount": 0,
+          "pendingChoice": null
+        },
+        "after": {
+          "rawError": "No legal target for interactive support card",
+          "hand": [
+            "東洋奧援"
+          ],
+          "discard": [],
+          "discardCount": 0,
+          "pendingChoice": null
+        }
+      }
+    },
+    {
+      "name": "icon_close_hides_modal",
+      "passed": true,
+      "details": {
+        "visible": false,
+        "title": "東洋奧援無法使用",
+        "message": "這張奧援卡目前沒有合法目標。",
+        "hudText": "",
+        "hudVisible": false,
+        "rect": {
+          "left": 0,
+          "top": 0,
+          "right": 0,
+          "bottom": 0
+        }
+      }
+    },
+    {
+      "name": "same_server_state_render_stays_closed",
+      "passed": true,
+      "details": {
+        "visible": false,
+        "title": "東洋奧援無法使用",
+        "message": "這張奧援卡目前沒有合法目標。",
+        "hudText": "",
+        "hudVisible": false,
+        "rect": {
+          "left": 0,
+          "top": 0,
+          "right": 0,
+          "bottom": 0
+        }
+      }
+    },
+    {
+      "name": "second_same_turn_click_is_new_attempt_and_reopens",
+      "passed": true,
+      "details": {
+        "visible": true,
+        "title": "東洋奧援無法使用",
+        "message": "這張奧援卡目前沒有合法目標。",
+        "hudText": "",
+        "hudVisible": false,
+        "rect": {
+          "left": 340,
+          "top": 308.26251220703125,
+          "right": 684,
+          "bottom": 459.7250061035156
+        }
+      }
+    },
+    {
+      "name": "second_rejection_also_preserves_zones_and_pending",
+      "passed": true,
+      "details": {
+        "rawError": "No legal target for interactive support card",
+        "hand": [
+          "東洋奧援"
+        ],
+        "discard": [],
+        "discardCount": 0,
+        "pendingChoice": null
+      }
+    },
+    {
+      "name": "modal_fits_1024x768_viewport",
+      "passed": true,
+      "details": {
+        "left": 340,
+        "top": 308.26251220703125,
+        "right": 684,
+        "bottom": 459.7250061035156
+      }
+    },
+    {
+      "name": "native_dialog_count_is_zero",
+      "passed": true,
+      "details": []
+    },
+    {
+      "name": "browser_console_error_count_is_zero",
+      "passed": true,
+      "details": []
+    }
+  ],
+  "native_dialogs": [],
+  "console_errors": [],
+  "screenshot": "docs/records/support-cards/east-support-no-target-modal/east_support_no_target_modal_1024x768.png"
+}
