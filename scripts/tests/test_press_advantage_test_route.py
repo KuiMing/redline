@@ -418,6 +418,90 @@ def test_press_advantage_http_body_contract_openapi_and_route_adjacency():
         assert [card.name for card in list_game.players[0].deck.draw_pile] == DEFAULT_DRAW_PILE
         assert [card.name for card in list_game.players[0].deck.discard_pile] == DEFAULT_DISCARD_PILE
 
+    root_scalar_responses = [
+        (
+            value,
+            client.post(
+                ROUTE_PATH,
+                content=raw,
+                headers={"content-type": "application/json"},
+            ),
+        )
+        for value, raw in [(None, "null"), (False, "false"), (0, "0"), ("", '\"\"')]
+    ]
+    if int(pydantic.VERSION.split(".")[0]) >= 2:
+        for value, scalar_response in root_scalar_responses:
+            assert scalar_response.status_code == 422
+            if value is None:
+                assert scalar_response.json() == {
+                    "detail": [
+                        {
+                            "type": "missing",
+                            "loc": ["body"],
+                            "msg": "Field required",
+                            "input": None,
+                        }
+                    ]
+                }
+            else:
+                assert scalar_response.json() == {
+                    "detail": [
+                        {
+                            "type": "dict_type",
+                            "loc": ["body"],
+                            "msg": "Input should be a valid dictionary",
+                            "input": value,
+                        }
+                    ]
+                }
+    else:
+        for value, scalar_response in root_scalar_responses:
+            if value == "":
+                assert scalar_response.status_code == 200
+                scalar_result = scalar_response.json()
+                scalar_game = runtime.manager.games[scalar_result["game_id"]]
+                viewer, enemy = scalar_game.players
+                assert scalar_result == {
+                    "success": True,
+                    "game_id": scalar_game.id,
+                    "player_id": viewer.id,
+                    "players": [
+                        {
+                            "id": player.id,
+                            "name": player.name,
+                            "faction": player.faction_id,
+                            "base": player.base,
+                        }
+                        for player in (viewer, enemy)
+                    ],
+                    "state": scalar_game.state(),
+                }
+                assert [card.name for card in scalar_game.players[0].deck.draw_pile] == DEFAULT_DRAW_PILE
+                assert [card.name for card in scalar_game.players[0].deck.discard_pile] == DEFAULT_DISCARD_PILE
+                continue
+
+            assert scalar_response.status_code == 422
+            if value is None:
+                assert scalar_response.json() == {
+                    "detail": [
+                        {
+                            "loc": ["body"],
+                            "msg": "field required",
+                            "type": "value_error.missing",
+                        }
+                    ]
+                }
+            else:
+                assert scalar_response.json() == {
+                    "detail": [
+                        {
+                            "loc": ["body"],
+                            "msg": "value is not a valid dict",
+                            "type": "type_error.dict",
+                        }
+                    ]
+                }
+
     operation = app.openapi()["paths"][ROUTE_PATH]["post"]
     assert operation["summary"] == "Test Setup Press Advantage Proof"
     assert operation["operationId"].startswith("test_setup_press_advantage_proof_")
