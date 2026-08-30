@@ -28,6 +28,7 @@ from server.map_data_routes import (
 from server.test_routes.build_queue import BuildQueueRuntime, BuildQueueTestRoutes
 from server.test_routes.build_view_persistence import BuildViewPersistenceTestRoutes
 from server.test_routes.card_scenario import CardScenarioTestRoutes
+from server.test_routes.destroyed_red_base_marker import DestroyedRedBaseMarkerTestRoutes
 from server.test_routes.enemy_occupancy import EnemyOccupancyTestRoutes
 from server.test_routes.expand_results import ExpandResultsTestRoutes
 from server.test_routes.force_base_selection import ForceBaseSelectionTestRoutes
@@ -907,49 +908,20 @@ test_setup_move_confirmation_proof = (
 )
 
 
-@app.post("/test/setup-destroyed-red-base-marker-proof")
-def test_setup_destroyed_red_base_marker_proof(payload: dict):
-    """Create a Mongol move state before or after Beijing's Red Army base organization is destroyed."""
-    game_id = str(uuid.uuid4())
-    players = [(str(uuid.uuid4()), "mongol"), (str(uuid.uuid4()), "red")]
-    game = Game(players, market_mode="all_cards")
-    mongol, red = game.players
-
-    destroyed = bool(payload.get("destroyed", True))
-    mongol.faction_id = "mongol"
-    mongol.base = "烏蘭巴托"
-    mongol.organizations = {"烏蘭巴托": 1, "張家口": 1}
-    mongol.moves_left = 3
-
-    red.faction_id = "red_army"
-    red.base = "北京"
-    red.organizations = {} if destroyed else {"北京": 1}
-
-    game.current_player_index = 0
-    game.round_start_player_index = 0
-    game.turn_phase = TurnPhase.ACTION
-    game.game_phase = GamePhase.MAIN
-    game.pending_base_choices = {}
-    game.pending_choice = None
-    game.id = game_id
-    if destroyed:
-        game.turn_log["red_army_base_build_blocks"] = ["北京"]
-
-    manager.games[game_id] = game
-    manager.connections[game_id] = manager.connections.get(game_id, {})
-    lobby[game_id] = [(p.id, p.name) for p in game.players]
-    lobby_hosts[game_id] = mongol.id
-    lobby_factions[game_id] = {mongol.id: mongol.faction_id, red.id: red.faction_id}
-    lobby_bases[game_id] = {mongol.id: mongol.base, red.id: red.base}
-    lobby_ready[game_id] = {p.id: True for p in game.players}
-    return {
-        "success": True,
-        "destroyed": destroyed,
-        "game_id": game_id,
-        "player_id": mongol.id,
-        "url": f"/?game_id={game_id}&player_id={mongol.id}",
-        "state": game.state(),
-    }
+_destroyed_red_base_marker_test_routes = DestroyedRedBaseMarkerTestRoutes(
+    lambda: GameSetupRuntime(
+        manager=manager,
+        lobby=lobby,
+        lobby_hosts=lobby_hosts,
+        lobby_factions=lobby_factions,
+        lobby_bases=lobby_bases,
+        lobby_ready=lobby_ready,
+    )
+)
+app.include_router(_destroyed_red_base_marker_test_routes.router)
+test_setup_destroyed_red_base_marker_proof = (
+    _destroyed_red_base_marker_test_routes.test_setup_destroyed_red_base_marker_proof
+)
 
 
 @app.post("/test/setup-hu-taiwan-shared")
