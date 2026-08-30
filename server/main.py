@@ -30,6 +30,7 @@ from server.test_routes.build_view_persistence import BuildViewPersistenceTestRo
 from server.test_routes.business_network_transport import BusinessNetworkTransportTestRoutes
 from server.test_routes.card_scenario import CardScenarioTestRoutes
 from server.test_routes.destroyed_red_base_marker import DestroyedRedBaseMarkerTestRoutes
+from server.test_routes.discard_reshuffle import DiscardReshuffleTestRoutes
 from server.test_routes.draw_privacy import DrawPrivacyTestRoutes
 from server.test_routes.elite_defection_discard import EliteDefectionDiscardTestRoutes
 from server.test_routes.end_turn_topdeck import EndTurnTopdeckTestRoutes
@@ -1227,57 +1228,20 @@ test_setup_elite_defection_discard_proof = (
 )
 
 
-@app.post("/test/setup-discard-reshuffle-proof")
-def test_setup_discard_reshuffle_proof(payload: dict):
-    scenario = str(payload.get("scenario") or "sufficient")
-    if scenario not in {"sufficient", "exhausted"}:
-        return {"error": "scenario must be sufficient or exhausted"}
-
-    game_id = str(uuid.uuid4())
-    players = [(str(uuid.uuid4()), "紅軍"), (str(uuid.uuid4()), "對手")]
-    game = Game(players)
-    red, opponent = game.players
-    red.faction_id = "red_army"
-    red.base = "北京"
-    red.organizations = {"北京": 1}
-    opponent.faction_id = "taiwan_green"
-    opponent.base = "臺北"
-    opponent.organizations = {"臺北": 1}
-
-    red.hand = [Card(f"保留手牌{i}", "command", {}) for i in range(1, 5)]
-    red.deck.draw_pile = [] if scenario == "exhausted" else [Card("牌庫保留牌", "command", {})]
-    red.deck.discard_pile = [Card("棄牌唯一一張", "command", {})]
-    red.resources = {"money": 0, "propaganda": 0}
-    red.moves_left = 0
-
-    game.game_phase = GamePhase.MAIN
-    game.turn_phase = TurnPhase.END
-    game.current_player_index = 0
-    game.pending_base_choices = {}
-    game.pending_choice = None
-    game._deferred_auto_event = False
-    noop_event = game._event_by_name("歲月靜好")
-    game.current_event = dict(noop_event or {})
-    game.event_progress = {"count": 0, "required": 0, "succeeded": True, "settled": True, "status": "idle"}
-    game.event_modifiers = []
-    game.id = game_id
-
-    manager.games[game_id] = game
-    manager.connections[game_id] = {}
-    lobby[game_id] = [(red.id, red.name), (opponent.id, opponent.name)]
-    lobby_hosts[game_id] = red.id
-    lobby_factions[game_id] = {red.id: red.faction_id, opponent.id: opponent.faction_id}
-    lobby_bases[game_id] = {red.id: red.base, opponent.id: opponent.base}
-    lobby_ready[game_id] = {red.id: True, opponent.id: True}
-
-    return {
-        "success": True,
-        "scenario": scenario,
-        "game_id": game_id,
-        "player_id": red.id,
-        "opponent_id": opponent.id,
-        "state": game.state(red.id),
-    }
+_discard_reshuffle_test_routes = DiscardReshuffleTestRoutes(
+    lambda: GameSetupRuntime(
+        manager=manager,
+        lobby=lobby,
+        lobby_hosts=lobby_hosts,
+        lobby_factions=lobby_factions,
+        lobby_bases=lobby_bases,
+        lobby_ready=lobby_ready,
+    )
+)
+app.include_router(_discard_reshuffle_test_routes.router)
+test_setup_discard_reshuffle_proof = (
+    _discard_reshuffle_test_routes.test_setup_discard_reshuffle_proof
+)
 
 
 @app.post("/test/setup-support-proof")
