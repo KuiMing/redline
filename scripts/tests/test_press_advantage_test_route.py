@@ -1,3 +1,4 @@
+import inspect
 import random
 import uuid
 
@@ -15,6 +16,9 @@ PROOF_LOG = (
     "[Turn 1] UI proof setup: viewer has 乘勝追擊; discard pile contains "
     "宣傳家 / 合作談判 / 走漏風聲."
 )
+ROUTE_PATH = "/test/setup-press-advantage-proof"
+DEFAULT_DRAW_PILE = ["抽牌A", "抽牌B"]
+DEFAULT_DISCARD_PILE = ["宣傳家", "合作談判", "走漏風聲"]
 
 
 class FakeManager:
@@ -297,11 +301,41 @@ def test_main_press_advantage_uses_rebound_runtime_and_callable(monkeypatch):
     )
 
 
-def test_press_advantage_uuid_prefix_and_rng_consumption_are_stable(monkeypatch):
+def test_press_advantage_complete_uuid_ledger_and_rng_consumption_are_stable(
+    monkeypatch,
+):
     from server.test_routes import press_advantage
 
-    ids = [uuid.UUID(int=value) for value in range(201, 1000)]
-    monkeypatch.setattr(press_advantage.uuid, "uuid4", iter(ids).__next__)
+    ids = [uuid.UUID(int=value) for value in range(201, 207)]
+    uuid_values = iter(ids)
+    ledger = []
+
+    def tracked_uuid4():
+        current_frame = inspect.currentframe()
+        assert current_frame is not None
+        caller = current_frame.f_back
+        assert caller is not None
+        caller_name = caller.f_code.co_qualname
+        if caller_name == "Game.__init__":
+            label = "Game.__init__.temporary_id"
+        elif caller_name == "Player.__init__":
+            label = f"Player.__init__.temporary_id:{caller.f_locals['name']}"
+        else:
+            source_line = inspect.getframeinfo(caller).code_context[0]
+            if "game_id =" in source_line:
+                label = "route.game_id"
+            elif '"viewer"' in source_line:
+                label = "route.viewer_id"
+            elif '"enemy"' in source_line:
+                label = "route.enemy_id"
+            else:
+                label = f"unexpected:{caller_name}:{source_line.strip()}"
+        value = next(uuid_values)
+        ledger.append((label, value))
+        return value
+
+    original_uuid4 = press_advantage.uuid.uuid4
+    monkeypatch.setattr(press_advantage.uuid, "uuid4", tracked_uuid4)
     runtime = _runtime()
 
     random.seed(24680)
@@ -311,33 +345,80 @@ def test_press_advantage_uuid_prefix_and_rng_consumption_are_stable(monkeypatch)
     actual_random_state = random.getstate()
     game = runtime.manager.games[result["game_id"]]
 
+    monkeypatch.setattr(press_advantage.uuid, "uuid4", original_uuid4)
     random.seed(24680)
     Game([("baseline-viewer", "viewer"), ("baseline-enemy", "enemy")])
     expected_random_state = random.getstate()
 
+    assert ledger == [
+        ("route.game_id", ids[0]),
+        ("route.viewer_id", ids[1]),
+        ("route.enemy_id", ids[2]),
+        ("Game.__init__.temporary_id", ids[3]),
+        ("Player.__init__.temporary_id:viewer", ids[4]),
+        ("Player.__init__.temporary_id:enemy", ids[5]),
+    ]
     assert result["game_id"] == str(ids[0])
     assert [player.id for player in game.players] == [str(ids[1]), str(ids[2])]
     assert actual_random_state == expected_random_state
 
 
-def test_press_advantage_http_body_coercion_openapi_and_route_adjacency():
+def test_press_advantage_http_body_contract_openapi_and_route_adjacency():
     runtime = _runtime()
     app = _make_app(lambda: runtime)
     client = TestClient(app)
 
     response = client.post(
-        "/test/setup-press-advantage-proof",
+        ROUTE_PATH,
         json={"draw_pile": [], "discard_pile": ["走漏風聲"]},
     )
     assert response.status_code == 200
     assert set(response.json()) == {"success", "game_id", "player_id", "players", "state"}
-    assert client.post("/test/setup-press-advantage-proof").status_code == 422
-    list_response = client.post("/test/setup-press-advantage-proof", json=[])
-    assert list_response.status_code == (
-        422 if int(pydantic.VERSION.split(".")[0]) >= 2 else 200
-    )
 
-    operation = app.openapi()["paths"]["/test/setup-press-advantage-proof"]["post"]
+    missing_response = client.post(ROUTE_PATH)
+    assert missing_response.status_code == 422
+    if int(pydantic.VERSION.split(".")[0]) >= 2:
+        assert missing_response.json() == {
+            "detail": [
+                {
+                    "type": "missing",
+                    "loc": ["body"],
+                    "msg": "Field required",
+                    "input": None,
+                }
+            ]
+        }
+    else:
+        assert missing_response.json() == {
+            "detail": [
+                {
+                    "loc": ["body"],
+                    "msg": "field required",
+                    "type": "value_error.missing",
+                }
+            ]
+        }
+
+    list_response = client.post(ROUTE_PATH, json=[])
+    if int(pydantic.VERSION.split(".")[0]) >= 2:
+        assert list_response.status_code == 422
+        assert list_response.json() == {
+            "detail": [
+                {
+                    "type": "dict_type",
+                    "loc": ["body"],
+                    "msg": "Input should be a valid dictionary",
+                    "input": [],
+                }
+            ]
+        }
+    else:
+        assert list_response.status_code == 200
+        list_game = runtime.manager.games[list_response.json()["game_id"]]
+        assert [card.name for card in list_game.players[0].deck.draw_pile] == DEFAULT_DRAW_PILE
+        assert [card.name for card in list_game.players[0].deck.discard_pile] == DEFAULT_DISCARD_PILE
+
+    operation = app.openapi()["paths"][ROUTE_PATH]["post"]
     assert operation["summary"] == "Test Setup Press Advantage Proof"
     assert operation["operationId"].startswith("test_setup_press_advantage_proof_")
     assert operation["requestBody"]["required"] is True
@@ -346,11 +427,89 @@ def test_press_advantage_http_body_coercion_openapi_and_route_adjacency():
     matching = [
         route
         for route in routes
-        if getattr(route, "path", None) == "/test/setup-press-advantage-proof"
+        if getattr(route, "path", None) == ROUTE_PATH
     ]
     assert len(matching) == 1
     assert getattr(matching[0], "methods", None) == {"POST"}
     paths = [getattr(route, "path", None) for route in routes]
-    index = paths.index("/test/setup-press-advantage-proof")
+    index = paths.index(ROUTE_PATH)
     assert paths[index - 1] == "/test/setup-intel-network-proof"
     assert paths[index + 1] == "/test/setup-expand-results-proof"
+
+
+@pytest.mark.parametrize(
+    ("field", "player_index", "attribute", "response_key"),
+    [
+        ("viewer_faction", 0, "faction_id", "faction"),
+        ("viewer_base", 0, "base", "base"),
+        ("enemy_faction", 1, "faction_id", "faction"),
+        ("enemy_base", 1, "base", "base"),
+    ],
+)
+@pytest.mark.parametrize("value", [None, False, 0, ""])
+def test_press_advantage_http_preserves_explicit_falsy_faction_and_base_values(
+    field,
+    player_index,
+    attribute,
+    response_key,
+    value,
+):
+    runtime = _runtime()
+    client = TestClient(_make_app(lambda: runtime))
+
+    response = client.post(ROUTE_PATH, json={field: value})
+
+    assert response.status_code == 200
+    result = response.json()
+    player = runtime.manager.games[result["game_id"]].players[player_index]
+    assert getattr(player, attribute) == value
+    assert result["players"][player_index][response_key] == value
+    if attribute == "base":
+        assert player.organizations == {value: 1}
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "expected_status", "expected_names"),
+    [
+        ("draw_pile", None, 500, None),
+        ("draw_pile", [], 200, []),
+        ("draw_pile", {}, 200, []),
+        ("draw_pile", False, 500, None),
+        ("draw_pile", 0, 500, None),
+        ("draw_pile", 7, 500, None),
+        ("draw_pile", "", 200, []),
+        ("draw_pile", "AB", 200, ["A", "B"]),
+        ("discard_pile", None, 200, DEFAULT_DISCARD_PILE),
+        ("discard_pile", [], 200, DEFAULT_DISCARD_PILE),
+        ("discard_pile", {}, 200, DEFAULT_DISCARD_PILE),
+        ("discard_pile", False, 200, DEFAULT_DISCARD_PILE),
+        ("discard_pile", 0, 200, DEFAULT_DISCARD_PILE),
+        ("discard_pile", 7, 500, None),
+        ("discard_pile", "", 200, DEFAULT_DISCARD_PILE),
+        ("discard_pile", "AB", 200, ["A", "B"]),
+    ],
+)
+def test_press_advantage_http_pile_coercion_and_error_contract(
+    field,
+    value,
+    expected_status,
+    expected_names,
+):
+    runtime = _runtime()
+    client = TestClient(
+        _make_app(lambda: runtime),
+        raise_server_exceptions=False,
+    )
+
+    response = client.post(ROUTE_PATH, json={field: value})
+
+    assert response.status_code == expected_status
+    if expected_status == 500:
+        assert response.text == "Internal Server Error"
+        assert runtime.manager.games == {}
+        return
+
+    result = response.json()
+    viewer = runtime.manager.games[result["game_id"]].players[0]
+    pile = getattr(viewer.deck, field)
+    assert [card.name for card in pile] == expected_names
