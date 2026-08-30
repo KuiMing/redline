@@ -35,6 +35,7 @@ from server.test_routes.force_base_selection import ForceBaseSelectionTestRoutes
 from server.test_routes.hand_preview import HandPreviewRuntime, HandPreviewTestRoutes
 from server.test_routes.hong_kong_safehouse import HongKongSafehouseTestRoutes
 from server.test_routes.hu_taiwan_shared import HuTaiwanSharedTestRoutes
+from server.test_routes.india_support_purchase import IndiaSupportPurchaseTestRoutes
 from server.test_routes.inside_wall import InsideWallTestRoutes
 from server.test_routes.intel_network import IntelNetworkTestRoutes
 from server.test_routes.intel_network_reaction import IntelNetworkReactionTestRoutes
@@ -956,50 +957,19 @@ test_setup_shared_dissolve = (
 )
 
 
-@app.post("/test/setup-india-support-purchase")
-def test_setup_india_support_purchase(payload: dict):
-    game_id = str(uuid.uuid4())
-    players = [(str(uuid.uuid4()), "tibet"), (str(uuid.uuid4()), "red")]
-    game = Game(players)
-
-    tibet = game.players[0]
-    red = game.players[1]
-
-    tibet.faction_id = "tibet_dehradun"
-    tibet.base = payload.get("base", "德拉敦")
-    tibet.organizations = {tibet.base: 1}
-    tibet.resources = {"money": 5, "propaganda": 5}
-    tibet.hand = []
-
-    red.faction_id = "red_army"
-    red.base = "北京"
-    red.organizations = {"北京": 1}
-
-    support_name = payload.get("support_name", "印度奧援")
-    game.purchase_area = [game._make_support_card(support_name)]
-    game.current_player_index = 0
-    game.turn_phase = TurnPhase.ACTION
-    game.game_phase = GamePhase.MAIN
-    game.pending_base_choices = {}
-    game.id = game_id
-
-    manager.games[game_id] = game
-    manager.connections[game_id] = manager.connections.get(game_id, {})
-    lobby[game_id] = list(zip([p.id for p in game.players], [p.name for p in game.players]))
-    lobby_hosts[game_id] = tibet.id
-    lobby_factions[game_id] = {tibet.id: tibet.faction_id, red.id: red.faction_id}
-    lobby_bases[game_id] = {tibet.id: tibet.base, red.id: red.base}
-
-    return {
-        "success": True,
-        "game_id": game_id,
-        "player_id": tibet.id,
-        "support_name": support_name,
-        "turn_phase": game.turn_phase,
-        "game_phase": game.game_phase,
-        "players": [{"id": p.id, "name": p.name, "faction": p.faction_id} for p in game.players],
-        "state": game.state(),
-    }
+_india_support_purchase_test_routes = IndiaSupportPurchaseTestRoutes(
+    lambda: GameSetupRuntime(
+        manager=manager,
+        lobby=lobby,
+        lobby_hosts=lobby_hosts,
+        lobby_factions=lobby_factions,
+        lobby_bases=lobby_bases,
+    )
+)
+app.include_router(_india_support_purchase_test_routes.router)
+test_setup_india_support_purchase = (
+    _india_support_purchase_test_routes.test_setup_india_support_purchase
+)
 
 
 @app.post("/test/setup-remove-to-purchase")
