@@ -18,6 +18,7 @@ from server.test_routes.negotiation import NegotiationTestRoutes
 
 
 ROUTE_PATH = "/test/setup-negotiation-proof"
+BASELINE_MAIN_REF = "e6a7104070afe8b0fa94219f68cbb46677ed909d:server/main.py"
 EXPECTED_EVENT = {
     "id": "quiet_times",
     "name": "歲月靜好",
@@ -518,22 +519,28 @@ def test_negotiation_main_http_and_callable_use_late_bound_replacements(monkeypa
 
 def _load_baseline_handler(namespace):
     source = subprocess.run(
-        ["git", "show", "origin/dev:server/main.py"],
+        ["git", "show", BASELINE_MAIN_REF],
         check=True,
         capture_output=True,
         text=True,
     ).stdout
     tree = ast.parse(source)
     function = next(
-        node
-        for node in tree.body
-        if isinstance(node, ast.FunctionDef)
-        and node.name == "test_setup_negotiation_proof"
+        (
+            node
+            for node in tree.body
+            if isinstance(node, ast.FunctionDef)
+            and node.name == "test_setup_negotiation_proof"
+        ),
+        None,
+    )
+    assert function is not None, (
+        f"test_setup_negotiation_proof missing from reviewed base {BASELINE_MAIN_REF}"
     )
     function.decorator_list = []
     module = ast.Module(body=[function], type_ignores=[])
     ast.fix_missing_locations(module)
-    exec(compile(module, "origin/dev:server/main.py", "exec"), namespace)
+    exec(compile(module, BASELINE_MAIN_REF, "exec"), namespace)
     return namespace["test_setup_negotiation_proof"]
 
 
@@ -570,7 +577,7 @@ def _snapshot(result, runtime):
     }
 
 
-def test_negotiation_seeded_origin_dev_deterministic_differential(monkeypatch):
+def test_negotiation_seeded_reviewed_base_deterministic_differential(monkeypatch):
     original_uuid4 = uuid.uuid4
 
     def run(handler, runtime, seed):
