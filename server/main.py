@@ -33,6 +33,7 @@ from server.test_routes.force_base_selection import ForceBaseSelectionTestRoutes
 from server.test_routes.hand_preview import HandPreviewRuntime, HandPreviewTestRoutes
 from server.test_routes.inside_wall import InsideWallTestRoutes
 from server.test_routes.intel_network import IntelNetworkTestRoutes
+from server.test_routes.intel_network_reaction import IntelNetworkReactionTestRoutes
 from server.test_routes.negotiation import NegotiationTestRoutes
 from server.test_routes.press_advantage import PressAdvantageTestRoutes
 from server.test_routes.runtime import GameSetupRuntime
@@ -821,87 +822,22 @@ test_setup_expand_results_proof = (
 )
 
 
-@app.post("/test/setup-intel-network-cancel-reaction-proof")
-def test_setup_intel_network_cancel_reaction_proof(payload: dict):
-    game_id = str(uuid.uuid4())
-    players = [
-        (str(uuid.uuid4()), "actor"),
-        (str(uuid.uuid4()), "reactor"),
-    ]
-    game = Game(players)
-    actor, reactor = game.players
-
-    def proof_card(name):
-        card_def = next((c for c in game.structured_cards if c.get("name") == name), None)
-        if card_def:
-            return Card(card_def["name"], card_def.get("type", "command"), dict(card_def.get("resources", {}) or {}))
-        return Card(name, "command", {})
-
-    actor_card = payload.get("actor_card", "領導")
-    reaction_card = payload.get("reaction_card", "情報網")
-
-    actor.faction_id = payload.get("actor_faction", "hong_kong")
-    actor.base = payload.get("actor_base", "香港城")
-    actor.organizations = {actor.base: 1}
-    actor.hand = [proof_card(actor_card)]
-    actor.deck.draw_pile = [proof_card(payload.get("actor_draw_top", "ShouldNotDraw"))]
-    actor.deck.discard_pile = []
-    actor.resources = {"money": 0, "propaganda": 0}
-
-    reactor.faction_id = payload.get("reactor_faction", "red_army")
-    reactor.base = payload.get("reactor_base", "北京")
-    reactor.organizations = {reactor.base: 1}
-    reactor.hand = [proof_card(reaction_card)]
-    reactor.deck.draw_pile = [proof_card(payload.get("reactor_draw_top", "IntelShouldNotDrawBonus"))]
-    reactor.deck.discard_pile = []
-    reactor.resources = {"money": 0, "propaganda": 0}
-
-    game.current_player_index = 0
-    game.turn_phase = TurnPhase.ACTION
-    game.game_phase = GamePhase.MAIN
-    game.pending_base_choices = {}
-    game.id = game_id
-    game.log(f"{reaction_card}取消反應測試：actor 準備打出 {actor_card}；reactor 手牌有 {reaction_card} 可取消。")
-
-    manager.games[game_id] = game
-    manager.connections[game_id] = manager.connections.get(game_id, {})
-    lobby[game_id] = list(zip([p.id for p in game.players], [p.name for p in game.players]))
-    lobby_hosts[game_id] = actor.id
-    lobby_factions[game_id] = {p.id: p.faction_id for p in game.players}
-    lobby_bases[game_id] = {p.id: p.base for p in game.players}
-
-    return {
-        "success": True,
-        "game_id": game_id,
-        "actor_id": actor.id,
-        "reactor_id": reactor.id,
-        "players": [{"id": p.id, "name": p.name, "faction": p.faction_id} for p in game.players],
-        "state": game.state(),
-    }
-
-
-@app.post("/test/resolve-intel-network-cancel-reaction-proof")
-def test_resolve_intel_network_cancel_reaction_proof(payload: dict):
-    game_id = payload.get("game_id")
-    game = manager.get_game(game_id)
-    if not game:
-        return {"error": "Game not found"}
-    actor = next((p for p in game.players if p.name == payload.get("actor_name", "actor")), game.current_player())
-    reactor = next((p for p in game.players if p.name == payload.get("reactor_name", "reactor")), None)
-    if not actor or not reactor:
-        return {"error": "Proof players not found"}
-    for idx, candidate in enumerate(game.players):
-        if candidate.id == actor.id:
-            game.current_player_index = idx
-            break
-    result = game.play_card(0, mode="action", reaction={"player_id": reactor.id, "card_index": 0})
-    state = game.state()
-    state["last_action_result"] = result
-    return {
-        "success": not bool(result.get("error")) if isinstance(result, dict) else True,
-        "result": result,
-        "state": state,
-    }
+_intel_network_reaction_test_routes = IntelNetworkReactionTestRoutes(
+    lambda: GameSetupRuntime(
+        manager=manager,
+        lobby=lobby,
+        lobby_hosts=lobby_hosts,
+        lobby_factions=lobby_factions,
+        lobby_bases=lobby_bases,
+    )
+)
+app.include_router(_intel_network_reaction_test_routes.router)
+test_setup_intel_network_cancel_reaction_proof = (
+    _intel_network_reaction_test_routes.test_setup_intel_network_cancel_reaction_proof
+)
+test_resolve_intel_network_cancel_reaction_proof = (
+    _intel_network_reaction_test_routes.test_resolve_intel_network_cancel_reaction_proof
+)
 
 
 @app.post("/test/setup-hong-kong-safehouse")
