@@ -32,6 +32,10 @@ let lastEventRevealKey = null;
 let stickyPlayerErrorNotice = '';
 let stickyPlayerErrorTimer = null;
 let unavailableActionModalReturnFocus = null;
+let supportCardPlayAttemptSequence = 0;
+let latestSupportCardPlayAttempt = null;
+let lastShownSupportNoTargetAttemptSequence = -1;
+let lastShownSupportNoTargetFallbackKey = '';
 let lastRedArmyReactionWaitKey = null;
 let lastRedArmyReactionCancelKey = null;
 let redArmyReactionWaitContext = null;
@@ -1751,6 +1755,19 @@ function bindHandCardActionButtons(container) {
   });
 }
 
+function recordSupportCardPlayAttempt(cardName, mode, state = window.lastGameState || {}) {
+  if (mode !== 'action' || !/奧援/.test(cardName || '')) return;
+  supportCardPlayAttemptSequence += 1;
+  latestSupportCardPlayAttempt = {
+    sequence: supportCardPlayAttemptSequence,
+    cardName,
+    gameId,
+    playerId,
+    turn: state.turn_number ?? state.turn ?? null,
+    currentPlayer: state.current_player || '',
+  };
+}
+
 function playHandCard(index, card, mode) {
   if (!isMyTurnState()) return;
   const state = window.lastGameState || {};
@@ -1796,6 +1813,7 @@ function playHandCard(index, card, mode) {
     };
     if (openCardTargetModal(index, cardName, labelMap[cardName] || '目標玩家')) return;
   }
+  recordSupportCardPlayAttempt(cardName, mode, state);
   sendAction('play_card', payload);
 }
 
@@ -2878,6 +2896,32 @@ function showActionMessageModal(titleText, message, options = {}) {
   modal.setAttribute('aria-hidden', 'false');
   const focusTargetId = options.iconCloseOnly ? 'closeUnavailableActionModalIcon' : 'closeUnavailableActionModalBtn';
   requestAnimationFrame(() => document.getElementById(focusTargetId)?.focus());
+}
+
+function trustedSupportCardPlayAttempt(state) {
+  const attempt = latestSupportCardPlayAttempt;
+  if (!attempt || attempt.gameId !== gameId || attempt.playerId !== playerId) return null;
+  if (attempt.turn !== (state.turn_number ?? state.turn ?? null)) return null;
+  if (attempt.currentPlayer !== (state.current_player || '')) return null;
+  const me = (state.players || []).find(player => player.id === playerId) || null;
+  if (!me || !(me.hand || []).includes(attempt.cardName)) return null;
+  return attempt;
+}
+
+function showSupportNoTargetModal(state) {
+  if (state.error !== 'No legal target for interactive support card') return false;
+  const attempt = trustedSupportCardPlayAttempt(state);
+  if (attempt) {
+    if (lastShownSupportNoTargetAttemptSequence === supportCardPlayAttemptSequence) return true;
+    lastShownSupportNoTargetAttemptSequence = supportCardPlayAttemptSequence;
+  } else {
+    const fallbackKey = [gameId, playerId, state.turn_number ?? state.turn ?? '', state.current_player || '', state.error].join('|');
+    if (lastShownSupportNoTargetFallbackKey === fallbackKey) return true;
+    lastShownSupportNoTargetFallbackKey = fallbackKey;
+  }
+  const title = attempt?.cardName === '東洋奧援' ? '東洋奧援無法使用' : '奧援卡無法使用';
+  showActionMessageModal(title, playerMessageZhTw(state.error));
+  return true;
 }
 
 const RED_ARMY_REACTION_ACTION_NAMES = new Set(['統戰部', '政工部', '國安部', '中紀委']);
@@ -4199,14 +4243,18 @@ async function render(state) {
   }
 
   if (playerError) {
-    const isPendingChoiceError = !!state.pending_choice && /待選擇效果|待選效果|pending choice/i.test(playerError);
-    if (isPendingChoiceError) {
-      showPendingChoiceReminderModal(state);
-      syncPlayerErrorToStrategicMap(pendingChoiceWaitText(state) || playerError);
-    } else {
-      showStickyPlayerErrorNotice(playerError);
+    if (showSupportNoTargetModal(state)) {
       syncPlayerErrorToStrategicMap(playerError);
-      alert(playerError);
+    } else {
+      const isPendingChoiceError = !!state.pending_choice && /待選擇效果|待選效果|pending choice/i.test(playerError);
+      if (isPendingChoiceError) {
+        showPendingChoiceReminderModal(state);
+        syncPlayerErrorToStrategicMap(pendingChoiceWaitText(state) || playerError);
+      } else {
+        showStickyPlayerErrorNotice(playerError);
+        syncPlayerErrorToStrategicMap(playerError);
+        alert(playerError);
+      }
     }
   } else if (stickyPlayerErrorNotice) {
     setPhaseActionNotice(stickyPlayerErrorNotice);
