@@ -30,6 +30,7 @@ from server.test_routes.build_queue import BuildQueueRuntime, BuildQueueTestRout
 from server.test_routes.build_view_persistence import BuildViewPersistenceTestRoutes
 from server.test_routes.business_network_transport import BusinessNetworkTransportTestRoutes
 from server.test_routes.card_scenario import CardScenarioTestRoutes
+from server.test_routes.ccdi_choice import CcdiChoiceTestRoutes
 from server.test_routes.destroyed_red_base_marker import DestroyedRedBaseMarkerTestRoutes
 from server.test_routes.discard_reshuffle import DiscardReshuffleTestRoutes
 from server.test_routes.discard_topdeck_choice import DiscardTopdeckChoiceTestRoutes
@@ -1397,45 +1398,18 @@ test_setup_discard_topdeck_choice = (
 )
 
 
-@app.post("/test/setup-ccdi-choice")
-def test_setup_ccdi_choice(payload: dict):
-    """Put a Red Army player straight into the 中紀委 (red_army_ccdi_discard_draw) choice,
-    to exercise the cancellable-choice close/cancel behaviour."""
-    players = [(str(uuid.uuid4()), "red"), (str(uuid.uuid4()), "opp")]
-    game = Game(players, market_mode="all_cards")
-    red = game.players[0]
-    opp = game.players[1]
-    red.faction_id = "red_army"
-    opp.faction_id = "liberals"
-    red.base = "北京"
-    red.organizations = {"北京": 1}
-    opp.base = "臺北"
-    opp.organizations = {"臺北": 1}
-    red.hand = [Card("手牌甲", "command", {}), Card("手牌乙", "command", {}), Card("手牌丙", "command", {})]
-    game.pending_base_choices = []
-    game.game_phase = GamePhase.MAIN
-    game.current_player_index = 0
-    game.turn_phase = TurnPhase.ACTION
-    game.turn_log = game._new_turn_log()
-
-    game._activated_faction_action(red, "中紀委")
-
-    game_id = str(uuid.uuid4())
-    game.id = game_id
-    manager.games[game_id] = game
-    manager.connections[game_id] = manager.connections.get(game_id, {})
-    lobby[game_id] = [(p.id, p.name) for p in game.players]
-    lobby_hosts[game_id] = red.id
-    lobby_factions[game_id] = {p.id: p.faction_id for p in game.players}
-    lobby_bases[game_id] = {p.id: p.base for p in game.players if p.base}
-    lobby_ready[game_id] = {p.id: True for p in game.players}
-    return {
-        "success": True,
-        "game_id": game_id,
-        "player_id": red.id,
-        "url": f"/?game_id={game_id}&player_id={red.id}",
-        "state": game.state(),
-    }
+_ccdi_choice_test_routes = CcdiChoiceTestRoutes(
+    lambda: GameSetupRuntime(
+        manager=manager,
+        lobby=lobby,
+        lobby_hosts=lobby_hosts,
+        lobby_factions=lobby_factions,
+        lobby_bases=lobby_bases,
+        lobby_ready=lobby_ready,
+    )
+)
+app.include_router(_ccdi_choice_test_routes.router)
+test_setup_ccdi_choice = _ccdi_choice_test_routes.test_setup_ccdi_choice
 
 
 @app.post("/test/setup-elite-defection-event-proof")
