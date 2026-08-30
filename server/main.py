@@ -45,6 +45,7 @@ from server.test_routes.india_support_purchase import IndiaSupportPurchaseTestRo
 from server.test_routes.inside_wall import InsideWallTestRoutes
 from server.test_routes.intel_network import IntelNetworkTestRoutes
 from server.test_routes.intel_network_reaction import IntelNetworkReactionTestRoutes
+from server.test_routes.manchuria_era_reorder import ManchuriaEraReorderTestRoutes
 from server.test_routes.move_confirmation import MoveConfirmationTestRoutes
 from server.test_routes.negotiation import NegotiationTestRoutes
 from server.test_routes.pending_choice_board_guard import PendingChoiceBoardGuardTestRoutes
@@ -1282,61 +1283,20 @@ test_setup_bait_exhaustion_ui = (
 )
 
 
-@app.post("/test/setup-manchuria-era-reorder-proof")
-def test_setup_manchuria_era_reorder_proof(payload: dict):
-    players = [(str(uuid.uuid4()), "viewer"), (str(uuid.uuid4()), "red")]
-    game = Game(players, market_mode="all_cards")
-    viewer = game.players[0]
-    red = game.players[1]
-    viewer.faction_id = "manchuria"
-    red.faction_id = "red_army"
-    viewer.base = "瀋陽"
-    red.base = "北京"
-    viewer.organizations = {"瀋陽": 1}
-    red.organizations = {"北京": 1}
-    viewer.hand = [Card("追隨者", "propaganda", {"propaganda": 1})]
-    viewer.deck.draw_pile = [Card(f"底牌{i}", "command", {}) for i in range(3)] + [
-        Card("第七張", "command", {}),
-        Card("第六張", "command", {}),
-        Card("第五張", "command", {}),
-        Card("第四張", "command", {}),
-        Card("第三張", "command", {}),
-        Card("第二張", "command", {}),
-        Card("第一張", "command", {}),
-    ]
-    viewer.deck.discard_pile = []
-    red.hand = [Card("追隨者", "propaganda", {"propaganda": 1})]
-    game.pending_base_choices = []
-    game.game_phase = GamePhase.MAIN
-    game.current_player_index = 0
-    game.turn_phase = TurnPhase.ACTION
-    game.era_engine.activate_era("manchuria")
-    era = game.era_engine.get_definition("manchuria")
-    runtime_effects = game._apply_era_activation_effects(era)
-    game.era_notification = {
-        "id": era.get("id") if era else "manchuria",
-        "name": era.get("name") if era else "[滿洲]滿洲地方派系凝聚",
-        "runtime_effects": runtime_effects,
-    }
-
-    game_id = str(uuid.uuid4())
-    manager.games[game_id] = game
-    manager.connections[game_id] = manager.connections.get(game_id, {})
-    lobby[game_id] = [(p.id, p.name) for p in game.players]
-    lobby_hosts[game_id] = viewer.id
-    lobby_factions[game_id] = {p.id: p.faction_id for p in game.players}
-    lobby_bases[game_id] = {p.id: p.base for p in game.players if p.base}
-    lobby_ready[game_id] = {p.id: True for p in game.players}
-    return {
-        "success": True,
-        "game_id": game_id,
-        "player_id": viewer.id,
-        "red_player_id": red.id,
-        "era_name": era.get("name") if era else None,
-        "runtime_effects": runtime_effects,
-        "url": f"/?game_id={game_id}&player_id={viewer.id}",
-        "state": game.state(),
-    }
+_manchuria_era_reorder_test_routes = ManchuriaEraReorderTestRoutes(
+    lambda: GameSetupRuntime(
+        manager=manager,
+        lobby=lobby,
+        lobby_hosts=lobby_hosts,
+        lobby_factions=lobby_factions,
+        lobby_bases=lobby_bases,
+        lobby_ready=lobby_ready,
+    )
+)
+app.include_router(_manchuria_era_reorder_test_routes.router)
+test_setup_manchuria_era_reorder_proof = (
+    _manchuria_era_reorder_test_routes.test_setup_manchuria_era_reorder_proof
+)
 
 
 @app.get("/")
