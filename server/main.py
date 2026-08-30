@@ -29,6 +29,7 @@ from server.test_routes.build_queue import BuildQueueRuntime, BuildQueueTestRout
 from server.test_routes.build_view_persistence import BuildViewPersistenceTestRoutes
 from server.test_routes.card_scenario import CardScenarioTestRoutes
 from server.test_routes.destroyed_red_base_marker import DestroyedRedBaseMarkerTestRoutes
+from server.test_routes.end_turn_topdeck import EndTurnTopdeckTestRoutes
 from server.test_routes.enemy_occupancy import EnemyOccupancyTestRoutes
 from server.test_routes.expand_results import ExpandResultsTestRoutes
 from server.test_routes.force_base_selection import ForceBaseSelectionTestRoutes
@@ -1065,73 +1066,19 @@ app.include_router(_hand_preview_test_routes.router)
 test_setup_hand_preview = _hand_preview_test_routes.test_setup_hand_preview
 
 
-@app.post("/test/setup-end-turn-topdeck-proof")
-def test_setup_end_turn_topdeck_proof(payload: dict):
-    """Proof setup for the 行動預告/行動募資 topdeck-right flow (2026-08-07 改版):
-    the viewer already played the card (right banked, resource already granted) and has a
-    purchased card sitting in discard — either to drive the manual "頂牌" button (default
-    ACTION phase) or the auto-drain-on-end-turn path (phase="end")."""
-    game_id = str(uuid.uuid4())
-    players = [(str(uuid.uuid4()), "viewer"), (str(uuid.uuid4()), "red")]
-    game = Game(players)
-
-    viewer = game.players[0]
-    red = game.players[1]
-
-    card_name = payload.get("card_name", "行動預告")
-    bought_card_names = payload.get("bought_cards") or [payload.get("bought_card", "本回合購得牌")]
-    extra_hand = payload.get("extra_hand") or ["Filler"]
-    pending_topdeck_uses = payload.get("pending_topdeck_uses", 1)
-    phase = payload.get("phase", "action")
-
-    def proof_card(name):
-        card_def = next((c for c in game.structured_cards if c.get("name") == name), None)
-        if card_def:
-            return Card(card_def["name"], card_def.get("type", "command"), dict(card_def.get("resources", {}) or {}))
-        return Card(name, "command", {})
-
-    bought_cards = [proof_card(name) for name in bought_card_names]
-    resource_key = "propaganda" if card_name == "行動預告" else "money"
-    default_resources = {"money": 0, "propaganda": 0}
-    default_resources[resource_key] = pending_topdeck_uses
-
-    viewer.faction_id = payload.get("faction_id", "tibet_dehradun")
-    viewer.base = payload.get("base", "德拉敦")
-    viewer.organizations = {viewer.base: 1}
-    viewer.resources = payload.get("resources") or default_resources
-    viewer.hand = [proof_card(name) for name in extra_hand]
-    viewer.deck.draw_pile = [proof_card(name) for name in (payload.get("draw_pile") or ["補牌1", "補牌2", "補牌3", "補牌4", "補牌5"])]
-    viewer.deck.discard_pile = list(bought_cards)
-
-    red.faction_id = "red_army"
-    red.base = "北京"
-    red.organizations = {"北京": 1}
-    red.hand = []
-
-    game.current_player_index = 0
-    game.turn_phase = TurnPhase.END if phase == "end" else TurnPhase.ACTION
-    game.game_phase = GamePhase.MAIN
-    game.pending_base_choices = {}
-    game.turn_log["purchased_cards_this_turn"] = list(bought_cards)
-    game.turn_log["pending_topdeck_uses"] = pending_topdeck_uses
-    game.id = game_id
-    game.log(f"UI proof setup: viewer already played {card_name} ({pending_topdeck_uses} banked right); bought cards {bought_card_names} are in discard.")
-
-    manager.games[game_id] = game
-    manager.connections[game_id] = manager.connections.get(game_id, {})
-    lobby[game_id] = list(zip([p.id for p in game.players], [p.name for p in game.players]))
-    lobby_hosts[game_id] = viewer.id
-    lobby_factions[game_id] = {viewer.id: viewer.faction_id, red.id: red.faction_id}
-    lobby_bases[game_id] = {viewer.id: viewer.base, red.id: red.base}
-
-    return {
-        "success": True,
-        "game_id": game_id,
-        "player_id": viewer.id,
-        "card_name": card_name,
-        "bought_cards": bought_card_names,
-        "state": game.state(),
-    }
+_end_turn_topdeck_test_routes = EndTurnTopdeckTestRoutes(
+    lambda: GameSetupRuntime(
+        manager=manager,
+        lobby=lobby,
+        lobby_hosts=lobby_hosts,
+        lobby_factions=lobby_factions,
+        lobby_bases=lobby_bases,
+    )
+)
+app.include_router(_end_turn_topdeck_test_routes.router)
+test_setup_end_turn_topdeck_proof = (
+    _end_turn_topdeck_test_routes.test_setup_end_turn_topdeck_proof
+)
 
 
 @app.post("/test/setup-business-network-transport-proof")
