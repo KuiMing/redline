@@ -17,7 +17,7 @@ EXPECTED_ABILITY_NAMES = {
     "基金會", "安全屋", "展現實力", "攬炒策略", "政工部", "新疆社會管控", "星星之火",
     "本土社團", "東突厥斯坦政府", "殉道者", "民主陣線", "民國之心", "民族祭儀",
     "民族調和", "活動家", "游擊隊", "盟旗學校", "立場試探", "紅軍派系", "統戰部",
-    "華文傳媒", "賭徒耳語", "達賴救援", "選我河山", "青山里", "非暴力",
+    "華文傳媒", "賭徒耳語", "達賴救援", "還我河山", "青山里", "非暴力",
 }
 
 
@@ -96,7 +96,7 @@ def test_taiwan_green_support_build_is_recorded_and_draws_at_turn_end():
 def test_taiwan_blue_and_republican_turn_end_build_triggers():
     for faction_id, base, ability, town in [
         ("taiwan_blue", "臺北", "民國之心", "曼谷"),
-        ("republican", "任意牆內", "選我河山", "成都"),
+        ("republican", "任意牆內", "還我河山", "成都"),
     ]:
         game, player, _ = make_game(faction_id, base)
         player.hand = [Card(f"手牌{i}", "command", {}) for i in range(5)]
@@ -110,7 +110,7 @@ def test_taiwan_blue_and_republican_turn_end_build_triggers():
 def test_npc_counts_each_turn_end_build_trigger_family():
     for faction_id, base, town, ability in [
         ("taiwan_blue", "臺北", "曼谷", "民國之心"),
-        ("republican", "任意牆內", "成都", "選我河山"),
+        ("republican", "任意牆內", "成都", "還我河山"),
     ]:
         game, player, _ = make_game(faction_id, base)
         pin_national_people_congress(game)
