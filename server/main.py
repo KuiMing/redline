@@ -61,6 +61,7 @@ from server.test_routes.shared_dissolve import SharedDissolveTestRoutes
 from server.test_routes.spy import SpyTestRoutes
 from server.test_routes.support import SupportTestRoutes
 from server.test_routes.support_card_play import SupportCardPlayTestRoutes
+from server.test_routes.taiwan_support import TaiwanSupportTestRoutes
 from server.test_routes.trash_choice_ui import TrashChoiceUiTestRoutes
 from server.test_routes.underground_party import UndergroundPartyTestRoutes
 from server.test_routes.victory import VictoryTestRoutes
@@ -1258,11 +1259,11 @@ app.include_router(_support_test_routes.router)
 test_setup_support_proof = _support_test_routes.test_setup_support_proof
 
 
-@app.post("/test/setup-taiwan-support-proof")
-def test_setup_taiwan_support_proof(payload: dict):
-    scoped = dict(payload or {})
-    scoped.setdefault("support_name", "臺灣奧援")
-    return test_setup_support_proof(scoped)
+_taiwan_support_test_routes = TaiwanSupportTestRoutes(test_setup_support_proof)
+app.include_router(_taiwan_support_test_routes.router)
+test_setup_taiwan_support_proof = (
+    _taiwan_support_test_routes.test_setup_taiwan_support_proof
+)
 
 
 @app.post("/test/setup-bait-exhaustion-ui")
