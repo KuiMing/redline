@@ -40,6 +40,7 @@ from server.test_routes.elite_defection_discard import EliteDefectionDiscardTest
 from server.test_routes.elite_defection_event import EliteDefectionEventTestRoutes
 from server.test_routes.end_turn_topdeck import EndTurnTopdeckTestRoutes
 from server.test_routes.enemy_occupancy import EnemyOccupancyTestRoutes
+from server.test_routes.era_event_layout import EraEventLayoutTestRoutes
 from server.test_routes.event_card import EventCardTestRoutes
 from server.test_routes.expand_results import ExpandResultsTestRoutes
 from server.test_routes.force_base_selection import ForceBaseSelectionTestRoutes
@@ -1464,59 +1465,11 @@ test_setup_tibet_era_red_build_proof = (
 )
 
 
-@app.post("/test/setup-era-event-layout-proof")
-def test_setup_era_event_layout_proof(payload: dict):
-    game_id = str(payload.get("game_id") or "")
-    game = manager.games.get(game_id)
-    if not game:
-        return {"success": False, "error": "Game not found"}
-
-    requested_era_ids = payload.get("era_ids")
-    era_ids = [str(item) for item in requested_era_ids] if isinstance(requested_era_ids, list) and requested_era_ids else [str(payload.get("era_id") or "hong_kong")]
-    present_factions = {str(getattr(player, "faction_id", "") or "") for player in game.players}
-    missing_factions = [era_id for era_id in era_ids if era_id not in present_factions]
-    if missing_factions:
-        return {
-            "success": False,
-            "error": "Era layout proof requires one matching player faction per active era",
-            "missing_factions": missing_factions,
-            "player_count": len(game.players),
-        }
-    eras = []
-    for era_id in era_ids:
-        era = game.era_engine.get_definition(era_id)
-        if not era:
-            return {"success": False, "error": f"Unknown era: {era_id}"}
-        game.era_engine.activate_era(era_id)
-        eras.append(era)
-    era = eras[0]
-    game.era_notification = game._era_notification_payload(era)
-    game.era_notification["runtime_effects"] = {
-        "red_suppression": (era.get("effects") or {}).get("red_suppression"),
-        "revolution_counterattack": (era.get("effects") or {}).get("revolution_counterattack"),
-    }
-
-    event_name = str(payload.get("event_name") or "歲月靜好")
-    event = game._event_by_name(event_name)
-    if not event:
-        return {"success": False, "error": f"Unknown event: {event_name}"}
-    game.current_event = event
-    game.event_progress = {
-        "count": 0,
-        "required": int((event.get("trigger") or {}).get("count", 0) or 0),
-        "succeeded": True,
-        "settled": True,
-        "status": "idle",
-    }
-    game.event_notification = game._event_display_payload()
-    game.event_deck.draw_pile = []
-    game.event_deck.discard_pile = []
-    return {
-        "success": True,
-        "game_id": game_id,
-        "era_ids": era_ids,
-        "event_name": event_name,
-    }
+_era_event_layout_test_routes = EraEventLayoutTestRoutes(lambda: manager)
+app.include_router(_era_event_layout_test_routes.router)
+test_setup_era_event_layout_proof = (
+    _era_event_layout_test_routes.test_setup_era_event_layout_proof
+)
 
 
 @app.post("/test/setup-era-notification-proof")
