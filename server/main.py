@@ -31,6 +31,7 @@ from server.test_routes.card_scenario import CardScenarioTestRoutes
 from server.test_routes.expand_results import ExpandResultsTestRoutes
 from server.test_routes.force_base_selection import ForceBaseSelectionTestRoutes
 from server.test_routes.hand_preview import HandPreviewRuntime, HandPreviewTestRoutes
+from server.test_routes.hong_kong_safehouse import HongKongSafehouseTestRoutes
 from server.test_routes.inside_wall import InsideWallTestRoutes
 from server.test_routes.intel_network import IntelNetworkTestRoutes
 from server.test_routes.intel_network_reaction import IntelNetworkReactionTestRoutes
@@ -840,47 +841,19 @@ test_resolve_intel_network_cancel_reaction_proof = (
 )
 
 
-@app.post("/test/setup-hong-kong-safehouse")
-def test_setup_hong_kong_safehouse(payload: dict):
-    game_id = str(uuid.uuid4())
-    players = [(str(uuid.uuid4()), "hk"), (str(uuid.uuid4()), "red")]
-    game = Game(players)
-
-    hk = game.players[0]
-    red = game.players[1]
-
-    hk.faction_id = "hong_kong"
-    hk.base = payload.get("base", "香港城")
-    hk.organizations = {hk.base: 1}
-    hk.hand = []
-
-    red.faction_id = "red_army"
-    red.base = "北京"
-    red.organizations = {"北京": 1}
-
-    game.current_player_index = 0
-    game.turn_phase = TurnPhase.ACTION
-    game.game_phase = GamePhase.MAIN
-    game.pending_base_choices = {}
-    game.id = game_id
-
-    manager.games[game_id] = game
-    manager.connections[game_id] = manager.connections.get(game_id, {})
-    lobby[game_id] = list(zip([p.id for p in game.players], [p.name for p in game.players]))
-    lobby_hosts[game_id] = hk.id
-    lobby_factions[game_id] = {hk.id: "hong_kong", red.id: "red_army"}
-    lobby_bases[game_id] = {hk.id: hk.base, red.id: red.base}
-
-    return {
-        "success": True,
-        "game_id": game_id,
-        "player_id": hk.id,
-        "base": hk.base,
-        "turn_phase": game.turn_phase,
-        "game_phase": game.game_phase,
-        "players": [{"id": p.id, "name": p.name, "faction": p.faction_id} for p in game.players],
-        "state": game.state(),
-    }
+_hong_kong_safehouse_test_routes = HongKongSafehouseTestRoutes(
+    lambda: GameSetupRuntime(
+        manager=manager,
+        lobby=lobby,
+        lobby_hosts=lobby_hosts,
+        lobby_factions=lobby_factions,
+        lobby_bases=lobby_bases,
+    )
+)
+app.include_router(_hong_kong_safehouse_test_routes.router)
+test_setup_hong_kong_safehouse = (
+    _hong_kong_safehouse_test_routes.test_setup_hong_kong_safehouse
+)
 
 
 @app.post("/test/setup-pending-choice-board-guard")
