@@ -32,6 +32,7 @@ from server.test_routes.force_base_selection import ForceBaseSelectionTestRoutes
 from server.test_routes.hand_preview import HandPreviewRuntime, HandPreviewTestRoutes
 from server.test_routes.inside_wall import InsideWallTestRoutes
 from server.test_routes.intel_network import IntelNetworkTestRoutes
+from server.test_routes.negotiation import NegotiationTestRoutes
 from server.test_routes.press_advantage import PressAdvantageTestRoutes
 from server.test_routes.runtime import GameSetupRuntime
 from server.test_routes.scope_audit import ScopeAuditTestRoutes
@@ -709,60 +710,19 @@ test_setup_build_queue_proof = (
 )
 
 
-@app.post("/test/setup-negotiation-proof")
-def test_setup_negotiation_proof(payload: dict):
-    game_id = str(uuid.uuid4())
-    players = [
-        (str(uuid.uuid4()), "Actor"),
-        (str(uuid.uuid4()), "Ally"),
-        (str(uuid.uuid4()), "Enemy"),
-        (str(uuid.uuid4()), "Observer"),
-    ]
-    game = Game(players)
-    actor, ally, enemy, observer = game.players
-    actor.faction_id = "liberals"
-    ally.faction_id = "hong_kong"
-    enemy.faction_id = "red_army"
-    observer.faction_id = "taiwan_green"
-
-    card_def = next(card for card in game.structured_cards if card.get("name") == "合作談判")
-    actor.hand = [Card(card_def["name"], card_def.get("type", "command"), card_def.get("resources", {}))]
-    actor.deck.draw_pile = [Card("ActorDraw", "command", {})]
-    ally.deck.draw_pile = [Card("AllyDraw", "command", {})]
-    enemy.deck.draw_pile = [Card("EnemyDraw", "command", {})]
-    observer.deck.draw_pile = [Card("ObserverDraw", "command", {})]
-    for player in game.players:
-        if player is not actor:
-            player.hand = []
-        player.deck.discard_pile = []
-        player.resources = {"money": 0, "propaganda": 0}
-
-    game.current_player_index = 0
-    game.game_phase = GamePhase.MAIN
-    game.turn_phase = TurnPhase.ACTION
-    game.pending_base_choices = {}
-    game.pending_choice = None
-    noop_event = game._event_by_name("歲月靜好")
-    game.current_event = dict(noop_event or {})
-    game.event_progress = {"count": 0, "required": 0, "succeeded": True, "settled": True, "status": "idle"}
-    game.event_notification = game._event_display_payload()
-    game.event_modifiers = []
-    game.id = game_id
-
-    manager.games[game_id] = game
-    manager.connections[game_id] = manager.connections.get(game_id, {})
-    lobby[game_id] = [(player.id, player.name) for player in game.players]
-    lobby_hosts[game_id] = actor.id
-    lobby_factions[game_id] = {player.id: player.faction_id for player in game.players}
-    lobby_bases[game_id] = {}
-
-    return {
-        "success": True,
-        "game_id": game_id,
-        "player_id": actor.id,
-        "enemy_player_id": enemy.id,
-        "state": game.state(actor.id),
-    }
+_negotiation_test_routes = NegotiationTestRoutes(
+    lambda: GameSetupRuntime(
+        manager=manager,
+        lobby=lobby,
+        lobby_hosts=lobby_hosts,
+        lobby_factions=lobby_factions,
+        lobby_bases=lobby_bases,
+    )
+)
+app.include_router(_negotiation_test_routes.router)
+test_setup_negotiation_proof = (
+    _negotiation_test_routes.test_setup_negotiation_proof
+)
 
 
 _scope_audit_test_routes = ScopeAuditTestRoutes(
