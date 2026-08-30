@@ -48,6 +48,7 @@ from server.test_routes.runtime import GameSetupRuntime
 from server.test_routes.scope_audit import ScopeAuditTestRoutes
 from server.test_routes.set_hand import SetHandTestRoutes
 from server.test_routes.shared_dissolve import SharedDissolveTestRoutes
+from server.test_routes.underground_party import UndergroundPartyTestRoutes
 import uuid
 import asyncio
 import secrets
@@ -988,65 +989,19 @@ test_setup_remove_to_purchase = (
 )
 
 
-@app.post("/test/setup-underground-party")
-def test_setup_underground_party(payload: dict):
-    game_id = str(uuid.uuid4())
-    players = [(str(uuid.uuid4()), "viewer"), (str(uuid.uuid4()), "red")]
-    game = Game(players)
-
-    viewer = game.players[0]
-    red = game.players[1]
-
-    def proof_card(name):
-        card_def = next((c for c in game.structured_cards if c.get("name") == name), None)
-        if card_def:
-            return Card(card_def["name"], card_def.get("type", "command"), dict(card_def.get("resources", {}) or {}))
-        return Card(name, "command", {})
-
-    viewer.faction_id = payload.get("faction_id", "tibet_dehradun")
-    viewer.base = payload.get("base", "德拉敦")
-    viewer.organizations = payload.get("orgs") or {viewer.base: 1}
-    viewer.resources = payload.get("resources") or {"money": 4, "propaganda": 4}
-    viewer.hand = [proof_card("地下黨")]
-    viewer.deck.draw_pile = [proof_card("抽牌A"), proof_card("抽牌B")]
-    viewer.deck.discard_pile = []
-
-    red.faction_id = "red_army"
-    red.base = "北京"
-    red.organizations = {"北京": 1}
-    red.hand = []
-
-    # Deck.draw() pops from the end; arrange the three proof candidates so the UI reveals them in this order.
-    candidate_names = payload.get("candidate_names") or ["宣傳家", "合作談判", "走漏風聲"]
-    game.purchase_deck.draw_pile = [proof_card(name) for name in reversed(candidate_names)]
-    game.purchase_deck.discard_pile = []
-    game.purchase_area = game._static_purchase_cards()[:]
-    random_market_names = payload.get("purchase_area_random") or ["批鬥", "組織經驗甲", "組織經驗丙", "北國奧援", "模仿戰術"]
-    game.purchase_area.extend(proof_card(name) for name in random_market_names)
-
-    game.current_player_index = 0
-    game.turn_phase = TurnPhase.ACTION
-    game.game_phase = GamePhase.MAIN
-    game.pending_base_choices = {}
-    game.id = game_id
-    game.log("UI proof setup: viewer has 地下黨; purchase deck top reveals 宣傳家 / 合作談判 / 走漏風聲.")
-
-    manager.games[game_id] = game
-    manager.connections[game_id] = manager.connections.get(game_id, {})
-    lobby[game_id] = list(zip([p.id for p in game.players], [p.name for p in game.players]))
-    lobby_hosts[game_id] = viewer.id
-    lobby_factions[game_id] = {p.id: p.faction_id for p in game.players}
-    lobby_bases[game_id] = {p.id: p.base for p in game.players}
-
-    return {
-        "success": True,
-        "game_id": game_id,
-        "player_id": viewer.id,
-        "purchase_draw_pile": [getattr(c, 'name', str(c)) for c in game.purchase_deck.draw_pile],
-        "expected_reveal_order": list(candidate_names),
-        "hand": [getattr(c, 'name', str(c)) for c in viewer.hand],
-        "state": game.state(),
-    }
+_underground_party_test_routes = UndergroundPartyTestRoutes(
+    lambda: GameSetupRuntime(
+        manager=manager,
+        lobby=lobby,
+        lobby_hosts=lobby_hosts,
+        lobby_factions=lobby_factions,
+        lobby_bases=lobby_bases,
+    )
+)
+app.include_router(_underground_party_test_routes.router)
+test_setup_underground_party = (
+    _underground_party_test_routes.test_setup_underground_party
+)
 
 
 @app.post("/test/setup-recruit-talent-proof")
