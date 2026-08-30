@@ -34,6 +34,7 @@ from server.test_routes.expand_results import ExpandResultsTestRoutes
 from server.test_routes.force_base_selection import ForceBaseSelectionTestRoutes
 from server.test_routes.hand_preview import HandPreviewRuntime, HandPreviewTestRoutes
 from server.test_routes.hong_kong_safehouse import HongKongSafehouseTestRoutes
+from server.test_routes.hu_taiwan_shared import HuTaiwanSharedTestRoutes
 from server.test_routes.inside_wall import InsideWallTestRoutes
 from server.test_routes.intel_network import IntelNetworkTestRoutes
 from server.test_routes.intel_network_reaction import IntelNetworkReactionTestRoutes
@@ -924,52 +925,19 @@ test_setup_destroyed_red_base_marker_proof = (
 )
 
 
-@app.post("/test/setup-hu-taiwan-shared")
-def test_setup_hu_taiwan_shared(payload: dict):
-    game_id = str(uuid.uuid4())
-    players = [(str(uuid.uuid4()), "hu"), (str(uuid.uuid4()), "taiwan")]
-    game = Game(players)
-
-    hu = game.players[0]
-    tw = game.players[1]
-
-    hu.faction_id = "hu"
-    hu.base = payload.get("hu_base", "紐約")
-    hu.organizations = {hu.base: 1}
-    hu.hand = []
-    hu.moves_left = 0
-
-    tw.faction_id = "taiwan_green"
-    tw.base = payload.get("tw_base", "臺北")
-    tw.organizations = {
-        payload.get("shared_town", "上海"): 1,
-        tw.base: 1,
-    }
-    tw.hand = []
-
-    game.current_player_index = 0
-    game.turn_phase = TurnPhase.ACTION
-    game.game_phase = GamePhase.MAIN
-    game.pending_base_choices = {}
-    game.id = game_id
-
-    manager.games[game_id] = game
-    manager.connections[game_id] = manager.connections.get(game_id, {})
-    lobby[game_id] = list(zip([p.id for p in game.players], [p.name for p in game.players]))
-    lobby_hosts[game_id] = hu.id
-    lobby_factions[game_id] = {hu.id: "hu", tw.id: "taiwan_green"}
-    lobby_bases[game_id] = {hu.id: hu.base, tw.id: tw.base}
-
-    return {
-        "success": True,
-        "game_id": game_id,
-        "player_id": hu.id,
-        "shared_town": payload.get("shared_town", "上海"),
-        "turn_phase": game.turn_phase,
-        "game_phase": game.game_phase,
-        "players": [{"id": p.id, "name": p.name, "faction": p.faction_id} for p in game.players],
-        "state": game.state(),
-    }
+_hu_taiwan_shared_test_routes = HuTaiwanSharedTestRoutes(
+    lambda: GameSetupRuntime(
+        manager=manager,
+        lobby=lobby,
+        lobby_hosts=lobby_hosts,
+        lobby_factions=lobby_factions,
+        lobby_bases=lobby_bases,
+    )
+)
+app.include_router(_hu_taiwan_shared_test_routes.router)
+test_setup_hu_taiwan_shared = (
+    _hu_taiwan_shared_test_routes.test_setup_hu_taiwan_shared
+)
 
 
 @app.post("/test/setup-shared-dissolve")
