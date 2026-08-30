@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-08-01T11:28:46.924649+00:00",
-  "base_url": "http://127.0.0.1:8000",
+  "generated_at": "2026-08-30T08:48:10.012678+00:00",
+  "base_url": "http://127.0.0.1:8765",
   "status": "passed",
   "checks_passed": 11,
   "checks_total": 11,
@@ -89,9 +89,9 @@
       }
     },
     {
-      "name": "formal_log_names_actor_enemy_and_negotiation",
+      "name": "formal_traditional_chinese_log_names_actor_enemy_and_negotiation",
       "ok": true,
-      "detail": "[Turn 1] Actor played 合作談判\n[Turn 1] Actor and Enemy each drew 1 via 合作談判"
+      "detail": "[Turn 1] Actor played 合作談判\n[Turn 1] Actor 與 Enemy 因合作談判各抽了 1 張牌：Actor抽到：ActorDraw；Enemy抽了 1 張牌"
     },
     {
       "name": "browser_console_has_no_errors",
