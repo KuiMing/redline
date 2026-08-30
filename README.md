@@ -10,8 +10,7 @@ Redline 是一個以瀏覽器 UI 與 Python WebSocket 伺服器實作的桌遊�
 
 ```bash
 cd "$HOME/.openclaw/workspace/redline"
-uv run --with fastapi --with 'uvicorn[standard]' --with websockets \
-  uvicorn server.main:app --host 0.0.0.0 --port 8000
+uv run uvicorn server.main:app --host 0.0.0.0 --port 8000
 ```
 
 服務啟動後：
