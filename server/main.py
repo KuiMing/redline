@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from server.game import Game, TurnPhase, GamePhase, STATIC_PURCHASE_CARD_SUPPLY
@@ -26,11 +26,18 @@ from server.map_data_routes import (
 )
 from server.test_routes.registry import register_test_routes
 from server.test_routes.runtime import GameSetupRuntime
+import os
 import uuid
 import asyncio
 import secrets
 import json
 from pathlib import Path
+
+ENABLE_TEST_ROUTES = os.getenv("ENABLE_TEST_ROUTES", "false").strip().lower() in (
+    "1",
+    "true",
+    "yes",
+)
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -703,8 +710,16 @@ def _test_broadcaster_provider():
     return broadcast_game_state
 
 
+# /test/* routes let a caller directly mutate live game state. They must
+# stay off by default in production; local/dev/CI runs opt in explicitly.
+# When enabled, register_test_routes mounts each sub-router directly onto
+# `app` (unchanged from before this gate existed) so route nesting/order
+# stays exactly as scripts/tests/*_test_route.py already assert. When
+# disabled, sub-routers are mounted onto a throwaway APIRouter instead so
+# the bound test_setup_* callables below still exist for direct in-process
+# calls, without ever becoming HTTP-reachable on `app`.
 _test_routes = register_test_routes(
-    app=app,
+    app=app if ENABLE_TEST_ROUTES else APIRouter(),
     runtime_provider=_test_runtime_provider,
     manager_provider=_test_manager_provider,
     broadcaster_provider=_test_broadcaster_provider,
@@ -713,5 +728,7 @@ _test_routes = register_test_routes(
 # Re-export every bound test_setup_* / test_set_hand callable as a module
 # global: several scripts/tests/*_test_route.py files call these directly
 # (main.test_setup_x(...)) instead of only via HTTP, for backward
-# compatibility with the pre-registry inline-route era.
+# compatibility with the pre-registry inline-route era. Kept unconditional
+# regardless of ENABLE_TEST_ROUTES since it is a direct in-process call, not
+# an HTTP-reachable surface.
 globals().update(vars(_test_routes))

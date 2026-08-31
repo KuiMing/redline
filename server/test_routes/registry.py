@@ -8,9 +8,9 @@ main.test_setup_x for backward compatibility).
 """
 
 from types import SimpleNamespace
-from typing import Any, Callable
+from typing import Any, Callable, Union
 
-from fastapi import FastAPI
+from fastapi import APIRouter, FastAPI
 
 from server.test_routes.bait_exhaustion_ui import BaitExhaustionUiTestRoutes
 from server.test_routes.belt_road_red_turn import BeltRoadRedTurnTestRoutes
@@ -78,7 +78,7 @@ from server.test_routes.victory import VictoryTestRoutes
 
 def register_test_routes(
     *,
-    app: FastAPI,
+    app: Union[FastAPI, APIRouter],
     runtime_provider: Callable[[], GameSetupRuntime],
     manager_provider: Callable[[], Any],
     broadcaster_provider: Callable[[], Any],
