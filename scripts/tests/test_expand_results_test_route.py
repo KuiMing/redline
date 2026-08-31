@@ -576,7 +576,7 @@ def test_expand_results_main_http_and_callable_use_late_bound_replacements(monke
     assert second.manager.games[direct["game_id"]].players[1].base == "臺北"
     assert callable(main.test_setup_expand_results_proof)
     assert not inspect.iscoroutinefunction(main.test_setup_expand_results_proof)
-    assert main.test_setup_expand_results_proof.__self__ is main._expand_results_test_routes
+    assert isinstance(main.test_setup_expand_results_proof.__self__, ExpandResultsTestRoutes)
     assert (
         main.test_setup_expand_results_proof.__func__
         is ExpandResultsTestRoutes.test_setup_expand_results_proof

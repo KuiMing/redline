@@ -218,4 +218,4 @@ def test_manchuria_era_reorder_http_openapi_and_route_order():
     paths = [getattr(route, "path", None) for route in routes]
     index = paths.index("/test/setup-manchuria-era-reorder-proof")
     assert paths[index - 1] == "/test/setup-bait-exhaustion-ui"
-    assert paths[index + 1] == "/"
+    assert paths[index + 1] == "/test/setup-event-card-proof"

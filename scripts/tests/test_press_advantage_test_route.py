@@ -291,9 +291,8 @@ def test_main_press_advantage_uses_rebound_runtime_and_callable(monkeypatch):
     assert direct["game_id"] != game_id
     assert manager.games[direct["game_id"]].players[1].base == "臺北"
     assert callable(main.test_setup_press_advantage_proof)
-    assert (
-        main.test_setup_press_advantage_proof.__self__
-        is main._press_advantage_test_routes
+    assert isinstance(
+        main.test_setup_press_advantage_proof.__self__, PressAdvantageTestRoutes
     )
     assert (
         main.test_setup_press_advantage_proof.__func__

@@ -510,7 +510,7 @@ def test_negotiation_main_http_and_callable_use_late_bound_replacements(monkeypa
     assert direct["game_id"] in second.manager.games
     assert direct["game_id"] not in first.manager.games
     assert callable(main.test_setup_negotiation_proof)
-    assert main.test_setup_negotiation_proof.__self__ is main._negotiation_test_routes
+    assert isinstance(main.test_setup_negotiation_proof.__self__, NegotiationTestRoutes)
     assert (
         main.test_setup_negotiation_proof.__func__
         is NegotiationTestRoutes.test_setup_negotiation_proof

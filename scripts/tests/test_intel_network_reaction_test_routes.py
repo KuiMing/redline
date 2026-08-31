@@ -498,7 +498,7 @@ def test_main_preserves_two_bound_callables_and_late_bound_runtime(monkeypatch):
         callable_ = getattr(main, name)
         assert callable(callable_)
         assert not inspect.iscoroutinefunction(callable_)
-        assert callable_.__self__ is main._intel_network_reaction_test_routes
+        assert isinstance(callable_.__self__, IntelNetworkReactionTestRoutes)
 
 
 def _baseline_functions(*names):

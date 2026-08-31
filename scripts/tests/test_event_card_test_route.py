@@ -269,5 +269,5 @@ def test_event_card_http_openapi_and_route_order():
     assert getattr(matching[0], "methods", None) == {"POST"}
     paths = [getattr(route, "path", None) for route in routes]
     index = paths.index("/test/setup-event-card-proof")
-    assert paths[index - 1] == "/new-game"
+    assert paths[index - 1] == "/test/setup-manchuria-era-reorder-proof"
     assert paths[index + 1] == "/test/setup-national-people-congress-red-dissolve-proof"
