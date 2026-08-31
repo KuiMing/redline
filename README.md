@@ -13,6 +13,16 @@ cd "$HOME/.openclaw/workspace/redline"
 uv run uvicorn server.main:app --host 0.0.0.0 --port 8000
 ```
 
+`/test/*` 這類會直接改遊戲狀態的測試端點預設是關閉的（正式環境不應該讓人從外部直接改
+遊戲狀態）。如果你要跑 `scripts/validate_*_browser.py` 這類 browser-proof 腳本、或任何
+需要打 `/test/*` 的手動驗證，啟動前要另外加上：
+
+```bash
+ENABLE_TEST_ROUTES=true uv run uvicorn server.main:app --host 0.0.0.0 --port 8000
+```
+
+沒開這個環境變數的話，`/test/*` 會回傳 404，browser-proof 腳本會整批打不到 setup 端點。
+
 服務啟動後：
 
 - 本機瀏覽器：`http://127.0.0.1:8000`
