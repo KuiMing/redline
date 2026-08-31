@@ -187,3 +187,12 @@ docker run -d --name redline -p 8000:8000 redline
 - `scripts/validate_ui_card_flows.py`
 
 重跑驗證時，對應腳本應優先把輸出直接寫進各自的 `docs/records/<topic>/`；repo 根目錄目前不應再承接這些 validation report。
+
+## 授權與原作聲明
+
+- 本專案自行開發的程式碼採用 MIT License。完整條款請參閱 [`LICENSE-CODE`](LICENSE-CODE)。
+- 本專案使用或改編自桌上遊戲《逆統戰：致地與海的革命者》的規則、文字、角色、圖像及其他《逆統戰》原作內容。相關原作內容的權利屬 ESC Taiwan／原著作權人所有，不適用 MIT License。
+- 依原權利人向本專案提供的書面說明及[官方二次創作政策](https://reversedfront.tw/download/)，原作相關內容僅限非商用且必須註明出處；商業使用須另行取得原著作權人同意。
+- 本專案是獨立製作的非官方二次創作，並非 ESC Taiwan 官方開發、發行、贊助或認可的作品。
+
+完整的授權範圍與權利聲明請參閱 [`LICENSE.md`](LICENSE.md)。
