@@ -1538,24 +1538,47 @@ function sendAction(action, payload = {}) {
 }
 
 function purchaseSelectionDetails(state = window.lastGameState || {}) {
+  // Set iteration preserves the order in which the player selected cards.  The
+  // server applies the same submitted order when sharing propaganda in a batch.
   const indices = [...selectedPurchaseIndices]
-    .filter(index => Number.isInteger(index) && index >= 0 && index < (state.purchase_area || []).length)
-    .sort((a, b) => a - b);
+    .filter(index => Number.isInteger(index) && index >= 0 && index < (state.purchase_area || []).length);
+  const me = (state.players || []).find(player => player.id === playerId) || null;
+  const policy = state.purchase_payment_policy || {};
+  const flexible = policy.active === true
+    && policy.type === 'propaganda_then_money_shortfall'
+    && policy.allocation_scope === 'batch';
   const cards = indices.map(index => {
-    const payment = state.purchase_area_payments?.[index] || state.purchase_area_costs?.[index] || {money: 0, propaganda: 0};
+    const cost = state.purchase_area_costs?.[index] || state.purchase_area_payments?.[index] || {money: 0, propaganda: 0};
     return {
       index,
       name: state.purchase_area[index],
       zone: index < 6 ? '常設購買區' : '隨機購買區',
-      money: Number(payment.money || 0),
-      propaganda: Number(payment.propaganda || 0),
+      eligibleForFlexiblePayment: flexible && Number(cost[policy.eligible_cost] || 0) > 0,
+      money: Number(cost.money || 0),
+      propaganda: Number(cost.propaganda || 0),
     };
   });
+
+  if (flexible && me) {
+    const fixedPropaganda = cards.reduce(
+      (sum, card) => sum + (card.eligibleForFlexiblePayment ? 0 : card.propaganda),
+      0,
+    );
+    let remainingPropaganda = Math.max(0, Number(me.resources?.propaganda || 0) - fixedPropaganda);
+    cards.forEach(card => {
+      if (!card.eligibleForFlexiblePayment) return;
+      const propagandaPayment = Math.min(remainingPropaganda, card.propaganda);
+      const moneyShortfall = card.propaganda - propagandaPayment;
+      card.propaganda = propagandaPayment;
+      card.money += moneyShortfall;
+      remainingPropaganda -= propagandaPayment;
+    });
+  }
+
   const total = cards.reduce((sum, card) => ({
     money: sum.money + card.money,
     propaganda: sum.propaganda + card.propaganda,
   }), {money: 0, propaganda: 0});
-  const me = (state.players || []).find(player => player.id === playerId) || null;
   const affordable = !!me
     && Number(me.resources?.money || 0) >= total.money
     && Number(me.resources?.propaganda || 0) >= total.propaganda;

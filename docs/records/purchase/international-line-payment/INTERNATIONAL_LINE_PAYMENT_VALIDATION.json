@@ -1,0 +1,75 @@
+{
+  "summary": {
+    "total": 5,
+    "passed": 5,
+    "failed": 0
+  },
+  "checks": [
+    {
+      "name": "server_projects_mixed_payment_for_thinker",
+      "passed": true,
+      "details": {
+        "cost": {
+          "money": 0,
+          "propaganda": 5
+        },
+        "payment": {
+          "money": 3,
+          "propaganda": 2
+        },
+        "policy": {
+          "type": "propaganda_then_money_shortfall",
+          "active": true,
+          "ability_name": "國際線",
+          "eligible_cost": "propaganda",
+          "allocation_scope": "batch"
+        }
+      }
+    },
+    {
+      "name": "selection_summary_uses_three_money_and_two_propaganda",
+      "passed": true,
+      "details": {
+        "summary": "已選 1 張｜合計 3 資金 ＋ 2 宣傳",
+        "buy_enabled": true,
+        "screenshot": "docs/records/purchase/international-line-payment/01-thinker-selected-3-money-2-propaganda.png"
+      }
+    },
+    {
+      "name": "confirmation_modal_shows_mixed_payment",
+      "passed": true,
+      "details": {
+        "card": "思想家\n常設購買區\n3 資金 ＋ 2 宣傳",
+        "total": "共 1 張｜合計 3 資金 ＋ 2 宣傳",
+        "confirm_enabled": true,
+        "screenshot": "docs/records/purchase/international-line-payment/02-confirm-mixed-payment.png"
+      }
+    },
+    {
+      "name": "purchase_deducts_resources_and_moves_thinker",
+      "passed": true,
+      "details": {
+        "resources": {
+          "money": 0,
+          "propaganda": 0
+        },
+        "discard_pile": [
+          "思想家"
+        ],
+        "thinker_supply": 14,
+        "trigger_logs": [
+          "[Turn 1] viewer triggered 國際線 to pay propaganda with money"
+        ],
+        "screenshot": "docs/records/purchase/international-line-payment/03-after-purchase.png"
+      }
+    },
+    {
+      "name": "browser_console_is_clean",
+      "passed": true,
+      "details": {
+        "console_errors": [],
+        "page_errors": []
+      }
+    }
+  ]
+}
