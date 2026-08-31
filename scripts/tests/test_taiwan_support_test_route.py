@@ -78,9 +78,10 @@ def test_main_taiwan_support_delegates_to_shared_support_route(monkeypatch):
         calls.append(payload)
         return {"support_name": payload.get("support_name")}
 
+    taiwan_support_instance = main.test_setup_taiwan_support_proof.__self__
     monkeypatch.setattr(main, "test_setup_support_proof", fake_support_proof)
     monkeypatch.setattr(
-        main._taiwan_support_test_routes, "_support_proof_provider", fake_support_proof
+        taiwan_support_instance, "_support_proof_provider", fake_support_proof
     )
 
     response = TestClient(main.app).post("/test/setup-taiwan-support-proof", json={})
