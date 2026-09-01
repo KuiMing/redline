@@ -40,7 +40,7 @@ OpenFreeMap 公共服務沒有納入 Redline 的可用性保證。正式部署�
 
 ```bash
 ENABLE_TEST_ROUTES=1 uv run uvicorn server.main:app --host 127.0.0.1 --port 8781
-PYTHONPATH=. uv run python scripts/validate/validate_vector_basemap.py
+PYTHONPATH=. uv run python scripts/validate_vector_basemap.py
 ```
 
 驗證範圍：

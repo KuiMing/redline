@@ -6,7 +6,7 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "docs" / "records" / "map-ui" / "vector-basemap"
 URL = "http://127.0.0.1:8781/static/leaflet_game_map.html"
 STYLE_URL = "https://tiles.openfreemap.org/styles/liberty"
