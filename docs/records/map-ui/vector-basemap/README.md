@@ -63,5 +63,5 @@ PYTHONPATH=. uv run python scripts/validate_vector_basemap.py
 Latest evidence:
 
 - Browser proof：**29/29 passed**
-- Focused basemap/map route tests：**11 passed**
-- Broad pytest（excluding the pre-existing live websocket script `scripts/tests/test_ws_flow.py`）：**1006 passed**
+- Focused basemap tests：**7 passed**
+- Broad pytest（excluding the pre-existing live websocket script `scripts/tests/test_ws_flow.py`）：**439 passed**
