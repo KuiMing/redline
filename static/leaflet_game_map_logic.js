@@ -114,12 +114,161 @@ function initializeCanonicalMapData(mapData, geoCoordinates) {
 
 const map = L.map('map', { preferCanvas:true, worldCopyJump:false });
 window.__redlinePlayableMap = map;
-// Avoid direct use of tile.openstreetmap.org here: local HTML files may be blocked by OSM's tile usage policy
-// when Referer is missing. CARTO tiles use OSM data but are more suitable for this standalone viewer.
-const cartoLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', { maxZoom:19, attribution:'&copy; OpenStreetMap contributors &copy; CARTO' });
-const cartoDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', { maxZoom:19, attribution:'&copy; OpenStreetMap contributors &copy; CARTO' });
-cartoDark.addTo(map);
-let currentBasemap = 'cartoDark';
+const OPENFREEMAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
+const REDLINE_VECTOR_BASEMAP_LAYER_IDS = new Set([
+  'background',
+  'natural_earth',
+  'water',
+  'waterway_river',
+  'boundary_3',
+  'boundary_2',
+  'boundary_disputed',
+  'tunnel_motorway_link_casing',
+  'tunnel_link_casing',
+  'tunnel_trunk_primary_casing',
+  'tunnel_motorway_casing',
+  'tunnel_motorway_link',
+  'tunnel_link',
+  'tunnel_trunk_primary',
+  'tunnel_motorway',
+  'road_motorway_link_casing',
+  'road_link_casing',
+  'road_trunk_primary_casing',
+  'road_motorway_casing',
+  'road_motorway_link',
+  'road_link',
+  'road_trunk_primary',
+  'road_motorway',
+  'bridge_motorway_link_casing',
+  'bridge_link_casing',
+  'bridge_trunk_primary_casing',
+  'bridge_motorway_casing',
+  'bridge_motorway_link',
+  'bridge_link',
+  'bridge_trunk_primary',
+  'bridge_motorway',
+]);
+const REQUIRED_REDLINE_VECTOR_BASEMAP_LAYER_IDS = new Set([
+  'background',
+  'water',
+  'boundary_2',
+  'road_motorway',
+]);
+const BASEMAP_LOAD_TIMEOUT_MS = 10000;
+
+function minimalRedlineBasemapStyle(sourceStyle) {
+  const style = JSON.parse(JSON.stringify(sourceStyle));
+  const sourceLayerIds = new Set((style.layers || []).map(layer => layer.id));
+  const missingLayerIds = [...REQUIRED_REDLINE_VECTOR_BASEMAP_LAYER_IDS]
+    .filter(layerId => !sourceLayerIds.has(layerId));
+  if (missingLayerIds.length) {
+    throw new Error(`OpenFreeMap style missing required layers: ${missingLayerIds.join(', ')}`);
+  }
+  delete style.sprite;
+  delete style.glyphs;
+  style.layers = (style.layers || [])
+    .filter(layer => layer.type !== 'symbol' && REDLINE_VECTOR_BASEMAP_LAYER_IDS.has(layer.id))
+    .map(layer => {
+      const paint = { ...(layer.paint || {}) };
+      if (layer.id === 'background') paint['background-color'] = '#343841';
+      if (layer.id === 'natural_earth') paint['raster-opacity'] = 0.04;
+      if (layer.id === 'water') {
+        paint['fill-color'] = '#071522';
+        paint['fill-outline-color'] = '#6f87a8';
+      }
+      if (layer.id.startsWith('boundary_')) {
+        paint['line-color'] = '#53617a';
+        paint['line-opacity'] = 0.42;
+      }
+      if (/^(road|bridge|tunnel)_/.test(layer.id)) {
+        paint['line-color'] = layer.id.endsWith('_casing') ? '#111a2c' : '#35425b';
+        paint['line-opacity'] = 0.58;
+      }
+      return { ...layer, paint };
+    });
+  return style;
+}
+
+let vectorBasemap = null;
+let basemapUnavailable = false;
+function handleBasemapError() {
+  if (basemapUnavailable) return;
+  basemapUnavailable = true;
+  if (vectorBasemap && map.hasLayer(vectorBasemap)) map.removeLayer(vectorBasemap);
+  map.getContainer().classList.add('redline-basemap-unavailable');
+}
+
+function waitForLeafletMapLoad() {
+  if (map._loaded) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      map.off('load', handleLoad);
+      reject(new Error('Leaflet map load timed out'));
+    }, BASEMAP_LOAD_TIMEOUT_MS);
+    const handleLoad = () => {
+      clearTimeout(timeoutId);
+      resolve();
+    };
+    map.once('load', handleLoad);
+  });
+}
+
+function waitForVectorMapLoad(vectorMap) {
+  if (vectorMap.loaded()) return Promise.resolve(vectorMap);
+  return new Promise((resolve, reject) => {
+    let timeoutId = null;
+    const cleanup = () => {
+      clearTimeout(timeoutId);
+      vectorMap.off('load', handleLoad);
+      vectorMap.off('error', handleError);
+    };
+    const handleLoad = () => {
+      cleanup();
+      resolve(vectorMap);
+    };
+    const handleError = event => {
+      cleanup();
+      reject(event?.error || event || new Error('Vector basemap failed to load'));
+    };
+    timeoutId = setTimeout(
+      () => handleError(new Error('Vector basemap load timed out')),
+      BASEMAP_LOAD_TIMEOUT_MS,
+    );
+    vectorMap.on('load', handleLoad);
+    vectorMap.on('error', handleError);
+  });
+}
+
+async function loadMinimalVectorBasemap() {
+  const controller = new AbortController();
+  const styleTimeoutId = setTimeout(() => controller.abort(), BASEMAP_LOAD_TIMEOUT_MS);
+  try {
+    const response = await fetch(OPENFREEMAP_STYLE_URL, { signal: controller.signal });
+    if (!response.ok) throw new Error(`OpenFreeMap style request failed (${response.status})`);
+    const sourceStyle = await response.json();
+    clearTimeout(styleTimeoutId);
+    await waitForLeafletMapLoad();
+    vectorBasemap = L.maplibreGL({
+      style: minimalRedlineBasemapStyle(sourceStyle),
+      attribution: '<a href="https://openfreemap.org">OpenFreeMap</a> | &copy; <a href="https://openmaptiles.org">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>',
+    }).addTo(map);
+    const vectorMap = vectorBasemap.getMaplibreMap();
+    await waitForVectorMapLoad(vectorMap);
+    vectorMap.on('error', event => {
+      console.warn('Vector basemap runtime error; using dark fallback.', event?.error || event);
+      handleBasemapError();
+    });
+    return vectorMap;
+  } catch (error) {
+    clearTimeout(styleTimeoutId);
+    console.warn('Vector basemap unavailable; using dark fallback.', error);
+    handleBasemapError();
+    return null;
+  }
+}
+
+window.__redlineBasemapReady = loadMinimalVectorBasemap();
+let currentBasemap = 'openFreeMapMinimalVector';
 
 const roadLayer = L.layerGroup().addTo(map);
 const railLayer = L.layerGroup().addTo(map);
