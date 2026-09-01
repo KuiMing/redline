@@ -26,8 +26,9 @@ Leaflet 遊戲地圖使用 OpenFreeMap vector tiles，並透過 MapLibre GL Leaf
 
 ## 依賴與 attribution
 
-- MapLibre GL JS `5.7.1`
-- MapLibre GL Leaflet `0.1.3`
+- MapLibre GL JS `5.7.1`，自託管於 `static/vendor/maplibre-gl/5.7.1/`
+- MapLibre GL Leaflet `0.1.3`，自託管於 `static/vendor/maplibre-gl-leaflet/0.1.3/`
+- 兩個 vendor 目錄均保留上游授權文字；contract tests 驗證三個執行資產的 SHA-256。
 - OpenFreeMap style：`https://tiles.openfreemap.org/styles/liberty`
 - Attribution：OpenFreeMap、OpenMapTiles、OpenStreetMap contributors
 
@@ -53,10 +54,14 @@ PYTHONPATH=. uv run python scripts/validate/validate_vector_basemap.py
 - 無 `API KEY REQUIRED`
 - console 無 JavaScript error
 - vector error dark fallback
+- style request failure and 10-second timeout fallback
+- self-hosted plugin load failure fallback
+- missing required upstream layer fallback
+- post-load tile failure fallback
 - town marker interaction remains functional with the MapLibre canvas present
 
 Latest evidence:
 
-- Browser proof：**24/24 passed**
-- Focused basemap/map route tests：**10 passed**
-- Broad pytest（excluding the pre-existing live websocket script `scripts/tests/test_ws_flow.py`）：**1005 passed**
+- Browser proof：**29/29 passed**
+- Focused basemap/map route tests：**11 passed**
+- Broad pytest（excluding the pre-existing live websocket script `scripts/tests/test_ws_flow.py`）：**1006 passed**
