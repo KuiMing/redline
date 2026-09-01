@@ -1,6 +1,6 @@
 # 南洋奧援 tier1 discard choice validation
 
-可重跑指令：`python3 scripts/validate_south_seas_support_tier1_discard_choice.py`
+可重跑指令：`python3 scripts/validate/validate_south_seas_support_tier1_discard_choice.py`
 
 - total: 2
 - passed: 2

@@ -1,6 +1,6 @@
 # 香港根據地遷移驗證（S5-1＋機場根據地用途）
 
-可重跑指令：`python3 scripts/validate_hk_base_relocation.py`
+可重跑指令：`python3 scripts/validate/validate_hk_base_relocation.py`
 
 - total: 6 / passed: 6 / failed: 0
 

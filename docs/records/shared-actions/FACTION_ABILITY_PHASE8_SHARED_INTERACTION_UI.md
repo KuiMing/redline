@@ -52,7 +52,7 @@
 
 ## 驗證
 新增：
-- `scripts/validate_shared_interaction_ui_phase8.py`
+- `scripts/validate/validate_shared_interaction_ui_phase8.py`
 
 輸出：
 - `SHARED_INTERACTION_UI_PHASE8_VALIDATION.json`

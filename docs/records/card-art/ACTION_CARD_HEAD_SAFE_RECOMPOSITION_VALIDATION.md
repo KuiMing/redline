@@ -1,6 +1,6 @@
 # 行動卡頭部安全取景重組驗證
 
-可重跑：`uv run python scripts/validate_action_card_recomposition.py`
+可重跑：`uv run python scripts/validate/validate_action_card_recomposition.py`
 
 - cards: 46 / passed: 46 / failed: 0
 

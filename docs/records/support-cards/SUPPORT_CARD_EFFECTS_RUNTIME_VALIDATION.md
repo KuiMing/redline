@@ -1,6 +1,6 @@
 # SUPPORT CARD EFFECTS RUNTIME VALIDATION
 
-可重跑指令：`python3 scripts/validate_support_card_effects_runtime.py`
+可重跑指令：`python3 scripts/validate/validate_support_card_effects_runtime.py`
 
 - scope: 英美奧援, 歐洲奧援, 南洋奧援, 印度奧援
 - total: 12

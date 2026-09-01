@@ -1,6 +1,6 @@
 # 紅軍奧援歸屬驗證（非紅軍打出後回紅軍棄牌堆）
 
-可重跑指令：`python3 scripts/validate_red_support_ownership.py`
+可重跑指令：`python3 scripts/validate/validate_red_support_ownership.py`
 
 - total: 4 / passed: 4 / failed: 0
 

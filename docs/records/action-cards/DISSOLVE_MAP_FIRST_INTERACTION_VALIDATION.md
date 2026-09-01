@@ -1,6 +1,6 @@
 # 瓦解組織效果：地圖優先互動（interaction_kind 統一／💀 標示／連續瓦解）驗證
 
-可重跑指令：`python3 scripts/validate_dissolve_map_first_interaction.py`
+可重跑指令：`python3 scripts/validate/validate_dissolve_map_first_interaction.py`
 
 - total: 9 / passed: 9 / failed: 0
 - screenshots: /Users/benmini/.openclaw/workspace/redline/docs/records/action-cards/dissolve_map_first_spy_card.png, /Users/benmini/.openclaw/workspace/redline/docs/records/action-cards/dissolve_map_first_multi_target.png

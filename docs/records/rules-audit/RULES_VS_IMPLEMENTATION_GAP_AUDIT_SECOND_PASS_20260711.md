@@ -20,7 +20,7 @@
 
 **建議修法**：新增一個 `player.org_supply_limit`（開局時依陣營計算：反共=22、紅軍=8×反共人數(+8 if 任一玩家選臺灣)），在所有「建立組織」的統一入口（建議收斂到一個 `_place_organization(player, town)` helper，或至少在 `build_organization`／`_resolve_support_flow_choice` 的 build 分支／事件建立分支各補檢查）檢查 `total_organizations() < limit`，超過時回傳明確錯誤。注意組織「遷移」不增加總數、「瓦解」會釋放供應，都不需要動。
 
-**修正記錄（2026-07-11）**：紅軍上限依使用者決定**不採規則書 8×N+8 公式，改為固定 40**；反共維持 22。供應檢查收斂在 `can_develop_in_town()`（所有建立路徑與 UI 可建清單的共同漏斗），`build_organization` 補明確錯誤訊息；另發現「移動他人共享組織會轉移所有權（總數+1）」也需消耗供應，一併補上；自有移動與瓦解不受影響。驗證：`python3 scripts/validate_org_supply_limits.py`（6/6）＋既有移動/佔領/開局驗證回歸全 PASS。proof：`docs/records/rules-audit/ORG_SUPPLY_LIMITS_VALIDATION_20260711.{json,md}`；`TODO.md` 已同步新增 `[done]` 條目。
+**修正記錄（2026-07-11）**：紅軍上限依使用者決定**不採規則書 8×N+8 公式，改為固定 40**；反共維持 22。供應檢查收斂在 `can_develop_in_town()`（所有建立路徑與 UI 可建清單的共同漏斗），`build_organization` 補明確錯誤訊息；另發現「移動他人共享組織會轉移所有權（總數+1）」也需消耗供應，一併補上；自有移動與瓦解不受影響。驗證：`python3 scripts/validate/validate_org_supply_limits.py`（6/6）＋既有移動/佔領/開局驗證回歸全 PASS。proof：`docs/records/rules-audit/ORG_SUPPLY_LIMITS_VALIDATION_20260711.{json,md}`；`TODO.md` 已同步新增 `[done]` 條目。
 
 ---
 
@@ -34,7 +34,7 @@
 
 **建議修法**：比照 `_player_is_nonviolent()` 模式新增 `_player_is_distance_restricted(player)`（檢查 `_player_has_ability(player, "新疆社會管控")`），在上述每個 ignore-distance 建立入口對「牆內城鎮」加擋（或依 `組織經驗甲` 卡面規則降級為距離1格——這與第一輪 B3 已記錄的 `組織經驗甲`「無法無視距離建立牆內組織者，本牌於牆內建立組織距離為1格」缺口是同一組工作，建議一起做）。
 
-**修正記錄（2026-07-11）**：已按建議實作（含 `組織經驗甲` 降級子句，以 `inner_fallback_range: 1` 資料欄位表達）。**勘誤**：本報告原寫「維吾爾慕尼黑」，實際 faction JSON 中**四個維吾爾變體全部帶有此限制**，修正對全部生效。`東洋奧援` III 級對受限玩家採「降級為己方組織1格內」的實作裁定（比照組織經驗甲卡面慣例，可再依規則書調整）。驗證：`python3 scripts/validate_xinjiang_distance_restriction.py`（4/4）；proof：`docs/records/rules-audit/XINJIANG_DISTANCE_RESTRICTION_VALIDATION_20260711.{json,md}`；`TODO.md` 已同步新增 `[done]` 條目。
+**修正記錄（2026-07-11）**：已按建議實作（含 `組織經驗甲` 降級子句，以 `inner_fallback_range: 1` 資料欄位表達）。**勘誤**：本報告原寫「維吾爾慕尼黑」，實際 faction JSON 中**四個維吾爾變體全部帶有此限制**，修正對全部生效。`東洋奧援` III 級對受限玩家採「降級為己方組織1格內」的實作裁定（比照組織經驗甲卡面慣例，可再依規則書調整）。驗證：`python3 scripts/validate/validate_xinjiang_distance_restriction.py`（4/4）；proof：`docs/records/rules-audit/XINJIANG_DISTANCE_RESTRICTION_VALIDATION_20260711.{json,md}`；`TODO.md` 已同步新增 `[done]` 條目。
 
 ---
 
@@ -46,9 +46,9 @@
 
 **影響**：每場遊戲的事件組成分佈與實體規則不同（例如 5 張歲月靜好必定全部在庫，而抽 20/25 之下期望值是 4 張）。
 
-**修正記錄（2026-07-11）**：新增 `EVENT_DECK_SIZE = 20` 常數與 `_draw_event_deck_cards()`（對全池 `random.sample` 抽 20 張），`EventDeck` 建構改用它；`_initial_event_cards()` 維持回傳完整全池，既有 declared-counts 回歸測試不受影響。驗證：`python3 scripts/validate_event_deck_draw_twenty.py`（12 場開局全過）；proof：`docs/records/event-cards/EVENT_DECK_DRAW_TWENTY_VALIDATION_20260711.{json,md}`；`TODO.md` 已同步新增 `[done]` 條目。**C2（開局可選抽除至多 5 張歲月靜好的難度選項）尚未做，仍待處理。**
+**修正記錄（2026-07-11）**：新增 `EVENT_DECK_SIZE = 20` 常數與 `_draw_event_deck_cards()`（對全池 `random.sample` 抽 20 張），`EventDeck` 建構改用它；`_initial_event_cards()` 維持回傳完整全池，既有 declared-counts 回歸測試不受影響。驗證：`python3 scripts/validate/validate_event_deck_draw_twenty.py`（12 場開局全過）；proof：`docs/records/event-cards/EVENT_DECK_DRAW_TWENTY_VALIDATION_20260711.{json,md}`；`TODO.md` 已同步新增 `[done]` 條目。**C2（開局可選抽除至多 5 張歲月靜好的難度選項）尚未做，仍待處理。**
 
-**附帶發現（已另立 TODO P2 項目）**：驗證過程發現 `scripts/validate_event_cards_runtime.py` 從 20+ 個 commit 前就穩定失敗——其 `settle_round_event()` helper 停留在 2026-05-31 生命週期改版前的舊設計（advance 一次就期待結算），屬於驗證腳本過期而非 runtime bug，該腳本的 FAIL 目前不應被當成 regression 訊號。
+**附帶發現（已另立 TODO P2 項目）**：驗證過程發現 `scripts/validate/validate_event_cards_runtime.py` 從 20+ 個 commit 前就穩定失敗——其 `settle_round_event()` helper 停留在 2026-05-31 生命週期改版前的舊設計（advance 一次就期待結算），屬於驗證腳本過期而非 runtime bug，該腳本的 FAIL 目前不應被當成 regression 訊號。
 
 ---
 
@@ -64,7 +64,7 @@
 
 **建議修法**：把 `_apply_setup_abilities` 的執行時機提前到 `_init_decks` 抽起手牌之前，直接把額外卡加入 `starter` 清單一起洗（或建 deck 後 insert+shuffle 再抽 5）；注意 static supply 扣減邏輯（`_add_setup_static_card_to_discard` 內應有）要保留。
 
-**修正記錄（2026-07-11）**：採「加入牌庫 → 起手牌放回 → 整副重洗 → 重抽同樣張數」方案（等同開局 11~12 張牌庫再抽起手），static supply 邏輯保留，無加牌時不重洗。驗證：`python3 scripts/validate_setup_cards_shuffled_into_deck.py`（6/6，含 40 局起手可達性統計）；既有 `validate_static_purchase_initial_supply.py` 斷言同步更新後 PASS。proof：`docs/records/faction-ui/SETUP_CARDS_SHUFFLED_INTO_DECK_VALIDATION_20260711.{json,md}`；`TODO.md` 已同步新增 `[done]` 條目。「宣傳卡 vs 宣傳家」用語（達賴救援/東突厥斯坦政府）**仍待確認**，維持在第三梯隊。
+**修正記錄（2026-07-11）**：採「加入牌庫 → 起手牌放回 → 整副重洗 → 重抽同樣張數」方案（等同開局 11~12 張牌庫再抽起手），static supply 邏輯保留，無加牌時不重洗。驗證：`python3 scripts/validate/validate_setup_cards_shuffled_into_deck.py`（6/6，含 40 局起手可達性統計）；既有 `validate_static_purchase_initial_supply.py` 斷言同步更新後 PASS。proof：`docs/records/faction-ui/SETUP_CARDS_SHUFFLED_INTO_DECK_VALIDATION_20260711.{json,md}`；`TODO.md` 已同步新增 `[done]` 條目。「宣傳卡 vs 宣傳家」用語（達賴救援/東突厥斯坦政府）**仍待確認**，維持在第三梯隊。
 
 ---
 

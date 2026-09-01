@@ -1,6 +1,6 @@
 # 開局額外卡洗入起始牌庫驗證（S4）
 
-可重跑指令：`python3 scripts/validate_setup_cards_shuffled_into_deck.py`
+可重跑指令：`python3 scripts/validate/validate_setup_cards_shuffled_into_deck.py`
 
 - total: 6
 - passed: 6

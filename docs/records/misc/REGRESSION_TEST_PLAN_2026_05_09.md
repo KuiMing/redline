@@ -14,20 +14,20 @@
 
 ### 可保留直接重跑
 
-- `scripts/validate_all_action_cards.py`
-- `scripts/validate_support_purchase_deck_runtime.py`
-- `scripts/validate_support_card_effects_runtime.py`
-- `scripts/validate_india_research_room.py`
-- `scripts/validate_india_research_room_support_taxonomy.py`
-- `scripts/validate_shared_*.py`
-- `scripts/validate_faction_picker_combinations.py`
+- `scripts/validate/validate_all_action_cards.py`
+- `scripts/validate/validate_support_purchase_deck_runtime.py`
+- `scripts/validate/validate_support_card_effects_runtime.py`
+- `scripts/validate/validate_india_research_room.py`
+- `scripts/validate/validate_india_research_room_support_taxonomy.py`
+- `scripts/validate/validate_shared_*.py`
+- `scripts/validate/validate_faction_picker_combinations.py`
 
 ### 需要修正後再當主回歸
 
-- `scripts/validate_full_gameplay_2p.py`
-- `scripts/validate_full_gameplay_multi.py`
-- `scripts/validate_card_type_ui_flows.py`
-- `scripts/validate_all_cards_ui_batch.py`
+- `scripts/validate/validate_full_gameplay_2p.py`
+- `scripts/validate/validate_full_gameplay_multi.py`
+- `scripts/validate/validate_card_type_ui_flows.py`
+- `scripts/validate/validate_all_cards_ui_batch.py`
 
 ### 需要新增
 
@@ -44,7 +44,7 @@
 
 目標檔案：
 
-- `scripts/validate_full_gameplay_2p.py`
+- `scripts/validate/validate_full_gameplay_2p.py`
 
 要求：
 
@@ -58,7 +58,7 @@
 
 目標檔案：
 
-- `scripts/validate_victory_rules.py`
+- `scripts/validate/validate_victory_rules.py`
 
 要求：
 
@@ -72,7 +72,7 @@
 
 目標檔案：
 
-- `scripts/validate_main_tabs_layout.py`
+- `scripts/validate/validate_main_tabs_layout.py`
 
 要求：
 
@@ -89,7 +89,7 @@
 
 新增：
 
-- `scripts/validate_setup_rules.py`
+- `scripts/validate/validate_setup_rules.py`
 
 驗證：
 
@@ -106,7 +106,7 @@
 
 新增：
 
-- `scripts/validate_turn_flow_rules.py`
+- `scripts/validate/validate_turn_flow_rules.py`
 
 驗證：
 
@@ -120,7 +120,7 @@
 
 新增：
 
-- `scripts/validate_movement_rules.py`
+- `scripts/validate/validate_movement_rules.py`
 
 驗證：
 
@@ -137,7 +137,7 @@
 
 新增：
 
-- `scripts/validate_event_era_rules.py`
+- `scripts/validate/validate_event_era_rules.py`
 
 驗證：
 
@@ -150,31 +150,31 @@
 
 新增：
 
-- `scripts/validate_card_rule_expectations.py`
+- `scripts/validate/validate_card_rule_expectations.py`
 
 把 `validate_all_action_cards.py` 從「可執行 smoke」升級到「每張卡明確 expected result」。
 
 ## 建議標準回歸順序
 
 1. 後端規則 smoke：
-   - `python3 scripts/validate_victory_rules.py`
-   - `python3 scripts/validate_full_gameplay_2p.py`
-   - `python3 scripts/validate_full_gameplay_multi.py`
-   - `python3 scripts/validate_all_action_cards.py`
+   - `python3 scripts/validate/validate_victory_rules.py`
+   - `python3 scripts/validate/validate_full_gameplay_2p.py`
+   - `python3 scripts/validate/validate_full_gameplay_multi.py`
+   - `python3 scripts/validate/validate_all_action_cards.py`
 
 2. 專項規則回歸：
-   - `python3 scripts/validate_support_purchase_deck_runtime.py`
-   - `python3 scripts/validate_support_card_effects_runtime.py`
-   - `python3 scripts/validate_india_research_room_support_taxonomy.py`
-   - `python3 scripts/validate_shared_move_phase8.py`
-   - `python3 scripts/validate_shared_dissolve_phase8.py`
-   - `python3 scripts/validate_shared_victory_phase8.py`
+   - `python3 scripts/validate/validate_support_purchase_deck_runtime.py`
+   - `python3 scripts/validate/validate_support_card_effects_runtime.py`
+   - `python3 scripts/validate/validate_india_research_room_support_taxonomy.py`
+   - `python3 scripts/validate/validate_shared_move_phase8.py`
+   - `python3 scripts/validate/validate_shared_dissolve_phase8.py`
+   - `python3 scripts/validate/validate_shared_victory_phase8.py`
 
 3. UI 回歸：
    - 先啟動 server：`python3 -m uvicorn server.main:app --host 127.0.0.1 --port 8000`
-   - `python3 scripts/validate_main_tabs_layout.py`
-   - `python3 scripts/validate_card_type_ui_flows.py`
-   - `python3 scripts/validate_all_cards_ui_batch.py --start 0 --end 10` 等 batch
+   - `python3 scripts/validate/validate_main_tabs_layout.py`
+   - `python3 scripts/validate/validate_card_type_ui_flows.py`
+   - `python3 scripts/validate/validate_all_cards_ui_batch.py --start 0 --end 10` 等 batch
 
 4. 視覺驗證：
    - 檢查 Playwright 截圖。

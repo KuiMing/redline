@@ -3,7 +3,7 @@
 Summary: 6/6 passed
 
 - Screenshot: `docs/records/map-ui/KINMEN_LABEL_UI_2026_07_28.png`
-- Re-run: `uv run --with playwright python scripts/validate_kinmen_map_label.py`
+- Re-run: `uv run --with playwright python scripts/validate/validate_kinmen_map_label.py`
 
 ## PASS — kinmen_has_explicit_collision_safe_label_placement_and_cache_bust
 

@@ -1,6 +1,6 @@
 # 奧援卡手牌按鈕（棄置／行動）驗證
 
-可重跑指令：`python3 scripts/validate_support_card_detail_button.py`
+可重跑指令：`python3 scripts/validate/validate_support_card_detail_button.py`
 
 - total: 6 / passed: 6 / failed: 0
 - screenshot: /Users/benmini/.openclaw/workspace/redline/docs/records/action-cards/support_card_detail_button.png

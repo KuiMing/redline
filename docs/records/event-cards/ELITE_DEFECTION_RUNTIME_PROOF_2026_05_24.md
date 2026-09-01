@@ -6,7 +6,7 @@
 - Structured effect implemented: `trash_from_hand_or_discard`, `count: 1`.
 
 ## Validator coverage
-`python3 scripts/validate_event_cards_runtime.py` now includes:
+`python3 scripts/validate/validate_event_cards_runtime.py` now includes:
 
 - `test_elite_defection_trashes_from_hand_after_three_moves`
   - Sets event to `紅軍權貴出逃`.

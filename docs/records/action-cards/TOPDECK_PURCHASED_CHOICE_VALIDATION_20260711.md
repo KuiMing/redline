@@ -1,6 +1,6 @@
 # 行動預告/行動募資 頂牌選擇驗證
 
-可重跑指令：`python3 scripts/validate_topdeck_purchased_choice.py`
+可重跑指令：`python3 scripts/validate/validate_topdeck_purchased_choice.py`
 
 - total: 7 / passed: 7 / failed: 0
 

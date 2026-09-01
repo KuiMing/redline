@@ -1,6 +1,6 @@
 # 紅軍派系（改革開放派）實作驗證
 
-可重跑指令：`python3 scripts/validate_red_faction_inspect_reorder.py`
+可重跑指令：`python3 scripts/validate/validate_red_faction_inspect_reorder.py`
 
 - total: 5
 - passed: 5

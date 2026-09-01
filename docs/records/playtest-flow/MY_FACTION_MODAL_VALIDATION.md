@@ -1,6 +1,6 @@
 # 「我的陣營」按鈕與 modal 驗證
 
-可重跑指令：`python3 scripts/validate_my_faction_modal.py`
+可重跑指令：`python3 scripts/validate/validate_my_faction_modal.py`
 
 - total: 5 / passed: 5 / failed: 0
 - screenshots: /Users/benmini/.openclaw/workspace/redline/docs/records/playtest-flow/my_faction_modal.png, /Users/benmini/.openclaw/workspace/redline/docs/records/playtest-flow/my_faction_modal_hong_kong.png

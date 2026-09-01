@@ -21,7 +21,7 @@
   - `無 camp` 可建
   - `其他 camp` 不可建
 
-### scripts/validate_faction_abilities_phase1.py
+### scripts/validate/validate_faction_abilities_phase1.py
 - 把原本錯誤的 `mongol_school_restriction` 測試改成：
   - `mongol_develop_legality`
 - 驗證以下三件事：

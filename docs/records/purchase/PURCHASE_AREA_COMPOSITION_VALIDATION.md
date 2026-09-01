@@ -1,6 +1,6 @@
 # C3 購買區組成資料校驗
 
-可重跑指令：`python3 scripts/validate_purchase_area_composition.py`
+可重跑指令：`python3 scripts/validate/validate_purchase_area_composition.py`
 
 - total: 10 / passed: 10 / failed: 0
 

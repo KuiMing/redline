@@ -3550,7 +3550,7 @@ def test_non_red_army_movement_is_not_restricted_by_build_development_space():
     """2026-08-04 playtest 回報＋更正：使用者先回報「紅軍以外玩家組織建立後可遷移至任意
     城鎮」，接著澄清：建立組織才受「發展空間」限制，遷移只要城鎮相鄰（含翻牆規則）、
     移動次數足夠就該成功，即使目的地不是該陣營可以建立組織的城鎮。這推翻了更早一次
-    playtest（`scripts/validate_wall_crossing_movement.py` 的 `case_reported_dongsha_
+    playtest（`scripts/validate/validate_wall_crossing_movement.py` 的 `case_reported_dongsha_
     kwuntong`）錯誤回報的「應該擋下」判斷——使用者確認那次回報本身就錯了：翻牆本來就
     有獨立的2次移動成本限制，不需要再疊加發展空間限制。這裡直接用真正的
     `move_organization()` 重現東沙（牆外）→觀塘（牆內，不適用臺灣陣營）成功遷移。"""

@@ -1,6 +1,6 @@
 # 連續建立組織：地圖鏡頭保留驗證
 
-可重跑指令：`python3 scripts/validate_build_queue_preserves_map_viewport.py`
+可重跑指令：`python3 scripts/validate/validate_build_queue_preserves_map_viewport.py`
 
 - total: 5 / passed: 5 / failed: 0
 - screenshots: /Users/benmini/.openclaw/workspace/redline/docs/records/action-cards/build-queue-viewport/viewport_before_manual_pan.png, /Users/benmini/.openclaw/workspace/redline/docs/records/action-cards/build-queue-viewport/viewport_after_manual_pan.png, /Users/benmini/.openclaw/workspace/redline/docs/records/action-cards/build-queue-viewport/viewport_preserved_after_build.png

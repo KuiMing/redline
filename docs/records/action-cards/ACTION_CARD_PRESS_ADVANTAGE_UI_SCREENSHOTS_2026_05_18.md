@@ -54,6 +54,6 @@ Live UI state after resolving:
 
 ## Verification
 
-- `python3 scripts/validate_action_card_press_advantage_runtime.py`
+- `python3 scripts/validate/validate_action_card_press_advantage_runtime.py`
 - `python3 -m pytest -q scripts/tests/test_action_card_regressions.py -k 'press_advantage'`
 - `python3 -m compileall -q server scripts static`

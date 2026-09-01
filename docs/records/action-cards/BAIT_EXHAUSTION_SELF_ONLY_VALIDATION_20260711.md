@@ -1,6 +1,6 @@
 # 誘導虛耗僅可移除本牌驗證
 
-可重跑指令：`python3 scripts/validate_bait_exhaustion_self_only.py`
+可重跑指令：`python3 scripts/validate/validate_bait_exhaustion_self_only.py`
 
 - total: 3 / passed: 3 / failed: 0
 

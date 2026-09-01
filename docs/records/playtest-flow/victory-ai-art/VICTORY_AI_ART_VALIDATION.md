@@ -1,6 +1,6 @@
 # 全版 AI 勝利畫面驗證
 
-重跑：`uv run --with playwright python scripts/validate_victory_fullscreen_ai_art.py`
+重跑：`uv run --with playwright python scripts/validate/validate_victory_fullscreen_ai_art.py`
 
 - total: 31
 - passed: 31

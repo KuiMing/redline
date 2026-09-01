@@ -49,7 +49,7 @@
 
 ### 驗證腳本
 新增：
-- `scripts/validate_faction_abilities_phase1.py`
+- `scripts/validate/validate_faction_abilities_phase1.py`
 
 輸出：
 - `FACTION_ABILITY_PHASE1_VALIDATION.json`

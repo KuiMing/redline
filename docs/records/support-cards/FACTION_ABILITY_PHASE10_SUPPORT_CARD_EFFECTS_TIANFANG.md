@@ -25,7 +25,7 @@
 
 ## 驗證
 更新：
-- `scripts/validate_support_card_effects_runtime.py`
+- `scripts/validate/validate_support_card_effects_runtime.py`
 
 ### 最新結果
 - total: 7

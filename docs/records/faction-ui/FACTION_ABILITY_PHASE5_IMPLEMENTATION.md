@@ -50,7 +50,7 @@
 
 ## 驗證
 新增：
-- `scripts/validate_faction_abilities_phase5.py`
+- `scripts/validate/validate_faction_abilities_phase5.py`
 
 輸出：
 - `FACTION_ABILITY_PHASE5_VALIDATION.json`

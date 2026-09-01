@@ -37,7 +37,7 @@
 
 ## 驗證
 新增：
-- `scripts/validate_shared_org_count_phase6b.py`
+- `scripts/validate/validate_shared_org_count_phase6b.py`
 
 輸出：
 - `SHARED_ORG_COUNT_PHASE6B_VALIDATION.json`

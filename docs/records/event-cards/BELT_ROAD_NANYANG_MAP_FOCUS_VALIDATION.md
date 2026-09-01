@@ -3,7 +3,7 @@
 Summary: 7/7 passed
 
 - Screenshot: `docs/records/event-cards/BELT_ROAD_NANYANG_MAP_FOCUS.png`
-- Re-run: `uv run --with playwright python scripts/validate_belt_road_nanyang_map_focus.py`
+- Re-run: `uv run --with playwright python scripts/validate/validate_belt_road_nanyang_map_focus.py`
 
 ## PASS — red_turn_has_nanyang_event_build_choice
 

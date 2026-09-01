@@ -67,7 +67,7 @@
 
 ## 驗證
 新增：
-- `scripts/validate_support_card_effects_runtime.py`
+- `scripts/validate/validate_support_card_effects_runtime.py`
 
 輸出：
 - `SUPPORT_CARD_EFFECTS_RUNTIME_VALIDATION.json`

@@ -1,6 +1,6 @@
 # 區網連線資訊顯示 驗證
 
-可重跑指令：`uv run --with playwright python scripts/validate_lan_info_display.py`
+可重跑指令：`uv run --with playwright python scripts/validate/validate_lan_info_display.py`
 
 - total: 6 / passed: 6 / failed: 0
 - screenshots: docs/records/playtest-flow/lan_info_display.png, docs/records/playtest-flow/lan_info_domain_without_internal_port.png

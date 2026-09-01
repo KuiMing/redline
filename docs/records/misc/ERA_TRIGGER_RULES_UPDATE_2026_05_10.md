@@ -62,7 +62,7 @@
 
 新增：
 
-- `scripts/validate_era_rules.py`
+- `scripts/validate/validate_era_rules.py`
 - `ERA_RULES_VALIDATION.json`
 - `ERA_RULES_VALIDATION.md`
 
@@ -84,15 +84,15 @@
 
 已跑過並通過：
 
-- `python3 scripts/validate_era_rules.py` — PASS
-- `python3 scripts/validate_purchase_rules.py` — PASS
-- `python3 scripts/validate_support_purchase_deck_runtime.py` — PASS
-- `python3 scripts/validate_deck_lifecycle.py` — PASS
-- `python3 scripts/validate_card_action_correctness.py` — PASS
-- `python3 scripts/validate_movement_rules.py` — PASS
-- `python3 scripts/validate_full_gameplay_2p.py` — PASS
-- `python3 scripts/validate_full_gameplay_multi.py` — PASS
-- `/usr/bin/python3 scripts/validate_setup_rules.py` — PASS
+- `python3 scripts/validate/validate_era_rules.py` — PASS
+- `python3 scripts/validate/validate_purchase_rules.py` — PASS
+- `python3 scripts/validate/validate_support_purchase_deck_runtime.py` — PASS
+- `python3 scripts/validate/validate_deck_lifecycle.py` — PASS
+- `python3 scripts/validate/validate_card_action_correctness.py` — PASS
+- `python3 scripts/validate/validate_movement_rules.py` — PASS
+- `python3 scripts/validate/validate_full_gameplay_2p.py` — PASS
+- `python3 scripts/validate/validate_full_gameplay_multi.py` — PASS
+- `/usr/bin/python3 scripts/validate/validate_setup_rules.py` — PASS
 - `git diff --check` — PASS
 
 ---

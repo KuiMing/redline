@@ -26,7 +26,7 @@
 
 ## 驗證
 新增：
-- `scripts/validate_mongol_discard_shield.py`
+- `scripts/validate/validate_mongol_discard_shield.py`
 
 輸出：
 - `MONGOL_DISCARD_SHIELD_VALIDATION.json`

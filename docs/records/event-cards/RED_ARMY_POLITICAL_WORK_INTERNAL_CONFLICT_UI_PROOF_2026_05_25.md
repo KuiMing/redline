@@ -22,6 +22,6 @@
 
 ## Runtime validator
 
-- `scripts/validate_red_army_faction_abilities.py` now covers:
+- `scripts/validate/validate_red_army_faction_abilities.py` now covers:
   - 政工部 topdeck `內鬥` and decrements static supply.
   - `內鬥` static supply empty: no card is created/topdecked.
