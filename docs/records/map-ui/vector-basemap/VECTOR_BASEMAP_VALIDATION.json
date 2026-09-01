@@ -1,0 +1,111 @@
+{
+  "url": "http://127.0.0.1:8781/static/leaflet_game_map.html",
+  "checks": [
+    {
+      "name": "1280x720: vector basemap loaded",
+      "passed": true
+    },
+    {
+      "name": "1280x720: all symbol layers removed",
+      "passed": true
+    },
+    {
+      "name": "1280x720: minimal layer count",
+      "passed": true
+    },
+    {
+      "name": "1280x720: OFM/OSM attribution",
+      "passed": true
+    },
+    {
+      "name": "1280x720: Redline overlay canvas",
+      "passed": true
+    },
+    {
+      "name": "1280x720: no API key error",
+      "passed": true
+    },
+    {
+      "name": "1280x720: basemap available",
+      "passed": true
+    },
+    {
+      "name": "1280x720: console clean",
+      "passed": true,
+      "details": []
+    },
+    {
+      "name": "1280x720: town marker interaction",
+      "passed": true
+    },
+    {
+      "name": "1024x768: vector basemap loaded",
+      "passed": true
+    },
+    {
+      "name": "1024x768: all symbol layers removed",
+      "passed": true
+    },
+    {
+      "name": "1024x768: minimal layer count",
+      "passed": true
+    },
+    {
+      "name": "1024x768: OFM/OSM attribution",
+      "passed": true
+    },
+    {
+      "name": "1024x768: Redline overlay canvas",
+      "passed": true
+    },
+    {
+      "name": "1024x768: no API key error",
+      "passed": true
+    },
+    {
+      "name": "1024x768: basemap available",
+      "passed": true
+    },
+    {
+      "name": "1024x768: console clean",
+      "passed": true,
+      "details": []
+    },
+    {
+      "name": "1024x768: town marker interaction",
+      "passed": true
+    },
+    {
+      "name": "Hong Kong zoom 11: exact zoom",
+      "passed": true
+    },
+    {
+      "name": "Hong Kong zoom 11: no basemap symbols",
+      "passed": true
+    },
+    {
+      "name": "Hong Kong zoom 11: Redline labels visible",
+      "passed": true
+    },
+    {
+      "name": "Hong Kong zoom 11: no API key error",
+      "passed": true
+    },
+    {
+      "name": "Hong Kong zoom 11: console clean",
+      "passed": true,
+      "details": []
+    },
+    {
+      "name": "vector error removes basemap and enables dark fallback",
+      "passed": true
+    }
+  ],
+  "passed": 24,
+  "total": 24,
+  "screenshots": [
+    "docs/records/map-ui/vector-basemap/vector_basemap_1280x720.png",
+    "docs/records/map-ui/vector-basemap/vector_basemap_1024x768.png",
+    "docs/records/map-ui/vector-basemap/vector_basemap_hong_kong_zoom11_1280x720.png"
+  ]
+}
