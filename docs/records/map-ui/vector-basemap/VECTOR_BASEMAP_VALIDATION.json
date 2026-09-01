@@ -97,12 +97,32 @@
       "details": []
     },
     {
-      "name": "vector error removes basemap and enables dark fallback",
+      "name": "direct vector error removes basemap and enables dark fallback",
+      "passed": true
+    },
+    {
+      "name": "real style request failure enables dark fallback",
+      "passed": true
+    },
+    {
+      "name": "pending style request times out into dark fallback",
+      "passed": true
+    },
+    {
+      "name": "self-hosted plugin load failure enables dark fallback",
+      "passed": true
+    },
+    {
+      "name": "missing required upstream layer enables dark fallback",
+      "passed": true
+    },
+    {
+      "name": "post-load tile failure removes vector canvas and enables dark fallback",
       "passed": true
     }
   ],
-  "passed": 24,
-  "total": 24,
+  "passed": 29,
+  "total": 29,
   "screenshots": [
     "docs/records/map-ui/vector-basemap/vector_basemap_1280x720.png",
     "docs/records/map-ui/vector-basemap/vector_basemap_1024x768.png",

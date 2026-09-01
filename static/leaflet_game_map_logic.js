@@ -148,9 +148,24 @@ const REDLINE_VECTOR_BASEMAP_LAYER_IDS = new Set([
   'bridge_trunk_primary',
   'bridge_motorway',
 ]);
+const REQUIRED_REDLINE_VECTOR_BASEMAP_LAYER_IDS = new Set([
+  'background',
+  'water',
+  'boundary_2',
+  'road_motorway',
+]);
+const BASEMAP_LOAD_TIMEOUT_MS = 10000;
 
 function minimalRedlineBasemapStyle(sourceStyle) {
   const style = JSON.parse(JSON.stringify(sourceStyle));
+  const sourceLayerIds = new Set((style.layers || []).map(layer => layer.id));
+  const missingLayerIds = [...REQUIRED_REDLINE_VECTOR_BASEMAP_LAYER_IDS]
+    .filter(layerId => !sourceLayerIds.has(layerId));
+  if (missingLayerIds.length) {
+    throw new Error(`OpenFreeMap style missing required layers: ${missingLayerIds.join(', ')}`);
+  }
+  delete style.sprite;
+  delete style.glyphs;
   style.layers = (style.layers || [])
     .filter(layer => layer.type !== 'symbol' && REDLINE_VECTOR_BASEMAP_LAYER_IDS.has(layer.id))
     .map(layer => {
@@ -183,22 +198,69 @@ function handleBasemapError() {
   map.getContainer().classList.add('redline-basemap-unavailable');
 }
 
+function waitForLeafletMapLoad() {
+  if (map._loaded) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      map.off('load', handleLoad);
+      reject(new Error('Leaflet map load timed out'));
+    }, BASEMAP_LOAD_TIMEOUT_MS);
+    const handleLoad = () => {
+      clearTimeout(timeoutId);
+      resolve();
+    };
+    map.once('load', handleLoad);
+  });
+}
+
+function waitForVectorMapLoad(vectorMap) {
+  if (vectorMap.loaded()) return Promise.resolve(vectorMap);
+  return new Promise((resolve, reject) => {
+    let timeoutId = null;
+    const cleanup = () => {
+      clearTimeout(timeoutId);
+      vectorMap.off('load', handleLoad);
+      vectorMap.off('error', handleError);
+    };
+    const handleLoad = () => {
+      cleanup();
+      resolve(vectorMap);
+    };
+    const handleError = event => {
+      cleanup();
+      reject(event?.error || event || new Error('Vector basemap failed to load'));
+    };
+    timeoutId = setTimeout(
+      () => handleError(new Error('Vector basemap load timed out')),
+      BASEMAP_LOAD_TIMEOUT_MS,
+    );
+    vectorMap.on('load', handleLoad);
+    vectorMap.on('error', handleError);
+  });
+}
+
 async function loadMinimalVectorBasemap() {
+  const controller = new AbortController();
+  const styleTimeoutId = setTimeout(() => controller.abort(), BASEMAP_LOAD_TIMEOUT_MS);
   try {
-    const response = await fetch(OPENFREEMAP_STYLE_URL);
+    const response = await fetch(OPENFREEMAP_STYLE_URL, { signal: controller.signal });
     if (!response.ok) throw new Error(`OpenFreeMap style request failed (${response.status})`);
     const sourceStyle = await response.json();
-    if (!map._loaded) await new Promise(resolve => map.once('load', resolve));
+    clearTimeout(styleTimeoutId);
+    await waitForLeafletMapLoad();
     vectorBasemap = L.maplibreGL({
       style: minimalRedlineBasemapStyle(sourceStyle),
       attribution: '<a href="https://openfreemap.org">OpenFreeMap</a> | &copy; <a href="https://openmaptiles.org">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>',
     }).addTo(map);
     const vectorMap = vectorBasemap.getMaplibreMap();
-    return await new Promise((resolve, reject) => {
-      vectorMap.once('load', () => resolve(vectorMap));
-      vectorMap.once('error', event => reject(event?.error || new Error('Vector basemap failed to load')));
+    await waitForVectorMapLoad(vectorMap);
+    vectorMap.on('error', event => {
+      console.warn('Vector basemap runtime error; using dark fallback.', event?.error || event);
+      handleBasemapError();
     });
+    return vectorMap;
   } catch (error) {
+    clearTimeout(styleTimeoutId);
     console.warn('Vector basemap unavailable; using dark fallback.', error);
     handleBasemapError();
     return null;
