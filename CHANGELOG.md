@@ -6,6 +6,39 @@
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-02
+
+### Added
+
+- 新增 minimal vector basemap，以清楚呈現暗色陸地、水域、海岸線、行政邊界與主要道路，同時移除底圖地名、POI、設施圖示及道路名稱等雜訊。
+- 新增程式碼與原作內容的雙層授權文件，明確區分專案自行開發程式碼與《逆統戰》原作內容的權利範圍。
+
+### Changed
+
+- 地圖底圖改用 OpenFreeMap vector style，並自託管固定版本的 MapLibre GL JS 與 Leaflet integration 資產及其授權文件。
+- 底圖載入流程新增 style、plugin、必要圖層、timeout 與載入後 tile error 的暗色 fallback；底圖失效時仍保留 Leaflet 遊戲疊圖與操作。
+
+### Fixed
+
+- 修正香港「國際線」與相同付款語意的「華文傳媒」：玩家會先用既有宣傳支付宣傳費用，再由資金補足不足部分，而不是把整筆費用改為資金。
+- 修正批次購買的彈性付款分配，避免多張卡牌重複使用同一份宣傳資源，並維持整批購買的原子性。
+
+## [0.1.1] - 2026-08-31
+
+### Added
+
+- 新增 `pyproject.toml` 與 `uv.lock`，提供可重現的 Python 相依套件安裝基準。
+
+### Changed
+
+- Docker 建置與本機啟動流程改用 uv，並在 image 建置時以 frozen lockfile 安裝執行期相依套件。
+
+### Fixed
+
+- 修正臺灣時代效果過早結束，現在會維持完整整輪。
+- 修正東洋奧援沒有合法目標時使用非正式提示的問題；現在會顯示正式 modal，並確認既有的拒絕出牌與卡牌保留行為不變。
+- 修正陣營能力名稱：`盟族學校` 改為 `盟旗學校`，`選我河山` 改為 `還我河山`。
+
 ## [0.1.0] - 2026-08-25
 
 這是 REDLINE 第一個版本化發布。此版本整理自專案建立以來完成的遊戲系統、介面與規則修正。
@@ -46,5 +79,7 @@
 - 修正陣營選擇、根據地按鈕高度、面板尺寸、HUD 排列與小型 viewport 裁切。
 - 修正抽牌資訊外洩，避免其他玩家看到不應公開的卡牌名稱。
 
-[Unreleased]: https://github.com/KuiMing/redline/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/KuiMing/redline/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/KuiMing/redline/compare/v0.1.1...v0.2.0
+[0.1.1]: https://github.com/KuiMing/redline/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/KuiMing/redline/releases/tag/v0.1.0

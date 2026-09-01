@@ -1,6 +1,6 @@
 [project]
 name = "redline"
-version = "0.1.0"
+version = "0.2.0"
 description = "Redline 桌遊原型：瀏覽器 UI 與 Python WebSocket 伺服器"
 requires-python = ">=3.11"
 dependencies = [
