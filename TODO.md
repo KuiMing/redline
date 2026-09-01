@@ -1,15 +1,16 @@
 # Redline TODO
 
-最後更新：2026-08-26
+最後更新：2026-09-01
 
 ## 待辦
 
 ### P1：臺灣時代關卡「綏靖派反對介入對岸」只持續一回合
-- [todo] 回報紀錄：Turn 14 觸發 `[臺灣]綏靖派反對介入對岸`，並將 3 張「內鬥」加入臺灣玩家棄牌堆；實際觀察中，革命反撲效果只維持一回合，Turn 15 後已不再持續。
-- [todo] 規則依據：`data/cards/event_and_era_cards.v1.1.json` 與 `data/raw/event_and_era_cards.csv` 均明載「每當臺灣在臺灣城鎮建立至少1個組織時，獲得1點宣傳。持續2回合。」；`data/era_structured.v1.1.json` 同時設定關卡 `duration.value = 2` 及效果 `duration = 2`。
-- [todo] 預期行為：關卡觸發後，臺灣的革命反撲效果須完整持續 2 回合；不可在觸發當回合結束、玩家交棒或回合編號切換時提前減少一次有效期。
-- [todo] 驗收需覆蓋：觸發當下只執行一次紅軍壓制；第 1、2 個有效回合在臺灣城鎮建立組織均可獲得 1 點宣傳；第 2 回合結束後才失效；active-era 投影與遊戲紀錄顯示一致。
-- [todo] 交付範圍：以同一份行為修正及回歸測試同步套用到 `main` 與 `dev`。不可只修其中一個分支。
+- [done] 回報紀錄：Turn 14 觸發 `[臺灣]綏靖派反對介入對岸`，並將 3 張「內鬥」加入臺灣玩家棄牌堆；實際觀察中，革命反撲效果只維持一回合，Turn 15 後已不再持續。
+- [done] 規則依據：`data/cards/event_and_era_cards.v1.1.json` 與 `data/raw/event_and_era_cards.csv` 均明載「每當臺灣在臺灣城鎮建立至少1個組織時，獲得1點宣傳。持續2回合。」；`data/era_structured.v1.1.json` 同時設定關卡 `duration.value = 2` 及效果 `duration = 2`。
+- [done] 根因與修正：舊邏輯在每位玩家結束個別回合時扣減時代期限。現在只在紅軍回合結束的完整輪次邊界扣減，而且先扣既有關卡，再偵測新關卡，避免新觸發的 2 回合效果立即降為 1 回合。
+- [done] 驗收覆蓋：觸發當下只執行一次紅軍壓制；臺灣第 1、2 個有效回合在臺灣城鎮建立組織均可獲得 1 點宣傳；第 2 個完整輪次結束後才失效；active-era 投影、剩餘回合與遊戲紀錄一致。
+- [done] 交付：同一份行為修正與完整時間線回歸已合併到 `main` 與 `dev`。核心修正 commit 為 `f92579e`；後續時間線測試由 `16ea64f`、`12cf8eb`、`4e09e2e` 補強。
+- [done] 2026-09-01 現況驗證：最新 `origin/main` (`9878bcc`) 與最新 `origin/dev` (`ae6a8a4`) 執行 `uv run pytest -q scripts/tests/test_era_lifecycle.py`，兩者皆為 **14 passed**。
 - [evidence] 使用者提供 Turn 14–15 完整 action log；關鍵紀錄包含 `Era triggered: [臺灣]綏靖派反對介入對岸`、`added 3 內鬥 to test's discard`，以及後續 Turn 15 流程。
 
 ### P1：同步地圖城鎮選取與說明
