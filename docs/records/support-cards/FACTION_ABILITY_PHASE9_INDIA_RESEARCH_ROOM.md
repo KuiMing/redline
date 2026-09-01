@@ -48,7 +48,7 @@
 
 ## 驗證
 新增：
-- `scripts/validate_india_research_room.py`
+- `scripts/validate/validate_india_research_room.py`
 
 輸出：
 - `INDIA_RESEARCH_ROOM_VALIDATION.json`

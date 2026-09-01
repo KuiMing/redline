@@ -1,6 +1,6 @@
 # 點燃熱情/樹立信心/陣營能力購買費用觸發修正驗證
 
-可重跑指令：`python3 scripts/validate_cost_composition_triggers.py`
+可重跑指令：`python3 scripts/validate/validate_cost_composition_triggers.py`
 
 - total: 9
 - passed: 9

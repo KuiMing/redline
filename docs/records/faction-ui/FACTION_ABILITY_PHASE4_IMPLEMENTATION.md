@@ -41,7 +41,7 @@
 
 ## 驗證
 新增：
-- `scripts/validate_faction_abilities_phase4.py`
+- `scripts/validate/validate_faction_abilities_phase4.py`
 
 輸出：
 - `FACTION_ABILITY_PHASE4_VALIDATION.json`

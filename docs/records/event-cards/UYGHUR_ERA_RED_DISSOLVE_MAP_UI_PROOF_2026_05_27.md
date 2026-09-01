@@ -3,7 +3,7 @@
 - Date: 2026-05-27
 - Scenario: 維吾爾時代關卡紅軍壓制：紅軍打出武裝者，既有武裝棄牌 pending choice 完成後，追加選擇 1 個紅軍組織 1 格內的維吾爾組織瓦解。
 - Screenshot: `docs/records/event-cards/UYGHUR_ERA_RED_DISSOLVE_MAP_UI_2026_05_27.png`
-- Validator: `python3 scripts/validate_era_effects_runtime.py => 12/12 passed`
+- Validator: `python3 scripts/validate/validate_era_effects_runtime.py => 12/12 passed`
 
 ## Flow
 

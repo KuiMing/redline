@@ -1,6 +1,6 @@
 # 地圖標籤 zoom 門檻／開局根據地視角／玩家名陣營色 驗證
 
-可重跑指令：`python3 scripts/validate_map_label_zoom_and_base_view.py`
+可重跑指令：`python3 scripts/validate/validate_map_label_zoom_and_base_view.py`
 
 - total: 6 / passed: 6 / failed: 0
 - screenshots: /Users/benmini/.openclaw/workspace/redline/docs/records/map-ui/map_label_far_zoom.png, /Users/benmini/.openclaw/workspace/redline/docs/records/map-ui/map_label_near_zoom.png

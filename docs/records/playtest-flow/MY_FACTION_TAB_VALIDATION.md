@@ -1,6 +1,6 @@
 # 「我的陣營」頁內 Tab 驗證
 
-可重跑指令：`uv run --with playwright python scripts/validate_my_faction_modal.py`
+可重跑指令：`uv run --with playwright python scripts/validate/validate_my_faction_modal.py`
 
 - total: 7 / passed: 7 / failed: 0
 - base URL: http://127.0.0.1:8000

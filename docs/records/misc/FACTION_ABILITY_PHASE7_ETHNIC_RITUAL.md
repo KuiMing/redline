@@ -53,7 +53,7 @@
 
 ## 驗證
 新增：
-- `scripts/validate_ethnic_ritual_ui_and_engine.py`
+- `scripts/validate/validate_ethnic_ritual_ui_and_engine.py`
 
 輸出：
 - `ETHNIC_RITUAL_UI_AND_ENGINE_VALIDATION.json`

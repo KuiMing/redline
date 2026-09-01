@@ -1,6 +1,6 @@
 # 第20回合勝利宣告時機驗證
 
-可重跑指令：`python3 scripts/validate_turn20_victory_declaration.py`
+可重跑指令：`python3 scripts/validate/validate_turn20_victory_declaration.py`
 
 - total: 3 / passed: 3 / failed: 0
 

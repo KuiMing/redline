@@ -20,14 +20,14 @@
   - 購牌完成後追蹤 `buy_card` 事件進度。
   - 新增 `topdeck_from_discard` effect，重用既有 `card_choice` pending choice 架構。
   - 新增 `event_topdeck_from_discard` pending choice resolution。
-- `scripts/validate_event_cards_runtime.py`
+- `scripts/validate/validate_event_cards_runtime.py`
   - 新增成功路徑：購買 4 點卡後 pending choice，選購買卡置頂。
   - 新增負向路徑：購買 3 點非 `英美奧援` 卡不觸發。
   - 新增 structured data 對齊 raw rule 斷言。
 
 ## Validator proof
 
-`python3 scripts/validate_event_cards_runtime.py` 通過（14 passed），輸出寫入：
+`python3 scripts/validate/validate_event_cards_runtime.py` 通過（14 passed），輸出寫入：
 
 - `docs/records/event-cards/EVENT_CARDS_RUNTIME_VALIDATION.json`
 - `docs/records/event-cards/EVENT_CARDS_RUNTIME_VALIDATION.md`

@@ -1,6 +1,6 @@
 # 45 個 text-only 陣營勝利條件實作驗證（A1）
 
-可重跑指令：`python3 scripts/validate_text_faction_win_conditions.py`
+可重跑指令：`python3 scripts/validate/validate_text_faction_win_conditions.py`
 
 - total: 7 / passed: 7 / failed: 0
 

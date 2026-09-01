@@ -20,10 +20,10 @@
 
 權威追蹤來源是 `TODO.md` 的「P1：LAN / end-to-end playtest feedback」區塊（每項有回報情境、期望、需檢查位置）；前三項另有規劃書 `docs/records/playtest-feedback/PLAN_P1_UI_FIXES_20260709.md`（含程式碼位置與建議做法）。每項完成都要：root cause、修正摘要、驗證指令與 browser proof（放 `docs/records/...`），並把 `TODO.md` 對應項目改 [done]。
 
-0. 【先做】放射狀直線修正收尾：這個修正的程式碼「已經在 working tree 但未 commit」——`static/leaflet_game_map.html`、`static/leaflet_game_map_logic.js` 是 modified，proof（docs/records/map-ui/MAP_NO_RADIAL_LINES_20260709_065808.*）與 `scripts/validate_map_no_radial_lines.py` 是 untracked。請先看懂該 diff、重跑驗證腳本確認仍通過，然後把這 5+ 個檔案明確列名 commit。若驗證不過才需要修。
+0. 【先做】放射狀直線修正收尾：這個修正的程式碼「已經在 working tree 但未 commit」——`static/leaflet_game_map.html`、`static/leaflet_game_map_logic.js` 是 modified，proof（docs/records/map-ui/MAP_NO_RADIAL_LINES_20260709_065808.*）與 `scripts/validate/validate_map_no_radial_lines.py` 是 untracked。請先看懂該 diff、重跑驗證腳本確認仍通過，然後把這 5+ 個檔案明確列名 commit。若驗證不過才需要修。
 1. 移動確認視窗：選定組織後點可移動城鎮，先跳確認視窗；確認才送 move，取消要保留選擇狀態（不可影響事件/卡牌 pending choice 的選點流程）。
 2. Lobby 房間代碼複製保留一個，移除最上方橫幅的重複複製入口（static/index.html + app.js copyRoomId 綁定）。
-3. 移動高亮／成本需 faction-aware + cost-aware：後端已改為「翻牆花2點且僅能1格、目的城鎮須適用移動者陣營、赤臘角機場航線（香港限定，赤臘角→臺北/倫敦/卡加利/多倫多，花2點）」；前端可移動城鎮高亮、路線視覺化、剩餘移動點顯示要跟後端一致（不適用的城鎮不可高亮、跨牆/機場要顯示成本2）。後端行為見 scripts/validate_wall_crossing_movement.py 與 TODO.md 對應條目。
+3. 移動高亮／成本需 faction-aware + cost-aware：後端已改為「翻牆花2點且僅能1格、目的城鎮須適用移動者陣營、赤臘角機場航線（香港限定，赤臘角→臺北/倫敦/卡加利/多倫多，花2點）」；前端可移動城鎮高亮、路線視覺化、剩餘移動點顯示要跟後端一致（不適用的城鎮不可高亮、跨牆/機場要顯示成本2）。後端行為見 scripts/validate/validate_wall_crossing_movement.py 與 TODO.md 對應條目。
 4. 地圖已建立組織的城鎮／根據地直接顯示所屬陣營（地名標籤 + 圓圈填色用陣營代表色；base marker 與一般城鎮樣式一致）。
 5. 顯示「目前還有幾個城鎮可以建立組織」，數字要跟實際可點擊/可建立名單一致。
 6. 奧援卡卡面：把「資源」按鈕改成「詳情」，點開顯示 I/II/III 級完整效果文字（奧援卡只能當行動用，不應有資源按鈕）。effect_text 資料不足時回查 data/raw/support_cards.csv。
@@ -37,11 +37,11 @@
 ===== 第二批：P2 過期驗證腳本修復 =====
 
 這些腳本在「修正之前」就已經 FAIL（已用 git stash 基準比對確認非近期修正造成），是腳本假設過期，不是遊戲邏輯錯誤。修復方向是更新腳本情境假設，讓它們重新反映現行正確行為；若修的過程發現真正的邏輯 bug，先回報再動 server/。
-1. scripts/validate_turn_phase_action_gating.py（目前 5/15；另外注意 docs/records/playtest-flow/TURN_PHASE_ACTION_GATING_VALIDATION.{json,md} 是它的舊輸出、目前是 dirty 狀態，修好重跑後一起 commit）。
-2. scripts/validate_event_cards_runtime.py（settle_round_event helper 早於「整輪結算」改動）。
-3. scripts/validate_era_effects_runtime.py。
-4. scripts/validate_action_card_end_turn_topdeck_runtime.py（phase 推進假設過期）。
-5. scripts/validate_faction_abilities_phase5.py 的 華文傳媒 案例。
+1. scripts/validate/validate_turn_phase_action_gating.py（目前 5/15；另外注意 docs/records/playtest-flow/TURN_PHASE_ACTION_GATING_VALIDATION.{json,md} 是它的舊輸出、目前是 dirty 狀態，修好重跑後一起 commit）。
+2. scripts/validate/validate_event_cards_runtime.py（settle_round_event helper 早於「整輪結算」改動）。
+3. scripts/validate/validate_era_effects_runtime.py。
+4. scripts/validate/validate_action_card_end_turn_topdeck_runtime.py（phase 推進假設過期）。
+5. scripts/validate/validate_faction_abilities_phase5.py 的 華文傳媒 案例。
 
 ===== 第三批（做得完再做）：第四梯隊保養 =====
 - C3：購買區組成資料校驗腳本（data/raw CSV vs 程式購買區組成）。

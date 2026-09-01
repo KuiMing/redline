@@ -1,6 +1,6 @@
 # 組織棋供應上限驗證（S1）
 
-可重跑指令：`python3 scripts/validate_org_supply_limits.py`
+可重跑指令：`python3 scripts/validate/validate_org_supply_limits.py`
 
 - 反共陣營上限: 22
 - 紅軍上限: 40（2026-07-11 使用者決定，取代規則書 8×N+8 公式）

@@ -67,7 +67,7 @@
 
 ## 驗證
 新增：
-- `scripts/validate_shared_dissolve_ui_phase8.py`
+- `scripts/validate/validate_shared_dissolve_ui_phase8.py`
 
 輸出：
 - `SHARED_DISSOLVE_UI_PHASE8_VALIDATION.json`

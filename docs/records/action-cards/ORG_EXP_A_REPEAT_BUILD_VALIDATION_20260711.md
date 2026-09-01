@@ -1,6 +1,6 @@
 # 組織經驗甲 重複建立子句驗證
 
-可重跑指令：`python3 scripts/validate_org_exp_a_repeat_build.py`
+可重跑指令：`python3 scripts/validate/validate_org_exp_a_repeat_build.py`
 
 - total: 5 / passed: 5 / failed: 0
 

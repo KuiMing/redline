@@ -1,6 +1,6 @@
 # 凝聚共識/武裝集團 死代碼 JSON 宣告清理驗證
 
-可重跑指令：`python3 scripts/validate_dead_effect_cleanup.py`
+可重跑指令：`python3 scripts/validate/validate_dead_effect_cleanup.py`
 
 - total: 3 / passed: 3 / failed: 0
 

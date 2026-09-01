@@ -1,6 +1,6 @@
 # Buildable town count validation
 
-可重跑指令：`python3 scripts/validate_buildable_town_count.py`
+可重跑指令：`python3 scripts/validate/validate_buildable_town_count.py`
 
 - total: 4 / passed: 4 / failed: 0
 

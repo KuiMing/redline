@@ -1,7 +1,7 @@
 import importlib.util
 from pathlib import Path
 
-module_path = Path(__file__).resolve().parents[1] / 'validate_ui_card_flows.py'
+module_path = Path(__file__).resolve().parents[1] / 'validate' / 'validate_ui_card_flows.py'
 spec = importlib.util.spec_from_file_location('card_ui_validator_runtime', module_path)
 validator = importlib.util.module_from_spec(spec)
 assert spec.loader is not None

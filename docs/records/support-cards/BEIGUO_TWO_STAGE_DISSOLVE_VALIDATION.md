@@ -1,6 +1,6 @@
 # 北國奧援 I級兩段式瓦解驗證
 
-可重跑指令：`python3 scripts/validate_beiguo_two_stage_dissolve.py`
+可重跑指令：`python3 scripts/validate/validate_beiguo_two_stage_dissolve.py`
 
 - total: 6 / passed: 6 / failed: 0
 - screenshot: /Users/benmini/.openclaw/workspace/redline/docs/records/support-cards/beiguo_two_stage_dissolve.png

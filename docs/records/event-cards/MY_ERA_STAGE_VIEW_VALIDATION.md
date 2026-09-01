@@ -1,6 +1,6 @@
 # 「我的時代關卡」遊戲內查看入口驗證
 
-可重跑指令：`uv run --with playwright python scripts/validate_my_era_stage_view.py`
+可重跑指令：`uv run --with playwright python scripts/validate/validate_my_era_stage_view.py`
 
 - total: 10 / passed: 10 / failed: 0
 - base URL: http://127.0.0.1:8000

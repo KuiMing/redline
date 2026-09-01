@@ -1,6 +1,6 @@
 # 粵/澳門 <-> 香港 共用組織修正驗證
 
-可重跑指令：`python3 scripts/validate_yue_aomen_hongkong_shared_org.py`
+可重跑指令：`python3 scripts/validate/validate_yue_aomen_hongkong_shared_org.py`
 
 - scope: yue, aomen, hong_kong
 - total: 5

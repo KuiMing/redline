@@ -24,7 +24,7 @@
   - `#purchaseSection .panel-title,`
   - `#randomMarketPanel .panel-title { margin-bottom: 14px; }`
 
-### 2. `scripts/validate_purchase_section_alignment.py`
+### 2. `scripts/validate/validate_purchase_section_alignment.py`
 已補強驗證腳本，避免只驗證「標題對齊」卻忽略「卡牌本體對齊」。
 
 現在驗證包含：
@@ -36,7 +36,7 @@
 重新執行：
 
 ```bash
-python3 scripts/validate_purchase_section_alignment.py
+python3 scripts/validate/validate_purchase_section_alignment.py
 ```
 
 結果：

@@ -1,6 +1,6 @@
 # 事件牌庫抽出20張驗證
 
-可重跑指令：`python3 scripts/validate_event_deck_draw_twenty.py`
+可重跑指令：`python3 scripts/validate/validate_event_deck_draw_twenty.py`
 
 - 全池張數（依卡牌張數展開）: 25
 - 牌庫張數常數 EVENT_DECK_SIZE: 20

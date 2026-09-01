@@ -1,6 +1,6 @@
 # 民運派／性別革命 非暴力 fix validation
 
-可重跑指令：`python3 scripts/validate_minyun_gender_revolution_nonviolent.py`
+可重跑指令：`python3 scripts/validate/validate_minyun_gender_revolution_nonviolent.py`
 
 - total: 7
 - passed: 7

@@ -5,7 +5,7 @@ Generated at: `2026-08-09T22:55:31`
 Summary: 7 passed / 0 failed / 7 total.
 
 可重跑指令（需先啟動伺服器於 127.0.0.1:8000）：
-`python3 scripts/validate_era_restrict_ignore_distance.py`
+`python3 scripts/validate/validate_era_restrict_ignore_distance.py`
 
 ## rebels_era_ideologue_limited_to_one_step_inside_wall — passed
 

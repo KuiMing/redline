@@ -1,6 +1,6 @@
 # 離間內鬥僅放對方牌堆驗證
 
-可重跑指令：`python3 scripts/validate_divide_targets_others_only.py`
+可重跑指令：`python3 scripts/validate/validate_divide_targets_others_only.py`
 
 - total: 2 / passed: 2 / failed: 0
 

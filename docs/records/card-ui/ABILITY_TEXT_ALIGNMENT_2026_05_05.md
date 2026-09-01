@@ -37,5 +37,5 @@
   - `盟旗學校：只能在蒙古發展空間建立組織`
 
 ### 驗證
-- `scripts/validate_faction_abilities_phase1.py` 已同步更新並重新通過
+- `scripts/validate/validate_faction_abilities_phase1.py` 已同步更新並重新通過
 - phase1 驗證維持：6 / 6 passed

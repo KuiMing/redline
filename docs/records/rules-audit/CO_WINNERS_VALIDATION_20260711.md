@@ -1,6 +1,6 @@
 # 共同勝利（2/3 進度）驗證（A4）
 
-可重跑指令：`python3 scripts/validate_co_winners.py`
+可重跑指令：`python3 scripts/validate/validate_co_winners.py`
 
 - total: 4 / passed: 4 / failed: 0
 

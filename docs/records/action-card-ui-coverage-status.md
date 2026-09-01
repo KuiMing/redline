@@ -85,7 +85,7 @@
 - 類型：command
 - 預期 UI 需求：target_player
 - 目前判定：有明確 UI/validator 證據
-- 對應 validator：scripts/validate_negotiation_card.py
+- 對應 validator：scripts/validate/validate_negotiation_card.py
 - app.js 訊號：named_in_app_js, target_player_flow_present
 
 ### 地下黨
