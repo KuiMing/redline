@@ -552,7 +552,7 @@ body {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.8rem;
   color: #dbe7f3;
-  z-index: 2;
+  z-index: 3;
   backdrop-filter: blur(8px);
   display: none;
   align-items: center;
