@@ -51,6 +51,12 @@ from server.game_market_transactions import (
     purchase_payment_policy,
     allocate_purchase_payments,
 )
+from server.game_base_setup import (
+    classify_base_options,
+    resolve_starting_base,
+    base_option_to_towns,
+    candidate_base_names,
+)
 
 STATIC_PURCHASE_CARD_SUPPLY = {
     # data/raw/action_cards.csv 「卡牌張數」
@@ -3547,92 +3553,22 @@ class Game:
         return {'tier': tier, 'matched_rulers': matched, 'effect_type': effect_type, 'effect_text': self._support_card_effect_text(card_name, tier, region_index)}
 
     def _classify_base_options(self, faction):
-        bases = faction.get("bases", [])
-        names = []
-        for b in bases:
-            if isinstance(b, dict):
-                name = b.get("name")
-            else:
-                name = b
-            if name:
-                names.append(name)
-        tags = set(faction.get("tags", []))
-
-        if faction.get("id") == "hong_kong":
-            return "special", names
-        if any(name.startswith("任意") for name in names):
-            return "flex", names
-        if "flex_base" in tags:
-            return "flex", names
-        first_base = bases[0] if bases else None
-        if len(names) == 1 and isinstance(first_base, dict) and first_base.get("type") == "fixed":
-            return "fixed", names
-        return "candidate", names
+        return classify_base_options(faction)
 
     def _resolve_starting_base(self, faction, used):
-        kind, names = self._classify_base_options(faction)
-        towns = self.map.get("towns", {})
-
-        # fixed / candidate / special currently choose first legal explicit town deterministically
-        if kind in {"fixed", "candidate", "special"}:
-            for name in names:
-                if name in towns and name not in used and self.can_faction_develop_in_town(faction.get("id"), name):
-                    return name
-            return None
-
-        # flex rules: deterministic fallback by semantic token
-        if kind == "flex":
-            semantic_pools = {
-                "任意牆內": self._towns_for_region_alias("china"),
-                "任意牆內城鎮": self._towns_for_region_alias("china"),
-                "任意英美城鎮": ["華盛頓", "紐約", "多倫多", "卡加利", "溫哥華", "舊金山", "洛杉磯", "倫敦"],
-                "任意南洋": ["曼谷", "吉隆坡", "新加坡", "雅加達", "河內", "胡志明市", "仰光"],
-                "任意南洋城鎮": ["曼谷", "吉隆坡", "新加坡", "雅加達", "河內", "胡志明市", "仰光"],
-                "任意東洋": ["東京", "大阪", "福岡", "札幌", "仙臺", "沖繩", "首爾", "釜山"],
-            }
-            for label in names:
-                pool = semantic_pools.get(label, [])
-                for town in pool:
-                    if town in towns and town not in used and self.can_faction_develop_in_town(faction.get("id"), town):
-                        return town
-            return None
-
-        return None
+        return resolve_starting_base(
+            self.map, self.towns_by_ruler, self.can_faction_develop_in_town, faction, used
+        )
 
     def _base_option_to_towns(self, faction, option_name):
-        towns = self.map.get("towns", {})
-        if option_name in towns:
-            return [option_name] if self.can_faction_develop_in_town(faction.get("id"), option_name) else []
-
-        semantic_pools = {
-            "任意牆內": self._towns_for_region_alias("china"),
-            "任意牆內城鎮": self._towns_for_region_alias("china"),
-            "任意英美城鎮": ["華盛頓", "紐約", "多倫多", "卡加利", "溫哥華", "舊金山", "洛杉磯", "倫敦"],
-            "任意南洋": ["曼谷", "吉隆坡", "新加坡", "雅加達", "河內", "胡志明市", "仰光"],
-            "任意南洋城鎮": ["曼谷", "吉隆坡", "新加坡", "雅加達", "河內", "胡志明市", "仰光"],
-            "任意東洋": ["東京", "大阪", "福岡", "札幌", "仙臺", "沖繩", "首爾", "釜山"],
-        }
-        pool = semantic_pools.get(option_name, [])
-        ordered = []
-        seen = set()
-        for town in pool:
-            if town in towns and town not in seen and self.can_faction_develop_in_town(faction.get("id"), town):
-                seen.add(town)
-                ordered.append(town)
-        return ordered
+        return base_option_to_towns(
+            self.map, self.towns_by_ruler, self.can_faction_develop_in_town, faction, option_name
+        )
 
     def _candidate_base_names(self, faction):
-        if faction.get("id") in {"uyghur_family", "tibet_family"}:
-            return [b.get("name") for b in faction.get("bases", []) if b.get("name")]
-        _, names = self._classify_base_options(faction)
-        candidates = []
-        seen = set()
-        for option_name in names:
-            for town in self._base_option_to_towns(faction, option_name):
-                if town not in seen:
-                    seen.add(town)
-                    candidates.append(town)
-        return candidates
+        return candidate_base_names(
+            self.map, self.towns_by_ruler, self.can_faction_develop_in_town, faction
+        )
 
     def _compute_pending_base_choices(self):
         pending = {}
