@@ -30,6 +30,13 @@ from server.game_catalog import (
     load_json,
     build_towns_by_ruler,
 )
+from server.game_map_rules import (
+    is_inside_wall_town,
+    town_neighbors,
+    towns_within_steps,
+    towns_for_region_alias,
+    town_matches_region_alias,
+)
 
 STATIC_PURCHASE_CARD_SUPPLY = {
     # data/raw/action_cards.csv 「卡牌張數」
@@ -523,9 +530,7 @@ class Game:
         self.event_modifiers = active
 
     def _town_matches_region_alias(self, town, region):
-        if not region:
-            return True
-        return town in set(self._towns_for_region_alias(region))
+        return town_matches_region_alias(self.map, self.towns_by_ruler, town, region)
 
     def _event_scoped_card_range(self, player, card_type, target_region=None):
         best = None
@@ -917,8 +922,7 @@ class Game:
 
     def _is_inside_wall_town(self, town):
         """Classify a town by canonical map ruler, not runtime controller."""
-        town_data = (self.map.get("towns", {}) or {}).get(town, {})
-        return "紅軍" in (town_data.get("ruler") or [])
+        return is_inside_wall_town(self.map, town)
 
     def _player_organization_scope_counts(self, player, *, include_shared=False):
         """Split owned or effective organizations into inside/outside-wall counts."""
@@ -941,37 +945,7 @@ class Game:
         }
 
     def _towns_for_region_alias(self, region):
-        alias_to_ruler = {
-            "china": "紅軍",
-            "taiwan": "臺灣",
-            "hong_kong": "紅軍",
-            "southeast_asia": "南洋",
-            "manchuria": "滿洲",
-            "outer_manchuria": "北國",
-            "mongolian_plateau": "蒙古",
-            "inner_mongolia": "紅軍",
-            "turkestan": "紅軍",
-            "tibet_region": "藏國",
-            "india": "印度",
-            "middle_east": "天方",
-            "japan": "東洋",
-            "korean_peninsula": "東洋",
-            "trans_siberian": "北國",
-            "anglo_america": "英美",
-            "europe": "歐洲",
-        }
-        ruler = alias_to_ruler.get(region, region)
-        towns = list(self.towns_by_ruler.get(ruler, []))
-        if towns:
-            return towns
-        # Some era regions (for example tibet_region) are represented by camp tags
-        # rather than ruler tags on the current map data.
-        camp_towns = [
-            town for town, info in (self.map.get("towns", {}) or {}).items()
-            if ruler in (info.get("camp") or [])
-        ]
-        camp_towns.sort()
-        return camp_towns
+        return towns_for_region_alias(self.map, self.towns_by_ruler, region)
 
     def _assign_factions(self, players_data):
         red = next(f for f in self.factions if f["id"] == "red_army")
@@ -1125,26 +1099,10 @@ class Game:
         return {'zone': 'removed', 'name': card_name}
 
     def _town_neighbors(self, town):
-        if not town:
-            return set()
-        entry = self.map.get('towns', {}).get(town, {}) or {}
-        return set(entry.get('road', []) or []) | set(entry.get('rail', []) or [])
+        return town_neighbors(self.map, town)
 
     def _towns_within_steps(self, origins, max_steps=1):
-        origins = [town for town in (origins or []) if town in self.map.get('towns', {})]
-        if max_steps < 0 or not origins:
-            return set()
-        seen = set(origins)
-        frontier = [(town, 0) for town in origins]
-        while frontier:
-            town, dist = frontier.pop(0)
-            if dist >= max_steps:
-                continue
-            for nxt in self._town_neighbors(town):
-                if nxt not in seen:
-                    seen.add(nxt)
-                    frontier.append((nxt, dist + 1))
-        return seen
+        return towns_within_steps(self.map, origins, max_steps)
 
     def _card_build_town_choices(self, player, effect):
         if self._event_modifier_active('restrict_build'):
