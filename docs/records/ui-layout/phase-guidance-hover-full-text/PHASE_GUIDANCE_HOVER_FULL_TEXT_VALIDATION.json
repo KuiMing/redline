@@ -1,10 +1,10 @@
 {
   "summary": {
-    "total": 12,
-    "passed": 12,
+    "total": 14,
+    "passed": 14,
     "failed": 0
   },
-  "base_url": "http://127.0.0.1:8000",
+  "base_url": "http://127.0.0.1:8785",
   "long_text": "烏魯木齊七五事件：探聽東突厥的現況；回合結束時至少有 1 個己方組織在牆內。成功：免費在己方組織 1 格內建立 1 個組織。失敗：被紅軍隨機棄掉 1 張手牌。",
   "checks": [
     {
@@ -68,6 +68,35 @@
           "top": 0,
           "right": 1280,
           "bottom": 720
+        }
+      }
+    },
+    {
+      "name": "tooltip_paints_above_tab_and_action_row_1280x720",
+      "passed": true,
+      "details": {
+        "tooltip": {
+          "left": 616.796875,
+          "top": 43.5,
+          "right": 1176.796875,
+          "bottom": 106.1875,
+          "width": 560,
+          "height": 62.6875
+        },
+        "hudZ": 3,
+        "shellZ": 2,
+        "tabs": {
+          "left": 0,
+          "top": 56,
+          "right": 1280,
+          "bottom": 104
+        },
+        "probe": {
+          "x": 896.796875,
+          "y": 80,
+          "topId": "phaseActionMetaTooltip",
+          "topClass": "",
+          "tooltipOnTop": true
         }
       }
     },
@@ -137,6 +166,35 @@
           "top": 0,
           "right": 1024,
           "bottom": 768
+        }
+      }
+    },
+    {
+      "name": "tooltip_paints_above_tab_and_action_row_1024x768",
+      "passed": true,
+      "details": {
+        "tooltip": {
+          "left": 493.4375,
+          "top": 130.8000030517578,
+          "right": 941.4375,
+          "bottom": 180.95001220703125,
+          "width": 448,
+          "height": 50.15000915527344
+        },
+        "hudZ": 3,
+        "shellZ": 2,
+        "tabs": {
+          "left": 0,
+          "top": 140.8000030517578,
+          "right": 1024,
+          "bottom": 179.20001220703125
+        },
+        "probe": {
+          "x": 717.4375,
+          "y": 160.00000762939453,
+          "topId": "phaseActionMetaTooltip",
+          "topClass": "",
+          "tooltipOnTop": true
         }
       }
     },

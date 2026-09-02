@@ -44,6 +44,7 @@ def main() -> None:
                   document.getElementById('lobby').style.display = 'none';
                   const hud = document.getElementById('hud');
                   hud.style.display = 'flex';
+                  document.getElementById('gameShell').style.display = 'block';
                   document.getElementById('hudMainRow').innerHTML = '<span class="hud-chip hud-chip-primary">回合 6</span><span class="hud-chip">當前玩家 滿洲</span><span class="hud-chip hud-chip-resource">資金 0</span><span class="hud-chip hud-chip-resource">宣傳 0</span>';
                   setPhaseActionMeta(text);
                 }""",
@@ -67,11 +68,50 @@ def main() -> None:
                 }"""
             )
             restart_rect = restart.evaluate("el => {const r=el.getBoundingClientRect(); return {left:r.left,top:r.top,right:r.right,bottom:r.bottom}}")
+            tab_layer = page.evaluate(
+                """() => {
+                  const rect = element => {
+                    const r = element.getBoundingClientRect();
+                    return {left:r.left,top:r.top,right:r.right,bottom:r.bottom};
+                  };
+                  const hud = document.getElementById('hud');
+                  const shell = document.getElementById('gameShell');
+                  const tabs = document.getElementById('gameTabs');
+                  const tooltip = document.getElementById('phaseActionMetaTooltip');
+                  const tabRect = rect(tabs);
+                  const tooltipRect = rect(tooltip);
+                  const probe = {
+                    x: (Math.max(tabRect.left, tooltipRect.left) + Math.min(tabRect.right, tooltipRect.right)) / 2,
+                    y: (Math.max(tabRect.top, tooltipRect.top) + Math.min(tabRect.bottom, tooltipRect.bottom)) / 2,
+                  };
+                  tooltip.style.pointerEvents = 'auto';
+                  const topElement = document.elementFromPoint(probe.x, probe.y);
+                  tooltip.style.pointerEvents = '';
+                  return {
+                    hudZ: Number(getComputedStyle(hud).zIndex),
+                    shellZ: Number(getComputedStyle(shell).zIndex),
+                    tabs: tabRect,
+                    probe: {
+                      ...probe,
+                      topId: topElement?.id || '',
+                      topClass: topElement?.className || '',
+                      tooltipOnTop: topElement === tooltip || tooltip.contains(topElement),
+                    },
+                  };
+                }"""
+            )
             viewport_rect = {"left": 0, "top": 0, "right": width, "bottom": height}
             visible_and_complete = tooltip_state["display"] == "block" and tooltip_state["text"] == LONG_TEXT and tooltip_state["ariaHidden"] == "false"
             record(f"hover_shows_complete_text_{width}x{height}", visible_and_complete, tooltip_state)
             tooltip_inside = tooltip_state["rect"]["left"] >= viewport_rect["left"] and tooltip_state["rect"]["right"] <= viewport_rect["right"] and tooltip_state["rect"]["top"] >= viewport_rect["top"] and tooltip_state["rect"]["bottom"] <= viewport_rect["bottom"]
             record(f"tooltip_is_inside_view_and_avoids_restart_{width}x{height}", tooltip_inside and not intersects(tooltip_state["rect"], restart_rect), {"tooltip": tooltip_state["rect"], "restart": restart_rect, "viewport": viewport_rect})
+            record(
+                f"tooltip_paints_above_tab_and_action_row_{width}x{height}",
+                intersects(tooltip_state["rect"], tab_layer["tabs"])
+                and tab_layer["hudZ"] > tab_layer["shellZ"]
+                and tab_layer["probe"]["tooltipOnTop"],
+                {"tooltip": tooltip_state["rect"], **tab_layer},
+            )
 
             meta.focus()
             page.wait_for_timeout(80)
