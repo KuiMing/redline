@@ -1,6 +1,6 @@
 # 情報網 own-turn choose_one fix validation
 
-可重跑指令：`python3 scripts/validate_intel_network_no_reaction_option_own_turn.py`
+可重跑指令：`python3 scripts/validate/validate_intel_network_no_reaction_option_own_turn.py`
 
 - total: 2
 - passed: 2

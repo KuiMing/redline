@@ -25,7 +25,7 @@ Status: passed
 - Action log: `[Turn 1] viewer built organization in 天津 via event`
 
 ## Related validator
-- `scripts/validate_event_cards_runtime.py`
+- `scripts/validate/validate_event_cards_runtime.py`
   - `test_urumqi_end_turn_wall_org_builds_near_own_org`
   - `test_urumqi_end_turn_without_wall_org_fails_random_discard`
   - `test_urumqi_structured_matches_raw_rule`

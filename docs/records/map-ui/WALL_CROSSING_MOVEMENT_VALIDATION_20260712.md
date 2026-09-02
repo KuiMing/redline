@@ -1,6 +1,6 @@
 # 翻牆移動成本＋目的城鎮陣營適用驗證
 
-可重跑指令：`python3 scripts/validate_wall_crossing_movement.py`
+可重跑指令：`python3 scripts/validate/validate_wall_crossing_movement.py`
 
 - total: 6 / passed: 6 / failed: 0
 

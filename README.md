@@ -13,6 +13,16 @@ cd "$HOME/.openclaw/workspace/redline"
 uv run uvicorn server.main:app --host 0.0.0.0 --port 8000
 ```
 
+`/test/*` 這類會直接改遊戲狀態的測試端點預設是關閉的（正式環境不應該讓人從外部直接改
+遊戲狀態）。如果你要跑 `scripts/validate_*_browser.py` 這類 browser-proof 腳本、或任何
+需要打 `/test/*` 的手動驗證，啟動前要另外加上：
+
+```bash
+ENABLE_TEST_ROUTES=true uv run uvicorn server.main:app --host 0.0.0.0 --port 8000
+```
+
+沒開這個環境變數的話，`/test/*` 會回傳 404，browser-proof 腳本會整批打不到 setup 端點。
+
 服務啟動後：
 
 - 本機瀏覽器：`http://127.0.0.1:8000`
@@ -165,26 +175,26 @@ docker run -d --name redline -p 8000:8000 redline
 
 例如這批與購買區 / remove-return 相關的驗證，現在由下列腳本直接輸出到 `docs/records/purchase/`：
 
-- `scripts/validate_market_mode_and_removed_supply.py`
-- `scripts/validate_purchase_section_alignment.py`
-- `scripts/validate_underground_party.py`
+- `scripts/validate/validate_market_mode_and_removed_supply.py`
+- `scripts/validate/validate_purchase_section_alignment.py`
+- `scripts/validate/validate_underground_party.py`
 
 共享勝利 / 合作談判 / 勝利條件相關驗證，現在直接輸出到 `docs/records/shared-actions/`：
 
-- `scripts/validate_negotiation_card.py`
-- `scripts/validate_hu_shared_and_win.py`
-- `scripts/validate_shared_victory_phase8.py`
-- `scripts/validate_victory_rules.py`
+- `scripts/validate/validate_negotiation_card.py`
+- `scripts/validate/validate_hu_shared_and_win.py`
+- `scripts/validate/validate_shared_victory_phase8.py`
+- `scripts/validate/validate_victory_rules.py`
 
 完整遊戲流程與 era 規則驗證，現在直接輸出到 `docs/records/misc/`：
 
-- `scripts/validate_full_gameplay_2p.py`
-- `scripts/validate_full_gameplay_multi.py`
-- `scripts/validate_era_rules.py`
+- `scripts/validate/validate_full_gameplay_2p.py`
+- `scripts/validate/validate_full_gameplay_multi.py`
+- `scripts/validate/validate_era_rules.py`
 
 卡牌 UI / 類型流程驗證，現在直接輸出到 `docs/records/card-ui/`：
 
-- `scripts/validate_ui_card_flows.py`
+- `scripts/validate/validate_ui_card_flows.py`
 
 重跑驗證時，對應腳本應優先把輸出直接寫進各自的 `docs/records/<topic>/`；repo 根目錄目前不應再承接這些 validation report。
 

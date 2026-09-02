@@ -43,7 +43,7 @@
 
 ## 驗證
 新增：
-- `scripts/validate_support_purchase_deck_runtime.py`
+- `scripts/validate/validate_support_purchase_deck_runtime.py`
 
 輸出：
 - `SUPPORT_PURCHASE_DECK_RUNTIME_VALIDATION.json`

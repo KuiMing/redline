@@ -1,6 +1,6 @@
 # 回合結束補牌（保留手牌補到5）＋本土社團額外抽驗證
 
-可重跑指令：`python3 scripts/validate_end_turn_hand_refill.py`
+可重跑指令：`python3 scripts/validate/validate_end_turn_hand_refill.py`
 
 - total: 4 / passed: 4 / failed: 0
 

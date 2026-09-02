@@ -33,7 +33,7 @@
 
 ## 驗證
 新增：
-- `scripts/validate_safehouse_build_range.py`
+- `scripts/validate/validate_safehouse_build_range.py`
 
 輸出：
 - `SAFEHOUSE_BUILD_RANGE_VALIDATION.json`

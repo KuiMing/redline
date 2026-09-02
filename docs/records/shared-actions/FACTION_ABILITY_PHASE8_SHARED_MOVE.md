@@ -47,7 +47,7 @@
 
 ## 驗證
 新增：
-- `scripts/validate_shared_move_phase8.py`
+- `scripts/validate/validate_shared_move_phase8.py`
 
 輸出：
 - `SHARED_MOVE_PHASE8_VALIDATION.json`

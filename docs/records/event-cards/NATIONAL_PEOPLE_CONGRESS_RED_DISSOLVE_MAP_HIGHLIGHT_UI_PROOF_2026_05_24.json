@@ -20,7 +20,7 @@
     "no_new_intel_highlight": true
   },
   "validation": {
-    "runtime_validator": "python3 scripts/validate_event_cards_runtime.py",
+    "runtime_validator": "python3 scripts/validate/validate_event_cards_runtime.py",
     "static_assertion": "test_event_red_dissolve_ui_reuses_target_map_highlight"
   }
 }

@@ -41,7 +41,7 @@
 
 ## 驗證
 新增：
-- `scripts/validate_shared_organizations_phase6.py`
+- `scripts/validate/validate_shared_organizations_phase6.py`
 
 輸出：
 - `SHARED_ORGANIZATIONS_PHASE6_VALIDATION.json`

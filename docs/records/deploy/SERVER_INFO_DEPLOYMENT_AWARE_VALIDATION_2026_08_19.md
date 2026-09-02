@@ -42,5 +42,5 @@
 `http://192.168.10.192:8000/` 開房，lobby 的「區網連線網址」欄位正確顯示
 `http://192.168.10.192:8000`（`docker_lan_url_lobby.png`）。
 
-`scripts/validate_lan_info_display.py`（既有裸機情境的驗證腳本，未改動、行為不變）
+`scripts/validate/validate_lan_info_display.py`（既有裸機情境的驗證腳本，未改動、行為不變）
 與完整 pytest 366/366 皆通過。

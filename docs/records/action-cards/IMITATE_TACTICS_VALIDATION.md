@@ -1,6 +1,6 @@
 # 模仿戰術目標選擇驗證
 
-可重跑指令：`python3 scripts/validate_imitate_tactics.py`
+可重跑指令：`python3 scripts/validate/validate_imitate_tactics.py`
 
 - total: 5 / passed: 5 / failed: 0
 

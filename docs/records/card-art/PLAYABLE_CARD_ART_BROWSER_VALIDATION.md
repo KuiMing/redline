@@ -1,6 +1,6 @@
 # 行動卡與奧援卡完整卡面瀏覽器驗證
 
-可重跑：`uv run --with playwright python scripts/validate_playable_card_art_browser.py`
+可重跑：`uv run --with playwright python scripts/validate/validate_playable_card_art_browser.py`
 
 - total: 7 / passed: 7 / failed: 0
 

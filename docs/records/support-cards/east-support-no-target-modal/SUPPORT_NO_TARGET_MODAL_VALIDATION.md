@@ -18,4 +18,4 @@
 
 Screenshot: `docs/records/support-cards/east-support-no-target-modal/east_support_no_target_modal_1024x768.png`
 
-重跑：`REDLINE_BASE_URL=http://127.0.0.1:8769 uv run --with playwright python scripts/validate_support_no_target_modal.py`
+重跑：`REDLINE_BASE_URL=http://127.0.0.1:8769 uv run --with playwright python scripts/validate/validate_support_no_target_modal.py`

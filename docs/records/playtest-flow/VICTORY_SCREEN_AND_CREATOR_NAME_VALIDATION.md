@@ -1,6 +1,6 @@
 # 勝利畫面／建房者行動代號 驗證
 
-可重跑指令：`python3 scripts/validate_victory_screen_and_creator_name.py`
+可重跑指令：`python3 scripts/validate/validate_victory_screen_and_creator_name.py`
 
 - total: 5 / passed: 5 / failed: 0
 - screenshot: /Users/benmini/.openclaw/workspace/redline/docs/records/playtest-flow/victory_screen.png

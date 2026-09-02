@@ -1,6 +1,6 @@
 # 無視距離建立牆內組織的限制驗證（S2 陣營能力 + S3 時代關卡）
 
-可重跑指令：`python3 scripts/validate_xinjiang_distance_restriction.py`
+可重跑指令：`python3 scripts/validate/validate_xinjiang_distance_restriction.py`
 
 - total: 10 / passed: 10 / failed: 0
 

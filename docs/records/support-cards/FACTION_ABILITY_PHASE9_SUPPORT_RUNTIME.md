@@ -45,7 +45,7 @@
 
 ## 驗證
 新增：
-- `scripts/validate_support_cards_runtime_purchase_area.py`
+- `scripts/validate/validate_support_cards_runtime_purchase_area.py`
 
 輸出：
 - `SUPPORT_CARDS_RUNTIME_PURCHASE_AREA_VALIDATION.json`

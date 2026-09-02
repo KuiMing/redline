@@ -36,7 +36,7 @@
    那個閘門是唯一擋住玩家用剛補到的新手牌繼續出牌的機制。
 5. 前端 `static/app.js`：advance 按鈕文字 `行動 -> 結束行動階段`；購買勾選面板與購買區卡片改成
    `action`／`end` 皆可購買；手牌出牌的判斷邏輯**完全不動**（只更新過時文案），保留
-   `scripts/validate_turn_phase_action_gating.py` 與 `test_red_army_ability_timing_ws.py` 的逐字字串比對。
+   `scripts/validate/validate_turn_phase_action_gating.py` 與 `test_red_army_ability_timing_ws.py` 的逐字字串比對。
 6. `server/main.py` 三個 `/test/*` 端點的 advance 次數同步收斂（少一次 advance 才會落在同一個座位）。
 
 ## 驗證結果
@@ -47,7 +47,7 @@
 - `scripts/tests/test_hong_kong_base_relocation.py`：**10 passed**，且只改前置設定（拿掉手動
   `game.turn_phase = TurnPhase.END`），**沒有動任何斷言**——這是 `_finish_action_phase()` 抽取是否
   忠實原邏輯的準繩。
-- `scripts/validate_turn_phase_action_gating.py`：**14/14**，其中新增的正面驗證確認同一位玩家不呼叫
+- `scripts/validate/validate_turn_phase_action_gating.py`：**14/14**，其中新增的正面驗證確認同一位玩家不呼叫
   `advance_turn_phase()` 就能「出牌 → 購買 → 出牌 → 購買」全部成功，`turn_phase` 全程 `ACTION`、
   `current_player` 不變；單次 advance 後手牌補到 5 張並換人。
 - 全部非瀏覽器 validator 與改動前（HEAD）逐一比對：沒有任何一支從通過變成失敗；
@@ -57,7 +57,7 @@
 
 ### 真實瀏覽器（Playwright + Chromium）
 
-`scripts/validate_action_phase_interleave_browser.py` — **8/8 通過**，對應使用者原始回報的確切流程：
+`scripts/validate/validate_action_phase_interleave_browser.py` — **8/8 通過**，對應使用者原始回報的確切流程：
 
 | # | 驗收項目 | 結果 |
 |---|---|---|

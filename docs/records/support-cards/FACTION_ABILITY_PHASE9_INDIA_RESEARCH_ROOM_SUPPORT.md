@@ -54,7 +54,7 @@
 
 ## 驗證
 新增：
-- `scripts/validate_india_research_room_support_taxonomy.py`
+- `scripts/validate/validate_india_research_room_support_taxonomy.py`
 
 輸出：
 - `INDIA_RESEARCH_ROOM_SUPPORT_TAXONOMY_VALIDATION.json`

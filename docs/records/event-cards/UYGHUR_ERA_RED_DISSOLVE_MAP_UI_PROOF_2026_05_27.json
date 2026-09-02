@@ -44,6 +44,6 @@
     "map_sidebar_text": "[維吾爾]莎車大屠殺：紅軍選擇 1 個維吾爾組織瓦解；地圖上已用橘色外框標出可選城鎮。"
   },
   "screenshot": "docs/records/event-cards/UYGHUR_ERA_RED_DISSOLVE_MAP_UI_2026_05_27.png",
-  "validator": "python3 scripts/validate_era_effects_runtime.py => 12/12 passed",
+  "validator": "python3 scripts/validate/validate_era_effects_runtime.py => 12/12 passed",
   "notes": "此 proof 重用既有 pending target choice / support-targets map highlight 架構，沒有重做情報網 target choice map highlight。"
 }

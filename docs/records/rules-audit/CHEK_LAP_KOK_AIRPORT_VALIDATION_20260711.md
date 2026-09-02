@@ -1,6 +1,6 @@
 # 赤鱲角機場規則驗證（S5-2）
 
-可重跑指令：`python3 scripts/validate_chek_lap_kok_airport.py`
+可重跑指令：`python3 scripts/validate/validate_chek_lap_kok_airport.py`
 
 - total: 7 / passed: 7 / failed: 0
 

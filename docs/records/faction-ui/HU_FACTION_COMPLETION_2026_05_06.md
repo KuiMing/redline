@@ -46,7 +46,7 @@
 
 ## 驗證
 新增：
-- `scripts/validate_hu_shared_and_win.py`
+- `scripts/validate/validate_hu_shared_and_win.py`
 
 輸出：
 - `HU_SHARED_AND_WIN_VALIDATION.json`

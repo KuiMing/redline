@@ -1,6 +1,6 @@
 # 可取消 pending choice 驗證
 
-可重跑指令：`python3 scripts/validate_cancellable_choice.py`
+可重跑指令：`python3 scripts/validate/validate_cancellable_choice.py`
 
 - total: 7 / passed: 7 / failed: 0
 

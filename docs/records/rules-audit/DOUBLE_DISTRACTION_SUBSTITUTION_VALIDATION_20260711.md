@@ -1,6 +1,6 @@
 # 內鬥耗盡改雙倍分神替代驗證（C1）
 
-可重跑指令：`python3 scripts/validate_double_distraction_substitution.py`
+可重跑指令：`python3 scripts/validate/validate_double_distraction_substitution.py`
 
 - total: 5 / passed: 5 / failed: 0
 

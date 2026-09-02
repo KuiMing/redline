@@ -4,7 +4,7 @@
 
 ## 本輪修正
 
-- 修正 `scripts/validate_all_action_cards.py` 中對出牌索引的錯誤假設。
+- 修正 `scripts/validate/validate_all_action_cards.py` 中對出牌索引的錯誤假設。
 - 先前腳本直接打最後一張牌，導致像 `高效行動` 這種會在手牌中插入額外測試牌的情況，驗證結果失真。
 - 現在改成：按卡名精準找到待測卡，再呼叫 `play_card(index)`。
 

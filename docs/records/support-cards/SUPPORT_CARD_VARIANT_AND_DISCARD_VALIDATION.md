@@ -1,6 +1,6 @@
 # 奧援卡「單一變體地區判定」與「棄置」驗證
 
-可重跑指令：`python3 scripts/validate_support_card_variant_and_discard.py`
+可重跑指令：`python3 scripts/validate/validate_support_card_variant_and_discard.py`
 
 - total: 6 / passed: 6 / failed: 0
 - screenshot: /Users/benmini/.openclaw/workspace/redline/docs/records/support-cards/support_card_variant_and_discard.png

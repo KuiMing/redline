@@ -14,9 +14,9 @@
   - `走漏風聲` 行動模式開啟目標玩家 modal。
   - 點目標後送出 `target_player_id`。
   - 修正手牌 inline onclick 字串 escaping，避免中文字/引號造成 attribute 壞掉。
-- `scripts/validate_leak_card.py`
+- `scripts/validate/validate_leak_card.py`
   - 後端規則驗證。
-- `scripts/validate_leak_card_target_ui.py`
+- `scripts/validate/validate_leak_card_target_ui.py`
   - UI modal 與 payload 驗證。
 - `docs/records/leak-card/LEAK_CARD_VALIDATION.json`
 - `docs/records/leak-card/LEAK_CARD_VALIDATION.md`
@@ -37,7 +37,7 @@
 - `PURCHASE_SECTION_ALIGNMENT_VALIDATION.md`
 - `data/map.json`
 - `map.json`（目前是 deleted，需特別小心）
-- `scripts/validate_purchase_section_alignment.py`
+- `scripts/validate/validate_purchase_section_alignment.py`
 - `static/leaflet_embed_logic.js`
 - `static/leaflet_full_map.html`
 - `static/leaflet_game_map_logic.js`
@@ -70,7 +70,7 @@
 - `static/map_test.html`
 - `scripts/generate_era_structured.py`
 - `scripts/generate_town_coordinates.py`
-- `scripts/validate_ui_card_flows.py`
+- `scripts/validate/validate_ui_card_flows.py`
 - `test_*.py`
 - `sketches/`
 - 各類 `*_VALIDATION.json/md`、`*_BATTLESHOT.json`、`*_PREVIEW.json`
@@ -78,10 +78,10 @@
 ## 已跑驗證
 
 ```bash
-python3 -m py_compile server/game.py server/effect_engine.py scripts/validate_leak_card.py scripts/validate_leak_card_target_ui.py
+python3 -m py_compile server/game.py server/effect_engine.py scripts/validate/validate_leak_card.py scripts/validate/validate_leak_card_target_ui.py
 node --check static/app.js
-python3 scripts/validate_leak_card.py
-python3 scripts/validate_leak_card_target_ui.py
+python3 scripts/validate/validate_leak_card.py
+python3 scripts/validate/validate_leak_card_target_ui.py
 ```
 
 結果：全部通過。
@@ -94,8 +94,8 @@ git add \
   server/game.py \
   server/effect_engine.py \
   static/app.js \
-  scripts/validate_leak_card.py \
-  scripts/validate_leak_card_target_ui.py \
+  scripts/validate/validate_leak_card.py \
+  scripts/validate/validate_leak_card_target_ui.py \
   README.md \
   docs/records/README.md \
   docs/records/leak-card/LEAK_CARD_VALIDATION.json \

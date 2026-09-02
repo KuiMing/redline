@@ -1,6 +1,6 @@
 # 東洋奧援 taxonomy fix validation
 
-可重跑指令：`python3 scripts/validate_east_asia_support_taxonomy_fix.py`
+可重跑指令：`python3 scripts/validate/validate_east_asia_support_taxonomy_fix.py`
 
 - scope: 東洋奧援
 - total: 6
