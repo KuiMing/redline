@@ -37,6 +37,16 @@ from server.game_map_rules import (
     towns_for_region_alias,
     town_matches_region_alias,
 )
+from server.game_market_cost_rules import (
+    support_card_cost,
+    card_purchase_cost,
+    event_reduce_cost_amount,
+    armory_purchase_cost_reduction,
+    era_purchase_cost_reduction,
+    purchase_area_card_cost_total,
+    purchase_area_card_cost_money,
+    top_card_cost_total,
+)
 
 STATIC_PURCHASE_CARD_SUPPLY = {
     # data/raw/action_cards.csv 「卡牌張數」
@@ -508,7 +518,7 @@ class Game:
         return any((m or {}).get('type') == modifier_type for m in self._active_event_modifiers())
 
     def _event_reduce_cost_amount(self):
-        return sum(int((m or {}).get('amount', 0) or 0) for m in self._active_event_modifiers() if (m or {}).get('type') == 'reduce_cost')
+        return event_reduce_cost_amount(self._active_event_modifiers())
 
     def _event_modifier_from_effect(self, effect):
         modifier = dict(effect or {})
@@ -991,19 +1001,7 @@ class Game:
         return mapping.get(name, 'support')
 
     def _support_card_cost(self, support_name):
-        entry = self._support_taxonomy_entry(support_name) or {}
-        text = entry.get('cost', '')
-        if text == '起始牌':
-            return {'money': 0, 'propaganda': 0}
-        money = 0
-        propaganda = 0
-        if isinstance(text, str):
-            import re
-            m = re.search(r'(\d+)資金', text)
-            p = re.search(r'(\d+)宣傳', text)
-            money = int(m.group(1)) if m else 0
-            propaganda = int(p.group(1)) if p else 0
-        return {'money': money, 'propaganda': propaganda}
+        return support_card_cost(self.support_taxonomy, support_name)
 
     def _make_support_card(self, support_name, variant_index=0):
         entry = self._support_taxonomy_entry(support_name) or {}
@@ -3986,42 +3984,10 @@ class Game:
         return int(resources.get("money", 0) or 0) + int(resources.get("propaganda", 0) or 0)
 
     def _purchase_area_card_cost_total(self, card):
-        card_name = getattr(card, 'name', str(card))
-        for c in self.structured_cards:
-            if c.get('name') == card_name:
-                cost = c.get('cost', {})
-                return int(cost.get('money', 0) or 0) + int(cost.get('propaganda', 0) or 0)
-        entry = self._support_taxonomy_entry(card_name)
-        if entry and isinstance(entry.get('cost'), str):
-            text = entry['cost']
-            money = 0
-            propaganda = 0
-            if '資金' in text:
-                try:
-                    money = int(text.split('資金')[0].split('+')[-1].strip()[-1])
-                except Exception:
-                    money = 0
-            if '宣傳' in text:
-                try:
-                    propaganda = int(text.split('宣傳')[0].split('+')[-1].strip()[-1])
-                except Exception:
-                    propaganda = 0
-            return money + propaganda
-        return 0
+        return purchase_area_card_cost_total(self.structured_cards, self.support_taxonomy, card)
 
     def _purchase_area_card_cost_money(self, card):
-        card_name = getattr(card, 'name', str(card))
-        for c in self.structured_cards:
-            if c.get('name') == card_name:
-                cost = c.get('cost', {})
-                return int(cost.get('money', 0) or 0)
-        entry = self._support_taxonomy_entry(card_name)
-        if entry and isinstance(entry.get('cost'), str) and '資金' in entry['cost']:
-            try:
-                return int(entry['cost'].split('資金')[0].split('+')[-1].strip()[-1])
-            except Exception:
-                return 0
-        return 0
+        return purchase_area_card_cost_money(self.structured_cards, self.support_taxonomy, card)
 
     def _top_card_cost_total(self, card):
         # 2026-08-09 使用者 playtest 回報：立場試探／賭徒耳語／民族祭儀三個能力的文字都
@@ -4031,7 +3997,7 @@ class Game:
         # 其實從未被真正執行過。對追隨者／樂捐者這類起始牌影響最大：它們沒有真正的購買
         # 價格（規則書：起始牌不會在遊戲中被購買），正確費用應為 0（偶數），但舊邏輯誤用
         # 印刷資源（例如樂捐者資源為1資金，被誤判成奇數）。
-        return self._purchase_area_card_cost_total(card)
+        return top_card_cost_total(self.structured_cards, self.support_taxonomy, card)
 
     def _non_red_players(self):
         return [p for p in self.players if getattr(p, 'faction_id', None) != 'red_army']
@@ -6662,17 +6628,7 @@ class Game:
         return {"success": True}
 
     def _card_purchase_cost(self, card):
-        card_name = getattr(card, 'name', str(card))
-        if getattr(card, "card_type", None) == "support" or getattr(card, "type", None) == "support":
-            return self._support_card_cost(card_name)
-        for c in self.structured_cards:
-            if c.get('name') == card_name:
-                cost = c.get('cost', {}) or {}
-                return {
-                    'money': int(cost.get('money', 0) or 0),
-                    'propaganda': int(cost.get('propaganda', 0) or 0),
-                }
-        return {'money': 0, 'propaganda': 0}
+        return card_purchase_cost(self.structured_cards, self.support_taxonomy, card)
 
     def _effective_purchase_cost(self, player, card):
         cost = dict(self._card_purchase_cost(card) or {})
@@ -6695,19 +6651,7 @@ class Game:
         return {'money': cost_money, 'propaganda': cost_propaganda}
 
     def _armory_purchase_cost_reduction(self, player, card):
-        # 2026-08-04 使用者回報規則：玩家在軍火庫城鎮每擁有1個組織，購買每張武裝類卡牌
-        # 所需支付的費用減少1點資金，至多可藉軍火庫減少3點資金。「一城一組織」invariant
-        # 下每座軍火庫城鎮最多只會計1個組織，因此這裡直接數玩家目前有多少座「不同的」
-        # 軍火庫城鎮擁有組織（不是城鎮內組織數，那永遠是0或1），再夾到3點上限。
-        if getattr(card, 'card_type', None) != 'armed':
-            return 0
-        towns = self.map.get('towns', {}) or {}
-        armory_towns_owned = sum(
-            1
-            for town, count in (getattr(player, 'organizations', {}) or {}).items()
-            if count > 0 and (towns.get(town) or {}).get('type') == '軍火庫'
-        )
-        return min(3, armory_towns_owned)
+        return armory_purchase_cost_reduction(self.map, card, getattr(player, 'organizations', {}) or {})
 
     def _purchase_payment_policy(self, player):
         ability_name = next(
@@ -7104,19 +7048,12 @@ class Game:
         return effects
 
     def _era_purchase_cost_reduction(self, player, card):
-        reductions = {'money': 0, 'propaganda': 0}
-        for _era, _side, effect in self._active_era_effects():
-            if (effect or {}).get('type') != 'reduce_purchase_cost':
-                continue
-            if not self._player_matches_camp(player, effect.get('target_camp')):
-                continue
-            if not self._card_matches_types(card, effect.get('card_types') or []):
-                continue
-            resource = effect.get('resource', 'money')
-            if resource not in reductions:
-                continue
-            reductions[resource] += int(effect.get('amount', 0) or 0)
-        return reductions
+        return era_purchase_cost_reduction(
+            self._active_era_effects(),
+            self._player_camp(player),
+            getattr(player, 'faction_id', None),
+            card,
+        )
 
     def _apply_era_resource_card_bonus(self, player, card):
         applied = []
