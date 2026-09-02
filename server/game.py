@@ -8,8 +8,6 @@ Clean unified Game engine core (Engine Cleanup Phase)
 
 import uuid
 import random
-import json
-from pathlib import Path
 
 from server.deck import Deck
 from server.cards import Card
@@ -19,16 +17,20 @@ from server.era_engine import EraEngine
 from server.victory import VictoryEngine
 from server.events import EventDeck
 from server.game_models import GamePhase, Player, TurnPhase
+from server.game_catalog import (
+    BASE_DIR,
+    MAP_PATH,
+    FACTIONS_PATH,
+    STRUCTURED_ACTION_PATH,
+    ERA_STRUCTURED_PATH,
+    SUPPORT_CARDS_PATH,
+    SUPPORT_TAXONOMY_PATH,
+    EVENT_STRUCTURED_PATH,
+    EVENT_CARD_COUNTS_PATH,
+    load_json,
+    build_towns_by_ruler,
+)
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-MAP_PATH = BASE_DIR / "data" / "map.json"
-FACTIONS_PATH = BASE_DIR / "data" / "factions" / "all_faction.integrated.v2.json"
-STRUCTURED_ACTION_PATH = BASE_DIR / "data" / "action_cards_structured.v1.1.json"
-ERA_STRUCTURED_PATH = BASE_DIR / "data" / "era_structured.v1.1.json"
-SUPPORT_CARDS_PATH = BASE_DIR / "data" / "cards" / "support_cards.v1.1.json"
-SUPPORT_TAXONOMY_PATH = BASE_DIR / "data" / "cards" / "support_taxonomy.v1.1.json"
-EVENT_STRUCTURED_PATH = BASE_DIR / "data" / "events_structured.v1.1.json"
-EVENT_CARD_COUNTS_PATH = BASE_DIR / "data" / "cards" / "event_and_era_cards.v1.1.json"
 STATIC_PURCHASE_CARD_SUPPLY = {
     # data/raw/action_cards.csv 「卡牌張數」
     '宣傳家': 15,
@@ -87,17 +89,17 @@ class Game:
         self._pending_show_strength_players = []
         self.market_mode = market_mode or "sample_53"
 
-        self.map = self._load_json(MAP_PATH)
-        self.factions_data = self._load_json(FACTIONS_PATH)
+        self.map = load_json(MAP_PATH)
+        self.factions_data = load_json(FACTIONS_PATH)
         self.factions = self.factions_data["factions"]
         self.ability_templates = self.factions_data.get("ability_templates", {})
-        self.towns_by_ruler = self._build_towns_by_ruler(self.map)
-        self.structured_cards = self._load_json(STRUCTURED_ACTION_PATH)["cards"]
-        self.support_cards = self._load_json(SUPPORT_CARDS_PATH)
-        self.support_taxonomy = self._load_json(SUPPORT_TAXONOMY_PATH).get("cards", []) if SUPPORT_TAXONOMY_PATH.exists() else []
+        self.towns_by_ruler = build_towns_by_ruler(self.map)
+        self.structured_cards = load_json(STRUCTURED_ACTION_PATH)["cards"]
+        self.support_cards = load_json(SUPPORT_CARDS_PATH)
+        self.support_taxonomy = load_json(SUPPORT_TAXONOMY_PATH).get("cards", []) if SUPPORT_TAXONOMY_PATH.exists() else []
         # ✅ Load structured eras
-        self.structured_eras = self._load_json(ERA_STRUCTURED_PATH)["eras"]
-        self.structured_events = self._load_json(EVENT_STRUCTURED_PATH).get("events", [])
+        self.structured_eras = load_json(ERA_STRUCTURED_PATH)["eras"]
+        self.structured_events = load_json(EVENT_STRUCTURED_PATH).get("events", [])
 
         self.players = []
         self._assign_factions(players_data)
@@ -166,15 +168,11 @@ class Game:
 
     # ---------- Init ----------
 
-    def _load_json(self, path):
-        with open(path, encoding="utf-8") as f:
-            return json.load(f)
-
     def _event_card_counts(self):
         counts = {}
         if not EVENT_CARD_COUNTS_PATH.exists():
             return counts
-        rows = self._load_json(EVENT_CARD_COUNTS_PATH)
+        rows = load_json(EVENT_CARD_COUNTS_PATH)
         for row in rows:
             if not isinstance(row, list) or len(row) < 6:
                 continue
@@ -916,15 +914,6 @@ class Game:
                 self._open_hong_kong_base_relocation_window()
         self.event_notification = self._event_display_payload()
         return result
-
-    def _build_towns_by_ruler(self, map_data):
-        grouped = {}
-        for town, info in (map_data.get("towns", {}) or {}).items():
-            for ruler in (info.get("ruler") or []):
-                grouped.setdefault(ruler, []).append(town)
-        for towns in grouped.values():
-            towns.sort()
-        return grouped
 
     def _is_inside_wall_town(self, town):
         """Classify a town by canonical map ruler, not runtime controller."""
@@ -7410,7 +7399,7 @@ class Game:
         if not path.exists():
             return None
         try:
-            rows = self._load_json(path)
+            rows = load_json(path)
         except Exception:
             return None
         for row in rows:
