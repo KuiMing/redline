@@ -135,6 +135,16 @@ from server.game_card_rules import (
     card_dissolve_effects,
     card_can_queue_build,
 )
+from server.game_support_target_rules import (
+    can_dissolve_base_target,
+    target_players_for_interaction,
+    player_has_org_within_steps_of_player,
+    find_target_town_within_steps_of_player,
+    interactive_support_dissolve_targets,
+    interactive_support_dissolve_targets_near_town,
+    interactive_support_discard_targets_near,
+    interactive_support_sacrifice_towns,
+)
 
 STATIC_PURCHASE_CARD_SUPPLY = {
     # data/raw/action_cards.csv 「卡牌張數」
@@ -1064,32 +1074,16 @@ class Game:
         return choices
 
     def _player_has_org_within_steps_of_player(self, source_player, target_player, max_steps=1, target_region=None):
-        source_towns = self._organization_towns_for_player(source_player)
-        target_towns = {
-            town
-            for town in self._organization_towns_for_player(target_player)
-            if self._town_matches_region_alias(town, target_region)
-        }
-        if not source_towns or not target_towns:
-            return False
-        reachable = self._towns_within_steps(source_towns, max_steps=max_steps)
-        return bool(reachable & target_towns)
+        return player_has_org_within_steps_of_player(
+            self.map, self.towns_by_ruler, self.faction_by_id, self.players,
+            source_player, target_player, max_steps, target_region,
+        )
 
     def _find_target_town_within_steps_of_player(self, source_player, target_player, max_steps=1, target_region=None):
-        source_towns = self._organization_towns_for_player(source_player)
-        if not source_towns:
-            return None
-        reachable = self._towns_within_steps(source_towns, max_steps=max_steps)
-        for town in self._organization_towns_for_player(target_player):
-            target_owner = self._shared_origin_owner(target_player, town)
-            if (
-                target_owner is not None
-                and town in reachable
-                and self._town_matches_region_alias(town, target_region)
-                and self._can_dissolve_base_target(target_owner, town)[0]
-            ):
-                return town
-        return None
+        return find_target_town_within_steps_of_player(
+            self.map, self.towns_by_ruler, self.faction_by_id, self.players,
+            source_player, target_player, max_steps, target_region,
+        )
 
     def _set_pending_card_choice(self, player, choice_key, cards, prompt, **extra):
         card_list = list(cards)
@@ -2679,89 +2673,22 @@ class Game:
         ]
 
     def _target_players_for_interaction(self, player, target_player_id=None):
-        if target_player_id is not None:
-            target = next((p for p in self.players if getattr(p, 'id', None) == target_player_id), None)
-            return [target] if target is not None and target is not player else []
-        return [other for other in self.players if other is not player]
+        return target_players_for_interaction(self.players, player, target_player_id)
 
     def _interactive_support_dissolve_targets(self, player, require_self_sacrifice=False, max_steps=1, target_players=None, target_region=None):
-        targets = []
-        seen_physical_targets = set()
-        opponents = list(target_players) if target_players is not None else [other for other in self.players if other is not player]
-        source_towns = self._organization_towns_for_player(player)
-        reachable = self._towns_within_steps(source_towns, max_steps=max_steps)
-        for other in opponents:
-            if other is None or other is player:
-                continue
-            for town in self._organization_towns_for_player(other):
-                target_owner = self._shared_origin_owner(other, town)
-                target_key = (getattr(target_owner, 'id', None), town)
-                if (
-                    target_owner is None
-                    or target_owner is player
-                    or target_key in seen_physical_targets
-                    or town not in reachable
-                    or not self._town_matches_region_alias(town, target_region)
-                ):
-                    continue
-                if not self._can_dissolve_base_target(target_owner, town)[0]:
-                    continue
-                seen_physical_targets.add(target_key)
-                targets.append({
-                    'id': f'{getattr(other, "id", other.name)}::{town}',
-                    'label': f'{other.name}｜{town}',
-                    'player_id': getattr(other, 'id', None),
-                    'town': town,
-                    'requires_self_sacrifice': require_self_sacrifice,
-                })
-        return targets
+        return interactive_support_dissolve_targets(
+            self.map, self.towns_by_ruler, self.faction_by_id, self.players, player,
+            require_self_sacrifice, max_steps, target_players, target_region,
+        )
 
     def _interactive_support_dissolve_targets_near_town(self, player, origin_town, max_steps=1, target_players=None, target_region=None):
-        reachable = self._towns_within_steps([origin_town], max_steps=max_steps)
-        targets = []
-        seen_physical_targets = set()
-        opponents = list(target_players) if target_players is not None else [other for other in self.players if other is not player]
-        for other in opponents:
-            if other is None or other is player:
-                continue
-            for town in self._organization_towns_for_player(other):
-                target_owner = self._shared_origin_owner(other, town)
-                target_key = (getattr(target_owner, 'id', None), town)
-                if (
-                    target_owner is None
-                    or target_owner is player
-                    or target_key in seen_physical_targets
-                    or town not in reachable
-                    or not self._town_matches_region_alias(town, target_region)
-                ):
-                    continue
-                if not self._can_dissolve_base_target(target_owner, town)[0]:
-                    continue
-                seen_physical_targets.add(target_key)
-                targets.append({
-                    'id': f'{getattr(other, "id", other.name)}::{town}',
-                    'label': f'{other.name}｜{town}',
-                    'player_id': getattr(other, 'id', None),
-                    'town': town,
-                    'sacrifice_town': origin_town,
-                })
-        return targets
+        return interactive_support_dissolve_targets_near_town(
+            self.map, self.towns_by_ruler, self.faction_by_id, self.players, player, origin_town,
+            max_steps, target_players, target_region,
+        )
 
     def _interactive_support_discard_targets_near(self, player):
-        targets = []
-        for other in self.players:
-            if other is player:
-                continue
-            if not getattr(other, 'hand', None):
-                continue
-            if not self._player_has_org_within_steps_of_player(player, other, max_steps=1):
-                continue
-            targets.append({
-                'id': getattr(other, 'id', None),
-                'label': getattr(other, 'name', str(getattr(other, 'id', ''))),
-                'player_id': getattr(other, 'id', None),
-            })
-        return targets
+        return interactive_support_discard_targets_near(self.map, self.towns_by_ruler, self.faction_by_id, self.players, player)
 
     def _can_replace_dissolved_org_with_own(self, player, target_player, town):
         """Non-mutating preflight for 臺灣奧援 III's dissolve-then-build target."""
@@ -2792,28 +2719,10 @@ class Game:
             target_player.organizations[town] = original_count
 
     def _interactive_support_sacrifice_towns(self, player, max_steps=1, target_players=None, target_region=None):
-        towns = []
-        for town in self._organization_towns_for_player(player):
-            target_owner = self._shared_origin_owner(player, town)
-            if target_owner is None:
-                continue
-            if town == getattr(target_owner, 'base', None):
-                continue
-            targets = self._interactive_support_dissolve_targets_near_town(
-                player,
-                town,
-                max_steps=max_steps,
-                target_players=target_players,
-                target_region=target_region,
-            )
-            if not targets:
-                continue
-            towns.append({
-                'town': town,
-                'label': f'{town}（可瓦解鄰近敵方組織）',
-                'target_count': len(targets),
-            })
-        return towns
+        return interactive_support_sacrifice_towns(
+            self.map, self.towns_by_ruler, self.faction_by_id, self.players, player,
+            max_steps, target_players, target_region,
+        )
 
     def _start_card_dissolve_interaction(self, player, card_name, requires_self_sacrifice=False, range_limit=1, target_player_id=None, target_region=None, extra_context=None):
         target_players = self._target_players_for_interaction(player, target_player_id)
@@ -5939,11 +5848,7 @@ class Game:
         return True
 
     def _can_dissolve_base_target(self, target_owner, town):
-        if town != getattr(target_owner, 'base', None):
-            return True, None
-        if getattr(target_owner, 'faction_id', None) == 'red_army':
-            return True, None
-        return False, "Non-Red-Army bases cannot be dissolved"
+        return can_dissolve_base_target(target_owner, town)
 
     def dissolve_organization(self, attacker, defender, town, source="card", _from_pending_choice=False):
         if not _from_pending_choice:
