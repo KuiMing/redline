@@ -314,6 +314,19 @@ class Game(CardPlayMixin):
         event = event or self.current_event
         return event_display_payload(event, self.event_progress)
 
+    # ---------- Turn/phase lifecycle ----------
+    # This cluster drives the EVENT -> ACTION -> END phase machine and the
+    # round-wrap-to-next-player handoff: _start_event_phase (draws the round's
+    # event card, seeds event_progress), _apply_auto_event_if_ready (resolves an
+    # 'auto' event as soon as no era activation/pending_choice is blocking it),
+    # _settle_current_event (judges a 'mission' event's success/failure at its
+    # settlement boundary), and advance_turn_phase / _finish_action_phase /
+    # _end_turn / _finish_end_turn_handoff (the phase-advance + refill +
+    # next-player handoff chain, further down this file). All of these read and
+    # write self.turn_phase/current_event/event_progress/pending_choice/
+    # current_player_index, so — like the play_card/pending-choice cluster moved
+    # to game_card_play.py in PR #117 — they cannot become standalone pure
+    # functions; they stay here as methods.
     def _start_event_phase(self):
         if getattr(self, 'hk_free_base_relocation', False):
             self.hk_free_base_relocation = False
@@ -560,6 +573,7 @@ class Game(CardPlayMixin):
         event = event or self.current_event or {}
         return self._event_effect_player(self.current_player(), event.get('effect') or {})
 
+    # Turn/phase lifecycle cluster — see _start_event_phase's comment above.
     def _apply_auto_event_if_ready(self):
         event = self.current_event or {}
         if event.get('type') != 'auto':
@@ -858,6 +872,7 @@ class Game(CardPlayMixin):
             )
         return {'success': True, 'pending_choice': True}
 
+    # Turn/phase lifecycle cluster — see _start_event_phase's comment above.
     def _settle_current_event(self):
         event = self.current_event or {}
         if event.get('type') != 'mission' or not self.event_progress or self.event_progress.get('settled'):
@@ -1876,6 +1891,15 @@ class Game(CardPlayMixin):
         )
         return {'pending_choice': True}
 
+    # ---------- Faction ability execution ----------
+    # _activated_faction_action dispatches a player-triggered activated ability
+    # (紅軍's four actions + the generic activated abilities); further down,
+    # _apply_card_play_faction_abilities applies passive/triggered abilities once
+    # after a card play clears reaction gating. Both mutate turn_log/player
+    # resources/hand and call self.log(...), so — unlike the *lookup* helpers in
+    # game_faction_rules.py (resolve_faction_abilities, player_has_ability, etc.),
+    # which are pure and already extracted — these two stay here as the
+    # execution/mutation half of faction abilities.
     def _activated_faction_action(self, player, action_name, **kwargs):
         red_army_actions = {'統戰部', '政工部', '國安部', '中紀委'}
         skip_reaction_prompt = bool(kwargs.pop('_skip_reaction_prompt', False))
@@ -2254,6 +2278,8 @@ class Game(CardPlayMixin):
             else:
                 random.shuffle(player.deck.draw_pile)
 
+    # Faction ability execution cluster — see _activated_faction_action's
+    # comment above.
     def _apply_card_play_faction_abilities(
         self,
         player,
@@ -2787,6 +2813,9 @@ class Game(CardPlayMixin):
         # immediately discarded or dodged by emptying the hand.
         return True
 
+    # Turn/phase lifecycle cluster — see _start_event_phase's comment above
+    # (advance_turn_phase / _finish_action_phase / _end_turn /
+    # _finish_end_turn_handoff are the phase-advance + handoff half of it).
     def advance_turn_phase(self):
         if self.pending_choice and not self._recover_stale_event_build_choice_if_satisfied():
             return {"error": "Resolve pending choice before advancing phase"}
@@ -2814,6 +2843,7 @@ class Game(CardPlayMixin):
             return self._finish_action_phase()
         return {"success": True}
 
+    # Turn/phase lifecycle cluster — see _start_event_phase's comment above.
     def _finish_action_phase(self):
         """結束目前玩家的行動階段：在正確時機結算本輪事件、清空待用的頂牌權利、
         補手牌到5張／補滿購買區、時代關卡 tick、把席位交給下一位玩家。
@@ -2898,6 +2928,7 @@ class Game(CardPlayMixin):
                 return {"success": True, "pending_choice": True}
         return {"success": True}
 
+    # Turn/phase lifecycle cluster — see _start_event_phase's comment above.
     def _end_turn(self, advance_player=True):
         # Victory *detection* is NOT run per player-turn. It is deferred to the
         # round-wrap boundary below so Red Army's turn this round can still
@@ -2968,6 +2999,7 @@ class Game(CardPlayMixin):
         if advance_player:
             self._finish_end_turn_handoff()
 
+    # Turn/phase lifecycle cluster — see _start_event_phase's comment above.
     def _finish_end_turn_handoff(self):
         """Advance the seat after all end-turn effects and mandatory decisions finish."""
         self.current_player_index = (self.current_player_index + 1) % len(self.players)
@@ -3023,6 +3055,17 @@ class Game(CardPlayMixin):
             return {"error": "請先完成目前的選擇"}
         return None
 
+    # ---------- Organization build/dissolve/move execution ----------
+    # build_organization / build_organization_with_support (place a new physical
+    # organization), dissolve_organization (remove one, with the 2-hit
+    # durability rule), relocate_hong_kong_base (move a base town), and
+    # _validate_organization_move (legality check for a movement action) all
+    # mutate player.organizations/turn_log and call self.log(...)/
+    # self._place_organization(...). The *eligibility* predicates they call into
+    # (can_develop_in_town, _can_dissolve_base_target,
+    # _town_blocks_movement_for_player, etc.) are the pure, already-extracted
+    # halves in game_build_eligibility_rules.py / game_support_target_rules.py;
+    # this cluster is the mutation that actually applies once eligibility passes.
     def build_organization(self, town):
         player = self.current_player()
         pending_result = self._resolve_pending_build_choice_for_town(player, town)
@@ -3051,6 +3094,8 @@ class Game(CardPlayMixin):
         self.log(f"{player.name} built organization in {town}")
         return {"success": True, **({"pending_choice": True} if self.pending_choice else {})}
 
+    # Organization build/dissolve/move execution cluster — see
+    # build_organization's comment above.
     def build_organization_with_support(self, origin_town, target_town):
         """內部輔助：以 origin_town 為起點、在距離內的 target_town 建立組織。
 
@@ -3133,6 +3178,8 @@ class Game(CardPlayMixin):
     def _can_dissolve_base_target(self, target_owner, town):
         return can_dissolve_base_target(target_owner, town)
 
+    # Organization build/dissolve/move execution cluster — see
+    # build_organization's comment above.
     def dissolve_organization(self, attacker, defender, town, source="card", _from_pending_choice=False):
         if not _from_pending_choice:
             pending_error = self._pending_board_action_error()
@@ -3197,6 +3244,8 @@ class Game(CardPlayMixin):
         self.hk_relocation_blocks_turn_handoff = False
         self._finish_end_turn_handoff()
 
+    # Organization build/dissolve/move execution cluster — see
+    # build_organization's comment above.
     def relocate_hong_kong_base(self, player_id, to_town):
         """Use the one-time free forward-base window opened by 香港抗暴之戰."""
         pending_error = self._pending_board_action_error()
@@ -3252,6 +3301,8 @@ class Game(CardPlayMixin):
         self._complete_hong_kong_relocation_turn_handoff()
         return {"success": True, "kept": player.base}
 
+    # Organization build/dissolve/move execution cluster — see
+    # build_organization's comment above.
     def _validate_organization_move(self, from_town, to_town, mode="road"):
         """Validate one organization move without mutating game state.
 
@@ -3459,6 +3510,15 @@ class Game(CardPlayMixin):
         self.log(f"{getattr(card, 'name', str(card))} returned to {owner.name}'s deck top")
         return True
 
+    # ---------- Purchase execution ----------
+    # buy_cards resolves a purchase-area selection into payment/state mutation
+    # (self.purchase_area/player.resources/hand, static-purchase supply counts).
+    # The pure cost/payment-policy calculations it calls into
+    # (card_purchase_cost, allocate_purchase_payments, etc.) already live in
+    # game_market_cost_rules.py / game_market_transactions.py.
+    # (_initial_purchase_deck, above near __init__, is a separate concern — it
+    # builds a fresh shuffled purchase deck at game setup/reshuffle time, not a
+    # per-turn purchase action.)
     def buy_cards(self, indices):
         # 行動階段內可自由交錯出牌與購買；TurnPhase.END 仍接受，因為現在只是
         # advance_turn_phase 內部的結算標記（香港根據地遷移等待窗口會停在該狀態）。
@@ -3601,6 +3661,18 @@ class Game(CardPlayMixin):
                 towns.append({'town': town, 'near_target_towns': sorted([src for src in source_towns if town in self._towns_within_steps([src], max_steps=max_steps)])})
         return towns
 
+    # ---------- Era activation ----------
+    # This cluster detects when an era's trigger condition becomes newly
+    # satisfied (_detect_era_triggers below, run only at the round-wrap
+    # boundary) and then applies its effects (_continue_era_activation_queue
+    # below drains the queue serially, pausing for interactive choices;
+    # _start_era_red_discard_build_flow / _start_era_inspect_deck_top_and_
+    # reorder_flow / _apply_era_build_effects are specific effect-kind
+    # handlers; _era_activation_interactive_target picks which player owns an
+    # interactive era's choice). All mutate turn_log/pending_choice/player
+    # state and read self.era_engine, unlike the pure era *display*/
+    # *trigger-matching* rules already extracted into game_era_rules.py
+    # (era_notification_payload, evaluate_era_trigger, etc.).
     def _start_era_red_discard_build_flow(self, effect, era):
         red = self._red_player()
         if red is None:
@@ -3636,6 +3708,8 @@ class Game(CardPlayMixin):
         )
         return {'type': (effect or {}).get('type'), 'status': 'pending_discard_choice', 'player_id': red.id, 'town_count': len(towns), 'max_discard': max_discard}
 
+    # Era activation cluster — see _start_era_red_discard_build_flow's comment
+    # above.
     def _start_era_inspect_deck_top_and_reorder_flow(self, effect, era):
         targets = self._era_effect_target_players(effect)
         if not targets:
@@ -3747,6 +3821,8 @@ class Game(CardPlayMixin):
                 })
         return targets
 
+    # Era activation cluster — see _start_era_red_discard_build_flow's comment
+    # above.
     def _apply_era_build_effects(self, player, town):
         applied = []
         built_count = len(self.turn_log.get('built_towns') or [])
@@ -3787,6 +3863,8 @@ class Game(CardPlayMixin):
     def _era_notification_payload(self, era):
         return era_notification_payload(era)
 
+    # Era activation cluster — see _start_era_red_discard_build_flow's comment
+    # above.
     def _detect_era_triggers(self):
         """Scan for newly-qualifying eras and enqueue them for activation.
 
@@ -3837,6 +3915,8 @@ class Game(CardPlayMixin):
         self._detect_era_triggers()
         return self._continue_era_activation_queue()
 
+    # Era activation cluster — see _start_era_red_discard_build_flow's comment
+    # above.
     def _era_activation_interactive_target(self, era):
         """Return the Player who would OWN an interactive pending_choice created by
         activating this era, or None when activation needs no interactive input.
@@ -3882,6 +3962,8 @@ class Game(CardPlayMixin):
                 return player
         return None
 
+    # Era activation cluster — see _start_era_red_discard_build_flow's comment
+    # above.
     def _continue_era_activation_queue(self):
         """Activate qualifying eras serially, pausing for each choice chain.
 
