@@ -1,11 +1,9 @@
 """Unit tests for server/game_era_rules.py — the pure era display/
-notification cluster extracted from game.py (item 23, extract-era-service,
-first slice: pure tier, same pattern as item 22's PR #106/#107).
+notification cluster extracted from game.py (item 23, extract-era-service).
 
-_evaluate_era_trigger / _player_region_org_count /
-_player_requirement_org_count stay in game.py for now — they depend on
-Game._player_organization_scope_counts / Game._organization_towns_for_player,
-which weren't verified pure in this pass.
+evaluate_era_trigger was added in a later slice once
+game_organization_scope_rules.organization_towns_for_player (and its
+dependents) were verified pure.
 """
 
 from server.game import Game
@@ -14,6 +12,7 @@ from server.game_era_rules import (
     era_notification_payload,
     player_matches_era_trigger,
     era_stage_for_player,
+    evaluate_era_trigger,
 )
 
 
@@ -126,3 +125,33 @@ def test_era_stage_for_player_finds_a_matching_era_and_marks_active():
         assert result is not None
         assert result['id'] == matching_era['id']
         assert result['achieved'] is True
+
+
+# ---------- evaluate_era_trigger ----------
+
+def test_evaluate_era_trigger_count_only_false_when_the_threshold_is_unreachable():
+    game = _new_game()
+    trigger = {'type': 'count_only', 'region': 'china', 'count': 9999}
+    assert evaluate_era_trigger(game.map, game.towns_by_ruler, game.faction_by_id, game.players, trigger) is False
+
+
+def test_evaluate_era_trigger_count_only_true_when_the_threshold_is_zero():
+    # A count of 0 is trivially satisfied by every matching player, regardless
+    # of their actual organization count — checks the wiring, not the counting.
+    game = _new_game()
+    trigger = {'type': 'count_only', 'region': 'china', 'count': 0}
+    assert evaluate_era_trigger(game.map, game.towns_by_ruler, game.faction_by_id, game.players, trigger) is True
+
+
+def test_evaluate_era_trigger_unknown_type_returns_false():
+    game = _new_game()
+    assert evaluate_era_trigger(game.map, game.towns_by_ruler, game.faction_by_id, game.players, {'type': 'no_such_type'}) is False
+
+
+def test_evaluate_era_trigger_count_and_required_with_requirements_list():
+    game = _new_game()
+    trigger = {
+        'type': 'count_and_required',
+        'requirements': [{'region': 'china', 'count': 0}],
+    }
+    assert evaluate_era_trigger(game.map, game.towns_by_ruler, game.faction_by_id, game.players, trigger) is True

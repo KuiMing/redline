@@ -1,13 +1,12 @@
 """Unit tests for server/game_support_rules.py — the pure support-card
 taxonomy/effect-resolution cluster extracted from game.py (item 24,
-extract-support-service, first slice: pure tier, same pattern as items
-22/23's PR #106/#107/#109).
+extract-support-service).
 
-_support_card_tier / _player_ruler_organization_counts /
-_player_ruler_leadership stay in game.py — they depend on
-Game._organization_towns_for_player, not verified pure in this pass.
-Support card interaction/execution (_execute_support_card,
-_start_support_interaction, ...) also stays — those mutate state.
+support_card_tier was added in a later slice once
+game_organization_scope_rules.player_ruler_leadership (and its
+dependents) were verified pure. Support card interaction/execution
+(_execute_support_card, _start_support_interaction, ...) stays in
+game.py — those mutate state.
 """
 
 from server.cards import Card
@@ -22,6 +21,7 @@ from server.game_support_rules import (
     support_card_effect_text,
     resolve_support_card_effect,
     make_support_card,
+    support_card_tier,
 )
 
 
@@ -164,3 +164,36 @@ def test_make_support_card_records_variant_index():
     game = _new_game()
     card = make_support_card(game.support_taxonomy, '英美奧援', variant_index=1)
     assert card.variant_index == 1
+
+
+# ---------- support_card_tier ----------
+
+def test_support_card_tier_defaults_to_tier_1_with_no_ruler_leadership():
+    game = _new_game()
+    player = game.players[0]
+    card = make_support_card(game.support_taxonomy, '英美奧援')
+    tier, variant_index, matched = support_card_tier(
+        game.support_taxonomy, game.map, game.faction_by_id, game.players, player, card
+    )
+    assert tier == 1
+    assert variant_index == 0
+    assert matched == []
+
+
+def test_support_card_tier_returns_tier_1_for_a_card_with_no_taxonomy_entry():
+    game = _new_game()
+    player = game.players[0]
+    card = Card('不存在的奧援卡_xyz', 'support', {})
+    tier, variant_index, matched = support_card_tier(
+        game.support_taxonomy, game.map, game.faction_by_id, game.players, player, card
+    )
+    assert (tier, variant_index, matched) == (1, None, [])
+
+
+def test_game_wrapper_support_card_tier_matches_the_module_function():
+    game = _new_game()
+    player = game.players[0]
+    card = make_support_card(game.support_taxonomy, '英美奧援')
+    assert game._support_card_tier(player, card) == support_card_tier(
+        game.support_taxonomy, game.map, game.faction_by_id, game.players, player, card
+    )
