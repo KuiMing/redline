@@ -129,6 +129,21 @@ def canonical_faction_name_to_id(name):
     return _CANONICAL_FACTION_NAME_TO_ID.get(name, name)
 
 
+def player_camp(faction_by_id, player):
+    faction = faction_by_id.get(getattr(player, 'faction_id', None), {})
+    return faction.get('camp') or getattr(player, 'faction_id', None)
+
+
+def player_matches_camp(faction_by_id, player, camp):
+    if not camp:
+        return True
+    return player_camp(faction_by_id, player) == camp or getattr(player, 'faction_id', None) == camp
+
+
+def players_matching_camp(faction_by_id, players, camp):
+    return [player for player in players if player_matches_camp(faction_by_id, player, camp)]
+
+
 def factions_sharing_with(faction_by_id, faction_id):
     faction = faction_by_id.get(faction_id, {})
     shared = {canonical_faction_name_to_id(x) for x in (faction.get('shared_organizations_with', []) or [])}
