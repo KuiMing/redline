@@ -30,6 +30,7 @@ from game_replay_harness import run_scenario, diff_steps
 from game_replay_scenario_2p import scenario as scenario_2p
 from game_replay_scenario_faction_abilities import scenario as scenario_faction_abilities
 from game_replay_scenario_red_army_actions import scenario as scenario_red_army_actions
+from game_replay_scenario_generic_activated_abilities import scenario as scenario_generic_activated_abilities
 
 FIXTURES = Path(__file__).resolve().parent / 'fixtures'
 
@@ -51,5 +52,12 @@ def test_faction_abilities_scenario_matches_baseline():
 def test_red_army_actions_scenario_matches_baseline():
     baseline = json.loads((FIXTURES / 'game_replay_red_army_actions_baseline.json').read_text(encoding='utf-8'))
     current = run_scenario(scenario_red_army_actions, seed=55001)
+    diff = diff_steps(baseline, current)
+    assert diff is None, diff
+
+
+def test_generic_activated_abilities_scenario_matches_baseline():
+    baseline = json.loads((FIXTURES / 'game_replay_generic_activated_abilities_baseline.json').read_text(encoding='utf-8'))
+    current = run_scenario(scenario_generic_activated_abilities, seed=77001)
     diff = diff_steps(baseline, current)
     assert diff is None, diff
