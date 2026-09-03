@@ -69,6 +69,12 @@ from server.game_faction_rules import (
     factions_sharing_with,
 )
 from server.game_event_display import event_display_payload
+from server.game_event_triggers import (
+    event_trigger_matches_scope,
+    event_trigger_actor_allowed,
+    event_purchase_trigger_matches,
+    event_state_condition_met,
+)
 
 STATIC_PURCHASE_CARD_SUPPLY = {
     # data/raw/action_cards.csv 「卡牌張數」
@@ -285,19 +291,6 @@ class Game:
             self.log(f"Event drawn: {self.current_event.get('name')}")
         self.event_notification = self._event_display_payload()
 
-    def _event_trigger_matches_scope(self, trigger, town=None):
-        scope = trigger.get('scope')
-        if not scope:
-            return True
-        if scope == '牆內':
-            return town is None or town in set(self._towns_for_region_alias('china'))
-        return True
-
-    def _event_trigger_actor_allowed(self, player):
-        if player is None:
-            return True
-        return getattr(player, 'faction_id', None) != 'red_army'
-
     def _track_event_progress(self, trigger_type, amount=1, town=None, player=None):
         event = self.current_event or {}
         if event.get('type') != 'mission' or not self.event_progress or self.event_progress.get('settled'):
@@ -305,9 +298,9 @@ class Game:
         trigger = event.get('trigger') or {}
         if trigger.get('type') != trigger_type:
             return
-        if not self._event_trigger_actor_allowed(player):
+        if not event_trigger_actor_allowed(player):
             return
-        if not self._event_trigger_matches_scope(trigger, town=town):
+        if not event_trigger_matches_scope(self.map, self.towns_by_ruler, trigger, town=town):
             return
         self.event_progress['count'] = int(self.event_progress.get('count', 0) or 0) + int(amount or 1)
         if player is not None:
@@ -322,45 +315,14 @@ class Game:
         self.event_notification = self._event_display_payload()
         return {'success': True}
 
-    def _event_purchase_trigger_matches(self, trigger, card, original_cost=None):
-        if (trigger or {}).get('type') != 'buy_card':
-            return False
-        card_name = getattr(card, 'name', str(card))
-        if card_name in set(trigger.get('card_names') or []):
-            return True
-        min_cost = trigger.get('min_cost')
-        if min_cost is not None:
-            cost = original_cost or self._card_purchase_cost(card)
-            total = int((cost or {}).get('money', 0) or 0) + int((cost or {}).get('propaganda', 0) or 0)
-            if total >= int(min_cost or 0):
-                return True
-        return False
-
     def _track_event_purchase(self, card, original_cost=None, player=None):
         event = self.current_event or {}
         if event.get('type') != 'mission' or not self.event_progress or self.event_progress.get('settled'):
             return {'success': True}
         trigger = event.get('trigger') or {}
-        if not self._event_purchase_trigger_matches(trigger, card, original_cost=original_cost):
+        if not event_purchase_trigger_matches(self.structured_cards, self.support_taxonomy, trigger, card, original_cost=original_cost):
             return {'success': True}
         return self._track_event_progress('buy_card', player=player) or {'success': True}
-
-    def _event_state_condition_met(self, trigger, player):
-        condition = (trigger or {}).get('condition')
-        if condition == 'own_organization_in_scope':
-            scope = (trigger or {}).get('scope')
-            required = int((trigger or {}).get('count', 1) or 1)
-            if scope == '牆內':
-                allowed = set(self._towns_for_region_alias('china'))
-            else:
-                allowed = set(self.map.get('towns', {}) or {})
-            count = sum(
-                int(n or 0)
-                for town, n in (getattr(player, 'organizations', {}) or {}).items()
-                if town in allowed and int(n or 0) > 0
-            )
-            return count >= required, count
-        return False, 0
 
     def _event_build_towns_near_own(self, player, max_steps=1):
         origins = self._organization_towns_for_player(player)
@@ -680,7 +642,7 @@ class Game:
                     for town, n in (other.organizations or {}).items():
                         if (
                             n > 0
-                            and self._event_trigger_matches_scope({'scope': effect.get('scope')}, town=town)
+                            and event_trigger_matches_scope(self.map, self.towns_by_ruler, {'scope': effect.get('scope')}, town=town)
                             and self._can_dissolve_base_target(other, town)[0]
                         ):
                             targets.append({'id': f'{other.id}:{town}', 'player_id': other.id, 'town': town, 'label': f'{other.name}｜{town}'})
@@ -799,7 +761,7 @@ class Game:
             player = next((p for p in self.players if p.id == self.event_progress.get('last_actor_id')), player)
         trigger = event.get('trigger') or {}
         if trigger.get('type') == 'end_turn_state' and not self.event_progress.get('succeeded'):
-            met, count = self._event_state_condition_met(trigger, player)
+            met, count = event_state_condition_met(self.map, self.towns_by_ruler, trigger, player)
             self.event_progress['count'] = count
             if met:
                 self.event_progress['succeeded'] = True
