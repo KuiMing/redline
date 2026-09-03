@@ -598,155 +598,220 @@ class Game:
         if t in (None, 'none'):
             self.log(f"Event {outcome}: no effect")
             return {'success': True, 'effect': t or 'none'}
+
+        pending_result = None
         if t == 'draw':
-            self._draw_player_cards(player, count)
+            self._apply_event_effect_draw(player, count)
         elif t == 'gain_card':
-            self._gain_event_card(player, effect.get('card'), count)
+            self._apply_event_effect_gain_card(player, effect, count)
         elif t == 'discard_self':
-            cards = list(player.hand)
-            if not cards:
-                self.log(f"Event {outcome}: {player.name} has no hand card to discard")
-            else:
-                self.log(f"Event {outcome}: {player.name} must discard {min(count, len(cards))} hand card(s)")
-                self._set_pending_multi_card_choice(player, 'event_discard_self', cards, f"{self.current_event.get('name')}：請選擇 {min(count, len(cards))} 張手牌棄掉。", min(count, len(cards)), source_name=self.current_event.get('name'))
-                return {'success': True, 'pending_choice': True}
+            pending_result = self._apply_event_effect_discard_self(player, count, outcome)
         elif t == 'discard_random':
-            targets = [player]
-            default_failure_targets_non_red = outcome == 'failure' and not (effect or {}).get('player_faction')
-            if default_failure_targets_non_red:
-                targets = [p for p in self.players if getattr(p, 'faction_id', None) != 'red_army']
-            discarded_total = 0
-            discarded_by_player = []
-            for target in targets:
-                discarded_for_target = 0
-                for _ in range(min(count, len(target.hand))):
-                    card = random.choice(target.hand)
-                    target.hand.remove(card)
-                    target.deck.discard([card])
-                    discarded_total += 1
-                    discarded_for_target += 1
-                if discarded_for_target:
-                    discarded_by_player.append(f"{target.name} discarded {discarded_for_target} random hand card(s)")
-            if discarded_by_player:
-                self.log(f"Event {outcome}: " + '; '.join(discarded_by_player))
-            else:
-                target_label = 'non-red player' if default_failure_targets_non_red else getattr(player, 'name', 'target player')
-                self.log(f"Event {outcome}: no eligible {target_label} hand cards to discard")
+            self._apply_event_effect_discard_random(player, effect, count, outcome)
         elif t == 'red_dissolve':
-            red = self._red_player()
-            if red:
-                targets = []
-                for other in self.players:
-                    if other is red:
-                        continue
-                    for town, n in (other.organizations or {}).items():
-                        if (
-                            n > 0
-                            and event_trigger_matches_scope(self.map, self.towns_by_ruler, {'scope': effect.get('scope')}, town=town)
-                            and self._can_dissolve_base_target(other, town)[0]
-                        ):
-                            targets.append({'id': f'{other.id}:{town}', 'player_id': other.id, 'town': town, 'label': f'{other.name}｜{town}'})
-                if targets:
-                    self._set_pending_target_choice(red, 'event_red_dissolve', targets, f"{self.current_event.get('name')}：紅軍選擇要瓦解的組織。", source_name=self.current_event.get('name'))
-                    return {'success': True, 'pending_choice': True}
+            pending_result = self._apply_event_effect_red_dissolve(effect)
         elif t == 'add_internal_conflict':
-            self._gain_event_card(player, '內鬥', count)
+            self._apply_event_effect_add_internal_conflict(player, count)
         elif t == 'move':
-            player.moves_left += count
+            self._apply_event_effect_move(player, count)
         elif t in {'reduce_cost', 'restrict_build', 'ignore_distance', 'scoped_card_range'}:
-            self.event_modifiers.append(self._event_modifier_from_effect(effect))
+            self._apply_event_effect_modifier(effect)
         elif t == 'build_organization':
-            towns = [{'town': town} for town in sorted(self.map.get('towns', {})) if self._can_player_build_in_town(player, town)]
-            if towns:
-                self._set_pending_town_choice(player, 'event_build_organization', towns, f"{self.current_event.get('name')}：選擇要建立組織的城鎮。", source_name=self.current_event.get('name'))
-                return {'success': True, 'pending_choice': True}
+            pending_result = self._apply_event_effect_build_organization(player)
         elif t == 'build_organization_in_region':
-            region = effect.get('region')
-            towns = self._event_build_towns_in_region(player, region)
-            if towns:
-                self._set_pending_town_choice(
-                    player,
-                    'event_build_organization',
-                    towns,
-                    f"{self.current_event.get('name')}：在指定區域免費建立 {min(count, len(towns))} 個組織。",
-                    source_name=self.current_event.get('name'),
-                    count=min(count, len(towns)),
-                    region=region,
-                    free=bool(effect.get('free', True)),
-                    ignore_distance=bool(effect.get('ignore_distance', True)),
-                )
-                return {'success': True, 'pending_choice': True}
-            self.log(f"{self.current_event.get('name')}：{player.name} 在指定區域內沒有合法的城鎮可以建立組織")
+            pending_result = self._apply_event_effect_build_organization_in_region(player, effect, count)
         elif t == 'build_organization_near_own':
-            max_steps = int(effect.get('max_steps', 1) or 1)
-            towns = self._event_build_towns_near_own(player, max_steps=max_steps)
-            if towns:
-                self._set_pending_town_choice(
-                    player,
-                    'event_build_organization',
-                    towns,
-                    f"{self.current_event.get('name')}：在己方組織 {max_steps} 格內免費建立 {min(count, len(towns))} 個組織。",
-                    source_name=self.current_event.get('name'),
-                    count=min(count, len(towns)),
-                )
-                return {'success': True, 'pending_choice': True}
-            self.log(f"{self.current_event.get('name')}：{player.name} 在己方組織附近沒有合法的城鎮可以建立組織")
+            pending_result = self._apply_event_effect_build_organization_near_own(player, effect, count)
         elif t == 'topdeck_from_discard':
-            cards = list(player.deck.discard_pile)
-            if cards:
-                choice_count = min(count, len(cards))
-                if choice_count == 1:
-                    self._set_pending_card_choice(
-                        player,
-                        'event_topdeck_from_discard',
-                        cards,
-                        f"{self.current_event.get('name')}：從棄牌堆選 1 張牌置於牌庫頂。",
-                        source_name=self.current_event.get('name'),
-                    )
-                else:
-                    self._set_pending_multi_card_choice(
-                        player,
-                        'event_topdeck_from_discard',
-                        cards,
-                        f"{self.current_event.get('name')}：從棄牌堆選 {choice_count} 張牌置於牌庫頂。",
-                        choice_count,
-                        source_name=self.current_event.get('name'),
-                    )
-                return {'success': True, 'pending_choice': True}
-            self.log(f"Event {outcome}: {player.name} has no discard card to topdeck")
+            pending_result = self._apply_event_effect_topdeck_from_discard(player, count, outcome)
         elif t == 'trash_from_hand_or_discard':
-            cards = [
-                {'card': card, 'zone': 'hand', 'zone_label': '手牌'}
-                for card in list(player.hand)
-            ] + [
-                {'card': card, 'zone': 'discard', 'zone_label': '棄牌堆'}
-                for card in list(player.deck.discard_pile)
-            ]
-            if cards:
-                choice_count = min(count, len(cards))
-                prompt = f"{self.current_event.get('name')}：請從己方手牌或棄牌堆中移除 {choice_count} 張牌。"
-                if choice_count == 1:
-                    self._set_pending_card_choice(
-                        player,
-                        'trash_from_hand_or_discard',
-                        cards,
-                        prompt,
-                        source_name=self.current_event.get('name'),
-                        count=1,
-                    )
-                else:
-                    self._set_pending_multi_card_choice(
-                        player,
-                        'trash_from_hand_or_discard',
-                        cards,
-                        prompt,
-                        choice_count,
-                        source_name=self.current_event.get('name'),
-                    )
-                return {'success': True, 'pending_choice': True}
-            self.log(f"Event {outcome}: {player.name} has no hand/discard card to remove")
+            pending_result = self._apply_event_effect_trash_from_hand_or_discard(player, count, outcome)
+
+        if pending_result is not None:
+            return pending_result
         self.log(f"Event {outcome} resolved: {self.current_event.get('name')} / {t}")
         return {'success': True, 'effect': t}
+
+    def _apply_event_effect_draw(self, player, count):
+        """draw: draw `count` cards."""
+        self._draw_player_cards(player, count)
+
+    def _apply_event_effect_gain_card(self, player, effect, count):
+        """gain_card: gain `count` copies of the named card."""
+        self._gain_event_card(player, effect.get('card'), count)
+
+    def _apply_event_effect_discard_self(self, player, count, outcome):
+        """discard_self: player chooses which hand cards to discard."""
+        cards = list(player.hand)
+        if not cards:
+            self.log(f"Event {outcome}: {player.name} has no hand card to discard")
+            return None
+        self.log(f"Event {outcome}: {player.name} must discard {min(count, len(cards))} hand card(s)")
+        self._set_pending_multi_card_choice(player, 'event_discard_self', cards, f"{self.current_event.get('name')}：請選擇 {min(count, len(cards))} 張手牌棄掉。", min(count, len(cards)), source_name=self.current_event.get('name'))
+        return {'success': True, 'pending_choice': True}
+
+    def _apply_event_effect_discard_random(self, player, effect, count, outcome):
+        """discard_random: randomly discard from the player, or (on a failure outcome
+        with no explicit player_faction) every non-red player."""
+        targets = [player]
+        default_failure_targets_non_red = outcome == 'failure' and not (effect or {}).get('player_faction')
+        if default_failure_targets_non_red:
+            targets = [p for p in self.players if getattr(p, 'faction_id', None) != 'red_army']
+        discarded_total = 0
+        discarded_by_player = []
+        for target in targets:
+            discarded_for_target = 0
+            for _ in range(min(count, len(target.hand))):
+                card = random.choice(target.hand)
+                target.hand.remove(card)
+                target.deck.discard([card])
+                discarded_total += 1
+                discarded_for_target += 1
+            if discarded_for_target:
+                discarded_by_player.append(f"{target.name} discarded {discarded_for_target} random hand card(s)")
+        if discarded_by_player:
+            self.log(f"Event {outcome}: " + '; '.join(discarded_by_player))
+        else:
+            target_label = 'non-red player' if default_failure_targets_non_red else getattr(player, 'name', 'target player')
+            self.log(f"Event {outcome}: no eligible {target_label} hand cards to discard")
+
+    def _apply_event_effect_red_dissolve(self, effect):
+        """red_dissolve: red army chooses a non-red organization to dissolve, scoped by effect."""
+        red = self._red_player()
+        if not red:
+            return None
+        targets = []
+        for other in self.players:
+            if other is red:
+                continue
+            for town, n in (other.organizations or {}).items():
+                if (
+                    n > 0
+                    and event_trigger_matches_scope(self.map, self.towns_by_ruler, {'scope': effect.get('scope')}, town=town)
+                    and self._can_dissolve_base_target(other, town)[0]
+                ):
+                    targets.append({'id': f'{other.id}:{town}', 'player_id': other.id, 'town': town, 'label': f'{other.name}｜{town}'})
+        if not targets:
+            return None
+        self._set_pending_target_choice(red, 'event_red_dissolve', targets, f"{self.current_event.get('name')}：紅軍選擇要瓦解的組織。", source_name=self.current_event.get('name'))
+        return {'success': True, 'pending_choice': True}
+
+    def _apply_event_effect_add_internal_conflict(self, player, count):
+        """add_internal_conflict: gain `count` 內鬥 cards."""
+        self._gain_event_card(player, '內鬥', count)
+
+    def _apply_event_effect_move(self, player, count):
+        """move: grant `count` extra organization moves this turn."""
+        player.moves_left += count
+
+    def _apply_event_effect_modifier(self, effect):
+        """reduce_cost/restrict_build/ignore_distance/scoped_card_range: register a turn-scoped event modifier."""
+        self.event_modifiers.append(self._event_modifier_from_effect(effect))
+
+    def _apply_event_effect_build_organization(self, player):
+        """build_organization: player chooses any legal town to build in."""
+        towns = [{'town': town} for town in sorted(self.map.get('towns', {})) if self._can_player_build_in_town(player, town)]
+        if not towns:
+            return None
+        self._set_pending_town_choice(player, 'event_build_organization', towns, f"{self.current_event.get('name')}：選擇要建立組織的城鎮。", source_name=self.current_event.get('name'))
+        return {'success': True, 'pending_choice': True}
+
+    def _apply_event_effect_build_organization_in_region(self, player, effect, count):
+        """build_organization_in_region: player builds free within a specific region."""
+        region = effect.get('region')
+        towns = self._event_build_towns_in_region(player, region)
+        if not towns:
+            self.log(f"{self.current_event.get('name')}：{player.name} 在指定區域內沒有合法的城鎮可以建立組織")
+            return None
+        self._set_pending_town_choice(
+            player,
+            'event_build_organization',
+            towns,
+            f"{self.current_event.get('name')}：在指定區域免費建立 {min(count, len(towns))} 個組織。",
+            source_name=self.current_event.get('name'),
+            count=min(count, len(towns)),
+            region=region,
+            free=bool(effect.get('free', True)),
+            ignore_distance=bool(effect.get('ignore_distance', True)),
+        )
+        return {'success': True, 'pending_choice': True}
+
+    def _apply_event_effect_build_organization_near_own(self, player, effect, count):
+        """build_organization_near_own: player builds free near their own organizations."""
+        max_steps = int(effect.get('max_steps', 1) or 1)
+        towns = self._event_build_towns_near_own(player, max_steps=max_steps)
+        if not towns:
+            self.log(f"{self.current_event.get('name')}：{player.name} 在己方組織附近沒有合法的城鎮可以建立組織")
+            return None
+        self._set_pending_town_choice(
+            player,
+            'event_build_organization',
+            towns,
+            f"{self.current_event.get('name')}：在己方組織 {max_steps} 格內免費建立 {min(count, len(towns))} 個組織。",
+            source_name=self.current_event.get('name'),
+            count=min(count, len(towns)),
+        )
+        return {'success': True, 'pending_choice': True}
+
+    def _apply_event_effect_topdeck_from_discard(self, player, count, outcome):
+        """topdeck_from_discard: player chooses discard-pile cards to place on top of their deck."""
+        cards = list(player.deck.discard_pile)
+        if not cards:
+            self.log(f"Event {outcome}: {player.name} has no discard card to topdeck")
+            return None
+        choice_count = min(count, len(cards))
+        if choice_count == 1:
+            self._set_pending_card_choice(
+                player,
+                'event_topdeck_from_discard',
+                cards,
+                f"{self.current_event.get('name')}：從棄牌堆選 1 張牌置於牌庫頂。",
+                source_name=self.current_event.get('name'),
+            )
+        else:
+            self._set_pending_multi_card_choice(
+                player,
+                'event_topdeck_from_discard',
+                cards,
+                f"{self.current_event.get('name')}：從棄牌堆選 {choice_count} 張牌置於牌庫頂。",
+                choice_count,
+                source_name=self.current_event.get('name'),
+            )
+        return {'success': True, 'pending_choice': True}
+
+    def _apply_event_effect_trash_from_hand_or_discard(self, player, count, outcome):
+        """trash_from_hand_or_discard: player removes cards from hand/discard entirely."""
+        cards = [
+            {'card': card, 'zone': 'hand', 'zone_label': '手牌'}
+            for card in list(player.hand)
+        ] + [
+            {'card': card, 'zone': 'discard', 'zone_label': '棄牌堆'}
+            for card in list(player.deck.discard_pile)
+        ]
+        if not cards:
+            self.log(f"Event {outcome}: {player.name} has no hand/discard card to remove")
+            return None
+        choice_count = min(count, len(cards))
+        prompt = f"{self.current_event.get('name')}：請從己方手牌或棄牌堆中移除 {choice_count} 張牌。"
+        if choice_count == 1:
+            self._set_pending_card_choice(
+                player,
+                'trash_from_hand_or_discard',
+                cards,
+                prompt,
+                source_name=self.current_event.get('name'),
+                count=1,
+            )
+        else:
+            self._set_pending_multi_card_choice(
+                player,
+                'trash_from_hand_or_discard',
+                cards,
+                prompt,
+                choice_count,
+                source_name=self.current_event.get('name'),
+            )
+        return {'success': True, 'pending_choice': True}
 
     def _settle_current_event(self):
         event = self.current_event or {}
