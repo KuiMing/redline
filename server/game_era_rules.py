@@ -5,15 +5,13 @@ Era *activation* (`_detect_era_triggers`, `_continue_era_activation_queue`,
 `_apply_era_activation_effects`, and everything that creates/resolves a
 pending_choice for an interactive era) stays in `game.py` — those mutate
 turn_log/pending_choice/player state, unlike everything here.
-
-`_evaluate_era_trigger` / `_player_region_org_count` /
-`_player_requirement_org_count` also stay in `game.py`: they depend on
-`Game._player_organization_scope_counts` / `Game._organization_towns_for_player`,
-which weren't verified pure in this pass — left for a future slice rather
-than guessed at.
 """
 
 from server.game_catalog import EVENT_CARD_COUNTS_PATH, load_json
+from server.game_organization_scope_rules import (
+    player_region_org_count,
+    player_requirement_org_count,
+)
 
 
 def era_card_entry(era_name):
@@ -96,3 +94,39 @@ def era_stage_for_player(structured_eras, faction_by_id, activated_eras, player,
             payload["duration"] = active.get("duration")
         return payload
     return None
+
+
+def evaluate_era_trigger(map_data, towns_by_ruler, faction_by_id, players, trigger):
+    t = trigger.get("type")
+
+    if t == "count_only":
+        region = trigger.get("region")
+        count = trigger.get("count", 0)
+
+        for p in players:
+            if not player_matches_era_trigger(faction_by_id, p, trigger):
+                continue
+            if player_region_org_count(map_data, towns_by_ruler, faction_by_id, players, p, region) >= count:
+                return True
+
+    if t == "count_and_required":
+        requirements = trigger.get("requirements")
+        if requirements:
+            for p in players:
+                if not player_matches_era_trigger(faction_by_id, p, trigger):
+                    continue
+                if all(
+                    player_requirement_org_count(map_data, towns_by_ruler, faction_by_id, players, p, req) >= req.get("count", 0)
+                    for req in requirements
+                ):
+                    return True
+        else:
+            region = trigger.get("region")
+            count = trigger.get("count", 0)
+            for p in players:
+                if not player_matches_era_trigger(faction_by_id, p, trigger):
+                    continue
+                if player_region_org_count(map_data, towns_by_ruler, faction_by_id, players, p, region) >= count:
+                    return True
+
+    return False

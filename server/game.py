@@ -78,6 +78,7 @@ from server.game_era_rules import (
     era_notification_payload,
     player_matches_era_trigger,
     era_stage_for_player,
+    evaluate_era_trigger,
 )
 from server.game_support_rules import (
     support_taxonomy_entry,
@@ -89,8 +90,23 @@ from server.game_support_rules import (
     support_card_effect_text,
     resolve_support_card_effect,
     make_support_card,
+    support_card_tier,
 )
 from server.game_log_rules import project_action_log
+from server.game_organization_scope_rules import (
+    shared_origin_owner,
+    shared_org_count,
+    town_has_shared_org_access,
+    town_blocks_movement_for_player,
+    organization_towns_for_player,
+    player_organization_scope_counts,
+    player_ruler_organization_counts,
+    player_ruler_leadership,
+    player_ruler_presence,
+    player_region_org_count,
+    player_requirement_org_count,
+)
+from server.game_choice_rules import choice_is_card_map_interaction
 
 STATIC_PURCHASE_CARD_SUPPLY = {
     # data/raw/action_cards.csv 「卡牌張數」
@@ -869,24 +885,9 @@ class Game:
         return is_inside_wall_town(self.map, town)
 
     def _player_organization_scope_counts(self, player, *, include_shared=False):
-        """Split owned or effective organizations into inside/outside-wall counts."""
-        if player is None:
-            return {"total": 0, "inside_wall": 0, "outside_wall": 0}
-        if include_shared:
-            entries = [(town, 1) for town in self._organization_towns_for_player(player)]
-        else:
-            entries = [
-                (town, int(count or 0))
-                for town, count in (getattr(player, "organizations", {}) or {}).items()
-                if int(count or 0) > 0
-            ]
-        inside = sum(count for town, count in entries if self._is_inside_wall_town(town))
-        total = sum(count for _, count in entries)
-        return {
-            "total": total,
-            "inside_wall": inside,
-            "outside_wall": total - inside,
-        }
+        return player_organization_scope_counts(
+            self.map, self.faction_by_id, self.players, player, include_shared=include_shared
+        )
 
     def _towns_for_region_alias(self, region):
         return towns_for_region_alias(self.map, self.towns_by_ruler, region)
@@ -1175,32 +1176,7 @@ class Game:
         )
 
     def _choice_is_card_map_interaction(self, choice):
-        if not isinstance(choice, dict):
-            return False
-        if choice.get('choice_key') == 'card_build_organization':
-            return True
-        context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
-        effect_type = context.get('effect_type')
-        return bool(
-            choice.get('choice_key') == 'intel_network_dissolve_target'
-            or (
-                choice.get('choice_key') == 'support_interaction'
-                and choice.get('step') == 'town'
-                and effect_type in {
-                    'interactive_build_anywhere_inner',
-                    'interactive_build_near_inner',
-                }
-            )
-            or (
-                choice.get('choice_key') in {'support_interaction', 'card_dissolve_interaction'}
-                and choice.get('step') == 'target'
-                and effect_type in {
-                    'interactive_dissolve_many_near',
-                    'interactive_dissolve_and_build',
-                    'interactive_dissolve_self_and_enemy',
-                }
-            )
-        )
+        return choice_is_card_map_interaction(choice)
 
     def _card_action_legality(self, player, card):
         build_effects = self._card_build_effects(card)
@@ -3605,65 +3581,19 @@ class Game:
         return is_india_flag_card(self.support_taxonomy, card)
 
     def _player_ruler_presence(self, player):
-        return set(self._player_ruler_organization_counts(player))
+        return player_ruler_presence(self.map, self.faction_by_id, self.players, player)
 
     def _player_ruler_organization_counts(self, player):
-        """Count organizations by ruler region, including organizations shared with player."""
-        counts = {}
-        for town in self._organization_towns_for_player(player):
-            town_data = self.map.get("towns", {}).get(town, {})
-            for ruler in (town_data.get("ruler", []) or []):
-                counts[ruler] = counts.get(ruler, 0) + 1
-        return counts
+        return player_ruler_organization_counts(self.map, self.faction_by_id, self.players, player)
 
     def _player_ruler_leadership(self, player):
-        """Regions where player has a positive count tied for the most organizations."""
-        counts_by_player = {
-            other.id: self._player_ruler_organization_counts(other)
-            for other in self.players
-        }
-        own_counts = counts_by_player.get(player.id, {})
-        leaders = set()
-        for ruler, own_count in own_counts.items():
-            if own_count <= 0:
-                continue
-            maximum = max(
-                (counts.get(ruler, 0) for counts in counts_by_player.values()),
-                default=0,
-            )
-            if own_count == maximum:
-                leaders.add(ruler)
-        return leaders
+        return player_ruler_leadership(self.map, self.faction_by_id, self.players, player)
 
     def _support_card_variant_info(self, card):
         return support_card_variant_info(self.support_taxonomy, card)
 
     def _support_card_tier(self, player, card):
-        card_name = getattr(card, "name", str(card))
-        entry = self._support_taxonomy_entry(card_name)
-        if not entry:
-            return 1, None, []
-        regions = entry.get("regions", []) or []
-        if not regions:
-            return 1, None, []
-        # 每張奧援卡實體只印一組 II 級門檻地區（見 support_cards.csv 兩列），這張牌抽到的是
-        # 哪一組由 _make_support_card 存在 card.variant_index 上；只檢查這張牌自己印的那組，
-        # 不看同名卡另一種印刷變體的地區（2026-07-16 使用者裁決）。
-        variant_index = getattr(card, "variant_index", 0) or 0
-        if variant_index >= len(regions):
-            variant_index = 0
-        region = regions[variant_index]
-        leading = self._player_ruler_leadership(player)
-        support_region = entry.get("support_region")
-        preferred = region.get("preferred_rulers", []) or []
-        matched = [r for r in preferred if r in leading]
-        tier = 1
-        if support_region and support_region in leading and region.get("tier_3"):
-            tier = 3
-        elif matched:
-            # II 級門檻為 OR：印刷配對中任一地區並列擁有最多組織即可。
-            tier = 2
-        return tier, variant_index, matched
+        return support_card_tier(self.support_taxonomy, self.map, self.faction_by_id, self.players, player, card)
 
     def _player_has_india_research_room(self, player):
         return self._player_has_ability(player, "印度研究分析室")
@@ -4400,13 +4330,7 @@ class Game:
         return bool(self._organization_entries_at(town))
 
     def _organization_towns_for_player(self, player):
-        """Physical organization towns the player may use, including shared access."""
-        if player is None:
-            return []
-        return [
-            town for town in self.map.get('towns', {})
-            if self._shared_org_count(player, town) > 0
-        ]
+        return organization_towns_for_player(self.map, self.faction_by_id, self.players, player)
 
     def _organization_occupancy_violations(self):
         violations = []
@@ -4437,34 +4361,16 @@ class Game:
         return True
 
     def _shared_org_count(self, player, town):
-        owner = self._shared_origin_owner(player, town)
-        return 1 if owner is not None else 0
+        return shared_org_count(self.faction_by_id, self.players, player, town)
 
     def _shared_origin_owner(self, player, town):
-        if player.organizations.get(town, 0) > 0:
-            return player
-        shared_with = self._factions_sharing_with(player.faction_id)
-        if not shared_with:
-            return None
-        for other in self.players:
-            if other is player:
-                continue
-            if other.faction_id in shared_with and other.organizations.get(town, 0) > 0:
-                return other
-        return None
+        return shared_origin_owner(self.faction_by_id, self.players, player, town)
 
     def _town_has_shared_org_access(self, player, town):
-        return self._shared_origin_owner(player, town) is not None
+        return town_has_shared_org_access(self.faction_by_id, self.players, player, town)
 
     def _town_blocks_movement_for_player(self, player, town):
-        friendly_factions = {player.faction_id}
-        friendly_factions.update(self._factions_sharing_with(player.faction_id))
-        for other in self.players:
-            if other.faction_id in friendly_factions:
-                continue
-            if other.organizations.get(town, 0) > 0:
-                return True
-        return False
+        return town_blocks_movement_for_player(self.faction_by_id, self.players, player, town)
 
     def _can_player_build_in_town(self, player, town):
         return self.can_develop_in_town(player, town)
@@ -7128,56 +7034,15 @@ class Game:
         }
 
     def _player_region_org_count(self, player, region):
-        if region in {"china", "牆內"}:
-            return self._player_organization_scope_counts(player, include_shared=True)["inside_wall"]
-        region_towns = set(self._towns_for_region_alias(region))
-        return sum(1 for town in self._organization_towns_for_player(player) if town in region_towns)
+        return player_region_org_count(self.map, self.towns_by_ruler, self.faction_by_id, self.players, player, region)
 
     def _player_requirement_org_count(self, player, requirement):
-        if requirement.get("region"):
-            return self._player_region_org_count(player, requirement.get("region"))
-        if requirement.get("ruler"):
-            ruler = requirement.get("ruler")
-            return sum(
-                1 for town in self._organization_towns_for_player(player)
-                if ruler in (self.map.get("towns", {}).get(town, {}).get("ruler") or [])
-            )
-        return 0
+        return player_requirement_org_count(
+            self.map, self.towns_by_ruler, self.faction_by_id, self.players, player, requirement
+        )
 
     def _evaluate_era_trigger(self, trigger):
-        t = trigger.get("type")
-
-        if t == "count_only":
-            region = trigger.get("region")
-            count = trigger.get("count", 0)
-
-            for p in self.players:
-                if not player_matches_era_trigger(self.faction_by_id, p, trigger):
-                    continue
-                if self._player_region_org_count(p, region) >= count:
-                    return True
-
-        if t == "count_and_required":
-            requirements = trigger.get("requirements")
-            if requirements:
-                for p in self.players:
-                    if not player_matches_era_trigger(self.faction_by_id, p, trigger):
-                        continue
-                    if all(
-                        self._player_requirement_org_count(p, req) >= req.get("count", 0)
-                        for req in requirements
-                    ):
-                        return True
-            else:
-                region = trigger.get("region")
-                count = trigger.get("count", 0)
-                for p in self.players:
-                    if not player_matches_era_trigger(self.faction_by_id, p, trigger):
-                        continue
-                    if self._player_region_org_count(p, region) >= count:
-                        return True
-
-        return False
+        return evaluate_era_trigger(self.map, self.towns_by_ruler, self.faction_by_id, self.players, trigger)
 
     # ---------- State ----------
 

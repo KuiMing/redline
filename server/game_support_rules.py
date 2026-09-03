@@ -7,14 +7,10 @@ everything that creates/resolves a pending_choice for an interactive
 support effect) stays in `game.py` — those mutate turn_log/pending_choice/
 player state, unlike everything here.
 
-`_support_card_tier` / `_player_ruler_organization_counts` /
-`_player_ruler_leadership` also stay in `game.py`: they depend on
-`Game._organization_towns_for_player`, which wasn't verified pure in this
-pass (same reasoning as the era-rules extraction in PR #109 leaving
-`_evaluate_era_trigger` behind).
 """
 
 from server.cards import Card
+from server.game_organization_scope_rules import player_ruler_leadership
 
 
 def support_taxonomy_entry(support_taxonomy, card_name):
@@ -90,6 +86,34 @@ def support_card_effect_text(support_taxonomy, card_name, tier, region_index):
     if tier == 2:
         return region_entry.get('tier_2') or region_entry.get('tier_3')
     return region_entry.get('tier_1')
+
+
+def support_card_tier(support_taxonomy, map_data, faction_by_id, players, player, card):
+    card_name = getattr(card, "name", str(card))
+    entry = support_taxonomy_entry(support_taxonomy, card_name)
+    if not entry:
+        return 1, None, []
+    regions = entry.get("regions", []) or []
+    if not regions:
+        return 1, None, []
+    # 每張奧援卡實體只印一組 II 級門檻地區（見 support_cards.csv 兩列），這張牌抽到的是
+    # 哪一組由 _make_support_card 存在 card.variant_index 上；只檢查這張牌自己印的那組，
+    # 不看同名卡另一種印刷變體的地區（2026-07-16 使用者裁決）。
+    variant_index = getattr(card, "variant_index", 0) or 0
+    if variant_index >= len(regions):
+        variant_index = 0
+    region = regions[variant_index]
+    leading = player_ruler_leadership(map_data, faction_by_id, players, player)
+    support_region = entry.get("support_region")
+    preferred = region.get("preferred_rulers", []) or []
+    matched = [r for r in preferred if r in leading]
+    tier = 1
+    if support_region and support_region in leading and region.get("tier_3"):
+        tier = 3
+    elif matched:
+        # II 級門檻為 OR：印刷配對中任一地區並列擁有最多組織即可。
+        tier = 2
+    return tier, variant_index, matched
 
 
 def resolve_support_card_effect(support_taxonomy, card_name, tier, region_index):
