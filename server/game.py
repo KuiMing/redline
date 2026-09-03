@@ -4061,55 +4061,16 @@ class Game:
                 return prompt
 
         if action_name == '統戰部':
-            ok, err = self._red_army_can_use_action(player, action_name)
-            if not ok:
-                return {'error': err}
-            drawn = self._draw_player_cards(player, 1)
-            self._mark_red_army_action_used(action_name)
-            self._track_event_progress('use_faction_ability', player=player)
-            self.log(f"{player.name} triggered 統戰部 and drew {len(drawn)} card(s)")
-            return {'success': True, 'result': {'name': action_name, 'drawn': len(drawn)}}
+            return self._activate_red_army_united_front(player)
 
         if action_name == '政工部':
-            target, pending_or_error = self._resolve_red_army_action_target(player, action_name, kwargs.get('target_player_id'))
-            if pending_or_error:
-                return pending_or_error
-            topdecked = '內鬥'
-            added = self._topdeck_static_purchase_card(target, topdecked, action_name)
-            self._mark_red_army_action_used(action_name, target.id)
-            self._track_event_progress('use_faction_ability', player=player)
-            if added:
-                self.log(f"{player.name} triggered 政工部 and placed {'、'.join(added)} on {target.name}'s deck")
-            else:
-                self.log(f"{player.name} triggered 政工部 but {topdecked} supply was empty")
-            return {'success': True, 'result': {'name': action_name, 'target_player_name': target.name, 'topdecked_card': '、'.join(added) if added else None, 'static_supply_empty': not added}}
+            return self._activate_red_army_propaganda_department(player, kwargs.get('target_player_id'))
 
         if action_name == '國安部':
-            ok, err = self._red_army_can_use_action(player, action_name)
-            if not ok:
-                return {'error': err}
-            return self._start_red_army_state_security(player)
+            return self._activate_red_army_state_security_action(player)
 
         if action_name == '中紀委':
-            ok, err = self._red_army_can_use_action(player, action_name)
-            if not ok:
-                return {'error': err}
-            cards = list(player.hand)
-            if not cards:
-                self._mark_red_army_action_used(action_name)
-                self._track_event_progress('use_faction_ability', player=player)
-                self.log(f"{player.name} triggered 中紀委 with no hand cards")
-                return {'success': True, 'result': {'name': action_name, 'discarded': 0, 'drawn': 0}}
-            self._set_pending_multi_card_choice(
-                player,
-                'red_army_ccdi_discard_draw',
-                cards,
-                '中紀委：可棄掉任意張手牌，然後抽等量的牌。',
-                len(cards),
-                source_name='中紀委',
-                min_count=0,
-            )
-            return {'pending_choice': True}
+            return self._activate_red_army_discipline_inspection(player)
 
         if action_name == '民主陣線':
             if self._resource_total(player.resources) < 2:
@@ -4191,6 +4152,69 @@ class Game:
             return {'success': True, 'pending_choice': True}
 
         return {"error": "Unknown faction action"}
+
+    def _activate_red_army_united_front(self, player):
+        """統戰部: draw 1 card."""
+        ok, err = self._red_army_can_use_action(player, '統戰部')
+        if not ok:
+            return {'error': err}
+        drawn = self._draw_player_cards(player, 1)
+        self._mark_red_army_action_used('統戰部')
+        self._track_event_progress('use_faction_ability', player=player)
+        self.log(f"{player.name} triggered 統戰部 and drew {len(drawn)} card(s)")
+        return {'success': True, 'result': {'name': '統戰部', 'drawn': len(drawn)}}
+
+    def _activate_red_army_propaganda_department(self, player, target_player_id):
+        """政工部: topdeck 內鬥 (fallback to whatever's in static supply) onto the target's deck."""
+        target, pending_or_error = self._resolve_red_army_action_target(player, '政工部', target_player_id)
+        if pending_or_error:
+            return pending_or_error
+        topdecked = '內鬥'
+        added = self._topdeck_static_purchase_card(target, topdecked, '政工部')
+        self._mark_red_army_action_used('政工部', target.id)
+        self._track_event_progress('use_faction_ability', player=player)
+        if added:
+            self.log(f"{player.name} triggered 政工部 and placed {'、'.join(added)} on {target.name}'s deck")
+        else:
+            self.log(f"{player.name} triggered 政工部 but {topdecked} supply was empty")
+        return {
+            'success': True,
+            'result': {
+                'name': '政工部',
+                'target_player_name': target.name,
+                'topdecked_card': '、'.join(added) if added else None,
+                'static_supply_empty': not added,
+            },
+        }
+
+    def _activate_red_army_state_security_action(self, player):
+        """國安部: open target selection for dissolving a nearby wall-inside organization."""
+        ok, err = self._red_army_can_use_action(player, '國安部')
+        if not ok:
+            return {'error': err}
+        return self._start_red_army_state_security(player)
+
+    def _activate_red_army_discipline_inspection(self, player):
+        """中紀委: discard any number of hand cards, then draw that many."""
+        ok, err = self._red_army_can_use_action(player, '中紀委')
+        if not ok:
+            return {'error': err}
+        cards = list(player.hand)
+        if not cards:
+            self._mark_red_army_action_used('中紀委')
+            self._track_event_progress('use_faction_ability', player=player)
+            self.log(f"{player.name} triggered 中紀委 with no hand cards")
+            return {'success': True, 'result': {'name': '中紀委', 'discarded': 0, 'drawn': 0}}
+        self._set_pending_multi_card_choice(
+            player,
+            'red_army_ccdi_discard_draw',
+            cards,
+            '中紀委：可棄掉任意張手牌，然後抽等量的牌。',
+            len(cards),
+            source_name='中紀委',
+            min_count=0,
+        )
+        return {'pending_choice': True}
 
     def _resolve_guess_ability_with_bottom_card(self, player, action_name, guess, bottom_card):
         if bottom_card not in player.hand:
