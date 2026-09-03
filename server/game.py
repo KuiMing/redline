@@ -18,7 +18,6 @@ from server.victory import VictoryEngine
 from server.events import EventDeck
 from server.game_models import GamePhase, Player, TurnPhase
 from server.game_catalog import (
-    BASE_DIR,
     MAP_PATH,
     FACTIONS_PATH,
     STRUCTURED_ACTION_PATH,
@@ -74,6 +73,11 @@ from server.game_event_triggers import (
     event_trigger_actor_allowed,
     event_purchase_trigger_matches,
     event_state_condition_met,
+)
+from server.game_era_rules import (
+    era_notification_payload,
+    player_matches_era_trigger,
+    era_stage_for_player,
 )
 
 STATIC_PURCHASE_CARD_SUPPLY = {
@@ -7073,73 +7077,8 @@ class Game:
             return True
         return False
 
-    def _era_card_entry(self, era_name):
-        path = BASE_DIR / "data" / "cards" / "event_and_era_cards.v1.1.json"
-        if not path.exists():
-            return None
-        try:
-            rows = load_json(path)
-        except Exception:
-            return None
-        for row in rows:
-            if isinstance(row, list) and row and row[0] == era_name:
-                return row
-        return None
-
     def _era_notification_payload(self, era):
-        era_name = era.get("name", "未知時代")
-        row = self._era_card_entry(era_name)
-        summary_text = None
-        trigger_text = None
-        success_text = None
-        fail_text = None
-        if row and len(row) >= 5:
-            summary_text = row[1] or None
-            trigger_text = row[2] or None
-            success_text = row[3] or None
-            fail_text = row[4] or None
-        trigger = era.get("trigger") or {}
-        if not trigger_text and trigger.get("type") == "count_only":
-            trigger_text = f"在指定區域擁有至少 {trigger.get('count', 0)} 個有效組織。"
-        duration = era.get("duration", {})
-        if duration.get("type") == "turns":
-            duration_text = f"持續 {duration.get('value', 0)} 回合"
-        elif duration.get("type") == "permanent":
-            duration_text = "持續至遊戲結束"
-        else:
-            duration_text = "持續時間未明"
-        return {
-            "id": era.get("id"),
-            "name": era_name,
-            "summary_text": summary_text or "（時代關卡簡述暫缺）",
-            "trigger_text": trigger_text or "（條件資料暫缺）",
-            "success_text": success_text or "（紅軍壓制效果暫缺）",
-            "fail_text": fail_text or "（革命反撲效果暫缺）",
-            "duration_text": duration_text,
-            "remaining": None,
-            "minimized": False,
-        }
-
-    def _era_stage_for_player(self, player, active_era_details=None):
-        if not player or player.faction_id == "red_army":
-            return None
-        active_era_details = active_era_details or []
-        for era in self.structured_eras:
-            trigger = era.get("trigger") or {}
-            if not self._player_matches_era_trigger(player, trigger):
-                continue
-            payload = self._era_notification_payload(era)
-            active = next(
-                (item for item in active_era_details if item.get("id") == era.get("id")),
-                None,
-            )
-            payload["active"] = active is not None
-            payload["achieved"] = era.get("id") in set(self.era_engine.get_activated_eras())
-            if active:
-                payload["remaining"] = active.get("remaining")
-                payload["duration"] = active.get("duration")
-            return payload
-        return None
+        return era_notification_payload(era)
 
     def _detect_era_triggers(self):
         """Scan for newly-qualifying eras and enqueue them for activation.
@@ -7297,17 +7236,6 @@ class Game:
             'queued': list(queue),
         }
 
-    def _player_matches_era_trigger(self, player, trigger):
-        faction_id = trigger.get("faction_id")
-        if faction_id and player.faction_id != faction_id:
-            return False
-        camp = trigger.get("camp")
-        if camp:
-            faction = self.faction_by_id.get(player.faction_id, {})
-            if faction.get("camp") != camp and player.faction_id != camp:
-                return False
-        return True
-
     def _player_region_org_count(self, player, region):
         if region in {"china", "牆內"}:
             return self._player_organization_scope_counts(player, include_shared=True)["inside_wall"]
@@ -7333,7 +7261,7 @@ class Game:
             count = trigger.get("count", 0)
 
             for p in self.players:
-                if not self._player_matches_era_trigger(p, trigger):
+                if not player_matches_era_trigger(self.faction_by_id, p, trigger):
                     continue
                 if self._player_region_org_count(p, region) >= count:
                     return True
@@ -7342,7 +7270,7 @@ class Game:
             requirements = trigger.get("requirements")
             if requirements:
                 for p in self.players:
-                    if not self._player_matches_era_trigger(p, trigger):
+                    if not player_matches_era_trigger(self.faction_by_id, p, trigger):
                         continue
                     if all(
                         self._player_requirement_org_count(p, req) >= req.get("count", 0)
@@ -7353,7 +7281,7 @@ class Game:
                 region = trigger.get("region")
                 count = trigger.get("count", 0)
                 for p in self.players:
-                    if not self._player_matches_era_trigger(p, trigger):
+                    if not player_matches_era_trigger(self.faction_by_id, p, trigger):
                         continue
                     if self._player_region_org_count(p, region) >= count:
                         return True
@@ -7380,7 +7308,13 @@ class Game:
             (player for player in self.players if player.id == viewer_player_id),
             None,
         ) if viewer_player_id is not None else None
-        my_era_stage = self._era_stage_for_player(viewer_player, active_era_details)
+        my_era_stage = era_stage_for_player(
+            self.structured_eras,
+            self.faction_by_id,
+            self.era_engine.get_activated_eras(),
+            viewer_player,
+            active_era_details,
+        )
         # 前端「時代關卡達成」浮窗被縮小之後，任何玩家都要能再點右上角的釘選卡片重新叫出
         # 完整說明，因此每個生效中的時代都要附上達成條件／紅軍壓制／革命反撲／期限文字，
         # 而不是只有觸發當下那一個 era_notification 才有。
