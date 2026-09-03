@@ -7193,8 +7193,7 @@ class Game:
 
     # ---------- State ----------
 
-    def state(self, viewer_player_id=None):
-        # aggregate map control
+    def _project_map_control(self):
         town_control = {}
         shared_access = {}
         for p in self.players:
@@ -7205,12 +7204,13 @@ class Game:
             for town in self.map.get('towns', {}).keys():
                 if self._shared_org_count(p, town) > p.organizations.get(town, 0):
                     shared_access.setdefault(town, []).append(p.faction_id)
+        return town_control, shared_access
 
+    def _project_era_state(self, viewer_player):
+        """Returns (active_era_details enriched with notification text, my_era_stage,
+        era_notification). my_era_stage is computed against the *raw* (pre-enrichment)
+        active_era_details, matching the original inline ordering exactly."""
         active_era_details = self.era_engine.get_active_era_details() if self.era_engine else []
-        viewer_player = next(
-            (player for player in self.players if player.id == viewer_player_id),
-            None,
-        ) if viewer_player_id is not None else None
         my_era_stage = era_stage_for_player(
             self.structured_eras,
             self.faction_by_id,
@@ -7233,7 +7233,9 @@ class Game:
                 notification = {**self._era_notification_payload(active_match), **notification}
                 notification["remaining"] = active_match.get("remaining")
                 notification["duration"] = active_match.get("duration")
+        return active_era_details, my_era_stage, notification
 
+    def _project_pending_choice(self, viewer_player_id, viewer_player):
         pending_choice = None
         if self.pending_choice:
             raw_pending_context = self.pending_choice.get('context')
@@ -7350,13 +7352,9 @@ class Game:
                 ],
                 'step': self.pending_choice.get('step'),
             }
+        return pending_choice
 
-        current_player = self.current_player()
-        legal_organization_moves = (
-            self._legal_organization_moves()
-            if viewer_player is current_player
-            else {}
-        )
+    def _project_purchase_area(self, current_player):
         purchase_area_costs = [
             self._effective_purchase_cost(current_player, card)
             for card in self.purchase_area
@@ -7369,6 +7367,45 @@ class Game:
             self._player_can_afford_purchase(current_player, card, purchase_area_costs[idx])
             for idx, card in enumerate(self.purchase_area)
         ]
+        return purchase_area_costs, purchase_area_payments, purchase_area_affordable
+
+    def _project_players(self, viewer_player_id):
+        return [
+            {
+                "id": p.id,
+                "name": p.name,
+                "faction": p.faction_id,
+                "base": p.base,
+                "resources": p.resources,
+                "moves_left": p.moves_left,
+                "hand": [getattr(card, 'name', str(card)) for card in p.hand] if (viewer_player_id is None or p.id == viewer_player_id) else ['未知手牌' for _ in p.hand],
+                "hand_variants": [self._support_card_variant_info(card) for card in p.hand] if (viewer_player_id is None or p.id == viewer_player_id) else [None for _ in p.hand],
+                "hand_action_legality": [self._card_action_legality(p, card) for card in p.hand] if (viewer_player_id is None or p.id == viewer_player_id) else [None for _ in p.hand],
+                "deck_count": len(p.deck.draw_pile) if p.deck else 0,
+                "discard_count": len(p.deck.discard_pile) if p.deck else 0,
+                "discard_pile": [getattr(card, 'name', str(card)) for card in p.deck.discard_pile] if p.deck else [],
+                "discard_variants": [self._support_card_variant_info(card) for card in p.deck.discard_pile] if p.deck else [],
+                "organization_counts": self._player_organization_scope_counts(p),
+                "orgs": p.organizations
+            }
+            for p in self.players
+        ]
+
+    def state(self, viewer_player_id=None):
+        town_control, shared_access = self._project_map_control()
+        viewer_player = next(
+            (player for player in self.players if player.id == viewer_player_id),
+            None,
+        ) if viewer_player_id is not None else None
+        active_era_details, my_era_stage, notification = self._project_era_state(viewer_player)
+        pending_choice = self._project_pending_choice(viewer_player_id, viewer_player)
+        current_player = self.current_player()
+        legal_organization_moves = (
+            self._legal_organization_moves()
+            if viewer_player is current_player
+            else {}
+        )
+        purchase_area_costs, purchase_area_payments, purchase_area_affordable = self._project_purchase_area(current_player)
 
         return {
             "turn": self.turn,
@@ -7408,24 +7445,5 @@ class Game:
                 "shared_access": shared_access,
                 "legal_organization_moves": legal_organization_moves,
             },
-            "players": [
-                {
-                    "id": p.id,
-                    "name": p.name,
-                    "faction": p.faction_id,
-                    "base": p.base,
-                    "resources": p.resources,
-                    "moves_left": p.moves_left,
-                    "hand": [getattr(card, 'name', str(card)) for card in p.hand] if (viewer_player_id is None or p.id == viewer_player_id) else ['未知手牌' for _ in p.hand],
-                    "hand_variants": [self._support_card_variant_info(card) for card in p.hand] if (viewer_player_id is None or p.id == viewer_player_id) else [None for _ in p.hand],
-                    "hand_action_legality": [self._card_action_legality(p, card) for card in p.hand] if (viewer_player_id is None or p.id == viewer_player_id) else [None for _ in p.hand],
-                    "deck_count": len(p.deck.draw_pile) if p.deck else 0,
-                    "discard_count": len(p.deck.discard_pile) if p.deck else 0,
-                    "discard_pile": [getattr(card, 'name', str(card)) for card in p.deck.discard_pile] if p.deck else [],
-                    "discard_variants": [self._support_card_variant_info(card) for card in p.deck.discard_pile] if p.deck else [],
-                    "organization_counts": self._player_organization_scope_counts(p),
-                    "orgs": p.organizations
-                }
-                for p in self.players
-            ]
+            "players": self._project_players(viewer_player_id),
         }
