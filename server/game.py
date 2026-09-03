@@ -127,6 +127,14 @@ from server.game_build_eligibility_rules import (
     restricted_build_fallback_towns,
     active_era_effects,
 )
+from server.game_card_rules import (
+    active_event_modifiers,
+    event_modifier_active,
+    card_matches_types,
+    card_build_effects,
+    card_dissolve_effects,
+    card_can_queue_build,
+)
 
 STATIC_PURCHASE_CARD_SUPPLY = {
     # data/raw/action_cards.csv 「卡牌張數」
@@ -408,13 +416,10 @@ class Game:
         return drawn
 
     def _active_event_modifiers(self):
-        return [
-            modifier for modifier in (getattr(self, 'event_modifiers', []) or [])
-            if int((modifier or {}).get('remaining_turns', 1) or 0) > 0
-        ]
+        return active_event_modifiers(getattr(self, 'event_modifiers', []))
 
     def _event_modifier_active(self, modifier_type):
-        return any((m or {}).get('type') == modifier_type for m in self._active_event_modifiers())
+        return event_modifier_active(getattr(self, 'event_modifiers', []), modifier_type)
 
     def _event_reduce_cost_amount(self):
         return event_reduce_cost_amount(self._active_event_modifiers())
@@ -621,9 +626,7 @@ class Game:
         return players_matching_camp(self.faction_by_id, self.players, camp)
 
     def _card_matches_types(self, card, card_types):
-        if not card_types:
-            return True
-        return getattr(card, 'card_type', None) in set(card_types or [])
+        return card_matches_types(card, card_types)
 
     def _event_build_towns_in_region(self, player, region):
         region_towns = set(self._towns_for_region_alias(region))
@@ -1133,36 +1136,15 @@ class Game:
         }
         return {'pending_choice': True}
 
-    def _card_build_effects(self, card):
-        card_name = getattr(card, 'name', str(card))
+    def _action_engine_cards(self):
         engine = getattr(self, 'action_engine', None)
-        cards = getattr(engine, 'cards', {}) if engine is not None else {}
-        card_def = cards.get(card_name) or {}
-        return [
-            effect
-            for effect in (card_def.get('effect') or [])
-            if isinstance(effect, dict) and effect.get('type') == 'build'
-        ]
+        return getattr(engine, 'cards', {}) if engine is not None else {}
+
+    def _card_build_effects(self, card):
+        return card_build_effects(self._action_engine_cards(), card)
 
     def _card_dissolve_effects(self, card):
-        card_name = getattr(card, 'name', str(card))
-        engine = getattr(self, 'action_engine', None)
-        cards = getattr(engine, 'cards', {}) if engine is not None else {}
-        card_def = cards.get(card_name) or {}
-        found = []
-
-        def collect(value):
-            if isinstance(value, dict):
-                if value.get('type') == 'dissolve':
-                    found.append(value)
-                for nested in value.values():
-                    collect(nested)
-            elif isinstance(value, list):
-                for nested in value:
-                    collect(nested)
-
-        collect(card_def.get('effect') or [])
-        return found
+        return card_dissolve_effects(self._action_engine_cards(), card)
 
     def _card_can_queue_map_action(self, player, card):
         if self._card_build_effects(card) or self._card_dissolve_effects(card):
@@ -1200,7 +1182,7 @@ class Game:
         return {'playable': True}
 
     def _card_can_queue_build(self, card):
-        return bool(self._card_build_effects(card))
+        return card_can_queue_build(self._action_engine_cards(), card)
 
     def _build_choice_entitlement_count(self, choice):
         if not isinstance(choice, dict):
