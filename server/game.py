@@ -4073,85 +4073,102 @@ class Game:
             return self._activate_red_army_discipline_inspection(player)
 
         if action_name == '民主陣線':
-            if self._resource_total(player.resources) < 2:
-                return {"error": "Not enough resources"}
-            spend = 2
-            propaganda_spend = min(player.resources['propaganda'], spend)
-            player.resources['propaganda'] -= propaganda_spend
-            spend -= propaganda_spend
-            if spend > 0:
-                player.resources['money'] = max(0, player.resources['money'] - spend)
-            from server.cards import Card
-            gained = Card('已移除牌', 'command', {})
-            player.deck.discard([gained])
-            self.turn_log['faction_action_used'] = True
-            self._track_event_progress('use_faction_ability', player=player)
-            self.log(f"{player.name} triggered 民主陣線 and gained a removed card proxy")
-            return {"success": True}
+            return self._activate_democratic_front(player)
 
         if action_name == '紅軍派系':
-            look = min(3, len(player.deck.draw_pile))
-            if look <= 0:
-                return {"error": "Deck empty"}
-            inspected = list(reversed(player.deck.draw_pile[-look:]))
-            self._set_pending_multi_card_choice(
-                player,
-                'era_inspect_deck_top_and_reorder',
-                inspected,
-                f"紅軍派系：檢視牌庫頂 {look} 張，請依序選擇 {look} 張放回牌庫頂（第一張會成為下一張抽到的牌），完成後抽 1 張牌。",
-                look,
-                top_count=look,
-                look_count=look,
-                source_name='紅軍派系',
-                context={'draw_after_reorder': 1, 'faction_action_name': action_name},
-            )
-            self.log(f"{player.name} triggered 紅軍派系 and inspected top {look} card(s)")
-            return {'success': True, 'pending_choice': True, 'result': {'name': action_name, 'inspected_count': look}}
+            return self._activate_red_army_faction_deck_reorder(player)
 
         if action_name == '立場試探':
-            if not player.deck.draw_pile:
-                return {"error": "Deck empty"}
-            card = player.deck.draw_pile.pop()
-            total = self._top_card_cost_total(card)
-            self.turn_log['faction_action_used'] = True
-            self._track_event_progress('use_faction_ability', player=player)
-            destination = 'hand' if total % 2 == 1 else 'discard'
-            if destination == 'hand':
-                player.hand.append(card)
-                self.log(f"{player.name} triggered 立場試探 and added {card.name} to hand")
-            else:
-                player.deck.discard([card])
-                self.log(f"{player.name} triggered 立場試探 and discarded {card.name}")
-            return {
-                "success": True,
-                "result": {
-                    "name": action_name,
-                    "revealed_card": getattr(card, 'name', str(card)),
-                    "cost_total": total,
-                    "destination": destination,
-                },
-            }
+            return self._activate_stance_probe(player)
 
         if action_name in {'賭徒耳語', '民族祭儀'}:
-            if not player.hand:
-                return {"error": "No hand card to bottom-deck"}
-            guess = kwargs.get('guess')
-            if guess not in {'odd', 'even'}:
-                return {"error": "Guess required"}
-            # 能力文字：「將1張手牌放進牌庫底」——由玩家選擇要墊哪一張；只有一張時不用問
-            if len(player.hand) == 1:
-                return self._resolve_guess_ability_with_bottom_card(player, action_name, guess, player.hand[0])
-            self._set_pending_card_choice(
-                player,
-                'guess_ability_bottom_card',
-                list(player.hand),
-                f'{action_name}：請選擇 1 張手牌放進牌庫底。',
-                source_name=action_name,
-                context={'action_name': action_name, 'guess': guess},
-            )
-            return {'success': True, 'pending_choice': True}
+            return self._activate_guess_ability(player, action_name, kwargs.get('guess'))
 
         return {"error": "Unknown faction action"}
+
+    def _activate_democratic_front(self, player):
+        """民主陣線: spend 2 resources (propaganda first) for a removed-card proxy."""
+        if self._resource_total(player.resources) < 2:
+            return {"error": "Not enough resources"}
+        spend = 2
+        propaganda_spend = min(player.resources['propaganda'], spend)
+        player.resources['propaganda'] -= propaganda_spend
+        spend -= propaganda_spend
+        if spend > 0:
+            player.resources['money'] = max(0, player.resources['money'] - spend)
+        from server.cards import Card
+        gained = Card('已移除牌', 'command', {})
+        player.deck.discard([gained])
+        self.turn_log['faction_action_used'] = True
+        self._track_event_progress('use_faction_ability', player=player)
+        self.log(f"{player.name} triggered 民主陣線 and gained a removed card proxy")
+        return {"success": True}
+
+    def _activate_red_army_faction_deck_reorder(self, player):
+        """紅軍派系: inspect the top 3 cards, reorder them, then draw 1."""
+        look = min(3, len(player.deck.draw_pile))
+        if look <= 0:
+            return {"error": "Deck empty"}
+        inspected = list(reversed(player.deck.draw_pile[-look:]))
+        self._set_pending_multi_card_choice(
+            player,
+            'era_inspect_deck_top_and_reorder',
+            inspected,
+            f"紅軍派系：檢視牌庫頂 {look} 張，請依序選擇 {look} 張放回牌庫頂（第一張會成為下一張抽到的牌），完成後抽 1 張牌。",
+            look,
+            top_count=look,
+            look_count=look,
+            source_name='紅軍派系',
+            context={'draw_after_reorder': 1, 'faction_action_name': '紅軍派系'},
+        )
+        self.log(f"{player.name} triggered 紅軍派系 and inspected top {look} card(s)")
+        return {'success': True, 'pending_choice': True, 'result': {'name': '紅軍派系', 'inspected_count': look}}
+
+    def _activate_stance_probe(self, player):
+        """立場試探: peek the top card, route it to hand (odd cost) or discard (even cost)."""
+        if not player.deck.draw_pile:
+            return {"error": "Deck empty"}
+        card = player.deck.draw_pile.pop()
+        total = self._top_card_cost_total(card)
+        self.turn_log['faction_action_used'] = True
+        self._track_event_progress('use_faction_ability', player=player)
+        destination = 'hand' if total % 2 == 1 else 'discard'
+        if destination == 'hand':
+            player.hand.append(card)
+            self.log(f"{player.name} triggered 立場試探 and added {card.name} to hand")
+        else:
+            player.deck.discard([card])
+            self.log(f"{player.name} triggered 立場試探 and discarded {card.name}")
+        return {
+            "success": True,
+            "result": {
+                "name": '立場試探',
+                "revealed_card": getattr(card, 'name', str(card)),
+                "cost_total": total,
+                "destination": destination,
+            },
+        }
+
+    def _activate_guess_ability(self, player, action_name, guess):
+        """賭徒耳語/民族祭儀: bottom-deck a chosen hand card, then guess the new top card's cost parity.
+
+        能力文字：「將1張手牌放進牌庫底」——由玩家選擇要墊哪一張；只有一張時不用問。
+        """
+        if not player.hand:
+            return {"error": "No hand card to bottom-deck"}
+        if guess not in {'odd', 'even'}:
+            return {"error": "Guess required"}
+        if len(player.hand) == 1:
+            return self._resolve_guess_ability_with_bottom_card(player, action_name, guess, player.hand[0])
+        self._set_pending_card_choice(
+            player,
+            'guess_ability_bottom_card',
+            list(player.hand),
+            f'{action_name}：請選擇 1 張手牌放進牌庫底。',
+            source_name=action_name,
+            context={'action_name': action_name, 'guess': guess},
+        )
+        return {'success': True, 'pending_choice': True}
 
     def _activate_red_army_united_front(self, player):
         """統戰部: draw 1 card."""
