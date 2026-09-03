@@ -90,6 +90,7 @@ from server.game_support_rules import (
     resolve_support_card_effect,
     make_support_card,
 )
+from server.game_log_rules import project_action_log
 
 STATIC_PURCHASE_CARD_SUPPLY = {
     # data/raw/action_cards.csv 「卡牌張數」
@@ -4714,20 +4715,7 @@ class Game:
         )
 
     def _project_action_log(self, viewer_player_id=None):
-        if viewer_player_id is None:
-            return list(self.action_log)
-        visibility = list(getattr(self, '_action_log_visibility', []) or [])
-        if len(visibility) < len(self.action_log):
-            visibility = [None] * (len(self.action_log) - len(visibility)) + visibility
-        elif len(visibility) > len(self.action_log):
-            visibility = visibility[-len(self.action_log):]
-        viewer_key = str(viewer_player_id)
-        return [
-            ((rule.get('private_messages') or {}).get(viewer_key) or rule.get('public_message') or entry)
-            if isinstance(rule, dict)
-            else entry
-            for entry, rule in zip(self.action_log, visibility)
-        ]
+        return project_action_log(self.action_log, getattr(self, '_action_log_visibility', []), viewer_player_id)
 
     def _reaction_card_cancel_predicate(self, reaction_card_name, canceled_cost):
         # 2026-08-05 使用者回報：打出宣傳家（購買費用只有宣傳、無資金）時，產業滲透完全
