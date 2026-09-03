@@ -79,6 +79,17 @@ from server.game_era_rules import (
     player_matches_era_trigger,
     era_stage_for_player,
 )
+from server.game_support_rules import (
+    support_taxonomy_entry,
+    is_starter_support_card,
+    support_card_runtime_type,
+    is_support_card,
+    is_india_flag_card,
+    support_card_variant_info,
+    support_card_effect_text,
+    resolve_support_card_effect,
+    make_support_card,
+)
 
 STATIC_PURCHASE_CARD_SUPPLY = {
     # data/raw/action_cards.csv 「卡牌張數」
@@ -893,8 +904,7 @@ class Game:
             self.players.append(p)
 
     def _is_starter_support_card(self, support_name):
-        entry = self._support_taxonomy_entry(support_name) or {}
-        return entry.get('cost') == '起始牌'
+        return is_starter_support_card(self.support_taxonomy, support_name)
 
     def _init_decks(self):
         for p in self.players:
@@ -909,38 +919,13 @@ class Game:
             p.hand = p.deck.draw(5)
 
     def _support_card_runtime_type(self, name):
-        mapping = {
-            '英美奧援': 'support',
-            '東洋奧援': 'support',
-            '南洋奧援': 'support',
-            '印度奧援': 'support',
-            '天方奧援': 'support',
-            '歐洲奧援': 'support',
-            '北國奧援': 'support',
-            '臺灣奧援': 'support',
-            '紅軍奧援': 'support',
-        }
-        return mapping.get(name, 'support')
+        return support_card_runtime_type(name)
 
     def _support_card_cost(self, support_name):
         return support_card_cost(self.support_taxonomy, support_name)
 
     def _make_support_card(self, support_name, variant_index=0):
-        entry = self._support_taxonomy_entry(support_name) or {}
-        # 普通奧援沒有資源模式印刷產出；紅軍奧援是 canonical 明載的唯一例外：
-        # 它是零購買費用的起始牌，但可作為資源取得 1資金＋1宣傳。兩者不可混用。
-        printed_resources = {'money': 1, 'propaganda': 1} if support_name == '紅軍奧援' else {}
-        card = Card(
-            support_name,
-            self._support_card_runtime_type(support_name),
-            printed_resources,
-            effect={'support_taxonomy': entry},
-        )
-        # 每種奧援卡實體上印有兩種不同的 II 級門檻地區組合（見 support_cards.csv 兩列），
-        # 一張實體卡只印其中一組；variant_index 記住這張牌抽到的是哪一組，讓 _support_card_tier
-        # 只檢查該卡實際印刷的那組地區，而不是把兩組地區都算進同一張牌（2026-07-16 使用者裁決）。
-        card.variant_index = variant_index
-        return card
+        return make_support_card(self.support_taxonomy, support_name, variant_index=variant_index)
 
     def _static_purchase_cards(self):
         cards = []
@@ -2695,68 +2680,10 @@ class Game:
         return self._apply_auto_event_if_ready()
 
     def _support_card_effect_text(self, card_name, tier, region_index):
-        entry = self._support_taxonomy_entry(card_name)
-        if not entry:
-            return None
-        regions = entry.get('regions', []) or []
-        if region_index is None or region_index >= len(regions):
-            return None
-        region_entry = regions[region_index]
-        if tier >= 3:
-            return region_entry.get('tier_3')
-        if tier == 2:
-            return region_entry.get('tier_2') or region_entry.get('tier_3')
-        return region_entry.get('tier_1')
+        return support_card_effect_text(self.support_taxonomy, card_name, tier, region_index)
 
     def _resolve_support_card_effect(self, card_name, tier, region_index):
-        if card_name == '紅軍奧援':
-            return 'red_support_draw_and_pass', {'draw': 1}
-        text = self._support_card_effect_text(card_name, tier, region_index)
-        if not text:
-            return None, None
-
-        if card_name == '印度奧援':
-            count = 3 if tier >= 3 else 2 if tier == 2 else 1
-            return 'add_internal_conflict', {'count': count, 'target': 'red_army'}
-        if card_name == '英美奧援':
-            amount = 3 if tier >= 3 else 2 if tier == 2 else 1
-            return 'gain_resource', {'money': amount}
-        if card_name == '歐洲奧援':
-            amount = 4 if tier >= 3 else 3 if tier == 2 else 2
-            return 'gain_resource', {'propaganda': amount}
-        if card_name == '南洋奧援':
-            if tier >= 3:
-                return 'draw', {'count': 2}
-            if tier == 2:
-                return 'draw', {'count': 1}
-            return 'draw_then_discard', {'draw': 1, 'discard': 1}
-        if card_name == '東洋奧援':
-            if tier >= 3:
-                return 'interactive_build_anywhere_inner', {'count': 1}
-            if tier == 2:
-                return 'interactive_build_near_inner', {'count': 1}
-            return 'gain_resource', {'propaganda': 2}
-        if card_name == '北國奧援':
-            if tier >= 3:
-                return 'interactive_dissolve_many_near', {'count': 2}
-            if tier == 2:
-                return 'interactive_dissolve_many_near', {'count': 1}
-            return 'interactive_dissolve_self_and_enemy', {'count': 1}
-        if card_name == '臺灣奧援':
-            if tier >= 3:
-                return 'interactive_dissolve_and_build', {'count': 1}
-            if tier == 2:
-                return 'interactive_dissolve_many_near', {'count': 1}
-            return 'gain_resource', {'propaganda': 1}
-        if card_name == '天方奧援':
-            if tier >= 3:
-                return 'force_discard_near', {'count': 2, 'random': True}
-            if tier == 2:
-                return 'force_discard_near', {'count': 1, 'random': True}
-            return 'force_discard_near', {'count': 1, 'random': False}
-        if card_name == '紅軍奧援':
-            return 'red_support_draw_and_pass', {'draw': 1}
-        return 'text_only', {'text': text}
+        return resolve_support_card_effect(self.support_taxonomy, card_name, tier, region_index)
 
     def _interactive_support_build_towns(self, player, near_only=False):
         inner_towns = set(self._towns_for_region_alias('china'))
@@ -3668,20 +3595,13 @@ class Game:
         return self._towns_within_steps(source_towns, max_steps=max_steps)
 
     def _support_taxonomy_entry(self, card_name):
-        for entry in self.support_taxonomy:
-            if entry.get("name") == card_name:
-                return entry
-        return None
+        return support_taxonomy_entry(self.support_taxonomy, card_name)
 
     def _is_support_card(self, card):
-        card_name = getattr(card, "name", str(card))
-        return self._support_taxonomy_entry(card_name) is not None
+        return is_support_card(self.support_taxonomy, card)
 
     def _is_india_flag_card(self, card):
-        entry = self._support_taxonomy_entry(getattr(card, "name", str(card)))
-        if entry is not None:
-            return bool(entry.get("counts_as_flag_card"))
-        return False
+        return is_india_flag_card(self.support_taxonomy, card)
 
     def _player_ruler_presence(self, player):
         return set(self._player_ruler_organization_counts(player))
@@ -3715,24 +3635,7 @@ class Game:
         return leaders
 
     def _support_card_variant_info(self, card):
-        """Which II 級門檻地區這張特定奧援卡實體印的是哪一組，供前端顯示這張牌實際印的
-        那組地區（而不是同名卡另一種變體的地區）。非奧援卡回傳 None。"""
-        card_name = getattr(card, "name", str(card))
-        entry = self._support_taxonomy_entry(card_name)
-        if not entry:
-            return None
-        regions = entry.get("regions", []) or []
-        if not regions:
-            return None
-        variant_index = getattr(card, "variant_index", 0) or 0
-        if variant_index >= len(regions):
-            variant_index = 0
-        region = regions[variant_index]
-        return {
-            "variant_index": variant_index,
-            "support_region": entry.get("support_region"),
-            "tier2_regions": list(region.get("preferred_rulers", []) or []),
-        }
+        return support_card_variant_info(self.support_taxonomy, card)
 
     def _support_card_tier(self, player, card):
         card_name = getattr(card, "name", str(card))
