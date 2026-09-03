@@ -4392,45 +4392,86 @@ class Game:
             if not isinstance(ability, dict):
                 continue
             name = ability.get("name")
-            if name == "商貿組織" and cost_has_money and not self.turn_log.get("faction_first_money_triggered"):
-                self.turn_log["faction_first_money_triggered"] = True
-                self._draw_player_cards(player, 1, trigger_name=name)
-                self.log(f"{player.name} triggered {name} and drew 1 card")
-                self._track_event_progress('use_faction_ability', player=player)
-            elif name in {"民族調和", "星星之火"} and cost_has_propaganda and not self.turn_log.get("faction_first_propaganda_triggered"):
-                self.turn_log["faction_first_propaganda_triggered"] = True
-                self._draw_player_cards(player, 1, trigger_name=name)
-                self.log(f"{player.name} triggered {name} and drew 1 card")
-                self._track_event_progress('use_faction_ability', player=player)
-            elif name == "人同此心" and cost_has_propaganda and not self.turn_log.get("faction_first_prop_gain_triggered"):
-                self.turn_log["faction_first_prop_gain_triggered"] = True
-                player.resources["propaganda"] += 2
-                self.log(f"{player.name} triggered 人同此心 and gained 2 propaganda")
-                self._track_event_progress('use_faction_ability', player=player)
-            elif name in {"基金會", "共合會"} and cost_has_money and not self.turn_log.get("faction_first_money_gain_triggered"):
-                self.turn_log["faction_first_money_gain_triggered"] = True
-                player.resources["money"] += 2
-                self.log(f"{player.name} triggered {name} and gained 2 money")
-                self._track_event_progress('use_faction_ability', player=player)
-            elif name == "展現實力" and not self.turn_log.get("combo_reward_triggered"):
-                if len(self.turn_log.get("played_nonstarter_names", [])) >= 3:
-                    self.turn_log["combo_reward_triggered"] = True
-                    self._pending_show_strength_players.append(player.id)
-                    self.log(f"{player.name} triggered 展現實力 and must choose 3 propaganda or 3 money")
-                    if not self.pending_choice:
-                        self._continue_show_strength_choice_queue()
-                    self._track_event_progress('use_faction_ability', player=player)
+            if self._maybe_trigger_first_money_draw(player, name, cost_has_money):
+                continue
+            if self._maybe_trigger_first_propaganda_draw(player, name, cost_has_propaganda):
+                continue
+            if self._maybe_trigger_first_propaganda_gain(player, name, cost_has_propaganda):
+                continue
+            if self._maybe_trigger_first_money_gain(player, name, cost_has_money):
+                continue
+            self._maybe_trigger_combo_reward(player, name)
 
+        self._maybe_trigger_india_research_room(player, played_card)
+
+    def _maybe_trigger_first_money_draw(self, player, name, cost_has_money):
+        """商貿組織: first money-cost card play this turn -> draw 1 card."""
+        if name != "商貿組織" or not cost_has_money or self.turn_log.get("faction_first_money_triggered"):
+            return False
+        self.turn_log["faction_first_money_triggered"] = True
+        self._draw_player_cards(player, 1, trigger_name=name)
+        self.log(f"{player.name} triggered {name} and drew 1 card")
+        self._track_event_progress('use_faction_ability', player=player)
+        return True
+
+    def _maybe_trigger_first_propaganda_draw(self, player, name, cost_has_propaganda):
+        """民族調和/星星之火: first propaganda-cost card play this turn -> draw 1 card."""
+        if name not in {"民族調和", "星星之火"} or not cost_has_propaganda or self.turn_log.get("faction_first_propaganda_triggered"):
+            return False
+        self.turn_log["faction_first_propaganda_triggered"] = True
+        self._draw_player_cards(player, 1, trigger_name=name)
+        self.log(f"{player.name} triggered {name} and drew 1 card")
+        self._track_event_progress('use_faction_ability', player=player)
+        return True
+
+    def _maybe_trigger_first_propaganda_gain(self, player, name, cost_has_propaganda):
+        """人同此心: first propaganda-cost card play this turn -> gain 2 propaganda."""
+        if name != "人同此心" or not cost_has_propaganda or self.turn_log.get("faction_first_prop_gain_triggered"):
+            return False
+        self.turn_log["faction_first_prop_gain_triggered"] = True
+        player.resources["propaganda"] += 2
+        self.log(f"{player.name} triggered 人同此心 and gained 2 propaganda")
+        self._track_event_progress('use_faction_ability', player=player)
+        return True
+
+    def _maybe_trigger_first_money_gain(self, player, name, cost_has_money):
+        """基金會/共合會: first money-cost card play this turn -> gain 2 money."""
+        if name not in {"基金會", "共合會"} or not cost_has_money or self.turn_log.get("faction_first_money_gain_triggered"):
+            return False
+        self.turn_log["faction_first_money_gain_triggered"] = True
+        player.resources["money"] += 2
+        self.log(f"{player.name} triggered {name} and gained 2 money")
+        self._track_event_progress('use_faction_ability', player=player)
+        return True
+
+    def _maybe_trigger_combo_reward(self, player, name):
+        """展現實力: after 3 distinct non-starter card plays this turn -> pending choice for 3 propaganda or 3 money."""
+        if name != "展現實力" or self.turn_log.get("combo_reward_triggered"):
+            return False
+        if len(self.turn_log.get("played_nonstarter_names", [])) < 3:
+            return False
+        self.turn_log["combo_reward_triggered"] = True
+        self._pending_show_strength_players.append(player.id)
+        self.log(f"{player.name} triggered 展現實力 and must choose 3 propaganda or 3 money")
+        if not self.pending_choice:
+            self._continue_show_strength_choice_queue()
+        self._track_event_progress('use_faction_ability', player=player)
+        return True
+
+    def _maybe_trigger_india_research_room(self, player, played_card):
+        """印度研究分析室: playing an India flag card -> gain 2 money (once per turn)."""
         if (
-            played_card is not None
-            and self._player_has_india_research_room(player)
-            and self._is_india_flag_card(played_card)
-            and not self.turn_log.get("india_flag_money_triggered")
+            played_card is None
+            or not self._player_has_india_research_room(player)
+            or not self._is_india_flag_card(played_card)
+            or self.turn_log.get("india_flag_money_triggered")
         ):
-            self.turn_log["india_flag_money_triggered"] = True
-            player.resources["money"] += 2
-            self.log(f"{player.name} triggered 印度研究分析室 and gained 2 money")
-            self._track_event_progress('use_faction_ability', player=player)
+            return False
+        self.turn_log["india_flag_money_triggered"] = True
+        player.resources["money"] += 2
+        self.log(f"{player.name} triggered 印度研究分析室 and gained 2 money")
+        self._track_event_progress('use_faction_ability', player=player)
+        return True
 
     def _apply_turn_end_faction_abilities(self, player):
         effective = self._player_effective_abilities(player)
@@ -4442,17 +4483,27 @@ class Game:
             if not isinstance(ability, dict):
                 continue
             name = ability.get("name")
-            if name in {"本土社團", "還我河山"} and built_in_china:
-                self._draw_player_cards(player, 1)
-                self.log(f"{player.name} triggered {name} and drew 1 card")
-                self._track_event_progress('use_faction_ability', player=player)
-            elif name == "民國之心" and (built_in_china or built_in_nanyang):
-                self._draw_player_cards(player, 1)
-                self.log(f"{player.name} triggered 民國之心 and drew 1 card")
-                self._track_event_progress('use_faction_ability', player=player)
-            elif name in {"商貿組織", "民族調和", "星星之火", "基金會", "共合會", "展現實力"}:
-                # not turn-end abilities
+            if self._maybe_trigger_turn_end_build_draw(player, name, built_in_china):
                 continue
+            self._maybe_trigger_turn_end_expansion_draw(player, name, built_in_china, built_in_nanyang)
+
+    def _maybe_trigger_turn_end_build_draw(self, player, name, built_in_china):
+        """本土社團/還我河山: built in China this turn -> draw 1 card."""
+        if name not in {"本土社團", "還我河山"} or not built_in_china:
+            return False
+        self._draw_player_cards(player, 1)
+        self.log(f"{player.name} triggered {name} and drew 1 card")
+        self._track_event_progress('use_faction_ability', player=player)
+        return True
+
+    def _maybe_trigger_turn_end_expansion_draw(self, player, name, built_in_china, built_in_nanyang):
+        """民國之心: built in China or Nanyang this turn -> draw 1 card."""
+        if name != "民國之心" or not (built_in_china or built_in_nanyang):
+            return False
+        self._draw_player_cards(player, 1)
+        self.log(f"{player.name} triggered 民國之心 and drew 1 card")
+        self._track_event_progress('use_faction_ability', player=player)
+        return True
 
     def _camp_token_for_faction_id(self, faction_id):
         return camp_token_for_faction_id(self.faction_by_id, faction_id)
