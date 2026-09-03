@@ -60,3 +60,6 @@ class GameManager:
                     await ws.send_json(state)
                 except Exception:
                     self.remove_connection(game_id, player_id, ws)
+
+
+manager = GameManager()
