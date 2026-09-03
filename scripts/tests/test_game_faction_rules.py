@@ -16,6 +16,9 @@ from server.game_faction_rules import (
     camp_token_for_faction_id,
     canonical_faction_name_to_id,
     factions_sharing_with,
+    player_camp,
+    player_matches_camp,
+    players_matching_camp,
 )
 
 
@@ -151,3 +154,41 @@ def test_factions_sharing_with_matches_game_method_for_taiwan_blue():
     actual = factions_sharing_with(game.faction_by_id, "taiwan_blue")
     assert expected == actual
     assert actual == {"republican", "dian"}
+
+
+def test_player_camp_falls_back_to_faction_id_when_faction_has_no_camp():
+    game = _new_game()
+    player = game.players[0]
+    player.faction_id = "hong_kong"
+    expected = game._player_camp(player)
+    actual = player_camp(game.faction_by_id, player)
+    assert expected == actual
+
+
+def test_player_matches_camp_true_for_no_camp_filter():
+    game = _new_game()
+    player = game.players[0]
+    assert game._player_matches_camp(player, None) is True
+    assert player_matches_camp(game.faction_by_id, player, None) is True
+
+
+def test_player_matches_camp_matches_by_own_camp_or_faction_id():
+    game = _new_game()
+    player = game.players[0]
+    player.faction_id = "red_army"
+    camp = game._player_camp(player)
+    assert game._player_matches_camp(player, camp) is True
+    assert player_matches_camp(game.faction_by_id, player, camp) is True
+    assert game._player_matches_camp(player, "no_such_camp_xyz") is False
+
+
+def test_players_matching_camp_matches_game_method():
+    game = _new_game()
+    game.players[0].faction_id = "red_army"
+    game.players[1].faction_id = "hong_kong"
+    camp = game._player_camp(game.players[0])
+    expected = game._players_matching_camp(camp)
+    actual = players_matching_camp(game.faction_by_id, game.players, camp)
+    assert [p.id for p in expected] == [p.id for p in actual]
+    assert game.players[0] in expected
+    assert game.players[1] not in expected

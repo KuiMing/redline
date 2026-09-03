@@ -66,6 +66,9 @@ from server.game_faction_rules import (
     camp_token_for_faction_id,
     canonical_faction_name_to_id,
     factions_sharing_with,
+    player_camp,
+    player_matches_camp,
+    players_matching_camp,
 )
 from server.game_event_display import event_display_payload
 from server.game_event_triggers import (
@@ -107,6 +110,23 @@ from server.game_organization_scope_rules import (
     player_requirement_org_count,
 )
 from server.game_choice_rules import choice_is_card_map_interaction
+from server.game_build_eligibility_rules import (
+    camp_token_for_player,
+    red_army_base_build_blocked,
+    can_faction_develop_in_town,
+    organization_entries_at,
+    town_has_physical_organization,
+    organization_occupancy_violations,
+    rail_reachable_within_three,
+    org_supply_limit,
+    player_is_nonviolent,
+    player_is_distance_restricted,
+    faction_restricts_ignore_distance_build,
+    era_restricts_ignore_distance_build,
+    ignore_distance_build_restricted,
+    restricted_build_fallback_towns,
+    active_era_effects,
+)
 
 STATIC_PURCHASE_CARD_SUPPLY = {
     # data/raw/action_cards.csv 「卡牌張數」
@@ -121,12 +141,6 @@ STATIC_PURCHASE_CARD_NAMES = tuple(STATIC_PURCHASE_CARD_SUPPLY)
 
 # rules.md 步驟⑦：事件牌庫為混洗後抽出的 20 張
 EVENT_DECK_SIZE = 20
-
-# rules.md 步驟④：反共陣營各 22 個組織棋，此即可建立組織之最大數量。
-# 紅軍上限原文為「反共陣營玩家總人數×8（有臺灣玩家再+8）」；
-# 依使用者 2026-07-11 決定改為固定 40。
-ANTI_COMMUNIST_ORG_SUPPLY = 22
-RED_ARMY_ORG_SUPPLY = 40
 
 # Pending choices that may be cancelled by closing the modal without any side effect.
 # These are voluntary Red Army activated abilities whose ability-use count is only consumed
@@ -598,16 +612,13 @@ class Game:
         return {'success': True, 'applied': True, 'target_player_id': getattr(target_player, 'id', None)}
 
     def _player_camp(self, player):
-        faction = self.faction_by_id.get(getattr(player, 'faction_id', None), {})
-        return faction.get('camp') or getattr(player, 'faction_id', None)
+        return player_camp(self.faction_by_id, player)
 
     def _player_matches_camp(self, player, camp):
-        if not camp:
-            return True
-        return self._player_camp(player) == camp or getattr(player, 'faction_id', None) == camp
+        return player_matches_camp(self.faction_by_id, player, camp)
 
     def _players_matching_camp(self, camp):
-        return [player for player in self.players if self._player_matches_camp(player, camp)]
+        return players_matching_camp(self.faction_by_id, self.players, camp)
 
     def _card_matches_types(self, card, card_types):
         if not card_types:
@@ -3527,49 +3538,31 @@ class Game:
         )
 
     def _player_is_nonviolent(self, player):
-        return self._player_has_ability(player, "非暴力")
+        return player_is_nonviolent(self.faction_by_id, self.ability_templates, player)
 
     def _player_is_distance_restricted(self, player):
-        # 新疆社會管控（維吾爾慕尼黑）：無法無視距離建立牆內組織
-        return self._player_has_ability(player, "新疆社會管控")
+        return player_is_distance_restricted(self.faction_by_id, self.ability_templates, player)
 
     def _faction_restricts_ignore_distance_build(self, player, town):
-        if not self._player_is_distance_restricted(player):
-            return False
-        return town in set(self._towns_for_region_alias("china"))
+        return faction_restricts_ignore_distance_build(
+            self.map, self.towns_by_ruler, self.faction_by_id, self.ability_templates, player, town
+        )
 
     def _ignore_distance_build_restricted(self, player, town):
-        """該玩家在這個城鎮是否「無法無視距離建立組織」。
-
-        目前有兩種來源，兩者的處理方式必須一致：
-        1. 陣營能力「新疆社會管控」（維吾爾）——固定限制牆內。
-        2. 時代關卡的 `restrict_ignore_distance_build` 紅色壓制（[反賊]公知世代的終結、
-           [哈薩克]伊塔事件……），依 `target_camp`／`scope` 判定。任何未來新增同型效果
-           的時代關卡都會自動沿用同一套處理。
-
-        兩者都只是「不能無視距離」，不是「完全不能建立」：呼叫端應改用近距離退回範圍
-        （見 `_restricted_build_fallback_towns()`），而不是直接把城鎮排除掉。
-        """
-        if self._faction_restricts_ignore_distance_build(player, town):
-            return True
-        return self._era_restricts_ignore_distance_build(player, town)
+        return ignore_distance_build_restricted(
+            self.map,
+            self.towns_by_ruler,
+            self.faction_by_id,
+            self.ability_templates,
+            self._active_era_effects(),
+            player,
+            town,
+        )
 
     def _restricted_build_fallback_towns(self, player, fallback_range):
-        """受距離限制時可退回的建立範圍：卡面基礎格數 ＋ 建立距離加成 ＋ 安全屋 +1。
-
-        例：組織經驗甲卡面「本牌於牆內建立組織距離為1格」＝ fallback_range 1；若該玩家
-        另有增加建立距離的能力（安全屋／build_range_bonus），則放寬為 2 格。
-        """
-        fallback_range = int(fallback_range or 0)
-        if fallback_range <= 0:
-            return set()
-        source_towns = self._organization_towns_for_player(player)
-        if not source_towns:
-            return set()
-        max_steps = fallback_range + int(getattr(player, 'build_range_bonus', 0) or 0)
-        if self._player_has_ability(player, "安全屋"):
-            max_steps += 1
-        return self._towns_within_steps(source_towns, max_steps=max_steps)
+        return restricted_build_fallback_towns(
+            self.map, self.faction_by_id, self.players, self.ability_templates, player, fallback_range
+        )
 
     def _support_taxonomy_entry(self, card_name):
         return support_taxonomy_entry(self.support_taxonomy, card_name)
@@ -4285,33 +4278,13 @@ class Game:
         return camp_token_for_faction_id(self.faction_by_id, faction_id)
 
     def _camp_token_for_player(self, player):
-        return self._camp_token_for_faction_id(player.faction_id)
+        return camp_token_for_player(self.faction_by_id, player)
 
     def _red_army_base_build_blocked(self, faction_id, town):
-        return (
-            faction_id == 'red_army'
-            and town in set((getattr(self, 'turn_log', {}) or {}).get('red_army_base_build_blocks', []) or [])
-        )
+        return red_army_base_build_blocked(getattr(self, 'turn_log', {}), faction_id, town)
 
     def can_faction_develop_in_town(self, faction_id, town):
-        town_data = self.map.get("towns", {}).get(town)
-        if not town_data:
-            return False
-
-        camp_tags = town_data.get("camp", []) or []
-        faction_token = self._camp_token_for_faction_id(faction_id)
-
-        # Red Army can only develop where explicit red camp tag exists. A base that
-        # suffered two successful dissolves by one attacker is blocked only this turn.
-        if faction_id == "red_army":
-            if self._red_army_base_build_blocked(faction_id, town):
-                return False
-            return "紅軍" in camp_tags
-
-        # Non-red factions may develop in their own tagged towns OR towns with no camp tags.
-        if not camp_tags:
-            return True
-        return faction_token in camp_tags
+        return can_faction_develop_in_town(self.map, self.faction_by_id, getattr(self, 'turn_log', {}), faction_id, town)
 
     def _canonical_faction_name_to_id(self, name):
         return canonical_faction_name_to_id(name)
@@ -4320,31 +4293,16 @@ class Game:
         return factions_sharing_with(self.faction_by_id, faction_id)
 
     def _organization_entries_at(self, town):
-        return [
-            (player, int((player.organizations or {}).get(town, 0) or 0))
-            for player in self.players
-            if int((player.organizations or {}).get(town, 0) or 0) > 0
-        ]
+        return organization_entries_at(self.players, town)
 
     def _town_has_physical_organization(self, town):
-        return bool(self._organization_entries_at(town))
+        return town_has_physical_organization(self.players, town)
 
     def _organization_towns_for_player(self, player):
         return organization_towns_for_player(self.map, self.faction_by_id, self.players, player)
 
     def _organization_occupancy_violations(self):
-        violations = []
-        for town in self.map.get('towns', {}):
-            entries = self._organization_entries_at(town)
-            if len(entries) > 1 or any(count != 1 for _, count in entries):
-                violations.append({
-                    'town': town,
-                    'entries': [
-                        {'player_id': getattr(owner, 'id', None), 'player': owner.name, 'count': count}
-                        for owner, count in entries
-                    ],
-                })
-        return violations
+        return organization_occupancy_violations(self.map, self.players)
 
     def _place_organization(self, player, town, *, require_supply=True, require_development=True, enforce_base_build_block=True):
         if town not in self.map.get('towns', {}):
@@ -4376,42 +4334,21 @@ class Game:
         return self.can_develop_in_town(player, town)
 
     def _rail_reachable_within_three(self, player, from_town, to_town):
-        # rules.md：鐵路一次最多移動3格，但「翻牆需2次移動且僅移動1格」——
-        # 多格鐵路移動不得跨越牆內/牆外邊界（跨牆只能走 move_organization 的1格跨牆分支）
-        movement_rules = self.map.get('movement_rules', {}) or {}
-        rail_range = max(1, int(movement_rules.get('rail_range', 3) or 3))
-        inner_towns = set(self._towns_for_region_alias('china'))
-        origin_side_inner = from_town in inner_towns
-        visited = {from_town}
-        queue = [(from_town, 0)]
-        while queue:
-            town, distance = queue.pop(0)
-            if distance >= rail_range:
-                continue
-            for neighbor in self.map.get('towns', {}).get(town, {}).get('rail', []) or []:
-                if neighbor not in self.map.get('towns', {}):
-                    continue
-                if (neighbor in inner_towns) != origin_side_inner:
-                    continue
-                next_distance = distance + 1
-                if neighbor == to_town:
-                    return not self._town_blocks_movement_for_player(player, neighbor)
-                if neighbor in visited:
-                    continue
-                if self._town_blocks_movement_for_player(player, neighbor):
-                    continue
-                visited.add(neighbor)
-                queue.append((neighbor, next_distance))
-        return False
+        return rail_reachable_within_three(
+            self.map, self.towns_by_ruler, self.faction_by_id, self.players, player, from_town, to_town
+        )
 
     def _org_supply_limit(self, player):
-        return RED_ARMY_ORG_SUPPLY if getattr(player, 'faction_id', None) == 'red_army' else ANTI_COMMUNIST_ORG_SUPPLY
+        return org_supply_limit(player)
 
     def _has_org_supply(self, player, count=1):
+        # Routed through self._org_supply_limit (not the module's has_org_supply
+        # composite) so that tests can monkeypatch _org_supply_limit and have it
+        # take effect here — see test_build_entitlement_queue.py.
         return player.total_organizations() + count <= self._org_supply_limit(player)
 
     def can_develop_in_town(self, player, town):
-        # 所有建立路徑都遵守：全場每城最多一個實體組織；共用組織只提供使用權，不提供疊放例外。
+        # Routed through self._has_org_supply for the same monkeypatch reason.
         if self._town_has_physical_organization(town):
             return False
         if not self._has_org_supply(player):
@@ -6626,11 +6563,7 @@ class Game:
     def _active_era_effects(self):
         if not getattr(self, 'era_engine', None):
             return []
-        effects = []
-        for detail in self.era_engine.get_active_era_details():
-            for side, effect in ((detail.get('effects') or {}).items()):
-                effects.append((detail, side, effect or {}))
-        return effects
+        return active_era_effects(self.era_engine.get_active_era_details())
 
     def _era_purchase_cost_reduction(self, player, card):
         return era_purchase_cost_reduction(
@@ -6863,16 +6796,9 @@ class Game:
         return applied
 
     def _era_restricts_ignore_distance_build(self, player, target_town):
-        for era, _side, effect in self._active_era_effects():
-            if (effect or {}).get('type') != 'restrict_ignore_distance_build':
-                continue
-            if not self._player_matches_camp(player, effect.get('target_camp')):
-                continue
-            scope = effect.get('scope')
-            if scope and not self._town_matches_region_alias(target_town, scope):
-                continue
-            return True
-        return False
+        return era_restricts_ignore_distance_build(
+            self._active_era_effects(), self.faction_by_id, self.map, self.towns_by_ruler, player, target_town
+        )
 
     def _era_notification_payload(self, era):
         return era_notification_payload(era)
