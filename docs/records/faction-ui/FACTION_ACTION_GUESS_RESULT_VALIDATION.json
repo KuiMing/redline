@@ -16,6 +16,7 @@
         "guess": true,
         "hit": true,
         "reward": true,
+        "private_bottom_card_not_in_result": true,
         "destination": true,
         "state_flag": true,
         "hand_bottomed": true,
@@ -32,7 +33,6 @@
           "cost_total": 3,
           "guess": "odd",
           "hit": true,
-          "bottom_card": "墊牌",
           "destination": "deck_top",
           "reward": {
             "money": 3,
@@ -62,6 +62,7 @@
         "guess": true,
         "hit": true,
         "reward": true,
+        "private_bottom_card_not_in_result": true,
         "destination": true,
         "state_flag": true,
         "hand_bottomed": true,
@@ -78,7 +79,6 @@
           "cost_total": 2,
           "guess": "odd",
           "hit": false,
-          "bottom_card": "墊牌",
           "destination": "deck_top",
           "reward": {
             "money": 0,
@@ -108,6 +108,7 @@
         "guess": true,
         "hit": true,
         "reward": true,
+        "private_bottom_card_not_in_result": true,
         "destination": true,
         "state_flag": true,
         "hand_bottomed": true,
@@ -124,7 +125,6 @@
           "cost_total": 2,
           "guess": "even",
           "hit": true,
-          "bottom_card": "墊牌",
           "destination": "deck_top",
           "reward": {
             "money": 2,
@@ -154,6 +154,7 @@
         "guess": true,
         "hit": true,
         "reward": true,
+        "private_bottom_card_not_in_result": true,
         "destination": true,
         "state_flag": true,
         "hand_bottomed": true,
@@ -171,7 +172,6 @@
           "cost_total": 3,
           "guess": "even",
           "hit": false,
-          "bottom_card": "墊牌",
           "destination": "deck_top",
           "reward": {
             "money": 0,
@@ -201,6 +201,7 @@
         "guess": true,
         "hit": true,
         "reward": true,
+        "private_bottom_card_not_in_result": true,
         "destination": true,
         "state_flag": true,
         "hand_bottomed": true,
@@ -218,7 +219,6 @@
           "cost_total": 3,
           "guess": "even",
           "hit": false,
-          "bottom_card": "墊牌",
           "destination": "deck_top",
           "reward": {
             "money": 2,
@@ -248,6 +248,7 @@
         "guess": true,
         "hit": true,
         "reward": true,
+        "private_bottom_card_not_in_result": true,
         "destination": true,
         "state_flag": true,
         "hand_bottomed": true,
@@ -266,7 +267,6 @@
           "cost_total": 3,
           "guess": "odd",
           "hit": true,
-          "bottom_card": "要墊底的牌",
           "destination": "deck_top",
           "reward": {
             "money": 3,
@@ -293,10 +293,11 @@
         "ethnic_result_branch": true,
         "guess_text": true,
         "reward_text": true,
-        "result_actions_include_guess_cards": true,
-        "aomen_modal_receives_result_html": true,
-        "ethnic_modal_receives_result_html": true,
-        "placeholder_mentions_guess_result": true
+        "shared_reveal_result_actions": true,
+        "shared_result_uses_prompt_modal": true,
+        "shared_result_suppresses_inline_result": true,
+        "shared_result_suppresses_duplicate_peer_notice": true,
+        "placeholder_mentions_shared_prompt": true
       }
     }
   ]

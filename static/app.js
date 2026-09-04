@@ -3085,6 +3085,8 @@ function showStickyPlayerErrorNotice(message, durationMs = 5000) {
   }, durationMs);
 }
 
+const SHARED_REVEAL_RESULT_ACTION_NAMES = new Set(['立場試探', '賭徒耳語', '民族祭儀']);
+
 function formatFactionActionResult(result) {
   if (!result || !result.name) return '';
   if (result.unavailable) {
@@ -3139,18 +3141,27 @@ function renderFactionActionResult(state, faction) {
     info.textContent = '';
     return {hasResult: false, message: '', html: ''};
   }
-  const resultActionNames = new Set(['立場試探', '賭徒耳語', '民族祭儀', ...redArmyActionNames]);
+  const resultActionNames = new Set([...SHARED_REVEAL_RESULT_ACTION_NAMES, ...redArmyActionNames]);
   if (resultActionNames.has(result?.name) && message) {
-    const resultKey = JSON.stringify(result);
+    const resultKey = JSON.stringify([
+      state.turn_number ?? state.turn ?? null,
+      state.current_player || '',
+      result,
+    ]);
+    const isSharedRevealResult = SHARED_REVEAL_RESULT_ACTION_NAMES.has(result.name) && !result.unavailable;
     if (lastFactionActionResultKey !== resultKey) {
       lastFactionActionResultKey = resultKey;
       if (result.unavailable) {
         showUnavailableActionModal(result.name, message);
+      } else if (isSharedRevealResult) {
+        showActionMessageModal(`${result.name}結果`, message);
       } else {
         showStickyPlayerErrorNotice(message);
       }
     }
-    const html = result.unavailable ? '' : `<div class="faction-action-result">${escapeHtml(message)}</div>`;
+    const html = result.unavailable || isSharedRevealResult
+      ? ''
+      : `<div class="faction-action-result">${escapeHtml(message)}</div>`;
     info.innerHTML = html;
     return {hasResult: true, message, html};
   }
@@ -3159,13 +3170,13 @@ function renderFactionActionResult(state, faction) {
   if (!stickyPlayerErrorNotice) setPhaseActionNotice('');
 
   if (faction === 'liberals') {
-    const html = '<div class="faction-action-placeholder">發動後會在此直接顯示翻到的卡牌與去向。</div>';
+    const html = '<div class="faction-action-placeholder">發動後會以提示視窗向所有玩家公開翻到的卡牌與去向。</div>';
     info.innerHTML = html;
     return {hasResult: false, message: '', html};
   }
 
   if (faction === 'aomen') {
-    const html = '<div class="faction-action-placeholder">發動後會在此直接顯示猜測、翻牌與資源結果。</div>';
+    const html = '<div class="faction-action-placeholder">發動後會以提示視窗向所有玩家公開猜測、翻牌與資源結果。</div>';
     info.innerHTML = html;
     return {hasResult: false, message: '', html};
   }
@@ -3177,7 +3188,7 @@ function renderFactionActionResult(state, faction) {
 
   const ethnicRitualFactions = new Set(['zhuang','yi','bai','hani','dai','miao','tujia','dong','buyei','yao','li']);
   if (ethnicRitualFactions.has(faction)) {
-    const html = '<div class="faction-action-placeholder">發動後會在此直接顯示猜測、翻牌與資源結果。</div>';
+    const html = '<div class="faction-action-placeholder">發動後會以提示視窗向所有玩家公開猜測、翻牌與資源結果。</div>';
     info.innerHTML = html;
     return {hasResult: false, message: '', html};
   }
@@ -3945,6 +3956,12 @@ function renderPeerActionNotice(state) {
   const overlay = document.getElementById('peerActionNotice');
   if (!overlay) return;
   const entries = state.action_log || [];
+  const sharedResultName = state.last_action_result?.name || '';
+  if (SHARED_REVEAL_RESULT_ACTION_NAMES.has(sharedResultName)) {
+    // 公開翻牌結果已由所有玩家共用的行動提示視窗顯示；消耗相同 log，避免再疊一層動態通知。
+    closePeerActionNotice(entries);
+    return;
+  }
 
   if (peerActionNoticeGameId !== gameId) {
     // (Re)connected to a different game: don't replay the whole history as "new".
