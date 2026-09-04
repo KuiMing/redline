@@ -1,0 +1,176 @@
+{
+  "summary": {
+    "total": 11,
+    "passed": 11,
+    "failed": 0
+  },
+  "red_baseline": {
+    "summary": {
+      "total": 11,
+      "passed": 5,
+      "failed": 6
+    },
+    "failed_checks": [
+      "private_bottom_card_is_not_in_public_result",
+      "actor_sees_result_prompt_modal",
+      "observer_sees_result_prompt_modal",
+      "actor_and_observer_messages_are_identical",
+      "result_does_not_use_hud_notice",
+      "observer_does_not_get_duplicate_peer_action_overlay"
+    ],
+    "record": "docs/records/faction-ui/gambler-whisper-shared-result-modal/GAMBLER_WHISPER_SHARED_RESULT_MODAL_RED_BASELINE.json"
+  },
+  "service": "http://127.0.0.1:8787",
+  "scenario": "澳門發動賭徒耳語；猜奇數；公開翻到宣傳家；識別碼 [REDACTED]",
+  "checks": [
+    {
+      "name": "same_result_reaches_actor_and_observer",
+      "passed": true,
+      "details": {
+        "actor": {
+          "name": "賭徒耳語",
+          "revealed_card": "宣傳家",
+          "cost_total": 3,
+          "guess": "odd",
+          "hit": true,
+          "destination": "deck_top",
+          "reward": {
+            "money": 3,
+            "propaganda": 3
+          }
+        },
+        "observer": {
+          "name": "賭徒耳語",
+          "revealed_card": "宣傳家",
+          "cost_total": 3,
+          "guess": "odd",
+          "hit": true,
+          "destination": "deck_top",
+          "reward": {
+            "money": 3,
+            "propaganda": 3
+          }
+        }
+      }
+    },
+    {
+      "name": "private_bottom_card_is_not_in_public_result",
+      "passed": true,
+      "details": {
+        "actor": {
+          "name": "賭徒耳語",
+          "revealed_card": "宣傳家",
+          "cost_total": 3,
+          "guess": "odd",
+          "hit": true,
+          "destination": "deck_top",
+          "reward": {
+            "money": 3,
+            "propaganda": 3
+          }
+        },
+        "observer": {
+          "name": "賭徒耳語",
+          "revealed_card": "宣傳家",
+          "cost_total": 3,
+          "guess": "odd",
+          "hit": true,
+          "destination": "deck_top",
+          "reward": {
+            "money": 3,
+            "propaganda": 3
+          }
+        }
+      }
+    },
+    {
+      "name": "actor_sees_result_prompt_modal",
+      "passed": true,
+      "details": {
+        "modalDisplay": "flex",
+        "modalTitle": "賭徒耳語結果",
+        "modalMessage": "賭徒耳語結果：猜奇數，翻到 宣傳家（費用 3） 是奇數，猜中，獲得 資金 +3、宣傳 +3",
+        "phaseNoticeDisplay": "none",
+        "phaseNoticeText": "",
+        "peerNoticeDisplay": "none"
+      }
+    },
+    {
+      "name": "observer_sees_result_prompt_modal",
+      "passed": true,
+      "details": {
+        "modalDisplay": "flex",
+        "modalTitle": "賭徒耳語結果",
+        "modalMessage": "賭徒耳語結果：猜奇數，翻到 宣傳家（費用 3） 是奇數，猜中，獲得 資金 +3、宣傳 +3",
+        "phaseNoticeDisplay": "none",
+        "phaseNoticeText": "",
+        "peerNoticeDisplay": "none"
+      }
+    },
+    {
+      "name": "actor_and_observer_messages_are_identical",
+      "passed": true,
+      "details": {
+        "actor": "賭徒耳語結果：猜奇數，翻到 宣傳家（費用 3） 是奇數，猜中，獲得 資金 +3、宣傳 +3",
+        "observer": "賭徒耳語結果：猜奇數，翻到 宣傳家（費用 3） 是奇數，猜中，獲得 資金 +3、宣傳 +3"
+      }
+    },
+    {
+      "name": "result_does_not_use_hud_notice",
+      "passed": true,
+      "details": {
+        "actor": {
+          "modalDisplay": "flex",
+          "modalTitle": "賭徒耳語結果",
+          "modalMessage": "賭徒耳語結果：猜奇數，翻到 宣傳家（費用 3） 是奇數，猜中，獲得 資金 +3、宣傳 +3",
+          "phaseNoticeDisplay": "none",
+          "phaseNoticeText": "",
+          "peerNoticeDisplay": "none"
+        },
+        "observer": {
+          "modalDisplay": "flex",
+          "modalTitle": "賭徒耳語結果",
+          "modalMessage": "賭徒耳語結果：猜奇數，翻到 宣傳家（費用 3） 是奇數，猜中，獲得 資金 +3、宣傳 +3",
+          "phaseNoticeDisplay": "none",
+          "phaseNoticeText": "",
+          "peerNoticeDisplay": "none"
+        }
+      }
+    },
+    {
+      "name": "observer_does_not_get_duplicate_peer_action_overlay",
+      "passed": true,
+      "details": "none"
+    },
+    {
+      "name": "gambler_reward_and_hand_state_are_resolved",
+      "passed": true,
+      "details": {
+        "resources": {
+          "money": 3,
+          "propaganda": 3
+        },
+        "hand": []
+      }
+    },
+    {
+      "name": "actor_dismissal_stays_closed_for_same_result",
+      "passed": true,
+      "details": "none"
+    },
+    {
+      "name": "observer_dismissal_stays_closed_for_same_result",
+      "passed": true,
+      "details": "none"
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "passed": true,
+      "details": []
+    }
+  ],
+  "screenshots": [
+    "docs/records/faction-ui/gambler-whisper-shared-result-modal/gambler_whisper_actor_result_modal_1280x720.png",
+    "docs/records/faction-ui/gambler-whisper-shared-result-modal/gambler_whisper_observer_result_modal_1280x720.png"
+  ]
+}

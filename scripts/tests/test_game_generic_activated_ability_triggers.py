@@ -121,10 +121,15 @@ def test_guess_ability_with_single_hand_card_resolves_immediately():
     game = _new_game()
     player = _player(game)
     player.hand = [Card('追隨者', 'propaganda', {'propaganda': 1})]
+    player.deck.draw_pile = [Card('宣傳家', 'propaganda', {'propaganda': 2})]
     result = game._activate_guess_ability(player, '賭徒耳語', 'odd')
     # No pending choice for the bottom-card pick (only one option) — resolves
     # straight through _resolve_guess_ability_with_bottom_card.
     assert 'result' in result or result.get('pending_choice') is True
+    payload = result.get('result')
+    assert isinstance(payload, dict)
+    assert payload['revealed_card'] == '宣傳家'
+    assert 'bottom_card' not in payload
     assert player.hand == []  # the sole card was bottom-decked
 
 

@@ -2115,7 +2115,6 @@ class Game(CardPlayMixin):
             'cost_total': total,
             'guess': guess,
             'hit': hit,
-            'bottom_card': getattr(bottom_card, 'name', str(bottom_card)),
             'destination': 'deck_top',
         }
         if action_name == '賭徒耳語':

@@ -48,7 +48,8 @@ def run_guess_case(action_name, faction_id, revealed_card, expected_cost_total, 
         miss_choice_offered = True
         result = game.resolve_pending_choice(player.id, miss_reward_index or 0)
 
-    payload = result.get('result') or {}
+    raw_payload = result.get('result')
+    payload = raw_payload if isinstance(raw_payload, dict) else {}
     checks = {
         'success': result.get('success') is True,
         'result_name': payload.get('name') == action_name,
@@ -57,6 +58,7 @@ def run_guess_case(action_name, faction_id, revealed_card, expected_cost_total, 
         'guess': payload.get('guess') == guess,
         'hit': payload.get('hit') is expected_hit,
         'reward': payload.get('reward') == expected_reward,
+        'private_bottom_card_not_in_result': 'bottom_card' not in payload,
         # 能力文字只說「展示」牌庫頂牌：看完放回牌庫頂
         'destination': payload.get('destination') == 'deck_top',
         'state_flag': game.state().get('faction_action_used') is True,
@@ -92,10 +94,11 @@ def check_static_result_text():
         'ethnic_result_branch': "result.name === '民族祭儀'" in app_js,
         'guess_text': '猜${guessText}' in app_js,
         'reward_text': "獲得 ${rewardParts.join('、')}" in app_js,
-        'result_actions_include_guess_cards': "'立場試探', '賭徒耳語', '民族祭儀'" in app_js,
-        'aomen_modal_receives_result_html': "'將 1 張手牌放進牌庫底，猜牌庫頂牌購買費用奇偶；若猜中獲得 3 點宣傳與 3 點資金。',\n      factionResult.html" in app_js,
-        'ethnic_modal_receives_result_html': "'猜中可獲得 2 點宣傳與 2 點資金；沒猜中則獲得 2 點宣傳或 2 點資金（二選一）。',\n      factionResult.html" in app_js,
-        'placeholder_mentions_guess_result': '發動後會在此直接顯示猜測、翻牌與資源結果。' in app_js,
+        'shared_reveal_result_actions': "const SHARED_REVEAL_RESULT_ACTION_NAMES = new Set(['立場試探', '賭徒耳語', '民族祭儀']);" in app_js,
+        'shared_result_uses_prompt_modal': 'showActionMessageModal(`${result.name}結果`, message);' in app_js,
+        'shared_result_suppresses_inline_result': 'result.unavailable || isSharedRevealResult' in app_js,
+        'shared_result_suppresses_duplicate_peer_notice': 'SHARED_REVEAL_RESULT_ACTION_NAMES.has(sharedResultName)' in app_js,
+        'placeholder_mentions_shared_prompt': '以提示視窗向所有玩家公開猜測、翻牌與資源結果。' in app_js,
     }
     return {
         'name': 'static_modal_formats_guess_results',
