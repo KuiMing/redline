@@ -71,8 +71,8 @@ def main() -> None:
                   const glass = modal?.querySelector('.unavailable-action-glass');
                   const rect = glass?.getBoundingClientRect();
                   return {
-                    notice: document.getElementById('phaseActionNotice')?.textContent.trim() || '',
-                    noticeVisible: document.getElementById('phaseActionNotice')?.classList.contains('visible') || false,
+                    topNoticeBarAbsent: !document.getElementById('phaseActionBar')
+                      && !document.getElementById('phaseActionNotice'),
                     modalVisible: modal?.style.display === 'flex' && modal?.getAttribute('aria-hidden') === 'false',
                     modalTitle: document.getElementById('unavailableActionTitle')?.textContent.trim() || '',
                     modalMessage: document.getElementById('unavailableActionMessage')?.textContent.trim() || '',
@@ -86,7 +86,7 @@ def main() -> None:
             )
             record(
                 f"{ability_name}_shows_blocking_unavailable_modal_without_hud_notice",
-                state["modalVisible"] and state["modalTitle"] == f"{ability_name}無法發動" and expected_text in state["modalMessage"] and not state["noticeVisible"] and not state["notice"] and state["focusedId"] == "closeUnavailableActionModalBtn" and state["pendingChoice"] is None and state["usedCount"] == 0,
+                state["modalVisible"] and state["modalTitle"] == f"{ability_name}無法發動" and expected_text in state["modalMessage"] and state["topNoticeBarAbsent"] and state["focusedId"] == "closeUnavailableActionModalBtn" and state["pendingChoice"] is None and state["usedCount"] == 0,
                 state,
             )
             if ability_name == "國安部":
@@ -96,7 +96,7 @@ def main() -> None:
                     page.wait_for_function("document.getElementById('unavailableActionModal')?.style.display === 'none'")
                 record(
                     "unavailable_modal_can_be_closed_without_creating_hud_notice",
-                    state["modalVisible"] and page.evaluate("document.getElementById('unavailableActionModal')?.style.display === 'none' && !document.getElementById('phaseActionNotice')?.classList.contains('visible') && !document.getElementById('phaseActionNotice')?.textContent.trim()"),
+                    state["modalVisible"] and page.evaluate("document.getElementById('unavailableActionModal')?.style.display === 'none' && !document.getElementById('phaseActionBar') && !document.getElementById('phaseActionNotice')"),
                     {"modalWasVisible": state["modalVisible"]},
                 )
                 page.evaluate("message => showUnavailableActionModal('國安部', message)", state["modalMessage"])

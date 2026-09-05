@@ -1,0 +1,135 @@
+{
+  "summary": {
+    "total": 13,
+    "passed": 13,
+    "failed": 0
+  },
+  "red_baseline": {
+    "summary": {
+      "total": 13,
+      "passed": 2,
+      "failed": 11
+    },
+    "failed_checks": [
+      "top_notice_bar_dom_is_removed",
+      "invalid_phase_card_play_uses_prompt_modal",
+      "business_network_result_uses_prompt_modal",
+      "unrelated_purchase_index_is_not_business_network_result",
+      "generic_player_error_uses_prompt_modal",
+      "new_action_attempt_can_show_same_error_again",
+      "queued_action_is_counted_once_across_flush",
+      "base_selection_wait_uses_phase_meta_not_notification",
+      "layout_has_no_secondary_row_1280x720",
+      "layout_has_no_secondary_row_1024x768",
+      "no_native_browser_dialogs"
+    ],
+    "record": "docs/records/ui-layout/no-top-notice-bar/NO_TOP_NOTICE_BAR_RED_BASELINE.json"
+  },
+  "service": "http://127.0.0.1:8787",
+  "checks": [
+    {
+      "name": "top_notice_bar_dom_is_removed",
+      "passed": true,
+      "details": null
+    },
+    {
+      "name": "invalid_phase_card_play_uses_prompt_modal",
+      "passed": true,
+      "details": {
+        "visible": true,
+        "title": "無法打出手牌",
+        "message": "行動階段已結束，不能再打出手牌。"
+      }
+    },
+    {
+      "name": "business_network_result_uses_prompt_modal",
+      "passed": true,
+      "details": {
+        "visible": true,
+        "title": "企業人脈結果",
+        "message": "企業人脈：已借用 交通經驗乙（購買區槽位 8）"
+      }
+    },
+    {
+      "name": "unrelated_purchase_index_is_not_business_network_result",
+      "passed": true,
+      "details": {
+        "resultType": "idle",
+        "modalHidden": true
+      }
+    },
+    {
+      "name": "generic_player_error_uses_prompt_modal",
+      "passed": true,
+      "details": {
+        "visible": true,
+        "title": "操作提示",
+        "message": "操作失敗，請重新確認目前狀態後再試。"
+      }
+    },
+    {
+      "name": "closed_error_prompt_does_not_reopen_for_same_state",
+      "passed": true,
+      "details": null
+    },
+    {
+      "name": "new_action_attempt_can_show_same_error_again",
+      "passed": true,
+      "details": {
+        "sequenceAdvanced": true,
+        "sentCount": 1,
+        "modalVisible": true
+      }
+    },
+    {
+      "name": "queued_action_is_counted_once_across_flush",
+      "passed": true,
+      "details": {
+        "queuedOnce": true,
+        "sequenceAdvancedOnce": true,
+        "queueRestored": true,
+        "sentCount": 1
+      }
+    },
+    {
+      "name": "base_selection_wait_uses_phase_meta_not_notification",
+      "passed": true,
+      "details": {
+        "meta": "等待其他玩家選擇根據地",
+        "modalHidden": true,
+        "topNoticeBarAbsent": true
+      }
+    },
+    {
+      "name": "layout_has_no_secondary_row_1280x720",
+      "passed": true,
+      "details": {
+        "hudBottom": 48,
+        "shellTop": 56,
+        "topNoticeBarAbsent": true
+      }
+    },
+    {
+      "name": "layout_has_no_secondary_row_1024x768",
+      "passed": true,
+      "details": {
+        "hudBottom": 134.39999389648438,
+        "shellTop": 140.8000030517578,
+        "topNoticeBarAbsent": true
+      }
+    },
+    {
+      "name": "no_native_browser_dialogs",
+      "passed": true,
+      "details": []
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "passed": true,
+      "details": []
+    }
+  ],
+  "screenshots": [
+    "docs/records/ui-layout/no-top-notice-bar/no_top_notice_bar_prompt_1280x720.png"
+  ]
+}

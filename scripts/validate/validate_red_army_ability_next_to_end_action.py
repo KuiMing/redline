@@ -60,7 +60,8 @@ def main() -> None:
                 advanceText: document.getElementById('advanceStepBtn')?.textContent || '',
                 gap: red && advance ? advance.left - red.right : null,
                 verticalDelta: red && advance ? Math.abs((red.top + red.bottom) / 2 - (advance.top + advance.bottom) / 2) : null,
-                phaseBarDisplay: getComputedStyle(document.getElementById('phaseActionBar')).display,
+                topNoticeBarAbsent: !document.getElementById('phaseActionBar')
+                  && !document.getElementById('phaseActionNotice'),
               };
             }"""
         )
@@ -98,8 +99,8 @@ def main() -> None:
         )
         record(
             "red_army_button_no_longer_opens_secondary_bar_by_itself",
-            wide["phaseBarDisplay"] == "none",
-            {"phaseBarDisplay": wide["phaseBarDisplay"]},
+            wide["topNoticeBarAbsent"],
+            {"topNoticeBarAbsent": wide["topNoticeBarAbsent"]},
         )
         page.screenshot(path=str(SHOT_1280), full_page=True)
 

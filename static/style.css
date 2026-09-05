@@ -568,32 +568,6 @@ body {
   min-width: 0;
 }
 
-#phaseActionBar {
-  position: absolute;
-  left: 0;
-  top: 48px;
-  width: 1280px;
-  min-height: 48px;
-  padding: 6px 16px;
-  background: rgba(8, 12, 18, 0.56);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  z-index: 2;
-  backdrop-filter: blur(8px);
-}
-
-#phaseActionControls {
-  position: relative;
-  width: 100%;
-  min-height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-}
 
 #purchaseSelectionControls {
   display: flex;
@@ -644,28 +618,6 @@ body {
   cursor: not-allowed;
 }
 
-#phaseActionNotice {
-  display: none;
-  position: absolute;
-  right: 220px;
-  z-index: 8;
-  max-width: min(720px, calc(100vw - 260px));
-  color: #fde68a;
-  border: 1px solid rgba(245, 158, 11, 0.36);
-  background: rgba(120, 53, 15, 0.30);
-  border-radius: 999px;
-  padding: 7px 12px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.78rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.08);
-}
-
-#phaseActionNotice.visible {
-  display: block;
-}
 
 #phaseActionMetaWrap {
   position: relative;
