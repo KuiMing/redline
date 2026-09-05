@@ -190,16 +190,30 @@ def test_red_taiwan_override_requires_taiwan_player_and_fourteen_taiwan_organiza
     assert game.victory_engine._check_player_conditions(red, game) == (True, "red_army")
 
 
-def test_wan_expansion_condition_fails_closed_until_wan_map_is_modeled():
-    game, actor, _red = make_game("wan")
-    all_towns = list(game.map["towns"])
-    set_orgs(actor, all_towns[:20])
-    assert game.victory_engine._check_player_conditions(actor, game)[0] is False
-    assert game.victory_engine._count_scope(actor, "宛地", game) == int(actor.organizations.get("南陽", 0) > 0)
+def test_wan_expansion_condition_counts_南陽_and_the_20_wan_map_towns():
+    from server.victory import WAN_EXPANSION_TOWNS
 
-    actor.organizations = {"南陽": 14}
-    assert game.victory_engine._count_scope(actor, "宛地", game) == 1
+    game, actor, _red = make_game("wan")
+    assert len(WAN_EXPANSION_TOWNS) == 21
+    assert "南陽" in WAN_EXPANSION_TOWNS
+    assert WAN_EXPANSION_TOWNS <= set(game.map["towns"])
+
+    # Orgs outside the scope don't count, even with plenty of them.
+    outside_scope_towns = [town for town in game.map["towns"] if town not in WAN_EXPANSION_TOWNS]
+    set_orgs(actor, outside_scope_towns[:20])
+    assert game.victory_engine._count_scope(actor, "宛地", game) == 0
     assert game.victory_engine._check_player_conditions(actor, game)[0] is False
+
+    # 13 orgs inside the scope: not yet enough.
+    scope_towns = sorted(WAN_EXPANSION_TOWNS)
+    set_orgs(actor, scope_towns[:13])
+    assert game.victory_engine._count_scope(actor, "宛地", game) == 13
+    assert game.victory_engine._check_player_conditions(actor, game)[0] is False
+
+    # 14 orgs spread across the scope (南陽 + wan-expansion towns): condition met.
+    set_orgs(actor, scope_towns[:14])
+    assert game.victory_engine._count_scope(actor, "宛地", game) == 14
+    assert game.victory_engine._check_player_conditions(actor, game) == (True, actor.name)
 
 
 def test_every_runtime_victory_scope_is_explicitly_supported():

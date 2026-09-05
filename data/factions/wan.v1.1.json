@@ -26,9 +26,8 @@
   ],
   "win_conditions": [
     {
-      "type": "map_specific_count",
-      "map": "宛地圖",
-      "scope": "宛地（含南陽與宛地圖城鎮）",
+      "type": "count_only",
+      "scope": "宛地",
       "count": 14
     }
   ],

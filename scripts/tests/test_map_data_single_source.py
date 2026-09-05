@@ -42,8 +42,10 @@ def test_map_topology_has_only_existing_bidirectional_edges():
     assert failures == []
 
     expected_visual_topology = {
-        'road': (185, '5101788c6717ae8c80d810d8be04c53e1343bf0b40020f3e9f330a1980cc489c'),
-        'rail': (286, 'bf412de9e39568b38edfa211d37deb21ad5e8925b5aae29c25eac38c8116d9b1'),
+        # 2026-09-06 宛擴充地圖：新增 20 個城鎮，+25 road/+17 rail edges
+        # （西安/鄭州/武漢/南陽與新城鎮之間，以及新城鎮彼此之間）。
+        'road': (210, '0d9797ab5921989d0ec2da6a6fb5fd89049e2a62dbde8e9f6899b0dd612e4a05'),
+        'rail': (303, '12fb9dcb4755b700f003bea33cc386fabb93044de4a46c80187436532061d43e'),
     }
     for mode, expected in expected_visual_topology.items():
         edges = sorted({
