@@ -1,0 +1,401 @@
+{
+  "summary": {
+    "total": 21,
+    "passed": 13,
+    "failed": 8
+  },
+  "service": "http://127.0.0.1:8794",
+  "scenario": "紅軍依序發動四種能力；發動者與其他玩家只保留必要提示；識別碼 [REDACTED]",
+  "checks": [
+    {
+      "name": "統戰部_observer_sees_centered_result",
+      "passed": true,
+      "details": {
+        "result": {
+          "name": "統戰部",
+          "drawn": 1
+        },
+        "currentPlayer": "紅軍",
+        "modalDisplay": "flex",
+        "modalTitle": "統戰部結果",
+        "modalMessage": "統戰部結果：抽 1 張牌",
+        "peerDisplay": "flex",
+        "peerMinimized": false
+      }
+    },
+    {
+      "name": "統戰部_observer_has_exactly_one_result_surface",
+      "passed": false,
+      "details": {
+        "result": {
+          "name": "統戰部",
+          "drawn": 1
+        },
+        "currentPlayer": "紅軍",
+        "modalDisplay": "flex",
+        "modalTitle": "統戰部結果",
+        "modalMessage": "統戰部結果：抽 1 張牌",
+        "peerDisplay": "flex",
+        "peerMinimized": false
+      }
+    },
+    {
+      "name": "統戰部_actor_has_no_redundant_result_surface",
+      "passed": true,
+      "details": {
+        "result": {
+          "name": "統戰部",
+          "drawn": 1
+        },
+        "currentPlayer": "紅軍",
+        "modalDisplay": "none",
+        "modalTitle": "無法發動能力",
+        "modalMessage": "",
+        "peerDisplay": "none",
+        "peerMinimized": false
+      }
+    },
+    {
+      "name": "統戰部_result_modal_closes_on_turn_handoff",
+      "passed": false,
+      "details": {
+        "result": {
+          "success": true
+        },
+        "currentPlayer": "自由派",
+        "modalDisplay": "flex",
+        "modalTitle": "統戰部結果",
+        "modalMessage": "統戰部結果：抽 1 張牌",
+        "peerDisplay": "none",
+        "peerMinimized": false
+      }
+    },
+    {
+      "name": "統戰部_suppressed_log_does_not_replay_after_next_handoff",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true
+        },
+        "currentPlayer": "香港",
+        "modalDisplay": "flex",
+        "modalTitle": "統戰部結果",
+        "modalMessage": "統戰部結果：抽 1 張牌",
+        "peerDisplay": "none",
+        "peerMinimized": false
+      }
+    },
+    {
+      "name": "政工部_observer_sees_centered_result",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true,
+          "choice_index": 0,
+          "target_id": "lib-proof",
+          "selected": {
+            "id": "lib-proof",
+            "label": "自由派",
+            "player_id": "lib-proof"
+          },
+          "choice_key": "red_army_propaganda_department_target",
+          "name": "政工部",
+          "target_player_name": "自由派",
+          "topdecked_card": "內鬥",
+          "static_supply_empty": false
+        },
+        "currentPlayer": "紅軍",
+        "modalDisplay": "flex",
+        "modalTitle": "政工部結果",
+        "modalMessage": "政工部結果：已將 內鬥 放到 自由派 的牌庫頂",
+        "peerDisplay": "flex",
+        "peerMinimized": false
+      }
+    },
+    {
+      "name": "政工部_observer_has_exactly_one_result_surface",
+      "passed": false,
+      "details": {
+        "result": {
+          "success": true,
+          "choice_index": 0,
+          "target_id": "lib-proof",
+          "selected": {
+            "id": "lib-proof",
+            "label": "自由派",
+            "player_id": "lib-proof"
+          },
+          "choice_key": "red_army_propaganda_department_target",
+          "name": "政工部",
+          "target_player_name": "自由派",
+          "topdecked_card": "內鬥",
+          "static_supply_empty": false
+        },
+        "currentPlayer": "紅軍",
+        "modalDisplay": "flex",
+        "modalTitle": "政工部結果",
+        "modalMessage": "政工部結果：已將 內鬥 放到 自由派 的牌庫頂",
+        "peerDisplay": "flex",
+        "peerMinimized": false
+      }
+    },
+    {
+      "name": "政工部_actor_has_no_redundant_result_surface",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true,
+          "choice_index": 0,
+          "target_id": "lib-proof",
+          "selected": {
+            "id": "lib-proof",
+            "label": "自由派",
+            "player_id": "lib-proof"
+          },
+          "choice_key": "red_army_propaganda_department_target",
+          "name": "政工部",
+          "target_player_name": "自由派",
+          "topdecked_card": "內鬥",
+          "static_supply_empty": false
+        },
+        "currentPlayer": "紅軍",
+        "modalDisplay": "none",
+        "modalTitle": "無法發動能力",
+        "modalMessage": "",
+        "peerDisplay": "none",
+        "peerMinimized": false
+      }
+    },
+    {
+      "name": "政工部_result_modal_closes_on_turn_handoff",
+      "passed": false,
+      "details": {
+        "result": {
+          "success": true
+        },
+        "currentPlayer": "自由派",
+        "modalDisplay": "flex",
+        "modalTitle": "政工部結果",
+        "modalMessage": "政工部結果：已將 內鬥 放到 自由派 的牌庫頂",
+        "peerDisplay": "none",
+        "peerMinimized": false
+      }
+    },
+    {
+      "name": "政工部_suppressed_log_does_not_replay_after_next_handoff",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true
+        },
+        "currentPlayer": "香港",
+        "modalDisplay": "flex",
+        "modalTitle": "政工部結果",
+        "modalMessage": "政工部結果：已將 內鬥 放到 自由派 的牌庫頂",
+        "peerDisplay": "none",
+        "peerMinimized": false
+      }
+    },
+    {
+      "name": "國安部_observer_sees_centered_result",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true,
+          "choice_index": 0,
+          "target_id": "lib-proof::天津",
+          "selected": {
+            "id": "lib-proof::天津",
+            "label": "自由派｜天津",
+            "player_id": "lib-proof",
+            "town": "天津"
+          },
+          "choice_key": "red_army_state_security_target",
+          "name": "國安部",
+          "target_player_name": "自由派",
+          "town": "天津"
+        },
+        "currentPlayer": "紅軍",
+        "modalDisplay": "flex",
+        "modalTitle": "國安部結果",
+        "modalMessage": "國安部結果：已瓦解 自由派 在 天津 的組織",
+        "peerDisplay": "flex",
+        "peerMinimized": false
+      }
+    },
+    {
+      "name": "國安部_observer_has_exactly_one_result_surface",
+      "passed": false,
+      "details": {
+        "result": {
+          "success": true,
+          "choice_index": 0,
+          "target_id": "lib-proof::天津",
+          "selected": {
+            "id": "lib-proof::天津",
+            "label": "自由派｜天津",
+            "player_id": "lib-proof",
+            "town": "天津"
+          },
+          "choice_key": "red_army_state_security_target",
+          "name": "國安部",
+          "target_player_name": "自由派",
+          "town": "天津"
+        },
+        "currentPlayer": "紅軍",
+        "modalDisplay": "flex",
+        "modalTitle": "國安部結果",
+        "modalMessage": "國安部結果：已瓦解 自由派 在 天津 的組織",
+        "peerDisplay": "flex",
+        "peerMinimized": false
+      }
+    },
+    {
+      "name": "國安部_actor_has_no_redundant_result_surface",
+      "passed": true,
+      "details": {
+        "result": null,
+        "currentPlayer": "紅軍",
+        "modalDisplay": "none",
+        "modalTitle": "無法發動能力",
+        "modalMessage": "",
+        "peerDisplay": "none",
+        "peerMinimized": false
+      }
+    },
+    {
+      "name": "國安部_result_modal_closes_on_turn_handoff",
+      "passed": false,
+      "details": {
+        "result": {
+          "success": true
+        },
+        "currentPlayer": "自由派",
+        "modalDisplay": "flex",
+        "modalTitle": "國安部結果",
+        "modalMessage": "國安部結果：已瓦解 自由派 在 天津 的組織",
+        "peerDisplay": "none",
+        "peerMinimized": false
+      }
+    },
+    {
+      "name": "國安部_suppressed_log_does_not_replay_after_next_handoff",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true
+        },
+        "currentPlayer": "香港",
+        "modalDisplay": "flex",
+        "modalTitle": "國安部結果",
+        "modalMessage": "國安部結果：已瓦解 自由派 在 天津 的組織",
+        "peerDisplay": "none",
+        "peerMinimized": false
+      }
+    },
+    {
+      "name": "中紀委_observer_sees_centered_result",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true,
+          "name": "中紀委",
+          "chosen_cards": [
+            "手牌甲"
+          ],
+          "discarded": 1,
+          "drawn": 1,
+          "choice_key": "red_army_ccdi_discard_draw"
+        },
+        "currentPlayer": "紅軍",
+        "modalDisplay": "flex",
+        "modalTitle": "中紀委結果",
+        "modalMessage": "中紀委結果：棄 1 張，抽 1 張",
+        "peerDisplay": "flex",
+        "peerMinimized": false
+      }
+    },
+    {
+      "name": "中紀委_observer_has_exactly_one_result_surface",
+      "passed": false,
+      "details": {
+        "result": {
+          "success": true,
+          "name": "中紀委",
+          "chosen_cards": [
+            "手牌甲"
+          ],
+          "discarded": 1,
+          "drawn": 1,
+          "choice_key": "red_army_ccdi_discard_draw"
+        },
+        "currentPlayer": "紅軍",
+        "modalDisplay": "flex",
+        "modalTitle": "中紀委結果",
+        "modalMessage": "中紀委結果：棄 1 張，抽 1 張",
+        "peerDisplay": "flex",
+        "peerMinimized": false
+      }
+    },
+    {
+      "name": "中紀委_actor_has_no_redundant_result_surface",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true,
+          "name": "中紀委",
+          "chosen_cards": [
+            "手牌甲"
+          ],
+          "discarded": 1,
+          "drawn": 1,
+          "choice_key": "red_army_ccdi_discard_draw"
+        },
+        "currentPlayer": "紅軍",
+        "modalDisplay": "none",
+        "modalTitle": "無法發動能力",
+        "modalMessage": "",
+        "peerDisplay": "none",
+        "peerMinimized": false
+      }
+    },
+    {
+      "name": "中紀委_result_modal_closes_on_turn_handoff",
+      "passed": false,
+      "details": {
+        "result": {
+          "success": true
+        },
+        "currentPlayer": "自由派",
+        "modalDisplay": "flex",
+        "modalTitle": "中紀委結果",
+        "modalMessage": "中紀委結果：棄 1 張，抽 1 張",
+        "peerDisplay": "none",
+        "peerMinimized": false
+      }
+    },
+    {
+      "name": "中紀委_suppressed_log_does_not_replay_after_next_handoff",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true
+        },
+        "currentPlayer": "香港",
+        "modalDisplay": "flex",
+        "modalTitle": "中紀委結果",
+        "modalMessage": "中紀委結果：棄 1 張，抽 1 張",
+        "peerDisplay": "none",
+        "peerMinimized": false
+      }
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "passed": true,
+      "details": []
+    }
+  ],
+  "screenshots": [
+    "docs/records/faction-ui/red-army-single-result-prompt/red_army_united_front_single_prompt_1280x720.png"
+  ]
+}
