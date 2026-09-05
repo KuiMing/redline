@@ -3073,6 +3073,11 @@ function showPlayerErrorModal(state, message) {
 }
 
 const SHARED_REVEAL_RESULT_ACTION_NAMES = new Set(['立場試探', '賭徒耳語', '民族祭儀']);
+const RED_ARMY_RESULT_ACTION_NAMES = new Set(['統戰部', '政工部', '國安部', '中紀委']);
+const SHARED_RESULT_MODAL_ACTION_NAMES = new Set([
+  ...SHARED_REVEAL_RESULT_ACTION_NAMES,
+  ...RED_ARMY_RESULT_ACTION_NAMES,
+]);
 
 function closeSharedFactionActionResultOnTurnHandoff(state) {
   const active = activeSharedFactionActionResult;
@@ -3137,27 +3142,25 @@ function renderFactionActionResult(state, faction) {
 
   const result = state.last_action_result || null;
   const message = formatFactionActionResult(result);
-  const redArmyActionNames = new Set(['統戰部', '政工部', '國安部', '中紀委']);
-  if (faction === 'red_army' && redArmyActionNames.has(result?.name) && !result.unavailable) {
+  if (faction === 'red_army' && RED_ARMY_RESULT_ACTION_NAMES.has(result?.name) && !result.unavailable) {
     // Successful Red Army abilities already update the hand, deck, organizations, and
     // remaining-use counter. Do not create a redundant HUD result row or panel message.
     lastFactionActionResultKey = JSON.stringify(result);
     info.textContent = '';
     return {hasResult: false, message: '', html: ''};
   }
-  const resultActionNames = new Set([...SHARED_REVEAL_RESULT_ACTION_NAMES, ...redArmyActionNames]);
-  if (resultActionNames.has(result?.name) && message) {
+  if (SHARED_RESULT_MODAL_ACTION_NAMES.has(result?.name) && message) {
     const resultKey = JSON.stringify([
       state.turn_number ?? state.turn ?? null,
       state.current_player || '',
       result,
     ]);
-    const isSharedRevealResult = SHARED_REVEAL_RESULT_ACTION_NAMES.has(result.name) && !result.unavailable;
+    const usesSharedResultModal = SHARED_RESULT_MODAL_ACTION_NAMES.has(result.name) && !result.unavailable;
     if (lastFactionActionResultKey !== resultKey) {
       lastFactionActionResultKey = resultKey;
       if (result.unavailable) {
         showUnavailableActionModal(result.name, message);
-      } else if (isSharedRevealResult) {
+      } else if (usesSharedResultModal) {
         const title = `${result.name}結果`;
         showActionMessageModal(title, message);
         activeSharedFactionActionResult = {
@@ -3169,7 +3172,7 @@ function renderFactionActionResult(state, faction) {
         showActionMessageModal(`${result.name}結果`, message);
       }
     }
-    const html = result.unavailable || isSharedRevealResult
+    const html = result.unavailable || usesSharedResultModal
       ? ''
       : `<div class="faction-action-result">${escapeHtml(message)}</div>`;
     info.innerHTML = html;
@@ -3292,13 +3295,20 @@ function renderBaseSelection(state) {
   });
 }
 
-function factionToneClass(factionId) {
-  if (factionId === 'red_army') return ' tone-red';
-  if (String(factionId || '').startsWith('taiwan')) return ' tone-taiwan';
-  if (String(factionId || '').startsWith('tibet')) return ' tone-tibet';
-  if (String(factionId || '').startsWith('uyghur') || factionId === 'kazakh') return ' tone-gold';
-  if (factionId === 'hong_kong') return ' tone-hongkong';
-  return '';
+function hexToRgbTuple(hex) {
+  const match = /^#?([0-9a-f]{6})$/i.exec(hex || '');
+  if (!match) return [96, 165, 250];
+  const n = parseInt(match[1], 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+// 依陣營代表色（factionNameColor，涵蓋全部 9 個陣營分類）算出戰況卡邊框/頭像/徽章共用的
+// CSS variable，取代舊版逐一列舉 tone-xxx class 的作法（曾遺漏蒙古/滿洲/反賊等陣營，
+// 只有陣營名稱字色正確、卡片其餘部位仍落到預設藍色）。
+function factionToneStyle(factionId) {
+  const [r, g, b] = hexToRgbTuple(factionNameColor(factionId) || '#60a5fa');
+  const light = [r, g, b].map(c => Math.round(c + (255 - c) * 0.72));
+  return `--tone-rgb:${r},${g},${b};--tone-light-rgb:${light[0]},${light[1]},${light[2]};`;
 }
 
 function playerBaseName(player) {
@@ -3346,7 +3356,7 @@ function renderPlayerStatusCards(state) {
     const baseName = playerBaseName(player);
     const initial = escapeHtml(String(player.name || '?').slice(0, 1).toUpperCase());
     return `
-      <article class="player-status-card${isCurrent ? ' current' : ''}${factionToneClass(player.faction)}">
+      <article class="player-status-card${isCurrent ? ' current' : ''}" style="${factionToneStyle(player.faction)}">
         <div class="player-status-top">
           <div class="player-status-avatar">${initial}</div>
           <div class="player-status-id">
@@ -3964,8 +3974,8 @@ function renderPeerActionNotice(state) {
   if (!overlay) return;
   const entries = state.action_log || [];
   const sharedResultName = state.last_action_result?.name || '';
-  if (SHARED_REVEAL_RESULT_ACTION_NAMES.has(sharedResultName)) {
-    // 公開翻牌結果已由所有玩家共用的行動提示視窗顯示；消耗相同 log，避免再疊一層動態通知。
+  if (SHARED_RESULT_MODAL_ACTION_NAMES.has(sharedResultName)) {
+    // 公開陣營能力結果已由共用的中央提示視窗顯示；消耗相同 log，避免再疊一層其他玩家動態。
     closePeerActionNotice(entries);
     return;
   }
