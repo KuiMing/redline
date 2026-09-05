@@ -6,6 +6,30 @@
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-05
+
+### Added
+
+- 新增 deterministic multi-viewer differential replay harness，固定並比較一般雙人流程、陣營能力、紅軍特殊行動及一般主動能力的完整玩家與公開狀態。
+- 新增陣營能力公開結果提示視窗，讓「立場試探」、「賭徒耳語」與「民族祭儀」的公開結果同步顯示給發動者與其他玩家。
+
+### Changed
+
+- 移除遊戲畫面頂部的窄條通知列；重要結果與錯誤改用中央提示視窗，等待根據地選擇則整合至階段狀態區。
+- 紅軍「統戰部」、「政工部」、「國安部」與「中紀委」統一使用單一中央結果視窗，不再與「其他玩家動態」重複顯示。
+- 「戰況總覽」玩家卡片改用完整陣營色盤，補齊蒙古、滿洲與各反賊陣營的辨識色。
+- 將 `server/game.py` 的出牌、待選、反應、事件、陣營、地圖、購買、組織及狀態投影規則拆成獨立模組，並保留既有主要匯入介面。
+- 將 Lobby、地圖資料與測試 setup API 從 `server/main.py` 拆成獨立路由模組。
+- 將驗證腳本集中至 `scripts/validate/`，並移除過時的一次性驗證腳本。
+- `/test/*` HTTP 路由改為預設停用；Browser proof 或本機測試服務必須明確設定 `ENABLE_TEST_ROUTES=true`。
+
+### Fixed
+
+- 修正陣營能力結果視窗在回合交接後仍停留或再次重播的問題；自動關閉只作用於原本的共享結果，不會誤關閉後續錯誤或待選視窗。
+- 修正紅軍能力結果與「其他玩家動態」重複疊加的問題。
+- 修正共享能力結果可能公開被放到牌庫底之私人手牌資訊的問題。
+- 修正過長的階段提示在滑鼠停留或鍵盤聚焦時仍被遊戲分頁及操作列遮住的問題。
+
 ## [0.2.0] - 2026-09-02
 
 ### Added
@@ -79,7 +103,8 @@
 - 修正陣營選擇、根據地按鈕高度、面板尺寸、HUD 排列與小型 viewport 裁切。
 - 修正抽牌資訊外洩，避免其他玩家看到不應公開的卡牌名稱。
 
-[Unreleased]: https://github.com/KuiMing/redline/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/KuiMing/redline/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/KuiMing/redline/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/KuiMing/redline/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/KuiMing/redline/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/KuiMing/redline/releases/tag/v0.1.0
