@@ -2026,11 +2026,12 @@ body {
 
 .reaction-choice-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
 }
 
 .reaction-choice-actions .modal-choice-btn {
-  flex: 0 0 auto;
+  flex: 1 1 0;
   min-width: 84px;
   padding: 10px 20px;
   text-align: center;
