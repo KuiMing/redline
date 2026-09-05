@@ -724,6 +724,22 @@ function factionDisplayName(factionId) {
   return fallbackNames[factionId] || factionId || '未選陣營';
 }
 
+// 紅軍統戰部/政工部/國安部/中紀委等特殊能力觸發取消反應時，`played_card_name` 是能力
+// 名稱，不是真的卡牌，`cardPresentationCatalog` 查不到——改從發動者的陣營資料裡找同名
+// 能力的 trigger/effect 文字（跟「我的陣營」頁籤 renderMyFactionView 用的同一份資料）。
+function factionAbilityDetailByName(factionId, baseName, abilityName) {
+  const opt = factionOptionById(factionId);
+  if (!opt) return null;
+  const detailSource = (baseName && opt.variant_details) ? (opt.variant_details[baseName] || null) : null;
+  const detail = detailSource || opt;
+  const selectedBaseData = (detail.bases || []).find(base => base?.name === baseName) || null;
+  const rawAbilities = [
+    ...((detail.abilities_text || detail.abilities || [])),
+    ...((selectedBaseData?.abilities) || []),
+  ];
+  return rawAbilities.find(item => typeof item === 'object' && item && item.name === abilityName) || null;
+}
+
 function factionOptionById(factionId) {
   for (const category of availableFactionCategories) {
     for (const opt of (category.options || [])) {
@@ -2293,9 +2309,30 @@ function renderChoiceModal(state) {
     const targetLine = choice.target_player_name
       ? `<div class="reaction-choice-target">目標玩家：${escapeHtml(choice.target_player_name)}</div>`
       : '';
+    // 這裡的「行動」可能是真的卡牌（查得到 cardPresentation），也可能是紅軍統戰部等
+    // 特殊能力（played_card_name 只是能力名稱，卡牌目錄裡沒有）——後者改用發動者的
+    // 陣營能力資料渲染同樣結構的卡面（標題／觸發時機／效果文字），而不是顯示空白卡面。
+    const actionPreviewHtml = cardPresentation(choice.played_card_name)
+      ? renderCardFace(choice.played_card_name, 'choice', false, true)
+      : (() => {
+        const actingPlayer = (state.players || []).find(p => p.id === choice.acting_player_id) || null;
+        const ability = actingPlayer
+          ? factionAbilityDetailByName(actingPlayer.faction, actingPlayer.base, choice.played_card_name)
+          : null;
+        return `
+          <div class="card-face compact">
+            <div class="card-face-top">
+              <div class="purchase-card-title">${escapeHtml(choice.played_card_name || '特殊能力')}</div>
+            </div>
+            <div class="card-face-meta-row">${escapeHtml(ability?.trigger || '特殊能力')}</div>
+            <div class="purchase-card-body card-effect-block">
+              <div>${escapeHtml(ability?.effect || '（暫無資料）')}</div>
+            </div>
+          </div>`;
+      })();
     preview.innerHTML = `
       <div class="reaction-choice-preview-label">即將取消的行動</div>
-      ${renderCardFace(choice.played_card_name, 'choice', false, true)}
+      ${actionPreviewHtml}
       ${targetLine}
     `;
     cards.appendChild(preview);
