@@ -2001,12 +2001,13 @@ body {
 .reaction-choice-body {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
+  align-items: center;
   gap: 10px;
 }
 
 .reaction-choice-preview {
   max-width: 260px;
+  width: 100%;
 }
 
 .reaction-choice-preview-label {
@@ -2028,6 +2029,9 @@ body {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+  align-self: stretch;
+  width: 100%;
+  max-width: 260px;
 }
 
 .reaction-choice-actions .modal-choice-btn {
