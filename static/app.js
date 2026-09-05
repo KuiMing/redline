@@ -724,6 +724,22 @@ function factionDisplayName(factionId) {
   return fallbackNames[factionId] || factionId || '未選陣營';
 }
 
+// 紅軍統戰部/政工部/國安部/中紀委等特殊能力觸發取消反應時，`played_card_name` 是能力
+// 名稱，不是真的卡牌，`cardPresentationCatalog` 查不到——改從發動者的陣營資料裡找同名
+// 能力的 trigger/effect 文字（跟「我的陣營」頁籤 renderMyFactionView 用的同一份資料）。
+function factionAbilityDetailByName(factionId, baseName, abilityName) {
+  const opt = factionOptionById(factionId);
+  if (!opt) return null;
+  const detailSource = (baseName && opt.variant_details) ? (opt.variant_details[baseName] || null) : null;
+  const detail = detailSource || opt;
+  const selectedBaseData = (detail.bases || []).find(base => base?.name === baseName) || null;
+  const rawAbilities = [
+    ...((detail.abilities_text || detail.abilities || [])),
+    ...((selectedBaseData?.abilities) || []),
+  ];
+  return rawAbilities.find(item => typeof item === 'object' && item && item.name === abilityName) || null;
+}
+
 function factionOptionById(factionId) {
   for (const category of availableFactionCategories) {
     for (const opt of (category.options || [])) {
@@ -2175,6 +2191,13 @@ function renderChoiceModal(state) {
       ? (targetChoiceTitleMap[choiceKey] || sourceName || '選擇目標玩家')
       : (choiceType === 'underground_party' ? '地下黨' : (sourceName || '卡牌選擇')));
   activeChoiceModal = choiceType;
+  // 取消反應只需要一張小卡面預覽＋是否二選一，套用其它 choice 類型共用的 860px
+  // 寬版面（給多張卡片並排選擇用）明顯太大（2026-09-05 使用者回報：視窗為何這麼大）。
+  const glass = overlay.querySelector('.modal-glass');
+  if (glass) glass.classList.toggle('choice-glass-compact', choiceType === 'reaction_choice');
+  // #choiceModalCards 平常是給多張卡片並排選擇用的 3 欄 220px CSS grid；取消反應只有
+  // 單一卡面預覽，硬套那個固定欄寬會讓卡面被夾在比它窄的容器裡橫向被裁掉一截。
+  cards.classList.toggle('choice-card-grid-compact', choiceType === 'reaction_choice');
   title.textContent = resolvedTitle;
   const localizedChoicePrompt = playerMessageZhTw(choice.prompt, '請進行選擇。');
   desc.innerHTML = `${escapeHtml(businessNetworkModalHeader?.desc || localizedChoicePrompt)}${businessNetworkModalHeader?.helperHtml || ''}`;
@@ -2288,30 +2311,91 @@ function renderChoiceModal(state) {
       cards.appendChild(btn);
     });
   } else if (choiceType === 'reaction_choice') {
+    // 問句直接收進標題（「是否用『X』取消？」），desc 跟卡面預覽下面就不用再重複寫一次
+    // 說明文字了（2026-09-05 使用者回報：標題應該直接問是否用該卡取消，下面不用多寫）。
+    desc.innerHTML = '';
+    const reactionCards = choice.cards || [];
+    const cardNameOf = (entry, index) => (typeof entry === 'string' ? entry : (entry?.name || `取消牌 ${index + 1}`));
+    const distinctNames = [...new Set(reactionCards.map(cardNameOf))];
+    title.textContent = distinctNames.length === 1
+      ? `是否用『${distinctNames[0]}』取消？`
+      : '是否要取消對方的行動？';
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'reaction-choice-body';
+
+    const targetLine = choice.target_player_name
+      ? `<div class="reaction-choice-target">目標玩家：${escapeHtml(choice.target_player_name)}</div>`
+      : '';
+    // 這裡的「行動」可能是真的卡牌（查得到 cardPresentation），也可能是紅軍統戰部等
+    // 特殊能力（played_card_name 只是能力名稱，卡牌目錄裡沒有）——後者改用發動者的
+    // 陣營能力資料渲染同樣結構的卡面（標題／觸發時機／效果文字），而不是顯示空白卡面。
+    const actionPreviewHtml = cardPresentation(choice.played_card_name)
+      ? renderCardFace(choice.played_card_name, 'choice', false, true)
+      : (() => {
+        const actingPlayer = (state.players || []).find(p => p.id === choice.acting_player_id) || null;
+        const ability = actingPlayer
+          ? factionAbilityDetailByName(actingPlayer.faction, actingPlayer.base, choice.played_card_name)
+          : null;
+        return `
+          <div class="card-face compact">
+            <div class="card-face-top">
+              <div class="purchase-card-title">${escapeHtml(choice.played_card_name || '特殊能力')}</div>
+            </div>
+            <div class="card-face-meta-row">${escapeHtml(ability?.trigger || '特殊能力')}</div>
+            <div class="purchase-card-body card-effect-block">
+              <div>${escapeHtml(ability?.effect || '（暫無資料）')}</div>
+            </div>
+          </div>`;
+      })();
+    const preview = document.createElement('div');
+    preview.className = 'reaction-choice-preview';
+    preview.innerHTML = `
+      <div class="reaction-choice-preview-label">即將取消的行動</div>
+      ${actionPreviewHtml}
+      ${targetLine}
+    `;
+    wrapper.appendChild(preview);
+
     const row = document.createElement('div');
-    row.className = 'modal-choice-row';
+    row.className = 'reaction-choice-actions';
 
-    const skipBtn = document.createElement('button');
-    skipBtn.className = 'modal-choice-btn';
-    skipBtn.type = 'button';
-    skipBtn.textContent = '不取消';
-    skipBtn.onclick = () => {
-      sendAction('resolve_choice', { index: 0 });
-    };
-    row.appendChild(skipBtn);
+    if (distinctNames.length <= 1) {
+      // 手上只有一種取消牌（絕大多數情況）：標題已經問完了，這裡只給「是」／「否」兩個按鈕。
+      const yesBtn = document.createElement('button');
+      yesBtn.className = 'modal-choice-btn reaction-choice-yes';
+      yesBtn.type = 'button';
+      yesBtn.textContent = '是';
+      yesBtn.onclick = () => sendAction('resolve_choice', { index: 1 });
+      row.appendChild(yesBtn);
 
-    (choice.cards || []).forEach((cardEntry, cardIndex) => {
-      const btn = document.createElement('button');
-      btn.className = 'modal-choice-btn';
-      btn.type = 'button';
-      const cardName = typeof cardEntry === 'string' ? cardEntry : (cardEntry?.name || `取消牌 ${cardIndex + 1}`);
-      btn.textContent = `使用 ${cardName} 取消`;
-      btn.onclick = () => {
-        sendAction('resolve_choice', { index: cardIndex + 1 });
-      };
-      row.appendChild(btn);
-    });
-    cards.appendChild(row);
+      const noBtn = document.createElement('button');
+      noBtn.className = 'modal-choice-btn reaction-choice-no';
+      noBtn.type = 'button';
+      noBtn.textContent = '否';
+      noBtn.onclick = () => sendAction('resolve_choice', { index: 0 });
+      row.appendChild(noBtn);
+    } else {
+      // 手上有 2 種以上不同名稱的取消牌時，用哪一張是玩家要做的實質選擇（不同牌之後的
+      // 加成條件不同），無法收成單純是否二選一，保留逐張選擇。
+      const skipBtn = document.createElement('button');
+      skipBtn.className = 'modal-choice-btn reaction-choice-no';
+      skipBtn.type = 'button';
+      skipBtn.textContent = '不取消';
+      skipBtn.onclick = () => sendAction('resolve_choice', { index: 0 });
+      row.appendChild(skipBtn);
+
+      reactionCards.forEach((cardEntry, cardIndex) => {
+        const btn = document.createElement('button');
+        btn.className = 'modal-choice-btn';
+        btn.type = 'button';
+        btn.textContent = `使用 ${cardNameOf(cardEntry, cardIndex)} 取消`;
+        btn.onclick = () => sendAction('resolve_choice', { index: cardIndex + 1 });
+        row.appendChild(btn);
+      });
+    }
+    wrapper.appendChild(row);
+    cards.appendChild(wrapper);
     closeBtn.onclick = () => {
       sendAction('resolve_choice', { index: 0 });
     };

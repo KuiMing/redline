@@ -4149,6 +4149,16 @@ class Game(CardPlayMixin):
             pending_live_towns = self._live_pending_town_choices(pending_choice_owner, self.pending_choice) if pending_choice_owner else None
             if pending_live_towns is not None:
                 self.pending_choice['towns'] = pending_live_towns
+            # 取消反應（爆料黑幕/產業滲透/情報網）視窗：把即將被取消的行動所指定的目標玩家
+            # 一併投影出去，讓前端能顯示「要取消的行動」目標是誰，不只是卡名。派遣間諜／
+            # 內應間諜等瓦解類卡牌在這個時間點還沒選定要瓦解的組織（瓦解目標選擇發生在
+            # 取消視窗結算之後），因此這裡只會有目標玩家（若有指定），沒有目標組織。
+            pending_action_context = self.pending_choice.get('action_context') or {}
+            pending_target_player_id = pending_action_context.get('target_player_id')
+            pending_target_player = next(
+                (p for p in self.players if getattr(p, 'id', None) == pending_target_player_id),
+                None,
+            ) if pending_target_player_id is not None else None
             pending_choice = {
                 'type': self.pending_choice.get('type'),
                 'choice_key': self.pending_choice.get('choice_key'),
@@ -4178,6 +4188,8 @@ class Game(CardPlayMixin):
                 'acting_player_id': self.pending_choice.get('acting_player_id'),
                 'acting_player_name': self.pending_choice.get('acting_player_name'),
                 'played_card_name': self.pending_choice.get('played_card_name'),
+                'target_player_id': pending_target_player_id,
+                'target_player_name': getattr(pending_target_player, 'name', None),
                 'region': self.pending_choice.get('region'),
                 'free': self.pending_choice.get('free'),
                 'ignore_distance': self.pending_choice.get('ignore_distance'),

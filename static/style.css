@@ -1995,6 +1995,61 @@ body {
   min-width: 108px;
 }
 
+/* 卡面預覽＋是否問句包成單一 grid item，避免跟其它 choice 類型共用的
+   `#choiceModalCards`（CSS grid，預設 align-items: stretch）把矮的按鈕列
+   撐成跟卡面預覽一樣高（2026-09-05 使用者回報：按鈕太大顆）。 */
+.reaction-choice-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.reaction-choice-preview {
+  max-width: 260px;
+  width: 100%;
+}
+
+.reaction-choice-preview-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #9fb0ca;
+  margin-bottom: 6px;
+}
+
+.reaction-choice-target {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #dce9ff;
+}
+
+.reaction-choice-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-self: stretch;
+  width: 100%;
+  max-width: 260px;
+}
+
+.reaction-choice-actions .modal-choice-btn {
+  flex: 1 1 0;
+  min-width: 84px;
+  padding: 10px 20px;
+  text-align: center;
+}
+
+.reaction-choice-actions .reaction-choice-yes {
+  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(239, 68, 68, 0.16);
+}
+
+.reaction-choice-actions .reaction-choice-yes:hover {
+  background: rgba(239, 68, 68, 0.28);
+}
+
 .modal-choice-row {
   display: flex;
   flex-wrap: nowrap;
@@ -2319,6 +2374,12 @@ body {
   width: min(860px, calc(100vw - 48px));
 }
 
+/* 取消反應只需要一張小卡面預覽＋是否二選一，其它 choice 類型共用的 860px 寬版面
+   （給多張卡片並排選擇用）明顯太大（2026-09-05 使用者回報：視窗為何這麼大）。 */
+.choice-glass.choice-glass-compact {
+  width: min(320px, calc(100vw - 48px));
+}
+
 .choice-card-grid {
   display: grid;
   grid-template-columns: repeat(3, 220px);
@@ -2331,6 +2392,16 @@ body {
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 2px 6px 2px 2px;
+}
+
+/* 取消反應只有一張卡面預覽，不需要多欄卡片選擇網格用的固定 220px 欄寬——套用它會讓
+   卡面被夾在比它窄的 .choice-glass-compact 容器裡，橫向被裁掉一截。 */
+.choice-card-grid.choice-card-grid-compact {
+  display: block;
+  max-height: none;
+  overflow: visible;
+  margin: 10px 0 0;
+  padding: 0;
 }
 
 .choice-card-btn {

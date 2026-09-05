@@ -53,6 +53,27 @@ def test_reaction_choice_projection_hides_reaction_cards_from_non_reactor():
     assert reactor_state['pending_choice']['cards'] == [{'name': '爆料黑幕', 'card_index': 0}]
 
 
+def test_reaction_choice_projection_includes_target_player_for_reactor():
+    g = Game([('actor', 'actor'), ('bystander', 'bystander'), ('reactor', 'reactor')])
+    g.game_phase = GamePhase.MAIN
+    g.turn_phase = TurnPhase.ACTION
+    g.current_player_index = 0
+    g.pending_base_choices = {}
+    g.pending_choice = None
+    actor, bystander, reactor = g.players
+    actor.hand = [card(g, '誘導虛耗')]
+    actor.deck.draw_pile = [Card('DrawnCard', 'command', {})]
+    reactor.hand = [card(g, '爆料黑幕')]
+
+    result = g.play_card(0, mode='action', target_player_id=bystander.id)
+
+    assert result.get('pending_choice') is True, result
+    reactor_state = g.state(reactor.id)
+    assert reactor_state['pending_choice']['type'] == 'reaction_choice'
+    assert reactor_state['pending_choice']['target_player_id'] == bystander.id
+    assert reactor_state['pending_choice']['target_player_name'] == bystander.name
+
+
 def test_reaction_choice_auto_skips_after_timeout_and_resolves_action():
     async def run_case():
         g = make_game()
