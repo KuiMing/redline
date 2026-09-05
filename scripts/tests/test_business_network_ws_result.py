@@ -52,5 +52,6 @@ def test_business_network_resolve_choice_websocket_broadcasts_last_action_result
         'success': True,
         'chosen_card': '交通經驗乙',
         'purchase_index': 7,
+        'zone_label': '購買區槽位 8',
     }
     assert resolved_state['pending_choice'] is None

@@ -96,8 +96,8 @@ def main() -> None:
                   modalDisplay: getComputedStyle(document.getElementById('unavailableActionModal')).display,
                   modalTitle: document.getElementById('unavailableActionTitle').textContent,
                   modalMessage: document.getElementById('unavailableActionMessage').textContent,
-                  phaseNoticeDisplay: getComputedStyle(document.getElementById('phaseActionNotice')).display,
-                  phaseNoticeText: document.getElementById('phaseActionNotice').textContent,
+                  topNoticeBarAbsent: !document.getElementById('phaseActionBar')
+                    && !document.getElementById('phaseActionNotice'),
                   peerNoticeDisplay: getComputedStyle(document.getElementById('peerActionNotice')).display,
                   me: window.lastGameState.players.find(player => player.id === playerId),
                 })"""
@@ -111,8 +111,7 @@ def main() -> None:
                 "modalDisplay": state["modalDisplay"],
                 "modalTitle": state["modalTitle"],
                 "modalMessage": state["modalMessage"],
-                "phaseNoticeDisplay": state["phaseNoticeDisplay"],
-                "phaseNoticeText": state["phaseNoticeText"],
+                "topNoticeBarAbsent": state["topNoticeBarAbsent"],
                 "peerNoticeDisplay": state["peerNoticeDisplay"],
             }
 
@@ -144,10 +143,8 @@ def main() -> None:
             {"actor": actor_state["modalMessage"], "observer": observer_state["modalMessage"]},
         )
         record(
-            "result_does_not_use_hud_notice",
-            actor_state["phaseNoticeDisplay"] == observer_state["phaseNoticeDisplay"] == "none"
-            and not actor_state["phaseNoticeText"]
-            and not observer_state["phaseNoticeText"],
+            "top_notice_bar_is_absent_for_both_players",
+            actor_state["topNoticeBarAbsent"] and observer_state["topNoticeBarAbsent"],
             {
                 "actor": prompt_details(actor_state),
                 "observer": prompt_details(observer_state),

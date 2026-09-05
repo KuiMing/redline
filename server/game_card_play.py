@@ -306,6 +306,7 @@ class CardPlayMixin:
                 'success': True,
                 'chosen_card': getattr(borrowed, 'name', str(borrowed)),
                 'purchase_index': purchase_index,
+                'zone_label': source_entry.get('zone_label') or '購買區',
             }
             if 'pending_choice' in action_result:
                 response['pending_choice'] = action_result.get('pending_choice')

@@ -64,24 +64,18 @@ def test_raw_no_target_error_has_attempt_aware_modal_contract() -> None:
     assert "supportCardPlayAttemptSequence" in handler
 
 
-def test_special_case_returns_before_generic_hud_and_native_alert_sinks() -> None:
+def test_special_case_returns_before_generic_modal_sink() -> None:
     source = APP_JS.read_text(encoding="utf-8")
     render = function_source(source, "render")
-    error_block_match = re.search(
-        r"if \(playerError\) \{(?P<body>.*?)\n\s*\} else if \(stickyPlayerErrorNotice\)",
-        render,
-        re.DOTALL,
-    )
-    assert error_block_match, "render error dispatch block missing"
-    error_block = error_block_match.group("body")
 
-    assert "showSupportNoTargetModal(state)" in error_block
-    special_index = error_block.index("showSupportNoTargetModal(state)")
-    sticky_index = error_block.index("showStickyPlayerErrorNotice(playerError)")
-    alert_index = error_block.index("alert(playerError)")
-    assert special_index < sticky_index < alert_index
+    assert "showSupportNoTargetModal(state)" in render
+    assert "showPlayerErrorModal(state, playerError)" in render
+    assert "alert(playerError)" not in render
+    special_index = render.index("showSupportNoTargetModal(state)")
+    generic_index = render.index("showPlayerErrorModal(state, playerError)")
+    assert special_index < generic_index
     assert re.search(
         r"if \(showSupportNoTargetModal\(state\)\)\s*\{[^}]*syncPlayerErrorToStrategicMap\(playerError\);[^}]*\}\s*else",
-        error_block,
+        render,
         re.DOTALL,
-    ), "special support error must be handled in an exclusive branch before generic HUD/alert"
+    ), "special support error must be handled in an exclusive branch before the generic modal"

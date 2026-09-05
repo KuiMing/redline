@@ -53,14 +53,13 @@ def main() -> None:
                   const clear=document.getElementById('clearPurchaseSelectionBtn');
                   const topdeck=document.getElementById('topdeckRightBtn');
                   const buy=document.getElementById('openPurchaseConfirmBtn');
-                  const secondary=document.getElementById('phaseActionBar');
                   const hud=document.getElementById('hud');
                   const shell=document.getElementById('gameShell');
                   return {
                     text:topdeck.textContent.trim(), title:topdeck.title, disabled:topdeck.disabled,
                     parentId:topdeck.parentElement?.id || '', previousId:topdeck.previousElementSibling?.id || '', nextId:topdeck.nextElementSibling?.id || '',
                     controls:box(controls), clear:box(clear), topdeck:box(topdeck), buy:box(buy), hud:box(hud), shell:box(shell),
-                    secondaryDisplay:getComputedStyle(secondary).display,
+                    topNoticeBarAbsent:!document.getElementById('phaseActionBar') && !document.getElementById('phaseActionNotice'),
                     position:getComputedStyle(topdeck).position,
                   };
                 }"""
@@ -69,7 +68,7 @@ def main() -> None:
             same_row = abs(layout["clear"]["top"] - layout["topdeck"]["top"]) <= 1 and abs(layout["clear"]["height"] - layout["topdeck"]["height"]) <= 1
             adjacent = layout["clear"]["left"] >= layout["topdeck"]["right"] and layout["clear"]["left"] - layout["topdeck"]["right"] <= 16 * scale
             record(f"{width}x{height}_topdeck_is_renamed_and_left_of_clear", layout["text"] == "卡牌置頂 (1)" and layout["parentId"] == "purchaseSelectionControls" and layout["previousId"] == "purchaseSelectionSummary" and layout["nextId"] == "clearPurchaseSelectionBtn" and same_row and adjacent and layout["position"] == "static", layout)
-            record(f"{width}x{height}_topdeck_no_longer_creates_secondary_row", layout["secondaryDisplay"] == "none" and layout["shell"]["top"] <= layout["hud"]["bottom"] + 10 * scale, {"secondaryDisplay": layout["secondaryDisplay"], "hud": layout["hud"], "shell": layout["shell"], "scale": scale})
+            record(f"{width}x{height}_topdeck_no_longer_creates_secondary_row", layout["topNoticeBarAbsent"] and layout["shell"]["top"] <= layout["hud"]["bottom"] + 10 * scale, {"topNoticeBarAbsent": layout["topNoticeBarAbsent"], "hud": layout["hud"], "shell": layout["shell"], "scale": scale})
 
             screenshot = OUT / f"topdeck_near_clear_{width}x{height}_20260823.png"
             page.screenshot(path=str(screenshot), full_page=True)

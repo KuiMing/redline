@@ -62,14 +62,13 @@ def modal_snapshot(page: Page) -> dict:
         """() => {
           const modal = document.getElementById('unavailableActionModal');
           const glass = modal?.querySelector('.unavailable-action-glass');
-          const notice = document.getElementById('phaseActionNotice');
           const rect = glass?.getBoundingClientRect();
           return {
             visible: modal?.style.display === 'flex' && modal?.getAttribute('aria-hidden') === 'false',
             title: document.getElementById('unavailableActionTitle')?.textContent.trim() || '',
             message: document.getElementById('unavailableActionMessage')?.textContent.trim() || '',
-            hudText: notice?.textContent.trim() || '',
-            hudVisible: !!notice?.classList.contains('visible'),
+            topNoticeBarAbsent: !document.getElementById('phaseActionBar')
+              && !document.getElementById('phaseActionNotice'),
             rect: rect ? {left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom} : null,
           };
         }"""
@@ -175,8 +174,8 @@ def main() -> None:
         )
         record(
             "hud_notice_remains_empty_and_invisible",
-            not first_modal["hudText"] and not first_modal["hudVisible"],
-            {"text": first_modal["hudText"], "visible": first_modal["hudVisible"]},
+            first_modal["topNoticeBarAbsent"],
+            {"topNoticeBarAbsent": first_modal["topNoticeBarAbsent"]},
         )
         record(
             "rejected_play_retains_card_discard_and_pending_state",

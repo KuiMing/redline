@@ -105,11 +105,9 @@ def main() -> None:
               synthetic.red_army_action_count = 1;
               await render(synthetic);
               await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-              const notice = document.getElementById('phaseActionNotice');
               return {
-                phaseBarDisplay: getComputedStyle(document.getElementById('phaseActionBar')).display,
-                noticeVisible: notice.classList.contains('visible'),
-                noticeText: notice.textContent.trim(),
+                topNoticeBarAbsent: !document.getElementById('phaseActionBar')
+                  && !document.getElementById('phaseActionNotice'),
                 actionInfo: document.getElementById('factionActionInfo')?.textContent.trim() || '',
                 abilityText: document.getElementById('redArmyAbilityBtn')?.textContent.trim() || '',
               };
@@ -117,9 +115,7 @@ def main() -> None:
         )
         record(
             "successful_red_army_ability_does_not_create_result_row",
-            successful_result["phaseBarDisplay"] == "none"
-            and not successful_result["noticeVisible"]
-            and not successful_result["noticeText"]
+            successful_result["topNoticeBarAbsent"]
             and not successful_result["actionInfo"]
             and successful_result["abilityText"] == "紅軍能力 1/2",
             successful_result,
@@ -154,7 +150,8 @@ def main() -> None:
                 iconCloseVisible: getComputedStyle(document.getElementById('closeUnavailableActionModalIcon')).display !== 'none',
                 buttonActionsDisplay: getComputedStyle(document.querySelector('.unavailable-action-actions')).display,
                 focusedId: document.activeElement?.id || '',
-                phaseBarDisplay: getComputedStyle(document.getElementById('phaseActionBar')).display,
+                topNoticeBarAbsent: !document.getElementById('phaseActionBar')
+                  && !document.getElementById('phaseActionNotice'),
               };
             }"""
         )
@@ -167,7 +164,7 @@ def main() -> None:
             and waiting_reaction["iconCloseVisible"]
             and waiting_reaction["buttonActionsDisplay"] == "none"
             and waiting_reaction["focusedId"] == "closeUnavailableActionModalIcon"
-            and waiting_reaction["phaseBarDisplay"] == "none",
+            and waiting_reaction["topNoticeBarAbsent"],
             waiting_reaction,
         )
         page.screenshot(path=str(WAITING_REACTION_SHOT), full_page=True)
@@ -204,7 +201,8 @@ def main() -> None:
                 iconCloseVisible: getComputedStyle(document.getElementById('closeUnavailableActionModalIcon')).display !== 'none',
                 buttonActionsDisplay: getComputedStyle(document.querySelector('.unavailable-action-actions')).display,
                 focusedId: document.activeElement?.id || '',
-                phaseBarDisplay: getComputedStyle(document.getElementById('phaseActionBar')).display,
+                topNoticeBarAbsent: !document.getElementById('phaseActionBar')
+                  && !document.getElementById('phaseActionNotice'),
                 abilityText: document.getElementById('redArmyAbilityBtn')?.textContent.trim() || '',
               };
             }"""
@@ -218,7 +216,7 @@ def main() -> None:
             and canceled_reaction["iconCloseVisible"]
             and canceled_reaction["buttonActionsDisplay"] == "none"
             and canceled_reaction["focusedId"] == "closeUnavailableActionModalIcon"
-            and canceled_reaction["phaseBarDisplay"] == "none"
+            and canceled_reaction["topNoticeBarAbsent"]
             and canceled_reaction["abilityText"] == "紅軍能力 1/2",
             canceled_reaction,
         )

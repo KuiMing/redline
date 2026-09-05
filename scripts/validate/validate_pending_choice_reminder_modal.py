@@ -98,7 +98,8 @@ def main() -> None:
                 message: document.getElementById('unavailableActionMessage')?.textContent.trim() || '',
                 ownerName: other.name,
                 focusedId: document.activeElement?.id || '',
-                hudNotice: document.getElementById('phaseActionNotice')?.textContent.trim() || '',
+                topNoticeBarAbsent: !document.getElementById('phaseActionBar')
+                  && !document.getElementById('phaseActionNotice'),
                 rect: rect ? {left:rect.left, top:rect.top, right:rect.right, bottom:rect.bottom} : null,
               };
             }"""
@@ -109,7 +110,7 @@ def main() -> None:
         rect = waiting_state["rect"] or {}
         record(
             "other_player_wait_uses_custom_modal",
-            waiting_state["modalVisible"] and waiting_state["title"] == "等待其他玩家處理效果" and waiting_state["ownerName"] in waiting_state["message"] and waiting_state["focusedId"] == "closeUnavailableActionModalBtn" and not waiting_state["hudNotice"],
+            waiting_state["modalVisible"] and waiting_state["title"] == "等待其他玩家處理效果" and waiting_state["ownerName"] in waiting_state["message"] and waiting_state["focusedId"] == "closeUnavailableActionModalBtn" and waiting_state["topNoticeBarAbsent"],
             waiting_state,
         )
         record(
