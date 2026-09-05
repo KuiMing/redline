@@ -13,10 +13,11 @@ ROOT = Path(__file__).resolve().parents[2]
 BASE_URL = os.environ.get("REDLINE_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
 OUT = ROOT / "docs/records/faction-ui/gambler-whisper-shared-result-modal"
 JSON_PATH = OUT / "GAMBLER_WHISPER_SHARED_RESULT_MODAL_VALIDATION.json"
-RED_BASELINE_JSON_PATH = OUT / "GAMBLER_WHISPER_SHARED_RESULT_MODAL_RED_BASELINE.json"
+RED_BASELINE_JSON_PATH = OUT / "GAMBLER_WHISPER_TURN_HANDOFF_RED_BASELINE.json"
 MD_PATH = OUT / "GAMBLER_WHISPER_SHARED_RESULT_MODAL_VALIDATION.md"
 ACTOR_SHOT = OUT / "gambler_whisper_actor_result_modal_1280x720.png"
 OBSERVER_SHOT = OUT / "gambler_whisper_observer_result_modal_1280x720.png"
+HANDOFF_SHOT = OUT / "gambler_whisper_turn_handoff_1280x720.png"
 EXPECTED_CARD = "宣傳家"
 EXPECTED_MESSAGE_PARTS = (
     "賭徒耳語結果",
@@ -182,6 +183,64 @@ def main() -> None:
             display = page.locator("#unavailableActionModal").evaluate("element => getComputedStyle(element).display")
             record(f"{role}_dismissal_stays_closed_for_same_result", display == "none", display)
 
+        # Re-open the same result to prove that turn handoff, rather than manual dismissal,
+        # retires the public-result prompt for every viewer.
+        for page in (actor, observer):
+            page.evaluate("showActionMessageModal('賭徒耳語結果', formatFactionActionResult(window.lastGameState.last_action_result))")
+        original_current_player = actor.evaluate("window.lastGameState.current_player")
+        actor.evaluate("sendAction('advance')")
+        for page in (actor, observer):
+            page.wait_for_function(
+                "expected => window.lastGameState?.current_player && window.lastGameState.current_player !== expected",
+                arg=original_current_player,
+                timeout=10000,
+            )
+            page.wait_for_timeout(120)
+        for role, page in (("actor", actor), ("observer", observer)):
+            handoff_state = page.evaluate(
+                """() => ({
+                  currentPlayer: window.lastGameState.current_player,
+                  modalDisplay: getComputedStyle(document.getElementById('unavailableActionModal')).display,
+                  modalTitle: document.getElementById('unavailableActionTitle').textContent,
+                })"""
+            )
+            record(
+                f"{role}_result_prompt_closes_on_turn_handoff",
+                handoff_state["modalDisplay"] == "none",
+                handoff_state,
+            )
+        actor.screenshot(path=str(HANDOFF_SHOT), full_page=True)
+
+        unrelated_modal_state = actor.evaluate(
+            """() => {
+              if (typeof closeSharedFactionActionResultOnTurnHandoff !== 'function') {
+                return {supported: false, display: '', title: '', message: ''};
+              }
+              activeSharedFactionActionResult = {
+                gameId,
+                currentPlayer: 'previous player',
+                title: '賭徒耳語結果',
+              };
+              showActionMessageModal('操作提示', '這是後續的其他提示。');
+              closeSharedFactionActionResultOnTurnHandoff(window.lastGameState);
+              return {
+                supported: true,
+                display: getComputedStyle(document.getElementById('unavailableActionModal')).display,
+                title: document.getElementById('unavailableActionTitle').textContent,
+                message: document.getElementById('unavailableActionMessage').textContent,
+              };
+            }"""
+        )
+        record(
+            "turn_handoff_does_not_close_unrelated_modal",
+            unrelated_modal_state["supported"]
+            and unrelated_modal_state["display"] == "flex"
+            and unrelated_modal_state["title"] == "操作提示"
+            and unrelated_modal_state["message"] == "這是後續的其他提示。",
+            unrelated_modal_state,
+        )
+        actor.evaluate("closeUnavailableActionModal()")
+
         browser.close()
 
     record("browser_console_has_no_errors", not console_errors, console_errors)
@@ -208,7 +267,11 @@ def main() -> None:
         "service": BASE_URL,
         "scenario": "澳門發動賭徒耳語；猜奇數；公開翻到宣傳家；識別碼 [REDACTED]",
         "checks": checks,
-        "screenshots": [str(ACTOR_SHOT.relative_to(ROOT)), str(OBSERVER_SHOT.relative_to(ROOT))],
+        "screenshots": [
+            str(ACTOR_SHOT.relative_to(ROOT)),
+            str(OBSERVER_SHOT.relative_to(ROOT)),
+            str(HANDOFF_SHOT.relative_to(ROOT)),
+        ],
     }
     JSON_PATH.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     red_lines = []

@@ -1,23 +1,26 @@
 {
   "summary": {
     "total": 14,
-    "passed": 14,
-    "failed": 0
+    "passed": 11,
+    "failed": 3
   },
   "red_baseline": {
     "summary": {
-      "total": 14,
-      "passed": 11,
-      "failed": 3
+      "total": 11,
+      "passed": 5,
+      "failed": 6
     },
     "failed_checks": [
-      "actor_result_prompt_closes_on_turn_handoff",
-      "observer_result_prompt_closes_on_turn_handoff",
-      "turn_handoff_does_not_close_unrelated_modal"
+      "private_bottom_card_is_not_in_public_result",
+      "actor_sees_result_prompt_modal",
+      "observer_sees_result_prompt_modal",
+      "actor_and_observer_messages_are_identical",
+      "result_does_not_use_hud_notice",
+      "observer_does_not_get_duplicate_peer_action_overlay"
     ],
-    "record": "docs/records/faction-ui/gambler-whisper-shared-result-modal/GAMBLER_WHISPER_TURN_HANDOFF_RED_BASELINE.json"
+    "record": "docs/records/faction-ui/gambler-whisper-shared-result-modal/GAMBLER_WHISPER_SHARED_RESULT_MODAL_RED_BASELINE.json"
   },
-  "service": "http://127.0.0.1:8791",
+  "service": "http://127.0.0.1:8792",
   "scenario": "澳門發動賭徒耳語；猜奇數；公開翻到宣傳家；識別碼 [REDACTED]",
   "checks": [
     {
@@ -158,30 +161,30 @@
     },
     {
       "name": "actor_result_prompt_closes_on_turn_handoff",
-      "passed": true,
+      "passed": false,
       "details": {
         "currentPlayer": "opponent",
-        "modalDisplay": "none",
+        "modalDisplay": "flex",
         "modalTitle": "賭徒耳語結果"
       }
     },
     {
       "name": "observer_result_prompt_closes_on_turn_handoff",
-      "passed": true,
+      "passed": false,
       "details": {
         "currentPlayer": "opponent",
-        "modalDisplay": "none",
+        "modalDisplay": "flex",
         "modalTitle": "賭徒耳語結果"
       }
     },
     {
       "name": "turn_handoff_does_not_close_unrelated_modal",
-      "passed": true,
+      "passed": false,
       "details": {
-        "supported": true,
-        "display": "flex",
-        "title": "操作提示",
-        "message": "這是後續的其他提示。"
+        "supported": false,
+        "display": "",
+        "title": "",
+        "message": ""
       }
     },
     {

@@ -27,6 +27,7 @@ let factionPickerModalOpen = false;
 let factionPickerReturnFocus = null;
 let activeChoiceModal = null;
 let lastFactionActionResultKey = null;
+let activeSharedFactionActionResult = null;
 let lastSupportChoiceMapHighlightPayload = null;
 let lastEventRevealKey = null;
 let lastPlayerErrorModalKey = null;
@@ -3073,6 +3074,21 @@ function showPlayerErrorModal(state, message) {
 
 const SHARED_REVEAL_RESULT_ACTION_NAMES = new Set(['立場試探', '賭徒耳語', '民族祭儀']);
 
+function closeSharedFactionActionResultOnTurnHandoff(state) {
+  const active = activeSharedFactionActionResult;
+  if (!active) return;
+  const gameChanged = active.gameId !== gameId;
+  const currentPlayerChanged = active.currentPlayer !== (state.current_player || '');
+  if (!gameChanged && !currentPlayerChanged) return;
+
+  const modal = document.getElementById('unavailableActionModal');
+  const title = document.getElementById('unavailableActionTitle');
+  if (modal?.style.display === 'flex' && title?.textContent === active.title) {
+    closeUnavailableActionModal();
+  }
+  activeSharedFactionActionResult = null;
+}
+
 function formatFactionActionResult(result) {
   if (!result || !result.name) return '';
   if (result.unavailable) {
@@ -3117,6 +3133,8 @@ function renderFactionActionResult(state, faction) {
   const info = document.getElementById('factionActionInfo');
   if (!info) return {hasResult: false, message: '', html: ''};
 
+  closeSharedFactionActionResultOnTurnHandoff(state);
+
   const result = state.last_action_result || null;
   const message = formatFactionActionResult(result);
   const redArmyActionNames = new Set(['統戰部', '政工部', '國安部', '中紀委']);
@@ -3140,7 +3158,13 @@ function renderFactionActionResult(state, faction) {
       if (result.unavailable) {
         showUnavailableActionModal(result.name, message);
       } else if (isSharedRevealResult) {
-        showActionMessageModal(`${result.name}結果`, message);
+        const title = `${result.name}結果`;
+        showActionMessageModal(title, message);
+        activeSharedFactionActionResult = {
+          gameId,
+          currentPlayer: state.current_player || '',
+          title,
+        };
       } else {
         showActionMessageModal(`${result.name}結果`, message);
       }
