@@ -2550,39 +2550,20 @@ body {
 }
 
 .player-status-card {
+  --tone-rgb: 96, 165, 250;
+  --tone-light-rgb: 219, 234, 254;
   position: relative;
   overflow: hidden;
   border-radius: 16px;
   padding: 10px 10px;
-  border: 1px solid rgba(130, 170, 255, 0.22);
-  background: linear-gradient(135deg, rgba(14, 24, 42, 0.88), rgba(5, 8, 12, 0.70));
+  border: 1px solid rgba(var(--tone-rgb), 0.48);
+  background: linear-gradient(135deg, rgba(var(--tone-rgb), 0.20), rgba(5, 8, 12, 0.78));
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .player-status-card.current {
   border-color: rgba(96, 165, 250, 0.78);
   box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.22), 0 0 30px rgba(58, 123, 213, 0.22), 0 14px 30px rgba(0, 0, 0, 0.26);
-}
-
-.player-status-card.tone-red {
-  border-color: rgba(239, 68, 68, 0.48);
-  background: linear-gradient(135deg, rgba(72, 20, 24, 0.86), rgba(8, 10, 16, 0.72));
-}
-
-.player-status-card.tone-taiwan {
-  border-color: rgba(45, 212, 191, 0.48);
-}
-
-.player-status-card.tone-tibet {
-  border-color: rgba(96, 165, 250, 0.52);
-}
-
-.player-status-card.tone-gold {
-  border-color: rgba(245, 158, 11, 0.52);
-}
-
-.player-status-card.tone-hongkong {
-  border-color: rgba(168, 85, 247, 0.52);
 }
 
 .player-status-top {
@@ -2602,12 +2583,8 @@ body {
   font-family: 'JetBrains Mono', monospace;
   font-weight: 900;
   color: #06111f;
-  background: linear-gradient(135deg, #dbeafe, #60a5fa);
+  background: linear-gradient(135deg, rgb(var(--tone-light-rgb)), rgb(var(--tone-rgb)));
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
-}
-
-.tone-red .player-status-avatar {
-  background: linear-gradient(135deg, #fecaca, #ef4444);
 }
 
 .player-status-id {
@@ -2662,13 +2639,8 @@ body {
 
 .player-status-badge.faction {
   color: #eef6ff;
-  background: rgba(96, 165, 250, 0.16);
-  border-color: rgba(96, 165, 250, 0.32);
-}
-
-.tone-red .player-status-badge.faction {
-  background: rgba(239, 68, 68, 0.17);
-  border-color: rgba(239, 68, 68, 0.34);
+  background: rgba(var(--tone-rgb), 0.18);
+  border-color: rgba(var(--tone-rgb), 0.36);
 }
 
 .player-status-stats {

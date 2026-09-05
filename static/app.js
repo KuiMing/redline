@@ -3295,13 +3295,20 @@ function renderBaseSelection(state) {
   });
 }
 
-function factionToneClass(factionId) {
-  if (factionId === 'red_army') return ' tone-red';
-  if (String(factionId || '').startsWith('taiwan')) return ' tone-taiwan';
-  if (String(factionId || '').startsWith('tibet')) return ' tone-tibet';
-  if (String(factionId || '').startsWith('uyghur') || factionId === 'kazakh') return ' tone-gold';
-  if (factionId === 'hong_kong') return ' tone-hongkong';
-  return '';
+function hexToRgbTuple(hex) {
+  const match = /^#?([0-9a-f]{6})$/i.exec(hex || '');
+  if (!match) return [96, 165, 250];
+  const n = parseInt(match[1], 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+// 依陣營代表色（factionNameColor，涵蓋全部 9 個陣營分類）算出戰況卡邊框/頭像/徽章共用的
+// CSS variable，取代舊版逐一列舉 tone-xxx class 的作法（曾遺漏蒙古/滿洲/反賊等陣營，
+// 只有陣營名稱字色正確、卡片其餘部位仍落到預設藍色）。
+function factionToneStyle(factionId) {
+  const [r, g, b] = hexToRgbTuple(factionNameColor(factionId) || '#60a5fa');
+  const light = [r, g, b].map(c => Math.round(c + (255 - c) * 0.72));
+  return `--tone-rgb:${r},${g},${b};--tone-light-rgb:${light[0]},${light[1]},${light[2]};`;
 }
 
 function playerBaseName(player) {
@@ -3349,7 +3356,7 @@ function renderPlayerStatusCards(state) {
     const baseName = playerBaseName(player);
     const initial = escapeHtml(String(player.name || '?').slice(0, 1).toUpperCase());
     return `
-      <article class="player-status-card${isCurrent ? ' current' : ''}${factionToneClass(player.faction)}">
+      <article class="player-status-card${isCurrent ? ' current' : ''}" style="${factionToneStyle(player.faction)}">
         <div class="player-status-top">
           <div class="player-status-avatar">${initial}</div>
           <div class="player-status-id">
