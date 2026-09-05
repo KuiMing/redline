@@ -2304,8 +2304,12 @@ function renderChoiceModal(state) {
       cards.appendChild(btn);
     });
   } else if (choiceType === 'reaction_choice') {
-    const preview = document.createElement('div');
-    preview.className = 'reaction-choice-preview';
+    // 這個彈窗只問「要不要取消」，跟前面統一設好的「actor 打出 X。是否要取消對方的行動？」
+    // 說明文字重複，這裡改用自己的卡面預覽＋是否問句取代，desc 不需要再顯示一次。
+    desc.innerHTML = '';
+    const wrapper = document.createElement('div');
+    wrapper.className = 'reaction-choice-body';
+
     const targetLine = choice.target_player_name
       ? `<div class="reaction-choice-target">目標玩家：${escapeHtml(choice.target_player_name)}</div>`
       : '';
@@ -2330,37 +2334,70 @@ function renderChoiceModal(state) {
             </div>
           </div>`;
       })();
+    const preview = document.createElement('div');
+    preview.className = 'reaction-choice-preview';
     preview.innerHTML = `
       <div class="reaction-choice-preview-label">即將取消的行動</div>
       ${actionPreviewHtml}
       ${targetLine}
     `;
-    cards.appendChild(preview);
+    wrapper.appendChild(preview);
 
+    const reactionCards = choice.cards || [];
+    const cardNameOf = (entry, index) => (typeof entry === 'string' ? entry : (entry?.name || `取消牌 ${index + 1}`));
+    const distinctNames = [...new Set(reactionCards.map(cardNameOf))];
     const row = document.createElement('div');
-    row.className = 'modal-choice-row';
+    row.className = 'reaction-choice-actions';
 
-    const skipBtn = document.createElement('button');
-    skipBtn.className = 'modal-choice-btn';
-    skipBtn.type = 'button';
-    skipBtn.textContent = '不取消';
-    skipBtn.onclick = () => {
-      sendAction('resolve_choice', { index: 0 });
-    };
-    row.appendChild(skipBtn);
+    if (distinctNames.length <= 1) {
+      // 手上只有一種取消牌（絕大多數情況）：直接問是否使用它，只給「是」／「否」兩個按鈕，
+      // 不需要先選「不取消」還是「使用 X 取消」——那其實是同一個決定問了兩次
+      // （2026-09-05 使用者回報：按鈕太大顆、應該直接問是否使用『X』取消）。
+      const cardName = distinctNames[0] || '取消牌';
+      const question = document.createElement('div');
+      question.className = 'reaction-choice-question';
+      question.textContent = `是否要使用『${cardName}』取消行動？`;
+      wrapper.appendChild(question);
 
-    (choice.cards || []).forEach((cardEntry, cardIndex) => {
-      const btn = document.createElement('button');
-      btn.className = 'modal-choice-btn';
-      btn.type = 'button';
-      const cardName = typeof cardEntry === 'string' ? cardEntry : (cardEntry?.name || `取消牌 ${cardIndex + 1}`);
-      btn.textContent = `使用 ${cardName} 取消`;
-      btn.onclick = () => {
-        sendAction('resolve_choice', { index: cardIndex + 1 });
-      };
-      row.appendChild(btn);
-    });
-    cards.appendChild(row);
+      const yesBtn = document.createElement('button');
+      yesBtn.className = 'modal-choice-btn reaction-choice-yes';
+      yesBtn.type = 'button';
+      yesBtn.textContent = '是';
+      yesBtn.onclick = () => sendAction('resolve_choice', { index: 1 });
+      row.appendChild(yesBtn);
+
+      const noBtn = document.createElement('button');
+      noBtn.className = 'modal-choice-btn reaction-choice-no';
+      noBtn.type = 'button';
+      noBtn.textContent = '否';
+      noBtn.onclick = () => sendAction('resolve_choice', { index: 0 });
+      row.appendChild(noBtn);
+    } else {
+      // 手上有 2 種以上不同名稱的取消牌時，用哪一張是玩家要做的實質選擇（不同牌之後的
+      // 加成條件不同），無法收成單純是否二選一，保留逐張選擇。
+      const question = document.createElement('div');
+      question.className = 'reaction-choice-question';
+      question.textContent = '是否要取消對方的行動？';
+      wrapper.appendChild(question);
+
+      const skipBtn = document.createElement('button');
+      skipBtn.className = 'modal-choice-btn reaction-choice-no';
+      skipBtn.type = 'button';
+      skipBtn.textContent = '不取消';
+      skipBtn.onclick = () => sendAction('resolve_choice', { index: 0 });
+      row.appendChild(skipBtn);
+
+      reactionCards.forEach((cardEntry, cardIndex) => {
+        const btn = document.createElement('button');
+        btn.className = 'modal-choice-btn';
+        btn.type = 'button';
+        btn.textContent = `使用 ${cardNameOf(cardEntry, cardIndex)} 取消`;
+        btn.onclick = () => sendAction('resolve_choice', { index: cardIndex + 1 });
+        row.appendChild(btn);
+      });
+    }
+    wrapper.appendChild(row);
+    cards.appendChild(wrapper);
     closeBtn.onclick = () => {
       sendAction('resolve_choice', { index: 0 });
     };
