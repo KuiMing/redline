@@ -1995,6 +1995,26 @@ body {
   min-width: 108px;
 }
 
+.reaction-choice-preview {
+  margin-bottom: 14px;
+  max-width: 260px;
+}
+
+.reaction-choice-preview-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #9fb0ca;
+  margin-bottom: 6px;
+}
+
+.reaction-choice-target {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #dce9ff;
+}
+
 .modal-choice-row {
   display: flex;
   flex-wrap: nowrap;

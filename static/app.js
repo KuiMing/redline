@@ -2288,6 +2288,18 @@ function renderChoiceModal(state) {
       cards.appendChild(btn);
     });
   } else if (choiceType === 'reaction_choice') {
+    const preview = document.createElement('div');
+    preview.className = 'reaction-choice-preview';
+    const targetLine = choice.target_player_name
+      ? `<div class="reaction-choice-target">目標玩家：${escapeHtml(choice.target_player_name)}</div>`
+      : '';
+    preview.innerHTML = `
+      <div class="reaction-choice-preview-label">即將取消的行動</div>
+      ${renderCardFace(choice.played_card_name, 'choice', false, true)}
+      ${targetLine}
+    `;
+    cards.appendChild(preview);
+
     const row = document.createElement('div');
     row.className = 'modal-choice-row';
 
