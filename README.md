@@ -14,7 +14,7 @@ uv run uvicorn server.main:app --host 0.0.0.0 --port 8000
 ```
 
 `/test/*` 這類會直接改遊戲狀態的測試端點預設是關閉的（正式環境不應該讓人從外部直接改
-遊戲狀態）。如果你要跑 `scripts/validate_*_browser.py` 這類 browser-proof 腳本、或任何
+遊戲狀態）。如果你要跑 `scripts/validate/validate_*_browser.py` 這類 browser-proof 腳本、或任何
 需要打 `/test/*` 的手動驗證，啟動前要另外加上：
 
 ```bash
@@ -70,7 +70,8 @@ docker run -d --name redline -p 8000:8000 redline
 - `data/`
   - 遊戲資料檔，例如卡牌、城鎮、陣營與地圖資料。
 - `scripts/`
-  - 驗證腳本、資料產生腳本與一次性檢查工具。
+  - 資料產生腳本與其他專案工具。
+  - `scripts/validate/`：Browser proof、規則驗證與其他可重跑驗證腳本。
   - `scripts/debug/`：臨時截圖、連線檢查、除錯輔助腳本。
   - `scripts/tests/`：手動 WebSocket / lobby / Playwright 測試腳本。
 - `docs/`
@@ -89,7 +90,7 @@ docker run -d --name redline -p 8000:8000 redline
    - 看專案結構、紀錄檔規則、目前紀錄放哪裡。
 2. `docs/records/<topic>/`
    - 看你現在要接的任務主題，例如 `purchase/`、`safehouse/`、`shared-actions/`、`support-cards/`、`leak-card/`。
-3. 對應驗證腳本 `scripts/validate_*.py`
+3. 對應驗證腳本 `scripts/validate/validate_*.py`
    - 確認該 topic 的紀錄是不是由腳本直接產出，避免人工搬運造成路徑漂移。
 
 ## 怎麼看目前做到哪
@@ -121,7 +122,7 @@ docker run -d --name redline -p 8000:8000 redline
    - 確認主題資料夾與最新驗證紀錄。
 2. 再看該 topic 內的檔案
    - 優先看 `*_STATUS_*.md`、`*_COMMIT_SCOPE.md`、`*_VALIDATION.md`。
-3. 如果要追輸出來源或重跑方式，再看對應 `scripts/validate_*.py`
+3. 如果要追輸出來源或重跑方式，再看對應 `scripts/validate/validate_*.py`
 4. 如果還不夠，再看 git 歷史
    - `git log -- docs/records/<topic>/`
    - `git log -- README.md`
