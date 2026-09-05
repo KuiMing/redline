@@ -1,0 +1,118 @@
+{
+  "summary": {
+    "total": 13,
+    "passed": 2,
+    "failed": 11
+  },
+  "red_baseline": null,
+  "service": "http://127.0.0.1:8788",
+  "checks": [
+    {
+      "name": "top_notice_bar_dom_is_removed",
+      "passed": false,
+      "details": null
+    },
+    {
+      "name": "invalid_phase_card_play_uses_prompt_modal",
+      "passed": false,
+      "details": {
+        "visible": false,
+        "title": "無法發動能力",
+        "message": ""
+      }
+    },
+    {
+      "name": "business_network_result_uses_prompt_modal",
+      "passed": false,
+      "details": {
+        "visible": false,
+        "title": "無法發動能力",
+        "message": ""
+      }
+    },
+    {
+      "name": "unrelated_purchase_index_is_not_business_network_result",
+      "passed": false,
+      "details": {
+        "resultType": "resolved",
+        "modalHidden": true
+      }
+    },
+    {
+      "name": "generic_player_error_uses_prompt_modal",
+      "passed": false,
+      "details": {
+        "visible": false,
+        "title": "無法發動能力",
+        "message": ""
+      }
+    },
+    {
+      "name": "closed_error_prompt_does_not_reopen_for_same_state",
+      "passed": true,
+      "details": null
+    },
+    {
+      "name": "new_action_attempt_can_show_same_error_again",
+      "passed": false,
+      "details": {
+        "sequenceAdvanced": false,
+        "sentCount": 0,
+        "modalVisible": false
+      }
+    },
+    {
+      "name": "queued_action_is_counted_once_across_flush",
+      "passed": false,
+      "details": {
+        "queuedOnce": false,
+        "sequenceAdvancedOnce": false,
+        "queueRestored": false,
+        "sentCount": 0
+      }
+    },
+    {
+      "name": "base_selection_wait_uses_phase_meta_not_notification",
+      "passed": false,
+      "details": {
+        "meta": "目前：購買｜下一步：結束回合",
+        "modalHidden": true,
+        "topNoticeBarAbsent": false
+      }
+    },
+    {
+      "name": "layout_has_no_secondary_row_1280x720",
+      "passed": false,
+      "details": {
+        "hudBottom": 48,
+        "shellTop": 56,
+        "topNoticeBarAbsent": false
+      }
+    },
+    {
+      "name": "layout_has_no_secondary_row_1024x768",
+      "passed": false,
+      "details": {
+        "hudBottom": 134.39999389648438,
+        "shellTop": 140.8000030517578,
+        "topNoticeBarAbsent": false
+      }
+    },
+    {
+      "name": "no_native_browser_dialogs",
+      "passed": false,
+      "details": [
+        "操作失敗，請重新確認目前狀態後再試。",
+        "操作失敗，請重新確認目前狀態後再試。"
+      ]
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "passed": true,
+      "details": []
+    }
+  ],
+  "screenshots": [
+    "docs/records/ui-layout/no-top-notice-bar/no_top_notice_bar_prompt_1280x720.png"
+  ]
+}

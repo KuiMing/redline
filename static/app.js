@@ -27,10 +27,11 @@ let factionPickerModalOpen = false;
 let factionPickerReturnFocus = null;
 let activeChoiceModal = null;
 let lastFactionActionResultKey = null;
+let activeSharedFactionActionResult = null;
 let lastSupportChoiceMapHighlightPayload = null;
 let lastEventRevealKey = null;
-let stickyPlayerErrorNotice = '';
-let stickyPlayerErrorTimer = null;
+let lastPlayerErrorModalKey = null;
+let outboundActionSequence = 0;
 let unavailableActionModalReturnFocus = null;
 let supportCardPlayAttemptSequence = 0;
 let latestSupportCardPlayAttempt = null;
@@ -1524,6 +1525,7 @@ function connect(options = {}) {
 }
 
 function sendAction(action, payload = {}) {
+  outboundActionSequence += 1;
   setSocketDebug(`sendAction:${action}:readyState=${ws ? ws.readyState : 'null'}`);
   if (!ws || ws.readyState === WebSocket.CLOSED || ws.readyState === WebSocket.CLOSING) {
     pendingOutboundActions.push({action, payload});
@@ -1804,7 +1806,7 @@ function playHandCard(index, card, mode) {
       : cardName === '紅軍奧援' && mode === 'resource'
         ? '事件結算中可先發動紅軍奧援的「行動」，資源需等行動階段。'
         : '目前不能打出一般手牌；請先處理事件結算或等待行動階段。';
-    setPhaseActionNotice(message);
+    showActionMessageModal('無法打出手牌', message);
     return;
   }
   const canQueueMapCard = !!(
@@ -2000,7 +2002,6 @@ function eventBuildChoiceMapPayload(choice, sourceName = '', resolvedTitle = '')
 function renderBusinessNetworkResult(state) {
   const choice = state?.pending_choice || null;
   const result = state?.last_action_result || null;
-  const phaseNoticeMessage = document.getElementById('phaseActionNotice')?.textContent || '';
 
   if (choice?.choice_key === 'use_purchase_area_card') {
     const sourceName = choice?.source_name || '企業人脈';
@@ -2018,18 +2019,19 @@ function renderBusinessNetworkResult(state) {
     };
   }
 
-  if ((result?.chosen_card && /borrowed/.test(phaseNoticeMessage || '')) || result?.purchase_index != null) {
+  if (typeof result?.chosen_card === 'string' && result.chosen_card && Number.isInteger(result.purchase_index)) {
     const chosenCard = result?.chosen_card || '未知卡牌';
-    const purchaseIndex = Number.isFinite(result?.purchase_index) ? result.purchase_index + 1 : null;
-    const slotText = purchaseIndex != null ? `購買區槽位 ${purchaseIndex}` : '購買區';
-    const resultKey = JSON.stringify({ chosenCard, purchaseIndex, phaseNoticeMessage });
+    const purchaseIndex = result.purchase_index;
+    const slotText = result.zone_label || '購買區';
+    const message = `企業人脈：已借用 ${chosenCard}（${slotText}）`;
+    const resultKey = JSON.stringify({ chosenCard, purchaseIndex, slotText });
     if (lastBusinessNetworkResultKey !== resultKey) {
       lastBusinessNetworkResultKey = resultKey;
-      setPhaseActionNotice(`企業人脈：已借用 ${chosenCard}（${slotText}）`);
+      showActionMessageModal('企業人脈結果', message);
     }
     return {
       type: 'resolved',
-      message: `企業人脈：已借用 ${chosenCard}（${slotText}）`,
+      message,
       html: `
         <div class="business-network-result business-network-result-resolved">
           <div class="business-network-result-title">企業人脈已完成</div>
@@ -2888,27 +2890,11 @@ function setPhaseActionMeta(message = '') {
 
 window.addEventListener('resize', () => requestAnimationFrame(syncPhaseActionMetaOverflow));
 
-function setPhaseActionNotice(message = '') {
-  const notice = document.getElementById('phaseActionNotice');
-  if (!notice) return;
-  notice.textContent = message || '';
-  notice.title = message || '';
-  notice.classList.toggle('visible', !!message);
-}
-
-function clearStickyPlayerErrorNotice() {
-  if (stickyPlayerErrorTimer) clearTimeout(stickyPlayerErrorTimer);
-  stickyPlayerErrorNotice = '';
-  stickyPlayerErrorTimer = null;
-  setPhaseActionNotice('');
-}
-
 function showActionMessageModal(titleText, message, options = {}) {
   const modal = document.getElementById('unavailableActionModal');
   const title = document.getElementById('unavailableActionTitle');
   const body = document.getElementById('unavailableActionMessage');
   if (!modal || !title || !body) return;
-  clearStickyPlayerErrorNotice();
   if (modal.style.display !== 'flex') {
     unavailableActionModalReturnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   }
@@ -3073,16 +3059,34 @@ document.addEventListener('keydown', event => {
   closeUnavailableActionModal();
 });
 
-function showStickyPlayerErrorNotice(message, durationMs = 5000) {
-  stickyPlayerErrorNotice = message || '';
-  if (stickyPlayerErrorTimer) clearTimeout(stickyPlayerErrorTimer);
-  setPhaseActionNotice(stickyPlayerErrorNotice);
-  stickyPlayerErrorTimer = setTimeout(() => {
-    if (stickyPlayerErrorNotice !== message) return;
-    stickyPlayerErrorNotice = '';
-    stickyPlayerErrorTimer = null;
-    setPhaseActionNotice('');
-  }, durationMs);
+function showPlayerErrorModal(state, message) {
+  const errorKey = JSON.stringify([
+    state.turn_number ?? state.turn ?? null,
+    state.current_player || '',
+    state.error || message || '',
+    state.pending_choice?.choice_key || '',
+    outboundActionSequence,
+  ]);
+  if (lastPlayerErrorModalKey === errorKey) return;
+  lastPlayerErrorModalKey = errorKey;
+  showActionMessageModal('操作提示', message);
+}
+
+const SHARED_REVEAL_RESULT_ACTION_NAMES = new Set(['立場試探', '賭徒耳語', '民族祭儀']);
+
+function closeSharedFactionActionResultOnTurnHandoff(state) {
+  const active = activeSharedFactionActionResult;
+  if (!active) return;
+  const gameChanged = active.gameId !== gameId;
+  const currentPlayerChanged = active.currentPlayer !== (state.current_player || '');
+  if (!gameChanged && !currentPlayerChanged) return;
+
+  const modal = document.getElementById('unavailableActionModal');
+  const title = document.getElementById('unavailableActionTitle');
+  if (modal?.style.display === 'flex' && title?.textContent === active.title) {
+    closeUnavailableActionModal();
+  }
+  activeSharedFactionActionResult = null;
 }
 
 function formatFactionActionResult(result) {
@@ -3129,6 +3133,8 @@ function renderFactionActionResult(state, faction) {
   const info = document.getElementById('factionActionInfo');
   if (!info) return {hasResult: false, message: '', html: ''};
 
+  closeSharedFactionActionResultOnTurnHandoff(state);
+
   const result = state.last_action_result || null;
   const message = formatFactionActionResult(result);
   const redArmyActionNames = new Set(['統戰部', '政工部', '國安部', '中紀委']);
@@ -3139,33 +3145,47 @@ function renderFactionActionResult(state, faction) {
     info.textContent = '';
     return {hasResult: false, message: '', html: ''};
   }
-  const resultActionNames = new Set(['立場試探', '賭徒耳語', '民族祭儀', ...redArmyActionNames]);
+  const resultActionNames = new Set([...SHARED_REVEAL_RESULT_ACTION_NAMES, ...redArmyActionNames]);
   if (resultActionNames.has(result?.name) && message) {
-    const resultKey = JSON.stringify(result);
+    const resultKey = JSON.stringify([
+      state.turn_number ?? state.turn ?? null,
+      state.current_player || '',
+      result,
+    ]);
+    const isSharedRevealResult = SHARED_REVEAL_RESULT_ACTION_NAMES.has(result.name) && !result.unavailable;
     if (lastFactionActionResultKey !== resultKey) {
       lastFactionActionResultKey = resultKey;
       if (result.unavailable) {
         showUnavailableActionModal(result.name, message);
+      } else if (isSharedRevealResult) {
+        const title = `${result.name}結果`;
+        showActionMessageModal(title, message);
+        activeSharedFactionActionResult = {
+          gameId,
+          currentPlayer: state.current_player || '',
+          title,
+        };
       } else {
-        showStickyPlayerErrorNotice(message);
+        showActionMessageModal(`${result.name}結果`, message);
       }
     }
-    const html = result.unavailable ? '' : `<div class="faction-action-result">${escapeHtml(message)}</div>`;
+    const html = result.unavailable || isSharedRevealResult
+      ? ''
+      : `<div class="faction-action-result">${escapeHtml(message)}</div>`;
     info.innerHTML = html;
     return {hasResult: true, message, html};
   }
 
   lastFactionActionResultKey = null;
-  if (!stickyPlayerErrorNotice) setPhaseActionNotice('');
 
   if (faction === 'liberals') {
-    const html = '<div class="faction-action-placeholder">發動後會在此直接顯示翻到的卡牌與去向。</div>';
+    const html = '<div class="faction-action-placeholder">發動後會以提示視窗向所有玩家公開翻到的卡牌與去向。</div>';
     info.innerHTML = html;
     return {hasResult: false, message: '', html};
   }
 
   if (faction === 'aomen') {
-    const html = '<div class="faction-action-placeholder">發動後會在此直接顯示猜測、翻牌與資源結果。</div>';
+    const html = '<div class="faction-action-placeholder">發動後會以提示視窗向所有玩家公開猜測、翻牌與資源結果。</div>';
     info.innerHTML = html;
     return {hasResult: false, message: '', html};
   }
@@ -3177,7 +3197,7 @@ function renderFactionActionResult(state, faction) {
 
   const ethnicRitualFactions = new Set(['zhuang','yi','bai','hani','dai','miao','tujia','dong','buyei','yao','li']);
   if (ethnicRitualFactions.has(faction)) {
-    const html = '<div class="faction-action-placeholder">發動後會在此直接顯示猜測、翻牌與資源結果。</div>';
+    const html = '<div class="faction-action-placeholder">發動後會以提示視窗向所有玩家公開猜測、翻牌與資源結果。</div>';
     info.innerHTML = html;
     return {hasResult: false, message: '', html};
   }
@@ -3210,12 +3230,10 @@ function renderBaseSelection(state) {
     pendingBaseSelectionLabel = null;
     choicesEl.innerHTML = '';
     info.textContent = '';
-    setPhaseActionNotice('等待其他玩家選擇根據地');
     return;
   }
 
   panel.style.display = 'block';
-  setPhaseActionNotice('');
 
   const hasGeneric = labels.some(label => label.startsWith('任意'));
   choicesEl.innerHTML = '';
@@ -3945,6 +3963,12 @@ function renderPeerActionNotice(state) {
   const overlay = document.getElementById('peerActionNotice');
   if (!overlay) return;
   const entries = state.action_log || [];
+  const sharedResultName = state.last_action_result?.name || '';
+  if (SHARED_REVEAL_RESULT_ACTION_NAMES.has(sharedResultName)) {
+    // 公開翻牌結果已由所有玩家共用的行動提示視窗顯示；消耗相同 log，避免再疊一層動態通知。
+    closePeerActionNotice(entries);
+    return;
+  }
 
   if (peerActionNoticeGameId !== gameId) {
     // (Re)connected to a different game: don't replay the whole history as "new".
@@ -4060,14 +4084,17 @@ async function render(state) {
       ${orgInfo}
     `;
 
-    const phaseActionBar = document.getElementById('phaseActionBar');
     const gameShell = document.getElementById('gameShell');
     const advanceBtn = document.getElementById('advanceStepBtn');
     const redArmyBtn = document.getElementById('redArmyAbilityBtn');
     const isMyTurn = isMyTurnState(state);
     const waitText = pendingChoiceWaitText(state);
+    const waitingForOtherBaseSelections = state.game_phase === 'base_selection'
+      && !state.pending_base_choices?.[playerId];
     const stepLabel = phaseLabel === '事件結算' ? '開始行動階段' : phaseLabel === '行動' ? '結束行動' : phaseLabel === '購買' ? '結束回合' : '結束目前步驟';
-    const phaseMetaText = waitText || (isMyTurn ? `目前：${phaseLabel}｜下一步：${stepLabel}` : `目前：${phaseLabel}｜等待 ${state.current_player} 操作`);
+    const phaseMetaText = waitingForOtherBaseSelections
+      ? '等待其他玩家選擇根據地'
+      : waitText || (isMyTurn ? `目前：${phaseLabel}｜下一步：${stepLabel}` : `目前：${phaseLabel}｜等待 ${state.current_player} 操作`);
     setPhaseActionMeta(phaseMetaText);
     if (advanceBtn) {
       advanceBtn.style.display = state.game_phase === 'main' ? 'inline-flex' : 'none';
@@ -4099,19 +4126,10 @@ async function render(state) {
       topdeckBtn.title = candidateCount === 0 ? '本回合尚未購買可頂的牌' : '';
     }
 
-    const phaseNotice = document.getElementById('phaseActionNotice');
-    const showSecondaryBar = state.game_phase === 'main' && Boolean(
-      phaseNotice?.classList.contains('visible')
-    );
-    if (phaseActionBar) phaseActionBar.style.display = showSecondaryBar ? 'flex' : 'none';
-    if (phaseActionBar && hud) {
-      const barTop = hud.offsetTop + hud.offsetHeight + 8;
-      phaseActionBar.style.top = `${barTop}px`;
-      if (gameShell) {
-        const contentTop = showSecondaryBar ? barTop + phaseActionBar.offsetHeight + 8 : barTop;
-        gameShell.style.top = `${contentTop}px`;
-        gameShell.style.height = `${Math.max(0, 720 - contentTop)}px`;
-      }
+    if (gameShell && hud) {
+      const contentTop = hud.offsetTop + hud.offsetHeight + 8;
+      gameShell.style.top = `${contentTop}px`;
+      gameShell.style.height = `${Math.max(0, 720 - contentTop)}px`;
     }
   }
 
@@ -4274,13 +4292,10 @@ async function render(state) {
         showPendingChoiceReminderModal(state);
         syncPlayerErrorToStrategicMap(pendingChoiceWaitText(state) || playerError);
       } else {
-        showStickyPlayerErrorNotice(playerError);
+        showPlayerErrorModal(state, playerError);
         syncPlayerErrorToStrategicMap(playerError);
-        alert(playerError);
       }
     }
-  } else if (stickyPlayerErrorNotice) {
-    setPhaseActionNotice(stickyPlayerErrorNotice);
   }
 
 }
