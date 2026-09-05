@@ -2191,6 +2191,13 @@ function renderChoiceModal(state) {
       ? (targetChoiceTitleMap[choiceKey] || sourceName || '選擇目標玩家')
       : (choiceType === 'underground_party' ? '地下黨' : (sourceName || '卡牌選擇')));
   activeChoiceModal = choiceType;
+  // 取消反應只需要一張小卡面預覽＋是否二選一，套用其它 choice 類型共用的 860px
+  // 寬版面（給多張卡片並排選擇用）明顯太大（2026-09-05 使用者回報：視窗為何這麼大）。
+  const glass = overlay.querySelector('.modal-glass');
+  if (glass) glass.classList.toggle('choice-glass-compact', choiceType === 'reaction_choice');
+  // #choiceModalCards 平常是給多張卡片並排選擇用的 3 欄 220px CSS grid；取消反應只有
+  // 單一卡面預覽，硬套那個固定欄寬會讓卡面被夾在比它窄的容器裡橫向被裁掉一截。
+  cards.classList.toggle('choice-card-grid-compact', choiceType === 'reaction_choice');
   title.textContent = resolvedTitle;
   const localizedChoicePrompt = playerMessageZhTw(choice.prompt, '請進行選擇。');
   desc.innerHTML = `${escapeHtml(businessNetworkModalHeader?.desc || localizedChoicePrompt)}${businessNetworkModalHeader?.helperHtml || ''}`;
@@ -2304,9 +2311,16 @@ function renderChoiceModal(state) {
       cards.appendChild(btn);
     });
   } else if (choiceType === 'reaction_choice') {
-    // 這個彈窗只問「要不要取消」，跟前面統一設好的「actor 打出 X。是否要取消對方的行動？」
-    // 說明文字重複，這裡改用自己的卡面預覽＋是否問句取代，desc 不需要再顯示一次。
+    // 問句直接收進標題（「是否用『X』取消？」），desc 跟卡面預覽下面就不用再重複寫一次
+    // 說明文字了（2026-09-05 使用者回報：標題應該直接問是否用該卡取消，下面不用多寫）。
     desc.innerHTML = '';
+    const reactionCards = choice.cards || [];
+    const cardNameOf = (entry, index) => (typeof entry === 'string' ? entry : (entry?.name || `取消牌 ${index + 1}`));
+    const distinctNames = [...new Set(reactionCards.map(cardNameOf))];
+    title.textContent = distinctNames.length === 1
+      ? `是否用『${distinctNames[0]}』取消？`
+      : '是否要取消對方的行動？';
+
     const wrapper = document.createElement('div');
     wrapper.className = 'reaction-choice-body';
 
@@ -2343,22 +2357,11 @@ function renderChoiceModal(state) {
     `;
     wrapper.appendChild(preview);
 
-    const reactionCards = choice.cards || [];
-    const cardNameOf = (entry, index) => (typeof entry === 'string' ? entry : (entry?.name || `取消牌 ${index + 1}`));
-    const distinctNames = [...new Set(reactionCards.map(cardNameOf))];
     const row = document.createElement('div');
     row.className = 'reaction-choice-actions';
 
     if (distinctNames.length <= 1) {
-      // 手上只有一種取消牌（絕大多數情況）：直接問是否使用它，只給「是」／「否」兩個按鈕，
-      // 不需要先選「不取消」還是「使用 X 取消」——那其實是同一個決定問了兩次
-      // （2026-09-05 使用者回報：按鈕太大顆、應該直接問是否使用『X』取消）。
-      const cardName = distinctNames[0] || '取消牌';
-      const question = document.createElement('div');
-      question.className = 'reaction-choice-question';
-      question.textContent = `是否要使用『${cardName}』取消行動？`;
-      wrapper.appendChild(question);
-
+      // 手上只有一種取消牌（絕大多數情況）：標題已經問完了，這裡只給「是」／「否」兩個按鈕。
       const yesBtn = document.createElement('button');
       yesBtn.className = 'modal-choice-btn reaction-choice-yes';
       yesBtn.type = 'button';
@@ -2375,11 +2378,6 @@ function renderChoiceModal(state) {
     } else {
       // 手上有 2 種以上不同名稱的取消牌時，用哪一張是玩家要做的實質選擇（不同牌之後的
       // 加成條件不同），無法收成單純是否二選一，保留逐張選擇。
-      const question = document.createElement('div');
-      question.className = 'reaction-choice-question';
-      question.textContent = '是否要取消對方的行動？';
-      wrapper.appendChild(question);
-
       const skipBtn = document.createElement('button');
       skipBtn.className = 'modal-choice-btn reaction-choice-no';
       skipBtn.type = 'button';
