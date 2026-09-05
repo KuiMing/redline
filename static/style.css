@@ -1995,8 +1995,17 @@ body {
   min-width: 108px;
 }
 
+/* 卡面預覽＋是否問句包成單一 grid item，避免跟其它 choice 類型共用的
+   `#choiceModalCards`（CSS grid，預設 align-items: stretch）把矮的按鈕列
+   撐成跟卡面預覽一樣高（2026-09-05 使用者回報：按鈕太大顆）。 */
+.reaction-choice-body {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+
 .reaction-choice-preview {
-  margin-bottom: 14px;
   max-width: 260px;
 }
 
@@ -2013,6 +2022,33 @@ body {
   font-size: 12px;
   font-weight: 700;
   color: #dce9ff;
+}
+
+.reaction-choice-question {
+  font-size: 13px;
+  font-weight: 700;
+  color: #eef6ff;
+}
+
+.reaction-choice-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.reaction-choice-actions .modal-choice-btn {
+  flex: 0 0 auto;
+  min-width: 84px;
+  padding: 10px 20px;
+  text-align: center;
+}
+
+.reaction-choice-actions .reaction-choice-yes {
+  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(239, 68, 68, 0.16);
+}
+
+.reaction-choice-actions .reaction-choice-yes:hover {
+  background: rgba(239, 68, 68, 0.28);
 }
 
 .modal-choice-row {
