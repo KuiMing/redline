@@ -53,6 +53,29 @@ def test_reaction_choice_projection_hides_reaction_cards_from_non_reactor():
     assert reactor_state['pending_choice']['cards'] == [{'name': '爆料黑幕', 'card_index': 0}]
 
 
+def test_canceling_a_plain_command_card_reports_canceled_not_a_fresh_play():
+    """2026-09-06 使用者回報：一般指令/組織卡（非奧援、非紅軍特殊行動）被取消反應卡取消
+    後，落到跟「正常出牌成功」共用的結尾程式碼，多寫一筆「played {card}」紀錄，回傳值
+    也跟成功出牌一樣分不出差別。紅軍特殊行動／奧援卡被取消時已經正確回報
+    canceled=True 並記錄「被取消」，這裡驗證一般指令卡現在也一樣。"""
+    g = make_game()
+    actor, reactor = g.players
+    actor.hand = [card(g, '領導')]
+    actor.deck.draw_pile = [Card('DrawnCard', 'command', {})]
+    reactor.hand = [card(g, '爆料黑幕')]
+
+    played = g.play_card(0, mode='action')
+    assert played.get('pending_choice') is True, played
+
+    resolved = g.resolve_pending_choice(reactor.id, 1)
+
+    assert resolved.get('success') is True, resolved
+    assert resolved.get('canceled') is True, resolved
+    last_entries = ' | '.join(g.action_log[-3:])
+    assert "was canceled by reaction" in last_entries
+    assert f"{actor.name} played 領導" not in g.action_log
+
+
 def test_reaction_choice_projection_includes_target_player_for_reactor():
     g = Game([('actor', 'actor'), ('bystander', 'bystander'), ('reactor', 'reactor')])
     g.game_phase = GamePhase.MAIN
