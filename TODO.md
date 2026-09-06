@@ -6,16 +6,14 @@
 
 ## 待辦
 
-### P2：Repository 與 validator hygiene
-- [todo] 維持 repository root 的 record-like 檔案數量為 0。
-- [todo] Validation reports、proof Markdown 與 screenshots 必須放在 `docs/records/<topic>/`。
-- [todo] 新增 validator 時，確認輸出路徑不是 repository root，且失敗時回傳非零 exit code。
+（目前沒有待辦項目。）
 
 ## 工作規則
 - 開始新工作前先讀本文件，並執行 `git status --short --branch` 與 `git log --oneline -5`。
 - 同一時間只保留一個 `in_progress`。
 - 完成項目後，從本文件移除。
-- 歷史證據放在 `docs/records/<topic>/`，不要放在 repository root。
+- 歷史證據放在 `docs/records/<topic>/`，不要放在 repository root；維持 repository root 的 record-like 檔案數量為 0。
+- 新增 validator 時，確認輸出路徑不是 repository root，且失敗時回傳非零 exit code。
 - UI 變更必須使用正式 Browser UI screenshot proof。
 - 事件卡與常設牌互動時，遵守 static supply。`宣傳家`、`思想家`、`資助者`、`資本家`、`分神`、`內鬥` 等固定購買牌不可憑空新增。
 
