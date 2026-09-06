@@ -1,3 +1,13 @@
+# 宛擴充地圖（2026-09-06 建模）：宛陣營勝利條件的「全宛地」範圍＝主地圖南陽＋這 20 個
+# 宛地圖城鎮（見 data/map.json 對應條目；統治者皆為紅軍，可建組織陣營僅紅軍／反賊）。
+WAN_EXPANSION_TOWNS = frozenset({
+    "南陽",
+    "十堰", "丹江口", "老河口", "襄陽", "棗陽",
+    "西峽", "淅川", "內鄉", "鎮平", "南召", "臥龍",
+    "鄧州", "新野", "博望", "方城", "社旗", "唐河", "泌陽", "桐柏", "舞陽",
+})
+
+
 class VictoryEngine:
     def __init__(self, factions_data):
         self.factions = {f['id']: f for f in factions_data}
@@ -121,9 +131,8 @@ class VictoryEngine:
         if scope == "牆內與牆外":
             return shared_count(all_org_towns)
         if scope == "宛地":
-            # 宛（win_condition：全宛地）＝主地圖南陽＋宛擴充地圖城鎮；
-            # 宛地圖尚未建模，目前僅計南陽（見 faction 資料的 note 欄位）
-            return shared_count({"南陽"})
+            # 宛（win_condition：全宛地）＝主地圖南陽＋宛擴充地圖城鎮（2026-09-06 已建模）
+            return shared_count(WAN_EXPANSION_TOWNS)
         return shared_count(all_org_towns)
 
     def _taiwan_faction_present(self, game):

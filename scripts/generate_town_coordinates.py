@@ -27,7 +27,18 @@ REGION_CENTERS = {
     "anglo_america": (300, 800),
     "europe": (500, 500),
     "outer_manchuria": (1600, 250),
-    "southeast_asia": (1400, 1000)
+    "southeast_asia": (1400, 1000),
+    # 宛擴充地圖（2026-09-06）：這 20 個城鎮的 ruler 也是紅軍，但屬於獨立的地圖插頁，
+    # 不跟主地圖「china」大網格混在一起——否則會被吃進那個既有網格，把座標打散、
+    # 也會讓既有城鎮因為網格大小變動而被重新排列。中心點落在既有城鎮座標範圍
+    # （y ≤ 1090）以外的空白區域。
+    "wan": (1300, 1235),
+}
+
+WAN_EXPANSION_TOWNS = {
+    "十堰", "丹江口", "老河口", "襄陽", "棗陽",
+    "西峽", "淅川", "內鄉", "鎮平", "南召", "臥龍",
+    "鄧州", "新野", "博望", "方城", "社旗", "唐河", "泌陽", "桐柏", "舞陽",
 }
 
 with open(MAP_PATH, encoding="utf-8") as f:
@@ -41,7 +52,9 @@ towns_by_region = {
 
 for town, info in map_data.get("towns", {}).items():
     rulers = set(info.get("ruler") or [])
-    if "紅軍" in rulers:
+    if town in WAN_EXPANSION_TOWNS:
+        towns_by_region["wan"].append(town)
+    elif "紅軍" in rulers:
         towns_by_region["china"].append(town)
     if "臺灣" in rulers:
         towns_by_region["taiwan"].append(town)
