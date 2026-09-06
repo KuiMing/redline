@@ -196,15 +196,15 @@ def start_game(payload: dict):
     if sum(1 for fid in chosen.values() if fid == 'red_army') != 1:
         return {"error": "必須有且只能有一名玩家選擇紅軍，才能啟動行動"}
 
-    game = Game(player_list, market_mode=lobby_market_mode.get(game_id, "sample_53"))
-    # override randomized faction assignment with chosen factions
+    # Pass the real chosen factions into the constructor rather than overriding
+    # player.faction_id afterward: Game.__init__ may resolve the game's first
+    # event card before returning (some are "auto" and restricted to a specific
+    # faction, e.g. player_faction: "red_army"), and an override applied only
+    # after construction is too late — that first event has already resolved
+    # against whichever player construction's own random assignment happened
+    # to pick, not the player who actually chose that faction in the lobby.
+    game = Game(player_list, market_mode=lobby_market_mode.get(game_id, "sample_53"), factions=chosen)
     chosen_bases = lobby_bases.get(game_id, {})
-    for player in game.players:
-        if player.id in chosen:
-            player.faction_id = chosen[player.id]
-    # Rebuild starting decks after lobby faction overrides so faction-specific
-    # starter cards such as 紅軍奧援 are assigned to the actual chosen faction.
-    game._init_decks()
     game.faction_by_id = {f["id"]: f for f in game.factions}
     game.faction_by_id.update({
         "uyghur_family": {

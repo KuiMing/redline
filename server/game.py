@@ -163,7 +163,7 @@ EVENT_DECK_SIZE = 20
 
 
 class Game(CardPlayMixin):
-    def __init__(self, players_data, market_mode="sample_53"):
+    def __init__(self, players_data, market_mode="sample_53", factions=None):
         if len(players_data) < 2 or len(players_data) > 4:
             raise ValueError("Game requires 2–4 players")
 
@@ -200,7 +200,7 @@ class Game(CardPlayMixin):
         self.structured_events = load_json(EVENT_STRUCTURED_PATH).get("events", [])
 
         self.players = []
-        self._assign_factions(players_data)
+        self._assign_factions(players_data, factions)
         self.faction_by_id = {f["id"]: f for f in self.factions}
         self.faction_by_id.update({
             "uyghur_family": {
@@ -920,7 +920,23 @@ class Game(CardPlayMixin):
     def _towns_for_region_alias(self, region):
         return towns_for_region_alias(self.map, self.towns_by_ruler, region)
 
-    def _assign_factions(self, players_data):
+    def _assign_factions(self, players_data, factions=None):
+        # `factions` (player_id -> faction_id) lets a caller that already knows the
+        # real chosen factions (the lobby, once every seat has picked) skip the
+        # random placeholder assignment below entirely. This matters because
+        # __init__ may resolve the game's first event card (some are "auto" and
+        # restricted to a specific faction, e.g. player_faction: "red_army") before
+        # returning — a caller that constructs with random factions and overrides
+        # player.faction_id only *after* Game() returns is too late: that first
+        # event has already resolved against the wrong (random) player.
+        if factions:
+            for player_id, name in players_data:
+                faction_id = factions.get(player_id)
+                p = Player(name, faction_id)
+                p.id = player_id
+                self.players.append(p)
+            return
+
         red = next(f for f in self.factions if f["id"] == "red_army")
         others = [f for f in self.factions if f["id"] != "red_army"]
         random.shuffle(others)
