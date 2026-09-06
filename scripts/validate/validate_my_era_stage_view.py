@@ -262,24 +262,46 @@ def check(browser):
     )
     lifecycle_context.close()
 
+    # 2026-09-06：紅軍沒有個人時代關卡，右欄改列出其他玩家的陣營與獲勝條件
+    # （見 scripts/validate/validate_red_army_other_players_win_conditions.py 的完整覆蓋）。
+    # 這裡仍指定一個非紅軍對手，確保這個合併頁籤本身有正確顯示該對手的獲勝條件。
     red_setup = post_json(
         "/test/setup-support-card-play",
-        {"support_name": "紅軍奧援", "faction_id": "red_army", "base": "北京"},
+        {
+            "support_name": "紅軍奧援",
+            "faction_id": "red_army",
+            "base": "北京",
+            "enemy_faction_id": "taiwan_green",
+            "enemy_base": "臺北",
+        },
     )
     red_context, red_page = open_game(browser, red_setup)
     red_page.click("#myFactionBtn")
     red_page.wait_for_timeout(100)
     red_data = inspect_era_tab(red_page)
     projected = red_page.evaluate("() => window.lastGameState?.my_era_stage ?? null")
+    other_players_panel = red_page.evaluate("""() => ({
+      panelLabel: document.getElementById('myEraStagePanelLabel')?.textContent,
+      title: document.getElementById('myEraStageTitle')?.textContent,
+      status: document.getElementById('myEraStageStatus')?.textContent,
+      sections: [...document.querySelectorAll('#myEraStageBody .era-achievement-section-title')].map(el => el.textContent),
+      wins: [...document.querySelectorAll('#myEraStageBody .my-era-stage-other-wins')].map(
+        ul => [...ul.querySelectorAll('li')].map(li => li.textContent)
+      ),
+    })""")
     record(
-        "red_army_gets_clear_no_personal_stage_message_in_tab",
+        "red_army_tab_lists_other_player_faction_and_win_condition_instead_of_era_stage",
         projected is None
         and red_data["viewActive"]
-        and red_data["title"] == "無個人時代關卡"
-        and red_data["status"] == "此陣營沒有專屬時代關卡"
-        and "紅軍沒有個人時代關卡" in (red_data["summary"] or "")
-        and red_data["imageCount"] == 0,
-        {**red_data, "projected": projected},
+        and other_players_panel["panelLabel"] == "其他玩家獲勝條件"
+        and other_players_panel["title"] == "非紅軍的獲勝條件"
+        and other_players_panel["status"] == "共 1 位其他玩家"
+        and len(other_players_panel["sections"]) == 1
+        and "臺灣" in other_players_panel["sections"][0]
+        and len(other_players_panel["wins"]) == 1
+        and other_players_panel["wins"][0]
+        and "14" in other_players_panel["wins"][0][0],
+        {**red_data, "projected": projected, "other_players_panel": other_players_panel},
     )
     red_page.screenshot(path=str(RED_SCREENSHOT), full_page=True)
     red_context.close()
