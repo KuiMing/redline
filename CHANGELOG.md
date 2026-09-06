@@ -6,6 +6,26 @@
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-09-06
+
+此版本將 REDLINE 定位為可自行部署、可在家中開桌遊玩的第一個正式版本。
+
+### Added
+
+- 新增宛擴充地圖、20 個擴充城鎮及其道路、鐵路、統治者與發展限制，使宛陣營在南陽及宛擴充地圖建立 14 個有效組織的勝利條件可以正常達成。
+
+### Changed
+
+- 宛陣營的勝利條件文字改為明確列出完整的 21 個計分城鎮。
+- 進入宛擴充地圖時會聚焦至該區域，並分開顯示位置相近的南陽與臥龍標記。
+- README 與套件說明改為正式的自行部署多人桌遊定位。
+
+### Fixed
+
+- 修正延遲執行的亞洲地圖聚焦覆蓋已完成初始定位的問題。
+- 修正 Lobby 建立 Game 時，陣營設定可能在兩個階段之間發生競態的問題。
+- 修正一般指令牌或組織牌被取消後，系統未正確回報取消狀態的問題。
+
 ## [0.3.1] - 2026-09-06
 
 ### Changed
@@ -115,7 +135,8 @@
 - 修正陣營選擇、根據地按鈕高度、面板尺寸、HUD 排列與小型 viewport 裁切。
 - 修正抽牌資訊外洩，避免其他玩家看到不應公開的卡牌名稱。
 
-[Unreleased]: https://github.com/KuiMing/redline/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/KuiMing/redline/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/KuiMing/redline/compare/v0.3.1...v1.0.0
 [0.3.1]: https://github.com/KuiMing/redline/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/KuiMing/redline/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/KuiMing/redline/compare/v0.1.1...v0.2.0
