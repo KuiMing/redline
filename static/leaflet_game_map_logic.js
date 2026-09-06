@@ -696,29 +696,33 @@ function shouldShowLabels() {
 
 function townDisplayLatLng(town) {
   const latLng = L.latLng(town.lat, town.lon);
-  if (town.name !== '黑河' && town.name !== '海蘭泡') return latLng;
+  if (town.name !== '黑河' && town.name !== '海蘭泡' && town.name !== '臥龍') return latLng;
   if (!map._loaded) return latLng;
-  // 黑河與海蘭泡隔江相對，真實座標在亞洲視角只差不到一個像素。
-  // 使用固定像素偏移分開兩個 marker；只改 Leaflet 顯示位置，不改地圖資料、
-  // 鐵路拓撲、距離或合法目標。黑河南移，海蘭泡北移，方向也符合地理位置。
+  // 黑河與海蘭泡隔江相對，真實座標在亞洲視角只差不到一個像素；臥龍（宛擴充地圖）
+  // 實際上就是南陽市轄區，真實座標與南陽只差約 0.8 公里，是全部城鎮中距離最近的一對。
+  // 使用固定像素偏移分開重疊的 marker；只改 Leaflet 顯示位置，不改地圖資料、
+  // 鐵路拓撲、距離或合法目標。黑河南移，海蘭泡北移，方向也符合地理位置；
+  // 臥龍南移（南陽本身位置不變），方向同樣符合臥龍在南陽以南的真實地理位置。
   const point = map.latLngToLayerPoint(latLng);
-  const yOffset = town.name === '黑河' ? 12 : -12;
+  const yOffset = town.name === '海蘭泡' ? -12 : 12;
   return map.layerPointToLatLng(L.point(point.x, point.y + yOffset));
 }
 
 function townLabelOptions(townName, zoom = map.getZoom()) {
   const distance = markerRadius(zoom) + 4;
-  // 金門／廈門與黑河／海蘭泡在低／中 zoom 幾乎重疊。將每組的其中一個
-  // 標籤放到 marker 下方，並讓標籤本身可點擊。玩家點海蘭泡文字時，
-  // Leaflet 會把事件交給海蘭泡 marker，而不是落到下方重疊的黑河 marker。
-  const usesBottomLabel = townName === '金門' || townName === '黑河';
+  // 金門／廈門、黑河／海蘭泡、南陽／臥龍在低／中 zoom 幾乎重疊。將每組的其中一個
+  // 標籤放到 marker 下方，並讓標籤本身可點擊。玩家點海蘭泡（或臥龍）文字時，
+  // Leaflet 會把事件交給該 marker，而不是落到重疊的黑河（或南陽）marker。
+  const usesBottomLabel = townName === '金門' || townName === '黑河' || townName === '臥龍';
   const collisionClass = townName === '金門'
     ? ' town-label-kinmen'
     : townName === '黑河'
       ? ' town-label-heihe'
       : townName === '海蘭泡'
         ? ' town-label-hailanpao'
-        : '';
+        : townName === '臥龍'
+          ? ' town-label-wolong'
+          : '';
   return {
     permanent: true,
     interactive: true,
@@ -1494,6 +1498,16 @@ window.addEventListener('message', (event) => {
 
 let initialBaseViewDone = false;
 
+// 宛擴充地圖（2026-09-06）：宛陣營的勝利條件涵蓋南陽＋這 20 個城鎮（見
+// server/victory.py 的 WAN_EXPANSION_TOWNS），範圍比單一根據地大很多，直接用
+// 「根據地 zoom 9」看不到大部分擴充城鎮。宛玩家開局改成 fitBounds 整個宛地範圍
+// （2026-09-06 使用者需求：選宛陣營時地圖應直接 zoom 到南陽＋這 20 個城鎮）。
+const WAN_EXPANSION_TOWNS = [
+  '南陽', '十堰', '丹江口', '老河口', '襄陽', '棗陽',
+  '西峽', '淅川', '內鄉', '鎮平', '南召', '臥龍',
+  '鄧州', '新野', '博望', '方城', '社旗', '唐河', '泌陽', '桐柏', '舞陽',
+];
+
 const INITIAL_VIEW_MAP_CHOICE_KEYS = new Set([
   'event_build_organization',
   'era_red_build_near_target',
@@ -1524,6 +1538,14 @@ function focusOwnBaseOnFirstState(state) {
     return;
   }
   const me = (state.players || []).find(p => p.id === mapPlayerId);
+  if (me && me.faction === 'wan') {
+    const wanPts = WAN_EXPANSION_TOWNS.map(name => byName.get(name)).filter(Boolean).map(t => [t.lat, t.lon]);
+    if (wanPts.length) {
+      map.fitBounds(wanPts, { padding: [30, 30], animate: false });
+      initialBaseViewDone = true;
+      return;
+    }
+  }
   const baseTown = me && me.base ? byName.get(me.base) : null;
   if (!baseTown) return;
   map.setView([baseTown.lat, baseTown.lon], 9, { animate: false });
@@ -1845,13 +1867,16 @@ async function bootstrapCanonicalGameMap() {
   renderMap();
   if (lastGameState) applyGameStateToMap(lastGameState);
   // 新遊戲首次開啟戰略地圖時，choice 可能比地圖資料先抵達。地圖資料完成後要重新
-  // 嘗試一次候選範圍聚焦；預設亞洲視角只能在沒有待處理地圖 choice 時執行，否則
-  // 延遲的 focusAsia 會把剛完成的宣傳家 setView 沖掉。
+  // 嘗試一次候選範圍聚焦；預設亞洲視角只能在沒有待處理地圖 choice、且尚未完成
+  // 開局聚焦（focusOwnBaseOnFirstState／宛陣營 fitBounds）時執行，否則在本機
+  // 低延遲環境下，WS 狀態可能搶在這個 100ms timeout 之前就完成正確的開局聚焦，
+  // 隨後延遲的 focusAsia 又把它沖掉，變成「先對再跳回全亞洲」
+  // （2026-09-06 使用者回報：選宛陣營後會先 zoom 到南陽，下一瞬間又跳回全中國）。
   applySupportChoiceHighlight(supportChoiceHighlight);
   setTimeout(() => {
     if (supportChoiceHighlight) {
       applySupportChoiceHighlight(supportChoiceHighlight);
-    } else {
+    } else if (!initialBaseViewDone) {
       focusAsia();
     }
   }, 100);
