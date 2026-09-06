@@ -9,7 +9,6 @@ Redline 是一個以瀏覽器 UI 與 Python WebSocket 伺服器實作的桌遊�
 在專案根目錄執行：
 
 ```bash
-cd "$HOME/.openclaw/workspace/redline"
 uv run uvicorn server.main:app --host 0.0.0.0 --port 8000
 ```
 
@@ -48,7 +47,6 @@ curl -fsS http://127.0.0.1:8000/server-info
 也可以用 `Dockerfile` build 出 image 再跑：
 
 ```bash
-cd "$HOME/.openclaw/workspace/redline"
 docker build -t redline .
 docker run -d --name redline -p 8000:8000 redline
 ```
