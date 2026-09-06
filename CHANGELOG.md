@@ -6,6 +6,18 @@
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-09-06
+
+### Changed
+
+- 取消反應視窗改為精簡的中央卡面預覽，顯示即將被取消的行動、指定玩家及特殊能力效果文字。
+- 玩家只有一種取消牌時，視窗改用等寬的「是／否」按鈕；持有多種取消牌時仍可選擇要使用的牌。
+
+### Fixed
+
+- 修正取消反應視窗過寬、卡面預覽偏移或裁切，以及按鈕大小不一致的問題。
+- 修正取消紅軍特殊能力時無法顯示能力內容，以及指定玩家行動未顯示目標玩家的問題。
+
 ## [0.3.0] - 2026-09-05
 
 ### Added
@@ -103,7 +115,8 @@
 - 修正陣營選擇、根據地按鈕高度、面板尺寸、HUD 排列與小型 viewport 裁切。
 - 修正抽牌資訊外洩，避免其他玩家看到不應公開的卡牌名稱。
 
-[Unreleased]: https://github.com/KuiMing/redline/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/KuiMing/redline/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/KuiMing/redline/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/KuiMing/redline/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/KuiMing/redline/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/KuiMing/redline/compare/v0.1.0...v0.1.1
