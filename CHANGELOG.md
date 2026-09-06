@@ -6,6 +6,13 @@
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-09-06
+
+### Changed
+
+- 依目前 `v1.0` 遊戲介面全面校正玩家手冊，補齊作戰準備室、陣營選擇、事件卡、行動、購買、戰略地圖、陣營能力及勝利結算流程。
+- 重新拍攝 19 張 `1280×720` 玩家手冊截圖，移除過時介面，並以目前正式畫面對應每個操作步驟。
+
 ## [1.0.0] - 2026-09-06
 
 此版本將 REDLINE 定位為可自行部署、可在家中開桌遊玩的第一個正式版本。
@@ -135,7 +142,8 @@
 - 修正陣營選擇、根據地按鈕高度、面板尺寸、HUD 排列與小型 viewport 裁切。
 - 修正抽牌資訊外洩，避免其他玩家看到不應公開的卡牌名稱。
 
-[Unreleased]: https://github.com/KuiMing/redline/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/KuiMing/redline/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/KuiMing/redline/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/KuiMing/redline/compare/v0.3.1...v1.0.0
 [0.3.1]: https://github.com/KuiMing/redline/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/KuiMing/redline/compare/v0.2.0...v0.3.0
