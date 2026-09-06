@@ -3708,6 +3708,17 @@ body.victory-art-viewer-open {
   margin-top: 0;
 }
 
+.my-era-stage-other-wins {
+  margin: 0;
+  padding-left: 18px;
+  color: #cbd5e1;
+  line-height: 1.6;
+}
+
+.my-era-stage-other-wins li {
+  margin-bottom: 4px;
+}
+
 @media (max-width: 720px) {
   .victory-art-viewer {
     padding: 50px 12px 56px;

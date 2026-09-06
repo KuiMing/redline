@@ -1,8 +1,8 @@
 {
   "summary": {
     "total": 9,
-    "passed": 9,
-    "failed": 0
+    "passed": 8,
+    "failed": 1
   },
   "results": [
     {
@@ -18,10 +18,10 @@
     },
     {
       "name": "merged_personal_tab_stays_clear_of_event_panel",
-      "ok": true,
+      "ok": false,
       "detail": {
         "gapAfterLog": 9,
-        "noEventOverlap": true
+        "noEventOverlap": false
       }
     },
     {
@@ -57,17 +57,17 @@
           "height": 1100,
           "rect": {
             "left": 873.158203125,
-            "top": 454.5,
+            "top": 351,
             "right": 1298.408203125,
-            "bottom": 801,
+            "bottom": 697.5,
             "width": 425.25,
             "height": 346.5
           },
           "contained": true
         },
         "fallbackVisible": false,
-        "scrollHeight": 328,
-        "clientHeight": 328,
+        "scrollHeight": 420,
+        "clientHeight": 420,
         "panelFits": true,
         "stateId": "taiwan",
         "achieved": false,
@@ -108,17 +108,17 @@
           "height": 1100,
           "rect": {
             "left": 873.158203125,
-            "top": 454.5,
+            "top": 351,
             "right": 1298.408203125,
-            "bottom": 801,
+            "bottom": 697.5,
             "width": 425.25,
             "height": 346.5
           },
           "contained": true
         },
         "fallbackVisible": false,
-        "scrollHeight": 328,
-        "clientHeight": 328,
+        "scrollHeight": 420,
+        "clientHeight": 420,
         "panelFits": true,
         "stateId": "taiwan",
         "achieved": false,
@@ -169,7 +169,7 @@
         },
         "fallbackVisible": true,
         "scrollHeight": 405,
-        "clientHeight": 293,
+        "clientHeight": 385,
         "panelFits": true,
         "stateId": "taiwan",
         "achieved": false,
@@ -218,17 +218,17 @@
           "height": 1100,
           "rect": {
             "left": 873.158203125,
-            "top": 454.5,
+            "top": 351,
             "right": 1298.408203125,
-            "bottom": 801,
+            "bottom": 697.5,
             "width": 425.25,
             "height": 346.5
           },
           "contained": true
         },
         "fallbackVisible": false,
-        "scrollHeight": 328,
-        "clientHeight": 328,
+        "scrollHeight": 420,
+        "clientHeight": 420,
         "panelFits": true,
         "stateId": "mongolia",
         "achieved": true,
@@ -269,35 +269,35 @@
           "height": 1100,
           "rect": {
             "left": 873.158203125,
-            "top": 454.5,
+            "top": 351,
             "right": 1298.408203125,
-            "bottom": 801,
+            "bottom": 697.5,
             "width": 425.25,
             "height": 346.5
           },
           "contained": true
         },
         "fallbackVisible": false,
-        "scrollHeight": 328,
-        "clientHeight": 328,
+        "scrollHeight": 420,
+        "clientHeight": 420,
         "panelFits": true,
         "stateId": "taiwan",
         "achieved": true,
         "active": true,
         "remaining": 2,
         "organizations": {
-          "南投": 1,
-          "嘉義": 1,
-          "基隆": 1,
-          "宜蘭": 1,
-          "屏東": 1,
-          "彰化": 1,
-          "新北": 1
+          "上海": 1,
+          "北京": 1,
+          "南京": 1,
+          "南寧": 1,
+          "南昌": 1,
+          "南陽": 1,
+          "合肥": 1
         }
       }
     },
     {
-      "name": "red_army_gets_clear_no_personal_stage_message_in_tab",
+      "name": "red_army_tab_lists_other_player_faction_and_win_condition_instead_of_era_stage",
       "ok": true,
       "detail": {
         "viewActive": true,
@@ -305,24 +305,39 @@
         "commandActive": false,
         "modalExists": false,
         "overlayCount": 0,
-        "title": "無個人時代關卡",
-        "status": "此陣營沒有專屬時代關卡",
+        "title": "全桌獲勝條件一覽",
+        "status": "共 1 位其他玩家",
         "statusClass": "my-era-stage-status unavailable",
-        "summary": "紅軍沒有個人時代關卡；其他陣營達成關卡後，效果仍會顯示於全桌的時代通知。",
-        "sections": [],
+        "summary": "僅列出玩家名稱、陣營與獲勝條件，不包含手牌等私人資訊。",
+        "sections": [
+          "red｜臺灣（綠線）"
+        ],
         "texts": [],
         "imageCount": 0,
         "artActive": false,
         "image": null,
         "fallbackVisible": false,
-        "scrollHeight": 293,
-        "clientHeight": 293,
+        "scrollHeight": 385,
+        "clientHeight": 385,
         "panelFits": true,
         "stateId": null,
         "achieved": null,
         "active": null,
         "remaining": null,
-        "projected": null
+        "projected": null,
+        "other_players_panel": {
+          "panelLabel": "其他玩家獲勝條件",
+          "title": "全桌獲勝條件一覽",
+          "status": "共 1 位其他玩家",
+          "sections": [
+            "red｜臺灣（綠線）"
+          ],
+          "wins": [
+            [
+              "回合結束時在牆內擁有至少 14 個有效組織。"
+            ]
+          ]
+        }
       }
     }
   ],
@@ -331,5 +346,5 @@
     "/Users/benmini/.openclaw/workspace/redline/docs/records/event-cards/my_era_stage_tab_active.png",
     "/Users/benmini/.openclaw/workspace/redline/docs/records/event-cards/my_era_stage_tab_red_army.png"
   ],
-  "base_url": "http://127.0.0.1:8000"
+  "base_url": "http://127.0.0.1:8010"
 }

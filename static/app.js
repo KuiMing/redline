@@ -3589,10 +3589,73 @@ function renderMyFactionView(state = window.lastGameState || {}) {
   });
 }
 
+// 陣營公開資料（factions catalog）查某陣營+根據地變體的獲勝條件文字，邏輯與
+// renderMyFactionView 的 wins 萃取一致，供「其他玩家獲勝條件」欄重用。
+function factionWinConditionItemsFor(factionId, baseName) {
+  let opt = factionOptionById(factionId);
+  if (!opt) {
+    outer:
+    for (const category of availableFactionCategories) {
+      for (const parent of (category.options || [])) {
+        for (const v of Object.values(parent.variant_details || {})) {
+          if (v && v.id === factionId) { opt = v; break outer; }
+        }
+      }
+    }
+  }
+  if (!opt) return [];
+  const detailSource = (baseName && opt.variant_details) ? (opt.variant_details[baseName] || null) : null;
+  const detail = detailSource || opt;
+  return detail.win_condition_text
+    ? [detail.win_condition_text]
+    : (detail.win_conditions || []).map(humanizeWinCondition);
+}
+
+// 紅軍沒有個人時代關卡，「我的陣營」右欄改列出桌上每位其他玩家的陣營與獲勝條件，
+// 方便紅軍規劃壓制策略（2026-09-06 使用者需求）。只用陣營公開資料與
+// state.players 的 name/faction/base，不觸碰手牌等私人欄位。
+function renderOtherPlayersWinConditionsPane(state, els) {
+  const { paneEl, panelLabelEl, titleEl, statusEl, summaryEl, bodyEl } = els;
+  if (panelLabelEl) panelLabelEl.textContent = '其他玩家獲勝條件';
+  titleEl.textContent = '全桌獲勝條件一覽';
+  const others = (state.players || []).filter(p => p.id !== playerId);
+  statusEl.textContent = `共 ${others.length} 位其他玩家`;
+  statusEl.className = 'my-era-stage-status unavailable';
+  summaryEl.textContent = '僅列出玩家名稱、陣營與獲勝條件，不包含手牌等私人資訊。';
+  bodyEl.classList.remove('era-card-art-active');
+  paneEl.classList.remove('era-card-art-active');
+
+  if (!others.length) {
+    bodyEl.innerHTML = '<div class="personal-info-empty">目前沒有其他玩家。</div>';
+    return;
+  }
+
+  bodyEl.innerHTML = others.map(p => {
+    if (!p.faction) {
+      return `
+        <section class="my-era-stage-section">
+          <div class="era-achievement-section-title">${escapeHtml(p.name)}</div>
+          <div class="modal-body-text">尚未選擇陣營</div>
+        </section>`;
+    }
+    const color = factionNameColor(p.faction) || '#e5ecf5';
+    const wins = factionWinConditionItemsFor(p.faction, p.base);
+    const winsMarkup = wins.length
+      ? `<ul class="my-era-stage-other-wins">${wins.map(w => `<li>${escapeHtml(w)}</li>`).join('')}</ul>`
+      : '<div class="modal-body-text">（暫無資料）</div>';
+    return `
+      <section class="my-era-stage-section">
+        <div class="era-achievement-section-title"><span style="color:${color};font-weight:800">${escapeHtml(p.name)}</span>｜${escapeHtml(factionDisplayName(p.faction))}</div>
+        ${winsMarkup}
+      </section>`;
+  }).join('');
+}
+
 // 「我的陣營」右欄時代關卡：未達成前也可隨時查看自己的完整卡面與雙方效果。
 // 後端只投影觀看者所屬陣營大類的關卡，避免把其他玩家的個人資訊混進來。
 function renderMyEraStageView(state = window.lastGameState || {}) {
   const paneEl = document.getElementById('myEraStagePane');
+  const panelLabelEl = document.getElementById('myEraStagePanelLabel');
   const titleEl = document.getElementById('myEraStageTitle');
   const statusEl = document.getElementById('myEraStageStatus');
   const summaryEl = document.getElementById('myEraStageSummary');
@@ -3600,6 +3663,13 @@ function renderMyEraStageView(state = window.lastGameState || {}) {
   if (!paneEl || !titleEl || !statusEl || !summaryEl || !bodyEl) return;
 
   const me = (state.players || []).find(p => p.id === playerId);
+
+  if (me?.faction === 'red_army') {
+    renderOtherPlayersWinConditionsPane(state, { paneEl, panelLabelEl, titleEl, statusEl, summaryEl, bodyEl });
+    return;
+  }
+  if (panelLabelEl) panelLabelEl.textContent = '時代關卡';
+
   const stage = state.my_era_stage || null;
   const factionColor = factionNameColor(me?.faction) || '#e5ecf5';
 
@@ -3607,9 +3677,7 @@ function renderMyEraStageView(state = window.lastGameState || {}) {
     titleEl.textContent = '無個人時代關卡';
     statusEl.textContent = '此陣營沒有專屬時代關卡';
     statusEl.className = 'my-era-stage-status unavailable';
-    summaryEl.textContent = me?.faction === 'red_army'
-      ? '紅軍沒有個人時代關卡；其他陣營達成關卡後，效果仍會顯示於全桌的時代通知。'
-      : '目前找不到這個陣營對應的時代關卡資料。';
+    summaryEl.textContent = '目前找不到這個陣營對應的時代關卡資料。';
     bodyEl.innerHTML = '';
     bodyEl.classList.remove('era-card-art-active');
     paneEl.classList.remove('era-card-art-active');

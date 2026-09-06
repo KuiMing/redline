@@ -1,0 +1,271 @@
+{
+  "summary": {
+    "total": 7,
+    "passed": 7,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "fixture_has_red_army_viewer_and_three_distinct_other_factions",
+      "ok": true,
+      "detail": {
+        "players": [
+          {
+            "id": "6b37ece8-b4a1-4b6f-a7d2-983ce59427fe",
+            "name": "Actor",
+            "faction": "liberals",
+            "base": null,
+            "resources": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "moves_left": 0,
+            "hand": [
+              "合作談判"
+            ],
+            "hand_variants": [
+              null
+            ],
+            "hand_action_legality": [
+              {
+                "playable": true
+              }
+            ],
+            "deck_count": 1,
+            "discard_count": 0,
+            "discard_pile": [],
+            "discard_variants": [],
+            "organization_counts": {
+              "total": 0,
+              "inside_wall": 0,
+              "outside_wall": 0
+            },
+            "orgs": {}
+          },
+          {
+            "id": "e16f0f44-26a4-4e45-965b-98dc755d8726",
+            "name": "Ally",
+            "faction": "hong_kong",
+            "base": "北京",
+            "resources": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "moves_left": 0,
+            "hand": [],
+            "hand_variants": [],
+            "hand_action_legality": [],
+            "deck_count": 1,
+            "discard_count": 0,
+            "discard_pile": [],
+            "discard_variants": [],
+            "organization_counts": {
+              "total": 1,
+              "inside_wall": 1,
+              "outside_wall": 0
+            },
+            "orgs": {
+              "北京": 1
+            }
+          },
+          {
+            "id": "7d2208ce-8f93-487f-b155-03b714bb9e71",
+            "name": "Enemy",
+            "faction": "red_army",
+            "base": null,
+            "resources": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "moves_left": 0,
+            "hand": [],
+            "hand_variants": [],
+            "hand_action_legality": [],
+            "deck_count": 1,
+            "discard_count": 0,
+            "discard_pile": [],
+            "discard_variants": [],
+            "organization_counts": {
+              "total": 0,
+              "inside_wall": 0,
+              "outside_wall": 0
+            },
+            "orgs": {}
+          },
+          {
+            "id": "632bbb59-fd2c-446f-968e-3cab90099c5a",
+            "name": "Observer",
+            "faction": "taiwan_green",
+            "base": null,
+            "resources": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "moves_left": 0,
+            "hand": [],
+            "hand_variants": [],
+            "hand_action_legality": [],
+            "deck_count": 1,
+            "discard_count": 0,
+            "discard_pile": [],
+            "discard_variants": [],
+            "organization_counts": {
+              "total": 0,
+              "inside_wall": 0,
+              "outside_wall": 0
+            },
+            "orgs": {}
+          }
+        ]
+      }
+    },
+    {
+      "name": "red_army_pane_relabeled_to_other_players_win_conditions",
+      "ok": true,
+      "detail": {
+        "panelLabel": "其他玩家獲勝條件",
+        "title": "全桌獲勝條件一覽",
+        "status": "共 3 位其他玩家",
+        "statusClass": "my-era-stage-status unavailable",
+        "summary": "僅列出玩家名稱、陣營與獲勝條件，不包含手牌等私人資訊。",
+        "sections": [
+          "Actor｜自由派",
+          "Ally｜香港",
+          "Observer｜臺灣（綠線）"
+        ],
+        "wins": [
+          [
+            "回合結束時在牆內擁有至少14個有效組織。"
+          ],
+          [
+            "回合結束時在牆內擁有至少 14 個有效組織。"
+          ],
+          [
+            "回合結束時在牆內擁有至少 14 個有效組織。"
+          ]
+        ],
+        "bodyText": "Actor｜自由派\n回合結束時在牆內擁有至少14個有效組織。\nAlly｜香港\n回合結束時在牆內擁有至少 14 個有效組織。\nObserver｜臺灣（綠線）\n回合結束時在牆內擁有至少 14 個有效組織。",
+        "scrollable": true
+      }
+    },
+    {
+      "name": "red_army_pane_lists_every_other_player_name_and_faction",
+      "ok": true,
+      "detail": {
+        "panelLabel": "其他玩家獲勝條件",
+        "title": "全桌獲勝條件一覽",
+        "status": "共 3 位其他玩家",
+        "statusClass": "my-era-stage-status unavailable",
+        "summary": "僅列出玩家名稱、陣營與獲勝條件，不包含手牌等私人資訊。",
+        "sections": [
+          "Actor｜自由派",
+          "Ally｜香港",
+          "Observer｜臺灣（綠線）"
+        ],
+        "wins": [
+          [
+            "回合結束時在牆內擁有至少14個有效組織。"
+          ],
+          [
+            "回合結束時在牆內擁有至少 14 個有效組織。"
+          ],
+          [
+            "回合結束時在牆內擁有至少 14 個有效組織。"
+          ]
+        ],
+        "bodyText": "Actor｜自由派\n回合結束時在牆內擁有至少14個有效組織。\nAlly｜香港\n回合結束時在牆內擁有至少 14 個有效組織。\nObserver｜臺灣（綠線）\n回合結束時在牆內擁有至少 14 個有效組織。",
+        "scrollable": true
+      }
+    },
+    {
+      "name": "red_army_pane_shows_win_condition_text_for_each_other_player",
+      "ok": true,
+      "detail": {
+        "panelLabel": "其他玩家獲勝條件",
+        "title": "全桌獲勝條件一覽",
+        "status": "共 3 位其他玩家",
+        "statusClass": "my-era-stage-status unavailable",
+        "summary": "僅列出玩家名稱、陣營與獲勝條件，不包含手牌等私人資訊。",
+        "sections": [
+          "Actor｜自由派",
+          "Ally｜香港",
+          "Observer｜臺灣（綠線）"
+        ],
+        "wins": [
+          [
+            "回合結束時在牆內擁有至少14個有效組織。"
+          ],
+          [
+            "回合結束時在牆內擁有至少 14 個有效組織。"
+          ],
+          [
+            "回合結束時在牆內擁有至少 14 個有效組織。"
+          ]
+        ],
+        "bodyText": "Actor｜自由派\n回合結束時在牆內擁有至少14個有效組織。\nAlly｜香港\n回合結束時在牆內擁有至少 14 個有效組織。\nObserver｜臺灣（綠線）\n回合結束時在牆內擁有至少 14 個有效組織。",
+        "scrollable": true
+      }
+    },
+    {
+      "name": "red_army_pane_does_not_leak_other_players_hand_contents",
+      "ok": true,
+      "detail": {
+        "bodyText": "Actor｜自由派\n回合結束時在牆內擁有至少14個有效組織。\nAlly｜香港\n回合結束時在牆內擁有至少 14 個有效組織。\nObserver｜臺灣（綠線）\n回合結束時在牆內擁有至少 14 個有效組織。"
+      }
+    },
+    {
+      "name": "red_army_pane_keeps_scrollable_layout",
+      "ok": true,
+      "detail": {
+        "panelLabel": "其他玩家獲勝條件",
+        "title": "全桌獲勝條件一覽",
+        "status": "共 3 位其他玩家",
+        "statusClass": "my-era-stage-status unavailable",
+        "summary": "僅列出玩家名稱、陣營與獲勝條件，不包含手牌等私人資訊。",
+        "sections": [
+          "Actor｜自由派",
+          "Ally｜香港",
+          "Observer｜臺灣（綠線）"
+        ],
+        "wins": [
+          [
+            "回合結束時在牆內擁有至少14個有效組織。"
+          ],
+          [
+            "回合結束時在牆內擁有至少 14 個有效組織。"
+          ],
+          [
+            "回合結束時在牆內擁有至少 14 個有效組織。"
+          ]
+        ],
+        "bodyText": "Actor｜自由派\n回合結束時在牆內擁有至少14個有效組織。\nAlly｜香港\n回合結束時在牆內擁有至少 14 個有效組織。\nObserver｜臺灣（綠線）\n回合結束時在牆內擁有至少 14 個有效組織。",
+        "scrollable": true
+      }
+    },
+    {
+      "name": "non_red_army_player_still_sees_personal_era_stage_pane_unchanged",
+      "ok": true,
+      "detail": {
+        "panelLabel": "時代關卡",
+        "title": "[香港]香港人被自殺",
+        "status": "尚未達成",
+        "statusClass": "my-era-stage-status pending",
+        "summary": "紅軍用不會受國際譴責的方式出兵鎮壓香港：讓警察和武警潛入民宅姦殺抗爭者",
+        "sections": [
+          "觸發條件",
+          "紅軍壓制",
+          "革命反撲",
+          "效果期限"
+        ],
+        "wins": [],
+        "bodyText": "",
+        "scrollable": true
+      }
+    }
+  ],
+  "screenshots": [
+    "/Users/benmini/.openclaw/workspace/redline/docs/records/faction-ui/red_army_other_players_win_conditions.png",
+    "/Users/benmini/.openclaw/workspace/redline/docs/records/faction-ui/non_red_army_era_stage_unchanged.png"
+  ],
+  "base_url": "http://127.0.0.1:8010"
+}
