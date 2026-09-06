@@ -2011,6 +2011,20 @@ class CardPlayMixin:
                         self.log(f"{player.name} played {card_name}")
                         return {"success": True, "pending_choice": True}
 
+        if action_context.get('card_canceled'):
+            # 2026-09-06 使用者回報：一般指令/組織卡（非奧援、非紅軍特殊行動）被取消反應
+            # 卡取消後，落到跟「正常出牌成功」共用的結尾程式碼，補寫一筆「played {card}」
+            # 紀錄、回傳值也跟成功出牌一樣分不出差別，玩家看紀錄／收到的結果訊息都以為
+            # 這張卡打成功了。比照上面奧援卡、紅軍特殊行動被取消時已有的處理，提早結束、
+            # 記錄成「被取消」，不要落進下面共用的成功結尾。
+            if not skip_reaction_resolution:
+                self._resolve_reaction_context(reaction_context)
+            if not action_context.get('removed_current_card'):
+                if not self._return_borrowed_card_to_owner_topdeck(played_card):
+                    player.deck.discard([played_card])
+            self.log(f"{player.name}'s {card_name} was canceled by reaction")
+            return {"success": True, "canceled": True}
+
         if not skip_reaction_resolution:
             self._resolve_reaction_context(reaction_context)
 
