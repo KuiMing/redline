@@ -6,6 +6,16 @@
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-09-06
+
+### Added
+
+- 紅軍玩家的「我的陣營」右側新增「非紅軍的獲勝條件」，列出目前遊戲中每位非紅軍玩家的名稱、陣營與公開獲勝條件。
+
+### Changed
+
+- 非紅軍玩家仍維持原本的時代關卡畫面；紅軍專用畫面只使用公開陣營資料，不顯示其他玩家的手牌或私人狀態。
+
 ## [1.0.1] - 2026-09-06
 
 ### Changed
@@ -142,7 +152,8 @@
 - 修正陣營選擇、根據地按鈕高度、面板尺寸、HUD 排列與小型 viewport 裁切。
 - 修正抽牌資訊外洩，避免其他玩家看到不應公開的卡牌名稱。
 
-[Unreleased]: https://github.com/KuiMing/redline/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/KuiMing/redline/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/KuiMing/redline/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/KuiMing/redline/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/KuiMing/redline/compare/v0.3.1...v1.0.0
 [0.3.1]: https://github.com/KuiMing/redline/compare/v0.3.0...v0.3.1
