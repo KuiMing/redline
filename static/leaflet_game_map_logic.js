@@ -1867,13 +1867,16 @@ async function bootstrapCanonicalGameMap() {
   renderMap();
   if (lastGameState) applyGameStateToMap(lastGameState);
   // 新遊戲首次開啟戰略地圖時，choice 可能比地圖資料先抵達。地圖資料完成後要重新
-  // 嘗試一次候選範圍聚焦；預設亞洲視角只能在沒有待處理地圖 choice 時執行，否則
-  // 延遲的 focusAsia 會把剛完成的宣傳家 setView 沖掉。
+  // 嘗試一次候選範圍聚焦；預設亞洲視角只能在沒有待處理地圖 choice、且尚未完成
+  // 開局聚焦（focusOwnBaseOnFirstState／宛陣營 fitBounds）時執行，否則在本機
+  // 低延遲環境下，WS 狀態可能搶在這個 100ms timeout 之前就完成正確的開局聚焦，
+  // 隨後延遲的 focusAsia 又把它沖掉，變成「先對再跳回全亞洲」
+  // （2026-09-06 使用者回報：選宛陣營後會先 zoom 到南陽，下一瞬間又跳回全中國）。
   applySupportChoiceHighlight(supportChoiceHighlight);
   setTimeout(() => {
     if (supportChoiceHighlight) {
       applySupportChoiceHighlight(supportChoiceHighlight);
-    } else {
+    } else if (!initialBaseViewDone) {
       focusAsia();
     }
   }, 100);
