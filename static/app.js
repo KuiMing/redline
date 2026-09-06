@@ -3617,7 +3617,7 @@ function factionWinConditionItemsFor(factionId, baseName) {
 function renderOtherPlayersWinConditionsPane(state, els) {
   const { paneEl, panelLabelEl, titleEl, statusEl, summaryEl, bodyEl } = els;
   if (panelLabelEl) panelLabelEl.textContent = '其他玩家獲勝條件';
-  titleEl.textContent = '全桌獲勝條件一覽';
+  titleEl.textContent = '非紅軍的獲勝條件';
   const others = (state.players || []).filter(p => p.id !== playerId);
   statusEl.textContent = `共 ${others.length} 位其他玩家`;
   statusEl.className = 'my-era-stage-status unavailable';

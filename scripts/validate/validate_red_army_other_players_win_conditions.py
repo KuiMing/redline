@@ -112,7 +112,7 @@ def check(browser):
     record(
         "red_army_pane_relabeled_to_other_players_win_conditions",
         red_pane["panelLabel"] == "其他玩家獲勝條件"
-        and red_pane["title"] == "全桌獲勝條件一覽"
+        and red_pane["title"] == "非紅軍的獲勝條件"
         and red_pane["status"] == "共 3 位其他玩家",
         red_pane,
     )
@@ -148,7 +148,7 @@ def check(browser):
     record(
         "non_red_army_player_still_sees_personal_era_stage_pane_unchanged",
         ally_pane["panelLabel"] == "時代關卡"
-        and ally_pane["title"] != "全桌獲勝條件一覽"
+        and ally_pane["title"] != "非紅軍的獲勝條件"
         and "共 " not in (ally_pane["status"] or ""),
         ally_pane,
     )

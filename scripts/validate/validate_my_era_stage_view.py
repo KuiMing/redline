@@ -294,7 +294,7 @@ def check(browser):
         projected is None
         and red_data["viewActive"]
         and other_players_panel["panelLabel"] == "其他玩家獲勝條件"
-        and other_players_panel["title"] == "全桌獲勝條件一覽"
+        and other_players_panel["title"] == "非紅軍的獲勝條件"
         and other_players_panel["status"] == "共 1 位其他玩家"
         and len(other_players_panel["sections"]) == 1
         and "臺灣" in other_players_panel["sections"][0]

@@ -305,7 +305,7 @@
         "commandActive": false,
         "modalExists": false,
         "overlayCount": 0,
-        "title": "全桌獲勝條件一覽",
+        "title": "非紅軍的獲勝條件",
         "status": "共 1 位其他玩家",
         "statusClass": "my-era-stage-status unavailable",
         "summary": "僅列出玩家名稱、陣營與獲勝條件，不包含手牌等私人資訊。",
@@ -327,7 +327,7 @@
         "projected": null,
         "other_players_panel": {
           "panelLabel": "其他玩家獲勝條件",
-          "title": "全桌獲勝條件一覽",
+          "title": "非紅軍的獲勝條件",
           "status": "共 1 位其他玩家",
           "sections": [
             "red｜臺灣（綠線）"
