@@ -14,7 +14,8 @@ from typing import Any
 
 from mcp_server.rules_data import (
     HIDDEN_HAND_CARD_LABEL,
-    TARGETED_ACTION_CARD_NAMES,
+    OPTIONAL_TARGET_ACTION_CARD_NAMES,
+    REQUIRED_TARGET_ACTION_CARD_NAMES,
     faction_dispatchable_action_names,
 )
 
@@ -206,8 +207,12 @@ def legal_actions(state: dict, player_id: str, faction_catalog: dict) -> dict:
                 entry["modes"].append("action")
             elif legality.get("reason"):
                 entry["action_mode_blocked_reason"] = legality["reason"]
-            if card_name in TARGETED_ACTION_CARD_NAMES:
+            if card_name in REQUIRED_TARGET_ACTION_CARD_NAMES:
                 entry["needs_target_player_id"] = True
+                entry["target_candidates"] = [p["id"] for p in state.get("players") or [] if p.get("id") != player_id]
+            elif card_name in OPTIONAL_TARGET_ACTION_CARD_NAMES:
+                entry["needs_target_player_id"] = False
+                entry["optional_target_player_id"] = True
                 entry["target_candidates"] = [p["id"] for p in state.get("players") or [] if p.get("id") != player_id]
         actions.append(entry)
 

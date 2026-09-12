@@ -103,6 +103,7 @@ class RedlineClient:
         self._sessions: dict[tuple[str, str], PlayerSession] = {}
         self._known_rooms: dict[str, float] = {}
         self._resume_tokens: dict[tuple[str, str], str] = {}
+        self._connect_locks: dict[tuple[str, str], asyncio.Lock] = {}
 
     @staticmethod
     def _derive_ws_base(http_base: str) -> str:
@@ -230,14 +231,25 @@ class RedlineClient:
         session = self._sessions.get(key)
         if session is not None and not session.closed:
             return session
-        resume_token = resume_token or self._resume_tokens.get(key)
-        if session is None:
-            session = PlayerSession(game_id=game_id, player_id=player_id, resume_token=resume_token)
-            self._sessions[key] = session
-        elif resume_token:
-            session.resume_token = resume_token
-        await self._open_ws(session)
-        return session
+        # Two tool calls for the same not-yet-connected (game_id, player_id)
+        # can genuinely race here (an MCP host may dispatch several tool
+        # calls from one model turn concurrently) — without this lock both
+        # would call _open_ws on the same/a fresh PlayerSession, orphaning
+        # one WebSocket + reader task. Re-check after acquiring, since the
+        # first racer may have already finished connecting by then.
+        lock = self._connect_locks.setdefault(key, asyncio.Lock())
+        async with lock:
+            session = self._sessions.get(key)
+            if session is not None and not session.closed:
+                return session
+            resume_token = resume_token or self._resume_tokens.get(key)
+            if session is None:
+                session = PlayerSession(game_id=game_id, player_id=player_id, resume_token=resume_token)
+                self._sessions[key] = session
+            elif resume_token:
+                session.resume_token = resume_token
+            await self._open_ws(session)
+            return session
 
     async def _open_ws(self, session: PlayerSession) -> None:
         uri = f"{self.ws_base_url}/ws/{session.game_id}/{session.player_id}"

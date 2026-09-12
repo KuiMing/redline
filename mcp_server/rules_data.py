@@ -35,13 +35,20 @@ DISPATCHABLE_FACTION_ACTION_NAMES = frozenset(
     }
 )
 
-# Action cards whose "action" mode requires target_player_id (server-enforced
-# in server/game_card_play.py::play_card). Kept as an explicit list rather
-# than derived, because the requirement is per-card-name business logic, not
-# a field present in the card catalog.
-TARGETED_ACTION_CARD_NAMES = frozenset(
-    {"合作談判", "走漏風聲", "武裝者", "武裝小隊", "武裝集團", "派遣間諜", "內應間諜"}
-)
+# Action cards whose "action" mode is target_player_id-related
+# (server-enforced in server/game_card_play.py::play_card, ~line 2404-2432).
+# Kept as explicit lists rather than derived, because the requirement is
+# per-card-name business logic, not a field present in the card catalog.
+#
+# REQUIRED: server returns an error if target_player_id is None or self
+# ("合作談判必須指定任意一名其他玩家" / "武裝卡必須指定其他玩家").
+REQUIRED_TARGET_ACTION_CARD_NAMES = frozenset({"合作談判", "武裝者", "武裝小隊", "武裝集團"})
+# OPTIONAL: target_player_id narrows an otherwise auto-selected target pool
+# (走漏風聲 only validates it "if target_player_id is not None"; 派遣間諜/
+# 內應間諜 fall back to `_target_players_for_interaction` when omitted) —
+# still useful to expose as a candidate list, but never mandatory.
+OPTIONAL_TARGET_ACTION_CARD_NAMES = frozenset({"走漏風聲", "派遣間諜", "內應間諜"})
+TARGETED_ACTION_CARD_NAMES = REQUIRED_TARGET_ACTION_CARD_NAMES | OPTIONAL_TARGET_ACTION_CARD_NAMES
 
 HIDDEN_HAND_CARD_LABEL = "未知手牌"
 

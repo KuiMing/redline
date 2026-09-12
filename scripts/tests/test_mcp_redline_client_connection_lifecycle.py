@@ -84,3 +84,29 @@ async def test_send_action_times_out_with_actionable_message_when_nothing_arrive
     _install_session(client, "g1", "p1")
     with pytest.raises(RedlineConnectionError, match="No response to 'advance'"):
         await client.send_action("g1", "p1", "advance", {})
+
+
+@pytest.mark.anyio
+async def test_ensure_connected_serializes_concurrent_first_connects_for_same_session():
+    # An MCP host can dispatch several tool calls from one model turn
+    # concurrently; two calls hitting the same not-yet-connected
+    # (game_id, player_id) must not both open a WebSocket for it (that would
+    # orphan one connection + reader task — see ensure_connected's lock).
+    client = RedlineClient(base_url="http://127.0.0.1:1")
+    open_calls: list[PlayerSession] = []
+
+    async def _fake_open_ws(session: PlayerSession) -> None:
+        open_calls.append(session)
+        await asyncio.sleep(0.05)
+        session.ws = _FakeWS()
+        session.closed = False
+        session.latest_state = {"turn": 1, "game_phase": "main"}
+
+    client._open_ws = _fake_open_ws  # type: ignore[method-assign]
+
+    first, second = await asyncio.gather(
+        client.ensure_connected("g1", "p1"),
+        client.ensure_connected("g1", "p1"),
+    )
+    assert first is second
+    assert len(open_calls) == 1

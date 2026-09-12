@@ -257,6 +257,23 @@ def test_targeted_card_gets_target_candidates_excluding_self():
     assert play["target_candidates"] == [OTHER]
 
 
+def test_optionally_targeted_card_is_not_flagged_as_required():
+    # server/game_card_play.py only validates 走漏風聲's target_player_id
+    # "if target_player_id is not None" — unlike 合作談判/武裝*, it's legal
+    # to play without one. get_legal_actions must not tell the LLM it's
+    # mandatory (it would still be harmless if supplied, but a caller who
+    # trusts "needs_target_player_id" as gospel should not be blocked from
+    # omitting it).
+    state = _base_state()
+    state["players"][0]["hand"] = ["走漏風聲"]
+    state["players"][0]["hand_action_legality"] = [{"playable": True}]
+    legal = summarize.legal_actions(state, ME, FACTION_CATALOG)
+    play = next(a for a in legal["actions"] if a["kind"] == "play_card")
+    assert play["needs_target_player_id"] is False
+    assert play["optional_target_player_id"] is True
+    assert play["target_candidates"] == [OTHER]
+
+
 def test_move_and_buy_entries_come_from_state_fields():
     state = _base_state(
         purchase_area=["宣傳家"],

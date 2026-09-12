@@ -40,9 +40,9 @@
       "ok": true,
       "detail": {
         "ok": true,
-        "game_id": "4c4db366-6365-43ca-90e7-ac0a17878473",
-        "player_id": "f00c754b-5f01-4552-b3cf-dc6f8c112b8f",
-        "resume_token": "RyfAQNv0efzu0Nj38yYfrumYOU2bwzWBA0dm8kUKyXk",
+        "game_id": "6d62e80d-6cbe-488f-856e-d8d06e12a351",
+        "player_id": "3a7e998d-cf35-462a-b0d9-33336c04ed51",
+        "resume_token": "5vQSW4CiLU9zH919zgR7vMFCYQNUeEfv-cvanrTEjk8",
         "role": "host",
         "next_step": "Call choose_faction, then set_ready. Once every seat is ready, the host calls start_game."
       }
@@ -52,9 +52,9 @@
       "ok": true,
       "detail": {
         "ok": true,
-        "game_id": "4c4db366-6365-43ca-90e7-ac0a17878473",
-        "player_id": "1d270406-16ae-4c1a-8c53-9fa565595c9a",
-        "resume_token": "pX6ITMxJI6S941R7Yjqa_xf-IlhOuIESzxEc-Ie5A3E",
+        "game_id": "6d62e80d-6cbe-488f-856e-d8d06e12a351",
+        "player_id": "a7137d85-e3d6-4b44-a721-b4caa180fd86",
+        "resume_token": "EHXFV9H9guK9OIm4UmPNnC60HoksNjgmlAj26CXe0hE",
         "resumed": false,
         "role": "guest",
         "next_step": "Call choose_faction, then set_ready, and wait for the host to start_game."
@@ -80,7 +80,7 @@
           "turn_phase": "action",
           "current_player_name": "SmokeGuest",
           "is_my_turn": false,
-          "my_player_id": "f00c754b-5f01-4552-b3cf-dc6f8c112b8f",
+          "my_player_id": "3a7e998d-cf35-462a-b0d9-33336c04ed51",
           "my_faction": "red_army",
           "my_base": "北京",
           "my_resources": {
@@ -94,7 +94,7 @@
           "pending_choice": null,
           "pending_base_choice_for_me": false,
           "hk_relocation_open_for_me": false,
-          "current_event_name": "歲月靜好",
+          "current_event_name": "香港抗暴之戰",
           "purchase_area": [
             "宣傳家",
             "思想家",
@@ -102,15 +102,15 @@
             "資本家",
             "分神",
             "內鬥",
-            "交通經驗乙",
-            "批鬥",
-            "武裝者",
-            "歐洲奧援",
-            "南洋奧援"
+            "樹立信心",
+            "樹立信心",
+            "英美奧援",
+            "英美奧援",
+            "合作談判"
           ],
           "players": [
             {
-              "id": "f00c754b-5f01-4552-b3cf-dc6f8c112b8f",
+              "id": "3a7e998d-cf35-462a-b0d9-33336c04ed51",
               "name": "SmokeHost",
               "faction": "red_army",
               "resources": {
@@ -120,7 +120,7 @@
               "organization_total": 1
             },
             {
-              "id": "1d270406-16ae-4c1a-8c53-9fa565595c9a",
+              "id": "a7137d85-e3d6-4b44-a721-b4caa180fd86",
               "name": "SmokeGuest",
               "faction": "taiwan_green",
               "resources": {
@@ -131,7 +131,7 @@
             }
           ],
           "recent_log": [
-            "[Turn 1] Event drawn: 歲月靜好 (no-op)"
+            "[Turn 1] Event drawn: 香港抗暴之戰"
           ]
         },
         "legal_action_kinds": {
@@ -184,7 +184,7 @@
           {
             "kind": "play_card",
             "index": 2,
-            "card_name": "追隨者",
+            "card_name": "樂捐者",
             "modes": [
               "resource",
               "action"
@@ -193,7 +193,7 @@
           {
             "kind": "play_card",
             "index": 3,
-            "card_name": "樂捐者",
+            "card_name": "追隨者",
             "modes": [
               "resource",
               "action"
@@ -271,37 +271,37 @@
           {
             "kind": "buy_card",
             "index": 6,
-            "card_name": "交通經驗乙",
+            "card_name": "樹立信心",
             "cost": {
-              "money": 3,
-              "propaganda": 0
+              "money": 2,
+              "propaganda": 1
             },
             "affordable": false
           },
           {
             "kind": "buy_card",
             "index": 7,
-            "card_name": "批鬥",
+            "card_name": "樹立信心",
             "cost": {
-              "money": 0,
-              "propaganda": 4
+              "money": 2,
+              "propaganda": 1
             },
             "affordable": false
           },
           {
             "kind": "buy_card",
             "index": 8,
-            "card_name": "武裝者",
+            "card_name": "英美奧援",
             "cost": {
-              "money": 2,
-              "propaganda": 0
+              "money": 1,
+              "propaganda": 2
             },
             "affordable": false
           },
           {
             "kind": "buy_card",
             "index": 9,
-            "card_name": "歐洲奧援",
+            "card_name": "英美奧援",
             "cost": {
               "money": 1,
               "propaganda": 2
@@ -311,9 +311,9 @@
           {
             "kind": "buy_card",
             "index": 10,
-            "card_name": "南洋奧援",
+            "card_name": "合作談判",
             "cost": {
-              "money": 1,
+              "money": 2,
               "propaganda": 2
             },
             "affordable": false
@@ -336,7 +336,7 @@
           "turn_phase": "action",
           "current_player_name": "SmokeGuest",
           "is_my_turn": true,
-          "my_player_id": "1d270406-16ae-4c1a-8c53-9fa565595c9a",
+          "my_player_id": "a7137d85-e3d6-4b44-a721-b4caa180fd86",
           "my_faction": "taiwan_green",
           "my_base": "臺北",
           "my_resources": {
@@ -350,7 +350,7 @@
           "pending_choice": null,
           "pending_base_choice_for_me": false,
           "hk_relocation_open_for_me": false,
-          "current_event_name": "歲月靜好",
+          "current_event_name": "香港抗暴之戰",
           "purchase_area": [
             "宣傳家",
             "思想家",
@@ -358,15 +358,15 @@
             "資本家",
             "分神",
             "內鬥",
-            "交通經驗乙",
-            "批鬥",
-            "武裝者",
-            "歐洲奧援",
-            "南洋奧援"
+            "樹立信心",
+            "樹立信心",
+            "英美奧援",
+            "英美奧援",
+            "合作談判"
           ],
           "players": [
             {
-              "id": "f00c754b-5f01-4552-b3cf-dc6f8c112b8f",
+              "id": "3a7e998d-cf35-462a-b0d9-33336c04ed51",
               "name": "SmokeHost",
               "faction": "red_army",
               "resources": {
@@ -376,7 +376,7 @@
               "organization_total": 1
             },
             {
-              "id": "1d270406-16ae-4c1a-8c53-9fa565595c9a",
+              "id": "a7137d85-e3d6-4b44-a721-b4caa180fd86",
               "name": "SmokeGuest",
               "faction": "taiwan_green",
               "resources": {
@@ -387,7 +387,7 @@
             }
           ],
           "recent_log": [
-            "[Turn 1] Event drawn: 歲月靜好 (no-op)",
+            "[Turn 1] Event drawn: 香港抗暴之戰",
             "[Turn 1] SmokeGuest played 追隨者 as resource"
           ]
         },
@@ -413,7 +413,7 @@
           "turn_phase": "action",
           "current_player_name": "SmokeHost",
           "is_my_turn": false,
-          "my_player_id": "1d270406-16ae-4c1a-8c53-9fa565595c9a",
+          "my_player_id": "a7137d85-e3d6-4b44-a721-b4caa180fd86",
           "my_faction": "taiwan_green",
           "my_base": "臺北",
           "my_resources": {
@@ -424,10 +424,22 @@
           "game_over": false,
           "winner": null,
           "co_winners": [],
-          "pending_choice": null,
+          "pending_choice": {
+            "type": "multi_card_choice",
+            "choice_key": "event_discard_self",
+            "prompt": "香港抗暴之戰：請選擇 1 張手牌棄掉。",
+            "source_name": "香港抗暴之戰",
+            "for_player_id": "a7137d85-e3d6-4b44-a721-b4caa180fd86",
+            "for_player_name": null,
+            "is_mine_to_resolve": true,
+            "cancellable": false,
+            "option_count": 5,
+            "min_count": null,
+            "count": 1
+          },
           "pending_base_choice_for_me": false,
           "hk_relocation_open_for_me": false,
-          "current_event_name": "歲月靜好",
+          "current_event_name": "香港抗暴之戰",
           "purchase_area": [
             "宣傳家",
             "思想家",
@@ -435,15 +447,15 @@
             "資本家",
             "分神",
             "內鬥",
-            "交通經驗乙",
-            "批鬥",
-            "武裝者",
-            "歐洲奧援",
-            "南洋奧援"
+            "樹立信心",
+            "樹立信心",
+            "英美奧援",
+            "英美奧援",
+            "合作談判"
           ],
           "players": [
             {
-              "id": "f00c754b-5f01-4552-b3cf-dc6f8c112b8f",
+              "id": "3a7e998d-cf35-462a-b0d9-33336c04ed51",
               "name": "SmokeHost",
               "faction": "red_army",
               "resources": {
@@ -453,7 +465,7 @@
               "organization_total": 1
             },
             {
-              "id": "1d270406-16ae-4c1a-8c53-9fa565595c9a",
+              "id": "a7137d85-e3d6-4b44-a721-b4caa180fd86",
               "name": "SmokeGuest",
               "faction": "taiwan_green",
               "resources": {
@@ -464,15 +476,18 @@
             }
           ],
           "recent_log": [
-            "[Turn 1] Event drawn: 歲月靜好 (no-op)",
+            "[Turn 1] Event drawn: 香港抗暴之戰",
             "[Turn 1] SmokeGuest played 追隨者 as resource",
-            "[Turn 1] End of turn for SmokeGuest"
+            "[Turn 1] End of turn for SmokeGuest",
+            "[Turn 1] Event failure: SmokeGuest must discard 1 hand card(s)"
           ]
         },
         "legal_action_kinds": {
-          "waiting_on": "SmokeHost",
-          "reason": "Not your turn; waiting for SmokeHost",
-          "kind_counts": {}
+          "waiting_on": null,
+          "reason": null,
+          "kind_counts": {
+            "resolve_pending_choice": 1
+          }
         }
       }
     },
