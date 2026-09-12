@@ -6,7 +6,7 @@ object itself, so nothing here talks to a database or holds game state.
 """
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 def _float_env(name, default):
@@ -17,6 +17,68 @@ def _float_env(name, default):
         return float(raw)
     except ValueError:
         return default
+
+
+def _int_env(name, default):
+    raw = os.environ.get(name)
+    if not raw:
+        return default
+    try:
+        return int(raw)
+    except ValueError:
+        return default
+
+
+def _bool_env(name, default):
+    raw = os.environ.get(name)
+    if raw is None or raw == "":
+        return default
+    return raw.strip().lower() in ("1", "true", "yes", "on")
+
+
+def _csv_env(name, default):
+    raw = os.environ.get(name)
+    if raw is None or raw.strip() == "":
+        return list(default)
+    return [item.strip() for item in raw.split(",") if item.strip()]
+
+
+# Same values the `mcp` SDK itself auto-applies when a streamable-http server
+# binds literally to "127.0.0.1"/"localhost"/"::1" (see
+# mcp.server.lowlevel.server.Server.streamable_http_app). We bind "0.0.0.0"
+# inside a container so that auto-detection never fires — these are the
+# explicit defaults that keep the same safe behavior regardless of bind host.
+DEFAULT_ALLOWED_HOSTS = ["127.0.0.1:*", "localhost:*", "[::1]:*"]
+DEFAULT_ALLOWED_ORIGINS = ["http://127.0.0.1:*", "http://localhost:*", "http://[::1]:*"]
+
+
+@dataclass(frozen=True)
+class StreamableHttpConfig:
+    """Bind address + DNS-rebinding-protection settings for `--transport
+    streamable-http`. Kept separate from RedlineMCPConfig (which configures
+    the *client* side talking to the REDLINE game server) since this is
+    entirely about how *this* process's own HTTP endpoint is exposed.
+    """
+
+    host: str
+    port: int
+    path: str
+    enable_dns_rebinding_protection: bool
+    allowed_hosts: list[str] = field(default_factory=lambda: list(DEFAULT_ALLOWED_HOSTS))
+    allowed_origins: list[str] = field(default_factory=lambda: list(DEFAULT_ALLOWED_ORIGINS))
+
+    @classmethod
+    def from_env(cls) -> "StreamableHttpConfig":
+        return cls(
+            host=os.environ.get("REDLINE_MCP_HTTP_HOST", "127.0.0.1"),
+            port=_int_env("REDLINE_MCP_HTTP_PORT", 8080),
+            path=os.environ.get("REDLINE_MCP_HTTP_PATH", "/mcp"),
+            enable_dns_rebinding_protection=_bool_env(
+                "REDLINE_MCP_ENABLE_DNS_REBINDING_PROTECTION", True
+            ),
+            allowed_hosts=_csv_env("REDLINE_MCP_ALLOWED_HOSTS", DEFAULT_ALLOWED_HOSTS),
+            allowed_origins=_csv_env("REDLINE_MCP_ALLOWED_ORIGINS", DEFAULT_ALLOWED_ORIGINS),
+        )
 
 
 @dataclass(frozen=True)

@@ -1,0 +1,75 @@
+# Builds and runs the REDLINE game server plus its MCP server together.
+#
+#   docker compose up --build
+#
+# - `redline`  : the game's HTTP+WebSocket server (root Dockerfile), same
+#                image/behavior as running it standalone. Host port defaults
+#                to 8000, same as the existing single-container instructions
+#                in README.md — override with REDLINE_HOST_PORT.
+# - `redline-mcp` : the MCP server (mcp_server/Dockerfile), talking to
+#                `redline` over the Compose-internal network by service name
+#                (no host.docker.internal). Its host port mapping is bound
+#                to 127.0.0.1 ONLY by default, so `docker compose up` never
+#                exposes the unauthenticated MCP endpoint to the LAN — see
+#                docs/mcp_server.md's Docker section before changing this.
+#
+# See docs/mcp_server.md for the full walkthrough, environment variables,
+# and an MCP client config example pointing at this stack.
+
+services:
+  redline:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${REDLINE_HOST_PORT:-8000}:8000"
+    healthcheck:
+      # /server-info needs no room/game state to exist — never treat "no
+      # rooms yet" as unhealthy.
+      test: ["CMD", "python3", "-c", "import urllib.request as u; u.urlopen('http://127.0.0.1:8000/server-info', timeout=3)"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    restart: unless-stopped
+    networks:
+      - redline-net
+
+  redline-mcp:
+    build:
+      context: .
+      dockerfile: mcp_server/Dockerfile
+    environment:
+      REDLINE_BASE_URL: "http://redline:8000"
+      REDLINE_MCP_HTTP_HOST: "0.0.0.0"
+      REDLINE_MCP_HTTP_PORT: "8080"
+      # Defaults already cover "localhost"/"127.0.0.1"/"::1" (see
+      # mcp_server/config.py's DEFAULT_ALLOWED_HOSTS/_ORIGINS) — only set
+      # these if a reverse proxy in front of this container will present a
+      # different Host/Origin.
+      # REDLINE_MCP_ALLOWED_HOSTS: "127.0.0.1:*,localhost:*"
+      # REDLINE_MCP_ALLOWED_ORIGINS: "http://127.0.0.1:*,http://localhost:*"
+    ports:
+      # Bound to 127.0.0.1 only — intentional, see the header comment above.
+      - "127.0.0.1:${REDLINE_MCP_HOST_PORT:-8765}:8080"
+    # `service_started`, not `service_healthy`: the MCP process itself must
+    # be able to start (and its own /health must reflect that) even before
+    # `redline` is ready — each gameplay tool call surfaces a REDLINE
+    # connection failure as its own clear MCP tool error at call time. See
+    # mcp_server/server_app.py's register_health_route.
+    depends_on:
+      redline:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request as u; u.urlopen('http://127.0.0.1:8080/health', timeout=3)"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    restart: unless-stopped
+    networks:
+      - redline-net
+
+networks:
+  redline-net:
+    driver: bridge

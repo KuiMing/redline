@@ -7,6 +7,8 @@ from __future__ import annotations
 from typing import Any
 
 from mcp.server.mcpserver import MCPServer
+from starlette.requests import Request
+from starlette.responses import JSONResponse
 
 from mcp_server.config import RedlineMCPConfig
 from mcp_server.context import AppContext
@@ -41,7 +43,24 @@ def build_server(config: RedlineMCPConfig | None = None) -> tuple[MCPServer, App
     app = MCPServer(name="redline", instructions=SERVER_INSTRUCTIONS)
     register_tools(app, ctx)
     register_resources(app, ctx)
+    register_health_route(app)
     return app, ctx
+
+
+def register_health_route(app: MCPServer) -> None:
+    """`/health` reports only whether this MCP process itself is up and
+    serving — NOT whether the REDLINE game server it proxies to is reachable
+    or has any rooms. A Docker healthcheck must never treat "REDLINE has no
+    rooms yet" or "REDLINE isn't ready yet" as this process being unhealthy;
+    each gameplay tool call already reports a connection failure to the
+    REDLINE server as its own actionable MCP tool error (see
+    mcp_server/tools/errors.py) — that is the correct place for that signal,
+    not this endpoint. Only meaningful under `--transport streamable-http`;
+    harmless to register unconditionally (unused under stdio)."""
+
+    @app.custom_route("/health", methods=["GET"], include_in_schema=False)
+    async def health(_request: Request) -> JSONResponse:
+        return JSONResponse({"status": "ok", "server": "redline-mcp"})
 
 
 def register_tools(app: MCPServer, ctx: AppContext) -> None:

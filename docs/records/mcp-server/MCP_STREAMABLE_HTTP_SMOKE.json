@@ -1,0 +1,73 @@
+{
+  "summary": {
+    "total": 8,
+    "passed": 8,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "health_endpoint_ok_without_any_game_backend_dependency",
+      "ok": true,
+      "detail": {
+        "status_code": 200,
+        "body": {
+          "status": "ok",
+          "server": "redline-mcp"
+        }
+      }
+    },
+    {
+      "name": "dns_rebinding_protection_rejects_spoofed_host_header",
+      "ok": true,
+      "detail": {
+        "status_code": 421
+      }
+    },
+    {
+      "name": "dns_rebinding_protection_rejects_spoofed_origin_header",
+      "ok": true,
+      "detail": {
+        "status_code": 403
+      }
+    },
+    {
+      "name": "initialize_succeeds",
+      "ok": true,
+      "detail": {
+        "server_info": "name='redline' title=None version='' description=None website_url=None icons=None"
+      }
+    },
+    {
+      "name": "tool_count_is_32",
+      "ok": true,
+      "detail": {
+        "count": 32
+      }
+    },
+    {
+      "name": "rules_resource_listed",
+      "ok": true,
+      "detail": {
+        "resources": [
+          "redline://rules"
+        ]
+      }
+    },
+    {
+      "name": "get_rules_text_ok",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "length": 4422
+      }
+    },
+    {
+      "name": "list_factions_reaches_real_redline_server",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "faction_count": 55
+      }
+    }
+  ]
+}

@@ -86,6 +86,40 @@ async def test_send_action_times_out_with_actionable_message_when_nothing_arrive
         await client.send_action("g1", "p1", "advance", {})
 
 
+class _BrokenCloseWS(_FakeWS):
+    """Simulates a websocket whose close() raises (e.g. a transport already
+    torn down by a closed event loop — the scenario aclose() must survive
+    under the long-lived streamable-http transport)."""
+
+    async def close(self):
+        raise RuntimeError("simulated: transport attached to a closed loop")
+
+
+class _BrokenCancelTask:
+    def cancel(self):
+        raise RuntimeError("simulated: task attached to a closed loop")
+
+
+@pytest.mark.anyio
+async def test_aclose_cleans_up_every_session_even_when_one_raises_during_close():
+    # A long-lived streamable-http process can accumulate several sessions;
+    # one misbehaving session's cleanup must not prevent the others from
+    # being closed, and must not raise out of aclose() (that would turn a
+    # clean process shutdown into a crash — see mcp_server/__main__.py's
+    # `finally: asyncio.run(ctx.client.aclose())`).
+    client = RedlineClient(base_url="http://127.0.0.1:1")
+    broken = _install_session(client, "g-broken", "p1")
+    broken.ws = _BrokenCloseWS()
+    broken.reader_task = _BrokenCancelTask()
+    healthy = _install_session(client, "g-healthy", "p2")
+
+    await client.aclose()  # must not raise
+
+    assert client._sessions == {}
+    assert broken.closed is True
+    assert healthy.closed is True
+
+
 @pytest.mark.anyio
 async def test_ensure_connected_serializes_concurrent_first_connects_for_same_session():
     # An MCP host can dispatch several tool calls from one model turn

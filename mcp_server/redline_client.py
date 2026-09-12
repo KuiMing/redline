@@ -376,7 +376,10 @@ class RedlineClient:
     async def _close_session(self, session: PlayerSession) -> None:
         session.closed = True
         if session.reader_task is not None:
-            session.reader_task.cancel()
+            try:
+                session.reader_task.cancel()
+            except Exception:
+                pass
         if session.ws is not None:
             try:
                 await session.ws.close()
@@ -384,6 +387,14 @@ class RedlineClient:
                 pass
 
     async def aclose(self) -> None:
+        # Best-effort: under the streamable-http transport this process is
+        # long-lived and can accumulate many (game_id, player_id) sessions
+        # over its lifetime (unlike a stdio process, which typically serves
+        # one LLM conversation). One session's cleanup raising must never
+        # skip the rest, or turn a clean process shutdown into a crash.
         for session in list(self._sessions.values()):
-            await self._close_session(session)
+            try:
+                await self._close_session(session)
+            except Exception:
+                pass
         self._sessions.clear()

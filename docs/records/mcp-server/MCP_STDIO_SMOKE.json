@@ -20,7 +20,7 @@
       }
     },
     {
-      "name": "rules_resource_listed",
+      "name": "<redacted>",
       "ok": true,
       "detail": {
         "resources": [
@@ -29,7 +29,7 @@
       }
     },
     {
-      "name": "rules_resource_readable",
+      "name": "<redacted>",
       "ok": true,
       "detail": {
         "length": 4422
@@ -40,9 +40,9 @@
       "ok": true,
       "detail": {
         "ok": true,
-        "game_id": "6d62e80d-6cbe-488f-856e-d8d06e12a351",
-        "player_id": "3a7e998d-cf35-462a-b0d9-33336c04ed51",
-        "resume_token": "5vQSW4CiLU9zH919zgR7vMFCYQNUeEfv-cvanrTEjk8",
+        "game_id": "<redacted>",
+        "player_id": "<redacted>",
+        "resume_token": "<redacted>",
         "role": "host",
         "next_step": "Call choose_faction, then set_ready. Once every seat is ready, the host calls start_game."
       }
@@ -52,9 +52,9 @@
       "ok": true,
       "detail": {
         "ok": true,
-        "game_id": "6d62e80d-6cbe-488f-856e-d8d06e12a351",
-        "player_id": "a7137d85-e3d6-4b44-a721-b4caa180fd86",
-        "resume_token": "EHXFV9H9guK9OIm4UmPNnC60HoksNjgmlAj26CXe0hE",
+        "game_id": "<redacted>",
+        "player_id": "<redacted>",
+        "resume_token": "<redacted>",
         "resumed": false,
         "role": "guest",
         "next_step": "Call choose_faction, then set_ready, and wait for the host to start_game."
@@ -70,258 +70,50 @@
       }
     },
     {
-      "name": "get_state_ok_and_privacy_scoped",
+      "name": "<redacted>",
       "ok": true,
       "detail": {
         "ok": true,
-        "state": {
-          "turn": 1,
-          "game_phase": "main",
-          "turn_phase": "action",
-          "current_player_name": "SmokeGuest",
-          "is_my_turn": false,
-          "my_player_id": "3a7e998d-cf35-462a-b0d9-33336c04ed51",
-          "my_faction": "red_army",
-          "my_base": "北京",
-          "my_resources": {
-            "money": 0,
-            "propaganda": 0
-          },
-          "my_hand_size": 5,
-          "game_over": false,
-          "winner": null,
-          "co_winners": [],
-          "pending_choice": null,
-          "pending_base_choice_for_me": false,
-          "hk_relocation_open_for_me": false,
-          "current_event_name": "香港抗暴之戰",
-          "purchase_area": [
-            "宣傳家",
-            "思想家",
-            "資助者",
-            "資本家",
-            "分神",
-            "內鬥",
-            "樹立信心",
-            "樹立信心",
-            "英美奧援",
-            "英美奧援",
-            "合作談判"
-          ],
-          "players": [
-            {
-              "id": "3a7e998d-cf35-462a-b0d9-33336c04ed51",
-              "name": "SmokeHost",
-              "faction": "red_army",
-              "resources": {
-                "money": 0,
-                "propaganda": 0
-              },
-              "organization_total": 1
-            },
-            {
-              "id": "a7137d85-e3d6-4b44-a721-b4caa180fd86",
-              "name": "SmokeGuest",
-              "faction": "taiwan_green",
-              "resources": {
-                "money": 0,
-                "propaganda": 0
-              },
-              "organization_total": 1
-            }
-          ],
-          "recent_log": [
-            "[Turn 1] Event drawn: 香港抗暴之戰"
-          ]
-        },
-        "legal_action_kinds": {
-          "waiting_on": "SmokeGuest",
-          "reason": "Not your turn; waiting for SmokeGuest",
-          "kind_counts": {}
-        }
-      }
-    },
-    {
-      "name": "other_players_hand_redacted",
-      "ok": true,
-      "detail": {
-        "guest_hand_as_seen_by_host": [
-          "未知手牌",
-          "未知手牌",
-          "未知手牌",
-          "未知手牌",
-          "未知手牌"
+        "state_keys": [
+          "co_winners",
+          "current_event_name",
+          "current_player_name",
+          "game_over",
+          "game_phase",
+          "<redacted>",
+          "is_my_turn",
+          "my_base",
+          "my_faction",
+          "my_hand_size",
+          "my_player_id",
+          "my_resources",
+          "<redacted>",
+          "pending_choice",
+          "players",
+          "purchase_area",
+          "recent_log",
+          "turn",
+          "turn_phase",
+          "winner"
         ]
       }
     },
     {
-      "name": "legal_actions_lists_play_card",
+      "name": "<redacted>",
+      "ok": true,
+      "detail": {
+        "hand_entries_are_placeholder": true
+      }
+    },
+    {
+      "name": "<redacted>",
       "ok": true,
       "detail": {
         "ok": true,
-        "waiting_on": null,
-        "reason": null,
-        "turn_phase": "action",
-        "actions": [
-          {
-            "kind": "play_card",
-            "index": 0,
-            "card_name": "追隨者",
-            "modes": [
-              "resource",
-              "action"
-            ]
-          },
-          {
-            "kind": "play_card",
-            "index": 1,
-            "card_name": "追隨者",
-            "modes": [
-              "resource",
-              "action"
-            ]
-          },
-          {
-            "kind": "play_card",
-            "index": 2,
-            "card_name": "樂捐者",
-            "modes": [
-              "resource",
-              "action"
-            ]
-          },
-          {
-            "kind": "play_card",
-            "index": 3,
-            "card_name": "追隨者",
-            "modes": [
-              "resource",
-              "action"
-            ]
-          },
-          {
-            "kind": "play_card",
-            "index": 4,
-            "card_name": "追隨者",
-            "modes": [
-              "resource",
-              "action"
-            ]
-          },
-          {
-            "kind": "buy_card",
-            "index": 0,
-            "card_name": "宣傳家",
-            "cost": {
-              "money": 0,
-              "propaganda": 3
-            },
-            "affordable": false
-          },
-          {
-            "kind": "buy_card",
-            "index": 1,
-            "card_name": "思想家",
-            "cost": {
-              "money": 0,
-              "propaganda": 5
-            },
-            "affordable": false
-          },
-          {
-            "kind": "buy_card",
-            "index": 2,
-            "card_name": "資助者",
-            "cost": {
-              "money": 2,
-              "propaganda": 1
-            },
-            "affordable": false
-          },
-          {
-            "kind": "buy_card",
-            "index": 3,
-            "card_name": "資本家",
-            "cost": {
-              "money": 3,
-              "propaganda": 2
-            },
-            "affordable": false
-          },
-          {
-            "kind": "buy_card",
-            "index": 4,
-            "card_name": "分神",
-            "cost": {
-              "money": 0,
-              "propaganda": 0
-            },
-            "affordable": true
-          },
-          {
-            "kind": "buy_card",
-            "index": 5,
-            "card_name": "內鬥",
-            "cost": {
-              "money": 0,
-              "propaganda": 0
-            },
-            "affordable": true
-          },
-          {
-            "kind": "buy_card",
-            "index": 6,
-            "card_name": "樹立信心",
-            "cost": {
-              "money": 2,
-              "propaganda": 1
-            },
-            "affordable": false
-          },
-          {
-            "kind": "buy_card",
-            "index": 7,
-            "card_name": "樹立信心",
-            "cost": {
-              "money": 2,
-              "propaganda": 1
-            },
-            "affordable": false
-          },
-          {
-            "kind": "buy_card",
-            "index": 8,
-            "card_name": "英美奧援",
-            "cost": {
-              "money": 1,
-              "propaganda": 2
-            },
-            "affordable": false
-          },
-          {
-            "kind": "buy_card",
-            "index": 9,
-            "card_name": "英美奧援",
-            "cost": {
-              "money": 1,
-              "propaganda": 2
-            },
-            "affordable": false
-          },
-          {
-            "kind": "buy_card",
-            "index": 10,
-            "card_name": "合作談判",
-            "cost": {
-              "money": 2,
-              "propaganda": 2
-            },
-            "affordable": false
-          },
-          {
-            "kind": "advance_turn",
-            "why": "End the action phase: draw back to 5, refill the market, pass the turn."
-          }
+        "action_kinds": [
+          "advance_turn",
+          "buy_card",
+          "play_card"
         ]
       }
     },
@@ -330,76 +122,7 @@
       "ok": true,
       "detail": {
         "ok": true,
-        "state": {
-          "turn": 1,
-          "game_phase": "main",
-          "turn_phase": "action",
-          "current_player_name": "SmokeGuest",
-          "is_my_turn": true,
-          "my_player_id": "a7137d85-e3d6-4b44-a721-b4caa180fd86",
-          "my_faction": "taiwan_green",
-          "my_base": "臺北",
-          "my_resources": {
-            "money": 0,
-            "propaganda": 1
-          },
-          "my_hand_size": 4,
-          "game_over": false,
-          "winner": null,
-          "co_winners": [],
-          "pending_choice": null,
-          "pending_base_choice_for_me": false,
-          "hk_relocation_open_for_me": false,
-          "current_event_name": "香港抗暴之戰",
-          "purchase_area": [
-            "宣傳家",
-            "思想家",
-            "資助者",
-            "資本家",
-            "分神",
-            "內鬥",
-            "樹立信心",
-            "樹立信心",
-            "英美奧援",
-            "英美奧援",
-            "合作談判"
-          ],
-          "players": [
-            {
-              "id": "3a7e998d-cf35-462a-b0d9-33336c04ed51",
-              "name": "SmokeHost",
-              "faction": "red_army",
-              "resources": {
-                "money": 0,
-                "propaganda": 0
-              },
-              "organization_total": 1
-            },
-            {
-              "id": "a7137d85-e3d6-4b44-a721-b4caa180fd86",
-              "name": "SmokeGuest",
-              "faction": "taiwan_green",
-              "resources": {
-                "money": 0,
-                "propaganda": 1
-              },
-              "organization_total": 1
-            }
-          ],
-          "recent_log": [
-            "[Turn 1] Event drawn: 香港抗暴之戰",
-            "[Turn 1] SmokeGuest played 追隨者 as resource"
-          ]
-        },
-        "legal_action_kinds": {
-          "waiting_on": null,
-          "reason": null,
-          "kind_counts": {
-            "play_card": 4,
-            "buy_card": 11,
-            "advance_turn": 1
-          }
-        }
+        "error": false
       }
     },
     {
@@ -407,88 +130,7 @@
       "ok": true,
       "detail": {
         "ok": true,
-        "state": {
-          "turn": 1,
-          "game_phase": "main",
-          "turn_phase": "action",
-          "current_player_name": "SmokeHost",
-          "is_my_turn": false,
-          "my_player_id": "a7137d85-e3d6-4b44-a721-b4caa180fd86",
-          "my_faction": "taiwan_green",
-          "my_base": "臺北",
-          "my_resources": {
-            "money": 0,
-            "propaganda": 0
-          },
-          "my_hand_size": 5,
-          "game_over": false,
-          "winner": null,
-          "co_winners": [],
-          "pending_choice": {
-            "type": "multi_card_choice",
-            "choice_key": "event_discard_self",
-            "prompt": "香港抗暴之戰：請選擇 1 張手牌棄掉。",
-            "source_name": "香港抗暴之戰",
-            "for_player_id": "a7137d85-e3d6-4b44-a721-b4caa180fd86",
-            "for_player_name": null,
-            "is_mine_to_resolve": true,
-            "cancellable": false,
-            "option_count": 5,
-            "min_count": null,
-            "count": 1
-          },
-          "pending_base_choice_for_me": false,
-          "hk_relocation_open_for_me": false,
-          "current_event_name": "香港抗暴之戰",
-          "purchase_area": [
-            "宣傳家",
-            "思想家",
-            "資助者",
-            "資本家",
-            "分神",
-            "內鬥",
-            "樹立信心",
-            "樹立信心",
-            "英美奧援",
-            "英美奧援",
-            "合作談判"
-          ],
-          "players": [
-            {
-              "id": "3a7e998d-cf35-462a-b0d9-33336c04ed51",
-              "name": "SmokeHost",
-              "faction": "red_army",
-              "resources": {
-                "money": 0,
-                "propaganda": 0
-              },
-              "organization_total": 1
-            },
-            {
-              "id": "a7137d85-e3d6-4b44-a721-b4caa180fd86",
-              "name": "SmokeGuest",
-              "faction": "taiwan_green",
-              "resources": {
-                "money": 0,
-                "propaganda": 0
-              },
-              "organization_total": 1
-            }
-          ],
-          "recent_log": [
-            "[Turn 1] Event drawn: 香港抗暴之戰",
-            "[Turn 1] SmokeGuest played 追隨者 as resource",
-            "[Turn 1] End of turn for SmokeGuest",
-            "[Turn 1] Event failure: SmokeGuest must discard 1 hand card(s)"
-          ]
-        },
-        "legal_action_kinds": {
-          "waiting_on": null,
-          "reason": null,
-          "kind_counts": {
-            "resolve_pending_choice": 1
-          }
-        }
+        "error": false
       }
     },
     {
@@ -511,7 +153,7 @@
       }
     },
     {
-      "name": "get_faction_detail_ok",
+      "name": "<redacted>",
       "ok": true,
       "detail": {
         "ok": true,

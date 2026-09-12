@@ -61,12 +61,16 @@ docker run -d --name redline -p 8000:8000 redline
 `static/card-art/` 的卡牌美術（約 78MB）已經是 git 追蹤的既有檔案，`docker build`
 會照常包進 image；不需要額外處理。
 
+想同時啟動遊戲服務與 MCP server（讓 LLM 透過 MCP 連進來玩）？用根目錄的
+`docker-compose.yml`：`docker compose up --build`。細節、預設 port 與安全性說明見
+[`docs/mcp_server.md`](docs/mcp_server.md#4-docker--docker-compose)。
+
 ## 資料夾結構
 
 - `server/`
   - 遊戲狀態、規則解析、卡牌效果與 WebSocket/API 伺服器邏輯。
 - `mcp_server/`
-  - REDLINE MCP server（stdio），讓 MCP 相容的 LLM client 透過既有 HTTP/WebSocket API 玩遊戲。見 [`docs/mcp_server.md`](docs/mcp_server.md)。
+  - REDLINE MCP server（stdio 或 Streamable HTTP），讓 MCP 相容的 LLM client 透過既有 HTTP/WebSocket API 玩遊戲。見 [`docs/mcp_server.md`](docs/mcp_server.md)。
 - `static/`
   - 前端 HTML/CSS/JavaScript、地圖 UI、遊戲主畫面與瀏覽器端互動。
 - `data/`

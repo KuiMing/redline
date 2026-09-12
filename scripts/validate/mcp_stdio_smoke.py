@@ -15,6 +15,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import re
 import socket
 import subprocess
 import sys
@@ -25,6 +26,25 @@ ROOT = Path(__file__).resolve().parent.parent.parent
 RECORD_DIR = ROOT / "docs" / "records" / "mcp-server"
 OUT_JSON = RECORD_DIR / "MCP_STDIO_SMOKE.json"
 OUT_MD = RECORD_DIR / "MCP_STDIO_SMOKE.md"
+
+# Each run creates a fresh room with random game_id/player_id/resume_token —
+# committing those to docs/records/ would (a) leave the worktree dirty after
+# every rerun (pure diff noise) and (b) commit live-looking credentials/ids
+# that are meaningless outside this one process anyway. Redact by shape
+# (UUIDs and long url-safe-base64-ish tokens), not by key name, so this
+# stays correct even if a new field is added later. Ordinary game content
+# (Chinese card/event names, short English words) never matches.
+_DYNAMIC_VALUE_RE = re.compile(r"^[A-Za-z0-9_-]{20,}$")
+
+
+def _redact_dynamic_values(value):
+    if isinstance(value, dict):
+        return {k: _redact_dynamic_values(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_redact_dynamic_values(v) for v in value]
+    if isinstance(value, str) and _DYNAMIC_VALUE_RE.match(value):
+        return "<redacted>"
+    return value
 
 
 def _free_port() -> int:
@@ -125,33 +145,49 @@ async def _run(base_url: str) -> dict:
                     else:
                         await call("resolve_pending_choice", {"game_id": game_id, "player_id": player_id, "index": 0})
 
+            # Detail payloads below deliberately capture shape (key sets,
+            # booleans, counts) rather than the actual random game content
+            # (which event/cards were drawn, hand order, ...) — the game
+            # engine shuffles with no fixed seed, so raw content would make
+            # every rerun's proof differ for no meaningful reason. See the
+            # module docstring's redaction note for the id/token half of
+            # this same concern.
             host_state, err = await call("get_state", {"game_id": game_id, "player_id": host_id})
-            record("get_state_ok_and_privacy_scoped", host_state.get("ok") is True and not err, host_state)
+            record(
+                "get_state_ok_and_privacy_scoped",
+                host_state.get("ok") is True and not err,
+                {"ok": host_state.get("ok"), "state_keys": sorted((host_state.get("state") or {}).keys())},
+            )
 
             host_players, err = await call(
                 "get_state_detail", {"game_id": game_id, "player_id": host_id, "section": "players"}
             )
             guest_row = next(p for p in host_players.get("value", []) if p["id"] == guest_id)
+            hand_is_redacted = all(card == "未知手牌" for card in guest_row.get("hand", []))
             record(
                 "other_players_hand_redacted",
-                all(card == "未知手牌" for card in guest_row.get("hand", [])),
-                {"guest_hand_as_seen_by_host": guest_row.get("hand")},
+                hand_is_redacted,
+                {"hand_entries_are_placeholder": hand_is_redacted},
             )
 
             current_name = host_state["state"]["current_player_name"]
             actor_id = host_id if current_name == "SmokeHost" else guest_id
             legal, _ = await call("get_legal_actions", {"game_id": game_id, "player_id": actor_id})
             play_entry = next((a for a in legal.get("actions", []) if a["kind"] == "play_card"), None)
-            record("legal_actions_lists_play_card", play_entry is not None, legal)
+            record(
+                "legal_actions_lists_play_card",
+                play_entry is not None,
+                {"ok": legal.get("ok"), "action_kinds": sorted({a["kind"] for a in legal.get("actions", [])})},
+            )
 
             if play_entry is not None:
                 played, err = await call(
                     "play_card", {"game_id": game_id, "player_id": actor_id, "index": play_entry["index"], "mode": "resource"}
                 )
-                record("play_card_ok", played.get("ok") is True and not err, played)
+                record("play_card_ok", played.get("ok") is True and not err, {"ok": played.get("ok"), "error": err})
 
             advanced, err = await call("advance_turn", {"game_id": game_id, "player_id": actor_id})
-            record("advance_turn_ok", advanced.get("ok") is True and not err, advanced)
+            record("advance_turn_ok", advanced.get("ok") is True and not err, {"ok": advanced.get("ok"), "error": err})
 
             card_detail, _ = await call("get_card_detail", {"name": "追隨者"})
             record("get_card_detail_ok", card_detail.get("ok") is True, card_detail)
@@ -182,7 +218,8 @@ def main() -> None:
         except subprocess.TimeoutExpired:
             server_proc.kill()
 
-    OUT_JSON.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    redacted_payload = _redact_dynamic_values(payload)
+    OUT_JSON.write_text(json.dumps(redacted_payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     lines = [
         "# REDLINE MCP server — stdio protocol smoke",
         "",
