@@ -2,6 +2,8 @@
 
 `red_army_controller` 在主機上監看 REDLINE。等待真人時不呼叫模型。只有輪到紅軍，或紅軍必須處理 `pending_choice` 時，控制器才啟動專用 Hermes Agent。
 
+Claude Code、OpenAI Codex 與自訂 `AgentRunner` 的串接方式見 [`agent_mcp_controller_integration.md`](agent_mcp_controller_integration.md)。
+
 ## 安全模型
 
 - Docker 只執行 REDLINE 與 MCP。模型憑證留在主機。

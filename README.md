@@ -8,6 +8,8 @@ Redline 是一個以瀏覽器 UI 與 Python WebSocket 伺服器實作的桌遊�
 
 **想讓 Agent 不需人工提醒，自動擔任紅軍？** 請看 [`docs/red_army_controller.md`](docs/red_army_controller.md)。
 
+**想用 Claude Code、OpenAI Codex 或其他 Agent 串接 MCP，並接上控制器？** 請看 [`docs/agent_mcp_controller_integration.md`](docs/agent_mcp_controller_integration.md)。
+
 ## 啟動遊戲服務
 
 在專案根目錄執行：

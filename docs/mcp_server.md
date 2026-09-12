@@ -19,6 +19,10 @@ LLM client <--MCP (stdio or Streamable HTTP)--> mcp_server (this package) <--HTT
 Can also be run as a two-container [Docker Compose](#4-docker--docker-compose)
 stack alongside the game server.
 
+For copy-paste Claude Code and OpenAI Codex setup, the standard gameplay
+loop, and the controller adapter contract, see
+[`agent_mcp_controller_integration.md`](agent_mcp_controller_integration.md).
+
 ## Install
 
 Dependencies are managed the same way as the rest of the repo:
