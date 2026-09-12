@@ -1,0 +1,560 @@
+{
+  "summary": {
+    "total": 14,
+    "passed": 14,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "initialize_succeeds",
+      "ok": true,
+      "detail": {
+        "server_info": "name='redline' title=None version='' description=None website_url=None icons=None"
+      }
+    },
+    {
+      "name": "tool_count_is_32",
+      "ok": true,
+      "detail": {
+        "count": 32
+      }
+    },
+    {
+      "name": "rules_resource_listed",
+      "ok": true,
+      "detail": {
+        "resources": [
+          "redline://rules"
+        ]
+      }
+    },
+    {
+      "name": "rules_resource_readable",
+      "ok": true,
+      "detail": {
+        "length": 4422
+      }
+    },
+    {
+      "name": "create_room_ok",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "game_id": "4c4db366-6365-43ca-90e7-ac0a17878473",
+        "player_id": "f00c754b-5f01-4552-b3cf-dc6f8c112b8f",
+        "resume_token": "RyfAQNv0efzu0Nj38yYfrumYOU2bwzWBA0dm8kUKyXk",
+        "role": "host",
+        "next_step": "Call choose_faction, then set_ready. Once every seat is ready, the host calls start_game."
+      }
+    },
+    {
+      "name": "join_room_ok",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "game_id": "4c4db366-6365-43ca-90e7-ac0a17878473",
+        "player_id": "1d270406-16ae-4c1a-8c53-9fa565595c9a",
+        "resume_token": "pX6ITMxJI6S941R7Yjqa_xf-IlhOuIESzxEc-Ie5A3E",
+        "resumed": false,
+        "role": "guest",
+        "next_step": "Call choose_faction, then set_ready, and wait for the host to start_game."
+      }
+    },
+    {
+      "name": "start_game_ok",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "market_mode": "sample_53",
+        "next_step": "Call get_state for each seated player_id to see whether base selection is needed before the first turn."
+      }
+    },
+    {
+      "name": "get_state_ok_and_privacy_scoped",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "state": {
+          "turn": 1,
+          "game_phase": "main",
+          "turn_phase": "action",
+          "current_player_name": "SmokeGuest",
+          "is_my_turn": false,
+          "my_player_id": "f00c754b-5f01-4552-b3cf-dc6f8c112b8f",
+          "my_faction": "red_army",
+          "my_base": "北京",
+          "my_resources": {
+            "money": 0,
+            "propaganda": 0
+          },
+          "my_hand_size": 5,
+          "game_over": false,
+          "winner": null,
+          "co_winners": [],
+          "pending_choice": null,
+          "pending_base_choice_for_me": false,
+          "hk_relocation_open_for_me": false,
+          "current_event_name": "歲月靜好",
+          "purchase_area": [
+            "宣傳家",
+            "思想家",
+            "資助者",
+            "資本家",
+            "分神",
+            "內鬥",
+            "交通經驗乙",
+            "批鬥",
+            "武裝者",
+            "歐洲奧援",
+            "南洋奧援"
+          ],
+          "players": [
+            {
+              "id": "f00c754b-5f01-4552-b3cf-dc6f8c112b8f",
+              "name": "SmokeHost",
+              "faction": "red_army",
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "organization_total": 1
+            },
+            {
+              "id": "1d270406-16ae-4c1a-8c53-9fa565595c9a",
+              "name": "SmokeGuest",
+              "faction": "taiwan_green",
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "organization_total": 1
+            }
+          ],
+          "recent_log": [
+            "[Turn 1] Event drawn: 歲月靜好 (no-op)"
+          ]
+        },
+        "legal_action_kinds": {
+          "waiting_on": "SmokeGuest",
+          "reason": "Not your turn; waiting for SmokeGuest",
+          "kind_counts": {}
+        }
+      }
+    },
+    {
+      "name": "other_players_hand_redacted",
+      "ok": true,
+      "detail": {
+        "guest_hand_as_seen_by_host": [
+          "未知手牌",
+          "未知手牌",
+          "未知手牌",
+          "未知手牌",
+          "未知手牌"
+        ]
+      }
+    },
+    {
+      "name": "legal_actions_lists_play_card",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "waiting_on": null,
+        "reason": null,
+        "turn_phase": "action",
+        "actions": [
+          {
+            "kind": "play_card",
+            "index": 0,
+            "card_name": "追隨者",
+            "modes": [
+              "resource",
+              "action"
+            ]
+          },
+          {
+            "kind": "play_card",
+            "index": 1,
+            "card_name": "追隨者",
+            "modes": [
+              "resource",
+              "action"
+            ]
+          },
+          {
+            "kind": "play_card",
+            "index": 2,
+            "card_name": "追隨者",
+            "modes": [
+              "resource",
+              "action"
+            ]
+          },
+          {
+            "kind": "play_card",
+            "index": 3,
+            "card_name": "樂捐者",
+            "modes": [
+              "resource",
+              "action"
+            ]
+          },
+          {
+            "kind": "play_card",
+            "index": 4,
+            "card_name": "追隨者",
+            "modes": [
+              "resource",
+              "action"
+            ]
+          },
+          {
+            "kind": "buy_card",
+            "index": 0,
+            "card_name": "宣傳家",
+            "cost": {
+              "money": 0,
+              "propaganda": 3
+            },
+            "affordable": false
+          },
+          {
+            "kind": "buy_card",
+            "index": 1,
+            "card_name": "思想家",
+            "cost": {
+              "money": 0,
+              "propaganda": 5
+            },
+            "affordable": false
+          },
+          {
+            "kind": "buy_card",
+            "index": 2,
+            "card_name": "資助者",
+            "cost": {
+              "money": 2,
+              "propaganda": 1
+            },
+            "affordable": false
+          },
+          {
+            "kind": "buy_card",
+            "index": 3,
+            "card_name": "資本家",
+            "cost": {
+              "money": 3,
+              "propaganda": 2
+            },
+            "affordable": false
+          },
+          {
+            "kind": "buy_card",
+            "index": 4,
+            "card_name": "分神",
+            "cost": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "affordable": true
+          },
+          {
+            "kind": "buy_card",
+            "index": 5,
+            "card_name": "內鬥",
+            "cost": {
+              "money": 0,
+              "propaganda": 0
+            },
+            "affordable": true
+          },
+          {
+            "kind": "buy_card",
+            "index": 6,
+            "card_name": "交通經驗乙",
+            "cost": {
+              "money": 3,
+              "propaganda": 0
+            },
+            "affordable": false
+          },
+          {
+            "kind": "buy_card",
+            "index": 7,
+            "card_name": "批鬥",
+            "cost": {
+              "money": 0,
+              "propaganda": 4
+            },
+            "affordable": false
+          },
+          {
+            "kind": "buy_card",
+            "index": 8,
+            "card_name": "武裝者",
+            "cost": {
+              "money": 2,
+              "propaganda": 0
+            },
+            "affordable": false
+          },
+          {
+            "kind": "buy_card",
+            "index": 9,
+            "card_name": "歐洲奧援",
+            "cost": {
+              "money": 1,
+              "propaganda": 2
+            },
+            "affordable": false
+          },
+          {
+            "kind": "buy_card",
+            "index": 10,
+            "card_name": "南洋奧援",
+            "cost": {
+              "money": 1,
+              "propaganda": 2
+            },
+            "affordable": false
+          },
+          {
+            "kind": "advance_turn",
+            "why": "End the action phase: draw back to 5, refill the market, pass the turn."
+          }
+        ]
+      }
+    },
+    {
+      "name": "play_card_ok",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "state": {
+          "turn": 1,
+          "game_phase": "main",
+          "turn_phase": "action",
+          "current_player_name": "SmokeGuest",
+          "is_my_turn": true,
+          "my_player_id": "1d270406-16ae-4c1a-8c53-9fa565595c9a",
+          "my_faction": "taiwan_green",
+          "my_base": "臺北",
+          "my_resources": {
+            "money": 0,
+            "propaganda": 1
+          },
+          "my_hand_size": 4,
+          "game_over": false,
+          "winner": null,
+          "co_winners": [],
+          "pending_choice": null,
+          "pending_base_choice_for_me": false,
+          "hk_relocation_open_for_me": false,
+          "current_event_name": "歲月靜好",
+          "purchase_area": [
+            "宣傳家",
+            "思想家",
+            "資助者",
+            "資本家",
+            "分神",
+            "內鬥",
+            "交通經驗乙",
+            "批鬥",
+            "武裝者",
+            "歐洲奧援",
+            "南洋奧援"
+          ],
+          "players": [
+            {
+              "id": "f00c754b-5f01-4552-b3cf-dc6f8c112b8f",
+              "name": "SmokeHost",
+              "faction": "red_army",
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "organization_total": 1
+            },
+            {
+              "id": "1d270406-16ae-4c1a-8c53-9fa565595c9a",
+              "name": "SmokeGuest",
+              "faction": "taiwan_green",
+              "resources": {
+                "money": 0,
+                "propaganda": 1
+              },
+              "organization_total": 1
+            }
+          ],
+          "recent_log": [
+            "[Turn 1] Event drawn: 歲月靜好 (no-op)",
+            "[Turn 1] SmokeGuest played 追隨者 as resource"
+          ]
+        },
+        "legal_action_kinds": {
+          "waiting_on": null,
+          "reason": null,
+          "kind_counts": {
+            "play_card": 4,
+            "buy_card": 11,
+            "advance_turn": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "advance_turn_ok",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "state": {
+          "turn": 1,
+          "game_phase": "main",
+          "turn_phase": "action",
+          "current_player_name": "SmokeHost",
+          "is_my_turn": false,
+          "my_player_id": "1d270406-16ae-4c1a-8c53-9fa565595c9a",
+          "my_faction": "taiwan_green",
+          "my_base": "臺北",
+          "my_resources": {
+            "money": 0,
+            "propaganda": 0
+          },
+          "my_hand_size": 5,
+          "game_over": false,
+          "winner": null,
+          "co_winners": [],
+          "pending_choice": null,
+          "pending_base_choice_for_me": false,
+          "hk_relocation_open_for_me": false,
+          "current_event_name": "歲月靜好",
+          "purchase_area": [
+            "宣傳家",
+            "思想家",
+            "資助者",
+            "資本家",
+            "分神",
+            "內鬥",
+            "交通經驗乙",
+            "批鬥",
+            "武裝者",
+            "歐洲奧援",
+            "南洋奧援"
+          ],
+          "players": [
+            {
+              "id": "f00c754b-5f01-4552-b3cf-dc6f8c112b8f",
+              "name": "SmokeHost",
+              "faction": "red_army",
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "organization_total": 1
+            },
+            {
+              "id": "1d270406-16ae-4c1a-8c53-9fa565595c9a",
+              "name": "SmokeGuest",
+              "faction": "taiwan_green",
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "organization_total": 1
+            }
+          ],
+          "recent_log": [
+            "[Turn 1] Event drawn: 歲月靜好 (no-op)",
+            "[Turn 1] SmokeGuest played 追隨者 as resource",
+            "[Turn 1] End of turn for SmokeGuest"
+          ]
+        },
+        "legal_action_kinds": {
+          "waiting_on": "SmokeHost",
+          "reason": "Not your turn; waiting for SmokeHost",
+          "kind_counts": {}
+        }
+      }
+    },
+    {
+      "name": "get_card_detail_ok",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "card": {
+          "name": "追隨者",
+          "color": "灰",
+          "kind": "宣傳",
+          "strength": "丙級",
+          "cost_text": "無",
+          "effect_text": "無效果。",
+          "resource_text": "宣傳1",
+          "position_text": "起始牌",
+          "meaning_text": "追隨您的志士",
+          "count_text": "35"
+        }
+      }
+    },
+    {
+      "name": "get_faction_detail_ok",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "faction_id": "red_army",
+        "name": "紅軍",
+        "bases": [
+          {
+            "name": "北京",
+            "type": "fixed"
+          }
+        ],
+        "abilities": [
+          {
+            "name": "統戰部",
+            "type": "activated",
+            "timing": "行動階段開始時",
+            "limit": "每次任選1種；每回合可發動之總次數與反共陣營玩家總人數相同",
+            "effect": "抽1張牌"
+          },
+          {
+            "name": "政工部",
+            "type": "activated",
+            "timing": "行動階段開始時",
+            "limit": "同一玩家每回合限用1次；視同打出1張行動卡",
+            "effect": "將1張內鬥放進其他玩家的牌庫頂"
+          },
+          {
+            "name": "國安部",
+            "type": "activated",
+            "timing": "行動階段開始時",
+            "limit": "同一玩家每回合限用1次；視同打出1張行動卡",
+            "effect": "瓦解其他玩家在紅軍組織1格內的1個牆內組織"
+          },
+          {
+            "name": "中紀委",
+            "type": "activated",
+            "timing": "行動階段開始時",
+            "limit": "視同打出1張行動卡",
+            "effect": "棄掉任意張數的手牌，而後抽等量的牌"
+          }
+        ],
+        "setup_effects": [
+          "在遊戲開始時額外將1張紅軍兵援放入起始牌庫。",
+          "負責保管事件牌庫與回合指示板，於每回合事件階段翻出事件卡。"
+        ],
+        "special_rules": [
+          "政工部與國安部每回合對同一玩家限用1次。",
+          "4種特殊能力每次效果視同打出1張行動卡，玩家可打出特定行動卡取消其效果。",
+          "紅軍根據地可被瓦解。當一玩家於1回合內對紅軍根據地成功進行2次瓦解，則紅軍根據地消失，消失後無法重建。"
+        ],
+        "restrictions": [
+          "紅軍組織不得離開紅軍的發展空間。"
+        ],
+        "win_conditions": [
+          "遊戲結束前未有反共陣營玩家達成勝利條件。",
+          "紅軍於回合結束時在臺灣城鎮擁有至少14個有效組織，則紅軍直接獲勝。"
+        ]
+      }
+    }
+  ]
+}

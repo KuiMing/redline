@@ -4,6 +4,8 @@ Redline 是一個以瀏覽器 UI 與 Python WebSocket 伺服器實作的桌遊�
 
 **不會玩、想知道畫面上要點哪裡？** 請看配有真實截圖的 [`docs/PLAYER_GUIDE.md`](docs/PLAYER_GUIDE.md)（玩家手冊）。
 
+**想讓 LLM 透過 MCP 直接玩這個遊戲？** 請看 [`docs/mcp_server.md`](docs/mcp_server.md)。
+
 ## 啟動遊戲服務
 
 在專案根目錄執行：
@@ -63,6 +65,8 @@ docker run -d --name redline -p 8000:8000 redline
 
 - `server/`
   - 遊戲狀態、規則解析、卡牌效果與 WebSocket/API 伺服器邏輯。
+- `mcp_server/`
+  - REDLINE MCP server（stdio），讓 MCP 相容的 LLM client 透過既有 HTTP/WebSocket API 玩遊戲。見 [`docs/mcp_server.md`](docs/mcp_server.md)。
 - `static/`
   - 前端 HTML/CSS/JavaScript、地圖 UI、遊戲主畫面與瀏覽器端互動。
 - `data/`
