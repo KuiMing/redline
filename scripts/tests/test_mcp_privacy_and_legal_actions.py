@@ -274,6 +274,39 @@ def test_optionally_targeted_card_is_not_flagged_as_required():
     assert play["target_candidates"] == [OTHER]
 
 
+def test_play_card_entry_includes_action_effect_text_when_non_trivial():
+    # 2026-09-13: a live Red Army Agent run never once played a card in
+    # "action" mode — including 派遣間諜 (dissolve an opposing org) — and
+    # always defaulted to "resource" instead, apparently because nothing
+    # in get_legal_actions said what "action" mode actually does. Surface
+    # the printed effect text directly on the entry so a caller doesn't
+    # have to separately call get_card_detail per hand card to find out.
+    card_catalog = {
+        "派遣間諜": {"effect_text": "以瓦解1個己方組織為代價，瓦解該組織1格內的1個對手組織。"},
+        "追隨者": {"effect_text": "無效果。"},
+    }
+    state = _base_state()
+    state["players"][0]["hand"] = ["派遣間諜", "追隨者"]
+    state["players"][0]["hand_action_legality"] = [{"playable": True}, {"playable": True}]
+    legal = summarize.legal_actions(state, ME, FACTION_CATALOG, card_catalog)
+    plays = {a["card_name"]: a for a in legal["actions"] if a["kind"] == "play_card"}
+    assert plays["派遣間諜"]["action_effect_text"] == "以瓦解1個己方組織為代價，瓦解該組織1格內的1個對手組織。"
+    # A pure resource card ("無效果。") must not get a noisy, useless entry.
+    assert "action_effect_text" not in plays["追隨者"]
+
+
+def test_play_card_entry_omits_action_effect_text_when_card_catalog_not_supplied():
+    # Backward-compatible default: existing callers that don't pass a card
+    # catalog (or a card missing from it) still get a valid result, just
+    # without the enrichment — never a KeyError/crash.
+    state = _base_state()
+    state["players"][0]["hand"] = ["派遣間諜"]
+    state["players"][0]["hand_action_legality"] = [{"playable": True}]
+    legal = summarize.legal_actions(state, ME, FACTION_CATALOG)
+    play = next(a for a in legal["actions"] if a["kind"] == "play_card")
+    assert "action_effect_text" not in play
+
+
 def test_move_and_buy_entries_come_from_state_fields():
     state = _base_state(
         purchase_area=["宣傳家"],

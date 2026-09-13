@@ -20,7 +20,8 @@ VALID_MOVE_MODES = {"road", "rail"}
 
 async def _summary_bundle(ctx: AppContext, state: dict, player_id: str) -> dict[str, Any]:
     faction_catalog = await call_guarded(ctx.rules.factions())
-    legal = summarize.legal_actions(state, player_id, faction_catalog)
+    card_catalog = await call_guarded(ctx.rules.cards())
+    legal = summarize.legal_actions(state, player_id, faction_catalog, card_catalog.get("cards") or {})
     return {
         "state": summarize.summarize_state(state, player_id),
         "legal_action_kinds": summarize.compact_legal_action_kinds(legal),
@@ -45,7 +46,8 @@ async def get_state_detail(ctx: AppContext, game_id: str, player_id: str, sectio
 async def get_legal_actions(ctx: AppContext, game_id: str, player_id: str) -> dict[str, Any]:
     state = await call_guarded(ctx.client.get_state(game_id, player_id))
     faction_catalog = await call_guarded(ctx.rules.factions())
-    legal = summarize.legal_actions(state, player_id, faction_catalog)
+    card_catalog = await call_guarded(ctx.rules.cards())
+    legal = summarize.legal_actions(state, player_id, faction_catalog, card_catalog.get("cards") or {})
     return {"ok": True, **legal}
 
 

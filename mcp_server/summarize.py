@@ -121,7 +121,33 @@ def _hand_action_legality_for(me: dict, index: int) -> dict | None:
     return None
 
 
-def legal_actions(state: dict, player_id: str, faction_catalog: dict) -> dict:
+_NO_EFFECT_TEXT_PREFIXES = ("無效果",)
+
+
+def _action_effect_text(card_catalog: dict, card_name: str) -> str | None:
+    """Short printed effect text for a card's "action" mode, from the public
+    card-presentation catalog (server/card_presentation.py's `effect_text`).
+
+    2026-09-13: a live Red Army Agent run never once played a card in
+    "action" mode across an entire game — including 派遣間諜 (dissolve an
+    opposing organization) and 離間 (seed 內鬥 into opponents' decks) — and
+    instead cashed every card in for its resource value, leaving its
+    organization count unchanged the whole game. `modes` alone doesn't say
+    *what* action mode does, so a caller had to separately call
+    get_card_detail per card to find out, or just default to the
+    already-understood "resource" mode. Surfacing the effect text directly
+    on the play_card entry removes that friction.
+    """
+    detail = (card_catalog or {}).get(card_name)
+    if not isinstance(detail, dict):
+        return None
+    text = (detail.get("effect_text") or "").strip()
+    if not text or text.startswith(_NO_EFFECT_TEXT_PREFIXES):
+        return None
+    return text
+
+
+def legal_actions(state: dict, player_id: str, faction_catalog: dict, card_catalog: dict | None = None) -> dict:
     me = _find_player(state, player_id)
     if me is None:
         return {"waiting_on": None, "reason": "Player not found in this game's state", "actions": []}
@@ -208,6 +234,9 @@ def legal_actions(state: dict, player_id: str, faction_catalog: dict) -> dict:
                 entry["modes"].append("action")
             elif legality.get("reason"):
                 entry["action_mode_blocked_reason"] = legality["reason"]
+            effect_text = _action_effect_text(card_catalog, card_name)
+            if effect_text:
+                entry["action_effect_text"] = effect_text
             if card_name in REQUIRED_TARGET_ACTION_CARD_NAMES:
                 entry["needs_target_player_id"] = True
                 entry["target_candidates"] = [p["id"] for p in state.get("players") or [] if p.get("id") != player_id]
