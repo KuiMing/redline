@@ -16,10 +16,18 @@ from red_army_controller.config import ControllerConfig
 from red_army_controller.controller import (
     ControllerStopped,
     RedArmyController,
+    SafeStatus,
+    describe_outcome,
+    safe_status,
     state_fingerprint,
     trigger_reason,
 )
-from red_army_controller.hermes_runner import AgentRunResult, HermesRunner, build_agent_prompt
+from red_army_controller.hermes_runner import (
+    AgentRunResult,
+    HermesPreflightError,
+    HermesRunner,
+    build_agent_prompt,
+)
 from red_army_controller.mcp_gateway import MCPGateway
 from red_army_controller.state_store import SeatCredentials, StateFileError, StateStore
 
@@ -27,7 +35,7 @@ from red_army_controller.state_store import SeatCredentials, StateFileError, Sta
 CREDS = SeatCredentials("game-public-code", "private-player-id", "private-resume-token")
 
 
-def _state(*, mine=False, pending=False, game_over=False):
+def _state(*, mine=False, pending=False, game_over=False, winner=None, co_winners=None):
     return {
         "ok": True,
         "state": {
@@ -37,6 +45,8 @@ def _state(*, mine=False, pending=False, game_over=False):
             "my_faction": "red_army",
             "game_over": game_over,
             "pending_choice": {"is_mine_to_resolve": True, "choice_key": "x"} if pending else None,
+            "winner": winner,
+            "co_winners": co_winners or [],
         },
         "legal_action_kinds": {"waiting_on": None},
     }
@@ -50,6 +60,36 @@ def test_trigger_matrix():
     waiting_on_human = _state(mine=True)
     waiting_on_human["state"]["pending_choice"] = {"is_mine_to_resolve": False}
     assert trigger_reason(waiting_on_human) is None
+
+
+def test_safe_status_surfaces_winner_and_co_winners():
+    # Who won is public — every seat's browser shows the same victory
+    # screen — so this belongs in the safe (non-secret) status, unlike
+    # hands/player_id/resume_token. 2026-09-13 user-reported gap: the
+    # controller silently stopped on game_over with no visible outcome.
+    solo_win = safe_status(CREDS, _state(game_over=True, winner="red_army"), {})
+    assert solo_win.game_over is True
+    assert solo_win.winner == "red_army"
+    assert solo_win.co_winners == []
+
+    shared_win = safe_status(CREDS, _state(game_over=True, co_winners=["Alice", "Bob"]), {})
+    assert shared_win.co_winners == ["Alice", "Bob"]
+
+    still_playing = safe_status(CREDS, _state(mine=True), {})
+    assert still_playing.game_over is False
+    assert still_playing.winner is None
+    assert still_playing.co_winners == []
+
+
+def test_describe_outcome_is_never_empty_or_raising():
+    assert describe_outcome(SafeStatus("g", "finished", None, False, None, True, "red_army", [])) == "winner=red_army"
+    assert describe_outcome(SafeStatus("g", "finished", None, False, None, True, None, ["Alice", "Bob"])) == "co_winners=['Alice', 'Bob']"
+    # Co-winners takes precedence when a state result somehow carries both
+    # (shouldn't happen server-side, but describe_outcome must still pick
+    # a deterministic, non-raising answer rather than assume one is unset).
+    assert describe_outcome(SafeStatus("g", "finished", None, False, None, True, "red_army", ["Alice"])) == "co_winners=['Alice']"
+    # A draw / no declared winner must not raise or return an empty string.
+    assert describe_outcome(SafeStatus("g", "finished", None, False, None, True, None, [])) == "no declared winner"
 
 
 def test_fingerprint_is_stable_and_changes_with_legal_state():
@@ -108,8 +148,20 @@ def test_prompt_contains_no_resume_token_and_defends_against_game_prompt_injecti
     assert "非 REDLINE MCP tools" in prompt
 
 
+def _write_locked_down_profile(hermes_home: Path, profile: str, mcp_server_name: str = "redline") -> None:
+    config_dir = hermes_home / "profiles" / profile
+    config_dir.mkdir(parents=True, exist_ok=True)
+    (config_dir / "config.yaml").write_text(
+        f"mcp_servers:\n  {mcp_server_name}:\n    url: http://127.0.0.1:8765/mcp\n    enabled: true\n"
+        "platform_toolsets:\n  cli: []\n",
+        encoding="utf-8",
+    )
+
+
 @pytest.mark.anyio
 async def test_hermes_runner_suppresses_stdout_and_uses_dedicated_profile(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes-home"))
+    _write_locked_down_profile(tmp_path / "hermes-home", "redarmy")
     argv_path = tmp_path / "argv"
     fake = tmp_path / "fake-hermes"
     fake.write_text(
@@ -123,13 +175,79 @@ async def test_hermes_runner_suppresses_stdout_and_uses_dedicated_profile(tmp_pa
     assert result.returncode == 0
     argv = argv_path.read_text()
     assert "redarmy" in argv
-    assert "mcp-redline" in argv
+    # -t mcp-redline was removed: confirmed broken against the installed
+    # Hermes CLI (it silently yielded zero tools instead of scoping to one
+    # server) — see HermesRunner.preflight()'s docstring. The profile's own
+    # persisted config (locked down by _write_locked_down_profile above) is
+    # the real, verified boundary now.
+    assert "mcp-redline" not in argv
+    assert "-t" not in argv.splitlines()
     assert "--ignore-rules" in argv
     assert "safe prompt" in argv
 
 
 @pytest.mark.anyio
-async def test_hermes_runner_terminates_child_when_controller_stops(tmp_path):
+async def test_hermes_runner_preflight_fails_closed_when_profile_config_missing(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes-home-missing"))
+    fake = tmp_path / "fake-hermes"
+    fake.write_text("#!/bin/sh\necho should-not-run\n", encoding="utf-8")
+    fake.chmod(0o755)
+    runner = HermesRunner(str(fake), "redarmy", 5, cwd=tmp_path)
+    with pytest.raises(HermesPreflightError, match="no config at"):
+        runner.preflight()
+
+
+@pytest.mark.anyio
+async def test_hermes_runner_preflight_fails_closed_when_mcp_server_not_enabled(tmp_path, monkeypatch):
+    home = tmp_path / "hermes-home"
+    monkeypatch.setenv("HERMES_HOME", str(home))
+    config_dir = home / "profiles" / "redarmy"
+    config_dir.mkdir(parents=True)
+    (config_dir / "config.yaml").write_text("mcp_servers: {}\n", encoding="utf-8")
+    fake = tmp_path / "fake-hermes"
+    fake.write_text("#!/bin/sh\necho should-not-run\n", encoding="utf-8")
+    fake.chmod(0o755)
+    runner = HermesRunner(str(fake), "redarmy", 5, cwd=tmp_path)
+    with pytest.raises(HermesPreflightError, match="does not have the 'redline' MCP server enabled"):
+        runner.preflight()
+
+
+@pytest.mark.anyio
+async def test_hermes_runner_preflight_fails_closed_when_builtin_toolset_enabled(tmp_path, monkeypatch):
+    home = tmp_path / "hermes-home"
+    monkeypatch.setenv("HERMES_HOME", str(home))
+    config_dir = home / "profiles" / "redarmy"
+    config_dir.mkdir(parents=True)
+    (config_dir / "config.yaml").write_text(
+        "mcp_servers:\n  redline:\n    enabled: true\nplatform_toolsets:\n  cli:\n    - terminal\n",
+        encoding="utf-8",
+    )
+    fake = tmp_path / "fake-hermes"
+    fake.write_text("#!/bin/sh\necho should-not-run\n", encoding="utf-8")
+    fake.chmod(0o755)
+    runner = HermesRunner(str(fake), "redarmy", 5, cwd=tmp_path)
+    with pytest.raises(HermesPreflightError, match="built-in toolsets enabled \\(terminal\\)"):
+        runner.preflight()
+
+
+@pytest.mark.anyio
+async def test_hermes_runner_run_converts_preflight_failure_to_failed_result_not_a_crash(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes-home-missing"))
+    fake = tmp_path / "fake-hermes"
+    fake.write_text("#!/bin/sh\necho should-not-run\n", encoding="utf-8")
+    fake.chmod(0o755)
+    runner = HermesRunner(str(fake), "redarmy", 5, cwd=tmp_path)
+    result = await runner.run("safe prompt")
+    assert result.returncode != 0
+
+
+@pytest.mark.anyio
+async def test_hermes_runner_terminates_child_when_controller_stops(tmp_path, monkeypatch):
+    # Must pass preflight and actually spawn the fake subprocess, or this
+    # test would spuriously "pass" via the preflight-failure short circuit
+    # without ever exercising subprocess termination.
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes-home"))
+    _write_locked_down_profile(tmp_path / "hermes-home", "redarmy")
     fake = tmp_path / "slow-hermes"
     fake.write_text("#!/bin/sh\nsleep 60\n", encoding="utf-8")
     fake.chmod(0o755)
@@ -197,6 +315,23 @@ async def test_controller_invokes_only_when_red_army_actionable(monkeypatch, tmp
     await controller.run(CREDS)
     assert runner.calls == 1
     assert CREDS.resume_token not in runner.prompts[0]
+
+
+@pytest.mark.anyio
+async def test_controller_stops_quietly_and_logs_winner_on_game_over(monkeypatch, tmp_path, caplog):
+    # 2026-09-13 user-reported gap: when game_over is already true on a poll
+    # (the common case — the game ended on another player's turn, so the Red
+    # Army Agent is never invoked to "see" it), the controller must still
+    # log the actual outcome, not just a bare "stopped" with no winner.
+    config = ControllerConfig(state_file=tmp_path / "seat", poll_seconds=0.01)
+    runner = StoppingRunner()
+    controller = RedArmyController(config, runner=runner)
+    gateway = FakeGateway(_state(game_over=True, winner="taiwan_green"), {"ok": True, "actions": []})
+    monkeypatch.setattr("red_army_controller.controller.MCPGateway", lambda _url: gateway)
+    with caplog.at_level("INFO", logger="redline-red-army"):
+        await controller.run(CREDS)
+    assert runner.calls == 0
+    assert any("winner=taiwan_green" in record.getMessage() for record in caplog.records)
 
 
 @pytest.mark.anyio

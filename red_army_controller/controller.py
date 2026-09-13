@@ -31,6 +31,14 @@ class SafeStatus:
     is_red_army_turn: bool
     waiting_on: str | None
     game_over: bool
+    # Who won is public information — every seat's browser shows the same
+    # victory screen — so surfacing it here is not a privacy leak the way
+    # hands/pending-choice contents are. Kept as raw values from `state()`
+    # (winner: "red_army" or a winning player's name; co_winners: a list of
+    # player names on a shared win — see server/victory.py) rather than a
+    # single derived string, so callers don't have to guess the format.
+    winner: str | None
+    co_winners: list[str]
 
 
 def state_fingerprint(state_result: dict, legal_result: dict) -> str:
@@ -53,6 +61,17 @@ def trigger_reason(state_result: dict) -> str | None:
     return None
 
 
+def describe_outcome(status: "SafeStatus") -> str:
+    """Human-readable outcome for logs/CLI — never raises on an unset
+    winner (e.g. a draw, or a state read racing the exact moment the server
+    finishes settling victory)."""
+    if status.co_winners:
+        return f"co_winners={list(status.co_winners)}"
+    if status.winner:
+        return f"winner={status.winner}"
+    return "no declared winner"
+
+
 def safe_status(credentials: SeatCredentials, state_result: dict, legal_result: dict) -> SafeStatus:
     state = state_result.get("state") or {}
     legal_kinds = state_result.get("legal_action_kinds") or {}
@@ -63,6 +82,8 @@ def safe_status(credentials: SeatCredentials, state_result: dict, legal_result: 
         is_red_army_turn=bool(state.get("is_my_turn")),
         waiting_on=legal_result.get("waiting_on") or legal_kinds.get("waiting_on"),
         game_over=bool(state.get("game_over")),
+        winner=state.get("winner"),
+        co_winners=list(state.get("co_winners") or []),
     )
 
 
@@ -176,7 +197,16 @@ class RedArmyController:
             await self.hydrate(gateway, credentials)
             room = await gateway.call("get_room_status", {"game_id": credentials.game_id})
             if not room.get("started"):
-                return SafeStatus(credentials.game_id, "lobby", None, False, "players", False)
+                return SafeStatus(
+                    game_id=credentials.game_id,
+                    phase="lobby",
+                    turn_phase=None,
+                    is_red_army_turn=False,
+                    waiting_on="players",
+                    game_over=False,
+                    winner=None,
+                    co_winners=[],
+                )
             state, legal = await self._read_turn(gateway, credentials)
             return safe_status(credentials, state, legal)
 
@@ -199,7 +229,7 @@ class RedArmyController:
                         state, legal = await self._read_turn(gateway, credentials)
                         status = safe_status(credentials, state, legal)
                         if status.game_over:
-                            LOG.info("Game over; controller stopped")
+                            LOG.info("Game over (%s); controller stopped", describe_outcome(status))
                             return
                         reason = trigger_reason(state)
                         if reason is None:

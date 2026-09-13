@@ -290,6 +290,27 @@ def test_move_and_buy_entries_come_from_state_fields():
     assert buys == [{"kind": "buy_card", "index": 0, "card_name": "宣傳家", "cost": {"money": 1}, "affordable": True}]
 
 
+def test_disruption_only_cards_are_never_offered_as_buy_card_options():
+    # server/game.py's buy_cards() rejects a direct purchase of 分神/內鬥
+    # (2026-09-13 rules fix — see DISRUPTION_ONLY_CARD_NAMES there); this
+    # layer must not even offer them as a legal buy_card action in the
+    # first place, or an LLM caller would try one, get rejected, and waste
+    # a turn/tool-call cycle discovering that the hard way.
+    state = _base_state(
+        purchase_area=["宣傳家", "分神", "內鬥", "資本家"],
+        purchase_area_costs=[{"money": 1}, {"money": 0}, {"money": 0}, {"money": 3}],
+        purchase_area_affordable=[True, True, True, True],
+    )
+    state["players"][0]["hand"] = []
+    state["players"][0]["hand_action_legality"] = []
+    legal = summarize.legal_actions(state, ME, FACTION_CATALOG)
+    buys = [a for a in legal["actions"] if a["kind"] == "buy_card"]
+    assert {b["card_name"] for b in buys} == {"宣傳家", "資本家"}
+    # Indices must stay aligned to the real purchase_area positions (not
+    # re-numbered after skipping the two excluded slots).
+    assert {b["index"] for b in buys} == {0, 3}
+
+
 def test_red_army_faction_actions_gated_by_action_count_not_used_flag():
     state = _base_state(faction_action_used=True, red_army_action_limit=4, red_army_action_count=1)
     state["players"][0]["faction"] = "red_army"

@@ -52,6 +52,15 @@ TARGETED_ACTION_CARD_NAMES = REQUIRED_TARGET_ACTION_CARD_NAMES | OPTIONAL_TARGET
 
 HIDDEN_HAND_CARD_LABEL = "未知手牌"
 
+# rules.md「放入分神或內鬥」: these two static-purchase-area cards are only
+# ever placed into a *target* player's deck via an ability or another card's
+# effect (see server/game.py's DISRUPTION_ONLY_CARD_NAMES) — never something
+# a player buys for themselves. server/game.py::buy_cards() rejects a direct
+# purchase attempt with this exact error string; excluded here too so
+# get_legal_actions() never offers it as a buy_card option in the first
+# place (2026-09-13: a live Red Army Agent run bought both before this fix).
+DISRUPTION_ONLY_CARD_NAMES = frozenset({"分神", "內鬥"})
+
 
 def read_rules_markdown() -> str:
     return RULES_MD_PATH.read_text(encoding="utf-8")

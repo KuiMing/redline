@@ -60,6 +60,7 @@
     'Duplicate purchase index': '不能重複購買同一個位置的卡牌。',
     'No card in slot': '這個購買位置沒有卡牌。',
     'Static purchase card is out of supply': '這張常設購買卡已無庫存。',
+    'Disruption cards cannot be purchased directly': '分神／內鬥不可直接購買，只能透過能力或卡牌效果放入牌庫。',
     'Not enough resources': '資源不足。',
     'Card not found': '找不到卡牌。',
     'Card play mode must be resource or action': '請選擇將卡牌用作資源或行動。',

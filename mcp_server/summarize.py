@@ -13,6 +13,7 @@ from __future__ import annotations
 from typing import Any
 
 from mcp_server.rules_data import (
+    DISRUPTION_ONLY_CARD_NAMES,
     HIDDEN_HAND_CARD_LABEL,
     OPTIONAL_TARGET_ACTION_CARD_NAMES,
     REQUIRED_TARGET_ACTION_CARD_NAMES,
@@ -234,6 +235,10 @@ def legal_actions(state: dict, player_id: str, faction_catalog: dict) -> dict:
     affordable = state.get("purchase_area_affordable") or []
     costs = state.get("purchase_area_costs") or []
     for index, card_name in enumerate(purchase_area):
+        if card_name in DISRUPTION_ONLY_CARD_NAMES:
+            # Server-rejected (see DISRUPTION_ONLY_CARD_NAMES) — never offer
+            # it as a legal buy_card option in the first place.
+            continue
         actions.append(
             {
                 "kind": "buy_card",

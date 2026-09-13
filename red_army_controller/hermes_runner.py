@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 import shutil
 import signal
@@ -8,11 +9,22 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+import yaml
+
+LOG = logging.getLogger("redline-red-army")
+
 
 @dataclass(frozen=True)
 class AgentRunResult:
     returncode: int
     timed_out: bool = False
+
+
+class HermesPreflightError(RuntimeError):
+    """Raised when the dedicated Hermes profile is not verifiably locked
+    down to just the target MCP server. Never caught silently — every
+    caller either surfaces it as a failed AgentRunResult or lets it
+    propagate, so a misconfigured profile is loud, not a quiet no-op."""
 
 
 class HermesRunner:
@@ -32,18 +44,82 @@ class HermesRunner:
         self.stop_event = stop_event
         self.mcp_server_name = mcp_server_name
 
+    def _profile_config_path(self) -> Path:
+        home = Path(os.environ.get("HERMES_HOME") or (Path.home() / ".hermes")).expanduser()
+        if self.profile in (None, "", "default"):
+            return home / "config.yaml"
+        return home / "profiles" / self.profile / "config.yaml"
+
     def preflight(self) -> None:
+        """Fail closed before every Agent invocation.
+
+        `-t mcp-{server}` (the obvious way to scope a single Hermes
+        invocation to one MCP server) was empirically confirmed broken
+        against the installed Hermes CLI on 2026-09-13: it printed
+        "Warning: Unknown toolsets: mcp-<server>" and the agent ran with
+        ZERO tools available (0 tool calls, no actual game action) instead
+        of being scoped to just that server — a silent functional failure
+        that hangs the Red Army seat forever, not a security one, but not
+        safe to build on either. `run()` no longer passes that flag.
+
+        The verified-working boundary is the dedicated profile's OWN
+        persisted config (see docs/red_army_controller.md "一次性 Hermes
+        設定": every built-in toolset disabled, only the target MCP server
+        enabled) — confirmed live: omitting `-t` entirely lets that config
+        take effect and tool calls succeed. This method reads that same
+        config file before every invocation and refuses to run if it is
+        not actually in the locked-down shape, rather than trusting
+        one-time operator setup to still hold.
+        """
         if shutil.which(self.binary) is None:
-            raise RuntimeError(f"Hermes executable not found: {self.binary}")
+            raise HermesPreflightError(f"Hermes executable not found: {self.binary}")
+
+        path = self._profile_config_path()
+        if not path.exists():
+            raise HermesPreflightError(
+                f"Hermes profile '{self.profile}' has no config at {path}. "
+                "Run the one-time setup in docs/red_army_controller.md first."
+            )
+        try:
+            config = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        except Exception as exc:
+            raise HermesPreflightError(f"Could not read/parse Hermes profile config at {path}: {exc}") from exc
+        if not isinstance(config, dict):
+            raise HermesPreflightError(f"Hermes profile config at {path} is not a mapping")
+
+        mcp_servers = config.get("mcp_servers") or {}
+        server = mcp_servers.get(self.mcp_server_name) if isinstance(mcp_servers, dict) else None
+        if not isinstance(server, dict) or server.get("enabled") is False:
+            raise HermesPreflightError(
+                f"Hermes profile '{self.profile}' does not have the '{self.mcp_server_name}' "
+                f"MCP server enabled. Run: hermes -p {self.profile} mcp add {self.mcp_server_name} "
+                "--url <REDLINE MCP URL>"
+            )
+
+        enabled_builtin_toolsets: set[str] = set()
+        platform_toolsets = config.get("platform_toolsets")
+        if isinstance(platform_toolsets, dict):
+            for entries in platform_toolsets.values():
+                if isinstance(entries, list):
+                    enabled_builtin_toolsets.update(str(name) for name in entries)
+        if enabled_builtin_toolsets:
+            raise HermesPreflightError(
+                f"Hermes profile '{self.profile}' has built-in toolsets enabled "
+                f"({', '.join(sorted(enabled_builtin_toolsets))}); the Red Army Agent must have "
+                f"only the '{self.mcp_server_name}' MCP server available. Run: hermes -p "
+                f"{self.profile} tools disable {' '.join(sorted(enabled_builtin_toolsets))}"
+            )
 
     async def run(self, prompt: str) -> AgentRunResult:
-        self.preflight()
+        try:
+            self.preflight()
+        except HermesPreflightError as exc:
+            LOG.error("Hermes preflight failed: %s", exc)
+            return AgentRunResult(returncode=1)
         command = [
             self.binary,
             "-p",
             self.profile,
-            "-t",
-            f"mcp-{self.mcp_server_name}",
             "chat",
             "-q",
             prompt,
