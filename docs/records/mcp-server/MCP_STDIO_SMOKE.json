@@ -1,0 +1,217 @@
+{
+  "summary": {
+    "total": 14,
+    "passed": 14,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "initialize_succeeds",
+      "ok": true,
+      "detail": {
+        "server_info": "name='redline' title=None version='' description=None website_url=None icons=None"
+      }
+    },
+    {
+      "name": "tool_count_is_32",
+      "ok": true,
+      "detail": {
+        "count": 32
+      }
+    },
+    {
+      "name": "<redacted>",
+      "ok": true,
+      "detail": {
+        "resources": [
+          "redline://rules"
+        ]
+      }
+    },
+    {
+      "name": "<redacted>",
+      "ok": true,
+      "detail": {
+        "length": 4422
+      }
+    },
+    {
+      "name": "create_room_ok",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "game_id": "<redacted>",
+        "player_id": "<redacted>",
+        "resume_token": "<redacted>",
+        "role": "host",
+        "next_step": "Call choose_faction, then set_ready. Once every seat is ready, the host calls start_game."
+      }
+    },
+    {
+      "name": "join_room_ok",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "game_id": "<redacted>",
+        "player_id": "<redacted>",
+        "resume_token": "<redacted>",
+        "resumed": false,
+        "role": "guest",
+        "next_step": "Call choose_faction, then set_ready, and wait for the host to start_game."
+      }
+    },
+    {
+      "name": "start_game_ok",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "market_mode": "sample_53",
+        "next_step": "Call get_state for each seated player_id to see whether base selection is needed before the first turn."
+      }
+    },
+    {
+      "name": "<redacted>",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "state_keys": [
+          "co_winners",
+          "current_event_name",
+          "current_player_name",
+          "game_over",
+          "game_phase",
+          "<redacted>",
+          "is_my_turn",
+          "my_base",
+          "my_faction",
+          "my_hand_size",
+          "my_player_id",
+          "my_resources",
+          "<redacted>",
+          "pending_choice",
+          "players",
+          "purchase_area",
+          "recent_log",
+          "turn",
+          "turn_phase",
+          "winner"
+        ]
+      }
+    },
+    {
+      "name": "<redacted>",
+      "ok": true,
+      "detail": {
+        "hand_entries_are_placeholder": true
+      }
+    },
+    {
+      "name": "<redacted>",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "action_kinds": [
+          "advance_turn",
+          "buy_card",
+          "play_card"
+        ]
+      }
+    },
+    {
+      "name": "play_card_ok",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "error": false
+      }
+    },
+    {
+      "name": "advance_turn_ok",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "error": false
+      }
+    },
+    {
+      "name": "get_card_detail_ok",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "card": {
+          "name": "追隨者",
+          "color": "灰",
+          "kind": "宣傳",
+          "strength": "丙級",
+          "cost_text": "無",
+          "effect_text": "無效果。",
+          "resource_text": "宣傳1",
+          "position_text": "起始牌",
+          "meaning_text": "追隨您的志士",
+          "count_text": "35"
+        }
+      }
+    },
+    {
+      "name": "<redacted>",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "faction_id": "red_army",
+        "name": "紅軍",
+        "bases": [
+          {
+            "name": "北京",
+            "type": "fixed"
+          }
+        ],
+        "abilities": [
+          {
+            "name": "統戰部",
+            "type": "activated",
+            "timing": "行動階段開始時",
+            "limit": "每次任選1種；每回合可發動之總次數與反共陣營玩家總人數相同",
+            "effect": "抽1張牌"
+          },
+          {
+            "name": "政工部",
+            "type": "activated",
+            "timing": "行動階段開始時",
+            "limit": "同一玩家每回合限用1次；視同打出1張行動卡",
+            "effect": "將1張內鬥放進其他玩家的牌庫頂"
+          },
+          {
+            "name": "國安部",
+            "type": "activated",
+            "timing": "行動階段開始時",
+            "limit": "同一玩家每回合限用1次；視同打出1張行動卡",
+            "effect": "瓦解其他玩家在紅軍組織1格內的1個牆內組織"
+          },
+          {
+            "name": "中紀委",
+            "type": "activated",
+            "timing": "行動階段開始時",
+            "limit": "視同打出1張行動卡",
+            "effect": "棄掉任意張數的手牌，而後抽等量的牌"
+          }
+        ],
+        "setup_effects": [
+          "在遊戲開始時額外將1張紅軍兵援放入起始牌庫。",
+          "負責保管事件牌庫與回合指示板，於每回合事件階段翻出事件卡。"
+        ],
+        "special_rules": [
+          "政工部與國安部每回合對同一玩家限用1次。",
+          "4種特殊能力每次效果視同打出1張行動卡，玩家可打出特定行動卡取消其效果。",
+          "紅軍根據地可被瓦解。當一玩家於1回合內對紅軍根據地成功進行2次瓦解，則紅軍根據地消失，消失後無法重建。"
+        ],
+        "restrictions": [
+          "紅軍組織不得離開紅軍的發展空間。"
+        ],
+        "win_conditions": [
+          "遊戲結束前未有反共陣營玩家達成勝利條件。",
+          "紅軍於回合結束時在臺灣城鎮擁有至少14個有效組織，則紅軍直接獲勝。"
+        ]
+      }
+    }
+  ]
+}

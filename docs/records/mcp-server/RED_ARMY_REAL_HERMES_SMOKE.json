@@ -1,0 +1,21 @@
+{
+  "summary": {
+    "total": 3,
+    "passed": 3,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "dedicated_hermes_profile_loads_only_mcp_redline_toolset",
+      "ok": true
+    },
+    {
+      "name": "controller_invokes_real_hermes_agent_without_manual_turn_trigger",
+      "ok": true
+    },
+    {
+      "name": "real_hermes_agent_completes_red_army_turn_handoff",
+      "ok": true
+    }
+  ]
+}
