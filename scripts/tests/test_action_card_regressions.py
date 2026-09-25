@@ -719,9 +719,9 @@ def test_business_network_borrowed_transport_card_grants_its_action_effect_after
 
 
 
-def test_red_support_resource_mode_from_rebel_hand_grants_resources_and_returns_to_red_discard():
-    # 紅軍奧援是普通奧援「資源模式只棄置」的唯一例外。反共玩家使用時取得印刷的 1/1，
-    # 不抽牌，並把牌放回紅軍玩家棄牌堆。
+def test_red_support_resource_mode_from_rebel_hand_grants_resources_and_discards_to_own_pile():
+    # 「打出」指行動模式。反共玩家選擇資源模式時取得印刷的 1/1、不抽牌，
+    # 並依一般資源牌規則把牌放入自己的棄牌堆。
     g = make_game()
     red = g.current_player()
     rebel = g.players[1]
@@ -737,8 +737,8 @@ def test_red_support_resource_mode_from_rebel_hand_grants_resources_and_returns_
     assert result.get('success'), result
     assert g.pending_choice is None
     assert rebel.resources == {'money': 1, 'propaganda': 1}
-    assert names(rebel.deck.discard_pile) == []
-    assert names(red.deck.discard_pile) == ['紅軍奧援']
+    assert names(rebel.deck.discard_pile) == ['紅軍奧援']
+    assert names(red.deck.discard_pile) == []
 
 
 
