@@ -93,13 +93,40 @@ MCP tool 名稱：
 
 完整工具說明見 [`mcp_server.md`](mcp_server.md)。
 
+### 3.1 自動輪替：不用真人手動喊「換你了」
+
+直接 MCP 模式通常把 Agent 放進一個持續互動的 session（不像 Codex 的 `exec` 或第 6 節控制
+器那樣每次決策才啟動一個 process），沒有東西提醒的話，每回合都要真人手動說一次「輪到你
+了」才會繼續。
+
+這不是 Claude Code 專屬的問題，解法也不綁定特定 Agent：
+[`scripts/watch_my_turn.py`](../scripts/watch_my_turn.py) 是一支普通的 Python 腳本，只做一
+件事——每隔幾秒呼叫一次 `get_state`，狀態變成「輪到這個席位」（自己的回合，或屬於自己的
+`pending_choice`）才印一行 `[watch] ...`，其餘時間安靜。任何能背景執行子行程、並把它的
+stdout 轉成通知或喚醒訊號的 Agent runtime 都能用它——Claude Code 的 `Monitor` 工具是其中一
+種，換成別的 host（自訂 runner、tmux 加輪詢、systemd timer）一樣可以：
+
+```bash
+uv run python scripts/watch_my_turn.py --creds /path/to/seat.json
+```
+
+憑證檔跟第 9 節的狀態檔同一種格式（`{game_id, player_id, resume_token}`，權限 `0600`）。
+
 ## 4. Claude Code 直接連接 MCP
 
 ### 4.1 加入本機 MCP server
 
+這個 repo 已經在根目錄放了一份 [`.mcp.json`](../.mcp.json)（project scope，開在
+`http://127.0.0.1:8765/mcp`，對應 Docker Compose 的預設 port）。在這個 repo 底下開 Claude
+Code，第一次會跳出信任提示，同意後 `mcp__redline__*` tools 就可以用，不用再手動加。
+
+如果 MCP 不是用 Docker Compose、而是單獨用 `uv run python -m mcp_server --transport
+streamable-http` 啟動（預設會開在 `8080`），改 `.mcp.json` 裡的 `url`，或改用 CLI 加一個
+local-scope 的設定覆蓋它：
+
 ```bash
 claude mcp add --transport http --scope local \
-  redline http://127.0.0.1:8765/mcp
+  redline http://127.0.0.1:8080/mcp
 ```
 
 檢查設定：
@@ -135,6 +162,10 @@ claude \
 ```
 
 `--tools ''` 關閉內建 tools。`--strict-mcp-config` 排除其他 MCP server。`--allowedTools 'mcp__redline__*'` 允許 REDLINE MCP tools 無需互動批准。三者應一起使用。
+
+互動 session 模式下（不是單次 `-p` 就結束），建議搭配 §3.1 的
+`scripts/watch_my_turn.py`，掛在 Claude Code 的 `Monitor` 工具背景執行，避免每回合都要真人
+手動提醒。
 
 ## 5. OpenAI Codex 直接連接 MCP
 

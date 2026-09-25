@@ -123,6 +123,7 @@ check yours — but most look like this:
 {
   "mcpServers": {
     "redline": {
+      "type": "http",
       "url": "http://localhost:8080/mcp"
     }
   }
@@ -134,6 +135,14 @@ Replace `localhost:8080` with wherever the server is actually reachable —
 [§4](#4-docker--docker-compose)), or your real host/port. This endpoint is
 **unauthenticated**; see [§5 Security](#5-security-streamable-http-transport)
 before pointing a client at anything beyond your own machine.
+
+For Claude Code specifically, this repo already ships this exact block as a
+project-scoped [`.mcp.json`](../.mcp.json) at the repo root (port `8765`, the
+Docker Compose default) — no manual `claude mcp add` needed. Opening this
+repo in Claude Code prompts once to trust it; approve, and the
+`mcp__redline__*` tools are available for that session. If you started the
+MCP server a different way (a different port), edit `.mcp.json`'s `url` to
+match.
 
 ## 3. Connecting to an already-running REDLINE server
 

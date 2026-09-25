@@ -12,62 +12,65 @@ Redline 是一個以瀏覽器 UI 與 Python WebSocket 伺服器實作的桌遊�
 
 ## 啟動遊戲服務
 
-在專案根目錄執行：
+三種方式，依方便程度排列。
+
+### 方式一：Docker Compose（推薦，一次把遊戲跟 MCP 都開好）
 
 ```bash
-uv run uvicorn server.main:app --host 0.0.0.0 --port 8000
+export REDLINE_HOST_PORT=8100
+docker compose up --build -d
 ```
 
-`/test/*` 這類會直接改遊戲狀態的測試端點預設是關閉的（正式環境不應該讓人從外部直接改
-遊戲狀態）。如果你要跑 `scripts/validate/validate_*_browser.py` 這類 browser-proof 腳本、或任何
-需要打 `/test/*` 的手動驗證，啟動前要另外加上：
+- 遊戲 UI：`http://localhost:8100`
+- MCP（給 Agent 用，見下一節）：`http://127.0.0.1:8765/mcp`
 
-```bash
-ENABLE_TEST_ROUTES=true uv run uvicorn server.main:app --host 0.0.0.0 --port 8000
-```
+就算不需要 Agent，這個做法也沒有壞處——MCP 那個容器預設只綁本機、平常閒置不會影響什麼。
+細節見 [`docs/mcp_server.md`](docs/mcp_server.md#4-docker--docker-compose)。
 
-沒開這個環境變數的話，`/test/*` 會回傳 404，browser-proof 腳本會整批打不到 setup 端點。
-
-服務啟動後：
-
-- 本機瀏覽器：`http://127.0.0.1:8000`
-- 同一個 Wi-Fi／區網的其他玩家：`http://<這台電腦的區網 IP>:8000`
-- Lobby 會顯示可分享給其他玩家的區網連線網址。
-
-可用以下方式確認服務是否正常：
-
-```bash
-curl -fsS http://127.0.0.1:8000/server-info
-```
-
-成功時會回傳區網 IP 與 port，例如：
-
-```json
-{"lan_ip":"192.168.x.x","port":8000}
-```
-
-前景執行時按 `Ctrl+C` 即可停止服務。請保留單一 Uvicorn worker，因為目前房間與遊戲狀態儲存在該 Python process 的記憶體中。
-
-### 用 Docker 啟動
-
-也可以用 `Dockerfile` build 出 image 再跑：
+### 方式二：只用 Docker（只要遊戲本體）
 
 ```bash
 docker build -t redline .
 docker run -d --name redline -p 8000:8000 redline
 ```
 
-跟直接跑 `uv run` 一樣只保留單一 worker（同一個限制：房間與遊戲狀態存在單一 process
-的記憶體中，不能跑多個 replica）。`/server-info`（因此 lobby 顯示的「區網連線網址」）
-會依照瀏覽器實際連線時用的 Host 自動判斷正確的網址，不論是直接跑在主機上、Docker
-發布 port、還是之後部署到 Render 這類網域後面的 PaaS，都不需要另外設定。
+`http://localhost:8000`。想讓 Agent 陪玩的話，另外開 MCP（見下方「給 Agent 用的 MCP」）。
 
-`static/card-art/` 的卡牌美術（約 78MB）已經是 git 追蹤的既有檔案，`docker build`
-會照常包進 image；不需要額外處理。
+### 方式三：直接用 uv 跑（不需要 Docker）
 
-想同時啟動遊戲服務與 MCP server（讓 LLM 透過 MCP 連進來玩）？用根目錄的
-`docker-compose.yml`：`docker compose up --build`。細節、預設 port 與安全性說明見
-[`docs/mcp_server.md`](docs/mcp_server.md#4-docker--docker-compose)。
+```bash
+uv run uvicorn server.main:app --host 0.0.0.0 --port 8000
+```
+
+`http://127.0.0.1:8000`；同一區網的其他人可以用 `http://<這台電腦的區網 IP>:8000` 加入，
+Lobby 畫面也會顯示這個網址。想讓 Agent 陪玩的話，另外開 MCP（見下方「給 Agent 用的 MCP」）。
+
+以上三種都只能跑單一 worker／單一 container（房間與遊戲狀態存在該 process 的記憶體
+中，重開就會消失）。跑 `scripts/validate/validate_*_browser.py` 這類需要 `/test/*` 端點的
+驗證腳本時，方式三要另外加 `ENABLE_TEST_ROUTES=true`（不開的話 `/test/*` 一律回傳 404）。
+
+### 給 Agent 用的 MCP
+
+方式一（Docker Compose）已經內建 MCP，開在 `http://127.0.0.1:8765/mcp`，不用另外做什麼。
+
+方式二、三（只有遊戲本體）想讓 Agent 陪玩，另外開：
+
+```bash
+uv run python -m mcp_server --transport streamable-http
+```
+
+MCP 會開在 `http://127.0.0.1:8080/mcp`。
+
+## 讓 Agent 陪你玩（以紅軍為例）
+
+不限定用哪個 Agent，步驟都一樣：
+
+1. 把你的 Agent 接上 MCP：`http://127.0.0.1:8765/mcp`（或你上面選的其他 port）。怎麼接依
+   你用的 Agent 而定——大多數 MCP client 只要給這個網址就好；Claude Code、Codex 的具體做法
+   見 [`docs/agent_mcp_controller_integration.md`](docs/agent_mcp_controller_integration.md)。
+2. 跟 Agent 說：「讀 `skills/play-redline/SKILL.md` 照做，幫我開一局 REDLINE，你當紅軍」。
+   它會給你一個房號，打開遊戲網址、用房號加入、選陣營、按準備，再跟 Agent 說「開始吧」。
+   之後每一回合它會自動接手，不用你提醒。
 
 ## 資料夾結構
 
