@@ -280,7 +280,18 @@ def legal_actions(state: dict, player_id: str, faction_catalog: dict, card_catal
 
     actions.extend(_faction_action_entries(state, me, faction_catalog))
 
-    if state.get("topdeck_candidates_count"):
+    # 2026-09-25: `topdeck_candidates_count` (server/game.py's
+    # `_available_purchased_cards_for_topdeck`) counts cards bought this
+    # turn that are CURRENTLY sitting in the discard pile — it says nothing
+    # about whether a topdeck RIGHT was actually granted. The real gate for
+    # `use_pending_topdeck_right()` is `pending_topdeck_uses` (server/
+    # game.py's `_consume_one_pending_topdeck_use`, granted by cards like
+    # 行動預告/行動募資), which used to be ignored here entirely — this
+    # offered `use_topdeck_right` as legal any time ANY purchased card
+    # happened to still be in the discard pile, which the server then
+    # rejected with "No pending topdeck right available". Caught live
+    # playing a real game.
+    if state.get("pending_topdeck_uses"):
         actions.append({"kind": "use_topdeck_right", "candidate_count": state.get("topdeck_candidates_count")})
 
     actions.append(

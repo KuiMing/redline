@@ -307,6 +307,28 @@ def test_play_card_entry_omits_action_effect_text_when_card_catalog_not_supplied
     assert "action_effect_text" not in play
 
 
+def test_topdeck_right_not_offered_when_only_candidates_exist_without_a_granted_right():
+    # 2026-09-25, caught live playing a real game: `topdeck_candidates_count`
+    # (server/game.py's _available_purchased_cards_for_topdeck) just counts
+    # purchased-this-turn cards currently sitting in the discard pile — it
+    # says nothing about whether a topdeck RIGHT was actually granted (that's
+    # `pending_topdeck_uses`, from a card like 行動預告/行動募資). Offering
+    # use_topdeck_right whenever candidates existed regardless of
+    # pending_topdeck_uses led the server to reject it with "No pending
+    # topdeck right available" — a real card was bought this turn, sitting
+    # in the discard pile, but no card had granted the right to topdeck it.
+    state = _base_state(topdeck_candidates_count=2, pending_topdeck_uses=0)
+    legal = summarize.legal_actions(state, ME, FACTION_CATALOG)
+    assert not any(a["kind"] == "use_topdeck_right" for a in legal["actions"])
+
+
+def test_topdeck_right_offered_when_a_right_is_actually_pending():
+    state = _base_state(topdeck_candidates_count=2, pending_topdeck_uses=1)
+    legal = summarize.legal_actions(state, ME, FACTION_CATALOG)
+    entry = next(a for a in legal["actions"] if a["kind"] == "use_topdeck_right")
+    assert entry["candidate_count"] == 2
+
+
 def test_move_and_buy_entries_come_from_state_fields():
     state = _base_state(
         purchase_area=["宣傳家"],
