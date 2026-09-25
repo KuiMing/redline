@@ -4399,6 +4399,11 @@ async function render(state) {
       const colorName = (cardPresentation(card)?.color) || (isSupport ? '奧援' : '灰');
       const colorClass = cardColorClass(colorName);
       const staticSupply = isStatic ? liveStaticSupplyForCard(state, card) : null;
+      // 分神／內鬥只能透過能力或卡牌效果（政工部、離間、情報網……）從常設供應放進
+      // 目標玩家牌庫，玩家自己不能主動購買——即使它們跟其餘 4 張常設卡一樣佔用
+      // purchase_area 前段、共用 static_purchase_supply 計數。伺服器
+      // buy_cards() 一律拒絕，這裡同步擋掉勾選，避免玩家先勾選才在送出時才看到錯誤。
+      const isDisruptionOnly = card === '分神' || card === '內鬥';
       const purchasePhase = String(state.turn_phase || '').toLowerCase();
       const inPurchasePhase = purchasePhase === 'action' || purchasePhase === 'end';
       const isMyPurchaseTurn = isMyTurnState(state);
@@ -4408,16 +4413,18 @@ async function render(state) {
       if (Number(purchaseCost.money || 0) > 0) costParts.push(`${purchaseCost.money}資金`);
       if (Number(purchaseCost.propaganda || 0) > 0) costParts.push(`${purchaseCost.propaganda}宣傳`);
       const costText = costParts.length ? costParts.join(' + ') : '免費';
-      const canSelect = inPurchasePhase && isMyPurchaseTurn && !hasMyPendingChoice && (!isStatic || (staticSupply != null && staticSupply > 0));
-      const selectTitle = !inPurchasePhase
-        ? '目前不是行動階段，無法購買。'
-        : !isMyPurchaseTurn
-          ? '等待當前玩家購買。'
-          : hasMyPendingChoice
-            ? '請先處理目前待選擇效果。'
-            : isStatic && (staticSupply == null || staticSupply <= 0)
-              ? '常設供應已售完'
-              : `勾選此卡（${costText}）`;
+      const canSelect = !isDisruptionOnly && inPurchasePhase && isMyPurchaseTurn && !hasMyPendingChoice && (!isStatic || (staticSupply != null && staticSupply > 0));
+      const selectTitle = isDisruptionOnly
+        ? '分神／內鬥不可直接購買，只能透過能力或卡牌效果放入牌庫。'
+        : !inPurchasePhase
+          ? '目前不是行動階段，無法購買。'
+          : !isMyPurchaseTurn
+            ? '等待當前玩家購買。'
+            : hasMyPendingChoice
+              ? '請先處理目前待選擇效果。'
+              : isStatic && (staticSupply == null || staticSupply <= 0)
+                ? '常設供應已售完'
+                : `勾選此卡（${costText}）`;
       const variantInfo = (state.purchase_area_variants || [])[i] || null;
       const isSelected = selectedPurchaseIndices.has(i);
       container.innerHTML += `

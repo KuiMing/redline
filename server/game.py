@@ -158,6 +158,13 @@ STATIC_PURCHASE_CARD_SUPPLY = {
 }
 STATIC_PURCHASE_CARD_NAMES = tuple(STATIC_PURCHASE_CARD_SUPPLY)
 
+# rules.md「放入分神或內鬥」：這兩張只透過能力／卡牌效果（如政工部、離間、情報網）
+# 從常設供應直接置入目標玩家牌庫，不是玩家自己可以主動購買的牌——即使它們跟其餘
+# 4 張常設購買卡一樣佔用 purchase_area 前段、共用 static_purchase_supply 計數。
+# 2026-09-13 使用者 playtest 回報：buy_cards() 先前沒有排除這兩張，紅軍 Agent 透過
+# MCP 直接把它們買進自己牌庫，違反規則。
+DISRUPTION_ONLY_CARD_NAMES = frozenset({'分神', '內鬥'})
+
 # rules.md 步驟⑦：事件牌庫為混洗後抽出的 20 張
 EVENT_DECK_SIZE = 20
 
@@ -3564,6 +3571,8 @@ class Game(CardPlayMixin):
 
             is_static_purchase = index < static_count
             card_name = getattr(card, 'name', str(card))
+            if card_name in DISRUPTION_ONLY_CARD_NAMES:
+                return {"error": "Disruption cards cannot be purchased directly"}
             if is_static_purchase and int(self.static_purchase_supply.get(card_name, 0) or 0) <= 0:
                 return {"error": "Static purchase card is out of supply"}
 

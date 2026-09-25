@@ -219,6 +219,31 @@ def list_factions():
     return build_faction_presentation()
 
 
+def _ws_action_error_message(result):
+    """A result is a real failure if it carries an `error` string, OR
+    explicitly reports `success: False` — the only place that returns the
+    latter shape is server/game.py's `_red_army_unavailable_result` (a Red
+    Army ability that is legitimately unavailable right now, e.g. 國安部
+    with no valid dissolve target, or 政工部 with the 內鬥/分神 static
+    supply empty). Both must surface to the client; only `error` was
+    checked here previously, so the `success: False` case was silently
+    broadcast as if the action had worked — the explanatory message the
+    server already computes (e.g. "國安部：目前沒有可以瓦解的組織...")
+    never reached the caller, browser or MCP alike. 2026-09-25: caught live
+    playing a real game over MCP.
+    """
+    if not isinstance(result, dict):
+        return None
+    if result.get("error"):
+        return result.get("error")
+    if result.get("success") is False:
+        inner = result.get("result")
+        if isinstance(inner, dict) and inner.get("message"):
+            return inner["message"]
+        return "Action unavailable"
+    return None
+
+
 @app.websocket("/ws/{game_id}/{player_id}")
 async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str):
     supplied_token = websocket.headers.get("sec-websocket-protocol", "").split(",", 1)[0].strip()
@@ -251,9 +276,10 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
 
             if action == "set_base":
                 result = game.set_base_choice(player_id, data.get("town"), data.get("label"))
-                if result and result.get("error"):
+                error_message = _ws_action_error_message(result)
+                if error_message:
                     error_state = dict(game.state(player_id))
-                    error_state["error"] = result.get("error")
+                    error_state["error"] = error_message
                     await websocket.send_json(error_state)
                     continue
                 await broadcast_game_state(game_id, game)
@@ -325,7 +351,7 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
                         guess=data.get("guess"),
                         target_player_id=data.get("target_player_id"),
                     )
-                    if not (result and result.get("error")):
+                    if not _ws_action_error_message(result):
                         game.turn_phase = TurnPhase.EVENT
                 else:
                     result = game._activated_faction_action(
@@ -343,9 +369,10 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
             elif action == "cancel_choice":
                 result = game.cancel_pending_choice(player_id)
 
-            if result and result.get("error"):
+            error_message = _ws_action_error_message(result)
+            if error_message:
                 error_state = dict(game.state(player_id))
-                error_state["error"] = result.get("error")
+                error_state["error"] = error_message
                 await websocket.send_json(error_state)
                 continue
 

@@ -1,0 +1,49 @@
+{
+  "summary": {
+    "total": 6,
+    "passed": 6,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "docker_compose_build_succeeds",
+      "ok": true,
+      "detail": {
+        "returncode": 0
+      }
+    },
+    {
+      "name": "docker_compose_up_succeeds",
+      "ok": true,
+      "detail": {
+        "returncode": 0
+      }
+    },
+    {
+      "name": "redline_service_becomes_healthy",
+      "ok": true,
+      "detail": {}
+    },
+    {
+      "name": "mcp_service_becomes_healthy",
+      "ok": true,
+      "detail": {}
+    },
+    {
+      "name": "mcp_tool_call_reaches_redline_over_compose_internal_network",
+      "ok": true,
+      "detail": {
+        "is_error": false,
+        "ok": true,
+        "faction_count": 55
+      }
+    },
+    {
+      "name": "docker_compose_down_succeeds",
+      "ok": true,
+      "detail": {
+        "returncode": 0
+      }
+    }
+  ]
+}

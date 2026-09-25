@@ -1,0 +1,37 @@
+{
+  "summary": {
+    "total": 7,
+    "passed": 7,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "creates_and_selects_red_army",
+      "ok": true
+    },
+    {
+      "name": "credential_file_is_0600",
+      "ok": true
+    },
+    {
+      "name": "auto_starts_when_all_seats_ready",
+      "ok": true
+    },
+    {
+      "name": "automatically_invokes_agent_for_red_army",
+      "ok": true
+    },
+    {
+      "name": "fake_agent_completes_red_army_handoff",
+      "ok": true
+    },
+    {
+      "name": "resume_token_never_enters_agent_prompt",
+      "ok": true
+    },
+    {
+      "name": "controller_restart_rehydrates_seat",
+      "ok": true
+    }
+  ]
+}

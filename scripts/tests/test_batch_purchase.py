@@ -238,3 +238,64 @@ def test_ordinary_player_payment_projection_is_unchanged():
 
     assert state['purchase_area_payments'][1] == {'money': 0, 'propaganda': 5}
     assert state['purchase_payment_policy']['active'] is False
+
+
+# rules.md「放入分神或內鬥」：這兩張常設卡只透過能力／卡牌效果放入目標玩家牌庫
+# （政工部、離間、情報網……），玩家不能主動購買，即使它們跟其餘 4 張常設卡一樣
+# 佔用 purchase_area 前段、共用 static_purchase_supply 計數。2026-09-13 使用者
+# playtest 回報：buy_cards() 先前沒有排除這兩張，玩家可以直接買進自己牌庫。
+def test_buy_cards_rejects_distraction_card_even_though_supply_is_available():
+    game = make_purchase_game()
+    player = game.current_player()
+    player.resources = {'money': 20, 'propaganda': 20}
+    distraction_index = next(i for i, card in enumerate(game.purchase_area) if card.name == '分神')
+    resources_before = dict(player.resources)
+    discard_before = list(player.deck.discard_pile)
+    supply_before = dict(game.static_purchase_supply)
+    purchase_area_before = card_names(game.purchase_area)
+
+    result = game.buy_card(distraction_index)
+
+    assert result.get('error') == 'Disruption cards cannot be purchased directly'
+    assert player.resources == resources_before
+    assert player.deck.discard_pile == discard_before
+    assert game.static_purchase_supply == supply_before
+    assert card_names(game.purchase_area) == purchase_area_before
+
+
+def test_buy_cards_rejects_infighting_card_even_though_supply_is_available():
+    game = make_purchase_game()
+    player = game.current_player()
+    player.resources = {'money': 20, 'propaganda': 20}
+    infighting_index = next(i for i, card in enumerate(game.purchase_area) if card.name == '內鬥')
+
+    result = game.buy_card(infighting_index)
+
+    assert result.get('error') == 'Disruption cards cannot be purchased directly'
+
+
+def test_buy_cards_batch_rejects_whole_batch_if_any_index_is_a_disruption_card():
+    # A single illegal index in a multi-card buy_cards() batch must fail the
+    # WHOLE batch atomically — not silently buy the other, legal card(s).
+    game = make_purchase_game()
+    player = game.current_player()
+    player.resources = {'money': 20, 'propaganda': 20}
+    legal_index = next(i for i, card in enumerate(game.purchase_area) if card.name == '宣傳家')
+    distraction_index = next(i for i, card in enumerate(game.purchase_area) if card.name == '分神')
+    resources_before = dict(player.resources)
+    supply_before = dict(game.static_purchase_supply)
+
+    result = game.buy_cards([legal_index, distraction_index])
+
+    assert result.get('error') == 'Disruption cards cannot be purchased directly'
+    assert player.resources == resources_before
+    assert game.static_purchase_supply == supply_before
+
+
+def test_disruption_only_card_names_matches_static_supply_positions():
+    # Guards the frozenset itself against drifting from the printed card
+    # names in STATIC_PURCHASE_CARD_SUPPLY (e.g. a future rename).
+    from server.game import DISRUPTION_ONLY_CARD_NAMES, STATIC_PURCHASE_CARD_SUPPLY
+
+    assert DISRUPTION_ONLY_CARD_NAMES == frozenset({'分神', '內鬥'})
+    assert DISRUPTION_ONLY_CARD_NAMES <= set(STATIC_PURCHASE_CARD_SUPPLY)
