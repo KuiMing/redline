@@ -32,13 +32,13 @@ def main() -> None:
         "/test/setup-support-card-play",
         {
             "support_name": "紅軍奧援",
-            "faction_id": "red_army",
-            "base": "北京",
-            "orgs": {"北京": 1},
+            "faction_id": "liberals",
+            "base": "臺北",
+            "orgs": {"臺北": 1},
             "resources": {"money": 0, "propaganda": 0},
-            "enemy_faction_id": "liberals",
-            "enemy_base": "臺北",
-            "enemy_orgs": {"臺北": 1},
+            "enemy_faction_id": "red_army",
+            "enemy_base": "北京",
+            "enemy_orgs": {"北京": 1},
         },
     )
     if not setup.get("success"):
@@ -124,6 +124,12 @@ def main() -> None:
 
         page.evaluate("setActiveGameView('log')")
         page.locator("#logView").wait_for(state="visible", timeout=5000)
+        log_text = page.locator("#logView").inner_text()
+        record(
+            "resource_mode_log_does_not_claim_transfer_to_red_discard",
+            "使用紅軍奧援作為資源" in log_text and "卡牌放入" not in log_text,
+            {"log_text": log_text},
+        )
         page.screenshot(path=str(SCREENSHOT), full_page=True)
         browser.close()
 
