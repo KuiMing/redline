@@ -6,6 +6,21 @@
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-09-26
+
+### Added
+
+- 新增 in-repo REDLINE MCP server（`mcp_server/`），讓 MCP 相容的 LLM client（Claude Code、OpenAI Codex 等）可以透過既有的 HTTP/WebSocket API 建立或加入房間、選陣營、讀取自己的隱私範圍狀態、查詢目前合法動作並實際下棋，支援 stdio 與 Streamable HTTP 兩種傳輸方式。
+- 新增自動化紅軍控制器（`red_army_controller/`），可在真人回合時完全不呼叫模型，只在紅軍需要決策時喚起 Agent，並支援自訂 Agent runner adapter。
+- 新增 Docker Compose 設定，一次啟動遊戲伺服器與 MCP server；MCP 端預設只綁定本機、開啟 DNS-rebinding 防護。
+- 新增 `.mcp.json`，讓 Claude Code 開啟本 repo 時自動偵測 MCP server，不需手動執行 `claude mcp add`。
+- 新增 `skills/play-redline/SKILL.md` 與 README「讓 Agent 陪你玩」章節，說明如何讓任何 MCP 相容 Agent 扮演紅軍與真人對局。
+
+### Fixed
+
+- `server/main.py` 的 WebSocket 派送層過去只檢查 `error` 欄位，導致紅軍能力（國安部／政工部／中紀委）在合法但目前無可用目標時，伺服器已算好的說明訊息會被靜默吞掉，畫面看起來像「動作成功但沒反應」；瀏覽器介面與 MCP 皆受影響，現在已一併修正。
+- MCP 的 `get_legal_actions` 過去只要本回合購買的牌還留在棄牌堆，就會誤判「可使用頂牌權」，即使玩家實際上沒有被授予頂牌權；現在改為檢查真正的授權次數。
+
 ## [1.1.0] - 2026-09-06
 
 ### Added
