@@ -75,14 +75,13 @@ MCP 預設只綁定主機 loopback。不要直接將它暴露到 LAN 或 Interne
 
 不論使用哪一種 Agent，請遵守相同迴圈：
 
-1. 呼叫 `get_state(game_id, player_id)`。
-2. 呼叫 `get_legal_actions(game_id, player_id)`。
-3. 若 `pending_choice.is_mine_to_resolve` 為 true，先處理該選擇。
-4. 若不是自己的回合，且沒有自己的 pending choice，立即返回。
-5. 從 `get_legal_actions.actions` 選擇一個動作。
-6. 使用該 action 提供的欄位組成 tool payload。不要猜欄位或目標。
-7. 動作完成後重新呼叫 `get_state` 與 `get_legal_actions`。
-8. 在回合交接、等待其他玩家、遊戲結束或沒有合法動作時返回。
+1. 呼叫 `get_state(game_id, player_id)`——回傳已經附帶 `legal_actions`（跟單獨呼叫 `get_legal_actions` 同一種內容），通常不需要再另外呼叫一次。
+2. 若 `pending_choice.is_mine_to_resolve` 為 true，先處理該選擇。
+3. 若不是自己的回合，且沒有自己的 pending choice，立即返回。
+4. 從最新一次拿到的 `legal_actions.actions` 選擇一個動作。
+5. 使用該 action 提供的欄位組成 tool payload。不要猜欄位或目標。
+6. 每個動作工具的回傳結果都會附上執行後最新的 `legal_actions`，直接拿來決定下一步；不必每個動作後都額外呼叫一次 `get_legal_actions`。
+7. 在回合交接、等待其他玩家、遊戲結束或沒有合法動作時返回。
 
 直接 MCP 模式下，`create_room`、`join_room` 與 `resume_room` 可能把 `resume_token` 回傳給 Agent client。這個 token 是席位憑證。請停用 session persistence，不要輸出完整 tool result，並把 token 保存於權限 `0600` 的本機 secret store。若需要讓模型完全看不到 `resume_token`，請改用控制器模式。
 

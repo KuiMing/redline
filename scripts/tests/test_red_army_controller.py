@@ -148,6 +148,20 @@ def test_prompt_contains_no_resume_token_and_defends_against_game_prompt_injecti
     assert "非 REDLINE MCP tools" in prompt
 
 
+def test_prompt_includes_verified_win_conditions_and_tactical_priorities():
+    # 2026-09-25: a live Opus 5 run only ever cashed cards for resources and
+    # never grew its organization count across a whole game — not a rules
+    # misunderstanding so much as the prompt never mentioning what red army
+    # should actually be optimizing for. These facts are quoted verbatim
+    # from rules.md (see 紅軍勝利條件/反共勝利條件) so they can't silently
+    # drift from the real rules without this test catching it.
+    prompt = build_agent_prompt(CREDS.game_id, CREDS.player_id, "red_army_turn")
+    assert "第20回合結束前沒有任何反共陣營玩家達成勝利" in prompt
+    assert "臺灣城鎮擁有至少14個有效組織" in prompt
+    assert "牆內至少14個有效組織" in prompt
+    assert "分神／內鬥" in prompt
+
+
 def _write_locked_down_profile(hermes_home: Path, profile: str, mcp_server_name: str = "redline") -> None:
     config_dir = hermes_home / "profiles" / profile
     config_dir.mkdir(parents=True, exist_ok=True)

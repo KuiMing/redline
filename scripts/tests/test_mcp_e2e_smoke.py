@@ -157,6 +157,15 @@ async def test_full_lobby_to_first_action_flow(ctx):
     played = await gameplay.play_card(ctx, game_id, first_id, 0, "resource")
     assert played["ok"] is True
     assert played["state"]["my_hand_size"] == pre_play_hand_size - 1
+    # 2026-09-25: an action tool's own result must carry the fresh, full
+    # legal_actions projection (not just the compact kind-count summary),
+    # so a caller can act on consecutive turns without a separate
+    # get_legal_actions round trip after every single action — a real live
+    # game showed this roughly doubling tool-call count per turn.
+    assert "legal_actions" in played
+    assert played["legal_actions"]["actions"] == (
+        await gameplay.get_legal_actions(ctx, game_id, first_id)
+    )["actions"]
 
     bad_index = await gameplay.play_card(ctx, game_id, first_id, 99, "resource")
     assert bad_index["ok"] is False

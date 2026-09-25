@@ -25,6 +25,16 @@ async def _summary_bundle(ctx: AppContext, state: dict, player_id: str) -> dict[
     return {
         "state": summarize.summarize_state(state, player_id),
         "legal_action_kinds": summarize.compact_legal_action_kinds(legal),
+        # 2026-09-25: every action tool (play_card, build_organization, ...)
+        # used to return only the compact kind-count summary above, forcing
+        # a separate get_legal_actions() round trip after EVERY action just
+        # to get indices/target candidates for the next one — a live game
+        # showed this roughly doubling tool-call count (and therefore
+        # latency) per turn for no reason, since the server already
+        # recomputes this on every state() call anyway. Embedding the full
+        # projection here lets a caller act on consecutive turns without a
+        # follow-up lookup when nothing else changed its mind.
+        "legal_actions": legal,
     }
 
 

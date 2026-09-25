@@ -269,26 +269,31 @@ get_state(game_id, guest_id)
   -> {ok: true, state: {turn: 1, game_phase: "main", turn_phase: "action",
        current_player_name: "Bob", is_my_turn: true, my_hand_size: 5,
        pending_choice: null, ...},
-      legal_action_kinds: {kind_counts: {play_card: 5, buy_card: 6, advance_turn: 1}}}
-
-get_legal_actions(game_id, guest_id)
-  -> {actions: [{kind: "play_card", index: 0, card_name: "追隨者",
-       modes: ["resource", "action"]}, ...,
-       {kind: "advance_turn", why: "..."}]}
+      legal_action_kinds: {kind_counts: {play_card: 5, buy_card: 6, advance_turn: 1}},
+      legal_actions: {actions: [{kind: "play_card", index: 0, card_name: "追隨者",
+        modes: ["resource", "action"]}, ..., {kind: "advance_turn", why: "..."}]}}
 
 play_card(game_id, guest_id, index=0, mode="resource")
-  -> {ok: true, state: {...}, legal_action_kinds: {...}}
+  -> {ok: true, state: {...}, legal_action_kinds: {...}, legal_actions: {...}}
 
 advance_turn(game_id, guest_id)
-  -> {ok: true, state: {current_player_name: "Alice", turn_phase: "action", ...}}
+  -> {ok: true, state: {current_player_name: "Alice", turn_phase: "action", ...}, legal_actions: {...}}
 ```
+
+Every `get_state` call and every action tool's result already carries a
+fresh `legal_actions` block (the same shape `get_legal_actions` returns on
+its own) reflecting the state right after that call — act on it directly
+for the next move. Call `get_legal_actions` on its own only when you want
+to re-derive it for some other reason (e.g. right after a `resume_room` or
+`resolve_pending_choice` whose own result you didn't capture).
 
 If an action is rejected (wrong turn, illegal target, insufficient
 resources, ...) the tool still returns `{"ok": false, "error": "<reason>",
-"state": {...}, "legal_action_kinds": {...}}` — never a bare protocol
-error — so the caller always has enough context to pick a different action.
-Only transport-level failures (server unreachable, connection dropped,
-action timed out) surface as an MCP tool error; see "Error handling" below.
+"state": {...}, "legal_action_kinds": {...}, "legal_actions": {...}}` —
+never a bare protocol error — so the caller always has enough context to
+pick a different action. Only transport-level failures (server
+unreachable, connection dropped, action timed out) surface as an MCP tool
+error; see "Error handling" below.
 
 If a `pending_choice` shows up (an event, reaction window, or card effect
 that needs a decision before anything else is accepted), resolve it with
