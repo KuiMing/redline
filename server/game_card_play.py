@@ -2451,17 +2451,10 @@ class CardPlayMixin:
         if mode == "resource":
             if getattr(played_card, 'card_type', None) == 'support':
                 if card_name == '紅軍奧援':
-                    # 2026-08-08 使用者更正：選擇反共玩家棄牌堆只是行動模式的效果（把牌
-                    # 傳給對手），資源模式跟一般資源卡一樣直接取得資源、卡片入自己棄牌堆，
-                    # 不該問要放進誰的棄牌堆。紅軍奧援是零購買費用的起始牌，但唯一印有
-                    # 資源模式產出（1資金＋1宣傳）；非紅軍用掉後仍照既有規則歸還紅軍棄牌堆。
+                    # 「打出」是行動模式；只有行動模式才依陣營改變卡牌去向。
+                    # 資源模式只取得印刷的 1 資金＋1 宣傳，並依一般資源牌規則
+                    # 放入使用者自己的棄牌堆。
                     self._gain_red_support_printed_resources(player, played_card)
-                    red = self._red_player()
-                    if (self.faction_by_id.get(player.faction_id, {}).get('camp') != 'red_army'
-                            and red is not None and red is not player):
-                        red.deck.discard([played_card])
-                        self.log(f"{player.name} 使用紅軍奧援作為資源；卡牌放入{red.name}棄牌堆")
-                        return {"success": True, "card_returned_to": red.name}
                     player.deck.discard([played_card])
                     self.log(f"{player.name} 使用紅軍奧援作為資源")
                     return {"success": True}
