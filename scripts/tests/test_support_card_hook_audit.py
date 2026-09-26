@@ -354,19 +354,24 @@ def test_red_player_can_use_red_army_support_as_resource_without_choosing_target
     assert anti_red.deck.discard_pile == []
 
 
-def test_anti_red_player_can_use_red_army_support_as_resource_and_return_it_to_red_discard():
+def test_anti_red_player_can_use_red_army_support_as_resource_and_discard_it_own_pile():
+    # 「打出」指行動模式。反共玩家選擇資源模式時，只取得印刷資源，
+    # 並依一般資源牌規則把牌放進自己的棄牌堆。
     game, anti_red, red = make_game("liberals")
     anti_red.hand = [game._make_support_card("紅軍奧援")]
     anti_red.resources = {"money": 0, "propaganda": 0}
     anti_red.deck.draw_pile = [Card("不應抽到", "command", {})]
+    anti_red.deck.discard_pile = []
     red.deck.discard_pile = []
 
     result = game.play_card(0, mode="resource")
 
     assert result.get("success") is True
+    assert result.get("card_returned_to") is None
     assert anti_red.resources == {"money": 1, "propaganda": 1}
     assert [card.name for card in anti_red.deck.draw_pile] == ["不應抽到"]
-    assert [card.name for card in red.deck.discard_pile] == ["紅軍奧援"]
+    assert [card.name for card in anti_red.deck.discard_pile] == ["紅軍奧援"]
+    assert red.deck.discard_pile == []
     assert game.pending_choice is None
 
 

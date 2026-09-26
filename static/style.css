@@ -3290,13 +3290,24 @@ body.victory-art-viewer-open {
 }
 
 .victory-glass > .era-achievement-actions {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  flex-wrap: wrap;
   margin-top: 4px;
 }
 
 .victory-glass > .era-achievement-actions .modal-choice-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 38px;
   padding: 9px 16px;
   font-size: 0.9rem;
+}
+
+#victoryRestartBtn {
+  text-decoration: none;
 }
 
 /* 多人局或特別長的結局文案改用緊湊尺寸，確保結果仍可完整捲動閱讀。 */

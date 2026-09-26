@@ -1,0 +1,62 @@
+{
+  "status": "passed",
+  "checks_passed": 4,
+  "checks_total": 4,
+  "checks": [
+    {
+      "name": "restart_button_is_visible_next_to_final_board_button",
+      "ok": true,
+      "detail": {
+        "finalBoard": {
+          "left": 61,
+          "right": 181.40625,
+          "top": 331.1875,
+          "bottom": 371.1875,
+          "width": 120.40625,
+          "height": 40
+        },
+        "restart": {
+          "left": 191.40625,
+          "right": 283.015625,
+          "top": 331.1875,
+          "bottom": 371.1875,
+          "width": 91.609375,
+          "height": 40
+        },
+        "restartText": "重新開始",
+        "restartHref": "/new-game",
+        "restartDisplay": "flex",
+        "restartDecoration": "none"
+      }
+    },
+    {
+      "name": "restart_button_has_expected_label_target_and_button_style",
+      "ok": true,
+      "detail": {
+        "text": "重新開始",
+        "href": "/new-game",
+        "display": "flex",
+        "text_decoration": "none"
+      }
+    },
+    {
+      "name": "restart_button_opens_a_clean_new_game_lobby",
+      "ok": true,
+      "detail": {
+        "path": "/",
+        "search": "",
+        "lobby_visible": true
+      }
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "ok": true,
+      "detail": {
+        "errors": []
+      }
+    }
+  ],
+  "console_errors": [],
+  "screenshot": "docs/records/ui-layout/victory-restart/victory_restart.png",
+  "identifiers": "[REDACTED]"
+}

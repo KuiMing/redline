@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-08-11T14:06:02.312190+00:00",
-  "base_url": "http://192.168.10.192:8000",
+  "generated_at": "2026-09-25T15:33:59.401119+00:00",
+  "base_url": "http://127.0.0.1:8813",
   "status": "passed",
-  "checks_passed": 5,
-  "checks_total": 5,
+  "checks_passed": 6,
+  "checks_total": 6,
   "checks": [
     {
       "name": "formal_ui_shows_enabled_resource_button_for_red_support",
@@ -40,6 +40,13 @@
           "紅軍奧援"
         ],
         "target_discard": []
+      }
+    },
+    {
+      "name": "resource_mode_log_does_not_claim_transfer_to_red_discard",
+      "ok": true,
+      "detail": {
+        "log_text": "戰況總覽\nP\nplayer\n當前行動玩家\n當前玩家\n陣營：自由派\n根據地：臺北\n組織\n1\n牆內 0／牆外 1\n資金\n1\n宣傳\n1\n手牌\n0\n牌庫\n2\n棄牌\n1\n移動\n0\n棄牌堆\n紅軍奧援\nR\nred\n玩家戰況\n陣營：紅軍\n根據地：北京\n組織\n1\n牆內 1／牆外 0\n資金\n0\n宣傳\n0\n手牌\n0\n牌庫\n1\n棄牌\n0\n移動\n0\n棄牌堆\n無\n事件紀錄\n[Turn 1] player 使用紅軍奧援作為資源\n[Turn 1] player 使用紅軍奧援作為資源，取得1資金與1宣傳"
       }
     },
     {
