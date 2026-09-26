@@ -6,6 +6,16 @@
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-09-26
+
+### Added
+
+- 勝利結算畫面的「檢視最終盤面」旁新增「重新開始」，可直接離開已結束的對局並回到乾淨的新遊戲大廳。
+
+### Fixed
+
+- 修正反共玩家將「紅軍奧援」作為資源時的棄牌去向：玩家取得 1 資金與 1 宣傳、不抽牌，卡牌進入使用者自己的棄牌堆；只有打出行動時才依陣營轉移卡牌。
+
 ## [1.2.0] - 2026-09-26
 
 ### Added
@@ -167,7 +177,9 @@
 - 修正陣營選擇、根據地按鈕高度、面板尺寸、HUD 排列與小型 viewport 裁切。
 - 修正抽牌資訊外洩，避免其他玩家看到不應公開的卡牌名稱。
 
-[Unreleased]: https://github.com/KuiMing/redline/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/KuiMing/redline/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/KuiMing/redline/compare/v1.2.0...v1.2.1
+[1.2.0]: https://github.com/KuiMing/redline/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/KuiMing/redline/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/KuiMing/redline/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/KuiMing/redline/compare/v0.3.1...v1.0.0
