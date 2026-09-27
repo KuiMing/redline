@@ -92,7 +92,7 @@ def resolve_one_build(page, frame, *, avoid_town: str | None = None) -> str:
         """() => {
           const frame = document.getElementById('strategicMapFrame');
           const button = frame?.contentDocument?.getElementById('directBuildBtn');
-          return button && !button.disabled && button.textContent.includes('效果');
+          return button && !button.disabled && button.textContent === '建立組織';
         }""",
         timeout=10000,
     )

@@ -555,7 +555,7 @@ function renderSupportChoiceHighlights(options = {}) {
       const isBuildChoice = isBuildSupportChoiceHighlight();
       const focusText = supportChoiceHighlight.focusTown ? ` 已聚焦 ${supportChoiceHighlight.focusTown}。` : '';
       const actionText = isBuildChoice
-        ? '請點選中性色外框城鎮，然後使用左側「在目前城鎮建立組織（效果）」按鈕完成建立。'
+        ? '請點選中性色外框城鎮，然後使用左側「建立組織」按鈕完成建立。'
         : isDissolveChoice
           ? '請點選 💀 標示的組織，再使用左側「瓦解目前城鎮（效果）」按鈕確認完成瓦解。'
           : '請點選中性色外框城鎮，然後使用左側「瓦解目前城鎮（效果）」按鈕完成瓦解；也可回到選擇視窗確認。';
@@ -1141,7 +1141,7 @@ function refreshDirectBuildUi() {
   const eventChoice = eventBuildChoiceForTown(selectedTown);
   if (eventChoice) {
     btn.disabled = false;
-    btn.textContent = '在目前城鎮建立組織（效果）';
+    btn.textContent = '建立組織';
     hint.innerHTML = `目前選取 <span class="hint-strong">${selectedTown}</span>：目前效果允許在此建立組織；按上方按鈕完成建立。`;
   } else {
     btn.textContent = '在目前城鎮建立組織';
@@ -1163,7 +1163,7 @@ function refreshDirectBuildUi() {
     dissolveBtn.textContent = '確認瓦解此組織';
     dissolveHint.innerHTML = `確認瓦解 <span class="hint-strong">${selectedTown}</span> 的組織？（${supportChoiceHighlight.sourceName || '目前效果'}）點擊地圖上其他 💀 目標可改選，按上方按鈕才會真正執行。`;
   } else {
-    dissolveBtn.textContent = '瓦解目前城鎮組織';
+    dissolveBtn.textContent = '瓦解組織';
     const dissolveTarget = sharedDissolveTargetForTown(selectedTown);
     if (!dissolveTarget) {
       dissolveBtn.disabled = true;
