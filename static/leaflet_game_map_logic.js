@@ -881,6 +881,30 @@ function currentPlayerState() {
 // 等於把被動能力做成主動動作，已整組移除；安全屋的 +1 只保留在後端卡牌／奧援建立候選清單
 // （Game._card_build_town_choices()／_interactive_support_build_towns()）。
 
+function highlightConnectedRoutes(townName) {
+  roadLayer.eachLayer(layer => {
+    const route = layer.__redlineRoute;
+    const connected = route && (route.source === townName || route.target === townName);
+    if (!connected || !layer.setStyle) return;
+    layer.setStyle({
+      color: '#d8a04a', opacity: 0.9,
+      weight: roadWeight(map.getZoom()),
+      lineCap: 'round',
+    });
+  });
+  railLayer.eachLayer(layer => {
+    const route = layer.__redlineRoute;
+    const connected = route && (route.source === townName || route.target === townName);
+    if (!connected || !layer.setStyle) return;
+    layer.setStyle({
+      color: '#ef4444', opacity: 0.9,
+      weight: railWeight(map.getZoom()),
+      dashArray: railDashArray(map.getZoom()),
+      lineCap: 'round',
+    });
+  });
+}
+
 function renderMovementHighlights(townName, options = {}) {
   const { autoFocus = false } = options;
   highlightLayer.clearLayers();
@@ -923,6 +947,14 @@ function renderMovementHighlights(townName, options = {}) {
     originMarker.setStyle(originStyle);
   }
 
+  roadLayer.eachLayer(layer => {
+    if (layer.setStyle) layer.setStyle({ color:'#d8a04a', opacity:0.12, weight:roadWeight(map.getZoom()) });
+  });
+  railLayer.eachLayer(layer => {
+    if (layer.setStyle) layer.setStyle({ color:'#ef4444', opacity:0.15, weight:railWeight(map.getZoom()), dashArray: railDashArray(map.getZoom()) });
+  });
+  highlightConnectedRoutes(townName);
+
   if (!canAct) {
     updateStatusPanel();
     refreshDirectBuildUi();
@@ -930,13 +962,6 @@ function renderMovementHighlights(townName, options = {}) {
   }
 
   let highlightCount = 0;
-
-  roadLayer.eachLayer(layer => {
-    if (layer.setStyle) layer.setStyle({ color:'#d8a04a', opacity:0.12, weight:Math.max(1.5, roadWeight(map.getZoom()) - 1) });
-  });
-  railLayer.eachLayer(layer => {
-    if (layer.setStyle) layer.setStyle({ color:'#ef4444', opacity:0.15, weight:Math.max(2, railWeight(map.getZoom()) - 1), dashArray: railDashArray(map.getZoom()) });
-  });
 
   const candidateStyle = (townName, mode) => {
     const base = markerStyleForTown(townName, map.getZoom());
@@ -1156,7 +1181,7 @@ function updateDynamicStyles() {
     if (layer.setStyle) layer.setStyle({ color:'#7a6030', weight: roadWeight(z), opacity: 0.24 });
   });
   railLayer.eachLayer(layer => {
-    if (layer.setStyle) layer.setStyle({ color: '#42667a', weight: railWeight(z), opacity: 0.28, dashArray: railDashArray(z), lineCap: 'round' });
+    if (layer.setStyle) layer.setStyle({ color: '#ef4444', weight: railWeight(z), opacity: 0.34, dashArray: railDashArray(z), lineCap: 'round' });
   });
   markerLayer.eachLayer(layer => {
     const name = [...currentMarkers.entries()].find(([town, marker]) => marker === layer)?.[0];
@@ -1180,7 +1205,11 @@ function updateDynamicStyles() {
     if (!town || !badge.setLatLng) return;
     badge.setLatLng(townDisplayLatLng(town));
   });
-  renderSupportChoiceHighlights();
+  if (selectedTown) {
+    renderMovementHighlights(selectedTown, { autoFocus: false });
+  } else {
+    renderSupportChoiceHighlights();
+  }
 }
 
 function renderParticipatingFactionBaseBadges() {
@@ -1230,9 +1259,10 @@ function renderMap() {
     const latlngs = [townDisplayLatLng(a), townDisplayLatLng(b)];
     const style = link.type === 'road'
       ? { color:'#7a6030', weight:roadWeight(), opacity:0.24 }
-      : { color:'#42667a', weight:railWeight(), opacity:0.28, dashArray: railDashArray(), lineCap:'round' };
+      : { color:'#ef4444', weight:railWeight(), opacity:0.34, dashArray: railDashArray(), lineCap:'round' };
     const linkTypeLabel = link.type === 'rail' ? '鐵路' : '道路';
     const poly = L.polyline(latlngs, style).bindPopup(`${linkTypeLabel}：${escapeHtml(link.source)} ↔ ${escapeHtml(link.target)}`);
+    poly.__redlineRoute = { source: link.source, target: link.target, type: link.type };
     if (link.type === 'road' && showRoad) poly.addTo(roadLayer);
     if (link.type === 'rail' && showRail) poly.addTo(railLayer);
   }
@@ -1408,6 +1438,14 @@ function focusAsia() {
   map.fitBounds([[-5, 68], [55, 145]], { padding:[20,20] });
 }
 
+function focusOwnBase() {
+  const me = currentPlayerState();
+  const baseTown = me?.base ? byName.get(me.base) : null;
+  if (!baseTown) return false;
+  map.flyTo([baseTown.lat, baseTown.lon], 9, { animate: true, duration: 0.35 });
+  return true;
+}
+
 function focusSelectedTown(townName) {
   const origin = byName.get(townName);
   if (!origin || !map) return;
@@ -1437,6 +1475,7 @@ document.getElementById('resetFilter').addEventListener('click', () => {
 document.getElementById('fitFiltered').addEventListener('click', fitVisible);
 document.getElementById('fitAll').addEventListener('click', fitAll);
 document.getElementById('focusAsia').addEventListener('click', focusAsia);
+document.getElementById('focusBase').addEventListener('click', focusOwnBase);
 document.getElementById('confirmMoveBtn').addEventListener('click', () => {
   if (!pendingMoveTarget) return;
   const { from, to, mode } = pendingMoveTarget;
@@ -1757,6 +1796,23 @@ window.connectGameMap = function ({ gameId: gid, playerId: pid, resumeToken: tok
   mapResumeToken = token;
   if (!mapGameId || !mapPlayerId) return { ok: false, reason: 'missing-ids' };
   return openMapSocket();
+};
+
+window.__clearTownSelectionForTest = function () {
+  exitMovementSelection();
+  return { ok: selectedTown === null };
+};
+
+window.__routeStylesForTest = function () {
+  const collect = (layerGroup, type) => {
+    const routes = [];
+    layerGroup.eachLayer(layer => {
+      if (!layer.__redlineRoute) return;
+      routes.push({ ...layer.__redlineRoute, type, color: layer.options.color, opacity: layer.options.opacity, weight: layer.options.weight, dashArray: layer.options.dashArray || null });
+    });
+    return routes;
+  };
+  return [...collect(roadLayer, 'road'), ...collect(railLayer, 'rail')];
 };
 
 window.__clickTownMarkerForTest = function (townName) {

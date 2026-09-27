@@ -1,0 +1,258 @@
+{
+  "status": "passed",
+  "checks_passed": 13,
+  "checks_total": 13,
+  "checks": [
+    {
+      "name": "legend_keeps_gold_road_and_red_dashed_rail_explanations",
+      "ok": true,
+      "detail": [
+        "一般道路：金色",
+        "鐵路：紅色虛線"
+      ]
+    },
+    {
+      "name": "legend_removes_town_state_explanations",
+      "ok": true,
+      "detail": "一般道路：金色\n        鐵路：紅色虛線"
+    },
+    {
+      "name": "sidebar_title_is_removed_and_content_starts_at_top",
+      "ok": true,
+      "detail": {
+        "sidebar_title_count": 0,
+        "first_card_top": 28
+      }
+    },
+    {
+      "name": "organization_actions_are_above_focus_controls",
+      "ok": true,
+      "detail": {
+        "first_card_id": "organizationActionsCard",
+        "action_card_top": 28,
+        "focus_card_top": 511.75
+      }
+    },
+    {
+      "name": "toolbar_replaces_export_view_with_base_focus",
+      "ok": true,
+      "detail": [
+        "顯示全部",
+        "聚焦亞洲",
+        "根據地"
+      ]
+    },
+    {
+      "name": "base_button_focuses_viewers_base",
+      "ok": true,
+      "detail": {
+        "lat": 24.8039,
+        "lng": 120.9687,
+        "zoom": 9
+      }
+    },
+    {
+      "name": "railway_routes_are_red_before_selection",
+      "ok": true,
+      "detail": {
+        "rail_count": 303,
+        "colors": [
+          "#ef4444"
+        ]
+      }
+    },
+    {
+      "name": "selecting_town_brightens_only_its_connected_routes",
+      "ok": true,
+      "detail": {
+        "selection": {
+          "ok": true,
+          "town": "基隆",
+          "highlighted": true,
+          "road": 4,
+          "rail": 7,
+          "owns": true,
+          "shared": false,
+          "canAct": true
+        },
+        "connected_roads": [
+          {
+            "source": "基隆",
+            "target": "新北",
+            "type": "road",
+            "color": "#d8a04a",
+            "opacity": 0.9,
+            "weight": 5.066666666666666,
+            "dashArray": null
+          },
+          {
+            "source": "沖繩",
+            "target": "基隆",
+            "type": "road",
+            "color": "#d8a04a",
+            "opacity": 0.9,
+            "weight": 5.066666666666666,
+            "dashArray": null
+          },
+          {
+            "source": "馬祖",
+            "target": "基隆",
+            "type": "road",
+            "color": "#d8a04a",
+            "opacity": 0.9,
+            "weight": 5.066666666666666,
+            "dashArray": null
+          },
+          {
+            "source": "金門",
+            "target": "基隆",
+            "type": "road",
+            "color": "#d8a04a",
+            "opacity": 0.9,
+            "weight": 5.066666666666666,
+            "dashArray": null
+          }
+        ],
+        "connected_rails": [
+          {
+            "source": "基隆",
+            "target": "臺北",
+            "type": "rail",
+            "color": "#ef4444",
+            "opacity": 0.9,
+            "weight": 5.533333333333333,
+            "dashArray": "9.3 7.0"
+          },
+          {
+            "source": "宜蘭",
+            "target": "基隆",
+            "type": "rail",
+            "color": "#ef4444",
+            "opacity": 0.9,
+            "weight": 5.533333333333333,
+            "dashArray": "9.3 7.0"
+          }
+        ],
+        "unrelated_opacity_max": 0.15
+      }
+    },
+    {
+      "name": "non_actionable_selected_town_still_brightens_connected_routes",
+      "ok": true,
+      "detail": {
+        "selection": {
+          "ok": true,
+          "town": "高雄",
+          "highlighted": false,
+          "road": 0,
+          "rail": 0,
+          "owns": false,
+          "shared": false,
+          "canAct": false
+        },
+        "connected": [
+          {
+            "source": "澎湖",
+            "target": "高雄",
+            "type": "road",
+            "color": "#d8a04a",
+            "opacity": 0.9,
+            "weight": 5.066666666666666,
+            "dashArray": null
+          },
+          {
+            "source": "高雄",
+            "target": "臺南",
+            "type": "rail",
+            "color": "#ef4444",
+            "opacity": 0.9,
+            "weight": 5.533333333333333,
+            "dashArray": "9.3 7.0"
+          },
+          {
+            "source": "屏東",
+            "target": "高雄",
+            "type": "rail",
+            "color": "#ef4444",
+            "opacity": 0.9,
+            "weight": 5.533333333333333,
+            "dashArray": "9.3 7.0"
+          }
+        ]
+      }
+    },
+    {
+      "name": "selected_route_highlight_survives_zoom_restyle",
+      "ok": true,
+      "detail": [
+        {
+          "source": "澎湖",
+          "target": "高雄",
+          "type": "road",
+          "color": "#d8a04a",
+          "opacity": 0.9,
+          "weight": 5.933333333333334,
+          "dashArray": null
+        },
+        {
+          "source": "高雄",
+          "target": "臺南",
+          "type": "rail",
+          "color": "#ef4444",
+          "opacity": 0.9,
+          "weight": 6.466666666666667,
+          "dashArray": "10.7 8.0"
+        },
+        {
+          "source": "屏東",
+          "target": "高雄",
+          "type": "rail",
+          "color": "#ef4444",
+          "opacity": 0.9,
+          "weight": 6.466666666666667,
+          "dashArray": "10.7 8.0"
+        }
+      ]
+    },
+    {
+      "name": "selected_route_highlight_does_not_change_line_width",
+      "ok": true,
+      "detail": {
+        "selected_widths": [
+          5.933333333333334,
+          6.466666666666667
+        ],
+        "base_widths": [
+          5.933333333333334,
+          6.466666666666667
+        ]
+      }
+    },
+    {
+      "name": "clearing_selection_restores_base_route_styles",
+      "ok": true,
+      "detail": {
+        "cleared": {
+          "ok": true
+        },
+        "road_opacities": [
+          0.24
+        ],
+        "rail_colors": [
+          "#ef4444"
+        ],
+        "rail_opacities": [
+          0.34
+        ]
+      }
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "ok": true,
+      "detail": []
+    }
+  ],
+  "console_errors": [],
+  "screenshot": "docs/records/map-ui/map-legend-markers/map_legend_markers.png",
+  "identifiers": "[REDACTED]"
+}
