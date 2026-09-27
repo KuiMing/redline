@@ -915,6 +915,26 @@ class CardPlayMixin:
         if choice_key == 'event_build_organization':
             self._place_organization(player, town)
             self.log(f"{player.name} built organization in {town} via event")
+            context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
+            remaining_event_players = list(context.get('remaining_event_build_near_own_player_ids') or [])
+            if remaining_event_players:
+                self.pending_choice = None
+                followup = self._open_next_event_build_near_own_choice(
+                    remaining_event_players,
+                    context.get('event_build_near_own_effect') or {},
+                    int(context.get('event_build_near_own_count', 1) or 1),
+                    event_name=context.get('event_name') or choice.get('source_name'),
+                )
+                response = {
+                    'success': True,
+                    'choice_index': index,
+                    'town': town,
+                    'selected': selected,
+                    'choice_key': choice_key,
+                }
+                if followup and followup.get('pending_choice'):
+                    response['pending_choice'] = True
+                return response
         elif choice_key == 'card_build_organization':
             remaining_before = self._remaining_card_build_entitlements()
             self._place_organization(player, town)

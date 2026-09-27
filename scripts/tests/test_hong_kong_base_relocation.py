@@ -255,6 +255,33 @@ def test_event_discard_choice_hides_each_players_hand_from_other_viewers():
     assert '第二位秘密手牌' not in str(game.state(first.id)['pending_choice'])
 
 
+def test_other_discard_self_event_failures_also_penalize_every_non_red_player():
+    for event_name in ('重大災難', '紅軍權貴出逃'):
+        game, first, second, red = make_three_player_game()
+        first.hand = [Card(f'{event_name}第一位手牌', 'command', {})]
+        second.hand = [Card(f'{event_name}第二位手牌', 'command', {})]
+        game.current_event = game._event_by_name(event_name)
+        game.event_progress = {
+            'count': 0,
+            'required': int(game.current_event.get('trigger', {}).get('count', 1) or 1),
+            'succeeded': False,
+            'settled': False,
+            'status': 'active',
+        }
+
+        assert game.advance_turn_phase().get('pending_choice') is True
+        assert game.current_player() is red
+        assert game.pending_choice.get('player_id') == first.id
+        assert game.resolve_pending_choice(first.id, [0]).get('pending_choice') is True
+        assert game.pending_choice.get('player_id') == second.id
+        assert game.resolve_pending_choice(second.id, [0]).get('success') is True
+        assert game.pending_choice is None
+        assert len(first.deck.discard_pile) == 1
+        assert len(second.deck.discard_pile) == 1
+        assert len(red.deck.discard_pile) == 0
+        assert game.hk_free_base_relocation is False
+
+
 def test_successful_event_also_waits_for_keep_decision_before_next_player_starts():
     game, hk, red = make_game()
     game.current_event = game._event_by_name('香港抗暴之戰')

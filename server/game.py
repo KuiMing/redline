@@ -738,10 +738,10 @@ class Game(CardPlayMixin):
         return None
 
     def _apply_event_effect_discard_self(self, player, count, outcome):
-        """discard_self: queue every non-Red target for 香港抗暴之戰 failure."""
+        """discard_self: every non-Red player chooses cards on mission failure."""
         targets = (
             [p.id for p in self.players if getattr(p, 'faction_id', None) != 'red_army']
-            if outcome == 'failure' and (self.current_event or {}).get('name') == '香港抗暴之戰'
+            if outcome == 'failure'
             else [player.id]
         )
         return self._open_next_event_discard_self_choice(targets, count, outcome)
@@ -834,20 +834,40 @@ class Game(CardPlayMixin):
 
     def _apply_event_effect_build_organization_near_own(self, player, effect, count):
         """build_organization_near_own: player builds free near their own organizations."""
-        max_steps = int(effect.get('max_steps', 1) or 1)
-        towns = self._event_build_towns_near_own(player, max_steps=max_steps)
-        if not towns:
-            self.log(f"{self.current_event.get('name')}：{player.name} 在己方組織附近沒有合法的城鎮可以建立組織")
-            return None
-        self._set_pending_town_choice(
-            player,
-            'event_build_organization',
-            towns,
-            f"{self.current_event.get('name')}：在己方組織 {max_steps} 格內免費建立 {min(count, len(towns))} 個組織。",
-            source_name=self.current_event.get('name'),
-            count=min(count, len(towns)),
+        return self._open_next_event_build_near_own_choice(
+            [player.id], effect, count, event_name=(self.current_event or {}).get('name')
         )
-        return {'success': True, 'pending_choice': True}
+
+    def _open_next_event_build_near_own_choice(self, player_ids, effect, count, *, event_name=None):
+        """Queue one build for each qualifying event player in deterministic order."""
+        max_steps = int(effect.get('max_steps', 1) or 1)
+        source_name = event_name or (self.current_event or {}).get('name')
+        remaining_ids = list(player_ids or [])
+        while remaining_ids:
+            player_id = remaining_ids.pop(0)
+            player = next((p for p in self.players if p.id == player_id), None)
+            if player is None:
+                continue
+            towns = self._event_build_towns_near_own(player, max_steps=max_steps)
+            if not towns:
+                self.log(f"{source_name}：{player.name} 在己方組織附近沒有合法的城鎮可以建立組織")
+                continue
+            self._set_pending_town_choice(
+                player,
+                'event_build_organization',
+                towns,
+                f"{source_name}：在己方組織 {max_steps} 格內免費建立 {min(count, len(towns))} 個組織。",
+                source_name=source_name,
+                count=min(count, len(towns)),
+                context={
+                    'remaining_event_build_near_own_player_ids': remaining_ids,
+                    'event_build_near_own_effect': dict(effect or {}),
+                    'event_build_near_own_count': count,
+                    'event_name': source_name,
+                },
+            )
+            return {'success': True, 'pending_choice': True}
+        return None
 
     def _apply_event_effect_topdeck_from_discard(self, player, count, outcome):
         """topdeck_from_discard: player chooses discard-pile cards to place on top of their deck."""
@@ -923,16 +943,39 @@ class Game(CardPlayMixin):
             player = next((p for p in self.players if p.id == self.event_progress.get('last_actor_id')), player)
         trigger = event.get('trigger') or {}
         if trigger.get('type') == 'end_turn_state' and not self.event_progress.get('succeeded'):
-            met, count = event_state_condition_met(self.map, self.towns_by_ruler, trigger, player)
-            self.event_progress['count'] = count
-            if met:
+            qualified_players = []
+            total_count = 0
+            for candidate in self.players:
+                if getattr(candidate, 'faction_id', None) == 'red_army':
+                    continue
+                met, count = event_state_condition_met(self.map, self.towns_by_ruler, trigger, candidate)
+                total_count += int(count or 0)
+                if met:
+                    qualified_players.append(candidate)
+            self.event_progress['count'] = total_count
+            self.event_progress['qualified_player_ids'] = [candidate.id for candidate in qualified_players]
+            if qualified_players:
                 self.event_progress['succeeded'] = True
                 self.event_progress['status'] = 'success_pending'
         succeeded = bool(self.event_progress.get('succeeded'))
         effect = event.get('success') if succeeded else event.get('failure')
         self.event_progress['settled'] = True
         self.event_progress['status'] = 'success' if succeeded else 'failure'
-        result = self._apply_event_effect(effect or {'type': 'none'}, player, outcome='success' if succeeded else 'failure')
+        if (
+            succeeded
+            and trigger.get('type') == 'end_turn_state'
+            and (effect or {}).get('type') == 'build_organization_near_own'
+        ):
+            result = self._open_next_event_build_near_own_choice(
+                self.event_progress.get('qualified_player_ids') or [],
+                effect,
+                int(effect.get('count', 1) or 1),
+                event_name=event.get('name'),
+            )
+            if result is None:
+                self.log(f"Event success resolved: {event.get('name')} / {effect.get('type')}")
+        else:
+            result = self._apply_event_effect(effect or {'type': 'none'}, player, outcome='success' if succeeded else 'failure')
         # 香港 special_rules：事件卡「香港抗暴之戰」發生並完成結算後，
         # 不論任務成功或失敗，香港可在下一回合開始前免費遷移一次根據地。
         if event.get('name') == '香港抗暴之戰' and any(getattr(pl, 'faction_id', None) == 'hong_kong' for pl in self.players):
@@ -4176,17 +4219,22 @@ class Game(CardPlayMixin):
                 None,
             )
             pending_is_reaction = self.pending_choice.get('type') == 'reaction_choice'
-            pending_is_private_event_discard = self.pending_choice.get('choice_key') == 'event_discard_self'
+            pending_is_event_discard = self.pending_choice.get('choice_key') == 'event_discard_self'
+            pending_is_private_trash = self.pending_choice.get('choice_key') == 'trash_from_hand_or_discard'
             pending_is_for_viewer = viewer_player_id is None or self.pending_choice.get('player_id') == viewer_player_id
             pending_cards = self.pending_choice.get('cards') or []
             if pending_is_reaction and not pending_is_for_viewer:
                 serialized_pending_cards = []
                 pending_prompt = f"{self.pending_choice.get('acting_player_name', '玩家')} 打出 {self.pending_choice.get('played_card_name', '卡牌')}。等待對方是否取消。"
                 pending_source_name = '等待反應'
-            elif pending_is_private_event_discard and not pending_is_for_viewer:
+            elif pending_is_event_discard and not pending_is_for_viewer:
                 serialized_pending_cards = []
                 pending_prompt = f"等待 {getattr(pending_choice_owner, 'name', '玩家')} 完成事件棄牌。"
                 pending_source_name = '等待事件棄牌'
+            elif pending_is_private_trash and not pending_is_for_viewer:
+                serialized_pending_cards = []
+                pending_prompt = f"等待 {getattr(pending_choice_owner, 'name', '玩家')} 完成私人卡牌選擇。"
+                pending_source_name = '等待私人選擇'
             else:
                 serialized_pending_cards = [
                     dict(card) if isinstance(card, dict) and 'name' in card and 'card' not in card else {
