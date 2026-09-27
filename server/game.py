@@ -706,15 +706,45 @@ class Game(CardPlayMixin):
         """gain_card: gain `count` copies of the named card."""
         self._gain_event_card(player, effect.get('card'), count)
 
+    def _open_next_event_discard_self_choice(self, player_ids, count, outcome, *, open_hk_relocation=False):
+        """Open the next required discard, skipping targets that have no hand cards."""
+        remaining_ids = list(player_ids or [])
+        while remaining_ids:
+            player_id = remaining_ids.pop(0)
+            player = next((p for p in self.players if p.id == player_id), None)
+            if player is None:
+                continue
+            cards = list(player.hand)
+            if not cards:
+                self.log(f"Event {outcome}: {player.name} has no hand card to discard")
+                continue
+            choice_count = min(count, len(cards))
+            self.log(f"Event {outcome}: {player.name} must discard {choice_count} hand card(s)")
+            self._set_pending_multi_card_choice(
+                player,
+                'event_discard_self',
+                cards,
+                f"{self.current_event.get('name')}：請選擇 {choice_count} 張手牌棄掉。",
+                choice_count,
+                source_name=self.current_event.get('name'),
+                context={
+                    'remaining_event_discard_self_player_ids': remaining_ids,
+                    'event_discard_self_count': count,
+                    'event_discard_self_outcome': outcome,
+                    'open_hk_free_base_relocation_after_resolution': bool(open_hk_relocation),
+                },
+            )
+            return {'success': True, 'pending_choice': True}
+        return None
+
     def _apply_event_effect_discard_self(self, player, count, outcome):
-        """discard_self: player chooses which hand cards to discard."""
-        cards = list(player.hand)
-        if not cards:
-            self.log(f"Event {outcome}: {player.name} has no hand card to discard")
-            return None
-        self.log(f"Event {outcome}: {player.name} must discard {min(count, len(cards))} hand card(s)")
-        self._set_pending_multi_card_choice(player, 'event_discard_self', cards, f"{self.current_event.get('name')}：請選擇 {min(count, len(cards))} 張手牌棄掉。", min(count, len(cards)), source_name=self.current_event.get('name'))
-        return {'success': True, 'pending_choice': True}
+        """discard_self: queue every non-Red target for 香港抗暴之戰 failure."""
+        targets = (
+            [p.id for p in self.players if getattr(p, 'faction_id', None) != 'red_army']
+            if outcome == 'failure' and (self.current_event or {}).get('name') == '香港抗暴之戰'
+            else [player.id]
+        )
+        return self._open_next_event_discard_self_choice(targets, count, outcome)
 
     def _apply_event_effect_discard_random(self, player, effect, count, outcome):
         """discard_random: randomly discard from the player, or (on a failure outcome
@@ -2638,11 +2668,6 @@ class Game(CardPlayMixin):
         the settlement boundary delays cards like 紅軍權貴出逃 until after the
         Red Army turn and applies discard_self to the wrong player.
         """
-        current = self.current_player()
-        next_player = self.players[next_player_index]
-        if getattr(current, 'faction_id', None) != 'red_army' and getattr(next_player, 'faction_id', None) == 'red_army':
-            return True
-
         non_red_indices = self._non_red_player_indices()
         if not non_red_indices:
             return next_player_index == getattr(self, 'round_start_player_index', 0)
@@ -4146,13 +4171,22 @@ class Game(CardPlayMixin):
                 pending_remaining_builds = self._remaining_card_build_entitlements()
             elif pending_is_build and pending_remaining_builds is None:
                 pending_remaining_builds = int((pending_context.get('effect_payload') or {}).get('count', 1) or 1)
+            pending_choice_owner = next(
+                (p for p in self.players if getattr(p, 'id', None) == self.pending_choice.get('player_id')),
+                None,
+            )
             pending_is_reaction = self.pending_choice.get('type') == 'reaction_choice'
+            pending_is_private_event_discard = self.pending_choice.get('choice_key') == 'event_discard_self'
             pending_is_for_viewer = viewer_player_id is None or self.pending_choice.get('player_id') == viewer_player_id
             pending_cards = self.pending_choice.get('cards') or []
             if pending_is_reaction and not pending_is_for_viewer:
                 serialized_pending_cards = []
                 pending_prompt = f"{self.pending_choice.get('acting_player_name', '玩家')} 打出 {self.pending_choice.get('played_card_name', '卡牌')}。等待對方是否取消。"
                 pending_source_name = '等待反應'
+            elif pending_is_private_event_discard and not pending_is_for_viewer:
+                serialized_pending_cards = []
+                pending_prompt = f"等待 {getattr(pending_choice_owner, 'name', '玩家')} 完成事件棄牌。"
+                pending_source_name = '等待事件棄牌'
             else:
                 serialized_pending_cards = [
                     dict(card) if isinstance(card, dict) and 'name' in card and 'card' not in card else {
@@ -4167,10 +4201,6 @@ class Game(CardPlayMixin):
             # 連續多次建立的候選城鎮清單即時投影（見 `_live_pending_town_choices()`）——不要
             # 相信 `self.pending_choice['towns']` 裡儲存的舊清單，每次序列化都用該效果的
             # 擁有者（不是目前這次 state() 呼叫的 viewer）當下的組織位置重新投影一次。
-            pending_choice_owner = next(
-                (p for p in self.players if getattr(p, 'id', None) == self.pending_choice.get('player_id')),
-                None,
-            )
             pending_live_towns = self._live_pending_town_choices(pending_choice_owner, self.pending_choice) if pending_choice_owner else None
             if pending_live_towns is not None:
                 self.pending_choice['towns'] = pending_live_towns

@@ -24,6 +24,48 @@ def make_game():
     return game, hk, red
 
 
+def make_three_player_game():
+    game = Game([('first', '第一位反共'), ('second', '第二位反共'), ('red', '紅軍玩家')])
+    first, second, red = game.players
+    first.faction_id = 'hong_kong'
+    second.faction_id = 'taiwan_green'
+    red.faction_id = 'red_army'
+    first.base = '香港城'
+    second.base = '臺北'
+    red.base = '北京'
+    first.organizations = {'香港城': 1}
+    second.organizations = {'臺北': 1}
+    red.organizations = {'北京': 1}
+    game.current_player_index = 1
+    game.round_start_player_index = 0
+    game.turn_phase = TurnPhase.END
+    game.turn_log = game._new_turn_log()
+    game.pending_choice = None
+    game.hk_free_base_relocation = False
+    return game, first, second, red
+
+
+def make_interleaved_three_player_game():
+    game = Game([('first', '第一位反共'), ('red', '紅軍玩家'), ('second', '第二位反共')])
+    first, red, second = game.players
+    first.faction_id = 'hong_kong'
+    red.faction_id = 'red_army'
+    second.faction_id = 'taiwan_green'
+    first.base = '香港城'
+    red.base = '北京'
+    second.base = '臺北'
+    first.organizations = {'香港城': 1}
+    red.organizations = {'北京': 1}
+    second.organizations = {'臺北': 1}
+    game.current_player_index = 0
+    game.round_start_player_index = 0
+    game.turn_phase = TurnPhase.END
+    game.turn_log = game._new_turn_log()
+    game.pending_choice = None
+    game.hk_free_base_relocation = False
+    return game, first, red, second
+
+
 def settle_event(game, name='香港抗暴之戰', succeeded=False):
     game.current_event = {
         'name': name,
@@ -114,6 +156,103 @@ def test_end_turn_waits_for_hong_kong_relocation_decision_before_next_player_sta
     assert relocated.get('success') is True
     assert game.current_player() is red
     assert game.turn_phase == TurnPhase.ACTION
+
+
+def test_three_player_failure_makes_each_non_red_player_discard_before_hong_kong_relocation():
+    game, first, second, red = make_three_player_game()
+    first.hand = [Card('第一位手牌', 'command', {})]
+    second.hand = [Card('第二位手牌', 'command', {})]
+    game.current_event = game._event_by_name('香港抗暴之戰')
+    game.event_progress = {
+        'count': 0,
+        'required': 1,
+        'succeeded': False,
+        'settled': False,
+        'status': 'active',
+    }
+
+    ended = game.advance_turn_phase()
+
+    assert ended.get('pending_choice') is True
+    assert game.current_player() is second
+    assert game.pending_choice.get('choice_key') == 'event_discard_self'
+    assert game.pending_choice.get('player_id') == first.id
+
+    first_discarded = game.resolve_pending_choice(first.id, [0])
+
+    assert first_discarded.get('pending_choice') is True
+    assert game.pending_choice.get('player_id') == second.id
+    assert game.hk_free_base_relocation is False
+
+    second_discarded = game.resolve_pending_choice(second.id, [0])
+
+    assert second_discarded.get('success') is True
+    assert game.pending_choice is None
+    assert len(first.deck.discard_pile) == 1
+    assert len(second.deck.discard_pile) == 1
+    assert len(red.deck.discard_pile) == 0
+    assert game.hk_free_base_relocation is True
+    assert game.current_player() is second
+
+    assert game.keep_hong_kong_base(first.id) == {'success': True, 'kept': '香港城'}
+    assert game.current_player() is red
+    assert game.turn_phase == TurnPhase.ACTION
+
+
+def test_interleaved_red_seat_waits_for_the_actual_final_non_red_player():
+    game, first, red, second = make_interleaved_three_player_game()
+    first.hand = [Card('第一位手牌', 'command', {})]
+    second.hand = [Card('第二位手牌', 'command', {})]
+    game.current_event = game._event_by_name('香港抗暴之戰')
+    game.event_progress = {
+        'count': 0,
+        'required': 1,
+        'succeeded': False,
+        'settled': False,
+        'status': 'active',
+    }
+
+    assert game.advance_turn_phase() == {'success': True}
+    assert game.current_player() is red
+    assert game.pending_choice is None
+    assert game.event_progress['settled'] is False
+
+    game.turn_phase = TurnPhase.END
+    assert game.advance_turn_phase() == {'success': True}
+    assert game.current_player() is second
+    assert game.pending_choice is None
+    assert game.event_progress['settled'] is False
+
+    game.turn_phase = TurnPhase.END
+    assert game.advance_turn_phase().get('pending_choice') is True
+    assert game.current_player() is second
+    assert game.pending_choice.get('player_id') == first.id
+
+
+def test_event_discard_choice_hides_each_players_hand_from_other_viewers():
+    game, first, second, red = make_three_player_game()
+    first.hand = [Card('第一位秘密手牌', 'command', {})]
+    second.hand = [Card('第二位秘密手牌', 'command', {})]
+    game.current_event = game._event_by_name('香港抗暴之戰')
+    game.event_progress = {
+        'count': 0,
+        'required': 1,
+        'succeeded': False,
+        'settled': False,
+        'status': 'active',
+    }
+
+    assert game.advance_turn_phase().get('pending_choice') is True
+    assert game.state(first.id)['pending_choice']['cards'] == ['第一位秘密手牌']
+    assert game.state(second.id)['pending_choice']['cards'] == []
+    assert game.state(red.id)['pending_choice']['cards'] == []
+    assert '第一位秘密手牌' not in str(game.state(second.id)['pending_choice'])
+
+    assert game.resolve_pending_choice(first.id, [0]).get('pending_choice') is True
+    assert game.state(second.id)['pending_choice']['cards']
+    assert game.state(first.id)['pending_choice']['cards'] == []
+    assert game.state(red.id)['pending_choice']['cards'] == []
+    assert '第二位秘密手牌' not in str(game.state(first.id)['pending_choice'])
 
 
 def test_successful_event_also_waits_for_keep_decision_before_next_player_starts():
