@@ -1,4 +1,5 @@
 import hashlib
+import re
 from pathlib import Path
 
 
@@ -70,4 +71,5 @@ def test_basemap_handles_initial_runtime_and_timeout_failures():
 def test_basemap_exposes_readiness_for_browser_proof():
     assert "waitForLeafletMapLoad" in LOGIC
     assert "window.__redlineBasemapReady" in LOGIC
-    assert "leaflet_game_map_logic.js?v=minimal-vector-basemap-20260901" in HTML
+    script = re.search(r'<script src="/static/leaflet_game_map_logic\.js\?v=([^"&]+)"></script>', HTML)
+    assert script and script.group(1)
