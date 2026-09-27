@@ -121,6 +121,23 @@ def test_event_card_hk_end_turn_relocation_timing_branch():
     assert game.event_deck.discard_pile == []
 
 
+def test_event_card_three_player_failure_branch_targets_the_final_non_red_turn():
+    runtime = _runtime()
+    result = EventCardTestRoutes(lambda: runtime).test_setup_event_card_proof(
+        {"hk_three_player_failure": True}
+    )
+    game = runtime.manager.games[result["game_id"]]
+    viewer, ally, red = game.players
+
+    assert result["second_player_id"] == ally.id
+    assert result["second_url"] == f"/?game_id={result['game_id']}&player_id={ally.id}"
+    assert [player.faction_id for player in game.players] == ["hong_kong", "taiwan_green", "red_army"]
+    assert game.current_player() is ally
+    assert game.turn_phase == TurnPhase.END
+    assert game.event_progress["settled"] is False
+    assert red.hand
+
+
 def test_event_card_hk_failed_relocation_settles_immediately():
     runtime = _runtime()
     result = EventCardTestRoutes(lambda: runtime).test_setup_event_card_proof(

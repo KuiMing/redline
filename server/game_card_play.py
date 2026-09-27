@@ -666,6 +666,16 @@ class CardPlayMixin:
                 f"{player.name} discarded {len(selected_cards)} chosen card(s): {', '.join(chosen_names)} "
                 f"(hand {len(player.hand)}, deck {len(player.deck.draw_pile)}, discard {len(player.deck.discard_pile)})"
             )
+            remaining_event_targets = list(context.get('remaining_event_discard_self_player_ids') or [])
+            if choice_key == 'event_discard_self' and remaining_event_targets:
+                followup = self._open_next_event_discard_self_choice(
+                    remaining_event_targets,
+                    int(context.get('event_discard_self_count', 1) or 1),
+                    context.get('event_discard_self_outcome') or 'failure',
+                    open_hk_relocation=bool(context.get('open_hk_free_base_relocation_after_resolution')),
+                )
+                if followup and followup.get('pending_choice'):
+                    return {'success': True, 'chosen_cards': chosen_names, 'pending_choice': True}
             if context.get('open_hk_free_base_relocation_after_resolution'):
                 self._open_hong_kong_base_relocation_window()
             return {'success': True, 'chosen_cards': chosen_names}
