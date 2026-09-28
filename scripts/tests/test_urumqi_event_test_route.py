@@ -120,6 +120,23 @@ def test_urumqi_event_settle_false_leaves_progress_without_settlement_target():
     }
 
 
+def test_urumqi_event_multi_qualifier_opens_first_players_build_choice():
+    runtime = _runtime()
+    result = UrumqiEventTestRoutes(lambda: runtime).test_setup_urumqi_event_proof(
+        {"multi_qualifier": True}
+    )
+    game = runtime.manager.games[result["game_id"]]
+    viewer, ally, red = game.players
+
+    assert result["ally_player_id"] == ally.id
+    assert result["ally_url"] == f"/?game_id={result['game_id']}&player_id={ally.id}"
+    assert game.event_progress["qualified_player_ids"] == [viewer.id, ally.id]
+    assert game.pending_choice["player_id"] == viewer.id
+    assert game.pending_choice["choice_key"] == "event_build_organization"
+    assert game.pending_choice["context"]["remaining_event_build_near_own_player_ids"] == [ally.id]
+    assert red.id not in game.event_progress["qualified_player_ids"]
+
+
 def test_main_urumqi_event_uses_rebound_runtime_and_callable(monkeypatch):
     manager = FakeManager()
     lobby = {}

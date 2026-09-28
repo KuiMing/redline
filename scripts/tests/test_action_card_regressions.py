@@ -1732,7 +1732,11 @@ def test_divide_adds_internal_conflict_to_other_players_not_self():
     for player in g.players:
         player.deck.discard_pile = []
 
-    result = g.play_card(0, mode='action')
+    result = g.play_card(
+        0,
+        mode='action',
+        target_player_ids=[p2.id, p3.id, p4.id],
+    )
 
     assert result.get('success'), result
     assert names(p1.deck.discard_pile).count('內鬥') == 0

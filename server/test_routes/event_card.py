@@ -23,29 +23,58 @@ class EventCardTestRoutes:
     def test_setup_event_card_proof(self, payload: dict):
         runtime = self._runtime_provider()
         event_name = payload.get("event_name") or "香港抗暴之戰"
-        players = [(str(uuid.uuid4()), "viewer"), (str(uuid.uuid4()), "red")]
+        three_player_failure = bool(payload.get("hk_three_player_failure"))
+        players = [(str(uuid.uuid4()), "viewer")]
+        if three_player_failure:
+            players.append((str(uuid.uuid4()), "ally"))
+        players.append((str(uuid.uuid4()), "red"))
         game = Game(players, market_mode="all_cards")
-        game.players[0].faction_id = payload.get("viewer_faction") or "liberals"
-        game.players[1].faction_id = "red_army"
-        game.players[0].base = (
-            "香港城" if game.players[0].faction_id == "hong_kong" else "臺北"
+        viewer = game.players[0]
+        ally = game.players[1] if three_player_failure else None
+        red = game.players[-1]
+        viewer.faction_id = "hong_kong" if three_player_failure else (payload.get("viewer_faction") or "liberals")
+        red.faction_id = "red_army"
+        viewer.base = (
+            "香港城" if viewer.faction_id == "hong_kong" else "臺北"
         )
-        game.players[1].base = "北京"
-        game.players[0].organizations = dict(
-            payload.get("viewer_orgs") or {game.players[0].base: 1}
+        red.base = "北京"
+        viewer.organizations = dict(
+            payload.get("viewer_orgs") or {viewer.base: 1}
         )
-        game.players[1].organizations = dict(payload.get("red_orgs") or {"北京": 1})
+        red.organizations = dict(payload.get("red_orgs") or {"北京": 1})
+        if ally is not None:
+            ally.faction_id = "taiwan_green"
+            ally.base = "臺北"
+            ally.organizations = {"臺北": 1}
         game.pending_base_choices = []
         game.game_phase = GamePhase.MAIN
         game.current_player_index = 0
         game.turn_phase = TurnPhase.EVENT
-        game.players[0].hand = [
+        viewer.hand = [
             Card("合作談判", "command", {}),
             Card("追隨者", "propaganda", {"propaganda": 1}),
         ]
-        game.players[0].deck.discard_pile = []
+        viewer.deck.discard_pile = []
+        if ally is not None:
+            ally.hand = [Card("思想家", "command", {})]
+            ally.deck.discard_pile = []
         event = game._event_by_name(event_name) or game._event_by_name("香港抗暴之戰")
-        if payload.get("hk_end_turn_relocation_timing") and event:
+        if three_player_failure and event:
+            game.current_player_index = 1
+            game.round_start_player_index = 0
+            game.current_event = event
+            game.event_progress = {
+                "count": 0,
+                "required": int(event.get("trigger", {}).get("count", 1) or 1),
+                "succeeded": False,
+                "settled": False,
+                "status": "active",
+            }
+            game.event_notification = game._event_display_payload()
+            game.event_deck.draw_pile = []
+            game.event_deck.discard_pile = []
+            game.turn_phase = TurnPhase.END
+        elif payload.get("hk_end_turn_relocation_timing") and event:
             game.current_event = event
             game.event_progress = {
                 "count": 0,
@@ -120,9 +149,13 @@ class EventCardTestRoutes:
         return {
             "success": True,
             "game_id": game_id,
-            "player_id": game.players[0].id,
-            "red_player_id": game.players[1].id,
+            "player_id": viewer.id,
+            "red_player_id": red.id,
             "event_name": event.get("name") if event else None,
-            "url": f"/?game_id={game_id}&player_id={game.players[0].id}",
+            "url": f"/?game_id={game_id}&player_id={viewer.id}",
             "state": game.state(),
+            **({
+                "second_player_id": ally.id,
+                "second_url": f"/?game_id={game_id}&player_id={ally.id}",
+            } if ally is not None else {}),
         }

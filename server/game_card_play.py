@@ -207,7 +207,7 @@ class CardPlayMixin:
         self.pending_choice = new_choice
         return {'pending_choice': True}
 
-    def _resolve_card_choice(self, player, choice, index):
+    def _resolve_card_choice(self, player, choice, index, target_player_ids=None):
         cards = choice.get('cards') or []
         if index is None or index < 0 or index >= len(cards):
             return {'error': 'Invalid choice index'}
@@ -299,7 +299,11 @@ class CardPlayMixin:
             self.pending_choice = None
             self.log(f"{player.name} borrowed {getattr(borrowed, 'name', str(borrowed))} from purchase area")
             borrowed_index = len(player.hand) - 1
-            action_result = self.play_card(borrowed_index, mode='action')
+            action_result = self.play_card(
+                borrowed_index,
+                mode='action',
+                target_player_ids=target_player_ids,
+            )
             if action_result.get('error'):
                 return action_result
             response = {
@@ -666,6 +670,16 @@ class CardPlayMixin:
                 f"{player.name} discarded {len(selected_cards)} chosen card(s): {', '.join(chosen_names)} "
                 f"(hand {len(player.hand)}, deck {len(player.deck.draw_pile)}, discard {len(player.deck.discard_pile)})"
             )
+            remaining_event_targets = list(context.get('remaining_event_discard_self_player_ids') or [])
+            if choice_key == 'event_discard_self' and remaining_event_targets:
+                followup = self._open_next_event_discard_self_choice(
+                    remaining_event_targets,
+                    int(context.get('event_discard_self_count', 1) or 1),
+                    context.get('event_discard_self_outcome') or 'failure',
+                    open_hk_relocation=bool(context.get('open_hk_free_base_relocation_after_resolution')),
+                )
+                if followup and followup.get('pending_choice'):
+                    return {'success': True, 'chosen_cards': chosen_names, 'pending_choice': True}
             if context.get('open_hk_free_base_relocation_after_resolution'):
                 self._open_hong_kong_base_relocation_window()
             return {'success': True, 'chosen_cards': chosen_names}
@@ -905,6 +919,26 @@ class CardPlayMixin:
         if choice_key == 'event_build_organization':
             self._place_organization(player, town)
             self.log(f"{player.name} built organization in {town} via event")
+            context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
+            remaining_event_players = list(context.get('remaining_event_build_near_own_player_ids') or [])
+            if remaining_event_players:
+                self.pending_choice = None
+                followup = self._open_next_event_build_near_own_choice(
+                    remaining_event_players,
+                    context.get('event_build_near_own_effect') or {},
+                    int(context.get('event_build_near_own_count', 1) or 1),
+                    event_name=context.get('event_name') or choice.get('source_name'),
+                )
+                response = {
+                    'success': True,
+                    'choice_index': index,
+                    'town': town,
+                    'selected': selected,
+                    'choice_key': choice_key,
+                }
+                if followup and followup.get('pending_choice'):
+                    response['pending_choice'] = True
+                return response
         elif choice_key == 'card_build_organization':
             remaining_before = self._remaining_card_build_entitlements()
             self._place_organization(player, town)
@@ -1375,7 +1409,7 @@ class CardPlayMixin:
                 response['pending_choice'] = True
         return response
 
-    def resolve_pending_choice(self, player_id, index):
+    def resolve_pending_choice(self, player_id, index, target_player_ids=None):
         choice = self.pending_choice or {}
         if not choice:
             return {'error': 'No pending choice'}
@@ -1397,7 +1431,15 @@ class CardPlayMixin:
         if choice_type not in resolvers:
             return {'error': 'Unsupported pending choice type'}
         resolver = resolvers[choice_type]
-        result = resolver(player, choice, index)
+        if choice_type == 'card_choice':
+            result = resolver(
+                player,
+                choice,
+                index,
+                target_player_ids=target_player_ids,
+            )
+        else:
+            result = resolver(player, choice, index)
         deferred_triggers = (choice.get('context') or {}).get('post_play_faction_triggers')
         if not result.get('error') and isinstance(deferred_triggers, dict):
             trigger_player = next(
@@ -2358,7 +2400,7 @@ class CardPlayMixin:
             and choice['context'].get('current_card') is not None
         )
 
-    def play_card(self, index, mode=None, target_player_id=None, reaction=None):
+    def play_card(self, index, mode=None, target_player_id=None, target_player_ids=None, reaction=None):
         if mode not in {"resource", "action"}:
             return {"error": "Card play mode must be resource or action"}
 
@@ -2405,6 +2447,32 @@ class CardPlayMixin:
             target = next((p for p in self.players if getattr(p, "id", None) == target_player_id), None) if target_player_id is not None else None
             if target is None or target == player:
                 return {"error": "合作談判必須指定任意一名其他玩家"}
+        if mode == "action" and pending_card_name == "離間":
+            other_player_ids = [
+                getattr(other, 'id', None)
+                for other in self.players
+                if other != player
+            ]
+            selected_ids = target_player_ids
+            if selected_ids is None and target_player_id is not None:
+                selected_ids = [target_player_id]
+            if selected_ids is None:
+                if len(other_player_ids) == 1:
+                    selected_ids = list(other_player_ids)
+                else:
+                    return {"error": "離間必須選擇 1 至 3 位其他玩家"}
+            if not isinstance(selected_ids, (list, tuple)):
+                return {"error": "離間目標格式無效"}
+            selected_ids = list(selected_ids)
+            if not 1 <= len(selected_ids) <= 3:
+                return {"error": "離間必須選擇 1 至 3 位其他玩家"}
+            if any(not isinstance(selected_id, str) for selected_id in selected_ids):
+                return {"error": "離間目標格式無效"}
+            if len(set(selected_ids)) != len(selected_ids):
+                return {"error": "離間不能重複選擇同一位玩家"}
+            if any(selected_id not in other_player_ids for selected_id in selected_ids):
+                return {"error": "離間只能選擇其他有效玩家"}
+            target_player_ids = selected_ids
         if mode == "action" and pending_card_name == "走漏風聲" and target_player_id is not None:
             target = next((p for p in self.players if getattr(p, "id", None) == target_player_id), None)
             if target is None or target == player:
@@ -2540,6 +2608,8 @@ class CardPlayMixin:
             action_context['era_followup_discard_choice'] = era_followup_discard_choice
         if target_player_id is not None:
             action_context['target_player_id'] = target_player_id
+        if target_player_ids is not None:
+            action_context['target_player_ids'] = list(target_player_ids)
 
         # Once the card is committed to play, record both printed purchase-cost components.
         # Do this before an interactive support flow can return early with pending_choice;

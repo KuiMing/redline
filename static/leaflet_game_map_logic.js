@@ -555,7 +555,7 @@ function renderSupportChoiceHighlights(options = {}) {
       const isBuildChoice = isBuildSupportChoiceHighlight();
       const focusText = supportChoiceHighlight.focusTown ? ` 已聚焦 ${supportChoiceHighlight.focusTown}。` : '';
       const actionText = isBuildChoice
-        ? '請點選中性色外框城鎮，然後使用左側「在目前城鎮建立組織（效果）」按鈕完成建立。'
+        ? '請點選中性色外框城鎮，然後使用左側「建立組織」按鈕完成建立。'
         : isDissolveChoice
           ? '請點選 💀 標示的組織，再使用左側「瓦解目前城鎮（效果）」按鈕確認完成瓦解。'
           : '請點選中性色外框城鎮，然後使用左側「瓦解目前城鎮（效果）」按鈕完成瓦解；也可回到選擇視窗確認。';
@@ -1131,7 +1131,7 @@ function refreshDirectBuildUi() {
 
   if (!selectedTown) {
     btn.disabled = true;
-    btn.textContent = '在目前城鎮建立組織';
+    btn.textContent = '建立組織';
     dissolveBtn.disabled = true;
     hint.innerHTML = '選取具有自己組織、共享組織可用性或事件卡允許建立的城鎮後，這裡會顯示是否可直接建立。';
     dissolveHint.innerHTML = '選取具有共享可用性的城鎮後，這裡會顯示是否可對實際組織擁有者發動瓦解。';
@@ -1141,10 +1141,10 @@ function refreshDirectBuildUi() {
   const eventChoice = eventBuildChoiceForTown(selectedTown);
   if (eventChoice) {
     btn.disabled = false;
-    btn.textContent = '在目前城鎮建立組織（效果）';
+    btn.textContent = '建立組織';
     hint.innerHTML = `目前選取 <span class="hint-strong">${selectedTown}</span>：目前效果允許在此建立組織；按上方按鈕完成建立。`;
   } else {
-    btn.textContent = '在目前城鎮建立組織';
+    btn.textContent = '建立組織';
     btn.disabled = true;
     const sharedOnly = !playerOwnsTown(selectedTown) && playerHasSharedAccessToTown(selectedTown);
     const canAct = canActFromTown(selectedTown);
@@ -1163,7 +1163,7 @@ function refreshDirectBuildUi() {
     dissolveBtn.textContent = '確認瓦解此組織';
     dissolveHint.innerHTML = `確認瓦解 <span class="hint-strong">${selectedTown}</span> 的組織？（${supportChoiceHighlight.sourceName || '目前效果'}）點擊地圖上其他 💀 目標可改選，按上方按鈕才會真正執行。`;
   } else {
-    dissolveBtn.textContent = '瓦解目前城鎮組織';
+    dissolveBtn.textContent = '瓦解組織';
     const dissolveTarget = sharedDissolveTargetForTown(selectedTown);
     if (!dissolveTarget) {
       dissolveBtn.disabled = true;
@@ -1675,7 +1675,7 @@ function mapSocketIsOpen() {
 // （伺服器重啟、筆電睡眠喚醒、網路閃斷，或伺服器端 broadcast 對某個已死連線丟出例外時
 // 連帶關掉本連線），這條 socket 就永遠是 CLOSED。此時父頁 app.js 仍有自己的 scheduleReconnect
 // 會重連，指揮中心看起來一切正常，選擇提示也照樣 postMessage 進地圖 → 候選城鎮亮著、
-// 「在目前城鎮建立組織（效果）」按鈕也照樣 enabled，但按下去只會走到 sendDirectBuildAction()
+// 「建立組織」按鈕也照樣 enabled，但按下去只會走到 sendDirectBuildAction()
 // 的 socket-not-open 分支靜默 return，玩家完全看不到任何錯誤。
 // （2026-08-08 playtest 回報：組織經驗丙選好廈門、按鈕亮著，按下去卻沒有建立組織。）
 function scheduleMapSocketReconnect(reason = 'closed') {

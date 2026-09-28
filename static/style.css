@@ -2066,6 +2066,27 @@ body {
   word-break: keep-all;
 }
 
+.modal-choice-row.divide-target-choices {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  max-width: 100%;
+}
+
+.modal-choice-row.divide-target-choices .modal-choice-btn {
+  width: 100%;
+  max-width: none;
+}
+
+.divide-target-choice.divide-target-selected {
+  border-color: #f4c95d;
+  background: #4a3b14;
+  box-shadow: 0 0 0 2px rgba(244, 201, 93, 0.3);
+}
+
+.divide-target-confirm {
+  grid-column: 1 / -1;
+}
+
 .modal-choice-row.red-army-action-choices {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

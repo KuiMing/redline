@@ -22,20 +22,35 @@ class UrumqiEventTestRoutes:
 
     def test_setup_urumqi_event_proof(self, payload: dict):
         runtime = self._runtime_provider()
-        players = [(str(uuid.uuid4()), "viewer"), (str(uuid.uuid4()), "red")]
+        multi_qualifier = bool(payload.get("multi_qualifier"))
+        players = [(str(uuid.uuid4()), "viewer")]
+        if multi_qualifier:
+            players.append((str(uuid.uuid4()), "ally"))
+        players.append((str(uuid.uuid4()), "red"))
         game = Game(players, market_mode="all_cards")
         viewer = game.players[0]
-        red = game.players[1]
+        ally = game.players[1] if multi_qualifier else None
+        red = game.players[-1]
         viewer.faction_id = "taiwan_green"
+        if ally is not None:
+            ally.faction_id = "liberals"
         red.faction_id = "red_army"
         viewer.base = "臺北"
+        if ally is not None:
+            ally.base = "新北"
         red.base = "北京"
-        viewer.organizations = {"北京": 1}
+        viewer.organizations = {"上海": 1} if multi_qualifier else {"北京": 1}
+        if ally is not None:
+            ally.organizations = {"廣州": 1}
         red.organizations = {"北京": 1}
         viewer.resources = {"money": 0, "propaganda": 0}
         viewer.hand = [Card("保留手牌", "command", {})]
         viewer.deck.draw_pile = [Card("牌庫保留", "command", {})]
         viewer.deck.discard_pile = []
+        if ally is not None:
+            ally.hand = [Card("盟友保留手牌", "command", {})]
+            ally.deck.draw_pile = [Card("盟友牌庫保留", "command", {})]
+            ally.deck.discard_pile = []
         game.pending_base_choices = []
         game.game_phase = GamePhase.MAIN
         game.current_player_index = 0
@@ -53,7 +68,10 @@ class UrumqiEventTestRoutes:
         game.event_deck.draw_pile = []
         game.event_deck.discard_pile = []
 
-        if payload.get("settle", True):
+        if multi_qualifier:
+            game.current_player_index = len(game.players) - 1
+            game._settle_current_event()
+        elif payload.get("settle", True):
             game.advance_turn_phase()
 
         game_id = str(uuid.uuid4())
@@ -72,4 +90,8 @@ class UrumqiEventTestRoutes:
             "event_name": event.get("name") if event else None,
             "url": f"/?game_id={game_id}&player_id={viewer.id}",
             "state": game.state(),
+            **({
+                "ally_player_id": ally.id,
+                "ally_url": f"/?game_id={game_id}&player_id={ally.id}",
+            } if ally is not None else {}),
         }
