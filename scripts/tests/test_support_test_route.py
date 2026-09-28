@@ -126,6 +126,40 @@ def test_support_northern_card_tier_1_and_custom_matched_regions():
     assert game._support_card_tier(player, player.hand[0]) == (1, 0, ["自訂區域"])
 
 
+def test_support_fixture_can_reproduce_tianfang_shared_tianjin_origin():
+    runtime = _runtime()
+    result = SupportTestRoutes(lambda: runtime).test_setup_support_proof(
+        {
+            "support_name": "天方奧援",
+            "tier": 2,
+            "faction_id": "taiwan_green",
+            "base": "臺北",
+            "orgs": {"臺北": 1},
+            "enemy_faction_id": "red_army",
+            "enemy_base": "北京",
+            "enemy_orgs": {"北京": 1},
+            "enemy_hand": ["紅軍手牌"],
+            "shared_faction_id": "gender_revolution",
+            "shared_player_name": "性別革命",
+            "shared_base": "天津",
+            "shared_orgs": {"天津": 1},
+        }
+    )
+    game = runtime.manager.games[result["game_id"]]
+    player, enemy, shared_player = game.players
+
+    assert shared_player.faction_id == "gender_revolution"
+    assert shared_player.base == "天津"
+    assert runtime.lobby_factions[result["game_id"]][shared_player.id] == "gender_revolution"
+    played = game.play_card(0, mode="action")
+    assert played.get("pending_choice") is True, played
+    assert any(
+        entry["player_id"] == enemy.id
+        for entry in game.pending_choice["targets"]
+    )
+    assert game.pending_choice["context"]["include_shared_source"] is True
+
+
 def test_support_event_turn_phase_and_pending_choice_auto_resolve():
     runtime = _runtime()
     result = SupportTestRoutes(lambda: runtime).test_setup_support_proof(
