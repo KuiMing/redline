@@ -59,12 +59,14 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "anti"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ]
@@ -420,12 +422,14 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "anti"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ]
@@ -779,12 +783,14 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "anti"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ]
@@ -1136,12 +1142,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -1498,12 +1506,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -1858,12 +1868,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -2216,12 +2228,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -2578,12 +2592,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -2938,12 +2954,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -3299,12 +3317,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -3657,12 +3677,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -4013,12 +4035,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -4373,12 +4397,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -4731,12 +4757,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -5087,12 +5115,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -5447,12 +5477,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -5805,12 +5837,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -6161,12 +6195,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -6524,12 +6560,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -6900,12 +6938,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -7274,12 +7314,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -7650,12 +7692,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -8023,12 +8067,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -8404,12 +8450,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -8773,12 +8821,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -9146,12 +9196,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -9527,12 +9579,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -9896,12 +9950,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -10269,12 +10325,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -10650,12 +10708,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -11018,12 +11078,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -11405,12 +11467,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -11794,12 +11858,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -12180,12 +12246,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -12561,12 +12629,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -12944,12 +13014,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -13327,12 +13399,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -13708,12 +13782,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -14091,12 +14167,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -14474,12 +14552,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -14855,12 +14935,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -15238,12 +15320,14 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -15628,18 +15712,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -16020,18 +16107,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -16414,18 +16504,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -16802,18 +16895,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -17194,18 +17290,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -17588,18 +17687,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -17979,18 +18081,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -18365,18 +18470,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -18759,18 +18867,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -19141,18 +19252,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -19527,18 +19641,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -19921,18 +20038,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -20303,18 +20423,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -20689,18 +20812,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -21083,18 +21209,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -21456,18 +21585,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -21848,18 +21980,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -22242,18 +22377,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -22633,18 +22771,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -23021,18 +23162,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -23411,18 +23555,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -23801,18 +23948,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -24189,18 +24339,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -24579,18 +24732,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -24969,18 +25125,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -25357,18 +25516,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -25747,18 +25909,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -26139,18 +26304,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -26544,18 +26712,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -26951,18 +27122,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -27355,18 +27529,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -27754,18 +27931,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -28161,18 +28341,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -28556,18 +28739,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -28955,18 +29141,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -29362,18 +29551,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -29757,18 +29949,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -30156,18 +30351,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -30563,18 +30761,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -30969,18 +31170,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -31370,18 +31574,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -31773,18 +31980,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -32173,18 +32383,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -32568,18 +32781,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -32965,18 +33181,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -33362,18 +33581,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -33757,18 +33979,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -34154,18 +34379,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -34551,18 +34779,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -34946,18 +35177,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -35343,18 +35577,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -35744,18 +35981,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -36144,18 +36384,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -36546,18 +36789,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -36945,18 +37191,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -37341,18 +37590,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -37745,18 +37997,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -38137,18 +38392,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -38533,18 +38791,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -38937,18 +39198,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -39329,18 +39593,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -39725,18 +39992,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -40129,18 +40399,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -40523,18 +40796,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -40936,18 +41212,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -41351,18 +41630,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -41763,18 +42045,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -42172,18 +42457,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -42583,18 +42871,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -42994,18 +43285,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -43403,18 +43697,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -43814,18 +44111,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -44225,18 +44525,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -44634,18 +44937,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -45045,18 +45351,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -45463,18 +45772,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -45888,18 +46200,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -46315,18 +46630,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -46738,18 +47056,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -47163,18 +47484,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -47590,18 +47914,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -48016,18 +48343,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -48435,18 +48765,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -48862,18 +49195,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -49279,18 +49615,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -49698,18 +50037,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -50125,18 +50467,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -50542,18 +50887,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -50961,18 +51309,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -51388,18 +51739,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -51805,18 +52159,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -52243,18 +52600,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -52679,18 +53039,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -53118,18 +53481,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -53550,18 +53916,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -53980,18 +54349,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -54416,18 +54788,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -54848,18 +55223,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -55278,18 +55656,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -55714,18 +56095,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -56146,18 +56530,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -56576,18 +56963,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -57020,18 +57410,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -57460,18 +57853,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -57898,18 +58294,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -58336,18 +58735,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -58776,18 +59178,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -59214,18 +59619,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -59655,18 +60063,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -60089,18 +60500,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -60527,18 +60941,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -60959,18 +61376,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -61393,18 +61813,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -61831,18 +62254,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -62263,18 +62689,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -62697,18 +63126,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -63135,18 +63567,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -63569,18 +64004,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -64000,18 +64438,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -64429,18 +64870,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -64861,18 +65305,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -65286,18 +65733,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -65709,18 +66159,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -66138,18 +66591,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -66563,18 +67019,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -66986,18 +67445,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -67415,18 +67877,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -67840,18 +68305,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -68263,18 +68731,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -68695,18 +69166,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -69143,18 +69617,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -69589,18 +70066,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -70037,18 +70517,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -70482,18 +70965,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -70935,18 +71421,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -71376,18 +71865,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -71821,18 +72313,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -72274,18 +72769,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -72715,18 +73213,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -73160,18 +73661,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -73613,18 +74117,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -74046,18 +74553,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -74498,18 +75008,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -74952,18 +75465,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -75403,18 +75919,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -75849,18 +76368,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -76297,18 +76819,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -76745,18 +77270,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -77191,18 +77719,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -77639,18 +78170,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -78087,18 +78621,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -78533,18 +79070,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -78981,18 +79521,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -79432,18 +79975,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -79880,18 +80426,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -80330,18 +80879,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -80777,18 +81329,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -81219,18 +81774,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -81669,18 +82227,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -82107,18 +82668,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -82549,18 +83113,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -82999,18 +83566,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -83437,18 +84007,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -83879,18 +84452,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -84329,18 +84905,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -84768,18 +85347,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -85226,18 +85808,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -85686,18 +86271,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -86140,18 +86728,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -86598,18 +87189,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]
@@ -87058,18 +87652,21 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "吉爾吉特": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "香港城": [
               {
                 "count": 1,
+                "faction": "hong_kong",
                 "player": "anti"
               }
             ]

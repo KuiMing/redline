@@ -130,8 +130,8 @@ def main():
             {'directBeforeConfirm': initial['directBeforeConfirm']},
         )
         record(
-            'town_info_uses_presence_not_single_town_organization_count',
-            '組織狀態：有組織' in initial['infoText']
+            'town_info_uses_controller_label_not_single_town_organization_count',
+            '當前控制者：' in initial['infoText']
             and '當前組織總數' not in initial['infoText']
             and '有組織（1）' not in initial['infoText'],
             {'infoText': initial['infoText']},

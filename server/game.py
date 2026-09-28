@@ -4137,7 +4137,7 @@ class Game(CardPlayMixin):
             for town, count in p.organizations.items():
                 if town not in town_control:
                     town_control[town] = []
-                town_control[town].append({"player": p.name, "count": count})
+                town_control[town].append({"player": p.name, "count": count, "faction": p.faction_id})
             for town in self.map.get('towns', {}).keys():
                 if self._shared_org_count(p, town) > p.organizations.get(town, 0):
                     shared_access.setdefault(town, []).append(p.faction_id)
