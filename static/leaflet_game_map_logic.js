@@ -362,8 +362,10 @@ function popupHtml(t) {
   const roads = (t.road||[]).map(n=>`<span class="pill">${n}</span>`).join(' ') || '無';
   const rails = (t.rail||[]).map(n=>`<span class="pill">${n}</span>`).join(' ') || '無';
   const entries = townStateEntries(t.name);
-  const total = totalOrganizationsInTown(t.name);
-  const controller = entries.length ? entries.slice().sort((a,b)=>(b.count||0)-(a.count||0))[0].player : null;
+  const controllerEntry = entries.length ? entries.slice().sort((a,b)=>(b.count||0)-(a.count||0))[0] : null;
+  const controllerLabel = controllerEntry
+    ? (controllerEntry.faction ? `${controllerEntry.player}/${factionLabel(controllerEntry.faction)}` : controllerEntry.player)
+    : null;
   const shared = sharedAccessForTown(t.name);
   return `
     <div class="name">${t.name}</div>
@@ -372,10 +374,8 @@ function popupHtml(t) {
     <div>陣營：${(t.camp||[]).map(x=>`<span class="pill">${x}</span>`).join(' ') || '無'}</div>
     <div>城鎮類型：${t.type ? `<span class="pill">${t.type}</span>` : '一般城鎮'}</div>
     <hr style="border-color:#2b385d;border-style:solid;border-width:1px 0 0;margin:10px 0;">
-    <div>當前控制者：${controller ? `<span class="pill">${controller}</span>` : '無組織'}</div>
-    <div>組織狀態：<span class="pill">${total > 0 ? '有組織' : '無組織'}</span></div>
-    <div>共享可用：${shared.length ? shared.map(x=>`<span class="pill">${x}</span>`).join(' ') : '無'}</div>
-    <div>共享說明：${shared.length ? `<span class="pill">${sharedAccessSummary(t.name)}</span>` : '無'}</div>
+    <div>當前控制者：${controllerLabel ? `<span class="pill">${controllerLabel}</span>` : '無組織'}</div>
+    <div>可共享陣營：${shared.length ? shared.map(x=>`<span class="pill">${factionLabel(x)}</span>`).join(' ') : '無'}</div>
     <hr style="border-color:#2b385d;border-style:solid;border-width:1px 0 0;margin:10px 0;">
     <div>一般道路：${roads}</div>
     <div>鐵路：${rails}</div>`;

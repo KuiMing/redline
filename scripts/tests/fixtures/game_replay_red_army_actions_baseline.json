@@ -47,24 +47,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "underground_church",
                 "player": "red"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "manchuria"
               }
             ],
             "太原": [
               {
                 "count": 1,
+                "faction": "jin",
                 "player": "kazakh"
               }
             ],
             "桂林": [
               {
                 "count": 1,
+                "faction": "yao",
                 "player": "tibet"
               }
             ]
@@ -502,24 +506,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "underground_church",
                 "player": "red"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "manchuria"
               }
             ],
             "太原": [
               {
                 "count": 1,
+                "faction": "jin",
                 "player": "kazakh"
               }
             ],
             "桂林": [
               {
                 "count": 1,
+                "faction": "yao",
                 "player": "tibet"
               }
             ]
@@ -935,24 +943,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "underground_church",
                 "player": "red"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "manchuria"
               }
             ],
             "太原": [
               {
                 "count": 1,
+                "faction": "jin",
                 "player": "kazakh"
               }
             ],
             "桂林": [
               {
                 "count": 1,
+                "faction": "yao",
                 "player": "tibet"
               }
             ]
@@ -1360,24 +1372,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "underground_church",
                 "player": "red"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "manchuria"
               }
             ],
             "太原": [
               {
                 "count": 1,
+                "faction": "jin",
                 "player": "kazakh"
               }
             ],
             "桂林": [
               {
                 "count": 1,
+                "faction": "yao",
                 "player": "tibet"
               }
             ]
@@ -1793,24 +1809,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "underground_church",
                 "player": "red"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "manchuria"
               }
             ],
             "太原": [
               {
                 "count": 1,
+                "faction": "jin",
                 "player": "kazakh"
               }
             ],
             "桂林": [
               {
                 "count": 1,
+                "faction": "yao",
                 "player": "tibet"
               }
             ]
@@ -2232,30 +2252,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -2693,30 +2718,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -3132,30 +3162,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -3575,30 +3610,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -4014,30 +4054,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -4447,30 +4492,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -4908,30 +4958,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -5347,30 +5402,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -5790,30 +5850,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -6229,30 +6294,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -6665,30 +6735,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -7135,30 +7210,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -7583,30 +7663,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -8035,30 +8120,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -8483,30 +8573,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -8929,30 +9024,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -9409,30 +9509,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -9871,30 +9976,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -10333,30 +10443,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -10795,30 +10910,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -11255,30 +11375,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -11745,30 +11870,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -12217,30 +12347,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -12689,30 +12824,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -13161,30 +13301,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -13631,30 +13776,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -14128,30 +14278,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -14605,30 +14760,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -15082,30 +15242,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -15559,30 +15724,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -16043,30 +16213,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -16551,30 +16726,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -17039,30 +17219,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -17527,30 +17712,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -18015,30 +18205,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -18502,30 +18697,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -19017,30 +19217,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -19512,30 +19717,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -20007,30 +20217,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -20502,30 +20717,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -20996,30 +21216,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -21518,30 +21743,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -22020,30 +22250,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -22522,30 +22757,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -23024,30 +23264,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -23532,30 +23777,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -24095,30 +24345,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -24632,30 +24887,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -25177,30 +25437,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -25716,30 +25981,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -26256,30 +26526,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -26818,30 +27093,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -27356,30 +27636,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -27894,30 +28179,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -28440,30 +28730,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -28980,30 +29275,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -29507,30 +29807,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -30018,30 +30323,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -30529,30 +30839,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -31040,30 +31355,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -31549,30 +31869,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -32076,30 +32401,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -32587,30 +32917,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -33098,30 +33433,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -33609,30 +33949,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -34121,30 +34466,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -34649,30 +34999,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -35161,30 +35516,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -35673,30 +36033,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -36185,30 +36550,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -36696,30 +37066,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -37225,30 +37600,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -37738,30 +38118,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -38251,30 +38636,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -38764,30 +39154,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -39279,30 +39674,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -39805,30 +40205,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -40315,30 +40720,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -40823,30 +41233,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -41331,30 +41746,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -41841,30 +42261,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -42360,30 +42785,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -42861,30 +43291,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -43362,30 +43797,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -43861,30 +44301,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -44369,30 +44814,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -44921,30 +45371,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -45447,30 +45902,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -45981,30 +46441,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -46509,30 +46974,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -47038,30 +47508,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -47591,30 +48066,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -48120,30 +48600,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -48649,30 +49134,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -49186,30 +49676,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -49717,30 +50212,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -50237,30 +50737,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -50741,30 +51246,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -51245,30 +51755,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -51749,30 +52264,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -52251,30 +52771,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -52771,30 +53296,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -53275,30 +53805,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -53779,30 +54314,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -54283,30 +54823,35 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "天津": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -54789,24 +55334,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -55304,24 +55853,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -55803,24 +56356,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -56302,24 +56859,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -56801,24 +57362,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -57300,24 +57865,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -57815,24 +58384,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -58314,24 +58887,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -58813,24 +59390,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -59312,24 +59893,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -59810,24 +60395,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -60326,24 +60915,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -60826,24 +61419,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -61326,24 +61923,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -61826,24 +62427,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -62327,24 +62932,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -62855,24 +63464,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -63367,24 +63980,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -63877,24 +64494,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -64387,24 +65008,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -64898,24 +65523,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -65442,24 +66071,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -65964,24 +66597,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -66490,24 +67127,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -67010,24 +67651,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -67533,24 +68178,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -68091,24 +68740,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -68625,24 +69278,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -69163,24 +69820,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -69697,24 +70358,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -70231,24 +70896,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -70790,24 +71459,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -71325,24 +71998,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -71864,24 +72541,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -72399,24 +73080,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -72932,24 +73617,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -73491,24 +74180,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -74026,24 +74719,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -74565,24 +75262,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -75100,24 +75801,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -75631,24 +76336,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -76190,24 +76899,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -76725,24 +77438,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -77264,24 +77981,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -77799,24 +78520,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -78333,24 +79058,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -78899,24 +79628,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -79441,24 +80174,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -79987,24 +80724,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -80529,24 +81270,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -81070,24 +81815,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -81643,24 +82392,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -82192,24 +82945,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -82745,24 +83502,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -83294,24 +84055,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -83844,24 +84609,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -84426,24 +85195,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -84984,24 +85757,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -85546,24 +86323,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -86104,24 +86885,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -86662,24 +87447,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -87251,24 +88040,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -87814,24 +88607,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -88381,24 +89178,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -88944,24 +89745,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -89497,24 +90302,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -90078,24 +90887,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -90633,24 +91446,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -91192,24 +92009,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -91747,24 +92568,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -92300,24 +93125,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -92881,24 +93710,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -93436,24 +94269,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -93995,24 +94832,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]
@@ -94550,24 +95391,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "東京": [
               {
                 "count": 1,
+                "faction": "manchuria",
                 "player": "manchuria"
               }
             ],
             "達蘭薩拉": [
               {
                 "count": 1,
+                "faction": "tibet_dharamsala",
                 "player": "tibet"
               }
             ],
             "阿拉木圖": [
               {
                 "count": 1,
+                "faction": "kazakh",
                 "player": "kazakh"
               }
             ]

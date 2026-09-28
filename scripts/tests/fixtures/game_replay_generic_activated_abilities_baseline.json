@@ -55,24 +55,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "liberals"
               }
             ],
             "哲古宗": [
               {
                 "count": 1,
+                "faction": "tibet_chogu",
                 "player": "aomen"
               }
             ],
             "臺北": [
               {
                 "count": 1,
+                "faction": "taiwan_green",
                 "player": "red"
               }
             ],
             "貴陽": [
               {
                 "count": 1,
+                "faction": "ye_lang_qian",
                 "player": "minyun"
               }
             ]
@@ -514,24 +518,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "liberals"
               }
             ],
             "哲古宗": [
               {
                 "count": 1,
+                "faction": "tibet_chogu",
                 "player": "aomen"
               }
             ],
             "臺北": [
               {
                 "count": 1,
+                "faction": "taiwan_green",
                 "player": "red"
               }
             ],
             "貴陽": [
               {
                 "count": 1,
+                "faction": "ye_lang_qian",
                 "player": "minyun"
               }
             ]
@@ -943,24 +951,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "liberals"
               }
             ],
             "哲古宗": [
               {
                 "count": 1,
+                "faction": "tibet_chogu",
                 "player": "aomen"
               }
             ],
             "臺北": [
               {
                 "count": 1,
+                "faction": "taiwan_green",
                 "player": "red"
               }
             ],
             "貴陽": [
               {
                 "count": 1,
+                "faction": "ye_lang_qian",
                 "player": "minyun"
               }
             ]
@@ -1384,24 +1396,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "liberals"
               }
             ],
             "哲古宗": [
               {
                 "count": 1,
+                "faction": "tibet_chogu",
                 "player": "aomen"
               }
             ],
             "臺北": [
               {
                 "count": 1,
+                "faction": "taiwan_green",
                 "player": "red"
               }
             ],
             "貴陽": [
               {
                 "count": 1,
+                "faction": "ye_lang_qian",
                 "player": "minyun"
               }
             ]
@@ -1825,24 +1841,28 @@
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "liberals"
               }
             ],
             "哲古宗": [
               {
                 "count": 1,
+                "faction": "tibet_chogu",
                 "player": "aomen"
               }
             ],
             "臺北": [
               {
                 "count": 1,
+                "faction": "taiwan_green",
                 "player": "red"
               }
             ],
             "貴陽": [
               {
                 "count": 1,
+                "faction": "ye_lang_qian",
                 "player": "minyun"
               }
             ]
@@ -2272,24 +2292,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -2731,24 +2755,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -3172,24 +3200,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -3613,24 +3645,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -4054,24 +4090,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -4489,24 +4529,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -4948,24 +4992,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -5389,24 +5437,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -5830,24 +5882,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -6271,24 +6327,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -6707,24 +6767,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -7171,24 +7235,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -7617,24 +7685,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -8063,24 +8135,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -8509,24 +8585,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -8950,24 +9030,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -9415,24 +9499,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -9862,24 +9950,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -10309,24 +10401,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -10756,24 +10852,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -11198,24 +11298,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -11668,24 +11772,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -12120,24 +12228,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -12572,24 +12684,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -13024,24 +13140,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -13471,24 +13591,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -13942,24 +14066,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -14395,24 +14523,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -14848,24 +14980,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -15301,24 +15437,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -15752,24 +15892,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -16219,24 +16363,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -16670,24 +16818,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -17121,24 +17273,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -17570,24 +17726,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -18015,24 +18175,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -18482,24 +18646,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -18933,24 +19101,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -19384,24 +19556,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -19833,24 +20009,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -20281,24 +20461,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -20756,24 +20940,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -21213,24 +21401,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -21670,24 +21862,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -22127,24 +22323,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -22586,24 +22786,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -23075,24 +23279,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -23546,24 +23754,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -24017,24 +24229,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -24488,24 +24704,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -24954,24 +25174,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -25446,24 +25670,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -25920,24 +26148,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -26394,24 +26626,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -26868,24 +27104,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -27337,24 +27577,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -27830,24 +28074,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -28305,24 +28553,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -28780,24 +29032,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -29255,24 +29511,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -29724,24 +29984,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -30217,24 +30481,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -30692,24 +30960,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -31167,24 +31439,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -31642,24 +31918,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -32112,24 +32392,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -32606,24 +32890,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -33082,24 +33370,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -33558,24 +33850,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -34034,24 +34330,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -34508,24 +34808,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -34998,24 +35302,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -35472,24 +35780,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -35946,24 +36258,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -36418,24 +36734,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -36886,24 +37206,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -37376,24 +37700,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -37850,24 +38178,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -38324,24 +38656,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -38796,24 +39132,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -39282,24 +39622,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -39795,24 +40139,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -40290,24 +40638,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -40785,24 +41137,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -41280,24 +41636,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -41753,24 +42113,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -42254,24 +42618,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -42737,24 +43105,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -43220,24 +43592,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -43703,24 +44079,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -44181,24 +44561,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -44685,24 +45069,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -45171,24 +45559,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -45657,24 +46049,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -46143,24 +46539,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -46624,24 +47024,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -47129,24 +47533,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -47616,24 +48024,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -48103,24 +48515,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -48590,24 +49006,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -49071,24 +49491,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -49576,24 +50000,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -50063,24 +50491,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -50550,24 +50982,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -51037,24 +51473,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -51519,24 +51959,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -52025,24 +52469,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -52513,24 +52961,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -53001,24 +53453,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -53489,24 +53945,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -53975,24 +54435,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -54477,24 +54941,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -54963,24 +55431,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -55449,24 +55921,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -55933,24 +56409,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -56413,24 +56893,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -56915,24 +57399,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -57401,24 +57889,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -57887,24 +58379,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -58371,24 +58867,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -58854,24 +59354,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -59364,24 +59868,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -59856,24 +60364,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -60348,24 +60860,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -60840,24 +61356,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -61331,24 +61851,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -61836,24 +62360,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -62323,24 +62851,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -62810,24 +63342,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -63297,24 +63833,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -63778,24 +64318,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -64283,24 +64827,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -64770,24 +65318,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -65257,24 +65809,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
@@ -65744,24 +66300,28 @@
             "三亞": [
               {
                 "count": 1,
+                "faction": "liberals",
                 "player": "liberals"
               }
             ],
             "北京": [
               {
                 "count": 1,
+                "faction": "red_army",
                 "player": "red"
               }
             ],
             "巴黎": [
               {
                 "count": 1,
+                "faction": "minyun",
                 "player": "minyun"
               }
             ],
             "澳門": [
               {
                 "count": 1,
+                "faction": "aomen",
                 "player": "aomen"
               }
             ]
