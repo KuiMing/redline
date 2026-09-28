@@ -1084,7 +1084,7 @@ function sendDirectBuildAction(townName) {
   }
   const eventChoice = eventBuildChoiceForTown(townName);
   if (eventChoice) {
-    mapWs.send(JSON.stringify({ action: 'resolve_choice', index: eventChoice.index }));
+    mapWs.send(JSON.stringify({ action: 'resolve_choice', index: eventChoice.index, choice_id: supportChoiceHighlight.choiceId }));
     return { ok: true, eventChoice: true, index: eventChoice.index };
   }
   mapWs.send(JSON.stringify({ action: 'build', town: townName }));
@@ -1097,7 +1097,7 @@ function sendDissolveAction(defender, townName) {
   }
   const supportTargetChoice = supportTargetChoiceForTown(townName);
   if (supportTargetChoice) {
-    mapWs.send(JSON.stringify({ action: 'resolve_choice', index: supportTargetChoice.index }));
+    mapWs.send(JSON.stringify({ action: 'resolve_choice', index: supportTargetChoice.index, choice_id: supportChoiceHighlight.choiceId }));
     return { ok: true, supportTargetChoice: true, index: supportTargetChoice.index };
   }
   mapWs.send(JSON.stringify({ action: 'dissolve', defender, town: townName }));

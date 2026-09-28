@@ -43,7 +43,11 @@ def test_business_network_resolve_choice_websocket_broadcasts_last_action_result
             if entry.get('name') == '交通經驗乙'
         )
 
-        ws.send_json({'action': 'resolve_choice', 'index': choice_index})
+        ws.send_json({
+            'action': 'resolve_choice',
+            'index': choice_index,
+            'choice_id': pending_state['pending_choice']['choice_id'],
+        })
         resolved_state = ws.receive_json()
 
     me = next(player for player in resolved_state['players'] if player['id'] == player_id)

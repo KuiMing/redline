@@ -4191,6 +4191,7 @@ class Game(CardPlayMixin):
     def _project_pending_choice(self, viewer_player_id, viewer_player):
         pending_choice = None
         if self.pending_choice:
+            self.pending_choice.setdefault('choice_id', uuid.uuid4().hex)
             raw_pending_context = self.pending_choice.get('context')
             pending_context = dict(raw_pending_context) if isinstance(raw_pending_context, dict) else {}
             pending_effect_type = pending_context.get('effect_type')
@@ -4279,6 +4280,7 @@ class Game(CardPlayMixin):
                 None,
             ) if pending_target_player_id is not None else None
             pending_choice = {
+                'choice_id': self.pending_choice.get('choice_id'),
                 'type': self.pending_choice.get('type'),
                 'choice_key': self.pending_choice.get('choice_key'),
                 'interaction_kind': (

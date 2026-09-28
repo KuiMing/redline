@@ -85,7 +85,30 @@ async def test_call_guarded_passes_through_successful_result():
 @pytest.mark.anyio
 async def test_resolve_pending_choice_requires_exactly_one_of_index_or_indices():
     ctx = _Ctx(_FakeClient())
-    both = await gameplay.resolve_pending_choice(ctx, "g1", "p1", index=0, indices=[0, 1])
-    neither = await gameplay.resolve_pending_choice(ctx, "g1", "p1")
+    both = await gameplay.resolve_pending_choice(ctx, "g1", "p1", "choice-1", index=0, indices=[0, 1])
+    neither = await gameplay.resolve_pending_choice(ctx, "g1", "p1", "choice-1")
     assert both == {"ok": False, "error": "Provide exactly one of index or indices"}
     assert neither == {"ok": False, "error": "Provide exactly one of index or indices"}
+
+
+@pytest.mark.anyio
+async def test_pending_choice_tools_forward_the_callers_choice_id(monkeypatch):
+    sent = []
+
+    async def fake_do_action(ctx, game_id, player_id, action, payload):
+        sent.append((action, payload))
+        return {"ok": True}
+
+    monkeypatch.setattr(gameplay, "_do_action", fake_do_action)
+    ctx = _Ctx(_FakeClient())
+
+    assert await gameplay.resolve_pending_choice(
+        ctx, "g1", "p1", "old-choice-id", index=0
+    ) == {"ok": True}
+    assert await gameplay.cancel_pending_choice(
+        ctx, "g1", "p1", "old-cancel-id"
+    ) == {"ok": True}
+    assert sent == [
+        ("resolve_choice", {"index": 0, "choice_id": "old-choice-id"}),
+        ("cancel_choice", {"choice_id": "old-cancel-id"}),
+    ]

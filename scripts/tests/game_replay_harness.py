@@ -18,9 +18,14 @@ import json
 
 
 def normalize_state(state):
-    """Strip the one known non-deterministic field (the game's own uuid4 id)."""
+    """Strip transport nonces and the game's non-deterministic uuid4 id."""
     state = dict(state)
     state.pop('id', None)
+    pending_choice = state.get('pending_choice')
+    if isinstance(pending_choice, dict):
+        pending_choice = dict(pending_choice)
+        pending_choice.pop('choice_id', None)
+        state['pending_choice'] = pending_choice
     return state
 
 

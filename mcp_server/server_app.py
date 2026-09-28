@@ -192,15 +192,21 @@ def register_tools(app: MCPServer, ctx: AppContext) -> None:
 
     @app.tool()
     async def resolve_pending_choice(
-        game_id: str, player_id: str, index: int | None = None, indices: list[int] | None = None
+        game_id: str,
+        player_id: str,
+        choice_id: str,
+        index: int | None = None,
+        indices: list[int] | None = None,
     ) -> dict[str, Any]:
-        """Answer the current pending_choice by picking from its options/towns/targets/cards list. Pass `index` for a single pick; pass `indices` (a list) when get_legal_actions shows choice_type 'multi_card_choice' (count/min_count > 1)."""
-        return await gameplay.resolve_pending_choice(ctx, game_id, player_id, index=index, indices=indices)
+        """Answer the pending_choice identified by get_state/get_legal_actions `choice_id`. Pass `index` for a single pick; pass `indices` for a multi-card choice."""
+        return await gameplay.resolve_pending_choice(
+            ctx, game_id, player_id, choice_id, index=index, indices=indices
+        )
 
     @app.tool()
-    async def cancel_pending_choice(game_id: str, player_id: str) -> dict[str, Any]:
-        """Cancel the current pending_choice, if get_state/get_legal_actions marks it cancellable."""
-        return await gameplay.cancel_pending_choice(ctx, game_id, player_id)
+    async def cancel_pending_choice(game_id: str, player_id: str, choice_id: str) -> dict[str, Any]:
+        """Cancel the pending_choice identified by get_state/get_legal_actions `choice_id`, if it is cancellable."""
+        return await gameplay.cancel_pending_choice(ctx, game_id, player_id, choice_id)
 
     @app.tool()
     async def set_base(game_id: str, player_id: str, town: str, label: str | None = None) -> dict[str, Any]:
