@@ -279,7 +279,6 @@ const highlightLayer = L.layerGroup().addTo(map);
 const supportChoiceHighlightLayer = L.layerGroup().addTo(map);
 let labelMode = 'auto', showRoad = true, showRail = true;
 let currentMarkers = new Map();
-let currentSharedBadges = new Map();
 let currentArmoryBadges = new Map();
 let currentBaseBadges = new Map();
 let currentVisible = towns.map(t=>t.name);
@@ -350,12 +349,6 @@ function totalOrganizationsInTown(name) {
 
 function sharedAccessForTown(name) {
   return ((lastGameState && lastGameState.map && lastGameState.map.shared_access && lastGameState.map.shared_access[name]) || []);
-}
-
-function sharedAccessSummary(name) {
-  const shared = sharedAccessForTown(name);
-  if (!shared.length) return '無';
-  return `此城鎮可被 ${shared.join(' / ')} 視為共用組織`;
 }
 
 function popupHtml(t) {
@@ -647,7 +640,7 @@ function updateStatusPanel() {
     } else if (lastResolvedMove) {
       hintEl.innerHTML = `已完成移動：<span class="hint-strong">${lastResolvedMove.from}</span> → <span class="hint-strong">${lastResolvedMove.to}</span>`;
     } else if (!selectedTown) {
-      hintEl.innerHTML = '連上遊戲後，只有 <span class="hint-strong">當前玩家自己擁有組織</span> 的城鎮可以高亮合法移動；若城鎮具有共享組織，會以 <span class="hint-strong">金色外框與 S 標記</span> 顯示。';
+      hintEl.innerHTML = '連上遊戲後，只有 <span class="hint-strong">當前玩家自己擁有組織</span> 的城鎮可以高亮合法移動；若城鎮具有共享組織，會以 <span class="hint-strong">黃色圓圈</span> 顯示。';
     } else if (eventBuildChoiceForTown(selectedTown)) {
       hintEl.innerHTML = `已選取 <span class="hint-strong">${selectedTown}</span>：事件卡效果允許在此建立組織，請使用左側「在目前城鎮建立組織（事件卡）」按鈕完成。`;
     } else if (playerOwnsTown(selectedTown)) {
@@ -748,11 +741,7 @@ function clearLayers() {
   armoryBadgeLayer.clearLayers();
   baseBadgeLayer.clearLayers();
   highlightLayer.clearLayers();
-  currentSharedBadges.forEach(marker => {
-    try { map.removeLayer(marker); } catch {}
-  });
   currentMarkers = new Map();
-  currentSharedBadges = new Map();
   currentArmoryBadges = new Map();
   currentBaseBadges = new Map();
 }
@@ -1206,11 +1195,6 @@ function updateDynamicStyles() {
       layer.setTooltipContent(labelTextForTown(name));
     }
   });
-  currentSharedBadges.forEach((badge, townName) => {
-    const town = byName.get(townName);
-    if (!town || !badge.setLatLng || !badge.getElement) return;
-    badge.setLatLng(townDisplayLatLng(town));
-  });
   currentArmoryBadges.forEach((badge, townName) => {
     const town = byName.get(townName);
     if (!town || !badge.setLatLng) return;
@@ -1287,21 +1271,6 @@ function renderMap() {
     const marker = L.circleMarker(townDisplayLatLng(t), markerStyleForTown(t.name)).addTo(markerLayer);
     marker.bindPopup(popupHtml(t), { maxWidth:380 });
 
-    const shared = sharedAccessForTown(t.name);
-    if (shared.length) {
-      const badge = L.marker(townDisplayLatLng(t), {
-        interactive: false,
-        keyboard: false,
-        zIndexOffset: 700,
-        icon: L.divIcon({
-          className: 'shared-badge-wrap',
-          html: `<div class="shared-badge ${shared.length > 1 ? 'shared-badge-multi' : ''}" title="${sharedAccessSummary(t.name)}">S${shared.length > 1 ? shared.length : ''}</div>`,
-          iconSize: [26, 22],
-          iconAnchor: [-2, 14],
-        })
-      }).addTo(map);
-      currentSharedBadges.set(t.name, badge);
-    }
     if (t.type === '軍火庫' && !currentArmoryBadges.has(t.name)) {
       const armoryBadge = L.marker(townDisplayLatLng(t), {
         interactive: false,
