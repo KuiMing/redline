@@ -1373,7 +1373,7 @@ class Game(CardPlayMixin):
         # restrict_ignore_distance_build 紅色壓制，如[反賊]公知世代的終結、[哈薩克]伊塔事件）：
         # 比照組織經驗甲卡面的降級慣例，「牆內任意城鎮」清單降級為「己方組織1格內」
         # （若另有增加建立距離的能力則為2格；實作裁定，見 TODO 記錄）。
-        near_towns = self._restricted_build_fallback_towns(player, 1, include_shared=False)
+        near_towns = self._restricted_build_fallback_towns(player, 1, include_shared=True)
         if near_only:
             reachable = near_towns & inner_towns
         else:

@@ -203,7 +203,7 @@ def test_canceling_borrowed_beiguo_support_restores_exact_card_and_return_marker
     assert game.pending_choice is None
 
 
-def test_shared_organizations_are_not_support_origins_targets_or_sacrifices():
+def test_shared_organizations_are_available_to_every_spatial_support_effect():
     game = Game([("actor", "粵"), ("sharer", "香港"), ("enemy", "敵方")])
     actor, sharer, enemy = game.players
     actor.faction_id = "yue"
@@ -224,18 +224,185 @@ def test_shared_organizations_are_not_support_origins_targets_or_sacrifices():
     actual_builds = {
         entry["town"] for entry in game._interactive_support_build_towns(actor, near_only=True)
     }
-    assert actual_builds == set()
-    assert not any(
+    assert "梅州" in actual_builds
+    assert any(
         entry["player_id"] == enemy.id and entry["town"] == "深圳"
-        for entry in game._interactive_support_dissolve_targets(actor, include_shared_source=False)
+        for entry in game._interactive_support_dissolve_targets(actor, include_shared_source=True)
     )
-    assert not game._player_has_org_within_steps_of_player(
-        actor, enemy, max_steps=1, include_shared_source=False
+    assert game._player_has_org_within_steps_of_player(
+        actor, enemy, max_steps=1, include_shared_source=True
     )
-    assert not any(
+    assert any(
         entry["town"] == "廣州"
-        for entry in game._interactive_support_sacrifice_towns(actor, include_shared_source=False)
+        for entry in game._interactive_support_sacrifice_towns(actor, include_shared_source=True)
     )
+
+
+@pytest.mark.parametrize(("tier", "discard_count"), [(1, 1), (2, 1), (3, 2)])
+def test_tianfang_support_uses_gender_revolution_base_shared_with_taiwan_green(
+    tier, discard_count
+):
+    game = Game([("red", "紅軍"), ("tw", "臺灣綠線"), ("gender", "性別革命")])
+    red, taiwan, gender = game.players
+    red.faction_id = "red_army"
+    red.base = "北京"
+    red.organizations = {"北京": 1}
+    red.hand = [Card(f"紅軍手牌 {index}", "command", {}) for index in range(3)]
+    taiwan.faction_id = "taiwan_green"
+    taiwan.base = "臺北"
+    taiwan.organizations = {"臺北": 1}
+    taiwan.hand = [game._make_support_card("天方奧援")]
+    gender.faction_id = "gender_revolution"
+    gender.base = "天津"
+    gender.organizations = {"天津": 1}
+    game.current_player_index = 1
+    game.turn_phase = TurnPhase.ACTION
+    game.turn_log = game._new_turn_log()
+    game._support_card_tier = lambda _player, _card: (tier, 0, [])
+
+    played = game.play_card(0, mode="action")
+
+    assert played.get("pending_choice") is True, played
+    assert any(
+        entry["player_id"] == red.id
+        for entry in game.pending_choice["targets"]
+    )
+    assert game.pending_choice["context"]["include_shared_source"] is True
+    red_target_index = next(
+        index
+        for index, entry in enumerate(game.pending_choice["targets"])
+        if entry["player_id"] == red.id
+    )
+    resolved = game.resolve_pending_choice(taiwan.id, red_target_index)
+    assert resolved.get("success") is True, resolved
+    if tier == 1:
+        assert resolved.get("pending_choice") is True, resolved
+        assert game.pending_choice["player_id"] == red.id
+        resolved = game.resolve_pending_choice(red.id, 0)
+        assert resolved.get("success") is True, resolved
+    assert len(red.hand) == 3 - discard_count
+    assert len(red.deck.discard_pile) == discard_count
+
+
+@pytest.mark.parametrize(
+    ("card_name", "tier", "expected_choice_key"),
+    [
+        ("東洋奧援", 2, "support_interaction"),
+        ("北國奧援", 2, "support_interaction"),
+        ("北國奧援", 3, "support_interaction"),
+        ("臺灣奧援", 2, "support_interaction"),
+        ("臺灣奧援", 3, "support_interaction"),
+    ],
+)
+def test_other_spatial_support_cards_use_shared_organization_as_range_origin(
+    card_name, tier, expected_choice_key
+):
+    game = Game([("actor", "臺灣綠線"), ("sharer", "性別革命"), ("enemy", "紅軍")])
+    actor, sharer, enemy = game.players
+    actor.faction_id = "taiwan_green"
+    actor.base = "臺北"
+    actor.organizations = {"臺北": 1}
+    actor.hand = [game._make_support_card(card_name)]
+    sharer.faction_id = "gender_revolution"
+    sharer.base = "天津"
+    sharer.organizations = {"天津": 1}
+    enemy.faction_id = "red_army"
+    enemy.base = "巴黎"
+    enemy.organizations = {} if card_name == "東洋奧援" else {"北京": 1}
+    game.current_player_index = 0
+    game.turn_phase = TurnPhase.ACTION
+    game.turn_log = game._new_turn_log()
+    game._support_card_tier = lambda _player, _card: (tier, 0, [])
+
+    played = game.play_card(0, mode="action")
+
+    assert played.get("pending_choice") is True, played
+    assert game.pending_choice["choice_key"] == expected_choice_key
+    choices = game.pending_choice.get("towns") or game.pending_choice.get("targets") or []
+    assert any(entry.get("town") == "北京" for entry in choices)
+    assert game.pending_choice["context"]["include_shared_source"] is True
+
+
+def test_beiguo_tier_three_keeps_shared_origin_for_second_dissolve():
+    game = Game([("actor", "臺灣綠線"), ("sharer", "性別革命"), ("enemy", "紅軍")])
+    actor, sharer, enemy = game.players
+    actor.faction_id = "taiwan_green"
+    actor.base = "臺北"
+    actor.organizations = {"臺北": 1}
+    actor.hand = [game._make_support_card("北國奧援")]
+    sharer.faction_id = "gender_revolution"
+    sharer.base = "天津"
+    sharer.organizations = {"天津": 1}
+    enemy.faction_id = "red_army"
+    enemy.base = "巴黎"
+    enemy.organizations = {"北京": 1, "濟南": 1}
+    game.current_player_index = 0
+    game.turn_phase = TurnPhase.ACTION
+    game.turn_log = game._new_turn_log()
+    game._support_card_tier = lambda _player, _card: (3, 0, [])
+
+    assert game.play_card(0, mode="action").get("pending_choice") is True
+    first_index = next(
+        index for index, entry in enumerate(game.pending_choice["targets"])
+        if entry["town"] == "北京"
+    )
+    first = game.resolve_pending_choice(actor.id, first_index)
+
+    assert first.get("pending_choice") is True, first
+    assert game.pending_choice["context"]["include_shared_source"] is True
+    assert [entry["town"] for entry in game.pending_choice["targets"]] == ["濟南"]
+    final = game.resolve_pending_choice(actor.id, 0)
+    assert final.get("success") is True, final
+    assert enemy.organizations == {}
+
+
+def test_stale_tianfang_choice_refresh_keeps_shared_origins():
+    game = Game([
+        ("actor", "臺灣綠線"),
+        ("sharer", "性別革命"),
+        ("red_one", "紅軍一"),
+        ("red_two", "紅軍二"),
+    ])
+    actor, sharer, red_one, red_two = game.players
+    actor.faction_id = "taiwan_green"
+    actor.base = "臺北"
+    actor.organizations = {"臺北": 1}
+    actor.hand = [game._make_support_card("天方奧援")]
+    sharer.faction_id = "gender_revolution"
+    sharer.base = "天津"
+    sharer.organizations = {"天津": 1, "南京": 1}
+    sharer.hand = []
+    red_one.faction_id = "red_army"
+    red_one.base = "北京"
+    red_one.organizations = {"北京": 1}
+    red_one.hand = [Card("已失效目標", "command", {})]
+    red_two.faction_id = "red_army"
+    red_two.base = "上海"
+    red_two.organizations = {"上海": 1}
+    red_two.hand = [Card("仍合法目標", "command", {})]
+    game.current_player_index = 0
+    game.turn_phase = TurnPhase.ACTION
+    game.turn_log = game._new_turn_log()
+    game._support_card_tier = lambda _player, _card: (1, 0, [])
+
+    assert game.play_card(0, mode="action").get("pending_choice") is True
+    stale_index = next(
+        index for index, entry in enumerate(game.pending_choice["targets"])
+        if entry["player_id"] == red_one.id
+    )
+    red_one.hand = []
+    stale = game.resolve_pending_choice(actor.id, stale_index)
+
+    assert stale.get("retryable") is True, stale
+    assert game.pending_choice["context"]["include_shared_source"] is True
+    assert [entry["player_id"] for entry in game.pending_choice["targets"]] == [red_two.id]
+    completed = game.resolve_pending_choice(actor.id, 0)
+    assert completed.get("success") is True, completed
+    assert completed.get("pending_choice") is True, completed
+    assert game.pending_choice["player_id"] == red_two.id
+    completed = game.resolve_pending_choice(red_two.id, 0)
+    assert completed.get("success") is True, completed
+    assert red_two.hand == []
 
 
 def test_support_cannot_target_an_opponents_shared_physical_organization():
@@ -263,7 +430,7 @@ def test_support_cannot_target_an_opponents_shared_physical_organization():
     assert owner.organizations == {"廣州": 1}
 
 
-def test_beiguo_tier_one_cannot_sacrifice_a_shared_physical_organization():
+def test_beiguo_tier_one_can_sacrifice_a_shared_physical_organization():
     game = Game([("actor", "粵"), ("sharer", "香港"), ("enemy", "敵方")])
     actor, sharer, enemy = game.players
     actor.faction_id = "yue"
@@ -283,10 +450,15 @@ def test_beiguo_tier_one_cannot_sacrifice_a_shared_physical_organization():
 
     played = game.play_card(0, mode="action")
 
-    assert played.get("error") == "No legal target for interactive support card"
-    assert [card.name for card in actor.hand] == ["北國奧援"]
-    assert sharer.organizations == {"廣州": 1}
-    assert game.pending_choice is None
+    assert played.get("pending_choice") is True, played
+    assert [entry["town"] for entry in game.pending_choice["towns"]] == ["廣州"]
+    sacrificed = game.resolve_pending_choice(actor.id, 0)
+    assert sacrificed.get("pending_choice") is True, sacrificed
+    assert sharer.organizations == {}
+    assert game.pending_choice["step"] == "target"
+    assert [(entry["player_id"], entry["town"]) for entry in game.pending_choice["targets"]] == [
+        (enemy.id, "深圳")
+    ]
 
 
 def test_beiguo_tier_one_sacrifices_own_org_then_dissolves_enemy_within_one_step():

@@ -291,6 +291,46 @@ def test_north_support_map_tier_queues_dissolve_behind_active_build_choice():
     assert game.pending_choice is None
 
 
+def test_queued_north_support_refresh_keeps_shared_origin():
+    game = Game([('actor', '臺灣綠線'), ('enemy', '紅軍'), ('sharer', '性別革命')])
+    actor, enemy, sharer = game.players
+    actor.faction_id = 'taiwan_green'
+    actor.base = '臺北'
+    actor.organizations = {'臺北': 1}
+    enemy.faction_id = 'red_army'
+    enemy.base = '巴黎'
+    enemy.organizations = {'北京': 1}
+    sharer.faction_id = 'gender_revolution'
+    sharer.base = '天津'
+    sharer.organizations = {'天津': 1}
+    actor.hand = [action_card(game, '組織經驗丙'), game._make_support_card('北國奧援')]
+    game.current_player_index = 0
+    game.game_phase = GamePhase.MAIN
+    game.turn_phase = TurnPhase.ACTION
+    game.pending_base_choices = {}
+    game.pending_choice = None
+    game.turn_log = game._new_turn_log()
+    game._support_card_tier = lambda _player, card: (2, 0, []) if card.name == '北國奧援' else (1, 0, [])
+
+    assert game.play_card(0, mode='action').get('pending_choice') is True
+    queued = game.play_card(0, mode='action')
+    assert queued.get('pending_choice') is True, queued
+    queued_support = game._queued_card_build_choices[0]
+    assert queued_support['context']['include_shared_source'] is True
+
+    _, activated = choose_town(game, actor)
+
+    assert activated.get('pending_choice') is True, activated
+    assert game.pending_choice['source_name'] == '北國奧援'
+    assert game.pending_choice['context']['include_shared_source'] is True
+    assert [(entry['player_id'], entry['town']) for entry in game.pending_choice['targets']] == [
+        (enemy.id, '北京')
+    ]
+    _, resolved = choose_target(game, actor, '北京')
+    assert resolved.get('success') is True, resolved
+    assert enemy.organizations == {}
+
+
 def test_targetless_queued_support_still_settles_deferred_card_triggers(monkeypatch):
     game, actor, enemy = make_dissolve_game()
     enemy.organizations = {'北京': 1, '新北': 1}

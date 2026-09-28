@@ -1680,14 +1680,14 @@ class CardPlayMixin:
                 require_self_sacrifice=False,
                 max_steps=int(payload.get('range', 1) or 1),
                 target_region=payload.get('target_region'),
-                include_shared_source=False,
+                include_shared_source=True,
             )
         if effect_type == 'interactive_dissolve_self_and_enemy':
             return self._interactive_support_sacrifice_towns(
                 player,
                 max_steps=int(payload.get('range', 1) or 1),
                 target_region=payload.get('target_region'),
-                include_shared_source=False,
+                include_shared_source=True,
             )
         if effect_type == 'interactive_dissolve_and_build':
             targets = self._interactive_support_dissolve_targets(
@@ -1695,7 +1695,7 @@ class CardPlayMixin:
                 require_self_sacrifice=False,
                 max_steps=int(payload.get('range', 1) or 1),
                 target_region=payload.get('target_region'),
-                include_shared_source=False,
+                include_shared_source=True,
             )
             return [
                 entry
@@ -1711,7 +1711,7 @@ class CardPlayMixin:
                 player,
                 max_steps=int(payload.get('range', 1) or 1),
                 target_region=payload.get('target_region'),
-                include_shared_source=False,
+                include_shared_source=True,
             )
         return None
 
@@ -1723,7 +1723,7 @@ class CardPlayMixin:
             'region_index': region_index,
             'effect_type': effect_type,
             'effect_payload': dict(payload or {}),
-            'include_shared_source': False,
+            'include_shared_source': True,
             'effect_text': effect_text,
         }
         targets = self._support_interaction_targets(player, effect_type, payload)
