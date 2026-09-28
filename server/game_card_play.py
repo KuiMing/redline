@@ -1495,12 +1495,14 @@ class CardPlayMixin:
             response['pending_choice'] = True
         return response
 
-    def cancel_pending_choice(self, player_id):
+    def cancel_pending_choice(self, player_id, expected_choice_id=None):
         choice = self.pending_choice or {}
         if not choice:
             return {'error': 'No pending choice'}
         if choice.get('player_id') != player_id:
             return {'error': 'Not your pending choice'}
+        if expected_choice_id is not None and choice.get('choice_id') != expected_choice_id:
+            return {'error': 'Stale pending choice'}
         is_registered_cancellable = choice.get('choice_key') in CANCELLABLE_CHOICE_KEYS
         if not is_registered_cancellable and not choice.get('cancellable'):
             return {'error': 'This choice cannot be cancelled'}
@@ -1565,12 +1567,14 @@ class CardPlayMixin:
                 response['pending_choice'] = True
         return response
 
-    def resolve_pending_choice(self, player_id, index, target_player_ids=None):
+    def resolve_pending_choice(self, player_id, index, target_player_ids=None, expected_choice_id=None):
         choice = self.pending_choice or {}
         if not choice:
             return {'error': 'No pending choice'}
         if choice.get('player_id') != player_id:
             return {'error': 'Not your pending choice'}
+        if expected_choice_id is not None and choice.get('choice_id') != expected_choice_id:
+            return {'error': 'Stale pending choice'}
         player = next((p for p in self.players if p.id == player_id), None)
         if not player:
             return {'error': 'Player not found'}
@@ -2322,7 +2326,20 @@ class CardPlayMixin:
         self.log(f"{player.name} played {card_name}")
         return {"success": True}
 
-    def _set_pending_reaction_choice(self, reacting_player, acting_player, played_card, card_name, candidates, effective_type, action_context, support_resolution=None, remaining_candidates=None, resolution_stack=None):
+    def _set_pending_reaction_choice(
+        self,
+        reacting_player,
+        acting_player,
+        played_card,
+        card_name,
+        candidates,
+        effective_type,
+        action_context,
+        support_resolution=None,
+        remaining_candidates=None,
+        resolution_stack=None,
+        closed_reactor_ids=None,
+    ):
         # 2026-08-02 使用者更正：只要持有卡牌，對手「每一次」符合條件的行動都要問是否取消，
         # 不是「這回合問過這個人一次就不再問」。因此這裡不再記錄／檢查 per-turn 的
         # 已詢問名單；`remaining_candidates` 改為承載「這一次出牌」還沒問過的其他候選人，
@@ -2362,6 +2379,10 @@ class CardPlayMixin:
             'cards': list(candidates),
             'remaining_candidates': list(remaining_candidates or []),
             'resolution_stack': resolution_stack,
+            # If one player accepted a reaction, every still-waiting responder in that
+            # layer has had the same prompt closed. Keep those player ids out of deeper
+            # counter layers so the dismissed prompt cannot immediately reappear.
+            'closed_reactor_ids': sorted(closed_reactor_ids or []),
             'prompt': f'{acting_player.name} 打出 {card_name}。是否要取消對方的行動？',
             'source_name': '取消反應',
         }
@@ -2393,6 +2414,7 @@ class CardPlayMixin:
                     support_resolution=choice.get('support_resolution'),
                     remaining_candidates=remaining[1:],
                     resolution_stack=resolution_stack,
+                    closed_reactor_ids=choice.get('closed_reactor_ids'),
                 )
                 result['success'] = True
                 result['skipped_reaction'] = True
@@ -2415,19 +2437,26 @@ class CardPlayMixin:
         )
         if reaction_context is None:
             return {'error': 'Invalid reaction card'}
-        # This reactor cancelled the current top card by playing their own reaction card:
-        # push it as a new stack frame, then treat that play itself as a fresh action that
-        # opens its own reaction window (computed exactly like any other card play, keyed on
-        # the reaction card's printed cost, excluding only the player who just played it).
-        # Anyone still holding a qualifying card — the original actor, a bystander who
-        # declined earlier, or even a player who already spent a different card in this chain
-        # — may counter-cancel. If nobody can (or the frontend is not driving the loop),
-        # settle the whole stack now.
+        # This reactor cancelled the current top card by playing their own reaction card.
+        # Close every still-waiting prompt in this layer before opening a counter layer.
+        # The original actor and players from earlier completed layers may counter-cancel,
+        # but responders whose sibling prompt was just closed cannot immediately receive
+        # the same reaction prompt again in this chain.
         resolution_stack.append({'kind': 'reaction', 'reaction_context': reaction_context})
         self.pending_choice = None
         reaction_card = reaction_context['reaction_card']
         reaction_card_name = reaction_context['reaction_card_name']
-        counter_candidates = self._reaction_prompt_candidates(player, reaction_card)
+        closed_reactor_ids = set(choice.get('closed_reactor_ids') or [])
+        closed_reactor_ids.update(
+            getattr(candidate.get('player'), 'id', None)
+            for candidate in (choice.get('remaining_candidates') or [])
+        )
+        closed_reactor_ids.discard(None)
+        counter_candidates = [
+            candidate
+            for candidate in self._reaction_prompt_candidates(player, reaction_card)
+            if getattr(candidate.get('player'), 'id', None) not in closed_reactor_ids
+        ]
         if counter_candidates:
             first = counter_candidates[0]
             result = self._set_pending_reaction_choice(
@@ -2441,6 +2470,7 @@ class CardPlayMixin:
                 support_resolution=None,
                 remaining_candidates=counter_candidates[1:],
                 resolution_stack=resolution_stack,
+                closed_reactor_ids=closed_reactor_ids,
             )
             result['success'] = True
             result['opened_counter_layer'] = True

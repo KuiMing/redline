@@ -88,9 +88,13 @@ async def _resolve_any_pending_choice(ctx, game_id, player_ids, max_iterations=5
                 continue
             if entry.get("use_indices_param"):
                 pick = list(range(entry.get("min_count") or entry.get("count") or 0))
-                result = await gameplay.resolve_pending_choice(ctx, game_id, player_id, indices=pick)
+                result = await gameplay.resolve_pending_choice(
+                    ctx, game_id, player_id, entry["choice_id"], indices=pick
+                )
             else:
-                result = await gameplay.resolve_pending_choice(ctx, game_id, player_id, index=0)
+                result = await gameplay.resolve_pending_choice(
+                    ctx, game_id, player_id, entry["choice_id"], index=0
+                )
             assert result["ok"] is True, result
             resolved_one = True
         if not resolved_one:

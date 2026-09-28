@@ -1541,6 +1541,9 @@ function connect(options = {}) {
 }
 
 function sendAction(action, payload = {}) {
+  if ((action === 'resolve_choice' || action === 'cancel_choice') && !payload.choice_id) {
+    payload = {...payload, choice_id: lastGameState?.pending_choice?.choice_id};
+  }
   outboundActionSequence += 1;
   setSocketDebug(`sendAction:${action}:readyState=${ws ? ws.readyState : 'null'}`);
   if (!ws || ws.readyState === WebSocket.CLOSED || ws.readyState === WebSocket.CLOSING) {
@@ -2078,6 +2081,7 @@ function eventBuildChoiceMapPayload(choice, sourceName = '', resolvedTitle = '')
   return {
     mode: 'support-targets',
     actionKind: 'build',
+    choiceId: choice.choice_id,
     remainingBuilds: Math.max(1, Number(choice.remaining_builds || 1)),
     choiceKey: choice.choice_key,
     region: choice.region || '',
@@ -2226,6 +2230,7 @@ function renderChoiceModal(state) {
       const payload = {
         mode: 'support-targets',
         actionKind: 'dissolve',
+        choiceId: choice.choice_id,
         choiceKey,
         sourceName: sourceName || choiceKey || '瓦解組織',
         prompt: playerMessageZhTw(choice.prompt, '請在戰略地圖點選要瓦解的組織。'),
@@ -2256,6 +2261,11 @@ function renderChoiceModal(state) {
   const maxChoiceCount = Math.max(0, Number(choice.count || 1));
   const minChoiceCount = choice.min_count === 0 ? 0 : Math.max(1, Number(choice.min_count ?? maxChoiceCount));
   const exactChoiceCount = maxChoiceCount;
+  const resolveCurrentChoice = (index, extra = {}) => sendAction('resolve_choice', {
+    index,
+    choice_id: choice.choice_id,
+    ...extra,
+  });
   const businessNetworkState = renderBusinessNetworkResult(state);
   const businessNetworkModalHeader = renderBusinessNetworkModalHeader(state);
   const mimicLikeTargetChoice = choiceType === 'target_choice';
@@ -2295,11 +2305,11 @@ function renderChoiceModal(state) {
           closeChoiceModal();
           openDivideTargetSelection(
             otherPlayers,
-            targetPlayerIds => sendAction('resolve_choice', {index, target_player_ids: targetPlayerIds}),
+            targetPlayerIds => resolveCurrentChoice(index, {target_player_ids: targetPlayerIds}),
           );
           return;
         }
-        sendAction('resolve_choice', { index });
+        resolveCurrentChoice(index);
         closeChoiceModal();
       };
       const rawZoneLabel = cardEntry && typeof cardEntry === 'object' ? cardEntry.zone_label : '';
@@ -2347,7 +2357,7 @@ function renderChoiceModal(state) {
       if (isVariableCountChoice) {
         if (selected.size < minChoiceCount || selected.size > maxChoiceCount) return;
       } else if (selected.size !== exactChoiceCount) return;
-      sendAction('resolve_choice', { index: Array.from(selected) });
+      resolveCurrentChoice(Array.from(selected));
       closeChoiceModal();
     };
 
@@ -2391,7 +2401,7 @@ function renderChoiceModal(state) {
       const optionLabel = option?.label || '';
       btn.textContent = playerMessageZhTw(optionLabel, `選項 ${index + 1}`) || `選項 ${index + 1}`;
       btn.onclick = () => {
-        sendAction('resolve_choice', { index });
+        resolveCurrentChoice(index);
       };
       cards.appendChild(btn);
     });
@@ -2451,14 +2461,14 @@ function renderChoiceModal(state) {
       yesBtn.className = 'modal-choice-btn reaction-choice-yes';
       yesBtn.type = 'button';
       yesBtn.textContent = '是';
-      yesBtn.onclick = () => sendAction('resolve_choice', { index: 1 });
+      yesBtn.onclick = () => resolveCurrentChoice(1);
       row.appendChild(yesBtn);
 
       const noBtn = document.createElement('button');
       noBtn.className = 'modal-choice-btn reaction-choice-no';
       noBtn.type = 'button';
       noBtn.textContent = '否';
-      noBtn.onclick = () => sendAction('resolve_choice', { index: 0 });
+      noBtn.onclick = () => resolveCurrentChoice(0);
       row.appendChild(noBtn);
     } else {
       // 手上有 2 種以上不同名稱的取消牌時，用哪一張是玩家要做的實質選擇（不同牌之後的
@@ -2467,7 +2477,7 @@ function renderChoiceModal(state) {
       skipBtn.className = 'modal-choice-btn reaction-choice-no';
       skipBtn.type = 'button';
       skipBtn.textContent = '不取消';
-      skipBtn.onclick = () => sendAction('resolve_choice', { index: 0 });
+      skipBtn.onclick = () => resolveCurrentChoice(0);
       row.appendChild(skipBtn);
 
       reactionCards.forEach((cardEntry, cardIndex) => {
@@ -2475,14 +2485,14 @@ function renderChoiceModal(state) {
         btn.className = 'modal-choice-btn';
         btn.type = 'button';
         btn.textContent = `使用 ${cardNameOf(cardEntry, cardIndex)} 取消`;
-        btn.onclick = () => sendAction('resolve_choice', { index: cardIndex + 1 });
+        btn.onclick = () => resolveCurrentChoice(cardIndex + 1);
         row.appendChild(btn);
       });
     }
     wrapper.appendChild(row);
     cards.appendChild(wrapper);
     closeBtn.onclick = () => {
-      sendAction('resolve_choice', { index: 0 });
+      resolveCurrentChoice(0);
     };
   } else if (choiceType === 'town_choice' || (choiceType === 'support_flow_choice' && (choice.step === 'town' || choice.step === 'sacrifice_town'))) {
     (choice.towns || []).forEach((entry, index) => {
@@ -2494,7 +2504,7 @@ function renderChoiceModal(state) {
       const meta = localizedTownLabel ? `｜${localizedTownLabel}` : '';
       btn.textContent = `${town}${meta}`;
       btn.onclick = () => {
-        sendAction('resolve_choice', { index });
+        resolveCurrentChoice(index);
       };
       cards.appendChild(btn);
     });
@@ -2511,7 +2521,7 @@ function renderChoiceModal(state) {
         ? rawTargetLabel
         : (playerMessageZhTw(rawTargetLabel, '') || `目標 ${index + 1}`);
       btn.onclick = () => {
-        sendAction('resolve_choice', { index });
+        resolveCurrentChoice(index);
       };
       row.appendChild(btn);
     });
@@ -2527,7 +2537,7 @@ function renderChoiceModal(state) {
   } else if (choice.cancellable) {
     closeBtn.style.display = '';
     closeBtn.textContent = '取消';
-    closeBtn.onclick = () => { sendAction('cancel_choice'); closeChoiceModal(); };
+    closeBtn.onclick = () => { sendAction('cancel_choice', {choice_id: choice.choice_id}); closeChoiceModal(); };
   } else if (shouldUseMapContextModal) {
     closeBtn.style.display = '';
     closeBtn.textContent = '關閉';

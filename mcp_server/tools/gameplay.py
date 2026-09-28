@@ -143,7 +143,12 @@ async def use_topdeck_right(ctx: AppContext, game_id: str, player_id: str) -> di
 
 
 async def resolve_pending_choice(
-    ctx: AppContext, game_id: str, player_id: str, index: int | None = None, indices: list[int] | None = None
+    ctx: AppContext,
+    game_id: str,
+    player_id: str,
+    choice_id: str,
+    index: int | None = None,
+    indices: list[int] | None = None,
 ) -> dict[str, Any]:
     """Most pending choices take a single `index`. A few (choice_type
     'multi_card_choice' — see get_legal_actions' `count`/`min_count`) need
@@ -151,11 +156,14 @@ async def resolve_pending_choice(
     `index`/`indices` must be given."""
     if (index is None) == (indices is None):
         return {"ok": False, "error": "Provide exactly one of index or indices"}
-    return await _do_action(ctx, game_id, player_id, "resolve_choice", {"index": indices if indices is not None else index})
+    return await _do_action(ctx, game_id, player_id, "resolve_choice", {
+        "index": indices if indices is not None else index,
+        "choice_id": choice_id,
+    })
 
 
-async def cancel_pending_choice(ctx: AppContext, game_id: str, player_id: str) -> dict[str, Any]:
-    return await _do_action(ctx, game_id, player_id, "cancel_choice", {})
+async def cancel_pending_choice(ctx: AppContext, game_id: str, player_id: str, choice_id: str) -> dict[str, Any]:
+    return await _do_action(ctx, game_id, player_id, "cancel_choice", {"choice_id": choice_id})
 
 
 async def set_base(ctx: AppContext, game_id: str, player_id: str, town: str, label: str | None = None) -> dict[str, Any]:

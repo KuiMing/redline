@@ -1,12 +1,12 @@
 # Redline TODO
 
-最後更新：2026-09-06
+最後更新：2026-09-29
 
 本文件只保留尚未完成的工作。已完成內容請查閱 Git history、`CHANGELOG.md` 與 `docs/records/`。
 
 ## 待辦
 
-（目前沒有待辦項目。）
+目前沒有待辦項目。
 
 ## 工作規則
 - 開始新工作前先讀本文件，並執行 `git status --short --branch` 與 `git log --oneline -5`。

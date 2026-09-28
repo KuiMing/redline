@@ -1170,9 +1170,12 @@ def test_counter_cancel_depth3_lets_original_action_resolve():
     assert names(reactor.hand) == []
 
 
-def test_counter_cancel_depth3_with_bystander_who_always_declines():
-    """三人局：C 全程持有可取消卡但每一層都選擇不取消，結果應與只有 A、B 兩人時完全
-    一樣——C 手握合格反應卡這件事本身不該改變任何結算，只是多一次詢問。"""
+def test_first_cancel_closes_other_original_reactors_window_through_counter_chain():
+    """三人局：B、C 同時可取消 A 的牌；B 先取消後，C 的同批反應立即失效。
+
+    A 仍可反制 B，但 C 不得因反制鏈而立刻重開「爆料黑幕」視窗。這可確保第一個
+    成功取消者會清除同一批其他 responder 的 pending reaction，且舊視窗不會重現。
+    """
     g = Game([('p1', 'P1'), ('p2', 'P2'), ('p3', 'P3')])
     g.game_phase = GamePhase.MAIN
     g.turn_phase = TurnPhase.ACTION
@@ -1184,41 +1187,38 @@ def test_counter_cancel_depth3_with_bystander_who_always_declines():
     actor.hand = [card(g, '領導'), card(g, '爆料黑幕')]
     actor.deck.draw_pile = [Card('D1', 'command', {}), Card('D2', 'command', {})]
     b.hand = [card(g, '情報網')]
-    c.hand = [card(g, '爆料黑幕')]  # 全程候選人，但每次都選擇不取消
+    c.hand = [card(g, '爆料黑幕')]
 
     result = g.play_card(0, mode='action')
     assert result.get('pending_choice') is True, result
-    # 最初這層：B、C 都持合格卡，先問 B（players 順序）
     assert g.pending_choice['player_id'] == b.id
-    assert [entry['name'] for entry in g.pending_choice['remaining_candidates'][0]['cards']] == ['爆料黑幕']
+    assert g.pending_choice['remaining_candidates'][0]['player'] is c
 
-    canceled = g.resolve_pending_choice(b.id, 1)  # B 用 情報網 取消 領導（C 沒被問到，因為 B 先取消了）
+    canceled = g.resolve_pending_choice(b.id, 1)
     assert canceled.get('success'), canceled
     assert canceled.get('opened_counter_layer') is True
-    # 反制層：候選人是 A（自己的爆料黑幕）與 C（爆料黑幕），排除剛出牌的 B。players 順序 A 先問。
     assert g.pending_choice['player_id'] == actor.id
-    assert g.pending_choice['remaining_candidates'] and g.pending_choice['remaining_candidates'][0]['player'] is c
+    assert not g.pending_choice.get('remaining_candidates'), 'C 的原反應批次應在 B 成功取消時立即清除'
+    assert g.state(c.id)['pending_choice']['player_id'] == actor.id
 
-    countered = g.resolve_pending_choice(actor.id, 1)  # A 反制
+    countered = g.resolve_pending_choice(actor.id, 1)
     assert countered.get('success'), countered
-    assert g.pending_choice is not None, 'C 仍是候選人，其反應卡對 A 的爆料黑幕也合格'
-    assert g.pending_choice['player_id'] == c.id
-    assert [entry['name'] for entry in g.pending_choice['cards']] == ['爆料黑幕']
-
-    declined = g.resolve_pending_choice(c.id, 0)  # C 選擇不取消
-    assert declined.get('success'), declined
-    assert g.pending_choice is None
+    assert g.pending_choice is None, 'C 的失效反應視窗不得在反制後重現'
+    assert g.resolve_pending_choice(c.id, 1).get('error') == 'No pending choice'
 
     assert sorted(names(actor.hand)) == ['D1', 'D2']
     assert names(actor.deck.discard_pile) == ['爆料黑幕', '領導']
     assert names(b.deck.discard_pile) == ['情報網']
-    assert names(c.hand) == ['爆料黑幕']  # C 從未出牌，卡還在手上
+    assert names(c.hand) == ['爆料黑幕']
     assert names(c.deck.discard_pile) == []
 
 
-def test_counter_cancel_depth4_third_player_joins_chain_and_recancels_original():
-    """使用者確認的產品設計：A 出牌、B 取消、A 反制、C 也能加入反制鏈再取消 A 的反制——
-    使 A 的原始牌最終還是被取消（堆疊上方存活的取消次數為偶數→翻回取消）。"""
+def test_counter_cancel_depth4_original_reactor_can_recancel_after_other_windows_close():
+    """A 出牌、B 取消、A 反制後，B 可用另一張牌再次反制。
+
+    C 是最初反應層尚未輪到的候選人。B 第一次取消時，C 的同批視窗必須關閉，且不得
+    加入後續反制鏈。這仍保留原出牌者與已完成反應者之間的多層反制。
+    """
     g = Game([('p1', 'P1'), ('p2', 'P2'), ('p3', 'P3')])
     g.game_phase = GamePhase.MAIN
     g.turn_phase = TurnPhase.ACTION
@@ -1229,8 +1229,9 @@ def test_counter_cancel_depth4_third_player_joins_chain_and_recancels_original()
     actor, b, c = g.players
     actor.hand = [card(g, '領導'), card(g, '爆料黑幕')]
     actor.deck.draw_pile = [Card('D1', 'command', {}), Card('D2', 'command', {})]
-    b.hand = [card(g, '情報網')]
-    c.hand = [card(g, '產業滲透')]  # 爆料黑幕購買費用含資金1，符合產業滲透取消條件
+    b.hand = [card(g, '情報網'), card(g, '產業滲透')]
+    b.deck.draw_pile = [Card('B-D1', 'command', {})]
+    c.hand = [card(g, '爆料黑幕')]
 
     result = g.play_card(0, mode='action')
     assert result.get('pending_choice') is True, result
@@ -1244,33 +1245,30 @@ def test_counter_cancel_depth4_third_player_joins_chain_and_recancels_original()
     step2 = g.resolve_pending_choice(actor.id, 1)  # A 用 爆料黑幕 反制 B 的 情報網
     assert step2.get('success'), step2
     assert step2.get('opened_counter_layer') is True
-    assert g.pending_choice is not None, 'C 手上的 產業滲透 對 A 的 爆料黑幕（含資金費用1）合格，應繼續開新層'
-    assert g.pending_choice['player_id'] == c.id
+    assert g.pending_choice is not None
+    assert g.pending_choice['player_id'] == b.id
     assert g.pending_choice['acting_player_id'] == actor.id
     assert g.pending_choice['played_card_name'] == '爆料黑幕'
     assert [entry['name'] for entry in g.pending_choice['cards']] == ['產業滲透']
+    assert not g.pending_choice.get('remaining_candidates')
 
-    step3 = g.resolve_pending_choice(c.id, 1)  # C 用 產業滲透 反制 A 的 爆料黑幕
+    step3 = g.resolve_pending_choice(b.id, 1)  # B 用 產業滲透 再次反制 A 的 爆料黑幕
     assert step3.get('success'), step3
     assert step3.get('reaction_card') == '產業滲透'
     assert step3.get('canceled_card') == '爆料黑幕'
-    assert g.pending_choice is None, '沒有更多候選人（B、A 手牌已空），整條深度4的鏈直接結算'
+    assert g.pending_choice is None, 'C 的原反應視窗已失效，整條深度4的鏈直接結算'
 
-    # 交替結算：stack = [領導, 情報網(B), 爆料黑幕(A), 產業滲透(C)]，n=3（奇數）
+    # 交替結算：stack = [領導, 情報網(B), 爆料黑幕(A), 產業滲透(B)]，n=3（奇數）
     # resolved[3]=True（頂端，沒人能取消它）→ resolved[2]=not resolved[3]=False（A 的爆料黑幕
     # 被取消）→ resolved[1]=not resolved[2]=True（B 的情報網翻回生效）→
     # resolved[0]=not resolved[1]=False（A 的領導最終仍是被取消）。
-    assert names(actor.hand) == []  # 領導被取消，沒有抽牌
-    assert names(actor.deck.draw_pile) == ['D1', 'D2']  # 沒人動用這副牌，領導的抽牌效果從未執行
-    # actor 打出的兩張牌（領導＝原始牌、爆料黑幕＝反制用掉的反應卡）都被消耗進自己的棄牌堆，
-    # 即使各自的效果都沒有生效（領導被取消；爆料黑幕本身也被 C 取消，沒有 bonus 抽牌）。
+    assert names(actor.hand) == []
+    assert names(actor.deck.draw_pile) == ['D1', 'D2']
     assert names(actor.deck.discard_pile) == ['爆料黑幕', '領導']
-    # 情報網翻回生效：`_resolve_reaction_context` 對『作為反應卡使用』的情報網固定只執行
-    # cancel_card（不會走它印刷的 choose_one／放內鬥效果——那是情報網當作自己回合行動卡時
-    # 才有的分支，2026-08-02 的既有規則），所以這裡只驗證它已從 B 手上消耗並進棄牌堆。
-    assert names(b.deck.discard_pile) == ['情報網']
-    # 產業滲透生效：取消的是 爆料黑幕（購買費用含資金1）→ 觸發 canceled_money_cost_card bonus 抽牌
-    assert names(c.deck.discard_pile) == ['產業滲透']
+    assert names(b.deck.discard_pile) == ['產業滲透', '情報網']
+    assert names(b.hand) == ['B-D1']
+    assert names(c.hand) == ['爆料黑幕']
+    assert names(c.deck.discard_pile) == []
 
 
 def test_counter_cancel_chain_cannot_ask_same_reactor_twice_with_one_card():
@@ -2766,9 +2764,9 @@ def test_reactively_played_reaction_card_counts_toward_its_own_cost_based_event_
 def test_reactively_played_reaction_card_counting_is_unaffected_by_being_counter_canceled():
     """反應卡本身被算入「打出購買費用有…的牌」的時機是「花掉這張卡去反應」那個當下，
     跟它後續有沒有被反制、真正的取消效果有沒有生效無關——比照 play_card() 既有的「出牌
-    本身就計入，之後被取消也不會撤銷」語意。這裡讓 A 用爆料黑幕（宣傳4）取消 B 的牌，
-    A 自己的爆料黑幕又被 C 用另一張爆料黑幕反制（B 的原始效果最終翻回生效），確認 A 的
-    爆料黑幕仍然計入宣傳費用觸發的任務進度。"""
+    本身就計入，之後被取消也不會撤銷」語意。這裡讓 B 用爆料黑幕（宣傳4）取消 A 的牌，
+    B 的爆料黑幕再被 A 用另一張爆料黑幕反制。C 的同批視窗已關閉。確認 B 的爆料黑幕
+    仍然計入宣傳費用觸發的任務進度。"""
     g = Game([('p1', 'P1'), ('p2', 'P2'), ('p3', 'P3')])
     g.game_phase = GamePhase.MAIN
     g.turn_phase = TurnPhase.ACTION
@@ -2781,7 +2779,7 @@ def test_reactively_played_reaction_card_counting_is_unaffected_by_being_counter
     b.faction_id = 'liberals'
     c.faction_id = 'hong_kong'
     pin_active_mission_event(g, '重大災難')
-    actor.hand = [card(g, '乘勝追擊')]
+    actor.hand = [card(g, '乘勝追擊'), card(g, '爆料黑幕')]
     b.hand = [card(g, '爆料黑幕')]
     c.hand = [card(g, '爆料黑幕')]
 
@@ -2789,9 +2787,12 @@ def test_reactively_played_reaction_card_counting_is_unaffected_by_being_counter
     assert result.get('pending_choice') is True, result
     step1 = g.resolve_pending_choice(b.id, 1)  # B 用爆料黑幕取消 A 的乘勝追擊
     assert step1.get('opened_counter_layer') is True, step1
-    step2 = g.resolve_pending_choice(c.id, 1)  # C 用爆料黑幕反制 B 的爆料黑幕
+    assert g.pending_choice['player_id'] == actor.id
+    assert not g.pending_choice.get('remaining_candidates')
+    step2 = g.resolve_pending_choice(actor.id, 1)  # A 用爆料黑幕反制 B 的爆料黑幕
     assert step2.get('success'), step2
     assert g.pending_choice is None
+    assert names(c.hand) == ['爆料黑幕']
 
     assert g.event_progress['succeeded'] is True
 
