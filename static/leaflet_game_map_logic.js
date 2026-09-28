@@ -488,18 +488,25 @@ function renderSupportChoiceHighlights(options = {}) {
   supportChoiceHighlightLayer.clearLayers();
   if (!supportChoiceHighlight || supportChoiceHighlight.mode !== 'support-targets') return false;
   const towns = Array.isArray(supportChoiceHighlight.towns) ? supportChoiceHighlight.towns : [];
+  // Filters control every town circle, including temporary action-card and organization-experience
+  // target rings. Keep the complete legal target list so clearing the filter restores every option,
+  // but draw and permit interaction only for targets that pass the current filter.
+  const visibleTownNames = new Set(currentVisible);
   const bounds = [];
-  let focusedBounds = null;
+  const allTargetBounds = [];
+  let focusedTargetBounds = null;
   const isDissolveChoice = isDissolveSupportChoiceHighlight();
   towns.forEach(entry => {
     const townName = entry?.town;
     const town = byName.get(townName);
     if (!town) return;
     const townBounds = townDisplayLatLng(town);
-    bounds.push(townBounds);
+    allTargetBounds.push(townBounds);
     if (supportChoiceHighlight.focusTown && supportChoiceHighlight.focusTown === townName) {
-      focusedBounds = [townBounds];
+      focusedTargetBounds = [townBounds];
     }
+    if (!visibleTownNames.has(townName)) return;
+    bounds.push(townBounds);
     const isFocused = supportChoiceHighlight.focusTown && supportChoiceHighlight.focusTown === townName;
     if (isDissolveChoice) {
       // 瓦解目標：後端判定的合法目標以 💀 標示，但點擊只會「選取」該城鎮
@@ -574,10 +581,12 @@ function renderSupportChoiceHighlights(options = {}) {
       const markerDescText = isDissolveChoice ? '地圖上已用 💀 標出可瓦解的合法目標，點選後請於左側按鈕確認。' : '地圖上已用中性色外框標出可選城鎮。';
       hintEl.innerHTML = `${sourceLabel}：<span class="hint-strong">${escapeHtml(promptText)}</span> ${countText}${markerDescText}${escapeHtml(focusText)}${actionText}`;
     }
-    if (autoFocus) {
-      focusSupportChoiceTargets(focusedBounds || bounds);
-      return true;
-    }
+  }
+  if (autoFocus && allTargetBounds.length) {
+    // Filtering hides target rings, but it must not change the established action-choice
+    // autofocus semantics. Manual 「聚焦結果」 remains responsible for focusing filters.
+    focusSupportChoiceTargets(focusedTargetBounds || allTargetBounds);
+    return true;
   }
   return false;
 }
@@ -1036,6 +1045,7 @@ function sendMoveAction(fromTown, toTown, mode) {
 
 function eventBuildChoiceForTown(townName) {
   if (!supportChoiceHighlight || !isBuildSupportChoiceHighlight()) return null;
+  if (!currentVisible.includes(townName)) return null;
   const towns = Array.isArray(supportChoiceHighlight.towns) ? supportChoiceHighlight.towns : [];
   const entry = towns.find(item => item?.town === townName);
   if (!entry) return null;
@@ -1049,6 +1059,7 @@ function eventBuildChoiceForTown(townName) {
 function supportTargetChoiceForTown(townName) {
   if (!supportChoiceHighlight || supportChoiceHighlight.mode !== 'support-targets') return null;
   if (isBuildSupportChoiceHighlight()) return null;
+  if (!currentVisible.includes(townName)) return null;
   const towns = Array.isArray(supportChoiceHighlight.towns) ? supportChoiceHighlight.towns : [];
   const entry = towns.find(item => item?.town === townName);
   if (!entry) return null;
@@ -1068,7 +1079,7 @@ function supportChoiceTownNearLatLng(latlng, maxPixels = 28) {
   towns.forEach(entry => {
     const townName = entry?.town;
     const town = byName.get(townName);
-    if (!town) return;
+    if (!town || !currentVisible.includes(townName)) return;
     const point = map.latLngToContainerPoint(townDisplayLatLng(town));
     const distance = clickPoint.distanceTo(point);
     if (distance <= maxPixels && (!nearest || distance < nearest.distance)) {
@@ -1252,6 +1263,11 @@ function renderMap() {
   const visibleTowns = towns.filter(t => townMatches(t, f));
   currentVisible = visibleTowns.map(t => t.name);
   const visibleSet = new Set(currentVisible);
+  if (selectedTown && !visibleSet.has(selectedTown)) {
+    selectedTown = null;
+    selectedMoveTargets = [];
+    pendingMoveTarget = null;
+  }
 
   for (const link of links) {
     if (!visibleSet.has(link.source) || !visibleSet.has(link.target)) continue;
