@@ -35,3 +35,4 @@ playthrough_screens/
 
 # Card-art design review assets (large image sets, never meant for version control).
 /docs/records/design/card-art/
+.local_state/
