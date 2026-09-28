@@ -60349,36 +60349,38 @@
         "active_eras": [],
         "co_winners": [],
         "current_event": {
-          "effect": {},
-          "effect_text": "無",
-          "failure": {
-            "count": 1,
-            "scope": "牆內",
-            "type": "red_dissolve"
-          },
-          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
           "id": "national_people_congress",
           "name": "全國人大召開",
+          "type": "mission",
+          "trigger": {
+            "type": "use_faction_ability",
+            "count": 1,
+            "each_non_red_player": true
+          },
+          "success": {
+            "type": "draw",
+            "count": 1
+          },
+          "failure": {
+            "type": "red_dissolve",
+            "count": 1,
+            "scope": "牆內"
+          },
+          "effect": {},
           "progress": {
             "count": 0,
-            "required": 1,
+            "required": 3,
+            "succeeded": false,
             "settled": false,
             "status": "active",
-            "succeeded": false
+            "completed_player_ids": []
           },
-          "result_text": "非紅軍任務進行中",
           "status": "active",
-          "success": {
-            "count": 1,
-            "type": "draw"
-          },
+          "result_text": "非紅軍任務進行中",
+          "trigger_text": "每位非紅軍玩家各自使用或觸發陣營特殊能力至少 1 次",
           "success_text": "非紅軍：抽 1 張牌",
-          "trigger": {
-            "count": 1,
-            "type": "use_faction_ability"
-          },
-          "trigger_text": "使用或觸發陣營特殊能力至少 1 次",
-          "type": "mission"
+          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
+          "effect_text": "無"
         },
         "current_player": "tibet",
         "era_notification": null,
@@ -60869,36 +60871,38 @@
         "active_eras": [],
         "co_winners": [],
         "current_event": {
-          "effect": {},
-          "effect_text": "無",
-          "failure": {
-            "count": 1,
-            "scope": "牆內",
-            "type": "red_dissolve"
-          },
-          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
           "id": "national_people_congress",
           "name": "全國人大召開",
+          "type": "mission",
+          "trigger": {
+            "type": "use_faction_ability",
+            "count": 1,
+            "each_non_red_player": true
+          },
+          "success": {
+            "type": "draw",
+            "count": 1
+          },
+          "failure": {
+            "type": "red_dissolve",
+            "count": 1,
+            "scope": "牆內"
+          },
+          "effect": {},
           "progress": {
             "count": 0,
-            "required": 1,
+            "required": 3,
+            "succeeded": false,
             "settled": false,
             "status": "active",
-            "succeeded": false
+            "completed_player_ids": []
           },
-          "result_text": "非紅軍任務進行中",
           "status": "active",
-          "success": {
-            "count": 1,
-            "type": "draw"
-          },
+          "result_text": "非紅軍任務進行中",
+          "trigger_text": "每位非紅軍玩家各自使用或觸發陣營特殊能力至少 1 次",
           "success_text": "非紅軍：抽 1 張牌",
-          "trigger": {
-            "count": 1,
-            "type": "use_faction_ability"
-          },
-          "trigger_text": "使用或觸發陣營特殊能力至少 1 次",
-          "type": "mission"
+          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
+          "effect_text": "無"
         },
         "current_player": "tibet",
         "era_notification": null,
@@ -61373,36 +61377,38 @@
         "active_eras": [],
         "co_winners": [],
         "current_event": {
-          "effect": {},
-          "effect_text": "無",
-          "failure": {
-            "count": 1,
-            "scope": "牆內",
-            "type": "red_dissolve"
-          },
-          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
           "id": "national_people_congress",
           "name": "全國人大召開",
+          "type": "mission",
+          "trigger": {
+            "type": "use_faction_ability",
+            "count": 1,
+            "each_non_red_player": true
+          },
+          "success": {
+            "type": "draw",
+            "count": 1
+          },
+          "failure": {
+            "type": "red_dissolve",
+            "count": 1,
+            "scope": "牆內"
+          },
+          "effect": {},
           "progress": {
             "count": 0,
-            "required": 1,
+            "required": 3,
+            "succeeded": false,
             "settled": false,
             "status": "active",
-            "succeeded": false
+            "completed_player_ids": []
           },
-          "result_text": "非紅軍任務進行中",
           "status": "active",
-          "success": {
-            "count": 1,
-            "type": "draw"
-          },
+          "result_text": "非紅軍任務進行中",
+          "trigger_text": "每位非紅軍玩家各自使用或觸發陣營特殊能力至少 1 次",
           "success_text": "非紅軍：抽 1 張牌",
-          "trigger": {
-            "count": 1,
-            "type": "use_faction_ability"
-          },
-          "trigger_text": "使用或觸發陣營特殊能力至少 1 次",
-          "type": "mission"
+          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
+          "effect_text": "無"
         },
         "current_player": "tibet",
         "era_notification": null,
@@ -61877,36 +61883,38 @@
         "active_eras": [],
         "co_winners": [],
         "current_event": {
-          "effect": {},
-          "effect_text": "無",
-          "failure": {
-            "count": 1,
-            "scope": "牆內",
-            "type": "red_dissolve"
-          },
-          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
           "id": "national_people_congress",
           "name": "全國人大召開",
+          "type": "mission",
+          "trigger": {
+            "type": "use_faction_ability",
+            "count": 1,
+            "each_non_red_player": true
+          },
+          "success": {
+            "type": "draw",
+            "count": 1
+          },
+          "failure": {
+            "type": "red_dissolve",
+            "count": 1,
+            "scope": "牆內"
+          },
+          "effect": {},
           "progress": {
             "count": 0,
-            "required": 1,
+            "required": 3,
+            "succeeded": false,
             "settled": false,
             "status": "active",
-            "succeeded": false
+            "completed_player_ids": []
           },
-          "result_text": "非紅軍任務進行中",
           "status": "active",
-          "success": {
-            "count": 1,
-            "type": "draw"
-          },
+          "result_text": "非紅軍任務進行中",
+          "trigger_text": "每位非紅軍玩家各自使用或觸發陣營特殊能力至少 1 次",
           "success_text": "非紅軍：抽 1 張牌",
-          "trigger": {
-            "count": 1,
-            "type": "use_faction_ability"
-          },
-          "trigger_text": "使用或觸發陣營特殊能力至少 1 次",
-          "type": "mission"
+          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
+          "effect_text": "無"
         },
         "current_player": "tibet",
         "era_notification": null,
@@ -62381,36 +62389,38 @@
         "active_eras": [],
         "co_winners": [],
         "current_event": {
-          "effect": {},
-          "effect_text": "無",
-          "failure": {
-            "count": 1,
-            "scope": "牆內",
-            "type": "red_dissolve"
-          },
-          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
           "id": "national_people_congress",
           "name": "全國人大召開",
+          "type": "mission",
+          "trigger": {
+            "type": "use_faction_ability",
+            "count": 1,
+            "each_non_red_player": true
+          },
+          "success": {
+            "type": "draw",
+            "count": 1
+          },
+          "failure": {
+            "type": "red_dissolve",
+            "count": 1,
+            "scope": "牆內"
+          },
+          "effect": {},
           "progress": {
             "count": 0,
-            "required": 1,
+            "required": 3,
+            "succeeded": false,
             "settled": false,
             "status": "active",
-            "succeeded": false
+            "completed_player_ids": []
           },
-          "result_text": "非紅軍任務進行中",
           "status": "active",
-          "success": {
-            "count": 1,
-            "type": "draw"
-          },
+          "result_text": "非紅軍任務進行中",
+          "trigger_text": "每位非紅軍玩家各自使用或觸發陣營特殊能力至少 1 次",
           "success_text": "非紅軍：抽 1 張牌",
-          "trigger": {
-            "count": 1,
-            "type": "use_faction_ability"
-          },
-          "trigger_text": "使用或觸發陣營特殊能力至少 1 次",
-          "type": "mission"
+          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
+          "effect_text": "無"
         },
         "current_player": "tibet",
         "era_notification": null,
@@ -62886,36 +62896,38 @@
         "active_eras": [],
         "co_winners": [],
         "current_event": {
-          "effect": {},
-          "effect_text": "無",
-          "failure": {
-            "count": 1,
-            "scope": "牆內",
-            "type": "red_dissolve"
-          },
-          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
           "id": "national_people_congress",
           "name": "全國人大召開",
+          "type": "mission",
+          "trigger": {
+            "type": "use_faction_ability",
+            "count": 1,
+            "each_non_red_player": true
+          },
+          "success": {
+            "type": "draw",
+            "count": 1
+          },
+          "failure": {
+            "type": "red_dissolve",
+            "count": 1,
+            "scope": "牆內"
+          },
+          "effect": {},
           "progress": {
             "count": 0,
-            "required": 1,
+            "required": 3,
+            "succeeded": false,
             "settled": false,
             "status": "active",
-            "succeeded": false
+            "completed_player_ids": []
           },
-          "result_text": "非紅軍任務進行中",
           "status": "active",
-          "success": {
-            "count": 1,
-            "type": "draw"
-          },
+          "result_text": "非紅軍任務進行中",
+          "trigger_text": "每位非紅軍玩家各自使用或觸發陣營特殊能力至少 1 次",
           "success_text": "非紅軍：抽 1 張牌",
-          "trigger": {
-            "count": 1,
-            "type": "use_faction_ability"
-          },
-          "trigger_text": "使用或觸發陣營特殊能力至少 1 次",
-          "type": "mission"
+          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
+          "effect_text": "無"
         },
         "current_player": "manchuria",
         "era_notification": null,
@@ -63418,36 +63430,38 @@
         "active_eras": [],
         "co_winners": [],
         "current_event": {
-          "effect": {},
-          "effect_text": "無",
-          "failure": {
-            "count": 1,
-            "scope": "牆內",
-            "type": "red_dissolve"
-          },
-          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
           "id": "national_people_congress",
           "name": "全國人大召開",
+          "type": "mission",
+          "trigger": {
+            "type": "use_faction_ability",
+            "count": 1,
+            "each_non_red_player": true
+          },
+          "success": {
+            "type": "draw",
+            "count": 1
+          },
+          "failure": {
+            "type": "red_dissolve",
+            "count": 1,
+            "scope": "牆內"
+          },
+          "effect": {},
           "progress": {
             "count": 0,
-            "required": 1,
+            "required": 3,
+            "succeeded": false,
             "settled": false,
             "status": "active",
-            "succeeded": false
+            "completed_player_ids": []
           },
-          "result_text": "非紅軍任務進行中",
           "status": "active",
-          "success": {
-            "count": 1,
-            "type": "draw"
-          },
+          "result_text": "非紅軍任務進行中",
+          "trigger_text": "每位非紅軍玩家各自使用或觸發陣營特殊能力至少 1 次",
           "success_text": "非紅軍：抽 1 張牌",
-          "trigger": {
-            "count": 1,
-            "type": "use_faction_ability"
-          },
-          "trigger_text": "使用或觸發陣營特殊能力至少 1 次",
-          "type": "mission"
+          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
+          "effect_text": "無"
         },
         "current_player": "manchuria",
         "era_notification": null,
@@ -63934,36 +63948,38 @@
         "active_eras": [],
         "co_winners": [],
         "current_event": {
-          "effect": {},
-          "effect_text": "無",
-          "failure": {
-            "count": 1,
-            "scope": "牆內",
-            "type": "red_dissolve"
-          },
-          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
           "id": "national_people_congress",
           "name": "全國人大召開",
+          "type": "mission",
+          "trigger": {
+            "type": "use_faction_ability",
+            "count": 1,
+            "each_non_red_player": true
+          },
+          "success": {
+            "type": "draw",
+            "count": 1
+          },
+          "failure": {
+            "type": "red_dissolve",
+            "count": 1,
+            "scope": "牆內"
+          },
+          "effect": {},
           "progress": {
             "count": 0,
-            "required": 1,
+            "required": 3,
+            "succeeded": false,
             "settled": false,
             "status": "active",
-            "succeeded": false
+            "completed_player_ids": []
           },
-          "result_text": "非紅軍任務進行中",
           "status": "active",
-          "success": {
-            "count": 1,
-            "type": "draw"
-          },
+          "result_text": "非紅軍任務進行中",
+          "trigger_text": "每位非紅軍玩家各自使用或觸發陣營特殊能力至少 1 次",
           "success_text": "非紅軍：抽 1 張牌",
-          "trigger": {
-            "count": 1,
-            "type": "use_faction_ability"
-          },
-          "trigger_text": "使用或觸發陣營特殊能力至少 1 次",
-          "type": "mission"
+          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
+          "effect_text": "無"
         },
         "current_player": "manchuria",
         "era_notification": null,
@@ -64448,36 +64464,38 @@
         "active_eras": [],
         "co_winners": [],
         "current_event": {
-          "effect": {},
-          "effect_text": "無",
-          "failure": {
-            "count": 1,
-            "scope": "牆內",
-            "type": "red_dissolve"
-          },
-          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
           "id": "national_people_congress",
           "name": "全國人大召開",
+          "type": "mission",
+          "trigger": {
+            "type": "use_faction_ability",
+            "count": 1,
+            "each_non_red_player": true
+          },
+          "success": {
+            "type": "draw",
+            "count": 1
+          },
+          "failure": {
+            "type": "red_dissolve",
+            "count": 1,
+            "scope": "牆內"
+          },
+          "effect": {},
           "progress": {
             "count": 0,
-            "required": 1,
+            "required": 3,
+            "succeeded": false,
             "settled": false,
             "status": "active",
-            "succeeded": false
+            "completed_player_ids": []
           },
-          "result_text": "非紅軍任務進行中",
           "status": "active",
-          "success": {
-            "count": 1,
-            "type": "draw"
-          },
+          "result_text": "非紅軍任務進行中",
+          "trigger_text": "每位非紅軍玩家各自使用或觸發陣營特殊能力至少 1 次",
           "success_text": "非紅軍：抽 1 張牌",
-          "trigger": {
-            "count": 1,
-            "type": "use_faction_ability"
-          },
-          "trigger_text": "使用或觸發陣營特殊能力至少 1 次",
-          "type": "mission"
+          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
+          "effect_text": "無"
         },
         "current_player": "manchuria",
         "era_notification": null,
@@ -64962,36 +64980,38 @@
         "active_eras": [],
         "co_winners": [],
         "current_event": {
-          "effect": {},
-          "effect_text": "無",
-          "failure": {
-            "count": 1,
-            "scope": "牆內",
-            "type": "red_dissolve"
-          },
-          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
           "id": "national_people_congress",
           "name": "全國人大召開",
+          "type": "mission",
+          "trigger": {
+            "type": "use_faction_ability",
+            "count": 1,
+            "each_non_red_player": true
+          },
+          "success": {
+            "type": "draw",
+            "count": 1
+          },
+          "failure": {
+            "type": "red_dissolve",
+            "count": 1,
+            "scope": "牆內"
+          },
+          "effect": {},
           "progress": {
             "count": 0,
-            "required": 1,
+            "required": 3,
+            "succeeded": false,
             "settled": false,
             "status": "active",
-            "succeeded": false
+            "completed_player_ids": []
           },
-          "result_text": "非紅軍任務進行中",
           "status": "active",
-          "success": {
-            "count": 1,
-            "type": "draw"
-          },
+          "result_text": "非紅軍任務進行中",
+          "trigger_text": "每位非紅軍玩家各自使用或觸發陣營特殊能力至少 1 次",
           "success_text": "非紅軍：抽 1 張牌",
-          "trigger": {
-            "count": 1,
-            "type": "use_faction_ability"
-          },
-          "trigger_text": "使用或觸發陣營特殊能力至少 1 次",
-          "type": "mission"
+          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
+          "effect_text": "無"
         },
         "current_player": "manchuria",
         "era_notification": null,
@@ -65477,36 +65497,38 @@
         "active_eras": [],
         "co_winners": [],
         "current_event": {
-          "effect": {},
-          "effect_text": "無",
-          "failure": {
-            "count": 1,
-            "scope": "牆內",
-            "type": "red_dissolve"
-          },
-          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
           "id": "national_people_congress",
           "name": "全國人大召開",
+          "type": "mission",
+          "trigger": {
+            "type": "use_faction_ability",
+            "count": 1,
+            "each_non_red_player": true
+          },
+          "success": {
+            "type": "draw",
+            "count": 1
+          },
+          "failure": {
+            "type": "red_dissolve",
+            "count": 1,
+            "scope": "牆內"
+          },
+          "effect": {},
           "progress": {
             "count": 0,
-            "required": 1,
+            "required": 3,
+            "succeeded": false,
             "settled": false,
             "status": "active",
-            "succeeded": false
+            "completed_player_ids": []
           },
-          "result_text": "非紅軍任務進行中",
           "status": "active",
-          "success": {
-            "count": 1,
-            "type": "draw"
-          },
+          "result_text": "非紅軍任務進行中",
+          "trigger_text": "每位非紅軍玩家各自使用或觸發陣營特殊能力至少 1 次",
           "success_text": "非紅軍：抽 1 張牌",
-          "trigger": {
-            "count": 1,
-            "type": "use_faction_ability"
-          },
-          "trigger_text": "使用或觸發陣營特殊能力至少 1 次",
-          "type": "mission"
+          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
+          "effect_text": "無"
         },
         "current_player": "kazakh",
         "era_notification": null,
@@ -66025,36 +66047,38 @@
         "active_eras": [],
         "co_winners": [],
         "current_event": {
-          "effect": {},
-          "effect_text": "無",
-          "failure": {
-            "count": 1,
-            "scope": "牆內",
-            "type": "red_dissolve"
-          },
-          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
           "id": "national_people_congress",
           "name": "全國人大召開",
+          "type": "mission",
+          "trigger": {
+            "type": "use_faction_ability",
+            "count": 1,
+            "each_non_red_player": true
+          },
+          "success": {
+            "type": "draw",
+            "count": 1
+          },
+          "failure": {
+            "type": "red_dissolve",
+            "count": 1,
+            "scope": "牆內"
+          },
+          "effect": {},
           "progress": {
             "count": 0,
-            "required": 1,
+            "required": 3,
+            "succeeded": false,
             "settled": false,
             "status": "active",
-            "succeeded": false
+            "completed_player_ids": []
           },
-          "result_text": "非紅軍任務進行中",
           "status": "active",
-          "success": {
-            "count": 1,
-            "type": "draw"
-          },
+          "result_text": "非紅軍任務進行中",
+          "trigger_text": "每位非紅軍玩家各自使用或觸發陣營特殊能力至少 1 次",
           "success_text": "非紅軍：抽 1 張牌",
-          "trigger": {
-            "count": 1,
-            "type": "use_faction_ability"
-          },
-          "trigger_text": "使用或觸發陣營特殊能力至少 1 次",
-          "type": "mission"
+          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
+          "effect_text": "無"
         },
         "current_player": "kazakh",
         "era_notification": null,
@@ -66551,36 +66575,38 @@
         "active_eras": [],
         "co_winners": [],
         "current_event": {
-          "effect": {},
-          "effect_text": "無",
-          "failure": {
-            "count": 1,
-            "scope": "牆內",
-            "type": "red_dissolve"
-          },
-          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
           "id": "national_people_congress",
           "name": "全國人大召開",
+          "type": "mission",
+          "trigger": {
+            "type": "use_faction_ability",
+            "count": 1,
+            "each_non_red_player": true
+          },
+          "success": {
+            "type": "draw",
+            "count": 1
+          },
+          "failure": {
+            "type": "red_dissolve",
+            "count": 1,
+            "scope": "牆內"
+          },
+          "effect": {},
           "progress": {
             "count": 0,
-            "required": 1,
+            "required": 3,
+            "succeeded": false,
             "settled": false,
             "status": "active",
-            "succeeded": false
+            "completed_player_ids": []
           },
-          "result_text": "非紅軍任務進行中",
           "status": "active",
-          "success": {
-            "count": 1,
-            "type": "draw"
-          },
+          "result_text": "非紅軍任務進行中",
+          "trigger_text": "每位非紅軍玩家各自使用或觸發陣營特殊能力至少 1 次",
           "success_text": "非紅軍：抽 1 張牌",
-          "trigger": {
-            "count": 1,
-            "type": "use_faction_ability"
-          },
-          "trigger_text": "使用或觸發陣營特殊能力至少 1 次",
-          "type": "mission"
+          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
+          "effect_text": "無"
         },
         "current_player": "kazakh",
         "era_notification": null,
@@ -67081,36 +67107,38 @@
         "active_eras": [],
         "co_winners": [],
         "current_event": {
-          "effect": {},
-          "effect_text": "無",
-          "failure": {
-            "count": 1,
-            "scope": "牆內",
-            "type": "red_dissolve"
-          },
-          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
           "id": "national_people_congress",
           "name": "全國人大召開",
+          "type": "mission",
+          "trigger": {
+            "type": "use_faction_ability",
+            "count": 1,
+            "each_non_red_player": true
+          },
+          "success": {
+            "type": "draw",
+            "count": 1
+          },
+          "failure": {
+            "type": "red_dissolve",
+            "count": 1,
+            "scope": "牆內"
+          },
+          "effect": {},
           "progress": {
             "count": 0,
-            "required": 1,
+            "required": 3,
+            "succeeded": false,
             "settled": false,
             "status": "active",
-            "succeeded": false
+            "completed_player_ids": []
           },
-          "result_text": "非紅軍任務進行中",
           "status": "active",
-          "success": {
-            "count": 1,
-            "type": "draw"
-          },
+          "result_text": "非紅軍任務進行中",
+          "trigger_text": "每位非紅軍玩家各自使用或觸發陣營特殊能力至少 1 次",
           "success_text": "非紅軍：抽 1 張牌",
-          "trigger": {
-            "count": 1,
-            "type": "use_faction_ability"
-          },
-          "trigger_text": "使用或觸發陣營特殊能力至少 1 次",
-          "type": "mission"
+          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
+          "effect_text": "無"
         },
         "current_player": "kazakh",
         "era_notification": null,
@@ -67605,36 +67633,38 @@
         "active_eras": [],
         "co_winners": [],
         "current_event": {
-          "effect": {},
-          "effect_text": "無",
-          "failure": {
-            "count": 1,
-            "scope": "牆內",
-            "type": "red_dissolve"
-          },
-          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
           "id": "national_people_congress",
           "name": "全國人大召開",
+          "type": "mission",
+          "trigger": {
+            "type": "use_faction_ability",
+            "count": 1,
+            "each_non_red_player": true
+          },
+          "success": {
+            "type": "draw",
+            "count": 1
+          },
+          "failure": {
+            "type": "red_dissolve",
+            "count": 1,
+            "scope": "牆內"
+          },
+          "effect": {},
           "progress": {
             "count": 0,
-            "required": 1,
+            "required": 3,
+            "succeeded": false,
             "settled": false,
             "status": "active",
-            "succeeded": false
+            "completed_player_ids": []
           },
-          "result_text": "非紅軍任務進行中",
           "status": "active",
-          "success": {
-            "count": 1,
-            "type": "draw"
-          },
+          "result_text": "非紅軍任務進行中",
+          "trigger_text": "每位非紅軍玩家各自使用或觸發陣營特殊能力至少 1 次",
           "success_text": "非紅軍：抽 1 張牌",
-          "trigger": {
-            "count": 1,
-            "type": "use_faction_ability"
-          },
-          "trigger_text": "使用或觸發陣營特殊能力至少 1 次",
-          "type": "mission"
+          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
+          "effect_text": "無"
         },
         "current_player": "kazakh",
         "era_notification": null,
@@ -68131,37 +68161,39 @@
         "active_eras": [],
         "co_winners": [],
         "current_event": {
-          "effect": {},
-          "effect_text": "無",
-          "failure": {
-            "count": 1,
-            "scope": "牆內",
-            "type": "red_dissolve"
-          },
-          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
           "id": "national_people_congress",
           "name": "全國人大召開",
+          "type": "mission",
+          "trigger": {
+            "type": "use_faction_ability",
+            "count": 1,
+            "each_non_red_player": true
+          },
+          "success": {
+            "type": "draw",
+            "count": 1
+          },
+          "failure": {
+            "type": "red_dissolve",
+            "count": 1,
+            "scope": "牆內"
+          },
+          "effect": {},
           "progress": {
             "count": 0,
-            "required": 1,
+            "required": 3,
+            "succeeded": false,
             "settled": true,
-            "settlement_target_player_id": "p3",
             "status": "failure",
-            "succeeded": false
+            "completed_player_ids": [],
+            "settlement_target_player_id": "p3"
           },
-          "result_text": "非紅軍任務失敗，紅軍效果生效",
           "status": "failure",
-          "success": {
-            "count": 1,
-            "type": "draw"
-          },
+          "result_text": "非紅軍任務失敗，紅軍效果生效",
+          "trigger_text": "每位非紅軍玩家各自使用或觸發陣營特殊能力至少 1 次",
           "success_text": "非紅軍：抽 1 張牌",
-          "trigger": {
-            "count": 1,
-            "type": "use_faction_ability"
-          },
-          "trigger_text": "使用或觸發陣營特殊能力至少 1 次",
-          "type": "mission"
+          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
+          "effect_text": "無"
         },
         "current_player": "red",
         "era_notification": null,
@@ -68693,37 +68725,39 @@
         "active_eras": [],
         "co_winners": [],
         "current_event": {
-          "effect": {},
-          "effect_text": "無",
-          "failure": {
-            "count": 1,
-            "scope": "牆內",
-            "type": "red_dissolve"
-          },
-          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
           "id": "national_people_congress",
           "name": "全國人大召開",
+          "type": "mission",
+          "trigger": {
+            "type": "use_faction_ability",
+            "count": 1,
+            "each_non_red_player": true
+          },
+          "success": {
+            "type": "draw",
+            "count": 1
+          },
+          "failure": {
+            "type": "red_dissolve",
+            "count": 1,
+            "scope": "牆內"
+          },
+          "effect": {},
           "progress": {
             "count": 0,
-            "required": 1,
+            "required": 3,
+            "succeeded": false,
             "settled": true,
-            "settlement_target_player_id": "p3",
             "status": "failure",
-            "succeeded": false
+            "completed_player_ids": [],
+            "settlement_target_player_id": "p3"
           },
-          "result_text": "非紅軍任務失敗，紅軍效果生效",
           "status": "failure",
-          "success": {
-            "count": 1,
-            "type": "draw"
-          },
+          "result_text": "非紅軍任務失敗，紅軍效果生效",
+          "trigger_text": "每位非紅軍玩家各自使用或觸發陣營特殊能力至少 1 次",
           "success_text": "非紅軍：抽 1 張牌",
-          "trigger": {
-            "count": 1,
-            "type": "use_faction_ability"
-          },
-          "trigger_text": "使用或觸發陣營特殊能力至少 1 次",
-          "type": "mission"
+          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
+          "effect_text": "無"
         },
         "current_player": "red",
         "era_notification": null,
@@ -69231,37 +69265,39 @@
         "active_eras": [],
         "co_winners": [],
         "current_event": {
-          "effect": {},
-          "effect_text": "無",
-          "failure": {
-            "count": 1,
-            "scope": "牆內",
-            "type": "red_dissolve"
-          },
-          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
           "id": "national_people_congress",
           "name": "全國人大召開",
+          "type": "mission",
+          "trigger": {
+            "type": "use_faction_ability",
+            "count": 1,
+            "each_non_red_player": true
+          },
+          "success": {
+            "type": "draw",
+            "count": 1
+          },
+          "failure": {
+            "type": "red_dissolve",
+            "count": 1,
+            "scope": "牆內"
+          },
+          "effect": {},
           "progress": {
             "count": 0,
-            "required": 1,
+            "required": 3,
+            "succeeded": false,
             "settled": true,
-            "settlement_target_player_id": "p3",
             "status": "failure",
-            "succeeded": false
+            "completed_player_ids": [],
+            "settlement_target_player_id": "p3"
           },
-          "result_text": "非紅軍任務失敗，紅軍效果生效",
           "status": "failure",
-          "success": {
-            "count": 1,
-            "type": "draw"
-          },
+          "result_text": "非紅軍任務失敗，紅軍效果生效",
+          "trigger_text": "每位非紅軍玩家各自使用或觸發陣營特殊能力至少 1 次",
           "success_text": "非紅軍：抽 1 張牌",
-          "trigger": {
-            "count": 1,
-            "type": "use_faction_ability"
-          },
-          "trigger_text": "使用或觸發陣營特殊能力至少 1 次",
-          "type": "mission"
+          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
+          "effect_text": "無"
         },
         "current_player": "red",
         "era_notification": null,
@@ -69773,37 +69809,39 @@
         "active_eras": [],
         "co_winners": [],
         "current_event": {
-          "effect": {},
-          "effect_text": "無",
-          "failure": {
-            "count": 1,
-            "scope": "牆內",
-            "type": "red_dissolve"
-          },
-          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
           "id": "national_people_congress",
           "name": "全國人大召開",
+          "type": "mission",
+          "trigger": {
+            "type": "use_faction_ability",
+            "count": 1,
+            "each_non_red_player": true
+          },
+          "success": {
+            "type": "draw",
+            "count": 1
+          },
+          "failure": {
+            "type": "red_dissolve",
+            "count": 1,
+            "scope": "牆內"
+          },
+          "effect": {},
           "progress": {
             "count": 0,
-            "required": 1,
+            "required": 3,
+            "succeeded": false,
             "settled": true,
-            "settlement_target_player_id": "p3",
             "status": "failure",
-            "succeeded": false
+            "completed_player_ids": [],
+            "settlement_target_player_id": "p3"
           },
-          "result_text": "非紅軍任務失敗，紅軍效果生效",
           "status": "failure",
-          "success": {
-            "count": 1,
-            "type": "draw"
-          },
+          "result_text": "非紅軍任務失敗，紅軍效果生效",
+          "trigger_text": "每位非紅軍玩家各自使用或觸發陣營特殊能力至少 1 次",
           "success_text": "非紅軍：抽 1 張牌",
-          "trigger": {
-            "count": 1,
-            "type": "use_faction_ability"
-          },
-          "trigger_text": "使用或觸發陣營特殊能力至少 1 次",
-          "type": "mission"
+          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
+          "effect_text": "無"
         },
         "current_player": "red",
         "era_notification": null,
@@ -70311,37 +70349,39 @@
         "active_eras": [],
         "co_winners": [],
         "current_event": {
-          "effect": {},
-          "effect_text": "無",
-          "failure": {
-            "count": 1,
-            "scope": "牆內",
-            "type": "red_dissolve"
-          },
-          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
           "id": "national_people_congress",
           "name": "全國人大召開",
+          "type": "mission",
+          "trigger": {
+            "type": "use_faction_ability",
+            "count": 1,
+            "each_non_red_player": true
+          },
+          "success": {
+            "type": "draw",
+            "count": 1
+          },
+          "failure": {
+            "type": "red_dissolve",
+            "count": 1,
+            "scope": "牆內"
+          },
+          "effect": {},
           "progress": {
             "count": 0,
-            "required": 1,
+            "required": 3,
+            "succeeded": false,
             "settled": true,
-            "settlement_target_player_id": "p3",
             "status": "failure",
-            "succeeded": false
+            "completed_player_ids": [],
+            "settlement_target_player_id": "p3"
           },
-          "result_text": "非紅軍任務失敗，紅軍效果生效",
           "status": "failure",
-          "success": {
-            "count": 1,
-            "type": "draw"
-          },
+          "result_text": "非紅軍任務失敗，紅軍效果生效",
+          "trigger_text": "每位非紅軍玩家各自使用或觸發陣營特殊能力至少 1 次",
           "success_text": "非紅軍：抽 1 張牌",
-          "trigger": {
-            "count": 1,
-            "type": "use_faction_ability"
-          },
-          "trigger_text": "使用或觸發陣營特殊能力至少 1 次",
-          "type": "mission"
+          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
+          "effect_text": "無"
         },
         "current_player": "red",
         "era_notification": null,
@@ -70849,37 +70889,39 @@
         "active_eras": [],
         "co_winners": [],
         "current_event": {
-          "effect": {},
-          "effect_text": "無",
-          "failure": {
-            "count": 1,
-            "scope": "牆內",
-            "type": "red_dissolve"
-          },
-          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
           "id": "national_people_congress",
           "name": "全國人大召開",
+          "type": "mission",
+          "trigger": {
+            "type": "use_faction_ability",
+            "count": 1,
+            "each_non_red_player": true
+          },
+          "success": {
+            "type": "draw",
+            "count": 1
+          },
+          "failure": {
+            "type": "red_dissolve",
+            "count": 1,
+            "scope": "牆內"
+          },
+          "effect": {},
           "progress": {
             "count": 0,
-            "required": 1,
+            "required": 3,
+            "succeeded": false,
             "settled": true,
-            "settlement_target_player_id": "p3",
             "status": "failure",
-            "succeeded": false
+            "completed_player_ids": [],
+            "settlement_target_player_id": "p3"
           },
-          "result_text": "非紅軍任務失敗，紅軍效果生效",
           "status": "failure",
-          "success": {
-            "count": 1,
-            "type": "draw"
-          },
+          "result_text": "非紅軍任務失敗，紅軍效果生效",
+          "trigger_text": "每位非紅軍玩家各自使用或觸發陣營特殊能力至少 1 次",
           "success_text": "非紅軍：抽 1 張牌",
-          "trigger": {
-            "count": 1,
-            "type": "use_faction_ability"
-          },
-          "trigger_text": "使用或觸發陣營特殊能力至少 1 次",
-          "type": "mission"
+          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
+          "effect_text": "無"
         },
         "current_player": "red",
         "era_notification": null,
@@ -71412,37 +71454,39 @@
         "active_eras": [],
         "co_winners": [],
         "current_event": {
-          "effect": {},
-          "effect_text": "無",
-          "failure": {
-            "count": 1,
-            "scope": "牆內",
-            "type": "red_dissolve"
-          },
-          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
           "id": "national_people_congress",
           "name": "全國人大召開",
+          "type": "mission",
+          "trigger": {
+            "type": "use_faction_ability",
+            "count": 1,
+            "each_non_red_player": true
+          },
+          "success": {
+            "type": "draw",
+            "count": 1
+          },
+          "failure": {
+            "type": "red_dissolve",
+            "count": 1,
+            "scope": "牆內"
+          },
+          "effect": {},
           "progress": {
             "count": 0,
-            "required": 1,
+            "required": 3,
+            "succeeded": false,
             "settled": true,
-            "settlement_target_player_id": "p3",
             "status": "failure",
-            "succeeded": false
+            "completed_player_ids": [],
+            "settlement_target_player_id": "p3"
           },
-          "result_text": "非紅軍任務失敗，紅軍效果生效",
           "status": "failure",
-          "success": {
-            "count": 1,
-            "type": "draw"
-          },
+          "result_text": "非紅軍任務失敗，紅軍效果生效",
+          "trigger_text": "每位非紅軍玩家各自使用或觸發陣營特殊能力至少 1 次",
           "success_text": "非紅軍：抽 1 張牌",
-          "trigger": {
-            "count": 1,
-            "type": "use_faction_ability"
-          },
-          "trigger_text": "使用或觸發陣營特殊能力至少 1 次",
-          "type": "mission"
+          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
+          "effect_text": "無"
         },
         "current_player": "red",
         "era_notification": null,
@@ -71951,37 +71995,39 @@
         "active_eras": [],
         "co_winners": [],
         "current_event": {
-          "effect": {},
-          "effect_text": "無",
-          "failure": {
-            "count": 1,
-            "scope": "牆內",
-            "type": "red_dissolve"
-          },
-          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
           "id": "national_people_congress",
           "name": "全國人大召開",
+          "type": "mission",
+          "trigger": {
+            "type": "use_faction_ability",
+            "count": 1,
+            "each_non_red_player": true
+          },
+          "success": {
+            "type": "draw",
+            "count": 1
+          },
+          "failure": {
+            "type": "red_dissolve",
+            "count": 1,
+            "scope": "牆內"
+          },
+          "effect": {},
           "progress": {
             "count": 0,
-            "required": 1,
+            "required": 3,
+            "succeeded": false,
             "settled": true,
-            "settlement_target_player_id": "p3",
             "status": "failure",
-            "succeeded": false
+            "completed_player_ids": [],
+            "settlement_target_player_id": "p3"
           },
-          "result_text": "非紅軍任務失敗，紅軍效果生效",
           "status": "failure",
-          "success": {
-            "count": 1,
-            "type": "draw"
-          },
+          "result_text": "非紅軍任務失敗，紅軍效果生效",
+          "trigger_text": "每位非紅軍玩家各自使用或觸發陣營特殊能力至少 1 次",
           "success_text": "非紅軍：抽 1 張牌",
-          "trigger": {
-            "count": 1,
-            "type": "use_faction_ability"
-          },
-          "trigger_text": "使用或觸發陣營特殊能力至少 1 次",
-          "type": "mission"
+          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
+          "effect_text": "無"
         },
         "current_player": "red",
         "era_notification": null,
@@ -72494,37 +72540,39 @@
         "active_eras": [],
         "co_winners": [],
         "current_event": {
-          "effect": {},
-          "effect_text": "無",
-          "failure": {
-            "count": 1,
-            "scope": "牆內",
-            "type": "red_dissolve"
-          },
-          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
           "id": "national_people_congress",
           "name": "全國人大召開",
+          "type": "mission",
+          "trigger": {
+            "type": "use_faction_ability",
+            "count": 1,
+            "each_non_red_player": true
+          },
+          "success": {
+            "type": "draw",
+            "count": 1
+          },
+          "failure": {
+            "type": "red_dissolve",
+            "count": 1,
+            "scope": "牆內"
+          },
+          "effect": {},
           "progress": {
             "count": 0,
-            "required": 1,
+            "required": 3,
+            "succeeded": false,
             "settled": true,
-            "settlement_target_player_id": "p3",
             "status": "failure",
-            "succeeded": false
+            "completed_player_ids": [],
+            "settlement_target_player_id": "p3"
           },
-          "result_text": "非紅軍任務失敗，紅軍效果生效",
           "status": "failure",
-          "success": {
-            "count": 1,
-            "type": "draw"
-          },
+          "result_text": "非紅軍任務失敗，紅軍效果生效",
+          "trigger_text": "每位非紅軍玩家各自使用或觸發陣營特殊能力至少 1 次",
           "success_text": "非紅軍：抽 1 張牌",
-          "trigger": {
-            "count": 1,
-            "type": "use_faction_ability"
-          },
-          "trigger_text": "使用或觸發陣營特殊能力至少 1 次",
-          "type": "mission"
+          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
+          "effect_text": "無"
         },
         "current_player": "red",
         "era_notification": null,
@@ -73033,37 +73081,39 @@
         "active_eras": [],
         "co_winners": [],
         "current_event": {
-          "effect": {},
-          "effect_text": "無",
-          "failure": {
-            "count": 1,
-            "scope": "牆內",
-            "type": "red_dissolve"
-          },
-          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
           "id": "national_people_congress",
           "name": "全國人大召開",
+          "type": "mission",
+          "trigger": {
+            "type": "use_faction_ability",
+            "count": 1,
+            "each_non_red_player": true
+          },
+          "success": {
+            "type": "draw",
+            "count": 1
+          },
+          "failure": {
+            "type": "red_dissolve",
+            "count": 1,
+            "scope": "牆內"
+          },
+          "effect": {},
           "progress": {
             "count": 0,
-            "required": 1,
+            "required": 3,
+            "succeeded": false,
             "settled": true,
-            "settlement_target_player_id": "p3",
             "status": "failure",
-            "succeeded": false
+            "completed_player_ids": [],
+            "settlement_target_player_id": "p3"
           },
-          "result_text": "非紅軍任務失敗，紅軍效果生效",
           "status": "failure",
-          "success": {
-            "count": 1,
-            "type": "draw"
-          },
+          "result_text": "非紅軍任務失敗，紅軍效果生效",
+          "trigger_text": "每位非紅軍玩家各自使用或觸發陣營特殊能力至少 1 次",
           "success_text": "非紅軍：抽 1 張牌",
-          "trigger": {
-            "count": 1,
-            "type": "use_faction_ability"
-          },
-          "trigger_text": "使用或觸發陣營特殊能力至少 1 次",
-          "type": "mission"
+          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
+          "effect_text": "無"
         },
         "current_player": "red",
         "era_notification": null,
@@ -73570,37 +73620,39 @@
         "active_eras": [],
         "co_winners": [],
         "current_event": {
-          "effect": {},
-          "effect_text": "無",
-          "failure": {
-            "count": 1,
-            "scope": "牆內",
-            "type": "red_dissolve"
-          },
-          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
           "id": "national_people_congress",
           "name": "全國人大召開",
+          "type": "mission",
+          "trigger": {
+            "type": "use_faction_ability",
+            "count": 1,
+            "each_non_red_player": true
+          },
+          "success": {
+            "type": "draw",
+            "count": 1
+          },
+          "failure": {
+            "type": "red_dissolve",
+            "count": 1,
+            "scope": "牆內"
+          },
+          "effect": {},
           "progress": {
             "count": 0,
-            "required": 1,
+            "required": 3,
+            "succeeded": false,
             "settled": true,
-            "settlement_target_player_id": "p3",
             "status": "failure",
-            "succeeded": false
+            "completed_player_ids": [],
+            "settlement_target_player_id": "p3"
           },
-          "result_text": "非紅軍任務失敗，紅軍效果生效",
           "status": "failure",
-          "success": {
-            "count": 1,
-            "type": "draw"
-          },
+          "result_text": "非紅軍任務失敗，紅軍效果生效",
+          "trigger_text": "每位非紅軍玩家各自使用或觸發陣營特殊能力至少 1 次",
           "success_text": "非紅軍：抽 1 張牌",
-          "trigger": {
-            "count": 1,
-            "type": "use_faction_ability"
-          },
-          "trigger_text": "使用或觸發陣營特殊能力至少 1 次",
-          "type": "mission"
+          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
+          "effect_text": "無"
         },
         "current_player": "red",
         "era_notification": null,
@@ -74133,37 +74185,39 @@
         "active_eras": [],
         "co_winners": [],
         "current_event": {
-          "effect": {},
-          "effect_text": "無",
-          "failure": {
-            "count": 1,
-            "scope": "牆內",
-            "type": "red_dissolve"
-          },
-          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
           "id": "national_people_congress",
           "name": "全國人大召開",
+          "type": "mission",
+          "trigger": {
+            "type": "use_faction_ability",
+            "count": 1,
+            "each_non_red_player": true
+          },
+          "success": {
+            "type": "draw",
+            "count": 1
+          },
+          "failure": {
+            "type": "red_dissolve",
+            "count": 1,
+            "scope": "牆內"
+          },
+          "effect": {},
           "progress": {
             "count": 0,
-            "required": 1,
+            "required": 3,
+            "succeeded": false,
             "settled": true,
-            "settlement_target_player_id": "p3",
             "status": "failure",
-            "succeeded": false
+            "completed_player_ids": [],
+            "settlement_target_player_id": "p3"
           },
-          "result_text": "非紅軍任務失敗，紅軍效果生效",
           "status": "failure",
-          "success": {
-            "count": 1,
-            "type": "draw"
-          },
+          "result_text": "非紅軍任務失敗，紅軍效果生效",
+          "trigger_text": "每位非紅軍玩家各自使用或觸發陣營特殊能力至少 1 次",
           "success_text": "非紅軍：抽 1 張牌",
-          "trigger": {
-            "count": 1,
-            "type": "use_faction_ability"
-          },
-          "trigger_text": "使用或觸發陣營特殊能力至少 1 次",
-          "type": "mission"
+          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
+          "effect_text": "無"
         },
         "current_player": "red",
         "era_notification": null,
@@ -74672,37 +74726,39 @@
         "active_eras": [],
         "co_winners": [],
         "current_event": {
-          "effect": {},
-          "effect_text": "無",
-          "failure": {
-            "count": 1,
-            "scope": "牆內",
-            "type": "red_dissolve"
-          },
-          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
           "id": "national_people_congress",
           "name": "全國人大召開",
+          "type": "mission",
+          "trigger": {
+            "type": "use_faction_ability",
+            "count": 1,
+            "each_non_red_player": true
+          },
+          "success": {
+            "type": "draw",
+            "count": 1
+          },
+          "failure": {
+            "type": "red_dissolve",
+            "count": 1,
+            "scope": "牆內"
+          },
+          "effect": {},
           "progress": {
             "count": 0,
-            "required": 1,
+            "required": 3,
+            "succeeded": false,
             "settled": true,
-            "settlement_target_player_id": "p3",
             "status": "failure",
-            "succeeded": false
+            "completed_player_ids": [],
+            "settlement_target_player_id": "p3"
           },
-          "result_text": "非紅軍任務失敗，紅軍效果生效",
           "status": "failure",
-          "success": {
-            "count": 1,
-            "type": "draw"
-          },
+          "result_text": "非紅軍任務失敗，紅軍效果生效",
+          "trigger_text": "每位非紅軍玩家各自使用或觸發陣營特殊能力至少 1 次",
           "success_text": "非紅軍：抽 1 張牌",
-          "trigger": {
-            "count": 1,
-            "type": "use_faction_ability"
-          },
-          "trigger_text": "使用或觸發陣營特殊能力至少 1 次",
-          "type": "mission"
+          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
+          "effect_text": "無"
         },
         "current_player": "red",
         "era_notification": null,
@@ -75215,37 +75271,39 @@
         "active_eras": [],
         "co_winners": [],
         "current_event": {
-          "effect": {},
-          "effect_text": "無",
-          "failure": {
-            "count": 1,
-            "scope": "牆內",
-            "type": "red_dissolve"
-          },
-          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
           "id": "national_people_congress",
           "name": "全國人大召開",
+          "type": "mission",
+          "trigger": {
+            "type": "use_faction_ability",
+            "count": 1,
+            "each_non_red_player": true
+          },
+          "success": {
+            "type": "draw",
+            "count": 1
+          },
+          "failure": {
+            "type": "red_dissolve",
+            "count": 1,
+            "scope": "牆內"
+          },
+          "effect": {},
           "progress": {
             "count": 0,
-            "required": 1,
+            "required": 3,
+            "succeeded": false,
             "settled": true,
-            "settlement_target_player_id": "p3",
             "status": "failure",
-            "succeeded": false
+            "completed_player_ids": [],
+            "settlement_target_player_id": "p3"
           },
-          "result_text": "非紅軍任務失敗，紅軍效果生效",
           "status": "failure",
-          "success": {
-            "count": 1,
-            "type": "draw"
-          },
+          "result_text": "非紅軍任務失敗，紅軍效果生效",
+          "trigger_text": "每位非紅軍玩家各自使用或觸發陣營特殊能力至少 1 次",
           "success_text": "非紅軍：抽 1 張牌",
-          "trigger": {
-            "count": 1,
-            "type": "use_faction_ability"
-          },
-          "trigger_text": "使用或觸發陣營特殊能力至少 1 次",
-          "type": "mission"
+          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
+          "effect_text": "無"
         },
         "current_player": "red",
         "era_notification": null,
@@ -75754,37 +75812,39 @@
         "active_eras": [],
         "co_winners": [],
         "current_event": {
-          "effect": {},
-          "effect_text": "無",
-          "failure": {
-            "count": 1,
-            "scope": "牆內",
-            "type": "red_dissolve"
-          },
-          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
           "id": "national_people_congress",
           "name": "全國人大召開",
+          "type": "mission",
+          "trigger": {
+            "type": "use_faction_ability",
+            "count": 1,
+            "each_non_red_player": true
+          },
+          "success": {
+            "type": "draw",
+            "count": 1
+          },
+          "failure": {
+            "type": "red_dissolve",
+            "count": 1,
+            "scope": "牆內"
+          },
+          "effect": {},
           "progress": {
             "count": 0,
-            "required": 1,
+            "required": 3,
+            "succeeded": false,
             "settled": true,
-            "settlement_target_player_id": "p3",
             "status": "failure",
-            "succeeded": false
+            "completed_player_ids": [],
+            "settlement_target_player_id": "p3"
           },
-          "result_text": "非紅軍任務失敗，紅軍效果生效",
           "status": "failure",
-          "success": {
-            "count": 1,
-            "type": "draw"
-          },
+          "result_text": "非紅軍任務失敗，紅軍效果生效",
+          "trigger_text": "每位非紅軍玩家各自使用或觸發陣營特殊能力至少 1 次",
           "success_text": "非紅軍：抽 1 張牌",
-          "trigger": {
-            "count": 1,
-            "type": "use_faction_ability"
-          },
-          "trigger_text": "使用或觸發陣營特殊能力至少 1 次",
-          "type": "mission"
+          "failure_text": "紅軍：瓦解 1 個組織（牆內）",
+          "effect_text": "無"
         },
         "current_player": "red",
         "era_notification": null,

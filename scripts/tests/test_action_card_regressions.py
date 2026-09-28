@@ -3765,6 +3765,7 @@ def test_npc_progresses_when_hong_kong_safe_house_triggers_on_inner_build():
     g = make_game()
     actor = g.current_player()
     actor.faction_id = 'hong_kong'
+    g.players[1].faction_id = 'liberals'
     actor.base = '香港城'
     pin_active_mission_event(g, '全國人大召開')
 
@@ -3772,8 +3773,11 @@ def test_npc_progresses_when_hong_kong_safe_house_triggers_on_inner_build():
     assert '南寧' in set(g._towns_for_region_alias('china'))
     g._record_action_build(actor, '南寧')
 
-    assert g.event_progress['succeeded'] is True
-    assert g.event_progress['status'] == 'success_pending'
+    assert g.event_progress['count'] == 1
+    assert g.event_progress['required'] == 2
+    assert g.event_progress['completed_player_ids'] == [actor.id]
+    assert g.event_progress['succeeded'] is False
+    assert g.event_progress['status'] == 'active'
     assert any('triggered 安全屋 while building in 南寧' in entry for entry in g.action_log)
 
 
@@ -3795,8 +3799,8 @@ def test_npc_does_not_count_safe_house_when_hong_kong_base_no_longer_has_it():
 def test_npc_progresses_on_turn_end_inner_build_draw_ability():
     """2026-08-05 使用者playtest回報：事件卡『全國人大召開』（trigger:
     {"type": "use_faction_ability", "count": 1}）——臺灣綠線用東洋奧援在牆內建立組織，
-    回合結束時觸發本土社團（牆內建組織→多抽1張），這個特殊能力發動本身就應該滿足
-    『全國人大召開』的成功條件。稽核發現根因比單一事件更大：`use_faction_ability` 追蹤
+    回合結束時觸發本土社團（牆內建組織→多抽1張），這個特殊能力發動本身就應該完成
+    臺灣綠線在『全國人大召開』中的玩家別進度。稽核發現根因比單一事件更大：`use_faction_ability` 追蹤
     先前只掛在「玩家主動按下的陣營行動」（紅軍統戰部/政工部…以及非紅軍的立場試探/民族
     祭儀等），而「自動觸發型」的陣營能力——回合結束牆內建組織抽牌（本土社團/還我河山/
     還我河山/民國之心）與出牌後首張帶資金/宣傳費用的觸發（商貿組織/民族調和/星星之火/
@@ -3807,6 +3811,7 @@ def test_npc_progresses_on_turn_end_inner_build_draw_ability():
     g = make_game()
     actor = g.current_player()
     actor.faction_id = 'taiwan_green'
+    g.players[1].faction_id = 'liberals'
     pin_active_mission_event(g, '全國人大召開')
     # 本回合在牆內城鎮（南寧、廣州）建立組織——與東洋奧援建組織後 build_organization
     # 寫入 turn_log['built_towns'] 的結果一致。
@@ -3814,8 +3819,11 @@ def test_npc_progresses_on_turn_end_inner_build_draw_ability():
 
     g._end_turn()
 
-    assert g.event_progress['succeeded'] is True
-    assert g.event_progress['status'] == 'success_pending'
+    assert g.event_progress['count'] == 1
+    assert g.event_progress['required'] == 2
+    assert g.event_progress['completed_player_ids'] == [actor.id]
+    assert g.event_progress['succeeded'] is False
+    assert g.event_progress['status'] == 'active'
 
 
 def test_npc_progresses_on_first_money_cost_trigger_ability_immediate_play():
@@ -3835,8 +3843,11 @@ def test_npc_progresses_on_first_money_cost_trigger_ability_immediate_play():
 
     assert result.get('success'), result
     assert g.turn_log.get('faction_first_money_triggered') is True
-    assert g.event_progress['succeeded'] is True
-    assert g.event_progress['status'] == 'success_pending'
+    assert g.event_progress['count'] == 1
+    assert g.event_progress['required'] == 2
+    assert g.event_progress['completed_player_ids'] == [actor.id]
+    assert g.event_progress['succeeded'] is False
+    assert g.event_progress['status'] == 'active'
 
 
 def test_npc_progresses_on_first_money_cost_trigger_ability_deferred_reaction_resume():
@@ -3864,8 +3875,11 @@ def test_npc_progresses_on_first_money_cost_trigger_ability_deferred_reaction_re
 
     assert skipped.get('success'), skipped
     assert g.turn_log.get('faction_first_money_triggered') is True
-    assert g.event_progress['succeeded'] is True
-    assert g.event_progress['status'] == 'success_pending'
+    assert g.event_progress['count'] == 1
+    assert g.event_progress['required'] == 2
+    assert g.event_progress['completed_player_ids'] == [actor.id]
+    assert g.event_progress['succeeded'] is False
+    assert g.event_progress['status'] == 'active'
 
 
 def test_npc_ignores_red_army_own_faction_ability():

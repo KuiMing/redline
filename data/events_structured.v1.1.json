@@ -4,7 +4,7 @@
     {"id": "quiet_times", "name": "歲月靜好", "type": "idle"},
 
     {"id": "national_people_congress", "name": "全國人大召開", "type": "mission",
-      "trigger": {"type": "use_faction_ability", "count": 1},
+      "trigger": {"type": "use_faction_ability", "count": 1, "each_non_red_player": true},
       "success": {"type": "draw", "count": 1},
       "failure": {"type": "red_dissolve", "count": 1, "scope": "牆內"}},
 

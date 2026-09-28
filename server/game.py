@@ -348,7 +348,13 @@ class Game(CardPlayMixin):
         event_type = self.current_event.get('type')
         trigger = self.current_event.get('trigger') or {}
         required = int(trigger.get('count', 0) or 0)
+        completed_player_ids = None
+        if trigger.get('each_non_red_player'):
+            required = len([p for p in self.players if getattr(p, 'faction_id', None) != 'red_army'])
+            completed_player_ids = []
         self.event_progress = {'count': 0, 'required': required, 'succeeded': False, 'settled': False, 'status': 'active'}
+        if completed_player_ids is not None:
+            self.event_progress['completed_player_ids'] = completed_player_ids
         if event_type == 'idle':
             self.event_progress.update({'succeeded': True, 'settled': True, 'status': 'idle'})
             self.log(f"Event drawn: {self.current_event.get('name')} (no-op)")
@@ -375,11 +381,26 @@ class Game(CardPlayMixin):
             return
         if not event_trigger_matches_scope(self.map, self.towns_by_ruler, trigger, town=town):
             return
-        self.event_progress['count'] = int(self.event_progress.get('count', 0) or 0) + int(amount or 1)
+        if trigger.get('each_non_red_player'):
+            player_id = getattr(player, 'id', None)
+            eligible_player_ids = {
+                p.id for p in self.players if getattr(p, 'faction_id', None) != 'red_army'
+            }
+            if player_id not in eligible_player_ids:
+                return
+            completed_player_ids = list(self.event_progress.get('completed_player_ids') or [])
+            if player_id not in completed_player_ids:
+                completed_player_ids.append(player_id)
+            self.event_progress['completed_player_ids'] = completed_player_ids
+            self.event_progress['count'] = len(completed_player_ids)
+            required = len([p for p in self.players if getattr(p, 'faction_id', None) != 'red_army'])
+            self.event_progress['required'] = required
+        else:
+            self.event_progress['count'] = int(self.event_progress.get('count', 0) or 0) + int(amount or 1)
+            required = int(trigger.get('count', 1) or 1)
         if player is not None:
             self.event_progress['last_actor_id'] = getattr(player, 'id', None)
             self.event_progress['last_actor_name'] = getattr(player, 'name', None)
-        required = int(trigger.get('count', 1) or 1)
         if self.event_progress['count'] >= required:
             self.event_progress['succeeded'] = True
             self.event_progress['status'] = 'success_pending'

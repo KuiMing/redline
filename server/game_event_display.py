@@ -35,7 +35,8 @@ def event_condition_text(trigger, event=None):
             detail = f"（{' / '.join(criteria)}）"
     if trigger.get('type') == 'end_turn_state' and trigger.get('condition') == 'own_organization_in_scope':
         detail = f"（己方至少 {count} 個組織）"
-    return f"{labels.get(trigger.get('type'), trigger.get('type') or '未知條件')}{scope_text}{detail}至少 {count} 次"
+    actor_text = '每位非紅軍玩家各自' if trigger.get('each_non_red_player') else ''
+    return f"{actor_text}{labels.get(trigger.get('type'), trigger.get('type') or '未知條件')}{scope_text}{detail}至少 {count} 次"
 
 
 def event_result_text(event, event_progress):
