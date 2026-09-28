@@ -103,7 +103,9 @@ def support_card_tier(support_taxonomy, map_data, faction_by_id, players, player
     if variant_index >= len(regions):
         variant_index = 0
     region = regions[variant_index]
-    leading = player_ruler_leadership(map_data, faction_by_id, players, player)
+    leading = player_ruler_leadership(
+        map_data, faction_by_id, players, player, include_shared=False
+    )
     support_region = entry.get("support_region")
     preferred = region.get("preferred_rulers", []) or []
     matched = [r for r in preferred if r in leading]

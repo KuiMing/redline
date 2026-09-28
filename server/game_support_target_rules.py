@@ -38,11 +38,14 @@ def target_players_for_interaction(players, player, target_player_id=None):
     return [other for other in players if other is not player]
 
 
-def player_has_org_within_steps_of_player(map_data, towns_by_ruler, faction_by_id, players, source_player, target_player, max_steps=1, target_region=None):
-    source_towns = organization_towns_for_player(map_data, faction_by_id, players, source_player)
+def player_has_org_within_steps_of_player(map_data, towns_by_ruler, faction_by_id, players, source_player, target_player, max_steps=1, target_region=None, include_shared_source=True):
+    source_towns = (
+        organization_towns_for_player(map_data, faction_by_id, players, source_player)
+        if include_shared_source else list(source_player.organizations)
+    )
     target_towns = {
         town
-        for town in organization_towns_for_player(map_data, faction_by_id, players, target_player)
+        for town in target_player.organizations
         if town_matches_region_alias(map_data, towns_by_ruler, town, target_region)
     }
     if not source_towns or not target_towns:
@@ -71,17 +74,21 @@ def find_target_town_within_steps_of_player(map_data, towns_by_ruler, faction_by
 def interactive_support_dissolve_targets(
     map_data, towns_by_ruler, faction_by_id, players, player,
     require_self_sacrifice=False, max_steps=1, target_players=None, target_region=None,
+    include_shared_source=False,
 ):
     targets = []
     seen_physical_targets = set()
     opponents = list(target_players) if target_players is not None else [other for other in players if other is not player]
-    source_towns = organization_towns_for_player(map_data, faction_by_id, players, player)
+    source_towns = (
+        organization_towns_for_player(map_data, faction_by_id, players, player)
+        if include_shared_source else list(player.organizations)
+    )
     reachable = towns_within_steps(map_data, source_towns, max_steps=max_steps)
     for other in opponents:
         if other is None or other is player:
             continue
-        for town in organization_towns_for_player(map_data, faction_by_id, players, other):
-            target_owner = shared_origin_owner(faction_by_id, players, other, town)
+        for town in other.organizations:
+            target_owner = other
             target_key = (getattr(target_owner, 'id', None), town)
             if (
                 target_owner is None
@@ -106,7 +113,7 @@ def interactive_support_dissolve_targets(
 
 def interactive_support_dissolve_targets_near_town(
     map_data, towns_by_ruler, faction_by_id, players, player, origin_town,
-    max_steps=1, target_players=None, target_region=None,
+    max_steps=1, target_players=None, target_region=None, excluded_target=None,
 ):
     reachable = towns_within_steps(map_data, [origin_town], max_steps=max_steps)
     targets = []
@@ -115,12 +122,13 @@ def interactive_support_dissolve_targets_near_town(
     for other in opponents:
         if other is None or other is player:
             continue
-        for town in organization_towns_for_player(map_data, faction_by_id, players, other):
-            target_owner = shared_origin_owner(faction_by_id, players, other, town)
+        for town in other.organizations:
+            target_owner = other
             target_key = (getattr(target_owner, 'id', None), town)
             if (
                 target_owner is None
                 or target_owner is player
+                or target_key == excluded_target
                 or target_key in seen_physical_targets
                 or town not in reachable
                 or not town_matches_region_alias(map_data, towns_by_ruler, town, target_region)
@@ -139,14 +147,22 @@ def interactive_support_dissolve_targets_near_town(
     return targets
 
 
-def interactive_support_discard_targets_near(map_data, towns_by_ruler, faction_by_id, players, player):
+def interactive_support_discard_targets_near(
+    map_data, towns_by_ruler, faction_by_id, players, player, max_steps=1,
+    target_players=None, target_region=None, include_shared_source=False,
+):
     targets = []
-    for other in players:
+    opponents = list(target_players) if target_players is not None else players
+    for other in opponents:
         if other is player:
             continue
         if not getattr(other, 'hand', None):
             continue
-        if not player_has_org_within_steps_of_player(map_data, towns_by_ruler, faction_by_id, players, player, other, max_steps=1):
+        if not player_has_org_within_steps_of_player(
+            map_data, towns_by_ruler, faction_by_id, players, player, other,
+            max_steps=max_steps, target_region=target_region,
+            include_shared_source=include_shared_source,
+        ):
             continue
         targets.append({
             'id': getattr(other, 'id', None),
@@ -158,10 +174,15 @@ def interactive_support_discard_targets_near(map_data, towns_by_ruler, faction_b
 
 def interactive_support_sacrifice_towns(
     map_data, towns_by_ruler, faction_by_id, players, player, max_steps=1, target_players=None, target_region=None,
+    include_shared_source=False,
 ):
     towns = []
-    for town in organization_towns_for_player(map_data, faction_by_id, players, player):
-        target_owner = shared_origin_owner(faction_by_id, players, player, town)
+    source_towns = (
+        organization_towns_for_player(map_data, faction_by_id, players, player)
+        if include_shared_source else list(player.organizations)
+    )
+    for town in source_towns:
+        target_owner = shared_origin_owner(faction_by_id, players, player, town) if include_shared_source else player
         if target_owner is None:
             continue
         if town == getattr(target_owner, 'base', None):
@@ -169,6 +190,7 @@ def interactive_support_sacrifice_towns(
         targets = interactive_support_dissolve_targets_near_town(
             map_data, towns_by_ruler, faction_by_id, players, player, town,
             max_steps=max_steps, target_players=target_players, target_region=target_region,
+            excluded_target=(getattr(target_owner, 'id', None), town),
         )
         if not targets:
             continue

@@ -105,7 +105,7 @@ def test_player_state_projects_owned_inside_outside_counts_with_total_conservati
     assert projected['organization_counts']['inside_wall'] + projected['organization_counts']['outside_wall'] == sum(projected['orgs'].values())
 
 
-def test_shared_effective_organization_counts_for_era_but_owned_status_total_stays_physical():
+def test_shared_organization_does_not_count_for_era_or_owned_status_total():
     game = make_game()
     red, taiwan, other = game.players
     taiwan.faction_id = 'taiwan_green'
@@ -115,9 +115,27 @@ def test_shared_effective_organization_counts_for_era_but_owned_status_total_sta
     other.organizations = {town: 1 for town in inside_towns}
     taiwan.organizations = {}
 
-    assert game._evaluate_era_trigger(taiwan_trigger(game)) is True
+    assert game._evaluate_era_trigger(taiwan_trigger(game)) is False
     assert game._player_organization_scope_counts(taiwan) == {
         'total': 0,
         'inside_wall': 0,
         'outside_wall': 0,
     }
+
+
+def test_rebel_three_plus_shared_taiwan_one_does_not_trigger_four_org_era():
+    game = make_game()
+    _red, taiwan, rebel = game.players
+    taiwan.faction_id = 'taiwan_green'
+    rebel.faction_id = 'gender_revolution'
+    inside_towns = ruler_towns(game, '紅軍')[:4]
+    assert len(inside_towns) == 4
+    rebel.organizations = {town: 1 for town in inside_towns[:3]}
+    taiwan.organizations = {inside_towns[3]: 1}
+    rebel_trigger = next(
+        era['trigger'] for era in game.structured_eras if era['id'] == 'rebels'
+    )
+
+    assert game._evaluate_era_trigger(rebel_trigger) is False
+    rebel.organizations[inside_towns[3]] = 1
+    assert game._evaluate_era_trigger(rebel_trigger) is True
