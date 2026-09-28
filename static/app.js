@@ -1687,6 +1687,70 @@ function confirmSelectedPurchase() {
   sendAction('buy_cards', {indices: selection.indices});
 }
 
+function openDivideTargetSelection(players, onConfirm) {
+  const overlay = document.getElementById('factionActionModal');
+  const title = document.getElementById('factionActionModalTitle');
+  const desc = document.getElementById('factionActionModalDesc');
+  const choices = document.getElementById('factionActionModalChoices');
+  const hint = document.getElementById('factionActionModalRewardHint');
+  const closeBtn = document.getElementById('closeFactionActionModal');
+  const oddBtn = document.getElementById('guessOddBtn');
+  const evenBtn = document.getElementById('guessEvenBtn');
+  if (!overlay || !title || !desc || !choices || !hint || !closeBtn || !players.length) return false;
+  if (players.length === 1) {
+    onConfirm([players[0].id]);
+    return true;
+  }
+  const maxTargets = Math.min(3, players.length);
+  const selectedIds = new Set();
+  title.textContent = '離間';
+  desc.textContent = `離間：選擇 1 至 ${maxTargets} 位其他玩家`;
+  choices.innerHTML = '';
+  choices.classList.remove('red-army-action-choices');
+  choices.classList.add('divide-target-choices');
+  if (oddBtn) oddBtn.style.display = 'none';
+  if (evenBtn) evenBtn.style.display = 'none';
+  const confirmBtn = document.createElement('button');
+  confirmBtn.className = 'modal-choice-btn divide-target-confirm';
+  confirmBtn.type = 'button';
+  confirmBtn.disabled = true;
+  const refreshSelection = () => {
+    confirmBtn.disabled = selectedIds.size === 0;
+    confirmBtn.textContent = `確認選擇（${selectedIds.size}／${maxTargets}）`;
+    hint.textContent = `每位被選擇的玩家棄牌堆各放入 1 張內鬥。已選 ${selectedIds.size}／${maxTargets} 位。`;
+  };
+  players.forEach((p) => {
+    const btn = document.createElement('button');
+    btn.className = 'modal-choice-btn divide-target-choice';
+    btn.type = 'button';
+    btn.textContent = p.name;
+    btn.setAttribute('aria-pressed', 'false');
+    btn.onclick = () => {
+      if (selectedIds.has(p.id)) {
+        selectedIds.delete(p.id);
+        btn.classList.remove('divide-target-selected');
+        btn.setAttribute('aria-pressed', 'false');
+      } else if (selectedIds.size < maxTargets) {
+        selectedIds.add(p.id);
+        btn.classList.add('divide-target-selected');
+        btn.setAttribute('aria-pressed', 'true');
+      }
+      refreshSelection();
+    };
+    choices.appendChild(btn);
+  });
+  confirmBtn.onclick = () => {
+    if (!selectedIds.size) return;
+    onConfirm([...selectedIds]);
+    closeFactionActionModal();
+  };
+  choices.appendChild(confirmBtn);
+  refreshSelection();
+  closeBtn.onclick = closeFactionActionModal;
+  overlay.style.display = 'flex';
+  return true;
+}
+
 function openCardTargetModal(index, cardName, targetLabel) {
   const state = window.lastGameState || {};
   const players = (state.players || []).filter(p => p.id !== playerId);
@@ -1701,6 +1765,12 @@ function openCardTargetModal(index, cardName, targetLabel) {
   if (!overlay || !title || !desc || !choices || !hint || !closeBtn) return false;
 
   const actionPayload = {index, mode: 'action'};
+  if (cardName === '離間') {
+    return openDivideTargetSelection(
+      players,
+      targetPlayerIds => sendAction('play_card', {...actionPayload, target_player_ids: targetPlayerIds}),
+    );
+  }
   const requiresRange = new Set(['武裝者', '武裝小隊', '武裝集團', '派遣間諜', '內應間諜']);
   if (players.length === 1) {
     sendAction('play_card', {...actionPayload, target_player_id: players[0].id});
@@ -1723,8 +1793,10 @@ function openCardTargetModal(index, cardName, targetLabel) {
     hint.textContent = '請選擇目標玩家。';
   }
   choices.innerHTML = '';
+  choices.classList.remove('divide-target-choices');
   if (oddBtn) oddBtn.style.display = 'none';
   if (evenBtn) evenBtn.style.display = 'none';
+
   players.forEach((p) => {
     const btn = document.createElement('button');
     btn.className = 'modal-choice-btn';
@@ -1841,10 +1913,11 @@ function playHandCard(index, card, mode) {
   // 模仿戰術 selects its target on the server (which filters out players with an empty deck
   // and always opens a choice, even against a single opponent), so it is intentionally not
   // in this frontend auto-target set.
-  const playerTargetCards = new Set(['合作談判', '走漏風聲', '武裝者', '武裝小隊', '武裝集團', '派遣間諜', '內應間諜']);
+  const playerTargetCards = new Set(['離間', '合作談判', '走漏風聲', '武裝者', '武裝小隊', '武裝集團', '派遣間諜', '內應間諜']);
   if (mode === 'action' && playerTargetCards.has(cardName)) {
     const labelMap = {
       '合作談判': '抽牌對象',
+      '離間': '內鬥放置對象',
       '走漏風聲': '棄牌庫頂牌對象',
       '武裝者': '攻擊對象',
       '武裝小隊': '攻擊對象',
@@ -1864,6 +1937,8 @@ resizeStage();
 function closeFactionActionModal() {
   activeFactionActionModal = null;
   const overlay = document.getElementById('factionActionModal');
+  const choices = document.getElementById('factionActionModalChoices');
+  if (choices) choices.classList.remove('divide-target-choices', 'red-army-action-choices');
   if (overlay) overlay.style.display = 'none';
 }
 
@@ -1894,6 +1969,7 @@ function openRedArmyAbilityModal(state = window.lastGameState || {}) {
     ? '本回合紅軍能力已達發動上限。'
     : `紅軍可在開始行動階段之前自行選擇何時發動；本回合已用 ${usedCount}/${limitCount} 次。`;
   choices.innerHTML = '';
+  choices.classList.remove('divide-target-choices');
   choices.classList.add('red-army-action-choices');
   if (oddBtn) oddBtn.style.display = 'none';
   if (evenBtn) evenBtn.style.display = 'none';
@@ -2214,6 +2290,15 @@ function renderChoiceModal(state) {
       wrapper.className = 'choice-card-btn';
       wrapper.type = 'button';
       wrapper.onclick = () => {
+        if (choiceKey === 'use_purchase_area_card' && cardName === '離間') {
+          const otherPlayers = (state.players || []).filter(p => p.id !== playerId);
+          closeChoiceModal();
+          openDivideTargetSelection(
+            otherPlayers,
+            targetPlayerIds => sendAction('resolve_choice', {index, target_player_ids: targetPlayerIds}),
+          );
+          return;
+        }
         sendAction('resolve_choice', { index });
         closeChoiceModal();
       };

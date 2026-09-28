@@ -220,4 +220,4 @@ def test_peer_choice_notice_http_openapi_and_route_order():
     paths = [getattr(route, "path", None) for route in routes]
     index = paths.index("/test/setup-peer-choice-notice-proof")
     assert paths[index - 1] == "/test/setup-show-strength-choice-proof"
-    assert paths[index + 1] == "/test/setup-safehouse-range-proof"
+    assert paths[index + 1] == "/test/setup-divide-targets-proof"

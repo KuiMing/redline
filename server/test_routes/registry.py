@@ -22,6 +22,7 @@ from server.test_routes.ccdi_choice import CcdiChoiceTestRoutes
 from server.test_routes.destroyed_red_base_marker import DestroyedRedBaseMarkerTestRoutes
 from server.test_routes.discard_reshuffle import DiscardReshuffleTestRoutes
 from server.test_routes.discard_topdeck_choice import DiscardTopdeckChoiceTestRoutes
+from server.test_routes.divide_targets import DivideTargetsTestRoutes
 from server.test_routes.draw_privacy import DrawPrivacyTestRoutes
 from server.test_routes.elite_defection_discard import EliteDefectionDiscardTestRoutes
 from server.test_routes.elite_defection_event import EliteDefectionEventTestRoutes
@@ -611,6 +612,13 @@ def register_test_routes(
     )
 
 
+    _divide_targets_test_routes = DivideTargetsTestRoutes(runtime_provider)
+    app.include_router(_divide_targets_test_routes.router)
+    test_setup_divide_targets_proof = (
+        _divide_targets_test_routes.test_setup_divide_targets_proof
+    )
+
+
     _safehouse_range_test_routes = SafehouseRangeTestRoutes(
         runtime_provider
     )
@@ -627,7 +635,6 @@ def register_test_routes(
     test_setup_era_restrict_ignore_distance_proof = (
         _era_restrict_ignore_distance_test_routes.test_setup_era_restrict_ignore_distance_proof
     )
-
 
     return SimpleNamespace(
         test_set_hand=test_set_hand,
@@ -692,4 +699,5 @@ def register_test_routes(
         test_setup_peer_choice_notice_proof=test_setup_peer_choice_notice_proof,
         test_setup_safehouse_range_proof=test_setup_safehouse_range_proof,
         test_setup_era_restrict_ignore_distance_proof=test_setup_era_restrict_ignore_distance_proof,
+        test_setup_divide_targets_proof=test_setup_divide_targets_proof,
     )

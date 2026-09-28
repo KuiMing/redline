@@ -190,5 +190,5 @@ def test_safehouse_range_http_openapi_and_route_order():
     assert getattr(matching[0], "methods", None) == {"POST"}
     paths = [getattr(route, "path", None) for route in routes]
     index = paths.index("/test/setup-safehouse-range-proof")
-    assert paths[index - 1] == "/test/setup-peer-choice-notice-proof"
+    assert paths[index - 1] == "/test/setup-divide-targets-proof"
     assert paths[index + 1] == "/test/setup-era-restrict-ignore-distance-proof"

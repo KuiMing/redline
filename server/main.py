@@ -311,7 +311,12 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
             elif action == "use_topdeck_right":
                 result = game.use_pending_topdeck_right()
             elif action == "play_card":
-                result = game.play_card(data.get("index"), mode=data.get("mode"), target_player_id=data.get("target_player_id"))
+                result = game.play_card(
+                    data.get("index"),
+                    mode=data.get("mode"),
+                    target_player_id=data.get("target_player_id"),
+                    target_player_ids=data.get("target_player_ids"),
+                )
             elif action == "buy_card":
                 result = game.buy_card(data.get("index"))
             elif action == "buy_cards":
@@ -365,7 +370,11 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
             elif action == "keep_hong_kong_base":
                 result = game.keep_hong_kong_base(player_id)
             elif action == "resolve_choice":
-                result = game.resolve_pending_choice(player_id, data.get("index"))
+                result = game.resolve_pending_choice(
+                    player_id,
+                    data.get("index"),
+                    target_player_ids=data.get("target_player_ids"),
+                )
             elif action == "cancel_choice":
                 result = game.cancel_pending_choice(player_id)
 

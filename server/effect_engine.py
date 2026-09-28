@@ -550,7 +550,23 @@ class EffectEngine:
             context = context or {}
             target_id = context.get("target_player_id") or effect.get("target_player_id")
             targets = []
-            if target_id:
+            target_ids = context.get("target_player_ids")
+            if target_ids is not None:
+                seen_target_ids = set()
+                for selected_id in target_ids:
+                    if selected_id in seen_target_ids:
+                        continue
+                    target = next(
+                        (
+                            candidate for candidate in game.players
+                            if getattr(candidate, "id", None) == selected_id and candidate != player
+                        ),
+                        None,
+                    )
+                    if target is not None:
+                        targets.append(target)
+                        seen_target_ids.add(selected_id)
+            elif target_id:
                 target = next((p for p in game.players if getattr(p, "id", None) == target_id), None)
                 if target is not None:
                     targets = [target]
