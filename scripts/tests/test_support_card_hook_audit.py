@@ -203,7 +203,7 @@ def test_canceling_borrowed_beiguo_support_restores_exact_card_and_return_marker
     assert game.pending_choice is None
 
 
-def test_shared_organizations_are_support_origins_targets_and_sacrifices():
+def test_shared_organizations_are_not_support_origins_targets_or_sacrifices():
     game = Game([("actor", "粵"), ("sharer", "香港"), ("enemy", "敵方")])
     actor, sharer, enemy = game.players
     actor.faction_id = "yue"
@@ -221,25 +221,24 @@ def test_shared_organizations_are_support_origins_targets_and_sacrifices():
     game.turn_log = game._new_turn_log()
 
     assert "廣州" in game._organization_towns_for_player(actor)
-    reachable_inner = game._towns_within_steps(["廣州"], max_steps=1) & set(game._towns_for_region_alias("china"))
-    expected_builds = {
-        town for town in reachable_inner
-        if game._can_player_build_in_town(actor, town)
-    }
     actual_builds = {
         entry["town"] for entry in game._interactive_support_build_towns(actor, near_only=True)
     }
-    assert expected_builds
-    assert actual_builds == expected_builds
-    assert any(
+    assert actual_builds == set()
+    assert not any(
         entry["player_id"] == enemy.id and entry["town"] == "深圳"
-        for entry in game._interactive_support_dissolve_targets(actor)
+        for entry in game._interactive_support_dissolve_targets(actor, include_shared_source=False)
     )
-    assert game._player_has_org_within_steps_of_player(actor, enemy, max_steps=1)
-    assert any(entry["town"] == "廣州" for entry in game._interactive_support_sacrifice_towns(actor))
+    assert not game._player_has_org_within_steps_of_player(
+        actor, enemy, max_steps=1, include_shared_source=False
+    )
+    assert not any(
+        entry["town"] == "廣州"
+        for entry in game._interactive_support_sacrifice_towns(actor, include_shared_source=False)
+    )
 
 
-def test_support_can_target_an_opponents_shared_physical_organization():
+def test_support_cannot_target_an_opponents_shared_physical_organization():
     game = Game([("actor", "聯邦派"), ("target", "粵"), ("owner", "香港")])
     actor, target, owner = game.players
     actor.faction_id = "federalists"
@@ -255,19 +254,16 @@ def test_support_can_target_an_opponents_shared_physical_organization():
     game.turn_phase = TurnPhase.ACTION
     game.turn_log = game._new_turn_log()
 
-    targets = game._interactive_support_dissolve_targets(actor)
-    shared_target = next(
-        entry for entry in targets
-        if entry["player_id"] == target.id and entry["town"] == "廣州"
+    targets = game._interactive_support_dissolve_targets(actor, include_shared_source=False)
+    assert not any(
+        entry["player_id"] == target.id and entry["town"] == "廣州"
+        for entry in targets
     )
-    assert game._can_replace_dissolved_org_with_own(actor, target, "廣州") is True
-
-    dissolved = game.dissolve_organization(actor, target, shared_target["town"])
-    assert dissolved.get("success") is True
-    assert "廣州" not in owner.organizations
+    assert game._can_replace_dissolved_org_with_own(actor, target, "廣州") is False
+    assert owner.organizations == {"廣州": 1}
 
 
-def test_beiguo_tier_one_can_sacrifice_a_shared_physical_organization():
+def test_beiguo_tier_one_cannot_sacrifice_a_shared_physical_organization():
     game = Game([("actor", "粵"), ("sharer", "香港"), ("enemy", "敵方")])
     actor, sharer, enemy = game.players
     actor.faction_id = "yue"
@@ -286,17 +282,207 @@ def test_beiguo_tier_one_can_sacrifice_a_shared_physical_organization():
     game._support_card_tier = lambda _player, _card: (1, 0, [])
 
     played = game.play_card(0, mode="action")
-    assert played.get("pending_choice") is True
-    sacrifice_index = next(
-        index for index, entry in enumerate(game.pending_choice["towns"])
-        if entry["town"] == "廣州"
-    )
-    resolved = game.resolve_pending_choice(actor.id, sacrifice_index)
 
-    assert resolved.get("success") is True
-    assert resolved.get("pending_choice") is True
-    assert "廣州" not in sharer.organizations
-    assert game.pending_choice.get("step") == "target"
+    assert played.get("error") == "No legal target for interactive support card"
+    assert [card.name for card in actor.hand] == ["北國奧援"]
+    assert sharer.organizations == {"廣州": 1}
+    assert game.pending_choice is None
+
+
+def test_beiguo_tier_one_sacrifices_own_org_then_dissolves_enemy_within_one_step():
+    game = Game([("actor", "粵"), ("enemy", "敵方")])
+    actor, enemy = game.players
+    actor.faction_id = "yue"
+    actor.base = "韶關"
+    actor.organizations = {"廣州": 1}
+    actor.hand = [game._make_support_card("北國奧援")]
+    enemy.faction_id = "red_army"
+    enemy.base = "巴黎"
+    enemy.organizations = {"深圳": 1}
+    game.current_player_index = 0
+    game.turn_phase = TurnPhase.ACTION
+    game.turn_log = game._new_turn_log()
+    game._support_card_tier = lambda _player, _card: (1, 0, [])
+
+    played = game.play_card(0, mode="action")
+
+    assert played.get("pending_choice") is True, played
+    assert game.pending_choice["step"] == "sacrifice_town"
+    assert [entry["town"] for entry in game.pending_choice["towns"]] == ["廣州"]
+
+    sacrificed = game.resolve_pending_choice(actor.id, 0)
+
+    assert sacrificed.get("pending_choice") is True, sacrificed
+    assert actor.organizations == {}
+    assert game.pending_choice["step"] == "target"
+    assert [(entry["player_id"], entry["town"]) for entry in game.pending_choice["targets"]] == [
+        (enemy.id, "深圳")
+    ]
+
+    resolved = game.resolve_pending_choice(actor.id, 0)
+
+    assert resolved.get("success") is True, resolved
+    assert enemy.organizations == {}
+    assert game.pending_choice is None
+
+
+def test_self_sacrifice_spy_applies_target_region_before_consuming_origin():
+    game = Game([("actor", "粵"), ("target", "目標")])
+    actor, target = game.players
+    actor.faction_id = "yue"
+    actor.base = "韶關"
+    actor.organizations = {"馬祖": 1}
+    target.faction_id = "red_army"
+    target.base = "巴黎"
+    target.organizations = {"金門": 1, "福州": 1}
+
+    resolved = game._resolve_support_interaction_result(
+        actor,
+        {"town": "馬祖"},
+        {
+            "step": "sacrifice_town",
+            "context": {
+                "effect_type": "interactive_dissolve_self_and_enemy",
+                "card_name": "派遣間諜",
+                "effect_payload": {"range": 1, "target_region": "china"},
+                "include_shared_source": True,
+            },
+        },
+    )
+
+    assert resolved.get("pending_choice") is True, resolved
+    assert actor.organizations == {}
+    assert [entry["town"] for entry in game.pending_choice["targets"]] == ["福州"]
+    assert "1 格內" in game.pending_choice["prompt"]
+
+
+def test_shared_spy_consent_applies_target_region_and_range_prompt():
+    game = Game([("actor", "粵"), ("owner", "香港"), ("target", "目標")])
+    actor, owner, target = game.players
+    actor.faction_id = "yue"
+    actor.base = "韶關"
+    owner.faction_id = "hong_kong"
+    owner.base = "香港城"
+    owner.organizations = {"馬祖": 1}
+    target.faction_id = "red_army"
+    target.base = "巴黎"
+    target.organizations = {"金門": 1, "福州": 1, "廈門": 1}
+    choice = {
+        "choice_key": "shared_spy_origin_consent",
+        "options": ["不同意", "同意"],
+        "context": {
+            "actor_player_id": actor.id,
+            "owner_player_id": owner.id,
+            "sacrifice_town": "馬祖",
+            "flow_context": {
+                "effect_type": "interactive_dissolve_self_and_enemy",
+                "card_name": "派遣間諜",
+                "effect_payload": {"range": 2, "target_region": "china"},
+                "include_shared_source": True,
+            },
+        },
+    }
+
+    resolved = game._resolve_option_choice(owner, choice, 1)
+
+    assert resolved.get("pending_choice") is True, resolved
+    assert owner.organizations == {}
+    assert [entry["town"] for entry in game.pending_choice["targets"]] == ["福州", "廈門"]
+    assert "2 格內" in game.pending_choice["prompt"]
+
+
+def test_spy_resolution_preserves_effect_range_policy():
+    game = Game([("actor", "粵"), ("target", "目標")])
+    actor, target = game.players
+    actor.faction_id = "yue"
+    actor.base = "韶關"
+    actor.organizations = {"臺北": 1}
+    target.faction_id = "red_army"
+    target.base = "巴黎"
+    target.organizations = {"新竹": 1}
+
+    resolved = game._resolve_support_interaction_result(
+        actor,
+        {"selected": {"player_id": target.id, "town": "新竹"}},
+        {
+            "context": {
+                "effect_type": "interactive_dissolve_many_near",
+                "card_name": "內應間諜",
+                "effect_payload": {"range": 2, "count": 1},
+                "include_shared_source": True,
+            },
+        },
+    )
+
+    assert resolved.get("success") is True, resolved
+    assert target.organizations == {}
+
+
+def test_intel_network_revalidates_the_selected_organization_not_only_its_owner():
+    game = Game([("actor", "粵"), ("target", "目標")])
+    actor, target = game.players
+    actor.faction_id = "yue"
+    actor.base = "韶關"
+    actor.organizations = {"臺北": 1}
+    target.faction_id = "red_army"
+    target.base = "巴黎"
+    target.organizations = {"新北": 1, "新竹": 1}
+    choice = {
+        "choice_key": "intel_network_dissolve_target",
+        "targets": [{"id": f"{target.id}::新竹", "player_id": target.id, "town": "新竹"}],
+        "context": {"source_name": "情報網"},
+    }
+
+    resolved = game._resolve_target_choice(actor, choice, 0)
+
+    assert resolved.get("error") == "Target organization is no longer within range"
+    assert target.organizations == {"新北": 1, "新竹": 1}
+
+
+def test_support_discard_revalidation_does_not_fall_back_to_shared_origin():
+    game = Game([("actor", "粵"), ("sharer", "香港"), ("target", "目標")])
+    actor, sharer, target = game.players
+    actor.faction_id = "yue"
+    actor.base = "韶關"
+    actor.organizations = {"廣州": 1}
+    sharer.faction_id = "hong_kong"
+    sharer.base = "香港"
+    sharer.organizations = {"廣州": 1}
+    target.faction_id = "red_army"
+    target.base = "巴黎"
+    target.organizations = {"深圳": 1}
+    target.hand = [Card("應保留", "command", {})]
+
+    assert game._player_has_org_within_steps_of_player(
+        actor, target, max_steps=1, include_shared_source=False
+    ) is True
+
+    actor.organizations.clear()
+
+    assert game._player_has_org_within_steps_of_player(
+        actor, target, max_steps=1, include_shared_source=False
+    ) is False
+    assert game._player_has_org_within_steps_of_player(
+        actor, target, max_steps=1, include_shared_source=True
+    ) is True
+
+    resolved = game._resolve_support_interaction_result(
+        actor,
+        {"selected": {"player_id": target.id}},
+        {
+            "choice_key": "support_interaction",
+            "step": "target",
+            "context": {
+                "effect_type": "force_discard_near",
+                "card_name": "天方奧援",
+                "effect_payload": {"range": 1, "count": 1, "random": True},
+                "include_shared_source": False,
+            },
+        },
+    )
+
+    assert resolved.get("error") == "Target player is not within range"
+    assert [card.name for card in target.hand] == ["應保留"]
 
 
 def test_stale_support_target_refreshes_choice_instead_of_consuming_interaction():

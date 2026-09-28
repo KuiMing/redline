@@ -182,7 +182,16 @@ def ignore_distance_build_restricted(
     return era_restricts_ignore_distance_build(active_era_effects_list, faction_by_id, map_data, towns_by_ruler, player, town)
 
 
-def restricted_build_fallback_towns(map_data, faction_by_id, players, ability_templates, player, fallback_range):
+def restricted_build_fallback_towns(
+    map_data,
+    faction_by_id,
+    players,
+    ability_templates,
+    player,
+    fallback_range,
+    *,
+    include_shared=True,
+):
     """受距離限制時可退回的建立範圍：卡面基礎格數 ＋ 建立距離加成 ＋ 安全屋 +1。
 
     例：組織經驗甲卡面「本牌於牆內建立組織距離為1格」＝ fallback_range 1；若該玩家
@@ -191,7 +200,11 @@ def restricted_build_fallback_towns(map_data, faction_by_id, players, ability_te
     fallback_range = int(fallback_range or 0)
     if fallback_range <= 0:
         return set()
-    source_towns = organization_towns_for_player(map_data, faction_by_id, players, player)
+    source_towns = (
+        organization_towns_for_player(map_data, faction_by_id, players, player)
+        if include_shared
+        else list((getattr(player, "organizations", {}) or {}).keys())
+    )
     if not source_towns:
         return set()
     max_steps = fallback_range + int(getattr(player, 'build_range_bonus', 0) or 0)

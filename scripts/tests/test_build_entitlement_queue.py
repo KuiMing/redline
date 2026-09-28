@@ -82,6 +82,7 @@ def test_two_internal_spies_queue_before_map_and_resolve_fifo():
     first_town, first_result = choose_target(game, actor, '新北')
     assert first_town == '新北'
     assert first_result.get('pending_choice') is True, first_result
+    assert [entry['town'] for entry in game.pending_choice['targets']] == ['桃園']
     second_town, second_result = choose_target(game, actor, '桃園')
     assert second_town == '桃園'
     assert second_result.get('success') is True, second_result
@@ -111,6 +112,37 @@ def test_two_intel_network_dissolves_collect_options_before_map():
     _, second_result = choose_target(game, actor, '桃園')
     assert second_result.get('success') is True, second_result
     assert game.pending_choice is None
+
+
+def test_queued_intel_network_preserves_scoped_range_and_region(monkeypatch):
+    game, actor, enemy = make_dissolve_game()
+    actor.organizations = {'亞巴坎': 1}
+    enemy.organizations = {'伯力': 1, '海蘭泡': 1, '北京': 1}
+    actor.hand = [action_card(game, '情報網'), action_card(game, '情報網')]
+    monkeypatch.setattr(
+        game,
+        '_event_card_range_context',
+        lambda *_args, **_kwargs: {'range_limit': 5, 'target_region': 'outer_manchuria'},
+    )
+
+    assert game.play_card(0, mode='action').get('pending_choice') is True
+    assert game.resolve_pending_choice(actor.id, 1).get('pending_choice') is True
+    assert game.play_card(0, mode='action').get('pending_choice') is True
+    queued = game.resolve_pending_choice(actor.id, 1)
+
+    assert queued.get('pending_choice') is True, queued
+    assert len(game._queued_card_build_choices) == 1
+    assert {entry['town'] for entry in game.pending_choice['targets']} == {'伯力', '海蘭泡'}
+
+    _, first_result = choose_target(game, actor, '伯力')
+
+    assert first_result.get('pending_choice') is True, first_result
+    assert game.pending_choice['choice_key'] == 'intel_network_dissolve_target'
+    assert [entry['town'] for entry in game.pending_choice['targets']] == ['海蘭泡']
+    _, second_result = choose_target(game, actor, '海蘭泡')
+    assert second_result.get('success') is True, second_result
+    assert game.pending_choice is None
+    assert enemy.organizations == {'北京': 1}
 
 
 def test_non_map_option_on_queued_intel_network_restores_original_dissolve_choice():
@@ -257,6 +289,31 @@ def test_north_support_map_tier_queues_dissolve_behind_active_build_choice():
     assert final_result.get('success') is True, final_result
     assert '赤柱' not in enemy.organizations
     assert game.pending_choice is None
+
+
+def test_targetless_queued_support_still_settles_deferred_card_triggers(monkeypatch):
+    game, actor, enemy = make_dissolve_game()
+    enemy.organizations = {'北京': 1, '新北': 1}
+    actor.hand = [action_card(game, '內應間諜'), game._make_support_card('北國奧援')]
+    game._support_card_tier = lambda _player, card: (2, 0, []) if card.name == '北國奧援' else (1, 0, [])
+    triggered = []
+    monkeypatch.setattr(
+        game,
+        '_apply_card_play_faction_abilities',
+        lambda _player, **kwargs: triggered.append(getattr(kwargs.get('played_card'), 'name', None)),
+    )
+
+    assert game.play_card(0, mode='action', target_player_id=enemy.id).get('pending_choice') is True
+    queued = game.play_card(0, mode='action')
+    assert queued.get('pending_choice') is True, queued
+    assert len(game._queued_card_build_choices) == 1
+
+    _, result = choose_target(game, actor, '新北')
+
+    assert result.get('success') is True, result
+    assert game.pending_choice is None
+    assert game._queued_card_build_choices == []
+    assert triggered == ['內應間諜', '北國奧援']
 
 
 def test_taiwan_support_tier_three_queues_atomic_dissolve_and_build_choice():

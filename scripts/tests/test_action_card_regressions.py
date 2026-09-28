@@ -829,6 +829,36 @@ def test_intel_network_state_serializes_three_options_for_ui():
 
 
 
+def test_intel_network_dissolve_branch_preserves_scoped_range_and_region(monkeypatch):
+    g = make_game()
+    actor, target = g.players
+    actor.hand = [card(g, '情報網')]
+    actor.organizations = {'亞巴坎': 1}
+    target.organizations = {'伯力': 1, '北京': 1}
+    monkeypatch.setattr(
+        g,
+        '_event_card_range_context',
+        lambda *_args, **_kwargs: {'range_limit': 5, 'target_region': 'outer_manchuria'},
+    )
+
+    played = g.play_card(0, mode='action')
+
+    assert played.get('success'), played
+    assert g.pending_choice and g.pending_choice['choice_key'] == 'choose_one'
+    resolved = g.resolve_pending_choice(actor.id, 1)
+    assert resolved.get('pending_choice') is True, resolved
+    assert g.pending_choice['choice_key'] == 'intel_network_dissolve_target'
+    assert g.pending_choice['prompt'] == '情報網：選擇 1 個要瓦解的 5 格內敵方組織。'
+    assert [(entry['player_id'], entry['town']) for entry in g.pending_choice['targets']] == [
+        (target.id, '伯力')
+    ]
+
+    target_resolved = g.resolve_pending_choice(actor.id, 0)
+
+    assert target_resolved.get('success'), target_resolved
+    assert target.organizations == {'北京': 1}
+
+
 def test_intel_network_first_branch_adds_internal_conflict_without_running_other_branches():
     g = Game([('p1', 'P1'), ('p2', 'P2'), ('p3', 'P3'), ('p4', 'P4')])
     g.game_phase = GamePhase.MAIN
@@ -2091,6 +2121,94 @@ def test_embedded_agent_requires_target_org_within_one_step_of_own_org():
     assert p1.organizations == {'北京': 1}
     assert p2.organizations == {'香港城': 1}
 
+
+def _shared_spy_game():
+    g = Game([('actor', '台灣綠線'), ('owner', '性別革命'), ('enemy', '紅軍')])
+    actor, owner, enemy = g.players
+    g.game_phase = GamePhase.MAIN
+    g.turn_phase = TurnPhase.ACTION
+    g.current_player_index = 0
+    g.pending_base_choices = {}
+    actor.faction_id = 'taiwan_green'
+    owner.faction_id = 'gender_revolution'
+    enemy.faction_id = 'red_army'
+    actor.base = '臺北'
+    actor.organizations = {}
+    owner.base = '香港城'
+    owner.organizations = {'上海': 1}
+    enemy.base = '北京'
+    enemy.organizations = {'杭州': 1}
+    pin_noop_event(g)
+    actor.hand = [card(g, '派遣間諜')]
+    return g, actor, owner, enemy
+
+
+def test_field_agent_requires_shared_organization_owner_consent_before_sacrifice():
+    g, actor, owner, _enemy = _shared_spy_game()
+
+    played = g.play_card(0, mode='action')
+    assert played.get('pending_choice') is True, played
+    assert g.pending_choice['player_id'] == actor.id
+    assert [entry['town'] for entry in g.pending_choice['towns']] == ['上海']
+
+    requested = g.resolve_pending_choice(actor.id, 0)
+
+    assert requested.get('pending_choice') is True, requested
+    assert g.pending_choice['type'] == 'option_choice'
+    assert g.pending_choice['choice_key'] == 'shared_spy_origin_consent'
+    assert g.pending_choice['player_id'] == owner.id
+    assert owner.organizations == {'上海': 1}
+
+    approved = g.resolve_pending_choice(owner.id, 1)
+
+    assert approved.get('pending_choice') is True, approved
+    assert owner.organizations == {}
+    assert g.pending_choice['player_id'] == actor.id
+    assert g.pending_choice['step'] == 'target'
+
+
+def test_field_agent_owner_can_refuse_shared_organization_sacrifice():
+    g, actor, owner, _enemy = _shared_spy_game()
+
+    assert g.play_card(0, mode='action').get('pending_choice') is True
+    assert g.resolve_pending_choice(actor.id, 0).get('pending_choice') is True
+    refused = g.resolve_pending_choice(owner.id, 0)
+
+    assert refused.get('pending_choice') is False, refused
+    assert refused.get('declined') is True
+    assert owner.organizations == {'上海': 1}
+    assert g.pending_choice is None
+
+
+def test_field_agent_refusal_excludes_declined_origin_but_keeps_alternative():
+    g, actor, owner, _enemy = _shared_spy_game()
+    actor.organizations = {'南京': 1}
+
+    assert g.play_card(0, mode='action').get('pending_choice') is True
+    shared_index = next(
+        index for index, entry in enumerate(g.pending_choice['towns']) if entry['town'] == '上海'
+    )
+    assert g.resolve_pending_choice(actor.id, shared_index).get('pending_choice') is True
+    refused = g.resolve_pending_choice(owner.id, 0)
+
+    assert refused.get('pending_choice') is True, refused
+    assert owner.organizations == {'上海': 1}
+    assert g.pending_choice['player_id'] == actor.id
+    assert [entry['town'] for entry in g.pending_choice['towns']] == ['南京']
+
+
+def test_field_agent_consent_revalidates_target_before_sacrifice():
+    g, actor, owner, enemy = _shared_spy_game()
+
+    assert g.play_card(0, mode='action').get('pending_choice') is True
+    assert g.resolve_pending_choice(actor.id, 0).get('pending_choice') is True
+    enemy.organizations.clear()
+    approved = g.resolve_pending_choice(owner.id, 1)
+
+    assert approved.get('pending_choice') is False, approved
+    assert approved.get('declined') is True
+    assert owner.organizations == {'上海': 1}
+    assert g.pending_choice is None
 
 
 def test_embedded_agent_prompts_exact_in_range_target_org_without_self_sacrifice():

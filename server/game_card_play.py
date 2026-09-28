@@ -116,15 +116,69 @@ class CardPlayMixin:
             choice['towns'] = list(towns)
             return True
         if choice.get('choice_key') == 'intel_network_dissolve_target':
-            targets = self._interactive_support_dissolve_targets(player, require_self_sacrifice=False)
+            context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
+            targets = self._interactive_support_dissolve_targets(
+                player,
+                require_self_sacrifice=False,
+                max_steps=int(context.get('range_limit', 1) or 1),
+                target_players=self._target_players_for_interaction(player, context.get('target_player_id')),
+                target_region=context.get('target_region'),
+                include_shared_source=True,
+            )
             if not targets:
                 return False
             choice['targets'] = list(targets)
             return True
         if self._choice_is_card_map_interaction(choice):
             self.pending_choice = None
-            return self._refresh_support_flow_choice_after_stale_result(player, choice)
+            if not self._refresh_support_flow_choice_after_stale_result(player, choice):
+                return False
+            refreshed = self.pending_choice
+            if not isinstance(refreshed, dict):
+                return False
+            choice.clear()
+            choice.update(refreshed)
+            self.pending_choice = None
+            return True
         return False
+
+    def _settle_deferred_card_play_triggers(self, fallback_player, choice):
+        context = choice.get('context') if isinstance(choice, dict) else None
+        if not isinstance(context, dict):
+            return False
+        deferred_triggers = context.pop('post_play_faction_triggers', None)
+        if not isinstance(deferred_triggers, dict):
+            return False
+
+        # A resolver can copy the context into a continuation before this runs.
+        # Remove the same marker there so one committed card fires once.
+        pending_context = (
+            self.pending_choice.get('context')
+            if isinstance(self.pending_choice, dict)
+            else None
+        )
+        if isinstance(pending_context, dict):
+            if pending_context.get('post_play_faction_triggers') is deferred_triggers:
+                pending_context.pop('post_play_faction_triggers', None)
+            flow_context = pending_context.get('flow_context')
+            if (
+                isinstance(flow_context, dict)
+                and flow_context.get('post_play_faction_triggers') is deferred_triggers
+            ):
+                flow_context.pop('post_play_faction_triggers', None)
+
+        trigger_player = next(
+            (candidate for candidate in self.players if candidate.id == deferred_triggers.get('player_id')),
+            fallback_player,
+        )
+        self._apply_card_play_faction_abilities(
+            trigger_player,
+            cost_has_money=bool(deferred_triggers.get('cost_has_money')),
+            cost_has_propaganda=bool(deferred_triggers.get('cost_has_propaganda')),
+            played_card=deferred_triggers.get('played_card'),
+            used_faction_ability_names=deferred_triggers.get('used_faction_ability_names'),
+        )
+        return True
 
     def _queue_new_card_map_choice_behind_deferred(self, player, new_choice):
         deferred = self._deferred_build_choice
@@ -766,6 +820,69 @@ class CardPlayMixin:
             return {'error': 'Invalid choice index'}
         choice_key = choice.get('choice_key')
 
+        if choice_key == 'shared_spy_origin_consent':
+            context = dict(choice.get('context') or {})
+            actor = next(
+                (p for p in self.players if getattr(p, 'id', None) == context.get('actor_player_id')),
+                None,
+            )
+            sacrifice_town = context.get('sacrifice_town')
+            flow_context = dict(context.get('flow_context') or {})
+            self.pending_choice = None
+            if actor is None or not sacrifice_town:
+                return {'error': 'Shared spy origin is no longer valid'}
+
+            def restore_actor_choice(message, *, exclude_declined_origin=False):
+                blocked_towns = set(flow_context.get('declined_shared_origin_towns') or [])
+                if exclude_declined_origin:
+                    blocked_towns.add(sacrifice_town)
+                towns = self._interactive_support_sacrifice_towns(
+                    actor,
+                    max_steps=int((flow_context.get('effect_payload') or {}).get('range', 1) or 1),
+                    target_players=self._target_players_for_interaction(actor, flow_context.get('target_player_id')),
+                    target_region=(flow_context.get('effect_payload') or {}).get('target_region'),
+                    include_shared_source=True,
+                )
+                towns = [entry for entry in towns if entry.get('town') not in blocked_towns]
+                if towns:
+                    flow_context['declined_shared_origin_towns'] = sorted(blocked_towns)
+                    self._set_pending_support_flow_choice(
+                        actor, 'card_dissolve_interaction', 'sacrifice_town',
+                        f'派遣間諜：{message}，請重新選擇要瓦解的起點組織。',
+                        source_name='派遣間諜', towns=towns, context=flow_context,
+                    )
+                return {'success': True, 'pending_choice': bool(towns), 'declined': True}
+
+            if index == 0:
+                self.log(f"{player.name} declined {actor.name}'s request to use the organization at {sacrifice_town} for 派遣間諜")
+                return restore_actor_choice('組織擁有者不同意', exclude_declined_origin=True)
+
+            current_owner = self._shared_origin_owner(actor, sacrifice_town)
+            if current_owner is not player or sacrifice_town == getattr(player, 'base', None):
+                return restore_actor_choice('共用組織狀態已改變')
+            targets = self._interactive_support_dissolve_targets_near_town(
+                actor,
+                sacrifice_town,
+                max_steps=int((flow_context.get('effect_payload') or {}).get('range', 1) or 1),
+                target_players=self._target_players_for_interaction(actor, flow_context.get('target_player_id')),
+                target_region=(flow_context.get('effect_payload') or {}).get('target_region'),
+                excluded_target=(player.id, sacrifice_town),
+            )
+            if not targets:
+                return restore_actor_choice('已無合法目標')
+            player.organizations[sacrifice_town] -= 1
+            if player.organizations[sacrifice_town] <= 0:
+                del player.organizations[sacrifice_town]
+            self.log(f"{player.name} agreed that {actor.name} may dissolve the organization at {sacrifice_town} for 派遣間諜")
+            next_context = {**flow_context, 'sacrifice_town': sacrifice_town}
+            max_steps = int((flow_context.get('effect_payload') or {}).get('range', 1) or 1)
+            self._set_pending_support_flow_choice(
+                actor, 'card_dissolve_interaction', 'target',
+                f'派遣間諜：選擇 {sacrifice_town} {max_steps} 格內的 1 個敵方組織瓦解。',
+                source_name='派遣間諜', targets=targets, context=next_context,
+            )
+            return {'success': True, 'pending_choice': True, 'town': sacrifice_town}
+
         if choice_key == 'org_exp_repeat_prompt':
             context = dict(choice.get('context') or {})
             source_name = choice.get('source_name') or context.get('card_name') or '組織經驗甲'
@@ -839,13 +956,22 @@ class CardPlayMixin:
                 nested_type = nested.get('type') if isinstance(nested, dict) else None
                 source_name = context.get('card_name') or choice.get('source_name')
                 if nested_type == 'dissolve' and source_name == '情報網':
-                    targets = self._interactive_support_dissolve_targets(player, require_self_sacrifice=False)
+                    range_limit = int(context.get('range_limit', 1) or 1)
+                    target_region = context.get('target_region')
+                    targets = self._interactive_support_dissolve_targets(
+                        player,
+                        require_self_sacrifice=False,
+                        max_steps=range_limit,
+                        target_players=self._target_players_for_interaction(player, context.get('target_player_id')),
+                        target_region=target_region,
+                        include_shared_source=True,
+                    )
                     if targets:
                         pending_target_result = self._set_pending_target_choice(
                             player,
                             'intel_network_dissolve_target',
                             targets,
-                            '情報網：選擇 1 個要瓦解的鄰近敵方組織。',
+                            f'情報網：選擇 1 個要瓦解的 {range_limit} 格內敵方組織。',
                             source_name='情報網',
                             context=context,
                         )
@@ -1110,8 +1236,21 @@ class CardPlayMixin:
                 return {'error': 'Target player not found'}
             if not town:
                 return {'error': 'Target town not found'}
-            if choice_key == 'intel_network_dissolve_target' and not self._player_has_org_within_steps_of_player(player, target_player, max_steps=1):
-                return {'error': 'Target player is not within range'}
+            if choice_key == 'intel_network_dissolve_target':
+                context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
+                current_targets = self._interactive_support_dissolve_targets(
+                    player,
+                    require_self_sacrifice=False,
+                    max_steps=int(context.get('range_limit', 1) or 1),
+                    target_players=self._target_players_for_interaction(player, context.get('target_player_id')),
+                    target_region=context.get('target_region'),
+                    include_shared_source=True,
+                )
+                if not any(
+                    entry.get('player_id') == target_player_id and entry.get('town') == town
+                    for entry in current_targets
+                ):
+                    return {'error': 'Target organization is no longer within range'}
             if choice_key == 'era_red_bonus_dissolve_target':
                 context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
                 max_steps = int(context.get('max_steps', 1) or 1)
@@ -1264,6 +1403,7 @@ class CardPlayMixin:
                 max_steps=int((context.get('effect_payload') or {}).get('range', 1) or 1),
                 target_players=self._target_players_for_interaction(player, context.get('target_player_id')),
                 target_region=(context.get('effect_payload') or {}).get('target_region'),
+                include_shared_source=bool(context.get('include_shared_source', False)),
             )
             refreshed['towns'] = towns
             if towns:
@@ -1282,9 +1422,17 @@ class CardPlayMixin:
                 target_region=(context.get('effect_payload') or {}).get('target_region'),
             )
         elif effect_type == 'interactive_dissolve_and_build':
+            payload = context.get('effect_payload') or {}
             targets = [
                 entry
-                for entry in self._interactive_support_dissolve_targets(player, require_self_sacrifice=False)
+                for entry in self._interactive_support_dissolve_targets(
+                    player,
+                    require_self_sacrifice=False,
+                    max_steps=int(payload.get('range', 1) or 1),
+                    target_players=self._target_players_for_interaction(player, context.get('target_player_id')),
+                    target_region=payload.get('target_region'),
+                    include_shared_source=bool(context.get('include_shared_source', False)),
+                )
                 if self._can_replace_dissolved_org_with_own(
                     player,
                     next((p for p in self.players if getattr(p, 'id', None) == entry.get('player_id')), None),
@@ -1298,9 +1446,17 @@ class CardPlayMixin:
                 max_steps=int((context.get('effect_payload') or {}).get('range', 1) or 1),
                 target_players=self._target_players_for_interaction(player, context.get('target_player_id')),
                 target_region=(context.get('effect_payload') or {}).get('target_region'),
+                include_shared_source=bool(context.get('include_shared_source', False)),
             )
         elif effect_type == 'force_discard_near':
-            targets = self._interactive_support_discard_targets_near(player)
+            payload = context.get('effect_payload') or {}
+            targets = self._interactive_support_discard_targets_near(
+                player,
+                max_steps=int(payload.get('range', 1) or 1),
+                target_players=self._target_players_for_interaction(player, context.get('target_player_id')),
+                target_region=payload.get('target_region'),
+                include_shared_source=bool(context.get('include_shared_source', False)),
+            )
         else:
             targets = []
         refreshed['targets'] = targets
@@ -1440,19 +1596,8 @@ class CardPlayMixin:
             )
         else:
             result = resolver(player, choice, index)
-        deferred_triggers = (choice.get('context') or {}).get('post_play_faction_triggers')
-        if not result.get('error') and isinstance(deferred_triggers, dict):
-            trigger_player = next(
-                (candidate for candidate in self.players if candidate.id == deferred_triggers.get('player_id')),
-                player,
-            )
-            self._apply_card_play_faction_abilities(
-                trigger_player,
-                cost_has_money=bool(deferred_triggers.get('cost_has_money')),
-                cost_has_propaganda=bool(deferred_triggers.get('cost_has_propaganda')),
-                played_card=deferred_triggers.get('played_card'),
-                used_faction_ability_names=deferred_triggers.get('used_faction_ability_names'),
-            )
+        if not result.get('error'):
+            self._settle_deferred_card_play_triggers(player, choice)
         if not result.get('error') and not self.pending_choice:
             build_continuation = self._resume_card_build_queue_if_idle(player)
             if build_continuation:
@@ -1472,6 +1617,7 @@ class CardPlayMixin:
             'card_name': card_name,
             'effect_type': effect_type,
             'effect_payload': {'range': range_limit, 'target_region': target_region},
+            'include_shared_source': True,
             'target_player_id': target_player_id,
             **(extra_context if isinstance(extra_context, dict) else {}),
         }
@@ -1481,6 +1627,7 @@ class CardPlayMixin:
                 max_steps=range_limit,
                 target_players=target_players,
                 target_region=target_region,
+                include_shared_source=True,
             )
             if not towns:
                 return None
@@ -1500,6 +1647,7 @@ class CardPlayMixin:
             max_steps=range_limit,
             target_players=target_players,
             target_region=target_region,
+            include_shared_source=True,
         )
         if not targets:
             return None
@@ -1527,11 +1675,28 @@ class CardPlayMixin:
                 near_only=(effect_type == 'interactive_build_near_inner'),
             )
         if effect_type == 'interactive_dissolve_many_near':
-            return self._interactive_support_dissolve_targets(player, require_self_sacrifice=False)
+            return self._interactive_support_dissolve_targets(
+                player,
+                require_self_sacrifice=False,
+                max_steps=int(payload.get('range', 1) or 1),
+                target_region=payload.get('target_region'),
+                include_shared_source=False,
+            )
         if effect_type == 'interactive_dissolve_self_and_enemy':
-            return self._interactive_support_sacrifice_towns(player)
+            return self._interactive_support_sacrifice_towns(
+                player,
+                max_steps=int(payload.get('range', 1) or 1),
+                target_region=payload.get('target_region'),
+                include_shared_source=False,
+            )
         if effect_type == 'interactive_dissolve_and_build':
-            targets = self._interactive_support_dissolve_targets(player, require_self_sacrifice=False)
+            targets = self._interactive_support_dissolve_targets(
+                player,
+                require_self_sacrifice=False,
+                max_steps=int(payload.get('range', 1) or 1),
+                target_region=payload.get('target_region'),
+                include_shared_source=False,
+            )
             return [
                 entry
                 for entry in targets
@@ -1542,7 +1707,12 @@ class CardPlayMixin:
                 )
             ]
         if effect_type == 'force_discard_near':
-            return self._interactive_support_discard_targets_near(player)
+            return self._interactive_support_discard_targets_near(
+                player,
+                max_steps=int(payload.get('range', 1) or 1),
+                target_region=payload.get('target_region'),
+                include_shared_source=False,
+            )
         return None
 
     def _start_support_interaction(self, player, card_name, tier, region_index, effect_type, payload):
@@ -1553,6 +1723,7 @@ class CardPlayMixin:
             'region_index': region_index,
             'effect_type': effect_type,
             'effect_payload': dict(payload or {}),
+            'include_shared_source': False,
             'effect_text': effect_text,
         }
         targets = self._support_interaction_targets(player, effect_type, payload)
@@ -1652,7 +1823,12 @@ class CardPlayMixin:
             return {'success': True, 'town': town}
         if effect_type == 'interactive_dissolve_self_and_enemy' and choice.get('step') == 'sacrifice_town':
             sacrifice_town = result.get('town')
-            sacrifice_owner = self._shared_origin_owner(player, sacrifice_town) if sacrifice_town else None
+            include_shared_source = bool(context.get('include_shared_source', False))
+            sacrifice_owner = (
+                self._shared_origin_owner(player, sacrifice_town)
+                if sacrifice_town and include_shared_source
+                else player if sacrifice_town in player.organizations else None
+            )
             if not sacrifice_town or sacrifice_owner is None:
                 return {'error': 'Invalid own organization to sacrifice'}
             if sacrifice_town == getattr(sacrifice_owner, 'base', None):
@@ -1662,9 +1838,26 @@ class CardPlayMixin:
                 sacrifice_town,
                 max_steps=int((context.get('effect_payload') or {}).get('range', 1) or 1),
                 target_players=self._target_players_for_interaction(player, context.get('target_player_id')),
+                target_region=(context.get('effect_payload') or {}).get('target_region'),
+                excluded_target=(getattr(sacrifice_owner, 'id', None), sacrifice_town),
             )
             if not targets:
                 return {'error': 'No enemy organization within range of sacrificed organization'}
+            if card_name == '派遣間諜' and sacrifice_owner is not player:
+                self._set_pending_option_choice(
+                    sacrifice_owner,
+                    'shared_spy_origin_consent',
+                    ['不同意', '同意'],
+                    f'{player.name} 想以你在 {sacrifice_town} 的組織發動派遣間諜，是否同意？',
+                    source_name=card_name,
+                    context={
+                        'actor_player_id': player.id,
+                        'owner_player_id': sacrifice_owner.id,
+                        'sacrifice_town': sacrifice_town,
+                        'flow_context': context,
+                    },
+                )
+                return {'success': True, 'pending_choice': True, 'awaiting_consent': True}
             sacrifice_owner.organizations[sacrifice_town] -= 1
             if sacrifice_owner.organizations[sacrifice_town] <= 0:
                 del sacrifice_owner.organizations[sacrifice_town]
@@ -1672,17 +1865,23 @@ class CardPlayMixin:
             self.log(f"{player.name} dissolved 1 own organization at {sacrifice_town}{shared_text} for {card_name}")
             next_context = dict(context)
             next_context['sacrifice_town'] = sacrifice_town
+            max_steps = int((context.get('effect_payload') or {}).get('range', 1) or 1)
             self._set_pending_support_flow_choice(
                 player,
                 'support_interaction',
                 'target',
-                f'{card_name}：選擇 {sacrifice_town} 1 格內的 1 個敵方組織瓦解。',
+                f'{card_name}：選擇 {sacrifice_town} {max_steps} 格內的 1 個敵方組織瓦解。',
                 source_name=card_name,
                 targets=targets,
                 context=next_context,
             )
             return {'success': True, 'pending_choice': True, 'town': sacrifice_town}
         if effect_type in {'interactive_dissolve_many_near', 'interactive_dissolve_self_and_enemy', 'interactive_dissolve_and_build'}:
+            raw_payload = context.get('effect_payload')
+            payload = dict(raw_payload) if isinstance(raw_payload, dict) else {}
+            max_steps = int(payload.get('range', 1) or 1)
+            target_players = self._target_players_for_interaction(player, context.get('target_player_id'))
+            target_region = payload.get('target_region')
             selected = result.get('selected') or {}
             target_player_id = selected.get('player_id')
             town = selected.get('town')
@@ -1693,13 +1892,26 @@ class CardPlayMixin:
                 sacrifice_town = context.get('sacrifice_town')
                 if not sacrifice_town:
                     return {'error': 'Missing sacrificed organization'}
-                if town not in self._towns_within_steps([sacrifice_town], max_steps=1):
+                current_targets = self._interactive_support_dissolve_targets_near_town(
+                    player,
+                    sacrifice_town,
+                    max_steps=max_steps,
+                    target_players=target_players,
+                    target_region=target_region,
+                )
+                if not any(
+                    entry.get('player_id') == target_player_id and entry.get('town') == town
+                    for entry in current_targets
+                ):
                     return {'error': 'Target organization is not within range of sacrificed organization'}
             else:
                 current_targets = self._interactive_support_dissolve_targets(
                     player,
                     require_self_sacrifice=False,
-                    max_steps=1,
+                    max_steps=max_steps,
+                    target_players=target_players,
+                    target_region=target_region,
+                    include_shared_source=bool(context.get('include_shared_source', False)),
                 )
                 target_still_legal = any(
                     entry.get('player_id') == target_player_id and entry.get('town') == town
@@ -1715,14 +1927,15 @@ class CardPlayMixin:
             if dissolve_result.get('error'):
                 return dissolve_result
             if effect_type == 'interactive_dissolve_many_near':
-                raw_payload = context.get('effect_payload')
-                payload = dict(raw_payload) if isinstance(raw_payload, dict) else {}
                 remaining_count = max(1, int(context.get('remaining_count', payload.get('count', 1)) or 1)) - 1
                 if remaining_count > 0:
                     next_targets = self._interactive_support_dissolve_targets(
                         player,
                         require_self_sacrifice=False,
-                        max_steps=1,
+                        max_steps=max_steps,
+                        target_players=target_players,
+                        target_region=target_region,
+                        include_shared_source=bool(context.get('include_shared_source', False)),
                     )
                     if next_targets:
                         next_context = {**context, 'remaining_count': remaining_count}
@@ -1778,10 +1991,17 @@ class CardPlayMixin:
                 return {'error': 'Invalid discard target'}
             if not getattr(target_player, 'hand', None):
                 return {'error': 'Target player has no hand cards'}
-            if not self._player_has_org_within_steps_of_player(player, target_player, max_steps=1):
+            payload = context.get('effect_payload') or {}
+            if not self._player_has_org_within_steps_of_player(
+                player,
+                target_player,
+                max_steps=int(payload.get('range', 1) or 1),
+                target_region=payload.get('target_region'),
+                include_shared_source=bool(context.get('include_shared_source', False)),
+            ):
                 return {'error': 'Target player is not within range'}
-            count = int(context.get('effect_payload', {}).get('count', 0) or 0)
-            random_pick = bool(context.get('effect_payload', {}).get('random'))
+            count = int(payload.get('count', 0) or 0)
+            random_pick = bool(payload.get('random'))
             if random_pick:
                 discarded_names = []
                 for _ in range(min(count, len(target_player.hand))):
@@ -2493,9 +2713,9 @@ class CardPlayMixin:
             target_players = [target] if target is not None else self._target_players_for_interaction(player)
             range_context = self._event_card_range_context(player, pending_card)
             if pending_card_name == "派遣間諜":
-                valid = bool(self._interactive_support_sacrifice_towns(player, max_steps=range_context['range_limit'], target_players=target_players, target_region=range_context['target_region']))
+                valid = bool(self._interactive_support_sacrifice_towns(player, max_steps=range_context['range_limit'], target_players=target_players, target_region=range_context['target_region'], include_shared_source=True))
             else:
-                valid = bool(self._interactive_support_dissolve_targets(player, max_steps=range_context['range_limit'], target_players=target_players, target_region=range_context['target_region']))
+                valid = bool(self._interactive_support_dissolve_targets(player, max_steps=range_context['range_limit'], target_players=target_players, target_region=range_context['target_region'], include_shared_source=True))
             if not valid:
                 return {"error": "No target organization within range"}
 
@@ -2600,6 +2820,10 @@ class CardPlayMixin:
                 ['國際線'] if international_line_used else []
             ),
         }
+        if mode == 'action' and card_name == '情報網':
+            range_context = self._event_card_range_context(player, played_card)
+            action_context['range_limit'] = range_context['range_limit']
+            action_context['target_region'] = range_context['target_region']
         era_followup_target_choice = self._era_followup_target_choice_for_play_card(player, played_card)
         if era_followup_target_choice:
             action_context['era_followup_target_choice'] = era_followup_target_choice

@@ -1173,10 +1173,14 @@ class Game(CardPlayMixin):
             choices.append({'town': town})
         return choices
 
-    def _player_has_org_within_steps_of_player(self, source_player, target_player, max_steps=1, target_region=None):
+    def _player_has_org_within_steps_of_player(
+        self, source_player, target_player, max_steps=1, target_region=None,
+        include_shared_source=True,
+    ):
         return player_has_org_within_steps_of_player(
             self.map, self.towns_by_ruler, self.faction_by_id, self.players,
             source_player, target_player, max_steps, target_region,
+            include_shared_source,
         )
 
     def _find_target_town_within_steps_of_player(self, source_player, target_player, max_steps=1, target_region=None):
@@ -1245,6 +1249,9 @@ class Game(CardPlayMixin):
             unresolved += self._build_choice_entitlement_count(choice)
             if not self._refresh_queued_card_map_choice(player, choice):
                 self.log(f"{player.name} 有排隊中的地圖卡牌效果（來自{choice.get('source_name') or '卡牌'}），但目前沒有合法目標")
+                self._settle_deferred_card_play_triggers(player, choice)
+                if self.pending_choice:
+                    return {'success': True, 'pending_choice': True}
                 continue
             self.pending_choice = choice
             unresolved -= self._build_choice_entitlement_count(choice)
@@ -1366,7 +1373,7 @@ class Game(CardPlayMixin):
         # restrict_ignore_distance_build 紅色壓制，如[反賊]公知世代的終結、[哈薩克]伊塔事件）：
         # 比照組織經驗甲卡面的降級慣例，「牆內任意城鎮」清單降級為「己方組織1格內」
         # （若另有增加建立距離的能力則為2格；實作裁定，見 TODO 記錄）。
-        near_towns = self._restricted_build_fallback_towns(player, 1)
+        near_towns = self._restricted_build_fallback_towns(player, 1, include_shared=False)
         if near_only:
             reachable = near_towns & inner_towns
         else:
@@ -1386,29 +1393,37 @@ class Game(CardPlayMixin):
     def _target_players_for_interaction(self, player, target_player_id=None):
         return target_players_for_interaction(self.players, player, target_player_id)
 
-    def _interactive_support_dissolve_targets(self, player, require_self_sacrifice=False, max_steps=1, target_players=None, target_region=None):
+    def _interactive_support_dissolve_targets(self, player, require_self_sacrifice=False, max_steps=1, target_players=None, target_region=None, include_shared_source=False):
         return interactive_support_dissolve_targets(
             self.map, self.towns_by_ruler, self.faction_by_id, self.players, player,
             require_self_sacrifice, max_steps, target_players, target_region,
+            include_shared_source,
         )
 
-    def _interactive_support_dissolve_targets_near_town(self, player, origin_town, max_steps=1, target_players=None, target_region=None):
+    def _interactive_support_dissolve_targets_near_town(
+        self, player, origin_town, max_steps=1, target_players=None,
+        target_region=None, excluded_target=None,
+    ):
         return interactive_support_dissolve_targets_near_town(
             self.map, self.towns_by_ruler, self.faction_by_id, self.players, player, origin_town,
-            max_steps, target_players, target_region,
+            max_steps, target_players, target_region, excluded_target,
         )
 
-    def _interactive_support_discard_targets_near(self, player):
-        return interactive_support_discard_targets_near(self.map, self.towns_by_ruler, self.faction_by_id, self.players, player)
+    def _interactive_support_discard_targets_near(
+        self, player, max_steps=1, target_players=None, target_region=None,
+        include_shared_source=False,
+    ):
+        return interactive_support_discard_targets_near(
+            self.map, self.towns_by_ruler, self.faction_by_id, self.players, player,
+            max_steps, target_players, target_region, include_shared_source,
+        )
 
     def _can_replace_dissolved_org_with_own(self, player, target_player, town):
         """Non-mutating preflight for 臺灣奧援 III's dissolve-then-build target."""
         if not player or not target_player or not town or not self._has_org_supply(player):
             return False
-        target_owner = self._shared_origin_owner(target_player, town)
-        if target_owner is None:
+        if town not in target_player.organizations:
             return False
-        target_player = target_owner
         if not self._can_dissolve_base_target(target_player, town)[0]:
             return False
         # 2026-08-04 使用者裁決：紅軍根據地不再永久排除瓦解＋補位組合——只要根據地真的被
@@ -1429,10 +1444,10 @@ class Game(CardPlayMixin):
         finally:
             target_player.organizations[town] = original_count
 
-    def _interactive_support_sacrifice_towns(self, player, max_steps=1, target_players=None, target_region=None):
+    def _interactive_support_sacrifice_towns(self, player, max_steps=1, target_players=None, target_region=None, include_shared_source=False):
         return interactive_support_sacrifice_towns(
             self.map, self.towns_by_ruler, self.faction_by_id, self.players, player,
-            max_steps, target_players, target_region,
+            max_steps, target_players, target_region, include_shared_source,
         )
 
     def _gain_red_support_printed_resources(self, player, card):
@@ -1780,9 +1795,10 @@ class Game(CardPlayMixin):
             town,
         )
 
-    def _restricted_build_fallback_towns(self, player, fallback_range):
+    def _restricted_build_fallback_towns(self, player, fallback_range, *, include_shared=True):
         return restricted_build_fallback_towns(
-            self.map, self.faction_by_id, self.players, self.ability_templates, player, fallback_range
+            self.map, self.faction_by_id, self.players, self.ability_templates, player, fallback_range,
+            include_shared=include_shared,
         )
 
     def _support_taxonomy_entry(self, card_name):

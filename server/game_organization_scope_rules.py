@@ -76,20 +76,27 @@ def player_organization_scope_counts(map_data, faction_by_id, players, player, *
     }
 
 
-def player_ruler_organization_counts(map_data, faction_by_id, players, player):
-    """Count organizations by ruler region, including organizations shared with player."""
+def player_ruler_organization_counts(map_data, faction_by_id, players, player, *, include_shared=True):
+    """Count organizations by ruler region under the requested ownership scope."""
     counts = {}
-    for town in organization_towns_for_player(map_data, faction_by_id, players, player):
+    towns = (
+        organization_towns_for_player(map_data, faction_by_id, players, player)
+        if include_shared
+        else list((getattr(player, "organizations", {}) or {}).keys())
+    )
+    for town in towns:
         town_data = map_data.get("towns", {}).get(town, {})
         for ruler in (town_data.get("ruler", []) or []):
             counts[ruler] = counts.get(ruler, 0) + 1
     return counts
 
 
-def player_ruler_leadership(map_data, faction_by_id, players, player):
+def player_ruler_leadership(map_data, faction_by_id, players, player, *, include_shared=True):
     """Regions where player has a positive count tied for the most organizations."""
     counts_by_player = {
-        other.id: player_ruler_organization_counts(map_data, faction_by_id, players, other)
+        other.id: player_ruler_organization_counts(
+            map_data, faction_by_id, players, other, include_shared=include_shared
+        )
         for other in players
     }
     own_counts = counts_by_player.get(player.id, {})
@@ -112,10 +119,10 @@ def player_ruler_presence(map_data, faction_by_id, players, player):
 
 def player_region_org_count(map_data, towns_by_ruler, faction_by_id, players, player, region):
     if region in {"china", "牆內"}:
-        return player_organization_scope_counts(map_data, faction_by_id, players, player, include_shared=True)["inside_wall"]
+        return player_organization_scope_counts(map_data, faction_by_id, players, player, include_shared=False)["inside_wall"]
     region_towns = set(towns_for_region_alias(map_data, towns_by_ruler, region))
     return sum(
-        1 for town in organization_towns_for_player(map_data, faction_by_id, players, player)
+        1 for town in (getattr(player, "organizations", {}) or {})
         if town in region_towns
     )
 
@@ -126,7 +133,7 @@ def player_requirement_org_count(map_data, towns_by_ruler, faction_by_id, player
     if requirement.get("ruler"):
         ruler = requirement.get("ruler")
         return sum(
-            1 for town in organization_towns_for_player(map_data, faction_by_id, players, player)
+            1 for town in (getattr(player, "organizations", {}) or {})
             if ruler in (map_data.get("towns", {}).get(town, {}).get("ruler") or [])
         )
     return 0
