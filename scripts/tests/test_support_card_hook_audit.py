@@ -168,7 +168,11 @@ def test_canceling_beiguo_support_restores_played_card_combo_state():
     game, player, _ = make_game("manchuria")
     player.hand = [game._make_support_card("北國奧援")]
     game._support_card_tier = lambda _player, _card: (2, 0, [])
-    game.turn_log["played_nonstarter_names"] = ["甲", "乙"]
+    # Seed via the reference-counted helper (not a raw list assignment) so cancelling 北國奧援
+    # below decrements only its OWN contribution, leaving 甲/乙's independently-tracked refs
+    # intact -- see Game._new_turn_log's field comment and the _note_*/_undo_* helpers.
+    game._note_nonstarter_name_played("甲")
+    game._note_nonstarter_name_played("乙")
 
     played = game.play_card(0, mode="action")
     assert played.get("pending_choice") is True
@@ -454,11 +458,18 @@ def test_beiguo_tier_one_can_sacrifice_a_shared_physical_organization():
     assert [entry["town"] for entry in game.pending_choice["towns"]] == ["廣州"]
     sacrificed = game.resolve_pending_choice(actor.id, 0)
     assert sacrificed.get("pending_choice") is True, sacrificed
-    assert sharer.organizations == {}
+    # Cancellable-dissolve-target-selection feature: no organization is removed until the FINAL
+    # confirmation (picking the enemy target below).
+    assert sharer.organizations == {"廣州": 1}
     assert game.pending_choice["step"] == "target"
     assert [(entry["player_id"], entry["town"]) for entry in game.pending_choice["targets"]] == [
         (enemy.id, "深圳")
     ]
+
+    resolved = game.resolve_pending_choice(actor.id, 0)
+    assert resolved.get("success"), resolved
+    assert sharer.organizations == {}
+    assert enemy.organizations == {}
 
 
 def test_beiguo_tier_one_sacrifices_own_org_then_dissolves_enemy_within_one_step():
@@ -485,7 +496,9 @@ def test_beiguo_tier_one_sacrifices_own_org_then_dissolves_enemy_within_one_step
     sacrificed = game.resolve_pending_choice(actor.id, 0)
 
     assert sacrificed.get("pending_choice") is True, sacrificed
-    assert actor.organizations == {}
+    # Cancellable-dissolve-target-selection feature: no organization is removed until the FINAL
+    # confirmation (picking the enemy target below).
+    assert actor.organizations == {"廣州": 1}
     assert game.pending_choice["step"] == "target"
     assert [(entry["player_id"], entry["town"]) for entry in game.pending_choice["targets"]] == [
         (enemy.id, "深圳")
@@ -523,7 +536,9 @@ def test_self_sacrifice_spy_applies_target_region_before_consuming_origin():
     )
 
     assert resolved.get("pending_choice") is True, resolved
-    assert actor.organizations == {}
+    # Cancellable-dissolve-target-selection feature: the sacrifice-town *pick* alone does not
+    # consume the origin organization -- it is deferred to the final target confirmation.
+    assert actor.organizations == {"馬祖": 1}
     assert [entry["town"] for entry in game.pending_choice["targets"]] == ["福州"]
     assert "1 格內" in game.pending_choice["prompt"]
 
@@ -558,7 +573,9 @@ def test_shared_spy_consent_applies_target_region_and_range_prompt():
     resolved = game._resolve_option_choice(owner, choice, 1)
 
     assert resolved.get("pending_choice") is True, resolved
-    assert owner.organizations == {}
+    # Cancellable-dissolve-target-selection feature: consent alone does not consume the shared
+    # organization -- deferred to the final target confirmation.
+    assert owner.organizations == {"馬祖": 1}
     assert [entry["town"] for entry in game.pending_choice["targets"]] == ["福州", "廈門"]
     assert "2 格內" in game.pending_choice["prompt"]
 

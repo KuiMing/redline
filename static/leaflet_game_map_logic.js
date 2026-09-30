@@ -599,6 +599,10 @@ function applySupportChoiceHighlight(payload) {
     supportChoiceHighlightFocusKey = nextKey;
     if (isBuildChoice) buildChoiceViewportInitialized = true;
   }
+  // Keep the sidebar's cancel/confirm affordances (cancellable flag, N/M selected count) in
+  // sync immediately -- don't wait for the map's own independent WebSocket state push, whose
+  // arrival relative to this postMessage payload is not ordered.
+  refreshDirectBuildUi();
 }
 
 function finalizeMoveSelection(fromTown, toTown) {
@@ -1104,6 +1108,24 @@ function sendDissolveAction(defender, townName) {
   return { ok: true };
 }
 
+// Cancellable-dissolve-target-selection feature: cancels the CURRENT dissolve-target pending
+// choice (自己主動打出的瓦解組織卡/奧援瓦解選項 -- 派遣間諜/內應間諜/情報網/北國奧援/臺灣奧援
+// 等瓦解目標選擇階段), before any target has been committed. Mirrors sendDissolveAction's shape
+// exactly, but sends 'cancel_choice' instead of 'resolve_choice' -- the backend is the sole
+// authority on whether this specific choice is actually cancellable (see `cancellable` on the
+// pending_choice projection); this only ever fires the request, never fakes a local "cancelled"
+// state before the server confirms it via the next state push.
+function sendCancelDissolveAction() {
+  if (!supportChoiceHighlight || !supportChoiceHighlight.choiceId) {
+    return { ok: false, reason: 'no-pending-choice' };
+  }
+  if (!requireOpenMapSocket()) {
+    return { ok: false, reason: 'socket-not-open' };
+  }
+  mapWs.send(JSON.stringify({ action: 'cancel_choice', choice_id: supportChoiceHighlight.choiceId }));
+  return { ok: true };
+}
+
 function refreshMoveConfirmUi() {
   const confirmBtn = document.getElementById('confirmMoveBtn');
   const hint = document.getElementById('confirmMoveHint');
@@ -1121,8 +1143,21 @@ function refreshMoveConfirmUi() {
   hint.innerHTML = `確認將組織從 <span class="hint-strong">${pendingMoveTarget.from}</span> 移動到 <span class="hint-strong">${pendingMoveTarget.to}</span>（${modeLabel}，${costLabel}）？`;
 }
 
+function refreshCancelDissolveChoiceUi() {
+  const cancelBtn = document.getElementById('cancelDissolveChoiceBtn');
+  if (!cancelBtn) return;
+  const isDissolveChoice = isDissolveSupportChoiceHighlight();
+  const isCancellable = isDissolveChoice && !!supportChoiceHighlight.cancellable;
+  cancelBtn.style.display = isCancellable ? '' : 'none';
+  cancelBtn.disabled = !isCancellable;
+  if (!isCancellable) return;
+  const totalCount = Number(supportChoiceHighlight.totalCount || 0);
+  cancelBtn.textContent = totalCount > 1 ? '取消瓦解（放棄本次已選目標）' : '取消瓦解';
+}
+
 function refreshDirectBuildUi() {
   refreshMoveConfirmUi();
+  refreshCancelDissolveChoiceUi();
   const btn = document.getElementById('directBuildBtn');
   const hint = document.getElementById('directBuildHint');
   const dissolveBtn = document.getElementById('dissolveBtn');
@@ -1134,7 +1169,13 @@ function refreshDirectBuildUi() {
     btn.textContent = '建立組織';
     dissolveBtn.disabled = true;
     hint.innerHTML = '選取具有自己組織、共享組織可用性或事件卡允許建立的城鎮後，這裡會顯示是否可直接建立。';
-    dissolveHint.innerHTML = '選取具有共享可用性的城鎮後，這裡會顯示是否可對實際組織擁有者發動瓦解。';
+    if (isDissolveSupportChoiceHighlight() && Number(supportChoiceHighlight.totalCount || 0) > 1) {
+      const selectedCount = Number(supportChoiceHighlight.selectedCount || 0);
+      const totalCount = Number(supportChoiceHighlight.totalCount || 0);
+      dissolveHint.innerHTML = `已選 <span class="hint-strong">${selectedCount}/${totalCount}</span> 個瓦解目標：在地圖上點選 💀 標示的組織，再按下方按鈕確認。`;
+    } else {
+      dissolveHint.innerHTML = '選取具有共享可用性的城鎮後，這裡會顯示是否可對實際組織擁有者發動瓦解。';
+    }
     return;
   }
 
@@ -1160,8 +1201,26 @@ function refreshDirectBuildUi() {
   const supportTargetChoice = supportTargetChoiceForTown(selectedTown);
   if (supportTargetChoice) {
     dissolveBtn.disabled = false;
-    dissolveBtn.textContent = '確認瓦解此組織';
-    dissolveHint.innerHTML = `確認瓦解 <span class="hint-strong">${selectedTown}</span> 的組織？（${supportChoiceHighlight.sourceName || '目前效果'}）點擊地圖上其他 💀 目標可改選，按上方按鈕才會真正執行。`;
+    const totalCount = Number(supportChoiceHighlight.totalCount || 0);
+    if (totalCount > 1) {
+      const selectedCount = Number(supportChoiceHighlight.selectedCount || 0);
+      dissolveBtn.textContent = `確認瓦解此組織（${selectedCount + 1}/${totalCount}）`;
+      dissolveHint.innerHTML = `已選 <span class="hint-strong">${selectedCount}/${totalCount}</span> 個瓦解目標。確認瓦解 <span class="hint-strong">${selectedTown}</span> 的組織？（${supportChoiceHighlight.sourceName || '目前效果'}）點擊地圖上其他 💀 目標可改選，按上方按鈕才會真正執行；按「取消瓦解」可放棄本次所有已選目標。`;
+    } else {
+      dissolveBtn.textContent = '確認瓦解此組織';
+      dissolveHint.innerHTML = `確認瓦解 <span class="hint-strong">${selectedTown}</span> 的組織？（${supportChoiceHighlight.sourceName || '目前效果'}）點擊地圖上其他 💀 目標可改選，按上方按鈕才會真正執行。`;
+    }
+  } else if (isDissolveSupportChoiceHighlight() && Number(supportChoiceHighlight.totalCount || 0) > 1) {
+    // A multi-target dissolve choice is active (e.g. 北國奧援 III) but the currently-selected
+    // town is no longer one of the remaining legal targets -- most commonly because it was JUST
+    // confirmed as an earlier pick and the backend's fresh target list no longer includes it.
+    // Show the running "已選 N/M" progress instead of the unrelated single-target "沒有可瓦解的
+    // 共享組織目標" fallback below, and point the player at the still-open 💀 targets.
+    dissolveBtn.disabled = true;
+    dissolveBtn.textContent = '瓦解組織';
+    const selectedCount = Number(supportChoiceHighlight.selectedCount || 0);
+    const totalCount = Number(supportChoiceHighlight.totalCount || 0);
+    dissolveHint.innerHTML = `已選 <span class="hint-strong">${selectedCount}/${totalCount}</span> 個瓦解目標：請在地圖上點選其餘 💀 標示的組織，再按下方按鈕確認；按「取消瓦解」可放棄本次所有已選目標。`;
   } else {
     dissolveBtn.textContent = '瓦解組織';
     const dissolveTarget = sharedDissolveTargetForTown(selectedTown);
@@ -1483,6 +1542,9 @@ document.getElementById('dissolveBtn').addEventListener('click', () => {
   const target = sharedDissolveTargetForTown(selectedTown);
   if (!target) return;
   sendDissolveAction(target, selectedTown);
+});
+document.getElementById('cancelDissolveChoiceBtn').addEventListener('click', () => {
+  sendCancelDissolveAction();
 });
 
 map.on('click', (event) => {

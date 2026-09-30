@@ -31,6 +31,18 @@ CANCELLABLE_CHOICE_KEYS = frozenset({
     'red_army_state_security_target',          # 國安部
 })
 
+# `context['effect_type']` values that represent a *player-initiated* dissolve-organization
+# target pick (as opposed to a build/discard interaction that happens to share the same
+# `card_dissolve_interaction` / `support_interaction` choice_key plumbing). Used both to decide
+# which pending choices the cancellable-dissolve-target feature applies to, and to gate the
+# "defer every board mutation to the final confirmation" behaviour in
+# `_resolve_support_interaction_result` (see `_dissolve_cancel_kwargs` below).
+DISSOLVE_INTERACTIVE_EFFECT_TYPES = frozenset({
+    'interactive_dissolve_many_near',       # 內應間諜；北國奧援 II/III；臺灣奧援 II
+    'interactive_dissolve_self_and_enemy',  # 派遣間諜；北國奧援 I
+    'interactive_dissolve_and_build',       # 臺灣奧援 III
+})
+
 
 class CardPlayMixin:
     def _set_pending_card_choice(self, player, choice_key, cards, prompt, **extra):
@@ -143,29 +155,29 @@ class CardPlayMixin:
         return False
 
     def _settle_deferred_card_play_triggers(self, fallback_player, choice):
-        context = choice.get('context') if isinstance(choice, dict) else None
+        # Whether a deferred post_play_faction_triggers marker should fire now is decided
+        # PURELY by an explicit `is_final_confirmation` flag set on the choice dict itself, by
+        # the resolver code path that just committed real board state for it (see
+        # `_resolve_support_interaction_result`'s dissolve/atomic-multi-target commits,
+        # `_resolve_target_choice`'s intel_network_dissolve_target commit,
+        # `_resolve_support_flow_choice`'s "effect fizzled" branch, and the `choose_one`
+        # option-A/C-or-no-legal-target branch). This is deliberately NOT inferred by searching
+        # for whether the marker is still reachable from `self.pending_choice` (or any nested
+        # `flow_context`): a flow's paused continuation can legitimately live in several other
+        # places instead -- `self._queued_card_build_choices`, `self._deferred_build_choice`, or
+        # simply nowhere yet if `_set_pending_option_choice` (used by 情報網's `choose_one`)
+        # never engages the queue at all -- and interleaving a second card's play in between a
+        # flow's stages (ordinary, frequently-tested game machinery) can make any one of those
+        # locations hold the "wrong" choice at the moment this runs. Checking a flag on the
+        # choice actually being resolved right now is immune to all of that by construction.
+        if not isinstance(choice, dict) or not choice.get('is_final_confirmation'):
+            return False
+        context = choice.get('context')
         if not isinstance(context, dict):
             return False
         deferred_triggers = context.pop('post_play_faction_triggers', None)
         if not isinstance(deferred_triggers, dict):
             return False
-
-        # A resolver can copy the context into a continuation before this runs.
-        # Remove the same marker there so one committed card fires once.
-        pending_context = (
-            self.pending_choice.get('context')
-            if isinstance(self.pending_choice, dict)
-            else None
-        )
-        if isinstance(pending_context, dict):
-            if pending_context.get('post_play_faction_triggers') is deferred_triggers:
-                pending_context.pop('post_play_faction_triggers', None)
-            flow_context = pending_context.get('flow_context')
-            if (
-                isinstance(flow_context, dict)
-                and flow_context.get('post_play_faction_triggers') is deferred_triggers
-            ):
-                flow_context.pop('post_play_faction_triggers', None)
 
         trigger_player = next(
             (candidate for candidate in self.players if candidate.id == deferred_triggers.get('player_id')),
@@ -245,6 +257,225 @@ class CardPlayMixin:
             return queued
         self.pending_choice = new_choice
         return {'pending_choice': True}
+
+    def _pick_requires_mongol_shield_discard(self, pick):
+        """Whether one accumulated (target_player_id, town) pick belongs to a 盟旗學校-protected
+        player -- i.e. whether it reserves 1 of the attacker's hand cards at final-commit time.
+        Used to compute cumulative reservation for target LISTING (see
+        _reserved_shield_discards_for_picks) so a multi-pick flow never offers more
+        盟旗學校-protected targets than the attacker can actually afford across the whole
+        selection (parent-level review, defect 1)."""
+        owner = next((p for p in self.players if getattr(p, 'id', None) == pick.get('target_player_id')), None)
+        if owner is None:
+            return False
+        return self._player_has_ability(owner, "盟旗學校")
+
+    def _reserved_shield_discards_for_picks(self, picks):
+        return sum(1 for pick in (picks or []) if self._pick_requires_mongol_shield_discard(pick))
+
+    def _target_keys_for_picks(self, picks):
+        """The `(target_player_id, town)` key set for a list of accumulated picks, for passing
+        as `exclude_target_keys` to `_interactive_support_dissolve_targets[_near_town]`.
+
+        Excluding already-picked towns from the raw candidate scan ENTIRELY (not just filtering
+        them out of the returned list afterward) matters: an already-picked town is still
+        physically present on the board (mutation is deferred to final commit), so if it were
+        merely filtered out after the fact, it would still have consumed 1 unit of
+        shield-discard budget while being walked -- silently starving a later, genuinely
+        still-open, affordable Mongol candidate of budget purely as an artifact of
+        `other.organizations` dict iteration order (parent-level review, Critical 2). Passing
+        this exclusion set is what lets `pre_reserved_shield_discards` (a flat count) correctly
+        shrink the STARTING budget for candidates that actually compete for it, instead of
+        double-counting already-reserved picks a second time as they're walked.
+        """
+        return {(pick.get('target_player_id'), pick.get('town')) for pick in (picks or [])}
+
+    def _dissolve_cancel_kwargs(self, context):
+        """Given a `context` dict that may carry a `_dissolve_cancel_snapshot` (seeded once, at
+        the moment a player-initiated dissolve card's *first* pending choice opens -- see
+        `play_card`'s `action_context['_dissolve_cancel_snapshot']`, `_start_card_dissolve_interaction`,
+        and `_commit_support_card_play`), return the `**extra` kwargs that mark a
+        `_set_pending_support_flow_choice`/`_set_pending_target_choice` call as cancellable with a
+        full rollback. `context` is threaded verbatim through every stage of these flows
+        (`next_context = dict(context)` / `{**context, ...}`), so passing this snapshot through
+        forward at every stage-transition call site is what lets `cancel_pending_choice()` fully
+        unwind the play from *any* stage, not just the first.
+
+        Returns {} (not cancellable) when no snapshot is present -- e.g. non-dissolve
+        support_interaction steps (build/discard) never opt in, and forced/mandatory dissolve
+        choices (event_red_dissolve, era_red_bonus_dissolve_target, intel_network's own
+        `choose_one` gate aside) never seed a snapshot in the first place.
+        """
+        snapshot = (context or {}).get('_dissolve_cancel_snapshot')
+        if not isinstance(snapshot, dict) or snapshot.get('card') is None:
+            return {}
+        return {
+            'cancellable': True,
+            'rollback_card': snapshot.get('card'),
+            'rollback_hand_index': snapshot.get('hand_index'),
+            # What THIS card's play itself contributed to the reference-counted turn_log
+            # bookkeeping -- cancel_pending_choice() decrements exactly this, which stays correct
+            # regardless of what order multiple interleaved cancellable cards get cancelled in
+            # (see _note_*/_undo_* helpers and Game._new_turn_log's field comment).
+            'rollback_contributed_money_cost': bool(snapshot.get('contributed_money_cost')),
+            'rollback_contributed_propaganda_cost': bool(snapshot.get('contributed_propaganda_cost')),
+            'rollback_contributed_nonstarter_name': snapshot.get('contributed_nonstarter_name'),
+            'rollback_borrowed_owner_id': snapshot.get('borrowed_owner_id'),
+            'rollback_borrowed_purchase_area_index': snapshot.get('borrowed_purchase_area_index'),
+            # What THIS card's own play changed in event_progress (count/completed_player_ids),
+            # captured as a delta rather than an absolute before/after pair -- see
+            # _event_progress_delta/_undo_event_progress_delta below for why: an absolute
+            # snapshot restore has exactly the same interleaved-cancellation-order bug the
+            # turn_log fields had (fixed via reference counting) -- cancelling one of two
+            # interleaved contributors would stomp the other's still-live, already-correct
+            # contribution. `event_progress` itself isn't naturally a simple counter (it also
+            # carries `succeeded`/`status`/`completed_player_ids`/attribution fields derived
+            # from the count), so instead of a parallel ref-count structure, this undoes exactly
+            # this play's own numeric contribution and re-derives the dependent fields from the
+            # result, which is equivalent in effect but doesn't require threading new
+            # always-present internal counters through Game._new_turn_log-style state for a
+            # value (event_progress) that isn't turn-scoped the same way.
+            'rollback_event_progress_delta': self._event_progress_delta(
+                snapshot.get('event_progress'), snapshot.get('event_progress_after')
+            ),
+        }
+
+    def _event_progress_delta(self, before, after):
+        """What a single card play's own _track_event_progress call(s) changed, as a small
+        delta descriptor -- or None if nothing changed (no active mission, trigger type didn't
+        match, event already settled, etc.) or either snapshot isn't a dict.
+
+        Deliberately delta-based, not an absolute before/after pair: see the long comment on
+        `rollback_event_progress_delta` in `_dissolve_cancel_kwargs` for why an absolute
+        snapshot restore is unsafe under interleaved cancellable plays.
+        """
+        if not isinstance(before, dict) or not isinstance(after, dict) or before == after:
+            return None
+        count_delta = int(after.get('count', 0) or 0) - int(before.get('count', 0) or 0)
+        added_completed_player_ids = []
+        if isinstance(after.get('completed_player_ids'), list):
+            before_ids = set(before.get('completed_player_ids') or [])
+            after_ids = set(after.get('completed_player_ids') or [])
+            added_completed_player_ids = sorted(after_ids - before_ids)
+        if not count_delta and not added_completed_player_ids:
+            return None
+        return {
+            'count_delta': count_delta,
+            'added_completed_player_ids': added_completed_player_ids,
+            # Identifies THIS play's own entry in event_progress['_actor_contributions'] (see
+            # Game._track_event_progress) so _undo_event_progress_delta can pop exactly that
+            # entry by token -- not by value/position -- and re-derive last_actor_id/name/token
+            # from whichever contribution is now the most recent SURVIVING one. Deliberately NOT
+            # a before/after id VALUE comparison: two different interleaved plays by the SAME
+            # player write the identical last_actor_id/name, so a bare value comparison can't
+            # tell "still this play's own, uncontested, attribution" apart from "coincidentally
+            # the same actor id a later, still-live play also wrote"; and deliberately NOT a
+            # "restore my own before-play snapshot" either, since that snapshot can itself
+            # already be stale by undo time (see the stack's own comment in
+            # Game._track_event_progress for why). (Parent-level review, defect 1 follow-up.)
+            'last_actor_token_after': after.get('last_actor_token'),
+        }
+
+    def _undo_event_progress_delta(self, delta):
+        """Reverse exactly what one card play's `_event_progress_delta` recorded, against the
+        CURRENT live `self.event_progress` -- not by overwriting it with an absolute snapshot,
+        so any OTHER still-live interleaved cancellable play's own independent contribution is
+        left untouched. `succeeded`/`status` are pure functions of count vs. required (mirroring
+        `_track_event_progress`'s own derivation), so they're recomputed from the adjusted count
+        rather than separately tracked; `event_notification` is regenerated the same way
+        `_track_event_progress` itself does, from the corrected `event_progress`.
+        """
+        if not isinstance(delta, dict):
+            return
+        progress = self.event_progress
+        if not isinstance(progress, dict) or progress.get('settled'):
+            return
+        added_ids = delta.get('added_completed_player_ids') or []
+        if added_ids and isinstance(progress.get('completed_player_ids'), list):
+            removed = set(added_ids)
+            progress['completed_player_ids'] = [
+                pid for pid in progress['completed_player_ids'] if pid not in removed
+            ]
+            # each_non_red_player mode derives count directly from this list's length.
+            progress['count'] = len(progress['completed_player_ids'])
+        else:
+            count_delta = int(delta.get('count_delta', 0) or 0)
+            if count_delta:
+                progress['count'] = max(0, int(progress.get('count', 0) or 0) - count_delta)
+        required = int(progress.get('required', 0) or 0)
+        if required > 0:
+            now_succeeded = int(progress.get('count', 0) or 0) >= required
+            progress['succeeded'] = now_succeeded
+            progress['status'] = 'success_pending' if now_succeeded else 'active'
+        # Remove exactly THIS play's own entry from the ordered "still-live contributors" stack
+        # (by token, not by value/position), then re-derive last_actor_id/name/token from
+        # whatever is now the most recent SURVIVING contribution. NOT a "restore my own
+        # before-play value" -- a value-snapshot restore is unsafe here even beyond the
+        # same-actor-id ambiguity a token fixes: the "before" value captured when THIS play
+        # started may itself already be a now-stale snapshot of a DIFFERENT play's contribution
+        # that has since been independently cancelled (see the long comment on the stack in
+        # Game._track_event_progress), which restoring it would incorrectly resurrect. Popping
+        # by token and re-deriving from the live stack's new top is correct under every
+        # interleaved cancellation order (parent-level review, defect 1 follow-up).
+        token_after = delta.get('last_actor_token_after')
+        stack = progress.get('_actor_contributions')
+        if token_after and isinstance(stack, list):
+            new_stack = [entry for entry in stack if entry.get('token') != token_after]
+            if len(new_stack) != len(stack):
+                progress['_actor_contributions'] = new_stack
+                if new_stack:
+                    top = new_stack[-1]
+                    progress['last_actor_id'] = top.get('actor_id')
+                    progress['last_actor_name'] = top.get('actor_name')
+                    progress['last_actor_token'] = top.get('token')
+                else:
+                    progress.pop('last_actor_id', None)
+                    progress.pop('last_actor_name', None)
+                    progress.pop('last_actor_token', None)
+                    progress.pop('_actor_contributions', None)
+        self.event_notification = self._event_display_payload()
+
+    # --- Reference-counted played_money_card/played_propaganda_card/played_nonstarter_names ---
+    # bookkeeping (see the field comments in Game._new_turn_log). Every card play that
+    # contributes to one of these public flags calls the matching _note_* helper; a later
+    # cancel_pending_choice() call for that SAME play (if it was cancellable) calls the matching
+    # _undo_* helper. This keeps the flags correct under any interleaving/cancellation order of
+    # multiple cancellable plays, not just strict reverse-of-play order.
+    def _note_money_cost_card_played(self):
+        self.turn_log['_money_cost_card_refs'] = int(self.turn_log.get('_money_cost_card_refs', 0) or 0) + 1
+        self.turn_log['played_money_card'] = True
+
+    def _undo_money_cost_card_played(self):
+        refs = max(0, int(self.turn_log.get('_money_cost_card_refs', 0) or 0) - 1)
+        self.turn_log['_money_cost_card_refs'] = refs
+        self.turn_log['played_money_card'] = refs > 0
+
+    def _note_propaganda_cost_card_played(self):
+        self.turn_log['_propaganda_cost_card_refs'] = int(self.turn_log.get('_propaganda_cost_card_refs', 0) or 0) + 1
+        self.turn_log['played_propaganda_card'] = True
+
+    def _undo_propaganda_cost_card_played(self):
+        refs = max(0, int(self.turn_log.get('_propaganda_cost_card_refs', 0) or 0) - 1)
+        self.turn_log['_propaganda_cost_card_refs'] = refs
+        self.turn_log['played_propaganda_card'] = refs > 0
+
+    def _note_nonstarter_name_played(self, card_name):
+        refs = self.turn_log.setdefault('_nonstarter_name_refs', {})
+        refs[card_name] = int(refs.get(card_name, 0) or 0) + 1
+        self.turn_log['played_nonstarter_names'] = [name for name, count in refs.items() if count > 0]
+
+    def _undo_nonstarter_name_played(self, card_name):
+        refs = self.turn_log.setdefault('_nonstarter_name_refs', {})
+        if card_name in refs:
+            remaining = max(0, int(refs[card_name] or 0) - 1)
+            if remaining > 0:
+                refs[card_name] = remaining
+            else:
+                # Prune zero-count entries entirely (rather than leaving `name: 0`) so a fully
+                # cancelled turn's internal bookkeeping is byte-identical to a turn where nothing
+                # was ever played, not just "derives the same boolean/list."
+                del refs[card_name]
+        self.turn_log['played_nonstarter_names'] = [name for name, count in refs.items() if count > 0]
 
     def _set_pending_support_flow_choice(self, player, choice_key, step, prompt, **extra):
         new_choice = {
@@ -850,7 +1081,33 @@ class CardPlayMixin:
                         actor, 'card_dissolve_interaction', 'sacrifice_town',
                         f'派遣間諜：{message}，請重新選擇要瓦解的起點組織。',
                         source_name='派遣間諜', towns=towns, context=flow_context,
+                        **self._dissolve_cancel_kwargs(flow_context),
                     )
+                else:
+                    # No alternative sacrifice-eligible organization exists: 派遣間諜's flow ends
+                    # here with no effect (the actor's card was already committed/discarded when
+                    # the flow started, and this is not a cancel -- it's a fizzle, exactly like
+                    # `_resolve_support_flow_choice`'s "no legal target" branch). The deferred
+                    # trigger's marker lives nested under this consent choice's own
+                    # `flow_context` (never at this choice's own top-level context), so
+                    # `_settle_deferred_card_play_triggers` -- which only ever inspects the
+                    # top-level context of the choice actually being resolved (the OWNER's
+                    # consent choice here, not the actor's flow) -- could never find it. Fire it
+                    # directly here instead, at this definite terminal point.
+                    deferred_triggers = flow_context.get('post_play_faction_triggers')
+                    if isinstance(deferred_triggers, dict):
+                        flow_context.pop('post_play_faction_triggers', None)
+                        trigger_player = next(
+                            (candidate for candidate in self.players if candidate.id == deferred_triggers.get('player_id')),
+                            actor,
+                        )
+                        self._apply_card_play_faction_abilities(
+                            trigger_player,
+                            cost_has_money=bool(deferred_triggers.get('cost_has_money')),
+                            cost_has_propaganda=bool(deferred_triggers.get('cost_has_propaganda')),
+                            played_card=deferred_triggers.get('played_card'),
+                            used_faction_ability_names=deferred_triggers.get('used_faction_ability_names'),
+                        )
                 return {'success': True, 'pending_choice': bool(towns), 'declined': True}
 
             if index == 0:
@@ -870,16 +1127,19 @@ class CardPlayMixin:
             )
             if not targets:
                 return restore_actor_choice('已無合法目標')
-            player.organizations[sacrifice_town] -= 1
-            if player.organizations[sacrifice_town] <= 0:
-                del player.organizations[sacrifice_town]
+            # Consent alone does not remove the organization yet -- per the cancellable-dissolve
+            # -target-selection feature, no own organization may be removed until the *final*
+            # confirmation (picking the enemy target below). The consenting owner's organization
+            # is decremented atomically together with the enemy dissolve in
+            # `_resolve_support_interaction_result`'s 'interactive_dissolve_self_and_enemy' branch.
             self.log(f"{player.name} agreed that {actor.name} may dissolve the organization at {sacrifice_town} for 派遣間諜")
-            next_context = {**flow_context, 'sacrifice_town': sacrifice_town}
+            next_context = {**flow_context, 'sacrifice_town': sacrifice_town, 'sacrifice_owner_player_id': player.id}
             max_steps = int((flow_context.get('effect_payload') or {}).get('range', 1) or 1)
             self._set_pending_support_flow_choice(
                 actor, 'card_dissolve_interaction', 'target',
                 f'派遣間諜：選擇 {sacrifice_town} {max_steps} 格內的 1 個敵方組織瓦解。',
                 source_name='派遣間諜', targets=targets, context=next_context,
+                **self._dissolve_cancel_kwargs(next_context),
             )
             return {'success': True, 'pending_choice': True, 'town': sacrifice_town}
 
@@ -974,6 +1234,7 @@ class CardPlayMixin:
                             f'情報網：選擇 1 個要瓦解的 {range_limit} 格內敵方組織。',
                             source_name='情報網',
                             context=context,
+                            **self._dissolve_cancel_kwargs(context),
                         )
                         result = pending_target_result
                         continue
@@ -981,11 +1242,19 @@ class CardPlayMixin:
                 if isinstance(nested_result, dict) and nested_result.get('pending_choice'):
                     result = nested_result
             self.log(f"{player.name} resolved choose_one option {index}")
+            still_pending = isinstance(result, dict) and result.get('pending_choice')
+            if not still_pending:
+                # Option A/C (or B with no legal target at all): nothing further is pending, so
+                # this choose_one resolve IS the flow's final step -- mirrors every other
+                # dissolve-flow commit point (see _settle_deferred_card_play_triggers). Option B
+                # with a legal target opened its own nested intel_network_dissolve_target choice
+                # instead (still_pending True), whose OWN eventual commit tags itself.
+                choice['is_final_confirmation'] = True
             return {
                 'success': True,
                 'choice_index': index,
                 'label': selected.get('label'),
-                **({'pending_choice': True} if isinstance(result, dict) and result.get('pending_choice') else {}),
+                **({'pending_choice': True} if still_pending else {}),
             }
 
         return {'error': 'Unsupported pending choice type'}
@@ -1265,6 +1534,11 @@ class CardPlayMixin:
             )
             if result.get('error'):
                 return result
+            # Committing real board state right now (covers 情報網's cancellable
+            # intel_network_dissolve_target as well as the forced event_red_dissolve/
+            # era_red_bonus_dissolve_target choices, for which this is a harmless no-op since
+            # those never carry a post_play_faction_triggers marker in the first place).
+            choice['is_final_confirmation'] = True
             self.pending_choice = None
             if choice_key == 'era_red_bonus_dissolve_target':
                 self.turn_log.setdefault('era_effects_applied', []).append({
@@ -1440,14 +1714,22 @@ class CardPlayMixin:
                 )
             ]
         elif effect_type == 'interactive_dissolve_many_near':
-            targets = self._interactive_support_dissolve_targets(
-                player,
-                require_self_sacrifice=False,
-                max_steps=int((context.get('effect_payload') or {}).get('range', 1) or 1),
-                target_players=self._target_players_for_interaction(player, context.get('target_player_id')),
-                target_region=(context.get('effect_payload') or {}).get('target_region'),
-                include_shared_source=bool(context.get('include_shared_source', False)),
-            )
+            accumulated_picks = context.get('accumulated_dissolve_picks') or []
+            targets = [
+                entry
+                for entry in self._interactive_support_dissolve_targets(
+                    player,
+                    require_self_sacrifice=False,
+                    max_steps=int((context.get('effect_payload') or {}).get('range', 1) or 1),
+                    target_players=self._target_players_for_interaction(player, context.get('target_player_id')),
+                    target_region=(context.get('effect_payload') or {}).get('target_region'),
+                    include_shared_source=bool(context.get('include_shared_source', False)),
+                )
+                if not any(
+                    pick.get('target_player_id') == entry.get('player_id') and pick.get('town') == entry.get('town')
+                    for pick in accumulated_picks
+                )
+            ]
         elif effect_type == 'force_discard_near':
             payload = context.get('effect_payload') or {}
             targets = self._interactive_support_discard_targets_near(
@@ -1479,6 +1761,10 @@ class CardPlayMixin:
         if isinstance(response, dict) and response.get('error'):
             if self._refresh_support_flow_choice_after_stale_result(player, choice):
                 return {**response, 'pending_choice': True, 'retryable': True}
+            # No legal target remains -- the effect fizzles, but the card itself was still
+            # genuinely played (this is not a cancel; nothing here is reversible), so this is
+            # ALSO a legitimate final commit point for any deferred faction-play trigger.
+            choice['is_final_confirmation'] = True
             self.pending_choice = None
             self.log(f"{player.name} 的 {choice.get('source_name', '奧援')} 因結算時已無合法目標而結束")
             return {
@@ -1542,14 +1828,22 @@ class CardPlayMixin:
 
             hand_index = max(0, min(int(choice.get('rollback_hand_index', len(player.hand))), len(player.hand)))
             player.hand.insert(hand_index, rollback_card)
-            self.turn_log['played_money_card'] = bool(choice.get('rollback_played_money_card', False))
-            self.turn_log['played_propaganda_card'] = bool(choice.get('rollback_played_propaganda_card', False))
-            self.turn_log['played_nonstarter_names'] = list(choice.get('rollback_played_nonstarter_names', []))
-            if 'rollback_event_progress' in choice:
-                snapshot = choice.get('rollback_event_progress')
-                self.event_progress = dict(snapshot) if isinstance(snapshot, dict) else snapshot
-                notification = choice.get('rollback_event_notification')
-                self.event_notification = dict(notification) if isinstance(notification, dict) else notification
+            # Undo exactly (and only) what THIS card's own play contributed to the
+            # reference-counted turn_log bookkeeping -- correct under any cancellation order of
+            # multiple interleaved cancellable cards, unlike restoring an absolute snapshot (see
+            # _note_*/_undo_* helpers and Game._new_turn_log's field comment).
+            if choice.get('rollback_contributed_money_cost'):
+                self._undo_money_cost_card_played()
+            if choice.get('rollback_contributed_propaganda_cost'):
+                self._undo_propaganda_cost_card_played()
+            contributed_name = choice.get('rollback_contributed_nonstarter_name')
+            if contributed_name:
+                self._undo_nonstarter_name_played(contributed_name)
+            # Undo exactly (and only) what THIS card's own play contributed to event_progress --
+            # correct under any cancellation order of multiple interleaved cancellable plays,
+            # unlike restoring an absolute snapshot (see _event_progress_delta/
+            # _undo_event_progress_delta).
+            self._undo_event_progress_delta(choice.get('rollback_event_progress_delta'))
         # Registered ability choices consume nothing until resolved; transactional support
         # choices explicitly restore their card and turn flags above.
         self.pending_choice = None
@@ -1643,6 +1937,7 @@ class CardPlayMixin:
                 source_name=card_name,
                 towns=towns,
                 context=base_context,
+                **self._dissolve_cancel_kwargs(base_context),
             )
             return {'pending_choice': True, **result}
         targets = self._interactive_support_dissolve_targets(
@@ -1663,16 +1958,23 @@ class CardPlayMixin:
             source_name=card_name,
             targets=targets,
             context=base_context,
+            **self._dissolve_cancel_kwargs(base_context),
         )
         return {'pending_choice': True, **result}
 
-    def _support_interaction_targets(self, player, effect_type, payload):
+    def _support_interaction_targets(self, player, effect_type, payload, pre_reserved_shield_discards=0):
         # Single source of truth for an interactive support card's legal targets. Returns
         # the list of build towns / dissolve targets (an empty list means "no legal
         # target"), or None for non-interactive effect types (which always resolve).
         # Shared by _start_support_interaction (which opens the pending choice) and
         # _support_card_has_legal_target (the non-mutating pre-check in play_card) so the
         # two can never disagree about whether a play is legal.
+        #
+        # `pre_reserved_shield_discards`: see _support_card_has_legal_target's own docstring --
+        # only meaningfully non-zero for a PRE-pop caller reserving the about-to-be-played card's
+        # own hand slot; the real post-pop callers (_start_support_interaction itself, and
+        # play_card's own post-pop re-check) pass 0 (default), since by then the hand already
+        # correctly reflects reality and needs no adjustment.
         if effect_type in ('interactive_build_anywhere_inner', 'interactive_build_near_inner'):
             return self._interactive_support_build_towns(
                 player,
@@ -1685,6 +1987,7 @@ class CardPlayMixin:
                 max_steps=int(payload.get('range', 1) or 1),
                 target_region=payload.get('target_region'),
                 include_shared_source=True,
+                pre_reserved_shield_discards=pre_reserved_shield_discards,
             )
         if effect_type == 'interactive_dissolve_self_and_enemy':
             return self._interactive_support_sacrifice_towns(
@@ -1700,6 +2003,7 @@ class CardPlayMixin:
                 max_steps=int(payload.get('range', 1) or 1),
                 target_region=payload.get('target_region'),
                 include_shared_source=True,
+                pre_reserved_shield_discards=pre_reserved_shield_discards,
             )
             return [
                 entry
@@ -1757,14 +2061,28 @@ class CardPlayMixin:
             )
             return {'pending_choice': True, **result}
         if effect_type == 'interactive_dissolve_many_near':
+            total_count = int((payload or {}).get('count', 1) or 1)
+            is_multi = total_count > 1
+            multi_kwargs = (
+                {'remaining_count': total_count, 'selected_count': 0, 'total_count': total_count}
+                if is_multi else {}
+            )
+            prompt = (
+                f'{card_name}：已選 0/{total_count}，選擇 1 個要瓦解的鄰近敵方組織。'
+                if is_multi else f'{card_name}：選擇 1 個要瓦解的鄰近敵方組織。'
+            )
+            # Note: `cancellable`/`rollback_*` are stamped onto this choice post-hoc, by
+            # `_commit_support_card_play` (which runs right after this returns and has access to
+            # the pre-play `action_context` this function does not) -- not here.
             result = self._set_pending_support_flow_choice(
                 player,
                 'support_interaction',
                 'target',
-                f'{card_name}：選擇 1 個要瓦解的鄰近敵方組織。',
+                prompt,
                 source_name=card_name,
                 targets=targets,
                 context=base_context,
+                **multi_kwargs,
             )
             return {'pending_choice': True, **result}
         if effect_type == 'interactive_dissolve_self_and_enemy':
@@ -1824,6 +2142,10 @@ class CardPlayMixin:
             self._place_organization(player, town)
             self._record_action_build(player, town)
             self.log(f"{player.name} resolved {card_name} and built in {town}")
+            # This resolve is committing real board state right now -- see
+            # _settle_deferred_card_play_triggers for why this is tagged on the choice itself
+            # rather than inferred from where a paused choice happens to be parked.
+            choice['is_final_confirmation'] = True
             return {'success': True, 'town': town}
         if effect_type == 'interactive_dissolve_self_and_enemy' and choice.get('step') == 'sacrifice_town':
             sacrifice_town = result.get('town')
@@ -1862,13 +2184,13 @@ class CardPlayMixin:
                     },
                 )
                 return {'success': True, 'pending_choice': True, 'awaiting_consent': True}
-            sacrifice_owner.organizations[sacrifice_town] -= 1
-            if sacrifice_owner.organizations[sacrifice_town] <= 0:
-                del sacrifice_owner.organizations[sacrifice_town]
-            shared_text = f"（實體屬於{sacrifice_owner.name}）" if sacrifice_owner is not player else ''
-            self.log(f"{player.name} dissolved 1 own organization at {sacrifice_town}{shared_text} for {card_name}")
+            # Deferred to the final confirmation: no own organization is removed here. This is
+            # only the town *pick* -- the actual sacrifice happens atomically together with the
+            # enemy dissolve once the target step below is confirmed, so a cancel issued at any
+            # point up to (and not including) that final confirmation is a true no-op.
             next_context = dict(context)
             next_context['sacrifice_town'] = sacrifice_town
+            next_context['sacrifice_owner_player_id'] = getattr(sacrifice_owner, 'id', None)
             max_steps = int((context.get('effect_payload') or {}).get('range', 1) or 1)
             self._set_pending_support_flow_choice(
                 player,
@@ -1878,6 +2200,7 @@ class CardPlayMixin:
                 source_name=card_name,
                 targets=targets,
                 context=next_context,
+                **self._dissolve_cancel_kwargs(next_context),
             )
             return {'success': True, 'pending_choice': True, 'town': sacrifice_town}
         if effect_type in {'interactive_dissolve_many_near', 'interactive_dissolve_self_and_enemy', 'interactive_dissolve_and_build'}:
@@ -1896,6 +2219,22 @@ class CardPlayMixin:
                 sacrifice_town = context.get('sacrifice_town')
                 if not sacrifice_town:
                     return {'error': 'Missing sacrificed organization'}
+                sacrifice_owner_player_id = context.get('sacrifice_owner_player_id')
+                sacrifice_owner = (
+                    next((p for p in self.players if getattr(p, 'id', None) == sacrifice_owner_player_id), None)
+                    if sacrifice_owner_player_id is not None
+                    else player
+                )
+                # The sacrifice was never applied to the board (deferred -- see the
+                # 'sacrifice_town' branch above and `shared_spy_origin_consent`'s consent-granted
+                # path), so it must still be re-validated as legal here, at the final
+                # confirmation, exactly like any other stale-target check.
+                if (
+                    sacrifice_owner is None
+                    or sacrifice_owner.organizations.get(sacrifice_town, 0) <= 0
+                    or sacrifice_town == getattr(sacrifice_owner, 'base', None)
+                ):
+                    return {'error': 'Sacrificed organization is no longer valid'}
                 current_targets = self._interactive_support_dissolve_targets_near_town(
                     player,
                     sacrifice_town,
@@ -1925,43 +2264,211 @@ class CardPlayMixin:
                     return {'error': 'Target organization is no longer within range'}
                 if effect_type == 'interactive_dissolve_and_build' and not self._can_replace_dissolved_org_with_own(player, target_player, town):
                     return {'error': 'Target cannot be replaced with an organization'}
-            dissolve_result = self.dissolve_organization(
-                player, target_player, town, source='support_card', _from_pending_choice=True
-            )
-            if dissolve_result.get('error'):
-                return dissolve_result
-            if effect_type == 'interactive_dissolve_many_near':
-                remaining_count = max(1, int(context.get('remaining_count', payload.get('count', 1)) or 1)) - 1
+
+            total_count = int(payload.get('count', 1) or 1) if effect_type == 'interactive_dissolve_many_near' else 1
+            if effect_type == 'interactive_dissolve_many_near' and total_count > 1:
+                # Multi-target dissolve (e.g. 北國奧援 III): per requirement #6, only the FINAL
+                # Confirm may commit anything atomically -- this pick is recorded without
+                # touching the board yet, so a cancel issued after any non-final pick is still a
+                # true no-op. The accumulated picks are re-validated and applied together, one
+                # `dissolve_organization()` call each, only once the count is filled (or no
+                # further legal target remains).
+                accumulated_picks = list(context.get('accumulated_dissolve_picks') or [])
+                accumulated_picks = accumulated_picks + [{'target_player_id': target_player_id, 'town': town}]
+                remaining_count = total_count - len(accumulated_picks)
                 if remaining_count > 0:
-                    next_targets = self._interactive_support_dissolve_targets(
+                    next_targets = [
+                        entry for entry in self._interactive_support_dissolve_targets(
+                            player,
+                            require_self_sacrifice=False,
+                            max_steps=max_steps,
+                            target_players=target_players,
+                            target_region=target_region,
+                            include_shared_source=bool(context.get('include_shared_source', False)),
+                            # Reserve 1 hand-card discard for each 盟旗學校-protected pick
+                            # already locked into this batch (this pick included), so a
+                            # 盟旗學校-protected target never gets offered here beyond what the
+                            # attacker could still afford cumulatively (parent-level review,
+                            # defect 1) -- and exclude those same picks' own towns from the raw
+                            # scan entirely, so they never compete for that budget a second time
+                            # purely as an artifact of dict iteration order (Critical 2).
+                            pre_reserved_shield_discards=self._reserved_shield_discards_for_picks(accumulated_picks),
+                            exclude_target_keys=self._target_keys_for_picks(accumulated_picks),
+                        )
+                        # Redundant with exclude_target_keys above (kept as defense-in-depth --
+                        # harmless no-op given the listing already excludes these).
+                        if not any(
+                            pick['target_player_id'] == entry.get('player_id') and pick['town'] == entry.get('town')
+                            for pick in accumulated_picks
+                        )
+                    ]
+                    if next_targets:
+                        next_context = {**context, 'accumulated_dissolve_picks': accumulated_picks, 'remaining_count': remaining_count}
+                        self._set_pending_support_flow_choice(
+                            player,
+                            'support_interaction',
+                            'target',
+                            f'{card_name}：已選 {len(accumulated_picks)}/{total_count}，還可再選 {remaining_count} 個鄰近敵方組織。',
+                            source_name=card_name,
+                            targets=next_targets,
+                            remaining_count=remaining_count,
+                            selected_count=len(accumulated_picks),
+                            total_count=total_count,
+                            context=next_context,
+                            **self._dissolve_cancel_kwargs(next_context),
+                        )
+                        self.log(f"{player.name} selected one {card_name} target ({len(accumulated_picks)}/{total_count}); not yet dissolved")
+                        return {
+                            'success': True,
+                            'pending_choice': True,
+                            'selected_count': len(accumulated_picks),
+                            'total_count': total_count,
+                            'remaining_count': remaining_count,
+                        }
+                    self.log(f"{player.name} has {remaining_count} {card_name} dissolve(s) remaining but no further legal target; confirming {len(accumulated_picks)} now")
+                # Final confirmation: re-validate every accumulated pick against the live board
+                # BEFORE applying anything (req #9 -- an earlier pick could have gone stale while
+                # later picks were still being made). 北國奧援 III's own printed text is
+                # "dissolve UP TO 2 organizations", not "exactly 2" -- so if a replacement legal
+                # target exists for a vacated (stale) slot, reopen for that re-pick (unchanged
+                # from the previous round); but if NO further legal target exists at all, the
+                # correct outcome is to resolve every STILL-VALID selected target now, even if
+                # that ends up fewer than the card's stated max -- not to fizzle the whole flow.
+                # (Parent-level review, defect 2 -- the previous round's full-fizzle-on-no-
+                # replacement behavior was itself built on the wrong all-or-nothing premise.)
+                # Validated ONE PICK AT A TIME, each against a listing that excludes every OTHER
+                # accumulated pick's own town (so those don't compete for shield-discard budget)
+                # while reserving budget for their own shield costs -- NOT a single shared
+                # listing call. A single shared call with a flat pre_reserved_shield_discards
+                # would walk every accumulated pick's town as an ordinary candidate too (since
+                # none of them have actually been dissolved on the board yet), letting an
+                # already-locked-in pick's own town spuriously consume the very budget being
+                # reserved for it, and (depending on `other.organizations` dict iteration order)
+                # spuriously fail to find IT SELF in the resulting list -- incorrectly marking a
+                # pick "no longer legal" that was never actually stale or unaffordable
+                # (parent-level review, Critical 2).
+                still_valid_picks = []
+                for candidate_pick in accumulated_picks:
+                    other_picks = [p for p in accumulated_picks if p is not candidate_pick]
+                    live_targets_for_this_pick = self._interactive_support_dissolve_targets(
                         player,
                         require_self_sacrifice=False,
                         max_steps=max_steps,
                         target_players=target_players,
                         target_region=target_region,
                         include_shared_source=bool(context.get('include_shared_source', False)),
+                        pre_reserved_shield_discards=self._reserved_shield_discards_for_picks(other_picks),
+                        exclude_target_keys=self._target_keys_for_picks(other_picks),
                     )
-                    if next_targets:
-                        next_context = {**context, 'remaining_count': remaining_count}
+                    if any(
+                        entry.get('player_id') == candidate_pick['target_player_id'] and entry.get('town') == candidate_pick['town']
+                        for entry in live_targets_for_this_pick
+                    ):
+                        still_valid_picks.append(candidate_pick)
+                if len(still_valid_picks) < len(accumulated_picks):
+                    stale_towns = [
+                        pick['town'] for pick in accumulated_picks if pick not in still_valid_picks
+                    ]
+                    remaining_count = total_count - len(still_valid_picks)
+                    next_targets = [
+                        entry for entry in self._interactive_support_dissolve_targets(
+                            player,
+                            require_self_sacrifice=False,
+                            max_steps=max_steps,
+                            target_players=target_players,
+                            target_region=target_region,
+                            include_shared_source=bool(context.get('include_shared_source', False)),
+                            pre_reserved_shield_discards=self._reserved_shield_discards_for_picks(still_valid_picks),
+                            exclude_target_keys=self._target_keys_for_picks(still_valid_picks),
+                        )
+                        # Redundant with exclude_target_keys above (kept as defense-in-depth --
+                        # harmless no-op given the listing already excludes these).
+                        if not any(
+                            pick['target_player_id'] == entry.get('player_id') and pick['town'] == entry.get('town')
+                            for pick in still_valid_picks
+                        )
+                    ]
+                    if remaining_count > 0 and next_targets:
+                        next_context = {
+                            **context,
+                            'accumulated_dissolve_picks': still_valid_picks,
+                            'remaining_count': remaining_count,
+                        }
                         self._set_pending_support_flow_choice(
                             player,
                             'support_interaction',
                             'target',
-                            f'{card_name}：還可瓦解 {remaining_count} 個鄰近敵方組織。',
+                            f'{card_name}：{"、".join(stale_towns)} 已不再是合法目標，請重新選擇 {remaining_count} 個鄰近敵方組織。',
                             source_name=card_name,
                             targets=next_targets,
                             remaining_count=remaining_count,
+                            selected_count=len(still_valid_picks),
+                            total_count=total_count,
                             context=next_context,
+                            **self._dissolve_cancel_kwargs(next_context),
                         )
-                        self.log(f"{player.name} resolved one {card_name} target; {remaining_count} dissolve(s) remain")
+                        self.log(f"{player.name}'s {card_name} pick(s) at {'、'.join(stale_towns)} became illegal before final confirmation; re-opened for {remaining_count} more")
                         return {
                             'success': True,
                             'pending_choice': True,
-                            'town': town,
-                            'target_player_id': target_player_id,
+                            'retryable': True,
+                            'selected_count': len(still_valid_picks),
+                            'total_count': total_count,
                             'remaining_count': remaining_count,
+                            'stale_towns': stale_towns,
                         }
-                    self.log(f"{player.name} has {remaining_count} {card_name} dissolve(s) remaining but no legal target")
+                    # No legal replacement target exists at all -- resolve every still-valid
+                    # selected target now ("up to N", per the card's own printed wording), rather
+                    # than fizzling the whole flow. Falls through to the shared apply loop below
+                    # with accumulated_picks narrowed to just the still-valid subset.
+                    accumulated_picks = still_valid_picks
+                    self.log(f"{player.name}'s {card_name} pick(s) at {'、'.join(stale_towns)} became illegal with no legal replacement; resolving the remaining {len(accumulated_picks)} valid target(s)")
+
+                # Apply every (still-)valid accumulated pick.
+                applied = []
+                for pick in accumulated_picks:
+                    pick_target_player = next((p for p in self.players if getattr(p, 'id', None) == pick['target_player_id']), None)
+                    if pick_target_player is None:
+                        continue
+                    pick_result = self.dissolve_organization(
+                        player, pick_target_player, pick['town'], source='support_card', _from_pending_choice=True
+                    )
+                    if not pick_result.get('error'):
+                        applied.append({'town': pick['town'], 'target_player_id': pick['target_player_id']})
+                # As above: this IS the atomic final-confirmation commit for the whole
+                # multi-target flow (every accumulated pick just got dissolved above), regardless
+                # of how many earlier picks were queued/parked elsewhere along the way.
+                choice['is_final_confirmation'] = True
+                self.pending_choice = None
+                self.log(f"{player.name} resolved {card_name}: dissolved {len(applied)} organization(s)")
+                return {'success': True, 'dissolved': applied, 'target_count': len(applied)}
+
+            # Single-target dissolve (interactive_dissolve_many_near with total_count == 1),
+            # interactive_dissolve_self_and_enemy, and interactive_dissolve_and_build: exactly
+            # one target is chosen and this resolver call already *is* the flow's only/final
+            # confirmation, so it commits immediately with no deferred-accumulation bookkeeping.
+            dissolve_result = self.dissolve_organization(
+                player, target_player, town, source='support_card', _from_pending_choice=True
+            )
+            if dissolve_result.get('error'):
+                return dissolve_result
+            # This resolve call is committing real board state right now -- tag the JUST-RESOLVED
+            # choice object itself (not wherever a paused choice might currently be parked: that
+            # can be self.pending_choice, a queued continuation, or the single deferred-build
+            # slot, and is not reliably enumerable) so `_settle_deferred_card_play_triggers`
+            # (resolve_pending_choice's tail) knows unambiguously that any deferred
+            # post_play_faction_triggers on this flow may now fire.
+            choice['is_final_confirmation'] = True
+            if effect_type == 'interactive_dissolve_self_and_enemy':
+                # Apply the deferred sacrifice now, atomically alongside the enemy dissolve above
+                # -- this single resolver call is the flow's one and only final confirmation, so
+                # by construction no own organization existed in a removed state at any point a
+                # cancel could have been issued.
+                sacrifice_owner.organizations[sacrifice_town] -= 1
+                if sacrifice_owner.organizations[sacrifice_town] <= 0:
+                    del sacrifice_owner.organizations[sacrifice_town]
+                shared_text = f"（實體屬於{sacrifice_owner.name}）" if sacrifice_owner is not player else ''
+                self.log(f"{player.name} dissolved 1 own organization at {sacrifice_town}{shared_text} for {card_name}")
             if effect_type == 'interactive_dissolve_and_build':
                 if not self._can_player_build_in_town(player, town):
                     if dissolve_result.get('red_base_hit') and not dissolve_result.get('red_base_destroyed'):
@@ -2004,6 +2511,12 @@ class CardPlayMixin:
                 include_shared_source=bool(context.get('include_shared_source', False)),
             ):
                 return {'error': 'Target player is not within range'}
+            # This resolve is committing (the target player is now locked in, whether the
+            # ensuing discard is random -- immediate -- or a choice handed to the target player,
+            # whose own follow-up choice never carries this marker forward; matches this
+            # pre-existing flow's original, unchanged timing). See
+            # _settle_deferred_card_play_triggers for why this is tagged on the choice itself.
+            choice['is_final_confirmation'] = True
             count = int(payload.get('count', 0) or 0)
             random_pick = bool(payload.get('random'))
             if random_pick:
@@ -2133,22 +2646,42 @@ class CardPlayMixin:
                 'played_card': played_card,
                 'used_faction_ability_names': list(action_context.get('used_faction_ability_names') or []),
             }
-            if card_name == '北國奧援' and pending_destination and action_context.get('hand_index') is not None:
-                # No 北國奧援 effect has mutated the board at the initial target/sacrifice
-                # choice, so this first step can still be cancelled as an atomic card play
-                # (the player's own rollback, distinct from the opponent's reaction).
-                pending_destination.update({
-                    'cancellable': True,
-                    'rollback_card': played_card,
-                    'rollback_hand_index': action_context.get('hand_index'),
-                    'rollback_played_money_card': action_context.get('prior_played_money_card'),
-                    'rollback_played_propaganda_card': action_context.get('prior_played_propaganda_card'),
-                    'rollback_played_nonstarter_names': list(action_context.get('prior_played_nonstarter_names', [])),
-                    'rollback_borrowed_owner_id': action_context.get('borrowed_owner_id'),
-                    'rollback_borrowed_purchase_area_index': action_context.get('borrowed_purchase_area_index'),
-                    'rollback_event_progress': action_context.get('prior_event_progress'),
-                    'rollback_event_notification': action_context.get('prior_event_notification'),
-                })
+            pending_effect_type = pending_context.get('effect_type')
+            if (
+                pending_destination is not None
+                and action_context.get('hand_index') is not None
+                and pending_effect_type in DISSOLVE_INTERACTIVE_EFFECT_TYPES
+            ):
+                # No dissolve-card/support-tier effect in DISSOLVE_INTERACTIVE_EFFECT_TYPES has
+                # mutated the board at the initial target/sacrifice choice (support cards other
+                # than 北國奧援/臺灣奧援's dissolve tiers -- e.g. build/discard interactions --
+                # never opt into this), so this first step can still be cancelled as an atomic
+                # card play (the player's own rollback, distinct from the opponent's reaction).
+                # Seeding the snapshot into `pending_context` (not just onto `pending_destination`
+                # itself) lets it survive being copied forward into every later stage of the flow
+                # (`next_context = dict(context)` / `{**context, ...}`, see
+                # `_resolve_support_interaction_result`), so `_dissolve_cancel_kwargs()` can
+                # re-derive the same rollback_* kwargs at every subsequent stage transition too.
+                # NOTE: play_card() always seeds action_context['_dissolve_cancel_snapshot']
+                # unconditionally before any branch runs, so the `or {...}` fallback below is
+                # unreachable in practice; kept (and kept in sync with the same
+                # contributed_*-based schema -- see play_card's own snapshot construction) only
+                # as defense-in-depth against a future caller of this method that doesn't.
+                pending_context['_dissolve_cancel_snapshot'] = action_context.get('_dissolve_cancel_snapshot') or {
+                    'card': played_card,
+                    'hand_index': action_context.get('hand_index'),
+                    'contributed_money_cost': bool(action_context.get('cost_has_money')),
+                    'contributed_propaganda_cost': bool(action_context.get('cost_has_propaganda')),
+                    'contributed_nonstarter_name': card_name,
+                    'borrowed_owner_id': action_context.get('borrowed_owner_id'),
+                    'borrowed_purchase_area_index': action_context.get('borrowed_purchase_area_index'),
+                    'event_progress': action_context.get('prior_event_progress'),
+                    'event_notification': action_context.get('prior_event_notification'),
+                    'event_progress_after': (
+                        dict(self.event_progress) if isinstance(self.event_progress, dict) else self.event_progress
+                    ),
+                }
+                pending_destination.update(self._dissolve_cancel_kwargs(pending_context))
             if not action_context.get('removed_current_card'):
                 if not self._return_borrowed_card_to_owner_topdeck(played_card):
                     player.deck.discard([played_card])
@@ -2255,7 +2788,50 @@ class CardPlayMixin:
                 return support_response
 
         if effective_type != 'support':
-            if card_name in getattr(self.action_engine, 'cards', {}):
+            if card_name in {"派遣間諜", "內應間諜"}:
+                # A declined reaction resumes the same committed card play -- but 派遣間諜/
+                # 內應間諜 have NO `effect` entry in action_engine.cards (their dissolve
+                # mechanic is hardcoded via _start_card_dissolve_interaction, not the generic
+                # data-driven effect pipeline the `elif` branch below drives). Routing them
+                # through that generic branch instead does nothing: the `elif` condition is
+                # simply false for these two cards, so control fell through to the shared tail
+                # below, discarded the card, fired cost/faction-ability hooks, and never opened
+                # a target choice at all -- the player lost the card for nothing. Mirror
+                # play_card's own direct-play special-case for these two cards exactly (see
+                # that branch, above in play_card itself) so the cancellable dissolve flow opens
+                # here exactly as it would on a normal, non-reaction-interrupted play.
+                # (Parent-level review, defect 3.)
+                if not action_context.get('card_canceled'):
+                    spy_result = self._start_card_dissolve_interaction(
+                        player,
+                        card_name,
+                        requires_self_sacrifice=(card_name == "派遣間諜"),
+                        range_limit=self._event_card_range_context(player, played_card)['range_limit'],
+                        target_player_id=action_context.get('target_player_id'),
+                        target_region=self._event_card_range_context(player, played_card)['target_region'],
+                        extra_context={
+                            **(
+                                {'era_followup_discard_choice': action_context.get('era_followup_discard_choice')}
+                                if action_context.get('era_followup_discard_choice') else {}
+                            ),
+                            '_dissolve_cancel_snapshot': action_context.get('_dissolve_cancel_snapshot'),
+                            'post_play_faction_triggers': {
+                                'player_id': player.id,
+                                'cost_has_money': bool(action_context.get('cost_has_money')),
+                                'cost_has_propaganda': bool(action_context.get('cost_has_propaganda')),
+                                'played_card': played_card,
+                                'used_faction_ability_names': list(action_context.get('used_faction_ability_names') or []),
+                            },
+                        },
+                    )
+                    if spy_result and spy_result.get('pending_choice'):
+                        if not action_context.get('removed_current_card'):
+                            if not self._return_borrowed_card_to_owner_topdeck(played_card):
+                                player.deck.discard([played_card])
+                        self.log(f"{player.name} played {card_name}")
+                        return {"success": True, "pending_choice": True, **spy_result}
+                    return {"error": "No target organization within range"}
+            elif card_name in getattr(self.action_engine, 'cards', {}):
                 if not action_context.get('card_canceled'):
                     action_result = self.action_engine.execute(card_name, player, self, context=action_context, include_resources=False)
                     if isinstance(action_result, dict) and action_result.get('pending_choice'):
@@ -2294,24 +2870,48 @@ class CardPlayMixin:
         if not skip_reaction_resolution:
             self._resolve_reaction_context(reaction_context)
 
-        # Deferred-reaction path never used to set these (only the immediate play_card
-        # path did), so a card that triggered a reaction prompt — even one the reactor
-        # skipped — silently failed to count toward 點燃熱情/樹立信心's "played a card with
-        # money/propaganda cost this turn" condition for whichever card came after it.
-        if action_context.get('cost_has_money'):
-            self.turn_log['played_money_card'] = True
-        if action_context.get('cost_has_propaganda'):
-            self.turn_log['played_propaganda_card'] = True
+        if self.pending_choice and card_name == '情報網':
+            # 情報網's `choose_one` always ends up open here (mirrors play_card's own shared
+            # tail -- see that special-case for the full rationale: effect_engine.py's
+            # `choose_one` handler doesn't return a `pending_choice` dict for
+            # action_engine.execute to catch above, so it always falls through to this generic
+            # tail). Unlike every OTHER card_name reaching this point, 情報網's cost/nonstarter
+            # contribution was ALREADY noted by play_card's own eager _note_* calls -- those run
+            # BEFORE 情報網's reaction-candidate check (unlike 紅軍奧援/is_red_support_card/
+            # general 奧援卡, which check for an eligible reactor before their own note-calls and
+            # so, when deferred here, never noted at all -- that's what the comment below this
+            # branch is about). Re-noting here would double-count this play's own contribution
+            # (a real regression this feature's ref-counted turn_log tracking would otherwise
+            # turn into a *permanently* stuck True flag, since the matching single cancel-time
+            # decrement could never catch up to a double-increment). Defer to
+            # `_settle_deferred_card_play_triggers` instead -- exactly like play_card's tail --
+            # and do NOT call the _note_* helpers again.
+            self.pending_choice.setdefault('context', {})['post_play_faction_triggers'] = {
+                'player_id': player.id,
+                'cost_has_money': bool(action_context.get('cost_has_money')),
+                'cost_has_propaganda': bool(action_context.get('cost_has_propaganda')),
+                'played_card': played_card,
+                'used_faction_ability_names': list(action_context.get('used_faction_ability_names') or []),
+            }
+        else:
+            # Deferred-reaction path never used to set these (only the immediate play_card
+            # path did), so a card that triggered a reaction prompt — even one the reactor
+            # skipped — silently failed to count toward 點燃熱情/樹立信心's "played a card with
+            # money/propaganda cost this turn" condition for whichever card came after it.
+            if action_context.get('cost_has_money'):
+                self._note_money_cost_card_played()
+            if action_context.get('cost_has_propaganda'):
+                self._note_propaganda_cost_card_played()
 
-        trigger_cost_has_money = action_context.get('cost_has_money')
-        trigger_cost_has_propaganda = action_context.get('cost_has_propaganda')
-        self._apply_card_play_faction_abilities(
-            player,
-            cost_has_money=bool(trigger_cost_has_money),
-            cost_has_propaganda=bool(trigger_cost_has_propaganda),
-            played_card=played_card,
-            used_faction_ability_names=action_context.get('used_faction_ability_names'),
-        )
+            trigger_cost_has_money = action_context.get('cost_has_money')
+            trigger_cost_has_propaganda = action_context.get('cost_has_propaganda')
+            self._apply_card_play_faction_abilities(
+                player,
+                cost_has_money=bool(trigger_cost_has_money),
+                cost_has_propaganda=bool(trigger_cost_has_propaganda),
+                played_card=played_card,
+                used_faction_ability_names=action_context.get('used_faction_ability_names'),
+            )
 
         if self.pending_choice:
             if not action_context.get('removed_current_card'):
@@ -2745,14 +3345,25 @@ class CardPlayMixin:
             if pending_card_name == "派遣間諜":
                 valid = bool(self._interactive_support_sacrifice_towns(player, max_steps=range_context['range_limit'], target_players=target_players, target_region=range_context['target_region'], include_shared_source=True))
             else:
-                valid = bool(self._interactive_support_dissolve_targets(player, max_steps=range_context['range_limit'], target_players=target_players, target_region=range_context['target_region'], include_shared_source=True))
+                # `pending_card` (this very 內應間諜) is still sitting in `player.hand` at this
+                # point (the pop below hasn't run yet) -- reserve 1 slot for it so a
+                # 盟旗學校-protected target's affordability is judged against the hand AS IT WILL
+                # BE once this card is actually played, not inflated by counting the
+                # about-to-be-spent card as if it were available to pay its own discard cost.
+                # Without this, a lone Mongol org could pass this pre-check (hand looks
+                # non-empty here) only to have `_start_card_dissolve_interaction`'s own
+                # (correctly post-pop) listing find zero legal targets after all -- by which
+                # point the card would already be popped and lost.
+                valid = bool(self._interactive_support_dissolve_targets(player, max_steps=range_context['range_limit'], target_players=target_players, target_region=range_context['target_region'], include_shared_source=True, pre_reserved_shield_discards=1))
             if not valid:
                 return {"error": "No target organization within range"}
 
         if (
             queueing_map_card
             and getattr(pending_card, 'card_type', None) == 'support'
-            and not self._support_card_has_legal_target(player, pending_card)
+            # `pending_card` is still in `player.hand` here (pop is below) -- reserve its own
+            # slot, same as _card_can_queue_map_action's own call just above (Critical 1).
+            and not self._support_card_has_legal_target(player, pending_card, pre_reserved_shield_discards=1)
         ):
             return {
                 "error": "No legal target for interactive support card",
@@ -2849,6 +3460,33 @@ class CardPlayMixin:
             'used_faction_ability_names': (
                 ['國際線'] if international_line_used else []
             ),
+            'hand_index': index,
+        }
+        # Snapshot used only by the player-initiated-dissolve cancel feature (see
+        # `_dissolve_cancel_kwargs`/`cancel_pending_choice`'s rollback_* handling): captures
+        # every piece of state this card's play is about to mutate, *before* it mutates it, so
+        # a later `cancel_pending_choice()` call -- issued from any stage of a dissolve card's
+        # target-selection flow -- can restore the exact pre-play state. Harmless/unread for
+        # any card whose flow never opts into `_dissolve_cancel_kwargs()`.
+        # contributed_* record exactly what THIS card's own play is about to add to the
+        # reference-counted played_money_card/played_propaganda_card/played_nonstarter_names
+        # bookkeeping (see Game._new_turn_log / _note_*/_undo_* in this file) -- NOT an absolute
+        # prior snapshot. cancel_pending_choice() undoes precisely this card's own contribution
+        # (decrementing the shared ref-counts), which -- unlike restoring an absolute snapshot --
+        # stays correct no matter what order multiple interleaved cancellable cards' flows are
+        # cancelled or confirmed in.
+        action_context['_dissolve_cancel_snapshot'] = {
+            'card': played_card,
+            'hand_index': index,
+            'contributed_money_cost': cost_has_money,
+            'contributed_propaganda_cost': cost_has_propaganda,
+            'contributed_nonstarter_name': (
+                card_name if (effective_type == 'support' or card_name not in {"追隨者", "樂捐者"}) else None
+            ),
+            'borrowed_owner_id': action_context['borrowed_owner_id'],
+            'borrowed_purchase_area_index': action_context['borrowed_purchase_area_index'],
+            'event_progress': action_context['prior_event_progress'],
+            'event_notification': action_context['prior_event_notification'],
         }
         if mode == 'action' and card_name == '情報網':
             range_context = self._event_card_range_context(player, played_card)
@@ -2869,9 +3507,9 @@ class CardPlayMixin:
         # Do this before an interactive support flow can return early with pending_choice;
         # conditional cards still use the pre-card snapshot above, so a card cannot satisfy itself.
         if cost_has_money:
-            self.turn_log["played_money_card"] = True
+            self._note_money_cost_card_played()
         if cost_has_propaganda:
-            self.turn_log["played_propaganda_card"] = True
+            self._note_propaganda_cost_card_played()
 
         if effective_type == 'support':
             action_context['hand_index'] = index
@@ -2880,8 +3518,26 @@ class CardPlayMixin:
             # the range pre-validation the command-card path does before hand.pop.
             if not self._support_card_has_legal_target(player, played_card):
                 player.hand.insert(index, played_card)
-                self.turn_log['played_money_card'] = action_context['prior_played_money_card']
-                self.turn_log['played_propaganda_card'] = action_context['prior_played_propaganda_card']
+                # Synchronous, same call: exactly undoes the _note_* calls just above, no
+                # interleaving window exists between them.
+                if cost_has_money:
+                    self._undo_money_cost_card_played()
+                if cost_has_propaganda:
+                    self._undo_propaganda_cost_card_played()
+                # Defense-in-depth (parent-level review, Critical 1): if this card was being
+                # QUEUED behind an already-open pending_choice (queueing_map_card), that earlier
+                # choice was already moved out of self.pending_choice into
+                # self._deferred_build_choice before this card was even popped -- a legality
+                # false-positive at the pre-pop check (now fixed to reserve this card's own
+                # hand slot, but this restore stays as a safety net regardless of WHY this
+                # post-pop check ever disagrees with the pre-pop one) must not leave that earlier
+                # choice permanently orphaned: neither player could ever resolve a pending_choice
+                # that's been dropped on the floor here, and _resume_card_build_queue_if_idle
+                # would otherwise later resurrect it during a completely different player's turn
+                # (a real softlock, not just a lost card -- see that method's own guard too).
+                if queueing_map_card and self._deferred_build_choice is not None:
+                    self.pending_choice = self._deferred_build_choice
+                    self._deferred_build_choice = None
                 self.log(f"{player.name} could not play {card_name}: no legal target")
                 return {
                     "error": "No legal target for interactive support card",
@@ -2896,14 +3552,18 @@ class CardPlayMixin:
                 self._track_event_progress('play_card_with_money', player=player)
             if int(purchase_cost.get('propaganda', 0) or 0) > 0:
                 self._track_event_progress('play_card_with_propaganda', player=player)
+            # Captured AFTER this play's own cost-trigger calls above, so
+            # _event_progress_delta(event_progress, event_progress_after) sees exactly what
+            # THIS play's own _track_event_progress call(s) changed (see _dissolve_cancel_kwargs).
+            action_context['_dissolve_cancel_snapshot']['event_progress_after'] = (
+                dict(self.event_progress) if isinstance(self.event_progress, dict) else self.event_progress
+            )
             # A support card counts toward 展現實力's played-card combo on the act of
             # playing (even if a reaction later cancels it), exactly like a command card,
             # whose name is recorded before its own reaction window below. Recording it
             # here keeps that semantic on the deferred path; the idempotent block after
             # this branch is then a no-op for support cards.
-            played_names = self.turn_log.setdefault("played_nonstarter_names", [])
-            if card_name not in played_names:
-                played_names.append(card_name)
+            self._note_nonstarter_name_played(card_name)
             # Open the cancel-reaction window BEFORE the support card mutates the board or
             # opens its own interactive choice, mirroring the deferred command-card path.
             # If a reactor holds an eligible card, defer _execute_support_card into
@@ -2932,10 +3592,13 @@ class CardPlayMixin:
                 self._track_event_progress('play_card_with_money', player=player)
             if int(purchase_cost.get('propaganda', 0) or 0) > 0:
                 self._track_event_progress('play_card_with_propaganda', player=player)
-        if card_name not in {"追隨者", "樂捐者"}:
-            played_names = self.turn_log.setdefault("played_nonstarter_names", [])
-            if card_name not in played_names:
-                played_names.append(card_name)
+            # See the matching capture in the support branch above -- same reasoning.
+            action_context['_dissolve_cancel_snapshot']['event_progress_after'] = (
+                dict(self.event_progress) if isinstance(self.event_progress, dict) else self.event_progress
+            )
+        # (support cards already recorded their own name above; this covers every other path)
+        if effective_type != 'support' and card_name not in {"追隨者", "樂捐者"}:
+            self._note_nonstarter_name_played(card_name)
 
         reaction_context = self._build_reaction_context(player, played_card, card_name, mode, reaction)
         if reaction_context is None and reaction is None:
@@ -2967,21 +3630,30 @@ class CardPlayMixin:
                         range_limit=self._event_card_range_context(player, played_card)['range_limit'],
                         target_player_id=target_player_id,
                         target_region=self._event_card_range_context(player, played_card)['target_region'],
-                        extra_context={'era_followup_discard_choice': action_context.get('era_followup_discard_choice')} if action_context.get('era_followup_discard_choice') else None,
+                        extra_context={
+                            **({'era_followup_discard_choice': action_context.get('era_followup_discard_choice')} if action_context.get('era_followup_discard_choice') else {}),
+                            '_dissolve_cancel_snapshot': action_context.get('_dissolve_cancel_snapshot'),
+                            # Deferred, NOT applied immediately (民族調和／星星之火／商貿組織／
+                            # 基金會／人同此心 etc.): this dissolve interaction is cancellable
+                            # (see the cancellable-dissolve-target-selection feature), so the
+                            # play is not truly committed until its flow's FINAL confirmation.
+                            # `_settle_deferred_card_play_triggers` (called from
+                            # resolve_pending_choice's tail) applies this exactly once the flow
+                            # finishes without being cancelled -- mirroring the support-card
+                            # interactive-flow path (`_commit_support_card_play`). A cancel
+                            # never calls that method, so a cancelled play correctly never fires
+                            # it at all -- no drawn card / latched turn_log flag / queued combo
+                            # reward can leak past a cancel this way.
+                            'post_play_faction_triggers': {
+                                'player_id': player.id,
+                                'cost_has_money': bool(cost_has_money),
+                                'cost_has_propaganda': bool(cost_has_propaganda),
+                                'played_card': played_card,
+                                'used_faction_ability_names': list(action_context.get('used_faction_ability_names') or []),
+                            },
+                        },
                     )
                     if spy_result and spy_result.get('pending_choice'):
-                        # The card is already committed: legality and reaction gating both
-                        # passed, and its dissolve interaction now waits for a town choice.
-                        # Returning here used to skip every purchase-cost faction trigger
-                        # (民族調和／星星之火／商貿組織／基金會／人同此心). Apply the shared
-                        # post-play hook before handing control to the pending interaction.
-                        self._apply_card_play_faction_abilities(
-                            player,
-                            cost_has_money=cost_has_money,
-                            cost_has_propaganda=cost_has_propaganda,
-                            played_card=played_card,
-                            used_faction_ability_names=action_context.get('used_faction_ability_names'),
-                        )
                         if not action_context.get('removed_current_card'):
                             if not self._return_borrowed_card_to_owner_topdeck(played_card):
                                 player.deck.discard([played_card])
@@ -2999,6 +3671,15 @@ class CardPlayMixin:
                         # cost. This includes both builds of 組織經驗乙. The play is already
                         # committed at this point, so run the same hook used by immediate
                         # cards exactly once before returning the pending choice.
+                        #
+                        # NOTE: 情報網's `choose_one` (the one action-engine card in this
+                        # feature's scope that can lead to a cancellable nested choice,
+                        # `intel_network_dissolve_target`) never reaches this branch -- its
+                        # effect_engine.py handler doesn't return a `pending_choice` dict for
+                        # `action_engine.execute` to propagate here, so `action_result` is None
+                        # and it falls through to the shared tail below instead, which defers
+                        # this same hook specifically for 情報網. Every OTHER card reaching this
+                        # branch keeps its original immediate-apply timing unchanged.
                         self._apply_card_play_faction_abilities(
                             player,
                             cost_has_money=cost_has_money,
@@ -3016,13 +3697,36 @@ class CardPlayMixin:
 
         self._resolve_reaction_context(reaction_context)
 
-        self._apply_card_play_faction_abilities(
-            player,
-            cost_has_money=cost_has_money,
-            cost_has_propaganda=cost_has_propaganda,
-            played_card=played_card,
-            used_faction_ability_names=action_context.get('used_faction_ability_names'),
-        )
+        if self.pending_choice and card_name == '情報網':
+            # 情報網's `choose_one` ends up open here despite not going through the
+            # action-engine branch's own pending_choice handling above: the underlying
+            # effect_engine.py `choose_one` handler calls `_set_pending_option_choice` as a
+            # side effect but does not itself return a `pending_choice` dict for
+            # `action_engine.execute` to propagate, so it falls through to this shared tail.
+            # Defer here too, exactly like every other 情報網/派遣間諜/內應間諜/support-card
+            # branch: picking option B leads to the cancellable nested
+            # `intel_network_dissolve_target` choice, and firing the trigger now (before the
+            # player has even chosen A/B/C) would let a later cancel of that nested choice leave
+            # its side effects (drawn cards, latched turn_log flags, queued combo rewards) stuck
+            # in place with nothing to undo them. Scoped to 情報網 specifically -- unlike the
+            # other branches above, this shared tail is also reached by many ordinary,
+            # never-cancellable action-engine cards (e.g. 組織經驗乙), whose existing
+            # apply-immediately timing must not change.
+            self.pending_choice.setdefault('context', {})['post_play_faction_triggers'] = {
+                'player_id': player.id,
+                'cost_has_money': bool(cost_has_money),
+                'cost_has_propaganda': bool(cost_has_propaganda),
+                'played_card': played_card,
+                'used_faction_ability_names': list(action_context.get('used_faction_ability_names') or []),
+            }
+        else:
+            self._apply_card_play_faction_abilities(
+                player,
+                cost_has_money=cost_has_money,
+                cost_has_propaganda=cost_has_propaganda,
+                played_card=played_card,
+                used_faction_ability_names=action_context.get('used_faction_ability_names'),
+            )
 
         build_continuation = self._resume_card_build_queue_if_idle(player)
         if self.pending_choice:

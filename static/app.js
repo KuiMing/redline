@@ -2239,6 +2239,21 @@ function renderChoiceModal(state) {
           label: entry.label || entry.town,
           index,
         })),
+        // Cancellable-dissolve-target-selection feature: the backend is the sole source of
+        // truth for whether THIS specific pending choice may be cancelled -- `choice.cancellable`
+        // (server/game.py's state() projection) is already `bool(pending_choice.cancellable) or
+        // choice_key in CANCELLABLE_CHOICE_KEYS`, so it's simply forwarded as-is here, with no
+        // frontend-side choice_key logic needed. This is True for player-initiated dissolve
+        // target selections (派遣間諜/內應間諜/情報網/北國奧援/臺灣奧援) AND for 國安部 (a
+        // pre-existing, unrelated Red Army activated ability already in CANCELLABLE_CHOICE_KEYS)
+        // -- both correctly get a working Cancel button this way. It is False for genuinely
+        // forced/mandatory choices (event_red_dissolve/era_red_bonus_dissolve_target), which
+        // never set the per-instance flag and are never members of CANCELLABLE_CHOICE_KEYS, so
+        // the map never shows a cancel affordance for those. selected/total count drive the
+        // "已選 N/M" display for multi-target cards (e.g. 北國奧援 III).
+        cancellable: !!choice.cancellable,
+        selectedCount: choice.selected_count ?? null,
+        totalCount: choice.total_count ?? null,
       };
       lastSupportChoiceMapHighlightPayload = payload;
       if ((choice.queueable_card_names || []).length > 0) {
