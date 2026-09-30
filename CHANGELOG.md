@@ -6,6 +6,43 @@
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-09-27
+
+### Added
+
+- 戰略地圖右上角新增「根據地」捷徑，可快速聚焦目前玩家的實際根據地。
+
+### Changed
+
+- 戰略地圖選取城鎮後，會以亮度與透明度強調相連路線，但不改變線寬；鐵路統一顯示為紅色虛線。
+- 地圖圖例只保留一般道路與鐵路說明，移除無法涵蓋所有操作狀態的城鎮標記說明。
+- 將建立、移動及瓦解組織的操作區移至搜尋與聚焦控制之前，並移除地圖內重複的「逆統戰」標題。
+
+## [1.2.1] - 2026-09-26
+
+### Added
+
+- 勝利結算畫面的「檢視最終盤面」旁新增「重新開始」，可直接離開已結束的對局並回到乾淨的新遊戲大廳。
+
+### Fixed
+
+- 修正反共玩家將「紅軍奧援」作為資源時的棄牌去向：玩家取得 1 資金與 1 宣傳、不抽牌，卡牌進入使用者自己的棄牌堆；只有打出行動時才依陣營轉移卡牌。
+
+## [1.2.0] - 2026-09-26
+
+### Added
+
+- 新增 in-repo REDLINE MCP server（`mcp_server/`），讓 MCP 相容的 LLM client（Claude Code、OpenAI Codex 等）可以透過既有的 HTTP/WebSocket API 建立或加入房間、選陣營、讀取自己的隱私範圍狀態、查詢目前合法動作並實際下棋，支援 stdio 與 Streamable HTTP 兩種傳輸方式。
+- 新增自動化紅軍控制器（`red_army_controller/`），可在真人回合時完全不呼叫模型，只在紅軍需要決策時喚起 Agent，並支援自訂 Agent runner adapter。
+- 新增 Docker Compose 設定，一次啟動遊戲伺服器與 MCP server；MCP 端預設只綁定本機、開啟 DNS-rebinding 防護。
+- 新增 `.mcp.json`，讓 Claude Code 開啟本 repo 時自動偵測 MCP server，不需手動執行 `claude mcp add`。
+- 新增 `skills/play-redline/SKILL.md` 與 README「讓 Agent 陪你玩」章節，說明如何讓任何 MCP 相容 Agent 扮演紅軍與真人對局。
+
+### Fixed
+
+- `server/main.py` 的 WebSocket 派送層過去只檢查 `error` 欄位，導致紅軍能力（國安部／政工部／中紀委）在合法但目前無可用目標時，伺服器已算好的說明訊息會被靜默吞掉，畫面看起來像「動作成功但沒反應」；瀏覽器介面與 MCP 皆受影響，現在已一併修正。
+- MCP 的 `get_legal_actions` 過去只要本回合購買的牌還留在棄牌堆，就會誤判「可使用頂牌權」，即使玩家實際上沒有被授予頂牌權；現在改為檢查真正的授權次數。
+
 ## [1.1.0] - 2026-09-06
 
 ### Added
@@ -152,7 +189,9 @@
 - 修正陣營選擇、根據地按鈕高度、面板尺寸、HUD 排列與小型 viewport 裁切。
 - 修正抽牌資訊外洩，避免其他玩家看到不應公開的卡牌名稱。
 
-[Unreleased]: https://github.com/KuiMing/redline/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/KuiMing/redline/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/KuiMing/redline/compare/v1.2.0...v1.2.1
+[1.2.0]: https://github.com/KuiMing/redline/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/KuiMing/redline/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/KuiMing/redline/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/KuiMing/redline/compare/v0.3.1...v1.0.0
