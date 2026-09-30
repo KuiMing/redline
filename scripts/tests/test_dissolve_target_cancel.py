@@ -1,0 +1,1102 @@
+"""Regression tests for the cancellable-dissolve-target-selection feature.
+
+Scope: a player who actively plays a dissolve-organization card/support-tier can cancel while
+picking the target(s), before committing, with a *complete* rollback (card stays in hand,
+no resource/action/supply consumption, no organization changes, no effect or resolution log
+entry, pending_choice cleared) -- verified via full state-equality checks, not just spot fields.
+
+Covered cards/tiers (see `DISSOLVE_INTERACTIVE_EFFECT_TYPES` in server/game_card_play.py):
+  - 內應間諜 (single-target, no sacrifice)
+  - 派遣間諜 (two-phase: sacrifice own org, then dissolve an enemy org)
+  - 情報網 option B (single-target, via a `choose_one` gate)
+  - 北國奧援 I (two-phase, like 派遣間諜), II (single-target), III (multi-target, count=2)
+  - 臺灣奧援 II (single-target), III (single-target + build combo)
+
+Also verifies forced/mandatory dissolve choices (event_red_dissolve, era_red_bonus_dissolve_target)
+remain non-cancellable, and that non-owners cannot cancel someone else's pending choice.
+"""
+
+from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+import copy
+
+import pytest
+
+from server.cards import Card
+from server.game import Game, GamePhase, TurnPhase
+from server.test_routes.runtime import GameSetupRuntime
+from server.test_routes.uyghur_era_red_dissolve import UyghurEraRedDissolveTestRoutes
+
+
+# ---------------------------------------------------------------------------
+# Shared helpers
+# ---------------------------------------------------------------------------
+
+def make_game(actor_faction="taiwan_green", enemy_faction="red_army"):
+    game = Game([("actor", "Actor"), ("enemy", "Enemy")])
+    actor, enemy = game.players
+    game.game_phase = GamePhase.MAIN
+    game.turn_phase = TurnPhase.ACTION
+    game.current_player_index = 0
+    game.pending_base_choices = {}
+    actor.faction_id = actor_faction
+    enemy.faction_id = enemy_faction
+    # 固定成無效果事件，讓測試與事件亂數脫鉤（比照其他 action-card 測試的既有作法）。
+    game.current_event = dict(game._event_by_name("歲月靜好"))
+    game.event_progress = {"count": 0, "required": 0, "succeeded": True, "settled": True, "status": "idle"}
+    game.event_modifiers = []
+    game.pending_choice = None
+    game.turn_log = game._new_turn_log()
+    game.action_log = []
+    return game, actor, enemy
+
+
+def action_card(game, name):
+    definition = next(c for c in game.structured_cards if c["name"] == name)
+    return Card(definition["name"], definition["type"], definition.get("resources", {}))
+
+
+def snapshot(game):
+    """A structural snapshot of everything the cancel feature promises to leave untouched."""
+    return {
+        "hands": {p.id: [c.name for c in p.hand] for p in game.players},
+        "discards": {p.id: [c.name for c in p.deck.discard_pile] for p in game.players},
+        "draw_piles": {p.id: [c.name for c in p.deck.draw_pile] for p in game.players},
+        "resources": {p.id: dict(p.resources) for p in game.players},
+        "organizations": {p.id: dict(p.organizations) for p in game.players},
+        "static_purchase_supply": dict(game.static_purchase_supply),
+        "random_purchase_supply": [c.name for c in game.random_purchase_supply] if hasattr(game, "random_purchase_supply") else None,
+        "purchase_area": [getattr(c, "name", str(c)) for c in game.purchase_area],
+        "turn_phase": game.turn_phase,
+        "current_player_index": game.current_player_index,
+        # deepcopy -- turn_log holds nested lists/dicts (e.g. played_nonstarter_names,
+        # red_army_base_dissolves) that later in-place mutation would otherwise leak back into
+        # this "before" snapshot through shared list/dict references.
+        "turn_log": copy.deepcopy(game.turn_log),
+        "action_log_len": len(game.action_log),
+        "pending_choice": copy.deepcopy(game.pending_choice),
+    }
+
+
+def assert_full_rollback(before, after, *, log_entries_allowed=True, ignore_hand_order=False):
+    """Every field must be byte-identical except action_log length (informational
+    play/cancel log lines are tolerated -- see `cancel_pending_choice`'s own precedent for
+    北國奧援: it always logs a "取消了 X" line -- but no *effect* fields may differ).
+
+    ignore_hand_order: when two independently-cancelled flows both re-insert their own card at
+    the SAME remembered hand index, restoring them in a different order than they were removed
+    can leave the hand containing the exact same cards in a different position (cosmetic, not a
+    leak -- no card/resource/organization content differs). Set True to compare hands as
+    multisets instead of ordered lists for exactly that scenario.
+    """
+    for key in before:
+        if key == "action_log_len":
+            continue
+        if key == "hands" and ignore_hand_order:
+            before_hands = {pid: sorted(names) for pid, names in before[key].items()}
+            after_hands = {pid: sorted(names) for pid, names in after[key].items()}
+            assert after_hands == before_hands, f"hands differ (as multisets): before={before_hands!r} after={after_hands!r}"
+            continue
+        assert after[key] == before[key], f"{key} differs: before={before[key]!r} after={after[key]!r}"
+    assert after["pending_choice"] is None
+    if not log_entries_allowed:
+        assert after["action_log_len"] == before["action_log_len"]
+
+
+# ---------------------------------------------------------------------------
+# 內應間諜 -- single-target, no sacrifice
+# ---------------------------------------------------------------------------
+
+def test_embedded_agent_single_target_choice_is_cancellable_with_full_rollback():
+    game, actor, enemy = make_game()
+    actor.organizations = {"北京": 1}
+    enemy.organizations = {"天津": 1}
+    actor.hand = [action_card(game, "內應間諜")]
+
+    before = snapshot(game)
+
+    played = game.play_card(0, mode="action")
+    assert played.get("pending_choice") is True, played
+    assert game.pending_choice["choice_key"] == "card_dissolve_interaction"
+    assert game.pending_choice["step"] == "target"
+    assert game.pending_choice.get("cancellable") is True
+    choice_id = game.pending_choice.get("choice_id")
+
+    cancelled = game.cancel_pending_choice(actor.id, expected_choice_id=choice_id)
+    assert cancelled.get("success") is True, cancelled
+    assert cancelled.get("cancelled") is True
+
+    after = snapshot(game)
+    assert_full_rollback(before, after)
+
+
+def test_embedded_agent_single_target_resolves_immediately_when_confirmed():
+    game, actor, enemy = make_game()
+    actor.organizations = {"北京": 1}
+    enemy.organizations = {"天津": 1}
+    actor.hand = [action_card(game, "內應間諜")]
+
+    played = game.play_card(0, mode="action")
+    assert played.get("pending_choice") is True, played
+    index = next(i for i, t in enumerate(game.pending_choice["targets"]) if t["town"] == "天津")
+
+    resolved = game.resolve_pending_choice(actor.id, index)
+    assert resolved.get("success") is True, resolved
+    assert game.pending_choice is None
+    assert enemy.organizations.get("天津", 0) == 0
+    assert [c.name for c in actor.deck.discard_pile] == ["內應間諜"]
+
+
+def test_embedded_agent_with_no_legal_target_never_opens_a_pending_choice():
+    game, actor, enemy = make_game()
+    actor.organizations = {"臺北": 1}
+    enemy.organizations = {}  # nothing within range
+    actor.hand = [action_card(game, "內應間諜")]
+    before = snapshot(game)
+
+    result = game.play_card(0, mode="action")
+
+    assert result.get("error") == "No target organization within range"
+    assert game.pending_choice is None
+    after = snapshot(game)
+    # Illegal play must be a no-op too (unrelated to cancel, but the same guarantee).
+    assert after["hands"] == before["hands"]
+    assert after["organizations"] == before["organizations"]
+
+
+# ---------------------------------------------------------------------------
+# 派遣間諜 -- two-phase: sacrifice own org, then dissolve enemy org
+# ---------------------------------------------------------------------------
+
+def test_field_agent_cancel_at_sacrifice_town_stage_is_a_full_rollback():
+    game, actor, enemy = make_game()
+    actor.base = "北京"
+    actor.organizations = {"北京": 1, "上海": 1}
+    enemy.organizations = {"天津": 1, "杭州": 1, "香港城": 1}
+    actor.hand = [action_card(game, "派遣間諜")]
+    before = snapshot(game)
+
+    played = game.play_card(0, mode="action")
+    assert played.get("pending_choice") is True, played
+    assert game.pending_choice["step"] == "sacrifice_town"
+    assert game.pending_choice.get("cancellable") is True
+    choice_id = game.pending_choice.get("choice_id")
+
+    cancelled = game.cancel_pending_choice(actor.id, expected_choice_id=choice_id)
+    assert cancelled.get("success") is True, cancelled
+
+    after = snapshot(game)
+    assert_full_rollback(before, after)
+
+
+def test_field_agent_cancel_at_target_stage_after_sacrifice_pick_is_still_a_full_rollback():
+    game, actor, enemy = make_game()
+    actor.base = "北京"
+    actor.organizations = {"北京": 1, "上海": 1}
+    enemy.organizations = {"天津": 1, "杭州": 1, "香港城": 1}
+    actor.hand = [action_card(game, "派遣間諜")]
+    before = snapshot(game)
+
+    played = game.play_card(0, mode="action")
+    assert played.get("pending_choice") is True, played
+    sacrificed = game.resolve_pending_choice(actor.id, 0)
+    assert sacrificed.get("pending_choice") is True, sacrificed
+    assert game.pending_choice["step"] == "target"
+    assert game.pending_choice.get("cancellable") is True
+    # Requirement #7: no own organization is removed until the FINAL confirmation.
+    assert actor.organizations == {"北京": 1, "上海": 1}
+
+    choice_id = game.pending_choice.get("choice_id")
+    cancelled = game.cancel_pending_choice(actor.id, expected_choice_id=choice_id)
+    assert cancelled.get("success") is True, cancelled
+
+    after = snapshot(game)
+    assert_full_rollback(before, after)
+
+
+def test_field_agent_confirming_both_stages_dissolves_atomically():
+    game, actor, enemy = make_game()
+    actor.base = "北京"
+    actor.organizations = {"北京": 1, "上海": 1}
+    enemy.organizations = {"天津": 1, "杭州": 1, "香港城": 1}
+    actor.hand = [action_card(game, "派遣間諜")]
+
+    game.play_card(0, mode="action")
+    game.resolve_pending_choice(actor.id, 0)
+    assert actor.organizations == {"北京": 1, "上海": 1}
+    resolved = game.resolve_pending_choice(actor.id, 0)
+
+    assert resolved.get("success") is True, resolved
+    assert game.pending_choice is None
+    assert actor.organizations == {"北京": 1}
+    assert sum(enemy.organizations.values()) == 2
+
+
+def test_field_agent_stale_sacrifice_is_rejected_at_final_confirmation():
+    # Between the sacrifice pick and the final target confirm, some other effect removes the
+    # sacrificed organization from the board -- the final confirmation must re-validate and
+    # reject rather than resolve on stale data (requirement #9), and must not partially apply
+    # the enemy dissolve either.
+    game, actor, enemy = make_game()
+    actor.base = "北京"
+    actor.organizations = {"北京": 1, "上海": 1}
+    enemy.organizations = {"天津": 1, "杭州": 1, "香港城": 1}
+    actor.hand = [action_card(game, "派遣間諜")]
+
+    game.play_card(0, mode="action")
+    game.resolve_pending_choice(actor.id, 0)
+    assert game.pending_choice["step"] == "target"
+
+    # Simulate the sacrificed organization disappearing out from under the pending choice.
+    del actor.organizations["上海"]
+
+    resolved = game.resolve_pending_choice(actor.id, 0)
+    assert resolved.get("error") == "Sacrificed organization is no longer valid"
+    assert sum(enemy.organizations.values()) == 3
+
+
+# ---------------------------------------------------------------------------
+# 情報網 option B -- single-target dissolve gated behind a choose_one pick
+# ---------------------------------------------------------------------------
+
+def test_intel_network_option_b_dissolve_choice_is_cancellable_with_full_rollback():
+    game, actor, enemy = make_game()
+    actor.organizations = {"北京": 1}
+    enemy.organizations = {"天津": 1}
+    actor.hand = [action_card(game, "情報網")]
+    before = snapshot(game)
+
+    played = game.play_card(0, mode="action")
+    assert played.get("pending_choice") is True, played
+    assert game.pending_choice["choice_key"] == "choose_one"
+    b_index = next(i for i, o in enumerate(game.pending_choice["options"]) if o.get("label", "").startswith("Ｂ") or "瓦解" in str(o))
+
+    chosen = game.resolve_pending_choice(actor.id, b_index)
+    assert chosen.get("pending_choice") is True, chosen
+    assert game.pending_choice["choice_key"] == "intel_network_dissolve_target"
+    assert game.pending_choice.get("cancellable") is True
+    choice_id = game.pending_choice.get("choice_id")
+
+    cancelled = game.cancel_pending_choice(actor.id, expected_choice_id=choice_id)
+    assert cancelled.get("success") is True, cancelled
+
+    after = snapshot(game)
+    assert_full_rollback(before, after)
+
+
+def test_intel_network_option_b_resolves_immediately_when_confirmed():
+    game, actor, enemy = make_game()
+    actor.organizations = {"北京": 1}
+    enemy.organizations = {"天津": 1}
+    actor.hand = [action_card(game, "情報網")]
+
+    played = game.play_card(0, mode="action")
+    b_index = next(i for i, o in enumerate(game.pending_choice["options"]) if "瓦解" in str(o))
+    game.resolve_pending_choice(actor.id, b_index)
+    assert game.pending_choice["choice_key"] == "intel_network_dissolve_target"
+
+    resolved = game.resolve_pending_choice(actor.id, 0)
+    assert resolved.get("success") is True, resolved
+    assert game.pending_choice is None
+    assert enemy.organizations.get("天津", 0) == 0
+
+
+# ---------------------------------------------------------------------------
+# 北國奧援 -- I (two-phase), II (single), III (multi, count=2)
+# ---------------------------------------------------------------------------
+
+def test_north_support_tier1_cancel_at_either_stage_is_a_full_rollback():
+    game, actor, enemy = make_game(actor_faction="liberals")
+    actor.base = "巴黎"
+    actor.organizations = {"巴黎": 1, "日內瓦": 1}
+    actor.hand = [game._make_support_card("北國奧援", variant_index=1)]
+    enemy.faction_id = "red_army"
+    enemy.base = "北京"
+    enemy.organizations = {"慕尼黑": 1}
+    before = snapshot(game)
+
+    played = game.play_card(0, mode="action")
+    assert played.get("pending_choice") is True, played
+    assert played.get("tier") == 1
+    assert game.pending_choice["step"] == "sacrifice_town"
+    assert game.pending_choice.get("cancellable") is True
+
+    cancelled = game.cancel_pending_choice(actor.id)
+    assert cancelled.get("success") is True, cancelled
+    after = snapshot(game)
+    assert_full_rollback(before, after)
+
+    # Replay and cancel at the SECOND stage instead.
+    actor.hand = [game._make_support_card("北國奧援", variant_index=1)]
+    before2 = snapshot(game)
+    game.play_card(0, mode="action")
+    game.resolve_pending_choice(actor.id, 0)
+    assert game.pending_choice["step"] == "target"
+    assert game.pending_choice.get("cancellable") is True
+    assert actor.organizations == {"巴黎": 1, "日內瓦": 1}
+
+    cancelled2 = game.cancel_pending_choice(actor.id)
+    assert cancelled2.get("success") is True, cancelled2
+    after2 = snapshot(game)
+    assert_full_rollback(before2, after2)
+
+
+def test_north_support_tier2_single_target_cancellable_and_resolves_immediately():
+    game, actor, enemy = make_game(actor_faction="liberals")
+    actor.base = "北京"
+    actor.organizations = {"北京": 1}
+    actor.hand = [game._make_support_card("北國奧援")]
+    game._support_card_tier = lambda _player, _card: (2, 0, [])
+    enemy.faction_id = "red_army"
+    enemy.base = "西安"
+    enemy.organizations = {"天津": 1}
+    before = snapshot(game)
+
+    played = game.play_card(0, mode="action")
+    assert played.get("pending_choice") is True, played
+    assert game.pending_choice["step"] == "target"
+    assert game.pending_choice.get("cancellable") is True
+
+    cancelled = game.cancel_pending_choice(actor.id)
+    assert cancelled.get("success") is True, cancelled
+    after = snapshot(game)
+    assert_full_rollback(before, after)
+
+    # Replay and confirm instead of cancelling.
+    actor.hand = [game._make_support_card("北國奧援")]
+    game.play_card(0, mode="action")
+    index = 0
+    resolved = game.resolve_pending_choice(actor.id, index)
+    assert resolved.get("success") is True, resolved
+    assert game.pending_choice is None
+    assert sum(enemy.organizations.values()) == 0
+
+
+def test_north_support_tier3_multi_target_select_change_confirm_and_cancel():
+    game, actor, enemy = make_game(actor_faction="liberals")
+    actor.base = "北京"
+    actor.organizations = {"北京": 1}
+    actor.hand = [game._make_support_card("北國奧援")]
+    game._support_card_tier = lambda _player, _card: (3, 0, [])
+    enemy.faction_id = "red_army"
+    enemy.base = "西安"
+    enemy.organizations = {"天津": 1, "石家莊": 1}
+    before = snapshot(game)
+
+    played = game.play_card(0, mode="action")
+    assert played.get("pending_choice") is True, played
+    assert len(game.pending_choice["targets"]) == 2
+    assert game.pending_choice.get("cancellable") is True
+
+    # Pick one target -- nothing should be dissolved yet (deferred to the final Confirm).
+    first_town = game.pending_choice["targets"][0]["town"]
+    first = game.resolve_pending_choice(actor.id, 0)
+    assert first.get("pending_choice") is True, first
+    assert first.get("selected_count") == 1
+    assert first.get("total_count") == 2
+    assert sum(enemy.organizations.values()) == 2
+    assert game.pending_choice.get("cancellable") is True
+    assert first_town not in [t["town"] for t in game.pending_choice["targets"]]
+
+    # Cancel here: full rollback even though one target has already been "selected".
+    cancelled = game.cancel_pending_choice(actor.id)
+    assert cancelled.get("success") is True, cancelled
+    after = snapshot(game)
+    assert_full_rollback(before, after)
+
+    # Replay: pick a *different* target this time (changing the selection is free before the
+    # final Confirm -- each pick before the last is just a local re-arm), then confirm both.
+    actor.hand = [game._make_support_card("北國奧援")]
+    game.play_card(0, mode="action")
+    second_town = game.pending_choice["targets"][1]["town"]
+    second_index = next(i for i, t in enumerate(game.pending_choice["targets"]) if t["town"] == second_town)
+    picked_first = game.resolve_pending_choice(actor.id, second_index)
+    assert picked_first.get("selected_count") == 1
+    assert sum(enemy.organizations.values()) == 2, "still nothing dissolved before the final pick"
+
+    final = game.resolve_pending_choice(actor.id, 0)
+    assert final.get("success") is True, final
+    assert game.pending_choice is None
+    assert final.get("target_count") == 2
+    assert sum(enemy.organizations.values()) == 0
+
+
+# ---------------------------------------------------------------------------
+# 臺灣奧援 -- II (single-target), III (single-target + build combo)
+# ---------------------------------------------------------------------------
+
+def _taiwan_support_game(tier):
+    game, actor, enemy = make_game(actor_faction="taiwan_green")
+    actor.base = "佬沃"
+    actor.organizations = {"屏東": 1, "佬沃": 1, "馬祖": 1}
+    actor.hand = [game._make_support_card("臺灣奧援")]
+    actor.resources = {"money": 0, "propaganda": 0}
+    actor.deck.draw_pile = []
+    actor.deck.discard_pile = []
+    enemy.faction_id = "red_army"
+    enemy.base = "北京"
+    enemy.organizations = {"福州": 1}
+    enemy.deck.discard_pile = []
+
+    original_resolver = game._support_card_tier
+
+    def forced_tier(player, card):
+        if getattr(player, "id", None) == actor.id and getattr(card, "name", str(card)) == "臺灣奧援":
+            return tier, 0, ["東洋", "南洋"]
+        return original_resolver(player, card)
+
+    game._support_card_tier = forced_tier
+    return game, actor, enemy
+
+
+def test_taiwan_support_tier2_single_target_cancellable_with_full_rollback():
+    game, actor, enemy = _taiwan_support_game(2)
+    before = snapshot(game)
+
+    played = game.play_card(0, mode="action")
+    assert played.get("pending_choice") is True, played
+    assert game.pending_choice.get("cancellable") is True
+
+    cancelled = game.cancel_pending_choice(actor.id)
+    assert cancelled.get("success") is True, cancelled
+    after = snapshot(game)
+    assert_full_rollback(before, after)
+
+
+def test_taiwan_support_tier3_dissolve_and_build_cancellable_with_full_rollback():
+    game, actor, enemy = _taiwan_support_game(3)
+    before = snapshot(game)
+
+    played = game.play_card(0, mode="action")
+    assert played.get("pending_choice") is True, played
+    assert played.get("effect_type") == "interactive_dissolve_and_build"
+    assert game.pending_choice.get("cancellable") is True
+
+    cancelled = game.cancel_pending_choice(actor.id)
+    assert cancelled.get("success") is True, cancelled
+    after = snapshot(game)
+    assert_full_rollback(before, after)
+
+    # Confirm instead: dissolve then build lands atomically as before (unaffected).
+    actor.hand = [game._make_support_card("臺灣奧援")]
+    game.play_card(0, mode="action")
+    resolved = game.resolve_pending_choice(actor.id, 0)
+    assert resolved.get("built") is True, resolved
+    assert actor.organizations.get("福州", 0) == 1
+    assert enemy.organizations.get("福州", 0) == 0
+
+
+# ---------------------------------------------------------------------------
+# Regression: play-then-cancel must not leak post-play faction-ability triggers
+# (independent review finding -- money/propaganda-cost-triggered abilities like 商貿組織 fire
+# as soon as a card is committed to play, e.g. drawing a card and latching
+# turn_log['faction_first_money_triggered']. Since these dissolve flows only commit the card
+# once cancel_pending_choice can no longer be called (see DISSOLVE_INTERACTIVE_EFFECT_TYPES'
+# deferred-mutation design above), any such trigger fired eagerly at choice-open time -- before
+# the flow's real final confirmation -- must ALSO be deferred, or a cancel would restore the
+# card/hand/organizations but leave the drawn card and latched turn_log flag behind: a free,
+# repeatable resource-generation exploit via play-then-cancel every turn.
+# ---------------------------------------------------------------------------
+
+def test_embedded_agent_cancel_does_not_leak_money_triggered_faction_ability():
+    # federalists' 商貿組織: first money-cost card played each turn draws 1 card.
+    game, actor, enemy = make_game(actor_faction="federalists")
+    actor.organizations = {"北京": 1}
+    enemy.organizations = {"天津": 1}
+    actor.hand = [action_card(game, "內應間諜")]
+    before = snapshot(game)
+
+    played = game.play_card(0, mode="action")
+    assert played.get("pending_choice") is True, played
+    # The trigger must not have fired yet -- the choice is still cancellable.
+    assert game.turn_log.get("faction_first_money_triggered") in (None, False)
+    assert [c.name for c in actor.hand] == []
+
+    cancelled = game.cancel_pending_choice(actor.id)
+    assert cancelled.get("success") is True, cancelled
+
+    after = snapshot(game)
+    assert_full_rollback(before, after)
+    assert after["turn_log"].get("faction_first_money_triggered") in (None, False)
+
+
+def test_embedded_agent_confirm_still_fires_money_triggered_faction_ability():
+    # Non-regression: the deferral must not prevent the trigger from firing on a real resolve.
+    game, actor, enemy = make_game(actor_faction="federalists")
+    actor.organizations = {"北京": 1}
+    enemy.organizations = {"天津": 1}
+    actor.hand = [action_card(game, "內應間諜")]
+    actor.deck.draw_pile = list(actor.deck.draw_pile) + [Card("商貿組織抽到", "command", {})]
+
+    game.play_card(0, mode="action")
+    index = next(i for i, t in enumerate(game.pending_choice["targets"]) if t["town"] == "天津")
+    resolved = game.resolve_pending_choice(actor.id, index)
+
+    assert resolved.get("success") is True, resolved
+    assert game.turn_log.get("faction_first_money_triggered") is True
+    assert [c.name for c in actor.hand] == ["商貿組織抽到"]
+    assert sum("triggered 商貿組織" in entry for entry in game.action_log) == 1
+
+
+def test_field_agent_cancel_at_sacrifice_stage_does_not_leak_money_triggered_faction_ability():
+    game, actor, enemy = make_game(actor_faction="federalists")
+    actor.base = "北京"
+    actor.organizations = {"北京": 1, "上海": 1}
+    enemy.organizations = {"天津": 1, "杭州": 1, "香港城": 1}
+    actor.hand = [action_card(game, "派遣間諜")]
+    before = snapshot(game)
+
+    played = game.play_card(0, mode="action")
+    assert played.get("pending_choice") is True, played
+    assert game.turn_log.get("faction_first_money_triggered") in (None, False)
+
+    cancelled = game.cancel_pending_choice(actor.id)
+    assert cancelled.get("success") is True, cancelled
+
+    after = snapshot(game)
+    assert_full_rollback(before, after)
+    assert after["turn_log"].get("faction_first_money_triggered") in (None, False)
+
+
+def test_field_agent_cancel_at_target_stage_does_not_leak_money_triggered_faction_ability():
+    # The exploit as originally reported: confirm stage 1 (which does NOT itself fire the
+    # trigger -- see the sacrifice-stage test above), THEN cancel stage 2. Before the fix, the
+    # trigger fired the moment the (stage-1) choice opened and was never revisited on a later
+    # stage's cancel.
+    game, actor, enemy = make_game(actor_faction="federalists")
+    actor.base = "北京"
+    actor.organizations = {"北京": 1, "上海": 1}
+    enemy.organizations = {"天津": 1, "杭州": 1, "香港城": 1}
+    actor.hand = [action_card(game, "派遣間諜")]
+    before = snapshot(game)
+
+    game.play_card(0, mode="action")
+    sacrificed = game.resolve_pending_choice(actor.id, 0)
+    assert sacrificed.get("pending_choice") is True, sacrificed
+    assert game.turn_log.get("faction_first_money_triggered") in (None, False)
+    assert [c.name for c in actor.hand] == []
+
+    cancelled = game.cancel_pending_choice(actor.id)
+    assert cancelled.get("success") is True, cancelled
+
+    after = snapshot(game)
+    assert_full_rollback(before, after)
+    assert after["turn_log"].get("faction_first_money_triggered") in (None, False)
+
+
+def test_field_agent_confirm_still_fires_money_triggered_faction_ability_once():
+    game, actor, enemy = make_game(actor_faction="federalists")
+    actor.base = "北京"
+    actor.organizations = {"北京": 1, "上海": 1}
+    enemy.organizations = {"天津": 1, "杭州": 1, "香港城": 1}
+    actor.hand = [action_card(game, "派遣間諜")]
+    actor.deck.draw_pile = list(actor.deck.draw_pile) + [Card("商貿組織抽到", "command", {})]
+
+    game.play_card(0, mode="action")
+    game.resolve_pending_choice(actor.id, 0)
+    assert game.turn_log.get("faction_first_money_triggered") in (None, False)
+    resolved = game.resolve_pending_choice(actor.id, 0)
+
+    assert resolved.get("success") is True, resolved
+    assert game.turn_log.get("faction_first_money_triggered") is True
+    assert [c.name for c in actor.hand] == ["商貿組織抽到"]
+    assert sum("triggered 商貿組織" in entry for entry in game.action_log) == 1
+
+
+def test_north_support_tier1_cancel_at_target_stage_does_not_leak_money_triggered_faction_ability():
+    game, actor, enemy = make_game(actor_faction="federalists")
+    actor.base = "巴黎"
+    actor.organizations = {"巴黎": 1, "日內瓦": 1}
+    actor.hand = [game._make_support_card("北國奧援", variant_index=1)]
+    enemy.faction_id = "red_army"
+    enemy.base = "北京"
+    enemy.organizations = {"慕尼黑": 1}
+    before = snapshot(game)
+
+    played = game.play_card(0, mode="action")
+    assert played.get("pending_choice") is True, played
+    assert played.get("tier") == 1
+    sacrificed = game.resolve_pending_choice(actor.id, 0)
+    assert sacrificed.get("pending_choice") is True, sacrificed
+    assert game.turn_log.get("faction_first_money_triggered") in (None, False)
+
+    cancelled = game.cancel_pending_choice(actor.id)
+    assert cancelled.get("success") is True, cancelled
+
+    after = snapshot(game)
+    assert_full_rollback(before, after)
+    assert after["turn_log"].get("faction_first_money_triggered") in (None, False)
+
+
+def test_intel_network_option_b_cancel_does_not_leak_money_triggered_faction_ability():
+    game, actor, enemy = make_game(actor_faction="federalists")
+    actor.organizations = {"北京": 1}
+    enemy.organizations = {"天津": 1}
+    actor.hand = [action_card(game, "情報網")]
+    before = snapshot(game)
+
+    played = game.play_card(0, mode="action")
+    assert played.get("pending_choice") is True, played
+    assert game.pending_choice["choice_key"] == "choose_one"
+    # The trigger must not fire even at the choose_one gate -- picking B below can still lead to
+    # a cancellable nested choice.
+    assert game.turn_log.get("faction_first_money_triggered") in (None, False)
+    b_index = next(i for i, o in enumerate(game.pending_choice["options"]) if "瓦解" in str(o))
+
+    chosen = game.resolve_pending_choice(actor.id, b_index)
+    assert chosen.get("pending_choice") is True, chosen
+    assert game.pending_choice["choice_key"] == "intel_network_dissolve_target"
+    assert game.turn_log.get("faction_first_money_triggered") in (None, False)
+    assert [c.name for c in actor.hand] == []
+
+    cancelled = game.cancel_pending_choice(actor.id)
+    assert cancelled.get("success") is True, cancelled
+
+    after = snapshot(game)
+    assert_full_rollback(before, after)
+    assert after["turn_log"].get("faction_first_money_triggered") in (None, False)
+
+
+def test_intel_network_option_b_confirm_still_fires_money_triggered_faction_ability():
+    game, actor, enemy = make_game(actor_faction="federalists")
+    actor.organizations = {"北京": 1}
+    enemy.organizations = {"天津": 1}
+    actor.hand = [action_card(game, "情報網")]
+    actor.deck.draw_pile = list(actor.deck.draw_pile) + [Card("商貿組織抽到", "command", {})]
+
+    game.play_card(0, mode="action")
+    b_index = next(i for i, o in enumerate(game.pending_choice["options"]) if "瓦解" in str(o))
+    game.resolve_pending_choice(actor.id, b_index)
+    resolved = game.resolve_pending_choice(actor.id, 0)
+
+    assert resolved.get("success") is True, resolved
+    assert game.turn_log.get("faction_first_money_triggered") is True
+    assert [c.name for c in actor.hand] == ["商貿組織抽到"]
+    assert sum("triggered 商貿組織" in entry for entry in game.action_log) == 1
+
+
+def test_intel_network_via_declined_reaction_does_not_leak_money_triggered_faction_ability():
+    # 4th independent-review finding: 情報網 falls through to `_resume_reaction_pending_action`'s
+    # OWN copy of play_card's "resolve deferred play -> apply faction triggers" tail whenever an
+    # opponent merely HOLDS an unconditionally-eligible reaction card (爆料黑幕/產業滲透/情報網),
+    # regardless of whether they actually react -- this is ordinary, no-special-setup-required
+    # game flow (see _reaction_card_cancel_predicate). That second tail lacked the same
+    # 情報網-aware deferral play_card's own tail has, so it fired the faction trigger immediately
+    # (before the player even reached the choose_one gate) AND, with this feature's ref-counted
+    # turn_log tracking, double-noted the cost contribution (play_card's own eager note already
+    # ran before the reaction prompt opened) -- leaving played_money_card/played_propaganda_card
+    # PERMANENTLY stuck True for the rest of the turn even after a full, "successful" cancel,
+    # since the single matching decrement could never catch up to the double increment.
+    game, actor, enemy = make_game(actor_faction="federalists")
+    actor.organizations = {"北京": 1}
+    enemy.faction_id = "red_army"
+    enemy.organizations = {"天津": 1}
+    enemy.hand = [Card("爆料黑幕", "reaction", {})]
+    actor.hand = [action_card(game, "情報網")]
+    before = snapshot(game)
+
+    played = game.play_card(0, mode="action")
+    assert played.get("pending_choice") is True, played
+    assert game.pending_choice.get("choice_key") == "cancel_other_player_action"
+    assert game.turn_log.get("_money_cost_card_refs") == 1
+
+    declined = game.resolve_pending_choice(enemy.id, 0)
+    assert declined.get("success") is True, declined
+    assert game.pending_choice["choice_key"] == "choose_one"
+    # Must NOT have double-counted this card's own contribution just by resuming past a merely-
+    # held (never actually played) reaction card, and must NOT have fired the trigger yet -- the
+    # player hasn't even picked A/B/C.
+    assert game.turn_log.get("_money_cost_card_refs") == 1
+    assert game.turn_log.get("faction_first_money_triggered") in (None, False)
+    assert [c.name for c in actor.hand] == []
+
+    b_index = next(i for i, o in enumerate(game.pending_choice["options"]) if "瓦解" in str(o))
+    chosen = game.resolve_pending_choice(actor.id, b_index)
+    assert chosen.get("pending_choice") is True, chosen
+    assert game.pending_choice["choice_key"] == "intel_network_dissolve_target"
+    assert game.turn_log.get("_money_cost_card_refs") == 1
+    assert game.turn_log.get("faction_first_money_triggered") in (None, False)
+
+    cancelled = game.cancel_pending_choice(actor.id)
+    assert cancelled.get("success") is True, cancelled
+
+    after = snapshot(game)
+    assert_full_rollback(before, after)
+    assert after["turn_log"].get("faction_first_money_triggered") in (None, False)
+    assert after["turn_log"].get("_money_cost_card_refs") == 0
+    assert after["turn_log"].get("played_money_card") is False
+
+
+def test_intel_network_via_declined_reaction_confirm_still_fires_trigger_once():
+    # Non-regression: the fix above must not prevent the trigger from firing (exactly once) when
+    # the flow is actually confirmed instead of cancelled.
+    game, actor, enemy = make_game(actor_faction="federalists")
+    actor.organizations = {"北京": 1}
+    enemy.faction_id = "red_army"
+    enemy.organizations = {"天津": 1}
+    enemy.hand = [Card("爆料黑幕", "reaction", {})]
+    actor.hand = [action_card(game, "情報網")]
+    actor.deck.draw_pile = list(actor.deck.draw_pile) + [Card("商貿組織抽到", "command", {})]
+
+    game.play_card(0, mode="action")
+    game.resolve_pending_choice(enemy.id, 0)  # decline
+    b_index = next(i for i, o in enumerate(game.pending_choice["options"]) if "瓦解" in str(o))
+    game.resolve_pending_choice(actor.id, b_index)
+    resolved = game.resolve_pending_choice(actor.id, 0)
+
+    assert resolved.get("success") is True, resolved
+    assert game.turn_log.get("faction_first_money_triggered") is True
+    assert game.turn_log.get("_money_cost_card_refs") == 1
+    assert [c.name for c in actor.hand] == ["商貿組織抽到"]
+    assert sum("triggered 商貿組織" in entry for entry in game.action_log) == 1
+
+
+# ---------------------------------------------------------------------------
+# Forced/mandatory dissolve choices must NOT become cancellable
+# ---------------------------------------------------------------------------
+
+def test_event_red_dissolve_forced_choice_is_not_cancellable():
+    game = Game([("p1", "red"), ("p2", "other")])
+    red, other = game.players
+    red.faction_id = "red_army"
+    red.base = "北京"
+    red.organizations = {"北京": 1}
+    other.faction_id = "hong_kong"
+    other.base = "香港城"
+    other.organizations = {"天津": 1}
+    game.current_event = {"name": "Test Event"}
+
+    result = game._apply_event_effect_red_dissolve({"scope": "牆內"})
+    assert result == {"success": True, "pending_choice": True}
+    assert game.pending_choice.get("choice_key") == "event_red_dissolve"
+    assert not game.pending_choice.get("cancellable")
+
+    cancelled = game.cancel_pending_choice(red.id)
+    assert cancelled.get("error") == "This choice cannot be cancelled"
+    assert game.pending_choice is not None
+
+
+def test_era_red_bonus_dissolve_target_forced_choice_is_not_cancellable():
+    runtime = GameSetupRuntime(
+        manager=type("FakeManager", (), {"__init__": lambda self: setattr(self, "games", {}) or setattr(self, "connections", {})})(),
+        lobby={}, lobby_hosts={}, lobby_factions={}, lobby_bases={}, lobby_ready={},
+    )
+    result = UyghurEraRedDissolveTestRoutes(lambda: runtime).test_setup_uyghur_era_red_dissolve_proof({})
+    game_id = result["game_id"]
+    game = runtime.manager.games[game_id]
+    _actor, red = game.players
+
+    assert game.pending_choice["choice_key"] == "era_red_bonus_dissolve_target"
+    assert not game.pending_choice.get("cancellable")
+
+    cancelled = game.cancel_pending_choice(red.id)
+    assert cancelled.get("error") == "This choice cannot be cancelled"
+    assert game.pending_choice is not None
+
+
+# ---------------------------------------------------------------------------
+# Regression: interleaved flows (a second card queued behind an unresolved first one) must not
+# let a deferred faction-ability trigger fire early or leak past a cancel of either flow
+# (2nd independent-review finding). Queueing a card's map-interaction behind an already-active
+# pending choice is ordinary, frequently-tested game machinery (see
+# scripts/tests/test_build_entitlement_queue.py) -- no special setup needed, reachable through
+# normal play. The exploit chain: play card A (opens a cancellable dissolve choice), play card B
+# (a two-stage or gated flow) while A is still unresolved so B's flow gets queued/deferred behind
+# A, resolve B's first (non-map-classified) stage -- this swaps which flow is
+# `self.pending_choice` vs. parked in the queue/deferred slot -- then cancel BOTH flows in turn.
+# Zero net resource/card leakage must hold regardless of which flow ends up "active" vs. "parked"
+# at any point, and regardless of how many places a paused choice can be parked
+# (self.pending_choice / self._queued_card_build_choices / self._deferred_build_choice).
+# ---------------------------------------------------------------------------
+
+def test_two_stage_card_queued_behind_another_unresolved_card_cancel_both_leaks_nothing():
+    # federalists' 商貿組織: first money-cost card played each turn draws 1 card. Card A =
+    # 內應間諜 (single-target), Card B = 北國奧援 tier I (two-stage: sacrifice_town, then target).
+    game, actor, enemy = make_game(actor_faction="federalists")
+    actor.base = "北京"
+    actor.organizations = {"北京": 1, "上海": 1}
+    enemy.faction_id = "red_army"
+    enemy.base = "西安"
+    enemy.organizations = {"天津": 1, "杭州": 1, "香港城": 1}
+    actor.hand = [action_card(game, "內應間諜"), game._make_support_card("北國奧援", variant_index=1)]
+    before = snapshot(game)
+
+    played_a = game.play_card(0, mode="action")
+    assert played_a.get("pending_choice") is True, played_a
+    played_b = game.play_card(0, mode="action")
+    assert played_b.get("pending_choice") is True, played_b
+    assert played_b.get("tier") == 1
+
+    # Resolve B's first (sacrifice_town) stage -- NOT classified as a map interaction
+    # (choice_is_card_map_interaction only recognizes step=='target'), which is exactly the
+    # interleaving that swaps which flow ends up as self.pending_choice vs. queued/deferred.
+    current = game.pending_choice
+    assert current.get("choice_key") == "support_interaction"
+    assert current.get("step") == "sacrifice_town"
+    resolved_stage1 = game.resolve_pending_choice(actor.id, 0)
+    assert resolved_stage1.get("pending_choice") is True, resolved_stage1
+    # Neither card's deferred trigger may have fired yet -- both flows are still cancellable.
+    assert game.turn_log.get("faction_first_money_triggered") in (None, False)
+    assert [c.name for c in actor.hand] == []
+
+    # Cancel whichever flow is currently active, then cancel the other (now reactivated).
+    first_cancel = game.cancel_pending_choice(actor.id)
+    assert first_cancel.get("success") is True, first_cancel
+    assert game.pending_choice is not None, "the other flow's parked choice must reactivate"
+    second_cancel = game.cancel_pending_choice(actor.id)
+    assert second_cancel.get("success") is True, second_cancel
+
+    after = snapshot(game)
+    # Full state-equality check, turn_log included: both cards are fully back in hand, no cards
+    # drawn, no discard/resource/organization change, no pending choice left open, the deferred
+    # faction trigger never fired, AND the reference-counted played_money_card/
+    # played_propaganda_card/played_nonstarter_names bookkeeping is exactly clean (not just
+    # "looks False" but the underlying _*_refs counters are back to zero -- see
+    # _note_*/_undo_* helpers) despite this cancelling in PLAY order (A then B), not
+    # reverse-of-play/LIFO order. Hand ORDER can differ (each cancel restores its own card at its
+    # own remembered index -- cosmetic, not a leak; see assert_full_rollback's ignore_hand_order
+    # docstring) when two flows are un-nested this way.
+    assert_full_rollback(before, after, ignore_hand_order=True)
+    assert after["turn_log"].get("faction_first_money_triggered") in (None, False)
+    assert sorted(after["hands"][actor.id]) == sorted(["北國奧援", "內應間諜"])
+
+
+def test_intel_network_queued_behind_another_unresolved_card_cancel_both_leaks_nothing():
+    # Card A = 內應間諜 (single-target), Card B = 情報網 (choose_one gate -- never engages the
+    # build/dissolve queue at all, so A's choice is parked in `_deferred_build_choice` instead
+    # while B's choose_one becomes active).
+    game, actor, enemy = make_game(actor_faction="federalists")
+    actor.organizations = {"北京": 1}
+    enemy.faction_id = "red_army"
+    enemy.organizations = {"天津": 1, "杭州": 1}
+    actor.hand = [action_card(game, "內應間諜"), action_card(game, "情報網")]
+    before = snapshot(game)
+
+    played_a = game.play_card(0, mode="action")
+    assert played_a.get("pending_choice") is True, played_a
+    played_b = game.play_card(0, mode="action")
+    assert played_b.get("pending_choice") is True, played_b
+    assert game.pending_choice["choice_key"] == "choose_one"
+    assert game._deferred_build_choice is not None
+
+    b_index = next(i for i, o in enumerate(game.pending_choice["options"]) if "瓦解" in str(o))
+    chosen = game.resolve_pending_choice(actor.id, b_index)
+    assert chosen.get("pending_choice") is True, chosen
+    # Neither card's deferred trigger may have fired yet.
+    assert game.turn_log.get("faction_first_money_triggered") in (None, False)
+    assert [c.name for c in actor.hand] == []
+
+    first_cancel = game.cancel_pending_choice(actor.id)
+    assert first_cancel.get("success") is True, first_cancel
+    assert game.pending_choice is not None, "the other flow's parked choice must reactivate"
+    second_cancel = game.cancel_pending_choice(actor.id)
+    assert second_cancel.get("success") is True, second_cancel
+
+    after = snapshot(game)
+    # Full state-equality check, turn_log included (see the sibling 北國奧援 test above).
+    assert_full_rollback(before, after, ignore_hand_order=True)
+    assert after["turn_log"].get("faction_first_money_triggered") in (None, False)
+    assert sorted(after["hands"][actor.id]) == sorted(["情報網", "內應間諜"])
+
+
+def test_two_stage_card_queued_then_both_confirmed_still_fires_each_trigger_once():
+    # Non-regression: interleaving two flows must not prevent EITHER trigger from firing
+    # exactly once when both are actually confirmed (not cancelled).
+    game, actor, enemy = make_game(actor_faction="federalists")
+    actor.base = "北京"
+    actor.organizations = {"北京": 1, "上海": 1}
+    enemy.faction_id = "red_army"
+    enemy.base = "西安"
+    enemy.organizations = {"天津": 1, "杭州": 1, "香港城": 1}
+    actor.hand = [action_card(game, "內應間諜"), game._make_support_card("北國奧援", variant_index=1)]
+    actor.deck.draw_pile = list(actor.deck.draw_pile) + [Card("商貿組織抽到", "command", {})]
+
+    game.play_card(0, mode="action")
+    game.play_card(0, mode="action")
+    game.resolve_pending_choice(actor.id, 0)  # B's sacrifice_town stage
+    assert game.turn_log.get("faction_first_money_triggered") in (None, False)
+
+    # Confirm whichever flow is active (A's target choice), then confirm B's target choice too.
+    resolved_1 = game.resolve_pending_choice(actor.id, 0)
+    assert resolved_1.get("success") is True, resolved_1
+    assert game.turn_log.get("faction_first_money_triggered") is True
+    assert sum("triggered 商貿組織" in entry for entry in game.action_log) == 1
+
+    assert game.pending_choice is not None
+    resolved_2 = game.resolve_pending_choice(actor.id, 0)
+    assert resolved_2.get("success") is True, resolved_2
+    assert game.pending_choice is None
+    # Still exactly once overall -- 商貿組織 only triggers on the FIRST money-cost card each turn.
+    assert sum("triggered 商貿組織" in entry for entry in game.action_log) == 1
+
+
+def test_interleaved_double_cancel_does_not_enable_an_early_combo_reward():
+    # 3rd independent-review repro A: a phantom entry in turn_log['played_nonstarter_names']
+    # surviving a full double-cancel of two interleaved flows could let manchuria's 展現實力
+    # ability ("3 distinct non-starter plays this turn" -> pending choice for a reward) fire
+    # after only 2 REAL plays. 展現實力 is a passive faction ability checked automatically after
+    # EVERY card play (_apply_card_play_faction_abilities -> _maybe_trigger_combo_reward), not a
+    # card of its own. Reproduces the exact interleaving (內應間諜 + 北國奧援 tier I, cancelled in
+    # play order), then plays 2 more genuinely-distinct filler cards and asserts the reward does
+    # NOT fire (would require a 3rd distinct play if the phantom entries were truly gone), then
+    # plays a genuine 3rd and confirms the reward DOES fire there -- proving the fix didn't also
+    # break the legitimate trigger.
+    game, actor, enemy = make_game(actor_faction="manchuria")
+    actor.base = "北京"
+    actor.organizations = {"北京": 1, "上海": 1}
+    enemy.faction_id = "red_army"
+    enemy.base = "西安"
+    enemy.organizations = {"天津": 1, "杭州": 1, "香港城": 1}
+    actor.hand = [
+        action_card(game, "內應間諜"),
+        game._make_support_card("北國奧援", variant_index=1),
+        Card("非起始牌甲", "command", {}),
+        Card("非起始牌乙", "command", {}),
+        Card("非起始牌丙", "command", {}),
+    ]
+
+    game.play_card(0, mode="action")
+    game.play_card(0, mode="action")
+    game.resolve_pending_choice(actor.id, 0)
+    game.cancel_pending_choice(actor.id)
+    game.cancel_pending_choice(actor.id)
+    assert game.turn_log["played_nonstarter_names"] == []
+    assert game.turn_log["combo_reward_triggered"] is False
+
+    filler_a = next(i for i, c in enumerate(actor.hand) if c.name == "非起始牌甲")
+    game.play_card(filler_a, mode="action")
+    assert game.turn_log["played_nonstarter_names"] == ["非起始牌甲"]
+    assert game.turn_log["combo_reward_triggered"] is False
+
+    filler_b = next(i for i, c in enumerate(actor.hand) if c.name == "非起始牌乙")
+    game.play_card(filler_b, mode="action")
+    assert len(game.turn_log["played_nonstarter_names"]) == 2
+    assert game.turn_log["combo_reward_triggered"] is False, (
+        "展現實力's combo reward fired after only 2 real plays -- the phantom nonstarter-name "
+        "entry from the cancelled flows leaked through"
+    )
+
+    # A genuine 3rd distinct play: the reward SHOULD legitimately fire here.
+    filler_c = next(i for i, c in enumerate(actor.hand) if c.name == "非起始牌丙")
+    result = game.play_card(filler_c, mode="action")
+    assert result.get("success") is True, result
+    assert len(game.turn_log["played_nonstarter_names"]) == 3
+    assert game.turn_log["combo_reward_triggered"] is True
+
+
+def test_interleaved_double_cancel_does_not_grant_a_leaked_bonus_draw():
+    # 3rd independent-review repro B: turn_log['played_propaganda_card'] stuck True after a full
+    # double-cancel of two interleaved flows would let a freshly-played 點燃熱情 draw its bonus
+    # card (conditional_draw on played_propaganda_card, server/effect_engine.py) it should not be
+    # entitled to. Compares against a clean-turn_log control run for an exact expected draw count.
+    def play_out(game, actor, enemy):
+        actor.base = "北京"
+        actor.organizations = {"北京": 1, "上海": 1}
+        enemy.faction_id = "red_army"
+        enemy.base = "西安"
+        enemy.organizations = {"天津": 1, "杭州": 1, "香港城": 1}
+        actor.hand = [
+            action_card(game, "內應間諜"),
+            game._make_support_card("北國奧援", variant_index=1),
+            action_card(game, "點燃熱情"),
+        ]
+        actor.deck.draw_pile = [Card(f"補牌{i}", "command", {}) for i in range(10)]
+
+    # Control: play only 點燃熱情 (no interleaving at all) -- establishes the correct draw count.
+    control_game, control_actor, control_enemy = make_game(actor_faction="taiwan_green")
+    play_out(control_game, control_actor, control_enemy)
+    hot_index_control = next(i for i, c in enumerate(control_actor.hand) if c.name == "點燃熱情")
+    control_hand_len = len(control_actor.hand)
+    control_result = control_game.play_card(hot_index_control, mode="action")
+    assert control_result.get("success") is True, control_result
+    control_drawn = len(control_actor.hand) - (control_hand_len - 1)
+
+    # Exploit attempt: interleave + double-cancel first, then play the same 點燃熱情.
+    game, actor, enemy = make_game(actor_faction="taiwan_green")
+    play_out(game, actor, enemy)
+    game.play_card(0, mode="action")
+    game.play_card(0, mode="action")
+    game.resolve_pending_choice(actor.id, 0)
+    game.cancel_pending_choice(actor.id)
+    game.cancel_pending_choice(actor.id)
+    assert game.turn_log.get("played_propaganda_card") in (None, False)
+
+    hot_index = next(i for i, c in enumerate(actor.hand) if c.name == "點燃熱情")
+    hand_len_before = len(actor.hand)
+    result = game.play_card(hot_index, mode="action")
+    assert result.get("success") is True, result
+    drawn = len(actor.hand) - (hand_len_before - 1)
+    assert drawn == control_drawn, (
+        f"drew {drawn} card(s) vs. the clean-turn_log control's {control_drawn} -- a leaked "
+        f"played_propaganda_card flag granted an extra bonus draw"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Authorization: only the owning player may cancel their own pending choice
+# ---------------------------------------------------------------------------
+
+def test_non_owner_cannot_cancel_someone_elses_pending_dissolve_choice():
+    game, actor, enemy = make_game()
+    actor.organizations = {"北京": 1}
+    enemy.organizations = {"天津": 1}
+    actor.hand = [action_card(game, "內應間諜")]
+
+    game.play_card(0, mode="action")
+    assert game.pending_choice.get("cancellable") is True
+
+    rejected = game.cancel_pending_choice(enemy.id)
+    assert rejected.get("error") == "Not your pending choice"
+    assert game.pending_choice is not None
+
+
+def test_stale_choice_id_is_rejected_for_both_cancel_and_resolve():
+    game, actor, enemy = make_game()
+    actor.organizations = {"北京": 1}
+    enemy.organizations = {"天津": 1}
+    actor.hand = [action_card(game, "內應間諜")]
+
+    game.play_card(0, mode="action")
+    real_choice_id = game.pending_choice.get("choice_id")
+    stale_id = (real_choice_id or "") + "-stale"
+
+    assert game.cancel_pending_choice(actor.id, expected_choice_id=stale_id) == {"error": "Stale pending choice"}
+    assert game.resolve_pending_choice(actor.id, 0, expected_choice_id=stale_id) == {"error": "Stale pending choice"}
+    assert game.pending_choice is not None
+
+
+# ---------------------------------------------------------------------------
+# Interaction with the unrelated reaction/counter-cancel mechanic (爆料黑幕-style)
+# ---------------------------------------------------------------------------
+
+def test_reaction_cancel_of_the_original_card_play_is_unaffected_by_the_new_cancel_feature():
+    # An opponent using 爆料黑幕 to cancel the ORIGINAL 內應間諜 play is a completely different
+    # mechanic (a reaction_choice on the *opponent's* pending_choice) from the new
+    # player-initiated dissolve-target cancel. Confirm it still works exactly as before, and
+    # that no dissolve-target pending choice (and thus no new cancellability) is ever reached.
+    game, actor, enemy = make_game()
+    actor.organizations = {"北京": 1}
+    enemy.organizations = {"天津": 1}
+    enemy.hand = [Card("爆料黑幕", "reaction", {})]
+    actor.hand = [action_card(game, "內應間諜")]
+
+    played = game.play_card(0, mode="action")
+    assert played.get("pending_choice") is True, played
+    assert game.pending_choice.get("type") == "reaction_choice"
+    assert game.pending_choice.get("choice_key") == "cancel_other_player_action"
+    # The reaction window's own choice is not part of the dissolve-cancel feature.
+    assert not game.pending_choice.get("cancellable")
+
+    cancel_reaction = game.resolve_pending_choice(enemy.id, 1)
+    assert cancel_reaction.get("success") is True, cancel_reaction
+    assert game.pending_choice is None
+    # The card play was cancelled by the reaction -- no dissolve happened, card is discarded
+    # (not restored to hand -- that is the reaction mechanic's own, pre-existing semantics).
+    assert actor.hand == []
+    assert [c.name for c in actor.deck.discard_pile] == ["內應間諜"]
+    assert enemy.organizations.get("天津", 0) == 1

@@ -35,6 +35,12 @@
   #directBuildBtn:not(:disabled):hover,
   #confirmMoveBtn:not(:disabled):hover,
   #dissolveBtn:not(:disabled):hover { background:#4a3b14; }
+  #cancelDissolveChoiceBtn:not(:disabled) {
+    background:#3a1414;
+    border-color:#c65a5a;
+    color:#ffd9d9;
+  }
+  #cancelDissolveChoiceBtn:not(:disabled):hover { background:#4a1a1a; }
   .row { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
   .stats { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
   .stat { background:#0d1426; border:1px solid #27375d; padding:10px; border-radius:12px; }
@@ -152,6 +158,7 @@
         <div class="note" id="confirmMoveHint">點選可移動城鎮後，這裡會顯示移動確認；點地圖其他地方可取消。</div>
         <button id="dissolveBtn" disabled>瓦解組織</button>
         <div class="note" id="dissolveHint">選取具有共享可用性的城鎮後，這裡會顯示是否可對實際組織擁有者發動瓦解。</div>
+        <button id="cancelDissolveChoiceBtn" disabled style="display:none;">取消瓦解</button>
       </div>
     </div>
 

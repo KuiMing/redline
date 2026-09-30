@@ -348,7 +348,9 @@ def test_north_support_tier1_sacrifices_the_selected_own_org_before_dissolving_e
 
     assert sacrificed.get('success'), sacrificed
     assert sacrificed.get('pending_choice') is True, sacrificed
-    assert actor.organizations == {'巴黎': 1}
+    # Cancellable-dissolve-target-selection feature: no own organization is removed until the
+    # FINAL confirmation (picking the enemy target below), so 日內瓦 is still present here.
+    assert actor.organizations == {'巴黎': 1, '日內瓦': 1}
     assert g.pending_choice['step'] == 'target'
     assert g.pending_choice['targets'] == [{
         'id': f'{enemy.id}::慕尼黑',
@@ -361,6 +363,7 @@ def test_north_support_tier1_sacrifices_the_selected_own_org_before_dissolving_e
     resolved = g.resolve_pending_choice(actor.id, 0)
 
     assert resolved.get('success'), resolved
+    # Both the sacrifice and the enemy dissolve land atomically at this final confirmation.
     assert actor.organizations == {'巴黎': 1}
     assert enemy.organizations.get('慕尼黑', 0) == 0
 
@@ -2085,7 +2088,9 @@ def test_field_agent_prompts_sacrifice_then_target_org_like_north_support():
 
     assert sacrificed.get('success'), sacrificed
     assert sacrificed.get('pending_choice') is True
-    assert p1.organizations == {'北京': 1}
+    # Cancellable-dissolve-target-selection feature: no own organization is removed until the
+    # FINAL confirmation (picking the enemy target below), so 上海 is still present here.
+    assert p1.organizations == {'北京': 1, '上海': 1}
     assert g.pending_choice['step'] == 'target'
     assert g.pending_choice['targets'] == [{
         'id': f'{p2.id}::杭州',
@@ -2160,7 +2165,10 @@ def test_field_agent_requires_shared_organization_owner_consent_before_sacrifice
     approved = g.resolve_pending_choice(owner.id, 1)
 
     assert approved.get('pending_choice') is True, approved
-    assert owner.organizations == {}
+    # Cancellable-dissolve-target-selection feature: consent alone does not remove the shared
+    # organization -- that happens atomically together with the enemy dissolve at the FINAL
+    # confirmation (the acting player's target pick), not here.
+    assert owner.organizations == {'上海': 1}
     assert g.pending_choice['player_id'] == actor.id
     assert g.pending_choice['step'] == 'target'
 

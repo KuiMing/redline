@@ -1270,6 +1270,10 @@ class Game(CardPlayMixin):
             unresolved += self._build_choice_entitlement_count(choice)
             if not self._refresh_queued_card_map_choice(player, choice):
                 self.log(f"{player.name} 有排隊中的地圖卡牌效果（來自{choice.get('source_name') or '卡牌'}），但目前沒有合法目標")
+                # This dequeued flow fizzles (no legal target once it's finally its turn) --
+                # a genuine terminal point, not a cancel, so any deferred post_play_faction_
+                # triggers marker on it may fire now. See _settle_deferred_card_play_triggers.
+                choice['is_final_confirmation'] = True
                 self._settle_deferred_card_play_triggers(player, choice)
                 if self.pending_choice:
                     return {'success': True, 'pending_choice': True}
@@ -1760,6 +1764,20 @@ class Game(CardPlayMixin):
             "successful_discard": False,
             "built_towns": [],
             "played_nonstarter_names": [],
+            # Internal reference-counted bookkeeping backing played_money_card/
+            # played_propaganda_card/played_nonstarter_names above -- see
+            # _note_money_cost_card_played()/_undo_money_cost_card_played() and siblings in
+            # server/game_card_play.py. A cancellable card play increments these when played and
+            # decrements them if later cancelled; a non-cancellable play increments and never
+            # decrements (permanent, matching the pre-existing one-way-latch behavior). This
+            # makes the derived public flags correct regardless of the ORDER two interleaved
+            # cancellable card plays are cancelled in (not just strict reverse-of-play/LIFO order)
+            # -- a flag only clears once every contributing still-live play has actually been
+            # cancelled, never because one unrelated play's cancel blindly overwrote it back to a
+            # stale absolute snapshot. Never read directly outside these helpers.
+            "_money_cost_card_refs": 0,
+            "_propaganda_cost_card_refs": 0,
+            "_nonstarter_name_refs": {},
             "combo_reward_triggered": False,
             "guerrilla_triggered": False,
             "faction_action_used": False,
@@ -4326,6 +4344,12 @@ class Game(CardPlayMixin):
                 'source_name': pending_source_name,
                 'count': self.pending_choice.get('count'),
                 'min_count': self.pending_choice.get('min_count'),
+                # Multi-target dissolve cards (北國奧援 III): how many targets have already been
+                # selected-but-not-yet-dissolved vs. how many the card allows in total, so the
+                # client can render "已選 N/M". Absent (None) for every other choice.
+                'selected_count': self.pending_choice.get('selected_count'),
+                'total_count': self.pending_choice.get('total_count'),
+                'remaining_count': self.pending_choice.get('remaining_count'),
                 'mode': self.pending_choice.get('mode'),
                 'acting_player_id': self.pending_choice.get('acting_player_id'),
                 'acting_player_name': self.pending_choice.get('acting_player_name'),

@@ -217,7 +217,9 @@ def test_queued_field_agent_finishes_sacrifice_step_before_joining_fifo():
     sacrificed = game.resolve_pending_choice(actor.id, 0)
 
     assert sacrificed.get('pending_choice') is True, sacrificed
-    assert actor.organizations == {'北京': 1}
+    # Cancellable-dissolve-target-selection feature: no own organization is removed until the
+    # FINAL confirmation (picking the enemy target below).
+    assert actor.organizations == {'北京': 1, '上海': 1}
     assert game.pending_choice['choice_key'] == 'card_dissolve_interaction'
     assert game.pending_choice['step'] == 'target'
     assert game._deferred_build_choice is None
@@ -228,10 +230,16 @@ def test_queued_field_agent_finishes_sacrifice_step_before_joining_fifo():
     assert first_result.get('pending_choice') is True, first_result
     assert game.pending_choice['source_name'] == '派遣間諜'
     assert game.pending_choice['step'] == 'target'
+    # 內應間諜 (dequeued and resolved by the choose_target call above) never sacrifices its own
+    # organization, and 派遣間諜's own sacrifice is still deferred to its own final confirmation
+    # (immediately below), so 上海 remains present here.
+    assert actor.organizations == {'北京': 1, '上海': 1}
     final_town = game.pending_choice['targets'][0]['town']
     _, final_result = choose_target(game, actor, final_town)
     assert final_result.get('success') is True, final_result
     assert game.pending_choice is None
+    # 派遣間諜's own sacrifice + enemy dissolve landed atomically at that final confirmation.
+    assert actor.organizations == {'北京': 1}
 
 
 def test_east_support_map_tier_queues_behind_active_build_choice():

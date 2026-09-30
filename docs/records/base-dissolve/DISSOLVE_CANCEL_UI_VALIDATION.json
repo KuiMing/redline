@@ -1,0 +1,6389 @@
+{
+  "summary": {
+    "total": 20,
+    "passed": 20,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "single_target_setup_succeeded",
+      "ok": true,
+      "detail": {
+        "success": true,
+        "game_id": "32b94b52-f9f7-4261-929d-141463c34859",
+        "player_id": "faa027b7-c2ea-4b47-91bd-ee54cd2d2643",
+        "url": "/?game_id=32b94b52-f9f7-4261-929d-141463c34859&player_id=faa027b7-c2ea-4b47-91bd-ee54cd2d2643",
+        "play_result": {
+          "success": true,
+          "pending_choice": true
+        },
+        "pre_play_state": {
+          "turn": 1,
+          "game_phase": "main",
+          "turn_phase": "action",
+          "winner": null,
+          "co_winners": [],
+          "hk_free_base_relocation": false,
+          "current_player": "玩家",
+          "active_eras": [],
+          "active_era_details": [],
+          "my_era_stage": {
+            "id": "taiwan",
+            "name": "[臺灣]綏靖派反對介入對岸",
+            "summary_text": "臺灣對共和國滲透日深 紅軍策動臺灣綏靖派阻礙反共工作",
+            "trigger_text": "[臺灣重建敵後工作]臺灣在牆內擁有至少7個有效組織",
+            "success_text": "[鼓吹停止挑釁紅軍]將3張內鬥放進臺灣棄牌堆",
+            "fail_text": "[打擊國內綏靖主義]每當臺灣在臺灣城鎮建立至少1個組織時，獲得1點宣傳。持續2回合。",
+            "duration_text": "持續 2 回合",
+            "remaining": null,
+            "minimized": false,
+            "active": false,
+            "achieved": false
+          },
+          "era_notification": null,
+          "current_event": {
+            "id": "quiet_times",
+            "name": "歲月靜好",
+            "type": "idle",
+            "trigger": {},
+            "success": {},
+            "failure": {},
+            "effect": {},
+            "progress": {
+              "count": 0,
+              "required": 0,
+              "succeeded": true,
+              "settled": true,
+              "status": "idle"
+            },
+            "status": "idle",
+            "result_text": "本次事件無效果",
+            "trigger_text": "無",
+            "success_text": "無",
+            "failure_text": "無",
+            "effect_text": "無"
+          },
+          "event_deck_count": 20,
+          "red_army_action_count": 0,
+          "red_army_action_limit": 1,
+          "red_army_base_build_blocks": [],
+          "pending_topdeck_uses": 0,
+          "topdeck_candidates_count": 0,
+          "event_discard_count": 0,
+          "event_modifiers": [],
+          "market_mode": "all_cards",
+          "pending_base_choices": [],
+          "pending_choice": null,
+          "faction_action_used": false,
+          "action_log": [],
+          "purchase_area": [
+            "宣傳家",
+            "思想家",
+            "資助者",
+            "資本家",
+            "分神",
+            "內鬥",
+            "離間",
+            "高效行動",
+            "交通經驗丙",
+            "印度奧援",
+            "謀劃"
+          ],
+          "purchase_area_variants": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            {
+              "variant_index": 0,
+              "support_region": "印度",
+              "tier2_regions": [
+                "南洋",
+                "英美"
+              ]
+            },
+            null
+          ],
+          "purchase_area_costs": [
+            {
+              "money": 0,
+              "propaganda": 3
+            },
+            {
+              "money": 0,
+              "propaganda": 5
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 3,
+              "propaganda": 2
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 4
+            },
+            {
+              "money": 2,
+              "propaganda": 2
+            },
+            {
+              "money": 1,
+              "propaganda": 0
+            },
+            {
+              "money": 1,
+              "propaganda": 2
+            },
+            {
+              "money": 1,
+              "propaganda": 1
+            }
+          ],
+          "purchase_area_payments": [
+            {
+              "money": 0,
+              "propaganda": 3
+            },
+            {
+              "money": 0,
+              "propaganda": 5
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 3,
+              "propaganda": 2
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 4
+            },
+            {
+              "money": 2,
+              "propaganda": 2
+            },
+            {
+              "money": 1,
+              "propaganda": 0
+            },
+            {
+              "money": 1,
+              "propaganda": 2
+            },
+            {
+              "money": 1,
+              "propaganda": 1
+            }
+          ],
+          "purchase_area_affordable": [
+            false,
+            false,
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "purchase_payment_policy": {
+            "type": "propaganda_then_money_shortfall",
+            "active": false,
+            "ability_name": null,
+            "eligible_cost": "propaganda",
+            "allocation_scope": "batch"
+          },
+          "static_purchase_supply": {
+            "宣傳家": 15,
+            "思想家": 15,
+            "資助者": 15,
+            "資本家": 15,
+            "分神": 30,
+            "內鬥": 20
+          },
+          "map": {
+            "towns": {
+              "北京": [
+                {
+                  "player": "玩家",
+                  "count": 1,
+                  "faction": "taiwan_green"
+                }
+              ],
+              "天津": [
+                {
+                  "player": "紅軍",
+                  "count": 1,
+                  "faction": "red_army"
+                }
+              ]
+            },
+            "shared_access": {},
+            "legal_organization_moves": {}
+          },
+          "players": [
+            {
+              "id": "faa027b7-c2ea-4b47-91bd-ee54cd2d2643",
+              "name": "玩家",
+              "faction": "taiwan_green",
+              "base": "北京",
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "moves_left": 0,
+              "hand": [
+                "內應間諜"
+              ],
+              "hand_variants": [
+                null
+              ],
+              "hand_action_legality": [
+                {
+                  "playable": true
+                }
+              ],
+              "deck_count": 5,
+              "discard_count": 0,
+              "discard_pile": [],
+              "discard_variants": [],
+              "organization_counts": {
+                "total": 1,
+                "inside_wall": 1,
+                "outside_wall": 0
+              },
+              "orgs": {
+                "北京": 1
+              }
+            },
+            {
+              "id": "da2b80d7-a482-4c65-ad6d-6517514f295f",
+              "name": "紅軍",
+              "faction": "red_army",
+              "base": "西安",
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "moves_left": 0,
+              "hand": [
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌"
+              ],
+              "hand_variants": [
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "hand_action_legality": [
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "deck_count": 6,
+              "discard_count": 0,
+              "discard_pile": [],
+              "discard_variants": [],
+              "organization_counts": {
+                "total": 1,
+                "inside_wall": 1,
+                "outside_wall": 0
+              },
+              "orgs": {
+                "天津": 1
+              }
+            }
+          ]
+        },
+        "state": {
+          "turn": 1,
+          "game_phase": "main",
+          "turn_phase": "action",
+          "winner": null,
+          "co_winners": [],
+          "hk_free_base_relocation": false,
+          "current_player": "玩家",
+          "active_eras": [],
+          "active_era_details": [],
+          "my_era_stage": {
+            "id": "taiwan",
+            "name": "[臺灣]綏靖派反對介入對岸",
+            "summary_text": "臺灣對共和國滲透日深 紅軍策動臺灣綏靖派阻礙反共工作",
+            "trigger_text": "[臺灣重建敵後工作]臺灣在牆內擁有至少7個有效組織",
+            "success_text": "[鼓吹停止挑釁紅軍]將3張內鬥放進臺灣棄牌堆",
+            "fail_text": "[打擊國內綏靖主義]每當臺灣在臺灣城鎮建立至少1個組織時，獲得1點宣傳。持續2回合。",
+            "duration_text": "持續 2 回合",
+            "remaining": null,
+            "minimized": false,
+            "active": false,
+            "achieved": false
+          },
+          "era_notification": null,
+          "current_event": {
+            "id": "quiet_times",
+            "name": "歲月靜好",
+            "type": "idle",
+            "trigger": {},
+            "success": {},
+            "failure": {},
+            "effect": {},
+            "progress": {
+              "count": 0,
+              "required": 0,
+              "succeeded": true,
+              "settled": true,
+              "status": "idle"
+            },
+            "status": "idle",
+            "result_text": "本次事件無效果",
+            "trigger_text": "無",
+            "success_text": "無",
+            "failure_text": "無",
+            "effect_text": "無"
+          },
+          "event_deck_count": 20,
+          "red_army_action_count": 0,
+          "red_army_action_limit": 1,
+          "red_army_base_build_blocks": [],
+          "pending_topdeck_uses": 0,
+          "topdeck_candidates_count": 0,
+          "event_discard_count": 0,
+          "event_modifiers": [],
+          "market_mode": "all_cards",
+          "pending_base_choices": [],
+          "pending_choice": {
+            "choice_id": "39a4487b2a1146af80f0220ed4e66ae6",
+            "type": "support_flow_choice",
+            "choice_key": "card_dissolve_interaction",
+            "interaction_kind": "dissolve_organization",
+            "remaining_builds": null,
+            "queueable_card_names": [],
+            "cancellable": true,
+            "player_id": "faa027b7-c2ea-4b47-91bd-ee54cd2d2643",
+            "player_name": null,
+            "prompt": "內應間諜：選擇 1 個要瓦解的鄰近敵方組織。",
+            "source_name": "內應間諜",
+            "count": null,
+            "min_count": null,
+            "selected_count": null,
+            "total_count": null,
+            "remaining_count": null,
+            "mode": null,
+            "acting_player_id": null,
+            "acting_player_name": null,
+            "played_card_name": null,
+            "target_player_id": null,
+            "target_player_name": null,
+            "region": null,
+            "free": null,
+            "ignore_distance": null,
+            "cards": [],
+            "options": [],
+            "towns": [],
+            "targets": [
+              {
+                "id": "da2b80d7-a482-4c65-ad6d-6517514f295f::天津",
+                "label": "紅軍｜天津",
+                "player_id": "da2b80d7-a482-4c65-ad6d-6517514f295f",
+                "town": "天津",
+                "requires_self_sacrifice": false
+              }
+            ],
+            "step": "target"
+          },
+          "faction_action_used": false,
+          "action_log": [
+            "[Turn 1] 玩家 played 內應間諜"
+          ],
+          "purchase_area": [
+            "宣傳家",
+            "思想家",
+            "資助者",
+            "資本家",
+            "分神",
+            "內鬥",
+            "離間",
+            "高效行動",
+            "交通經驗丙",
+            "印度奧援",
+            "謀劃"
+          ],
+          "purchase_area_variants": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            {
+              "variant_index": 0,
+              "support_region": "印度",
+              "tier2_regions": [
+                "南洋",
+                "英美"
+              ]
+            },
+            null
+          ],
+          "purchase_area_costs": [
+            {
+              "money": 0,
+              "propaganda": 3
+            },
+            {
+              "money": 0,
+              "propaganda": 5
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 3,
+              "propaganda": 2
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 4
+            },
+            {
+              "money": 2,
+              "propaganda": 2
+            },
+            {
+              "money": 1,
+              "propaganda": 0
+            },
+            {
+              "money": 1,
+              "propaganda": 2
+            },
+            {
+              "money": 1,
+              "propaganda": 1
+            }
+          ],
+          "purchase_area_payments": [
+            {
+              "money": 0,
+              "propaganda": 3
+            },
+            {
+              "money": 0,
+              "propaganda": 5
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 3,
+              "propaganda": 2
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 4
+            },
+            {
+              "money": 2,
+              "propaganda": 2
+            },
+            {
+              "money": 1,
+              "propaganda": 0
+            },
+            {
+              "money": 1,
+              "propaganda": 2
+            },
+            {
+              "money": 1,
+              "propaganda": 1
+            }
+          ],
+          "purchase_area_affordable": [
+            false,
+            false,
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "purchase_payment_policy": {
+            "type": "propaganda_then_money_shortfall",
+            "active": false,
+            "ability_name": null,
+            "eligible_cost": "propaganda",
+            "allocation_scope": "batch"
+          },
+          "static_purchase_supply": {
+            "宣傳家": 15,
+            "思想家": 15,
+            "資助者": 15,
+            "資本家": 15,
+            "分神": 30,
+            "內鬥": 20
+          },
+          "map": {
+            "towns": {
+              "北京": [
+                {
+                  "player": "玩家",
+                  "count": 1,
+                  "faction": "taiwan_green"
+                }
+              ],
+              "天津": [
+                {
+                  "player": "紅軍",
+                  "count": 1,
+                  "faction": "red_army"
+                }
+              ]
+            },
+            "shared_access": {},
+            "legal_organization_moves": {}
+          },
+          "players": [
+            {
+              "id": "faa027b7-c2ea-4b47-91bd-ee54cd2d2643",
+              "name": "玩家",
+              "faction": "taiwan_green",
+              "base": "北京",
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "moves_left": 0,
+              "hand": [],
+              "hand_variants": [],
+              "hand_action_legality": [],
+              "deck_count": 5,
+              "discard_count": 1,
+              "discard_pile": [
+                "內應間諜"
+              ],
+              "discard_variants": [
+                null
+              ],
+              "organization_counts": {
+                "total": 1,
+                "inside_wall": 1,
+                "outside_wall": 0
+              },
+              "orgs": {
+                "北京": 1
+              }
+            },
+            {
+              "id": "da2b80d7-a482-4c65-ad6d-6517514f295f",
+              "name": "紅軍",
+              "faction": "red_army",
+              "base": "西安",
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "moves_left": 0,
+              "hand": [
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌"
+              ],
+              "hand_variants": [
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "hand_action_legality": [
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "deck_count": 6,
+              "discard_count": 0,
+              "discard_pile": [],
+              "discard_variants": [],
+              "organization_counts": {
+                "total": 1,
+                "inside_wall": 1,
+                "outside_wall": 0
+              },
+              "orgs": {
+                "天津": 1
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "single_target_legal_target_highlighted_and_cancel_visible",
+      "ok": true,
+      "detail": {
+        "skullCount": 1,
+        "cancelVisible": true,
+        "cancelEnabled": true,
+        "cancelText": "取消瓦解",
+        "dissolveBtnDisabled": true,
+        "dissolveHintText": "選取具有共享可用性的城鎮後，這裡會顯示是否可對實際組織擁有者發動瓦解。",
+        "supportChoiceHighlight": {
+          "choice_id": "39a4487b2a1146af80f0220ed4e66ae6",
+          "type": "support_flow_choice",
+          "choice_key": "card_dissolve_interaction",
+          "interaction_kind": "dissolve_organization",
+          "remaining_builds": null,
+          "queueable_card_names": [],
+          "cancellable": true,
+          "player_id": "faa027b7-c2ea-4b47-91bd-ee54cd2d2643",
+          "player_name": null,
+          "prompt": "內應間諜：選擇 1 個要瓦解的鄰近敵方組織。",
+          "source_name": "內應間諜",
+          "count": null,
+          "min_count": null,
+          "selected_count": null,
+          "total_count": null,
+          "remaining_count": null,
+          "mode": null,
+          "acting_player_id": null,
+          "acting_player_name": null,
+          "played_card_name": null,
+          "target_player_id": null,
+          "target_player_name": null,
+          "region": null,
+          "free": null,
+          "ignore_distance": null,
+          "cards": [],
+          "options": [],
+          "towns": [],
+          "targets": [
+            {
+              "id": "da2b80d7-a482-4c65-ad6d-6517514f295f::天津",
+              "label": "紅軍｜天津",
+              "player_id": "da2b80d7-a482-4c65-ad6d-6517514f295f",
+              "town": "天津",
+              "requires_self_sacrifice": false
+            }
+          ],
+          "step": "target"
+        },
+        "lastGameState": {
+          "turn": 1,
+          "game_phase": "main",
+          "turn_phase": "action",
+          "winner": null,
+          "co_winners": [],
+          "hk_free_base_relocation": false,
+          "current_player": "玩家",
+          "active_eras": [],
+          "active_era_details": [],
+          "my_era_stage": {
+            "id": "taiwan",
+            "name": "[臺灣]綏靖派反對介入對岸",
+            "summary_text": "臺灣對共和國滲透日深 紅軍策動臺灣綏靖派阻礙反共工作",
+            "trigger_text": "[臺灣重建敵後工作]臺灣在牆內擁有至少7個有效組織",
+            "success_text": "[鼓吹停止挑釁紅軍]將3張內鬥放進臺灣棄牌堆",
+            "fail_text": "[打擊國內綏靖主義]每當臺灣在臺灣城鎮建立至少1個組織時，獲得1點宣傳。持續2回合。",
+            "duration_text": "持續 2 回合",
+            "remaining": null,
+            "minimized": false,
+            "active": false,
+            "achieved": false
+          },
+          "era_notification": null,
+          "current_event": {
+            "id": "quiet_times",
+            "name": "歲月靜好",
+            "type": "idle",
+            "trigger": {},
+            "success": {},
+            "failure": {},
+            "effect": {},
+            "progress": {
+              "count": 0,
+              "required": 0,
+              "succeeded": true,
+              "settled": true,
+              "status": "idle"
+            },
+            "status": "idle",
+            "result_text": "本次事件無效果",
+            "trigger_text": "無",
+            "success_text": "無",
+            "failure_text": "無",
+            "effect_text": "無"
+          },
+          "event_deck_count": 20,
+          "red_army_action_count": 0,
+          "red_army_action_limit": 1,
+          "red_army_base_build_blocks": [],
+          "pending_topdeck_uses": 0,
+          "topdeck_candidates_count": 0,
+          "event_discard_count": 0,
+          "event_modifiers": [],
+          "market_mode": "all_cards",
+          "pending_base_choices": [],
+          "pending_choice": {
+            "choice_id": "39a4487b2a1146af80f0220ed4e66ae6",
+            "type": "support_flow_choice",
+            "choice_key": "card_dissolve_interaction",
+            "interaction_kind": "dissolve_organization",
+            "remaining_builds": null,
+            "queueable_card_names": [],
+            "cancellable": true,
+            "player_id": "faa027b7-c2ea-4b47-91bd-ee54cd2d2643",
+            "player_name": null,
+            "prompt": "內應間諜：選擇 1 個要瓦解的鄰近敵方組織。",
+            "source_name": "內應間諜",
+            "count": null,
+            "min_count": null,
+            "selected_count": null,
+            "total_count": null,
+            "remaining_count": null,
+            "mode": null,
+            "acting_player_id": null,
+            "acting_player_name": null,
+            "played_card_name": null,
+            "target_player_id": null,
+            "target_player_name": null,
+            "region": null,
+            "free": null,
+            "ignore_distance": null,
+            "cards": [],
+            "options": [],
+            "towns": [],
+            "targets": [
+              {
+                "id": "da2b80d7-a482-4c65-ad6d-6517514f295f::天津",
+                "label": "紅軍｜天津",
+                "player_id": "da2b80d7-a482-4c65-ad6d-6517514f295f",
+                "town": "天津",
+                "requires_self_sacrifice": false
+              }
+            ],
+            "step": "target"
+          },
+          "faction_action_used": false,
+          "action_log": [
+            "[Turn 1] 玩家 played 內應間諜"
+          ],
+          "purchase_area": [
+            "宣傳家",
+            "思想家",
+            "資助者",
+            "資本家",
+            "分神",
+            "內鬥",
+            "離間",
+            "高效行動",
+            "交通經驗丙",
+            "印度奧援",
+            "謀劃"
+          ],
+          "purchase_area_variants": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            {
+              "variant_index": 0,
+              "support_region": "印度",
+              "tier2_regions": [
+                "南洋",
+                "英美"
+              ]
+            },
+            null
+          ],
+          "purchase_area_costs": [
+            {
+              "money": 0,
+              "propaganda": 3
+            },
+            {
+              "money": 0,
+              "propaganda": 5
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 3,
+              "propaganda": 2
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 4
+            },
+            {
+              "money": 2,
+              "propaganda": 2
+            },
+            {
+              "money": 1,
+              "propaganda": 0
+            },
+            {
+              "money": 1,
+              "propaganda": 2
+            },
+            {
+              "money": 1,
+              "propaganda": 1
+            }
+          ],
+          "purchase_area_payments": [
+            {
+              "money": 0,
+              "propaganda": 3
+            },
+            {
+              "money": 0,
+              "propaganda": 5
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 3,
+              "propaganda": 2
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 4
+            },
+            {
+              "money": 2,
+              "propaganda": 2
+            },
+            {
+              "money": 1,
+              "propaganda": 0
+            },
+            {
+              "money": 1,
+              "propaganda": 2
+            },
+            {
+              "money": 1,
+              "propaganda": 1
+            }
+          ],
+          "purchase_area_affordable": [
+            false,
+            false,
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "purchase_payment_policy": {
+            "type": "propaganda_then_money_shortfall",
+            "active": false,
+            "ability_name": null,
+            "eligible_cost": "propaganda",
+            "allocation_scope": "batch"
+          },
+          "static_purchase_supply": {
+            "宣傳家": 15,
+            "思想家": 15,
+            "資助者": 15,
+            "資本家": 15,
+            "分神": 30,
+            "內鬥": 20
+          },
+          "map": {
+            "towns": {
+              "北京": [
+                {
+                  "player": "玩家",
+                  "count": 1,
+                  "faction": "taiwan_green"
+                }
+              ],
+              "天津": [
+                {
+                  "player": "紅軍",
+                  "count": 1,
+                  "faction": "red_army"
+                }
+              ]
+            },
+            "shared_access": {},
+            "legal_organization_moves": {}
+          },
+          "players": [
+            {
+              "id": "faa027b7-c2ea-4b47-91bd-ee54cd2d2643",
+              "name": "玩家",
+              "faction": "taiwan_green",
+              "base": "北京",
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "moves_left": 0,
+              "hand": [],
+              "hand_variants": [],
+              "hand_action_legality": [],
+              "deck_count": 5,
+              "discard_count": 1,
+              "discard_pile": [
+                "內應間諜"
+              ],
+              "discard_variants": [
+                null
+              ],
+              "organization_counts": {
+                "total": 1,
+                "inside_wall": 1,
+                "outside_wall": 0
+              },
+              "orgs": {
+                "北京": 1
+              }
+            },
+            {
+              "id": "da2b80d7-a482-4c65-ad6d-6517514f295f",
+              "name": "紅軍",
+              "faction": "red_army",
+              "base": "西安",
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "moves_left": 0,
+              "hand": [
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌"
+              ],
+              "hand_variants": [
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "hand_action_legality": [
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "deck_count": 6,
+              "discard_count": 0,
+              "discard_pile": [],
+              "discard_variants": [],
+              "organization_counts": {
+                "total": 1,
+                "inside_wall": 1,
+                "outside_wall": 0
+              },
+              "orgs": {
+                "天津": 1
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "single_target_cancel_produces_byte_identical_state_and_clears_pending_choice",
+      "ok": true,
+      "detail": {
+        "before": {
+          "players": [
+            {
+              "id": "faa027b7-c2ea-4b47-91bd-ee54cd2d2643",
+              "hand": [
+                "內應間諜"
+              ],
+              "discard_pile": [],
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "orgs": {
+                "北京": 1
+              }
+            },
+            {
+              "id": "da2b80d7-a482-4c65-ad6d-6517514f295f",
+              "hand": [
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌"
+              ],
+              "discard_pile": [],
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "orgs": {
+                "天津": 1
+              }
+            }
+          ],
+          "turn_phase": "action",
+          "pending_choice": null
+        },
+        "after": {
+          "players": [
+            {
+              "id": "faa027b7-c2ea-4b47-91bd-ee54cd2d2643",
+              "hand": [
+                "內應間諜"
+              ],
+              "discard_pile": [],
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "orgs": {
+                "北京": 1
+              }
+            },
+            {
+              "id": "da2b80d7-a482-4c65-ad6d-6517514f295f",
+              "hand": [
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌"
+              ],
+              "discard_pile": [],
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "orgs": {
+                "天津": 1
+              }
+            }
+          ],
+          "turn_phase": "action",
+          "pending_choice": null
+        }
+      }
+    },
+    {
+      "name": "single_target_confirm_resolves_immediately_and_dissolves",
+      "ok": true,
+      "detail": {
+        "before": {
+          "skullCount": 1,
+          "cancelVisible": true,
+          "cancelEnabled": true,
+          "cancelText": "取消瓦解",
+          "dissolveBtnDisabled": false,
+          "dissolveHintText": "確認瓦解 天津 的組織？（內應間諜）點擊地圖上其他 💀 目標可改選，按上方按鈕才會真正執行。",
+          "supportChoiceHighlight": {
+            "choice_id": "1c50b1b3198d49f0ab004a9850f77a88",
+            "type": "support_flow_choice",
+            "choice_key": "card_dissolve_interaction",
+            "interaction_kind": "dissolve_organization",
+            "remaining_builds": null,
+            "queueable_card_names": [],
+            "cancellable": true,
+            "player_id": "123b7337-3bac-462d-9e0c-8bce1a3c386b",
+            "player_name": null,
+            "prompt": "內應間諜：選擇 1 個要瓦解的鄰近敵方組織。",
+            "source_name": "內應間諜",
+            "count": null,
+            "min_count": null,
+            "selected_count": null,
+            "total_count": null,
+            "remaining_count": null,
+            "mode": null,
+            "acting_player_id": null,
+            "acting_player_name": null,
+            "played_card_name": null,
+            "target_player_id": null,
+            "target_player_name": null,
+            "region": null,
+            "free": null,
+            "ignore_distance": null,
+            "cards": [],
+            "options": [],
+            "towns": [],
+            "targets": [
+              {
+                "id": "465e776c-3648-4db7-b4c8-79152b0c7d20::天津",
+                "label": "紅軍｜天津",
+                "player_id": "465e776c-3648-4db7-b4c8-79152b0c7d20",
+                "town": "天津",
+                "requires_self_sacrifice": false
+              }
+            ],
+            "step": "target"
+          },
+          "lastGameState": {
+            "turn": 1,
+            "game_phase": "main",
+            "turn_phase": "action",
+            "winner": null,
+            "co_winners": [],
+            "hk_free_base_relocation": false,
+            "current_player": "玩家",
+            "active_eras": [],
+            "active_era_details": [],
+            "my_era_stage": {
+              "id": "taiwan",
+              "name": "[臺灣]綏靖派反對介入對岸",
+              "summary_text": "臺灣對共和國滲透日深 紅軍策動臺灣綏靖派阻礙反共工作",
+              "trigger_text": "[臺灣重建敵後工作]臺灣在牆內擁有至少7個有效組織",
+              "success_text": "[鼓吹停止挑釁紅軍]將3張內鬥放進臺灣棄牌堆",
+              "fail_text": "[打擊國內綏靖主義]每當臺灣在臺灣城鎮建立至少1個組織時，獲得1點宣傳。持續2回合。",
+              "duration_text": "持續 2 回合",
+              "remaining": null,
+              "minimized": false,
+              "active": false,
+              "achieved": false
+            },
+            "era_notification": null,
+            "current_event": {
+              "id": "quiet_times",
+              "name": "歲月靜好",
+              "type": "idle",
+              "trigger": {},
+              "success": {},
+              "failure": {},
+              "effect": {},
+              "progress": {
+                "count": 0,
+                "required": 0,
+                "succeeded": true,
+                "settled": true,
+                "status": "idle"
+              },
+              "status": "idle",
+              "result_text": "本次事件無效果",
+              "trigger_text": "無",
+              "success_text": "無",
+              "failure_text": "無",
+              "effect_text": "無"
+            },
+            "event_deck_count": 20,
+            "red_army_action_count": 0,
+            "red_army_action_limit": 1,
+            "red_army_base_build_blocks": [],
+            "pending_topdeck_uses": 0,
+            "topdeck_candidates_count": 0,
+            "event_discard_count": 0,
+            "event_modifiers": [],
+            "market_mode": "all_cards",
+            "pending_base_choices": [],
+            "pending_choice": {
+              "choice_id": "1c50b1b3198d49f0ab004a9850f77a88",
+              "type": "support_flow_choice",
+              "choice_key": "card_dissolve_interaction",
+              "interaction_kind": "dissolve_organization",
+              "remaining_builds": null,
+              "queueable_card_names": [],
+              "cancellable": true,
+              "player_id": "123b7337-3bac-462d-9e0c-8bce1a3c386b",
+              "player_name": null,
+              "prompt": "內應間諜：選擇 1 個要瓦解的鄰近敵方組織。",
+              "source_name": "內應間諜",
+              "count": null,
+              "min_count": null,
+              "selected_count": null,
+              "total_count": null,
+              "remaining_count": null,
+              "mode": null,
+              "acting_player_id": null,
+              "acting_player_name": null,
+              "played_card_name": null,
+              "target_player_id": null,
+              "target_player_name": null,
+              "region": null,
+              "free": null,
+              "ignore_distance": null,
+              "cards": [],
+              "options": [],
+              "towns": [],
+              "targets": [
+                {
+                  "id": "465e776c-3648-4db7-b4c8-79152b0c7d20::天津",
+                  "label": "紅軍｜天津",
+                  "player_id": "465e776c-3648-4db7-b4c8-79152b0c7d20",
+                  "town": "天津",
+                  "requires_self_sacrifice": false
+                }
+              ],
+              "step": "target"
+            },
+            "faction_action_used": false,
+            "action_log": [
+              "[Turn 1] 玩家 played 內應間諜"
+            ],
+            "purchase_area": [
+              "宣傳家",
+              "思想家",
+              "資助者",
+              "資本家",
+              "分神",
+              "內鬥",
+              "輿論丕變",
+              "樹立信心",
+              "臺灣奧援",
+              "乘勝追擊",
+              "企畫遊說"
+            ],
+            "purchase_area_variants": [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              {
+                "variant_index": 0,
+                "support_region": "臺灣",
+                "tier2_regions": [
+                  "東洋",
+                  "南洋"
+                ]
+              },
+              null,
+              null
+            ],
+            "purchase_area_costs": [
+              {
+                "money": 0,
+                "propaganda": 3
+              },
+              {
+                "money": 0,
+                "propaganda": 5
+              },
+              {
+                "money": 2,
+                "propaganda": 1
+              },
+              {
+                "money": 3,
+                "propaganda": 2
+              },
+              {
+                "money": 0,
+                "propaganda": 0
+              },
+              {
+                "money": 0,
+                "propaganda": 0
+              },
+              {
+                "money": 0,
+                "propaganda": 3
+              },
+              {
+                "money": 2,
+                "propaganda": 1
+              },
+              {
+                "money": 1,
+                "propaganda": 2
+              },
+              {
+                "money": 2,
+                "propaganda": 0
+              },
+              {
+                "money": 1,
+                "propaganda": 2
+              }
+            ],
+            "purchase_area_payments": [
+              {
+                "money": 0,
+                "propaganda": 3
+              },
+              {
+                "money": 0,
+                "propaganda": 5
+              },
+              {
+                "money": 2,
+                "propaganda": 1
+              },
+              {
+                "money": 3,
+                "propaganda": 2
+              },
+              {
+                "money": 0,
+                "propaganda": 0
+              },
+              {
+                "money": 0,
+                "propaganda": 0
+              },
+              {
+                "money": 0,
+                "propaganda": 3
+              },
+              {
+                "money": 2,
+                "propaganda": 1
+              },
+              {
+                "money": 1,
+                "propaganda": 2
+              },
+              {
+                "money": 2,
+                "propaganda": 0
+              },
+              {
+                "money": 1,
+                "propaganda": 2
+              }
+            ],
+            "purchase_area_affordable": [
+              false,
+              false,
+              false,
+              false,
+              true,
+              true,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "purchase_payment_policy": {
+              "type": "propaganda_then_money_shortfall",
+              "active": false,
+              "ability_name": null,
+              "eligible_cost": "propaganda",
+              "allocation_scope": "batch"
+            },
+            "static_purchase_supply": {
+              "宣傳家": 15,
+              "思想家": 15,
+              "資助者": 15,
+              "資本家": 15,
+              "分神": 30,
+              "內鬥": 20
+            },
+            "map": {
+              "towns": {
+                "北京": [
+                  {
+                    "player": "玩家",
+                    "count": 1,
+                    "faction": "taiwan_green"
+                  }
+                ],
+                "天津": [
+                  {
+                    "player": "紅軍",
+                    "count": 1,
+                    "faction": "red_army"
+                  }
+                ]
+              },
+              "shared_access": {},
+              "legal_organization_moves": {}
+            },
+            "players": [
+              {
+                "id": "123b7337-3bac-462d-9e0c-8bce1a3c386b",
+                "name": "玩家",
+                "faction": "taiwan_green",
+                "base": "北京",
+                "resources": {
+                  "money": 0,
+                  "propaganda": 0
+                },
+                "moves_left": 0,
+                "hand": [],
+                "hand_variants": [],
+                "hand_action_legality": [],
+                "deck_count": 5,
+                "discard_count": 1,
+                "discard_pile": [
+                  "內應間諜"
+                ],
+                "discard_variants": [
+                  null
+                ],
+                "organization_counts": {
+                  "total": 1,
+                  "inside_wall": 1,
+                  "outside_wall": 0
+                },
+                "orgs": {
+                  "北京": 1
+                }
+              },
+              {
+                "id": "465e776c-3648-4db7-b4c8-79152b0c7d20",
+                "name": "紅軍",
+                "faction": "red_army",
+                "base": "西安",
+                "resources": {
+                  "money": 0,
+                  "propaganda": 0
+                },
+                "moves_left": 0,
+                "hand": [
+                  "未知手牌",
+                  "未知手牌",
+                  "未知手牌",
+                  "未知手牌",
+                  "未知手牌"
+                ],
+                "hand_variants": [
+                  null,
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                "hand_action_legality": [
+                  null,
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                "deck_count": 6,
+                "discard_count": 0,
+                "discard_pile": [],
+                "discard_variants": [],
+                "organization_counts": {
+                  "total": 1,
+                  "inside_wall": 1,
+                  "outside_wall": 0
+                },
+                "orgs": {
+                  "天津": 1
+                }
+              }
+            ]
+          }
+        },
+        "enemy_orgs_after": {}
+      }
+    },
+    {
+      "name": "multi_target_setup_succeeded",
+      "ok": true,
+      "detail": {
+        "success": true,
+        "game_id": "4de8cc4b-84a4-42a9-9c65-3830e1aebcbe",
+        "player_id": "e90b4ecc-cabd-4bf7-ae6b-c7fe0187ee70",
+        "url": "/?game_id=4de8cc4b-84a4-42a9-9c65-3830e1aebcbe&player_id=e90b4ecc-cabd-4bf7-ae6b-c7fe0187ee70",
+        "play_result": {
+          "success": true,
+          "pending_choice": true,
+          "tier": 3,
+          "matched_rulers": [],
+          "effect_type": "interactive_dissolve_many_near",
+          "effect_text": "瓦解己方組織1格內的2個對手組織。"
+        },
+        "pre_play_state": {
+          "turn": 1,
+          "game_phase": "main",
+          "turn_phase": "action",
+          "winner": null,
+          "co_winners": [],
+          "hk_free_base_relocation": false,
+          "current_player": "玩家",
+          "active_eras": [],
+          "active_era_details": [],
+          "my_era_stage": {
+            "id": "rebels",
+            "name": "[反賊]公知世代的終結",
+            "summary_text": "言論相對自由的十年結束了 新的領導人要求網信辦嚴控網路輿論",
+            "trigger_text": "[寒冬將至新芽始生]反賊在牆內擁有至少4個有效組織",
+            "success_text": "[互聯網管控全面化]反賊此後無法再無視距離建立牆內組織。",
+            "fail_text": "[反賊結社潛入地下]反賊在回合中建立至少3個組織，則當回合可再抽1張牌。持續至遊戲結束。",
+            "duration_text": "持續至遊戲結束",
+            "remaining": null,
+            "minimized": false,
+            "active": false,
+            "achieved": false
+          },
+          "era_notification": null,
+          "current_event": {
+            "id": "quiet_times",
+            "name": "歲月靜好",
+            "type": "idle",
+            "trigger": {},
+            "success": {},
+            "failure": {},
+            "effect": {},
+            "progress": {
+              "count": 0,
+              "required": 0,
+              "succeeded": true,
+              "settled": true,
+              "status": "idle"
+            },
+            "status": "idle",
+            "result_text": "本次事件無效果",
+            "trigger_text": "無",
+            "success_text": "無",
+            "failure_text": "無",
+            "effect_text": "無"
+          },
+          "event_deck_count": 19,
+          "red_army_action_count": 0,
+          "red_army_action_limit": 1,
+          "red_army_base_build_blocks": [],
+          "pending_topdeck_uses": 0,
+          "topdeck_candidates_count": 0,
+          "event_discard_count": 1,
+          "event_modifiers": [],
+          "market_mode": "all_cards",
+          "pending_base_choices": [],
+          "pending_choice": null,
+          "faction_action_used": false,
+          "action_log": [
+            "[Turn 1] Event drawn: 全國人大召開"
+          ],
+          "purchase_area": [
+            "宣傳家",
+            "思想家",
+            "資助者",
+            "資本家",
+            "分神",
+            "內鬥",
+            "交通經驗丙",
+            "離間",
+            "擴大戰果",
+            "樹立信心",
+            "印度奧援"
+          ],
+          "purchase_area_variants": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            {
+              "variant_index": 1,
+              "support_region": "印度",
+              "tier2_regions": [
+                "天方",
+                "北國"
+              ]
+            }
+          ],
+          "purchase_area_costs": [
+            {
+              "money": 0,
+              "propaganda": 3
+            },
+            {
+              "money": 0,
+              "propaganda": 5
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 3,
+              "propaganda": 2
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 1,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 4
+            },
+            {
+              "money": 4,
+              "propaganda": 0
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 1,
+              "propaganda": 2
+            }
+          ],
+          "purchase_area_payments": [
+            {
+              "money": 0,
+              "propaganda": 3
+            },
+            {
+              "money": 0,
+              "propaganda": 5
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 3,
+              "propaganda": 2
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 1,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 4
+            },
+            {
+              "money": 4,
+              "propaganda": 0
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 1,
+              "propaganda": 2
+            }
+          ],
+          "purchase_area_affordable": [
+            false,
+            false,
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "purchase_payment_policy": {
+            "type": "propaganda_then_money_shortfall",
+            "active": false,
+            "ability_name": null,
+            "eligible_cost": "propaganda",
+            "allocation_scope": "batch"
+          },
+          "static_purchase_supply": {
+            "宣傳家": 15,
+            "思想家": 15,
+            "資助者": 15,
+            "資本家": 15,
+            "分神": 30,
+            "內鬥": 20
+          },
+          "map": {
+            "towns": {
+              "北京": [
+                {
+                  "player": "玩家",
+                  "count": 1,
+                  "faction": "liberals"
+                }
+              ],
+              "天津": [
+                {
+                  "player": "紅軍",
+                  "count": 1,
+                  "faction": "red_army"
+                }
+              ],
+              "石家莊": [
+                {
+                  "player": "紅軍",
+                  "count": 1,
+                  "faction": "red_army"
+                }
+              ]
+            },
+            "shared_access": {},
+            "legal_organization_moves": {}
+          },
+          "players": [
+            {
+              "id": "e90b4ecc-cabd-4bf7-ae6b-c7fe0187ee70",
+              "name": "玩家",
+              "faction": "liberals",
+              "base": "北京",
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "moves_left": 0,
+              "hand": [
+                "北國奧援"
+              ],
+              "hand_variants": [
+                {
+                  "variant_index": 0,
+                  "support_region": "北國",
+                  "tier2_regions": [
+                    "歐洲",
+                    "東洋"
+                  ]
+                }
+              ],
+              "hand_action_legality": [
+                {
+                  "playable": true
+                }
+              ],
+              "deck_count": 5,
+              "discard_count": 0,
+              "discard_pile": [],
+              "discard_variants": [],
+              "organization_counts": {
+                "total": 1,
+                "inside_wall": 1,
+                "outside_wall": 0
+              },
+              "orgs": {
+                "北京": 1
+              }
+            },
+            {
+              "id": "e77a1c10-359c-47b0-8d66-a1179d03b0c0",
+              "name": "紅軍",
+              "faction": "red_army",
+              "base": "西安",
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "moves_left": 0,
+              "hand": [
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌"
+              ],
+              "hand_variants": [
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "hand_action_legality": [
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "deck_count": 6,
+              "discard_count": 0,
+              "discard_pile": [],
+              "discard_variants": [],
+              "organization_counts": {
+                "total": 2,
+                "inside_wall": 2,
+                "outside_wall": 0
+              },
+              "orgs": {
+                "天津": 1,
+                "石家莊": 1
+              }
+            }
+          ]
+        },
+        "state": {
+          "turn": 1,
+          "game_phase": "main",
+          "turn_phase": "action",
+          "winner": null,
+          "co_winners": [],
+          "hk_free_base_relocation": false,
+          "current_player": "玩家",
+          "active_eras": [],
+          "active_era_details": [],
+          "my_era_stage": {
+            "id": "rebels",
+            "name": "[反賊]公知世代的終結",
+            "summary_text": "言論相對自由的十年結束了 新的領導人要求網信辦嚴控網路輿論",
+            "trigger_text": "[寒冬將至新芽始生]反賊在牆內擁有至少4個有效組織",
+            "success_text": "[互聯網管控全面化]反賊此後無法再無視距離建立牆內組織。",
+            "fail_text": "[反賊結社潛入地下]反賊在回合中建立至少3個組織，則當回合可再抽1張牌。持續至遊戲結束。",
+            "duration_text": "持續至遊戲結束",
+            "remaining": null,
+            "minimized": false,
+            "active": false,
+            "achieved": false
+          },
+          "era_notification": null,
+          "current_event": {
+            "id": "quiet_times",
+            "name": "歲月靜好",
+            "type": "idle",
+            "trigger": {},
+            "success": {},
+            "failure": {},
+            "effect": {},
+            "progress": {
+              "count": 0,
+              "required": 0,
+              "succeeded": true,
+              "settled": true,
+              "status": "idle"
+            },
+            "status": "idle",
+            "result_text": "本次事件無效果",
+            "trigger_text": "無",
+            "success_text": "無",
+            "failure_text": "無",
+            "effect_text": "無"
+          },
+          "event_deck_count": 19,
+          "red_army_action_count": 0,
+          "red_army_action_limit": 1,
+          "red_army_base_build_blocks": [],
+          "pending_topdeck_uses": 0,
+          "topdeck_candidates_count": 0,
+          "event_discard_count": 1,
+          "event_modifiers": [],
+          "market_mode": "all_cards",
+          "pending_base_choices": [],
+          "pending_choice": {
+            "choice_id": "57e44eb16dce4f8c8e74ec71f91578b5",
+            "type": "support_flow_choice",
+            "choice_key": "support_interaction",
+            "interaction_kind": "dissolve_organization",
+            "remaining_builds": null,
+            "queueable_card_names": [],
+            "cancellable": true,
+            "player_id": "e90b4ecc-cabd-4bf7-ae6b-c7fe0187ee70",
+            "player_name": null,
+            "prompt": "北國奧援：已選 0/2，選擇 1 個要瓦解的鄰近敵方組織。",
+            "source_name": "北國奧援",
+            "count": null,
+            "min_count": null,
+            "selected_count": 0,
+            "total_count": 2,
+            "remaining_count": 2,
+            "mode": null,
+            "acting_player_id": null,
+            "acting_player_name": null,
+            "played_card_name": null,
+            "target_player_id": null,
+            "target_player_name": null,
+            "region": null,
+            "free": null,
+            "ignore_distance": null,
+            "cards": [],
+            "options": [],
+            "towns": [],
+            "targets": [
+              {
+                "id": "e77a1c10-359c-47b0-8d66-a1179d03b0c0::天津",
+                "label": "紅軍｜天津",
+                "player_id": "e77a1c10-359c-47b0-8d66-a1179d03b0c0",
+                "town": "天津",
+                "requires_self_sacrifice": false
+              },
+              {
+                "id": "e77a1c10-359c-47b0-8d66-a1179d03b0c0::石家莊",
+                "label": "紅軍｜石家莊",
+                "player_id": "e77a1c10-359c-47b0-8d66-a1179d03b0c0",
+                "town": "石家莊",
+                "requires_self_sacrifice": false
+              }
+            ],
+            "step": "target"
+          },
+          "faction_action_used": false,
+          "action_log": [
+            "[Turn 1] Event drawn: 全國人大召開",
+            "[Turn 1] 玩家 started interactive support resolution for 北國奧援 at tier 3",
+            "[Turn 1] 玩家 played 北國奧援"
+          ],
+          "purchase_area": [
+            "宣傳家",
+            "思想家",
+            "資助者",
+            "資本家",
+            "分神",
+            "內鬥",
+            "交通經驗丙",
+            "離間",
+            "擴大戰果",
+            "樹立信心",
+            "印度奧援"
+          ],
+          "purchase_area_variants": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            {
+              "variant_index": 1,
+              "support_region": "印度",
+              "tier2_regions": [
+                "天方",
+                "北國"
+              ]
+            }
+          ],
+          "purchase_area_costs": [
+            {
+              "money": 0,
+              "propaganda": 3
+            },
+            {
+              "money": 0,
+              "propaganda": 5
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 3,
+              "propaganda": 2
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 1,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 4
+            },
+            {
+              "money": 4,
+              "propaganda": 0
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 1,
+              "propaganda": 2
+            }
+          ],
+          "purchase_area_payments": [
+            {
+              "money": 0,
+              "propaganda": 3
+            },
+            {
+              "money": 0,
+              "propaganda": 5
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 3,
+              "propaganda": 2
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 1,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 4
+            },
+            {
+              "money": 4,
+              "propaganda": 0
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 1,
+              "propaganda": 2
+            }
+          ],
+          "purchase_area_affordable": [
+            false,
+            false,
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "purchase_payment_policy": {
+            "type": "propaganda_then_money_shortfall",
+            "active": false,
+            "ability_name": null,
+            "eligible_cost": "propaganda",
+            "allocation_scope": "batch"
+          },
+          "static_purchase_supply": {
+            "宣傳家": 15,
+            "思想家": 15,
+            "資助者": 15,
+            "資本家": 15,
+            "分神": 30,
+            "內鬥": 20
+          },
+          "map": {
+            "towns": {
+              "北京": [
+                {
+                  "player": "玩家",
+                  "count": 1,
+                  "faction": "liberals"
+                }
+              ],
+              "天津": [
+                {
+                  "player": "紅軍",
+                  "count": 1,
+                  "faction": "red_army"
+                }
+              ],
+              "石家莊": [
+                {
+                  "player": "紅軍",
+                  "count": 1,
+                  "faction": "red_army"
+                }
+              ]
+            },
+            "shared_access": {},
+            "legal_organization_moves": {}
+          },
+          "players": [
+            {
+              "id": "e90b4ecc-cabd-4bf7-ae6b-c7fe0187ee70",
+              "name": "玩家",
+              "faction": "liberals",
+              "base": "北京",
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "moves_left": 0,
+              "hand": [],
+              "hand_variants": [],
+              "hand_action_legality": [],
+              "deck_count": 5,
+              "discard_count": 1,
+              "discard_pile": [
+                "北國奧援"
+              ],
+              "discard_variants": [
+                {
+                  "variant_index": 0,
+                  "support_region": "北國",
+                  "tier2_regions": [
+                    "歐洲",
+                    "東洋"
+                  ]
+                }
+              ],
+              "organization_counts": {
+                "total": 1,
+                "inside_wall": 1,
+                "outside_wall": 0
+              },
+              "orgs": {
+                "北京": 1
+              }
+            },
+            {
+              "id": "e77a1c10-359c-47b0-8d66-a1179d03b0c0",
+              "name": "紅軍",
+              "faction": "red_army",
+              "base": "西安",
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "moves_left": 0,
+              "hand": [
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌"
+              ],
+              "hand_variants": [
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "hand_action_legality": [
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "deck_count": 6,
+              "discard_count": 0,
+              "discard_pile": [],
+              "discard_variants": [],
+              "organization_counts": {
+                "total": 2,
+                "inside_wall": 2,
+                "outside_wall": 0
+              },
+              "orgs": {
+                "天津": 1,
+                "石家莊": 1
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "multi_target_shows_both_legal_targets_and_zero_of_total_count",
+      "ok": true,
+      "detail": {
+        "skullCount": 2,
+        "cancelVisible": true,
+        "cancelEnabled": true,
+        "cancelText": "取消瓦解（放棄本次已選目標）",
+        "dissolveBtnDisabled": true,
+        "dissolveHintText": "已選 0/2 個瓦解目標：在地圖上點選 💀 標示的組織，再按下方按鈕確認。",
+        "supportChoiceHighlight": {
+          "choice_id": "57e44eb16dce4f8c8e74ec71f91578b5",
+          "type": "support_flow_choice",
+          "choice_key": "support_interaction",
+          "interaction_kind": "dissolve_organization",
+          "remaining_builds": null,
+          "queueable_card_names": [],
+          "cancellable": true,
+          "player_id": "e90b4ecc-cabd-4bf7-ae6b-c7fe0187ee70",
+          "player_name": null,
+          "prompt": "北國奧援：已選 0/2，選擇 1 個要瓦解的鄰近敵方組織。",
+          "source_name": "北國奧援",
+          "count": null,
+          "min_count": null,
+          "selected_count": 0,
+          "total_count": 2,
+          "remaining_count": 2,
+          "mode": null,
+          "acting_player_id": null,
+          "acting_player_name": null,
+          "played_card_name": null,
+          "target_player_id": null,
+          "target_player_name": null,
+          "region": null,
+          "free": null,
+          "ignore_distance": null,
+          "cards": [],
+          "options": [],
+          "towns": [],
+          "targets": [
+            {
+              "id": "e77a1c10-359c-47b0-8d66-a1179d03b0c0::天津",
+              "label": "紅軍｜天津",
+              "player_id": "e77a1c10-359c-47b0-8d66-a1179d03b0c0",
+              "town": "天津",
+              "requires_self_sacrifice": false
+            },
+            {
+              "id": "e77a1c10-359c-47b0-8d66-a1179d03b0c0::石家莊",
+              "label": "紅軍｜石家莊",
+              "player_id": "e77a1c10-359c-47b0-8d66-a1179d03b0c0",
+              "town": "石家莊",
+              "requires_self_sacrifice": false
+            }
+          ],
+          "step": "target"
+        },
+        "lastGameState": {
+          "turn": 1,
+          "game_phase": "main",
+          "turn_phase": "action",
+          "winner": null,
+          "co_winners": [],
+          "hk_free_base_relocation": false,
+          "current_player": "玩家",
+          "active_eras": [],
+          "active_era_details": [],
+          "my_era_stage": {
+            "id": "rebels",
+            "name": "[反賊]公知世代的終結",
+            "summary_text": "言論相對自由的十年結束了 新的領導人要求網信辦嚴控網路輿論",
+            "trigger_text": "[寒冬將至新芽始生]反賊在牆內擁有至少4個有效組織",
+            "success_text": "[互聯網管控全面化]反賊此後無法再無視距離建立牆內組織。",
+            "fail_text": "[反賊結社潛入地下]反賊在回合中建立至少3個組織，則當回合可再抽1張牌。持續至遊戲結束。",
+            "duration_text": "持續至遊戲結束",
+            "remaining": null,
+            "minimized": false,
+            "active": false,
+            "achieved": false
+          },
+          "era_notification": null,
+          "current_event": {
+            "id": "quiet_times",
+            "name": "歲月靜好",
+            "type": "idle",
+            "trigger": {},
+            "success": {},
+            "failure": {},
+            "effect": {},
+            "progress": {
+              "count": 0,
+              "required": 0,
+              "succeeded": true,
+              "settled": true,
+              "status": "idle"
+            },
+            "status": "idle",
+            "result_text": "本次事件無效果",
+            "trigger_text": "無",
+            "success_text": "無",
+            "failure_text": "無",
+            "effect_text": "無"
+          },
+          "event_deck_count": 19,
+          "red_army_action_count": 0,
+          "red_army_action_limit": 1,
+          "red_army_base_build_blocks": [],
+          "pending_topdeck_uses": 0,
+          "topdeck_candidates_count": 0,
+          "event_discard_count": 1,
+          "event_modifiers": [],
+          "market_mode": "all_cards",
+          "pending_base_choices": [],
+          "pending_choice": {
+            "choice_id": "57e44eb16dce4f8c8e74ec71f91578b5",
+            "type": "support_flow_choice",
+            "choice_key": "support_interaction",
+            "interaction_kind": "dissolve_organization",
+            "remaining_builds": null,
+            "queueable_card_names": [],
+            "cancellable": true,
+            "player_id": "e90b4ecc-cabd-4bf7-ae6b-c7fe0187ee70",
+            "player_name": null,
+            "prompt": "北國奧援：已選 0/2，選擇 1 個要瓦解的鄰近敵方組織。",
+            "source_name": "北國奧援",
+            "count": null,
+            "min_count": null,
+            "selected_count": 0,
+            "total_count": 2,
+            "remaining_count": 2,
+            "mode": null,
+            "acting_player_id": null,
+            "acting_player_name": null,
+            "played_card_name": null,
+            "target_player_id": null,
+            "target_player_name": null,
+            "region": null,
+            "free": null,
+            "ignore_distance": null,
+            "cards": [],
+            "options": [],
+            "towns": [],
+            "targets": [
+              {
+                "id": "e77a1c10-359c-47b0-8d66-a1179d03b0c0::天津",
+                "label": "紅軍｜天津",
+                "player_id": "e77a1c10-359c-47b0-8d66-a1179d03b0c0",
+                "town": "天津",
+                "requires_self_sacrifice": false
+              },
+              {
+                "id": "e77a1c10-359c-47b0-8d66-a1179d03b0c0::石家莊",
+                "label": "紅軍｜石家莊",
+                "player_id": "e77a1c10-359c-47b0-8d66-a1179d03b0c0",
+                "town": "石家莊",
+                "requires_self_sacrifice": false
+              }
+            ],
+            "step": "target"
+          },
+          "faction_action_used": false,
+          "action_log": [
+            "[Turn 1] Event drawn: 全國人大召開",
+            "[Turn 1] 玩家 started interactive support resolution for 北國奧援 at tier 3",
+            "[Turn 1] 玩家 played 北國奧援"
+          ],
+          "purchase_area": [
+            "宣傳家",
+            "思想家",
+            "資助者",
+            "資本家",
+            "分神",
+            "內鬥",
+            "交通經驗丙",
+            "離間",
+            "擴大戰果",
+            "樹立信心",
+            "印度奧援"
+          ],
+          "purchase_area_variants": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            {
+              "variant_index": 1,
+              "support_region": "印度",
+              "tier2_regions": [
+                "天方",
+                "北國"
+              ]
+            }
+          ],
+          "purchase_area_costs": [
+            {
+              "money": 0,
+              "propaganda": 3
+            },
+            {
+              "money": 0,
+              "propaganda": 5
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 3,
+              "propaganda": 2
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 1,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 4
+            },
+            {
+              "money": 4,
+              "propaganda": 0
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 1,
+              "propaganda": 2
+            }
+          ],
+          "purchase_area_payments": [
+            {
+              "money": 0,
+              "propaganda": 3
+            },
+            {
+              "money": 0,
+              "propaganda": 5
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 3,
+              "propaganda": 2
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 1,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 4
+            },
+            {
+              "money": 4,
+              "propaganda": 0
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 1,
+              "propaganda": 2
+            }
+          ],
+          "purchase_area_affordable": [
+            false,
+            false,
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "purchase_payment_policy": {
+            "type": "propaganda_then_money_shortfall",
+            "active": false,
+            "ability_name": null,
+            "eligible_cost": "propaganda",
+            "allocation_scope": "batch"
+          },
+          "static_purchase_supply": {
+            "宣傳家": 15,
+            "思想家": 15,
+            "資助者": 15,
+            "資本家": 15,
+            "分神": 30,
+            "內鬥": 20
+          },
+          "map": {
+            "towns": {
+              "北京": [
+                {
+                  "player": "玩家",
+                  "count": 1,
+                  "faction": "liberals"
+                }
+              ],
+              "天津": [
+                {
+                  "player": "紅軍",
+                  "count": 1,
+                  "faction": "red_army"
+                }
+              ],
+              "石家莊": [
+                {
+                  "player": "紅軍",
+                  "count": 1,
+                  "faction": "red_army"
+                }
+              ]
+            },
+            "shared_access": {},
+            "legal_organization_moves": {}
+          },
+          "players": [
+            {
+              "id": "e90b4ecc-cabd-4bf7-ae6b-c7fe0187ee70",
+              "name": "玩家",
+              "faction": "liberals",
+              "base": "北京",
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "moves_left": 0,
+              "hand": [],
+              "hand_variants": [],
+              "hand_action_legality": [],
+              "deck_count": 5,
+              "discard_count": 1,
+              "discard_pile": [
+                "北國奧援"
+              ],
+              "discard_variants": [
+                {
+                  "variant_index": 0,
+                  "support_region": "北國",
+                  "tier2_regions": [
+                    "歐洲",
+                    "東洋"
+                  ]
+                }
+              ],
+              "organization_counts": {
+                "total": 1,
+                "inside_wall": 1,
+                "outside_wall": 0
+              },
+              "orgs": {
+                "北京": 1
+              }
+            },
+            {
+              "id": "e77a1c10-359c-47b0-8d66-a1179d03b0c0",
+              "name": "紅軍",
+              "faction": "red_army",
+              "base": "西安",
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "moves_left": 0,
+              "hand": [
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌"
+              ],
+              "hand_variants": [
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "hand_action_legality": [
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "deck_count": 6,
+              "discard_count": 0,
+              "discard_pile": [],
+              "discard_variants": [],
+              "organization_counts": {
+                "total": 2,
+                "inside_wall": 2,
+                "outside_wall": 0
+              },
+              "orgs": {
+                "天津": 1,
+                "石家莊": 1
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "multi_target_selecting_a_target_shows_count_but_does_not_dissolve_yet",
+      "ok": true,
+      "detail": {
+        "skullCount": 2,
+        "cancelVisible": true,
+        "cancelEnabled": true,
+        "cancelText": "取消瓦解（放棄本次已選目標）",
+        "dissolveBtnDisabled": false,
+        "dissolveHintText": "已選 0/2 個瓦解目標。確認瓦解 天津 的組織？（北國奧援）點擊地圖上其他 💀 目標可改選，按上方按鈕才會真正執行；按「取消瓦解」可放棄本次所有已選目標。",
+        "supportChoiceHighlight": {
+          "choice_id": "57e44eb16dce4f8c8e74ec71f91578b5",
+          "type": "support_flow_choice",
+          "choice_key": "support_interaction",
+          "interaction_kind": "dissolve_organization",
+          "remaining_builds": null,
+          "queueable_card_names": [],
+          "cancellable": true,
+          "player_id": "e90b4ecc-cabd-4bf7-ae6b-c7fe0187ee70",
+          "player_name": null,
+          "prompt": "北國奧援：已選 0/2，選擇 1 個要瓦解的鄰近敵方組織。",
+          "source_name": "北國奧援",
+          "count": null,
+          "min_count": null,
+          "selected_count": 0,
+          "total_count": 2,
+          "remaining_count": 2,
+          "mode": null,
+          "acting_player_id": null,
+          "acting_player_name": null,
+          "played_card_name": null,
+          "target_player_id": null,
+          "target_player_name": null,
+          "region": null,
+          "free": null,
+          "ignore_distance": null,
+          "cards": [],
+          "options": [],
+          "towns": [],
+          "targets": [
+            {
+              "id": "e77a1c10-359c-47b0-8d66-a1179d03b0c0::天津",
+              "label": "紅軍｜天津",
+              "player_id": "e77a1c10-359c-47b0-8d66-a1179d03b0c0",
+              "town": "天津",
+              "requires_self_sacrifice": false
+            },
+            {
+              "id": "e77a1c10-359c-47b0-8d66-a1179d03b0c0::石家莊",
+              "label": "紅軍｜石家莊",
+              "player_id": "e77a1c10-359c-47b0-8d66-a1179d03b0c0",
+              "town": "石家莊",
+              "requires_self_sacrifice": false
+            }
+          ],
+          "step": "target"
+        },
+        "lastGameState": {
+          "turn": 1,
+          "game_phase": "main",
+          "turn_phase": "action",
+          "winner": null,
+          "co_winners": [],
+          "hk_free_base_relocation": false,
+          "current_player": "玩家",
+          "active_eras": [],
+          "active_era_details": [],
+          "my_era_stage": {
+            "id": "rebels",
+            "name": "[反賊]公知世代的終結",
+            "summary_text": "言論相對自由的十年結束了 新的領導人要求網信辦嚴控網路輿論",
+            "trigger_text": "[寒冬將至新芽始生]反賊在牆內擁有至少4個有效組織",
+            "success_text": "[互聯網管控全面化]反賊此後無法再無視距離建立牆內組織。",
+            "fail_text": "[反賊結社潛入地下]反賊在回合中建立至少3個組織，則當回合可再抽1張牌。持續至遊戲結束。",
+            "duration_text": "持續至遊戲結束",
+            "remaining": null,
+            "minimized": false,
+            "active": false,
+            "achieved": false
+          },
+          "era_notification": null,
+          "current_event": {
+            "id": "quiet_times",
+            "name": "歲月靜好",
+            "type": "idle",
+            "trigger": {},
+            "success": {},
+            "failure": {},
+            "effect": {},
+            "progress": {
+              "count": 0,
+              "required": 0,
+              "succeeded": true,
+              "settled": true,
+              "status": "idle"
+            },
+            "status": "idle",
+            "result_text": "本次事件無效果",
+            "trigger_text": "無",
+            "success_text": "無",
+            "failure_text": "無",
+            "effect_text": "無"
+          },
+          "event_deck_count": 19,
+          "red_army_action_count": 0,
+          "red_army_action_limit": 1,
+          "red_army_base_build_blocks": [],
+          "pending_topdeck_uses": 0,
+          "topdeck_candidates_count": 0,
+          "event_discard_count": 1,
+          "event_modifiers": [],
+          "market_mode": "all_cards",
+          "pending_base_choices": [],
+          "pending_choice": {
+            "choice_id": "57e44eb16dce4f8c8e74ec71f91578b5",
+            "type": "support_flow_choice",
+            "choice_key": "support_interaction",
+            "interaction_kind": "dissolve_organization",
+            "remaining_builds": null,
+            "queueable_card_names": [],
+            "cancellable": true,
+            "player_id": "e90b4ecc-cabd-4bf7-ae6b-c7fe0187ee70",
+            "player_name": null,
+            "prompt": "北國奧援：已選 0/2，選擇 1 個要瓦解的鄰近敵方組織。",
+            "source_name": "北國奧援",
+            "count": null,
+            "min_count": null,
+            "selected_count": 0,
+            "total_count": 2,
+            "remaining_count": 2,
+            "mode": null,
+            "acting_player_id": null,
+            "acting_player_name": null,
+            "played_card_name": null,
+            "target_player_id": null,
+            "target_player_name": null,
+            "region": null,
+            "free": null,
+            "ignore_distance": null,
+            "cards": [],
+            "options": [],
+            "towns": [],
+            "targets": [
+              {
+                "id": "e77a1c10-359c-47b0-8d66-a1179d03b0c0::天津",
+                "label": "紅軍｜天津",
+                "player_id": "e77a1c10-359c-47b0-8d66-a1179d03b0c0",
+                "town": "天津",
+                "requires_self_sacrifice": false
+              },
+              {
+                "id": "e77a1c10-359c-47b0-8d66-a1179d03b0c0::石家莊",
+                "label": "紅軍｜石家莊",
+                "player_id": "e77a1c10-359c-47b0-8d66-a1179d03b0c0",
+                "town": "石家莊",
+                "requires_self_sacrifice": false
+              }
+            ],
+            "step": "target"
+          },
+          "faction_action_used": false,
+          "action_log": [
+            "[Turn 1] Event drawn: 全國人大召開",
+            "[Turn 1] 玩家 started interactive support resolution for 北國奧援 at tier 3",
+            "[Turn 1] 玩家 played 北國奧援"
+          ],
+          "purchase_area": [
+            "宣傳家",
+            "思想家",
+            "資助者",
+            "資本家",
+            "分神",
+            "內鬥",
+            "交通經驗丙",
+            "離間",
+            "擴大戰果",
+            "樹立信心",
+            "印度奧援"
+          ],
+          "purchase_area_variants": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            {
+              "variant_index": 1,
+              "support_region": "印度",
+              "tier2_regions": [
+                "天方",
+                "北國"
+              ]
+            }
+          ],
+          "purchase_area_costs": [
+            {
+              "money": 0,
+              "propaganda": 3
+            },
+            {
+              "money": 0,
+              "propaganda": 5
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 3,
+              "propaganda": 2
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 1,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 4
+            },
+            {
+              "money": 4,
+              "propaganda": 0
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 1,
+              "propaganda": 2
+            }
+          ],
+          "purchase_area_payments": [
+            {
+              "money": 0,
+              "propaganda": 3
+            },
+            {
+              "money": 0,
+              "propaganda": 5
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 3,
+              "propaganda": 2
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 1,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 4
+            },
+            {
+              "money": 4,
+              "propaganda": 0
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 1,
+              "propaganda": 2
+            }
+          ],
+          "purchase_area_affordable": [
+            false,
+            false,
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "purchase_payment_policy": {
+            "type": "propaganda_then_money_shortfall",
+            "active": false,
+            "ability_name": null,
+            "eligible_cost": "propaganda",
+            "allocation_scope": "batch"
+          },
+          "static_purchase_supply": {
+            "宣傳家": 15,
+            "思想家": 15,
+            "資助者": 15,
+            "資本家": 15,
+            "分神": 30,
+            "內鬥": 20
+          },
+          "map": {
+            "towns": {
+              "北京": [
+                {
+                  "player": "玩家",
+                  "count": 1,
+                  "faction": "liberals"
+                }
+              ],
+              "天津": [
+                {
+                  "player": "紅軍",
+                  "count": 1,
+                  "faction": "red_army"
+                }
+              ],
+              "石家莊": [
+                {
+                  "player": "紅軍",
+                  "count": 1,
+                  "faction": "red_army"
+                }
+              ]
+            },
+            "shared_access": {},
+            "legal_organization_moves": {}
+          },
+          "players": [
+            {
+              "id": "e90b4ecc-cabd-4bf7-ae6b-c7fe0187ee70",
+              "name": "玩家",
+              "faction": "liberals",
+              "base": "北京",
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "moves_left": 0,
+              "hand": [],
+              "hand_variants": [],
+              "hand_action_legality": [],
+              "deck_count": 5,
+              "discard_count": 1,
+              "discard_pile": [
+                "北國奧援"
+              ],
+              "discard_variants": [
+                {
+                  "variant_index": 0,
+                  "support_region": "北國",
+                  "tier2_regions": [
+                    "歐洲",
+                    "東洋"
+                  ]
+                }
+              ],
+              "organization_counts": {
+                "total": 1,
+                "inside_wall": 1,
+                "outside_wall": 0
+              },
+              "orgs": {
+                "北京": 1
+              }
+            },
+            {
+              "id": "e77a1c10-359c-47b0-8d66-a1179d03b0c0",
+              "name": "紅軍",
+              "faction": "red_army",
+              "base": "西安",
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "moves_left": 0,
+              "hand": [
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌"
+              ],
+              "hand_variants": [
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "hand_action_legality": [
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "deck_count": 6,
+              "discard_count": 0,
+              "discard_pile": [],
+              "discard_variants": [],
+              "organization_counts": {
+                "total": 2,
+                "inside_wall": 2,
+                "outside_wall": 0
+              },
+              "orgs": {
+                "天津": 1,
+                "石家莊": 1
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "multi_target_selection_can_change_freely_before_confirm",
+      "ok": true,
+      "detail": {
+        "skullCount": 2,
+        "cancelVisible": true,
+        "cancelEnabled": true,
+        "cancelText": "取消瓦解（放棄本次已選目標）",
+        "dissolveBtnDisabled": false,
+        "dissolveHintText": "已選 0/2 個瓦解目標。確認瓦解 石家莊 的組織？（北國奧援）點擊地圖上其他 💀 目標可改選，按上方按鈕才會真正執行；按「取消瓦解」可放棄本次所有已選目標。",
+        "supportChoiceHighlight": {
+          "choice_id": "57e44eb16dce4f8c8e74ec71f91578b5",
+          "type": "support_flow_choice",
+          "choice_key": "support_interaction",
+          "interaction_kind": "dissolve_organization",
+          "remaining_builds": null,
+          "queueable_card_names": [],
+          "cancellable": true,
+          "player_id": "e90b4ecc-cabd-4bf7-ae6b-c7fe0187ee70",
+          "player_name": null,
+          "prompt": "北國奧援：已選 0/2，選擇 1 個要瓦解的鄰近敵方組織。",
+          "source_name": "北國奧援",
+          "count": null,
+          "min_count": null,
+          "selected_count": 0,
+          "total_count": 2,
+          "remaining_count": 2,
+          "mode": null,
+          "acting_player_id": null,
+          "acting_player_name": null,
+          "played_card_name": null,
+          "target_player_id": null,
+          "target_player_name": null,
+          "region": null,
+          "free": null,
+          "ignore_distance": null,
+          "cards": [],
+          "options": [],
+          "towns": [],
+          "targets": [
+            {
+              "id": "e77a1c10-359c-47b0-8d66-a1179d03b0c0::天津",
+              "label": "紅軍｜天津",
+              "player_id": "e77a1c10-359c-47b0-8d66-a1179d03b0c0",
+              "town": "天津",
+              "requires_self_sacrifice": false
+            },
+            {
+              "id": "e77a1c10-359c-47b0-8d66-a1179d03b0c0::石家莊",
+              "label": "紅軍｜石家莊",
+              "player_id": "e77a1c10-359c-47b0-8d66-a1179d03b0c0",
+              "town": "石家莊",
+              "requires_self_sacrifice": false
+            }
+          ],
+          "step": "target"
+        },
+        "lastGameState": {
+          "turn": 1,
+          "game_phase": "main",
+          "turn_phase": "action",
+          "winner": null,
+          "co_winners": [],
+          "hk_free_base_relocation": false,
+          "current_player": "玩家",
+          "active_eras": [],
+          "active_era_details": [],
+          "my_era_stage": {
+            "id": "rebels",
+            "name": "[反賊]公知世代的終結",
+            "summary_text": "言論相對自由的十年結束了 新的領導人要求網信辦嚴控網路輿論",
+            "trigger_text": "[寒冬將至新芽始生]反賊在牆內擁有至少4個有效組織",
+            "success_text": "[互聯網管控全面化]反賊此後無法再無視距離建立牆內組織。",
+            "fail_text": "[反賊結社潛入地下]反賊在回合中建立至少3個組織，則當回合可再抽1張牌。持續至遊戲結束。",
+            "duration_text": "持續至遊戲結束",
+            "remaining": null,
+            "minimized": false,
+            "active": false,
+            "achieved": false
+          },
+          "era_notification": null,
+          "current_event": {
+            "id": "quiet_times",
+            "name": "歲月靜好",
+            "type": "idle",
+            "trigger": {},
+            "success": {},
+            "failure": {},
+            "effect": {},
+            "progress": {
+              "count": 0,
+              "required": 0,
+              "succeeded": true,
+              "settled": true,
+              "status": "idle"
+            },
+            "status": "idle",
+            "result_text": "本次事件無效果",
+            "trigger_text": "無",
+            "success_text": "無",
+            "failure_text": "無",
+            "effect_text": "無"
+          },
+          "event_deck_count": 19,
+          "red_army_action_count": 0,
+          "red_army_action_limit": 1,
+          "red_army_base_build_blocks": [],
+          "pending_topdeck_uses": 0,
+          "topdeck_candidates_count": 0,
+          "event_discard_count": 1,
+          "event_modifiers": [],
+          "market_mode": "all_cards",
+          "pending_base_choices": [],
+          "pending_choice": {
+            "choice_id": "57e44eb16dce4f8c8e74ec71f91578b5",
+            "type": "support_flow_choice",
+            "choice_key": "support_interaction",
+            "interaction_kind": "dissolve_organization",
+            "remaining_builds": null,
+            "queueable_card_names": [],
+            "cancellable": true,
+            "player_id": "e90b4ecc-cabd-4bf7-ae6b-c7fe0187ee70",
+            "player_name": null,
+            "prompt": "北國奧援：已選 0/2，選擇 1 個要瓦解的鄰近敵方組織。",
+            "source_name": "北國奧援",
+            "count": null,
+            "min_count": null,
+            "selected_count": 0,
+            "total_count": 2,
+            "remaining_count": 2,
+            "mode": null,
+            "acting_player_id": null,
+            "acting_player_name": null,
+            "played_card_name": null,
+            "target_player_id": null,
+            "target_player_name": null,
+            "region": null,
+            "free": null,
+            "ignore_distance": null,
+            "cards": [],
+            "options": [],
+            "towns": [],
+            "targets": [
+              {
+                "id": "e77a1c10-359c-47b0-8d66-a1179d03b0c0::天津",
+                "label": "紅軍｜天津",
+                "player_id": "e77a1c10-359c-47b0-8d66-a1179d03b0c0",
+                "town": "天津",
+                "requires_self_sacrifice": false
+              },
+              {
+                "id": "e77a1c10-359c-47b0-8d66-a1179d03b0c0::石家莊",
+                "label": "紅軍｜石家莊",
+                "player_id": "e77a1c10-359c-47b0-8d66-a1179d03b0c0",
+                "town": "石家莊",
+                "requires_self_sacrifice": false
+              }
+            ],
+            "step": "target"
+          },
+          "faction_action_used": false,
+          "action_log": [
+            "[Turn 1] Event drawn: 全國人大召開",
+            "[Turn 1] 玩家 started interactive support resolution for 北國奧援 at tier 3",
+            "[Turn 1] 玩家 played 北國奧援"
+          ],
+          "purchase_area": [
+            "宣傳家",
+            "思想家",
+            "資助者",
+            "資本家",
+            "分神",
+            "內鬥",
+            "交通經驗丙",
+            "離間",
+            "擴大戰果",
+            "樹立信心",
+            "印度奧援"
+          ],
+          "purchase_area_variants": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            {
+              "variant_index": 1,
+              "support_region": "印度",
+              "tier2_regions": [
+                "天方",
+                "北國"
+              ]
+            }
+          ],
+          "purchase_area_costs": [
+            {
+              "money": 0,
+              "propaganda": 3
+            },
+            {
+              "money": 0,
+              "propaganda": 5
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 3,
+              "propaganda": 2
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 1,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 4
+            },
+            {
+              "money": 4,
+              "propaganda": 0
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 1,
+              "propaganda": 2
+            }
+          ],
+          "purchase_area_payments": [
+            {
+              "money": 0,
+              "propaganda": 3
+            },
+            {
+              "money": 0,
+              "propaganda": 5
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 3,
+              "propaganda": 2
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 1,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 4
+            },
+            {
+              "money": 4,
+              "propaganda": 0
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 1,
+              "propaganda": 2
+            }
+          ],
+          "purchase_area_affordable": [
+            false,
+            false,
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "purchase_payment_policy": {
+            "type": "propaganda_then_money_shortfall",
+            "active": false,
+            "ability_name": null,
+            "eligible_cost": "propaganda",
+            "allocation_scope": "batch"
+          },
+          "static_purchase_supply": {
+            "宣傳家": 15,
+            "思想家": 15,
+            "資助者": 15,
+            "資本家": 15,
+            "分神": 30,
+            "內鬥": 20
+          },
+          "map": {
+            "towns": {
+              "北京": [
+                {
+                  "player": "玩家",
+                  "count": 1,
+                  "faction": "liberals"
+                }
+              ],
+              "天津": [
+                {
+                  "player": "紅軍",
+                  "count": 1,
+                  "faction": "red_army"
+                }
+              ],
+              "石家莊": [
+                {
+                  "player": "紅軍",
+                  "count": 1,
+                  "faction": "red_army"
+                }
+              ]
+            },
+            "shared_access": {},
+            "legal_organization_moves": {}
+          },
+          "players": [
+            {
+              "id": "e90b4ecc-cabd-4bf7-ae6b-c7fe0187ee70",
+              "name": "玩家",
+              "faction": "liberals",
+              "base": "北京",
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "moves_left": 0,
+              "hand": [],
+              "hand_variants": [],
+              "hand_action_legality": [],
+              "deck_count": 5,
+              "discard_count": 1,
+              "discard_pile": [
+                "北國奧援"
+              ],
+              "discard_variants": [
+                {
+                  "variant_index": 0,
+                  "support_region": "北國",
+                  "tier2_regions": [
+                    "歐洲",
+                    "東洋"
+                  ]
+                }
+              ],
+              "organization_counts": {
+                "total": 1,
+                "inside_wall": 1,
+                "outside_wall": 0
+              },
+              "orgs": {
+                "北京": 1
+              }
+            },
+            {
+              "id": "e77a1c10-359c-47b0-8d66-a1179d03b0c0",
+              "name": "紅軍",
+              "faction": "red_army",
+              "base": "西安",
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "moves_left": 0,
+              "hand": [
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌"
+              ],
+              "hand_variants": [
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "hand_action_legality": [
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "deck_count": 6,
+              "discard_count": 0,
+              "discard_pile": [],
+              "discard_variants": [],
+              "organization_counts": {
+                "total": 2,
+                "inside_wall": 2,
+                "outside_wall": 0
+              },
+              "orgs": {
+                "天津": 1,
+                "石家莊": 1
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "multi_target_cancel_with_an_armed_but_unconfirmed_target_is_a_full_rollback",
+      "ok": true,
+      "detail": {
+        "before": {
+          "players": [
+            {
+              "id": "e90b4ecc-cabd-4bf7-ae6b-c7fe0187ee70",
+              "hand": [
+                "北國奧援"
+              ],
+              "discard_pile": [],
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "orgs": {
+                "北京": 1
+              }
+            },
+            {
+              "id": "e77a1c10-359c-47b0-8d66-a1179d03b0c0",
+              "hand": [
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌"
+              ],
+              "discard_pile": [],
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "orgs": {
+                "天津": 1,
+                "石家莊": 1
+              }
+            }
+          ],
+          "turn_phase": "action",
+          "pending_choice": null
+        },
+        "after": {
+          "players": [
+            {
+              "id": "e90b4ecc-cabd-4bf7-ae6b-c7fe0187ee70",
+              "hand": [
+                "北國奧援"
+              ],
+              "discard_pile": [],
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "orgs": {
+                "北京": 1
+              }
+            },
+            {
+              "id": "e77a1c10-359c-47b0-8d66-a1179d03b0c0",
+              "hand": [
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌"
+              ],
+              "discard_pile": [],
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "orgs": {
+                "天津": 1,
+                "石家莊": 1
+              }
+            }
+          ],
+          "turn_phase": "action",
+          "pending_choice": null
+        }
+      }
+    },
+    {
+      "name": "multi_target_first_confirmed_pick_does_not_dissolve_until_the_final_pick",
+      "ok": true,
+      "detail": {
+        "enemy_orgs_mid": {
+          "天津": 1,
+          "石家莊": 1
+        },
+        "snap": {
+          "skullCount": 1,
+          "cancelVisible": true,
+          "cancelEnabled": true,
+          "cancelText": "取消瓦解（放棄本次已選目標）",
+          "dissolveBtnDisabled": true,
+          "dissolveHintText": "已選 1/2 個瓦解目標：請在地圖上點選其餘 💀 標示的組織，再按下方按鈕確認；按「取消瓦解」可放棄本次所有已選目標。",
+          "supportChoiceHighlight": {
+            "choice_id": "84bc78cdb45e4cb08882c513a6ad8ad1",
+            "type": "support_flow_choice",
+            "choice_key": "support_interaction",
+            "interaction_kind": "dissolve_organization",
+            "remaining_builds": null,
+            "queueable_card_names": [],
+            "cancellable": true,
+            "player_id": "69fa1af1-236b-4a41-913a-c6c7b0e5c74f",
+            "player_name": null,
+            "prompt": "北國奧援：已選 1/2，還可再選 1 個鄰近敵方組織。",
+            "source_name": "北國奧援",
+            "count": null,
+            "min_count": null,
+            "selected_count": 1,
+            "total_count": 2,
+            "remaining_count": 1,
+            "mode": null,
+            "acting_player_id": null,
+            "acting_player_name": null,
+            "played_card_name": null,
+            "target_player_id": null,
+            "target_player_name": null,
+            "region": null,
+            "free": null,
+            "ignore_distance": null,
+            "cards": [],
+            "options": [],
+            "towns": [],
+            "targets": [
+              {
+                "id": "45799f53-ea66-443a-903e-b5ad2a7f3e2e::石家莊",
+                "label": "紅軍｜石家莊",
+                "player_id": "45799f53-ea66-443a-903e-b5ad2a7f3e2e",
+                "town": "石家莊",
+                "requires_self_sacrifice": false
+              }
+            ],
+            "step": "target"
+          },
+          "lastGameState": {
+            "turn": 1,
+            "game_phase": "main",
+            "turn_phase": "action",
+            "winner": null,
+            "co_winners": [],
+            "hk_free_base_relocation": false,
+            "current_player": "玩家",
+            "active_eras": [],
+            "active_era_details": [],
+            "my_era_stage": {
+              "id": "rebels",
+              "name": "[反賊]公知世代的終結",
+              "summary_text": "言論相對自由的十年結束了 新的領導人要求網信辦嚴控網路輿論",
+              "trigger_text": "[寒冬將至新芽始生]反賊在牆內擁有至少4個有效組織",
+              "success_text": "[互聯網管控全面化]反賊此後無法再無視距離建立牆內組織。",
+              "fail_text": "[反賊結社潛入地下]反賊在回合中建立至少3個組織，則當回合可再抽1張牌。持續至遊戲結束。",
+              "duration_text": "持續至遊戲結束",
+              "remaining": null,
+              "minimized": false,
+              "active": false,
+              "achieved": false
+            },
+            "era_notification": null,
+            "current_event": {
+              "id": "quiet_times",
+              "name": "歲月靜好",
+              "type": "idle",
+              "trigger": {},
+              "success": {},
+              "failure": {},
+              "effect": {},
+              "progress": {
+                "count": 0,
+                "required": 0,
+                "succeeded": true,
+                "settled": true,
+                "status": "idle"
+              },
+              "status": "idle",
+              "result_text": "本次事件無效果",
+              "trigger_text": "無",
+              "success_text": "無",
+              "failure_text": "無",
+              "effect_text": "無"
+            },
+            "event_deck_count": 19,
+            "red_army_action_count": 0,
+            "red_army_action_limit": 1,
+            "red_army_base_build_blocks": [],
+            "pending_topdeck_uses": 0,
+            "topdeck_candidates_count": 0,
+            "event_discard_count": 1,
+            "event_modifiers": [],
+            "market_mode": "all_cards",
+            "pending_base_choices": [],
+            "pending_choice": {
+              "choice_id": "84bc78cdb45e4cb08882c513a6ad8ad1",
+              "type": "support_flow_choice",
+              "choice_key": "support_interaction",
+              "interaction_kind": "dissolve_organization",
+              "remaining_builds": null,
+              "queueable_card_names": [],
+              "cancellable": true,
+              "player_id": "69fa1af1-236b-4a41-913a-c6c7b0e5c74f",
+              "player_name": null,
+              "prompt": "北國奧援：已選 1/2，還可再選 1 個鄰近敵方組織。",
+              "source_name": "北國奧援",
+              "count": null,
+              "min_count": null,
+              "selected_count": 1,
+              "total_count": 2,
+              "remaining_count": 1,
+              "mode": null,
+              "acting_player_id": null,
+              "acting_player_name": null,
+              "played_card_name": null,
+              "target_player_id": null,
+              "target_player_name": null,
+              "region": null,
+              "free": null,
+              "ignore_distance": null,
+              "cards": [],
+              "options": [],
+              "towns": [],
+              "targets": [
+                {
+                  "id": "45799f53-ea66-443a-903e-b5ad2a7f3e2e::石家莊",
+                  "label": "紅軍｜石家莊",
+                  "player_id": "45799f53-ea66-443a-903e-b5ad2a7f3e2e",
+                  "town": "石家莊",
+                  "requires_self_sacrifice": false
+                }
+              ],
+              "step": "target"
+            },
+            "faction_action_used": false,
+            "action_log": [
+              "[Turn 1] Event drawn: 重大災難",
+              "[Turn 1] 玩家 started interactive support resolution for 北國奧援 at tier 3",
+              "[Turn 1] 玩家 played 北國奧援",
+              "[Turn 1] 玩家 selected one 北國奧援 target (1/2); not yet dissolved"
+            ],
+            "purchase_area": [
+              "宣傳家",
+              "思想家",
+              "資助者",
+              "資本家",
+              "分神",
+              "內鬥",
+              "合作談判",
+              "內應間諜",
+              "臺灣奧援",
+              "歐洲奧援",
+              "走漏風聲"
+            ],
+            "purchase_area_variants": [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              {
+                "variant_index": 1,
+                "support_region": "臺灣",
+                "tier2_regions": [
+                  "英美",
+                  "歐洲"
+                ]
+              },
+              {
+                "variant_index": 0,
+                "support_region": "歐洲",
+                "tier2_regions": [
+                  "北國",
+                  "天方"
+                ]
+              },
+              null
+            ],
+            "purchase_area_costs": [
+              {
+                "money": 0,
+                "propaganda": 3
+              },
+              {
+                "money": 0,
+                "propaganda": 5
+              },
+              {
+                "money": 2,
+                "propaganda": 1
+              },
+              {
+                "money": 3,
+                "propaganda": 2
+              },
+              {
+                "money": 0,
+                "propaganda": 0
+              },
+              {
+                "money": 0,
+                "propaganda": 0
+              },
+              {
+                "money": 2,
+                "propaganda": 2
+              },
+              {
+                "money": 3,
+                "propaganda": 2
+              },
+              {
+                "money": 1,
+                "propaganda": 2
+              },
+              {
+                "money": 1,
+                "propaganda": 2
+              },
+              {
+                "money": 2,
+                "propaganda": 0
+              }
+            ],
+            "purchase_area_payments": [
+              {
+                "money": 0,
+                "propaganda": 3
+              },
+              {
+                "money": 0,
+                "propaganda": 5
+              },
+              {
+                "money": 2,
+                "propaganda": 1
+              },
+              {
+                "money": 3,
+                "propaganda": 2
+              },
+              {
+                "money": 0,
+                "propaganda": 0
+              },
+              {
+                "money": 0,
+                "propaganda": 0
+              },
+              {
+                "money": 2,
+                "propaganda": 2
+              },
+              {
+                "money": 3,
+                "propaganda": 2
+              },
+              {
+                "money": 1,
+                "propaganda": 2
+              },
+              {
+                "money": 1,
+                "propaganda": 2
+              },
+              {
+                "money": 2,
+                "propaganda": 0
+              }
+            ],
+            "purchase_area_affordable": [
+              false,
+              false,
+              false,
+              false,
+              true,
+              true,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "purchase_payment_policy": {
+              "type": "propaganda_then_money_shortfall",
+              "active": false,
+              "ability_name": null,
+              "eligible_cost": "propaganda",
+              "allocation_scope": "batch"
+            },
+            "static_purchase_supply": {
+              "宣傳家": 13,
+              "思想家": 15,
+              "資助者": 15,
+              "資本家": 15,
+              "分神": 30,
+              "內鬥": 20
+            },
+            "map": {
+              "towns": {
+                "北京": [
+                  {
+                    "player": "玩家",
+                    "count": 1,
+                    "faction": "liberals"
+                  }
+                ],
+                "天津": [
+                  {
+                    "player": "紅軍",
+                    "count": 1,
+                    "faction": "red_army"
+                  }
+                ],
+                "石家莊": [
+                  {
+                    "player": "紅軍",
+                    "count": 1,
+                    "faction": "red_army"
+                  }
+                ]
+              },
+              "shared_access": {},
+              "legal_organization_moves": {}
+            },
+            "players": [
+              {
+                "id": "69fa1af1-236b-4a41-913a-c6c7b0e5c74f",
+                "name": "玩家",
+                "faction": "liberals",
+                "base": "北京",
+                "resources": {
+                  "money": 0,
+                  "propaganda": 0
+                },
+                "moves_left": 0,
+                "hand": [],
+                "hand_variants": [],
+                "hand_action_legality": [],
+                "deck_count": 7,
+                "discard_count": 1,
+                "discard_pile": [
+                  "北國奧援"
+                ],
+                "discard_variants": [
+                  {
+                    "variant_index": 0,
+                    "support_region": "北國",
+                    "tier2_regions": [
+                      "歐洲",
+                      "東洋"
+                    ]
+                  }
+                ],
+                "organization_counts": {
+                  "total": 1,
+                  "inside_wall": 1,
+                  "outside_wall": 0
+                },
+                "orgs": {
+                  "北京": 1
+                }
+              },
+              {
+                "id": "45799f53-ea66-443a-903e-b5ad2a7f3e2e",
+                "name": "紅軍",
+                "faction": "red_army",
+                "base": "西安",
+                "resources": {
+                  "money": 0,
+                  "propaganda": 0
+                },
+                "moves_left": 0,
+                "hand": [
+                  "未知手牌",
+                  "未知手牌",
+                  "未知手牌",
+                  "未知手牌",
+                  "未知手牌"
+                ],
+                "hand_variants": [
+                  null,
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                "hand_action_legality": [
+                  null,
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                "deck_count": 6,
+                "discard_count": 0,
+                "discard_pile": [],
+                "discard_variants": [],
+                "organization_counts": {
+                  "total": 2,
+                  "inside_wall": 2,
+                  "outside_wall": 0
+                },
+                "orgs": {
+                  "天津": 1,
+                  "石家莊": 1
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "multi_target_cancel_after_one_confirmed_pick_still_fully_rolls_back",
+      "ok": true,
+      "detail": {
+        "before": {
+          "players": [
+            {
+              "id": "69fa1af1-236b-4a41-913a-c6c7b0e5c74f",
+              "hand": [
+                "北國奧援"
+              ],
+              "discard_pile": [],
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "orgs": {
+                "北京": 1
+              }
+            },
+            {
+              "id": "45799f53-ea66-443a-903e-b5ad2a7f3e2e",
+              "hand": [
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌"
+              ],
+              "discard_pile": [],
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "orgs": {
+                "天津": 1,
+                "石家莊": 1
+              }
+            }
+          ],
+          "turn_phase": "action",
+          "pending_choice": null
+        },
+        "after": {
+          "players": [
+            {
+              "id": "69fa1af1-236b-4a41-913a-c6c7b0e5c74f",
+              "hand": [
+                "北國奧援"
+              ],
+              "discard_pile": [],
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "orgs": {
+                "北京": 1
+              }
+            },
+            {
+              "id": "45799f53-ea66-443a-903e-b5ad2a7f3e2e",
+              "hand": [
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌"
+              ],
+              "discard_pile": [],
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "orgs": {
+                "天津": 1,
+                "石家莊": 1
+              }
+            }
+          ],
+          "turn_phase": "action",
+          "pending_choice": null
+        }
+      }
+    },
+    {
+      "name": "multi_target_confirming_both_picks_dissolves_both_atomically",
+      "ok": true,
+      "detail": {
+        "enemy_orgs_final": {}
+      }
+    },
+    {
+      "name": "forced_event_setup_succeeded",
+      "ok": true,
+      "detail": {
+        "success": true,
+        "game_id": "6fd3922c-8a00-4f2a-929b-aedc06c1fceb",
+        "player_id": "5a48ec30-a548-45fd-8e78-ffff334e4593",
+        "url": "/?game_id=6fd3922c-8a00-4f2a-929b-aedc06c1fceb&player_id=5a48ec30-a548-45fd-8e78-ffff334e4593",
+        "effect_result": {
+          "success": true,
+          "pending_choice": true
+        },
+        "state": {
+          "turn": 1,
+          "game_phase": "main",
+          "turn_phase": "action",
+          "winner": null,
+          "co_winners": [],
+          "hk_free_base_relocation": false,
+          "current_player": "紅軍",
+          "active_eras": [],
+          "active_era_details": [],
+          "my_era_stage": null,
+          "era_notification": null,
+          "current_event": {
+            "id": null,
+            "name": "全國人大召開",
+            "type": null,
+            "trigger": {},
+            "success": {},
+            "failure": {},
+            "effect": {},
+            "progress": {},
+            "status": "active",
+            "result_text": "",
+            "trigger_text": "無",
+            "success_text": "無",
+            "failure_text": "無",
+            "effect_text": "無"
+          },
+          "event_deck_count": 20,
+          "red_army_action_count": 0,
+          "red_army_action_limit": 1,
+          "red_army_base_build_blocks": [],
+          "pending_topdeck_uses": 0,
+          "topdeck_candidates_count": 0,
+          "event_discard_count": 0,
+          "event_modifiers": [],
+          "market_mode": "all_cards",
+          "pending_base_choices": [],
+          "pending_choice": {
+            "choice_id": "1a12b4dd390e48a7b7a32c039eca642d",
+            "type": "target_choice",
+            "choice_key": "event_red_dissolve",
+            "interaction_kind": "dissolve_organization",
+            "remaining_builds": null,
+            "queueable_card_names": [],
+            "cancellable": false,
+            "player_id": "5a48ec30-a548-45fd-8e78-ffff334e4593",
+            "player_name": null,
+            "prompt": "全國人大召開：紅軍選擇要瓦解的組織。",
+            "source_name": "全國人大召開",
+            "count": null,
+            "min_count": null,
+            "selected_count": null,
+            "total_count": null,
+            "remaining_count": null,
+            "mode": null,
+            "acting_player_id": null,
+            "acting_player_name": null,
+            "played_card_name": null,
+            "target_player_id": null,
+            "target_player_name": null,
+            "region": null,
+            "free": null,
+            "ignore_distance": null,
+            "cards": [],
+            "options": [],
+            "towns": [],
+            "targets": [
+              {
+                "id": "06479aed-1076-4a9c-ac4c-83d81940c0f4:天津",
+                "player_id": "06479aed-1076-4a9c-ac4c-83d81940c0f4",
+                "town": "天津",
+                "label": "玩家｜天津"
+              }
+            ],
+            "step": null
+          },
+          "faction_action_used": false,
+          "action_log": [],
+          "purchase_area": [
+            "宣傳家",
+            "思想家",
+            "資助者",
+            "資本家",
+            "分神",
+            "內鬥",
+            "派遣間諜",
+            "批鬥",
+            "企畫遊說",
+            "批判",
+            "網羅人才"
+          ],
+          "purchase_area_variants": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "purchase_area_costs": [
+            {
+              "money": 0,
+              "propaganda": 3
+            },
+            {
+              "money": 0,
+              "propaganda": 5
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 3,
+              "propaganda": 2
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 0,
+              "propaganda": 4
+            },
+            {
+              "money": 1,
+              "propaganda": 2
+            },
+            {
+              "money": 0,
+              "propaganda": 2
+            },
+            {
+              "money": 3,
+              "propaganda": 2
+            }
+          ],
+          "purchase_area_payments": [
+            {
+              "money": 0,
+              "propaganda": 3
+            },
+            {
+              "money": 0,
+              "propaganda": 5
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 3,
+              "propaganda": 2
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 0,
+              "propaganda": 4
+            },
+            {
+              "money": 1,
+              "propaganda": 2
+            },
+            {
+              "money": 0,
+              "propaganda": 2
+            },
+            {
+              "money": 3,
+              "propaganda": 2
+            }
+          ],
+          "purchase_area_affordable": [
+            false,
+            false,
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "purchase_payment_policy": {
+            "type": "propaganda_then_money_shortfall",
+            "active": false,
+            "ability_name": null,
+            "eligible_cost": "propaganda",
+            "allocation_scope": "batch"
+          },
+          "static_purchase_supply": {
+            "宣傳家": 15,
+            "思想家": 15,
+            "資助者": 15,
+            "資本家": 15,
+            "分神": 30,
+            "內鬥": 20
+          },
+          "map": {
+            "towns": {
+              "北京": [
+                {
+                  "player": "紅軍",
+                  "count": 1,
+                  "faction": "red_army"
+                }
+              ],
+              "天津": [
+                {
+                  "player": "玩家",
+                  "count": 1,
+                  "faction": "hong_kong"
+                }
+              ]
+            },
+            "shared_access": {},
+            "legal_organization_moves": {}
+          },
+          "players": [
+            {
+              "id": "5a48ec30-a548-45fd-8e78-ffff334e4593",
+              "name": "紅軍",
+              "faction": "red_army",
+              "base": "北京",
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "moves_left": 0,
+              "hand": [
+                "追隨者",
+                "追隨者",
+                "樂捐者",
+                "追隨者",
+                "樂捐者"
+              ],
+              "hand_variants": [
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "hand_action_legality": [
+                {
+                  "playable": true
+                },
+                {
+                  "playable": true
+                },
+                {
+                  "playable": true
+                },
+                {
+                  "playable": true
+                },
+                {
+                  "playable": true
+                }
+              ],
+              "deck_count": 5,
+              "discard_count": 0,
+              "discard_pile": [],
+              "discard_variants": [],
+              "organization_counts": {
+                "total": 1,
+                "inside_wall": 1,
+                "outside_wall": 0
+              },
+              "orgs": {
+                "北京": 1
+              }
+            },
+            {
+              "id": "06479aed-1076-4a9c-ac4c-83d81940c0f4",
+              "name": "玩家",
+              "faction": "hong_kong",
+              "base": "香港城",
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "moves_left": 0,
+              "hand": [
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌"
+              ],
+              "hand_variants": [
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "hand_action_legality": [
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "deck_count": 6,
+              "discard_count": 0,
+              "discard_pile": [],
+              "discard_variants": [],
+              "organization_counts": {
+                "total": 1,
+                "inside_wall": 1,
+                "outside_wall": 0
+              },
+              "orgs": {
+                "天津": 1
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "forced_event_dissolve_has_targets_but_no_cancel_affordance",
+      "ok": true,
+      "detail": {
+        "skullCount": 1,
+        "cancelVisible": false,
+        "cancelEnabled": false,
+        "cancelText": "取消瓦解",
+        "dissolveBtnDisabled": true,
+        "dissolveHintText": "選取具有共享可用性的城鎮後，這裡會顯示是否可對實際組織擁有者發動瓦解。",
+        "supportChoiceHighlight": {
+          "choice_id": "1a12b4dd390e48a7b7a32c039eca642d",
+          "type": "target_choice",
+          "choice_key": "event_red_dissolve",
+          "interaction_kind": "dissolve_organization",
+          "remaining_builds": null,
+          "queueable_card_names": [],
+          "cancellable": false,
+          "player_id": "5a48ec30-a548-45fd-8e78-ffff334e4593",
+          "player_name": null,
+          "prompt": "全國人大召開：紅軍選擇要瓦解的組織。",
+          "source_name": "全國人大召開",
+          "count": null,
+          "min_count": null,
+          "selected_count": null,
+          "total_count": null,
+          "remaining_count": null,
+          "mode": null,
+          "acting_player_id": null,
+          "acting_player_name": null,
+          "played_card_name": null,
+          "target_player_id": null,
+          "target_player_name": null,
+          "region": null,
+          "free": null,
+          "ignore_distance": null,
+          "cards": [],
+          "options": [],
+          "towns": [],
+          "targets": [
+            {
+              "id": "06479aed-1076-4a9c-ac4c-83d81940c0f4:天津",
+              "player_id": "06479aed-1076-4a9c-ac4c-83d81940c0f4",
+              "town": "天津",
+              "label": "玩家｜天津"
+            }
+          ],
+          "step": null
+        },
+        "lastGameState": {
+          "turn": 1,
+          "game_phase": "main",
+          "turn_phase": "action",
+          "winner": null,
+          "co_winners": [],
+          "hk_free_base_relocation": false,
+          "current_player": "紅軍",
+          "active_eras": [],
+          "active_era_details": [],
+          "my_era_stage": null,
+          "era_notification": null,
+          "current_event": {
+            "id": null,
+            "name": "全國人大召開",
+            "type": null,
+            "trigger": {},
+            "success": {},
+            "failure": {},
+            "effect": {},
+            "progress": {},
+            "status": "active",
+            "result_text": "",
+            "trigger_text": "無",
+            "success_text": "無",
+            "failure_text": "無",
+            "effect_text": "無"
+          },
+          "event_deck_count": 20,
+          "red_army_action_count": 0,
+          "red_army_action_limit": 1,
+          "red_army_base_build_blocks": [],
+          "pending_topdeck_uses": 0,
+          "topdeck_candidates_count": 0,
+          "event_discard_count": 0,
+          "event_modifiers": [],
+          "market_mode": "all_cards",
+          "pending_base_choices": [],
+          "pending_choice": {
+            "choice_id": "1a12b4dd390e48a7b7a32c039eca642d",
+            "type": "target_choice",
+            "choice_key": "event_red_dissolve",
+            "interaction_kind": "dissolve_organization",
+            "remaining_builds": null,
+            "queueable_card_names": [],
+            "cancellable": false,
+            "player_id": "5a48ec30-a548-45fd-8e78-ffff334e4593",
+            "player_name": null,
+            "prompt": "全國人大召開：紅軍選擇要瓦解的組織。",
+            "source_name": "全國人大召開",
+            "count": null,
+            "min_count": null,
+            "selected_count": null,
+            "total_count": null,
+            "remaining_count": null,
+            "mode": null,
+            "acting_player_id": null,
+            "acting_player_name": null,
+            "played_card_name": null,
+            "target_player_id": null,
+            "target_player_name": null,
+            "region": null,
+            "free": null,
+            "ignore_distance": null,
+            "cards": [],
+            "options": [],
+            "towns": [],
+            "targets": [
+              {
+                "id": "06479aed-1076-4a9c-ac4c-83d81940c0f4:天津",
+                "player_id": "06479aed-1076-4a9c-ac4c-83d81940c0f4",
+                "town": "天津",
+                "label": "玩家｜天津"
+              }
+            ],
+            "step": null
+          },
+          "faction_action_used": false,
+          "action_log": [],
+          "purchase_area": [
+            "宣傳家",
+            "思想家",
+            "資助者",
+            "資本家",
+            "分神",
+            "內鬥",
+            "派遣間諜",
+            "批鬥",
+            "企畫遊說",
+            "批判",
+            "網羅人才"
+          ],
+          "purchase_area_variants": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "purchase_area_costs": [
+            {
+              "money": 0,
+              "propaganda": 3
+            },
+            {
+              "money": 0,
+              "propaganda": 5
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 3,
+              "propaganda": 2
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 0,
+              "propaganda": 4
+            },
+            {
+              "money": 1,
+              "propaganda": 2
+            },
+            {
+              "money": 0,
+              "propaganda": 2
+            },
+            {
+              "money": 3,
+              "propaganda": 2
+            }
+          ],
+          "purchase_area_payments": [
+            {
+              "money": 0,
+              "propaganda": 3
+            },
+            {
+              "money": 0,
+              "propaganda": 5
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 3,
+              "propaganda": 2
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 0,
+              "propaganda": 4
+            },
+            {
+              "money": 1,
+              "propaganda": 2
+            },
+            {
+              "money": 0,
+              "propaganda": 2
+            },
+            {
+              "money": 3,
+              "propaganda": 2
+            }
+          ],
+          "purchase_area_affordable": [
+            false,
+            false,
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "purchase_payment_policy": {
+            "type": "propaganda_then_money_shortfall",
+            "active": false,
+            "ability_name": null,
+            "eligible_cost": "propaganda",
+            "allocation_scope": "batch"
+          },
+          "static_purchase_supply": {
+            "宣傳家": 15,
+            "思想家": 15,
+            "資助者": 15,
+            "資本家": 15,
+            "分神": 30,
+            "內鬥": 20
+          },
+          "map": {
+            "towns": {
+              "北京": [
+                {
+                  "player": "紅軍",
+                  "count": 1,
+                  "faction": "red_army"
+                }
+              ],
+              "天津": [
+                {
+                  "player": "玩家",
+                  "count": 1,
+                  "faction": "hong_kong"
+                }
+              ]
+            },
+            "shared_access": {},
+            "legal_organization_moves": {}
+          },
+          "players": [
+            {
+              "id": "5a48ec30-a548-45fd-8e78-ffff334e4593",
+              "name": "紅軍",
+              "faction": "red_army",
+              "base": "北京",
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "moves_left": 0,
+              "hand": [
+                "追隨者",
+                "追隨者",
+                "樂捐者",
+                "追隨者",
+                "樂捐者"
+              ],
+              "hand_variants": [
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "hand_action_legality": [
+                {
+                  "playable": true
+                },
+                {
+                  "playable": true
+                },
+                {
+                  "playable": true
+                },
+                {
+                  "playable": true
+                },
+                {
+                  "playable": true
+                }
+              ],
+              "deck_count": 5,
+              "discard_count": 0,
+              "discard_pile": [],
+              "discard_variants": [],
+              "organization_counts": {
+                "total": 1,
+                "inside_wall": 1,
+                "outside_wall": 0
+              },
+              "orgs": {
+                "北京": 1
+              }
+            },
+            {
+              "id": "06479aed-1076-4a9c-ac4c-83d81940c0f4",
+              "name": "玩家",
+              "faction": "hong_kong",
+              "base": "香港城",
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "moves_left": 0,
+              "hand": [
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌"
+              ],
+              "hand_variants": [
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "hand_action_legality": [
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "deck_count": 6,
+              "discard_count": 0,
+              "discard_pile": [],
+              "discard_variants": [],
+              "organization_counts": {
+                "total": 1,
+                "inside_wall": 1,
+                "outside_wall": 0
+              },
+              "orgs": {
+                "天津": 1
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "two_phase_setup_succeeded",
+      "ok": true,
+      "detail": {
+        "success": true,
+        "game_id": "260dc535-0a48-48b5-9900-e357df0f3ac4",
+        "player_id": "672d4b7b-450d-4859-9410-7b1c0a2745ff",
+        "url": "/?game_id=260dc535-0a48-48b5-9900-e357df0f3ac4&player_id=672d4b7b-450d-4859-9410-7b1c0a2745ff",
+        "play_result": {
+          "success": true,
+          "pending_choice": true
+        },
+        "pre_play_state": {
+          "turn": 1,
+          "game_phase": "main",
+          "turn_phase": "action",
+          "winner": null,
+          "co_winners": [],
+          "hk_free_base_relocation": false,
+          "current_player": "玩家",
+          "active_eras": [],
+          "active_era_details": [],
+          "my_era_stage": {
+            "id": "taiwan",
+            "name": "[臺灣]綏靖派反對介入對岸",
+            "summary_text": "臺灣對共和國滲透日深 紅軍策動臺灣綏靖派阻礙反共工作",
+            "trigger_text": "[臺灣重建敵後工作]臺灣在牆內擁有至少7個有效組織",
+            "success_text": "[鼓吹停止挑釁紅軍]將3張內鬥放進臺灣棄牌堆",
+            "fail_text": "[打擊國內綏靖主義]每當臺灣在臺灣城鎮建立至少1個組織時，獲得1點宣傳。持續2回合。",
+            "duration_text": "持續 2 回合",
+            "remaining": null,
+            "minimized": false,
+            "active": false,
+            "achieved": false
+          },
+          "era_notification": null,
+          "current_event": {
+            "id": "quiet_times",
+            "name": "歲月靜好",
+            "type": "idle",
+            "trigger": {},
+            "success": {},
+            "failure": {},
+            "effect": {},
+            "progress": {
+              "count": 0,
+              "required": 0,
+              "succeeded": true,
+              "settled": true,
+              "status": "idle"
+            },
+            "status": "idle",
+            "result_text": "本次事件無效果",
+            "trigger_text": "無",
+            "success_text": "無",
+            "failure_text": "無",
+            "effect_text": "無"
+          },
+          "event_deck_count": 19,
+          "red_army_action_count": 0,
+          "red_army_action_limit": 1,
+          "red_army_base_build_blocks": [],
+          "pending_topdeck_uses": 0,
+          "topdeck_candidates_count": 0,
+          "event_discard_count": 1,
+          "event_modifiers": [],
+          "market_mode": "all_cards",
+          "pending_base_choices": [],
+          "pending_choice": null,
+          "faction_action_used": false,
+          "action_log": [
+            "[Turn 1] Event drawn: 歲月靜好 (no-op)"
+          ],
+          "purchase_area": [
+            "宣傳家",
+            "思想家",
+            "資助者",
+            "資本家",
+            "分神",
+            "內鬥",
+            "走漏風聲",
+            "武裝者",
+            "組織經驗丙",
+            "模仿戰術",
+            "武裝者"
+          ],
+          "purchase_area_variants": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "purchase_area_costs": [
+            {
+              "money": 0,
+              "propaganda": 3
+            },
+            {
+              "money": 0,
+              "propaganda": 5
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 3,
+              "propaganda": 2
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 2,
+              "propaganda": 0
+            },
+            {
+              "money": 2,
+              "propaganda": 0
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 0,
+              "propaganda": 4
+            },
+            {
+              "money": 2,
+              "propaganda": 0
+            }
+          ],
+          "purchase_area_payments": [
+            {
+              "money": 0,
+              "propaganda": 3
+            },
+            {
+              "money": 0,
+              "propaganda": 5
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 3,
+              "propaganda": 2
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 2,
+              "propaganda": 0
+            },
+            {
+              "money": 2,
+              "propaganda": 0
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 0,
+              "propaganda": 4
+            },
+            {
+              "money": 2,
+              "propaganda": 0
+            }
+          ],
+          "purchase_area_affordable": [
+            false,
+            false,
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "purchase_payment_policy": {
+            "type": "propaganda_then_money_shortfall",
+            "active": false,
+            "ability_name": null,
+            "eligible_cost": "propaganda",
+            "allocation_scope": "batch"
+          },
+          "static_purchase_supply": {
+            "宣傳家": 13,
+            "思想家": 15,
+            "資助者": 15,
+            "資本家": 15,
+            "分神": 30,
+            "內鬥": 20
+          },
+          "map": {
+            "towns": {
+              "北京": [
+                {
+                  "player": "玩家",
+                  "count": 1,
+                  "faction": "taiwan_green"
+                }
+              ],
+              "上海": [
+                {
+                  "player": "玩家",
+                  "count": 1,
+                  "faction": "taiwan_green"
+                }
+              ],
+              "天津": [
+                {
+                  "player": "紅軍",
+                  "count": 1,
+                  "faction": "red_army"
+                }
+              ],
+              "杭州": [
+                {
+                  "player": "紅軍",
+                  "count": 1,
+                  "faction": "red_army"
+                }
+              ],
+              "香港城": [
+                {
+                  "player": "紅軍",
+                  "count": 1,
+                  "faction": "red_army"
+                }
+              ]
+            },
+            "shared_access": {},
+            "legal_organization_moves": {}
+          },
+          "players": [
+            {
+              "id": "672d4b7b-450d-4859-9410-7b1c0a2745ff",
+              "name": "玩家",
+              "faction": "taiwan_green",
+              "base": "北京",
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "moves_left": 0,
+              "hand": [
+                "派遣間諜"
+              ],
+              "hand_variants": [
+                null
+              ],
+              "hand_action_legality": [
+                {
+                  "playable": true
+                }
+              ],
+              "deck_count": 6,
+              "discard_count": 0,
+              "discard_pile": [],
+              "discard_variants": [],
+              "organization_counts": {
+                "total": 2,
+                "inside_wall": 2,
+                "outside_wall": 0
+              },
+              "orgs": {
+                "北京": 1,
+                "上海": 1
+              }
+            },
+            {
+              "id": "1b1a366d-1da9-4317-b150-6df3978d17d4",
+              "name": "紅軍",
+              "faction": "red_army",
+              "base": "西安",
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "moves_left": 0,
+              "hand": [
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌"
+              ],
+              "hand_variants": [
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "hand_action_legality": [
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "deck_count": 7,
+              "discard_count": 0,
+              "discard_pile": [],
+              "discard_variants": [],
+              "organization_counts": {
+                "total": 3,
+                "inside_wall": 3,
+                "outside_wall": 0
+              },
+              "orgs": {
+                "天津": 1,
+                "杭州": 1,
+                "香港城": 1
+              }
+            }
+          ]
+        },
+        "state": {
+          "turn": 1,
+          "game_phase": "main",
+          "turn_phase": "action",
+          "winner": null,
+          "co_winners": [],
+          "hk_free_base_relocation": false,
+          "current_player": "玩家",
+          "active_eras": [],
+          "active_era_details": [],
+          "my_era_stage": {
+            "id": "taiwan",
+            "name": "[臺灣]綏靖派反對介入對岸",
+            "summary_text": "臺灣對共和國滲透日深 紅軍策動臺灣綏靖派阻礙反共工作",
+            "trigger_text": "[臺灣重建敵後工作]臺灣在牆內擁有至少7個有效組織",
+            "success_text": "[鼓吹停止挑釁紅軍]將3張內鬥放進臺灣棄牌堆",
+            "fail_text": "[打擊國內綏靖主義]每當臺灣在臺灣城鎮建立至少1個組織時，獲得1點宣傳。持續2回合。",
+            "duration_text": "持續 2 回合",
+            "remaining": null,
+            "minimized": false,
+            "active": false,
+            "achieved": false
+          },
+          "era_notification": null,
+          "current_event": {
+            "id": "quiet_times",
+            "name": "歲月靜好",
+            "type": "idle",
+            "trigger": {},
+            "success": {},
+            "failure": {},
+            "effect": {},
+            "progress": {
+              "count": 0,
+              "required": 0,
+              "succeeded": true,
+              "settled": true,
+              "status": "idle"
+            },
+            "status": "idle",
+            "result_text": "本次事件無效果",
+            "trigger_text": "無",
+            "success_text": "無",
+            "failure_text": "無",
+            "effect_text": "無"
+          },
+          "event_deck_count": 19,
+          "red_army_action_count": 0,
+          "red_army_action_limit": 1,
+          "red_army_base_build_blocks": [],
+          "pending_topdeck_uses": 0,
+          "topdeck_candidates_count": 0,
+          "event_discard_count": 1,
+          "event_modifiers": [],
+          "market_mode": "all_cards",
+          "pending_base_choices": [],
+          "pending_choice": {
+            "choice_id": "e71acab04aea41129a6cb2a79c1b60c8",
+            "type": "support_flow_choice",
+            "choice_key": "card_dissolve_interaction",
+            "interaction_kind": null,
+            "remaining_builds": null,
+            "queueable_card_names": [],
+            "cancellable": true,
+            "player_id": "672d4b7b-450d-4859-9410-7b1c0a2745ff",
+            "player_name": null,
+            "prompt": "派遣間諜：先選擇 1 個要瓦解的己方組織。",
+            "source_name": "派遣間諜",
+            "count": null,
+            "min_count": null,
+            "selected_count": null,
+            "total_count": null,
+            "remaining_count": null,
+            "mode": null,
+            "acting_player_id": null,
+            "acting_player_name": null,
+            "played_card_name": null,
+            "target_player_id": null,
+            "target_player_name": null,
+            "region": null,
+            "free": null,
+            "ignore_distance": null,
+            "cards": [],
+            "options": [],
+            "towns": [
+              {
+                "town": "上海",
+                "label": "上海（可瓦解鄰近敵方組織）",
+                "target_count": 1
+              }
+            ],
+            "targets": [],
+            "step": "sacrifice_town"
+          },
+          "faction_action_used": false,
+          "action_log": [
+            "[Turn 1] Event drawn: 歲月靜好 (no-op)",
+            "[Turn 1] 玩家 played 派遣間諜"
+          ],
+          "purchase_area": [
+            "宣傳家",
+            "思想家",
+            "資助者",
+            "資本家",
+            "分神",
+            "內鬥",
+            "走漏風聲",
+            "武裝者",
+            "組織經驗丙",
+            "模仿戰術",
+            "武裝者"
+          ],
+          "purchase_area_variants": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "purchase_area_costs": [
+            {
+              "money": 0,
+              "propaganda": 3
+            },
+            {
+              "money": 0,
+              "propaganda": 5
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 3,
+              "propaganda": 2
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 2,
+              "propaganda": 0
+            },
+            {
+              "money": 2,
+              "propaganda": 0
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 0,
+              "propaganda": 4
+            },
+            {
+              "money": 2,
+              "propaganda": 0
+            }
+          ],
+          "purchase_area_payments": [
+            {
+              "money": 0,
+              "propaganda": 3
+            },
+            {
+              "money": 0,
+              "propaganda": 5
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 3,
+              "propaganda": 2
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 0,
+              "propaganda": 0
+            },
+            {
+              "money": 2,
+              "propaganda": 0
+            },
+            {
+              "money": 2,
+              "propaganda": 0
+            },
+            {
+              "money": 2,
+              "propaganda": 1
+            },
+            {
+              "money": 0,
+              "propaganda": 4
+            },
+            {
+              "money": 2,
+              "propaganda": 0
+            }
+          ],
+          "purchase_area_affordable": [
+            false,
+            false,
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "purchase_payment_policy": {
+            "type": "propaganda_then_money_shortfall",
+            "active": false,
+            "ability_name": null,
+            "eligible_cost": "propaganda",
+            "allocation_scope": "batch"
+          },
+          "static_purchase_supply": {
+            "宣傳家": 13,
+            "思想家": 15,
+            "資助者": 15,
+            "資本家": 15,
+            "分神": 30,
+            "內鬥": 20
+          },
+          "map": {
+            "towns": {
+              "北京": [
+                {
+                  "player": "玩家",
+                  "count": 1,
+                  "faction": "taiwan_green"
+                }
+              ],
+              "上海": [
+                {
+                  "player": "玩家",
+                  "count": 1,
+                  "faction": "taiwan_green"
+                }
+              ],
+              "天津": [
+                {
+                  "player": "紅軍",
+                  "count": 1,
+                  "faction": "red_army"
+                }
+              ],
+              "杭州": [
+                {
+                  "player": "紅軍",
+                  "count": 1,
+                  "faction": "red_army"
+                }
+              ],
+              "香港城": [
+                {
+                  "player": "紅軍",
+                  "count": 1,
+                  "faction": "red_army"
+                }
+              ]
+            },
+            "shared_access": {},
+            "legal_organization_moves": {}
+          },
+          "players": [
+            {
+              "id": "672d4b7b-450d-4859-9410-7b1c0a2745ff",
+              "name": "玩家",
+              "faction": "taiwan_green",
+              "base": "北京",
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "moves_left": 0,
+              "hand": [],
+              "hand_variants": [],
+              "hand_action_legality": [],
+              "deck_count": 6,
+              "discard_count": 1,
+              "discard_pile": [
+                "派遣間諜"
+              ],
+              "discard_variants": [
+                null
+              ],
+              "organization_counts": {
+                "total": 2,
+                "inside_wall": 2,
+                "outside_wall": 0
+              },
+              "orgs": {
+                "北京": 1,
+                "上海": 1
+              }
+            },
+            {
+              "id": "1b1a366d-1da9-4317-b150-6df3978d17d4",
+              "name": "紅軍",
+              "faction": "red_army",
+              "base": "西安",
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "moves_left": 0,
+              "hand": [
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌"
+              ],
+              "hand_variants": [
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "hand_action_legality": [
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "deck_count": 7,
+              "discard_count": 0,
+              "discard_pile": [],
+              "discard_variants": [],
+              "organization_counts": {
+                "total": 3,
+                "inside_wall": 3,
+                "outside_wall": 0
+              },
+              "orgs": {
+                "天津": 1,
+                "杭州": 1,
+                "香港城": 1
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "two_phase_sacrifice_stage_modal_shows_cancel_button",
+      "ok": true,
+      "detail": {
+        "overlayVisible": true,
+        "closeBtnVisible": true,
+        "closeBtnText": "取消",
+        "title": "派遣間諜"
+      }
+    },
+    {
+      "name": "two_phase_cancel_at_sacrifice_stage_is_a_full_rollback",
+      "ok": true,
+      "detail": {
+        "before": {
+          "players": [
+            {
+              "id": "672d4b7b-450d-4859-9410-7b1c0a2745ff",
+              "hand": [
+                "派遣間諜"
+              ],
+              "discard_pile": [],
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "orgs": {
+                "北京": 1,
+                "上海": 1
+              }
+            },
+            {
+              "id": "1b1a366d-1da9-4317-b150-6df3978d17d4",
+              "hand": [
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌"
+              ],
+              "discard_pile": [],
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "orgs": {
+                "天津": 1,
+                "杭州": 1,
+                "香港城": 1
+              }
+            }
+          ],
+          "turn_phase": "action",
+          "pending_choice": null
+        },
+        "after": {
+          "players": [
+            {
+              "id": "672d4b7b-450d-4859-9410-7b1c0a2745ff",
+              "hand": [
+                "派遣間諜"
+              ],
+              "discard_pile": [],
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "orgs": {
+                "北京": 1,
+                "上海": 1
+              }
+            },
+            {
+              "id": "1b1a366d-1da9-4317-b150-6df3978d17d4",
+              "hand": [
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌"
+              ],
+              "discard_pile": [],
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "orgs": {
+                "天津": 1,
+                "杭州": 1,
+                "香港城": 1
+              }
+            }
+          ],
+          "turn_phase": "action",
+          "pending_choice": null
+        }
+      }
+    },
+    {
+      "name": "two_phase_target_stage_shows_cancel_and_sacrifice_not_yet_removed",
+      "ok": true,
+      "detail": {
+        "snap": {
+          "skullCount": 1,
+          "cancelVisible": true,
+          "cancelEnabled": true,
+          "cancelText": "取消瓦解",
+          "dissolveBtnDisabled": true,
+          "dissolveHintText": "選取具有共享可用性的城鎮後，這裡會顯示是否可對實際組織擁有者發動瓦解。",
+          "supportChoiceHighlight": {
+            "choice_id": "9381c1be4e6c4be59d6ba8f4fdd5f891",
+            "type": "support_flow_choice",
+            "choice_key": "support_interaction",
+            "interaction_kind": "dissolve_organization",
+            "remaining_builds": null,
+            "queueable_card_names": [],
+            "cancellable": true,
+            "player_id": "32e66d44-e868-4fca-a9e3-526d7e705c36",
+            "player_name": null,
+            "prompt": "派遣間諜：選擇 上海 1 格內的 1 個敵方組織瓦解。",
+            "source_name": "派遣間諜",
+            "count": null,
+            "min_count": null,
+            "selected_count": null,
+            "total_count": null,
+            "remaining_count": null,
+            "mode": null,
+            "acting_player_id": null,
+            "acting_player_name": null,
+            "played_card_name": null,
+            "target_player_id": null,
+            "target_player_name": null,
+            "region": null,
+            "free": null,
+            "ignore_distance": null,
+            "cards": [],
+            "options": [],
+            "towns": [],
+            "targets": [
+              {
+                "id": "bbefb634-fad1-4669-8bcd-e5a4c15b482d::杭州",
+                "label": "紅軍｜杭州",
+                "player_id": "bbefb634-fad1-4669-8bcd-e5a4c15b482d",
+                "town": "杭州",
+                "sacrifice_town": "上海"
+              }
+            ],
+            "step": "target"
+          },
+          "lastGameState": {
+            "turn": 1,
+            "game_phase": "main",
+            "turn_phase": "action",
+            "winner": null,
+            "co_winners": [],
+            "hk_free_base_relocation": false,
+            "current_player": "玩家",
+            "active_eras": [],
+            "active_era_details": [],
+            "my_era_stage": {
+              "id": "taiwan",
+              "name": "[臺灣]綏靖派反對介入對岸",
+              "summary_text": "臺灣對共和國滲透日深 紅軍策動臺灣綏靖派阻礙反共工作",
+              "trigger_text": "[臺灣重建敵後工作]臺灣在牆內擁有至少7個有效組織",
+              "success_text": "[鼓吹停止挑釁紅軍]將3張內鬥放進臺灣棄牌堆",
+              "fail_text": "[打擊國內綏靖主義]每當臺灣在臺灣城鎮建立至少1個組織時，獲得1點宣傳。持續2回合。",
+              "duration_text": "持續 2 回合",
+              "remaining": null,
+              "minimized": false,
+              "active": false,
+              "achieved": false
+            },
+            "era_notification": null,
+            "current_event": {
+              "id": "quiet_times",
+              "name": "歲月靜好",
+              "type": "idle",
+              "trigger": {},
+              "success": {},
+              "failure": {},
+              "effect": {},
+              "progress": {
+                "count": 0,
+                "required": 0,
+                "succeeded": true,
+                "settled": true,
+                "status": "idle"
+              },
+              "status": "idle",
+              "result_text": "本次事件無效果",
+              "trigger_text": "無",
+              "success_text": "無",
+              "failure_text": "無",
+              "effect_text": "無"
+            },
+            "event_deck_count": 20,
+            "red_army_action_count": 0,
+            "red_army_action_limit": 1,
+            "red_army_base_build_blocks": [],
+            "pending_topdeck_uses": 0,
+            "topdeck_candidates_count": 0,
+            "event_discard_count": 0,
+            "event_modifiers": [],
+            "market_mode": "all_cards",
+            "pending_base_choices": [],
+            "pending_choice": {
+              "choice_id": "9381c1be4e6c4be59d6ba8f4fdd5f891",
+              "type": "support_flow_choice",
+              "choice_key": "support_interaction",
+              "interaction_kind": "dissolve_organization",
+              "remaining_builds": null,
+              "queueable_card_names": [],
+              "cancellable": true,
+              "player_id": "32e66d44-e868-4fca-a9e3-526d7e705c36",
+              "player_name": null,
+              "prompt": "派遣間諜：選擇 上海 1 格內的 1 個敵方組織瓦解。",
+              "source_name": "派遣間諜",
+              "count": null,
+              "min_count": null,
+              "selected_count": null,
+              "total_count": null,
+              "remaining_count": null,
+              "mode": null,
+              "acting_player_id": null,
+              "acting_player_name": null,
+              "played_card_name": null,
+              "target_player_id": null,
+              "target_player_name": null,
+              "region": null,
+              "free": null,
+              "ignore_distance": null,
+              "cards": [],
+              "options": [],
+              "towns": [],
+              "targets": [
+                {
+                  "id": "bbefb634-fad1-4669-8bcd-e5a4c15b482d::杭州",
+                  "label": "紅軍｜杭州",
+                  "player_id": "bbefb634-fad1-4669-8bcd-e5a4c15b482d",
+                  "town": "杭州",
+                  "sacrifice_town": "上海"
+                }
+              ],
+              "step": "target"
+            },
+            "faction_action_used": false,
+            "action_log": [
+              "[Turn 1] 玩家 played 派遣間諜"
+            ],
+            "purchase_area": [
+              "宣傳家",
+              "思想家",
+              "資助者",
+              "資本家",
+              "分神",
+              "內鬥",
+              "東洋奧援",
+              "英美奧援",
+              "擴大戰果",
+              "地下黨",
+              "產業滲透"
+            ],
+            "purchase_area_variants": [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              {
+                "variant_index": 0,
+                "support_region": "東洋",
+                "tier2_regions": [
+                  "臺灣",
+                  "南洋"
+                ]
+              },
+              {
+                "variant_index": 0,
+                "support_region": "英美",
+                "tier2_regions": [
+                  "歐洲",
+                  "天方"
+                ]
+              },
+              null,
+              null,
+              null
+            ],
+            "purchase_area_costs": [
+              {
+                "money": 0,
+                "propaganda": 3
+              },
+              {
+                "money": 0,
+                "propaganda": 5
+              },
+              {
+                "money": 2,
+                "propaganda": 1
+              },
+              {
+                "money": 3,
+                "propaganda": 2
+              },
+              {
+                "money": 0,
+                "propaganda": 0
+              },
+              {
+                "money": 0,
+                "propaganda": 0
+              },
+              {
+                "money": 1,
+                "propaganda": 2
+              },
+              {
+                "money": 1,
+                "propaganda": 2
+              },
+              {
+                "money": 4,
+                "propaganda": 0
+              },
+              {
+                "money": 2,
+                "propaganda": 4
+              },
+              {
+                "money": 4,
+                "propaganda": 1
+              }
+            ],
+            "purchase_area_payments": [
+              {
+                "money": 0,
+                "propaganda": 3
+              },
+              {
+                "money": 0,
+                "propaganda": 5
+              },
+              {
+                "money": 2,
+                "propaganda": 1
+              },
+              {
+                "money": 3,
+                "propaganda": 2
+              },
+              {
+                "money": 0,
+                "propaganda": 0
+              },
+              {
+                "money": 0,
+                "propaganda": 0
+              },
+              {
+                "money": 1,
+                "propaganda": 2
+              },
+              {
+                "money": 1,
+                "propaganda": 2
+              },
+              {
+                "money": 4,
+                "propaganda": 0
+              },
+              {
+                "money": 2,
+                "propaganda": 4
+              },
+              {
+                "money": 4,
+                "propaganda": 1
+              }
+            ],
+            "purchase_area_affordable": [
+              false,
+              false,
+              false,
+              false,
+              true,
+              true,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "purchase_payment_policy": {
+              "type": "propaganda_then_money_shortfall",
+              "active": false,
+              "ability_name": null,
+              "eligible_cost": "propaganda",
+              "allocation_scope": "batch"
+            },
+            "static_purchase_supply": {
+              "宣傳家": 15,
+              "思想家": 15,
+              "資助者": 14,
+              "資本家": 15,
+              "分神": 30,
+              "內鬥": 20
+            },
+            "map": {
+              "towns": {
+                "北京": [
+                  {
+                    "player": "玩家",
+                    "count": 1,
+                    "faction": "taiwan_green"
+                  }
+                ],
+                "上海": [
+                  {
+                    "player": "玩家",
+                    "count": 1,
+                    "faction": "taiwan_green"
+                  }
+                ],
+                "天津": [
+                  {
+                    "player": "紅軍",
+                    "count": 1,
+                    "faction": "red_army"
+                  }
+                ],
+                "杭州": [
+                  {
+                    "player": "紅軍",
+                    "count": 1,
+                    "faction": "red_army"
+                  }
+                ],
+                "香港城": [
+                  {
+                    "player": "紅軍",
+                    "count": 1,
+                    "faction": "red_army"
+                  }
+                ]
+              },
+              "shared_access": {},
+              "legal_organization_moves": {}
+            },
+            "players": [
+              {
+                "id": "32e66d44-e868-4fca-a9e3-526d7e705c36",
+                "name": "玩家",
+                "faction": "taiwan_green",
+                "base": "北京",
+                "resources": {
+                  "money": 0,
+                  "propaganda": 0
+                },
+                "moves_left": 0,
+                "hand": [],
+                "hand_variants": [],
+                "hand_action_legality": [],
+                "deck_count": 6,
+                "discard_count": 1,
+                "discard_pile": [
+                  "派遣間諜"
+                ],
+                "discard_variants": [
+                  null
+                ],
+                "organization_counts": {
+                  "total": 2,
+                  "inside_wall": 2,
+                  "outside_wall": 0
+                },
+                "orgs": {
+                  "北京": 1,
+                  "上海": 1
+                }
+              },
+              {
+                "id": "bbefb634-fad1-4669-8bcd-e5a4c15b482d",
+                "name": "紅軍",
+                "faction": "red_army",
+                "base": "西安",
+                "resources": {
+                  "money": 0,
+                  "propaganda": 0
+                },
+                "moves_left": 0,
+                "hand": [
+                  "未知手牌",
+                  "未知手牌",
+                  "未知手牌",
+                  "未知手牌",
+                  "未知手牌"
+                ],
+                "hand_variants": [
+                  null,
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                "hand_action_legality": [
+                  null,
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                "deck_count": 6,
+                "discard_count": 0,
+                "discard_pile": [],
+                "discard_variants": [],
+                "organization_counts": {
+                  "total": 3,
+                  "inside_wall": 3,
+                  "outside_wall": 0
+                },
+                "orgs": {
+                  "天津": 1,
+                  "杭州": 1,
+                  "香港城": 1
+                }
+              }
+            ]
+          }
+        },
+        "actor_orgs_mid": {
+          "北京": 1,
+          "上海": 1
+        }
+      }
+    },
+    {
+      "name": "two_phase_cancel_at_target_stage_is_also_a_full_rollback",
+      "ok": true,
+      "detail": {
+        "before": {
+          "players": [
+            {
+              "id": "32e66d44-e868-4fca-a9e3-526d7e705c36",
+              "hand": [
+                "派遣間諜"
+              ],
+              "discard_pile": [],
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "orgs": {
+                "北京": 1,
+                "上海": 1
+              }
+            },
+            {
+              "id": "bbefb634-fad1-4669-8bcd-e5a4c15b482d",
+              "hand": [
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌"
+              ],
+              "discard_pile": [],
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "orgs": {
+                "天津": 1,
+                "杭州": 1,
+                "香港城": 1
+              }
+            }
+          ],
+          "turn_phase": "action",
+          "pending_choice": null
+        },
+        "mid": {
+          "players": [
+            {
+              "id": "32e66d44-e868-4fca-a9e3-526d7e705c36",
+              "hand": [],
+              "discard_pile": [
+                "派遣間諜"
+              ],
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "orgs": {
+                "北京": 1,
+                "上海": 1
+              }
+            },
+            {
+              "id": "bbefb634-fad1-4669-8bcd-e5a4c15b482d",
+              "hand": [
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌"
+              ],
+              "discard_pile": [],
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "orgs": {
+                "天津": 1,
+                "杭州": 1,
+                "香港城": 1
+              }
+            }
+          ],
+          "turn_phase": "action",
+          "pending_choice": {
+            "choice_id": "9381c1be4e6c4be59d6ba8f4fdd5f891",
+            "type": "support_flow_choice",
+            "choice_key": "support_interaction",
+            "interaction_kind": "dissolve_organization",
+            "remaining_builds": null,
+            "queueable_card_names": [],
+            "cancellable": true,
+            "player_id": "32e66d44-e868-4fca-a9e3-526d7e705c36",
+            "player_name": null,
+            "prompt": "派遣間諜：選擇 上海 1 格內的 1 個敵方組織瓦解。",
+            "source_name": "派遣間諜",
+            "count": null,
+            "min_count": null,
+            "selected_count": null,
+            "total_count": null,
+            "remaining_count": null,
+            "mode": null,
+            "acting_player_id": null,
+            "acting_player_name": null,
+            "played_card_name": null,
+            "target_player_id": null,
+            "target_player_name": null,
+            "region": null,
+            "free": null,
+            "ignore_distance": null,
+            "cards": [],
+            "options": [],
+            "towns": [],
+            "targets": [
+              {
+                "id": "bbefb634-fad1-4669-8bcd-e5a4c15b482d::杭州",
+                "label": "紅軍｜杭州",
+                "player_id": "bbefb634-fad1-4669-8bcd-e5a4c15b482d",
+                "town": "杭州",
+                "sacrifice_town": "上海"
+              }
+            ],
+            "step": "target"
+          }
+        },
+        "after": {
+          "players": [
+            {
+              "id": "32e66d44-e868-4fca-a9e3-526d7e705c36",
+              "hand": [
+                "派遣間諜"
+              ],
+              "discard_pile": [],
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "orgs": {
+                "北京": 1,
+                "上海": 1
+              }
+            },
+            {
+              "id": "bbefb634-fad1-4669-8bcd-e5a4c15b482d",
+              "hand": [
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌",
+                "未知手牌"
+              ],
+              "discard_pile": [],
+              "resources": {
+                "money": 0,
+                "propaganda": 0
+              },
+              "orgs": {
+                "天津": 1,
+                "杭州": 1,
+                "香港城": 1
+              }
+            }
+          ],
+          "turn_phase": "action",
+          "pending_choice": null
+        }
+      }
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "ok": true,
+      "detail": {
+        "errors": []
+      }
+    }
+  ],
+  "screenshots": [
+    "docs/records/base-dissolve/dissolve-cancel-multi-target.png",
+    "docs/records/base-dissolve/dissolve-cancel-forced-event-no-cancel.png"
+  ]
+}
