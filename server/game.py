@@ -399,8 +399,31 @@ class Game(CardPlayMixin):
             self.event_progress['count'] = int(self.event_progress.get('count', 0) or 0) + int(amount or 1)
             required = int(trigger.get('count', 1) or 1)
         if player is not None:
-            self.event_progress['last_actor_id'] = getattr(player, 'id', None)
-            self.event_progress['last_actor_name'] = getattr(player, 'name', None)
+            # Append to an ordered "still-live contributors" stack, rather than only writing
+            # last_actor_id/name directly -- cancelling one of several interleaved cancellable
+            # plays must remove exactly THAT play's own entry (wherever it sits in the stack,
+            # not necessarily the top) and let attribution fall back to whichever contribution
+            # is now the most recent SURVIVING one. A before/after value-snapshot restore can't
+            # do this correctly: the "before" state captured when a later play (B) started
+            # already reflects an earlier play (A)'s contribution, but if A is cancelled first,
+            # that captured "before" value is stale by the time B is itself cancelled -- undoing
+            # B by restoring it would incorrectly resurrect A's already-undone attribution
+            # instead of correctly falling back to "no attribution at all" (or to whichever
+            # OTHER still-live contribution actually comes next). See game_card_play.py's
+            # _undo_event_progress_delta, which pops by token from this stack instead of
+            # restoring a value. Kept in sync with last_actor_id/name/token, which mirror
+            # stack[-1] for every existing reader (_mission_settlement_target_id,
+            # _settle_current_event, event_display_payload) that doesn't know about the stack.
+            token = uuid.uuid4().hex
+            stack = self.event_progress.setdefault('_actor_contributions', [])
+            stack.append({
+                'token': token,
+                'actor_id': getattr(player, 'id', None),
+                'actor_name': getattr(player, 'name', None),
+            })
+            self.event_progress['last_actor_id'] = stack[-1]['actor_id']
+            self.event_progress['last_actor_name'] = stack[-1]['actor_name']
+            self.event_progress['last_actor_token'] = token
         if self.event_progress['count'] >= required:
             self.event_progress['succeeded'] = True
             self.event_progress['status'] = 'success_pending'

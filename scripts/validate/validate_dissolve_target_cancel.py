@@ -56,6 +56,7 @@ def map_snapshot(page):
           const cancelBtn = doc.getElementById('cancelDissolveChoiceBtn');
           const dissolveBtn = doc.getElementById('dissolveBtn');
           const dissolveHint = doc.getElementById('dissolveHint');
+          const interactionHint = doc.getElementById('interactionHint');
           const skulls = Array.from(doc.querySelectorAll('.dissolve-target-badge'));
           return {
             skullCount: skulls.length,
@@ -64,6 +65,12 @@ def map_snapshot(page):
             cancelText: cancelBtn ? cancelBtn.textContent : null,
             dissolveBtnDisabled: !!dissolveBtn && dissolveBtn.disabled,
             dissolveHintText: dissolveHint ? dissolveHint.textContent : null,
+            // interactionHint renders the backend's own choice.prompt string (see
+            // renderSupportChoiceHighlights in leaflet_game_map_logic.js) -- this is where a
+            // stale-pick rejection's updated prompt ("已不再是合法目標，請重新選擇...") actually
+            // surfaces to the player, NOT dissolveHint (which is purely a client-side
+            // selectedCount/totalCount counter and never reflects prompt text).
+            interactionHintText: interactionHint ? interactionHint.textContent : null,
             supportChoiceHighlight: win.__lastMapState ? win.__lastMapState.pending_choice : null,
             lastGameState: window.lastGameState,
           };
@@ -260,6 +267,86 @@ def main():
             and enemy_orgs_final.get('天津', 0) == 0
             and enemy_orgs_final.get('石家莊', 0) == 0,
             {'enemy_orgs_final': enemy_orgs_final},
+        )
+
+        # -----------------------------------------------------------------
+        # B2) Multi-target stale-pick-at-final-confirmation (parent-level review, defect 2 fix):
+        #     confirming the last remaining pick when an EARLIER accumulated pick (天津) has gone
+        #     stale must reject atomically -- no partial dissolve of the still-valid pick (石家莊)
+        #     -- and re-open the choice onto a fresh legal replacement target (上海) with an
+        #     updated prompt, rather than silently completing or losing the still-valid pick.
+        # -----------------------------------------------------------------
+        setup_b5 = post_json('/test/setup-dissolve-cancel-multi-target-stale-final-pick', {})
+        record(
+            'multi_target_stale_final_pick_setup_succeeded', setup_b5.get('success') is True, setup_b5
+        )
+        load_game(page, setup_b5['url'])
+
+        snap_b5_before = map_snapshot(page)
+        record(
+            'multi_target_stale_pick_shows_remaining_slot_with_two_live_candidates_before_confirm',
+            snap_b5_before['skullCount'] == 2 and '1/2' in (snap_b5_before['dissolveHintText'] or ''),
+            snap_b5_before,
+        )
+
+        # Confirm one of the two still-live offered targets (石家莊) -- this is the exact click
+        # sequence that hits the final-confirmation code path with one stale (天津, already
+        # accumulated) and one live (石家莊, just picked) pick.
+        select_town(page, '石家莊')
+        click_map_button(page, 'dissolveBtn')
+        snap_b5_after = map_snapshot(page)
+        state_after_stale_confirm = page.evaluate('() => window.lastGameState')
+        enemy_orgs_after_stale_confirm = next(
+            (
+                p.get('orgs')
+                for p in (state_after_stale_confirm.get('players') or [])
+                if p.get('id') != setup_b5['player_id']
+            ),
+            {},
+        )
+        record(
+            'multi_target_stale_final_pick_does_not_partially_dissolve_and_reopens_with_updated_hint',
+            enemy_orgs_after_stale_confirm.get('石家莊', 0) == 1
+            and state_after_stale_confirm.get('pending_choice') is not None
+            and '已不再是合法目標' in (snap_b5_after['interactionHintText'] or ''),
+            {
+                'enemy_orgs_after_stale_confirm': enemy_orgs_after_stale_confirm,
+                'interactionHintText': snap_b5_after['interactionHintText'],
+                'snap': snap_b5_after,
+            },
+        )
+        record(
+            'multi_target_stale_final_pick_reopened_choice_still_shows_cancel_affordance',
+            snap_b5_after['cancelVisible'] and snap_b5_after['cancelEnabled'],
+            snap_b5_after,
+        )
+        record(
+            'multi_target_stale_final_pick_reopened_choice_offers_fresh_replacement_target',
+            snap_b5_after['skullCount'] == 1,
+            snap_b5_after,
+        )
+
+        # Complete the retry: pick the fresh replacement target (承德) offered after the reopen,
+        # and confirm -- proves the retry path still atomically dissolves both the earlier
+        # still-valid pick (石家莊) and the new replacement (承德), while 天津 (the stale pick that
+        # triggered the rejection) is never touched at all.
+        select_town(page, '承德')
+        click_map_button(page, 'dissolveBtn')
+        final_state_b5 = page.evaluate('() => window.lastGameState')
+        enemy_orgs_final_b5 = next(
+            (
+                p.get('orgs')
+                for p in (final_state_b5.get('players') or [])
+                if p.get('id') != setup_b5['player_id']
+            ),
+            {},
+        )
+        record(
+            'multi_target_stale_final_pick_retry_confirms_and_dissolves_both_remaining_targets',
+            final_state_b5.get('pending_choice') is None
+            and enemy_orgs_final_b5.get('石家莊', 0) == 0
+            and enemy_orgs_final_b5.get('承德', 0) == 0,
+            {'enemy_orgs_final_b5': enemy_orgs_final_b5},
         )
 
         # -----------------------------------------------------------------

@@ -651,6 +651,9 @@ def register_test_routes(
     test_setup_dissolve_cancel_multi_target = (
         _dissolve_cancel_proof_test_routes.setup_multi_target
     )
+    test_setup_dissolve_cancel_multi_target_stale_final_pick = (
+        _dissolve_cancel_proof_test_routes.setup_multi_target_stale_final_pick
+    )
     test_setup_dissolve_cancel_forced_event = (
         _dissolve_cancel_proof_test_routes.setup_forced_event
     )
@@ -708,6 +711,7 @@ def register_test_routes(
         test_setup_dissolve_cancel_single_target=test_setup_dissolve_cancel_single_target,
         test_setup_dissolve_cancel_two_phase=test_setup_dissolve_cancel_two_phase,
         test_setup_dissolve_cancel_multi_target=test_setup_dissolve_cancel_multi_target,
+        test_setup_dissolve_cancel_multi_target_stale_final_pick=test_setup_dissolve_cancel_multi_target_stale_final_pick,
         test_setup_dissolve_cancel_forced_event=test_setup_dissolve_cancel_forced_event,
         test_setup_elite_defection_event_proof=test_setup_elite_defection_event_proof,
         test_setup_belt_road_red_turn_proof=test_setup_belt_road_red_turn_proof,

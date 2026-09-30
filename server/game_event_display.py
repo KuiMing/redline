@@ -130,6 +130,14 @@ def event_display_payload(event, event_progress):
     failure = event.get('failure') or {}
     effect = event.get('effect') or {}
     progress = dict(event_progress or {})
+    # '_actor_contributions' (an internal per-play-token stack used only by
+    # game_card_play.py's cancellable-dissolve-cancel undo to correctly attribute
+    # last_actor_id/name under interleaved same-actor plays) and 'last_actor_token' (the current
+    # top-of-stack token, also internal) are bookkeeping, not player-facing data -- strip them
+    # before this reaches state()/clients. last_actor_id/last_actor_name themselves (already
+    # public, pre-existing fields) are left untouched.
+    progress.pop('_actor_contributions', None)
+    progress.pop('last_actor_token', None)
     return {
         'id': event.get('id'),
         'name': event.get('name'),

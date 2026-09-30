@@ -290,9 +290,118 @@ class CardPlayMixin:
             'rollback_contributed_nonstarter_name': snapshot.get('contributed_nonstarter_name'),
             'rollback_borrowed_owner_id': snapshot.get('borrowed_owner_id'),
             'rollback_borrowed_purchase_area_index': snapshot.get('borrowed_purchase_area_index'),
-            'rollback_event_progress': snapshot.get('event_progress'),
-            'rollback_event_notification': snapshot.get('event_notification'),
+            # What THIS card's own play changed in event_progress (count/completed_player_ids),
+            # captured as a delta rather than an absolute before/after pair -- see
+            # _event_progress_delta/_undo_event_progress_delta below for why: an absolute
+            # snapshot restore has exactly the same interleaved-cancellation-order bug the
+            # turn_log fields had (fixed via reference counting) -- cancelling one of two
+            # interleaved contributors would stomp the other's still-live, already-correct
+            # contribution. `event_progress` itself isn't naturally a simple counter (it also
+            # carries `succeeded`/`status`/`completed_player_ids`/attribution fields derived
+            # from the count), so instead of a parallel ref-count structure, this undoes exactly
+            # this play's own numeric contribution and re-derives the dependent fields from the
+            # result, which is equivalent in effect but doesn't require threading new
+            # always-present internal counters through Game._new_turn_log-style state for a
+            # value (event_progress) that isn't turn-scoped the same way.
+            'rollback_event_progress_delta': self._event_progress_delta(
+                snapshot.get('event_progress'), snapshot.get('event_progress_after')
+            ),
         }
+
+    def _event_progress_delta(self, before, after):
+        """What a single card play's own _track_event_progress call(s) changed, as a small
+        delta descriptor -- or None if nothing changed (no active mission, trigger type didn't
+        match, event already settled, etc.) or either snapshot isn't a dict.
+
+        Deliberately delta-based, not an absolute before/after pair: see the long comment on
+        `rollback_event_progress_delta` in `_dissolve_cancel_kwargs` for why an absolute
+        snapshot restore is unsafe under interleaved cancellable plays.
+        """
+        if not isinstance(before, dict) or not isinstance(after, dict) or before == after:
+            return None
+        count_delta = int(after.get('count', 0) or 0) - int(before.get('count', 0) or 0)
+        added_completed_player_ids = []
+        if isinstance(after.get('completed_player_ids'), list):
+            before_ids = set(before.get('completed_player_ids') or [])
+            after_ids = set(after.get('completed_player_ids') or [])
+            added_completed_player_ids = sorted(after_ids - before_ids)
+        if not count_delta and not added_completed_player_ids:
+            return None
+        return {
+            'count_delta': count_delta,
+            'added_completed_player_ids': added_completed_player_ids,
+            # Identifies THIS play's own entry in event_progress['_actor_contributions'] (see
+            # Game._track_event_progress) so _undo_event_progress_delta can pop exactly that
+            # entry by token -- not by value/position -- and re-derive last_actor_id/name/token
+            # from whichever contribution is now the most recent SURVIVING one. Deliberately NOT
+            # a before/after id VALUE comparison: two different interleaved plays by the SAME
+            # player write the identical last_actor_id/name, so a bare value comparison can't
+            # tell "still this play's own, uncontested, attribution" apart from "coincidentally
+            # the same actor id a later, still-live play also wrote"; and deliberately NOT a
+            # "restore my own before-play snapshot" either, since that snapshot can itself
+            # already be stale by undo time (see the stack's own comment in
+            # Game._track_event_progress for why). (Parent-level review, defect 1 follow-up.)
+            'last_actor_token_after': after.get('last_actor_token'),
+        }
+
+    def _undo_event_progress_delta(self, delta):
+        """Reverse exactly what one card play's `_event_progress_delta` recorded, against the
+        CURRENT live `self.event_progress` -- not by overwriting it with an absolute snapshot,
+        so any OTHER still-live interleaved cancellable play's own independent contribution is
+        left untouched. `succeeded`/`status` are pure functions of count vs. required (mirroring
+        `_track_event_progress`'s own derivation), so they're recomputed from the adjusted count
+        rather than separately tracked; `event_notification` is regenerated the same way
+        `_track_event_progress` itself does, from the corrected `event_progress`.
+        """
+        if not isinstance(delta, dict):
+            return
+        progress = self.event_progress
+        if not isinstance(progress, dict) or progress.get('settled'):
+            return
+        added_ids = delta.get('added_completed_player_ids') or []
+        if added_ids and isinstance(progress.get('completed_player_ids'), list):
+            removed = set(added_ids)
+            progress['completed_player_ids'] = [
+                pid for pid in progress['completed_player_ids'] if pid not in removed
+            ]
+            # each_non_red_player mode derives count directly from this list's length.
+            progress['count'] = len(progress['completed_player_ids'])
+        else:
+            count_delta = int(delta.get('count_delta', 0) or 0)
+            if count_delta:
+                progress['count'] = max(0, int(progress.get('count', 0) or 0) - count_delta)
+        required = int(progress.get('required', 0) or 0)
+        if required > 0:
+            now_succeeded = int(progress.get('count', 0) or 0) >= required
+            progress['succeeded'] = now_succeeded
+            progress['status'] = 'success_pending' if now_succeeded else 'active'
+        # Remove exactly THIS play's own entry from the ordered "still-live contributors" stack
+        # (by token, not by value/position), then re-derive last_actor_id/name/token from
+        # whatever is now the most recent SURVIVING contribution. NOT a "restore my own
+        # before-play value" -- a value-snapshot restore is unsafe here even beyond the
+        # same-actor-id ambiguity a token fixes: the "before" value captured when THIS play
+        # started may itself already be a now-stale snapshot of a DIFFERENT play's contribution
+        # that has since been independently cancelled (see the long comment on the stack in
+        # Game._track_event_progress), which restoring it would incorrectly resurrect. Popping
+        # by token and re-deriving from the live stack's new top is correct under every
+        # interleaved cancellation order (parent-level review, defect 1 follow-up).
+        token_after = delta.get('last_actor_token_after')
+        stack = progress.get('_actor_contributions')
+        if token_after and isinstance(stack, list):
+            new_stack = [entry for entry in stack if entry.get('token') != token_after]
+            if len(new_stack) != len(stack):
+                progress['_actor_contributions'] = new_stack
+                if new_stack:
+                    top = new_stack[-1]
+                    progress['last_actor_id'] = top.get('actor_id')
+                    progress['last_actor_name'] = top.get('actor_name')
+                    progress['last_actor_token'] = top.get('token')
+                else:
+                    progress.pop('last_actor_id', None)
+                    progress.pop('last_actor_name', None)
+                    progress.pop('last_actor_token', None)
+                    progress.pop('_actor_contributions', None)
+        self.event_notification = self._event_display_payload()
 
     # --- Reference-counted played_money_card/played_propaganda_card/played_nonstarter_names ---
     # bookkeeping (see the field comments in Game._new_turn_log). Every card play that
@@ -1698,11 +1807,11 @@ class CardPlayMixin:
             contributed_name = choice.get('rollback_contributed_nonstarter_name')
             if contributed_name:
                 self._undo_nonstarter_name_played(contributed_name)
-            if 'rollback_event_progress' in choice:
-                snapshot = choice.get('rollback_event_progress')
-                self.event_progress = dict(snapshot) if isinstance(snapshot, dict) else snapshot
-                notification = choice.get('rollback_event_notification')
-                self.event_notification = dict(notification) if isinstance(notification, dict) else notification
+            # Undo exactly (and only) what THIS card's own play contributed to event_progress --
+            # correct under any cancellation order of multiple interleaved cancellable plays,
+            # unlike restoring an absolute snapshot (see _event_progress_delta/
+            # _undo_event_progress_delta).
+            self._undo_event_progress_delta(choice.get('rollback_event_progress_delta'))
         # Registered ability choices consume nothing until resolved; transactional support
         # choices explicitly restore their card and turn flags above.
         self.pending_choice = None
@@ -2166,26 +2275,87 @@ class CardPlayMixin:
                             'remaining_count': remaining_count,
                         }
                     self.log(f"{player.name} has {remaining_count} {card_name} dissolve(s) remaining but no further legal target; confirming {len(accumulated_picks)} now")
-                # Final confirmation: apply every accumulated pick atomically. Each pick is
-                # re-validated against the live board immediately before it is applied (req #9 --
-                # an earlier pick could have gone stale while later picks were still being made).
+                # Final confirmation: re-validate every accumulated pick against the live board
+                # BEFORE applying anything (req #9 -- an earlier pick could have gone stale while
+                # later picks were still being made). This must be all-or-nothing (req #6): a
+                # stale pick may NOT be silently dropped while the remaining (now-partial) picks
+                # still get dissolved and the card still gets consumed -- that would resolve a
+                # 2-target pick into only 1 actual dissolution. So the board is only ever mutated
+                # below once EVERY accumulated pick has independently confirmed still-legal;
+                # otherwise nothing is applied, nothing is consumed, and the flow either re-opens
+                # onto a fresh legal target for the vacated slot(s) or fully fizzles -- mirroring
+                # the same all-or-nothing discipline already used for the two-phase
+                # self-sacrifice flows' own stale-target revalidation above. (Parent-level
+                # review, defect 2.)
+                live_targets_for_validation = self._interactive_support_dissolve_targets(
+                    player,
+                    require_self_sacrifice=False,
+                    max_steps=max_steps,
+                    target_players=target_players,
+                    target_region=target_region,
+                    include_shared_source=bool(context.get('include_shared_source', False)),
+                )
+                still_valid_picks = [
+                    pick for pick in accumulated_picks
+                    if any(
+                        entry.get('player_id') == pick['target_player_id'] and entry.get('town') == pick['town']
+                        for entry in live_targets_for_validation
+                    )
+                ]
+                if len(still_valid_picks) < len(accumulated_picks):
+                    stale_towns = [
+                        pick['town'] for pick in accumulated_picks if pick not in still_valid_picks
+                    ]
+                    remaining_count = total_count - len(still_valid_picks)
+                    next_targets = [
+                        entry for entry in live_targets_for_validation
+                        if not any(
+                            pick['target_player_id'] == entry.get('player_id') and pick['town'] == entry.get('town')
+                            for pick in still_valid_picks
+                        )
+                    ]
+                    if remaining_count > 0 and next_targets:
+                        next_context = {
+                            **context,
+                            'accumulated_dissolve_picks': still_valid_picks,
+                            'remaining_count': remaining_count,
+                        }
+                        self._set_pending_support_flow_choice(
+                            player,
+                            'support_interaction',
+                            'target',
+                            f'{card_name}：{"、".join(stale_towns)} 已不再是合法目標，請重新選擇 {remaining_count} 個鄰近敵方組織。',
+                            source_name=card_name,
+                            targets=next_targets,
+                            remaining_count=remaining_count,
+                            selected_count=len(still_valid_picks),
+                            total_count=total_count,
+                            context=next_context,
+                            **self._dissolve_cancel_kwargs(next_context),
+                        )
+                        self.log(f"{player.name}'s {card_name} pick(s) at {'、'.join(stale_towns)} became illegal before final confirmation; re-opened for {remaining_count} more")
+                        return {
+                            'success': True,
+                            'pending_choice': True,
+                            'retryable': True,
+                            'selected_count': len(still_valid_picks),
+                            'total_count': total_count,
+                            'remaining_count': remaining_count,
+                            'stale_towns': stale_towns,
+                        }
+                    # No legal replacement target exists at all -- nothing can be applied or
+                    # re-picked, so the whole flow fizzles: card already committed (per the
+                    # existing on-play cost semantics this feature never changed), but zero
+                    # board effect, exactly like the fizzle already used when no legal target
+                    # remained after an earlier non-final pick above.
+                    choice['is_final_confirmation'] = True
+                    self.pending_choice = None
+                    self.log(f"{player.name}'s {card_name} confirmation had stale target(s) at {'、'.join(stale_towns)} with no legal replacement; effect fizzled")
+                    return {'success': True, 'effect_fizzled': True, 'reason': 'Stale target', 'source_name': card_name}
+
+                # Every accumulated pick is still legal -- apply them all atomically.
                 applied = []
                 for pick in accumulated_picks:
-                    live_targets = self._interactive_support_dissolve_targets(
-                        player,
-                        require_self_sacrifice=False,
-                        max_steps=max_steps,
-                        target_players=target_players,
-                        target_region=target_region,
-                        include_shared_source=bool(context.get('include_shared_source', False)),
-                    )
-                    still_legal = any(
-                        entry.get('player_id') == pick['target_player_id'] and entry.get('town') == pick['town']
-                        for entry in live_targets
-                    )
-                    if not still_legal:
-                        self.log(f"{player.name}'s {card_name} target at {pick['town']} became illegal before confirmation and was skipped")
-                        continue
                     pick_target_player = next((p for p in self.players if getattr(p, 'id', None) == pick['target_player_id']), None)
                     if pick_target_player is None:
                         continue
@@ -2436,6 +2606,9 @@ class CardPlayMixin:
                     'borrowed_purchase_area_index': action_context.get('borrowed_purchase_area_index'),
                     'event_progress': action_context.get('prior_event_progress'),
                     'event_notification': action_context.get('prior_event_notification'),
+                    'event_progress_after': (
+                        dict(self.event_progress) if isinstance(self.event_progress, dict) else self.event_progress
+                    ),
                 }
                 pending_destination.update(self._dissolve_cancel_kwargs(pending_context))
             if not action_context.get('removed_current_card'):
@@ -2544,7 +2717,50 @@ class CardPlayMixin:
                 return support_response
 
         if effective_type != 'support':
-            if card_name in getattr(self.action_engine, 'cards', {}):
+            if card_name in {"派遣間諜", "內應間諜"}:
+                # A declined reaction resumes the same committed card play -- but 派遣間諜/
+                # 內應間諜 have NO `effect` entry in action_engine.cards (their dissolve
+                # mechanic is hardcoded via _start_card_dissolve_interaction, not the generic
+                # data-driven effect pipeline the `elif` branch below drives). Routing them
+                # through that generic branch instead does nothing: the `elif` condition is
+                # simply false for these two cards, so control fell through to the shared tail
+                # below, discarded the card, fired cost/faction-ability hooks, and never opened
+                # a target choice at all -- the player lost the card for nothing. Mirror
+                # play_card's own direct-play special-case for these two cards exactly (see
+                # that branch, above in play_card itself) so the cancellable dissolve flow opens
+                # here exactly as it would on a normal, non-reaction-interrupted play.
+                # (Parent-level review, defect 3.)
+                if not action_context.get('card_canceled'):
+                    spy_result = self._start_card_dissolve_interaction(
+                        player,
+                        card_name,
+                        requires_self_sacrifice=(card_name == "派遣間諜"),
+                        range_limit=self._event_card_range_context(player, played_card)['range_limit'],
+                        target_player_id=action_context.get('target_player_id'),
+                        target_region=self._event_card_range_context(player, played_card)['target_region'],
+                        extra_context={
+                            **(
+                                {'era_followup_discard_choice': action_context.get('era_followup_discard_choice')}
+                                if action_context.get('era_followup_discard_choice') else {}
+                            ),
+                            '_dissolve_cancel_snapshot': action_context.get('_dissolve_cancel_snapshot'),
+                            'post_play_faction_triggers': {
+                                'player_id': player.id,
+                                'cost_has_money': bool(action_context.get('cost_has_money')),
+                                'cost_has_propaganda': bool(action_context.get('cost_has_propaganda')),
+                                'played_card': played_card,
+                                'used_faction_ability_names': list(action_context.get('used_faction_ability_names') or []),
+                            },
+                        },
+                    )
+                    if spy_result and spy_result.get('pending_choice'):
+                        if not action_context.get('removed_current_card'):
+                            if not self._return_borrowed_card_to_owner_topdeck(played_card):
+                                player.deck.discard([played_card])
+                        self.log(f"{player.name} played {card_name}")
+                        return {"success": True, "pending_choice": True, **spy_result}
+                    return {"error": "No target organization within range"}
+            elif card_name in getattr(self.action_engine, 'cards', {}):
                 if not action_context.get('card_canceled'):
                     action_result = self.action_engine.execute(card_name, player, self, context=action_context, include_resources=False)
                     if isinstance(action_result, dict) and action_result.get('pending_choice'):
@@ -3240,6 +3456,12 @@ class CardPlayMixin:
                 self._track_event_progress('play_card_with_money', player=player)
             if int(purchase_cost.get('propaganda', 0) or 0) > 0:
                 self._track_event_progress('play_card_with_propaganda', player=player)
+            # Captured AFTER this play's own cost-trigger calls above, so
+            # _event_progress_delta(event_progress, event_progress_after) sees exactly what
+            # THIS play's own _track_event_progress call(s) changed (see _dissolve_cancel_kwargs).
+            action_context['_dissolve_cancel_snapshot']['event_progress_after'] = (
+                dict(self.event_progress) if isinstance(self.event_progress, dict) else self.event_progress
+            )
             # A support card counts toward 展現實力's played-card combo on the act of
             # playing (even if a reaction later cancels it), exactly like a command card,
             # whose name is recorded before its own reaction window below. Recording it
@@ -3274,6 +3496,10 @@ class CardPlayMixin:
                 self._track_event_progress('play_card_with_money', player=player)
             if int(purchase_cost.get('propaganda', 0) or 0) > 0:
                 self._track_event_progress('play_card_with_propaganda', player=player)
+            # See the matching capture in the support branch above -- same reasoning.
+            action_context['_dissolve_cancel_snapshot']['event_progress_after'] = (
+                dict(self.event_progress) if isinstance(self.event_progress, dict) else self.event_progress
+            )
         # (support cards already recorded their own name above; this covers every other path)
         if effective_type != 'support' and card_name not in {"追隨者", "樂捐者"}:
             self._note_nonstarter_name_played(card_name)

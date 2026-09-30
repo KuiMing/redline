@@ -50,6 +50,11 @@ class DissolveCancelProofTestRoutes:
             methods=["POST"],
         )
         self.router.add_api_route(
+            "/test/setup-dissolve-cancel-multi-target-stale-final-pick",
+            self.setup_multi_target_stale_final_pick,
+            methods=["POST"],
+        )
+        self.router.add_api_route(
             "/test/setup-dissolve-cancel-forced-event",
             self.setup_forced_event,
             methods=["POST"],
@@ -145,6 +150,43 @@ class DissolveCancelProofTestRoutes:
             "url": f"/?game_id={game_id}&player_id={actor.id}",
             "play_result": played,
             "pre_play_state": pre_play_state,
+            "state": game.state(actor.id),
+        }
+
+    def setup_multi_target_stale_final_pick(self, payload: dict):
+        """北國奧援 III (count=2) with the FIRST pick (天津) already made and then made stale
+        (its organization removed from the board, simulating some other action in between) --
+        lands the game one resolve away from the multi-target final-confirmation's stale-pick
+        rejection path (parent-level review, defect 2). A third enemy organization (承德, also
+        within 1 tile of 北京 -- unlike 上海, which is NOT in range and so is never offered as a
+        target at all) is still available so the stale rejection has a legal replacement target
+        to re-open onto, exercising the "reopen for re-pick with an updated hint" branch rather
+        than the full-fizzle branch -- this is the UI-visible retry state the frontend must
+        render correctly on a stale-pick rejection. The frontend should see the choice re-open
+        with an updated prompt/target list (still scoped to the ONE remaining pick) rather than
+        either silently completing or losing the still-valid 石家莊 pick."""
+        runtime = self._runtime_provider()
+        game, actor, enemy = self._base_game()
+        actor.faction_id = "liberals"
+        actor.base = "北京"
+        actor.organizations = {"北京": 1}
+        actor.hand = [game._make_support_card("北國奧援")]
+        game._support_card_tier = lambda _player, _card: (3, 0, [])
+        enemy.base = "西安"
+        enemy.organizations = {"天津": 1, "石家莊": 1, "承德": 1}
+
+        game.play_card(0, mode="action")
+        first_index = next(i for i, t in enumerate(game.pending_choice["targets"]) if t["town"] == "天津")
+        first_pick = game.resolve_pending_choice(actor.id, first_index)
+        del enemy.organizations["天津"]  # 天津 goes stale before the final pick
+
+        game_id = _register_game(runtime, game, actor)
+        return {
+            "success": True,
+            "game_id": game_id,
+            "player_id": actor.id,
+            "url": f"/?game_id={game_id}&player_id={actor.id}",
+            "first_pick_result": first_pick,
             "state": game.state(actor.id),
         }
 
