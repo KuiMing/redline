@@ -281,4 +281,6 @@ def test_era_restrict_ignore_distance_http_openapi_and_route_order():
     paths = [getattr(route, "path", None) for route in routes]
     index = paths.index("/test/setup-era-restrict-ignore-distance-proof")
     assert paths[index - 1] == "/test/setup-safehouse-range-proof"
-    assert index == len(paths) - 1
+    # No longer the last-registered test route: the cancellable-dissolve-target-selection
+    # feature's proof routes were appended after this one (see registry.py).
+    assert paths[index + 1] == "/test/setup-dissolve-cancel-single-target"

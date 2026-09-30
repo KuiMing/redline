@@ -348,7 +348,9 @@ def test_north_support_tier1_sacrifices_the_selected_own_org_before_dissolving_e
 
     assert sacrificed.get('success'), sacrificed
     assert sacrificed.get('pending_choice') is True, sacrificed
-    assert actor.organizations == {'巴黎': 1}
+    # Cancellable-dissolve-target-selection feature: no own organization is removed until the
+    # FINAL confirmation (picking the enemy target below), so 日內瓦 is still present here.
+    assert actor.organizations == {'巴黎': 1, '日內瓦': 1}
     assert g.pending_choice['step'] == 'target'
     assert g.pending_choice['targets'] == [{
         'id': f'{enemy.id}::慕尼黑',
@@ -361,6 +363,7 @@ def test_north_support_tier1_sacrifices_the_selected_own_org_before_dissolving_e
     resolved = g.resolve_pending_choice(actor.id, 0)
 
     assert resolved.get('success'), resolved
+    # Both the sacrifice and the enemy dissolve land atomically at this final confirmation.
     assert actor.organizations == {'巴黎': 1}
     assert enemy.organizations.get('慕尼黑', 0) == 0
 
@@ -829,6 +832,36 @@ def test_intel_network_state_serializes_three_options_for_ui():
 
 
 
+def test_intel_network_dissolve_branch_preserves_scoped_range_and_region(monkeypatch):
+    g = make_game()
+    actor, target = g.players
+    actor.hand = [card(g, '情報網')]
+    actor.organizations = {'亞巴坎': 1}
+    target.organizations = {'伯力': 1, '北京': 1}
+    monkeypatch.setattr(
+        g,
+        '_event_card_range_context',
+        lambda *_args, **_kwargs: {'range_limit': 5, 'target_region': 'outer_manchuria'},
+    )
+
+    played = g.play_card(0, mode='action')
+
+    assert played.get('success'), played
+    assert g.pending_choice and g.pending_choice['choice_key'] == 'choose_one'
+    resolved = g.resolve_pending_choice(actor.id, 1)
+    assert resolved.get('pending_choice') is True, resolved
+    assert g.pending_choice['choice_key'] == 'intel_network_dissolve_target'
+    assert g.pending_choice['prompt'] == '情報網：選擇 1 個要瓦解的 5 格內敵方組織。'
+    assert [(entry['player_id'], entry['town']) for entry in g.pending_choice['targets']] == [
+        (target.id, '伯力')
+    ]
+
+    target_resolved = g.resolve_pending_choice(actor.id, 0)
+
+    assert target_resolved.get('success'), target_resolved
+    assert target.organizations == {'北京': 1}
+
+
 def test_intel_network_first_branch_adds_internal_conflict_without_running_other_branches():
     g = Game([('p1', 'P1'), ('p2', 'P2'), ('p3', 'P3'), ('p4', 'P4')])
     g.game_phase = GamePhase.MAIN
@@ -1140,9 +1173,12 @@ def test_counter_cancel_depth3_lets_original_action_resolve():
     assert names(reactor.hand) == []
 
 
-def test_counter_cancel_depth3_with_bystander_who_always_declines():
-    """三人局：C 全程持有可取消卡但每一層都選擇不取消，結果應與只有 A、B 兩人時完全
-    一樣——C 手握合格反應卡這件事本身不該改變任何結算，只是多一次詢問。"""
+def test_first_cancel_closes_other_original_reactors_window_through_counter_chain():
+    """三人局：B、C 同時可取消 A 的牌；B 先取消後，C 的同批反應立即失效。
+
+    A 仍可反制 B，但 C 不得因反制鏈而立刻重開「爆料黑幕」視窗。這可確保第一個
+    成功取消者會清除同一批其他 responder 的 pending reaction，且舊視窗不會重現。
+    """
     g = Game([('p1', 'P1'), ('p2', 'P2'), ('p3', 'P3')])
     g.game_phase = GamePhase.MAIN
     g.turn_phase = TurnPhase.ACTION
@@ -1154,41 +1190,38 @@ def test_counter_cancel_depth3_with_bystander_who_always_declines():
     actor.hand = [card(g, '領導'), card(g, '爆料黑幕')]
     actor.deck.draw_pile = [Card('D1', 'command', {}), Card('D2', 'command', {})]
     b.hand = [card(g, '情報網')]
-    c.hand = [card(g, '爆料黑幕')]  # 全程候選人，但每次都選擇不取消
+    c.hand = [card(g, '爆料黑幕')]
 
     result = g.play_card(0, mode='action')
     assert result.get('pending_choice') is True, result
-    # 最初這層：B、C 都持合格卡，先問 B（players 順序）
     assert g.pending_choice['player_id'] == b.id
-    assert [entry['name'] for entry in g.pending_choice['remaining_candidates'][0]['cards']] == ['爆料黑幕']
+    assert g.pending_choice['remaining_candidates'][0]['player'] is c
 
-    canceled = g.resolve_pending_choice(b.id, 1)  # B 用 情報網 取消 領導（C 沒被問到，因為 B 先取消了）
+    canceled = g.resolve_pending_choice(b.id, 1)
     assert canceled.get('success'), canceled
     assert canceled.get('opened_counter_layer') is True
-    # 反制層：候選人是 A（自己的爆料黑幕）與 C（爆料黑幕），排除剛出牌的 B。players 順序 A 先問。
     assert g.pending_choice['player_id'] == actor.id
-    assert g.pending_choice['remaining_candidates'] and g.pending_choice['remaining_candidates'][0]['player'] is c
+    assert not g.pending_choice.get('remaining_candidates'), 'C 的原反應批次應在 B 成功取消時立即清除'
+    assert g.state(c.id)['pending_choice']['player_id'] == actor.id
 
-    countered = g.resolve_pending_choice(actor.id, 1)  # A 反制
+    countered = g.resolve_pending_choice(actor.id, 1)
     assert countered.get('success'), countered
-    assert g.pending_choice is not None, 'C 仍是候選人，其反應卡對 A 的爆料黑幕也合格'
-    assert g.pending_choice['player_id'] == c.id
-    assert [entry['name'] for entry in g.pending_choice['cards']] == ['爆料黑幕']
-
-    declined = g.resolve_pending_choice(c.id, 0)  # C 選擇不取消
-    assert declined.get('success'), declined
-    assert g.pending_choice is None
+    assert g.pending_choice is None, 'C 的失效反應視窗不得在反制後重現'
+    assert g.resolve_pending_choice(c.id, 1).get('error') == 'No pending choice'
 
     assert sorted(names(actor.hand)) == ['D1', 'D2']
     assert names(actor.deck.discard_pile) == ['爆料黑幕', '領導']
     assert names(b.deck.discard_pile) == ['情報網']
-    assert names(c.hand) == ['爆料黑幕']  # C 從未出牌，卡還在手上
+    assert names(c.hand) == ['爆料黑幕']
     assert names(c.deck.discard_pile) == []
 
 
-def test_counter_cancel_depth4_third_player_joins_chain_and_recancels_original():
-    """使用者確認的產品設計：A 出牌、B 取消、A 反制、C 也能加入反制鏈再取消 A 的反制——
-    使 A 的原始牌最終還是被取消（堆疊上方存活的取消次數為偶數→翻回取消）。"""
+def test_counter_cancel_depth4_original_reactor_can_recancel_after_other_windows_close():
+    """A 出牌、B 取消、A 反制後，B 可用另一張牌再次反制。
+
+    C 是最初反應層尚未輪到的候選人。B 第一次取消時，C 的同批視窗必須關閉，且不得
+    加入後續反制鏈。這仍保留原出牌者與已完成反應者之間的多層反制。
+    """
     g = Game([('p1', 'P1'), ('p2', 'P2'), ('p3', 'P3')])
     g.game_phase = GamePhase.MAIN
     g.turn_phase = TurnPhase.ACTION
@@ -1199,8 +1232,9 @@ def test_counter_cancel_depth4_third_player_joins_chain_and_recancels_original()
     actor, b, c = g.players
     actor.hand = [card(g, '領導'), card(g, '爆料黑幕')]
     actor.deck.draw_pile = [Card('D1', 'command', {}), Card('D2', 'command', {})]
-    b.hand = [card(g, '情報網')]
-    c.hand = [card(g, '產業滲透')]  # 爆料黑幕購買費用含資金1，符合產業滲透取消條件
+    b.hand = [card(g, '情報網'), card(g, '產業滲透')]
+    b.deck.draw_pile = [Card('B-D1', 'command', {})]
+    c.hand = [card(g, '爆料黑幕')]
 
     result = g.play_card(0, mode='action')
     assert result.get('pending_choice') is True, result
@@ -1214,33 +1248,30 @@ def test_counter_cancel_depth4_third_player_joins_chain_and_recancels_original()
     step2 = g.resolve_pending_choice(actor.id, 1)  # A 用 爆料黑幕 反制 B 的 情報網
     assert step2.get('success'), step2
     assert step2.get('opened_counter_layer') is True
-    assert g.pending_choice is not None, 'C 手上的 產業滲透 對 A 的 爆料黑幕（含資金費用1）合格，應繼續開新層'
-    assert g.pending_choice['player_id'] == c.id
+    assert g.pending_choice is not None
+    assert g.pending_choice['player_id'] == b.id
     assert g.pending_choice['acting_player_id'] == actor.id
     assert g.pending_choice['played_card_name'] == '爆料黑幕'
     assert [entry['name'] for entry in g.pending_choice['cards']] == ['產業滲透']
+    assert not g.pending_choice.get('remaining_candidates')
 
-    step3 = g.resolve_pending_choice(c.id, 1)  # C 用 產業滲透 反制 A 的 爆料黑幕
+    step3 = g.resolve_pending_choice(b.id, 1)  # B 用 產業滲透 再次反制 A 的 爆料黑幕
     assert step3.get('success'), step3
     assert step3.get('reaction_card') == '產業滲透'
     assert step3.get('canceled_card') == '爆料黑幕'
-    assert g.pending_choice is None, '沒有更多候選人（B、A 手牌已空），整條深度4的鏈直接結算'
+    assert g.pending_choice is None, 'C 的原反應視窗已失效，整條深度4的鏈直接結算'
 
-    # 交替結算：stack = [領導, 情報網(B), 爆料黑幕(A), 產業滲透(C)]，n=3（奇數）
+    # 交替結算：stack = [領導, 情報網(B), 爆料黑幕(A), 產業滲透(B)]，n=3（奇數）
     # resolved[3]=True（頂端，沒人能取消它）→ resolved[2]=not resolved[3]=False（A 的爆料黑幕
     # 被取消）→ resolved[1]=not resolved[2]=True（B 的情報網翻回生效）→
     # resolved[0]=not resolved[1]=False（A 的領導最終仍是被取消）。
-    assert names(actor.hand) == []  # 領導被取消，沒有抽牌
-    assert names(actor.deck.draw_pile) == ['D1', 'D2']  # 沒人動用這副牌，領導的抽牌效果從未執行
-    # actor 打出的兩張牌（領導＝原始牌、爆料黑幕＝反制用掉的反應卡）都被消耗進自己的棄牌堆，
-    # 即使各自的效果都沒有生效（領導被取消；爆料黑幕本身也被 C 取消，沒有 bonus 抽牌）。
+    assert names(actor.hand) == []
+    assert names(actor.deck.draw_pile) == ['D1', 'D2']
     assert names(actor.deck.discard_pile) == ['爆料黑幕', '領導']
-    # 情報網翻回生效：`_resolve_reaction_context` 對『作為反應卡使用』的情報網固定只執行
-    # cancel_card（不會走它印刷的 choose_one／放內鬥效果——那是情報網當作自己回合行動卡時
-    # 才有的分支，2026-08-02 的既有規則），所以這裡只驗證它已從 B 手上消耗並進棄牌堆。
-    assert names(b.deck.discard_pile) == ['情報網']
-    # 產業滲透生效：取消的是 爆料黑幕（購買費用含資金1）→ 觸發 canceled_money_cost_card bonus 抽牌
-    assert names(c.deck.discard_pile) == ['產業滲透']
+    assert names(b.deck.discard_pile) == ['產業滲透', '情報網']
+    assert names(b.hand) == ['B-D1']
+    assert names(c.hand) == ['爆料黑幕']
+    assert names(c.deck.discard_pile) == []
 
 
 def test_counter_cancel_chain_cannot_ask_same_reactor_twice_with_one_card():
@@ -1732,7 +1763,11 @@ def test_divide_adds_internal_conflict_to_other_players_not_self():
     for player in g.players:
         player.deck.discard_pile = []
 
-    result = g.play_card(0, mode='action')
+    result = g.play_card(
+        0,
+        mode='action',
+        target_player_ids=[p2.id, p3.id, p4.id],
+    )
 
     assert result.get('success'), result
     assert names(p1.deck.discard_pile).count('內鬥') == 0
@@ -2053,7 +2088,9 @@ def test_field_agent_prompts_sacrifice_then_target_org_like_north_support():
 
     assert sacrificed.get('success'), sacrificed
     assert sacrificed.get('pending_choice') is True
-    assert p1.organizations == {'北京': 1}
+    # Cancellable-dissolve-target-selection feature: no own organization is removed until the
+    # FINAL confirmation (picking the enemy target below), so 上海 is still present here.
+    assert p1.organizations == {'北京': 1, '上海': 1}
     assert g.pending_choice['step'] == 'target'
     assert g.pending_choice['targets'] == [{
         'id': f'{p2.id}::杭州',
@@ -2087,6 +2124,97 @@ def test_embedded_agent_requires_target_org_within_one_step_of_own_org():
     assert p1.organizations == {'北京': 1}
     assert p2.organizations == {'香港城': 1}
 
+
+def _shared_spy_game():
+    g = Game([('actor', '台灣綠線'), ('owner', '性別革命'), ('enemy', '紅軍')])
+    actor, owner, enemy = g.players
+    g.game_phase = GamePhase.MAIN
+    g.turn_phase = TurnPhase.ACTION
+    g.current_player_index = 0
+    g.pending_base_choices = {}
+    actor.faction_id = 'taiwan_green'
+    owner.faction_id = 'gender_revolution'
+    enemy.faction_id = 'red_army'
+    actor.base = '臺北'
+    actor.organizations = {}
+    owner.base = '香港城'
+    owner.organizations = {'上海': 1}
+    enemy.base = '北京'
+    enemy.organizations = {'杭州': 1}
+    pin_noop_event(g)
+    actor.hand = [card(g, '派遣間諜')]
+    return g, actor, owner, enemy
+
+
+def test_field_agent_requires_shared_organization_owner_consent_before_sacrifice():
+    g, actor, owner, _enemy = _shared_spy_game()
+
+    played = g.play_card(0, mode='action')
+    assert played.get('pending_choice') is True, played
+    assert g.pending_choice['player_id'] == actor.id
+    assert [entry['town'] for entry in g.pending_choice['towns']] == ['上海']
+
+    requested = g.resolve_pending_choice(actor.id, 0)
+
+    assert requested.get('pending_choice') is True, requested
+    assert g.pending_choice['type'] == 'option_choice'
+    assert g.pending_choice['choice_key'] == 'shared_spy_origin_consent'
+    assert g.pending_choice['player_id'] == owner.id
+    assert owner.organizations == {'上海': 1}
+
+    approved = g.resolve_pending_choice(owner.id, 1)
+
+    assert approved.get('pending_choice') is True, approved
+    # Cancellable-dissolve-target-selection feature: consent alone does not remove the shared
+    # organization -- that happens atomically together with the enemy dissolve at the FINAL
+    # confirmation (the acting player's target pick), not here.
+    assert owner.organizations == {'上海': 1}
+    assert g.pending_choice['player_id'] == actor.id
+    assert g.pending_choice['step'] == 'target'
+
+
+def test_field_agent_owner_can_refuse_shared_organization_sacrifice():
+    g, actor, owner, _enemy = _shared_spy_game()
+
+    assert g.play_card(0, mode='action').get('pending_choice') is True
+    assert g.resolve_pending_choice(actor.id, 0).get('pending_choice') is True
+    refused = g.resolve_pending_choice(owner.id, 0)
+
+    assert refused.get('pending_choice') is False, refused
+    assert refused.get('declined') is True
+    assert owner.organizations == {'上海': 1}
+    assert g.pending_choice is None
+
+
+def test_field_agent_refusal_excludes_declined_origin_but_keeps_alternative():
+    g, actor, owner, _enemy = _shared_spy_game()
+    actor.organizations = {'南京': 1}
+
+    assert g.play_card(0, mode='action').get('pending_choice') is True
+    shared_index = next(
+        index for index, entry in enumerate(g.pending_choice['towns']) if entry['town'] == '上海'
+    )
+    assert g.resolve_pending_choice(actor.id, shared_index).get('pending_choice') is True
+    refused = g.resolve_pending_choice(owner.id, 0)
+
+    assert refused.get('pending_choice') is True, refused
+    assert owner.organizations == {'上海': 1}
+    assert g.pending_choice['player_id'] == actor.id
+    assert [entry['town'] for entry in g.pending_choice['towns']] == ['南京']
+
+
+def test_field_agent_consent_revalidates_target_before_sacrifice():
+    g, actor, owner, enemy = _shared_spy_game()
+
+    assert g.play_card(0, mode='action').get('pending_choice') is True
+    assert g.resolve_pending_choice(actor.id, 0).get('pending_choice') is True
+    enemy.organizations.clear()
+    approved = g.resolve_pending_choice(owner.id, 1)
+
+    assert approved.get('pending_choice') is False, approved
+    assert approved.get('declined') is True
+    assert owner.organizations == {'上海': 1}
+    assert g.pending_choice is None
 
 
 def test_embedded_agent_prompts_exact_in_range_target_org_without_self_sacrifice():
@@ -2644,9 +2772,9 @@ def test_reactively_played_reaction_card_counts_toward_its_own_cost_based_event_
 def test_reactively_played_reaction_card_counting_is_unaffected_by_being_counter_canceled():
     """反應卡本身被算入「打出購買費用有…的牌」的時機是「花掉這張卡去反應」那個當下，
     跟它後續有沒有被反制、真正的取消效果有沒有生效無關——比照 play_card() 既有的「出牌
-    本身就計入，之後被取消也不會撤銷」語意。這裡讓 A 用爆料黑幕（宣傳4）取消 B 的牌，
-    A 自己的爆料黑幕又被 C 用另一張爆料黑幕反制（B 的原始效果最終翻回生效），確認 A 的
-    爆料黑幕仍然計入宣傳費用觸發的任務進度。"""
+    本身就計入，之後被取消也不會撤銷」語意。這裡讓 B 用爆料黑幕（宣傳4）取消 A 的牌，
+    B 的爆料黑幕再被 A 用另一張爆料黑幕反制。C 的同批視窗已關閉。確認 B 的爆料黑幕
+    仍然計入宣傳費用觸發的任務進度。"""
     g = Game([('p1', 'P1'), ('p2', 'P2'), ('p3', 'P3')])
     g.game_phase = GamePhase.MAIN
     g.turn_phase = TurnPhase.ACTION
@@ -2659,7 +2787,7 @@ def test_reactively_played_reaction_card_counting_is_unaffected_by_being_counter
     b.faction_id = 'liberals'
     c.faction_id = 'hong_kong'
     pin_active_mission_event(g, '重大災難')
-    actor.hand = [card(g, '乘勝追擊')]
+    actor.hand = [card(g, '乘勝追擊'), card(g, '爆料黑幕')]
     b.hand = [card(g, '爆料黑幕')]
     c.hand = [card(g, '爆料黑幕')]
 
@@ -2667,9 +2795,12 @@ def test_reactively_played_reaction_card_counting_is_unaffected_by_being_counter
     assert result.get('pending_choice') is True, result
     step1 = g.resolve_pending_choice(b.id, 1)  # B 用爆料黑幕取消 A 的乘勝追擊
     assert step1.get('opened_counter_layer') is True, step1
-    step2 = g.resolve_pending_choice(c.id, 1)  # C 用爆料黑幕反制 B 的爆料黑幕
+    assert g.pending_choice['player_id'] == actor.id
+    assert not g.pending_choice.get('remaining_candidates')
+    step2 = g.resolve_pending_choice(actor.id, 1)  # A 用爆料黑幕反制 B 的爆料黑幕
     assert step2.get('success'), step2
     assert g.pending_choice is None
+    assert names(c.hand) == ['爆料黑幕']
 
     assert g.event_progress['succeeded'] is True
 
@@ -3642,6 +3773,7 @@ def test_npc_progresses_when_hong_kong_safe_house_triggers_on_inner_build():
     g = make_game()
     actor = g.current_player()
     actor.faction_id = 'hong_kong'
+    g.players[1].faction_id = 'liberals'
     actor.base = '香港城'
     pin_active_mission_event(g, '全國人大召開')
 
@@ -3649,8 +3781,11 @@ def test_npc_progresses_when_hong_kong_safe_house_triggers_on_inner_build():
     assert '南寧' in set(g._towns_for_region_alias('china'))
     g._record_action_build(actor, '南寧')
 
-    assert g.event_progress['succeeded'] is True
-    assert g.event_progress['status'] == 'success_pending'
+    assert g.event_progress['count'] == 1
+    assert g.event_progress['required'] == 2
+    assert g.event_progress['completed_player_ids'] == [actor.id]
+    assert g.event_progress['succeeded'] is False
+    assert g.event_progress['status'] == 'active'
     assert any('triggered 安全屋 while building in 南寧' in entry for entry in g.action_log)
 
 
@@ -3672,8 +3807,8 @@ def test_npc_does_not_count_safe_house_when_hong_kong_base_no_longer_has_it():
 def test_npc_progresses_on_turn_end_inner_build_draw_ability():
     """2026-08-05 使用者playtest回報：事件卡『全國人大召開』（trigger:
     {"type": "use_faction_ability", "count": 1}）——臺灣綠線用東洋奧援在牆內建立組織，
-    回合結束時觸發本土社團（牆內建組織→多抽1張），這個特殊能力發動本身就應該滿足
-    『全國人大召開』的成功條件。稽核發現根因比單一事件更大：`use_faction_ability` 追蹤
+    回合結束時觸發本土社團（牆內建組織→多抽1張），這個特殊能力發動本身就應該完成
+    臺灣綠線在『全國人大召開』中的玩家別進度。稽核發現根因比單一事件更大：`use_faction_ability` 追蹤
     先前只掛在「玩家主動按下的陣營行動」（紅軍統戰部/政工部…以及非紅軍的立場試探/民族
     祭儀等），而「自動觸發型」的陣營能力——回合結束牆內建組織抽牌（本土社團/還我河山/
     還我河山/民國之心）與出牌後首張帶資金/宣傳費用的觸發（商貿組織/民族調和/星星之火/
@@ -3684,6 +3819,7 @@ def test_npc_progresses_on_turn_end_inner_build_draw_ability():
     g = make_game()
     actor = g.current_player()
     actor.faction_id = 'taiwan_green'
+    g.players[1].faction_id = 'liberals'
     pin_active_mission_event(g, '全國人大召開')
     # 本回合在牆內城鎮（南寧、廣州）建立組織——與東洋奧援建組織後 build_organization
     # 寫入 turn_log['built_towns'] 的結果一致。
@@ -3691,8 +3827,11 @@ def test_npc_progresses_on_turn_end_inner_build_draw_ability():
 
     g._end_turn()
 
-    assert g.event_progress['succeeded'] is True
-    assert g.event_progress['status'] == 'success_pending'
+    assert g.event_progress['count'] == 1
+    assert g.event_progress['required'] == 2
+    assert g.event_progress['completed_player_ids'] == [actor.id]
+    assert g.event_progress['succeeded'] is False
+    assert g.event_progress['status'] == 'active'
 
 
 def test_npc_progresses_on_first_money_cost_trigger_ability_immediate_play():
@@ -3712,8 +3851,11 @@ def test_npc_progresses_on_first_money_cost_trigger_ability_immediate_play():
 
     assert result.get('success'), result
     assert g.turn_log.get('faction_first_money_triggered') is True
-    assert g.event_progress['succeeded'] is True
-    assert g.event_progress['status'] == 'success_pending'
+    assert g.event_progress['count'] == 1
+    assert g.event_progress['required'] == 2
+    assert g.event_progress['completed_player_ids'] == [actor.id]
+    assert g.event_progress['succeeded'] is False
+    assert g.event_progress['status'] == 'active'
 
 
 def test_npc_progresses_on_first_money_cost_trigger_ability_deferred_reaction_resume():
@@ -3741,8 +3883,11 @@ def test_npc_progresses_on_first_money_cost_trigger_ability_deferred_reaction_re
 
     assert skipped.get('success'), skipped
     assert g.turn_log.get('faction_first_money_triggered') is True
-    assert g.event_progress['succeeded'] is True
-    assert g.event_progress['status'] == 'success_pending'
+    assert g.event_progress['count'] == 1
+    assert g.event_progress['required'] == 2
+    assert g.event_progress['completed_player_ids'] == [actor.id]
+    assert g.event_progress['succeeded'] is False
+    assert g.event_progress['status'] == 'active'
 
 
 def test_npc_ignores_red_army_own_faction_ability():

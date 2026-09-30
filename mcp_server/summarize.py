@@ -325,6 +325,7 @@ def compact_legal_action_kinds(legal: dict) -> dict:
 def _pending_choice_action_entry(pending: dict) -> dict:
     entry = {
         "kind": "resolve_pending_choice",
+        "choice_id": pending.get("choice_id"),
         "choice_type": pending.get("type"),
         "choice_key": pending.get("choice_key"),
         "prompt": pending.get("prompt"),

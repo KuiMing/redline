@@ -1541,6 +1541,9 @@ function connect(options = {}) {
 }
 
 function sendAction(action, payload = {}) {
+  if ((action === 'resolve_choice' || action === 'cancel_choice') && !payload.choice_id) {
+    payload = {...payload, choice_id: lastGameState?.pending_choice?.choice_id};
+  }
   outboundActionSequence += 1;
   setSocketDebug(`sendAction:${action}:readyState=${ws ? ws.readyState : 'null'}`);
   if (!ws || ws.readyState === WebSocket.CLOSED || ws.readyState === WebSocket.CLOSING) {
@@ -1687,6 +1690,70 @@ function confirmSelectedPurchase() {
   sendAction('buy_cards', {indices: selection.indices});
 }
 
+function openDivideTargetSelection(players, onConfirm) {
+  const overlay = document.getElementById('factionActionModal');
+  const title = document.getElementById('factionActionModalTitle');
+  const desc = document.getElementById('factionActionModalDesc');
+  const choices = document.getElementById('factionActionModalChoices');
+  const hint = document.getElementById('factionActionModalRewardHint');
+  const closeBtn = document.getElementById('closeFactionActionModal');
+  const oddBtn = document.getElementById('guessOddBtn');
+  const evenBtn = document.getElementById('guessEvenBtn');
+  if (!overlay || !title || !desc || !choices || !hint || !closeBtn || !players.length) return false;
+  if (players.length === 1) {
+    onConfirm([players[0].id]);
+    return true;
+  }
+  const maxTargets = Math.min(3, players.length);
+  const selectedIds = new Set();
+  title.textContent = '離間';
+  desc.textContent = `離間：選擇 1 至 ${maxTargets} 位其他玩家`;
+  choices.innerHTML = '';
+  choices.classList.remove('red-army-action-choices');
+  choices.classList.add('divide-target-choices');
+  if (oddBtn) oddBtn.style.display = 'none';
+  if (evenBtn) evenBtn.style.display = 'none';
+  const confirmBtn = document.createElement('button');
+  confirmBtn.className = 'modal-choice-btn divide-target-confirm';
+  confirmBtn.type = 'button';
+  confirmBtn.disabled = true;
+  const refreshSelection = () => {
+    confirmBtn.disabled = selectedIds.size === 0;
+    confirmBtn.textContent = `確認選擇（${selectedIds.size}／${maxTargets}）`;
+    hint.textContent = `每位被選擇的玩家棄牌堆各放入 1 張內鬥。已選 ${selectedIds.size}／${maxTargets} 位。`;
+  };
+  players.forEach((p) => {
+    const btn = document.createElement('button');
+    btn.className = 'modal-choice-btn divide-target-choice';
+    btn.type = 'button';
+    btn.textContent = p.name;
+    btn.setAttribute('aria-pressed', 'false');
+    btn.onclick = () => {
+      if (selectedIds.has(p.id)) {
+        selectedIds.delete(p.id);
+        btn.classList.remove('divide-target-selected');
+        btn.setAttribute('aria-pressed', 'false');
+      } else if (selectedIds.size < maxTargets) {
+        selectedIds.add(p.id);
+        btn.classList.add('divide-target-selected');
+        btn.setAttribute('aria-pressed', 'true');
+      }
+      refreshSelection();
+    };
+    choices.appendChild(btn);
+  });
+  confirmBtn.onclick = () => {
+    if (!selectedIds.size) return;
+    onConfirm([...selectedIds]);
+    closeFactionActionModal();
+  };
+  choices.appendChild(confirmBtn);
+  refreshSelection();
+  closeBtn.onclick = closeFactionActionModal;
+  overlay.style.display = 'flex';
+  return true;
+}
+
 function openCardTargetModal(index, cardName, targetLabel) {
   const state = window.lastGameState || {};
   const players = (state.players || []).filter(p => p.id !== playerId);
@@ -1701,6 +1768,12 @@ function openCardTargetModal(index, cardName, targetLabel) {
   if (!overlay || !title || !desc || !choices || !hint || !closeBtn) return false;
 
   const actionPayload = {index, mode: 'action'};
+  if (cardName === '離間') {
+    return openDivideTargetSelection(
+      players,
+      targetPlayerIds => sendAction('play_card', {...actionPayload, target_player_ids: targetPlayerIds}),
+    );
+  }
   const requiresRange = new Set(['武裝者', '武裝小隊', '武裝集團', '派遣間諜', '內應間諜']);
   if (players.length === 1) {
     sendAction('play_card', {...actionPayload, target_player_id: players[0].id});
@@ -1723,8 +1796,10 @@ function openCardTargetModal(index, cardName, targetLabel) {
     hint.textContent = '請選擇目標玩家。';
   }
   choices.innerHTML = '';
+  choices.classList.remove('divide-target-choices');
   if (oddBtn) oddBtn.style.display = 'none';
   if (evenBtn) evenBtn.style.display = 'none';
+
   players.forEach((p) => {
     const btn = document.createElement('button');
     btn.className = 'modal-choice-btn';
@@ -1841,10 +1916,11 @@ function playHandCard(index, card, mode) {
   // 模仿戰術 selects its target on the server (which filters out players with an empty deck
   // and always opens a choice, even against a single opponent), so it is intentionally not
   // in this frontend auto-target set.
-  const playerTargetCards = new Set(['合作談判', '走漏風聲', '武裝者', '武裝小隊', '武裝集團', '派遣間諜', '內應間諜']);
+  const playerTargetCards = new Set(['離間', '合作談判', '走漏風聲', '武裝者', '武裝小隊', '武裝集團', '派遣間諜', '內應間諜']);
   if (mode === 'action' && playerTargetCards.has(cardName)) {
     const labelMap = {
       '合作談判': '抽牌對象',
+      '離間': '內鬥放置對象',
       '走漏風聲': '棄牌庫頂牌對象',
       '武裝者': '攻擊對象',
       '武裝小隊': '攻擊對象',
@@ -1864,6 +1940,8 @@ resizeStage();
 function closeFactionActionModal() {
   activeFactionActionModal = null;
   const overlay = document.getElementById('factionActionModal');
+  const choices = document.getElementById('factionActionModalChoices');
+  if (choices) choices.classList.remove('divide-target-choices', 'red-army-action-choices');
   if (overlay) overlay.style.display = 'none';
 }
 
@@ -1894,6 +1972,7 @@ function openRedArmyAbilityModal(state = window.lastGameState || {}) {
     ? '本回合紅軍能力已達發動上限。'
     : `紅軍可在開始行動階段之前自行選擇何時發動；本回合已用 ${usedCount}/${limitCount} 次。`;
   choices.innerHTML = '';
+  choices.classList.remove('divide-target-choices');
   choices.classList.add('red-army-action-choices');
   if (oddBtn) oddBtn.style.display = 'none';
   if (evenBtn) evenBtn.style.display = 'none';
@@ -2002,6 +2081,7 @@ function eventBuildChoiceMapPayload(choice, sourceName = '', resolvedTitle = '')
   return {
     mode: 'support-targets',
     actionKind: 'build',
+    choiceId: choice.choice_id,
     remainingBuilds: Math.max(1, Number(choice.remaining_builds || 1)),
     choiceKey: choice.choice_key,
     region: choice.region || '',
@@ -2150,6 +2230,7 @@ function renderChoiceModal(state) {
       const payload = {
         mode: 'support-targets',
         actionKind: 'dissolve',
+        choiceId: choice.choice_id,
         choiceKey,
         sourceName: sourceName || choiceKey || '瓦解組織',
         prompt: playerMessageZhTw(choice.prompt, '請在戰略地圖點選要瓦解的組織。'),
@@ -2158,6 +2239,21 @@ function renderChoiceModal(state) {
           label: entry.label || entry.town,
           index,
         })),
+        // Cancellable-dissolve-target-selection feature: the backend is the sole source of
+        // truth for whether THIS specific pending choice may be cancelled -- `choice.cancellable`
+        // (server/game.py's state() projection) is already `bool(pending_choice.cancellable) or
+        // choice_key in CANCELLABLE_CHOICE_KEYS`, so it's simply forwarded as-is here, with no
+        // frontend-side choice_key logic needed. This is True for player-initiated dissolve
+        // target selections (派遣間諜/內應間諜/情報網/北國奧援/臺灣奧援) AND for 國安部 (a
+        // pre-existing, unrelated Red Army activated ability already in CANCELLABLE_CHOICE_KEYS)
+        // -- both correctly get a working Cancel button this way. It is False for genuinely
+        // forced/mandatory choices (event_red_dissolve/era_red_bonus_dissolve_target), which
+        // never set the per-instance flag and are never members of CANCELLABLE_CHOICE_KEYS, so
+        // the map never shows a cancel affordance for those. selected/total count drive the
+        // "已選 N/M" display for multi-target cards (e.g. 北國奧援 III).
+        cancellable: !!choice.cancellable,
+        selectedCount: choice.selected_count ?? null,
+        totalCount: choice.total_count ?? null,
       };
       lastSupportChoiceMapHighlightPayload = payload;
       if ((choice.queueable_card_names || []).length > 0) {
@@ -2180,6 +2276,11 @@ function renderChoiceModal(state) {
   const maxChoiceCount = Math.max(0, Number(choice.count || 1));
   const minChoiceCount = choice.min_count === 0 ? 0 : Math.max(1, Number(choice.min_count ?? maxChoiceCount));
   const exactChoiceCount = maxChoiceCount;
+  const resolveCurrentChoice = (index, extra = {}) => sendAction('resolve_choice', {
+    index,
+    choice_id: choice.choice_id,
+    ...extra,
+  });
   const businessNetworkState = renderBusinessNetworkResult(state);
   const businessNetworkModalHeader = renderBusinessNetworkModalHeader(state);
   const mimicLikeTargetChoice = choiceType === 'target_choice';
@@ -2214,7 +2315,16 @@ function renderChoiceModal(state) {
       wrapper.className = 'choice-card-btn';
       wrapper.type = 'button';
       wrapper.onclick = () => {
-        sendAction('resolve_choice', { index });
+        if (choiceKey === 'use_purchase_area_card' && cardName === '離間') {
+          const otherPlayers = (state.players || []).filter(p => p.id !== playerId);
+          closeChoiceModal();
+          openDivideTargetSelection(
+            otherPlayers,
+            targetPlayerIds => resolveCurrentChoice(index, {target_player_ids: targetPlayerIds}),
+          );
+          return;
+        }
+        resolveCurrentChoice(index);
         closeChoiceModal();
       };
       const rawZoneLabel = cardEntry && typeof cardEntry === 'object' ? cardEntry.zone_label : '';
@@ -2262,7 +2372,7 @@ function renderChoiceModal(state) {
       if (isVariableCountChoice) {
         if (selected.size < minChoiceCount || selected.size > maxChoiceCount) return;
       } else if (selected.size !== exactChoiceCount) return;
-      sendAction('resolve_choice', { index: Array.from(selected) });
+      resolveCurrentChoice(Array.from(selected));
       closeChoiceModal();
     };
 
@@ -2306,7 +2416,7 @@ function renderChoiceModal(state) {
       const optionLabel = option?.label || '';
       btn.textContent = playerMessageZhTw(optionLabel, `選項 ${index + 1}`) || `選項 ${index + 1}`;
       btn.onclick = () => {
-        sendAction('resolve_choice', { index });
+        resolveCurrentChoice(index);
       };
       cards.appendChild(btn);
     });
@@ -2366,14 +2476,14 @@ function renderChoiceModal(state) {
       yesBtn.className = 'modal-choice-btn reaction-choice-yes';
       yesBtn.type = 'button';
       yesBtn.textContent = '是';
-      yesBtn.onclick = () => sendAction('resolve_choice', { index: 1 });
+      yesBtn.onclick = () => resolveCurrentChoice(1);
       row.appendChild(yesBtn);
 
       const noBtn = document.createElement('button');
       noBtn.className = 'modal-choice-btn reaction-choice-no';
       noBtn.type = 'button';
       noBtn.textContent = '否';
-      noBtn.onclick = () => sendAction('resolve_choice', { index: 0 });
+      noBtn.onclick = () => resolveCurrentChoice(0);
       row.appendChild(noBtn);
     } else {
       // 手上有 2 種以上不同名稱的取消牌時，用哪一張是玩家要做的實質選擇（不同牌之後的
@@ -2382,7 +2492,7 @@ function renderChoiceModal(state) {
       skipBtn.className = 'modal-choice-btn reaction-choice-no';
       skipBtn.type = 'button';
       skipBtn.textContent = '不取消';
-      skipBtn.onclick = () => sendAction('resolve_choice', { index: 0 });
+      skipBtn.onclick = () => resolveCurrentChoice(0);
       row.appendChild(skipBtn);
 
       reactionCards.forEach((cardEntry, cardIndex) => {
@@ -2390,14 +2500,14 @@ function renderChoiceModal(state) {
         btn.className = 'modal-choice-btn';
         btn.type = 'button';
         btn.textContent = `使用 ${cardNameOf(cardEntry, cardIndex)} 取消`;
-        btn.onclick = () => sendAction('resolve_choice', { index: cardIndex + 1 });
+        btn.onclick = () => resolveCurrentChoice(cardIndex + 1);
         row.appendChild(btn);
       });
     }
     wrapper.appendChild(row);
     cards.appendChild(wrapper);
     closeBtn.onclick = () => {
-      sendAction('resolve_choice', { index: 0 });
+      resolveCurrentChoice(0);
     };
   } else if (choiceType === 'town_choice' || (choiceType === 'support_flow_choice' && (choice.step === 'town' || choice.step === 'sacrifice_town'))) {
     (choice.towns || []).forEach((entry, index) => {
@@ -2409,7 +2519,7 @@ function renderChoiceModal(state) {
       const meta = localizedTownLabel ? `｜${localizedTownLabel}` : '';
       btn.textContent = `${town}${meta}`;
       btn.onclick = () => {
-        sendAction('resolve_choice', { index });
+        resolveCurrentChoice(index);
       };
       cards.appendChild(btn);
     });
@@ -2426,7 +2536,7 @@ function renderChoiceModal(state) {
         ? rawTargetLabel
         : (playerMessageZhTw(rawTargetLabel, '') || `目標 ${index + 1}`);
       btn.onclick = () => {
-        sendAction('resolve_choice', { index });
+        resolveCurrentChoice(index);
       };
       row.appendChild(btn);
     });
@@ -2442,7 +2552,7 @@ function renderChoiceModal(state) {
   } else if (choice.cancellable) {
     closeBtn.style.display = '';
     closeBtn.textContent = '取消';
-    closeBtn.onclick = () => { sendAction('cancel_choice'); closeChoiceModal(); };
+    closeBtn.onclick = () => { sendAction('cancel_choice', {choice_id: choice.choice_id}); closeChoiceModal(); };
   } else if (shouldUseMapContextModal) {
     closeBtn.style.display = '';
     closeBtn.textContent = '關閉';
@@ -2757,7 +2867,7 @@ function openEthnicRitualGuessModal() {
 
 function strategicMapUrl() {
   const url = new URL('/static/leaflet_game_map.html', window.location.origin);
-  url.searchParams.set('v', 'map-base-focus-20260927');
+  url.searchParams.set('v', 'shared-org-circle-20260928');
   if (gameId) url.searchParams.set('gameId', gameId);
   if (playerId) url.searchParams.set('playerId', playerId);
   return url.toString();

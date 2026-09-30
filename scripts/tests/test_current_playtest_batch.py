@@ -233,7 +233,11 @@ def test_multiple_propagandists_accumulate_build_entitlements_and_resolve_two_bu
     assert len(red.organizations) == 3
 
 
-def test_north_support_tier_three_resolves_two_targets_and_only_initial_step_is_cancellable():
+def test_north_support_tier_three_resolves_two_targets_and_every_step_is_cancellable():
+    # Cancellable-dissolve-target-selection feature: 北國奧援 III lets the player pick 2 targets,
+    # but per requirement #6 ("only the final Confirm commits atomically") neither dissolve
+    # lands until the second pick is confirmed -- so a cancel is available, and is a true no-op,
+    # at both the first and the second pick.
     game = make_game()
     red, opponent = game.players
     red.organizations = {'北京': 1}
@@ -248,15 +252,33 @@ def test_north_support_tier_three_resolves_two_targets_and_only_initial_step_is_
 
     first_result = game.resolve_pending_choice(red.id, 0)
     assert first_result.get('pending_choice') is True, first_result
-    assert first_result.get('remaining_count') == 1
-    assert game.pending_choice and game.pending_choice.get('cancellable') is not True
-    assert game.cancel_pending_choice(red.id).get('error') == 'This choice cannot be cancelled'
-    assert sum(opponent.organizations.values()) == 1
+    assert first_result.get('selected_count') == 1
+    assert first_result.get('total_count') == 2
+    # Neither target has been dissolved yet -- the first pick only accumulates a selection.
+    assert sum(opponent.organizations.values()) == 2
+    assert game.pending_choice and game.pending_choice.get('cancellable') is True
+    assert game.pending_choice.get('selected_count') == 1
+    assert game.pending_choice.get('total_count') == 2
+
+    cancelled = game.cancel_pending_choice(red.id)
+    assert cancelled.get('success') is True, cancelled
+    assert game.pending_choice is None
+    assert [c.name for c in red.hand] == ['北國奧援']
+    assert opponent.organizations == {'天津': 1, '石家莊': 1}
+
+    # Replay the card and this time confirm both picks.
+    replay = game.play_card(0, mode='action')
+    assert replay.get('pending_choice') is True, replay
+    first_result = game.resolve_pending_choice(red.id, 0)
+    assert first_result.get('pending_choice') is True, first_result
+    assert sum(opponent.organizations.values()) == 2
+    assert game.pending_choice and game.pending_choice.get('cancellable') is True
 
     second_result = game.resolve_pending_choice(red.id, 0)
     assert second_result.get('success') is True, second_result
     assert game.pending_choice is None
     assert opponent.organizations == {}
+    assert second_result.get('target_count') == 2
 
 
 def _era_restriction_game(faction_id, era_id=None, origin='上海'):

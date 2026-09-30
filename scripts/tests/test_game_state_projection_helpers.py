@@ -36,8 +36,8 @@ def _new_game():
 def test_project_map_control_reflects_each_players_organizations():
     game, a, b = _new_game()
     town_control, shared_access = game._project_map_control()
-    assert town_control['香港城'] == [{'player': a.name, 'count': 1}]
-    assert town_control['北京'] == [{'player': b.name, 'count': 1}]
+    assert town_control['香港城'] == [{'player': a.name, 'count': 1, 'faction': 'hong_kong'}]
+    assert town_control['北京'] == [{'player': b.name, 'count': 1, 'faction': 'red_army'}]
     assert isinstance(shared_access, dict)
 
 

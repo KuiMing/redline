@@ -29,10 +29,15 @@ class SupportTestRoutes:
             (str(uuid.uuid4()), payload.get("player_name", "player")),
             (str(uuid.uuid4()), payload.get("enemy_name", "red")),
         ]
+        if payload.get("shared_faction_id"):
+            players.append(
+                (str(uuid.uuid4()), payload.get("shared_player_name", "shared"))
+            )
         game = Game(players)
 
         player = game.players[0]
         enemy = game.players[1]
+        shared_player = game.players[2] if len(game.players) > 2 else None
 
         default_player_faction = {
             "臺灣奧援": "taiwan_green",
@@ -118,6 +123,17 @@ class SupportTestRoutes:
         enemy.deck.draw_pile = []
         enemy.deck.discard_pile = []
 
+        if shared_player is not None:
+            shared_player.faction_id = str(payload["shared_faction_id"])
+            shared_player.base = str(payload.get("shared_base", "天津"))
+            shared_player.organizations = payload.get("shared_orgs") or {
+                shared_player.base: 1
+            }
+            shared_player.resources = {"money": 0, "propaganda": 0}
+            shared_player.hand = []
+            shared_player.deck.draw_pile = []
+            shared_player.deck.discard_pile = []
+
         original_resolver = game._support_card_tier
 
         def forced_tier(target_player, card):
@@ -180,10 +196,11 @@ class SupportTestRoutes:
         )
         runtime.lobby_hosts[game_id] = player.id
         runtime.lobby_factions[game_id] = {
-            player.id: player.faction_id,
-            enemy.id: enemy.faction_id,
+            current.id: current.faction_id for current in game.players
         }
-        runtime.lobby_bases[game_id] = {player.id: player.base, enemy.id: enemy.base}
+        runtime.lobby_bases[game_id] = {
+            current.id: current.base for current in game.players
+        }
 
         auto_resolve_target_index = payload.get("auto_resolve_target_index")
         if auto_resolve_target_index is not None:

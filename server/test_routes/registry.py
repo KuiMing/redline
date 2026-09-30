@@ -19,9 +19,11 @@ from server.test_routes.build_view_persistence import BuildViewPersistenceTestRo
 from server.test_routes.business_network_transport import BusinessNetworkTransportTestRoutes
 from server.test_routes.card_scenario import CardScenarioTestRoutes
 from server.test_routes.ccdi_choice import CcdiChoiceTestRoutes
+from server.test_routes.dissolve_cancel_proof import DissolveCancelProofTestRoutes
 from server.test_routes.destroyed_red_base_marker import DestroyedRedBaseMarkerTestRoutes
 from server.test_routes.discard_reshuffle import DiscardReshuffleTestRoutes
 from server.test_routes.discard_topdeck_choice import DiscardTopdeckChoiceTestRoutes
+from server.test_routes.divide_targets import DivideTargetsTestRoutes
 from server.test_routes.draw_privacy import DrawPrivacyTestRoutes
 from server.test_routes.elite_defection_discard import EliteDefectionDiscardTestRoutes
 from server.test_routes.elite_defection_event import EliteDefectionEventTestRoutes
@@ -611,6 +613,13 @@ def register_test_routes(
     )
 
 
+    _divide_targets_test_routes = DivideTargetsTestRoutes(runtime_provider)
+    app.include_router(_divide_targets_test_routes.router)
+    test_setup_divide_targets_proof = (
+        _divide_targets_test_routes.test_setup_divide_targets_proof
+    )
+
+
     _safehouse_range_test_routes = SafehouseRangeTestRoutes(
         runtime_provider
     )
@@ -628,6 +637,35 @@ def register_test_routes(
         _era_restrict_ignore_distance_test_routes.test_setup_era_restrict_ignore_distance_proof
     )
 
+
+    _dissolve_cancel_proof_test_routes = DissolveCancelProofTestRoutes(
+        runtime_provider
+    )
+    app.include_router(_dissolve_cancel_proof_test_routes.router)
+    test_setup_dissolve_cancel_single_target = (
+        _dissolve_cancel_proof_test_routes.setup_single_target
+    )
+    test_setup_dissolve_cancel_two_phase = (
+        _dissolve_cancel_proof_test_routes.setup_two_phase
+    )
+    test_setup_dissolve_cancel_multi_target = (
+        _dissolve_cancel_proof_test_routes.setup_multi_target
+    )
+    test_setup_dissolve_cancel_multi_target_stale_final_pick = (
+        _dissolve_cancel_proof_test_routes.setup_multi_target_stale_final_pick
+    )
+    test_setup_dissolve_cancel_mongol_shield_target_filtering = (
+        _dissolve_cancel_proof_test_routes.setup_mongol_shield_target_filtering
+    )
+    test_setup_dissolve_cancel_mongol_shield_second_pick_dict_order = (
+        _dissolve_cancel_proof_test_routes.setup_mongol_shield_second_pick_dict_order
+    )
+    test_setup_dissolve_cancel_multi_target_stale_no_replacement = (
+        _dissolve_cancel_proof_test_routes.setup_multi_target_stale_no_replacement
+    )
+    test_setup_dissolve_cancel_forced_event = (
+        _dissolve_cancel_proof_test_routes.setup_forced_event
+    )
 
     return SimpleNamespace(
         test_set_hand=test_set_hand,
@@ -679,6 +717,14 @@ def register_test_routes(
         test_setup_trade_war_event_proof=test_setup_trade_war_event_proof,
         test_setup_discard_topdeck_choice=test_setup_discard_topdeck_choice,
         test_setup_ccdi_choice=test_setup_ccdi_choice,
+        test_setup_dissolve_cancel_single_target=test_setup_dissolve_cancel_single_target,
+        test_setup_dissolve_cancel_two_phase=test_setup_dissolve_cancel_two_phase,
+        test_setup_dissolve_cancel_multi_target=test_setup_dissolve_cancel_multi_target,
+        test_setup_dissolve_cancel_multi_target_stale_final_pick=test_setup_dissolve_cancel_multi_target_stale_final_pick,
+        test_setup_dissolve_cancel_mongol_shield_target_filtering=test_setup_dissolve_cancel_mongol_shield_target_filtering,
+        test_setup_dissolve_cancel_mongol_shield_second_pick_dict_order=test_setup_dissolve_cancel_mongol_shield_second_pick_dict_order,
+        test_setup_dissolve_cancel_multi_target_stale_no_replacement=test_setup_dissolve_cancel_multi_target_stale_no_replacement,
+        test_setup_dissolve_cancel_forced_event=test_setup_dissolve_cancel_forced_event,
         test_setup_elite_defection_event_proof=test_setup_elite_defection_event_proof,
         test_setup_belt_road_red_turn_proof=test_setup_belt_road_red_turn_proof,
         test_setup_tibet_era_red_build_proof=test_setup_tibet_era_red_build_proof,
@@ -692,4 +738,5 @@ def register_test_routes(
         test_setup_peer_choice_notice_proof=test_setup_peer_choice_notice_proof,
         test_setup_safehouse_range_proof=test_setup_safehouse_range_proof,
         test_setup_era_restrict_ignore_distance_proof=test_setup_era_restrict_ignore_distance_proof,
+        test_setup_divide_targets_proof=test_setup_divide_targets_proof,
     )

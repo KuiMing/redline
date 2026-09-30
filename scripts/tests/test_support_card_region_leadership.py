@@ -105,23 +105,38 @@ def test_zero_organizations_never_counts_as_tied_for_most():
     assert game._support_card_tier(actor, card) == (1, 0, [])
 
 
-def test_shared_physical_organization_counts_for_each_sharing_player_region_leadership():
+def test_shared_physical_organization_does_not_count_for_support_region_leadership():
     game = make_game()
     actor, sharing_partner, rival = game.players
     actor.faction_id = 'hong_kong'
     sharing_partner.faction_id = 'yue'
     rival.faction_id = 'red_army'
 
-    # The 粵-owned Paris organization is shared with 香港 and therefore counts as one
-    # European organization for the actor. Rival owns one separate European organization:
-    # actor is a co-leader and qualifies for tier II.
+    # 共用只提供普通行動的起點。奧援階級只計算玩家實際擁有的組織。
     sharing_partner.organizations = {'巴黎': 1}
     rival.organizations = {'日內瓦': 1}
     actor.organizations = {}
     card = game._make_support_card('英美奧援', variant_index=0)  # 歐洲／天方
 
     assert game._organization_towns_for_player(actor) == ['巴黎']
-    assert game._support_card_tier(actor, card) == (2, 0, ['歐洲'])
+    assert game._support_card_tier(actor, card) == (1, 0, [])
+
+
+def test_taiwan_support_tier_uses_only_owned_nine_eight_two_counts():
+    game = make_game()
+    red, actor, sharing_partner = game.players
+    red.faction_id = 'red_army'
+    actor.faction_id = 'taiwan_green'
+    sharing_partner.faction_id = 'gender_revolution'
+    taiwan_towns = towns_for(game, '臺灣')
+    assert len(taiwan_towns) >= 9
+    red.organizations = {town: 1 for town in taiwan_towns[:9]}
+    actor.organizations = {town: 1 for town in taiwan_towns[:8]}
+    sharing_partner.organizations = {town: 1 for town in taiwan_towns[:2]}
+    card = game._make_support_card('臺灣奧援', variant_index=0)
+
+    tier, _variant, _matched = game._support_card_tier(actor, card)
+    assert tier != 3
 
 
 def test_purchased_support_card_keeps_variant_through_discard_shuffle_and_draw():

@@ -315,6 +315,14 @@ def test_pending_spy_interaction_fires_kazakh_cost_trigger_once():
     played = game.play_card(0, mode="action", target_player_id=red.id)
 
     assert played.get("pending_choice") is True
+    # Cancellable-dissolve-target-selection feature: 內應間諜's dissolve-target choice is
+    # cancellable, so the 民族調和 draw-cost trigger must not fire until the choice actually
+    # resolves (a cancel must be able to undo it) -- not immediately on play.
+    assert [card.name for card in player.hand] == []
+    assert game.turn_log.get("faction_first_propaganda_triggered") is None
+
+    resolved = game.resolve_pending_choice(player.id, 0)
+    assert resolved.get("success") is True, resolved
     assert [card.name for card in player.hand] == ["民族調和間諜加抽"]
     assert game.turn_log["faction_first_propaganda_triggered"] is True
     assert sum("triggered 民族調和" in entry for entry in game.action_log) == 1

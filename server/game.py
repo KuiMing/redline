@@ -348,7 +348,13 @@ class Game(CardPlayMixin):
         event_type = self.current_event.get('type')
         trigger = self.current_event.get('trigger') or {}
         required = int(trigger.get('count', 0) or 0)
+        completed_player_ids = None
+        if trigger.get('each_non_red_player'):
+            required = len([p for p in self.players if getattr(p, 'faction_id', None) != 'red_army'])
+            completed_player_ids = []
         self.event_progress = {'count': 0, 'required': required, 'succeeded': False, 'settled': False, 'status': 'active'}
+        if completed_player_ids is not None:
+            self.event_progress['completed_player_ids'] = completed_player_ids
         if event_type == 'idle':
             self.event_progress.update({'succeeded': True, 'settled': True, 'status': 'idle'})
             self.log(f"Event drawn: {self.current_event.get('name')} (no-op)")
@@ -375,11 +381,49 @@ class Game(CardPlayMixin):
             return
         if not event_trigger_matches_scope(self.map, self.towns_by_ruler, trigger, town=town):
             return
-        self.event_progress['count'] = int(self.event_progress.get('count', 0) or 0) + int(amount or 1)
+        if trigger.get('each_non_red_player'):
+            player_id = getattr(player, 'id', None)
+            eligible_player_ids = {
+                p.id for p in self.players if getattr(p, 'faction_id', None) != 'red_army'
+            }
+            if player_id not in eligible_player_ids:
+                return
+            completed_player_ids = list(self.event_progress.get('completed_player_ids') or [])
+            if player_id not in completed_player_ids:
+                completed_player_ids.append(player_id)
+            self.event_progress['completed_player_ids'] = completed_player_ids
+            self.event_progress['count'] = len(completed_player_ids)
+            required = len([p for p in self.players if getattr(p, 'faction_id', None) != 'red_army'])
+            self.event_progress['required'] = required
+        else:
+            self.event_progress['count'] = int(self.event_progress.get('count', 0) or 0) + int(amount or 1)
+            required = int(trigger.get('count', 1) or 1)
         if player is not None:
-            self.event_progress['last_actor_id'] = getattr(player, 'id', None)
-            self.event_progress['last_actor_name'] = getattr(player, 'name', None)
-        required = int(trigger.get('count', 1) or 1)
+            # Append to an ordered "still-live contributors" stack, rather than only writing
+            # last_actor_id/name directly -- cancelling one of several interleaved cancellable
+            # plays must remove exactly THAT play's own entry (wherever it sits in the stack,
+            # not necessarily the top) and let attribution fall back to whichever contribution
+            # is now the most recent SURVIVING one. A before/after value-snapshot restore can't
+            # do this correctly: the "before" state captured when a later play (B) started
+            # already reflects an earlier play (A)'s contribution, but if A is cancelled first,
+            # that captured "before" value is stale by the time B is itself cancelled -- undoing
+            # B by restoring it would incorrectly resurrect A's already-undone attribution
+            # instead of correctly falling back to "no attribution at all" (or to whichever
+            # OTHER still-live contribution actually comes next). See game_card_play.py's
+            # _undo_event_progress_delta, which pops by token from this stack instead of
+            # restoring a value. Kept in sync with last_actor_id/name/token, which mirror
+            # stack[-1] for every existing reader (_mission_settlement_target_id,
+            # _settle_current_event, event_display_payload) that doesn't know about the stack.
+            token = uuid.uuid4().hex
+            stack = self.event_progress.setdefault('_actor_contributions', [])
+            stack.append({
+                'token': token,
+                'actor_id': getattr(player, 'id', None),
+                'actor_name': getattr(player, 'name', None),
+            })
+            self.event_progress['last_actor_id'] = stack[-1]['actor_id']
+            self.event_progress['last_actor_name'] = stack[-1]['actor_name']
+            self.event_progress['last_actor_token'] = token
         if self.event_progress['count'] >= required:
             self.event_progress['succeeded'] = True
             self.event_progress['status'] = 'success_pending'
@@ -1173,10 +1217,14 @@ class Game(CardPlayMixin):
             choices.append({'town': town})
         return choices
 
-    def _player_has_org_within_steps_of_player(self, source_player, target_player, max_steps=1, target_region=None):
+    def _player_has_org_within_steps_of_player(
+        self, source_player, target_player, max_steps=1, target_region=None,
+        include_shared_source=True,
+    ):
         return player_has_org_within_steps_of_player(
             self.map, self.towns_by_ruler, self.faction_by_id, self.players,
             source_player, target_player, max_steps, target_region,
+            include_shared_source,
         )
 
     def _find_target_town_within_steps_of_player(self, source_player, target_player, max_steps=1, target_region=None):
@@ -1214,7 +1262,13 @@ class Game(CardPlayMixin):
                 'interactive_dissolve_and_build',
                 'interactive_dissolve_self_and_enemy',
             }
-            and self._support_card_has_legal_target(player, card)
+            # `card` is always still sitting in `player.hand` at every call site of this method
+            # (both play_card's own queueing_map_card pre-check and the queueable_card_names
+            # projection loop below iterate the player's CURRENT hand) -- reserve 1 slot so a
+            # 盟旗學校-protected target's affordability isn't inflated by counting the
+            # about-to-be-played card as if it were available to pay its own discard cost (see
+            # _support_card_has_legal_target's docstring; parent-level review, Critical 1).
+            and self._support_card_has_legal_target(player, card, pre_reserved_shield_discards=1)
         )
 
     def _choice_is_card_map_interaction(self, choice):
@@ -1245,6 +1299,13 @@ class Game(CardPlayMixin):
             unresolved += self._build_choice_entitlement_count(choice)
             if not self._refresh_queued_card_map_choice(player, choice):
                 self.log(f"{player.name} 有排隊中的地圖卡牌效果（來自{choice.get('source_name') or '卡牌'}），但目前沒有合法目標")
+                # This dequeued flow fizzles (no legal target once it's finally its turn) --
+                # a genuine terminal point, not a cancel, so any deferred post_play_faction_
+                # triggers marker on it may fire now. See _settle_deferred_card_play_triggers.
+                choice['is_final_confirmation'] = True
+                self._settle_deferred_card_play_triggers(player, choice)
+                if self.pending_choice:
+                    return {'success': True, 'pending_choice': True}
                 continue
             self.pending_choice = choice
             unresolved -= self._build_choice_entitlement_count(choice)
@@ -1266,6 +1327,27 @@ class Game(CardPlayMixin):
         if self.pending_choice:
             return None
         if isinstance(self._deferred_build_choice, dict):
+            # Correctness invariant, defense-in-depth (parent-level review, Critical 1): never
+            # resurrect a deferred choice that belongs to a DIFFERENT player than whoever's turn
+            # it currently is. Checked against `self.current_player()`, NOT the `player` argument
+            # this method was called with -- a legitimate resume can (and routinely does) happen
+            # on behalf of a DIFFERENT player than the deferred choice's own owner, e.g. this
+            # same method is called with the REACTOR as `player` right after they resolve their
+            # own cancel-reaction choice, correctly handing control back to the original actor's
+            # still-queued FIFO entry -- that's turn-preserving (still the actor's turn) and must
+            # keep working. What must never happen is resurrecting a deferred choice into a
+            # DIFFERENT player's turn entirely (e.g. a legality-check false positive orphaning an
+            # in-progress choice without properly restoring it -- see play_card's
+            # queueing_map_card rollback path -- followed by the turn advancing before anyone
+            # notices). Since resolve_pending_choice requires choice['player_id'] == player_id,
+            # neither player could then ever resolve such an orphan, and ordinary action-gating
+            # would block all further play -- a real softlock, not just a lost card. Drop the
+            # orphan instead of corrupting turn state.
+            deferred_player_id = self._deferred_build_choice.get('player_id')
+            current_player_id = getattr(self.current_player(), 'id', None)
+            if deferred_player_id is not None and deferred_player_id != current_player_id:
+                self._deferred_build_choice = None
+                return None
             self.pending_choice = self._deferred_build_choice
             self._deferred_build_choice = None
             remaining = self._refresh_card_build_choice_projection()
@@ -1366,7 +1448,7 @@ class Game(CardPlayMixin):
         # restrict_ignore_distance_build 紅色壓制，如[反賊]公知世代的終結、[哈薩克]伊塔事件）：
         # 比照組織經驗甲卡面的降級慣例，「牆內任意城鎮」清單降級為「己方組織1格內」
         # （若另有增加建立距離的能力則為2格；實作裁定，見 TODO 記錄）。
-        near_towns = self._restricted_build_fallback_towns(player, 1)
+        near_towns = self._restricted_build_fallback_towns(player, 1, include_shared=True)
         if near_only:
             reachable = near_towns & inner_towns
         else:
@@ -1386,29 +1468,43 @@ class Game(CardPlayMixin):
     def _target_players_for_interaction(self, player, target_player_id=None):
         return target_players_for_interaction(self.players, player, target_player_id)
 
-    def _interactive_support_dissolve_targets(self, player, require_self_sacrifice=False, max_steps=1, target_players=None, target_region=None):
+    def _interactive_support_dissolve_targets(self, player, require_self_sacrifice=False, max_steps=1, target_players=None, target_region=None, include_shared_source=False, pre_reserved_shield_discards=0, exclude_target_keys=None):
         return interactive_support_dissolve_targets(
             self.map, self.towns_by_ruler, self.faction_by_id, self.players, player,
             require_self_sacrifice, max_steps, target_players, target_region,
+            include_shared_source, ability_templates=self.ability_templates,
+            pre_reserved_shield_discards=pre_reserved_shield_discards,
+            exclude_target_keys=exclude_target_keys,
         )
 
-    def _interactive_support_dissolve_targets_near_town(self, player, origin_town, max_steps=1, target_players=None, target_region=None):
+    def _interactive_support_dissolve_targets_near_town(
+        self, player, origin_town, max_steps=1, target_players=None,
+        target_region=None, excluded_target=None, pre_reserved_shield_discards=0,
+        exclude_target_keys=None,
+    ):
         return interactive_support_dissolve_targets_near_town(
             self.map, self.towns_by_ruler, self.faction_by_id, self.players, player, origin_town,
-            max_steps, target_players, target_region,
+            max_steps, target_players, target_region, excluded_target,
+            ability_templates=self.ability_templates,
+            pre_reserved_shield_discards=pre_reserved_shield_discards,
+            exclude_target_keys=exclude_target_keys,
         )
 
-    def _interactive_support_discard_targets_near(self, player):
-        return interactive_support_discard_targets_near(self.map, self.towns_by_ruler, self.faction_by_id, self.players, player)
+    def _interactive_support_discard_targets_near(
+        self, player, max_steps=1, target_players=None, target_region=None,
+        include_shared_source=False,
+    ):
+        return interactive_support_discard_targets_near(
+            self.map, self.towns_by_ruler, self.faction_by_id, self.players, player,
+            max_steps, target_players, target_region, include_shared_source,
+        )
 
     def _can_replace_dissolved_org_with_own(self, player, target_player, town):
         """Non-mutating preflight for 臺灣奧援 III's dissolve-then-build target."""
         if not player or not target_player or not town or not self._has_org_supply(player):
             return False
-        target_owner = self._shared_origin_owner(target_player, town)
-        if target_owner is None:
+        if town not in target_player.organizations:
             return False
-        target_player = target_owner
         if not self._can_dissolve_base_target(target_player, town)[0]:
             return False
         # 2026-08-04 使用者裁決：紅軍根據地不再永久排除瓦解＋補位組合——只要根據地真的被
@@ -1429,10 +1525,10 @@ class Game(CardPlayMixin):
         finally:
             target_player.organizations[town] = original_count
 
-    def _interactive_support_sacrifice_towns(self, player, max_steps=1, target_players=None, target_region=None):
+    def _interactive_support_sacrifice_towns(self, player, max_steps=1, target_players=None, target_region=None, include_shared_source=False):
         return interactive_support_sacrifice_towns(
             self.map, self.towns_by_ruler, self.faction_by_id, self.players, player,
-            max_steps, target_players, target_region,
+            max_steps, target_players, target_region, include_shared_source,
         )
 
     def _gain_red_support_printed_resources(self, player, card):
@@ -1724,6 +1820,20 @@ class Game(CardPlayMixin):
             "successful_discard": False,
             "built_towns": [],
             "played_nonstarter_names": [],
+            # Internal reference-counted bookkeeping backing played_money_card/
+            # played_propaganda_card/played_nonstarter_names above -- see
+            # _note_money_cost_card_played()/_undo_money_cost_card_played() and siblings in
+            # server/game_card_play.py. A cancellable card play increments these when played and
+            # decrements them if later cancelled; a non-cancellable play increments and never
+            # decrements (permanent, matching the pre-existing one-way-latch behavior). This
+            # makes the derived public flags correct regardless of the ORDER two interleaved
+            # cancellable card plays are cancelled in (not just strict reverse-of-play/LIFO order)
+            # -- a flag only clears once every contributing still-live play has actually been
+            # cancelled, never because one unrelated play's cancel blindly overwrote it back to a
+            # stale absolute snapshot. Never read directly outside these helpers.
+            "_money_cost_card_refs": 0,
+            "_propaganda_cost_card_refs": 0,
+            "_nonstarter_name_refs": {},
             "combo_reward_triggered": False,
             "guerrilla_triggered": False,
             "faction_action_used": False,
@@ -1780,9 +1890,10 @@ class Game(CardPlayMixin):
             town,
         )
 
-    def _restricted_build_fallback_towns(self, player, fallback_range):
+    def _restricted_build_fallback_towns(self, player, fallback_range, *, include_shared=True):
         return restricted_build_fallback_towns(
-            self.map, self.faction_by_id, self.players, self.ability_templates, player, fallback_range
+            self.map, self.faction_by_id, self.players, self.ability_templates, player, fallback_range,
+            include_shared=include_shared,
         )
 
     def _support_taxonomy_entry(self, card_name):
@@ -2786,7 +2897,7 @@ class Game(CardPlayMixin):
     def _project_action_log(self, viewer_player_id=None):
         return project_action_log(self.action_log, getattr(self, '_action_log_visibility', []), viewer_player_id)
 
-    def _support_card_has_legal_target(self, player, card):
+    def _support_card_has_legal_target(self, player, card, pre_reserved_shield_discards=0):
         # Non-mutating legal-target pre-check, sharing _support_interaction_targets (the
         # single source of truth) with _start_support_interaction so the two can never
         # disagree. Lets play_card reject an illegal interactive support play — and decide
@@ -2794,10 +2905,23 @@ class Game(CardPlayMixin):
         # up the support card's own interactive pending choice. Non-interactive support
         # effects (gain_resource / draw / draw_then_discard / add_internal_conflict) always
         # resolve, so _support_interaction_targets returns None for them.
+        #
+        # `pre_reserved_shield_discards`: this SAME method is also called from TWO places in
+        # play_card() BEFORE `card` itself has been popped from `player.hand`
+        # (_card_can_queue_map_action's own call, and play_card's own queueing_map_card
+        # pre-check) -- at those call sites `card` is still sitting in the attacker's hand,
+        # which would otherwise inflate a 盟旗學校-protected target's affordability by 1 (the
+        # about-to-be-spent card counted as if it could pay its own discard cost). Reserving 1
+        # slot there keeps those pre-pop checks in agreement with the real post-pop mutation
+        # check below (and with _start_support_interaction's own post-pop listing) -- without
+        # this, a legality-check false positive could pop a queued card, have it correctly fail
+        # post-pop, and (if the rollback path itself were also incomplete) orphan an unrelated
+        # already-open pending_choice entirely -- see play_card's queueing_map_card handling and
+        # its rollback path for the full defense-in-depth story (parent-level review, Critical 1).
         card_name = getattr(card, 'name', str(card))
         tier, region_index, _ = self._support_card_tier(player, card)
         effect_type, payload = self._resolve_support_card_effect(card_name, tier, region_index)
-        targets = self._support_interaction_targets(player, effect_type, payload)
+        targets = self._support_interaction_targets(player, effect_type, payload, pre_reserved_shield_discards=pre_reserved_shield_discards)
         if targets is None:
             return True
         return bool(targets)
@@ -4137,7 +4261,7 @@ class Game(CardPlayMixin):
             for town, count in p.organizations.items():
                 if town not in town_control:
                     town_control[town] = []
-                town_control[town].append({"player": p.name, "count": count})
+                town_control[town].append({"player": p.name, "count": count, "faction": p.faction_id})
             for town in self.map.get('towns', {}).keys():
                 if self._shared_org_count(p, town) > p.organizations.get(town, 0):
                     shared_access.setdefault(town, []).append(p.faction_id)
@@ -4175,6 +4299,7 @@ class Game(CardPlayMixin):
     def _project_pending_choice(self, viewer_player_id, viewer_player):
         pending_choice = None
         if self.pending_choice:
+            self.pending_choice.setdefault('choice_id', uuid.uuid4().hex)
             raw_pending_context = self.pending_choice.get('context')
             pending_context = dict(raw_pending_context) if isinstance(raw_pending_context, dict) else {}
             pending_effect_type = pending_context.get('effect_type')
@@ -4263,6 +4388,7 @@ class Game(CardPlayMixin):
                 None,
             ) if pending_target_player_id is not None else None
             pending_choice = {
+                'choice_id': self.pending_choice.get('choice_id'),
                 'type': self.pending_choice.get('type'),
                 'choice_key': self.pending_choice.get('choice_key'),
                 'interaction_kind': (
@@ -4287,6 +4413,12 @@ class Game(CardPlayMixin):
                 'source_name': pending_source_name,
                 'count': self.pending_choice.get('count'),
                 'min_count': self.pending_choice.get('min_count'),
+                # Multi-target dissolve cards (北國奧援 III): how many targets have already been
+                # selected-but-not-yet-dissolved vs. how many the card allows in total, so the
+                # client can render "已選 N/M". Absent (None) for every other choice.
+                'selected_count': self.pending_choice.get('selected_count'),
+                'total_count': self.pending_choice.get('total_count'),
+                'remaining_count': self.pending_choice.get('remaining_count'),
                 'mode': self.pending_choice.get('mode'),
                 'acting_player_id': self.pending_choice.get('acting_player_id'),
                 'acting_player_name': self.pending_choice.get('acting_player_name'),

@@ -279,7 +279,6 @@ const highlightLayer = L.layerGroup().addTo(map);
 const supportChoiceHighlightLayer = L.layerGroup().addTo(map);
 let labelMode = 'auto', showRoad = true, showRail = true;
 let currentMarkers = new Map();
-let currentSharedBadges = new Map();
 let currentArmoryBadges = new Map();
 let currentBaseBadges = new Map();
 let currentVisible = towns.map(t=>t.name);
@@ -352,18 +351,14 @@ function sharedAccessForTown(name) {
   return ((lastGameState && lastGameState.map && lastGameState.map.shared_access && lastGameState.map.shared_access[name]) || []);
 }
 
-function sharedAccessSummary(name) {
-  const shared = sharedAccessForTown(name);
-  if (!shared.length) return '無';
-  return `此城鎮可被 ${shared.join(' / ')} 視為共用組織`;
-}
-
 function popupHtml(t) {
   const roads = (t.road||[]).map(n=>`<span class="pill">${n}</span>`).join(' ') || '無';
   const rails = (t.rail||[]).map(n=>`<span class="pill">${n}</span>`).join(' ') || '無';
   const entries = townStateEntries(t.name);
-  const total = totalOrganizationsInTown(t.name);
-  const controller = entries.length ? entries.slice().sort((a,b)=>(b.count||0)-(a.count||0))[0].player : null;
+  const controllerEntry = entries.length ? entries.slice().sort((a,b)=>(b.count||0)-(a.count||0))[0] : null;
+  const controllerLabel = controllerEntry
+    ? (controllerEntry.faction ? `${controllerEntry.player}/${factionLabel(controllerEntry.faction)}` : controllerEntry.player)
+    : null;
   const shared = sharedAccessForTown(t.name);
   return `
     <div class="name">${t.name}</div>
@@ -372,10 +367,8 @@ function popupHtml(t) {
     <div>陣營：${(t.camp||[]).map(x=>`<span class="pill">${x}</span>`).join(' ') || '無'}</div>
     <div>城鎮類型：${t.type ? `<span class="pill">${t.type}</span>` : '一般城鎮'}</div>
     <hr style="border-color:#2b385d;border-style:solid;border-width:1px 0 0;margin:10px 0;">
-    <div>當前控制者：${controller ? `<span class="pill">${controller}</span>` : '無組織'}</div>
-    <div>組織狀態：<span class="pill">${total > 0 ? '有組織' : '無組織'}</span></div>
-    <div>共享可用：${shared.length ? shared.map(x=>`<span class="pill">${x}</span>`).join(' ') : '無'}</div>
-    <div>共享說明：${shared.length ? `<span class="pill">${sharedAccessSummary(t.name)}</span>` : '無'}</div>
+    <div>當前控制者：${controllerLabel ? `<span class="pill">${controllerLabel}</span>` : '無組織'}</div>
+    <div>可共享陣營：${shared.length ? shared.map(x=>`<span class="pill">${factionLabel(x)}</span>`).join(' ') : '無'}</div>
     <hr style="border-color:#2b385d;border-style:solid;border-width:1px 0 0;margin:10px 0;">
     <div>一般道路：${roads}</div>
     <div>鐵路：${rails}</div>`;
@@ -488,18 +481,25 @@ function renderSupportChoiceHighlights(options = {}) {
   supportChoiceHighlightLayer.clearLayers();
   if (!supportChoiceHighlight || supportChoiceHighlight.mode !== 'support-targets') return false;
   const towns = Array.isArray(supportChoiceHighlight.towns) ? supportChoiceHighlight.towns : [];
+  // Filters control every town circle, including temporary action-card and organization-experience
+  // target rings. Keep the complete legal target list so clearing the filter restores every option,
+  // but draw and permit interaction only for targets that pass the current filter.
+  const visibleTownNames = new Set(currentVisible);
   const bounds = [];
-  let focusedBounds = null;
+  const allTargetBounds = [];
+  let focusedTargetBounds = null;
   const isDissolveChoice = isDissolveSupportChoiceHighlight();
   towns.forEach(entry => {
     const townName = entry?.town;
     const town = byName.get(townName);
     if (!town) return;
     const townBounds = townDisplayLatLng(town);
-    bounds.push(townBounds);
+    allTargetBounds.push(townBounds);
     if (supportChoiceHighlight.focusTown && supportChoiceHighlight.focusTown === townName) {
-      focusedBounds = [townBounds];
+      focusedTargetBounds = [townBounds];
     }
+    if (!visibleTownNames.has(townName)) return;
+    bounds.push(townBounds);
     const isFocused = supportChoiceHighlight.focusTown && supportChoiceHighlight.focusTown === townName;
     if (isDissolveChoice) {
       // 瓦解目標：後端判定的合法目標以 💀 標示，但點擊只會「選取」該城鎮
@@ -574,10 +574,12 @@ function renderSupportChoiceHighlights(options = {}) {
       const markerDescText = isDissolveChoice ? '地圖上已用 💀 標出可瓦解的合法目標，點選後請於左側按鈕確認。' : '地圖上已用中性色外框標出可選城鎮。';
       hintEl.innerHTML = `${sourceLabel}：<span class="hint-strong">${escapeHtml(promptText)}</span> ${countText}${markerDescText}${escapeHtml(focusText)}${actionText}`;
     }
-    if (autoFocus) {
-      focusSupportChoiceTargets(focusedBounds || bounds);
-      return true;
-    }
+  }
+  if (autoFocus && allTargetBounds.length) {
+    // Filtering hides target rings, but it must not change the established action-choice
+    // autofocus semantics. Manual 「聚焦結果」 remains responsible for focusing filters.
+    focusSupportChoiceTargets(focusedTargetBounds || allTargetBounds);
+    return true;
   }
   return false;
 }
@@ -597,6 +599,10 @@ function applySupportChoiceHighlight(payload) {
     supportChoiceHighlightFocusKey = nextKey;
     if (isBuildChoice) buildChoiceViewportInitialized = true;
   }
+  // Keep the sidebar's cancel/confirm affordances (cancellable flag, N/M selected count) in
+  // sync immediately -- don't wait for the map's own independent WebSocket state push, whose
+  // arrival relative to this postMessage payload is not ordered.
+  refreshDirectBuildUi();
 }
 
 function finalizeMoveSelection(fromTown, toTown) {
@@ -638,7 +644,7 @@ function updateStatusPanel() {
     } else if (lastResolvedMove) {
       hintEl.innerHTML = `已完成移動：<span class="hint-strong">${lastResolvedMove.from}</span> → <span class="hint-strong">${lastResolvedMove.to}</span>`;
     } else if (!selectedTown) {
-      hintEl.innerHTML = '連上遊戲後，只有 <span class="hint-strong">當前玩家自己擁有組織</span> 的城鎮可以高亮合法移動；若城鎮具有共享組織，會以 <span class="hint-strong">金色外框與 S 標記</span> 顯示。';
+      hintEl.innerHTML = '連上遊戲後，只有 <span class="hint-strong">當前玩家自己擁有組織</span> 的城鎮可以高亮合法移動；若城鎮具有共享組織，會以 <span class="hint-strong">黃色圓圈</span> 顯示。';
     } else if (eventBuildChoiceForTown(selectedTown)) {
       hintEl.innerHTML = `已選取 <span class="hint-strong">${selectedTown}</span>：事件卡效果允許在此建立組織，請使用左側「在目前城鎮建立組織（事件卡）」按鈕完成。`;
     } else if (playerOwnsTown(selectedTown)) {
@@ -739,11 +745,7 @@ function clearLayers() {
   armoryBadgeLayer.clearLayers();
   baseBadgeLayer.clearLayers();
   highlightLayer.clearLayers();
-  currentSharedBadges.forEach(marker => {
-    try { map.removeLayer(marker); } catch {}
-  });
   currentMarkers = new Map();
-  currentSharedBadges = new Map();
   currentArmoryBadges = new Map();
   currentBaseBadges = new Map();
 }
@@ -1036,6 +1038,7 @@ function sendMoveAction(fromTown, toTown, mode) {
 
 function eventBuildChoiceForTown(townName) {
   if (!supportChoiceHighlight || !isBuildSupportChoiceHighlight()) return null;
+  if (!currentVisible.includes(townName)) return null;
   const towns = Array.isArray(supportChoiceHighlight.towns) ? supportChoiceHighlight.towns : [];
   const entry = towns.find(item => item?.town === townName);
   if (!entry) return null;
@@ -1049,6 +1052,7 @@ function eventBuildChoiceForTown(townName) {
 function supportTargetChoiceForTown(townName) {
   if (!supportChoiceHighlight || supportChoiceHighlight.mode !== 'support-targets') return null;
   if (isBuildSupportChoiceHighlight()) return null;
+  if (!currentVisible.includes(townName)) return null;
   const towns = Array.isArray(supportChoiceHighlight.towns) ? supportChoiceHighlight.towns : [];
   const entry = towns.find(item => item?.town === townName);
   if (!entry) return null;
@@ -1068,7 +1072,7 @@ function supportChoiceTownNearLatLng(latlng, maxPixels = 28) {
   towns.forEach(entry => {
     const townName = entry?.town;
     const town = byName.get(townName);
-    if (!town) return;
+    if (!town || !currentVisible.includes(townName)) return;
     const point = map.latLngToContainerPoint(townDisplayLatLng(town));
     const distance = clickPoint.distanceTo(point);
     if (distance <= maxPixels && (!nearest || distance < nearest.distance)) {
@@ -1084,7 +1088,7 @@ function sendDirectBuildAction(townName) {
   }
   const eventChoice = eventBuildChoiceForTown(townName);
   if (eventChoice) {
-    mapWs.send(JSON.stringify({ action: 'resolve_choice', index: eventChoice.index }));
+    mapWs.send(JSON.stringify({ action: 'resolve_choice', index: eventChoice.index, choice_id: supportChoiceHighlight.choiceId }));
     return { ok: true, eventChoice: true, index: eventChoice.index };
   }
   mapWs.send(JSON.stringify({ action: 'build', town: townName }));
@@ -1097,10 +1101,28 @@ function sendDissolveAction(defender, townName) {
   }
   const supportTargetChoice = supportTargetChoiceForTown(townName);
   if (supportTargetChoice) {
-    mapWs.send(JSON.stringify({ action: 'resolve_choice', index: supportTargetChoice.index }));
+    mapWs.send(JSON.stringify({ action: 'resolve_choice', index: supportTargetChoice.index, choice_id: supportChoiceHighlight.choiceId }));
     return { ok: true, supportTargetChoice: true, index: supportTargetChoice.index };
   }
   mapWs.send(JSON.stringify({ action: 'dissolve', defender, town: townName }));
+  return { ok: true };
+}
+
+// Cancellable-dissolve-target-selection feature: cancels the CURRENT dissolve-target pending
+// choice (自己主動打出的瓦解組織卡/奧援瓦解選項 -- 派遣間諜/內應間諜/情報網/北國奧援/臺灣奧援
+// 等瓦解目標選擇階段), before any target has been committed. Mirrors sendDissolveAction's shape
+// exactly, but sends 'cancel_choice' instead of 'resolve_choice' -- the backend is the sole
+// authority on whether this specific choice is actually cancellable (see `cancellable` on the
+// pending_choice projection); this only ever fires the request, never fakes a local "cancelled"
+// state before the server confirms it via the next state push.
+function sendCancelDissolveAction() {
+  if (!supportChoiceHighlight || !supportChoiceHighlight.choiceId) {
+    return { ok: false, reason: 'no-pending-choice' };
+  }
+  if (!requireOpenMapSocket()) {
+    return { ok: false, reason: 'socket-not-open' };
+  }
+  mapWs.send(JSON.stringify({ action: 'cancel_choice', choice_id: supportChoiceHighlight.choiceId }));
   return { ok: true };
 }
 
@@ -1121,8 +1143,21 @@ function refreshMoveConfirmUi() {
   hint.innerHTML = `確認將組織從 <span class="hint-strong">${pendingMoveTarget.from}</span> 移動到 <span class="hint-strong">${pendingMoveTarget.to}</span>（${modeLabel}，${costLabel}）？`;
 }
 
+function refreshCancelDissolveChoiceUi() {
+  const cancelBtn = document.getElementById('cancelDissolveChoiceBtn');
+  if (!cancelBtn) return;
+  const isDissolveChoice = isDissolveSupportChoiceHighlight();
+  const isCancellable = isDissolveChoice && !!supportChoiceHighlight.cancellable;
+  cancelBtn.style.display = isCancellable ? '' : 'none';
+  cancelBtn.disabled = !isCancellable;
+  if (!isCancellable) return;
+  const totalCount = Number(supportChoiceHighlight.totalCount || 0);
+  cancelBtn.textContent = totalCount > 1 ? '取消瓦解（放棄本次已選目標）' : '取消瓦解';
+}
+
 function refreshDirectBuildUi() {
   refreshMoveConfirmUi();
+  refreshCancelDissolveChoiceUi();
   const btn = document.getElementById('directBuildBtn');
   const hint = document.getElementById('directBuildHint');
   const dissolveBtn = document.getElementById('dissolveBtn');
@@ -1131,10 +1166,16 @@ function refreshDirectBuildUi() {
 
   if (!selectedTown) {
     btn.disabled = true;
-    btn.textContent = '在目前城鎮建立組織';
+    btn.textContent = '建立組織';
     dissolveBtn.disabled = true;
     hint.innerHTML = '選取具有自己組織、共享組織可用性或事件卡允許建立的城鎮後，這裡會顯示是否可直接建立。';
-    dissolveHint.innerHTML = '選取具有共享可用性的城鎮後，這裡會顯示是否可對實際組織擁有者發動瓦解。';
+    if (isDissolveSupportChoiceHighlight() && Number(supportChoiceHighlight.totalCount || 0) > 1) {
+      const selectedCount = Number(supportChoiceHighlight.selectedCount || 0);
+      const totalCount = Number(supportChoiceHighlight.totalCount || 0);
+      dissolveHint.innerHTML = `已選 <span class="hint-strong">${selectedCount}/${totalCount}</span> 個瓦解目標：在地圖上點選 💀 標示的組織，再按下方按鈕確認。`;
+    } else {
+      dissolveHint.innerHTML = '選取具有共享可用性的城鎮後，這裡會顯示是否可對實際組織擁有者發動瓦解。';
+    }
     return;
   }
 
@@ -1144,7 +1185,7 @@ function refreshDirectBuildUi() {
     btn.textContent = '建立組織';
     hint.innerHTML = `目前選取 <span class="hint-strong">${selectedTown}</span>：目前效果允許在此建立組織；按上方按鈕完成建立。`;
   } else {
-    btn.textContent = '在目前城鎮建立組織';
+    btn.textContent = '建立組織';
     btn.disabled = true;
     const sharedOnly = !playerOwnsTown(selectedTown) && playerHasSharedAccessToTown(selectedTown);
     const canAct = canActFromTown(selectedTown);
@@ -1160,8 +1201,26 @@ function refreshDirectBuildUi() {
   const supportTargetChoice = supportTargetChoiceForTown(selectedTown);
   if (supportTargetChoice) {
     dissolveBtn.disabled = false;
-    dissolveBtn.textContent = '確認瓦解此組織';
-    dissolveHint.innerHTML = `確認瓦解 <span class="hint-strong">${selectedTown}</span> 的組織？（${supportChoiceHighlight.sourceName || '目前效果'}）點擊地圖上其他 💀 目標可改選，按上方按鈕才會真正執行。`;
+    const totalCount = Number(supportChoiceHighlight.totalCount || 0);
+    if (totalCount > 1) {
+      const selectedCount = Number(supportChoiceHighlight.selectedCount || 0);
+      dissolveBtn.textContent = `確認瓦解此組織（${selectedCount + 1}/${totalCount}）`;
+      dissolveHint.innerHTML = `已選 <span class="hint-strong">${selectedCount}/${totalCount}</span> 個瓦解目標。確認瓦解 <span class="hint-strong">${selectedTown}</span> 的組織？（${supportChoiceHighlight.sourceName || '目前效果'}）點擊地圖上其他 💀 目標可改選，按上方按鈕才會真正執行；按「取消瓦解」可放棄本次所有已選目標。`;
+    } else {
+      dissolveBtn.textContent = '確認瓦解此組織';
+      dissolveHint.innerHTML = `確認瓦解 <span class="hint-strong">${selectedTown}</span> 的組織？（${supportChoiceHighlight.sourceName || '目前效果'}）點擊地圖上其他 💀 目標可改選，按上方按鈕才會真正執行。`;
+    }
+  } else if (isDissolveSupportChoiceHighlight() && Number(supportChoiceHighlight.totalCount || 0) > 1) {
+    // A multi-target dissolve choice is active (e.g. 北國奧援 III) but the currently-selected
+    // town is no longer one of the remaining legal targets -- most commonly because it was JUST
+    // confirmed as an earlier pick and the backend's fresh target list no longer includes it.
+    // Show the running "已選 N/M" progress instead of the unrelated single-target "沒有可瓦解的
+    // 共享組織目標" fallback below, and point the player at the still-open 💀 targets.
+    dissolveBtn.disabled = true;
+    dissolveBtn.textContent = '瓦解組織';
+    const selectedCount = Number(supportChoiceHighlight.selectedCount || 0);
+    const totalCount = Number(supportChoiceHighlight.totalCount || 0);
+    dissolveHint.innerHTML = `已選 <span class="hint-strong">${selectedCount}/${totalCount}</span> 個瓦解目標：請在地圖上點選其餘 💀 標示的組織，再按下方按鈕確認；按「取消瓦解」可放棄本次所有已選目標。`;
   } else {
     dissolveBtn.textContent = '瓦解組織';
     const dissolveTarget = sharedDissolveTargetForTown(selectedTown);
@@ -1194,11 +1253,6 @@ function updateDynamicStyles() {
       layer.getTooltip().options.offset = options.offset;
       layer.setTooltipContent(labelTextForTown(name));
     }
-  });
-  currentSharedBadges.forEach((badge, townName) => {
-    const town = byName.get(townName);
-    if (!town || !badge.setLatLng || !badge.getElement) return;
-    badge.setLatLng(townDisplayLatLng(town));
   });
   currentArmoryBadges.forEach((badge, townName) => {
     const town = byName.get(townName);
@@ -1252,6 +1306,11 @@ function renderMap() {
   const visibleTowns = towns.filter(t => townMatches(t, f));
   currentVisible = visibleTowns.map(t => t.name);
   const visibleSet = new Set(currentVisible);
+  if (selectedTown && !visibleSet.has(selectedTown)) {
+    selectedTown = null;
+    selectedMoveTargets = [];
+    pendingMoveTarget = null;
+  }
 
   for (const link of links) {
     if (!visibleSet.has(link.source) || !visibleSet.has(link.target)) continue;
@@ -1271,21 +1330,6 @@ function renderMap() {
     const marker = L.circleMarker(townDisplayLatLng(t), markerStyleForTown(t.name)).addTo(markerLayer);
     marker.bindPopup(popupHtml(t), { maxWidth:380 });
 
-    const shared = sharedAccessForTown(t.name);
-    if (shared.length) {
-      const badge = L.marker(townDisplayLatLng(t), {
-        interactive: false,
-        keyboard: false,
-        zIndexOffset: 700,
-        icon: L.divIcon({
-          className: 'shared-badge-wrap',
-          html: `<div class="shared-badge ${shared.length > 1 ? 'shared-badge-multi' : ''}" title="${sharedAccessSummary(t.name)}">S${shared.length > 1 ? shared.length : ''}</div>`,
-          iconSize: [26, 22],
-          iconAnchor: [-2, 14],
-        })
-      }).addTo(map);
-      currentSharedBadges.set(t.name, badge);
-    }
     if (t.type === '軍火庫' && !currentArmoryBadges.has(t.name)) {
       const armoryBadge = L.marker(townDisplayLatLng(t), {
         interactive: false,
@@ -1499,6 +1543,9 @@ document.getElementById('dissolveBtn').addEventListener('click', () => {
   if (!target) return;
   sendDissolveAction(target, selectedTown);
 });
+document.getElementById('cancelDissolveChoiceBtn').addEventListener('click', () => {
+  sendCancelDissolveAction();
+});
 
 map.on('click', (event) => {
   const supportTown = supportChoiceTownNearLatLng(event.latlng);
@@ -1675,7 +1722,7 @@ function mapSocketIsOpen() {
 // （伺服器重啟、筆電睡眠喚醒、網路閃斷，或伺服器端 broadcast 對某個已死連線丟出例外時
 // 連帶關掉本連線），這條 socket 就永遠是 CLOSED。此時父頁 app.js 仍有自己的 scheduleReconnect
 // 會重連，指揮中心看起來一切正常，選擇提示也照樣 postMessage 進地圖 → 候選城鎮亮著、
-// 「在目前城鎮建立組織（效果）」按鈕也照樣 enabled，但按下去只會走到 sendDirectBuildAction()
+// 「建立組織」按鈕也照樣 enabled，但按下去只會走到 sendDirectBuildAction()
 // 的 socket-not-open 分支靜默 return，玩家完全看不到任何錯誤。
 // （2026-08-08 playtest 回報：組織經驗丙選好廈門、按鈕亮著，按下去卻沒有建立組織。）
 function scheduleMapSocketReconnect(reason = 'closed') {

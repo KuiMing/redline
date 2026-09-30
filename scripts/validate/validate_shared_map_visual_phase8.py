@@ -8,11 +8,11 @@ html = (ROOT / 'static' / 'leaflet_game_map.html').read_text(encoding='utf-8')
 
 checks = {
     'shared_access_helper': 'function sharedAccessForTown(name)' in js,
-    'shared_summary_helper': 'function sharedAccessSummary(name)' in js,
-    'shared_badge_marker': 'shared-badge' in js,
-    'shared_badge_css': '.shared-badge' in html,
-    'status_panel_shared_hint': '金色外框與 S 標記' in js,
-    'info_panel_shared_badge': '共享中（${shared.length}）' in js,
+    'shared_badge_marker_removed': 'shared-badge' not in js,
+    'shared_badge_css_removed': '.shared-badge' not in html,
+    'shared_yellow_circle': "color: '#facc15'" in js and "hasShared ? '#facc15'" in js,
+    'status_panel_shared_hint': '黃色圓圈' in js,
+    'info_panel_shared_access': '可共享陣營：' in js,
 }
 
 passed = sum(1 for v in checks.values() if v)

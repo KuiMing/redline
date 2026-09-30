@@ -129,3 +129,72 @@ def test_reaction_choice_auto_skips_after_timeout_and_resolves_action():
             server_main.manager.connections.pop(game_id, None)
 
     asyncio.run(run_case())
+
+
+def test_reaction_timeout_reschedules_for_each_remaining_responder():
+    async def run_case():
+        g = Game([('actor', 'actor'), ('reactor-b', 'reactor-b'), ('reactor-c', 'reactor-c')])
+        g.game_phase = GamePhase.MAIN
+        g.turn_phase = TurnPhase.ACTION
+        g.current_player_index = 0
+        g.pending_base_choices = {}
+        g.pending_choice = None
+        actor, reactor_b, reactor_c = g.players
+        actor.hand = [card(g, '領導')]
+        actor.deck.draw_pile = [Card('Draw1', 'command', {})]
+        reactor_b.hand = [card(g, '情報網')]
+        reactor_c.hand = [card(g, '爆料黑幕')]
+        game_id = 'multi-reaction-timeout-test'
+        old_timeout = server_main.REACTION_RESPONSE_TIMEOUT_SECONDS
+        server_main.REACTION_RESPONSE_TIMEOUT_SECONDS = 0.01
+        server_main.manager.games[game_id] = g
+        server_main.manager.connections[game_id] = {}
+        try:
+            prompted = g.play_card(0, mode='action')
+            assert prompted.get('pending_choice') is True, prompted
+            assert g.pending_choice['player_id'] == reactor_b.id
+            server_main.schedule_reaction_timeout(game_id, g)
+            await asyncio.sleep(0.08)
+            assert g.pending_choice is None
+            assert names(actor.hand) == ['Draw1']
+            assert names(reactor_b.hand) == ['情報網']
+            assert names(reactor_c.hand) == ['爆料黑幕']
+            timeout_entries = [entry for entry in g.action_log if 'timed out' in entry]
+            assert len(timeout_entries) == 2, timeout_entries
+        finally:
+            server_main.REACTION_RESPONSE_TIMEOUT_SECONDS = old_timeout
+            task = server_main.reaction_timeout_tasks.pop(game_id, None)
+            if task:
+                task.cancel()
+            server_main.manager.games.pop(game_id, None)
+            server_main.manager.connections.pop(game_id, None)
+
+    asyncio.run(run_case())
+
+
+def test_stale_reaction_submission_cannot_resolve_a_deeper_window_for_same_player():
+    g = Game([('actor', 'actor'), ('reactor', 'reactor')])
+    g.game_phase = GamePhase.MAIN
+    g.turn_phase = TurnPhase.ACTION
+    g.current_player_index = 0
+    g.pending_base_choices = {}
+    g.pending_choice = None
+    actor, reactor = g.players
+    actor.hand = [card(g, '領導'), card(g, '爆料黑幕')]
+    actor.deck.draw_pile = [Card('Draw1', 'command', {}), Card('Draw2', 'command', {})]
+    reactor.hand = [card(g, '情報網'), card(g, '產業滲透')]
+
+    assert g.play_card(0, mode='action').get('pending_choice') is True
+    original_reaction_id = g.state(reactor.id)['pending_choice']['choice_id']
+    first_cancel = g.resolve_pending_choice(reactor.id, 1, expected_choice_id=original_reaction_id)
+    assert first_cancel.get('opened_counter_layer') is True, first_cancel
+    actor_counter_id = g.state(actor.id)['pending_choice']['choice_id']
+    second_cancel = g.resolve_pending_choice(actor.id, 1, expected_choice_id=actor_counter_id)
+    assert second_cancel.get('opened_counter_layer') is True, second_cancel
+    deeper_reaction_id = g.state(reactor.id)['pending_choice']['choice_id']
+    assert deeper_reaction_id != original_reaction_id
+
+    replay = g.resolve_pending_choice(reactor.id, 0, expected_choice_id=original_reaction_id)
+    assert replay == {'error': 'Stale pending choice'}
+    assert g.pending_choice['player_id'] == reactor.id
+    assert g.pending_choice['choice_id'] == deeper_reaction_id

@@ -122,6 +122,9 @@ def schedule_reaction_timeout(game_id, game):
             active_game.log(f"{active_choice.get('played_card_name', 'card')} cancel reaction timed out after {REACTION_RESPONSE_TIMEOUT_SECONDS} seconds; treated as no cancel")
             result = active_game.resolve_pending_choice(reacting_player_id, 0)
             await broadcast_game_state(game_id, active_game, result if isinstance(result, dict) else None)
+            if reaction_timeout_tasks.get(game_id) is asyncio.current_task():
+                reaction_timeout_tasks.pop(game_id, None)
+            schedule_reaction_timeout(game_id, active_game)
         except asyncio.CancelledError:
             return
         finally:
@@ -311,7 +314,12 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
             elif action == "use_topdeck_right":
                 result = game.use_pending_topdeck_right()
             elif action == "play_card":
-                result = game.play_card(data.get("index"), mode=data.get("mode"), target_player_id=data.get("target_player_id"))
+                result = game.play_card(
+                    data.get("index"),
+                    mode=data.get("mode"),
+                    target_player_id=data.get("target_player_id"),
+                    target_player_ids=data.get("target_player_ids"),
+                )
             elif action == "buy_card":
                 result = game.buy_card(data.get("index"))
             elif action == "buy_cards":
@@ -365,9 +373,23 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
             elif action == "keep_hong_kong_base":
                 result = game.keep_hong_kong_base(player_id)
             elif action == "resolve_choice":
-                result = game.resolve_pending_choice(player_id, data.get("index"))
+                if not data.get("choice_id"):
+                    result = {"error": "Missing pending choice id"}
+                else:
+                    result = game.resolve_pending_choice(
+                        player_id,
+                        data.get("index"),
+                        target_player_ids=data.get("target_player_ids"),
+                        expected_choice_id=data.get("choice_id"),
+                    )
             elif action == "cancel_choice":
-                result = game.cancel_pending_choice(player_id)
+                if not data.get("choice_id"):
+                    result = {"error": "Missing pending choice id"}
+                else:
+                    result = game.cancel_pending_choice(
+                        player_id,
+                        expected_choice_id=data.get("choice_id"),
+                    )
 
             error_message = _ws_action_error_message(result)
             if error_message:
