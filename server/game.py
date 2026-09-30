@@ -1262,7 +1262,13 @@ class Game(CardPlayMixin):
                 'interactive_dissolve_and_build',
                 'interactive_dissolve_self_and_enemy',
             }
-            and self._support_card_has_legal_target(player, card)
+            # `card` is always still sitting in `player.hand` at every call site of this method
+            # (both play_card's own queueing_map_card pre-check and the queueable_card_names
+            # projection loop below iterate the player's CURRENT hand) -- reserve 1 slot so a
+            # 盟旗學校-protected target's affordability isn't inflated by counting the
+            # about-to-be-played card as if it were available to pay its own discard cost (see
+            # _support_card_has_legal_target's docstring; parent-level review, Critical 1).
+            and self._support_card_has_legal_target(player, card, pre_reserved_shield_discards=1)
         )
 
     def _choice_is_card_map_interaction(self, choice):
@@ -1321,6 +1327,27 @@ class Game(CardPlayMixin):
         if self.pending_choice:
             return None
         if isinstance(self._deferred_build_choice, dict):
+            # Correctness invariant, defense-in-depth (parent-level review, Critical 1): never
+            # resurrect a deferred choice that belongs to a DIFFERENT player than whoever's turn
+            # it currently is. Checked against `self.current_player()`, NOT the `player` argument
+            # this method was called with -- a legitimate resume can (and routinely does) happen
+            # on behalf of a DIFFERENT player than the deferred choice's own owner, e.g. this
+            # same method is called with the REACTOR as `player` right after they resolve their
+            # own cancel-reaction choice, correctly handing control back to the original actor's
+            # still-queued FIFO entry -- that's turn-preserving (still the actor's turn) and must
+            # keep working. What must never happen is resurrecting a deferred choice into a
+            # DIFFERENT player's turn entirely (e.g. a legality-check false positive orphaning an
+            # in-progress choice without properly restoring it -- see play_card's
+            # queueing_map_card rollback path -- followed by the turn advancing before anyone
+            # notices). Since resolve_pending_choice requires choice['player_id'] == player_id,
+            # neither player could then ever resolve such an orphan, and ordinary action-gating
+            # would block all further play -- a real softlock, not just a lost card. Drop the
+            # orphan instead of corrupting turn state.
+            deferred_player_id = self._deferred_build_choice.get('player_id')
+            current_player_id = getattr(self.current_player(), 'id', None)
+            if deferred_player_id is not None and deferred_player_id != current_player_id:
+                self._deferred_build_choice = None
+                return None
             self.pending_choice = self._deferred_build_choice
             self._deferred_build_choice = None
             remaining = self._refresh_card_build_choice_projection()
@@ -1441,20 +1468,26 @@ class Game(CardPlayMixin):
     def _target_players_for_interaction(self, player, target_player_id=None):
         return target_players_for_interaction(self.players, player, target_player_id)
 
-    def _interactive_support_dissolve_targets(self, player, require_self_sacrifice=False, max_steps=1, target_players=None, target_region=None, include_shared_source=False):
+    def _interactive_support_dissolve_targets(self, player, require_self_sacrifice=False, max_steps=1, target_players=None, target_region=None, include_shared_source=False, pre_reserved_shield_discards=0, exclude_target_keys=None):
         return interactive_support_dissolve_targets(
             self.map, self.towns_by_ruler, self.faction_by_id, self.players, player,
             require_self_sacrifice, max_steps, target_players, target_region,
-            include_shared_source,
+            include_shared_source, ability_templates=self.ability_templates,
+            pre_reserved_shield_discards=pre_reserved_shield_discards,
+            exclude_target_keys=exclude_target_keys,
         )
 
     def _interactive_support_dissolve_targets_near_town(
         self, player, origin_town, max_steps=1, target_players=None,
-        target_region=None, excluded_target=None,
+        target_region=None, excluded_target=None, pre_reserved_shield_discards=0,
+        exclude_target_keys=None,
     ):
         return interactive_support_dissolve_targets_near_town(
             self.map, self.towns_by_ruler, self.faction_by_id, self.players, player, origin_town,
             max_steps, target_players, target_region, excluded_target,
+            ability_templates=self.ability_templates,
+            pre_reserved_shield_discards=pre_reserved_shield_discards,
+            exclude_target_keys=exclude_target_keys,
         )
 
     def _interactive_support_discard_targets_near(
@@ -2864,7 +2897,7 @@ class Game(CardPlayMixin):
     def _project_action_log(self, viewer_player_id=None):
         return project_action_log(self.action_log, getattr(self, '_action_log_visibility', []), viewer_player_id)
 
-    def _support_card_has_legal_target(self, player, card):
+    def _support_card_has_legal_target(self, player, card, pre_reserved_shield_discards=0):
         # Non-mutating legal-target pre-check, sharing _support_interaction_targets (the
         # single source of truth) with _start_support_interaction so the two can never
         # disagree. Lets play_card reject an illegal interactive support play — and decide
@@ -2872,10 +2905,23 @@ class Game(CardPlayMixin):
         # up the support card's own interactive pending choice. Non-interactive support
         # effects (gain_resource / draw / draw_then_discard / add_internal_conflict) always
         # resolve, so _support_interaction_targets returns None for them.
+        #
+        # `pre_reserved_shield_discards`: this SAME method is also called from TWO places in
+        # play_card() BEFORE `card` itself has been popped from `player.hand`
+        # (_card_can_queue_map_action's own call, and play_card's own queueing_map_card
+        # pre-check) -- at those call sites `card` is still sitting in the attacker's hand,
+        # which would otherwise inflate a 盟旗學校-protected target's affordability by 1 (the
+        # about-to-be-spent card counted as if it could pay its own discard cost). Reserving 1
+        # slot there keeps those pre-pop checks in agreement with the real post-pop mutation
+        # check below (and with _start_support_interaction's own post-pop listing) -- without
+        # this, a legality-check false positive could pop a queued card, have it correctly fail
+        # post-pop, and (if the rollback path itself were also incomplete) orphan an unrelated
+        # already-open pending_choice entirely -- see play_card's queueing_map_card handling and
+        # its rollback path for the full defense-in-depth story (parent-level review, Critical 1).
         card_name = getattr(card, 'name', str(card))
         tier, region_index, _ = self._support_card_tier(player, card)
         effect_type, payload = self._resolve_support_card_effect(card_name, tier, region_index)
-        targets = self._support_interaction_targets(player, effect_type, payload)
+        targets = self._support_interaction_targets(player, effect_type, payload, pre_reserved_shield_discards=pre_reserved_shield_discards)
         if targets is None:
             return True
         return bool(targets)

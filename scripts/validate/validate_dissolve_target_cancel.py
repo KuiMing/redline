@@ -350,6 +350,85 @@ def main():
         )
 
         # -----------------------------------------------------------------
+        # B3) 盟旗學校 (Mongol faction shield) target-visibility filtering (parent-level review,
+        #     corrected defect 1): an unaffordable 盟旗學校-protected target must never appear as
+        #     a pickable 💀 target on the map at all -- not offered, not just rejected on click.
+        #     One ordinary target + two Mongol-protected targets are in range, but the attacker
+        #     only has 1 other hand card after playing -- the map must show exactly 2 skulls
+        #     (the ordinary target plus ONE of the two Mongol targets), never 3.
+        # -----------------------------------------------------------------
+        setup_b6 = post_json('/test/setup-dissolve-cancel-mongol-shield-target-filtering', {})
+        record(
+            'mongol_shield_filtering_setup_succeeded', setup_b6.get('success') is True, setup_b6
+        )
+        load_game(page, setup_b6['url'])
+        snap_b6 = map_snapshot(page)
+        record(
+            'mongol_shield_filtering_shows_ordinary_plus_exactly_one_affordable_mongol_target',
+            snap_b6['skullCount'] == 2 and '0/2' in (snap_b6['dissolveHintText'] or ''),
+            snap_b6,
+        )
+
+        # -----------------------------------------------------------------
+        # B3b) Second-pick listing under 盟旗學校 dict-iteration-order artifacts (parent-level
+        #      review, Critical 2): 3 Mongol-protected targets are in range with 2 spare hand
+        #      cards -- only 2 may ever be offered together. After making the FIRST pick (of
+        #      whichever 2 were initially offered), the map's listing for the SECOND pick must
+        #      still show the other still-affordable Mongol target -- not come back with zero
+        #      skulls, which is what an already-picked town spuriously re-consuming already-
+        #      reserved shield-discard budget would produce.
+        # -----------------------------------------------------------------
+        setup_b8 = post_json('/test/setup-dissolve-cancel-mongol-shield-second-pick-dict-order', {})
+        record(
+            'mongol_shield_second_pick_setup_succeeded', setup_b8.get('success') is True, setup_b8
+        )
+        load_game(page, setup_b8['url'])
+        snap_b8 = map_snapshot(page)
+        record(
+            'mongol_shield_second_pick_listing_still_offers_the_remaining_affordable_target',
+            snap_b8['skullCount'] == 1 and '1/2' in (snap_b8['dissolveHintText'] or ''),
+            {'snap': snap_b8, 'setup': setup_b8},
+        )
+
+        # -----------------------------------------------------------------
+        # B4) Stale pick with NO legal replacement anywhere resolves the still-valid pick(s)
+        #     directly (parent-level review, corrected defect 2 -- 北國奧援 III's own printed
+        #     text is "dissolve UP TO 2", not "exactly 2", so this is intentionally a PARTIAL
+        #     commit, not a fizzle/error state). Only 2 organizations exist on the whole board;
+        #     the first pick (天津) has already gone stale and there is no 3rd org to reopen onto
+        #     -- confirming the sole remaining pick (石家莊) must dissolve it immediately.
+        # -----------------------------------------------------------------
+        setup_b7 = post_json('/test/setup-dissolve-cancel-multi-target-stale-no-replacement', {})
+        record(
+            'multi_target_stale_no_replacement_setup_succeeded', setup_b7.get('success') is True, setup_b7
+        )
+        load_game(page, setup_b7['url'])
+        snap_b7_before = map_snapshot(page)
+        record(
+            'multi_target_stale_no_replacement_shows_the_one_remaining_live_target_before_confirm',
+            snap_b7_before['skullCount'] == 1 and '1/2' in (snap_b7_before['dissolveHintText'] or ''),
+            snap_b7_before,
+        )
+
+        select_town(page, '石家莊')
+        click_map_button(page, 'dissolveBtn')
+        final_state_b7 = page.evaluate('() => window.lastGameState')
+        enemy_orgs_final_b7 = next(
+            (
+                p.get('orgs')
+                for p in (final_state_b7.get('players') or [])
+                if p.get('id') != setup_b7['player_id']
+            ),
+            {},
+        )
+        record(
+            'multi_target_stale_no_replacement_resolves_the_still_valid_pick_as_a_partial_commit',
+            final_state_b7.get('pending_choice') is None
+            and enemy_orgs_final_b7.get('石家莊', 0) == 0,
+            {'enemy_orgs_final_b7': enemy_orgs_final_b7, 'final_state_pending_choice': final_state_b7.get('pending_choice')},
+        )
+
+        # -----------------------------------------------------------------
         # C) Forced/mandatory event dissolve (全國人大召開): legal targets are still highlighted,
         #    but there must be NO cancel affordance.
         # -----------------------------------------------------------------

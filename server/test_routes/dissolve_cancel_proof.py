@@ -55,6 +55,21 @@ class DissolveCancelProofTestRoutes:
             methods=["POST"],
         )
         self.router.add_api_route(
+            "/test/setup-dissolve-cancel-mongol-shield-target-filtering",
+            self.setup_mongol_shield_target_filtering,
+            methods=["POST"],
+        )
+        self.router.add_api_route(
+            "/test/setup-dissolve-cancel-mongol-shield-second-pick-dict-order",
+            self.setup_mongol_shield_second_pick_dict_order,
+            methods=["POST"],
+        )
+        self.router.add_api_route(
+            "/test/setup-dissolve-cancel-multi-target-stale-no-replacement",
+            self.setup_multi_target_stale_no_replacement,
+            methods=["POST"],
+        )
+        self.router.add_api_route(
             "/test/setup-dissolve-cancel-forced-event",
             self.setup_forced_event,
             methods=["POST"],
@@ -179,6 +194,143 @@ class DissolveCancelProofTestRoutes:
         first_index = next(i for i, t in enumerate(game.pending_choice["targets"]) if t["town"] == "天津")
         first_pick = game.resolve_pending_choice(actor.id, first_index)
         del enemy.organizations["天津"]  # 天津 goes stale before the final pick
+
+        game_id = _register_game(runtime, game, actor)
+        return {
+            "success": True,
+            "game_id": game_id,
+            "player_id": actor.id,
+            "url": f"/?game_id={game_id}&player_id={actor.id}",
+            "first_pick_result": first_pick,
+            "state": game.state(actor.id),
+        }
+
+    def setup_mongol_shield_target_filtering(self, payload: dict):
+        """北國奧援 III (count=2) with one ordinary target and TWO Mongol-protected (盟旗學校)
+        targets, but the attacker has only 1 other hand card left after playing -- the map's
+        initial target list must show the ordinary target plus exactly ONE of the two Mongol
+        targets (never both), proving a 盟旗學校-protected target the attacker cannot afford is
+        never offered as a pickable target at all, individually or cumulatively across the whole
+        multi-pick selection. (Parent-level review, corrected defect 1.)"""
+        runtime = self._runtime_provider()
+        players = [
+            (str(uuid.uuid4()), "玩家"),
+            (str(uuid.uuid4()), "紅軍"),
+            (str(uuid.uuid4()), "蒙古"),
+        ]
+        game = Game(players, market_mode="all_cards")
+        actor, red, mongol = game.players
+        actor.faction_id = "liberals"
+        red.faction_id = "red_army"
+        mongol.faction_id = "mongol"
+        game.pending_base_choices = []
+        game.game_phase = GamePhase.MAIN
+        game.current_player_index = 0
+        game.turn_phase = TurnPhase.ACTION
+        game.current_event = dict(game._event_by_name("歲月靜好"))
+        game.event_progress = {"count": 0, "required": 0, "succeeded": True, "settled": True, "status": "idle"}
+        game.event_modifiers = []
+        game.turn_log = game._new_turn_log()
+
+        actor.base = "北京"
+        actor.organizations = {"北京": 1}
+        filler_card = Card("填充卡", "command", {})
+        actor.hand = [game._make_support_card("北國奧援"), filler_card]
+        game._support_card_tier = lambda _player, _card: (3, 0, [])
+        red.base = "西安"
+        red.organizations = {"天津": 1}
+        mongol.base = "太原"
+        mongol.organizations = {"石家莊": 1, "承德": 1}
+
+        pre_play_state = game.state(actor.id)
+        played = game.play_card(0, mode="action")
+
+        game_id = _register_game(runtime, game, actor)
+        return {
+            "success": True,
+            "game_id": game_id,
+            "player_id": actor.id,
+            "url": f"/?game_id={game_id}&player_id={actor.id}",
+            "play_result": played,
+            "pre_play_state": pre_play_state,
+            "state": game.state(actor.id),
+        }
+
+    def setup_mongol_shield_second_pick_dict_order(self, payload: dict):
+        """北國奧援 III (count=2) with THREE Mongol-protected (盟旗學校) targets in range, but the
+        attacker has only 2 spare hand cards after playing -- exactly 2 of the 3 may ever be
+        offered together. Lands the game with the FIRST pick already made, testing that the
+        SECOND listing (computed fresh after that pick) still correctly offers the remaining
+        still-affordable Mongol target regardless of `other.organizations` dict iteration order
+        -- an already-picked town must never spuriously re-consume shield-discard budget that
+        was already reserved for it, which would otherwise silently under-deliver the genuinely
+        still-open, still-affordable second target. (Parent-level review, Critical 2.)"""
+        runtime = self._runtime_provider()
+        players = [
+            (str(uuid.uuid4()), "玩家"),
+            (str(uuid.uuid4()), "蒙古"),
+        ]
+        game = Game(players, market_mode="all_cards")
+        actor, mongol = game.players
+        actor.faction_id = "liberals"
+        mongol.faction_id = "mongol"
+        game.pending_base_choices = []
+        game.game_phase = GamePhase.MAIN
+        game.current_player_index = 0
+        game.turn_phase = TurnPhase.ACTION
+        game.current_event = dict(game._event_by_name("歲月靜好"))
+        game.event_progress = {"count": 0, "required": 0, "succeeded": True, "settled": True, "status": "idle"}
+        game.event_modifiers = []
+        game.turn_log = game._new_turn_log()
+
+        actor.base = "北京"
+        actor.organizations = {"北京": 1}
+        filler1 = Card("填充卡1", "command", {})
+        filler2 = Card("填充卡2", "command", {})
+        actor.hand = [game._make_support_card("北國奧援"), filler1, filler2]
+        game._support_card_tier = lambda _player, _card: (3, 0, [])
+        mongol.base = "太原"
+        mongol.organizations = {"承德": 1, "石家莊": 1, "天津": 1}
+
+        played = game.play_card(0, mode="action")
+        first_town = game.pending_choice["targets"][0]["town"]
+        first_index = next(i for i, t in enumerate(game.pending_choice["targets"]) if t["town"] == first_town)
+        first_pick = game.resolve_pending_choice(actor.id, first_index)
+
+        game_id = _register_game(runtime, game, actor)
+        return {
+            "success": True,
+            "game_id": game_id,
+            "player_id": actor.id,
+            "url": f"/?game_id={game_id}&player_id={actor.id}",
+            "play_result": played,
+            "first_pick_result": first_pick,
+            "first_town": first_town,
+            "state": game.state(actor.id),
+        }
+
+    def setup_multi_target_stale_no_replacement(self, payload: dict):
+        """北國奧援 III (count=2) with only 2 organizations on the board total -- the FIRST pick
+        (天津) already made and then made stale, with NO third organization available anywhere
+        as a replacement target. Confirming the sole remaining pick (石家莊) must now resolve it
+        directly as a partial ("up to 2", per 北國奧援 III's own printed wording) commit, NOT
+        fizzle the whole flow -- the map should show the effect completing with exactly 1
+        organization dissolved rather than an error/fizzle state. (Parent-level review, corrected
+        defect 2.)"""
+        runtime = self._runtime_provider()
+        game, actor, enemy = self._base_game()
+        actor.faction_id = "liberals"
+        actor.base = "北京"
+        actor.organizations = {"北京": 1}
+        actor.hand = [game._make_support_card("北國奧援")]
+        game._support_card_tier = lambda _player, _card: (3, 0, [])
+        enemy.base = "西安"
+        enemy.organizations = {"天津": 1, "石家莊": 1}
+
+        game.play_card(0, mode="action")
+        first_index = next(i for i, t in enumerate(game.pending_choice["targets"]) if t["town"] == "天津")
+        first_pick = game.resolve_pending_choice(actor.id, first_index)
+        del enemy.organizations["天津"]  # 天津 goes stale before the final pick; no 3rd org exists
 
         game_id = _register_game(runtime, game, actor)
         return {

@@ -258,6 +258,38 @@ class CardPlayMixin:
         self.pending_choice = new_choice
         return {'pending_choice': True}
 
+    def _pick_requires_mongol_shield_discard(self, pick):
+        """Whether one accumulated (target_player_id, town) pick belongs to a 盟旗學校-protected
+        player -- i.e. whether it reserves 1 of the attacker's hand cards at final-commit time.
+        Used to compute cumulative reservation for target LISTING (see
+        _reserved_shield_discards_for_picks) so a multi-pick flow never offers more
+        盟旗學校-protected targets than the attacker can actually afford across the whole
+        selection (parent-level review, defect 1)."""
+        owner = next((p for p in self.players if getattr(p, 'id', None) == pick.get('target_player_id')), None)
+        if owner is None:
+            return False
+        return self._player_has_ability(owner, "盟旗學校")
+
+    def _reserved_shield_discards_for_picks(self, picks):
+        return sum(1 for pick in (picks or []) if self._pick_requires_mongol_shield_discard(pick))
+
+    def _target_keys_for_picks(self, picks):
+        """The `(target_player_id, town)` key set for a list of accumulated picks, for passing
+        as `exclude_target_keys` to `_interactive_support_dissolve_targets[_near_town]`.
+
+        Excluding already-picked towns from the raw candidate scan ENTIRELY (not just filtering
+        them out of the returned list afterward) matters: an already-picked town is still
+        physically present on the board (mutation is deferred to final commit), so if it were
+        merely filtered out after the fact, it would still have consumed 1 unit of
+        shield-discard budget while being walked -- silently starving a later, genuinely
+        still-open, affordable Mongol candidate of budget purely as an artifact of
+        `other.organizations` dict iteration order (parent-level review, Critical 2). Passing
+        this exclusion set is what lets `pre_reserved_shield_discards` (a flat count) correctly
+        shrink the STARTING budget for candidates that actually compete for it, instead of
+        double-counting already-reserved picks a second time as they're walked.
+        """
+        return {(pick.get('target_player_id'), pick.get('town')) for pick in (picks or [])}
+
     def _dissolve_cancel_kwargs(self, context):
         """Given a `context` dict that may carry a `_dissolve_cancel_snapshot` (seeded once, at
         the moment a player-initiated dissolve card's *first* pending choice opens -- see
@@ -1930,13 +1962,19 @@ class CardPlayMixin:
         )
         return {'pending_choice': True, **result}
 
-    def _support_interaction_targets(self, player, effect_type, payload):
+    def _support_interaction_targets(self, player, effect_type, payload, pre_reserved_shield_discards=0):
         # Single source of truth for an interactive support card's legal targets. Returns
         # the list of build towns / dissolve targets (an empty list means "no legal
         # target"), or None for non-interactive effect types (which always resolve).
         # Shared by _start_support_interaction (which opens the pending choice) and
         # _support_card_has_legal_target (the non-mutating pre-check in play_card) so the
         # two can never disagree about whether a play is legal.
+        #
+        # `pre_reserved_shield_discards`: see _support_card_has_legal_target's own docstring --
+        # only meaningfully non-zero for a PRE-pop caller reserving the about-to-be-played card's
+        # own hand slot; the real post-pop callers (_start_support_interaction itself, and
+        # play_card's own post-pop re-check) pass 0 (default), since by then the hand already
+        # correctly reflects reality and needs no adjustment.
         if effect_type in ('interactive_build_anywhere_inner', 'interactive_build_near_inner'):
             return self._interactive_support_build_towns(
                 player,
@@ -1949,6 +1987,7 @@ class CardPlayMixin:
                 max_steps=int(payload.get('range', 1) or 1),
                 target_region=payload.get('target_region'),
                 include_shared_source=True,
+                pre_reserved_shield_discards=pre_reserved_shield_discards,
             )
         if effect_type == 'interactive_dissolve_self_and_enemy':
             return self._interactive_support_sacrifice_towns(
@@ -1964,6 +2003,7 @@ class CardPlayMixin:
                 max_steps=int(payload.get('range', 1) or 1),
                 target_region=payload.get('target_region'),
                 include_shared_source=True,
+                pre_reserved_shield_discards=pre_reserved_shield_discards,
             )
             return [
                 entry
@@ -2245,7 +2285,18 @@ class CardPlayMixin:
                             target_players=target_players,
                             target_region=target_region,
                             include_shared_source=bool(context.get('include_shared_source', False)),
+                            # Reserve 1 hand-card discard for each 盟旗學校-protected pick
+                            # already locked into this batch (this pick included), so a
+                            # 盟旗學校-protected target never gets offered here beyond what the
+                            # attacker could still afford cumulatively (parent-level review,
+                            # defect 1) -- and exclude those same picks' own towns from the raw
+                            # scan entirely, so they never compete for that budget a second time
+                            # purely as an artifact of dict iteration order (Critical 2).
+                            pre_reserved_shield_discards=self._reserved_shield_discards_for_picks(accumulated_picks),
+                            exclude_target_keys=self._target_keys_for_picks(accumulated_picks),
                         )
+                        # Redundant with exclude_target_keys above (kept as defense-in-depth --
+                        # harmless no-op given the listing already excludes these).
                         if not any(
                             pick['target_player_id'] == entry.get('player_id') and pick['town'] == entry.get('town')
                             for pick in accumulated_picks
@@ -2277,38 +2328,61 @@ class CardPlayMixin:
                     self.log(f"{player.name} has {remaining_count} {card_name} dissolve(s) remaining but no further legal target; confirming {len(accumulated_picks)} now")
                 # Final confirmation: re-validate every accumulated pick against the live board
                 # BEFORE applying anything (req #9 -- an earlier pick could have gone stale while
-                # later picks were still being made). This must be all-or-nothing (req #6): a
-                # stale pick may NOT be silently dropped while the remaining (now-partial) picks
-                # still get dissolved and the card still gets consumed -- that would resolve a
-                # 2-target pick into only 1 actual dissolution. So the board is only ever mutated
-                # below once EVERY accumulated pick has independently confirmed still-legal;
-                # otherwise nothing is applied, nothing is consumed, and the flow either re-opens
-                # onto a fresh legal target for the vacated slot(s) or fully fizzles -- mirroring
-                # the same all-or-nothing discipline already used for the two-phase
-                # self-sacrifice flows' own stale-target revalidation above. (Parent-level
-                # review, defect 2.)
-                live_targets_for_validation = self._interactive_support_dissolve_targets(
-                    player,
-                    require_self_sacrifice=False,
-                    max_steps=max_steps,
-                    target_players=target_players,
-                    target_region=target_region,
-                    include_shared_source=bool(context.get('include_shared_source', False)),
-                )
-                still_valid_picks = [
-                    pick for pick in accumulated_picks
-                    if any(
-                        entry.get('player_id') == pick['target_player_id'] and entry.get('town') == pick['town']
-                        for entry in live_targets_for_validation
+                # later picks were still being made). 北國奧援 III's own printed text is
+                # "dissolve UP TO 2 organizations", not "exactly 2" -- so if a replacement legal
+                # target exists for a vacated (stale) slot, reopen for that re-pick (unchanged
+                # from the previous round); but if NO further legal target exists at all, the
+                # correct outcome is to resolve every STILL-VALID selected target now, even if
+                # that ends up fewer than the card's stated max -- not to fizzle the whole flow.
+                # (Parent-level review, defect 2 -- the previous round's full-fizzle-on-no-
+                # replacement behavior was itself built on the wrong all-or-nothing premise.)
+                # Validated ONE PICK AT A TIME, each against a listing that excludes every OTHER
+                # accumulated pick's own town (so those don't compete for shield-discard budget)
+                # while reserving budget for their own shield costs -- NOT a single shared
+                # listing call. A single shared call with a flat pre_reserved_shield_discards
+                # would walk every accumulated pick's town as an ordinary candidate too (since
+                # none of them have actually been dissolved on the board yet), letting an
+                # already-locked-in pick's own town spuriously consume the very budget being
+                # reserved for it, and (depending on `other.organizations` dict iteration order)
+                # spuriously fail to find IT SELF in the resulting list -- incorrectly marking a
+                # pick "no longer legal" that was never actually stale or unaffordable
+                # (parent-level review, Critical 2).
+                still_valid_picks = []
+                for candidate_pick in accumulated_picks:
+                    other_picks = [p for p in accumulated_picks if p is not candidate_pick]
+                    live_targets_for_this_pick = self._interactive_support_dissolve_targets(
+                        player,
+                        require_self_sacrifice=False,
+                        max_steps=max_steps,
+                        target_players=target_players,
+                        target_region=target_region,
+                        include_shared_source=bool(context.get('include_shared_source', False)),
+                        pre_reserved_shield_discards=self._reserved_shield_discards_for_picks(other_picks),
+                        exclude_target_keys=self._target_keys_for_picks(other_picks),
                     )
-                ]
+                    if any(
+                        entry.get('player_id') == candidate_pick['target_player_id'] and entry.get('town') == candidate_pick['town']
+                        for entry in live_targets_for_this_pick
+                    ):
+                        still_valid_picks.append(candidate_pick)
                 if len(still_valid_picks) < len(accumulated_picks):
                     stale_towns = [
                         pick['town'] for pick in accumulated_picks if pick not in still_valid_picks
                     ]
                     remaining_count = total_count - len(still_valid_picks)
                     next_targets = [
-                        entry for entry in live_targets_for_validation
+                        entry for entry in self._interactive_support_dissolve_targets(
+                            player,
+                            require_self_sacrifice=False,
+                            max_steps=max_steps,
+                            target_players=target_players,
+                            target_region=target_region,
+                            include_shared_source=bool(context.get('include_shared_source', False)),
+                            pre_reserved_shield_discards=self._reserved_shield_discards_for_picks(still_valid_picks),
+                            exclude_target_keys=self._target_keys_for_picks(still_valid_picks),
+                        )
+                        # Redundant with exclude_target_keys above (kept as defense-in-depth --
+                        # harmless no-op given the listing already excludes these).
                         if not any(
                             pick['target_player_id'] == entry.get('player_id') and pick['town'] == entry.get('town')
                             for pick in still_valid_picks
@@ -2343,17 +2417,14 @@ class CardPlayMixin:
                             'remaining_count': remaining_count,
                             'stale_towns': stale_towns,
                         }
-                    # No legal replacement target exists at all -- nothing can be applied or
-                    # re-picked, so the whole flow fizzles: card already committed (per the
-                    # existing on-play cost semantics this feature never changed), but zero
-                    # board effect, exactly like the fizzle already used when no legal target
-                    # remained after an earlier non-final pick above.
-                    choice['is_final_confirmation'] = True
-                    self.pending_choice = None
-                    self.log(f"{player.name}'s {card_name} confirmation had stale target(s) at {'、'.join(stale_towns)} with no legal replacement; effect fizzled")
-                    return {'success': True, 'effect_fizzled': True, 'reason': 'Stale target', 'source_name': card_name}
+                    # No legal replacement target exists at all -- resolve every still-valid
+                    # selected target now ("up to N", per the card's own printed wording), rather
+                    # than fizzling the whole flow. Falls through to the shared apply loop below
+                    # with accumulated_picks narrowed to just the still-valid subset.
+                    accumulated_picks = still_valid_picks
+                    self.log(f"{player.name}'s {card_name} pick(s) at {'、'.join(stale_towns)} became illegal with no legal replacement; resolving the remaining {len(accumulated_picks)} valid target(s)")
 
-                # Every accumulated pick is still legal -- apply them all atomically.
+                # Apply every (still-)valid accumulated pick.
                 applied = []
                 for pick in accumulated_picks:
                     pick_target_player = next((p for p in self.players if getattr(p, 'id', None) == pick['target_player_id']), None)
@@ -3274,14 +3345,25 @@ class CardPlayMixin:
             if pending_card_name == "派遣間諜":
                 valid = bool(self._interactive_support_sacrifice_towns(player, max_steps=range_context['range_limit'], target_players=target_players, target_region=range_context['target_region'], include_shared_source=True))
             else:
-                valid = bool(self._interactive_support_dissolve_targets(player, max_steps=range_context['range_limit'], target_players=target_players, target_region=range_context['target_region'], include_shared_source=True))
+                # `pending_card` (this very 內應間諜) is still sitting in `player.hand` at this
+                # point (the pop below hasn't run yet) -- reserve 1 slot for it so a
+                # 盟旗學校-protected target's affordability is judged against the hand AS IT WILL
+                # BE once this card is actually played, not inflated by counting the
+                # about-to-be-spent card as if it were available to pay its own discard cost.
+                # Without this, a lone Mongol org could pass this pre-check (hand looks
+                # non-empty here) only to have `_start_card_dissolve_interaction`'s own
+                # (correctly post-pop) listing find zero legal targets after all -- by which
+                # point the card would already be popped and lost.
+                valid = bool(self._interactive_support_dissolve_targets(player, max_steps=range_context['range_limit'], target_players=target_players, target_region=range_context['target_region'], include_shared_source=True, pre_reserved_shield_discards=1))
             if not valid:
                 return {"error": "No target organization within range"}
 
         if (
             queueing_map_card
             and getattr(pending_card, 'card_type', None) == 'support'
-            and not self._support_card_has_legal_target(player, pending_card)
+            # `pending_card` is still in `player.hand` here (pop is below) -- reserve its own
+            # slot, same as _card_can_queue_map_action's own call just above (Critical 1).
+            and not self._support_card_has_legal_target(player, pending_card, pre_reserved_shield_discards=1)
         ):
             return {
                 "error": "No legal target for interactive support card",
@@ -3442,6 +3524,20 @@ class CardPlayMixin:
                     self._undo_money_cost_card_played()
                 if cost_has_propaganda:
                     self._undo_propaganda_cost_card_played()
+                # Defense-in-depth (parent-level review, Critical 1): if this card was being
+                # QUEUED behind an already-open pending_choice (queueing_map_card), that earlier
+                # choice was already moved out of self.pending_choice into
+                # self._deferred_build_choice before this card was even popped -- a legality
+                # false-positive at the pre-pop check (now fixed to reserve this card's own
+                # hand slot, but this restore stays as a safety net regardless of WHY this
+                # post-pop check ever disagrees with the pre-pop one) must not leave that earlier
+                # choice permanently orphaned: neither player could ever resolve a pending_choice
+                # that's been dropped on the floor here, and _resume_card_build_queue_if_idle
+                # would otherwise later resurrect it during a completely different player's turn
+                # (a real softlock, not just a lost card -- see that method's own guard too).
+                if queueing_map_card and self._deferred_build_choice is not None:
+                    self.pending_choice = self._deferred_build_choice
+                    self._deferred_build_choice = None
                 self.log(f"{player.name} could not play {card_name}: no legal target")
                 return {
                     "error": "No legal target for interactive support card",

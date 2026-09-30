@@ -169,6 +169,257 @@ def test_embedded_agent_with_no_legal_target_never_opens_a_pending_choice():
     assert after["organizations"] == before["organizations"]
 
 
+def test_embedded_agent_sole_target_unaffordable_under_mongol_shield_is_a_full_noop():
+    # Parent-level review, corrected defect 1: 盟旗學校 (a Mongol faction passive) requires the
+    # ATTACKER to discard a hand card to dissolve a Mongol organization. If the attacker cannot
+    # pay that cost, the Mongol organization is simply NOT a legal target -- exactly like any
+    # other target that fails a range/ownership check -- and must never be offered as a pickable
+    # target at all. Repro (a): the attacker's hand becomes empty once 內應間諜 (its only card)
+    # is played, and the ONLY enemy organization in range belongs to a Mongol player. The old
+    # code still displayed it as the sole target; selecting it returned a 盟旗學校 error and left
+    # an unresolvable pending choice (with the card already spent) -- the player was stuck.
+    game, actor, enemy = make_game()
+    actor.organizations = {"臺北": 1}
+    enemy.faction_id = "mongol"
+    enemy.base = "太原"
+    enemy.organizations = {"新北": 1}  # within range of 臺北, but attacker cannot afford 盟旗學校
+    actor.hand = [action_card(game, "內應間諜")]
+    before = snapshot(game)
+
+    result = game.play_card(0, mode="action")
+
+    assert result.get("error") == "No target organization within range", result
+    assert game.pending_choice is None
+    after = snapshot(game)
+    # The unaffordable-target rejection must be a full no-op, exactly like the genuinely-no-org
+    # case above -- the card must NOT be popped/lost even transiently on the way to this error.
+    assert after["hands"] == before["hands"]
+    assert after["organizations"] == before["organizations"]
+
+
+def test_north_support_tier3_never_offers_more_mongol_targets_than_affordable_cumulatively():
+    # Companion repro (b) + the cumulative-affordability requirement: a multi-pick flow must
+    # never offer more 盟旗學校-protected targets than the attacker can actually pay for across
+    # the WHOLE selection. Attacker has exactly 1 hand card left (after playing 北國奧援 III) and
+    # 2 Mongol organizations are in range alongside 1 ordinary (unprotected) one -- only 1 of the
+    # 2 Mongol organizations may ever be offered as a legal target, never both, and the ordinary
+    # target must still be offered normally.
+    game = Game([("actor", "Actor"), ("red", "Red"), ("mongol", "Mongol")])
+    actor, red, mongol = game.players
+    game.game_phase = GamePhase.MAIN
+    game.turn_phase = TurnPhase.ACTION
+    game.current_player_index = 0
+    game.pending_base_choices = {}
+    actor.faction_id = "liberals"
+    red.faction_id = "red_army"
+    mongol.faction_id = "mongol"
+    game.current_event = dict(game._event_by_name("歲月靜好"))
+    game.event_progress = {"count": 0, "required": 0, "succeeded": True, "settled": True, "status": "idle"}
+    game.event_modifiers = []
+    game.pending_choice = None
+    game.turn_log = game._new_turn_log()
+    game.action_log = []
+
+    actor.base = "北京"
+    actor.organizations = {"北京": 1}
+    filler_card = Card("填充卡", "command", {})
+    actor.hand = [game._make_support_card("北國奧援"), filler_card]
+    game._support_card_tier = lambda _player, _card: (3, 0, [])
+    red.base = "西安"
+    red.organizations = {"天津": 1}
+    mongol.base = "太原"
+    mongol.organizations = {"石家莊": 1, "承德": 1}
+
+    played = game.play_card(0, mode="action")
+    assert played.get("pending_choice") is True, played
+    assert [c.name for c in actor.hand] == ["填充卡"], "only the filler card should remain in hand"
+
+    targets = game.pending_choice["targets"]
+    mongol_towns_offered = [t["town"] for t in targets if t["town"] in ("石家莊", "承德")]
+    assert len(mongol_towns_offered) == 1, (
+        "attacker has exactly 1 hand card -- only 1 of the 2 Mongol organizations may ever be "
+        f"offered as a legal target, not both: got {mongol_towns_offered}"
+    )
+    assert any(t["town"] == "天津" for t in targets), "the ordinary (unprotected) target must still be offered"
+
+
+def test_north_support_tier3_second_pick_listing_offers_remaining_affordable_mongol_target_regardless_of_dict_order():
+    # Parent-level review, Critical 2: an already-picked town is still physically present in
+    # `other.organizations` (board mutation is deferred to final commit), so a naive
+    # implementation that only subtracts a flat count from the starting shield-discard budget
+    # while still walking every candidate (already-picked ones included) can have an
+    # already-picked town spuriously re-consume budget that was already reserved for it --
+    # starving the SECOND, genuinely-still-open, genuinely-affordable Mongol candidate of budget
+    # purely as an artifact of `other.organizations` dict iteration order. Repro: attacker has 2
+    # spare cards, 3 Mongol organizations in range (only 2 of which can ever be offered
+    # together). Pick the FIRST-offered one; the listing for the remaining pick must still
+    # correctly offer the second still-affordable Mongol target, not come back empty.
+    game = Game([("actor", "Actor"), ("mongol", "Mongol")])
+    actor, mongol = game.players
+    game.game_phase = GamePhase.MAIN
+    game.turn_phase = TurnPhase.ACTION
+    game.current_player_index = 0
+    game.pending_base_choices = {}
+    actor.faction_id = "liberals"
+    mongol.faction_id = "mongol"
+    game.current_event = dict(game._event_by_name("歲月靜好"))
+    game.event_progress = {"count": 0, "required": 0, "succeeded": True, "settled": True, "status": "idle"}
+    game.event_modifiers = []
+    game.pending_choice = None
+    game.turn_log = game._new_turn_log()
+    game.action_log = []
+
+    actor.base = "北京"
+    actor.organizations = {"北京": 1}
+    filler1 = Card("填充卡1", "command", {})
+    filler2 = Card("填充卡2", "command", {})
+    actor.hand = [game._make_support_card("北國奧援"), filler1, filler2]
+    game._support_card_tier = lambda _player, _card: (3, 0, [])
+    # 3 Mongol orgs in range -- with 2 spare hand cards, exactly 2 of these 3 may ever be
+    # offered together (never all 3).
+    mongol.base = "太原"
+    mongol.organizations = {"承德": 1, "石家莊": 1, "天津": 1}
+
+    played = game.play_card(0, mode="action")
+    assert played.get("pending_choice") is True, played
+    initial_towns = [t["town"] for t in game.pending_choice["targets"]]
+    assert len(initial_towns) == 2, f"expected exactly 2 of the 3 Mongol orgs offered initially: {initial_towns}"
+
+    # Pick whichever one was offered first (this is the one that iterates first in
+    # `mongol.organizations` -- the exact scenario that triggers the dict-order bug).
+    first_town = initial_towns[0]
+    first_index = next(i for i, t in enumerate(game.pending_choice["targets"]) if t["town"] == first_town)
+    picked_first = game.resolve_pending_choice(actor.id, first_index)
+    assert picked_first.get("selected_count") == 1, picked_first
+
+    remaining_towns = [t["town"] for t in game.pending_choice["targets"]] if game.pending_choice else []
+    expected_remaining = initial_towns[1]
+    assert remaining_towns == [expected_remaining], (
+        f"second-pick listing must still offer the other still-affordable Mongol target "
+        f"({expected_remaining!r}), got {remaining_towns!r} -- a dict-iteration-order artifact "
+        f"must not silently under-deliver targets that are genuinely still affordable"
+    )
+
+
+def test_support_card_queued_behind_open_choice_fails_affordability_pre_pop_without_orphaning_the_open_choice():
+    # Parent-level review, Critical 1: playing card A (內應間諜) opens an in-progress
+    # pending_choice. While it's still open, attempting to queue card B (北國奧援, forced to a
+    # single-target dissolve tier) behind it -- whose sole legal target (the only enemy
+    # organization on the board) is Mongol-shielded, and which is the attacker's ONLY remaining
+    # hand card at that point -- must be rejected cleanly, WITHOUT losing track of card A's own
+    # still-open choice.
+    #
+    # The old bug: `_card_can_queue_map_action`'s (and play_card's own) legality pre-check for
+    # card B ran BEFORE card B was popped from hand, so `player.hand` still included card B
+    # itself -- inflating affordability by 1 and reporting the Mongol target as pickable when it
+    # actually wasn't. That let `queueing_map_card` come back True, which moved card A's
+    # pending_choice into `_deferred_build_choice` and popped card B; only THEN did the real
+    # post-pop check correctly reject card B (rolling it back into hand) -- but nothing restored
+    # `self.pending_choice` from `_deferred_build_choice` on that path, permanently orphaning
+    # card A's choice (`game.pending_choice` ends up None with card A fully spent and its own
+    # flow never resolved -- and `_resume_card_build_queue_if_idle` would later resurrect that
+    # orphaned choice during a DIFFERENT player's turn: a real softlock, not just a lost card).
+    #
+    # Reserving the about-to-be-played card's own hand slot in the pre-pop check (this round's
+    # primary fix) makes the pre-pop and post-pop checks agree, so this now correctly gets
+    # rejected BEFORE card B is ever popped/queued at all -- card A's choice is never even
+    # touched, which is the strongest form of "no state loss."
+    game, actor, mongol = make_game(actor_faction="taiwan_green", enemy_faction="mongol")
+    actor.base = "北京"
+    actor.organizations = {"北京": 1, "上海": 1}
+    mongol.base = "太原"
+    mongol.organizations = {"天津": 1}  # sole target on the whole board, Mongol-shielded
+
+    card_a = action_card(game, "內應間諜")
+    card_b = game._make_support_card("北國奧援")
+    actor.hand = [card_a, card_b]
+    game._support_card_tier = lambda _player, _card: (2, 0, [])  # single-target dissolve tier
+
+    # Card A: opens an in-progress pending_choice (owned by actor), still unresolved. Its own
+    # target listing is itself computed post-pop (hand=[card_b], size 1) so 天津 is correctly
+    # still affordable FOR CARD A at this point (nothing has been reserved against it yet).
+    played_a = game.play_card(0, mode="action")
+    assert played_a.get("pending_choice") is True, played_a
+    choice_a_id = game.pending_choice.get("choice_id")
+    assert game.pending_choice.get("player_id") == actor.id
+    assert [c.name for c in actor.hand] == ["北國奧援"]
+
+    # Card B is now the attacker's ONLY remaining hand card -- queuing it behind card A's still-
+    # open choice must fail cleanly (its own play would need to discard a hand card for 盟旗學校,
+    # but playing it would leave zero cards to pay that cost with).
+    played_b = game.play_card(0, mode="action")
+
+    assert played_b.get("error"), played_b
+    assert [c.name for c in actor.hand] == ["北國奧援"], (
+        f"card B must still be in hand after a clean rejection: {[c.name for c in actor.hand]}"
+    )
+
+    # Card A's own pending_choice must survive completely intact -- not orphaned/lost.
+    assert game.pending_choice is not None, (
+        "card A's in-progress choice was lost -- card A was fully spent with its effect never "
+        "resolved and no way for the player to ever recover it"
+    )
+    assert game.pending_choice.get("choice_id") == choice_a_id
+    assert game.pending_choice.get("player_id") == actor.id
+
+    # And card A's own flow can still be resolved normally afterward.
+    index = next(i for i, t in enumerate(game.pending_choice["targets"]) if t["town"] == "天津")
+    resolved_a = game.resolve_pending_choice(actor.id, index)
+    assert resolved_a.get("success") is True, resolved_a
+    assert game.pending_choice is None
+    assert mongol.organizations.get("天津", 0) == 0
+
+
+def test_resume_card_build_queue_never_resurrects_a_deferred_choice_for_the_wrong_player():
+    # Parent-level review, Critical 1 (defense-in-depth invariant): _resume_card_build_queue_if_idle
+    # must never resurrect self._deferred_build_choice into self.pending_choice when it belongs
+    # to someone other than whoever's turn it currently is (self.current_player()) -- doing so
+    # would softlock the game (neither the choice's real owner nor the current player could ever
+    # resolve it, since resolve_pending_choice requires choice['player_id'] == player_id, and
+    # ordinary action-gating would then block all further play). This is a last-resort safety net
+    # on top of this round's primary fix (which prevents a legality-check disagreement from ever
+    # orphaning a choice into _deferred_build_choice in the first place) -- exercised directly
+    # here since the primary fix means this mismatch is no longer reachable through ordinary
+    # play_card()/resolve_pending_choice() calls.
+    #
+    # Deliberately checked against self.current_player(), NOT the `player` argument this method
+    # is called with: a LEGITIMATE resume routinely happens on behalf of a different player than
+    # the deferred choice's own owner (e.g. called with the REACTOR right after they resolve
+    # their own cancel-reaction choice, correctly handing control back to the original actor's
+    # still-queued entry) -- that must keep working, which the companion assertion below verifies.
+    game, actor, enemy = make_game(actor_faction="taiwan_green", enemy_faction="mongol")
+    orphaned_choice = {
+        'type': 'support_flow_choice',
+        'choice_key': 'card_dissolve_interaction',
+        'player_id': actor.id,
+        'step': 'target',
+        'targets': [],
+    }
+    game._deferred_build_choice = dict(orphaned_choice)
+    game.pending_choice = None
+
+    # Simulate the turn having advanced to a DIFFERENT player than the deferred choice's owner.
+    game.current_player_index = game.players.index(enemy)
+    result = game._resume_card_build_queue_if_idle(enemy)
+
+    assert result is None
+    assert game.pending_choice is None, (
+        "a deferred choice belonging to a different player than whoever's turn it currently is "
+        f"must never be resurrected into self.pending_choice: {game.pending_choice}"
+    )
+    assert game._deferred_build_choice is None, "the orphaned choice must be dropped, not left dangling"
+
+    # Companion: it's still the ORIGINAL owner's turn (the ordinary case, and also the
+    # after-a-reaction-resolves case, where the `player` argument can legitimately be someone
+    # else entirely) -- the deferred choice must still resume normally.
+    game.current_player_index = game.players.index(actor)
+    game._deferred_build_choice = dict(orphaned_choice)
+    result_correct = game._resume_card_build_queue_if_idle(enemy)
+    assert result_correct is not None and result_correct.get('success') is True, result_correct
+    assert game.pending_choice is not None
+    assert game.pending_choice.get('player_id') == actor.id
+
+
 # ---------------------------------------------------------------------------
 # 派遣間諜 -- two-phase: sacrifice own org, then dissolve enemy org
 # ---------------------------------------------------------------------------
@@ -426,14 +677,15 @@ def test_north_support_tier3_multi_target_select_change_confirm_and_cancel():
     assert sum(enemy.organizations.values()) == 0
 
 
-def test_north_support_tier3_stale_pick_at_final_confirmation_is_rejected_atomically():
-    # Parent-level review, defect 2: if one of the accumulated picks in a multi-target dissolve
-    # flow (北國奧援 III) goes stale between selection and the FINAL confirmation, the old code
-    # silently skipped just that pick and still consumed the card while dissolving the OTHER
-    # (still-valid) pick -- a partial, non-atomic commit. The final confirmation must be
-    # all-or-nothing: either every accumulated pick is still legal and all get applied together,
-    # or the confirmation is rejected without dissolving anything and without losing track of the
-    # picks that were still valid.
+def test_north_support_tier3_stale_pick_with_no_replacement_resolves_the_still_valid_target():
+    # Parent-level review, defect 2 (CORRECTED premise): 北國奧援 III's actual printed text is
+    # 「瓦解己方組織1格內的2個對手組織」 -- dissolve UP TO 2 organizations, not EXACTLY 2.
+    # Resolving fewer than 2 when no further legal target exists is correct, intended behavior.
+    # So: if one accumulated pick goes stale before final confirmation and NO further legal
+    # replacement target exists at all, the correct outcome is to resolve every STILL-VALID
+    # selected target now -- even if that's fewer than the card's stated max -- not to fizzle
+    # the whole flow. (This test replaces this round's earlier, incorrect regression, which
+    # itself codified a full-fizzle expectation built on the wrong all-or-nothing premise.)
     game, actor, enemy = make_game(actor_faction="liberals")
     actor.base = "北京"
     actor.organizations = {"北京": 1}
@@ -458,32 +710,30 @@ def test_north_support_tier3_stale_pick_at_final_confirmation_is_rejected_atomic
     del enemy.organizations["天津"]
 
     # Pick the only remaining offered target (石家莊) -- this fills remaining_count to 0 and
-    # triggers the final-confirmation code path with one stale (天津) and one live (石家莊) pick.
+    # triggers the final-confirmation code path with one stale (天津) and one live (石家莊) pick,
+    # with no further legal target anywhere (only 2 orgs existed on the board to begin with).
     remaining_index = 0
     final = game.resolve_pending_choice(actor.id, remaining_index)
 
-    # All-or-nothing: 石家莊 must NOT have been silently dissolved on its own while quietly
-    # dropping 天津 -- either both are still organizations (fully rejected) or the response makes
-    # clear nothing final was committed and a valid choice remains open for 石家莊.
-    assert enemy.organizations.get("石家莊", 0) == 1, (
-        "石家莊 was dissolved even though the overall confirmation had a stale pick -- "
-        "the final confirmation was not atomic"
+    # Correct outcome: 石家莊 (still legal) gets dissolved; 天津 (stale) is simply excluded from
+    # the result -- a partial ("up to 2") commit is the intended behavior here, not a bug.
+    assert final.get("success") is True, final
+    assert enemy.organizations.get("石家莊", 0) == 0, (
+        "石家莊 should have been dissolved: with no legal replacement for the stale 天津 pick, "
+        "北國奧援 III's own 'up to 2' wording means the still-valid pick(s) resolve on their own"
     )
-    assert final.get("target_count") != 1, final
-    if game.pending_choice is None:
-        # Fully fizzled with nothing applied is an acceptable all-or-nothing outcome too.
-        assert final.get("effect_fizzled") is True, final
-        assert enemy.organizations.get("石家莊", 0) == 1
-    else:
-        # Still open, scoped to re-picking the stale slot -- card not yet consumed either way.
-        assert game.pending_choice.get("cancellable") is True
-        assert final.get("pending_choice") is True, final
+    assert final.get("target_count") == 1, final
+    assert game.pending_choice is None
 
 
 def test_north_support_tier3_stale_pick_can_still_be_confirmed_after_re_pick():
-    # Companion to the defect-2 regression above: after a stale pick is rejected and the choice
-    # re-opens for the vacated slot, picking a legal replacement and confirming again must still
-    # atomically dissolve everything (both the earlier still-valid pick and the new one).
+    # Companion to the defect-2 regression above: when a legal replacement target DOES exist for
+    # a vacated (stale) slot, the choice must still reopen for that re-pick -- confirming again
+    # must then atomically dissolve everything (both the earlier still-valid pick and the new
+    # one). 承德 (not 上海 -- confirmed independently NOT in range of 北京 for this card, which
+    # meant this test's own recovery-path assertions never actually ran; 承德 IS in range, the
+    # same town already used correctly in setup_multi_target_stale_final_pick's own test route)
+    # is the 3rd org, so the reopened choice genuinely has a legal replacement to re-pick.
     game, actor, enemy = make_game(actor_faction="liberals")
     actor.base = "北京"
     actor.organizations = {"北京": 1}
@@ -491,7 +741,7 @@ def test_north_support_tier3_stale_pick_can_still_be_confirmed_after_re_pick():
     game._support_card_tier = lambda _player, _card: (3, 0, [])
     enemy.faction_id = "red_army"
     enemy.base = "西安"
-    enemy.organizations = {"天津": 1, "石家莊": 1, "上海": 1}
+    enemy.organizations = {"天津": 1, "石家莊": 1, "承德": 1}
 
     game.play_card(0, mode="action")
     tianjin_index = next(i for i, t in enumerate(game.pending_choice["targets"]) if t["town"] == "天津")
@@ -502,18 +752,22 @@ def test_north_support_tier3_stale_pick_can_still_be_confirmed_after_re_pick():
     rejected = game.resolve_pending_choice(actor.id, shijiazhuang_index)
     assert enemy.organizations.get("石家莊", 0) == 1, "must not have dissolved 石家莊 on the rejected attempt"
 
-    if game.pending_choice is not None:
-        # Re-pick the vacated slot with the remaining legal target and confirm again.
-        assert len(game.pending_choice["targets"]) >= 1
-        replacement_index = next(
-            i for i, t in enumerate(game.pending_choice["targets"]) if t["town"] == "上海"
-        )
-        final = game.resolve_pending_choice(actor.id, replacement_index)
-        assert final.get("success") is True, final
-        assert game.pending_choice is None
-        assert enemy.organizations.get("石家莊", 0) == 0
-        assert enemy.organizations.get("上海", 0) == 0
-        assert enemy.organizations.get("天津", 0) == 0
+    # This branch must actually execute (承德 genuinely reopens as the replacement target) --
+    # asserted unconditionally now, not left contingent on an `if`, so a future regression that
+    # silently stops reopening the choice fails loudly instead of being skipped.
+    assert game.pending_choice is not None, (
+        "expected the choice to reopen with 承德 as a legal replacement target"
+    )
+    assert len(game.pending_choice["targets"]) >= 1
+    replacement_index = next(
+        i for i, t in enumerate(game.pending_choice["targets"]) if t["town"] == "承德"
+    )
+    final = game.resolve_pending_choice(actor.id, replacement_index)
+    assert final.get("success") is True, final
+    assert game.pending_choice is None
+    assert enemy.organizations.get("石家莊", 0) == 0
+    assert enemy.organizations.get("承德", 0) == 0
+    assert enemy.organizations.get("天津", 0) == 0
 
 
 # ---------------------------------------------------------------------------
