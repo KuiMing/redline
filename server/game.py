@@ -4477,7 +4477,19 @@ class Game(CardPlayMixin):
                 "discard_pile": [getattr(card, 'name', str(card)) for card in p.deck.discard_pile] if p.deck else [],
                 "discard_variants": [self._support_card_variant_info(card) for card in p.deck.discard_pile] if p.deck else [],
                 "organization_counts": self._player_organization_scope_counts(p),
-                "orgs": p.organizations
+                "orgs": p.organizations,
+                # 2026-10-02 (programmed Red Army AI, plan section 1c/10): victory-
+                # proximity math must never be independently re-derived off-server
+                # (same principle as legality) — these two were already computed
+                # authoritatively by VictoryEngine (server/victory.py) for
+                # co_winners()/evaluate() but never exposed on state() before now.
+                # condition_progress is 0.0 for red_army itself (its own
+                # win_conditions are "default_survival"/"taiwan_override", neither
+                # of which condition_progress()'s best=max loop counts) — use
+                # taiwan_organization_count vs the rules.md "14 效組織" threshold
+                # for red army's own progress instead.
+                "condition_progress": self.victory_engine.condition_progress(p, self),
+                "taiwan_organization_count": self.victory_engine._count_taiwan_orgs(p, self),
             }
             for p in self.players
         ]

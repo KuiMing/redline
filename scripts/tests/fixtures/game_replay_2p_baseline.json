@@ -80,6 +80,7 @@
         "players": [
           {
             "base": "三亞",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -130,10 +131,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -188,7 +191,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -455,6 +459,7 @@
         "players": [
           {
             "base": "三亞",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -505,10 +510,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -549,7 +556,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -804,6 +812,7 @@
         "players": [
           {
             "base": "三亞",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -844,10 +853,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -902,7 +913,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -1163,6 +1175,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -1213,10 +1226,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -1272,7 +1287,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -1539,6 +1555,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -1589,10 +1606,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -1634,7 +1653,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -1889,6 +1909,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -1929,10 +1950,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -1988,7 +2011,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -2249,6 +2273,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -2299,10 +2324,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -2358,7 +2385,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -2625,6 +2653,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -2675,10 +2704,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -2720,7 +2751,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -2975,6 +3007,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -3015,10 +3048,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -3074,7 +3109,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -3338,6 +3374,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 3,
             "discard_pile": [
@@ -3381,10 +3418,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -3440,7 +3479,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -3710,6 +3750,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 3,
             "discard_pile": [
@@ -3753,10 +3794,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -3798,7 +3841,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -4056,6 +4100,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 3,
             "discard_pile": [
@@ -4095,10 +4140,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -4154,7 +4201,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -4418,6 +4466,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 3,
             "discard_pile": [
@@ -4461,10 +4510,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -4520,7 +4571,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -4790,6 +4842,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 3,
             "discard_pile": [
@@ -4833,10 +4886,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -4878,7 +4933,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -5136,6 +5192,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 3,
             "discard_pile": [
@@ -5175,10 +5232,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -5234,7 +5293,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -5498,6 +5558,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 3,
             "discard_pile": [
@@ -5541,10 +5602,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -5600,7 +5663,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -5870,6 +5934,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 3,
             "discard_pile": [
@@ -5913,10 +5978,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -5958,7 +6025,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -6216,6 +6284,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 3,
             "discard_pile": [
@@ -6255,10 +6324,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -6314,7 +6385,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -6581,6 +6653,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 3,
             "discard_pile": [
@@ -6639,10 +6712,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -6698,7 +6773,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -6971,6 +7047,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 3,
             "discard_pile": [
@@ -7029,10 +7106,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -7074,7 +7153,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -7335,6 +7415,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 3,
             "discard_pile": [
@@ -7383,10 +7464,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -7442,7 +7525,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -7713,6 +7797,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 3,
             "discard_pile": [
@@ -7771,10 +7856,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 3,
             "discard_pile": [
@@ -7823,7 +7910,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -8100,6 +8188,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 3,
             "discard_pile": [
@@ -8158,10 +8247,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 3,
             "discard_pile": [
@@ -8206,7 +8297,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -8471,6 +8563,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 3,
             "discard_pile": [
@@ -8519,10 +8612,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 3,
             "discard_pile": [
@@ -8571,7 +8666,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -8842,6 +8938,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 3,
             "discard_pile": [
@@ -8900,10 +8997,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 3,
             "discard_pile": [
@@ -8952,7 +9051,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -9229,6 +9329,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 3,
             "discard_pile": [
@@ -9287,10 +9388,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 3,
             "discard_pile": [
@@ -9335,7 +9438,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -9600,6 +9704,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 3,
             "discard_pile": [
@@ -9648,10 +9753,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 3,
             "discard_pile": [
@@ -9700,7 +9807,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -9971,6 +10079,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 3,
             "discard_pile": [
@@ -10029,10 +10138,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 3,
             "discard_pile": [
@@ -10081,7 +10192,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -10358,6 +10470,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 3,
             "discard_pile": [
@@ -10416,10 +10529,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 3,
             "discard_pile": [
@@ -10464,7 +10579,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -10729,6 +10845,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 3,
             "discard_pile": [
@@ -10777,10 +10894,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 3,
             "discard_pile": [
@@ -10829,7 +10948,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -11099,6 +11219,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 3,
             "discard_pile": [
@@ -11157,10 +11278,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -11224,7 +11347,8 @@
             "resources": {
               "money": 2,
               "propaganda": 1
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -11500,6 +11624,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 3,
             "discard_pile": [
@@ -11558,10 +11683,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -11615,7 +11742,8 @@
             "resources": {
               "money": 2,
               "propaganda": 1
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -11879,6 +12007,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 3,
             "discard_pile": [
@@ -11927,10 +12056,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -11994,7 +12125,8 @@
             "resources": {
               "money": 2,
               "propaganda": 1
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -12267,6 +12399,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 6,
             "discard_pile": [
@@ -12316,10 +12449,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -12383,7 +12518,8 @@
             "resources": {
               "money": 2,
               "propaganda": 1
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -12662,6 +12798,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 6,
             "discard_pile": [
@@ -12711,10 +12848,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -12768,7 +12907,8 @@
             "resources": {
               "money": 2,
               "propaganda": 1
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -13035,6 +13175,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 6,
             "discard_pile": [
@@ -13080,10 +13221,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -13147,7 +13290,8 @@
             "resources": {
               "money": 2,
               "propaganda": 1
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -13420,6 +13564,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 6,
             "discard_pile": [
@@ -13469,10 +13614,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -13536,7 +13683,8 @@
             "resources": {
               "money": 2,
               "propaganda": 1
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -13815,6 +13963,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 6,
             "discard_pile": [
@@ -13864,10 +14013,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -13921,7 +14072,8 @@
             "resources": {
               "money": 2,
               "propaganda": 1
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -14188,6 +14340,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 6,
             "discard_pile": [
@@ -14233,10 +14386,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -14300,7 +14455,8 @@
             "resources": {
               "money": 2,
               "propaganda": 1
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -14573,6 +14729,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 6,
             "discard_pile": [
@@ -14622,10 +14779,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -14689,7 +14848,8 @@
             "resources": {
               "money": 2,
               "propaganda": 1
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -14968,6 +15128,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 6,
             "discard_pile": [
@@ -15017,10 +15178,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -15074,7 +15237,8 @@
             "resources": {
               "money": 2,
               "propaganda": 1
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -15341,6 +15505,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 6,
             "discard_pile": [
@@ -15386,10 +15551,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -15453,7 +15620,8 @@
             "resources": {
               "money": 2,
               "propaganda": 1
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -15740,6 +15908,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -15790,10 +15959,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -15857,7 +16028,8 @@
             "resources": {
               "money": 2,
               "propaganda": 1
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -16147,6 +16319,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -16197,10 +16370,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -16254,7 +16429,8 @@
             "resources": {
               "money": 2,
               "propaganda": 1
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -16532,6 +16708,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -16572,10 +16749,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -16639,7 +16818,8 @@
             "resources": {
               "money": 2,
               "propaganda": 1
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -16923,6 +17103,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -16973,10 +17154,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -17040,7 +17223,8 @@
             "resources": {
               "money": 2,
               "propaganda": 1
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -17330,6 +17514,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -17380,10 +17565,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -17437,7 +17624,8 @@
             "resources": {
               "money": 2,
               "propaganda": 1
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -17715,6 +17903,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -17755,10 +17944,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -17822,7 +18013,8 @@
             "resources": {
               "money": 2,
               "propaganda": 1
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -18109,6 +18301,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -18159,10 +18352,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 6,
             "discard_pile": [
@@ -18217,7 +18412,8 @@
             "resources": {
               "money": 2,
               "propaganda": 1
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -18510,6 +18706,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -18560,10 +18757,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 6,
             "discard_pile": [
@@ -18614,7 +18813,8 @@
             "resources": {
               "money": 2,
               "propaganda": 1
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -18895,6 +19095,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -18935,10 +19136,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 6,
             "discard_pile": [
@@ -18993,7 +19196,8 @@
             "resources": {
               "money": 2,
               "propaganda": 1
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -19280,6 +19484,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -19330,10 +19535,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 6,
             "discard_pile": [
@@ -19388,7 +19595,8 @@
             "resources": {
               "money": 2,
               "propaganda": 1
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -19681,6 +19889,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -19731,10 +19940,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 6,
             "discard_pile": [
@@ -19785,7 +19996,8 @@
             "resources": {
               "money": 2,
               "propaganda": 1
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -20066,6 +20278,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -20106,10 +20319,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 6,
             "discard_pile": [
@@ -20164,7 +20379,8 @@
             "resources": {
               "money": 2,
               "propaganda": 1
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -20451,6 +20667,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -20501,10 +20718,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 6,
             "discard_pile": [
@@ -20559,7 +20778,8 @@
             "resources": {
               "money": 2,
               "propaganda": 1
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -20852,6 +21072,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -20902,10 +21123,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 6,
             "discard_pile": [
@@ -20956,7 +21179,8 @@
             "resources": {
               "money": 2,
               "propaganda": 1
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -21237,6 +21461,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -21277,10 +21502,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 6,
             "discard_pile": [
@@ -21335,7 +21562,8 @@
             "resources": {
               "money": 2,
               "propaganda": 1
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -21613,6 +21841,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -21663,10 +21892,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -21736,7 +21967,8 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -22020,6 +22252,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -22070,10 +22303,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -22133,7 +22368,8 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -22405,6 +22641,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -22445,10 +22682,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -22518,7 +22757,8 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -22799,6 +23039,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 3,
             "discard_pile": [
@@ -22842,10 +23083,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -22915,7 +23158,8 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -23202,6 +23446,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 3,
             "discard_pile": [
@@ -23245,10 +23490,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -23308,7 +23555,8 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -23583,6 +23831,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 3,
             "discard_pile": [
@@ -23622,10 +23871,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -23695,7 +23946,8 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -23976,6 +24228,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 3,
             "discard_pile": [
@@ -24019,10 +24272,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -24092,7 +24347,8 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -24379,6 +24635,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 3,
             "discard_pile": [
@@ -24422,10 +24679,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -24485,7 +24744,8 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -24760,6 +25020,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 3,
             "discard_pile": [
@@ -24799,10 +25060,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -24872,7 +25135,8 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -25153,6 +25417,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 3,
             "discard_pile": [
@@ -25196,10 +25461,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -25269,7 +25536,8 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -25556,6 +25824,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 3,
             "discard_pile": [
@@ -25599,10 +25868,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -25662,7 +25933,8 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -25937,6 +26209,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 3,
             "discard_pile": [
@@ -25976,10 +26249,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -26049,7 +26324,8 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -26332,6 +26608,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 3,
             "discard_pile": [
@@ -26390,10 +26667,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -26463,7 +26742,8 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -26752,6 +27032,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 3,
             "discard_pile": [
@@ -26810,10 +27091,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -26873,7 +27156,8 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -27150,6 +27434,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 3,
             "discard_pile": [
@@ -27198,10 +27483,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -27271,7 +27558,8 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -27557,6 +27845,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 3,
             "discard_pile": [
@@ -27615,10 +27904,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 9,
             "discard_pile": [
@@ -27679,7 +27970,8 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -27971,6 +28263,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 3,
             "discard_pile": [
@@ -28029,10 +28322,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 9,
             "discard_pile": [
@@ -28089,7 +28384,8 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -28369,6 +28665,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 3,
             "discard_pile": [
@@ -28417,10 +28714,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 9,
             "discard_pile": [
@@ -28481,7 +28780,8 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -28767,6 +29067,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 3,
             "discard_pile": [
@@ -28825,10 +29126,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 9,
             "discard_pile": [
@@ -28889,7 +29192,8 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -29181,6 +29485,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 3,
             "discard_pile": [
@@ -29239,10 +29544,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 9,
             "discard_pile": [
@@ -29299,7 +29606,8 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -29579,6 +29887,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 3,
             "discard_pile": [
@@ -29627,10 +29936,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 9,
             "discard_pile": [
@@ -29691,7 +30002,8 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -29977,6 +30289,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 3,
             "discard_pile": [
@@ -30035,10 +30348,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 9,
             "discard_pile": [
@@ -30099,7 +30414,8 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -30391,6 +30707,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 3,
             "discard_pile": [
@@ -30449,10 +30766,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 9,
             "discard_pile": [
@@ -30509,7 +30828,8 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -30789,6 +31109,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 3,
             "discard_pile": [
@@ -30837,10 +31158,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 9,
             "discard_pile": [
@@ -30901,7 +31224,8 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -31198,6 +31522,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 3,
             "discard_pile": [
@@ -31256,10 +31581,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -31311,7 +31638,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -31614,6 +31942,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 3,
             "discard_pile": [
@@ -31672,10 +32001,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -31717,7 +32048,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -32008,6 +32340,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 3,
             "discard_pile": [
@@ -32056,10 +32389,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -32111,7 +32446,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -32411,6 +32747,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 6,
             "discard_pile": [
@@ -32460,10 +32797,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -32515,7 +32854,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -32821,6 +33161,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 6,
             "discard_pile": [
@@ -32870,10 +33211,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -32915,7 +33258,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -33209,6 +33553,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 6,
             "discard_pile": [
@@ -33254,10 +33599,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -33309,7 +33656,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -33609,6 +33957,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 6,
             "discard_pile": [
@@ -33658,10 +34007,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -33713,7 +34064,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -34019,6 +34371,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 6,
             "discard_pile": [
@@ -34068,10 +34421,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -34113,7 +34468,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -34407,6 +34763,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 6,
             "discard_pile": [
@@ -34452,10 +34809,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -34507,7 +34866,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -34807,6 +35167,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 6,
             "discard_pile": [
@@ -34856,10 +35217,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -34911,7 +35274,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -35217,6 +35581,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 6,
             "discard_pile": [
@@ -35266,10 +35631,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -35311,7 +35678,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -35605,6 +35973,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 6,
             "discard_pile": [
@@ -35650,10 +36019,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -35705,7 +36076,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -36009,6 +36381,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -36059,10 +36432,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -36114,7 +36489,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -36424,6 +36800,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -36474,10 +36851,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -36519,7 +36898,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -36817,6 +37197,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -36857,10 +37238,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -36912,7 +37295,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -37219,6 +37603,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -37269,10 +37654,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 3,
             "discard_pile": [
@@ -37317,7 +37704,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -37630,6 +38018,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -37680,10 +38069,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 3,
             "discard_pile": [
@@ -37724,7 +38115,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -38025,6 +38417,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -38065,10 +38458,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 3,
             "discard_pile": [
@@ -38113,7 +38508,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -38420,6 +38816,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -38470,10 +38867,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 3,
             "discard_pile": [
@@ -38518,7 +38917,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -38831,6 +39231,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -38881,10 +39282,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 3,
             "discard_pile": [
@@ -38925,7 +39328,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -39226,6 +39630,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -39266,10 +39671,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 3,
             "discard_pile": [
@@ -39314,7 +39721,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -39621,6 +40029,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -39671,10 +40080,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 3,
             "discard_pile": [
@@ -39719,7 +40130,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -40032,6 +40444,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -40082,10 +40495,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 3,
             "discard_pile": [
@@ -40126,7 +40541,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -40427,6 +40843,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -40467,10 +40884,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 3,
             "discard_pile": [
@@ -40515,7 +40934,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -40824,6 +41244,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -40874,10 +41295,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -40937,7 +41360,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -41252,6 +41676,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -41302,10 +41727,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -41355,7 +41782,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -41658,6 +42086,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -41698,10 +42127,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -41761,7 +42192,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -42073,6 +42505,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 3,
             "discard_pile": [
@@ -42116,10 +42549,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -42179,7 +42614,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -42497,6 +42933,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 3,
             "discard_pile": [
@@ -42540,10 +42977,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -42593,7 +43032,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -42899,6 +43339,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 3,
             "discard_pile": [
@@ -42938,10 +43379,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -43001,7 +43444,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -43313,6 +43757,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 3,
             "discard_pile": [
@@ -43356,10 +43801,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -43419,7 +43866,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -43737,6 +44185,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 3,
             "discard_pile": [
@@ -43780,10 +44229,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -43833,7 +44284,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -44139,6 +44591,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 3,
             "discard_pile": [
@@ -44178,10 +44631,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -44241,7 +44696,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -44553,6 +45009,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 3,
             "discard_pile": [
@@ -44596,10 +45053,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -44659,7 +45118,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -44977,6 +45437,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 3,
             "discard_pile": [
@@ -45020,10 +45481,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -45073,7 +45536,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -45379,6 +45843,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 3,
             "discard_pile": [
@@ -45418,10 +45883,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -45481,7 +45948,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -45800,6 +46268,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 4,
             "discard_pile": [
@@ -45855,10 +46324,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -45918,7 +46389,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -46240,6 +46712,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 4,
             "discard_pile": [
@@ -46295,10 +46768,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -46348,7 +46823,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -46658,6 +47134,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 4,
             "discard_pile": [
@@ -46705,10 +47182,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -46768,7 +47247,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -47084,6 +47564,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 4,
             "discard_pile": [
@@ -47139,10 +47620,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -47202,7 +47685,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -47524,6 +48008,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 4,
             "discard_pile": [
@@ -47579,10 +48064,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -47632,7 +48119,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -47942,6 +48430,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 4,
             "discard_pile": [
@@ -47989,10 +48478,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -48052,7 +48543,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -48371,6 +48863,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 4,
             "discard_pile": [
@@ -48426,10 +48919,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 6,
             "discard_pile": [
@@ -48480,7 +48975,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -48805,6 +49301,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 4,
             "discard_pile": [
@@ -48860,10 +49357,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 6,
             "discard_pile": [
@@ -48910,7 +49409,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -49223,6 +49723,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 4,
             "discard_pile": [
@@ -49270,10 +49771,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 6,
             "discard_pile": [
@@ -49324,7 +49827,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -49643,6 +50147,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 4,
             "discard_pile": [
@@ -49698,10 +50203,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 6,
             "discard_pile": [
@@ -49752,7 +50259,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -50077,6 +50585,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 4,
             "discard_pile": [
@@ -50132,10 +50641,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 6,
             "discard_pile": [
@@ -50182,7 +50693,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -50495,6 +51007,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 4,
             "discard_pile": [
@@ -50542,10 +51055,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 6,
             "discard_pile": [
@@ -50596,7 +51111,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -50915,6 +51431,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 4,
             "discard_pile": [
@@ -50970,10 +51487,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 6,
             "discard_pile": [
@@ -51024,7 +51543,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -51349,6 +51869,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 4,
             "discard_pile": [
@@ -51404,10 +51925,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 6,
             "discard_pile": [
@@ -51454,7 +51977,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -51767,6 +52291,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 4,
             "discard_pile": [
@@ -51814,10 +52339,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 6,
             "discard_pile": [
@@ -51868,7 +52395,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -52187,6 +52715,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 4,
             "discard_pile": [
@@ -52242,10 +52771,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -52315,7 +52846,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -52640,6 +53172,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 4,
             "discard_pile": [
@@ -52695,10 +53228,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -52754,7 +53289,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -53067,6 +53603,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 4,
             "discard_pile": [
@@ -53114,10 +53651,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -53187,7 +53726,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -53509,6 +54049,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 7,
             "discard_pile": [
@@ -53555,10 +54096,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -53628,7 +54171,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -53956,6 +54500,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 7,
             "discard_pile": [
@@ -54002,10 +54547,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -54061,7 +54608,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -54377,6 +54925,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 7,
             "discard_pile": [
@@ -54421,10 +54970,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -54494,7 +55045,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -54816,6 +55368,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 7,
             "discard_pile": [
@@ -54862,10 +55415,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -54935,7 +55490,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -55263,6 +55819,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 7,
             "discard_pile": [
@@ -55309,10 +55866,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -55368,7 +55927,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -55684,6 +56244,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 7,
             "discard_pile": [
@@ -55728,10 +56289,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -55801,7 +56364,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -56123,6 +56687,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 7,
             "discard_pile": [
@@ -56169,10 +56734,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -56242,7 +56809,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -56570,6 +57138,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 7,
             "discard_pile": [
@@ -56616,10 +57185,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -56675,7 +57246,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -56991,6 +57563,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 2,
             "discard_count": 7,
             "discard_pile": [
@@ -57035,10 +57608,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -57108,7 +57683,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -57438,6 +58014,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 1,
             "discard_pile": [
@@ -57487,10 +58064,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -57560,7 +58139,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -57893,6 +58473,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 1,
             "discard_pile": [
@@ -57942,10 +58523,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -58001,7 +58584,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -58322,6 +58906,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 1,
             "discard_pile": [
@@ -58363,10 +58948,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -58436,7 +59023,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -58763,6 +59351,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 1,
             "discard_pile": [
@@ -58812,10 +59401,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -58885,7 +59476,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -59218,6 +59810,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 1,
             "discard_pile": [
@@ -59267,10 +59860,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -59326,7 +59921,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -59647,6 +60243,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 1,
             "discard_pile": [
@@ -59688,10 +60285,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -59761,7 +60360,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -60091,6 +60691,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 1,
             "discard_pile": [
@@ -60140,10 +60741,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 9,
             "discard_pile": [
@@ -60204,7 +60807,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -60540,6 +61144,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 1,
             "discard_pile": [
@@ -60589,10 +61194,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 9,
             "discard_pile": [
@@ -60645,7 +61252,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -60969,6 +61577,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 1,
             "discard_pile": [
@@ -61010,10 +61619,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 9,
             "discard_pile": [
@@ -61074,7 +61685,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -61404,6 +62016,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 1,
             "discard_pile": [
@@ -61453,10 +62066,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 9,
             "discard_pile": [
@@ -61517,7 +62132,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -61853,6 +62469,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 1,
             "discard_pile": [
@@ -61902,10 +62519,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 9,
             "discard_pile": [
@@ -61958,7 +62577,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -62282,6 +62902,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 1,
             "discard_pile": [
@@ -62323,10 +62944,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 9,
             "discard_pile": [
@@ -62387,7 +63010,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -62717,6 +63341,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 1,
             "discard_pile": [
@@ -62766,10 +63391,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 9,
             "discard_pile": [
@@ -62830,7 +63457,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -63166,6 +63794,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 1,
             "discard_pile": [
@@ -63215,10 +63844,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 9,
             "discard_pile": [
@@ -63271,7 +63902,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -63595,6 +64227,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 1,
             "discard_pile": [
@@ -63636,10 +64269,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 9,
             "discard_pile": [
@@ -63700,7 +64335,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -64032,6 +64668,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 1,
             "discard_pile": [
@@ -64081,10 +64718,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -64140,7 +64779,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -64478,6 +65118,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 1,
             "discard_pile": [
@@ -64527,10 +65168,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -64572,7 +65215,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -64898,6 +65542,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 1,
             "discard_pile": [
@@ -64939,10 +65584,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -64998,7 +65645,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -65333,6 +65981,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 4,
             "discard_pile": [
@@ -65373,10 +66022,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -65432,7 +66083,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -65773,6 +66425,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 4,
             "discard_pile": [
@@ -65813,10 +66466,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -65858,7 +66513,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -66187,6 +66843,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 4,
             "discard_pile": [
@@ -66225,10 +66882,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -66284,7 +66943,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -66619,6 +67279,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 4,
             "discard_pile": [
@@ -66659,10 +67320,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -66718,7 +67381,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -67059,6 +67723,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 4,
             "discard_pile": [
@@ -67099,10 +67764,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -67144,7 +67811,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -67473,6 +68141,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 4,
             "discard_pile": [
@@ -67511,10 +68180,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -67570,7 +68241,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -67905,6 +68577,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 4,
             "discard_pile": [
@@ -67945,10 +68618,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -68004,7 +68679,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -68345,6 +69021,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 4,
             "discard_pile": [
@@ -68385,10 +69062,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -68430,7 +69109,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -68759,6 +69439,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 4,
             "discard_pile": [
@@ -68797,10 +69478,12 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -68856,7 +69539,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -69194,6 +69878,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 1,
             "discard_count": 4,
             "discard_pile": [
@@ -69254,10 +69939,12 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -69313,7 +70000,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -69657,6 +70345,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 1,
             "discard_count": 4,
             "discard_pile": [
@@ -69717,10 +70406,12 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -69762,7 +70453,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -70094,6 +70786,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 1,
             "discard_count": 4,
             "discard_pile": [
@@ -70144,10 +70837,12 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 0,
             "discard_pile": [],
@@ -70203,7 +70898,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -70545,6 +71241,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 1,
             "discard_count": 4,
             "discard_pile": [
@@ -70605,10 +71302,12 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 3,
             "discard_pile": [
@@ -70657,7 +71356,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -71005,6 +71705,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 1,
             "discard_count": 4,
             "discard_pile": [
@@ -71065,10 +71766,12 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 3,
             "discard_pile": [
@@ -71113,7 +71816,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -71449,6 +72153,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 1,
             "discard_count": 4,
             "discard_pile": [
@@ -71499,10 +72204,12 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 3,
             "discard_pile": [
@@ -71551,7 +72258,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -71893,6 +72601,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 1,
             "discard_count": 4,
             "discard_pile": [
@@ -71953,10 +72662,12 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 3,
             "discard_pile": [
@@ -72005,7 +72716,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -72353,6 +73065,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 1,
             "discard_count": 4,
             "discard_pile": [
@@ -72413,10 +73126,12 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 3,
             "discard_pile": [
@@ -72461,7 +73176,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -72797,6 +73513,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 1,
             "discard_count": 4,
             "discard_pile": [
@@ -72847,10 +73564,12 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 3,
             "discard_pile": [
@@ -72899,7 +73618,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -73241,6 +73961,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 1,
             "discard_count": 4,
             "discard_pile": [
@@ -73301,10 +74022,12 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 3,
             "discard_pile": [
@@ -73353,7 +74076,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -73701,6 +74425,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 1,
             "discard_count": 4,
             "discard_pile": [
@@ -73761,10 +74486,12 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 3,
             "discard_pile": [
@@ -73809,7 +74536,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -74145,6 +74873,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 1,
             "discard_count": 4,
             "discard_pile": [
@@ -74195,10 +74924,12 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 6,
             "discard_count": 3,
             "discard_pile": [
@@ -74247,7 +74978,8 @@
             "resources": {
               "money": 1,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -74581,6 +75313,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 1,
             "discard_count": 4,
             "discard_pile": [
@@ -74641,10 +75374,12 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -74708,7 +75443,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -75048,6 +75784,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 1,
             "discard_count": 4,
             "discard_pile": [
@@ -75108,10 +75845,12 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -75165,7 +75904,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -75493,6 +76233,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 1,
             "discard_count": 4,
             "discard_pile": [
@@ -75543,10 +76284,12 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -75610,7 +76353,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -75947,6 +76691,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 1,
             "discard_count": 7,
             "discard_pile": [
@@ -75998,10 +76743,12 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -76065,7 +76812,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -76408,6 +77156,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 1,
             "discard_count": 7,
             "discard_pile": [
@@ -76459,10 +77208,12 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -76516,7 +77267,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -76847,6 +77599,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 1,
             "discard_count": 7,
             "discard_pile": [
@@ -76894,10 +77647,12 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -76961,7 +77716,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -77298,6 +78054,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 1,
             "discard_count": 7,
             "discard_pile": [
@@ -77349,10 +78106,12 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -77416,7 +78175,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -77759,6 +78519,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 1,
             "discard_count": 7,
             "discard_pile": [
@@ -77810,10 +78571,12 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -77867,7 +78630,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -78198,6 +78962,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 1,
             "discard_count": 7,
             "discard_pile": [
@@ -78245,10 +79010,12 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -78312,7 +79079,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -78649,6 +79417,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 1,
             "discard_count": 7,
             "discard_pile": [
@@ -78700,10 +79469,12 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -78767,7 +79538,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -79110,6 +79882,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 1,
             "discard_count": 7,
             "discard_pile": [
@@ -79161,10 +79934,12 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -79218,7 +79993,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -79549,6 +80325,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 1,
             "discard_count": 7,
             "discard_pile": [
@@ -79596,10 +80373,12 @@
             "resources": {
               "money": 0,
               "propaganda": 3
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -79663,7 +80442,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -80003,6 +80783,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -80053,10 +80834,12 @@
             "resources": {
               "money": 0,
               "propaganda": 0
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -80120,7 +80903,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -80466,6 +81250,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -80516,10 +81301,12 @@
             "resources": {
               "money": 0,
               "propaganda": 0
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -80573,7 +81360,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -80907,6 +81695,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -80947,10 +81736,12 @@
             "resources": {
               "money": 0,
               "propaganda": 0
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 3,
             "discard_pile": [
@@ -81014,7 +81805,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -81357,6 +82149,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -81407,10 +82200,12 @@
             "resources": {
               "money": 0,
               "propaganda": 0
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 6,
             "discard_pile": [
@@ -81465,7 +82260,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -81814,6 +82610,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -81864,10 +82661,12 @@
             "resources": {
               "money": 0,
               "propaganda": 0
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 6,
             "discard_pile": [
@@ -81918,7 +82717,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -82255,6 +83055,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -82295,10 +83096,12 @@
             "resources": {
               "money": 0,
               "propaganda": 0
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 6,
             "discard_pile": [
@@ -82353,7 +83156,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -82696,6 +83500,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -82746,10 +83551,12 @@
             "resources": {
               "money": 0,
               "propaganda": 0
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 6,
             "discard_pile": [
@@ -82804,7 +83611,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -83153,6 +83961,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -83203,10 +84012,12 @@
             "resources": {
               "money": 0,
               "propaganda": 0
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 6,
             "discard_pile": [
@@ -83257,7 +84068,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -83594,6 +84406,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -83634,10 +84447,12 @@
             "resources": {
               "money": 0,
               "propaganda": 0
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 6,
             "discard_pile": [
@@ -83692,7 +84507,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -84035,6 +84851,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -84085,10 +84902,12 @@
             "resources": {
               "money": 0,
               "propaganda": 0
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 6,
             "discard_pile": [
@@ -84143,7 +84962,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -84492,6 +85312,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -84542,10 +85363,12 @@
             "resources": {
               "money": 0,
               "propaganda": 0
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 6,
             "discard_pile": [
@@ -84596,7 +85419,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -84933,6 +85757,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -84973,10 +85798,12 @@
             "resources": {
               "money": 0,
               "propaganda": 0
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 3,
             "discard_count": 6,
             "discard_pile": [
@@ -85031,7 +85858,8 @@
             "resources": {
               "money": 1,
               "propaganda": 2
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -85375,6 +86203,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -85425,10 +86254,12 @@
             "resources": {
               "money": 0,
               "propaganda": 0
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -85498,7 +86329,8 @@
             "resources": {
               "money": 0,
               "propaganda": 0
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -85848,6 +86680,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -85898,10 +86731,12 @@
             "resources": {
               "money": 0,
               "propaganda": 0
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -85961,7 +86796,8 @@
             "resources": {
               "money": 0,
               "propaganda": 0
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -86299,6 +87135,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -86339,10 +87176,12 @@
             "resources": {
               "money": 0,
               "propaganda": 0
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -86412,7 +87251,8 @@
             "resources": {
               "money": 0,
               "propaganda": 0
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -86756,6 +87596,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -86806,10 +87647,12 @@
             "resources": {
               "money": 0,
               "propaganda": 0
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -86879,7 +87722,8 @@
             "resources": {
               "money": 0,
               "propaganda": 0
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -87229,6 +88073,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -87279,10 +88124,12 @@
             "resources": {
               "money": 0,
               "propaganda": 0
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -87342,7 +88189,8 @@
             "resources": {
               "money": 0,
               "propaganda": 0
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
@@ -87680,6 +88528,7 @@
         "players": [
           {
             "base": "香港城",
+            "condition_progress": 0.07142857142857142,
             "deck_count": 5,
             "discard_count": 0,
             "discard_pile": [],
@@ -87720,10 +88569,12 @@
             "resources": {
               "money": 0,
               "propaganda": 0
-            }
+            },
+            "taiwan_organization_count": 0
           },
           {
             "base": "北京",
+            "condition_progress": 0.0,
             "deck_count": 0,
             "discard_count": 6,
             "discard_pile": [
@@ -87793,7 +88644,8 @@
             "resources": {
               "money": 0,
               "propaganda": 0
-            }
+            },
+            "taiwan_organization_count": 0
           }
         ],
         "purchase_area": [
