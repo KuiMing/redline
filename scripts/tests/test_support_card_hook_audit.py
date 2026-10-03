@@ -63,6 +63,26 @@ def resolve_all_support_choices(game: Game, player, *, limit: int = 8):
     raise AssertionError("support flow did not settle within limit")
 
 
+def test_state_blocks_tianfang_action_mode_when_no_target_is_in_range():
+    game, player, red = make_game("federalists")
+    game.current_player_index = 1
+    red.base = "北京"
+    red.organizations = {"北京": 1}
+    red.hand = [game._make_support_card("天方奧援")]
+    player.base = "臺北"
+    player.organizations = {"臺北": 1}
+    player.hand = [Card("保留手牌", "command", {})]
+    game._support_card_tier = lambda _player, _card: (1, 0, [])
+
+    state = game.state(red.id)
+    red_state = next(entry for entry in state["players"] if entry["id"] == red.id)
+    legality = red_state["hand_action_legality"][0]
+
+    assert legality["playable"] is False
+    assert legality["no_legal_target"] is True
+    assert legality["reason"] == "這張奧援卡目前沒有合法目標。"
+
+
 @pytest.mark.parametrize(("card_name", "tier"), ORDINARY_SUPPORTS)
 def test_every_ordinary_support_path_runs_post_play_faction_hooks_once(card_name: str, tier: int):
     game, player, _ = make_game("federalists")

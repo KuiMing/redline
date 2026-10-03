@@ -79,12 +79,15 @@ def _buy_card_score(action: dict, assessment: Assessment, config: PolicyConfig) 
     weights = config.weights
     if action.get("affordable") is False:
         return None, {"_heuristic": True, "affordable": False}, "unaffordable"
-    raw = weights.buy_card_base_value - weights.buy_card_diminishing_rate * assessment.my_hand_size
+    raw = (
+        weights.buy_card_base_value
+        - weights.buy_card_diminishing_rate * assessment.purchased_cards_this_turn_count
+    )
     score = weights.w5_resource_efficiency * raw
     breakdown = {
         "_heuristic": True,
         "resource_efficiency": score,
-        "hand_size_at_decision": assessment.my_hand_size,
+        "purchased_cards_this_turn_count": assessment.purchased_cards_this_turn_count,
         "diminishing_marginal_value": raw,
     }
     return score, breakdown, None
@@ -95,17 +98,28 @@ def _play_card_score(action: dict, assessment: Assessment, config: PolicyConfig)
     modes = action.get("modes") or ["resource"]
     effect_text = action.get("action_effect_text") or ""
     overrides: dict[str, Any] = {}
+    # A legal printed action is the AI's immediate tactical opportunity. It
+    # must outrank the highest possible generic purchase score; otherwise the
+    # v1 weights greedily shop first and delay every real card action until no
+    # further purchase is affordable.
+    action_mode_floor = weights.w5_resource_efficiency * (weights.buy_card_base_value + 0.5)
     if "action" in modes and any(k in effect_text for k in _GROWTH_EFFECT_KEYWORDS):
-        score = weights.w4_organization_growth * 3.0
+        score = max(weights.w4_organization_growth * 3.0, action_mode_floor)
         breakdown = {"_heuristic": True, "organization_growth": score, "reason": "action_effect_text suggests building an organization"}
         overrides["mode"] = "action"
     elif "action" in modes and any(k in effect_text for k in _DISSOLVE_EFFECT_KEYWORDS):
-        score = weights.w2_block_opponent_progress * 0.5 * assessment.max_opponent_progress
-        breakdown = {"_heuristic": True, "block_opponent_progress": score, "reason": "action_effect_text suggests a dissolve/disruption effect"}
+        blocking_bonus = weights.w2_block_opponent_progress * 0.5 * assessment.max_opponent_progress
+        score = action_mode_floor + blocking_bonus
+        breakdown = {
+            "_heuristic": True,
+            "legal_action_priority": action_mode_floor,
+            "block_opponent_progress": blocking_bonus,
+            "reason": "action_effect_text suggests a dissolve/disruption effect",
+        }
         overrides["mode"] = "action"
     elif "action" in modes and effect_text:
-        score = weights.w5_resource_efficiency * 0.6
-        breakdown = {"_heuristic": True, "generic_action_mode_bonus": score, "reason": "action mode has a real effect per hermes_runner.py's tactical lesson (action > resource when available)"}
+        score = action_mode_floor
+        breakdown = {"_heuristic": True, "legal_action_priority": score, "reason": "play a legal printed action before generic market purchases"}
         overrides["mode"] = "action"
     else:
         score = weights.w5_resource_efficiency * 0.4

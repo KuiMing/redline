@@ -25,9 +25,10 @@ from red_army_policy.scoring import rank, score_all
 from red_army_policy.state_assessor import assess
 
 
-def _state(*, my_hand_size=2, opponent_progress=0.1):
+def _state(*, my_hand_size=2, opponent_progress=0.1, purchased_count=0):
     return {
         "current_player": "Red",
+        "purchased_cards_this_turn_count": purchased_count,
         "players": [
             {
                 "id": "red",
@@ -68,6 +69,24 @@ _GROWTH_PLAY_CARD = {
     "action_effect_text": "於己方組織1格內建立1個組織。",
 }
 _MOVE_ORG = {"kind": "move_organization", "from_town": "北京", "to_town": "天津", "mode": "road", "cost": 1}
+
+
+def test_legal_printed_action_outranks_maximum_generic_purchase_score():
+    assessment, state = _assessment(my_hand_size=0, opponent_progress=0.1)
+    action_card = {
+        "kind": "play_card",
+        "index": 0,
+        "card_name": "企畫遊說",
+        "modes": ["resource", "action"],
+        "action_effect_text": "展示牌庫頂牌並執行效果。",
+    }
+
+    scored = score_all([_BUY_CARD, action_card, _ADVANCE_TURN], state, assessment, PolicyConfig())
+    chosen, _ = rank(scored)
+
+    assert chosen.action["kind"] == "play_card"
+    assert chosen.action["card_name"] == "企畫遊說"
+    assert chosen.submit_overrides["mode"] == "action"
 
 
 # ---------- 1. 國安部 must not be crowded out by a low-value buy_card ----------
@@ -140,11 +159,13 @@ def test_ranking_itself_tracks_organization_distribution_not_just_the_override()
     """
     config = PolicyConfig()
 
-    # State A: hand already large enough that buying is past its ceiling
-    # (see the diminishing-returns tests below) and there is no
-    # organizational-move opportunity on the board — advance_turn is
-    # genuinely the best legal option.
-    assessment_a, state_a = _assessment(my_hand_size=4, opponent_progress=0.1)
+    # State A: several purchases this turn have pushed buying past its ceiling,
+    # and there is no organizational-move opportunity on the board.
+    assessment_a, state_a = _assessment(
+        my_hand_size=4,
+        opponent_progress=0.1,
+        purchased_count=4,
+    )
     actions_a = [_BUY_CARD, _ADVANCE_TURN]
     scored_a = score_all(actions_a, state_a, assessment_a, config)
     chosen_a, _ = rank(scored_a)
@@ -152,7 +173,11 @@ def test_ranking_itself_tracks_organization_distribution_not_just_the_override()
     # State B: identical hand size and opponent progress — but the board
     # now offers a cheap move_organization (the "organization distribution"
     # axis): red has a one-step, low-cost expansion available.
-    assessment_b, state_b = _assessment(my_hand_size=4, opponent_progress=0.1)
+    assessment_b, state_b = _assessment(
+        my_hand_size=4,
+        opponent_progress=0.1,
+        purchased_count=4,
+    )
     actions_b = [_BUY_CARD, _MOVE_ORG, _ADVANCE_TURN]
     scored_b = score_all(actions_b, state_b, assessment_b, config)
     chosen_b, _ = rank(scored_b)
@@ -162,29 +187,33 @@ def test_ranking_itself_tracks_organization_distribution_not_just_the_override()
     assert chosen_a.action["kind"] != chosen_b.action["kind"]
 
 
-# ---------- 3. Card-buying has a diminishing-returns ceiling ----------
+# ---------- 3. Card-buying diminishes after each purchase, not after spending hand cards ----------
 
-def test_buy_card_score_hits_diminishing_returns_ceiling_with_a_full_hand():
-    assessment, state = _assessment(my_hand_size=8, opponent_progress=0.1)
-    actions = [_BUY_CARD, _ADVANCE_TURN]
+def test_spending_hand_as_resource_does_not_increase_buy_score():
+    full_hand, full_state = _assessment(my_hand_size=8, opponent_progress=0.1, purchased_count=1)
+    empty_hand, empty_state = _assessment(my_hand_size=0, opponent_progress=0.1, purchased_count=1)
     config = PolicyConfig()
 
-    scored = score_all(actions, state, assessment, config)
-    buy_entry = next(c for c in scored if c.action["kind"] == "buy_card")
-    chosen, _tie = rank(scored)
+    full_score = score_all([_BUY_CARD], full_state, full_hand, config)[0]
+    empty_score = score_all([_BUY_CARD], empty_state, empty_hand, config)[0]
 
-    assert buy_entry.breakdown["diminishing_marginal_value"] < 0
-    assert chosen.action["kind"] == "advance_turn"
+    assert full_score.score == empty_score.score
+    assert full_score.breakdown["purchased_cards_this_turn_count"] == 1
 
 
-def test_buy_card_score_is_attractive_with_a_small_hand():
-    assessment, state = _assessment(my_hand_size=1, opponent_progress=0.1)
-    actions = [_BUY_CARD, _ADVANCE_TURN]
+def test_each_purchase_reduces_next_purchase_score():
     config = PolicyConfig()
 
-    scored = score_all(actions, state, assessment, config)
-    chosen, _tie = rank(scored)
-    assert chosen.action["kind"] == "buy_card"
+    scores = []
+    for purchased_count in (0, 1, 2):
+        assessment, state = _assessment(
+            my_hand_size=1,
+            opponent_progress=0.1,
+            purchased_count=purchased_count,
+        )
+        scores.append(score_all([_BUY_CARD], state, assessment, config)[0].score)
+
+    assert scores[0] > scores[1] > scores[2]
 
 
 # ---------- 4. Own organization growth scores positively and can be chosen ----------
