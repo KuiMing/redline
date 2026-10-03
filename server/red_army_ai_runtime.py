@@ -75,10 +75,14 @@ _RUNNING: set[str] = set()
 
 
 def forget_game(game_id: str) -> None:
-    """Drop all per-game pacing state (game finished / room torn down)."""
+    """Drop the per-game cooldown state (game finished / fresh start).
+
+    `_DRIVING` / `_RUNNING` are deliberately left alone: they are ownership
+    guards released only by the live driver's own `finally`. A driver may
+    still be awaiting a broadcast or cooldown, and discarding its guard here
+    would let a second driver start and double-submit.
+    """
     _LAST_SUCCESS.pop(game_id, None)
-    _DRIVING.discard(game_id)
-    _RUNNING.discard(game_id)
 
 
 _STALLED_STATUSES = {

@@ -508,3 +508,68 @@ def test_forget_game_clears_pacing_state():
     red_army_ai_runtime._LAST_SUCCESS["g1"] = 1.0
     red_army_ai_runtime.forget_game("g1")
     assert "g1" not in red_army_ai_runtime._LAST_SUCCESS
+
+
+def _forget_during(monkeypatch, where):
+    """Drive a game whose driver calls forget_game() (and a rival driver
+    attempt) from inside `where` ("broadcast" or "sleep")."""
+    game, _, _ = _new_ai_red_vs_taiwan_game()
+    clock = _Clock()
+    script = ["ok", "ok", "waiting_turn"]
+    submits, rival_submits = [], []
+
+    def fake_run(g, pid, max_successful_actions=None, pre_submit=None):
+        item = script.pop(0)
+        if item == "ok":
+            try:
+                if pre_submit:
+                    pre_submit()
+            except red_army_ai_runtime.SubmitDeferred:
+                script.insert(0, item)
+                return _Result("submit_deferred", 0)
+            submits.append(clock())
+            return _Result("action_limit")
+        return _Result(item, 0)
+
+    monkeypatch.setattr(red_army_ai_runtime, "run_red_army_turn", fake_run)
+    fired = []
+
+    async def rival():
+        async def noop():
+            pass
+        n = len(submits)
+        await red_army_ai_runtime.drive_red_army_turns(
+            "pace-x", game, noop, delay_seconds=0.0, sleep=fake_sleep, clock=clock)
+        rival_submits.append(len(submits) - n)
+
+    async def mid_flight():
+        if fired:
+            return
+        fired.append(1)
+        red_army_ai_runtime.forget_game("pace-x")
+        assert "pace-x" in red_army_ai_runtime._DRIVING
+        await rival()
+
+    async def fake_sleep(seconds):
+        clock.t += seconds
+        if where == "sleep":
+            await mid_flight()
+
+    async def on_advance():
+        if where == "broadcast":
+            await mid_flight()
+
+    asyncio.run(red_army_ai_runtime.drive_red_army_turns(
+        "pace-x", game, on_advance, delay_seconds=3.0, sleep=fake_sleep, clock=clock))
+    return submits, rival_submits
+
+
+@pytest.mark.parametrize("where", ["broadcast", "sleep"])
+def test_forget_game_mid_drive_keeps_ownership_guard(monkeypatch, where):
+    red_army_ai_runtime._DRIVING.discard("pace-x")
+    red_army_ai_runtime._RUNNING.discard("pace-x")
+    submits, rival_submits = _forget_during(monkeypatch, where)
+    assert rival_submits == [0]  # second driver refused, submitted nothing
+    assert len(submits) == 2  # original driver did each action exactly once
+    assert "pace-x" not in red_army_ai_runtime._DRIVING
+    assert "pace-x" not in red_army_ai_runtime._RUNNING
