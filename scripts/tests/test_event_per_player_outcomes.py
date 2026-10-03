@@ -1,7 +1,7 @@
-"""Per-player mission-event outcomes, settled when the Red Army turn ends.
+"""Per-player mission-event outcomes, settled when the full round ends (Red is the last seat here).
 
 Every mission event is tracked, judged and rewarded/penalised per non-Red player; no outcome may
-be applied at a non-Red seat's own turn end (Red Army's actions in the window can still change a
+be applied before the round's last seat ends (Red Army's actions in the window can still change a
 player's progress); several players' different outcomes (and their pending choices) are queued
 and processed one at a time. See rules.md「任務事件：每位非紅軍玩家個別判定」.
 """

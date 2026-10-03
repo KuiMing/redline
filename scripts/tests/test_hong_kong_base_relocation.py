@@ -214,32 +214,33 @@ def test_three_player_failure_makes_each_non_red_player_discard_before_hong_kong
     assert game.turn_phase == TurnPhase.ACTION
 
 
-def test_interleaved_red_seat_settles_when_the_red_seat_ends_not_at_a_later_non_red_seat():
+def test_interleaved_red_seat_settles_after_the_last_seat_of_the_round():
     game, first, red, second = make_interleaved_three_player_game()
     first.hand = [Card('第一位手牌', 'command', {})]
     second.hand = [Card('第二位手牌', 'command', {})]
     pin_hong_kong_event(game)
 
-    # first (before red) ends: nothing settles.
+    # first and Red (both before `second`) end: nothing settles, `second` has not acted yet.
     assert end_turn(game) == {'success': True}
     assert game.current_player() is red
+    assert end_turn(game) == {'success': True}
+    assert game.current_player() is second
     assert game.pending_choice is None
     assert game.event_progress['settled'] is False
 
-    # The Red Army seat ending is the one settlement boundary, even though `second` still has
-    # a seat later in the round.
+    # The last seat of the round ending is the one settlement boundary.
     assert end_turn(game).get('pending_choice') is True
-    assert game.current_player() is red
+    assert game.current_player() is second
     assert game.pending_choice.get('player_id') == first.id
     assert game.resolve_pending_choice(first.id, [0]).get('pending_choice') is True
     assert game.pending_choice.get('player_id') == second.id
     assert game.resolve_pending_choice(second.id, [0]).get('success') is True
     assert game.event_progress['settled'] is True
     assert game.hk_free_base_relocation is True
-    assert game.current_player() is red
+    assert game.current_player() is second
 
     assert game.keep_hong_kong_base(first.id).get('success') is True
-    assert game.current_player() is second
+    assert game.current_player() is first
 
 
 def test_event_discard_choice_hides_each_players_hand_from_other_viewers():

@@ -345,9 +345,7 @@ def start_game(payload: dict):
     else:
         game._assign_starting_bases()
         game.game_phase = GamePhase.MAIN
-        first_non_red = next((idx for idx, player in enumerate(game.players) if player.faction_id != 'red_army'), 0)
-        game.current_player_index = first_non_red
-        game.round_start_player_index = first_non_red
+        game.open_round_after_red()  # Red always acts last in a round
         if game.turn_phase in {TurnPhase.EVENT, TurnPhase.ACTION} and not game.current_event:
             game._start_event_phase()
 

@@ -2702,8 +2702,8 @@ function eraCardArtMarkup(stage, fallbackMarkup = '') {
 
 const EVENT_STATUS_TEXT = {
   active: '進行中',
-  success_pending: '條件已達成，等待紅軍回合結束結算',
-  settling: '紅軍回合結束，逐一結算各玩家結果',
+  success_pending: '條件已達成，等待整輪結束結算',
+  settling: '整輪結束，逐一結算各玩家結果',
   success: '成功已結算',
   mixed: '各玩家個別結算完成',
   failure: '失敗已結算',

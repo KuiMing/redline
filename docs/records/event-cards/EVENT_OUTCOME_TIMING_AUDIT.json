@@ -1,11 +1,19 @@
 {
   "summary": {
-    "total": 95,
-    "passed": 95,
+    "total": 97,
+    "passed": 97,
     "failed": 0,
     "events": 14
   },
   "checks": [
+    {
+      "name": "runtime mission definitions equal the fixed oracle (all cards)",
+      "passed": true,
+      "problems": [],
+      "details": {
+        "cards": 14
+      }
+    },
     {
       "name": "全國人大召開 success only for Ben, failure for the others",
       "passed": true,
@@ -1701,7 +1709,7 @@
       }
     },
     {
-      "name": "烏魯木齊七五事件 Red turn dissolve flips only that player to failure",
+      "name": "烏魯木齊七五事件 in-round Red dissolve flips only that player to failure",
       "passed": true,
       "problems": [],
       "details": {
@@ -2752,6 +2760,18 @@
             "result": "failure"
           }
         }
+      }
+    },
+    {
+      "name": "[Ben, Red, Angie] runs Angie -> Ben -> Red and settles only after Red (Angie acts before judgement)",
+      "passed": true,
+      "problems": [],
+      "details": {
+        "round_order": [
+          "Angie",
+          "Ben",
+          "Red"
+        ]
       }
     }
   ]

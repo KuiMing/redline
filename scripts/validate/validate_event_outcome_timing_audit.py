@@ -6,29 +6,44 @@ Every mission event card (main cards and 副本 copies) is run through the real 
 checked for the two authoritative rules:
 
 1. each non-Red player is tracked, judged and rewarded/penalised INDIVIDUALLY;
-2. every outcome is decided only when the Red Army turn ends (never at a non-Red seat's end),
-   so Red Army's own actions inside the window can still change a player's result.
+2. every outcome is decided only when the full round ends (every player, Red Army included,
+   acted once; never earlier), so Red Army's own actions inside the window can still change a player's result.
+
+A separate seat-order check ([Ben, Red, Angie]) proves the round opens after Red (Angie -> Ben -> Red):
+no earlier turn end settles anything; Red's turn end (the full-round end) does.
 
 Players satisfy the trigger through real game actions on their own turn (playing cards, buying,
 building, moving, using abilities); 盟旗學校 credit is earned through a real dissolve attempt.
 Outcome effects are then applied by the real settlement queue, and every pending choice is
 answered in order, so the audit also exercises the re-entrant per-player state machine.
 
+Expected results come from the fixed hand-written oracle in event_card_oracle.py, never from the
+loaded event definition: each card's runtime definition must first equal the oracle exactly, and
+the expected per-player deltas are computed from the oracle's effects. A wrong value in the data
+(main card, copy, or both) therefore fails the audit instead of validating itself.
+
 Writes docs/records/event-cards/EVENT_OUTCOME_TIMING_AUDIT.{json,md}. Exit code 1 on any failure.
 """
+import copy
 import json
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from server.cards import Card  # noqa: E402
 from server.game import Game, GamePhase, TurnPhase  # noqa: E402
+from event_card_oracle import MISSION_ORACLE, ORACLE_BY_NAME, definition_mismatches  # noqa: E402
 
 RECORD_DIR = ROOT / 'docs' / 'records' / 'event-cards'
 JSON_OUT = RECORD_DIR / 'EVENT_OUTCOME_TIMING_AUDIT.json'
 MD_OUT = RECORD_DIR / 'EVENT_OUTCOME_TIMING_AUDIT.md'
+
+# Test hook: a callable that mutates the (deep-copied) runtime event definitions of each audited
+# game, used by the mutation regression tests to prove the audit catches wrong data.
+RUNTIME_EVENT_MUTATOR = None
 
 NON_RED = ('Ben', 'Angie', 'Cy')
 # Distinct, non-base 牆內 towns used for the dissolvable / near-own organizations.
@@ -55,15 +70,18 @@ class Audit:
 
     def __init__(self, event_name, with_inside_orgs=False):
         self.event_name = event_name
+        factions = {'Ben': 'aomen', 'Angie': 'mongol', 'Cy': 'liberals', 'Red': 'red_army'}
         game = Game(
             [('ben-id', 'Ben'), ('angie-id', 'Angie'), ('cy-id', 'Cy'), ('red-id', 'Red')],
             market_mode='all_cards',
+            factions={f'{name.lower()}-id': faction for name, faction in factions.items()},
         )
         self.game = game
-        factions = {'Ben': 'aomen', 'Angie': 'mongol', 'Cy': 'liberals', 'Red': 'red_army'}
+        if RUNTIME_EVENT_MUTATOR is not None:
+            game.structured_events = copy.deepcopy(game.structured_events)
+            RUNTIME_EVENT_MUTATOR(game.structured_events)
         bases = {'Ben': '澳門', 'Angie': '烏蘭巴托', 'Cy': '臺北', 'Red': '北京'}
         for player in game.players:
-            player.faction_id = factions[player.name]
             player.base = bases[player.name]
             player.organizations = {player.base: 1}
             player.resources = {'money': 0, 'propaganda': 0}
@@ -76,8 +94,7 @@ class Audit:
                 self.player(name).organizations[INSIDE_ORG_TOWNS[name]] = 1
         game.pending_base_choices = {}
         game.game_phase = GamePhase.MAIN
-        game.current_player_index = 0
-        game.round_start_player_index = 0
+        assert (game.current_player_index, game.round_start_player_index) == (0, 0)  # Red last
         game.event_deck.draw_pile = [game._event_by_name(event_name)]
         game.event_deck.discard_pile = []
         game.current_event = None
@@ -87,12 +104,18 @@ class Audit:
         game._start_event_phase()  # the real draw: builds the per-player progress
         game.turn_phase = TurnPhase.ACTION
         self.event = game.current_event
+        # Expectations come from the fixed oracle, NOT from the loaded `self.event`.
+        self.oracle = ORACLE_BY_NAME[event_name]
+        self.definition_problems = [
+            problem for problem in definition_mismatches(game.structured_events)
+            if problem.startswith(f'{event_name}:')
+        ]
         # The settled progress dict is replaced by the next round's event at the round wrap, so
         # keep a reference to the one this run is auditing.
         self.progress_ref = game.event_progress
-        self.trigger = (self.event.get('trigger') or {})
-        self.success_effect = self.event.get('success') or {'type': 'none'}
-        self.failure_effect = self.event.get('failure') or {'type': 'none'}
+        self.trigger = self.oracle['trigger']
+        self.success_effect = self.oracle['success']
+        self.failure_effect = self.oracle['failure']
 
     # ----- helpers -----
     def player(self, name):
@@ -282,8 +305,8 @@ class Audit:
         if red_action:
             red_action()
 
-    def end_red_turn_and_resolve(self):
-        """End the Red Army turn, answer every pending choice in order. Returns the sequence of
+    def end_round_and_resolve(self):
+        """End the last seat's turn (the round's final one), answer every pending choice in order. Returns the sequence of
         choice owners (in the order they were asked) and the snapshots around settlement."""
         game = self.game
         self.before_settlement = self.snapshot()
@@ -346,7 +369,7 @@ CHOICE_KEY_FOR_EFFECT = {
 def verify_outcomes(run, expected_success):
     """Compare every non-Red player's own outcome with `expected_success` (a set of names)."""
     progress = run.progress_summary()
-    problems = []
+    problems = list(run.definition_problems)
     expected_owner_order = []
     for name in NON_RED:
         should_succeed = name in expected_success
@@ -382,9 +405,9 @@ def timing_problems(run):
     problems = []
     state = run.after_last_non_red_state
     if state['settled'] or state['started']:
-        problems.append(f'settled early at the last non-Red seat end: {state}')
+        problems.append(f'settled early before the last seat of the round ended: {state}')
     if state['log_has_outcome']:
-        problems.append('an outcome was applied before the Red Army turn ended')
+        problems.append('an outcome was applied before the full round ended')
     if state['current'] != 'Red':
         problems.append(f'expected Red seat next, got {state["current"]}')
     return problems
@@ -414,7 +437,7 @@ def uses_inside_orgs(event_name):
 
 def scenario(event_name, satisfied, label):
     """`satisfied`: names meeting the trigger. Angie's passive 盟旗學校 credit (use_faction_ability
-    events) comes from Red Army dissolving her organization during the Red turn."""
+    events) comes from Red Army dissolving her organization during the round."""
     def run():
         run = Audit(event_name, with_inside_orgs=uses_inside_orgs(event_name))
         angie_by_red = (
@@ -430,13 +453,13 @@ def scenario(event_name, satisfied, label):
             before = run.progress_summary()
             for name in NON_RED:
                 if before[name]['met'] != (name in satisfied and not (angie_by_red and name == 'Angie')):
-                    problems.append(f'{name} progress before the Red turn is {before[name]}')
+                    problems.append(f'{name} progress before the round ends is {before[name]}')
         if angie_by_red:
             result = run.red_dissolves('Angie')
             if not result.get('success'):
                 problems.append(f'red dissolve of Angie failed: {result}')
             # The Red Army hand card paid for 盟旗學校 is expected; restore a hand for refill checks.
-        run.end_red_turn_and_resolve()
+        run.end_round_and_resolve()
         # Red's own payment (盟旗學校) / refill is not part of the per-player delta below.
         found, progress = verify_outcomes(run, set(satisfied))
         problems += found
@@ -452,7 +475,7 @@ def scenario_red_actions_not_credited(event_name):
                 run.player(name).organizations = {OUTSIDE_ORGS[name]: 1}
         run.play_window(satisfied=(), red_satisfies=run.trigger.get('type') != 'end_turn_state')
         problems = timing_problems(run)
-        run.end_red_turn_and_resolve()
+        run.end_round_and_resolve()
         found, progress = verify_outcomes(run, set())
         problems += found
         return problems, {'progress': progress}
@@ -460,8 +483,8 @@ def scenario_red_actions_not_credited(event_name):
 
 
 def scenario_red_turn_changes_state_condition(event_name):
-    """烏魯木齊七五事件: Red Army dissolving a player's 牆內 organization during the Red turn
-    flips that player to failure, because the state is read only when the Red turn ends."""
+    """烏魯木齊七五事件: Red Army dissolving a player's 牆內 organization during the round
+    flips that player to failure, because the state is read only when the full round ends."""
     def run():
         run = Audit(event_name)
         origins = {}
@@ -473,11 +496,11 @@ def scenario_red_turn_changes_state_condition(event_name):
         result = run.red_dissolves('Ben', town=origins['Ben'])
         if not result.get('success'):
             problems.append(f'red dissolve failed: {result}')
-        run.end_red_turn_and_resolve()
+        run.end_round_and_resolve()
         found, progress = verify_outcomes(run, {'Angie', 'Cy'})
         problems += found
         return problems, {'progress': progress}
-    return check(f'{event_name} Red turn dissolve flips only that player to failure', run)
+    return check(f'{event_name} in-round Red dissolve flips only that player to failure', run)
 
 
 def scenario_npc_passive_credit(event_name, label, attacker, hand=True, expect_credit=True):
@@ -490,7 +513,7 @@ def scenario_npc_passive_credit(event_name, label, attacker, hand=True, expect_c
             run.play_window(satisfied=(), peer_attack=peer)
         else:
             run.play_window(satisfied=())
-        problems = timing_problems(run)
+        problems = timing_problems(run) + list(run.definition_problems)
         if attacker == 'Red':
             result = run.red_dissolves('Angie', hand=hand)
             succeeded = bool(result.get('success'))
@@ -520,7 +543,7 @@ def scenario_single_dissolve_does_not_double_count(event_name):
             problems.append('Angie not credited')
         if run.progress_ref['count'] != 1:
             problems.append(f'aggregate count {run.progress_ref["count"]} expected 1')
-        run.end_red_turn_and_resolve()
+        run.end_round_and_resolve()
         found, progress = verify_outcomes(run, {'Angie'})
         problems += found
         return problems, {'progress': progress}
@@ -532,8 +555,8 @@ def scenario_no_target_failure(event_name):
     def run():
         run = Audit(event_name, with_inside_orgs=False)
         run.play_window(satisfied=('Ben',))
-        run.end_red_turn_and_resolve()
-        problems = []
+        run.end_round_and_resolve()
+        problems = list(run.definition_problems)
         if run.owners:
             problems.append(f'unexpected pending choices {run.owners}')
         if not run.progress_ref['settled']:
@@ -545,10 +568,22 @@ def scenario_no_target_failure(event_name):
     return check(f'{event_name} failure with no legal target settles without a choice', run)
 
 
+def check_definition_matches_oracle():
+    """The runtime-loaded definitions must equal the fixed oracle before anything else is trusted."""
+    def run():
+        probe = Game([('p1', 'P1'), ('p2', 'P2')])
+        events = probe.structured_events
+        if RUNTIME_EVENT_MUTATOR is not None:
+            events = copy.deepcopy(events)
+            RUNTIME_EVENT_MUTATOR(events)
+        problems = definition_mismatches(events)
+        return problems, {'cards': len(ORACLE_BY_NAME)}
+    return check('runtime mission definitions equal the fixed oracle (all cards)', run)
+
+
 def run_all_checks():
-    probe_game = Game([('p1', 'P1'), ('p2', 'P2')])
-    missions = [e for e in probe_game.structured_events if e.get('type') == 'mission']
-    checks = []
+    missions = MISSION_ORACLE
+    checks = [check_definition_matches_oracle()]
     for event in missions:
         name = event['name']
         checks.append(scenario(name, {'Ben'}, 'success only for Ben, failure for the others'))
@@ -557,9 +592,9 @@ def run_all_checks():
         checks.append(scenario(name, set(NON_RED), 'every non-Red player succeeds'))
         checks.append(scenario(name, set(), 'every non-Red player fails'))
         checks.append(scenario_red_actions_not_credited(name))
-        if (event.get('failure') or {}).get('type') == 'red_dissolve':
+        if event['failure']['type'] == 'red_dissolve':
             checks.append(scenario_no_target_failure(name))
-        if (event.get('trigger') or {}).get('type') == 'use_faction_ability':
+        if event['trigger']['type'] == 'use_faction_ability':
             checks.append(scenario_npc_passive_credit(
                 name, '盟旗學校 triggered by a Red Army dissolve credits Angie only', 'Red'))
             checks.append(scenario_npc_passive_credit(
@@ -567,9 +602,65 @@ def run_all_checks():
             checks.append(scenario_npc_passive_credit(
                 name, '盟旗學校 blocked (attacker cannot pay) credits nobody', 'Red', hand=False, expect_credit=False))
             checks.append(scenario_single_dissolve_does_not_double_count(name))
-        if (event.get('trigger') or {}).get('type') == 'end_turn_state':
+        if event['trigger']['type'] == 'end_turn_state':
             checks.append(scenario_red_turn_changes_state_condition(name))
+    checks.append(scenario_red_mid_seat_waits_for_full_round())
     return checks, len(missions)
+
+
+def scenario_red_mid_seat_waits_for_full_round():
+    """[Ben, Red, Angie]: the round opens at the seat after Red, so it runs Angie -> Ben -> Red.
+    Angie and Ben each get a full turn, Red acts last, and the outcome is judged only when Red ends."""
+    def run():
+        problems = []
+        event_name = '重大災難'
+        game = Game([('ben-id', 'Ben'), ('red-id', 'Red'), ('angie-id', 'Angie')], market_mode='all_cards',
+                    factions={'ben-id': 'aomen', 'red-id': 'red_army', 'angie-id': 'mongol'})
+        for player in game.players:
+            player.base = {'Ben': '澳門', 'Red': '北京', 'Angie': '烏蘭巴托'}[player.name]
+            player.organizations = {player.base: 1}
+            player.hand = [card(f'{player.name}手牌{i}') for i in range(5)]
+            player.deck.draw_pile = [card(f'{player.name}補牌{i}') for i in range(12)]
+        game.pending_base_choices = {}
+        game.game_phase = GamePhase.MAIN
+        game.current_player_index = game.round_start_player_index = 2  # seat after Red, as /start sets it
+        game.event_deck.draw_pile = [game._event_by_name('歲月靜好'), game._event_by_name(event_name)]
+        game.event_deck.discard_pile = []
+        game.current_event = None
+        game.pending_choice = None
+        game._start_event_phase()
+        game.turn_phase = TurnPhase.ACTION
+        progress = game.event_progress
+        acted = []
+        for expected in ('Angie', 'Ben', 'Red'):
+            if game.current_player().name != expected:
+                problems.append(f'expected {expected} to act, got {game.current_player().name}')
+                break
+            acted.append(expected)
+            if expected == 'Angie':
+                angie = game.current_player()
+                angie.hand.append(real_card(game, '宣傳家'))
+                game.play_card(len(angie.hand) - 1, mode='resource')
+            game.turn_phase = TurnPhase.ACTION
+            game.advance_turn_phase()
+            started = bool(progress.get('settlement_started'))
+            if expected != 'Red' and (started or progress['settled']):
+                problems.append(f'settled after {expected} ended, before the round was complete')
+        if acted != ['Angie', 'Ben', 'Red']:
+            problems.append(f'acted sequence {acted}')
+        entries = progress.get('player_progress') or {}
+        if (entries.get('angie-id') or {}).get('result') != 'success' or (entries.get('ben-id') or {}).get('result') != 'failure':
+            problems.append(f'unexpected results {entries}')
+        guard = 0
+        while game.pending_choice and guard < 10:
+            guard += 1
+            game.resolve_pending_choice(game.pending_choice['player_id'], [0])
+        if not progress['settled']:
+            problems.append('not settled after Red and its choices')
+        if game.current_player().name != 'Angie':
+            problems.append(f'next round should open at Angie, got {game.current_player().name}')
+        return problems, {'round_order': ['Angie', 'Ben', 'Red']}
+    return check('[Ben, Red, Angie] runs Angie -> Ben -> Red and settles only after Red (Angie acts before judgement)', run)
 
 
 def main():
@@ -586,7 +677,7 @@ def main():
     lines = [
         '# Event outcome timing audit',
         '',
-        '每張任務事件卡（含副本）逐位非紅軍玩家驗證：個別追蹤、個別成功／失敗效果、紅軍回合結束才結算、',
+        '每張任務事件卡（含副本）逐位非紅軍玩家驗證：個別追蹤、個別成功／失敗效果、整輪結束（每位玩家各行動一次）才結算、',
         '多人 pending choice 依序處理。座位：Ben(澳門) → Angie(蒙古) → Cy(自由派) → Red(紅軍)。',
         '',
         f"- events: `{summary['events']}`",

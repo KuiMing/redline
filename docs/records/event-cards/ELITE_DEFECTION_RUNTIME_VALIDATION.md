@@ -92,7 +92,7 @@
           "qualified_player_ids": []
         },
         "pending_choice": {
-          "choice_id": "dcb3ea91921f4ab0ae7ccc19eaf7201c",
+          "choice_id": "1f7c6164f0bb4c3b812bb271a0cecc44",
           "type": "multi_card_choice",
           "choice_key": "event_discard_self",
           "interaction_kind": null,
@@ -133,7 +133,7 @@
           "[Turn 1] Event drawn: 紅軍權貴出逃",
           "[Turn 1] End of turn for viewer",
           "[Turn 1] End of turn for red",
-          "[Turn 1] 事件結算（紅軍回合結束）：紅軍權貴出逃｜成功：無｜失敗：viewer",
+          "[Turn 1] 事件結算（整輪結束）：紅軍權貴出逃｜成功：無｜失敗：viewer",
           "[Turn 1] Event failure: viewer must discard 1 hand card(s)"
         ]
       }

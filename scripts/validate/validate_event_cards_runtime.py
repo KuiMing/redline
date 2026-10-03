@@ -27,7 +27,7 @@ def make_game(event_name="歲月靜好"):
     game.game_phase = GamePhase.MAIN
     game.current_player_index = 0
     # Seat order is viewer -> red. Mission outcomes are per non-Red player and settle only
-    # when the Red Army turn ends, so settle_round_event() drives both seats.
+    # when the round's last seat ends (Red is last here), so settle_round_event() drives both seats.
     game.round_start_player_index = 0
     game.turn_phase = TurnPhase.EVENT
     event = game._event_by_name(event_name)
@@ -49,7 +49,7 @@ def assert_ok(result, label):
 
 def settle_round_event(game, label="settle round event"):
     """Mission progress can succeed during ACTION, but every player's outcome resolves when the
-    Red Army turn ends (never at a non-Red seat's own end). When that advance also wraps the
+    round's last seat ends (never earlier). When that advance also wraps the
     round, the settled progress is the PRE-wrap snapshot, so track this round's own progress
     object rather than game.event_progress."""
     progress = game.event_progress
@@ -188,7 +188,7 @@ def test_event_mission_triggers_ignore_red_army_actor():
     game._track_event_purchase(bought, original_cost={"money": 1, "propaganda": 0}, player=non_red)
     assert game.event_progress["count"] == 1, "non-red purchases should satisfy event-card mission conditions"
     success_payload = game._event_display_payload()
-    assert success_payload["result_text"] == "所有非紅軍玩家已達成條件；將於紅軍回合結束時個別結算"
+    assert success_payload["result_text"] == "所有非紅軍玩家已達成條件；將於整輪結束時個別結算"
     # Display-text check for a settled success (settlement flow itself is covered by the
     # dedicated tests above); mirror the manual construction used for the failure case.
     game.event_progress = {"count": 1, "required": 1, "succeeded": True, "settled": True, "status": "success"}
