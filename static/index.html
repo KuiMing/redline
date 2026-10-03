@@ -79,6 +79,19 @@
           <button class="lobby-market-option" type="button" data-market-mode="all_cards" data-card-counts="共245張：奧援64張、指揮68張、間諜24張、資金20張、武裝16張、交通15張、特殊宣傳15張、整肅12張、組織11張。" data-tooltip="共245張：奧援64張、指揮68張、間諜24張、資金20張、武裝16張、交通15張、特殊宣傳15張、整肅12張、組織11張。" onclick="setMarketMode('all_cards')" disabled>一般模式</button>
         </div>
       </div>
+
+      <div class="lobby-field" id="aiRedArmyField">
+        <span>紅軍席位</span>
+        <select id="aiRedArmySelect" class="lobby-hidden-select" aria-label="紅軍席位">
+          <option value="off">真人紅軍</option>
+          <option value="on">AI 紅軍</option>
+        </select>
+        <div class="lobby-market-toggle" role="group" aria-label="紅軍席位">
+          <button class="lobby-market-option active" type="button" data-ai-red-army="off" data-tooltip="由一位玩家在作戰室中選擇紅軍陣營並親自操作。" onclick="setAiRedArmy(false)" disabled>真人紅軍</button>
+          <button class="lobby-market-option" type="button" data-ai-red-army="on" data-tooltip="紅軍席位改由電腦（決定性規則引擎）自動操作，不需要真人加入。" onclick="setAiRedArmy(true)" disabled>AI 紅軍</button>
+        </div>
+        <div class="lobby-field-hint" id="aiRedArmyHint">建立房間後，房主可以切換紅軍是否由 AI 代打。</div>
+      </div>
     </div>
 
     <div class="lobby-column lobby-roster-column">

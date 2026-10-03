@@ -9,6 +9,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -469,6 +476,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -907,6 +921,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -1345,6 +1366,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -1775,6 +1803,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -2219,6 +2254,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -2706,6 +2748,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -3163,6 +3212,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -3624,6 +3680,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -4085,6 +4148,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -4534,6 +4604,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -5021,6 +5098,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -5478,6 +5562,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -5939,6 +6030,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -6400,6 +6498,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -6858,6 +6963,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -7340,6 +7452,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -7792,6 +7911,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -8256,6 +8382,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -8720,6 +8853,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -9174,6 +9314,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -9662,6 +9809,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -10120,6 +10274,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -10590,6 +10751,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -11060,6 +11228,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -11519,6 +11694,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -12023,6 +12205,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -12497,6 +12686,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -12977,6 +13173,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -13457,6 +13660,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -13938,6 +14148,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -14444,6 +14661,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -14926,6 +15150,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -15434,6 +15665,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -15922,6 +16160,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -16406,6 +16651,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -16912,6 +17164,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -17396,6 +17655,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -17904,6 +18170,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -18394,6 +18667,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -18874,6 +19154,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -19380,6 +19667,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -19864,6 +20158,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -20372,6 +20673,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -20862,6 +21170,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -21342,6 +21657,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -21856,6 +22178,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -22348,6 +22677,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -22864,6 +23200,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -23362,6 +23705,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -23849,6 +24199,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -24369,6 +24726,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -24865,6 +25229,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -25361,6 +25732,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -25863,6 +26241,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -26364,6 +26749,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -26903,6 +27295,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -27422,6 +27821,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -27941,6 +28347,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -28508,6 +28921,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -29025,6 +29445,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -29562,6 +29989,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -30083,6 +30517,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -30604,6 +31045,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -31169,6 +31617,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -31684,6 +32139,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -32221,6 +32683,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -32742,6 +33211,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -33263,6 +33739,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -33828,6 +34311,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -34344,6 +34834,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -34888,6 +35385,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -35414,6 +35918,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -35940,6 +36451,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -36466,6 +36984,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -36992,6 +37517,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -37528,6 +38060,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -38054,6 +38593,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -38580,6 +39126,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -39106,6 +39659,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -39618,6 +40178,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -40154,6 +40721,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -40680,6 +41254,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -41206,6 +41787,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -41732,6 +42320,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -42246,6 +42841,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -42813,6 +43415,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -43362,6 +43971,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -43911,6 +44527,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -44460,6 +45083,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -45009,6 +45639,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -45568,6 +46205,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -46109,6 +46753,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -46658,6 +47309,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -47207,6 +47865,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -47750,6 +48415,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -48309,6 +48981,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -48850,6 +49529,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -49399,6 +50085,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -49948,6 +50641,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -50493,6 +51193,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -51054,6 +51761,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -51597,6 +52311,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -52140,6 +52861,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -52683,6 +53411,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -53226,6 +53961,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -53779,6 +54521,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -54322,6 +55071,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -54857,6 +55613,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -55400,6 +56163,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -55937,6 +56707,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -56490,6 +57267,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -57033,6 +57817,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -57568,6 +58359,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -58111,6 +58909,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -58649,6 +59454,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -59223,6 +60035,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -59779,6 +60598,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -60335,6 +61161,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -60891,6 +61724,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -61447,6 +62287,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -62013,6 +62860,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -62569,6 +63423,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -63125,6 +63986,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -63673,6 +64541,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -64223,6 +65098,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -64789,6 +65671,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -65345,6 +66234,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -65901,6 +66797,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -66449,6 +67352,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -67007,6 +67917,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -67620,6 +68537,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -68209,6 +69133,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -68806,6 +69737,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -69397,6 +70335,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -69987,6 +70932,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -70599,6 +71551,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -71189,6 +72148,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -71779,6 +72745,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -72377,6 +73350,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -72967,6 +73947,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -73543,6 +74530,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -74105,6 +75099,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -74667,6 +75668,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -75229,6 +76237,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -75787,6 +76802,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -76363,6 +77385,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -76925,6 +77954,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -77487,6 +78523,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -78049,6 +79092,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -78613,6 +79663,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -79181,6 +80238,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -79743,6 +80807,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -80305,6 +81376,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -80867,6 +81945,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -81417,6 +82502,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -81985,6 +83077,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -82547,6 +83646,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -83109,6 +84215,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -83671,6 +84784,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -84224,6 +85344,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -84790,6 +85917,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -85342,6 +86476,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -85894,6 +87035,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -86446,6 +87594,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -87003,6 +88158,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -87561,6 +88723,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -88105,6 +89274,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -88657,6 +89833,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -89209,6 +90392,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -89759,6 +90949,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -90323,6 +91520,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -90873,6 +92077,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -91431,6 +92642,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -91989,6 +93207,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -92544,6 +93769,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -93137,6 +94369,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -93716,6 +94955,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -94293,6 +95539,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -94870,6 +96123,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -95449,6 +96709,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -96031,6 +97298,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -96607,6 +97881,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -97173,6 +98454,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -97747,6 +99035,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -98317,6 +99612,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -98899,6 +100201,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -99475,6 +100784,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -100041,6 +101357,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -100615,6 +101938,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -101187,6 +102517,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -101775,6 +103112,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -102347,6 +103691,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -102919,6 +104270,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -103489,6 +104847,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -104061,6 +105426,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -104638,6 +106010,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -105207,6 +106586,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -105776,6 +107162,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -106335,6 +107728,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -106898,6 +108298,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -107475,6 +108882,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -108044,6 +109458,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -108613,6 +110034,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -109172,6 +110600,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -109738,6 +111173,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -110349,6 +111791,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -110942,6 +112391,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -111535,6 +112991,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -112128,6 +113591,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -112718,6 +114188,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -113320,6 +114797,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -113912,6 +115396,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -114504,6 +115995,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -115096,6 +116594,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -115674,6 +117179,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -116276,6 +117788,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -116868,6 +118387,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -117460,6 +118986,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -118052,6 +119585,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -118630,6 +120170,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -119251,6 +120798,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -119854,6 +121408,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -120457,6 +122018,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -121060,6 +122628,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -121657,6 +123232,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -122278,6 +123860,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -122881,6 +124470,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -123484,6 +125080,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},
@@ -124087,6 +125690,13 @@
         ],
         "active_era_details": [],
         "active_eras": [],
+        "ai_red_army": {
+          "enabled": false,
+          "player_id": null,
+          "status": {
+            "state": "idle"
+          }
+        },
         "co_winners": [],
         "current_event": {
           "effect": {},

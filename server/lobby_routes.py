@@ -31,6 +31,26 @@ lobby_bases = {}  # {game_id: {player_id: base_name}}
 lobby_ready = {}  # {game_id: {player_id: bool}}
 lobby_market_mode = {}  # {game_id: "sample_53" | "all_cards"}
 lobby_player_credentials = {}  # {game_id: {player_id: {device_id, resume_token}}}
+lobby_ai_red_army = {}  # {game_id: bool} — host-owned toggle; see set_ai_red_army(). Defaults
+# to False (off) for every room so existing human-vs-human flow is unchanged
+# unless the host opts in. Immutable once manager.games[game_id] exists.
+
+# A synthetic "virtual seat" player_id prefix used only inside start_game()
+# when lobby_ai_red_army[game_id] is True — never written into `lobby`,
+# `lobby_ready`, or `lobby_player_credentials` (it is not a human join and
+# must never be resumable/connectable like one). See start_game().
+AI_RED_ARMY_PLAYER_ID_PREFIX = "ai-red-army-"
+AI_RED_ARMY_PLAYER_NAME = "AI 紅軍"
+
+
+def _ai_red_army_player_id(game_id: str) -> str:
+    return f"{AI_RED_ARMY_PLAYER_ID_PREFIX}{game_id}"
+
+
+def _max_human_players(game_id: str) -> int:
+    """Room capacity for human joiners. Normally 4; capped at 3 when AI Red
+    Army is enabled for this room, since the 4th seat is always the AI's."""
+    return 3 if lobby_ai_red_army.get(game_id) else 4
 
 
 @router.post("/create")
@@ -47,6 +67,7 @@ def create_room(payload: dict = None):
     lobby_bases[game_id] = {}
     lobby_ready[game_id] = {host_id: False}
     lobby_market_mode[game_id] = "sample_53"
+    lobby_ai_red_army[game_id] = False
     device_id = str((payload or {}).get("device_id") or "").strip()
     resume_token = secrets.token_urlsafe(32)
     lobby_player_credentials[game_id] = {
@@ -90,7 +111,7 @@ def join_game(payload: dict):
                 "resumed": True,
             }
 
-    if len(lobby[game_id]) >= 4:
+    if len(lobby[game_id]) >= _max_human_players(game_id):
         return {"error": "Room full"}
 
     player_id = str(uuid.uuid4())
@@ -132,7 +153,16 @@ def resume_game(payload: dict):
 
 
 def _required_faction_for_player(game_id: str, player_id: str):
-    """Return the faction forced by the remaining-seat rule, if any."""
+    """Return the faction forced by the remaining-seat rule, if any.
+
+    Never applies when AI Red Army is enabled for this room: the red_army
+    seat is already filled by the AI, no human seat is ever forced into it
+    (and choose_faction() rejects a human trying to pick it anyway), so a
+    room full of 4 humans must distribute entirely across non-red_army
+    factions instead of being made to wait on a 4th that will never come.
+    """
+    if lobby_ai_red_army.get(game_id):
+        return None
     players = lobby.get(game_id, [])
     chosen = lobby_factions.get(game_id, {})
     has_red_army = any(fid == 'red_army' for fid in chosen.values())
@@ -160,6 +190,38 @@ def set_lobby_market_mode(payload: dict):
     return {"success": True, "market_mode": market_mode}
 
 
+@router.post("/ai-red-army")
+def set_ai_red_army(payload: dict):
+    """Host-owned lobby toggle: when enabled, the red_army seat is taken
+    over by the red_army_policy engine as soon as /start runs (see
+    start_game() below) instead of being joinable by a human. Three
+    distinct rejection cases, enforced server-side (not just hidden in the
+    UI) — a non-host caller, a non-boolean value, and any attempt to
+    change it once the game has actually started.
+    """
+    game_id = payload.get("game_id")
+    player_id = payload.get("player_id")
+    enabled = payload.get("enabled")
+
+    if game_id not in lobby:
+        return {"error": "Game not found"}
+    if lobby_hosts.get(game_id) != player_id:
+        return {"error": "Only host can change AI Red Army setting"}
+    if manager.games.get(game_id) is not None:
+        return {"error": "Game already started"}
+    if not isinstance(enabled, bool):
+        return {"error": "Invalid value"}
+
+    if enabled:
+        if any(fid == 'red_army' for fid in lobby_factions.get(game_id, {}).values()):
+            return {"error": "請先取消已選擇紅軍的玩家，才能開啟 AI 紅軍"}
+        if len(lobby.get(game_id, [])) > 3:
+            return {"error": "房間人數已達上限，無法開啟 AI 紅軍"}
+
+    lobby_ai_red_army[game_id] = enabled
+    return {"success": True, "ai_red_army": lobby_ai_red_army[game_id]}
+
+
 @router.post("/start")
 def start_game(payload: dict):
     game_id = payload.get("game_id")
@@ -169,17 +231,19 @@ def start_game(payload: dict):
     if game_id not in lobby:
         return {"error": "Game not found"}
 
-    if len(lobby[game_id]) < 2:
+    ai_enabled = bool(lobby_ai_red_army.get(game_id))
+    human_players = lobby[game_id]
+    effective_player_count = len(human_players) + (1 if ai_enabled else 0)
+    if effective_player_count < 2:
         return {"error": "Need at least 2 players"}
 
     if lobby_hosts.get(game_id) != player_id:
         return {"error": "Only host can start"}
 
-    player_list = lobby[game_id]
     ready = lobby_ready.setdefault(game_id, {})
-    for pid, _ in player_list:
+    for pid, _ in human_players:
         ready.setdefault(pid, False)
-    if any(not ready.get(pid, False) for pid, _ in player_list):
+    if any(not ready.get(pid, False) for pid, _ in human_players):
         return {"error": "All players must be ready before start"}
 
     if market_mode in {"sample_53", "all_cards"}:
@@ -191,10 +255,34 @@ def start_game(payload: dict):
         return {"success": True, "reused": True}
 
     chosen = lobby_factions.get(game_id, {})
-    if len(chosen) != len(player_list):
+    if len(chosen) != len(human_players):
         return {"error": "All players must choose factions first"}
-    if sum(1 for fid in chosen.values() if fid == 'red_army') != 1:
+    human_red_army_count = sum(1 for fid in chosen.values() if fid == 'red_army')
+    if ai_enabled:
+        # choose_faction() already rejects a human picking red_army while AI
+        # is on, but this is a server-authoritative invariant, not merely a
+        # UI affordance — re-check it here too rather than trusting the
+        # caller never raced around that guard.
+        if human_red_army_count != 0:
+            return {"error": "AI 紅軍已啟用，紅軍席位不可由玩家選擇"}
+    elif human_red_army_count != 1:
         return {"error": "必須有且只能有一名玩家選擇紅軍，才能啟動行動"}
+
+    # When AI Red Army is enabled, the red_army seat is filled by a synthetic
+    # "virtual seat" player — never added to `lobby`/`lobby_ready`/
+    # `lobby_player_credentials` (it is not a human join, must never be
+    # resumable or websocket-connectable like one), only ever handed to the
+    # Game constructor below so the authoritative engine has a real Player
+    # object to run turns/hand/resources against — exactly like a human
+    # red_army player would get. game.ai_red_army_player_id (set further
+    # down) is what server/red_army_ai_runtime.py's wake-up hook looks for.
+    player_list = list(human_players)
+    game_chosen = dict(chosen)
+    ai_player_id = None
+    if ai_enabled:
+        ai_player_id = _ai_red_army_player_id(game_id)
+        player_list.append((ai_player_id, AI_RED_ARMY_PLAYER_NAME))
+        game_chosen[ai_player_id] = 'red_army'
 
     # Pass the real chosen factions into the constructor rather than overriding
     # player.faction_id afterward: Game.__init__ may resolve the game's first
@@ -203,7 +291,10 @@ def start_game(payload: dict):
     # after construction is too late — that first event has already resolved
     # against whichever player construction's own random assignment happened
     # to pick, not the player who actually chose that faction in the lobby.
-    game = Game(player_list, market_mode=lobby_market_mode.get(game_id, "sample_53"), factions=chosen)
+    game = Game(player_list, market_mode=lobby_market_mode.get(game_id, "sample_53"), factions=game_chosen)
+    if ai_player_id:
+        game.ai_red_army_player_id = ai_player_id
+        game.ai_red_army_status = {"state": "idle"}
     chosen_bases = lobby_bases.get(game_id, {})
     game.faction_by_id = {f["id"]: f for f in game.factions}
     game.faction_by_id.update({
@@ -262,7 +353,11 @@ def start_game(payload: dict):
     manager.games[game_id] = game
     manager.connections.setdefault(game_id, {})
 
-    return {"success": True, "market_mode": lobby_market_mode.get(game_id, "sample_53")}
+    return {
+        "success": True,
+        "market_mode": lobby_market_mode.get(game_id, "sample_53"),
+        "ai_red_army": ai_enabled,
+    }
 
 
 @router.post("/choose-faction")
@@ -277,6 +372,9 @@ def choose_faction(payload: dict):
 
     if player_id not in [pid for pid, _ in lobby[game_id]]:
         return {"error": "Player not found in lobby"}
+
+    if faction_id == 'red_army' and lobby_ai_red_army.get(game_id):
+        return {"error": "AI 紅軍已啟用，紅軍席位由電腦控制，玩家不可選擇"}
 
     from pathlib import Path
     import json
@@ -349,6 +447,7 @@ def lobby_state(game_id: str):
         "ready": ready,
         "started": manager.games.get(game_id) is not None,
         "market_mode": lobby_market_mode.get(game_id, "sample_53"),
+        "ai_red_army": bool(lobby_ai_red_army.get(game_id, False)),
         "required_faction_by_player": {
             pid: required
             for pid, _ in lobby[game_id]
