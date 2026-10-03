@@ -26,10 +26,9 @@ def make_game(event_name="歲月靜好"):
     game.pending_base_choices = []
     game.game_phase = GamePhase.MAIN
     game.current_player_index = 0
-    # Most runtime checks focus the non-red viewer as the last actor of a
-    # round, so mission settlement happens on ACTION -> END without needing
-    # to drive the Red Army's unrelated turn.
-    game.round_start_player_index = 1
+    # Seat order is viewer -> red. Mission outcomes are per non-Red player and settle only
+    # when the Red Army turn ends, so settle_round_event() drives both seats.
+    game.round_start_player_index = 0
     game.turn_phase = TurnPhase.EVENT
     event = game._event_by_name(event_name)
     assert event, f"missing event: {event_name}"
@@ -49,10 +48,10 @@ def assert_ok(result, label):
 
 
 def settle_round_event(game, label="settle round event"):
-    """Mission progress can succeed during ACTION, but event effects resolve at round end.
-    Settlement fires on the END advance (deferred until after the end-turn refill); when
-    that advance also wraps the round, the settled progress is the PRE-wrap snapshot, so
-    track this round's own progress object rather than game.event_progress."""
+    """Mission progress can succeed during ACTION, but every player's outcome resolves when the
+    Red Army turn ends (never at a non-Red seat's own end). When that advance also wraps the
+    round, the settled progress is the PRE-wrap snapshot, so track this round's own progress
+    object rather than game.event_progress."""
     progress = game.event_progress
     result = None
     for _ in range(3):
@@ -189,16 +188,16 @@ def test_event_mission_triggers_ignore_red_army_actor():
     game._track_event_purchase(bought, original_cost={"money": 1, "propaganda": 0}, player=non_red)
     assert game.event_progress["count"] == 1, "non-red purchases should satisfy event-card mission conditions"
     success_payload = game._event_display_payload()
-    assert success_payload["result_text"] == "非紅軍任務條件已達成，等待全體玩家行動結束後結算"
+    assert success_payload["result_text"] == "所有非紅軍玩家已達成條件；將於紅軍回合結束時個別結算"
     # Display-text check for a settled success (settlement flow itself is covered by the
     # dedicated tests above); mirror the manual construction used for the failure case.
     game.event_progress = {"count": 1, "required": 1, "succeeded": True, "settled": True, "status": "success"}
     settled_success_payload = game._event_display_payload()
-    assert settled_success_payload["result_text"] == "非紅軍任務成功"
+    assert settled_success_payload["result_text"] == "所有非紅軍玩家任務成功"
 
     game.event_progress = {"count": 0, "required": 1, "succeeded": False, "settled": True, "status": "failure"}
     failure_payload = game._event_display_payload()
-    assert failure_payload["result_text"] == "非紅軍任務失敗，紅軍效果生效"
+    assert failure_payload["result_text"] == "所有非紅軍玩家任務失敗，紅軍效果生效"
 
     return {
         "red_progress": 0,
@@ -212,32 +211,32 @@ def test_remaining_six_event_structured_matches_raw_rules():
     game = make_game("歲月靜好")
     expected = {
         "全國人大召開": {
-            "trigger": {"type": "use_faction_ability", "count": 1},
+            "trigger": {"type": "use_faction_ability", "count": 1, "each_non_red_player": True},
             "success": {"type": "draw", "count": 1},
             "failure": {"type": "red_dissolve", "count": 1, "scope": "牆內"},
         },
         "香港抗暴之戰": {
-            "trigger": {"type": "play_card_with_money", "count": 1},
+            "trigger": {"type": "play_card_with_money", "count": 1, "each_non_red_player": True},
             "success": {"type": "gain_card", "card": "宣傳家", "count": 2},
             "failure": {"type": "discard_self", "count": 1},
         },
         "重大災難": {
-            "trigger": {"type": "play_card_with_propaganda", "count": 1},
+            "trigger": {"type": "play_card_with_propaganda", "count": 1, "each_non_red_player": True},
             "success": {"type": "gain_card", "card": "宣傳家", "count": 1},
             "failure": {"type": "discard_self", "count": 1},
         },
         "藏印邊境軍事對峙": {
-            "trigger": {"type": "build_organization", "count": 1, "scope": "牆內"},
+            "trigger": {"type": "build_organization", "count": 1, "scope": "牆內", "each_non_red_player": True},
             "success": {"type": "move", "count": 2},
             "failure": {"type": "none"},
         },
         "東突厥集中營": {
-            "trigger": {"type": "play_card_with_propaganda", "count": 1},
+            "trigger": {"type": "play_card_with_propaganda", "count": 1, "each_non_red_player": True},
             "success": {"type": "gain_card", "card": "宣傳家", "count": 1},
             "failure": {"type": "discard_random", "count": 1},
         },
         "北京政爭": {
-            "trigger": {"type": "draw", "count": 1},
+            "trigger": {"type": "draw", "count": 1, "each_non_red_player": True},
             "success": {"type": "draw", "count": 1},
             "failure": {"type": "none"},
         },
@@ -362,11 +361,13 @@ def test_trade_war_purchase_trigger_topdecks_from_discard():
     progress = game.event_progress
     result = settle_round_event(game, "settle trade war success at round end")
     assert result.get("pending_choice") is True, result
-    assert progress["settled"] is True
+    # The event is only settled once the player's own pending choice has been resolved.
+    assert progress["settled"] is False
     choice = game.state()["pending_choice"]
     assert choice["choice_key"] == "event_topdeck_from_discard"
     assert names(choice["cards"]) == ["舊棄牌", "四點行動"], names(choice["cards"])
     assert_ok(game.resolve_pending_choice(player.id, 1), "topdeck purchased card")
+    assert progress["settled"] is True
     assert names(player.deck.draw_pile)[-1] == "四點行動"
     assert "四點行動" not in names(player.deck.discard_pile)
     return {"event": "貿易戰加劇", "choice_key": choice["choice_key"], "deck_top": names(player.deck.draw_pile)[-1], "discard": names(player.deck.discard_pile)}
@@ -435,13 +436,14 @@ def test_elite_defection_trashes_from_hand_after_three_moves():
     progress = game.event_progress
     settle_round_event(game, "settle elite defection success at round end")
     assert game.pending_choice is not None
-    assert progress["settled"] is True
+    assert progress["settled"] is False   # settled only after the player's own choice resolves
     choice = game.state()["pending_choice"]
     assert choice["choice_key"] == "trash_from_hand_or_discard"
     assert choice["cards"] == [
         {"name": "手牌移除目標", "zone": "hand", "zone_label": "手牌"},
     ], choice["cards"]
     resolve = assert_ok(game.resolve_pending_choice(player.id, 0), "trash hand card")
+    assert progress["settled"] is True
     assert resolve["chosen_card"] == "手牌移除目標"
     assert resolve["zone"] == "hand"
     assert names(player.hand) == []
@@ -487,7 +489,7 @@ def test_elite_defection_trashes_from_discard_after_three_moves():
 def test_elite_defection_structured_matches_raw_rule():
     game = make_game("紅軍權貴出逃")
     event = game._event_by_name("紅軍權貴出逃")
-    assert event["trigger"] == {"type": "move_organization", "count": 3}
+    assert event["trigger"] == {"type": "move_organization", "count": 3, "each_non_red_player": True}
     assert event["success"] == {"type": "trash_from_hand_or_discard", "count": 1}
     assert event["failure"] == {"type": "discard_self", "count": 1}
     duplicate = game._event_by_name("紅軍權貴出逃（副本）")
@@ -508,7 +510,7 @@ def test_urumqi_end_turn_wall_org_builds_near_own_org():
     assert result.get("pending_choice") is True, result
     assert progress["count"] == 1
     assert progress["succeeded"] is True
-    assert progress["settled"] is True
+    assert progress["settled"] is False   # the player's own build choice is still pending
     choice = game.state()["pending_choice"]
     assert choice["choice_key"] == "event_build_organization"
     assert choice["type"] == "town_choice"
@@ -548,7 +550,7 @@ def test_urumqi_end_turn_without_wall_org_fails_random_discard():
 def test_urumqi_structured_matches_raw_rule():
     game = make_game("烏魯木齊七五事件")
     event = game._event_by_name("烏魯木齊七五事件")
-    assert event["trigger"] == {"type": "end_turn_state", "count": 1, "condition": "own_organization_in_scope", "scope": "牆內"}
+    assert event["trigger"] == {"type": "end_turn_state", "count": 1, "condition": "own_organization_in_scope", "scope": "牆內", "each_non_red_player": True}
     assert event["success"] == {"type": "build_organization_near_own", "count": 1, "max_steps": 1}
     assert event["failure"] == {"type": "discard_random", "count": 1}
     return {"event": event["name"], "trigger": event["trigger"], "success": event["success"], "failure": event["failure"]}
@@ -569,7 +571,7 @@ def test_event_deck_uses_declared_counts_without_structured_duplicate_overcount(
 def test_trade_war_structured_matches_raw_rule():
     game = make_game("貿易戰加劇")
     event = game._event_by_name("貿易戰加劇")
-    assert event["trigger"] == {"type": "buy_card", "count": 1, "min_cost": 4, "card_names": ["英美奧援"]}
+    assert event["trigger"] == {"type": "buy_card", "count": 1, "min_cost": 4, "card_names": ["英美奧援"], "each_non_red_player": True}
     assert event["success"] == {"type": "topdeck_from_discard", "count": 1}
     assert event["failure"] == {"type": "none"}
     return {"event": event["name"], "trigger": event["trigger"], "success": event["success"]}
@@ -648,9 +650,9 @@ def test_event_runtime_primitive_inventory_is_covered():
 
 
 def test_event_red_dissolve_ui_reuses_target_map_highlight():
-    app_js = (ROOT / "static" / "app.js").read_text(encoding="utf-8")
-    needle = "targetChoicesWithMapHighlight = new Set("
-    assert needle in app_js and "'event_red_dissolve'" in app_js, "event_red_dissolve should reuse existing target choice map highlight pipeline"
+    # The target-choice map highlight list lives in the leaflet game-map module.
+    map_js = (ROOT / "static" / "leaflet_game_map_logic.js").read_text(encoding="utf-8")
+    assert "'event_red_dissolve'," in map_js, "event_red_dissolve should reuse existing target choice map highlight pipeline"
     return {
         "choice_key": "event_red_dissolve",
         "highlight_pipeline": "support-targets",

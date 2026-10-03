@@ -7,6 +7,8 @@ machinery stay in `game.py` — those mutate turn_log, pending_choice, and
 player state, unlike everything here.
 """
 
+import copy
+
 
 def event_condition_text(trigger, event=None):
     if not trigger:
@@ -42,16 +44,22 @@ def event_condition_text(trigger, event=None):
 def event_result_text(event, event_progress):
     if not event:
         return ''
-    progress = dict(event_progress or {})
+    # Deep copy: per-player entries are nested dicts that settlement keeps mutating, and a
+    # published notification must stay a point-in-time snapshot.
+    progress = copy.deepcopy(dict(event_progress or {}))
     status = progress.get('status') or 'active'
     if event.get('type') == 'mission':
         if status == 'success_pending':
-            return '非紅軍任務條件已達成，等待全體玩家行動結束後結算'
+            return '所有非紅軍玩家已達成條件；將於紅軍回合結束時個別結算'
+        if status == 'settling':
+            return '紅軍回合結束：正在逐一結算每位非紅軍玩家的成功／失敗效果'
         if status == 'success':
-            return '非紅軍任務成功'
+            return '所有非紅軍玩家任務成功'
+        if status == 'mixed':
+            return '各玩家個別結算：部分成功、部分失敗'
         if status == 'failure':
-            return '非紅軍任務失敗，紅軍效果生效'
-        return '非紅軍任務進行中'
+            return '所有非紅軍玩家任務失敗，紅軍效果生效'
+        return '非紅軍任務進行中：每位玩家個別判定，紅軍回合結束時結算'
     if status == 'auto':
         return '紅軍事件效果已自動套用'
     if status == 'auto_pending':
@@ -138,7 +146,19 @@ def event_display_payload(event, event_progress):
     # public, pre-existing fields) are left untouched.
     progress.pop('_actor_contributions', None)
     progress.pop('last_actor_token', None)
-    return {
+    progress.pop('settlement_queue', None)
+    player_results = [
+        {
+            'player_id': entry.get('player_id'),
+            'player_name': entry.get('player_name'),
+            'count': entry.get('count', 0),
+            'required': entry.get('required', 1),
+            'met': bool(entry.get('met')),
+            'result': entry.get('result'),
+        }
+        for entry in (progress.get('player_progress') or {}).values()
+    ]
+    payload = {
         'id': event.get('id'),
         'name': event.get('name'),
         'type': event.get('type'),
@@ -154,3 +174,6 @@ def event_display_payload(event, event_progress):
         'failure_text': event_effect_text(failure, default_actor='紅軍'),
         'effect_text': event_effect_text(effect),
     }
+    if event.get('type') == 'mission':
+        payload['player_results'] = player_results
+    return payload

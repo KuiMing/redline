@@ -1,7 +1,7 @@
 {
   "summary": {
-    "total": 3,
-    "passed": 3,
+    "total": 4,
+    "passed": 4,
     "failed": 0
   },
   "checks": [
@@ -14,7 +14,45 @@
       }
     },
     {
-      "name": "failure_discard_choice_after_refill_before_red_action",
+      "name": "viewer_turn_end_refills_but_does_not_settle",
+      "passed": true,
+      "details": {
+        "result": {
+          "success": true
+        },
+        "current_player": "red",
+        "viewer_hand": [
+          "補牌5",
+          "補牌4",
+          "補牌3",
+          "補牌2",
+          "補牌1"
+        ],
+        "event_progress": {
+          "count": 0,
+          "required": 1,
+          "succeeded": false,
+          "settled": true,
+          "status": "failure",
+          "completed_player_ids": [],
+          "player_progress": {
+            "viewer-id": {
+              "player_id": "viewer-id",
+              "player_name": "viewer",
+              "count": 0,
+              "required": 3,
+              "met": false,
+              "result": "failure"
+            }
+          },
+          "settlement_started": true,
+          "settlement_queue": [],
+          "qualified_player_ids": []
+        }
+      }
+    },
+    {
+      "name": "failure_discard_choice_after_red_turn_end",
       "passed": true,
       "details": {
         "result": {
@@ -31,13 +69,27 @@
         ],
         "event_progress": {
           "count": 0,
-          "required": 3,
+          "required": 1,
           "succeeded": false,
           "settled": true,
           "status": "failure",
-          "settlement_target_player_id": "viewer-id"
+          "completed_player_ids": [],
+          "player_progress": {
+            "viewer-id": {
+              "player_id": "viewer-id",
+              "player_name": "viewer",
+              "count": 0,
+              "required": 3,
+              "met": false,
+              "result": "failure"
+            }
+          },
+          "settlement_started": true,
+          "settlement_queue": [],
+          "qualified_player_ids": []
         },
         "pending_choice": {
+          "choice_id": "dcb3ea91921f4ab0ae7ccc19eaf7201c",
           "type": "multi_card_choice",
           "choice_key": "event_discard_self",
           "interaction_kind": null,
@@ -50,10 +102,15 @@
           "source_name": "紅軍權貴出逃",
           "count": 1,
           "min_count": null,
+          "selected_count": null,
+          "total_count": null,
+          "remaining_count": null,
           "mode": null,
           "acting_player_id": null,
           "acting_player_name": null,
           "played_card_name": null,
+          "target_player_id": null,
+          "target_player_name": null,
           "region": null,
           "free": null,
           "ignore_distance": null,
@@ -72,6 +129,8 @@
         "log": [
           "[Turn 1] Event drawn: 紅軍權貴出逃",
           "[Turn 1] End of turn for viewer",
+          "[Turn 1] End of turn for red",
+          "[Turn 1] 事件結算（紅軍回合結束）：紅軍權貴出逃｜成功：無｜失敗：viewer",
           "[Turn 1] Event failure: viewer must discard 1 hand card(s)"
         ]
       }

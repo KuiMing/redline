@@ -37,6 +37,14 @@ All events in `events_structured.v1.1.json` must use ONLY these types.
 
 ---
 
+## ✅ Per-player missions
+
+Every `mission` event is judged **per non-Red player** (`trigger.each_non_red_player: true`): each player
+tracks their own progress toward `trigger.count`, and each player's success/failure effect applies only to
+that player. All outcomes are settled when the Red Army turn ends (see `rules.md`).
+
+---
+
 ## ✅ Rule
 
 - No new effect types may be introduced without updating this file.

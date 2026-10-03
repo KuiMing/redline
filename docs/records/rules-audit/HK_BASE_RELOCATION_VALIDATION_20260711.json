@@ -63,9 +63,10 @@
     {
       "name": "turn_handoff_waits_for_hong_kong_decision",
       "checks": {
-        "end_turn_pauses_before_handoff": true,
+        "hk_own_turn_end_does_not_settle": true,
+        "red_turn_end_pauses_before_handoff": true,
         "keep_decision_consumes_window": true,
-        "next_player_starts_after_decision": true
+        "next_round_starts_after_decision": true
       },
       "ok": true
     },

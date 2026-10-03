@@ -10,6 +10,7 @@ moved here verbatim as a mixin class purely to shrink ``game.py`` -- this is a
 verbatim text relocation, not a rewrite; nothing about the logic changed.
 """
 
+import copy
 import random
 
 from server.cards import Card
@@ -357,10 +358,15 @@ class CardPlayMixin:
             ),
         }
 
+    def _event_progress_snapshot(self):
+        """Deep copy of event_progress: per-player entries are nested dicts, so a shallow
+        `dict()` copy would alias them and make before/after deltas always empty."""
+        return copy.deepcopy(self.event_progress) if isinstance(self.event_progress, dict) else self.event_progress
+
     def _event_progress_delta(self, before, after):
         """What a single card play's own _track_event_progress call(s) changed, as a small
-        delta descriptor -- or None if nothing changed (no active mission, trigger type didn't
-        match, event already settled, etc.) or either snapshot isn't a dict.
+        per-player delta descriptor -- or None if nothing changed (no active mission, trigger
+        type didn't match, event already settled, etc.) or either snapshot isn't a dict.
 
         Deliberately delta-based, not an absolute before/after pair: see the long comment on
         `rollback_event_progress_delta` in `_dissolve_cancel_kwargs` for why an absolute
@@ -368,17 +374,16 @@ class CardPlayMixin:
         """
         if not isinstance(before, dict) or not isinstance(after, dict) or before == after:
             return None
-        count_delta = int(after.get('count', 0) or 0) - int(before.get('count', 0) or 0)
-        added_completed_player_ids = []
-        if isinstance(after.get('completed_player_ids'), list):
-            before_ids = set(before.get('completed_player_ids') or [])
-            after_ids = set(after.get('completed_player_ids') or [])
-            added_completed_player_ids = sorted(after_ids - before_ids)
-        if not count_delta and not added_completed_player_ids:
+        before_players = before.get('player_progress') or {}
+        player_deltas = {}
+        for player_id, entry in (after.get('player_progress') or {}).items():
+            count_delta = int(entry.get('count', 0) or 0) - int((before_players.get(player_id) or {}).get('count', 0) or 0)
+            if count_delta:
+                player_deltas[player_id] = count_delta
+        if not player_deltas:
             return None
         return {
-            'count_delta': count_delta,
-            'added_completed_player_ids': added_completed_player_ids,
+            'player_count_deltas': player_deltas,
             # Identifies THIS play's own entry in event_progress['_actor_contributions'] (see
             # Game._track_event_progress) so _undo_event_progress_delta can pop exactly that
             # entry by token -- not by value/position -- and re-derive last_actor_id/name/token
@@ -397,33 +402,25 @@ class CardPlayMixin:
         """Reverse exactly what one card play's `_event_progress_delta` recorded, against the
         CURRENT live `self.event_progress` -- not by overwriting it with an absolute snapshot,
         so any OTHER still-live interleaved cancellable play's own independent contribution is
-        left untouched. `succeeded`/`status` are pure functions of count vs. required (mirroring
-        `_track_event_progress`'s own derivation), so they're recomputed from the adjusted count
-        rather than separately tracked; `event_notification` is regenerated the same way
-        `_track_event_progress` itself does, from the corrected `event_progress`.
+        left untouched. Each player's `met` flag is a pure function of that player's own count
+        vs. their required count (mirroring `_track_event_progress`'s own derivation), so it is
+        recomputed from the adjusted count rather than separately tracked; the aggregate
+        summary and `event_notification` are regenerated the same way `_track_event_progress`
+        itself does, from the corrected `event_progress`.
         """
         if not isinstance(delta, dict):
             return
         progress = self.event_progress
-        if not isinstance(progress, dict) or progress.get('settled'):
+        if not isinstance(progress, dict) or progress.get('settled') or progress.get('settlement_started'):
             return
-        added_ids = delta.get('added_completed_player_ids') or []
-        if added_ids and isinstance(progress.get('completed_player_ids'), list):
-            removed = set(added_ids)
-            progress['completed_player_ids'] = [
-                pid for pid in progress['completed_player_ids'] if pid not in removed
-            ]
-            # each_non_red_player mode derives count directly from this list's length.
-            progress['count'] = len(progress['completed_player_ids'])
-        else:
-            count_delta = int(delta.get('count_delta', 0) or 0)
-            if count_delta:
-                progress['count'] = max(0, int(progress.get('count', 0) or 0) - count_delta)
-        required = int(progress.get('required', 0) or 0)
-        if required > 0:
-            now_succeeded = int(progress.get('count', 0) or 0) >= required
-            progress['succeeded'] = now_succeeded
-            progress['status'] = 'success_pending' if now_succeeded else 'active'
+        entries = progress.get('player_progress') or {}
+        for player_id, count_delta in (delta.get('player_count_deltas') or {}).items():
+            entry = entries.get(player_id)
+            if entry is None:
+                continue
+            entry['count'] = max(0, int(entry.get('count', 0) or 0) - int(count_delta or 0))
+            entry['met'] = entry['count'] >= int(entry.get('required', 1) or 1)
+        self._refresh_event_progress_summary()
         # Remove exactly THIS play's own entry from the ordered "still-live contributors" stack
         # (by token, not by value/position), then re-derive last_actor_id/name/token from
         # whatever is now the most recent SURVIVING contribution. NOT a "restore my own
@@ -793,7 +790,7 @@ class CardPlayMixin:
                 pending = self._prompt_end_turn_topdeck_action_if_available()
                 if pending and pending.get('pending_choice'):
                     return {'success': True, 'topdecked_card': getattr(chosen, 'name', str(chosen)), 'pending_choice': True}
-                self._end_turn()
+                self._conclude_action_phase()
             return {'success': True, 'topdecked_card': getattr(chosen, 'name', str(chosen))}
 
         if choice_key == 'guess_ability_bottom_card':
@@ -965,25 +962,12 @@ class CardPlayMixin:
                 player.deck.discard([card])
             if choice.get('grant_propaganda_if_all_non_starter') and len(non_starters) == len(selected_cards):
                 player.resources['propaganda'] += int(choice.get('grant_propaganda_if_all_non_starter'))
-            context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
             self.pending_choice = None
             chosen_names = [getattr(card, 'name', str(card)) for card in selected_cards]
             self.log(
                 f"{player.name} discarded {len(selected_cards)} chosen card(s): {', '.join(chosen_names)} "
                 f"(hand {len(player.hand)}, deck {len(player.deck.draw_pile)}, discard {len(player.deck.discard_pile)})"
             )
-            remaining_event_targets = list(context.get('remaining_event_discard_self_player_ids') or [])
-            if choice_key == 'event_discard_self' and remaining_event_targets:
-                followup = self._open_next_event_discard_self_choice(
-                    remaining_event_targets,
-                    int(context.get('event_discard_self_count', 1) or 1),
-                    context.get('event_discard_self_outcome') or 'failure',
-                    open_hk_relocation=bool(context.get('open_hk_free_base_relocation_after_resolution')),
-                )
-                if followup and followup.get('pending_choice'):
-                    return {'success': True, 'chosen_cards': chosen_names, 'pending_choice': True}
-            if context.get('open_hk_free_base_relocation_after_resolution'):
-                self._open_hong_kong_base_relocation_window()
             return {'success': True, 'chosen_cards': chosen_names}
 
         if choice_key in {'armed_target_discard', 'era_bonus_discard_on_red_card'}:
@@ -1331,26 +1315,6 @@ class CardPlayMixin:
         if choice_key == 'event_build_organization':
             self._place_organization(player, town)
             self.log(f"{player.name} built organization in {town} via event")
-            context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
-            remaining_event_players = list(context.get('remaining_event_build_near_own_player_ids') or [])
-            if remaining_event_players:
-                self.pending_choice = None
-                followup = self._open_next_event_build_near_own_choice(
-                    remaining_event_players,
-                    context.get('event_build_near_own_effect') or {},
-                    int(context.get('event_build_near_own_count', 1) or 1),
-                    event_name=context.get('event_name') or choice.get('source_name'),
-                )
-                response = {
-                    'success': True,
-                    'choice_index': index,
-                    'town': town,
-                    'selected': selected,
-                    'choice_key': choice_key,
-                }
-                if followup and followup.get('pending_choice'):
-                    response['pending_choice'] = True
-                return response
         elif choice_key == 'card_build_organization':
             remaining_before = self._remaining_card_build_entitlements()
             self._place_organization(player, town)
@@ -2726,9 +2690,7 @@ class CardPlayMixin:
                     'borrowed_purchase_area_index': action_context.get('borrowed_purchase_area_index'),
                     'event_progress': action_context.get('prior_event_progress'),
                     'event_notification': action_context.get('prior_event_notification'),
-                    'event_progress_after': (
-                        dict(self.event_progress) if isinstance(self.event_progress, dict) else self.event_progress
-                    ),
+                    'event_progress_after': self._event_progress_snapshot(),
                 }
                 pending_destination.update(self._dissolve_cancel_kwargs(pending_context))
             if not action_context.get('removed_current_card'):
@@ -3512,7 +3474,7 @@ class CardPlayMixin:
             'prior_played_nonstarter_names': list(self.turn_log.get('played_nonstarter_names', [])),
             'borrowed_owner_id': getattr(played_card, '_return_to_owner_topdeck', None),
             'borrowed_purchase_area_index': getattr(played_card, '_return_to_purchase_area_index', None),
-            'prior_event_progress': dict(self.event_progress) if isinstance(self.event_progress, dict) else self.event_progress,
+            'prior_event_progress': self._event_progress_snapshot(),
             'prior_event_notification': dict(self.event_notification) if isinstance(self.event_notification, dict) else self.event_notification,
             'used_faction_ability_names': (
                 ['國際線'] if international_line_used else []
@@ -3613,7 +3575,7 @@ class CardPlayMixin:
             # _event_progress_delta(event_progress, event_progress_after) sees exactly what
             # THIS play's own _track_event_progress call(s) changed (see _dissolve_cancel_kwargs).
             action_context['_dissolve_cancel_snapshot']['event_progress_after'] = (
-                dict(self.event_progress) if isinstance(self.event_progress, dict) else self.event_progress
+                self._event_progress_snapshot()
             )
             # A support card counts toward 展現實力's played-card combo on the act of
             # playing (even if a reaction later cancels it), exactly like a command card,
@@ -3651,7 +3613,7 @@ class CardPlayMixin:
                 self._track_event_progress('play_card_with_propaganda', player=player)
             # See the matching capture in the support branch above -- same reasoning.
             action_context['_dissolve_cancel_snapshot']['event_progress_after'] = (
-                dict(self.event_progress) if isinstance(self.event_progress, dict) else self.event_progress
+                self._event_progress_snapshot()
             )
         # (support cards already recorded their own name above; this covers every other path)
         if effective_type != 'support' and card_name not in {"追隨者", "樂捐者"}:

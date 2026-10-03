@@ -57,11 +57,13 @@ def test_result_text_no_event():
 
 def test_result_text_mission_statuses():
     event = {'type': 'mission'}
-    assert event_result_text(event, {'status': 'success_pending'}) == '非紅軍任務條件已達成，等待全體玩家行動結束後結算'
-    assert event_result_text(event, {'status': 'success'}) == '非紅軍任務成功'
-    assert event_result_text(event, {'status': 'failure'}) == '非紅軍任務失敗，紅軍效果生效'
-    assert event_result_text(event, {'status': 'active'}) == '非紅軍任務進行中'
-    assert event_result_text(event, {}) == '非紅軍任務進行中'
+    assert event_result_text(event, {'status': 'success_pending'}) == '所有非紅軍玩家已達成條件；將於紅軍回合結束時個別結算'
+    assert event_result_text(event, {'status': 'settling'}) == '紅軍回合結束：正在逐一結算每位非紅軍玩家的成功／失敗效果'
+    assert event_result_text(event, {'status': 'success'}) == '所有非紅軍玩家任務成功'
+    assert event_result_text(event, {'status': 'mixed'}) == '各玩家個別結算：部分成功、部分失敗'
+    assert event_result_text(event, {'status': 'failure'}) == '所有非紅軍玩家任務失敗，紅軍效果生效'
+    assert event_result_text(event, {'status': 'active'}) == '非紅軍任務進行中：每位玩家個別判定，紅軍回合結束時結算'
+    assert event_result_text(event, {}) == '非紅軍任務進行中：每位玩家個別判定，紅軍回合結束時結算'
 
 
 def test_result_text_non_mission_statuses():
@@ -142,7 +144,7 @@ def test_display_payload_assembles_all_text_fields():
     assert payload['id'] == 'e1'
     assert payload['name'] == '測試事件'
     assert payload['status'] == 'success'
-    assert payload['result_text'] == '非紅軍任務成功'
+    assert payload['result_text'] == '所有非紅軍玩家任務成功'
     assert payload['trigger_text'] == event_condition_text(event['trigger'])
     assert payload['success_text'] == event_effect_text(event['success'], default_actor='非紅軍')
     assert payload['failure_text'] == '無'

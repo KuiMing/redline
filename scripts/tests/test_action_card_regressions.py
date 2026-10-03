@@ -28,6 +28,9 @@ def make_game():
     g.current_player_index = 0
     g.pending_base_choices = {}
     g.players[0].faction_id = 'red_army'
+    # Game() assigns the other seat a random faction; mission events are per non-Red player, so
+    # pin it (it must not be 'red_army') to keep every event-progress assertion deterministic.
+    g.players[1].faction_id = 'liberals'
     return pin_noop_event(g)
 
 
@@ -2765,8 +2768,9 @@ def test_reactively_played_reaction_card_counts_toward_its_own_cost_based_event_
     canceled = g.resolve_pending_choice(reactor.id, 1)
 
     assert canceled.get('success'), canceled
-    assert g.event_progress['succeeded'] is True
-    assert g.event_progress['count'] >= 1
+    # Per-player task: only the player who spent the reaction card (the reactor) progresses.
+    assert g.event_progress['player_progress'][reactor.id]['met'] is True
+    assert g.event_progress['player_progress'][actor.id]['met'] is False
 
 
 def test_reactively_played_reaction_card_counting_is_unaffected_by_being_counter_canceled():
@@ -2802,7 +2806,7 @@ def test_reactively_played_reaction_card_counting_is_unaffected_by_being_counter
     assert g.pending_choice is None
     assert names(c.hand) == ['爆料黑幕']
 
-    assert g.event_progress['succeeded'] is True
+    assert g.event_progress['player_progress'][b.id]['met'] is True
 
 
 def test_canceled_red_army_action_still_counts_as_used_this_turn():
@@ -3566,9 +3570,7 @@ def test_standard_draw_effect_card_logs_the_specific_drawn_card_name():
 
 def pin_active_mission_event(g, event_name):
     g.current_event = dict(g._event_by_name(event_name))
-    trigger = g.current_event.get('trigger') or {}
-    required = int(trigger.get('count', 0) or 0)
-    g.event_progress = {'count': 0, 'required': required, 'succeeded': False, 'settled': False, 'status': 'active'}
+    g.event_progress = g._new_event_progress(g.current_event)
     g.event_modifiers = []
     g.pending_choice = None
     return g
@@ -3591,8 +3593,9 @@ def test_beijing_power_struggle_progresses_on_ordinary_draw_effect_card():
     result = g.play_card(0, mode='action')
 
     assert result.get('success'), result
-    assert g.event_progress['succeeded'] is True
-    assert g.event_progress['status'] == 'success_pending'
+    # Missions are tracked per non-Red player: the actor's own draw progresses the actor only.
+    assert g.event_progress['player_progress'][actor.id]['met'] is True
+    assert g.event_progress['player_progress'][g.players[1].id]['met'] is False
 
 
 def test_beijing_power_struggle_progresses_on_shared_draw_effect_card():
@@ -4035,7 +4038,7 @@ def test_urumqi_state_trigger_settles_after_red_army_turn_not_before():
     assert g.advance_turn_phase() == {'success': True}   # 結束行動階段 -> _end_turn -> Red Army seat
     assert g.current_player() is red
     assert not (g.event_progress or {}).get('settled')
-    assert (g.event_progress or {}).get('settlement_target_player_id') == b.id
+    assert not (g.event_progress or {}).get('settlement_started')
 
     # Red Army dissolves the inside-the-wall org on its own turn; then the round wraps.
     b.organizations = {}
@@ -4066,12 +4069,10 @@ def test_urumqi_state_trigger_succeeds_when_org_survives_full_round():
     assert b.organizations.get(inner, 0) == 1            # owning org preserved through the round
 
 
-def test_count_based_mission_still_settles_at_final_non_red_turn():
-    """Guardrail for the 烏魯木齊 fix: it must move ONLY end_turn_state settlement. A
-    count-based mission (北京政爭, trigger {"type": "draw"}) must still settle at the final
-    non-red turn — i.e. right after the last non-red player's END, BEFORE Red Army's own
-    turn — exactly as before. Same [non-red, Red-last] seating as the urumqi tests so the
-    contrast is apples-to-apples: urumqi is unsettled at this point, this one is settled."""
+def test_count_based_mission_also_settles_only_when_red_army_turn_ends():
+    """Every mission event (count based or state based) is judged per non-red player when the
+    Red Army turn ends -- never at a non-red player's own turn end. Same [non-red, Red-last]
+    seating as the urumqi tests."""
     g = Game([('p1', 'P1'), ('p2', 'P2')])
     g.game_phase = GamePhase.MAIN
     g.pending_base_choices = {}
@@ -4082,10 +4083,8 @@ def test_count_based_mission_still_settles_at_final_non_red_turn():
     b.hand = [Card('追隨者', 'propaganda', {'propaganda': 1}) for _ in range(5)]
     red.hand = [Card('追隨者', 'propaganda', {'propaganda': 1}) for _ in range(3)]
     pin_active_mission_event(g, '北京政爭')
-    g.event_progress['count'] = 1
-    g.event_progress['succeeded'] = True
-    g.event_progress['status'] = 'success_pending'
-    g.event_progress['last_actor_id'] = b.id
+    g._track_event_progress('draw', player=b)
+    assert g.event_progress['player_progress'][b.id]['met'] is True
     g.turn = 5
     g.current_player_index = 0
     g.round_start_player_index = 0
@@ -4093,7 +4092,10 @@ def test_count_based_mission_still_settles_at_final_non_red_turn():
 
     assert g.advance_turn_phase() == {'success': True}   # 結束行動階段 -> _end_turn -> Red Army seat
     assert g.current_player() is red
-    # Count-based trigger is settled BEFORE Red Army's turn, unchanged by the fix.
-    assert (g.event_progress or {}).get('settled') is True
-    assert (g.event_progress or {}).get('status') == 'success'
+    # Not settled before Red Army's own turn is over, even though b already met the condition.
+    assert not (g.event_progress or {}).get('settled')
+    assert not any('北京政爭' in line and 'success resolved' in line for line in g.action_log)
+
+    g.turn_phase = TurnPhase.ACTION
+    assert g.advance_turn_phase() == {'success': True}   # Red Army turn ends -> settle -> wrap
     assert any('北京政爭' in line and 'success resolved' in line for line in g.action_log)

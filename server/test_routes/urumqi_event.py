@@ -57,13 +57,7 @@ class UrumqiEventTestRoutes:
         game.turn_phase = TurnPhase.ACTION
         event = game._event_by_name("烏魯木齊七五事件")
         game.current_event = event
-        game.event_progress = {
-            "count": 0,
-            "required": int((event or {}).get("trigger", {}).get("count", 1) or 1),
-            "succeeded": False,
-            "settled": False,
-            "status": "active",
-        }
+        game.event_progress = game._new_event_progress(event)
         game.event_notification = game._event_display_payload()
         game.event_deck.draw_pile = []
         game.event_deck.discard_pile = []

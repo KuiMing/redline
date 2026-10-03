@@ -87,7 +87,7 @@ def test_urumqi_event_default_state_settles_and_lobby_registration():
     assert game.turn_phase == TurnPhase.ACTION
     assert game.current_event["name"] == "烏魯木齊七五事件"
     assert game.event_progress["status"] == "active"
-    assert game.event_progress["settlement_target_player_id"] == viewer.id
+    assert not game.event_progress.get("settlement_started")
     assert game.event_notification is not None
     assert game.event_deck.draw_pile == []
     assert game.event_deck.discard_pile == []
@@ -110,14 +110,10 @@ def test_urumqi_event_settle_false_leaves_progress_without_settlement_target():
     )
     game = runtime.manager.games[result["game_id"]]
 
-    assert "settlement_target_player_id" not in game.event_progress
-    assert game.event_progress == {
-        "count": 0,
-        "required": 1,
-        "succeeded": False,
-        "settled": False,
-        "status": "active",
-    }
+    progress = game.event_progress
+    assert (progress["count"], progress["required"]) == (0, 1)
+    assert (progress["succeeded"], progress["settled"], progress["status"]) == (False, False, "active")
+    assert [entry["met"] for entry in progress["player_progress"].values()] == [False]
 
 
 def test_urumqi_event_multi_qualifier_opens_first_players_build_choice():
@@ -133,7 +129,7 @@ def test_urumqi_event_multi_qualifier_opens_first_players_build_choice():
     assert game.event_progress["qualified_player_ids"] == [viewer.id, ally.id]
     assert game.pending_choice["player_id"] == viewer.id
     assert game.pending_choice["choice_key"] == "event_build_organization"
-    assert game.pending_choice["context"]["remaining_event_build_near_own_player_ids"] == [ally.id]
+    assert [item["player_id"] for item in game.event_progress["settlement_queue"]] == [ally.id]
     assert red.id not in game.event_progress["qualified_player_ids"]
 
 

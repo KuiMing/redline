@@ -57,14 +57,29 @@ def test_national_people_congress_requires_every_non_red_player_once():
     assert set(game.event_progress['completed_player_ids']) == {ben.id, other.id}
 
 
-def test_national_people_congress_fails_when_one_non_red_player_did_not_trigger():
+def test_national_people_congress_judges_each_non_red_player_individually():
     game, ben, other, red = _national_people_congress_game()
+    other_hand_before = len(other.hand)
 
     game._track_event_progress('use_faction_ability', player=other)
     settlement = game._settle_current_event()
 
-    assert ben.id not in game.event_progress['completed_player_ids']
-    assert game.event_progress['status'] == 'failure'
+    # `other` triggered an ability -> own success (draws 1); ben did not -> own failure.
+    assert game.event_progress['player_progress'][other.id]['result'] == 'success'
+    assert game.event_progress['player_progress'][ben.id]['result'] == 'failure'
+    # Results are applied one player at a time in seat order: ben's pending decision holds
+    # other's reward in the queue.
+    assert len(other.hand) == other_hand_before
     assert settlement.get('pending_choice') is True
     assert game.pending_choice['player_id'] == red.id
     assert game.pending_choice['choice_key'] == 'event_red_dissolve'
+    # Red only dissolves the failed player's own organizations (never the successful one's).
+    assert {target['player_id'] for target in game.pending_choice['targets']} == {ben.id}
+
+    resolved = game.resolve_pending_choice(red.id, 0)
+
+    assert resolved.get('success') is True
+    assert len(other.hand) == other_hand_before + 1
+    assert game.event_progress['settled'] is True
+    assert game.event_progress['status'] == 'mixed'
+    assert other.organizations == {'香港城': 1}

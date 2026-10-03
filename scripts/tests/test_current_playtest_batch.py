@@ -58,20 +58,22 @@ def test_elite_defection_failure_after_refill_discards_exactly_one_named_card():
     red.hand = [Card(f'紅軍手牌{i}', 'command', {}) for i in range(5)]
 
     game.current_event = game._event_by_name('紅軍權貴出逃')
-    game.event_progress = {
-        'count': 0,
-        'required': 3,
-        'succeeded': False,
-        'settled': False,
-        'status': 'active',
-        'last_actor_id': host.id,
-    }
+    game.event_progress = game._new_event_progress(game.current_event)
 
+    # host's own turn end refills the hand but must NOT settle the mission.
     result = game.advance_turn_phase()
-    assert result.get('pending_choice') is True
+    assert result == {'success': True}
+    assert game.current_player() is red
+    assert not game.event_progress['settled']
     assert len(host.hand) == 5
     assert len(host.deck.draw_pile) == 8
     assert host.deck.discard_pile == []
+
+    # The Red Army turn end judges host individually: condition unmet -> discard 1 chosen card.
+    game.turn_phase = TurnPhase.ACTION
+    result = game.advance_turn_phase()
+    assert result.get('pending_choice') is True
+    assert game.pending_choice['player_id'] == host.id
     donor_index = next(i for i, card in enumerate(game.pending_choice['cards']) if card is selected_donor)
 
     resolved = game.resolve_pending_choice(host.id, [donor_index])
