@@ -11,10 +11,13 @@ WORKDIR /app
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev
 
-# 只複製執行期真正需要的東西：server/（遊戲邏輯與 WebSocket/API）、static/
-# （前端與地圖 UI，含 app.mount("/static", ...)）、data/（卡牌／城鎮／陣營／地圖資料）。
+# 只複製執行期真正需要的東西：server/（遊戲邏輯與 WebSocket/API）、
+# red_army_policy/（程式化紅軍 AI）、mcp_server/（AI 共用的合法行動摘要）、
+# static/（前端與地圖 UI，含 app.mount("/static", ...)）、data/（卡牌／城鎮／陣營／地圖資料）。
 # scripts/、docs/、sketches/ 是開發與驗證用（見 README.md「資料夾結構」），不需要進 image。
 COPY server/ ./server/
+COPY red_army_policy/ ./red_army_policy/
+COPY mcp_server/ ./mcp_server/
 COPY static/ ./static/
 COPY data/ ./data/
 
