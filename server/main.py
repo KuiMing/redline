@@ -45,7 +45,7 @@ from server.map_data_routes import (
     map_test,
     router as map_data_router,
 )
-from server.red_army_ai_runtime import maybe_run_red_army_turn
+from server.red_army_ai_runtime import drive_red_army_turns
 from server.test_routes.registry import register_test_routes
 from server.test_routes.runtime import GameSetupRuntime
 import os
@@ -93,8 +93,11 @@ async def broadcast_game_state(game_id, game, last_action_result=None):
     # AI's move; `maybe_run_red_army_turn` returns False once there is
     # nothing further to do right now, which bounds this recursion to
     # exactly as many rounds as the AI actually played.
-    if maybe_run_red_army_turn(game_id, game):
+    # Paced one action at a time (fixed delay between actions, non-blocking).
+    async def _rebroadcast():
         await broadcast_game_state(game_id, game)
+
+    await drive_red_army_turns(game_id, game, _rebroadcast)
 
 
 def schedule_reaction_timeout(game_id, game):
