@@ -189,7 +189,7 @@ class Game(CardPlayMixin):
         self.ai_red_army_status = {"state": "idle"}
         # 香港 special_rules（2026-07-11 裁決 S5-1）：香港抗暴之戰結算後、下一回合開始前的免費根據地遷移窗口
         self.hk_free_base_relocation = False
-        # 事件於紅軍回合結束結算後，先凍結換人；香港完成「遷移／留在」後才交棒。
+        # 事件於整輪結束結算後，先凍結換人；香港完成「遷移／留在」後才交棒。
         self.hk_relocation_blocks_turn_handoff = False
         # 紅軍回合結束後觸發互動式時代關卡時，先讓紅軍完成該關卡，再將席位交給下一位。
         self.era_blocks_turn_handoff = False
@@ -1027,8 +1027,8 @@ class Game(CardPlayMixin):
 
     # Turn/phase lifecycle cluster — see _start_event_phase's comment above.
     # Mission settlement state machine. Every mission event is judged per non-Red player when
-    # the Red Army turn ends (so Red Army's own actions in the window can still change a
-    # player's progress). `_begin_event_settlement` locks progress and queues one
+    # the round that follows its reveal is complete (every seat has acted exactly once, so
+    # Red Army's own actions in the window can still change a player's progress). `_begin_event_settlement` locks progress and queues one
     # {player_id, outcome} item per non-Red player in seat order; `_continue_event_settlement`
     # applies that queue one player at a time and is re-entrant: an outcome that needs a
     # decision leaves `pending_choice` set and the remaining items stay queued until the
@@ -1044,14 +1044,13 @@ class Game(CardPlayMixin):
             or progress.get('settlement_started')
         ):
             return False
-        player = self.current_player()
-        if getattr(player, 'faction_id', None) == 'red_army':
-            return True
-        if self._red_player() is None:
-            # No Red Army seat to wait for (bare test setups): fall back to the round wrap.
-            next_index = (self.current_player_index + 1) % len(self.players)
-            return next_index == getattr(self, 'round_start_player_index', 0)
-        return False
+        # The window is the whole round that follows the reveal: it closes only when the last
+        # seat of the round (the seat right before round_start_player_index) finishes, wherever
+        # Red Army sits. That is the same authoritative boundary as the round wrap.
+        if not self.players:
+            return False
+        next_index = (self.current_player_index + 1) % len(self.players)
+        return next_index == (getattr(self, 'round_start_player_index', 0) or 0)
 
     def _begin_event_settlement(self):
         event = self.current_event or {}
@@ -1089,7 +1088,7 @@ class Game(CardPlayMixin):
         progress['status'] = 'settling'
         self._refresh_event_progress_summary()
         self.log(
-            f"事件結算（紅軍回合結束）：{event.get('name')}｜成功：{'、'.join(succeeded_names) or '無'}｜"
+            f"事件結算（整輪結束）：{event.get('name')}｜成功：{'、'.join(succeeded_names) or '無'}｜"
             f"失敗：{'、'.join(failed_names) or '無'}"
         )
         self.event_notification = self._event_display_payload()
@@ -1922,9 +1921,18 @@ class Game(CardPlayMixin):
 
         if not self.pending_base_choices:
             self.game_phase = GamePhase.MAIN
+            # Initialization boundary: BASE_SELECTION has no turns played, so opening the round here
+            # never resets a game in progress.
+            self.open_round_after_red()
             if self.turn_phase == TurnPhase.ACTION and not self.current_event:
                 self._start_event_phase()
         return {"success": True}
+
+    def open_round_after_red(self):
+        """Red acts last: the round opens at the seat right after Red (wrapping). Call only when setup completes."""
+        red_index = next((i for i, p in enumerate(self.players) if p.faction_id == 'red_army'), None)
+        start = 0 if red_index is None else (red_index + 1) % len(self.players)
+        self.current_player_index = self.round_start_player_index = start
 
     def _assign_starting_bases(self):
         pending = self._compute_pending_base_choices()
@@ -3144,7 +3152,7 @@ class Game(CardPlayMixin):
     # Turn/phase lifecycle cluster — see _start_event_phase's comment above.
     def _finish_action_phase(self):
         """結束目前玩家的行動階段：清空待用的頂牌權利、補手牌到5張／補滿購買區、
-        （紅軍回合結束時）逐一結算每位非紅軍玩家的任務事件結果、時代關卡 tick、
+        （整輪最後一席結束時）逐一結算每位非紅軍玩家的任務事件結果、時代關卡 tick、
         把席位交給下一位玩家。呼叫前 self.turn_phase 必須已經是 TurnPhase.END。
         正常完成回傳 {"success": True}；卡在必要決定（個人事件結算選擇／香港根據地
         遷移）時回傳帶 pending_choice / pending_hk_relocation 的 dict，此時席位
@@ -3161,10 +3169,11 @@ class Game(CardPlayMixin):
         return self._conclude_action_phase()
 
     def _conclude_action_phase(self):
-        # Mission events are per-player tasks judged once, when the Red Army turn ends: Red
-        # Army's own actions in the window can still progress (e.g. 盟旗學校 triggered by a
+        # Mission events are per-player tasks judged once, when the last seat of the round
+        # finishes (every player, Red Army included, has acted exactly once since the reveal).
+        # Red Army's actions in the window can still progress (e.g. 盟旗學校 triggered by a
         # dissolve) or invalidate a non-Red player's condition, so no earlier boundary may
-        # settle them. Settlement runs after the Red Army refill and before era detection.
+        # settle them. Settlement runs after that seat's refill and before the round wrap.
         self._end_turn(settle_event=self._is_event_settlement_boundary())
         return self._turn_end_result()
 
@@ -3219,7 +3228,7 @@ class Game(CardPlayMixin):
         self._continue_era_activation_queue()
 
         if settle_event and self._begin_event_settlement():
-            # 事件任務按每位非紅軍玩家個別判定，統一在紅軍回合結束時結算；任何個人結果
+            # 事件任務按每位非紅軍玩家個別判定，統一在整輪最後一席結束時結算；任何個人結果
             # 需要決定時，其餘玩家的結果留在佇列中依序處理，全部完成後才繼續換人。
             self._turn_end_after_settlement = {'advance_player': bool(advance_player)}
             self._continue_pending_turn_end()

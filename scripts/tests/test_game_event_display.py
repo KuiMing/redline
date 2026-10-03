@@ -57,13 +57,13 @@ def test_result_text_no_event():
 
 def test_result_text_mission_statuses():
     event = {'type': 'mission'}
-    assert event_result_text(event, {'status': 'success_pending'}) == '所有非紅軍玩家已達成條件；將於紅軍回合結束時個別結算'
-    assert event_result_text(event, {'status': 'settling'}) == '紅軍回合結束：正在逐一結算每位非紅軍玩家的成功／失敗效果'
+    assert event_result_text(event, {'status': 'success_pending'}) == '所有非紅軍玩家已達成條件；將於整輪結束時個別結算'
+    assert event_result_text(event, {'status': 'settling'}) == '整輪結束：正在逐一結算每位非紅軍玩家的成功／失敗效果'
     assert event_result_text(event, {'status': 'success'}) == '所有非紅軍玩家任務成功'
     assert event_result_text(event, {'status': 'mixed'}) == '各玩家個別結算：部分成功、部分失敗'
     assert event_result_text(event, {'status': 'failure'}) == '所有非紅軍玩家任務失敗，紅軍效果生效'
-    assert event_result_text(event, {'status': 'active'}) == '非紅軍任務進行中：每位玩家個別判定，紅軍回合結束時結算'
-    assert event_result_text(event, {}) == '非紅軍任務進行中：每位玩家個別判定，紅軍回合結束時結算'
+    assert event_result_text(event, {'status': 'active'}) == '非紅軍任務進行中：每位玩家個別判定，整輪結束時結算'
+    assert event_result_text(event, {}) == '非紅軍任務進行中：每位玩家個別判定，整輪結束時結算'
 
 
 def test_result_text_non_mission_statuses():

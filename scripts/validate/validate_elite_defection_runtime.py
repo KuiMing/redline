@@ -68,7 +68,7 @@ def main():
         'details': {'turn_phase': game.turn_phase.value, 'event': game.current_event.get('name') if game.current_event else None},
     })
 
-    # 事件任務按每位非紅軍玩家個別判定，統一在紅軍回合結束時結算；viewer 自己結束回合只補牌、不結算。
+    # 事件任務按每位非紅軍玩家個別判定，統一在整輪最後一席（此處為紅軍）結束時結算；viewer 自己結束回合只補牌、不結算。
     progress = game.event_progress
     result = assert_ok(game.advance_turn_phase(), 'viewer end of turn: refill only')
     checks.append({
@@ -83,7 +83,7 @@ def main():
         'details': {'result': result, 'current_player': game.current_player().name, 'viewer_hand': names(viewer.hand), 'event_progress': progress},
     })
 
-    # 紅軍回合結束 -> 逐位結算：viewer 未達成（沒有 3 次遷移）-> 自己選 1 張手牌棄掉。
+    # 整輪最後一席結束 -> 逐位結算：viewer 未達成（沒有 3 次遷移）-> 自己選 1 張手牌棄掉。
     result = assert_ok(game.advance_turn_phase(), 'red end of turn: settle viewer individually')
     choice = game.state().get('pending_choice') or {}
     checks.append({

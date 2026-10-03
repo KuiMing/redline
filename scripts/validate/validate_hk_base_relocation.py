@@ -100,12 +100,12 @@ def case_turn_handoff_waits_for_hong_kong_decision():
     g.current_event = g._event_by_name('香港抗暴之戰')
     g.event_progress = g._new_event_progress(g.current_event)
     g._track_event_progress('play_card_with_money', player=hk)  # HK meets its own condition
-    # 每位非紅軍玩家個別判定，統一在紅軍回合結束時結算：香港自己結束回合不會結算。
+    # 每位非紅軍玩家個別判定，統一在整輪最後一席（此處為紅軍）結束時結算：香港自己結束回合不會結算。
     g.turn_phase = TurnPhase.END
     hk_end = g.advance_turn_phase()
     not_settled_at_hk_end = hk_end == {'success': True} and not g.event_progress['settled'] and g.current_player() is red
     g.turn_phase = TurnPhase.END
-    ended = g.advance_turn_phase()  # 紅軍回合結束 -> 結算 -> 香港遷移窗口
+    ended = g.advance_turn_phase()  # 整輪最後一席結束 -> 結算 -> 香港遷移窗口
     waits_for_decision = (
         ended.get('pending_hk_relocation') is True
         and g.current_player() is red

@@ -1,13 +1,14 @@
 # Event outcome timing audit
 
-每張任務事件卡（含副本）逐位非紅軍玩家驗證：個別追蹤、個別成功／失敗效果、紅軍回合結束才結算、
+每張任務事件卡（含副本）逐位非紅軍玩家驗證：個別追蹤、個別成功／失敗效果、整輪結束（每位玩家各行動一次）才結算、
 多人 pending choice 依序處理。座位：Ben(澳門) → Angie(蒙古) → Cy(自由派) → Red(紅軍)。
 
 - events: `14`
-- total: `95`
-- passed: `95`
+- total: `97`
+- passed: `97`
 - failed: `0`
 
+- ✅ runtime mission definitions equal the fixed oracle (all cards)
 - ✅ 全國人大召開 success only for Ben, failure for the others
 - ✅ 全國人大召開 Ben and Angie succeed, Cy fails
 - ✅ 全國人大召開 Angie and Cy succeed, Ben fails
@@ -67,7 +68,7 @@
 - ✅ 烏魯木齊七五事件 every non-Red player succeeds
 - ✅ 烏魯木齊七五事件 every non-Red player fails
 - ✅ 烏魯木齊七五事件 red actions never progress a non-Red player
-- ✅ 烏魯木齊七五事件 Red turn dissolve flips only that player to failure
+- ✅ 烏魯木齊七五事件 in-round Red dissolve flips only that player to failure
 - ✅ 重大災難（副本） success only for Ben, failure for the others
 - ✅ 重大災難（副本） Ben and Angie succeed, Cy fails
 - ✅ 重大災難（副本） Angie and Cy succeed, Ben fails
@@ -103,3 +104,4 @@
 - ✅ 紅軍權貴出逃（副本） every non-Red player succeeds
 - ✅ 紅軍權貴出逃（副本） every non-Red player fails
 - ✅ 紅軍權貴出逃（副本） red actions never progress a non-Red player
+- ✅ [Ben, Red, Angie] runs Angie -> Ben -> Red and settles only after Red (Angie acts before judgement)
