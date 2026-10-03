@@ -21,6 +21,7 @@ from server.faction_presentation import (
 )
 from server.game import Game, GamePhase, STATIC_PURCHASE_CARD_SUPPLY, TurnPhase
 from server.game_manager import manager
+from server.red_army_ai_runtime import forget_game
 
 router = APIRouter()
 
@@ -350,6 +351,7 @@ def start_game(payload: dict):
         if game.turn_phase in {TurnPhase.EVENT, TurnPhase.ACTION} and not game.current_event:
             game._start_event_phase()
 
+    forget_game(game_id)  # no stale AI pacing state for a fresh game
     manager.games[game_id] = game
     manager.connections.setdefault(game_id, {})
 

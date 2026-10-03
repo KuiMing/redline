@@ -73,6 +73,14 @@ _LAST_SUCCESS: dict[str, float] = {}
 # game_id -> currently inside a run_red_army_turn() call for that game.
 _RUNNING: set[str] = set()
 
+
+def forget_game(game_id: str) -> None:
+    """Drop all per-game pacing state (game finished / room torn down)."""
+    _LAST_SUCCESS.pop(game_id, None)
+    _DRIVING.discard(game_id)
+    _RUNNING.discard(game_id)
+
+
 _STALLED_STATUSES = {
     "blocked_fingerprint_loop",
     "blocked_retry_exhausted",
@@ -97,6 +105,7 @@ def maybe_run_red_army_turn(
     # directly via the str mixin, so this also works against a plain string
     # double used by a test fixture that doesn't import GamePhase at all.
     if getattr(game, "game_phase", None) == "finished":
+        _LAST_SUCCESS.pop(game_id, None)
         return False
 
     if game_id in _RUNNING:
@@ -195,13 +204,25 @@ async def drive_red_army_turns(
                 continue
             if not advanced:
                 break
-            status = (game.ai_red_army_status or {}).get("last_run_status")
-            if status == "action_limit":
-                _LAST_SUCCESS[game_id] = now()
-            elif status == "game_over":
+            # The authoritative phase decides "finished": a final action hits
+            # max_successful_actions=1 and reports action_limit, not game_over.
+            if getattr(game, "game_phase", None) == "finished":
+                game.ai_red_army_status = {
+                    "state": "finished",
+                    "last_run_status": "game_over",
+                    "steps_taken": (game.ai_red_army_status or {}).get("steps_taken", 0),
+                }
                 _LAST_SUCCESS.pop(game_id, None)
+                await on_advance()
+                break
+            status = (game.ai_red_army_status or {}).get("last_run_status")
             await on_advance()
-            if status != "action_limit":
+            if status == "action_limit":
+                # Observable-time baseline: starts once the broadcast is done.
+                _LAST_SUCCESS[game_id] = now()
+            else:
+                if status == "game_over":
+                    _LAST_SUCCESS.pop(game_id, None)
                 break
     finally:
         _DRIVING.discard(game_id)

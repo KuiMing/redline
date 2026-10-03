@@ -310,7 +310,7 @@ class _Clock:
         return self.t
 
 
-def _drive(monkeypatch, game, script, clock=None, game_id="pace-x"):
+def _drive(monkeypatch, game, script, clock=None, game_id="pace-x", broadcast_seconds=0.0):
     """Run drive_red_army_turns against a scripted policy. Each script item is
     "ok" (successful action), "reject" (only a rejected attempt), or a status
     string for a no-submit outcome. Every would-be submission goes through the
@@ -321,7 +321,7 @@ def _drive(monkeypatch, game, script, clock=None, game_id="pace-x"):
 
     def fake_run(g, pid, max_successful_actions=None, pre_submit=None):
         item = script.pop(0)
-        if item in ("ok", "reject"):
+        if item in ("ok", "reject", "final"):
             try:
                 if pre_submit:
                     pre_submit()
@@ -331,6 +331,8 @@ def _drive(monkeypatch, game, script, clock=None, game_id="pace-x"):
             if item == "reject":
                 return _Result("blocked_retry_exhausted", 1)
             submits.append(clock())
+            if item == "final":
+                g.game_phase = GamePhase.FINISHED
             return _Result("action_limit")
         return _Result(item, 0)
 
@@ -341,7 +343,8 @@ def _drive(monkeypatch, game, script, clock=None, game_id="pace-x"):
         clock.t += seconds
 
     async def on_advance():
-        broadcasts.append(1)
+        broadcasts.append(clock())
+        clock.t += broadcast_seconds
 
     game, _, _ = game
     asyncio.run(red_army_ai_runtime.drive_red_army_turns(
@@ -474,3 +477,34 @@ def test_drive_does_not_start_a_second_loop_while_one_is_in_flight(monkeypatch):
 
     asyncio.run(red_army_ai_runtime.drive_red_army_turns("pace-x", game, on_advance))
     assert ran == []
+
+
+def test_cooldown_starts_after_broadcast_completes(monkeypatch):
+    clock = _Clock()
+    sleeps, broadcasts, submits = _drive(
+        monkeypatch, _new_ai_red_vs_taiwan_game(), ["ok", "ok", "waiting_turn"],
+        clock=clock, broadcast_seconds=4.0,
+    )
+    # Broadcast took 4s (> 3s delay) but the next action still waits a full 3s
+    # after that broadcast finished.
+    assert sleeps == [3.0]
+    broadcast_done = broadcasts[0] + 4.0
+    assert submits[1] - broadcast_done >= 3.0
+
+
+def test_final_action_marks_finished_and_clears_pacing_state(monkeypatch):
+    game_tuple = _new_ai_red_vs_taiwan_game()
+    game = game_tuple[0]
+    sleeps, broadcasts, submits = _drive(monkeypatch, game_tuple, ["ok", "final"])
+    assert len(submits) == 2
+    assert game.game_phase == GamePhase.FINISHED
+    assert game.ai_red_army_status["state"] == "finished"
+    assert game.ai_red_army_status["last_run_status"] == "game_over"
+    assert "pace-x" not in red_army_ai_runtime._LAST_SUCCESS
+    assert len(broadcasts) == 2
+
+
+def test_forget_game_clears_pacing_state():
+    red_army_ai_runtime._LAST_SUCCESS["g1"] = 1.0
+    red_army_ai_runtime.forget_game("g1")
+    assert "g1" not in red_army_ai_runtime._LAST_SUCCESS
