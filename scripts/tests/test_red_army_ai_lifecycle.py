@@ -69,11 +69,13 @@ def _new_ai_red_vs_taiwan_game():
 def _clean_running_set(monkeypatch):
     _RUNNING.clear()
     red_army_ai_runtime._DRIVING.clear()
+    red_army_ai_runtime._LAST_SUCCESS.clear()
     # Never really wait between AI actions in tests.
     monkeypatch.setattr(red_army_ai_runtime, "AI_ACTION_DELAY_SECONDS", 0.0)
     yield
     _RUNNING.clear()
     red_army_ai_runtime._DRIVING.clear()
+    red_army_ai_runtime._LAST_SUCCESS.clear()
 
 
 # ---------- Red Army's turn is handled automatically ----------
@@ -300,27 +302,52 @@ class _Result:
         self.steps_taken = steps_taken
 
 
-def _drive(monkeypatch, game, results, pending):
-    """Run drive_red_army_turns against scripted run results; `pending` is
-    the has_pending_action() answer sequence consulted after each advance."""
-    results = list(results)
-    pending = list(pending)
-    sleeps, broadcasts = [], []
+class _Clock:
+    def __init__(self):
+        self.t = 100.0
 
-    monkeypatch.setattr(red_army_ai_runtime, "run_red_army_turn", lambda g, pid, **kw: results.pop(0))
-    monkeypatch.setattr(red_army_ai_runtime, "has_pending_action", lambda g, pid: pending.pop(0))
+    def __call__(self):
+        return self.t
+
+
+def _drive(monkeypatch, game, script, clock=None, game_id="pace-x"):
+    """Run drive_red_army_turns against a scripted policy. Each script item is
+    "ok" (successful action), "reject" (only a rejected attempt), or a status
+    string for a no-submit outcome. Every would-be submission goes through the
+    real pre_submit gate; fake sleep advances the fake clock."""
+    script = list(script)
+    clock = clock or _Clock()
+    sleeps, broadcasts, submits = [], [], []
+
+    def fake_run(g, pid, max_successful_actions=None, pre_submit=None):
+        item = script.pop(0)
+        if item in ("ok", "reject"):
+            try:
+                if pre_submit:
+                    pre_submit()
+            except red_army_ai_runtime.SubmitDeferred:
+                script.insert(0, item)
+                return _Result("submit_deferred", 0)
+            if item == "reject":
+                return _Result("blocked_retry_exhausted", 1)
+            submits.append(clock())
+            return _Result("action_limit")
+        return _Result(item, 0)
+
+    monkeypatch.setattr(red_army_ai_runtime, "run_red_army_turn", fake_run)
 
     async def fake_sleep(seconds):
         sleeps.append(seconds)
+        clock.t += seconds
 
     async def on_advance():
         broadcasts.append(1)
 
     game, _, _ = game
     asyncio.run(red_army_ai_runtime.drive_red_army_turns(
-        "pace-x", game, on_advance, delay_seconds=3.0, sleep=fake_sleep,
+        game_id, game, on_advance, delay_seconds=3.0, sleep=fake_sleep, clock=clock,
     ))
-    return sleeps, broadcasts
+    return sleeps, broadcasts, submits
 
 
 def test_default_action_delay_is_three_seconds():
@@ -332,33 +359,82 @@ def test_default_action_delay_is_three_seconds():
         importlib.reload(red_army_ai_runtime)
 
 
-def test_delay_once_between_two_successful_actions_and_none_after_the_last(monkeypatch):
-    sleeps, broadcasts = _drive(
-        monkeypatch, _new_ai_red_vs_taiwan_game(),
-        results=[_Result("action_limit"), _Result("action_limit")],
-        pending=[True, False],  # more to do after action 1; nothing after action 2
+def test_two_successful_actions_are_at_least_three_seconds_apart(monkeypatch):
+    sleeps, broadcasts, submits = _drive(
+        monkeypatch, _new_ai_red_vs_taiwan_game(), ["ok", "ok", "waiting_turn"],
     )
     assert sleeps == [3.0]
+    assert submits[1] - submits[0] >= 3.0
     assert len(broadcasts) == 2
 
 
-def test_no_delay_when_turn_ends_or_ai_waits_for_other_player(monkeypatch):
-    sleeps, broadcasts = _drive(
-        monkeypatch, _new_ai_red_vs_taiwan_game(),
-        results=[_Result("waiting_turn")],  # action(s) done, then turn passed on
-        pending=[],
+def test_no_sleep_after_the_last_successful_action(monkeypatch):
+    sleeps, broadcasts, submits = _drive(
+        monkeypatch, _new_ai_red_vs_taiwan_game(), ["ok", "waiting_turn"],
     )
     assert sleeps == []
-    assert len(broadcasts) == 1
+    assert len(submits) == 1 and len(broadcasts) == 1
+
+
+def test_no_delay_when_ai_waits_for_other_player(monkeypatch):
+    sleeps, broadcasts, _ = _drive(
+        monkeypatch, _new_ai_red_vs_taiwan_game(), ["waiting_other_pending"],
+    )
+    assert sleeps == [] and broadcasts == []
+
+
+def test_human_reaction_within_cooldown_waits_only_the_remainder(monkeypatch):
+    game = _new_ai_red_vs_taiwan_game()
+    clock = _Clock()
+    _, _, s1 = _drive(monkeypatch, game, ["ok", "waiting_other_pending"], clock=clock)
+    assert red_army_ai_runtime._DRIVING == set()  # driver exited, human reacts
+    clock.t += 1.0  # human answered after 1s
+    sleeps, _, s2 = _drive(monkeypatch, game, ["ok", "waiting_turn"], clock=clock)
+    assert sleeps == [pytest.approx(2.0)]
+    assert s2[0] - s1[0] >= 3.0
+
+
+def test_human_reaction_over_cooldown_does_not_wait(monkeypatch):
+    game = _new_ai_red_vs_taiwan_game()
+    clock = _Clock()
+    _drive(monkeypatch, game, ["ok", "waiting_other_pending"], clock=clock)
+    clock.t += 3.5
+    sleeps, _, submits = _drive(monkeypatch, game, ["ok", "waiting_turn"], clock=clock)
+    assert sleeps == []
+    assert len(submits) == 1
+
+
+def test_rejected_attempt_does_not_reset_or_trigger_cooldown(monkeypatch):
+    game = _new_ai_red_vs_taiwan_game()
+    clock = _Clock()
+    _drive(monkeypatch, game, ["ok", "waiting_other_pending"], clock=clock)
+    first = red_army_ai_runtime._LAST_SUCCESS["pace-x"]
+    clock.t += 3.5
+    sleeps, _, submits = _drive(monkeypatch, game, ["reject"], clock=clock)
+    assert sleeps == []
+    assert submits == []
+    assert red_army_ai_runtime._LAST_SUCCESS["pace-x"] == first
 
 
 def test_stalled_run_does_not_sleep_or_loop(monkeypatch):
-    sleeps, _ = _drive(
-        monkeypatch, _new_ai_red_vs_taiwan_game(),
-        results=[_Result("blocked_retry_exhausted", steps_taken=3)],
-        pending=[],
-    )
+    sleeps, _, _ = _drive(monkeypatch, _new_ai_red_vs_taiwan_game(), ["reject"])
     assert sleeps == []
+
+
+def test_policy_pre_submit_deferral_submits_nothing():
+    from red_army_policy import policy
+
+    game, red, other = _new_ai_red_vs_taiwan_game()
+    before = game.state(red.id).get("turn_phase")
+
+    def gate():
+        raise policy.SubmitDeferred()
+
+    result = policy.run_red_army_turn(game, red.id, max_successful_actions=1, pre_submit=gate)
+    if result.status != "waiting_turn":
+        assert result.status == "submit_deferred"
+        assert result.steps_taken == 0
+        assert game.state(red.id).get("turn_phase") == before
 
 
 def test_rejected_submission_does_not_count_as_an_action_or_add_delay(monkeypatch):

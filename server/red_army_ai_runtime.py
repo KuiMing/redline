@@ -49,10 +49,11 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from typing import Any, Awaitable, Callable
 
 from red_army_policy import run_red_army_turn
-from red_army_policy.policy import has_pending_action
+from red_army_policy.policy import SubmitDeferred
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +65,11 @@ AI_ACTION_DELAY_SECONDS = 3.0
 # across awaits so a human event arriving mid-delay can't start a second one.
 _DRIVING: set[str] = set()
 
+# game_id -> clock() reading at the last *successful* AI action. Survives the
+# driver exiting (e.g. while a human reacts) so any later wake-up still honours
+# the remaining cooldown. Rejected attempts never touch it.
+_LAST_SUCCESS: dict[str, float] = {}
+
 # game_id -> currently inside a run_red_army_turn() call for that game.
 _RUNNING: set[str] = set()
 
@@ -74,7 +80,9 @@ _STALLED_STATUSES = {
 }
 
 
-def maybe_run_red_army_turn(game_id: str, game: Any, max_actions: int | None = None) -> bool:
+def maybe_run_red_army_turn(
+    game_id: str, game: Any, max_actions: int | None = None, pre_submit: Any = None,
+) -> bool:
     """Drive the AI Red Army forward as far as it can go right now, if at
     all. Returns True iff it actually attempted at least one decision this
     call (i.e. the caller should re-broadcast the resulting state) — False
@@ -98,10 +106,12 @@ def maybe_run_red_army_turn(game_id: str, game: Any, max_actions: int | None = N
 
     _RUNNING.add(game_id)
     try:
-        if max_actions is None:
+        if max_actions is None and pre_submit is None:
             result = run_red_army_turn(game, ai_player_id)
         else:
-            result = run_red_army_turn(game, ai_player_id, max_successful_actions=max_actions)
+            result = run_red_army_turn(
+                game, ai_player_id, max_successful_actions=max_actions, pre_submit=pre_submit,
+            )
     except Exception as exc:  # pragma: no cover - defensive isolation path
         logger.exception("Red Army AI runner crashed for game %s", game_id)
         game.ai_red_army_status = {
@@ -111,6 +121,10 @@ def maybe_run_red_army_turn(game_id: str, game: Any, max_actions: int | None = N
         return False
     finally:
         _RUNNING.discard(game_id)
+
+    if result.status == "submit_deferred":
+        # Stopped before submitting (cooldown); nothing happened, keep status.
+        return False
 
     if result.status in _STALLED_STATUSES:
         game.ai_red_army_status = {
@@ -141,26 +155,53 @@ async def drive_red_army_turns(
     *,
     delay_seconds: float | None = None,
     sleep: Callable[[float], Awaitable[Any]] | None = None,
+    clock: Callable[[], float] | None = None,
 ) -> None:
-    """Play the AI one successful action at a time: after each, `on_advance`
-    (broadcast), then — only if the AI has a further action to take — wait
-    `delay_seconds` without blocking the event loop. No delay after the last
-    action, after a rejected attempt (retries stay inside one run), or while
-    waiting on another player. Rules/legality stay in the policy and Game.
+    """Play the AI one successful action at a time, `on_advance` (broadcast)
+    after each, keeping >= `delay_seconds` between successful actions.
+
+    Cooldown semantics: the deadline is `_LAST_SUCCESS[game_id] + delay`,
+    checked by the policy immediately before every submission. If it hasn't
+    passed, nothing is submitted; we `await sleep(remaining)` (non-blocking)
+    and re-run against fresh state. So the wait is never taken speculatively:
+    after the last action, at turn end, or while waiting on another player
+    there is no sleep and the driver exits. Time a human spends reacting
+    counts toward the cooldown; rejected retries neither wait nor reset it.
+    Rules/legality stay in the policy and Game.
     """
     if game_id in _DRIVING:
         return
     delay = AI_ACTION_DELAY_SECONDS if delay_seconds is None else delay_seconds
     sleeper = sleep or asyncio.sleep
-    ai_player_id = getattr(game, "ai_red_army_player_id", None)
+    now = clock or time.monotonic
+    remaining: list[float] = []
+
+    def _gate() -> None:
+        last = _LAST_SUCCESS.get(game_id)
+        if last is None:
+            return
+        wait = last + delay - now()
+        if wait > 0:
+            remaining.append(wait)
+            raise SubmitDeferred()
+
     _DRIVING.add(game_id)
     try:
-        while maybe_run_red_army_turn(game_id, game, max_actions=1):
+        while True:
+            remaining.clear()
+            advanced = maybe_run_red_army_turn(game_id, game, max_actions=1, pre_submit=_gate)
+            if remaining:
+                await sleeper(remaining[0])
+                continue
+            if not advanced:
+                break
+            status = (game.ai_red_army_status or {}).get("last_run_status")
+            if status == "action_limit":
+                _LAST_SUCCESS[game_id] = now()
+            elif status == "game_over":
+                _LAST_SUCCESS.pop(game_id, None)
             await on_advance()
-            if (game.ai_red_army_status or {}).get("last_run_status") != "action_limit":
+            if status != "action_limit":
                 break
-            if not has_pending_action(game, ai_player_id):
-                break
-            await sleeper(delay)
     finally:
         _DRIVING.discard(game_id)

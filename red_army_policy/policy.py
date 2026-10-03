@@ -110,7 +110,7 @@ def _build_action_phase_decision_record(state: dict, decision_point: str, scored
     }
 
 
-def _resolve_pending_choice_step(game: Any, player_id: str, state: dict, config: PolicyConfig) -> StepResult:
+def _resolve_pending_choice_step(game: Any, player_id: str, state: dict, config: PolicyConfig, pre_submit: Any = None) -> StepResult:
     pending = state.get("pending_choice") or {}
     assessment = assess(state, player_id)
     submission = select_pending_choice_submission(pending, assessment)
@@ -137,9 +137,20 @@ def _resolve_pending_choice_step(game: Any, player_id: str, state: dict, config:
         "chosen_reason": submission.get("reason"),
         "tie_breaker_used": False,
     }
-    result = action_submitter.submit(game, player_id, action)
+    result = _submit(game, player_id, action, pre_submit)
     decision["submit_result"] = result
     return StepResult("decision_made", decision, result, state=state)
+
+
+class SubmitDeferred(Exception):
+    """Raised by a `pre_submit` hook to stop *before* anything is submitted
+    (pacing). The run returns `RunResult("submit_deferred", ...)`."""
+
+
+def _submit(game: Any, player_id: str, action: dict, pre_submit: Any) -> Any:
+    if pre_submit is not None:
+        pre_submit()
+    return action_submitter.submit(game, player_id, action)
 
 
 def step(
@@ -150,6 +161,7 @@ def step(
     faction_catalog: dict | None = None,
     card_catalog: dict | None = None,
     excluded_signatures: set | None = None,
+    pre_submit: Any = None,
 ) -> StepResult:
     config = config or PolicyConfig()
     state = game.state(player_id)
@@ -166,7 +178,7 @@ def step(
     if pending:
         if pending.get("player_id") != player_id:
             return StepResult("waiting_other_pending", state=state)
-        return _resolve_pending_choice_step(game, player_id, state, config)
+        return _resolve_pending_choice_step(game, player_id, state, config, pre_submit)
 
     me = _find_player(state, player_id)
     current_player_name = state.get("current_player")
@@ -193,7 +205,7 @@ def step(
             "chosen_reason": "event phase only ever offers advance_turn",
             "tie_breaker_used": False,
         }
-        result = action_submitter.submit(game, player_id, action)
+        result = _submit(game, player_id, action, pre_submit)
         decision["submit_result"] = result
         return StepResult(
             "decision_made", decision, result, state=state, legal=legal,
@@ -214,37 +226,13 @@ def step(
     action = dict(chosen.action)
     action.update(chosen.submit_overrides)
     decision = _build_action_phase_decision_record(state, "action_phase_choice", scored, chosen, tie, config)
-    result = action_submitter.submit(game, player_id, action)
+    result = _submit(game, player_id, action, pre_submit)
     decision["submit_result"] = result
     decision["chosen_submitted_action"] = action
     return StepResult(
         "decision_made", decision, result, state=state, legal=legal,
         attempted_signature=candidate_signature(action),
     )
-
-
-def has_pending_action(
-    game: Any,
-    player_id: str,
-    *,
-    faction_catalog: dict | None = None,
-    card_catalog: dict | None = None,
-) -> bool:
-    """Read-only check: would `step()` have something to act on right now?
-    Mirrors step()'s gating without submitting anything, so a pacing caller
-    can decide whether a delay before the next action is worth waiting for.
-    """
-    state = game.state(player_id)
-    if state.get("game_phase") == "finished":
-        return False
-    pending = state.get("pending_choice")
-    if pending:
-        return pending.get("player_id") == player_id
-    me = _find_player(state, player_id)
-    if me is None or me.get("name") != state.get("current_player"):
-        return False
-    legal = generate_candidates(state, player_id, faction_catalog=faction_catalog, card_catalog=card_catalog)
-    return not legal.get("waiting_on") and bool(legal.get("actions"))
 
 
 _TERMINAL_STATUSES = {"game_over", "waiting_other_pending", "waiting_turn", "no_legal_actions"}
@@ -258,6 +246,7 @@ def run_red_army_turn(
     faction_catalog: dict | None = None,
     card_catalog: dict | None = None,
     max_successful_actions: int | None = None,
+    pre_submit: Any = None,
 ) -> RunResult:
     """Drive the Red Army policy forward until control must return to a
     human, the AI is blocked on another player's pending choice/reaction,
@@ -296,6 +285,10 @@ def run_red_army_turn(
     `max_successful_actions` (pacing hook): once that many submissions have
     succeeded, return `RunResult("action_limit", ...)` so an async caller can
     broadcast and pause between actions. Rejected submissions don't count.
+
+    `pre_submit` is called right before every submission (including retries);
+    if it raises `SubmitDeferred` nothing is submitted and the run returns
+    `RunResult("submit_deferred", ...)`.
     """
     config = config or PolicyConfig()
     decisions: list[dict[str, Any]] = []
@@ -306,10 +299,13 @@ def run_red_army_turn(
     successful_actions = 0
 
     for _ in range(config.max_steps):
-        result = step(
-            game, player_id, config=config, faction_catalog=faction_catalog, card_catalog=card_catalog,
-            excluded_signatures=excluded_signatures,
-        )
+        try:
+            result = step(
+                game, player_id, config=config, faction_catalog=faction_catalog, card_catalog=card_catalog,
+                excluded_signatures=excluded_signatures, pre_submit=pre_submit,
+            )
+        except SubmitDeferred:
+            return RunResult("submit_deferred", decisions, len(decisions))
 
         if result.status in _TERMINAL_STATUSES:
             return RunResult(result.status, decisions, len(decisions))
