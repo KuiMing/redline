@@ -123,13 +123,15 @@ function deriveLobbyHint(lobbyRes) {
   const players = lobbyRes?.players || [];
   const chosen = lobbyRes?.factions || {};
   const ready = lobbyRes?.ready || {};
+  const aiRedArmy = !!lobbyRes?.ai_red_army;
   const everyoneChose = players.length > 0 && Object.keys(chosen).length === players.length;
   const everyoneReady = players.length > 0 && players.every(([pid]) => ready[pid]);
-  const hasRedArmy = Object.values(chosen).includes('red_army');
+  const hasRedArmy = aiRedArmy || Object.values(chosen).includes('red_army');
   if (everyoneChose && everyoneReady && !hasRedArmy) return '房間必須有一名紅軍玩家，才能啟動行動。';
   if (everyoneChose && everyoneReady) return '所有玩家已準備；房主可以啟動行動。';
   if (everyoneChose) return '玩家陣營已選定；等待所有玩家按下準備。';
-  return `已進入 ${players.length}/4 人作戰室；等待玩家選擇陣營。`;
+  const capacity = aiRedArmy ? 3 : 4;
+  return `已進入 ${players.length}/${capacity} 人作戰室；等待玩家選擇陣營。`;
 }
 
 function renderLobbyRoster(lobbyRes, statusText = null) {
@@ -167,17 +169,31 @@ function renderLobbyRoster(lobbyRes, statusText = null) {
       </div>`;
   }).join('');
 
-  const emptySlots = Math.max(0, 4 - players.length);
+  const aiRedArmy = !!lobbyRes.ai_red_army;
+  // The AI seat shows only a fixed, non-personal label — never any other
+  // player's hand/pending-choice/private state (nothing from `players`/
+  // `chosen`/`bases` for a human is read here at all).
+  const aiSeatCard = aiRedArmy ? `
+    <div class="lobby-player-card ai-seat">
+      <div class="lobby-player-avatar">AI</div>
+      <div>
+        <strong>AI 紅軍</strong>
+        <span>電腦代打｜無需真人加入</span>
+      </div>
+    </div>` : '';
+
+  const roomCapacity = aiRedArmy ? 3 : 4;
+  const emptySlots = Math.max(0, roomCapacity - players.length);
   const emptyCards = Array.from({length: emptySlots}).map((_, idx) => `
     <div class="lobby-player-card empty">
       <div class="lobby-player-avatar">+</div>
       <div>
         <strong>${idx === 0 ? '等待玩家加入' : '空席位'}</strong>
-        <span>${idx === 0 ? '分享房間代碼邀請下一位玩家' : '最多 4 位玩家'}</span>
+        <span>${idx === 0 ? '分享房間代碼邀請下一位玩家' : `最多 ${roomCapacity} 位玩家`}</span>
       </div>
     </div>`).join('');
 
-  roster.innerHTML = cards + emptyCards;
+  roster.innerHTML = cards + aiSeatCard + emptyCards;
   updateLobbyActionControls(lobbyRes);
   if (hint) {
     if (statusText) lobbyTransientStatus = statusText;
@@ -194,11 +210,14 @@ function lobbyReadiness(lobbyRes = latestLobbyState) {
   const isHost = hasRoom && lobbyRes?.host_id === playerId;
   const meChose = !!chosen[playerId];
   const meReady = !!ready[playerId];
-  const enoughPlayers = players.length >= 2;
+  const aiRedArmy = !!lobbyRes?.ai_red_army;
+  // With AI Red Army on, the 4th (AI) seat is never a human join — a single
+  // human plus the AI is already a complete, startable game.
+  const enoughPlayers = players.length >= (aiRedArmy ? 1 : 2);
   const everyoneChose = enoughPlayers && Object.keys(chosen).length === players.length;
   const everyoneReady = enoughPlayers && players.every(([pid]) => ready[pid]);
-  const hasRedArmy = Object.values(chosen).includes('red_army');
-  return {players, chosen, ready, hasRoom, isHost, meChose, meReady, enoughPlayers, everyoneChose, everyoneReady, hasRedArmy};
+  const hasRedArmy = aiRedArmy || Object.values(chosen).includes('red_army');
+  return {players, chosen, ready, hasRoom, isHost, meChose, meReady, aiRedArmy, enoughPlayers, everyoneChose, everyoneReady, hasRedArmy};
 }
 
 function updateLobbyActionControls(lobbyRes = latestLobbyState) {
@@ -208,7 +227,7 @@ function updateLobbyActionControls(lobbyRes = latestLobbyState) {
   const status = lobbyReadiness(lobbyRes);
   const marketMode = lobbyRes?.market_mode || document.getElementById('marketModeSelect')?.value || 'sample_53';
   applyMarketMode(marketMode);
-  document.querySelectorAll('.lobby-market-option').forEach(button => {
+  document.querySelectorAll('[data-market-mode]').forEach(button => {
     button.disabled = !status.isHost;
     button.setAttribute('aria-disabled', String(!status.isHost));
     const cardCounts = button.dataset.cardCounts || '';
@@ -218,6 +237,25 @@ function updateLobbyActionControls(lobbyRes = latestLobbyState) {
         ? ' 只有房主可以切換遊戲難易度。'
         : ' 建立房間後，只有房主可以切換遊戲難易度。';
     button.dataset.tooltip = `${cardCounts}${hostNote}`.trim();
+  });
+
+  const gameStarted = !!lobbyRes?.started;
+  applyAiRedArmy(status.aiRedArmy);
+  document.querySelectorAll('[data-ai-red-army]').forEach(button => {
+    const locked = !status.isHost || gameStarted;
+    button.disabled = locked;
+    button.setAttribute('aria-disabled', String(locked));
+    const baseTip = button.dataset.aiRedArmy === 'on'
+      ? '紅軍席位改由電腦（決定性規則引擎）自動操作，不需要真人加入。'
+      : '由一位玩家在作戰室中選擇紅軍陣營並親自操作。';
+    const note = gameStarted
+      ? ' 作戰已啟動，無法變更。'
+      : status.isHost
+        ? ''
+        : status.hasRoom
+          ? ' 只有房主可以切換。'
+          : ' 建立房間後，只有房主可以切換。';
+    button.dataset.tooltip = `${baseTip}${note}`.trim();
   });
 
   if (factionPickerBtn) {
@@ -323,9 +361,52 @@ function syncLobbyRoomCode() {
 function applyMarketMode(mode) {
   const select = document.getElementById('marketModeSelect');
   if (select) select.value = mode;
-  document.querySelectorAll('.lobby-market-option').forEach(btn => {
+  // Scoped to [data-market-mode] (not the shared .lobby-market-option
+  // class) so this never touches the AI Red Army toggle buttons, which
+  // reuse the same visual class but carry [data-ai-red-army] instead.
+  document.querySelectorAll('[data-market-mode]').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.marketMode === mode);
   });
+}
+
+function applyAiRedArmy(enabled) {
+  const select = document.getElementById('aiRedArmySelect');
+  if (select) select.value = enabled ? 'on' : 'off';
+  document.querySelectorAll('[data-ai-red-army]').forEach(btn => {
+    btn.classList.toggle('active', (btn.dataset.aiRedArmy === 'on') === !!enabled);
+  });
+  const hint = document.getElementById('aiRedArmyHint');
+  if (hint) {
+    hint.textContent = enabled
+      ? 'AI 紅軍已啟用：紅軍席位改由電腦自動操作，不需要真人加入；啟動行動後無法變更。'
+      : '紅軍席位需要一位玩家親自選擇並操作；房主可以切換改由 AI 代打。';
+  }
+}
+
+async function setAiRedArmy(enabled) {
+  const status = lobbyReadiness();
+  if (!status.hasRoom) {
+    updateLobbyStatus('請先建立作戰室。');
+    return;
+  }
+  if (!status.isHost) {
+    updateLobbyStatus('只有房主可以切換 AI 紅軍。');
+    updateLobbyActionControls();
+    return;
+  }
+  const res = await fetch('/ai-red-army', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({game_id: gameId, player_id: playerId, enabled: !!enabled}),
+  });
+  const data = await res.json();
+  if (data.error) {
+    updateLobbyStatus(data.error === 'Only host can change AI Red Army setting' ? '只有房主可以切換 AI 紅軍。' : playerMessageZhTw(data.error));
+    await refreshLobbyState();
+    return;
+  }
+  applyAiRedArmy(!!data.ai_red_army);
+  await refreshLobbyState(data.ai_red_army ? 'AI 紅軍已啟用：紅軍席位改由電腦自動操作。' : 'AI 紅軍已關閉：紅軍席位需由玩家親自選擇。');
 }
 
 async function setMarketMode(mode) {
@@ -610,6 +691,7 @@ async function createRoom() {
   }
   const marketSelect = document.getElementById('marketModeSelect');
   if (marketSelect) applyMarketMode('sample_53');
+  applyAiRedArmy(false);
   lobbyTransientStatus = '作戰室已建立；請選擇陣營，或分享房間代碼。';
   await loadFactions();
   startLobbySync();
@@ -1309,15 +1391,19 @@ async function renderFactionPicker() {
       .map(([, fid]) => factionCategoryOf(fid))
   );
 
+  const aiRedArmyEnabled = !!lobbyRes.ai_red_army;
   availableFactionCategories.forEach(category => {
     const btn = document.createElement('button');
     const isSelectedCategory = activeChoice && factionCategoryOf(activeChoice) === category.id;
+    const blockedByAi = aiRedArmyEnabled && category.id === 'red_army';
     btn.className = `faction-choice-btn faction-primary-btn${isSelectedCategory ? ' active' : ''}`;
     btn.textContent = category.label;
-    btn.disabled = takenCategories.has(category.id) || (!!requiredFaction && category.id !== factionCategoryOf(requiredFaction));
-    btn.title = requiredFaction && category.id !== factionCategoryOf(requiredFaction)
-      ? '房間尚無紅軍；最後一個席位只能選擇紅軍'
-      : '';
+    btn.disabled = takenCategories.has(category.id) || (!!requiredFaction && category.id !== factionCategoryOf(requiredFaction)) || blockedByAi;
+    btn.title = blockedByAi
+      ? 'AI 紅軍已啟用，紅軍席位由電腦控制，玩家不可選擇'
+      : requiredFaction && category.id !== factionCategoryOf(requiredFaction)
+        ? '房間尚無紅軍；最後一個席位只能選擇紅軍'
+        : '';
     btn.onclick = async () => {
       pendingFactionCategory = category;
       pendingFactionChoice = category.mode === 'direct' ? category.options[0].id : null;

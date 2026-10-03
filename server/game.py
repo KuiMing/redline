@@ -182,6 +182,11 @@ class Game(CardPlayMixin):
         self.turn_phase = TurnPhase.ACTION
         self.winner = None
         self.co_winners = []
+        # 紅軍席位由 red_army_policy 引擎代打時，lobby /start 會在建構後設定這兩個
+        # 欄位（player_id + 一個供前端顯示、AI runtime 寫入的狀態小物件）。預設為
+        # None／idle：真人紅軍場次完全不受影響。見 server/red_army_ai_runtime.py。
+        self.ai_red_army_player_id = None
+        self.ai_red_army_status = {"state": "idle"}
         # 香港 special_rules（2026-07-11 裁決 S5-1）：香港抗暴之戰結算後、下一回合開始前的免費根據地遷移窗口
         self.hk_free_base_relocation = False
         # 事件在回合結束補牌後結算時，先凍結換人；香港完成「遷移／留在」後才交棒。
@@ -4477,7 +4482,19 @@ class Game(CardPlayMixin):
                 "discard_pile": [getattr(card, 'name', str(card)) for card in p.deck.discard_pile] if p.deck else [],
                 "discard_variants": [self._support_card_variant_info(card) for card in p.deck.discard_pile] if p.deck else [],
                 "organization_counts": self._player_organization_scope_counts(p),
-                "orgs": p.organizations
+                "orgs": p.organizations,
+                # 2026-10-02 (programmed Red Army AI, plan section 1c/10): victory-
+                # proximity math must never be independently re-derived off-server
+                # (same principle as legality) — these two were already computed
+                # authoritatively by VictoryEngine (server/victory.py) for
+                # co_winners()/evaluate() but never exposed on state() before now.
+                # condition_progress is 0.0 for red_army itself (its own
+                # win_conditions are "default_survival"/"taiwan_override", neither
+                # of which condition_progress()'s best=max loop counts) — use
+                # taiwan_organization_count vs the rules.md "14 效組織" threshold
+                # for red army's own progress instead.
+                "condition_progress": self.victory_engine.condition_progress(p, self),
+                "taiwan_organization_count": self.victory_engine._count_taiwan_orgs(p, self),
             }
             for p in self.players
         ]
@@ -4504,6 +4521,11 @@ class Game(CardPlayMixin):
             "turn_phase": self.turn_phase,
             "winner": self.winner,
             "co_winners": list(getattr(self, 'co_winners', []) or []),
+            "ai_red_army": {
+                "enabled": bool(getattr(self, "ai_red_army_player_id", None)),
+                "player_id": getattr(self, "ai_red_army_player_id", None),
+                "status": dict(getattr(self, "ai_red_army_status", None) or {"state": "idle"}),
+            },
             "hk_free_base_relocation": bool(getattr(self, 'hk_free_base_relocation', False)),
             "current_player": self.current_player().name,
             "active_eras": self.era_engine.get_active_eras() if self.era_engine else [],

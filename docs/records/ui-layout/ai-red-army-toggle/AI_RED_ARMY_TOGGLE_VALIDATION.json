@@ -1,0 +1,231 @@
+{
+  "summary": {
+    "total": 10,
+    "passed": 10,
+    "failed": 0
+  },
+  "service": "http://127.0.0.1:8768",
+  "scenario": "房主 + 訪客 lobby（toggle 權限/同步）；單人房主 + AI 紅軍（實際開局與 AI 行動證明）",
+  "checks": [
+    {
+      "name": "toggle_disabled_before_room_exists",
+      "passed": true,
+      "details": {
+        "disabled": [
+          true,
+          true
+        ],
+        "labels": [
+          "真人紅軍",
+          "AI 紅軍"
+        ]
+      }
+    },
+    {
+      "name": "toggle_enabled_for_host_after_room_created_defaults_off",
+      "passed": true,
+      "details": {
+        "disabled": [
+          false,
+          false
+        ],
+        "active": "off"
+      }
+    },
+    {
+      "name": "toggle_disabled_read_only_for_guest",
+      "passed": true,
+      "details": {
+        "disabled": [
+          true,
+          true
+        ],
+        "tooltip": "紅軍席位改由電腦（決定性規則引擎）自動操作，不需要真人加入。 只有房主可以切換。"
+      }
+    },
+    {
+      "name": "server_rejects_guest_attempt_to_change_toggle",
+      "passed": true,
+      "details": {
+        "status": 200,
+        "body": {
+          "error": "Only host can change AI Red Army setting"
+        }
+      }
+    },
+    {
+      "name": "host_choice_syncs_to_server_and_guest_tab",
+      "passed": true,
+      "details": {
+        "serverValue": true,
+        "guestActiveButton": "on"
+      }
+    },
+    {
+      "name": "red_army_not_offered_as_a_joinable_faction_while_ai_is_on",
+      "passed": true,
+      "details": {
+        "found": true,
+        "disabled": true,
+        "title": "AI 紅軍已啟用，紅軍席位由電腦控制，玩家不可選擇"
+      }
+    },
+    {
+      "name": "ai_red_army_field_does_not_overlap_the_bottom_action_bar",
+      "passed": true,
+      "details": {
+        "ok": true,
+        "fieldRect": {
+          "top": 498.375,
+          "bottom": 592.0625
+        },
+        "actionsRect": {
+          "top": 614,
+          "bottom": 662
+        }
+      }
+    },
+    {
+      "name": "game_started_with_ai_red_army_on_and_no_human_in_that_seat",
+      "passed": true,
+      "details": {
+        "note": "room had exactly one human player (the host) for the whole lobby/start flow; red_army was never offered/chosen by a human — see red_army_not_offered_as_a_joinable_faction_while_ai_is_on above for the same server-side guarantee in this exact room."
+      }
+    },
+    {
+      "name": "real_ai_action_genuinely_advanced_authoritative_state",
+      "passed": true,
+      "details": {
+        "ai_steps_taken": 9,
+        "ai_status": {
+          "state": "idle",
+          "last_run_status": "waiting_turn",
+          "steps_taken": 9
+        },
+        "turn_before": 1,
+        "turn_after": 2,
+        "red_army_player_fields_that_changed": [
+          "deck_count",
+          "discard_count"
+        ],
+        "red_army_player_before": {
+          "id": "ai-red-army-c3059fc6-bd8a-447f-a110-dea42dfdf907",
+          "name": "AI 紅軍",
+          "faction": "red_army",
+          "base": "北京",
+          "resources": {
+            "money": 0,
+            "propaganda": 0
+          },
+          "moves_left": 0,
+          "hand": [
+            "未知手牌",
+            "未知手牌",
+            "未知手牌",
+            "未知手牌",
+            "未知手牌"
+          ],
+          "hand_variants": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "hand_action_legality": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "deck_count": 6,
+          "discard_count": 0,
+          "discard_pile": [],
+          "discard_variants": [],
+          "organization_counts": {
+            "total": 1,
+            "inside_wall": 1,
+            "outside_wall": 0
+          },
+          "orgs": {
+            "北京": 1
+          },
+          "condition_progress": 0,
+          "taiwan_organization_count": 0
+        },
+        "red_army_player_after": {
+          "id": "ai-red-army-c3059fc6-bd8a-447f-a110-dea42dfdf907",
+          "name": "AI 紅軍",
+          "faction": "red_army",
+          "base": "北京",
+          "resources": {
+            "money": 0,
+            "propaganda": 0
+          },
+          "moves_left": 0,
+          "hand": [
+            "未知手牌",
+            "未知手牌",
+            "未知手牌",
+            "未知手牌",
+            "未知手牌"
+          ],
+          "hand_variants": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "hand_action_legality": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "deck_count": 1,
+          "discard_count": 6,
+          "discard_pile": [
+            "追隨者",
+            "追隨者",
+            "追隨者",
+            "宣傳家",
+            "追隨者",
+            "樂捐者"
+          ],
+          "discard_variants": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "organization_counts": {
+            "total": 1,
+            "inside_wall": 1,
+            "outside_wall": 0
+          },
+          "orgs": {
+            "北京": 1
+          },
+          "condition_progress": 0,
+          "taiwan_organization_count": 0
+        }
+      }
+    },
+    {
+      "name": "browser_console_has_no_errors",
+      "passed": true,
+      "details": []
+    }
+  ],
+  "screenshots": [
+    "docs/records/ui-layout/ai-red-army-toggle/host_ai_red_army_toggle_1280x720.png",
+    "docs/records/ui-layout/ai-red-army-toggle/guest_ai_red_army_toggle_disabled_1280x720.png",
+    "docs/records/ui-layout/ai-red-army-toggle/host_before_ai_turn_1280x720.png",
+    "docs/records/ui-layout/ai-red-army-toggle/host_after_ai_turn_1280x720.png"
+  ]
+}

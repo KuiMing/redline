@@ -224,6 +224,9 @@ body {
 
 .lobby-room-column {
   z-index: 3;
+  overflow-y: auto;
+  max-height: 100%;
+  padding-right: 4px;
 }
 
 .lobby-section-title {
@@ -427,6 +430,17 @@ body {
   background: rgba(30, 41, 59, 0.88);
   color: rgba(203, 213, 225, 0.72);
   box-shadow: none;
+}
+
+.lobby-player-card.ai-seat {
+  border-color: rgba(59, 130, 246, 0.42);
+  background: linear-gradient(135deg, rgba(30, 64, 175, 0.26), rgba(15, 23, 42, 0.62));
+}
+
+.lobby-player-card.ai-seat .lobby-player-avatar {
+  background: linear-gradient(180deg, #3b82f6, #1e3a8a);
+  box-shadow: 0 0 22px rgba(59, 130, 246, 0.28);
+  font-size: 0.78rem;
 }
 
 .lobby-player-card strong {
