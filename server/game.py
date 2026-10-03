@@ -4516,6 +4516,20 @@ class Game(CardPlayMixin):
             for p in self.players
         ]
 
+    def _project_red_army_state_security_targets(self, viewer_player, current_player):
+        if (
+            viewer_player is None
+            or viewer_player is not current_player
+            or getattr(viewer_player, 'faction_id', None) != 'red_army'
+        ):
+            return {}
+        return {
+            'red_army_state_security_targets': [
+                {'player_id': t['player_id'], 'town': t['town']}
+                for t in self._red_army_state_security_targets(viewer_player)
+            ]
+        }
+
     def state(self, viewer_player_id=None):
         town_control, shared_access = self._project_map_control()
         viewer_player = next(
@@ -4554,6 +4568,9 @@ class Game(CardPlayMixin):
             "red_army_action_count": self.turn_log.get('red_army_action_count', 0),
             "red_army_action_limit": self._red_army_action_limit(),
             "red_army_base_build_blocks": list(self.turn_log.get('red_army_base_build_blocks', []) or []),
+            # 國安部 的合法瓦解目標（公開的組織位置，不含手牌）。只對輪到行動的紅軍檢視者提供，
+            # 讓程式化紅軍不必自行重算 1 格範圍／牆內／根據地合法性。
+            **self._project_red_army_state_security_targets(viewer_player, current_player),
             "pending_topdeck_uses": self.turn_log.get('pending_topdeck_uses', 0),
             "topdeck_candidates_count": len(self._available_purchased_cards_for_topdeck(self.current_player())),
             "event_discard_count": len(self.event_deck.discard_pile) if getattr(self, 'event_deck', None) else 0,

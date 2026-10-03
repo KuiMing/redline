@@ -232,13 +232,10 @@ def test_candidate_rejected_for_lacking_a_target_falls_through_not_stuck():
     assert result.status != "blocked_retry_exhausted"
     successful = [d for d in result.decisions if action_submitter.action_error_message(d["submit_result"]) is None]
     assert successful, f"expected at least one successful submission this turn; decisions={result.decisions}"
-    # The first attempt (國安部, the highest-scoring candidate with no
-    # target) must actually have been rejected — otherwise this isn't
-    # exercising the bug at all.
-    first_attempt = result.decisions[0]
-    assert first_attempt["chosen"].get("kind") == "faction_action"
-    assert first_attempt["chosen"].get("name") == "國安部"
-    assert action_submitter.action_error_message(first_attempt["submit_result"]) is not None
+    # The server now lists 國安部's legal dissolve targets (empty here), so the
+    # policy skips it up front instead of burning a rejected attempt on it.
+    assert all(d["chosen"].get("name") != "國安部" for d in result.decisions)
+    assert action_submitter.action_error_message(result.decisions[0]["submit_result"]) is None
 
 
 # ---------- infinite loop is blocked by the step/fingerprint budget ----------

@@ -33,14 +33,15 @@ from red_army_policy.state_assessor import Assessment
 
 
 def _best_index_by_player_progress(entries: list[dict], assessment: Assessment) -> int:
+    """Pick the entry whose owner is the greatest threat (victory progress,
+    then organization footprint); first entry wins remaining ties."""
     best_index = 0
-    best_progress = -1.0
+    best_threat: tuple[float, int] | None = None
     for i, entry in enumerate(entries):
         player_id = entry.get("player_id") or entry.get("id")
-        opponent = assessment.opponent_by_id(player_id)
-        progress = opponent.condition_progress if opponent else -1.0
-        if progress > best_progress:
-            best_progress = progress
+        threat = assessment.threat_key(player_id)
+        if best_threat is None or threat > best_threat:
+            best_threat = threat
             best_index = i
     return best_index
 
@@ -62,7 +63,7 @@ def select_pending_choice_submission(pending: dict, assessment: Assessment) -> d
         targets = pending.get("targets") or []
         index = _best_index_by_player_progress(targets, assessment) if targets else 0
         if targets:
-            reason = "picked the target belonging to the opponent with the highest condition_progress"
+            reason = "picked the target belonging to the opponent with the highest threat (condition_progress, then organization count)"
         return {"index": index, "reason": reason}
     if choice_type == "town_choice":
         # Scope cut — see module docstring.

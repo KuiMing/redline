@@ -22,6 +22,14 @@ class OpponentAssessment:
     condition_progress: float
     organization_total: int
     taiwan_organization_count: int
+    # Public organization positions (town -> count), straight from state().
+    orgs: dict = field(default_factory=dict)
+
+    @property
+    def threat(self) -> tuple[float, int]:
+        """Lexicographic threat key: victory progress first; organization
+        footprint only breaks exact progress ties. Compare, never add."""
+        return (self.condition_progress, self.organization_total)
 
 
 @dataclass(frozen=True)
@@ -52,6 +60,11 @@ class Assessment:
             return None
         return max(self.opponents, key=lambda o: o.condition_progress)
 
+    def threat_key(self, player_id: str | None) -> tuple[float, int]:
+        """Threat key for a player id; unknown players rank below everyone."""
+        opponent = self.opponent_by_id(player_id)
+        return opponent.threat if opponent else (-1.0, -1)
+
     def opponent_by_id(self, player_id: str | None) -> OpponentAssessment | None:
         for opponent in self.opponents:
             if opponent.player_id == player_id:
@@ -76,6 +89,7 @@ def assess(state: dict, player_id: str) -> Assessment:
             condition_progress=float(p.get("condition_progress") or 0.0),
             organization_total=int((p.get("organization_counts") or {}).get("total") or 0),
             taiwan_organization_count=int(p.get("taiwan_organization_count") or 0),
+            orgs={t: c for t, c in (p.get("orgs") or {}).items() if c},
         )
         for p in state.get("players") or []
         if p.get("id") != player_id
