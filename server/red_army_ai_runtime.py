@@ -47,12 +47,22 @@ Design (see the top-level feature report for the full rationale):
 
 from __future__ import annotations
 
+import asyncio
 import logging
-from typing import Any
+from typing import Any, Awaitable, Callable
 
 from red_army_policy import run_red_army_turn
+from red_army_policy.policy import has_pending_action
 
 logger = logging.getLogger(__name__)
+
+# Fixed pause between two consecutive successful AI actions so humans can
+# follow what happened. Tests monkeypatch this or pass `sleep`/`delay_seconds`.
+AI_ACTION_DELAY_SECONDS = 3.0
+
+# game_ids with an async pacing loop (drive_red_army_turns) in flight; held
+# across awaits so a human event arriving mid-delay can't start a second one.
+_DRIVING: set[str] = set()
 
 # game_id -> currently inside a run_red_army_turn() call for that game.
 _RUNNING: set[str] = set()
@@ -64,7 +74,7 @@ _STALLED_STATUSES = {
 }
 
 
-def maybe_run_red_army_turn(game_id: str, game: Any) -> bool:
+def maybe_run_red_army_turn(game_id: str, game: Any, max_actions: int | None = None) -> bool:
     """Drive the AI Red Army forward as far as it can go right now, if at
     all. Returns True iff it actually attempted at least one decision this
     call (i.e. the caller should re-broadcast the resulting state) — False
@@ -88,7 +98,10 @@ def maybe_run_red_army_turn(game_id: str, game: Any) -> bool:
 
     _RUNNING.add(game_id)
     try:
-        result = run_red_army_turn(game, ai_player_id)
+        if max_actions is None:
+            result = run_red_army_turn(game, ai_player_id)
+        else:
+            result = run_red_army_turn(game, ai_player_id, max_successful_actions=max_actions)
     except Exception as exc:  # pragma: no cover - defensive isolation path
         logger.exception("Red Army AI runner crashed for game %s", game_id)
         game.ai_red_army_status = {
@@ -119,3 +132,35 @@ def maybe_run_red_army_turn(game_id: str, game: Any) -> bool:
         }
 
     return result.steps_taken > 0
+
+
+async def drive_red_army_turns(
+    game_id: str,
+    game: Any,
+    on_advance: Callable[[], Awaitable[None]],
+    *,
+    delay_seconds: float | None = None,
+    sleep: Callable[[float], Awaitable[Any]] | None = None,
+) -> None:
+    """Play the AI one successful action at a time: after each, `on_advance`
+    (broadcast), then — only if the AI has a further action to take — wait
+    `delay_seconds` without blocking the event loop. No delay after the last
+    action, after a rejected attempt (retries stay inside one run), or while
+    waiting on another player. Rules/legality stay in the policy and Game.
+    """
+    if game_id in _DRIVING:
+        return
+    delay = AI_ACTION_DELAY_SECONDS if delay_seconds is None else delay_seconds
+    sleeper = sleep or asyncio.sleep
+    ai_player_id = getattr(game, "ai_red_army_player_id", None)
+    _DRIVING.add(game_id)
+    try:
+        while maybe_run_red_army_turn(game_id, game, max_actions=1):
+            await on_advance()
+            if (game.ai_red_army_status or {}).get("last_run_status") != "action_limit":
+                break
+            if not has_pending_action(game, ai_player_id):
+                break
+            await sleeper(delay)
+    finally:
+        _DRIVING.discard(game_id)

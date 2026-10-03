@@ -66,10 +66,14 @@ def _new_ai_red_vs_taiwan_game():
 
 
 @pytest.fixture(autouse=True)
-def _clean_running_set():
+def _clean_running_set(monkeypatch):
     _RUNNING.clear()
+    red_army_ai_runtime._DRIVING.clear()
+    # Never really wait between AI actions in tests.
+    monkeypatch.setattr(red_army_ai_runtime, "AI_ACTION_DELAY_SECONDS", 0.0)
     yield
     _RUNNING.clear()
+    red_army_ai_runtime._DRIVING.clear()
 
 
 # ---------- Red Army's turn is handled automatically ----------
@@ -286,3 +290,111 @@ def test_broadcast_game_state_wakes_the_ai_and_rebroadcasts_the_result():
     # reflects that forward progress really happened.
     assert last_state.get("ai_red_army", {}).get("status", {}).get("steps_taken", 0) > 0
     assert first_turn is not None
+
+
+# ---------- fixed 3s pacing between successful AI actions ----------
+
+class _Result:
+    def __init__(self, status, steps_taken=1):
+        self.status = status
+        self.steps_taken = steps_taken
+
+
+def _drive(monkeypatch, game, results, pending):
+    """Run drive_red_army_turns against scripted run results; `pending` is
+    the has_pending_action() answer sequence consulted after each advance."""
+    results = list(results)
+    pending = list(pending)
+    sleeps, broadcasts = [], []
+
+    monkeypatch.setattr(red_army_ai_runtime, "run_red_army_turn", lambda g, pid, **kw: results.pop(0))
+    monkeypatch.setattr(red_army_ai_runtime, "has_pending_action", lambda g, pid: pending.pop(0))
+
+    async def fake_sleep(seconds):
+        sleeps.append(seconds)
+
+    async def on_advance():
+        broadcasts.append(1)
+
+    game, _, _ = game
+    asyncio.run(red_army_ai_runtime.drive_red_army_turns(
+        "pace-x", game, on_advance, delay_seconds=3.0, sleep=fake_sleep,
+    ))
+    return sleeps, broadcasts
+
+
+def test_default_action_delay_is_three_seconds():
+    import importlib
+    fresh = importlib.reload(red_army_ai_runtime)
+    try:
+        assert fresh.AI_ACTION_DELAY_SECONDS == 3.0
+    finally:
+        importlib.reload(red_army_ai_runtime)
+
+
+def test_delay_once_between_two_successful_actions_and_none_after_the_last(monkeypatch):
+    sleeps, broadcasts = _drive(
+        monkeypatch, _new_ai_red_vs_taiwan_game(),
+        results=[_Result("action_limit"), _Result("action_limit")],
+        pending=[True, False],  # more to do after action 1; nothing after action 2
+    )
+    assert sleeps == [3.0]
+    assert len(broadcasts) == 2
+
+
+def test_no_delay_when_turn_ends_or_ai_waits_for_other_player(monkeypatch):
+    sleeps, broadcasts = _drive(
+        monkeypatch, _new_ai_red_vs_taiwan_game(),
+        results=[_Result("waiting_turn")],  # action(s) done, then turn passed on
+        pending=[],
+    )
+    assert sleeps == []
+    assert len(broadcasts) == 1
+
+
+def test_stalled_run_does_not_sleep_or_loop(monkeypatch):
+    sleeps, _ = _drive(
+        monkeypatch, _new_ai_red_vs_taiwan_game(),
+        results=[_Result("blocked_retry_exhausted", steps_taken=3)],
+        pending=[],
+    )
+    assert sleeps == []
+
+
+def test_rejected_submission_does_not_count_as_an_action_or_add_delay(monkeypatch):
+    """Policy level: a rejected submit retries inside the same run and does
+    not consume the success budget, so no pacing boundary appears."""
+    from red_army_policy import policy
+
+    game, red, other = _new_ai_red_vs_taiwan_game()
+    real_submit = policy.action_submitter.submit
+    calls = {"n": 0}
+
+    def flaky_submit(g, pid, action):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            return {"error": "simulated rejection"}
+        return real_submit(g, pid, action)
+
+    monkeypatch.setattr(policy.action_submitter, "submit", flaky_submit)
+    monkeypatch.setattr(policy.action_submitter, "action_error_message",
+                        lambda r: (r or {}).get("error"))
+
+    result = policy.run_red_army_turn(game, red.id, max_successful_actions=1)
+
+    assert result.status == "action_limit"
+    assert calls["n"] == 2  # 1 rejected + 1 successful, in a single run
+    assert len(result.decisions) == 2
+
+
+def test_drive_does_not_start_a_second_loop_while_one_is_in_flight(monkeypatch):
+    game, red, other = _new_ai_red_vs_taiwan_game()
+    red_army_ai_runtime._DRIVING.add("pace-x")
+    ran = []
+    monkeypatch.setattr(red_army_ai_runtime, "run_red_army_turn", lambda g, pid, **kw: ran.append(1))
+
+    async def on_advance():
+        pass
+
+    asyncio.run(red_army_ai_runtime.drive_red_army_turns("pace-x", game, on_advance))
+    assert ran == []

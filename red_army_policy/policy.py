@@ -223,6 +223,30 @@ def step(
     )
 
 
+def has_pending_action(
+    game: Any,
+    player_id: str,
+    *,
+    faction_catalog: dict | None = None,
+    card_catalog: dict | None = None,
+) -> bool:
+    """Read-only check: would `step()` have something to act on right now?
+    Mirrors step()'s gating without submitting anything, so a pacing caller
+    can decide whether a delay before the next action is worth waiting for.
+    """
+    state = game.state(player_id)
+    if state.get("game_phase") == "finished":
+        return False
+    pending = state.get("pending_choice")
+    if pending:
+        return pending.get("player_id") == player_id
+    me = _find_player(state, player_id)
+    if me is None or me.get("name") != state.get("current_player"):
+        return False
+    legal = generate_candidates(state, player_id, faction_catalog=faction_catalog, card_catalog=card_catalog)
+    return not legal.get("waiting_on") and bool(legal.get("actions"))
+
+
 _TERMINAL_STATUSES = {"game_over", "waiting_other_pending", "waiting_turn", "no_legal_actions"}
 
 
@@ -233,6 +257,7 @@ def run_red_army_turn(
     config: PolicyConfig | None = None,
     faction_catalog: dict | None = None,
     card_catalog: dict | None = None,
+    max_successful_actions: int | None = None,
 ) -> RunResult:
     """Drive the Red Army policy forward until control must return to a
     human, the AI is blocked on another player's pending choice/reaction,
@@ -267,6 +292,10 @@ def run_red_army_turn(
     folded into the loop-guard fingerprint so "trying several different,
     doomed candidates in a row" is never mistaken for "stuck repeating the
     exact same decision".
+
+    `max_successful_actions` (pacing hook): once that many submissions have
+    succeeded, return `RunResult("action_limit", ...)` so an async caller can
+    broadcast and pause between actions. Rejected submissions don't count.
     """
     config = config or PolicyConfig()
     decisions: list[dict[str, Any]] = []
@@ -274,6 +303,7 @@ def run_red_army_turn(
     last_fingerprint: str | None = None
     same_fingerprint_streak = 0
     excluded_signatures: set = set()
+    successful_actions = 0
 
     for _ in range(config.max_steps):
         result = step(
@@ -304,5 +334,8 @@ def run_red_army_turn(
             continue
         consecutive_retry_failures = 0
         excluded_signatures = set()
+        successful_actions += 1
+        if max_successful_actions is not None and successful_actions >= max_successful_actions:
+            return RunResult("action_limit", decisions, len(decisions))
 
     return RunResult("blocked_step_budget", decisions, len(decisions))
