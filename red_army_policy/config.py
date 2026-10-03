@@ -55,7 +55,7 @@ class ScoringWeights:
     w6_dissolve_threat: float = 0.0  # stubbed P1 (未新增既有函式可重用，見 plan 第4.1節)
     w7_future_value: float = 0.0  # stubbed P2 (無既有深度搜尋基礎，見 plan 第6節)
 
-    buy_card_diminishing_rate: float = 0.9  # subtracted per card already in hand
+    buy_card_diminishing_rate: float = 0.9  # subtracted per card already purchased this turn
     buy_card_base_value: float = 3.0
 
     faction_action_base: dict = field(

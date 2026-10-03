@@ -153,6 +153,11 @@ def step(
 ) -> StepResult:
     config = config or PolicyConfig()
     state = game.state(player_id)
+    # Keep this policy-only metric out of the public game-state contract.
+    # The value still comes from the authoritative server turn log.
+    state["purchased_cards_this_turn_count"] = len(
+        (getattr(game, "turn_log", {}) or {}).get("purchased_cards_this_turn", []) or []
+    )
 
     if state.get("game_phase") == "finished":
         return StepResult("game_over", state=state)

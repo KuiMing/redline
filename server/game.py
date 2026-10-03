@@ -1287,6 +1287,23 @@ class Game(CardPlayMixin):
                 'reason': '目前沒有城鎮可以建立組織。',
                 'no_legal_build_town': True,
             }
+        if (
+            getattr(card, 'card_type', None) == 'support'
+            and not self._support_card_has_legal_target(
+                player,
+                card,
+                pre_reserved_shield_discards=1,
+            )
+        ):
+            # Keep state()/legal_actions() aligned with play_card(). Without
+            # this pre-check, automated players see a false-positive action
+            # mode and retry the same doomed support card after every other
+            # successful action in the turn.
+            return {
+                'playable': False,
+                'reason': '這張奧援卡目前沒有合法目標。',
+                'no_legal_target': True,
+            }
         return {'playable': True}
 
     def _card_can_queue_build(self, card):

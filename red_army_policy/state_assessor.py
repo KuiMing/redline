@@ -35,6 +35,7 @@ class Assessment:
     is_my_turn: bool
     my_resources: dict
     my_hand_size: int
+    purchased_cards_this_turn_count: int
     my_organization_total: int
     my_taiwan_organization_count: int
     opponents: list[OpponentAssessment] = field(default_factory=list)
@@ -91,6 +92,7 @@ def assess(state: dict, player_id: str) -> Assessment:
         is_my_turn=is_my_turn,
         my_resources=dict(me.get("resources") or {}) if me else {},
         my_hand_size=len(me.get("hand") or []) if me else 0,
+        purchased_cards_this_turn_count=int(state.get("purchased_cards_this_turn_count") or 0),
         my_organization_total=int((me.get("organization_counts") or {}).get("total") or 0) if me else 0,
         my_taiwan_organization_count=int(me.get("taiwan_organization_count") or 0) if me else 0,
         opponents=opponents,

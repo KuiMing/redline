@@ -281,6 +281,48 @@ def test_north_support_tier_three_resolves_two_targets_and_every_step_is_cancell
     assert second_result.get('target_count') == 2
 
 
+def test_north_support_tier_three_can_hit_beijing_red_base_twice_with_one_card():
+    game = make_game()
+    red, actor = game.players
+    game.current_player_index = 1
+    red.base = '北京'
+    red.organizations = {'北京': 1}
+    actor.organizations = {'天津': 1}
+    actor.hand = [game._make_support_card('北國奧援', variant_index=0)]
+    game._support_card_tier = lambda player, card: (3, 0, ['北國'])
+
+    play_result = game.play_card(0, mode='action')
+    assert play_result.get('pending_choice') is True, play_result
+    first_index = next(
+        i
+        for i, entry in enumerate(game.pending_choice['targets'])
+        if entry['player_id'] == red.id and entry['town'] == '北京'
+    )
+
+    first_result = game.resolve_pending_choice(actor.id, first_index)
+    assert first_result.get('pending_choice') is True, first_result
+    assert red.organizations == {'北京': 1}
+    assert any(
+        entry['player_id'] == red.id and entry['town'] == '北京'
+        for entry in game.pending_choice['targets']
+    )
+
+    second_index = next(
+        i
+        for i, entry in enumerate(game.pending_choice['targets'])
+        if entry['player_id'] == red.id and entry['town'] == '北京'
+    )
+    second_result = game.resolve_pending_choice(actor.id, second_index)
+
+    assert second_result.get('success') is True, second_result
+    assert second_result.get('target_count') == 2
+    assert game.pending_choice is None
+    assert red.organizations == {}
+    assert red.base == '北京'
+    assert '北京' in game.turn_log['red_army_base_build_blocks']
+    assert sum('成功瓦解北京紅軍根據地' in line for line in game.action_log) == 2
+
+
 def _era_restriction_game(faction_id, era_id=None, origin='上海'):
     """建立一個「時代關卡已生效」的對局：時代關卡的無視距離限制只是 active modifier，
     直接 activate_era 即可，不需要真的打到觸發條件。"""

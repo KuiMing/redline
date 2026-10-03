@@ -726,6 +726,41 @@ def test_north_support_tier3_stale_pick_with_no_replacement_resolves_the_still_v
     assert game.pending_choice is None
 
 
+def test_north_support_tier3_stale_second_target_resolves_queued_first_target():
+    game, actor, enemy = make_game(actor_faction="liberals")
+    actor.base = "北京"
+    actor.organizations = {"北京": 1}
+    actor.hand = [game._make_support_card("北國奧援")]
+    game._support_card_tier = lambda _player, _card: (3, 0, [])
+    enemy.faction_id = "red_army"
+    enemy.base = "西安"
+    enemy.organizations = {"天津": 1, "石家莊": 1}
+
+    played = game.play_card(0, mode="action")
+    assert played.get("pending_choice") is True, played
+    tianjin_index = next(
+        i for i, target in enumerate(game.pending_choice["targets"])
+        if target["town"] == "天津"
+    )
+    first = game.resolve_pending_choice(actor.id, tianjin_index)
+    assert first.get("pending_choice") is True, first
+    assert enemy.organizations == {"天津": 1, "石家莊": 1}
+
+    # The only offered second target goes stale before its confirmation.
+    shijiazhuang_index = next(
+        i for i, target in enumerate(game.pending_choice["targets"])
+        if target["town"] == "石家莊"
+    )
+    del enemy.organizations["石家莊"]
+    final = game.resolve_pending_choice(actor.id, shijiazhuang_index)
+
+    assert final.get("success") is True, final
+    assert final.get("effect_fizzled") is not True, final
+    assert final.get("target_count") == 1, final
+    assert enemy.organizations.get("天津", 0) == 0
+    assert game.pending_choice is None
+
+
 def test_north_support_tier3_stale_pick_can_still_be_confirmed_after_re_pick():
     # Companion to the defect-2 regression above: when a legal replacement target DOES exist for
     # a vacated (stale) slot, the choice must still reopen for that re-pick -- confirming again
