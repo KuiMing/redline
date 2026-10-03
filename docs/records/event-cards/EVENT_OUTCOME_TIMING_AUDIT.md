@@ -1,34 +1,105 @@
 # Event outcome timing audit
 
-- total: `28`
-- passed: `26`
-- failed: `2`
+每張任務事件卡（含副本）逐位非紅軍玩家驗證：個別追蹤、個別成功／失敗效果、紅軍回合結束才結算、
+多人 pending choice 依序處理。座位：Ben(澳門) → Angie(蒙古) → Cy(自由派) → Red(紅軍)。
 
-- ✅ 全國人大召開 success draw after refill
-- ✅ 全國人大召開 failure red_dissolve after refill
-- ❌ 香港抗暴之戰 success gain_card after refill
-- ❌ 香港抗暴之戰 failure discard_self after refill
-- ✅ 重大災難 success gain_card after refill
-- ✅ 重大災難 failure discard_self after refill
-- ✅ 藏印邊境軍事對峙 success move after reset/refill
-- ✅ 藏印邊境軍事對峙 failure none after refill no-op
-- ✅ 貿易戰加劇 success topdeck before refill
-- ✅ 貿易戰加劇 failure none after refill no-op
-- ✅ 東突厥集中營 success gain_card after refill
-- ✅ 東突厥集中營 failure discard_random after refill
-- ✅ 北京政爭 success draw after refill
-- ✅ 北京政爭 failure none after refill no-op
-- ✅ 紅軍權貴出逃 success trash hand/discard after refill
-- ✅ 紅軍權貴出逃 failure discard_self after refill
-- ✅ 烏魯木齊七五事件 success build after full round wrap
-- ✅ 烏魯木齊七五事件 failure discard_random after full round wrap
-- ✅ 重大災難（副本） success gain_card after refill
-- ✅ 重大災難（副本） failure discard_self after refill
-- ✅ 全國人大召開（副本） success draw after refill
-- ✅ 全國人大召開（副本） failure red_dissolve after refill
-- ✅ 貿易戰加劇（副本） success topdeck before refill
-- ✅ 貿易戰加劇（副本） failure none after refill no-op
-- ✅ 藏印邊境軍事對峙（副本） success move after reset/refill
-- ✅ 藏印邊境軍事對峙（副本） failure none after refill no-op
-- ✅ 紅軍權貴出逃（副本） success trash hand/discard after refill
-- ✅ 紅軍權貴出逃（副本） failure discard_self after refill
+- events: `14`
+- total: `95`
+- passed: `95`
+- failed: `0`
+
+- ✅ 全國人大召開 success only for Ben, failure for the others
+- ✅ 全國人大召開 Ben and Angie succeed, Cy fails
+- ✅ 全國人大召開 Angie and Cy succeed, Ben fails
+- ✅ 全國人大召開 every non-Red player succeeds
+- ✅ 全國人大召開 every non-Red player fails
+- ✅ 全國人大召開 red actions never progress a non-Red player
+- ✅ 全國人大召開 failure with no legal target settles without a choice
+- ✅ 全國人大召開 盟旗學校 triggered by a Red Army dissolve credits Angie only
+- ✅ 全國人大召開 盟旗學校 triggered by a peer dissolve credits Angie, not the attacker
+- ✅ 全國人大召開 盟旗學校 blocked (attacker cannot pay) credits nobody
+- ✅ 全國人大召開 repeated 盟旗學校 triggers still settle Angie once
+- ✅ 香港抗暴之戰 success only for Ben, failure for the others
+- ✅ 香港抗暴之戰 Ben and Angie succeed, Cy fails
+- ✅ 香港抗暴之戰 Angie and Cy succeed, Ben fails
+- ✅ 香港抗暴之戰 every non-Red player succeeds
+- ✅ 香港抗暴之戰 every non-Red player fails
+- ✅ 香港抗暴之戰 red actions never progress a non-Red player
+- ✅ 重大災難 success only for Ben, failure for the others
+- ✅ 重大災難 Ben and Angie succeed, Cy fails
+- ✅ 重大災難 Angie and Cy succeed, Ben fails
+- ✅ 重大災難 every non-Red player succeeds
+- ✅ 重大災難 every non-Red player fails
+- ✅ 重大災難 red actions never progress a non-Red player
+- ✅ 藏印邊境軍事對峙 success only for Ben, failure for the others
+- ✅ 藏印邊境軍事對峙 Ben and Angie succeed, Cy fails
+- ✅ 藏印邊境軍事對峙 Angie and Cy succeed, Ben fails
+- ✅ 藏印邊境軍事對峙 every non-Red player succeeds
+- ✅ 藏印邊境軍事對峙 every non-Red player fails
+- ✅ 藏印邊境軍事對峙 red actions never progress a non-Red player
+- ✅ 貿易戰加劇 success only for Ben, failure for the others
+- ✅ 貿易戰加劇 Ben and Angie succeed, Cy fails
+- ✅ 貿易戰加劇 Angie and Cy succeed, Ben fails
+- ✅ 貿易戰加劇 every non-Red player succeeds
+- ✅ 貿易戰加劇 every non-Red player fails
+- ✅ 貿易戰加劇 red actions never progress a non-Red player
+- ✅ 東突厥集中營 success only for Ben, failure for the others
+- ✅ 東突厥集中營 Ben and Angie succeed, Cy fails
+- ✅ 東突厥集中營 Angie and Cy succeed, Ben fails
+- ✅ 東突厥集中營 every non-Red player succeeds
+- ✅ 東突厥集中營 every non-Red player fails
+- ✅ 東突厥集中營 red actions never progress a non-Red player
+- ✅ 北京政爭 success only for Ben, failure for the others
+- ✅ 北京政爭 Ben and Angie succeed, Cy fails
+- ✅ 北京政爭 Angie and Cy succeed, Ben fails
+- ✅ 北京政爭 every non-Red player succeeds
+- ✅ 北京政爭 every non-Red player fails
+- ✅ 北京政爭 red actions never progress a non-Red player
+- ✅ 紅軍權貴出逃 success only for Ben, failure for the others
+- ✅ 紅軍權貴出逃 Ben and Angie succeed, Cy fails
+- ✅ 紅軍權貴出逃 Angie and Cy succeed, Ben fails
+- ✅ 紅軍權貴出逃 every non-Red player succeeds
+- ✅ 紅軍權貴出逃 every non-Red player fails
+- ✅ 紅軍權貴出逃 red actions never progress a non-Red player
+- ✅ 烏魯木齊七五事件 success only for Ben, failure for the others
+- ✅ 烏魯木齊七五事件 Ben and Angie succeed, Cy fails
+- ✅ 烏魯木齊七五事件 Angie and Cy succeed, Ben fails
+- ✅ 烏魯木齊七五事件 every non-Red player succeeds
+- ✅ 烏魯木齊七五事件 every non-Red player fails
+- ✅ 烏魯木齊七五事件 red actions never progress a non-Red player
+- ✅ 烏魯木齊七五事件 Red turn dissolve flips only that player to failure
+- ✅ 重大災難（副本） success only for Ben, failure for the others
+- ✅ 重大災難（副本） Ben and Angie succeed, Cy fails
+- ✅ 重大災難（副本） Angie and Cy succeed, Ben fails
+- ✅ 重大災難（副本） every non-Red player succeeds
+- ✅ 重大災難（副本） every non-Red player fails
+- ✅ 重大災難（副本） red actions never progress a non-Red player
+- ✅ 全國人大召開（副本） success only for Ben, failure for the others
+- ✅ 全國人大召開（副本） Ben and Angie succeed, Cy fails
+- ✅ 全國人大召開（副本） Angie and Cy succeed, Ben fails
+- ✅ 全國人大召開（副本） every non-Red player succeeds
+- ✅ 全國人大召開（副本） every non-Red player fails
+- ✅ 全國人大召開（副本） red actions never progress a non-Red player
+- ✅ 全國人大召開（副本） failure with no legal target settles without a choice
+- ✅ 全國人大召開（副本） 盟旗學校 triggered by a Red Army dissolve credits Angie only
+- ✅ 全國人大召開（副本） 盟旗學校 triggered by a peer dissolve credits Angie, not the attacker
+- ✅ 全國人大召開（副本） 盟旗學校 blocked (attacker cannot pay) credits nobody
+- ✅ 全國人大召開（副本） repeated 盟旗學校 triggers still settle Angie once
+- ✅ 貿易戰加劇（副本） success only for Ben, failure for the others
+- ✅ 貿易戰加劇（副本） Ben and Angie succeed, Cy fails
+- ✅ 貿易戰加劇（副本） Angie and Cy succeed, Ben fails
+- ✅ 貿易戰加劇（副本） every non-Red player succeeds
+- ✅ 貿易戰加劇（副本） every non-Red player fails
+- ✅ 貿易戰加劇（副本） red actions never progress a non-Red player
+- ✅ 藏印邊境軍事對峙（副本） success only for Ben, failure for the others
+- ✅ 藏印邊境軍事對峙（副本） Ben and Angie succeed, Cy fails
+- ✅ 藏印邊境軍事對峙（副本） Angie and Cy succeed, Ben fails
+- ✅ 藏印邊境軍事對峙（副本） every non-Red player succeeds
+- ✅ 藏印邊境軍事對峙（副本） every non-Red player fails
+- ✅ 藏印邊境軍事對峙（副本） red actions never progress a non-Red player
+- ✅ 紅軍權貴出逃（副本） success only for Ben, failure for the others
+- ✅ 紅軍權貴出逃（副本） Ben and Angie succeed, Cy fails
+- ✅ 紅軍權貴出逃（副本） Angie and Cy succeed, Ben fails
+- ✅ 紅軍權貴出逃（副本） every non-Red player succeeds
+- ✅ 紅軍權貴出逃（副本） every non-Red player fails
+- ✅ 紅軍權貴出逃（副本） red actions never progress a non-Red player

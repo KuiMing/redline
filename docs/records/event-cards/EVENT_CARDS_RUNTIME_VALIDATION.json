@@ -22,9 +22,34 @@
           "succeeded": true,
           "settled": true,
           "status": "success",
+          "completed_player_ids": [
+            "viewer"
+          ],
+          "player_progress": {
+            "viewer": {
+              "player_id": "viewer",
+              "player_name": "viewer",
+              "count": 1,
+              "required": 1,
+              "met": true,
+              "result": "success"
+            }
+          },
+          "_actor_contributions": [
+            {
+              "token": "a72329f0f6074f20af652e2828bbe5ed",
+              "actor_id": "viewer",
+              "actor_name": "viewer"
+            }
+          ],
           "last_actor_id": "viewer",
           "last_actor_name": "viewer",
-          "settlement_target_player_id": "viewer"
+          "last_actor_token": "a72329f0f6074f20af652e2828bbe5ed",
+          "settlement_started": true,
+          "settlement_queue": [],
+          "qualified_player_ids": [
+            "viewer"
+          ]
         },
         "discard": [
           "資助者",
@@ -56,9 +81,34 @@
           "succeeded": true,
           "settled": true,
           "status": "success",
+          "completed_player_ids": [
+            "viewer"
+          ],
+          "player_progress": {
+            "viewer": {
+              "player_id": "viewer",
+              "player_name": "viewer",
+              "count": 1,
+              "required": 1,
+              "met": true,
+              "result": "success"
+            }
+          },
+          "_actor_contributions": [
+            {
+              "token": "43da859180104f94a6af8162ccac3298",
+              "actor_id": "viewer",
+              "actor_name": "viewer"
+            }
+          ],
           "last_actor_id": "viewer",
           "last_actor_name": "viewer",
-          "settlement_target_player_id": "viewer"
+          "last_actor_token": "43da859180104f94a6af8162ccac3298",
+          "settlement_started": true,
+          "settlement_queue": [],
+          "qualified_player_ids": [
+            "viewer"
+          ]
         },
         "discard": [
           "宣傳家",
@@ -77,9 +127,34 @@
           "succeeded": true,
           "settled": true,
           "status": "success",
+          "completed_player_ids": [
+            "viewer"
+          ],
+          "player_progress": {
+            "viewer": {
+              "player_id": "viewer",
+              "player_name": "viewer",
+              "count": 1,
+              "required": 1,
+              "met": true,
+              "result": "success"
+            }
+          },
+          "_actor_contributions": [
+            {
+              "token": "4dd91bbaded645a7938d2ead0b70d993",
+              "actor_id": "viewer",
+              "actor_name": "viewer"
+            }
+          ],
           "last_actor_id": "viewer",
           "last_actor_name": "viewer",
-          "settlement_target_player_id": "viewer"
+          "last_actor_token": "4dd91bbaded645a7938d2ead0b70d993",
+          "settlement_started": true,
+          "settlement_queue": [],
+          "qualified_player_ids": [
+            "viewer"
+          ]
         },
         "hand_count": 7
       }
@@ -99,8 +174,8 @@
           "draw",
           "buy_card"
         ],
-        "success_result_text": "非紅軍任務成功",
-        "failure_result_text": "非紅軍任務失敗，紅軍效果生效"
+        "success_result_text": "所有非紅軍玩家任務成功",
+        "failure_result_text": "所有非紅軍玩家任務失敗，紅軍效果生效"
       }
     },
     {
@@ -111,7 +186,8 @@
           "全國人大召開": {
             "trigger": {
               "type": "use_faction_ability",
-              "count": 1
+              "count": 1,
+              "each_non_red_player": true
             },
             "success": {
               "type": "draw",
@@ -126,7 +202,8 @@
           "香港抗暴之戰": {
             "trigger": {
               "type": "play_card_with_money",
-              "count": 1
+              "count": 1,
+              "each_non_red_player": true
             },
             "success": {
               "type": "gain_card",
@@ -141,7 +218,8 @@
           "重大災難": {
             "trigger": {
               "type": "play_card_with_propaganda",
-              "count": 1
+              "count": 1,
+              "each_non_red_player": true
             },
             "success": {
               "type": "gain_card",
@@ -157,7 +235,8 @@
             "trigger": {
               "type": "build_organization",
               "count": 1,
-              "scope": "牆內"
+              "scope": "牆內",
+              "each_non_red_player": true
             },
             "success": {
               "type": "move",
@@ -170,7 +249,8 @@
           "東突厥集中營": {
             "trigger": {
               "type": "play_card_with_propaganda",
-              "count": 1
+              "count": 1,
+              "each_non_red_player": true
             },
             "success": {
               "type": "gain_card",
@@ -185,7 +265,8 @@
           "北京政爭": {
             "trigger": {
               "type": "draw",
-              "count": 1
+              "count": 1,
+              "each_non_red_player": true
             },
             "success": {
               "type": "draw",
@@ -209,9 +290,34 @@
           "succeeded": true,
           "settled": true,
           "status": "success",
+          "completed_player_ids": [
+            "viewer"
+          ],
+          "player_progress": {
+            "viewer": {
+              "player_id": "viewer",
+              "player_name": "viewer",
+              "count": 1,
+              "required": 1,
+              "met": true,
+              "result": "success"
+            }
+          },
+          "_actor_contributions": [
+            {
+              "token": "94cb850695e441e7a263ce08bcb52bf2",
+              "actor_id": "viewer",
+              "actor_name": "viewer"
+            }
+          ],
           "last_actor_id": "viewer",
           "last_actor_name": "viewer",
-          "settlement_target_player_id": "viewer"
+          "last_actor_token": "94cb850695e441e7a263ce08bcb52bf2",
+          "settlement_started": true,
+          "settlement_queue": [],
+          "qualified_player_ids": [
+            "viewer"
+          ]
         },
         "hand": [
           "保留手牌",
@@ -246,9 +352,34 @@
           "succeeded": true,
           "settled": true,
           "status": "success",
+          "completed_player_ids": [
+            "viewer"
+          ],
+          "player_progress": {
+            "viewer": {
+              "player_id": "viewer",
+              "player_name": "viewer",
+              "count": 1,
+              "required": 1,
+              "met": true,
+              "result": "success"
+            }
+          },
+          "_actor_contributions": [
+            {
+              "token": "483c4b1989c54e1ab6c079c75502e8f8",
+              "actor_id": "viewer",
+              "actor_name": "viewer"
+            }
+          ],
           "last_actor_id": "viewer",
           "last_actor_name": "viewer",
-          "settlement_target_player_id": "viewer"
+          "last_actor_token": "483c4b1989c54e1ab6c079c75502e8f8",
+          "settlement_started": true,
+          "settlement_queue": [],
+          "qualified_player_ids": [
+            "viewer"
+          ]
         },
         "moves_left": 2,
         "organizations": {
@@ -293,7 +424,18 @@
           "required": 1,
           "succeeded": false,
           "settled": false,
-          "status": "active"
+          "status": "active",
+          "completed_player_ids": [],
+          "player_progress": {
+            "viewer": {
+              "player_id": "viewer",
+              "player_name": "viewer",
+              "count": 0,
+              "required": 1,
+              "met": false,
+              "result": null
+            }
+          }
         },
         "pending_choice": null
       }
@@ -334,7 +476,8 @@
         "event": "紅軍權貴出逃",
         "trigger": {
           "type": "move_organization",
-          "count": 3
+          "count": 3,
+          "each_non_red_player": true
         },
         "success": {
           "type": "trash_from_hand_or_discard",
@@ -378,7 +521,8 @@
           "type": "end_turn_state",
           "count": 1,
           "condition": "own_organization_in_scope",
-          "scope": "牆內"
+          "scope": "牆內",
+          "each_non_red_player": true
         },
         "success": {
           "type": "build_organization_near_own",
@@ -544,7 +688,8 @@
           "min_cost": 4,
           "card_names": [
             "英美奧援"
-          ]
+          ],
+          "each_non_red_player": true
         },
         "success": {
           "type": "topdeck_from_discard",
@@ -587,7 +732,8 @@
             "min_cost": 4,
             "card_names": [
               "英美奧援"
-            ]
+            ],
+            "each_non_red_player": true
           }
         },
         "回合結束狀態 trigger": {
@@ -596,7 +742,8 @@
             "type": "end_turn_state",
             "count": 1,
             "condition": "own_organization_in_scope",
-            "scope": "牆內"
+            "scope": "牆內",
+            "each_non_red_player": true
           }
         },
         "從棄牌堆選牌置頂": {
@@ -657,7 +804,7 @@
       "detail": {
         "event": "香港抗暴之戰",
         "blocked_error": "Resolve pending choice before advancing phase",
-        "phase_after_resolve": "end"
+        "phase_after_resolve": "action"
       }
     },
     {

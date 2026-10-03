@@ -2702,8 +2702,10 @@ function eraCardArtMarkup(stage, fallbackMarkup = '') {
 
 const EVENT_STATUS_TEXT = {
   active: '進行中',
-  success_pending: '條件已達成，等待結算',
+  success_pending: '條件已達成，等待紅軍回合結束結算',
+  settling: '紅軍回合結束，逐一結算各玩家結果',
   success: '成功已結算',
+  mixed: '各玩家個別結算完成',
   failure: '失敗已結算',
   idle: '無效果',
   auto: '自動效果已套用',
@@ -2726,10 +2728,18 @@ function eventCardMarkup(event, expanded = false) {
   const autoEffectLine = event.type === 'auto'
     ? `<div class="event-card-line event-card-effect-row"><strong>自動效果：</strong><span>${escapeHtml(event.effect_text || '無')}</span></div>`
     : '';
+  const playerResults = event.type === 'mission' && Array.isArray(event.player_results) ? event.player_results : [];
+  const playerResultMarkup = playerResults.length
+    ? `<div class="event-card-line event-card-player-results"><strong>各玩家：</strong><span>${playerResults.map((entry) => {
+      const label = entry.result === 'success' ? '成功' : entry.result === 'failure' ? '失敗' : (entry.met ? '已達成' : '進行中');
+      return `${escapeHtml(entry.player_name || '')} ${escapeHtml(label)}（${Number(entry.count || 0)}/${Number(entry.required || 1)}）`;
+    }).join('、')}</span></div>`
+    : '';
   const missionLines = event.type === 'mission'
     ? `
       <div class="event-card-line event-card-effect-row"><strong>任務條件：</strong><span>${escapeHtml(event.trigger_text || '無')}</span></div>
       <div class="event-card-progress">進度：${current}/${required || 0}</div>
+      ${playerResultMarkup}
       <div class="event-card-line event-card-effect-row event-card-success"><strong>成功獎勵：</strong><span>${escapeHtml(event.success_text || '無')}</span></div>
       <div class="event-card-line event-card-effect-row event-card-failure"><strong>失敗／紅軍效果：</strong><span>${escapeHtml(event.failure_text || '無')}</span></div>`
     : '';

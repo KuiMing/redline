@@ -58,13 +58,7 @@ def resolved_ability_names(game: Game) -> set[str]:
 
 def pin_national_people_congress(game: Game) -> None:
     game.current_event = dict(game._event_by_name("全國人大召開"))
-    game.event_progress = {
-        "count": 0,
-        "required": 1,
-        "succeeded": False,
-        "settled": False,
-        "status": "active",
-    }
+    game.event_progress = game._new_event_progress(game.current_event)
     game.event_modifiers = []
     game.pending_choice = None
 
@@ -485,7 +479,7 @@ def test_npc_counts_mongol_school_when_attacker_discards_to_bypass_it():
     assert game.event_progress["succeeded"] is True
 
 
-def test_npc_counts_mongol_school_even_when_it_blocks_dissolve_for_no_discard():
+def test_npc_does_not_count_mongol_school_when_it_blocks_dissolve_for_no_discard():
     game, defender, attacker = make_game("mongol", "烏蘭巴托")
     pin_national_people_congress(game)
     defender.base = "巴黎"
@@ -496,7 +490,10 @@ def test_npc_counts_mongol_school_even_when_it_blocks_dissolve_for_no_discard():
 
     assert "盟旗學校" in result.get("error", "")
     assert defender.organizations == {"成都": 1}
-    assert game.event_progress["succeeded"] is True
+    # 盟旗學校 never actually ran its effect (the attacker could not pay), so the Mongolian
+    # defender has not triggered the ability.
+    assert game.event_progress["succeeded"] is False
+    assert game.event_progress["player_progress"][defender.id]["met"] is False
 
 
 def test_npc_counts_hong_kong_airport_only_for_its_special_long_range_move():
