@@ -36,6 +36,11 @@ from red_army_policy.state_assessor import Assessment
 _GROWTH_EFFECT_KEYWORDS = ("建立", "組織")
 _DISSOLVE_EFFECT_KEYWORDS = ("瓦解",)
 
+# 印度奧援 adds 分神 to the Red Army's own deck whenever any player plays it
+# (server/game_support_rules.py), so the programmed Red Army never buys it.
+# Policy-only: the server's generic purchase legality is unchanged.
+_NEVER_BUY_CARD_NAMES = frozenset({"印度奧援"})
+
 
 def candidate_signature(action: dict) -> tuple:
     """A hashable identity for "this specific candidate, with whatever
@@ -77,6 +82,8 @@ class ScoredCandidate:
 
 def _buy_card_score(action: dict, assessment: Assessment, config: PolicyConfig) -> tuple[float | None, dict, str | None]:
     weights = config.weights
+    if action.get("card_name") in _NEVER_BUY_CARD_NAMES:
+        return None, {"_heuristic": True, "never_buy": action.get("card_name")}, "red_army_never_buys_india_support"
     if action.get("affordable") is False:
         return None, {"_heuristic": True, "affordable": False}, "unaffordable"
     raw = (
@@ -103,13 +110,20 @@ def _play_card_score(action: dict, assessment: Assessment, config: PolicyConfig)
     # v1 weights greedily shop first and delay every real card action until no
     # further purchase is affordable.
     action_mode_floor = weights.w5_resource_efficiency * (weights.buy_card_base_value + 0.5)
-    if "action" in modes and any(k in effect_text for k in _GROWTH_EFFECT_KEYWORDS):
+    # "瓦解1個組織" also contains "組織": a dissolve effect is checked first so it
+    # is never mistaken for organization growth.
+    is_dissolve = any(k in effect_text for k in _DISSOLVE_EFFECT_KEYWORDS)
+    if "action" in modes and not is_dissolve and any(k in effect_text for k in _GROWTH_EFFECT_KEYWORDS):
         score = max(weights.w4_organization_growth * 3.0, action_mode_floor)
         breakdown = {"_heuristic": True, "organization_growth": score, "reason": "action_effect_text suggests building an organization"}
         overrides["mode"] = "action"
     elif "action" in modes and any(k in effect_text for k in _DISSOLVE_EFFECT_KEYWORDS):
         blocking_bonus = weights.w2_block_opponent_progress * 0.5 * assessment.max_opponent_progress
         score = action_mode_floor + blocking_bonus
+        if any(o.organization_total > 0 for o in assessment.opponents):
+            # A real opposing organization exists to disrupt: this outranks
+            # low-value organization growth (but not 國安部's guaranteed target).
+            score = max(weights.w4_organization_growth * 3.0, action_mode_floor) + 0.5 + blocking_bonus
         breakdown = {
             "_heuristic": True,
             "legal_action_priority": action_mode_floor,
@@ -135,12 +149,11 @@ def _play_card_score(action: dict, assessment: Assessment, config: PolicyConfig)
 
 def _best_target_player_id(candidate_ids: list[str], assessment: Assessment) -> str | None:
     best_id = None
-    best_progress = -1.0
+    best_key: tuple[float, int] | None = None
     for pid in candidate_ids:
-        opponent = assessment.opponent_by_id(pid)
-        progress = opponent.condition_progress if opponent else 0.0
-        if progress > best_progress:
-            best_progress = progress
+        key = assessment.threat_key(pid)
+        if best_key is None or key > best_key:
+            best_key = key
             best_id = pid
     return best_id
 
@@ -152,13 +165,37 @@ def _move_organization_score(action: dict, config: PolicyConfig) -> tuple[float,
     return score, {"_heuristic": True, "region_control": score, "move_cost": cost}
 
 
-def _faction_action_score(action: dict, assessment: Assessment, config: PolicyConfig) -> tuple[float, dict, dict]:
+def _faction_action_score(action: dict, assessment: Assessment, config: PolicyConfig) -> tuple[float | None, dict, dict]:
     weights = config.weights
     name = action.get("name")
     base = weights.faction_action_base.get(name, 1.0)
     overrides: dict[str, Any] = {}
     breakdown: dict[str, Any] = {"_heuristic": True, "faction_action_base": base}
     score = base
+    if name == "國安部" and "dissolve_targets" in action:
+        targets = action.get("dissolve_targets") or []
+        if not targets:
+            return None, {**breakdown, "dissolve_targets": 0}, overrides
+        # Lexicographic selection (first wins exact ties); numeric bonus uses progress only.
+        top_player = None
+        top_key: tuple[float, int] | None = None
+        for t in targets:
+            pid = t.get("player_id")
+            key = assessment.threat_key(pid)
+            if top_key is None or key > top_key:
+                top_key, top_player = key, pid
+        top_opponent = assessment.opponent_by_id(top_player)
+        top_progress = top_opponent.condition_progress if top_opponent else 0.0
+        score = max(weights.w4_organization_growth * 3.0, weights.w5_resource_efficiency * (weights.buy_card_base_value + 0.5)) \
+            + 1.0 + weights.w2_block_opponent_progress * top_progress
+        breakdown.update({
+            "threat": top_progress,
+            "threat_organization_total": top_opponent.organization_total if top_opponent else 0,
+            "threat_target_player_id": top_player,
+            "legal_dissolve_target_count": len(targets),
+            "reason": "server-listed legal dissolve target exists; disrupting opponent organizations outranks growth/purchases",
+        })
+        return score, breakdown, overrides
     if name == "國安部":
         bonus = weights.w2_block_opponent_progress * assessment.max_opponent_progress
         score += bonus
@@ -197,7 +234,7 @@ def score_candidate(action: dict, state: dict, assessment: Assessment, config: P
         return score, breakdown, None, {}
     if kind == "faction_action":
         score, breakdown, overrides = _faction_action_score(action, assessment, config)
-        return score, breakdown, None, overrides
+        return score, breakdown, ("no_legal_dissolve_target" if score is None else None), overrides
     if kind == "use_topdeck_right":
         score = config.weights.w5_resource_efficiency * 0.5
         return score, {"_heuristic": True, "card_advantage": score}, None, {}

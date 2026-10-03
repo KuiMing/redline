@@ -14148,6 +14148,12 @@
         "red_army_action_count": 0,
         "red_army_action_limit": 3,
         "red_army_base_build_blocks": [],
+        "red_army_state_security_targets": [
+          {
+            "player_id": "p1",
+            "town": "天津"
+          }
+        ],
         "static_purchase_supply": {
           "內鬥": 20,
           "分神": 30,
@@ -16651,6 +16657,12 @@
         "red_army_action_count": 1,
         "red_army_action_limit": 3,
         "red_army_base_build_blocks": [],
+        "red_army_state_security_targets": [
+          {
+            "player_id": "p1",
+            "town": "天津"
+          }
+        ],
         "static_purchase_supply": {
           "內鬥": 20,
           "分神": 30,
@@ -27261,6 +27273,12 @@
         "red_army_action_count": 0,
         "red_army_action_limit": 3,
         "red_army_base_build_blocks": [],
+        "red_army_state_security_targets": [
+          {
+            "player_id": "p1",
+            "town": "天津"
+          }
+        ],
         "static_purchase_supply": {
           "內鬥": 20,
           "分神": 30,
@@ -30099,6 +30117,12 @@
         "red_army_action_count": 0,
         "red_army_action_limit": 3,
         "red_army_base_build_blocks": [],
+        "red_army_state_security_targets": [
+          {
+            "player_id": "p1",
+            "town": "天津"
+          }
+        ],
         "static_purchase_supply": {
           "內鬥": 20,
           "分神": 30,
@@ -32771,6 +32795,12 @@
         "red_army_action_count": 0,
         "red_army_action_limit": 3,
         "red_army_base_build_blocks": [],
+        "red_army_state_security_targets": [
+          {
+            "player_id": "p1",
+            "town": "天津"
+          }
+        ],
         "static_purchase_supply": {
           "內鬥": 20,
           "分神": 30,
@@ -35440,6 +35470,12 @@
         "red_army_action_count": 0,
         "red_army_action_limit": 3,
         "red_army_base_build_blocks": [],
+        "red_army_state_security_targets": [
+          {
+            "player_id": "p1",
+            "town": "天津"
+          }
+        ],
         "static_purchase_supply": {
           "內鬥": 20,
           "分神": 30,
@@ -38116,6 +38152,12 @@
         "red_army_action_count": 1,
         "red_army_action_limit": 3,
         "red_army_base_build_blocks": [],
+        "red_army_state_security_targets": [
+          {
+            "player_id": "p1",
+            "town": "天津"
+          }
+        ],
         "static_purchase_supply": {
           "內鬥": 19,
           "分神": 30,
@@ -48852,6 +48894,12 @@
         "red_army_action_count": 0,
         "red_army_action_limit": 3,
         "red_army_base_build_blocks": [],
+        "red_army_state_security_targets": [
+          {
+            "player_id": "p1",
+            "town": "天津"
+          }
+        ],
         "static_purchase_supply": {
           "內鬥": 19,
           "分神": 30,
@@ -51645,6 +51693,12 @@
         "red_army_action_count": 0,
         "red_army_action_limit": 3,
         "red_army_base_build_blocks": [],
+        "red_army_state_security_targets": [
+          {
+            "player_id": "p1",
+            "town": "天津"
+          }
+        ],
         "static_purchase_supply": {
           "內鬥": 19,
           "分神": 30,
@@ -54282,6 +54336,12 @@
         "red_army_action_count": 0,
         "red_army_action_limit": 3,
         "red_army_base_build_blocks": [],
+        "red_army_state_security_targets": [
+          {
+            "player_id": "p1",
+            "town": "天津"
+          }
+        ],
         "static_purchase_supply": {
           "內鬥": 19,
           "分神": 30,
@@ -56916,6 +56976,12 @@
         "red_army_action_count": 0,
         "red_army_action_limit": 3,
         "red_army_base_build_blocks": [],
+        "red_army_state_security_targets": [
+          {
+            "player_id": "p1",
+            "town": "天津"
+          }
+        ],
         "static_purchase_supply": {
           "內鬥": 19,
           "分神": 30,
@@ -59523,6 +59589,7 @@
         "red_army_action_count": 1,
         "red_army_action_limit": 3,
         "red_army_base_build_blocks": [],
+        "red_army_state_security_targets": [],
         "static_purchase_supply": {
           "內鬥": 19,
           "分神": 30,
@@ -62129,6 +62196,7 @@
         "red_army_action_count": 1,
         "red_army_action_limit": 3,
         "red_army_base_build_blocks": [],
+        "red_army_state_security_targets": [],
         "static_purchase_supply": {
           "內鬥": 19,
           "分神": 30,
@@ -72955,6 +73023,7 @@
         "red_army_action_count": 0,
         "red_army_action_limit": 3,
         "red_army_base_build_blocks": [],
+        "red_army_state_security_targets": [],
         "static_purchase_supply": {
           "內鬥": 19,
           "分神": 30,
@@ -75762,6 +75831,7 @@
         "red_army_action_count": 1,
         "red_army_action_limit": 3,
         "red_army_base_build_blocks": [],
+        "red_army_state_security_targets": [],
         "static_purchase_supply": {
           "內鬥": 19,
           "分神": 30,
@@ -78568,6 +78638,7 @@
         "red_army_action_count": 1,
         "red_army_action_limit": 3,
         "red_army_base_build_blocks": [],
+        "red_army_state_security_targets": [],
         "static_purchase_supply": {
           "內鬥": 19,
           "分神": 30,
@@ -89964,6 +90035,7 @@
         "red_army_action_count": 0,
         "red_army_action_limit": 3,
         "red_army_base_build_blocks": [],
+        "red_army_state_security_targets": [],
         "static_purchase_supply": {
           "內鬥": 19,
           "分神": 30,
@@ -92904,6 +92976,7 @@
         "red_army_action_count": 1,
         "red_army_action_limit": 3,
         "red_army_base_build_blocks": [],
+        "red_army_state_security_targets": [],
         "static_purchase_supply": {
           "內鬥": 19,
           "分神": 30,
