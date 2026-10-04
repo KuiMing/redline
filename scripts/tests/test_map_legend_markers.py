@@ -28,8 +28,8 @@ def test_selected_town_brightens_connected_routes_and_uses_red_rail():
     logic = (ROOT / "static" / "leaflet_game_map_logic.js").read_text(encoding="utf-8")
 
     assert "poly.__redlineRoute = { source: link.source, target: link.target, type: link.type };" in logic
-    assert "function highlightConnectedRoutes(townName)" in logic
-    assert "route.source === townName || route.target === townName" in logic
+    assert "function highlightConnectedRoutes(townName, targetTown = null)" in logic
+    assert "route.source === townName || route.target === townName" in logic  # direct adjacency
     assert "color: '#d8a04a', opacity: 0.9" in logic
     assert "color: '#ef4444', opacity: 0.9" in logic
     assert "weight: roadWeight(map.getZoom())" in logic
