@@ -363,6 +363,10 @@ def _faction_action_entries(state: dict, me: dict, faction_catalog: dict) -> lis
             return []
         for name in candidate_names:
             entry = {"kind": "faction_action", "name": name, "note": "Server re-validates target/count limits per use."}
+            if name == "國安部" and "red_army_state_security_targets" in state:
+                # Server-computed (legal range/inside-wall/base-dissolve rules);
+                # public organization positions only.
+                entry["dissolve_targets"] = [dict(t) for t in state.get("red_army_state_security_targets") or []]
             if name == "政工部":
                 entry["needs_target_player_id"] = True
                 entry["target_candidates"] = [p["id"] for p in state.get("players") or [] if p.get("id") != me.get("id")]

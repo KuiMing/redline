@@ -115,7 +115,7 @@ def test_event_card_hk_end_turn_relocation_timing_branch():
     assert game.turn_phase == TurnPhase.END
     assert game.current_event["name"] == "香港抗暴之戰"
     assert game.event_progress["status"] == "active"
-    assert game.event_progress["settlement_target_player_id"] == viewer.id
+    assert not game.event_progress.get("settlement_started")
     assert game.event_notification is not None
     assert game.event_deck.draw_pile == []
     assert game.event_deck.discard_pile == []
@@ -145,9 +145,15 @@ def test_event_card_hk_failed_relocation_settles_immediately():
     )
     game = runtime.manager.games[result["game_id"]]
 
+    viewer, _red = game.players
+
     assert game.turn_phase == TurnPhase.ACTION
-    assert game.event_progress["settled"] is True
+    assert game.event_progress["settlement_started"] is True
     assert game.event_progress["succeeded"] is False
+    # The viewer's own required discard keeps the event unsettled until it is resolved.
+    assert game.event_progress["settled"] is False
+    assert game.pending_choice["player_id"] == viewer.id
+    assert game.pending_choice["choice_key"] == "event_discard_self"
 
 
 def test_event_card_hk_free_relocation_settles_as_success():

@@ -22,6 +22,7 @@ from server.lobby_routes import (
     create_room,
     join_game,
     lobby,
+    lobby_ai_red_army,
     lobby_bases,
     lobby_factions,
     lobby_hosts,
@@ -30,6 +31,7 @@ from server.lobby_routes import (
     lobby_ready,
     lobby_state,
     resume_game,
+    set_ai_red_army,
     set_lobby_market_mode,
     set_ready,
     start_game,
@@ -43,6 +45,7 @@ from server.map_data_routes import (
     map_test,
     router as map_data_router,
 )
+from server.red_army_ai_runtime import drive_red_army_turns
 from server.test_routes.registry import register_test_routes
 from server.test_routes.runtime import GameSetupRuntime
 import os
@@ -82,6 +85,19 @@ async def broadcast_game_state(game_id, game, last_action_result=None):
                 dead_connections.append((pid, ws))
     for pid, ws in dead_connections:
         manager.remove_connection(game_id, pid, ws)
+
+    # AI Red Army wake-up hook (server-side, event-driven — see
+    # server/red_army_ai_runtime.py's module docstring). This is a no-op
+    # for every room that didn't enable AI Red Army in the lobby. When it
+    # genuinely advances the game, re-broadcast so connected humans see the
+    # AI's move; `maybe_run_red_army_turn` returns False once there is
+    # nothing further to do right now, which bounds this recursion to
+    # exactly as many rounds as the AI actually played.
+    # Paced one action at a time (fixed delay between actions, non-blocking).
+    async def _rebroadcast():
+        await broadcast_game_state(game_id, game)
+
+    await drive_red_army_turns(game_id, game, _rebroadcast)
 
 
 def schedule_reaction_timeout(game_id, game):
@@ -251,6 +267,14 @@ def _ws_action_error_message(result):
 async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str):
     supplied_token = websocket.headers.get("sec-websocket-protocol", "").split(",", 1)[0].strip()
     await websocket.accept(subprotocol=supplied_token or None)
+
+    game_for_seat_check = manager.get_game(game_id)
+    if game_for_seat_check is not None and player_id == getattr(
+        game_for_seat_check, "ai_red_army_player_id", None
+    ):
+        await websocket.send_json({"error": "This seat is AI-controlled and cannot be connected to"})
+        await websocket.close(code=1008)
+        return
 
     credential = lobby_player_credentials.get(game_id, {}).get(player_id)
     if credential:

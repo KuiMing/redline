@@ -82,7 +82,6 @@ class EventCardTestRoutes:
                 "succeeded": False,
                 "settled": False,
                 "status": "active",
-                "settlement_target_player_id": game.players[0].id,
             }
             game.event_notification = game._event_display_payload()
             game.event_deck.draw_pile = []

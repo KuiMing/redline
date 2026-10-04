@@ -726,6 +726,41 @@ def test_north_support_tier3_stale_pick_with_no_replacement_resolves_the_still_v
     assert game.pending_choice is None
 
 
+def test_north_support_tier3_stale_second_target_resolves_queued_first_target():
+    game, actor, enemy = make_game(actor_faction="liberals")
+    actor.base = "北京"
+    actor.organizations = {"北京": 1}
+    actor.hand = [game._make_support_card("北國奧援")]
+    game._support_card_tier = lambda _player, _card: (3, 0, [])
+    enemy.faction_id = "red_army"
+    enemy.base = "西安"
+    enemy.organizations = {"天津": 1, "石家莊": 1}
+
+    played = game.play_card(0, mode="action")
+    assert played.get("pending_choice") is True, played
+    tianjin_index = next(
+        i for i, target in enumerate(game.pending_choice["targets"])
+        if target["town"] == "天津"
+    )
+    first = game.resolve_pending_choice(actor.id, tianjin_index)
+    assert first.get("pending_choice") is True, first
+    assert enemy.organizations == {"天津": 1, "石家莊": 1}
+
+    # The only offered second target goes stale before its confirmation.
+    shijiazhuang_index = next(
+        i for i, target in enumerate(game.pending_choice["targets"])
+        if target["town"] == "石家莊"
+    )
+    del enemy.organizations["石家莊"]
+    final = game.resolve_pending_choice(actor.id, shijiazhuang_index)
+
+    assert final.get("success") is True, final
+    assert final.get("effect_fizzled") is not True, final
+    assert final.get("target_count") == 1, final
+    assert enemy.organizations.get("天津", 0) == 0
+    assert game.pending_choice is None
+
+
 def test_north_support_tier3_stale_pick_can_still_be_confirmed_after_re_pick():
     # Companion to the defect-2 regression above: when a legal replacement target DOES exist for
     # a vacated (stale) slot, the choice must still reopen for that re-pick -- confirming again
@@ -1210,7 +1245,7 @@ def test_event_red_dissolve_forced_choice_is_not_cancellable():
     other.organizations = {"天津": 1}
     game.current_event = {"name": "Test Event"}
 
-    result = game._apply_event_effect_red_dissolve({"scope": "牆內"})
+    result = game._apply_event_effect_red_dissolve({"scope": "牆內"}, other)
     assert result == {"success": True, "pending_choice": True}
     assert game.pending_choice.get("choice_key") == "event_red_dissolve"
     assert not game.pending_choice.get("cancellable")
@@ -1558,14 +1593,13 @@ def _pin_money_cost_mission(game, required=3):
         "type": "mission",
         "trigger": {"type": "play_card_with_money", "count": required},
     }
-    game.event_progress = {
-        "count": 0,
-        "required": required,
-        "succeeded": False,
-        "settled": False,
-        "status": "active",
-    }
+    game.event_progress = game._new_event_progress(game.current_event)
     game.event_modifiers = []
+
+
+def _count(game, player):
+    """The player's OWN progress toward the mission (missions are tracked per player)."""
+    return game.event_progress["player_progress"][player.id]["count"]
 
 
 def test_interleaved_double_cancel_restores_event_progress_correctly():
@@ -1587,13 +1621,13 @@ def test_interleaved_double_cancel_restores_event_progress_correctly():
     assert played_a.get("pending_choice") is True, played_a
     played_b = game.play_card(0, mode="action")
     assert played_b.get("pending_choice") is True, played_b
-    assert game.event_progress["count"] == 2, game.event_progress
+    assert _count(game, actor) == 2, game.event_progress
 
     # Resolve B's first (sacrifice_town) stage -- swaps which flow is self.pending_choice vs.
     # queued, exactly like the turn_log interleaving regressions above.
     resolved_stage1 = game.resolve_pending_choice(actor.id, 0)
     assert resolved_stage1.get("pending_choice") is True, resolved_stage1
-    assert game.event_progress["count"] == 2
+    assert _count(game, actor) == 2
 
     # Cancel whichever flow is currently active, then cancel the other (now reactivated).
     first_cancel = game.cancel_pending_choice(actor.id)
@@ -1602,7 +1636,7 @@ def test_interleaved_double_cancel_restores_event_progress_correctly():
     second_cancel = game.cancel_pending_choice(actor.id)
     assert second_cancel.get("success") is True, second_cancel
 
-    assert game.event_progress["count"] == 0, (
+    assert _count(game, actor) == 0, (
         f"event_progress not fully restored after cancelling both interleaved plays: "
         f"{game.event_progress}"
     )
@@ -1624,12 +1658,12 @@ def test_interleaved_cancel_one_confirm_other_leaves_event_progress_at_one():
 
     game.play_card(0, mode="action")
     game.play_card(0, mode="action")
-    assert game.event_progress["count"] == 2
+    assert _count(game, actor) == 2
     game.resolve_pending_choice(actor.id, 0)  # B's sacrifice_town stage
 
     # Cancel the currently-active flow (whichever that is)...
     game.cancel_pending_choice(actor.id)
-    assert game.event_progress["count"] == 1, game.event_progress
+    assert _count(game, actor) == 1, game.event_progress
 
     # ...then CONFIRM the other one instead of also cancelling it.
     assert game.pending_choice is not None
@@ -1641,7 +1675,7 @@ def test_interleaved_cancel_one_confirm_other_leaves_event_progress_at_one():
         # 北國奧援's target step (2nd stage of its own two-phase flow) -- one resolve away.
         result = game.resolve_pending_choice(actor.id, 0)
     assert result.get("success") is True, result
-    assert game.event_progress["count"] == 1, (
+    assert _count(game, actor) == 1, (
         "confirming the surviving flow must not touch event_progress a second time, and the "
         f"cancelled flow's contribution must stay undone: {game.event_progress}"
     )
@@ -1659,7 +1693,7 @@ def test_event_progress_cancel_non_interleaved_still_fully_restores():
     before_progress = dict(game.event_progress)
 
     game.play_card(0, mode="action")
-    assert game.event_progress["count"] == 1
+    assert _count(game, actor) == 1
     cancelled = game.cancel_pending_choice(actor.id)
     assert cancelled.get("success") is True, cancelled
     assert game.event_progress == before_progress
@@ -1682,7 +1716,7 @@ def test_event_progress_confirm_path_still_reaches_success_normally():
     resolved = game.resolve_pending_choice(actor.id, index)
     assert resolved.get("success") is True, resolved
     assert game.event_progress["succeeded"] is True
-    assert game.event_progress["count"] == 1
+    assert _count(game, actor) == 1
 
 
 # ---------------------------------------------------------------------------
@@ -1727,7 +1761,7 @@ def test_same_actor_interleaved_cancel_first_played_keeps_surviving_plays_attrib
 
     cancel_a = game.cancel_pending_choice(actor.id)
     assert cancel_a.get("success") is True, cancel_a
-    assert game.event_progress["count"] == 1, (
+    assert _count(game, actor) == 1, (
         "A's own contribution must be undone, leaving exactly B's still-live contribution"
     )
     # The bug: same-value last_actor_id comparison would treat A's cancel as "still credited"
@@ -1747,7 +1781,7 @@ def test_same_actor_interleaved_cancel_first_played_keeps_surviving_plays_attrib
     final_index = next(i for i in range(len(game.pending_choice["targets"])))
     final = game.resolve_pending_choice(actor.id, final_index)
     assert final.get("success") is True, final
-    assert game.event_progress["count"] == 1
+    assert _count(game, actor) == 1
     assert game.event_progress.get("last_actor_id") == actor.id, (
         f"B's attribution must still be correct after B's own final confirmation: {game.event_progress}"
     )
@@ -1779,7 +1813,7 @@ def test_same_actor_interleaved_cancel_later_played_keeps_earlier_plays_attribut
     assert game.pending_choice.get("choice_key") == "card_dissolve_interaction", (
         "expected A to be reactivated after cancelling B"
     )
-    assert game.event_progress["count"] == 1, (
+    assert _count(game, actor) == 1, (
         "B's own contribution must be undone, leaving exactly A's still-live contribution"
     )
     assert game.event_progress.get("last_actor_id") == actor.id, (
@@ -1792,7 +1826,7 @@ def test_same_actor_interleaved_cancel_later_played_keeps_earlier_plays_attribut
     )
     final = game.resolve_pending_choice(actor.id, final_index)
     assert final.get("success") is True, final
-    assert game.event_progress["count"] == 1
+    assert _count(game, actor) == 1
     assert game.event_progress.get("last_actor_id") == actor.id, (
         f"A's attribution must still be correct after A's own final confirmation: {game.event_progress}"
     )

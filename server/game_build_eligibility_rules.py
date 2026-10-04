@@ -118,6 +118,57 @@ def rail_reachable_within_three(map_data, towns_by_ruler, faction_by_id, players
     return False
 
 
+def rail_route_edges(map_data, towns_by_ruler, faction_by_id, players, player, from_town, to_town):
+    # 與 rail_reachable_within_three 使用同一套通行規則（同側牆、不得穿越阻擋城鎮、範圍上限），
+    # 回傳 from_town→to_town 所有「最短」合法鐵路路徑上的線段（依路徑順序的 [a, b] 清單）。
+    # 只含最短路徑：較長但仍在範圍內的繞路不屬於必要路徑，不擴大高亮。
+    # 直接相鄰的鐵路（含跨牆1格）只回傳該單一線段。無合法鐵路路徑時回傳 []。
+    towns = map_data.get('towns', {})
+    if from_town == to_town or from_town not in towns or to_town not in towns:
+        return []
+    if to_town in (towns[from_town].get('rail', []) or []):
+        return [[from_town, to_town]]
+    movement_rules = map_data.get('movement_rules', {}) or {}
+    rail_range = max(1, int(movement_rules.get('rail_range', 3) or 3))
+    inner_towns = set(towns_for_region_alias(map_data, towns_by_ruler, 'china'))
+    origin_side_inner = from_town in inner_towns
+    if (to_town in inner_towns) != origin_side_inner:
+        return []
+    if town_blocks_movement_for_player(faction_by_id, players, player, to_town):
+        return []
+    distance = {from_town: 0}
+    queue = [from_town]
+    while queue:
+        town = queue.pop(0)
+        if distance[town] >= rail_range or town == to_town:
+            continue
+        for neighbor in towns.get(town, {}).get('rail', []) or []:
+            if neighbor not in towns or neighbor in distance:
+                continue
+            if (neighbor in inner_towns) != origin_side_inner:
+                continue
+            if neighbor != to_town and town_blocks_movement_for_player(faction_by_id, players, player, neighbor):
+                continue
+            distance[neighbor] = distance[town] + 1
+            queue.append(neighbor)
+    if to_town not in distance:
+        return []
+    edges = []
+    seen = set()
+    frontier = [to_town]
+    while frontier:
+        town = frontier.pop()
+        for previous, previous_distance in distance.items():
+            if previous_distance != distance[town] - 1 or town not in (towns[previous].get('rail', []) or []):
+                continue
+            if (previous, town) not in seen:
+                seen.add((previous, town))
+                edges.append([previous, town])
+                frontier.append(previous)
+    edges.sort(key=lambda edge: (distance[edge[0]], edge))
+    return edges
+
+
 def org_supply_limit(player):
     return RED_ARMY_ORG_SUPPLY if getattr(player, 'faction_id', None) == 'red_army' else ANTI_COMMUNIST_ORG_SUPPLY
 

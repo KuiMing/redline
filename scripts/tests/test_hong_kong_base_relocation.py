@@ -124,57 +124,72 @@ def test_failed_event_opens_relocation_only_after_required_discard_resolves():
     assert game.relocate_hong_kong_base(hk.id, '倫敦').get('success') is True
 
 
+def end_turn(game):
+    """The current seat presses 結束行動階段."""
+    game.turn_phase = TurnPhase.ACTION
+    return game.advance_turn_phase()
+
+
+def end_turns_through_red(game):
+    """End every seat's turn up to and including the Red Army seat. Returns the Red Army
+    seat's own end-turn result (earlier non-red seats must have ended without any event
+    settlement, so their results are plain successes)."""
+    for _ in range(len(game.players)):
+        was_red = game.current_player().faction_id == 'red_army'
+        result = end_turn(game)
+        if was_red:
+            return result
+        assert result == {'success': True}
+        assert not game.event_progress['settled']
+        assert not game.event_progress.get('settlement_started')
+    raise AssertionError('red seat never ended its turn')
+
+
+def pin_hong_kong_event(game, name='香港抗暴之戰'):
+    game.current_event = game._event_by_name(name)
+    game.event_progress = game._new_event_progress(game.current_event)
+    return game.event_progress
+
+
 def test_end_turn_waits_for_hong_kong_relocation_decision_before_next_player_starts():
     game, hk, red = make_game()
     hk.hand = [Card('合作談判', 'command', {})]
-    game.current_event = game._event_by_name('香港抗暴之戰')
-    game.event_progress = {
-        'count': 0,
-        'required': 1,
-        'succeeded': False,
-        'settled': False,
-        'status': 'active',
-        'settlement_target_player_id': hk.id,
-    }
+    pin_hong_kong_event(game)
 
-    ended = game.advance_turn_phase()
+    ended = end_turns_through_red(game)
 
     assert ended.get('pending_choice') is True
-    assert game.current_player() is hk
+    assert game.current_player() is red
     assert game.turn_phase == TurnPhase.END
     assert game.pending_choice.get('choice_key') == 'event_discard_self'
+    assert game.pending_choice.get('player_id') == hk.id
     assert game.hk_free_base_relocation is False
 
     discarded = game.resolve_pending_choice(hk.id, [0])
 
     assert discarded.get('success') is True
-    assert game.current_player() is hk
+    assert game.current_player() is red
     assert game.hk_free_base_relocation is True
+    assert game.hk_relocation_blocks_turn_handoff is True
 
     relocated = game.relocate_hong_kong_base(hk.id, '臺北')
 
     assert relocated.get('success') is True
-    assert game.current_player() is red
+    assert game.current_player() is hk
     assert game.turn_phase == TurnPhase.ACTION
 
 
 def test_three_player_failure_makes_each_non_red_player_discard_before_hong_kong_relocation():
     game, first, second, red = make_three_player_game()
+    game.current_player_index = 0
     first.hand = [Card('第一位手牌', 'command', {})]
     second.hand = [Card('第二位手牌', 'command', {})]
-    game.current_event = game._event_by_name('香港抗暴之戰')
-    game.event_progress = {
-        'count': 0,
-        'required': 1,
-        'succeeded': False,
-        'settled': False,
-        'status': 'active',
-    }
+    pin_hong_kong_event(game)
 
-    ended = game.advance_turn_phase()
+    ended = end_turns_through_red(game)
 
     assert ended.get('pending_choice') is True
-    assert game.current_player() is second
+    assert game.current_player() is red
     assert game.pending_choice.get('choice_key') == 'event_discard_self'
     assert game.pending_choice.get('player_id') == first.id
 
@@ -192,64 +207,58 @@ def test_three_player_failure_makes_each_non_red_player_discard_before_hong_kong
     assert len(second.deck.discard_pile) == 1
     assert len(red.deck.discard_pile) == 0
     assert game.hk_free_base_relocation is True
-    assert game.current_player() is second
+    assert game.current_player() is red
 
     assert game.keep_hong_kong_base(first.id) == {'success': True, 'kept': '香港城'}
-    assert game.current_player() is red
+    assert game.current_player() is first
     assert game.turn_phase == TurnPhase.ACTION
 
 
-def test_interleaved_red_seat_waits_for_the_actual_final_non_red_player():
+def test_interleaved_red_seat_settles_after_the_last_seat_of_the_round():
     game, first, red, second = make_interleaved_three_player_game()
     first.hand = [Card('第一位手牌', 'command', {})]
     second.hand = [Card('第二位手牌', 'command', {})]
-    game.current_event = game._event_by_name('香港抗暴之戰')
-    game.event_progress = {
-        'count': 0,
-        'required': 1,
-        'succeeded': False,
-        'settled': False,
-        'status': 'active',
-    }
+    pin_hong_kong_event(game)
 
-    assert game.advance_turn_phase() == {'success': True}
+    # first and Red (both before `second`) end: nothing settles, `second` has not acted yet.
+    assert end_turn(game) == {'success': True}
     assert game.current_player() is red
-    assert game.pending_choice is None
-    assert game.event_progress['settled'] is False
-
-    game.turn_phase = TurnPhase.END
-    assert game.advance_turn_phase() == {'success': True}
+    assert end_turn(game) == {'success': True}
     assert game.current_player() is second
     assert game.pending_choice is None
     assert game.event_progress['settled'] is False
 
-    game.turn_phase = TurnPhase.END
-    assert game.advance_turn_phase().get('pending_choice') is True
+    # The last seat of the round ending is the one settlement boundary.
+    assert end_turn(game).get('pending_choice') is True
     assert game.current_player() is second
     assert game.pending_choice.get('player_id') == first.id
+    assert game.resolve_pending_choice(first.id, [0]).get('pending_choice') is True
+    assert game.pending_choice.get('player_id') == second.id
+    assert game.resolve_pending_choice(second.id, [0]).get('success') is True
+    assert game.event_progress['settled'] is True
+    assert game.hk_free_base_relocation is True
+    assert game.current_player() is second
+
+    assert game.keep_hong_kong_base(first.id).get('success') is True
+    assert game.current_player() is first
 
 
 def test_event_discard_choice_hides_each_players_hand_from_other_viewers():
     game, first, second, red = make_three_player_game()
+    game.current_player_index = 0
     first.hand = [Card('第一位秘密手牌', 'command', {})]
     second.hand = [Card('第二位秘密手牌', 'command', {})]
-    game.current_event = game._event_by_name('香港抗暴之戰')
-    game.event_progress = {
-        'count': 0,
-        'required': 1,
-        'succeeded': False,
-        'settled': False,
-        'status': 'active',
-    }
+    pin_hong_kong_event(game)
 
-    assert game.advance_turn_phase().get('pending_choice') is True
-    assert game.state(first.id)['pending_choice']['cards'] == ['第一位秘密手牌']
+    assert end_turns_through_red(game).get('pending_choice') is True
+    # Each seat's own end-turn refill topped the hand up to 5 before the Red Army seat settled.
+    assert '第一位秘密手牌' in game.state(first.id)['pending_choice']['cards']
     assert game.state(second.id)['pending_choice']['cards'] == []
     assert game.state(red.id)['pending_choice']['cards'] == []
     assert '第一位秘密手牌' not in str(game.state(second.id)['pending_choice'])
 
     assert game.resolve_pending_choice(first.id, [0]).get('pending_choice') is True
-    assert game.state(second.id)['pending_choice']['cards']
+    assert '第二位秘密手牌' in game.state(second.id)['pending_choice']['cards']
     assert game.state(first.id)['pending_choice']['cards'] == []
     assert game.state(red.id)['pending_choice']['cards'] == []
     assert '第二位秘密手牌' not in str(game.state(first.id)['pending_choice'])
@@ -258,18 +267,12 @@ def test_event_discard_choice_hides_each_players_hand_from_other_viewers():
 def test_other_discard_self_event_failures_also_penalize_every_non_red_player():
     for event_name in ('重大災難', '紅軍權貴出逃'):
         game, first, second, red = make_three_player_game()
+        game.current_player_index = 0
         first.hand = [Card(f'{event_name}第一位手牌', 'command', {})]
         second.hand = [Card(f'{event_name}第二位手牌', 'command', {})]
-        game.current_event = game._event_by_name(event_name)
-        game.event_progress = {
-            'count': 0,
-            'required': int(game.current_event.get('trigger', {}).get('count', 1) or 1),
-            'succeeded': False,
-            'settled': False,
-            'status': 'active',
-        }
+        pin_hong_kong_event(game, event_name)
 
-        assert game.advance_turn_phase().get('pending_choice') is True
+        assert end_turns_through_red(game).get('pending_choice') is True
         assert game.current_player() is red
         assert game.pending_choice.get('player_id') == first.id
         assert game.resolve_pending_choice(first.id, [0]).get('pending_choice') is True
@@ -284,20 +287,14 @@ def test_other_discard_self_event_failures_also_penalize_every_non_red_player():
 
 def test_successful_event_also_waits_for_keep_decision_before_next_player_starts():
     game, hk, red = make_game()
-    game.current_event = game._event_by_name('香港抗暴之戰')
-    game.event_progress = {
-        'count': 1,
-        'required': 1,
-        'succeeded': True,
-        'settled': False,
-        'status': 'success_pending',
-        'settlement_target_player_id': hk.id,
-    }
+    pin_hong_kong_event(game)
+    game._track_event_progress('play_card_with_money', player=hk)
+    assert game.event_progress['player_progress'][hk.id]['met'] is True
 
-    ended = game.advance_turn_phase()
+    ended = end_turns_through_red(game)
 
     assert ended.get('pending_hk_relocation') is True
-    assert game.current_player() is hk
+    assert game.current_player() is red
     assert game.turn_phase == TurnPhase.END
     assert game.hk_free_base_relocation is True
     assert game.advance_turn_phase() == {
@@ -307,8 +304,7 @@ def test_successful_event_also_waits_for_keep_decision_before_next_player_starts
     kept = game.keep_hong_kong_base(hk.id)
 
     assert kept == {'success': True, 'kept': '香港城'}
-    assert game.current_player() is red
-    assert game.turn_phase == TurnPhase.ACTION
+    assert game.current_player() is hk
 
 
 def test_free_relocation_to_existing_own_organization_promotes_it_to_base_without_removing_old_organization():

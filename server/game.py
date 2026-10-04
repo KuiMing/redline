@@ -118,6 +118,7 @@ from server.game_build_eligibility_rules import (
     town_has_physical_organization,
     organization_occupancy_violations,
     rail_reachable_within_three,
+    rail_route_edges,
     org_supply_limit,
     player_is_nonviolent,
     player_is_distance_restricted,
@@ -182,12 +183,19 @@ class Game(CardPlayMixin):
         self.turn_phase = TurnPhase.ACTION
         self.winner = None
         self.co_winners = []
+        # 紅軍席位由 red_army_policy 引擎代打時，lobby /start 會在建構後設定這兩個
+        # 欄位（player_id + 一個供前端顯示、AI runtime 寫入的狀態小物件）。預設為
+        # None／idle：真人紅軍場次完全不受影響。見 server/red_army_ai_runtime.py。
+        self.ai_red_army_player_id = None
+        self.ai_red_army_status = {"state": "idle"}
         # 香港 special_rules（2026-07-11 裁決 S5-1）：香港抗暴之戰結算後、下一回合開始前的免費根據地遷移窗口
         self.hk_free_base_relocation = False
-        # 事件在回合結束補牌後結算時，先凍結換人；香港完成「遷移／留在」後才交棒。
+        # 事件於整輪結束結算後，先凍結換人；香港完成「遷移／留在」後才交棒。
         self.hk_relocation_blocks_turn_handoff = False
         # 紅軍回合結束後觸發互動式時代關卡時，先讓紅軍完成該關卡，再將席位交給下一位。
         self.era_blocks_turn_handoff = False
+        # Set while a turn end waits on per-player mission outcomes (see _end_turn).
+        self._turn_end_after_settlement = None
         # 若紅軍正好是整輪最後一席，時代效果必須記在新回合；交棒時不可再次增加回合數。
         self._era_turn_preincremented = False
         self._pending_guerrilla_players = []
@@ -346,15 +354,7 @@ class Game(CardPlayMixin):
             self.event_notification = None
             return
         event_type = self.current_event.get('type')
-        trigger = self.current_event.get('trigger') or {}
-        required = int(trigger.get('count', 0) or 0)
-        completed_player_ids = None
-        if trigger.get('each_non_red_player'):
-            required = len([p for p in self.players if getattr(p, 'faction_id', None) != 'red_army'])
-            completed_player_ids = []
-        self.event_progress = {'count': 0, 'required': required, 'succeeded': False, 'settled': False, 'status': 'active'}
-        if completed_player_ids is not None:
-            self.event_progress['completed_player_ids'] = completed_player_ids
+        self.event_progress = self._new_event_progress(self.current_event)
         if event_type == 'idle':
             self.event_progress.update({'succeeded': True, 'settled': True, 'status': 'idle'})
             self.log(f"Event drawn: {self.current_event.get('name')} (no-op)")
@@ -370,65 +370,152 @@ class Game(CardPlayMixin):
             self.log(f"Event drawn: {self.current_event.get('name')}")
         self.event_notification = self._event_display_payload()
 
+    def _new_event_progress(self, event):
+        """Fresh progress for a newly drawn event.
+
+        Every mission event is a per-player task: each non-Red player carries their own
+        progress entry and is judged (and rewarded/penalised) individually when the Red Army
+        turn ends. `count`/`required`/`completed_player_ids` stay as an aggregate summary
+        (how many players already met their own condition) for the UI.
+        """
+        trigger = (event or {}).get('trigger') or {}
+        progress = {
+            'count': 0,
+            'required': int(trigger.get('count', 0) or 0),
+            'succeeded': False,
+            'settled': False,
+            'status': 'active',
+        }
+        if (event or {}).get('type') == 'mission':
+            per_player_required = max(1, int(trigger.get('count', 1) or 1))
+            players = self._non_red_players()
+            progress['required'] = len(players)
+            progress['completed_player_ids'] = []
+            progress['player_progress'] = {
+                p.id: {
+                    'player_id': p.id,
+                    'player_name': p.name,
+                    'count': 0,
+                    'required': per_player_required,
+                    'met': False,
+                    'result': None,
+                }
+                for p in players
+            }
+        return progress
+
+    def _ensure_event_player_progress(self):
+        """Upgrade an aggregate-shaped event_progress (hand-built fixtures/test routes) to the
+        per-player shape. Players already recorded as completed/qualified (or the last actor
+        when only the legacy `succeeded` flag is set) count as having met their condition; a
+        bare legacy `succeeded` flag with no attribution means every non-Red player met it."""
+        progress = self.event_progress
+        if not isinstance(progress, dict):
+            return
+        if isinstance(progress.get('player_progress'), dict):
+            # Keep membership in step with the actual non-Red roster (factions can still be
+            # finalised after the first event is drawn).
+            entries = progress['player_progress']
+            fresh_entries = (self._new_event_progress(self.current_event).get('player_progress') or {})
+            changed = False
+            for player_id in [pid for pid in entries if pid not in fresh_entries]:
+                del entries[player_id]
+                changed = True
+            for player_id, entry in fresh_entries.items():
+                if player_id not in entries:
+                    entries[player_id] = entry
+                    changed = True
+            if changed:
+                self._refresh_event_progress_summary()
+            return
+        fresh = self._new_event_progress(self.current_event)
+        entries = fresh.get('player_progress') or {}
+        met_ids = set(progress.get('completed_player_ids') or []) | set(progress.get('qualified_player_ids') or [])
+        if progress.get('succeeded') and not met_ids:
+            actor_id = progress.get('last_actor_id') or progress.get('settlement_target_player_id')
+            met_ids = {actor_id} if actor_id in entries else set(entries)
+        for player_id in met_ids:
+            if player_id in entries:
+                entries[player_id]['met'] = True
+                entries[player_id]['count'] = entries[player_id]['required']
+        progress['player_progress'] = entries
+        progress.setdefault('completed_player_ids', [])
+        self._refresh_event_progress_summary()
+
+    def _refresh_event_progress_summary(self):
+        progress = self.event_progress
+        entries = (progress or {}).get('player_progress')
+        if not isinstance(entries, dict):
+            return
+        met_ids = [pid for pid in self._event_progress_player_order(entries) if entries[pid].get('met')]
+        progress['completed_player_ids'] = met_ids
+        progress['count'] = len(met_ids)
+        progress['required'] = len(entries)
+        # Aggregate flag only (UI/summary): True once EVERY non-Red player has met their own
+        # condition. Individual outcomes always come from player_progress.
+        all_met = bool(entries) and len(met_ids) == len(entries)
+        progress['succeeded'] = all_met
+        if not progress.get('settled') and not progress.get('settlement_started'):
+            progress['status'] = 'success_pending' if all_met else 'active'
+
+    def _event_progress_player_order(self, entries=None):
+        """Player ids with an event entry, in this round's seat order."""
+        entries = entries if entries is not None else ((self.event_progress or {}).get('player_progress') or {})
+        count = len(self.players)
+        start = getattr(self, 'round_start_player_index', 0) or 0
+        ordered = [self.players[(start + offset) % count].id for offset in range(count)] if count else []
+        return [pid for pid in ordered if pid in entries]
+
     def _track_event_progress(self, trigger_type, amount=1, town=None, player=None):
         event = self.current_event or {}
-        if event.get('type') != 'mission' or not self.event_progress or self.event_progress.get('settled'):
+        progress = self.event_progress
+        if (
+            event.get('type') != 'mission'
+            or not progress
+            or progress.get('settled')
+            or progress.get('settlement_started')
+        ):
             return
         trigger = event.get('trigger') or {}
         if trigger.get('type') != trigger_type:
             return
-        if not event_trigger_actor_allowed(player):
+        # Per-player task: progress is credited only to the (non-Red) player the trigger belongs
+        # to. Passive/auto abilities must pass their owner here, never the acting opponent.
+        if player is None or not event_trigger_actor_allowed(player):
             return
         if not event_trigger_matches_scope(self.map, self.towns_by_ruler, trigger, town=town):
             return
-        if trigger.get('each_non_red_player'):
-            player_id = getattr(player, 'id', None)
-            eligible_player_ids = {
-                p.id for p in self.players if getattr(p, 'faction_id', None) != 'red_army'
-            }
-            if player_id not in eligible_player_ids:
-                return
-            completed_player_ids = list(self.event_progress.get('completed_player_ids') or [])
-            if player_id not in completed_player_ids:
-                completed_player_ids.append(player_id)
-            self.event_progress['completed_player_ids'] = completed_player_ids
-            self.event_progress['count'] = len(completed_player_ids)
-            required = len([p for p in self.players if getattr(p, 'faction_id', None) != 'red_army'])
-            self.event_progress['required'] = required
-        else:
-            self.event_progress['count'] = int(self.event_progress.get('count', 0) or 0) + int(amount or 1)
-            required = int(trigger.get('count', 1) or 1)
-        if player is not None:
-            # Append to an ordered "still-live contributors" stack, rather than only writing
-            # last_actor_id/name directly -- cancelling one of several interleaved cancellable
-            # plays must remove exactly THAT play's own entry (wherever it sits in the stack,
-            # not necessarily the top) and let attribution fall back to whichever contribution
-            # is now the most recent SURVIVING one. A before/after value-snapshot restore can't
-            # do this correctly: the "before" state captured when a later play (B) started
-            # already reflects an earlier play (A)'s contribution, but if A is cancelled first,
-            # that captured "before" value is stale by the time B is itself cancelled -- undoing
-            # B by restoring it would incorrectly resurrect A's already-undone attribution
-            # instead of correctly falling back to "no attribution at all" (or to whichever
-            # OTHER still-live contribution actually comes next). See game_card_play.py's
-            # _undo_event_progress_delta, which pops by token from this stack instead of
-            # restoring a value. Kept in sync with last_actor_id/name/token, which mirror
-            # stack[-1] for every existing reader (_mission_settlement_target_id,
-            # _settle_current_event, event_display_payload) that doesn't know about the stack.
-            token = uuid.uuid4().hex
-            stack = self.event_progress.setdefault('_actor_contributions', [])
-            stack.append({
-                'token': token,
-                'actor_id': getattr(player, 'id', None),
-                'actor_name': getattr(player, 'name', None),
-            })
-            self.event_progress['last_actor_id'] = stack[-1]['actor_id']
-            self.event_progress['last_actor_name'] = stack[-1]['actor_name']
-            self.event_progress['last_actor_token'] = token
-        if self.event_progress['count'] >= required:
-            self.event_progress['succeeded'] = True
-            self.event_progress['status'] = 'success_pending'
-            self.event_notification = self._event_display_payload()
-            return {'success': True}
+        self._ensure_event_player_progress()
+        entry = (progress.get('player_progress') or {}).get(getattr(player, 'id', None))
+        if entry is None:
+            return
+        entry['count'] = int(entry.get('count', 0) or 0) + int(amount or 1)
+        entry['met'] = entry['count'] >= int(entry.get('required', 1) or 1)
+        self._refresh_event_progress_summary()
+        # Append to an ordered "still-live contributors" stack, rather than only writing
+        # last_actor_id/name directly -- cancelling one of several interleaved cancellable
+        # plays must remove exactly THAT play's own entry (wherever it sits in the stack,
+        # not necessarily the top) and let attribution fall back to whichever contribution
+        # is now the most recent SURVIVING one. A before/after value-snapshot restore can't
+        # do this correctly: the "before" state captured when a later play (B) started
+        # already reflects an earlier play (A)'s contribution, but if A is cancelled first,
+        # that captured "before" value is stale by the time B is itself cancelled -- undoing
+        # B by restoring it would incorrectly resurrect A's already-undone attribution
+        # instead of correctly falling back to "no attribution at all" (or to whichever
+        # OTHER still-live contribution actually comes next). See game_card_play.py's
+        # _undo_event_progress_delta, which pops by token from this stack instead of
+        # restoring a value. Kept in sync with last_actor_id/name/token, which mirror
+        # stack[-1] for display (event_display_payload).
+        token = uuid.uuid4().hex
+        stack = progress.setdefault('_actor_contributions', [])
+        stack.append({
+            'token': token,
+            'actor_id': getattr(player, 'id', None),
+            'actor_name': getattr(player, 'name', None),
+        })
+        progress['last_actor_id'] = stack[-1]['actor_id']
+        progress['last_actor_name'] = stack[-1]['actor_name']
+        progress['last_actor_token'] = token
         self.event_notification = self._event_display_payload()
         return {'success': True}
 
@@ -706,7 +793,7 @@ class Game(CardPlayMixin):
         count = int(effect.get('count', 1) or 1)
         player = self._event_effect_player(player, effect)
         if t in (None, 'none'):
-            self.log(f"Event {outcome}: no effect")
+            self.log(f"Event {outcome}: no effect for {getattr(player, 'name', 'player')}")
             return {'success': True, 'effect': t or 'none'}
 
         pending_result = None
@@ -719,7 +806,7 @@ class Game(CardPlayMixin):
         elif t == 'discard_random':
             self._apply_event_effect_discard_random(player, effect, count, outcome)
         elif t == 'red_dissolve':
-            pending_result = self._apply_event_effect_red_dissolve(effect)
+            pending_result = self._apply_event_effect_red_dissolve(effect, player)
         elif t == 'add_internal_conflict':
             self._apply_event_effect_add_internal_conflict(player, count)
         elif t == 'move':
@@ -739,7 +826,7 @@ class Game(CardPlayMixin):
 
         if pending_result is not None:
             return pending_result
-        self.log(f"Event {outcome} resolved: {self.current_event.get('name')} / {t}")
+        self.log(f"Event {outcome} resolved: {self.current_event.get('name')} / {t} for {player.name}")
         return {'success': True, 'effect': t}
 
     def _apply_event_effect_draw(self, player, count):
@@ -750,90 +837,75 @@ class Game(CardPlayMixin):
         """gain_card: gain `count` copies of the named card."""
         self._gain_event_card(player, effect.get('card'), count)
 
-    def _open_next_event_discard_self_choice(self, player_ids, count, outcome, *, open_hk_relocation=False):
-        """Open the next required discard, skipping targets that have no hand cards."""
-        remaining_ids = list(player_ids or [])
-        while remaining_ids:
-            player_id = remaining_ids.pop(0)
-            player = next((p for p in self.players if p.id == player_id), None)
-            if player is None:
-                continue
-            cards = list(player.hand)
-            if not cards:
-                self.log(f"Event {outcome}: {player.name} has no hand card to discard")
-                continue
-            choice_count = min(count, len(cards))
-            self.log(f"Event {outcome}: {player.name} must discard {choice_count} hand card(s)")
-            self._set_pending_multi_card_choice(
-                player,
-                'event_discard_self',
-                cards,
-                f"{self.current_event.get('name')}：請選擇 {choice_count} 張手牌棄掉。",
-                choice_count,
-                source_name=self.current_event.get('name'),
-                context={
-                    'remaining_event_discard_self_player_ids': remaining_ids,
-                    'event_discard_self_count': count,
-                    'event_discard_self_outcome': outcome,
-                    'open_hk_free_base_relocation_after_resolution': bool(open_hk_relocation),
-                },
-            )
-            return {'success': True, 'pending_choice': True}
-        return None
-
     def _apply_event_effect_discard_self(self, player, count, outcome):
-        """discard_self: every non-Red player chooses cards on mission failure."""
-        targets = (
-            [p.id for p in self.players if getattr(p, 'faction_id', None) != 'red_army']
-            if outcome == 'failure'
-            else [player.id]
+        """discard_self: this player chooses cards to discard (each failed player is resolved
+        individually by the settlement queue)."""
+        cards = list(player.hand)
+        if not cards:
+            self.log(f"Event {outcome}: {player.name} has no hand card to discard")
+            return None
+        choice_count = min(count, len(cards))
+        self.log(f"Event {outcome}: {player.name} must discard {choice_count} hand card(s)")
+        self._set_pending_multi_card_choice(
+            player,
+            'event_discard_self',
+            cards,
+            f"{self.current_event.get('name')}：請選擇 {choice_count} 張手牌棄掉。",
+            choice_count,
+            source_name=self.current_event.get('name'),
+            context={'event_discard_self_count': count, 'event_discard_self_outcome': outcome},
         )
-        return self._open_next_event_discard_self_choice(targets, count, outcome)
+        return {'success': True, 'pending_choice': True}
 
     def _apply_event_effect_discard_random(self, player, effect, count, outcome):
-        """discard_random: randomly discard from the player, or (on a failure outcome
-        with no explicit player_faction) every non-red player."""
-        targets = [player]
-        default_failure_targets_non_red = outcome == 'failure' and not (effect or {}).get('player_faction')
-        if default_failure_targets_non_red:
-            targets = [p for p in self.players if getattr(p, 'faction_id', None) != 'red_army']
-        discarded_total = 0
-        discarded_by_player = []
-        for target in targets:
-            discarded_for_target = 0
-            for _ in range(min(count, len(target.hand))):
-                card = random.choice(target.hand)
-                target.hand.remove(card)
-                target.deck.discard([card])
-                discarded_total += 1
-                discarded_for_target += 1
-            if discarded_for_target:
-                discarded_by_player.append(f"{target.name} discarded {discarded_for_target} random hand card(s)")
-        if discarded_by_player:
-            self.log(f"Event {outcome}: " + '; '.join(discarded_by_player))
+        """discard_random: randomly discard from this player."""
+        discarded = 0
+        for _ in range(min(count, len(player.hand))):
+            card = random.choice(player.hand)
+            player.hand.remove(card)
+            player.deck.discard([card])
+            discarded += 1
+        if discarded:
+            self.log(f"Event {outcome}: {player.name} discarded {discarded} random hand card(s)")
         else:
-            target_label = 'non-red player' if default_failure_targets_non_red else getattr(player, 'name', 'target player')
-            self.log(f"Event {outcome}: no eligible {target_label} hand cards to discard")
+            self.log(f"Event {outcome}: no eligible hand cards to discard for {player.name}")
 
-    def _apply_event_effect_red_dissolve(self, effect):
-        """red_dissolve: red army chooses a non-red organization to dissolve, scoped by effect."""
+    def _event_red_dissolve_targets(self, owner, scope):
+        """Legal Red Army dissolve targets among `owner`'s own organizations in `scope`."""
         red = self._red_player()
-        if not red:
-            return None
         targets = []
-        for other in self.players:
-            if other is red:
+        for town, n in (owner.organizations or {}).items():
+            if n <= 0:
                 continue
-            for town, n in (other.organizations or {}).items():
-                if (
-                    n > 0
-                    and event_trigger_matches_scope(self.map, self.towns_by_ruler, {'scope': effect.get('scope')}, town=town)
-                    and self._can_dissolve_base_target(other, town)[0]
-                ):
-                    targets.append({'id': f'{other.id}:{town}', 'player_id': other.id, 'town': town, 'label': f'{other.name}｜{town}'})
-        if not targets:
+            if not event_trigger_matches_scope(self.map, self.towns_by_ruler, {'scope': scope}, town=town):
+                continue
+            if not self._can_dissolve_base_target(owner, town)[0]:
+                continue
+            # 盟旗學校 makes the attacker discard a hand card first; with an empty hand the
+            # dissolve cannot be carried out, so the target is not legal.
+            if self._player_has_ability(owner, "盟旗學校") and not getattr(red, 'hand', None):
+                continue
+            targets.append({'id': f'{owner.id}:{town}', 'player_id': owner.id, 'town': town, 'label': f'{owner.name}｜{town}'})
+        return targets
+
+    def _apply_event_effect_red_dissolve(self, effect, player):
+        """red_dissolve: Red Army dissolves one of `player`'s own organizations in scope
+        (the failed player is penalised individually; no legal target means no penalty)."""
+        red = self._red_player()
+        if not red or player is None or player is red:
             return None
-        self._set_pending_target_choice(red, 'event_red_dissolve', targets, f"{self.current_event.get('name')}：紅軍選擇要瓦解的組織。", source_name=self.current_event.get('name'))
+        targets = self._event_red_dissolve_targets(player, effect.get('scope'))
+        if not targets:
+            self.log(f"Event failure: no legal organization to dissolve for {player.name}")
+            return None
+        self._set_pending_target_choice(
+            red,
+            'event_red_dissolve',
+            targets,
+            f"{self.current_event.get('name')}：紅軍選擇要瓦解 {player.name} 的組織。",
+            source_name=self.current_event.get('name'),
+            context={'event_red_dissolve_target_player_id': player.id},
+        )
         return {'success': True, 'pending_choice': True}
 
     def _apply_event_effect_add_internal_conflict(self, player, count):
@@ -878,40 +950,21 @@ class Game(CardPlayMixin):
 
     def _apply_event_effect_build_organization_near_own(self, player, effect, count):
         """build_organization_near_own: player builds free near their own organizations."""
-        return self._open_next_event_build_near_own_choice(
-            [player.id], effect, count, event_name=(self.current_event or {}).get('name')
-        )
-
-    def _open_next_event_build_near_own_choice(self, player_ids, effect, count, *, event_name=None):
-        """Queue one build for each qualifying event player in deterministic order."""
         max_steps = int(effect.get('max_steps', 1) or 1)
-        source_name = event_name or (self.current_event or {}).get('name')
-        remaining_ids = list(player_ids or [])
-        while remaining_ids:
-            player_id = remaining_ids.pop(0)
-            player = next((p for p in self.players if p.id == player_id), None)
-            if player is None:
-                continue
-            towns = self._event_build_towns_near_own(player, max_steps=max_steps)
-            if not towns:
-                self.log(f"{source_name}：{player.name} 在己方組織附近沒有合法的城鎮可以建立組織")
-                continue
-            self._set_pending_town_choice(
-                player,
-                'event_build_organization',
-                towns,
-                f"{source_name}：在己方組織 {max_steps} 格內免費建立 {min(count, len(towns))} 個組織。",
-                source_name=source_name,
-                count=min(count, len(towns)),
-                context={
-                    'remaining_event_build_near_own_player_ids': remaining_ids,
-                    'event_build_near_own_effect': dict(effect or {}),
-                    'event_build_near_own_count': count,
-                    'event_name': source_name,
-                },
-            )
-            return {'success': True, 'pending_choice': True}
-        return None
+        source_name = (self.current_event or {}).get('name')
+        towns = self._event_build_towns_near_own(player, max_steps=max_steps)
+        if not towns:
+            self.log(f"{source_name}：{player.name} 在己方組織附近沒有合法的城鎮可以建立組織")
+            return None
+        self._set_pending_town_choice(
+            player,
+            'event_build_organization',
+            towns,
+            f"{source_name}：在己方組織 {max_steps} 格內免費建立 {min(count, len(towns))} 個組織。",
+            source_name=source_name,
+            count=min(count, len(towns)),
+        )
+        return {'success': True, 'pending_choice': True}
 
     def _apply_event_effect_topdeck_from_discard(self, player, count, outcome):
         """topdeck_from_discard: player chooses discard-pile cards to place on top of their deck."""
@@ -974,63 +1027,118 @@ class Game(CardPlayMixin):
         return {'success': True, 'pending_choice': True}
 
     # Turn/phase lifecycle cluster — see _start_event_phase's comment above.
-    def _settle_current_event(self):
+    # Mission settlement state machine. Every mission event is judged per non-Red player when
+    # the round that follows its reveal is complete (every seat has acted exactly once, so
+    # Red Army's own actions in the window can still change a player's progress). `_begin_event_settlement` locks progress and queues one
+    # {player_id, outcome} item per non-Red player in seat order; `_continue_event_settlement`
+    # applies that queue one player at a time and is re-entrant: an outcome that needs a
+    # decision leaves `pending_choice` set and the remaining items stay queued until the
+    # decision is resolved (`_continue_era_and_event_flows` resumes it). Only when the queue
+    # is empty and no choice is pending does the event become settled.
+    def _is_event_settlement_boundary(self):
         event = self.current_event or {}
-        if event.get('type') != 'mission' or not self.event_progress or self.event_progress.get('settled'):
-            return {'success': True}
-        player = self.current_player()
-        if self.event_progress and self.event_progress.get('settlement_target_player_id'):
-            player = next((p for p in self.players if p.id == self.event_progress.get('settlement_target_player_id')), player)
-        elif self.event_progress and self.event_progress.get('failure_target_player_id'):
-            player = next((p for p in self.players if p.id == self.event_progress.get('failure_target_player_id')), player)
-        elif self.event_progress and self.event_progress.get('last_actor_id'):
-            player = next((p for p in self.players if p.id == self.event_progress.get('last_actor_id')), player)
+        progress = self.event_progress
+        if (
+            event.get('type') != 'mission'
+            or not progress
+            or progress.get('settled')
+            or progress.get('settlement_started')
+        ):
+            return False
+        # The window is the whole round that follows the reveal: it closes only when the last
+        # seat of the round (the seat right before round_start_player_index) finishes, wherever
+        # Red Army sits. That is the same authoritative boundary as the round wrap.
+        if not self.players:
+            return False
+        next_index = (self.current_player_index + 1) % len(self.players)
+        return next_index == (getattr(self, 'round_start_player_index', 0) or 0)
+
+    def _begin_event_settlement(self):
+        event = self.current_event or {}
+        progress = self.event_progress
+        if (
+            event.get('type') != 'mission'
+            or not progress
+            or progress.get('settled')
+            or progress.get('settlement_started')
+        ):
+            return False
+        self._ensure_event_player_progress()
+        entries = progress.get('player_progress') or {}
         trigger = event.get('trigger') or {}
-        if trigger.get('type') == 'end_turn_state' and not self.event_progress.get('succeeded'):
-            qualified_players = []
-            total_count = 0
-            for candidate in self.players:
-                if getattr(candidate, 'faction_id', None) == 'red_army':
+        if trigger.get('type') == 'end_turn_state':
+            for candidate in self._non_red_players():
+                entry = entries.get(candidate.id)
+                if entry is None:
                     continue
                 met, count = event_state_condition_met(self.map, self.towns_by_ruler, trigger, candidate)
-                total_count += int(count or 0)
-                if met:
-                    qualified_players.append(candidate)
-            self.event_progress['count'] = total_count
-            self.event_progress['qualified_player_ids'] = [candidate.id for candidate in qualified_players]
-            if qualified_players:
-                self.event_progress['succeeded'] = True
-                self.event_progress['status'] = 'success_pending'
-        succeeded = bool(self.event_progress.get('succeeded'))
-        effect = event.get('success') if succeeded else event.get('failure')
-        self.event_progress['settled'] = True
-        self.event_progress['status'] = 'success' if succeeded else 'failure'
-        if (
-            succeeded
-            and trigger.get('type') == 'end_turn_state'
-            and (effect or {}).get('type') == 'build_organization_near_own'
-        ):
-            result = self._open_next_event_build_near_own_choice(
-                self.event_progress.get('qualified_player_ids') or [],
-                effect,
-                int(effect.get('count', 1) or 1),
-                event_name=event.get('name'),
-            )
-            if result is None:
-                self.log(f"Event success resolved: {event.get('name')} / {effect.get('type')}")
+                entry['count'] = int(count or 0)
+                entry['met'] = bool(met)
+        queue = []
+        succeeded_names = []
+        failed_names = []
+        for player_id in self._event_progress_player_order(entries):
+            entry = entries[player_id]
+            outcome = 'success' if entry.get('met') else 'failure'
+            entry['result'] = outcome
+            queue.append({'player_id': player_id, 'outcome': outcome})
+            (succeeded_names if outcome == 'success' else failed_names).append(entry.get('player_name') or player_id)
+        progress['settlement_started'] = True
+        progress['settlement_queue'] = queue
+        progress['qualified_player_ids'] = [item['player_id'] for item in queue if item['outcome'] == 'success']
+        progress['status'] = 'settling'
+        self._refresh_event_progress_summary()
+        self.log(
+            f"事件結算（整輪結束）：{event.get('name')}｜成功：{'、'.join(succeeded_names) or '無'}｜"
+            f"失敗：{'、'.join(failed_names) or '無'}"
+        )
+        self.event_notification = self._event_display_payload()
+        return True
+
+    def _continue_event_settlement(self):
+        progress = self.event_progress
+        if not progress or not progress.get('settlement_started') or progress.get('settled'):
+            return None
+        event = self.current_event or {}
+        while not self.pending_choice:
+            queue = progress.get('settlement_queue') or []
+            if not queue:
+                return self._finalize_event_settlement()
+            item = queue.pop(0)
+            player = next((p for p in self.players if p.id == item.get('player_id')), None)
+            if player is None:
+                continue
+            outcome = item.get('outcome')
+            effect = event.get('success') if outcome == 'success' else event.get('failure')
+            self._apply_event_effect(effect or {'type': 'none'}, player, outcome=outcome)
+        self.event_notification = self._event_display_payload()
+        return {'success': True, 'pending_choice': True}
+
+    def _finalize_event_settlement(self):
+        event = self.current_event or {}
+        progress = self.event_progress
+        results = [entry.get('result') for entry in (progress.get('player_progress') or {}).values()]
+        progress['settlement_queue'] = []
+        progress['settled'] = True
+        if results and all(result == 'success' for result in results):
+            progress['status'] = 'success'
+        elif any(result == 'success' for result in results):
+            progress['status'] = 'mixed'
         else:
-            result = self._apply_event_effect(effect or {'type': 'none'}, player, outcome='success' if succeeded else 'failure')
+            progress['status'] = 'failure'
+        progress['succeeded'] = bool(results) and all(result == 'success' for result in results)
         # 香港 special_rules：事件卡「香港抗暴之戰」發生並完成結算後，
         # 不論任務成功或失敗，香港可在下一回合開始前免費遷移一次根據地。
+        # 只有所有玩家的個別結果與必要選擇都完成後才開啟遷移窗口。
         if event.get('name') == '香港抗暴之戰' and any(getattr(pl, 'faction_id', None) == 'hong_kong' for pl in self.players):
-            if result and result.get('pending_choice') and self.pending_choice:
-                context = dict(self.pending_choice.get('context') or {})
-                context['open_hk_free_base_relocation_after_resolution'] = True
-                self.pending_choice['context'] = context
-            else:
-                self._open_hong_kong_base_relocation_window()
+            self._open_hong_kong_base_relocation_window()
         self.event_notification = self._event_display_payload()
-        return result
+        return {'success': True, 'settled': True}
+
+    def _settle_current_event(self):
+        """Judge and apply every non-Red player's own outcome now (no turn handoff)."""
+        self._begin_event_settlement()
+        return self._continue_event_settlement() or {'success': True}
 
     def _is_inside_wall_town(self, town):
         """Classify a town by canonical map ruler, not runtime controller."""
@@ -1282,6 +1390,23 @@ class Game(CardPlayMixin):
                 'reason': '目前沒有城鎮可以建立組織。',
                 'no_legal_build_town': True,
             }
+        if (
+            getattr(card, 'card_type', None) == 'support'
+            and not self._support_card_has_legal_target(
+                player,
+                card,
+                pre_reserved_shield_discards=1,
+            )
+        ):
+            # Keep state()/legal_actions() aligned with play_card(). Without
+            # this pre-check, automated players see a false-positive action
+            # mode and retry the same doomed support card after every other
+            # successful action in the turn.
+            return {
+                'playable': False,
+                'reason': '這張奧援卡目前沒有合法目標。',
+                'no_legal_target': True,
+            }
         return {'playable': True}
 
     def _card_can_queue_build(self, card):
@@ -1420,12 +1545,15 @@ class Game(CardPlayMixin):
             return {'success': True, 'pending_choice': True, 'source': 'era'}
         if era_result and era_result.get('error'):
             return era_result
-        event_result = self._continue_deferred_auto_event()
+        settlement_result = self._continue_pending_turn_end()
+        if self.pending_choice:
+            return {'success': True, 'pending_choice': True, 'source': 'event'}
+        event_result = self._continue_deferred_auto_event() or settlement_result
         if self.pending_choice:
             return {'success': True, 'pending_choice': True, 'source': 'event'}
         if getattr(self, 'era_blocks_turn_handoff', False):
             self.era_blocks_turn_handoff = False
-            self._finish_end_turn_handoff()
+            self._hand_off_after_turn_end()
             if self.pending_choice:
                 return {'success': True, 'pending_choice': True, 'source': 'turn_handoff'}
             return event_result or {'success': True, 'turn_handoff': True}
@@ -1794,9 +1922,18 @@ class Game(CardPlayMixin):
 
         if not self.pending_base_choices:
             self.game_phase = GamePhase.MAIN
+            # Initialization boundary: BASE_SELECTION has no turns played, so opening the round here
+            # never resets a game in progress.
+            self.open_round_after_red()
             if self.turn_phase == TurnPhase.ACTION and not self.current_event:
                 self._start_event_phase()
         return {"success": True}
+
+    def open_round_after_red(self):
+        """Red acts last: the round opens at the seat right after Red (wrapping). Call only when setup completes."""
+        red_index = next((i for i, p in enumerate(self.players) if p.faction_id == 'red_army'), None)
+        start = 0 if red_index is None else (red_index + 1) % len(self.players)
+        self.current_player_index = self.round_start_player_index = start
 
     def _assign_starting_bases(self):
         pending = self._compute_pending_base_choices()
@@ -2425,14 +2562,18 @@ class Game(CardPlayMixin):
         self._apply_guerrilla_on_build(player, town)
 
     def _can_target_org_with_dissolve(self, attacker, defender, source="card"):
-        if self._player_has_ability(defender, "盟旗學校"):
-            self.log(f"{defender.name} triggered 盟旗學校 against {attacker.name}")
-            self._track_event_progress('use_faction_ability', player=defender)
+        # 盟旗學校 is the defender's own passive ability. It only "triggers" (and so counts
+        # toward the defender's own event progress, never the attacker's) once the attacker
+        # really pays the discard and the dissolve goes ahead -- a blocked attempt (attacker has
+        # no hand card) or a self-targeted dissolve does not.
+        if attacker is not defender and self._player_has_ability(defender, "盟旗學校"):
             if not attacker.hand:
                 return False, "盟旗學校：須先棄1張手牌，才可以瓦解蒙古組織"
+            self.log(f"{defender.name} triggered 盟旗學校 against {attacker.name}")
             discarded = attacker.hand.pop()
             attacker.deck.discard([discarded])
             self.log(f"{attacker.name} discarded {getattr(discarded, 'name', str(discarded))} to bypass 盟旗學校")
+            self._track_event_progress('use_faction_ability', player=defender)
         return True, None
 
     def _starter_card(self, name):
@@ -2680,6 +2821,11 @@ class Game(CardPlayMixin):
             self.map, self.towns_by_ruler, self.faction_by_id, self.players, player, from_town, to_town
         )
 
+    def _rail_route_edges(self, player, from_town, to_town):
+        return rail_route_edges(
+            self.map, self.towns_by_ruler, self.faction_by_id, self.players, player, from_town, to_town
+        )
+
     def _org_supply_limit(self, player):
         return org_supply_limit(player)
 
@@ -2806,33 +2952,6 @@ class Game(CardPlayMixin):
 
     def current_player(self):
         return self.players[self.current_player_index]
-
-    def _non_red_player_indices(self):
-        return [
-            idx for idx, player in enumerate(self.players)
-            if getattr(player, 'faction_id', None) != 'red_army'
-        ]
-
-    def _is_final_non_red_turn_before_round_wrap(self, next_player_index):
-        """Return True when the current END step finishes the non-red mission window.
-
-        Event-card missions are non-red tasks: Red Army actions do not progress
-        them, and failure penalties should fire before control passes to Red
-        Army-only turns. With action-first turns, using the full table wrap as
-        the settlement boundary delays cards like 紅軍權貴出逃 until after the
-        Red Army turn and applies discard_self to the wrong player.
-        """
-        non_red_indices = self._non_red_player_indices()
-        if not non_red_indices:
-            return next_player_index == getattr(self, 'round_start_player_index', 0)
-
-        round_start = getattr(self, 'round_start_player_index', 0)
-        ordered = list(range(len(self.players)))
-        ordered = ordered[round_start:] + ordered[:round_start]
-        non_red_in_round_order = [idx for idx in ordered if idx in non_red_indices]
-        if not non_red_in_round_order:
-            return next_player_index == round_start
-        return self.current_player_index == non_red_in_round_order[-1]
 
     def log(self, message, *, private_messages=None, public_message=None):
         prefix = f"[Turn {self.turn}] "
@@ -3006,27 +3125,6 @@ class Game(CardPlayMixin):
             return self._prompt_end_turn_topdeck_action_if_available()
         return None
 
-    def _mission_settlement_target_id(self):
-        if self.event_progress and self.event_progress.get('last_actor_id'):
-            return self.event_progress.get('last_actor_id')
-        player = self.current_player()
-        return getattr(player, 'id', None)
-
-    def _should_defer_event_settlement_until_after_refill(self):
-        event = self.current_event or {}
-        if event.get('type') != 'mission' or not self.event_progress or self.event_progress.get('settled'):
-            return False
-        succeeded = bool(self.event_progress.get('succeeded'))
-        effect = event.get('success') if succeeded else event.get('failure')
-        effect_type = (effect or {}).get('type')
-        # Top-deck rewards must resolve before refill so the chosen card can be drawn.
-        if succeeded and effect_type == 'topdeck_from_discard':
-            return False
-        # All other mission outcomes are resolved after end-turn cleanup/refill so
-        # rewards and penalties operate on the player's next hand instead of being
-        # immediately discarded or dodged by emptying the hand.
-        return True
-
     # Turn/phase lifecycle cluster — see _start_event_phase's comment above
     # (advance_turn_phase / _finish_action_phase / _end_turn /
     # _finish_end_turn_handoff are the phase-advance + handoff half of it).
@@ -3059,91 +3157,43 @@ class Game(CardPlayMixin):
 
     # Turn/phase lifecycle cluster — see _start_event_phase's comment above.
     def _finish_action_phase(self):
-        """結束目前玩家的行動階段：在正確時機結算本輪事件、清空待用的頂牌權利、
-        補手牌到5張／補滿購買區、時代關卡 tick、把席位交給下一位玩家。
-        呼叫前 self.turn_phase 必須已經是 TurnPhase.END。
-        正常完成回傳 {"success": True}；卡在必要決定（事件結算選擇／香港根據地
+        """結束目前玩家的行動階段：清空待用的頂牌權利、補手牌到5張／補滿購買區、
+        （整輪最後一席結束時）逐一結算每位非紅軍玩家的任務事件結果、時代關卡 tick、
+        把席位交給下一位玩家。呼叫前 self.turn_phase 必須已經是 TurnPhase.END。
+        正常完成回傳 {"success": True}；卡在必要決定（個人事件結算選擇／香港根據地
         遷移）時回傳帶 pending_choice / pending_hk_relocation 的 dict，此時席位
         不會交出去。
         """
-        # Mission events are round-wide: resolve after the final player's
-        # purchase step, so buy_card triggers have a chance to progress.
-        next_player_index = (self.current_player_index + 1) % len(self.players)
-        is_round_final_action = self._is_final_non_red_turn_before_round_wrap(next_player_index)
-        # A live `end_turn_state` trigger (e.g. 烏魯木齊七五事件's own_organization_in_scope)
-        # is a FRESH state check at settlement, not an accumulated counter. It must be
-        # judged only once the WHOLE round — Red Army included — has acted, because Red
-        # Army's own turn this round can still dissolve the organization that satisfies
-        # it (playtest 回報：所有事件卡都應該要所有人都輪過該回合才結算). Count-based
-        # triggers stay at the final non-red turn (before Red Army-only turns) because
-        # Red Army never progresses their counter and failure penalties belong to the
-        # non-red actor; only the state check needs the true round-wrap boundary, which
-        # mirrors the era-trigger / victory-declaration rule (P1: 判定時機應等整輪含紅軍
-        # 行動完). The settlement target is still captured at the final non-red boundary
-        # below and persists in event_progress until the wrap, so a later Red-Army seat
-        # never becomes the target.
-        trigger_type = ((self.current_event or {}).get('trigger') or {}).get('type')
-        event_is_state_triggered = trigger_type == 'end_turn_state'
-        is_true_round_wrap = next_player_index == getattr(self, 'round_start_player_index', 0)
-        settle_boundary = is_true_round_wrap if event_is_state_triggered else is_round_final_action
-        defer_event_settlement = settle_boundary and self._should_defer_event_settlement_until_after_refill()
-        if is_round_final_action and self.event_progress is not None:
-            self.event_progress['settlement_target_player_id'] = self._mission_settlement_target_id()
-        if settle_boundary and not defer_event_settlement and not (self.event_progress or {}).get('settled'):
-            event_result = self._settle_current_event()
-            if event_result and event_result.get('pending_choice'):
-                return {"success": True, "pending_choice": True}
+        if self._turn_end_after_settlement is not None:
+            # A queued per-player event outcome was waiting on a decision that has since been
+            # cleared (e.g. a stale build choice); pick the settlement back up.
+            self._continue_era_and_event_flows()
+            return self._turn_end_result()
         pending = self._prompt_end_turn_topdeck_action_if_available()
         if pending:
             return {"success": True, "pending_choice": True}
-        # Snapshot the round's event before _end_turn: when this END also wraps the
-        # round, _end_turn discards current_event/event_progress and draws the next
-        # round's event. Without the snapshot the deferred settlement would settle
-        # that untouched new event instead — dropping the earned success reward and
-        # applying a bogus failure penalty for an event nobody has acted on yet.
-        deferred_event = self.current_event if defer_event_settlement else None
-        deferred_progress = self.event_progress if defer_event_settlement else None
-        hong_kong_must_decide_before_handoff = bool(
-            defer_event_settlement
-            and (deferred_event or {}).get('name') == '香港抗暴之戰'
-            and any(getattr(pl, 'faction_id', None) == 'hong_kong' for pl in self.players)
-        )
-        if hong_kong_must_decide_before_handoff:
-            # 先完成本回合的補牌與回合結束能力，但不要把席位交給下一位玩家。
-            # 香港事件的成功／失敗效果仍維持「補牌後結算」；必要棄牌完成後再開遷移窗口。
-            self.hk_relocation_blocks_turn_handoff = True
-            self._end_turn(advance_player=False)
-            event_result = self._settle_current_event()
-            if event_result and event_result.get('pending_choice'):
-                return {"success": True, "pending_choice": True}
-            if self.hk_free_base_relocation:
-                return {"success": True, "pending_hk_relocation": True}
-            self.hk_relocation_blocks_turn_handoff = False
-            self._finish_end_turn_handoff()
-            return {"success": True}
+        return self._conclude_action_phase()
 
-        self._end_turn()
-        if defer_event_settlement and deferred_progress is not None and not deferred_progress.get('settled'):
-            wrapped = self.current_event is not deferred_event
-            if wrapped:
-                next_event = self.current_event
-                next_progress = self.event_progress
-                next_notification = self.event_notification
-                self.current_event = deferred_event
-                self.event_progress = deferred_progress
-                event_result = self._settle_current_event()
-                self.current_event = next_event
-                self.event_progress = next_progress
-                # Keep the new round's event on display; the settled outcome is in the log.
-                self.event_notification = next_notification
-            else:
-                event_result = self._settle_current_event()
-            if event_result and event_result.get('pending_choice'):
-                return {"success": True, "pending_choice": True}
+    def _conclude_action_phase(self):
+        # Mission events are per-player tasks judged once, when the last seat of the round
+        # finishes (every player, Red Army included, has acted exactly once since the reveal).
+        # Red Army's actions in the window can still progress (e.g. 盟旗學校 triggered by a
+        # dissolve) or invalidate a non-Red player's condition, so no earlier boundary may
+        # settle them. Settlement runs after that seat's refill and before the round wrap.
+        self._end_turn(settle_event=self._is_event_settlement_boundary())
+        return self._turn_end_result()
+
+    def _turn_end_result(self):
+        # Only a decision owed by a per-player event outcome is reported here; an interactive era
+        # activation keeps its existing plain-success contract (it blocks the handoff on its own).
+        if self.pending_choice and self._turn_end_after_settlement is not None:
+            return {"success": True, "pending_choice": True}
+        if getattr(self, 'hk_relocation_blocks_turn_handoff', False):
+            return {"success": True, "pending_hk_relocation": True}
         return {"success": True}
 
     # Turn/phase lifecycle cluster — see _start_event_phase's comment above.
-    def _end_turn(self, advance_player=True):
+    def _end_turn(self, advance_player=True, settle_event=False):
         # Victory *detection* is NOT run per player-turn. It is deferred to the
         # round-wrap boundary below so Red Army's turn this round can still
         # invalidate a condition (e.g. dissolve an organization propping up an
@@ -3183,6 +3233,30 @@ class Game(CardPlayMixin):
         # pending choice from an already-triggered era is not stalled.
         self._continue_era_activation_queue()
 
+        if settle_event and self._begin_event_settlement():
+            # 事件任務按每位非紅軍玩家個別判定，統一在整輪最後一席結束時結算；任何個人結果
+            # 需要決定時，其餘玩家的結果留在佇列中依序處理，全部完成後才繼續換人。
+            self._turn_end_after_settlement = {'advance_player': bool(advance_player)}
+            self._continue_pending_turn_end()
+            return
+        self._complete_turn_end(advance_player)
+
+    def _continue_pending_turn_end(self):
+        """Resume a turn end that is waiting on per-player event outcomes (re-entrant)."""
+        context = self._turn_end_after_settlement
+        if self.pending_choice:
+            return None
+        settlement_result = self._continue_event_settlement()
+        if self.pending_choice:
+            return {'success': True, 'pending_choice': True, 'source': 'event'}
+        if context is None:
+            return settlement_result
+        self._turn_end_after_settlement = None
+        self._complete_turn_end(context.get('advance_player', True))
+        return {'success': True, 'turn_end_resumed': True}
+
+    def _complete_turn_end(self, advance_player=True):
+        player = self.current_player()
         # 時代關卡只在紅軍完成自己的回合後判定。不能在最後一位非紅軍玩家結束時
         # 先把關卡排入佇列，否則紅軍尚未獲得本回合瓦解組織的機會，下一次輪到紅軍
         # 就會立即觸發舊快照（playtest：第 13 回合藏國騷亂應等紅軍行動完，於第 14
@@ -3211,7 +3285,14 @@ class Game(CardPlayMixin):
                 return
 
         if advance_player:
-            self._finish_end_turn_handoff()
+            self._hand_off_after_turn_end()
+
+    def _hand_off_after_turn_end(self):
+        """Hand the seat over, unless Hong Kong still has to decide its free base move."""
+        if getattr(self, 'hk_free_base_relocation', False):
+            self.hk_relocation_blocks_turn_handoff = True
+            return
+        self._finish_end_turn_handoff()
 
     # Turn/phase lifecycle cluster — see _start_event_phase's comment above.
     def _finish_end_turn_handoff(self):
@@ -3618,7 +3699,11 @@ class Game(CardPlayMixin):
                 for to_town in all_towns:
                     checked = self._validate_organization_move(from_town, to_town, mode)
                     if checked.get("success"):
-                        modes[mode].append({"town": to_town, "cost": checked["cost"]})
+                        entry = {"town": to_town, "cost": checked["cost"]}
+                        if mode == "rail":
+                            # 伺服器權威的鐵路路徑線段，前端據此高亮整條多段路線，不自行推算合法性
+                            entry["edges"] = self._rail_route_edges(player, from_town, to_town)
+                        modes[mode].append(entry)
             if modes["road"] or modes["rail"]:
                 result[from_town] = modes
         return result
@@ -4477,10 +4562,36 @@ class Game(CardPlayMixin):
                 "discard_pile": [getattr(card, 'name', str(card)) for card in p.deck.discard_pile] if p.deck else [],
                 "discard_variants": [self._support_card_variant_info(card) for card in p.deck.discard_pile] if p.deck else [],
                 "organization_counts": self._player_organization_scope_counts(p),
-                "orgs": p.organizations
+                "orgs": p.organizations,
+                # 2026-10-02 (programmed Red Army AI, plan section 1c/10): victory-
+                # proximity math must never be independently re-derived off-server
+                # (same principle as legality) — these two were already computed
+                # authoritatively by VictoryEngine (server/victory.py) for
+                # co_winners()/evaluate() but never exposed on state() before now.
+                # condition_progress is 0.0 for red_army itself (its own
+                # win_conditions are "default_survival"/"taiwan_override", neither
+                # of which condition_progress()'s best=max loop counts) — use
+                # taiwan_organization_count vs the rules.md "14 效組織" threshold
+                # for red army's own progress instead.
+                "condition_progress": self.victory_engine.condition_progress(p, self),
+                "taiwan_organization_count": self.victory_engine._count_taiwan_orgs(p, self),
             }
             for p in self.players
         ]
+
+    def _project_red_army_state_security_targets(self, viewer_player, current_player):
+        if (
+            viewer_player is None
+            or viewer_player is not current_player
+            or getattr(viewer_player, 'faction_id', None) != 'red_army'
+        ):
+            return {}
+        return {
+            'red_army_state_security_targets': [
+                {'player_id': t['player_id'], 'town': t['town']}
+                for t in self._red_army_state_security_targets(viewer_player)
+            ]
+        }
 
     def state(self, viewer_player_id=None):
         town_control, shared_access = self._project_map_control()
@@ -4504,6 +4615,11 @@ class Game(CardPlayMixin):
             "turn_phase": self.turn_phase,
             "winner": self.winner,
             "co_winners": list(getattr(self, 'co_winners', []) or []),
+            "ai_red_army": {
+                "enabled": bool(getattr(self, "ai_red_army_player_id", None)),
+                "player_id": getattr(self, "ai_red_army_player_id", None),
+                "status": dict(getattr(self, "ai_red_army_status", None) or {"state": "idle"}),
+            },
             "hk_free_base_relocation": bool(getattr(self, 'hk_free_base_relocation', False)),
             "current_player": self.current_player().name,
             "active_eras": self.era_engine.get_active_eras() if self.era_engine else [],
@@ -4515,6 +4631,9 @@ class Game(CardPlayMixin):
             "red_army_action_count": self.turn_log.get('red_army_action_count', 0),
             "red_army_action_limit": self._red_army_action_limit(),
             "red_army_base_build_blocks": list(self.turn_log.get('red_army_base_build_blocks', []) or []),
+            # 國安部 的合法瓦解目標（公開的組織位置，不含手牌）。只對輪到行動的紅軍檢視者提供，
+            # 讓程式化紅軍不必自行重算 1 格範圍／牆內／根據地合法性。
+            **self._project_red_army_state_security_targets(viewer_player, current_player),
             "pending_topdeck_uses": self.turn_log.get('pending_topdeck_uses', 0),
             "topdeck_candidates_count": len(self._available_purchased_cards_for_topdeck(self.current_player())),
             "event_discard_count": len(self.event_deck.discard_pile) if getattr(self, 'event_deck', None) else 0,

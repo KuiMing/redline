@@ -68,11 +68,26 @@ def main():
         'details': {'turn_phase': game.turn_phase.value, 'event': game.current_event.get('name') if game.current_event else None},
     })
 
-    # 出牌與購買合併後，只需一次「結束行動階段」就補牌、結算並把席位交給紅軍。
-    result = assert_ok(game.advance_turn_phase(), 'refill then settle failure before red turn')
+    # 事件任務按每位非紅軍玩家個別判定，統一在整輪最後一席（此處為紅軍）結束時結算；viewer 自己結束回合只補牌、不結算。
+    progress = game.event_progress
+    result = assert_ok(game.advance_turn_phase(), 'viewer end of turn: refill only')
+    checks.append({
+        'name': 'viewer_turn_end_refills_but_does_not_settle',
+        'passed': (
+            not result.get('pending_choice')
+            and game.current_player_index == 1
+            and not progress.get('settled')
+            and not progress.get('settlement_started')
+            and len(viewer.hand) == 5
+        ),
+        'details': {'result': result, 'current_player': game.current_player().name, 'viewer_hand': names(viewer.hand), 'event_progress': progress},
+    })
+
+    # 整輪最後一席結束 -> 逐位結算：viewer 未達成（沒有 3 次遷移）-> 自己選 1 張手牌棄掉。
+    result = assert_ok(game.advance_turn_phase(), 'red end of turn: settle viewer individually')
     choice = game.state().get('pending_choice') or {}
     checks.append({
-        'name': 'failure_discard_choice_after_refill_before_red_action',
+        'name': 'failure_discard_choice_after_red_turn_end',
         'passed': (
             bool(result.get('pending_choice'))
             and game.current_player_index == 1
@@ -84,7 +99,7 @@ def main():
             'result': result,
             'current_player': game.current_player().name,
             'viewer_hand_after_refill': names(viewer.hand),
-            'event_progress': game.event_progress,
+            'event_progress': progress,
             'pending_choice': choice,
             'log': list(game.action_log),
         },

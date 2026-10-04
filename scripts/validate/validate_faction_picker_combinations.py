@@ -27,7 +27,7 @@ def humanize_win_condition(w):
     if t == 'default_survival':
         return w.get('text', '遊戲結束前未有反共陣營玩家達成勝利條件。')
     if t == 'taiwan_override':
-        return w.get('text', '若有玩家選用臺灣，紅軍在臺灣城鎮達成指定組織數時直接獲勝。')
+        return w.get('text', '若有玩家為台灣陣營，紅軍於回合結束時在臺灣城鎮擁有至少14個有效組織，則紅軍直接獲勝。')
     return json.dumps(w, ensure_ascii=False)
 
 

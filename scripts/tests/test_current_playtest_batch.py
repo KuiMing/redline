@@ -58,20 +58,22 @@ def test_elite_defection_failure_after_refill_discards_exactly_one_named_card():
     red.hand = [Card(f'紅軍手牌{i}', 'command', {}) for i in range(5)]
 
     game.current_event = game._event_by_name('紅軍權貴出逃')
-    game.event_progress = {
-        'count': 0,
-        'required': 3,
-        'succeeded': False,
-        'settled': False,
-        'status': 'active',
-        'last_actor_id': host.id,
-    }
+    game.event_progress = game._new_event_progress(game.current_event)
 
+    # host's own turn end refills the hand but must NOT settle the mission.
     result = game.advance_turn_phase()
-    assert result.get('pending_choice') is True
+    assert result == {'success': True}
+    assert game.current_player() is red
+    assert not game.event_progress['settled']
     assert len(host.hand) == 5
     assert len(host.deck.draw_pile) == 8
     assert host.deck.discard_pile == []
+
+    # The Red Army turn end judges host individually: condition unmet -> discard 1 chosen card.
+    game.turn_phase = TurnPhase.ACTION
+    result = game.advance_turn_phase()
+    assert result.get('pending_choice') is True
+    assert game.pending_choice['player_id'] == host.id
     donor_index = next(i for i, card in enumerate(game.pending_choice['cards']) if card is selected_donor)
 
     resolved = game.resolve_pending_choice(host.id, [donor_index])
@@ -279,6 +281,48 @@ def test_north_support_tier_three_resolves_two_targets_and_every_step_is_cancell
     assert game.pending_choice is None
     assert opponent.organizations == {}
     assert second_result.get('target_count') == 2
+
+
+def test_north_support_tier_three_can_hit_beijing_red_base_twice_with_one_card():
+    game = make_game()
+    red, actor = game.players
+    game.current_player_index = 1
+    red.base = '北京'
+    red.organizations = {'北京': 1}
+    actor.organizations = {'天津': 1}
+    actor.hand = [game._make_support_card('北國奧援', variant_index=0)]
+    game._support_card_tier = lambda player, card: (3, 0, ['北國'])
+
+    play_result = game.play_card(0, mode='action')
+    assert play_result.get('pending_choice') is True, play_result
+    first_index = next(
+        i
+        for i, entry in enumerate(game.pending_choice['targets'])
+        if entry['player_id'] == red.id and entry['town'] == '北京'
+    )
+
+    first_result = game.resolve_pending_choice(actor.id, first_index)
+    assert first_result.get('pending_choice') is True, first_result
+    assert red.organizations == {'北京': 1}
+    assert any(
+        entry['player_id'] == red.id and entry['town'] == '北京'
+        for entry in game.pending_choice['targets']
+    )
+
+    second_index = next(
+        i
+        for i, entry in enumerate(game.pending_choice['targets'])
+        if entry['player_id'] == red.id and entry['town'] == '北京'
+    )
+    second_result = game.resolve_pending_choice(actor.id, second_index)
+
+    assert second_result.get('success') is True, second_result
+    assert second_result.get('target_count') == 2
+    assert game.pending_choice is None
+    assert red.organizations == {}
+    assert red.base == '北京'
+    assert '北京' in game.turn_log['red_army_base_build_blocks']
+    assert sum('成功瓦解北京紅軍根據地' in line for line in game.action_log) == 2
 
 
 def _era_restriction_game(faction_id, era_id=None, origin='上海'):

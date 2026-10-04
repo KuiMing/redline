@@ -10,6 +10,7 @@ moved here verbatim as a mixin class purely to shrink ``game.py`` -- this is a
 verbatim text relocation, not a rewrite; nothing about the logic changed.
 """
 
+import copy
 import random
 
 from server.cards import Card
@@ -273,22 +274,39 @@ class CardPlayMixin:
     def _reserved_shield_discards_for_picks(self, picks):
         return sum(1 for pick in (picks or []) if self._pick_requires_mongol_shield_discard(pick))
 
-    def _target_keys_for_picks(self, picks):
-        """The `(target_player_id, town)` key set for a list of accumulated picks, for passing
-        as `exclude_target_keys` to `_interactive_support_dissolve_targets[_near_town]`.
+    def _target_keys_for_picks(self, picks, attacker):
+        """Return accumulated target keys that cannot be selected again.
 
-        Excluding already-picked towns from the raw candidate scan ENTIRELY (not just filtering
-        them out of the returned list afterward) matters: an already-picked town is still
-        physically present on the board (mutation is deferred to final commit), so if it were
-        merely filtered out after the fact, it would still have consumed 1 unit of
-        shield-discard budget while being walked -- silently starving a later, genuinely
-        still-open, affordable Mongol candidate of budget purely as an artifact of
-        `other.organizations` dict iteration order (parent-level review, Critical 2). Passing
-        this exclusion set is what lets `pre_reserved_shield_discards` (a flat count) correctly
-        shrink the STARTING budget for candidates that actually compete for it, instead of
-        double-counting already-reserved picks a second time as they're walked.
+        The target builder must exclude reserved targets before it allocates the Mongol shield
+        discard budget. Normal organizations can be selected once because board mutation waits
+        until final confirmation. A Red Army base is the exception: the same attacker needs two
+        successful dissolves in one turn, so keep that target available until prior hits plus
+        accumulated picks reach two.
         """
-        return {(pick.get('target_player_id'), pick.get('town')) for pick in (picks or [])}
+        pick_counts = {}
+        for pick in picks or []:
+            key = (pick.get('target_player_id'), pick.get('town'))
+            pick_counts[key] = pick_counts.get(key, 0) + 1
+
+        excluded = set()
+        dissolve_counts = self.turn_log.get('red_army_base_dissolves', {})
+        attacker_id = getattr(attacker, 'id', getattr(attacker, 'name', 'attacker'))
+        for (target_player_id, town), selected_count in pick_counts.items():
+            owner = next(
+                (p for p in self.players if getattr(p, 'id', None) == target_player_id),
+                None,
+            )
+            is_red_base = (
+                owner is not None
+                and getattr(owner, 'faction_id', None) == 'red_army'
+                and town == getattr(owner, 'base', None)
+            )
+            if is_red_base:
+                prior_hits = int(dissolve_counts.get(f'{attacker_id}:{town}', 0) or 0)
+                if prior_hits + selected_count < 2:
+                    continue
+            excluded.add((target_player_id, town))
+        return excluded
 
     def _dissolve_cancel_kwargs(self, context):
         """Given a `context` dict that may carry a `_dissolve_cancel_snapshot` (seeded once, at
@@ -340,10 +358,15 @@ class CardPlayMixin:
             ),
         }
 
+    def _event_progress_snapshot(self):
+        """Deep copy of event_progress: per-player entries are nested dicts, so a shallow
+        `dict()` copy would alias them and make before/after deltas always empty."""
+        return copy.deepcopy(self.event_progress) if isinstance(self.event_progress, dict) else self.event_progress
+
     def _event_progress_delta(self, before, after):
         """What a single card play's own _track_event_progress call(s) changed, as a small
-        delta descriptor -- or None if nothing changed (no active mission, trigger type didn't
-        match, event already settled, etc.) or either snapshot isn't a dict.
+        per-player delta descriptor -- or None if nothing changed (no active mission, trigger
+        type didn't match, event already settled, etc.) or either snapshot isn't a dict.
 
         Deliberately delta-based, not an absolute before/after pair: see the long comment on
         `rollback_event_progress_delta` in `_dissolve_cancel_kwargs` for why an absolute
@@ -351,17 +374,16 @@ class CardPlayMixin:
         """
         if not isinstance(before, dict) or not isinstance(after, dict) or before == after:
             return None
-        count_delta = int(after.get('count', 0) or 0) - int(before.get('count', 0) or 0)
-        added_completed_player_ids = []
-        if isinstance(after.get('completed_player_ids'), list):
-            before_ids = set(before.get('completed_player_ids') or [])
-            after_ids = set(after.get('completed_player_ids') or [])
-            added_completed_player_ids = sorted(after_ids - before_ids)
-        if not count_delta and not added_completed_player_ids:
+        before_players = before.get('player_progress') or {}
+        player_deltas = {}
+        for player_id, entry in (after.get('player_progress') or {}).items():
+            count_delta = int(entry.get('count', 0) or 0) - int((before_players.get(player_id) or {}).get('count', 0) or 0)
+            if count_delta:
+                player_deltas[player_id] = count_delta
+        if not player_deltas:
             return None
         return {
-            'count_delta': count_delta,
-            'added_completed_player_ids': added_completed_player_ids,
+            'player_count_deltas': player_deltas,
             # Identifies THIS play's own entry in event_progress['_actor_contributions'] (see
             # Game._track_event_progress) so _undo_event_progress_delta can pop exactly that
             # entry by token -- not by value/position -- and re-derive last_actor_id/name/token
@@ -380,33 +402,25 @@ class CardPlayMixin:
         """Reverse exactly what one card play's `_event_progress_delta` recorded, against the
         CURRENT live `self.event_progress` -- not by overwriting it with an absolute snapshot,
         so any OTHER still-live interleaved cancellable play's own independent contribution is
-        left untouched. `succeeded`/`status` are pure functions of count vs. required (mirroring
-        `_track_event_progress`'s own derivation), so they're recomputed from the adjusted count
-        rather than separately tracked; `event_notification` is regenerated the same way
-        `_track_event_progress` itself does, from the corrected `event_progress`.
+        left untouched. Each player's `met` flag is a pure function of that player's own count
+        vs. their required count (mirroring `_track_event_progress`'s own derivation), so it is
+        recomputed from the adjusted count rather than separately tracked; the aggregate
+        summary and `event_notification` are regenerated the same way `_track_event_progress`
+        itself does, from the corrected `event_progress`.
         """
         if not isinstance(delta, dict):
             return
         progress = self.event_progress
-        if not isinstance(progress, dict) or progress.get('settled'):
+        if not isinstance(progress, dict) or progress.get('settled') or progress.get('settlement_started'):
             return
-        added_ids = delta.get('added_completed_player_ids') or []
-        if added_ids and isinstance(progress.get('completed_player_ids'), list):
-            removed = set(added_ids)
-            progress['completed_player_ids'] = [
-                pid for pid in progress['completed_player_ids'] if pid not in removed
-            ]
-            # each_non_red_player mode derives count directly from this list's length.
-            progress['count'] = len(progress['completed_player_ids'])
-        else:
-            count_delta = int(delta.get('count_delta', 0) or 0)
-            if count_delta:
-                progress['count'] = max(0, int(progress.get('count', 0) or 0) - count_delta)
-        required = int(progress.get('required', 0) or 0)
-        if required > 0:
-            now_succeeded = int(progress.get('count', 0) or 0) >= required
-            progress['succeeded'] = now_succeeded
-            progress['status'] = 'success_pending' if now_succeeded else 'active'
+        entries = progress.get('player_progress') or {}
+        for player_id, count_delta in (delta.get('player_count_deltas') or {}).items():
+            entry = entries.get(player_id)
+            if entry is None:
+                continue
+            entry['count'] = max(0, int(entry.get('count', 0) or 0) - int(count_delta or 0))
+            entry['met'] = entry['count'] >= int(entry.get('required', 1) or 1)
+        self._refresh_event_progress_summary()
         # Remove exactly THIS play's own entry from the ordered "still-live contributors" stack
         # (by token, not by value/position), then re-derive last_actor_id/name/token from
         # whatever is now the most recent SURVIVING contribution. NOT a "restore my own
@@ -776,7 +790,7 @@ class CardPlayMixin:
                 pending = self._prompt_end_turn_topdeck_action_if_available()
                 if pending and pending.get('pending_choice'):
                     return {'success': True, 'topdecked_card': getattr(chosen, 'name', str(chosen)), 'pending_choice': True}
-                self._end_turn()
+                self._conclude_action_phase()
             return {'success': True, 'topdecked_card': getattr(chosen, 'name', str(chosen))}
 
         if choice_key == 'guess_ability_bottom_card':
@@ -948,25 +962,12 @@ class CardPlayMixin:
                 player.deck.discard([card])
             if choice.get('grant_propaganda_if_all_non_starter') and len(non_starters) == len(selected_cards):
                 player.resources['propaganda'] += int(choice.get('grant_propaganda_if_all_non_starter'))
-            context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
             self.pending_choice = None
             chosen_names = [getattr(card, 'name', str(card)) for card in selected_cards]
             self.log(
                 f"{player.name} discarded {len(selected_cards)} chosen card(s): {', '.join(chosen_names)} "
                 f"(hand {len(player.hand)}, deck {len(player.deck.draw_pile)}, discard {len(player.deck.discard_pile)})"
             )
-            remaining_event_targets = list(context.get('remaining_event_discard_self_player_ids') or [])
-            if choice_key == 'event_discard_self' and remaining_event_targets:
-                followup = self._open_next_event_discard_self_choice(
-                    remaining_event_targets,
-                    int(context.get('event_discard_self_count', 1) or 1),
-                    context.get('event_discard_self_outcome') or 'failure',
-                    open_hk_relocation=bool(context.get('open_hk_free_base_relocation_after_resolution')),
-                )
-                if followup and followup.get('pending_choice'):
-                    return {'success': True, 'chosen_cards': chosen_names, 'pending_choice': True}
-            if context.get('open_hk_free_base_relocation_after_resolution'):
-                self._open_hong_kong_base_relocation_window()
             return {'success': True, 'chosen_cards': chosen_names}
 
         if choice_key in {'armed_target_discard', 'era_bonus_discard_on_red_card'}:
@@ -1314,26 +1315,6 @@ class CardPlayMixin:
         if choice_key == 'event_build_organization':
             self._place_organization(player, town)
             self.log(f"{player.name} built organization in {town} via event")
-            context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
-            remaining_event_players = list(context.get('remaining_event_build_near_own_player_ids') or [])
-            if remaining_event_players:
-                self.pending_choice = None
-                followup = self._open_next_event_build_near_own_choice(
-                    remaining_event_players,
-                    context.get('event_build_near_own_effect') or {},
-                    int(context.get('event_build_near_own_count', 1) or 1),
-                    event_name=context.get('event_name') or choice.get('source_name'),
-                )
-                response = {
-                    'success': True,
-                    'choice_index': index,
-                    'town': town,
-                    'selected': selected,
-                    'choice_key': choice_key,
-                }
-                if followup and followup.get('pending_choice'):
-                    response['pending_choice'] = True
-                return response
         elif choice_key == 'card_build_organization':
             remaining_before = self._remaining_card_build_entitlements()
             self._place_organization(player, town)
@@ -1657,6 +1638,56 @@ class CardPlayMixin:
             'choice_key': choice_key,
         }
 
+    def _still_valid_accumulated_dissolve_picks(self, player, context, picks):
+        """Return queued multi-dissolve picks that are legal on the live board."""
+        payload = context.get('effect_payload') or {}
+        target_players = self._target_players_for_interaction(player, context.get('target_player_id'))
+        valid = []
+        for candidate_pick in picks:
+            other_picks = [pick for pick in picks if pick is not candidate_pick]
+            live_targets = self._interactive_support_dissolve_targets(
+                player,
+                require_self_sacrifice=False,
+                max_steps=int(payload.get('range', 1) or 1),
+                target_players=target_players,
+                target_region=payload.get('target_region'),
+                include_shared_source=bool(context.get('include_shared_source', False)),
+                pre_reserved_shield_discards=self._reserved_shield_discards_for_picks(other_picks),
+                exclude_target_keys=self._target_keys_for_picks(other_picks, player),
+            )
+            if any(
+                entry.get('player_id') == candidate_pick.get('target_player_id')
+                and entry.get('town') == candidate_pick.get('town')
+                for entry in live_targets
+            ):
+                valid.append(candidate_pick)
+        return valid
+
+    def _apply_accumulated_dissolve_picks(self, player, choice, picks):
+        """Commit the still-valid portion of an atomic multi-dissolve choice."""
+        card_name = choice.get('source_name', '奧援')
+        applied = []
+        for pick in picks:
+            target_player = next(
+                (p for p in self.players if getattr(p, 'id', None) == pick.get('target_player_id')),
+                None,
+            )
+            if target_player is None:
+                continue
+            result = self.dissolve_organization(
+                player,
+                target_player,
+                pick.get('town'),
+                source='support_card',
+                _from_pending_choice=True,
+            )
+            if not result.get('error'):
+                applied.append({'town': pick.get('town'), 'target_player_id': pick.get('target_player_id')})
+        choice['is_final_confirmation'] = True
+        self.pending_choice = None
+        self.log(f"{player.name} resolved {card_name}: dissolved {len(applied)} organization(s)")
+        return {'success': True, 'dissolved': applied, 'target_count': len(applied)}
+
     def _refresh_support_flow_choice_after_stale_result(self, player, choice):
         """Refresh an interactive support choice after resolve-time legality changed."""
         context = dict(choice.get('context') or {})
@@ -1715,21 +1746,16 @@ class CardPlayMixin:
             ]
         elif effect_type == 'interactive_dissolve_many_near':
             accumulated_picks = context.get('accumulated_dissolve_picks') or []
-            targets = [
-                entry
-                for entry in self._interactive_support_dissolve_targets(
-                    player,
-                    require_self_sacrifice=False,
-                    max_steps=int((context.get('effect_payload') or {}).get('range', 1) or 1),
-                    target_players=self._target_players_for_interaction(player, context.get('target_player_id')),
-                    target_region=(context.get('effect_payload') or {}).get('target_region'),
-                    include_shared_source=bool(context.get('include_shared_source', False)),
-                )
-                if not any(
-                    pick.get('target_player_id') == entry.get('player_id') and pick.get('town') == entry.get('town')
-                    for pick in accumulated_picks
-                )
-            ]
+            targets = self._interactive_support_dissolve_targets(
+                player,
+                require_self_sacrifice=False,
+                max_steps=int((context.get('effect_payload') or {}).get('range', 1) or 1),
+                target_players=self._target_players_for_interaction(player, context.get('target_player_id')),
+                target_region=(context.get('effect_payload') or {}).get('target_region'),
+                include_shared_source=bool(context.get('include_shared_source', False)),
+                pre_reserved_shield_discards=self._reserved_shield_discards_for_picks(accumulated_picks),
+                exclude_target_keys=self._target_keys_for_picks(accumulated_picks, player),
+            )
         elif effect_type == 'force_discard_near':
             payload = context.get('effect_payload') or {}
             targets = self._interactive_support_discard_targets_near(
@@ -1761,6 +1787,28 @@ class CardPlayMixin:
         if isinstance(response, dict) and response.get('error'):
             if self._refresh_support_flow_choice_after_stale_result(player, choice):
                 return {**response, 'pending_choice': True, 'retryable': True}
+            context = choice.get('context') if isinstance(choice.get('context'), dict) else {}
+            if context.get('effect_type') == 'interactive_dissolve_many_near':
+                accumulated_picks = list(context.get('accumulated_dissolve_picks') or [])
+                still_valid_picks = self._still_valid_accumulated_dissolve_picks(
+                    player,
+                    context,
+                    accumulated_picks,
+                )
+                if still_valid_picks:
+                    stale_towns = [
+                        pick.get('town') for pick in accumulated_picks if pick not in still_valid_picks
+                    ]
+                    self.log(
+                        f"{player.name}'s {choice.get('source_name', '奧援')} stale target"
+                        f" had no legal replacement; resolving {len(still_valid_picks)} queued target(s)"
+                        + (f" after dropping {'、'.join(stale_towns)}" if stale_towns else '')
+                    )
+                    return self._apply_accumulated_dissolve_picks(
+                        player,
+                        choice,
+                        still_valid_picks,
+                    )
             # No legal target remains -- the effect fizzles, but the card itself was still
             # genuinely played (this is not a cancel; nothing here is reversible), so this is
             # ALSO a legitimate final commit point for any deferred faction-play trigger.
@@ -2293,13 +2341,7 @@ class CardPlayMixin:
                             # scan entirely, so they never compete for that budget a second time
                             # purely as an artifact of dict iteration order (Critical 2).
                             pre_reserved_shield_discards=self._reserved_shield_discards_for_picks(accumulated_picks),
-                            exclude_target_keys=self._target_keys_for_picks(accumulated_picks),
-                        )
-                        # Redundant with exclude_target_keys above (kept as defense-in-depth --
-                        # harmless no-op given the listing already excludes these).
-                        if not any(
-                            pick['target_player_id'] == entry.get('player_id') and pick['town'] == entry.get('town')
-                            for pick in accumulated_picks
+                            exclude_target_keys=self._target_keys_for_picks(accumulated_picks, player),
                         )
                     ]
                     if next_targets:
@@ -2347,24 +2389,11 @@ class CardPlayMixin:
                 # spuriously fail to find IT SELF in the resulting list -- incorrectly marking a
                 # pick "no longer legal" that was never actually stale or unaffordable
                 # (parent-level review, Critical 2).
-                still_valid_picks = []
-                for candidate_pick in accumulated_picks:
-                    other_picks = [p for p in accumulated_picks if p is not candidate_pick]
-                    live_targets_for_this_pick = self._interactive_support_dissolve_targets(
-                        player,
-                        require_self_sacrifice=False,
-                        max_steps=max_steps,
-                        target_players=target_players,
-                        target_region=target_region,
-                        include_shared_source=bool(context.get('include_shared_source', False)),
-                        pre_reserved_shield_discards=self._reserved_shield_discards_for_picks(other_picks),
-                        exclude_target_keys=self._target_keys_for_picks(other_picks),
-                    )
-                    if any(
-                        entry.get('player_id') == candidate_pick['target_player_id'] and entry.get('town') == candidate_pick['town']
-                        for entry in live_targets_for_this_pick
-                    ):
-                        still_valid_picks.append(candidate_pick)
+                still_valid_picks = self._still_valid_accumulated_dissolve_picks(
+                    player,
+                    context,
+                    accumulated_picks,
+                )
                 if len(still_valid_picks) < len(accumulated_picks):
                     stale_towns = [
                         pick['town'] for pick in accumulated_picks if pick not in still_valid_picks
@@ -2379,13 +2408,7 @@ class CardPlayMixin:
                             target_region=target_region,
                             include_shared_source=bool(context.get('include_shared_source', False)),
                             pre_reserved_shield_discards=self._reserved_shield_discards_for_picks(still_valid_picks),
-                            exclude_target_keys=self._target_keys_for_picks(still_valid_picks),
-                        )
-                        # Redundant with exclude_target_keys above (kept as defense-in-depth --
-                        # harmless no-op given the listing already excludes these).
-                        if not any(
-                            pick['target_player_id'] == entry.get('player_id') and pick['town'] == entry.get('town')
-                            for pick in still_valid_picks
+                            exclude_target_keys=self._target_keys_for_picks(still_valid_picks, player),
                         )
                     ]
                     if remaining_count > 0 and next_targets:
@@ -2424,24 +2447,14 @@ class CardPlayMixin:
                     accumulated_picks = still_valid_picks
                     self.log(f"{player.name}'s {card_name} pick(s) at {'、'.join(stale_towns)} became illegal with no legal replacement; resolving the remaining {len(accumulated_picks)} valid target(s)")
 
-                # Apply every (still-)valid accumulated pick.
-                applied = []
-                for pick in accumulated_picks:
-                    pick_target_player = next((p for p in self.players if getattr(p, 'id', None) == pick['target_player_id']), None)
-                    if pick_target_player is None:
-                        continue
-                    pick_result = self.dissolve_organization(
-                        player, pick_target_player, pick['town'], source='support_card', _from_pending_choice=True
-                    )
-                    if not pick_result.get('error'):
-                        applied.append({'town': pick['town'], 'target_player_id': pick['target_player_id']})
                 # As above: this IS the atomic final-confirmation commit for the whole
-                # multi-target flow (every accumulated pick just got dissolved above), regardless
+                # multi-target flow (every accumulated pick gets dissolved here), regardless
                 # of how many earlier picks were queued/parked elsewhere along the way.
-                choice['is_final_confirmation'] = True
-                self.pending_choice = None
-                self.log(f"{player.name} resolved {card_name}: dissolved {len(applied)} organization(s)")
-                return {'success': True, 'dissolved': applied, 'target_count': len(applied)}
+                return self._apply_accumulated_dissolve_picks(
+                    player,
+                    choice,
+                    accumulated_picks,
+                )
 
             # Single-target dissolve (interactive_dissolve_many_near with total_count == 1),
             # interactive_dissolve_self_and_enemy, and interactive_dissolve_and_build: exactly
@@ -2677,9 +2690,7 @@ class CardPlayMixin:
                     'borrowed_purchase_area_index': action_context.get('borrowed_purchase_area_index'),
                     'event_progress': action_context.get('prior_event_progress'),
                     'event_notification': action_context.get('prior_event_notification'),
-                    'event_progress_after': (
-                        dict(self.event_progress) if isinstance(self.event_progress, dict) else self.event_progress
-                    ),
+                    'event_progress_after': self._event_progress_snapshot(),
                 }
                 pending_destination.update(self._dissolve_cancel_kwargs(pending_context))
             if not action_context.get('removed_current_card'):
@@ -3281,9 +3292,17 @@ class CardPlayMixin:
         if mode == "action":
             action_legality = self._card_action_legality(player, pending_card)
             if not action_legality.get('playable', True):
+                no_legal_target = bool(action_legality.get('no_legal_target'))
+                if no_legal_target:
+                    self.log(f"{player.name} could not play {pending_card_name}: no legal target")
                 return {
-                    'error': action_legality.get('reason') or '目前無法使用這張卡牌。',
+                    'error': (
+                        'No legal target for interactive support card'
+                        if no_legal_target
+                        else action_legality.get('reason') or '目前無法使用這張卡牌。'
+                    ),
                     **({'no_legal_build_town': True} if action_legality.get('no_legal_build_town') else {}),
+                    **({'no_legal_target': True} if no_legal_target else {}),
                     'card_name': pending_card_name,
                 }
         if mode == "action" and pending_card_name in {"爆料黑幕", "產業滲透"}:
@@ -3455,7 +3474,7 @@ class CardPlayMixin:
             'prior_played_nonstarter_names': list(self.turn_log.get('played_nonstarter_names', [])),
             'borrowed_owner_id': getattr(played_card, '_return_to_owner_topdeck', None),
             'borrowed_purchase_area_index': getattr(played_card, '_return_to_purchase_area_index', None),
-            'prior_event_progress': dict(self.event_progress) if isinstance(self.event_progress, dict) else self.event_progress,
+            'prior_event_progress': self._event_progress_snapshot(),
             'prior_event_notification': dict(self.event_notification) if isinstance(self.event_notification, dict) else self.event_notification,
             'used_faction_ability_names': (
                 ['國際線'] if international_line_used else []
@@ -3556,7 +3575,7 @@ class CardPlayMixin:
             # _event_progress_delta(event_progress, event_progress_after) sees exactly what
             # THIS play's own _track_event_progress call(s) changed (see _dissolve_cancel_kwargs).
             action_context['_dissolve_cancel_snapshot']['event_progress_after'] = (
-                dict(self.event_progress) if isinstance(self.event_progress, dict) else self.event_progress
+                self._event_progress_snapshot()
             )
             # A support card counts toward 展現實力's played-card combo on the act of
             # playing (even if a reaction later cancels it), exactly like a command card,
@@ -3594,7 +3613,7 @@ class CardPlayMixin:
                 self._track_event_progress('play_card_with_propaganda', player=player)
             # See the matching capture in the support branch above -- same reasoning.
             action_context['_dissolve_cancel_snapshot']['event_progress_after'] = (
-                dict(self.event_progress) if isinstance(self.event_progress, dict) else self.event_progress
+                self._event_progress_snapshot()
             )
         # (support cards already recorded their own name above; this covers every other path)
         if effective_type != 'support' and card_name not in {"追隨者", "樂捐者"}:

@@ -74,12 +74,14 @@ def test_effect_discard_random_discards_from_the_player_by_default():
     assert len(player.hand) == hand_before - 1
 
 
-def test_effect_discard_random_on_failure_without_player_faction_targets_every_non_red_player():
+def test_effect_discard_random_on_failure_only_hits_the_failed_player():
     game, player, other = _new_game()
+    player_hand_before = len(player.hand)
     other_hand_before = len(other.hand)
-    game._apply_event_effect_discard_random(player, {}, 1, 'failure')
-    # `player` here is red_army — the non-red default should hit `other`, not `player`.
+    # Each failed player is resolved individually by the settlement queue.
+    game._apply_event_effect_discard_random(other, {}, 1, 'failure')
     assert len(other.hand) == other_hand_before - 1
+    assert len(player.hand) == player_hand_before
 
 
 # ---------- _apply_event_effect_red_dissolve ----------
@@ -87,15 +89,16 @@ def test_effect_discard_random_on_failure_without_player_faction_targets_every_n
 def test_effect_red_dissolve_with_no_targets_is_a_no_op():
     game, player, other = _new_game()
     other.organizations = {}
-    assert game._apply_event_effect_red_dissolve({}) is None
+    assert game._apply_event_effect_red_dissolve({}, other) is None
 
 
 def test_effect_red_dissolve_opens_a_pending_choice_when_a_target_exists():
     game, player, other = _new_game()
     other.organizations = {'天津': 1}  # inside "china" scope, matches _can_dissolve_base_target
-    result = game._apply_event_effect_red_dissolve({'scope': '牆內'})
+    result = game._apply_event_effect_red_dissolve({'scope': '牆內'}, other)
     assert result == {'success': True, 'pending_choice': True}
     assert game.pending_choice.get('choice_key') == 'event_red_dissolve'
+    assert [t['player_id'] for t in game.pending_choice['targets']] == [other.id]
 
 
 # ---------- _apply_event_effect_add_internal_conflict ----------
