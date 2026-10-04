@@ -2963,7 +2963,7 @@ function openEthnicRitualGuessModal() {
 
 function strategicMapUrl() {
   const url = new URL('/static/leaflet_game_map.html', window.location.origin);
-  url.searchParams.set('v', 'shared-org-circle-20260928');
+  url.searchParams.set('v', 'rail-route-edges-20261004');
   if (gameId) url.searchParams.set('gameId', gameId);
   if (playerId) url.searchParams.set('playerId', playerId);
   return url.toString();

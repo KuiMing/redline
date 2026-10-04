@@ -865,7 +865,13 @@ function movementOptionsForTown(townName) {
 
   const normalize = entries => (Array.isArray(entries) ? entries : [])
     .filter(entry => entry && typeof entry.town === 'string')
-    .map(entry => ({ town: entry.town, cost: Number(entry.cost) || 1 }));
+    .map(entry => ({
+      town: entry.town,
+      cost: Number(entry.cost) || 1,
+      edges: Array.isArray(entry.edges)
+        ? entry.edges.filter(edge => Array.isArray(edge) && edge.length === 2)
+        : [],
+    }));
   return {
     road: normalize(projected.road),
     rail: normalize(projected.rail),
@@ -883,6 +889,14 @@ function currentPlayerState() {
 // 等於把被動能力做成主動動作，已整組移除；安全屋的 +1 只保留在後端卡牌／奧援建立候選清單
 // （Game._card_build_town_choices()／_interactive_support_build_towns()）。
 
+// 伺服器只對「目前行動玩家」的視角投影 legal_organization_moves；該玩家可行動的起點
+// （自己的組織或共享存取）即使合法移動集合為空也屬權威範圍。
+function movementProjectionAuthoritativeForTown(townName) {
+  const viewer = currentPlayerState();
+  if (!viewer || viewer.name !== currentPlayerName()) return false;
+  return canActFromTown(townName);
+}
+
 function highlightConnectedRoutes(townName) {
   roadLayer.eachLayer(layer => {
     const route = layer.__redlineRoute;
@@ -894,9 +908,23 @@ function highlightConnectedRoutes(townName) {
       lineCap: 'round',
     });
   });
+  // 鐵路高亮消費伺服器投影的完整路徑線段（多段移動的每一段都要亮），不自行推算合法性。
+  // 伺服器會省略「road/rail 皆空」的起點，所以「缺少 key」不代表沒有權威投影：只要是
+  // 目前行動玩家自己可選取的起點（actionable origin），就一律以投影為準、fail closed——
+  // 投影缺漏或為空時不亮任何鐵路。只有純檢視（非行動玩家視角，或選到非己方／無共享存取
+  // 的城鎮）這種明確條件才退回只標示與該城鎮直接相連的鐵路。
+  const projectionAuthoritative = movementProjectionAuthoritativeForTown(townName);
+  const projectedRailEdges = new Set();
+  if (projectionAuthoritative) {
+    movementOptionsForTown(townName).rail.forEach(option => {
+      option.edges.forEach(([a, b]) => projectedRailEdges.add([a, b].sort().join('\u0000')));
+    });
+  }
   railLayer.eachLayer(layer => {
     const route = layer.__redlineRoute;
-    const connected = route && (route.source === townName || route.target === townName);
+    const connected = route && (projectionAuthoritative
+      ? projectedRailEdges.has([route.source, route.target].sort().join('\u0000'))
+      : (route.source === townName || route.target === townName));
     if (!connected || !layer.setStyle) return;
     layer.setStyle({
       color: '#ef4444', opacity: 0.9,
