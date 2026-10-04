@@ -33,6 +33,6 @@ def test_filtering_keeps_complete_server_target_list_for_restore():
 
 
 def test_filtered_target_assets_use_the_same_cache_version():
-    version = "rail-route-edges-20261004"
+    version = "contextual-route-highlight-20261004"
     assert f"url.searchParams.set('v', '{version}')" in APP_LOGIC
     assert f"leaflet_game_map_logic.js?v={version}" in MAP_HTML

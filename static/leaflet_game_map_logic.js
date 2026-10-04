@@ -287,6 +287,7 @@ let selectedTown = null;
 let selectedMoveTargets = [];
 let pendingMove = null;
 let pendingMoveTarget = null;
+let routePreviewTarget = null; // { to, mode }：hover 指向的合法目的地
 let lastResolvedMove = null;
 let stickyPlayerErrorMessage = '';
 let stickyPlayerErrorTimer = null;
@@ -375,6 +376,7 @@ function popupHtml(t) {
 }
 
 function resetMoveSelection() {
+  routePreviewTarget = null;
   selectedMoveTargets = [];
   pendingMove = null;
   pendingMoveTarget = null;
@@ -897,34 +899,38 @@ function movementProjectionAuthoritativeForTown(townName) {
   return canActFromTown(townName);
 }
 
-function highlightConnectedRoutes(townName) {
+// 特定合法鐵路目的地的完整路徑線段（消費伺服器投影的 edges，不自行推算合法性）。
+// 只在「目前行動玩家可行動的起點」且目的地確實在伺服器的合法鐵路清單內時回傳；否則為 null。
+function projectedRailRouteEdges(fromTown, toTown) {
+  if (!fromTown || !toTown || !movementProjectionAuthoritativeForTown(fromTown)) return null;
+  const option = movementOptionsForTown(fromTown).rail.find(entry => entry.town === toTown);
+  return option && option.edges.length ? option.edges : null;
+}
+
+// 一般選取／剛選來源：只亮與該城鎮直接相連的道路與鐵路（純 adjacency，不代表合法性；
+// 合法目的地與可點擊性仍只由 selectedMoveTargets／候選標記決定）。
+// 指向（hover）或選定（pendingMoveTarget）一個特定合法鐵路目的地時：只亮該目的地由伺服器
+// 投影的完整路徑（例如 福岡－大阪－東京－仙臺 三段），不再亮來源的其他直接鄰接線段，
+// 也絕不把所有合法目的地的 edges 聯集一起亮起。
+function highlightConnectedRoutes(townName, targetTown = null) {
+  const routeEdges = projectedRailRouteEdges(townName, targetTown);
+  const pathKeys = routeEdges
+    ? new Set(routeEdges.map(([a, b]) => [a, b].sort().join('\u0000')))
+    : null;
+  const isDirect = route => route && (route.source === townName || route.target === townName);
+  const onPath = route => route && pathKeys.has([route.source, route.target].sort().join('\u0000'));
   roadLayer.eachLayer(layer => {
     const route = layer.__redlineRoute;
-    const connected = route && (route.source === townName || route.target === townName);
-    if (!connected || !layer.setStyle) return;
+    if (pathKeys || !isDirect(route) || !layer.setStyle) return;
     layer.setStyle({
       color: '#d8a04a', opacity: 0.9,
       weight: roadWeight(map.getZoom()),
       lineCap: 'round',
     });
   });
-  // 鐵路高亮消費伺服器投影的完整路徑線段（多段移動的每一段都要亮），不自行推算合法性。
-  // 伺服器會省略「road/rail 皆空」的起點，所以「缺少 key」不代表沒有權威投影：只要是
-  // 目前行動玩家自己可選取的起點（actionable origin），就一律以投影為準、fail closed——
-  // 投影缺漏或為空時不亮任何鐵路。只有純檢視（非行動玩家視角，或選到非己方／無共享存取
-  // 的城鎮）這種明確條件才退回只標示與該城鎮直接相連的鐵路。
-  const projectionAuthoritative = movementProjectionAuthoritativeForTown(townName);
-  const projectedRailEdges = new Set();
-  if (projectionAuthoritative) {
-    movementOptionsForTown(townName).rail.forEach(option => {
-      option.edges.forEach(([a, b]) => projectedRailEdges.add([a, b].sort().join('\u0000')));
-    });
-  }
   railLayer.eachLayer(layer => {
     const route = layer.__redlineRoute;
-    const connected = route && (projectionAuthoritative
-      ? projectedRailEdges.has([route.source, route.target].sort().join('\u0000'))
-      : (route.source === townName || route.target === townName));
+    const connected = pathKeys ? onPath(route) : isDirect(route);
     if (!connected || !layer.setStyle) return;
     layer.setStyle({
       color: '#ef4444', opacity: 0.9,
@@ -933,6 +939,21 @@ function highlightConnectedRoutes(townName) {
       lineCap: 'round',
     });
   });
+}
+
+// 目前 UI 指向的目的地：hover 預覽優先，其次是已點選待確認的目的地。
+function refreshRouteHighlights() {
+  if (!selectedTown) return;
+  roadLayer.eachLayer(layer => {
+    if (layer.setStyle) layer.setStyle({ color:'#d8a04a', opacity:0.12, weight:roadWeight(map.getZoom()) });
+  });
+  railLayer.eachLayer(layer => {
+    if (layer.setStyle) layer.setStyle({ color:'#ef4444', opacity:0.15, weight:railWeight(map.getZoom()), dashArray: railDashArray(map.getZoom()) });
+  });
+  const pending = pendingMoveTarget && pendingMoveTarget.from === selectedTown ? pendingMoveTarget : null;
+  const target = routePreviewTarget || pending;
+  // 只有「鐵路」模式的目的地才顯示完整鐵路路徑；道路目的地維持直接鄰接顯示。
+  highlightConnectedRoutes(selectedTown, target && target.mode === 'rail' ? target.to : null);
 }
 
 function renderMovementHighlights(townName, options = {}) {
@@ -977,13 +998,7 @@ function renderMovementHighlights(townName, options = {}) {
     originMarker.setStyle(originStyle);
   }
 
-  roadLayer.eachLayer(layer => {
-    if (layer.setStyle) layer.setStyle({ color:'#d8a04a', opacity:0.12, weight:roadWeight(map.getZoom()) });
-  });
-  railLayer.eachLayer(layer => {
-    if (layer.setStyle) layer.setStyle({ color:'#ef4444', opacity:0.15, weight:railWeight(map.getZoom()), dashArray: railDashArray(map.getZoom()) });
-  });
-  highlightConnectedRoutes(townName);
+  refreshRouteHighlights();
 
   if (!canAct) {
     updateStatusPanel();
@@ -1386,6 +1401,7 @@ function renderMap() {
       if (selectedTown && moveOption) {
         pendingMoveTarget = { from: selectedTown, to: t.name, mode: moveOption.mode, cost: moveOption.cost };
         refreshMoveConfirmUi();
+        refreshRouteHighlights();
         return;
       }
 
@@ -1404,6 +1420,17 @@ function renderMap() {
       }
 
       selectTownForCurrentMapAction(t.name, { autoFocus: true });
+    });
+    marker.on('mouseover', () => {
+      const option = selectedTown && moveOptionForTown(t.name);
+      if (!option) return;
+      routePreviewTarget = { to: t.name, mode: option.mode };
+      refreshRouteHighlights();
+    });
+    marker.on('mouseout', () => {
+      if (!routePreviewTarget || routePreviewTarget.to !== t.name) return;
+      routePreviewTarget = null;
+      refreshRouteHighlights();
     });
     currentMarkers.set(t.name, marker);
     if (shouldShowLabels()) {
@@ -1555,6 +1582,7 @@ document.getElementById('confirmMoveBtn').addEventListener('click', () => {
   window.__lastMoveRequest = { from, to, mode, ok: result.ok };
   pendingMoveTarget = null;
   refreshMoveConfirmUi();
+  refreshRouteHighlights();
 });
 document.getElementById('directBuildBtn').addEventListener('click', () => {
   if (!selectedTown) return;
