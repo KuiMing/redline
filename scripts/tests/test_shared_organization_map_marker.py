@@ -17,6 +17,6 @@ def test_shared_organization_uses_yellow_town_circle_without_s_badge():
 
 
 def test_map_asset_versions_match():
-    version = "shared-org-circle-20260928"
+    version = "rail-route-edges-20261004"
     assert f"leaflet_game_map_logic.js?v={version}" in MAP_HTML
     assert f"url.searchParams.set('v', '{version}')" in APP_JS

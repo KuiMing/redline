@@ -118,6 +118,7 @@ from server.game_build_eligibility_rules import (
     town_has_physical_organization,
     organization_occupancy_violations,
     rail_reachable_within_three,
+    rail_route_edges,
     org_supply_limit,
     player_is_nonviolent,
     player_is_distance_restricted,
@@ -2820,6 +2821,11 @@ class Game(CardPlayMixin):
             self.map, self.towns_by_ruler, self.faction_by_id, self.players, player, from_town, to_town
         )
 
+    def _rail_route_edges(self, player, from_town, to_town):
+        return rail_route_edges(
+            self.map, self.towns_by_ruler, self.faction_by_id, self.players, player, from_town, to_town
+        )
+
     def _org_supply_limit(self, player):
         return org_supply_limit(player)
 
@@ -3693,7 +3699,11 @@ class Game(CardPlayMixin):
                 for to_town in all_towns:
                     checked = self._validate_organization_move(from_town, to_town, mode)
                     if checked.get("success"):
-                        modes[mode].append({"town": to_town, "cost": checked["cost"]})
+                        entry = {"town": to_town, "cost": checked["cost"]}
+                        if mode == "rail":
+                            # 伺服器權威的鐵路路徑線段，前端據此高亮整條多段路線，不自行推算合法性
+                            entry["edges"] = self._rail_route_edges(player, from_town, to_town)
+                        modes[mode].append(entry)
             if modes["road"] or modes["rail"]:
                 result[from_town] = modes
         return result
