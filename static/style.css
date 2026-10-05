@@ -3786,3 +3786,28 @@ body.victory-art-viewer-open {
     white-space: normal;
   }
 }
+
+/* ---- Joy-Con／搖桿控制（controller_ui.js）：高對比焦點、不改版面尺寸 ---- */
+.rl-pad-focus {
+  outline: 4px solid #ffe14d !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 2px #000, 0 0 16px 4px rgba(255, 225, 77, 0.75) !important;
+  position: relative;
+  z-index: 3;
+}
+#padHud { position: absolute; right: 8px; bottom: 6px; z-index: 90; display: flex; align-items: center; gap: 6px; flex-direction: row-reverse; font-size: 12px; }
+#padToggleBtn { width: 28px; height: 28px; padding: 0; border-radius: 14px; border: 1px solid rgba(255,255,255,0.35); background: rgba(10,16,32,0.82); color: #fff; cursor: pointer; line-height: 1; font-size: 14px; opacity: 0.7; }
+#padToggleBtn:hover, #padHud[data-status="connected"] #padToggleBtn { opacity: 1; }
+#padHud[data-status="connected"] #padToggleBtn { border-color: #4ade80; }
+#padHud[data-status="error"] #padToggleBtn, #padHud[data-status="stale"] #padToggleBtn { border-color: #f87171; }
+#padHint { padding: 4px 10px; border-radius: 12px; background: rgba(10,16,32,0.9); color: #f1f5f9; border: 1px solid rgba(255,225,77,0.55); white-space: nowrap; pointer-events: none; }
+#padPanel { position: absolute; right: 0; bottom: 34px; width: 300px; padding: 10px 12px; border-radius: 10px; background: rgba(10,16,32,0.97); border: 1px solid rgba(255,255,255,0.3); color: #e2e8f0; display: flex; flex-direction: column; gap: 6px; }
+#padPanel[hidden], #padHint[hidden], #padButtonRing[hidden], .pad-note[hidden] { display: none !important; }
+#padPanel .pad-row { display: flex; flex-direction: column; gap: 3px; }
+#padPanel .pad-row:first-child { flex-direction: row; align-items: center; gap: 6px; }
+#padPanel .pad-actions { flex-direction: row; gap: 6px; }
+#padPanel input[type="text"] { width: 100%; box-sizing: border-box; padding: 4px 6px; background: #0b1220; color: #fff; border: 1px solid #475569; border-radius: 4px; }
+#padPanel button { padding: 4px 10px; border-radius: 4px; border: 1px solid #64748b; background: #1e293b; color: #fff; cursor: pointer; }
+.pad-note { color: #94a3b8; font-size: 11px; line-height: 1.4; }
+.pad-error { color: #fca5a5; }
+#padButtonRing { position: absolute; z-index: 80; pointer-events: none; outline: 4px solid #ffe14d; outline-offset: 2px; box-shadow: 0 0 0 2px #000, 0 0 16px 4px rgba(255,225,77,0.75); border-radius: 4px; }

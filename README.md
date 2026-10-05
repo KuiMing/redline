@@ -49,6 +49,10 @@ Lobby 畫面也會顯示這個網址。想讓 Agent 陪玩的話，另外開 MCP
 中，重開就會消失）。跑 `scripts/validate/validate_*_browser.py` 這類需要 `/test/*` 端點的
 驗證腳本時，方式三要另外加 `ENABLE_TEST_ROUTES=true`（不開的話 `/test/*` 一律回傳 404）。
 
+### Joy-Con／搖桿（選用）
+
+在 Mac 上用右 Joy-Con 玩：先啟動本機 bridge（`tools/joycon_bridge/run_mac.sh`），再在頁面右下角 🎮 啟用。詳見 [`docs/joycon_controller.md`](docs/joycon_controller.md) 與 [`tools/joycon_bridge/README.md`](tools/joycon_bridge/README.md)。
+
 ### 給 Agent 用的 MCP
 
 方式一（Docker Compose）已經內建 MCP，開在 `http://127.0.0.1:8765/mcp`，不用另外做什麼。

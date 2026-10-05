@@ -1,12 +1,16 @@
 # Redline TODO
 
-最後更新：2026-09-29
+最後更新：2026-10-05
 
 本文件只保留尚未完成的工作。已完成內容請查閱 Git history、`CHANGELOG.md` 與 `docs/records/`。
 
 ## 待辦
 
-目前沒有待辦項目。
+- **Mac 實機 Joy-Con 驗證**（Joy-Con／搖桿控制第一版已完成並通過 mock E2E，但尚未接真實硬體）：
+  - 用 `tools/joycon_bridge/run_mac.sh --dump-packets` 確認 S2B1 封包欄位位置（目前 buttons offset 4、float32 x/y offset 8 是假設）與 `y` 軸方向。
+  - 確認 Finally the Controller Works 在搖桿靜止時仍持續送封包（否則 1.5 秒後會 stale，閒置後第一次按鍵只會重新建立 baseline）。
+  - 用實體 Joy-Con 走過：大廳、購買、手牌、modal／pending choice、地圖移動與瓦解取消。
+  - 確認 https 頁面連 `ws://127.0.0.1` 在實際使用的瀏覽器是否被 mixed content 擋下；如需支援 https，另開 wss bridge 工作。
 
 ## 工作規則
 - 開始新工作前先讀本文件，並執行 `git status --short --branch` 與 `git log --oneline -5`。
