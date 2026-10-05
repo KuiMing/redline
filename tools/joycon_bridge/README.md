@@ -61,7 +61,7 @@ Joy-Con ─▶ Finally the Controller Works ─UDP 127.0.0.1:24800 (S2B1)─▶ 
 
 ## 已知限制（務必閱讀）
 
-- **S2B1 封包欄位位置尚未用實機驗證。** 預設假設 `S2B1` magic（4 bytes）＋ b0、b1（offset 4、5）＋ little-endian float32 x、y（offset 8、12）。
-  第一次使用請加 `--dump-packets` 對照實際封包，必要時用 `--buttons-offset`／`--stick-offset` 修正；`y` 方向同上。
+- **S2B1 預設使用 Finally the Controller Works v0.2.0 的 44-byte 格式。** 按鍵位於 u32 buttons（低兩個 byte offset 8、9）；REDLINE 使用右搖桿 rx、ry（offset 20、24）。
+  如未來版本變更 wire format，可加 `--dump-packets` 對照封包，並用 `--buttons-offset`／`--stick-offset` 暫時覆寫。
 - **https 頁面可能擋 `ws://127.0.0.1`（mixed content）。** 是否擋下取決於瀏覽器（Safari 會擋；Chrome／Firefox 對 loopback 通常放行，但不保證）。
   這一版沒有提供 `wss://` bridge（需要本機憑證）。目前 dev／區網是 http，請用 http 頁面；若頁面是 https 且連不上，設定面板會顯示警語，請改用 http 位址。

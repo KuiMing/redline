@@ -24,7 +24,15 @@ from tools.joycon_bridge.bridge import (
 
 
 def packet(x=0.0, y=0.0, b0=0, b1=0, magic=b"S2B1"):
-    return magic + bytes([b0, b1, 0, 0]) + struct.pack("<2f", x, y) + b"\0" * 0
+    # FTCW v0.2.0: magic, seq, u32 buttons, lx/ly, rx/ry, sensor tail.
+    return (
+        magic
+        + struct.pack("<I", 1)
+        + bytes([b0, b1, 0, 0])
+        + struct.pack("<2f", 0.0, 0.0)
+        + struct.pack("<2f", x, y)
+        + b"\0" * 16
+    )
 
 
 def test_parse_valid_packet():
@@ -49,7 +57,7 @@ def test_parse_clamps_tiny_overshoot():
 
 
 def test_custom_layout_offsets():
-    layout = PacketLayout(buttons_offset=6, stick_offset=8)
+    layout = PacketLayout(buttons_offset=6, stick_offset=8, min_length=16)
     data = b"S2B1" + bytes([1, 2, 0x40, 0x04]) + struct.pack("<2f", 0.1, 0.2)
     frame = parse_packet(data, layout)
     assert (frame.b0, frame.b1) == (0x40, 0x04)

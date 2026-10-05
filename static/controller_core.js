@@ -24,7 +24,7 @@
   const BUTTON_BITS = Object.freeze({
     A: [0, 0x08], B: [0, 0x04], X: [0, 0x02], Y: [0, 0x01],
     SL: [0, 0x20], SR: [0, 0x10], R: [0, 0x40], ZR: [0, 0x80],
-    PLUS: [1, 0x02], STICK: [1, 0x04], HOME: [1, 0x10], CAPTURE: [1, 0x40],
+    PLUS: [1, 0x02], STICK: [1, 0x04], HOME: [1, 0x10], CAPTURE: [1, 0x20],
   });
   const BUTTON_NAMES = Object.freeze(Object.keys(BUTTON_BITS));
 

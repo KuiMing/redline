@@ -34,14 +34,15 @@ LOOPBACK_NAMES = {"127.0.0.1", "localhost", "[::1]", "::1"}
 class PacketLayout:
     """S2B1 封包欄位位置。
 
-    注意：offset 是依需求描述假設的預設值，尚未用實機封包驗證；
-    用 `--dump-packets` 觀察實際封包，必要時以 CLI 覆寫。
+    Finally the Controller Works v0.2.0 的 44-byte wire format：
+    magic | u32 seq | u32 buttons | f32 lx,ly,rx,ry | sensors。
+    REDLINE 使用低 16-bit 按鍵與右搖桿 rx/ry。
     """
 
     magic: bytes = b"S2B1"
-    buttons_offset: int = 4  # b0, b1 連續兩個 byte
-    stick_offset: int = 8  # little-endian float32 x, y
-    min_length: int = 16
+    buttons_offset: int = 8  # u32 buttons 的低兩個 byte
+    stick_offset: int = 20  # little-endian float32 rx, ry
+    min_length: int = 44
 
 
 @dataclass(frozen=True)
