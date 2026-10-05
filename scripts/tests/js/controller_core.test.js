@@ -262,3 +262,66 @@ test('bridge URL settings: loopback only, defaults, persistence shape', () => {
   assert.equal(C.reconnectDelayMs(0), 1000);
   assert.equal(C.reconnectDelayMs(99), 8000);
 });
+
+// ---- 卡牌 scope：A 查看 / B 勾選 / 手牌 X 資源 / 手牌 Y 行動 ----
+const cardCtx = (card, extra = {}) => ({ scopeKind: 'page', hasFocus: true, cancelAvailable: false, sectionsLocked: false, card, ...extra });
+const handCard = { zone: 'hand', hasToggle: false };
+const buyCard = { zone: 'purchase', hasToggle: true };
+const X = { name: 'focusTurnBar' };
+const Y = { name: 'toggleHelp' };
+
+test('card focus: A previews and never activates/toggles/buys', () => {
+  for (const card of [handCard, buyCard, { zone: 'discard', hasToggle: false }]) {
+    assert.deepEqual(C.routeAction(cardCtx(card), { name: 'confirm' }), { cmd: 'cardPreview' }, card.zone);
+  }
+  assert.equal(C.routeAction(cardCtx(handCard, { hasFocus: false }), { name: 'confirm' }), null);
+  assert.deepEqual(C.routeAction(cardCtx(null), { name: 'confirm' }), { cmd: 'activate' });
+});
+
+test('card focus: B toggles only on checkable cards, otherwise keeps legacy cancel', () => {
+  assert.deepEqual(C.routeAction(cardCtx(buyCard), { name: 'cancel' }), { cmd: 'cardToggle' });
+  assert.equal(C.routeAction(cardCtx(handCard), { name: 'cancel' }), null);
+  assert.deepEqual(C.routeAction(cardCtx(handCard, { cancelAvailable: true }), { name: 'cancel' }), { cmd: 'cancel' });
+  assert.deepEqual(C.routeAction(cardCtx(null, { cancelAvailable: true }), { name: 'cancel' }), { cmd: 'cancel' });
+  assert.deepEqual(C.routeAction(cardCtx(null, { scopeKind: 'modal', cancelAvailable: true }), { name: 'cancel' }), { cmd: 'cancel' });
+});
+
+test('hand card focus: X = resource, Y = action', () => {
+  assert.deepEqual(C.routeAction(cardCtx(handCard), X), { cmd: 'cardMode', mode: 'resource' });
+  assert.deepEqual(C.routeAction(cardCtx(handCard), Y), { cmd: 'cardMode', mode: 'action' });
+});
+
+test('non-hand focus: X/Y never trigger card modes and keep legacy behaviour', () => {
+  for (const card of [buyCard, { zone: 'discard', hasToggle: false }, null]) {
+    assert.deepEqual(C.routeAction(cardCtx(card), X), { cmd: 'focusTurnBar' });
+    assert.deepEqual(C.routeAction(cardCtx(card), Y), { cmd: 'toggleHelp' });
+  }
+  assert.equal(C.routeAction(cardCtx(buyCard, { sectionsLocked: true }), X), null);
+});
+
+test('hand card X/Y never map to card modes without focus or inside a modal scope', () => {
+  assert.deepEqual(C.routeAction(cardCtx(handCard, { hasFocus: false }), X), { cmd: 'focusTurnBar' });
+  assert.deepEqual(C.routeAction(cardCtx(handCard, { hasFocus: false }), Y), { cmd: 'toggleHelp' });
+  assert.equal(C.routeAction(cardCtx(handCard, { scopeKind: 'modal' }), X), null);
+  assert.deepEqual(C.routeAction(cardCtx(handCard, { scopeKind: 'modal' }), Y), { cmd: 'toggleHelp' });
+  assert.equal(C.routeAction(cardCtx(handCard, { sectionsLocked: true }), X)?.cmd, 'cardMode');
+});
+
+test('A/B on non-card scopes are unchanged (map, modal, notices, plain buttons)', () => {
+  for (const scopeKind of ['modal', 'map', 'page']) {
+    const ctx = { scopeKind, hasFocus: true, cancelAvailable: true, sectionsLocked: false, card: null };
+    assert.deepEqual(C.routeAction(ctx, { name: 'confirm' }), { cmd: 'activate' });
+    assert.deepEqual(C.routeAction(ctx, { name: 'cancel' }), { cmd: 'cancel' });
+  }
+});
+
+test('card context is optional: legacy ctx without card behaves as before', () => {
+  const legacy = { scopeKind: 'page', hasFocus: true, cancelAvailable: false, sectionsLocked: false };
+  assert.deepEqual(C.routeAction(legacy, X), { cmd: 'focusTurnBar' });
+  assert.deepEqual(C.routeAction(legacy, { name: 'confirm' }), { cmd: 'activate' });
+});
+
+test('B cancel does not require focus (focus-less modals such as card preview still close)', () => {
+  const ctx = { scopeKind: 'modal', hasFocus: false, cancelAvailable: true, sectionsLocked: false, card: null };
+  assert.deepEqual(C.routeAction(ctx, { name: 'cancel' }), { cmd: 'cancel' });
+});

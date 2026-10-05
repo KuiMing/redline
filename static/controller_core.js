@@ -149,20 +149,33 @@
   }
 
   /**
-   * context router。ctx: {scopeKind:'modal'|'map'|'page', hasFocus, cancelAvailable, sectionsLocked}
+   * context router。ctx: {scopeKind:'modal'|'map'|'page', hasFocus, cancelAvailable, sectionsLocked,
+   *   card?: {zone, hasToggle} | null}（card = 焦點位於卡牌元素內時的描述）。
+   * 卡牌焦點：A = 查看預覽（絕不執行／勾選／購買）；B = 切換勾選（僅有勾選控制的卡牌，否則維持原本取消）；
+   * 手牌焦點：X = 資源、Y = 行動。非手牌焦點的 X/Y 維持原行為。
    * 回傳要執行的 command 或 null（null = 靜默忽略）。
    */
   function routeAction(ctx, logical) {
     if (!logical) return null;
     const modal = ctx.scopeKind === 'modal';
+    const card = ctx.card || null;
+    const onHand = !!card && card.zone === 'hand';
     switch (logical.name) {
       case 'move': return { cmd: 'move', dir: logical.dir };
-      case 'confirm': return ctx.hasFocus ? { cmd: 'activate' } : null;
-      case 'cancel': return ctx.cancelAvailable ? { cmd: 'cancel' } : null;
+      case 'confirm':
+        if (!ctx.hasFocus) return null;
+        return card ? { cmd: 'cardPreview' } : { cmd: 'activate' };
+      case 'cancel':
+        if (ctx.hasFocus && card && card.hasToggle) return { cmd: 'cardToggle' };
+        return ctx.cancelAvailable ? { cmd: 'cancel' } : null;
       case 'nextSection': return modal || ctx.sectionsLocked ? null : { cmd: 'section', step: 1 };
       case 'prevSection': return modal || ctx.sectionsLocked ? null : { cmd: 'section', step: -1 };
-      case 'focusTurnBar': return modal || ctx.sectionsLocked ? null : { cmd: 'focusTurnBar' };
-      case 'toggleHelp': return { cmd: 'toggleHelp' };
+      case 'focusTurnBar':
+        if (onHand && ctx.hasFocus && !modal) return { cmd: 'cardMode', mode: 'resource' };
+        return modal || ctx.sectionsLocked ? null : { cmd: 'focusTurnBar' };
+      case 'toggleHelp':
+        if (onHand && ctx.hasFocus && !modal) return { cmd: 'cardMode', mode: 'action' };
+        return { cmd: 'toggleHelp' };
       default: return null;
     }
   }

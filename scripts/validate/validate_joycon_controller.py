@@ -3,7 +3,7 @@
 
 不碰實體 Joy-Con：以 add_init_script 取代 `ws://127.0.0.1:8000/ws` 的 WebSocket，
 由測試注入 {x, y, buttons:[b0,b1]} frame；其餘連線（遊戲 / 地圖）仍走真實 WebSocket。
-驗證：預設不連線、焦點與高對比標示、A click、B cancel、modal 優先權、斷線重連不誤觸、
+驗證：預設不連線、焦點與高對比標示、A click、B cancel、modal 優先權、卡牌 A 預覽／B 勾選／手牌 X 資源／Y 行動、斷線重連不誤觸、
 地圖目標焦點、非法目標 fail-closed、iframe 訊息來源驗證。
 
 執行（會自動啟動隔離 server，不會碰 8100）：
@@ -26,7 +26,7 @@ from playwright.sync_api import sync_playwright
 ROOT = Path(__file__).resolve().parents[2]
 OUT = Path(os.environ.get("REDLINE_JOYCON_PROOF_DIR", "/tmp/redline-joycon-proof"))
 BRIDGE_URL = "ws://127.0.0.1:8000/ws"
-BIT = {"A": (0, 0x08), "B": (0, 0x04), "X": (0, 0x02), "R": (0, 0x40), "SR": (0, 0x10), "PLUS": (1, 0x02)}
+BIT = {"A": (0, 0x08), "B": (0, 0x04), "X": (0, 0x02), "Y": (0, 0x01), "R": (0, 0x40), "SR": (0, 0x10), "PLUS": (1, 0x02)}
 
 MOCK_WS = """
 (() => {
@@ -147,13 +147,13 @@ def focus_info(page):
 
 
 def focus_dom_toward(pad, page, selector, steps=40):
-    """用真正的搖桿方向輸入把焦點移到 selector（貪婪：朝目標位移較大的軸推）。"""
+    """用真正的搖桿方向輸入把焦點移到 selector 或其內部控制（貪婪：朝目標位移較大的軸推）。"""
     for _ in range(steps):
         d = page.evaluate(
             """(sel) => {
               const cur = document.querySelector('.rl-pad-focus'); const tgt = document.querySelector(sel);
               if (!cur || !tgt) return 'missing';
-              if (cur === tgt) return 'done';
+              if (cur === tgt || tgt.contains(cur)) return 'done';
               const a = cur.getBoundingClientRect(), b = tgt.getBoundingClientRect();
               const dx = (b.left + b.right - a.left - a.right) / 2, dy = (b.top + b.bottom - a.top - a.bottom) / 2;
               return Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
@@ -434,6 +434,127 @@ def main():
             page.wait_for_timeout(800)
             pending_now = page.evaluate("window.lastGameState && window.lastGameState.pending_choice")
             record("choice_B_uses_existing_cancel_flow", (not cancel_visible) or pending_now is None, [cancel_visible, pending_now])
+
+
+            # ---------- 10. 卡牌：A 預覽、B 勾選、手牌 X 資源 / Y 行動 ----------
+            setup3 = post_json(base, "/test/setup-move-confirmation-proof",
+                               {"mover_faction": "taiwan_green", "mover_base": "新竹", "mover_town": "臺北", "moves_left": 5})
+            page.goto(base + setup3["url"], wait_until="networkidle")
+            page.wait_for_selector("#gameShell", state="visible", timeout=15000)
+            page.evaluate("() => window.closeEventReveal && closeEventReveal()")
+            page.wait_for_function("RedlineController.getState().status === 'connected'", timeout=8000)
+            page.evaluate(SPY)
+            page.evaluate("""() => {
+              window.__cardSpy = { play: [], preview: [], toggle: 0 };
+              const play = window.playHandCard; window.playHandCard = function (...a) { window.__cardSpy.play.push([a[0], a[1], a[2]]); return play.apply(this, a); };
+              const prev = window.selectCardDetail; window.selectCardDetail = function (el) { window.__cardSpy.preview.push(el.dataset.cardName + '|' + el.dataset.cardZone); return prev.apply(this, arguments); };
+              const tog = window.togglePurchaseSelection; window.togglePurchaseSelection = function (...a) { window.__cardSpy.toggle += 1; return tog.apply(this, a); };
+            }""")
+            cs = lambda: page.evaluate("JSON.parse(JSON.stringify(window.__cardSpy))")
+            sends = lambda: page.evaluate("__spy.sendAction")
+            hand_n = lambda: page.evaluate("document.querySelectorAll('#hand .hand-card').length")
+            checked = lambda: page.evaluate("[...document.querySelectorAll('input[data-purchase-index]')].filter(i => i.checked).map(i => i.dataset.purchaseIndex)")
+            preview_open = lambda: page.evaluate("document.getElementById('cardPreviewModal').style.display === 'flex'")
+            pad.neutral()
+            pad.tap("A")  # 第一次只放焦點
+            BUY = '.card[data-card-zone="purchase"]:has(input[data-purchase-index="0"]:not(:disabled))'
+            BUY_DISABLED = '.card[data-card-zone="purchase"]:has(input[data-purchase-index="4"]:disabled)'
+            HAND = '#hand .hand-card[data-card-name="樂捐者"]'
+            HAND_FOLLOWER = '#hand .hand-card[data-card-name="追隨者"]'
+
+            # 購買區卡牌：A 只預覽，不勾選、不購買
+            record("card_focus_reaches_purchase_card", focus_dom_toward(pad, page, BUY), focus_info(page))
+            pad.tap("A")
+            page.wait_for_timeout(250)
+            c = cs()
+            record("card_A_opens_preview_only", preview_open() and c["preview"] == ["%s|purchase" % page.evaluate(f"document.querySelector('{BUY}').dataset.cardName")]
+                   and c["toggle"] == 0 and checked() == [] and sends() == 0, [c, checked()])
+            page.screenshot(path=str(OUT / "06_card_preview.png"))
+            pad.tap("B")  # modal B：既有關閉行為不回歸
+            page.wait_for_timeout(250)
+            record("modal_B_still_closes_card_preview", not preview_open() and cs()["toggle"] == 0 and checked() == [], [preview_open(), checked()])
+
+            # B 勾選／取消勾選（既有 checkbox + togglePurchaseSelection）
+            record("card_focus_returns_to_purchase_card", focus_dom_toward(pad, page, BUY), focus_info(page))
+            pad.tap("B")
+            page.wait_for_timeout(250)
+            record("card_B_checks_purchase_card_via_existing_control", checked() == ["0"] and cs()["toggle"] == 1 and sends() == 0 and not preview_open(), [checked(), cs()])
+            pad.tap("A")
+            page.wait_for_timeout(200)
+            record("card_A_on_checked_card_previews_without_changing_check", preview_open() and checked() == ["0"] and cs()["toggle"] == 1 and sends() == 0)
+            pad.tap("B")
+            page.wait_for_timeout(200)
+            record("card_focus_restored_after_preview", (focus_info(page) or {}).get("inModal") is False and checked() == ["0"], focus_info(page))
+            pad.tap("B")
+            page.wait_for_timeout(250)
+            record("card_B_toggles_purchase_card_off", checked() == [] and cs()["toggle"] == 2 and sends() == 0, [checked(), cs()])
+
+            # 購買區 X/Y：不得觸發手牌，也不得購買
+            pad.tap("X")
+            page.wait_for_timeout(200)
+            record("purchase_card_X_does_not_play_cards", cs()["play"] == [] and sends() == 0 and checked() == [], cs())
+            record("purchase_card_X_keeps_legacy_turn_bar_focus",
+                   page.evaluate("!!document.querySelector('.rl-pad-focus') && !!document.querySelector('.rl-pad-focus').closest('#turnActionButtons')"), focus_info(page))
+            record("focus_back_to_purchase_card_after_X", focus_dom_toward(pad, page, BUY), focus_info(page))
+            pad.tap("Y")
+            page.wait_for_timeout(200)
+            record("purchase_card_Y_does_not_play_cards", cs()["play"] == [] and sends() == 0 and checked() == [], cs())
+
+            # 不可勾選（disabled）的卡牌：B fail-closed
+            if page.evaluate(f"!!document.querySelector('{BUY_DISABLED}')"):
+                page.evaluate("""(sel) => { const c = document.querySelector(sel); c.setAttribute('data-controller-probe', '1'); }""", BUY_DISABLED)
+                reached = focus_dom_toward(pad, page, BUY_DISABLED)
+                if reached:
+                    pad.tap("B")
+                    page.wait_for_timeout(200)
+                    record("card_B_noop_on_disabled_checkbox", checked() == [] and cs()["toggle"] == 2 and sends() == 0, checked())
+                else:
+                    record("card_B_noop_on_disabled_checkbox", False, "cannot focus disabled card")
+
+            # 手牌：A 預覽不使用；非手牌 B 不取消
+            record("card_focus_reaches_hand_card", focus_dom_toward(pad, page, HAND), focus_info(page))
+            page.screenshot(path=str(OUT / "07_hand_card_focus.png"))
+            pad.tap("A")
+            page.wait_for_timeout(250)
+            record("hand_card_A_previews_without_playing", preview_open() and cs()["play"] == [] and sends() == 0 and hand_n() == 5, cs())
+            pad.tap("B")
+            page.wait_for_timeout(250)
+            record("hand_card_B_noop_without_checkbox", cs()["play"] == [] and sends() == 0 and checked() == [], [cs(), checked()])
+
+            # 手牌 Y = 行動（先用不需目標的追隨者以外的樂捐者以外之卡：這裡直接驗證 mode 與卡牌索引）
+            record("card_focus_reaches_follower", focus_dom_toward(pad, page, HAND_FOLLOWER), focus_info(page))
+            idx = page.evaluate(f"document.querySelector('{HAND_FOLLOWER}').querySelector('[data-card-mode=\"action\"]').dataset.cardIndex")
+            page.screenshot(path=str(OUT / "08_hand_focus_with_controls.png"), clip=page.evaluate(
+                """() => { const r = document.getElementById('hand').getBoundingClientRect(); return {x: Math.max(0, r.left - 10), y: Math.max(0, r.top - 10), width: Math.min(r.width + 20, innerWidth), height: Math.min(r.height + 20, innerHeight - Math.max(0, r.top - 10))}; }"""))
+            before_sends = sends()
+            pad.tap("Y")
+            page.wait_for_timeout(500)
+            c = cs()
+            record("hand_Y_plays_card_as_action_via_existing_flow", c["play"] == [[int(idx), "追隨者", "action"]], c)
+
+            # 手牌 X = 資源（重新取得手牌焦點）
+            page.wait_for_timeout(600)
+            pad.neutral()
+            ok = focus_dom_toward(pad, page, HAND)
+            record("card_focus_reaches_hand_card_for_resource", ok, focus_info(page))
+            n_before = len(cs()["play"])
+            hand_before = hand_n()
+            pad.tap("X")
+            page.wait_for_timeout(500)
+            c = cs()
+            record("hand_X_plays_card_as_resource_via_existing_flow",
+                   len(c["play"]) == n_before + 1 and c["play"][-1][1:] == ["樂捐者", "resource"], c)
+
+            # 手牌按鈕被停用（伺服器權威）→ X/Y fail-closed
+            page.evaluate("""() => { document.querySelectorAll('#hand .hand-card-action-btn').forEach(b => { b.disabled = true; b.setAttribute('aria-disabled', 'true'); }); }""")
+            page.wait_for_timeout(200)
+            if focus_dom_toward(pad, page, '#hand .hand-card'):
+                n_before = len(cs()["play"])
+                pad.tap("X")
+                pad.tap("Y")
+                record("hand_X_Y_fail_closed_when_controls_disabled", len(cs()["play"]) == n_before, cs())
+            else:
+                record("hand_X_Y_fail_closed_when_controls_disabled", False, "cannot focus hand card")
 
             browser.close()
     finally:

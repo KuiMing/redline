@@ -422,9 +422,13 @@
   function dispatch(action) {
     const logical = Core.logicalAction(action);
     if (!logical) return;
-    if (logical.name === 'toggleHelp') { ctl.helpOpen = !ctl.helpOpen; renderHud(); return; }
     const scope = currentScope();
     const items = buildItems(scope);
+    if (logical.name === 'toggleHelp' && !(ctl.padActive && handCardAt(items))) {
+      ctl.helpOpen = !ctl.helpOpen;
+      renderHud();
+      return;
+    }
     // 第一次有效操作只負責把焦點放上去，不執行（避免第一下就誤觸）。
     if (!ctl.padActive) {
       ctl.padActive = true;
@@ -435,15 +439,18 @@
     }
     const key = currentKey(items.all);
     const mapCancel = scope.kind === 'map' && ctl.mapSnapshot && ctl.mapSnapshot.canCancel;
+    const focused = items.all.find(i => i.key === key) || null;
     const ctx = {
       scopeKind: scope.kind,
       hasFocus: key !== null,
+      card: cardContext(focused),
       cancelAvailable: scope.kind === 'modal' ? !!modalCancelTarget(scope) : !!mapCancel,
       sectionsLocked: choiceLocked(),
     };
     const command = Core.routeAction(ctx, logical);
     if (!command) return;
-    if (key === null && command.cmd !== 'move') { applyItem(defaultItem(items, scope)); return; }
+    // 沒有焦點時只有「移動」與「取消」可直接執行（無可聚焦項目的 modal，例如卡牌預覽，仍須能用 B 關閉）。
+    if (key === null && command.cmd !== 'move' && command.cmd !== 'cancel') { applyItem(defaultItem(items, scope)); return; }
     const current = items.all.find(i => i.key === key);
     if (current) lastRect = { left: current.left, right: current.right, top: current.top, bottom: current.bottom };
 
@@ -454,11 +461,68 @@
         break;
       }
       case 'activate': activate(scope, items, current); break;
+      case 'cardPreview': previewCard(current); break;
+      case 'cardToggle': toggleCard(current); break;
+      case 'cardMode': playCardMode(current, command.mode); break;
       case 'cancel': cancel(scope); break;
       case 'section': changeSection(scope, command.step); break;
       case 'focusTurnBar': focusTurnBar(items); break;
       default: break;
     }
+  }
+
+  // ------------------------------------------------------------ card focus (A 預覽 / B 勾選 / 手牌 X 資源 Y 行動)
+  function cardHost(item) {
+    if (!item || item.kind !== 'dom' || !item.el.isConnected) return null;
+    return item.el.closest('[data-card-zone]');
+  }
+
+  function cardContext(item) {
+    const host = cardHost(item);
+    if (!host) return null;
+    return { zone: host.dataset.cardZone || '', hasToggle: !!host.querySelector('input[type="checkbox"]') };
+  }
+
+  function handCardAt(items) {
+    const key = currentKey(items.all);
+    const ctx = cardContext(items.all.find(i => i.key === key));
+    return !!ctx && ctx.zone === 'hand';
+  }
+
+  function isUsable(el) {
+    return !!el && el.isConnected && isShown(el) && !el.disabled && el.getAttribute('aria-disabled') !== 'true'
+      && !el.closest('[inert]');
+  }
+
+  /** A：只開啟既有置中卡牌預覽，不點擊卡牌內任何控制項。 */
+  function previewCard(current) {
+    const host = cardHost(current);
+    if (!host || typeof selectCardDetail !== 'function') return;
+    selectCardDetail(host);
+    scheduleReconcile();
+  }
+
+  /** B：點擊該卡牌內既有、可見且啟用的勾選框（伺服器權威的 canSelect 已反映在 disabled）。 */
+  function toggleCard(current) {
+    const host = cardHost(current);
+    const box = host && host.querySelector('input[type="checkbox"]');
+    if (!isUsable(box)) return;
+    box.click();
+    scheduleReconcile();
+  }
+
+  /** X/Y：只在手牌卡上，點擊該卡既有的「資源」／「行動」按鈕；找不到或被停用即 fail-closed。 */
+  function playCardMode(current, mode) {
+    const host = cardHost(current);
+    if (!host || host.dataset.cardZone !== 'hand' || !host.closest('#hand')) return;
+    const matches = [...host.querySelectorAll(`.hand-card-action-btn[data-card-mode="${mode}"]`)];
+    if (matches.length !== 1) return;
+    const btn = matches[0];
+    // 非紅軍奧援的 resource 位是「棄置」，不是資源使用：只接受標示為「資源」的按鈕。
+    if (mode === 'resource' && (btn.textContent || '').trim() !== '資源') return;
+    if (!isUsable(btn)) return;
+    btn.click();
+    scheduleReconcile();
   }
 
   function activate(scope, items, current) {
@@ -538,7 +602,7 @@
           <button id="padReconnectBtn" type="button">重新連線</button>
           <button id="padResetBtn" type="button">預設</button>
         </div>
-        <div class="pad-note">搖桿＝移動　A 確認　B 返回　R/SR 分頁　X 回合操作　Y 說明</div>
+        <div class="pad-note">搖桿＝移動　A 確認　B 返回　R/SR 分頁　X 回合操作　Y 說明<br>卡牌：A 查看　B 勾選　手牌 X 資源／Y 行動</div>
       </div>`;
     stage.appendChild(hud);
     const $ = id => document.getElementById(id);
@@ -583,6 +647,10 @@
     }
     if (scope.kind === 'map') {
       return `移動 搖桿　A 選取　B 取消${choiceLocked() ? '' : '　R/SR 分頁'}`;
+    }
+    const focused = ctl.focusKind === 'dom' ? cardContext({ kind: 'dom', el: ctl.focusEl }) : null;
+    if (focused) {
+      return `移動 搖桿　A 查看${focused.hasToggle ? '　B 勾選' : ''}${focused.zone === 'hand' ? '　X 資源　Y 行動' : ''}　R/SR 分頁`;
     }
     return '移動 搖桿　A 確認　R/SR 分頁　X 回合操作';
   }
