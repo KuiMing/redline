@@ -152,7 +152,7 @@
    * context router。ctx: {scopeKind:'modal'|'map'|'page', hasFocus, cancelAvailable, sectionsLocked,
    *   card?: {zone, hasToggle} | null}（card = 焦點位於卡牌元素內時的描述）。
    * 卡牌焦點：A = 查看預覽（絕不執行／勾選／購買）；B = 切換勾選（僅有勾選控制的卡牌，否則維持原本取消）；
-   * 手牌焦點：X = 資源、Y = 行動。非手牌焦點的 X/Y 維持原行為。
+   * 手牌焦點：X = 資源、Y = 行動；其他任何卡牌焦點的 X/Y 完全 no-op。非卡牌焦點的 X/Y 維持原行為。
    * 回傳要執行的 command 或 null（null = 靜默忽略）。
    */
   function routeAction(ctx, logical) {
@@ -171,10 +171,10 @@
       case 'nextSection': return modal || ctx.sectionsLocked ? null : { cmd: 'section', step: 1 };
       case 'prevSection': return modal || ctx.sectionsLocked ? null : { cmd: 'section', step: -1 };
       case 'focusTurnBar':
-        if (onHand && ctx.hasFocus && !modal) return { cmd: 'cardMode', mode: 'resource' };
+        if (card) return onHand && ctx.hasFocus && !modal ? { cmd: 'cardMode', mode: 'resource' } : null;
         return modal || ctx.sectionsLocked ? null : { cmd: 'focusTurnBar' };
       case 'toggleHelp':
-        if (onHand && ctx.hasFocus && !modal) return { cmd: 'cardMode', mode: 'action' };
+        if (card) return onHand && ctx.hasFocus && !modal ? { cmd: 'cardMode', mode: 'action' } : null;
         return { cmd: 'toggleHelp' };
       default: return null;
     }

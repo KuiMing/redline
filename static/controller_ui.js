@@ -424,7 +424,7 @@
     if (!logical) return;
     const scope = currentScope();
     const items = buildItems(scope);
-    if (logical.name === 'toggleHelp' && !(ctl.padActive && handCardAt(items))) {
+    if (logical.name === 'toggleHelp' && !(ctl.padActive && cardFocused(items))) {
       ctl.helpOpen = !ctl.helpOpen;
       renderHud();
       return;
@@ -483,10 +483,9 @@
     return { zone: host.dataset.cardZone || '', hasToggle: !!host.querySelector('input[type="checkbox"]') };
   }
 
-  function handCardAt(items) {
+  function cardFocused(items) {
     const key = currentKey(items.all);
-    const ctx = cardContext(items.all.find(i => i.key === key));
-    return !!ctx && ctx.zone === 'hand';
+    return !!cardContext(items.all.find(i => i.key === key));
   }
 
   function isUsable(el) {
@@ -693,7 +692,7 @@
   window.RedlineController = {
     feed, // 測試／除錯：與 bridge 訊息同路徑，且仍受「已啟用」限制
     getState: () => ({
-      enabled: ctl.settings.enabled, status: ctl.status, url: ctl.settings.url, padActive: ctl.padActive,
+      enabled: ctl.settings.enabled, status: ctl.status, url: ctl.settings.url, padActive: ctl.padActive, helpOpen: ctl.helpOpen,
       focusKind: ctl.focusKind, focusSig: ctl.focusSig, focusTown: ctl.focusTown,
       scope: currentScope().id, held: { ...ctl.input.held },
     }),

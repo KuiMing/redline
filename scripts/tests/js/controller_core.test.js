@@ -291,19 +291,24 @@ test('hand card focus: X = resource, Y = action', () => {
   assert.deepEqual(C.routeAction(cardCtx(handCard), Y), { cmd: 'cardMode', mode: 'action' });
 });
 
-test('non-hand focus: X/Y never trigger card modes and keep legacy behaviour', () => {
-  for (const card of [buyCard, { zone: 'discard', hasToggle: false }, null]) {
-    assert.deepEqual(C.routeAction(cardCtx(card), X), { cmd: 'focusTurnBar' });
-    assert.deepEqual(C.routeAction(cardCtx(card), Y), { cmd: 'toggleHelp' });
+test('non-hand card focus: X/Y are full no-ops (no turn bar, no help, no card mode)', () => {
+  for (const card of [buyCard, { zone: 'discard', hasToggle: false }]) {
+    assert.equal(C.routeAction(cardCtx(card), X), null, card.zone);
+    assert.equal(C.routeAction(cardCtx(card), Y), null, card.zone);
   }
   assert.equal(C.routeAction(cardCtx(buyCard, { sectionsLocked: true }), X), null);
 });
 
+test('non-card focus keeps legacy X/Y', () => {
+  assert.deepEqual(C.routeAction(cardCtx(null), X), { cmd: 'focusTurnBar' });
+  assert.deepEqual(C.routeAction(cardCtx(null), Y), { cmd: 'toggleHelp' });
+});
+
 test('hand card X/Y never map to card modes without focus or inside a modal scope', () => {
-  assert.deepEqual(C.routeAction(cardCtx(handCard, { hasFocus: false }), X), { cmd: 'focusTurnBar' });
-  assert.deepEqual(C.routeAction(cardCtx(handCard, { hasFocus: false }), Y), { cmd: 'toggleHelp' });
+  assert.equal(C.routeAction(cardCtx(handCard, { hasFocus: false }), X), null);
+  assert.equal(C.routeAction(cardCtx(handCard, { hasFocus: false }), Y), null);
   assert.equal(C.routeAction(cardCtx(handCard, { scopeKind: 'modal' }), X), null);
-  assert.deepEqual(C.routeAction(cardCtx(handCard, { scopeKind: 'modal' }), Y), { cmd: 'toggleHelp' });
+  assert.equal(C.routeAction(cardCtx(handCard, { scopeKind: 'modal' }), Y), null);
   assert.equal(C.routeAction(cardCtx(handCard, { sectionsLocked: true }), X)?.cmd, 'cardMode');
 });
 

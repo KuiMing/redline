@@ -490,15 +490,17 @@ def main():
             record("card_B_toggles_purchase_card_off", checked() == [] and cs()["toggle"] == 2 and sends() == 0, [checked(), cs()])
 
             # 購買區 X/Y：不得觸發手牌，也不得購買
+            help_before = page.evaluate("document.getElementById('padHint').textContent")
             pad.tap("X")
             page.wait_for_timeout(200)
-            record("purchase_card_X_does_not_play_cards", cs()["play"] == [] and sends() == 0 and checked() == [], cs())
-            record("purchase_card_X_keeps_legacy_turn_bar_focus",
-                   page.evaluate("!!document.querySelector('.rl-pad-focus') && !!document.querySelector('.rl-pad-focus').closest('#turnActionButtons')"), focus_info(page))
-            record("focus_back_to_purchase_card_after_X", focus_dom_toward(pad, page, BUY), focus_info(page))
+            record("purchase_card_X_is_full_noop", cs()["play"] == [] and sends() == 0 and checked() == []
+                   and page.evaluate("!!document.querySelector('.rl-pad-focus').closest('[data-card-zone=\"purchase\"]')"), focus_info(page))
             pad.tap("Y")
             page.wait_for_timeout(200)
-            record("purchase_card_Y_does_not_play_cards", cs()["play"] == [] and sends() == 0 and checked() == [], cs())
+            record("purchase_card_Y_is_full_noop_no_help_toggle", cs()["play"] == [] and sends() == 0 and checked() == []
+                   and page.evaluate("RedlineController.getState().helpOpen !== true")
+                   and page.evaluate("!!document.querySelector('.rl-pad-focus').closest('[data-card-zone=\"purchase\"]')")
+                   and page.evaluate("document.getElementById('padHint').textContent") == help_before, focus_info(page))
 
             # 不可勾選（disabled）的卡牌：B fail-closed
             if page.evaluate(f"!!document.querySelector('{BUY_DISABLED}')"):
