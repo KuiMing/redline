@@ -146,24 +146,79 @@ def focus_info(page):
     )
 
 
-def focus_dom_toward(pad, page, selector, steps=80):
-    """用真正的搖桿方向輸入把焦點移到 selector 或其內部控制（貪婪：朝目標位移較大的軸推）。"""
+FOCUS_KEY_JS = """(sel) => {
+  const el = document.querySelector('.rl-pad-focus');
+  if (!el) return null;
+  const host = el.closest('[data-card-name]');
+  const base = [el.tagName, el.id, host ? host.dataset.cardZone + ':' + host.dataset.cardName : '', el.dataset.cardMode || '',
+                el.dataset.view || '', (el.textContent || '').trim().slice(0, 12)].join('|');
+  const same = [...document.querySelectorAll('.rl-pad-focus, *')].filter(n => n.matches && n.matches(el.tagName.toLowerCase()) &&
+    [n.tagName, n.id, (n.closest('[data-card-name]') ? n.closest('[data-card-name]').dataset.cardZone + ':' + n.closest('[data-card-name]').dataset.cardName : ''),
+     n.dataset.cardMode || '', n.dataset.view || '', (n.textContent || '').trim().slice(0, 12)].join('|') === base);
+  const target = sel ? document.querySelector(sel) : null;
+  return { key: base + '#' + [...new Set(same)].indexOf(el), hit: !!(target && (target === el || target.contains(el))) };
+}"""
+
+_NAV_GRAPHS = {}
+
+
+def focus_dom_toward(pad, page, selector, steps=400):
+    """用真正的搖桿方向輸入把焦點移到 selector（或其內部控制）。
+
+    確定性做法：以實際輸入逐步探索「焦點節點 ×4 方向」的轉移圖（每一步都是真實 frame），
+    用已知邊在節點間移動，再對最近的未探索方向推一次，直到目標命中。邊以實際觀察覆寫，
+    因此捲動造成的偏移不會讓圖失真；節點用穩定 key（標籤／卡牌／模式）識別。
+    不直接設定 .rl-pad-focus、不呼叫產品 action。
+    """
+    graph = _NAV_GRAPHS.setdefault(id(page), {})
+    dirs = ["right", "down", "left", "up"]
+
+    def observe():
+        return page.evaluate(FOCUS_KEY_JS, selector)
+
+    cur = observe()
+    if cur is None:
+        return False
+    tried, reset_used = set(), False  # 本次呼叫已推過但沒有移動的 (節點, 方向)；不寫入跨呼叫快取（受捲動位置影響）
     for _ in range(steps):
-        d = page.evaluate(
-            """(sel) => {
-              const cur = document.querySelector('.rl-pad-focus'); const tgt = document.querySelector(sel);
-              if (!cur || !tgt) return 'missing';
-              if (cur === tgt || tgt.contains(cur)) return 'done';
-              const a = cur.getBoundingClientRect(), b = tgt.getBoundingClientRect();
-              const dx = (b.left + b.right - a.left - a.right) / 2, dy = (b.top + b.bottom - a.top - a.bottom) / 2;
-              return Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
-            }""", selector)
-        if d == "done":
+        if cur["hit"]:
             return True
-        if d == "missing":
+        # BFS：從 cur 找到最近且有未探索方向的節點
+        start = cur["key"]
+        prev, queue, goal = {start: None}, [start], None
+        while queue:
+            node = queue.pop(0)
+            if any(d not in graph.get(node, {}) and (node, d) not in tried for d in dirs):
+                goal = node
+                break
+            for d in dirs:
+                nxt = graph.get(node, {}).get(d)
+                if nxt is not None and nxt not in prev:
+                    prev[nxt] = (node, d)
+                    queue.append(nxt)
+        if goal is None:
+            if reset_used:
+                return False
+            graph.clear()
+            tried.clear()
+            reset_used = True
+            continue
+        path, node = [], goal
+        while prev[node] is not None:
+            node, d = prev[node][0], prev[node][1]
+            path.append(d)
+        step = path[-1] if path else next(d for d in dirs if d not in graph.get(goal, {}) and (goal, d) not in tried)
+        pad.push(step)
+        nxt = observe()
+        if nxt is None:
             return False
-        pad.push(d)
-    return False
+        if nxt["key"] == cur["key"]:
+            tried.add((cur["key"], step))
+            graph.get(cur["key"], {}).pop(step, None)
+        else:
+            graph.setdefault(cur["key"], {})[step] = nxt["key"]
+        cur = nxt
+    return bool(cur and cur["hit"])
 
 
 def focus_town_toward(pad, page, mframe, town, steps=60):
@@ -455,12 +510,15 @@ def main():
             hand_n = lambda: page.evaluate("document.querySelectorAll('#hand .hand-card').length")
             checked = lambda: page.evaluate("[...document.querySelectorAll('input[data-purchase-index]')].filter(i => i.checked).map(i => i.dataset.purchaseIndex)")
             preview_open = lambda: page.evaluate("document.getElementById('cardPreviewModal').style.display === 'flex'")
+            _NAV_GRAPHS.clear()
             pad.neutral()
             pad.tap("A")  # 第一次只放焦點
             BUY = '.card[data-card-zone="purchase"]:has(input[data-purchase-index="0"]:not(:disabled))'
             BUY_DISABLED = '.card[data-card-zone="purchase"]:has(input[data-purchase-index="4"]:disabled)'
-            HAND = '#hand .hand-card[data-card-name="樂捐者"]'
-            HAND_FOLLOWER = '#hand .hand-card[data-card-name="追隨者"]'
+            # 起手牌是隨機抽的：以「第一張非奧援手牌」為目標，期望值在執行時讀取，不假設牌名。
+            HAND = '#hand .hand-card:not([data-card-name*="奧援"])'
+            HAND_FOLLOWER = HAND
+            hand_name = lambda: page.evaluate(f"document.querySelector('{HAND}')?.dataset.cardName || null")
 
             # 購買區卡牌：A 只預覽，不勾選、不購買
             record("card_focus_reaches_purchase_card", focus_dom_toward(pad, page, BUY), focus_info(page))
@@ -574,6 +632,7 @@ def main():
 
             # 手牌 Y = 行動（先用不需目標的追隨者以外的樂捐者以外之卡：這裡直接驗證 mode 與卡牌索引）
             record("card_focus_reaches_follower", focus_dom_toward(pad, page, HAND_FOLLOWER), focus_info(page))
+            y_name = hand_name()
             idx = page.evaluate(f"document.querySelector('{HAND_FOLLOWER}').querySelector('[data-card-mode=\"action\"]').dataset.cardIndex")
             page.screenshot(path=str(OUT / "08_hand_focus_with_controls.png"), clip=page.evaluate(
                 """() => { const r = document.getElementById('hand').getBoundingClientRect(); return {x: Math.max(0, r.left - 10), y: Math.max(0, r.top - 10), width: Math.min(r.width + 20, innerWidth), height: Math.min(r.height + 20, innerHeight - Math.max(0, r.top - 10))}; }"""))
@@ -581,11 +640,12 @@ def main():
             pad.tap("Y")
             page.wait_for_timeout(500)
             c = cs()
-            record("hand_Y_plays_card_as_action_via_existing_flow", c["play"] == [[int(idx), "追隨者", "action"]], c)
+            record("hand_Y_plays_card_as_action_via_existing_flow", c["play"] == [[int(idx), y_name, "action"]], c)
 
             # 手牌 X = 資源（重新取得手牌焦點）
             page.wait_for_timeout(600)
             pad.neutral()
+            x_name = hand_name()
             ok = focus_dom_toward(pad, page, HAND)
             record("card_focus_reaches_hand_card_for_resource", ok, focus_info(page))
             n_before = len(cs()["play"])
@@ -594,7 +654,7 @@ def main():
             page.wait_for_timeout(500)
             c = cs()
             record("hand_X_plays_card_as_resource_via_existing_flow",
-                   len(c["play"]) == n_before + 1 and c["play"][-1][1:] == ["樂捐者", "resource"], c)
+                   len(c["play"]) == n_before + 1 and c["play"][-1][1:] == [x_name, "resource"], c)
 
             # 手牌按鈕被停用（伺服器權威）→ X/Y fail-closed
             page.evaluate("""() => { document.querySelectorAll('#hand .hand-card-action-btn').forEach(b => { b.disabled = true; b.setAttribute('aria-disabled', 'true'); }); }""")
