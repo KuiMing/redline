@@ -609,6 +609,33 @@ def main():
                    and page.evaluate("!!document.querySelector('.rl-pad-focus').closest('[data-card-zone=\"purchase\"]')")
                    and page.evaluate("document.getElementById('padHint').textContent") == help_before, focus_info(page))
 
+            # checkbox 仍 enabled 但被頁面狀態隱藏：聚焦卡牌後 B 必須完整 no-op
+            record("card_focus_before_hidden_checkbox_case", focus_dom_toward(pad, page, BUY), focus_info(page))
+            for variant, hide, restore in [
+                ("display_none", "box.style.display = 'none'", "box.style.display = ''"),
+                ("label_visibility_hidden", "box.parentElement.style.visibility = 'hidden'", "box.parentElement.style.visibility = ''"),
+            ]:
+                still_enabled = page.evaluate(f"""() => {{ const box = document.querySelector('{BUY}').querySelector('input[type=checkbox]');
+                  {hide}; return !box.disabled && box.getAttribute('aria-disabled') !== 'true'; }}""")
+                page.wait_for_timeout(250)
+                focus_key = lambda: page.evaluate("(() => { const e = document.querySelector('.rl-pad-focus'); return e ? [e.tagName, e.dataset.cardName || '', e.dataset.cardZone || ''].join('|') : null; })()")
+                before = dict(key=focus_key(), toggle=cs()["toggle"], sends=sends(), checked=checked(), help=page.evaluate("RedlineController.getState().helpOpen"), plays=cs()["play"], previews=cs()["preview"])
+                hidden = page.evaluate(f"""() => {{ const box = document.querySelector('{BUY}').querySelector('input[type=checkbox]');
+                  return box.getClientRects().length === 0 || getComputedStyle(box).visibility === 'hidden'; }}""")
+                pad.tap("B")
+                page.wait_for_timeout(250)
+                after = dict(key=focus_key(), toggle=cs()["toggle"], sends=sends(), checked=checked(), help=page.evaluate("RedlineController.getState().helpOpen"), plays=cs()["play"], previews=cs()["preview"])
+                record(f"card_B_noop_when_enabled_checkbox_hidden_{variant}", still_enabled and hidden and before == after and before["key"] is not None and after["checked"] == [],
+                       [still_enabled, hidden, before, after])
+                page.evaluate(f"""() => {{ const box = document.querySelector('{BUY}').querySelector('input[type=checkbox]'); {restore}; }}""")
+                page.wait_for_timeout(250)
+            pad.tap("B")
+            page.wait_for_timeout(250)
+            record("card_B_toggles_again_after_checkbox_restored", checked() == ["0"] and cs()["toggle"] == 3, [checked(), cs()["toggle"]])
+            pad.tap("B")
+            page.wait_for_timeout(250)
+            record("card_B_toggle_off_after_restore", checked() == [] and cs()["toggle"] == 4, [checked(), cs()["toggle"]])
+
             # 不可勾選（disabled）的卡牌：B fail-closed
             if page.evaluate(f"!!document.querySelector('{BUY_DISABLED}')"):
                 page.evaluate("""(sel) => { const c = document.querySelector(sel); c.setAttribute('data-controller-probe', '1'); }""", BUY_DISABLED)
@@ -616,7 +643,7 @@ def main():
                 if reached:
                     pad.tap("B")
                     page.wait_for_timeout(200)
-                    record("card_B_noop_on_disabled_checkbox", checked() == [] and cs()["toggle"] == 2 and sends() == 0, checked())
+                    record("card_B_noop_on_disabled_checkbox", checked() == [] and cs()["toggle"] == 4 and sends() == 0, checked())
                 else:
                     record("card_B_noop_on_disabled_checkbox", False, "cannot focus disabled card")
 
