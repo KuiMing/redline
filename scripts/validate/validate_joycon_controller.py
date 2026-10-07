@@ -146,7 +146,7 @@ def focus_info(page):
     )
 
 
-def focus_dom_toward(pad, page, selector, steps=40):
+def focus_dom_toward(pad, page, selector, steps=80):
     """用真正的搖桿方向輸入把焦點移到 selector 或其內部控制（貪婪：朝目標位移較大的軸推）。"""
     for _ in range(steps):
         d = page.evaluate(
@@ -464,6 +464,55 @@ def main():
 
             # 購買區卡牌：A 只預覽，不勾選、不購買
             record("card_focus_reaches_purchase_card", focus_dom_toward(pad, page, BUY), focus_info(page))
+            # 方向鍵只停在整張購買卡牌：checkbox（常設與隨機）不在焦點集合、沒有黃框
+            RAND = '#purchaseRandom .card[data-card-zone="purchase"]:has(input[data-purchase-index]:not(:disabled))'
+            STAT = '#purchaseStatic .card[data-card-zone="purchase"]:has(input[data-purchase-index]:not(:disabled))'
+            probe = """() => { const el = document.querySelector('.rl-pad-focus'); if (!el) return null;
+              return { tag: el.tagName, type: el.type || null, host: el.closest('[data-card-zone]')?.dataset.cardZone || null,
+                       isCard: el.matches('.card[data-card-zone]'), zone: el.closest('#purchaseStatic') ? 'static' : el.closest('#purchaseRandom') ? 'random' : null }; }"""
+            seen_zones, bad = set(), []
+            has_random = page.evaluate(f"!!document.querySelector('{RAND}')")
+            record("random_purchase_area_has_enabled_card_for_proof", has_random)
+            for target in [STAT, RAND]:
+                if not page.evaluate(f"!!document.querySelector('{target}')"):
+                    continue
+                focus_dom_toward(pad, page, target)
+                for d in ["down", "right", "up", "left", "right", "right", "down", "left", "up", "up", "left", "down"]:
+                    pad.push(d)
+                    f = page.evaluate(probe)
+                    if f and f["host"] == "purchase":
+                        seen_zones.add(f["zone"])
+                        if f["tag"] == "INPUT" or not f["isCard"]:
+                            bad.append(f)
+            record("arrow_focus_never_lands_on_purchase_checkbox", not bad, bad[:3])
+            record("arrow_focus_stops_on_static_and_random_purchase_cards", {"static", "random"} <= seen_zones, sorted(seen_zones))
+            record("purchase_checkboxes_have_no_controller_focus_class",
+                   page.evaluate("document.querySelectorAll('.purchase-card-checkbox input.rl-pad-focus').length") == 0)
+            record("focus_back_to_static_purchase_card", focus_dom_toward(pad, page, STAT), focus_info(page))
+            rand_idx = page.evaluate(f"document.querySelector('{RAND}')?.querySelector('input').dataset.purchaseIndex") if has_random else None
+            if rand_idx is not None:
+                focus_dom_toward(pad, page, RAND)
+                on = page.evaluate(probe)
+                pad.tap("B")
+                page.wait_for_timeout(250)
+                after_on = checked()
+                pad.tap("B")
+                page.wait_for_timeout(250)
+                record("random_card_B_toggles_on_then_off_via_existing_checkbox",
+                       bool(on and on["isCard"] and on["zone"] == "random") and after_on == [rand_idx] and checked() == [], [on, after_on, checked()])
+                record("focus_back_to_static_purchase_card_again", focus_dom_toward(pad, page, STAT), focus_info(page))
+            card_focus_shot = page.evaluate("""() => { const el = document.querySelector('.rl-pad-focus'); const box = el.querySelector('input');
+              const a = getComputedStyle(el), b = getComputedStyle(box);
+              return { cardOutline: parseFloat(a.outlineWidth), cardColor: a.outlineColor, boxOutline: parseFloat(b.outlineWidth), boxStyle: b.outlineStyle,
+                       boxHasClass: box.classList.contains('rl-pad-focus') }; }""")
+            record("purchase_card_has_yellow_outline_checkbox_does_not",
+                   card_focus_shot["cardOutline"] >= 4 and "255, 225, 77" in card_focus_shot["cardColor"]
+                   and not card_focus_shot["boxHasClass"] and (card_focus_shot["boxOutline"] == 0 or card_focus_shot["boxStyle"] == "none"), card_focus_shot)
+            page.evaluate("document.querySelector('.rl-pad-focus').scrollIntoView({block: 'center'})")
+            page.wait_for_timeout(200)
+            page.screenshot(path=str(OUT / "09_purchase_card_focus_no_checkbox_ring.png"))
+
+            page.evaluate("() => { window.__cardSpy.toggle = 0; window.__cardSpy.preview = []; window.__cardSpy.play = []; __spy.sendAction = 0; }")
             pad.tap("A")
             page.wait_for_timeout(250)
             c = cs()

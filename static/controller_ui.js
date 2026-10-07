@@ -208,6 +208,7 @@
         disabled: el.disabled === true,
         ariaDisabled: el.getAttribute('aria-disabled') === 'true',
         skip: SKIP_IDS.has(el.id) || el.hasAttribute('data-controller-skip'),
+        cardCheckbox: el.tagName === 'INPUT' && el.type === 'checkbox' && !!el.closest('[data-card-zone]'),
         left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom,
       });
     };

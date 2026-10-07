@@ -330,3 +330,21 @@ test('B cancel does not require focus (focus-less modals such as card preview st
   const ctx = { scopeKind: 'modal', hasFocus: false, cancelAvailable: true, sectionsLocked: false, card: null };
   assert.deepEqual(C.routeAction(ctx, { name: 'cancel' }), { cmd: 'cancel' });
 });
+
+test('card checkboxes are never directional focus targets; the whole card is', () => {
+  const base = { scope: 'page', visible: true, disabled: false, ariaDisabled: false, skip: false, left: 0, top: 0, right: 10, bottom: 10 };
+  const items = [
+    { ...base, key: 'static-card' },
+    { ...base, key: 'static-checkbox', cardCheckbox: true },
+    { ...base, key: 'random-card' },
+    { ...base, key: 'random-checkbox', cardCheckbox: true },
+    { ...base, key: 'plain-checkbox' },
+  ];
+  assert.deepEqual(C.buildFocusSet(items, 'page').map(i => i.key), ['static-card', 'random-card', 'plain-checkbox']);
+  assert.equal(C.isFocusableCandidate({ ...base, cardCheckbox: true }), false);
+  assert.equal(C.isFocusableCandidate({ ...base, cardCheckbox: false }), true);
+});
+
+test('B on a focused purchase card toggles; disabled-checkbox handling stays in the UI (core still routes cardToggle)', () => {
+  assert.deepEqual(C.routeAction(cardCtx({ zone: 'purchase', hasToggle: true }), { name: 'cancel' }), { cmd: 'cardToggle' });
+});

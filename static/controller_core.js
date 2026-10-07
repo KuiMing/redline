@@ -204,7 +204,8 @@
   }
 
   function isFocusableCandidate(c) {
-    return !!c && c.visible === true && !c.disabled && !c.ariaDisabled && !c.skip;
+    // cardCheckbox：卡牌內的勾選框只供滑鼠／可及性使用，方向焦點只停在整張卡牌（B 才勾選）。
+    return !!c && c.visible === true && !c.disabled && !c.ariaDisabled && !c.skip && !c.cardCheckbox;
   }
 
   /** candidates: [{key, scope, visible, disabled, ariaDisabled, skip, left, top, right, bottom}]。 */
