@@ -222,22 +222,31 @@
   // ------------------------------------------------------------ map iframe protocol (parent side)
   function mapFrame() { return document.getElementById('strategicMapFrame'); }
 
+  /** 回傳是否真的送出（沒有 iframe 或 postMessage 失敗為 false）；送出不代表 iframe 已執行。 */
   function sendToMap(cmd, extra = {}) {
     const frame = mapFrame();
-    if (!frame || !frame.contentWindow) return;
+    if (!frame || !frame.contentWindow) return false;
     try {
       frame.contentWindow.postMessage({ type: 'redline-controller-command', v: Core.MAP_MESSAGE_VERSION, cmd, ...extra }, window.location.origin);
-    } catch (err) { console.warn('controller: map postMessage failed', err); }
+      return true;
+    } catch (err) { console.warn('controller: map postMessage failed', err); return false; }
   }
 
   window.addEventListener('message', (event) => {
     const frame = mapFrame();
     if (!frame || !Core.isTrustedMessage(event, window.location.origin, frame.contentWindow)) return;
+    if (event.data.type === 'redline-controller-result') {
+      // 執行結果只交給客廳模式 layer 以 req 對應；不符 schema 視為沒有收到確認。
+      const result = Core.sanitizeMapResult(event.data);
+      if (result && layerActive() && typeof layer.onMapResult === 'function') layer.onMapResult(result);
+      return;
+    }
     if (event.data.type !== 'redline-controller-map-snapshot') return;
     const snap = Core.sanitizeMapSnapshot(event.data);
-    if (!snap) { ctl.mapSnapshot = null; return; }
+    if (!snap) { ctl.mapSnapshot = null; if (layerActive()) layer.scheduleRender(); return; }
     if (ctl.mapSnapshot && snap.seq < ctl.mapSnapshot.seq) return;
     ctl.mapSnapshot = snap;
+    if (layerActive()) layer.scheduleRender();
     if (ctl.padActive && ctl.autofocusMap && snap.targets.length) {
       // 用 R/SR 切進地圖後，第一份有目標的 snapshot 到達時把焦點放到地圖目標（而不是停在分頁上）。
       const scope = currentScope();
@@ -302,6 +311,7 @@
     ctl.focusTown = null;
     ctl.focusKind = null;
     ctl.padActive = false;
+    if (layerActive()) layer.onClear();
     renderHud();
   }
 
@@ -356,6 +366,10 @@
   }
 
   function defaultItem(items, scope) {
+    if (scope.kind === 'modal' && scope.def && scope.def.initial) {
+      const initial = items.dom.find(i => i.el.matches(scope.def.initial));
+      if (initial) return initial;
+    }
     if (scope.kind === 'map') {
       const snap = ctl.mapSnapshot;
       const preferred = snap && snap.focusTown ? items.all.find(i => i.key === `town:${snap.focusTown}`) : null;
@@ -368,6 +382,7 @@
   function reconcile() {
     ctl.reconcileTimer = null;
     if (!ctl.settings.enabled || !ctl.padActive) return;
+    if (layerActive() && layer.reconcile()) return;
     const scope = currentScope();
     const items = buildItems(scope);
     if (scope.id !== ctl.lastScopeId) {
@@ -421,6 +436,8 @@
 
   // ------------------------------------------------------------ dispatch (logical → UI)
   function dispatch(action) {
+    // 客廳模式的 page／map scope 由 layer 處理；modal、大廳與桌面模式維持下面的既有流程。
+    if (layerActive() && layer.dispatch(action)) return;
     const logical = Core.logicalAction(action);
     if (!logical) return;
     const scope = currentScope();
@@ -455,21 +472,24 @@
     const current = items.all.find(i => i.key === key);
     if (current) lastRect = { left: current.left, right: current.right, top: current.top, bottom: current.bottom };
 
+    let activated = false;
     switch (command.cmd) {
       case 'move': {
         const next = Core.pickDirectional(items.all, key, command.dir);
         if (next && next.key !== key) applyItem(next);
         break;
       }
-      case 'activate': activate(scope, items, current); break;
-      case 'cardPreview': previewCard(current); break;
-      case 'cardToggle': toggleCard(current); break;
-      case 'cardMode': playCardMode(current, command.mode); break;
+      case 'activate': activated = activate(scope, items, current); break;
+      case 'cardPreview': activated = previewCard(current); break;
+      case 'cardToggle': activated = toggleCard(current); break;
+      case 'cardMode': activated = playCardMode(current, command.mode); break;
       case 'cancel': cancel(scope); break;
       case 'section': changeSection(scope, command.step); break;
       case 'focusTurnBar': focusTurnBar(items); break;
       default: break;
     }
+    // 客廳模式（例如 modal 內的 A）：只有真的執行才開始 250ms 執行冷卻；桌面模式沒有 layer，不受影響。
+    if (activated && layerActive()) layer.noteActivation();
   }
 
   // ------------------------------------------------------------ card focus (A 預覽 / B 勾選 / 手牌 X 資源 Y 行動)
@@ -497,46 +517,51 @@
   /** A：只開啟既有置中卡牌預覽，不點擊卡牌內任何控制項。 */
   function previewCard(current) {
     const host = cardHost(current);
-    if (!host || typeof selectCardDetail !== 'function') return;
+    if (!host || typeof selectCardDetail !== 'function') return false;
     selectCardDetail(host);
     scheduleReconcile();
+    return true;
   }
 
   /** B：點擊該卡牌內既有、可見且啟用的勾選框（伺服器權威的 canSelect 已反映在 disabled）。 */
   function toggleCard(current) {
     const host = cardHost(current);
     const box = host && host.querySelector('input[type="checkbox"]');
-    if (!isUsable(box)) return;
+    if (!isUsable(box)) return false;
     box.click();
     scheduleReconcile();
+    return true;
   }
 
   /** X/Y：只在手牌卡上，點擊該卡既有的「資源」／「行動」按鈕；找不到或被停用即 fail-closed。 */
   function playCardMode(current, mode) {
     const host = cardHost(current);
-    if (!host || host.dataset.cardZone !== 'hand' || !host.closest('#hand')) return;
+    if (!host || host.dataset.cardZone !== 'hand' || !host.closest('#hand')) return false;
     const matches = [...host.querySelectorAll(`.hand-card-action-btn[data-card-mode="${mode}"]`)];
-    if (matches.length !== 1) return;
+    if (matches.length !== 1) return false;
     const btn = matches[0];
     // 非紅軍奧援的 resource 位是「棄置」，不是資源使用：只接受標示為「資源」的按鈕。
-    if (mode === 'resource' && (btn.textContent || '').trim() !== '資源') return;
-    if (!isUsable(btn)) return;
+    if (mode === 'resource' && (btn.textContent || '').trim() !== '資源') return false;
+    if (!isUsable(btn)) return false;
     btn.click();
     scheduleReconcile();
+    return true;
   }
 
+  /** 回傳是否真的執行（click／送出地圖指令）；只聚焦文字欄位或元素已失效時為 false。 */
   function activate(scope, items, current) {
-    if (!current) return;
+    if (!current) return false;
     if (current.kind === 'dom') {
       const el = current.el;
-      if (!el.isConnected) return;
-      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName)) { el.focus(); return; }
+      if (!el.isConnected) return false;
+      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName)) { el.focus(); return false; }
       el.click();
       scheduleReconcile();
-      return;
+      return true;
     }
     if (current.kind === 'town') sendToMap('activate', { town: current.town });
     else sendToMap('button', { id: current.id });
+    return true;
   }
 
   function cancel(scope) {
@@ -602,7 +627,7 @@
           <button id="padReconnectBtn" type="button">重新連線</button>
           <button id="padResetBtn" type="button">預設</button>
         </div>
-        <div class="pad-note">搖桿＝移動　A 確認　B 返回　R/SR 分頁　X 回合操作　Y 說明<br>卡牌：A 查看　B 勾選　手牌 X 資源／Y 行動</div>
+        <div class="pad-note">搖桿＝移動　A 確認　B 返回　R/SR 分頁　X 回合操作　Y 說明<br>卡牌：A 查看　B 勾選　手牌 X 資源／Y 行動<br>客廳模式：A 進入區域　ZR 回區域層　PLUS 動作列（只移焦點）</div>
       </div>`;
     stage.appendChild(hud);
     const $ = id => document.getElementById(id);
@@ -659,6 +684,7 @@
 
   function renderHud() {
     if (!hud) return;
+    if (layerActive()) layer.renderLegend();
     const $ = id => document.getElementById(id);
     $('padEnableChk').checked = ctl.settings.enabled;
     if (document.activeElement !== $('padUrlInput')) $('padUrlInput').value = ctl.settings.url;
@@ -680,14 +706,38 @@
     renderHud();
     ctl.staleTimer = setInterval(checkStale, 250);
     ctl.observer = new MutationObserver((records) => {
-      // 自己的 HUD／焦點 class 變動不能再觸發重算，否則會自我迴圈。
-      const relevant = records.some(r => !(hud && hud.contains(r.target)));
+      // 自己的 HUD／焦點 class 與客廳模式覆蓋層變動不能再觸發重算，否則會自我迴圈。
+      const relevant = records.some(r => !(hud && hud.contains(r.target)) && !isOverlayNode(r.target));
       if (relevant && ctl.padActive) { scheduleReconcile(); renderHud(); }
+      if (relevant && layerActive()) layer.scheduleRender();
     });
     ctl.observer.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['style', 'class', 'disabled'] });
     document.addEventListener('visibilitychange', () => { if (document.hidden) resetInput(); });
     window.addEventListener('blur', resetInput);
+    initialized = true;
+    if (layer) layer.init(host);
     if (ctl.settings.enabled) connect();
+  }
+
+  // ------------------------------------------------------------ display-mode layer（客廳模式）
+  // layer 由 controller_living_room.js 掛上；只呼叫這裡提供的既有焦點／卡牌／地圖函式，不另建 action 路徑。
+  let layer = null;
+  let initialized = false;
+  function layerActive() { return !!layer && initialized && layer.enabled(); }
+  function isOverlayNode(node) {
+    const el = node && node.nodeType === 1 ? node : node && node.parentElement;
+    return !!(el && el.closest && el.closest('[data-controller-overlay]'));
+  }
+  const host = {
+    ctl, currentScope, buildItems, collectDom, applyItem, focusDom, clearDomFocus, defaultItem, isShown, isUsable,
+    cardContext, previewCard, toggleCard, playCardMode, modalCancelTarget, sendToMap, choiceLocked, activeGameView,
+    scheduleReconcile, renderHud, hintText, clearFocus,
+    getMapSnapshot: () => ctl.mapSnapshot,
+    statusText: () => STATUS_TEXT[ctl.status] || ctl.status,
+  };
+  function attachLayer(next) {
+    layer = next;
+    if (initialized) layer.init(host);
   }
 
   window.RedlineController = {
@@ -696,8 +746,10 @@
       enabled: ctl.settings.enabled, status: ctl.status, url: ctl.settings.url, padActive: ctl.padActive, helpOpen: ctl.helpOpen,
       focusKind: ctl.focusKind, focusSig: ctl.focusSig, focusTown: ctl.focusTown,
       scope: currentScope().id, held: { ...ctl.input.held },
+      livingRoom: layerActive() ? layer.debugState() : null,
     }),
     setEnabled,
+    attachLayer,
   };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

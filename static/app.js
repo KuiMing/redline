@@ -45,14 +45,28 @@ const selectedPurchaseIndices = new Set();
 // 自己回合主動點「行動」不會取消任何東西，白白浪費這張卡，因此手牌區直接 disable。
 const REACTION_ONLY_ACTION_CARDS = new Set(['爆料黑幕', '產業滲透']);
 
+// 客廳大螢幕模式（html[data-display="living-room"]）：舞台等比縮放後再留 5% title-safe 邊界；
+// 桌面模式維持 1。
+const LIVING_ROOM_SAFE_AREA_SCALE = 0.9;
+
 function resizeStage() {
+  const safeArea = document.documentElement.dataset.display === 'living-room' ? LIVING_ROOM_SAFE_AREA_SCALE : 1;
   const scale = Math.min(
     window.innerWidth / 1280,
     window.innerHeight / 720
-  );
+  ) * safeArea;
   document.documentElement.style.setProperty('--stage-scale', String(scale));
   document.documentElement.style.setProperty('--stage-left', `${Math.max(0, (window.innerWidth - 1280 * scale) / 2)}px`);
   document.documentElement.style.setProperty('--stage-top', `${Math.max(0, (window.innerHeight - 720 * scale) / 2)}px`);
+}
+
+function layoutGameShell() {
+  const hud = document.getElementById('hud');
+  const gameShell = document.getElementById('gameShell');
+  if (!hud || !gameShell) return;
+  const contentTop = hud.offsetTop + hud.offsetHeight + 8;
+  gameShell.style.top = `${contentTop}px`;
+  gameShell.style.height = `${Math.max(0, 720 - contentTop)}px`;
 }
 
 function playerInitialFromInput(name) {
@@ -4494,11 +4508,7 @@ async function render(state) {
       topdeckBtn.title = candidateCount === 0 ? '本回合尚未購買可頂的牌' : '';
     }
 
-    if (gameShell && hud) {
-      const contentTop = hud.offsetTop + hud.offsetHeight + 8;
-      gameShell.style.top = `${contentTop}px`;
-      gameShell.style.height = `${Math.max(0, 720 - contentTop)}px`;
-    }
+    if (gameShell && hud) layoutGameShell();
   }
 
   // ✅ 地圖節點不在 render 中重建

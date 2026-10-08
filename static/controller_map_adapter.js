@@ -40,6 +40,7 @@
       knownTowns: [...byName.keys()],
       moveTargets: selectedTown ? selectedMoveTargets : [],
       selectedTown,
+      pendingMoveTarget,
       originTowns,
       buttons,
     });
@@ -62,7 +63,10 @@
       const town = byName.get(t.town);
       if (!town) continue;
       const p = map.latLngToContainerPoint(townDisplayLatLng(town));
-      targets.push({ town: t.town, role: t.role, x: origin.left + p.x, y: origin.top + p.y });
+      const target = { town: t.town, role: t.role, x: origin.left + p.x, y: origin.top + p.y };
+      if (t.mode !== undefined && t.mode !== null) target.mode = t.mode;
+      if (t.cost !== undefined && t.cost !== null) target.cost = t.cost;
+      targets.push(target);
     }
     const buttons = info.model.buttons.map(b => {
       const r = info.buttons.get(b.id).rect;
@@ -78,6 +82,8 @@
       buttons,
       focusTown: focusTown && targets.some(t => t.town === focusTown) ? focusTown : info.model.focusTown,
       canCancel: !!cancelAvailable(info),
+      selected: info.model.selected,
+      pending: info.model.pending,
     };
   }
 
@@ -141,8 +147,10 @@
   function pressButton(id) {
     const info = currentModel();
     if (!info.model.buttons.some(b => b.id === id)) return { ok: false, reason: 'button-unavailable' };
-    document.getElementById(id).click();
-    return { ok: true };
+    const el = document.getElementById(id);
+    if (!el || !el.isConnected) return { ok: false, reason: 'button-unavailable' };
+    el.click();
+    return { ok: true, via: id };
   }
 
   // B：只走既有可取消流程——可見且啟用的「取消瓦解」按鈕，或既有的「取消目前選取」。
@@ -151,11 +159,11 @@
     const which = cancelAvailable(info);
     if (which === 'cancelDissolveChoiceBtn') {
       document.getElementById('cancelDissolveChoiceBtn').click();
-      return { ok: true };
+      return { ok: true, via: 'cancelDissolveChoiceBtn' };
     }
     if (which === 'selection') {
       exitMovementSelection();
-      return { ok: true };
+      return { ok: true, via: 'selection' };
     }
     return { ok: false, reason: 'nothing-to-cancel' };
   }
@@ -171,7 +179,11 @@
     else if (command.cmd === 'activate') result = activate(command.town);
     else if (command.cmd === 'button') result = pressButton(command.id);
     else if (command.cmd === 'cancel') result = cancel();
-    postToParent({ type: 'redline-controller-result', v: Core.MAP_MESSAGE_VERSION, cmd: command.cmd, ok: result.ok, reason: result.reason || null });
+    // req 原樣回傳：parent 只在對應的 req 收到 ok:true（上面已在執行前重驗）時才視為已執行。
+    postToParent({
+      type: 'redline-controller-result', v: Core.MAP_MESSAGE_VERSION, cmd: command.cmd, req: command.req,
+      ok: result.ok === true, reason: result.reason || null, via: result.via || null,
+    });
     pushSnapshot();
   });
 

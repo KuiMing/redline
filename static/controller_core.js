@@ -183,7 +183,9 @@
   // ---------------------------------------------------------------- scope / focus set
 
   // 由高到低：同時可見多個時，只有第一個取得輸入。cancel = B 可點的既有取消／關閉元素 selector。
+  // initial = 開啟時的預設焦點（客廳模式危險操作確認單：永遠預設「返回」）。
   const MODAL_SCOPES = Object.freeze([
+    { id: 'lrConfirmModal', cancel: ['#lrConfirmCancelBtn'], initial: '#lrConfirmCancelBtn' },
     { id: 'victoryArtViewer', cancel: ['#victoryArtViewerClose'] },
     { id: 'cardPreviewModal', cancel: ['self'] },
     { id: 'eventRevealModal', cancel: ['self'] },
@@ -273,6 +275,23 @@
 
   function isShortString(v, max = 64) { return typeof v === 'string' && v.length > 0 && v.length <= max; }
   function isCoord(v) { return typeof v === 'number' && Number.isFinite(v) && Math.abs(v) < 100000; }
+  const MOVE_MODES = Object.freeze(['road', 'rail']);
+  // 以存在與否判斷而非 truthiness：0 視為合法值保留，只排除負數、非整數與不合理大值。
+  function isMoveCost(v) { return Number.isInteger(v) && v >= 0 && v <= 20; }
+  function isPresent(v) { return v !== undefined && v !== null; }
+
+  /** 移動目標的選用欄位（客廳模式清單排序用）：有給就必須合法，否則整份 snapshot 作廢。 */
+  function sanitizeMoveMeta(src, out) {
+    if (isPresent(src.mode)) {
+      if (!MOVE_MODES.includes(src.mode)) return false;
+      out.mode = src.mode;
+    }
+    if (isPresent(src.cost)) {
+      if (!isMoveCost(src.cost)) return false;
+      out.cost = src.cost;
+    }
+    return true;
+  }
 
   /** parent 端收到的 snapshot：不符 schema 一律回傳 null（視為沒有地圖目標）。 */
   function sanitizeMapSnapshot(data) {
@@ -283,7 +302,9 @@
     const targets = [];
     for (const t of data.targets) {
       if (!t || !isShortString(t.town) || !MAP_ROLES.includes(t.role) || !isCoord(t.x) || !isCoord(t.y)) return null;
-      targets.push({ town: t.town, role: t.role, x: t.x, y: t.y });
+      const target = { town: t.town, role: t.role, x: t.x, y: t.y };
+      if (t.role === 'move' && !sanitizeMoveMeta(t, target)) return null;
+      targets.push(target);
     }
     const buttons = [];
     for (const b of data.buttons) {
@@ -293,6 +314,15 @@
     }
     const focusTown = data.focusTown === null || data.focusTown === undefined ? null : data.focusTown;
     if (focusTown !== null && !isShortString(focusTown)) return null;
+    const selected = isPresent(data.selected) ? data.selected : null;
+    if (selected !== null && !isShortString(selected)) return null;
+    let pending = null;
+    if (isPresent(data.pending)) {
+      const p = data.pending;
+      if (!p || typeof p !== 'object' || !isShortString(p.from) || !isShortString(p.to)) return null;
+      pending = { from: p.from, to: p.to };
+      if (!sanitizeMoveMeta(p, pending)) return null;
+    }
     return {
       scope: data.scope,
       seq: Number.isInteger(data.seq) ? data.seq : 0,
@@ -300,15 +330,41 @@
       buttons,
       focusTown,
       canCancel: data.canCancel === true,
+      selected,
+      pending,
     };
   }
+
+  // 執行型指令的 request id：parent 產生、iframe 原樣回傳，用來把 result 對應回唯一一次送出。
+  function isRequestId(v) { return Number.isSafeInteger(v) && v > 0; }
+  const MAP_RESULT_VIA = Object.freeze([...MAP_BUTTON_IDS, 'selection']);
 
   function sanitizeMapCommand(data) {
     if (!data || data.v !== MAP_MESSAGE_VERSION || data.type !== 'redline-controller-command') return null;
     if (!MAP_COMMANDS.includes(data.cmd)) return null;
     if (['focus', 'activate'].includes(data.cmd) && !isShortString(data.town)) return null;
     if (data.cmd === 'button' && !MAP_BUTTON_IDS.includes(data.id)) return null;
-    return { cmd: data.cmd, town: data.town, id: data.id };
+    if (isPresent(data.req) && !isRequestId(data.req)) return null;
+    return { cmd: data.cmd, town: data.town, id: data.id, req: isPresent(data.req) ? data.req : null };
+  }
+
+  /**
+   * parent 端收到的 iframe 執行結果：不符 schema 回傳 null（呼叫端視為沒有收到確認）。
+   * req＝對應的 request id（沒有帶 req 的指令為 null）；via＝iframe 實際走的既有控制（例如取消瓦解或取消選取）。
+   */
+  function sanitizeMapResult(data) {
+    if (!data || data.type !== 'redline-controller-result' || data.v !== MAP_MESSAGE_VERSION) return null;
+    if (!MAP_COMMANDS.includes(data.cmd) || typeof data.ok !== 'boolean') return null;
+    if (isPresent(data.req) && !isRequestId(data.req)) return null;
+    if (isPresent(data.via) && !MAP_RESULT_VIA.includes(data.via)) return null;
+    if (isPresent(data.reason) && !isShortString(data.reason)) return null;
+    return {
+      cmd: data.cmd,
+      ok: data.ok,
+      req: isPresent(data.req) ? data.req : null,
+      via: isPresent(data.via) ? data.via : null,
+      reason: isPresent(data.reason) ? data.reason : null,
+    };
   }
 
   /**
@@ -317,43 +373,59 @@
    *   hasState, viewerCanAct, pendingChoiceBlocksMoves,
    *   highlight: {towns:[{town}]} | null,   // 來自 pending choice
    *   visibleTowns: string[], knownTowns: string[],
-   *   moveTargets: [{town}], selectedTown, originTowns: string[],
+   *   moveTargets: [{town, mode?, cost?}], selectedTown, originTowns: string[],
+   *   pendingMoveTarget: {from, to, mode?, cost?} | null,   // 既有「已點選待確認」的目的地
    *   buttons: [{id, visible, disabled, label}],
    * }
    * 缺少狀態／非自己回合／不在可見或已知城鎮 → 不產生目標（fail-closed）。
    */
   function buildMapSnapshotModel(input) {
-    const empty = { scope: 'none', targets: [], buttons: [], focusTown: null };
+    const empty = { scope: 'none', targets: [], buttons: [], focusTown: null, selected: null, pending: null };
     if (!input || !input.hasState) return empty;
     const visible = new Set(input.visibleTowns || []);
     const known = new Set(input.knownTowns || []);
     const ok = name => typeof name === 'string' && visible.has(name) && known.has(name);
     const seen = new Set();
     const targets = [];
-    const add = (town, role) => {
+    const add = (town, role, meta) => {
       if (!ok(town) || seen.has(town)) return;
       seen.add(town);
-      targets.push({ town, role });
+      const target = { town, role };
+      if (meta && MOVE_MODES.includes(meta.mode)) target.mode = meta.mode;
+      if (meta && isMoveCost(meta.cost)) target.cost = meta.cost;
+      targets.push(target);
     };
 
     let scope = 'none';
     let focusTown = null;
+    let selected = null;
+    let pending = null;
     if (input.highlight && Array.isArray(input.highlight.towns)) {
       scope = 'choice';
       input.highlight.towns.forEach(entry => add(entry && entry.town, 'choice'));
       if (ok(input.highlight.focusTown)) focusTown = input.highlight.focusTown;
+      if (ok(input.selectedTown) && targets.some(t => t.town === input.selectedTown)) selected = input.selectedTown;
     } else if (input.viewerCanAct && !input.pendingChoiceBlocksMoves) {
       scope = 'move';
-      (input.moveTargets || []).forEach(entry => add(entry && entry.town, 'move'));
+      (input.moveTargets || []).forEach(entry => add(entry && entry.town, 'move', entry));
       (input.originTowns || []).forEach(town => add(town, 'origin'));
-      if (ok(input.selectedTown)) focusTown = input.selectedTown;
+      if (ok(input.selectedTown)) {
+        focusTown = input.selectedTown;
+        selected = input.selectedTown;
+      }
+      const p = input.pendingMoveTarget;
+      if (p && selected && p.from === selected && targets.some(t => t.role === 'move' && t.town === p.to)) {
+        pending = { from: p.from, to: p.to };
+        if (MOVE_MODES.includes(p.mode)) pending.mode = p.mode;
+        if (isMoveCost(p.cost)) pending.cost = p.cost;
+      }
     }
     if (scope === 'none') return empty;
 
     const buttons = (input.buttons || [])
       .filter(b => b && MAP_BUTTON_IDS.includes(b.id) && b.visible === true && !b.disabled)
       .map(b => ({ id: b.id, label: String(b.label || '').slice(0, 80) }));
-    return { scope, targets, buttons, focusTown };
+    return { scope, targets, buttons, focusTown, selected, pending };
   }
 
   // ---------------------------------------------------------------- settings
@@ -387,12 +459,12 @@
 
   return {
     DEFAULT_BRIDGE_URL, DEFAULT_CONFIG, BUTTON_BITS, BUTTON_NAMES, BUTTON_ACTIONS, MODAL_SCOPES,
-    MAP_MESSAGE_VERSION, MAP_BUTTON_IDS, MAP_COMMANDS,
+    MAP_MESSAGE_VERSION, MAP_BUTTON_IDS, MAP_COMMANDS, MAP_RESULT_VIA,
     decodeButtonBytes, parseButtons, normalizeFrame,
     createInputState, resetInputState, reduceFrame, stickDirection, isStale,
     logicalAction, routeAction,
     resolveModalScope, isFocusableCandidate, buildFocusSet, pickInitial, pickDirectional, cycleIndex,
-    isTrustedMessage, sanitizeMapSnapshot, sanitizeMapCommand, buildMapSnapshotModel,
+    isTrustedMessage, sanitizeMapSnapshot, sanitizeMapCommand, sanitizeMapResult, buildMapSnapshotModel,
     validateBridgeUrl, normalizeSettings, mixedContentRisk, reconnectDelayMs,
   };
 });

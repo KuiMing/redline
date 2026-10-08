@@ -3811,3 +3811,160 @@ body.victory-art-viewer-open {
 .pad-note { color: #94a3b8; font-size: 11px; line-height: 1.4; }
 .pad-error { color: #fca5a5; }
 #padButtonRing { position: absolute; z-index: 80; pointer-events: none; outline: 4px solid #ffe14d; outline-offset: 2px; box-shadow: 0 0 0 2px #000, 0 0 16px 4px rgba(255,225,77,0.75); border-radius: 4px; }
+
+/* ---- 客廳大螢幕模式（controller_living_room.js）：只在 html[data-display="living-room"] 下生效 ----
+ * 舞台本身已等比縮放並留 5% title-safe 邊界（app.js resizeStage），以下尺寸都是 1280×720 設計單位，
+ * 因此在 720p／1080p／4K 只差銳利度。桌面模式不受影響。 */
+html[data-display="living-room"] #hud { height: 56px; padding: 8px 16px; font-size: 18px; }
+html[data-display="living-room"] .hud-chip { flex: 0 0 auto; min-height: 34px; padding: 3px 12px; font-weight: 600; white-space: nowrap; }
+html[data-display="living-room"] #phaseActionMetaWrap { flex-basis: 360px; max-width: 360px; }
+html[data-display="living-room"] #phaseActionMeta { font-size: 18px; }
+html[data-display="living-room"] #gameTabs { height: 52px; gap: 6px; padding: 6px 12px; overflow: hidden; }
+html[data-display="living-room"] .game-tab { font-size: 17px; font-weight: 600; padding: 7px 12px; }
+html[data-display="living-room"] .phase-action-btn,
+html[data-display="living-room"] .phase-red-army-btn { font-size: 16px; padding: 7px 12px; }
+html[data-display="living-room"] .game-view,
+html[data-display="living-room"] #mapView,
+html[data-display="living-room"] #logView { top: 52px; height: calc(100% - 52px - 76px); }
+html[data-display="living-room"] .panel-title { font-size: 18px; font-weight: 700; color: #bfdbfe; margin-bottom: 4px; }
+html[data-display="living-room"] #purchaseSection .panel-title,
+html[data-display="living-room"] #randomMarketPanel .panel-title { margin-bottom: 4px; }
+
+/* 指揮中心：上排 常設｜隨機｜（陣營能力／根據地選擇），下排 手牌 */
+html[data-display="living-room"] #commandGrid {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto auto;
+  grid-template-rows: 236px minmax(0, 1fr);
+  gap: 10px;
+  padding: 10px 12px;
+}
+html[data-display="living-room"] #controlPanel { display: contents; }
+html[data-display="living-room"] #purchaseSection {
+  grid-column: 1; grid-row: 1; min-width: 0; min-height: 0;
+  border: 1px solid rgba(120, 160, 255, 0.28); border-radius: 8px; background: rgba(5, 8, 12, 0.55); padding: 8px; overflow: hidden;
+}
+html[data-display="living-room"] #randomMarketPanel { grid-column: 2; grid-row: 1; }
+html[data-display="living-room"] #factionActionPanel,
+html[data-display="living-room"] #baseSelectionPanel {
+  grid-row: 1; max-width: 300px; min-height: 0; margin-top: 0 !important; overflow: auto; font-size: 16px;
+  border: 1px solid rgba(120, 160, 255, 0.28); border-radius: 8px; background: rgba(5, 8, 12, 0.55); padding: 8px;
+}
+html[data-display="living-room"] #factionActionPanel { grid-column: 3; }
+html[data-display="living-room"] #baseSelectionPanel { grid-column: 4; }
+html[data-display="living-room"] #handPanel { grid-column: 1 / -1; grid-row: 2; }
+html[data-display="living-room"] #randomMarketPanel,
+html[data-display="living-room"] #handPanel { background: rgba(5, 8, 12, 0.55); border-color: rgba(120, 160, 255, 0.28); }
+html[data-display="living-room"] #purchaseSelectionControls { min-height: 32px; margin: 0 0 4px; gap: 6px; }
+html[data-display="living-room"] #purchaseSelectionSummary,
+html[data-display="living-room"] .purchase-selection-clear-btn,
+html[data-display="living-room"] .purchase-selection-buy-btn,
+html[data-display="living-room"] .purchase-selection-topdeck-btn { font-size: 16px; padding: 5px 10px; min-height: 30px; }
+
+/* 卡牌列：單列水平捲動，整張卡等比縮小（卡面完整文字用 A 預覽放大） */
+html[data-display="living-room"] #purchaseStatic,
+html[data-display="living-room"] #purchaseRandom,
+html[data-display="living-room"] #hand {
+  display: flex; flex-wrap: nowrap; align-items: flex-start; gap: 10px;
+  overflow-x: auto; overflow-y: hidden; padding: 6px; scrollbar-width: thin;
+}
+html[data-display="living-room"] #purchaseStatic,
+html[data-display="living-room"] #purchaseRandom { --lr-card-zoom: 0.5; }
+html[data-display="living-room"] #hand { --lr-card-zoom: 0.66; }
+html[data-display="living-room"] #purchaseSection .card,
+html[data-display="living-room"] #purchaseRandom .card,
+html[data-display="living-room"] #hand .card { zoom: var(--lr-card-zoom); flex: 0 0 auto; }
+html[data-display="living-room"] .card[data-card-zone]::after {
+  content: attr(data-card-name);
+  position: absolute; left: 0; right: 0; top: 0; z-index: 2;
+  padding: calc(3px / var(--lr-card-zoom, 1)) calc(6px / var(--lr-card-zoom, 1));
+  background: rgba(2, 6, 12, 0.86); color: #ffffff; text-align: center;
+  font: 700 calc(17px / var(--lr-card-zoom, 1))/1.25 'Noto Sans TC', sans-serif;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none;
+}
+/* 勾選框停用（伺服器權威 canSelect）時，用文字而非只靠顏色標示 */
+html[data-display="living-room"] .card[data-card-zone="purchase"]:has(input[data-purchase-index]:disabled)::after {
+  content: attr(data-card-name) "・不可購買"; color: #e2e8f0; background: rgba(51, 65, 85, 0.92);
+}
+html[data-display="living-room"] .card[data-card-zone="purchase"].purchase-card-selected::after {
+  content: "✓ " attr(data-card-name); background: #1d4ed8;
+}
+html[data-display="living-room"] .purchase-card-checkbox { z-index: 3; }
+html[data-display="living-room"] .card.rl-pad-focus {
+  outline: calc(6px / var(--lr-card-zoom, 1)) solid #ffe14d !important;
+  outline-offset: calc(-6px / var(--lr-card-zoom, 1)) !important;
+  box-shadow: inset 0 0 0 calc(9px / var(--lr-card-zoom, 1)) #000, 0 0 calc(18px / var(--lr-card-zoom, 1)) rgba(255, 225, 77, 0.8) !important;
+}
+html[data-display="living-room"] .rl-pad-focus { outline-width: 5px !important; }
+
+/* 卡面預覽放大到畫面高約 80% */
+html[data-display="living-room"] .card-preview-content { width: 469px; height: 576px; }
+
+/* 區域層焦點框（整區黃框＋大字標籤）；內容層時改為細虛線提示目前所在區域 */
+html[data-display="living-room"] #lrZoneRing {
+  position: absolute; z-index: 45; pointer-events: none; box-sizing: border-box;
+  border: 5px solid #ffe14d; border-radius: 12px; box-shadow: 0 0 0 3px #000, 0 0 24px 6px rgba(255, 225, 77, 0.5);
+}
+html[data-display="living-room"] #lrZoneRing[data-layer="item"] { border-width: 3px; border-style: dashed; box-shadow: 0 0 0 2px #000; }
+html[data-display="living-room"] #lrZoneLabel {
+  position: absolute; left: 8px; top: -16px; padding: 2px 10px; border-radius: 6px;
+  background: #ffe14d; color: #111827; box-shadow: 0 0 0 2px #000;
+  font: 700 18px/1.25 'Noto Sans TC', sans-serif; white-space: nowrap;
+}
+html[data-display="living-room"] #lrZoneRing[data-label-inside="true"] #lrZoneLabel { top: 4px; left: auto; right: 8px; }
+html[data-display="living-room"] #lrZoneRing[data-layer="item"] #lrZoneLabel { font-size: 16px; opacity: 0.92; }
+
+/* 固定情境動作列＋controller legend（在 title-safe 內、不遮擋內容：分頁內容高度已扣掉 76px） */
+html[data-display="living-room"] #lrBar {
+  position: absolute; left: 0; bottom: 0; width: 1280px; height: 76px; box-sizing: border-box; z-index: 40;
+  display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: 42px 24px; column-gap: 14px;
+  padding: 5px 52px 5px 16px; background: rgba(3, 6, 12, 0.95); border-top: 2px solid rgba(255, 225, 77, 0.6);
+  color: #f8fafc; pointer-events: none; font-family: 'Noto Sans TC', sans-serif;
+}
+html[data-display="living-room"] #lrBar[hidden],
+html[data-display="living-room"] #lrHelp[hidden],
+html[data-display="living-room"] #lrZoneRing[hidden],
+html[data-display="living-room"] #lrMapPanel[hidden] { display: none !important; }
+html[data-display="living-room"] #lrBarStatus { grid-row: 1; align-self: center; max-width: 330px; font-size: 18px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #bfdbfe; }
+html[data-display="living-room"] #lrBarStatus[data-busy="true"] { color: #fde68a; }
+html[data-display="living-room"] #lrBarStatus[data-alert="true"] { color: #ffffff; background: #b91c1c; padding: 2px 10px; border-radius: 6px; }
+html[data-display="living-room"] #lrSlots { grid-row: 1; display: flex; align-items: center; gap: 12px; min-width: 0; overflow: hidden; padding: 0 8px; }
+html[data-display="living-room"] .lr-slot {
+  flex: 0 1 auto; min-width: 0; max-width: 320px; padding: 3px 14px; border-radius: 10px;
+  border: 2px solid #94a3b8; background: #0f172a; color: #f8fafc;
+  font-size: 18px; font-weight: 700; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+html[data-display="living-room"] .lr-slot[data-danger="true"] { background: #b91c1c; border-color: #fecaca; color: #ffffff; }
+html[data-display="living-room"] .lr-slot[data-danger="true"]::before { content: "⚠ "; }
+html[data-display="living-room"] .lr-slot.rl-pad-focus { outline: 4px solid #ffe14d !important; outline-offset: 0 !important; box-shadow: inset 0 0 0 3px #000 !important; }
+html[data-display="living-room"] .lr-slot-empty { color: #cbd5e1; font-size: 17px; }
+html[data-display="living-room"] #lrLegend { grid-column: 1 / -1; grid-row: 2; font-size: 16px; line-height: 24px; color: #fde68a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html[data-display="living-room"] #padHint { display: none !important; }
+html[data-display="living-room"] #padHud { bottom: 24px; }
+html[data-display="living-room"] #lrHelp {
+  position: absolute; right: 16px; bottom: 84px; z-index: 46; width: 540px; box-sizing: border-box; padding: 12px 16px;
+  border-radius: 12px; border: 2px solid #ffe14d; background: rgba(3, 6, 12, 0.96); color: #f8fafc;
+  font: 500 17px/1.6 'Noto Sans TC', sans-serif; pointer-events: none;
+}
+html[data-display="living-room"] .lr-help-title { font-size: 20px; font-weight: 700; color: #ffe14d; margin-bottom: 4px; }
+
+/* 地圖兩段式目標清單（控制器路徑；滑鼠仍可直接點地圖） */
+html[data-display="living-room"] #lrMapPanel {
+  position: absolute; right: 12px; top: 60px; bottom: 12px; width: 300px; z-index: 5; box-sizing: border-box;
+  display: flex; flex-direction: column; gap: 6px; padding: 10px; border-radius: 12px;
+  border: 2px solid rgba(255, 225, 77, 0.65); background: rgba(3, 6, 12, 0.94); color: #f8fafc; font-family: 'Noto Sans TC', sans-serif;
+}
+html[data-display="living-room"] #lrMapTitle { font-size: 19px; font-weight: 700; color: #ffe14d; }
+html[data-display="living-room"] #lrMapRows { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding: 6px; }
+html[data-display="living-room"] .lr-map-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 6px 10px; border-radius: 8px; background: #0f172a; border: 1px solid #334155; }
+html[data-display="living-room"] .lr-map-town { font-size: 20px; font-weight: 700; }
+html[data-display="living-room"] .lr-map-meta { font-size: 16px; color: #cbd5e1; white-space: nowrap; }
+html[data-display="living-room"] #lrMapFooter { font-size: 16px; line-height: 1.4; color: #fde68a; }
+
+/* 危險操作確認單（預設焦點＝返回） */
+html[data-display="living-room"] .lr-confirm-overlay { z-index: 85; background: rgba(2, 6, 12, 0.78); }
+html[data-display="living-room"] .lr-confirm-glass { width: 600px; padding: 22px; border: 2px solid #fca5a5; }
+html[data-display="living-room"] .lr-confirm-glass .modal-title-text { font-size: 28px; }
+html[data-display="living-room"] .lr-confirm-glass .modal-body-text { font-size: 18px; color: #e2e8f0; }
+html[data-display="living-room"] #lrConfirmInfo { margin: 0 0 16px; padding-left: 22px; font-size: 18px; line-height: 1.6; color: #fde68a; }
+html[data-display="living-room"] .lr-confirm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+html[data-display="living-room"] .lr-confirm-actions button { min-height: 58px; font-size: 21px; font-weight: 700; }
+html[data-display="living-room"] .lr-confirm-ok { background: #b91c1c; border-color: #fecaca; color: #ffffff; }
