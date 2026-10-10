@@ -2,7 +2,8 @@
 """客廳大螢幕（living-room）瀏覽器 E2E：真實頁面 + mock bridge，固定按鍵序列（不用 BFS 探索）。
 
 覆蓋：顯示模式切換／桌面不變；方向鍵只在內容資料間（永不落在手牌內按鈕、結束按鈕、六個全域分頁、
-購買 checkbox、陣營能力鈕或提示列）；R／SR 只循環六個全域區段（含事件卡／時代關卡說明 modal）且 scope lock 正確；
+購買 checkbox、陣營能力鈕或提示列）；R／SR 只循環六個全域區段（含事件卡／時代關卡說明 modal）且 scope lock 正確，
+落點須為該區段內容或實際存在的地圖焦點（靜止後重驗；只有確實沒有候選的區段才允許無焦點）；
 專用快捷鍵 Capture（結束行動，危險確認、預設返回、防連按）、PLUS（陣營能力）、手牌 B（棄置，危險確認）、
 購買卡 Y（既有購買所選 → 購買確認單）、地圖 Y（建立組織／確認移動／瓦解組織，iframe 權威重驗＋req 對應確認）、
 按下搖桿（下一個內容區）的成功與 fail-closed（hidden／disabled／detached／條件不足／處理中鎖／iframe 缺席／
@@ -63,6 +64,9 @@ SPY = """
 # 手牌卡內資源／行動／棄置、陣營能力發動鈕、按鍵提示列、卡牌勾選框。
 EXCLUDED_SEL = ('#gameTabs .game-tab, #turnActionButtons button, .hand-card-action-btn, #factionActionButtons button, '
                 '#lrBar, #lrBar *, [data-card-zone] input[type="checkbox"]')
+# 與 static/controller_ui.js FOCUSABLE 同一份候選 selector（驗證端用來獨立重算區段內容，不讀 controller 的焦點集合）。
+FOCUSABLE_SEL = ('button, a[href], input:not([type="hidden"]), select, textarea, [role="button"], '
+                 '[tabindex]:not([tabindex="-1"]), .card[data-card-zone]')
 
 # 以 .rl-pad-focus 與「原生」焦點一起判斷：document.activeElement、:focus、:focus-visible 也不得落在排除的控制上。
 FOCUS_PROBE = """() => { const el = document.querySelector('.rl-pad-focus'); if (!el) return null;
@@ -1539,10 +1543,96 @@ def section_reached(want):
             " && getComputedStyle(document.getElementById('eraAchievementModal')).display === 'none'")
 
 
-# 區段切換後的落點：內容（目前分頁內）、地圖目標或說明 modal；不會是分頁本身。
-LANDED_JS = """() => { const f = document.querySelector('.rl-pad-focus'); const st = RedlineController.getState();
-  return st.focusKind === 'map' || (!!f && (!!f.closest('.game-view.active') || !!f.closest('.modal-overlay')))
-    || (!f && st.focusKind !== 'dom'); }"""
+# R／SR 的目標容器：分頁＝.game-view.active（且分頁列的 active 正是該分頁）；事件卡／時代關卡＝對應的說明 modal。
+SECTION_TARGET_JS = """(want) => {
+  if (want === 'event') return document.getElementById('eventRevealModal');
+  if (want.startsWith('era:')) return document.getElementById('eraAchievementModal');
+  return document.querySelector('.game-tab.active')?.dataset.view === want.slice(5) ? document.querySelector('.game-view.active') : null; }"""
+SHOWN_JS = """(el) => !!el && el.isConnected && el.getClientRects().length > 0
+  && getComputedStyle(el).display !== 'none' && getComputedStyle(el).visibility !== 'hidden'"""
+
+# 區段切換後的落點（不是分頁本身，也不能是「沒有焦點」：changeSection() 會先清掉焦點、focusKind 設為 null 再延遲 reconcile）。
+# 只有兩種情況算落點：
+# 1. 唯一的 .rl-pad-focus 在目標分頁內容或目標說明 modal 內，可見且不是排除的控制；
+# 2. focusKind === 'map' 且地圖焦點真的存在：iframe 畫著該城鎮的焦點標籤（或 parent 畫著地圖按鈕外框），且仍是 adapter snapshot 的目標。
+LANDED_JS = """([want, EX]) => { const st = RedlineController.getState(); const f = document.querySelector('.rl-pad-focus');
+  const shown = """ + SHOWN_JS + """;
+  const target = (""" + SECTION_TARGET_JS + """)(want);
+  if (!shown(target)) return false;
+  if (st.focusKind === 'dom') {
+    return !!f && document.querySelectorAll('.rl-pad-focus').length === 1 && target.contains(f) && shown(f) && !f.matches(EX);
+  }
+  if (st.focusKind !== 'map' || want !== 'view:map' || st.scope !== 'map' || f) return false;
+  try {
+    const fr = document.getElementById('strategicMapFrame');
+    const snap = fr.contentWindow.__redlineControllerAdapter.snapshot();
+    if (st.focusTown) {
+      return st.focusSig === 'town:' + st.focusTown && snap.targets.some(t => t.town === st.focusTown)
+        && [...fr.contentDocument.querySelectorAll('.pad-focus-label')].some(l => l.textContent === st.focusTown);
+    }
+    const ring = document.getElementById('padButtonRing');
+    return snap.buttons.some(b => st.focusSig === 'button:' + b.id) && !!ring && !ring.hidden && shown(ring);
+  } catch (e) { return false; } }"""
+
+# 驗證端獨立重算目標區段的方向焦點候選：與 controller_ui.js 相同的 FOCUSABLE／SKIP_IDS／可見／啟用／inert 規則，再扣掉
+# 排除的控制；戰略地圖則數 iframe adapter snapshot 的目標與按鈕。focusless：沒有 .rl-pad-focus、沒有地圖焦點或按鈕外框。
+SECTION_CONTENT_JS = """([want, EX, FOCUSABLE]) => { const st = RedlineController.getState();
+  const shown = """ + SHOWN_JS + """;
+  const target = (""" + SECTION_TARGET_JS + """)(want);
+  let count = null;
+  if (shown(target)) {
+    if (want === 'view:map') {
+      try { const s = document.getElementById('strategicMapFrame').contentWindow.__redlineControllerAdapter.snapshot(); count = s.targets.length + s.buttons.length; }
+      catch (e) { count = null; }
+    } else {
+      count = [...target.querySelectorAll(FOCUSABLE)].filter(el => { const r = el.getBoundingClientRect();
+        return shown(el) && r.width > 0 && r.height > 0 && !el.disabled && el.getAttribute('aria-disabled') !== 'true' && !el.closest('[inert]')
+          && !el.hasAttribute('data-controller-skip') && el.id !== 'emergencyNewGameBtn' && el.id !== 'padToggleBtn' && el.id !== 'redArmyAbilityBtn'
+          && !el.matches(EX) && !el.closest('#gameTabs, #turnActionButtons, #factionActionButtons, #lrBar'); }).length;
+    }
+  }
+  const ring = document.getElementById('padButtonRing');
+  return { count, focusless: !document.querySelector('.rl-pad-focus') && st.focusKind === null && st.focusSig === null && (!ring || ring.hidden) }; }"""
+
+# 回歸用：同一段 script 內按下 R／SR 並立即判斷（changeSection() 已清掉焦點，延遲的 reconcile 一定還沒跑）。
+PRESS_THEN_PROBE = """([b0, b1, want, EX, FOCUSABLE]) => {
+  window.__padSend(0, 0, b0, b1);
+  window.__padSend(0, 0, 0, 0);
+  const st = RedlineController.getState();
+  return { view: document.querySelector('.game-tab.active')?.dataset.view || null, focusKind: st.focusKind,
+           padFocus: !!document.querySelector('.rl-pad-focus'), landed: (""" + LANDED_JS + """)([want, EX]),
+           content: (""" + SECTION_CONTENT_JS + """)([want, EX, FOCUSABLE]) }; }"""
+
+# 回歸用：模擬「區段 reconcile 壞掉」——只丟掉 controller 排的 80ms／160ms reconcile 計時器，其他計時器照常。
+DROP_RECONCILE_JS = """() => { if (window.__realSetTimeout) return false;
+  const real = window.setTimeout;
+  window.__realSetTimeout = real;
+  window.__droppedReconcile = 0;
+  window.setTimeout = function (fn, ms, ...rest) {
+    if (typeof fn === 'function' && (ms === 80 || ms === 160) && /reconcile\\(/.test(String(fn))) { window.__droppedReconcile += 1; return 0; }
+    return real.call(window, fn, ms, ...rest);
+  };
+  return true; }"""
+RESTORE_RECONCILE_JS = """() => { if (window.__realSetTimeout) { window.setTimeout = window.__realSetTimeout; delete window.__realSetTimeout; }
+  return window.__droppedReconcile || 0; }"""
+
+# 回歸用：經由真實的地圖協定（parent → iframe 'clearFocus'）讓 iframe 失去焦點；parent 端仍是 focusKind === 'map'。
+MAP_DROP_FOCUS_JS = """() => { const fr = document.getElementById('strategicMapFrame');
+  fr.contentWindow.postMessage({ type: 'redline-controller-command', v: RedlineControllerCore.MAP_MESSAGE_VERSION, cmd: 'clearFocus' }, location.origin);
+  return RedlineController.getState().focusTown; }"""
+MAP_FOCUS_LABELS_JS = "[...document.getElementById('strategicMapFrame').contentDocument.querySelectorAll('.pad-focus-label')].map(l => l.textContent)"
+
+
+def section_landing(S, want):
+    """R／SR 之後的落點：先 bounded poll，S.settle() 之後再重驗一次，兩次都要成立。目標區段經驗證端獨立重算確實
+    沒有任何方向焦點候選時（分頁不是方向焦點），才改為要求「完全沒有焦點」。"""
+    polled = S.poll(LANDED_JS, [want, EXCLUDED_SEL], timeout=2000)
+    S.settle()
+    settled = S.page.evaluate(LANDED_JS, [want, EXCLUDED_SEL])
+    content = S.page.evaluate(SECTION_CONTENT_JS, [want, EXCLUDED_SEL, FOCUSABLE_SEL])
+    if content["count"] == 0:
+        return {"mode": "empty", "ok": content["focusless"], "content": content}
+    return {"mode": "landed", "ok": polled and settled, "polled": polled, "settled": settled, "content": content}
 
 
 def scenario_directional_exclusions(browser, base, record, errors):
@@ -1701,14 +1791,45 @@ def scenario_directional_exclusions(browser, base, record, errors):
     for key, want in [("R", w) for w in stops[1:] + stops[:2]] + [("SR", w) for w in [stops[0], stops[5], stops[4], stops[3], stops[2]]]:
         S.pad.tap(key)
         reached = S.poll(section_reached(want), timeout=4000)
-        landed = S.poll(LANDED_JS, timeout=2000)
-        S.settle()
+        landing = section_landing(S, want)
         v = check(f"{key}->{want}")
-        visited.append([key, want, v["view"], v["modal"]])
-        if not reached or not landed:
-            bad.append([key, want, reached, landed, v])
+        visited.append([key, want, v["view"], v["modal"], landing["mode"]])
+        if not reached or not landing["ok"]:
+            bad.append([key, want, reached, landing, v])
+    # 本 fixture 只有「我的陣營」（純文字）與事件卡說明 modal（點擊任意地方關閉）沒有方向焦點候選；其他四站一定要落點。
+    empty = {w for _, w, _, _, mode in visited if mode == "empty"}
     record("desktop_R_SR_traverse_all_six_sections_both_directions_without_tab_focus",
-           fixture_ok and not bad and not violations, [stops, visited, bad[:3], violations[:3]])
+           fixture_ok and not bad and not violations and empty <= {"view:myFaction", "event"}, [stops, visited, bad[:3], violations[:3]])
+
+    # ---- 回歸（先失敗）：區段切換後「沒有焦點」不得算落點 ----
+    # 舊判定接受 `!f && focusKind !== 'dom'` 與任何 focusKind === 'map'，下面三種狀態都會被誤判為已落點。
+    reg = {}
+    # A. 真實的 reconcile 前窗口：戰況紀錄 SR → 戰略地圖，同一段 script 內立即判斷；之後真的 reconcile 完要能落點（判定不是永遠 false）。
+    pre = reg["pre"] = page.evaluate(PRESS_THEN_PROBE, [*press_bits("SR"), "view:map", EXCLUDED_SEL, FOCUSABLE_SEL])
+    reg["pre_then"] = section_landing(S, "view:map")
+    # B. 地圖焦點不存在：經由真實地圖協定讓 iframe 清掉焦點，parent 仍是 focusKind === 'map'。
+    reg["map_town"] = page.evaluate(MAP_DROP_FOCUS_JS)
+    reg["map_cleared"] = S.poll(f"({MAP_FOCUS_LABELS_JS}).length === 0", timeout=2000)
+    reg["map_state"] = page.evaluate("[RedlineController.getState().focusKind, RedlineController.getState().focusSig]")
+    reg["map_lost"] = section_landing(S, "view:map")
+    # C. 區段 reconcile 壞掉：丟掉 controller 的 reconcile 計時器後 SR → 指揮中心（有手牌內容），靜止後仍沒有焦點；
+    #    原生焦點不變式（activeElement／:focus／:focus-visible／.rl-pad-focus）此時沒有違規，只有落點判定擋得住。
+    try:
+        page.evaluate(DROP_RECONCILE_JS)
+        S.pad.tap("SR")
+        reg["broken_reached"] = S.poll(section_reached("view:command"), timeout=4000)
+        reg["broken"] = section_landing(S, "view:command")
+        reg["broken_invariant_bad"] = check("broken-reconcile")["bad"]
+    finally:
+        reg["dropped"] = page.evaluate(RESTORE_RECONCILE_JS)
+    record("desktop_section_landing_rejects_focusless_post_section_states",
+           pre["view"] == "map" and pre["focusKind"] is None and not pre["padFocus"] and not pre["landed"]
+           and reg["pre_then"]["mode"] == "landed" and reg["pre_then"]["ok"]
+           and bool(reg["map_town"]) and reg["map_cleared"] and reg["map_state"][0] == "map"
+           and reg["map_lost"]["mode"] == "landed" and not reg["map_lost"]["ok"]
+           and reg["dropped"] > 0 and reg["broken_reached"] and reg["broken"]["mode"] == "landed" and not reg["broken"]["ok"]
+           and reg["broken"]["content"]["focusless"] and not reg["broken_invariant_bad"],
+           reg)
     ctx.close()
 
     # ---- 桌面模式：必選地圖目標時 R／SR 只回戰略地圖；方向鍵在其他分頁也碰不到分頁與回合列 ----
