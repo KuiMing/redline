@@ -3,7 +3,8 @@
 
 覆蓋：顯示模式切換／桌面不變；方向鍵只在內容資料間（永不落在手牌內按鈕、結束按鈕、六個全域分頁、
 購買 checkbox、陣營能力鈕或提示列）；R／SR 只循環六個全域區段（含事件卡／時代關卡說明 modal）且 scope lock 正確，
-落點須為該區段內容或實際存在的地圖焦點（靜止後重驗；只有確實沒有候選的區段才允許無焦點）；
+落點須為該區段內容或實際存在的地圖焦點（必須真的靜止並重驗，落點元素本身須為合法方向候選；只有確實沒有候選的區段
+才允許無焦點，且 iframe 不得殘留地圖焦點標籤）；
 專用快捷鍵 Capture（結束行動，危險確認、預設返回、防連按）、PLUS（陣營能力）、手牌 B（棄置，危險確認）、
 購買卡 Y（既有購買所選 → 購買確認單）、地圖 Y（建立組織／確認移動／瓦解組織，iframe 權威重驗＋req 對應確認）、
 按下搖桿（下一個內容區）的成功與 fail-closed（hidden／disabled／detached／條件不足／處理中鎖／iframe 缺席／
@@ -1551,16 +1552,29 @@ SECTION_TARGET_JS = """(want) => {
 SHOWN_JS = """(el) => !!el && el.isConnected && el.getClientRects().length > 0
   && getComputedStyle(el).display !== 'none' && getComputedStyle(el).visibility !== 'hidden'"""
 
+# 合法的方向焦點候選：與 controller_ui.js collectDom／Core.isFocusableCandidate 相同的規則，由驗證端獨立重寫——
+# 符合 FOCUSABLE、不是 SKIP_IDS（與紅軍能力鈕）、可見且有尺寸、未 disabled／aria-disabled、不在 [inert] 內、
+# 沒有 data-controller-skip，且自己與祖先都不是排除的控制（closest(EX) 與分頁列／回合列／陣營能力／提示列）。
+# 區段內容普查與落點元素本身的重驗共用這一份。
+ELIGIBLE_JS = """(el, EX, FOCUSABLE) => { if (!el || el.nodeType !== 1 || !el.matches(FOCUSABLE)) return false;
+  const r = el.getBoundingClientRect();
+  return (""" + SHOWN_JS + """)(el) && r.width > 0 && r.height > 0 && !el.disabled && el.getAttribute('aria-disabled') !== 'true'
+    && !el.closest('[inert]') && !el.hasAttribute('data-controller-skip')
+    && el.id !== 'emergencyNewGameBtn' && el.id !== 'padToggleBtn' && el.id !== 'redArmyAbilityBtn'
+    && !el.closest(EX) && !el.closest('#gameTabs, #turnActionButtons, #factionActionButtons, #lrBar'); }"""
+
 # 區段切換後的落點（不是分頁本身，也不能是「沒有焦點」：changeSection() 會先清掉焦點、focusKind 設為 null 再延遲 reconcile）。
 # 只有兩種情況算落點：
-# 1. 唯一的 .rl-pad-focus 在目標分頁內容或目標說明 modal 內，可見且不是排除的控制；
+# 1. 唯一的 .rl-pad-focus 在目標分頁內容或目標說明 modal 內，可見、不是排除的控制，且本身就是合法的方向焦點候選（ELIGIBLE_JS）；
 # 2. focusKind === 'map' 且地圖焦點真的存在：iframe 畫著該城鎮的焦點標籤（或 parent 畫著地圖按鈕外框），且仍是 adapter snapshot 的目標。
-LANDED_JS = """([want, EX]) => { const st = RedlineController.getState(); const f = document.querySelector('.rl-pad-focus');
+LANDED_JS = """([want, EX, FOCUSABLE]) => { const st = RedlineController.getState(); const f = document.querySelector('.rl-pad-focus');
   const shown = """ + SHOWN_JS + """;
+  const eligible = """ + ELIGIBLE_JS + """;
   const target = (""" + SECTION_TARGET_JS + """)(want);
   if (!shown(target)) return false;
   if (st.focusKind === 'dom') {
-    return !!f && document.querySelectorAll('.rl-pad-focus').length === 1 && target.contains(f) && shown(f) && !f.matches(EX);
+    return !!f && document.querySelectorAll('.rl-pad-focus').length === 1 && target.contains(f) && shown(f) && !f.matches(EX)
+      && eligible(f, EX, FOCUSABLE);
   }
   if (st.focusKind !== 'map' || want !== 'view:map' || st.scope !== 'map' || f) return false;
   try {
@@ -1574,10 +1588,13 @@ LANDED_JS = """([want, EX]) => { const st = RedlineController.getState(); const 
     return snap.buttons.some(b => st.focusSig === 'button:' + b.id) && !!ring && !ring.hidden && shown(ring);
   } catch (e) { return false; } }"""
 
-# 驗證端獨立重算目標區段的方向焦點候選：與 controller_ui.js 相同的 FOCUSABLE／SKIP_IDS／可見／啟用／inert 規則，再扣掉
-# 排除的控制；戰略地圖則數 iframe adapter snapshot 的目標與按鈕。focusless：沒有 .rl-pad-focus、沒有地圖焦點或按鈕外框。
+# 驗證端獨立重算目標區段的方向焦點候選（ELIGIBLE_JS：與 controller_ui.js 相同的 FOCUSABLE／SKIP_IDS／可見／啟用／inert 規則，
+# 再扣掉排除的控制）；戰略地圖則數 iframe adapter snapshot 的目標與按鈕。
+# focusless：parent 沒有 .rl-pad-focus、沒有地圖焦點或按鈕外框，而且 iframe 內沒有任何 .pad-focus-label——clearFocus 是非同步
+# postMessage，S.settle() 不能證明 iframe 已處理，所以直接數 iframe DOM（讀不到就當作有焦點，fail closed）。
 SECTION_CONTENT_JS = """([want, EX, FOCUSABLE]) => { const st = RedlineController.getState();
   const shown = """ + SHOWN_JS + """;
+  const eligible = """ + ELIGIBLE_JS + """;
   const target = (""" + SECTION_TARGET_JS + """)(want);
   let count = null;
   if (shown(target)) {
@@ -1585,14 +1602,15 @@ SECTION_CONTENT_JS = """([want, EX, FOCUSABLE]) => { const st = RedlineControlle
       try { const s = document.getElementById('strategicMapFrame').contentWindow.__redlineControllerAdapter.snapshot(); count = s.targets.length + s.buttons.length; }
       catch (e) { count = null; }
     } else {
-      count = [...target.querySelectorAll(FOCUSABLE)].filter(el => { const r = el.getBoundingClientRect();
-        return shown(el) && r.width > 0 && r.height > 0 && !el.disabled && el.getAttribute('aria-disabled') !== 'true' && !el.closest('[inert]')
-          && !el.hasAttribute('data-controller-skip') && el.id !== 'emergencyNewGameBtn' && el.id !== 'padToggleBtn' && el.id !== 'redArmyAbilityBtn'
-          && !el.matches(EX) && !el.closest('#gameTabs, #turnActionButtons, #factionActionButtons, #lrBar'); }).length;
+      count = [...target.querySelectorAll(FOCUSABLE)].filter(el => eligible(el, EX, FOCUSABLE)).length;
     }
   }
   const ring = document.getElementById('padButtonRing');
-  return { count, focusless: !document.querySelector('.rl-pad-focus') && st.focusKind === null && st.focusSig === null && (!ring || ring.hidden) }; }"""
+  const fr = document.getElementById('strategicMapFrame');
+  let mapFocusLabels = 0;
+  if (fr) { try { mapFocusLabels = fr.contentDocument.querySelectorAll('.pad-focus-label').length; } catch (e) { mapFocusLabels = null; } }
+  return { count, mapFocusLabels, focusless: !document.querySelector('.rl-pad-focus') && st.focusKind === null && st.focusSig === null
+    && st.focusTown === null && (!ring || ring.hidden) && mapFocusLabels === 0 }; }"""
 
 # 回歸用：同一段 script 內按下 R／SR 並立即判斷（changeSection() 已清掉焦點，延遲的 reconcile 一定還沒跑）。
 PRESS_THEN_PROBE = """([b0, b1, want, EX, FOCUSABLE]) => {
@@ -1600,7 +1618,7 @@ PRESS_THEN_PROBE = """([b0, b1, want, EX, FOCUSABLE]) => {
   window.__padSend(0, 0, 0, 0);
   const st = RedlineController.getState();
   return { view: document.querySelector('.game-tab.active')?.dataset.view || null, focusKind: st.focusKind,
-           padFocus: !!document.querySelector('.rl-pad-focus'), landed: (""" + LANDED_JS + """)([want, EX]),
+           padFocus: !!document.querySelector('.rl-pad-focus'), landed: (""" + LANDED_JS + """)([want, EX, FOCUSABLE]),
            content: (""" + SECTION_CONTENT_JS + """)([want, EX, FOCUSABLE]) }; }"""
 
 # 回歸用：模擬「區段 reconcile 壞掉」——只丟掉 controller 排的 80ms／160ms reconcile 計時器，其他計時器照常。
@@ -1622,17 +1640,161 @@ MAP_DROP_FOCUS_JS = """() => { const fr = document.getElementById('strategicMapF
   return RedlineController.getState().focusTown; }"""
 MAP_FOCUS_LABELS_JS = "[...document.getElementById('strategicMapFrame').contentDocument.querySelectorAll('.pad-focus-label')].map(l => l.textContent)"
 
+# 回歸用：丟掉 parent 送往 iframe 的所有地圖指令（與主情境 (b) 相同的作法）；之後的 clearFocus 到不了 iframe，焦點標籤殘留。
+MAP_DROP_COMMANDS_JS = """() => { const w = document.getElementById('strategicMapFrame').contentWindow; if (w.__origPostMessage) return false;
+  w.__origPostMessage = w.postMessage; w.__droppedCmds = []; w.postMessage = function (msg) { w.__droppedCmds.push(msg && msg.cmd); };
+  return true; }"""
+MAP_RESTORE_COMMANDS_JS = """() => { const w = document.getElementById('strategicMapFrame').contentWindow; const dropped = w.__droppedCmds || [];
+  if (w.__origPostMessage) { w.postMessage = w.__origPostMessage; delete w.__origPostMessage; } delete w.__droppedCmds;
+  return dropped; }"""
+PARENT_FOCUSLESS_JS = """() => { const st = RedlineController.getState(); const ring = document.getElementById('padButtonRing');
+  return [st.focusKind, st.focusSig, !!document.querySelector('.rl-pad-focus'), !ring || ring.hidden]; }"""
+
+# 回歸用：每 15ms 切換一個沒有樣式的 class，MutationObserver 讓 controller 一直有待跑的 reconcile，S.settle() 必定逾時；
+# 焦點本身保持合法（同一個項目的 reconcile 只會重綁原位）。
+CHURN_START_JS = """() => { if (window.__settleChurn) return false;
+  window.__settleChurn = setInterval(() => document.getElementById('handPanel').classList.toggle('lr-settle-churn-probe'), 15);
+  return true; }"""
+CHURN_STOP_JS = """() => { clearInterval(window.__settleChurn); delete window.__settleChurn;
+  document.getElementById('handPanel').classList.remove('lr-settle-churn-probe'); return true; }"""
+
+# 回歸用：把真實落點的 .rl-pad-focus 改成非法候選（呼叫前先丟掉 reconcile 計時器，controller 不會把它修好）。
+# stale＝失去候選身分（整張卡沒了 data-card-zone）；nested-excluded＝類別移到排除控制（手牌「資源」鈕）內的 [role=button]。
+ILLEGAL_FOCUS_JS = """([how, FOCUSABLE]) => { const f = document.querySelector('.rl-pad-focus'); if (!f) return null;
+  const s = window.__illegalFocus = { how, el: f };
+  if (how === 'stale') { s.prev = f.getAttribute('data-card-zone'); f.removeAttribute('data-card-zone'); }
+  else if (how === 'disabled') { s.prev = f.disabled; f.disabled = true; }
+  else if (how === 'aria-disabled') { s.prev = f.getAttribute('aria-disabled'); f.setAttribute('aria-disabled', 'true'); }
+  else if (how === 'inert') { s.host = f.parentElement; s.host.inert = true; }
+  else if (how === 'skipped') f.setAttribute('data-controller-skip', '');
+  else if (how === 'nested-excluded') {
+    const btn = [...f.querySelectorAll('.hand-card-action-btn')].find(b => b.getClientRects().length > 0);
+    if (!btn) return { how, ok: false };
+    s.probe = document.createElement('span');
+    s.probe.setAttribute('role', 'button');
+    s.probe.textContent = '巢狀';
+    btn.appendChild(s.probe);
+    f.classList.remove('rl-pad-focus');
+    s.probe.classList.add('rl-pad-focus');
+  }
+  const now = document.querySelector('.rl-pad-focus');
+  return { how, ok: !!now && document.querySelectorAll('.rl-pad-focus').length === 1 && (how !== 'stale' || !now.matches(FOCUSABLE)),
+           tag: now ? now.tagName : null, cls: now ? String(now.className).slice(0, 48) : null }; }"""
+ILLEGAL_REVERT_JS = """() => { const s = window.__illegalFocus; if (!s) return false; const f = s.el;
+  if (s.how === 'stale') f.setAttribute('data-card-zone', s.prev);
+  else if (s.how === 'disabled') f.disabled = s.prev;
+  else if (s.how === 'aria-disabled') { if (s.prev === null) f.removeAttribute('aria-disabled'); else f.setAttribute('aria-disabled', s.prev); }
+  else if (s.how === 'inert') s.host.inert = false;
+  else if (s.how === 'skipped') f.removeAttribute('data-controller-skip');
+  else if (s.how === 'nested-excluded' && s.probe) { s.probe.remove(); f.classList.add('rl-pad-focus'); }
+  delete window.__illegalFocus;
+  return document.querySelector('.rl-pad-focus') === f; }"""
+
 
 def section_landing(S, want):
-    """R／SR 之後的落點：先 bounded poll，S.settle() 之後再重驗一次，兩次都要成立。目標區段經驗證端獨立重算確實
-    沒有任何方向焦點候選時（分頁不是方向焦點），才改為要求「完全沒有焦點」。"""
-    polled = S.poll(LANDED_JS, [want, EXCLUDED_SEL], timeout=2000)
-    S.settle()
-    settled = S.page.evaluate(LANDED_JS, [want, EXCLUDED_SEL])
+    """R／SR 之後的落點：先 bounded poll，S.settle() 必須真的靜止（逾時即失敗），之後再重驗一次，三者都要成立。
+    目標區段經驗證端獨立重算確實沒有任何方向焦點候選時（分頁不是方向焦點），才改為要求「完全沒有焦點」
+    （含 iframe 沒有殘留的地圖焦點標籤），同樣必須靜止。"""
+    polled = S.poll(LANDED_JS, [want, EXCLUDED_SEL, FOCUSABLE_SEL], timeout=2000)
+    quiescent = S.settle() is True
+    settled = S.page.evaluate(LANDED_JS, [want, EXCLUDED_SEL, FOCUSABLE_SEL])
     content = S.page.evaluate(SECTION_CONTENT_JS, [want, EXCLUDED_SEL, FOCUSABLE_SEL])
     if content["count"] == 0:
-        return {"mode": "empty", "ok": content["focusless"], "content": content}
-    return {"mode": "landed", "ok": polled and settled, "polled": polled, "settled": settled, "content": content}
+        return {"mode": "empty", "ok": quiescent and content["focusless"], "quiescent": quiescent, "content": content}
+    return {"mode": "landed", "ok": quiescent and polled and settled, "quiescent": quiescent, "polled": polled, "settled": settled,
+            "content": content}
+
+
+def section_landing_hardening_regressions(page, S, record):
+    """回歸（先失敗）：靜止逾時、verified-empty 時 iframe 殘留的地圖焦點標籤、以及本身不是合法方向候選的
+    .rl-pad-focus，都不得算落點；每一項前後都要有真實落點被接受（判定不是永遠 false）。起點：指揮中心。"""
+    def go(key, want):
+        S.pad.tap(key)
+        return S.poll(section_reached(want), timeout=4000)
+
+    h = {}
+    # E. iframe 殘留焦點標籤：戰略地圖取得真實地圖焦點後，丟掉送往 iframe 的指令再 R → 戰況紀錄 → 我的陣營（verified-empty）。
+    #    parent 已無焦點，但 clearFocus 沒到 iframe，標籤仍畫著。
+    h["to_map"] = go("R", "view:map")
+    h["map"] = section_landing(S, "view:map")
+    h["map_labels"] = page.evaluate(MAP_FOCUS_LABELS_JS)
+    h["drop_installed"] = page.evaluate(MAP_DROP_COMMANDS_JS)
+    try:
+        h["to_log"] = go("R", "view:log")
+        S.settle()
+        h["to_my"] = go("R", "view:myFaction")
+        h["residual"] = section_landing(S, "view:myFaction")
+        h["residual_parent"] = page.evaluate(PARENT_FOCUSLESS_JS)
+        h["residual_labels"] = page.evaluate(MAP_FOCUS_LABELS_JS)
+    finally:
+        h["dropped_cmds"] = page.evaluate(MAP_RESTORE_COMMANDS_JS)
+    page.evaluate(MAP_DROP_FOCUS_JS)
+    h["residual_cleared"] = S.poll(f"({MAP_FOCUS_LABELS_JS}).length === 0", timeout=2000)
+    h["empty_ok"] = section_landing(S, "view:myFaction")
+    record("desktop_section_landing_empty_rejects_iframe_residual_focus_label",
+           h["to_map"] and h["map"]["mode"] == "landed" and h["map"]["ok"] and len(h["map_labels"]) == 1 and h["drop_installed"]
+           and h["to_log"] and h["to_my"] and "clearFocus" in h["dropped_cmds"]
+           and h["residual_parent"] == [None, None, False, True] and h["residual_labels"] == h["map_labels"]
+           and h["residual"]["mode"] == "empty" and not h["residual"]["ok"] and h["residual"]["content"].get("mapFocusLabels") == 1
+           and h["residual_cleared"] and h["empty_ok"]["mode"] == "empty" and h["empty_ok"]["ok"]
+           and h["empty_ok"]["content"].get("mapFocusLabels") == 0, h)
+
+    # F. 靜止逾時：焦點狀態本身合法（verified-empty 的我的陣營／真實落點的戰況紀錄），但 controller 一直沒有靜止。
+    page.evaluate(CHURN_START_JS)
+    try:
+        h["churn_settle_empty"] = S.settle(timeout=800)
+        h["empty_churn"] = section_landing(S, "view:myFaction")
+    finally:
+        page.evaluate(CHURN_STOP_JS)
+    h["empty_after"] = section_landing(S, "view:myFaction")
+    h["to_log_back"] = go("SR", "view:log")
+    h["log"] = section_landing(S, "view:log")
+    page.evaluate(CHURN_START_JS)
+    try:
+        h["churn_settle_landed"] = S.settle(timeout=800)
+        h["landed_churn"] = section_landing(S, "view:log")
+    finally:
+        page.evaluate(CHURN_STOP_JS)
+    h["log_after"] = section_landing(S, "view:log")
+    record("desktop_section_landing_rejects_settle_timeout_in_both_modes",
+           h["churn_settle_empty"] is False and h["empty_churn"]["mode"] == "empty" and h["empty_churn"]["content"]["focusless"]
+           and h["empty_churn"].get("quiescent") is False and not h["empty_churn"]["ok"]
+           and h["empty_after"]["mode"] == "empty" and h["empty_after"]["ok"]
+           and h["to_log_back"] and h["log"]["mode"] == "landed" and h["log"]["ok"]
+           and h["churn_settle_landed"] is False and h["landed_churn"]["mode"] == "landed" and h["landed_churn"]["polled"]
+           and h["landed_churn"]["settled"] and h["landed_churn"].get("quiescent") is False and not h["landed_churn"]["ok"]
+           and h["log_after"]["ok"],
+           {k: h[k] for k in ("churn_settle_empty", "empty_churn", "empty_after", "to_log_back", "log", "churn_settle_landed",
+                              "landed_churn", "log_after")})
+
+    # G. 非法的 .rl-pad-focus：從真實落點出發，丟掉 reconcile 計時器後把焦點元素改成非法候選。戰況紀錄落在真正的
+    #    <button>（disabled）；指揮中心落在整張手牌（stale／aria-disabled／inert／skipped／nested-excluded）。
+    def illegal(how, want):
+        case = {"how": how, "before": section_landing(S, want)}
+        page.evaluate(DROP_RECONCILE_JS)
+        try:
+            case["applied"] = page.evaluate(ILLEGAL_FOCUS_JS, [how, FOCUSABLE_SEL])
+            case["landing"] = section_landing(S, want)
+        finally:
+            case["reverted"] = page.evaluate(ILLEGAL_REVERT_JS)
+            page.evaluate(RESTORE_RECONCILE_JS)
+        return case
+
+    cases = [illegal("disabled", "view:log")]
+    h["to_map_again"] = go("SR", "view:map")
+    S.settle()
+    h["to_command"] = go("SR", "view:command")
+    for how in ("stale", "aria-disabled", "inert", "skipped", "nested-excluded"):
+        cases.append(illegal(how, "view:command"))
+    h["command_after"] = section_landing(S, "view:command")
+    record("desktop_section_landing_rejects_illegal_focused_dom",
+           [c["how"] for c in cases] == ["disabled", "stale", "aria-disabled", "inert", "skipped", "nested-excluded"]
+           and h["to_map_again"] and h["to_command"]
+           and all(c["before"]["mode"] == "landed" and c["before"]["ok"] and (c["applied"] or {}).get("ok")
+                   and c["landing"]["mode"] == "landed" and not c["landing"]["ok"] and c["landing"].get("quiescent") is True
+                   and c["landing"]["polled"] is False and c["landing"]["settled"] is False and c["reverted"] for c in cases)
+           and h["command_after"]["mode"] == "landed" and h["command_after"]["ok"],
+           [cases, h["to_map_again"], h["to_command"], h["command_after"]])
 
 
 def scenario_directional_exclusions(browser, base, record, errors):
@@ -1830,6 +1992,8 @@ def scenario_directional_exclusions(browser, base, record, errors):
            and reg["dropped"] > 0 and reg["broken_reached"] and reg["broken"]["mode"] == "landed" and not reg["broken"]["ok"]
            and reg["broken"]["content"]["focusless"] and not reg["broken_invariant_bad"],
            reg)
+    # ---- 回歸（先失敗）：靜止逾時、iframe 殘留焦點標籤、非法的 .rl-pad-focus 都不得算落點 ----
+    section_landing_hardening_regressions(page, S, record)
     ctx.close()
 
     # ---- 桌面模式：必選地圖目標時 R／SR 只回戰略地圖；方向鍵在其他分頁也碰不到分頁與回合列 ----
