@@ -627,7 +627,7 @@
           <button id="padReconnectBtn" type="button">重新連線</button>
           <button id="padResetBtn" type="button">預設</button>
         </div>
-        <div class="pad-note">搖桿＝移動　A 確認　B 返回　R/SR 分頁　X 回合操作　Y 說明<br>卡牌：A 查看　B 勾選　手牌 X 資源／Y 行動<br>客廳模式：A 進入區域　ZR 回區域層　PLUS 動作列（只移焦點）</div>
+        <div class="pad-note">搖桿＝移動　A 確認　B 返回　R/SR 分頁　X 回合操作　Y 說明<br>卡牌：A 查看　B 勾選　手牌 X 資源／Y 行動<br>客廳模式：R/SR 六個區段　Capture 結束行動（確認）　+ 陣營能力　手牌 B 棄置（確認）　購買卡／地圖 Y 執行　按下搖桿 下一區</div>
       </div>`;
     stage.appendChild(hud);
     const $ = id => document.getElementById(id);

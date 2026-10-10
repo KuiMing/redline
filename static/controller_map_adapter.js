@@ -42,6 +42,8 @@
       selectedTown,
       pendingMoveTarget,
       originTowns,
+      // 既有「瓦解組織」按鈕對共享組織的判定（sharedDissolveTargetForTown）：只有這些來源有 Y 瓦解。
+      dissolveOrigins: originTowns.filter(name => !!sharedDissolveTargetForTown(name)),
       buttons,
     });
     return { model, buttons: new Map(buttons.map(b => [b.id, b])) };
@@ -66,6 +68,7 @@
       const target = { town: t.town, role: t.role, x: origin.left + p.x, y: origin.top + p.y };
       if (t.mode !== undefined && t.mode !== null) target.mode = t.mode;
       if (t.cost !== undefined && t.cost !== null) target.cost = t.cost;
+      if (t.act) target.act = t.act;
       targets.push(target);
     }
     const buttons = info.model.buttons.map(b => {
@@ -153,6 +156,44 @@
     return { ok: true, via: id };
   }
 
+  /** 既有按鈕目前作用的對象：確認移動＝已預備的目的地；建立／瓦解＝目前選取的城鎮。 */
+  function actBound(id, townName) {
+    if (id === 'confirmMoveBtn') {
+      return !!pendingMoveTarget && pendingMoveTarget.to === townName && pendingMoveTarget.from === selectedTown;
+    }
+    return selectedTown === townName;
+  }
+
+  /**
+   * 客廳模式 Y：對目標執行它的既有地圖操作（建立組織／確認移動／瓦解組織）。
+   * 1. 用權威資料重驗：town 必須是目前目標，且其 act 對應的既有按鈕必須等於 parent 要求的 id；
+   * 2. 按鈕尚未作用在這個 town 時，走與 A／滑鼠相同的既有 marker click 路徑選取／預備；
+   * 3. 再重驗一次：目標仍在、按鈕可見啟用且作用在這個 town，才點擊既有按鈕（伺服器仍做最終驗證）。
+   * 任何一步不符 → ok:false（不點按鈕、不送出遊戲動作；最多留下與按 A 相同的選取／預備狀態）。
+   */
+  function act(townName, id) {
+    const before = currentModel().model;
+    const target = before.targets.find(t => t.town === townName);
+    if (!target) return { ok: false, reason: 'not-a-target' };
+    if (!target.act || Core.MAP_ACTS[target.act] !== id) return { ok: false, reason: 'action-mismatch' };
+    if (!actBound(id, townName)) {
+      const marker = currentMarkers.get(townName);
+      if (!marker) return { ok: false, reason: 'no-marker' };
+      focusTown = townName;
+      marker.fire('click'); // 與滑鼠點擊同一條既有路徑（選取來源／預備目的地／選擇 pending choice 候選）
+      drawFocusRing();
+    }
+    const after = currentModel().model;
+    const still = after.targets.find(t => t.town === townName);
+    if (!still || still.act !== target.act || !actBound(id, townName) || !after.buttons.some(b => b.id === id)) {
+      return { ok: false, reason: 'button-unavailable' };
+    }
+    const el = document.getElementById(id);
+    if (!el || !el.isConnected) return { ok: false, reason: 'button-unavailable' };
+    el.click();
+    return { ok: true, via: id };
+  }
+
   // B：只走既有可取消流程——可見且啟用的「取消瓦解」按鈕，或既有的「取消目前選取」。
   function cancel() {
     const info = currentModel();
@@ -179,6 +220,7 @@
     else if (command.cmd === 'activate') result = activate(command.town);
     else if (command.cmd === 'button') result = pressButton(command.id);
     else if (command.cmd === 'cancel') result = cancel();
+    else if (command.cmd === 'act') result = act(command.town, command.id);
     // req 原樣回傳：parent 只在對應的 req 收到 ok:true（上面已在執行前重驗）時才視為已執行。
     postToParent({
       type: 'redline-controller-result', v: Core.MAP_MESSAGE_VERSION, cmd: command.cmd, req: command.req,

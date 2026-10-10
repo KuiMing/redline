@@ -262,7 +262,31 @@
   const MAP_SCOPES = Object.freeze(['none', 'choice', 'move']);
   const MAP_ROLES = Object.freeze(['choice', 'move', 'origin']);
   const MAP_BUTTON_IDS = Object.freeze(['directBuildBtn', 'confirmMoveBtn', 'dissolveBtn', 'cancelDissolveChoiceBtn']);
-  const MAP_COMMANDS = Object.freeze(['snapshot', 'focus', 'clearFocus', 'activate', 'button', 'cancel']);
+  const MAP_COMMANDS = Object.freeze(['snapshot', 'focus', 'clearFocus', 'activate', 'button', 'cancel', 'act']);
+  // 客廳模式地圖 Y：目標的既有主要操作 → 執行它的既有按鈕（建立組織／確認移動／瓦解組織）。
+  const MAP_ACTS = Object.freeze({ build: 'directBuildBtn', move: 'confirmMoveBtn', dissolve: 'dissolveBtn' });
+  const MAP_ACT_BUTTON_IDS = Object.freeze(Object.values(MAP_ACTS));
+
+  /**
+   * 目標的 Y 操作只由 scope／role 與 iframe 讀到的權威旗標決定：
+   *   choice 目標 → pending choice 的建立（build）或瓦解（dissolve）；
+   *   move 目標（已選來源的伺服器合法目的地）→ 移動；
+   *   origin 目標 → 只有可瓦解共享組織（dissolveOrigin）時才是瓦解。其餘一律沒有 Y 操作。
+   */
+  function mapTargetAct(scope, role, flags) {
+    const f = flags || {};
+    if (scope === 'choice' && role === 'choice') return f.choiceKind === 'build' || f.choiceKind === 'dissolve' ? f.choiceKind : null;
+    if (scope === 'move' && role === 'move') return 'move';
+    if (scope === 'move' && role === 'origin') return f.dissolveOrigin === true ? 'dissolve' : null;
+    return null;
+  }
+
+  /** snapshot 內的 act 必須與 scope／role 相容（例如 origin 不可能是 move）。 */
+  function isActLegalFor(scope, role, act) {
+    if (scope === 'choice') return role === 'choice' && (act === 'build' || act === 'dissolve');
+    if (scope === 'move') return (role === 'move' && act === 'move') || (role === 'origin' && act === 'dissolve');
+    return false;
+  }
 
   /** parent↔iframe 訊息一律驗證 origin 與 source；缺一即拒絕。 */
   function isTrustedMessage(event, expectedOrigin, expectedSource) {
@@ -304,6 +328,10 @@
       if (!t || !isShortString(t.town) || !MAP_ROLES.includes(t.role) || !isCoord(t.x) || !isCoord(t.y)) return null;
       const target = { town: t.town, role: t.role, x: t.x, y: t.y };
       if (t.role === 'move' && !sanitizeMoveMeta(t, target)) return null;
+      if (isPresent(t.act)) {
+        if (!isActLegalFor(data.scope, t.role, t.act)) return null;
+        target.act = t.act;
+      }
       targets.push(target);
     }
     const buttons = [];
@@ -342,8 +370,9 @@
   function sanitizeMapCommand(data) {
     if (!data || data.v !== MAP_MESSAGE_VERSION || data.type !== 'redline-controller-command') return null;
     if (!MAP_COMMANDS.includes(data.cmd)) return null;
-    if (['focus', 'activate'].includes(data.cmd) && !isShortString(data.town)) return null;
+    if (['focus', 'activate', 'act'].includes(data.cmd) && !isShortString(data.town)) return null;
     if (data.cmd === 'button' && !MAP_BUTTON_IDS.includes(data.id)) return null;
+    if (data.cmd === 'act' && !MAP_ACT_BUTTON_IDS.includes(data.id)) return null;
     if (isPresent(data.req) && !isRequestId(data.req)) return null;
     return { cmd: data.cmd, town: data.town, id: data.id, req: isPresent(data.req) ? data.req : null };
   }
@@ -375,8 +404,10 @@
    *   visibleTowns: string[], knownTowns: string[],
    *   moveTargets: [{town, mode?, cost?}], selectedTown, originTowns: string[],
    *   pendingMoveTarget: {from, to, mode?, cost?} | null,   // 既有「已點選待確認」的目的地
+   *   dissolveOrigins: string[],   // 可對實際擁有者瓦解共享組織的來源城鎮（既有「瓦解組織」按鈕的判定）
    *   buttons: [{id, visible, disabled, label}],
    * }
+   * highlight.actionKind（'build'|'dissolve'）決定 choice 目標的 Y 操作。
    * 缺少狀態／非自己回合／不在可見或已知城鎮 → 不產生目標（fail-closed）。
    */
   function buildMapSnapshotModel(input) {
@@ -384,19 +415,25 @@
     if (!input || !input.hasState) return empty;
     const visible = new Set(input.visibleTowns || []);
     const known = new Set(input.knownTowns || []);
+    const dissolveOrigins = new Set(input.dissolveOrigins || []);
     const ok = name => typeof name === 'string' && visible.has(name) && known.has(name);
     const seen = new Set();
     const targets = [];
+    let scope = 'none';
     const add = (town, role, meta) => {
       if (!ok(town) || seen.has(town)) return;
       seen.add(town);
       const target = { town, role };
       if (meta && MOVE_MODES.includes(meta.mode)) target.mode = meta.mode;
       if (meta && isMoveCost(meta.cost)) target.cost = meta.cost;
+      const act = mapTargetAct(scope, role, {
+        choiceKind: input.highlight && input.highlight.actionKind,
+        dissolveOrigin: dissolveOrigins.has(town),
+      });
+      if (act) target.act = act;
       targets.push(target);
     };
 
-    let scope = 'none';
     let focusTown = null;
     let selected = null;
     let pending = null;
@@ -459,7 +496,7 @@
 
   return {
     DEFAULT_BRIDGE_URL, DEFAULT_CONFIG, BUTTON_BITS, BUTTON_NAMES, BUTTON_ACTIONS, MODAL_SCOPES,
-    MAP_MESSAGE_VERSION, MAP_BUTTON_IDS, MAP_COMMANDS, MAP_RESULT_VIA,
+    MAP_MESSAGE_VERSION, MAP_BUTTON_IDS, MAP_COMMANDS, MAP_RESULT_VIA, MAP_ACTS, mapTargetAct,
     decodeButtonBytes, parseButtons, normalizeFrame,
     createInputState, resetInputState, reduceFrame, stickDirection, isStale,
     logicalAction, routeAction,

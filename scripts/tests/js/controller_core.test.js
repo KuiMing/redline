@@ -187,6 +187,7 @@ test('iframe message validation: origin, source, version, schema', () => {
   assert.equal(C.sanitizeMapCommand({ v: 1, type: 'redline-controller-command', cmd: 'activate' }), null);
   assert.equal(C.sanitizeMapCommand({ v: 1, type: 'redline-controller-command', cmd: 'rm -rf' }), null);
   assert.equal(C.sanitizeMapCommand({ v: 1, type: 'redline-controller-command', cmd: 'button', id: 'advanceStepBtn' }), null);
+  assert.equal(C.sanitizeMapCommand({ v: 1, type: 'redline-controller-command', cmd: 'act', id: 'directBuildBtn' }), null, 'act needs a town');
   assert.deepEqual(C.sanitizeMapCommand({ v: 1, type: 'redline-controller-command', cmd: 'activate', town: '臺北' }).town, '臺北');
   assert.ok(C.sanitizeMapCommand({ v: 1, type: 'redline-controller-command', cmd: 'button', id: 'confirmMoveBtn' }));
 
@@ -234,6 +235,28 @@ test('pending-choice highlight replaces move/origin targets and is filtered to v
   // choice highlight still works when the viewer is not otherwise able to act, but still needs state
   assert.equal(C.buildMapSnapshotModel(mapInput({ viewerCanAct: false, highlight: { towns: [{ town: '丁' }] } })).scope, 'choice');
   assert.equal(C.buildMapSnapshotModel(mapInput({ hasState: false, highlight: { towns: [{ town: '丁' }] } })).scope, 'none');
+});
+
+test('map act command: requires a town and one of the three existing Y buttons', () => {
+  const act = (extra) => C.sanitizeMapCommand({ v: 1, type: 'redline-controller-command', cmd: 'act', town: '臺北', id: 'directBuildBtn', ...extra });
+  assert.deepEqual(act({ req: 3 }), { cmd: 'act', town: '臺北', id: 'directBuildBtn', req: 3 });
+  for (const id of ['confirmMoveBtn', 'dissolveBtn']) assert.equal(act({ id }).id, id);
+  for (const id of ['cancelDissolveChoiceBtn', 'advanceStepBtn', 'openPurchaseConfirmBtn', undefined]) assert.equal(act({ id }), null, String(id));
+  assert.equal(act({ town: '' }), null);
+  assert.equal(act({ town: undefined }), null);
+  assert.equal(act({ req: 0 }), null);
+  assert.deepEqual(C.MAP_ACTS, { build: 'directBuildBtn', move: 'confirmMoveBtn', dissolve: 'dissolveBtn' });
+});
+
+test('map target action is derived only from scope, role and authoritative flags', () => {
+  assert.equal(C.mapTargetAct('choice', 'choice', { choiceKind: 'build' }), 'build');
+  assert.equal(C.mapTargetAct('choice', 'choice', { choiceKind: 'dissolve' }), 'dissolve');
+  assert.equal(C.mapTargetAct('choice', 'choice', { choiceKind: 'other' }), null);
+  assert.equal(C.mapTargetAct('move', 'move', {}), 'move');
+  assert.equal(C.mapTargetAct('move', 'origin', { dissolveOrigin: true }), 'dissolve');
+  assert.equal(C.mapTargetAct('move', 'origin', {}), null);
+  assert.equal(C.mapTargetAct('none', 'move', {}), null);
+  assert.equal(C.mapTargetAct('move', 'choice', { choiceKind: 'build' }), null);
 });
 
 test('map buttons: only whitelisted, visible and enabled existing buttons', () => {
