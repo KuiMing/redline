@@ -108,6 +108,42 @@ test('disconnect clears held state; a button held across the gap does not re-fir
   assert.deepEqual(after.actions, []);
 });
 
+test('bridge input gate: only an enabled, connected, open bridge feeds reduceFrame', () => {
+  const g = (o) => C.bridgeInputGate({ enabled: true, status: 'connected', socketOpen: true, fromBridge: true, ...o });
+  assert.equal(g({}), 'accept');
+  assert.equal(g({ fromBridge: false }), 'accept', 'public feed() while connected takes the same path as the bridge');
+  for (const status of ['off', 'connecting', 'error', 'bogus', undefined]) {
+    for (const fromBridge of [true, false]) assert.equal(g({ status, fromBridge }), 'drop', `${status}/${fromBridge}`);
+  }
+  assert.equal(g({ socketOpen: false }), 'drop', 'closing / closed socket while status still says connected');
+  assert.equal(g({ enabled: false }), 'drop');
+  assert.equal(g({ status: 'stale' }), 'recover', "the live bridge's own frame recovers from stale (as a baseline)");
+  assert.equal(g({ status: 'stale', fromBridge: false }), 'drop', 'public feed() cannot revive a stale bridge');
+  assert.equal(g({ status: 'stale', socketOpen: false }), 'drop');
+  assert.equal(C.bridgeInputGate(), 'drop');
+});
+
+test('bridge connected: shortcut hints require enabled + connected + open socket', () => {
+  const c = (o) => C.bridgeConnected({ enabled: true, status: 'connected', socketOpen: true, ...o });
+  assert.equal(c({}), true);
+  for (const status of ['off', 'connecting', 'error', 'stale']) assert.equal(c({ status }), false, status);
+  assert.equal(c({ socketOpen: false }), false);
+  assert.equal(c({ enabled: false }), false);
+  assert.equal(C.bridgeConnected(), false);
+});
+
+test('recover then reduce: a button held across the outage is only a baseline; a fresh press after release fires', () => {
+  assert.equal(C.bridgeInputGate({ enabled: true, status: 'stale', socketOpen: true, fromBridge: true }), 'recover');
+  let state = C.resetInputState();
+  let r = C.reduceFrame(state, frame(0, 0, ['X']), 5000);
+  assert.deepEqual(r.actions, [], 'first frame after recover/reconnect is a baseline');
+  r = C.reduceFrame(r.state, frame(0, 0, ['X']), 5033);
+  assert.deepEqual(r.actions, [], 'still held');
+  r = C.reduceFrame(r.state, frame(0, 0, []), 5066);
+  r = C.reduceFrame(r.state, frame(0, 0, ['X']), 5100);
+  assert.deepEqual(r.actions, [{ type: 'press', button: 'X' }]);
+});
+
 test('stale detection', () => {
   let r = C.reduceFrame(C.createInputState(), frame(), 1000);
   assert.equal(C.isStale(r.state, 1500), false);

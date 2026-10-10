@@ -38,6 +38,9 @@ MOCK_WS = """
       this.url = url; this.readyState = 0; this.onopen = this.onmessage = this.onclose = this.onerror = null;
       window.__bridgeAttempts += 1;
       window.__mockBridges.push(this);
+      // __bridgeRefuse：bridge 沒開（連線中 → 關閉 → error）；__bridgeHold：停在連線中，直到 __bridgeOpenHeld()。預設皆關閉。
+      if (window.__bridgeRefuse) { setTimeout(() => { if (this.readyState === 0) { this.readyState = 3; this.onclose && this.onclose({}); } }, 0); return; }
+      if (window.__bridgeHold) return;
       setTimeout(() => { if (this.readyState === 0) { this.readyState = 1; this.onopen && this.onopen({}); } }, 20);
     }
     send() {}
@@ -61,6 +64,15 @@ MOCK_WS = """
   window.__padSend = (x, y, b0, b1) => { window.__padLast = [x, y, b0, b1]; return emit(); };
   setInterval(() => { if (window.__padHeartbeat) emit(); }, 33);
   window.__padClose = () => { const live = window.__mockBridges.filter(b => b.readyState === 1).pop(); if (live) live.close(); };
+  window.__bridgeRefuse = false;
+  window.__bridgeHold = false;
+  window.__bridgeOpenHeld = () => {
+    const held = window.__mockBridges.filter(b => b.readyState === 0).pop();
+    if (!held) return false;
+    held.readyState = 1;
+    held.onopen && held.onopen({});
+    return true;
+  };
 })();
 """
 

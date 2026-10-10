@@ -85,7 +85,7 @@
     try { socket = new WebSocket(ctl.settings.url); } catch { setStatus('error'); scheduleReconnect(); return; }
     ctl.socket = socket;
     socket.onopen = () => { ctl.attempt = 0; resetInput(); setStatus('connected'); };
-    socket.onmessage = (event) => feed(event.data);
+    socket.onmessage = (event) => ingest(event.data, socket);
     socket.onclose = () => {
       if (ctl.socket !== socket) return;
       ctl.socket = null;
@@ -114,19 +114,36 @@
     }
   }
 
-  /** bridge 訊息入口（真實 WebSocket 與測試共用）。只有啟用時才處理。 */
-  function feed(raw) {
+  function bridgeOpen() { return !!ctl.socket && ctl.socket.readyState === 1; } // WebSocket.OPEN
+
+  /** 快捷鍵提示與執行的必要條件：啟用、connected 且目前 bridge socket 開著。 */
+  function bridgeConnected() {
+    return Core.bridgeConnected({ enabled: ctl.settings.enabled, status: ctl.status, socketOpen: bridgeOpen() });
+  }
+
+  /**
+   * 所有輸入的共同入口（bridge 訊息與公開 feed()）。只有已連線時才進 reduceFrame；
+   * off／connecting／error／失聯一律丟棄；stale 只能由目前 bridge socket 自己的 frame 恢復，且那一筆只當 baseline。
+   */
+  function ingest(raw, source) {
     if (!ctl.settings.enabled) return;
     if (document.hidden) { resetInput(); return; }
     let parsed = raw;
     if (typeof raw === 'string') { try { parsed = JSON.parse(raw); } catch { return; } }
     const frame = Core.normalizeFrame(parsed);
     if (!frame) return;
-    if (ctl.status === 'stale') { resetInput(); setStatus('connected'); }
+    const gate = Core.bridgeInputGate({
+      enabled: ctl.settings.enabled, status: ctl.status, socketOpen: bridgeOpen(), fromBridge: !!source && source === ctl.socket,
+    });
+    if (gate === 'drop') return;
+    if (gate === 'recover') { resetInput(); setStatus('connected'); }
     const { state, actions } = Core.reduceFrame(ctl.input, frame, performance.now());
     ctl.input = state;
     for (const action of actions) dispatch(action);
   }
+
+  /** 公開 feed()（測試／除錯）：與 bridge 訊息同一個入口，但不是 bridge socket，所以無法把 stale 救回 connected。 */
+  function feed(raw) { ingest(raw, null); }
 
   // ------------------------------------------------------------ DOM scope / focus set
   function isShown(el) {
@@ -731,7 +748,7 @@
   const host = {
     ctl, currentScope, buildItems, collectDom, applyItem, focusDom, clearDomFocus, defaultItem, isShown, isUsable,
     cardContext, previewCard, toggleCard, playCardMode, modalCancelTarget, sendToMap, choiceLocked, activeGameView,
-    scheduleReconcile, renderHud, hintText, clearFocus,
+    scheduleReconcile, renderHud, hintText, clearFocus, bridgeConnected,
     getMapSnapshot: () => ctl.mapSnapshot,
     statusText: () => STATUS_TEXT[ctl.status] || ctl.status,
   };
@@ -741,7 +758,7 @@
   }
 
   window.RedlineController = {
-    feed, // 測試／除錯：與 bridge 訊息同路徑，且仍受「已啟用」限制
+    feed, // 測試／除錯：與 bridge 訊息同一個入口，只在已啟用且已連線時處理（不能讓 stale 恢復）
     getState: () => ({
       enabled: ctl.settings.enabled, status: ctl.status, url: ctl.settings.url, padActive: ctl.padActive, helpOpen: ctl.helpOpen,
       focusKind: ctl.focusKind, focusSig: ctl.focusSig, focusTown: ctl.focusTown,

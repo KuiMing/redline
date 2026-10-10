@@ -257,7 +257,8 @@
 
   // ------------------------------------------------------------ key-hint bar（不可聚焦，只鏡射既有、可見、啟用的控制）
   function collectHints() {
-    if (!gameShown() || !host.ctl.padActive) return [];
+    // 只有 bridge 已連線才鏡射：off／connecting／error／stale 時快捷鍵不會執行，提示也不顯示。
+    if (!gameShown() || !host.ctl.padActive || !host.bridgeConnected()) return [];
     const sources = [];
     const el = lr.layer === 'item' ? host.ctl.focusEl : null;
     const card = el ? host.cardContext({ kind: 'dom', el }) : null;
@@ -298,7 +299,7 @@
     if (!hints.length) {
       const empty = document.createElement('div');
       empty.className = 'lr-hint-empty';
-      empty.textContent = host.ctl.padActive ? '目前沒有快捷操作' : '';
+      empty.textContent = host.ctl.padActive && host.bridgeConnected() ? '目前沒有快捷操作' : '';
       box.appendChild(empty);
       return;
     }

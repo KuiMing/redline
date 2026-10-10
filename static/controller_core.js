@@ -135,6 +135,24 @@
     return state.lastFrameAt === null || now - state.lastFrameAt > cfg.staleMs;
   }
 
+  /**
+   * 所有輸入（bridge 訊息與公開 feed()）進 reduceFrame 前的連線閘門：
+   *   'accept'  啟用、connected 且目前 socket 開著；
+   *   'recover' stale 時由目前 bridge socket 自己的 frame 恢復（呼叫端先 reset，這筆只當 baseline）；
+   *   'drop'    其他一律丟棄：停用、off、connecting、error、socket 不在或未開啟、stale 時非 bridge 來源。
+   */
+  function bridgeInputGate({ enabled, status, socketOpen, fromBridge } = {}) {
+    if (enabled !== true || socketOpen !== true) return 'drop';
+    if (status === 'connected') return 'accept';
+    if (status === 'stale' && fromBridge === true) return 'recover';
+    return 'drop';
+  }
+
+  /** 快捷鍵提示與執行的必要條件：啟用、connected 且目前 socket 開著。 */
+  function bridgeConnected({ enabled, status, socketOpen } = {}) {
+    return enabled === true && status === 'connected' && socketOpen === true;
+  }
+
   // ---------------------------------------------------------------- logical actions / router
 
   const BUTTON_ACTIONS = Object.freeze({
@@ -502,7 +520,7 @@
     DEFAULT_BRIDGE_URL, DEFAULT_CONFIG, BUTTON_BITS, BUTTON_NAMES, BUTTON_ACTIONS, MODAL_SCOPES,
     MAP_MESSAGE_VERSION, MAP_BUTTON_IDS, MAP_COMMANDS, MAP_RESULT_VIA, MAP_ACTS, mapTargetAct,
     decodeButtonBytes, parseButtons, normalizeFrame,
-    createInputState, resetInputState, reduceFrame, stickDirection, isStale,
+    createInputState, resetInputState, reduceFrame, stickDirection, isStale, bridgeInputGate, bridgeConnected,
     logicalAction, routeAction,
     resolveModalScope, isFocusableCandidate, buildFocusSet, pickInitial, pickDirectional, cycleIndex,
     isTrustedMessage, sanitizeMapSnapshot, sanitizeMapCommand, sanitizeMapResult, buildMapSnapshotModel,

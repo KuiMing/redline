@@ -8,7 +8,8 @@
 按下搖桿（下一個內容區）的成功與 fail-closed（hidden／disabled／detached／條件不足／處理中鎖／iframe 缺席／
 逾時／過期回覆／ok:false／權威目標失效，以及失敗後 <250ms 的合法 retry 不受污染）；
 卡牌既有語意不退化、處理中鎖、重繪不跨區域（含重繪後 reconcile 前的輸入 fail closed）、斷線／重連 baseline、PC 滑鼠勾選、
-720p／1080p／4K 安全區與無遮擋。
+720p／1080p／4K 安全區與無遮擋；連線狀態 fail-closed（error／connecting／stale／off 時 feed() 不執行、提示列清空，
+重連與 stale 恢復的第一筆只當 baseline，桌面模式語意不變）。
 
 所有遊戲動作都經由真實的既有 DOM 控制／click handler 與伺服器；非同步結果以 bounded polling 等待明確條件。
 
@@ -166,6 +167,29 @@ EMPTY_HAND = """async (press) => {
     preview: document.getElementById('cardPreviewModal').style.display === 'flex' } };
 }"""
 
+# 連線狀態 fail-closed：以公開 RedlineController.feed()（與 bridge 訊息同一個入口）注入 neutral → 按鍵／方向 → neutral。
+FEED_BURST = """(frames) => {
+  const statuses = [];
+  for (const [x, y, b0, b1] of frames) {
+    RedlineController.feed({ x: 0, y: 0, buttons: [0, 0] });
+    RedlineController.feed({ x, y, buttons: [b0, b1] });
+    RedlineController.feed({ x: 0, y: 0, buttons: [0, 0] });
+    statuses.push(RedlineController.getState().status);
+  }
+  return statuses;
+}"""
+
+# 快捷鍵／焦點／執行痕跡的快照（桌面模式 livingRoom 為 null）。
+CONTROLLER_SNAPSHOT = """() => { const st = RedlineController.getState(); const lr = st.livingRoom;
+  return { status: st.status, padActive: st.padActive, helpOpen: st.helpOpen, focusSig: st.focusSig,
+    zone: lr ? lr.zone : null, layer: lr ? lr.layer : null, itemKey: lr ? lr.itemKey : null,
+    lastCommand: lr ? lr.lastCommand : null, confirmOpen: lr ? lr.confirmOpen : null,
+    hints: lr ? lr.hints.map(h => h.id) : null,
+    domHints: [...document.querySelectorAll('#lrHints .lr-hint')].map(h => h.dataset.hintId),
+    tab: document.querySelector('.game-tab.active')?.dataset.view || null,
+    modals: [...document.querySelectorAll('.modal-overlay')].filter(m => getComputedStyle(m).display !== 'none' && m.getClientRects().length > 0).map(m => m.id),
+    spy: { send: __spy.sendAction, play: __spy.play.length, toggle: __spy.toggle, preview: __spy.preview } }; }"""
+
 # iframe 端：被要求執行指令時（在 adapter 處理完之後）才恢復按鈕，用來製造「第一次 ok:false、第二次合法」。
 ARM_RESTORE = """([id, how]) => {
   const btn = document.getElementById(id);
@@ -187,6 +211,17 @@ def press_bits(name):
     i, mask = BIT[name]
     b[i] |= mask
     return b
+
+
+def burst_frames():
+    """所有會產生動作的按鍵與四個方向（每筆之前／之後都會補 neutral）。"""
+    keys = ["X", "Y", "B", "A", "PLUS", "CAPTURE", "R", "SR", "ZR", "STICK"]
+    return [[0, 0, *press_bits(k)] for k in keys] + [[1, 0, 0, 0], [0, 1, 0, 0], [-1, 0, 0, 0], [0, -1, 0, 0]]
+
+
+def unchanged(before, after):
+    """除了連線狀態以外，焦點、提示、modal、分頁與所有執行痕跡都沒變。"""
+    return {k: v for k, v in before.items() if k != "status"} == {k: v for k, v in after.items() if k != "status"}
 
 
 class Session:
@@ -1316,6 +1351,138 @@ def scenario_dissolve(browser, base, record, errors):
     ctx.close()
 
 
+# ======================================================================== 7. 連線狀態 fail-closed
+def scenario_connection(browser, base, record, errors):
+    """快捷鍵只在 bridge 已連線時鏡射／執行：error、connecting、stale、off 一律 fail closed；重連後第一筆只當 baseline。"""
+    x0, x1 = press_bits("X")
+    setup = new_game(base)
+    ctx = browser.new_context(viewport={"width": 1920, "height": 1080})
+    ctx.add_init_script(MOCK_WS)
+    page = open_page(ctx, base, setup["url"] + "&display=living-room", errors)
+    enable_controller(page)
+    page.evaluate(SPY)
+    S = Session(page, record)
+    snap = lambda: page.evaluate(CONTROLLER_SNAPSHOT)
+    S.pad.neutral()
+    S.pad.tap("A")
+    S.goto_zone("hand")
+    S.settle()
+    live = snap()
+
+    # ---- error：bridge 關閉且重連被拒 ----
+    page.evaluate("window.__bridgeRefuse = true; window.__padHeartbeat = false; window.__padClose()")
+    page.wait_for_function("RedlineController.getState().status === 'error'", timeout=3000)
+    before = snap()
+    statuses = page.evaluate(FEED_BURST, burst_frames())
+    S.settle(ignore_processing=True)
+    after = snap()
+    record("connection_error_hides_shortcut_hints",
+           live["status"] == "connected" and "cardResource" in live["hints"] and live["padActive"]
+           and before["hints"] == [] and before["domHints"] == [], [live, before])
+    record("connection_error_feed_never_dispatches",
+           unchanged(before, after) and set(statuses) <= {"error", "connecting"}, [before, after, statuses])
+
+    # ---- connecting：socket 尚未開啟 ----
+    page.evaluate("window.__bridgeRefuse = false; window.__bridgeHold = true; RedlineController.setEnabled(true)")
+    page.wait_for_function("RedlineController.getState().status === 'connecting'", timeout=3000)
+    before = snap()
+    statuses = page.evaluate(FEED_BURST, burst_frames())
+    S.settle(ignore_processing=True)
+    after = snap()
+    record("connection_connecting_hides_hints_and_feed_never_dispatches",
+           before["status"] == "connecting" and before["padActive"] and before["hints"] == [] and before["domHints"] == []
+           and unchanged(before, after) and set(statuses) == {"connecting"}, [before, after, statuses])
+
+    # ---- 重連：斷線期間按住的 X 在第一筆 frame 只當 baseline；放開後的合法按壓才執行 ----
+    plays = before["spy"]["play"]
+    page.evaluate(f"window.__padLast = [0, 0, {x0}, {x1}]; window.__padHeartbeat = true; window.__bridgeHold = false; window.__bridgeOpenHeld()")
+    page.wait_for_function("RedlineController.getState().status === 'connected'", timeout=3000)
+    baseline_seen = S.poll("RedlineController.getState().held.X === true", timeout=2000)
+    S.settle()
+    held = snap()
+    record("connection_reconnect_first_frame_is_baseline_only",
+           baseline_seen and held["status"] == "connected" and held["spy"]["play"] == plays and held["spy"]["send"] == before["spy"]["send"]
+           and held["modals"] == [] and not held["confirmOpen"], held)
+    S.pad.neutral()
+    S.settle()
+    hints_back = snap()
+    S.pad.tap("X")
+    acted = S.poll(f"__spy.play.length === {plays + 1}", timeout=3000)
+    played = S.spy()["play"][plays:]
+    record("connection_reconnect_legal_frame_acts_and_hints_return",
+           "cardResource" in hints_back["hints"] and "cardResource" in hints_back["domHints"] and acted
+           and len(played) == 1 and played[0][2] == "resource", [hints_back["hints"], played])
+
+    # ---- stale：socket 還在但 bridge 停止送 frame；公開 feed() 不能把它救回 connected ----
+    S.settle()
+    pre_stale = snap()
+    page.evaluate("window.__padHeartbeat = false")
+    page.wait_for_function("RedlineController.getState().status === 'stale'", timeout=5000)
+    before = snap()
+    statuses = page.evaluate(FEED_BURST, burst_frames())
+    S.settle(ignore_processing=True)
+    after = snap()
+    record("connection_stale_hides_hints_and_public_feed_cannot_revive",
+           pre_stale["hints"] and before["hints"] == [] and before["domHints"] == []
+           and unchanged(before, after) and set(statuses) == {"stale"} and after["status"] == "stale", [pre_stale["hints"], before, after, statuses])
+
+    # ---- stale 恢復：只有 bridge 自己的 frame 能恢復，且第一筆（按住 X）只當 baseline ----
+    plays = after["spy"]["play"]
+    page.evaluate(f"window.__padLast = [0, 0, {x0}, {x1}]; window.__padHeartbeat = true")
+    page.wait_for_function("RedlineController.getState().status === 'connected'", timeout=3000)
+    baseline_seen = S.poll("RedlineController.getState().held.X === true", timeout=2000)
+    S.settle()
+    held = snap()
+    S.pad.neutral()
+    S.settle()
+    hints_back = snap()
+    S.pad.tap("X")
+    acted = S.poll(f"__spy.play.length === {plays + 1}", timeout=3000)
+    record("connection_stale_recovery_first_frame_is_baseline_then_acts",
+           baseline_seen and held["spy"]["play"] == plays and "cardResource" in hints_back["hints"] and acted, [held, hints_back["hints"]])
+
+    # ---- off：停用控制器 ----
+    S.settle()
+    page.evaluate("RedlineController.setEnabled(false)")
+    page.wait_for_function("RedlineController.getState().status === 'off'", timeout=3000)
+    before = snap()
+    statuses = page.evaluate(FEED_BURST, burst_frames())
+    S.settle(ignore_processing=True)
+    after = snap()
+    record("connection_off_feed_never_dispatches_and_hints_hidden",
+           before["hints"] == [] and before["domHints"] == [] and unchanged(before, after) and set(statuses) == {"off"}, [before, after, statuses])
+    ctx.close()
+
+    # ---- 桌面模式：同一個入口 fail closed；重連後既有語意不變（padActive 保留，合法 R 直接切分頁） ----
+    setup = new_game(base)
+    dctx = browser.new_context(viewport={"width": 1280, "height": 800})
+    dctx.add_init_script(MOCK_WS)
+    desk = open_page(dctx, base, setup["url"], errors)
+    enable_controller(desk)
+    desk.evaluate(SPY)
+    D = Session(desk, record)
+    dsnap = lambda: desk.evaluate(CONTROLLER_SNAPSHOT)
+    D.pad.neutral()
+    D.pad.tap("A")
+    desk.evaluate("window.__bridgeRefuse = true; window.__padHeartbeat = false; window.__padClose()")
+    desk.wait_for_function("RedlineController.getState().status === 'error'", timeout=3000)
+    before = dsnap()
+    statuses = desk.evaluate(FEED_BURST, burst_frames())
+    desk.wait_for_timeout(200)  # 負向檢查：留時間讓任何誤觸的 click／modal 生效
+    after = dsnap()
+    record("connection_desktop_error_feed_never_dispatches",
+           before["padActive"] and before["tab"] == "command" and unchanged(before, after) and set(statuses) <= {"error", "connecting"},
+           [before, after, statuses])
+    desk.evaluate("window.__bridgeRefuse = false; window.__padLast = [0, 0, 0, 0]; window.__padHeartbeat = true; RedlineController.setEnabled(true)")
+    desk.wait_for_function("RedlineController.getState().status === 'connected'", timeout=3000)
+    D.pad.neutral()
+    D.pad.tap("R")
+    switched = D.poll("document.querySelector('.game-tab.active')?.dataset.view === 'map'", timeout=3000)
+    record("connection_desktop_reconnect_keeps_existing_semantics",
+           switched and dsnap()["padActive"] and dsnap()["spy"]["send"] == before["spy"]["send"], dsnap())
+    dctx.close()
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     checks, console_errors = [], []
@@ -1331,7 +1498,8 @@ def main():
     try:
         with sync_playwright() as pw:
             browser = pw.chromium.launch(headless=True)
-            for scenario in (scenario_desktop, scenario_main, scenario_sections, scenario_faction, scenario_build, scenario_dissolve):
+            for scenario in (scenario_desktop, scenario_main, scenario_sections, scenario_faction, scenario_build, scenario_dissolve,
+                             scenario_connection):
                 try:
                     scenario(browser, base, record, console_errors)
                 except Exception as exc:  # 讓單一情境的意外中斷以 FAIL 呈現，其餘情境照跑
