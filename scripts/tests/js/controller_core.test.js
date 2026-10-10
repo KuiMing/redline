@@ -29,6 +29,14 @@ test('button bit mapping decodes every documented bit', () => {
   assert.equal(C.decodeButtonBytes(0x80, 0).ZR, true);
 });
 
+test('capture: upstream UInt32 0x00002000 arrives as bytes [0x00, 0x20] and decodes to CAPTURE only', () => {
+  // literal from switch2mac Switch2Protocol.swift (capture = 0x0000_2000, little-endian), not from BUTTON_BITS
+  const pressed = (b0, b1) => Object.entries(C.decodeButtonBytes(b0, b1)).filter(([, v]) => v).map(([k]) => k);
+  assert.deepEqual(pressed(0x00, 0x20), ['CAPTURE']);
+  assert.deepEqual(pressed(0x00, 0x40), [], 'b1 0x40 is not Capture');
+  assert.equal(C.normalizeFrame({ x: 0, y: 0, buttons: [0x00, 0x20] }).buttons.CAPTURE, true);
+});
+
 test('normalizeFrame rejects NaN, out-of-range and malformed input', () => {
   assert.equal(C.normalizeFrame({ x: NaN, y: 0, buttons: [0, 0] }), null);
   assert.equal(C.normalizeFrame({ x: 0, y: Infinity, buttons: [0, 0] }), null);
@@ -238,14 +246,44 @@ test('pending-choice highlight replaces move/origin targets and is filtered to v
 });
 
 test('map act command: requires a town and one of the three existing Y buttons', () => {
-  const act = (extra) => C.sanitizeMapCommand({ v: 1, type: 'redline-controller-command', cmd: 'act', town: '臺北', id: 'directBuildBtn', ...extra });
-  assert.deepEqual(act({ req: 3 }), { cmd: 'act', town: '臺北', id: 'directBuildBtn', req: 3 });
+  const act = (extra) => C.sanitizeMapCommand({ v: 1, type: 'redline-controller-command', cmd: 'act', town: '臺北', id: 'directBuildBtn', req: 3, ...extra });
+  assert.deepEqual(act({}), { cmd: 'act', town: '臺北', id: 'directBuildBtn', req: 3 });
   for (const id of ['confirmMoveBtn', 'dissolveBtn']) assert.equal(act({ id }).id, id);
   for (const id of ['cancelDissolveChoiceBtn', 'advanceStepBtn', 'openPurchaseConfirmBtn', undefined]) assert.equal(act({ id }), null, String(id));
   assert.equal(act({ town: '' }), null);
   assert.equal(act({ town: undefined }), null);
-  assert.equal(act({ req: 0 }), null);
   assert.deepEqual(C.MAP_ACTS, { build: 'directBuildBtn', move: 'confirmMoveBtn', dissolve: 'dissolveBtn' });
+});
+
+test('map act command: a correlated request id is mandatory (absent or invalid req is rejected)', () => {
+  const base = { v: 1, type: 'redline-controller-command', cmd: 'act', town: '臺北', id: 'confirmMoveBtn' };
+  assert.equal(C.sanitizeMapCommand(base), null, 'req absent');
+  for (const req of [null, undefined, 0, -1, 1.5, '3', NaN, Infinity, Number.MAX_SAFE_INTEGER + 2, true, {}, [7]]) {
+    assert.equal(C.sanitizeMapCommand({ ...base, req }), null, `req=${String(req)}`);
+  }
+  assert.equal(C.sanitizeMapCommand({ ...base, req: 1 }).req, 1);
+  assert.equal(C.sanitizeMapCommand({ ...base, req: Number.MAX_SAFE_INTEGER }).req, Number.MAX_SAFE_INTEGER);
+  // the iframe's act result must carry the same correlation; a req-less act result is not an acknowledgment
+  const result = (extra) => C.sanitizeMapResult({ type: 'redline-controller-result', v: 1, cmd: 'act', ok: true, ...extra });
+  assert.equal(result({}), null);
+  assert.equal(result({ req: null }), null);
+  assert.equal(result({ req: 0 }), null);
+  assert.equal(result({ req: 9 }).req, 9);
+});
+
+test('desktop map commands that intentionally omit req are unchanged', () => {
+  const cmd = (extra) => C.sanitizeMapCommand({ v: 1, type: 'redline-controller-command', ...extra });
+  assert.deepEqual(cmd({ cmd: 'snapshot' }), { cmd: 'snapshot', town: undefined, id: undefined, req: null });
+  assert.deepEqual(cmd({ cmd: 'clearFocus' }), { cmd: 'clearFocus', town: undefined, id: undefined, req: null });
+  assert.deepEqual(cmd({ cmd: 'focus', town: '臺北' }), { cmd: 'focus', town: '臺北', id: undefined, req: null });
+  assert.deepEqual(cmd({ cmd: 'activate', town: '臺北' }), { cmd: 'activate', town: '臺北', id: undefined, req: null });
+  assert.deepEqual(cmd({ cmd: 'button', id: 'directBuildBtn' }), { cmd: 'button', town: undefined, id: 'directBuildBtn', req: null });
+  assert.deepEqual(cmd({ cmd: 'cancel' }), { cmd: 'cancel', town: undefined, id: undefined, req: null });
+  // living-room requests on those commands keep their optional req
+  assert.equal(cmd({ cmd: 'activate', town: '臺北', req: 4 }).req, 4);
+  assert.equal(cmd({ cmd: 'cancel', req: 5 }).req, 5);
+  // results for req-less commands also stay accepted (req:null)
+  assert.equal(C.sanitizeMapResult({ type: 'redline-controller-result', v: 1, cmd: 'button', ok: true }).req, null);
 });
 
 test('map target action is derived only from scope, role and authoritative flags', () => {

@@ -66,7 +66,7 @@ parent 與 iframe 同源；雙方都驗證 `event.origin === location.origin` �
   在地圖狀態改變時推送（已合併）。座標是 iframe 內的 client 座標。選用欄位 `act`（客廳模式 Y 用）＝該目標的既有主要操作：
   choice 目標依 pending choice 為 `build`／`dissolve`；move 目標為 `move`；origin 只有可瓦解共享組織時為 `dissolve`。
   與 role／scope 不相容的 `act` 會讓整份 snapshot 作廢。
-- parent → iframe：`redline-controller-command`，`cmd` 為 `snapshot`、`focus {town}`、`clearFocus`、`activate {town}`、`button {id}`、`cancel`、`act {town, id}`（`id` 只限 `directBuildBtn`／`confirmMoveBtn`／`dissolveBtn`）；可選 `req`（正整數 request id）。
+- parent → iframe：`redline-controller-command`，`cmd` 為 `snapshot`、`focus {town}`、`clearFocus`、`activate {town}`、`button {id}`、`cancel`、`act {town, id, req}`（`id` 只限 `directBuildBtn`／`confirmMoveBtn`／`dissolveBtn`；**`act` 必須帶合法 `req`**，沒有或不合法的 `req` 在 iframe 端直接丟棄、不執行，`act` 的 result 也必須帶 `req`）；其他指令可選 `req`（正整數 request id）。
 - iframe → parent：`redline-controller-result` `{cmd, req, ok, reason, via}`，每個指令處理完都回覆；`req` 原樣回傳（沒帶則為 `null`），`via` 為 iframe 實際走的既有控制（按鈕 id，或取消時的 `cancelDissolveChoiceBtn`／`selection`）。
   客廳模式的地圖執行型指令（Y 地圖操作、清單選取、清單取消）都帶 `req`，且同時只有一筆等待確認：**只有對上該 `req` 的 `ok:true`（iframe 執行前已重驗）才算執行**，此時才記錄 250ms 冷卻，Y 地圖操作與 `via: cancelDissolveChoiceBtn` 的取消再上處理中鎖。沒有 iframe、`ok:false`、1 秒內沒有回覆、過期或對不上的 `req` 一律 fail closed，不記錄冷卻也不上鎖；等待期間其他執行型按鍵被擋下（不重送），回覆或逾時後立即解除。桌面模式不帶 `req`，行為不變。
 - `act` 在 iframe 內：(1) 用權威資料重驗 town 是目前目標、其 `act` 對應的既有按鈕等於 `id`（否則 `not-a-target`／`action-mismatch`）；(2) 按鈕尚未作用在該 town 時，走與 A／滑鼠相同的既有 marker click 選取／預備；(3) 再驗一次目標仍在、按鈕可見啟用且作用在該 town，才 `click()` 既有按鈕（否則 `button-unavailable`）。失敗時不點任何按鈕、不送出遊戲動作（最多留下與按 A 相同的選取／預備狀態）。
@@ -133,4 +133,4 @@ E2E 以 mock WebSocket 取代 bridge 並注入 frame，驗證真實頁面的焦�
 - https 頁面可能擋 `ws://127.0.0.1`（mixed content），詳見 bridge README；目前只完整支援 http dev／區網頁面。
 - S2B1 欄位位置與 `y` 軸方向尚未用實機確認。
 - 文字輸入欄位只能聚焦，無法用搖桿輸入文字。
-- CAPTURE 位元：`static/controller_core.js` 解碼為 b1 `0x20`，但 `tools/joycon_bridge/README.md` 寫 `0x40`；尚未用實機確認哪一個正確，程式維持 `0x20`。Capture 實體鍵通常在左 Joy-Con，只接右 Joy-Con 時可能沒有這顆鍵（滑鼠仍可結束行動）。
+- CAPTURE 位元為 b1 `0x20`：上游 `Peterksharma/switch2mac`（commit `a8f2e61e85c3e4a43df3e6ed2f1467327df03d72`）`Switch2Protocol.swift` 定義 `capture = 0x0000_2000`，UDPHub 以 little-endian u32 寫出，因此瀏覽器收到 `[0x00, 0x20]`；`static/controller_core.js` 與 bridge README 一致，並有字面封包回歸測試（`scripts/tests/test_joycon_bridge.py`、`scripts/tests/js/controller_core.test.js`）。**實機 Joy-Con 與實體 Capture 鍵尚未實測**。Capture 實體鍵通常在左 Joy-Con，只接右 Joy-Con 時可能沒有這顆鍵（滑鼠仍可結束行動）。

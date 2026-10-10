@@ -56,6 +56,28 @@ def test_parse_clamps_tiny_overshoot():
     assert parse_packet(packet(1.005, -1.005)).x == 1.0
 
 
+def test_capture_upstream_uint32_reaches_browser_as_b1_0x20():
+    # Upstream switch2mac Switch2Protocol.swift: capture = 0x0000_2000; UDPHub writes the raw UInt32 little-endian.
+    # Expected bytes are literals from that definition, not derived from BUTTON_BITS.
+    assert struct.pack("<I", 0x0000_2000) == b"\x00\x20\x00\x00"
+    data = (
+        b"S2B1"
+        + b"\x07\x00\x00\x00"  # u32 seq
+        + b"\x00\x20\x00\x00"  # u32 buttons = 0x00002000 (capture only)
+        + b"\x00" * 16  # f32 lx, ly, rx, ry = 0
+        + b"\x00" * 16  # sensor tail
+    )
+    assert len(data) == 44
+    frame = parse_packet(data)
+    assert (frame.b0, frame.b1) == (0x00, 0x20)
+    assert frame_payload(frame)["buttons"] == [0x00, 0x20]
+    state = ControllerState()
+    state.update(frame)
+    client = TestClient(create_app(state), base_url="http://127.0.0.1:8000")
+    with client.websocket_connect("/ws", headers={"host": "127.0.0.1:8000"}) as ws:
+        assert ws.receive_json()["buttons"] == [0x00, 0x20]
+
+
 def test_custom_layout_offsets():
     layout = PacketLayout(buttons_offset=6, stick_offset=8, min_length=16)
     data = b"S2B1" + bytes([1, 2, 0x40, 0x04]) + struct.pack("<2f", 0.1, 0.2)

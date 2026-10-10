@@ -7,7 +7,8 @@
 購買卡 Y（既有購買所選 → 購買確認單）、地圖 Y（建立組織／確認移動／瓦解組織，iframe 權威重驗＋req 對應確認）、
 按下搖桿（下一個內容區）的成功與 fail-closed（hidden／disabled／detached／條件不足／處理中鎖／iframe 缺席／
 逾時／過期回覆／ok:false／權威目標失效，以及失敗後 <250ms 的合法 retry 不受污染）；
-卡牌既有語意不退化、處理中鎖、重繪不跨區域、斷線／重連 baseline、PC 滑鼠勾選、720p／1080p／4K 安全區與無遮擋。
+卡牌既有語意不退化、處理中鎖、重繪不跨區域（含重繪後 reconcile 前的輸入 fail closed）、斷線／重連 baseline、PC 滑鼠勾選、
+720p／1080p／4K 安全區與無遮擋。
 
 所有遊戲動作都經由真實的既有 DOM 控制／click handler 與伺服器；非同步結果以 bounded polling 等待明確條件。
 
@@ -71,7 +72,21 @@ MODALS = """() => [...document.querySelectorAll('.modal-overlay, #victoryArtView
 
 SETTLED = """(ignoreProcessing) => { const s = RedlineController.getState().livingRoom; if (!s) return true; const t = performance.now();
   return (s.activatedAt === null || t - s.activatedAt > 270) && (s.redrawAt === null || t - s.redrawAt > 320)
-    && (ignoreProcessing || !s.processing) && !s.mapRequest; }"""
+    && (ignoreProcessing || !s.processing) && !s.mapRequest && !s.reconcilePending; }"""
+
+# SETTLED 必須連續成立 holdMs 才算靜止：iframe snapshot 往返後才排的 reconcile 也會被等到（不靠固定 sleep 猜計時器跑完沒）。
+QUIESCENT = """async ([ignoreProcessing, holdMs, timeoutMs]) => {
+  const settled = """ + SETTLED + """;
+  const t0 = performance.now();
+  let since = null;
+  while (performance.now() - t0 < timeoutMs) {
+    const now = performance.now();
+    if (settled(ignoreProcessing)) { if (since === null) since = now; if (now - since >= holdMs) return true; }
+    else since = null;
+    await new Promise(r => setTimeout(r, 10));
+  }
+  return false;
+}"""
 
 GEOMETRY = """() => {
   const vw = innerWidth, vh = innerHeight;
@@ -131,6 +146,26 @@ RETRY_AFTER_FAILURE = """async ([b0, b1]) => {
   return { sent, failed, ok: st(), gap: t1 - t0 };
 }"""
 
+# 手牌清空的重繪。render 完成後再等一個 microtask：MutationObserver 已排好 80ms reconcile 但計時器一定還沒跑
+# （同一段 script 內，與機器快慢無關），此時讀到的是重繪前的舊焦點；press 有給就在這個窗口內按下。
+EMPTY_HAND = """async (press) => {
+  const lrs = () => RedlineController.getState().livingRoom;
+  const s = structuredClone(window.lastGameState); const me = s.players.find(p => p.id === playerId);
+  me.hand = []; me.hand_variants = []; me.hand_action_legality = [];
+  await render(s);
+  await Promise.resolve();
+  const p = lrs();
+  const pre = { zone: p.zone, layer: p.layer, itemKey: p.itemKey, zones: p.zones, reconcilePending: p.reconcilePending,
+                stale: p.zone === 'hand' && p.layer === 'item' && !p.zones.includes('hand') && p.reconcilePending };
+  if (!press) return { pre };
+  window.__padSend(0, 0, press[0], press[1]);
+  window.__padSend(0, 0, 0, 0);
+  const a = lrs();
+  return { pre, after: { zone: a.zone, layer: a.layer, zones: a.zones, helpOpen: RedlineController.getState().helpOpen,
+    focus: !!document.querySelector('.rl-pad-focus'), confirm: a.confirmOpen,
+    preview: document.getElementById('cardPreviewModal').style.display === 'flex' } };
+}"""
+
 # iframe 端：被要求執行指令時（在 adapter 處理完之後）才恢復按鈕，用來製造「第一次 ok:false、第二次合法」。
 ARM_RESTORE = """([id, how]) => {
   const btn = document.getElementById(id);
@@ -144,6 +179,14 @@ ARM_RESTORE = """([id, how]) => {
   if (how === 'disabled') btn.disabled = true; else btn.style.display = 'none';
   return { disabled: btn.disabled, display: btn.style.display, buttons: window.__redlineControllerAdapter.snapshot().buttons.map(b => b.id) };
 }"""
+
+
+def press_bits(name):
+    """單一按鍵的 bridge button bytes [b0, b1]（給在頁面內同步送出的 __padSend 用）。"""
+    b = [0, 0]
+    i, mask = BIT[name]
+    b[i] |= mask
+    return b
 
 
 class Session:
@@ -177,10 +220,9 @@ class Session:
             return False
 
     def settle(self, ignore_processing=False, timeout=4000):
-        """等到 250ms 執行冷卻、300ms 重繪冷卻、地圖等待與處理中鎖都解除（bounded polling）。"""
-        ok = self.poll(SETTLED, ignore_processing, timeout)
-        self.page.wait_for_timeout(100)  # 讓 80ms reconcile／50ms render 計時器跑完
-        return ok
+        """等到 250ms 執行冷卻、300ms 重繪冷卻、地圖等待、處理中鎖與待跑的 reconcile／render 都解除，
+        並連續維持 100ms（bounded polling）。"""
+        return self.page.evaluate(QUIESCENT, [ignore_processing, 100, timeout])
 
     def timed(self, buttons, gap_ms):
         self.page.evaluate(TIMED, [list(buttons), gap_ms])
@@ -532,14 +574,41 @@ def scenario_main(browser, base, record, errors):
     page.evaluate("render(window.lastGameState)")
     S.settle()
     same = lr()["itemKey"] == key_before and page.evaluate("!!document.querySelector('#hand .hand-card.rl-pad-focus')")
-    page.evaluate("""() => { const s = structuredClone(window.lastGameState); const me = s.players.find(p => p.id === playerId);
-      me.hand = []; me.hand_variants = []; me.hand_action_legality = []; render(s); }""")
+    # 取樣：等 render 完成，再以 settle（沒有待跑的 80ms reconcile／50ms render 且連續靜止）為條件讀取，不靠固定時間。
+    pre_empty = page.evaluate(EMPTY_HAND, None)["pre"]
     S.settle()
     emptied = lr()
+    emptied_focus = focus()
     page.evaluate("render(window.lastGameState)")
     S.settle()
     record("redraw_same_state_rebinds_same_card", same, key_before)
-    record("redraw_empty_zone_falls_back_to_a_content_zone_layer", emptied["layer"] == "zone" and emptied["zone"] in ("static", "random"), emptied)
+    record("redraw_empty_zone_falls_back_to_a_content_zone_layer",
+           emptied["layer"] == "zone" and emptied["zone"] in ("static", "random")
+           and emptied["zone"] in emptied["zones"] and "hand" not in emptied["zones"] and not emptied["reconcilePending"]
+           and emptied_focus is None, [pre_empty, emptied, emptied_focus])
+
+    # ---- 重繪後、reconcile 跑完前的輸入：fail closed（獨立 coverage） ----
+    # 舊焦點仍指向已消失的手牌時按下 X／B／Y／A：一律以當下 DOM 重新解析，只把焦點放到既有內容區的區域層，
+    # 不打出、不棄置、不預覽、不送出、不開確認或說明。窗口由 EMPTY_HAND 在同一段 script 內確定（與機器快慢無關）。
+    pre_reconcile_runs = []
+    for key in ("X", "B", "Y", "A"):
+        entered = S.goto_zone("hand")
+        S.settle()
+        base_spy = spy()
+        out = page.evaluate(EMPTY_HAND, press_bits(key))
+        S.settle()
+        after_spy = spy()
+        pre_reconcile_runs.append({
+            "key": key, "entered": entered, **out,
+            "play": len(after_spy["play"]) - len(base_spy["play"]), "send": after_spy["sendAction"] - base_spy["sendAction"],
+            "preview": after_spy["preview"] - base_spy["preview"]})
+        page.evaluate("render(window.lastGameState)")
+        S.settle()
+    record("redraw_pre_reconcile_input_fails_closed",
+           all(r["entered"] and r["pre"]["stale"] and r["play"] == 0 and r["send"] == 0 and r["preview"] == 0
+               and r["after"]["layer"] == "zone" and r["after"]["zone"] in ("static", "random") and r["after"]["zone"] in r["after"]["zones"]
+               and not r["after"]["focus"] and not r["after"]["confirm"] and not r["after"]["preview"] and not r["after"]["helpOpen"]
+               for r in pre_reconcile_runs), pre_reconcile_runs)
 
     # ---- Capture：既有結束行動＋危險確認（fail-closed、預設返回、防連按） ----
     sends = spy()["sendAction"]

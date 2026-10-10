@@ -1213,6 +1213,8 @@
       activatedAt: lr.guard.activatedAt, redrawAt: lr.guard.redrawAt,
       mapRequest: lr.guard.mapRequest ? { req: lr.guard.mapRequest.req, cmd: lr.guard.mapRequest.cmd } : null,
       lastMapAck: lr.lastMapAck, sectionKey: lr.sectionKey, lastCommand: lr.lastCommand,
+      // DOM 變動後的 80ms reconcile／50ms render 尚未跑完：zone／layer／itemKey 仍是重繪前的值（輸入一律以當下 DOM 重新解析）。
+      reconcilePending: !!(host && host.ctl.reconcileTimer) || !!lr.renderTimer,
     };
   }
 

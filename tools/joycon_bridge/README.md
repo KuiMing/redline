@@ -57,7 +57,7 @@ Joy-Con ─▶ Finally the Controller Works ─UDP 127.0.0.1:24800 (S2B1)─▶ 
 ```
 
 - `x`、`y`：右搖桿，−1..1，**y 向下為正**（畫面座標）。若上下相反，請在 `bridge.py` 的 `parse_packet` 對 `y` 取負。
-- `buttons`：兩個 byte。b0：`0x08 A`、`0x04 B`、`0x02 X`、`0x01 Y`、`0x20 SL`、`0x10 SR`、`0x40 R`、`0x80 ZR`；b1：`0x02 +`、`0x04 STICK`、`0x10 HOME`、`0x40 CAPTURE`。
+- `buttons`：兩個 byte。b0：`0x08 A`、`0x04 B`、`0x02 X`、`0x01 Y`、`0x20 SL`、`0x10 SR`、`0x40 R`、`0x80 ZR`；b1：`0x02 +`、`0x04 STICK`、`0x10 HOME`、`0x20 CAPTURE`（上游 `Switch2Protocol.swift` 的 `capture = 0x0000_2000`，以 little-endian u32 寫出，落在 b1 的 `0x20`）。
 
 ## 已知限制（務必閱讀）
 

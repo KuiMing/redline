@@ -373,6 +373,9 @@
     if (['focus', 'activate', 'act'].includes(data.cmd) && !isShortString(data.town)) return null;
     if (data.cmd === 'button' && !MAP_BUTTON_IDS.includes(data.id)) return null;
     if (data.cmd === 'act' && !MAP_ACT_BUTTON_IDS.includes(data.id)) return null;
+    // act 只由客廳模式送出且一律等 correlated ack；沒有合法 req 的 act 不可執行（parent 會把 req:null 視為 stale）。
+    // 桌面模式不帶 req 的 snapshot／focus／clearFocus／activate／button／cancel 行為不變。
+    if (data.cmd === 'act' && !isRequestId(data.req)) return null;
     if (isPresent(data.req) && !isRequestId(data.req)) return null;
     return { cmd: data.cmd, town: data.town, id: data.id, req: isPresent(data.req) ? data.req : null };
   }
@@ -384,6 +387,7 @@
   function sanitizeMapResult(data) {
     if (!data || data.type !== 'redline-controller-result' || data.v !== MAP_MESSAGE_VERSION) return null;
     if (!MAP_COMMANDS.includes(data.cmd) || typeof data.ok !== 'boolean') return null;
+    if (data.cmd === 'act' && !isRequestId(data.req)) return null;
     if (isPresent(data.req) && !isRequestId(data.req)) return null;
     if (isPresent(data.via) && !MAP_RESULT_VIA.includes(data.via)) return null;
     if (isPresent(data.reason) && !isShortString(data.reason)) return null;
