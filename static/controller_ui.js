@@ -188,8 +188,7 @@
     const roots = [];
     if (isShown(document.getElementById('gameShell'))) {
       if (choiceLocked()) {
-        // 必選地圖目標時鎖住背景：分頁與回合按鈕不可用；在其他分頁時只提供「回到戰略地圖」。
-        if (scope.kind === 'page') roots.push(document.querySelector('.game-tab[data-view="map"]'));
+        // 必選地圖目標時鎖住背景：分頁與回合列本來就不是方向焦點；其他分頁沒有任何內容，只能用 R／SR 回到戰略地圖。
       } else {
         roots.push(document.getElementById('gameTabs'));
         if (scope.kind === 'page') roots.push(document.querySelector('.game-view.active'));
@@ -209,6 +208,33 @@
       (el.textContent || '').trim().slice(0, 16)].join('|');
   }
 
+  /** 方向焦點排除描述（桌面與客廳共用，由 Core.isDirectionalExcluded 判斷）。 */
+  function directionalFlags(el) {
+    return {
+      handAction: el.matches('.hand-card-action-btn'),
+      cardCheckbox: el.tagName === 'INPUT' && el.type === 'checkbox' && !!el.closest('[data-card-zone]'),
+      sectionTab: el.matches('.game-tab') || !!el.closest('#gameTabs .game-tab'),
+      turnControl: !!el.closest('#turnActionButtons'),
+      hintBar: !!el.closest('#lrBar'),
+      factionAbility: !!el.closest('#factionActionButtons') || el.id === 'redArmyAbilityBtn',
+    };
+  }
+
+  function padExcluded(el) {
+    return !!el && el.nodeType === 1 && typeof el.matches === 'function' && Core.isDirectionalExcluded(directionalFlags(el));
+  }
+
+  /**
+   * 原生焦點停在排除的控制上（滑鼠點過、或舊焦點）時放掉。整張卡牌 div 無法取得原生焦點，
+   * 所以 focus() 到卡牌時不會自動把原本停在分頁／結束行動／手牌按鈕上的原生焦點移走。
+   */
+  function releaseExcludedFocus() {
+    const active = document.activeElement;
+    if (active && active !== document.body && padExcluded(active)) {
+      try { active.blur(); } catch { /* ignore */ }
+    }
+  }
+
   function collectDom(scope) {
     const seen = new Set();
     const candidates = [];
@@ -225,7 +251,7 @@
         disabled: el.disabled === true,
         ariaDisabled: el.getAttribute('aria-disabled') === 'true',
         skip: SKIP_IDS.has(el.id) || el.hasAttribute('data-controller-skip'),
-        cardCheckbox: el.tagName === 'INPUT' && el.type === 'checkbox' && !!el.closest('[data-card-zone]'),
+        ...directionalFlags(el),
         left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom,
       });
     };
@@ -299,6 +325,7 @@
     document.querySelectorAll('.' + FOCUS_CLASS).forEach(el => el.classList.remove(FOCUS_CLASS));
     const ring = document.getElementById('padButtonRing');
     if (ring) ring.hidden = true;
+    releaseExcludedFocus();
   }
 
   // 地圖 iframe 內的按鈕不在 parent DOM：用 parent 端疊一圈等大的高對比框（pointer-events:none）。
@@ -333,6 +360,13 @@
   }
 
   function focusDom(item) {
+    // 不變式：搖桿焦點（class 與原生 focus）永遠不落在排除的控制上。任何路徑（記憶還原、舊 sig）要求聚焦它們時：
+    // 手牌卡內按鈕改為整張手牌，其他（分頁、結束行動、陣營能力鈕、勾選框）直接不聚焦。
+    if (padExcluded(item.el)) {
+      const card = item.el.matches('.hand-card-action-btn') ? item.el.closest('.card[data-card-zone="hand"]') : null;
+      if (!card) return;
+      item = { ...item, el: card, sig: sigOf(card) };
+    }
     clearDomFocus();
     if (ctl.focusKind === 'map') sendToMap('clearFocus');
     ctl.focusKind = 'dom';
@@ -393,12 +427,17 @@
       return preferred || Core.pickInitial(items.map.filter(i => i.kind === 'town'))
         || Core.pickInitial(items.map) || Core.pickInitial(items.dom);
     }
-    return Core.pickInitial(items.dom);
+    // 預設焦點只放在內容（與客廳模式相同）：指揮中心先放手牌，其他分頁放該分頁內第一個內容項目。
+    const view = scope.kind === 'page' ? document.querySelector('.game-view.active') : null;
+    const inView = view ? items.dom.filter(i => view.contains(i.el)) : [];
+    return Core.pickInitial(inView.filter(i => i.el.matches('#hand .card[data-card-zone="hand"]')))
+      || Core.pickInitial(inView) || Core.pickInitial(items.dom);
   }
 
   function reconcile() {
     ctl.reconcileTimer = null;
     if (!ctl.settings.enabled || !ctl.padActive) return;
+    releaseExcludedFocus();
     if (layerActive() && layer.reconcile()) return;
     const scope = currentScope();
     const items = buildItems(scope);
@@ -453,13 +492,17 @@
 
   // ------------------------------------------------------------ dispatch (logical → UI)
   function dispatch(action) {
+    // 搖桿輸入一律先放掉停在排除控制上的原生焦點（分頁、結束行動、手牌按鈕等）。
+    releaseExcludedFocus();
     // 客廳模式的 page／map scope 由 layer 處理；modal、大廳與桌面模式維持下面的既有流程。
     if (layerActive() && layer.dispatch(action)) return;
+    // 桌面模式的 Capture（結束行動）／PLUS（陣營能力）：與客廳模式同一套既有流程與閘門（第一下仍只放焦點）。
+    const shortcut = !layerActive() && layer ? layer.desktopShortcutOf(action) : null;
     const logical = Core.logicalAction(action);
-    if (!logical) return;
+    if (!logical && !shortcut) return;
     const scope = currentScope();
     const items = buildItems(scope);
-    if (logical.name === 'toggleHelp' && !(ctl.padActive && cardFocused(items))) {
+    if (logical && logical.name === 'toggleHelp' && !(ctl.padActive && cardFocused(items))) {
       ctl.helpOpen = !ctl.helpOpen;
       renderHud();
       return;
@@ -472,6 +515,17 @@
       applyItem(defaultItem(items, scope));
       return;
     }
+    if (shortcut) {
+      if (scope.kind !== 'modal') layer.runDesktopShortcut(shortcut);
+      renderHud();
+      return;
+    }
+    // 由 R／SR 開啟的事件卡／時代關卡說明 modal：R／SR 以既有關閉收起並前往下一個區段；其他 modal 維持 scope lock。
+    if ((logical.name === 'nextSection' || logical.name === 'prevSection') && scope.kind === 'modal' && !layerActive()
+      && layer && layer.isSectionModal(scope.id) && !choiceLocked()) {
+      changeSection(scope, logical.name === 'nextSection' ? 1 : -1);
+      return;
+    }
     const key = currentKey(items.all);
     const mapCancel = scope.kind === 'map' && ctl.mapSnapshot && ctl.mapSnapshot.canCancel;
     const focused = items.all.find(i => i.key === key) || null;
@@ -480,12 +534,14 @@
       hasFocus: key !== null,
       card: cardContext(focused),
       cancelAvailable: scope.kind === 'modal' ? !!modalCancelTarget(scope) : !!mapCancel,
-      sectionsLocked: choiceLocked(),
+      // 必選地圖目標：在地圖上 R／SR 不動；其他分頁的 R／SR 只回戰略地圖（由區段環處理）。
+      sectionsLocked: scope.kind === 'map' && choiceLocked(),
     };
     const command = Core.routeAction(ctx, logical);
     if (!command) return;
-    // 沒有焦點時只有「移動」與「取消」可直接執行（無可聚焦項目的 modal，例如卡牌預覽，仍須能用 B 關閉）。
-    if (key === null && command.cmd !== 'move' && command.cmd !== 'cancel') { applyItem(defaultItem(items, scope)); return; }
+    // 沒有焦點時只有「移動」「取消」與 R／SR 區段可直接執行（無可聚焦項目的 modal，例如卡牌預覽，仍須能用 B 關閉；
+    // 分頁不是方向焦點，沒有內容的分頁也必須能用 R／SR 離開）。
+    if (key === null && !['move', 'cancel', 'section'].includes(command.cmd)) { applyItem(defaultItem(items, scope)); return; }
     const current = items.all.find(i => i.key === key);
     if (current) lastRect = { left: current.left, right: current.right, top: current.top, bottom: current.bottom };
 
@@ -592,17 +648,21 @@
   }
 
   function changeSection(scope, step) {
-    if (choiceLocked()) return;
     if (document.getElementById('gameShell') && isShown(document.getElementById('gameShell'))) {
-      const tabs = [...document.querySelectorAll('.game-tab[data-view]')].filter(t => isShown(t) && !t.disabled);
-      if (!tabs.length) return;
-      const index = tabs.findIndex(t => t.classList.contains('active'));
-      const nextTab = tabs[Core.cycleIndex(tabs.length, index, step)];
-      ctl.autofocusMap = nextTab.dataset.view === 'map';
-      nextTab.click();
+      // 六個全域區段（四個分頁＋事件卡＋時代關卡）只由 R／SR 循環，與客廳模式同一個環與既有分頁／說明 modal；
+      // 必選地圖目標時環只提供「戰略地圖」（已在地圖則不動）。分頁永遠不是方向焦點：切換後清掉舊焦點，
+      // 再把焦點放到新區段的內容（不留在分頁上）。
+      if (!layer || !layer.runSectionRing(step, scope.kind === 'modal' ? scope : null)) return;
+      clearDomFocus();
+      if (ctl.focusKind === 'map') sendToMap('clearFocus');
+      ctl.focusEl = null;
+      ctl.focusSig = null;
+      ctl.focusTown = null;
+      ctl.focusKind = null;
+      ctl.autofocusMap = activeGameView() === 'map';
       ctl.pageFocusMemory = null;
       ctl.lastScopeId = null;
-      setTimeout(() => { if (ctl.padActive) { ctl.lastScopeId = null; reconcile(); } }, 160);
+      setTimeout(() => { if (ctl.padActive && !layerActive()) { ctl.lastScopeId = null; reconcile(); } }, 160);
       return;
     }
     const regions = [...document.querySelectorAll('#lobby .lobby-column, #lobby .lobby-actions')].filter(r => isShown(r));
@@ -685,16 +745,19 @@
     const scope = currentScope();
     if (scope.kind === 'modal') {
       const cancel = modalCancelTarget(scope);
-      return `移動 搖桿　A 確認${cancel ? '　B 返回' : ''}`;
+      // 客廳模式的 legend 自己補「R/SR 下一個區段」；桌面模式在這裡補。
+      const section = !layerActive() && layer && layer.isSectionModal(scope.id) && !choiceLocked() ? '　R/SR 下一個區段' : '';
+      return `移動 搖桿　A 確認${cancel ? '　B 返回' : ''}${section}`;
     }
     if (scope.kind === 'map') {
-      return `移動 搖桿　A 選取　B 取消${choiceLocked() ? '' : '　R/SR 分頁'}`;
+      return `移動 搖桿　A 選取　B 取消${choiceLocked() ? '' : '　R/SR 區段'}`;
     }
+    if (choiceLocked()) return '必選地圖目標：R/SR 回戰略地圖';
     const focused = ctl.focusKind === 'dom' ? cardContext({ kind: 'dom', el: ctl.focusEl }) : null;
     if (focused) {
-      return `移動 搖桿　A 查看${focused.hasToggle ? '　B 勾選' : ''}${focused.zone === 'hand' ? '　X 資源　Y 行動' : ''}　R/SR 分頁`;
+      return `移動 搖桿　A 查看${focused.hasToggle ? '　B 勾選' : ''}${focused.zone === 'hand' ? '　X 資源　Y 行動' : ''}　R/SR 區段`;
     }
-    return '移動 搖桿　A 確認　R/SR 分頁　X 回合操作';
+    return '移動 搖桿　A 確認　R/SR 區段　Capture 結束行動';
   }
 
   function setText(el, text) { if (el.textContent !== text) el.textContent = text; }
@@ -727,6 +790,8 @@
       const relevant = records.some(r => !(hud && hud.contains(r.target)) && !isOverlayNode(r.target));
       if (relevant && ctl.padActive) { scheduleReconcile(); renderHud(); }
       if (relevant && layerActive()) layer.scheduleRender();
+      // 桌面模式的 Capture 危險確認單：既有按鈕失效或換了步驟就關閉（客廳模式由 layer render 處理）。
+      else if (relevant && layer && layer.revalidateConfirm) layer.revalidateConfirm();
     });
     ctl.observer.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['style', 'class', 'disabled'] });
     document.addEventListener('visibilitychange', () => { if (document.hidden) resetInput(); });
@@ -748,7 +813,7 @@
   const host = {
     ctl, currentScope, buildItems, collectDom, applyItem, focusDom, clearDomFocus, defaultItem, isShown, isUsable,
     cardContext, previewCard, toggleCard, playCardMode, modalCancelTarget, sendToMap, choiceLocked, activeGameView,
-    scheduleReconcile, renderHud, hintText, clearFocus, bridgeConnected,
+    scheduleReconcile, renderHud, hintText, clearFocus, bridgeConnected, directionalFlags,
     getMapSnapshot: () => ctl.mapSnapshot,
     statusText: () => STATUS_TEXT[ctl.status] || ctl.status,
   };
@@ -763,6 +828,7 @@
       enabled: ctl.settings.enabled, status: ctl.status, url: ctl.settings.url, padActive: ctl.padActive, helpOpen: ctl.helpOpen,
       focusKind: ctl.focusKind, focusSig: ctl.focusSig, focusTown: ctl.focusTown,
       scope: currentScope().id, held: { ...ctl.input.held },
+      reconcilePending: !!ctl.reconcileTimer, // 除錯：DOM 變動後的 80ms reconcile 尚未跑完
       livingRoom: layerActive() ? layer.debugState() : null,
     }),
     setEnabled,

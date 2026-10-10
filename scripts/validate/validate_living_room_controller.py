@@ -26,7 +26,7 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from validate_joycon_controller import BIT, MOCK_WS, Pad, enable_controller, post_json, start_server  # noqa: E402
+from validate_joycon_controller import BIT, MOCK_WS, Pad, enable_controller, focus_dom_toward, post_json, start_server  # noqa: E402
 
 # 客廳模式額外用到的按鍵（位元與 static/controller_core.js BUTTON_BITS 相同）
 BIT.setdefault("ZR", (0, 0x80))
@@ -59,10 +59,21 @@ SPY = """
 """
 
 # forbidden：方向焦點不得落在的既有控制（與 LR.isDirectionalExcluded 同一份清單，由真實 DOM 判斷）
+# 搖桿永遠不可聚焦的既有控制（兩種顯示模式相同；滑鼠照常可用）：六個全域區段、回合列（結束行動／紅軍能力）、
+# 手牌卡內資源／行動／棄置、陣營能力發動鈕、按鍵提示列、卡牌勾選框。
+EXCLUDED_SEL = ('#gameTabs .game-tab, #turnActionButtons button, .hand-card-action-btn, #factionActionButtons button, '
+                '#lrBar, #lrBar *, [data-card-zone] input[type="checkbox"]')
+
+# 以 .rl-pad-focus 與「原生」焦點一起判斷：document.activeElement、:focus、:focus-visible 也不得落在排除的控制上。
 FOCUS_PROBE = """() => { const el = document.querySelector('.rl-pad-focus'); if (!el) return null;
-  const forbidden = el.matches('.hand-card-action-btn') || el.id === 'advanceStepBtn' || el.id === 'redArmyAbilityBtn'
+  const EX = """ + json.dumps(EXCLUDED_SEL) + """;
+  const active = document.activeElement;
+  const nativeForbidden = !!active && active !== document.body && !!active.matches && active.matches(EX);
+  const ringForbidden = [...document.querySelectorAll(EX)].some(c => c.matches(':focus') || c.matches(':focus-visible') || c.classList.contains('rl-pad-focus'));
+  const forbidden = el.matches(EX) || el.id === 'advanceStepBtn' || el.id === 'redArmyAbilityBtn'
     || !!el.closest('#gameTabs') || el.matches('.game-tab') || !!el.closest('#turnActionButtons') || !!el.closest('#lrBar')
-    || !!el.closest('#factionActionButtons') || (el.matches('input[type="checkbox"]') && !!el.closest('[data-card-zone]'));
+    || !!el.closest('#factionActionButtons') || (el.matches('input[type="checkbox"]') && !!el.closest('[data-card-zone]'))
+    || nativeForbidden || ringForbidden;
   return { tag: el.tagName, id: el.id || null, type: el.type || null, card: el.matches('.card[data-card-zone]'),
            zone: el.closest('[data-card-zone]')?.dataset.cardZone || null, name: el.dataset.cardName || null,
            town: el.dataset.town || null, inModal: !!el.closest('.modal-overlay'), modal: el.closest('.modal-overlay')?.id || null,
@@ -71,7 +82,8 @@ FOCUS_PROBE = """() => { const el = document.querySelector('.rl-pad-focus'); if 
 MODALS = """() => [...document.querySelectorAll('.modal-overlay, #victoryArtViewer')]
   .filter(m => getComputedStyle(m).display !== 'none' && m.getClientRects().length > 0).map(m => m.id)"""
 
-SETTLED = """(ignoreProcessing) => { const s = RedlineController.getState().livingRoom; if (!s) return true; const t = performance.now();
+SETTLED = """(ignoreProcessing) => { const st = RedlineController.getState(); const s = st.livingRoom; if (!s) return !st.reconcilePending;
+  const t = performance.now();
   return (s.activatedAt === null || t - s.activatedAt > 270) && (s.redrawAt === null || t - s.redrawAt > 320)
     && (ignoreProcessing || !s.processing) && !s.mapRequest && !s.reconcilePending; }"""
 
@@ -189,6 +201,31 @@ CONTROLLER_SNAPSHOT = """() => { const st = RedlineController.getState(); const 
     tab: document.querySelector('.game-tab.active')?.dataset.view || null,
     modals: [...document.querySelectorAll('.modal-overlay')].filter(m => getComputedStyle(m).display !== 'none' && m.getClientRects().length > 0).map(m => m.id),
     spy: { send: __spy.sendAction, play: __spy.play.length, toggle: __spy.toggle, preview: __spy.preview } }; }"""
+
+# 不變式（不論有沒有 .rl-pad-focus）：排除的控制不得有控制器焦點 class、不得是 document.activeElement、
+# 不得符合 :focus／:focus-visible。另回報目前的區段與 modal，供 R／SR 檢查使用。
+INVARIANT = """(EX) => {
+  const d = el => el ? [el.tagName, el.id || '', String(el.className || '').slice(0, 32), (el.textContent || '').trim().slice(0, 10)].join('|') : null;
+  const excluded = [...document.querySelectorAll(EX)];
+  const f = document.querySelector('.rl-pad-focus');
+  const a = document.activeElement;
+  const bad = [];
+  if (f && f.matches(EX)) bad.push('rl-pad-focus:' + d(f));
+  if (a && a !== document.body && a.matches && a.matches(EX)) bad.push('activeElement:' + d(a));
+  for (const el of excluded) {
+    if (el.matches(':focus')) bad.push('focus:' + d(el));
+    if (el.matches(':focus-visible')) bad.push('focus-visible:' + d(el));
+    if (el !== f && el.classList.contains('rl-pad-focus')) bad.push('class:' + d(el));
+  }
+  const modal = [...document.querySelectorAll('.modal-overlay')].find(m => getComputedStyle(m).display !== 'none' && m.getClientRects().length > 0);
+  return { bad: [...new Set(bad)], padFocus: d(f), wholeHand: !!f && f.matches('.card[data-card-zone="hand"]'),
+           inView: !!f && !!f.closest('.game-view.active'), view: document.querySelector('.game-tab.active')?.dataset.view || null,
+           modal: modal ? modal.id : null,
+           era: typeof eraAchievementViewId !== 'undefined' && eraAchievementViewId != null ? String(eraAchievementViewId) : null };
+}"""
+
+# 手動建立「原生焦點停在排除控制上」的既有狀態（例如滑鼠點過、或舊版控制器留下的 focus）。
+SEED_FOCUS = """(sel) => { const el = document.querySelector(sel); if (!el) return null; el.focus(); return document.activeElement === el; }"""
 
 # iframe 端：被要求執行指令時（在 adapter 處理完之後）才恢復按鈕，用來製造「第一次 ok:false、第二次合法」。
 ARM_RESTORE = """([id, how]) => {
@@ -1483,6 +1520,288 @@ def scenario_connection(browser, base, record, errors):
     dctx.close()
 
 
+# ======================================================================== 8. 方向焦點排除（桌面＋客廳兩種顯示模式）
+SECTION_KEYS_JS = """() => [...document.querySelectorAll('#gameTabs .game-tab')].filter(t => t.getClientRects().length && !t.disabled)
+  .map(t => t.dataset.view ? 'view:' + t.dataset.view : t.id === 'eventCardTab' ? 'event' : 'era:' + t.dataset.eraId)"""
+HAND_CARD = '#hand .card[data-card-zone="hand"]'
+SEEDS = {"section": '#gameTabs .game-tab[data-view="command"]', "handAction": '#hand .hand-card-action-btn[data-card-mode="action"]',
+         "endStep": '#advanceStepBtn'}
+CHOICE_LOCKED_JS = "typeof lastSupportChoiceMapHighlightPayload !== 'undefined' && !!lastSupportChoiceMapHighlightPayload"
+
+
+def section_reached(want):
+    if want == "event":
+        return "document.getElementById('eventRevealModal').style.display === 'flex'"
+    if want.startswith("era:"):
+        return "getComputedStyle(document.getElementById('eraAchievementModal')).display !== 'none'"
+    return (f"document.querySelector('.game-tab.active')?.dataset.view === {json.dumps(want[5:])}"
+            " && getComputedStyle(document.getElementById('eventRevealModal')).display === 'none'"
+            " && getComputedStyle(document.getElementById('eraAchievementModal')).display === 'none'")
+
+
+# 區段切換後的落點：內容（目前分頁內）、地圖目標或說明 modal；不會是分頁本身。
+LANDED_JS = """() => { const f = document.querySelector('.rl-pad-focus'); const st = RedlineController.getState();
+  return st.focusKind === 'map' || (!!f && (!!f.closest('.game-view.active') || !!f.closest('.modal-overlay')))
+    || (!f && st.focusKind !== 'dom'); }"""
+
+
+def scenario_directional_exclusions(browser, base, record, errors):
+    """使用者截圖是桌面模式：兩種顯示模式下方向鍵都只在內容；六個全域區段只由 R／SR；結束行動只由 Capture；
+    卡內按鈕由整張手牌的 X／Y／B 鏡射；原生焦點（activeElement／:focus／:focus-visible）也不得停在這些控制上。"""
+    def opener(width, height, url, close_event=True):
+        ctx = browser.new_context(viewport={"width": width, "height": height})
+        ctx.add_init_script(MOCK_WS)
+        page = open_page(ctx, base, url, errors, close_event=close_event)
+        enable_controller(page)
+        page.evaluate(SPY)
+        return ctx, page, Session(page, record)
+
+    def checker(page, prefix):
+        violations = []
+
+        def check(label):
+            v = page.evaluate(INVARIANT, EXCLUDED_SEL)
+            if v["bad"]:
+                violations.append([f"{prefix}:{label}", v["bad"], v["padFocus"]])
+            return v
+        return violations, check
+
+    def step(page, S, name):
+        if name in ("redraw",):
+            page.evaluate("render(window.lastGameState)")
+        elif name == "reconcile":
+            page.evaluate("document.getElementById('handPanel').classList.toggle('lr-reconcile-probe')")
+        elif name in ("up", "down", "left", "right"):
+            S.pad.push(name)
+        else:
+            S.pad.tap(name)
+
+    # ---- 桌面模式：第一下、方向鍵掃描 ----
+    setup = new_game(base)
+    ctx, page, S = opener(1280, 800, setup["url"])
+    pad = S.pad
+    violations, check = checker(page, "desktop")
+    pad.neutral()
+    pad.tap("A")
+    first = check("first-press")
+    record("desktop_first_press_lands_on_whole_hand_card", first["wholeHand"] and not violations and S.spy()["sendAction"] == 0, first)
+    hand_seen = set()
+    for d in ["up"] * 4 + ["left"] * 6 + ["right"] * 10 + ["down"] * 8 + ["up"] * 12 + ["left"] * 4 + ["down"] * 6 + ["right"] * 6 + ["up"] * 8:
+        pad.push(d)
+        v = check(f"dpad-{d}")
+        if v["wholeHand"]:
+            hand_seen.add(v["padFocus"])
+    record("desktop_dpad_never_focuses_sections_end_step_or_card_internal_controls",
+           not violations and len(hand_seen) >= 2, [violations[:4], sorted(hand_seen)])
+
+    # ---- 桌面模式：原生焦點先停在排除控制上，再做方向／X／Y／B／no-op／A 預覽＋B 關閉／重繪／reconcile ----
+    violations.clear()
+    seeded, plays = [], []
+    # A 開預覽 modal、下一步 B 關閉（modal 開著時不移焦點）。
+    for seed, name in [("handAction", "X"), ("section", "Y"), ("endStep", "B"), ("handAction", "ZR"), ("section", "right"),
+                       ("endStep", "left"), ("section", "A"), ("handAction", "B"), ("endStep", "redraw"), ("section", "reconcile")]:
+        if not S.modals() and not page.evaluate(INVARIANT, EXCLUDED_SEL)["wholeHand"]:
+            focus_dom_toward(pad, page, HAND_CARD)
+        S.settle()
+        n_play, n_hand = len(S.spy()["play"]), page.evaluate(f"document.querySelectorAll('{HAND_CARD}').length")
+        seeded.append(page.evaluate(SEED_FOCUS, SEEDS[seed]))
+        step(page, S, name)
+        if name not in ("redraw", "reconcile"):
+            check(f"{seed}+{name}")  # 搖桿輸入：在 dispatch 內同步放掉；重繪／reconcile 在 settle 後檢查
+        if name in ("X", "Y"):
+            S.poll(f"__spy.play.length === {n_play + 1}", timeout=3000)
+            plays.append(S.spy()["play"][n_play:])
+            S.poll(f"document.querySelectorAll('{HAND_CARD}').length === {n_hand - 1}", timeout=5000)
+        S.settle()
+        check(f"{seed}+{name}+settled")
+    record("desktop_native_focus_released_after_dpad_shortcuts_modal_redraw_and_reconcile",
+           all(seeded) and not violations and [p[0][2] for p in plays if p] == ["resource", "action"] and S.modals() == [],
+           [seeded, violations[:4], plays, S.modals()])
+
+    # ---- 桌面模式：滑鼠照常可用（分頁切換、手牌按鈕），之後的搖桿輸入不留下原生焦點 ----
+    violations.clear()
+    page.click('#gameTabs .game-tab[data-view="log"]')
+    mouse_log = S.poll("document.querySelector('.game-tab.active')?.dataset.view === 'log'", timeout=2000)
+    page.click('#gameTabs .game-tab[data-view="command"]')
+    mouse_cmd = S.poll("document.querySelector('.game-tab.active')?.dataset.view === 'command'", timeout=2000)
+    pad.push("down")
+    check("after-mouse-tab+dpad")
+    n_play = len(S.spy()["play"])
+    page.evaluate("""() => { const b = [...document.querySelectorAll('#hand .hand-card-action-btn[data-card-mode="resource"]')]
+      .find(x => x.textContent.trim() === '資源' && !x.disabled); if (b) b.setAttribute('data-lr-mouse-probe', '1'); }""")
+    page.click('[data-lr-mouse-probe="1"]')
+    mouse_play = S.poll(f"__spy.play.length === {n_play + 1} && __spy.play[{n_play}][2] === 'resource'", timeout=3000)
+    S.settle()
+    pad.push("right")
+    check("after-mouse-button+dpad")
+    record("desktop_mouse_still_switches_sections_and_plays_hand_buttons",
+           mouse_log and mouse_cmd and mouse_play and not violations, [mouse_log, mouse_cmd, mouse_play, violations[:3]])
+
+    # ---- 桌面模式：Capture → 既有結束行動（危險確認、預設返回）；結束行動本身不是方向焦點 ----
+    violations.clear()
+    S.settle()
+    page.evaluate(SEED_FOCUS, SEEDS["endStep"])
+    sends = S.spy()["calls"].count("advance")
+    pad.tap("CAPTURE")
+    opened = S.poll("document.getElementById('lrConfirmModal')?.style.display === 'flex' && document.querySelector('.rl-pad-focus')?.id === 'lrConfirmCancelBtn'", timeout=2000)
+    check("capture-open")
+    pad.tap("B")
+    closed = S.poll("document.getElementById('lrConfirmModal')?.style.display === 'none'", timeout=2000)
+    check("capture-B")
+    no_send = S.spy()["calls"].count("advance") == sends
+    pad.tap("CAPTURE")
+    S.poll("document.getElementById('lrConfirmModal')?.style.display === 'flex'", timeout=2000)
+    pad.push("right")
+    ok_focus = page.evaluate("document.querySelector('.rl-pad-focus')?.id || null")
+    pad.tap("A")
+    executed = S.poll(f"__spy.calls.filter(c => c === 'advance').length === {sends + 1}", timeout=3000)
+    check("capture-executed")
+    record("desktop_capture_runs_existing_end_step_via_danger_confirm_default_back",
+           opened and closed and no_send and ok_focus == "lrConfirmOkBtn" and executed and not violations,
+           [opened, closed, no_send, ok_focus, executed, violations[:3]])
+    ctx.close()
+
+    # ---- 桌面模式：PLUS → 唯一可用的既有陣營能力（賭徒耳語） ----
+    setup = new_game(base, ["追隨者"], faction="aomen", base_town="澳門", town="澳門")
+    ctx, page, S = opener(1280, 800, setup["url"])
+    violations, check = checker(page, "desktop-plus")
+    S.pad.neutral()
+    S.pad.tap("A")
+    usable_abilities = page.evaluate("[...document.querySelectorAll('#factionActionButtons button')].filter(b => b.getClientRects().length && !b.disabled).map(b => b.textContent.trim())")
+    page.evaluate("() => { window.__abilityClicks = 0; document.getElementById('factionActionButtons').addEventListener('click', () => { window.__abilityClicks += 1; }, true); }")
+    for d in ["up", "left", "down", "down", "right", "up"]:
+        S.pad.push(d)
+        check(f"dpad-{d}")
+    S.pad.tap("PLUS")
+    clicked = S.poll("window.__abilityClicks === 1", timeout=3000)
+    S.settle()
+    check("plus")
+    record("desktop_plus_runs_single_usable_faction_ability",
+           len(usable_abilities) == 1 and clicked and page.evaluate("window.__abilityClicks") == 1 and not violations,
+           [usable_abilities, page.evaluate("window.__abilityClicks"), violations[:3]])
+    ctx.close()
+
+    # ---- 桌面模式：R／SR 正反兩個方向走完六個全域區段，分頁不留任何焦點 ----
+    setup = post_json(base, "/test/setup-era-notification-proof", {"era_id": "mongolia", "via_lifecycle": True})
+    ctx, page, S = opener(1280, 800, setup["url"], close_event=False)
+    violations, check = checker(page, "desktop-sections")
+    S.poll("!!document.querySelector('#activeEraTabs .era-stage-tab') && getComputedStyle(document.getElementById('eventCardTab')).display !== 'none'", timeout=5000)
+    S.pad.neutral()
+    for _ in range(6):
+        if not S.modals():
+            break
+        S.pad.tap("B")
+        S.settle()
+    if not page.evaluate("RedlineController.getState().padActive"):
+        S.pad.push("down")
+    stops = page.evaluate(SECTION_KEYS_JS)
+    fixture_ok = (stops[:5] == ["view:command", "view:map", "view:log", "view:myFaction", "event"] and len(stops) == 6
+                  and stops[5].startswith("era:") and not S.modals() and S.view() == "command")
+    visited, bad = [], []
+    for key, want in [("R", w) for w in stops[1:] + stops[:2]] + [("SR", w) for w in [stops[0], stops[5], stops[4], stops[3], stops[2]]]:
+        S.pad.tap(key)
+        reached = S.poll(section_reached(want), timeout=4000)
+        landed = S.poll(LANDED_JS, timeout=2000)
+        S.settle()
+        v = check(f"{key}->{want}")
+        visited.append([key, want, v["view"], v["modal"]])
+        if not reached or not landed:
+            bad.append([key, want, reached, landed, v])
+    record("desktop_R_SR_traverse_all_six_sections_both_directions_without_tab_focus",
+           fixture_ok and not bad and not violations, [stops, visited, bad[:3], violations[:3]])
+    ctx.close()
+
+    # ---- 桌面模式：必選地圖目標時 R／SR 只回戰略地圖；方向鍵在其他分頁也碰不到分頁與回合列 ----
+    setup = new_game(base, ["組織經驗丙", "追隨者", "追隨者"])
+    ctx, page, S = opener(1280, 800, setup["url"])
+    violations, check = checker(page, "desktop-choice")
+    S.pad.neutral()
+    S.pad.tap("A")
+    on_build = page.evaluate("document.querySelector('.rl-pad-focus')?.dataset.cardName || null")
+    S.pad.tap("Y")
+    locked = S.poll(f"document.querySelector('.game-tab.active').dataset.view === 'map' && {CHOICE_LOCKED_JS}", timeout=20000)
+    S.pad.tap("R")
+    S.pad.tap("SR")
+    stayed = S.view() == "map"
+    check("choice-R-SR-on-map")
+    page.click('#gameTabs .game-tab[data-view="command"]')
+    S.poll("document.querySelector('.game-tab.active').dataset.view === 'command'", timeout=2000)
+    for d in ["up", "up", "left", "right", "down", "right", "up"]:
+        S.pad.push(d)
+        check(f"choice-dpad-{d}")
+    S.pad.tap("R")
+    back = S.poll("document.querySelector('.game-tab.active').dataset.view === 'map'", timeout=3000)
+    check("choice-R-back")
+    record("desktop_choice_lock_R_SR_only_return_to_map_and_dpad_never_reaches_tabs",
+           on_build == "組織經驗丙" and locked and stayed and back and not violations, [on_build, locked, stayed, back, violations[:3]])
+    ctx.close()
+
+    # ---- 客廳模式：原生焦點先停在排除控制上，再做方向／X／Y／B／no-op／STICK／R／SR／A 預覽＋B 關閉／重繪／reconcile ----
+    setup = new_game(base)
+    ctx, page, S = opener(1920, 1080, setup["url"] + "&display=living-room")
+    violations, check = checker(page, "living-room")
+    S.pad.neutral()
+    S.pad.tap("A")
+    seeded, plays = [], []
+    # A 開預覽、CAPTURE 開危險確認：下一步 B 關閉（modal 開著時不移焦點）；R 到戰略地圖後 SR 回指揮中心（只種分頁焦點）。
+    for seed, name in [("section", "right"), ("handAction", "X"), ("endStep", "Y"), ("section", "B"), ("handAction", "ZR"),
+                       ("endStep", "STICK"), ("handAction", "A"), ("section", "B"), ("handAction", "redraw"),
+                       ("section", "reconcile"), ("endStep", "CAPTURE"), ("section", "B"), ("section", "R"), ("section", "SR")]:
+        if not S.modals() and S.view() == "command":
+            S.goto_zone("hand")
+        S.settle()
+        n_play = len(S.spy()["play"])
+        seeded.append(page.evaluate(SEED_FOCUS, SEEDS[seed]))
+        step(page, S, name)
+        if name not in ("redraw", "reconcile"):
+            check(f"{seed}+{name}")  # 搖桿輸入：在 dispatch 內同步放掉；重繪／reconcile 在 settle 後檢查
+        if name in ("X", "Y"):
+            S.poll(f"__spy.play.length === {n_play + 1}", timeout=3000)
+            plays.append(S.spy()["play"][n_play:])
+        S.settle()
+        check(f"{seed}+{name}+settled")
+    record("living_room_native_focus_released_after_dpad_shortcuts_sections_modal_redraw_and_reconcile",
+           all(seeded) and not violations and [p[0][2] for p in plays if p] == ["resource", "action"] and S.modals() == [],
+           [seeded, violations[:4], plays, S.modals()])
+
+    # ---- 客廳模式：滑鼠照常可用 ----
+    violations.clear()
+    page.click('#gameTabs .game-tab[data-view="log"]')
+    mouse_log = S.poll("document.querySelector('.game-tab.active')?.dataset.view === 'log'", timeout=2000)
+    page.click('#gameTabs .game-tab[data-view="command"]')
+    mouse_cmd = S.poll("document.querySelector('.game-tab.active')?.dataset.view === 'command'", timeout=2000)
+    S.settle()
+    S.pad.push("down")
+    check("after-mouse-tab+dpad")
+    n_play = len(S.spy()["play"])
+    page.evaluate("""() => { const b = [...document.querySelectorAll('#hand .hand-card-action-btn[data-card-mode="resource"]')]
+      .find(x => x.textContent.trim() === '資源' && !x.disabled); if (b) b.setAttribute('data-lr-mouse-probe', '1'); }""")
+    page.click('[data-lr-mouse-probe="1"]')
+    mouse_play = S.poll(f"__spy.play.length === {n_play + 1} && __spy.play[{n_play}][2] === 'resource'", timeout=3000)
+    S.settle()
+    S.pad.push("right")
+    check("after-mouse-button+dpad")
+    record("living_room_mouse_still_switches_sections_and_plays_hand_buttons",
+           mouse_log and mouse_cmd and mouse_play and not violations, [mouse_log, mouse_cmd, mouse_play, violations[:3]])
+
+    # ---- 切換顯示模式不會把舊焦點留在（或還原到）分頁／結束行動／手牌按鈕 ----
+    violations.clear()
+    results = []
+    for seed, mode in [("section", "desktop"), ("handAction", "living-room"), ("endStep", "desktop"), ("section", "living-room")]:
+        S.settle()
+        ok_seed = page.evaluate(SEED_FOCUS, SEEDS[seed])
+        page.evaluate(f"window.RedlineDisplayMode.set({json.dumps(mode)})")
+        S.poll(f"(document.documentElement.dataset.display || 'desktop') === {json.dumps(mode)}", timeout=2000)
+        check(f"{seed}->{mode}")
+        S.pad.push("down")
+        S.settle()
+        v = check(f"{seed}->{mode}+dpad")
+        results.append([seed, mode, ok_seed, v["padFocus"]])
+    record("mode_switch_never_restores_stale_section_end_step_or_card_button_focus",
+           all(r[2] for r in results) and not violations, [results, violations[:4]])
+    ctx.close()
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     checks, console_errors = [], []
@@ -1499,7 +1818,7 @@ def main():
         with sync_playwright() as pw:
             browser = pw.chromium.launch(headless=True)
             for scenario in (scenario_desktop, scenario_main, scenario_sections, scenario_faction, scenario_build, scenario_dissolve,
-                             scenario_connection):
+                             scenario_connection, scenario_directional_exclusions):
                 try:
                     scenario(browser, base, record, console_errors)
                 except Exception as exc:  # 讓單一情境的意外中斷以 FAIL 呈現，其餘情境照跑

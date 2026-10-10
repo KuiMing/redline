@@ -168,14 +168,15 @@ FOCUS_KEY_JS = """(sel) => {
     [n.tagName, n.id, (n.closest('[data-card-name]') ? n.closest('[data-card-name]').dataset.cardZone + ':' + n.closest('[data-card-name]').dataset.cardName : ''),
      n.dataset.cardMode || '', n.dataset.view || '', (n.textContent || '').trim().slice(0, 12)].join('|') === base);
   const target = sel ? document.querySelector(sel) : null;
-  return { key: base + '#' + [...new Set(same)].indexOf(el), hit: !!(target && (target === el || target.contains(el))) };
+  // 只有焦點正好在 selector 本身才算命中：卡牌內部控制（例如手牌的資源／行動鈕）不算命中整張卡牌。
+  return { key: base + '#' + [...new Set(same)].indexOf(el), hit: !!target && target === el };
 }"""
 
 _NAV_GRAPHS = {}
 
 
 def focus_dom_toward(pad, page, selector, steps=400):
-    """用真正的搖桿方向輸入把焦點移到 selector（或其內部控制）。
+    """用真正的搖桿方向輸入把焦點移到 selector 本身（卡牌內部控制不算）。
 
     確定性做法：以實際輸入逐步探索「焦點節點 ×4 方向」的轉移圖（每一步都是真實 frame），
     用已知邊在節點間移動，再對最近的未探索方向推一次，直到目標命中。邊以實際觀察覆寫，
@@ -311,24 +312,37 @@ def main():
             f1 = focus_info(page)
             record("first_press_places_focus_without_click", f1 is not None and page.evaluate("__spy.sendAction") == 0, f1)
             record("focus_ring_is_high_contrast", bool(f1) and f1["outlineWidth"] >= 4 and "255, 225, 77" in f1["outlineColor"], f1)
-            seen = {f1["id"] or f1["text"]}
+            # 以元素為單位計數（起手牌是隨機抽的，可能有多張同名、同文字的手牌）
+            focus_key = lambda: (page.evaluate(FOCUS_KEY_JS, None) or {}).get("key")
+            seen = {focus_key()}
             for d in ["right", "right", "down", "left", "down"]:
                 pad.push(d)
-                f = focus_info(page)
-                if f:
-                    seen.add(f["id"] or f["text"])
-            record("stick_moves_focus_between_controls", len(seen) >= 3, sorted(seen))
+                if focus_info(page):
+                    seen.add(focus_key())
+            record("stick_moves_focus_between_controls", len(seen - {None}) >= 3, sorted(k for k in seen if k))
             record("hud_height_unchanged", abs(page.evaluate("document.getElementById('hud').getBoundingClientRect().height") - hud_h) < 1)
             page.screenshot(path=str(OUT / "01_command_focus.png"))
 
-            # ---------- 4. A 觸發既有 click（手牌／卡面預覽） ----------
+            # ---------- 4. 六個全域區段只由 R／SR 切換：方向鍵碰不到分頁與結束行動（class 與原生焦點皆然） ----------
             page.evaluate("""() => { window.__clicks = []; document.addEventListener('click', e => window.__clicks.push(e.target.id || e.target.className), true); }""")
-            tab_target = page.evaluate("document.querySelector('.game-tab[data-view=\"log\"]') && true")
-            reached = focus_dom_toward(pad, page, '.game-tab[data-view="log"]')
-            pad.tap("A")
-            page.wait_for_timeout(300)
-            record("A_clicks_focused_tab_via_existing_handler",
-                   reached and page.evaluate("document.getElementById('logView').classList.contains('active')"), focus_info(page))
+            on_section = """() => { const ex = el => !!el && el !== document.body && !!el.closest
+                && (!!el.closest('#gameTabs .game-tab') || !!el.closest('#turnActionButtons'));
+              return ex(document.querySelector('.rl-pad-focus')) || ex(document.activeElement)
+                || [...document.querySelectorAll('#gameTabs .game-tab, #turnActionButtons button')].some(t => t.matches(':focus') || t.matches(':focus-visible')); }"""
+            tab_hits = []
+            for d in ["up"] * 6 + ["left"] * 3 + ["right"] * 8 + ["up"] * 2:
+                pad.push(d)
+                if page.evaluate(on_section):
+                    tab_hits.append([d, focus_info(page)])
+            record("dpad_never_reaches_section_tabs_or_end_step", not tab_hits, tab_hits[:3])
+            view_is = lambda v: page.wait_for_function(f"document.querySelector('.game-tab.active').dataset.view === '{v}'", timeout=3000)
+            pad.tap("R")  # 指揮中心 → 戰略地圖
+            view_is("map")
+            pad.tap("R")  # 戰略地圖 → 戰況紀錄
+            view_is("log")
+            page.wait_for_timeout(250)
+            record("R_reaches_log_section_without_tab_focus",
+                   page.evaluate("document.getElementById('logView').classList.contains('active')") and not page.evaluate(on_section), focus_info(page))
             pad.tap("R")
             page.wait_for_timeout(300)
             record("R_cycles_to_next_tab", page.evaluate("document.querySelector('.game-tab.active').dataset.view") == "myFaction")
@@ -338,12 +352,28 @@ def main():
             pad.tap("SR")
             pad.tap("SR")
             page.wait_for_timeout(300)
-            record("SR_wraps_back_to_command", page.evaluate("document.querySelector('.game-tab.active').dataset.view") == "command")
+            record("SR_SR_returns_to_command", page.evaluate("document.querySelector('.game-tab.active').dataset.view") == "command"
+                   and not page.evaluate(on_section))
 
-            # + 不可觸發任何東西（結束步驟）
+            # PLUS：只發動「唯一一個」可用的既有陣營能力；沒有或不只一個時不做事（不會觸發結束步驟）
+            abilities = page.evaluate("""[...document.querySelectorAll('#factionActionButtons button, #redArmyAbilityBtn')]
+              .filter(b => b.getClientRects().length && !b.disabled && b.getAttribute('aria-disabled') !== 'true').map(b => b.textContent.trim())""")
+            page.evaluate("""() => { window.__abilityClicks = 0; for (const el of document.querySelectorAll('#factionActionButtons, #redArmyAbilityBtn'))
+              el.addEventListener('click', () => { window.__abilityClicks += 1; }, true); }""")
             before = page.evaluate("__spy.sendAction")
+            advance_before = page.evaluate("(window.__clicks || []).filter(c => c === 'advanceStepBtn').length")
             pad.tap("PLUS")
-            record("plus_button_does_nothing", page.evaluate("__spy.sendAction") == before)
+            page.wait_for_timeout(300)
+            clicks = page.evaluate("window.__abilityClicks")
+            no_advance = page.evaluate("(window.__clicks || []).filter(c => c === 'advanceStepBtn').length") == advance_before
+            record("plus_runs_only_the_single_usable_faction_ability",
+                   no_advance and ((clicks == 1) if len(abilities) == 1 else (clicks == 0 and page.evaluate("__spy.sendAction") == before)),
+                   [abilities, clicks, no_advance])
+            for _ in range(3):  # 能力若開了既有選擇視窗，用既有關閉收起，讓後面的流程從一般頁面開始
+                if not page.evaluate("[...document.querySelectorAll('.modal-overlay')].some(m => getComputedStyle(m).display !== 'none' && m.getClientRects().length)"):
+                    break
+                pad.tap("B")
+                page.wait_for_timeout(250)
 
             # ---------- 5. B 在沒有取消時不做事 ----------
             before = page.evaluate("[__spy.sendAction, __spy.cancelChoice]")

@@ -228,15 +228,9 @@
 
   // ---------------------------------------------------------------- directional focus set / zones
 
-  /**
-   * 方向焦點只停在內容資料（卡牌、玩家動態、根據地候選、地圖目標）。下列既有控制一律排除，
-   * 改由專用鍵或 R／SR 操作：手牌內的資源／行動／棄置鈕、卡牌勾選框、六個全域分頁、
-   * 回合列（結束行動／紅軍能力）、按鍵提示列、陣營能力發動鈕（PLUS）。描述不明 → 排除（fail-closed）。
-   */
-  function isDirectionalExcluded(d) {
-    if (!d || typeof d !== 'object') return true;
-    return !!(d.handAction || d.cardCheckbox || d.sectionTab || d.turnControl || d.hintBar || d.factionAbility);
-  }
+  // 方向焦點排除規則與桌面模式共用同一個判斷（Core.isDirectionalExcluded）：手牌內按鈕、卡牌勾選框、六個全域分頁、
+  // 回合列、按鍵提示列、陣營能力發動鈕一律不是方向焦點；描述不明 → 排除（fail-closed）。
+  const isDirectionalExcluded = Core.isDirectionalExcluded;
 
   // 每個分頁可用的內容區（依序也是 STICK 循環順序）。舊的玩家狀態列／地圖入口／動作列都不再是方向焦點。
   const CONTENT_ZONES = Object.freeze({

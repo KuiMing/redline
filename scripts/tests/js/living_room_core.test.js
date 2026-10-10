@@ -156,6 +156,11 @@ test('directional focus excludes hand buttons, end/turn controls, the six global
   assert.equal(LR.isDirectionalExcluded(null), true, 'unknown element fails closed');
 });
 
+test('desktop and living-room share one directional exclusion predicate', () => {
+  assert.equal(typeof C.isDirectionalExcluded, 'function');
+  assert.equal(LR.isDirectionalExcluded, C.isDirectionalExcluded);
+});
+
 test('content zones never include the old status / map portal / action bar zones', () => {
   const all = Object.values(LR.CONTENT_ZONES).flat();
   for (const banned of ['status', 'map', 'actionbar']) assert.equal(all.includes(banned), false, banned);

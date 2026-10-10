@@ -3811,6 +3811,11 @@ body.victory-art-viewer-open {
 .pad-note { color: #94a3b8; font-size: 11px; line-height: 1.4; }
 .pad-error { color: #fca5a5; }
 #padButtonRing { position: absolute; z-index: 80; pointer-events: none; outline: 4px solid #ffe14d; outline-offset: 2px; box-shadow: 0 0 0 2px #000, 0 0 16px 4px rgba(255,225,77,0.75); border-radius: 4px; }
+/* 桌面模式也用同一張危險確認單（Capture 結束行動）：沿用既有 modal 外觀，只補按鈕列與危險色（客廳模式樣式在下方區段） */
+html:not([data-display="living-room"]) .lr-confirm-overlay { z-index: 85; }
+html:not([data-display="living-room"]) .lr-confirm-glass { border: 2px solid #fca5a5; }
+html:not([data-display="living-room"]) .lr-confirm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+html:not([data-display="living-room"]) .lr-confirm-ok { background: #b91c1c; border-color: #fecaca; color: #ffffff; }
 
 /* ---- 客廳大螢幕模式（controller_living_room.js）：只在 html[data-display="living-room"] 下生效 ----
  * 舞台本身已等比縮放並留 5% title-safe 邊界（app.js resizeStage），以下尺寸都是 1280×720 設計單位，

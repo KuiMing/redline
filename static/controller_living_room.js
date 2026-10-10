@@ -148,7 +148,13 @@
       panel.innerHTML = '<div id="lrMapTitle"></div><div id="lrMapRows" role="listbox" aria-label="地圖目標清單"></div><div id="lrMapFooter"></div>';
       mapView.appendChild(panel);
     }
+    ensureConfirmDom();
+  }
 
+  /** 危險操作確認單（Capture 結束行動、B 棄置）：兩種顯示模式共用；桌面模式在第一次 Capture 時才建立。 */
+  function ensureConfirmDom() {
+    const stage = $('designStage');
+    if (!stage || $('lrConfirmModal')) return;
     const modal = document.createElement('div');
     modal.id = 'lrConfirmModal';
     modal.className = 'modal-overlay lr-confirm-overlay';
@@ -401,16 +407,9 @@
     return zone;
   }
 
-  /** 交給 LR.isDirectionalExcluded 判斷的既有控制描述（手牌按鈕、勾選框、分頁、回合列、提示列、陣營能力鈕）。 */
+  /** 交給 LR.isDirectionalExcluded 判斷的既有控制描述：與桌面模式同一份（host.directionalFlags）。 */
   function directionalDescriptor(el) {
-    return {
-      handAction: el.matches('.hand-card-action-btn'),
-      cardCheckbox: el.matches('input[type="checkbox"]') && !!el.closest('[data-card-zone]'),
-      sectionTab: !!el.closest('#gameTabs .game-tab') || el.matches('.game-tab'),
-      turnControl: !!el.closest('#turnActionButtons'),
-      hintBar: !!el.closest('#lrBar'),
-      factionAbility: !!el.closest('#factionActionButtons') || el.id === 'redArmyAbilityBtn',
-    };
+    return host.directionalFlags(el);
   }
 
   function controlsWithin(roots) {
@@ -738,7 +737,7 @@
         if (next && next.id !== zone.id) focusZone(next);
         return false;
       }
-      case 'section': return runSection(command.step, null);
+      case 'section': runSection(command.step, null); return false; // 導航，不啟動執行冷卻
       case 'zoneCycle': cycleContentZone(zones, zone); return false;
       case 'endStep': return startEndStep();
       case 'factionAbility': return runFactionAbility();
@@ -879,7 +878,7 @@
     host.scheduleReconcile();
     // 說明 modal 真的開啟才算一次執行：其中的 A 需間隔 250ms。
     if (!key.startsWith('view:') && host.currentScope().kind === 'modal') noteActivation();
-    return false;
+    return true;
   }
 
   // ------------------------------------------------------------ Capture／PLUS／B 棄置／Y 購買
@@ -1013,6 +1012,7 @@
 
   /** 開啟確認單；回傳是否真的開啟（開啟本身算一次執行，確認鍵需間隔 250ms）。 */
   function openConfirm(target) {
+    ensureConfirmDom();
     const modal = $('lrConfirmModal');
     const el = resolveDanger(target);
     if (!modal || !el) return false;
@@ -1202,6 +1202,35 @@
     lr.view = null;
   }
 
+  // ------------------------------------------------------------ 桌面模式共用（同一套既有流程與閘門）
+  /** 桌面模式的 Capture／PLUS：回傳 'endStep'｜'factionAbility'；其他按鍵 null。 */
+  function desktopShortcutOf(action) {
+    const logical = LR.logicalAction(action);
+    return logical && (logical.name === 'endStep' || logical.name === 'factionAbility') ? logical.name : null;
+  }
+
+  /** 桌面模式的 Capture（既有結束行動＋危險確認）／PLUS（唯一可用的既有陣營能力）：經過與客廳模式相同的閘門。 */
+  function runDesktopShortcut(name) {
+    if (enabled() || !host || !gameShown() || (name !== 'endStep' && name !== 'factionAbility')) return false;
+    syncStateToken();
+    execute({ cmd: name }, null, -1, [], activeView());
+    return true;
+  }
+
+  /** 桌面模式的 R／SR：與客廳模式同一個六區段環；回傳是否真的切到下一個區段。 */
+  function runSectionRing(step, modalScope) {
+    if (!host || !gameShown()) return false;
+    syncStateToken();
+    return runSection(step < 0 ? -1 : 1, modalScope || null);
+  }
+
+  function isSectionModal(id) { return LR.SECTION_MODALS.has(id); }
+
+  /** 桌面模式：確認單開著時，既有按鈕失效或換了步驟就關閉（客廳模式由 renderAll 處理）。 */
+  function revalidateConfirm() {
+    if (lr.confirm && !dangerStillValid(lr.confirm)) closeConfirm();
+  }
+
   function debugState() {
     return {
       mode: displayMode, view: lr.view, zone: lr.zone, layer: lr.layer,
@@ -1239,6 +1268,11 @@
     noteActivation,
     onMapResult,
     debugState,
+    desktopShortcutOf,
+    runDesktopShortcut,
+    runSectionRing,
+    isSectionModal,
+    revalidateConfirm,
   });
   window.RedlineDisplayMode = { get: () => displayMode, set: mode => setDisplayMode(mode) };
 })();

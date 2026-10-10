@@ -223,9 +223,18 @@
     return MODAL_SCOPES.find(scope => visible.has(scope.id)) || null;
   }
 
+  /**
+   * 方向焦點只停在內容資料（桌面與客廳兩種顯示模式相同）。下列既有控制一律排除，改由專用鍵或 R／SR 操作（滑鼠照常可用）：
+   * 手牌內的資源／行動／棄置鈕（整張手牌 X／Y／B）、卡牌勾選框（B）、六個全域分頁（R／SR）、
+   * 回合列：結束行動／紅軍能力（Capture）、按鍵提示列、陣營能力發動鈕（PLUS）。描述不明 → 排除（fail-closed）。
+   */
+  function isDirectionalExcluded(d) {
+    if (!d || typeof d !== 'object') return true;
+    return !!(d.handAction || d.cardCheckbox || d.sectionTab || d.turnControl || d.hintBar || d.factionAbility);
+  }
+
   function isFocusableCandidate(c) {
-    // cardCheckbox：卡牌內的勾選框只供滑鼠／可及性使用，方向焦點只停在整張卡牌（B 才勾選）。
-    return !!c && c.visible === true && !c.disabled && !c.ariaDisabled && !c.skip && !c.cardCheckbox;
+    return !!c && c.visible === true && !c.disabled && !c.ariaDisabled && !c.skip && !isDirectionalExcluded(c);
   }
 
   /** candidates: [{key, scope, visible, disabled, ariaDisabled, skip, left, top, right, bottom}]。 */
@@ -522,7 +531,7 @@
     decodeButtonBytes, parseButtons, normalizeFrame,
     createInputState, resetInputState, reduceFrame, stickDirection, isStale, bridgeInputGate, bridgeConnected,
     logicalAction, routeAction,
-    resolveModalScope, isFocusableCandidate, buildFocusSet, pickInitial, pickDirectional, cycleIndex,
+    resolveModalScope, isDirectionalExcluded, isFocusableCandidate, buildFocusSet, pickInitial, pickDirectional, cycleIndex,
     isTrustedMessage, sanitizeMapSnapshot, sanitizeMapCommand, sanitizeMapResult, buildMapSnapshotModel,
     validateBridgeUrl, normalizeSettings, mixedContentRisk, reconnectDelayMs,
   };

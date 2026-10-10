@@ -442,6 +442,45 @@ test('card checkboxes are never directional focus targets; the whole card is', (
   assert.equal(C.isFocusableCandidate({ ...base, cardCheckbox: false }), true);
 });
 
+test('directional set holds only allowed content: six section tabs and end-step never enter it (R/SR and Capture only)', () => {
+  const base = { scope: 'page', visible: true, disabled: false, ariaDisabled: false, skip: false };
+  const items = [
+    ...['command', 'map', 'log', 'myFaction', 'event', 'era'].map((k, i) => ({
+      ...base, key: `tab-${k}`, sectionTab: true, top: 0, bottom: 10, left: i * 20, right: i * 20 + 10 })),
+    { ...base, key: 'end-step', turnControl: true, top: 0, bottom: 10, left: 200, right: 210 },
+    { ...base, key: 'hand-card', top: 50, bottom: 60, left: 0, right: 10 },
+  ];
+  const set = C.buildFocusSet(items, 'page');
+  assert.deepEqual(set.map(i => i.key), ['hand-card']);
+  assert.equal(C.pickInitial(set).key, 'hand-card');
+  // existing contract: no candidate in that direction → stay on the current item
+  for (const dir of ['up', 'down', 'left', 'right']) assert.equal(C.pickDirectional(set, 'hand-card', dir).key, 'hand-card', dir);
+});
+
+test('hand-card 資源/行動/棄置, hint bar, faction ability and card checkboxes never enter the directional set', () => {
+  const base = { scope: 'page', visible: true, disabled: false, ariaDisabled: false, skip: false, left: 0, right: 10 };
+  const items = [
+    { ...base, key: 'hand-card-0', top: 0, bottom: 10 },
+    { ...base, key: 'hand-0-resource', handAction: true, top: 20, bottom: 30 },
+    { ...base, key: 'hand-0-action', handAction: true, top: 20, bottom: 30, left: 12, right: 22 },
+    { ...base, key: 'hand-card-1', top: 40, bottom: 50 },
+    { ...base, key: 'hand-1-discard', handAction: true, top: 60, bottom: 70 },
+    { ...base, key: 'hint-bar', hintBar: true, top: 80, bottom: 90 },
+    { ...base, key: 'faction-ability', factionAbility: true, top: 100, bottom: 110 },
+    { ...base, key: 'purchase-checkbox', cardCheckbox: true, top: 120, bottom: 130 },
+  ];
+  const set = C.buildFocusSet(items, 'page');
+  assert.deepEqual(set.map(i => i.key), ['hand-card-0', 'hand-card-1']);
+  assert.equal(C.pickDirectional(set, 'hand-card-0', 'down').key, 'hand-card-1', 'down from a hand card skips its buttons');
+  assert.equal(C.pickDirectional(set, 'hand-card-1', 'down').key, 'hand-card-1', 'nothing allowed below → stays');
+  for (const flag of ['sectionTab', 'turnControl', 'handAction', 'hintBar', 'factionAbility', 'cardCheckbox']) {
+    assert.equal(C.isDirectionalExcluded({ [flag]: true }), true, flag);
+    assert.equal(C.isFocusableCandidate({ ...base, top: 0, bottom: 1, [flag]: true }), false, flag);
+  }
+  assert.equal(C.isDirectionalExcluded({}), false);
+  assert.equal(C.isDirectionalExcluded(null), true, 'unknown descriptor fails closed');
+});
+
 test('B on a focused purchase card toggles; disabled-checkbox handling stays in the UI (core still routes cardToggle)', () => {
   assert.deepEqual(C.routeAction(cardCtx({ zone: 'purchase', hasToggle: true }), { name: 'cancel' }), { cmd: 'cardToggle' });
 });
