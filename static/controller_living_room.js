@@ -21,7 +21,7 @@
   const CONTROL_SELECTOR = 'button, a[href], input:not([type="hidden"]), select, textarea, [role="button"], [tabindex]:not([tabindex="-1"])';
   const VIEW_LABEL = { command: '指揮中心', map: '戰略地圖', log: '戰況紀錄', myFaction: '我的陣營' };
   // 與焦點無關的全域鍵：任何層（即使目前沒有內容區）都直接處理。
-  const GLOBAL_COMMANDS = new Set(['section', 'endStep', 'factionAbility', 'zoneCycle']);
+  const GLOBAL_COMMANDS = new Set(['section', 'endStep', 'factionAbility', 'zoneCycle', 'focusMenu']);
   const BLOCK_TEXT = {
     'not-selected': '先按 B 勾選這張卡，再按 Y 購買', 'buy-unavailable': '購買所選目前不可用（資源不足或未勾選）', 'card-gone': '此卡目前不可購買',
   };
@@ -35,6 +35,9 @@
     hints: [], hintSig: '', mapList: LR.buildMapList(null), mapSig: '', mapStageKey: '', mapStageChanged: false,
     mapFocusTown: null, notice: null, noticeTimer: null, renderTimer: null, confirm: null,
     mapReqSeq: 0, mapAckTimer: null, lastMapAck: null, sectionKey: null, lastCommand: null,
+    // SL 聚焦選單：menu＝開著時的 {model, origin, sig}；
+    // menuReq＝等待中的 snapshot 請求 {req, at, acked, purpose:'open'|'pick'|'refresh', origin?|key?}。
+    menu: null, menuReq: null, menuTimer: null,
   };
 
   // ------------------------------------------------------------ display mode
@@ -60,7 +63,7 @@
     }
     if (previous !== displayMode) {
       closeConfirm({ silent: true });
-      onClear();
+      onClear(); // 含 resetFocusMenu
       if (host.ctl.padActive) host.clearFocus();
     }
     renderAll();
@@ -129,6 +132,7 @@
       <div>+：發動陣營能力（例如賭徒耳語）</div>
       <div>Capture：結束行動／結束回合（⚠ 需確認，預設返回）</div>
       <div>R／SR：指揮中心→戰略地圖→戰況紀錄→我的陣營→事件卡→時代關卡</div>
+      <div>SL：聚焦選單（依統治者／陣營區域跳到可建立組織的合法城鎮；只移焦點，再按 SL 或 B 返回）</div>
       <div>按下搖桿：下一個內容區　ZR：回區域層（區域層再按＝回指揮中心）</div>`;
     stage.appendChild(help);
 
@@ -177,6 +181,39 @@
     stage.appendChild(modal);
     $('lrConfirmCancelBtn').addEventListener('click', () => closeConfirm());
     $('lrConfirmOkBtn').addEventListener('click', confirmOk);
+  }
+
+  /**
+   * SL 聚焦選單（兩種顯示模式共用；第一次開啟時才建立）。既有 modal scope 機制負責 scope lock 與方向導航：
+   * 方向只在選項間移動、A 選取、B 點既有關閉 ×（× 保留滑鼠操作，但不是方向焦點）。
+   */
+  function ensureFocusMenuDom() {
+    const stage = $('designStage');
+    if (!stage || $(Core.FOCUS_MENU_MODAL_ID)) return;
+    const modal = document.createElement('div');
+    modal.id = Core.FOCUS_MENU_MODAL_ID;
+    modal.className = 'modal-overlay lr-focus-overlay';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-labelledby', 'lrFocusMenuTitle');
+    modal.setAttribute('aria-hidden', 'true');
+    modal.style.display = 'none';
+    modal.innerHTML = `
+      <div class="modal-glass lr-focus-glass">
+        <div class="lr-focus-head">
+          <div id="lrFocusMenuTitle" class="modal-title-text"></div>
+          <button id="lrFocusMenuClose" type="button" class="lr-focus-close" aria-label="關閉聚焦選單" title="關閉" data-controller-skip>×</button>
+        </div>
+        <div class="lr-focus-lead">選範圍後，焦點移到該範圍內可建立組織的合法城鎮；不會建立、移動或瓦解（建立仍按 Y）。</div>
+        <div id="lrFocusMenuSections"></div>
+        <div class="lr-focus-footer">搖桿 選範圍　A 聚焦　B／SL 返回</div>
+      </div>`;
+    stage.appendChild(modal);
+    $('lrFocusMenuClose').addEventListener('click', () => { closeFocusMenu(); if (host) host.renderHud(); });
+    $('lrFocusMenuSections').addEventListener('click', (e) => {
+      const option = e.target.closest('.lr-focus-option');
+      if (option) pickFocusMenuOption(option.dataset.key);
+    });
   }
 
   function ensureSettingsUi() {
@@ -265,6 +302,7 @@
   function collectHints() {
     // 只有 bridge 已連線才鏡射：off／connecting／error／stale 時快捷鍵不會執行，提示也不顯示。
     if (!gameShown() || !host.ctl.padActive || !host.bridgeConnected()) return [];
+    if (focusMenuOpen()) return []; // 選單內的按鍵由 legend 說明；背景快捷鍵此時都不作用
     const sources = [];
     const el = lr.layer === 'item' ? host.ctl.focusEl : null;
     const card = el ? host.cardContext({ kind: 'dom', el }) : null;
@@ -288,6 +326,8 @@
       const cancelBtn = snap.buttons.find(b => b.id === 'cancelDissolveChoiceBtn');
       sources.push({ id: 'mapCancel', label: cancelBtn ? cancelBtn.label : '取消選取', visible: true });
     }
+    const menu = LR.buildFocusMenu(snap);
+    if (menu.ok) sources.push({ id: 'focusMenu', label: `聚焦選單（${menu.total} 個目標）`, visible: true });
     const ability = factionAbilityTarget();
     if (ability) sources.push(controlSource('factionAbility', ability));
     sources.push(controlSource('endStep', $('advanceStepBtn')));
@@ -297,7 +337,8 @@
   function renderHints() {
     const hints = collectHints();
     lr.hints = hints;
-    const sig = JSON.stringify(hints);
+    const menuOpen = focusMenuOpen();
+    const sig = JSON.stringify([hints, menuOpen]);
     if (sig === lr.hintSig) return;
     lr.hintSig = sig;
     const box = $('lrHints');
@@ -306,7 +347,7 @@
     if (!hints.length) {
       const empty = document.createElement('div');
       empty.className = 'lr-hint-empty';
-      empty.textContent = host.ctl.padActive && host.bridgeConnected() ? '目前沒有快捷操作' : '';
+      empty.textContent = host.ctl.padActive && host.bridgeConnected() && !menuOpen ? '目前沒有快捷操作' : '';
       box.appendChild(empty);
       return;
     }
@@ -637,9 +678,18 @@
     return false;
   }
 
-  /** modal scope：只有 R／SR 開啟的兩個唯讀說明 modal（事件卡、時代關卡）允許 R／SR 前往下一個區段。 */
+  /**
+   * modal scope：只有 R／SR 開啟的兩個唯讀說明 modal（事件卡、時代關卡）允許 R／SR 前往下一個區段。
+   * SL 聚焦選單內：SL＝關閉（同 B）；只有方向、A、B 交回既有 modal 流程，其他鍵（R/SR、X、Y、+、Capture、ZR、STICK）一律吞掉。
+   * 其他 modal 內的 SL 不作用（scope lock）。
+   */
   function dispatchModal(action, scope) {
     const logical = LR.logicalAction(action);
+    if (logical && scope.id === Core.FOCUS_MENU_MODAL_ID && host.ctl.padActive) {
+      if (logical.name === 'focusMenu') { closeFocusMenu(); host.renderHud(); return true; }
+      if (!['move', 'confirm', 'cancel'].includes(logical.name)) { host.renderHud(); return true; }
+    }
+    if (logical && logical.name === 'focusMenu') return host.ctl.padActive;
     const sectionKey = logical && (logical.name === 'nextSection' || logical.name === 'prevSection');
     if (sectionKey && host.ctl.padActive && gameShown() && LR.SECTION_MODALS.has(scope.id) && !host.choiceLocked()) {
       syncStateToken();
@@ -717,8 +767,10 @@
 
   /** 處理中鎖／地圖等待／重繪冷卻／執行冷卻的共同閘門（客廳模式與桌面模式的專用鍵共用）；回傳是否真的執行。 */
   function guarded(cmd, fn) {
+    const waiting = lr.guard.mapRequest;
     const verdict = LR.gate(lr.guard, performance.now(), lr.stateSeq, cmd);
     lr.guard = verdict.guard;
+    if (waiting && !lr.guard.mapRequest) onMapRequestExpired(waiting); // gate 只會以逾時清掉等待中的地圖請求
     if (!verdict.allowed) {
       lr.lastCommand = { cmd, result: verdict.reason };
       if (verdict.reason === 'processing' || verdict.reason === 'map-pending') flash('處理中…請稍候');
@@ -747,6 +799,7 @@
       }
       case 'section': runSection(command.step, null); return false; // 導航，不啟動執行冷卻
       case 'zoneCycle': cycleContentZone(zones, zone); return false;
+      case 'focusMenu': return requestFocusMenu(); // 等 iframe 回應自己 req 的 snapshot 才開啟（onMapSnapshot）
       case 'endStep': return startEndStep();
       case 'factionAbility': return runFactionAbility();
       case 'enterZone': return enterZone(zone);
@@ -983,8 +1036,16 @@
     lr.mapAckTimer = null;
     const out = LR.expireMapRequest(lr.guard, performance.now());
     lr.guard = out.guard;
-    if (!out.expired || !host) return;
-    lr.lastMapAck = { req: out.expired.req, cmd: out.expired.cmd, outcome: 'timeout', lock: false };
+    if (out.expired) onMapRequestExpired(out.expired);
+  }
+
+  /** 等待中的地圖請求逾時（ack 計時器，或任一按鍵經過閘門時發現）：視為未執行並 fail closed。 */
+  function onMapRequestExpired(expired) {
+    clearTimeout(lr.mapAckTimer);
+    lr.mapAckTimer = null;
+    if (!host) return;
+    lr.lastMapAck = { req: expired.req, cmd: expired.cmd, outcome: 'timeout', lock: false };
+    if (lr.menuReq && lr.menuReq.req === expired.req) failMenuRequest(null); // 聚焦選單的 snapshot 請求逾時：晚到的回覆不再採用
     flash('地圖沒有回應，請再試一次');
     host.scheduleReconcile();
   }
@@ -997,11 +1058,317 @@
     clearTimeout(lr.mapAckTimer);
     lr.mapAckTimer = null;
     lr.lastMapAck = { req: out.request.req, cmd: out.request.cmd, outcome: out.outcome, lock: out.lock, reason: result.reason || null };
+    // 聚焦選單：及時的 ok:true 只記下 acked，之後還要同一個 req 的 snapshot（onMapSnapshot）；ok:false／逾時直接 fail closed。
+    if (lr.menuReq && lr.menuReq.req === out.request.req) {
+      if (out.outcome === 'success') lr.menuReq.acked = true;
+      else failMenuRequest(null);
+    }
     if (out.lock) lock();
     if (out.outcome === 'failed') flash('此操作目前不可用');
     else if (out.outcome === 'timeout') flash('地圖沒有回應，請再試一次');
     host.scheduleReconcile();
     host.renderHud();
+  }
+
+  // ------------------------------------------------------------ SL 聚焦選單（兩種顯示模式共用；只移焦點）
+  // 開啟、選定與開著時的刷新都先向 iframe 要一份新的權威 snapshot（帶 req）：只採用同一個 req 先及時回覆 ok:true、
+  // 再於 1000ms 內送達的那一份（一般推送只觸發一次新的請求，本身不更新選單）。缺 snapshot、逾時、ok:false、
+  // 不合 schema、沒有合法建立目標或分組資料不足一律 fail closed 並顯示短原因。選定後只移焦點：不選取、不建立、不移動、不瓦解。
+  // 只有真的開啟選單或真的把焦點移到合法城鎮才開始 250ms 執行冷卻。
+
+  function focusMenuReason(code) { return LR.FOCUS_MENU_REASONS[code] || LR.FOCUS_MENU_REASONS['no-targets']; }
+
+  function focusMenuOpen() {
+    const modal = $(Core.FOCUS_MENU_MODAL_ID);
+    return !!lr.menu && !!modal && modal.style.display !== 'none';
+  }
+
+  /** 提示用：最新權威 snapshot 是否有可分組的合法建立目標（真正開啟時仍會重新要一份 req 綁定的 snapshot）。 */
+  function focusMenuAvailable() {
+    return !!host && gameShown() && LR.buildFocusMenu(host.getMapSnapshot()).ok;
+  }
+
+  /** 開啟當下的「目前焦點」城鎮（選定分組含它時保留）：客廳模式＝地圖清單焦點列；桌面模式＝地圖城鎮焦點。 */
+  function focusMenuOrigin() {
+    if (enabled()) return { town: activeView() === 'map' && lr.zone === 'maplist' && lr.layer === 'item' ? lr.mapFocusTown : null };
+    const ctl = host.ctl;
+    return { town: ctl.focusKind === 'map' && ctl.focusTown ? ctl.focusTown : null };
+  }
+
+  function finishMenuRequest() {
+    lr.menuReq = null;
+    clearTimeout(lr.menuTimer);
+    lr.menuTimer = null;
+  }
+
+  /**
+   * 聚焦選單請求 fail closed：清掉等待（晚到的回覆不再採用）。刷新失敗或回覆不合 schema（close）時一併關閉選單：
+   * 畫面上的候選不能再保證是最新的權威資料。reason＝要顯示的短原因（null＝呼叫端已顯示）。
+   */
+  function failMenuRequest(reason, { close = false } = {}) {
+    const pending = lr.menuReq;
+    finishMenuRequest();
+    if (pending && (close || pending.purpose === 'refresh')) closeFocusMenu();
+    if (reason) flash(focusMenuReason(reason));
+  }
+
+  /**
+   * 送出帶 req 的 snapshot 指令（與其他地圖指令同一個等待／逾時機制；確認成功不記錄執行冷卻）。
+   * 一律回傳 false：開啟、選定或刷新都要等 onMapResult 的 ok:true 與同一個 req 的 snapshot。
+   */
+  function sendMenuRequest(purpose, extra) {
+    sendMapRequest('snapshot', {}, { noActivation: true });
+    const pending = lr.guard.mapRequest;
+    if (!pending || pending.cmd !== 'snapshot' || pending.req !== lr.mapReqSeq) { // 沒有 iframe：已 fail closed
+      if (purpose === 'refresh') closeFocusMenu();
+      return false;
+    }
+    lr.menuReq = { ...extra, purpose, req: pending.req, at: pending.at, acked: false };
+    clearTimeout(lr.menuTimer);
+    // ok:true 已到但同一個 req 的 snapshot 在逾時前沒到：同樣 fail closed（逾時後到達的也會被 menuSnapshotVerdict 拒絕）。
+    lr.menuTimer = setTimeout(() => {
+      lr.menuTimer = null;
+      if (lr.menuReq && lr.menuReq.req === pending.req) failMenuRequest('stale');
+    }, LR.DEFAULT_GUARD_CONFIG.mapAckTimeoutMs + 40);
+    return false;
+  }
+
+  /** SL（選單未開）：先做本地檢查，再向 iframe 要新的 snapshot。 */
+  function requestFocusMenu() {
+    if (!host) return false;
+    if (!gameShown()) { flash(focusMenuReason('no-game')); return false; }
+    if (host.currentScope().kind === 'modal') return false;
+    if (!host.getMapSnapshot()) { flash(focusMenuReason('no-snapshot')); return false; }
+    return sendMenuRequest('open', { origin: focusMenuOrigin() });
+  }
+
+  /**
+   * controller_ui 交來每一份已 sanitize 的 snapshot（不合 schema 時為 null）。只有回應等待中請求、且通過
+   * menuSnapshotVerdict 的那一份才會開啟／選定／刷新；選單開著時的一般推送只觸發一次新的 req 綁定刷新。
+   */
+  function onMapSnapshot(snap) {
+    if (!host) return;
+    const pending = lr.menuReq;
+    const verdict = LR.menuSnapshotVerdict(pending, snap, performance.now());
+    if (verdict === 'invalid') { failMenuRequest('no-group-data', { close: true }); return; }
+    if (verdict === 'stale') { failMenuRequest('stale'); return; }
+    if (verdict === 'accept') {
+      finishMenuRequest();
+      completeMenuRequest(pending, snap);
+      return;
+    }
+    // 其他請求（含選定）等待中時不另外送：它的回覆本身就是更新的權威 snapshot。
+    if (!pending && !lr.guard.mapRequest && focusMenuOpen()) sendMenuRequest('refresh', {});
+  }
+
+  function completeMenuRequest(pending, snap) {
+    // 停用、清除焦點或 bridge 斷線之後才到的回覆：不開啟、不選定（resetFocusMenu 已清掉等待，這裡再擋一次）。
+    if (!host.ctl.padActive || !host.bridgeConnected()) { closeFocusMenu(); return; }
+    const model = LR.buildFocusMenu(snap);
+    if (pending.purpose === 'open') {
+      if (!gameShown() || host.currentScope().kind === 'modal') return; // 等待期間開了其他視窗：不蓋上去
+      if (!model.ok) { flash(focusMenuReason(model.reason)); return; }
+      if (openFocusMenu(model, pending.origin)) noteActivation(); // 真的開啟才開始 250ms 執行冷卻（之後的 A 需間隔）
+      return;
+    }
+    if (!focusMenuOpen()) return; // 等待期間已用 B／SL／× 關閉
+    if (!model.ok) { closeFocusMenu(); flash(focusMenuReason(model.reason)); return; }
+    if (pending.purpose === 'refresh') { renderFocusMenu(model, { redraw: true }); return; }
+    if (LR.focusMenuDrift(lr.menu.model, model)) {
+      // 開啟後清單段或 pending choice 的已選城鎮變了：刷新選單、不移焦點。
+      renderFocusMenu(model, { redraw: true });
+      flash(focusMenuReason('changed'));
+      return;
+    }
+    const town = LR.pickFocusMenuTown(LR.findFocusMenuGroup(model, pending.key), lr.menu.origin.town);
+    if (!town) {
+      // 候選在選定瞬間消失：刷新選單、不移焦點。
+      renderFocusMenu(model, { redraw: true });
+      flash(focusMenuReason('gone'));
+      return;
+    }
+    closeFocusMenu();
+    if (focusMapTarget(town)) noteActivation(); // 焦點真的移到合法城鎮才開始 250ms 執行冷卻
+  }
+
+  function openFocusMenu(model, origin) {
+    ensureFocusMenuDom();
+    const modal = $(Core.FOCUS_MENU_MODAL_ID);
+    if (!modal) return false;
+    lr.menu = { model, origin: origin || { town: null }, sig: '' };
+    renderFocusMenu(model);
+    modal.style.display = 'flex';
+    modal.setAttribute('aria-hidden', 'false');
+    host.scheduleReconcile(); // 既有 modal scope：焦點移到第一個選項，背景控制不在焦點集合內
+    host.renderHud();
+    return true;
+  }
+
+  /**
+   * 選項只來自模型（每次都是 req 綁定的新 snapshot）；內容沒變就不重建（焦點元素不換）。
+   * 在游標下重建＝非使用者造成的焦點變更：300ms 內忽略 A。
+   */
+  function renderFocusMenu(model, { redraw = false } = {}) {
+    lr.menu.model = model;
+    const title = $('lrFocusMenuTitle');
+    const titleText = `聚焦選單｜可建立組織 ${model.total} 個`;
+    if (title.textContent !== titleText) title.textContent = titleText;
+    const sig = JSON.stringify(model.sections.map(s => s.groups.map(g => [g.key, g.count])));
+    if (sig === lr.menu.sig) return;
+    lr.menu.sig = sig;
+    if (redraw) noteRedraw();
+    const box = $('lrFocusMenuSections');
+    box.textContent = '';
+    for (const section of model.sections) {
+      const el = document.createElement('section');
+      el.className = 'lr-focus-section';
+      el.dataset.focusSection = section.kind;
+      const head = document.createElement('div');
+      head.className = 'lr-focus-section-title';
+      head.textContent = section.label;
+      const grid = document.createElement('div');
+      grid.className = 'lr-focus-grid';
+      if (!section.groups.length) {
+        const empty = document.createElement('div');
+        empty.className = 'lr-focus-empty';
+        empty.textContent = '沒有含合法目標的項目';
+        grid.appendChild(empty);
+      }
+      for (const group of section.groups) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'lr-focus-option';
+        button.id = `lrFocusOpt-${group.kind}-${group.name}`;
+        button.dataset.key = group.key;
+        button.dataset.kind = group.kind;
+        button.dataset.name = group.name;
+        button.dataset.count = String(group.count);
+        button.setAttribute('aria-label', `${section.label} ${group.name}${group.note ? `（${group.note}）` : ''}：${group.count} 個合法城鎮`);
+        const name = document.createElement('span');
+        name.className = 'lr-focus-name';
+        name.textContent = group.name;
+        button.appendChild(name);
+        if (group.note) {
+          const note = document.createElement('span');
+          note.className = 'lr-focus-tag';
+          note.textContent = group.note;
+          button.appendChild(note);
+        }
+        const count = document.createElement('span');
+        count.className = 'lr-focus-count';
+        count.textContent = `${group.count} 個`;
+        button.appendChild(count);
+        grid.appendChild(button);
+      }
+      el.append(head, grid);
+      box.appendChild(el);
+    }
+  }
+
+  /** A（或滑鼠）選定一個選項：重新要一份 snapshot，在 completeMenuRequest 驗證後才移焦點。 */
+  function pickFocusMenuOption(key) {
+    if (!host || !focusMenuOpen() || typeof key !== 'string') return false;
+    syncStateToken();
+    return guarded('focusMenuPick', () => sendMenuRequest('pick', { key }));
+  }
+
+  /** B／×／SL 再按，或被其他視窗蓋過：關閉。焦點由既有 reconcile 還原（桌面＝scope 記憶，客廳＝區域／項目記憶）。 */
+  function closeFocusMenu({ silent = false } = {}) {
+    if (lr.menuReq && lr.menuReq.purpose !== 'open') finishMenuRequest(); // 等待中的選定／刷新跟著作廢
+    const wasOpen = !!lr.menu;
+    lr.menu = null;
+    const modal = $(Core.FOCUS_MENU_MODAL_ID);
+    if (modal && modal.style.display !== 'none') {
+      modal.style.display = 'none';
+      modal.setAttribute('aria-hidden', 'true');
+    }
+    // 搖桿焦點不留在隱藏的選項上：還原交給 reconcile（沒有可還原的內容時就不放焦點，例如必選地圖目標時的其他分頁）。
+    const ctl = host && host.ctl;
+    if (ctl && ctl.focusKind === 'dom' && ctl.focusEl && modal && modal.contains(ctl.focusEl)) {
+      host.clearDomFocus();
+      ctl.focusEl = null;
+      ctl.focusSig = null;
+      ctl.focusKind = null;
+    }
+    if (wasOpen && !silent && host) host.scheduleReconcile();
+  }
+
+  /**
+   * 停用控制器、清除焦點、切換顯示模式或 bridge 斷線（含 stale）：關閉選單並取消等待中的開啟／選定／刷新請求，
+   * 之後才到的 iframe 回覆不會再開啟或選定。silent:false＝還原開啟前的焦點（仍連著 bridge 的情況）。
+   */
+  function resetFocusMenu({ silent = true } = {}) {
+    finishMenuRequest();
+    closeFocusMenu({ silent });
+  }
+
+  function otherModalShown(id) {
+    const el = $(id);
+    if (!el || !host.isShown(el)) return false;
+    return !(id === 'peerActionNotice' && el.classList.contains('peer-action-notice-minimized'));
+  }
+
+  /** 選單開著時離開遊戲畫面或出現其他視窗（例如伺服器推來的選擇視窗）：關閉，交給該視窗的既有 scope。 */
+  function revalidateFocusMenu() {
+    if (!lr.menu || !host) return;
+    if (!focusMenuOpen()) { lr.menu = null; return; }
+    const covered = Core.MODAL_SCOPES.some(s => s.id !== Core.FOCUS_MENU_MODAL_ID && otherModalShown(s.id));
+    if (!gameShown() || covered) closeFocusMenu();
+  }
+
+  /**
+   * 把焦點移到選定的合法城鎮：不在戰略地圖就用既有分頁切換過去（與 R／SR 相同的 tab click，不模擬滑鼠或鍵盤）；
+   * 客廳模式聚焦地圖清單的該列，桌面模式聚焦地圖城鎮目標。找不到（已不是目標）→ fail closed，不移到非法城鎮。
+   */
+  function focusMapTarget(town) {
+    if (activeView() !== 'map') {
+      const stop = sectionStops().find(s => s.key === 'view:map');
+      if (!stop || !stop.usable) { flash(focusMenuReason('map-unavailable')); host.scheduleReconcile(); return false; }
+      lr.sectionKey = 'view:map';
+      stop.el.click(); // 既有分頁切換
+      host.sendToMap('snapshot');
+    }
+    const key = `town:${town}`;
+    if (enabled()) {
+      renderAll();
+      lr.mapStageChanged = false; // 這次換清單由使用者選定，不要回到第一列
+      const zone = describeZone('maplist');
+      const index = zone ? zone.keys.indexOf(key) : -1;
+      if (index < 0) { flash(focusMenuReason('gone')); host.scheduleReconcile(); return false; }
+      lr.view = 'map';
+      host.ctl.lastScopeId = 'map';
+      focusItem(zone, index);
+    } else {
+      const scope = host.currentScope();
+      const item = scope.kind === 'map' ? host.buildItems(scope).map.find(i => i.key === key) : null;
+      if (!item) { flash(focusMenuReason('gone')); host.scheduleReconcile(); return false; }
+      const ctl = host.ctl;
+      ctl.lastScopeId = scope.id;
+      ctl.pageFocusMemory = null;
+      ctl.autofocusMap = false;
+      host.applyItem(item);
+    }
+    host.renderHud();
+    return true;
+  }
+
+  /** controller_ui 路徑的 SL（桌面模式 page／map／modal、客廳模式大廳）：開著就關，否則經同一個閘門開啟。 */
+  function runFocusMenuKey() {
+    if (!host) return false;
+    if (focusMenuOpen()) { closeFocusMenu(); host.renderHud(); return true; }
+    if (host.currentScope().kind === 'modal') return false;
+    syncStateToken();
+    guarded('focusMenu', requestFocusMenu);
+    host.renderHud();
+    return true;
+  }
+
+  function focusMenuDebug() {
+    return {
+      focusMenu: lr.menu ? { stage: lr.menu.model.stage, selected: lr.menu.model.selected, total: lr.menu.model.total,
+        origin: lr.menu.origin.town, keys: lr.menu.model.sections.flatMap(s => s.groups.map(g => g.key)) } : null,
+      focusMenuRequest: lr.menuReq ? { req: lr.menuReq.req, purpose: lr.menuReq.purpose, acked: lr.menuReq.acked } : null,
+    };
   }
 
   // ------------------------------------------------------------ dangerous confirm（預設焦點＝返回）
@@ -1148,6 +1515,7 @@
       closeConfirm();
       flash('此操作目前不可用');
     }
+    revalidateFocusMenu();
     if (!host.ctl.padActive) hideRing();
     renderLegend();
     return changed;
@@ -1219,6 +1587,7 @@
   }
 
   function onClear() {
+    resetFocusMenu();
     hideRing();
     clearMapTownFocus();
     lr.layer = 'zone';
@@ -1271,6 +1640,7 @@
     return {
       processing: processing(), activatedAt: lr.guard.activatedAt, notice: lr.notice, lastCommand: lr.lastCommand,
       mapRequest: lr.guard.mapRequest ? { req: lr.guard.mapRequest.req, cmd: lr.guard.mapRequest.cmd } : null, lastMapAck: lr.lastMapAck,
+      redrawAt: lr.guard.redrawAt, ...focusMenuDebug(),
     };
   }
 
@@ -1283,9 +1653,10 @@
 
   function isSectionModal(id) { return LR.SECTION_MODALS.has(id); }
 
-  /** 桌面模式：確認單開著時，既有按鈕失效或換了步驟就關閉（客廳模式由 renderAll 處理）。 */
+  /** 桌面模式：確認單開著時，既有按鈕失效或換了步驟就關閉；聚焦選單被其他視窗蓋過就關閉（客廳模式由 renderAll 處理）。 */
   function revalidateConfirm() {
     if (lr.confirm && !dangerStillValid(lr.confirm)) closeConfirm();
+    revalidateFocusMenu();
   }
 
   function debugState() {
@@ -1299,7 +1670,7 @@
       confirmOpen: !!lr.confirm, confirm: lr.confirm ? { kind: lr.confirm.kind, label: lr.confirm.label, key: lr.confirm.key || null } : null,
       activatedAt: lr.guard.activatedAt, redrawAt: lr.guard.redrawAt,
       mapRequest: lr.guard.mapRequest ? { req: lr.guard.mapRequest.req, cmd: lr.guard.mapRequest.cmd } : null,
-      lastMapAck: lr.lastMapAck, sectionKey: lr.sectionKey, lastCommand: lr.lastCommand,
+      lastMapAck: lr.lastMapAck, sectionKey: lr.sectionKey, lastCommand: lr.lastCommand, ...focusMenuDebug(),
       // DOM 變動後的 80ms reconcile／50ms render 尚未跑完：zone／layer／itemKey 仍是重繪前的值（輸入一律以當下 DOM 重新解析）。
       reconcilePending: !!(host && host.ctl.reconcileTimer) || !!lr.renderTimer,
     };
@@ -1335,6 +1706,10 @@
     runSectionRing,
     isSectionModal,
     revalidateConfirm,
+    onMapSnapshot,
+    runFocusMenuKey,
+    focusMenuAvailable,
+    resetFocusMenu,
   });
   window.RedlineDisplayMode = { get: () => displayMode, set: mode => setDisplayMode(mode) };
 })();

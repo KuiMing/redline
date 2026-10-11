@@ -52,6 +52,8 @@
   function setStatus(status) {
     if (ctl.status === status) return;
     ctl.status = status;
+    // bridge 不再是 connected（停用、斷線、重連中、stale）：SL 聚焦選單關閉並取消等待中的請求（兩種顯示模式）。
+    if (status !== 'connected' && layer && initialized && typeof layer.resetFocusMenu === 'function') layer.resetFocusMenu({ silent: !ctl.padActive });
     renderHud();
   }
 
@@ -286,10 +288,14 @@
     }
     if (event.data.type !== 'redline-controller-map-snapshot') return;
     const snap = Core.sanitizeMapSnapshot(event.data);
-    if (!snap) { ctl.mapSnapshot = null; if (layerActive()) layer.scheduleRender(); return; }
+    // SL 聚焦選單（兩種顯示模式）：只採用對上自己 req（且已先收到同一個 req 的及時 ok:true）的 snapshot；
+    // 不合 schema 的 snapshot 讓等待中的請求 fail closed。
+    const notifyMenu = (s) => { if (layer && initialized && typeof layer.onMapSnapshot === 'function') layer.onMapSnapshot(s); };
+    if (!snap) { ctl.mapSnapshot = null; if (layerActive()) layer.scheduleRender(); notifyMenu(null); return; }
     if (ctl.mapSnapshot && snap.seq < ctl.mapSnapshot.seq) return;
     ctl.mapSnapshot = snap;
     if (layerActive()) layer.scheduleRender();
+    notifyMenu(snap);
     if (ctl.padActive && ctl.autofocusMap && snap.targets.length) {
       // 用 R/SR 切進地圖後，第一份有目標的 snapshot 到達時把焦點放到地圖目標（而不是停在分頁上）。
       const scope = currentScope();
@@ -355,6 +361,8 @@
     ctl.focusTown = null;
     ctl.focusKind = null;
     ctl.padActive = false;
+    // 兩種顯示模式：SL 聚焦選單關閉並取消等待中的請求（晚到的回覆不會再開啟）。
+    if (layer && initialized && typeof layer.resetFocusMenu === 'function') layer.resetFocusMenu();
     if (layerActive()) layer.onClear();
     renderHud();
   }
@@ -502,8 +510,10 @@
     if (!logical && !shortcut) return;
     const scope = currentScope();
     const items = buildItems(scope);
-    // Y 在卡牌（手牌行動／購買卡購買所選）與地圖城鎮目標（既有地圖操作）上不是說明。
-    if (logical && logical.name === 'toggleHelp' && !(ctl.padActive && (cardFocused(items) || mapTargetFocused(scope, items)))) {
+    const focusMenuOpen = scope.kind === 'modal' && scope.id === Core.FOCUS_MENU_MODAL_ID;
+    // Y 在卡牌（手牌行動／購買卡購買所選）與地圖城鎮目標（既有地圖操作）上不是說明；SL 聚焦選單內 Y 完全不作用。
+    if (logical && logical.name === 'toggleHelp' && !focusMenuOpen
+      && !(ctl.padActive && (cardFocused(items) || mapTargetFocused(scope, items)))) {
       ctl.helpOpen = !ctl.helpOpen;
       renderHud();
       return;
@@ -538,12 +548,13 @@
       cancelAvailable: scope.kind === 'modal' ? !!modalCancelTarget(scope) : !!mapCancel,
       // 必選地圖目標：在地圖上 R／SR 不動；其他分頁的 R／SR 只回戰略地圖（由區段環處理）。
       sectionsLocked: scope.kind === 'map' && choiceLocked(),
+      focusMenuOpen,
     };
     const command = Core.routeAction(ctx, logical);
     if (!command) return;
-    // 沒有焦點時只有「移動」「取消」與 R／SR 區段可直接執行（無可聚焦項目的 modal，例如卡牌預覽，仍須能用 B 關閉；
-    // 分頁不是方向焦點，沒有內容的分頁也必須能用 R／SR 離開）。
-    if (key === null && !['move', 'cancel', 'section'].includes(command.cmd)) { applyItem(defaultItem(items, scope)); return; }
+    // 沒有焦點時只有「移動」「取消」、R／SR 區段與 SL 聚焦選單可直接執行（無可聚焦項目的 modal，例如卡牌預覽，仍須能用 B 關閉；
+    // 分頁不是方向焦點，沒有內容的分頁也必須能用 R／SR 離開；聚焦選單本身就是用來找焦點的）。
+    if (key === null && !['move', 'cancel', 'section', 'focusMenu'].includes(command.cmd)) { applyItem(defaultItem(items, scope)); return; }
     const current = items.all.find(i => i.key === key);
     if (current) lastRect = { left: current.left, right: current.right, top: current.top, bottom: current.bottom };
 
@@ -563,11 +574,14 @@
       case 'mapAct': if (layer && current && current.kind === 'town') layer.runDesktopMapAct(current.town); break;
       case 'cancel': cancel(scope); break;
       case 'section': changeSection(scope, command.step); break;
+      // SL：開啟／關閉聚焦選單（只移焦點）。客廳模式的 page／map 由 layer.dispatch 處理；這裡是桌面模式、大廳與 modal 內。
+      case 'focusMenu': if (layer) layer.runFocusMenuKey(); break;
       case 'focusTurnBar': focusTurnBar(items); break;
       default: break;
     }
     // 客廳模式（例如 modal 內的 A）：只有真的執行才開始 250ms 執行冷卻；桌面模式沒有 layer，不受影響。
-    if (activated && layerActive()) layer.noteActivation();
+    // SL 聚焦選單內的 A 只送出 snapshot 請求：成功移焦點後才由 layer 記錄冷卻（失敗的選定不阻擋下一個按鍵）。
+    if (activated && layerActive() && !focusMenuOpen) layer.noteActivation();
   }
 
   // ------------------------------------------------------------ card focus (A 預覽 / B 勾選 / 手牌 X 資源 Y 行動)
@@ -717,7 +731,7 @@
           <button id="padReconnectBtn" type="button">重新連線</button>
           <button id="padResetBtn" type="button">預設</button>
         </div>
-        <div class="pad-note">搖桿＝移動　A 確認　B 返回　R/SR 六個區段　Y 說明<br>Capture 結束行動（確認）　+ 陣營能力<br>卡牌：A 查看　手牌 X 資源／Y 行動　購買卡 B 勾選 → Y 購買所選（確認）<br>地圖目標：A 選取　Y 建立組織／確認移動／瓦解組織<br>客廳模式：A 進入內容區　手牌 B 棄置（確認）　按下搖桿 下一區</div>
+        <div class="pad-note">搖桿＝移動　A 確認　B 返回　R/SR 六個區段　Y 說明<br>Capture 結束行動（確認）　+ 陣營能力<br>卡牌：A 查看　手牌 X 資源／Y 行動　購買卡 B 勾選 → Y 購買所選（確認）<br>地圖目標：A 選取　Y 建立組織／確認移動／瓦解組織<br>SL 聚焦選單：依統治者／陣營區域跳到可建立組織的合法城鎮（只移焦點）<br>客廳模式：A 進入內容區　手牌 B 棄置（確認）　按下搖桿 下一區</div>
       </div>`;
     stage.appendChild(hud);
     const $ = id => document.getElementById(id);
@@ -756,17 +770,20 @@
 
   function hintText() {
     const scope = currentScope();
+    if (scope.kind === 'modal' && scope.id === Core.FOCUS_MENU_MODAL_ID) return '搖桿 選範圍　A 聚焦（不執行）　B／SL 返回';
     if (scope.kind === 'modal') {
       const cancel = modalCancelTarget(scope);
       // 客廳模式的 legend 自己補「R/SR 下一個區段」；桌面模式在這裡補。
       const section = !layerActive() && layer && layer.isSectionModal(scope.id) && !choiceLocked() ? '　R/SR 下一個區段' : '';
       return `移動 搖桿　A 確認${cancel ? '　B 返回' : ''}${section}`;
     }
+    // 有可分組的合法建立目標時，提示可用 SL 聚焦選單（客廳模式由提示列顯示）。
+    const menu = !layerActive() && layer && layer.focusMenuAvailable() ? '　SL 聚焦選單' : '';
     if (scope.kind === 'map') {
       const act = ctl.focusKind === 'map' && ctl.focusTown && layer && !layerActive() ? layer.desktopMapActLabel(ctl.focusTown) : null;
-      return `移動 搖桿　A 選取${act ? `　Y ${act}` : ''}　B 取消${choiceLocked() ? '' : '　R/SR 區段'}`;
+      return `移動 搖桿　A 選取${act ? `　Y ${act}` : ''}　B 取消${menu}${choiceLocked() ? '' : '　R/SR 區段'}`;
     }
-    if (choiceLocked()) return '必選地圖目標：R/SR 回戰略地圖';
+    if (choiceLocked()) return `必選地圖目標：R/SR 回戰略地圖${menu}`;
     const focused = ctl.focusKind === 'dom' ? cardContext({ kind: 'dom', el: ctl.focusEl }) : null;
     if (focused) {
       const buy = focused.zone === 'purchase' ? '　勾選後 Y 購買所選' : '';
@@ -807,7 +824,8 @@
       const relevant = records.some(r => !(hud && hud.contains(r.target)) && !isOverlayNode(r.target));
       if (relevant && ctl.padActive) { scheduleReconcile(); renderHud(); }
       if (relevant && layerActive()) layer.scheduleRender();
-      // 桌面模式的 Capture 危險確認單：既有按鈕失效或換了步驟就關閉（客廳模式由 layer render 處理）。
+      // 桌面模式的 Capture 危險確認單：既有按鈕失效或換了步驟就關閉；SL 聚焦選單：被其他視窗蓋過或離開遊戲就關閉
+      // （客廳模式由 layer render 處理）。
       else if (relevant && layer && layer.revalidateConfirm) layer.revalidateConfirm();
     });
     ctl.observer.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['style', 'class', 'disabled'] });

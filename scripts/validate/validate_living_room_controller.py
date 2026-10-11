@@ -8,6 +8,9 @@
 專用快捷鍵 Capture（結束行動，危險確認、預設返回、防連按；注入實機 b1 0x40，上游 b1 0x20 另驗相容）、PLUS（陣營能力）、
 手牌 B（棄置，危險確認）、購買卡 B 勾選 → Y（既有購買所選 → 購買確認單；不自動勾選）、
 地圖 Y（建立組織／確認移動／瓦解組織，iframe 權威重驗＋req 對應確認；含非第一列 A 選取後的 Y 與桌面模式）、
+SL 聚焦選單（統治者／陣營區域分組只來自目前合法建立目標，瓦解的 pending choice fail closed；A 只移焦點、開啟後 250ms 內被擋，
+可從其他分頁切到戰略地圖；從非預設列 B／×／SL 精確還原；背景鍵 scope lock 含正向對照；選定時已選城鎮改變、一般推送只觸發
+req 綁定刷新、斷線／停用與晚到回覆、缺 snapshot／逾時／候選消失 fail closed；55 吋可讀字級；選單開著時 Y 不穿透，選定後 Y 走既有建立流程）、
 按下搖桿（下一個內容區）的成功與 fail-closed（hidden／disabled／detached／條件不足／處理中鎖／iframe 缺席／
 逾時／過期回覆／ok:false／權威目標失效，以及失敗後 <250ms 的合法 retry 不受污染）；
 卡牌既有語意不退化、處理中鎖、重繪不跨區域（含重繪後 reconcile 前的輸入 fail closed）、斷線／重連 baseline、PC 滑鼠勾選、
@@ -30,7 +33,10 @@ from playwright.sync_api import sync_playwright
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from validate_joycon_controller import (  # noqa: E402
-    BIT, MOCK_WS, Pad, enable_controller, focus_dom_toward, focus_town_toward, post_json, start_server,
+    BIT, CMD_LOG_JS, DROP_TO_MAP_JS, EXECUTING_MAP_CMDS, FAST_A_JS, FIRST_IN_LIST_ORDER_JS, FOCUS_MENU_CLOSED_JS, FOCUS_MENU_JS,
+    FOCUS_MENU_OPEN_JS, FOCUS_MENU_ORDER_OK_JS, GUARD_JS, HOLD_MAP_CMDS_JS, INSTALL_RESPONDER_JS, INSTRUMENT_JS, MOCK_WS,
+    MOVER_ORGS_JS, PROBE_COUNTS_JS, RELEASE_MAP_CMDS_JS, RESPOND_TO_HELD_JS, RESTORE_TO_MAP_JS, SNAPSHOT_CMDS_JS, UNINSTRUMENT_JS,
+    VANISH_JS, Pad, enable_controller, expected_focus_groups, focus_dom_toward, focus_town_toward, menu_counts, post_json, start_server,
 )
 
 # 客廳模式額外用到的按鍵（位元與 static/controller_core.js BUTTON_BITS 相同）。CAPTURE 一律用實機訊號：只接右 Joy-Con 2 時
@@ -1383,6 +1389,15 @@ def scenario_dissolve(browser, base, record, errors):
     hints = S.hints()
     record("dissolve_choice_list_rows_carry_dissolve_action_and_hints", entered and s["mapRows"] == ["天津"] and s["mapActs"] == ["dissolve"]
            and hints.get("mapAct", {}).get("label") == "瓦解組織 天津" and hints.get("mapCancel", {}).get("key") == "B", [s, list(hints.values())])
+    # SL 聚焦選單只服務建立組織：瓦解的 pending choice → fail closed（不開選單、提示列沒有 SL、不送任何動作）
+    sends = S.spy()["sendAction"]
+    pad.tap("SL")
+    done = S.poll(f"!{LR_STATE}.focusMenuRequest && !{LR_STATE}.mapRequest", timeout=2500)
+    dis_menu, dis_status = page.evaluate(FOCUS_MENU_JS), page.evaluate("document.getElementById('lrBarStatus').textContent")
+    record("dissolve_choice_SL_focus_menu_fails_closed_no_build_targets",
+           done and not dis_menu["open"] and "目前沒有可聚焦的地圖目標" in dis_status and "focusMenu" not in hints
+           and S.spy()["sendAction"] == sends and lr()["mapSelected"] == s["mapSelected"], [dis_menu["open"], dis_status, list(hints)])
+    S.settle()
     mframe = map_frame(page)
     page.screenshot(path=str(OUT / "12_map_choice_Y_dissolve.png"))
     # iframe 收不到 → 逾時 fail closed（不瓦解、不上鎖）
@@ -2403,6 +2418,462 @@ def scenario_physical_shortcuts(browser, base, record, errors):
     ctx.close()
 
 
+# 55 吋客廳可讀性：字級以 1280×720 設計單位計（舞台用 transform 縮放，computed font-size 即設計單位，與 GEOMETRY 相同）；
+# 選單整塊在舞台內、每個選項都在面板內且未被遮擋、不是頂部窄條。
+FOCUS_MENU_GEOMETRY_JS = """() => { const stage = document.getElementById('designStage').getBoundingClientRect(); const scale = stage.width / 1280;
+  const glass = document.querySelector('#lrFocusMenu .lr-focus-glass').getBoundingClientRect();
+  const du = el => el ? parseFloat(getComputedStyle(el).fontSize) : null;
+  const opts = [...document.querySelectorAll('#lrFocusMenu .lr-focus-option')];
+  const inside = r => r.left >= glass.left - 1 && r.right <= glass.right + 1 && r.top >= glass.top - 1 && r.bottom <= glass.bottom + 1;
+  const hit = o => { const r = o.getBoundingClientRect(); const e = document.elementFromPoint((r.left + r.right) / 2, (r.top + r.bottom) / 2);
+    return !!e && (e === o || o.contains(e)); };
+  return { nameDu: du(document.querySelector('#lrFocusMenu .lr-focus-name')), countDu: du(document.querySelector('#lrFocusMenu .lr-focus-count')),
+    titleDu: du(document.getElementById('lrFocusMenuTitle')),
+    glassInStage: glass.left >= stage.left - 1 && glass.right <= stage.right + 1 && glass.top >= stage.top - 1 && glass.bottom <= stage.bottom + 1,
+    optionsInside: opts.length > 0 && opts.every(o => inside(o.getBoundingClientRect())), optionsUnobscured: opts.length > 0 && opts.every(hit),
+    notTopStrip: (glass.top - stage.top) / scale > 24 && glass.height / scale > 160,
+    hudDu: document.getElementById('hud').getBoundingClientRect().height / scale, tabsDu: document.getElementById('gameTabs').getBoundingClientRect().height / scale }; }"""
+BARS_DU_JS = """() => { const scale = document.getElementById('designStage').getBoundingClientRect().width / 1280;
+  return { hudDu: document.getElementById('hud').getBoundingClientRect().height / scale,
+           tabsDu: document.getElementById('gameTabs').getBoundingClientRect().height / scale }; }"""
+
+
+def scenario_focus_menu(browser, base, record, errors):
+    """客廳模式 SL 聚焦選單：組織經驗甲 → 大量合法建立目標；依統治者／陣營區域把清單焦點快速移到合法城鎮。"""
+    setup = new_game(base, ["組織經驗甲", "追隨者", "追隨者"])
+    ctx = browser.new_context(viewport={"width": 1920, "height": 1080})
+    ctx.add_init_script(MOCK_WS)
+    page = open_page(ctx, base, setup["url"] + "&display=living-room", errors)
+    S = Session(page, record)
+    pad, lr = S.pad, S.lr
+    enable_controller(page)
+    page.evaluate(SPY)
+    menu = lambda: page.evaluate(FOCUS_MENU_JS)
+    status = lambda: page.evaluate("document.getElementById('lrBarStatus').textContent")
+    guard = lambda: page.evaluate(GUARD_JS)
+    help_shown = lambda: page.evaluate("document.getElementById('lrHelp')?.hidden === false")
+    pad.neutral()
+    pad.tap("A")  # 第一次有效操作只放焦點（區域層）
+    S.settle()
+    # 地圖從未載入 → fail closed＋短原因（提示列狀態欄）
+    pad.tap("SL")
+    page.wait_for_timeout(150)
+    m0, s0 = menu(), status()
+    record("living_room_SL_without_map_snapshot_fails_closed_with_short_reason", not m0["open"] and "地圖尚未載入" in s0, [m0, s0])
+    S.settle()
+    pad.tap("A")  # 區域層 → 手牌內容層
+    S.settle()
+    on_build = lr()["itemKey"]
+    pad.tap("Y")  # 既有「行動」→ 伺服器 pending choice → 戰略地圖清單
+    entered = S.poll(f"document.querySelector('.game-tab.active').dataset.view === 'map' && {LR_STATE}.mapStage === 'choice'", timeout=20000)
+    S.settle()
+    if lr()["zone"] != "maplist" or lr()["layer"] != "item":
+        pad.tap("A")
+        S.settle()
+    mframe = map_frame(page)
+    legal = page.evaluate("(window.lastGameState.pending_choice?.towns || []).map(t => t.town)")
+    expected = expected_focus_groups(legal)
+    want_counts = {k: {n: len(v) for n, v in g.items()} for k, g in expected.items()}
+    t0 = (S.focus() or {}).get("town")
+    page.evaluate(CMD_LOG_JS)
+    mframe.evaluate(INSTALL_RESPONDER_JS)
+    # 基準在打出組織經驗甲（既有 play_card 送出一次）之後取：之後選單的任何操作都不得再送出遊戲動作。
+    sel0, orgs0, sends0 = lr()["mapSelected"], page.evaluate(MOVER_ORGS_JS), S.spy()["sendAction"]
+    hint_ids = [h["id"] for h in lr()["hints"]]
+    geo0 = page.evaluate(BARS_DU_JS)
+
+    def executing_since(n):
+        return [c for c in page.evaluate("window.__cmdLog")[n:] if c["cmd"] in EXECUTING_MAP_CMDS]
+
+    def no_side_effects(n):
+        return (S.spy()["sendAction"] == sends0 and not executing_since(n) and lr()["mapSelected"] == sel0
+                and page.evaluate(MOVER_ORGS_JS) == orgs0)
+
+    def open_menu():
+        pad.tap("SL")
+        ok = S.poll(FOCUS_MENU_OPEN_JS, timeout=3000)
+        page.wait_for_timeout(300)  # 開啟算一次執行：250ms 內的 A 會被擋
+        return ok
+
+    def on_row(town):
+        return S.poll(f"(() => {{ const s = {LR_STATE}; return s.zone === 'maplist' && s.layer === 'item' && s.itemKey === {json.dumps('town:' + str(town))}"
+                      f" && document.querySelector('.rl-pad-focus')?.dataset.town === {json.dumps(town)}; }})()", timeout=3000)
+
+    def row_town():
+        key = lr()["itemKey"] or ""
+        return key.split(":", 1)[1] if key.startswith("town:") else None
+
+    n0 = page.evaluate("window.__cmdLog.length")
+    a_pre = guard()["activatedAt"]
+    opened = open_menu()
+    m1 = menu()
+    a_open = guard()["activatedAt"]
+    geo = page.evaluate(FOCUS_MENU_GEOMETRY_JS)
+    legend = page.evaluate("document.getElementById('lrLegend').textContent")
+    page.screenshot(path=str(OUT / "30_living_room_focus_menu.png"))
+    record("living_room_SL_opens_focus_menu_grouped_by_ruler_and_region_from_legal_build_targets_only",
+           on_build == "hand:0:組織經驗甲" and entered and opened and len(set(legal)) >= 20 and "focusMenu" in hint_ids
+           and [s["kind"] for s in m1["sections"]] == ["ruler", "camp"] and [s["title"] for s in m1["sections"]] == ["統治者", "陣營區域"]
+           and menu_counts(m1) == want_counts and f"可建立組織 {len(set(legal))} 個" in m1["title"]
+           and page.evaluate(FOCUS_MENU_ORDER_OK_JS, m1["sections"]) and m1["focusInMenu"] and m1["focusKey"] == m1["firstKey"]
+           and "A 聚焦" in legend and a_open is not None and (a_pre is None or a_open > a_pre) and no_side_effects(n0),
+           [on_build, entered, hint_ids, m1, want_counts, legend, a_pre, a_open])
+    record("living_room_focus_menu_is_readable_on_55_inch_and_adds_no_top_strip",
+           geo["nameDu"] >= 20 and geo["countDu"] >= 16 and geo["titleDu"] >= 24 and geo["glassInStage"] and geo["optionsInside"]
+           and geo["optionsUnobscured"] and geo["notTopStrip"] and abs(geo["hudDu"] - geo0["hudDu"]) < 0.5
+           and abs(geo["tabsDu"] - geo0["tabsDu"]) < 0.5, [geo, geo0])
+    pad.tap("B")
+    S.poll(FOCUS_MENU_CLOSED_JS)
+    on_row(t0)
+    S.settle()
+
+    # 開啟後 250ms 內的 A（焦點一落到選項就按）：被執行冷卻擋下，不送選定請求；冷卻過後同一個 A 才選定並移焦點
+    fast = page.evaluate(FAST_A_JS)
+    page.wait_for_timeout(300)
+    mf = menu()
+    picks_fast = page.evaluate(SNAPSHOT_CMDS_JS, fast["sends"]) if fast else ["?"]
+    if mf["open"]:
+        pad.tap("A")  # 只在選單開著時按（否則 A 會落在清單列上）
+    picked = mf["open"] and S.poll(FOCUS_MENU_CLOSED_JS) and S.poll(f"{LR_STATE}.zone === 'maplist' && {LR_STATE}.layer === 'item'")
+    picks_late = page.evaluate(SNAPSHOT_CMDS_JS, fast["sends"]) if fast else []
+    S.settle()
+    record("living_room_focus_menu_A_within_250ms_of_opening_is_ignored_then_accepted",
+           bool(fast) and fast["gap"] < 250 and mf["open"] and mf["focusInMenu"] and mf["focusKey"] == fast["key"] and not picks_fast
+           and picked and len(picks_late) == 1 and no_side_effects(n0), [fast, mf["open"], picks_fast, picks_late])
+
+    # scope lock＋正向對照：每個鍵先在選單開著時按（不得有任何效果），B 關閉並確認焦點回到原處後，
+    # 在完全相同的情境再按一次，證明它在選單關閉時確實會執行。
+    def lock_probe(key, observe, restore, undo=None):
+        S.settle()
+        before = observe()
+        opened_ = open_menu()
+        pad.tap(key)
+        page.wait_for_timeout(100)
+        s = menu()
+        during = observe()
+        locked = opened_ and s["open"] and s["focusInMenu"] and during == before and not lr()["confirmOpen"]
+        pad.tap("B")
+        back = S.poll(FOCUS_MENU_CLOSED_JS) and restore()
+        S.settle()
+        pad.tap(key)
+        page.wait_for_timeout(150)
+        after = observe()
+        if undo:
+            undo()
+        return {"key": key, "locked": locked, "executed": back and after != before, "before": before, "during": during, "after": after}
+
+    def at_zone_layer():
+        return S.poll(f"{LR_STATE}.zone === 'maplist' && {LR_STATE}.layer === 'zone'")
+
+    def to_log():
+        page.click("button.game-tab[data-view='log']")  # 測試設置：滑鼠切到戰況紀錄（必選目標時沒有內容區）
+        ok = S.poll("document.querySelector('.game-tab.active').dataset.view === 'log'")
+        S.settle()
+        return ok
+
+    def nothing_left_in_menu():
+        return S.poll("!document.querySelector('#lrFocusMenu .rl-pad-focus')")
+
+    # 清單列（真實）：方向鍵
+    t_row = row_town()
+    S.settle()
+    d_open = open_menu()
+    k_open, n_focus = menu()["focusKey"], len([c for c in page.evaluate("window.__cmdLog") if c["cmd"] == "focus"])
+    pad.push("right")
+    pad.push("down")
+    s_d = menu()
+    map_focus_sent = len([c for c in page.evaluate("window.__cmdLog") if c["cmd"] == "focus"]) - n_focus
+    pad.tap("B")
+    d_back = S.poll(FOCUS_MENU_CLOSED_JS) and on_row(t_row)
+    S.settle()
+    pad.push("down")
+    dpad = {"key": "dpad", "locked": d_open and s_d["open"] and s_d["focusInMenu"] and s_d["focusKey"] != k_open and map_focus_sent == 0,
+            "executed": d_back and row_town() not in (t_row, None), "before": t_row, "during": s_d["focusKey"], "after": row_town()}
+    # Capture／PLUS（清單列）：pending choice 期間遊戲停用結束行動與陣營能力 → 暫時啟用（click 一律攔下）
+    page.evaluate(INSTRUMENT_JS, [{"name": "advance", "selector": "#advanceStepBtn"},
+                                  {"name": "ability", "selector": "#redArmyAbilityBtn", "show": True}])
+    t_cap = row_town()
+    cap = lock_probe("CAPTURE", lambda: lr()["confirmOpen"], lambda: on_row(t_cap),
+                     undo=lambda: (pad.tap("B"), S.poll(f"!{LR_STATE}.confirmOpen")))
+    t_plus = row_town()
+    plus = lock_probe("PLUS", lambda: page.evaluate(PROBE_COUNTS_JS).get("ability", 0), lambda: on_row(t_plus))  # 之後有 1.5 秒處理中鎖
+    page.evaluate(UNINSTRUMENT_JS)
+    # HOME（兩種顯示模式都未綁定）：選單開著時同樣不穿透
+    S.settle()
+    home_before = [S.view(), lr()["itemKey"], help_shown()]
+    home_open = open_menu()
+    pad.tap("HOME")
+    s_home = menu()
+    home_ok = home_open and s_home["open"] and s_home["focusInMenu"] and [S.view(), lr()["itemKey"], help_shown()] == home_before
+    pad.tap("B")
+    home_ok = home_ok and S.poll(FOCUS_MENU_CLOSED_JS) and on_row(home_before[1].split(":", 1)[1])
+    # 戰況紀錄（真實；必選目標時沒有內容區）：R／SR 回戰略地圖（Y 在清單列上＝建立組織，見最後一項）
+    on_log = to_log()
+    r = lock_probe("R", S.view, nothing_left_in_menu, undo=to_log)
+    sr = lock_probe("SR", S.view, nothing_left_in_menu)
+    # 地圖清單的區域層（真實）：停用後重新啟用搖桿控制，第一下只放焦點並落在區域層；Y＝說明、STICK＝進入清單
+    S.settle()
+    page.evaluate("() => RedlineController.setEnabled(false)")  # 與設定面板「啟用搖桿控制」同一個函式
+    page.evaluate("() => RedlineController.setEnabled(true)")
+    S.poll("RedlineController.getState().status === 'connected'", timeout=8000)
+    pad.neutral()
+    pad.tap("A")
+    S.settle()
+    in_zone = at_zone_layer()
+    y_help = lock_probe("Y", help_shown, at_zone_layer, undo=lambda: (pad.tap("Y"), S.poll("document.getElementById('lrHelp')?.hidden !== false")))
+    stick = lock_probe("STICK", lambda: lr()["layer"], at_zone_layer)
+    # ZR（清單列→區域層）與 X（手牌資源）：只在必選鎖之外才會執行 → 暫時解除 parent 的必選鎖旗標（iframe 的建立目標不變，
+    # 選單照常開啟），X 另外暫時啟用該張手牌的「資源」（click 在 capture 階段計數並攔下，不送出任何動作）；測試後還原。
+    S.settle()
+    t_zr = row_town()
+    page.evaluate("() => { window.__slChoiceLock = lastSupportChoiceMapHighlightPayload; lastSupportChoiceMapHighlightPayload = null; }")
+    zr = lock_probe("ZR", lambda: lr()["layer"], lambda: on_row(t_zr))
+    page.click("button.game-tab[data-view='command']")
+    S.poll("document.querySelector('.game-tab.active').dataset.view === 'command'")
+    S.settle()
+    on_hand = S.goto_zone("hand", item=True)
+    hand_key = lr()["itemKey"]
+    page.evaluate(INSTRUMENT_JS, [{"name": "resource", "selector": '#hand .card[data-card-zone="hand"][data-card-name="追隨者"] .hand-card-action-btn[data-card-mode="resource"]'}])
+    x = lock_probe("X", lambda: page.evaluate(PROBE_COUNTS_JS).get("resource", 0),
+                   lambda: S.poll(f"{LR_STATE}.zone === 'hand' && {LR_STATE}.layer === 'item' && {LR_STATE}.itemKey === {json.dumps(hand_key)}"))
+    page.evaluate(UNINSTRUMENT_JS)
+    page.evaluate("() => { lastSupportChoiceMapHighlightPayload = window.__slChoiceLock; delete window.__slChoiceLock; }")
+    S.settle()
+    pad.tap("R")  # 必選地圖目標：R 回戰略地圖
+    S.poll("document.querySelector('.game-tab.active').dataset.view === 'map'")
+    S.settle()
+    if lr()["layer"] != "item":
+        pad.tap("A")
+        S.settle()
+    real = [dpad, r, sr, y_help, stick]
+    lifted = [zr, x]
+    instrumented = [cap, plus]
+    record("living_room_focus_menu_scope_lock_real_contexts_dpad_R_SR_Y_STICK_blocked_open_and_executed_closed",
+           on_log and in_zone and all(p["locked"] and p["executed"] for p in real) and home_ok and no_side_effects(n0), [real, home_ok])
+    record("living_room_focus_menu_scope_lock_outside_choice_lock_ZR_X_and_instrumented_capture_plus_blocked_open_and_executed_closed",
+           on_hand and all(p["locked"] and p["executed"] for p in lifted + instrumented) and no_side_effects(n0), [on_hand, lifted, instrumented])
+
+    # SL 再按／B／滑鼠 × 取消：從非預設的清單列開啟，關閉後精確回到該列（不是重新放第一列）
+    S.settle()
+    rows = lr()["mapRows"]
+    for _ in range(4):
+        if row_town() not in (rows[0], t0):
+            break
+        pad.push("down")
+        S.settle()
+    t_nd = row_town()
+    restores = {}
+    for how in ["SL", "B", "mouse"]:
+        S.settle()
+        open_menu()
+        if how == "mouse":
+            page.click("#lrFocusMenuClose")
+        else:
+            pad.tap(how)
+        restores[how] = S.poll(FOCUS_MENU_CLOSED_JS) and on_row(t_nd)
+    S.settle()
+    record("living_room_focus_menu_SL_again_B_and_mouse_close_restore_the_exact_non_default_row",
+           t_nd not in (rows[0], t0, None) and all(restores.values()) and no_side_effects(n0), [t_nd, rows[0], t0, restores, lr()["itemKey"]])
+
+    # A 選陣營區域（不含目前焦點）→ 清單焦點移到該區清單順序第一個合法城鎮；不選取、不建立；成功移焦點才開始執行冷卻
+    camps = m1["sections"][1]["groups"]
+    g1 = next((g for g in camps if t_nd not in expected["camp"][g["name"]] and g["count"] >= 2), None)
+    want1 = page.evaluate(FIRST_IN_LIST_ORDER_JS, sorted(expected["camp"][g1["name"]])) if g1 else None
+    open_menu()
+    reached1 = bool(g1) and focus_dom_toward(pad, page, f'#lrFocusMenu .lr-focus-option[data-key="{g1["key"]}"]')
+    page.wait_for_timeout(320)
+    a_pick0 = guard()["activatedAt"]
+    pad.tap("A")
+    moved = S.poll(FOCUS_MENU_CLOSED_JS) and on_row(want1)
+    a_pick1 = guard()["activatedAt"]
+    S.settle()
+    labels1 = mframe.evaluate("[...document.querySelectorAll('.pad-focus-label')].map(l => l.textContent)")
+    page.screenshot(path=str(OUT / "31_living_room_focus_menu_pick.png"))
+    record("living_room_focus_menu_A_moves_list_focus_to_first_legal_town_of_group_without_action",
+           reached1 and moved and labels1 == [want1] and want1 in lr()["mapRows"] and a_pick0 is not None and a_pick1 is not None
+           and a_pick1 > a_pick0 and no_side_effects(n0), [g1, want1, lr()["itemKey"], labels1, executing_since(n0), a_pick0, a_pick1])
+
+    # 從其他分頁（指揮中心；必選目標時沒有內容區）開選單 → A 經既有分頁切換回戰略地圖並聚焦該城鎮
+    page.click("button.game-tab[data-view='command']")
+    S.poll(f"{LR_STATE}.view === 'command'", timeout=3000)
+    S.settle()
+    cmd_zones = lr()["zones"]
+    rulers = m1["sections"][0]["groups"]
+    g2 = next((g for g in rulers[1:] if want1 not in expected["ruler"][g["name"]]), None)
+    want2 = page.evaluate(FIRST_IN_LIST_ORDER_JS, sorted(expected["ruler"][g2["name"]])) if g2 else None
+    from_cmd = open_menu()
+    reached2 = bool(g2) and focus_dom_toward(pad, page, f'#lrFocusMenu .lr-focus-option[data-key="{g2["key"]}"]')
+    page.wait_for_timeout(320)
+    pad.tap("A")
+    switched = S.poll(FOCUS_MENU_CLOSED_JS) and S.poll("document.querySelector('.game-tab.active').dataset.view === 'map'") and on_row(want2)
+    S.settle()
+    record("living_room_focus_menu_from_command_view_switches_to_map_via_existing_tab_and_focuses_town",
+           cmd_zones == [] and from_cmd and reached2 and switched and lr()["sectionKey"] == "view:map" and no_side_effects(n0),
+           [cmd_zones, g2, want2, lr()["itemKey"], lr()["sectionKey"]])
+
+    # 選定分組包含目前焦點 → 保留目前焦點
+    t2 = want2
+    firsts = {g["key"]: page.evaluate(FIRST_IN_LIST_ORDER_JS, sorted(expected[s["kind"]][g["name"]]))
+              for s in m1["sections"] for g in s["groups"] if t2 in expected[s["kind"]][g["name"]]}
+    g3key = next((k for k, first in firsts.items() if first != t2), None)
+    open_menu()
+    reached3 = bool(g3key) and focus_dom_toward(pad, page, f'#lrFocusMenu .lr-focus-option[data-key="{g3key}"]')
+    page.wait_for_timeout(320)
+    pad.tap("A")
+    kept = S.poll(FOCUS_MENU_CLOSED_JS) and on_row(t2)
+    S.settle()
+    record("living_room_focus_menu_keeps_current_focus_when_it_belongs_to_the_chosen_group",
+           reached3 and kept and no_side_effects(n0), [t2, g3key, firsts, lr()["itemKey"]])
+
+    # 開啟後 pending choice 的已選城鎮改變（iframe 權威資料改了、尚未推送）→ 選定時 fail closed：刷新選單、不移焦點
+    sel_to = next(t for t in sorted(set(legal)) if t != t2)
+    open_menu()
+    n_dr = page.evaluate("window.__cmdLog.length")
+    mframe.evaluate("(t) => { window.__slSelBackup = selectedTown; selectedTown = t; }", sel_to)
+    pad.tap("A")
+    drift_flash = S.poll("document.getElementById('lrBarStatus').textContent.includes('地圖狀態已改變')", timeout=2500)
+    m_dr = menu()
+    drift_focus = [c for c in page.evaluate("window.__cmdLog")[n_dr:] if c["cmd"] == "focus"]
+    drift_shown = page.evaluate(f"{LR_STATE}.focusMenu")
+    mframe.evaluate("() => { selectedTown = window.__slSelBackup; delete window.__slSelBackup; refreshDirectBuildUi(); }")
+    S.poll(f"{LR_STATE}.focusMenu && {LR_STATE}.focusMenu.selected === null", timeout=2500)
+    pad.tap("B")
+    drift_back = S.poll(FOCUS_MENU_CLOSED_JS) and on_row(t2)
+    S.settle()
+    record("living_room_focus_menu_pick_fails_closed_when_the_pending_choice_selection_changed_since_open",
+           drift_flash and m_dr["open"] and m_dr["focusInMenu"] and not drift_focus and (drift_shown or {}).get("selected") == sel_to
+           and drift_back and lr()["mapSelected"] == sel0 and no_side_effects(n0), [sel_to, m_dr["open"], drift_focus, drift_shown, drift_back])
+
+    # 選單開著時的一般推送（不帶 req、內容過期）不直接更新選單：只觸發一次新的 req 綁定 snapshot 請求，畫面以那份回覆為準
+    g_v = next((g for g in reversed(rulers) if t2 not in expected["ruler"][g["name"]]), None)
+    gone_v = sorted(expected["ruler"][g_v["name"]]) if g_v else []
+    open_menu()
+    n_rf = page.evaluate("window.__cmdLog.length")
+    stale_push = mframe.evaluate("() => window.__redlineControllerAdapter.snapshot()")  # 消失前的內容（不帶 req）
+    mframe.evaluate(VANISH_JS, gone_v)  # 權威資料改變，但不推送
+    mframe.evaluate("(m) => window.parent.postMessage(m, location.origin)", stale_push)
+    refreshed_rf = S.poll("(k) => !document.querySelector(`#lrFocusMenu .lr-focus-option[data-key=\"${k}\"]`)", g_v["key"] if g_v else "")
+    asked_rf = page.evaluate(SNAPSHOT_CMDS_JS, n_rf)
+    S.poll("!!document.querySelector('#lrFocusMenu .rl-pad-focus')")  # 選項重建後 reconcile 把焦點放回選單內
+    m_rf = menu()
+    mframe.evaluate("() => applySupportChoiceHighlight(window.__hlBackup)")  # 既有推送 → 再一次 req 綁定刷新
+    back_rf = S.poll("(k) => !!document.querySelector(`#lrFocusMenu .lr-focus-option[data-key=\"${k}\"]`)", g_v["key"] if g_v else "")
+    asked_rf2 = page.evaluate(SNAPSHOT_CMDS_JS, n_rf)
+    pad.tap("B")
+    rf_closed = S.poll(FOCUS_MENU_CLOSED_JS) and on_row(t2)
+    S.settle()
+    record("living_room_focus_menu_refreshes_only_from_request_bound_snapshots_not_from_routine_pushes",
+           bool(g_v) and "req" not in stale_push and all(t in {x["town"] for x in stale_push["targets"]} for t in gone_v)
+           and refreshed_rf and len(asked_rf) >= 1 and all(isinstance(c["req"], int) for c in asked_rf) and m_rf["open"] and m_rf["focusInMenu"]
+           and back_rf and len(asked_rf2) > len(asked_rf) and rf_closed and no_side_effects(n0),
+           {"group": g_v, "refreshed": refreshed_rf, "asked": asked_rf, "asked_after_restore": asked_rf2, "open": m_rf["open"],
+            "focusInMenu": m_rf["focusInMenu"], "back": back_rf, "closed": rf_closed})
+
+    # 候選在選定瞬間消失 → fail closed：選單刷新、焦點不移到消失的城鎮
+    g4 = next((g for g in reversed(rulers) if t2 not in expected["ruler"][g["name"]]), None)
+    gone = sorted(expected["ruler"][g4["name"]]) if g4 else []
+    open_menu()
+    reached4 = bool(g4) and focus_dom_toward(pad, page, f'#lrFocusMenu .lr-focus-option[data-key="{g4["key"]}"]')
+    page.wait_for_timeout(320)
+    n4 = page.evaluate("window.__cmdLog.length")
+    left = mframe.evaluate(VANISH_JS, gone)
+    pad.tap("A")
+    refreshed = S.poll("(k) => !document.querySelector(`#lrFocusMenu .lr-focus-option[data-key=\"${k}\"]`)", g4["key"] if g4 else "")
+    s4, m4 = status(), menu()
+    focused_gone = [c for c in page.evaluate("window.__cmdLog")[n4:] if c["cmd"] == "focus" and c["town"] in gone]
+    mframe.evaluate("() => applySupportChoiceHighlight(window.__hlBackup)")
+    back = S.poll("(k) => !!document.querySelector(`#lrFocusMenu .lr-focus-option[data-key=\"${k}\"]`)", g4["key"] if g4 else "")
+    pad.tap("B")
+    restored = S.poll(FOCUS_MENU_CLOSED_JS) and on_row(t2)
+    S.settle()
+    record("living_room_focus_menu_candidates_vanishing_at_selection_fail_closed_and_menu_refreshes",
+           reached4 and left == len(set(legal)) - len(gone) and refreshed and m4["open"] and m4["focusInMenu"]
+           and "此範圍已沒有合法目標" in s4 and not focused_gone and back and restored and no_side_effects(n0),
+           [g4, left, m4, s4, focused_gone, back, restored])
+
+    # bridge 斷線／控制器停用：開著的選單關閉、等待中的開啟請求作廢，晚到的 ok:true＋同一個 req 的 snapshot 不會再開啟
+    connected = "RedlineController.getState().status === 'connected'"
+    open_menu()
+    page.evaluate("() => window.__padClose()")
+    dc_closed = S.poll(FOCUS_MENU_CLOSED_JS, timeout=2000)
+    dc_reconnected = S.poll(connected, timeout=8000)
+    pad.neutral()
+    page.wait_for_timeout(300)
+    dc_still = not menu()["open"]
+    S.settle()
+    page.evaluate(HOLD_MAP_CMDS_JS)
+    pad.tap("SL")
+    pending_req = guard()["menuRequest"]
+    page.evaluate("() => window.__padClose()")
+    S.poll(f"!({connected})", timeout=2000)
+    cleared = guard()["menuRequest"] is None
+    held = page.evaluate(RESPOND_TO_HELD_JS, [{"kind": "result", "ok": True, "at": 0}, {"kind": "snapshot", "at": 5}])
+    page.wait_for_timeout(400)
+    late_open = menu()["open"]
+    late_arrivals = page.evaluate("window.__slArrivals || []")
+    page.evaluate(RELEASE_MAP_CMDS_JS)
+    S.poll(connected, timeout=8000)
+    pad.neutral()
+    page.wait_for_timeout(300)
+    S.settle()
+    late_still = not menu()["open"]
+    open_menu()
+    page.evaluate("() => RedlineController.setEnabled(false)")  # 與設定面板「啟用搖桿控制」取消勾選同一個函式
+    off_closed = S.poll(FOCUS_MENU_CLOSED_JS, timeout=2000) and not page.evaluate("RedlineController.getState().padActive")
+    page.evaluate("() => RedlineController.setEnabled(true)")
+    S.poll(connected, timeout=8000)
+    pad.neutral()
+    pad.tap("A")  # 重新啟用後第一下只放焦點
+    S.settle()
+    if lr()["layer"] != "item":
+        pad.tap("A")
+        S.settle()
+    record("living_room_focus_menu_closes_on_disconnect_or_disable_and_late_replies_never_open_it",
+           dc_closed and dc_reconnected and dc_still and bool(pending_req) and cleared and bool(held)
+           and [a["type"] for a in late_arrivals if held and a["req"] == held["req"]] == ["result", "snapshot"] and not late_open and late_still and off_closed
+           and not menu()["open"] and no_side_effects(n0),
+           [dc_closed, dc_reconnected, dc_still, pending_req, cleared, late_arrivals, late_open, late_still, off_closed])
+
+    # iframe 沒有回應：期間的一般推送不得開選單；1 秒逾時 fail closed
+    t2 = row_town()
+    page.evaluate(DROP_TO_MAP_JS)
+    pad.tap("SL")
+    mframe.evaluate("() => refreshDirectBuildUi()")
+    page.wait_for_timeout(300)
+    mid = menu()["open"]
+    expired = S.poll(f"{LR_STATE}.mapRequest === null", timeout=2500)
+    s5, end = status(), menu()["open"]
+    page.evaluate(RESTORE_TO_MAP_JS)
+    S.settle()
+    record("living_room_focus_menu_stale_snapshot_request_fails_closed",
+           not mid and expired and not end and "地圖沒有回應" in s5 and lr()["itemKey"] == f"town:{t2}" and no_side_effects(n0), [mid, expired, end, s5])
+
+    # 選定的城鎮仍走既有地圖操作：選單開著時 Y 不穿透；B 關閉後同一個 Y → iframe act（unique req）→ 對上 req 的 ok:true → 伺服器建立
+    S.settle(ignore_processing=False, timeout=4000)
+    na = page.evaluate("window.__cmdLog.length")
+    y_open = open_menu()
+    pad.tap("Y")
+    page.wait_for_timeout(300)
+    y_blocked = menu()["open"] and not [c for c in page.evaluate("window.__cmdLog")[na:] if c["cmd"] == "act"]
+    pad.tap("B")
+    y_back = S.poll(FOCUS_MENU_CLOSED_JS) and on_row(t2)
+    S.settle()
+    at_t2 = page.evaluate(ORGS_AT_JS, t2)
+    page.evaluate("""() => { window.__slResults = []; window.addEventListener('message', e => {
+      if (e.data && e.data.type === 'redline-controller-result' && e.data.cmd === 'act') window.__slResults.push(e.data); }); }""")
+    pad.tap("Y")
+    built = S.poll(f"({ORGS_AT_JS})({json.dumps(t2)}) > {at_t2}", timeout=8000)
+    S.settle(ignore_processing=True)
+    acts = [c for c in page.evaluate("window.__cmdLog")[na:] if c["cmd"] == "act"]
+    results = page.evaluate("window.__slResults")
+    ack = lr()["lastMapAck"] or {}
+    record("living_room_SL_focused_town_Y_is_locked_while_open_then_builds_via_existing_req_ack_path",
+           y_open and y_blocked and y_back and built and len(acts) == 1 and acts[0]["town"] == t2 and acts[0]["id"] == "directBuildBtn"
+           and len(results) == 1 and results[0]["req"] == acts[0]["req"] and results[0]["ok"] is True and ack.get("outcome") == "success"
+           and ack.get("req") == acts[0]["req"] and "build" not in S.spy()["calls"], [t2, y_blocked, acts, results, ack])
+    ctx.close()
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     checks, console_errors = [], []
@@ -2419,7 +2890,7 @@ def main():
         with sync_playwright() as pw:
             browser = pw.chromium.launch(headless=True)
             for scenario in (scenario_desktop, scenario_main, scenario_sections, scenario_faction, scenario_build, scenario_dissolve,
-                             scenario_connection, scenario_directional_exclusions, scenario_physical_shortcuts):
+                             scenario_connection, scenario_directional_exclusions, scenario_physical_shortcuts, scenario_focus_menu):
                 try:
                     scenario(browser, base, record, console_errors)
                 except Exception as exc:  # 讓單一情境的意外中斷以 FAIL 呈現，其餘情境照跑

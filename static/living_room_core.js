@@ -39,12 +39,14 @@
   // ---------------------------------------------------------------- logical actions
 
   // 只在客廳模式綁定：PLUS＝陣營能力、CAPTURE＝結束行動／步驟（危險確認）、ZR＝回區域層、STICK（按下搖桿）＝下一個內容區。
+  // SL＝聚焦選單（與桌面模式相同）。
   const BUTTON_ACTIONS = Object.freeze({
     A: 'confirm', B: 'cancel', X: 'focusTurnBar', Y: 'toggleHelp',
     R: 'nextSection', SR: 'prevSection', PLUS: 'factionAbility', ZR: 'zoneBack', CAPTURE: 'endStep', STICK: 'nextZone',
+    SL: 'focusMenu',
   });
 
-  /** HOME、SL 仍不綁定。 */
+  /** HOME 仍不綁定。 */
   function logicalAction(action) {
     if (!action) return null;
     if (action.type === 'nav') return { name: 'move', dir: action.dir };
@@ -63,11 +65,12 @@
    *   mapCanCancel: boolean,    // iframe snapshot 回報有可取消的既有流程
    *   item: null | { card: {zone, hasToggle, hasDiscard}|null, mapRow: boolean },
    * }
-   * 全域鍵（R/SR、Capture、PLUS、STICK）與焦點無關，任何層都先處理；其餘依區域層／內容層。
+   * 全域鍵（R/SR、Capture、PLUS、STICK、SL）與焦點無關，任何層都先處理；其餘依區域層／內容層。
    */
   function routeLivingRoom(ctx, logical) {
     if (!logical || !ctx) return null;
     const name = logical.name;
+    if (name === 'focusMenu') return { cmd: 'focusMenu' }; // 只移焦點；必選地圖目標時也可用（選定後回到戰略地圖）
     if (name === 'nextSection' || name === 'prevSection') {
       if (ctx.choiceLock && ctx.view === 'map') return null; // 必選地圖目標：留在地圖
       return { cmd: 'section', step: name === 'nextSection' ? 1 : -1 };
@@ -132,16 +135,18 @@
   ]));
   // 與焦點有關的 A／B／X／Y 類指令：非使用者造成的焦點變更（重繪、分頁切換、STICK 跳區）之後短時間內忽略。
   // 全域的 Capture／PLUS 不依賴焦點，不受此冷卻影響。
+  // focusMenuPick＝聚焦選單內選定一個選項（選單在游標下刷新後 300ms 內忽略）。
   const COOLDOWN_GATED = Object.freeze(new Set([
-    'activate', 'cardMode', 'cardToggle', 'cardPreview', 'cardDiscard', 'cardBuy', 'enterZone', 'mapPick', 'mapAct',
+    'activate', 'cardMode', 'cardToggle', 'cardPreview', 'cardDiscard', 'cardBuy', 'enterZone', 'mapPick', 'mapAct', 'focusMenuPick',
   ]));
   // 執行型按鍵之後 250ms 內不再接受下一個執行型按鍵：防止開啟 modal（購買確認、卡面預覽、危險確認）、
   // 地圖選取／取消或卡牌勾選的那一下連按落到新出現的按鈕上，或把剛勾的 checkbox 又取消。
   // modalConfirm＝客廳模式下 modal 內的 A。只延後輸入、不改變任何遊戲語意；
   // 方向移動、R/SR、STICK、ZR、回區域層與 modal 內的 B（取消／返回）不受影響。
+  // focusMenu（SL 開啟聚焦選單）／focusMenuPick（選定選項）只移焦點，不受處理中鎖限制，但同樣等待地圖確認與執行冷卻。
   const ACTIVATION_GATED = Object.freeze(new Set([
     'activate', 'cardMode', 'cardToggle', 'cardPreview', 'cardDiscard', 'cardBuy', 'enterZone',
-    'mapPick', 'mapAct', 'mapCancel', 'modalConfirm', 'endStep', 'factionAbility',
+    'mapPick', 'mapAct', 'mapCancel', 'modalConfirm', 'endStep', 'factionAbility', 'focusMenu', 'focusMenuPick',
   ]));
 
   function createGuard() { return { lockedAt: null, lockedToken: null, redrawAt: null, activatedAt: null, mapRequest: null }; }
@@ -166,12 +171,15 @@
   // （執行前已用權威資料重驗）時才算執行；送出後到回覆前為「等待確認」，不記錄冷卻、不上處理中鎖。
   // ok:false、逾時、沒有 iframe、對不上的 req（過期或偽造）一律 fail closed，不污染冷卻與處理中鎖。
 
-  /** 送出成功後登記唯一一筆等待中的請求。lock：成功後上處理中鎖；lockVia：iframe 回報走該控制時才上鎖。 */
+  /**
+   * 送出成功後登記唯一一筆等待中的請求。lock：成功後上處理中鎖；lockVia：iframe 回報走該控制時才上鎖；
+   * noActivation：確認成功也不記錄 250ms 執行冷卻（SL 聚焦選單的 snapshot 請求：真的開啟／移焦點後才由呼叫端記錄）。
+   */
   function beginMapRequest(guard, now, req, meta) {
     const m = meta || {};
     return {
       ...(guard || createGuard()),
-      mapRequest: { req, cmd: m.cmd || null, at: now, lock: m.lock === true, lockVia: m.lockVia || null },
+      mapRequest: { req, cmd: m.cmd || null, at: now, lock: m.lock === true, lockVia: m.lockVia || null, noActivation: m.noActivation === true },
     };
   }
 
@@ -189,7 +197,7 @@
 
   /**
    * 處理一筆（已 sanitize 的）iframe 回覆。outcome：
-   *   success — req 對上、未逾時、ok:true → 記錄 250ms 執行冷卻；lock 表示呼叫端要上處理中鎖。
+   *   success — req 對上、未逾時、ok:true → 記錄 250ms 執行冷卻（noActivation 的請求除外）；lock 表示呼叫端要上處理中鎖。
    *   failed  — req 對上、ok:false → 清掉等待，不記錄冷卻、不上鎖（下一個合法操作立即可用）。
    *   timeout — req 對上但已逾時 → 清掉等待，視為未執行。
    *   stale   — 沒有等待中的請求、沒有 req、req 或 cmd 對不上 → 完全忽略。
@@ -205,7 +213,7 @@
     if (mapRequestExpired(pending, now, config)) return { guard: cleared, outcome: 'timeout', lock: false, request: pending };
     if (result.ok !== true) return { guard: cleared, outcome: 'failed', lock: false, request: pending };
     const lock = pending.lock || (pending.lockVia !== null && result.via === pending.lockVia);
-    return { guard: noteActivation(cleared, now), outcome: 'success', lock, request: pending };
+    return { guard: pending.noActivation ? cleared : noteActivation(cleared, now), outcome: 'success', lock, request: pending };
   }
 
   /** 回傳 {allowed, reason, guard}；guard 可能被更新（逾時或 state 抵達後解鎖、地圖請求逾時）。 */
@@ -394,7 +402,8 @@
 
   // ---------------------------------------------------------------- dedicated-key hints（不可聚焦）
 
-  // 提示列只鏡射「目前就能用專用鍵執行」的既有、可見、啟用控制；排序 Y → X → B → PLUS → Capture（危險最右）。
+  // 提示列只鏡射「目前就能用專用鍵執行」的既有、可見、啟用控制（SL 聚焦選單只在有可分組的合法建立目標時出現）；
+  // 排序 Y → X → B → SL → PLUS → Capture（危險最右）。
   const HINTS = Object.freeze({
     mapAct: { key: 'Y', danger: false },
     cardBuy: { key: 'Y', danger: false },
@@ -403,6 +412,7 @@
     cardToggle: { key: 'B', danger: false },
     cardDiscard: { key: 'B', danger: true },
     mapCancel: { key: 'B', danger: false },
+    focusMenu: { key: 'SL', danger: false },
     factionAbility: { key: '+', danger: false },
     endStep: { key: 'Capture', danger: true },
   });
@@ -517,6 +527,114 @@
 
   function moveModeLabel(mode) { return mode === 'rail' ? '鐵路' : mode === 'road' ? '道路' : ''; }
 
+  // ---------------------------------------------------------------- SL focus menu（統治者／陣營區域 → 合法地圖城鎮）
+
+  // fail-closed 的短原因（兩種顯示模式的提示膠囊／提示列狀態欄）。
+  const FOCUS_MENU_REASONS = Object.freeze({
+    'no-snapshot': '地圖尚未載入：先用 R 切到戰略地圖',
+    'no-targets': '目前沒有可聚焦的地圖目標',
+    'no-group-data': '地圖資料不足，無法分組',
+    stale: '地圖沒有回應，請再試一次',
+    gone: '此範圍已沒有合法目標',
+    changed: '地圖狀態已改變，請重新選擇',
+    'no-game': '遊戲尚未開始',
+    'map-unavailable': '戰略地圖目前不可用',
+  });
+  const FOCUS_MENU_SECTIONS = Object.freeze([['ruler', '統治者'], ['camp', '陣營區域']]);
+
+  function focusMenuFail(reason) { return { ok: false, reason, stage: 'none', selected: null, total: 0, sections: [] }; }
+
+  /**
+   * SL 聚焦選單模型（純函式）。候選＝目前 pending choice 的合法「建立組織」目標（地圖清單 choice 段，每列 act＝build，
+   * 之後 Y＝directBuildBtn）；移動來源、移動目的地、瓦解或沒有 act 的 choice 都不是候選（no-targets）。
+   * 分組資料只取 snapshot 內 iframe 由 canonical 地圖資料帶來的 ruler／camp（groupMeta 版本必須相符）；
+   * 任一候選缺少分組資料或格式不合 → 整份 fail closed（no-group-data），不過濾、不補值。
+   * 每區只列出至少含 1 個合法目標的項目；城鎮與成員資格都去重。分組依城鎮數多→少、同數依名稱；分組內城鎮依清單順序。
+   * 缺 snapshot、沒有合法建立目標、沒有版本化分組資料或分不出任何組 → {ok:false, reason}（fail closed）。
+   */
+  function buildFocusMenu(snap) {
+    if (!snap || typeof snap !== 'object') return focusMenuFail('no-snapshot');
+    const list = buildMapList(snap);
+    if (list.stage !== 'choice' || !list.rows.length || !list.rows.every(r => r.act === 'build')) return focusMenuFail('no-targets');
+    if (snap.groupMeta !== Core.MAP_GROUP_META_VERSION) return focusMenuFail('no-group-data');
+    const order = [];
+    for (const row of list.rows) if (!order.includes(row.town)) order.push(row.town);
+    const meta = new Map(order.map(town => [town, { ruler: new Set(), camp: new Set() }]));
+    for (const t of snap.targets) {
+      const m = t && t.role === 'choice' ? meta.get(t.town) : null;
+      if (!m) continue; // 不是 pending choice 目標（例如 choice scope 裡的來源）
+      for (const [kind] of FOCUS_MENU_SECTIONS) {
+        const names = Core.sanitizeGroupNames(t[kind], kind);
+        if (!names) return focusMenuFail('no-group-data');
+        for (const name of names) m[kind].add(name);
+      }
+    }
+    const sections = FOCUS_MENU_SECTIONS.map(([kind, label]) => {
+      const groups = new Map();
+      for (const town of order) {
+        for (const name of meta.get(town)[kind]) {
+          if (!groups.has(name)) groups.set(name, []);
+          groups.get(name).push(town);
+        }
+      }
+      const items = [...groups].map(([name, towns]) => ({
+        key: `${kind}:${name}`, kind, name, count: towns.length, towns,
+        // rules.md：統治者清單含紅軍的城鎮＝牆內城鎮。
+        note: kind === 'ruler' && name === '紅軍' ? '牆內' : null,
+      })).sort((a, b) => (b.count - a.count) || byTown({ town: a.name }, { town: b.name }));
+      return { kind, label, groups: items };
+    });
+    if (!sections.some(s => s.groups.length)) return focusMenuFail('no-group-data');
+    return { ok: true, reason: null, stage: list.stage, selected: list.selected, total: order.length, sections };
+  }
+
+  /**
+   * 選定當下的新模型與畫面上的選單（開啟或上次以 req 綁定 snapshot 重畫時的模型）相比：清單段或 pending choice 的
+   * 已選城鎮變了 → true（不移焦點，改為刷新選單）。只有候選變少由各分組自己判斷（gone）。
+   */
+  function focusMenuDrift(shown, fresh) {
+    if (!shown || !fresh) return true;
+    return shown.stage !== fresh.stage || (shown.selected || null) !== (fresh.selected || null);
+  }
+
+  function findFocusMenuGroup(menu, key) {
+    if (!menu || !menu.ok || typeof key !== 'string') return null;
+    for (const section of menu.sections) {
+      const group = section.groups.find(g => g.key === key);
+      if (group) return group;
+    }
+    return null;
+  }
+
+  /** 選定分組後的焦點城鎮：目前焦點在該組內就保留，否則取清單順序第一個；沒有 → null（fail closed）。 */
+  function pickFocusMenuTown(group, preferred) {
+    const towns = group && Array.isArray(group.towns) ? group.towns : [];
+    if (typeof preferred === 'string' && towns.includes(preferred)) return preferred;
+    return towns[0] || null;
+  }
+
+  /** 聚焦選單只採用回應自己 snapshot 請求（同一個 req）的 snapshot；一般推送或過期回覆不算。 */
+  function matchesMenuRequest(pending, snap) {
+    return !!pending && !!snap && Core.isRequestId(pending.req) && snap.req === pending.req;
+  }
+
+  /**
+   * 等待中的聚焦選單請求 pending = {req, at（送出時間）, acked（已收到同一個 req 的 ok:true）} 收到一份 snapshot
+   * （已 sanitize；不合 schema 為 null）時的判定：
+   *   accept  — req 相同、已收到 ok:true，且在 mapAckTimeoutMs（1000ms）之內到達；
+   *   stale   — req 相同但還沒有 ok:true，或已到逾時（不開啟、不選定）；
+   *   invalid — 等待中收到不合 schema 的 snapshot（fail closed）；
+   *   ignore  — 沒有等待中的請求、一般推送（沒有 req）或其他 req（繼續等；逾時 fail closed）。
+   */
+  function menuSnapshotVerdict(pending, snap, now, config) {
+    const cfg = { ...DEFAULT_GUARD_CONFIG, ...config };
+    if (!pending) return 'ignore';
+    if (!snap) return 'invalid';
+    if (!matchesMenuRequest(pending, snap)) return 'ignore';
+    if (pending.acked !== true || !Number.isFinite(pending.at) || !Number.isFinite(now)) return 'stale';
+    return now - pending.at < cfg.mapAckTimeoutMs ? 'accept' : 'stale';
+  }
+
   // ---------------------------------------------------------------- dangerous confirm
 
   // 確認單預設焦點永遠是「返回」。
@@ -541,5 +659,6 @@
     isDirectionalExcluded, contentZonesFor, reconcileIndex, gridColumns, gridMove, listMove, pickZone, cycleZone, resolveZone,
     sectionOfKey, stepSection, buildKeyHints, pickFactionAbility, purchaseBuyBlocker, discardControlIndex,
     buildMapList, mapStageKey, mapActFor, moveModeLabel, confirmInfoLines,
+    FOCUS_MENU_REASONS, buildFocusMenu, focusMenuDrift, findFocusMenuGroup, pickFocusMenuTown, matchesMenuRequest, menuSnapshotVerdict,
   };
 });

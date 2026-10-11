@@ -3816,6 +3816,35 @@ html:not([data-display="living-room"]) .lr-confirm-overlay { z-index: 85; }
 html:not([data-display="living-room"]) .lr-confirm-glass { border: 2px solid #fca5a5; }
 html:not([data-display="living-room"]) .lr-confirm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
 html:not([data-display="living-room"]) .lr-confirm-ok { background: #b91c1c; border-color: #fecaca; color: #ffffff; }
+/* SL 聚焦選單（兩種顯示模式共用，controller_living_room.js）：精簡置中 modal；尺寸為 1280×720 設計單位，字級以 55 吋客廳可讀為準 */
+.lr-focus-overlay { z-index: 84; background: rgba(2, 6, 12, 0.72); }
+.lr-focus-glass {
+  width: 820px; max-height: 600px; box-sizing: border-box; padding: 18px 22px; display: flex; flex-direction: column; gap: 10px;
+  border: 2px solid rgba(255, 225, 77, 0.7); font-family: 'Noto Sans TC', sans-serif;
+}
+.lr-focus-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.lr-focus-glass #lrFocusMenuTitle { margin: 0; font-size: 26px; color: #ffe14d; }
+.lr-focus-close {
+  flex: 0 0 auto; width: 44px; height: 44px; padding: 0; border-radius: 10px; border: 1px solid rgba(148, 163, 184, 0.5);
+  background: rgba(17, 24, 39, 0.9); color: #f8fafc; font-size: 26px; line-height: 1; cursor: pointer;
+}
+.lr-focus-close:hover { background: rgba(51, 65, 85, 0.95); }
+.lr-focus-lead { font-size: 17px; line-height: 1.4; color: #e2e8f0; }
+#lrFocusMenuSections { min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 6px; }
+.lr-focus-section-title { margin-bottom: 6px; font-size: 20px; font-weight: 700; color: #bfdbfe; }
+.lr-focus-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.lr-focus-option {
+  display: flex; align-items: baseline; gap: 6px; min-width: 0; min-height: 56px; box-sizing: border-box; padding: 8px 12px;
+  border-radius: 12px; border: 2px solid #334155; background: #0f172a; color: #f8fafc; font-family: inherit; text-align: left; cursor: pointer;
+}
+.lr-focus-option:hover { border-color: #94a3b8; }
+.lr-focus-name { min-width: 0; font-size: 22px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lr-focus-tag { font-size: 16px; color: #fca5a5; white-space: nowrap; }
+.lr-focus-count { margin-left: auto; font-size: 17px; color: #fde68a; white-space: nowrap; }
+.lr-focus-empty { grid-column: 1 / -1; font-size: 17px; color: #94a3b8; }
+.lr-focus-footer { font-size: 16px; color: #fde68a; }
+/* 客廳模式：底部提示列（76px）保持可見，fail-closed 原因與按鍵說明照常顯示；不新增頂部窄條 */
+html[data-display="living-room"] .lr-focus-overlay { height: 644px; }
 
 /* ---- 客廳大螢幕模式（controller_living_room.js）：只在 html[data-display="living-room"] 下生效 ----
  * 舞台本身已等比縮放並留 5% title-safe 邊界（app.js resizeStage），以下尺寸都是 1280×720 設計單位，

@@ -33,9 +33,11 @@ test('living-room key map: PLUS = faction ability, CAPTURE = end step, STICK = n
   assert.deepEqual(press('CAPTURE'), { name: 'endStep' });
   assert.deepEqual(press('STICK'), { name: 'nextZone' });
   assert.deepEqual(press('ZR'), { name: 'zoneBack' });
-  for (const b of ['HOME', 'SL']) assert.equal(press(b), null, b);
-  // desktop mapping is untouched: + / CAPTURE / STICK / ZR still do nothing there
-  for (const b of ['PLUS', 'CAPTURE', 'STICK', 'ZR', 'HOME', 'SL']) assert.equal(C.logicalAction({ type: 'press', button: b }), null, `desktop ${b}`);
+  assert.deepEqual(press('SL'), { name: 'focusMenu' }, 'SL = focus menu (same as desktop)');
+  assert.equal(press('HOME'), null);
+  // desktop mapping is untouched: + / CAPTURE / STICK / ZR still do nothing there; SL is the shared focus menu
+  for (const b of ['PLUS', 'CAPTURE', 'STICK', 'ZR', 'HOME']) assert.equal(C.logicalAction({ type: 'press', button: b }), null, `desktop ${b}`);
+  assert.deepEqual(C.logicalAction({ type: 'press', button: 'SL' }), press('SL'));
 });
 
 // ---- router: global keys (any layer, page or map scope) ----
@@ -55,6 +57,32 @@ test('PLUS always routes to the faction ability and never to a focus jump or the
 
 test('STICK cycles content zones in every layer (focus only)', () => {
   for (const ctx of allCtxs()) assert.deepEqual(LR.routeLivingRoom(ctx, press('STICK')), { cmd: 'zoneCycle', step: 1 });
+});
+
+test('SL routes to the focus menu from every layer and view, including a pending map choice', () => {
+  for (const ctx of allCtxs()) {
+    for (const lock of [{}, { choiceLock: true }, { choiceLock: true, locked: true }]) {
+      assert.deepEqual(LR.routeLivingRoom({ ...ctx, ...lock }, press('SL')), { cmd: 'focusMenu' });
+    }
+  }
+});
+
+test('focus menu gating: opening is focus-only (no processing lock) but waits out map requests and the 250ms activation cooldown', () => {
+  const locked = LR.lockProcessing(LR.createGuard(), 1000, 7);
+  assert.equal(LR.gate(locked, 1100, 7, 'focusMenu').allowed, true, 'only moves focus: allowed while a game action is processing');
+  assert.equal(LR.gate(locked, 1100, 7, 'focusMenuPick').allowed, true);
+  const pending = LR.beginMapRequest(LR.createGuard(), 1000, 3, { cmd: 'act', lock: true });
+  assert.equal(LR.gate(pending, 1100, 1, 'focusMenu').reason, 'map-pending');
+  assert.equal(LR.gate(pending, 1100, 1, 'focusMenuPick').reason, 'map-pending');
+  const activated = LR.noteActivation(LR.createGuard(), 1000);
+  assert.equal(LR.gate(activated, 1100, 1, 'focusMenu').reason, 'activation-cooldown');
+  assert.equal(LR.gate(activated, 1100, 1, 'focusMenuPick').reason, 'activation-cooldown', 'A right after the menu opened is ignored');
+  assert.equal(LR.gate(activated, 1250, 1, 'focusMenuPick').allowed, true);
+  const redrawn = LR.noteRedraw(LR.createGuard(), 1000);
+  assert.equal(LR.gate(redrawn, 1100, 1, 'focusMenuPick').reason, 'redraw-cooldown', 'menu refreshed under the cursor: ignore A for 300ms');
+  assert.equal(LR.gate(redrawn, 1100, 1, 'focusMenu').allowed, true, 'opening does not depend on the current focus item');
+  for (const cmd of ['focusMenu', 'focusMenuPick']) assert.equal(LR.PROCESSING_GATED.has(cmd), false, cmd);
+  assert.deepEqual({ ...LR.DEFAULT_GUARD_CONFIG }, { processingTimeoutMs: 1500, redrawCooldownMs: 300, activationCooldownMs: 250, mapAckTimeoutMs: 1000 });
 });
 
 test('R/SR route to the global section ring from every layer; a pending map choice blocks them on the map', () => {
@@ -593,6 +621,200 @@ test('map Y labels and buttons come only from the row action', () => {
   assert.equal(LR.mapActFor({ town: '乙', act: null }, list), null);
   assert.equal(LR.mapActFor({ town: '乙', act: 'teleport' }, list), null);
   assert.equal(LR.mapActFor(null, list), null);
+});
+
+// ---- SL 聚焦選單：只由目前合法地圖目標（iframe 權威 snapshot＋canonical 統治者／陣營區域）建立分組 ----
+
+const zh = new Intl.Collator('zh-Hant');
+const sortZh = (arr) => [...arr].sort(zh.compare);
+const metaTarget = (town, ruler, camp, extra = {}) => ({ town, role: 'choice', x: 1, y: 1, act: 'build', ruler, camp, ...extra });
+const groupSnapshot = (targets, extra = {}) => C.sanitizeMapSnapshot({
+  type: 'redline-controller-map-snapshot', v: 1, seq: 1, scope: 'choice', buttons: [], groupMeta: 1, targets, ...extra,
+});
+const CHOICE_TARGETS = [
+  metaTarget('臺北', ['臺灣'], ['臺灣', '紅軍']),
+  metaTarget('新北', ['臺灣'], ['臺灣', '紅軍', '臺灣']),
+  metaTarget('沖繩', ['東洋'], ['臺灣']),
+  metaTarget('香港城', ['紅軍'], ['香港', '紅軍']),
+  metaTarget('曼谷', ['南洋'], []),
+  metaTarget('臺北', ['臺灣'], ['臺灣', '紅軍']),
+  // 不是目前合法目標（choice scope 裡的來源）：不得計入任何分組
+  { town: '北京', role: 'origin', x: 1, y: 1, ruler: ['紅軍'], camp: ['紅軍'] },
+];
+const groupsOf = (menu, kind) => menu.sections.find(s => s.kind === kind).groups.map(g => [g.name, g.count, g.towns]);
+
+test('focus menu groups only current legal map targets by 統治者 and 陣營區域, de-duplicated, with counts', () => {
+  const menu = LR.buildFocusMenu(groupSnapshot(CHOICE_TARGETS));
+  assert.equal(menu.ok, true);
+  assert.equal(menu.reason, null);
+  assert.equal(menu.stage, 'choice');
+  assert.equal(menu.total, 5, '臺北 listed twice still counts once; the origin 北京 is not a legal target here');
+  assert.deepEqual(menu.sections.map(s => [s.kind, s.label]), [['ruler', '統治者'], ['camp', '陣營區域']]);
+  const ties = sortZh(['東洋', '紅軍', '南洋']);
+  assert.deepEqual(groupsOf(menu, 'ruler'), [
+    ['臺灣', 2, sortZh(['臺北', '新北'])],
+    ...ties.map(name => [name, 1, [{ 東洋: '沖繩', 紅軍: '香港城', 南洋: '曼谷' }[name]]]),
+  ]);
+  const camps = sortZh(['臺灣', '紅軍']);
+  assert.deepEqual(groupsOf(menu, 'camp'), [
+    ...camps.map(name => [name, 3, sortZh(name === '臺灣' ? ['臺北', '新北', '沖繩'] : ['臺北', '新北', '香港城'])]),
+    ['香港', 1, ['香港城']],
+  ], 'every listed region holds >=1 legal target; 曼谷 (no camp tag) is in no region; 紅軍 excludes the non-target 北京');
+  const red = menu.sections[0].groups.find(g => g.name === '紅軍');
+  assert.equal(red.key, 'ruler:紅軍');
+  assert.equal(red.note, '牆內', 'rules.md: a town whose ruler list contains 紅軍 is inside the wall');
+  assert.equal(menu.sections[1].groups.find(g => g.name === '紅軍').note, null);
+});
+
+test('focus menu ordering and counts are deterministic regardless of snapshot order', () => {
+  const a = LR.buildFocusMenu(groupSnapshot(CHOICE_TARGETS));
+  const b = LR.buildFocusMenu(groupSnapshot([...CHOICE_TARGETS].reverse()));
+  const c = LR.buildFocusMenu(groupSnapshot([CHOICE_TARGETS[3], CHOICE_TARGETS[0], CHOICE_TARGETS[6], CHOICE_TARGETS[4], CHOICE_TARGETS[2], CHOICE_TARGETS[1]]));
+  assert.deepEqual(b, a);
+  assert.deepEqual(c, a);
+  // groups: more matching towns first, then name; towns: the map list order
+  for (const section of a.sections) {
+    for (let i = 1; i < section.groups.length; i += 1) {
+      const [p, q] = [section.groups[i - 1], section.groups[i]];
+      assert.ok(p.count > q.count || (p.count === q.count && zh.compare(p.name, q.name) <= 0), `${p.name} before ${q.name}`);
+    }
+  }
+});
+
+test('focus menu lists only legal build targets: move sources, move destinations, dissolve and act-less choices fail closed', () => {
+  const destination = groupSnapshot([
+    { town: '桃園', role: 'move', x: 1, y: 1, mode: 'rail', cost: 1, act: 'move', ruler: ['臺灣'], camp: ['臺灣'] },
+    { town: '基隆', role: 'move', x: 1, y: 1, mode: 'road', cost: 1, act: 'move', ruler: ['臺灣'], camp: ['臺灣', '紅軍'] },
+    { town: '臺北', role: 'origin', x: 1, y: 1, ruler: ['臺灣'], camp: ['臺灣', '紅軍', '香港'] },
+  ], { scope: 'move', selected: '臺北' });
+  assert.equal(LR.buildMapList(destination).stage, 'destination', 'the map list itself still shows the destinations');
+  const source = groupSnapshot([
+    { town: '臺北', role: 'origin', x: 1, y: 1, ruler: ['臺灣'], camp: [] },
+    { town: '天津', role: 'origin', x: 1, y: 1, act: 'dissolve', ruler: ['紅軍'], camp: ['紅軍'] },
+  ], { scope: 'move' });
+  assert.equal(LR.buildMapList(source).stage, 'source');
+  const dissolve = groupSnapshot(CHOICE_TARGETS.filter(t => t.role === 'choice').map(t => ({ ...t, act: 'dissolve' })));
+  const noAct = groupSnapshot(CHOICE_TARGETS.filter(t => t.role === 'choice').map(t => ({ ...t, act: undefined })));
+  const mixed = groupSnapshot([metaTarget('臺北', ['臺灣'], []), metaTarget('天津', ['紅軍'], [], { act: 'dissolve' })]);
+  for (const [label, snap] of [['move destination', destination], ['move source', source], ['dissolve choice', dissolve],
+    ['choice without an action', noAct], ['choice mixing build and dissolve', mixed]]) {
+    assert.ok(snap, `${label}: the snapshot itself is valid`);
+    const menu = LR.buildFocusMenu(snap);
+    assert.deepEqual([menu.ok, menu.reason, menu.sections], [false, 'no-targets', []], label);
+  }
+  // 只有建立組織的 pending choice：之後 Y＝directBuildBtn。
+  const build = LR.buildFocusMenu(groupSnapshot(CHOICE_TARGETS));
+  assert.equal(build.ok, true);
+  for (const town of build.sections.flatMap(s => s.groups.flatMap(g => g.towns))) {
+    assert.equal(LR.mapActFor(LR.buildMapList(groupSnapshot(CHOICE_TARGETS)).rows.find(r => r.town === town), null).id, 'directBuildBtn', town);
+  }
+});
+
+test('focus menu fails closed: missing snapshot, no legal targets, missing or empty group data', () => {
+  assert.deepEqual([LR.buildFocusMenu(null).ok, LR.buildFocusMenu(null).reason], [false, 'no-snapshot']);
+  assert.equal(LR.buildFocusMenu(groupSnapshot([], { scope: 'none' })).reason, 'no-targets');
+  assert.equal(LR.buildFocusMenu(groupSnapshot([])).reason, 'no-targets');
+  assert.equal(LR.buildFocusMenu(groupSnapshot([{ town: '北京', role: 'origin', x: 1, y: 1, ruler: ['紅軍'], camp: [] }])).reason, 'no-targets',
+    'choice scope without choice targets has nothing legal to focus');
+  const legacy = C.sanitizeMapSnapshot({ type: 'redline-controller-map-snapshot', v: 1, scope: 'choice', buttons: [], targets: [{ town: '臺北', role: 'choice', x: 1, y: 1, act: 'build' }] });
+  assert.equal(LR.buildFocusMenu(legacy).reason, 'no-group-data', 'an iframe without versioned group metadata never guesses');
+  assert.equal(groupSnapshot([metaTarget('無名', [], [])]), null, 'the parent sanitizer rejects an empty ruler list');
+  for (const bad of [LR.buildFocusMenu(null), LR.buildFocusMenu(legacy)]) assert.deepEqual(bad.sections, []);
+  for (const code of ['no-snapshot', 'no-targets', 'no-group-data', 'stale', 'gone', 'changed', 'no-game', 'map-unavailable']) {
+    const textValue = LR.FOCUS_MENU_REASONS[code];
+    assert.ok(typeof textValue === 'string' && textValue.length > 0 && textValue.length <= 24, code);
+  }
+});
+
+test('focus menu: any candidate with missing or invalid group data fails the whole menu closed (nothing filtered or coerced)', () => {
+  // buildFocusMenu 也直接驗證（不只依賴 parent sanitizer）：每個候選都要有非空 ruler 陣列與 camp 陣列。
+  const raw = (targets) => ({ scope: 'choice', groupMeta: 1, selected: null, targets });
+  const good = metaTarget('臺北', ['臺灣'], ['臺灣']);
+  assert.equal(LR.buildFocusMenu(raw([good])).ok, true);
+  for (const [label, bad] of [
+    ['ruler missing', metaTarget('新北', undefined, ['臺灣'])],
+    ['empty ruler list', metaTarget('新北', [], ['臺灣'])],
+    ['ruler not an array', metaTarget('新北', '臺灣', ['臺灣'])],
+    ['camp missing', metaTarget('新北', ['臺灣'], undefined)],
+    ['camp not an array', metaTarget('新北', ['臺灣'], '臺灣')],
+    ['invalid camp entry', metaTarget('新北', ['臺灣'], ['臺灣', 3])],
+    ['empty ruler name', metaTarget('新北', [''], [])],
+  ]) {
+    const menu = LR.buildFocusMenu(raw([good, bad]));
+    assert.deepEqual([menu.ok, menu.reason, menu.total, menu.sections], [false, 'no-group-data', 0, []], label);
+  }
+});
+
+test('focus menu context: stage or pending-choice selection drift between open and pick is detected', () => {
+  const shown = LR.buildFocusMenu(groupSnapshot(CHOICE_TARGETS));
+  assert.equal(shown.selected, null);
+  assert.equal(LR.focusMenuDrift(shown, LR.buildFocusMenu(groupSnapshot([...CHOICE_TARGETS].reverse()))), false, 'same state, any order');
+  const fewer = LR.buildFocusMenu(groupSnapshot(CHOICE_TARGETS.slice(1)));
+  assert.equal(LR.focusMenuDrift(shown, fewer), false, 'candidates shrinking is handled per group (gone), not as drift');
+  const picked = LR.buildFocusMenu(groupSnapshot(CHOICE_TARGETS, { selected: '沖繩' }));
+  assert.equal(picked.selected, '沖繩');
+  assert.equal(LR.focusMenuDrift(shown, picked), true, 'the pending-choice selection changed');
+  assert.equal(LR.focusMenuDrift(picked, LR.buildFocusMenu(groupSnapshot(CHOICE_TARGETS, { selected: '曼谷' }))), true);
+  assert.equal(LR.focusMenuDrift(shown, { ...shown, stage: 'destination' }), true, 'stage changed');
+  assert.equal(LR.focusMenuDrift(shown, null), true);
+  assert.equal(LR.focusMenuDrift(null, shown), true);
+});
+
+test('focus menu pick: keep the current focus when it matches, otherwise the first town in list order; unknown groups fail closed', () => {
+  const menu = LR.buildFocusMenu(groupSnapshot(CHOICE_TARGETS));
+  const taiwan = LR.findFocusMenuGroup(menu, 'camp:臺灣');
+  assert.deepEqual(taiwan.towns, sortZh(['臺北', '新北', '沖繩']));
+  assert.equal(LR.pickFocusMenuTown(taiwan, '沖繩'), '沖繩', 'current focus is in the chosen group: stay');
+  assert.equal(LR.pickFocusMenuTown(taiwan, '香港城'), taiwan.towns[0], 'not in the group: first town in list order');
+  assert.equal(LR.pickFocusMenuTown(taiwan, null), taiwan.towns[0]);
+  assert.equal(LR.findFocusMenuGroup(menu, 'ruler:不存在'), null);
+  assert.equal(LR.findFocusMenuGroup(menu, 'bogus'), null);
+  assert.equal(LR.findFocusMenuGroup(LR.buildFocusMenu(null), 'ruler:臺灣'), null);
+  assert.equal(LR.pickFocusMenuTown(null, '臺北'), null);
+  assert.equal(LR.pickFocusMenuTown({ towns: [] }, '臺北'), null);
+});
+
+test('focus menu opens / picks only from the snapshot answering its own request (stale or foreign snapshots never count)', () => {
+  const snap = (req) => groupSnapshot(CHOICE_TARGETS, req === undefined ? {} : { req });
+  assert.equal(LR.matchesMenuRequest({ req: 5 }, snap(5)), true);
+  assert.equal(LR.matchesMenuRequest({ req: 5 }, snap(6)), false);
+  assert.equal(LR.matchesMenuRequest({ req: 5 }, snap()), false, 'a routine push without req is not the answer');
+  assert.equal(LR.matchesMenuRequest(null, snap(5)), false);
+  assert.equal(LR.matchesMenuRequest({ req: 5 }, null), false);
+});
+
+test('focus menu snapshot verdict: needs the matching req, a prior timely ok:true and arrival before the 1000 ms timeout', () => {
+  const snap = (req) => groupSnapshot(CHOICE_TARGETS, req === undefined ? {} : { req });
+  const pending = { req: 5, at: 1000, acked: true };
+  assert.equal(LR.DEFAULT_GUARD_CONFIG.mapAckTimeoutMs, 1000);
+  assert.equal(LR.menuSnapshotVerdict(pending, snap(5), 1010), 'accept');
+  assert.equal(LR.menuSnapshotVerdict(pending, snap(5), 1999), 'accept', 'last millisecond before the timeout');
+  assert.equal(LR.menuSnapshotVerdict(pending, snap(5), 2000), 'stale', 'at the timeout: never opens or selects');
+  assert.equal(LR.menuSnapshotVerdict(pending, snap(5), 2600), 'stale');
+  assert.equal(LR.menuSnapshotVerdict({ ...pending, acked: false }, snap(5), 1010), 'stale', 'no matching ok:true yet');
+  assert.equal(LR.menuSnapshotVerdict({ req: 5, at: 1000 }, snap(5), 1010), 'stale', 'ack flag missing');
+  assert.equal(LR.menuSnapshotVerdict(pending, snap(6), 1010), 'ignore', 'another request: wait for ours (times out)');
+  assert.equal(LR.menuSnapshotVerdict(pending, snap(), 1010), 'ignore', 'routine push without req');
+  assert.equal(LR.menuSnapshotVerdict(pending, null, 1010), 'invalid', 'a schema-invalid snapshot while waiting fails closed');
+  assert.equal(LR.menuSnapshotVerdict(null, snap(5), 1010), 'ignore', 'nothing pending');
+  assert.equal(LR.menuSnapshotVerdict(null, null, 1010), 'ignore');
+  assert.equal(LR.menuSnapshotVerdict({ req: 5, at: 'x', acked: true }, snap(5), 1010), 'stale', 'unknown send time');
+});
+
+test('focus menu snapshot request: a successful ack starts no activation cooldown; only the caller does after opening or focusing', () => {
+  const g = LR.beginMapRequest(LR.createGuard(), 1000, 4, { cmd: 'snapshot', noActivation: true });
+  assert.equal(g.mapRequest.noActivation, true);
+  const res = C.sanitizeMapResult({ type: 'redline-controller-result', v: 1, cmd: 'snapshot', req: 4, ok: true });
+  const out = LR.settleMapResult(g, 1010, res);
+  assert.equal(out.outcome, 'success');
+  assert.equal(out.lock, false);
+  assert.equal(out.guard.activatedAt, null, 'a fail-closed open / pick must not block the next executing key');
+  assert.equal(out.guard.mapRequest, null);
+  for (const cmd of ['mapAct', 'focusMenuPick', 'endStep', 'factionAbility']) assert.equal(LR.gate(out.guard, 1020, 1, cmd).allowed, true, cmd);
+  // 其他地圖指令照舊：成功確認才記錄 250ms 冷卻
+  const act = LR.settleMapResult(LR.beginMapRequest(LR.createGuard(), 1000, 5, { cmd: 'act', lock: true }), 1010,
+    C.sanitizeMapResult({ type: 'redline-controller-result', v: 1, cmd: 'act', req: 5, ok: true }));
+  assert.equal(act.guard.activatedAt, 1010);
 });
 
 test('confirm dialog defaults to cancel and info lines only reflect client-visible counts', () => {

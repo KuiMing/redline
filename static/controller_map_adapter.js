@@ -56,11 +56,17 @@
     return null;
   }
 
-  function snapshotMessage() {
+  /**
+   * req：只有回應帶 req 的 `snapshot` 指令時才帶（parent 的 SL 聚焦選單只採用對上自己 req 的那一份，避免用到過期推送）。
+   * 每個目標附上 canonical 地圖資料（/map-data）的統治者／陣營區域，版本由 groupMeta 宣告；任一目標的資料不合法時
+   * 整份都不帶分組資料（不宣告 groupMeta），parent 的聚焦選單因此 fail closed，其餘地圖控制不受影響。
+   */
+  function snapshotMessage(req) {
     const info = currentModel();
     const mapEl = document.getElementById('map');
     const origin = mapEl ? mapEl.getBoundingClientRect() : { left: 0, top: 0 };
     const targets = [];
+    const groups = [];
     for (const t of info.model.targets) {
       const town = byName.get(t.town);
       if (!town) continue;
@@ -70,7 +76,10 @@
       if (t.cost !== undefined && t.cost !== null) target.cost = t.cost;
       if (t.act) target.act = t.act;
       targets.push(target);
+      groups.push(Core.townGroupMeta(town));
     }
+    const groupMeta = groups.every(Boolean);
+    if (groupMeta) targets.forEach((target, i) => { target.ruler = groups[i].ruler; target.camp = groups[i].camp; });
     const buttons = info.model.buttons.map(b => {
       const r = info.buttons.get(b.id).rect;
       return { id: b.id, label: b.label || b.id, x: r.left, y: r.top, w: r.width, h: r.height };
@@ -87,6 +96,8 @@
       canCancel: !!cancelAvailable(info),
       selected: info.model.selected,
       pending: info.model.pending,
+      ...(groupMeta ? { groupMeta: Core.MAP_GROUP_META_VERSION } : {}),
+      ...(Core.isRequestId(req) ? { req } : {}),
     };
   }
 
@@ -98,9 +109,9 @@
     }
   }
 
-  function pushSnapshot() {
+  function pushSnapshot(req) {
     pushTimer = null;
-    postToParent(snapshotMessage());
+    postToParent(snapshotMessage(req));
   }
 
   // 任何地圖狀態變更都排一次（合併）推送；parent 只用它來畫焦點，真正執行時 iframe 會重驗。
@@ -226,7 +237,8 @@
       type: 'redline-controller-result', v: Core.MAP_MESSAGE_VERSION, cmd: command.cmd, req: command.req,
       ok: result.ok === true, reason: result.reason || null, via: result.via || null,
     });
-    pushSnapshot();
+    // 收到指令當下用權威資料重算一份；`snapshot` 指令的 req 原樣帶回，parent 據此判斷這份不是過期推送。
+    pushSnapshot(command.cmd === 'snapshot' ? command.req : null);
   });
 
   // 既有函式變更地圖狀態時順便通知 parent（不改函式行為，只加掛 hook）。

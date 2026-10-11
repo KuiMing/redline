@@ -184,13 +184,146 @@ test('stale detection', () => {
   assert.equal(C.isStale(C.createInputState(), 0), true);
 });
 
-test('logical mapping: + / HOME / CAPTURE / ZR / STICK / SL never produce actions', () => {
-  for (const b of ['PLUS', 'HOME', 'CAPTURE', 'ZR', 'STICK', 'SL']) {
+test('logical mapping: + / HOME / CAPTURE / ZR / STICK never produce desktop actions; SL opens the focus menu', () => {
+  for (const b of ['PLUS', 'HOME', 'CAPTURE', 'ZR', 'STICK']) {
     assert.equal(C.logicalAction({ type: 'press', button: b }), null, b);
   }
+  assert.deepEqual(C.logicalAction({ type: 'press', button: 'SL' }), { name: 'focusMenu' });
   assert.deepEqual(C.logicalAction({ type: 'press', button: 'A' }), { name: 'confirm' });
   assert.deepEqual(C.logicalAction({ type: 'press', button: 'R' }), { name: 'nextSection' });
   assert.deepEqual(C.logicalAction({ type: 'press', button: 'SR' }), { name: 'prevSection' });
+});
+
+// ---- SL 聚焦選單 ----
+
+test('SL: the existing b0 0x20 mapping is kept and decodes to SL only (no new raw bit)', () => {
+  assert.deepEqual(C.BUTTON_BITS.SL, [0, 0x20]);
+  assert.equal(C.BUTTON_ALT_BITS.SL, undefined, 'no alternate bit invented for SL');
+  const pressed = (b0, b1) => Object.entries(C.decodeButtonBytes(b0, b1)).filter(([, v]) => v).map(([k]) => k);
+  assert.deepEqual(pressed(0x20, 0x00), ['SL']);
+  assert.deepEqual(pressed(0x30, 0x00), ['SL', 'SR'], 'SL with SR held: two distinct keys');
+  assert.deepEqual(pressed(0x00, 0x20), ['CAPTURE'], 'b1 0x20 stays CAPTURE, never SL');
+  assert.equal(C.normalizeFrame({ x: 0, y: 0, buttons: 0x0020 }).buttons.SL, true);
+});
+
+test('SL: physical byte → one logical focusMenu per press; held and reconnect-held never re-fire', () => {
+  const raw = (b0) => C.normalizeFrame({ x: 0.01, y: -0.02, buttons: [b0, 0] });
+  const logical = (steps) => {
+    let state = C.createInputState();
+    const out = [];
+    for (const [t, b0] of steps) {
+      const r = C.reduceFrame(state, raw(b0), t);
+      state = r.state;
+      out.push(...r.actions.map(a => C.logicalAction(a)).filter(Boolean).map(l => l.name));
+    }
+    return out;
+  };
+  // neutral → SL held for several frames → release → SL again
+  assert.deepEqual(logical([[0, 0], [33, 0x20], [66, 0x20], [100, 0x20], [133, 0], [166, 0x20], [200, 0]]), ['focusMenu', 'focusMenu']);
+  // (re)connect while SL is already held: baseline only; fires again only after a release
+  assert.deepEqual(logical([[0, 0x20], [33, 0x20], [66, 0x20]]), []);
+  assert.deepEqual(logical([[0, 0x20], [33, 0x20], [66, 0], [100, 0x20]]), ['focusMenu']);
+  // SR pressed while SL stays held: SR fires, SL does not repeat
+  assert.deepEqual(logical([[0, 0], [33, 0x20], [66, 0x30], [100, 0x20]]), ['focusMenu', 'prevSection']);
+});
+
+const FOCUS_MENU_ID = 'lrFocusMenu';
+test('SL routing: opens from page / map scope, toggles the open menu closed, and is scope-locked in every other modal', () => {
+  const SL = { name: 'focusMenu' };
+  for (const scopeKind of ['page', 'map']) {
+    for (const extra of [{}, { hasFocus: false }, { sectionsLocked: true }, { card: { zone: 'hand', hasToggle: false } }]) {
+      assert.deepEqual(C.routeAction({ scopeKind, hasFocus: true, cancelAvailable: false, sectionsLocked: false, ...extra }, SL), { cmd: 'focusMenu' }, scopeKind);
+    }
+  }
+  assert.equal(C.routeAction({ scopeKind: 'modal', hasFocus: true, cancelAvailable: true, sectionsLocked: false }, SL), null, 'other modal: scope lock');
+  assert.deepEqual(C.routeAction({ scopeKind: 'modal', hasFocus: true, cancelAvailable: true, sectionsLocked: false, focusMenuOpen: true }, SL), { cmd: 'focusMenu' }, 'SL again = close');
+  assert.equal(C.FOCUS_MENU_MODAL_ID, FOCUS_MENU_ID);
+});
+
+test('focus menu modal: background keys are inert; A picks the focused option, B cancels via the existing close', () => {
+  const menu = { scopeKind: 'modal', hasFocus: true, cancelAvailable: true, sectionsLocked: false, focusMenuOpen: true, card: null };
+  for (const name of ['nextSection', 'prevSection', 'focusTurnBar', 'toggleHelp']) assert.equal(C.routeAction(menu, { name }), null, name);
+  assert.deepEqual(C.routeAction(menu, { name: 'confirm' }), { cmd: 'activate' });
+  assert.deepEqual(C.routeAction(menu, { name: 'cancel' }), { cmd: 'cancel' });
+  assert.deepEqual(C.routeAction(menu, { name: 'move', dir: 'down' }), { cmd: 'move', dir: 'down' });
+  assert.equal(C.routeAction({ ...menu, hasFocus: false }, { name: 'confirm' }), null);
+  // + / Capture / ZR / STICK / HOME have no desktop logical action at all
+  for (const b of ['PLUS', 'CAPTURE', 'ZR', 'STICK', 'HOME']) assert.equal(C.logicalAction({ type: 'press', button: b }), null, b);
+});
+
+test('focus menu modal sits right under the danger confirm and has a mouse-closable cancel', () => {
+  assert.equal(C.MODAL_SCOPES[0].id, 'lrConfirmModal');
+  const scope = C.MODAL_SCOPES[1];
+  assert.equal(scope.id, FOCUS_MENU_ID);
+  assert.deepEqual(scope.cancel, ['#lrFocusMenuClose']);
+  assert.equal(typeof scope.initial, 'string');
+  assert.equal(C.resolveModalScope(['choiceModal', 'peerActionNotice', FOCUS_MENU_ID]).id, FOCUS_MENU_ID);
+  assert.equal(C.resolveModalScope([FOCUS_MENU_ID, 'lrConfirmModal']).id, 'lrConfirmModal');
+});
+
+const groupSnap = (extra = {}, target = {}) => ({
+  type: 'redline-controller-map-snapshot', v: 1, seq: 4, scope: 'choice', buttons: [], focusTown: null, canCancel: false,
+  groupMeta: 1,
+  targets: [{ town: '臺北', role: 'choice', x: 1, y: 2, act: 'build', ruler: ['臺灣'], camp: ['臺灣', '紅軍'], ...target }],
+  ...extra,
+});
+
+test('snapshot group metadata (groupMeta v1): canonical ruler / camp lists are validated and de-duplicated', () => {
+  const ok = C.sanitizeMapSnapshot(groupSnap({}, { camp: ['臺灣', '紅軍', '臺灣'] }));
+  assert.equal(ok.groupMeta, 1);
+  assert.deepEqual(ok.targets[0], { town: '臺北', role: 'choice', x: 1, y: 2, act: 'build', ruler: ['臺灣'], camp: ['臺灣', '紅軍'] });
+  assert.deepEqual(C.sanitizeMapSnapshot(groupSnap({}, { camp: [] })).targets[0].camp, [], 'a town without camp tags is valid');
+  assert.equal(C.MAP_GROUP_META_VERSION, 1);
+  for (const [label, extra, target] of [
+    ['unknown group schema version', { groupMeta: 2 }, {}],
+    ['non-integer version', { groupMeta: '1' }, {}],
+    ['ruler not an array', {}, { ruler: '臺灣' }],
+    ['camp missing', {}, { camp: undefined }],
+    ['ruler missing', {}, { ruler: undefined }],
+    ['empty ruler list', {}, { ruler: [] }],
+    ['camp not an array', {}, { camp: '臺灣' }],
+    ['empty name', {}, { camp: [''] }],
+    ['non-string name', {}, { ruler: [7] }],
+    ['overlong name', {}, { camp: ['名'.repeat(17)] }],
+    ['too many rulers', {}, { ruler: Array.from({ length: 9 }, (_, i) => `R${i}`) }],
+    ['too many camps', {}, { camp: Array.from({ length: 17 }, (_, i) => `C${i}`) }],
+  ]) assert.equal(C.sanitizeMapSnapshot(groupSnap(extra, target)), null, label);
+  // metadata without the version flag is not trusted: the whole snapshot is rejected (fail closed)
+  assert.equal(C.sanitizeMapSnapshot(groupSnap({ groupMeta: undefined })), null);
+  // legacy snapshots without any group metadata stay valid but carry none
+  const legacy = C.sanitizeMapSnapshot(groupSnap({ groupMeta: undefined }, { ruler: undefined, camp: undefined }));
+  assert.equal(legacy.groupMeta, null);
+  assert.equal(legacy.targets[0].ruler, undefined);
+});
+
+test('snapshot req: a snapshot answering a snapshot request echoes a valid request id; anything else is rejected', () => {
+  assert.equal(C.sanitizeMapSnapshot(groupSnap({ req: 12 })).req, 12);
+  assert.equal(C.sanitizeMapSnapshot(groupSnap()).req, null);
+  for (const req of [0, -1, 1.5, '3', true, {}, Number.MAX_SAFE_INTEGER + 2]) assert.equal(C.sanitizeMapSnapshot(groupSnap({ req })), null, String(req));
+  assert.deepEqual(C.sanitizeMapCommand({ v: 1, type: 'redline-controller-command', cmd: 'snapshot', req: 9 }), { cmd: 'snapshot', town: undefined, id: undefined, req: 9 });
+  assert.equal(C.isRequestId(9), true);
+  assert.equal(C.isRequestId(0), false);
+});
+
+test('town group metadata: canonical ruler / camp are taken whole or rejected (never filtered, truncated or guessed)', () => {
+  assert.deepEqual(C.townGroupMeta({ ruler: ['臺灣'], camp: ['臺灣', '紅軍', '臺灣'] }), { ruler: ['臺灣'], camp: ['臺灣', '紅軍'] },
+    'duplicate membership counts once');
+  assert.deepEqual(C.townGroupMeta({ ruler: ['紅軍'], camp: [] }), { ruler: ['紅軍'], camp: [] }, 'a town without camp tags is valid');
+  for (const [label, raw] of [
+    ['no map data', null],
+    ['not an object', '臺北'],
+    ['ruler missing', { camp: [] }],
+    ['camp missing', { ruler: ['紅軍'] }],
+    ['empty ruler list', { ruler: [], camp: [] }],
+    ['ruler not an array', { ruler: '臺灣', camp: [] }],
+    ['camp not an array', { ruler: ['臺灣'], camp: '香港' }],
+    ['invalid camp entry is not filtered out', { ruler: ['臺灣'], camp: ['臺灣', '紅軍', 3] }],
+    ['empty ruler name', { ruler: [''], camp: [] }],
+    ['null camp entry', { ruler: ['臺灣'], camp: [null] }],
+    ['overlong name', { ruler: ['名'.repeat(17)], camp: [] }],
+    ['too many rulers is not truncated', { ruler: Array.from({ length: 9 }, (_, i) => `R${i}`), camp: [] }],
+    ['too many camps is not truncated', { ruler: ['臺灣'], camp: Array.from({ length: 17 }, (_, i) => `C${i}`) }],
+  ]) assert.equal(C.townGroupMeta(raw), null, label);
 });
 
 test('B does nothing when no cancel exists; A needs a focus', () => {

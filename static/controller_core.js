@@ -22,7 +22,7 @@
 
   // bridge 的 S2B1 位元定義：b0 / b1 兩個 byte。
   // CAPTURE 主位元是 b1 0x40（上游 switch2mac 的 `c` = 0x4000）：只接右 Joy-Con 2 時，實機按「Capture」送出的就是它
-  // （2026-10-10 bridge 實錄 buttons:[0,64]）。
+  // （2026-10-10 bridge 實錄 buttons:[0,64]）。SL＝b0 0x20（聚焦選單）：使用者提供的實機按鍵區 capture 為 `20 00`。
   const BUTTON_BITS = Object.freeze({
     A: [0, 0x08], B: [0, 0x04], X: [0, 0x02], Y: [0, 0x01],
     SL: [0, 0x20], SR: [0, 0x10], R: [0, 0x40], ZR: [0, 0x80],
@@ -161,11 +161,12 @@
 
   // ---------------------------------------------------------------- logical actions / router
 
+  // SL＝聚焦選單（兩種顯示模式相同；只移動焦點，不執行任何遊戲操作）。
   const BUTTON_ACTIONS = Object.freeze({
-    A: 'confirm', B: 'cancel', R: 'nextSection', SR: 'prevSection', X: 'focusTurnBar', Y: 'toggleHelp',
+    A: 'confirm', B: 'cancel', R: 'nextSection', SR: 'prevSection', X: 'focusTurnBar', Y: 'toggleHelp', SL: 'focusMenu',
   });
 
-  /** 未對應的按鍵（含 `+`、HOME、CAPTURE、ZR、STICK、SL）一律不產生動作。 */
+  /** 未對應的按鍵（含 `+`、HOME、CAPTURE、ZR、STICK）一律不產生動作。 */
   function logicalAction(action) {
     if (action.type === 'nav') return { name: 'move', dir: action.dir };
     const name = BUTTON_ACTIONS[action.button];
@@ -175,10 +176,13 @@
   /**
    * context router。ctx: {scopeKind:'modal'|'map'|'page', hasFocus, cancelAvailable, sectionsLocked,
    *   card?: {zone, hasToggle} | null,   // 焦點位於卡牌元素內時的描述
-   *   mapTarget?: boolean}               // 焦點是地圖 snapshot 的城鎮目標（不是地圖按鈕）
+   *   mapTarget?: boolean,               // 焦點是地圖 snapshot 的城鎮目標（不是地圖按鈕）
+   *   focusMenuOpen?: boolean}           // 目前的 modal 就是 SL 聚焦選單
    * 卡牌焦點：A = 查看預覽（絕不執行／勾選／購買）；B = 切換勾選（僅有勾選控制的卡牌，否則維持原本取消）；
    * 手牌焦點：X = 資源、Y = 行動；購買卡 Y = 既有「購買所選」→ 購買確認單（UI 要求焦點卡已用 B 勾選，不自動勾選）；
    * 其他卡牌焦點的 X/Y 完全 no-op。地圖城鎮目標的 Y = 該目標的既有地圖操作（建立組織／確認移動／瓦解組織）。
+   * SL = 開啟聚焦選單（page／map scope）；選單開著時 SL = 關閉（同 B）；其他 modal 內 SL 不作用（scope lock）。
+   * 聚焦選單內只有方向、A（選取選項）、B（關閉）與 SL 有作用。
    * 其餘非卡牌焦點的 X/Y 維持原行為。回傳要執行的 command 或 null（null = 靜默忽略）。
    */
   function routeAction(ctx, logical) {
@@ -187,6 +191,9 @@
     const card = ctx.card || null;
     const onHand = !!card && card.zone === 'hand';
     switch (logical.name) {
+      case 'focusMenu':
+        if (modal) return ctx.focusMenuOpen ? { cmd: 'focusMenu' } : null;
+        return { cmd: 'focusMenu' };
       case 'move': return { cmd: 'move', dir: logical.dir };
       case 'confirm':
         if (!ctx.hasFocus) return null;
@@ -200,6 +207,7 @@
         if (card) return onHand && ctx.hasFocus && !modal ? { cmd: 'cardMode', mode: 'resource' } : null;
         return modal || ctx.sectionsLocked ? null : { cmd: 'focusTurnBar' };
       case 'toggleHelp':
+        if (ctx.focusMenuOpen) return null;
         if (card) {
           if (!ctx.hasFocus || modal) return null;
           if (onHand) return { cmd: 'cardMode', mode: 'action' };
@@ -215,8 +223,11 @@
 
   // 由高到低：同時可見多個時，只有第一個取得輸入。cancel = B 可點的既有取消／關閉元素 selector。
   // initial = 開啟時的預設焦點（客廳模式危險操作確認單：永遠預設「返回」）。
+  // SL 聚焦選單（兩種顯示模式共用）：B 點既有關閉 ×；預設焦點＝第一個選項。
+  const FOCUS_MENU_MODAL_ID = 'lrFocusMenu';
   const MODAL_SCOPES = Object.freeze([
     { id: 'lrConfirmModal', cancel: ['#lrConfirmCancelBtn'], initial: '#lrConfirmCancelBtn' },
+    { id: FOCUS_MENU_MODAL_ID, cancel: ['#lrFocusMenuClose'], initial: '.lr-focus-option' },
     { id: 'victoryArtViewer', cancel: ['#victoryArtViewerClose'] },
     { id: 'cardPreviewModal', cancel: ['self'] },
     { id: 'eventRevealModal', cancel: ['self'] },
@@ -357,12 +368,46 @@
     return true;
   }
 
+  // SL 聚焦選單的分組資料（snapshot 選用欄位 groupMeta 的版本）：每個目標帶 canonical 地圖資料的
+  // 統治者（ruler，至少 1 個）與陣營區域（camp，即發展空間標籤，可為空）清單。版本不符、缺欄位或格式不合一律整份作廢。
+  const MAP_GROUP_META_VERSION = 1;
+  const GROUP_LIMITS = Object.freeze({ ruler: { min: 1, max: 8 }, camp: { min: 0, max: 16 } });
+
+  /**
+   * 分組名稱清單（kind＝ruler｜camp）：陣列、數量在上下限內、每項為 1–16 字的字串；重複名稱只算一次（同一份成員資格）。
+   * 不合法回傳 null：不過濾不合法項目、不截斷、不補值。
+   */
+  function sanitizeGroupNames(list, kind) {
+    const limit = Object.prototype.hasOwnProperty.call(GROUP_LIMITS, kind) ? GROUP_LIMITS[kind] : null;
+    if (!limit || !Array.isArray(list) || list.length < limit.min || list.length > limit.max) return null;
+    const out = [];
+    for (const name of list) {
+      if (!isShortString(name, 16)) return null;
+      if (!out.includes(name)) out.push(name);
+    }
+    return out;
+  }
+
+  /**
+   * iframe 端：從 canonical 地圖資料（/map-data 的 towns[name]）取出統治者／陣營區域。
+   * 任一欄位缺少、不是陣列、數量不合或含不合法名稱 → null（snapshot 因此不宣告 groupMeta，parent 顯示資料不足）。
+   */
+  function townGroupMeta(raw) {
+    if (!raw || typeof raw !== 'object') return null;
+    const ruler = sanitizeGroupNames(raw.ruler, 'ruler');
+    const camp = sanitizeGroupNames(raw.camp, 'camp');
+    return ruler && camp ? { ruler, camp } : null;
+  }
+
   /** parent 端收到的 snapshot：不符 schema 一律回傳 null（視為沒有地圖目標）。 */
   function sanitizeMapSnapshot(data) {
     if (!data || data.type !== 'redline-controller-map-snapshot' || data.v !== MAP_MESSAGE_VERSION) return null;
     if (!MAP_SCOPES.includes(data.scope)) return null;
     if (!Array.isArray(data.targets) || data.targets.length > 400) return null;
     if (!Array.isArray(data.buttons) || data.buttons.length > MAP_BUTTON_IDS.length) return null;
+    if (isPresent(data.groupMeta) && data.groupMeta !== MAP_GROUP_META_VERSION) return null;
+    const groupMeta = data.groupMeta === MAP_GROUP_META_VERSION;
+    if (isPresent(data.req) && !isRequestId(data.req)) return null;
     const targets = [];
     for (const t of data.targets) {
       if (!t || !isShortString(t.town) || !MAP_ROLES.includes(t.role) || !isCoord(t.x) || !isCoord(t.y)) return null;
@@ -371,6 +416,15 @@
       if (isPresent(t.act)) {
         if (!isActLegalFor(data.scope, t.role, t.act)) return null;
         target.act = t.act;
+      }
+      if (groupMeta) {
+        const ruler = sanitizeGroupNames(t.ruler, 'ruler');
+        const camp = sanitizeGroupNames(t.camp, 'camp');
+        if (!ruler || !camp) return null;
+        target.ruler = ruler;
+        target.camp = camp;
+      } else if (isPresent(t.ruler) || isPresent(t.camp)) {
+        return null; // 沒有宣告版本的分組資料不可信
       }
       targets.push(target);
     }
@@ -400,6 +454,9 @@
       canCancel: data.canCancel === true,
       selected,
       pending,
+      groupMeta: groupMeta ? MAP_GROUP_META_VERSION : null,
+      // 回應帶 req 的 snapshot 指令時原樣帶回（聚焦選單只用對上自己 req 的那一份）；一般推送為 null。
+      req: isPresent(data.req) ? data.req : null,
     };
   }
 
@@ -539,8 +596,8 @@
   }
 
   return {
-    DEFAULT_BRIDGE_URL, DEFAULT_CONFIG, BUTTON_BITS, BUTTON_ALT_BITS, BUTTON_NAMES, BUTTON_ACTIONS, MODAL_SCOPES,
-    MAP_MESSAGE_VERSION, MAP_BUTTON_IDS, MAP_COMMANDS, MAP_RESULT_VIA, MAP_ACTS, mapTargetAct,
+    DEFAULT_BRIDGE_URL, DEFAULT_CONFIG, BUTTON_BITS, BUTTON_ALT_BITS, BUTTON_NAMES, BUTTON_ACTIONS, MODAL_SCOPES, FOCUS_MENU_MODAL_ID,
+    MAP_MESSAGE_VERSION, MAP_GROUP_META_VERSION, MAP_BUTTON_IDS, MAP_COMMANDS, MAP_RESULT_VIA, MAP_ACTS, mapTargetAct, townGroupMeta, sanitizeGroupNames, isRequestId,
     decodeButtonBytes, parseButtons, normalizeFrame,
     createInputState, resetInputState, reduceFrame, stickDirection, isStale, bridgeInputGate, bridgeConnected,
     logicalAction, routeAction,
