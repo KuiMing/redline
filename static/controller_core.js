@@ -21,20 +21,26 @@
   });
 
   // bridge 的 S2B1 位元定義：b0 / b1 兩個 byte。
+  // CAPTURE 主位元是 b1 0x40（上游 switch2mac 的 `c` = 0x4000）：只接右 Joy-Con 2 時，實機按「Capture」送出的就是它
+  // （2026-10-10 bridge 實錄 buttons:[0,64]）。
   const BUTTON_BITS = Object.freeze({
     A: [0, 0x08], B: [0, 0x04], X: [0, 0x02], Y: [0, 0x01],
     SL: [0, 0x20], SR: [0, 0x10], R: [0, 0x40], ZR: [0, 0x80],
-    PLUS: [1, 0x02], STICK: [1, 0x04], HOME: [1, 0x10], CAPTURE: [1, 0x20],
+    PLUS: [1, 0x02], STICK: [1, 0x04], HOME: [1, 0x10], CAPTURE: [1, 0x40],
   });
+  // 同一個邏輯鍵的相容位元：上游 `capture` = 0x2000（b1 0x20，左 Joy-Con 2／Pro 手把的截圖鍵）仍算 CAPTURE。
+  // 兩個位元都沒有其他已知用途；同時或交替按住仍是同一個按鍵（只在第一次按下觸發）。
+  const BUTTON_ALT_BITS = Object.freeze({ CAPTURE: Object.freeze([Object.freeze([1, 0x20])]) });
   const BUTTON_NAMES = Object.freeze(Object.keys(BUTTON_BITS));
 
   // ---------------------------------------------------------------- frame
 
+  function bitSet(b0, b1, [index, mask]) { return ((index === 0 ? b0 : b1) & mask) !== 0; }
+
   function decodeButtonBytes(b0, b1) {
     const out = {};
     for (const name of BUTTON_NAMES) {
-      const [index, mask] = BUTTON_BITS[name];
-      out[name] = ((index === 0 ? b0 : b1) & mask) !== 0;
+      out[name] = bitSet(b0, b1, BUTTON_BITS[name]) || (BUTTON_ALT_BITS[name] || []).some(bits => bitSet(b0, b1, bits));
     }
     return out;
   }
@@ -168,10 +174,12 @@
 
   /**
    * context router。ctx: {scopeKind:'modal'|'map'|'page', hasFocus, cancelAvailable, sectionsLocked,
-   *   card?: {zone, hasToggle} | null}（card = 焦點位於卡牌元素內時的描述）。
+   *   card?: {zone, hasToggle} | null,   // 焦點位於卡牌元素內時的描述
+   *   mapTarget?: boolean}               // 焦點是地圖 snapshot 的城鎮目標（不是地圖按鈕）
    * 卡牌焦點：A = 查看預覽（絕不執行／勾選／購買）；B = 切換勾選（僅有勾選控制的卡牌，否則維持原本取消）；
-   * 手牌焦點：X = 資源、Y = 行動；其他任何卡牌焦點的 X/Y 完全 no-op。非卡牌焦點的 X/Y 維持原行為。
-   * 回傳要執行的 command 或 null（null = 靜默忽略）。
+   * 手牌焦點：X = 資源、Y = 行動；購買卡 Y = 既有「購買所選」→ 購買確認單（UI 要求焦點卡已用 B 勾選，不自動勾選）；
+   * 其他卡牌焦點的 X/Y 完全 no-op。地圖城鎮目標的 Y = 該目標的既有地圖操作（建立組織／確認移動／瓦解組織）。
+   * 其餘非卡牌焦點的 X/Y 維持原行為。回傳要執行的 command 或 null（null = 靜默忽略）。
    */
   function routeAction(ctx, logical) {
     if (!logical) return null;
@@ -192,7 +200,12 @@
         if (card) return onHand && ctx.hasFocus && !modal ? { cmd: 'cardMode', mode: 'resource' } : null;
         return modal || ctx.sectionsLocked ? null : { cmd: 'focusTurnBar' };
       case 'toggleHelp':
-        if (card) return onHand && ctx.hasFocus && !modal ? { cmd: 'cardMode', mode: 'action' } : null;
+        if (card) {
+          if (!ctx.hasFocus || modal) return null;
+          if (onHand) return { cmd: 'cardMode', mode: 'action' };
+          return card.zone === 'purchase' ? { cmd: 'cardBuy' } : null;
+        }
+        if (ctx.mapTarget && ctx.hasFocus && ctx.scopeKind === 'map') return { cmd: 'mapAct' };
         return { cmd: 'toggleHelp' };
       default: return null;
     }
@@ -526,7 +539,7 @@
   }
 
   return {
-    DEFAULT_BRIDGE_URL, DEFAULT_CONFIG, BUTTON_BITS, BUTTON_NAMES, BUTTON_ACTIONS, MODAL_SCOPES,
+    DEFAULT_BRIDGE_URL, DEFAULT_CONFIG, BUTTON_BITS, BUTTON_ALT_BITS, BUTTON_NAMES, BUTTON_ACTIONS, MODAL_SCOPES,
     MAP_MESSAGE_VERSION, MAP_BUTTON_IDS, MAP_COMMANDS, MAP_RESULT_VIA, MAP_ACTS, mapTargetAct,
     decodeButtonBytes, parseButtons, normalizeFrame,
     createInputState, resetInputState, reduceFrame, stickDirection, isStale, bridgeInputGate, bridgeConnected,

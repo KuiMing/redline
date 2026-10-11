@@ -279,9 +279,9 @@
     const frame = mapFrame();
     if (!frame || !Core.isTrustedMessage(event, window.location.origin, frame.contentWindow)) return;
     if (event.data.type === 'redline-controller-result') {
-      // 執行結果只交給客廳模式 layer 以 req 對應；不符 schema 視為沒有收到確認。
+      // 執行結果交給 layer 以 req 對應（兩種顯示模式的地圖 Y 共用；沒有等待中的 req 一律當 stale 忽略）；不符 schema 視為沒有收到確認。
       const result = Core.sanitizeMapResult(event.data);
-      if (result && layerActive() && typeof layer.onMapResult === 'function') layer.onMapResult(result);
+      if (result && layer && initialized && typeof layer.onMapResult === 'function') layer.onMapResult(result);
       return;
     }
     if (event.data.type !== 'redline-controller-map-snapshot') return;
@@ -502,7 +502,8 @@
     if (!logical && !shortcut) return;
     const scope = currentScope();
     const items = buildItems(scope);
-    if (logical && logical.name === 'toggleHelp' && !(ctl.padActive && cardFocused(items))) {
+    // Y 在卡牌（手牌行動／購買卡購買所選）與地圖城鎮目標（既有地圖操作）上不是說明。
+    if (logical && logical.name === 'toggleHelp' && !(ctl.padActive && (cardFocused(items) || mapTargetFocused(scope, items)))) {
       ctl.helpOpen = !ctl.helpOpen;
       renderHud();
       return;
@@ -533,6 +534,7 @@
       scopeKind: scope.kind,
       hasFocus: key !== null,
       card: cardContext(focused),
+      mapTarget: scope.kind === 'map' && !!focused && focused.kind === 'town',
       cancelAvailable: scope.kind === 'modal' ? !!modalCancelTarget(scope) : !!mapCancel,
       // 必選地圖目標：在地圖上 R／SR 不動；其他分頁的 R／SR 只回戰略地圖（由區段環處理）。
       sectionsLocked: scope.kind === 'map' && choiceLocked(),
@@ -556,6 +558,9 @@
       case 'cardPreview': activated = previewCard(current); break;
       case 'cardToggle': activated = toggleCard(current); break;
       case 'cardMode': activated = playCardMode(current, command.mode); break;
+      // 購買卡 Y／地圖目標 Y：與客廳模式同一套既有流程與閘門（layer 只在桌面模式執行；客廳模式的 page／map 由 layer.dispatch 處理）。
+      case 'cardBuy': if (layer && current && current.kind === 'dom') layer.runDesktopCardBuy(current.el); break;
+      case 'mapAct': if (layer && current && current.kind === 'town') layer.runDesktopMapAct(current.town); break;
       case 'cancel': cancel(scope); break;
       case 'section': changeSection(scope, command.step); break;
       case 'focusTurnBar': focusTurnBar(items); break;
@@ -580,6 +585,14 @@
   function cardFocused(items) {
     const key = currentKey(items.all);
     return !!cardContext(items.all.find(i => i.key === key));
+  }
+
+  /** 焦點是地圖 snapshot 的城鎮目標（不是 iframe 按鈕外框）。 */
+  function mapTargetFocused(scope, items) {
+    if (scope.kind !== 'map') return false;
+    const key = currentKey(items.all);
+    const item = items.all.find(i => i.key === key);
+    return !!item && item.kind === 'town';
   }
 
   function isUsable(el) {
@@ -704,7 +717,7 @@
           <button id="padReconnectBtn" type="button">重新連線</button>
           <button id="padResetBtn" type="button">預設</button>
         </div>
-        <div class="pad-note">搖桿＝移動　A 確認　B 返回　R/SR 分頁　X 回合操作　Y 說明<br>卡牌：A 查看　B 勾選　手牌 X 資源／Y 行動<br>客廳模式：R/SR 六個區段　Capture 結束行動（確認）　+ 陣營能力　手牌 B 棄置（確認）　購買卡／地圖 Y 執行　按下搖桿 下一區</div>
+        <div class="pad-note">搖桿＝移動　A 確認　B 返回　R/SR 六個區段　Y 說明<br>Capture 結束行動（確認）　+ 陣營能力<br>卡牌：A 查看　手牌 X 資源／Y 行動　購買卡 B 勾選 → Y 購買所選（確認）<br>地圖目標：A 選取　Y 建立組織／確認移動／瓦解組織<br>客廳模式：A 進入內容區　手牌 B 棄置（確認）　按下搖桿 下一區</div>
       </div>`;
     stage.appendChild(hud);
     const $ = id => document.getElementById(id);
@@ -750,12 +763,14 @@
       return `移動 搖桿　A 確認${cancel ? '　B 返回' : ''}${section}`;
     }
     if (scope.kind === 'map') {
-      return `移動 搖桿　A 選取　B 取消${choiceLocked() ? '' : '　R/SR 區段'}`;
+      const act = ctl.focusKind === 'map' && ctl.focusTown && layer && !layerActive() ? layer.desktopMapActLabel(ctl.focusTown) : null;
+      return `移動 搖桿　A 選取${act ? `　Y ${act}` : ''}　B 取消${choiceLocked() ? '' : '　R/SR 區段'}`;
     }
     if (choiceLocked()) return '必選地圖目標：R/SR 回戰略地圖';
     const focused = ctl.focusKind === 'dom' ? cardContext({ kind: 'dom', el: ctl.focusEl }) : null;
     if (focused) {
-      return `移動 搖桿　A 查看${focused.hasToggle ? '　B 勾選' : ''}${focused.zone === 'hand' ? '　X 資源　Y 行動' : ''}　R/SR 區段`;
+      const buy = focused.zone === 'purchase' ? '　勾選後 Y 購買所選' : '';
+      return `移動 搖桿　A 查看${focused.hasToggle ? '　B 勾選' : ''}${buy}${focused.zone === 'hand' ? '　X 資源　Y 行動' : ''}　R/SR 區段`;
     }
     return '移動 搖桿　A 確認　R/SR 區段　Capture 結束行動';
   }
@@ -775,7 +790,9 @@
     const show = ctl.settings.enabled && (ctl.status !== 'connected' || ctl.helpOpen || ctl.padActive);
     hint.hidden = !show;
     if (show) {
-      setText(hint, ctl.status === 'connected' ? `🎮 ${hintText()}` : `🎮 ${STATUS_TEXT[ctl.status]}`);
+      // 桌面模式專用鍵 fail closed 的原因（例如「先按 B 勾選這張卡，再按 Y 購買」）暫時接在提示前面；客廳模式顯示在提示列狀態欄。
+      const notice = ctl.status === 'connected' && layer && !layerActive() && typeof layer.notice === 'function' ? layer.notice() : null;
+      setText(hint, ctl.status === 'connected' ? `🎮 ${notice ? `${notice}｜` : ''}${hintText()}` : `🎮 ${STATUS_TEXT[ctl.status]}`);
     }
   }
 
@@ -830,6 +847,7 @@
       scope: currentScope().id, held: { ...ctl.input.held },
       reconcilePending: !!ctl.reconcileTimer, // 除錯：DOM 變動後的 80ms reconcile 尚未跑完
       livingRoom: layerActive() ? layer.debugState() : null,
+      shortcuts: layer && initialized && !layerActive() ? layer.shortcutState() : null, // 桌面模式專用鍵的閘門狀態
     }),
     setEnabled,
     attachLayer,

@@ -3,8 +3,9 @@
 
 不碰實體 Joy-Con：以 add_init_script 取代 `ws://127.0.0.1:8000/ws` 的 WebSocket，
 由測試注入 {x, y, buttons:[b0,b1]} frame；其餘連線（遊戲 / 地圖）仍走真實 WebSocket。
-驗證：預設不連線、焦點與高對比標示、A click、B cancel、modal 優先權、卡牌 A 預覽／B 勾選／手牌 X 資源／Y 行動、斷線重連不誤觸、
-地圖目標焦點、非法目標 fail-closed、iframe 訊息來源驗證。
+驗證：預設不連線、焦點與高對比標示、A click、B cancel、modal 優先權、卡牌 A 預覽／B 勾選／手牌 X 資源／Y 行動、
+購買卡 Y（未勾選或買不起時 fail closed，不自動勾選）、實機 Capture（b1 0x40）危險確認、斷線重連不誤觸、
+地圖目標焦點、非法目標 fail-closed、iframe 訊息來源驗證。（購買卡 B→Y 成功、地圖 Y 建立見客廳驗證的 scenario_physical_shortcuts）
 
 執行（會自動啟動隔離 server，不會碰 8100）：
   uv run python scripts/validate/validate_joycon_controller.py
@@ -26,7 +27,9 @@ from playwright.sync_api import sync_playwright
 ROOT = Path(__file__).resolve().parents[2]
 OUT = Path(os.environ.get("REDLINE_JOYCON_PROOF_DIR", "/tmp/redline-joycon-proof"))
 BRIDGE_URL = "ws://127.0.0.1:8000/ws"
-BIT = {"A": (0, 0x08), "B": (0, 0x04), "X": (0, 0x02), "Y": (0, 0x01), "R": (0, 0x40), "SR": (0, 0x10), "PLUS": (1, 0x02)}
+# CAPTURE＝實機訊號：只接右 Joy-Con 2 時實體 Capture 鍵送出 buttons:[0,64]（b1 0x40，上游 `c`）。
+BIT = {"A": (0, 0x08), "B": (0, 0x04), "X": (0, 0x02), "Y": (0, 0x01), "R": (0, 0x40), "SR": (0, 0x10), "PLUS": (1, 0x02),
+       "CAPTURE": (1, 0x40)}
 
 MOCK_WS = """
 (() => {
@@ -634,22 +637,31 @@ def main():
             pad.tap("B")
             page.wait_for_timeout(200)
             record("card_focus_restored_after_preview", (focus_info(page) or {}).get("inModal") is False and checked() == ["0"], focus_info(page))
+            # B 勾選後的 Y＝既有「購買所選」；本 fixture 資源為 0，既有按鈕停用（買不起）→ fail closed，不開確認單、不購買
+            buy_disabled = page.evaluate("document.getElementById('openPurchaseConfirmBtn').disabled")
+            pad.tap("Y")
+            page.wait_for_timeout(250)
+            record("purchase_card_Y_fails_closed_when_checked_but_existing_buy_disabled",
+                   buy_disabled and page.evaluate("getComputedStyle(document.getElementById('purchaseConfirmModal')).display") == "none"
+                   and checked() == ["0"] and cs()["toggle"] == 1 and sends() == 0, [buy_disabled, checked()])
             pad.tap("B")
             page.wait_for_timeout(250)
             record("card_B_toggles_purchase_card_off", checked() == [] and cs()["toggle"] == 2 and sends() == 0, [checked(), cs()])
 
-            # 購買區 X/Y：不得觸發手牌，也不得購買
-            help_before = page.evaluate("document.getElementById('padHint').textContent")
+            # 購買區 X/Y：不得觸發手牌；未勾選時 Y 不會自動勾選、不開確認單、不切換說明（只顯示「先按 B 勾選」）
             pad.tap("X")
             page.wait_for_timeout(200)
             record("purchase_card_X_is_full_noop", cs()["play"] == [] and sends() == 0 and checked() == []
                    and page.evaluate("!!document.querySelector('.rl-pad-focus').closest('[data-card-zone=\"purchase\"]')"), focus_info(page))
+            page.wait_for_timeout(300)
             pad.tap("Y")
             page.wait_for_timeout(200)
-            record("purchase_card_Y_is_full_noop_no_help_toggle", cs()["play"] == [] and sends() == 0 and checked() == []
-                   and page.evaluate("RedlineController.getState().helpOpen !== true")
+            record("purchase_card_Y_unchecked_fails_closed_no_auto_check_no_help_toggle", cs()["play"] == [] and sends() == 0 and checked() == []
+                   and cs()["toggle"] == 2 and page.evaluate("RedlineController.getState().helpOpen !== true")
+                   and page.evaluate("getComputedStyle(document.getElementById('purchaseConfirmModal')).display") == "none"
                    and page.evaluate("!!document.querySelector('.rl-pad-focus').closest('[data-card-zone=\"purchase\"]')")
-                   and page.evaluate("document.getElementById('padHint').textContent") == help_before, focus_info(page))
+                   and "先按 B 勾選" in page.evaluate("document.getElementById('padHint').textContent"),
+                   [focus_info(page), page.evaluate("document.getElementById('padHint').textContent")])
 
             # checkbox 仍 enabled 但被頁面狀態隱藏：聚焦卡牌後 B 必須完整 no-op
             record("card_focus_before_hidden_checkbox_case", focus_dom_toward(pad, page, BUY), focus_info(page))
@@ -735,6 +747,18 @@ def main():
                 record("hand_X_Y_fail_closed_when_controls_disabled", len(cs()["play"]) == n_before, cs())
             else:
                 record("hand_X_Y_fail_closed_when_controls_disabled", False, "cannot focus hand card")
+
+            # ---------- 11. 實機 Capture（b1 0x40）→ 既有結束行動危險確認，預設焦點「返回」；B 取消不送出 ----------
+            page.evaluate("() => { window.__advanceSpy = 0; document.getElementById('advanceStepBtn').addEventListener('click', () => { window.__advanceSpy += 1; }, true); }")
+            pad.tap("CAPTURE")
+            opened = page.evaluate("""() => document.getElementById('lrConfirmModal')?.style.display === 'flex'
+              && document.querySelector('.rl-pad-focus')?.id === 'lrConfirmCancelBtn'""")
+            page.screenshot(path=str(OUT / "10_physical_capture_confirm_default_back.png"))
+            pad.tap("B")
+            page.wait_for_timeout(250)
+            record("physical_capture_b1_0x40_opens_end_step_confirm_default_back_and_B_cancels",
+                   opened and page.evaluate("document.getElementById('lrConfirmModal').style.display") == "none"
+                   and page.evaluate("window.__advanceSpy") == 0, [opened, focus_info(page)])
 
             browser.close()
     finally:

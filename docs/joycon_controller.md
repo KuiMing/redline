@@ -18,20 +18,22 @@
 | 右搖桿 | 方向導航，**只在內容之間**（deadzone 0.5；按住有 380ms 延遲後每 140ms 重複一次）。與客廳模式同一份排除規則（`Core.isDirectionalExcluded`）：六個全域分頁、回合列（結束行動／紅軍能力）、手牌卡內的「資源」「行動」「棄置」、陣營能力發動鈕、卡牌勾選框、按鍵提示列**永遠不會**取得方向焦點（`.rl-pad-focus` 與瀏覽器原生 focus 皆然）；手牌只以整張卡牌取得焦點 |
 | A | 確認／啟用目前焦點（呼叫既有 click handler）；**焦點在任何卡牌上時一律只開啟置中卡牌預覽**，不執行、不勾選、不購買 |
 | B | 返回／取消——只在目前 UI 本身有可見、可用的取消／關閉按鈕時才作用，否則什麼都不做 |
-| B（卡牌） | 焦點在購買區卡牌（checkbox 不進入焦點集合、無黃框）時切換勾選，點擊該卡既有 checkbox；勾選框停用（伺服器權威）則不作用 |
+| B（卡牌） | 焦點在購買區卡牌（checkbox 不進入焦點集合、無黃框）時切換勾選，點擊該卡既有 checkbox；勾選框停用（伺服器權威）則不作用。多張勾選照舊（逐張 B） |
 | X（手牌） | 焦點在整張手牌時＝以資源使用：點擊該卡既有「資源」按鈕；按鈕不存在（如一般奧援為「棄置」）、隱藏或停用則不作用 |
 | Y（手牌） | 焦點在整張手牌時＝以行動使用：點擊該卡既有「行動」按鈕；隱藏或停用則不作用 |
+| Y（購買卡） | **先 B 勾選，再按 Y**：焦點卡是有效的已勾選卡（勾選框可見、未停用）且既有「購買所選」可用時，點它開啟既有購買確認單（內容是目前整份勾選；確認、資源檢查與 `buy_cards` 都在既有確認單）。未勾選、勾選框停用／隱藏（例如售完）、合計買不起（按鈕停用）、按鈕隱藏或不存在一律 fail closed；**Y 永遠不會勾選任何卡**、不直接購買。與客廳模式同一個函式與閘門 |
+| Y（地圖目標） | 焦點在地圖城鎮目標時＝該目標的既有地圖操作（建立組織／確認移動／瓦解組織，見下方協定 `act`），與客廳模式同一條 iframe `act`＋`req` 確認路徑與閘門：可先用 A 走既有選取，也可直接 Y（iframe 會先走同一個選取）。只有對上 `req` 的 `ok:true` 才算執行（之後上處理中鎖）；沒有操作的目標（例如一般來源）、沒有 iframe、`ok:false`、1 秒逾時一律 fail closed，且不切換說明 |
 | R / SR | **選取六個全域區段的唯一方式**，與客廳模式同一個環：指揮中心→戰略地圖→戰況紀錄→我的陣營→事件卡→時代關卡（點既有分頁／開既有說明 modal；在事件卡／時代關卡說明 modal 內按 R／SR 以既有關閉收起並前往下一個區段，其他 modal 一律停用）。必選地圖目標時只回戰略地圖（已在地圖則不動）。切換後焦點放到新區段的內容，不留在分頁上（大廳則為區塊） |
-| CAPTURE | 既有「結束行動／結束步驟」，經危險確認單（預設焦點「返回」，與客廳模式同一張確認單與閘門）；結束行動本身不是方向焦點 |
+| CAPTURE | 既有「結束行動／結束步驟」，經危險確認單（預設焦點「返回」，向右到「確認」再按 A 才執行；與客廳模式同一張確認單與閘門）；結束行動本身不是方向焦點。實體鍵：只接右 Joy-Con 2 時送出 b1 `0x40`（上游 `c`，2026-10-10 實錄）；上游 `capture`（b1 `0x20`，左 Joy-Con 2／Pro）同樣接受 |
 | `+` | 發動唯一一個可見、啟用的既有陣營能力（例如賭徒耳語）；沒有或不只一個時不做事 |
 | X | 非手牌焦點時不作用（回合列不是方向焦點，改用 CAPTURE） |
-| Y | 顯示／隱藏操作提示（手牌卡焦點時見上；其他卡牌焦點時 X/Y 完全不作用） |
+| Y | 其他焦點時顯示／隱藏操作提示（手牌、購買卡、地圖目標見上；其他卡牌焦點時 X/Y 完全不作用） |
 | HOME、ZR、STICK、SL | 桌面模式不綁定 |
 
 第一次有效操作（含 CAPTURE／`+`）只會把焦點放上去，不會執行；預設焦點與區段切換後的落點都是內容（指揮中心先放手牌）。
 區段切換時，該區段只要有可取得方向焦點的內容就一定落在內容上；經確認沒有任何這類內容的區段可以維持無焦點，但一定仍可用 R／SR 離開。
 搖桿輸入、reconcile 與焦點變更時，若瀏覽器原生 focus 停在上述排除的控制上（例如滑鼠點過分頁），一律放掉；整張卡牌 div 本身無法取得原生 focus。
-滑鼠點擊分頁、手牌按鈕、結束行動等完全不變。畫面右下角只有一個精簡提示膠囊，不增加頂部窄條。
+滑鼠點擊分頁、手牌按鈕、結束行動、購買 checkbox 等完全不變。畫面右下角只有一個精簡提示膠囊，不增加頂部窄條；專用鍵 fail closed 時，原因（例如「先按 B 勾選這張卡，再按 Y 購買」）會在膠囊前段顯示約 1.8 秒。
 
 ## 輸入安全
 
@@ -74,7 +76,7 @@ parent 與 iframe 同源；雙方都驗證 `event.origin === location.origin` �
   與 role／scope 不相容的 `act` 會讓整份 snapshot 作廢。
 - parent → iframe：`redline-controller-command`，`cmd` 為 `snapshot`、`focus {town}`、`clearFocus`、`activate {town}`、`button {id}`、`cancel`、`act {town, id, req}`（`id` 只限 `directBuildBtn`／`confirmMoveBtn`／`dissolveBtn`；**`act` 必須帶合法 `req`**，沒有或不合法的 `req` 在 iframe 端直接丟棄、不執行，`act` 的 result 也必須帶 `req`）；其他指令可選 `req`（正整數 request id）。
 - iframe → parent：`redline-controller-result` `{cmd, req, ok, reason, via}`，每個指令處理完都回覆；`req` 原樣回傳（沒帶則為 `null`），`via` 為 iframe 實際走的既有控制（按鈕 id，或取消時的 `cancelDissolveChoiceBtn`／`selection`）。
-  客廳模式的地圖執行型指令（Y 地圖操作、清單選取、清單取消）都帶 `req`，且同時只有一筆等待確認：**只有對上該 `req` 的 `ok:true`（iframe 執行前已重驗）才算執行**，此時才記錄 250ms 冷卻，Y 地圖操作與 `via: cancelDissolveChoiceBtn` 的取消再上處理中鎖。沒有 iframe、`ok:false`、1 秒內沒有回覆、過期或對不上的 `req` 一律 fail closed，不記錄冷卻也不上鎖；等待期間其他執行型按鍵被擋下（不重送），回覆或逾時後立即解除。桌面模式不帶 `req`，行為不變。
+  地圖執行型指令（兩種顯示模式的 Y 地圖操作；客廳模式另有清單選取、清單取消）都帶 `req`，且同時只有一筆等待確認：**只有對上該 `req` 的 `ok:true`（iframe 執行前已重驗）才算執行**，此時才記錄 250ms 冷卻，Y 地圖操作與 `via: cancelDissolveChoiceBtn` 的取消再上處理中鎖。沒有 iframe、`ok:false`、1 秒內沒有回覆、過期或對不上的 `req` 一律 fail closed，不記錄冷卻也不上鎖；等待期間其他執行型按鍵被擋下（不重送），回覆或逾時後立即解除。桌面模式的 A／B（`activate`／`button`／`cancel`）不帶 `req`，行為不變。
 - `act` 在 iframe 內：(1) 用權威資料重驗 town 是目前目標、其 `act` 對應的既有按鈕等於 `id`（否則 `not-a-target`／`action-mismatch`）；(2) 按鈕尚未作用在該 town 時，走與 A／滑鼠相同的既有 marker click 選取／預備；(3) 再驗一次目標仍在、按鈕可見啟用且作用在該 town，才 `click()` 既有按鈕（否則 `button-unavailable`）。失敗時不點任何按鈕、不送出遊戲動作（最多留下與按 A 相同的選取／預備狀態）。
 
 焦點集合只來自伺服器權威資料，且**每個指令執行當下 iframe 都重新驗證**（parent 的 snapshot 過期或被偽造也不會讓非法目標可 action）：
@@ -105,7 +107,7 @@ A 對城鎮走既有 marker `click` 路徑（選取來源／預備移動目的�
 | A | 進入區域（還原上次項目） | 卡牌＝查看；內容控制項＝既有 click；地圖清單＝選取／預備（不執行） |
 | B | 不做事 | 購買卡＝勾選／取消；**一般奧援手牌＝既有「棄置」（危險確認）**，其他手牌不做事；地圖清單有既有取消流程時＝取消；其他＝回區域層 |
 | X | 不做事 | 手牌＝資源；其他不做事 |
-| Y | 說明 | 手牌＝行動；**購買卡＝既有「購買所選」**；**地圖目標＝建立組織／確認移動／瓦解組織**；其他＝說明 |
+| Y | 說明 | 手牌＝行動；**購買卡（先 B 勾選）＝既有「購買所選」**；**地圖目標＝建立組織／確認移動／瓦解組織**；其他＝說明 |
 | R／SR | 下一個／上一個全域區段 | 同左 |
 | PLUS（+） | **發動既有陣營能力** | 同左 |
 | CAPTURE | **既有結束行動／結束步驟（危險確認）** | 同左 |
@@ -116,8 +118,8 @@ A 對城鎮走既有 marker `click` 路徑（選取來源／預備移動目的�
   - CAPTURE：`advanceStepBtn`（結束行動／結束回合／開始行動階段）→ 危險確認單，預設焦點「返回」；連按不會開第二張確認單；確認單開著時按鈕失效或文字改變（換了步驟）就自動關閉不執行。
   - PLUS：`#factionActionButtons` 內的既有發動鈕（例如「發動 賭徒耳語」）或 `redArmyAbilityBtn`，**恰好一個可用**才點擊；沒有或多於一個不做事。點擊後若沒有開啟既有視窗（handler 直接送出伺服器動作）才上處理中鎖。
   - 手牌 B：該卡第一顆標示「棄置」的既有按鈕（一般奧援）→ 危險確認單（以手牌 key 綁定，確認當下再驗）；紅軍奧援的「資源」與其他卡牌永遠不是棄置。
-  - 購買卡 Y：焦點卡**已勾選**（在既有購買選取內）且既有「購買所選」可用時才點它，開啟既有購買確認單；資源檢查、確認與 `buy_cards` 送出都在既有流程。未勾選、資源不足（按鈕停用）、按鈕隱藏或不存在一律 no-op；不會自動勾選、不建立新購買 action。
-  - 地圖 Y：清單列 `act` 對應的既有按鈕（`directBuildBtn`／`confirmMoveBtn`／`dissolveBtn`），以 iframe `act` 指令＋`req` 確認執行（見上方協定）；沒有 `act` 的列（例如一般來源）不做事。
+  - 購買卡 Y（與桌面模式相同）：**先用 B 勾選焦點卡，再按 Y**。焦點卡是有效的已勾選卡（勾選框可見、未停用，即仍在既有購買選取內）且既有「購買所選」可用時才點它，開啟既有購買確認單（內容是目前整份勾選）；資源檢查、確認與 `buy_cards` 送出都在既有流程。未勾選、勾選框停用／隱藏（例如售完）、資源不足（按鈕停用）、按鈕隱藏或不存在一律 no-op 並顯示原因；不會自動勾選、不建立新購買 action。
+  - 地圖 Y（與桌面模式相同）：清單列 `act` 對應的既有按鈕（`directBuildBtn`／`confirmMoveBtn`／`dissolveBtn`），以 iframe `act` 指令＋`req` 確認執行（見上方協定）；沒有 `act` 的列（例如一般來源）不做事。pending choice 目標用 A 選取後焦點**留在該列**（只有換了一份清單——來源 ↔ 目的地或換來源——才回第一列），所以接著按 Y 就是在剛選的城鎮建立／瓦解。
   - STICK：只移焦點，不執行；新焦點視為非使用者指定，300ms 內忽略 A／B／X／Y。沒有內容區時不做事。
 - **按鍵提示列**：固定在畫面下緣，**不接受焦點也不接受滑鼠**，只在 bridge 已連線時（未啟用、連線中、無法連線、訊號中斷時整列清空）以「鍵＋標籤」顯示目前可用的專用鍵操作（例如 `Y 購買所選 1 張`、`B ⚠ 棄置 歐洲奧援`、`+ 發動 賭徒耳語`、`Capture ⚠ 結束行動`、`Y 移動 臺北→宜蘭`），來源同樣只限可見、啟用的既有控制。「清除」與「卡牌置頂」不再有搖桿入口（滑鼠照常可用；搖桿可用 B 逐張取消勾選；未使用的頂牌權利在結束行動時由伺服器既有流程處理：只有一張候選時自動置頂，多張時開既有選擇視窗）。
 - **地圖兩段式清單**：來源（可行動城鎮）→ A → 該來源的伺服器合法目的地（依消耗、道路先於鐵路排序）→ A 只預備移動、Y 直接走既有「確認移動」。pending choice 目標：A 只選取、Y 走既有「建立組織」或「瓦解組織」。清單只來自 iframe 權威 snapshot（選用欄位 `selected`、`pending`、移動目標 `mode`／`cost`、目標 `act`，有給就嚴格驗證），iframe 執行每個指令前仍重驗；沒有 snapshot 或目標時清單為空、A／Y 無作用。滑鼠仍可直接操作地圖。
@@ -129,7 +131,7 @@ A 對城鎮走既有 marker `click` 路徑（選取來源／預備移動目的�
 node --test scripts/tests/js/controller_core.test.js scripts/tests/js/living_room_core.test.js   # 或透過 pytest 包裝
 uv run python -m pytest scripts/tests/test_controller_core_js.py scripts/tests/test_living_room_core_js.py scripts/tests/test_joycon_bridge.py
 uv run python scripts/validate/validate_joycon_controller.py   # 瀏覽器 E2E（mock bridge），截圖到 /tmp/redline-joycon-proof/
-uv run python scripts/validate/validate_living_room_controller.py   # 客廳模式 E2E（固定按鍵序列、六個情境、三種解析度），截圖到 /private/tmp/redline-living-room-proof/
+uv run python scripts/validate/validate_living_room_controller.py   # 客廳模式 E2E（固定按鍵序列、三種解析度，含兩種顯示模式的實機 Capture／購買卡 B→Y／地圖 Y 情境），截圖到 /private/tmp/redline-living-room-proof/
 ```
 
 E2E 以 mock WebSocket 取代 bridge 並注入 frame，驗證真實頁面的焦點、A click、B cancel、modal 優先權、斷線重連不誤觸、stale、地圖目標焦點與 fail-closed。**這不能取代 Mac 實機 Joy-Con 驗證**（見 `TODO.md`）。
@@ -137,6 +139,6 @@ E2E 以 mock WebSocket 取代 bridge 並注入 frame，驗證真實頁面的焦�
 ## 限制
 
 - https 頁面可能擋 `ws://127.0.0.1`（mixed content），詳見 bridge README；目前只完整支援 http dev／區網頁面。
-- S2B1 欄位位置與 `y` 軸方向尚未用實機確認。
+- S2B1 按鍵位元只實錄了 Y（b0 `0x01`）與實體 Capture 鍵（b1 `0x40`）；其他按鍵與 `y` 軸方向尚未用實機逐一確認。
 - 文字輸入欄位只能聚焦，無法用搖桿輸入文字。
-- CAPTURE 位元為 b1 `0x20`：上游 `Peterksharma/switch2mac`（commit `a8f2e61e85c3e4a43df3e6ed2f1467327df03d72`）`Switch2Protocol.swift` 定義 `capture = 0x0000_2000`，UDPHub 以 little-endian u32 寫出，因此瀏覽器收到 `[0x00, 0x20]`；`static/controller_core.js` 與 bridge README 一致，並有字面封包回歸測試（`scripts/tests/test_joycon_bridge.py`、`scripts/tests/js/controller_core.test.js`）。**實機 Joy-Con 與實體 Capture 鍵尚未實測**。Capture 實體鍵通常在左 Joy-Con，只接右 Joy-Con 時可能沒有這顆鍵（滑鼠仍可結束行動）。
+- CAPTURE 接受 b1 `0x40` 與 b1 `0x20` 兩個位元（同一個邏輯鍵，按住時切換位元不會重複觸發）。上游 `Peterksharma/switch2mac`（commit `a8f2e61e85c3e4a43df3e6ed2f1467327df03d72`）`Switch2Protocol.swift` 定義 `capture = 0x0000_2000`、`c = 0x0000_4000`，UDPHub 以 little-endian u32 寫出。2026-10-10 以獨立 subscriber 實錄本機 bridge（只接右 Joy-Con 2）：Y＝`[1, 0]`、實體 Capture 鍵＝`[0, 64]`（b1 `0x40`，即上游 `c`；右 Joy-Con 2 沒有 `capture` 那顆鍵），因此 `0x40` 是主位元；`0x20` 保留給左 Joy-Con 2／Pro 手把的 `capture`（未實測）。兩個位元原本都沒有其他對應，沒有重新指派任何已知按鍵。字面封包回歸測試：`scripts/tests/test_joycon_bridge.py`、`scripts/tests/js/controller_core.test.js`。

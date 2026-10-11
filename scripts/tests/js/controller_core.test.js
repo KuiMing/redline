@@ -29,12 +29,45 @@ test('button bit mapping decodes every documented bit', () => {
   assert.equal(C.decodeButtonBytes(0x80, 0).ZR, true);
 });
 
-test('capture: upstream UInt32 0x00002000 arrives as bytes [0x00, 0x20] and decodes to CAPTURE only', () => {
-  // literal from switch2mac Switch2Protocol.swift (capture = 0x0000_2000, little-endian), not from BUTTON_BITS
+test('capture: the physical key (b1 0x40) and upstream capture (b1 0x20) both decode to CAPTURE only', () => {
+  // literals, not from BUTTON_BITS. A live bridge subscriber recorded the physical Capture press on the
+  // right-Joy-Con-2 setup as buttons:[0,64] (switch2mac `c` = 0x0000_4000); `capture` = 0x0000_2000 stays accepted.
   const pressed = (b0, b1) => Object.entries(C.decodeButtonBytes(b0, b1)).filter(([, v]) => v).map(([k]) => k);
-  assert.deepEqual(pressed(0x00, 0x20), ['CAPTURE']);
-  assert.deepEqual(pressed(0x00, 0x40), [], 'b1 0x40 is not Capture');
+  assert.deepEqual(pressed(0x00, 0x40), ['CAPTURE'], 'observed physical Capture');
+  assert.deepEqual(pressed(0x00, 0x20), ['CAPTURE'], 'upstream capture bit (compat)');
+  assert.deepEqual(pressed(0x00, 0x60), ['CAPTURE']);
+  assert.deepEqual(pressed(0x01, 0x00), ['Y'], 'observed physical Y');
+  // neighbouring bits keep their own meaning (or none); nothing known is remapped
+  assert.deepEqual(pressed(0x00, 0x02), ['PLUS']);
+  assert.deepEqual(pressed(0x00, 0x04), ['STICK']);
+  assert.deepEqual(pressed(0x00, 0x10), ['HOME']);
+  for (const b1 of [0x01, 0x08, 0x80]) assert.deepEqual(pressed(0x00, b1), [], `b1 0x${b1.toString(16)}`);
+  assert.deepEqual(pressed(0x40, 0x00), ['R'], 'b0 0x40 is R, not Capture');
+  assert.deepEqual(pressed(0x20, 0x00), ['SL'], 'b0 0x20 is SL, not Capture');
+  assert.equal(C.normalizeFrame({ x: 0, y: 0, buttons: [0x00, 0x40] }).buttons.CAPTURE, true);
+  assert.equal(C.normalizeFrame({ x: 0, y: 0, buttons: 0x4000 }).buttons.CAPTURE, true);
   assert.equal(C.normalizeFrame({ x: 0, y: 0, buttons: [0x00, 0x20] }).buttons.CAPTURE, true);
+});
+
+test('capture: the recorded physical sequence fires one Y and one CAPTURE; reconnect hold stays a baseline', () => {
+  const raw = (b) => C.normalizeFrame({ x: -0.0098, y: 0.0256, buttons: b });
+  const presses = (steps) => {
+    let state = C.createInputState();
+    const out = [];
+    for (const [t, b] of steps) {
+      const r = C.reduceFrame(state, raw(b), t);
+      state = r.state;
+      out.push(...r.actions.filter(a => a.type === 'press').map(a => a.button));
+    }
+    return out;
+  };
+  // bridge subscriber: neutral → [1,0] → neutral → [0,64] (held a few frames) → neutral → [0,64] → neutral
+  assert.deepEqual(presses([[0, [0, 0]], [33, [1, 0]], [66, [0, 0]], [100, [0, 64]], [133, [0, 64]], [166, [0, 0]], [200, [0, 64]], [233, [0, 0]]]),
+    ['Y', 'CAPTURE', 'CAPTURE']);
+  // one logical key: moving between its two bits while held never re-fires
+  assert.deepEqual(presses([[0, [0, 0]], [33, [0, 0x20]], [66, [0, 0x60]], [100, [0, 0x40]], [133, [0, 0]], [166, [0, 0x40]]]), ['CAPTURE', 'CAPTURE']);
+  // first frame after (re)connect holding the physical Capture key is only a baseline
+  assert.deepEqual(presses([[0, [0, 64]], [33, [0, 64]], [66, [0, 0]], [100, [0, 64]]]), ['CAPTURE']);
 });
 
 test('normalizeFrame rejects NaN, out-of-range and malformed input', () => {
@@ -388,12 +421,29 @@ test('hand card focus: X = resource, Y = action', () => {
   assert.deepEqual(C.routeAction(cardCtx(handCard), Y), { cmd: 'cardMode', mode: 'action' });
 });
 
-test('non-hand card focus: X/Y are full no-ops (no turn bar, no help, no card mode)', () => {
-  for (const card of [buyCard, { zone: 'discard', hasToggle: false }]) {
-    assert.equal(C.routeAction(cardCtx(card), X), null, card.zone);
-    assert.equal(C.routeAction(cardCtx(card), Y), null, card.zone);
-  }
+test('non-hand card focus: X is a full no-op; Y is a no-op except the purchase-card buy flow', () => {
+  for (const card of [buyCard, { zone: 'discard', hasToggle: false }]) assert.equal(C.routeAction(cardCtx(card), X), null, card.zone);
+  assert.equal(C.routeAction(cardCtx({ zone: 'discard', hasToggle: false }), Y), null);
   assert.equal(C.routeAction(cardCtx(buyCard, { sectionsLocked: true }), X), null);
+});
+
+test('purchase card focus: B checks, Y opens the existing buy flow (the UI requires a B-checked card)', () => {
+  assert.deepEqual(C.routeAction(cardCtx(buyCard), { name: 'cancel' }), { cmd: 'cardToggle' }, 'B stays the checkbox toggle');
+  assert.deepEqual(C.routeAction(cardCtx(buyCard), Y), { cmd: 'cardBuy' });
+  assert.deepEqual(C.routeAction(cardCtx(buyCard, { sectionsLocked: true }), Y), { cmd: 'cardBuy' });
+  assert.equal(C.routeAction(cardCtx(buyCard, { hasFocus: false }), Y), null);
+  assert.equal(C.routeAction(cardCtx(buyCard, { scopeKind: 'modal' }), Y), null, 'never from inside a modal');
+});
+
+test('map target focus: Y = the focused target\'s existing map action; other focus keeps legacy Y', () => {
+  const map = { scopeKind: 'map', hasFocus: true, cancelAvailable: false, sectionsLocked: true, card: null };
+  assert.deepEqual(C.routeAction({ ...map, mapTarget: true }, Y), { cmd: 'mapAct' }, 'pending build choice');
+  assert.deepEqual(C.routeAction({ ...map, sectionsLocked: false, mapTarget: true }, Y), { cmd: 'mapAct' });
+  assert.deepEqual(C.routeAction({ ...map, mapTarget: false }, Y), { cmd: 'toggleHelp' }, 'map button ring');
+  assert.deepEqual(C.routeAction({ ...map, mapTarget: true, hasFocus: false }, Y), { cmd: 'toggleHelp' });
+  assert.deepEqual(C.routeAction({ ...cardCtx(null), mapTarget: true }, Y), { cmd: 'toggleHelp' }, 'only the map scope');
+  assert.deepEqual(C.routeAction({ ...map, mapTarget: true }, { name: 'confirm' }), { cmd: 'activate' }, 'A still only selects / arms');
+  assert.equal(C.routeAction({ ...map, mapTarget: true }, X)?.cmd, undefined, 'X is unchanged (locked map: no turn bar)');
 });
 
 test('non-card focus keeps legacy X/Y', () => {

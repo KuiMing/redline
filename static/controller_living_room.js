@@ -125,7 +125,7 @@
       <div>搖桿：選內容區（卡牌／玩家動態／地圖目標）；A 進入後在區內移動</div>
       <div>A：進入區域；卡牌＝查看；地圖目標＝選取／預備</div>
       <div>B：購買卡勾選／取消；奧援手牌＝棄置（⚠ 需確認）；地圖＝取消</div>
-      <div>X：手牌＝資源　Y：手牌＝行動；已勾選購買卡＝購買所選；地圖目標＝建立／移動／瓦解</div>
+      <div>X：手牌＝資源　Y：手牌＝行動；購買卡先按 B 勾選再按 Y＝開啟購買確認；地圖目標＝建立／移動／瓦解</div>
       <div>+：發動陣營能力（例如賭徒耳語）</div>
       <div>Capture：結束行動／結束回合（⚠ 需確認，預設返回）</div>
       <div>R／SR：指揮中心→戰略地圖→戰況紀錄→我的陣營→事件卡→時代關卡</div>
@@ -277,7 +277,8 @@
     } else if (card && card.zone === 'purchase') {
       const { box, buy } = purchaseParts(el);
       if (box) sources.push(controlSource('cardToggle', box, box.checked ? '取消勾選' : '勾選'));
-      if (box && box.checked && buy) sources.push(controlSource('cardBuy', buy, `${text(buy)}（開啟購買確認）`));
+      // Y 只在焦點卡已用 B 勾選（且勾選框仍可用）時提示；未勾選時提示列只有「B 勾選」。
+      if (box && box.checked && host.isUsable(box) && buy) sources.push(controlSource('cardBuy', buy, `${text(buy)}（開啟購買確認）`));
     } else if (lr.zone === 'maplist' && el && el.dataset.town) {
       const act = LR.mapActFor(lr.mapList.rows.find(r => r.town === el.dataset.town), lr.mapList);
       if (act) sources.push({ id: 'mapAct', label: act.label, visible: true });
@@ -342,7 +343,8 @@
     const visible = enabled() && host.ctl.settings.enabled && activeView() === 'map';
     if (panel.hidden === visible) panel.hidden = !visible;
     const list = activeView() === 'map' ? LR.buildMapList(host.getMapSnapshot()) : LR.buildMapList(null);
-    const stageKey = `${list.stage}|${list.selected || ''}`;
+    // 只有真的換了一份清單才把焦點放回第一列；pending choice 的 A 選取不算（焦點留在剛選的那一列）。
+    const stageKey = LR.mapStageKey(list);
     if (stageKey !== lr.mapStageKey) {
       lr.mapStageChanged = lr.mapStageKey !== '';
       lr.mapStageKey = stageKey;
@@ -710,17 +712,23 @@
   }
 
   function execute(command, zone, index, zones, view) {
-    const verdict = LR.gate(lr.guard, performance.now(), lr.stateSeq, command.cmd);
+    guarded(command.cmd, () => run(command, zone, index, zones, view));
+  }
+
+  /** 處理中鎖／地圖等待／重繪冷卻／執行冷卻的共同閘門（客廳模式與桌面模式的專用鍵共用）；回傳是否真的執行。 */
+  function guarded(cmd, fn) {
+    const verdict = LR.gate(lr.guard, performance.now(), lr.stateSeq, cmd);
     lr.guard = verdict.guard;
     if (!verdict.allowed) {
-      lr.lastCommand = { cmd: command.cmd, result: verdict.reason };
+      lr.lastCommand = { cmd, result: verdict.reason };
       if (verdict.reason === 'processing' || verdict.reason === 'map-pending') flash('處理中…請稍候');
-      return;
+      return false;
     }
-    // 只有真的執行了（run 回傳 true）才開始 250ms 冷卻；fail-closed no-op 與導航不記錄。
-    const executed = run(command, zone, index, zones, view) === true;
-    lr.lastCommand = { cmd: command.cmd, result: executed ? 'executed' : 'noop' };
-    if (executed && LR.ACTIVATION_GATED.has(command.cmd)) noteActivation();
+    // 只有真的執行了（fn 回傳 true）才開始 250ms 冷卻；fail-closed no-op 與導航不記錄。
+    const executed = fn() === true;
+    lr.lastCommand = { cmd, result: executed ? 'executed' : 'noop' };
+    if (executed && LR.ACTIVATION_GATED.has(cmd)) noteActivation();
+    return executed;
   }
 
   /**
@@ -903,11 +911,16 @@
     return openConfirm({ kind: 'discard', key: zone.keys[index], name: card.dataset.cardName || '' });
   }
 
-  /** Y：焦點購買卡已勾選且既有「購買所選」可用 → 點它開啟既有購買確認單（資源檢查與送出仍走既有流程）。 */
+  /**
+   * Y：焦點購買卡已用 B 勾選（勾選框仍可見可用）且既有「購買所選」可用 → 點它開啟既有購買確認單，內容是目前整份勾選；
+   * 資源檢查與送出仍走既有流程。Y 不會勾選任何卡；不符一律 fail closed。
+   */
   function buyFromCard(el) {
     const { card, box, buy } = purchaseParts(el);
     const blocker = LR.purchaseBuyBlocker({
-      cardShown: !!card && shown(card) && !!box && box.isConnected, checked: !!box && box.checked, buyUsable: usable(buy),
+      // selectable：與 B 勾選（host.toggleCard）同一個判斷——勾選框可見、未停用、不在 [inert] 內。
+      cardShown: !!card && shown(card) && !!box && box.isConnected, selectable: !!box && host.isUsable(box), checked: !!box && box.checked,
+      buyUsable: usable(buy),
     });
     if (blocker) { flash(BLOCK_TEXT[blocker] || '此操作目前不可用'); return false; }
     buy.click();
@@ -923,7 +936,17 @@
 
   /** Y：清單列的既有地圖操作（建立組織／確認移動／瓦解組織）。iframe 重驗、預備並點既有按鈕後才回 ok:true。 */
   function mapAct(town) {
-    const act = LR.mapActFor(lr.mapList.rows.find(r => r.town === town), lr.mapList);
+    return sendMapAct(town, LR.mapActFor(lr.mapList.rows.find(r => r.town === town), lr.mapList));
+  }
+
+  /** 桌面模式地圖目標的 Y 操作：直接取自最新 iframe 權威 snapshot 的該目標（與客廳清單列的 act 同一個來源）。 */
+  function snapshotMapAct(town) {
+    const snap = host.getMapSnapshot();
+    const target = snap && snap.scope !== 'none' ? snap.targets.find(t => t.town === town) : null;
+    return LR.mapActFor(target ? { town: target.town, act: target.act } : null, { selected: snap ? snap.selected : null });
+  }
+
+  function sendMapAct(town, act) {
     if (!act) { flash('此目標沒有可執行的地圖操作'); return false; }
     return sendMapRequest('act', { town, id: act.id }, { lock: true });
   }
@@ -1077,7 +1100,7 @@
     }
     const card = ctl.focusEl ? host.cardContext({ kind: 'dom', el: ctl.focusEl }) : null;
     if (card && card.zone === 'hand') return '←→ 選牌　A 查看　X 資源　Y 行動　B 棄置（奧援）　ZR 回區域層';
-    if (card) return '←→ 選牌　A 查看　B 勾選／取消　Y 購買所選　ZR 回區域層';
+    if (card) return '←→ 選牌　A 查看　B 勾選／取消　勾選後 Y 購買所選　ZR 回區域層';
     return 'A 確認　B 回區域層　ZR 回區域層　R/SR 區段';
   }
 
@@ -1217,6 +1240,40 @@
     return true;
   }
 
+  /** 桌面模式購買卡 Y：與客廳模式同一個 buyFromCard 與閘門（焦點卡須已用 B 勾選；只開啟既有購買確認單）。 */
+  function runDesktopCardBuy(el) {
+    if (enabled() || !host || !gameShown() || !el) return false;
+    syncStateToken();
+    return guarded('cardBuy', () => buyFromCard(el));
+  }
+
+  /**
+   * 桌面模式地圖城鎮目標的 Y：與客廳模式同一條 iframe `act`＋req 確認路徑與閘門。一律回傳 false（尚未執行）：
+   * 只有 iframe 以同一個 req 回覆 ok:true 才由 onMapResult 記錄冷卻並上處理中鎖；沒有 act、沒有 iframe、ok:false、逾時一律 fail closed。
+   */
+  function runDesktopMapAct(town) {
+    if (enabled() || !host || !gameShown() || typeof town !== 'string') return false;
+    syncStateToken();
+    return guarded('mapAct', () => sendMapAct(town, snapshotMapAct(town)));
+  }
+
+  /** 桌面模式提示：焦點城鎮目標的 Y 操作文字（例如「建立組織 新北」）；沒有則 null。 */
+  function desktopMapActLabel(town) {
+    const act = host && typeof town === 'string' ? snapshotMapAct(town) : null;
+    return act ? act.label : null;
+  }
+
+  /** 桌面模式提示列用：專用鍵 fail closed 的原因（1.8 秒後自動清除）。 */
+  function notice() { return lr.notice; }
+
+  /** 除錯／驗證：桌面模式專用鍵（Capture／+／購買卡 Y／地圖 Y）共用的閘門狀態（唯讀）。 */
+  function shortcutState() {
+    return {
+      processing: processing(), activatedAt: lr.guard.activatedAt, notice: lr.notice, lastCommand: lr.lastCommand,
+      mapRequest: lr.guard.mapRequest ? { req: lr.guard.mapRequest.req, cmd: lr.guard.mapRequest.cmd } : null, lastMapAck: lr.lastMapAck,
+    };
+  }
+
   /** 桌面模式的 R／SR：與客廳模式同一個六區段環；回傳是否真的切到下一個區段。 */
   function runSectionRing(step, modalScope) {
     if (!host || !gameShown()) return false;
@@ -1270,6 +1327,11 @@
     debugState,
     desktopShortcutOf,
     runDesktopShortcut,
+    runDesktopCardBuy,
+    runDesktopMapAct,
+    desktopMapActLabel,
+    notice,
+    shortcutState,
     runSectionRing,
     isSectionModal,
     revalidateConfirm,

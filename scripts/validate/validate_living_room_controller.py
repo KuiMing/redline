@@ -5,8 +5,9 @@
 購買 checkbox、陣營能力鈕或提示列）；R／SR 只循環六個全域區段（含事件卡／時代關卡說明 modal）且 scope lock 正確，
 落點須為該區段內容或實際存在的地圖焦點（必須真的靜止並重驗，落點元素本身須為合法方向候選；只有確實沒有候選的區段
 才允許無焦點，且 iframe 不得殘留地圖焦點標籤）；
-專用快捷鍵 Capture（結束行動，危險確認、預設返回、防連按）、PLUS（陣營能力）、手牌 B（棄置，危險確認）、
-購買卡 Y（既有購買所選 → 購買確認單）、地圖 Y（建立組織／確認移動／瓦解組織，iframe 權威重驗＋req 對應確認）、
+專用快捷鍵 Capture（結束行動，危險確認、預設返回、防連按；注入實機 b1 0x40，上游 b1 0x20 另驗相容）、PLUS（陣營能力）、
+手牌 B（棄置，危險確認）、購買卡 B 勾選 → Y（既有購買所選 → 購買確認單；不自動勾選）、
+地圖 Y（建立組織／確認移動／瓦解組織，iframe 權威重驗＋req 對應確認；含非第一列 A 選取後的 Y 與桌面模式）、
 按下搖桿（下一個內容區）的成功與 fail-closed（hidden／disabled／detached／條件不足／處理中鎖／iframe 缺席／
 逾時／過期回覆／ok:false／權威目標失效，以及失敗後 <250ms 的合法 retry 不受污染）；
 卡牌既有語意不退化、處理中鎖、重繪不跨區域（含重繪後 reconcile 前的輸入 fail closed）、斷線／重連 baseline、PC 滑鼠勾選、
@@ -28,11 +29,15 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from validate_joycon_controller import BIT, MOCK_WS, Pad, enable_controller, focus_dom_toward, post_json, start_server  # noqa: E402
+from validate_joycon_controller import (  # noqa: E402
+    BIT, MOCK_WS, Pad, enable_controller, focus_dom_toward, focus_town_toward, post_json, start_server,
+)
 
-# 客廳模式額外用到的按鍵（位元與 static/controller_core.js BUTTON_BITS 相同）
+# 客廳模式額外用到的按鍵（位元與 static/controller_core.js BUTTON_BITS 相同）。CAPTURE 一律用實機訊號：只接右 Joy-Con 2 時
+# 實體 Capture 鍵送出 buttons:[0,64]（b1 0x40，上游 `c`）；上游 `capture`（b1 0x20）以 CAPTURE_COMPAT 另外驗證仍相容。
 BIT.setdefault("ZR", (0, 0x80))
-BIT.setdefault("CAPTURE", (1, 0x20))
+BIT["CAPTURE"] = (1, 0x40)
+BIT["CAPTURE_COMPAT"] = (1, 0x20)
 BIT.setdefault("STICK", (1, 0x04))
 
 OUT = Path(os.environ.get("REDLINE_LIVING_ROOM_PROOF_DIR", "/private/tmp/redline-living-room-proof"))
@@ -136,7 +141,7 @@ GEOMETRY = """() => {
 }"""
 
 TIMED = """async ([buttons, gap]) => {
-  const bit = { A: [0x08, 0], B: [0x04, 0], X: [0x02, 0], Y: [0x01, 0], R: [0x40, 0], PLUS: [0, 0x02], CAPTURE: [0, 0x20], STICK: [0, 0x04] };
+  const bit = { A: [0x08, 0], B: [0x04, 0], X: [0x02, 0], Y: [0x01, 0], R: [0x40, 0], PLUS: [0, 0x02], CAPTURE: [0, 0x40], STICK: [0, 0x04] };
   for (let i = 0; i < buttons.length; i++) {
     const [b0, b1] = bit[buttons[i]];
     window.__padSend(0, 0, b0, b1);
@@ -145,9 +150,9 @@ TIMED = """async ([buttons, gap]) => {
   }
 }"""
 
-# 失敗回覆一到就立刻再按一次（不靠固定 sleep）；回傳兩次按壓的間隔與各階段狀態。
+# 失敗回覆一到就立刻再按一次（不靠固定 sleep）；回傳兩次按壓的間隔與各階段狀態（客廳模式 livingRoom，桌面模式 shortcuts）。
 RETRY_AFTER_FAILURE = """async ([b0, b1]) => {
-  const st = () => { const s = RedlineController.getState().livingRoom;
+  const st = () => { const g = RedlineController.getState(); const s = g.livingRoom || g.shortcuts || {};
     return { activatedAt: s.activatedAt, processing: s.processing, mapRequest: s.mapRequest, lastMapAck: s.lastMapAck, itemKey: s.itemKey }; };
   const press = () => { window.__padSend(0, 0, b0, b1); window.__padSend(0, 0, 0, 0); };
   const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -787,6 +792,22 @@ def scenario_main(browser, base, record, errors):
         page.evaluate(restore_js)
         S.settle()
         record(f"purchase_Y_fails_closed_when_buy_button_{variant}", result == (False, False, "noop"), result)
+    # 焦點卡仍是勾選狀態，但勾選框在當下失效（售完／停用、被隱藏）：不再是有效勾選 → Y fail closed（既有「購買所選」仍可用也一樣）
+    BOX0 = "document.querySelector('input[data-purchase-index=\"0\"]')"
+    for variant, break_js, restore_js in [
+        ("checkbox_disabled", f"{BOX0}.disabled = true", f"{BOX0}.disabled = false"),
+        ("checkbox_hidden", f"{BOX0}.style.display = 'none'", f"{BOX0}.style.display = ''"),
+    ]:
+        page.evaluate(break_js)
+        S.settle()
+        still = (page.evaluate(f"{BOX0}.checked"), page.evaluate(f"!{BUY}.disabled"))
+        pad.tap("Y")
+        result = ("purchaseConfirmModal" in S.modals(), "buy_cards" in spy()["calls"], (lr()["lastCommand"] or {}).get("result"), checked())
+        page.evaluate(restore_js)
+        if result[0]:  # 回歸時誤開的確認單用既有關閉收起，避免後續檢查連鎖失敗
+            page.evaluate("closePurchaseConfirmModal()")
+        S.settle()
+        record(f"purchase_Y_fails_closed_when_checked_card_{variant}", still == (True, True) and result == (False, False, "noop", ["0"]), [still, result])
     pad.push("right")
     S.settle()
     pad.tap("Y")
@@ -828,7 +849,7 @@ def scenario_main(browser, base, record, errors):
     page.evaluate("window.__padClose()")
     page.wait_for_function("RedlineController.getState().status !== 'connected'", timeout=3000)
     alert = page.evaluate("document.getElementById('lrBarStatus').dataset.alert")
-    page.evaluate("window.__padLast = [0, 0, 0x08, 0x22]; window.__padHeartbeat = true")
+    page.evaluate("window.__padLast = [0, 0, 0x08, 0x62]; window.__padHeartbeat = true")  # A + PLUS + 兩個 Capture 位元
     page.wait_for_function("RedlineController.getState().status === 'connected'", timeout=8000)
     page.wait_for_timeout(500)
     record("reconnect_with_held_A_PLUS_CAPTURE_fires_nothing", (lr()["zone"], lr()["layer"], spy()["sendAction"], confirm_open()) == snapshot_before
@@ -2087,6 +2108,301 @@ def scenario_directional_exclusions(browser, base, record, errors):
     ctx.close()
 
 
+# ======================================================================== 9. 實機專用鍵：Capture／購買卡 B→Y／地圖 Y（兩種顯示模式）
+# 使用者實測（只接右 Joy-Con 2）：Capture 送出 buttons:[0,64]；聚焦購買卡 → B 勾選 → Y 要開既有購買確認單；
+# 聚焦（必要時 A 選取）可建立組織的城鎮 → Y 要以既有「建立組織」建立。舊驗證的盲點：Capture 只注入上游 b1 0x20；
+# 購買卡 Y 與地圖 Y 只在客廳模式驗證（桌面模式兩者都是 no-op／說明）；地圖只測第一列，而 A 選取後焦點被重設回第一列，剛好看不出來。
+CONFIRM_BACK_JS = ("document.getElementById('lrConfirmModal')?.style.display === 'flex'"
+                   " && document.querySelector('.rl-pad-focus')?.id === 'lrConfirmCancelBtn'")
+CONFIRM_CLOSED_JS = "document.getElementById('lrConfirmModal')?.style.display !== 'flex'"
+
+# 記錄 parent 送往 iframe 的帶 req 指令與 iframe 的回覆（照常轉送，不攔截）；監聽在 controller 之後註冊，看到回覆時 controller 已處理完。
+ACT_LOG_JS = """() => { const w = document.getElementById('strategicMapFrame').contentWindow;
+  window.__actLog = { sent: [], results: [] };
+  if (!w.__actLogOrig) {
+    w.__actLogOrig = w.postMessage;
+    w.postMessage = function (msg, ...rest) {
+      if (msg && msg.type === 'redline-controller-command' && msg.req) window.__actLog.sent.push({ cmd: msg.cmd, town: msg.town || null, id: msg.id || null, req: msg.req });
+      return w.__actLogOrig.call(this, msg, ...rest);
+    };
+    window.addEventListener('message', e => { const d = e.data;
+      if (d && d.type === 'redline-controller-result' && d.req) window.__actLog.results.push({ cmd: d.cmd, req: d.req, ok: d.ok, via: d.via, reason: d.reason }); });
+  }
+  return true; }"""
+ORGS_AT_JS = """(t) => (document.getElementById('strategicMapFrame').contentWindow.lastGameState?.map?.towns?.[t] || [])
+  .filter(e => e.player === 'mover').reduce((n, e) => n + (e.count || 0), 0)"""
+PURCHASE_STATE_JS = """() => { const f = document.querySelector('.rl-pad-focus');
+  return { checked: [...document.querySelectorAll('input[data-purchase-index]')].filter(i => i.checked).map(i => i.dataset.purchaseIndex),
+    modal: getComputedStyle(document.getElementById('purchaseConfirmModal')).display !== 'none',
+    buyDisabled: document.getElementById('openPurchaseConfirmBtn').disabled,
+    focusCard: f?.closest('.card[data-card-zone="purchase"]')?.querySelector('input[data-purchase-index]')?.dataset.purchaseIndex ?? null,
+    focusInModal: !!f?.closest('#purchaseConfirmModal'), focusId: f?.id || null,
+    buys: __spy.calls.filter(c => c === 'buy_cards').length, toggles: __spy.toggle, helpOpen: RedlineController.getState().helpOpen }; }"""
+
+
+def scenario_physical_shortcuts(browser, base, record, errors):
+    def opener(width, height, url):
+        ctx = browser.new_context(viewport={"width": width, "height": height})
+        ctx.add_init_script(MOCK_WS)
+        page = open_page(ctx, base, url, errors)
+        enable_controller(page)
+        page.evaluate(SPY)
+        S = Session(page, record)
+        S.pad.neutral()
+        S.pad.tap("A")  # 第一次有效操作只放焦點
+        S.settle()
+        return ctx, page, S
+
+    advances = lambda S: S.spy()["calls"].count("advance")
+
+    # ---- 桌面模式 Capture：實機 b1 0x40 → 既有結束行動危險確認（預設返回）；上游 0x20 仍相容；重連時按住不觸發 ----
+    ctx, page, S = opener(1280, 800, new_game(base)["url"])
+    sends = advances(S)
+    S.pad.tap("CAPTURE_COMPAT")
+    compat = S.poll(CONFIRM_BACK_JS, timeout=2000)
+    S.pad.tap("B")
+    S.poll(CONFIRM_CLOSED_JS, timeout=2000)
+    S.settle()
+    S.pad.tap("CAPTURE")
+    opened = S.poll(CONFIRM_BACK_JS, timeout=2000)
+    S.settle()
+    S.pad.tap("A")  # 預設焦點「返回」→ 只關閉
+    back_closed = S.poll(CONFIRM_CLOSED_JS, timeout=2000) and advances(S) == sends
+    S.settle()
+    page.evaluate("window.__padHeartbeat = false; window.__padClose()")
+    page.wait_for_function("RedlineController.getState().status !== 'connected'", timeout=3000)
+    page.evaluate("window.__padLast = [0, 0, 0, 0x40]; window.__padHeartbeat = true")
+    page.wait_for_function("RedlineController.getState().status === 'connected'", timeout=8000)
+    page.wait_for_timeout(500)
+    held_silent = page.evaluate(CONFIRM_CLOSED_JS) and advances(S) == sends
+    S.pad.neutral()
+    S.settle()
+    S.pad.tap("CAPTURE")
+    reopened = S.poll(CONFIRM_BACK_JS, timeout=2000)
+    S.settle()
+    S.pad.push("right")
+    ok_focus = page.evaluate("document.querySelector('.rl-pad-focus')?.id || null")
+    S.pad.tap("A")
+    executed = S.poll(f"__spy.calls.filter(c => c === 'advance').length === {sends + 1}", timeout=3000)
+    record("desktop_physical_capture_b1_0x40_opens_end_step_confirm_default_back_and_executes_once",
+           compat and opened and back_closed and held_silent and reopened and ok_focus == "lrConfirmOkBtn" and executed
+           and advances(S) == sends + 1,
+           [compat, opened, back_closed, held_silent, reopened, ok_focus, executed, advances(S) - sends])
+    ctx.close()
+
+    # ---- 客廳模式 Capture：實機 b1 0x40 → 同一張確認單（預設返回）；上游 0x20 仍相容 ----
+    ctx, page, S = opener(1920, 1080, new_game(base)["url"] + "&display=living-room")
+    sends = advances(S)
+    S.pad.tap("CAPTURE")
+    lr_open = S.poll(CONFIRM_BACK_JS, timeout=2000)
+    c = S.lr()["confirm"]
+    S.settle()
+    S.pad.tap("B")
+    lr_closed = S.poll(CONFIRM_CLOSED_JS, timeout=2000)
+    S.settle()
+    S.pad.tap("CAPTURE_COMPAT")
+    lr_compat = S.poll(CONFIRM_BACK_JS, timeout=2000)
+    S.settle()
+    S.pad.tap("B")
+    S.poll(CONFIRM_CLOSED_JS, timeout=2000)
+    record("living_room_physical_capture_b1_0x40_opens_end_step_confirm_default_back",
+           lr_open and c and c["kind"] == "advance" and lr_closed and lr_compat and advances(S) == sends, [lr_open, c, lr_closed, lr_compat])
+    ctx.close()
+
+    # ---- 桌面模式購買卡：聚焦 → B 勾選 → Y 開既有購買確認單；Y 不會自動勾選，沒有有效勾選即 fail closed ----
+    ctx, page, S = opener(1280, 800, new_game(base, ["追隨者"] * 4)["url"])
+    # 前置（滑鼠走既有「資源」按鈕）：4 宣傳 → 宣傳家（#0，3 宣傳）買得起；加上思想家（#1，5 宣傳）就超過。
+    for n in range(4, 0, -1):
+        page.click('#hand .hand-card-action-btn[data-card-mode="resource"]')
+        S.poll(f"document.querySelectorAll('#hand .hand-card').length === {n - 1}", timeout=5000)
+    S.settle()
+    propaganda = page.evaluate("window.lastGameState.players.find(p => p.id === playerId).resources.propaganda")
+    card = lambda i: f'.card[data-card-zone="purchase"]:has(input[data-purchase-index="{i}"])'
+    ps = lambda: page.evaluate(PURCHASE_STATE_JS)
+    steps = {}
+    modal_open = "getComputedStyle(document.getElementById('purchaseConfirmModal')).display !== 'none'"
+    # 先驗 fail closed（未勾選、勾選的是別張、合計買不起），最後才走成功路徑
+    steps["reach0"] = focus_dom_toward(S.pad, page, card(0))
+    S.settle()
+    S.pad.tap("Y")
+    S.settle()
+    steps["y_unchecked"] = ps()
+    S.pad.tap("B")
+    S.settle()
+    steps["b_checked"] = ps()
+    steps["reach1"] = focus_dom_toward(S.pad, page, card(1))
+    S.settle()
+    S.pad.tap("Y")
+    S.settle()
+    steps["y_other_unchecked"] = ps()
+    S.pad.tap("B")
+    S.settle()
+    S.pad.tap("Y")
+    S.settle()
+    steps["y_unaffordable"] = ps()
+    S.pad.tap("B")
+    S.settle()
+    steps["reach0_again"] = focus_dom_toward(S.pad, page, card(0))
+    S.settle()
+    # 仍勾選、但勾選框當下失效（停用／隱藏）→ 不是有效勾選，Y fail closed
+    box0 = "document.querySelector('input[data-purchase-index=\"0\"]')"
+    for variant, brk, rst in [("disabled", f"{box0}.disabled = true", f"{box0}.disabled = false"),
+                              ("hidden", f"{box0}.style.display = 'none'", f"{box0}.style.display = ''")]:
+        page.evaluate(brk)
+        S.settle()
+        S.pad.tap("Y")
+        S.settle()
+        steps[f"y_box_{variant}"] = ps()
+        page.evaluate(rst)
+        S.settle()
+    S.pad.tap("Y")
+    S.poll(modal_open, timeout=2000)
+    S.settle()
+    steps["y_opened"] = ps()
+    page.screenshot(path=str(OUT / "20_desktop_purchase_B_then_Y_confirm.png"))
+    S.pad.tap("B")
+    S.poll(f"!({modal_open})", timeout=2000)
+    S.settle()
+    steps["modal_B"] = ps()
+    S.pad.tap("Y")
+    S.poll(modal_open, timeout=2000)
+    S.settle()
+    for _ in range(4):
+        if page.evaluate("document.querySelector('.rl-pad-focus')?.id") == "confirmPurchaseBtn":
+            break
+        S.pad.push("right" if _ < 2 else "left")
+    S.pad.tap("A")
+    bought = S.poll(f"window.lastGameState.players.find(p => p.id === playerId).resources.propaganda === {propaganda - 3}", timeout=5000)
+    S.settle()
+    steps["bought"] = ps()
+    y0, b0, op, mb = steps["y_unchecked"], steps["b_checked"], steps["y_opened"], steps["modal_B"]
+    yo, yu, fin = steps["y_other_unchecked"], steps["y_unaffordable"], steps["bought"]
+    record("desktop_purchase_Y_fails_closed_without_valid_checked_card_and_never_auto_checks",
+           steps["reach0"] and propaganda == 4 and y0["checked"] == [] and not y0["modal"] and y0["toggles"] == 0 and y0["focusCard"] == "0"
+           and y0["helpOpen"] is not True and b0["checked"] == ["0"] and not b0["buyDisabled"]
+           and steps["reach1"] and yo["checked"] == ["0"] and not yo["modal"] and yo["focusCard"] == "1" and yo["toggles"] == b0["toggles"]
+           and yu["checked"] == ["0", "1"] and yu["buyDisabled"] and not yu["modal"] and yu["buys"] == 0
+           and all(steps[k]["checked"] == ["0"] and not steps[k]["buyDisabled"] and not steps[k]["modal"] and steps[k]["focusCard"] == "0"
+                   for k in ("y_box_disabled", "y_box_hidden")), steps)
+    record("desktop_purchase_focus_B_check_then_Y_opens_existing_confirm_without_buying",
+           steps["reach0_again"] and op["focusCard"] is None and op["modal"] and op["focusInModal"] and op["checked"] == ["0"] and op["buys"] == 0
+           and not mb["modal"] and mb["checked"] == ["0"] and mb["buys"] == 0 and mb["focusCard"] == "0", steps)
+    record("desktop_purchase_B_Y_then_existing_confirm_buys_once_via_server",
+           bought and fin["buys"] == 1 and fin["checked"] == [] and not fin["modal"], steps)
+    ctx.close()
+
+    # ---- 桌面模式地圖：聚焦合法建立目標 → A 選取 → Y 走 iframe 既有「建立組織」，對上 req 的 ok:true，伺服器真的建立 ----
+    ctx, page, S = opener(1280, 800, new_game(base, ["組織經驗丙", "追隨者", "追隨者"])["url"])
+    on_build = page.evaluate("document.querySelector('.rl-pad-focus')?.dataset.cardName || null")
+    S.pad.tap("Y")  # 手牌 Y＝既有「行動」→ 伺服器 pending choice → 戰略地圖
+    locked = S.poll(f"document.querySelector('.game-tab.active').dataset.view === 'map' && {CHOICE_LOCKED_JS}", timeout=20000)
+    page.wait_for_function("document.getElementById('strategicMapFrame').contentWindow.lastGameState", timeout=20000)
+    mframe = map_frame(page)
+    S.poll("(() => { const s = RedlineController.getState(); return s.focusKind === 'map' && !!s.focusTown; })()", timeout=8000)
+    S.settle()
+    snap = mframe.evaluate("window.__redlineControllerAdapter.snapshot()")
+    targets = sorted(t["town"] for t in snap["targets"] if t.get("act") == "build")
+    start = page.evaluate("RedlineController.getState().focusTown")
+    town = next((t for t in targets if t != start), None)
+    reached = bool(town) and focus_town_toward(S.pad, page, mframe, town)
+    S.settle()
+    S.pad.tap("A")  # 既有選取流程（marker click）
+    try:  # selectedTown 是 iframe 的 top-level let，不在 window 上：在 iframe 內等
+        mframe.wait_for_function("(t) => selectedTown === t", arg=town, timeout=5000, polling=20)
+        selected = True
+    except Exception:
+        selected = False
+    S.settle()
+    before = {t: page.evaluate(ORGS_AT_JS, t) for t in targets}
+    page.evaluate(ACT_LOG_JS)
+    help_before = page.evaluate("RedlineController.getState().helpOpen")
+    hint = page.evaluate("document.getElementById('padHint').textContent")
+    sc = lambda: page.evaluate("RedlineController.getState().shortcuts || {}")
+    base_sc = sc()
+    # (a) iframe 收不到指令 → 1 秒逾時 fail closed：不建立、不上鎖、不記冷卻
+    page.evaluate("""() => { const w = document.getElementById('strategicMapFrame').contentWindow;
+      w.__dropKeep = w.postMessage; w.postMessage = function () {}; }""")
+    S.pad.tap("Y")
+    in_flight = sc()
+    S.poll("RedlineController.getState().shortcuts?.mapRequest === null", timeout=2500)
+    timed_out = sc()
+    page.evaluate("""() => { const w = document.getElementById('strategicMapFrame').contentWindow;
+      w.postMessage = w.__dropKeep; delete w.__dropKeep; }""")
+    S.settle()
+    # (b) iframe 內既有「建立組織」在執行當下停用 → ok:false；失敗後 <250ms 的合法 Y 不受污染 → ok:true → 伺服器建立
+    pre = mframe.evaluate(ARM_RESTORE, ["directBuildBtn", "disabled"])
+    seq = page.evaluate(RETRY_AFTER_FAILURE, [0x01, 0])
+    built = S.poll(f"({ORGS_AT_JS})({json.dumps(town)}) > {before.get(town, 0)}", timeout=8000)
+    S.settle()
+    log = page.evaluate("JSON.parse(JSON.stringify(window.__actLog))")
+    sent = [s for s in log["sent"] if s["cmd"] == "act"]
+    res = [r for r in log["results"] if r["cmd"] == "act"]
+    others = {t: page.evaluate(ORGS_AT_JS, t) for t in targets if t != town}
+    timeout_ack, failed_ack, ok_ack = timed_out.get("lastMapAck") or {}, seq["failed"].get("lastMapAck") or {}, seq["ok"].get("lastMapAck") or {}
+    record("desktop_map_Y_fails_closed_on_timeout_and_ok_false_without_lock_or_cooldown",
+           f"Y 建立組織 {town}" in hint and (in_flight.get("mapRequest") or {}).get("cmd") == "act"
+           and timeout_ack.get("outcome") == "timeout" and timed_out.get("processing") is False
+           and "activatedAt" in timed_out and timed_out["activatedAt"] == base_sc.get("activatedAt")
+           and pre.get("disabled") is True and len(res) >= 1 and res[0]["ok"] is False and res[0]["reason"] == "button-unavailable"
+           and failed_ack.get("outcome") == "failed" and seq["failed"].get("processing") is False
+           and seq["failed"].get("activatedAt") == base_sc.get("activatedAt") and seq["gap"] < 250, [hint, in_flight, timed_out, pre, seq, res])
+    record("desktop_map_focus_select_then_Y_builds_focused_target_with_matching_ok_ack",
+           on_build == "組織經驗丙" and locked and len(targets) >= 2 and reached and selected
+           and len(sent) == 2 and all(s["town"] == town and s["id"] == "directBuildBtn" for s in sent)
+           and len(res) == 2 and [r["req"] for r in res] == [s["req"] for s in sent] and res[1]["ok"] is True and res[1]["via"] == "directBuildBtn"
+           and ok_ack.get("outcome") == "success" and ok_ack.get("req") == sent[1]["req"] and ok_ack.get("lock") is True
+           and built and all(others[t] == before[t] for t in others) and "build" not in S.spy()["calls"]
+           and page.evaluate("RedlineController.getState().helpOpen") == help_before,
+           [on_build, locked, targets, start, town, reached, selected, log, ok_ack, before, others])
+    ctx.close()
+
+    # ---- 客廳模式地圖：清單選非第一列的合法建立目標 → A 選取（焦點必須留在該列）→ Y 只在該城鎮建立 ----
+    ctx, page, S = opener(1920, 1080, new_game(base, ["組織經驗丙", "追隨者", "追隨者"])["url"] + "&display=living-room")
+    S.pad.tap("A")  # 區域層 → 手牌內容層
+    S.settle()
+    on_build = S.lr()["itemKey"]
+    S.pad.tap("Y")
+    entered = S.poll(f"document.querySelector('.game-tab.active').dataset.view === 'map' && {LR_STATE}.mapStage === 'choice'", timeout=20000)
+    S.settle()
+    if S.lr()["zone"] != "maplist" or S.lr()["layer"] != "item":
+        S.pad.tap("A")
+        S.settle()
+    rows = S.lr()["mapRows"]
+    acts = S.lr()["mapActs"]
+    k = len(rows) - 1
+    for _ in range(len(rows) + 1):
+        S.pad.push("up")
+    for _ in range(k):
+        S.pad.push("down")
+    S.settle()
+    focused = (S.focus() or {}).get("town")
+    S.pad.tap("A")
+    selected = S.poll(f"{LR_STATE}.mapSelected === {json.dumps(rows[k] if rows else None)}", timeout=5000)
+    S.settle()
+    after_select = [S.lr()["itemKey"], (S.focus() or {}).get("town"), page.evaluate(f"({MAP_FOCUS_LABELS_JS})")]
+    record("living_room_map_A_select_keeps_focus_on_the_selected_choice_row",
+           on_build == "hand:0:組織經驗丙" and entered and len(rows) >= 2 and all(a == "build" for a in acts) and focused == rows[k]
+           and selected and after_select == [f"town:{rows[k]}", rows[k], [rows[k]]], [on_build, rows, k, focused, selected, after_select])
+    before = {t: page.evaluate(ORGS_AT_JS, t) for t in rows}
+    page.evaluate(ACT_LOG_JS)
+    S.pad.tap("Y")
+    acked = S.poll("window.__actLog.results.some(r => r.cmd === 'act')", timeout=3000)
+    built = S.poll(f"({ORGS_AT_JS})({json.dumps(rows[k])}) > {before[rows[k]]}", timeout=8000)
+    S.settle()
+    log = page.evaluate("JSON.parse(JSON.stringify(window.__actLog))")
+    sent = [s for s in log["sent"] if s["cmd"] == "act"]
+    res = [r for r in log["results"] if r["cmd"] == "act"]
+    ack = S.lr()["lastMapAck"] or {}
+    others = {t: page.evaluate(ORGS_AT_JS, t) for t in rows if t != rows[k]}
+    record("living_room_map_select_non_first_row_then_Y_builds_that_town_with_matching_ok_ack",
+           acked and len(sent) == 1 and sent[0]["town"] == rows[k] and sent[0]["id"] == "directBuildBtn"
+           and len(res) == 1 and res[0]["req"] == sent[0]["req"] and res[0]["ok"] is True and res[0]["via"] == "directBuildBtn"
+           and ack.get("outcome") == "success" and ack.get("req") == sent[0]["req"] and ack.get("lock") is True
+           and built and all(others[t] == before[t] for t in others) and "build" not in S.spy()["calls"],
+           [rows, k, log, ack, before, others])
+    ctx.close()
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     checks, console_errors = [], []
@@ -2103,7 +2419,7 @@ def main():
         with sync_playwright() as pw:
             browser = pw.chromium.launch(headless=True)
             for scenario in (scenario_desktop, scenario_main, scenario_sections, scenario_faction, scenario_build, scenario_dissolve,
-                             scenario_connection, scenario_directional_exclusions):
+                             scenario_connection, scenario_directional_exclusions, scenario_physical_shortcuts):
                 try:
                     scenario(browser, base, record, console_errors)
                 except Exception as exc:  # 讓單一情境的意外中斷以 FAIL 呈現，其餘情境照跑

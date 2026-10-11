@@ -91,10 +91,9 @@
     if (name === 'zoneBack') return ctx.locked ? null : { cmd: 'toZoneLayer' };
     const card = item && item.card;
     if (card) {
-      // 只有兩個新語意取代既有卡牌語意：購買卡 Y＝既有購買流程、可棄置手牌 B＝既有棄置（危險確認）。
-      if (card.zone === 'purchase' && name === 'toggleHelp') return { cmd: 'cardBuy' };
+      // 只有一個客廳模式專屬語意：可棄置手牌 B＝既有棄置（危險確認）。
       if (card.zone === 'hand' && name === 'cancel' && card.hasDiscard) return { cmd: 'cardDiscard' };
-      // 其餘（A 查看、購買卡 B 勾選／X no-op、手牌 X 資源／Y 行動）與桌面 controller_core.routeAction 完全相同。
+      // 其餘（A 查看、購買卡 B 勾選／X no-op／Y 購買所選、手牌 X 資源／Y 行動）與桌面 controller_core.routeAction 完全相同。
       return Core.routeAction(
         { scopeKind: 'page', hasFocus: true, card: { zone: card.zone, hasToggle: !!card.hasToggle }, cancelAvailable: false, sectionsLocked: false },
         logical,
@@ -431,9 +430,12 @@
     return usable.length === 1 ? usable[0] : -1;
   }
 
-  /** 購買卡 Y：焦點卡必須已勾選（在既有購買選取內），且既有「購買所選」按鈕可用；否則回傳阻擋原因。 */
+  /**
+   * 購買卡 Y：焦點卡必須是有效的已勾選卡（先用 B 勾選、勾選框仍可見可用，即仍在既有購買選取內且可購買），
+   * 且既有「購買所選」按鈕可用；否則回傳阻擋原因。Y 本身永遠不勾選任何卡。selectable 不明視為不可（fail closed）。
+   */
   function purchaseBuyBlocker(s) {
-    if (!s || !s.cardShown) return 'card-gone';
+    if (!s || !s.cardShown || s.selectable !== true) return 'card-gone';
     if (!s.checked) return 'not-selected';
     if (!s.buyUsable) return 'buy-unavailable';
     return null;
@@ -491,6 +493,16 @@
     return { ...empty, canCancel };
   }
 
+  /**
+   * 清單「換了一份」的判斷 key：stage 改變（來源 ↔ 目的地、有／無目標）或目的地清單換了來源才算，焦點此時回第一列。
+   * pending choice 的 A 選取只改 selected、列不變：不算換段，焦點留在剛選的那一列（Y 才會作用在它）。
+   */
+  function mapStageKey(list) {
+    const l = list || {};
+    const stage = l.stage || 'none';
+    return `${stage}|${stage === 'destination' ? l.selected || '' : ''}`;
+  }
+
   /** 地圖 Y：清單列的 act → 要按的既有按鈕與提示文字；沒有 act → null（fail-closed）。 */
   function mapActFor(row, list) {
     if (!row || typeof row.town !== 'string') return null;
@@ -528,6 +540,6 @@
     beginMapRequest, expireMapRequest, settleMapResult,
     isDirectionalExcluded, contentZonesFor, reconcileIndex, gridColumns, gridMove, listMove, pickZone, cycleZone, resolveZone,
     sectionOfKey, stepSection, buildKeyHints, pickFactionAbility, purchaseBuyBlocker, discardControlIndex,
-    buildMapList, mapActFor, moveModeLabel, confirmInfoLines,
+    buildMapList, mapStageKey, mapActFor, moveModeLabel, confirmInfoLines,
   };
 });

@@ -106,8 +106,8 @@ test('hand card: A preview, X resource, Y action; B discards only when the card 
   assert.deepEqual(LR.routeLivingRoom(itemCtx(supportItem), press('B')), { cmd: 'cardDiscard' });
 });
 
-test('unchanged card semantics still match desktop routing; only purchase Y and hand-discard B are new', () => {
-  const changed = new Set(['purchase:Y', 'hand+discard:B']);
+test('card semantics match desktop routing (purchase Y included); only hand-discard B is living-room only', () => {
+  const changed = new Set(['hand+discard:B']);
   for (const [tag, item] of [['hand', handItem], ['hand+discard', supportItem], ['purchase', buyItem]]) {
     for (const button of ['A', 'B', 'X', 'Y']) {
       const lr = LR.routeLivingRoom(itemCtx(item), press(button));
@@ -444,12 +444,15 @@ test('exactly one faction ability control is required; zero or several fail clos
   assert.equal(LR.pickFactionAbility(null), -1);
 });
 
-test('purchase Y needs the focused card checked and the existing buy button enabled', () => {
-  const ok = { checked: true, buyUsable: true, cardShown: true };
+test('purchase Y needs the focused card validly checked (via B) and the existing buy button enabled', () => {
+  const ok = { checked: true, selectable: true, buyUsable: true, cardShown: true };
   assert.equal(LR.purchaseBuyBlocker(ok), null);
-  assert.equal(LR.purchaseBuyBlocker({ ...ok, checked: false }), 'not-selected');
+  assert.equal(LR.purchaseBuyBlocker({ ...ok, checked: false }), 'not-selected', 'Y never checks an unselected card');
   assert.equal(LR.purchaseBuyBlocker({ ...ok, buyUsable: false }), 'buy-unavailable');
   assert.equal(LR.purchaseBuyBlocker({ ...ok, cardShown: false }), 'card-gone');
+  // a card that stays checked after it stopped being purchasable (sold out / disabled / hidden checkbox) is not a valid selection
+  assert.equal(LR.purchaseBuyBlocker({ ...ok, selectable: false }), 'card-gone');
+  assert.equal(LR.purchaseBuyBlocker({ checked: true, buyUsable: true, cardShown: true }), 'card-gone', 'unknown selectability fails closed');
   assert.equal(LR.purchaseBuyBlocker(null), 'card-gone');
 });
 
@@ -562,6 +565,24 @@ test('map list choice stage shows pending-choice targets, their action and the c
   assert.equal(list.selected, '丁');
   assert.deepEqual(list.rows.map(r => r.act), ['build', 'build']);
   assert.equal(LR.buildMapList(snap({ scope: 'choice', selected: '庚', targets: [{ town: '丁', role: 'choice' }] })).selected, null);
+});
+
+test('map list stage key: selecting a pending-choice row (A) keeps the stage, so focus stays on that row for Y', () => {
+  const choice = (selected) => LR.buildMapList(snap({ scope: 'choice', selected,
+    targets: ['丁', '戊', '己'].map(town => ({ town, role: 'choice', act: 'build' })) }));
+  assert.equal(choice('己').selected, '己');
+  assert.equal(LR.mapStageKey(choice(null)), LR.mapStageKey(choice('己')), 'A on a choice row is not a new list');
+  assert.equal(LR.mapStageKey(choice('丁')), LR.mapStageKey(choice('己')));
+  // a different list still resets: source → destination, a different source, destination → source, any stage → none
+  const source = LR.buildMapList(snap({ targets: [{ town: '甲', role: 'origin' }, { town: '乙', role: 'origin' }] }));
+  const dest = (from) => LR.buildMapList(snap({ selected: from, targets: [{ town: '丙', role: 'move', act: 'move' }] }));
+  assert.notEqual(LR.mapStageKey(source), LR.mapStageKey(dest('甲')));
+  assert.notEqual(LR.mapStageKey(dest('甲')), LR.mapStageKey(dest('乙')));
+  assert.notEqual(LR.mapStageKey(choice('丁')), LR.mapStageKey(LR.buildMapList(null)));
+  assert.equal(LR.mapStageKey(LR.buildMapList(null)), LR.mapStageKey(null));
+  // arming a destination only changes `pending`, never the stage
+  const armed = LR.buildMapList(snap({ selected: '甲', targets: [{ town: '丙', role: 'move', act: 'move' }], pending: { from: '甲', to: '丙' } }));
+  assert.equal(LR.mapStageKey(armed), LR.mapStageKey(dest('甲')));
 });
 
 test('map Y labels and buttons come only from the row action', () => {
