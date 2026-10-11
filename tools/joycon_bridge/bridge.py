@@ -62,11 +62,14 @@ def parse_packet(data: bytes, layout: PacketLayout = PacketLayout()) -> Frame | 
         return None
     b0 = data[layout.buttons_offset]
     b1 = data[layout.buttons_offset + 1]
-    x, y = struct.unpack_from("<2f", data, layout.stick_offset)
-    if not (math.isfinite(x) and math.isfinite(y)):
+    x, raw_y = struct.unpack_from("<2f", data, layout.stick_offset)
+    if not (math.isfinite(x) and math.isfinite(raw_y)):
         return None
-    if abs(x) > 1.01 or abs(y) > 1.01:
+    if abs(x) > 1.01 or abs(raw_y) > 1.01:
         return None
+    # FTCW uses controller coordinates (up is positive). REDLINE uses screen
+    # coordinates (down is positive), so normalize the wire value here.
+    y = -raw_y
     return Frame(x=max(-1.0, min(1.0, x)), y=max(-1.0, min(1.0, y)), b0=b0, b1=b1)
 
 

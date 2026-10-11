@@ -35,8 +35,11 @@ def packet(x=0.0, y=0.0, b0=0, b1=0, magic=b"S2B1"):
     )
 
 
-def test_parse_valid_packet():
-    assert parse_packet(packet(0.5, -0.25, 0x08, 0x02)) == Frame(0.5, -0.25, 0x08, 0x02)
+def test_parse_valid_packet_normalizes_ftcw_y_to_screen_coordinates():
+    # FTCW reports upward stick motion as positive y. The browser contract uses
+    # screen coordinates, where upward is negative and downward is positive.
+    assert parse_packet(packet(0.5, -0.25, 0x08, 0x02)) == Frame(0.5, 0.25, 0x08, 0x02)
+    assert parse_packet(packet(0.0, 0.75)) == Frame(0.0, -0.75, 0, 0)
 
 
 @pytest.mark.parametrize("bad", [
