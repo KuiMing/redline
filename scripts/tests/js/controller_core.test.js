@@ -184,10 +184,11 @@ test('stale detection', () => {
   assert.equal(C.isStale(C.createInputState(), 0), true);
 });
 
-test('logical mapping: + / HOME / CAPTURE / ZR / STICK never produce desktop actions; SL opens the focus menu', () => {
-  for (const b of ['PLUS', 'HOME', 'CAPTURE', 'ZR', 'STICK']) {
+test('logical mapping: + / HOME / CAPTURE / STICK never produce desktop actions; ZR = map zoom; SL opens the focus menu', () => {
+  for (const b of ['PLUS', 'HOME', 'CAPTURE', 'STICK']) {
     assert.equal(C.logicalAction({ type: 'press', button: b }), null, b);
   }
+  assert.deepEqual(C.logicalAction({ type: 'press', button: 'ZR' }), { name: 'mapZoom' });
   assert.deepEqual(C.logicalAction({ type: 'press', button: 'SL' }), { name: 'focusMenu' });
   assert.deepEqual(C.logicalAction({ type: 'press', button: 'A' }), { name: 'confirm' });
   assert.deepEqual(C.logicalAction({ type: 'press', button: 'R' }), { name: 'nextSection' });
@@ -242,13 +243,105 @@ test('SL routing: opens from page / map scope, toggles the open menu closed, and
 
 test('focus menu modal: background keys are inert; A picks the focused option, B cancels via the existing close', () => {
   const menu = { scopeKind: 'modal', hasFocus: true, cancelAvailable: true, sectionsLocked: false, focusMenuOpen: true, card: null };
-  for (const name of ['nextSection', 'prevSection', 'focusTurnBar', 'toggleHelp']) assert.equal(C.routeAction(menu, { name }), null, name);
+  for (const name of ['nextSection', 'prevSection', 'focusTurnBar', 'toggleHelp', 'mapZoom']) assert.equal(C.routeAction(menu, { name }), null, name);
   assert.deepEqual(C.routeAction(menu, { name: 'confirm' }), { cmd: 'activate' });
   assert.deepEqual(C.routeAction(menu, { name: 'cancel' }), { cmd: 'cancel' });
   assert.deepEqual(C.routeAction(menu, { name: 'move', dir: 'down' }), { cmd: 'move', dir: 'down' });
   assert.equal(C.routeAction({ ...menu, hasFocus: false }, { name: 'confirm' }), null);
-  // + / Capture / ZR / STICK / HOME have no desktop logical action at all
-  for (const b of ['PLUS', 'CAPTURE', 'ZR', 'STICK', 'HOME']) assert.equal(C.logicalAction({ type: 'press', button: b }), null, b);
+  // + / Capture / STICK / HOME have no desktop logical action at all (ZR = map zoom is inert in the menu, above)
+  for (const b of ['PLUS', 'CAPTURE', 'STICK', 'HOME']) assert.equal(C.logicalAction({ type: 'press', button: b }), null, b);
+});
+
+// ---- ZR 戰略地圖縮放循環 ----
+
+test('ZR: the physical b0 0x80 byte decodes to ZR only; one press = one mapZoom, held and reconnect-held never re-fire', () => {
+  assert.deepEqual(C.BUTTON_BITS.ZR, [0, 0x80]);
+  assert.equal(C.BUTTON_ALT_BITS.ZR, undefined, 'no alternate bit invented for ZR');
+  const pressed = (b0, b1) => Object.entries(C.decodeButtonBytes(b0, b1)).filter(([, v]) => v).map(([k]) => k);
+  assert.deepEqual(pressed(0x80, 0x00), ['ZR'], 'user BUTTON AREA record: ZR = 80 00');
+  assert.deepEqual(pressed(0x00, 0x80), [], 'b1 0x80 is not ZR');
+  assert.deepEqual(pressed(0xc0, 0x00), ['R', 'ZR'], 'R with ZR held: two distinct keys');
+  assert.equal(C.normalizeFrame({ x: 0, y: 0, buttons: 0x0080 }).buttons.ZR, true);
+  assert.equal(C.normalizeFrame({ x: 0, y: 0, buttons: { b0: 0x80 } }).buttons.ZR, true);
+  const logical = (steps) => {
+    let state = C.createInputState();
+    const out = [];
+    for (const [t, b0] of steps) {
+      const r = C.reduceFrame(state, C.normalizeFrame({ x: 0.01, y: -0.02, buttons: [b0, 0] }), t);
+      state = r.state;
+      out.push(...r.actions.map(a => C.logicalAction(a)).filter(Boolean).map(l => l.name));
+    }
+    return out;
+  };
+  assert.deepEqual(logical([[0, 0], [33, 0x80], [66, 0x80], [100, 0x80], [133, 0], [166, 0x80], [200, 0]]), ['mapZoom', 'mapZoom']);
+  assert.deepEqual(logical([[0, 0x80], [33, 0x80], [66, 0x80]]), [], '(re)connect with ZR held is only a baseline');
+  assert.deepEqual(logical([[0, 0x80], [33, 0], [66, 0x80]]), ['mapZoom']);
+});
+
+test('ZR routing: only the strategic-map scope zooms (any focus, choice lock); page, modal and the focus menu are inert', () => {
+  const ZR = { name: 'mapZoom' };
+  const map = { scopeKind: 'map', hasFocus: true, cancelAvailable: false, sectionsLocked: false, card: null };
+  for (const extra of [{}, { hasFocus: false }, { sectionsLocked: true }, { mapTarget: true }, { cancelAvailable: true }]) {
+    assert.deepEqual(C.routeAction({ ...map, ...extra }, ZR), { cmd: 'mapZoom' }, JSON.stringify(extra));
+  }
+  for (const ctx of [
+    { ...map, scopeKind: 'page' },
+    { ...map, scopeKind: 'page', card: { zone: 'hand', hasToggle: false } },
+    { ...map, scopeKind: 'modal', cancelAvailable: true },
+    { ...map, scopeKind: 'modal', cancelAvailable: true, focusMenuOpen: true },
+    { ...map, scopeKind: 'map', focusMenuOpen: true },
+  ]) assert.equal(C.routeAction(ctx, ZR), null, JSON.stringify(ctx));
+});
+
+test('zoom command / result: a correlated request id is mandatory', () => {
+  const cmd = (extra) => C.sanitizeMapCommand({ v: 1, type: 'redline-controller-command', cmd: 'zoom', ...extra });
+  assert.ok(C.MAP_COMMANDS.includes('zoom'));
+  assert.deepEqual(cmd({ req: 4 }), { cmd: 'zoom', town: undefined, id: undefined, req: 4 });
+  assert.equal(cmd({}), null, 'req absent');
+  for (const req of [null, 0, -1, 1.5, '3', NaN, Infinity, Number.MAX_SAFE_INTEGER + 2, true, {}, [7]]) assert.equal(cmd({ req }), null, `req=${String(req)}`);
+  const result = (extra) => C.sanitizeMapResult({ type: 'redline-controller-result', v: 1, cmd: 'zoom', ok: true, ...extra });
+  assert.deepEqual(result({ req: 9 }), { cmd: 'zoom', ok: true, req: 9, via: null, reason: null });
+  assert.equal(result({ req: 9, ok: false, reason: 'map-hidden' }).reason, 'map-hidden');
+  for (const extra of [{}, { req: null }, { req: 0 }, { req: '9' }, { req: 9, ok: 'yes' }, { req: 9, via: 'directBuildBtnX' }]) {
+    assert.equal(result(extra), null, JSON.stringify(extra));
+  }
+});
+
+test('zoom bounds: Leaflet getMinZoom/getMaxZoom intersected with MAP_ZOOM_CYCLE; unusable ranges fail closed', () => {
+  const { min, max } = C.MAP_ZOOM_CYCLE;
+  assert.ok(Number.isInteger(min) && Number.isInteger(max) && max > min, 'integer levels, at least two');
+  assert.ok(Object.isFrozen(C.MAP_ZOOM_CYCLE));
+  // the strategic map sets no maxZoom: Leaflet reports 0 / Infinity → the cycle constant decides
+  assert.deepEqual(C.mapZoomBounds(0, Infinity), { min, max });
+  // a map configured tighter than the cycle wins on both ends (Leaflet stays authoritative)
+  assert.deepEqual(C.mapZoomBounds(min + 1, max - 2), { min: min + 1, max: max - 2 });
+  assert.deepEqual(C.mapZoomBounds(min + 0.5, max - 0.5), { min: min + 1, max: max - 1 }, 'whole levels only');
+  assert.deepEqual(C.mapZoomBounds(3, 7, { min: 1, max: 18 }), { min: 3, max: 7 });
+  for (const [a, b] of [[NaN, 18], [0, NaN], ['0', 18], [0, undefined], [null, 18], [max, max], [max + 1, max + 5], [min - 5, min]]) {
+    assert.equal(C.mapZoomBounds(a, b), null, `${a}..${b}`);
+  }
+});
+
+test('zoom step: min → min+1, middle → next, max → min; outside the range → min; fractional → next level; invalid → null', () => {
+  const b = { min: 2, max: 10 };
+  assert.equal(C.nextMapZoom(2, b), 3, 'min → min+1');
+  assert.equal(C.nextMapZoom(6, b), 7, 'middle level → next');
+  assert.equal(C.nextMapZoom(9, b), 10, 'one below max → max');
+  assert.equal(C.nextMapZoom(10, b), 2, 'max → min (single direction cycle)');
+  assert.equal(C.nextMapZoom(13, b), 2, 'zoomed past the cycle with the mouse → back to min');
+  assert.equal(C.nextMapZoom(0, b), 2, 'below the cycle → min');
+  assert.equal(C.nextMapZoom(1.4, b), 2);
+  assert.equal(C.nextMapZoom(6.4, b), 7, 'fractional level advances to the next whole level');
+  assert.equal(C.nextMapZoom(9.9999999, b), 2, 'float noise at max still wraps');
+  assert.equal(C.nextMapZoom(5.9999999, b), 7, 'float noise at a level still advances exactly one level');
+  // a full cycle visits every level exactly once
+  const seen = [];
+  let z = b.min;
+  for (let i = 0; i <= b.max - b.min + 1; i += 1) { seen.push(z); z = C.nextMapZoom(z, b); }
+  assert.deepEqual(seen, [2, 3, 4, 5, 6, 7, 8, 9, 10, 2]);
+  for (const cur of [NaN, Infinity, -Infinity, '5', null, undefined]) assert.equal(C.nextMapZoom(cur, b), null, String(cur));
+  for (const bad of [null, {}, { min: 2 }, { min: 2, max: 2 }, { min: 5, max: 3 }, { min: 2.5, max: 9 }]) assert.equal(C.nextMapZoom(4, bad), null, JSON.stringify(bad));
+  assert.equal(C.nextMapZoom(C.MAP_ZOOM_CYCLE.max, C.mapZoomBounds(0, Infinity)), C.MAP_ZOOM_CYCLE.min);
 });
 
 test('focus menu modal sits right under the danger confirm and has a mouse-closable cancel', () => {

@@ -28,16 +28,18 @@ test('display mode: URL wins and persists, invalid URL falls back to storage, de
 
 // ---- logical actions ----
 
-test('living-room key map: PLUS = faction ability, CAPTURE = end step, STICK = next zone, ZR = zone back', () => {
+test('living-room key map: PLUS = faction ability, CAPTURE = end step, STICK = next zone, ZR = map zoom', () => {
   assert.deepEqual(press('PLUS'), { name: 'factionAbility' });
   assert.deepEqual(press('CAPTURE'), { name: 'endStep' });
   assert.deepEqual(press('STICK'), { name: 'nextZone' });
-  assert.deepEqual(press('ZR'), { name: 'zoneBack' });
+  assert.deepEqual(press('ZR'), { name: 'mapZoom' });
   assert.deepEqual(press('SL'), { name: 'focusMenu' }, 'SL = focus menu (same as desktop)');
   assert.equal(press('HOME'), null);
-  // desktop mapping is untouched: + / CAPTURE / STICK / ZR still do nothing there; SL is the shared focus menu
-  for (const b of ['PLUS', 'CAPTURE', 'STICK', 'ZR', 'HOME']) assert.equal(C.logicalAction({ type: 'press', button: b }), null, `desktop ${b}`);
+  assert.equal(Object.values(LR.BUTTON_ACTIONS).includes('zoneBack'), false, 'ZR no longer goes back a layer / view');
+  // desktop: + / CAPTURE / STICK still do nothing there; SL (focus menu) and ZR (map zoom) are shared
+  for (const b of ['PLUS', 'CAPTURE', 'STICK', 'HOME']) assert.equal(C.logicalAction({ type: 'press', button: b }), null, `desktop ${b}`);
   assert.deepEqual(C.logicalAction({ type: 'press', button: 'SL' }), press('SL'));
+  assert.deepEqual(C.logicalAction({ type: 'press', button: 'ZR' }), press('ZR'));
 });
 
 // ---- router: global keys (any layer, page or map scope) ----
@@ -108,11 +110,25 @@ test('zone layer: stick moves between content zones, A enters, B and X are no-op
   assert.equal(LR.routeLivingRoom(zoneCtx({ zone: null }), nav('up')), null, 'no zone: the stick has nothing to move');
 });
 
-test('zone layer ZR: no-op in command view, returns to command view elsewhere unless the map is locked', () => {
-  assert.equal(LR.routeLivingRoom(zoneCtx(), press('ZR')), null);
-  assert.deepEqual(LR.routeLivingRoom(zoneCtx({ view: 'log', zone: 'view' }), press('ZR')), { cmd: 'leaveView' });
-  assert.deepEqual(LR.routeLivingRoom(zoneCtx({ view: 'map', scopeKind: 'map', zone: 'maplist' }), press('ZR')), { cmd: 'leaveView' });
-  assert.equal(LR.routeLivingRoom(zoneCtx({ view: 'map', scopeKind: 'map', zone: 'maplist', locked: true }), press('ZR')), null);
+test('ZR zooms the strategic map from either layer (pending map choice included) and is a full no-op on every other view', () => {
+  const ZOOM = { cmd: 'mapZoom' };
+  const onMap = [
+    zoneCtx({ view: 'map', scopeKind: 'map', zone: 'maplist' }), zoneCtx({ view: 'map', scopeKind: 'map', zone: null }), mapCtx(),
+    itemCtx(null, { zone: 'maplist', scopeKind: 'map', view: 'map' }),
+  ];
+  for (const ctx of onMap) {
+    for (const lock of [{}, { choiceLock: true, locked: true }, { mapCanCancel: true }]) {
+      assert.deepEqual(LR.routeLivingRoom({ ...ctx, ...lock }, press('ZR')), ZOOM, JSON.stringify({ ...ctx, ...lock }));
+    }
+  }
+  const offMap = [
+    zoneCtx(), zoneCtx({ zone: null }), zoneCtx({ view: 'log', zone: 'view' }), zoneCtx({ view: 'myFaction', zone: 'view' }),
+    itemCtx(handItem), itemCtx(supportItem), itemCtx(buyItem), itemCtx(controlItem, { zone: 'faction' }), itemCtx(controlItem, { view: 'log', zone: 'view' }),
+    zoneCtx({ choiceLock: true, zone: null }),
+    // the map tab without the map scope (e.g. the iframe is hidden) or the map scope reported for another tab: fail closed
+    zoneCtx({ view: 'map', scopeKind: 'page', zone: 'maplist' }), zoneCtx({ view: 'command', scopeKind: 'map' }),
+  ];
+  for (const ctx of offMap) assert.equal(LR.routeLivingRoom(ctx, press('ZR')), null, JSON.stringify(ctx));
 });
 
 // ---- router: item layer cards ----
@@ -146,10 +162,10 @@ test('card semantics match desktop routing (purchase Y included); only hand-disc
   }
 });
 
-test('item layer: stick moves inside the zone, ZR returns to the zone layer', () => {
+test('item layer: stick moves inside the zone; ZR off the map never leaves the layer', () => {
   assert.deepEqual(LR.routeLivingRoom(itemCtx(handItem), nav('right')), { cmd: 'itemMove', dir: 'right' });
-  assert.deepEqual(LR.routeLivingRoom(itemCtx(handItem), press('ZR')), { cmd: 'toZoneLayer' });
-  assert.deepEqual(LR.routeLivingRoom(itemCtx(buyItem), press('ZR')), { cmd: 'toZoneLayer' });
+  assert.equal(LR.routeLivingRoom(itemCtx(handItem), press('ZR')), null);
+  assert.equal(LR.routeLivingRoom(itemCtx(buyItem), press('ZR')), null);
 });
 
 test('item layer non-card control: A activates, B returns to zone layer, X no-op, Y help', () => {
@@ -168,7 +184,7 @@ test('map list row: A picks, Y runs the target\'s existing map action, B cancels
   assert.deepEqual(LR.routeLivingRoom(mapCtx({}), press('B')), { cmd: 'toZoneLayer' });
   assert.equal(LR.routeLivingRoom(mapCtx({ locked: true }), press('B')), null);
   assert.deepEqual(LR.routeLivingRoom(mapCtx({ locked: true, mapCanCancel: true }), press('B')), { cmd: 'mapCancel' });
-  assert.equal(LR.routeLivingRoom(mapCtx({ locked: true }), press('ZR')), null);
+  assert.deepEqual(LR.routeLivingRoom(mapCtx({ locked: true }), press('ZR')), { cmd: 'mapZoom' }, 'zoom never touches the pending choice');
   // empty map list (no row focused): A and Y do nothing
   assert.equal(LR.routeLivingRoom(itemCtx(null, { zone: 'maplist', scopeKind: 'map', view: 'map' }), press('A')), null);
   assert.equal(LR.routeLivingRoom(itemCtx(null, { zone: 'maplist', scopeKind: 'map', view: 'map' }), press('Y')), null);
@@ -297,7 +313,7 @@ test('post-activation cooldown: every executing command (incl. new shortcuts) wa
 
 test('post-activation cooldown never delays navigation or back/escape keys', () => {
   const g = LR.noteActivation(LR.createGuard(), 1000);
-  for (const cmd of ['itemMove', 'zoneMove', 'zoneCycle', 'section', 'toZoneLayer', 'leaveView', 'toggleHelp']) {
+  for (const cmd of ['itemMove', 'zoneMove', 'zoneCycle', 'section', 'toZoneLayer', 'toggleHelp']) {
     assert.equal(LR.gate(g, 1001, 1, cmd).allowed, true, cmd);
   }
 });
@@ -421,6 +437,79 @@ test('map cancel locks only when the iframe reports the server-sending cancel', 
   const pick = LR.settleMapResult(LR.beginMapRequest(LR.createGuard(), 0, 4, { cmd: 'activate' }),
     5, C.sanitizeMapResult({ type: 'redline-controller-result', v: 1, cmd: 'activate', req: 4, ok: true }));
   assert.equal(pick.lock, false, 'town pick keeps its existing no-lock behaviour');
+});
+
+// ---- ZR 地圖縮放：閘門、確認與前置條件 ----
+
+const zoomAck = (req, ok, extra = {}) => C.sanitizeMapResult({ type: 'redline-controller-result', v: 1, cmd: 'zoom', req, ok, ...extra });
+
+test('ZR gating: one pending map request at a time; never the processing lock, redraw cooldown or activation cooldown', () => {
+  assert.equal(LR.MAP_VIEW_COMMANDS.has('mapZoom'), true);
+  assert.equal(LR.ACTIVATION_GATED.has('mapZoom'), false, 'a quick second ZR press still zooms one more level');
+  assert.equal(LR.PROCESSING_GATED.has('mapZoom'), false, 'zoom is not a game action');
+  assert.equal(LR.COOLDOWN_GATED.has('mapZoom'), false, 'zoom does not depend on the focused item');
+  assert.equal(LR.gate(LR.lockProcessing(LR.createGuard(), 1000, 7), 1100, 7, 'mapZoom').allowed, true, 'allowed while a game action is processing');
+  assert.equal(LR.gate(LR.noteRedraw(LR.createGuard(), 1000), 1100, 1, 'mapZoom').allowed, true);
+  assert.equal(LR.gate(LR.noteActivation(LR.createGuard(), 1000), 1001, 1, 'mapZoom').allowed, true);
+  for (const cmd of ['act', 'activate', 'cancel', 'snapshot', 'zoom']) {
+    assert.equal(LR.gate(LR.beginMapRequest(LR.createGuard(), 1000, 3, { cmd }), 1100, 1, 'mapZoom').reason, 'map-pending', `pending ${cmd}`);
+  }
+  // a pending zoom also holds back every other executing key (no second request can overwrite the single slot)
+  const zooming = LR.beginMapRequest(LR.createGuard(), 1000, 4, { cmd: 'zoom' });
+  for (const cmd of ['mapAct', 'mapPick', 'mapCancel', 'focusMenu', 'endStep', 'mapZoom']) assert.equal(LR.gate(zooming, 1100, 1, cmd).reason, 'map-pending', cmd);
+  for (const cmd of ['itemMove', 'zoneMove', 'zoneCycle', 'section', 'toZoneLayer']) assert.equal(LR.gate(zooming, 1100, 1, cmd).allowed, true, cmd);
+  assert.equal(LR.gate(zooming, 2000, 1, 'mapZoom').allowed, true, 'an expired zoom request no longer blocks');
+});
+
+test('ZR ack: sending alone records nothing; only the matching, timely ok:true records success and the cooldown (never a lock)', () => {
+  const g = LR.beginMapRequest(LR.createGuard(), 1000, 11, { cmd: 'zoom' });
+  assert.deepEqual({ ...g, mapRequest: null }, LR.createGuard(), 'postMessage alone: no success, cooldown or lock');
+  const ok = LR.settleMapResult(g, 1010, zoomAck(11, true));
+  assert.equal(ok.outcome, 'success');
+  assert.equal(ok.lock, false);
+  assert.equal(ok.guard.activatedAt, 1010);
+  assert.equal(ok.guard.lockedAt, null);
+  assert.equal(ok.guard.mapRequest, null);
+  assert.equal(LR.gate(ok.guard, 1100, 1, 'mapAct').reason, 'activation-cooldown', 'the next executing key waits 250ms');
+  assert.equal(LR.gate(ok.guard, 1100, 1, 'mapZoom').allowed, true, 'the next ZR press is not delayed');
+  // duplicate ack of the same req after success: stale, nothing recorded again
+  const dup = LR.settleMapResult(ok.guard, 1300, zoomAck(11, true));
+  assert.equal(dup.outcome, 'stale');
+  assert.equal(dup.guard, ok.guard);
+  // ok:false → failed without cooldown; the next legal key is not blocked
+  const refused = LR.settleMapResult(g, 1010, zoomAck(11, false, { reason: 'map-hidden' }));
+  assert.equal(refused.outcome, 'failed');
+  assert.equal(refused.guard.activatedAt, null);
+  assert.equal(LR.gate(refused.guard, 1020, 1, 'mapZoom').allowed, true);
+  // late ack (at / after the 1000ms timeout) → timeout, nothing recorded; after expiry it is stale
+  const late = LR.settleMapResult(g, 2000, zoomAck(11, true));
+  assert.equal(late.outcome, 'timeout');
+  assert.equal(late.guard.activatedAt, null);
+  const expired = LR.expireMapRequest(g, 2000);
+  assert.equal(expired.expired.cmd, 'zoom');
+  assert.equal(LR.settleMapResult(expired.guard, 2100, zoomAck(11, true)).outcome, 'stale');
+  // wrong req, missing req (rejected by the sanitizer), malformed reply or another command's result → stale, keep waiting
+  for (const result of [zoomAck(12, true), zoomAck(10, true), zoomAck(null, true), zoomAck(11, 'yes'), null,
+    C.sanitizeMapResult({ type: 'redline-controller-result', v: 1, cmd: 'act', req: 11, ok: true })]) {
+    const out = LR.settleMapResult(g, 1010, result);
+    assert.equal(out.outcome, 'stale');
+    assert.equal(out.guard, g);
+  }
+});
+
+test('ZR preconditions: connected bridge, game screen, strategic-map scope and a ready iframe (no focus needed) — anything else fails closed', () => {
+  const ok = { connected: true, gameShown: true, scopeKind: 'map', view: 'map', frameReady: true };
+  assert.equal(LR.mapZoomBlocker(ok), null);
+  assert.equal(LR.mapZoomBlocker({ ...ok, padActive: false }), null, 'the first ZR press on the map zooms without a placed focus');
+  assert.equal(LR.mapZoomBlocker({ ...ok, connected: false }), 'disconnected', 'disabled / connecting / error / stale / socket closed');
+  assert.equal(LR.mapZoomBlocker({ ...ok, gameShown: false }), 'no-game');
+  assert.equal(LR.mapZoomBlocker({ ...ok, scopeKind: 'modal' }), 'modal');
+  assert.equal(LR.mapZoomBlocker({ ...ok, scopeKind: 'page' }), 'not-map');
+  assert.equal(LR.mapZoomBlocker({ ...ok, view: 'command' }), 'not-map');
+  assert.equal(LR.mapZoomBlocker({ ...ok, frameReady: false }), 'no-frame');
+  assert.equal(LR.mapZoomBlocker({ ...ok, connected: 'yes' }), 'disconnected', 'only an explicit true counts');
+  assert.equal(LR.mapZoomBlocker(null), 'disconnected');
+  assert.equal(LR.mapZoomBlocker(undefined), 'disconnected');
 });
 
 test('map protocol: command req and result fields are strictly validated', () => {

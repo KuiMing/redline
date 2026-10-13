@@ -57,7 +57,7 @@ Joy-Con ─▶ Finally the Controller Works ─UDP 127.0.0.1:24800 (S2B1)─▶ 
 ```
 
 - `x`、`y`：右搖桿，−1..1，**y 向下為正**（畫面座標）。Bridge 會將 FTCW 的「向上為正」Y 軸取負，轉成畫面座標。
-- `buttons`：兩個 byte（上游 `Switch2Protocol.swift` 的 u32 buttons 以 little-endian 寫出的低兩個 byte，bridge 原樣轉送）。b0：`0x08 A`、`0x04 B`、`0x02 X`、`0x01 Y`、`0x20 SL`、`0x10 SR`、`0x40 R`、`0x80 ZR`；b1：`0x02 +`、`0x04 STICK`、`0x10 HOME`、`0x40 C`、`0x20 CAPTURE`。只接右 Joy-Con 2 時，實體 Capture 鍵送出的是 `c = 0x0000_4000`（b1 `0x40`，2026-10-10 實錄 `[0, 64]`）；左 Joy-Con 2／Pro 手把的 `capture = 0x0000_2000` 是 b1 `0x20`。瀏覽器端兩者都當 CAPTURE（結束行動）。使用者提供的實體 BUTTON AREA 紀錄已確認右 Joy-Con 2 的 A／B／X／Y／SL／SR／R／ZR／`+`／STICK／HOME／Capture 位元與上表一致（例如 SL＝`20 00`，瀏覽器端用於 SL 聚焦選單；詳見 `docs/joycon_controller.md`「限制」）。
+- `buttons`：兩個 byte（上游 `Switch2Protocol.swift` 的 u32 buttons 以 little-endian 寫出的低兩個 byte，bridge 原樣轉送）。b0：`0x08 A`、`0x04 B`、`0x02 X`、`0x01 Y`、`0x20 SL`、`0x10 SR`、`0x40 R`、`0x80 ZR`；b1：`0x02 +`、`0x04 STICK`、`0x10 HOME`、`0x40 C`、`0x20 CAPTURE`。只接右 Joy-Con 2 時，實體 Capture 鍵送出的是 `c = 0x0000_4000`（b1 `0x40`，2026-10-10 實錄 `[0, 64]`）；左 Joy-Con 2／Pro 手把的 `capture = 0x0000_2000` 是 b1 `0x20`。瀏覽器端兩者都當 CAPTURE（結束行動）。使用者提供的實體 BUTTON AREA 紀錄已確認右 Joy-Con 2 的 A／B／X／Y／SL／SR／R／ZR／`+`／STICK／HOME／Capture 位元與上表一致（例如 SL＝`20 00`，瀏覽器端用於 SL 聚焦選單；ZR＝`80 00`，瀏覽器端用於戰略地圖縮放循環；詳見 `docs/joycon_controller.md`「限制」）。
 
 ## 已知限制（務必閱讀）
 

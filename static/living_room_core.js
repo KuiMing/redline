@@ -38,11 +38,11 @@
 
   // ---------------------------------------------------------------- logical actions
 
-  // 只在客廳模式綁定：PLUS＝陣營能力、CAPTURE＝結束行動／步驟（危險確認）、ZR＝回區域層、STICK（按下搖桿）＝下一個內容區。
-  // SL＝聚焦選單（與桌面模式相同）。
+  // 只在客廳模式綁定：PLUS＝陣營能力、CAPTURE＝結束行動／步驟（危險確認）、STICK（按下搖桿）＝下一個內容區。
+  // SL＝聚焦選單、ZR＝戰略地圖縮放循環（兩者與桌面模式相同）。
   const BUTTON_ACTIONS = Object.freeze({
     A: 'confirm', B: 'cancel', X: 'focusTurnBar', Y: 'toggleHelp',
-    R: 'nextSection', SR: 'prevSection', PLUS: 'factionAbility', ZR: 'zoneBack', CAPTURE: 'endStep', STICK: 'nextZone',
+    R: 'nextSection', SR: 'prevSection', PLUS: 'factionAbility', ZR: 'mapZoom', CAPTURE: 'endStep', STICK: 'nextZone',
     SL: 'focusMenu',
   });
 
@@ -61,16 +61,18 @@
    * ctx: {
    *   scopeKind: 'page'|'map', view: 'command'|'map'|..., layer: 'zone'|'item', zone: string|null,
    *   choiceLock: boolean,      // 有必選地圖目標（pending choice 的地圖 highlight）
-   *   locked: boolean,          // 地圖 scope 且 choiceLock：ZR 停用、B 只走既有取消
+   *   locked: boolean,          // 地圖 scope 且 choiceLock：B 只走既有取消
    *   mapCanCancel: boolean,    // iframe snapshot 回報有可取消的既有流程
    *   item: null | { card: {zone, hasToggle, hasDiscard}|null, mapRow: boolean },
    * }
-   * 全域鍵（R/SR、Capture、PLUS、STICK、SL）與焦點無關，任何層都先處理；其餘依區域層／內容層。
+   * 全域鍵（R/SR、Capture、PLUS、STICK、SL、ZR）與焦點無關，任何層都先處理；其餘依區域層／內容層。
+   * ZR 只在戰略地圖（map scope 且分頁＝戰略地圖）縮放，必選地圖目標時也可用；其他分頁一律 null（不回區域層、不切分頁）。
    */
   function routeLivingRoom(ctx, logical) {
     if (!logical || !ctx) return null;
     const name = logical.name;
     if (name === 'focusMenu') return { cmd: 'focusMenu' }; // 只移焦點；必選地圖目標時也可用（選定後回到戰略地圖）
+    if (name === 'mapZoom') return ctx.scopeKind === 'map' && ctx.view === 'map' ? { cmd: 'mapZoom' } : null;
     if (name === 'nextSection' || name === 'prevSection') {
       if (ctx.choiceLock && ctx.view === 'map') return null; // 必選地圖目標：留在地圖
       return { cmd: 'section', step: name === 'nextSection' ? 1 : -1 };
@@ -84,14 +86,12 @@
         case 'move': return ctx.zone ? { cmd: 'zoneMove', dir: logical.dir } : null;
         case 'confirm': return ctx.zone ? { cmd: 'enterZone' } : null;
         case 'toggleHelp': return { cmd: 'toggleHelp' };
-        case 'zoneBack': return ctx.view && ctx.view !== 'command' && !ctx.locked ? { cmd: 'leaveView' } : null;
         default: return null; // B、X 在區域層不做事
       }
     }
 
     const item = ctx.item || null;
     if (name === 'move') return { cmd: 'itemMove', dir: logical.dir };
-    if (name === 'zoneBack') return ctx.locked ? null : { cmd: 'toZoneLayer' };
     const card = item && item.card;
     if (card) {
       // 只有一個客廳模式專屬語意：可棄置手牌 B＝既有棄置（危險確認）。
@@ -142,12 +142,15 @@
   // 執行型按鍵之後 250ms 內不再接受下一個執行型按鍵：防止開啟 modal（購買確認、卡面預覽、危險確認）、
   // 地圖選取／取消或卡牌勾選的那一下連按落到新出現的按鈕上，或把剛勾的 checkbox 又取消。
   // modalConfirm＝客廳模式下 modal 內的 A。只延後輸入、不改變任何遊戲語意；
-  // 方向移動、R/SR、STICK、ZR、回區域層與 modal 內的 B（取消／返回）不受影響。
+  // 方向移動、R/SR、STICK、回區域層與 modal 內的 B（取消／返回）不受影響。
   // focusMenu（SL 開啟聚焦選單）／focusMenuPick（選定選項）只移焦點，不受處理中鎖限制，但同樣等待地圖確認與執行冷卻。
   const ACTIVATION_GATED = Object.freeze(new Set([
     'activate', 'cardMode', 'cardToggle', 'cardPreview', 'cardDiscard', 'cardBuy', 'enterZone',
     'mapPick', 'mapAct', 'mapCancel', 'modalConfirm', 'endStep', 'factionAbility', 'focusMenu', 'focusMenuPick',
   ]));
+  // 只改地圖視角的 iframe 指令（ZR 縮放）：不受處理中鎖、重繪冷卻與執行冷卻限制（連按時每一下都前進一級），
+  // 但與執行型指令共用「同時只有一筆地圖等待」，不會覆蓋等待中的其他請求。確認成功仍記錄執行冷卻（擋下緊接的 A／Y 等）。
+  const MAP_VIEW_COMMANDS = Object.freeze(new Set(['mapZoom']));
 
   function createGuard() { return { lockedAt: null, lockedToken: null, redrawAt: null, activatedAt: null, mapRequest: null }; }
 
@@ -216,14 +219,28 @@
     return { guard: pending.noActivation ? cleared : noteActivation(cleared, now), outcome: 'success', lock, request: pending };
   }
 
+  /**
+   * ZR 地圖縮放的前置條件（送出前與 iframe 確認到達時都重驗）。s = {connected（啟用＋connected＋socket 開著）, gameShown,
+   * scopeKind, view, frameReady（戰略地圖 iframe 仍掛在頁面上、可見且有 contentWindow）}。
+   * 縮放與焦點無關：不需要已放過焦點（戰略地圖上第一下 ZR 就執行）。回傳阻擋原因或 null；任何一項不明一律視為不符（fail closed）。
+   */
+  function mapZoomBlocker(s) {
+    if (!s || s.connected !== true) return 'disconnected';
+    if (s.gameShown !== true) return 'no-game';
+    if (s.scopeKind === 'modal') return 'modal';
+    if (s.scopeKind !== 'map' || s.view !== 'map') return 'not-map';
+    if (s.frameReady !== true) return 'no-frame';
+    return null;
+  }
+
   /** 回傳 {allowed, reason, guard}；guard 可能被更新（逾時或 state 抵達後解鎖、地圖請求逾時）。 */
   function gate(guard, now, token, cmd, config) {
     const cfg = { ...DEFAULT_GUARD_CONFIG, ...config };
     let next = expireMapRequest(guard || createGuard(), now, cfg).guard;
     if (next.lockedAt !== null && !processingActive(next, now, token, cfg)) next = { ...next, lockedAt: null, lockedToken: null };
     if (PROCESSING_GATED.has(cmd) && next.lockedAt !== null) return { allowed: false, reason: 'processing', guard: next };
-    // 地圖指令等待 iframe 確認期間不送出第二個執行型指令（避免同一下連按重送）；確認或逾時後立即解除。
-    if (ACTIVATION_GATED.has(cmd) && next.mapRequest) return { allowed: false, reason: 'map-pending', guard: next };
+    // 地圖指令等待 iframe 確認期間不送出第二個執行型或地圖視角指令（避免同一下連按重送、不覆蓋等待中的請求）；確認或逾時後立即解除。
+    if ((ACTIVATION_GATED.has(cmd) || MAP_VIEW_COMMANDS.has(cmd)) && next.mapRequest) return { allowed: false, reason: 'map-pending', guard: next };
     if (COOLDOWN_GATED.has(cmd) && next.redrawAt !== null && now - next.redrawAt < cfg.redrawCooldownMs) {
       return { allowed: false, reason: 'redraw-cooldown', guard: next };
     }
@@ -652,10 +669,10 @@
 
   return {
     DISPLAY_STORAGE_KEY, DISPLAY_MODES, SAFE_AREA_SCALE, BUTTON_ACTIONS, DEFAULT_GUARD_CONFIG,
-    PROCESSING_GATED, COOLDOWN_GATED, ACTIVATION_GATED, CONTENT_ZONES, SECTION_LABELS, SECTION_MODALS, HINTS, CONFIRM_DEFAULT_FOCUS,
+    PROCESSING_GATED, COOLDOWN_GATED, ACTIVATION_GATED, MAP_VIEW_COMMANDS, CONTENT_ZONES, SECTION_LABELS, SECTION_MODALS, HINTS, CONFIRM_DEFAULT_FOCUS,
     normalizeDisplayMode, resolveDisplayMode, logicalAction, routeLivingRoom,
     createGuard, lockProcessing, noteRedraw, noteActivation, processingActive, gate,
-    beginMapRequest, expireMapRequest, settleMapResult,
+    beginMapRequest, expireMapRequest, settleMapResult, mapZoomBlocker,
     isDirectionalExcluded, contentZonesFor, reconcileIndex, gridColumns, gridMove, listMove, pickZone, cycleZone, resolveZone,
     sectionOfKey, stepSection, buildKeyHints, pickFactionAbility, purchaseBuyBlocker, discardControlIndex,
     buildMapList, mapStageKey, mapActFor, moveModeLabel, confirmInfoLines,

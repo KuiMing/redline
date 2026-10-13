@@ -509,6 +509,12 @@
     const logical = Core.logicalAction(action);
     if (!logical && !shortcut) return;
     const scope = currentScope();
+    // ZR＝戰略地圖縮放，與焦點無關：地圖 scope 直接執行（第一下也執行；不放焦點、不改 padActive），頁面、大廳與任何 modal
+    // （含 SL 聚焦選單）完全 no-op（連焦點都不改）。客廳模式的 page／map scope 已由 layer.dispatch 處理。
+    if (logical && logical.name === 'mapZoom') {
+      if (Core.routeAction({ scopeKind: scope.kind }, logical) && layer) { layer.runDesktopMapZoom(); renderHud(); }
+      return;
+    }
     const items = buildItems(scope);
     const focusMenuOpen = scope.kind === 'modal' && scope.id === Core.FOCUS_MENU_MODAL_ID;
     // Y 在卡牌（手牌行動／購買卡購買所選）與地圖城鎮目標（既有地圖操作）上不是說明；SL 聚焦選單內 Y 完全不作用。
@@ -731,7 +737,7 @@
           <button id="padReconnectBtn" type="button">重新連線</button>
           <button id="padResetBtn" type="button">預設</button>
         </div>
-        <div class="pad-note">搖桿＝移動　A 確認　B 返回　R/SR 六個區段　Y 說明<br>Capture 結束行動（確認）　+ 陣營能力<br>卡牌：A 查看　手牌 X 資源／Y 行動　購買卡 B 勾選 → Y 購買所選（確認）<br>地圖目標：A 選取　Y 建立組織／確認移動／瓦解組織<br>SL 聚焦選單：依統治者／陣營區域跳到可建立組織的合法城鎮（只移焦點）<br>客廳模式：A 進入內容區　手牌 B 棄置（確認）　按下搖桿 下一區</div>
+        <div class="pad-note">搖桿＝移動　A 確認　B 返回　R/SR 六個區段　Y 說明<br>Capture 結束行動（確認）　+ 陣營能力<br>卡牌：A 查看　手牌 X 資源／Y 行動　購買卡 B 勾選 → Y 購買所選（確認）<br>地圖目標：A 選取　Y 建立組織／確認移動／瓦解組織<br>ZR（戰略地圖）：放大一級，到最大後再按回到最小<br>SL 聚焦選單：依統治者／陣營區域跳到可建立組織的合法城鎮（只移焦點）<br>客廳模式：A 進入內容區　手牌 B 棄置（確認）　按下搖桿 下一區</div>
       </div>`;
     stage.appendChild(hud);
     const $ = id => document.getElementById(id);
@@ -781,7 +787,7 @@
     const menu = !layerActive() && layer && layer.focusMenuAvailable() ? '　SL 聚焦選單' : '';
     if (scope.kind === 'map') {
       const act = ctl.focusKind === 'map' && ctl.focusTown && layer && !layerActive() ? layer.desktopMapActLabel(ctl.focusTown) : null;
-      return `移動 搖桿　A 選取${act ? `　Y ${act}` : ''}　B 取消${menu}${choiceLocked() ? '' : '　R/SR 區段'}`;
+      return `移動 搖桿　A 選取${act ? `　Y ${act}` : ''}　B 取消　ZR 放大地圖（循環）${menu}${choiceLocked() ? '' : '　R/SR 區段'}`;
     }
     if (choiceLocked()) return `必選地圖目標：R/SR 回戰略地圖${menu}`;
     const focused = ctl.focusKind === 'dom' ? cardContext({ kind: 'dom', el: ctl.focusEl }) : null;

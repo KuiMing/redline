@@ -8,7 +8,10 @@
 地圖目標焦點、非法目標 fail-closed、iframe 訊息來源驗證、SL 聚焦選單（統治者／陣營區域分組只來自目前合法建立目標，
 移動來源／目的地 fail closed；A 只移焦點且開啟後 250ms 內被擋；從非預設焦點 B／×／SL 精確還原；背景鍵 scope lock 含正向對照；
 從指揮中心選定；協定整合：ok:false／錯的 req／不合 schema／snapshot 先於 ok:true／1000ms 逾時邊界；缺 snapshot／逾時／
-候選消失／無目標／canonical 分組資料不合法 fail closed 且不開始執行冷卻；選單開著時 Y 不穿透，選定後 Y 走既有建立流程）。
+候選消失／無目標／canonical 分組資料不合法 fail closed 且不開始執行冷卻；選單開著時 Y 不穿透，選定後 Y 走既有建立流程）、
+ZR 戰略地圖縮放循環（min→…→max→min、每下一級、中心／焦點／選取／預備移動／遊戲狀態不變、Leaflet min／max；iframe `zoom`＋唯一 req，
+對上的 ok:true 才記錄成功；缺 req／錯的 req／不合 schema／ok:false／逾時／逾時後／重複的回覆、modal、iframe 隱藏或不在、等待中離開地圖或停用、
+停用、斷線、重連中、stale、重連時按住、非地圖分頁一律 fail closed）。
 （購買卡 B→Y 成功、地圖 Y 建立見客廳驗證的 scenario_physical_shortcuts）
 
 執行（會自動啟動隔離 server，不會碰 8100）：
@@ -18,6 +21,7 @@
 """
 
 import json
+import math
 import os
 import socket
 import subprocess
@@ -140,6 +144,59 @@ RESTORE_GROUP_JS = """() => { for (const [town, field, had, value] of (window.__
 # controller 的唯讀狀態（兩種顯示模式）：執行冷卻時間與最後一個專用鍵指令。
 GUARD_JS = "() => { const st = RedlineController.getState(); const g = st.livingRoom || st.shortcuts || {}; return { activatedAt: g.activatedAt ?? null, lastCommand: g.lastCommand || null, mapRequest: g.mapRequest || null, menuRequest: g.focusMenuRequest || null }; }"
 SNAPSHOT_CMDS_JS = "(n) => (window.__cmdLog || []).slice(n).filter(c => c.cmd === 'snapshot')"
+
+# ---- ZR 戰略地圖縮放循環（兩種顯示模式共用的驗證工具） ----
+# 循環範圍（產品端 RedlineControllerCore.MAP_ZOOM_CYCLE，驗證端獨立寫一份）；實際範圍＝它與 Leaflet getMinZoom／getMaxZoom 的交集。
+ZR_CYCLE = (2, 10)
+# iframe realm：Leaflet 視角與地圖互動狀態（只讀）。maxZoom＝Infinity 時回傳 null。
+ZR_VIEW_JS = """() => { const c = map.getCenter(); const max = map.getMaxZoom();
+  return { zoom: map.getZoom(), lat: c.lat, lng: c.lng, minZoom: map.getMinZoom(), maxZoom: Number.isFinite(max) ? max : null,
+    selected: selectedTown ?? null, pending: pendingMoveTarget ? JSON.stringify(pendingMoveTarget) : null,
+    moves: JSON.stringify((selectedMoveTargets || []).map(t => t.town)),
+    highlight: supportChoiceHighlight ? JSON.stringify((supportChoiceHighlight.towns || []).map(t => t.town)) : null,
+    labels: [...document.querySelectorAll('.pad-focus-label')].map(l => l.textContent) }; }"""
+# iframe realm：測試設置用（直接以 Leaflet API 設定層級，不是產品路徑）。
+ZR_SET_ZOOM_JS = "(z) => { map.setView(map.getCenter(), z, { animate: false }); return map.getZoom(); }"
+# parent：controller 狀態（兩種顯示模式）＋遊戲狀態雜湊（任何 state 改變都會反映）。
+ZR_STATE_JS = """() => { const st = RedlineController.getState(); const g = st.livingRoom || st.shortcuts || {};
+  const s = JSON.stringify(window.lastGameState || null); let h = 0; for (let i = 0; i < s.length; i += 1) h = (h * 31 + s.charCodeAt(i)) | 0;
+  return { status: st.status, padActive: st.padActive, focusKind: st.focusKind, focusTown: st.focusTown, focusSig: st.focusSig, scope: st.scope,
+    helpOpen: st.helpOpen, view: document.querySelector('.game-tab.active')?.dataset.view || null,
+    activatedAt: g.activatedAt ?? null, processing: !!g.processing, mapRequest: g.mapRequest || null, lastMapAck: g.lastMapAck || null,
+    lastCommand: g.lastCommand || null, sends: window.__spy ? window.__spy.sendAction : null, stateHash: h,
+    hint: document.getElementById('padHint')?.textContent || '', barStatus: document.getElementById('lrBarStatus')?.textContent || '' }; }"""
+# parent：記錄 iframe 的 zoom 回覆（監聽在 controller 之後註冊：看到回覆時 controller 已經處理完）。
+ZR_RESULTS_JS = """() => { if (!window.__zrResults) { window.__zrResults = [];
+    window.addEventListener('message', e => { const d = e.data;
+      if (d && d.type === 'redline-controller-result' && d.cmd === 'zoom') window.__zrResults.push({ req: d.req ?? null, ok: d.ok, reason: d.reason ?? null }); }); }
+  return window.__zrResults.length; }"""
+ZR_SENT_JS = "() => (window.__cmdLog || []).filter(c => c.cmd === 'zoom').map(c => c.req)"
+# parent：攔下（不送達）parent 送往 iframe 的 zoom 指令，保留原訊息；ZR_DELIVER_JS 之後可以照原樣送達（其他指令照常）。
+ZR_HOLD_JS = """() => { const w = document.getElementById('strategicMapFrame').contentWindow; if (w.__zrHoldKeep) return false;
+  window.__zrHeld = []; w.__zrHoldKeep = w.postMessage;
+  w.postMessage = function (msg, ...rest) {
+    if (msg && msg.type === 'redline-controller-command' && msg.cmd === 'zoom') { window.__zrHeld.push({ msg, req: msg.req ?? null, at: performance.now() }); return; }
+    return w.__zrHoldKeep.call(this, msg, ...rest); };
+  return true; }"""
+ZR_DELIVER_JS = """(i) => { const w = document.getElementById('strategicMapFrame').contentWindow; const h = window.__zrHeld[i];
+  w.__zrHoldKeep.call(w, h.msg, location.origin); return h.req; }"""
+ZR_RELEASE_JS = """() => { const w = document.getElementById('strategicMapFrame').contentWindow; if (!w.__zrHoldKeep) return false;
+  w.postMessage = w.__zrHoldKeep; delete w.__zrHoldKeep; return true; }"""
+# iframe realm：偽造 zoom 回覆（以 iframe 的 window.parent.postMessage 送出，parent 的來源驗證照常通過）；r 原樣合併（可缺 req）。
+ZR_FORGE_JS = """(r) => { window.parent.postMessage(Object.assign({ type: 'redline-controller-result', v: 1, cmd: 'zoom', reason: null, via: null }, r),
+  location.origin); return true; }"""
+
+
+def zr_next(view):
+    """驗證端獨立計算：Leaflet min／max 與 ZR_CYCLE 的交集內，min → min+1 → … → max → min。"""
+    lo = max(math.ceil(view["minZoom"]), ZR_CYCLE[0])
+    hi = ZR_CYCLE[1] if view["maxZoom"] is None else min(math.floor(view["maxZoom"]), ZR_CYCLE[1])
+    z = view["zoom"]
+    return lo if z >= hi - 1e-6 or z < lo - 1e-6 else min(hi, math.floor(z + 1e-6) + 1)
+
+
+def same_center(a, b):
+    return abs(a["lat"] - b["lat"]) < 1e-9 and abs(a["lng"] - b["lng"]) < 1e-9
 
 
 def expected_focus_groups(towns):
@@ -591,9 +648,9 @@ def scenario_desktop_focus_menu(page, pad, base, record):
     on_command = to_command()
     r = lock_probe("R", view, nothing_left_in_menu, undo=to_command)
     sr = lock_probe("SR", view, nothing_left_in_menu, undo=to_command)
-    # 未綁定的鍵（桌面模式 ZR／STICK／HOME 不產生任何動作）：選單開著時同樣不穿透
-    unbound = page.evaluate("['ZR', 'STICK', 'HOME'].map(b => RedlineControllerCore.logicalAction({ type: 'press', button: b }))")
-    obs_all = lambda: [view(), st()["helpOpen"], confirm_open()]
+    # 未綁定的鍵（桌面模式 STICK／HOME 不產生任何動作）與 ZR（指揮中心＝no-op）：選單開著時同樣不穿透（地圖層級也不變）
+    unbound = page.evaluate("['STICK', 'HOME'].map(b => RedlineControllerCore.logicalAction({ type: 'press', button: b }))")
+    obs_all = lambda: [view(), st()["helpOpen"], confirm_open(), mframe.evaluate("map.getZoom()")]
     unbound_probes = []
     for key in ["ZR", "STICK", "HOME"]:
         before = obs_all()
@@ -627,6 +684,9 @@ def scenario_desktop_focus_menu(page, pad, base, record):
     wait("document.querySelector('.game-tab.active').dataset.view === 'map'")
     wait("(() => { const s = RedlineController.getState(); return s.focusKind === 'map' && !!s.focusTown; })()")
     page.wait_for_timeout(400)
+    # ZR（地圖城鎮焦點，真實；必選地圖目標時也會縮放）：選單開著時地圖層級不變，關閉後同一個 ZR 放大一級（或由最大回到最小）
+    tZ = focus_town()
+    zr = lock_probe("ZR", lambda: mframe.evaluate("map.getZoom()"), lambda: at_town(tZ))
     page.evaluate(INSTRUMENT_JS, [{"name": "advance", "selector": "#advanceStepBtn"},
                                   {"name": "ability", "selector": "#redArmyAbilityBtn", "show": True}])
     tB = focus_town()
@@ -635,14 +695,14 @@ def scenario_desktop_focus_menu(page, pad, base, record):
     tC = focus_town()
     plus = lock_probe("PLUS", count("ability"), lambda: at_town(tC))  # 最後做：PLUS 執行後有 1.5 秒處理中鎖
     page.evaluate(UNINSTRUMENT_JS)
-    real = [dpad, r, sr]
+    real = [dpad, r, sr, zr]
     instrumented = [x, y, cap, plus]
-    record("desktop_focus_menu_scope_lock_real_contexts_dpad_R_SR_blocked_open_and_executed_closed",
+    record("desktop_focus_menu_scope_lock_real_contexts_dpad_R_SR_ZR_blocked_open_and_executed_closed",
            on_command and all(p["locked"] and p["executed"] for p in real) and no_side_effects(n0), real)
     record("desktop_focus_menu_scope_lock_instrumented_X_Y_capture_plus_blocked_open_and_executed_closed",
            on_card and all(p["locked"] and p["executed"] for p in instrumented) and no_side_effects(n0), [on_card, instrumented])
-    record("desktop_focus_menu_scope_lock_unbound_ZR_STICK_HOME_never_pass_through",
-           unbound == [None, None, None] and all(ok and closed for _, ok, closed in unbound_probes) and no_side_effects(n0), [unbound, unbound_probes])
+    record("desktop_focus_menu_scope_lock_unbound_STICK_HOME_and_off_map_ZR_never_pass_through",
+           unbound == [None, None] and all(ok and closed for _, ok, closed in unbound_probes) and no_side_effects(n0), [unbound, unbound_probes])
 
     # (e) SL 再按／B／滑鼠 × 取消：從非預設焦點開啟，關閉後焦點精確回到該城鎮（不是重新放預設）；不執行任何操作
     page.wait_for_timeout(400)
@@ -843,6 +903,377 @@ def scenario_desktop_focus_menu(page, pad, base, record):
            y_open and y_blocked and y_back and built and len(acts) == 1 and acts[0]["town"] == t1 and acts[0]["id"] == "directBuildBtn"
            and isinstance(acts[0]["req"], int) and len(results) == 1 and results[0]["req"] == acts[0]["req"] and results[0]["ok"] is True
            and ack.get("outcome") == "success" and ack.get("req") == acts[0]["req"], [t1, y_blocked, acts, results, ack])
+
+
+def scenario_desktop_zr_zoom(page, pad, base, record):
+    """13. 桌面模式 ZR：戰略地圖每按一次放大一級，最大後回到最小；只在地圖 scope，iframe `zoom`＋唯一 req，對上的 ok:true 才算成功。"""
+    setup = post_json(base, "/test/setup-move-confirmation-proof",
+                      {"mover_faction": "taiwan_green", "mover_base": "新竹", "mover_town": "臺北", "moves_left": 5})
+    page.goto(base + setup["url"], wait_until="networkidle")
+    page.wait_for_selector("#gameShell", state="visible", timeout=15000)
+    page.evaluate("() => window.closeEventReveal && closeEventReveal()")
+    if not page.evaluate("RedlineController.getState().enabled"):
+        enable_controller(page)
+    page.wait_for_function("RedlineController.getState().status === 'connected'", timeout=8000)
+    page.evaluate(SPY)
+    _NAV_GRAPHS.clear()
+    st = lambda: page.evaluate(ZR_STATE_JS)
+    QUIET = ["focusKind", "focusTown", "focusSig", "helpOpen", "view", "activatedAt", "processing", "mapRequest", "lastMapAck",
+             "lastCommand", "sends", "stateHash"]
+    quiet = lambda s: {k: s[k] for k in QUIET}
+
+    def wait(js, arg=None, timeout=3000):
+        try:
+            page.wait_for_function(js, arg=arg, timeout=timeout, polling=20)
+            return True
+        except Exception:
+            return False
+
+    # (a) 非地圖：第一下 ZR 不放焦點；放好焦點後 ZR 也完全 no-op（不切說明、不送任何地圖指令、不記錄任何指令）
+    pad.neutral()
+    s0 = st()
+    pad.tap("ZR")
+    s1 = st()
+    record("desktop_ZR_first_input_off_map_is_a_full_noop",
+           s0["view"] == "command" and not s1["padActive"] and s1["focusKind"] is None and quiet(s1) == quiet(s0)
+           and page.evaluate("!document.querySelector('.rl-pad-focus')"), [s0, s1])
+    pad.tap("A")  # 第一次有效操作只放焦點
+    page.wait_for_timeout(200)
+    b0, k0 = st(), page.evaluate(FOCUS_KEY_JS, None)
+    pad.tap("ZR")
+    page.wait_for_timeout(150)
+    b1, k1 = st(), page.evaluate(FOCUS_KEY_JS, None)
+    record("desktop_ZR_on_command_page_is_a_full_noop", b0["padActive"] and b0["focusKind"] == "dom" and quiet(b1) == quiet(b0) and k1 == k0,
+           [b0, b1, k0, k1])
+
+    # (b) 戰略地圖：範圍來自 Leaflet min／max 與循環常數
+    pad.tap("R")
+    on_map = wait("document.querySelector('.game-tab.active').dataset.view === 'map'", timeout=10000)
+    page.wait_for_function("document.getElementById('strategicMapFrame').contentWindow.lastGameState", timeout=20000)
+    on_map = on_map and wait("(() => { const s = RedlineController.getState(); return s.focusKind === 'map' && !!s.focusTown; })()", timeout=10000)
+    page.wait_for_timeout(800)
+    mframe = next(f for f in page.frames if "leaflet_game_map" in f.url)
+    view = lambda: mframe.evaluate(ZR_VIEW_JS)
+    page.evaluate(CMD_LOG_JS)
+    page.evaluate(ZR_RESULTS_JS)
+    results = lambda: page.evaluate("window.__zrResults")
+    sent = lambda: page.evaluate(ZR_SENT_JS)
+    v_start = view()
+    cycle = page.evaluate("RedlineControllerCore.MAP_ZOOM_CYCLE")
+    hint = st()["hint"]
+    record("desktop_ZR_cycle_range_is_leaflet_min_max_intersected_with_the_cycle_constant",
+           on_map and cycle == {"min": ZR_CYCLE[0], "max": ZR_CYCLE[1]} and v_start["minZoom"] == 0 and v_start["maxZoom"] is None
+           and "ZR 放大地圖（循環）" in hint, [cycle, v_start, hint])
+
+    def zr_once(timeout=2000):
+        n = len(results())
+        pad.tap("ZR")
+        return wait(f"window.__zrResults.length > {n}", timeout=timeout)
+
+    # (c) 完整循環：從最小層級連按，min → … → max → min；每一下只前進一級、中心與焦點／選取／遊戲狀態都不變
+    mframe.evaluate(ZR_SET_ZOOM_JS, ZR_CYCLE[0])  # 測試設置：從循環最小層級開始
+    page.wait_for_timeout(300)
+    base_v, base_s = view(), st()
+    n_sent, n_res = len(sent()), len(results())
+    steps = []
+    for _ in range(ZR_CYCLE[1] - ZR_CYCLE[0] + 1):
+        before = st()
+        got = zr_once()
+        after_v, after_s = view(), st()
+        steps.append({"got": got, "zoom": after_v["zoom"], "center": same_center(base_v, after_v), "ack": after_s["lastMapAck"],
+                      "a0": before["activatedAt"], "a1": after_s["activatedAt"], "processing": after_s["processing"],
+                      "pending": after_s["mapRequest"], "focus": after_s["focusTown"], "labels": after_v["labels"],
+                      "selected": after_v["selected"], "sends": after_s["sends"], "hash": after_s["stateHash"]})
+    reqs, res = sent()[n_sent:], results()[n_res:]
+    expected = list(range(ZR_CYCLE[0] + 1, ZR_CYCLE[1] + 1)) + [ZR_CYCLE[0]]
+    page.screenshot(path=str(OUT / "13_desktop_zr_zoom_cycle.png"))
+    record("desktop_ZR_cycles_min_to_max_then_back_to_min_one_level_per_press",
+           base_v["zoom"] == ZR_CYCLE[0] and [s["zoom"] for s in steps] == expected and all(s["got"] for s in steps)
+           and len(reqs) == len(expected) and len(set(reqs)) == len(reqs) and reqs == sorted(reqs) and all(isinstance(r, int) for r in reqs)
+           and [r["req"] for r in res] == reqs and all(r["ok"] is True for r in res), [[s["zoom"] for s in steps], reqs, res])
+    record("desktop_ZR_keeps_center_focus_town_selection_and_game_state",
+           all(s["center"] and s["focus"] == base_s["focusTown"] and s["labels"] == base_v["labels"] and s["selected"] is None
+               and s["sends"] == base_s["sends"] and s["hash"] == base_s["stateHash"] for s in steps)
+           and base_s["focusKind"] == "map" and len(base_v["labels"]) == 1, [base_s, base_v, steps[:2]])
+    record("desktop_ZR_matching_ok_true_ack_records_success_and_cooldown_but_no_processing_lock",
+           all((s["ack"] or {}).get("outcome") == "success" and (s["ack"] or {}).get("req") == reqs[i] and s["ack"].get("lock") is False
+               and s["a1"] is not None and s["a1"] != s["a0"] and not s["processing"] and s["pending"] is None for i, s in enumerate(steps)),
+           steps)
+
+    # (d) 邊界：最小 → 下一級、一般層級 → 下一級、最大 → 最小；滑鼠縮放到循環之外 → 最小
+    levels = []
+    for z in [ZR_CYCLE[0], 6, ZR_CYCLE[1], 13]:
+        mframe.evaluate(ZR_SET_ZOOM_JS, z)
+        page.wait_for_timeout(150)
+        v0 = view()
+        zr_once()
+        v1 = view()
+        levels.append([v0["zoom"], v1["zoom"], zr_next(v0), same_center(v0, v1)])
+    record("desktop_ZR_min_middle_max_and_out_of_cycle_levels",
+           [lv[:2] for lv in levels] == [[2, 3], [6, 7], [10, 2], [13, 2]] and all(lv[1] == lv[2] and lv[3] for lv in levels), levels)
+    # (e) 地圖若設了更窄的 Leaflet min／max，循環跟著 Leaflet（測試設置後還原）
+    mframe.evaluate("() => { map.setMinZoom(3); map.setMaxZoom(6); }")
+    mframe.evaluate(ZR_SET_ZOOM_JS, 6)
+    page.wait_for_timeout(150)
+    tight = []
+    for _ in range(2):
+        zr_once()
+        tight.append(view()["zoom"])
+    mframe.evaluate("() => { map.setMinZoom(undefined); map.setMaxZoom(undefined); }")
+    record("desktop_ZR_follows_tighter_leaflet_min_max", tight == [3, 4] and view()["maxZoom"] is None, tight)
+
+    # (e2) 第一下就執行：停用再啟用（padActive=false、焦點清掉）後，戰略地圖上的第一下 ZR 直接放大一級，不放焦點、不改 padActive
+    page.evaluate("() => RedlineController.setEnabled(false)")
+    page.evaluate("() => RedlineController.setEnabled(true)")
+    wait("RedlineController.getState().status === 'connected'", timeout=8000)
+    pad.neutral()
+    page.wait_for_timeout(300)
+    f0, fv0 = st(), view()
+    first_ok = zr_once()
+    f1, fv1 = st(), view()
+    record("desktop_ZR_first_press_on_the_map_zooms_immediately_without_placing_focus",
+           not f0["padActive"] and f0["focusKind"] is None and f0["scope"] == "map" and first_ok and fv1["zoom"] == zr_next(fv0)
+           and same_center(fv0, fv1) and not f1["padActive"] and f1["focusKind"] is None and f1["focusTown"] is None
+           and fv1["labels"] == fv0["labels"] == [] and page.evaluate("!document.querySelector('.rl-pad-focus')")
+           and (f1["lastMapAck"] or {}).get("outcome") == "success", [f0, f1, fv0, fv1])
+    pad.tap("A")  # 之後的流程需要地圖焦點：第一下 A 只放焦點
+    wait("(() => { const s = RedlineController.getState(); return s.focusKind === 'map' && !!s.focusTown; })()", timeout=8000)
+
+    # (f) 選取來源／預備移動時縮放：選取、合法目的地、預備移動、焦點城鎮都不變（之後 B 走既有取消）
+    mframe.evaluate(ZR_SET_ZOOM_JS, 6)
+    page.wait_for_timeout(300)
+    snap = mframe.evaluate("window.__redlineControllerAdapter.snapshot()")
+    origins = [t["town"] for t in snap["targets"] if t["role"] == "origin"]
+    origin = mframe.evaluate("(names) => names.find(n => { const o = movementOptionsForTown(n); return o.road.length + o.rail.length > 0; })", origins)
+    reached = bool(origin) and focus_town_toward(pad, page, mframe, origin)
+
+    def fwait(js, arg=None, timeout=3000):
+        try:
+            mframe.wait_for_function(js, arg=arg, timeout=timeout, polling=20)
+            return True
+        except Exception:
+            return False
+
+    pad.tap("A")
+    picked = fwait("(t) => selectedTown === t", origin)
+    page.wait_for_timeout(500)  # 既有選取的 fitBounds 動畫結束
+    v_sel, s_sel = view(), st()
+    zr_once()
+    v_sel2, s_sel2 = view(), st()
+    dest = next((t["town"] for t in mframe.evaluate("window.__redlineControllerAdapter.snapshot()")["targets"] if t["role"] == "move"), None)
+    armed = bool(dest) and focus_town_toward(pad, page, mframe, dest)
+    pad.tap("A")
+    fwait("() => !!pendingMoveTarget")
+    page.wait_for_timeout(400)
+    v_arm, s_arm = view(), st()
+    zr_once()
+    v_arm2, s_arm2 = view(), st()
+    pad.tap("B")
+    cancelled = fwait("() => selectedTown === null")
+    record("desktop_ZR_keeps_selected_origin_legal_moves_pending_move_and_focus",
+           reached and picked and v_sel2["zoom"] == zr_next(v_sel) and same_center(v_sel, v_sel2)
+           and [v_sel2[k] for k in ("selected", "moves", "pending", "labels")] == [v_sel[k] for k in ("selected", "moves", "pending", "labels")]
+           and s_sel2["focusTown"] == s_sel["focusTown"] and armed and v_arm["pending"] is not None
+           and v_arm2["zoom"] == zr_next(v_arm) and same_center(v_arm, v_arm2)
+           and [v_arm2[k] for k in ("selected", "moves", "pending", "labels")] == [v_arm[k] for k in ("selected", "moves", "pending", "labels")]
+           and s_arm2["focusTown"] == s_arm["focusTown"] == dest and s_arm2["sends"] == s_sel["sends"] and cancelled,
+           [origin, dest, v_sel, v_sel2, v_arm, v_arm2])
+
+    # (g) 送出到確認之間什麼都不記錄；等待中再按 ZR 不重送；對上的 ok:true 到了才記錄成功與冷卻
+    page.wait_for_timeout(1900)  # 前一個提示過期
+    page.evaluate(ZR_HOLD_JS)
+    p0, pv0 = st(), view()
+    pad.tap("ZR")
+    held1, p1, pv1 = page.evaluate("window.__zrHeld.length"), st(), view()
+    pad.tap("ZR")
+    held2, p2 = page.evaluate("window.__zrHeld.length"), st()
+    req = page.evaluate(ZR_DELIVER_JS, 0)
+    acked = wait(f"window.__zrResults.some(r => r.req === {req})")
+    p3, pv3 = st(), view()
+    record("desktop_ZR_records_nothing_before_the_matching_ack_and_never_sends_twice_while_pending",
+           held1 == 1 and held2 == 1 and (p1["mapRequest"] or {}).get("req") == req and p1["mapRequest"]["cmd"] == "zoom"
+           and p1["activatedAt"] == p0["activatedAt"] and p1["lastMapAck"] == p0["lastMapAck"] and pv1["zoom"] == pv0["zoom"]
+           and (p2["lastCommand"] or {}).get("result") == "map-pending" and acked and (p3["lastMapAck"] or {}).get("req") == req
+           and p3["lastMapAck"]["outcome"] == "success" and p3["activatedAt"] != p0["activatedAt"] and pv3["zoom"] == zr_next(pv0),
+           [held1, held2, p1, p2, p3, pv0["zoom"], pv3["zoom"]])
+
+    # (h) 協定 fail closed（指令攔下不送達、回覆由 iframe 偽造）：ok:false、缺 req、錯的 req、不合 schema、逾時、逾時後才到的回覆
+    def forged(reply, expect, text, late=False):
+        page.wait_for_timeout(1900)
+        a, v0 = st(), view()
+        n = page.evaluate("window.__zrHeld.length")
+        pad.tap("ZR")
+        held = page.evaluate("window.__zrHeld")[n:]
+        r = held[0]["req"] if held else None
+        if reply is not None and not late and r is not None:
+            mframe.evaluate(ZR_FORGE_JS, {k: (r + v if k == "req" else v) for k, v in reply.items()})
+        done = wait("RedlineController.getState().shortcuts?.mapRequest === null", timeout=2500)
+        page.wait_for_timeout(60)
+        b = st()
+        if late:
+            mframe.evaluate(ZR_FORGE_JS, {"req": r, "ok": True})
+            wait(f"window.__zrResults.some(x => x.req === {r if r else -1} && x.ok === true)")
+            page.wait_for_timeout(60)
+        c, v1 = st(), view()
+        ok = (len(held) == 1 and done and (b["lastMapAck"] or {}).get("req") == r and b["lastMapAck"]["outcome"] == expect
+              and c["lastMapAck"] == b["lastMapAck"] and c["activatedAt"] == a["activatedAt"] and not c["processing"]
+              and v1["zoom"] == v0["zoom"] and text in b["hint"])
+        return {"ok": ok, "req": r, "ack": c["lastMapAck"], "hint": b["hint"], "zoom": [v0["zoom"], v1["zoom"]], "a": [a["activatedAt"], c["activatedAt"]]}
+
+    cases = {
+        "ok_false": forged({"req": 0, "ok": False, "reason": "test-refused"}, "failed", "地圖目前無法縮放"),
+        "missing_req": forged({"ok": True}, "timeout", "地圖沒有回應"),
+        "wrong_req": forged({"req": 1000, "ok": True}, "timeout", "地圖沒有回應"),
+        "malformed": forged({"req": 0, "ok": "yes"}, "timeout", "地圖沒有回應"),
+        "timeout": forged(None, "timeout", "地圖沒有回應"),
+        "late_after_timeout": forged({}, "timeout", "地圖沒有回應", late=True),
+    }
+    page.evaluate(ZR_RELEASE_JS)
+    record("desktop_ZR_fails_closed_on_ok_false_missing_wrong_malformed_timeout_and_late_ack",
+           all(c["ok"] for c in cases.values()), cases)
+    # 重複的確認：真實成功後同一個 req 再來一次 ok:true → stale，什麼都不再記錄
+    page.wait_for_timeout(400)
+    zr_once()
+    d0, dv0 = st(), view()
+    mframe.evaluate(ZR_FORGE_JS, {"req": d0["lastMapAck"]["req"], "ok": True})
+    wait(f"window.__zrResults.filter(r => r.req === {d0['lastMapAck']['req']}).length >= 2")
+    page.wait_for_timeout(60)
+    d1, dv1 = st(), view()
+    record("desktop_ZR_duplicate_ack_after_success_is_ignored",
+           d0["lastMapAck"]["outcome"] == "success" and d1["lastMapAck"] == d0["lastMapAck"] and d1["activatedAt"] == d0["activatedAt"]
+           and dv1["zoom"] == dv0["zoom"], [d0, d1])
+    # iframe 端：缺 req 的 zoom 指令與不是 parent 的來源一律不執行、不回覆
+    page.wait_for_timeout(300)
+    i0, n0 = view(), len(results())
+    page.evaluate("() => document.getElementById('strategicMapFrame').contentWindow.postMessage({ type: 'redline-controller-command', v: 1, cmd: 'zoom' }, location.origin)")
+    # 自己送給自己：用 iframe 原本的原生 postMessage（CMD_LOG_JS 存在 __cmdLogOrig）；它的包裝函式屬於 parent realm，
+    # 經由包裝函式送出時 source 會變成 parent，就不是「非 parent 來源」了。
+    mframe.evaluate("() => (window.__cmdLogOrig || window.postMessage).call(window, { type: 'redline-controller-command', v: 1, cmd: 'zoom', req: 990001 }, location.origin)")
+    page.wait_for_timeout(400)
+    record("desktop_iframe_rejects_zoom_without_req_or_from_a_non_parent_source",
+           view()["zoom"] == i0["zoom"] and len(results()) == n0, [i0["zoom"], view()["zoom"], results()[n0:]])
+
+    # (i) 情境 fail closed：modal、iframe 隱藏或不在、等待中離開地圖／停用、停用、斷線（error／重連中）、stale、重連時按住 ZR
+    def silent(label, act, undo=None):
+        page.wait_for_timeout(300)
+        a, v0, n = st(), view(), len(sent())
+        act()
+        page.wait_for_timeout(250)
+        b, v1 = st(), view()
+        if undo:
+            undo()
+        return {"label": label, "ok": len(sent()) == n and v1["zoom"] == v0["zoom"] and b["activatedAt"] == a["activatedAt"]
+                and b["lastMapAck"] == a["lastMapAck"], "zoom": [v0["zoom"], v1["zoom"]], "sent": len(sent()) - n}
+
+    ctx_cases = []
+    pad.tap("CAPTURE")  # 既有結束行動 → 危險確認 modal（預設返回）
+    modal_open = wait("document.getElementById('lrConfirmModal')?.style.display === 'flex'")
+    ctx_cases.append(silent("confirm_modal", lambda: pad.tap("ZR")))
+    still_open = page.evaluate("document.getElementById('lrConfirmModal')?.style.display === 'flex' && document.querySelector('.rl-pad-focus')?.id === 'lrConfirmCancelBtn'")
+    pad.tap("B")
+    wait("document.getElementById('lrConfirmModal')?.style.display !== 'flex'")
+    ctx_cases.append(silent("hidden_iframe", lambda: (page.evaluate("document.getElementById('strategicMapFrame').style.display = 'none'"),
+                                                      page.wait_for_timeout(150), pad.tap("ZR")),
+                            lambda: page.evaluate("document.getElementById('strategicMapFrame').style.display = ''")))
+    ctx_cases.append(silent("detached_iframe", lambda: (page.evaluate("document.getElementById('strategicMapFrame').id = 'strategicMapFrameDetached'"),
+                                                        pad.tap("ZR")),
+                            lambda: page.evaluate("document.getElementById('strategicMapFrameDetached').id = 'strategicMapFrame'")))
+    page.wait_for_timeout(400)
+    # iframe 端：容器不可見時直接收到 zoom → ok:false（map-hidden），不縮放
+    page.evaluate("document.getElementById('strategicMapFrame').style.display = 'none'")
+    h0, hn = view(), len(results())
+    page.evaluate("() => document.getElementById('strategicMapFrame').contentWindow.postMessage({ type: 'redline-controller-command', v: 1, cmd: 'zoom', req: 990002 }, location.origin)")
+    hidden_reply = wait(f"window.__zrResults.length > {hn}")
+    hidden_res = results()[hn:]
+    page.evaluate("document.getElementById('strategicMapFrame').style.display = ''")
+    page.wait_for_timeout(300)
+    record("desktop_iframe_fails_closed_when_the_map_container_is_hidden",
+           hidden_reply and hidden_res[:1] == [{"req": 990002, "ok": False, "reason": "map-hidden"}] and view()["zoom"] == h0["zoom"], hidden_res)
+
+    # 等待中狀態改變：離開戰略地圖或停用後才到的 ok:true → 視為 ok:false（不記錄成功或冷卻）
+    def changed(label, change, restore):
+        page.wait_for_timeout(1900)
+        page.evaluate(ZR_HOLD_JS)
+        a, v0 = st(), view()
+        n = page.evaluate("window.__zrHeld.length")
+        pad.tap("ZR")
+        held = page.evaluate("window.__zrHeld")[n:]
+        r = held[0]["req"] if held else None
+        change()
+        mframe.evaluate(ZR_FORGE_JS, {"req": r, "ok": True})
+        wait(f"window.__zrResults.some(x => x.req === {r if r else -1})")
+        page.wait_for_timeout(60)
+        b = st()
+        page.evaluate(ZR_RELEASE_JS)
+        restore()
+        return {"label": label, "ok": len(held) == 1 and (b["lastMapAck"] or {}).get("req") == r and b["lastMapAck"]["outcome"] == "failed"
+                and b["activatedAt"] == a["activatedAt"] and not b["processing"] and view()["zoom"] == v0["zoom"], "ack": b["lastMapAck"]}
+
+    def back_to_map():
+        pad.tap("R")
+        wait("document.querySelector('.game-tab.active').dataset.view === 'map'", timeout=5000)
+        wait("(() => { const s = RedlineController.getState(); return s.focusKind === 'map' && !!s.focusTown; })()", timeout=8000)
+        page.wait_for_timeout(300)
+
+    def re_enable():
+        page.evaluate("() => RedlineController.setEnabled(true)")
+        wait("RedlineController.getState().status === 'connected'", timeout=8000)
+        pad.neutral()
+        pad.tap("A")  # 重新啟用後第一下只放焦點
+        wait("RedlineController.getState().focusKind === 'map'", timeout=5000)
+
+    left = changed("left_map_while_pending", lambda: page.click("button.game-tab[data-view='command']"), back_to_map)
+    disabled = changed("disabled_while_pending", lambda: page.evaluate("() => RedlineController.setEnabled(false)"), re_enable)
+    ZR_FRAME = "() => RedlineController.feed({ x: 0, y: 0, buttons: [0x80, 0] }) || RedlineController.feed({ x: 0, y: 0, buttons: [0, 0] })"
+    ctx_cases.append(silent("disabled", lambda: (page.evaluate("() => RedlineController.setEnabled(false)"), page.evaluate(ZR_FRAME),
+                                                 page.evaluate("window.__padSend(0, 0, 0x80, 0)"), page.evaluate("window.__padSend(0, 0, 0, 0)")),
+                            re_enable))
+    # 斷線（error）與重連中（connecting）：bridge 停在連線中，期間的 ZR 一律丟棄
+    page.evaluate("window.__bridgeHold = true; window.__padHeartbeat = false")
+    page.evaluate("window.__padClose()")
+    wait("RedlineController.getState().status === 'error'", timeout=3000)
+    ctx_cases.append(silent("disconnected_error", lambda: page.evaluate(ZR_FRAME)))
+    connecting = wait("RedlineController.getState().status === 'connecting'", timeout=5000)
+    ctx_cases.append(silent("reconnecting", lambda: (page.evaluate(ZR_FRAME), page.evaluate("window.__padSend(0, 0, 0x80, 0)"))))
+    page.evaluate("window.__bridgeHold = false; window.__padLast = [0, 0, 0, 0]; window.__bridgeOpenHeld(); window.__padHeartbeat = true")
+    wait("RedlineController.getState().status === 'connected'", timeout=5000)
+    pad.neutral()
+    # stale：公開 feed() 丟棄；目前 bridge 的 ZR frame 只當 recover baseline
+    page.evaluate("window.__padHeartbeat = false")
+    stale = wait("RedlineController.getState().status === 'stale'", timeout=5000)
+    ctx_cases.append(silent("stale", lambda: (page.evaluate(ZR_FRAME), page.evaluate("window.__padSend(0, 0, 0x80, 0)"))))
+    page.evaluate("window.__padSend(0, 0, 0, 0); window.__padHeartbeat = true")
+    wait("RedlineController.getState().status === 'connected'", timeout=3000)
+    pad.neutral()
+    # 重連時 ZR 已按住：第一筆只當 baseline
+    page.evaluate("window.__padHeartbeat = false")
+    page.evaluate("window.__padClose()")
+    wait("RedlineController.getState().status !== 'connected'", timeout=3000)
+    ctx_cases.append(silent("reconnect_with_ZR_held", lambda: (page.evaluate("window.__padLast = [0, 0, 0x80, 0]; window.__padHeartbeat = true"),
+                                                               wait("RedlineController.getState().status === 'connected'", timeout=8000),
+                                                               page.wait_for_timeout(500))))
+    pad.neutral()
+    # 正向對照：同一個頁面恢復後 ZR 照常前進一級
+    page.wait_for_timeout(300)
+    pv_a = view()
+    resumed = zr_once()
+    pv_b = view()
+    record("desktop_ZR_fails_closed_in_modal_hidden_or_missing_iframe_disabled_disconnected_reconnecting_and_stale",
+           modal_open and still_open and connecting and stale and all(c["ok"] for c in ctx_cases)
+           and resumed and pv_b["zoom"] == zr_next(pv_a), [ctx_cases, pv_a["zoom"], pv_b["zoom"]])
+    record("desktop_ZR_ack_after_leaving_the_map_or_disabling_is_treated_as_failed", left["ok"] and disabled["ok"], [left, disabled])
+
+    # (j) 其他分頁：戰況紀錄的 ZR 也完全 no-op
+    pad.tap("R")
+    wait("document.querySelector('.game-tab.active').dataset.view === 'log'", timeout=5000)
+    page.wait_for_timeout(300)
+    g0 = st()
+    pad.tap("ZR")
+    page.wait_for_timeout(200)
+    g1 = st()
+    record("desktop_ZR_on_log_view_is_a_full_noop", g0["view"] == "log" and quiet(g1) == quiet(g0), [g0, g1])
+    pad_note = page.evaluate("document.querySelector('#padPanel .pad-note:not([id])')?.textContent || ''")
+    record("desktop_settings_help_documents_ZR", "ZR（戰略地圖）：放大一級，到最大後再按回到最小" in pad_note, pad_note)
 
 
 def main():
@@ -1347,6 +1778,7 @@ def main():
                    and page.evaluate("window.__advanceSpy") == 0, [opened, focus_info(page)])
 
             scenario_desktop_focus_menu(page, pad, base, record)
+            scenario_desktop_zr_zoom(page, pad, base, record)
 
             browser.close()
     finally:

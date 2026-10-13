@@ -162,11 +162,12 @@
   // ---------------------------------------------------------------- logical actions / router
 
   // SL＝聚焦選單（兩種顯示模式相同；只移動焦點，不執行任何遊戲操作）。
+  // ZR＝戰略地圖放大一級、最大後回到最小（兩種顯示模式相同；只改地圖視角，其他 scope 完全 no-op）。
   const BUTTON_ACTIONS = Object.freeze({
-    A: 'confirm', B: 'cancel', R: 'nextSection', SR: 'prevSection', X: 'focusTurnBar', Y: 'toggleHelp', SL: 'focusMenu',
+    A: 'confirm', B: 'cancel', R: 'nextSection', SR: 'prevSection', X: 'focusTurnBar', Y: 'toggleHelp', SL: 'focusMenu', ZR: 'mapZoom',
   });
 
-  /** 未對應的按鍵（含 `+`、HOME、CAPTURE、ZR、STICK）一律不產生動作。 */
+  /** 未對應的按鍵（含 `+`、HOME、CAPTURE、STICK）一律不產生動作。 */
   function logicalAction(action) {
     if (action.type === 'nav') return { name: 'move', dir: action.dir };
     const name = BUTTON_ACTIONS[action.button];
@@ -183,6 +184,7 @@
    * 其他卡牌焦點的 X/Y 完全 no-op。地圖城鎮目標的 Y = 該目標的既有地圖操作（建立組織／確認移動／瓦解組織）。
    * SL = 開啟聚焦選單（page／map scope）；選單開著時 SL = 關閉（同 B）；其他 modal 內 SL 不作用（scope lock）。
    * 聚焦選單內只有方向、A（選取選項）、B（關閉）與 SL 有作用。
+   * ZR = 戰略地圖縮放循環：只在 map scope（與焦點無關）；page、任何 modal（含聚焦選單）一律 null。
    * 其餘非卡牌焦點的 X/Y 維持原行為。回傳要執行的 command 或 null（null = 靜默忽略）。
    */
   function routeAction(ctx, logical) {
@@ -194,6 +196,7 @@
       case 'focusMenu':
         if (modal) return ctx.focusMenuOpen ? { cmd: 'focusMenu' } : null;
         return { cmd: 'focusMenu' };
+      case 'mapZoom': return ctx.scopeKind === 'map' && !ctx.focusMenuOpen ? { cmd: 'mapZoom' } : null;
       case 'move': return { cmd: 'move', dir: logical.dir };
       case 'confirm':
         if (!ctx.hasFocus) return null;
@@ -313,10 +316,39 @@
   const MAP_SCOPES = Object.freeze(['none', 'choice', 'move']);
   const MAP_ROLES = Object.freeze(['choice', 'move', 'origin']);
   const MAP_BUTTON_IDS = Object.freeze(['directBuildBtn', 'confirmMoveBtn', 'dissolveBtn', 'cancelDissolveChoiceBtn']);
-  const MAP_COMMANDS = Object.freeze(['snapshot', 'focus', 'clearFocus', 'activate', 'button', 'cancel', 'act']);
+  const MAP_COMMANDS = Object.freeze(['snapshot', 'focus', 'clearFocus', 'activate', 'button', 'cancel', 'act', 'zoom']);
+  // 一律要帶合法 req 的指令（指令與 result 都是）：地圖 Y（act）與 ZR 縮放（zoom）只在對上 req 的 ok:true 後才算執行。
+  const MAP_REQ_REQUIRED = Object.freeze(['act', 'zoom']);
   // 客廳模式地圖 Y：目標的既有主要操作 → 執行它的既有按鈕（建立組織／確認移動／瓦解組織）。
   const MAP_ACTS = Object.freeze({ build: 'directBuildBtn', move: 'confirmMoveBtn', dissolve: 'dissolveBtn' });
   const MAP_ACT_BUTTON_IDS = Object.freeze(Object.values(MAP_ACTS));
+
+  // ZR 縮放循環的整數層級範圍；實際範圍＝它與 Leaflet map.getMinZoom()／getMaxZoom() 的交集
+  // （戰略地圖沒有設定 minZoom／maxZoom，Leaflet 回傳 0／Infinity；之後地圖若設得更窄，循環跟著 Leaflet）。
+  //   min 2：整個遊戲範圍（溫哥華～奧克蘭）在戰略地圖內可見的最遠層級，也是地圖樣式 zoomProgress 的起點；
+  //   max 10：陣營標籤開始顯示的層級（leaflet_game_map_logic.js FACTION_LABEL_MIN_ZOOM），最密集的城鎮也能分辨。
+  const MAP_ZOOM_CYCLE = Object.freeze({ min: 2, max: 10 });
+
+  /** Leaflet min／max 與循環範圍的交集（只取整數層級）；不是數字、沒有交集或不足兩級 → null（fail closed）。 */
+  function mapZoomBounds(leafletMin, leafletMax, range = MAP_ZOOM_CYCLE) {
+    if (typeof leafletMin !== 'number' || typeof leafletMax !== 'number' || Number.isNaN(leafletMin) || Number.isNaN(leafletMax)) return null;
+    const min = Math.ceil(Math.max(leafletMin, range.min));
+    const max = Math.floor(Math.min(leafletMax, range.max));
+    if (!Number.isFinite(min) || !Number.isFinite(max) || max <= min) return null;
+    return { min, max };
+  }
+
+  /**
+   * ZR 的下一個層級：min → min+1 → … → max → min（單向循環，每次只前進一級）。已在 max、超出範圍或低於 min → min；
+   * 小數層級（滑鼠縮放或 flyTo 中途）前進到下一個整數層級。current 不是有限數或 bounds 不合法 → null。
+   */
+  function nextMapZoom(current, bounds) {
+    if (!bounds || !Number.isInteger(bounds.min) || !Number.isInteger(bounds.max) || bounds.max <= bounds.min) return null;
+    if (typeof current !== 'number' || !Number.isFinite(current)) return null;
+    const eps = 1e-6;
+    if (current < bounds.min - eps || current >= bounds.max - eps) return bounds.min;
+    return Math.min(bounds.max, Math.floor(current + eps) + 1);
+  }
 
   /**
    * 目標的 Y 操作只由 scope／role 與 iframe 讀到的權威旗標決定：
@@ -470,9 +502,9 @@
     if (['focus', 'activate', 'act'].includes(data.cmd) && !isShortString(data.town)) return null;
     if (data.cmd === 'button' && !MAP_BUTTON_IDS.includes(data.id)) return null;
     if (data.cmd === 'act' && !MAP_ACT_BUTTON_IDS.includes(data.id)) return null;
-    // act 只由客廳模式送出且一律等 correlated ack；沒有合法 req 的 act 不可執行（parent 會把 req:null 視為 stale）。
+    // act／zoom 一律等 correlated ack；沒有合法 req 的 act／zoom 不可執行（parent 會把 req:null 視為 stale）。
     // 桌面模式不帶 req 的 snapshot／focus／clearFocus／activate／button／cancel 行為不變。
-    if (data.cmd === 'act' && !isRequestId(data.req)) return null;
+    if (MAP_REQ_REQUIRED.includes(data.cmd) && !isRequestId(data.req)) return null;
     if (isPresent(data.req) && !isRequestId(data.req)) return null;
     return { cmd: data.cmd, town: data.town, id: data.id, req: isPresent(data.req) ? data.req : null };
   }
@@ -484,7 +516,7 @@
   function sanitizeMapResult(data) {
     if (!data || data.type !== 'redline-controller-result' || data.v !== MAP_MESSAGE_VERSION) return null;
     if (!MAP_COMMANDS.includes(data.cmd) || typeof data.ok !== 'boolean') return null;
-    if (data.cmd === 'act' && !isRequestId(data.req)) return null;
+    if (MAP_REQ_REQUIRED.includes(data.cmd) && !isRequestId(data.req)) return null;
     if (isPresent(data.req) && !isRequestId(data.req)) return null;
     if (isPresent(data.via) && !MAP_RESULT_VIA.includes(data.via)) return null;
     if (isPresent(data.reason) && !isShortString(data.reason)) return null;
@@ -598,6 +630,7 @@
   return {
     DEFAULT_BRIDGE_URL, DEFAULT_CONFIG, BUTTON_BITS, BUTTON_ALT_BITS, BUTTON_NAMES, BUTTON_ACTIONS, MODAL_SCOPES, FOCUS_MENU_MODAL_ID,
     MAP_MESSAGE_VERSION, MAP_GROUP_META_VERSION, MAP_BUTTON_IDS, MAP_COMMANDS, MAP_RESULT_VIA, MAP_ACTS, mapTargetAct, townGroupMeta, sanitizeGroupNames, isRequestId,
+    MAP_ZOOM_CYCLE, mapZoomBounds, nextMapZoom,
     decodeButtonBytes, parseButtons, normalizeFrame,
     createInputState, resetInputState, reduceFrame, stickDirection, isStale, bridgeInputGate, bridgeConnected,
     logicalAction, routeAction,

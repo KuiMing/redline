@@ -205,6 +205,32 @@
     return { ok: true, via: id };
   }
 
+  /**
+   * ZR（兩種顯示模式）：戰略地圖放大一級，已在最大層級時回到最小層級（Core.nextMapZoom；範圍＝Leaflet getMinZoom／getMaxZoom
+   * 與 Core.MAP_ZOOM_CYCLE 的交集）。只用 Leaflet setView：中心維持目前中心、不動畫；不碰焦點城鎮、選取、預備移動或 pending choice。
+   * 頁面或地圖容器不可見、地圖還沒有視圖、層級無法判定，或縮放後層級／中心驗證不符 → ok:false（parent 不記錄成功）。
+   */
+  function zoomCycle() {
+    const container = map.getContainer();
+    if (document.hidden || !container || !container.isConnected || container.getClientRects().length === 0
+      || !(container.clientWidth > 0) || !(container.clientHeight > 0)) return { ok: false, reason: 'map-hidden' };
+    let center;
+    let zoom;
+    try {
+      center = map.getCenter(); // 還沒有 setView／fitBounds 時 Leaflet 會丟例外
+      zoom = map.getZoom();
+    } catch {
+      return { ok: false, reason: 'map-not-ready' };
+    }
+    if (!center || !Number.isFinite(center.lat) || !Number.isFinite(center.lng)) return { ok: false, reason: 'map-not-ready' };
+    const next = Core.nextMapZoom(zoom, Core.mapZoomBounds(map.getMinZoom(), map.getMaxZoom()));
+    if (next === null) return { ok: false, reason: 'zoom-unavailable' };
+    map.setView(center, next, { animate: false });
+    // 縮放動畫進行中時 Leaflet 不會套用新層級：驗證不符即 fail closed。
+    if (map.getZoom() !== next || !map.getCenter().equals(center)) return { ok: false, reason: 'zoom-unverified' };
+    return { ok: true };
+  }
+
   // B：只走既有可取消流程——可見且啟用的「取消瓦解」按鈕，或既有的「取消目前選取」。
   function cancel() {
     const info = currentModel();
@@ -232,6 +258,7 @@
     else if (command.cmd === 'button') result = pressButton(command.id);
     else if (command.cmd === 'cancel') result = cancel();
     else if (command.cmd === 'act') result = act(command.town, command.id);
+    else if (command.cmd === 'zoom') result = zoomCycle();
     // req 原樣回傳：parent 只在對應的 req 收到 ok:true（上面已在執行前重驗）時才視為已執行。
     postToParent({
       type: 'redline-controller-result', v: Core.MAP_MESSAGE_VERSION, cmd: command.cmd, req: command.req,

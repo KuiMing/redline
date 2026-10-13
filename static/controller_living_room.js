@@ -133,7 +133,8 @@
       <div>Capture：結束行動／結束回合（⚠ 需確認，預設返回）</div>
       <div>R／SR：指揮中心→戰略地圖→戰況紀錄→我的陣營→事件卡→時代關卡</div>
       <div>SL：聚焦選單（依統治者／陣營區域跳到可建立組織的合法城鎮；只移焦點，再按 SL 或 B 返回）</div>
-      <div>按下搖桿：下一個內容區　ZR：回區域層（區域層再按＝回指揮中心）</div>`;
+      <div>按下搖桿：下一個內容區</div>
+      <div>ZR：戰略地圖放大一級，到最大後再按回到最小（最大地圖範圍）；其他分頁不作用</div>`;
     stage.appendChild(help);
 
     const ring = document.createElement('div');
@@ -722,6 +723,13 @@
     if (!logical) return true;
     const ctl = host.ctl;
     const view = activeView();
+    // ZR＝戰略地圖縮放，與焦點無關：戰略地圖上直接執行（第一下也執行；不放焦點、不改區域／層級），
+    // 其他分頁完全 no-op（不放焦點、不回區域層、不切分頁）。
+    if (logical.name === 'mapZoom') {
+      const zoom = LR.routeLivingRoom({ scopeKind: scope.kind, view }, logical);
+      if (zoom) { execute(zoom, null, -1, [], view); host.renderHud(); }
+      return true;
+    }
     renderAll();
     const zones = zonesNow(view);
     // 第一次有效操作（含 Capture／PLUS）只放焦點，不執行。
@@ -800,12 +808,12 @@
       case 'section': runSection(command.step, null); return false; // 導航，不啟動執行冷卻
       case 'zoneCycle': cycleContentZone(zones, zone); return false;
       case 'focusMenu': return requestFocusMenu(); // 等 iframe 回應自己 req 的 snapshot 才開啟（onMapSnapshot）
+      case 'mapZoom': return requestMapZoom(); // 等 iframe 以同一個 req 回覆 ok:true（onMapResult）
       case 'endStep': return startEndStep();
       case 'factionAbility': return runFactionAbility();
       case 'enterZone': return enterZone(zone);
       case 'itemMove': moveItem(zone, index, command.dir); return false;
       case 'toZoneLayer': focusZone(zone); return false;
-      case 'leaveView': leaveView(); return false;
       case 'toggleHelp': host.ctl.helpOpen = !host.ctl.helpOpen; renderHelp(); return false;
       case 'cardPreview': return host.previewCard(item) === true;
       case 'cardToggle': return host.toggleCard(item) === true;
@@ -866,15 +874,6 @@
       next = picked ? Number(picked.key) : index;
     }
     if (next >= 0 && next !== index) focusItem(zone, next);
-  }
-
-  function leaveView() {
-    const tab = document.querySelector('.game-tab[data-view="command"]');
-    if (!usable(tab)) return;
-    lr.returnZone = null;
-    lr.sectionKey = 'view:command';
-    tab.click(); // 既有分頁切換
-    host.scheduleReconcile();
   }
 
   function activateControl(el) {
@@ -1012,6 +1011,27 @@
     return sendMapRequest('cancel', {}, { lockVia: 'cancelDissolveChoiceBtn' });
   }
 
+  /** ZR 的前置條件（LR.mapZoomBlocker）以當下 DOM 與連線狀態重算；回傳阻擋原因或 null。 */
+  function mapZoomBlockerNow() {
+    if (!host) return 'disconnected';
+    const frame = $('strategicMapFrame');
+    return LR.mapZoomBlocker({
+      connected: host.bridgeConnected(), gameShown: gameShown(),
+      scopeKind: host.currentScope().kind, view: activeView(),
+      frameReady: !!frame && frame.isConnected && !!frame.contentWindow && host.isShown(frame),
+    });
+  }
+
+  /**
+   * ZR（兩種顯示模式）：向戰略地圖 iframe 送帶唯一 req 的 `zoom`（放大一級，最大後回到最小；iframe 以 Leaflet API 執行並保留中心）。
+   * 不需要焦點；前置條件不符 → no-op。一律回傳 false：只有同一個 req 及時回覆 ok:true、且當下仍符合前置條件，onMapResult 才記錄成功與
+   * 250ms 執行冷卻（縮放不是遊戲動作，不上處理中鎖）。
+   */
+  function requestMapZoom() {
+    if (mapZoomBlockerNow()) return false;
+    return sendMapRequest('zoom', {}, {});
+  }
+
   // ------------------------------------------------------------ map iframe acknowledgment
   /**
    * 送出帶 req 的地圖執行型指令並登記為等待確認。一律回傳 false（尚未執行）：
@@ -1050,21 +1070,28 @@
     host.scheduleReconcile();
   }
 
-  /** controller_ui 交來已 sanitize 的 iframe 回覆；只有對上等待中的 req 且 ok:true 才記錄冷卻／上鎖。 */
+  /**
+   * controller_ui 交來已 sanitize 的 iframe 回覆；只有對上等待中的 req 且 ok:true 才記錄冷卻／上鎖。
+   * ZR 縮放的 ok:true 到達時再驗一次前置條件：等待期間離開戰略地圖、開了 modal、停用／斷線／stale 或 iframe 被隱藏 → 視為 ok:false。
+   */
   function onMapResult(result) {
-    const out = LR.settleMapResult(lr.guard, performance.now(), result);
+    const pending = lr.guard.mapRequest;
+    const zoomBlocked = pending && pending.cmd === 'zoom' && result.cmd === 'zoom' && result.req === pending.req && result.ok === true
+      ? mapZoomBlockerNow() : null;
+    const effective = zoomBlocked ? { ...result, ok: false, reason: zoomBlocked } : result;
+    const out = LR.settleMapResult(lr.guard, performance.now(), effective);
     if (out.outcome === 'stale') return;
     lr.guard = out.guard;
     clearTimeout(lr.mapAckTimer);
     lr.mapAckTimer = null;
-    lr.lastMapAck = { req: out.request.req, cmd: out.request.cmd, outcome: out.outcome, lock: out.lock, reason: result.reason || null };
+    lr.lastMapAck = { req: out.request.req, cmd: out.request.cmd, outcome: out.outcome, lock: out.lock, reason: effective.reason || null };
     // 聚焦選單：及時的 ok:true 只記下 acked，之後還要同一個 req 的 snapshot（onMapSnapshot）；ok:false／逾時直接 fail closed。
     if (lr.menuReq && lr.menuReq.req === out.request.req) {
       if (out.outcome === 'success') lr.menuReq.acked = true;
       else failMenuRequest(null);
     }
     if (out.lock) lock();
-    if (out.outcome === 'failed') flash('此操作目前不可用');
+    if (out.outcome === 'failed') flash(out.request.cmd === 'zoom' ? '地圖目前無法縮放' : '此操作目前不可用');
     else if (out.outcome === 'timeout') flash('地圖沒有回應，請再試一次');
     host.scheduleReconcile();
     host.renderHud();
@@ -1456,19 +1483,19 @@
     const view = activeView();
     if (!lr.zone) return host.choiceLocked() ? '必選地圖目標：按 R／SR 前往戰略地圖' : '此分頁沒有內容區　R/SR 切換區段';
     if (lr.layer === 'zone') {
-      return `搖桿 選內容區　A 進入　按下搖桿 下一區　R/SR 區段　Y 說明${view !== 'command' ? '　ZR 回指揮中心' : ''}`;
+      return `搖桿 選內容區　A 進入　按下搖桿 下一區　R/SR 區段　Y 說明${view === 'map' ? '　ZR 放大地圖（循環）' : ''}`;
     }
     if (lr.zone === 'maplist') {
       const stage = lr.mapList.stage;
-      if (stage === 'destination') return '↑↓ 選目的地　A 預備　Y 移動　B 取消來源　ZR 回區域層';
-      if (stage === 'choice') return '↑↓ 選目標　A 選取　Y 執行　B 取消／返回　ZR 回區域層';
-      if (stage === 'source') return '↑↓ 選來源　A 選取　B 返回　ZR 回區域層　R/SR 區段';
-      return '沒有可操作的地圖目標　ZR 回區域層　R/SR 區段';
+      if (stage === 'destination') return '↑↓ 選目的地　A 預備　Y 移動　B 取消來源　ZR 放大地圖（循環）';
+      if (stage === 'choice') return '↑↓ 選目標　A 選取　Y 執行　B 取消／返回　ZR 放大地圖（循環）';
+      if (stage === 'source') return '↑↓ 選來源　A 選取　B 返回　ZR 放大地圖（循環）　R/SR 區段';
+      return '沒有可操作的地圖目標　ZR 放大地圖（循環）　R/SR 區段';
     }
     const card = ctl.focusEl ? host.cardContext({ kind: 'dom', el: ctl.focusEl }) : null;
-    if (card && card.zone === 'hand') return '←→ 選牌　A 查看　X 資源　Y 行動　B 棄置（奧援）　ZR 回區域層';
-    if (card) return '←→ 選牌　A 查看　B 勾選／取消　勾選後 Y 購買所選　ZR 回區域層';
-    return 'A 確認　B 回區域層　ZR 回區域層　R/SR 區段';
+    if (card && card.zone === 'hand') return '←→ 選牌　A 查看　X 資源　Y 行動　B 棄置（奧援）　按下搖桿 下一區';
+    if (card) return '←→ 選牌　A 查看　B 勾選／取消　勾選後 Y 購買所選　按下搖桿 下一區';
+    return 'A 確認　B 回區域層　R/SR 區段';
   }
 
   function statusText() {
@@ -1541,7 +1568,7 @@
     const view = activeView();
     const zones = zonesNow(view);
     if (view !== lr.view) {
-      // 分頁切換（R／SR、ZR 或滑鼠）：焦點落點不是使用者直接指定 → 300ms 內忽略 A/B/X/Y。
+      // 分頁切換（R／SR 或滑鼠）：焦點落點不是使用者直接指定 → 300ms 內忽略 A/B/X/Y。
       lr.view = view;
       if (view === 'map') {
         const list = zones.find(z => z.id === 'maplist');
@@ -1626,6 +1653,16 @@
     return guarded('mapAct', () => sendMapAct(town, snapshotMapAct(town)));
   }
 
+  /**
+   * 桌面模式的 ZR（controller_ui 只在地圖 scope 呼叫）：與客廳模式同一條 `zoom`＋req 確認路徑與閘門。一律回傳 false（尚未執行）：
+   * 只有 iframe 以同一個 req 回覆 ok:true 且仍符合前置條件，onMapResult 才記錄成功與冷卻。
+   */
+  function runDesktopMapZoom() {
+    if (enabled() || !host || !gameShown()) return false;
+    syncStateToken();
+    return guarded('mapZoom', requestMapZoom);
+  }
+
   /** 桌面模式提示：焦點城鎮目標的 Y 操作文字（例如「建立組織 新北」）；沒有則 null。 */
   function desktopMapActLabel(town) {
     const act = host && typeof town === 'string' ? snapshotMapAct(town) : null;
@@ -1635,7 +1672,7 @@
   /** 桌面模式提示列用：專用鍵 fail closed 的原因（1.8 秒後自動清除）。 */
   function notice() { return lr.notice; }
 
-  /** 除錯／驗證：桌面模式專用鍵（Capture／+／購買卡 Y／地圖 Y）共用的閘門狀態（唯讀）。 */
+  /** 除錯／驗證：桌面模式專用鍵（Capture／+／購買卡 Y／地圖 Y／ZR）共用的閘門狀態（唯讀）。 */
   function shortcutState() {
     return {
       processing: processing(), activatedAt: lr.guard.activatedAt, notice: lr.notice, lastCommand: lr.lastCommand,
@@ -1700,6 +1737,7 @@
     runDesktopShortcut,
     runDesktopCardBuy,
     runDesktopMapAct,
+    runDesktopMapZoom,
     desktopMapActLabel,
     notice,
     shortcutState,
