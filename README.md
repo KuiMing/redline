@@ -51,7 +51,7 @@ Lobby 畫面也會顯示這個網址。想讓 Agent 陪玩的話，另外開 MCP
 
 ### Joy-Con／搖桿（選用）
 
-在 Mac 上用右 Joy-Con 玩：先啟動本機 bridge（`tools/joycon_bridge/run_mac.sh`），再在頁面右下角 🎮 啟用。詳見 [`docs/joycon_controller.md`](docs/joycon_controller.md) 與 [`tools/joycon_bridge/README.md`](tools/joycon_bridge/README.md)。
+在 Mac 上用 Joy-Con 玩（每位玩家各拿一支左或右 Joy-Con）：先啟動本機 bridge（`tools/joycon_bridge/run_mac.sh`），再在頁面右下角 🎮 啟用並選擇自己的手把。詳見 [`docs/joycon_controller.md`](docs/joycon_controller.md) 與 [`tools/joycon_bridge/README.md`](tools/joycon_bridge/README.md)。
 
 ### 給 Agent 用的 MCP
 

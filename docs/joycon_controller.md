@@ -1,13 +1,38 @@
 # Joy-Con／搖桿控制
 
-右 Joy-Con（或任何能透過 [`tools/joycon_bridge`](../tools/joycon_bridge/README.md) 送出 `{x, y, buttons}` 的搖桿）作為**額外**輸入來源。滑鼠、觸控、鍵盤完全不變。
+左或右 Joy-Con（經 [`tools/joycon_bridge`](../tools/joycon_bridge/README.md)）作為**額外**輸入來源；每位玩家（每個瀏覽器分頁）各拿一支，彼此獨立（見下方「多支獨立 Joy-Con」）。滑鼠、觸控、鍵盤完全不變。下文的按鍵名稱一律是右 Joy-Con 的邏輯鍵；左 Joy-Con 的對照見「按鍵正規化」。
+
+## 多支獨立 Joy-Con（左／右）
+
+每位玩家只拿一支左 Joy-Con 或一支右 Joy-Con；左右**不會**配對成雙手控制器，兩支同側也不會互相覆寫。
+
+- **身份**：bridge 對 Finally the Controller Works（FTCW）的每個 UDP 埠（預設 24800–24803，一個埠一支手把）各自送 `hello`。身份＝左右＋FTCW 埠＋`S2N1` 裝置名稱指紋，例如 `L24801-3f2a9c1e`、`R24800-9b0c11d2`（不是只有 left／right）。左右只由 `S2N1` 名稱判定（`(L)`／`LEFT` → 左，`(R)`／`RIGHT` → 右）；兩者皆有或皆無、或非主埠沒有名稱 → 該埠 fail closed（不建立身份、不轉送、不能 claim）。**舊版相容**：主埠（`--udp-port`，預設 24800）收到輸入卻 1.5 秒都沒有名稱時，採用明確的暫時身份 `R24800-legacy`（視為右 Joy-Con）；之後名稱才到時身份改變，原擁有者不沿用。
+- **每支各自的狀態**：左右、原始／正規化 frame、最後收到時間、active／stale、擁有者各自獨立。1 秒沒有封包 → 只有這一支 stale，並清掉它的按鍵與搖桿（不殘留 stuck state）；其他手把不受影響。
+- **按鍵正規化（在 bridge 完成）**：左 Joy-Con 的實體輸入先轉成右 Joy-Con 的邏輯位元，瀏覽器的 action routing 只看共用邏輯 layout，桌面與客廳模式沒有兩份左右行為。
+
+  | 左 Joy-Con（封包 offset／位元） | 等同右 Joy-Con |
+  | --- | --- |
+  | ↑（10／`0x02`）、→（10／`0x04`）、↓（10／`0x01`）、←（10／`0x08`） | X、A、B、Y |
+  | 左搖桿（x＝offset 12、y＝offset 16，float32，FTCW 向上為正；每軸 deadzone 0.15） | 右搖桿（offset 20／24） |
+  | 按下搖桿（9／`0x08`） | STICK |
+  | L（10／`0x40`）、ZL（10／`0x80`） | R、ZR |
+  | −（9／`0x01`） | `+` |
+  | Capture（9／`0x20`） | Capture（b1 `0x40`）。**不是 HOME** |
+  | SR（10／`0x10`）、SL（10／`0x20`） | **SL、SR**（交叉：左 SR＝聚焦選單、左 SL＝上一個區段） |
+
+  右 HOME 沒有左側對應，維持原本不綁定。上游 `capture`（u32 `0x2000`）在右手／舊版預設身份仍當 Capture。逐項對照（Python 與 JS 測試共用）：`scripts/tests/fixtures/joycon_dual_layout.json`。
+- **玩家選擇（claim）**：🎮 設定面板「選擇手把」列出 bridge 的所有手把（其他玩家使用中、沒有訊號的不能選）；選一支＝claim，選「不使用手把」＝release。bridge 是唯一權威：每支最多一位擁有者、每位玩家最多一支；claim 別人的、不存在、ID 不合法、沒有訊號的一律拒絕（`claimed`／`unknown-controller`／`invalid-controller`／`not-active`），重複 claim 同一支是冪等，claim 另一支＝切換。沒有 claim 的分頁不會收到任何 frame（狀態「未選擇手把」，輸入與快捷鍵提示都 fail closed）。
+- **預設與記憶**：分頁的選擇存在 `sessionStorage`（`redline.controller.claim.v1`，重新整理後重連只會再 claim 同一支）。沒有選擇過的分頁只套用舊版相容預設：bridge 上**恰好只有一支手把、它是右 Joy-Con、有訊號且沒人用**時自動 claim；有兩支以上（或唯一一支是左手）就要手動選。之後加入的第二支手把永遠不會接管第一位玩家。
+- **斷線與重連**：手把 stale 時保留擁有者；同一身份（同埠同名）恢復時回到同一位玩家，epoch +1，瀏覽器把第一筆當 baseline（重連時按住的鍵不觸發）。換了埠就是新的、沒人擁有的手把；同一個埠換成另一支裝置（名稱或左右改變）→ 舊身份移除，原擁有者失去它並看到原因。玩家的瀏覽器連線結束即釋放手把。
+- **HUD**：設定面板「我的手把」顯示本分頁綁定的身份與左右（例如 `左 Joy-Con L24801-…（Joy-Con 2 (L)）`）；提示膠囊與客廳狀態列前面帶 `左 24801`／`右 24800`；左手玩家另顯示實體鍵對照。
+- **協定（bridge v2，同一個 `/ws`）**：頁面連上後送 `{"type":"hello","v":2}`；bridge 回 `roster`（`owned`、`controllers:[{id, side, name, endpoint, status, owner:'you'|'other'|null, sideSource}]`，變動時與每秒送一次），只送本分頁擁有那一支的 `{"type":"frame","v":2,controller,side,epoch,x,y,buttons:[b0,b1]}`。client 送 `claim {controller}`、`claim-default`、`release`，bridge 回 `claim-result {request, ok, controller, reason}`；格式不合 → `error bad-message`。瀏覽器端所有訊息都驗證 schema，id 與左右不符、非本分頁擁有的 frame 一律丟棄。**相容**：舊版頁面（不送 hello）0.3 秒後當舊版 client，只拿「唯一一支右 Joy-Con」並收原本的 `{x, y, buttons}`；新版頁面連到舊版 bridge 時，在收到 roster 前把無型別 frame 當唯一一支右 Joy-Con（`右 Joy-Con（舊版 bridge 相容）`）。Host／Origin 檢查不變，`/health` 也只接受 loopback Host。
 
 ## 啟用
 
 右下角 🎮 → 勾選「啟用搖桿控制」。設定（是否啟用、Bridge 位址）存在 `localStorage`（`redline.controller.v1`）。
 未啟用時不會建立任何連線、不會接管焦點；控制器未連線時 UI 正常。位址只接受 `ws(s)://127.0.0.1`、`localhost`、`[::1]`。
 
-連線狀態：未啟用／連線中／已連線／訊號中斷（stale，超過 1.5 秒沒收到 frame）／無法連線（自動以 1→8 秒退避重連，也可按「重新連線」）。
+連線狀態：未啟用／連線中／已連線／未選擇手把（bridge 已連線但這個分頁沒有手把）／訊號中斷（stale，bridge 回報這支手把 stale 或超過 1.5 秒沒收到 frame）／無法連線（自動以 1→8 秒退避重連，也可按「重新連線」）。
 
 ## 預設操作（桌面模式）
 
@@ -176,8 +201,8 @@ ZR 不再回區域層或回指揮中心：要回區域層用 B（非卡牌項目
 ## 測試
 
 ```bash
-node --test scripts/tests/js/controller_core.test.js scripts/tests/js/living_room_core.test.js   # 或透過 pytest 包裝
-uv run python -m pytest scripts/tests/test_controller_core_js.py scripts/tests/test_living_room_core_js.py scripts/tests/test_joycon_bridge.py
+node --test scripts/tests/js/controller_core.test.js scripts/tests/js/living_room_core.test.js scripts/tests/js/controller_dual.test.js   # 或透過 pytest 包裝
+uv run python -m pytest scripts/tests/test_controller_core_js.py scripts/tests/test_living_room_core_js.py scripts/tests/test_joycon_bridge.py scripts/tests/test_joycon_dual_bridge.py
 uv run python scripts/validate/validate_joycon_controller.py   # 瀏覽器 E2E（mock bridge；含桌面模式 SL 聚焦選單與 ZR 縮放循環），截圖到 /tmp/redline-joycon-proof/
 uv run python scripts/validate/validate_living_room_controller.py   # 客廳模式 E2E（固定按鍵序列、三種解析度，含兩種顯示模式的實機 Capture／購買卡 B→Y／地圖 Y 情境、客廳模式 SL 聚焦選單與 ZR 縮放循環），截圖到 /private/tmp/redline-living-room-proof/
 ```
@@ -219,5 +244,6 @@ ZR 縮放循環的 E2E（兩種模式）驗證：
   2026-10-10 的獨立 bridge WebSocket subscriber 也錄到 Y＝`[1, 0]`、實體 Capture＝`[0, 64]`。2026-10-11 另做的 bounded WebSocket capture
   因 FTCW 當時沒有送出任何 frame 而沒有資料，不影響上述紀錄。
 - 尚未以實體 Joy-Con 完整驗證 SL 聚焦選單與 ZR 縮放循環的操作流程（目前只有 mock E2E）。
+- **左 Joy-Con 與多支手把沒有實機證據**：左手的封包 offset／位元、左搖桿 offset 與 Y 軸方向、`S2N1` 名稱格式、多支同時輸入、斷線與重連行為都只以 fixture 封包與假 FTCW（臨時 UDP 埠）測試；需實機確認的項目列在 `TODO.md`。
 - 文字輸入欄位只能聚焦，無法用搖桿輸入文字。
 - CAPTURE 接受 b1 `0x40` 與 b1 `0x20` 兩個位元（同一個邏輯鍵，按住時切換位元不會重複觸發）。上游 `Peterksharma/switch2mac`（commit `a8f2e61e85c3e4a43df3e6ed2f1467327df03d72`）`Switch2Protocol.swift` 定義 `capture = 0x0000_2000`、`c = 0x0000_4000`，UDPHub 以 little-endian u32 寫出。2026-10-10 以獨立 subscriber 實錄本機 bridge（只接右 Joy-Con 2）：Y＝`[1, 0]`、實體 Capture 鍵＝`[0, 64]`（b1 `0x40`，即上游 `c`；右 Joy-Con 2 沒有 `capture` 那顆鍵），因此 `0x40` 是主位元；`0x20` 保留給左 Joy-Con 2／Pro 手把的 `capture`（未實測）。兩個位元原本都沒有其他對應，沒有重新指派任何已知按鍵。字面封包回歸測試：`scripts/tests/test_joycon_bridge.py`、`scripts/tests/js/controller_core.test.js`。

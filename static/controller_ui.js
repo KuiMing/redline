@@ -10,13 +10,19 @@
   if (!Core) return;
 
   const STORAGE_KEY = 'redline.controller.v1';
+  // 每個分頁（玩家）自己的手把選擇：sessionStorage（重新整理仍在，不和同一瀏覽器的其他分頁共用）。
+  const CLAIM_STORAGE_KEY = 'redline.controller.claim.v1';
   const FOCUS_CLASS = 'rl-pad-focus';
   const FOCUSABLE = 'button, a[href], input:not([type="hidden"]), select, textarea, [role="button"], '
     + '[tabindex]:not([tabindex="-1"]), .card[data-card-zone]';
   const SKIP_IDS = new Set(['emergencyNewGameBtn', 'padToggleBtn']);
+  // unbound＝bridge v2 已連線但這個分頁還沒有手把：輸入一律丟棄（只有 connected 才處理）。
   const STATUS_TEXT = {
-    off: '未啟用', connecting: '連線中…', connected: '已連線', stale: '訊號中斷', error: '無法連線',
+    off: '未啟用', connecting: '連線中…', connected: '已連線', unbound: '未選擇手把', stale: '訊號中斷', error: '無法連線',
   };
+  const NO_BINDING = Object.freeze({ mode: 'legacy', owned: null, side: null });
+  // socket 開啟後、收到 v2 roster 前：假設是舊版 bridge（唯一一支右 Joy-Con）；新版 bridge 在送 roster 前不送任何 frame。
+  const LEGACY_BINDING = Object.freeze({ mode: 'legacy', owned: Core.LEGACY_CONTROLLER_ID, side: 'right' });
 
   const ctl = {
     settings: Core.normalizeSettings(null),
@@ -26,6 +32,14 @@
     attempt: 0,
     staleTimer: null,
     input: Core.createInputState(),
+    inputKey: null, // 目前 reducer 屬於哪一支手把／哪一個 epoch（換了就重新 baseline）
+    binding: NO_BINDING, // {mode:'legacy'|'v2', owned, side}：這個分頁擁有的手把（bridge roster 為準）
+    roster: null,
+    claimPref: Core.normalizeClaimPref(null),
+    claimInFlight: null,
+    claimTimer: null,
+    claimNotice: null,
+    autoClaimSig: null,
     padActive: false, // 至少收到一次有效操作後才顯示/接管焦點
     helpOpen: false,
     focusEl: null,
@@ -47,6 +61,13 @@
   function saveSettings() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(ctl.settings)); } catch { /* storage may be blocked */ }
   }
+  function loadClaimPref() {
+    try { ctl.claimPref = Core.normalizeClaimPref(JSON.parse(sessionStorage.getItem(CLAIM_STORAGE_KEY) || 'null')); } catch { ctl.claimPref = Core.normalizeClaimPref(null); }
+  }
+  function saveClaimPref(pref) {
+    ctl.claimPref = Core.normalizeClaimPref(pref);
+    try { sessionStorage.setItem(CLAIM_STORAGE_KEY, JSON.stringify(ctl.claimPref)); } catch { /* storage may be blocked */ }
+  }
 
   // ------------------------------------------------------------ bridge connection
   function setStatus(status) {
@@ -57,12 +78,22 @@
     renderHud();
   }
 
-  // 失聯、停用或 stale：清空 held state；重新連線後第一筆 frame 只當 baseline。
-  function resetInput() { ctl.input = Core.resetInputState(); }
+  // 失聯、停用、stale、換手把：清空 held state；之後第一筆 frame 只當 baseline。
+  function resetInput() { ctl.input = Core.resetInputState(); ctl.inputKey = null; }
+
+  function resetBinding(binding) {
+    ctl.binding = binding;
+    ctl.roster = null;
+    ctl.claimInFlight = null;
+    ctl.autoClaimSig = null;
+    clearTimeout(ctl.claimTimer);
+    ctl.claimTimer = null;
+  }
 
   function closeSocket() {
     const socket = ctl.socket;
     ctl.socket = null;
+    resetBinding(NO_BINDING);
     if (socket) {
       socket.onopen = socket.onmessage = socket.onclose = socket.onerror = null;
       try { socket.close(); } catch { /* ignore */ }
@@ -86,11 +117,19 @@
     let socket;
     try { socket = new WebSocket(ctl.settings.url); } catch { setStatus('error'); scheduleReconnect(); return; }
     ctl.socket = socket;
-    socket.onopen = () => { ctl.attempt = 0; resetInput(); setStatus('connected'); };
+    socket.onopen = () => {
+      ctl.attempt = 0;
+      resetInput();
+      resetBinding(LEGACY_BINDING);
+      // 新版 bridge 收到 hello 才把這個連線當 v2（之後只送 roster 與本分頁擁有的手把 frame）；舊版 bridge 不讀 client 訊息。
+      try { socket.send(JSON.stringify(Core.bridgeHello())); } catch { /* ignore */ }
+      setStatus('connected');
+    };
     socket.onmessage = (event) => ingest(event.data, socket);
     socket.onclose = () => {
       if (ctl.socket !== socket) return;
       ctl.socket = null;
+      resetBinding(NO_BINDING);
       resetInput();
       setStatus(ctl.settings.enabled ? 'error' : 'off');
       scheduleReconnect();
@@ -129,19 +168,101 @@
    */
   function ingest(raw, source) {
     if (!ctl.settings.enabled) return;
-    if (document.hidden) { resetInput(); return; }
     let parsed = raw;
     if (typeof raw === 'string') { try { parsed = JSON.parse(raw); } catch { return; } }
-    const frame = Core.normalizeFrame(parsed);
-    if (!frame) return;
-    const gate = Core.bridgeInputGate({
-      enabled: ctl.settings.enabled, status: ctl.status, socketOpen: bridgeOpen(), fromBridge: !!source && source === ctl.socket,
-    });
+    const msg = Core.classifyBridgeMessage(parsed, ctl.binding.mode);
+    if (!msg) return;
+    const fromBridge = !!source && source === ctl.socket;
+    // 手把清單與 claim 結果只接受目前的 bridge socket（公開 feed() 不能改變綁定）。
+    if (msg.kind === 'roster') { if (fromBridge) applyRoster(msg.roster); return; }
+    if (msg.kind === 'claim') { if (fromBridge) applyClaimResult(msg); return; }
+    if (document.hidden) { resetInput(); return; }
+    // 只有這個分頁擁有的那一支手把能進 reducer；其他手把（或左右不符）的 frame 一律丟棄。
+    if (!Core.acceptControllerFrame(ctl.binding, msg)) return;
+    const gate = Core.bridgeInputGate({ enabled: ctl.settings.enabled, status: ctl.status, socketOpen: bridgeOpen(), fromBridge });
     if (gate === 'drop') return;
     if (gate === 'recover') { resetInput(); setStatus('connected'); }
-    const { state, actions } = Core.reduceFrame(ctl.input, frame, performance.now());
-    ctl.input = state;
-    for (const action of actions) dispatch(action);
+    // 換了手把或同一支重新連線（epoch 改變）：先清空，這一筆只當 baseline。
+    const step = Core.stepControllerInput({ input: ctl.input, key: ctl.inputKey }, msg, performance.now());
+    ctl.input = step.pad.input;
+    ctl.inputKey = step.pad.key;
+    for (const action of step.actions) dispatch(action);
+  }
+
+  // ------------------------------------------------------------ controller claim（bridge v2；bridge 是擁有權的權威）
+  function applyRoster(roster) {
+    const before = ctl.binding.owned;
+    ctl.roster = roster;
+    const owned = roster.owned ? roster.controllers.find(c => c.id === roster.owned) : null;
+    ctl.binding = { mode: 'v2', owned: owned ? owned.id : null, side: owned ? owned.side : null };
+    if (roster.lost) ctl.claimNotice = Core.lostReasonText(roster.lost.reason);
+    if (!owned) {
+      if (ctl.status === 'connected' || ctl.status === 'stale') { resetInput(); setStatus('unbound'); }
+    } else if (owned.id !== before) {
+      saveClaimPref({ mode: 'id', id: owned.id }); // 記住：重連時只會再 claim 同一支，不會改拿別支
+      ctl.claimNotice = null;
+      resetInput();
+      setStatus(owned.status === 'active' ? 'connected' : 'stale');
+    } else if (owned.status === 'stale' && ctl.status === 'connected') {
+      resetInput(); // 只清這一支的狀態；恢復時由 bridge socket 的 frame 回到 connected（第一筆只當 baseline）
+      setStatus('stale');
+    }
+    maybeAutoClaim();
+    renderHud();
+  }
+
+  function applyClaimResult(result) {
+    clearTimeout(ctl.claimTimer);
+    ctl.claimTimer = null;
+    ctl.claimInFlight = null;
+    if (!result.ok) ctl.claimNotice = Core.claimReasonText(result.reason);
+    else if (result.request !== 'release') ctl.claimNotice = null;
+    renderHud(); // 綁定以 bridge 接著送來的 roster 為準
+  }
+
+  function sendClaim(message) {
+    const socket = ctl.socket;
+    if (!socket || socket.readyState !== 1 || ctl.binding.mode !== 'v2') return false;
+    try { socket.send(JSON.stringify({ ...message, v: Core.BRIDGE_PROTOCOL_VERSION })); } catch { return false; }
+    clearTimeout(ctl.claimTimer);
+    ctl.claimInFlight = message.type;
+    ctl.claimTimer = setTimeout(() => { ctl.claimTimer = null; ctl.claimInFlight = null; maybeAutoClaim(); renderHud(); }, 2000);
+    return true;
+  }
+
+  /** 記住的手把或舊版相容預設（唯一一支右 Joy-Con）；同一份清單只自動嘗試一次。 */
+  function maybeAutoClaim() {
+    if (ctl.binding.mode !== 'v2' || !bridgeOpen() || ctl.claimInFlight) return;
+    const decision = Core.autoClaimDecision(ctl.claimPref, ctl.roster);
+    if (!decision) { ctl.autoClaimSig = null; return; }
+    const sig = JSON.stringify([decision, ctl.roster.controllers]);
+    if (sig === ctl.autoClaimSig) return;
+    ctl.autoClaimSig = sig;
+    sendClaim(decision);
+  }
+
+  /** 玩家明確選擇：id＝claim 那一支（bridge 驗證；不合法 fail closed）；null／''＝不使用手把（release，之後不自動 claim）。 */
+  function selectController(id) {
+    if (id === null || id === undefined || id === '') {
+      saveClaimPref({ mode: 'none' });
+      ctl.claimNotice = null;
+      const sent = sendClaim({ type: 'release' });
+      renderHud();
+      return sent;
+    }
+    if (!Core.isControllerId(id)) { ctl.claimNotice = Core.claimReasonText('invalid-controller'); renderHud(); return false; }
+    saveClaimPref({ mode: 'id', id });
+    ctl.claimNotice = null;
+    const sent = sendClaim({ type: 'claim', controller: id });
+    renderHud();
+    return sent;
+  }
+
+  function boundController() {
+    const id = ctl.binding.owned;
+    if (!id) return null;
+    if (id === Core.LEGACY_CONTROLLER_ID) return { id, side: 'right' };
+    return (ctl.roster && ctl.roster.controllers.find(c => c.id === id)) || null;
   }
 
   /** 公開 feed()（測試／除錯）：與 bridge 訊息同一個入口，但不是 bridge socket，所以無法把 stale 救回 connected。 */
@@ -727,6 +848,12 @@
       <div id="padPanel" hidden>
         <label class="pad-row"><input id="padEnableChk" type="checkbox"> 啟用搖桿控制</label>
         <div class="pad-row">狀態：<b id="padStatusText">未啟用</b></div>
+        <div class="pad-row">我的手把：<b id="padBindingText">—</b></div>
+        <label class="pad-row">選擇手把（每位玩家各拿一支）
+          <select id="padControllerSelect"></select>
+        </label>
+        <div id="padClaimNote" class="pad-note pad-error" hidden></div>
+        <div id="padSideMap" class="pad-note" hidden></div>
         <label class="pad-row">Bridge 位址
           <input id="padUrlInput" type="text" spellcheck="false" autocomplete="off">
         </label>
@@ -747,6 +874,53 @@
     $('padResetBtn').addEventListener('click', () => { $('padUrlInput').value = Core.DEFAULT_BRIDGE_URL; saveUrlFromInput(); });
     $('padReconnectBtn').addEventListener('click', () => { if (ctl.settings.enabled) { ctl.attempt = 0; connect(); } });
     $('padUrlInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') saveUrlFromInput(); });
+    $('padControllerSelect').addEventListener('change', (e) => selectController(e.target.value || null));
+  }
+
+  function bindingText() {
+    if (!ctl.settings.enabled || !ctl.socket) return '—';
+    const c = boundController();
+    if (c) return `${Core.controllerLabel(c)}${c.status === 'stale' ? '・訊號中斷' : ''}`;
+    return ctl.binding.mode === 'v2' ? '尚未選擇（在下方選一支）' : '—';
+  }
+
+  /** 下拉選單只列 bridge roster 的手把；其他玩家使用中或沒有訊號的不能選。舊版 bridge 只有一個唯讀選項。 */
+  function controllerOptions() {
+    if (ctl.binding.mode !== 'v2' || !ctl.roster) {
+      const c = boundController();
+      return [{ value: c ? c.id : '', label: c ? Core.controllerLabel(c) : '—', disabled: true }];
+    }
+    const options = [{ value: '', label: '— 不使用手把 —', disabled: false }];
+    for (const c of ctl.roster.controllers) {
+      const note = c.owner === 'other' ? '・其他玩家使用中' : c.status === 'stale' ? '・訊號中斷' : '';
+      options.push({ value: c.id, label: `${Core.controllerLabel(c)}${note}`, disabled: c.owner === 'other' || (c.owner !== 'you' && c.status !== 'active') });
+    }
+    return options;
+  }
+
+  function renderControllerSelect(select) {
+    const options = controllerOptions();
+    const value = ctl.binding.owned || '';
+    const sig = JSON.stringify([options, value, ctl.binding.mode]);
+    if (select.dataset.sig === sig) return; // 內容沒變不重建（下拉選單開著時不跳動）
+    select.dataset.sig = sig;
+    select.textContent = '';
+    for (const o of options) {
+      const option = document.createElement('option');
+      option.value = o.value;
+      option.textContent = o.label;
+      option.disabled = o.disabled;
+      select.appendChild(option);
+    }
+    select.value = value;
+    select.disabled = ctl.binding.mode !== 'v2';
+  }
+
+  /** 狀態文字：前面帶本分頁手把的左右＋埠（例如「左 24801 訊號中斷」）。 */
+  function statusLabel() {
+    const badge = Core.bindingBadge(ctl.binding);
+    const text = STATUS_TEXT[ctl.status] || ctl.status;
+    return badge && ctl.status !== 'off' ? `${badge} ${text}` : text;
   }
 
   function saveUrlFromInput() {
@@ -807,21 +981,32 @@
     $('padEnableChk').checked = ctl.settings.enabled;
     if (document.activeElement !== $('padUrlInput')) $('padUrlInput').value = ctl.settings.url;
     setText($('padStatusText'), STATUS_TEXT[ctl.status] || ctl.status);
+    setText($('padBindingText'), bindingText());
+    renderControllerSelect($('padControllerSelect'));
+    $('padClaimNote').hidden = !ctl.claimNotice;
+    setText($('padClaimNote'), ctl.claimNotice || '');
+    const legend = ctl.binding.owned ? Core.sideKeyLegend(ctl.binding.side) : null;
+    $('padSideMap').hidden = !legend;
+    setText($('padSideMap'), legend || '');
     $('padMixedNote').hidden = !Core.mixedContentRisk(location.protocol, ctl.settings.url);
     hud.dataset.status = ctl.status;
+    hud.dataset.side = ctl.binding.owned ? ctl.binding.side : '';
     const hint = $('padHint');
     const show = ctl.settings.enabled && (ctl.status !== 'connected' || ctl.helpOpen || ctl.padActive);
     hint.hidden = !show;
     if (show) {
       // 桌面模式專用鍵 fail closed 的原因（例如「先按 B 勾選這張卡，再按 Y 購買」）暫時接在提示前面；客廳模式顯示在提示列狀態欄。
       const notice = ctl.status === 'connected' && layer && !layerActive() && typeof layer.notice === 'function' ? layer.notice() : null;
-      setText(hint, ctl.status === 'connected' ? `🎮 ${notice ? `${notice}｜` : ''}${hintText()}` : `🎮 ${STATUS_TEXT[ctl.status]}`);
+      const badge = Core.bindingBadge(ctl.binding);
+      setText(hint, ctl.status === 'connected'
+        ? `🎮 ${badge ? `${badge}｜` : ''}${notice ? `${notice}｜` : ''}${hintText()}` : `🎮 ${statusLabel()}`);
     }
   }
 
   // ------------------------------------------------------------ init
   function init() {
     loadSettings();
+    loadClaimPref();
     buildHud();
     renderHud();
     ctl.staleTimer = setInterval(checkStale, 250);
@@ -856,7 +1041,8 @@
     cardContext, previewCard, toggleCard, playCardMode, modalCancelTarget, sendToMap, choiceLocked, activeGameView,
     scheduleReconcile, renderHud, hintText, clearFocus, bridgeConnected, directionalFlags,
     getMapSnapshot: () => ctl.mapSnapshot,
-    statusText: () => STATUS_TEXT[ctl.status] || ctl.status,
+    statusText: statusLabel,
+    bindingBadge: () => Core.bindingBadge(ctl.binding),
   };
   function attachLayer(next) {
     layer = next;
@@ -872,8 +1058,15 @@
       reconcilePending: !!ctl.reconcileTimer, // 除錯：DOM 變動後的 80ms reconcile 尚未跑完
       livingRoom: layerActive() ? layer.debugState() : null,
       shortcuts: layer && initialized && !layerActive() ? layer.shortcutState() : null, // 桌面模式專用鍵的閘門狀態
+      // 這個分頁擁有的手把（bridge roster 為準）與清單摘要；inputKey＝目前 reducer 屬於哪一支／哪一個 epoch。
+      controller: {
+        mode: ctl.binding.mode, owned: ctl.binding.owned, side: ctl.binding.side, pref: { ...ctl.claimPref },
+        claimInFlight: ctl.claimInFlight, notice: ctl.claimNotice, inputKey: ctl.inputKey,
+        roster: ctl.roster ? ctl.roster.controllers.map(c => ({ id: c.id, side: c.side, status: c.status, owner: c.owner })) : null,
+      },
     }),
     setEnabled,
+    selectController, // HUD 下拉選單同一個入口：claim 指定的手把，或 null＝不使用
     attachLayer,
   };
 

@@ -17,3 +17,13 @@ def test_controller_core_node_tests():
         cwd=_ROOT, capture_output=True, text=True, timeout=120,
     )
     assert result.returncode == 0, result.stdout[-3000:] + result.stderr[-2000:]
+
+
+def test_controller_dual_joycon_node_tests():
+    if shutil.which("node") is None:
+        pytest.skip("node not available")
+    result = subprocess.run(
+        ["node", "--test", str(_ROOT / "scripts/tests/js/controller_dual.test.js")],
+        cwd=_ROOT, capture_output=True, text=True, timeout=120,
+    )
+    assert result.returncode == 0, result.stdout[-3000:] + result.stderr[-2000:]

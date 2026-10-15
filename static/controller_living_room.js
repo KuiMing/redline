@@ -1501,11 +1501,14 @@
   function statusText() {
     const ctl = host.ctl;
     if (!ctl.settings.enabled) return { text: '🎮 搖桿未啟用（右下 🎮 設定）', alert: false };
-    if (ctl.status !== 'connected') return { text: `🎮 ${host.statusText()}`, alert: ctl.status === 'stale' || ctl.status === 'error' };
+    if (ctl.status !== 'connected') {
+      return { text: `🎮 ${host.statusText()}`, alert: ctl.status === 'stale' || ctl.status === 'error' || ctl.status === 'unbound' };
+    }
     if (processing()) return { text: '處理中…', alert: false, busy: true };
     if (lr.notice) return { text: lr.notice, alert: true };
     const zone = lr.zone ? (describeZone(lr.zone) || { label: '' }).label : '';
-    return { text: `${VIEW_LABEL[activeView()] || ''}${zone ? ` › ${zone}` : ''}`, alert: false };
+    const badge = host.bindingBadge(); // 這個分頁綁定的手把（左右＋埠）
+    return { text: `${badge ? `🎮 ${badge}｜` : ''}${VIEW_LABEL[activeView()] || ''}${zone ? ` › ${zone}` : ''}`, alert: false };
   }
 
   function renderLegend() {

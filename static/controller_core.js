@@ -598,6 +598,171 @@
     return { scope, targets, buttons, focusTown, selected, pending };
   }
 
+  // ---------------------------------------------------------------- per-controller binding（bridge v2）
+
+  // bridge v2：每支實體 Joy-Con 有自己的身份（左右＋FTCW UDP 埠＋S2N1 名稱指紋，例如 `L24801-3f2a9c1e`；主埠沒有名稱時的
+  // 舊版預設身份為 `R24800-legacy`）。每個分頁（玩家）最多擁有一支，bridge 只送它的 frame。左 Joy-Con 的實體按鍵已在 bridge
+  // 正規化成右 Joy-Con 的邏輯位元，這裡與之後的 action routing 只看共用邏輯 layout。
+  const BRIDGE_PROTOCOL_VERSION = 2;
+  const CONTROLLER_SIDES = Object.freeze(['left', 'right']);
+  const CONTROLLER_STATUSES = Object.freeze(['active', 'stale']);
+  const CONTROLLER_OWNERS = Object.freeze(['you', 'other']);
+  const SIDE_SOURCES = Object.freeze(['name', 'legacy-default']);
+  const CLAIM_REQUESTS = Object.freeze(['claim', 'claim-default', 'release']);
+  const ROSTER_MAX_CONTROLLERS = 16;
+  // 舊版 bridge（只送無型別的 {x, y, buttons}）的相容身份：唯一一支、視為右 Joy-Con。
+  const LEGACY_CONTROLLER_ID = 'legacy';
+
+  function isControllerId(v) {
+    if (typeof v !== 'string' || v.length > 24) return false;
+    const m = /^[LR]([1-9][0-9]{0,4})-(?:[0-9a-f]{8}|legacy)$/.exec(v);
+    return !!m && Number(m[1]) <= 65535;
+  }
+
+  function sideMatchesId(id, side) { return (id[0] === 'L') === (side === 'left'); }
+
+  /** bridge 的手把清單：不符 schema 一律整份作廢（null）；只有自己擁有的那一支可以是 you。 */
+  function sanitizeRoster(data) {
+    if (!data || data.type !== 'roster' || data.v !== BRIDGE_PROTOCOL_VERSION || !Array.isArray(data.controllers)) return null;
+    if (data.controllers.length > ROSTER_MAX_CONTROLLERS) return null;
+    const controllers = [];
+    for (const c of data.controllers) {
+      if (!c || !isControllerId(c.id) || !CONTROLLER_SIDES.includes(c.side) || !sideMatchesId(c.id, c.side)) return null;
+      if (!CONTROLLER_STATUSES.includes(c.status) || controllers.some(x => x.id === c.id)) return null;
+      if (isPresent(c.owner) && !CONTROLLER_OWNERS.includes(c.owner)) return null;
+      if (isPresent(c.name) && !isShortString(c.name, 64)) return null;
+      if (isPresent(c.endpoint) && !isShortString(c.endpoint, 64)) return null;
+      if (isPresent(c.sideSource) && !SIDE_SOURCES.includes(c.sideSource)) return null;
+      controllers.push({ id: c.id, side: c.side, status: c.status, owner: c.owner ?? null, name: c.name ?? null,
+        endpoint: c.endpoint ?? null, sideSource: c.sideSource ?? null });
+    }
+    const owned = isPresent(data.owned) ? data.owned : null;
+    if (owned !== null && !(controllers.find(c => c.id === owned) || {}).owner) return null;
+    if (controllers.some(c => (c.owner === 'you') !== (c.id === owned))) return null;
+    let lost = null;
+    if (isPresent(data.lost)) {
+      if (!data.lost || !isControllerId(data.lost.controller) || !isShortString(data.lost.reason, 32)) return null;
+      lost = { controller: data.lost.controller, reason: data.lost.reason };
+    }
+    return { owned, controllers, lost };
+  }
+
+  function sanitizeClaimResult(data) {
+    if (!data || data.type !== 'claim-result' || data.v !== BRIDGE_PROTOCOL_VERSION || !CLAIM_REQUESTS.includes(data.request)) return null;
+    if (typeof data.ok !== 'boolean') return null;
+    if (isPresent(data.controller) && !isControllerId(data.controller)) return null;
+    if (isPresent(data.reason) && !isShortString(data.reason, 32)) return null;
+    return { request: data.request, ok: data.ok, controller: data.controller ?? null, reason: data.reason ?? null };
+  }
+
+  /**
+   * bridge 訊息分類（compatibility adapter）。mode＝'legacy'（還沒收到 v2 roster）｜'v2'。
+   *   無型別 {x, y, buttons} → 只在 legacy 接受，視為舊版 bridge 的唯一一支右 Joy-Con；
+   *   roster／claim-result → 分類後交給呼叫端（roster 讓頁面切到 v2）；
+   *   v2 frame → 只在 v2 接受，必須有合法 id、與 id 相符的左右、非負整數 epoch。其他一律 null（丟棄）。
+   */
+  function classifyBridgeMessage(data, mode) {
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
+    if (!Object.prototype.hasOwnProperty.call(data, 'type')) {
+      if (mode !== 'legacy') return null;
+      const frame = normalizeFrame(data);
+      return frame ? { kind: 'frame', controller: LEGACY_CONTROLLER_ID, side: 'right', epoch: 0, frame } : null;
+    }
+    if (data.v !== BRIDGE_PROTOCOL_VERSION) return null;
+    if (data.type === 'roster') {
+      const roster = sanitizeRoster(data);
+      return roster ? { kind: 'roster', roster } : null;
+    }
+    if (data.type === 'claim-result') {
+      const result = sanitizeClaimResult(data);
+      return result ? { kind: 'claim', ...result } : null;
+    }
+    if (data.type !== 'frame' || mode !== 'v2') return null;
+    if (!isControllerId(data.controller) || !CONTROLLER_SIDES.includes(data.side) || !sideMatchesId(data.controller, data.side)) return null;
+    if (!Number.isSafeInteger(data.epoch) || data.epoch < 0) return null;
+    const frame = normalizeFrame(data);
+    return frame ? { kind: 'frame', controller: data.controller, side: data.side, epoch: data.epoch, frame } : null;
+  }
+
+  /** 只有本分頁綁定的那一支手把（id 與左右都相符）可以進 reducer；未綁定一律丟棄。 */
+  function acceptControllerFrame(binding, msg) {
+    if (!binding || !binding.owned || !msg || msg.kind !== 'frame') return false;
+    return msg.controller === binding.owned && msg.side === binding.side;
+  }
+
+  function frameInputKey(msg) { return `${msg.controller}#${msg.epoch}`; }
+
+  /**
+   * 一筆已接受的 frame 進本分頁的 reducer。pad＝{input, key}：換了手把或同一支重新連線（epoch 改變）時先清空，
+   * 這一筆只當 baseline（已按住的鍵與已推到底的搖桿都不觸發）。
+   */
+  function stepControllerInput(pad, msg, now, config) {
+    const key = frameInputKey(msg);
+    const base = pad && pad.key === key ? pad.input : createInputState();
+    const r = reduceFrame(base, msg.frame, now, config);
+    return { pad: { input: r.state, key }, actions: r.actions };
+  }
+
+  /** 分頁的手把偏好（sessionStorage）：沒有存值＝auto；記住的 id；none＝玩家明確不用。不合法的存值 fail closed 為 none。 */
+  function normalizeClaimPref(raw) {
+    if (raw === null || raw === undefined) return { mode: 'auto' };
+    if (raw && raw.mode === 'auto') return { mode: 'auto' };
+    if (raw && raw.mode === 'id' && isControllerId(raw.id)) return { mode: 'id', id: raw.id };
+    return { mode: 'none' };
+  }
+
+  /**
+   * 自動 claim（bridge 仍是最終權威）：已擁有、玩家選了 none 或沒有清單 → 不送。
+   * 記住的 id 有訊號且沒人用 → claim 它（不會改拿別支）；auto 在清單中恰好一支有訊號且沒人用時 claim 它。
+   * 這保留單手把即拿即用，也讓另一支已登錄但 stale 時不會阻止目前手把。兩支同時可用時仍要求玩家明確選擇。
+   */
+  function autoClaimDecision(pref, roster) {
+    const p = normalizeClaimPref(pref);
+    if (!roster || roster.owned || p.mode === 'none') return null;
+    if (p.mode === 'id') {
+      const c = roster.controllers.find(x => x.id === p.id);
+      return c && c.status === 'active' && !c.owner ? { type: 'claim', controller: c.id } : null;
+    }
+    const available = roster.controllers.filter(c => c.status === 'active' && !c.owner);
+    return available.length === 1 ? { type: 'claim', controller: available[0].id } : null;
+  }
+
+  function bridgeHello() { return { type: 'hello', v: BRIDGE_PROTOCOL_VERSION }; }
+
+  const SIDE_LABELS = Object.freeze({ left: '左 Joy-Con', right: '右 Joy-Con' });
+
+  /** HUD：玩家綁定的手把身份與左右（每個分頁只顯示自己的，不合併所有手把）。 */
+  function controllerLabel(c) {
+    if (!c) return '';
+    if (c.id === LEGACY_CONTROLLER_ID) return `${SIDE_LABELS.right}（舊版 bridge 相容）`;
+    const note = c.name ? `（${c.name}）` : c.sideSource === 'legacy-default' ? '（未回報名稱，預設右手）' : '';
+    return `${SIDE_LABELS[c.side] || '手把'} ${c.id}${note}`;
+  }
+
+  /** 提示膠囊／客廳狀態列的前綴：左右＋FTCW 埠（同一台 Mac 多個視窗時分得出是哪一支）。 */
+  function bindingBadge(binding) {
+    if (!binding || !binding.owned || !CONTROLLER_SIDES.includes(binding.side)) return '';
+    const side = binding.side === 'left' ? '左' : '右';
+    const m = /^[LR](\d+)-/.exec(binding.owned);
+    return m ? `${side} ${m[1]}` : side;
+  }
+
+  // 左 Joy-Con 玩家的實體鍵對照（提示文字沿用右 Joy-Con 的邏輯鍵名）。
+  const SIDE_KEY_LEGEND = Object.freeze({
+    left: '左 Joy-Con：→＝A　↓＝B　↑＝X　←＝Y　L＝R　ZL＝ZR　−＝+　SR＝SL　SL＝SR　按下搖桿＝STICK　Capture＝Capture（沒有 HOME）',
+  });
+  function sideKeyLegend(side) { return SIDE_KEY_LEGEND[side] || null; }
+
+  const CLAIM_REASON_TEXT = Object.freeze({
+    claimed: '這支手把已被其他玩家使用', 'not-active': '這支手把目前沒有訊號', 'unknown-controller': '找不到這支手把',
+    'invalid-controller': '手把 ID 不合法', 'no-default': '沒有唯一的右 Joy-Con，請手動選擇', 'already-owned': '已綁定手把',
+  });
+  const LOST_REASON_TEXT = Object.freeze({
+    replaced: '原本的手把已被同一埠的另一支裝置取代', unidentified: '原本的手把無法辨識左右',
+  });
+  function claimReasonText(reason) { return CLAIM_REASON_TEXT[reason] || '無法綁定這支手把'; }
+  function lostReasonText(reason) { return LOST_REASON_TEXT[reason] || '原本的手把已無法使用'; }
+
   // ---------------------------------------------------------------- settings
 
   const LOCAL_HOSTS = new Set(['127.0.0.1', 'localhost', '[::1]']);
@@ -637,5 +802,8 @@
     resolveModalScope, isDirectionalExcluded, isFocusableCandidate, buildFocusSet, pickInitial, pickDirectional, cycleIndex,
     isTrustedMessage, sanitizeMapSnapshot, sanitizeMapCommand, sanitizeMapResult, buildMapSnapshotModel,
     validateBridgeUrl, normalizeSettings, mixedContentRisk, reconnectDelayMs,
+    BRIDGE_PROTOCOL_VERSION, LEGACY_CONTROLLER_ID, isControllerId, sanitizeRoster, sanitizeClaimResult, classifyBridgeMessage,
+    acceptControllerFrame, frameInputKey, stepControllerInput, normalizeClaimPref, autoClaimDecision, bridgeHello,
+    controllerLabel, bindingBadge, sideKeyLegend, claimReasonText, lostReasonText,
   };
 });
