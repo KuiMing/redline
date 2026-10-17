@@ -731,20 +731,43 @@
 
   const SIDE_LABELS = Object.freeze({ left: '左 Joy-Con', right: '右 Joy-Con' });
 
-  /** HUD：玩家綁定的手把身份與左右（每個分頁只顯示自己的，不合併所有手把）。 */
-  function controllerLabel(c) {
-    if (!c) return '';
-    if (c.id === LEGACY_CONTROLLER_ID) return `${SIDE_LABELS.right}（舊版 bridge 相容）`;
-    const note = c.name ? `（${c.name}）` : c.sideSource === 'legacy-default' ? '（未回報名稱，預設右手）' : '';
-    return `${SIDE_LABELS[c.side] || '手把'} ${c.id}${note}`;
+  // ---- 玩家可見的手把名稱：只有左右；同側多支時加「目前 roster」內的顯示序號（依埠號、同埠依完整 id 排序）。
+  // 永遠不顯示 FTCW UDP 埠、S2N1 名稱（指紋）、endpoint 或 id；identity／claim／binding 一律仍用完整 id。
+  // static/hotseat_core.js 的 controllerDisplayNames 是同一規則（它在 <head> 先載入，不依賴這支；node 測試比對兩者）。
+  function idPort(id) { return Number(/^[LR](\d+)-/.exec(id)[1]); }
+
+  /** ids → {id: 名稱}。同側只有一支＝「左 Joy-Con」；多支＝「左 Joy-Con 1／2…」。不合法 id 忽略。 */
+  function controllerDisplayNames(ids) {
+    const unique = [...new Set((Array.isArray(ids) ? ids : []).filter(isControllerId))];
+    const out = {};
+    for (const [prefix, label] of [['L', SIDE_LABELS.left], ['R', SIDE_LABELS.right]]) {
+      const group = unique.filter(id => id[0] === prefix)
+        .sort((a, b) => idPort(a) - idPort(b) || (a < b ? -1 : a > b ? 1 : 0));
+      group.forEach((id, i) => { out[id] = group.length > 1 ? `${label} ${i + 1}` : label; });
+    }
+    return out;
   }
 
-  /** 提示膠囊／客廳狀態列的前綴：左右＋FTCW 埠（同一台 Mac 多個視窗時分得出是哪一支）。 */
-  function bindingBadge(binding) {
+  /** 一支手把的玩家名稱；controllers＝目前 roster（沒有或不在其中 → 只回左右）。 */
+  function controllerDisplayName(id, controllers) {
+    if (id === LEGACY_CONTROLLER_ID) return SIDE_LABELS.right;
+    if (!isControllerId(id)) return 'Joy-Con';
+    const names = controllerDisplayNames((Array.isArray(controllers) ? controllers : []).map(c => c && c.id));
+    return names[id] || (id[0] === 'L' ? SIDE_LABELS.left : SIDE_LABELS.right);
+  }
+
+  /** HUD（我的手把、選擇手把）：玩家名稱；controllers＝目前 roster。 */
+  function controllerLabel(c, controllers) {
+    if (!c) return '';
+    if (c.id === LEGACY_CONTROLLER_ID) return `${SIDE_LABELS.right}（舊版 bridge 相容）`;
+    const note = c.sideSource === 'legacy-default' ? '（未回報名稱，預設右手）' : '';
+    return `${controllerDisplayName(c.id, controllers)}${note}`;
+  }
+
+  /** 提示膠囊／客廳狀態列的前綴：本分頁手把的玩家名稱（同側多支時帶序號，分得出是哪一支）。 */
+  function bindingBadge(binding, controllers) {
     if (!binding || !binding.owned || !CONTROLLER_SIDES.includes(binding.side)) return '';
-    const side = binding.side === 'left' ? '左' : '右';
-    const m = /^[LR](\d+)-/.exec(binding.owned);
-    return m ? `${side} ${m[1]}` : side;
+    return controllerDisplayName(binding.owned, controllers);
   }
 
   // 左 Joy-Con 玩家的實體鍵對照（提示文字沿用右 Joy-Con 的邏輯鍵名）。
@@ -758,7 +781,7 @@
     'invalid-controller': '手把 ID 不合法', 'no-default': '沒有唯一的右 Joy-Con，請手動選擇', 'already-owned': '已綁定手把',
   });
   const LOST_REASON_TEXT = Object.freeze({
-    replaced: '原本的手把已被同一埠的另一支裝置取代', unidentified: '原本的手把無法辨識左右',
+    replaced: '原本的手把已被另一支裝置取代', unidentified: '原本的手把無法辨識左右',
   });
   function claimReasonText(reason) { return CLAIM_REASON_TEXT[reason] || '無法綁定這支手把'; }
   function lostReasonText(reason) { return LOST_REASON_TEXT[reason] || '原本的手把已無法使用'; }
@@ -804,6 +827,6 @@
     validateBridgeUrl, normalizeSettings, mixedContentRisk, reconnectDelayMs,
     BRIDGE_PROTOCOL_VERSION, LEGACY_CONTROLLER_ID, isControllerId, sanitizeRoster, sanitizeClaimResult, classifyBridgeMessage,
     acceptControllerFrame, frameInputKey, stepControllerInput, normalizeClaimPref, autoClaimDecision, bridgeHello,
-    controllerLabel, bindingBadge, sideKeyLegend, claimReasonText, lostReasonText,
+    controllerDisplayNames, controllerDisplayName, controllerLabel, bindingBadge, sideKeyLegend, claimReasonText, lostReasonText,
   };
 });

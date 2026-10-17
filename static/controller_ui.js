@@ -233,6 +233,8 @@
   /** 記住的手把或舊版相容預設（唯一一支右 Joy-Con）；同一份清單只自動嘗試一次。 */
   function maybeAutoClaim() {
     if (ctl.binding.mode !== 'v2' || !bridgeOpen() || ctl.claimInFlight) return;
+    // 客廳輪流大廳（hotseat_ui.js）：主連線只 claim 目前席位綁定的那一支；單手把自動 claim 不得搶走綁定流程。
+    if (gate && initialized && typeof gate.managesClaims === 'function' && gate.managesClaims()) { ctl.autoClaimSig = null; return; }
     const decision = Core.autoClaimDecision(ctl.claimPref, ctl.roster);
     if (!decision) { ctl.autoClaimSig = null; return; }
     const sig = JSON.stringify([decision, ctl.roster.controllers]);
@@ -621,6 +623,9 @@
 
   // ------------------------------------------------------------ dispatch (logical → UI)
   function dispatch(action) {
+    // 客廳輪流（hot-seat，hotseat_ui.js）：交接遮罩時所有輸入只給交接確認；顯示時只有該席位綁定的 Joy-Con 能操作。
+    // 未啟用 hot-seat 時 gate 一律放行，既有行為不變。
+    if (gate && initialized && gate.intercept(action, { owned: ctl.binding.owned })) return;
     // 搖桿輸入一律先放掉停在排除控制上的原生焦點（分頁、結束行動、手牌按鈕等）。
     releaseExcludedFocus();
     // 客廳模式的 page／map scope 由 layer 處理；modal、大廳與桌面模式維持下面的既有流程。
@@ -877,10 +882,13 @@
     $('padControllerSelect').addEventListener('change', (e) => selectController(e.target.value || null));
   }
 
+  // 玩家可見的手把名稱一律經 Core.controllerLabel／bindingBadge 並帶目前 roster（左右＋同側序號；不顯示埠、id、名稱指紋）。
+  function rosterList() { return ctl.roster ? ctl.roster.controllers : null; }
+
   function bindingText() {
     if (!ctl.settings.enabled || !ctl.socket) return '—';
     const c = boundController();
-    if (c) return `${Core.controllerLabel(c)}${c.status === 'stale' ? '・訊號中斷' : ''}`;
+    if (c) return `${Core.controllerLabel(c, rosterList())}${c.status === 'stale' ? '・訊號中斷' : ''}`;
     return ctl.binding.mode === 'v2' ? '尚未選擇（在下方選一支）' : '—';
   }
 
@@ -888,12 +896,13 @@
   function controllerOptions() {
     if (ctl.binding.mode !== 'v2' || !ctl.roster) {
       const c = boundController();
-      return [{ value: c ? c.id : '', label: c ? Core.controllerLabel(c) : '—', disabled: true }];
+      return [{ value: c ? c.id : '', label: c ? Core.controllerLabel(c, rosterList()) : '—', disabled: true }];
     }
     const options = [{ value: '', label: '— 不使用手把 —', disabled: false }];
     for (const c of ctl.roster.controllers) {
       const note = c.owner === 'other' ? '・其他玩家使用中' : c.status === 'stale' ? '・訊號中斷' : '';
-      options.push({ value: c.id, label: `${Core.controllerLabel(c)}${note}`, disabled: c.owner === 'other' || (c.owner !== 'you' && c.status !== 'active') });
+      // value＝完整 id（claim 身份）；label 只有玩家名稱。
+      options.push({ value: c.id, label: `${Core.controllerLabel(c, rosterList())}${note}`, disabled: c.owner === 'other' || (c.owner !== 'you' && c.status !== 'active') });
     }
     return options;
   }
@@ -916,9 +925,9 @@
     select.disabled = ctl.binding.mode !== 'v2';
   }
 
-  /** 狀態文字：前面帶本分頁手把的左右＋埠（例如「左 24801 訊號中斷」）。 */
+  /** 狀態文字：前面帶本分頁手把的玩家名稱（例如「左 Joy-Con 訊號中斷」；同側多支時「右 Joy-Con 2 訊號中斷」）。 */
   function statusLabel() {
-    const badge = Core.bindingBadge(ctl.binding);
+    const badge = Core.bindingBadge(ctl.binding, rosterList());
     const text = STATUS_TEXT[ctl.status] || ctl.status;
     return badge && ctl.status !== 'off' ? `${badge} ${text}` : text;
   }
@@ -997,7 +1006,7 @@
     if (show) {
       // 桌面模式專用鍵 fail closed 的原因（例如「先按 B 勾選這張卡，再按 Y 購買」）暫時接在提示前面；客廳模式顯示在提示列狀態欄。
       const notice = ctl.status === 'connected' && layer && !layerActive() && typeof layer.notice === 'function' ? layer.notice() : null;
-      const badge = Core.bindingBadge(ctl.binding);
+      const badge = Core.bindingBadge(ctl.binding, rosterList());
       setText(hint, ctl.status === 'connected'
         ? `🎮 ${badge ? `${badge}｜` : ''}${notice ? `${notice}｜` : ''}${hintText()}` : `🎮 ${statusLabel()}`);
     }
@@ -1042,12 +1051,15 @@
     scheduleReconcile, renderHud, hintText, clearFocus, bridgeConnected, directionalFlags,
     getMapSnapshot: () => ctl.mapSnapshot,
     statusText: statusLabel,
-    bindingBadge: () => Core.bindingBadge(ctl.binding),
+    bindingBadge: () => Core.bindingBadge(ctl.binding, rosterList()),
   };
   function attachLayer(next) {
     layer = next;
     if (initialized) layer.init(host);
   }
+  // 客廳輪流（hot-seat）閘門：只決定輸入是否放行／交給交接確認，不改焦點、layer 或綁定。
+  let gate = null;
+  function attachGate(next) { gate = next && typeof next.intercept === 'function' ? next : null; }
 
   window.RedlineController = {
     feed, // 測試／除錯：與 bridge 訊息同一個入口，只在已啟用且已連線時處理（不能讓 stale 恢復）
@@ -1068,6 +1080,7 @@
     setEnabled,
     selectController, // HUD 下拉選單同一個入口：claim 指定的手把，或 null＝不使用
     attachLayer,
+    attachGate,
   };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

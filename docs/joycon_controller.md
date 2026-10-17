@@ -24,7 +24,7 @@
 - **玩家選擇（claim）**：🎮 設定面板「選擇手把」列出 bridge 的所有手把（其他玩家使用中、沒有訊號的不能選）；選一支＝claim，選「不使用手把」＝release。bridge 是唯一權威：每支最多一位擁有者、每位玩家最多一支；claim 別人的、不存在、ID 不合法、沒有訊號的一律拒絕（`claimed`／`unknown-controller`／`invalid-controller`／`not-active`），重複 claim 同一支是冪等，claim 另一支＝切換。沒有 claim 的分頁不會收到任何 frame（狀態「未選擇手把」，輸入與快捷鍵提示都 fail closed）。
 - **預設與記憶**：分頁的選擇存在 `sessionStorage`（`redline.controller.claim.v1`，重新整理後重連只會再 claim 同一支）。沒有選擇過的分頁只套用舊版相容預設：bridge 上**恰好只有一支手把、它是右 Joy-Con、有訊號且沒人用**時自動 claim；有兩支以上（或唯一一支是左手）就要手動選。之後加入的第二支手把永遠不會接管第一位玩家。
 - **斷線與重連**：手把 stale 時保留擁有者；同一身份（同埠同名）恢復時回到同一位玩家，epoch +1，瀏覽器把第一筆當 baseline（重連時按住的鍵不觸發）。換了埠就是新的、沒人擁有的手把；同一個埠換成另一支裝置（名稱或左右改變）→ 舊身份移除，原擁有者失去它並看到原因。玩家的瀏覽器連線結束即釋放手把。
-- **HUD**：設定面板「我的手把」顯示本分頁綁定的身份與左右（例如 `左 Joy-Con L24801-…（Joy-Con 2 (L)）`）；提示膠囊與客廳狀態列前面帶 `左 24801`／`右 24800`；左手玩家另顯示實體鍵對照。
+- **HUD（玩家可見名稱）**：設定面板「我的手把」、「選擇手把」選項、提示膠囊與客廳狀態列只顯示玩家名稱（`Core.controllerLabel`／`bindingBadge`，帶目前 roster）：`左 Joy-Con`／`右 Joy-Con`；同側有多支時依**目前 roster** 給本機顯示序號（依埠號、同埠再依完整 id 排序，與 roster 順序無關），例如 `右 Joy-Con 1`、`右 Joy-Con 2`。**不顯示** FTCW UDP 埠、`S2N1` 名稱（指紋）、endpoint 或 controller id；同側手把增減時序號可能改變。選項的 value、claim、記住的選擇與 bridge 協定仍用完整 id（身份與授權模型不變）。左手玩家另顯示實體鍵對照。客廳輪流大廳用同一規則（`hotseat_core.controllerDisplayNames`，node 測試比對兩者一致）。
 - **協定（bridge v2，同一個 `/ws`）**：頁面連上後送 `{"type":"hello","v":2}`；bridge 回 `roster`（`owned`、`controllers:[{id, side, name, endpoint, status, owner:'you'|'other'|null, sideSource}]`，變動時與每秒送一次），只送本分頁擁有那一支的 `{"type":"frame","v":2,controller,side,epoch,x,y,buttons:[b0,b1]}`。client 送 `claim {controller}`、`claim-default`、`release`，bridge 回 `claim-result {request, ok, controller, reason}`；格式不合 → `error bad-message`。瀏覽器端所有訊息都驗證 schema，id 與左右不符、非本分頁擁有的 frame 一律丟棄。**相容**：舊版頁面（不送 hello）0.3 秒後當舊版 client，只拿「唯一一支右 Joy-Con」並收原本的 `{x, y, buttons}`；新版頁面連到舊版 bridge 時，在收到 roster 前把無型別 frame 當唯一一支右 Joy-Con（`右 Joy-Con（舊版 bridge 相容）`）。Host／Origin 檢查不變，`/health` 也只接受 loopback Host。
 
 ## 啟用
@@ -160,6 +160,33 @@ ZR 不再回區域層或回指揮中心：要回區域層用 B（非卡牌項目
 - **按鍵提示列**：固定在畫面下緣，**不接受焦點也不接受滑鼠**，只在 bridge 已連線時（未啟用、連線中、無法連線、訊號中斷時整列清空）以「鍵＋標籤」顯示目前可用的專用鍵操作（例如 `Y 購買所選 1 張`、`B ⚠ 棄置 歐洲奧援`、`SL 聚焦選單（85 個目標）`、`+ 發動 賭徒耳語`、`Capture ⚠ 結束行動`、`Y 移動 臺北→宜蘭`），來源同樣只限可見、啟用的既有控制（SL 只在最新權威 snapshot 有可分組的合法建立目標時出現，數字只是提示，開啟時仍以 req 綁定的新 snapshot 為準；聚焦選單開著時提示列清空，legend 改為選單按鍵）。「清除」與「卡牌置頂」不再有搖桿入口（滑鼠照常可用；搖桿可用 B 逐張取消勾選；未使用的頂牌權利在結束行動時由伺服器既有流程處理：只有一張候選時自動置頂，多張時開既有選擇視窗）。
 - **地圖兩段式清單**：來源（可行動城鎮）→ A → 該來源的伺服器合法目的地（依消耗、道路先於鐵路排序）→ A 只預備移動、Y 直接走既有「確認移動」。pending choice 目標：A 只選取、Y 走既有「建立組織」或「瓦解組織」。清單只來自 iframe 權威 snapshot（選用欄位 `selected`、`pending`、移動目標 `mode`／`cost`、目標 `act`，有給就嚴格驗證），iframe 執行每個指令前仍重驗；沒有 snapshot 或目標時清單為空、A／Y 無作用。滑鼠仍可直接操作地圖。
 - **防誤觸**（數值不變：處理中鎖 1500ms、重繪冷卻 300ms、執行冷卻 250ms、地圖確認逾時 1000ms）：送出遊戲動作後到下一份 state（或 1.5 秒）前不再送出 A／B／X／Y／CAPTURE／PLUS 類指令（處理中鎖）；任何**實際執行**（click 既有控制、開啟預覽／確認單／購買確認／說明 modal、B 勾選、iframe 確認成功的地圖操作與 ZR 縮放、成功進入區域，以及客廳模式下 modal 內的 A）之後 250ms 內不接受下一個執行型按鍵（fail-closed 的 no-op 不啟動冷卻；方向、R／SR、STICK、ZR、回區域層與 modal 的 B 不受影響）；重繪、分頁切換或 STICK 造成的焦點換項目後 300ms 內忽略與焦點有關的 A／B／X／Y（CAPTURE／PLUS 與焦點無關，不受此冷卻）；重繪後同 key 留原位、key 消失留同區域同索引、區域空了回同一分頁的預設內容區層，永不跨區域；沒有任何危險控制可取得方向焦點。第一次有效操作（含 CAPTURE／PLUS）只放焦點；戰略地圖上的 ZR 不需要焦點，第一下就執行縮放（不放焦點）。斷線／stale／重連 baseline 沿用上方規則（重連時按住 A＋PLUS＋CAPTURE 也不觸發）。
+
+## 客廳輪流（hot-seat，多位玩家共用一台螢幕）
+
+預設關閉；大廳勾選「客廳輪流（同一台多位玩家）」才啟用（`localStorage` `redline.hotseat.v1`）。未啟用、目前遊戲的本機席位少於兩個、或連線的不是本機席位時完全不介入，單席位桌面／客廳模式不變。
+
+- **席位**：同一瀏覽器、同一房間可保存多個席位，各自 `playerId`、`resumeToken` 與 Joy-Con 綁定。「新增本機玩家」以上方玩家名稱 `/join`（不帶舊 token，一定是新席位）；同一 `player_id` 只更新 token，不覆寫其他席位；新增後**不自動切換**，留在目前席位。本機玩家名稱不可重複。
+- **行動代號（P1～P4，Joy-Con 玩家不必打字）**：本機席位的系統預設代號依 **server `/lobby` 的 players 順序**（加入順序；只 append、改名不移位）＝P1、P2、P3、P4，與目前顯示哪一席、本機清單順序、切換席位或重新整理無關（`Core.seatCodename`／`codenameRenames`）。房間最多 4 位真人（AI 紅軍時 3 位），所以不會有 P5；已滿時「新增本機玩家」顯示「作戰室已滿」且不送出。
+  - **系統預設 vs 自訂**：「你的行動代號」欄的 HTML 預設值是 `host`；建立／進入作戰室**送出當下**，欄位仍是預設值（或空白）且使用者從未在欄位輸入過，才記為系統預設（`redline.sessions.v1` 的 `name_auto`，隨席位存成 `auto_name`）。使用者輸入過的名稱（即使字面也是 `host`）一律是自訂，永不被覆寫。建房後才勾選客廳輪流時，以建房送出時的紀錄判斷。
+  - **新增本機玩家**：沒有在欄位輸入新名稱時，用它將加入的 server lobby 位置的代號（`Core.nextSeatCodename`）；輸入了就用輸入的名稱（自訂）。
+  - **寫回伺服器**：客廳輪流啟用、本機至少兩席、尚未開局時，系統預設代號的本機席位若與 server lobby 名稱不同，以既有 `/join`（該席 `player_id`＋它自己的 `resume_token`）改名，寫進伺服器權威 lobby（開局時玩家名稱取自這裡）；成功後才更新本機席位與畫面，失敗 3 秒後再試。只有一席、未啟用客廳輪流、已開局時不改名（單席位與一般流程不變）。
+- **大廳列**：每個本機席位一列，顯示玩家名稱（目前連線的席位標「目前」）、已選陣營／根據地、準備狀態與 Joy-Con 綁定狀態，資料只來自 server `/lobby` 公開資料與席位綁定。每列兩行：玩家名稱；下一行左邊是「陣營／準備｜」，右邊是**靠右對齊的緊湊群組**：安全名稱＋狀態燈 → 綁定下拉 → 「切換」（群組內沒有撐開的空白，空白只在陣營／準備與群組之間）。安全名稱＋燈是固定寬度欄 `7.5em`（12px 字＝90 設計像素，靠左起排），所以每列的名稱（或「未綁定 Joy-Con」）左緣對齊成一欄：容得下最長的「右 Joy-Con 4」＋燈（Chrome 實測 89.2 設計像素）與「未綁定 Joy-Con」，較短的名稱只在燈之後留白，不裁切。目前席位不能切換到自己，該位置是同尺寸、不可見、不可點、不可聚焦、對輔助技術隱藏的佔位，所以每列下拉的右緣對齊成一欄。Joy-Con 狀態（`Core.seatJoyStatus`）：**已綁定一律只顯示安全名稱＋對應色燈，不加任何可見狀態文字**——連線正常＝綠；訊號中斷＝琥珀；其他分頁使用中＝紅；未偵測到（不在 bridge 清單）、bridge 未連線、搖桿控制未啟用＝灰色空心。該席目前綁定的下拉選項也不附加狀態註記（其他選項仍註明不可選的原因）。綁定下拉固定為緊湊寬度 `9.25em`（12px 字＝111 設計像素）：容得下最長的安全名稱「右 Joy-Con 4」與「— 未綁定 —」＋原生箭頭（Chrome 實測自然寬 106 設計像素），不再依展開清單裡最長的選項撐寬。未綁定＝「未綁定 Joy-Con」文字。燈是 `role="img"`，`aria-label` 與 `title` 都是完整狀態（例如「右 Joy-Con 2：其他分頁使用中」）；可見名稱對輔助技術隱藏，避免重複朗讀。錯誤永遠不會顯示成綠燈。
+- **玩家看到的手把名稱**（`Core.controllerNames`，與上方 HUD 同一規則）：只有左右，例如「左 Joy-Con」「右 Joy-Con」；同側有多支時依**目前 bridge roster** 加本機顯示序號「右 Joy-Con 1」「右 Joy-Con 2」（依埠號、同埠再依完整 id），所以大廳列、🎮 HUD、每個分頁與監聽連線看到的相同；綁定但暫時不在 roster 的手把只顯示左右（例如「右 Joy-Con」＋灰色空心燈，aria／title「右 Joy-Con：未偵測到」）。同側手把增減時序號可能改變。大廳列、下拉選項、提示文字與交接遮罩都**不顯示** FTCW UDP 埠、bridge 回報的名稱（含指紋）或內部 id。
+- **大廳綁定**：每列一個下拉，列出 bridge 的每一支手把。選項的 value 是精確 identity（例如 `L24801-…`、`R24800-…`；左右是不同玩家，同側多支依埠＋名稱指紋區分），綁定與 claim 一律用它；選項文字只有上面的玩家名稱。選一支＝綁定或改綁（原本那支釋出），「— 未綁定 —」＝解除。已綁給其他本機席位的手把不可選並註明「已綁給〈玩家〉」；強制送出也會被拒絕（`controller-taken`，store 不變）。綁定存在 `localStorage`，重新整理、bridge 重連、手把暫時 stale 都不改變綁定，也不退化成左右或名稱。
+- **大廳的 bridge 連線**：bridge v2 一條 WebSocket 連線最多擁有一支、且只收得到那一支的 frame（bridge 驗證 claim，每支只有一位擁有者，連線結束即釋放）。因此大廳裡：
+  - **主連線**（`controller_ui.js`）只 claim **目前席位**綁定的那一支，照既有 focus／modal routing 操作大廳；
+  - **監聽連線**（`hotseat_ui.js`）：其他每個已綁定、在 server lobby 內的本機席位各開一條 bridge 連線，送 `hello` 後只 claim 該席的精確 controller id（別的連線正擁有、沒有訊號或不在清單時等待，不搶）。frame 沿用 controller_core 的 `classifyBridgeMessage`／`acceptControllerFrame`／`stepControllerInput`（重連與換手把第一筆只當 baseline），只看 reducer 產生的 A，其他鍵一律丟棄、不路由；
+  - 未綁定的 Joy-Con 沒有監聽連線。大廳期間 controller_ui 的單手把自動 claim 暫停，不會搶走綁定流程；開局（或切換席位重新載入）時所有監聽連線關閉。
+  - 主連線看到本分頁監聽連線擁有的手把是 `owner:'other'`；大廳列顯示時視為本分頁的（`withLocalOwners`），顯示綠燈，不誤報「其他分頁使用中」。
+- **大廳按 A**：任何本機席位、任何時候（不論輪次、是否已選陣營或準備）用**自己已綁定**的 Joy-Con 按 A，都會切到自己的席位：記下 `{active: 該席, unlocked: false}` 後整頁重新載入，`/resume` 以該席自己的 `playerId`／`resumeToken` 重新授權（不只切 DOM 或 playerId）；該席未選陣營時自動開啟它自己的「選擇陣營與根據地」，已選則顯示它的大廳狀態。目前席位自己的 Joy-Con 按 A 不切換；它尚未選陣營且視窗沒開時，A 點既有「選擇陣營與根據地」按鈕，之後方向鍵與 A／B 走既有 modal focus routing，選擇送出時一律是目前席位的 `player_id`。
+- **不得代替其他席位**：其他席位的 Joy-Con 除了 A（切到它自己的席位）以外的輸入，都不會操作目前席位（不移焦點、不開視窗、不送出選擇）。未綁定任何本機席位的 Joy-Con（即使被手動選到主連線）一律攔下並顯示「這支 Joy-Con 尚未綁定任何本機席位」，不能切換。目前席位未綁定時（`lobby-bind`），主連線不 claim，任何 Joy-Con 都不能代替它操作，但其他已綁定席位仍可按自己的 A 進入自己的席位。沒有可信大廳狀態時 fail closed（不 claim、不監聽、不切換）。
+- 滑鼠「切換」走同一條重新載入路徑。大廳切換**不解鎖遊戲**：開局後第一位行動者仍要交接確認。
+- **三個身份分開**：displayed viewer（主頁 WebSocket 以哪一席的 token 連線）、controller owner（bridge 判定本分頁擁有的 Joy-Con 及其綁定席位）、authoritative actor（只讀伺服器 state，優先序：`pending_choice.player_id` → `hk_base_relocation_player_id`（須同時 `hk_free_base_relocation`）→ 選基地的 `pending_base_choices` → `current_player`）。交接只由 actor 驅動，不讀 DOM。除錯：`RedlineHotSeat.getState()`。
+- **香港抗暴之戰免費遷移根據地**：窗口開啟時伺服器凍結換人（`current_player` 仍是整輪最後一席），state 以 `hk_base_relocation_player_id` 明確給出要決定的香港玩家（只有 `hk_free_base_relocation` 開啟且唯一找到香港玩家時才有值，否則 `null`；公開資料，每個檢視者相同）。香港席位照一般交接遮罩、以其綁定 Joy-Con 按 A 確認，再以香港 `resumeToken` 重新載入。前端不以陣營猜：旗標關閉時忽略殘留 id；旗標開啟但 id 缺少或不在玩家清單時 fail closed（等待遮罩）。香港不是本機席位時顯示等待遮罩。棄牌等 `pending_choice` 未解決前仍交給該選擇的擁有者；香港「遷移／留在」後窗口關閉，依新 state 交給下一位。
+- **交接遮罩**：actor 換人時（含非本回合玩家的 pending choice、選擇解決後交回），在 render 前先以不透明全螢幕遮罩蓋住舞台，舞台與其他頂層節點 `inert`、鍵盤與所有 Joy-Con 輸入都不穿透，顯示「請交給〈玩家／陣營〉」。遮罩沒有關閉鈕。actor 不是本機席位（遠端玩家、AI 紅軍）或沒有權威狀態時顯示「等待〈玩家〉行動」，也不顯示任何席位畫面。遮罩一出現就鎖住：即使權威回到同一席位也要重新確認。
+- **確認**：本分頁改 claim 該席位綁定的 Joy-Con（bridge 權威：每支一位擁有者），接手者用它按 A。其他 Joy-Con 的 frame 本分頁收不到（也會被 `acceptControllerFrame` 丟棄）；B 等其他鍵不是確認。席位尚未綁定時，遮罩列出可綁定的手把（有訊號、不是其他分頁使用中、沒有綁給其他本機席位），選一支後再用它按 A；綁定的手把不在清單或沒有訊號時才可「更換手把」。
+- **重新連線**：確認後整頁重新載入，主頁 WebSocket 與戰略地圖 iframe 都以該席位自己的 `resumeToken` 重新授權連線，前一席位的 DOM 全部丟棄；新連線的 viewer-scoped state 確認 actor 就是這一席才解除遮罩。行動中重新整理沿用本分頁的確認紀錄（`sessionStorage` `redline.hotseat.session.v1`）；新分頁或沒有紀錄時一律先遮罩要求確認。
+- **顯示時**：只有綁給目前席位的 Joy-Con 能操作（其他手把即使被選取也被攔下）。
 
 ## SL 聚焦選單（兩種顯示模式）
 

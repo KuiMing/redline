@@ -259,19 +259,54 @@ test('auto-claim: remembered controller or exactly one active unowned controller
   for (const bad of [{ mode: 'id', id: 'left' }, { mode: 'steal' }, 'garbage', 7]) assert.deepEqual(C.normalizeClaimPref(bad), { mode: 'none' }, JSON.stringify(bad));
 });
 
-test('HUD names the bound controller identity and side (never a merged status); left players get a key legend', () => {
-  assert.equal(C.controllerLabel(ctrl(L1, 'left')), `左 Joy-Con ${L1}（Joy-Con 2 (L)）`);
-  assert.equal(C.controllerLabel({ id: 'R24800-legacy', side: 'right', name: null, sideSource: 'legacy-default' }), '右 Joy-Con R24800-legacy（未回報名稱，預設右手）');
+// 玩家可見文字不得出現 FTCW UDP 埠（4 位數以上）、名稱指紋（8 位 hex）、legacy、內部 id 開頭、bridge name 的 (L)/(R)、endpoint。
+const LEAK = /\d{4,}|[0-9a-f]{8}|legacy|[LR]\d|\((?:L|R)\)|127\.0\.0\.1|埠/;
+
+test('HUD names the bound controller by side only, with a stable per-side number from the current roster (no port / id / fingerprint)', () => {
+  const one = [ctrl(L1, 'left'), ctrl(R1, 'right')];
+  assert.equal(C.controllerLabel(ctrl(L1, 'left'), one), '左 Joy-Con');
+  assert.equal(C.controllerLabel(ctrl(R1, 'right'), one), '右 Joy-Con');
+  assert.equal(C.controllerLabel(ctrl(L1, 'left')), '左 Joy-Con'); // 沒有 roster 也只回左右
+  // 同側多支：依目前 roster 的埠號（同埠依完整 id）排序給序號；與 roster 順序無關
+  const two = [ctrl(L2, 'left'), ctrl(R1, 'right'), ctrl(L1, 'left')];
+  assert.equal(C.controllerLabel(ctrl(L1, 'left'), two), '左 Joy-Con 1');
+  assert.equal(C.controllerLabel(ctrl(L2, 'left'), two), '左 Joy-Con 2');
+  assert.equal(C.controllerLabel(ctrl(L2, 'left'), [...two].reverse()), '左 Joy-Con 2');
+  assert.equal(C.controllerLabel(ctrl(R1, 'right'), two), '右 Joy-Con');
+  assert.equal(C.controllerLabel({ id: 'R24800-legacy', side: 'right', name: null, sideSource: 'legacy-default' }, [{ id: 'R24800-legacy', side: 'right' }]),
+    '右 Joy-Con（未回報名稱，預設右手）');
   assert.equal(C.controllerLabel({ id: C.LEGACY_CONTROLLER_ID, side: 'right' }), '右 Joy-Con（舊版 bridge 相容）');
-  assert.equal(C.bindingBadge({ owned: L1, side: 'left' }), '左 24801');
-  assert.equal(C.bindingBadge({ owned: R1, side: 'right' }), '右 24800');
-  assert.equal(C.bindingBadge({ owned: C.LEGACY_CONTROLLER_ID, side: 'right' }), '右');
+  assert.equal(C.bindingBadge({ owned: L1, side: 'left' }, one), '左 Joy-Con');
+  assert.equal(C.bindingBadge({ owned: L2, side: 'left' }, two), '左 Joy-Con 2');
+  assert.equal(C.bindingBadge({ owned: R1, side: 'right' }, two), '右 Joy-Con');
+  assert.equal(C.bindingBadge({ owned: R1, side: 'right' }), '右 Joy-Con');
+  assert.equal(C.bindingBadge({ owned: C.LEGACY_CONTROLLER_ID, side: 'right' }), '右 Joy-Con');
   assert.equal(C.bindingBadge({ owned: null, side: null }), '');
+  for (const label of [...two.map(c => C.controllerLabel(c, two)), ...two.map(c => C.bindingBadge({ owned: c.id, side: c.side }, two)),
+    C.controllerLabel({ id: 'R24800-legacy', side: 'right', sideSource: 'legacy-default' }), C.lostReasonText('replaced'), C.lostReasonText('unidentified')]) {
+    assert.doesNotMatch(label, LEAK, label);
+  }
   const legend = C.sideKeyLegend('left');
   for (const pair of ['→＝A', '↓＝B', '↑＝X', '←＝Y', 'L＝R', 'ZL＝ZR', '−＝+', 'SR＝SL', 'SL＝SR']) assert.ok(legend.includes(pair), pair);
   assert.equal(C.sideKeyLegend('right'), null);
   assert.equal(C.claimReasonText('claimed'), '這支手把已被其他玩家使用');
-  assert.equal(C.lostReasonText('replaced'), '原本的手把已被同一埠的另一支裝置取代');
+  assert.equal(C.lostReasonText('replaced'), '原本的手把已被另一支裝置取代');
+});
+
+test('HUD and hot-seat lobby number the same roster identically (one shared naming rule)', () => {
+  const H = require('../../../static/hotseat_core.js');
+  const sets = [
+    [L1, R1], [L2, L1, R1], ['R9-01234567', R1, 'R24801-aaaabbbb'], ['L24801-ffffffff', L1], ['R24800-legacy', 'R24802-11112222'], [],
+  ];
+  for (const ids of sets) {
+    const controllers = ids.map(id => ({ id, side: id[0] === 'L' ? 'left' : 'right' }));
+    assert.deepEqual(C.controllerDisplayNames(ids), H.controllerDisplayNames(ids), ids.join(','));
+    const lobbyLabel = H.controllerNames(controllers);
+    for (const c of controllers) {
+      assert.equal(C.bindingBadge({ owned: c.id, side: c.side }, controllers), lobbyLabel(c.id), c.id);
+      assert.equal(C.controllerLabel(c, controllers), lobbyLabel(c.id), c.id);
+    }
+  }
 });
 
 test('unbound (v2 bridge connected, no controller claimed) drops all input and hides shortcuts', () => {
