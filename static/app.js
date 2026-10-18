@@ -45,14 +45,28 @@ const selectedPurchaseIndices = new Set();
 // 自己回合主動點「行動」不會取消任何東西，白白浪費這張卡，因此手牌區直接 disable。
 const REACTION_ONLY_ACTION_CARDS = new Set(['爆料黑幕', '產業滲透']);
 
+// 客廳大螢幕模式（html[data-display="living-room"]）：舞台等比縮放後再留 5% title-safe 邊界；
+// 桌面模式維持 1。
+const LIVING_ROOM_SAFE_AREA_SCALE = 0.9;
+
 function resizeStage() {
+  const safeArea = document.documentElement.dataset.display === 'living-room' ? LIVING_ROOM_SAFE_AREA_SCALE : 1;
   const scale = Math.min(
     window.innerWidth / 1280,
     window.innerHeight / 720
-  );
+  ) * safeArea;
   document.documentElement.style.setProperty('--stage-scale', String(scale));
   document.documentElement.style.setProperty('--stage-left', `${Math.max(0, (window.innerWidth - 1280 * scale) / 2)}px`);
   document.documentElement.style.setProperty('--stage-top', `${Math.max(0, (window.innerHeight - 720 * scale) / 2)}px`);
+}
+
+function layoutGameShell() {
+  const hud = document.getElementById('hud');
+  const gameShell = document.getElementById('gameShell');
+  if (!hud || !gameShell) return;
+  const contentTop = hud.offsetTop + hud.offsetHeight + 8;
+  gameShell.style.top = `${contentTop}px`;
+  gameShell.style.height = `${Math.max(0, 720 - contentTop)}px`;
 }
 
 function playerInitialFromInput(name) {
@@ -78,17 +92,37 @@ function storedRedlineSessions() {
   }
 }
 
-function saveRedlineSession(name = '') {
+// 「你的行動代號」仍是系統預設：欄位值等於 HTML 預設值（host）或空白，且使用者從未在欄位輸入過。
+// 使用者自行輸入的（即使也是 host）一律是自訂名稱：userEdited '1'＝剛輸入、'used'＝輸入的名稱已用於某個席位。
+function playerNameIsSystemDefault() {
+  const input = document.getElementById('playerName');
+  if (!input || input.dataset.userEdited) return false;
+  const value = input.value.trim();
+  return value === '' || value === input.defaultValue.trim();
+}
+
+// 輸入的行動代號已用於這個席位：之後客廳輪流「新增本機玩家」若沒有再輸入就用自動代號；它仍不會被當成系統預設。
+function markPlayerNameUsed() {
+  const input = document.getElementById('playerName');
+  if (input?.dataset.userEdited) input.dataset.userEdited = 'used';
+}
+
+// nameAuto：送出時行動代號是否為系統預設（客廳輪流據此把本機席位命名為 P1～P4）；未提供＝沿用同一席位先前的紀錄。
+function saveRedlineSession(name = '', nameAuto) {
   if (!gameId || !playerId || !resumeToken) return;
   const sessions = storedRedlineSessions();
+  const previous = sessions[gameId];
   sessions[gameId] = {
     game_id: gameId,
     player_id: playerId,
     resume_token: resumeToken,
     name: String(name || document.getElementById('playerName')?.value || '').trim(),
+    name_auto: typeof nameAuto === 'boolean' ? nameAuto : (previous?.player_id === playerId && previous?.name_auto === true),
     saved_at: Date.now(),
   };
   localStorage.setItem(REDLINE_SESSIONS_KEY, JSON.stringify(sessions));
+  // 客廳輪流（hot-seat）啟用時另外記住這個席位（同 player_id 只更新 token，不覆寫其他本機席位）。
+  window.RedlineHotSeat?.rememberSeat?.(gameId, playerId, resumeToken, sessions[gameId].name, sessions[gameId].name_auto);
 }
 
 function latestRedlineSession() {
@@ -195,6 +229,8 @@ function renderLobbyRoster(lobbyRes, statusText = null) {
 
   roster.innerHTML = cards + aiSeatCard + emptyCards;
   updateLobbyActionControls(lobbyRes);
+  // 客廳輪流（hot-seat）：大廳席位列與各席 Joy-Con 監聽只依這份 server /lobby 公開資料重算。
+  window.RedlineHotSeat?.onLobbyState?.();
   if (hint) {
     if (statusText) lobbyTransientStatus = statusText;
     const transient = lobbyTransientStatus;
@@ -547,7 +583,9 @@ function initProofSessionFromUrl() {
 }
 
 async function resumeStoredGame() {
-  const saved = latestRedlineSession();
+  // 客廳輪流（hot-seat）：以本分頁已確認（或正在交接）的席位恢復，各席位用自己的 resumeToken。
+  const hotSeat = window.RedlineHotSeat?.resumeTarget?.(latestRedlineSession()) || null;
+  const saved = hotSeat || latestRedlineSession();
   if (!saved) return false;
   const res = await fetch('/resume', {
     method: 'POST',
@@ -573,7 +611,8 @@ async function resumeStoredGame() {
   const nameInput = document.getElementById('playerName');
   if (roomInput) roomInput.value = gameId;
   if (nameInput && data.name) nameInput.value = data.name;
-  saveRedlineSession(data.name);
+  // hot-seat 換席位不改寫單席位的 session 紀錄（席位清單由 hotseat_ui.js 保存）。
+  if (!hotSeat) saveRedlineSession(data.name);
   if (data.started) {
     connect({reconnect: true});
   } else {
@@ -609,6 +648,7 @@ async function initLobbyControls() {
   if (nameInput && nameInput.dataset.bound !== '1') {
     nameInput.dataset.bound = '1';
     nameInput.addEventListener('input', () => {
+      nameInput.dataset.userEdited = '1';
       lobbyTransientStatus = null;
       updateLobbyStatus();
     });
@@ -623,8 +663,23 @@ async function initLobbyControls() {
   updateLobbyStatus();
   updateLobbyActionControls();
   syncLobbyRoomCode();
-  if (!startFresh) await resumeStoredGame();
+  try {
+    if (!startFresh) await resumeStoredGame();
+  } finally {
+    // 沒有進入遊戲（大廳）就沒有私密畫面：客廳輪流的預先遮罩解除。
+    if (!ws) window.RedlineHotSeat?.onLobby?.();
+  }
 }
+
+// 客廳輪流（hot-seat，hotseat_ui.js）：讀目前席位與大廳狀態。
+// 換席位（大廳與遊戲中）一律由 hotseat_ui.js 整頁重新載入，resumeStoredGame 以該席位 resumeToken 重新授權（不只切 DOM）。
+window.RedlineSession = {
+  current: () => {
+    const saved = gameId ? storedRedlineSessions()[gameId] : null;
+    const nameAuto = !!saved && saved.player_id === playerId && saved.name_auto === true;
+    return {gameId, playerId, resumeToken, started: !!ws, lobby: latestLobbyState, nameAuto};
+  },
+};
 
 async function setActiveGameView(view) {
   const tabs = document.querySelectorAll('.game-tab');
@@ -673,6 +728,7 @@ async function createRoom() {
   // 建房也要帶「行動代號」：/create 之前不吃名字、建房者永遠叫 host
   //（2026-07-18 自動桌測發現，2026-07-19 修正）。
   const creatorName = (document.getElementById('playerName')?.value || '').trim();
+  const nameAuto = playerNameIsSystemDefault();
   const res = await fetch('/create', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -683,7 +739,8 @@ async function createRoom() {
   playerId = data.host_id;
   resumeToken = data.resume_token;
   latestLobbyState = null;
-  saveRedlineSession(creatorName);
+  saveRedlineSession(creatorName, nameAuto);
+  markPlayerNameUsed();
   const roomInput = document.getElementById('roomId');
   if (roomInput) {
     roomInput.value = gameId;
@@ -1481,6 +1538,7 @@ async function joinRoom() {
     return;
   }
   const name = document.getElementById('playerName').value;
+  const nameAuto = playerNameIsSystemDefault();
 
   const savedSession = storedRedlineSessions()[gameId] || null;
   const payload = {game_id: gameId, name, device_id: redlineDeviceId()};
@@ -1507,7 +1565,8 @@ async function joinRoom() {
   playerId = data.player_id;
   resumeToken = data.resume_token;
   latestLobbyState = null;
-  saveRedlineSession(name);
+  saveRedlineSession(name, nameAuto);
+  markPlayerNameUsed();
   await loadFactions();
   startLobbySync();
   await openFactionPickerModal();
@@ -1573,6 +1632,8 @@ function connect(options = {}) {
     clearTimeout(wsReconnectTimer);
     wsReconnectTimer = null;
   }
+  // 客廳輪流：本機 hot-seat 席位在第一份 state 確認行動者之前一律遮住；其他遊戲不介入。
+  window.RedlineHotSeat?.onConnect?.(gameId, playerId);
   ws = resumeToken ? new WebSocket(websocketUrl(), resumeToken) : new WebSocket(websocketUrl());
 
   ws.onopen = () => {
@@ -1584,6 +1645,8 @@ function connect(options = {}) {
   ws.onmessage = async (event) => {
     const state = JSON.parse(event.data);
     window.lastGameState = state;
+    // 客廳輪流：依伺服器權威行動者先套用交接遮罩，再 render（遮罩在畫面更新前就位）。
+    window.RedlineHotSeat?.onState?.(state, gameId, playerId);
     await render(state);
     syncStrategicMap(state);
   };
@@ -2978,7 +3041,7 @@ function openEthnicRitualGuessModal() {
 
 function strategicMapUrl() {
   const url = new URL('/static/leaflet_game_map.html', window.location.origin);
-  url.searchParams.set('v', 'contextual-route-highlight-20261004');
+  url.searchParams.set('v', 'map-projection-guard-20261006');
   if (gameId) url.searchParams.set('gameId', gameId);
   if (playerId) url.searchParams.set('playerId', playerId);
   return url.toString();
@@ -4509,11 +4572,7 @@ async function render(state) {
       topdeckBtn.title = candidateCount === 0 ? '本回合尚未購買可頂的牌' : '';
     }
 
-    if (gameShell && hud) {
-      const contentTop = hud.offsetTop + hud.offsetHeight + 8;
-      gameShell.style.top = `${contentTop}px`;
-      gameShell.style.height = `${Math.max(0, 720 - contentTop)}px`;
-    }
+    if (gameShell && hud) layoutGameShell();
   }
 
   // ✅ 地圖節點不在 render 中重建

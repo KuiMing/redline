@@ -3529,6 +3529,18 @@ class Game(CardPlayMixin):
         faction = self.faction_by_id.get('hong_kong', {})
         return [b.get('name') for b in (faction.get('bases') or []) if isinstance(b, dict) and b.get('type') == 'relocatable']
 
+    def _hk_base_relocation_player_id(self):
+        """Seat that must decide the free relocation while the window is open (public; None otherwise).
+
+        Clients (hot-seat handoff) need the authoritative decider: the window freezes the
+        seat handoff, so current_player is still the round's last seat. Fails closed to None
+        unless exactly one Hong Kong player exists.
+        """
+        if not getattr(self, 'hk_free_base_relocation', False):
+            return None
+        hong_kong = [p for p in self.players if getattr(p, 'faction_id', None) == 'hong_kong']
+        return hong_kong[0].id if len(hong_kong) == 1 else None
+
     def _open_hong_kong_base_relocation_window(self):
         self.hk_free_base_relocation = True
         self.log('香港抗暴之戰已結算：香港可於下一回合開始前免費遷移根據地（臺北/倫敦/卡加利/多倫多）')
@@ -4621,6 +4633,7 @@ class Game(CardPlayMixin):
                 "status": dict(getattr(self, "ai_red_army_status", None) or {"state": "idle"}),
             },
             "hk_free_base_relocation": bool(getattr(self, 'hk_free_base_relocation', False)),
+            "hk_base_relocation_player_id": self._hk_base_relocation_player_id(),
             "current_player": self.current_player().name,
             "active_eras": self.era_engine.get_active_eras() if self.era_engine else [],
             "active_era_details": active_era_details,

@@ -1,0 +1,37 @@
+{
+  "_doc": "左右 Joy-Con 實體輸入 → 共用邏輯 layout（既有右 Joy-Con 的 [b0, b1]）。逐字取自規格表與已知 FTCW 封包參考，不由實作推導；Python（bridge 正規化）與 JS（瀏覽器解碼、桌面／客廳 parity）共用。packet_offset＝S2B1 封包內的絕對 byte offset（u32 buttons 從 offset 8 起，little-endian）。",
+  "logical_bits": {
+    "A": [0, "0x08"], "B": [0, "0x04"], "X": [0, "0x02"], "Y": [0, "0x01"],
+    "SL": [0, "0x20"], "SR": [0, "0x10"], "R": [0, "0x40"], "ZR": [0, "0x80"],
+    "PLUS": [1, "0x02"], "STICK": [1, "0x04"], "HOME": [1, "0x10"], "CAPTURE": [1, "0x40"]
+  },
+  "sticks": {
+    "left": {"x_offset": 12, "y_offset": 16, "ftcw_up_is_positive": true, "deadzone": 0.15},
+    "right": {"x_offset": 20, "y_offset": 24, "ftcw_up_is_positive": true}
+  },
+  "inputs": [
+    {"side": "left", "physical": "Up", "packet_offset": 10, "mask": "0x02", "logical": "X", "right_equivalent": "X"},
+    {"side": "left", "physical": "Right", "packet_offset": 10, "mask": "0x04", "logical": "A", "right_equivalent": "A"},
+    {"side": "left", "physical": "Down", "packet_offset": 10, "mask": "0x01", "logical": "B", "right_equivalent": "B"},
+    {"side": "left", "physical": "Left", "packet_offset": 10, "mask": "0x08", "logical": "Y", "right_equivalent": "Y"},
+    {"side": "left", "physical": "Stick press", "packet_offset": 9, "mask": "0x08", "logical": "STICK", "right_equivalent": "Stick press"},
+    {"side": "left", "physical": "L", "packet_offset": 10, "mask": "0x40", "logical": "R", "right_equivalent": "R"},
+    {"side": "left", "physical": "ZL", "packet_offset": 10, "mask": "0x80", "logical": "ZR", "right_equivalent": "ZR"},
+    {"side": "left", "physical": "-", "packet_offset": 9, "mask": "0x01", "logical": "PLUS", "right_equivalent": "+"},
+    {"side": "left", "physical": "Capture", "packet_offset": 9, "mask": "0x20", "logical": "CAPTURE", "right_equivalent": "Capture"},
+    {"side": "left", "physical": "SR", "packet_offset": 10, "mask": "0x10", "logical": "SL", "right_equivalent": "SL"},
+    {"side": "left", "physical": "SL", "packet_offset": 10, "mask": "0x20", "logical": "SR", "right_equivalent": "SR"},
+    {"side": "right", "physical": "Y", "packet_offset": 8, "mask": "0x01", "logical": "Y"},
+    {"side": "right", "physical": "X", "packet_offset": 8, "mask": "0x02", "logical": "X"},
+    {"side": "right", "physical": "B", "packet_offset": 8, "mask": "0x04", "logical": "B"},
+    {"side": "right", "physical": "A", "packet_offset": 8, "mask": "0x08", "logical": "A"},
+    {"side": "right", "physical": "SR", "packet_offset": 8, "mask": "0x10", "logical": "SR"},
+    {"side": "right", "physical": "SL", "packet_offset": 8, "mask": "0x20", "logical": "SL"},
+    {"side": "right", "physical": "R", "packet_offset": 8, "mask": "0x40", "logical": "R"},
+    {"side": "right", "physical": "ZR", "packet_offset": 8, "mask": "0x80", "logical": "ZR"},
+    {"side": "right", "physical": "+", "packet_offset": 9, "mask": "0x02", "logical": "PLUS"},
+    {"side": "right", "physical": "Stick press", "packet_offset": 9, "mask": "0x04", "logical": "STICK"},
+    {"side": "right", "physical": "HOME", "packet_offset": 9, "mask": "0x10", "logical": "HOME"},
+    {"side": "right", "physical": "Capture", "packet_offset": 9, "mask": "0x40", "logical": "CAPTURE"}
+  ]
+}

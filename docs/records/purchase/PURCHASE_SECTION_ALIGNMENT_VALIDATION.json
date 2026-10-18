@@ -1,11 +1,11 @@
 {
   "setup": {
-    "game_id": "1692bfde-653c-48fd-8aed-49b3d66171b0",
-    "player_id": "f9409145-050e-4616-a8ec-4b5916457aec"
+    "game_id": "49d5dde1-b5e2-4ae8-b742-80aeca43da68",
+    "player_id": "67b09895-a752-4060-8f5c-f873ab329708"
   },
   "summary": {
-    "total": 5,
-    "passed": 5,
+    "total": 6,
+    "passed": 6,
     "failed": 0
   },
   "results": [
@@ -36,7 +36,7 @@
           197.328125,
           197.328125
         ],
-        "base_selection_panel_display": "block"
+        "base_selection_panel_display": "none"
       }
     },
     {
@@ -105,6 +105,74 @@
         "focus_pointer_events": "none",
         "selected_overlay_display": "block",
         "button_background": "rgb(21, 128, 61)"
+      }
+    },
+    {
+      "name": "living_room_keeps_three_rows_without_scrollbars_or_focus_glow",
+      "ok": true,
+      "detail": {
+        "boxes": {
+          "randomMarketPanel": {
+            "x": 6,
+            "y": 114,
+            "width": 1268,
+            "height": 170.65625
+          },
+          "controlPanel": {
+            "x": 6,
+            "y": 290.65625,
+            "width": 1268,
+            "height": 170.671875
+          },
+          "handPanel": {
+            "x": 6,
+            "y": 467.328125,
+            "width": 1268,
+            "height": 170.671875
+          }
+        },
+        "rows": {
+          "purchaseRandom": {
+            "client_width": 1250,
+            "scroll_width": 1250,
+            "overflow_x": "hidden",
+            "has_horizontal_overflow": false
+          },
+          "purchaseStatic": {
+            "client_width": 1250,
+            "scroll_width": 1250,
+            "overflow_x": "hidden",
+            "has_horizontal_overflow": false
+          },
+          "hand": {
+            "client_width": 1250,
+            "scroll_width": 1250,
+            "overflow_x": "hidden",
+            "has_horizontal_overflow": false
+          }
+        },
+        "controls_outside_panel": [
+          {
+            "selector": "#purchaseRandom .purchase-card-select-button",
+            "count": 5,
+            "outside": 0
+          },
+          {
+            "selector": "#purchaseStatic .purchase-card-select-button",
+            "count": 6,
+            "outside": 0
+          },
+          {
+            "selector": "#hand .hand-card-action-btn",
+            "count": 10,
+            "outside": 0
+          }
+        ],
+        "focus_background": "rgba(255, 216, 61, 0.16)",
+        "focus_outline": "none",
+        "focus_shadow": "rgba(0, 0, 0, 0.34) 0px 12px 32px 0px",
+        "peer_outline": "none",
+        "peer_shadow": "rgba(0, 0, 0, 0.34) 0px 12px 32px 0px"
       }
     }
   ],

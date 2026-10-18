@@ -32,22 +32,50 @@ def post(path: str, payload: dict) -> dict:
 
 
 def validate_page(page) -> dict:
-    setup = post('/test/force-base-selection', {
-        'faction_ids': ['red_army', 'hong_kong'],
-        'player_names': ['玩家1', '玩家2'],
-        'bases': {'p1': ['北京'], 'p2': ['香港城']},
+    created = post('/create', {})
+    game_id = created['game_id']
+    host_id = created['host_id']
+    joined = post('/join', {'game_id': game_id, 'name': '香港'})
+    player_id = joined['player_id']
+    for pid, faction_id, base_name in (
+        (host_id, 'red_army', '北京'),
+        (player_id, 'hong_kong', '香港城'),
+    ):
+        chosen = post('/choose-faction', {
+            'game_id': game_id,
+            'player_id': pid,
+            'faction_id': faction_id,
+            'base_name': base_name,
+        })
+        if chosen.get('error'):
+            raise AssertionError(chosen)
+        ready = post('/ready', {'game_id': game_id, 'player_id': pid, 'ready': True})
+        if ready.get('error'):
+            raise AssertionError(ready)
+    started = post('/start', {'game_id': game_id, 'player_id': host_id, 'market_mode': 'sample_53'})
+    if started.get('error'):
+        raise AssertionError(started)
+    prepared = post('/test/set-hand', {
+        'game_id': game_id,
+        'player_id': player_id,
+        'cards': ['追隨者', '樂捐者', '追隨者', '樂捐者', '宣傳家'],
+        'turn_phase': 'action',
+        'set_current_player': True,
     })
-    game_id = setup['game_id']
-    player_id = setup['players'][0]['id']
+    if prepared.get('error'):
+        raise AssertionError(prepared)
 
-    page.goto(BASE_URL + '/', wait_until='networkidle')
-    page.evaluate(
-        "([gameIdValue, playerIdValue]) => { gameId = gameIdValue; playerId = playerIdValue; connect(); }",
-        [game_id, player_id],
+    page.goto(
+        f"{BASE_URL}/?game_id={game_id}&player_id={player_id}&resume_token={joined.get('resume_token', '')}&v=alignment",
+        wait_until='networkidle',
     )
     page.wait_for_selector('#purchaseSection .panel-title', timeout=10000)
     page.wait_for_selector('#randomMarketPanel .panel-title', timeout=10000)
     page.wait_for_timeout(600)
+    event_reveal = page.locator('#eventRevealModal')
+    if event_reveal.count() and event_reveal.is_visible():
+        page.evaluate('closeEventReveal()')
+        page.wait_for_timeout(250)
 
     random_panel_box = page.locator('#randomMarketPanel').bounding_box()
     static_panel_box = page.locator('#controlPanel').bounding_box()
@@ -109,6 +137,52 @@ def validate_page(page) -> dict:
 
     page.screenshot(path=str(SCREENSHOT), full_page=True)
 
+    living_room_layout = page.evaluate("""() => {
+      document.documentElement.dataset.display = 'living-room';
+      const panelIds = ['randomMarketPanel', 'controlPanel', 'handPanel'];
+      const boxes = Object.fromEntries(panelIds.map((id) => {
+        const rect = document.getElementById(id).getBoundingClientRect();
+        return [id, {x: rect.x, y: rect.y, width: rect.width, height: rect.height}];
+      }));
+      const rows = Object.fromEntries(['purchaseRandom', 'purchaseStatic', 'hand'].map((id) => {
+        const el = document.getElementById(id);
+        return [id, {
+          client_width: el.clientWidth,
+          scroll_width: el.scrollWidth,
+          overflow_x: getComputedStyle(el).overflowX,
+          has_horizontal_overflow: el.scrollWidth > el.clientWidth,
+        }];
+      }));
+      const controls_outside_panel = [
+        ['#purchaseRandom .purchase-card-select-button', 'randomMarketPanel'],
+        ['#purchaseStatic .purchase-card-select-button', 'controlPanel'],
+        ['#hand .hand-card-action-btn', 'handPanel'],
+      ].map(([selector, panelId]) => {
+        const panel = document.getElementById(panelId).getBoundingClientRect();
+        const controls = [...document.querySelectorAll(selector)];
+        return {
+          selector,
+          count: controls.length,
+          outside: controls.filter((el) => {
+            const r = el.getBoundingClientRect();
+            return r.height < 5 || r.bottom > panel.bottom + 0.5 || r.right > innerWidth + 0.5;
+          }).length,
+        };
+      });
+      const focusCard = document.querySelector('#purchaseStatic .card');
+      const peerCard = [...document.querySelectorAll('#purchaseStatic .card')].find((card) => card !== focusCard);
+      return {
+        boxes,
+        rows,
+        controls_outside_panel,
+        focus_background: focusCard ? getComputedStyle(focusCard, '::after').backgroundColor : null,
+        focus_outline: focusCard ? getComputedStyle(focusCard).outlineStyle : null,
+        focus_shadow: focusCard ? getComputedStyle(focusCard).boxShadow : null,
+        peer_outline: peerCard ? getComputedStyle(peerCard).outlineStyle : null,
+        peer_shadow: peerCard ? getComputedStyle(peerCard).boxShadow : null,
+      };
+    }""")
+
     results = [
         {
             'name': 'command_centre_uses_equal_random_static_hand_rows',
@@ -153,6 +227,23 @@ def validate_page(page) -> dict:
                 and focus_visual['button_background'] == 'rgb(21, 128, 61)'
             ),
             'detail': focus_visual,
+        },
+        {
+            'name': 'living_room_keeps_three_rows_without_scrollbars_or_focus_glow',
+            'ok': bool(
+                living_room_layout['boxes']['randomMarketPanel']['y']
+                < living_room_layout['boxes']['controlPanel']['y']
+                < living_room_layout['boxes']['handPanel']['y']
+                and all(
+                    not detail['has_horizontal_overflow'] and detail['overflow_x'] == 'hidden'
+                    for detail in living_room_layout['rows'].values()
+                )
+                and all(c['count'] > 0 and c['outside'] == 0 for c in living_room_layout['controls_outside_panel'])
+                and living_room_layout['focus_background'] == 'rgba(255, 216, 61, 0.16)'
+                and living_room_layout['focus_outline'] == living_room_layout['peer_outline']
+                and living_room_layout['focus_shadow'] == living_room_layout['peer_shadow']
+            ),
+            'detail': living_room_layout,
         },
     ]
 

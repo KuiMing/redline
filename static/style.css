@@ -3843,3 +3843,175 @@ body.victory-art-viewer-open {
     white-space: normal;
   }
 }
+
+/* ---- Joy-Con／搖桿控制（controller_ui.js）：高對比焦點、不改版面尺寸 ---- */
+.rl-pad-focus:not(.card) {
+  outline: 4px solid #ffe14d !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 2px #000, 0 0 16px 4px rgba(255, 225, 77, 0.75) !important;
+  position: relative;
+  z-index: 3;
+}
+#padHud { position: absolute; right: 8px; bottom: 6px; z-index: 90; display: flex; align-items: center; gap: 6px; flex-direction: row-reverse; font-size: 12px; }
+#padToggleBtn { width: 28px; height: 28px; padding: 0; border-radius: 14px; border: 1px solid rgba(255,255,255,0.35); background: rgba(10,16,32,0.82); color: #fff; cursor: pointer; line-height: 1; font-size: 14px; opacity: 0.7; }
+#padToggleBtn:hover, #padHud[data-status="connected"] #padToggleBtn { opacity: 1; }
+#padHud[data-status="connected"] #padToggleBtn { border-color: #4ade80; }
+#padHud[data-status="error"] #padToggleBtn, #padHud[data-status="stale"] #padToggleBtn { border-color: #f87171; }
+#padHint { padding: 4px 10px; border-radius: 12px; background: rgba(10,16,32,0.9); color: #f1f5f9; border: 1px solid rgba(255,225,77,0.55); white-space: nowrap; pointer-events: none; }
+#padPanel { position: absolute; right: 0; bottom: 34px; width: 300px; padding: 10px 12px; border-radius: 10px; background: rgba(10,16,32,0.97); border: 1px solid rgba(255,255,255,0.3); color: #e2e8f0; display: flex; flex-direction: column; gap: 6px; }
+#padPanel[hidden], #padHint[hidden], #padButtonRing[hidden], .pad-note[hidden] { display: none !important; }
+#padPanel .pad-row { display: flex; flex-direction: column; gap: 3px; }
+#padPanel .pad-row:first-child { flex-direction: row; align-items: center; gap: 6px; }
+#padPanel .pad-actions { flex-direction: row; gap: 6px; }
+#padPanel input[type="text"] { width: 100%; box-sizing: border-box; padding: 4px 6px; background: #0b1220; color: #fff; border: 1px solid #475569; border-radius: 4px; }
+#padPanel select { width: 100%; box-sizing: border-box; padding: 4px 6px; background: #0b1220; color: #fff; border: 1px solid #475569; border-radius: 4px; }
+#padHud[data-status="unbound"] #padToggleBtn { border-color: #facc15; }
+#padPanel button { padding: 4px 10px; border-radius: 4px; border: 1px solid #64748b; background: #1e293b; color: #fff; cursor: pointer; }
+.pad-note { color: #94a3b8; font-size: 11px; line-height: 1.4; }
+.pad-error { color: #fca5a5; }
+#padButtonRing { position: absolute; z-index: 80; pointer-events: none; outline: 4px solid #ffe14d; outline-offset: 2px; box-shadow: 0 0 0 2px #000, 0 0 16px 4px rgba(255,225,77,0.75); border-radius: 4px; }
+/* 桌面模式也用同一張危險確認單（Capture 結束行動）：沿用既有 modal 外觀，只補按鈕列與危險色（客廳模式樣式在下方區段） */
+html:not([data-display="living-room"]) .lr-confirm-overlay { z-index: 85; }
+html:not([data-display="living-room"]) .lr-confirm-glass { border: 2px solid #fca5a5; }
+html:not([data-display="living-room"]) .lr-confirm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+html:not([data-display="living-room"]) .lr-confirm-ok { background: #b91c1c; border-color: #fecaca; color: #ffffff; }
+/* SL 聚焦選單（兩種顯示模式共用，controller_living_room.js）：精簡置中 modal；尺寸為 1280×720 設計單位，字級以 55 吋客廳可讀為準 */
+.lr-focus-overlay { z-index: 84; background: rgba(2, 6, 12, 0.72); }
+.lr-focus-glass {
+  width: 820px; max-height: 600px; box-sizing: border-box; padding: 18px 22px; display: flex; flex-direction: column; gap: 10px;
+  border: 2px solid rgba(255, 225, 77, 0.7); font-family: 'Noto Sans TC', sans-serif;
+}
+.lr-focus-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.lr-focus-glass #lrFocusMenuTitle { margin: 0; font-size: 26px; color: #ffe14d; }
+.lr-focus-close {
+  flex: 0 0 auto; width: 44px; height: 44px; padding: 0; border-radius: 10px; border: 1px solid rgba(148, 163, 184, 0.5);
+  background: rgba(17, 24, 39, 0.9); color: #f8fafc; font-size: 26px; line-height: 1; cursor: pointer;
+}
+.lr-focus-close:hover { background: rgba(51, 65, 85, 0.95); }
+.lr-focus-lead { font-size: 17px; line-height: 1.4; color: #e2e8f0; }
+#lrFocusMenuSections { min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 6px; }
+.lr-focus-section-title { margin-bottom: 6px; font-size: 20px; font-weight: 700; color: #bfdbfe; }
+.lr-focus-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.lr-focus-option {
+  display: flex; align-items: baseline; gap: 6px; min-width: 0; min-height: 56px; box-sizing: border-box; padding: 8px 12px;
+  border-radius: 12px; border: 2px solid #334155; background: #0f172a; color: #f8fafc; font-family: inherit; text-align: left; cursor: pointer;
+}
+.lr-focus-option:hover { border-color: #94a3b8; }
+.lr-focus-name { min-width: 0; font-size: 22px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lr-focus-tag { font-size: 16px; color: #fca5a5; white-space: nowrap; }
+.lr-focus-count { margin-left: auto; font-size: 17px; color: #fde68a; white-space: nowrap; }
+.lr-focus-empty { grid-column: 1 / -1; font-size: 17px; color: #94a3b8; }
+.lr-focus-footer { font-size: 16px; color: #fde68a; }
+/* 客廳模式：底部提示列（76px）保持可見，fail-closed 原因與按鍵說明照常顯示；不新增頂部窄條 */
+html[data-display="living-room"] .lr-focus-overlay { height: 644px; }
+
+/* ---- 客廳大螢幕模式（controller_living_room.js）：只在 html[data-display="living-room"] 下生效 ----
+ * 舞台本身已等比縮放並留 5% title-safe 邊界（app.js resizeStage），以下尺寸都是 1280×720 設計單位，
+ * 因此在 720p／1080p／4K 只差銳利度。桌面模式不受影響。 */
+html[data-display="living-room"] #hud { height: 56px; padding: 8px 16px; font-size: 18px; }
+html[data-display="living-room"] .hud-chip { flex: 0 0 auto; min-height: 34px; padding: 3px 12px; font-weight: 600; white-space: nowrap; }
+html[data-display="living-room"] #phaseActionMetaWrap { flex-basis: 360px; max-width: 360px; }
+html[data-display="living-room"] #phaseActionMeta { font-size: 18px; }
+html[data-display="living-room"] #gameTabs { height: 52px; gap: 6px; padding: 6px 12px; overflow: hidden; }
+html[data-display="living-room"] .game-tab { font-size: 17px; font-weight: 600; padding: 7px 12px; }
+html[data-display="living-room"] .phase-action-btn,
+html[data-display="living-room"] .phase-red-army-btn { font-size: 16px; padding: 7px 12px; }
+html[data-display="living-room"] .game-view,
+html[data-display="living-room"] #mapView,
+html[data-display="living-room"] #logView { top: 52px; height: calc(100% - 52px - 76px); }
+html[data-display="living-room"] .panel-title { font-size: 18px; font-weight: 700; color: #bfdbfe; margin-bottom: 4px; }
+html[data-display="living-room"] #purchaseSection .panel-title,
+html[data-display="living-room"] #randomMarketPanel .panel-title { margin-bottom: 4px; }
+
+/* 指揮中心沿用三列半高卡版面。卡牌列不可出現捲軸。 */
+html[data-display="living-room"] #commandGrid {
+  gap: 6px;
+  padding: 6px;
+}
+/* 客廳模式為提示列保留 76px，三列各剩 ~124px：卡牌與其下方按鈕整組等比縮小，確保六張常設卡與按鈕完整顯示、不產生捲軸。 */
+html[data-display="living-room"] #purchaseRandom .purchase-card-item,
+html[data-display="living-room"] #purchaseStatic .purchase-card-item,
+html[data-display="living-room"] #hand .hand-card { zoom: 0.78; }
+html[data-display="living-room"] #purchaseSelectionControls { min-height: 30px; margin: 0 0 3px; gap: 6px; }
+html[data-display="living-room"] #purchaseSelectionSummary,
+html[data-display="living-room"] .purchase-selection-clear-btn,
+html[data-display="living-room"] .purchase-selection-buy-btn,
+html[data-display="living-room"] .purchase-selection-topdeck-btn { font-size: 15px; padding: 4px 9px; min-height: 28px; }
+
+/* 卡面預覽放大到畫面高約 80% */
+html[data-display="living-room"] .card-preview-content { width: 469px; height: 576px; }
+
+/* 區域層焦點框（整區黃框＋大字標籤）；內容層時改為細虛線提示目前所在區域 */
+html[data-display="living-room"] #lrZoneRing {
+  position: absolute; z-index: 45; pointer-events: none; box-sizing: border-box;
+  border: 5px solid #ffe14d; border-radius: 12px; box-shadow: 0 0 0 3px #000, 0 0 24px 6px rgba(255, 225, 77, 0.5);
+}
+html[data-display="living-room"] #lrZoneRing[data-layer="item"] { border-width: 3px; border-style: dashed; box-shadow: 0 0 0 2px #000; }
+html[data-display="living-room"] #lrZoneLabel {
+  position: absolute; left: 8px; top: -16px; padding: 2px 10px; border-radius: 6px;
+  background: #ffe14d; color: #111827; box-shadow: 0 0 0 2px #000;
+  font: 700 18px/1.25 'Noto Sans TC', sans-serif; white-space: nowrap;
+}
+html[data-display="living-room"] #lrZoneRing[data-label-inside="true"] #lrZoneLabel { top: 4px; left: auto; right: 8px; }
+html[data-display="living-room"] #lrZoneRing[data-layer="item"] #lrZoneLabel { font-size: 16px; opacity: 0.92; }
+
+/* 固定按鍵提示列＋controller legend（只顯示、不接受焦點；在 title-safe 內、不遮擋內容：分頁內容高度已扣掉 76px） */
+html[data-display="living-room"] #lrBar {
+  position: absolute; left: 0; bottom: 0; width: 1280px; height: 76px; box-sizing: border-box; z-index: 40;
+  display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: 42px 24px; column-gap: 14px;
+  padding: 5px 52px 5px 16px; background: rgba(3, 6, 12, 0.95); border-top: 2px solid rgba(255, 225, 77, 0.6);
+  color: #f8fafc; pointer-events: none; font-family: 'Noto Sans TC', sans-serif;
+}
+html[data-display="living-room"] #lrBar[hidden],
+html[data-display="living-room"] #lrHelp[hidden],
+html[data-display="living-room"] #lrZoneRing[hidden],
+html[data-display="living-room"] #lrMapPanel[hidden] { display: none !important; }
+html[data-display="living-room"] #lrBarStatus { grid-row: 1; align-self: center; max-width: 330px; font-size: 18px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #bfdbfe; }
+html[data-display="living-room"] #lrBarStatus[data-busy="true"] { color: #fde68a; }
+html[data-display="living-room"] #lrBarStatus[data-alert="true"] { color: #ffffff; background: #b91c1c; padding: 2px 10px; border-radius: 6px; }
+html[data-display="living-room"] #lrHints { grid-row: 1; display: flex; align-items: center; gap: 10px; min-width: 0; overflow: hidden; padding: 0 8px; }
+html[data-display="living-room"] .lr-hint {
+  flex: 0 1 auto; min-width: 0; max-width: 300px; display: flex; align-items: center; gap: 8px; padding: 3px 12px 3px 4px; border-radius: 10px;
+  border: 2px solid #94a3b8; background: #0f172a; color: #f8fafc;
+  font-size: 18px; font-weight: 700; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+html[data-display="living-room"] .lr-hint > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+html[data-display="living-room"] .lr-key {
+  flex: 0 0 auto; min-width: 26px; padding: 0 7px; border-radius: 7px; background: #ffe14d; color: #111827;
+  font: 800 17px/26px 'Noto Sans TC', sans-serif; text-align: center; box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.35);
+}
+html[data-display="living-room"] .lr-hint[data-danger="true"] { background: #b91c1c; border-color: #fecaca; color: #ffffff; }
+html[data-display="living-room"] .lr-hint[data-danger="true"] > span::before { content: "⚠ "; }
+html[data-display="living-room"] .lr-hint-empty { color: #cbd5e1; font-size: 17px; }
+html[data-display="living-room"] #lrLegend { grid-column: 1 / -1; grid-row: 2; font-size: 16px; line-height: 24px; color: #fde68a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html[data-display="living-room"] #padHint { display: none !important; }
+html[data-display="living-room"] #padHud { bottom: 24px; }
+html[data-display="living-room"] #lrHelp {
+  position: absolute; right: 16px; bottom: 84px; z-index: 46; width: 540px; box-sizing: border-box; padding: 12px 16px;
+  border-radius: 12px; border: 2px solid #ffe14d; background: rgba(3, 6, 12, 0.96); color: #f8fafc;
+  font: 500 17px/1.6 'Noto Sans TC', sans-serif; pointer-events: none;
+}
+html[data-display="living-room"] .lr-help-title { font-size: 20px; font-weight: 700; color: #ffe14d; margin-bottom: 4px; }
+
+/* 地圖兩段式目標清單（控制器路徑；滑鼠仍可直接點地圖） */
+html[data-display="living-room"] #lrMapPanel {
+  position: absolute; right: 12px; top: 60px; bottom: 12px; width: 300px; z-index: 5; box-sizing: border-box;
+  display: flex; flex-direction: column; gap: 6px; padding: 10px; border-radius: 12px;
+  border: 2px solid rgba(255, 225, 77, 0.65); background: rgba(3, 6, 12, 0.94); color: #f8fafc; font-family: 'Noto Sans TC', sans-serif;
+}
+html[data-display="living-room"] #lrMapTitle { font-size: 19px; font-weight: 700; color: #ffe14d; }
+html[data-display="living-room"] #lrMapRows { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding: 6px; }
+html[data-display="living-room"] .lr-map-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 6px 10px; border-radius: 8px; background: #0f172a; border: 1px solid #334155; }
+html[data-display="living-room"] .lr-map-town { font-size: 20px; font-weight: 700; }
+html[data-display="living-room"] .lr-map-meta { font-size: 16px; color: #cbd5e1; white-space: nowrap; }
+html[data-display="living-room"] #lrMapFooter { font-size: 16px; line-height: 1.4; color: #fde68a; }
+
+/* 危險操作確認單（預設焦點＝返回） */
+html[data-display="living-room"] .lr-confirm-overlay { z-index: 85; background: rgba(2, 6, 12, 0.78); }
+html[data-display="living-room"] .lr-confirm-glass { width: 600px; padding: 22px; border: 2px solid #fca5a5; }
+html[data-display="living-room"] .lr-confirm-glass .modal-title-text { font-size: 28px; }
+html[data-display="living-room"] .lr-confirm-glass .modal-body-text { font-size: 18px; color: #e2e8f0; }
+html[data-display="living-room"] #lrConfirmInfo { margin: 0 0 16px; padding-left: 22px; font-size: 18px; line-height: 1.6; color: #fde68a; }
+html[data-display="living-room"] .lr-confirm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+html[data-display="living-room"] .lr-confirm-actions button { min-height: 58px; font-size: 21px; font-weight: 700; }
+html[data-display="living-room"] .lr-confirm-ok { background: #b91c1c; border-color: #fecaca; color: #ffffff; }

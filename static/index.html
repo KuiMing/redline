@@ -4,7 +4,10 @@
   <meta charset="UTF-8" />
   <title>REDLINE // STRATEGIC COMMAND</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="/static/style.css?v=half-height-command-centre-20261018-5" />
+  <link rel="stylesheet" href="/static/style.css?v=half-height-command-centre-20261018-7" />
+  <!-- 客廳輪流（hot-seat）：在第一次繪製前就能遮住舞台，所以放在 <head>。 -->
+  <script src="/static/hotseat_core.js?v=hotseat-codename-p1234-20261017"></script>
+  <script src="/static/hotseat_ui.js?v=hotseat-codename-p1234-20261017"></script>
 </head>
 <body>
 <div id="stageViewport">
@@ -113,6 +116,14 @@
         </div>
       </div>
       <div id="lobbyStatusHint" class="lobby-status-hint">先建立作戰室，或貼上房間代碼後進入。</div>
+      <div id="hotseatLobby" class="hotseat-lobby">
+        <label><input id="hotseatEnableChk" type="checkbox"> 客廳輪流（同一台多位玩家）</label>
+        <div id="hotseatLobbyPrompt" class="hs-prompt" aria-live="polite"></div>
+        <div id="hotseatLobbyNotice" class="hs-notice" aria-live="polite"></div>
+        <div id="hotseatSeatList"></div>
+        <button id="hotseatAddSeatBtn" class="lobby-mini-btn" type="button" hidden>新增本機玩家（用上方玩家名稱）</button>
+        <div id="hotseatLobbyHint" class="lobby-field-hint"></div>
+      </div>
     </div>
 
     <div class="lobby-actions">
@@ -379,5 +390,9 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/static/player_messages_zh_tw.js?v=player-message-i18n-20260801"></script>
 <script src="/static/app.js?v=half-height-purchase-ui-20261018"></script>
+<script src="/static/controller_core.js?v=joycon-labels-20261016"></script>
+<script src="/static/living_room_core.js?v=dual-joycon-20261014"></script>
+<script src="/static/controller_ui.js?v=half-height-command-centre-20261018"></script>
+<script src="/static/controller_living_room.js?v=half-height-command-centre-20261018b"></script>
 </body>
 </html>
