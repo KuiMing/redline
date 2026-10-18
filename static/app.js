@@ -1063,9 +1063,10 @@ const SUPPORT_CARD_ART_FILES = {
   '紅軍奧援': ['17_紅軍奧援_起始牌.png'],
 };
 
-function playableCardArtUrl(cardName, variantInfo = null) {
+function playableCardArtUrl(cardName, variantInfo = null, halfHeight = false) {
   const name = String(cardName || '').trim();
   if (!name || !cardPresentation(name)) return '';
+  const artRoot = halfHeight ? '/static/card-art-half-height' : '/static/card-art';
   if (/奧援/.test(name)) {
     const files = SUPPORT_CARD_ART_FILES[name];
     if (!files?.length) return '';
@@ -1074,9 +1075,9 @@ function playableCardArtUrl(cardName, variantInfo = null) {
       : 0;
     const file = files[requestedIndex] || files[0];
     const version = name === '紅軍奧援' ? '?v=action-card-layout-20260811' : '';
-    return `/static/card-art/support/${encodeURIComponent(file)}${version}`;
+    return `${artRoot}/support/${encodeURIComponent(file)}${version}`;
   }
-  return `/static/card-art/actions/${encodeURIComponent(name)}.png?v=head-safe-20260726`;
+  return `${artRoot}/actions/${encodeURIComponent(name)}.png?v=head-safe-20260726`;
 }
 
 function renderCardFace(cardName, zone, isStatic = false, compact = false, countOverride = null, variantInfo = null) {
@@ -1102,7 +1103,7 @@ function renderCardFace(cardName, zone, isStatic = false, compact = false, count
   const meaning = (info.meaning_text && !isSupport) ? `<div class="card-meaning">${escapeHtml(info.meaning_text)}</div>` : '';
   // 只在常設購買區顯示即時剩餘供應；手牌與隨機牌庫的目錄張數不是目前供應量，
   // 而且會遮住完整卡面的購買費用。
-  const countText = isStatic
+  const countText = isStatic && !compact
     ? (countOverride != null ? String(countOverride) : info.count_text)
     : null;
   const count = countText ? `<div class="card-count">剩 ${escapeHtml(countText)}</div>` : '';
@@ -1119,11 +1120,12 @@ function renderCardFace(cardName, zone, isStatic = false, compact = false, count
       ${meaning}
       ${renderBadgeList(badgeItems)}
     </div>`;
-  const artUrl = playableCardArtUrl(cardName, variantInfo);
+  const halfHeight = compact && (zone === 'purchase' || zone === 'hand');
+  const artUrl = playableCardArtUrl(cardName, variantInfo, halfHeight);
   if (!artUrl) return textFace;
   return `
     <div class="card-face card-art-face ${colorClass}${compact ? ' compact' : ''}" style="${colorStyle}">
-      <img class="playable-card-art-image" src="${artUrl}" alt="${escapeHtml(cardName)}完整卡面" decoding="async" onerror="this.parentElement.classList.add('playable-card-art-load-failed')">
+      <img class="playable-card-art-image" src="${artUrl}" alt="${escapeHtml(cardName)}${halfHeight ? '半高' : '完整'}卡面" decoding="async" onerror="this.parentElement.classList.add('playable-card-art-load-failed')">
       ${count}
       <div class="playable-card-art-fallback">${textFace}</div>
     </div>`;
@@ -1718,7 +1720,7 @@ function updatePurchaseSelectionControls(state = window.lastGameState || {}) {
   const selection = purchaseSelectionDetails(state);
   summary.textContent = selection.cards.length
     ? `已選 ${selection.cards.length} 張｜合計 ${purchaseCostText(selection.total)}`
-    : '請勾選要購買的卡牌';
+    : '請選擇要購買的卡牌';
   clearBtn.disabled = selection.cards.length === 0;
   buyBtn.disabled = selection.cards.length === 0 || !selection.affordable;
   buyBtn.textContent = selection.cards.length ? `購買所選 ${selection.cards.length} 張` : '購買所選卡牌';
@@ -1727,17 +1729,30 @@ function updatePurchaseSelectionControls(state = window.lastGameState || {}) {
 
 function togglePurchaseSelection(event, index) {
   event.stopPropagation();
-  if (event.target.checked) selectedPurchaseIndices.add(index);
+  const button = event.currentTarget;
+  if (!(button instanceof HTMLButtonElement) || button.disabled) return;
+  const selected = !selectedPurchaseIndices.has(index);
+  if (selected) selectedPurchaseIndices.add(index);
   else selectedPurchaseIndices.delete(index);
-  const card = event.target.closest('.card');
-  if (card) card.classList.toggle('purchase-card-selected', event.target.checked);
+  const item = button.closest('.purchase-card-item');
+  const card = item?.querySelector('.card');
+  if (card) card.classList.toggle('purchase-card-selected', selected);
+  button.classList.toggle('is-selected', selected);
+  button.setAttribute('aria-pressed', String(selected));
+  const label = button.querySelector('.purchase-card-select-label');
+  if (label) label.textContent = selected ? '取消選擇' : '選擇卡牌';
   updatePurchaseSelectionControls();
 }
 
 function clearPurchaseSelection() {
   selectedPurchaseIndices.clear();
-  document.querySelectorAll('.purchase-card-checkbox input').forEach(input => { input.checked = false; });
   document.querySelectorAll('.purchase-card-selected').forEach(card => card.classList.remove('purchase-card-selected'));
+  document.querySelectorAll('.purchase-card-select-button.is-selected').forEach(button => {
+    button.classList.remove('is-selected');
+    button.setAttribute('aria-pressed', 'false');
+    const label = button.querySelector('.purchase-card-select-label');
+    if (label) label.textContent = '選擇卡牌';
+  });
   updatePurchaseSelectionControls();
 }
 
@@ -4630,15 +4645,27 @@ async function render(state) {
               ? '請先處理目前待選擇效果。'
               : isStatic && (staticSupply == null || staticSupply <= 0)
                 ? '常設供應已售完'
-                : `勾選此卡（${costText}）`;
+                : `選擇此卡（${costText}）`;
       const variantInfo = (state.purchase_area_variants || [])[i] || null;
-      const isSelected = selectedPurchaseIndices.has(i);
+      let isSelected = selectedPurchaseIndices.has(i);
+      if (isSelected && !canSelect) {
+        selectedPurchaseIndices.delete(i);
+        isSelected = false;
+      }
+      const buttonLabel = canSelect ? (isSelected ? '取消選擇' : '選擇卡牌') : '不可選擇';
+      const remainingHtml = isStatic
+        ? `<span class="purchase-card-remaining">剩 ${escapeHtml(staticSupply ?? 0)}</span>`
+        : '';
       container.innerHTML += `
-        <div class='card ${typeClass}${supportClass} ${colorClass}${isSelected ? ' purchase-card-selected' : ''}' data-card-name="${escapeHtml(card)}" data-card-zone="purchase" data-card-static="${isStatic}" data-card-count="${isStatic && staticSupply != null ? staticSupply : ''}" data-card-variant-index="${variantInfo?.variant_index ?? ''}" onclick="selectCardDetail(event.currentTarget)">
-          ${renderCardFace(card, 'purchase', isStatic, true, isStatic ? staticSupply : null, variantInfo)}
-          <label class="purchase-card-checkbox" title="${escapeHtml(selectTitle)}" onclick="event.stopPropagation()">
-            <input type="checkbox" data-purchase-index="${i}" aria-label="勾選 ${escapeHtml(card)}" ${isSelected ? 'checked' : ''} ${canSelect ? '' : 'disabled aria-disabled="true"'} onchange="togglePurchaseSelection(event, ${i})">
-          </label>
+        <div class="purchase-card-item">
+          <div class='card ${typeClass}${supportClass} ${colorClass}${isSelected ? ' purchase-card-selected' : ''}' data-card-name="${escapeHtml(card)}" data-card-zone="purchase" data-card-static="${isStatic}" data-card-count="${isStatic && staticSupply != null ? staticSupply : ''}" data-card-variant-index="${variantInfo?.variant_index ?? ''}" onclick="selectCardDetail(event.currentTarget)">
+            ${renderCardFace(card, 'purchase', isStatic, true, isStatic ? staticSupply : null, variantInfo)}
+            <span class="purchase-card-selected-overlay" aria-hidden="true"></span>
+          </div>
+          <button class="purchase-card-select-button${isSelected ? ' is-selected' : ''}" type="button" data-purchase-index="${i}" aria-label="${escapeHtml(buttonLabel)}：${escapeHtml(card)}" aria-pressed="${isSelected}" title="${escapeHtml(selectTitle)}" ${canSelect ? '' : 'disabled aria-disabled="true"'} onclick="togglePurchaseSelection(event, ${i})">
+            <span class="purchase-card-select-label">${buttonLabel}</span>
+            ${remainingHtml}
+          </button>
         </div>`;
     });
     updatePurchaseSelectionControls(state);

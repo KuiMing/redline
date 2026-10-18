@@ -68,7 +68,7 @@ def play_first_follower(page):
 
 
 def buy_first_static_card(page):
-    page.locator('#purchaseStatic .purchase-card-checkbox input').first.check(timeout=5000)
+    page.locator('#purchaseStatic .purchase-card-select-button').first.click(timeout=5000)
     page.wait_for_timeout(200)
     page.locator('#openPurchaseConfirmBtn').click(timeout=5000)
     page.wait_for_timeout(250)
@@ -106,7 +106,7 @@ def main():
         # 1. 行動階段一開始就顯示「結束行動」，且購買區已可勾選。
         state0 = page.evaluate('window.lastGameState')
         advance_text = page.locator('#advanceStepBtn').inner_text(timeout=5000)
-        buy_selectable = not page.locator('#purchaseStatic .purchase-card-checkbox input').first.is_disabled()
+        buy_selectable = not page.locator('#purchaseStatic .purchase-card-select-button').first.is_disabled()
         page.screenshot(path=str(shots_dir / '01_action_phase_start_buy_already_selectable.png'), full_page=True)
         checks.append({
             'name': '01_action_phase_starts_with_end_action_button_and_selectable_purchase',

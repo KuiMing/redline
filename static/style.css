@@ -584,12 +584,17 @@ body {
 
 
 #purchaseSelectionControls {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  left: 116px;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
-  min-height: 34px;
-  margin: -6px 0 8px;
+  min-height: 30px;
+  margin: 0;
 }
 
 #purchaseSelectionSummary {
@@ -986,9 +991,10 @@ body {
   width: 1280px;
   height: 100%;
   display: grid;
-  grid-template-columns: 284px 474px 474px;
-  gap: 12px;
-  padding: 12px;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  padding: 6px;
   align-items: stretch;
 }
 
@@ -1006,6 +1012,10 @@ body {
 .hand-panel-wide,
 .market-panel-wide {
   min-width: 0;
+}
+
+#randomMarketPanel {
+  position: relative;
 }
 
 .panel-title {
@@ -1039,12 +1049,13 @@ body {
 #purchaseStatic,
 .purchase-card-grid {
   flex: 1;
-  overflow: auto;
-  display: grid;
-  grid-template-columns: repeat(2, 220px);
-  gap: 12px;
-  justify-content: start;
-  align-content: start;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  justify-content: flex-start;
 }
 
 #purchaseSection {
@@ -1057,11 +1068,10 @@ body {
 
 #purchaseSection .panel-title,
 #randomMarketPanel .panel-title {
-  margin-bottom: 14px;
+  margin-bottom: 6px;
 }
 
 #purchaseStatic {
-  grid-template-columns: 220px;
   justify-content: start;
 }
 
@@ -1075,12 +1085,12 @@ body {
 #purchaseSection .card,
 #purchaseRandom .card,
 #hand .card {
-  width: 220px;
-  min-width: 220px;
-  max-width: 220px;
-  min-height: 270px;
-  height: 270px;
-  max-height: 270px;
+  width: 203px;
+  min-width: 203px;
+  max-width: 203px;
+  min-height: 125px;
+  height: 125px;
+  max-height: 125px;
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 0;
@@ -1092,7 +1102,7 @@ body {
   overflow: hidden;
   cursor: pointer;
   box-shadow: 0 12px 32px rgba(0,0,0,.34);
-  flex: 0 0 220px;
+  flex: 0 0 203px;
 }
 
 .hand-card {
@@ -1101,19 +1111,20 @@ body {
 }
 
 #hand .hand-card {
-  height: 318px;
-  max-height: 318px;
+  height: 156px;
+  max-height: 156px;
 }
 
 .hand-card .card-face {
-  flex: 1 1 auto;
-  min-height: 0;
+  flex: 0 0 125px;
+  height: 125px;
+  min-height: 125px;
   border-radius: 14px 14px 10px 10px;
 }
 
 .hand-card-actions {
   position: static;
-  margin: 8px;
+  margin: 5px 6px;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 6px;
@@ -1125,9 +1136,9 @@ body {
   border-radius: 999px;
   background: rgba(15, 23, 42, 0.9);
   color: #e5eefc;
-  font-size: 0.72rem;
+  font-size: 0.64rem;
   font-weight: 700;
-  padding: 5px 4px;
+  padding: 3px 4px;
   cursor: pointer;
 }
 
@@ -1171,44 +1182,90 @@ body {
   border-color: #f6ad55;
 }
 
-.purchase-card-checkbox {
+.purchase-card-item {
+  width: 203px;
+  min-width: 203px;
+  display: flex;
+  flex: 0 0 203px;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.purchase-card-selected-overlay {
   position: absolute;
-  left: 10px;
-  top: 10px;
+  inset: 0;
   z-index: 3;
-  display: inline-flex;
-  align-items: center;
-  border: 1px solid rgba(147, 197, 253, 0.68);
+  display: none;
+  border-radius: inherit;
+  pointer-events: none;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.purchase-card-selected .purchase-card-selected-overlay {
+  display: block;
+}
+
+/* Joy-Con／鍵盤目前焦點。控制器沿用 rl-pad-focus；黃色只覆蓋卡面。 */
+#commandGrid .card.rl-pad-focus::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  border-radius: inherit;
+  pointer-events: none;
+  background: rgba(255, 216, 61, 0.16);
+}
+
+.purchase-card-select-button {
+  position: relative;
+  width: 100%;
+  min-height: 25px;
+  border: 1px solid rgba(147, 197, 253, 0.72);
   border-radius: 6px;
-  padding: 4px;
+  padding: 4px 8px;
   color: #eff6ff;
-  background: rgba(15, 23, 42, 0.92);
+  background: #2563eb;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.34);
+  font-family: 'Noto Sans TC', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1.25;
 }
 
-.purchase-card-checkbox input {
-  width: 15px;
-  height: 15px;
-  margin: 0;
-  accent-color: #3b82f6;
-  cursor: pointer;
+.purchase-card-select-button:hover:not(:disabled) {
+  background: #1d4ed8;
 }
 
-.purchase-card-checkbox:has(input:disabled) {
-  opacity: 0.42;
+.purchase-card-select-button.is-selected {
+  border-color: rgba(134, 239, 172, 0.8);
+  background: #15803d;
+}
+
+.purchase-card-select-button.is-selected:hover {
+  background: #166534;
+}
+
+.purchase-card-select-button:disabled {
+  border-color: rgba(148, 163, 184, 0.38);
+  color: rgba(241, 245, 249, 0.72);
+  background: #475569;
   cursor: not-allowed;
 }
 
-.purchase-card-selected {
-  border-color: #60a5fa !important;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.56), 0 14px 34px rgba(37, 99, 235, 0.3) !important;
+.purchase-card-select-label {
+  display: block;
+  text-align: center;
 }
 
-.purchase-card-selected .purchase-card-checkbox {
-  color: #eff6ff;
-  border-color: #bfdbfe;
-  background: rgba(37, 99, 235, 0.96);
+.purchase-card-remaining {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.61rem;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .card-color-gray,

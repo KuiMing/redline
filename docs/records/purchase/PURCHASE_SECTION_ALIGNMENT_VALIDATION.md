@@ -1,49 +1,62 @@
 # Purchase Section Alignment Validation
 
-summary: {'total': 3, 'passed': 3, 'failed': 0}
+summary: {'total': 5, 'passed': 5, 'failed': 0}
 
 screenshot: docs/records/purchase/purchase_section_alignment_validation.png
 
-## PASS — static_purchase_title_aligns_with_random_market_title
+## PASS — command_centre_uses_equal_random_static_hand_rows
 
 ```json
 {
-  "static_title_box": {
-    "x": 21,
-    "y": 219,
-    "width": 294,
-    "height": 17
+  "random_panel_box": {
+    "x": 6,
+    "y": 110,
+    "width": 1268,
+    "height": 197.328125
   },
-  "random_title_box": {
-    "x": 345,
-    "y": 219,
-    "width": 442,
-    "height": 17
+  "static_panel_box": {
+    "x": 6,
+    "y": 313.328125,
+    "width": 1268,
+    "height": 197.328125
   },
-  "top_delta_px": 0,
-  "allowed_delta_px": 4,
-  "base_selection_panel_display": "none"
+  "hand_panel_box": {
+    "x": 6,
+    "y": 516.65625,
+    "width": 1268,
+    "height": 197.328125
+  },
+  "row_heights": [
+    197.328125,
+    197.328125,
+    197.328125
+  ],
+  "base_selection_panel_display": "block"
 }
 ```
 
-## PASS — static_purchase_first_card_top_aligns_with_random_market_first_card
+## PASS — first_card_stays_inside_each_assigned_row
 
 ```json
 {
-  "static_first_card_box": {
-    "x": 21,
-    "y": 250,
-    "width": 220,
-    "height": 270
-  },
   "random_first_card_box": {
-    "x": 345,
-    "y": 250,
-    "width": 220,
-    "height": 270
+    "x": 15,
+    "y": 143,
+    "width": 203,
+    "height": 125
   },
-  "top_delta_px": 0,
-  "allowed_delta_px": 4
+  "static_first_card_box": {
+    "x": 15,
+    "y": 346.328125,
+    "width": 203,
+    "height": 125
+  },
+  "hand_first_card_box": {
+    "x": 15,
+    "y": 549.65625,
+    "width": 203,
+    "height": 156
+  }
 }
 ```
 
@@ -52,6 +65,44 @@ screenshot: docs/records/purchase/purchase_section_alignment_validation.png
 ```json
 {
   "static_cards": 6,
-  "random_cards": 5
+  "random_cards": 5,
+  "hand_cards": 5
+}
+```
+
+## PASS — card_rows_never_show_horizontal_scrollbars
+
+```json
+{
+  "purchaseRandom": {
+    "client_width": 1250,
+    "scroll_width": 1250,
+    "overflow_x": "hidden",
+    "has_horizontal_overflow": false
+  },
+  "purchaseStatic": {
+    "client_width": 1250,
+    "scroll_width": 1250,
+    "overflow_x": "hidden",
+    "has_horizontal_overflow": false
+  },
+  "hand": {
+    "client_width": 1250,
+    "scroll_width": 1250,
+    "overflow_x": "hidden",
+    "has_horizontal_overflow": false
+  }
+}
+```
+
+## PASS — controller_focus_uses_yellow_overlay_distinct_from_selected_state
+
+```json
+{
+  "card_name": "宣傳家",
+  "focus_background": "rgba(255, 216, 61, 0.16)",
+  "focus_pointer_events": "none",
+  "selected_overlay_display": "block",
+  "button_background": "rgb(21, 128, 61)"
 }
 ```

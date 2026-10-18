@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
-"""Validate that the permanent/static purchase area aligns with the random market.
-
-The command screen can show a base-selection notice above the permanent purchase
-area. That notice must not push the permanent purchase cards downward; the
-permanent purchase title should align vertically with the random market title.
-"""
+"""Validate the command centre's random/static/hand three-row layout."""
 from __future__ import annotations
 
 import json
@@ -54,56 +49,110 @@ def validate_page(page) -> dict:
     page.wait_for_selector('#randomMarketPanel .panel-title', timeout=10000)
     page.wait_for_timeout(600)
 
-    static_box = page.locator('#purchaseSection .panel-title').bounding_box()
-    random_box = page.locator('#randomMarketPanel .panel-title').bounding_box()
+    random_panel_box = page.locator('#randomMarketPanel').bounding_box()
+    static_panel_box = page.locator('#controlPanel').bounding_box()
+    hand_panel_box = page.locator('#handPanel').bounding_box()
     static_card_box = page.locator('#purchaseStatic .card').first.bounding_box()
     random_card_box = page.locator('#purchaseRandom .card').first.bounding_box()
+    hand_card_box = page.locator('#hand .card').first.bounding_box()
     static_cards = page.locator('#purchaseStatic .card').count()
     random_cards = page.locator('#purchaseRandom .card').count()
+    hand_cards = page.locator('#hand .card').count()
     base_panel_display = page.locator('#baseSelectionPanel').evaluate("el => getComputedStyle(el).display")
+    focus_visual = page.evaluate("""() => {
+      const card = document.querySelector('#purchaseStatic .card');
+      if (!card) return null;
+      card.classList.add('rl-pad-focus', 'purchase-card-selected');
+      const button = card.closest('.purchase-card-item')?.querySelector('.purchase-card-select-button');
+      button?.classList.add('is-selected');
+      const focusStyle = getComputedStyle(card, '::after');
+      const selectedOverlay = card.querySelector('.purchase-card-selected-overlay');
+      return {
+        card_name: card.dataset.cardName,
+        focus_background: focusStyle.backgroundColor,
+        focus_pointer_events: focusStyle.pointerEvents,
+        selected_overlay_display: selectedOverlay ? getComputedStyle(selectedOverlay).display : null,
+        button_background: button ? getComputedStyle(button).backgroundColor : null,
+      };
+    }""")
+    row_overflow = page.evaluate("""() => Object.fromEntries(
+      ['purchaseRandom', 'purchaseStatic', 'hand'].map((id) => {
+        const el = document.getElementById(id);
+        return [id, {
+          client_width: el.clientWidth,
+          scroll_width: el.scrollWidth,
+          overflow_x: getComputedStyle(el).overflowX,
+          has_horizontal_overflow: el.scrollWidth > el.clientWidth,
+        }];
+      })
+    )""")
 
-    top_delta = None
-    title_aligned = False
-    if static_box and random_box:
-        top_delta = round(abs(static_box['y'] - random_box['y']), 2)
-        title_aligned = top_delta <= 4
-
-    card_left_delta = None
-    card_top_delta = None
-    cards_aligned = False
-    if static_card_box and random_card_box:
-        card_left_delta = round(abs(static_card_box['x'] - random_card_box['x']), 2)
-        card_top_delta = round(abs(static_card_box['y'] - random_card_box['y']), 2)
-        cards_aligned = card_left_delta <= 4 and card_top_delta <= 4
+    panel_ordered = bool(
+        random_panel_box
+        and static_panel_box
+        and hand_panel_box
+        and random_panel_box['y'] < static_panel_box['y'] < hand_panel_box['y']
+    )
+    row_heights = [box['height'] for box in (random_panel_box, static_panel_box, hand_panel_box) if box]
+    equal_rows = len(row_heights) == 3 and max(row_heights) - min(row_heights) <= 1
+    cards_inside_rows = bool(
+        random_panel_box
+        and static_panel_box
+        and hand_panel_box
+        and random_card_box
+        and static_card_box
+        and hand_card_box
+        and random_panel_box['y'] <= random_card_box['y'] < random_panel_box['y'] + random_panel_box['height']
+        and static_panel_box['y'] <= static_card_box['y'] < static_panel_box['y'] + static_panel_box['height']
+        and hand_panel_box['y'] <= hand_card_box['y'] < hand_panel_box['y'] + hand_panel_box['height']
+    )
 
     page.screenshot(path=str(SCREENSHOT), full_page=True)
 
     results = [
         {
-            'name': 'static_purchase_title_aligns_with_random_market_title',
-            'ok': bool(title_aligned),
+            'name': 'command_centre_uses_equal_random_static_hand_rows',
+            'ok': panel_ordered and equal_rows,
             'detail': {
-                'static_title_box': static_box,
-                'random_title_box': random_box,
-                'top_delta_px': top_delta,
-                'allowed_delta_px': 4,
+                'random_panel_box': random_panel_box,
+                'static_panel_box': static_panel_box,
+                'hand_panel_box': hand_panel_box,
+                'row_heights': row_heights,
                 'base_selection_panel_display': base_panel_display,
             },
         },
         {
-            'name': 'static_purchase_first_card_top_aligns_with_random_market_first_card',
-            'ok': bool(card_top_delta is not None and card_top_delta <= 4),
+            'name': 'first_card_stays_inside_each_assigned_row',
+            'ok': cards_inside_rows,
             'detail': {
-                'static_first_card_box': static_card_box,
                 'random_first_card_box': random_card_box,
-                'top_delta_px': card_top_delta,
-                'allowed_delta_px': 4,
+                'static_first_card_box': static_card_box,
+                'hand_first_card_box': hand_card_box,
             },
         },
         {
             'name': 'purchase_zones_populated_for_visual_comparison',
             'ok': static_cards >= 6 and random_cards >= 5,
-            'detail': {'static_cards': static_cards, 'random_cards': random_cards},
+            'detail': {'static_cards': static_cards, 'random_cards': random_cards, 'hand_cards': hand_cards},
+        },
+        {
+            'name': 'card_rows_never_show_horizontal_scrollbars',
+            'ok': all(
+                not detail['has_horizontal_overflow'] and detail['overflow_x'] == 'hidden'
+                for detail in row_overflow.values()
+            ),
+            'detail': row_overflow,
+        },
+        {
+            'name': 'controller_focus_uses_yellow_overlay_distinct_from_selected_state',
+            'ok': bool(
+                focus_visual
+                and focus_visual['focus_background'] == 'rgba(255, 216, 61, 0.16)'
+                and focus_visual['focus_pointer_events'] == 'none'
+                and focus_visual['selected_overlay_display'] == 'block'
+                and focus_visual['button_background'] == 'rgb(21, 128, 61)'
+            ),
+            'detail': focus_visual,
         },
     ]
 

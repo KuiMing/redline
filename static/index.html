@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>REDLINE // STRATEGIC COMMAND</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="/static/style.css?v=victory-restart-20260925" />
+  <link rel="stylesheet" href="/static/style.css?v=half-height-command-centre-20261018-5" />
 </head>
 <body>
 <div id="stageViewport">
@@ -300,6 +300,17 @@
 
   <div id="commandView" class="game-view active">
     <div id="commandGrid">
+      <div id="randomMarketPanel" class="panel market-panel-wide">
+        <div class="panel-title">隨機購買區</div>
+        <div id="purchaseSelectionControls" style="display:none;">
+          <span id="purchaseSelectionSummary">尚未選擇卡牌</span>
+          <button id="topdeckRightBtn" class="phase-secondary-btn purchase-selection-topdeck-btn" type="button" style="display:none;" onclick="sendAction('use_topdeck_right')">卡牌置頂</button>
+          <button id="clearPurchaseSelectionBtn" class="purchase-selection-clear-btn" type="button" onclick="clearPurchaseSelection()">清除</button>
+          <button id="openPurchaseConfirmBtn" class="purchase-selection-buy-btn" type="button" onclick="openPurchaseConfirmModal()" disabled>購買所選卡牌</button>
+        </div>
+        <div id="purchaseRandom" class="purchase-card-grid"></div>
+      </div>
+
       <div id="controlPanel" class="panel">
         <div id="purchaseSection">
           <div class="panel-title">常設購買區</div>
@@ -315,17 +326,6 @@
           <div id="baseSelectionInfo"></div>
           <div id="baseSelectionChoices"></div>
         </div>
-      </div>
-
-      <div id="randomMarketPanel" class="panel market-panel-wide">
-        <div class="panel-title">隨機購買區</div>
-        <div id="purchaseSelectionControls" style="display:none;">
-          <span id="purchaseSelectionSummary">尚未選擇卡牌</span>
-          <button id="topdeckRightBtn" class="phase-secondary-btn purchase-selection-topdeck-btn" type="button" style="display:none;" onclick="sendAction('use_topdeck_right')">卡牌置頂</button>
-          <button id="clearPurchaseSelectionBtn" class="purchase-selection-clear-btn" type="button" onclick="clearPurchaseSelection()">清除</button>
-          <button id="openPurchaseConfirmBtn" class="purchase-selection-buy-btn" type="button" onclick="openPurchaseConfirmModal()" disabled>購買所選卡牌</button>
-        </div>
-        <div id="purchaseRandom" class="purchase-card-grid"></div>
       </div>
 
       <div id="handPanel" class="panel hand-panel-wide">
@@ -378,6 +378,6 @@
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/static/player_messages_zh_tw.js?v=player-message-i18n-20260801"></script>
-<script src="/static/app.js?v=red-army-single-result-prompt-20260905"></script>
+<script src="/static/app.js?v=half-height-purchase-ui-20261018"></script>
 </body>
 </html>
