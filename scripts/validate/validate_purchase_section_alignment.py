@@ -88,19 +88,36 @@ def validate_page(page) -> dict:
     hand_cards = page.locator('#hand .card').count()
     base_panel_display = page.locator('#baseSelectionPanel').evaluate("el => getComputedStyle(el).display")
     focus_visual = page.evaluate("""() => {
-      const card = document.querySelector('#purchaseStatic .card');
-      if (!card) return null;
-      card.classList.add('rl-pad-focus', 'purchase-card-selected');
-      const button = card.closest('.purchase-card-item')?.querySelector('.purchase-card-select-button');
+      const cards = [...document.querySelectorAll('#purchaseStatic .card')];
+      const selectedCard = cards[0];
+      const card = cards[1];
+      const combinedCard = cards[2];
+      if (!selectedCard || !card || !combinedCard) return null;
+      selectedCard.classList.add('purchase-card-selected');
+      card.classList.add('rl-pad-focus');
+      combinedCard.classList.add('purchase-card-selected', 'rl-pad-focus');
+      const button = selectedCard.closest('.purchase-card-item')?.querySelector('.purchase-card-select-button');
       button?.classList.add('is-selected');
       const focusStyle = getComputedStyle(card, '::after');
-      const selectedOverlay = card.querySelector('.purchase-card-selected-overlay');
+      const selectedOverlay = selectedCard.querySelector('.purchase-card-selected-overlay');
+      const combinedFocusStyle = getComputedStyle(combinedCard, '::after');
+      const combinedSelectedOverlay = combinedCard.querySelector('.purchase-card-selected-overlay');
+      const combinedSelectedStyle = combinedSelectedOverlay ? getComputedStyle(combinedSelectedOverlay) : null;
       return {
         card_name: card.dataset.cardName,
         focus_background: focusStyle.backgroundColor,
+        focus_border_width: focusStyle.borderTopWidth,
+        focus_border_style: focusStyle.borderTopStyle,
+        focus_border_color: focusStyle.borderTopColor,
         focus_pointer_events: focusStyle.pointerEvents,
         selected_overlay_display: selectedOverlay ? getComputedStyle(selectedOverlay).display : null,
         button_background: button ? getComputedStyle(button).backgroundColor : null,
+        combined_focus_background: combinedFocusStyle.backgroundColor,
+        combined_focus_border_color: combinedFocusStyle.borderTopColor,
+        combined_focus_z_index: combinedFocusStyle.zIndex,
+        combined_selected_display: combinedSelectedStyle?.display || null,
+        combined_selected_background: combinedSelectedStyle?.backgroundColor || null,
+        combined_selected_z_index: combinedSelectedStyle?.zIndex || null,
       };
     }""")
     row_overflow = page.evaluate("""() => Object.fromEntries(
@@ -169,13 +186,16 @@ def validate_page(page) -> dict:
           }).length,
         };
       });
-      const focusCard = document.querySelector('#purchaseStatic .card');
-      const peerCard = [...document.querySelectorAll('#purchaseStatic .card')].find((card) => card !== focusCard);
+      const focusCard = document.querySelector('#purchaseStatic .card.rl-pad-focus');
+      const peerCard = [...document.querySelectorAll('#purchaseStatic .card')].find((card) => card !== focusCard && !card.classList.contains('rl-pad-focus'));
       return {
         boxes,
         rows,
         controls_outside_panel,
         focus_background: focusCard ? getComputedStyle(focusCard, '::after').backgroundColor : null,
+        focus_border_width: focusCard ? getComputedStyle(focusCard, '::after').borderTopWidth : null,
+        focus_border_style: focusCard ? getComputedStyle(focusCard, '::after').borderTopStyle : null,
+        focus_border_color: focusCard ? getComputedStyle(focusCard, '::after').borderTopColor : null,
         focus_outline: focusCard ? getComputedStyle(focusCard).outlineStyle : null,
         focus_shadow: focusCard ? getComputedStyle(focusCard).boxShadow : null,
         peer_outline: peerCard ? getComputedStyle(peerCard).outlineStyle : null,
@@ -218,13 +238,21 @@ def validate_page(page) -> dict:
             'detail': row_overflow,
         },
         {
-            'name': 'controller_focus_uses_yellow_overlay_distinct_from_selected_state',
+            'name': 'controller_focus_uses_opaque_yellow_border_with_transparent_interior',
             'ok': bool(
                 focus_visual
-                and focus_visual['focus_background'] == 'rgba(255, 216, 61, 0.16)'
+                and focus_visual['focus_background'] == 'rgba(0, 0, 0, 0)'
+                and focus_visual['focus_border_width'] == '2px'
+                and focus_visual['focus_border_style'] == 'solid'
+                and focus_visual['focus_border_color'] == 'rgb(255, 216, 61)'
                 and focus_visual['focus_pointer_events'] == 'none'
                 and focus_visual['selected_overlay_display'] == 'block'
                 and focus_visual['button_background'] == 'rgb(21, 128, 61)'
+                and focus_visual['combined_focus_background'] == 'rgba(0, 0, 0, 0)'
+                and focus_visual['combined_focus_border_color'] == 'rgb(255, 216, 61)'
+                and focus_visual['combined_selected_display'] == 'block'
+                and focus_visual['combined_selected_background'] == 'rgba(255, 255, 255, 0.28)'
+                and int(focus_visual['combined_focus_z_index']) > int(focus_visual['combined_selected_z_index'])
             ),
             'detail': focus_visual,
         },
@@ -239,7 +267,10 @@ def validate_page(page) -> dict:
                     for detail in living_room_layout['rows'].values()
                 )
                 and all(c['count'] > 0 and c['outside'] == 0 for c in living_room_layout['controls_outside_panel'])
-                and living_room_layout['focus_background'] == 'rgba(255, 216, 61, 0.16)'
+                and living_room_layout['focus_background'] == 'rgba(0, 0, 0, 0)'
+                and float(living_room_layout['focus_border_width'].removesuffix('px')) >= 2.5
+                and living_room_layout['focus_border_style'] == 'solid'
+                and living_room_layout['focus_border_color'] == 'rgb(255, 216, 61)'
                 and living_room_layout['focus_outline'] == living_room_layout['peer_outline']
                 and living_room_layout['focus_shadow'] == living_room_layout['peer_shadow']
             ),

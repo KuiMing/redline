@@ -340,6 +340,8 @@ def focus_info(page):
           return { id: el.id, tag: el.tagName, text: (el.textContent || '').trim().slice(0, 30),
                    outlineWidth: parseFloat(cs.outlineWidth), outlineColor: cs.outlineColor,
                    boxShadow: cs.boxShadow, overlayBackground: after.backgroundColor,
+                   overlayBorderWidth: after.borderTopWidth, overlayBorderStyle: after.borderTopStyle,
+                   overlayBorderColor: after.borderTopColor,
                    peerOutlineWidth: peerCs ? parseFloat(peerCs.outlineWidth) : null,
                    peerBoxShadow: peerCs ? peerCs.boxShadow : null,
                    inModal: !!el.closest('.modal-overlay'), modalId: el.closest('.modal-overlay')?.id || null,
@@ -1338,12 +1340,15 @@ def main():
             f1 = focus_info(page)
             record("first_press_places_focus_without_click", f1 is not None and page.evaluate("__spy.sendAction") == 0, f1)
             record(
-                "card_focus_uses_yellow_16_percent_overlay_without_ring_or_glow",
+                "card_focus_uses_opaque_yellow_border_with_transparent_interior",
                 bool(f1)
                 and "card" in f1["cls"]
                 and f1["outlineWidth"] == f1["peerOutlineWidth"]
                 and f1["boxShadow"] == f1["peerBoxShadow"]
-                and f1["overlayBackground"] == "rgba(255, 216, 61, 0.16)",
+                and f1["overlayBackground"] == "rgba(0, 0, 0, 0)"
+                and f1["overlayBorderWidth"] == "2px"
+                and f1["overlayBorderStyle"] == "solid"
+                and f1["overlayBorderColor"] == "rgb(255, 216, 61)",
                 f1,
             )
             # 以元素為單位計數（起手牌是隨機抽的，可能有多張同名、同文字的手牌）
@@ -1638,10 +1643,16 @@ def main():
             card_focus_shot = page.evaluate("""() => { const el = document.querySelector('.card.rl-pad-focus');
               const button = el.closest('.purchase-card-item').querySelector('.purchase-card-select-button');
               const overlay = getComputedStyle(el, '::after'), b = getComputedStyle(button);
-              return { overlayBackground: overlay.backgroundColor, buttonOutline: parseFloat(b.outlineWidth), buttonOutlineStyle: b.outlineStyle,
+              return { overlayBackground: overlay.backgroundColor, overlayBorderWidth: overlay.borderTopWidth,
+                       overlayBorderStyle: overlay.borderTopStyle, overlayBorderColor: overlay.borderTopColor,
+                       buttonOutline: parseFloat(b.outlineWidth), buttonOutlineStyle: b.outlineStyle,
                        buttonHasClass: button.classList.contains('rl-pad-focus') }; }""")
-            record("purchase_card_has_yellow_overlay_button_does_not",
-                   "255, 216, 61" in card_focus_shot["overlayBackground"] and not card_focus_shot["buttonHasClass"]
+            record("purchase_card_has_opaque_yellow_border_button_does_not",
+                   card_focus_shot["overlayBackground"] == "rgba(0, 0, 0, 0)"
+                   and card_focus_shot["overlayBorderWidth"] == "2px"
+                   and card_focus_shot["overlayBorderStyle"] == "solid"
+                   and card_focus_shot["overlayBorderColor"] == "rgb(255, 216, 61)"
+                   and not card_focus_shot["buttonHasClass"]
                    and (card_focus_shot["buttonOutline"] == 0 or card_focus_shot["buttonOutlineStyle"] == "none"), card_focus_shot)
             page.evaluate("document.querySelector('.rl-pad-focus').scrollIntoView({block: 'center'})")
             page.wait_for_timeout(200)

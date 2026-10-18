@@ -95,15 +95,24 @@ screenshot: docs/records/purchase/purchase_section_alignment_validation.png
 }
 ```
 
-## PASS — controller_focus_uses_yellow_overlay_distinct_from_selected_state
+## PASS — controller_focus_uses_opaque_yellow_border_with_transparent_interior
 
 ```json
 {
-  "card_name": "宣傳家",
-  "focus_background": "rgba(255, 216, 61, 0.16)",
+  "card_name": "思想家",
+  "focus_background": "rgba(0, 0, 0, 0)",
+  "focus_border_width": "2px",
+  "focus_border_style": "solid",
+  "focus_border_color": "rgb(255, 216, 61)",
   "focus_pointer_events": "none",
   "selected_overlay_display": "block",
-  "button_background": "rgb(21, 128, 61)"
+  "button_background": "rgb(21, 128, 61)",
+  "combined_focus_background": "rgba(0, 0, 0, 0)",
+  "combined_focus_border_color": "rgb(255, 216, 61)",
+  "combined_focus_z_index": "4",
+  "combined_selected_display": "block",
+  "combined_selected_background": "rgba(255, 255, 255, 0.28)",
+  "combined_selected_z_index": "3"
 }
 ```
 
@@ -168,7 +177,10 @@ screenshot: docs/records/purchase/purchase_section_alignment_validation.png
       "outside": 0
     }
   ],
-  "focus_background": "rgba(255, 216, 61, 0.16)",
+  "focus_background": "rgba(0, 0, 0, 0)",
+  "focus_border_width": "2.5641px",
+  "focus_border_style": "solid",
+  "focus_border_color": "rgb(255, 216, 61)",
   "focus_outline": "none",
   "focus_shadow": "rgba(0, 0, 0, 0.34) 0px 12px 32px 0px",
   "peer_outline": "none",

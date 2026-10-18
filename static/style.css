@@ -1205,7 +1205,7 @@ body {
   display: block;
 }
 
-/* Joy-Con／鍵盤目前焦點。控制器沿用 rl-pad-focus；黃色只覆蓋卡面。 */
+/* Joy-Con 目前焦點。控制器沿用 rl-pad-focus；不透明黃框只框住卡面。 */
 #commandGrid .card.rl-pad-focus::after {
   content: '';
   position: absolute;
@@ -1213,7 +1213,9 @@ body {
   z-index: 4;
   border-radius: inherit;
   pointer-events: none;
-  background: rgba(255, 216, 61, 0.16);
+  box-sizing: border-box;
+  border: 2px solid #ffd83d;
+  background: transparent;
 }
 
 .purchase-card-select-button {
@@ -3932,6 +3934,10 @@ html[data-display="living-room"] #commandGrid {
 html[data-display="living-room"] #purchaseRandom .purchase-card-item,
 html[data-display="living-room"] #purchaseStatic .purchase-card-item,
 html[data-display="living-room"] #hand .hand-card { zoom: 0.78; }
+/* 抵銷卡牌容器縮放，讓客廳模式仍顯示 2px 的焦點框。 */
+html[data-display="living-room"] #commandGrid .card.rl-pad-focus::after {
+  border-width: 2.57px;
+}
 html[data-display="living-room"] #purchaseSelectionControls { min-height: 30px; margin: 0 0 3px; gap: 6px; }
 html[data-display="living-room"] #purchaseSelectionSummary,
 html[data-display="living-room"] .purchase-selection-clear-btn,

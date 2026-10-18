@@ -43,7 +43,7 @@
 | 右搖桿 | 方向導航，**只在內容之間**（deadzone 0.5；按住有 380ms 延遲後每 140ms 重複一次）。與客廳模式同一份排除規則（`Core.isDirectionalExcluded`）：六個全域分頁、回合列（結束行動／紅軍能力）、手牌卡內的「資源」「行動」「棄置」、陣營能力發動鈕、購買選擇按鈕、按鍵提示列**永遠不會**取得方向焦點（`.rl-pad-focus` 與瀏覽器原生 focus 皆然）；手牌只以整張卡牌取得焦點 |
 | A | 確認／啟用目前焦點（呼叫既有 click handler）；**焦點在任何卡牌上時一律只開啟置中卡牌預覽**，不執行、不選擇、不購買 |
 | B | 返回／取消——只在目前 UI 本身有可見、可用的取消／關閉按鈕時才作用，否則什麼都不做 |
-| B（卡牌） | 焦點在購買區卡牌（選擇按鈕不進入焦點集合、沒有黃色焦點遮罩）時切換選擇，點擊該卡既有選擇按鈕；按鈕停用（伺服器權威）則不作用。多張選擇照舊（逐張 B） |
+| B（卡牌） | 焦點在購買區卡牌（選擇按鈕不進入焦點集合；卡面以 2px 不透明黃色邊框標示，框內透明）時切換選擇，點擊該卡既有選擇按鈕；按鈕停用（伺服器權威）則不作用。多張選擇照舊（逐張 B） |
 | X（手牌） | 焦點在整張手牌時＝以資源使用：點擊該卡既有「資源」按鈕；按鈕不存在（如一般奧援為「棄置」）、隱藏或停用則不作用 |
 | Y（手牌） | 焦點在整張手牌時＝以行動使用：點擊該卡既有「行動」按鈕；隱藏或停用則不作用 |
 | Y（購買卡） | **先 B 選擇，再按 Y**：焦點卡是有效的已選擇卡（選擇按鈕可見、未停用）且既有「購買所選」可用時，點它開啟既有購買確認單（內容是目前整份選擇；確認、資源檢查與 `buy_cards` 都在既有確認單）。未選擇、選擇按鈕停用／隱藏（例如售完）、合計買不起（按鈕停用）、按鈕隱藏或不存在一律 fail closed；**Y 永遠不會選擇任何卡**、不直接購買。與客廳模式同一個函式與閘門 |
@@ -81,7 +81,7 @@ physical input（bridge WebSocket frame）
 ```
 
 - `static/controller_core.js`：純邏輯，可在 node 測試（`scripts/tests/js/controller_core.test.js`）。
-- `static/controller_ui.js`：bridge client、設定與 HUD、DOM 焦點集合、焦點標示（`.rl-pad-focus`，4px 高對比外框，不改版面）、`scrollIntoView`。
+- `static/controller_ui.js`：bridge client、設定與 HUD、DOM 焦點集合、焦點標示（`.rl-pad-focus`；卡面使用 2px 不透明黃色邊框且框內透明，其他控制項使用高對比外框，不改版面）、`scrollIntoView`。
 - `static/controller_map_adapter.js`：戰略地圖 iframe 端。
 - `static/living_room_core.js`（純邏輯，node 可測：路由、方向焦點排除規則、R／SR 區段環、按鍵提示列、閘門、地圖清單）＋ `static/controller_living_room.js`（DOM 膠合，透過 `RedlineController.attachLayer` 只在客廳模式接手 page／map scope，以及事件卡／時代關卡說明 modal 內的 R／SR）：見下方「客廳大螢幕模式」。
 
