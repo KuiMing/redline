@@ -1,10 +1,17 @@
 # Redline TODO
 
-最後更新：2026-10-14
+最後更新：2026-10-20
 
 本文件只保留尚未完成的工作。已完成內容請查閱 Git history、`CHANGELOG.md` 與 `docs/records/`。
 
 ## 待辦
+
+- **指揮中心「陣營能力」位置調整**（需求記錄：`docs/records/ui-layout/faction-ability-location-request-20261020.md`）：
+  - 將目前位於常設購買區下方的橫向「陣營能力」區塊移至畫面右上角，放在「隨機購買區」最右邊。
+  - 保留完整能力說明及能力操作按鈕；不得遮住五張隨機購買卡、購買操作、右側控制項或回合控制。
+  - 保持固定 `1280 × 720` 舞台等比例縮放；不要改成傳統 Reflow RWD。
+  - 不改變隨機購買卡數量、購買規則、焦點狀態或 Joy-Con 操作。
+  - 完成時需提供正式 Browser UI screenshot proof，確認右上角位置、間距、可讀性與無遮擋。
 
 - **Mac 實機 Joy-Con 驗證**（右 Joy-Con 按鍵位元已有實機紀錄；左 Joy-Con 與多支獨立手把只有 fixture／假 FTCW 測試，尚未接真實硬體）：
   - 左 Joy-Con 2 的 S2B1 封包：用 `tools/joycon_bridge/run_mac.sh --dump-packets` 確認按鍵位元（offset 9：`0x01` −、`0x08` 按下搖桿、`0x20` Capture；offset 10：`0x01` ↓、`0x02` ↑、`0x04` →、`0x08` ←、`0x10` SR、`0x20` SL、`0x40` L、`0x80` ZL）、左搖桿 offset（x＝12、y＝16，float32 LE）與 Y 軸方向（目前假設 FTCW 向上為正），以及 deadzone 0.15 是否足以消除靜止漂移。
