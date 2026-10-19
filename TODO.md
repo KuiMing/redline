@@ -13,6 +13,13 @@
   - 不改變隨機購買卡數量、購買規則、焦點狀態或 Joy-Con 操作。
   - 完成時需提供正式 Browser UI screenshot proof，確認右上角位置、間距、可讀性與無遮擋。
 
+- **購買區已選卡重新聚焦的視覺狀態**（需求記錄：`docs/records/purchase/selected-card-refocus-visual-request-20261020.md`）：
+  - 卡牌確定選擇後，維持既有白色遮罩。
+  - 使用方向鍵再次聚焦該張已選卡牌時，白色遮罩、黃色邊框與中央準星必須同時顯示。
+  - 已選但未聚焦的卡牌只顯示白色遮罩；未選但已聚焦的卡牌只顯示黃色邊框與中央準星；其他卡牌不顯示這些提示。
+  - 方向鍵同一時間只可聚焦一張卡牌，因此最多只有一組黃色邊框與中央準星。
+  - 完成時需以正式 Browser UI 截圖分別證明四種狀態，並確認方向輸入在已選卡牌上仍可顯示唯一焦點。
+
 - **Mac 實機 Joy-Con 驗證**（右 Joy-Con 按鍵位元已有實機紀錄；左 Joy-Con 與多支獨立手把只有 fixture／假 FTCW 測試，尚未接真實硬體）：
   - 左 Joy-Con 2 的 S2B1 封包：用 `tools/joycon_bridge/run_mac.sh --dump-packets` 確認按鍵位元（offset 9：`0x01` −、`0x08` 按下搖桿、`0x20` Capture；offset 10：`0x01` ↓、`0x02` ↑、`0x04` →、`0x08` ←、`0x10` SR、`0x20` SL、`0x40` L、`0x80` ZL）、左搖桿 offset（x＝12、y＝16，float32 LE）與 Y 軸方向（目前假設 FTCW 向上為正），以及 deadzone 0.15 是否足以消除靜止漂移。
   - 右 Joy-Con 2 搖桿 offset（20／24）與 Y 軸方向的實機確認（按鍵位元已有實機紀錄）。
