@@ -4038,6 +4038,9 @@ html[data-display="living-room"] .lr-focus-overlay { height: 644px; }
 #stageViewport:has(#lobby[data-flow="start"][data-start-step="entry"])::before {
   opacity: 0;
 }
+#designStage:has(#lobby[data-flow="start"][data-start-step="entry"]) > #warTitle {
+  display: none;
+}
 #lobby[data-flow="start"][data-start-step="entry"] {
   padding: 0;
   overflow: hidden;
