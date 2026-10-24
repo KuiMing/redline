@@ -4086,8 +4086,8 @@ html[data-display="living-room"] .lr-focus-overlay { height: 644px; }
   text-align: center;
   box-shadow: inset 0 1px 0 rgba(255, 235, 190, 0.32), 0 5px 18px rgba(0, 0, 0, 0.46);
 }
-#lobby[data-flow="start"][data-start-step="entry"] #sfCreateHuman { left: 332px; top: 606px; }
-#lobby[data-flow="start"][data-start-step="entry"] #sfCreateAi { left: 654px; top: 606px; }
+#lobby[data-flow="start"][data-start-step="entry"] #sfCreateHuman { left: 170px; top: 606px; }
+#lobby[data-flow="start"][data-start-step="entry"] #sfCreateAi { left: 493px; top: 606px; }
 #lobby[data-flow="start"][data-start-step="entry"] .sf-path-btn strong {
   margin: 0;
   font: 900 18px/60px 'Noto Sans TC', sans-serif;
@@ -4103,45 +4103,54 @@ html[data-display="living-room"] .lr-focus-overlay { height: 644px; }
 }
 #lobby[data-flow="start"][data-start-step="entry"] .sf-path-join {
   position: absolute;
-  left: 493px;
-  top: 680px;
+  left: 816px;
+  top: 606px;
   width: 294px;
-  height: 36px;
+  height: 64px;
   padding: 0;
-  border: 0;
-  border-radius: 8px;
-  background: rgba(5, 7, 11, 0.84);
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.45);
+  border: 2px solid rgba(206, 161, 86, 0.72);
+  border-radius: 13px;
+  background: linear-gradient(180deg, rgba(153, 116, 62, 0.96), rgba(111, 77, 39, 0.96));
+  box-shadow: inset 0 1px 0 rgba(255, 235, 190, 0.32), 0 5px 18px rgba(0, 0, 0, 0.46);
 }
 #lobby[data-flow="start"][data-start-step="entry"] .sf-path-join > label { display: none; }
-#lobby[data-flow="start"][data-start-step="entry"] .sf-path-join .lobby-room-row { gap: 4px; }
+#lobby[data-flow="start"][data-start-step="entry"] .sf-path-join .lobby-room-row {
+  height: 60px;
+  gap: 0;
+  padding: 8px;
+}
 #lobby[data-flow="start"][data-start-step="entry"] #sfRoomCode {
-  height: 36px;
+  height: 44px;
   min-width: 0;
   padding: 6px 10px;
-  border-color: rgba(206, 161, 86, 0.66);
+  border: 1px solid rgba(79, 51, 24, 0.72);
   border-radius: 8px 0 0 8px;
-  background: rgba(7, 10, 16, 0.92);
-  color: #f4e4c2;
+  background: rgba(238, 213, 164, 0.94);
+  color: #21170d;
   text-align: center;
 }
+#lobby[data-flow="start"][data-start-step="entry"] #sfRoomCode::placeholder { color: rgba(54, 36, 18, 0.72); }
 #lobby[data-flow="start"][data-start-step="entry"] #sfJoinBtn {
-  height: 36px;
+  height: 44px;
   padding: 0 13px;
-  border-color: rgba(206, 161, 86, 0.72);
+  border-color: rgba(79, 51, 24, 0.72);
   border-radius: 0 8px 8px 0;
-  background: #74502a;
+  background: #60401f;
   color: #f8ead0;
 }
 #lobby[data-flow="start"][data-start-step="entry"] .sf-error {
   position: absolute;
   left: 0;
-  bottom: 38px;
+  bottom: 66px;
   width: 294px;
   margin: 0;
   padding: 3px 8px;
-  background: rgba(5, 7, 11, 0.88);
+  border-radius: 6px;
+  background: rgba(74, 22, 18, 0.94);
   text-align: center;
+}
+#lobby[data-flow="start"][data-start-step="entry"] .sf-error:empty {
+  display: none;
 }
 
 /* ---- 客廳大螢幕模式（controller_living_room.js）：只在 html[data-display="living-room"] 下生效 ----
