@@ -193,8 +193,8 @@ def test_entry_offers_three_paths_and_no_player_count(browser, app_url):
     ai = page.locator("#sfCreateAi").bounding_box()
     panel = page.locator("#startFlow").bounding_box()
     assert panel == {"x": 0, "y": 0, "width": 1280, "height": 720}
-    assert human == {"x": 527, "y": 532, "width": 294, "height": 64}
-    assert ai == {"x": 527, "y": 606, "width": 294, "height": 64}
+    assert human == {"x": 332, "y": 606, "width": 294, "height": 64}
+    assert ai == {"x": 654, "y": 606, "width": 294, "height": 64}
     shot(page, "01_entry_three_paths.png")
     page.context.close()
 
