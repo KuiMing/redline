@@ -3965,6 +3965,75 @@ html:not([data-display="living-room"]) .lr-confirm-ok { background: #b91c1c; bor
 /* 客廳模式：底部提示列（76px）保持可見，fail-closed 原因與按鍵說明照常顯示；不新增頂部窄條 */
 html[data-display="living-room"] .lr-focus-overlay { height: 644px; }
 
+/* ---- 開始遊戲前流程（start_flow_ui.js）：初始三條路徑 → 建立設定／Joy-Con 配對 → 既有行動代號／陣營畫面 ----
+ * 與 #lobby 同一個 1280×720 設計單位；顯示開始流程時隱藏作戰準備室本體，Joy-Con 焦點集合因此只會落在開始流程上。 */
+#lobby[data-flow="start"] > :not(#startFlow) { display: none !important; }
+#lobby:not([data-flow="start"]) > #startFlow { display: none; }
+.startflow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 4;
+  box-sizing: border-box;
+  width: 860px;
+  min-height: 460px;
+  max-height: 672px;
+  padding: 26px 32px 24px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 28px;
+  background: linear-gradient(145deg, rgba(9, 14, 22, 0.92), rgba(12, 18, 29, 0.78));
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.58), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  overflow-y: auto;
+}
+.startflow[hidden] { display: none; }
+.startflow .lobby-title { margin-bottom: 14px; }
+.startflow .lobby-market-option::after { display: none; }
+.sf-panel[hidden], .sf-pairing[hidden] { display: none; }
+.sf-paths { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.sf-path-btn {
+  min-height: 150px;
+  padding: 18px;
+  border: 1px solid rgba(251, 191, 36, 0.6);
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.92), rgba(15, 23, 42, 0.92));
+  color: #f1f5f9;
+  text-align: left;
+  cursor: pointer;
+}
+.sf-path-btn strong { display: block; margin-bottom: 8px; font-size: 1.45rem; }
+.sf-path-btn span { color: rgba(203, 213, 225, 0.86); font-size: 0.95rem; }
+.sf-path-btn:hover, .sf-path-btn:focus-visible { border-color: #fbbf24; background: linear-gradient(180deg, rgba(120, 53, 15, 0.7), rgba(15, 23, 42, 0.92)); }
+.sf-path-join {
+  grid-column: 1 / -1;
+  padding: 16px 18px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 20px;
+  background: rgba(15, 23, 42, 0.62);
+}
+.sf-path-join label strong { display: block; margin-bottom: 8px; font-size: 1.2rem; color: #e2e8f0; }
+.sf-error { min-height: 1.3em; margin-top: 6px; color: #fca5a5; font-size: 0.9rem; }
+.sf-setup-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.sf-setup-title { font-size: 1.5rem; font-weight: 800; color: #fbbf24; }
+.sf-row { display: grid; grid-template-columns: 110px 1fr; align-items: center; gap: 14px; margin-bottom: 12px; }
+.sf-row-label { color: rgba(203, 213, 225, 0.9); font-size: 1rem; font-weight: 700; }
+.sf-pairing { margin: 6px 0 4px; padding: 12px 14px; border: 1px solid rgba(251, 191, 36, 0.4); border-radius: 16px; background: rgba(15, 23, 42, 0.66); }
+.sf-pairing-prompt { color: #fde68a; font-size: 1rem; line-height: 1.5; }
+.sf-slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 10px 0 6px; }
+.sf-slot { padding: 8px 10px; border: 1px dashed rgba(148, 163, 184, 0.5); border-radius: 12px; text-align: center; color: rgba(148, 163, 184, 0.9); }
+.sf-slot strong { display: block; font-size: 1.25rem; }
+.sf-slot span { font-size: 0.85rem; }
+.sf-slot[data-paired="true"] { border-style: solid; border-color: #22c55e; background: rgba(21, 128, 61, 0.22); color: #bbf7d0; }
+.sf-slot[data-unavailable="true"] { opacity: 0.4; }
+.sf-pairing-status { min-height: 1.3em; color: rgba(203, 213, 225, 0.86); font-size: 0.9rem; }
+.sf-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 12px; }
+.sf-continue-hint { flex: 1; color: rgba(245, 158, 11, 0.9); font-size: 0.9rem; }
+.sf-footer .lobby-action-btn { flex: none; min-width: 220px; }
+.sf-summary { padding: 8px 10px; border: 1px solid rgba(148, 163, 184, 0.28); border-radius: 12px; background: rgba(15, 23, 42, 0.6); color: #e2e8f0; font-size: 0.85rem; line-height: 1.5; }
+#lobby[data-flow="create"] #joinRoomBtn, #lobby[data-flow="join"] #createRoomBtn { display: none; }
+#lobby[data-flow="join"] #lanInfoField { display: none; }
+#lobby[data-flow] .lobby-room-row + .lobby-field-hint { display: none; }
+
 /* ---- 客廳大螢幕模式（controller_living_room.js）：只在 html[data-display="living-room"] 下生效 ----
  * 舞台本身已等比縮放並留 5% title-safe 邊界（app.js resizeStage），以下尺寸都是 1280×720 設計單位，
  * 因此在 720p／1080p／4K 只差銳利度。桌面模式不受影響。 */

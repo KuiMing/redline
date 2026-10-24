@@ -8,6 +8,8 @@
 
 ### Added
 
+- 新的「開始遊戲前流程」（`static/start_flow_*.js`）：初始畫面三條路徑——建立真人紅軍遊戲、建立 AI 紅軍遊戲、輸入房間代碼加入；建立者不再選人數，在同一畫面選「簡單／一般模式」與「Joy-Con／電腦」。選 Joy-Con 後各玩家同時按 SL + SR，依成功順序配成 P1～P4（真人紅軍最多 4 支、AI 紅軍最多 3 支），至少一支才能按「完成配對」；多支時沿用客廳輪流為 P2～Pn 新增本機席位並依序綁定。完成後進入既有「行動代號／陣營」畫面；用房間代碼加入者略過設定與配對，直接進入該畫面並唯讀沿用房主設定。房主設定（紅軍類型、難度、操作方式、Joy-Con 數量）由 `/create` 驗證並保存為伺服器房間狀態，`/lobby/{id}` 回傳 `control_mode`、`joycon_count`；訪客不能修改。證據見 `docs/records/start-flow/`。
+
 - 新增 Joy-Con／搖桿控制（預設關閉，右下角 🎮 啟用）：本機 bridge（`tools/joycon_bridge/`，只綁 127.0.0.1）→ 輸入 reducer → 情境路由，支援搖桿導航、A 確認、B 取消（僅既有取消）、R/SR 切分頁；modal／必選選擇取得輸入優先權，戰略地圖以新的 parent↔iframe 協定從伺服器權威目標建立焦點。滑鼠、觸控、鍵盤不受影響。見 `docs/joycon_controller.md`。
 - Joy-Con 卡牌操作（方向鍵只選整張購買卡牌，不選 checkbox）：焦點在卡牌時 A＝開啟卡牌預覽（不執行／勾選／購買）、B＝切換勾選（既有 checkbox）；焦點在手牌卡時 X＝資源、Y＝行動（點擊既有按鈕，停用／缺少即不作用）。卡牌預覽等無可聚焦項目的 modal 現在可用 B 關閉。
 - 客廳輪流模式公開顯示 AI 紅軍行動：紅軍是 current player 的整段期間，遮罩內顯示置中的「AI 紅軍行動中」公開視窗，逐步列出卡牌、購買、移動、組織、事件與資金／宣傳變化（伺服器 `state.ai_red_army.public_report`，只在啟用 AI 紅軍時輸出）。紅軍要結束回合時，伺服器先停在 current player＝紅軍（`state.ai_red_army.awaiting_ack`），視窗標題改為「回合結束」；按「知道了」或 Joy-Con A（`ack_ai_red_army`）或逾時 10 秒後，才推進到下一位並進入交接。視窗開著時不再另外跳出「玩家動態」。只有客廳輪流前端送出 `ai_public_hold` 的遊戲會等待確認，其他遊戲行為不變。

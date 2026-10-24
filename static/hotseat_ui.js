@@ -915,6 +915,24 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
     if (nameInput && me && me.name) nameInput.value = me.name;
     lobbyHint(`已新增〈${name}〉；請在下方替這位玩家綁定 Joy-Con，輪到時用它按 A 進入自己的陣營選擇。`);
     if (typeof refreshLobbyState === 'function') await refreshLobbyState();
+    return data.player_id;
+  }
+
+  /**
+   * 開始流程配對了多支 Joy-Con：啟用客廳輪流，目前席位（房主）綁第 1 支，其餘依配對順序各新增一個本機席位（行動代號 P2～P4）
+   * 並綁定。全部沿用上面的 setEnabled／addLocalSeat／bindSeat；任何一步失敗就停下，已建立的席位可在大廳列手動綁定。
+   */
+  async function provisionSeats(controllers) {
+    const list = Array.isArray(controllers) ? controllers.filter(Core.isControllerId) : [];
+    const cur = session();
+    if (list.length < 2 || !cur.gameId || !cur.playerId) return false;
+    setEnabled(true);
+    if (!bindSeat(cur.playerId, list[0], cur.gameId).ok) return false;
+    for (const controller of list.slice(1)) {
+      const seatId = await addLocalSeat();
+      if (!seatId || !bindSeat(seatId, controller, cur.gameId).ok) return false;
+    }
+    return true;
   }
 
   function init() {
@@ -944,7 +962,7 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
   }
 
   window.RedlineHotSeat = {
-    onConnect, onState, onLobby, onLobbyState, resumeTarget, rememberSeat,
+    onConnect, onState, onLobby, onLobbyState, resumeTarget, rememberSeat, provisionSeats,
     /** AI 紅軍公開行動視窗正開著：app.js 據此略過「玩家動態」通知，同一件事不顯示兩次。 */
     /** 客廳輪流遊戲裡有 AI 紅軍、伺服器還沒啟用「結束回合前等公開視窗確認」：app.js 送出 ai_public_hold。 */
     wantsAiPublicHold: (state) => !!state && hs.verdict.view !== 'inactive' && !!state.ai_red_army

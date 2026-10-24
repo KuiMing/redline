@@ -275,3 +275,14 @@ ZR 縮放循環的 E2E（兩種模式）驗證：
 - **左 Joy-Con 與多支手把沒有實機證據**：左手的封包 offset／位元、左搖桿 offset 與 Y 軸方向、`S2N1` 名稱格式、多支同時輸入、斷線與重連行為都只以 fixture 封包與假 FTCW（臨時 UDP 埠）測試；需實機確認的項目列在 `TODO.md`。
 - 文字輸入欄位只能聚焦，無法用搖桿輸入文字。
 - CAPTURE 接受 b1 `0x40` 與 b1 `0x20` 兩個位元（同一個邏輯鍵，按住時切換位元不會重複觸發）。上游 `Peterksharma/switch2mac`（commit `a8f2e61e85c3e4a43df3e6ed2f1467327df03d72`）`Switch2Protocol.swift` 定義 `capture = 0x0000_2000`、`c = 0x0000_4000`，UDPHub 以 little-endian u32 寫出。2026-10-10 以獨立 subscriber 實錄本機 bridge（只接右 Joy-Con 2）：Y＝`[1, 0]`、實體 Capture 鍵＝`[0, 64]`（b1 `0x40`，即上游 `c`；右 Joy-Con 2 沒有 `capture` 那顆鍵），因此 `0x40` 是主位元；`0x20` 保留給左 Joy-Con 2／Pro 手把的 `capture`（未實測）。兩個位元原本都沒有其他對應，沒有重新指派任何已知按鍵。字面封包回歸測試：`scripts/tests/test_joycon_bridge.py`、`scripts/tests/js/controller_core.test.js`。
+
+
+## 開始遊戲前流程的 Joy-Con 配對
+
+初始畫面（`static/start_flow_ui.js`＋純邏輯 `start_flow_core.js`）選 Joy-Con 後：
+
+- 頁面啟用搖桿控制並放開主連線的手把，改為每支「有訊號、沒人使用」的手把各開一條只 claim 自己那一支的 bridge 連線（與客廳輪流大廳監聽相同做法）。
+- 只認 **SL + SR 同時按住的按下瞬間**（左 Joy-Con 的實體 SR／SL 已在 bridge 正規化為 SL／SR）；每支手把（或重新連線 epoch 改變）的第一筆 frame 只當 baseline，進來就已按住的組合要先放開再按。
+- 依成功順序分配 P1、P2、P3、P4；同一支不重複、滿額後不再收（真人紅軍 4 支；AI 紅軍佔一席，上限 3 支，與伺服器 `/create` 驗證相同）。
+- 至少一支配對成功，「完成配對」才可按；完成後關閉配對連線（bridge 釋放），主連線 claim P1，建立作戰室後再沿用客廳輪流為 P2～Pn 新增本機席位並依序綁定。
+- 配對畫面期間 Joy-Con 只用來配對；「完成配對」以滑鼠／觸控按下。

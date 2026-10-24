@@ -177,6 +177,7 @@ function renderLobbyRoster(lobbyRes, statusText = null) {
   }
 
   latestLobbyState = lobbyRes;
+  window.RedlineStartFlow?.onRoomSettings?.(lobbyRes); // 房主設定（伺服器權威）：顯示並讓訪客唯讀
   const players = lobbyRes.players || [];
   const chosen = lobbyRes.factions || {};
   const bases = lobbyRes.bases || {};
@@ -669,6 +670,8 @@ async function initLobbyControls() {
     // 沒有進入遊戲（大廳）就沒有私密畫面：客廳輪流的預先遮罩解除。
     if (!ws) window.RedlineHotSeat?.onLobby?.();
   }
+  // 沒有恢復到任何作戰室：先顯示開始畫面（建立真人／AI 紅軍、或輸入房間代碼加入）。
+  if (!ws && !gameId) window.RedlineStartFlow?.show?.();
 }
 
 // 客廳輪流（hot-seat，hotseat_ui.js）：讀目前席位與大廳狀態。
@@ -729,12 +732,18 @@ async function createRoom() {
   //（2026-07-18 自動桌測發現，2026-07-19 修正）。
   const creatorName = (document.getElementById('playerName')?.value || '').trim();
   const nameAuto = playerNameIsSystemDefault();
+  // 開始畫面（start_flow_ui.js）選好的房主設定：由伺服器 /create 驗證並保存；沒有走開始畫面則維持原預設。
+  const startSettings = window.RedlineStartFlow?.pendingCreate?.() || null;
   const res = await fetch('/create', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name: creatorName, device_id: redlineDeviceId() }),
+    body: JSON.stringify({ name: creatorName, device_id: redlineDeviceId(), ...(startSettings || {}) }),
   });
   const data = await res.json();
+  if (data.error || !data.game_id) {
+    updateLobbyStatus(playerMessageZhTw(data.error || '建立作戰室失敗。'));
+    return;
+  }
   gameId = data.game_id;
   playerId = data.host_id;
   resumeToken = data.resume_token;
@@ -747,11 +756,12 @@ async function createRoom() {
     syncLobbyRoomCode();
   }
   const marketSelect = document.getElementById('marketModeSelect');
-  if (marketSelect) applyMarketMode('sample_53');
-  applyAiRedArmy(false);
+  if (marketSelect) applyMarketMode(startSettings?.market_mode || 'sample_53');
+  applyAiRedArmy(!!startSettings?.ai_red_army);
   lobbyTransientStatus = '作戰室已建立；請選擇陣營，或分享房間代碼。';
   await loadFactions();
   startLobbySync();
+  await window.RedlineStartFlow?.afterCreate?.(); // Joy-Con 配對到多支：新增 P2～Pn 本機席位並依序綁定
   await openFactionPickerModal();
   updateLobbyStatus(lobbyTransientStatus);
 }
