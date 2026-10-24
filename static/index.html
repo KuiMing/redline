@@ -30,7 +30,7 @@
 <div id="lobby">
   <section id="startFlow" class="startflow" aria-label="開始遊戲" hidden>
     <div class="lobby-kicker">REDLINE COMMAND LOBBY</div>
-    <div class="lobby-title">開始遊戲</div>
+    <div id="sfTitle" class="lobby-title" tabindex="-1">開始遊戲</div>
 
     <div id="sfEntry" class="sf-panel" data-step="entry">
       <div class="sf-paths" role="group" aria-label="開始方式">
@@ -55,21 +55,21 @@
 
     <div id="sfSetup" class="sf-panel" data-step="setup" hidden>
       <div class="sf-setup-head">
-        <div id="sfSetupTitle" class="sf-setup-title">建立真人紅軍遊戲</div>
+        <div id="sfSetupTitle" class="sf-setup-title" tabindex="-1">建立真人紅軍遊戲</div>
         <button id="sfBackToEntry" class="lobby-mini-btn" type="button">← 重新選擇</button>
       </div>
       <div class="sf-row">
         <span class="sf-row-label">遊戲難度</span>
         <div class="lobby-market-toggle" role="group" aria-label="遊戲難度">
-          <button class="lobby-market-option active" type="button" data-sf-market="sample_53">簡單模式</button>
-          <button class="lobby-market-option" type="button" data-sf-market="all_cards">一般模式</button>
+          <button class="lobby-market-option active" type="button" data-sf-market="sample_53" aria-pressed="true">簡單模式</button>
+          <button class="lobby-market-option" type="button" data-sf-market="all_cards" aria-pressed="false">一般模式</button>
         </div>
       </div>
       <div class="sf-row">
         <span class="sf-row-label">操作方式</span>
         <div class="lobby-market-toggle" role="group" aria-label="操作方式">
-          <button class="lobby-market-option" type="button" data-sf-control="joycon">Joy-Con</button>
-          <button class="lobby-market-option active" type="button" data-sf-control="computer">電腦</button>
+          <button class="lobby-market-option" type="button" data-sf-control="joycon" aria-pressed="false">Joy-Con</button>
+          <button class="lobby-market-option active" type="button" data-sf-control="computer" aria-pressed="true">電腦</button>
         </div>
       </div>
       <div id="sfPairing" class="sf-pairing" hidden>

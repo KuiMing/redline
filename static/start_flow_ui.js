@@ -130,28 +130,33 @@
   const pairingActive = () => sf.draft.controlMode === 'joycon' && !!$('sfSetup') && !$('sfSetup').hidden;
 
   // ------------------------------------------------------------ 畫面
-  function show(step) {
+  function show(step, moveFocus) {
     closeAllListeners();
     setFlow('start');
     const flow = $('startFlow');
     if (flow) flow.hidden = false;
-    if (step === 'setup') showStep('setup'); else showStep('entry');
+    if (step === 'setup') showStep('setup', moveFocus); else showStep('entry', moveFocus);
     $('sfJoinError').textContent = '';
     startTimer();
   }
 
-  function showStep(step) {
+  function focusEl(el) { if (el && typeof el.focus === 'function') el.focus({ preventScroll: true }); }
+
+  /** moveFocus：使用者切換畫面時，把焦點移到新畫面的標題（標題 tabindex=-1），讓輔助科技與鍵盤使用者知道畫面已換。 */
+  function showStep(step, moveFocus) {
     $('sfEntry').hidden = step !== 'entry';
     $('sfSetup').hidden = step !== 'setup';
     if (step === 'entry') { closeAllListeners(); sf.pairing = Core.createPairing(Core.maxControllers(false)); }
     render();
+    if (moveFocus) focusEl(step === 'setup' ? $('sfSetupTitle') : $('sfTitle'));
   }
 
   function render() {
     const d = sf.draft;
     $('sfSetupTitle').textContent = d.aiRedArmy ? '建立 AI 紅軍遊戲' : '建立真人紅軍遊戲';
-    document.querySelectorAll('[data-sf-market]').forEach(b => b.classList.toggle('active', b.dataset.sfMarket === d.marketMode));
-    document.querySelectorAll('[data-sf-control]').forEach(b => b.classList.toggle('active', b.dataset.sfControl === d.controlMode));
+    const setPressed = (b, on) => { b.classList.toggle('active', on); b.setAttribute('aria-pressed', String(on)); };
+    document.querySelectorAll('[data-sf-market]').forEach(b => setPressed(b, b.dataset.sfMarket === d.marketMode));
+    document.querySelectorAll('[data-sf-control]').forEach(b => setPressed(b, b.dataset.sfControl === d.controlMode));
     const joy = d.controlMode === 'joycon';
     $('sfPairing').hidden = !joy;
     const slots = Core.slots(sf.pairing);
@@ -210,7 +215,7 @@
   function chooseEntry(ai) {
     sf.draft = Core.normalizeDraft({ ...sf.draft, aiRedArmy: ai });
     sf.pairing = Core.createPairing(Core.maxControllers(ai));
-    showStep('setup');
+    showStep('setup', true);
     if (sf.draft.controlMode === 'joycon') chooseControl('joycon');
   }
 
@@ -237,6 +242,7 @@
     if (typeof applyMarketMode === 'function') applyMarketMode(settings.market_mode);
     if (typeof applyAiRedArmy === 'function') applyAiRedArmy(settings.ai_red_army);
     if (controllers.length) claimFirst(controllers[0]);
+    focusEl($('playerName'));
     return true;
   }
 
@@ -270,6 +276,12 @@
     $('sfBackBtn').hidden = false;
     onRoomSettings(data);
     $('roomSettingsHint').textContent = '以房主設定進行；輸入行動代號後按「進入作戰室」。';
+    // 欄位預設值 host 是房主的代號；加入者要輸入自己的行動代號，不能預設成現有房主。
+    const nameInput = $('playerName');
+    if (nameInput) {
+      if (!nameInput.dataset.userEdited) nameInput.value = '';
+      focusEl(nameInput);
+    }
   }
 
   // ------------------------------------------------------------ app.js hooks
@@ -300,28 +312,46 @@
   /** createRoom() 送出前取得的房主設定；沒有走開始流程（舊流程）時為 null，/create 維持原預設。 */
   function pendingCreate() { return sf.pending ? { ...sf.pending.settings } : null; }
 
-  /** 房間建立後：配對到多支手把時，沿用客廳輪流為 P2～Pn 新增本機席位並依配對順序綁定。 */
-  async function afterCreate() {
-    const pending = sf.pending;
+  function clearPending() {
     sf.pending = null;
     try { sessionStorage.removeItem(PAIRING_KEY); } catch { /* ignore */ }
-    if (!pending || pending.controllers.length < 2) return;
-    const hs = window.RedlineHotSeat;
-    if (hs && typeof hs.provisionSeats === 'function') await hs.provisionSeats(pending.controllers);
   }
+
+  /**
+   * 房間建立後：配對到多支手把時，沿用客廳輪流為 P2～Pn 新增本機席位並依配對順序綁定。
+   * 只有全部席位成功且驗證通過才清除 pending／配對；失敗則保留（連同 roomId）供同一房間重試，回傳 { ok:false, error }。
+   */
+  async function afterCreate(roomId) {
+    const pending = sf.pending;
+    if (!pending) return { ok: true };
+    if (pending.controllers.length < 2) { clearPending(); return { ok: true }; }
+    pending.roomId = roomId || pending.roomId || null;
+    const hs = window.RedlineHotSeat;
+    let result;
+    try { result = hs && typeof hs.provisionSeats === 'function' ? await hs.provisionSeats(pending.controllers) : null; }
+    catch { result = null; }
+    if (!result || !result.ok) {
+      return { ok: false, error: (result && result.error) || 'Joy-Con 席位建立失敗，請再按「建立作戰室」重試。' };
+    }
+    clearPending();
+    return { ok: true };
+  }
+
+  /** 該房間已建立、但 Joy-Con 席位尚未全部配置完成（等待重試）。 */
+  function hasPendingProvision(roomId) { return !!(sf.pending && sf.pending.roomId && sf.pending.roomId === roomId); }
 
   function init() {
     const on = (id, fn) => { const el = $(id); if (el) el.addEventListener('click', fn); };
     on('sfCreateHuman', () => chooseEntry(false));
     on('sfCreateAi', () => chooseEntry(true));
     on('sfJoinBtn', join);
-    on('sfBackToEntry', () => showStep('entry'));
+    on('sfBackToEntry', () => showStep('entry', true));
     on('sfContinueBtn', finishCreateSetup);
     on('sfBackBtn', () => {
       const room = $('roomId');
       if (room) { room.readOnly = false; room.value = ''; }
       sf.pending = null;
-      show('entry');
+      show('entry', true);
     });
     const code = $('sfRoomCode');
     if (code) code.addEventListener('keydown', e => { if (e.key === 'Enter') join(); });
@@ -333,7 +363,7 @@
   }
 
   window.RedlineStartFlow = {
-    show, pendingCreate, afterCreate, onRoomSettings,
+    show, pendingCreate, afterCreate, hasPendingProvision, onRoomSettings,
     /** 流程已被既有 session 取代（恢復連線、proof URL）：不顯示開始畫面。 */
     hide: () => { closeAllListeners(); const f = $('startFlow'); if (f) f.hidden = true; setFlow(null); },
     // 除錯／E2E

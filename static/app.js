@@ -403,6 +403,7 @@ function applyMarketMode(mode) {
   // reuse the same visual class but carry [data-ai-red-army] instead.
   document.querySelectorAll('[data-market-mode]').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.marketMode === mode);
+    btn.setAttribute('aria-pressed', String(btn.dataset.marketMode === mode));
   });
 }
 
@@ -411,6 +412,7 @@ function applyAiRedArmy(enabled) {
   if (select) select.value = enabled ? 'on' : 'off';
   document.querySelectorAll('[data-ai-red-army]').forEach(btn => {
     btn.classList.toggle('active', (btn.dataset.aiRedArmy === 'on') === !!enabled);
+    btn.setAttribute('aria-pressed', String((btn.dataset.aiRedArmy === 'on') === !!enabled));
   });
   const hint = document.getElementById('aiRedArmyHint');
   if (hint) {
@@ -434,7 +436,7 @@ async function setAiRedArmy(enabled) {
   const res = await fetch('/ai-red-army', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({game_id: gameId, player_id: playerId, enabled: !!enabled}),
+    body: JSON.stringify({game_id: gameId, player_id: playerId, resume_token: resumeToken, enabled: !!enabled}),
   });
   const data = await res.json();
   if (data.error) {
@@ -456,7 +458,7 @@ async function setMarketMode(mode) {
   const res = await fetch('/market-mode', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({game_id: gameId, player_id: playerId, market_mode: mode}),
+    body: JSON.stringify({game_id: gameId, player_id: playerId, resume_token: resumeToken, market_mode: mode}),
   });
   const data = await res.json();
   if (data.error) {
@@ -727,7 +729,24 @@ async function loadCardPresentationCatalog() {
   return cardPresentationCatalog;
 }
 
+// 房間已建立之後的步驟：Joy-Con 多席位配置成功才進入陣營畫面；失敗時保留配對與房間，再按「建立作戰室」只重試配置。
+async function enterCreatedRoom() {
+  const provisioned = await window.RedlineStartFlow?.afterCreate?.(gameId);
+  if (provisioned && provisioned.ok === false) {
+    updateLobbyStatus(provisioned.error || 'Joy-Con 席位建立失敗，請再按「建立作戰室」重試。');
+    return false;
+  }
+  await openFactionPickerModal();
+  updateLobbyStatus(lobbyTransientStatus);
+  return true;
+}
+
 async function createRoom() {
+  // 上一次只差 Joy-Con 席位配置失敗：同一個房間重試，不再建立新房間（避免重複席位）。
+  if (gameId && window.RedlineStartFlow?.hasPendingProvision?.(gameId)) {
+    await enterCreatedRoom();
+    return;
+  }
   // 建房也要帶「行動代號」：/create 之前不吃名字、建房者永遠叫 host
   //（2026-07-18 自動桌測發現，2026-07-19 修正）。
   const creatorName = (document.getElementById('playerName')?.value || '').trim();
@@ -761,9 +780,7 @@ async function createRoom() {
   lobbyTransientStatus = '作戰室已建立；請選擇陣營，或分享房間代碼。';
   await loadFactions();
   startLobbySync();
-  await window.RedlineStartFlow?.afterCreate?.(); // Joy-Con 配對到多支：新增 P2～Pn 本機席位並依序綁定
-  await openFactionPickerModal();
-  updateLobbyStatus(lobbyTransientStatus);
+  await enterCreatedRoom(); // Joy-Con 配對到多支：新增 P2～Pn 本機席位並依序綁定，成功才進陣營畫面
 }
 
 async function chooseFaction(factionId) {
@@ -1584,11 +1601,11 @@ async function joinRoom() {
 }
 
 async function startGame() {
-  const marketMode = document.getElementById('marketModeSelect')?.value || 'sample_53';
+  // 難度以伺服器保存的房間設定為準；/start 不帶 market_mode，只證明房主身份。
   const res = await fetch('/start', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({game_id: gameId, player_id: playerId, market_mode: marketMode})
+    body: JSON.stringify({game_id: gameId, player_id: playerId, resume_token: resumeToken})
   });
 
   const data = await res.json();

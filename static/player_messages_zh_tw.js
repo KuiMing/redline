@@ -6,6 +6,7 @@
     'Game not found': '找不到遊戲房間。',
     'Name required': '請輸入玩家名稱。',
     'Room full': '房間已滿。',
+    'Host authentication failed': '房主身份驗證失敗，請重新進入作戰室。',
     'Invalid control mode': '操作方式無效，請重新選擇。',
     'Joy-Con count must be between 1 and 4': 'Joy-Con 數量必須是 1 到 4 支。',
     'Joy-Con count requires Joy-Con control mode': '只有 Joy-Con 操作才需要配對數量。',

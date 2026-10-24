@@ -920,19 +920,35 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
 
   /**
    * 開始流程配對了多支 Joy-Con：啟用客廳輪流，目前席位（房主）綁第 1 支，其餘依配對順序各新增一個本機席位（行動代號 P2～P4）
-   * 並綁定。全部沿用上面的 setEnabled／addLocalSeat／bindSeat；任何一步失敗就停下，已建立的席位可在大廳列手動綁定。
+   * 並綁定。沿用上面的 setEnabled／addLocalSeat／bindSeat，且可重入：已存在的本機席位直接沿用、不再 /join，
+   * 部分成功後重試不會產生重複席位。最後以本機席位表驗證每支手把都綁在預期席位，才回報成功。
+   * 回傳 { ok, error? }。
    */
   async function provisionSeats(controllers) {
     const list = Array.isArray(controllers) ? controllers.filter(Core.isControllerId) : [];
     const cur = session();
-    if (list.length < 2 || !cur.gameId || !cur.playerId) return false;
+    if (list.length < 2 || !cur.gameId || !cur.playerId) return { ok: false, error: '尚無可配置的房間或手把。' };
     setEnabled(true);
-    if (!bindSeat(cur.playerId, list[0], cur.gameId).ok) return false;
-    for (const controller of list.slice(1)) {
-      const seatId = await addLocalSeat();
-      if (!seatId || !bindSeat(seatId, controller, cur.gameId).ok) return false;
+    const seatIds = [cur.playerId];
+    const others = () => Core.seatsFor(loadStore(), cur.gameId).map(s => s.player_id).filter(id => id !== cur.playerId);
+    for (let i = 1; i < list.length; i += 1) {
+      let seatId = others()[i - 1];
+      if (!seatId) {
+        await addLocalSeat();
+        seatId = others()[i - 1];
+      }
+      if (!seatId) return { ok: false, error: `P${i + 1} 席位建立失敗，請再按「建立作戰室」重試。` };
+      seatIds.push(seatId);
     }
-    return true;
+    for (let i = 0; i < list.length; i += 1) {
+      if (!bindSeat(seatIds[i], list[i], cur.gameId).ok) return { ok: false, error: `P${i + 1} 的 Joy-Con 綁定失敗，請再按「建立作戰室」重試。` };
+    }
+    const store = loadStore();
+    const verified = list.every((controller, i) => {
+      const seat = Core.seatForController(store, cur.gameId, controller);
+      return !!seat && seat.player_id === seatIds[i];
+    });
+    return verified ? { ok: true } : { ok: false, error: 'Joy-Con 席位驗證失敗，請再按「建立作戰室」重試。' };
   }
 
   function init() {

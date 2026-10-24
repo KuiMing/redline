@@ -95,3 +95,64 @@ def test_guest_join_does_not_need_or_accept_settings():
 
 def test_unknown_room_lobby_preview_is_an_error_for_join_by_code():
     assert _client().get("/lobby/does-not-exist").json() == {"error": "Game not found"}
+
+
+def _ready_two_player_room(client, **settings):
+    created = _create(client, **settings)
+    game_id, host_id = created["game_id"], created["host_id"]
+    guest_id = client.post("/join", json={"game_id": game_id, "name": "Guest", "device_id": "tok-g"}).json()["player_id"]
+    main.lobby_factions[game_id] = {host_id: "red_army", guest_id: "liberals"}
+    main.lobby_bases[game_id] = {host_id: "北京", guest_id: "臺北"}
+    main.lobby_ready[game_id] = {host_id: True, guest_id: True}
+    return created, guest_id
+
+
+@pytest.mark.parametrize("route,body", [
+    ("/market-mode", {"market_mode": "all_cards"}),
+    ("/ai-red-army", {"enabled": True}),
+    ("/start", {}),
+])
+def test_host_mutations_reject_visitor_who_only_knows_public_host_id(route, body):
+    client = _client()
+    created, _ = _ready_two_player_room(client)
+    game_id, host_id = created["game_id"], created["host_id"]
+    before = (main.lobby_market_mode[game_id], main.lobby_ai_red_army[game_id])
+    for token in (None, "", "guessed-token"):
+        payload = {"game_id": game_id, "player_id": host_id, **body}
+        if token is not None:
+            payload["resume_token"] = token
+        assert client.post(route, json=payload).json() == {"error": "Host authentication failed"}
+    assert (main.lobby_market_mode[game_id], main.lobby_ai_red_army[game_id]) == before
+    assert main.manager.games.get(game_id) is None
+
+
+def test_host_mutations_accept_the_real_resume_token():
+    client = _client()
+    created, _ = _ready_two_player_room(client)
+    game_id, host_id, token = created["game_id"], created["host_id"], created["resume_token"]
+    auth = {"game_id": game_id, "player_id": host_id, "resume_token": token}
+    assert client.post("/market-mode", json={**auth, "market_mode": "all_cards"}).json()["success"] is True
+    assert client.post("/ai-red-army", json={**auth, "enabled": False}).json()["success"] is True
+    assert client.post("/start", json=auth).json()["success"] is True
+
+
+def test_guest_token_cannot_act_as_host():
+    client = _client()
+    created, guest_id = _ready_two_player_room(client)
+    guest_token = main.lobby_player_credentials[created["game_id"]][guest_id]["resume_token"]
+    result = client.post("/start", json={"game_id": created["game_id"], "player_id": guest_id, "resume_token": guest_token}).json()
+    assert result["error"] == "Only host can start"
+
+
+def test_start_ignores_client_market_mode_and_keeps_stored_difficulty():
+    client = _client()
+    created, _ = _ready_two_player_room(client, market_mode="all_cards")
+    game_id = created["game_id"]
+    started = client.post("/start", json={
+        "game_id": game_id, "player_id": created["host_id"], "resume_token": created["resume_token"],
+        "market_mode": "sample_53",  # stale client value must not overwrite the stored difficulty
+    }).json()
+    assert started["success"] is True
+    assert started["market_mode"] == "all_cards"
+    assert main.lobby_market_mode[game_id] == "all_cards"
+    assert client.get(f"/lobby/{game_id}").json()["market_mode"] == "all_cards"

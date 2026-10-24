@@ -229,6 +229,9 @@ def test_guest_joins_by_code_skips_setup_and_cannot_change_settings(browser, app
     assert guest.input_value("#roomId") == game_id
     assert "AI 紅軍｜一般模式｜操作：電腦" in guest.inner_text("#roomSettingsSummary")
     assert guest.is_visible("#playerName") and guest.is_visible("#joinRoomBtn") and not guest.is_visible("#createRoomBtn")
+    # 加入者的代號欄不能預設成現有房主（「host」是房主欄位的預設值），而且焦點在代號欄等著輸入。
+    assert guest.input_value("#playerName") == ""
+    assert guest.evaluate("document.activeElement.id") == "playerName"
     for sel in ("[data-market-mode]", "[data-ai-red-army]"):
         for i in range(guest.locator(sel).count()):
             assert guest.locator(sel).nth(i).is_disabled()
@@ -242,8 +245,74 @@ def test_guest_joins_by_code_skips_setup_and_cannot_change_settings(browser, app
     assert requests.post(f"{app_url}/ai-red-army", json={"game_id": game_id, "player_id": guest_id, "enabled": False}).json()["error"]
     state = requests.get(f"{app_url}/lobby/{game_id}").json()
     assert (state["ai_red_army"], state["market_mode"]) == (True, "all_cards")
+    # 訪客從公開 /lobby 看得到 host_id，但沒有房主 resume_token 就不能冒充房主。
+    host_id = state["host_id"]
+    for route, body in (("/market-mode", {"market_mode": "sample_53"}), ("/ai-red-army", {"enabled": False}), ("/start", {})):
+        res = requests.post(f"{app_url}{route}", json={"game_id": game_id, "player_id": host_id, **body}).json()
+        assert res == {"error": "Host authentication failed"}, (route, res)
+    state = requests.get(f"{app_url}/lobby/{game_id}").json()
+    assert (state["ai_red_army"], state["market_mode"], state["started"]) == (True, "all_cards", False)
     host.context.close()
     guest.context.close()
+
+
+def test_toggles_expose_aria_pressed_and_focus_follows_step_changes(browser, app_url):
+    page = new_page(browser, app_url)
+    pressed = lambda attr: page.evaluate(
+        f"[...document.querySelectorAll('[data-sf-{attr}]')].map(b => [b.dataset.sf{attr.capitalize()}, b.getAttribute('aria-pressed')])")
+    page.click("#sfCreateHuman")
+    assert page.evaluate("document.activeElement.id") == "sfSetupTitle"
+    assert pressed("market") == [["sample_53", "true"], ["all_cards", "false"]]
+    assert pressed("control") == [["joycon", "false"], ["computer", "true"]]
+    page.click('[data-sf-market="all_cards"]')
+    assert pressed("market") == [["sample_53", "false"], ["all_cards", "true"]]
+    page.click('[data-sf-control="joycon"]')
+    assert pressed("control") == [["joycon", "true"], ["computer", "false"]]
+    page.click('[data-sf-control="computer"]')
+    assert pressed("control") == [["joycon", "false"], ["computer", "true"]]
+    page.click("#sfBackToEntry")
+    assert page.evaluate("document.activeElement.id") == "sfTitle"
+    page.click("#sfCreateAi")
+    assert page.evaluate("document.activeElement.id") == "sfSetupTitle"
+    page.click("#sfContinueBtn")
+    page.wait_for_selector("#startFlow", state="hidden")
+    assert page.evaluate("document.activeElement.id") == "playerName"
+    page.context.close()
+
+
+def test_joycon_seat_provisioning_failure_keeps_pairing_and_retry_creates_no_duplicates(browser, app_url, joycons):
+    page = new_page(browser, app_url, joycons)
+    create_via_flow(page, control="joycon")
+    page.wait_for_function("window.RedlineStartFlow.getState().listeners.filter(l => l.owned).length === 4", timeout=20000)
+    order = [24801, 24800]
+    for n, port in enumerate(order, start=1):
+        joycons.press_chord(port)
+        page.wait_for_function(f"window.RedlineStartFlow.getState().paired.length === {n}", timeout=8000)
+    paired = page.evaluate("window.RedlineStartFlow.getState().paired")
+    page.click("#sfContinueBtn")
+    page.wait_for_selector("#startFlow", state="hidden")
+
+    page.route("**/join", lambda route: route.fulfill(json={"error": "Room full"}))
+    page.click("#createRoomBtn")
+    page.wait_for_function("window.RedlineSession.current().gameId")
+    game_id = page.evaluate("window.RedlineSession.current().gameId")
+    page.wait_for_function("document.getElementById('lobbyStatusHint').textContent.includes('重試')", timeout=10000)
+    assert page.is_hidden("#factionPicker"), "席位未配置成功不可進入陣營畫面"
+    state = page.evaluate("window.RedlineStartFlow.getState()")
+    assert state["pending"] and state["pending"]["controllers"] == paired and state["paired"] == paired
+    assert len(requests.get(f"{app_url}/lobby/{game_id}").json()["players"]) == 1
+
+    # 網路恢復後在同一個房間重試：只補缺的席位，不再建立新房間，也不重複建立席位。
+    page.unroute("**/join")
+    page.click("#createRoomBtn")
+    page.wait_for_selector("#factionPicker", state="visible")
+    assert page.evaluate("window.RedlineSession.current().gameId") == game_id
+    players = requests.get(f"{app_url}/lobby/{game_id}").json()["players"]
+    assert len(players) == 2
+    page.wait_for_function("window.RedlineHotSeat.getState().seats.length === 2 && window.RedlineHotSeat.getState().seats.every(s => s.controller)", timeout=20000)
+    assert [s["controller"] for s in page.evaluate("window.RedlineHotSeat.getState().seats")] == paired
+    assert page.evaluate("window.RedlineStartFlow.getState().pending") is None
+    page.context.close()
 
 
 def test_joycon_pairing_order_and_finish_threshold(browser, app_url, joycons):

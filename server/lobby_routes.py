@@ -209,6 +209,19 @@ def _required_faction_for_player(game_id: str, player_id: str):
     return None
 
 
+def _host_token_valid(game_id: str, player_id, payload: dict) -> bool:
+    """Host mutations must prove ownership of the host seat. Rooms built through
+    /create always carry a credential, so the public host_id alone is never
+    enough; only credential-less internal test lobbies stay legacy-compatible."""
+    credential = lobby_player_credentials.get(game_id, {}).get(player_id)
+    if not credential:
+        return True
+    supplied = str(payload.get("resume_token") or "").strip()
+    return bool(supplied) and secrets.compare_digest(
+        supplied, str(credential.get("resume_token") or "")
+    )
+
+
 @router.post("/market-mode")
 def set_lobby_market_mode(payload: dict):
     game_id = payload.get("game_id")
@@ -219,6 +232,8 @@ def set_lobby_market_mode(payload: dict):
         return {"error": "Game not found"}
     if lobby_hosts.get(game_id) != player_id:
         return {"error": "Only host can change game difficulty"}
+    if not _host_token_valid(game_id, player_id, payload):
+        return {"error": "Host authentication failed"}
     if manager.games.get(game_id) is not None:
         return {"error": "Game already started"}
     if market_mode not in {"sample_53", "all_cards"}:
@@ -245,6 +260,8 @@ def set_ai_red_army(payload: dict):
         return {"error": "Game not found"}
     if lobby_hosts.get(game_id) != player_id:
         return {"error": "Only host can change AI Red Army setting"}
+    if not _host_token_valid(game_id, player_id, payload):
+        return {"error": "Host authentication failed"}
     if manager.games.get(game_id) is not None:
         return {"error": "Game already started"}
     if not isinstance(enabled, bool):
@@ -264,7 +281,6 @@ def set_ai_red_army(payload: dict):
 def start_game(payload: dict):
     game_id = payload.get("game_id")
     player_id = payload.get("player_id")
-    market_mode = payload.get("market_mode")
 
     if game_id not in lobby:
         return {"error": "Game not found"}
@@ -277,15 +293,14 @@ def start_game(payload: dict):
 
     if lobby_hosts.get(game_id) != player_id:
         return {"error": "Only host can start"}
+    if not _host_token_valid(game_id, player_id, payload):
+        return {"error": "Host authentication failed"}
 
     ready = lobby_ready.setdefault(game_id, {})
     for pid, _ in human_players:
         ready.setdefault(pid, False)
     if any(not ready.get(pid, False) for pid, _ in human_players):
         return {"error": "All players must be ready before start"}
-
-    if market_mode in {"sample_53", "all_cards"}:
-        lobby_market_mode[game_id] = market_mode
 
     # For test/setup endpoints that already created a live game state,
     # preserve the prepared runtime instead of rebuilding a fresh one.
