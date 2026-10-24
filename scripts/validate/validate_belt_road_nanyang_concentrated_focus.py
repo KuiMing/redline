@@ -45,7 +45,7 @@ def formal_session() -> dict:
             {"game_id": game_id, "player_id": player_id, "faction_id": faction, "base_name": base},
         )
         post_json("/ready", {"game_id": game_id, "player_id": player_id, "ready": True})
-    post_json("/start", {"game_id": game_id, "player_id": viewer_id, "resume_token": viewer_token, "market_mode": "all_cards"})
+    post_json("/start", {"game_id": game_id, "player_id": viewer_id, "market_mode": "all_cards"})
     return {
         "game_id": game_id,
         "viewer_id": viewer_id,

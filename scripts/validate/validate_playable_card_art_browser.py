@@ -84,7 +84,7 @@ def main() -> None:
             {"hand_names": ["交通經驗甲", "領導", "英美奧援"], "faction_id": "taiwan_green", "base": "臺北"},
         )
         context, page, console_errors = open_game(browser, setup)
-        page.wait_for_function("[...document.querySelectorAll('#hand .playable-card-art-image')].length === 3 && [...document.querySelectorAll('#hand .playable-card-art-image')].every(img => img.naturalWidth === 1100 && img.naturalHeight === 675)")
+        page.wait_for_function("[...document.querySelectorAll('#hand .playable-card-art-image')].length === 3 && [...document.querySelectorAll('#hand .playable-card-art-image')].every(img => img.naturalWidth === 1100 && img.naturalHeight === 1350)")
         hand_data = page.evaluate("""() => [...document.querySelectorAll('#hand .hand-card')].map(card => {
           const image = card.querySelector('.playable-card-art-image');
           const face = card.querySelector('.card-art-face');
@@ -104,13 +104,11 @@ def main() -> None:
         for item in hand_data:
             hand_ok = hand_ok and item["srcFile"] == expected_files[item["name"]]
             hand_ok = hand_ok and (item["srcQuery"] == "?v=head-safe-20260726" if item["name"] != "英美奧援" else item["srcQuery"] == "")
-            hand_ok = hand_ok and item["natural"] == [1100, 675]
-            hand_ok = hand_ok and item["alt"] == f"{item['name']}半高卡面"
-            # getBoundingClientRect() measures the bordered content after the fixed
-            # stage scale; allow the two one-pixel borders in the 203 × 125 face.
-            hand_ok = hand_ok and abs((item["faceRect"]["width"] / item["faceRect"]["height"]) - (44 / 27)) < 0.03
+            hand_ok = hand_ok and item["natural"] == [1100, 1350]
+            hand_ok = hand_ok and item["alt"] == f"{item['name']}完整卡面"
+            hand_ok = hand_ok and abs((item["faceRect"]["width"] / item["faceRect"]["height"]) - (22 / 27)) < 0.02
         hand_ok = hand_ok and hand_data[0]["buttons"] == ["資源", "行動"] and hand_data[2]["buttons"] == ["棄置", "行動"]
-        record("hand_cards_use_half_height_action_and_support_faces", hand_ok, hand_data)
+        record("hand_cards_use_complete_action_and_support_faces", hand_ok, hand_data)
         purchase_data = page.evaluate("""() => {
           const cards = [...document.querySelectorAll('#purchaseStatic .card, #purchaseRandom .card')];
           const images = cards.map(card => card.querySelector('.playable-card-art-image'));
@@ -118,22 +116,20 @@ def main() -> None:
             expected: window.lastGameState?.purchase_area?.length || 0,
             cards: cards.length,
             images: images.length,
-            loaded: images.filter(image => image?.naturalWidth === 1100 && image?.naturalHeight === 675).length,
+            loaded: images.filter(image => image?.naturalWidth === 1100 && image?.naturalHeight === 1350).length,
             failed: cards.filter(card => card.querySelector('.playable-card-art-load-failed')).length,
             staticCards: document.querySelectorAll('#purchaseStatic .card').length,
             staticCountBadges: document.querySelectorAll('#purchaseStatic .card > .card-art-face > .card-count').length,
-            staticRemainingLabels: document.querySelectorAll('#purchaseStatic .purchase-card-remaining').length,
             randomCountBadges: document.querySelectorAll('#purchaseRandom .card > .card-art-face > .card-count').length,
           };
         }""")
         record(
-            "static_and_random_purchase_areas_use_half_height_faces",
+            "static_and_random_purchase_areas_use_complete_faces",
             purchase_data["cards"] == purchase_data["expected"]
             and purchase_data["images"] == purchase_data["expected"]
             and purchase_data["loaded"] == purchase_data["expected"]
             and purchase_data["failed"] == 0
-            and purchase_data["staticCountBadges"] == 0
-            and purchase_data["staticRemainingLabels"] == purchase_data["staticCards"]
+            and purchase_data["staticCountBadges"] == purchase_data["staticCards"]
             and purchase_data["randomCountBadges"] == 0,
             purchase_data,
         )
@@ -184,7 +180,7 @@ def main() -> None:
         }""")
         record(
             "support_variant_one_uses_its_own_printed_face",
-            support_data == {"variantIndex": "1", "srcFile": "02_英美奧援_東洋-臺灣.png", "alt": "英美奧援半高卡面"},
+            support_data == {"variantIndex": "1", "srcFile": "02_英美奧援_東洋-臺灣.png", "alt": "英美奧援完整卡面"},
             support_data,
         )
         support_page.screenshot(path=str(SUPPORT_SHOT), full_page=True)
@@ -205,7 +201,7 @@ def main() -> None:
     }
     OUT_JSON.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     lines = [
-        "# 行動卡與奧援卡半高卡面及完整預覽瀏覽器驗證",
+        "# 行動卡與奧援卡完整卡面瀏覽器驗證",
         "",
         "可重跑：`uv run --with playwright python scripts/validate/validate_playable_card_art_browser.py`",
         "",

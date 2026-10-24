@@ -17,13 +17,12 @@ def create_and_start(page, player_count):
     create = page.evaluate("""async () => (await (await fetch('/create', {method:'POST'})).json())""")
     room = create['game_id']
     host_id = create['host_id']
-    host_token = create['resume_token']
-    host_join = page.evaluate(f"""async () => (await (await fetch('/join', {{method:'POST', headers:{{'Content-Type':'application/json'}}, body: JSON.stringify({{'game_id':'{room}','name':'host','player_id':'{host_id}','resume_token':'{host_token}'}})}})).json())""")
+    host_join = page.evaluate(f"""async () => (await (await fetch('/join', {{method:'POST', headers:{{'Content-Type':'application/json'}}, body: JSON.stringify({{'game_id':'{room}','name':'host','player_id':'{host_id}'}})}})).json())""")
     players = [('host', host_join['player_id'])]
     for i in range(2, player_count + 1):
         joined = page.evaluate(f"""async () => (await (await fetch('/join', {{method:'POST', headers:{{'Content-Type':'application/json'}}, body: JSON.stringify({{'game_id':'{room}','name':'guest{i}'}})}})).json())""")
         players.append((f'guest{i}', joined['player_id']))
-    start = page.evaluate(f"""async () => (await (await fetch('/start', {{method:'POST', headers:{{'Content-Type':'application/json'}}, body: JSON.stringify({{'game_id':'{room}','player_id':'{host_id}','resume_token':'{host_token}'}})}})).json())""")
+    start = page.evaluate(f"""async () => (await (await fetch('/start', {{method:'POST', headers:{{'Content-Type':'application/json'}}, body: JSON.stringify({{'game_id':'{room}','player_id':'{host_id}'}})}})).json())""")
     return room, players, start
 
 

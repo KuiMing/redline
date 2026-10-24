@@ -94,7 +94,7 @@ def make_formal_game():
         ready = post_json("/ready", {"game_id": game_id, "player_id": pid, "ready": True})
         if ready.get("error"):
             raise AssertionError(f"ready {name}: {ready}")
-    start = post_json("/start", {"game_id": game_id, "player_id": host_id, "resume_token": create["resume_token"], "market_mode": "sample_53"})
+    start = post_json("/start", {"game_id": game_id, "player_id": host_id, "market_mode": "sample_53"})
     if start.get("error"):
         raise AssertionError(start)
     return (

@@ -25,7 +25,6 @@ if str(ROOT) not in sys.path:
 from fastapi.testclient import TestClient
 
 from server import main
-from conftest import host_token
 from server.game import Game
 
 EVENTS = json.loads((ROOT / "data" / "events_structured.v1.1.json").read_text(encoding="utf-8")).get("events", [])
@@ -95,7 +94,7 @@ def _start_two_player_lobby_game(client, host_faction, host_base, guest_faction,
 
     client.post("/ready", json={"game_id": game_id, "player_id": host_id, "ready": True})
     client.post("/ready", json={"game_id": game_id, "player_id": guest_id, "ready": True})
-    result = client.post("/start", json={"game_id": game_id, "player_id": host_id, "resume_token": host_token(game_id, host_id)}).json()
+    result = client.post("/start", json={"game_id": game_id, "player_id": host_id}).json()
     assert result.get("success") is True, result
     return game_id, host_id, guest_id
 

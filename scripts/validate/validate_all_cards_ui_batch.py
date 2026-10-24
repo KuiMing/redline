@@ -12,10 +12,9 @@ def create_and_start(page):
     create = page.evaluate("""async () => (await (await fetch('/create', {method:'POST'})).json())""")
     room = create['game_id']
     host_id = create['host_id']
-    host_token = create['resume_token']
-    host_join = page.evaluate(f"""async () => (await (await fetch('/join', {{method:'POST', headers:{{'Content-Type':'application/json'}}, body: JSON.stringify({{'game_id':'{room}','name':'host','player_id':'{host_id}','resume_token':'{host_token}'}})}})).json())""")
+    host_join = page.evaluate(f"""async () => (await (await fetch('/join', {{method:'POST', headers:{{'Content-Type':'application/json'}}, body: JSON.stringify({{'game_id':'{room}','name':'host','player_id':'{host_id}'}})}})).json())""")
     guest_join = page.evaluate(f"""async () => (await (await fetch('/join', {{method:'POST', headers:{{'Content-Type':'application/json'}}, body: JSON.stringify({{'game_id':'{room}','name':'guest'}})}})).json())""")
-    page.evaluate(f"""async () => (await (await fetch('/start', {{method:'POST', headers:{{'Content-Type':'application/json'}}, body: JSON.stringify({{'game_id':'{room}','player_id':'{host_id}','resume_token':'{host_token}'}})}})).json())""")
+    page.evaluate(f"""async () => (await (await fetch('/start', {{method:'POST', headers:{{'Content-Type':'application/json'}}, body: JSON.stringify({{'game_id':'{room}','player_id':'{host_id}'}})}})).json())""")
     return room, host_join['player_id'], guest_join['player_id']
 
 

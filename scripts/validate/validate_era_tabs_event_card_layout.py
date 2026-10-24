@@ -62,7 +62,7 @@ def make_formal_game() -> tuple[str, str, str]:
             raise AssertionError(ready)
     started = post_json(
         "/start",
-        {"game_id": create["game_id"], "player_id": create["host_id"], "resume_token": create["resume_token"], "market_mode": "sample_53"},
+        {"game_id": create["game_id"], "player_id": create["host_id"], "market_mode": "sample_53"},
     )
     if started.get("error"):
         raise AssertionError(started)

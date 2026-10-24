@@ -584,17 +584,12 @@ body {
 
 
 #purchaseSelectionControls {
-  position: absolute;
-  top: 4px;
-  right: 8px;
-  left: 116px;
-  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
-  min-height: 30px;
-  margin: 0;
+  min-height: 34px;
+  margin: -6px 0 8px;
 }
 
 #purchaseSelectionSummary {
@@ -991,10 +986,9 @@ body {
   width: 1280px;
   height: 100%;
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: repeat(3, minmax(0, 1fr));
-  gap: 6px;
-  padding: 6px;
+  grid-template-columns: 284px 474px 474px;
+  gap: 12px;
+  padding: 12px;
   align-items: stretch;
 }
 
@@ -1012,49 +1006,6 @@ body {
 .hand-panel-wide,
 .market-panel-wide {
   min-width: 0;
-}
-
-#randomMarketPanel {
-  --faction-ability-w: 200px;
-  position: relative;
-}
-
-/* 陣營能力：固定在隨機購買卡右側的空位。面板與購買操作列保留間距，
-   高度依內容收合，讓購買與清除按鈕維持原本的右上位置。 */
-#randomMarketPanel #factionActionPanel {
-  position: absolute;
-  top: 48px;
-  right: 8px;
-  bottom: auto;
-  z-index: 3;
-  width: var(--faction-ability-w);
-  box-sizing: border-box;
-  margin: 0;
-  padding: 6px 8px;
-  overflow: hidden;
-}
-
-#randomMarketPanel #factionActionPanel .panel-title {
-  margin-bottom: 3px;
-}
-
-#randomMarketPanel #factionActionInfo {
-  gap: 4px;
-  margin-bottom: 5px;
-}
-
-#randomMarketPanel .faction-action-result,
-#randomMarketPanel .faction-action-placeholder {
-  border-radius: 8px;
-  padding: 5px 7px;
-  font-size: 0.72rem;
-  line-height: 1.4;
-}
-
-#randomMarketPanel #factionActionButtons .base-choice-btn {
-  flex: 1 1 100%;
-  padding: 4px 6px;
-  font-size: 0.74rem;
 }
 
 .panel-title {
@@ -1088,13 +1039,12 @@ body {
 #purchaseStatic,
 .purchase-card-grid {
   flex: 1;
-  min-height: 0;
-  overflow-x: hidden;
-  overflow-y: hidden;
-  display: flex;
-  gap: 6px;
-  align-items: flex-start;
-  justify-content: flex-start;
+  overflow: auto;
+  display: grid;
+  grid-template-columns: repeat(2, 220px);
+  gap: 12px;
+  justify-content: start;
+  align-content: start;
 }
 
 #purchaseSection {
@@ -1107,10 +1057,11 @@ body {
 
 #purchaseSection .panel-title,
 #randomMarketPanel .panel-title {
-  margin-bottom: 6px;
+  margin-bottom: 14px;
 }
 
 #purchaseStatic {
+  grid-template-columns: 220px;
   justify-content: start;
 }
 
@@ -1124,12 +1075,12 @@ body {
 #purchaseSection .card,
 #purchaseRandom .card,
 #hand .card {
-  width: 203px;
-  min-width: 203px;
-  max-width: 203px;
-  min-height: 125px;
-  height: 125px;
-  max-height: 125px;
+  width: 220px;
+  min-width: 220px;
+  max-width: 220px;
+  min-height: 270px;
+  height: 270px;
+  max-height: 270px;
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 0;
@@ -1141,7 +1092,7 @@ body {
   overflow: hidden;
   cursor: pointer;
   box-shadow: 0 12px 32px rgba(0,0,0,.34);
-  flex: 0 0 203px;
+  flex: 0 0 220px;
 }
 
 .hand-card {
@@ -1150,20 +1101,19 @@ body {
 }
 
 #hand .hand-card {
-  height: 156px;
-  max-height: 156px;
+  height: 318px;
+  max-height: 318px;
 }
 
 .hand-card .card-face {
-  flex: 0 0 125px;
-  height: 125px;
-  min-height: 125px;
+  flex: 1 1 auto;
+  min-height: 0;
   border-radius: 14px 14px 10px 10px;
 }
 
 .hand-card-actions {
   position: static;
-  margin: 5px 6px;
+  margin: 8px;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 6px;
@@ -1175,9 +1125,9 @@ body {
   border-radius: 999px;
   background: rgba(15, 23, 42, 0.9);
   color: #e5eefc;
-  font-size: 0.64rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  padding: 3px 4px;
+  padding: 5px 4px;
   cursor: pointer;
 }
 
@@ -1221,111 +1171,44 @@ body {
   border-color: #f6ad55;
 }
 
-.purchase-card-item {
-  width: 203px;
-  min-width: 203px;
-  display: flex;
-  flex: 0 0 203px;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.purchase-card-selected-overlay {
+.purchase-card-checkbox {
   position: absolute;
-  inset: 0;
+  left: 10px;
+  top: 10px;
   z-index: 3;
-  display: none;
-  border-radius: inherit;
-  pointer-events: none;
-  background: rgba(255, 255, 255, 0.28);
-}
-
-.purchase-card-selected .purchase-card-selected-overlay {
-  display: block;
-}
-
-/* Joy-Con 焦點與滑鼠停留共用黃框準星。黃框內保留卡面原色。 */
-#commandGrid .card.rl-pad-focus::after,
-#commandGrid .card:hover::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 4;
-  border-radius: inherit;
-  pointer-events: none;
-  box-sizing: border-box;
-  border: 2px solid #ffd83d;
-  background: transparent;
-  background-image:
-    linear-gradient(#ffd83d, #ffd83d),
-    linear-gradient(90deg, #ffd83d, #ffd83d),
-    radial-gradient(circle at center,
-      transparent 0 14px,
-      #ffd83d 14px 16px,
-      transparent 16px);
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: 2px 48px, 48px 2px, 48px 48px;
-}
-
-/* 滑鼠停在卡牌上時，暫時取代 Joy-Con 焦點標記，避免畫面同時出現兩組黃框準星。 */
-#commandGrid:has(.card:hover) .card.rl-pad-focus:not(:hover)::after {
-  content: none;
-}
-
-/* 已選卡重新聚焦：白色遮罩（.purchase-card-selected-overlay，z-index 3）維持，黃框與準星（::after，z-index 4）疊在上方；
-   焦點只有一張，所以畫面最多一組黃框與準星。已選未聚焦只有白罩，未選已聚焦只有黃框與準星。 */
-
-.purchase-card-select-button {
-  position: relative;
-  width: 100%;
-  min-height: 25px;
-  border: 1px solid rgba(147, 197, 253, 0.72);
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(147, 197, 253, 0.68);
   border-radius: 6px;
-  padding: 4px 8px;
+  padding: 4px;
   color: #eff6ff;
-  background: #2563eb;
+  background: rgba(15, 23, 42, 0.92);
   cursor: pointer;
-  font-family: 'Noto Sans TC', sans-serif;
-  font-size: 0.68rem;
-  font-weight: 800;
-  line-height: 1.25;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.34);
 }
 
-.purchase-card-select-button:hover:not(:disabled) {
-  background: #1d4ed8;
+.purchase-card-checkbox input {
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: #3b82f6;
+  cursor: pointer;
 }
 
-.purchase-card-select-button.is-selected {
-  border-color: rgba(134, 239, 172, 0.8);
-  background: #15803d;
-}
-
-.purchase-card-select-button.is-selected:hover {
-  background: #166534;
-}
-
-.purchase-card-select-button:disabled {
-  border-color: rgba(148, 163, 184, 0.38);
-  color: rgba(241, 245, 249, 0.72);
-  background: #475569;
+.purchase-card-checkbox:has(input:disabled) {
+  opacity: 0.42;
   cursor: not-allowed;
 }
 
-.purchase-card-select-label {
-  display: block;
-  text-align: center;
+.purchase-card-selected {
+  border-color: #60a5fa !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.56), 0 14px 34px rgba(37, 99, 235, 0.3) !important;
 }
 
-.purchase-card-remaining {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.61rem;
-  font-weight: 700;
-  white-space: nowrap;
+.purchase-card-selected .purchase-card-checkbox {
+  color: #eff6ff;
+  border-color: #bfdbfe;
+  background: rgba(37, 99, 235, 0.96);
 }
 
 .card-color-gray,
@@ -3903,383 +3786,3 @@ body.victory-art-viewer-open {
     white-space: normal;
   }
 }
-
-/* ---- Joy-Con／搖桿控制（controller_ui.js）：高對比焦點、不改版面尺寸 ---- */
-.rl-pad-focus:not(.card) {
-  outline: 4px solid #ffe14d !important;
-  outline-offset: 2px !important;
-  box-shadow: 0 0 0 2px #000, 0 0 16px 4px rgba(255, 225, 77, 0.75) !important;
-  position: relative;
-  z-index: 3;
-}
-#padHud { position: absolute; right: 8px; bottom: 6px; z-index: 90; display: flex; align-items: center; gap: 6px; flex-direction: row-reverse; font-size: 12px; }
-#padToggleBtn { width: 28px; height: 28px; padding: 0; border-radius: 14px; border: 1px solid rgba(255,255,255,0.35); background: rgba(10,16,32,0.82); color: #fff; cursor: pointer; line-height: 1; font-size: 14px; opacity: 0.7; }
-#padToggleBtn:hover, #padHud[data-status="connected"] #padToggleBtn { opacity: 1; }
-#padHud[data-status="connected"] #padToggleBtn { border-color: #4ade80; }
-#padHud[data-status="error"] #padToggleBtn, #padHud[data-status="stale"] #padToggleBtn { border-color: #f87171; }
-#padHint { padding: 4px 10px; border-radius: 12px; background: rgba(10,16,32,0.9); color: #f1f5f9; border: 1px solid rgba(255,225,77,0.55); white-space: nowrap; pointer-events: none; }
-#padPanel { position: absolute; right: 0; bottom: 34px; width: 300px; padding: 10px 12px; border-radius: 10px; background: rgba(10,16,32,0.97); border: 1px solid rgba(255,255,255,0.3); color: #e2e8f0; display: flex; flex-direction: column; gap: 6px; }
-#padPanel[hidden], #padHint[hidden], #padButtonRing[hidden], .pad-note[hidden] { display: none !important; }
-#padPanel .pad-row { display: flex; flex-direction: column; gap: 3px; }
-#padPanel .pad-row:first-child { flex-direction: row; align-items: center; gap: 6px; }
-#padPanel .pad-actions { flex-direction: row; gap: 6px; }
-#padPanel input[type="text"] { width: 100%; box-sizing: border-box; padding: 4px 6px; background: #0b1220; color: #fff; border: 1px solid #475569; border-radius: 4px; }
-#padPanel select { width: 100%; box-sizing: border-box; padding: 4px 6px; background: #0b1220; color: #fff; border: 1px solid #475569; border-radius: 4px; }
-#padHud[data-status="unbound"] #padToggleBtn { border-color: #facc15; }
-#padPanel button { padding: 4px 10px; border-radius: 4px; border: 1px solid #64748b; background: #1e293b; color: #fff; cursor: pointer; }
-.pad-note { color: #94a3b8; font-size: 11px; line-height: 1.4; }
-.pad-error { color: #fca5a5; }
-#padButtonRing { position: absolute; z-index: 80; pointer-events: none; outline: 4px solid #ffe14d; outline-offset: 2px; box-shadow: 0 0 0 2px #000, 0 0 16px 4px rgba(255,225,77,0.75); border-radius: 4px; }
-/* 桌面模式也用同一張危險確認單（Capture 結束行動）：沿用既有 modal 外觀，只補按鈕列與危險色（客廳模式樣式在下方區段） */
-html:not([data-display="living-room"]) .lr-confirm-overlay { z-index: 85; }
-html:not([data-display="living-room"]) .lr-confirm-glass { border: 2px solid #fca5a5; }
-html:not([data-display="living-room"]) .lr-confirm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
-html:not([data-display="living-room"]) .lr-confirm-ok { background: #b91c1c; border-color: #fecaca; color: #ffffff; }
-/* SL 聚焦選單（兩種顯示模式共用，controller_living_room.js）：精簡置中 modal；尺寸為 1280×720 設計單位，字級以 55 吋客廳可讀為準 */
-.lr-focus-overlay { z-index: 84; background: rgba(2, 6, 12, 0.72); }
-.lr-focus-glass {
-  width: 820px; max-height: 600px; box-sizing: border-box; padding: 18px 22px; display: flex; flex-direction: column; gap: 10px;
-  border: 2px solid rgba(255, 225, 77, 0.7); font-family: 'Noto Sans TC', sans-serif;
-}
-.lr-focus-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.lr-focus-glass #lrFocusMenuTitle { margin: 0; font-size: 26px; color: #ffe14d; }
-.lr-focus-close {
-  flex: 0 0 auto; width: 44px; height: 44px; padding: 0; border-radius: 10px; border: 1px solid rgba(148, 163, 184, 0.5);
-  background: rgba(17, 24, 39, 0.9); color: #f8fafc; font-size: 26px; line-height: 1; cursor: pointer;
-}
-.lr-focus-close:hover { background: rgba(51, 65, 85, 0.95); }
-.lr-focus-lead { font-size: 17px; line-height: 1.4; color: #e2e8f0; }
-#lrFocusMenuSections { min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 6px; }
-.lr-focus-section-title { margin-bottom: 6px; font-size: 20px; font-weight: 700; color: #bfdbfe; }
-.lr-focus-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
-.lr-focus-option {
-  display: flex; align-items: baseline; gap: 6px; min-width: 0; min-height: 56px; box-sizing: border-box; padding: 8px 12px;
-  border-radius: 12px; border: 2px solid #334155; background: #0f172a; color: #f8fafc; font-family: inherit; text-align: left; cursor: pointer;
-}
-.lr-focus-option:hover { border-color: #94a3b8; }
-.lr-focus-name { min-width: 0; font-size: 22px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.lr-focus-tag { font-size: 16px; color: #fca5a5; white-space: nowrap; }
-.lr-focus-count { margin-left: auto; font-size: 17px; color: #fde68a; white-space: nowrap; }
-.lr-focus-empty { grid-column: 1 / -1; font-size: 17px; color: #94a3b8; }
-.lr-focus-footer { font-size: 16px; color: #fde68a; }
-/* 客廳模式：底部提示列（76px）保持可見，fail-closed 原因與按鍵說明照常顯示；不新增頂部窄條 */
-html[data-display="living-room"] .lr-focus-overlay { height: 644px; }
-
-/* ---- 開始遊戲前流程（start_flow_ui.js）：初始三條路徑 → 建立設定／Joy-Con 配對 → 既有行動代號／陣營畫面 ----
- * 與 #lobby 同一個 1280×720 設計單位；顯示開始流程時隱藏作戰準備室本體，Joy-Con 焦點集合因此只會落在開始流程上。 */
-#lobby[data-flow="start"] > :not(#startFlow) { display: none !important; }
-#lobby:not([data-flow="start"]) > #startFlow { display: none; }
-.startflow {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 4;
-  box-sizing: border-box;
-  width: 860px;
-  min-height: 460px;
-  max-height: 672px;
-  padding: 26px 32px 24px;
-  border: 1px solid rgba(148, 163, 184, 0.28);
-  border-radius: 28px;
-  background: linear-gradient(145deg, rgba(9, 14, 22, 0.92), rgba(12, 18, 29, 0.78));
-  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.58), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  overflow-y: auto;
-}
-.startflow[hidden] { display: none; }
-.startflow .lobby-title { margin-bottom: 14px; }
-.startflow .lobby-market-option::after { display: none; }
-.sf-panel[hidden], .sf-pairing[hidden] { display: none; }
-.sf-paths { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.sf-path-btn {
-  min-height: 150px;
-  padding: 18px;
-  border: 1px solid rgba(251, 191, 36, 0.6);
-  border-radius: 20px;
-  background: linear-gradient(180deg, rgba(30, 41, 59, 0.92), rgba(15, 23, 42, 0.92));
-  color: #f1f5f9;
-  text-align: left;
-  cursor: pointer;
-}
-.sf-path-btn strong { display: block; margin-bottom: 8px; font-size: 1.45rem; }
-.sf-path-btn span { color: rgba(203, 213, 225, 0.86); font-size: 0.95rem; }
-.sf-path-btn:hover, .sf-path-btn:focus-visible { border-color: #fbbf24; background: linear-gradient(180deg, rgba(120, 53, 15, 0.7), rgba(15, 23, 42, 0.92)); }
-.sf-path-join {
-  grid-column: 1 / -1;
-  padding: 16px 18px;
-  border: 1px solid rgba(148, 163, 184, 0.28);
-  border-radius: 20px;
-  background: rgba(15, 23, 42, 0.62);
-}
-.sf-path-join label strong { display: block; margin-bottom: 8px; font-size: 1.2rem; color: #e2e8f0; }
-.sf-error { min-height: 1.3em; margin-top: 6px; color: #fca5a5; font-size: 0.9rem; }
-.sf-setup-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
-.sf-setup-title { font-size: 1.5rem; font-weight: 800; color: #fbbf24; }
-.sf-row { display: grid; grid-template-columns: 110px 1fr; align-items: center; gap: 14px; margin-bottom: 12px; }
-.sf-row-label { color: rgba(203, 213, 225, 0.9); font-size: 1rem; font-weight: 700; }
-.sf-pairing { margin: 6px 0 4px; padding: 12px 14px; border: 1px solid rgba(251, 191, 36, 0.4); border-radius: 16px; background: rgba(15, 23, 42, 0.66); }
-.sf-pairing-prompt { color: #fde68a; font-size: 1rem; line-height: 1.5; }
-.sf-slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 10px 0 6px; }
-.sf-slot { padding: 8px 10px; border: 1px dashed rgba(148, 163, 184, 0.5); border-radius: 12px; text-align: center; color: rgba(148, 163, 184, 0.9); }
-.sf-slot strong { display: block; font-size: 1.25rem; }
-.sf-slot span { font-size: 0.85rem; }
-.sf-slot[data-paired="true"] { border-style: solid; border-color: #22c55e; background: rgba(21, 128, 61, 0.22); color: #bbf7d0; }
-.sf-slot[data-unavailable="true"] { opacity: 0.4; }
-.sf-pairing-status { min-height: 1.3em; color: rgba(203, 213, 225, 0.86); font-size: 0.9rem; }
-.sf-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 12px; }
-.sf-continue-hint { flex: 1; color: rgba(245, 158, 11, 0.9); font-size: 0.9rem; }
-.sf-footer .lobby-action-btn { flex: none; min-width: 220px; }
-.sf-summary { padding: 8px 10px; border: 1px solid rgba(148, 163, 184, 0.28); border-radius: 12px; background: rgba(15, 23, 42, 0.6); color: #e2e8f0; font-size: 0.85rem; line-height: 1.5; }
-#lobby[data-flow="create"] #joinRoomBtn, #lobby[data-flow="join"] #createRoomBtn { display: none; }
-#lobby[data-flow="join"] #lanInfoField { display: none; }
-/* Joy-Con 建立畫面：這些設定已在開始流程決定；只留行動代號、玩家席位與建立／陣營／準備／開始。 */
-#lobby[data-flow="create"][data-joycon-lobby] #roomSettingsSummary,
-#lobby[data-flow="create"][data-joycon-lobby] #roomSettingsHint,
-#lobby[data-flow="create"][data-joycon-lobby] #roomSettingsField > span,
-#lobby[data-flow="create"][data-joycon-lobby] .lobby-room-column > label.lobby-field:has(#roomId),
-#lobby[data-flow="create"][data-joycon-lobby] #lanInfoField,
-#lobby[data-flow="create"][data-joycon-lobby] #difficultyField,
-#lobby[data-flow="create"][data-joycon-lobby] #aiRedArmyField { display: none; }
-#lobby[data-flow] .lobby-room-row + .lobby-field-hint { display: none; }
-
-/* 初始入口沿用主視覺本身，不用面板遮住遊戲標題。位置依 1280×720 參考畫面固定。 */
-#stageViewport:has(#lobby[data-flow="start"][data-start-step="entry"])::before {
-  opacity: 0;
-}
-#designStage:has(#lobby[data-flow="start"][data-start-step="entry"]) > #warTitle {
-  display: none;
-}
-#lobby[data-flow="start"][data-start-step="entry"] {
-  padding: 0;
-  overflow: hidden;
-  background: linear-gradient(to bottom, transparent 0 68%, rgba(2, 4, 8, 0.08) 100%);
-}
-#lobby[data-flow="start"][data-start-step="entry"]::after { display: none; }
-#lobby[data-flow="start"][data-start-step="entry"] .startflow {
-  inset: 0;
-  width: 1280px;
-  height: 720px;
-  min-height: 0;
-  max-height: none;
-  padding: 0;
-  transform: none;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  overflow: hidden;
-}
-#lobby[data-flow="start"][data-start-step="entry"] .startflow > .lobby-kicker,
-#lobby[data-flow="start"][data-start-step="entry"] .startflow > .lobby-title {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-#lobby[data-flow="start"][data-start-step="entry"] .sf-paths {
-  display: block;
-}
-#lobby[data-flow="start"][data-start-step="entry"] .sf-path-btn {
-  position: absolute;
-  width: 294px;
-  min-height: 0;
-  height: 64px;
-  padding: 0 20px;
-  border: 2px solid rgba(206, 161, 86, 0.72);
-  border-radius: 13px;
-  background: linear-gradient(180deg, rgba(153, 116, 62, 0.96), rgba(111, 77, 39, 0.96));
-  color: #18130e;
-  text-align: center;
-  box-shadow: inset 0 1px 0 rgba(255, 235, 190, 0.32), 0 5px 18px rgba(0, 0, 0, 0.46);
-}
-#lobby[data-flow="start"][data-start-step="entry"] #sfCreateHuman { left: 170px; top: 606px; }
-#lobby[data-flow="start"][data-start-step="entry"] #sfCreateAi { left: 493px; top: 606px; }
-#lobby[data-flow="start"][data-start-step="entry"] .sf-path-btn strong {
-  margin: 0;
-  font: 900 18px/60px 'Noto Sans TC', sans-serif;
-  letter-spacing: 0.06em;
-}
-#lobby[data-flow="start"][data-start-step="entry"] .sf-path-btn span { display: none; }
-#lobby[data-flow="start"][data-start-step="entry"] .sf-path-btn:hover,
-#lobby[data-flow="start"][data-start-step="entry"] .sf-path-btn:focus-visible {
-  border-color: #ffe29a;
-  background: linear-gradient(180deg, #b78b49, #81572b);
-  outline: 3px solid rgba(255, 226, 154, 0.48);
-  outline-offset: 2px;
-}
-#lobby[data-flow="start"][data-start-step="entry"] .sf-path-join {
-  position: absolute;
-  left: 816px;
-  top: 606px;
-  width: 294px;
-  height: 64px;
-  padding: 0;
-  border: 2px solid rgba(206, 161, 86, 0.72);
-  border-radius: 13px;
-  background: linear-gradient(180deg, rgba(153, 116, 62, 0.96), rgba(111, 77, 39, 0.96));
-  box-shadow: inset 0 1px 0 rgba(255, 235, 190, 0.32), 0 5px 18px rgba(0, 0, 0, 0.46);
-}
-#lobby[data-flow="start"][data-start-step="entry"] .sf-path-join > label { display: none; }
-#lobby[data-flow="start"][data-start-step="entry"] .sf-path-join .lobby-room-row {
-  height: 60px;
-  gap: 0;
-  padding: 8px;
-}
-#lobby[data-flow="start"][data-start-step="entry"] #sfRoomCode {
-  height: 44px;
-  min-width: 0;
-  padding: 6px 10px;
-  border: 1px solid rgba(79, 51, 24, 0.72);
-  border-radius: 8px 0 0 8px;
-  background: rgba(238, 213, 164, 0.94);
-  color: #21170d;
-  text-align: center;
-}
-#lobby[data-flow="start"][data-start-step="entry"] #sfRoomCode::placeholder { color: rgba(54, 36, 18, 0.72); }
-#lobby[data-flow="start"][data-start-step="entry"] #sfJoinBtn {
-  height: 44px;
-  padding: 0 13px;
-  border-color: rgba(79, 51, 24, 0.72);
-  border-radius: 0 8px 8px 0;
-  background: #60401f;
-  color: #f8ead0;
-}
-#lobby[data-flow="start"][data-start-step="entry"] .sf-error {
-  position: absolute;
-  left: 0;
-  bottom: 66px;
-  width: 294px;
-  margin: 0;
-  padding: 3px 8px;
-  border-radius: 6px;
-  background: rgba(74, 22, 18, 0.94);
-  text-align: center;
-}
-#lobby[data-flow="start"][data-start-step="entry"] .sf-error:empty {
-  display: none;
-}
-
-/* ---- 客廳大螢幕模式（controller_living_room.js）：只在 html[data-display="living-room"] 下生效 ----
- * 舞台本身已等比縮放並留 5% title-safe 邊界（app.js resizeStage），以下尺寸都是 1280×720 設計單位，
- * 因此在 720p／1080p／4K 只差銳利度。桌面模式不受影響。 */
-html[data-display="living-room"] #hud { height: 56px; padding: 8px 16px; font-size: 18px; }
-html[data-display="living-room"] .hud-chip { flex: 0 0 auto; min-height: 34px; padding: 3px 12px; font-weight: 600; white-space: nowrap; }
-html[data-display="living-room"] #phaseActionMetaWrap { flex-basis: 360px; max-width: 360px; }
-html[data-display="living-room"] #phaseActionMeta { font-size: 18px; }
-html[data-display="living-room"] #gameTabs { height: 52px; gap: 6px; padding: 6px 12px; overflow: hidden; }
-html[data-display="living-room"] .game-tab { font-size: 17px; font-weight: 600; padding: 7px 12px; }
-html[data-display="living-room"] .phase-action-btn,
-html[data-display="living-room"] .phase-red-army-btn { font-size: 16px; padding: 7px 12px; }
-html[data-display="living-room"] .game-view,
-html[data-display="living-room"] #mapView,
-html[data-display="living-room"] #logView { top: 52px; height: calc(100% - 52px - 76px); }
-html[data-display="living-room"] .panel-title { font-size: 18px; font-weight: 700; color: #bfdbfe; margin-bottom: 4px; }
-html[data-display="living-room"] #purchaseSection .panel-title,
-html[data-display="living-room"] #randomMarketPanel .panel-title { margin-bottom: 4px; }
-
-/* 指揮中心沿用三列半高卡版面。卡牌列不可出現捲軸。 */
-html[data-display="living-room"] #commandGrid {
-  gap: 6px;
-  padding: 6px;
-}
-/* 客廳模式為提示列保留 76px，三列各剩 ~124px：卡牌與其下方按鈕整組等比縮小，確保六張常設卡與按鈕完整顯示、不產生捲軸。 */
-html[data-display="living-room"] #purchaseRandom .purchase-card-item,
-html[data-display="living-room"] #purchaseStatic .purchase-card-item,
-html[data-display="living-room"] #hand .hand-card { zoom: 0.78; }
-/* 抵銷卡牌容器縮放，讓客廳模式仍顯示 2px 的焦點框。 */
-html[data-display="living-room"] #commandGrid .card.rl-pad-focus::after,
-html[data-display="living-room"] #commandGrid .card:hover::after {
-  border-width: 2.57px;
-}
-/* 客廳模式的隨機購買卡縮小到 0.78，右側空位較寬：陣營能力欄放寬並用電視可讀的字級。 */
-html[data-display="living-room"] #randomMarketPanel { --faction-ability-w: 420px; }
-html[data-display="living-room"] #randomMarketPanel #factionActionPanel { top: 43px; padding: 4px 10px; }
-html[data-display="living-room"] #randomMarketPanel #factionActionPanel .panel-title { margin-bottom: 2px; }
-html[data-display="living-room"] #randomMarketPanel .faction-action-result,
-html[data-display="living-room"] #randomMarketPanel .faction-action-placeholder { padding: 4px 8px; font-size: 16px; line-height: 1.35; }
-html[data-display="living-room"] #randomMarketPanel #factionActionButtons .base-choice-btn { padding: 4px 10px; font-size: 17px; font-weight: 700; }
-html[data-display="living-room"] #purchaseSelectionControls { min-height: 30px; margin: 0 0 3px; gap: 6px; }
-html[data-display="living-room"] #purchaseSelectionSummary,
-html[data-display="living-room"] .purchase-selection-clear-btn,
-html[data-display="living-room"] .purchase-selection-buy-btn,
-html[data-display="living-room"] .purchase-selection-topdeck-btn { font-size: 15px; padding: 4px 9px; min-height: 28px; }
-
-/* 卡面預覽放大到畫面高約 80% */
-html[data-display="living-room"] .card-preview-content { width: 469px; height: 576px; }
-
-/* 區域層焦點框（整區黃框＋大字標籤）；內容層時改為細虛線提示目前所在區域 */
-html[data-display="living-room"] #lrZoneRing {
-  position: absolute; z-index: 45; pointer-events: none; box-sizing: border-box;
-  border: 5px solid #ffe14d; border-radius: 12px; box-shadow: 0 0 0 3px #000, 0 0 24px 6px rgba(255, 225, 77, 0.5);
-}
-html[data-display="living-room"] #lrZoneRing[data-layer="item"] { border-width: 3px; border-style: dashed; box-shadow: 0 0 0 2px #000; }
-html[data-display="living-room"] #lrZoneLabel {
-  position: absolute; left: 8px; top: -16px; padding: 2px 10px; border-radius: 6px;
-  background: #ffe14d; color: #111827; box-shadow: 0 0 0 2px #000;
-  font: 700 18px/1.25 'Noto Sans TC', sans-serif; white-space: nowrap;
-}
-html[data-display="living-room"] #lrZoneRing[data-label-inside="true"] #lrZoneLabel { top: 4px; left: auto; right: 8px; }
-html[data-display="living-room"] #lrZoneRing[data-layer="item"] #lrZoneLabel { font-size: 16px; opacity: 0.92; }
-
-/* 固定按鍵提示列＋controller legend（只顯示、不接受焦點；在 title-safe 內、不遮擋內容：分頁內容高度已扣掉 76px） */
-html[data-display="living-room"] #lrBar {
-  position: absolute; left: 0; bottom: 0; width: 1280px; height: 76px; box-sizing: border-box; z-index: 40;
-  display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: 42px 24px; column-gap: 14px;
-  padding: 5px 52px 5px 16px; background: rgba(3, 6, 12, 0.95); border-top: 2px solid rgba(255, 225, 77, 0.6);
-  color: #f8fafc; pointer-events: none; font-family: 'Noto Sans TC', sans-serif;
-}
-html[data-display="living-room"] #lrBar[hidden],
-html[data-display="living-room"] #lrHelp[hidden],
-html[data-display="living-room"] #lrZoneRing[hidden],
-html[data-display="living-room"] #lrMapPanel[hidden] { display: none !important; }
-html[data-display="living-room"] #lrBarStatus { grid-row: 1; align-self: center; max-width: 330px; font-size: 18px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #bfdbfe; }
-html[data-display="living-room"] #lrBarStatus[data-busy="true"] { color: #fde68a; }
-html[data-display="living-room"] #lrBarStatus[data-alert="true"] { color: #ffffff; background: #b91c1c; padding: 2px 10px; border-radius: 6px; }
-html[data-display="living-room"] #lrHints { grid-row: 1; display: flex; align-items: center; gap: 10px; min-width: 0; overflow: hidden; padding: 0 8px; }
-html[data-display="living-room"] .lr-hint {
-  flex: 0 1 auto; min-width: 0; max-width: 300px; display: flex; align-items: center; gap: 8px; padding: 3px 12px 3px 4px; border-radius: 10px;
-  border: 2px solid #94a3b8; background: #0f172a; color: #f8fafc;
-  font-size: 18px; font-weight: 700; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-html[data-display="living-room"] .lr-hint > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-html[data-display="living-room"] .lr-key {
-  flex: 0 0 auto; min-width: 26px; padding: 0 7px; border-radius: 7px; background: #ffe14d; color: #111827;
-  font: 800 17px/26px 'Noto Sans TC', sans-serif; text-align: center; box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.35);
-}
-html[data-display="living-room"] .lr-hint[data-danger="true"] { background: #b91c1c; border-color: #fecaca; color: #ffffff; }
-html[data-display="living-room"] .lr-hint[data-danger="true"] > span::before { content: "⚠ "; }
-html[data-display="living-room"] .lr-hint-empty { color: #cbd5e1; font-size: 17px; }
-html[data-display="living-room"] #lrLegend { grid-column: 1 / -1; grid-row: 2; font-size: 16px; line-height: 24px; color: #fde68a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-html[data-display="living-room"] #padHint { display: none !important; }
-html[data-display="living-room"] #padHud { bottom: 24px; }
-html[data-display="living-room"] #lrHelp {
-  position: absolute; right: 16px; bottom: 84px; z-index: 46; width: 540px; box-sizing: border-box; padding: 12px 16px;
-  border-radius: 12px; border: 2px solid #ffe14d; background: rgba(3, 6, 12, 0.96); color: #f8fafc;
-  font: 500 17px/1.6 'Noto Sans TC', sans-serif; pointer-events: none;
-}
-html[data-display="living-room"] .lr-help-title { font-size: 20px; font-weight: 700; color: #ffe14d; margin-bottom: 4px; }
-
-/* 地圖兩段式目標清單（控制器路徑；滑鼠仍可直接點地圖） */
-html[data-display="living-room"] #lrMapPanel {
-  position: absolute; right: 12px; top: 60px; bottom: 12px; width: 300px; z-index: 5; box-sizing: border-box;
-  display: flex; flex-direction: column; gap: 6px; padding: 10px; border-radius: 12px;
-  border: 2px solid rgba(255, 225, 77, 0.65); background: rgba(3, 6, 12, 0.94); color: #f8fafc; font-family: 'Noto Sans TC', sans-serif;
-}
-html[data-display="living-room"] #lrMapTitle { font-size: 19px; font-weight: 700; color: #ffe14d; }
-html[data-display="living-room"] #lrMapRows { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding: 6px; }
-html[data-display="living-room"] .lr-map-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 6px 10px; border-radius: 8px; background: #0f172a; border: 1px solid #334155; }
-html[data-display="living-room"] .lr-map-town { font-size: 20px; font-weight: 700; }
-html[data-display="living-room"] .lr-map-meta { font-size: 16px; color: #cbd5e1; white-space: nowrap; }
-html[data-display="living-room"] #lrMapFooter { font-size: 16px; line-height: 1.4; color: #fde68a; }
-
-/* 危險操作確認單（預設焦點＝返回） */
-html[data-display="living-room"] .lr-confirm-overlay { z-index: 85; background: rgba(2, 6, 12, 0.78); }
-html[data-display="living-room"] .lr-confirm-glass { width: 600px; padding: 22px; border: 2px solid #fca5a5; }
-html[data-display="living-room"] .lr-confirm-glass .modal-title-text { font-size: 28px; }
-html[data-display="living-room"] .lr-confirm-glass .modal-body-text { font-size: 18px; color: #e2e8f0; }
-html[data-display="living-room"] #lrConfirmInfo { margin: 0 0 16px; padding-left: 22px; font-size: 18px; line-height: 1.6; color: #fde68a; }
-html[data-display="living-room"] .lr-confirm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-html[data-display="living-room"] .lr-confirm-actions button { min-height: 58px; font-size: 21px; font-weight: 700; }
-html[data-display="living-room"] .lr-confirm-ok { background: #b91c1c; border-color: #fecaca; color: #ffffff; }
