@@ -149,7 +149,11 @@ class SubmitDeferred(Exception):
 
 def _submit(game: Any, player_id: str, action: dict, pre_submit: Any) -> Any:
     if pre_submit is not None:
-        pre_submit()
+        # 需要知道即將送出哪個行動的 hook（例如客廳輪流的回合結束確認）設 accepts_action；其他 hook 照舊不帶參數。
+        if getattr(pre_submit, "accepts_action", False):
+            pre_submit(action)
+        else:
+            pre_submit()
     return action_submitter.submit(game, player_id, action)
 
 

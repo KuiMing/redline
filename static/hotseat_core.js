@@ -197,6 +197,69 @@
 
   function masked(view) { return MASKED_VIEWS.includes(view); }
 
+  // ---------------------------------------------------------------- AI 紅軍公開行動視窗
+  // AI 紅軍不是本機席位：它行動時 decide() 回 waiting 遮罩。這裡只在「目前行動的玩家（actor）就是 AI 紅軍」時，把 server 給的
+  // 公開行動摘要（state.ai_red_army.public_report）整理成置中視窗的內容；此時紅軍仍是 current player，不先換到下一位玩家。
+  // 回合結束時的等待確認（ended）來自伺服器 state.ai_red_army.awaiting_ack：伺服器在確認或逾時前不會把 current player 換到下一位。
+  // 只挑固定欄位並限制長度與數量，避免異常 payload 撐破版面。
+  const AI_PUBLIC_MAX_STEPS = 6;
+  const AI_PUBLIC_MAX_LINES = 12;
+  const AI_PUBLIC_MAX_CHARS = 200;
+  const AI_PUBLIC_RESOURCES = Object.freeze(['money', 'propaganda']);
+
+  function cleanCount(v) { return Number.isFinite(v) ? Math.trunc(v) : 0; }
+
+  function cleanResources(raw) {
+    const out = {};
+    for (const key of AI_PUBLIC_RESOURCES) out[key] = cleanCount(raw && raw[key]);
+    return out;
+  }
+
+  // 伺服器 log 的英文句型中，「玩家動態」（app.js localizePeerActionNoticeText）沒有涵蓋、但 AI 回合會出現的幾種。
+  // 回傳 null＝這裡沒有對應，交給呼叫端的其他在地化；不會回傳含英文的字串。
+  const AI_LINE_PATTERNS = Object.freeze([
+    [/^End of turn for (.+)$/, m => `${m[1]} 結束回合`],
+    [/^Event drawn: (.+?)(?: \((.+)\))?$/, m => `抽出事件：${m[1]}`],
+    [/^Event (failure|success): (.+?) must discard (\d+) hand card\(s\)$/, m => `事件${m[1] === 'failure' ? '失敗' : '成功'}：${m[2]}須棄 ${m[3]} 張手牌`],
+    [/^Event (failure|success): no effect for (.+)$/, m => `事件${m[1] === 'failure' ? '失敗' : '成功'}：對${m[2]}沒有效果`],
+    [/^(.+?) triggered (.+?) and placed (.+?) on (.+?)'s deck$/, m => `${m[1]} 發動${m[2]}，將${m[3]}放到${m[4]}的牌庫上`],
+  ]);
+
+  function aiLineText(raw) {
+    const text = String(raw == null ? '' : raw).replace(/^\[Turn \d+\]\s*/, '').trim();
+    for (const [pattern, render] of AI_LINE_PATTERNS) {
+      const m = pattern.exec(text);
+      if (m) return render(m);
+    }
+    return null;
+  }
+
+  function aiPublicView(state, verdict) {
+    if (!verdict || verdict.view !== 'waiting' || !verdict.actor) return null;
+    const ai = state && state.ai_red_army;
+    if (!ai || ai.enabled !== true || !isId(ai.player_id) || verdict.actor.playerId !== ai.player_id) return null;
+    if (verdict.actor.faction !== 'red_army') return null; // 公開視窗只在紅軍是目前行動玩家時出現
+    const report = ai.public_report;
+    const fresh = !!report && typeof report === 'object' && report.turn === state.turn && Array.isArray(report.steps);
+    const steps = fresh
+      ? report.steps.slice(-AI_PUBLIC_MAX_STEPS).map(step => ({
+        seq: cleanCount(step && step.seq),
+        lines: (Array.isArray(step && step.lines) ? step.lines : [])
+          .filter(line => typeof line === 'string' && line.trim()).slice(-AI_PUBLIC_MAX_LINES)
+          .map(line => line.slice(0, AI_PUBLIC_MAX_CHARS)),
+        resources: cleanResources(step && step.resources),
+        delta: cleanResources(step && step.delta),
+      }))
+      : [];
+    const name = String(verdict.actor.name || (report && report.actor_name) || 'AI 紅軍').slice(0, 40);
+    // 伺服器權威：AI 紅軍要結束回合，正停在 current player＝紅軍，等公開視窗確認（知道了／A／逾時）後才輪到下一位。
+    const waiting = ai.awaiting_ack && typeof ai.awaiting_ack === 'object' && ai.awaiting_ack.turn === state.turn;
+    return {
+      actorId: ai.player_id, actorName: name, turn: cleanCount(state.turn), steps,
+      ended: !!waiting, timeoutSeconds: waiting ? cleanCount(ai.awaiting_ack.timeout_seconds) : 0,
+    };
+  }
+
   /** 交接確認：只有 A，且本分頁（bridge 權威）擁有的正是綁給該席位的那一支。 */
   function confirmVerdict({ verdict, owned, action }) {
     if (!verdict || verdict.view !== 'handoff' || !verdict.seat) return { ok: false, reason: 'not-handoff' };
@@ -511,7 +574,7 @@
   return {
     STORE_KEY, SESSION_KEY, MAX_SEATS, CODENAMES, seatCodename, nextSeatCodename, codenameRenames,
     isControllerId, normalizeStore, seatsFor, findSeat, seatForController, addSeat, bindController, unbindController,
-    isHotSeatGame, normalizeSession, confirmSession, lockSession, authoritativeActor, decide, masked,
+    isHotSeatGame, normalizeSession, confirmSession, lockSession, authoritativeActor, decide, masked, aiPublicView, aiLineText,
     confirmVerdict, allowsInput, bindableControllers, bindingLost, handoffTitle, reasonText,
     seatControllerStatus, controllerDisplayNames, controllerNames, seatJoyStatus, controllerChoices, withLocalOwners, lobbySeats, decideLobby, lobbyInput, lobbyEntersSelection, lobbyListeners, listenerSwitchTarget, claimTarget, switchSession, lobbyPrompt,
   };

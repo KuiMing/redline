@@ -670,3 +670,107 @@ test('席位 Joy-Con 狀態燈：已綁定一律只顯示色燈（無可見狀�
     assert.doesNotMatch(`${v.text}${v.aria}`, /有訊號/);
   }
 });
+
+// ---- AI 紅軍公開行動視窗：只在目前行動的玩家（current player）是 AI 紅軍（waiting 遮罩）時有內容；內容欄位固定、大小有上限
+const AI_ID = 'ai-red-1';
+const aiState = (extra = {}) => state({
+  turn: 3,
+  current_player: 'AI 紅軍',
+  players: [
+    { id: 'p-tw', name: '臺灣玩家', faction: 'taiwan_green' },
+    { id: 'p-hk', name: '香港玩家', faction: 'hong_kong' },
+    { id: AI_ID, name: 'AI 紅軍', faction: 'red_army' },
+  ],
+  ai_red_army: {
+    enabled: true, player_id: AI_ID, status: { state: 'idle' },
+    public_report: {
+      turn: 3, actor_name: 'AI 紅軍', next_seq: 3,
+      steps: [
+        { seq: 1, lines: ['[Turn 3] AI 紅軍 bought 宣傳家'], resources: { money: 1, propaganda: 0 }, delta: { money: -2, propaganda: 0 } },
+        { seq: 2, lines: ['[Turn 3] AI 紅軍 played 追隨者 as resource'], resources: { money: 2, propaganda: 1 }, delta: { money: 1, propaganda: 1 } },
+      ],
+    },
+  },
+  ...extra,
+});
+const aiVerdict = (s) => H.decide({ state: s, connectedSeatId: 'p-tw', session: { gameId: G, active: 'p-tw', unlocked: true }, store: storeWith(TW, HK), gameId: G });
+
+test('AI 紅軍是目前行動的玩家（faction red_army）：waiting 遮罩帶出公開行動（步驟、公開資源與變化）', () => {
+  const s = aiState();
+  const verdict = aiVerdict(s);
+  assert.equal(verdict.view, 'waiting');
+  assert.equal(verdict.actor.playerId, AI_ID);
+  const view = H.aiPublicView(s, verdict);
+  assert.equal(view.actorName, 'AI 紅軍');
+  assert.equal(view.turn, 3);
+  assert.deepEqual(view.steps.map(x => x.seq), [1, 2]);
+  assert.deepEqual(view.steps[1].delta, { money: 1, propaganda: 1 });
+  assert.deepEqual(view.steps[1].resources, { money: 2, propaganda: 1 });
+  assert.deepEqual(Object.keys(view.steps[0]).sort(), ['delta', 'lines', 'resources', 'seq']);
+});
+
+test('只在紅軍是目前行動的玩家時有內容：行動者是本機真人、不是 waiting 遮罩、沒有 AI、行動者不是紅軍 → null（結束時機由 UI 決定，不在這裡）', () => {
+  const ai = aiState();
+  assert.ok(H.aiPublicView(ai, aiVerdict(ai)));
+  // 下一位真人成為行動者：交接遮罩（handoff），AI 視窗關閉
+  const next = aiState({ current_player: '香港玩家' });
+  const handoff = aiVerdict(next);
+  assert.equal(handoff.view, 'handoff');
+  assert.equal(H.aiPublicView(next, handoff), null);
+  // pending_choice 交給真人（例如反應視窗）也是換人
+  const choice = aiState({ pending_choice: { player_id: 'p-hk' } });
+  assert.equal(H.aiPublicView(choice, aiVerdict(choice)), null);
+  // 沒有啟用 AI／不是 AI 的席位／沒有 verdict
+  assert.equal(H.aiPublicView(state(), H.decide({ state: state(), connectedSeatId: 'p-tw', session: { gameId: G, active: 'p-tw', unlocked: true }, store: storeWith(TW, HK), gameId: G })), null);
+  const off = aiState(); off.ai_red_army.enabled = false;
+  assert.equal(H.aiPublicView(off, aiVerdict(off)), null);
+  assert.equal(H.aiPublicView(ai, null), null);
+  // 紅軍仍是 current player 才有內容：actor 不是紅軍陣營 → null
+  const notRed = aiState(); notRed.players[2].faction = 'taiwan_green';
+  assert.equal(H.aiPublicView(notRed, aiVerdict(notRed)), null);
+  assert.equal(H.aiPublicView(null, aiVerdict(ai)), null);
+});
+
+test('舊回合的摘要不顯示：AI 回合剛開始、還沒有任何公開行動時是空步驟', () => {
+  const s = aiState({ turn: 4 });
+  const view = H.aiPublicView(s, aiVerdict(s));
+  assert.deepEqual(view.steps, []);
+  assert.equal(view.turn, 4);
+});
+
+test('摘要大小有上限：最多 6 步、每步 12 行、每行 200 字；非字串行丟棄', () => {
+  const s = aiState();
+  s.ai_red_army.public_report.steps = Array.from({ length: 10 }, (_, i) => ({
+    seq: i + 1, lines: [...Array.from({ length: 20 }, (_, n) => `AI 紅軍 line ${n}`), 42, null, '  ', 'x'.repeat(500)],
+    resources: { money: 'bad', propaganda: 2.9 }, delta: null,
+  }));
+  const view = H.aiPublicView(s, aiVerdict(s));
+  assert.equal(view.steps.length, 6);
+  assert.equal(view.steps[0].seq, 5);
+  assert.ok(view.steps.every(x => x.lines.length <= 12 && x.lines.every(l => typeof l === 'string' && l.length <= 200)));
+  assert.deepEqual(view.steps[0].resources, { money: 0, propaganda: 2 });
+  assert.deepEqual(view.steps[0].delta, { money: 0, propaganda: 0 });
+});
+
+test('AI 回合常見英文 log 句型轉成繁體中文；沒有對應的回傳 null（不露出英文）', () => {
+  assert.equal(H.aiLineText('[Turn 1] End of turn for AI 紅軍'), 'AI 紅軍 結束回合');
+  assert.equal(H.aiLineText('[Turn 2] Event drawn: 歲月靜好 (no-op)'), '抽出事件：歲月靜好');
+  assert.equal(H.aiLineText('[Turn 3] Event failure: 單人房主 must discard 1 hand card(s)'), '事件失敗：單人房主須棄 1 張手牌');
+  assert.equal(H.aiLineText("[Turn 1] AI 紅軍 triggered 政工部 and placed 內鬥 on 單人房主's deck"), 'AI 紅軍 發動政工部，將內鬥放到單人房主的牌庫上');
+  assert.equal(H.aiLineText('[Turn 1] AI 紅軍 bought 宣傳家'), null);
+  assert.equal(H.aiLineText(undefined), null);
+});
+
+test('回合結束的等待確認來自伺服器 awaiting_ack：current player 仍是紅軍時 ended＝true；沒有（或舊回合）則 false', () => {
+  const s = aiState();
+  assert.equal(H.aiPublicView(s, aiVerdict(s)).ended, false);
+  s.ai_red_army.awaiting_ack = { turn: 3, timeout_seconds: 10 };
+  const view = H.aiPublicView(s, aiVerdict(s));
+  assert.equal(s.current_player, 'AI 紅軍'); // 權威欄位：仍輪到紅軍
+  assert.deepEqual([view.ended, view.timeoutSeconds], [true, 10]);
+  s.ai_red_army.awaiting_ack = { turn: 2, timeout_seconds: 10 }; // 舊回合的等待不算
+  assert.equal(H.aiPublicView(s, aiVerdict(s)).ended, false);
+  // 伺服器放行（awaiting_ack 清除並輪到下一位）：不再有 AI 視窗內容
+  const next = aiState({ current_player: '香港玩家' });
+  assert.equal(H.aiPublicView(next, aiVerdict(next)), null);
+});

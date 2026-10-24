@@ -29,6 +29,23 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
 #hotseatMask .hs-error { color: #fca5a5; min-height: 1.5em; }
 #hotseatMask .hs-binds { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
 #hotseatMask button { font: inherit; padding: 6px 12px; border-radius: 8px; border: 1px solid #475569; background: #1e293b; color: #f8fafc; cursor: pointer; }
+/* AI 紅軍公開行動視窗：與舞台同一套 1280×720 設計單位，隨 --stage-scale（桌面與客廳模式）等比縮放並置中。 */
+#hotseatMask .hs-ai { display: none; position: absolute; left: 50%; top: 50%; width: 780px; box-sizing: border-box; padding: 22px 28px;
+  transform: translate(-50%, -50%) scale(var(--stage-scale, 1)); transform-origin: center; border: 2px solid #b91c1c; border-radius: 14px;
+  background: #0f141c; color: #f3f4f6; font-size: 20px; line-height: 1.45; }
+#hotseatMask[data-ai-public="on"] .hs-ai { display: block; }
+#hotseatMask[data-ai-public="on"] .hs-card { display: none; }
+#hotseatMask .hs-ai h2 { margin: 4px 0 2px; font-size: 36px; }
+#hotseatMask .hs-ai-sub { margin: 0 0 10px; color: #cbd5e1; font-size: 18px; }
+#hotseatMask .hs-ai-steps { list-style: none; margin: 0; padding: 0; max-height: 400px; overflow: hidden; display: flex; flex-direction: column; gap: 8px; }
+#hotseatMask .hs-ai-step { padding: 8px 14px; border: 1px solid #334155; border-radius: 10px; background: #111827; }
+#hotseatMask .hs-ai-step.hs-ai-latest { border-color: #fbbf24; background: #1f2937; }
+#hotseatMask .hs-ai-step-head { display: flex; justify-content: space-between; gap: 12px; color: #fcd34d; font-size: 16px; font-weight: 700; }
+#hotseatMask .hs-ai-line { margin: 2px 0 0; font-size: 20px; }
+#hotseatMask .hs-ai-empty { padding: 14px; border: 1px dashed #475569; border-radius: 10px; color: #cbd5e1; }
+#hotseatMask .hs-ai-foot { margin: 12px 0 0; display: flex; align-items: center; justify-content: space-between; gap: 16px; color: #94a3b8; font-size: 16px; }
+#hotseatMask .hs-ai-foot button { flex: none; padding: 8px 22px; font-size: 20px; font-weight: 700; border-color: #fbbf24; }
+#hotseatMask .hs-ai-foot button[hidden] { display: none; }
 .hotseat-lobby { margin-top: 10px; font-size: 13px; }
 .hotseat-lobby .hs-seat { display: flex; flex-direction: column; margin: 2px 0; padding: 2px 6px; border: 1px solid transparent; border-radius: 6px; }
 .hotseat-lobby .hs-seat.hs-actor { border-color: #f59e0b; }
@@ -73,6 +90,7 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
     maskSig: null,
     lobbySig: null,
     timer: null,
+    aiShown: null, // 目前顯示中的 AI 紅軍公開視窗內容（Core.aiPublicView）；沒有視窗時為 null
   };
 
   // ------------------------------------------------------------ storage（內容不可信，一律經 Core 正規化）
@@ -140,7 +158,13 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
       <p id="hotseatStatus"></p>
       <div id="hotseatBinds" class="hs-binds"></div>
       <p id="hotseatNotice" class="hs-error"></p>
-    </div>`;
+    </div>
+    <section id="hotseatAiPublic" class="hs-ai" role="status" aria-live="polite" aria-labelledby="hotseatAiTitle" hidden>
+      <h2 id="hotseatAiTitle"></h2>
+      <p id="hotseatAiSub" class="hs-ai-sub"></p>
+      <ol id="hotseatAiSteps" class="hs-ai-steps"></ol>
+      <p class="hs-ai-foot"><span id="hotseatAiFoot"></span><button id="hotseatAiDismiss" type="button" hidden>知道了</button></p>
+    </section>`;
     document.body.appendChild(el);
     return el;
   }
@@ -176,11 +200,81 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
     return b;
   }
 
+  /**
+   * 公開行動的一行：先用 AI 回合常見句型，再沿用「玩家動態」的在地化（只限 AI 自己的行動句）。
+   * 仍含英文的行不顯示，避免露出原始 log，也不把別人的事件結果掛在 AI 名下。
+   */
+  function aiLineText(raw, actorName, playerNames) {
+    const text = String(raw).replace(/^\[Turn \d+\]\s*/, '').trim();
+    if (!text) return '';
+    let out = Core.aiLineText(text);
+    if (out === null && text.startsWith(actorName) && typeof localizePeerActionNoticeText === 'function') {
+      try { out = localizePeerActionNoticeText({ actor: { name: actorName }, text, playerNames }); } catch { out = null; }
+    }
+    if (out === null) out = text;
+    return !out || /[A-Za-z]{3,}/.test(out) ? '' : out;
+  }
+
+  const RESOURCE_TEXT = Object.freeze({ money: '資金', propaganda: '宣傳' });
+
+  function aiDeltaText(delta) {
+    return Object.keys(RESOURCE_TEXT).filter(k => delta[k]).map(k => `${RESOURCE_TEXT[k]} ${delta[k] > 0 ? '+' : ''}${delta[k]}`).join('　');
+  }
+
+  /** 公開行動視窗內容（最新一步在最上面，超出高度的是較舊的步驟）；ai 為 null 時關閉並清空。 */
+  function renderAiPublic(el, ai) {
+    const panel = el.querySelector('#hotseatAiPublic');
+    if (!panel) return;
+    el.dataset.aiPublic = ai ? 'on' : 'off';
+    panel.hidden = !ai;
+    if (!ai) { el.querySelector('#hotseatAiSteps').replaceChildren(); return; }
+    const names = ((hs.lastState && hs.lastState.players) || []).map(p => p && p.name).filter(Boolean);
+    el.querySelector('#hotseatAiTitle').textContent = `${ai.actorName}${ai.ended ? '回合結束' : '行動中'}`;
+    el.querySelector('#hotseatAiFoot').textContent = ai.ended
+      ? `${ai.actorName}的回合已結束，目前仍輪到${ai.actorName}；按「知道了」或 A 後才會輪到下一位${ai.timeoutSeconds ? `（約 ${ai.timeoutSeconds} 秒後自動繼續）` : ''}。`
+      : `${ai.actorName}是目前行動的玩家；行動結束後會先停在這裡，按「知道了」或 A（或逾時）才會輪到下一位。`;
+    el.querySelector('#hotseatAiDismiss').hidden = !ai.ended;
+    const last = ai.steps[ai.steps.length - 1];
+    el.querySelector('#hotseatAiSub').textContent = `第 ${ai.turn} 回合｜公開行動摘要${last ? `｜目前資金 ${last.resources.money}、宣傳 ${last.resources.propaganda}` : ''}`;
+    const items = ai.steps.slice().reverse().map((step, i) => {
+      const li = document.createElement('li');
+      li.className = `hs-ai-step${i === 0 ? ' hs-ai-latest' : ''}`;
+      li.dataset.seq = String(step.seq);
+      const head = document.createElement('div');
+      head.className = 'hs-ai-step-head';
+      const delta = aiDeltaText(step.delta);
+      head.append(Object.assign(document.createElement('span'), { textContent: `${i === 0 ? '最新行動' : '先前行動'} #${step.seq}` }),
+        Object.assign(document.createElement('span'), { textContent: delta ? `資源變化：${delta}` : '' }));
+      li.appendChild(head);
+      const lines = step.lines.map(line => aiLineText(line, ai.actorName, names)).filter(Boolean);
+      for (const text of lines.length ? lines : ['完成了一項行動']) {
+        li.appendChild(Object.assign(document.createElement('p'), { className: 'hs-ai-line', textContent: text }));
+      }
+      return li;
+    });
+    if (!items.length) {
+      const empty = document.createElement('li');
+      empty.className = 'hs-ai-empty';
+      empty.textContent = `${ai.actorName}正在決定行動…`;
+      items.push(empty);
+    }
+    el.querySelector('#hotseatAiSteps').replaceChildren(...items);
+  }
+
   function renderMask() {
     const v = hs.verdict;
-    if (!Core.masked(v.view)) return;
+    if (!Core.masked(v.view)) {
+      const open = document.getElementById('hotseatMask');
+      hs.aiShown = null;
+      if (open && open.dataset.aiPublic === 'on') renderAiPublic(open, null); // 遮罩解除（已進入某席位畫面）：公開視窗不再存在
+      return;
+    }
     const el = maskEl();
     if (!el) return;
+    // 公開視窗只在 AI 紅軍是權威行動者（state.current_player 仍是紅軍）時顯示；回合結束的等待也是同一個狀態，
+    // 由伺服器在確認或逾時後才推進到下一位。視窗不以換人當關閉條件，也不靠前端自己停留。
+    const ai = v.view === 'waiting' ? Core.aiPublicView(hs.lastState, v) : null;
+    hs.aiShown = ai;
     const cs = ctlState();
     const ctl = cs && cs.controller;
     const list = roster();
@@ -219,14 +313,20 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
         }
       }
     }
-    const sig = JSON.stringify([v.view, title, status, hs.notice, binds.map(b => b.textContent), reasonLine(v.actor)]);
+    const sig = JSON.stringify([v.view, title, status, hs.notice, binds.map(b => b.textContent), reasonLine(v.actor), ai]);
     if (sig === hs.maskSig) return;
     hs.maskSig = sig;
+    renderAiPublic(el, ai);
     el.querySelector('#hotseatTitle').textContent = title;
     el.querySelector('#hotseatReason').textContent = v.view === 'handoff' ? reasonLine(v.actor) : '';
     el.querySelector('#hotseatStatus').textContent = status;
     el.querySelector('#hotseatNotice').textContent = hs.notice;
     el.querySelector('#hotseatBinds').replaceChildren(...binds);
+  }
+
+  /** 公開視窗的「知道了」／A：通知伺服器放行 AI 紅軍結束回合（伺服器才會把 current player 換到下一位）。 */
+  function ackAiTurn() {
+    if (typeof sendAction === 'function') sendAction('ack_ai_red_army');
   }
 
   function bindSeat(playerId, controllerId, gameId = hs.gameId) {
@@ -551,6 +651,10 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
       }
       const v = hs.verdict;
       if (v.view === 'inactive') return false;
+      if (Core.masked(v.view) && hs.aiShown) {
+        if (hs.aiShown.ended && action && action.type === 'press' && action.button === 'A') ackAiTurn();
+        return true; // 公開視窗開著時所有輸入都不穿透；A 只用來確認（伺服器放行後才會出現交接）
+      }
       if (Core.masked(v.view)) {
         if (v.view === 'handoff') {
           const r = Core.confirmVerdict({ verdict: v, owned, action });
@@ -814,7 +918,8 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
   }
 
   function init() {
-    maskEl();
+    const maskNode = maskEl();
+    if (maskNode) maskNode.querySelector('#hotseatAiDismiss').addEventListener('click', ackAiTurn);
     const chk = document.getElementById('hotseatEnableChk');
     if (chk) chk.addEventListener('change', (e) => setEnabled(e.target.checked));
     const add = document.getElementById('hotseatAddSeatBtn');
@@ -840,13 +945,28 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
 
   window.RedlineHotSeat = {
     onConnect, onState, onLobby, onLobbyState, resumeTarget, rememberSeat,
+    /** AI 紅軍公開行動視窗正開著：app.js 據此略過「玩家動態」通知，同一件事不顯示兩次。 */
+    /** 客廳輪流遊戲裡有 AI 紅軍、伺服器還沒啟用「結束回合前等公開視窗確認」：app.js 送出 ai_public_hold。 */
+    wantsAiPublicHold: (state) => !!state && hs.verdict.view !== 'inactive' && !!state.ai_red_army
+      && state.ai_red_army.enabled === true && state.ai_red_army.public_hold !== true,
+    aiPublicActive: () => {
+      const el = document.getElementById('hotseatMask');
+      return !!el && el.dataset.aiPublic === 'on' && Core.masked(hs.verdict.view);
+    },
     // 除錯／E2E：三個身份分開回報。
     getState: () => {
       const cs = ctlState();
       const owned = cs && cs.controller ? cs.controller.owned : null;
       const store = loadStore();
       const ownerSeat = hs.gameId ? Core.seatForController(store, hs.gameId, owned) : null;
+      const aiEl = document.getElementById('hotseatMask');
       return {
+        aiPublic: {
+          open: !!aiEl && aiEl.dataset.aiPublic === 'on',
+          ended: !!(hs.aiShown && hs.aiShown.ended),
+          steps: aiEl ? aiEl.querySelectorAll('#hotseatAiSteps .hs-ai-step').length : 0,
+          text: aiEl && aiEl.dataset.aiPublic === 'on' ? (aiEl.querySelector('#hotseatAiPublic').textContent || '').replace(/\s+/g, ' ').trim() : '',
+        },
         view: hs.verdict.view,
         displayedSeat: hs.connectedSeat,
         controllerOwner: { controller: owned, seat: ownerSeat ? ownerSeat.player_id : null },

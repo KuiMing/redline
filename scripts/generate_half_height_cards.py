@@ -15,6 +15,7 @@ import subprocess
 import tempfile
 import xml.etree.ElementTree as ET
 from pathlib import Path
+from typing import NamedTuple
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -41,6 +42,11 @@ SUPPORT_CAPTIONS = {
     "臺灣奧援": "島嶼城鎮與民間網絡，在瓦解後建立新的組織",
     "紅軍奧援": "一張往返陣營之間的起始牌，帶來資源與情報",
 }
+
+# The full-card SVGs are the visual source of truth. Read their frame colors
+# directly so every half-height card stays synchronized without per-card rules.
+ACTION_FULL_SVG = ROOT / "docs/records/design/card-art/all-action-cards-ai-review/svg"
+SUPPORT_FULL_SVG = ROOT / "docs/records/design/card-art/all-support-cards-ai-review/svg"
 
 
 def esc(value: object) -> str:
@@ -105,10 +111,48 @@ def load_support_rows() -> list[dict[str, str]]:
     return rows
 
 
-def defs() -> str:
-    return '''<defs>
-<linearGradient id="bronze" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#72593a"/><stop offset=".5" stop-color="#4e3a28"/><stop offset="1" stop-color="#72593a"/></linearGradient>
-<linearGradient id="header" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#211912"/><stop offset="1" stop-color="#100c09"/></linearGradient>
+class CardStyle(NamedTuple):
+    frame_stops: list[tuple[str, str]]
+    header_stops: list[tuple[str, str]]
+    background: str
+    outer_stroke: str
+    inner_fill: str
+    inner_stroke: str
+    divider: str
+
+
+def canonical_style(path: Path) -> CardStyle:
+    root = ET.parse(path).getroot()
+    namespace = {"svg": "http://www.w3.org/2000/svg"}
+
+    def gradient(identifier: str) -> list[tuple[str, str]]:
+        node = root.find(f".//svg:linearGradient[@id='{identifier}']", namespace)
+        if node is None:
+            raise ValueError(f"找不到 {identifier} 漸層：{path}")
+        return [(stop.get("offset", "0"), stop.attrib["stop-color"])
+                for stop in node.findall("svg:stop", namespace)]
+
+    rects = root.findall("svg:rect", namespace)
+    background = next(node.attrib["fill"] for node in rects if node.get("width") == "1100")
+    outer = next(node for node in rects if node.get("x") == "13" and node.get("width") == "1074")
+    inner = next(node for node in rects if node.get("x") == "31" and node.get("width") == "1038")
+    divider = next(node.attrib["stroke"] for node in root.findall("svg:path", namespace)
+                   if node.get("d", "").startswith("M46 194h1008"))
+    return CardStyle(
+        gradient("frame"), gradient("header"), background,
+        outer.attrib["stroke"], inner.attrib["fill"], inner.attrib["stroke"], divider,
+    )
+
+
+def gradient_stops(stops: list[tuple[str, str]]) -> str:
+    return "".join(f'<stop offset="{esc(offset)}" stop-color="{esc(color)}"/>'
+                   for offset, color in stops)
+
+
+def defs(style: CardStyle) -> str:
+    return f'''<defs>
+<linearGradient id="frame" x1="0" y1="0" x2="1" y2="1">{gradient_stops(style.frame_stops)}</linearGradient>
+<linearGradient id="header" x1="0" y1="0" x2="1" y2="0">{gradient_stops(style.header_stops)}</linearGradient>
 <radialGradient id="prop"><stop stop-color="#d37656"/><stop offset="1" stop-color="#91362b"/></radialGradient>
 <radialGradient id="money"><stop stop-color="#d7ad54"/><stop offset="1" stop-color="#7b591b"/></radialGradient>
 <pattern id="grain" width="41" height="43" patternUnits="userSpaceOnUse"><circle cx="7" cy="10" r="1" fill="#fff" opacity=".035"/><circle cx="29" cy="32" r=".9" fill="#000" opacity=".10"/></pattern>
@@ -117,20 +161,22 @@ def defs() -> str:
 </defs>'''
 
 
-def frame_start(title: str, cost: str, art_path: Path, desc: str) -> str:
+def frame_start(title: str, cost: str, art_path: Path, desc: str, style: CardStyle) -> str:
+    dark = style.header_stops[1][1]
+    light = style.divider
     title_size = 61 if len(title) <= 5 else 54
     return f'''<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="{WIDTH}" height="{HEIGHT}" viewBox="0 0 {WIDTH} {HEIGHT}" role="img" aria-labelledby="title desc">
-<title id="title">{esc(title)}半高卡面</title><desc id="desc">{esc(desc)}</desc>{defs()}
-<rect width="1100" height="675" rx="46" fill="#090705"/>
-<rect x="13" y="13" width="1074" height="649" rx="39" fill="url(#bronze)" stroke="#b99a61" stroke-width="5"/>
-<rect x="31" y="31" width="1038" height="613" rx="29" fill="#17100b" stroke="#d0b982" stroke-width="2"/>
+<title id="title">{esc(title)}半高卡面</title><desc id="desc">{esc(desc)}</desc>{defs(style)}
+<rect width="1100" height="675" rx="46" fill="{style.background}"/>
+<rect x="13" y="13" width="1074" height="649" rx="39" fill="url(#frame)" stroke="{style.outer_stroke}" stroke-width="5"/>
+<rect x="31" y="31" width="1038" height="613" rx="29" fill="{style.inner_fill}" stroke="{style.inner_stroke}" stroke-width="2"/>
 <path d="M45 45h1010v112H45z" fill="url(#header)"/>
-<path d="M46 157h1008" stroke="#b99a61" stroke-width="5"/>
-<g transform="translate(94 101)"><circle r="32" fill="#3f3021" stroke="#c3a56e" stroke-width="4"/><circle r="8" fill="#d0b982"/><path d="M0-8L-20-20M0-8L21-21M0 8L-22 22M0 8L22 22" stroke="#d0b982" stroke-width="4" stroke-linecap="round"/></g>
+<path d="M46 157h1008" stroke="{light}" stroke-width="5"/>
+<g transform="translate(94 101)"><circle r="32" fill="{dark}" stroke="{light}" stroke-width="4"/><circle r="8" fill="{light}"/><path d="M0-8L-20-20M0-8L21-21M0 8L-22 22M0 8L22 22" stroke="{light}" stroke-width="4" stroke-linecap="round"/></g>
 <text x="145" y="123" fill="#f6ecd8" font-family="PingFang TC, Noto Sans TC, sans-serif" font-size="{title_size}" font-weight="800" letter-spacing="3">{esc(title)}</text>
 {cost_markup(cost)}
 <g clip-path="url(#artClip)"><image xlink:href="{esc(art_path.as_uri())}" href="{esc(art_path.as_uri())}" x="52" y="174" width="996" height="466" preserveAspectRatio="xMidYMid slice"/><rect x="52" y="538" width="996" height="102" fill="#0b0907" opacity=".88"/></g>
-<rect x="52" y="174" width="996" height="466" rx="16" fill="none" stroke="#b99a61" stroke-width="5"/>'''
+<rect x="52" y="174" width="996" height="466" rx="16" fill="none" stroke="{light}" stroke-width="5"/>'''
 
 
 def cost_markup(value: str) -> str:
@@ -182,7 +228,12 @@ def action_svg(row: dict[str, str]) -> str:
     if not art_path.is_file():
         raise FileNotFoundError(art_path)
     meaning = row["行動卡意涵"].strip()
-    start = frame_start(name, row["購買費用"].strip(), art_path, f"購買費用 {row['購買費用']}，提供資源 {row['提供資源']}。")
+    style = canonical_style(ACTION_FULL_SVG / f"{name}.svg")
+    start = frame_start(
+        name, row["購買費用"].strip(), art_path,
+        f"購買費用 {row['購買費用']}，提供資源 {row['提供資源']}。",
+        style,
+    )
     caption = f'<text x="82" y="584" fill="#f2dca8" font-family="PingFang TC, sans-serif" font-size="25" font-weight="700">{esc(meaning)}</text><text x="82" y="616" fill="#b8aa91" font-family="PingFang TC, sans-serif" font-size="20" font-weight="700">行動卡</text>'
     return start + caption + resource_markup(row["提供資源"].strip()) + frame_end()
 
@@ -192,7 +243,13 @@ def support_svg(row: dict[str, str]) -> str:
     art_path = SUPPORT_ART / f"{name}_插圖.png"
     if not art_path.is_file():
         raise FileNotFoundError(art_path)
-    start = frame_start(name, row["cost"], art_path, f"購買費用 {row['cost']}，版本 {variant}。")
+    stem = f"{int(row['sequence']):02d}_{name}_{slug_condition(variant)}"
+    style = canonical_style(SUPPORT_FULL_SVG / f"{stem}.svg")
+    start = frame_start(
+        name, row["cost"], art_path,
+        f"購買費用 {row['cost']}，版本 {variant}。",
+        style,
+    )
     caption = SUPPORT_CAPTIONS[name]
     left = f'<text x="82" y="579" fill="#f2dca8" font-family="PingFang TC, sans-serif" font-size="23" font-weight="700">{esc(caption)}</text><text x="82" y="616" fill="#b8aa91" font-family="PingFang TC, sans-serif" font-size="22" font-weight="800">奧援卡</text>'
     if name == "紅軍奧援":

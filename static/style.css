@@ -1015,7 +1015,46 @@ body {
 }
 
 #randomMarketPanel {
+  --faction-ability-w: 200px;
   position: relative;
+}
+
+/* 陣營能力：固定在隨機購買卡右側的空位。面板與購買操作列保留間距，
+   高度依內容收合，讓購買與清除按鈕維持原本的右上位置。 */
+#randomMarketPanel #factionActionPanel {
+  position: absolute;
+  top: 48px;
+  right: 8px;
+  bottom: auto;
+  z-index: 3;
+  width: var(--faction-ability-w);
+  box-sizing: border-box;
+  margin: 0;
+  padding: 6px 8px;
+  overflow: hidden;
+}
+
+#randomMarketPanel #factionActionPanel .panel-title {
+  margin-bottom: 3px;
+}
+
+#randomMarketPanel #factionActionInfo {
+  gap: 4px;
+  margin-bottom: 5px;
+}
+
+#randomMarketPanel .faction-action-result,
+#randomMarketPanel .faction-action-placeholder {
+  border-radius: 8px;
+  padding: 5px 7px;
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+#randomMarketPanel #factionActionButtons .base-choice-btn {
+  flex: 1 1 100%;
+  padding: 4px 6px;
+  font-size: 0.74rem;
 }
 
 .panel-title {
@@ -1205,8 +1244,9 @@ body {
   display: block;
 }
 
-/* Joy-Con 目前焦點。控制器沿用 rl-pad-focus；不透明黃框只框住卡面。 */
-#commandGrid .card.rl-pad-focus::after {
+/* Joy-Con 焦點與滑鼠停留共用黃框準星。黃框內保留卡面原色。 */
+#commandGrid .card.rl-pad-focus::after,
+#commandGrid .card:hover::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -1216,7 +1256,25 @@ body {
   box-sizing: border-box;
   border: 2px solid #ffd83d;
   background: transparent;
+  background-image:
+    linear-gradient(#ffd83d, #ffd83d),
+    linear-gradient(90deg, #ffd83d, #ffd83d),
+    radial-gradient(circle at center,
+      transparent 0 14px,
+      #ffd83d 14px 16px,
+      transparent 16px);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 2px 48px, 48px 2px, 48px 48px;
 }
+
+/* 滑鼠停在卡牌上時，暫時取代 Joy-Con 焦點標記，避免畫面同時出現兩組黃框準星。 */
+#commandGrid:has(.card:hover) .card.rl-pad-focus:not(:hover)::after {
+  content: none;
+}
+
+/* 已選卡重新聚焦：白色遮罩（.purchase-card-selected-overlay，z-index 3）維持，黃框與準星（::after，z-index 4）疊在上方；
+   焦點只有一張，所以畫面最多一組黃框與準星。已選未聚焦只有白罩，未選已聚焦只有黃框與準星。 */
 
 .purchase-card-select-button {
   position: relative;
@@ -3935,9 +3993,17 @@ html[data-display="living-room"] #purchaseRandom .purchase-card-item,
 html[data-display="living-room"] #purchaseStatic .purchase-card-item,
 html[data-display="living-room"] #hand .hand-card { zoom: 0.78; }
 /* 抵銷卡牌容器縮放，讓客廳模式仍顯示 2px 的焦點框。 */
-html[data-display="living-room"] #commandGrid .card.rl-pad-focus::after {
+html[data-display="living-room"] #commandGrid .card.rl-pad-focus::after,
+html[data-display="living-room"] #commandGrid .card:hover::after {
   border-width: 2.57px;
 }
+/* 客廳模式的隨機購買卡縮小到 0.78，右側空位較寬：陣營能力欄放寬並用電視可讀的字級。 */
+html[data-display="living-room"] #randomMarketPanel { --faction-ability-w: 420px; }
+html[data-display="living-room"] #randomMarketPanel #factionActionPanel { top: 43px; padding: 4px 10px; }
+html[data-display="living-room"] #randomMarketPanel #factionActionPanel .panel-title { margin-bottom: 2px; }
+html[data-display="living-room"] #randomMarketPanel .faction-action-result,
+html[data-display="living-room"] #randomMarketPanel .faction-action-placeholder { padding: 4px 8px; font-size: 16px; line-height: 1.35; }
+html[data-display="living-room"] #randomMarketPanel #factionActionButtons .base-choice-btn { padding: 4px 10px; font-size: 17px; font-weight: 700; }
 html[data-display="living-room"] #purchaseSelectionControls { min-height: 30px; margin: 0 0 3px; gap: 6px; }
 html[data-display="living-room"] #purchaseSelectionSummary,
 html[data-display="living-room"] .purchase-selection-clear-btn,

@@ -215,3 +215,28 @@ def test_hotseat_css_hides_the_stage_while_masked():
     ui = (_ROOT / "static/hotseat_ui.js").read_text(encoding="utf-8")
     assert 'html[data-hotseat="masked"] #stageViewport' in ui
     assert "visibility: hidden" in ui
+
+
+def test_ai_public_window_wiring():
+    # AI 紅軍公開視窗：紅軍是目前行動的玩家（waiting 遮罩，Core.aiPublicView）時顯示；回合結束時伺服器先停在紅軍
+    # （awaiting_ack），前端只送 ack_ai_red_army（知道了／A），不自己停留；玩家動態在視窗開著時只消耗 log。
+    ui = (_ROOT / "static/hotseat_ui.js").read_text(encoding="utf-8")
+    render = _function_body(ui, "function renderMask() {")
+    assert "Core.aiPublicView(hs.lastState, v)" in render
+    assert "v.view === 'waiting'" in render
+    assert "renderAiPublic(open, null)" in render  # 遮罩解除（已進入某席位畫面）時不再存在
+    assert "AI_HOLD_MS" not in ui and "aiHold" not in ui  # 沒有前端自己的停留計時
+    assert "sendAction('ack_ai_red_army')" in _function_body(ui, "function ackAiTurn() {")
+    assert "ackAiTurn()" in _function_body(ui, "intercept(action, { owned }) {")
+    assert "wantsAiPublicHold" in ui
+    app = (_ROOT / "static/app.js").read_text(encoding="utf-8")
+    assert "sendAction('ai_public_hold', {enabled: true})" in app
+    notice = _function_body(app, "function renderPeerActionNotice(state) {")
+    assert "RedlineHotSeat?.aiPublicActive?.()" in notice
+    guard = notice.split("RedlineHotSeat?.aiPublicActive?.()", 1)[1].split("return;", 1)[0]
+    assert "closePeerActionNotice(entries)" in guard  # 消耗相同 log，不重播
+    # 視窗在 1280×720 舞台單位內等比縮放（不是另一套 RWD）
+    assert "scale(var(--stage-scale, 1))" in ui
+    # 伺服器端：ack／hold 不受「輪到誰」限制，且在 turn gate 之前處理
+    main = (_ROOT / "server/main.py").read_text(encoding="utf-8")
+    assert main.index('"ack_ai_red_army"') < main.index("current_player = game.current_player()")

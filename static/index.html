@@ -4,10 +4,10 @@
   <meta charset="UTF-8" />
   <title>REDLINE // STRATEGIC COMMAND</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="/static/style.css?v=half-height-command-centre-20261018-9" />
+  <link rel="stylesheet" href="/static/style.css?v=card-mouse-focus-20261023" />
   <!-- 客廳輪流（hot-seat）：在第一次繪製前就能遮住舞台，所以放在 <head>。 -->
-  <script src="/static/hotseat_core.js?v=hotseat-codename-p1234-20261017"></script>
-  <script src="/static/hotseat_ui.js?v=hotseat-codename-p1234-20261017"></script>
+  <script src="/static/hotseat_core.js?v=hotseat-ai-public-20261020"></script>
+  <script src="/static/hotseat_ui.js?v=hotseat-ai-public-clean-header-20261023"></script>
 </head>
 <body>
 <div id="stageViewport">
@@ -317,20 +317,20 @@
           <span id="purchaseSelectionSummary">尚未選擇卡牌</span>
           <button id="topdeckRightBtn" class="phase-secondary-btn purchase-selection-topdeck-btn" type="button" style="display:none;" onclick="sendAction('use_topdeck_right')">卡牌置頂</button>
           <button id="clearPurchaseSelectionBtn" class="purchase-selection-clear-btn" type="button" onclick="clearPurchaseSelection()">清除</button>
-          <button id="openPurchaseConfirmBtn" class="purchase-selection-buy-btn" type="button" onclick="openPurchaseConfirmModal()" disabled>購買所選卡牌</button>
+          <button id="openPurchaseConfirmBtn" class="purchase-selection-buy-btn" type="button" onclick="openPurchaseConfirmModal()" disabled>購買</button>
         </div>
         <div id="purchaseRandom" class="purchase-card-grid"></div>
+        <div id="factionActionPanel" style="display:none;">
+          <div class="panel-title">陣營能力</div>
+          <div id="factionActionInfo"></div>
+          <div id="factionActionButtons"></div>
+        </div>
       </div>
 
       <div id="controlPanel" class="panel">
         <div id="purchaseSection">
           <div class="panel-title">常設購買區</div>
           <div id="purchaseStatic" class="purchase-card-grid"></div>
-        </div>
-        <div id="factionActionPanel" style="display:none; margin-top:8px;">
-          <div class="panel-title">陣營能力</div>
-          <div id="factionActionInfo"></div>
-          <div id="factionActionButtons"></div>
         </div>
         <div id="baseSelectionPanel" style="display:none; margin-top:8px;">
           <div class="panel-title">根據地選擇</div>
@@ -389,7 +389,7 @@
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/static/player_messages_zh_tw.js?v=player-message-i18n-20260801"></script>
-<script src="/static/app.js?v=half-height-purchase-ui-20261018"></script>
+<script src="/static/app.js?v=compact-purchase-label-20261023"></script>
 <script src="/static/controller_core.js?v=joycon-labels-20261016"></script>
 <script src="/static/living_room_core.js?v=dual-joycon-20261014"></script>
 <script src="/static/controller_ui.js?v=half-height-command-centre-20261018"></script>

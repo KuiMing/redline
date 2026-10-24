@@ -1647,6 +1647,10 @@ function connect(options = {}) {
     window.lastGameState = state;
     // 客廳輪流：依伺服器權威行動者先套用交接遮罩，再 render（遮罩在畫面更新前就位）。
     window.RedlineHotSeat?.onState?.(state, gameId, playerId);
+    if (aiPublicHoldRequestedFor !== ws && window.RedlineHotSeat?.wantsAiPublicHold?.(state)) {
+      aiPublicHoldRequestedFor = ws; // 每條連線只要求一次；伺服器回的 state 會帶 public_hold: true
+      sendAction('ai_public_hold', {enabled: true});
+    }
     await render(state);
     syncStrategicMap(state);
   };
@@ -1690,6 +1694,8 @@ function connect(options = {}) {
 
   initTabs();
 }
+
+let aiPublicHoldRequestedFor = null;
 
 function sendAction(action, payload = {}) {
   if ((action === 'resolve_choice' || action === 'cancel_choice') && !payload.choice_id) {
@@ -1786,7 +1792,7 @@ function updatePurchaseSelectionControls(state = window.lastGameState || {}) {
     : '請選擇要購買的卡牌';
   clearBtn.disabled = selection.cards.length === 0;
   buyBtn.disabled = selection.cards.length === 0 || !selection.affordable;
-  buyBtn.textContent = selection.cards.length ? `購買所選 ${selection.cards.length} 張` : '購買所選卡牌';
+  buyBtn.textContent = '購買';
   buyBtn.title = selection.cards.length > 0 && !selection.affordable ? '所選卡牌的合計費用超過目前資源。' : '';
 }
 
@@ -3193,7 +3199,7 @@ function renderFactionActionPanel(state) {
 
   if (faction === 'aomen') {
     showActionPanel(
-      '澳門可在行動階段發動一次賭徒耳語：將 1 張手牌放進牌庫底，猜牌庫頂牌購買費用奇偶；若猜中獲得 3 點宣傳與 3 點資金。',
+      '將 1 張手牌放入牌庫底，再猜牌庫頂牌購買費用的奇偶；猜中獲得 3 點宣傳與 3 點資金。',
       '發動 賭徒耳語',
       openGamblerGuessModal
     );
@@ -3202,7 +3208,7 @@ function renderFactionActionPanel(state) {
 
   if (faction === 'reform_opening') {
     showActionPanel(
-      '改革開放派可在行動階段發動一次紅軍派系：檢視牌庫頂 3 張牌，以任意順序放回牌庫頂，然後抽 1 張牌。',
+      '檢視牌庫頂 3 張牌，以任意順序放回牌庫頂，然後抽 1 張牌。',
       '發動 紅軍派系',
       () => sendAction('faction_action', { name: '紅軍派系' })
     );
@@ -3211,7 +3217,7 @@ function renderFactionActionPanel(state) {
 
   if (faction === 'liberals') {
     showActionPanel(
-      '自由派可在行動階段發動一次立場試探：展示牌庫頂牌；若購買費用為奇數則加入手牌，若為偶數則放入棄牌堆。',
+      '展示牌庫頂牌；購買費用為奇數時加入手牌，為偶數時放入棄牌堆。',
       '發動 立場試探',
       () => sendAction('faction_action', { name: '立場試探' })
     );
@@ -3221,7 +3227,7 @@ function renderFactionActionPanel(state) {
   const ethnicRitualFactions = new Set(['zhuang','yi','bai','hani','dai','miao','tujia','dong','buyei','yao','li']);
   if (ethnicRitualFactions.has(faction)) {
     showActionPanel(
-      '可在行動階段發動一次民族祭儀：猜中可獲得 2 點宣傳與 2 點資金；沒猜中則獲得 2 點宣傳或 2 點資金（二選一）。',
+      '猜牌庫頂牌購買費用的奇偶。猜中獲得 2 點宣傳與 2 點資金；猜錯則選擇獲得 2 點宣傳或 2 點資金。',
       '發動 民族祭儀',
       openEthnicRitualGuessModal
     );
@@ -4420,6 +4426,12 @@ function renderPeerActionNotice(state) {
     // (Re)connected to a different game: don't replay the whole history as "new".
     peerActionNoticeGameId = gameId;
     peerActionNoticeLogSnapshot = [];
+    closePeerActionNotice(entries);
+    return;
+  }
+
+  if (window.RedlineHotSeat?.aiPublicActive?.()) {
+    // 客廳輪流：AI 紅軍的行動已由置中的公開視窗顯示；消耗相同 log，避免再疊一層玩家動態。
     closePeerActionNotice(entries);
     return;
   }

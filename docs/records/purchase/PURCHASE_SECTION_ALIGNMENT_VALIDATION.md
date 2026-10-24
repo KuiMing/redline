@@ -1,6 +1,6 @@
 # Purchase Section Alignment Validation
 
-summary: {'total': 6, 'passed': 6, 'failed': 0}
+summary: {'total': 7, 'passed': 7, 'failed': 0}
 
 screenshot: docs/records/purchase/purchase_section_alignment_validation.png
 
@@ -101,18 +101,61 @@ screenshot: docs/records/purchase/purchase_section_alignment_validation.png
 {
   "card_name": "思想家",
   "focus_background": "rgba(0, 0, 0, 0)",
+  "focus_background_image": "linear-gradient(rgb(255, 216, 61), rgb(255, 216, 61)), linear-gradient(90deg, rgb(255, 216, 61), rgb(255, 216, 61)), radial-gradient(circle, rgba(0, 0, 0, 0) 0px, rgba(0, 0, 0, 0) 14px, rgb(255, 216, 61) 14px, rgb(255, 216, 61) 16px, rgba(0, 0, 0, 0) 16px)",
   "focus_border_width": "2px",
   "focus_border_style": "solid",
   "focus_border_color": "rgb(255, 216, 61)",
   "focus_pointer_events": "none",
   "selected_overlay_display": "block",
   "button_background": "rgb(21, 128, 61)",
-  "combined_focus_background": "rgba(0, 0, 0, 0)",
-  "combined_focus_border_color": "rgb(255, 216, 61)",
-  "combined_focus_z_index": "4",
-  "combined_selected_display": "block",
-  "combined_selected_background": "rgba(255, 255, 255, 0.28)",
-  "combined_selected_z_index": "3"
+  "selected_focus": {
+    "content": "\"\"",
+    "border_color": "rgb(255, 216, 61)",
+    "border_width": "2px",
+    "background_image": "linear-gradient(rgb(255, 216, 61), rgb(255, 216, 61)), linear-gradient(90deg, rgb(255, 216, 61), rgb(255, 216, 61)), radial-gradient(circle, rgba(0, 0, 0, 0) 0px, rgba(0, 0, 0, 0) 14px, rgb(255, 216, 61) 14px, rgb(255, 216, 61) 16px, rgba(0, 0, 0, 0) 16px)",
+    "z_index": "4"
+  },
+  "selected_overlay_background": "rgba(255, 255, 255, 0.28)",
+  "selected_overlay_z_index": "3",
+  "neutral_focus_content": "none",
+  "focused_card_count": 1
+}
+```
+
+## PASS — mouse_hover_uses_single_yellow_border_and_crosshair_in_all_card_rows
+
+```json
+{
+  "purchaseRandom": {
+    "content": "\"\"",
+    "background": "rgba(0, 0, 0, 0)",
+    "background_image": "linear-gradient(rgb(255, 216, 61), rgb(255, 216, 61)), linear-gradient(90deg, rgb(255, 216, 61), rgb(255, 216, 61)), radial-gradient(circle, rgba(0, 0, 0, 0) 0px, rgba(0, 0, 0, 0) 14px, rgb(255, 216, 61) 14px, rgb(255, 216, 61) 16px, rgba(0, 0, 0, 0) 16px)",
+    "border_width": "2px",
+    "border_style": "solid",
+    "border_color": "rgb(255, 216, 61)",
+    "pointer_events": "none",
+    "controller_focus_content": "none"
+  },
+  "purchaseStatic": {
+    "content": "\"\"",
+    "background": "rgba(0, 0, 0, 0)",
+    "background_image": "linear-gradient(rgb(255, 216, 61), rgb(255, 216, 61)), linear-gradient(90deg, rgb(255, 216, 61), rgb(255, 216, 61)), radial-gradient(circle, rgba(0, 0, 0, 0) 0px, rgba(0, 0, 0, 0) 14px, rgb(255, 216, 61) 14px, rgb(255, 216, 61) 16px, rgba(0, 0, 0, 0) 16px)",
+    "border_width": "2px",
+    "border_style": "solid",
+    "border_color": "rgb(255, 216, 61)",
+    "pointer_events": "none",
+    "controller_focus_content": "none"
+  },
+  "hand": {
+    "content": "\"\"",
+    "background": "rgba(0, 0, 0, 0)",
+    "background_image": "linear-gradient(rgb(255, 216, 61), rgb(255, 216, 61)), linear-gradient(90deg, rgb(255, 216, 61), rgb(255, 216, 61)), radial-gradient(circle, rgba(0, 0, 0, 0) 0px, rgba(0, 0, 0, 0) 14px, rgb(255, 216, 61) 14px, rgb(255, 216, 61) 16px, rgba(0, 0, 0, 0) 16px)",
+    "border_width": "2px",
+    "border_style": "solid",
+    "border_color": "rgb(255, 216, 61)",
+    "pointer_events": "none",
+    "controller_focus_content": "none"
+  }
 }
 ```
 

@@ -46,6 +46,36 @@ def visible_text(svg: str) -> str:
     return "".join(root.itertext()).replace(" ", "").replace("\n", "")
 
 
+def style_signature_from_svg(svg: str) -> tuple[object, ...]:
+    root = ET.fromstring(svg)
+    namespace = {"svg": "http://www.w3.org/2000/svg"}
+
+    def gradient(identifier: str) -> list[tuple[str, str]]:
+        node = root.find(f".//svg:linearGradient[@id='{identifier}']", namespace)
+        if node is None:
+            raise AssertionError(identifier)
+        return [(stop.get("offset", "0"), stop.attrib["stop-color"])
+                for stop in node.findall("svg:stop", namespace)]
+
+    rects = root.findall("svg:rect", namespace)
+    background = next(node.attrib["fill"] for node in rects if node.get("width") == "1100")
+    outer = next(node for node in rects if node.get("x") == "13" and node.get("width") == "1074")
+    inner = next(node for node in rects if node.get("x") == "31" and node.get("width") == "1038")
+    divider = next(node.attrib["stroke"] for node in root.findall("svg:path", namespace)
+                   if node.get("d", "").startswith("M46 157h1008"))
+    return (
+        gradient("frame"), gradient("header"), background,
+        outer.attrib["stroke"], inner.attrib["fill"], inner.attrib["stroke"], divider,
+    )
+
+
+def canonical_style_signature(style: object) -> tuple[object, ...]:
+    return tuple(getattr(style, field) for field in (
+        "frame_stops", "header_stops", "background", "outer_stroke",
+        "inner_fill", "inner_stroke", "divider",
+    ))
+
+
 def main() -> None:
     generator = load_generator()
     actions = generator.load_action_rows()
@@ -63,6 +93,8 @@ def main() -> None:
             require(expected.replace(" ", "") in text, (name, expected))
         generator.resource_items(row["購買費用"].strip())
         generator.resource_items(row["提供資源"].strip())
+        canonical = generator.canonical_style(generator.ACTION_FULL_SVG / f"{name}.svg")
+        require(style_signature_from_svg(svg) == canonical_style_signature(canonical), name)
         path = f"actions/{name}.png"
         expected_paths.add(path)
         expected_manifest.append({
@@ -81,6 +113,8 @@ def main() -> None:
                 require(expected in text, (stem, expected))
         else:
             require("II級條件" in text and row["variant"] in text, stem)
+        canonical = generator.canonical_style(generator.SUPPORT_FULL_SVG / f"{stem}.svg")
+        require(style_signature_from_svg(svg) == canonical_style_signature(canonical), stem)
         path = f"support/{stem}.png"
         expected_paths.add(path)
         expected_manifest.append({

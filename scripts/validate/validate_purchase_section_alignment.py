@@ -17,12 +17,13 @@ except ModuleNotFoundError:
     raise
 
 ROOT = Path(__file__).resolve().parent.parent.parent
-BASE_URL = 'http://127.0.0.1:8000'
+BASE_URL = os.environ.get('REDLINE_BASE_URL', 'http://127.0.0.1:8000').rstrip('/')
 RECORDS_DIR = ROOT / 'docs' / 'records' / 'purchase'
 RECORDS_DIR.mkdir(parents=True, exist_ok=True)
 OUT_JSON = RECORDS_DIR / 'PURCHASE_SECTION_ALIGNMENT_VALIDATION.json'
 OUT_MD = RECORDS_DIR / 'PURCHASE_SECTION_ALIGNMENT_VALIDATION.md'
 SCREENSHOT = RECORDS_DIR / 'purchase_section_alignment_validation.png'
+HOVER_SCREENSHOT = RECORDS_DIR / 'purchase_card_mouse_hover_focus_validation.png'
 
 
 def post(path: str, payload: dict) -> dict:
@@ -91,35 +92,64 @@ def validate_page(page) -> dict:
       const cards = [...document.querySelectorAll('#purchaseStatic .card')];
       const selectedCard = cards[0];
       const card = cards[1];
-      const combinedCard = cards[2];
-      if (!selectedCard || !card || !combinedCard) return null;
-      selectedCard.classList.add('purchase-card-selected');
+      const neutralCard = cards[2];
+      if (!selectedCard || !card || !neutralCard) return null;
+      selectedCard.classList.add('purchase-card-selected', 'rl-pad-focus');
+      const selectedFocusStyle = getComputedStyle(selectedCard, '::after');
+      const selectedFocus = {
+        content: selectedFocusStyle.content,
+        border_color: selectedFocusStyle.borderTopColor,
+        border_width: selectedFocusStyle.borderTopWidth,
+        background_image: selectedFocusStyle.backgroundImage,
+        z_index: selectedFocusStyle.zIndex,
+      };
+      selectedCard.classList.remove('rl-pad-focus');
       card.classList.add('rl-pad-focus');
-      combinedCard.classList.add('purchase-card-selected', 'rl-pad-focus');
       const button = selectedCard.closest('.purchase-card-item')?.querySelector('.purchase-card-select-button');
       button?.classList.add('is-selected');
       const focusStyle = getComputedStyle(card, '::after');
       const selectedOverlay = selectedCard.querySelector('.purchase-card-selected-overlay');
-      const combinedFocusStyle = getComputedStyle(combinedCard, '::after');
-      const combinedSelectedOverlay = combinedCard.querySelector('.purchase-card-selected-overlay');
-      const combinedSelectedStyle = combinedSelectedOverlay ? getComputedStyle(combinedSelectedOverlay) : null;
+      const neutralFocusStyle = getComputedStyle(neutralCard, '::after');
       return {
         card_name: card.dataset.cardName,
         focus_background: focusStyle.backgroundColor,
+        focus_background_image: focusStyle.backgroundImage,
         focus_border_width: focusStyle.borderTopWidth,
         focus_border_style: focusStyle.borderTopStyle,
         focus_border_color: focusStyle.borderTopColor,
         focus_pointer_events: focusStyle.pointerEvents,
         selected_overlay_display: selectedOverlay ? getComputedStyle(selectedOverlay).display : null,
         button_background: button ? getComputedStyle(button).backgroundColor : null,
-        combined_focus_background: combinedFocusStyle.backgroundColor,
-        combined_focus_border_color: combinedFocusStyle.borderTopColor,
-        combined_focus_z_index: combinedFocusStyle.zIndex,
-        combined_selected_display: combinedSelectedStyle?.display || null,
-        combined_selected_background: combinedSelectedStyle?.backgroundColor || null,
-        combined_selected_z_index: combinedSelectedStyle?.zIndex || null,
+        selected_focus: selectedFocus,
+        selected_overlay_background: selectedOverlay ? getComputedStyle(selectedOverlay).backgroundColor : null,
+        selected_overlay_z_index: selectedOverlay ? getComputedStyle(selectedOverlay).zIndex : null,
+        neutral_focus_content: neutralFocusStyle.content,
+        focused_card_count: document.querySelectorAll('#purchaseStatic .card.rl-pad-focus').length,
       };
     }""")
+    hover_visual = {}
+    for zone in ('purchaseRandom', 'purchaseStatic', 'hand'):
+        page.locator(f'#{zone} .card').first.hover()
+        hover_visual[zone] = page.evaluate("""(zone) => {
+          const hovered = document.querySelector(`#${zone} .card:hover`);
+          const padFocus = document.querySelector('#commandGrid .card.rl-pad-focus:not(:hover)');
+          if (!hovered) return null;
+          const hoverStyle = getComputedStyle(hovered, '::after');
+          const padStyle = padFocus ? getComputedStyle(padFocus, '::after') : null;
+          return {
+            content: hoverStyle.content,
+            background: hoverStyle.backgroundColor,
+            background_image: hoverStyle.backgroundImage,
+            border_width: hoverStyle.borderTopWidth,
+            border_style: hoverStyle.borderTopStyle,
+            border_color: hoverStyle.borderTopColor,
+            pointer_events: hoverStyle.pointerEvents,
+            controller_focus_content: padStyle?.content || null,
+          };
+        }""", zone)
+    page.locator('#purchaseRandom .card').first.hover()
+    page.screenshot(path=str(HOVER_SCREENSHOT), full_page=True)
+    page.mouse.move(0, 0)
     row_overflow = page.evaluate("""() => Object.fromEntries(
       ['purchaseRandom', 'purchaseStatic', 'hand'].map((id) => {
         const el = document.getElementById(id);
@@ -242,19 +272,39 @@ def validate_page(page) -> dict:
             'ok': bool(
                 focus_visual
                 and focus_visual['focus_background'] == 'rgba(0, 0, 0, 0)'
+                and focus_visual['focus_background_image'] != 'none'
                 and focus_visual['focus_border_width'] == '2px'
                 and focus_visual['focus_border_style'] == 'solid'
                 and focus_visual['focus_border_color'] == 'rgb(255, 216, 61)'
                 and focus_visual['focus_pointer_events'] == 'none'
                 and focus_visual['selected_overlay_display'] == 'block'
                 and focus_visual['button_background'] == 'rgb(21, 128, 61)'
-                and focus_visual['combined_focus_background'] == 'rgba(0, 0, 0, 0)'
-                and focus_visual['combined_focus_border_color'] == 'rgb(255, 216, 61)'
-                and focus_visual['combined_selected_display'] == 'block'
-                and focus_visual['combined_selected_background'] == 'rgba(255, 255, 255, 0.28)'
-                and int(focus_visual['combined_focus_z_index']) > int(focus_visual['combined_selected_z_index'])
+                and focus_visual['selected_focus']['content'] != 'none'
+                and focus_visual['selected_focus']['border_color'] == 'rgb(255, 216, 61)'
+                and focus_visual['selected_focus']['border_width'] == '2px'
+                and focus_visual['selected_focus']['background_image'] != 'none'
+                and focus_visual['selected_overlay_background'] == 'rgba(255, 255, 255, 0.28)'
+                and int(focus_visual['selected_focus']['z_index']) > int(focus_visual['selected_overlay_z_index'])
+                and focus_visual['neutral_focus_content'] == 'none'
+                and focus_visual['focused_card_count'] == 1
             ),
             'detail': focus_visual,
+        },
+        {
+            'name': 'mouse_hover_uses_single_yellow_border_and_crosshair_in_all_card_rows',
+            'ok': all(
+                detail
+                and detail['content'] != 'none'
+                and detail['background'] == 'rgba(0, 0, 0, 0)'
+                and detail['background_image'] != 'none'
+                and detail['border_width'] == '2px'
+                and detail['border_style'] == 'solid'
+                and detail['border_color'] == 'rgb(255, 216, 61)'
+                and detail['pointer_events'] == 'none'
+                and detail['controller_focus_content'] == 'none'
+                for detail in hover_visual.values()
+            ),
+            'detail': hover_visual,
         },
         {
             'name': 'living_room_keeps_three_rows_without_scrollbars_or_focus_glow',
