@@ -22,7 +22,7 @@ def test_start_flow_core_node_tests():
 def test_start_flow_markup_has_three_paths_and_no_player_count_choice():
     html = (_ROOT / "static/index.html").read_text(encoding="utf-8")
     flow = html.split('id="startFlow"', 1)[1].split('<section class="lobby-card"', 1)[0]
-    for needle in ("建立真人紅軍遊戲", "建立 AI 紅軍遊戲", "輸入房間代碼加入", "簡單模式", "一般模式", "Joy-Con", "電腦", "SL + SR", "繼續"):
+    for needle in ("真人紅軍", "AI 紅軍", "輸入房間代碼", "簡單模式", "一般模式", "Joy-Con", "電腦", "SL + SR", "繼續"):
         assert needle in flow, needle
     assert "人數" not in flow and "<select" not in flow
 

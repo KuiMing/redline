@@ -4032,6 +4032,14 @@ html[data-display="living-room"] .lr-focus-overlay { height: 644px; }
 .sf-summary { padding: 8px 10px; border: 1px solid rgba(148, 163, 184, 0.28); border-radius: 12px; background: rgba(15, 23, 42, 0.6); color: #e2e8f0; font-size: 0.85rem; line-height: 1.5; }
 #lobby[data-flow="create"] #joinRoomBtn, #lobby[data-flow="join"] #createRoomBtn { display: none; }
 #lobby[data-flow="join"] #lanInfoField { display: none; }
+/* Joy-Con 建立畫面：這些設定已在開始流程決定；只留行動代號、玩家席位與建立／陣營／準備／開始。 */
+#lobby[data-flow="create"][data-joycon-lobby] #roomSettingsSummary,
+#lobby[data-flow="create"][data-joycon-lobby] #roomSettingsHint,
+#lobby[data-flow="create"][data-joycon-lobby] #roomSettingsField > span,
+#lobby[data-flow="create"][data-joycon-lobby] .lobby-room-column > label.lobby-field:has(#roomId),
+#lobby[data-flow="create"][data-joycon-lobby] #lanInfoField,
+#lobby[data-flow="create"][data-joycon-lobby] #difficultyField,
+#lobby[data-flow="create"][data-joycon-lobby] #aiRedArmyField { display: none; }
 #lobby[data-flow] .lobby-room-row + .lobby-field-hint { display: none; }
 
 /* 初始入口沿用主視覺本身，不用面板遮住遊戲標題。位置依 1280×720 參考畫面固定。 */

@@ -35,6 +35,7 @@ PROOF_DIR = os.environ.get("START_FLOW_PROOF_DIR")
 PORTS = (24800, 24801, 24802, 24803)
 NAMES = {24800: "Joy-Con 2 (R)", 24801: "Joy-Con 2 (L)", 24802: "Joy-Con 2 (R)", 24803: "Joy-Con 2 (L)"}
 # 物理 SL＋SR 位元（fixtures/joycon_dual_layout.json）：右 offset 8 的 0x20／0x10；左 offset 10 的 0x20／0x10。
+LEFT_PHYSICAL = {"A": (10, 0x04), "B": (10, 0x01)}
 CHORD_OFFSET = {"R": (8, 0x30), "L": (10, 0x30)}
 
 
@@ -58,6 +59,8 @@ class FakeJoyCons:
         self.registry = B.ControllerRegistry(PORTS, primary_port=24800)
         self.port = free_port()
         self.chord: set[int] = set()
+        self.held: dict[int, list[tuple[int, int]]] = {}  # port -> [(packet offset, mask)] 目前按住的實體鍵
+        self.stick: dict[int, tuple[float, float]] = {}  # port -> 左搖桿 (x, y)；FTCW 向上為正
         self.present = set(PORTS)
         self._stop = threading.Event()
         app = B.create_app(self.registry, allowed_origins=[page_origin])
@@ -81,7 +84,12 @@ class FakeJoyCons:
                 self.registry.observe(port, b"S2N1" + NAMES[port].encode())
                 side = "L" if "(L)" in NAMES[port] else "R"
                 offset, value = CHORD_OFFSET[side]
-                self.registry.observe(port, s2b1(offset, value) if port in self.chord else s2b1())
+                data = bytearray(s2b1(offset, value) if port in self.chord else s2b1())
+                for off, mask in list(self.held.get(port, ())):
+                    data[off] |= mask
+                if port in self.stick:
+                    data[12:20] = struct.pack("<2f", *self.stick[port])
+                self.registry.observe(port, bytes(data))
             time.sleep(0.03)
 
     def controller_id(self, port: int) -> str:
@@ -91,6 +99,22 @@ class FakeJoyCons:
         self.chord.add(port)
         time.sleep(hold)
         self.chord.discard(port)
+        time.sleep(0.2)
+
+    def press(self, port: int, logical: str, hold: float = 0.25):
+        """按一下左 Joy-Con 的實體鍵：A＝Right、B＝Down（fixture）。"""
+        offset, mask = LEFT_PHYSICAL[logical]
+        self.held[port] = [(offset, mask)]
+        time.sleep(hold)
+        self.held.pop(port, None)
+        time.sleep(0.2)
+
+    def nav(self, port: int, direction: str, hold: float = 0.25):
+        """左搖桿推一下（回中後才算下一次）：這是 Joy-Con 的方向導覽輸入。"""
+        x, y = {"up": (0, 1), "down": (0, -1), "left": (-1, 0), "right": (1, 0)}[direction]
+        self.stick[port] = (float(x), float(y))
+        time.sleep(hold)
+        self.stick.pop(port, None)
         time.sleep(0.2)
 
     def close(self):
@@ -486,4 +510,126 @@ def test_reload_resumes_room_without_showing_start_flow(browser, app_url):
     page.reload()
     page.wait_for_function("window.RedlineSession.current().gameId")
     assert page.evaluate("window.RedlineStartFlow.getState().step") == "done"
+    page.context.close()
+
+
+# ---------------------------------------------------------------- Joy-Con 配對後的作戰準備畫面
+def pair_one_left(page, joycons):
+    """AI／真人皆可：只配對左 Joy-Con（24801）→ P1。"""
+    page.wait_for_function("window.RedlineStartFlow.getState().listeners.filter(l => l.owned).length === 4", timeout=20000)
+    joycons.press_chord(24801)
+    page.wait_for_function("window.RedlineStartFlow.getState().paired.length === 1", timeout=8000)
+
+
+def visible(page, sel):
+    return page.evaluate("(s) => { const e = document.querySelector(s); if (!e) return false; const r = e.getBoundingClientRect(); return getComputedStyle(e).display !== 'none' && r.width > 0 && r.height > 0; }", sel)
+
+
+def focus_id(page):
+    return page.evaluate("document.activeElement && (document.activeElement.id || document.activeElement.className)")
+
+
+def test_joycon_main_controller_claims_p1_after_pairing_and_lobby_hides_duplicates(browser, app_url, joycons):
+    page = new_page(browser, app_url, joycons)
+    create_via_flow(page, ai=True, market="all_cards", control="joycon")
+    pair_one_left(page, joycons)
+    page.click("#sfContinueBtn")
+    page.wait_for_selector("#startFlow", state="hidden")
+    assert page.evaluate("window.RedlineStartFlow.getState().listeners.length") == 0
+    # 配對連線釋放後主連線會進入 unbound；必須能 claim P1（只接受 connected 就永遠不會 claim）。
+    page.wait_for_function("window.RedlineController.getState().controller.owned === '%s'" % joycons.controller_id(24801), timeout=15000)
+    assert page.evaluate("window.RedlineController.getState().status") == "connected"
+    # 四類重複設定不在畫面、不進焦點集合；行動代號與建立鈕保留。
+    for sel in ("#roomSettingsSummary", "#roomId", "#lanUrl", "#copyLanUrlBtn", "#copyRoomBtn", "#marketModeSelect",
+                '[data-market-mode="all_cards"]', '[data-ai-red-army="on"]'):
+        assert not visible(page, sel), sel
+    assert visible(page, "#playerName") and visible(page, "#createRoomBtn")
+    # AI 紅軍席位在房間建立前就已在右側，且不是可加入的空位。
+    assert page.locator("#lobbyRoster .lobby-player-card.ai-seat").count() == 1
+    assert "AI 紅軍" in page.inner_text("#lobbyRoster .ai-seat")
+    assert page.locator("#lobbyRoster .lobby-player-card").count() == 3
+    assert page.locator("#lobbyRoster .lobby-player-card.empty").count() == 1
+    shot(page, "10_joycon_ai_lobby.png")
+    # 真實 controller feed（bridge frame）：方向導覽能離開初始行動代號，且不會落在被隱藏的設定。
+    before = focus_id(page)
+    # 換由主連線 claim 後，第一筆 frame 只建立安全 baseline；第二次方向輸入才執行導覽。
+    joycons.nav(24801, "down")
+    joycons.nav(24801, "down")
+    after = focus_id(page)
+    assert before == "playerName"
+    assert after != before and after in {"createRoomBtn"}, (before, after)
+    # 建立後 canonical lobby 仍有 AI 席位，且只有一張。
+    page.fill("#playerName", "Tester")
+    page.click("#createRoomBtn")
+    page.wait_for_selector("#factionPicker", state="visible")
+    _, state = lobby_of(app_url, page)
+    assert state["ai_red_army"] is True
+    page.wait_for_function("document.querySelectorAll('#lobbyRoster .ai-seat').length === 1")
+    assert page.locator("#lobbyRoster .ai-seat[data-preroom]").count() == 0
+    page.context.close()
+
+
+def test_switching_back_to_computer_cancels_pairing_claim_lifecycle(browser, app_url, joycons):
+    page = new_page(browser, app_url, joycons)
+    create_via_flow(page, ai=False, control="joycon")
+    pair_one_left(page, joycons)
+    page.click("#sfContinueBtn")
+    page.wait_for_selector("#startFlow", state="hidden")
+    page.wait_for_function("window.RedlineController.getState().controller.owned === '%s'" % joycons.controller_id(24801), timeout=15000)
+    page.click("#sfBackBtn")
+    page.click("#sfCreateHuman")
+    page.click('[data-sf-control="computer"]')
+    page.wait_for_function("!window.RedlineController.getState().enabled && window.RedlineController.getState().controller.owned === null")
+    assert page.evaluate("window.RedlineStartFlow.getState().listeners.length") == 0
+    assert page.evaluate("window.RedlineStartFlow.getState().claimPending") is False
+    page.wait_for_timeout(1500)
+    assert page.evaluate("window.RedlineController.getState().controller.owned") is None
+    page.context.close()
+
+
+def test_joycon_faction_picker_navigation_a_and_b(browser, app_url, joycons):
+    page = new_page(browser, app_url, joycons)
+    create_via_flow(page, ai=False, control="joycon")
+    pair_one_left(page, joycons)
+    page.click("#sfContinueBtn")
+    page.wait_for_selector("#startFlow", state="hidden")
+    page.wait_for_function("window.RedlineController.getState().controller.owned === '%s'" % joycons.controller_id(24801), timeout=15000)
+    page.click("#createRoomBtn")
+    page.wait_for_selector("#factionPicker", state="visible")
+    in_picker = "(() => { const a = document.activeElement; return a && a.closest('#factionPicker') ? (a.dataset.faction || a.id || a.textContent.trim().slice(0, 16)) : null; })()"
+    # 陣營 modal：第一下只放焦點，之後方向在 modal 內可聚焦項目間移動。
+    seen = []
+    for _ in range(3):
+        joycons.nav(24801, "down")
+        seen.append(page.evaluate(in_picker))
+    assert all(seen) and len(set(seen)) > 1, seen
+    # A＝既有預覽／確認：選定一個陣營後出現確認列或詳情。
+    joycons.press(24801, "A")
+    page.wait_for_function("document.getElementById('factionDetailPanel').style.display !== 'none' || document.getElementById('factionConfirmBar').style.display !== 'none'", timeout=5000)
+    # B＝既有取消：最後可關閉 modal 回到 lobby（可能先退一層選擇）。
+    for _ in range(4):
+        if not visible(page, "#factionPicker"):
+            break
+        joycons.press(24801, "B")
+    assert not visible(page, "#factionPicker")
+    joycons.nav(24801, "down")
+    assert page.evaluate("!!document.activeElement && !!document.activeElement.closest('#lobby')")
+    page.context.close()
+
+
+@pytest.mark.parametrize("ai", [True, False])
+def test_computer_mode_keeps_room_settings_and_preroom_ai_seat_matches_entry(browser, app_url, ai):
+    page = new_page(browser, app_url)
+    create_via_flow(page, ai=ai, control="computer")
+    page.click("#sfContinueBtn")
+    page.wait_for_selector("#startFlow", state="hidden")
+    for sel in ("#roomSettingsSummary", "#roomId", "#lanUrl", "#playerName", "#createRoomBtn"):
+        assert visible(page, sel), sel
+    assert page.locator("#lobbyRoster .ai-seat").count() == (1 if ai else 0)
+    page.fill("#playerName", "Tester")
+    page.click("#createRoomBtn")
+    page.wait_for_selector("#factionPicker", state="visible")
+    _, state = lobby_of(app_url, page)
+    assert state["ai_red_army"] is ai
+    page.wait_for_function(f"document.querySelectorAll('#lobbyRoster .ai-seat').length === {1 if ai else 0}")
     page.context.close()

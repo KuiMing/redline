@@ -49,7 +49,15 @@
     }
   }
 
-  function closeAllListeners() { for (const l of [...sf.listeners.values()]) closeListener(l); }
+  function cancelClaimFirst() {
+    clearInterval(sf.claimTimer);
+    sf.claimTimer = null;
+  }
+
+  function closeAllListeners() {
+    cancelClaimFirst();
+    for (const l of [...sf.listeners.values()]) closeListener(l);
+  }
 
   function openListener(controller) {
     const cs = ctlState();
@@ -127,11 +135,15 @@
     renderStatus();
   }
 
-  const pairingActive = () => sf.draft.controlMode === 'joycon' && !!$('sfSetup') && !$('sfSetup').hidden;
+  // 開始流程隱藏後（完成配對進入作戰準備）配對監聽必須停止並釋放手把，主連線才能 claim；#sfSetup 本身不會被隱藏。
+  const pairingActive = () => sf.draft.controlMode === 'joycon' && !!$('sfSetup') && !$('sfSetup').hidden
+    && !!$('startFlow') && !$('startFlow').hidden;
 
   // ------------------------------------------------------------ 畫面
   function show(step, moveFocus) {
     closeAllListeners();
+    setJoyconLobby(false);
+    syncPreRoomAiSeat(false);
     setFlow('start');
     const flow = $('startFlow');
     if (flow) flow.hidden = false;
@@ -209,6 +221,8 @@
       syncListeners();
     } else {
       closeAllListeners();
+      const api = ctlApi();
+      if (api) { api.selectController(null); api.setEnabled(false); }
       sf.pairing = Core.createPairing(Core.maxControllers(sf.draft.aiRedArmy));
     }
     render();
@@ -243,20 +257,46 @@
     $('sfBackBtn').hidden = false;
     if (typeof applyMarketMode === 'function') applyMarketMode(settings.market_mode);
     if (typeof applyAiRedArmy === 'function') applyAiRedArmy(settings.ai_red_army);
+    const joy = settings.control_mode === 'joycon';
+    setJoyconLobby(joy);
+    syncPreRoomAiSeat(settings.ai_red_army);
     if (controllers.length) claimFirst(controllers[0]);
     focusEl($('playerName'));
     return true;
   }
 
+  /** Joy-Con 建立畫面：房主設定摘要、房間代碼、LAN 網址、難易度、紅軍席位都已在開始流程決定，不再顯示也不進方向焦點。 */
+  function setJoyconLobby(on) {
+    const lobby = lobbyEl();
+    if (lobby) { if (on) lobby.dataset.joyconLobby = 'true'; else delete lobby.dataset.joyconLobby; }
+    const back = $('sfBackBtn');
+    if (back) { if (on) back.setAttribute('data-controller-skip', ''); else back.removeAttribute('data-controller-skip'); }
+  }
+
+  /** 房間建立前，右側先顯示不可占用的 AI 紅軍席位；建立後由 app.js 依 server /lobby 重畫（canonical）。 */
+  function syncPreRoomAiSeat(ai) {
+    const roster = $('lobbyRoster');
+    if (!roster) return;
+    roster.querySelectorAll('[data-preroom]').forEach(el => el.remove());
+    if (!ai) return;
+    const card = document.createElement('div');
+    card.className = 'lobby-player-card ai-seat';
+    card.dataset.preroom = 'true';
+    card.innerHTML = '<div class="lobby-player-avatar">AI</div><div><strong>AI 紅軍</strong><span>電腦代打｜無需真人加入</span></div>';
+    const empty = roster.querySelector('.lobby-player-card.empty');
+    roster.insertBefore(card, empty);
+  }
+
   /** 完成配對後，主連線 claim P1（bridge 剛釋放配對連線，可能要重試幾次）。 */
   function claimFirst(controller) {
-    clearInterval(sf.claimTimer);
+    cancelClaimFirst();
     let tries = 0;
     sf.claimTimer = setInterval(() => {
       const cs = ctlState();
       tries += 1;
-      if ((cs && cs.controller && cs.controller.owned === controller) || tries > 12) { clearInterval(sf.claimTimer); return; }
-      if (cs && cs.enabled && cs.status === 'connected' && !cs.controller.claimInFlight) ctlApi().selectController(controller);
+      if ((cs && cs.controller && cs.controller.owned === controller) || tries > 12) { cancelClaimFirst(); return; }
+      // 配對連線釋放後主連線的 roster 沒有自己的手把＝unbound；connected／unbound 都是可 claim 的合法狀態。
+      if (cs && cs.enabled && (cs.status === 'connected' || cs.status === 'unbound') && !cs.controller.claimInFlight) ctlApi().selectController(controller);
     }, 600);
   }
 
@@ -271,6 +311,8 @@
     if (data.started) { err.textContent = '這個房間已經開始遊戲，無法加入。'; return; }
     closeAllListeners();
     sf.pending = null;
+    setJoyconLobby(false);
+    syncPreRoomAiSeat(false);
     $('startFlow').hidden = true;
     setFlow('join');
     const room = $('roomId');
@@ -373,6 +415,7 @@
       step: $('startFlow') && !$('startFlow').hidden ? ($('sfSetup').hidden ? 'entry' : 'setup') : 'done',
       draft: { ...sf.draft }, paired: sf.pairing.order.slice(), max: sf.pairing.max,
       listeners: [...sf.listeners.values()].map(l => ({ controller: l.controller, owned: l.owned, open: !!l.socket })),
+      claimPending: !!sf.claimTimer,
       pending: sf.pending ? { settings: { ...sf.pending.settings }, controllers: sf.pending.controllers.slice() } : null,
     }),
   };
