@@ -126,6 +126,26 @@ def test_host_mutations_reject_visitor_who_only_knows_public_host_id(route, body
     assert main.manager.games.get(game_id) is None
 
 
+@pytest.mark.parametrize("route,body", [
+    ("/market-mode", {"market_mode": "all_cards"}),
+    ("/ai-red-army", {"enabled": True}),
+    ("/start", {}),
+])
+def test_host_mutations_reject_room_with_missing_stored_host_credential(route, body):
+    client = _client()
+    created, _ = _ready_two_player_room(client)
+    game_id, host_id = created["game_id"], created["host_id"]
+    del main.lobby_player_credentials[game_id][host_id]
+    payload = {
+        "game_id": game_id,
+        "player_id": host_id,
+        "resume_token": created["resume_token"],
+        **body,
+    }
+    assert client.post(route, json=payload).json() == {"error": "Host authentication failed"}
+    assert main.manager.games.get(game_id) is None
+
+
 def test_host_mutations_accept_the_real_resume_token():
     client = _client()
     created, _ = _ready_two_player_room(client)
