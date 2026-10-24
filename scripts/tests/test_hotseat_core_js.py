@@ -202,12 +202,14 @@ def test_added_local_seats_get_a_codename_without_typing():
     # 新增本機玩家：使用者沒有輸入新名稱 → 依 server lobby 下一個位置的 P 代號（Core.nextSeatCodename），不要求打字；
     # 滿 4 席（沒有代號）不呼叫 /join、不發明 P5。
     ui = (_ROOT / "static/hotseat_ui.js").read_text(encoding="utf-8")
-    add = _function_body(ui, "async function addLocalSeat() {")
+    add = _function_body(ui, "async function addLocalSeat(opts) {")
     assert "Core.nextSeatCodename(" in add
     assert "dataset.userEdited === '1'" in add
     assert "請先在「玩家名稱」輸入新玩家的名稱" not in add
     assert add.index("Core.nextSeatCodename(") < add.index("fetch('/join'")
     assert "auto_name: !explicit" in add
+    # Joy-Con 配置重試：固定預期代號，並以既有 /join resume（公開 player_id）取回 response 遺失的席位。
+    assert "resumePlayerId" in add and "codename" in add
 
 
 def test_hotseat_css_hides_the_stage_while_masked():

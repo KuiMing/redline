@@ -872,16 +872,21 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
     lobbyHint('');
   }
 
-  async function addLocalSeat() {
+  /**
+   * opts.codename：固定預期代號（Joy-Con 配置 P2～P4 用），不隨 nextSeatCodename 跳號。
+   * opts.resumePlayerId：server 已建立、但回應遺失的席位；改以既有 /join resume（player_id＋device_id）取回同一席，不 append。
+   */
+  async function addLocalSeat(opts) {
+    const { codename, resumePlayerId } = opts || {};
     const cur = session();
     if (!cur.gameId) { lobbyHint('請先建立或進入作戰室。'); return; }
     if (cur.started) return;
     // 行動代號：使用者在欄位輸入過（非空）＝自訂名稱；否則（Joy-Con 玩家不必打字）用 server lobby 下一個位置的 P 代號。
     const nameInput = document.getElementById('playerName');
     const typed = String((nameInput || {}).value || '').trim();
-    const explicit = !!nameInput && nameInput.dataset.userEdited === '1' && !!typed;
-    let name = typed;
-    if (!explicit) {
+    const explicit = !codename && !!nameInput && nameInput.dataset.userEdited === '1' && !!typed;
+    let name = codename || typed;
+    if (!explicit && !codename) {
       const lobbyRes = (typeof refreshLobbyState === 'function' ? await refreshLobbyState().catch(() => null) : null) || cur.lobby;
       name = Core.nextSeatCodename(lobbyRes);
       if (!name) { lobbyHint('作戰室已滿，無法新增本機玩家。'); return; }
@@ -893,8 +898,12 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
       const res = await fetch('/join', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // 不帶 player_id／resume_token：一定建立新席位，不會恢復（覆寫）既有席位。
-        body: JSON.stringify({ game_id: cur.gameId, name, device_id: typeof redlineDeviceId === 'function' ? redlineDeviceId() : '' }),
+        // 一般新增不帶 player_id／resume_token：一定建立新席位，不會恢復（覆寫）既有席位；
+        // 只有取回遺失回應的孤兒席位才帶它的公開 player_id（server 以同一 device_id 驗證 resume）。
+        body: JSON.stringify({
+          game_id: cur.gameId, name, device_id: typeof redlineDeviceId === 'function' ? redlineDeviceId() : '',
+          ...(resumePlayerId ? { player_id: resumePlayerId } : {}),
+        }),
       });
       data = await res.json();
     } catch {
@@ -934,7 +943,10 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
     for (let i = 1; i < list.length; i += 1) {
       let seatId = others()[i - 1];
       if (!seatId) {
-        await addLocalSeat();
+        // 固定預期代號 P{i+1}；若上次 /join 已在 server 建立該席位但回應遺失，取回同一席而不是跳號新增。
+        const codename = Core.CODENAMES[i];
+        const lobbyRes = (typeof refreshLobbyState === 'function' ? await refreshLobbyState().catch(() => null) : null) || session().lobby;
+        await addLocalSeat({ codename, resumePlayerId: Core.orphanSeatId(lobbyRes, loadStore(), cur.gameId, codename) || undefined });
         seatId = others()[i - 1];
       }
       if (!seatId) return { ok: false, error: `P${i + 1} 席位建立失敗，請再按「建立作戰室」重試。` };

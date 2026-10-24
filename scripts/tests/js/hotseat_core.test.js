@@ -54,6 +54,16 @@ test('行動代號依 server lobby 順序：第 1～4 席＝P1～P4；沒有 P5�
   assert.equal(H.nextSeatCodename({ ...lobbyOf(['a', '1'], ['b', '2'], ['c', '3']), ai_red_army: true }), null);
 });
 
+test('orphanSeatId：lobby 有預期代號、本機席位表沒有它 → 回傳該公開 player_id（/join 回應遺失的恢復依據）', () => {
+  const store = storeWith(TW);
+  const lobby = lobbyOf([TW.player_id, 'P1'], ['orphan-2', 'P2']);
+  assert.equal(H.orphanSeatId(lobby, store, G, 'P2'), 'orphan-2');
+  assert.equal(H.orphanSeatId(lobby, store, G, 'P3'), null);
+  assert.equal(H.orphanSeatId(lobby, store, G, 'P1'), null); // 本機已有的席位不是孤兒
+  assert.equal(H.orphanSeatId(null, store, G, 'P2'), null);
+  assert.equal(H.orphanSeatId(lobby, store, G, ''), null);
+});
+
 test('席位的 auto_name：只有明確 true 才是系統預設代號；未提供時保留原值，不把自訂名稱變成預設', () => {
   let store = storeWith({ ...TW, auto_name: true }, HK);
   const seat = id => H.findSeat(store, G, id);

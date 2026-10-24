@@ -432,6 +432,17 @@
   }
 
   /**
+   * 「/join 已在 server 建立席位、回應卻在客戶端遺失」的孤兒席位：公開 lobby 裡名稱＝預期代號、
+   * 但本機席位表沒有它的 player_id。回傳該 player_id（沒有則 null），供重試時以既有 /join resume 取回，不再 append 新席位。
+   */
+  function orphanSeatId(lobby, store, gameId, codename) {
+    if (!validLobby(lobby) || !codename) return null;
+    const local = new Set(seatsFor(store, gameId).map(s => s.player_id));
+    const hit = lobby.players.find(p => Array.isArray(p) && isId(p[0]) && p[1] === codename && !local.has(p[0]));
+    return hit ? hit[0] : null;
+  }
+
+  /**
    * 要寫回 server 的改名：hot-seat 啟用、本機至少兩席、尚未開局時，auto_name 的本機席位改成它在 server lobby 位置的代號。
    * 自訂名稱（auto_name false，即使字面是 host）永不覆寫；已正確的不重送。只依 server lobby 與席位資料，與目前顯示哪一席無關。
    */
@@ -572,7 +583,7 @@
   function reasonText(reason) { return REASON_TEXT[reason] || ''; }
 
   return {
-    STORE_KEY, SESSION_KEY, MAX_SEATS, CODENAMES, seatCodename, nextSeatCodename, codenameRenames,
+    STORE_KEY, SESSION_KEY, MAX_SEATS, CODENAMES, seatCodename, nextSeatCodename, orphanSeatId, codenameRenames,
     isControllerId, normalizeStore, seatsFor, findSeat, seatForController, addSeat, bindController, unbindController,
     isHotSeatGame, normalizeSession, confirmSession, lockSession, authoritativeActor, decide, masked, aiPublicView, aiLineText,
     confirmVerdict, allowsInput, bindableControllers, bindingLost, handoffTitle, reasonText,

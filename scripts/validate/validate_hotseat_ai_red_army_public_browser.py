@@ -121,11 +121,11 @@ def main() -> None:
     p1 = {"player_id": created["host_id"], "token": created["resume_token"], "name": "P1"}
     joined = post(base, "/join", {"game_id": game_id, "name": "P2", "device_id": "hs-ai-p2"})
     p2 = {"player_id": joined["player_id"], "token": joined["resume_token"], "name": "P2"}
-    assert post(base, "/ai-red-army", {"game_id": game_id, "player_id": p1["player_id"], "enabled": True}).get("success")
+    assert post(base, "/ai-red-army", {"game_id": game_id, "player_id": p1["player_id"], "resume_token": p1["token"], "enabled": True}).get("success")
     for seat, faction in zip((p1, p2), HUMAN_FACTIONS):
         assert post(base, "/choose-faction", {"game_id": game_id, "player_id": seat["player_id"], "faction_id": faction}).get("success")
         assert post(base, "/ready", {"game_id": game_id, "player_id": seat["player_id"], "ready": True}).get("success")
-    started = post(base, "/start", {"game_id": game_id, "player_id": p1["player_id"]})
+    started = post(base, "/start", {"game_id": game_id, "player_id": p1["player_id"], "resume_token": p1["token"]})
     assert started.get("success"), started
     game = server_main.manager.get_game(game_id)
     ai_id = game.ai_red_army_player_id

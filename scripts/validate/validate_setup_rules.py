@@ -50,6 +50,7 @@ def check_setup(browser):
     create = request_json('/create', {'name': 'host', 'market_mode': 'sample_53'})
     game_id = create.get('game_id')
     host_id = create.get('host_id')
+    host_token = create.get('resume_token')
 
     join = request_json('/join', {'game_id': game_id, 'name': 'ally'})
     ally_id = join.get('player_id')
@@ -58,7 +59,7 @@ def check_setup(browser):
     request_json('/ready', {'game_id': game_id, 'player_id': host_id, 'ready': True})
     request_json('/ready', {'game_id': game_id, 'player_id': ally_id, 'ready': True})
 
-    start = request_json('/start', {'game_id': game_id, 'player_id': host_id})
+    start = request_json('/start', {'game_id': game_id, 'player_id': host_id, 'resume_token': host_token})
     record(results, 'start_endpoint_accepts_ready_setup', start.get('success') is True, start)
     state = websocket_initial_state(game_id, host_id)
 

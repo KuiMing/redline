@@ -315,6 +315,53 @@ def test_joycon_seat_provisioning_failure_keeps_pairing_and_retry_creates_no_dup
     page.context.close()
 
 
+def test_joycon_join_response_lost_after_server_created_seat_retry_recovers_same_seat(browser, app_url, joycons):
+    page = new_page(browser, app_url, joycons)
+    create_via_flow(page, control="joycon")
+    page.wait_for_function("window.RedlineStartFlow.getState().listeners.filter(l => l.owned).length === 4", timeout=20000)
+    for n, port in enumerate([24801, 24800, 24802], start=1):
+        joycons.press_chord(port)
+        page.wait_for_function(f"window.RedlineStartFlow.getState().paired.length === {n}", timeout=8000)
+    paired = page.evaluate("window.RedlineStartFlow.getState().paired")
+    page.click("#sfContinueBtn")
+    page.wait_for_selector("#startFlow", state="hidden")
+
+    # 第一個 /join：伺服器真的建立了 P2 席位，但回應在客戶端遺失（連線中斷）。
+    lost = []
+
+    def lose_first_join_response(route):
+        if lost:
+            route.continue_()
+            return
+        lost.append(route.fetch().json())
+        route.abort("connectionreset")
+
+    page.route("**/join", lose_first_join_response)
+    page.click("#createRoomBtn")
+    page.wait_for_function("window.RedlineSession.current().gameId")
+    game_id = page.evaluate("window.RedlineSession.current().gameId")
+    page.wait_for_function("document.getElementById('lobbyStatusHint').textContent.includes('重試')", timeout=10000)
+    assert page.is_hidden("#factionPicker")
+    orphan_id = lost[0]["player_id"]
+    before = requests.get(f"{app_url}/lobby/{game_id}").json()["players"]
+    assert [p[1] for p in before] == ["host", "P2"] and before[1][0] == orphan_id
+    assert page.evaluate("window.RedlineHotSeat.getState().seats.length") == 1  # 本機不知道有這一席
+
+    # 重試：取回同一個 P2（不是跳到 P3 留下孤兒），再補 P3；房間、席位 ID、配對順序不變。
+    page.click("#createRoomBtn")
+    page.wait_for_selector("#factionPicker", state="visible")
+    assert page.evaluate("window.RedlineSession.current().gameId") == game_id
+    after = requests.get(f"{app_url}/lobby/{game_id}").json()["players"]
+    assert [p[1] for p in after][1:] == ["P2", "P3"]  # 房主的預設名稱稍後會被既有的 codenameRenames 改成 P1
+    assert [p[0] for p in after[:2]] == [p[0] for p in before], "P2 必須是同一個席位 ID，不可重複建立"
+    assert len({p[0] for p in after}) == 3
+    page.wait_for_function("window.RedlineHotSeat.getState().seats.length === 3 && window.RedlineHotSeat.getState().seats.every(s => s.controller)", timeout=20000)
+    seats = page.evaluate("window.RedlineHotSeat.getState().seats")
+    assert [s["player_id"] for s in seats] == [p[0] for p in after]
+    assert [s["controller"] for s in seats] == paired
+    page.context.close()
+
+
 def test_joycon_pairing_order_and_finish_threshold(browser, app_url, joycons):
     page = new_page(browser, app_url, joycons)
     create_via_flow(page, ai=False, market="all_cards", control="joycon")

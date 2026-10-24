@@ -210,12 +210,12 @@ def _required_faction_for_player(game_id: str, player_id: str):
 
 
 def _host_token_valid(game_id: str, player_id, payload: dict) -> bool:
-    """Host mutations must prove ownership of the host seat. Rooms built through
-    /create always carry a credential, so the public host_id alone is never
-    enough; only credential-less internal test lobbies stay legacy-compatible."""
+    """Host mutations must prove ownership of the host seat. Fail closed: a seat
+    with no stored credential is rejected, so the public host_id alone is never
+    enough and every room must be built through /create."""
     credential = lobby_player_credentials.get(game_id, {}).get(player_id)
     if not credential:
-        return True
+        return False
     supplied = str(payload.get("resume_token") or "").strip()
     return bool(supplied) and secrets.compare_digest(
         supplied, str(credential.get("resume_token") or "")
