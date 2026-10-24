@@ -4034,6 +4034,114 @@ html[data-display="living-room"] .lr-focus-overlay { height: 644px; }
 #lobby[data-flow="join"] #lanInfoField { display: none; }
 #lobby[data-flow] .lobby-room-row + .lobby-field-hint { display: none; }
 
+/* 初始入口沿用主視覺本身，不用面板遮住遊戲標題。位置依 1280×720 參考畫面固定。 */
+#stageViewport:has(#lobby[data-flow="start"][data-start-step="entry"])::before {
+  opacity: 0;
+}
+#lobby[data-flow="start"][data-start-step="entry"] {
+  padding: 0;
+  overflow: hidden;
+  background: linear-gradient(to bottom, transparent 0 68%, rgba(2, 4, 8, 0.08) 100%);
+}
+#lobby[data-flow="start"][data-start-step="entry"]::after { display: none; }
+#lobby[data-flow="start"][data-start-step="entry"] .startflow {
+  inset: 0;
+  width: 1280px;
+  height: 720px;
+  min-height: 0;
+  max-height: none;
+  padding: 0;
+  transform: none;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: hidden;
+}
+#lobby[data-flow="start"][data-start-step="entry"] .startflow > .lobby-kicker,
+#lobby[data-flow="start"][data-start-step="entry"] .startflow > .lobby-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+#lobby[data-flow="start"][data-start-step="entry"] .sf-paths {
+  display: block;
+}
+#lobby[data-flow="start"][data-start-step="entry"] .sf-path-btn {
+  position: absolute;
+  left: 527px;
+  width: 294px;
+  min-height: 0;
+  height: 64px;
+  padding: 0 20px;
+  border: 2px solid rgba(206, 161, 86, 0.72);
+  border-radius: 13px;
+  background: linear-gradient(180deg, rgba(153, 116, 62, 0.96), rgba(111, 77, 39, 0.96));
+  color: #18130e;
+  text-align: center;
+  box-shadow: inset 0 1px 0 rgba(255, 235, 190, 0.32), 0 5px 18px rgba(0, 0, 0, 0.46);
+}
+#lobby[data-flow="start"][data-start-step="entry"] #sfCreateHuman { top: 532px; }
+#lobby[data-flow="start"][data-start-step="entry"] #sfCreateAi { top: 606px; }
+#lobby[data-flow="start"][data-start-step="entry"] .sf-path-btn strong {
+  margin: 0;
+  font: 900 18px/60px 'Noto Sans TC', sans-serif;
+  letter-spacing: 0.06em;
+}
+#lobby[data-flow="start"][data-start-step="entry"] .sf-path-btn span { display: none; }
+#lobby[data-flow="start"][data-start-step="entry"] .sf-path-btn:hover,
+#lobby[data-flow="start"][data-start-step="entry"] .sf-path-btn:focus-visible {
+  border-color: #ffe29a;
+  background: linear-gradient(180deg, #b78b49, #81572b);
+  outline: 3px solid rgba(255, 226, 154, 0.48);
+  outline-offset: 2px;
+}
+#lobby[data-flow="start"][data-start-step="entry"] .sf-path-join {
+  position: absolute;
+  left: 527px;
+  top: 680px;
+  width: 294px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: rgba(5, 7, 11, 0.84);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.45);
+}
+#lobby[data-flow="start"][data-start-step="entry"] .sf-path-join > label { display: none; }
+#lobby[data-flow="start"][data-start-step="entry"] .sf-path-join .lobby-room-row { gap: 4px; }
+#lobby[data-flow="start"][data-start-step="entry"] #sfRoomCode {
+  height: 36px;
+  min-width: 0;
+  padding: 6px 10px;
+  border-color: rgba(206, 161, 86, 0.66);
+  border-radius: 8px 0 0 8px;
+  background: rgba(7, 10, 16, 0.92);
+  color: #f4e4c2;
+  text-align: center;
+}
+#lobby[data-flow="start"][data-start-step="entry"] #sfJoinBtn {
+  height: 36px;
+  padding: 0 13px;
+  border-color: rgba(206, 161, 86, 0.72);
+  border-radius: 0 8px 8px 0;
+  background: #74502a;
+  color: #f8ead0;
+}
+#lobby[data-flow="start"][data-start-step="entry"] .sf-error {
+  position: absolute;
+  left: 0;
+  bottom: 38px;
+  width: 294px;
+  margin: 0;
+  padding: 3px 8px;
+  background: rgba(5, 7, 11, 0.88);
+  text-align: center;
+}
+
 /* ---- 客廳大螢幕模式（controller_living_room.js）：只在 html[data-display="living-room"] 下生效 ----
  * 舞台本身已等比縮放並留 5% title-safe 邊界（app.js resizeStage），以下尺寸都是 1280×720 設計單位，
  * 因此在 720p／1080p／4K 只差銳利度。桌面模式不受影響。 */

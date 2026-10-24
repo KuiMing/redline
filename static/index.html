@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>REDLINE // STRATEGIC COMMAND</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="/static/style.css?v=card-mouse-focus-20261023" />
+  <link rel="stylesheet" href="/static/style.css?v=start-hero-20261024" />
   <!-- 客廳輪流（hot-seat）：在第一次繪製前就能遮住舞台，所以放在 <head>。 -->
   <script src="/static/hotseat_core.js?v=hotseat-ai-public-20261020"></script>
   <script src="/static/hotseat_ui.js?v=hotseat-ai-public-clean-header-20261023"></script>
@@ -35,18 +35,18 @@
     <div id="sfEntry" class="sf-panel" data-step="entry">
       <div class="sf-paths" role="group" aria-label="開始方式">
         <button id="sfCreateHuman" class="sf-path-btn" type="button" data-sf-path="human">
-          <strong>建立真人紅軍遊戲</strong>
+          <strong>真人紅軍</strong>
           <span>由一位玩家擔任紅軍</span>
         </button>
         <button id="sfCreateAi" class="sf-path-btn" type="button" data-sf-path="ai">
-          <strong>建立 AI 紅軍遊戲</strong>
+          <strong>AI 紅軍</strong>
           <span>紅軍由電腦操作，不需要真人</span>
         </button>
         <div class="sf-path-join">
-          <label for="sfRoomCode"><strong>輸入房間代碼加入</strong></label>
+          <label for="sfRoomCode"><strong>加入現有房間</strong></label>
           <div class="lobby-room-row">
-            <input id="sfRoomCode" class="lobby-code-input" placeholder="貼上房主分享的房間代碼" autocomplete="off">
-            <button id="sfJoinBtn" class="lobby-mini-btn" type="button">加入房間</button>
+            <input id="sfRoomCode" class="lobby-code-input" aria-label="房間代碼" placeholder="輸入房間代碼" autocomplete="off">
+            <button id="sfJoinBtn" class="lobby-mini-btn" type="button">加入</button>
           </div>
           <div id="sfJoinError" class="sf-error" role="alert"></div>
         </div>
@@ -458,6 +458,6 @@
 <script src="/static/controller_ui.js?v=half-height-command-centre-20261018"></script>
 <script src="/static/controller_living_room.js?v=half-height-command-centre-20261018b"></script>
 <script src="/static/start_flow_core.js?v=start-flow-20261024"></script>
-<script src="/static/start_flow_ui.js?v=start-flow-20261024"></script>
+<script src="/static/start_flow_ui.js?v=start-hero-20261024"></script>
 </body>
 </html>

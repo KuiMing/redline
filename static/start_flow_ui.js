@@ -144,6 +144,8 @@
 
   /** moveFocus：使用者切換畫面時，把焦點移到新畫面的標題（標題 tabindex=-1），讓輔助科技與鍵盤使用者知道畫面已換。 */
   function showStep(step, moveFocus) {
+    const lobby = lobbyEl();
+    if (lobby) lobby.dataset.startStep = step;
     $('sfEntry').hidden = step !== 'entry';
     $('sfSetup').hidden = step !== 'setup';
     if (step === 'entry') { closeAllListeners(); sf.pairing = Core.createPairing(Core.maxControllers(false)); }

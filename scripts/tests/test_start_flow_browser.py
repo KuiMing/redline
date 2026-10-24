@@ -180,14 +180,21 @@ def finish_and_create(page, name="Tester", proof=None):
 
 def test_entry_offers_three_paths_and_no_player_count(browser, app_url):
     page = new_page(browser, app_url)
-    assert page.inner_text("#sfCreateHuman").startswith("建立真人紅軍遊戲")
-    assert page.inner_text("#sfCreateAi").startswith("建立 AI 紅軍遊戲")
+    assert page.inner_text("#sfCreateHuman").startswith("真人紅軍")
+    assert page.inner_text("#sfCreateAi").startswith("AI 紅軍")
     assert page.is_visible("#sfRoomCode") and page.is_visible("#sfJoinBtn")
     text = page.inner_text("#startFlow")
     assert "人數" not in text and "幾人" not in text
     assert page.locator("#startFlow select").count() == 0
     # 入口只有三條路：隱藏的作戰準備室不在畫面（Joy-Con 焦點集合因此不含它）。
     assert not page.locator("#lobby .lobby-card").is_visible()
+    # 入口直接疊在 1280×720 主視覺下方，不得再以大型面板遮住「逆統戰」標題。
+    human = page.locator("#sfCreateHuman").bounding_box()
+    ai = page.locator("#sfCreateAi").bounding_box()
+    panel = page.locator("#startFlow").bounding_box()
+    assert panel == {"x": 0, "y": 0, "width": 1280, "height": 720}
+    assert human == {"x": 527, "y": 532, "width": 294, "height": 64}
+    assert ai == {"x": 527, "y": 606, "width": 294, "height": 64}
     shot(page, "01_entry_three_paths.png")
     page.context.close()
 
