@@ -1,0 +1,285 @@
+/*
+ * 戰略地圖 iframe 端的 controller adapter。
+ * 與 parent 的 controller_ui.js 以 postMessage 溝通（協定見 docs/joycon_controller.md）。
+ * 焦點集合只由 leaflet_game_map_logic.js 持有的伺服器權威資料建立；每個指令在執行當下重新驗證，
+ * 因此 parent 送來過期或偽造的目標也不會讓非法目標可 action。
+ */
+(function () {
+  'use strict';
+  const Core = window.RedlineControllerCore;
+  if (!Core) return;
+
+  let snapSeq = 0;
+  let focusTown = null;
+  let focusLayer = null;
+  let pushTimer = null;
+
+  function buttonInfo(id) {
+    const el = document.getElementById(id);
+    if (!el) return { id, visible: false, disabled: true, label: '' };
+    const rect = el.getBoundingClientRect();
+    const visible = el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden';
+    return { id, visible, disabled: el.disabled === true, label: (el.textContent || '').trim(), rect };
+  }
+
+  function currentModel() {
+    const state = lastGameState;
+    const hasState = !!(state && !state.error && state.map && state.map.towns && mapPlayerId);
+    const viewer = hasState ? (state.players || []).find(p => p.id === mapPlayerId) : null;
+    const viewerCanAct = !!viewer && viewer.name === currentPlayerName();
+    const highlight = supportChoiceHighlight && supportChoiceHighlight.mode === 'support-targets'
+      ? supportChoiceHighlight : null;
+    const originTowns = viewerCanAct ? currentVisible.filter(name => canActFromTown(name)) : [];
+    const buttons = Core.MAP_BUTTON_IDS.map(buttonInfo);
+    const model = Core.buildMapSnapshotModel({
+      hasState,
+      viewerCanAct,
+      pendingChoiceBlocksMoves: !!(state && state.pending_choice) && !highlight,
+      highlight,
+      visibleTowns: currentVisible,
+      knownTowns: [...byName.keys()],
+      moveTargets: selectedTown ? selectedMoveTargets : [],
+      selectedTown,
+      pendingMoveTarget,
+      originTowns,
+      // 既有「瓦解組織」按鈕對共享組織的判定（sharedDissolveTargetForTown）：只有這些來源有 Y 瓦解。
+      dissolveOrigins: originTowns.filter(name => !!sharedDissolveTargetForTown(name)),
+      buttons,
+    });
+    return { model, buttons: new Map(buttons.map(b => [b.id, b])) };
+  }
+
+  function cancelAvailable(info) {
+    const cancelBtn = info.buttons.get('cancelDissolveChoiceBtn');
+    if (cancelBtn && cancelBtn.visible && !cancelBtn.disabled) return 'cancelDissolveChoiceBtn';
+    if (selectedTown) return 'selection';
+    return null;
+  }
+
+  /**
+   * req：只有回應帶 req 的 `snapshot` 指令時才帶（parent 的 SL 聚焦選單只採用對上自己 req 的那一份，避免用到過期推送）。
+   * 每個目標附上 canonical 地圖資料（/map-data）的統治者／陣營區域，版本由 groupMeta 宣告；任一目標的資料不合法時
+   * 整份都不帶分組資料（不宣告 groupMeta），parent 的聚焦選單因此 fail closed，其餘地圖控制不受影響。
+   */
+  function snapshotMessage(req) {
+    const info = currentModel();
+    const mapEl = document.getElementById('map');
+    const origin = mapEl ? mapEl.getBoundingClientRect() : { left: 0, top: 0 };
+    const targets = [];
+    const groups = [];
+    for (const t of info.model.targets) {
+      const town = byName.get(t.town);
+      if (!town) continue;
+      const p = map.latLngToContainerPoint(townDisplayLatLng(town));
+      const target = { town: t.town, role: t.role, x: origin.left + p.x, y: origin.top + p.y };
+      if (t.mode !== undefined && t.mode !== null) target.mode = t.mode;
+      if (t.cost !== undefined && t.cost !== null) target.cost = t.cost;
+      if (t.act) target.act = t.act;
+      targets.push(target);
+      groups.push(Core.townGroupMeta(town));
+    }
+    const groupMeta = groups.every(Boolean);
+    if (groupMeta) targets.forEach((target, i) => { target.ruler = groups[i].ruler; target.camp = groups[i].camp; });
+    const buttons = info.model.buttons.map(b => {
+      const r = info.buttons.get(b.id).rect;
+      return { id: b.id, label: b.label || b.id, x: r.left, y: r.top, w: r.width, h: r.height };
+    });
+    snapSeq += 1;
+    return {
+      type: 'redline-controller-map-snapshot',
+      v: Core.MAP_MESSAGE_VERSION,
+      seq: snapSeq,
+      scope: info.model.scope,
+      targets,
+      buttons,
+      focusTown: focusTown && targets.some(t => t.town === focusTown) ? focusTown : info.model.focusTown,
+      canCancel: !!cancelAvailable(info),
+      selected: info.model.selected,
+      pending: info.model.pending,
+      ...(groupMeta ? { groupMeta: Core.MAP_GROUP_META_VERSION } : {}),
+      ...(Core.isRequestId(req) ? { req } : {}),
+    };
+  }
+
+  function postToParent(message) {
+    try {
+      if (window.parent && window.parent !== window) window.parent.postMessage(message, window.location.origin);
+    } catch (err) {
+      console.warn('controller adapter: postMessage failed', err);
+    }
+  }
+
+  function pushSnapshot(req) {
+    pushTimer = null;
+    postToParent(snapshotMessage(req));
+  }
+
+  // 任何地圖狀態變更都排一次（合併）推送；parent 只用它來畫焦點，真正執行時 iframe 會重驗。
+  function scheduleSnapshot() {
+    if (pushTimer !== null) return;
+    pushTimer = setTimeout(pushSnapshot, 0);
+  }
+
+  function drawFocusRing() {
+    if (!focusLayer) focusLayer = L.layerGroup().addTo(map);
+    focusLayer.clearLayers();
+    if (!focusTown) return;
+    const town = byName.get(focusTown);
+    if (!town) return;
+    const ll = townDisplayLatLng(town);
+    const radius = Math.max(22, markerRadius(map.getZoom()) + 16);
+    L.circleMarker(ll, { radius: radius + 3, color: '#000000', weight: 9, fill: false, opacity: 0.9, interactive: false }).addTo(focusLayer);
+    L.circleMarker(ll, { radius, color: '#ffe14d', weight: 5, fill: false, opacity: 1, interactive: false }).addTo(focusLayer);
+    L.marker(ll, {
+      interactive: false, keyboard: false, zIndexOffset: 2000,
+      icon: L.divIcon({ className: 'pad-focus-label-wrap', html: `<div class="pad-focus-label">${escapeHtml(focusTown)}</div>`, iconSize: [0, 0], iconAnchor: [0, 36] }),
+    }).addTo(focusLayer);
+  }
+
+  function setFocus(townName) {
+    const { model } = currentModel();
+    if (!model.targets.some(t => t.town === townName)) return { ok: false, reason: 'not-a-target' };
+    focusTown = townName;
+    const town = byName.get(townName);
+    const ll = townDisplayLatLng(town);
+    if (!map.getBounds().pad(-0.1).contains(ll)) map.panInside(ll, { padding: [90, 90], animate: false });
+    drawFocusRing();
+    return { ok: true };
+  }
+
+  function activate(townName) {
+    const { model } = currentModel();
+    if (!model.targets.some(t => t.town === townName)) return { ok: false, reason: 'not-a-target' };
+    const marker = currentMarkers.get(townName);
+    if (!marker) return { ok: false, reason: 'no-marker' };
+    focusTown = townName;
+    marker.fire('click'); // 與滑鼠點擊同一條既有路徑（selection / pending move / resolve choice 候選）
+    drawFocusRing();
+    return { ok: true };
+  }
+
+  function pressButton(id) {
+    const info = currentModel();
+    if (!info.model.buttons.some(b => b.id === id)) return { ok: false, reason: 'button-unavailable' };
+    const el = document.getElementById(id);
+    if (!el || !el.isConnected) return { ok: false, reason: 'button-unavailable' };
+    el.click();
+    return { ok: true, via: id };
+  }
+
+  /** 既有按鈕目前作用的對象：確認移動＝已預備的目的地；建立／瓦解＝目前選取的城鎮。 */
+  function actBound(id, townName) {
+    if (id === 'confirmMoveBtn') {
+      return !!pendingMoveTarget && pendingMoveTarget.to === townName && pendingMoveTarget.from === selectedTown;
+    }
+    return selectedTown === townName;
+  }
+
+  /**
+   * 客廳模式 Y：對目標執行它的既有地圖操作（建立組織／確認移動／瓦解組織）。
+   * 1. 用權威資料重驗：town 必須是目前目標，且其 act 對應的既有按鈕必須等於 parent 要求的 id；
+   * 2. 按鈕尚未作用在這個 town 時，走與 A／滑鼠相同的既有 marker click 路徑選取／預備；
+   * 3. 再重驗一次：目標仍在、按鈕可見啟用且作用在這個 town，才點擊既有按鈕（伺服器仍做最終驗證）。
+   * 任何一步不符 → ok:false（不點按鈕、不送出遊戲動作；最多留下與按 A 相同的選取／預備狀態）。
+   */
+  function act(townName, id) {
+    const before = currentModel().model;
+    const target = before.targets.find(t => t.town === townName);
+    if (!target) return { ok: false, reason: 'not-a-target' };
+    if (!target.act || Core.MAP_ACTS[target.act] !== id) return { ok: false, reason: 'action-mismatch' };
+    if (!actBound(id, townName)) {
+      const marker = currentMarkers.get(townName);
+      if (!marker) return { ok: false, reason: 'no-marker' };
+      focusTown = townName;
+      marker.fire('click'); // 與滑鼠點擊同一條既有路徑（選取來源／預備目的地／選擇 pending choice 候選）
+      drawFocusRing();
+    }
+    const after = currentModel().model;
+    const still = after.targets.find(t => t.town === townName);
+    if (!still || still.act !== target.act || !actBound(id, townName) || !after.buttons.some(b => b.id === id)) {
+      return { ok: false, reason: 'button-unavailable' };
+    }
+    const el = document.getElementById(id);
+    if (!el || !el.isConnected) return { ok: false, reason: 'button-unavailable' };
+    el.click();
+    return { ok: true, via: id };
+  }
+
+  /**
+   * ZR（兩種顯示模式）：戰略地圖放大一級，已在最大層級時回到最小層級（Core.nextMapZoom；範圍＝Leaflet getMinZoom／getMaxZoom
+   * 與 Core.MAP_ZOOM_CYCLE 的交集）。只用 Leaflet setView：中心維持目前中心、不動畫；不碰焦點城鎮、選取、預備移動或 pending choice。
+   * 頁面或地圖容器不可見、地圖還沒有視圖、層級無法判定，或縮放後層級／中心驗證不符 → ok:false（parent 不記錄成功）。
+   */
+  function zoomCycle() {
+    const container = map.getContainer();
+    if (document.hidden || !container || !container.isConnected || container.getClientRects().length === 0
+      || !(container.clientWidth > 0) || !(container.clientHeight > 0)) return { ok: false, reason: 'map-hidden' };
+    let center;
+    let zoom;
+    try {
+      center = map.getCenter(); // 還沒有 setView／fitBounds 時 Leaflet 會丟例外
+      zoom = map.getZoom();
+    } catch {
+      return { ok: false, reason: 'map-not-ready' };
+    }
+    if (!center || !Number.isFinite(center.lat) || !Number.isFinite(center.lng)) return { ok: false, reason: 'map-not-ready' };
+    const next = Core.nextMapZoom(zoom, Core.mapZoomBounds(map.getMinZoom(), map.getMaxZoom()));
+    if (next === null) return { ok: false, reason: 'zoom-unavailable' };
+    map.setView(center, next, { animate: false });
+    // 縮放動畫進行中時 Leaflet 不會套用新層級：驗證不符即 fail closed。
+    if (map.getZoom() !== next || !map.getCenter().equals(center)) return { ok: false, reason: 'zoom-unverified' };
+    return { ok: true };
+  }
+
+  // B：只走既有可取消流程——可見且啟用的「取消瓦解」按鈕，或既有的「取消目前選取」。
+  function cancel() {
+    const info = currentModel();
+    const which = cancelAvailable(info);
+    if (which === 'cancelDissolveChoiceBtn') {
+      document.getElementById('cancelDissolveChoiceBtn').click();
+      return { ok: true, via: 'cancelDissolveChoiceBtn' };
+    }
+    if (which === 'selection') {
+      exitMovementSelection();
+      return { ok: true, via: 'selection' };
+    }
+    return { ok: false, reason: 'nothing-to-cancel' };
+  }
+
+  window.addEventListener('message', (event) => {
+    if (!Core.isTrustedMessage(event, window.location.origin, window.parent)) return;
+    if (event.data.type !== 'redline-controller-command') return;
+    const command = Core.sanitizeMapCommand(event.data);
+    if (!command) return;
+    let result = { ok: true };
+    if (command.cmd === 'focus') result = setFocus(command.town);
+    else if (command.cmd === 'clearFocus') { focusTown = null; drawFocusRing(); }
+    else if (command.cmd === 'activate') result = activate(command.town);
+    else if (command.cmd === 'button') result = pressButton(command.id);
+    else if (command.cmd === 'cancel') result = cancel();
+    else if (command.cmd === 'act') result = act(command.town, command.id);
+    else if (command.cmd === 'zoom') result = zoomCycle();
+    // req 原樣回傳：parent 只在對應的 req 收到 ok:true（上面已在執行前重驗）時才視為已執行。
+    postToParent({
+      type: 'redline-controller-result', v: Core.MAP_MESSAGE_VERSION, cmd: command.cmd, req: command.req,
+      ok: result.ok === true, reason: result.reason || null, via: result.via || null,
+    });
+    // 收到指令當下用權威資料重算一份；`snapshot` 指令的 req 原樣帶回，parent 據此判斷這份不是過期推送。
+    pushSnapshot(command.cmd === 'snapshot' ? command.req : null);
+  });
+
+  // 既有函式變更地圖狀態時順便通知 parent（不改函式行為，只加掛 hook）。
+  for (const name of ['refreshDirectBuildUi', 'applySupportChoiceHighlight', 'applyGameStateToMap', 'exitMovementSelection']) {
+    const original = window[name] || (typeof globalThis[name] === 'function' ? globalThis[name] : null);
+    if (typeof original !== 'function') continue;
+    const wrapped = function (...args) {
+      const result = original.apply(this, args);
+      scheduleSnapshot();
+      return result;
+    };
+    try { window[name] = wrapped; } catch { /* function declarations are writable on window */ }
+  }
+  map.on('moveend zoomend', () => { if (focusTown) drawFocusRing(); scheduleSnapshot(); });
+  window.addEventListener('load', scheduleSnapshot);
+  window.__redlineControllerAdapter = { snapshot: snapshotMessage };
+})();

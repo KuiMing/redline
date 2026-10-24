@@ -26,6 +26,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from server import main
+from conftest import host_token
 
 
 def _client() -> TestClient:
@@ -59,7 +60,7 @@ def test_host_can_enable_ai_red_army():
     created = _create_room(client)
     game_id, host_id = created["game_id"], created["host_id"]
 
-    result = client.post("/ai-red-army", json={"game_id": game_id, "player_id": host_id, "enabled": True}).json()
+    result = client.post("/ai-red-army", json={"game_id": game_id, "player_id": host_id, "resume_token": host_token(game_id, host_id), "enabled": True}).json()
 
     assert result == {"success": True, "ai_red_army": True}
     assert client.get(f"/lobby/{game_id}").json()["ai_red_army"] is True
@@ -69,9 +70,9 @@ def test_host_can_turn_it_back_off():
     client = _client()
     created = _create_room(client)
     game_id, host_id = created["game_id"], created["host_id"]
-    client.post("/ai-red-army", json={"game_id": game_id, "player_id": host_id, "enabled": True})
+    client.post("/ai-red-army", json={"game_id": game_id, "player_id": host_id, "resume_token": host_token(game_id, host_id), "enabled": True})
 
-    result = client.post("/ai-red-army", json={"game_id": game_id, "player_id": host_id, "enabled": False}).json()
+    result = client.post("/ai-red-army", json={"game_id": game_id, "player_id": host_id, "resume_token": host_token(game_id, host_id), "enabled": False}).json()
 
     assert result == {"success": True, "ai_red_army": False}
     assert client.get(f"/lobby/{game_id}").json()["ai_red_army"] is False
@@ -86,7 +87,7 @@ def test_guest_cannot_enable_ai_red_army():
     guest = _join(client, game_id, "Guest", "ai-toggle-guest")
     guest_id = guest["player_id"]
 
-    result = client.post("/ai-red-army", json={"game_id": game_id, "player_id": guest_id, "enabled": True}).json()
+    result = client.post("/ai-red-army", json={"game_id": game_id, "player_id": guest_id, "resume_token": host_token(game_id, guest_id), "enabled": True}).json()
 
     assert result == {"error": "Only host can change AI Red Army setting"}
     assert client.get(f"/lobby/{game_id}").json()["ai_red_army"] is False
@@ -101,7 +102,7 @@ def test_non_boolean_value_is_rejected():
 
     for bad_value in ["yes", 1, None, "true", [], {}]:
         result = client.post(
-            "/ai-red-army", json={"game_id": game_id, "player_id": host_id, "enabled": bad_value}
+            "/ai-red-army", json={"game_id": game_id, "player_id": host_id, "resume_token": host_token(game_id, host_id), "enabled": bad_value}
         ).json()
         assert result == {"error": "Invalid value"}, f"expected rejection for {bad_value!r}, got {result}"
 
@@ -119,10 +120,10 @@ def test_cannot_change_after_game_started():
 
     main.lobby_factions[game_id] = {host_id: "liberals", guest_id: "red_army"}
     main.lobby_ready[game_id] = {host_id: True, guest_id: True}
-    started = client.post("/start", json={"game_id": game_id, "player_id": host_id}).json()
+    started = client.post("/start", json={"game_id": game_id, "player_id": host_id, "resume_token": host_token(game_id, host_id)}).json()
     assert started.get("success") is True
 
-    result = client.post("/ai-red-army", json={"game_id": game_id, "player_id": host_id, "enabled": True}).json()
+    result = client.post("/ai-red-army", json={"game_id": game_id, "player_id": host_id, "resume_token": host_token(game_id, host_id), "enabled": True}).json()
 
     assert result == {"error": "Game already started"}
 
@@ -135,9 +136,9 @@ def test_lobby_get_always_reflects_current_server_value_not_a_stale_cache():
     game_id, host_id = created["game_id"], created["host_id"]
 
     assert client.get(f"/lobby/{game_id}").json()["ai_red_army"] is False
-    client.post("/ai-red-army", json={"game_id": game_id, "player_id": host_id, "enabled": True})
+    client.post("/ai-red-army", json={"game_id": game_id, "player_id": host_id, "resume_token": host_token(game_id, host_id), "enabled": True})
     assert client.get(f"/lobby/{game_id}").json()["ai_red_army"] is True
-    client.post("/ai-red-army", json={"game_id": game_id, "player_id": host_id, "enabled": False})
+    client.post("/ai-red-army", json={"game_id": game_id, "player_id": host_id, "resume_token": host_token(game_id, host_id), "enabled": False})
     assert client.get(f"/lobby/{game_id}").json()["ai_red_army"] is False
 
 
@@ -149,7 +150,7 @@ def test_enabling_is_rejected_while_a_human_already_chose_red_army():
     game_id, host_id = created["game_id"], created["host_id"]
     main.lobby_factions[game_id] = {host_id: "red_army"}
 
-    result = client.post("/ai-red-army", json={"game_id": game_id, "player_id": host_id, "enabled": True}).json()
+    result = client.post("/ai-red-army", json={"game_id": game_id, "player_id": host_id, "resume_token": host_token(game_id, host_id), "enabled": True}).json()
 
     assert result == {"error": "請先取消已選擇紅軍的玩家，才能開啟 AI 紅軍"}
     assert client.get(f"/lobby/{game_id}").json()["ai_red_army"] is False
@@ -164,12 +165,12 @@ def test_game_can_start_with_ai_red_army_on_and_zero_human_red_army_players():
     guest = _join(client, game_id, "Guest", "ai-toggle-seat-guest")
     guest_id = guest["player_id"]
 
-    enabled = client.post("/ai-red-army", json={"game_id": game_id, "player_id": host_id, "enabled": True}).json()
+    enabled = client.post("/ai-red-army", json={"game_id": game_id, "player_id": host_id, "resume_token": host_token(game_id, host_id), "enabled": True}).json()
     assert enabled["success"] is True
 
     main.lobby_factions[game_id] = {host_id: "liberals", guest_id: "hong_kong"}
     main.lobby_ready[game_id] = {host_id: True, guest_id: True}
-    result = client.post("/start", json={"game_id": game_id, "player_id": host_id}).json()
+    result = client.post("/start", json={"game_id": game_id, "player_id": host_id, "resume_token": host_token(game_id, host_id)}).json()
 
     assert result.get("success") is True
     assert result.get("ai_red_army") is True
@@ -187,11 +188,11 @@ def test_single_human_plus_ai_is_enough_players_to_start():
     client = _client()
     created = _create_room(client)
     game_id, host_id = created["game_id"], created["host_id"]
-    client.post("/ai-red-army", json={"game_id": game_id, "player_id": host_id, "enabled": True})
+    client.post("/ai-red-army", json={"game_id": game_id, "player_id": host_id, "resume_token": host_token(game_id, host_id), "enabled": True})
 
     main.lobby_factions[game_id] = {host_id: "liberals"}
     main.lobby_ready[game_id] = {host_id: True}
-    result = client.post("/start", json={"game_id": game_id, "player_id": host_id}).json()
+    result = client.post("/start", json={"game_id": game_id, "player_id": host_id, "resume_token": host_token(game_id, host_id)}).json()
 
     assert result.get("success") is True
     assert main.manager.games.get(game_id) is not None
@@ -214,10 +215,10 @@ def test_virtual_ai_seat_cannot_be_connected_to_over_websocket():
     game_id, host_id = created["game_id"], created["host_id"]
     guest = _join(client, game_id, "Guest", "ai-toggle-seat-security-guest")
     guest_id = guest["player_id"]
-    client.post("/ai-red-army", json={"game_id": game_id, "player_id": host_id, "enabled": True})
+    client.post("/ai-red-army", json={"game_id": game_id, "player_id": host_id, "resume_token": host_token(game_id, host_id), "enabled": True})
     main.lobby_factions[game_id] = {host_id: "liberals", guest_id: "hong_kong"}
     main.lobby_ready[game_id] = {host_id: True, guest_id: True}
-    client.post("/start", json={"game_id": game_id, "player_id": host_id})
+    client.post("/start", json={"game_id": game_id, "player_id": host_id, "resume_token": host_token(game_id, host_id)})
 
     game = main.manager.games[game_id]
     ai_player_id = game.ai_red_army_player_id
@@ -234,7 +235,7 @@ def test_human_cannot_choose_red_army_while_ai_is_enabled():
     client = _client()
     created = _create_room(client)
     game_id, host_id = created["game_id"], created["host_id"]
-    client.post("/ai-red-army", json={"game_id": game_id, "player_id": host_id, "enabled": True})
+    client.post("/ai-red-army", json={"game_id": game_id, "player_id": host_id, "resume_token": host_token(game_id, host_id), "enabled": True})
 
     result = client.post(
         "/choose-faction",
@@ -252,7 +253,7 @@ def test_required_faction_rule_never_forces_red_army_on_a_human_when_ai_is_on():
     client = _client()
     created = _create_room(client)
     game_id, host_id = created["game_id"], created["host_id"]
-    client.post("/ai-red-army", json={"game_id": game_id, "player_id": host_id, "enabled": True})
+    client.post("/ai-red-army", json={"game_id": game_id, "player_id": host_id, "resume_token": host_token(game_id, host_id), "enabled": True})
     player_ids = [host_id]
     for index in range(1, 3):
         joined = _join(client, game_id, f"Player {index + 1}", f"ai-toggle-forced-{index}")
@@ -267,7 +268,7 @@ def test_room_capacity_is_three_humans_when_ai_is_enabled():
     client = _client()
     created = _create_room(client)
     game_id, host_id = created["game_id"], created["host_id"]
-    client.post("/ai-red-army", json={"game_id": game_id, "player_id": host_id, "enabled": True})
+    client.post("/ai-red-army", json={"game_id": game_id, "player_id": host_id, "resume_token": host_token(game_id, host_id), "enabled": True})
     for index in range(2):
         joined = _join(client, game_id, f"Player {index + 1}", f"ai-toggle-capacity-{index}")
         assert joined.get("error") is None
@@ -284,7 +285,7 @@ def test_enabling_ai_is_rejected_when_room_already_has_four_humans():
     for index in range(3):
         _join(client, game_id, f"Player {index + 1}", f"ai-toggle-full-{index}")
 
-    result = client.post("/ai-red-army", json={"game_id": game_id, "player_id": host_id, "enabled": True}).json()
+    result = client.post("/ai-red-army", json={"game_id": game_id, "player_id": host_id, "resume_token": host_token(game_id, host_id), "enabled": True}).json()
 
     assert result == {"error": "房間人數已達上限，無法開啟 AI 紅軍"}
     assert client.get(f"/lobby/{game_id}").json()["ai_red_army"] is False
@@ -301,7 +302,7 @@ def test_existing_seat_rules_are_completely_unchanged_when_ai_is_off():
 
     main.lobby_factions[game_id] = {host_id: "liberals", guest_id: "hong_kong"}
     main.lobby_ready[game_id] = {host_id: True, guest_id: True}
-    result = client.post("/start", json={"game_id": game_id, "player_id": host_id}).json()
+    result = client.post("/start", json={"game_id": game_id, "player_id": host_id, "resume_token": host_token(game_id, host_id)}).json()
 
     assert result == {"error": "必須有且只能有一名玩家選擇紅軍，才能啟動行動"}
     assert main.manager.games.get(game_id) is None

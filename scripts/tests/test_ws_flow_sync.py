@@ -10,6 +10,7 @@ r = requests.post(f"{BASE}/create")
 data = r.json()
 room_id = data["game_id"]
 host_id = data["host_id"]
+host_token = data["resume_token"]
 
 # 2️⃣ Join A
 r = requests.post(f"{BASE}/join", json={
@@ -28,7 +29,8 @@ bob_id = r.json()["player_id"]
 # 4️⃣ Start
 r = requests.post(f"{BASE}/start", json={
     "game_id": room_id,
-    "player_id": host_id
+    "player_id": host_id,
+    "resume_token": host_token
 })
 print("Start:", r.json())
 

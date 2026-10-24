@@ -36,6 +36,9 @@ lobby_ai_red_army = {}  # {game_id: bool} — host-owned toggle; see set_ai_red_
 # to False (off) for every room so existing human-vs-human flow is unchanged
 # unless the host opts in. Immutable once manager.games[game_id] exists.
 
+lobby_control_mode = {}  # {game_id: "computer" | "joycon"} — fixed by the creator at /create
+lobby_joycon_count = {}  # {game_id: int 1..4 | None} — controllers paired before the room existed
+
 # A synthetic "virtual seat" player_id prefix used only inside start_game()
 # when lobby_ai_red_army[game_id] is True — never written into `lobby`,
 # `lobby_ready`, or `lobby_player_credentials` (it is not a human join and
@@ -54,8 +57,40 @@ def _max_human_players(game_id: str) -> int:
     return 3 if lobby_ai_red_army.get(game_id) else 4
 
 
+def _parse_create_settings(payload: dict):
+    """Validate the start-flow settings sent with /create. Absent keys keep the
+    legacy defaults, so a bare /create is unchanged. Returns (settings, error)."""
+    ai_red_army = payload.get("ai_red_army", False)
+    if not isinstance(ai_red_army, bool):
+        return None, "Invalid value"
+    market_mode = payload.get("market_mode", "sample_53")
+    if market_mode not in {"sample_53", "all_cards"}:
+        return None, "Invalid game difficulty"
+    control_mode = payload.get("control_mode", "computer")
+    if control_mode not in {"computer", "joycon"}:
+        return None, "Invalid control mode"
+    count = payload.get("joycon_count")
+    if control_mode == "joycon":
+        # bool is an int subclass; reject it explicitly.
+        if not isinstance(count, int) or isinstance(count, bool) or not 1 <= count <= 4:
+            return None, "Joy-Con count must be between 1 and 4"
+        if ai_red_army and count > 3:
+            return None, "AI 紅軍佔用一個席位，最多只能配對 3 支 Joy-Con"
+    elif count is not None:
+        return None, "Joy-Con count requires Joy-Con control mode"
+    return {
+        "ai_red_army": ai_red_army,
+        "market_mode": market_mode,
+        "control_mode": control_mode,
+        "joycon_count": count,
+    }, None
+
+
 @router.post("/create")
 def create_room(payload: dict = None):
+    settings, error = _parse_create_settings(payload or {})
+    if error:
+        return {"error": error}
     game_id = manager.create_room()
     host_id = str(uuid.uuid4())
 
@@ -67,8 +102,10 @@ def create_room(payload: dict = None):
     lobby_factions[game_id] = {}
     lobby_bases[game_id] = {}
     lobby_ready[game_id] = {host_id: False}
-    lobby_market_mode[game_id] = "sample_53"
-    lobby_ai_red_army[game_id] = False
+    lobby_market_mode[game_id] = settings["market_mode"]
+    lobby_ai_red_army[game_id] = settings["ai_red_army"]
+    lobby_control_mode[game_id] = settings["control_mode"]
+    lobby_joycon_count[game_id] = settings["joycon_count"]
     device_id = str((payload or {}).get("device_id") or "").strip()
     resume_token = secrets.token_urlsafe(32)
     lobby_player_credentials[game_id] = {
@@ -172,6 +209,19 @@ def _required_faction_for_player(game_id: str, player_id: str):
     return None
 
 
+def _host_token_valid(game_id: str, player_id, payload: dict) -> bool:
+    """Host mutations must prove ownership of the host seat. Fail closed: a seat
+    with no stored credential is rejected, so the public host_id alone is never
+    enough and every room must be built through /create."""
+    credential = lobby_player_credentials.get(game_id, {}).get(player_id)
+    if not credential:
+        return False
+    supplied = str(payload.get("resume_token") or "").strip()
+    return bool(supplied) and secrets.compare_digest(
+        supplied, str(credential.get("resume_token") or "")
+    )
+
+
 @router.post("/market-mode")
 def set_lobby_market_mode(payload: dict):
     game_id = payload.get("game_id")
@@ -182,6 +232,8 @@ def set_lobby_market_mode(payload: dict):
         return {"error": "Game not found"}
     if lobby_hosts.get(game_id) != player_id:
         return {"error": "Only host can change game difficulty"}
+    if not _host_token_valid(game_id, player_id, payload):
+        return {"error": "Host authentication failed"}
     if manager.games.get(game_id) is not None:
         return {"error": "Game already started"}
     if market_mode not in {"sample_53", "all_cards"}:
@@ -208,6 +260,8 @@ def set_ai_red_army(payload: dict):
         return {"error": "Game not found"}
     if lobby_hosts.get(game_id) != player_id:
         return {"error": "Only host can change AI Red Army setting"}
+    if not _host_token_valid(game_id, player_id, payload):
+        return {"error": "Host authentication failed"}
     if manager.games.get(game_id) is not None:
         return {"error": "Game already started"}
     if not isinstance(enabled, bool):
@@ -227,7 +281,6 @@ def set_ai_red_army(payload: dict):
 def start_game(payload: dict):
     game_id = payload.get("game_id")
     player_id = payload.get("player_id")
-    market_mode = payload.get("market_mode")
 
     if game_id not in lobby:
         return {"error": "Game not found"}
@@ -240,15 +293,14 @@ def start_game(payload: dict):
 
     if lobby_hosts.get(game_id) != player_id:
         return {"error": "Only host can start"}
+    if not _host_token_valid(game_id, player_id, payload):
+        return {"error": "Host authentication failed"}
 
     ready = lobby_ready.setdefault(game_id, {})
     for pid, _ in human_players:
         ready.setdefault(pid, False)
     if any(not ready.get(pid, False) for pid, _ in human_players):
         return {"error": "All players must be ready before start"}
-
-    if market_mode in {"sample_53", "all_cards"}:
-        lobby_market_mode[game_id] = market_mode
 
     # For test/setup endpoints that already created a live game state,
     # preserve the prepared runtime instead of rebuilding a fresh one.
@@ -448,6 +500,8 @@ def lobby_state(game_id: str):
         "started": manager.games.get(game_id) is not None,
         "market_mode": lobby_market_mode.get(game_id, "sample_53"),
         "ai_red_army": bool(lobby_ai_red_army.get(game_id, False)),
+        "control_mode": lobby_control_mode.get(game_id, "computer"),
+        "joycon_count": lobby_joycon_count.get(game_id),
         "required_faction_by_player": {
             pid: required
             for pid, _ in lobby[game_id]

@@ -27,21 +27,21 @@
       }
     },
     {
-      "name": "hand_cards_use_complete_action_and_support_faces",
+      "name": "hand_cards_use_half_height_action_and_support_faces",
       "passed": true,
       "details": [
         {
           "name": "交通經驗甲",
           "srcFile": "交通經驗甲.png",
           "srcQuery": "?v=head-safe-20260726",
-          "alt": "交通經驗甲完整卡面",
+          "alt": "交通經驗甲半高卡面",
           "natural": [
             1100,
-            1350
+            675
           ],
           "faceRect": {
-            "width": 245.25,
-            "height": 306
+            "width": 226.125,
+            "height": 140.625
           },
           "buttons": [
             "資源",
@@ -52,14 +52,14 @@
           "name": "領導",
           "srcFile": "領導.png",
           "srcQuery": "?v=head-safe-20260726",
-          "alt": "領導完整卡面",
+          "alt": "領導半高卡面",
           "natural": [
             1100,
-            1350
+            675
           ],
           "faceRect": {
-            "width": 245.25,
-            "height": 306
+            "width": 226.125,
+            "height": 140.625
           },
           "buttons": [
             "資源",
@@ -70,14 +70,14 @@
           "name": "英美奧援",
           "srcFile": "01_英美奧援_歐洲-天方.png",
           "srcQuery": "",
-          "alt": "英美奧援完整卡面",
+          "alt": "英美奧援半高卡面",
           "natural": [
             1100,
-            1350
+            675
           ],
           "faceRect": {
-            "width": 245.25,
-            "height": 306
+            "width": 226.125,
+            "height": 140.625
           },
           "buttons": [
             "棄置",
@@ -87,7 +87,7 @@
       ]
     },
     {
-      "name": "static_and_random_purchase_areas_use_complete_faces",
+      "name": "static_and_random_purchase_areas_use_half_height_faces",
       "passed": true,
       "details": {
         "expected": 11,
@@ -96,7 +96,8 @@
         "loaded": 11,
         "failed": 0,
         "staticCards": 6,
-        "staticCountBadges": 6,
+        "staticCountBadges": 0,
+        "staticRemainingLabels": 6,
         "randomCountBadges": 0
       }
     },
@@ -128,7 +129,7 @@
       "details": {
         "variantIndex": "1",
         "srcFile": "02_英美奧援_東洋-臺灣.png",
-        "alt": "英美奧援完整卡面"
+        "alt": "英美奧援半高卡面"
       }
     },
     {

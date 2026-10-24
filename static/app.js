@@ -45,14 +45,28 @@ const selectedPurchaseIndices = new Set();
 // 自己回合主動點「行動」不會取消任何東西，白白浪費這張卡，因此手牌區直接 disable。
 const REACTION_ONLY_ACTION_CARDS = new Set(['爆料黑幕', '產業滲透']);
 
+// 客廳大螢幕模式（html[data-display="living-room"]）：舞台等比縮放後再留 5% title-safe 邊界；
+// 桌面模式維持 1。
+const LIVING_ROOM_SAFE_AREA_SCALE = 0.9;
+
 function resizeStage() {
+  const safeArea = document.documentElement.dataset.display === 'living-room' ? LIVING_ROOM_SAFE_AREA_SCALE : 1;
   const scale = Math.min(
     window.innerWidth / 1280,
     window.innerHeight / 720
-  );
+  ) * safeArea;
   document.documentElement.style.setProperty('--stage-scale', String(scale));
   document.documentElement.style.setProperty('--stage-left', `${Math.max(0, (window.innerWidth - 1280 * scale) / 2)}px`);
   document.documentElement.style.setProperty('--stage-top', `${Math.max(0, (window.innerHeight - 720 * scale) / 2)}px`);
+}
+
+function layoutGameShell() {
+  const hud = document.getElementById('hud');
+  const gameShell = document.getElementById('gameShell');
+  if (!hud || !gameShell) return;
+  const contentTop = hud.offsetTop + hud.offsetHeight + 8;
+  gameShell.style.top = `${contentTop}px`;
+  gameShell.style.height = `${Math.max(0, 720 - contentTop)}px`;
 }
 
 function playerInitialFromInput(name) {
@@ -78,17 +92,37 @@ function storedRedlineSessions() {
   }
 }
 
-function saveRedlineSession(name = '') {
+// 「你的行動代號」仍是系統預設：欄位值等於 HTML 預設值（host）或空白，且使用者從未在欄位輸入過。
+// 使用者自行輸入的（即使也是 host）一律是自訂名稱：userEdited '1'＝剛輸入、'used'＝輸入的名稱已用於某個席位。
+function playerNameIsSystemDefault() {
+  const input = document.getElementById('playerName');
+  if (!input || input.dataset.userEdited) return false;
+  const value = input.value.trim();
+  return value === '' || value === input.defaultValue.trim();
+}
+
+// 輸入的行動代號已用於這個席位：之後客廳輪流「新增本機玩家」若沒有再輸入就用自動代號；它仍不會被當成系統預設。
+function markPlayerNameUsed() {
+  const input = document.getElementById('playerName');
+  if (input?.dataset.userEdited) input.dataset.userEdited = 'used';
+}
+
+// nameAuto：送出時行動代號是否為系統預設（客廳輪流據此把本機席位命名為 P1～P4）；未提供＝沿用同一席位先前的紀錄。
+function saveRedlineSession(name = '', nameAuto) {
   if (!gameId || !playerId || !resumeToken) return;
   const sessions = storedRedlineSessions();
+  const previous = sessions[gameId];
   sessions[gameId] = {
     game_id: gameId,
     player_id: playerId,
     resume_token: resumeToken,
     name: String(name || document.getElementById('playerName')?.value || '').trim(),
+    name_auto: typeof nameAuto === 'boolean' ? nameAuto : (previous?.player_id === playerId && previous?.name_auto === true),
     saved_at: Date.now(),
   };
   localStorage.setItem(REDLINE_SESSIONS_KEY, JSON.stringify(sessions));
+  // 客廳輪流（hot-seat）啟用時另外記住這個席位（同 player_id 只更新 token，不覆寫其他本機席位）。
+  window.RedlineHotSeat?.rememberSeat?.(gameId, playerId, resumeToken, sessions[gameId].name, sessions[gameId].name_auto);
 }
 
 function latestRedlineSession() {
@@ -143,6 +177,7 @@ function renderLobbyRoster(lobbyRes, statusText = null) {
   }
 
   latestLobbyState = lobbyRes;
+  window.RedlineStartFlow?.onRoomSettings?.(lobbyRes); // 房主設定（伺服器權威）：顯示並讓訪客唯讀
   const players = lobbyRes.players || [];
   const chosen = lobbyRes.factions || {};
   const bases = lobbyRes.bases || {};
@@ -195,6 +230,8 @@ function renderLobbyRoster(lobbyRes, statusText = null) {
 
   roster.innerHTML = cards + aiSeatCard + emptyCards;
   updateLobbyActionControls(lobbyRes);
+  // 客廳輪流（hot-seat）：大廳席位列與各席 Joy-Con 監聽只依這份 server /lobby 公開資料重算。
+  window.RedlineHotSeat?.onLobbyState?.();
   if (hint) {
     if (statusText) lobbyTransientStatus = statusText;
     const transient = lobbyTransientStatus;
@@ -366,6 +403,7 @@ function applyMarketMode(mode) {
   // reuse the same visual class but carry [data-ai-red-army] instead.
   document.querySelectorAll('[data-market-mode]').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.marketMode === mode);
+    btn.setAttribute('aria-pressed', String(btn.dataset.marketMode === mode));
   });
 }
 
@@ -374,6 +412,7 @@ function applyAiRedArmy(enabled) {
   if (select) select.value = enabled ? 'on' : 'off';
   document.querySelectorAll('[data-ai-red-army]').forEach(btn => {
     btn.classList.toggle('active', (btn.dataset.aiRedArmy === 'on') === !!enabled);
+    btn.setAttribute('aria-pressed', String((btn.dataset.aiRedArmy === 'on') === !!enabled));
   });
   const hint = document.getElementById('aiRedArmyHint');
   if (hint) {
@@ -397,7 +436,7 @@ async function setAiRedArmy(enabled) {
   const res = await fetch('/ai-red-army', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({game_id: gameId, player_id: playerId, enabled: !!enabled}),
+    body: JSON.stringify({game_id: gameId, player_id: playerId, resume_token: resumeToken, enabled: !!enabled}),
   });
   const data = await res.json();
   if (data.error) {
@@ -419,7 +458,7 @@ async function setMarketMode(mode) {
   const res = await fetch('/market-mode', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({game_id: gameId, player_id: playerId, market_mode: mode}),
+    body: JSON.stringify({game_id: gameId, player_id: playerId, resume_token: resumeToken, market_mode: mode}),
   });
   const data = await res.json();
   if (data.error) {
@@ -547,7 +586,9 @@ function initProofSessionFromUrl() {
 }
 
 async function resumeStoredGame() {
-  const saved = latestRedlineSession();
+  // 客廳輪流（hot-seat）：以本分頁已確認（或正在交接）的席位恢復，各席位用自己的 resumeToken。
+  const hotSeat = window.RedlineHotSeat?.resumeTarget?.(latestRedlineSession()) || null;
+  const saved = hotSeat || latestRedlineSession();
   if (!saved) return false;
   const res = await fetch('/resume', {
     method: 'POST',
@@ -573,7 +614,8 @@ async function resumeStoredGame() {
   const nameInput = document.getElementById('playerName');
   if (roomInput) roomInput.value = gameId;
   if (nameInput && data.name) nameInput.value = data.name;
-  saveRedlineSession(data.name);
+  // hot-seat 換席位不改寫單席位的 session 紀錄（席位清單由 hotseat_ui.js 保存）。
+  if (!hotSeat) saveRedlineSession(data.name);
   if (data.started) {
     connect({reconnect: true});
   } else {
@@ -609,6 +651,7 @@ async function initLobbyControls() {
   if (nameInput && nameInput.dataset.bound !== '1') {
     nameInput.dataset.bound = '1';
     nameInput.addEventListener('input', () => {
+      nameInput.dataset.userEdited = '1';
       lobbyTransientStatus = null;
       updateLobbyStatus();
     });
@@ -623,8 +666,25 @@ async function initLobbyControls() {
   updateLobbyStatus();
   updateLobbyActionControls();
   syncLobbyRoomCode();
-  if (!startFresh) await resumeStoredGame();
+  try {
+    if (!startFresh) await resumeStoredGame();
+  } finally {
+    // 沒有進入遊戲（大廳）就沒有私密畫面：客廳輪流的預先遮罩解除。
+    if (!ws) window.RedlineHotSeat?.onLobby?.();
+  }
+  // 沒有恢復到任何作戰室：先顯示開始畫面（建立真人／AI 紅軍、或輸入房間代碼加入）。
+  if (!ws && !gameId) window.RedlineStartFlow?.show?.();
 }
+
+// 客廳輪流（hot-seat，hotseat_ui.js）：讀目前席位與大廳狀態。
+// 換席位（大廳與遊戲中）一律由 hotseat_ui.js 整頁重新載入，resumeStoredGame 以該席位 resumeToken 重新授權（不只切 DOM）。
+window.RedlineSession = {
+  current: () => {
+    const saved = gameId ? storedRedlineSessions()[gameId] : null;
+    const nameAuto = !!saved && saved.player_id === playerId && saved.name_auto === true;
+    return {gameId, playerId, resumeToken, started: !!ws, lobby: latestLobbyState, nameAuto};
+  },
+};
 
 async function setActiveGameView(view) {
   const tabs = document.querySelectorAll('.game-tab');
@@ -669,34 +729,58 @@ async function loadCardPresentationCatalog() {
   return cardPresentationCatalog;
 }
 
+// 房間已建立之後的步驟：Joy-Con 多席位配置成功才進入陣營畫面；失敗時保留配對與房間，再按「建立作戰室」只重試配置。
+async function enterCreatedRoom() {
+  const provisioned = await window.RedlineStartFlow?.afterCreate?.(gameId);
+  if (provisioned && provisioned.ok === false) {
+    updateLobbyStatus(provisioned.error || 'Joy-Con 席位建立失敗，請再按「建立作戰室」重試。');
+    return false;
+  }
+  await openFactionPickerModal();
+  updateLobbyStatus(lobbyTransientStatus);
+  return true;
+}
+
 async function createRoom() {
+  // 上一次只差 Joy-Con 席位配置失敗：同一個房間重試，不再建立新房間（避免重複席位）。
+  if (gameId && window.RedlineStartFlow?.hasPendingProvision?.(gameId)) {
+    await enterCreatedRoom();
+    return;
+  }
   // 建房也要帶「行動代號」：/create 之前不吃名字、建房者永遠叫 host
   //（2026-07-18 自動桌測發現，2026-07-19 修正）。
   const creatorName = (document.getElementById('playerName')?.value || '').trim();
+  const nameAuto = playerNameIsSystemDefault();
+  // 開始畫面（start_flow_ui.js）選好的房主設定：由伺服器 /create 驗證並保存；沒有走開始畫面則維持原預設。
+  const startSettings = window.RedlineStartFlow?.pendingCreate?.() || null;
   const res = await fetch('/create', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name: creatorName, device_id: redlineDeviceId() }),
+    body: JSON.stringify({ name: creatorName, device_id: redlineDeviceId(), ...(startSettings || {}) }),
   });
   const data = await res.json();
+  if (data.error || !data.game_id) {
+    updateLobbyStatus(playerMessageZhTw(data.error || '建立作戰室失敗。'));
+    return;
+  }
   gameId = data.game_id;
   playerId = data.host_id;
   resumeToken = data.resume_token;
   latestLobbyState = null;
-  saveRedlineSession(creatorName);
+  saveRedlineSession(creatorName, nameAuto);
+  markPlayerNameUsed();
   const roomInput = document.getElementById('roomId');
   if (roomInput) {
     roomInput.value = gameId;
     syncLobbyRoomCode();
   }
   const marketSelect = document.getElementById('marketModeSelect');
-  if (marketSelect) applyMarketMode('sample_53');
-  applyAiRedArmy(false);
+  if (marketSelect) applyMarketMode(startSettings?.market_mode || 'sample_53');
+  applyAiRedArmy(!!startSettings?.ai_red_army);
   lobbyTransientStatus = '作戰室已建立；請選擇陣營，或分享房間代碼。';
   await loadFactions();
   startLobbySync();
-  await openFactionPickerModal();
-  updateLobbyStatus(lobbyTransientStatus);
+  await enterCreatedRoom(); // Joy-Con 配對到多支：新增 P2～Pn 本機席位並依序綁定，成功才進陣營畫面
 }
 
 async function chooseFaction(factionId) {
@@ -1063,9 +1147,10 @@ const SUPPORT_CARD_ART_FILES = {
   '紅軍奧援': ['17_紅軍奧援_起始牌.png'],
 };
 
-function playableCardArtUrl(cardName, variantInfo = null) {
+function playableCardArtUrl(cardName, variantInfo = null, halfHeight = false) {
   const name = String(cardName || '').trim();
   if (!name || !cardPresentation(name)) return '';
+  const artRoot = halfHeight ? '/static/card-art-half-height' : '/static/card-art';
   if (/奧援/.test(name)) {
     const files = SUPPORT_CARD_ART_FILES[name];
     if (!files?.length) return '';
@@ -1074,9 +1159,9 @@ function playableCardArtUrl(cardName, variantInfo = null) {
       : 0;
     const file = files[requestedIndex] || files[0];
     const version = name === '紅軍奧援' ? '?v=action-card-layout-20260811' : '';
-    return `/static/card-art/support/${encodeURIComponent(file)}${version}`;
+    return `${artRoot}/support/${encodeURIComponent(file)}${version}`;
   }
-  return `/static/card-art/actions/${encodeURIComponent(name)}.png?v=head-safe-20260726`;
+  return `${artRoot}/actions/${encodeURIComponent(name)}.png?v=head-safe-20260726`;
 }
 
 function renderCardFace(cardName, zone, isStatic = false, compact = false, countOverride = null, variantInfo = null) {
@@ -1102,7 +1187,7 @@ function renderCardFace(cardName, zone, isStatic = false, compact = false, count
   const meaning = (info.meaning_text && !isSupport) ? `<div class="card-meaning">${escapeHtml(info.meaning_text)}</div>` : '';
   // 只在常設購買區顯示即時剩餘供應；手牌與隨機牌庫的目錄張數不是目前供應量，
   // 而且會遮住完整卡面的購買費用。
-  const countText = isStatic
+  const countText = isStatic && !compact
     ? (countOverride != null ? String(countOverride) : info.count_text)
     : null;
   const count = countText ? `<div class="card-count">剩 ${escapeHtml(countText)}</div>` : '';
@@ -1119,11 +1204,12 @@ function renderCardFace(cardName, zone, isStatic = false, compact = false, count
       ${meaning}
       ${renderBadgeList(badgeItems)}
     </div>`;
-  const artUrl = playableCardArtUrl(cardName, variantInfo);
+  const halfHeight = compact && (zone === 'purchase' || zone === 'hand');
+  const artUrl = playableCardArtUrl(cardName, variantInfo, halfHeight);
   if (!artUrl) return textFace;
   return `
     <div class="card-face card-art-face ${colorClass}${compact ? ' compact' : ''}" style="${colorStyle}">
-      <img class="playable-card-art-image" src="${artUrl}" alt="${escapeHtml(cardName)}完整卡面" decoding="async" onerror="this.parentElement.classList.add('playable-card-art-load-failed')">
+      <img class="playable-card-art-image" src="${artUrl}" alt="${escapeHtml(cardName)}${halfHeight ? '半高' : '完整'}卡面" decoding="async" onerror="this.parentElement.classList.add('playable-card-art-load-failed')">
       ${count}
       <div class="playable-card-art-fallback">${textFace}</div>
     </div>`;
@@ -1479,6 +1565,7 @@ async function joinRoom() {
     return;
   }
   const name = document.getElementById('playerName').value;
+  const nameAuto = playerNameIsSystemDefault();
 
   const savedSession = storedRedlineSessions()[gameId] || null;
   const payload = {game_id: gameId, name, device_id: redlineDeviceId()};
@@ -1505,7 +1592,8 @@ async function joinRoom() {
   playerId = data.player_id;
   resumeToken = data.resume_token;
   latestLobbyState = null;
-  saveRedlineSession(name);
+  saveRedlineSession(name, nameAuto);
+  markPlayerNameUsed();
   await loadFactions();
   startLobbySync();
   await openFactionPickerModal();
@@ -1513,11 +1601,11 @@ async function joinRoom() {
 }
 
 async function startGame() {
-  const marketMode = document.getElementById('marketModeSelect')?.value || 'sample_53';
+  // 難度以伺服器保存的房間設定為準；/start 不帶 market_mode，只證明房主身份。
   const res = await fetch('/start', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({game_id: gameId, player_id: playerId, market_mode: marketMode})
+    body: JSON.stringify({game_id: gameId, player_id: playerId, resume_token: resumeToken})
   });
 
   const data = await res.json();
@@ -1571,6 +1659,8 @@ function connect(options = {}) {
     clearTimeout(wsReconnectTimer);
     wsReconnectTimer = null;
   }
+  // 客廳輪流：本機 hot-seat 席位在第一份 state 確認行動者之前一律遮住；其他遊戲不介入。
+  window.RedlineHotSeat?.onConnect?.(gameId, playerId);
   ws = resumeToken ? new WebSocket(websocketUrl(), resumeToken) : new WebSocket(websocketUrl());
 
   ws.onopen = () => {
@@ -1582,6 +1672,12 @@ function connect(options = {}) {
   ws.onmessage = async (event) => {
     const state = JSON.parse(event.data);
     window.lastGameState = state;
+    // 客廳輪流：依伺服器權威行動者先套用交接遮罩，再 render（遮罩在畫面更新前就位）。
+    window.RedlineHotSeat?.onState?.(state, gameId, playerId);
+    if (aiPublicHoldRequestedFor !== ws && window.RedlineHotSeat?.wantsAiPublicHold?.(state)) {
+      aiPublicHoldRequestedFor = ws; // 每條連線只要求一次；伺服器回的 state 會帶 public_hold: true
+      sendAction('ai_public_hold', {enabled: true});
+    }
     await render(state);
     syncStrategicMap(state);
   };
@@ -1625,6 +1721,8 @@ function connect(options = {}) {
 
   initTabs();
 }
+
+let aiPublicHoldRequestedFor = null;
 
 function sendAction(action, payload = {}) {
   if ((action === 'resolve_choice' || action === 'cancel_choice') && !payload.choice_id) {
@@ -1718,26 +1816,39 @@ function updatePurchaseSelectionControls(state = window.lastGameState || {}) {
   const selection = purchaseSelectionDetails(state);
   summary.textContent = selection.cards.length
     ? `已選 ${selection.cards.length} 張｜合計 ${purchaseCostText(selection.total)}`
-    : '請勾選要購買的卡牌';
+    : '請選擇要購買的卡牌';
   clearBtn.disabled = selection.cards.length === 0;
   buyBtn.disabled = selection.cards.length === 0 || !selection.affordable;
-  buyBtn.textContent = selection.cards.length ? `購買所選 ${selection.cards.length} 張` : '購買所選卡牌';
+  buyBtn.textContent = '購買';
   buyBtn.title = selection.cards.length > 0 && !selection.affordable ? '所選卡牌的合計費用超過目前資源。' : '';
 }
 
 function togglePurchaseSelection(event, index) {
   event.stopPropagation();
-  if (event.target.checked) selectedPurchaseIndices.add(index);
+  const button = event.currentTarget;
+  if (!(button instanceof HTMLButtonElement) || button.disabled) return;
+  const selected = !selectedPurchaseIndices.has(index);
+  if (selected) selectedPurchaseIndices.add(index);
   else selectedPurchaseIndices.delete(index);
-  const card = event.target.closest('.card');
-  if (card) card.classList.toggle('purchase-card-selected', event.target.checked);
+  const item = button.closest('.purchase-card-item');
+  const card = item?.querySelector('.card');
+  if (card) card.classList.toggle('purchase-card-selected', selected);
+  button.classList.toggle('is-selected', selected);
+  button.setAttribute('aria-pressed', String(selected));
+  const label = button.querySelector('.purchase-card-select-label');
+  if (label) label.textContent = selected ? '取消選擇' : '選擇卡牌';
   updatePurchaseSelectionControls();
 }
 
 function clearPurchaseSelection() {
   selectedPurchaseIndices.clear();
-  document.querySelectorAll('.purchase-card-checkbox input').forEach(input => { input.checked = false; });
   document.querySelectorAll('.purchase-card-selected').forEach(card => card.classList.remove('purchase-card-selected'));
+  document.querySelectorAll('.purchase-card-select-button.is-selected').forEach(button => {
+    button.classList.remove('is-selected');
+    button.setAttribute('aria-pressed', 'false');
+    const label = button.querySelector('.purchase-card-select-label');
+    if (label) label.textContent = '選擇卡牌';
+  });
   updatePurchaseSelectionControls();
 }
 
@@ -2963,7 +3074,7 @@ function openEthnicRitualGuessModal() {
 
 function strategicMapUrl() {
   const url = new URL('/static/leaflet_game_map.html', window.location.origin);
-  url.searchParams.set('v', 'contextual-route-highlight-20261004');
+  url.searchParams.set('v', 'map-projection-guard-20261006');
   if (gameId) url.searchParams.set('gameId', gameId);
   if (playerId) url.searchParams.set('playerId', playerId);
   return url.toString();
@@ -3115,7 +3226,7 @@ function renderFactionActionPanel(state) {
 
   if (faction === 'aomen') {
     showActionPanel(
-      '澳門可在行動階段發動一次賭徒耳語：將 1 張手牌放進牌庫底，猜牌庫頂牌購買費用奇偶；若猜中獲得 3 點宣傳與 3 點資金。',
+      '將 1 張手牌放入牌庫底，再猜牌庫頂牌購買費用的奇偶；猜中獲得 3 點宣傳與 3 點資金。',
       '發動 賭徒耳語',
       openGamblerGuessModal
     );
@@ -3124,7 +3235,7 @@ function renderFactionActionPanel(state) {
 
   if (faction === 'reform_opening') {
     showActionPanel(
-      '改革開放派可在行動階段發動一次紅軍派系：檢視牌庫頂 3 張牌，以任意順序放回牌庫頂，然後抽 1 張牌。',
+      '檢視牌庫頂 3 張牌，以任意順序放回牌庫頂，然後抽 1 張牌。',
       '發動 紅軍派系',
       () => sendAction('faction_action', { name: '紅軍派系' })
     );
@@ -3133,7 +3244,7 @@ function renderFactionActionPanel(state) {
 
   if (faction === 'liberals') {
     showActionPanel(
-      '自由派可在行動階段發動一次立場試探：展示牌庫頂牌；若購買費用為奇數則加入手牌，若為偶數則放入棄牌堆。',
+      '展示牌庫頂牌；購買費用為奇數時加入手牌，為偶數時放入棄牌堆。',
       '發動 立場試探',
       () => sendAction('faction_action', { name: '立場試探' })
     );
@@ -3143,7 +3254,7 @@ function renderFactionActionPanel(state) {
   const ethnicRitualFactions = new Set(['zhuang','yi','bai','hani','dai','miao','tujia','dong','buyei','yao','li']);
   if (ethnicRitualFactions.has(faction)) {
     showActionPanel(
-      '可在行動階段發動一次民族祭儀：猜中可獲得 2 點宣傳與 2 點資金；沒猜中則獲得 2 點宣傳或 2 點資金（二選一）。',
+      '猜牌庫頂牌購買費用的奇偶。猜中獲得 2 點宣傳與 2 點資金；猜錯則選擇獲得 2 點宣傳或 2 點資金。',
       '發動 民族祭儀',
       openEthnicRitualGuessModal
     );
@@ -4346,6 +4457,12 @@ function renderPeerActionNotice(state) {
     return;
   }
 
+  if (window.RedlineHotSeat?.aiPublicActive?.()) {
+    // 客廳輪流：AI 紅軍的行動已由置中的公開視窗顯示；消耗相同 log，避免再疊一層玩家動態。
+    closePeerActionNotice(entries);
+    return;
+  }
+
   const me = (state.players || []).find(p => p.id === playerId);
   if (me && state.current_player === me.name) {
     // 前一位玩家的廣播不應擋住本人新回合；連縮小狀態一併收掉，且消耗到最新 log，
@@ -4494,11 +4611,7 @@ async function render(state) {
       topdeckBtn.title = candidateCount === 0 ? '本回合尚未購買可頂的牌' : '';
     }
 
-    if (gameShell && hud) {
-      const contentTop = hud.offsetTop + hud.offsetHeight + 8;
-      gameShell.style.top = `${contentTop}px`;
-      gameShell.style.height = `${Math.max(0, 720 - contentTop)}px`;
-    }
+    if (gameShell && hud) layoutGameShell();
   }
 
   // ✅ 地圖節點不在 render 中重建
@@ -4630,15 +4743,27 @@ async function render(state) {
               ? '請先處理目前待選擇效果。'
               : isStatic && (staticSupply == null || staticSupply <= 0)
                 ? '常設供應已售完'
-                : `勾選此卡（${costText}）`;
+                : `選擇此卡（${costText}）`;
       const variantInfo = (state.purchase_area_variants || [])[i] || null;
-      const isSelected = selectedPurchaseIndices.has(i);
+      let isSelected = selectedPurchaseIndices.has(i);
+      if (isSelected && !canSelect) {
+        selectedPurchaseIndices.delete(i);
+        isSelected = false;
+      }
+      const buttonLabel = canSelect ? (isSelected ? '取消選擇' : '選擇卡牌') : '不可選擇';
+      const remainingHtml = isStatic
+        ? `<span class="purchase-card-remaining">剩 ${escapeHtml(staticSupply ?? 0)}</span>`
+        : '';
       container.innerHTML += `
-        <div class='card ${typeClass}${supportClass} ${colorClass}${isSelected ? ' purchase-card-selected' : ''}' data-card-name="${escapeHtml(card)}" data-card-zone="purchase" data-card-static="${isStatic}" data-card-count="${isStatic && staticSupply != null ? staticSupply : ''}" data-card-variant-index="${variantInfo?.variant_index ?? ''}" onclick="selectCardDetail(event.currentTarget)">
-          ${renderCardFace(card, 'purchase', isStatic, true, isStatic ? staticSupply : null, variantInfo)}
-          <label class="purchase-card-checkbox" title="${escapeHtml(selectTitle)}" onclick="event.stopPropagation()">
-            <input type="checkbox" data-purchase-index="${i}" aria-label="勾選 ${escapeHtml(card)}" ${isSelected ? 'checked' : ''} ${canSelect ? '' : 'disabled aria-disabled="true"'} onchange="togglePurchaseSelection(event, ${i})">
-          </label>
+        <div class="purchase-card-item">
+          <div class='card ${typeClass}${supportClass} ${colorClass}${isSelected ? ' purchase-card-selected' : ''}' data-card-name="${escapeHtml(card)}" data-card-zone="purchase" data-card-static="${isStatic}" data-card-count="${isStatic && staticSupply != null ? staticSupply : ''}" data-card-variant-index="${variantInfo?.variant_index ?? ''}" onclick="selectCardDetail(event.currentTarget)">
+            ${renderCardFace(card, 'purchase', isStatic, true, isStatic ? staticSupply : null, variantInfo)}
+            <span class="purchase-card-selected-overlay" aria-hidden="true"></span>
+          </div>
+          <button class="purchase-card-select-button${isSelected ? ' is-selected' : ''}" type="button" data-purchase-index="${i}" aria-label="${escapeHtml(buttonLabel)}：${escapeHtml(card)}" aria-pressed="${isSelected}" title="${escapeHtml(selectTitle)}" ${canSelect ? '' : 'disabled aria-disabled="true"'} onclick="togglePurchaseSelection(event, ${i})">
+            <span class="purchase-card-select-label">${buttonLabel}</span>
+            ${remainingHtml}
+          </button>
         </div>`;
     });
     updatePurchaseSelectionControls(state);

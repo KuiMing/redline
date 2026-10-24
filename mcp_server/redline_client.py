@@ -197,17 +197,23 @@ class RedlineClient:
         return data
 
     async def set_market_mode(self, game_id: str, player_id: str, market_mode: str) -> dict:
-        data = await self._http(
-            "POST", "/market-mode", {"game_id": game_id, "player_id": player_id, "market_mode": market_mode}
-        )
+        payload = {"game_id": game_id, "player_id": player_id, "market_mode": market_mode}
+        token = self._resume_tokens.get(self._key(game_id, player_id))
+        if token:
+            payload["resume_token"] = token
+        data = await self._http("POST", "/market-mode", payload)
         if data.get("error"):
             raise RedlineError(data["error"], code="set_market_mode_failed")
         return data
 
     async def start_game(self, game_id: str, player_id: str, market_mode: str | None = None) -> dict:
-        payload: dict[str, Any] = {"game_id": game_id, "player_id": player_id}
+        # /start only reads the stored difficulty; an explicit mode goes through /market-mode first.
         if market_mode:
-            payload["market_mode"] = market_mode
+            await self.set_market_mode(game_id, player_id, market_mode)
+        payload: dict[str, Any] = {"game_id": game_id, "player_id": player_id}
+        token = self._resume_tokens.get(self._key(game_id, player_id))
+        if token:
+            payload["resume_token"] = token
         data = await self._http("POST", "/start", payload)
         if data.get("error"):
             raise RedlineError(data["error"], code="start_game_failed")
