@@ -7,6 +7,8 @@ everyone, and guests cannot change any of them.
 from __future__ import annotations
 
 import sys
+import time
+from collections import OrderedDict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -16,7 +18,7 @@ if str(ROOT) not in sys.path:
 import pytest
 from fastapi.testclient import TestClient
 
-from server import main
+from server import lobby_routes, main
 
 
 def _client() -> TestClient:
@@ -35,6 +37,67 @@ def test_plain_create_keeps_legacy_defaults():
     assert state["market_mode"] == "sample_53"
     assert state["control_mode"] == "computer"
     assert state["joycon_count"] is None
+
+
+def test_create_request_id_replays_one_room_and_rejects_changed_payload():
+    client = _client()
+    request_id = "browser-create-retry-000001"
+    payload = {
+        "name": "玩家一號",
+        "device_id": "joycon-host",
+        "control_mode": "joycon",
+        "joycon_count": 2,
+        "create_request_id": request_id,
+    }
+    before = set(main.lobby)
+    first = client.post("/create", json=payload).json()
+    replay = client.post("/create", json=payload).json()
+    assert replay == first
+    assert set(main.lobby) - before == {first["game_id"]}
+
+    conflict = client.post("/create", json={**payload, "joycon_count": 3}).json()
+    assert conflict == {"error": "Create request payload conflict"}
+    assert set(main.lobby) - before == {first["game_id"]}
+
+
+def test_create_request_replay_cache_expires_and_stays_bounded(monkeypatch):
+    now = time.monotonic()
+    cache = OrderedDict({
+        "expired-request-000001": (now - 61, "expired", {"resume_token": "expired-secret"}),
+        "recent-request-000002": (now, "recent-2", {"resume_token": "recent-secret-2"}),
+        "recent-request-000003": (now, "recent-3", {"resume_token": "recent-secret-3"}),
+    })
+    monkeypatch.setattr(lobby_routes, "lobby_create_requests", cache)
+    monkeypatch.setattr(lobby_routes, "CREATE_REQUEST_TTL_SECONDS", 60)
+    monkeypatch.setattr(lobby_routes, "CREATE_REQUEST_CACHE_MAX", 2)
+
+    result = _create(_client(), create_request_id="new-request-key-000004")
+    assert result.get("game_id")
+    assert list(cache) == ["recent-request-000003", "new-request-key-000004"]
+    assert len(cache) <= lobby_routes.CREATE_REQUEST_CACHE_MAX
+
+
+def test_create_request_replay_wins_before_capacity_eviction(monkeypatch):
+    cache = OrderedDict()
+    monkeypatch.setattr(lobby_routes, "lobby_create_requests", cache)
+    monkeypatch.setattr(lobby_routes, "CREATE_REQUEST_CACHE_MAX", 2)
+
+    client = _client()
+    oldest = _create(client, create_request_id="oldest-request-key-0001")
+    _create(client, create_request_id="second-request-key-0002")
+    assert len(cache) == 2
+
+    replay = _create(client, create_request_id="oldest-request-key-0001")
+    assert replay == oldest
+    assert list(cache) == ["oldest-request-key-0001", "second-request-key-0002"]
+
+
+@pytest.mark.parametrize("request_id", ["short", 123, True])
+def test_create_request_id_requires_high_entropy_string(request_id):
+    before = set(main.lobby)
+    result = _create(_client(), create_request_id=request_id)
+    assert result == {"error": "Invalid create request id"}
+    assert set(main.lobby) == before
 
 
 def test_create_stores_all_settings_authoritatively():

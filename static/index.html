@@ -4,10 +4,10 @@
   <meta charset="UTF-8" />
   <title>REDLINE // STRATEGIC COMMAND</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="/static/style.css?v=start-hero-20261024" />
+  <link rel="stylesheet" href="/static/style.css?v=joycon-help-button-20261025" />
   <!-- 客廳輪流（hot-seat）：在第一次繪製前就能遮住舞台，所以放在 <head>。 -->
-  <script src="/static/hotseat_core.js?v=hotseat-ai-public-20261020"></script>
-  <script src="/static/hotseat_ui.js?v=hotseat-ai-public-clean-header-20261023"></script>
+  <script src="/static/hotseat_core.js?v=joycon-sequential-20261024"></script>
+  <script src="/static/hotseat_ui.js?v=propagandist-joycon-20261024"></script>
 </head>
 <body>
 <div id="stageViewport">
@@ -119,6 +119,12 @@
         </div>
         <div class="lobby-field-hint">要加入別人的房間：把對方分享的代碼貼在這格，再按「進入作戰室」。</div>
       </label>
+
+      <div class="lobby-field" id="sfAutoSetup" role="status" hidden>
+        <span id="sfAutoStatus"></span>
+        <button id="sfAutoRetryBtn" class="lobby-mini-btn" type="button" hidden>重試</button>
+        <button id="sfAutoBackBtn" class="lobby-mini-btn" type="button" hidden>← 回到配對</button>
+      </div>
 
       <label class="lobby-field">
         <span>你的行動代號</span>
@@ -366,6 +372,8 @@
     <button id="myFactionBtn" class="game-tab my-faction-tab" type="button" data-view="myFaction">我的陣營</button>
     <button id="eventCardTab" class="game-tab event-card-tab" type="button" style="display:none;" onclick="openCurrentEventReveal()">事件卡</button>
     <div id="activeEraTabs" class="active-era-tabs" role="group" aria-label="生效中的時代關卡"></div>
+    <!-- 不是第七個遊戲頁面：只開啟 Joy-Con 按鍵功能表圖片。Joy-Con 以 R／SR 環聚焦它，按 A 才開啟。 -->
+    <button id="joyconHelpBtn" class="joycon-help-btn" type="button" aria-label="Joy-Con 說明" aria-haspopup="dialog" aria-controls="joyconHelpModal" title="Joy-Con 說明（按鍵功能表）" onclick="openJoyconHelp()"><svg class="joycon-help-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M7 6h10a5 5 0 0 1 4.9 6l-1 5a3 3 0 0 1-5.2 1.4L13.6 16h-3.2l-2.1 2.4A3 3 0 0 1 3.1 17l-1-5A5 5 0 0 1 7 6zm0 3v1.5H5.5v2H7V14h2v-1.5h1.5v-2H9V9H7zm8.5 1a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5zm2.5 2.5a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5z"/></svg><span>Joy-Con 說明</span></button>
     <div id="turnActionButtons" role="group" aria-label="回合行動控制">
       <button id="redArmyAbilityBtn" class="phase-red-army-btn" type="button" style="display:none;" onclick="openRedArmyAbilityModal()">紅軍能力</button>
       <button id="advanceStepBtn" class="phase-action-btn" type="button" onclick="sendAction('advance')">結束目前步驟</button>
@@ -450,14 +458,28 @@
   </div>
 </div>
 </div>
+<!-- Joy-Con 說明圖（使用者提供的原圖 1280×960，不改字、不裁切）：舞台外的全視窗 modal，小螢幕可捲動。 -->
+<div id="joyconHelpModal" class="joycon-help-modal" role="dialog" aria-modal="true" aria-labelledby="joyconHelpTitle" aria-hidden="true" style="display:none;">
+  <div class="joycon-help-dialog">
+    <div class="joycon-help-header">
+      <h2 id="joyconHelpTitle" class="joycon-help-title">Joy-Con 說明</h2>
+      <span class="joycon-help-hint">按 B、Esc 或 × 關閉</span>
+      <button id="joyconHelpCloseBtn" class="joycon-help-close" type="button" aria-label="關閉 Joy-Con 說明">×</button>
+    </div>
+    <div id="joyconHelpScroll" class="joycon-help-scroll" role="region" aria-label="Joy-Con 功能表圖片" tabindex="0">
+      <img id="joyconHelpImage" class="joycon-help-image" src="/static/help/joycon-function-table.jpg" width="1280" height="960" loading="lazy" decoding="async"
+        alt="Joy-Con 功能表。左右 Joy-Con 的 L、R、ZL、ZR、SL、SR、Capture 按鍵位置圖。方向鍵對照：上＝X，手牌資源／奧援素質確認；下＝B，返回／取消／選取購買卡；右＝A，確認／查看卡牌／選擇地圖目標；左＝Y，卡牌行動／購買／執行地圖操作。其他按鍵對照：L＝R，下一個遊戲頁面；ZL＝ZR，地圖縮放；−＝+，發動陣營能力；左手 SR＝右手 SL，開啟城鎮聚焦選單；左手 SL＝右手 SR，上一個遊戲頁面；Capture，結束行動／步驟確認；按下搖桿，目前無功能。遊戲頁面：指揮中心、戰略地圖、戰況紀錄、我的陣營、事件卡和時代關卡。">
+    </div>
+  </div>
+</div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/static/player_messages_zh_tw.js?v=player-message-i18n-20260801"></script>
-<script src="/static/app.js?v=compact-purchase-label-20261023"></script>
-<script src="/static/controller_core.js?v=joycon-labels-20261016"></script>
-<script src="/static/living_room_core.js?v=dual-joycon-20261014"></script>
-<script src="/static/controller_ui.js?v=half-height-command-centre-20261018"></script>
-<script src="/static/controller_living_room.js?v=half-height-command-centre-20261018b"></script>
+<script src="/static/app.js?v=event-tab-label-20261025"></script>
+<script src="/static/controller_core.js?v=joycon-help-button-20261025"></script>
+<script src="/static/living_room_core.js?v=joycon-help-button-20261025"></script>
+<script src="/static/controller_ui.js?v=joycon-pairing-ab-20261025"></script>
+<script src="/static/controller_living_room.js?v=joycon-help-button-20261025"></script>
 <script src="/static/start_flow_core.js?v=start-flow-20261024"></script>
-<script src="/static/start_flow_ui.js?v=start-hero-20261024"></script>
+<script src="/static/start_flow_ui.js?v=joycon-pairing-ab-20261025"></script>
 </body>
 </html>

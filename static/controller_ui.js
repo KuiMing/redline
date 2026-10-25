@@ -16,6 +16,9 @@
   const FOCUSABLE = 'button, a[href], input:not([type="hidden"]), select, textarea, [role="button"], '
     + '[tabindex]:not([tabindex="-1"]), .card[data-card-zone]';
   const SKIP_IDS = new Set(['emergencyNewGameBtn', 'padToggleBtn']);
+  // 導覽列「Joy-Con 說明」按鈕：R／SR 環的額外焦點（focusKind 'help'；不是區段、不在方向焦點集合內），A 開啟說明圖。
+  const HELP_ENTRY_ID = 'joyconHelpBtn';
+  const HELP_RING_KEY = 'joyconHelp'; // = RedlineLivingRoomCore.RING_HELP_KEY（layer.runSectionRing 到達說明按鈕時的回傳值）
   // unbound＝bridge v2 已連線但這個分頁還沒有手把：輸入一律丟棄（只有 connected 才處理）。
   const STATUS_TEXT = {
     off: '未啟用', connecting: '連線中…', connected: '已連線', unbound: '未選擇手把', stale: '訊號中斷', error: '無法連線',
@@ -40,18 +43,30 @@
     claimTimer: null,
     claimNotice: null,
     autoClaimSig: null,
+    // 起始畫面導覽（start_flow_ui.js 以 setStartNav 開關）：恰好一支有訊號的 Joy-Con 時自動 claim 它操作開始流程。
+    // 未啟用搖桿控制時只為此開一條暫時連線（不寫入設定）；navClaim＝自動 claim 的那一支（不存成手把偏好、不綁席位）。
+    startNav: false,
+    navClaim: null,
+    // 已送出的起始導覽 claim。即使離開起始流程時 claim 尚未完成，也不得把晚到的 ownership 當成一般手把並保存。
+    navTransientClaim: null,
+    // 導覽 release 後，不讓預設 auto 模式立刻把同一支手把搶回來。既有明確 id 偏好不受影響。
+    navAutoBlock: null,
+    navOff: false, // 玩家在 HUD 取消勾選「啟用搖桿控制」：這次起始畫面不再自動連線
+    navManual: false, // 玩家在 HUD 自己選手把：這次起始畫面不再自動 claim／release
     padActive: false, // 至少收到一次有效操作後才顯示/接管焦點
     helpOpen: false,
     focusEl: null,
     focusSig: null,
     focusTown: null,
-    focusKind: null, // 'dom' | 'map'
+    focusKind: null, // 'dom' | 'map' | 'browse'（SL 全域地圖聚焦的城鎮：只看，不在 action 焦點集合內）
+    browseTargets: null, // 'browse' 焦點建立時的地圖目標簽章（Core.mapTargetsSig）；目標改變就交回既有規則
     mapSnapshot: null,
     autofocusMap: false,
     lastScopeId: null,
     pageFocusMemory: null,
     observer: null,
     reconcileTimer: null,
+    choiceSnapTimer: null, // 必選地圖目標切到戰略地圖後補要 snapshot 的計時器（有目標的 snapshot 到達即停止）
   };
 
   // ------------------------------------------------------------ settings
@@ -70,6 +85,11 @@
   }
 
   // ------------------------------------------------------------ bridge connection
+  /** 是否要連 bridge：玩家啟用搖桿控制，或起始畫面導覽（玩家沒在 HUD 關掉）。 */
+  function live() { return ctl.settings.enabled || (ctl.startNav && !ctl.navOff); }
+  /** 起始畫面導覽接管這個分頁的 claim（取代記住的手把偏好與 autoClaimDecision）。 */
+  function navManaged() { return live() && ctl.startNav && !ctl.navManual; }
+
   function setStatus(status) {
     if (ctl.status === status) return;
     ctl.status = status;
@@ -86,6 +106,8 @@
     ctl.roster = null;
     ctl.claimInFlight = null;
     ctl.autoClaimSig = null;
+    ctl.navClaim = null; // 換連線＝bridge 已釋放這條連線擁有的手把
+    ctl.navTransientClaim = null;
     clearTimeout(ctl.claimTimer);
     ctl.claimTimer = null;
   }
@@ -101,14 +123,14 @@
   }
 
   function scheduleReconnect() {
-    if (!ctl.settings.enabled || ctl.reconnectTimer) return;
+    if (!live() || ctl.reconnectTimer) return;
     const delay = Core.reconnectDelayMs(ctl.attempt);
     ctl.attempt += 1;
     ctl.reconnectTimer = setTimeout(() => { ctl.reconnectTimer = null; connect(); }, delay);
   }
 
   function connect() {
-    if (!ctl.settings.enabled) return;
+    if (!live()) return;
     clearTimeout(ctl.reconnectTimer);
     ctl.reconnectTimer = null;
     closeSocket();
@@ -131,7 +153,7 @@
       ctl.socket = null;
       resetBinding(NO_BINDING);
       resetInput();
-      setStatus(ctl.settings.enabled ? 'error' : 'off');
+      setStatus(live() ? 'error' : 'off');
       scheduleReconnect();
     };
     socket.onerror = () => { try { socket.close(); } catch { /* ignore */ } };
@@ -159,7 +181,7 @@
 
   /** 快捷鍵提示與執行的必要條件：啟用、connected 且目前 bridge socket 開著。 */
   function bridgeConnected() {
-    return Core.bridgeConnected({ enabled: ctl.settings.enabled, status: ctl.status, socketOpen: bridgeOpen() });
+    return Core.bridgeConnected({ enabled: live(), status: ctl.status, socketOpen: bridgeOpen() });
   }
 
   /**
@@ -167,7 +189,7 @@
    * off／connecting／error／失聯一律丟棄；stale 只能由目前 bridge socket 自己的 frame 恢復，且那一筆只當 baseline。
    */
   function ingest(raw, source) {
-    if (!ctl.settings.enabled) return;
+    if (!live()) return;
     let parsed = raw;
     if (typeof raw === 'string') { try { parsed = JSON.parse(raw); } catch { return; } }
     const msg = Core.classifyBridgeMessage(parsed, ctl.binding.mode);
@@ -177,9 +199,11 @@
     if (msg.kind === 'roster') { if (fromBridge) applyRoster(msg.roster); return; }
     if (msg.kind === 'claim') { if (fromBridge) applyClaimResult(msg); return; }
     if (document.hidden) { resetInput(); return; }
+    // 未啟用搖桿控制、只為起始畫面導覽開的連線：只接受 bridge v2 roster 裡自己擁有的那一支（不收舊版 bridge 的無身份 frame）。
+    if (!ctl.settings.enabled && ctl.binding.mode !== 'v2') return;
     // 只有這個分頁擁有的那一支手把能進 reducer；其他手把（或左右不符）的 frame 一律丟棄。
     if (!Core.acceptControllerFrame(ctl.binding, msg)) return;
-    const gate = Core.bridgeInputGate({ enabled: ctl.settings.enabled, status: ctl.status, socketOpen: bridgeOpen(), fromBridge });
+    const gate = Core.bridgeInputGate({ enabled: live(), status: ctl.status, socketOpen: bridgeOpen(), fromBridge });
     if (gate === 'drop') return;
     if (gate === 'recover') { resetInput(); setStatus('connected'); }
     // 換了手把或同一支重新連線（epoch 改變）：先清空，這一筆只當 baseline。
@@ -197,9 +221,11 @@
     ctl.binding = { mode: 'v2', owned: owned ? owned.id : null, side: owned ? owned.side : null };
     if (roster.lost) ctl.claimNotice = Core.lostReasonText(roster.lost.reason);
     if (!owned) {
+      ctl.navTransientClaim = null;
       if (ctl.status === 'connected' || ctl.status === 'stale') { resetInput(); setStatus('unbound'); }
     } else if (owned.id !== before) {
-      saveClaimPref({ mode: 'id', id: owned.id }); // 記住：重連時只會再 claim 同一支，不會改拿別支
+      // 記住：重連時只會再 claim 同一支，不會改拿別支。起始畫面導覽自動拿的那一支不記住（之後的席位綁定另由配對決定）。
+      if (owned.id !== ctl.navClaim && owned.id !== ctl.navTransientClaim) saveClaimPref({ mode: 'id', id: owned.id });
       ctl.claimNotice = null;
       resetInput();
       setStatus(owned.status === 'active' ? 'connected' : 'stale');
@@ -232,19 +258,74 @@
 
   /** 記住的手把或舊版相容預設（唯一一支右 Joy-Con）；同一份清單只自動嘗試一次。 */
   function maybeAutoClaim() {
-    if (ctl.binding.mode !== 'v2' || !bridgeOpen() || ctl.claimInFlight) return;
+    if (ctl.binding.mode !== 'v2' || !bridgeOpen()) return;
+    if (navManaged()) { syncNavClaim(); return; }
+    if (ctl.claimInFlight) return;
     // 客廳輪流大廳（hotseat_ui.js）：主連線只 claim 目前席位綁定的那一支；單手把自動 claim 不得搶走綁定流程。
     if (gate && initialized && typeof gate.managesClaims === 'function' && gate.managesClaims()) { ctl.autoClaimSig = null; return; }
     const decision = Core.autoClaimDecision(ctl.claimPref, ctl.roster);
     if (!decision) { ctl.autoClaimSig = null; return; }
+    if (decision.type === 'claim' && decision.controller === ctl.navAutoBlock) return;
     const sig = JSON.stringify([decision, ctl.roster.controllers]);
     if (sig === ctl.autoClaimSig) return;
     ctl.autoClaimSig = sig;
     sendClaim(decision);
   }
 
+  /**
+   * 起始畫面導覽：恰好一支有訊號、沒人使用的手把 → claim；擁有的那支不再是唯一候選（多支、stale、消失）→ 立刻停止接受
+   * 它的輸入（unbound）並 release。不送任何 server mutation、不綁定玩家席位。
+   */
+  function syncNavClaim() {
+    const decision = Core.startNavDecision(ctl.roster, ctl.binding.owned);
+    if (!decision) return;
+    if (decision.type === 'release') { revokeNav(); return; }
+    if (ctl.claimInFlight) return;
+    ctl.navClaim = decision.controller;
+    ctl.navTransientClaim = decision.controller;
+    sendClaim(decision);
+  }
+
+  function revokeNav() {
+    const released = ctl.navClaim || ctl.navTransientClaim || ctl.binding.owned;
+    if (released && !(ctl.claimPref.mode === 'id' && ctl.claimPref.id === released)) ctl.navAutoBlock = released;
+    ctl.navClaim = null;
+    resetInput();
+    clearFocus();
+    ctl.padActive = false; // 下一次取得導覽時第一下仍只放焦點
+    if (ctl.status === 'connected' || ctl.status === 'stale') setStatus('unbound'); // 之後的 frame 一律丟棄，不等 bridge 回覆
+    if (ctl.claimInFlight !== 'release') sendClaim({ type: 'release' });
+  }
+
+  /** start_flow_ui.js：起始畫面（尚未進入正式 SL＋SR 配對）顯示中＝on；離開、進入配對或改用既有 session＝off。 */
+  function setStartNav(on) {
+    const next = !!on;
+    // init() 之前（設定與 bridge 位址尚未載入）只記下，由 init() 依 live() 連線；不可先連預設位址。
+    if (!initialized) { ctl.startNav = next; return; }
+    if (next === ctl.startNav) { if (next && live() && !ctl.socket && !ctl.reconnectTimer) connect(); return; }
+    ctl.startNav = next;
+    ctl.navOff = false;
+    ctl.navManual = false;
+    if (next) {
+      if (!ctl.socket && !ctl.reconnectTimer) connect();
+      else maybeAutoClaim();
+    } else if (!ctl.settings.enabled) {
+      // 暫時連線：關閉（bridge 釋放手把）；焦點與第一下只放焦點的狀態都重來。
+      disconnect();
+      ctl.padActive = false;
+    } else if (ctl.navClaim) {
+      // claim 可能仍在傳輸中。照樣在同一條 socket 後送 release，並保留 transient 標記直到 roster 確認已釋放。
+      revokeNav();
+    } else {
+      ctl.navClaim = null;
+      maybeAutoClaim();
+    }
+    renderHud();
+  }
+
   /** 玩家明確選擇：id＝claim 那一支（bridge 驗證；不合法 fail closed）；null／''＝不使用手把（release，之後不自動 claim）。 */
   function selectController(id) {
+    ctl.navAutoBlock = null; // 玩家已明確選擇；之後依一般 controller 設定處理。
     if (id === null || id === undefined || id === '') {
       saveClaimPref({ mode: 'none' });
       ctl.claimNotice = null;
@@ -298,6 +379,15 @@
     return typeof lastSupportChoiceMapHighlightPayload !== 'undefined' && !!lastSupportChoiceMapHighlightPayload;
   }
 
+  /** 目前必選地圖目標的識別（伺服器 choice_id；沒有時用候選城鎮）；沒有鎖 → null。 */
+  function choiceLockKey() {
+    if (!choiceLocked()) return null;
+    const p = lastSupportChoiceMapHighlightPayload;
+    if (p.choiceId !== undefined && p.choiceId !== null && p.choiceId !== '') return `choice:${p.choiceId}`;
+    const towns = Array.isArray(p.towns) ? p.towns.map(t => (t && t.town) || '').join('|') : '';
+    return `towns:${p.actionKind || ''}:${towns}`;
+  }
+
   function currentScope() {
     const modal = Core.resolveModalScope(visibleModalIds());
     if (modal) return { kind: 'modal', id: modal.id, def: modal };
@@ -326,6 +416,8 @@
     return roots.filter(Boolean);
   }
 
+  // 手牌每次狀態推送都整列重建，焦點靠 sig 重新綁定：手牌卡 div 帶 data-card-index（伺服器手牌位置），
+  // 同名手牌（例如第 1 與第 6 張都是追隨者）才不會被綁回第一張。
   function sigOf(el) {
     if (el.id) return `#${el.id}`;
     const d = el.dataset || {};
@@ -343,6 +435,7 @@
       turnControl: !!el.closest('#turnActionButtons'),
       hintBar: !!el.closest('#lrBar'),
       factionAbility: !!el.closest('#factionActionButtons') || el.id === 'redArmyAbilityBtn',
+      helpEntry: el.id === HELP_ENTRY_ID,
     };
   }
 
@@ -356,6 +449,7 @@
    */
   function releaseExcludedFocus() {
     const active = document.activeElement;
+    if (ctl.focusKind === 'help' && active === ctl.focusEl) return; // R／SR 環放在 Joy-Con 說明按鈕上的焦點
     if (active && active !== document.body && padExcluded(active)) {
       try { active.blur(); } catch { /* ignore */ }
     }
@@ -479,7 +573,7 @@
 
   function clearFocus() {
     clearDomFocus();
-    if (ctl.focusKind === 'map') sendToMap('clearFocus');
+    if (ctl.focusKind === 'map' || ctl.focusKind === 'browse') sendToMap('clearFocus');
     ctl.focusEl = null;
     ctl.focusSig = null;
     ctl.focusTown = null;
@@ -500,7 +594,7 @@
       item = { ...item, el: card, sig: sigOf(card) };
     }
     clearDomFocus();
-    if (ctl.focusKind === 'map') sendToMap('clearFocus');
+    if (ctl.focusKind === 'map' || ctl.focusKind === 'browse') sendToMap('clearFocus');
     ctl.focusKind = 'dom';
     ctl.focusEl = item.el;
     ctl.focusSig = item.sig;
@@ -548,6 +642,103 @@
     renderHud();
   }
 
+  /**
+   * SL 全域地圖聚焦選定城鎮後的桌面模式焦點（iframe 已收到 focusTown 並自己畫 focus ring）。城鎮是目前的地圖目標 →
+   * 與方向鍵相同的目標焦點（A 選取／Y 既有地圖操作照舊）；否則是只看的 'browse' 焦點：不在 action 焦點集合內，A／Y 不作用。
+   * 不送 clearFocus（它會排在 focusTown 之後把新的 ring 清掉）。回傳 'target'｜'browse'。
+   */
+  function focusBrowseTown(town) {
+    const scope = currentScope();
+    ctl.lastScopeId = scope.id;
+    ctl.pageFocusMemory = null;
+    ctl.autofocusMap = false;
+    const item = scope.kind === 'map' ? collectMap().find(i => i.key === `town:${town}`) : null;
+    if (item) { applyItem(item); return 'target'; }
+    clearDomFocus();
+    ctl.focusKind = 'browse';
+    ctl.focusEl = null;
+    ctl.focusSig = `browse:${town}`;
+    ctl.focusTown = town;
+    ctl.browseTargets = Core.mapTargetsSig(ctl.mapSnapshot);
+    renderHud();
+    return 'browse';
+  }
+
+  /** 放掉 'browse' 焦點（並清掉 iframe 的 ring）；town 有給時只放掉該城鎮。回傳是否放掉。 */
+  function dropBrowseFocus(town) {
+    if (ctl.focusKind !== 'browse' || (town !== undefined && ctl.focusTown !== town)) return false;
+    sendToMap('clearFocus');
+    ctl.focusKind = null;
+    ctl.focusEl = null;
+    ctl.focusSig = null;
+    ctl.focusTown = null;
+    ctl.browseTargets = null;
+    renderHud();
+    return true;
+  }
+
+  /** 方向鍵從 'browse' 焦點出發時的起點：被聚焦的城鎮已置中，所以用地圖 iframe 的中心。 */
+  function browseOrigin(scope) {
+    const frame = mapFrame();
+    if (scope.kind !== 'map' || ctl.focusKind !== 'browse' || !frame) return null;
+    const r = frame.getBoundingClientRect();
+    const x = (r.left + r.right) / 2;
+    const y = (r.top + r.bottom) / 2;
+    return { key: ctl.focusSig, kind: 'browse', left: x - 6, right: x + 6, top: y - 6, bottom: y + 6 };
+  }
+
+  function helpEntryEl() {
+    const el = document.getElementById(HELP_ENTRY_ID);
+    return isShown(document.getElementById('gameShell')) && isUsable(el) ? el : null;
+  }
+
+  /** 焦點目前停在可用的 Joy-Con 說明按鈕（modal 開著時不算）。 */
+  function helpFocused(scope) {
+    return ctl.focusKind === 'help' && scope.kind !== 'modal' && !!helpEntryEl() && ctl.focusEl === helpEntryEl();
+  }
+
+  /** R／SR 環到達 Joy-Con 說明按鈕，或說明圖關閉後回焦：只放焦點（不開圖）。回傳是否成功。 */
+  function focusHelpEntry() {
+    const el = helpEntryEl();
+    if (!el) return false;
+    clearDomFocus();
+    if (ctl.focusKind === 'map' || ctl.focusKind === 'browse') sendToMap('clearFocus');
+    ctl.focusKind = 'help';
+    ctl.focusEl = el;
+    ctl.focusSig = `#${HELP_ENTRY_ID}`;
+    ctl.focusTown = null;
+    ctl.browseTargets = null;
+    ctl.autofocusMap = false;
+    ctl.pageFocusMemory = null;
+    ctl.padActive = true;
+    ctl.lastScopeId = currentScope().id;
+    el.classList.add(FOCUS_CLASS);
+    try { el.focus({ preventScroll: true }); } catch { /* ignore */ }
+    renderHud();
+    return true;
+  }
+
+  /** 方向鍵從 Joy-Con 說明按鈕出發時的起點（按鈕本身不在方向焦點集合內）。 */
+  function helpOrigin(scope) {
+    if (!helpFocused(scope)) return null;
+    const r = ctl.focusEl.getBoundingClientRect();
+    return { key: ctl.focusSig, kind: 'help', left: r.left, right: r.right, top: r.top, bottom: r.bottom };
+  }
+
+  /** 畫面流程明確指定新焦點時，同步控制器的內部焦點，避免 reconcile 拉回上一個已隱藏控制附近。 */
+  function focusElement(target) {
+    const el = typeof target === 'string' ? document.getElementById(target) : target;
+    if (!el) return false;
+    const scope = currentScope();
+    const item = buildItems(scope).dom.find(i => i.el === el);
+    if (!item) return false;
+    ctl.lastScopeId = scope.id;
+    ctl.pageFocusMemory = null;
+    ctl.padActive = true; // 流程明確指定的焦點：下一次 A 直接作用在它上面（不是「第一下只放焦點」）
+    applyItem(item);
+    return true;
+  }
+
   function defaultItem(items, scope) {
     if (scope.kind === 'modal' && scope.def && scope.def.initial) {
       const initial = items.dom.find(i => i.el.matches(scope.def.initial));
@@ -568,11 +759,33 @@
 
   function reconcile() {
     ctl.reconcileTimer = null;
-    if (!ctl.settings.enabled || !ctl.padActive) return;
+    if (!live() || !ctl.padActive) return;
     releaseExcludedFocus();
+    // 控制器使用中出現必選地圖目標、但畫面留在其他分頁（例如手上還有可排入的建立卡）：自動切到戰略地圖一次。
+    if (redirectChoiceToMap(currentScope(), true)) return;
     if (layerActive() && layer.reconcile()) return;
     const scope = currentScope();
+    // Joy-Con 說明按鈕上的焦點（不在 action 焦點集合內）：按鈕仍可用就保留；說明圖關閉後回到按鈕。
+    if (scope.kind !== 'modal' && ctl.focusKind === 'help') {
+      if (helpFocused(scope)) {
+        ctl.lastScopeId = scope.id;
+        if (!ctl.focusEl.classList.contains(FOCUS_CLASS)) ctl.focusEl.classList.add(FOCUS_CLASS);
+        return;
+      }
+      clearDomFocus();
+      ctl.focusKind = null; ctl.focusEl = null; ctl.focusSig = null;
+    }
+    if (scope.kind !== 'modal' && scope.id !== ctl.lastScopeId && ctl.pageFocusMemory && ctl.pageFocusMemory.kind === 'help'
+      && focusHelpEntry()) return;
     const items = buildItems(scope);
+    // SL 瀏覽焦點刻意不在 action 焦點集合內：仍在戰略地圖、仍是 canonical 城鎮且地圖目標沒變時保留（直到下一次使用者導航）。
+    // 目標改變（例如新的 pending choice）或城鎮不再可瀏覽 → 放掉，以既有的地圖預設焦點（iframe 的焦點城鎮或第一個城鎮目標）接手。
+    if (scope.kind === 'map' && ctl.focusKind === 'browse') {
+      const snap = ctl.mapSnapshot;
+      if (snap && snap.browseTowns.some(t => t.town === ctl.focusTown) && Core.mapTargetsSig(snap) === ctl.browseTargets) return;
+      dropBrowseFocus();
+      if (scope.id === ctl.lastScopeId) { applyItem(defaultItem(items, scope)); return; }
+    }
     if (scope.id !== ctl.lastScopeId) {
       // scope 改變（modal 開關、分頁切換）：記住頁面焦點，進 modal 時搶回焦點，離開時還原。
       if (ctl.lastScopeId === 'page' || ctl.lastScopeId === 'map') ctl.pageFocusMemory = { sig: ctl.focusSig, kind: ctl.focusKind };
@@ -611,6 +824,48 @@
     ctl.reconcileTimer = setTimeout(reconcile, 80);
   }
 
+  // ------------------------------------------------------------ 必選地圖目標 → 戰略地圖
+  // 切到地圖時 iframe 可能尚未掛載或還在載入，第一個 snapshot 指令會落空：依序補要，直到有目標的 snapshot 到達、
+  // 鎖解除或離開地圖為止（有上限，不會無限送）。snapshot 指令只讀，iframe 每次都以權威資料重算。
+  const CHOICE_SNAPSHOT_RETRY_MS = Object.freeze([250, 600, 1200, 2500, 4000]);
+
+  function choiceSnapshotReady() {
+    const snap = ctl.mapSnapshot;
+    return !!snap && snap.scope === 'choice' && snap.targets.length > 0;
+  }
+
+  function requestChoiceSnapshot() {
+    clearTimeout(ctl.choiceSnapTimer);
+    ctl.choiceSnapTimer = null;
+    let attempt = 0;
+    const tick = () => {
+      ctl.choiceSnapTimer = null;
+      if (!ctl.padActive || !choiceLocked() || currentScope().kind !== 'map' || choiceSnapshotReady()) return;
+      sendToMap('snapshot');
+      if (attempt < CHOICE_SNAPSHOT_RETRY_MS.length) ctl.choiceSnapTimer = setTimeout(tick, CHOICE_SNAPSHOT_RETRY_MS[attempt++]);
+    };
+    ctl.choiceSnapTimer = setTimeout(tick, CHOICE_SNAPSHOT_RETRY_MS[attempt++]);
+  }
+
+  /**
+   * 必選地圖目標但不在戰略地圖（page scope）：以既有區段切換（與 R／SR 同一條路，必選時只到戰略地圖）帶到地圖。
+   * iframe 尚未掛載時由既有分頁流程掛載；之後第一份有目標的 snapshot 到達就把焦點放到地圖目標
+   * （桌面＝autofocusMap，客廳＝地圖清單）。proactive＝鎖剛出現時的自動切換（每個 choice 一次；客廳輪流遮罩或
+   * 不是這個席位的 Joy-Con 時不做）；否則＝控制器輸入 input（該輸入不執行）。回傳是否真的切到了戰略地圖。
+   */
+  function redirectChoiceToMap(scope, proactive, input = null) {
+    if (!layer || !initialized || typeof layer.choiceMapRedirect !== 'function') return false;
+    if (proactive && gate && typeof gate.allowsPage === 'function' && !gate.allowsPage({ owned: ctl.binding.owned })) return false;
+    if (!layer.choiceMapRedirect({ scopeKind: scope.kind, proactive, input })) return false;
+    ctl.padActive = true;
+    if (layerActive()) layer.runSectionRing(1, null);
+    else changeSection(scope, 1);
+    if (activeGameView() !== 'map') return false;
+    requestChoiceSnapshot();
+    renderHud();
+    return true;
+  }
+
   // ------------------------------------------------------------ B / cancel
   function modalCancelTarget(scope) {
     const root = document.getElementById(scope.id);
@@ -624,11 +879,16 @@
 
   // ------------------------------------------------------------ dispatch (logical → UI)
   function dispatch(action) {
+    // 開始流程的 Joy-Con 配對畫面（start_flow_ui.js）：P1 的 A＝既有「完成配對」、B＝取消配對（不需先移焦點）。其他畫面一律放行。
+    if (startGate && initialized && startGate.intercept(action, { owned: ctl.binding.owned })) return;
     // 客廳輪流（hot-seat，hotseat_ui.js）：交接遮罩時所有輸入只給交接確認；顯示時只有該席位綁定的 Joy-Con 能操作。
     // 未啟用 hot-seat 時 gate 一律放行，既有行為不變。
     if (gate && initialized && gate.intercept(action, { owned: ctl.binding.owned })) return;
     // 搖桿輸入一律先放掉停在排除控制上的原生焦點（分頁、結束行動、手牌按鈕等）。
     releaseExcludedFocus();
+    // 必選地圖目標但停在其他分頁（那裡沒有任何焦點）：方向與 A／B／X／Y／R／SR／STICK／+／Capture 先切回戰略地圖，
+    // 不執行原本的按鍵。SL 不攔（它有自己的「切到地圖再開啟聚焦選單」流程）；ZR 在其他分頁照舊完全不作用。
+    if (action && redirectChoiceToMap(currentScope(), false, action)) return;
     // 客廳模式的 page／map scope 由 layer 處理；modal、大廳與桌面模式維持下面的既有流程。
     if (layerActive() && layer.dispatch(action)) return;
     // 桌面模式的 Capture（結束行動）／PLUS（陣營能力）：與客廳模式同一套既有流程與閘門（第一下仍只放焦點）。
@@ -673,9 +933,11 @@
     const key = currentKey(items.all);
     const mapCancel = scope.kind === 'map' && ctl.mapSnapshot && ctl.mapSnapshot.canCancel;
     const focused = items.all.find(i => i.key === key) || null;
+    const onHelp = helpFocused(scope);
     const ctx = {
       scopeKind: scope.kind,
-      hasFocus: key !== null,
+      hasFocus: key !== null || onHelp,
+      helpEntry: onHelp,
       card: cardContext(focused),
       mapTarget: scope.kind === 'map' && !!focused && focused.kind === 'town',
       cancelAvailable: scope.kind === 'modal' ? !!modalCancelTarget(scope) : !!mapCancel,
@@ -687,37 +949,44 @@
     if (!command) return;
     // 沒有焦點時只有「移動」「取消」、R／SR 區段與 SL 聚焦選單可直接執行（無可聚焦項目的 modal，例如卡牌預覽，仍須能用 B 關閉；
     // 分頁不是方向焦點，沒有內容的分頁也必須能用 R／SR 離開；聚焦選單本身就是用來找焦點的）。
-    if (key === null && !['move', 'cancel', 'section', 'focusMenu'].includes(command.cmd)) { applyItem(defaultItem(items, scope)); return; }
+    if (key === null && !onHelp && !['move', 'cancel', 'section', 'focusMenu'].includes(command.cmd)) { applyItem(defaultItem(items, scope)); return; }
     const current = items.all.find(i => i.key === key);
     if (current) lastRect = { left: current.left, right: current.right, top: current.top, bottom: current.bottom };
 
     let activated = false;
     switch (command.cmd) {
       case 'move': {
-        const next = Core.pickDirectional(items.all, key, command.dir);
-        if (next && next.key !== key) applyItem(next);
+        // SL 瀏覽焦點：從被聚焦的城鎮（地圖中心）往該方向找最近的地圖目標或控制；Joy-Con 說明按鈕：從按鈕位置出發。
+        const origin = browseOrigin(scope) || helpOrigin(scope);
+        const from = origin ? origin.key : key;
+        const next = Core.pickDirectional(origin ? [...items.all, origin] : items.all, from, command.dir);
+        if (next && next.key !== from) applyItem(next);
         break;
       }
       case 'activate': activated = activate(scope, items, current); break;
+      // A 在 Joy-Con 說明按鈕上：點既有按鈕開啟說明圖（modal 開啟後 reconcile 記住回焦點＝說明按鈕）。
+      case 'openHelp': if (helpEntryEl()) { helpEntryEl().click(); scheduleReconcile(); activated = true; } break;
       case 'cardPreview': activated = previewCard(current); break;
       case 'cardToggle': activated = toggleCard(current); break;
       case 'cardMode': activated = playCardMode(current, command.mode); break;
       // 購買卡 Y／地圖目標 Y：與客廳模式同一套既有流程與閘門（layer 只在桌面模式執行；客廳模式的 page／map 由 layer.dispatch 處理）。
       case 'cardBuy': if (layer && current && current.kind === 'dom') layer.runDesktopCardBuy(current.el); break;
+      // 一般奧援手牌 X：同一個 startDiscard 與閘門，只開啟危險確認單（預設焦點＝返回）；確認單內的 A 才點既有「棄置」。
+      case 'cardDiscard': if (layer && current && current.kind === 'dom') layer.runDesktopCardDiscard(current.el); break;
       case 'mapAct': if (layer && current && current.kind === 'town') layer.runDesktopMapAct(current.town); break;
       case 'cancel': cancel(scope); break;
       case 'section': changeSection(scope, command.step); break;
-      // SL：開啟／關閉聚焦選單（只移焦點）。客廳模式的 page／map 由 layer.dispatch 處理；這裡是桌面模式、大廳與 modal 內。
+      // SL：開啟／關閉全域地圖聚焦選單（只改地圖相機與焦點）。客廳模式的 page／map 由 layer.dispatch 處理；這裡是桌面模式、大廳與 modal 內。
       case 'focusMenu': if (layer) layer.runFocusMenuKey(); break;
       case 'focusTurnBar': focusTurnBar(items); break;
       default: break;
     }
     // 客廳模式（例如 modal 內的 A）：只有真的執行才開始 250ms 執行冷卻；桌面模式沒有 layer，不受影響。
-    // SL 聚焦選單內的 A 只送出 snapshot 請求：成功移焦點後才由 layer 記錄冷卻（失敗的選定不阻擋下一個按鍵）。
+    // SL 聚焦選單內的 A 由 layer 自己記錄冷卻（城鎮：iframe 以同一個 req 回覆 focusTown ok:true 後；失敗的選定不阻擋下一個按鍵）。
     if (activated && layerActive() && !focusMenuOpen) layer.noteActivation();
   }
 
-  // ------------------------------------------------------------ card focus (A 預覽 / B 選擇 / 手牌 X 資源 Y 行動)
+  // ------------------------------------------------------------ card focus (A 預覽 / B 選擇 / 手牌 X 資源（一般奧援＝棄置）Y 行動)
   function cardHost(item) {
     if (!item || item.kind !== 'dom' || !item.el.isConnected) return null;
     return item.el.closest('[data-card-zone]');
@@ -731,7 +1000,10 @@
   function cardContext(item) {
     const host = cardHost(item);
     if (!host) return null;
-    return { zone: host.dataset.cardZone || '', hasToggle: !!purchaseToggle(host) };
+    const zone = host.dataset.cardZone || '';
+    // hasDiscard：手牌帶既有「棄置」控制（一般奧援）→ X 走 layer 的危險確認；layer 不在 → false（X 照舊只接受「資源」鈕，fail closed）。
+    const hasDiscard = zone === 'hand' && !!layer && layer.hasHandDiscard(host) === true;
+    return { zone, hasToggle: !!purchaseToggle(host), hasDiscard };
   }
 
   function cardFocused(items) {
@@ -771,7 +1043,7 @@
     return true;
   }
 
-  /** X/Y：只在手牌卡上，點擊該卡既有的「資源」／「行動」按鈕；找不到或被停用即 fail-closed。 */
+  /** X/Y：只在手牌卡上，點擊該卡既有的「資源」／「行動」按鈕；找不到或被停用即 fail-closed（一般奧援的 X 走 cardDiscard，不經這裡）。 */
   function playCardMode(current, mode) {
     const host = cardHost(current);
     if (!host || host.dataset.cardZone !== 'hand' || !host.closest('#hand')) return false;
@@ -817,9 +1089,13 @@
       // 六個全域區段（四個分頁＋事件卡＋時代關卡）只由 R／SR 循環，與客廳模式同一個環與既有分頁／說明 modal；
       // 必選地圖目標時環只提供「戰略地圖」（已在地圖則不動）。分頁永遠不是方向焦點：切換後清掉舊焦點，
       // 再把焦點放到新區段的內容（不留在分頁上）。
-      if (!layer || !layer.runSectionRing(step, scope.kind === 'modal' ? scope : null)) return;
+      // 環上另有一個額外焦點：導覽列的 Joy-Con 說明按鈕（layer 已把焦點放上去；不切頁、不開圖，焦點不清掉）。
+      const reached = layer && layer.runSectionRing(step, scope.kind === 'modal' ? scope : null);
+      if (!reached) return;
+      if (reached === HELP_RING_KEY) return;
+      if (ctl.focusKind === 'help') ctl.focusKind = null; // 離開說明按鈕：原生焦點也一併放掉
       clearDomFocus();
-      if (ctl.focusKind === 'map') sendToMap('clearFocus');
+      if (ctl.focusKind === 'map' || ctl.focusKind === 'browse') sendToMap('clearFocus');
       ctl.focusEl = null;
       ctl.focusSig = null;
       ctl.focusTown = null;
@@ -848,6 +1124,7 @@
 
   // ------------------------------------------------------------ HUD (設定入口 + 精簡提示)
   let hud = null;
+  function inGame() { return isShown(document.getElementById('gameShell')); }
   function buildHud() {
     const stage = document.getElementById('designStage');
     if (!stage || hud) return;
@@ -875,24 +1152,25 @@
           <button id="padReconnectBtn" type="button">重新連線</button>
           <button id="padResetBtn" type="button">預設</button>
         </div>
-        <div class="pad-note">搖桿＝移動　A 確認　B 返回　R/SR 六個區段　Y 說明<br>Capture 結束行動（確認）　+ 陣營能力<br>卡牌：A 查看　手牌 X 資源／Y 行動　購買卡 B 選擇 → Y 購買所選（確認）<br>地圖目標：A 選取　Y 建立組織／確認移動／瓦解組織<br>ZR（戰略地圖）：放大一級，到最大後再按回到最小<br>SL 聚焦選單：依統治者／陣營區域跳到可建立組織的合法城鎮（只移焦點）<br>客廳模式：A 進入內容區　手牌 B 棄置（確認）　按下搖桿 下一區</div>
+        <div class="pad-note">搖桿＝移動　A 確認　B 返回　R/SR 六個區段＋Joy-Con 說明按鈕（A 開圖、B 關閉）　Y 說明<br>Capture 結束行動（確認）　+ 陣營能力<br>卡牌：A 查看　手牌 X 資源／Y 行動（一般奧援 X＝棄置，需確認）　購買卡 B 選擇 → Y 購買所選（確認）<br>地圖目標：A 選取　Y 建立組織／確認移動／瓦解組織<br>ZR（戰略地圖）：放大一級，到最大後再按回到最小<br>SL 地圖聚焦：依統治者／陣營區域選任一城鎮，置中放大（只改地圖畫面）</div>
       </div>`;
     stage.appendChild(hud);
     const $ = id => document.getElementById(id);
-    $('padToggleBtn').addEventListener('click', () => { $('padPanel').hidden = !$('padPanel').hidden; renderHud(); });
-    $('padEnableChk').addEventListener('change', (e) => setEnabled(e.target.checked));
+    // 遊戲畫面不提供設定面板（說明列移到上方中央、🎮 鈕隱藏）；程式觸發的 click 也不開。
+    $('padToggleBtn').addEventListener('click', () => { if (inGame()) return; $('padPanel').hidden = !$('padPanel').hidden; renderHud(); });
+    $('padEnableChk').addEventListener('change', (e) => { if (!e.target.checked) ctl.navOff = true; setEnabled(e.target.checked); });
     $('padSaveBtn').addEventListener('click', () => saveUrlFromInput());
     $('padResetBtn').addEventListener('click', () => { $('padUrlInput').value = Core.DEFAULT_BRIDGE_URL; saveUrlFromInput(); });
-    $('padReconnectBtn').addEventListener('click', () => { if (ctl.settings.enabled) { ctl.attempt = 0; connect(); } });
+    $('padReconnectBtn').addEventListener('click', () => { if (live()) { ctl.attempt = 0; connect(); } });
     $('padUrlInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') saveUrlFromInput(); });
-    $('padControllerSelect').addEventListener('change', (e) => selectController(e.target.value || null));
+    $('padControllerSelect').addEventListener('change', (e) => { ctl.navManual = true; selectController(e.target.value || null); });
   }
 
   // 玩家可見的手把名稱一律經 Core.controllerLabel／bindingBadge 並帶目前 roster（左右＋同側序號；不顯示埠、id、名稱指紋）。
   function rosterList() { return ctl.roster ? ctl.roster.controllers : null; }
 
   function bindingText() {
-    if (!ctl.settings.enabled || !ctl.socket) return '—';
+    if (!live() || !ctl.socket) return '—';
     const c = boundController();
     if (c) return `${Core.controllerLabel(c, rosterList())}${c.status === 'stale' ? '・訊號中斷' : ''}`;
     return ctl.binding.mode === 'v2' ? '尚未選擇（在下方選一支）' : '—';
@@ -957,23 +1235,30 @@
   }
 
   function setEnabled(enabled) {
+    ctl.navAutoBlock = null; // 玩家明確切換設定，可重新啟動一般 auto claim。
     ctl.settings.enabled = !!enabled;
     saveSettings();
-    if (enabled) connect(); else disconnect();
+    // 起始畫面導覽仍在：改由暫時連線（重新連線＝bridge 釋放後重新判斷；第一筆 frame 只當 baseline）。
+    if (enabled || live()) connect(); else disconnect();
     renderHud();
   }
 
   function hintText() {
     const scope = currentScope();
-    if (scope.kind === 'modal' && scope.id === Core.FOCUS_MENU_MODAL_ID) return '搖桿 選範圍　A 聚焦（不執行）　B／SL 返回';
+    if (scope.kind === 'modal' && scope.id === Core.FOCUS_MENU_MODAL_ID) return '搖桿 選擇　A 開啟分組／置中放大城鎮（不執行）　B／SL 關閉';
+    if (scope.kind === 'modal' && scope.id === 'joyconHelpModal') return 'Joy-Con 說明圖　B 關閉';
+    if (helpFocused(scope)) return 'Joy-Con 說明　A 開啟說明圖　R/SR 區段';
     if (scope.kind === 'modal') {
       const cancel = modalCancelTarget(scope);
       // 客廳模式的 legend 自己補「R/SR 下一個區段」；桌面模式在這裡補。
       const section = !layerActive() && layer && layer.isSectionModal(scope.id) && !choiceLocked() ? '　R/SR 下一個區段' : '';
       return `移動 搖桿　A 確認${cancel ? '　B 返回' : ''}${section}`;
     }
-    // 有可分組的合法建立目標時，提示可用 SL 聚焦選單（客廳模式由提示列顯示）。
+    // canonical 城鎮清單完整時，提示可用 SL 聚焦選單（客廳模式由提示列顯示）。
     const menu = !layerActive() && layer && layer.focusMenuAvailable() ? '　SL 聚焦選單' : '';
+    if (scope.kind === 'map' && ctl.focusKind === 'browse') {
+      return `聚焦 ${ctl.focusTown}（只看）　搖桿 移到地圖目標　ZR 放大地圖（循環）${menu}${choiceLocked() ? '' : '　R/SR 區段'}`;
+    }
     if (scope.kind === 'map') {
       const act = ctl.focusKind === 'map' && ctl.focusTown && layer && !layerActive() ? layer.desktopMapActLabel(ctl.focusTown) : null;
       return `移動 搖桿　A 選取${act ? `　Y ${act}` : ''}　B 取消　ZR 放大地圖（循環）${menu}${choiceLocked() ? '' : '　R/SR 區段'}`;
@@ -982,7 +1267,8 @@
     const focused = ctl.focusKind === 'dom' ? cardContext({ kind: 'dom', el: ctl.focusEl }) : null;
     if (focused) {
       const buy = focused.zone === 'purchase' ? '　選擇後 Y 購買所選' : '';
-      return `移動 搖桿　A 查看${focused.hasToggle ? '　B 選擇' : ''}${buy}${focused.zone === 'hand' ? '　X 資源　Y 行動' : ''}　R/SR 區段`;
+      const hand = focused.zone === 'hand' ? `　${focused.hasDiscard ? 'X 棄置（確認）' : 'X 資源'}　Y 行動` : '';
+      return `移動 搖桿　A 查看${focused.hasToggle ? '　B 選擇' : ''}${buy}${hand}　R/SR 區段`;
     }
     return '移動 搖桿　A 確認　R/SR 區段　Capture 結束行動';
   }
@@ -1004,10 +1290,13 @@
     $('padSideMap').hidden = !legend;
     setText($('padSideMap'), legend || '');
     $('padMixedNote').hidden = !Core.mixedContentRisk(location.protocol, ctl.settings.url);
+    if (inGame()) $('padPanel').hidden = true; // 大廳開著的設定面板不帶進遊戲
     hud.dataset.status = ctl.status;
     hud.dataset.side = ctl.binding.owned ? ctl.binding.side : '';
     const hint = $('padHint');
-    const show = ctl.settings.enabled && (ctl.status !== 'connected' || ctl.helpOpen || ctl.padActive);
+    // 起始畫面導覽的暫時連線：只有真的拿到手把並開始操作才顯示（沒有 bridge 的滑鼠玩家不看到連線錯誤）。
+    const show = ctl.settings.enabled ? (ctl.status !== 'connected' || ctl.helpOpen || ctl.padActive)
+      : live() && ctl.status === 'connected' && (ctl.helpOpen || ctl.padActive);
     hint.hidden = !show;
     if (show) {
       // 桌面模式專用鍵 fail closed 的原因（例如「先按 B 選擇這張卡，再按 Y 購買」）暫時接在提示前面；客廳模式顯示在提示列狀態欄。
@@ -1039,7 +1328,7 @@
     window.addEventListener('blur', resetInput);
     initialized = true;
     if (layer) layer.init(host);
-    if (ctl.settings.enabled) connect();
+    if (live()) connect();
   }
 
   // ------------------------------------------------------------ display-mode layer（客廳模式）
@@ -1053,8 +1342,8 @@
   }
   const host = {
     ctl, currentScope, buildItems, collectDom, applyItem, focusDom, clearDomFocus, defaultItem, isShown, isUsable,
-    cardContext, previewCard, toggleCard, playCardMode, modalCancelTarget, sendToMap, choiceLocked, activeGameView,
-    scheduleReconcile, renderHud, hintText, clearFocus, bridgeConnected, directionalFlags,
+    cardContext, previewCard, toggleCard, playCardMode, modalCancelTarget, sendToMap, choiceLocked, choiceLockKey, activeGameView,
+    scheduleReconcile, renderHud, hintText, clearFocus, bridgeConnected, directionalFlags, focusBrowseTown, dropBrowseFocus, focusHelpEntry,
     getMapSnapshot: () => ctl.mapSnapshot,
     statusText: statusLabel,
     bindingBadge: () => Core.bindingBadge(ctl.binding, rosterList()),
@@ -1066,6 +1355,9 @@
   // 客廳輪流（hot-seat）閘門：只決定輸入是否放行／交給交接確認，不改焦點、layer 或綁定。
   let gate = null;
   function attachGate(next) { gate = next && typeof next.intercept === 'function' ? next : null; }
+  // 開始流程配對畫面閘門：只在配對畫面攔截 P1 的 A／B，不改焦點、layer 或綁定。
+  let startGate = null;
+  function attachStartGate(next) { startGate = next && typeof next.intercept === 'function' ? next : null; }
 
   window.RedlineController = {
     feed, // 測試／除錯：與 bridge 訊息同一個入口，只在已啟用且已連線時處理（不能讓 stale 恢復）
@@ -1074,9 +1366,16 @@
       focusKind: ctl.focusKind, focusSig: ctl.focusSig, focusTown: ctl.focusTown,
       scope: currentScope().id, held: { ...ctl.input.held },
       reconcilePending: !!ctl.reconcileTimer, // 除錯：DOM 變動後的 80ms reconcile 尚未跑完
+      // 除錯：parent 目前採用的地圖 snapshot 摘要（沒有或最新一份不合 schema 被丟棄＝null）；sig＝Core.mapTargetsSig。
+      map: ctl.mapSnapshot ? {
+        seq: ctl.mapSnapshot.seq, scope: ctl.mapSnapshot.scope, targets: ctl.mapSnapshot.targets.length,
+        selected: ctl.mapSnapshot.selected, focusTown: ctl.mapSnapshot.focusTown, sig: Core.mapTargetsSig(ctl.mapSnapshot),
+      } : null,
       livingRoom: layerActive() ? layer.debugState() : null,
       shortcuts: layer && initialized && !layerActive() ? layer.shortcutState() : null, // 桌面模式專用鍵的閘門狀態
       // 這個分頁擁有的手把（bridge roster 為準）與清單摘要；inputKey＝目前 reducer 屬於哪一支／哪一個 epoch。
+      // 起始畫面導覽：on＝start flow 要求、live＝目前允許連線（含暫時連線）、claim＝自動 claim 的那一支（不是玩家席位）。
+      startNav: { on: ctl.startNav, live: live(), claim: ctl.navClaim, off: ctl.navOff, manual: ctl.navManual },
       controller: {
         mode: ctl.binding.mode, owned: ctl.binding.owned, side: ctl.binding.side, pref: { ...ctl.claimPref },
         claimInFlight: ctl.claimInFlight, notice: ctl.claimNotice, inputKey: ctl.inputKey,
@@ -1085,8 +1384,11 @@
     }),
     setEnabled,
     selectController, // HUD 下拉選單同一個入口：claim 指定的手把，或 null＝不使用
+    setStartNav,
+    focusElement,
     attachLayer,
     attachGate,
+    attachStartGate,
   };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

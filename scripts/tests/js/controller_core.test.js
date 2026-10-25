@@ -307,6 +307,102 @@ test('zoom command / result: a correlated request id is mandatory', () => {
   }
 });
 
+// ---- SL 全域地圖聚焦（focusTown／browseTowns） ----
+
+test('focusTown command / result: town and a correlated request id are mandatory', () => {
+  const cmd = (extra) => C.sanitizeMapCommand({ v: 1, type: 'redline-controller-command', cmd: 'focusTown', ...extra });
+  assert.ok(C.MAP_COMMANDS.includes('focusTown'));
+  assert.deepEqual(cmd({ town: '曼谷', req: 5 }), { cmd: 'focusTown', town: '曼谷', id: undefined, req: 5 });
+  assert.equal(cmd({ town: '曼谷' }), null, 'req absent');
+  for (const req of [null, 0, -1, 1.5, '3', NaN, true, {}]) assert.equal(cmd({ town: '曼谷', req }), null, `req=${String(req)}`);
+  for (const town of [undefined, '', 7, '名'.repeat(65)]) assert.equal(cmd({ town, req: 5 }), null, `town=${String(town)}`);
+  const result = (extra) => C.sanitizeMapResult({ type: 'redline-controller-result', v: 1, cmd: 'focusTown', ok: true, ...extra });
+  assert.deepEqual(result({ req: 5 }), { cmd: 'focusTown', ok: true, req: 5, via: null, reason: null });
+  assert.equal(result({ req: 5, ok: false, reason: 'unknown-town' }).reason, 'unknown-town');
+  for (const extra of [{}, { req: null }, { req: 0 }, { req: 5, via: 'directBuildBtn2' }]) assert.equal(result(extra), null, JSON.stringify(extra));
+  // 既有不帶 req 的桌面模式指令行為不變
+  assert.deepEqual(C.sanitizeMapCommand({ v: 1, type: 'redline-controller-command', cmd: 'focus', town: '臺北' }), { cmd: 'focus', town: '臺北', id: undefined, req: null });
+});
+
+test('focus zoom: fixed level, never above Leaflet maxZoom, whole levels only, fails closed when min/max cannot be met', () => {
+  assert.equal(C.MAP_FOCUS_ZOOM, 9, 'canonical SL focus level is 9 (not the ZR cycle max 10)');
+  assert.equal(C.MAP_ZOOM_CYCLE.max, 10, 'the ZR cycle keeps its own max');
+  assert.equal(C.mapFocusZoom(0, Infinity), C.MAP_FOCUS_ZOOM, 'the strategic map sets no min/max');
+  assert.equal(C.mapFocusZoom(0, 18), 9);
+  assert.equal(C.mapFocusZoom(0, 10), 9);
+  assert.equal(C.mapFocusZoom(0, 9), 9);
+  assert.equal(C.mapFocusZoom(2, 8), 8, 'capped by maxZoom');
+  assert.equal(C.mapFocusZoom(0, 7.5), 7, 'whole level not above maxZoom');
+  assert.equal(C.mapFocusZoom(-3, Infinity), C.MAP_FOCUS_ZOOM);
+  assert.equal(C.mapFocusZoom(9, 9), 9);
+  assert.equal(C.mapFocusZoom(0, 8.9), 8, 'maxZoom below 9 → its whole level');
+  assert.equal(C.mapFocusZoom(0, Infinity, 12), 12);
+  for (const [min, max] of [[10, 18], [11, 18], [8.5, 8.7], [NaN, 18], [0, NaN], ['0', 18], [0, '18'], [undefined, 18], [0, null], [0, -Infinity]]) {
+    assert.equal(C.mapFocusZoom(min, max), null, `${String(min)}..${String(max)}`);
+  }
+  for (const preferred of [NaN, 9.5, -1, '10']) assert.equal(C.mapFocusZoom(0, 18, preferred), null, String(preferred));
+});
+
+const BROWSE = [
+  { town: '臺北', ruler: ['臺灣'], camp: ['臺灣', '紅軍'] },
+  { town: '曼谷', ruler: ['南洋'], camp: [] },
+];
+const browseSnap = (extra = {}) => ({
+  type: 'redline-controller-map-snapshot', v: 1, seq: 2, scope: 'none', targets: [], buttons: [], focusTown: null, canCancel: false,
+  browseMeta: 1, browseTowns: BROWSE, ...extra,
+});
+
+test('snapshot browse list (browseMeta v1): the full canonical list is accepted without any pending choice or target', () => {
+  const snap = C.sanitizeMapSnapshot(browseSnap());
+  assert.equal(C.MAP_BROWSE_META_VERSION, 1);
+  assert.equal(snap.browseMeta, 1);
+  assert.deepEqual(snap.browseTowns, BROWSE);
+  assert.deepEqual(snap.targets, [], 'browse towns never become action targets');
+  assert.equal(snap.groupMeta, null);
+  const dup = C.sanitizeMapSnapshot(browseSnap({ browseTowns: [{ town: '臺北', ruler: ['臺灣'], camp: ['臺灣', '臺灣'] }] }));
+  assert.deepEqual(dup.browseTowns[0].camp, ['臺灣'], 'duplicate membership counts once');
+  // 與 pending choice 並存：目標與分組資料各自驗證，互不改寫。
+  const withChoice = C.sanitizeMapSnapshot(browseSnap({
+    scope: 'choice', groupMeta: 1, targets: [{ town: '臺北', role: 'choice', x: 1, y: 2, act: 'build', ruler: ['臺灣'], camp: ['臺灣'] }],
+  }));
+  assert.deepEqual(withChoice.targets.map(t => t.town), ['臺北']);
+  assert.deepEqual(withChoice.browseTowns.map(t => t.town), ['臺北', '曼谷']);
+  // 舊版 iframe（沒有 browseMeta）：snapshot 仍有效但沒有瀏覽清單。
+  const legacy = C.sanitizeMapSnapshot(browseSnap({ browseMeta: undefined, browseTowns: undefined }));
+  assert.deepEqual([legacy.browseMeta, legacy.browseTowns], [null, []]);
+});
+
+test('snapshot browse list fails closed as a whole: version, missing list, duplicates, malformed towns, size', () => {
+  for (const [label, extra] of [
+    ['unknown version', { browseMeta: 2 }],
+    ['string version', { browseMeta: '1' }],
+    ['version without list', { browseTowns: undefined }],
+    ['list without version', { browseMeta: undefined }],
+    ['list not an array', { browseTowns: { 臺北: {} } }],
+    ['empty list', { browseTowns: [] }],
+    ['duplicate town', { browseTowns: [...BROWSE, BROWSE[0]] }],
+    ['town missing', { browseTowns: [{ ruler: ['臺灣'], camp: [] }] }],
+    ['empty ruler', { browseTowns: [{ town: '臺北', ruler: [], camp: [] }] }],
+    ['camp missing', { browseTowns: [{ town: '臺北', ruler: ['臺灣'] }] }],
+    ['invalid camp entry', { browseTowns: [{ town: '臺北', ruler: ['臺灣'], camp: ['臺灣', 3] }] }],
+    ['null entry', { browseTowns: [null] }],
+    ['too many towns', { browseTowns: Array.from({ length: 401 }, (_, i) => ({ town: `T${i}`, ruler: ['R'], camp: [] })) }],
+  ]) assert.equal(C.sanitizeMapSnapshot(browseSnap(extra)), null, label);
+});
+
+test('map target signature: scope + role/town only (camera moves keep it), any target change alters it', () => {
+  const base = { scope: 'move', targets: [{ town: '北京', role: 'origin', x: 1, y: 2 }] };
+  const sig = C.mapTargetsSig(base);
+  assert.equal(typeof sig, 'string');
+  assert.equal(C.mapTargetsSig({ ...base, targets: [{ town: '北京', role: 'origin', x: 400, y: -20 }] }), sig, 'coordinates ignored');
+  assert.equal(C.mapTargetsSig({ ...base, browseTowns: BROWSE, seq: 99, focusTown: '北京' }), sig);
+  assert.notEqual(C.mapTargetsSig({ ...base, scope: 'choice', targets: [{ town: '北京', role: 'choice' }] }), sig, 'new pending choice');
+  assert.notEqual(C.mapTargetsSig({ ...base, targets: [...base.targets, { town: '天津', role: 'origin' }] }), sig);
+  assert.notEqual(C.mapTargetsSig({ scope: 'none', targets: [] }), sig);
+  assert.equal(C.mapTargetsSig(null), null);
+  assert.equal(C.mapTargetsSig({ scope: 'none' }), null);
+});
+
 test('zoom bounds: Leaflet getMinZoom/getMaxZoom intersected with MAP_ZOOM_CYCLE; unusable ranges fail closed', () => {
   const { min, max } = C.MAP_ZOOM_CYCLE;
   assert.ok(Number.isInteger(min) && Number.isInteger(max) && max > min, 'integer levels, at least two');
@@ -508,6 +604,31 @@ test('iframe message validation: origin, source, version, schema', () => {
   assert.equal(C.sanitizeMapSnapshot({ ...snap, targets: new Array(401).fill(snap.targets[0]) }), null);
 });
 
+test('map targets far off-screen (思想家 global targets after SL focus + ZR to zoom 10) stay valid; absurd points and button rects still fail closed', () => {
+  // 思想家 → SL 聚焦利雅德（zoom 9）後再按 ZR 放大到 zoom 10 時，溫哥華等北美目標的 container x 約 −12 萬 px：舊的 10 萬上限讓整份 snapshot 作廢。
+  const snap = {
+    type: 'redline-controller-map-snapshot', v: 1, seq: 4, scope: 'choice', focusTown: '利雅德', canCancel: false, buttons: [],
+    targets: [
+      { town: '利雅德', role: 'choice', act: 'build', x: 450, y: 280 },
+      { town: '溫哥華', role: 'choice', act: 'build', x: -123642, y: -22779 },
+      { town: '奧克蘭', role: 'choice', act: 'build', x: 93271, y: 47481 },
+    ],
+  };
+  const ok = C.sanitizeMapSnapshot(snap);
+  assert.ok(ok, 'off-screen targets keep the whole snapshot (and the controller focus set) alive');
+  assert.deepEqual(ok.targets.map(t => [t.town, t.x, t.y]), [['利雅德', 450, 280], ['溫哥華', -123642, -22779], ['奧克蘭', 93271, 47481]]);
+  assert.equal(ok.focusTown, '利雅德');
+  // 256px 圖磚在 zoom 22 的世界寬度以內都接受（戰略地圖 ZR 最大 10、SL 固定 9、fitBounds 最大 9）。
+  const far = C.MAP_POINT_LIMIT - 1;
+  assert.ok(C.sanitizeMapSnapshot({ ...snap, targets: [{ town: '溫哥華', role: 'choice', x: -far, y: far }] }));
+  for (const bad of [NaN, Infinity, -Infinity, C.MAP_POINT_LIMIT, -C.MAP_POINT_LIMIT, '1', null]) {
+    assert.equal(C.sanitizeMapSnapshot({ ...snap, targets: [{ town: '溫哥華', role: 'choice', x: bad, y: 0 }] }), null, `x=${bad}`);
+    assert.equal(C.sanitizeMapSnapshot({ ...snap, targets: [{ town: '溫哥華', role: 'choice', x: 0, y: bad }] }), null, `y=${bad}`);
+  }
+  // 按鈕外框是 iframe 視窗內的 DOM rect：維持原本的上限。
+  assert.equal(C.sanitizeMapSnapshot({ ...snap, buttons: [{ id: 'directBuildBtn', label: '建立組織', x: -123642, y: 0, w: 10, h: 10 }] }), null);
+});
+
 const mapInput = (over = {}) => ({
   hasState: true, viewerCanAct: true, pendingChoiceBlocksMoves: false, highlight: null,
   visibleTowns: ['甲', '乙', '丙', '丁'], knownTowns: ['甲', '乙', '丙', '丁', '戊'],
@@ -647,6 +768,27 @@ test('hand card focus: X = resource, Y = action', () => {
   assert.deepEqual(C.routeAction(cardCtx(handCard), Y), { cmd: 'cardMode', mode: 'action' });
 });
 
+test('hand card X: ordinary support card with an existing 棄置 control = cardDiscard (confirm flow); others keep resource', () => {
+  const aid = { zone: 'hand', hasToggle: false, hasDiscard: true };
+  assert.deepEqual(C.routeAction(cardCtx(aid), X), { cmd: 'cardDiscard' });
+  assert.deepEqual(C.routeAction(cardCtx(aid, { sectionsLocked: true }), X), { cmd: 'cardDiscard' });
+  assert.deepEqual(C.routeAction(cardCtx(aid), Y), { cmd: 'cardMode', mode: 'action' }, 'Y stays action');
+  // 紅軍奧援的既有按鈕是「資源」→ hasDiscard false → X 仍＝資源；未帶 hasDiscard（或非 true）一律不視為可棄置。
+  for (const card of [handCard, { zone: 'hand', hasToggle: false, hasDiscard: false }, { zone: 'hand', hasToggle: false, hasDiscard: 'yes' }]) {
+    assert.deepEqual(C.routeAction(cardCtx(card), X), { cmd: 'cardMode', mode: 'resource' });
+  }
+  assert.equal(C.routeAction(cardCtx({ zone: 'purchase', hasToggle: true, hasDiscard: true }), X), null, 'never outside the hand');
+  assert.equal(C.routeAction(cardCtx(aid, { hasFocus: false }), X), null);
+  assert.equal(C.routeAction(cardCtx(aid, { scopeKind: 'modal' }), X), null, 'never from inside a modal');
+});
+
+test('hand card B never discards: support cards keep the generic cancel semantics', () => {
+  const aid = { zone: 'hand', hasToggle: false, hasDiscard: true };
+  assert.equal(C.routeAction(cardCtx(aid), { name: 'cancel' }), null);
+  assert.deepEqual(C.routeAction(cardCtx(aid, { cancelAvailable: true }), { name: 'cancel' }), { cmd: 'cancel' });
+  assert.deepEqual(C.routeAction(cardCtx(aid, { scopeKind: 'modal', cancelAvailable: true }), { name: 'cancel' }), { cmd: 'cancel' });
+});
+
 test('non-hand card focus: X is a full no-op; Y is a no-op except the purchase-card buy flow', () => {
   for (const card of [buyCard, { zone: 'discard', hasToggle: false }]) assert.equal(C.routeAction(cardCtx(card), X), null, card.zone);
   assert.equal(C.routeAction(cardCtx({ zone: 'discard', hasToggle: false }), Y), null);
@@ -759,4 +901,37 @@ test('hand-card 資源/行動/棄置, hint bar, faction ability and card checkbo
 
 test('B on a focused purchase card toggles; disabled-checkbox handling stays in the UI (core still routes cardToggle)', () => {
   assert.deepEqual(C.routeAction(cardCtx({ zone: 'purchase', hasToggle: true }), { name: 'cancel' }), { cmd: 'cardToggle' });
+});
+
+test('Joy-Con help button focus: A opens the help image, B does nothing, R/SR keep cycling, SL still opens the focus menu', () => {
+  for (const scopeKind of ['page', 'map']) {
+    const ctx = { scopeKind, hasFocus: true, helpEntry: true, card: null, cancelAvailable: scopeKind === 'map', sectionsLocked: false };
+    assert.deepEqual(C.routeAction(ctx, { name: 'confirm' }), { cmd: 'openHelp' }, scopeKind);
+    assert.equal(C.routeAction(ctx, { name: 'cancel' }), null, `${scopeKind}: B never cancels a map flow from the help button`);
+    assert.deepEqual(C.routeAction(ctx, { name: 'nextSection' }), { cmd: 'section', step: 1 });
+    assert.deepEqual(C.routeAction(ctx, { name: 'prevSection' }), { cmd: 'section', step: -1 });
+    assert.deepEqual(C.routeAction(ctx, { name: 'focusMenu' }), { cmd: 'focusMenu' }, 'global SL town focus unchanged');
+    assert.deepEqual(C.routeAction(ctx, { name: 'move', dir: 'down' }), { cmd: 'move', dir: 'down' });
+  }
+  // 沒有 helpEntry 時一般焦點不變。
+  assert.deepEqual(C.routeAction({ scopeKind: 'page', hasFocus: true }, { name: 'confirm' }), { cmd: 'activate' });
+  // 方向焦點永遠不落在說明按鈕上（只由 R／SR 環到達）。
+  assert.equal(C.isDirectionalExcluded({ helpEntry: true }), true);
+  assert.equal(C.buildFocusSet([{ key: 'h', scope: 'page', visible: true, helpEntry: true }], 'page').length, 0);
+});
+
+test('Joy-Con help image modal is a scope lock: B closes via the close button; R/SR, SL, ZR, X never pass through', () => {
+  const scope = C.MODAL_SCOPES.find(s => s.id === 'joyconHelpModal');
+  assert.ok(scope);
+  assert.deepEqual(scope.cancel, ['#joyconHelpCloseBtn']);
+  assert.equal(C.resolveModalScope(['joyconHelpModal']).id, 'joyconHelpModal');
+  // 說明圖蓋在一般頁面上：它優先於事件卡／時代關卡等（R／SR 可離開的）說明 modal。
+  assert.equal(C.resolveModalScope(['eraAchievementModal', 'joyconHelpModal']).id, 'joyconHelpModal');
+  const ctx = { scopeKind: 'modal', hasFocus: true, cancelAvailable: true, helpEntry: false };
+  assert.deepEqual(C.routeAction(ctx, { name: 'cancel' }), { cmd: 'cancel' });
+  for (const name of ['nextSection', 'prevSection', 'focusMenu', 'mapZoom', 'focusTurnBar']) {
+    assert.equal(C.routeAction(ctx, { name }), null, name);
+  }
+  // 即使 helpEntry 旗標殘留，modal 內 A 也不會再開一次（照一般 modal 的 activate）。
+  assert.deepEqual(C.routeAction({ ...ctx, helpEntry: true }, { name: 'confirm' }), { cmd: 'activate' });
 });

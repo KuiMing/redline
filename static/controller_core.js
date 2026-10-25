@@ -161,7 +161,7 @@
 
   // ---------------------------------------------------------------- logical actions / router
 
-  // SL＝聚焦選單（兩種顯示模式相同；只移動焦點，不執行任何遊戲操作）。
+  // SL＝全域地圖聚焦選單（兩種顯示模式相同；只改地圖相機與焦點標示，不執行任何遊戲操作）。
   // ZR＝戰略地圖放大一級、最大後回到最小（兩種顯示模式相同；只改地圖視角，其他 scope 完全 no-op）。
   const BUTTON_ACTIONS = Object.freeze({
     A: 'confirm', B: 'cancel', R: 'nextSection', SR: 'prevSection', X: 'focusTurnBar', Y: 'toggleHelp', SL: 'focusMenu', ZR: 'mapZoom',
@@ -176,13 +176,14 @@
 
   /**
    * context router。ctx: {scopeKind:'modal'|'map'|'page', hasFocus, cancelAvailable, sectionsLocked,
-   *   card?: {zone, hasToggle} | null,   // 焦點位於卡牌元素內時的描述
+   *   card?: {zone, hasToggle, hasDiscard?} | null,   // 焦點位於卡牌元素內時的描述；hasDiscard＝手牌有既有「棄置」控制（一般奧援）
    *   mapTarget?: boolean,               // 焦點是地圖 snapshot 的城鎮目標（不是地圖按鈕）
    *   focusMenuOpen?: boolean}           // 目前的 modal 就是 SL 聚焦選單
    * 卡牌焦點：A = 查看預覽（絕不執行／選擇／購買）；B = 切換選擇（僅有選擇控制的卡牌，否則維持原本取消）；
-   * 手牌焦點：X = 資源、Y = 行動；購買卡 Y = 既有「購買所選」→ 購買確認單（UI 要求焦點卡已用 B 選擇，不自動選擇）；
+   * 手牌焦點：X = 資源（一般奧援＝既有「棄置」→ 危險確認；紅軍奧援的按鈕是「資源」，仍＝資源）、Y = 行動；B 與其他牌相同（不棄置）；購買卡 Y = 既有「購買所選」→ 購買確認單（UI 要求焦點卡已用 B 選擇，不自動選擇）；
    * 其他卡牌焦點的 X/Y 完全 no-op。地圖城鎮目標的 Y = 該目標的既有地圖操作（建立組織／確認移動／瓦解組織）。
-   * SL = 開啟聚焦選單（page／map scope）；選單開著時 SL = 關閉（同 B）；其他 modal 內 SL 不作用（scope lock）。
+   * helpEntry（焦點在導覽列「Joy-Con 說明」按鈕）：A = openHelp（開啟說明圖）、B = null；其餘鍵照非卡牌焦點。
+   * SL = 開啟聚焦選單（page／map scope；不需要 pending choice 或焦點）；選單開著時 SL = 關閉（同 B）；其他 modal 內 SL 不作用（scope lock）。
    * 聚焦選單內只有方向、A（選取選項）、B（關閉）與 SL 有作用。
    * ZR = 戰略地圖縮放循環：只在 map scope（與焦點無關）；page、任何 modal（含聚焦選單）一律 null。
    * 其餘非卡牌焦點的 X/Y 維持原行為。回傳要執行的 command 或 null（null = 靜默忽略）。
@@ -199,15 +200,21 @@
       case 'mapZoom': return ctx.scopeKind === 'map' && !ctx.focusMenuOpen ? { cmd: 'mapZoom' } : null;
       case 'move': return { cmd: 'move', dir: logical.dir };
       case 'confirm':
+        // 焦點停在「Joy-Con 說明」按鈕（ctx.helpEntry，R／SR 環的額外焦點）：A 才開啟說明圖。
+        if (ctx.helpEntry && !modal) return { cmd: 'openHelp' };
         if (!ctx.hasFocus) return null;
         return card ? { cmd: 'cardPreview' } : { cmd: 'activate' };
       case 'cancel':
+        if (ctx.helpEntry && !modal) return null; // 說明按鈕上的 B 不作用（不取消地圖選取等其他流程）
         if (ctx.hasFocus && card && card.hasToggle) return { cmd: 'cardToggle' };
         return ctx.cancelAvailable ? { cmd: 'cancel' } : null;
       case 'nextSection': return modal || ctx.sectionsLocked ? null : { cmd: 'section', step: 1 };
       case 'prevSection': return modal || ctx.sectionsLocked ? null : { cmd: 'section', step: -1 };
       case 'focusTurnBar':
-        if (card) return onHand && ctx.hasFocus && !modal ? { cmd: 'cardMode', mode: 'resource' } : null;
+        if (card) {
+          if (!onHand || !ctx.hasFocus || modal) return null;
+          return card.hasDiscard === true ? { cmd: 'cardDiscard' } : { cmd: 'cardMode', mode: 'resource' };
+        }
         return modal || ctx.sectionsLocked ? null : { cmd: 'focusTurnBar' };
       case 'toggleHelp':
         if (ctx.focusMenuOpen) return null;
@@ -232,6 +239,8 @@
     { id: 'lrConfirmModal', cancel: ['#lrConfirmCancelBtn'], initial: '#lrConfirmCancelBtn' },
     { id: FOCUS_MENU_MODAL_ID, cancel: ['#lrFocusMenuClose'], initial: '.lr-focus-option' },
     { id: 'victoryArtViewer', cancel: ['#victoryArtViewerClose'] },
+    // Joy-Con 說明圖：scope lock（R／SR、SL、ZR、X、Capture、+ 都不穿透）；B 點既有關閉 ×，焦點由 controller_ui 還原到說明按鈕。
+    { id: 'joyconHelpModal', cancel: ['#joyconHelpCloseBtn'], initial: '#joyconHelpCloseBtn' },
     { id: 'cardPreviewModal', cancel: ['self'] },
     { id: 'eventRevealModal', cancel: ['self'] },
     { id: 'unavailableActionModal', cancel: ['#closeUnavailableActionModalBtn'] },
@@ -241,7 +250,7 @@
     { id: 'choiceModal', cancel: ['#closeChoiceModal'] },
     { id: 'eraAchievementModal', cancel: ['#eraAchievementMinimizeBtn'] },
     { id: 'victoryModal', cancel: [] },
-    { id: 'factionPicker', cancel: ['#closeFactionPickerBtn'] },
+    { id: 'factionPicker', cancel: ['#closeFactionPickerBtn'], initial: '#factionList .faction-choice-btn' },
   ]);
 
   /** visibleIds：目前可見的 modal id 集合。回傳最高優先權的 scope 定義，或 null。 */
@@ -252,12 +261,13 @@
 
   /**
    * 方向焦點只停在內容資料（桌面與客廳兩種顯示模式相同）。下列既有控制一律排除，改由專用鍵或 R／SR 操作（滑鼠照常可用）：
-   * 手牌內的資源／行動／棄置鈕（整張手牌 X／Y／B）、購買卡選擇控制（B）、六個全域分頁（R／SR）、
+   * 手牌內的資源／行動／棄置鈕（整張手牌 X／Y；一般奧援的棄置＝X）、購買卡選擇控制（B）、六個全域分頁（R／SR）、
    * 回合列：結束行動／紅軍能力（Capture）、按鍵提示列、陣營能力發動鈕（PLUS）。描述不明 → 排除（fail-closed）。
    */
   function isDirectionalExcluded(d) {
     if (!d || typeof d !== 'object') return true;
-    return !!(d.handAction || d.cardCheckbox || d.sectionTab || d.turnControl || d.hintBar || d.factionAbility);
+    // helpEntry＝導覽列「Joy-Con 說明」按鈕：只由 R／SR 環聚焦（額外焦點，不是區段），方向鍵不會落在上面。
+    return !!(d.handAction || d.cardCheckbox || d.sectionTab || d.turnControl || d.hintBar || d.factionAbility || d.helpEntry);
   }
 
   function isFocusableCandidate(c) {
@@ -316,9 +326,10 @@
   const MAP_SCOPES = Object.freeze(['none', 'choice', 'move']);
   const MAP_ROLES = Object.freeze(['choice', 'move', 'origin']);
   const MAP_BUTTON_IDS = Object.freeze(['directBuildBtn', 'confirmMoveBtn', 'dissolveBtn', 'cancelDissolveChoiceBtn']);
-  const MAP_COMMANDS = Object.freeze(['snapshot', 'focus', 'clearFocus', 'activate', 'button', 'cancel', 'act', 'zoom']);
-  // 一律要帶合法 req 的指令（指令與 result 都是）：地圖 Y（act）與 ZR 縮放（zoom）只在對上 req 的 ok:true 後才算執行。
-  const MAP_REQ_REQUIRED = Object.freeze(['act', 'zoom']);
+  const MAP_COMMANDS = Object.freeze(['snapshot', 'focus', 'focusTown', 'clearFocus', 'activate', 'button', 'cancel', 'act', 'zoom']);
+  // 一律要帶合法 req 的指令（指令與 result 都是）：地圖 Y（act）、ZR 縮放（zoom）與 SL 全域聚焦（focusTown）
+  // 只在對上 req 的 ok:true 後才算執行。
+  const MAP_REQ_REQUIRED = Object.freeze(['act', 'zoom', 'focusTown']);
   // 客廳模式地圖 Y：目標的既有主要操作 → 執行它的既有按鈕（建立組織／確認移動／瓦解組織）。
   const MAP_ACTS = Object.freeze({ build: 'directBuildBtn', move: 'confirmMoveBtn', dissolve: 'dissolveBtn' });
   const MAP_ACT_BUTTON_IDS = Object.freeze(Object.values(MAP_ACTS));
@@ -328,6 +339,22 @@
   //   min 2：整個遊戲範圍（溫哥華～奧克蘭）在戰略地圖內可見的最遠層級，也是地圖樣式 zoomProgress 的起點；
   //   max 10：陣營標籤開始顯示的層級（leaflet_game_map_logic.js FACTION_LABEL_MIN_ZOOM），最密集的城鎮也能分辨。
   const MAP_ZOOM_CYCLE = Object.freeze({ min: 2, max: 10 });
+  // SL 全域地圖聚焦的固定近景層級：9（使用者決定；比 ZR 循環最大層級 10 低一級，與開局根據地視角同級，陣營標籤仍是短標籤）。
+  // 與 MAP_ZOOM_CYCLE 互相獨立：之後按 ZR 從 9 放大一級到 10，再一次回到最小層級。
+  const MAP_FOCUS_ZOOM = 9;
+
+  /**
+   * SL 聚焦要套用的整數層級：固定 MAP_FOCUS_ZOOM，Leaflet maxZoom 較小時取 maxZoom（向下取整，絕不超過）。
+   * 不是數字、上限低於下限，或下限高於聚焦層級（無法同時滿足）→ null（fail closed，不動相機）。
+   */
+  function mapFocusZoom(leafletMin, leafletMax, preferred = MAP_FOCUS_ZOOM) {
+    if (![leafletMin, leafletMax, preferred].every(v => typeof v === 'number' && !Number.isNaN(v))) return null;
+    if (!Number.isInteger(preferred) || preferred < 0) return null;
+    const min = Math.ceil(Math.max(0, leafletMin));
+    const zoom = Math.min(preferred, Math.floor(leafletMax));
+    if (!Number.isFinite(min) || !Number.isFinite(zoom) || zoom < min) return null;
+    return zoom;
+  }
 
   /** Leaflet min／max 與循環範圍的交集（只取整數層級）；不是數字、沒有交集或不足兩級 → null（fail closed）。 */
   function mapZoomBounds(leafletMin, leafletMax, range = MAP_ZOOM_CYCLE) {
@@ -382,6 +409,11 @@
 
   function isShortString(v, max = 64) { return typeof v === 'string' && v.length > 0 && v.length <= max; }
   function isCoord(v) { return typeof v === 'number' && Number.isFinite(v) && Math.abs(v) < 100000; }
+  // 地圖目標的座標是 iframe 內的 Leaflet container 座標，畫面外的目標可以離中心很遠：思想家（無視距離建立）的候選遍布全圖
+  // （含沒有陣營標籤的北美城鎮）：SL 聚焦利雅德（MAP_FOCUS_ZOOM 9）時北美目標約 6 萬 px，之後 ZR 放大到循環最大層級 10 約 12 萬 px。
+  // 沿用按鈕的 10 萬上限會讓整份 snapshot 作廢、parent 失去全部地圖目標（控制器完全不能操作）。上限＝256px 圖磚在 zoom 22 的世界寬度，只擋 NaN／Infinity 與不可能的值。
+  const MAP_POINT_LIMIT = 256 * 2 ** 22;
+  function isMapPoint(v) { return typeof v === 'number' && Number.isFinite(v) && Math.abs(v) < MAP_POINT_LIMIT; }
   const MOVE_MODES = Object.freeze(['road', 'rail']);
   // 以存在與否判斷而非 truthiness：0 視為合法值保留，只排除負數、非整數與不合理大值。
   function isMoveCost(v) { return Number.isInteger(v) && v >= 0 && v <= 20; }
@@ -400,9 +432,12 @@
     return true;
   }
 
-  // SL 聚焦選單的分組資料（snapshot 選用欄位 groupMeta 的版本）：每個目標帶 canonical 地圖資料的
+  // 目標分組資料（snapshot 選用欄位 groupMeta 的版本）：每個目標帶 canonical 地圖資料的
   // 統治者（ruler，至少 1 個）與陣營區域（camp，即發展空間標籤，可為空）清單。版本不符、缺欄位或格式不合一律整份作廢。
   const MAP_GROUP_META_VERSION = 1;
+  // SL 全域聚焦選單的完整 canonical 城鎮清單（snapshot 選用欄位 browseMeta 的版本＋browseTowns）：與 action targets 分離，
+  // 每個城鎮同樣帶 ruler／camp。宣告版本卻缺清單、沒宣告卻帶清單、重複城鎮或任一城鎮資料不合 → 整份 snapshot 作廢。
+  const MAP_BROWSE_META_VERSION = 1;
   const GROUP_LIMITS = Object.freeze({ ruler: { min: 1, max: 8 }, camp: { min: 0, max: 16 } });
 
   /**
@@ -438,11 +473,15 @@
     if (!Array.isArray(data.targets) || data.targets.length > 400) return null;
     if (!Array.isArray(data.buttons) || data.buttons.length > MAP_BUTTON_IDS.length) return null;
     if (isPresent(data.groupMeta) && data.groupMeta !== MAP_GROUP_META_VERSION) return null;
+    if (isPresent(data.browseMeta) && data.browseMeta !== MAP_BROWSE_META_VERSION) return null;
     const groupMeta = data.groupMeta === MAP_GROUP_META_VERSION;
+    const browseMeta = data.browseMeta === MAP_BROWSE_META_VERSION;
+    if (browseMeta !== Array.isArray(data.browseTowns)) return null;
+    if (browseMeta && (data.browseTowns.length < 1 || data.browseTowns.length > 400)) return null;
     if (isPresent(data.req) && !isRequestId(data.req)) return null;
     const targets = [];
     for (const t of data.targets) {
-      if (!t || !isShortString(t.town) || !MAP_ROLES.includes(t.role) || !isCoord(t.x) || !isCoord(t.y)) return null;
+      if (!t || !isShortString(t.town) || !MAP_ROLES.includes(t.role) || !isMapPoint(t.x) || !isMapPoint(t.y)) return null;
       const target = { town: t.town, role: t.role, x: t.x, y: t.y };
       if (t.role === 'move' && !sanitizeMoveMeta(t, target)) return null;
       if (isPresent(t.act)) {
@@ -466,6 +505,17 @@
         || !isCoord(b.w) || !isCoord(b.h)) return null;
       buttons.push({ id: b.id, label: b.label, x: b.x, y: b.y, w: b.w, h: b.h });
     }
+    const browseTowns = [];
+    const browseNames = new Set();
+    if (browseMeta) {
+      for (const t of data.browseTowns) {
+        if (!t || !isShortString(t.town) || browseNames.has(t.town)) return null;
+        const meta = townGroupMeta(t);
+        if (!meta) return null;
+        browseNames.add(t.town);
+        browseTowns.push({ town: t.town, ruler: meta.ruler, camp: meta.camp });
+      }
+    }
     const focusTown = data.focusTown === null || data.focusTown === undefined ? null : data.focusTown;
     if (focusTown !== null && !isShortString(focusTown)) return null;
     const selected = isPresent(data.selected) ? data.selected : null;
@@ -487,9 +537,20 @@
       selected,
       pending,
       groupMeta: groupMeta ? MAP_GROUP_META_VERSION : null,
+      browseMeta: browseMeta ? MAP_BROWSE_META_VERSION : null,
+      browseTowns,
       // 回應帶 req 的 snapshot 指令時原樣帶回（聚焦選單只用對上自己 req 的那一份）；一般推送為 null。
       req: isPresent(data.req) ? data.req : null,
     };
+  }
+
+  /**
+   * snapshot 的地圖目標集合簽章（scope＋每個目標的 role／town；不含隨相機改變的座標）。SL 瀏覽焦點只在簽章不變時保留：
+   * 目標改變（例如新的 pending choice 或換人行動）就交回既有規則，把焦點放到地圖目標。沒有 snapshot → null。
+   */
+  function mapTargetsSig(snap) {
+    if (!snap || !Array.isArray(snap.targets)) return null;
+    return JSON.stringify([snap.scope, snap.targets.map(t => [t.role, t.town])]);
   }
 
   // 執行型指令的 request id：parent 產生、iframe 原樣回傳，用來把 result 對應回唯一一次送出。
@@ -499,7 +560,7 @@
   function sanitizeMapCommand(data) {
     if (!data || data.v !== MAP_MESSAGE_VERSION || data.type !== 'redline-controller-command') return null;
     if (!MAP_COMMANDS.includes(data.cmd)) return null;
-    if (['focus', 'activate', 'act'].includes(data.cmd) && !isShortString(data.town)) return null;
+    if (['focus', 'focusTown', 'activate', 'act'].includes(data.cmd) && !isShortString(data.town)) return null;
     if (data.cmd === 'button' && !MAP_BUTTON_IDS.includes(data.id)) return null;
     if (data.cmd === 'act' && !MAP_ACT_BUTTON_IDS.includes(data.id)) return null;
     // act／zoom 一律等 correlated ack；沒有合法 req 的 act／zoom 不可執行（parent 會把 req:null 視為 stale）。
@@ -727,6 +788,30 @@
     return available.length === 1 ? { type: 'claim', controller: available[0].id } : null;
   }
 
+  /**
+   * 起始畫面的導覽手把（只控制開始流程的既有按鈕；不是玩家席位、不存成手把偏好）。roster＝已通過 sanitizeRoster 的清單。
+   * 有訊號的手把恰好一支、且沒有其他分頁使用（未被擁有或就是本分頁）→ 它的 id。沒有清單、沒有或超過一支有訊號、
+   * 唯一那支被其他分頁使用 → null（fail closed，不猜）。已登錄但 stale 的手把不算（與 autoClaimDecision 相同）。
+   */
+  function startNavCandidate(roster) {
+    if (!roster || !Array.isArray(roster.controllers)) return null;
+    const active = roster.controllers.filter(c => c && c.status === 'active');
+    if (active.length !== 1) return null;
+    const c = active[0];
+    return isControllerId(c.id) && (c.owner === null || c.owner === 'you') ? c.id : null;
+  }
+
+  /**
+   * 起始畫面導覽的 claim 決策。owned＝本分頁目前擁有的手把 id（或 null）。
+   * 擁有的不是候選（多支、stale、消失、清單變了）→ release；沒有擁有且有候選 → claim；其餘 null。
+   */
+  function startNavDecision(roster, owned) {
+    const want = startNavCandidate(roster);
+    if (owned && owned !== want) return { type: 'release' };
+    if (!owned && want) return { type: 'claim', controller: want };
+    return null;
+  }
+
   function bridgeHello() { return { type: 'hello', v: BRIDGE_PROTOCOL_VERSION }; }
 
   const SIDE_LABELS = Object.freeze({ left: '左 Joy-Con', right: '右 Joy-Con' });
@@ -817,8 +902,8 @@
 
   return {
     DEFAULT_BRIDGE_URL, DEFAULT_CONFIG, BUTTON_BITS, BUTTON_ALT_BITS, BUTTON_NAMES, BUTTON_ACTIONS, MODAL_SCOPES, FOCUS_MENU_MODAL_ID,
-    MAP_MESSAGE_VERSION, MAP_GROUP_META_VERSION, MAP_BUTTON_IDS, MAP_COMMANDS, MAP_RESULT_VIA, MAP_ACTS, mapTargetAct, townGroupMeta, sanitizeGroupNames, isRequestId,
-    MAP_ZOOM_CYCLE, mapZoomBounds, nextMapZoom,
+    MAP_MESSAGE_VERSION, MAP_GROUP_META_VERSION, MAP_BROWSE_META_VERSION, MAP_BUTTON_IDS, MAP_COMMANDS, MAP_RESULT_VIA, MAP_ACTS, mapTargetAct, townGroupMeta, sanitizeGroupNames, isRequestId,
+    MAP_ZOOM_CYCLE, MAP_FOCUS_ZOOM, MAP_POINT_LIMIT, mapZoomBounds, nextMapZoom, mapFocusZoom, mapTargetsSig,
     decodeButtonBytes, parseButtons, normalizeFrame,
     createInputState, resetInputState, reduceFrame, stickDirection, isStale, bridgeInputGate, bridgeConnected,
     logicalAction, routeAction,
@@ -826,7 +911,7 @@
     isTrustedMessage, sanitizeMapSnapshot, sanitizeMapCommand, sanitizeMapResult, buildMapSnapshotModel,
     validateBridgeUrl, normalizeSettings, mixedContentRisk, reconnectDelayMs,
     BRIDGE_PROTOCOL_VERSION, LEGACY_CONTROLLER_ID, isControllerId, sanitizeRoster, sanitizeClaimResult, classifyBridgeMessage,
-    acceptControllerFrame, frameInputKey, stepControllerInput, normalizeClaimPref, autoClaimDecision, bridgeHello,
+    acceptControllerFrame, frameInputKey, stepControllerInput, normalizeClaimPref, autoClaimDecision, startNavCandidate, startNavDecision, bridgeHello,
     controllerDisplayNames, controllerDisplayName, controllerLabel, bindingBadge, sideKeyLegend, claimReasonText, lostReasonText,
   };
 });

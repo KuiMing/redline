@@ -9,7 +9,10 @@ main.py, not a rewrite — nothing about the logic changed.
 
 import json
 import secrets
+import threading
+import time
 import uuid
+from collections import OrderedDict
 from pathlib import Path
 
 from fastapi import APIRouter
@@ -38,6 +41,10 @@ lobby_ai_red_army = {}  # {game_id: bool} — host-owned toggle; see set_ai_red_
 
 lobby_control_mode = {}  # {game_id: "computer" | "joycon"} — fixed by the creator at /create
 lobby_joycon_count = {}  # {game_id: int 1..4 | None} — controllers paired before the room existed
+lobby_create_requests = OrderedDict()  # {request id: (created_at, canonical payload, create response)}
+_lobby_create_lock = threading.Lock()
+CREATE_REQUEST_TTL_SECONDS = 15 * 60
+CREATE_REQUEST_CACHE_MAX = 512
 
 # A synthetic "virtual seat" player_id prefix used only inside start_game()
 # when lobby_ai_red_army[game_id] is True — never written into `lobby`,
@@ -86,17 +93,59 @@ def _parse_create_settings(payload: dict):
     }, None
 
 
+def _prune_create_requests(now: float) -> None:
+    """Drop expired credential-bearing replay records in insertion order."""
+    while lobby_create_requests:
+        _, (created_at, _, _) = next(iter(lobby_create_requests.items()))
+        if now - created_at <= CREATE_REQUEST_TTL_SECONDS:
+            break
+        lobby_create_requests.popitem(last=False)
+
+
 @router.post("/create")
 def create_room(payload: dict = None):
-    settings, error = _parse_create_settings(payload or {})
+    payload = payload or {}
+    settings, error = _parse_create_settings(payload)
     if error:
         return {"error": error}
+    assert settings is not None
+    request_id = payload.get("create_request_id")
+    if request_id is not None:
+        if not isinstance(request_id, str) or not 16 <= len(request_id) <= 200:
+            return {"error": "Invalid create request id"}
+        signature = json.dumps({
+            "name": str(payload.get("name") or "").strip(),
+            "device_id": str(payload.get("device_id") or "").strip(),
+            **settings,
+        }, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+        # The lookup and room creation are one critical section. Concurrent retries
+        # with the same high-entropy key can therefore create only one room.
+        with _lobby_create_lock:
+            now = time.monotonic()
+            _prune_create_requests(now)
+            previous = lobby_create_requests.get(request_id)
+            if previous:
+                _, previous_signature, previous_response = previous
+                if previous_signature != signature:
+                    return {"error": "Create request payload conflict"}
+                return dict(previous_response)
+            # Capacity eviction applies only to a genuinely new request. A replay
+            # at capacity must be served before its oldest record can be evicted.
+            while len(lobby_create_requests) >= CREATE_REQUEST_CACHE_MAX:
+                lobby_create_requests.popitem(last=False)
+            response = _create_room(payload, settings)
+            lobby_create_requests[request_id] = (now, signature, dict(response))
+            return response
+    return _create_room(payload, settings)
+
+
+def _create_room(payload: dict, settings: dict):
     game_id = manager.create_room()
     host_id = str(uuid.uuid4())
 
     # 建房者的「行動代號」以前被無聲忽略（永遠叫 host）；現在採用前端帶來的名字，
     # 空值才 fallback 成 host（2026-07-18 自動桌測發現，2026-07-19 修正）。
-    host_name = str((payload or {}).get("name") or "").strip() or "host"
+    host_name = str(payload.get("name") or "").strip() or "host"
     lobby[game_id] = [(host_id, host_name)]  # host is immediately in lobby
     lobby_hosts[game_id] = host_id
     lobby_factions[game_id] = {}
@@ -106,7 +155,7 @@ def create_room(payload: dict = None):
     lobby_ai_red_army[game_id] = settings["ai_red_army"]
     lobby_control_mode[game_id] = settings["control_mode"]
     lobby_joycon_count[game_id] = settings["joycon_count"]
-    device_id = str((payload or {}).get("device_id") or "").strip()
+    device_id = str(payload.get("device_id") or "").strip()
     resume_token = secrets.token_urlsafe(32)
     lobby_player_credentials[game_id] = {
         host_id: {"device_id": device_id, "resume_token": resume_token}
@@ -209,17 +258,29 @@ def _required_faction_for_player(game_id: str, player_id: str):
     return None
 
 
-def _host_token_valid(game_id: str, player_id, payload: dict) -> bool:
-    """Host mutations must prove ownership of the host seat. Fail closed: a seat
-    with no stored credential is rejected, so the public host_id alone is never
-    enough and every room must be built through /create."""
+def _player_token_valid(game_id: str, player_id, payload: dict) -> bool:
+    """A seat mutation must prove ownership of that seat. Fail closed: a seat
+    with no stored credential is rejected, so a public player_id alone (the
+    /lobby payload exposes them) is never enough."""
+    if not isinstance(game_id, str) or not isinstance(player_id, str):
+        return False
     credential = lobby_player_credentials.get(game_id, {}).get(player_id)
     if not credential:
         return False
-    supplied = str(payload.get("resume_token") or "").strip()
-    return bool(supplied) and secrets.compare_digest(
-        supplied, str(credential.get("resume_token") or "")
-    )
+    supplied = payload.get("resume_token")
+    expected = credential.get("resume_token")
+    if not isinstance(supplied, str) or not isinstance(expected, str):
+        return False
+    supplied = supplied.strip()
+    if not supplied or not expected:
+        return False
+    # Encode to bytes: compare_digest raises TypeError on non-ASCII str.
+    return secrets.compare_digest(supplied.encode("utf-8"), expected.encode("utf-8"))
+
+
+def _host_token_valid(game_id: str, player_id, payload: dict) -> bool:
+    """Host mutations must prove ownership of the host seat (see _player_token_valid)."""
+    return _player_token_valid(game_id, player_id, payload)
 
 
 @router.post("/market-mode")
@@ -425,6 +486,9 @@ def choose_faction(payload: dict):
     if player_id not in [pid for pid, _ in lobby[game_id]]:
         return {"error": "Player not found in lobby"}
 
+    if not _player_token_valid(game_id, player_id, payload):
+        return {"error": "Invalid player credentials"}
+
     if faction_id == 'red_army' and lobby_ai_red_army.get(game_id):
         return {"error": "AI 紅軍已啟用，紅軍席位由電腦控制，玩家不可選擇"}
 
@@ -473,6 +537,8 @@ def set_ready(payload: dict):
         return {"error": "Game not found"}
     if player_id not in [pid for pid, _ in lobby[game_id]]:
         return {"error": "Player not found in lobby"}
+    if not _player_token_valid(game_id, player_id, payload):
+        return {"error": "Invalid player credentials"}
     if is_ready and player_id not in lobby_factions.get(game_id, {}):
         return {"error": "Choose faction before ready"}
 

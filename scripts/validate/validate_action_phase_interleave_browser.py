@@ -35,14 +35,14 @@ def make_formal_game():
     joined = post_json('/join', {'game_id': game_id, 'name': 'ally'})
     ally_id = joined['player_id']
     seats = [
-        (host_id, 'red_army', '北京'),
-        (ally_id, 'hong_kong', '香港城'),
+        (host_id, create['resume_token'], 'red_army', '北京'),
+        (ally_id, joined['resume_token'], 'hong_kong', '香港城'),
     ]
-    for pid, faction_id, base_name in seats:
-        chosen = post_json('/choose-faction', {'game_id': game_id, 'player_id': pid, 'faction_id': faction_id, 'base_name': base_name})
+    for pid, token, faction_id, base_name in seats:
+        chosen = post_json('/choose-faction', {'game_id': game_id, 'player_id': pid, 'resume_token': token, 'faction_id': faction_id, 'base_name': base_name})
         if chosen.get('error'):
             raise AssertionError(chosen)
-        ready = post_json('/ready', {'game_id': game_id, 'player_id': pid, 'ready': True})
+        ready = post_json('/ready', {'game_id': game_id, 'player_id': pid, 'resume_token': token, 'ready': True})
         if ready.get('error'):
             raise AssertionError(ready)
     started = post_json('/start', {'game_id': game_id, 'player_id': host_id, 'resume_token': create['resume_token'], 'market_mode': 'sample_53'})

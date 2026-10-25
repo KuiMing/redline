@@ -33,12 +33,14 @@ def main():
         created = api(page, '/create', {'name': 'Host', 'device_id': 'proof-host'})
         game_id = created['game_id']
         player_ids = [created['host_id']]
+        tokens = [created['resume_token']]
         for index in range(1, 3):
             joined = api(page, '/join', {'game_id': game_id, 'name': f'Player {index + 1}', 'device_id': f'proof-{index}'})
             player_ids.append(joined['player_id'])
-        for pid, faction, base in zip(player_ids, ['taiwan_green', 'hong_kong', 'manchuria'], ['臺北', '香港城', '東京']):
+            tokens.append(joined['resume_token'])
+        for pid, token, faction, base in zip(player_ids, tokens, ['taiwan_green', 'hong_kong', 'manchuria'], ['臺北', '香港城', '東京']):
             # Base uniqueness is irrelevant until start; choose-faction accepts canonical faction bases.
-            result = api(page, '/choose-faction', {'game_id': game_id, 'player_id': pid, 'faction_id': faction, 'base_name': base})
+            result = api(page, '/choose-faction', {'game_id': game_id, 'player_id': pid, 'resume_token': token, 'faction_id': faction, 'base_name': base})
             if result.get('error'):
                 raise RuntimeError(result)
 
@@ -59,18 +61,19 @@ def main():
         record('last_seat_ui_only_enables_red_army', not red['disabled'] and all(button['disabled'] for button in non_red), picker)
         record('last_seat_ui_explains_forced_red_army', '最後一個席位' in picker['info'] and '只能選擇紅軍' in picker['info'], picker['info'])
 
-        rejected = api(page, '/choose-faction', {'game_id': game_id, 'player_id': last_id, 'faction_id': 'mongol', 'base_name': '烏蘭巴托'})
+        rejected = api(page, '/choose-faction', {'game_id': game_id, 'player_id': last_id, 'resume_token': joined_last['resume_token'], 'faction_id': 'mongol', 'base_name': '烏蘭巴托'})
         record('server_rejects_non_red_for_last_seat', rejected.get('error') == '房間尚無紅軍；最後一個席位只能選擇紅軍', rejected)
-        accepted = api(page, '/choose-faction', {'game_id': game_id, 'player_id': last_id, 'faction_id': 'red_army', 'base_name': '北京'})
+        accepted = api(page, '/choose-faction', {'game_id': game_id, 'player_id': last_id, 'resume_token': joined_last['resume_token'], 'faction_id': 'red_army', 'base_name': '北京'})
         record('last_seat_can_choose_red_army', accepted.get('success') is True, accepted)
 
         created2 = api(page, '/create', {'name': 'Host2', 'device_id': 'proof-host-2'})
         game2 = created2['game_id']; host2 = created2['host_id']
-        guest2 = api(page, '/join', {'game_id': game2, 'name': 'Guest2', 'device_id': 'proof-guest-2'})['player_id']
-        api(page, '/choose-faction', {'game_id': game2, 'player_id': host2, 'faction_id': 'taiwan_green', 'base_name': '臺北'})
-        api(page, '/choose-faction', {'game_id': game2, 'player_id': guest2, 'faction_id': 'hong_kong', 'base_name': '香港城'})
-        api(page, '/ready', {'game_id': game2, 'player_id': host2, 'ready': True})
-        api(page, '/ready', {'game_id': game2, 'player_id': guest2, 'ready': True})
+        guest2_joined = api(page, '/join', {'game_id': game2, 'name': 'Guest2', 'device_id': 'proof-guest-2'})
+        guest2 = guest2_joined['player_id']
+        api(page, '/choose-faction', {'game_id': game2, 'player_id': host2, 'resume_token': created2['resume_token'], 'faction_id': 'taiwan_green', 'base_name': '臺北'})
+        api(page, '/choose-faction', {'game_id': game2, 'player_id': guest2, 'resume_token': guest2_joined['resume_token'], 'faction_id': 'hong_kong', 'base_name': '香港城'})
+        api(page, '/ready', {'game_id': game2, 'player_id': host2, 'resume_token': created2['resume_token'], 'ready': True})
+        api(page, '/ready', {'game_id': game2, 'player_id': guest2, 'resume_token': guest2_joined['resume_token'], 'ready': True})
         state2 = api(page, f'/lobby/{game2}')
         page.evaluate("""({gameId, playerId, token}) => {
           localStorage.setItem('redline.sessions.v1', JSON.stringify({[gameId]: {game_id:gameId, player_id:playerId, resume_token:token, name:'Host2', saved_at:Date.now()}}));

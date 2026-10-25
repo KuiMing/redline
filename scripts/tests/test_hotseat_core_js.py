@@ -172,7 +172,7 @@ def test_codename_default_is_distinguished_from_user_input_at_submit_time():
     assert "input.dataset.userEdited) return false" in default and "defaultValue" in default
     init = _function_body(app, "async function initLobbyControls() {")
     assert "nameInput.dataset.userEdited = '1'" in init
-    for sig in ("async function createRoom() {", "async function joinRoom() {"):
+    for sig in ("async function createRoom(options) {", "async function joinRoom() {"):
         body = _function_body(app, sig)
         assert body.index("playerNameIsSystemDefault()") < body.index("fetch(")
         assert re.search(r"saveRedlineSession\(\w+, nameAuto\)", body), sig

@@ -44,17 +44,17 @@ def main():
             },
         )
 
-        setup = page.evaluate("""async ({gameId, playerId}) => {
+        setup = page.evaluate("""async ({gameId, playerId, token}) => {
           await fetch('/choose-faction', {
             method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({game_id: gameId, player_id: playerId, faction_id: 'red_army', base_name: '北京'}),
+            body: JSON.stringify({game_id: gameId, player_id: playerId, resume_token: token, faction_id: 'red_army', base_name: '北京'}),
           });
           await fetch('/ready', {
             method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({game_id: gameId, player_id: playerId, ready: true}),
+            body: JSON.stringify({game_id: gameId, player_id: playerId, resume_token: token, ready: true}),
           });
           return true;
-        }""", {'gameId': identity['game_id'], 'playerId': identity['player_id']})
+        }""", {'gameId': identity['game_id'], 'playerId': identity['player_id'], 'token': identity['resume_token']})
         assert setup
 
         page.reload(wait_until='networkidle')
@@ -82,11 +82,11 @@ def main():
           }).then(response => response.json());
           await fetch('/choose-faction', {
             method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({game_id: gameId, player_id: guest.player_id, faction_id: 'hong_kong', base_name: '香港城'}),
+            body: JSON.stringify({game_id: gameId, player_id: guest.player_id, resume_token: guest.resume_token, faction_id: 'hong_kong', base_name: '香港城'}),
           });
           await fetch('/ready', {
             method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({game_id: gameId, player_id: guest.player_id, ready: true}),
+            body: JSON.stringify({game_id: gameId, player_id: guest.player_id, resume_token: guest.resume_token, ready: true}),
           });
           return fetch('/start', {
             method: 'POST', headers: {'Content-Type': 'application/json'},

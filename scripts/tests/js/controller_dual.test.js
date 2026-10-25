@@ -63,6 +63,7 @@ const DESKTOP_CTX = [
   { scopeKind: 'modal', hasFocus: true, cancelAvailable: true },
   { scopeKind: 'modal', hasFocus: true, cancelAvailable: true, focusMenuOpen: true },
   { scopeKind: 'page', hasFocus: true, card: { zone: 'hand', hasToggle: false } },
+  { scopeKind: 'page', hasFocus: true, card: { zone: 'hand', hasToggle: false, hasDiscard: true } },
   { scopeKind: 'page', hasFocus: true, card: { zone: 'purchase', hasToggle: true } },
 ];
 const LR_CTX = [
@@ -312,4 +313,65 @@ test('HUD and hot-seat lobby number the same roster identically (one shared nami
 test('unbound (v2 bridge connected, no controller claimed) drops all input and hides shortcuts', () => {
   assert.equal(C.bridgeInputGate({ enabled: true, status: 'unbound', socketOpen: true, fromBridge: true }), 'drop');
   assert.equal(C.bridgeConnected({ enabled: true, status: 'unbound', socketOpen: true }), false);
+});
+
+test('start-screen nav: exactly one active controller not used by another tab; otherwise fail closed', () => {
+  const sr = (cs, owned = null) => C.sanitizeRoster(roster(cs, owned));
+  // 起始畫面 + 恰好一支有訊號：不用 SL＋SR，直接 claim（決策本身不帶席位、不帶 server 操作）。
+  assert.equal(C.startNavCandidate(sr([ctrl(L1, 'left')])), L1);
+  assert.deepEqual(C.startNavDecision(sr([ctrl(L1, 'left')]), null), { type: 'claim', controller: L1 });
+  assert.deepEqual(Object.keys(C.startNavDecision(sr([ctrl(R1, 'right')]), null)).sort(), ['controller', 'type']);
+  // 已經是本分頁的：不重送。
+  assert.equal(C.startNavDecision(sr([ctrl(L1, 'left', 'active', 'you')], L1), L1), null);
+  // 已登錄但 stale 的其他手把不算（與既有單手把自動 claim 相同）。
+  assert.equal(C.startNavCandidate(sr([ctrl(L1, 'left'), ctrl(R1, 'right', 'stale')])), L1);
+  // 0 支、多支、stale、other-tab、missing（沒有清單）、不合法清單：都不選。
+  assert.equal(C.startNavDecision(sr([]), null), null);
+  assert.equal(C.startNavDecision(sr([ctrl(L1, 'left'), ctrl(R1, 'right')]), null), null);
+  assert.equal(C.startNavDecision(sr([ctrl(L1, 'left'), ctrl(R1, 'right', 'active', 'other')]), null), null);
+  assert.equal(C.startNavDecision(sr([ctrl(L1, 'left', 'stale')]), null), null);
+  assert.equal(C.startNavDecision(sr([ctrl(L1, 'left', 'active', 'other')]), null), null);
+  assert.equal(C.startNavDecision(null, null), null);
+  const invalid = C.sanitizeRoster(roster([{ ...ctrl(L1, 'left'), side: 'right' }]));
+  assert.equal(invalid, null);
+  assert.equal(C.startNavDecision(invalid, null), null);
+  assert.equal(C.startNavCandidate({ controllers: [{ id: 'not-an-id', status: 'active', owner: null }] }), null);
+  // roster 改變：變成多支、該手把 stale、消失、換成另一支 → 撤銷擁有的那支。
+  assert.deepEqual(C.startNavDecision(sr([ctrl(L1, 'left', 'active', 'you'), ctrl(R1, 'right')], L1), L1), { type: 'release' });
+  assert.deepEqual(C.startNavDecision(sr([ctrl(L1, 'left', 'stale', 'you')], L1), L1), { type: 'release' });
+  assert.deepEqual(C.startNavDecision(sr([]), L1), { type: 'release' });
+  assert.deepEqual(C.startNavDecision(sr([ctrl(R1, 'right')]), L1), { type: 'release' });
+  assert.deepEqual(C.startNavDecision(null, L1), { type: 'release' });
+  // 撤銷後恢復成恰好一支：重新 claim（新連線第一筆 frame 仍只當 baseline，由 stepControllerInput 保證）。
+  assert.deepEqual(C.startNavDecision(sr([ctrl(L1, 'left'), ctrl(R1, 'right', 'stale')]), null), { type: 'claim', controller: L1 });
+});
+
+test('start-screen nav: newly claimed or reconnected controller treats held A as baseline only', () => {
+  const p = player(L1, 'left');
+  const A = bytesOf('A');
+  assert.equal(p.deliver(v2frame(L1, 'left', A, 1), 0), true);   // 拿到時已按住 A：baseline
+  assert.equal(p.deliver(v2frame(L1, 'left', A, 1), 30), true);
+  assert.deepEqual(p.fired, []);
+  p.deliver(v2frame(L1, 'left', [0, 0], 1), 60);
+  p.deliver(v2frame(L1, 'left', A, 1), 90);
+  assert.deepEqual(p.fired, [{ type: 'press', button: 'A' }]);
+  // bridge 重連（epoch 改變）時仍按著 A：只當 baseline。
+  p.deliver(v2frame(L1, 'left', A, 2), 120);
+  p.deliver(v2frame(L1, 'left', A, 2), 150);
+  assert.deepEqual(p.fired, [{ type: 'press', button: 'A' }]);
+});
+
+test('Joy-Con help ring: left L／SL after bridge normalization route exactly like right R／SR (incl. on the help button)', () => {
+  const lefts = Object.fromEntries(FIXTURE.inputs.filter(e => e.side === 'left').map(e => [e.physical, e]));
+  const HELP_CTX = { scopeKind: 'page', hasFocus: true, helpEntry: true, card: null, cancelAvailable: false, sectionsLocked: false };
+  for (const [physical, rightName, step] of [['L', 'R', 1], ['SL', 'SR', -1]]) {
+    const left = pressThrough('left', lefts[physical].logical);
+    const right = pressThrough('right', rightName);
+    assert.deepEqual(left, right, physical);
+    assert.deepEqual(C.routeAction(HELP_CTX, C.logicalAction(left[0])), { cmd: 'section', step }, physical);
+  }
+  // A（左＝→）在說明按鈕上開圖；B（左＝↓）不作用；左 SR（＝右 SL）仍是全域城鎮聚焦。
+  assert.deepEqual(C.routeAction(HELP_CTX, C.logicalAction(pressThrough('left', lefts.Right.logical)[0])), { cmd: 'openHelp' });
+  assert.equal(C.routeAction(HELP_CTX, C.logicalAction(pressThrough('left', lefts.Down.logical)[0])), null);
+  assert.deepEqual(C.routeAction(HELP_CTX, C.logicalAction(pressThrough('left', lefts.SR.logical)[0])), { cmd: 'focusMenu' });
 });

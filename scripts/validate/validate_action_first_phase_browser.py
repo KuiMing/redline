@@ -30,13 +30,14 @@ def make_formal_game():
         ('hk', joined['player_id'], 'hong_kong', '香港城'),
     ]
     for name, pid, faction_id, base_name in players:
-        chosen = post_json('/choose-faction', {'game_id': game_id, 'player_id': pid, 'faction_id': faction_id, 'base_name': base_name})
+        token = tokens[name]
+        chosen = post_json('/choose-faction', {'game_id': game_id, 'player_id': pid, 'resume_token': token, 'faction_id': faction_id, 'base_name': base_name})
         if chosen.get('error'):
             raise AssertionError(f'choose {name}: {chosen}')
-        ready = post_json('/ready', {'game_id': game_id, 'player_id': pid, 'ready': True})
+        ready = post_json('/ready', {'game_id': game_id, 'player_id': pid, 'resume_token': token, 'ready': True})
         if ready.get('error'):
             raise AssertionError(f'ready {name}: {ready}')
-    started = post_json('/start', {'game_id': game_id, 'player_id': host_id, 'market_mode': 'sample_53'})
+    started = post_json('/start', {'game_id': game_id, 'player_id': host_id, 'resume_token': tokens['host'], 'market_mode': 'sample_53'})
     if started.get('error'):
         raise AssertionError(started)
     return game_id, {name: pid for name, pid, *_ in players}, tokens

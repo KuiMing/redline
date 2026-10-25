@@ -45,16 +45,11 @@ const selectedPurchaseIndices = new Set();
 // 自己回合主動點「行動」不會取消任何東西，白白浪費這張卡，因此手牌區直接 disable。
 const REACTION_ONLY_ACTION_CARDS = new Set(['爆料黑幕', '產業滲透']);
 
-// 客廳大螢幕模式（html[data-display="living-room"]）：舞台等比縮放後再留 5% title-safe 邊界；
-// 桌面模式維持 1。
-const LIVING_ROOM_SAFE_AREA_SCALE = 0.9;
-
 function resizeStage() {
-  const safeArea = document.documentElement.dataset.display === 'living-room' ? LIVING_ROOM_SAFE_AREA_SCALE : 1;
   const scale = Math.min(
     window.innerWidth / 1280,
     window.innerHeight / 720
-  ) * safeArea;
+  );
   document.documentElement.style.setProperty('--stage-scale', String(scale));
   document.documentElement.style.setProperty('--stage-left', `${Math.max(0, (window.innerWidth - 1280 * scale) / 2)}px`);
   document.documentElement.style.setProperty('--stage-top', `${Math.max(0, (window.innerHeight - 720 * scale) / 2)}px`);
@@ -372,7 +367,7 @@ async function toggleReady() {
   const res = await fetch('/ready', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ game_id: gameId, player_id: playerId, ready: nextReady })
+    body: JSON.stringify({ game_id: gameId, player_id: playerId, resume_token: resumeToken, ready: nextReady })
   });
   const data = await res.json();
   if (data.error) {
@@ -682,7 +677,8 @@ window.RedlineSession = {
   current: () => {
     const saved = gameId ? storedRedlineSessions()[gameId] : null;
     const nameAuto = !!saved && saved.player_id === playerId && saved.name_auto === true;
-    return {gameId, playerId, resumeToken, started: !!ws, lobby: latestLobbyState, nameAuto};
+    const name = saved && saved.player_id === playerId ? String(saved.name || '') : '';
+    return {gameId, playerId, resumeToken, started: !!ws, lobby: latestLobbyState, nameAuto, name};
   },
 };
 
@@ -729,28 +725,48 @@ async function loadCardPresentationCatalog() {
   return cardPresentationCatalog;
 }
 
-// 房間已建立之後的步驟：Joy-Con 多席位配置成功才進入陣營畫面；失敗時保留配對與房間，再按「建立作戰室」只重試配置。
-async function enterCreatedRoom() {
+// 房間已建立之後的步驟：Joy-Con 多席位配置成功才進陣營畫面；失敗時保留配對與房間，只重試配置（不再建立新房間）。
+// 回傳 { ok, error? }；按鈕呼叫端忽略回傳值，Joy-Con 自動流程據此顯示可重試的狀態。
+async function enterCreatedRoom(isCurrent) {
+  const cancelled = () => typeof isCurrent === 'function' && !isCurrent();
+  if (cancelled()) return { ok: false, cancelled: true };
   const provisioned = await window.RedlineStartFlow?.afterCreate?.(gameId);
+  if (cancelled()) return { ok: false, cancelled: true };
   if (provisioned && provisioned.ok === false) {
-    updateLobbyStatus(provisioned.error || 'Joy-Con 席位建立失敗，請再按「建立作戰室」重試。');
-    return false;
+    const error = provisioned.error || 'Joy-Con 席位建立失敗，請重試。';
+    updateLobbyStatus(error);
+    return { ok: false, error };
   }
-  await openFactionPickerModal();
+  const opened = await openFactionPickerModal();
+  if (cancelled()) {
+    closeFactionPickerModal();
+    return { ok: false, cancelled: true };
+  }
+  if (!opened) {
+    const error = '無法開啟陣營選擇，請重試。';
+    updateLobbyStatus(error);
+    return { ok: false, error };
+  }
+  window.RedlineStartFlow?.entered?.(gameId);
   updateLobbyStatus(lobbyTransientStatus);
-  return true;
+  return { ok: true };
 }
 
-async function createRoom() {
-  // 上一次只差 Joy-Con 席位配置失敗：同一個房間重試，不再建立新房間（避免重複席位）。
+// options.codename：Joy-Con 自動建房（行動代號固定為 P1，不讀欄位）。按鈕 onclick 不帶參數，電腦／訪客流程維持原樣。
+async function createRoom(options) {
+  const isCurrent = options?.isCurrent;
+  const cancelled = () => typeof isCurrent === 'function' && !isCurrent();
+  // 上一次已建房、只差席位配置或開啟陣營畫面：同一個房間重試，不再建立新房間（避免重複房間／席位）。
   if (gameId && window.RedlineStartFlow?.hasPendingProvision?.(gameId)) {
-    await enterCreatedRoom();
-    return;
+    await loadFactions();
+    startLobbySync();
+    return enterCreatedRoom(isCurrent);
   }
   // 建房也要帶「行動代號」：/create 之前不吃名字、建房者永遠叫 host
   //（2026-07-18 自動桌測發現，2026-07-19 修正）。
-  const creatorName = (document.getElementById('playerName')?.value || '').trim();
-  const nameAuto = playerNameIsSystemDefault();
+  const autoName = typeof options?.codename === 'string' ? options.codename : null;
+  const creatorName = autoName !== null ? autoName : (document.getElementById('playerName')?.value || '').trim();
+  const nameAuto = autoName !== null ? true : playerNameIsSystemDefault();
   // 開始畫面（start_flow_ui.js）選好的房主設定：由伺服器 /create 驗證並保存；沒有走開始畫面則維持原預設。
   const startSettings = window.RedlineStartFlow?.pendingCreate?.() || null;
   const res = await fetch('/create', {
@@ -759,14 +775,19 @@ async function createRoom() {
     body: JSON.stringify({ name: creatorName, device_id: redlineDeviceId(), ...(startSettings || {}) }),
   });
   const data = await res.json();
+  // An automatic request can finish after session recovery or an explicit
+  // hide. Never let that late response replace the active session.
+  if (cancelled()) return { ok: false, cancelled: true };
   if (data.error || !data.game_id) {
-    updateLobbyStatus(playerMessageZhTw(data.error || '建立作戰室失敗。'));
-    return;
+    const error = playerMessageZhTw(data.error || '建立作戰室失敗。');
+    updateLobbyStatus(error);
+    return { ok: false, error };
   }
   gameId = data.game_id;
   playerId = data.host_id;
   resumeToken = data.resume_token;
   latestLobbyState = null;
+  window.RedlineStartFlow?.roomCreated?.(gameId); // 之後任何失敗都從這個房間重試
   saveRedlineSession(creatorName, nameAuto);
   markPlayerNameUsed();
   const roomInput = document.getElementById('roomId');
@@ -780,7 +801,7 @@ async function createRoom() {
   lobbyTransientStatus = '作戰室已建立；請選擇陣營，或分享房間代碼。';
   await loadFactions();
   startLobbySync();
-  await enterCreatedRoom(); // Joy-Con 配對到多支：新增 P2～Pn 本機席位並依序綁定，成功才進陣營畫面
+  return enterCreatedRoom(isCurrent); // Joy-Con 配對到多支：新增 P2～Pn 本機席位並依序綁定，成功才進陣營畫面
 }
 
 async function chooseFaction(factionId) {
@@ -816,7 +837,7 @@ async function confirmFactionChoice() {
   const res = await fetch('/choose-faction', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ game_id: gameId, player_id: playerId, faction_id: pendingFactionChoice, base_name: chosenBase })
+    body: JSON.stringify({ game_id: gameId, player_id: playerId, resume_token: resumeToken, faction_id: pendingFactionChoice, base_name: chosenBase })
   });
   const data = await res.json();
   if (data.error) {
@@ -1816,7 +1837,7 @@ function updatePurchaseSelectionControls(state = window.lastGameState || {}) {
   const selection = purchaseSelectionDetails(state);
   summary.textContent = selection.cards.length
     ? `已選 ${selection.cards.length} 張｜合計 ${purchaseCostText(selection.total)}`
-    : '請選擇要購買的卡牌';
+    : '';
   clearBtn.disabled = selection.cards.length === 0;
   buyBtn.disabled = selection.cards.length === 0 || !selection.affordable;
   buyBtn.textContent = '購買';
@@ -2922,9 +2943,9 @@ function renderCurrentEvent(state) {
   }
   const statusText = eventStatusText(event);
   tab.style.display = 'inline-flex';
-  tab.textContent = `事件卡｜${event.name || '目前事件'}`;
-  tab.setAttribute('aria-label', `${event.name || '目前事件'}，${statusText}，點擊查看完整事件卡`);
-  tab.setAttribute('title', `${event.name || '目前事件'}｜${statusText}｜點擊查看完整事件卡`);
+  tab.textContent = '事件卡';
+  tab.setAttribute('aria-label', `事件卡，${statusText}，點擊查看完整事件卡`);
+  tab.setAttribute('title', `事件卡｜${statusText}｜點擊查看完整事件卡`);
 
   const revealCard = document.getElementById('eventRevealCard');
   const revealOverlay = document.getElementById('eventRevealModal');
@@ -4058,6 +4079,51 @@ function openVictoryArtViewer() {
   requestAnimationFrame(() => closeButton?.focus());
 }
 
+// Joy-Con 說明圖（導覽列「Joy-Con 說明」按鈕；不是遊戲頁面）。關閉後焦點一律回到該按鈕。
+function joyconHelpIsOpen() {
+  return document.getElementById('joyconHelpModal')?.getAttribute('aria-hidden') === 'false';
+}
+
+function openJoyconHelp() {
+  const modal = document.getElementById('joyconHelpModal');
+  if (!modal || joyconHelpIsOpen()) return;
+  modal.style.display = 'flex';
+  modal.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('joycon-help-open');
+  const scroll = document.getElementById('joyconHelpScroll');
+  if (scroll) { scroll.scrollTop = 0; scroll.scrollLeft = 0; }
+  requestAnimationFrame(() => document.getElementById('joyconHelpCloseBtn')?.focus());
+}
+
+function closeJoyconHelp() {
+  const modal = document.getElementById('joyconHelpModal');
+  if (!modal || !joyconHelpIsOpen()) return;
+  modal.style.display = 'none';
+  modal.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('joycon-help-open');
+  const btn = document.getElementById('joyconHelpBtn');
+  if (btn?.isConnected) btn.focus({ preventScroll: true });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const modal = document.getElementById('joyconHelpModal');
+  if (!modal) return;
+  document.getElementById('joyconHelpCloseBtn')?.addEventListener('click', () => closeJoyconHelp());
+  modal.addEventListener('click', (event) => { if (event.target === modal) closeJoyconHelp(); });
+  document.addEventListener('keydown', (event) => {
+    if (!joyconHelpIsOpen()) return;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeJoyconHelp();
+    } else if (event.key === 'Tab') {
+      const close = document.getElementById('joyconHelpCloseBtn');
+      const scroll = document.getElementById('joyconHelpScroll');
+      event.preventDefault();
+      (document.activeElement === close ? scroll : close)?.focus();
+    }
+  });
+});
+
 function closeVictoryArtViewer(restoreFocus = true) {
   const viewer = document.getElementById('victoryArtViewer');
   if (!viewer || !victoryArtViewerIsOpen()) return;
@@ -4620,6 +4686,9 @@ async function render(state) {
   // Hand
   const handDiv = document.getElementById('hand');
   if (handDiv) {
+    // 手牌每次 render 都整列重建：清空會把 #hand 的水平捲動歸零。記下來、重建後還原（超過可視張數時，
+    // Joy-Con 焦點已捲入的後段手牌不會因為一次狀態推送就被捲回第一張）。
+    const handScrollLeft = handDiv.scrollLeft;
     handDiv.innerHTML = '';
     const me = (state.players || []).find(p => p.id === playerId);
     const isMyTurn = isMyTurnState(state);
@@ -4691,7 +4760,7 @@ async function render(state) {
               return `<button class="hand-card-action-btn" type="button" ${resourceDisabledAttr} title="${escapeHtml(resourceTitle)}" data-card-index="${i}" data-card-name="${cardAttr}" data-card-mode="resource">資源</button>`;
             })();
         handDiv.innerHTML += `
-          <div class='card hand-card ${colorClass}' data-card-name="${cardAttr}" data-card-zone="hand" data-card-static="false" data-card-variant-index="${variantInfo?.variant_index ?? ''}" onclick="selectCardDetail(event.currentTarget)">
+          <div class='card hand-card ${colorClass}' data-card-name="${cardAttr}" data-card-zone="hand" data-card-index="${i}" data-card-static="false" data-card-variant-index="${variantInfo?.variant_index ?? ''}" onclick="selectCardDetail(event.currentTarget)">
             ${renderCardFace(card, 'hand', false, true, null, variantInfo)}
             <div class="hand-card-actions">
               ${firstButtonHtml}
@@ -4701,6 +4770,7 @@ async function render(state) {
       });
       bindHandCardActionButtons(handDiv);
     }
+    handDiv.scrollLeft = handScrollLeft;
   }
 
   // Purchase

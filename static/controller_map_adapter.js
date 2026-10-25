@@ -58,8 +58,8 @@
 
   /**
    * req：只有回應帶 req 的 `snapshot` 指令時才帶（parent 的 SL 聚焦選單只採用對上自己 req 的那一份，避免用到過期推送）。
-   * 每個目標附上 canonical 地圖資料（/map-data）的統治者／陣營區域，版本由 groupMeta 宣告；任一目標的資料不合法時
-   * 整份都不帶分組資料（不宣告 groupMeta），parent 的聚焦選單因此 fail closed，其餘地圖控制不受影響。
+   * browseTowns 是與 action targets 分離的完整 canonical 導覽清單；缺資料時不宣告 browseMeta，parent 的 SL 選單 fail closed。
+   * targets 與既有 groupMeta 保留給 pending target 路徑，兩者互不改寫。
    */
   function snapshotMessage(req) {
     const info = currentModel();
@@ -80,6 +80,13 @@
     }
     const groupMeta = groups.every(Boolean);
     if (groupMeta) targets.forEach((target, i) => { target.ruler = groups[i].ruler; target.camp = groups[i].camp; });
+    // SL 全域聚焦選單：canonical 地圖的全部城鎮（不受 pending choice、目標或篩選影響）；任一城鎮缺分組資料就整份不帶。
+    const browseTowns = [];
+    for (const town of towns) {
+      const meta = Core.townGroupMeta(town);
+      if (!meta) { browseTowns.length = 0; break; }
+      browseTowns.push({ town: town.name, ruler: meta.ruler, camp: meta.camp });
+    }
     const buttons = info.model.buttons.map(b => {
       const r = info.buttons.get(b.id).rect;
       return { id: b.id, label: b.label || b.id, x: r.left, y: r.top, w: r.width, h: r.height };
@@ -97,6 +104,8 @@
       selected: info.model.selected,
       pending: info.model.pending,
       ...(groupMeta ? { groupMeta: Core.MAP_GROUP_META_VERSION } : {}),
+      ...(browseTowns.length === towns.length && browseTowns.length
+        ? { browseMeta: Core.MAP_BROWSE_META_VERSION, browseTowns } : {}),
       ...(Core.isRequestId(req) ? { req } : {}),
     };
   }
@@ -143,6 +152,39 @@
     const town = byName.get(townName);
     const ll = townDisplayLatLng(town);
     if (!map.getBounds().pad(-0.1).contains(ll)) map.panInside(ll, { padding: [90, 90], animate: false });
+    drawFocusRing();
+    return { ok: true };
+  }
+
+  function finiteLatLng(ll) { return !!ll && Number.isFinite(ll.lat) && Number.isFinite(ll.lng); }
+
+  /**
+   * SL 全域地圖聚焦：canonical 城鎮（/map-data，不限 action target）精確置中，並放大到固定層級 Core.mapFocusZoom
+   * （不超過 Leaflet maxZoom）。只用 Leaflet setView（不動畫）與 focus ring／標籤：不走 marker click、不點按鈕、
+   * 不改選取／預備移動／pending choice，也不送任何遊戲動作。黑河／海蘭泡／臥龍的顯示位置是依層級的像素偏移，
+   * 所以先到目標層級再以該層級的顯示位置置中。驗證城鎮的顯示位置落在容器中心（±1px）且層級正確才回 ok:true；
+   * 未知城鎮、缺座標、容器不可見、層級無法判定或驗證不符 → ok:false，不留下 focus ring。
+   */
+  function focusCanonicalTown(townName) {
+    const town = byName.get(townName);
+    if (!town) return { ok: false, reason: 'unknown-town' };
+    if (!Number.isFinite(town.lat) || !Number.isFinite(town.lon)) return { ok: false, reason: 'town-position-missing' };
+    const container = map.getContainer();
+    if (document.hidden || !container || !container.isConnected || container.getClientRects().length === 0
+      || !(container.clientWidth > 0) || !(container.clientHeight > 0)) return { ok: false, reason: 'map-hidden' };
+    const zoom = Core.mapFocusZoom(map.getMinZoom(), map.getMaxZoom());
+    if (zoom === null) return { ok: false, reason: 'zoom-unavailable' };
+    map.invalidateSize({ pan: false }); // 剛由其他分頁切回戰略地圖時，先取得目前的容器尺寸再計算中心
+    map.setView(L.latLng(town.lat, town.lon), zoom, { animate: false });
+    const ll = townDisplayLatLng(town);
+    if (!finiteLatLng(ll)) return { ok: false, reason: 'town-position-missing' };
+    if (!map.getCenter().equals(ll)) map.setView(ll, zoom, { animate: false });
+    const size = map.getSize();
+    const point = map.latLngToContainerPoint(townDisplayLatLng(town));
+    if (map.getZoom() !== zoom || !point || Math.abs(point.x - size.x / 2) > 1 || Math.abs(point.y - size.y / 2) > 1) {
+      return { ok: false, reason: 'focus-unverified' };
+    }
+    focusTown = townName;
     drawFocusRing();
     return { ok: true };
   }
@@ -253,6 +295,7 @@
     if (!command) return;
     let result = { ok: true };
     if (command.cmd === 'focus') result = setFocus(command.town);
+    else if (command.cmd === 'focusTown') result = focusCanonicalTown(command.town);
     else if (command.cmd === 'clearFocus') { focusTown = null; drawFocusRing(); }
     else if (command.cmd === 'activate') result = activate(command.town);
     else if (command.cmd === 'button') result = pressButton(command.id);

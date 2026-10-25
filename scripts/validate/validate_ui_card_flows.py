@@ -146,6 +146,7 @@ def wait_for_my_turn(page, timeout_ms=15000):
 
 
 HOST_TOKENS = {}  # {room: host resume_token}; /start is host-token gated
+PLAYER_TOKENS = {}  # {(room, player_id): resume_token}; /choose-faction and /ready are seat-token gated
 
 
 def create_and_start(page, player_count):
@@ -154,6 +155,7 @@ def create_and_start(page, player_count):
     room = create_payload['game_id']
     host_id = create_payload['host_id']
     HOST_TOKENS[room] = create_payload['resume_token']
+    PLAYER_TOKENS[(room, host_id)] = create_payload['resume_token']
     page.fill('#roomId', room)
     page.fill('#playerName', 'host')
     host_join_payload = request_json(page, '/join', {'game_id': room, 'name': 'host', 'player_id': host_id, 'resume_token': HOST_TOKENS[room]})
@@ -163,10 +165,10 @@ def create_and_start(page, player_count):
     page.evaluate(f'playerId = {json.dumps(host_id)}')
     page.click('text=進入作戰室')
     page.wait_for_timeout(300)
-    choose_payload = request_json(page, '/choose-faction', {'game_id': room, 'player_id': host_id, 'faction_id': 'red_army', 'base_name': '北京'})
+    choose_payload = request_json(page, '/choose-faction', {'game_id': room, 'player_id': host_id, 'resume_token': HOST_TOKENS[room], 'faction_id': 'red_army', 'base_name': '北京'})
     if choose_payload.get('error'):
         raise RuntimeError(f'host choose faction failed: {choose_payload}')
-    ready_payload = request_json(page, '/ready', {'game_id': room, 'player_id': host_id, 'ready': True})
+    ready_payload = request_json(page, '/ready', {'game_id': room, 'player_id': host_id, 'resume_token': HOST_TOKENS[room], 'ready': True})
     if ready_payload.get('error'):
         raise RuntimeError(f'host ready failed: {ready_payload}')
     wait_for_confirmed_faction(page, host_id)
@@ -178,6 +180,7 @@ def create_and_start(page, player_count):
         player_id = payload.get('player_id') or payload.get('id') or ((payload.get('player') or {}).get('id'))
         if not player_id:
             raise RuntimeError(f'join payload missing player id: {payload}')
+        PLAYER_TOKENS[(room, player_id)] = payload['resume_token']
         player_ids.append((f'guest{i}', player_id))
 
     return room, player_ids
@@ -197,6 +200,7 @@ def open_secondary_page(ctx, room, name, player_id, faction_button='臺灣', var
     choose_payload = request_json(page, '/choose-faction', {
         'game_id': room,
         'player_id': player_id,
+        'resume_token': PLAYER_TOKENS[(room, player_id)],
         'faction_id': faction_id,
         'base_name': base_button,
     })
@@ -204,7 +208,7 @@ def open_secondary_page(ctx, room, name, player_id, faction_button='臺灣', var
         raise RuntimeError(f'{name} choose faction failed: {choose_payload}')
     wait_for_confirmed_faction(page, player_id)
     if ready:
-        ready_payload = request_json(page, '/ready', {'game_id': room, 'player_id': player_id, 'ready': True})
+        ready_payload = request_json(page, '/ready', {'game_id': room, 'player_id': player_id, 'resume_token': PLAYER_TOKENS[(room, player_id)], 'ready': True})
         if ready_payload.get('error'):
             raise RuntimeError(f'{name} ready failed: {ready_payload}')
         wait_for_ready_state(page, player_id, True)

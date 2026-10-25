@@ -13,8 +13,10 @@
   - FTCW 多支手把：是否一個 UDP 埠一支（24800–24803）、回覆是否從同一個埠送出；左＋右、兩支同側同時輸入時各自的封包與按鍵是否互不影響。
   - 斷線與重連：關掉／重新連上單一 Joy-Con 時，只有該支在 1 秒後 stale；重連後是否回到同一個 FTCW 埠與名稱（決定 claim 是否保留），以及重連時按住的鍵不會觸發。
   - 確認 Finally the Controller Works 在搖桿靜止時仍持續送封包（否則 1 秒後該支會 stale，閒置後第一次按鍵只會重新建立 baseline）。
-  - 用實體 Joy-Con（左、右各一位玩家）走過：大廳、購買、手牌、modal／pending choice、地圖移動與瓦解取消，以及 SL 聚焦選單（開啟、選範圍、B／SL 返回、選定後 Y 建立；兩種顯示模式）與 ZR 戰略地圖縮放循環（第一下就縮放、最大後回到最小、其他分頁不作用；兩種顯示模式）。
+  - 用實體 Joy-Con（左、右各一位玩家）走過：大廳、購買、手牌、modal／pending choice、地圖移動與瓦解取消，以及 SL 全域地圖聚焦（任何分頁開啟、選分組→城鎮、置中放大、B／SL 關閉、目標城鎮選定後 Y 建立）與 ZR 戰略地圖縮放循環（第一下就縮放、最大後回到最小、其他分頁不作用），以及手牌 7～8 張（含同名卡）時搖桿逐張到最後一張再回來、對手行動推送狀態後焦點不跳回前段、X／Y 作用在焦點卡（桌面模式；客廳模式已移除）。
   - 確認 https 頁面連 `ws://127.0.0.1` 在實際使用的瀏覽器是否被 mixed content 擋下；如需支援 https，另開 wss bridge 工作。
+- **SL E2E 改寫**：`scripts/validate/validate_joycon_controller.py`（`scenario_desktop_focus_menu`）與 `scripts/validate/validate_living_room_controller.py`（SL 聚焦選單情境、瓦解 pending choice 時 SL fail closed 的檢查）仍以舊版「只聚焦合法建立目標、選分組即移焦點」驗證；改成全域地圖聚焦（無 pending choice 也能開、分組→城鎮兩層、`focusTown` 置中放大、目標城鎮綁定既有目標焦點）後再跑一次（兩支都會自動啟動隔離 server）。目前的新行為由 `scripts/tests/js/controller_map_adapter.test.js` 與 `scripts/tests/test_sl_global_focus_browser.py` 覆蓋。
+- **客廳大螢幕模式移除後的清理**：顯示模式入口已移除（一律桌面）。`controller_living_room.js`／`living_room_core.js` 裡客廳專用的內容區導航、提示列、地圖清單 UI，以及 `style.css` 中 `html[data-display="living-room"]` 規則目前是不會執行的休眠程式碼；拆出桌面共用部分（desktop* 快捷鍵、區段環、SL 聚焦選單、確認單、閘門）後再刪除。`scripts/validate/validate_living_room_controller.py` 與其他帶 `?display=living-room` 的 validate 腳本需改寫或移除。
 
 ## 工作規則
 - 開始新工作前先讀本文件，並執行 `git status --short --branch` 與 `git log --oneline -5`。

@@ -82,16 +82,17 @@ def make_formal_game():
         ("tibet", tibet_join["player_id"], tibet_join["resume_token"], "tibet_dharamsala", "達蘭薩拉"),
         ("uyghur", uyghur_join["player_id"], uyghur_join["resume_token"], "uyghur_munich", "慕尼黑"),
     ]
-    for name, pid, _token, faction_id, base_name in players:
+    for name, pid, token, faction_id, base_name in players:
         result = post_json("/choose-faction", {
             "game_id": game_id,
             "player_id": pid,
+            "resume_token": token,
             "faction_id": faction_id,
             "base_name": base_name,
         })
         if result.get("error"):
             raise AssertionError(f"choose {name}: {result}")
-        ready = post_json("/ready", {"game_id": game_id, "player_id": pid, "ready": True})
+        ready = post_json("/ready", {"game_id": game_id, "player_id": pid, "resume_token": token, "ready": True})
         if ready.get("error"):
             raise AssertionError(f"ready {name}: {ready}")
     start = post_json("/start", {"game_id": game_id, "player_id": host_id, "resume_token": create["resume_token"], "market_mode": "sample_53"})

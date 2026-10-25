@@ -6,7 +6,7 @@
 落點須為該區段內容或實際存在的地圖焦點（必須真的靜止並重驗，落點元素本身須為合法方向候選；只有確實沒有候選的區段
 才允許無焦點，且 iframe 不得殘留地圖焦點標籤）；
 專用快捷鍵 Capture（結束行動，危險確認、預設返回、防連按；注入實機 b1 0x40，上游 b1 0x20 另驗相容）、PLUS（陣營能力）、
-手牌 B（棄置，危險確認）、購買卡 B 勾選 → Y（既有購買所選 → 購買確認單；不自動勾選）、
+手牌 X（一般奧援＝既有棄置，危險確認；B 不棄置）、購買卡 B 勾選 → Y（既有購買所選 → 購買確認單；不自動勾選）、
 地圖 Y（建立組織／確認移動／瓦解組織，iframe 權威重驗＋req 對應確認；含非第一列 A 選取後的 Y 與桌面模式）、
 SL 聚焦選單（統治者／陣營區域分組只來自目前合法建立目標，瓦解的 pending choice fail closed；A 只移焦點、開啟後 250ms 內被擋，
 可從其他分頁切到戰略地圖；從非預設列 B／×／SL 精確還原；背景鍵 scope lock 含正向對照；選定時已選城鎮改變、一般推送只觸發
@@ -610,13 +610,15 @@ def scenario_main(browser, base, record, errors):
     record("hand_X_plays_resource_via_existing_button", spy()["play"][-1] == [1, "追隨者", "resource"], spy()["play"][-3:])
     record("redraw_with_duplicate_names_stays_on_same_index", lr()["itemKey"] == "hand:1:歐洲奧援", lr())
 
-    # ---- 手牌 B＝既有「棄置」（一般奧援）：fail-closed 與危險確認 ----
+    # ---- 手牌 X＝既有「棄置」（一般奧援）：fail-closed 與危險確認；B 不再棄置 ----
     n_play = len(spy()["play"])
-    pad.tap("X")
-    record("support_card_X_never_discards", (focus() or {}).get("name") == "歐洲奧援" and len(spy()["play"]) == n_play, [focus(), spy()["play"][-2:]])
+    pad.tap("B")
+    record("support_card_B_never_discards", (focus() or {}).get("name") == "歐洲奧援" and len(spy()["play"]) == n_play and not confirm_open(),
+           [focus(), spy()["play"][-2:]])
+    S.settle()
     hints = S.hints()
-    record("support_card_hint_offers_B_discard_as_danger", hints.get("cardDiscard", {}).get("key") == "B" and hints["cardDiscard"]["danger"]
-           and "歐洲奧援" in hints["cardDiscard"]["label"], list(hints.values()))
+    record("support_card_hint_offers_X_discard_as_danger", hints.get("cardDiscard", {}).get("key") == "X" and hints["cardDiscard"]["danger"]
+           and "歐洲奧援" in hints["cardDiscard"]["label"] and "cardResource" not in hints, list(hints.values()))
     DISCARD = "document.querySelector('#hand .card[data-card-name=\"歐洲奧援\"] .hand-card-action-btn[data-card-mode=\"resource\"]')"
     for variant, break_js, restore_js in [
         ("disabled", f"{DISCARD}.disabled = true", f"{DISCARD}.disabled = false"),
@@ -626,18 +628,18 @@ def scenario_main(browser, base, record, errors):
     ]:
         page.evaluate(break_js)
         S.settle()
-        pad.tap("B")
+        pad.tap("X")
         result = (confirm_open(), len(spy()["play"]) - n_play, spy()["sendAction"])
         page.evaluate(restore_js)
         S.settle()
-        record(f"hand_B_discard_fails_closed_when_button_{variant}", result[0] is False and result[1] == 0 and (focus() or {}).get("name") == "歐洲奧援", result)
+        record(f"hand_X_discard_fails_closed_when_button_{variant}", result[0] is False and result[1] == 0 and (focus() or {}).get("name") == "歐洲奧援", result)
     sends = spy()["sendAction"]
-    S.timed(["B", "A"], 120)
+    S.timed(["X", "A"], 120)
     record("discard_confirm_A_within_250ms_is_ignored", confirm_open() and len(spy()["play"]) == n_play
            and (lr()["lastCommand"] or {}).get("cmd") == "cardDiscard", focus())
     c = lr()["confirm"]
     f = focus()
-    record("hand_B_discard_opens_danger_confirm_default_back", confirm_open() and c and c["kind"] == "discard" and c["label"] == "棄置 歐洲奧援"
+    record("hand_X_discard_opens_danger_confirm_default_back", confirm_open() and c and c["kind"] == "discard" and c["label"] == "棄置 歐洲奧援"
            and f and f["id"] == "lrConfirmCancelBtn" and len(spy()["play"]) == n_play and spy()["sendAction"] == sends, [c, f])
     page.screenshot(path=str(OUT / "04_hand_discard_confirm_default_back.png"))
     S.settle()
@@ -645,19 +647,19 @@ def scenario_main(browser, base, record, errors):
     S.poll("document.getElementById('lrConfirmModal').style.display === 'none'", timeout=1500)
     record("discard_confirm_A_on_default_back_cancels", not confirm_open() and len(spy()["play"]) == n_play and lr()["itemKey"] == "hand:1:歐洲奧援", lr())
     S.settle()
-    pad.tap("B")
+    pad.tap("X")
     S.settle()
     pad.tap("B")
     S.poll("document.getElementById('lrConfirmModal').style.display === 'none'", timeout=1500)
     record("discard_confirm_B_cancels", not confirm_open() and len(spy()["play"]) == n_play)
     S.settle()
-    pad.tap("B")
+    pad.tap("X")
     page.evaluate(f"{DISCARD}.disabled = true")
     revalidated = S.poll("document.getElementById('lrConfirmModal').style.display === 'none'", timeout=1500)
     page.evaluate(f"{DISCARD}.disabled = false")
     record("discard_confirm_closes_when_button_becomes_invalid", revalidated and len(spy()["play"]) == n_play, lr())
     S.settle()
-    pad.tap("B")
+    pad.tap("X")
     S.settle()
     pad.push("right")
     ok_focus = (focus() or {}).get("id")

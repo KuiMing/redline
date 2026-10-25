@@ -37,7 +37,7 @@ def test_start_flow_scripts_load_after_controller_scripts():
 
 def test_app_sends_start_settings_to_create_and_shows_start_flow_when_no_session():
     app = (_ROOT / "static/app.js").read_text(encoding="utf-8")
-    create = app.split("async function createRoom() {", 1)[1].split("async function chooseFaction", 1)[0]
+    create = app.split("async function createRoom(options) {", 1)[1].split("async function chooseFaction", 1)[0]
     assert "RedlineStartFlow?.pendingCreate" in create and "startSettings" in create
     assert "RedlineStartFlow?.onRoomSettings" in app
     init = app.split("async function initLobbyControls() {", 1)[1].split("window.RedlineSession", 1)[0]

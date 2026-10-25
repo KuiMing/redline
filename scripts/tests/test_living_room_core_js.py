@@ -33,6 +33,9 @@ def test_living_room_css_is_scoped_to_the_display_attribute():
             assert selector.strip().startswith('html[data-display="living-room"]'), selector.strip()
 
 
-def test_desktop_stage_scale_is_unchanged():
+def test_stage_scale_has_no_living_room_safe_area():
+    # 客廳大螢幕顯示模式已移除：舞台縮放只剩桌面（不再有 5% title-safe 分支），設定面板也不再有顯示模式選單。
     app = (_ROOT / "static/app.js").read_text(encoding="utf-8")
-    assert "dataset.display === 'living-room' ? LIVING_ROOM_SAFE_AREA_SCALE : 1" in app
+    assert "LIVING_ROOM_SAFE_AREA_SCALE" not in app and "dataset.display" not in app
+    layer = (_ROOT / "static/controller_living_room.js").read_text(encoding="utf-8")
+    assert "padDisplaySelect" not in layer and "客廳大螢幕</option>" not in layer

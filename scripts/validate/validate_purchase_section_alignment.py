@@ -38,19 +38,20 @@ def validate_page(page) -> dict:
     host_id = created['host_id']
     joined = post('/join', {'game_id': game_id, 'name': '香港'})
     player_id = joined['player_id']
-    for pid, faction_id, base_name in (
-        (host_id, 'red_army', '北京'),
-        (player_id, 'hong_kong', '香港城'),
+    for pid, token, faction_id, base_name in (
+        (host_id, created['resume_token'], 'red_army', '北京'),
+        (player_id, joined['resume_token'], 'hong_kong', '香港城'),
     ):
         chosen = post('/choose-faction', {
             'game_id': game_id,
             'player_id': pid,
+            'resume_token': token,
             'faction_id': faction_id,
             'base_name': base_name,
         })
         if chosen.get('error'):
             raise AssertionError(chosen)
-        ready = post('/ready', {'game_id': game_id, 'player_id': pid, 'ready': True})
+        ready = post('/ready', {'game_id': game_id, 'player_id': pid, 'resume_token': token, 'ready': True})
         if ready.get('error'):
             raise AssertionError(ready)
     started = post('/start', {'game_id': game_id, 'player_id': host_id, 'resume_token': created['resume_token'], 'market_mode': 'sample_53'})

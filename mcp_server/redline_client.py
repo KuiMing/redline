@@ -185,13 +185,20 @@ class RedlineClient:
         payload: dict[str, Any] = {"game_id": game_id, "player_id": player_id, "faction_id": faction_id}
         if base_name:
             payload["base_name"] = base_name
+        token = self._resume_tokens.get(self._key(game_id, player_id))
+        if token:
+            payload["resume_token"] = token
         data = await self._http("POST", "/choose-faction", payload)
         if data.get("error"):
             raise RedlineError(data["error"], code="choose_faction_failed")
         return data
 
     async def set_ready(self, game_id: str, player_id: str, ready: bool = True) -> dict:
-        data = await self._http("POST", "/ready", {"game_id": game_id, "player_id": player_id, "ready": ready})
+        payload: dict[str, Any] = {"game_id": game_id, "player_id": player_id, "ready": ready}
+        token = self._resume_tokens.get(self._key(game_id, player_id))
+        if token:
+            payload["resume_token"] = token
+        data = await self._http("POST", "/ready", payload)
         if data.get("error"):
             raise RedlineError(data["error"], code="set_ready_failed")
         return data

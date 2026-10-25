@@ -37,10 +37,11 @@ def validate_ui():
     game_id = created['game_id']
     host_id = created['host_id']
     host_token = created['resume_token']
-    guest_id = str(uuid.uuid4())
-    post('/join', {'game_id': game_id, 'name': 'guest', 'player_id': guest_id})
-    post('/choose-faction', {'game_id': game_id, 'player_id': host_id, 'faction_id': 'zhuang', 'base_name': '南寧'})
-    post('/choose-faction', {'game_id': game_id, 'player_id': guest_id, 'faction_id': 'red_army', 'base_name': '北京'})
+    joined = post('/join', {'game_id': game_id, 'name': 'guest'})
+    guest_id = joined['player_id']
+    guest_token = joined['resume_token']
+    post('/choose-faction', {'game_id': game_id, 'player_id': host_id, 'resume_token': host_token, 'faction_id': 'zhuang', 'base_name': '南寧'})
+    post('/choose-faction', {'game_id': game_id, 'player_id': guest_id, 'resume_token': guest_token, 'faction_id': 'red_army', 'base_name': '北京'})
     post('/start', {'game_id': game_id, 'player_id': host_id, 'resume_token': host_token})
 
     with sync_playwright() as p:

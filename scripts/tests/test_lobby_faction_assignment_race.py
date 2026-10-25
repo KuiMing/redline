@@ -76,25 +76,27 @@ def _start_two_player_lobby_game(client, host_faction, host_base, guest_faction,
     created = client.post("/create", json={"name": "Host", "device_id": "race-host"}).json()
     game_id = created["game_id"]
     host_id = created["host_id"]
+    host_resume = created["resume_token"]
     joined = client.post("/join", json={
         "game_id": game_id,
         "name": "Guest",
         "device_id": "race-guest",
     }).json()
     guest_id = joined["player_id"]
+    guest_resume = joined["resume_token"]
 
-    host_payload = {"game_id": game_id, "player_id": host_id, "faction_id": host_faction}
+    host_payload = {"game_id": game_id, "player_id": host_id, "resume_token": host_resume, "faction_id": host_faction}
     if host_base:
         host_payload["base_name"] = host_base
     client.post("/choose-faction", json=host_payload)
 
-    guest_payload = {"game_id": game_id, "player_id": guest_id, "faction_id": guest_faction}
+    guest_payload = {"game_id": game_id, "player_id": guest_id, "resume_token": guest_resume, "faction_id": guest_faction}
     if guest_base:
         guest_payload["base_name"] = guest_base
     client.post("/choose-faction", json=guest_payload)
 
-    client.post("/ready", json={"game_id": game_id, "player_id": host_id, "ready": True})
-    client.post("/ready", json={"game_id": game_id, "player_id": guest_id, "ready": True})
+    client.post("/ready", json={"game_id": game_id, "player_id": host_id, "resume_token": host_resume, "ready": True})
+    client.post("/ready", json={"game_id": game_id, "player_id": guest_id, "resume_token": guest_resume, "ready": True})
     result = client.post("/start", json={"game_id": game_id, "player_id": host_id, "resume_token": host_token(game_id, host_id)}).json()
     assert result.get("success") is True, result
     return game_id, host_id, guest_id

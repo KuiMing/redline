@@ -17,13 +17,16 @@ const mapCtx = (extra = {}) => itemCtx(rowItem, { zone: 'maplist', scopeKind: 'm
 
 // ---- display mode ----
 
-test('display mode: URL wins and persists, invalid URL falls back to storage, default desktop', () => {
-  assert.deepEqual(LR.resolveDisplayMode('?display=living-room', null), { mode: 'living-room', persist: true });
-  assert.deepEqual(LR.resolveDisplayMode('?game_id=1&display=desktop', 'living-room'), { mode: 'desktop', persist: true });
-  assert.deepEqual(LR.resolveDisplayMode('?display=tv-hax', 'living-room'), { mode: 'living-room', persist: false });
+test('display mode: desktop only; removed living-room URL/stored values fall back to desktop and migrate storage', () => {
+  assert.deepEqual([...LR.DISPLAY_MODES], ['desktop']);
+  assert.deepEqual(LR.resolveDisplayMode('?display=living-room', null), { mode: 'desktop', persist: false });
+  assert.deepEqual(LR.resolveDisplayMode('', 'living-room'), { mode: 'desktop', persist: true });
+  assert.deepEqual(LR.resolveDisplayMode('?display=living-room', 'living-room'), { mode: 'desktop', persist: true });
+  assert.deepEqual(LR.resolveDisplayMode('?game_id=1&display=desktop', 'desktop'), { mode: 'desktop', persist: false });
+  assert.deepEqual(LR.resolveDisplayMode('', 'garbage'), { mode: 'desktop', persist: true });
   assert.deepEqual(LR.resolveDisplayMode('', null), { mode: 'desktop', persist: false });
-  assert.deepEqual(LR.resolveDisplayMode('', 'garbage'), { mode: 'desktop', persist: false });
-  assert.equal(LR.SAFE_AREA_SCALE, 0.9);
+  for (const value of ['living-room', 'desktop', '', null, undefined, 'tv-hax']) assert.equal(LR.normalizeDisplayMode(value), 'desktop');
+  assert.equal(LR.SAFE_AREA_SCALE, undefined);
 });
 
 // ---- logical actions ----
@@ -140,24 +143,25 @@ test('purchase card: A preview, B toggle, X no-op, Y = existing buy flow', () =>
   assert.deepEqual(LR.routeLivingRoom(itemCtx(buyItem), press('Y')), { cmd: 'cardBuy' });
 });
 
-test('hand card: A preview, X resource, Y action; B discards only when the card has a discard control', () => {
+test('hand card: A preview, Y action; X = discard (confirm) only with a discard control, otherwise resource; B never discards', () => {
   for (const item of [handItem, supportItem]) {
     assert.deepEqual(LR.routeLivingRoom(itemCtx(item), press('A')), { cmd: 'cardPreview' });
-    assert.deepEqual(LR.routeLivingRoom(itemCtx(item), press('X')), { cmd: 'cardMode', mode: 'resource' });
     assert.deepEqual(LR.routeLivingRoom(itemCtx(item), press('Y')), { cmd: 'cardMode', mode: 'action' });
+    assert.equal(LR.routeLivingRoom(itemCtx(item), press('B')), null, 'B on a hand card is the generic no-op (no discard shortcut)');
   }
-  assert.equal(LR.routeLivingRoom(itemCtx(handItem), press('B')), null, 'no discard control: keep the legacy B no-op');
-  assert.deepEqual(LR.routeLivingRoom(itemCtx(supportItem), press('B')), { cmd: 'cardDiscard' });
+  assert.deepEqual(LR.routeLivingRoom(itemCtx(handItem), press('X')), { cmd: 'cardMode', mode: 'resource' });
+  assert.deepEqual(LR.routeLivingRoom(itemCtx(supportItem), press('X')), { cmd: 'cardDiscard' });
+  // 紅軍奧援（既有按鈕＝「資源」）：hasDiscard false → X＝資源；不明值 fail closed 成資源路由（資源鈕不存在時 UI 端不作用）。
+  const odd = { card: { zone: 'hand', hasToggle: false, hasDiscard: 1 }, mapRow: false };
+  assert.deepEqual(LR.routeLivingRoom(itemCtx(odd), press('X')), { cmd: 'cardMode', mode: 'resource' });
 });
 
-test('card semantics match desktop routing (purchase Y included); only hand-discard B is living-room only', () => {
-  const changed = new Set(['hand+discard:B']);
-  for (const [tag, item] of [['hand', handItem], ['hand+discard', supportItem], ['purchase', buyItem]]) {
+test('card semantics match desktop routing exactly (hand X discard / resource, purchase Y included)', () => {
+  for (const item of [handItem, supportItem, buyItem]) {
     for (const button of ['A', 'B', 'X', 'Y']) {
       const lr = LR.routeLivingRoom(itemCtx(item), press(button));
       const desktop = C.routeAction({ scopeKind: 'page', hasFocus: true, card: item.card, cancelAvailable: false, sectionsLocked: false }, C.logicalAction({ type: 'press', button }));
-      if (changed.has(`${tag}:${button}`)) assert.notDeepEqual(lr, desktop, `${tag}:${button}`);
-      else assert.deepEqual(lr, desktop, `${tag}:${button}`);
+      assert.deepEqual(lr, desktop, `${item.card.zone}/${item.card.hasDiscard}:${button}`);
     }
   }
 });
@@ -217,6 +221,55 @@ test('content zones never include the old status / map portal / action bar zones
   assert.deepEqual(LR.contentZonesFor('myFaction', {}), ['view']);
 });
 
+// ---- pending map choice while off the strategic map ----
+
+// 必選地圖目標時其他分頁沒有任何焦點（上面的 contentZonesFor）；既有流程在手上還有可排入的建立／瓦解卡時不自動切到地圖
+// （例如打出宣傳家時手上還有另一張宣傳家）。控制器必須自己用既有分頁切換回到地圖，否則完全不能操作。
+const lockCtx = (extra = {}) => ({
+  padActive: true, connected: true, gameShown: true, choiceLocked: true, scopeKind: 'page', view: 'command', mapUsable: true,
+  proactive: false, input: { type: 'press', button: 'A' }, choiceKey: 'choice:c1', lastKey: null, ...extra,
+});
+const padPress = button => ({ type: 'press', button });
+
+test('choice lock off the map: controller input always returns to the strategic map', () => {
+  assert.equal(LR.choiceMapRedirect(lockCtx()), true);
+  assert.equal(LR.choiceMapRedirect(lockCtx({ view: 'log' })), true);
+  assert.equal(LR.choiceMapRedirect(lockCtx({ padActive: false })), true, 'the first input also redirects (nothing else is focusable)');
+  assert.equal(LR.choiceMapRedirect(lockCtx({ lastKey: 'choice:c1' })), true, 'input redirects again after the mouse left the map');
+  assert.equal(LR.choiceMapRedirect(lockCtx({ input: { type: 'nav', dir: 'right', repeat: false } })), true, 'stick');
+  for (const b of ['A', 'B', 'X', 'Y', 'R', 'SR', 'STICK', 'PLUS', 'CAPTURE']) {
+    assert.equal(LR.choiceMapRedirect(lockCtx({ input: padPress(b) })), true, b);
+  }
+});
+
+test('choice lock off the map: SL, ZR, unmapped buttons and missing input do not redirect', () => {
+  // SL 有自己的「切到地圖再開聚焦選單」流程；ZR 在其他分頁維持完全不作用（連焦點都不改）。
+  for (const input of [padPress('SL'), padPress('ZR'), padPress('HOME'), padPress('???'), { type: 'release', button: 'A' }, null, undefined, 'A']) {
+    assert.equal(LR.choiceMapRedirect(lockCtx({ input })), false, JSON.stringify(input));
+  }
+});
+
+test('choice lock off the map: proactive redirect once per choice, only while the controller is in use', () => {
+  assert.equal(LR.choiceMapRedirect(lockCtx({ proactive: true })), true);
+  assert.equal(LR.choiceMapRedirect(lockCtx({ proactive: true, lastKey: 'choice:c1' })), false, 'same choice: no second automatic switch');
+  assert.equal(LR.choiceMapRedirect(lockCtx({ proactive: true, lastKey: 'choice:c0' })), true, 'a new choice switches again');
+  assert.equal(LR.choiceMapRedirect(lockCtx({ proactive: true, padActive: false })), false);
+  assert.equal(LR.choiceMapRedirect(lockCtx({ proactive: true, choiceKey: null })), false);
+  assert.equal(LR.choiceMapRedirect(lockCtx({ proactive: true, choiceKey: '' })), false);
+});
+
+test('choice lock redirect fails closed outside the off-map page scope', () => {
+  for (const extra of [
+    { choiceLocked: false }, { view: 'map' }, { scopeKind: 'map' }, { scopeKind: 'modal' },
+    { connected: false }, { gameShown: false }, { mapUsable: false },
+  ]) {
+    assert.equal(LR.choiceMapRedirect(lockCtx(extra)), false, JSON.stringify(extra));
+    assert.equal(LR.choiceMapRedirect(lockCtx({ ...extra, proactive: true })), false, JSON.stringify(extra));
+  }
+  assert.equal(LR.choiceMapRedirect(null), false);
+  assert.equal(LR.choiceMapRedirect(undefined), false);
+});
+
 // ---- global section ring (R / SR) ----
 
 const stops = (...keys) => keys.map(k => (typeof k === 'string' ? { key: k, usable: true } : k));
@@ -258,6 +311,30 @@ test('section ring scope lock: a pending map choice only offers the strategic ma
   assert.equal(LR.stepSection(FULL, 'view:log', -1, { choiceLock: true, view: 'log' }), 'view:map');
   assert.equal(LR.stepSection(FULL, 'view:map', 1, { choiceLock: true, view: 'map' }), null);
   assert.equal(LR.stepSection(stops('view:command', { key: 'view:map', usable: false }), 'view:command', 1, { choiceLock: true, view: 'command' }), null);
+});
+
+test('Joy-Con help button is an extra ring focus after the six sections, never a seventh section', () => {
+  // 六個區段順序不變；Joy-Con 說明不是區段。
+  assert.deepEqual(Object.keys(LR.SECTION_LABELS), ['command', 'map', 'log', 'myFaction', 'event', 'era']);
+  assert.equal(LR.sectionOfKey(LR.RING_HELP_KEY), null);
+  assert.equal(LR.ringStopOfKey(LR.RING_HELP_KEY), LR.RING_HELP_KEY);
+  assert.equal(LR.ringStopOfKey('view:map'), 'map');
+  assert.equal(LR.ringStopOfKey('advanceStepBtn'), null);
+  // 導覽列順序：六個區段（含多個時代關卡）→ Joy-Con 說明 → 循環回指揮中心。
+  const ring = [...FULL, { key: LR.RING_HELP_KEY, usable: true }];
+  const seen = [];
+  let key = 'view:command';
+  for (let i = 0; i < ring.length; i += 1) { seen.push(key); key = LR.stepSection(ring, key, 1); }
+  assert.deepEqual(seen, ['view:command', 'view:map', 'view:log', 'view:myFaction', 'event', 'era:7', 'era:9', LR.RING_HELP_KEY]);
+  assert.equal(key, 'view:command', 'R from the help button continues the ring');
+  assert.equal(LR.stepSection(ring, LR.RING_HELP_KEY, -1), 'era:9', 'SR from the help button goes back to the previous section');
+  assert.equal(LR.stepSection(ring, 'view:command', -1), LR.RING_HELP_KEY, 'SR from the first section reaches the help button');
+  // 沒有事件卡／時代關卡：從我的陣營直接到說明按鈕。
+  const noExtras = stops('view:command', 'view:map', 'view:log', 'view:myFaction', { key: 'event', usable: false }, LR.RING_HELP_KEY);
+  assert.equal(LR.stepSection(noExtras, 'view:myFaction', 1), LR.RING_HELP_KEY);
+  // 必選地圖目標：環只提供戰略地圖（說明按鈕也不在其中）。
+  assert.equal(LR.stepSection(ring, 'era:9', 1, { choiceLock: true, view: 'log' }), 'view:map');
+  assert.equal(LR.stepSection(ring, LR.RING_HELP_KEY, 1, { choiceLock: true, view: 'map' }), null);
 });
 
 test('only the two read-only section modals let R/SR step out; every other modal keeps its scope lock', () => {
@@ -544,12 +621,13 @@ test('hint bar keeps only whitelisted, visible, enabled sources and labels each 
   assert.deepEqual(hints, [{ id: 'endStep', key: 'Capture', label: '結束行動', danger: true }]);
 });
 
-test('hint bar order: Y → X → B → + → Capture; dangerous discard / end step marked', () => {
+test('hint bar order: Y → X → B → + → Capture; dangerous discard (X) / end step marked', () => {
   const hints = LR.buildKeyHints([
     hint('endStep'), hint('factionAbility'), hint('cardDiscard'), hint('cardResource'), hint('cardAction'), hint('mapCancel'), hint('mapAct'),
   ]);
   assert.deepEqual(hints.map(h => h.id), ['mapAct', 'cardAction', 'cardResource', 'cardDiscard', 'mapCancel', 'factionAbility', 'endStep']);
-  assert.deepEqual(hints.map(h => h.key), ['Y', 'Y', 'X', 'B', 'B', '+', 'Capture']);
+  assert.deepEqual(hints.map(h => h.key), ['Y', 'Y', 'X', 'X', 'B', '+', 'Capture']);
+  assert.ok(!hints.some(h => h.key === 'B' && h.id === 'cardDiscard'), 'B is never advertised as discard');
   assert.deepEqual(hints.filter(h => h.danger).map(h => h.id), ['cardDiscard', 'endStep']);
 });
 
@@ -712,13 +790,21 @@ test('map Y labels and buttons come only from the row action', () => {
   assert.equal(LR.mapActFor(null, list), null);
 });
 
-// ---- SL 聚焦選單：只由目前合法地圖目標（iframe 權威 snapshot＋canonical 統治者／陣營區域）建立分組 ----
+// ---- SL 聚焦選單：完整 canonical 城鎮，與 action targets／pending choice 分離 ----
 
 const zh = new Intl.Collator('zh-Hant');
 const sortZh = (arr) => [...arr].sort(zh.compare);
 const metaTarget = (town, ruler, camp, extra = {}) => ({ town, role: 'choice', x: 1, y: 1, act: 'build', ruler, camp, ...extra });
+const BROWSE_TOWNS = [
+  { town: '臺北', ruler: ['臺灣'], camp: ['臺灣', '紅軍'] },
+  { town: '新北', ruler: ['臺灣'], camp: ['臺灣', '紅軍', '臺灣'] },
+  { town: '沖繩', ruler: ['東洋'], camp: ['臺灣'] },
+  { town: '香港城', ruler: ['紅軍'], camp: ['香港', '紅軍'] },
+  { town: '曼谷', ruler: ['南洋'], camp: [] },
+];
 const groupSnapshot = (targets, extra = {}) => C.sanitizeMapSnapshot({
-  type: 'redline-controller-map-snapshot', v: 1, seq: 1, scope: 'choice', buttons: [], groupMeta: 1, targets, ...extra,
+  type: 'redline-controller-map-snapshot', v: 1, seq: 1, scope: 'choice', buttons: [], groupMeta: 1, targets,
+  browseMeta: 1, browseTowns: BROWSE_TOWNS, ...extra,
 });
 const CHOICE_TARGETS = [
   metaTarget('臺北', ['臺灣'], ['臺灣', '紅軍']),
@@ -732,12 +818,12 @@ const CHOICE_TARGETS = [
 ];
 const groupsOf = (menu, kind) => menu.sections.find(s => s.kind === kind).groups.map(g => [g.name, g.count, g.towns]);
 
-test('focus menu groups only current legal map targets by 統治者 and 陣營區域, de-duplicated, with counts', () => {
+test('focus menu groups canonical towns by 統治者 and 陣營區域 even when action targets are unrelated', () => {
   const menu = LR.buildFocusMenu(groupSnapshot(CHOICE_TARGETS));
   assert.equal(menu.ok, true);
   assert.equal(menu.reason, null);
-  assert.equal(menu.stage, 'choice');
-  assert.equal(menu.total, 5, '臺北 listed twice still counts once; the origin 北京 is not a legal target here');
+  assert.equal(menu.stage, 'browse');
+  assert.equal(menu.total, 5);
   assert.deepEqual(menu.sections.map(s => [s.kind, s.label]), [['ruler', '統治者'], ['camp', '陣營區域']]);
   const ties = sortZh(['東洋', '紅軍', '南洋']);
   assert.deepEqual(groupsOf(menu, 'ruler'), [
@@ -748,7 +834,7 @@ test('focus menu groups only current legal map targets by 統治者 and 陣營�
   assert.deepEqual(groupsOf(menu, 'camp'), [
     ...camps.map(name => [name, 3, sortZh(name === '臺灣' ? ['臺北', '新北', '沖繩'] : ['臺北', '新北', '香港城'])]),
     ['香港', 1, ['香港城']],
-  ], 'every listed region holds >=1 legal target; 曼谷 (no camp tag) is in no region; 紅軍 excludes the non-target 北京');
+  ], 'every listed region holds >=1 canonical town; 曼谷 (no camp tag) is in no region; 北京 (only an action target, not in browseTowns) is never listed');
   const red = menu.sections[0].groups.find(g => g.name === '紅軍');
   assert.equal(red.key, 'ruler:紅軍');
   assert.equal(red.note, '牆內', 'rules.md: a town whose ruler list contains 紅軍 is inside the wall');
@@ -770,7 +856,7 @@ test('focus menu ordering and counts are deterministic regardless of snapshot or
   }
 });
 
-test('focus menu lists only legal build targets: move sources, move destinations, dissolve and act-less choices fail closed', () => {
+test('focus menu is unchanged with no pending choice or with move/dissolve target paths', () => {
   const destination = groupSnapshot([
     { town: '桃園', role: 'move', x: 1, y: 1, mode: 'rail', cost: 1, act: 'move', ruler: ['臺灣'], camp: ['臺灣'] },
     { town: '基隆', role: 'move', x: 1, y: 1, mode: 'road', cost: 1, act: 'move', ruler: ['臺灣'], camp: ['臺灣', '紅軍'] },
@@ -782,71 +868,83 @@ test('focus menu lists only legal build targets: move sources, move destinations
     { town: '天津', role: 'origin', x: 1, y: 1, act: 'dissolve', ruler: ['紅軍'], camp: ['紅軍'] },
   ], { scope: 'move' });
   assert.equal(LR.buildMapList(source).stage, 'source');
-  const dissolve = groupSnapshot(CHOICE_TARGETS.filter(t => t.role === 'choice').map(t => ({ ...t, act: 'dissolve' })));
-  const noAct = groupSnapshot(CHOICE_TARGETS.filter(t => t.role === 'choice').map(t => ({ ...t, act: undefined })));
-  const mixed = groupSnapshot([metaTarget('臺北', ['臺灣'], []), metaTarget('天津', ['紅軍'], [], { act: 'dissolve' })]);
-  for (const [label, snap] of [['move destination', destination], ['move source', source], ['dissolve choice', dissolve],
-    ['choice without an action', noAct], ['choice mixing build and dissolve', mixed]]) {
-    assert.ok(snap, `${label}: the snapshot itself is valid`);
+  const none = groupSnapshot([], { scope: 'none', groupMeta: undefined, targets: [] });
+  for (const [label, snap] of [['move destination', destination], ['move source', source], ['no pending choice', none]]) {
     const menu = LR.buildFocusMenu(snap);
-    assert.deepEqual([menu.ok, menu.reason, menu.sections], [false, 'no-targets', []], label);
+    assert.equal(menu.ok, true, label);
+    assert.equal(menu.total, BROWSE_TOWNS.length, label);
   }
-  // 只有建立組織的 pending choice：之後 Y＝directBuildBtn。
-  const build = LR.buildFocusMenu(groupSnapshot(CHOICE_TARGETS));
-  assert.equal(build.ok, true);
-  for (const town of build.sections.flatMap(s => s.groups.flatMap(g => g.towns))) {
-    assert.equal(LR.mapActFor(LR.buildMapList(groupSnapshot(CHOICE_TARGETS)).rows.find(r => r.town === town), null).id, 'directBuildBtn', town);
-  }
+  assert.equal(LR.buildMapList(destination).stage, 'destination', 'pending target behavior remains separate');
+  assert.equal(LR.buildMapList(source).stage, 'source');
 });
 
-test('focus menu fails closed: missing snapshot, no legal targets, missing or empty group data', () => {
+test('focus menu fails closed on missing or invalid canonical browse data', () => {
   assert.deepEqual([LR.buildFocusMenu(null).ok, LR.buildFocusMenu(null).reason], [false, 'no-snapshot']);
-  assert.equal(LR.buildFocusMenu(groupSnapshot([], { scope: 'none' })).reason, 'no-targets');
-  assert.equal(LR.buildFocusMenu(groupSnapshot([])).reason, 'no-targets');
-  assert.equal(LR.buildFocusMenu(groupSnapshot([{ town: '北京', role: 'origin', x: 1, y: 1, ruler: ['紅軍'], camp: [] }])).reason, 'no-targets',
-    'choice scope without choice targets has nothing legal to focus');
   const legacy = C.sanitizeMapSnapshot({ type: 'redline-controller-map-snapshot', v: 1, scope: 'choice', buttons: [], targets: [{ town: '臺北', role: 'choice', x: 1, y: 1, act: 'build' }] });
-  assert.equal(LR.buildFocusMenu(legacy).reason, 'no-group-data', 'an iframe without versioned group metadata never guesses');
+  assert.equal(LR.buildFocusMenu(legacy).reason, 'no-group-data', 'an iframe without versioned browse metadata never guesses');
+  assert.equal(C.sanitizeMapSnapshot({ ...groupSnapshot([], { scope: 'none' }), browseTowns: [] }), null);
   assert.equal(groupSnapshot([metaTarget('無名', [], [])]), null, 'the parent sanitizer rejects an empty ruler list');
   for (const bad of [LR.buildFocusMenu(null), LR.buildFocusMenu(legacy)]) assert.deepEqual(bad.sections, []);
-  for (const code of ['no-snapshot', 'no-targets', 'no-group-data', 'stale', 'gone', 'changed', 'no-game', 'map-unavailable']) {
+  for (const code of ['no-snapshot', 'no-targets', 'no-group-data', 'stale', 'gone', 'no-game', 'map-unavailable', 'loading', 'focus-failed']) {
     const textValue = LR.FOCUS_MENU_REASONS[code];
     assert.ok(typeof textValue === 'string' && textValue.length > 0 && textValue.length <= 24, code);
   }
 });
 
-test('focus menu: any candidate with missing or invalid group data fails the whole menu closed (nothing filtered or coerced)', () => {
-  // buildFocusMenu 也直接驗證（不只依賴 parent sanitizer）：每個候選都要有非空 ruler 陣列與 camp 陣列。
-  const raw = (targets) => ({ scope: 'choice', groupMeta: 1, selected: null, targets });
-  const good = metaTarget('臺北', ['臺灣'], ['臺灣']);
+test('focus menu directly rejects any malformed browse town (nothing filtered or coerced)', () => {
+  const raw = (browseTowns) => ({ scope: 'none', browseMeta: 1, targets: [], browseTowns });
+  const good = { town: '臺北', ruler: ['臺灣'], camp: ['臺灣'] };
   assert.equal(LR.buildFocusMenu(raw([good])).ok, true);
   for (const [label, bad] of [
-    ['ruler missing', metaTarget('新北', undefined, ['臺灣'])],
-    ['empty ruler list', metaTarget('新北', [], ['臺灣'])],
-    ['ruler not an array', metaTarget('新北', '臺灣', ['臺灣'])],
-    ['camp missing', metaTarget('新北', ['臺灣'], undefined)],
-    ['camp not an array', metaTarget('新北', ['臺灣'], '臺灣')],
-    ['invalid camp entry', metaTarget('新北', ['臺灣'], ['臺灣', 3])],
-    ['empty ruler name', metaTarget('新北', [''], [])],
+    ['ruler missing', { town: '新北', camp: ['臺灣'] }],
+    ['empty ruler list', { town: '新北', ruler: [], camp: ['臺灣'] }],
+    ['ruler not an array', { town: '新北', ruler: '臺灣', camp: ['臺灣'] }],
+    ['camp missing', { town: '新北', ruler: ['臺灣'] }],
+    ['invalid camp entry', { town: '新北', ruler: ['臺灣'], camp: ['臺灣', 3] }],
   ]) {
     const menu = LR.buildFocusMenu(raw([good, bad]));
     assert.deepEqual([menu.ok, menu.reason, menu.total, menu.sections], [false, 'no-group-data', 0, []], label);
   }
 });
 
-test('focus menu context: stage or pending-choice selection drift between open and pick is detected', () => {
+test('focus menu membership ignores pending-choice changes; targets only tag towns that are current map targets', () => {
   const shown = LR.buildFocusMenu(groupSnapshot(CHOICE_TARGETS));
-  assert.equal(shown.selected, null);
-  assert.equal(LR.focusMenuDrift(shown, LR.buildFocusMenu(groupSnapshot([...CHOICE_TARGETS].reverse()))), false, 'same state, any order');
-  const fewer = LR.buildFocusMenu(groupSnapshot(CHOICE_TARGETS.slice(1)));
-  assert.equal(LR.focusMenuDrift(shown, fewer), false, 'candidates shrinking is handled per group (gone), not as drift');
+  assert.deepEqual(shown.targets, sortZh(['臺北', '新北', '沖繩', '香港城', '曼谷']), 'choice targets, de-duplicated, name order');
+  const fewer = LR.buildFocusMenu(groupSnapshot(CHOICE_TARGETS.slice(2)));
   const picked = LR.buildFocusMenu(groupSnapshot(CHOICE_TARGETS, { selected: '沖繩' }));
-  assert.equal(picked.selected, '沖繩');
-  assert.equal(LR.focusMenuDrift(shown, picked), true, 'the pending-choice selection changed');
-  assert.equal(LR.focusMenuDrift(picked, LR.buildFocusMenu(groupSnapshot(CHOICE_TARGETS, { selected: '曼谷' }))), true);
-  assert.equal(LR.focusMenuDrift(shown, { ...shown, stage: 'destination' }), true, 'stage changed');
-  assert.equal(LR.focusMenuDrift(shown, null), true);
-  assert.equal(LR.focusMenuDrift(null, shown), true);
+  const none = LR.buildFocusMenu(groupSnapshot([], { scope: 'none', groupMeta: undefined }));
+  for (const menu of [fewer, picked, none]) {
+    assert.deepEqual(menu.sections, shown.sections, 'groups and towns come only from the canonical list');
+    assert.equal(menu.total, shown.total);
+    assert.equal(menu.selected, null);
+  }
+  assert.deepEqual(fewer.targets, sortZh(['沖繩', '香港城', '曼谷', '臺北']));
+  assert.deepEqual(none.targets, [], 'no pending choice, not my turn: nothing tagged');
+  const moves = LR.buildFocusMenu(groupSnapshot([
+    { town: '臺北', role: 'origin', x: 1, y: 1, ruler: ['臺灣'], camp: [] },
+    { town: '北京', role: 'origin', x: 1, y: 1, ruler: ['紅軍'], camp: ['紅軍'] },
+  ], { scope: 'move' }));
+  assert.deepEqual(moves.targets, ['臺北'], 'a target outside the canonical browse list is never tagged');
+  assert.equal(LR.focusMenuDrift, undefined, 'no pick-time drift check: the iframe re-validates the town itself');
+});
+
+test('focus menu over the real canonical map (data/map.json) with no pending choice lists every town', () => {
+  const towns = JSON.parse(require('node:fs').readFileSync(require('node:path').join(__dirname, '../../../data/map.json'), 'utf8')).towns;
+  const browseTowns = Object.entries(towns).map(([town, raw]) => ({ town, ...C.townGroupMeta(raw) }));
+  const snap = C.sanitizeMapSnapshot({
+    type: 'redline-controller-map-snapshot', v: 1, seq: 1, scope: 'none', targets: [], buttons: [], browseMeta: 1, browseTowns,
+  });
+  const menu = LR.buildFocusMenu(snap);
+  assert.equal(menu.ok, true);
+  assert.equal(menu.total, Object.keys(towns).length);
+  for (const [kind] of [['ruler'], ['camp']]) {
+    const section = menu.sections.find(s => s.kind === kind);
+    const expected = new Map();
+    for (const [town, raw] of Object.entries(towns)) for (const name of new Set(raw[kind])) expected.set(name, [...(expected.get(name) || []), town]);
+    assert.deepEqual(new Map(section.groups.map(g => [g.name, sortZh(g.towns)])), new Map([...expected].map(([n, t]) => [n, sortZh(t)])), kind);
+  }
+  const listed = new Set(menu.sections.find(s => s.kind === 'ruler').groups.flatMap(g => g.towns));
+  assert.equal(listed.size, Object.keys(towns).length, 'every canonical town is reachable from a 統治者 group');
 });
 
 test('focus menu pick: keep the current focus when it matches, otherwise the first town in list order; unknown groups fail closed', () => {

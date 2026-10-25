@@ -924,6 +924,138 @@ body {
   min-width: 0;
 }
 
+/* 導覽列的「Joy-Con 說明」按鈕：不是遊戲頁面（不帶 .game-tab），只開啟說明圖。 */
+.joycon-help-btn {
+  appearance: none;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: 1px solid rgba(255, 225, 77, 0.55);
+  border-radius: 8px;
+  background: rgba(40, 34, 10, 0.72);
+  color: #fde68a;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.84rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.joycon-help-btn:hover,
+.joycon-help-btn:focus-visible {
+  border-color: rgba(255, 225, 77, 0.9);
+  background: rgba(90, 72, 12, 0.72);
+  color: #fff7cc;
+}
+
+.joycon-help-icon {
+  flex: 0 0 auto;
+}
+
+/* Joy-Con 說明圖：舞台外的全視窗 modal（不跟著 1280×720 舞台縮放）。圖片保持 4:3、不裁切；
+   視窗夠大時整張放進可視範圍，太小時至少 640px 寬並可上下左右捲動。 */
+.joycon-help-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.88);
+}
+
+.joycon-help-dialog {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  max-width: 100%;
+  max-height: 100%;
+  border: 1px solid rgba(255, 225, 77, 0.45);
+  border-radius: 12px;
+  background: #0b111b;
+  box-shadow: 0 24px 90px rgba(0, 0, 0, 0.72);
+  overflow: hidden;
+}
+
+.joycon-help-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 8px 6px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  color: #f1f5f9;
+}
+
+.joycon-help-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.joycon-help-hint {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: rgba(241, 245, 249, 0.72);
+  font-size: 0.8rem;
+}
+
+.joycon-help-close {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(8, 12, 20, 0.78);
+  font: 300 28px/36px system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.joycon-help-close:hover,
+.joycon-help-close:focus-visible {
+  border-color: #fff;
+  background: rgba(185, 28, 28, 0.88);
+  outline: 3px solid rgba(255, 255, 255, 0.72);
+  outline-offset: 2px;
+}
+
+.joycon-help-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  overflow: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.joycon-help-scroll:focus-visible {
+  outline: 2px solid rgba(255, 225, 77, 0.7);
+  outline-offset: -2px;
+}
+
+.joycon-help-image {
+  display: block;
+  flex: 0 0 auto;
+  margin: auto;
+  /* 寬度＝可視範圍內整張放得下的最大寬度（不超過原圖 1280px）；但不小於 640px（或可用寬度），較小的螢幕改為捲動。 */
+  width: max(min(calc(100vw - 26px), 1280px, calc((100vh - 80px) * 4 / 3)), min(640px, calc(100vw - 26px)));
+  max-width: none;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+}
+
+body.joycon-help-open {
+  overflow: hidden;
+}
+
 .era-stage-tab {
   width: 176px;
   height: 34px;
@@ -3927,6 +4059,12 @@ body.victory-art-viewer-open {
 #padPanel select { width: 100%; box-sizing: border-box; padding: 4px 6px; background: #0b1220; color: #fff; border: 1px solid #475569; border-radius: 4px; }
 #padHud[data-status="unbound"] #padToggleBtn { border-color: #facc15; }
 #padPanel button { padding: 4px 10px; border-radius: 4px; border: 1px solid #64748b; background: #1e293b; color: #fff; cursor: pointer; }
+/* 遊戲畫面：Joy-Con 操作說明列移到上方中央（主導覽列 56–104px 下方、隨機購買卡 143px 上方的空白），不遮住左側標題與右側購買／陣營能力；
+ * 🎮 設定鈕與設定／狀態面板不在遊戲中出現（大廳／開始畫面照舊）。說明列只是提示，不接受點擊。 */
+#designStage:has(#gameShell[style*="display: block"]) #padHud { left: 50%; right: auto; top: 110px; bottom: auto; transform: translateX(-50%); pointer-events: none; }
+#designStage:has(#gameShell[style*="display: block"]) #padToggleBtn,
+#designStage:has(#gameShell[style*="display: block"]) #padPanel { display: none !important; }
+#designStage:has(#gameShell[style*="display: block"]) #padHint { max-width: 720px; overflow: hidden; text-overflow: ellipsis; padding: 3px 12px; line-height: 20px; }
 .pad-note { color: #94a3b8; font-size: 11px; line-height: 1.4; }
 .pad-error { color: #fca5a5; }
 #padButtonRing { position: absolute; z-index: 80; pointer-events: none; outline: 4px solid #ffe14d; outline-offset: 2px; box-shadow: 0 0 0 2px #000, 0 0 16px 4px rgba(255,225,77,0.75); border-radius: 4px; }
@@ -3962,6 +4100,12 @@ html:not([data-display="living-room"]) .lr-confirm-ok { background: #b91c1c; bor
 .lr-focus-count { margin-left: auto; font-size: 17px; color: #fde68a; white-space: nowrap; }
 .lr-focus-empty { grid-column: 1 / -1; font-size: 17px; color: #94a3b8; }
 .lr-focus-footer { font-size: 16px; color: #fde68a; }
+/* 城鎮層（分組 → 該組全部 canonical 城鎮，最多約 200 座）：五欄、可捲動；「← 分組」固定是第一個選項；目前的地圖目標加框標示 */
+.lr-focus-town-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.lr-focus-town-grid .lr-focus-option { min-height: 48px; padding: 6px 10px; }
+.lr-focus-town-grid .lr-focus-name { font-size: 19px; }
+.lr-focus-back { justify-content: center; font-size: 19px; font-weight: 700; color: #bfdbfe; border-color: #475569; }
+.lr-focus-option[data-target="true"] { border-color: #ca8a04; }
 /* 客廳模式：底部提示列（76px）保持可見，fail-closed 原因與按鍵說明照常顯示；不新增頂部窄條 */
 html[data-display="living-room"] .lr-focus-overlay { height: 644px; }
 
@@ -4040,6 +4184,23 @@ html[data-display="living-room"] .lr-focus-overlay { height: 644px; }
 #lobby[data-flow="create"][data-joycon-lobby] #lanInfoField,
 #lobby[data-flow="create"][data-joycon-lobby] #difficultyField,
 #lobby[data-flow="create"][data-joycon-lobby] #aiRedArmyField { display: none; }
+/* Joy-Con 行動代號固定為 P1～P4、房間在背景自動建立：不顯示代號欄、建立／加入鈕、客廳輪流開關。 */
+#lobby[data-flow="create"][data-joycon-lobby] .lobby-field:has(#playerName),
+#lobby[data-flow="create"][data-joycon-lobby] #createRoomBtn,
+#lobby[data-flow="create"][data-joycon-lobby] #hotseatLobby > label,
+#lobby[data-flow="create"][data-joycon-lobby] #hotseatAddSeatBtn { display: none; }
+/* Joy-Con 建立畫面：席位已由配對決定，不再重複列出客廳輪流的席位／綁定下拉與配對說明（DOM 保留，hotseat_ui.js 照常更新）；
+ * 操作者提示與錯誤通知（#hotseatLobbyPrompt／#hotseatLobbyNotice）照常顯示。 */
+#lobby[data-flow="create"][data-joycon-lobby] #hotseatSeatList,
+#lobby[data-flow="create"][data-joycon-lobby] #hotseatLobbyHint,
+#lobby[data-flow="create"][data-joycon-lobby] .lobby-room-column > .lobby-section-title,
+#lobby[data-flow="create"][data-joycon-lobby] #roomSettingsField { display: none; }
+/* 左欄只剩背景建房狀態：改單欄，玩家席位以整張卡片（＝1280×720 中線與底部按鈕列）水平置中；建房狀態出現時疊在席位上方。 */
+#lobby[data-flow="create"][data-joycon-lobby] .lobby-card { grid-template-columns: minmax(0, 1fr); }
+#lobby[data-flow="create"][data-joycon-lobby] .lobby-room-column:not(:has(#sfAutoSetup:not([hidden]))) { display: none; }
+#lobby[data-flow="create"][data-joycon-lobby] .lobby-room-column,
+#lobby[data-flow="create"][data-joycon-lobby] .lobby-roster-column { justify-self: center; width: min(560px, 100%); }
+#sfAutoSetup[hidden] { display: none; }
 #lobby[data-flow] .lobby-room-row + .lobby-field-hint { display: none; }
 
 /* 初始入口沿用主視覺本身，不用面板遮住遊戲標題。位置依 1280×720 參考畫面固定。 */

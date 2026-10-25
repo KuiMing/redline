@@ -55,13 +55,13 @@ def s2b1(offset: int | None = None, value: int = 0) -> bytes:
 class FakeJoyCons:
     """真的 ControllerRegistry＋bridge app；4 支 fixture 手把（不是實體硬體）。"""
 
-    def __init__(self, page_origin: str):
+    def __init__(self, page_origin: str, present=PORTS):
         self.registry = B.ControllerRegistry(PORTS, primary_port=24800)
         self.port = free_port()
         self.chord: set[int] = set()
         self.held: dict[int, list[tuple[int, int]]] = {}  # port -> [(packet offset, mask)] 目前按住的實體鍵
         self.stick: dict[int, tuple[float, float]] = {}  # port -> 左搖桿 (x, y)；FTCW 向上為正
-        self.present = set(PORTS)
+        self.present = set(present)  # 目前送封包的埠；拿掉＝手把訊號消失（bridge 1 秒後標成 stale）
         self._stop = threading.Event()
         app = B.create_app(self.registry, allowed_origins=[page_origin])
         self.server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=self.port, log_level="error"))
@@ -87,8 +87,10 @@ class FakeJoyCons:
                 data = bytearray(s2b1(offset, value) if port in self.chord else s2b1())
                 for off, mask in list(self.held.get(port, ())):
                     data[off] |= mask
-                if port in self.stick:
-                    data[12:20] = struct.pack("<2f", *self.stick[port])
+                # 只讀一次：測試執行緒可能剛好 pop 掉（先 in 再取值會 KeyError，feed 執行緒就此停掉）。
+                stick = self.stick.get(port)
+                if stick is not None:
+                    data[12:20] = struct.pack("<2f", *stick)
                 self.registry.observe(port, bytes(data))
             time.sleep(0.03)
 
@@ -108,6 +110,27 @@ class FakeJoyCons:
         time.sleep(hold)
         self.held.pop(port, None)
         time.sleep(0.2)
+
+    def _wait_bridge_button(self, port: int, logical: str, pressed: bool, timeout: float = 3.0):
+        """等 bridge registry 最新的 frame 真的是「按住／放開」：feed 執行緒每 30ms 才送一次，和瀏覽器沒有先後保證。"""
+        cid = self.controller_id(port)
+        index, bit = B.LOGICAL_BITS[logical]
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            frame = (self.registry.snapshot().get(cid) or {}).get("frame")
+            if frame is not None and bool((frame.b0, frame.b1)[index] & bit) is pressed:
+                return
+            time.sleep(0.005)
+        raise AssertionError(f"bridge 在 {timeout}s 內沒有收到 {port} 的 {logical}{'按住' if pressed else '放開'}")
+
+    def hold(self, port: int, logical: str):
+        """按住左 Joy-Con 的實體鍵不放，並等 bridge 已收到：之後才建立的連線，第一筆 frame 一定已經按著。"""
+        self.held[port] = [LEFT_PHYSICAL[logical]]
+        self._wait_bridge_button(port, logical, True)
+
+    def release(self, port: int, logical: str):
+        self.held.pop(port, None)
+        self._wait_bridge_button(port, logical, False)
 
     def nav(self, port: int, direction: str, hold: float = 0.25):
         """左搖桿推一下（回中後才算下一次）：這是 Joy-Con 的方向導覽輸入。"""
@@ -161,13 +184,15 @@ def browser():
         b.close()
 
 
-def new_page(browser, app_url, joycons=None, display=None):
+def new_page(browser, app_url, joycons=None, display=None, init_script=None):
     ctx = browser.new_context(viewport={"width": 1280, "height": 720})
     if joycons is not None:
         ctx.add_init_script(
             "if (!localStorage.getItem('redline.controller.v1')) localStorage.setItem('redline.controller.v1', "
             f"JSON.stringify({{enabled: false, url: '{joycons.url}'}}));"
         )
+    if init_script:
+        ctx.add_init_script(init_script)
     page = ctx.new_page()
     page.goto(app_url + ("/?display=" + display if display else "/"))
     page.wait_for_selector("#startFlow:not([hidden])")
@@ -200,6 +225,23 @@ def finish_and_create(page, name="Tester", proof=None):
         shot(page, proof)
     page.click("#createRoomBtn")
     page.wait_for_function("window.RedlineSession.current().gameId")
+
+
+def finish_joycon(page):
+    """Joy-Con：完成配對後自動建房；不填代號、不點建立鈕，等陣營選擇自動開啟。"""
+    page.click("#sfContinueBtn")
+    page.wait_for_selector("#factionPicker", state="visible", timeout=30000)
+
+
+def pad_finish_pairing(page, joycons, port=24801):
+    """P1 的 Joy-Con 以方向鍵＋A 完成配對（手把因此已啟用，之後焦點由流程明確指定）。"""
+    page.wait_for_function("window.RedlineController.getState().controller.owned === '%s'" % joycons.controller_id(port), timeout=15000)
+    for _ in range(6):
+        if focus_id(page) == "sfContinueBtn":
+            break
+        joycons.nav(port, "down")
+    assert focus_id(page) == "sfContinueBtn"
+    joycons.press(port, "A")
 
 
 def test_entry_offers_three_paths_and_no_player_count(browser, app_url):
@@ -322,28 +364,102 @@ def test_joycon_seat_provisioning_failure_keeps_pairing_and_retry_creates_no_dup
         joycons.press_chord(port)
         page.wait_for_function(f"window.RedlineStartFlow.getState().paired.length === {n}", timeout=8000)
     paired = page.evaluate("window.RedlineStartFlow.getState().paired")
-    page.click("#sfContinueBtn")
-    page.wait_for_selector("#startFlow", state="hidden")
 
     page.route("**/join", lambda route: route.fulfill(json={"error": "Room full"}))
-    page.click("#createRoomBtn")
-    page.wait_for_function("window.RedlineSession.current().gameId")
+    pad_finish_pairing(page, joycons)
+    page.wait_for_selector("#sfAutoRetryBtn", state="visible", timeout=20000)
     game_id = page.evaluate("window.RedlineSession.current().gameId")
-    page.wait_for_function("document.getElementById('lobbyStatusHint').textContent.includes('重試')", timeout=10000)
+    assert game_id
     assert page.is_hidden("#factionPicker"), "席位未配置成功不可進入陣營畫面"
+    assert page.is_hidden("#createRoomBtn") and page.is_hidden("#sfAutoBackBtn"), "已建房不可退回配對，也不顯示建立鈕"
     state = page.evaluate("window.RedlineStartFlow.getState()")
     assert state["pending"] and state["pending"]["controllers"] == paired and state["paired"] == paired
     assert len(requests.get(f"{app_url}/lobby/{game_id}").json()["players"]) == 1
+    # 重試鈕可由 Joy-Con 操作：焦點在重試鈕，A 觸發。
+    page.wait_for_function("document.activeElement && document.activeElement.id === 'sfAutoRetryBtn'", timeout=5000)
 
-    # 網路恢復後在同一個房間重試：只補缺的席位，不再建立新房間，也不重複建立席位。
+    # 網路恢復後用 Joy-Con A 重試：同一個房間，只補缺的席位。
     page.unroute("**/join")
-    page.click("#createRoomBtn")
-    page.wait_for_selector("#factionPicker", state="visible")
+    joycons.press(24801, "A")
+    page.wait_for_selector("#factionPicker", state="visible", timeout=20000)
     assert page.evaluate("window.RedlineSession.current().gameId") == game_id
     players = requests.get(f"{app_url}/lobby/{game_id}").json()["players"]
     assert len(players) == 2
     page.wait_for_function("window.RedlineHotSeat.getState().seats.length === 2 && window.RedlineHotSeat.getState().seats.every(s => s.controller)", timeout=20000)
     assert [s["controller"] for s in page.evaluate("window.RedlineHotSeat.getState().seats")] == paired
+    assert page.evaluate("window.RedlineStartFlow.getState().pending") is None
+    assert page.is_hidden("#sfAutoSetup")
+    page.context.close()
+
+
+def test_joycon_create_failure_can_go_back_to_pairing_then_retry_creates_one_room(browser, app_url, joycons):
+    page = new_page(browser, app_url, joycons)
+    create_via_flow(page, control="joycon")
+    pair_one_left(page, joycons)
+    page.route("**/create", lambda route: route.fulfill(json={"error": "boom"}))
+    page.click("#sfContinueBtn")
+    page.wait_for_selector("#sfAutoRetryBtn", state="visible", timeout=20000)
+    assert page.evaluate("window.RedlineSession.current().gameId") in (None, "")
+    assert page.is_visible("#sfAutoBackBtn")
+    page.unroute("**/create")
+    page.click("#sfAutoRetryBtn")
+    page.wait_for_selector("#factionPicker", state="visible", timeout=20000)
+    game_id, state = lobby_of(app_url, page)
+    assert state["control_mode"] == "joycon" and [p[1] for p in state["players"]] == ["P1"]
+    page.context.close()
+
+
+def test_joycon_create_response_lost_retries_same_room(browser, app_url, joycons):
+    page = new_page(browser, app_url, joycons)
+    create_via_flow(page, control="joycon")
+    pair_one_left(page, joycons)
+    lost = []
+
+    def lose_first_create_response(route):
+        if lost:
+            route.continue_()
+            return
+        lost.append(route.fetch().json())
+        route.abort("connectionreset")
+
+    page.route("**/create", lose_first_create_response)
+    page.click("#sfContinueBtn")
+    page.wait_for_selector("#sfAutoRetryBtn", state="visible", timeout=20000)
+    created_game_id = lost[0]["game_id"]
+    assert requests.get(f"{app_url}/lobby/{created_game_id}").json()["players"][0][1] == "P1"
+
+    page.click("#sfAutoRetryBtn")
+    page.wait_for_selector("#factionPicker", state="visible", timeout=20000)
+    assert page.evaluate("window.RedlineSession.current().gameId") == created_game_id
+    assert requests.get(f"{app_url}/lobby/{created_game_id}").json()["players"] == [
+        [lost[0]["host_id"], "P1"]
+    ]
+    page.context.close()
+
+
+def test_hiding_start_flow_ignores_late_create_response(browser, app_url, joycons):
+    page = new_page(browser, app_url, joycons)
+    create_via_flow(page, control="joycon")
+    pair_one_left(page, joycons)
+    page.evaluate("""() => {
+      const originalFetch = window.fetch.bind(window);
+      window.__releaseCreateResponse = null;
+      window.fetch = (input, init) => {
+        const response = originalFetch(input, init);
+        const url = typeof input === 'string' ? input : input.url;
+        if (!url.endsWith('/create')) return response;
+        return response.then(value => new Promise(resolve => {
+          window.__releaseCreateResponse = () => resolve(value);
+        }));
+      };
+    }""")
+    page.click("#sfContinueBtn")
+    page.wait_for_function("typeof window.__releaseCreateResponse === 'function'", timeout=20000)
+    page.evaluate("window.RedlineStartFlow.hide()")
+    page.evaluate("window.__releaseCreateResponse()")
+    time.sleep(0.5)
+    assert page.evaluate("window.RedlineSession.current().gameId") in (None, "")
+    assert page.is_hidden("#factionPicker") and page.is_hidden("#sfAutoSetup")
     assert page.evaluate("window.RedlineStartFlow.getState().pending") is None
     page.context.close()
 
@@ -356,8 +472,6 @@ def test_joycon_join_response_lost_after_server_created_seat_retry_recovers_same
         joycons.press_chord(port)
         page.wait_for_function(f"window.RedlineStartFlow.getState().paired.length === {n}", timeout=8000)
     paired = page.evaluate("window.RedlineStartFlow.getState().paired")
-    page.click("#sfContinueBtn")
-    page.wait_for_selector("#startFlow", state="hidden")
 
     # 第一個 /join：伺服器真的建立了 P2 席位，但回應在客戶端遺失（連線中斷）。
     lost = []
@@ -370,22 +484,21 @@ def test_joycon_join_response_lost_after_server_created_seat_retry_recovers_same
         route.abort("connectionreset")
 
     page.route("**/join", lose_first_join_response)
-    page.click("#createRoomBtn")
-    page.wait_for_function("window.RedlineSession.current().gameId")
+    page.click("#sfContinueBtn")
+    page.wait_for_selector("#sfAutoRetryBtn", state="visible", timeout=20000)
     game_id = page.evaluate("window.RedlineSession.current().gameId")
-    page.wait_for_function("document.getElementById('lobbyStatusHint').textContent.includes('重試')", timeout=10000)
     assert page.is_hidden("#factionPicker")
     orphan_id = lost[0]["player_id"]
     before = requests.get(f"{app_url}/lobby/{game_id}").json()["players"]
-    assert [p[1] for p in before] == ["host", "P2"] and before[1][0] == orphan_id
+    assert [p[1] for p in before] == ["P1", "P2"] and before[1][0] == orphan_id
     assert page.evaluate("window.RedlineHotSeat.getState().seats.length") == 1  # 本機不知道有這一席
 
     # 重試：取回同一個 P2（不是跳到 P3 留下孤兒），再補 P3；房間、席位 ID、配對順序不變。
-    page.click("#createRoomBtn")
-    page.wait_for_selector("#factionPicker", state="visible")
+    page.click("#sfAutoRetryBtn")
+    page.wait_for_selector("#factionPicker", state="visible", timeout=20000)
     assert page.evaluate("window.RedlineSession.current().gameId") == game_id
     after = requests.get(f"{app_url}/lobby/{game_id}").json()["players"]
-    assert [p[1] for p in after][1:] == ["P2", "P3"]  # 房主的預設名稱稍後會被既有的 codenameRenames 改成 P1
+    assert [p[1] for p in after]== ["P1", "P2", "P3"]
     assert [p[0] for p in after[:2]] == [p[0] for p in before], "P2 必須是同一個席位 ID，不可重複建立"
     assert len({p[0] for p in after}) == 3
     page.wait_for_function("window.RedlineHotSeat.getState().seats.length === 3 && window.RedlineHotSeat.getState().seats.every(s => s.controller)", timeout=20000)
@@ -422,10 +535,7 @@ def test_joycon_pairing_order_and_finish_threshold(browser, app_url, joycons):
     page.wait_for_function("window.RedlineStartFlow.getState().paired.length === 4", timeout=8000)
     shot(page, "06_pairing_four_paired.png")
 
-    page.click("#sfContinueBtn")
-    page.wait_for_selector("#startFlow", state="hidden")
-    page.click("#createRoomBtn")  # Joy-Con 玩家不必輸入行動代號：沿用預設，本機席位自動成為 P1～P4
-    page.wait_for_selector("#factionPicker", state="visible")
+    finish_joycon(page)  # 不填行動代號、不點建立鈕：自動以 P1 建房並開啟陣營選擇
     game_id, state = lobby_of(app_url, page)
     assert (state["control_mode"], state["joycon_count"], state["market_mode"], state["ai_red_army"]) == ("joycon", 4, "all_cards", False)
     # 客廳輪流席位：依配對順序 P1～P4 各綁一支。
@@ -453,16 +563,30 @@ def test_ai_red_army_limits_pairing_to_three_and_computer_needs_no_pairing(brows
     page.context.close()
 
 
-def test_living_room_display_keeps_fixed_stage(browser, app_url):
-    page = new_page(browser, app_url, display="living-room")
-    assert page.evaluate("document.documentElement.dataset.display") == "living-room"
+def test_removed_living_room_display_falls_back_to_desktop(browser, app_url):
+    """客廳大螢幕顯示模式已移除：舊的 ?display=living-room 書籤與已儲存的 'living-room' 都回到桌面並遷移儲存值，
+    設定面板沒有顯示模式選單，RedlineDisplayMode.set('living-room') 也只會得到桌面。"""
+    ctx = browser.new_context(viewport={"width": 1280, "height": 720})
+    ctx.add_init_script("if (!sessionStorage.getItem('seeded')) { localStorage.setItem('redline.display.v1', 'living-room'); sessionStorage.setItem('seeded', '1'); }")
+    page = ctx.new_page()
+    page.goto(app_url + "/?display=living-room")
+    page.wait_for_selector("#startFlow:not([hidden])")
+    assert page.evaluate("document.documentElement.dataset.display") is None
+    assert page.evaluate("window.RedlineDisplayMode.get()") == "desktop"
+    assert page.evaluate("localStorage.getItem('redline.display.v1')") == "desktop"
+    assert page.evaluate("document.getElementById('padDisplaySelect')") is None
+    assert "客廳" not in page.evaluate("document.getElementById('padPanel')?.textContent || ''")
     box = page.evaluate("(() => { const s = document.getElementById('designStage'); return [s.offsetWidth, s.offsetHeight]; })()")
     assert box == [1280, 720]
     zoom = page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--stage-scale')")
-    assert abs(float(zoom) - 0.9) < 1e-6
-    shot(page, "07_living_room_entry.png")
-    page.click("#sfCreateHuman")
-    shot(page, "08_living_room_setup.png")
+    assert abs(float(zoom) - 1.0) < 1e-6
+    page.evaluate("window.RedlineDisplayMode.set('living-room')")
+    assert page.evaluate("[window.RedlineDisplayMode.get(), document.documentElement.dataset.display ?? null]") == ["desktop", None]
+    assert page.evaluate("localStorage.getItem('redline.display.v1')") == "desktop"
+    page.reload()
+    page.wait_for_selector("#startFlow:not([hidden])")
+    assert page.evaluate("[window.RedlineDisplayMode.get(), document.documentElement.dataset.display ?? null]") == ["desktop", None]
+    shot(page, "07_desktop_after_living_room_removed.png")
     page.context.close()
 
 
@@ -472,7 +596,7 @@ def test_joycon_room_enables_controller_for_guest_but_computer_room_does_not(bro
     host.wait_for_function("window.RedlineStartFlow.getState().listeners.some(l => l.owned)", timeout=20000)
     joycons.press_chord(24800)
     host.wait_for_function("window.RedlineStartFlow.getState().paired.length === 1", timeout=8000)
-    finish_and_create(host)
+    finish_joycon(host)
     game_id, state = lobby_of(app_url, host)
     assert (state["control_mode"], state["joycon_count"]) == ("joycon", 1)
     assert host.evaluate("window.RedlineController.getState().enabled") is True
@@ -529,43 +653,99 @@ def focus_id(page):
     return page.evaluate("document.activeElement && (document.activeElement.id || document.activeElement.className)")
 
 
-def test_joycon_main_controller_claims_p1_after_pairing_and_lobby_hides_duplicates(browser, app_url, joycons):
+def test_joycon_two_pairs_ai_auto_creates_room_and_opens_faction_picker(browser, app_url, joycons):
     page = new_page(browser, app_url, joycons)
     create_via_flow(page, ai=True, market="all_cards", control="joycon")
-    pair_one_left(page, joycons)
-    page.click("#sfContinueBtn")
-    page.wait_for_selector("#startFlow", state="hidden")
+    page.wait_for_function("window.RedlineStartFlow.getState().listeners.filter(l => l.owned).length === 4", timeout=20000)
+    order = [24801, 24800]
+    joycons.press_chord(24801)
+    page.wait_for_function("window.RedlineStartFlow.getState().paired.length === 1", timeout=8000)
+    controller_id = joycons.controller_id(24801)
+    # P1 在配對畫面就交給主控制連線：Joy-Con 本身能完成流程。
+    page.wait_for_function("window.RedlineController.getState().controller.owned === '%s'" % controller_id, timeout=15000)
+    assert page.evaluate("window.RedlineStartFlow.getState().step") == "setup"
+    assert page.evaluate("window.RedlineStartFlow.getState().listeners.some(l => l.controller === '%s')" % controller_id) is False
+    joycons.press_chord(24800)
+    page.wait_for_function("window.RedlineStartFlow.getState().paired.length === 2", timeout=8000)
+    paired = page.evaluate("window.RedlineStartFlow.getState().paired")
+    assert paired == [joycons.controller_id(p) for p in order]
+    # 真實 bridge frame：方向鍵移到「完成配對」，A 觸發既有 click handler。
+    for _ in range(4):
+        if focus_id(page) == "sfContinueBtn":
+            break
+        joycons.nav(24801, "down")
+    assert focus_id(page) == "sfContinueBtn"
+    joycons.press(24801, "A")
+    # 不填 playerName、不點 createRoomBtn：陣營選擇自動開啟。
+    page.wait_for_selector("#factionPicker", state="visible", timeout=30000)
     assert page.evaluate("window.RedlineStartFlow.getState().listeners.length") == 0
-    # 配對連線釋放後主連線會進入 unbound；必須能 claim P1（只接受 connected 就永遠不會 claim）。
-    page.wait_for_function("window.RedlineController.getState().controller.owned === '%s'" % joycons.controller_id(24801), timeout=15000)
-    assert page.evaluate("window.RedlineController.getState().status") == "connected"
-    # 四類重複設定不在畫面、不進焦點集合；行動代號與建立鈕保留。
-    for sel in ("#roomSettingsSummary", "#roomId", "#lanUrl", "#copyLanUrlBtn", "#copyRoomBtn", "#marketModeSelect",
-                '[data-market-mode="all_cards"]', '[data-ai-red-army="on"]'):
+    for sel in ("#playerName", "#createRoomBtn", "#hotseatEnableChk", "#hotseatAddSeatBtn", "#roomSettingsSummary", "#roomId", "#lanUrl",
+                "#copyLanUrlBtn", "#copyRoomBtn", "#marketModeSelect", '[data-market-mode="all_cards"]', '[data-ai-red-army="on"]', "#sfAutoSetup"):
         assert not visible(page, sel), sel
-    assert visible(page, "#playerName") and visible(page, "#createRoomBtn")
-    # AI 紅軍席位在房間建立前就已在右側，且不是可加入的空位。
-    assert page.locator("#lobbyRoster .lobby-player-card.ai-seat").count() == 1
-    assert "AI 紅軍" in page.inner_text("#lobbyRoster .ai-seat")
-    assert page.locator("#lobbyRoster .lobby-player-card").count() == 3
-    assert page.locator("#lobbyRoster .lobby-player-card.empty").count() == 1
-    shot(page, "10_joycon_ai_lobby.png")
-    # 真實 controller feed（bridge frame）：方向導覽能離開初始行動代號，且不會落在被隱藏的設定。
-    before = focus_id(page)
-    # 換由主連線 claim 後，第一筆 frame 只建立安全 baseline；第二次方向輸入才執行導覽。
-    joycons.nav(24801, "down")
-    joycons.nav(24801, "down")
-    after = focus_id(page)
-    assert before == "playerName"
-    assert after != before and after in {"createRoomBtn"}, (before, after)
-    # 建立後 canonical lobby 仍有 AI 席位，且只有一張。
-    page.fill("#playerName", "Tester")
-    page.click("#createRoomBtn")
-    page.wait_for_selector("#factionPicker", state="visible")
-    _, state = lobby_of(app_url, page)
-    assert state["ai_red_army"] is True
+    game_id, state = lobby_of(app_url, page)
+    assert (state["control_mode"], state["joycon_count"], state["market_mode"], state["ai_red_army"]) == ("joycon", 2, "all_cards", True)
+    page.wait_for_function("window.RedlineHotSeat.getState().seats.length === 2 && window.RedlineHotSeat.getState().seats.every(s => s.controller)", timeout=20000)
+    page.wait_for_function("(window.RedlineSession.current().lobby.players || []).map(p => p[1]).join() === 'P1,P2'", timeout=20000)
+    # 真人席位數＝配對手把數（server lobby 只有 P1、P2），AI 紅軍另有且只有一個 AI 席位。
+    assert [p[1] for p in requests.get(f"{app_url}/lobby/{game_id}").json()["players"]] == ["P1", "P2"]
     page.wait_for_function("document.querySelectorAll('#lobbyRoster .ai-seat').length === 1")
     assert page.locator("#lobbyRoster .ai-seat[data-preroom]").count() == 0
+    # 配對順序＝本機席位綁定順序。
+    seats = page.evaluate("window.RedlineHotSeat.getState().seats")
+    assert [s["controller"] for s in seats] == paired
+    assert [p[0] for p in requests.get(f"{app_url}/lobby/{game_id}").json()["players"]] == [s["player_id"] for s in seats]
+    # 焦點在合法的陣營選項（不是關閉鈕、代號欄或隱藏鈕）。
+    page.wait_for_function("(() => { const a = document.activeElement; return !!a && !!a.closest('#factionList') && a.classList.contains('faction-choice-btn') && !a.disabled; })()", timeout=5000)
+    assert page.evaluate("window.RedlineController.getState().controller.owned") == controller_id
+    shot(page, "10_joycon_direct_faction.png")
+    page.context.close()
+
+
+ROSTER_LAYOUT_JS = """() => {
+  const box = (s) => { const e = document.querySelector(s); if (!e) return null; const r = e.getBoundingClientRect(); return { left: r.left, right: r.right, top: r.top, bottom: r.bottom, cx: (r.left + r.right) / 2 }; };
+  const buttons = [...document.querySelectorAll('#lobby .lobby-actions .lobby-action-btn')]
+    .filter(b => getComputedStyle(b).display !== 'none' && b.getClientRects().length).map(b => b.getBoundingClientRect());
+  return {
+    column: box('#lobby .lobby-roster-column'), roster: box('#lobbyRoster'), hint: box('#lobbyStatusHint'), hotseat: box('#hotseatLobby'),
+    actions: buttons.length ? { left: Math.min(...buttons.map(r => r.left)), right: Math.max(...buttons.map(r => r.right)), top: Math.min(...buttons.map(r => r.top)) } : null,
+    buttonCount: buttons.length,
+  };
+}"""
+
+
+def test_joycon_lobby_centers_roster_and_hides_duplicate_hotseat_details(browser, app_url, joycons):
+    """Synthetic bridge（非實體 Joy-Con）：Joy-Con 建立／準備畫面只留席位卡片、狀態提示與底部操作鈕，席位以畫面中線置中。"""
+    page = new_page(browser, app_url, joycons)
+    create_via_flow(page, ai=True, control="joycon")
+    pair_in_order(page, joycons, [24801, 24800])
+    page.click("#sfContinueBtn")
+    page.wait_for_selector("#factionPicker", state="visible", timeout=30000)
+    page.wait_for_function("window.RedlineHotSeat.getState().seats.length === 2 && window.RedlineHotSeat.getState().seats.every(s => s.controller)", timeout=20000)
+    page.wait_for_function("(window.RedlineSession.current().lobby.players || []).length === 2 && document.querySelectorAll('#lobbyRoster .ai-seat:not([data-preroom])').length === 1", timeout=20000)
+    page.click("#closeFactionPickerBtn")
+    page.wait_for_selector("#factionPicker", state="hidden")
+    # 重複的 hot-seat 細節（P1（目前）列、陣營／準備、Joy-Con 綁定下拉、配對長說明）不可見……
+    for sel in ("#hotseatSeatList", "#hotseatLobbyHint", ".hs-bind-select", ".hs-seat"):
+        assert not visible(page, sel), sel
+    # ……但 DOM 仍在且照常由 hotseat_ui.js 更新（隱藏不影響狀態邏輯）。
+    page.wait_for_function("document.querySelectorAll('#hotseatSeatList .hs-seat').length === 2", timeout=10000)
+    assert page.evaluate("document.querySelectorAll('#hotseatSeatList .hs-bind-select').length") == 2
+    assert page.evaluate("document.getElementById('hotseatLobbyHint').textContent.length") > 0
+    # 席位卡片、狀態提示、底部操作鈕仍可見。
+    for sel in ("#lobbyRoster", "#lobbyStatusHint", "#openFactionPickerBtn", "#toggleReadyBtn", "#startGameBtn"):
+        assert visible(page, sel), sel
+    assert page.locator("#lobbyRoster .lobby-player-card").count() == 4
+    layout = page.evaluate(ROSTER_LAYOUT_JS)
+    assert layout["buttonCount"] == 3, layout
+    actions_cx = (layout["actions"]["left"] + layout["actions"]["right"]) / 2
+    for key in ("column", "roster", "hint"):
+        assert abs(layout[key]["cx"] - 640) <= 2, (key, layout)
+    assert abs(actions_cx - 640) <= 2, layout
+    # 席位區不遮住底部按鈕。
+    assert max(layout["roster"]["bottom"], layout["hint"]["bottom"], layout["hotseat"]["bottom"]) <= layout["actions"]["top"], layout
+    proof = os.environ.get("REDLINE_CENTER_ROSTER_PROOF")
+    if proof:
+        page.screenshot(path=proof)
     page.context.close()
 
 
@@ -573,11 +753,7 @@ def test_switching_back_to_computer_cancels_pairing_claim_lifecycle(browser, app
     page = new_page(browser, app_url, joycons)
     create_via_flow(page, ai=False, control="joycon")
     pair_one_left(page, joycons)
-    page.click("#sfContinueBtn")
-    page.wait_for_selector("#startFlow", state="hidden")
     page.wait_for_function("window.RedlineController.getState().controller.owned === '%s'" % joycons.controller_id(24801), timeout=15000)
-    page.click("#sfBackBtn")
-    page.click("#sfCreateHuman")
     page.click('[data-sf-control="computer"]')
     page.wait_for_function("!window.RedlineController.getState().enabled && window.RedlineController.getState().controller.owned === null")
     assert page.evaluate("window.RedlineStartFlow.getState().listeners.length") == 0
@@ -587,18 +763,60 @@ def test_switching_back_to_computer_cancels_pairing_claim_lifecycle(browser, app
     page.context.close()
 
 
+def test_joycon_p1_claim_retries_beyond_reconnect_backoff_and_cancels_in_flight(browser, app_url, joycons):
+    page = new_page(browser, app_url, joycons)
+    create_via_flow(page, ai=False, control="joycon")
+    page.wait_for_function("window.RedlineStartFlow.getState().listeners.filter(l => l.owned).length === 4", timeout=20000)
+    # 模擬主 controller socket 重連／claim 暫時不可送出。舊實作約 7.2 秒後會永久停止。
+    page.evaluate("""() => {
+      window.__realSelectController = window.RedlineController.selectController;
+      window.RedlineController.selectController = () => false;
+    }""")
+    joycons.press_chord(24801)
+    page.wait_for_function("window.RedlineStartFlow.getState().paired.length === 1", timeout=8000)
+    page.wait_for_timeout(8500)
+    assert page.evaluate("window.RedlineStartFlow.getState().claimPending") is True
+    assert page.evaluate("window.RedlineController.getState().controller.owned") is None
+    page.evaluate("""() => {
+      window.RedlineController.selectController = window.__realSelectController;
+      delete window.__realSelectController;
+    }""")
+    page.wait_for_function("window.RedlineController.getState().controller.owned === '%s'" % joycons.controller_id(24801), timeout=15000)
+    page.wait_for_function("!window.RedlineStartFlow.getState().claimPending", timeout=2000)
+    page.context.close()
+
+    # claim 尚未成功時直接切回電腦模式，handoff retry 必須停止且不可延遲重搶。
+    page = new_page(browser, app_url, joycons)
+    create_via_flow(page, ai=False, control="joycon")
+    page.wait_for_function("window.RedlineStartFlow.getState().listeners.filter(l => l.owned).length === 4", timeout=20000)
+    page.evaluate("""() => {
+      window.__realSelectController = window.RedlineController.selectController;
+      window.RedlineController.selectController = () => false;
+    }""")
+    joycons.press_chord(24801)
+    page.wait_for_function("window.RedlineStartFlow.getState().claimPending", timeout=8000)
+    page.click('[data-sf-control="computer"]')
+    assert page.evaluate("window.RedlineStartFlow.getState().claimPending") is False
+    page.evaluate("""() => {
+      window.RedlineController.selectController = window.__realSelectController;
+      delete window.__realSelectController;
+    }""")
+    page.wait_for_timeout(1500)
+    assert page.evaluate("window.RedlineController.getState().controller.owned") is None
+    page.context.close()
+
+
 def test_joycon_faction_picker_navigation_a_and_b(browser, app_url, joycons):
     page = new_page(browser, app_url, joycons)
     create_via_flow(page, ai=False, control="joycon")
     pair_one_left(page, joycons)
-    page.click("#sfContinueBtn")
-    page.wait_for_selector("#startFlow", state="hidden")
+    finish_joycon(page)
     page.wait_for_function("window.RedlineController.getState().controller.owned === '%s'" % joycons.controller_id(24801), timeout=15000)
-    page.click("#createRoomBtn")
-    page.wait_for_selector("#factionPicker", state="visible")
     in_picker = "(() => { const a = document.activeElement; return a && a.closest('#factionPicker') ? (a.dataset.faction || a.id || a.textContent.trim().slice(0, 16)) : null; })()"
     # 陣營 modal：第一下只放焦點，之後方向在 modal 內可聚焦項目間移動。
-    seen = []
+    # 自動開啟時焦點已在第一個陣營；是否已啟用手把取決於時序，故以「起點＋三次導覽」整體判斷焦點確實移動過。
+    page.wait_for_function(in_picker, timeout=5000)
+    seen = [page.evaluate(in_picker)]
     for _ in range(3):
         joycons.nav(24801, "down")
         seen.append(page.evaluate(in_picker))
@@ -617,6 +835,133 @@ def test_joycon_faction_picker_navigation_a_and_b(browser, app_url, joycons):
     page.context.close()
 
 
+# ---------------------------------------------------------------- 配對畫面 P1 的 A／B（synthetic bridge，不等於實機）
+def wait_listener_owns(page, controller_id, timeout=15000):
+    page.wait_for_function(
+        "window.RedlineStartFlow.getState().listeners.some(l => l.controller === '%s' && l.owned === '%s')"
+        % (controller_id, controller_id), timeout=timeout)
+
+
+def test_joycon_pairing_p1_a_finishes_without_moving_focus(browser, app_url, joycons):
+    """Synthetic bridge（fixture 封包，不是實體 Joy-Con）：配對後 P1 不用方向鍵移焦點，直接按 A＝「完成配對」。"""
+    page = new_page(browser, app_url, joycons)
+    create_via_flow(page, ai=False, control="joycon")
+    cid = joycons.controller_id(24801)
+    pair_in_order(page, joycons, [24801])
+    sent = track_mutations(page)
+    page.wait_for_timeout(400)
+    assert focus_id(page) != "sfContinueBtn", "前提：焦點不在「完成配對」"
+    assert page.evaluate("window.RedlineStartFlow.getState().step") == "setup"
+    assert sent == [], "配對完成前不可送出任何 server mutation"
+    joycons.press(24801, "A")
+    page.wait_for_selector("#factionPicker", state="visible", timeout=30000)
+    game_id, state = lobby_of(app_url, page)
+    assert (state["control_mode"], state["joycon_count"]) == ("joycon", 1)
+    assert [p[1] for p in state["players"]] == ["P1"]
+    assert page.evaluate("window.RedlineController.getState().controller.owned") == cid
+    page.context.close()
+
+
+def test_joycon_pairing_b_cancels_then_second_b_returns_to_entry(browser, app_url, joycons):
+    """Synthetic bridge（不等於實機）：第一次 B 清空配對並留在配對畫面；P1 交還配對 listener、沒有晚到 claim 奪回；再按 B 回開始選擇。"""
+    page = new_page(browser, app_url, joycons)
+    create_via_flow(page, ai=False, control="joycon")
+    cid = joycons.controller_id(24801)
+    pair_in_order(page, joycons, [24801, 24800])
+    sent = track_mutations(page)
+
+    joycons.press(24801, "B")
+    page.wait_for_function("window.RedlineStartFlow.getState().cancelled && window.RedlineStartFlow.getState().paired.length === 0", timeout=5000)
+    assert page.evaluate("window.RedlineStartFlow.getState().step") == "setup"
+    assert page.is_visible("#sfPairing") and page.get_attribute("#sfPairing", "data-cancelled") == "true"
+    assert "已取消" in page.inner_text("#sfPairingStatus")
+    assert "已取消" in page.inner_text("#sfContinueHint")
+    assert page.is_disabled("#sfContinueBtn")
+    assert page.evaluate("[...document.querySelectorAll('.sf-slot')].every(s => s.dataset.paired === 'false')")
+    # 主連線釋放 P1、交接 claim 重試停止；P1 回到配對 listener（之後才能 SL＋SR 或 B）。
+    wait_listener_owns(page, cid)
+    page.wait_for_timeout(1500)
+    assert page.evaluate("window.RedlineController.getState().controller.owned") is None, "晚到的 claim 不可奪回 P1"
+    assert page.evaluate("window.RedlineStartFlow.getState().claimPending") is False
+    assert page.evaluate("window.RedlineStartFlow.getState().step") == "setup"
+
+    joycons.press(24801, "B")
+    page.wait_for_function("window.RedlineStartFlow.getState().step === 'entry'", timeout=5000)
+    sf = page.evaluate("window.RedlineStartFlow.getState()")
+    assert sf["cancelled"] is False and sf["paired"] == [] and sf["listeners"] == []
+    assert page.is_visible("#sfCreateHuman") and page.is_visible("#sfCreateAi")
+    assert page.is_hidden("#sfSetup")
+    assert sent == [], sent
+    page.context.close()
+
+
+def test_joycon_pairing_second_b_only_from_cancelling_controller(browser, app_url, joycons):
+    """Synthetic bridge（fixture 封包，不等於實體 Joy-Con）：原 P1 取消後，仍由配對 listener 持有的 P2 按 B
+    不可返回、不可送 mutation、不可改變取消狀態；只有剛才取消的原 P1 再按 B 才回到開始選擇。"""
+    page = new_page(browser, app_url, joycons)
+    create_via_flow(page, ai=False, control="joycon")
+    p1, p2 = joycons.controller_id(24801), joycons.controller_id(24803)
+    pair_in_order(page, joycons, [24801, 24803])
+    sent = track_mutations(page)
+
+    joycons.press(24801, "B")
+    page.wait_for_function("window.RedlineStartFlow.getState().cancelled && window.RedlineStartFlow.getState().paired.length === 0", timeout=5000)
+    assert page.evaluate("window.RedlineStartFlow.getState().cancelledBy") == p1
+    wait_listener_owns(page, p1)
+    wait_listener_owns(page, p2)  # 前提：P2 仍由配對 listener 持有，它的 B 會送進配對 listener
+
+    for _ in range(2):
+        joycons.press(24803, "B")
+    page.wait_for_timeout(800)
+    sf = page.evaluate("window.RedlineStartFlow.getState()")
+    assert sf["step"] == "setup", "P2 的 B 不可觸發「← 重新選擇」"
+    assert sf["cancelled"] is True and sf["cancelledBy"] == p1 and sf["paired"] == [], sf
+    assert page.get_attribute("#sfPairing", "data-cancelled") == "true"
+    assert page.is_hidden("#sfEntry") and page.is_visible("#sfSetup")
+    assert sent == [], sent
+
+    joycons.press(24801, "B")
+    page.wait_for_function("window.RedlineStartFlow.getState().step === 'entry'", timeout=5000)
+    sf = page.evaluate("window.RedlineStartFlow.getState()")
+    assert sf["cancelled"] is False and sf["cancelledBy"] is None and sf["paired"] == [] and sf["listeners"] == [], sf
+    assert page.is_visible("#sfCreateHuman") and page.is_visible("#sfCreateAi")
+    assert sent == [], sent
+    page.context.close()
+
+
+def test_joycon_pairing_b_cancel_then_sl_sr_repairs_and_a_finishes(browser, app_url, joycons):
+    """Synthetic bridge（不等於實機）：第一次 B 後不再按 B，同一支重新 SL＋SR 成為 P1（ownership 回到主連線），之後 A 完成。"""
+    page = new_page(browser, app_url, joycons)
+    create_via_flow(page, ai=True, control="joycon")
+    p1, p2 = joycons.controller_id(24801), joycons.controller_id(24803)
+    pair_in_order(page, joycons, [24801])
+    joycons.press(24801, "B")
+    page.wait_for_function("window.RedlineStartFlow.getState().cancelled && window.RedlineStartFlow.getState().paired.length === 0", timeout=5000)
+    wait_listener_owns(page, p1)
+
+    joycons.press_chord(24801)
+    page.wait_for_function("window.RedlineStartFlow.getState().paired.length === 1", timeout=8000)
+    assert page.evaluate("window.RedlineStartFlow.getState().paired") == [p1]
+    assert page.evaluate("window.RedlineStartFlow.getState().cancelled") is False
+    assert page.evaluate("window.RedlineStartFlow.getState().cancelledBy") is None
+    assert page.get_attribute("#sfPairing", "data-cancelled") is None
+    page.wait_for_function("window.RedlineController.getState().controller.owned === '%s'" % p1, timeout=15000)
+    page.wait_for_function("!window.RedlineStartFlow.getState().claimPending", timeout=5000)
+    joycons.press_chord(24803)
+    page.wait_for_function("window.RedlineStartFlow.getState().paired.length === 2", timeout=8000)
+    assert page.evaluate("window.RedlineStartFlow.getState().paired") == [p1, p2]
+    assert page.evaluate("window.RedlineStartFlow.getState().step") == "setup"
+    assert page.is_enabled("#sfContinueBtn")
+
+    joycons.press(24801, "A")
+    page.wait_for_selector("#factionPicker", state="visible", timeout=30000)
+    page.wait_for_function("window.RedlineHotSeat.getState().seats.length === 2 && window.RedlineHotSeat.getState().seats.every(s => s.controller)", timeout=20000)
+    assert [s["controller"] for s in page.evaluate("window.RedlineHotSeat.getState().seats")] == [p1, p2]
+    _, state = lobby_of(app_url, page)
+    assert [p[1] for p in state["players"]] == ["P1", "P2"]
+    page.context.close()
+
+
 @pytest.mark.parametrize("ai", [True, False])
 def test_computer_mode_keeps_room_settings_and_preroom_ai_seat_matches_entry(browser, app_url, ai):
     page = new_page(browser, app_url)
@@ -632,4 +977,479 @@ def test_computer_mode_keeps_room_settings_and_preroom_ai_seat_matches_entry(bro
     _, state = lobby_of(app_url, page)
     assert state["ai_red_army"] is ai
     page.wait_for_function(f"document.querySelectorAll('#lobbyRoster .ai-seat').length === {1 if ai else 0}")
+    # 非 Joy-Con：維持左右兩欄，#hotseatLobby（客廳輪流開關、席位列）照常可用。
+    page.click("#closeFactionPickerBtn")
+    page.wait_for_selector("#factionPicker", state="hidden")
+    assert visible(page, "#hotseatEnableChk")
+    page.check("#hotseatEnableChk")
+    page.wait_for_function("document.querySelectorAll('#hotseatSeatList .hs-seat').length >= 1", timeout=10000)
+    assert visible(page, "#hotseatSeatList") and visible(page, "#hotseatLobbyHint") and visible(page, "#hotseatAddSeatBtn")
+    assert page.evaluate(ROSTER_LAYOUT_JS)["column"]["left"] > 640
     page.context.close()
+
+
+# ---------------------------------------------------------------- Joy-Con 逐棒交接（P1→P2→…→回房主 P1 啟動）
+FACTION_PICKS = [("hong_kong", None), ("taiwan_green", None), ("tibet_family", None), ("red_army", "北京")]
+
+
+def local_seats(page):
+    gid = page.evaluate("window.RedlineSession.current().gameId")
+    store = page.evaluate("JSON.parse(localStorage.getItem('redline.hotseat.v1'))")
+    return gid, store["games"][gid]["seats"]
+
+
+def pair_in_order(page, joycons, ports):
+    page.wait_for_function("window.RedlineStartFlow.getState().listeners.filter(l => l.owned).length === 4", timeout=20000)
+    for n, port in enumerate(ports, start=1):
+        joycons.press_chord(port)
+        page.wait_for_function(f"window.RedlineStartFlow.getState().paired.length === {n}", timeout=8000)
+        if n == 1:
+            page.wait_for_function("window.RedlineController.getState().controller.owned === '%s'" % joycons.controller_id(port), timeout=15000)
+    return page.evaluate("window.RedlineStartFlow.getState().paired")
+
+
+def wait_turn(page, joycons, player_id, port, picker=True):
+    """這一棒：整頁已切到該席位、bridge 擁有權在它的手把、陣營選擇開啟且焦點在陣營選項。"""
+    page.wait_for_function("window.RedlineSession.current().playerId === '%s'" % player_id, timeout=30000)
+    page.wait_for_function("window.RedlineController.getState().controller.owned === '%s'" % joycons.controller_id(port), timeout=30000)
+    if picker:
+        page.wait_for_selector("#factionPicker", state="visible", timeout=30000)
+        page.wait_for_function("(() => { const a = document.activeElement; return !!a && !!a.closest('#factionList') && a.classList.contains('faction-choice-btn') && !a.disabled; })()", timeout=30000)
+
+
+def finish_turn(app_url, gid, seat, pick):
+    player_id, token = seat["player_id"], seat["resume_token"]
+    faction, base = pick
+    body = {"game_id": gid, "player_id": player_id, "resume_token": token, "faction_id": faction}
+    if base:
+        body["base_name"] = base
+    assert "error" not in requests.post(f"{app_url}/choose-faction", json=body).json()
+    assert requests.post(f"{app_url}/ready", json={"game_id": gid, "player_id": player_id, "resume_token": token, "ready": True}).json().get("success")
+
+
+def start_focused(page):
+    page.wait_for_function("document.activeElement && document.activeElement.id === 'startGameBtn'", timeout=30000)
+
+
+def test_joycon_two_players_hand_off_p1_to_p2_then_back_to_host_who_starts(browser, app_url, joycons):
+    page = new_page(browser, app_url, joycons)
+    create_via_flow(page, ai=True, control="joycon")
+    ports = [24801, 24800]  # P1＝左（A 鍵有 fixture 對應）、P2＝右
+    pair_in_order(page, joycons, ports)
+    page.click("#sfContinueBtn")
+    page.wait_for_selector("#factionPicker", state="visible", timeout=30000)
+    gid, seats = local_seats(page)
+    lobby = requests.get(f"{app_url}/lobby/{gid}").json()
+    # 兩支 → server lobby、本機 seat store 都是 P1、P2（AI 紅軍另占一席，不算真人）。
+    assert [p[1] for p in lobby["players"]] == ["P1", "P2"]
+    assert [s["player_id"] for s in seats] == [p[0] for p in lobby["players"]]
+    assert [s["name"] for s in seats] == ["P1", "P2"], "本機 P1 席位也必須是 P1，不是輸入欄預設的 host"
+    p1, p2 = seats[0], seats[1]
+    wait_turn(page, joycons, p1["player_id"], 24801)
+    assert page.evaluate("window.RedlineSession.current().playerId") == p1["player_id"]
+
+    # P1 完成選擇並 ready → 自動把整個 session、bridge 擁有權、焦點交給 P2，並直接開啟 P2 的陣營選擇。
+    finish_turn(app_url, gid, p1, FACTION_PICKS[0])
+    wait_turn(page, joycons, p2["player_id"], 24800)
+    assert page.evaluate("window.RedlineHotSeat.getState().controllerOwner.seat") == p2["player_id"]
+    for sel in ("#playerName", "#createRoomBtn", "#roomSettingsSummary", "#roomId", "#lanUrl", "#marketModeSelect", '[data-ai-red-army="on"]'):
+        assert not visible(page, sel), sel
+    # 這一棒 reload：仍是 P2、不新增房間或席位。
+    page.reload()
+    page.wait_for_function("window.RedlineSession.current().playerId === '%s'" % p2["player_id"], timeout=30000)
+    assert [p[0] for p in requests.get(f"{app_url}/lobby/{gid}").json()["players"]] == [p1["player_id"], p2["player_id"]]
+    # P2 不能啟動：伺服器只認房主憑證，P2 自己的 token 也不行；公開 host_id 不是憑證。
+    denied = requests.post(f"{app_url}/start", json={"game_id": gid, "player_id": p2["player_id"], "resume_token": p2["resume_token"]}).json()
+    assert "error" in denied
+    assert "error" in requests.post(f"{app_url}/start", json={"game_id": gid, "player_id": p1["player_id"]}).json()
+
+    # P2 完成並 ready → 最後一棒自動交回 P1：P1 的 Joy-Con 取得 ownership，焦點在「啟動行動」，尚未啟動。
+    finish_turn(app_url, gid, p2, FACTION_PICKS[1])
+    wait_turn(page, joycons, p1["player_id"], 24801, picker=False)
+    start_focused(page)
+    assert requests.get(f"{app_url}/lobby/{gid}").json()["started"] is False
+    assert not visible(page, "#factionPicker")
+    assert page.evaluate("window.RedlineHotSeat.getState().controllerOwner.seat") == p1["player_id"]
+    # P2 的 Joy-Con（右）按 A 不會啟動；房主 P1 的 Joy-Con 按 A 才啟動。
+    joycons.press(24800, "A")
+    page.wait_for_timeout(600)
+    assert requests.get(f"{app_url}/lobby/{gid}").json()["started"] is False
+    joycons.press(24801, "A")
+    page.wait_for_function("window.RedlineSession.current().started", timeout=30000)
+    assert requests.get(f"{app_url}/lobby/{gid}").json()["started"] is True
+    page.context.close()
+
+
+@pytest.mark.parametrize("ai,ports", [(True, [24801, 24800, 24802]), (False, [24801, 24800, 24802, 24803])])
+def test_joycon_three_and_four_players_hand_off_in_order_then_return_to_host(browser, app_url, joycons, ai, ports):
+    page = new_page(browser, app_url, joycons)
+    create_via_flow(page, ai=ai, control="joycon")
+    pair_in_order(page, joycons, ports)
+    page.click("#sfContinueBtn")
+    page.wait_for_selector("#factionPicker", state="visible", timeout=30000)
+    gid, seats = local_seats(page)
+    lobby = requests.get(f"{app_url}/lobby/{gid}").json()
+    n = len(ports)
+    assert [p[1] for p in lobby["players"]] == [f"P{i + 1}" for i in range(n)]
+    assert [s["player_id"] for s in seats] == [p[0] for p in lobby["players"]]
+    wait_turn(page, joycons, seats[0]["player_id"], ports[0])
+    visited = [page.evaluate("window.RedlineSession.current().playerId")]
+    picks = FACTION_PICKS[:n - 1] + ([FACTION_PICKS[2]] if ai else [FACTION_PICKS[3]])
+    for i in range(n):
+        # 前一棒完成前，lobby 仍只輪到第 i 棒：後面的席位沒有 faction／ready。
+        current = requests.get(f"{app_url}/lobby/{gid}").json()
+        assert all(seats[j]["player_id"] not in current["ready"] or not current["ready"][seats[j]["player_id"]] for j in range(i, n))
+        finish_turn(app_url, gid, seats[i], picks[i])
+        if i + 1 < n:
+            wait_turn(page, joycons, seats[i + 1]["player_id"], ports[i + 1])
+            visited.append(page.evaluate("window.RedlineSession.current().playerId"))
+    wait_turn(page, joycons, seats[0]["player_id"], ports[0], picker=False)
+    start_focused(page)
+    assert visited == [s["player_id"] for s in seats]
+    assert page.evaluate("window.RedlineSession.current().playerId") == seats[0]["player_id"]
+    assert requests.get(f"{app_url}/lobby/{gid}").json()["started"] is False
+    assert page.is_enabled("#startGameBtn")
+    page.context.close()
+
+
+def test_joycon_provisioning_survives_lobby_refresh_failures_and_creates_exactly_p1_p2(browser, app_url, joycons):
+    """實機 P2 失敗的根因：席位已建立後的 /lobby 刷新失敗（或配置期間被 claim／改名插隊）會讓整個配置被誤判失敗。"""
+    page = new_page(browser, app_url, joycons)
+    create_via_flow(page, ai=True, control="joycon")
+    pair_in_order(page, joycons, [24801, 24800])
+    seen = []
+
+    def flaky_lobby(route):
+        seen.append(1)
+        if len(seen) % 2 == 0:
+            route.abort("connectionreset")
+        else:
+            route.continue_()
+
+    page.route("**/lobby/*", flaky_lobby)
+    page.click("#sfContinueBtn")
+    page.wait_for_selector("#factionPicker", state="visible", timeout=40000)
+    page.unroute("**/lobby/*", flaky_lobby)
+    gid, seats = local_seats(page)
+    lobby = requests.get(f"{app_url}/lobby/{gid}").json()
+    assert [p[1] for p in lobby["players"]] == ["P1", "P2"]
+    assert [s["player_id"] for s in seats] == [p[0] for p in lobby["players"]]
+    assert page.is_hidden("#sfAutoSetup")
+    page.context.close()
+
+
+# ---------------------------------------------------------------- 起始畫面：單一 Joy-Con 不用 SL＋SR 直接導覽
+@pytest.fixture
+def single_joycon(app_url):
+    """bridge 上只有一支左 Joy-Con（24801）有訊號；其他埠不送封包（不在 roster）。"""
+    fake = FakeJoyCons(app_url, present={24801})
+    yield fake
+    fake.close()
+
+
+def nav_state(page):
+    return page.evaluate("window.RedlineController.getState()")
+
+
+def wait_nav_claim(page, controller_id, timeout=15000):
+    page.wait_for_function(
+        "(() => { const s = window.RedlineController.getState(); return s.controller.owned === '%s' && s.status === 'connected'"
+        " && s.startNav.claim === '%s'; })()" % (controller_id, controller_id), timeout=timeout)
+
+
+def track_mutations(page):
+    """記下所有非 GET 的 HTTP 請求（/create、/join、ready、start 等 server mutation）。"""
+    sent = []
+    page.on("request", lambda r: sent.append(f"{r.method} {r.url}") if r.method != "GET" else None)
+    return sent
+
+
+def nav_to(page, joycons, port, selector, limit=12):
+    """以真實 bridge frame 的方向鍵把焦點移到 selector（依畫面位置選方向）；第一下只放焦點。回傳是否到達。"""
+    for _ in range(limit):
+        delta = page.evaluate("""(sel) => {
+          const t = document.querySelector(sel), a = document.activeElement;
+          if (!t) return null;
+          if (a === t) return 'done';
+          if (!a || a === document.body || !a.classList.contains('rl-pad-focus')) return 'none';
+          const r = t.getBoundingClientRect(), q = a.getBoundingClientRect();
+          return [(r.left + r.right - q.left - q.right) / 2, (r.top + r.bottom - q.top - q.bottom) / 2];
+        }""", selector)
+        if delta == "done":
+            return True
+        if delta is None:
+            return False
+        if delta == "none":
+            joycons.nav(port, "down")  # 第一下只放焦點
+            continue
+        dx, dy = delta
+        joycons.nav(port, ("right" if dx > 0 else "left") if abs(dx) >= abs(dy) else ("down" if dy > 0 else "up"))
+    return page.evaluate("(sel) => document.activeElement === document.querySelector(sel)", selector)
+
+
+@pytest.mark.parametrize("ai", [False, True], ids=["human", "ai"])
+def test_single_joycon_drives_start_screen_without_sl_sr_and_creates_no_seat(browser, app_url, single_joycon, ai):
+    fake = single_joycon
+    cid = fake.controller_id(24801)
+    page = new_page(browser, app_url, fake)
+    sent = track_mutations(page)
+    # 搖桿控制未啟用（預設）：起始畫面只為導覽開暫時連線，恰好一支 → 自動 claim，沒有按 SL＋SR。
+    wait_nav_claim(page, cid)
+    s = nav_state(page)
+    assert s["enabled"] is False and s["startNav"]["on"] is True and s["startNav"]["live"] is True
+    assert page.evaluate("localStorage.getItem('redline.controller.v1')").find('"enabled":false') >= 0, "不寫入啟用設定"
+    assert page.evaluate("sessionStorage.getItem('redline.controller.claim.v1')") is None, "導覽手把不存成手把偏好"
+    sf = page.evaluate("window.RedlineStartFlow.getState()")
+    assert sf["step"] == "entry" and sf["paired"] == [] and sf["listeners"] == [] and sf["startNav"] is True
+    # 第一個 frame 是 baseline；第一下方向只放焦點（不執行），之後方向鍵移動、A 觸發既有按鈕。
+    target = "sfCreateAi" if ai else "sfCreateHuman"
+    assert nav_to(page, fake, 24801, "#" + target), focus_id(page)
+    assert page.evaluate("window.RedlineStartFlow.getState().step") == "entry"
+    fake.press(24801, "A")
+    page.wait_for_function("window.RedlineStartFlow.getState().step === 'setup'", timeout=5000)
+    assert page.evaluate("window.RedlineStartFlow.getState().draft.aiRedArmy") is ai
+    assert page.inner_text("#sfSetupTitle") == ("建立 AI 紅軍遊戲" if ai else "建立真人紅軍遊戲")
+    # 起始設定（難度）也由同一支操作；仍是導覽，不是 P1。
+    assert nav_to(page, fake, 24801, '[data-sf-market="all_cards"]'), focus_id(page)
+    fake.press(24801, "A")
+    page.wait_for_function("window.RedlineStartFlow.getState().draft.marketMode === 'all_cards'", timeout=5000)
+    # 沒有建立／綁定任何席位、沒有 server mutation、沒有 session。
+    sf = page.evaluate("window.RedlineStartFlow.getState()")
+    assert sf["paired"] == [] and sf["pending"] is None
+    assert page.evaluate("window.RedlineSession.current().gameId") in (None, "")
+    assert page.evaluate("window.RedlineHotSeat.getState().seats.length") == 0
+    assert sent == [], sent
+    assert nav_state(page)["controller"]["owned"] == cid
+    page.context.close()
+
+
+def test_single_joycon_nav_then_formal_pairing_still_needs_sl_sr(browser, app_url, single_joycon):
+    fake = single_joycon
+    cid = fake.controller_id(24801)
+    page = new_page(browser, app_url, fake)
+    sent = track_mutations(page)
+    wait_nav_claim(page, cid)
+    assert nav_to(page, fake, 24801, "#sfCreateHuman")
+    fake.press(24801, "A")
+    page.wait_for_function("window.RedlineStartFlow.getState().step === 'setup'", timeout=5000)
+    assert nav_to(page, fake, 24801, '[data-sf-control="joycon"]'), focus_id(page)
+    fake.press(24801, "A")
+    # 進入正式配對：導覽權撤銷，主連線不擁有；手把交給配對 listener，仍要 SL＋SR 才成為 P1。
+    page.wait_for_function("window.RedlineStartFlow.getState().listeners.some(l => l.owned === '%s')" % cid, timeout=15000)
+    s = nav_state(page)
+    assert s["startNav"]["on"] is False and s["startNav"]["claim"] is None and s["controller"]["owned"] is None
+    page.wait_for_timeout(800)
+    assert page.evaluate("window.RedlineStartFlow.getState().paired") == [], "沒有按 SL＋SR 不會自動成為 P1"
+    fake.press_chord(24801)
+    page.wait_for_function("window.RedlineStartFlow.getState().paired.length === 1", timeout=8000)
+    assert page.evaluate("window.RedlineStartFlow.getState().paired") == [cid]
+    page.wait_for_function("window.RedlineController.getState().controller.owned === '%s'" % cid, timeout=15000)
+    assert sent == [], sent
+    page.context.close()
+
+
+def test_start_nav_fail_closed_for_zero_multiple_and_other_tab(browser, app_url):
+    # 0 支：bridge 沒有任何手把。
+    empty = FakeJoyCons(app_url, present=set())
+    two = FakeJoyCons(app_url, present={24800, 24801})
+    one = FakeJoyCons(app_url, present={24801})
+    try:
+        page = new_page(browser, app_url, empty)
+        page.wait_for_function("(() => { const s = window.RedlineController.getState(); return s.controller.mode === 'v2' && Array.isArray(s.controller.roster); })()", timeout=15000)
+        page.wait_for_timeout(800)
+        s = nav_state(page)
+        assert s["controller"]["owned"] is None and s["startNav"]["claim"] is None
+        assert page.is_hidden("#padHint"), "沒拿到手把時不顯示暫時連線狀態"
+        page.context.close()
+        # 多支：兩支都有訊號 → 不猜，誰都不拿；按鍵完全不作用。
+        page = new_page(browser, app_url, two)
+        page.wait_for_function("(window.RedlineController.getState().controller.roster || []).filter(c => c.status === 'active').length === 2", timeout=15000)
+        page.wait_for_timeout(800)
+        assert nav_state(page)["controller"]["owned"] is None
+        two.nav(24801, "right")
+        two.press(24801, "A")
+        assert nav_state(page)["padActive"] is False
+        assert page.evaluate("window.RedlineStartFlow.getState().step") == "entry"
+        page.context.close()
+        # other-tab：第一個分頁已拿到唯一一支；第二個分頁看到 owner=other，不搶。
+        first = new_page(browser, app_url, one)
+        wait_nav_claim(first, one.controller_id(24801))
+        second = new_page(browser, app_url, one)
+        second.wait_for_function("(window.RedlineController.getState().controller.roster || []).some(c => c.owner === 'other')", timeout=15000)
+        second.wait_for_timeout(1000)
+        assert nav_state(second)["controller"]["owned"] is None
+        assert nav_state(first)["controller"]["owned"] == one.controller_id(24801)
+        second.context.close()
+        first.context.close()
+    finally:
+        for fake in (empty, two, one):
+            fake.close()
+
+
+def test_start_nav_revoked_when_second_controller_appears_or_pad_goes_stale(browser, app_url, single_joycon):
+    fake = single_joycon
+    cid = fake.controller_id(24801)
+    page = new_page(browser, app_url, fake)
+    wait_nav_claim(page, cid)
+    assert nav_to(page, fake, 24801, "#sfCreateAi")
+    # 第二支連上：恰好一支 → 多支，撤銷導覽（不留幽靈 controller），舊手把的 A 不作用。
+    fake.present.add(24800)
+    page.wait_for_function("window.RedlineController.getState().controller.owned === null", timeout=8000)
+    s = nav_state(page)
+    assert s["startNav"]["claim"] is None and s["status"] == "unbound" and s["padActive"] is False
+    fake.press(24801, "A")
+    fake.press(24800, "A")
+    assert page.evaluate("window.RedlineStartFlow.getState().step") == "entry"
+    # 第二支訊號消失（stale）：又只剩一支有訊號 → 重新取得導覽（第一下仍只放焦點）。
+    fake.present.discard(24800)
+    wait_nav_claim(page, cid)
+    # 唯一那支訊號消失：撤銷。
+    fake.present.discard(24801)
+    page.wait_for_function("window.RedlineController.getState().controller.owned === null", timeout=8000)
+    assert nav_state(page)["startNav"]["claim"] is None
+    fake.present.add(24801)
+    wait_nav_claim(page, cid)
+    assert page.evaluate("window.RedlineStartFlow.getState().step") == "entry"
+    page.context.close()
+
+
+# 記下這個文件每一條 WebSocket 收到的第一筆 bridge frame（buttons）：證明新連線建立時 bridge 已經是「按住」。
+FIRST_FRAME_PROBE = """
+(() => {
+  const Base = window.WebSocket;
+  window.__padSockets = [];
+  window.WebSocket = class FirstFrameProbe extends Base {
+    constructor(...args) {
+      super(...args);
+      const rec = { first: null };
+      window.__padSockets.push(rec);
+      this.addEventListener('message', (e) => {
+        if (rec.first || typeof e.data !== 'string') return;
+        try { const m = JSON.parse(e.data); if (m && m.type === 'frame') rec.first = m.buttons; } catch {}
+      });
+    }
+  };
+})();
+"""
+
+
+def first_frames(page, since=0):
+    return page.evaluate("(n) => window.__padSockets.slice(n).filter(s => s.first).map(s => s.first)", since)
+
+
+def wait_pad_held(page, button, held, timeout=8000):
+    """等這個分頁的 reducer 真的處理到該 frame（getState().held）；取代固定等待。"""
+    page.wait_for_function("([b, v]) => window.RedlineController.getState().held[b] === v", arg=[button, held], timeout=timeout)
+
+
+def test_start_nav_held_a_on_reload_and_bridge_reconnect_is_baseline_only(browser, app_url, single_joycon):
+    """產品不變式：連線建立前就按住的 A，在新連線上只是 baseline（不放焦點、不觸發）；放開也不算操作。
+
+    前提必須先成立：fake.hold 等到 bridge 已收到按住 A 才重新整理／重連。直接寫 fake.held 再 reload 時，
+    feed 執行緒（每 30ms）和新連線沒有先後保證；若新連線的第一筆仍是放開，之後的按住就是一次真的按下，
+    頁面把它當第一下放焦點（padActive=true）是正確行為，那是 fixture 競態，不是 baseline 失效。
+    """
+    fake = single_joycon
+    cid = fake.controller_id(24801)
+    page = new_page(browser, app_url, fake, init_script=FIRST_FRAME_PROBE)
+    wait_nav_claim(page, cid)
+    assert nav_to(page, fake, 24801, "#sfCreateHuman")
+    # 按住 A 重新整理（舊文件看到的是一次真的按下，可能點了「建立真人」；重新整理後的新頁面不受影響）。
+    fake.hold(24801, "A")
+    page.reload()
+    page.wait_for_selector("#startFlow:not([hidden])")
+    wait_nav_claim(page, cid)
+    wait_pad_held(page, "A", True)
+    frames = first_frames(page)
+    assert frames and all(f[0] & 0x08 for f in frames), f"新連線第一筆 frame 必須已按住 A：{frames}"
+    s = nav_state(page)
+    assert s["padActive"] is False, f"按住 A 重新整理：新連線第一筆只當 baseline：{s}"
+    assert page.evaluate("window.RedlineStartFlow.getState().step") == "entry"
+    fake.release(24801, "A")
+    wait_pad_held(page, "A", False)
+    assert page.evaluate("window.RedlineStartFlow.getState().step") == "entry"
+    assert nav_state(page)["padActive"] is False, "放開 A 也不算一次操作"
+    # bridge 重連時仍按著 A。目前連線把這次按下當第一下（只放焦點），再把焦點移到「建立真人」：
+    # 重連後若把按住的 A 當成新的按下，就會點下去進入 setup。
+    fake.hold(24801, "A")
+    page.wait_for_function("window.RedlineController.getState().padActive === true", timeout=5000)
+    assert nav_to(page, fake, 24801, "#sfCreateHuman"), focus_id(page)
+    sockets = page.evaluate("window.__padSockets.length")
+    page.evaluate("window.RedlineController.setEnabled(false)")  # 未啟用：起始畫面導覽改用新的暫時連線
+    wait_nav_claim(page, cid)
+    wait_pad_held(page, "A", True)
+    frames = first_frames(page, sockets)
+    assert frames and all(f[0] & 0x08 for f in frames), f"重連後第一筆 frame 必須已按住 A：{frames}"
+    assert page.evaluate("window.RedlineStartFlow.getState().step") == "entry"
+    assert nav_state(page)["focusSig"] == "#sfCreateHuman"
+    fake.release(24801, "A")
+    wait_pad_held(page, "A", False)
+    assert page.evaluate("window.RedlineStartFlow.getState().step") == "entry"
+    # 對照：放開後再按一次 A，同一個焦點立即作用（證明上面的「沒有作用」不是焦點或連線失效）。
+    fake.press(24801, "A")
+    page.wait_for_function("window.RedlineStartFlow.getState().step === 'setup'", timeout=5000)
+    page.context.close()
+
+
+def test_start_nav_leaves_desktop_mode_only(browser, app_url, single_joycon):
+    page = new_page(browser, app_url, single_joycon, display="living-room")
+    wait_nav_claim(page, single_joycon.controller_id(24801))
+    assert nav_state(page)["livingRoom"] is None
+    assert page.evaluate("[window.RedlineDisplayMode.get(), document.documentElement.dataset.display ?? null]") == ["desktop", None]
+    page.context.close()
+
+
+def test_browser_tests_never_reach_resident_bridge_on_8000(browser, app_url):
+    """預設 bridge 位址（常駐服務的 8000）在測試中一律被 conftest 換成沉默的 mock：沒有 roster、沒有 claim。"""
+    page = new_page(browser, app_url)
+    page.wait_for_timeout(1500)
+    s = nav_state(page)
+    assert s["url"] == "ws://127.0.0.1:8000/ws" and s["startNav"]["on"] is True
+    # 沉默的 mock 沒有 v2 roster：沒有任何 bridge 手把；未啟用時舊版（無身份）frame 也一律不收。
+    assert s["controller"]["roster"] is None and s["controller"]["mode"] != "v2" and s["startNav"]["claim"] is None
+    page.evaluate("window.RedlineController.feed({x: 1, y: 0, buttons: [0, 8]})")
+    assert nav_state(page)["padActive"] is False
+    assert page.is_hidden("#padHint")
+    page.context.close()
+
+
+def test_start_nav_exit_releases_claim_still_in_flight_when_controller_is_enabled(browser, app_url, single_joycon):
+    """離開起始頁時，晚到的導覽 claim 不得變成一般 ownership、保存偏好或留下幽靈控制權。"""
+    fake = single_joycon
+    ctx = browser.new_context(viewport={"width": 1280, "height": 720})
+    ctx.add_init_script(
+        f"""
+        localStorage.setItem('redline.controller.v1', JSON.stringify({{enabled: true, url: '{fake.url}'}}));
+        const NativeWebSocket = window.WebSocket;
+        window.WebSocket = class DelayedClaimWebSocket extends NativeWebSocket {{
+          send(data) {{
+            let message = null;
+            try {{ message = JSON.parse(data); }} catch {{}}
+            if (message && message.type === 'claim' && !window.__delayedStartNavClaim) {{
+              window.__delayedStartNavClaim = true;
+              setTimeout(() => super.send(data), 600);
+              return;
+            }}
+            if (message && message.type === 'release' && window.__delayedStartNavClaim) {{
+              setTimeout(() => super.send(data), 650);
+              return;
+            }}
+            return super.send(data);
+          }}
+        }};
+        """
+    )
+    page = ctx.new_page()
+    page.goto(app_url + "/")
+    page.wait_for_selector("#startFlow:not([hidden])")
+    page.wait_for_function("window.__delayedStartNavClaim === true", timeout=15000)
+
+    page.evaluate("window.RedlineStartFlow.hide()")
+    page.wait_for_timeout(1800)
+
+    state = nav_state(page)
+    assert state["startNav"]["on"] is False
+    assert state["startNav"]["claim"] is None
+    assert state["controller"]["owned"] is None
+    assert page.evaluate("sessionStorage.getItem('redline.controller.claim.v1')") is None
+    ctx.close()

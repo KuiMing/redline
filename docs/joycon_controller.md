@@ -29,38 +29,46 @@
 
 ## 啟用
 
-右下角 🎮 → 勾選「啟用搖桿控制」。設定（是否啟用、Bridge 位址）存在 `localStorage`（`redline.controller.v1`）。
+開始畫面／大廳右下角 🎮 → 勾選「啟用搖桿控制」（遊戲畫面中不顯示 🎮，也不能開啟這個設定／狀態面板）。設定（是否啟用、Bridge 位址）存在 `localStorage`（`redline.controller.v1`）。
 未啟用時不會建立任何連線、不會接管焦點；控制器未連線時 UI 正常。位址只接受 `ws(s)://127.0.0.1`、`localhost`、`[::1]`。
 
 連線狀態：未啟用／連線中／已連線／未選擇手把（bridge 已連線但這個分頁沒有手把）／訊號中斷（stale，bridge 回報這支手把 stale 或超過 1.5 秒沒收到 frame）／無法連線（自動以 1→8 秒退避重連，也可按「重新連線」）。
 
 ## 預設操作（桌面模式）
 
-客廳大螢幕模式另有一套內容導航與專用快捷鍵，見下方「客廳大螢幕模式」。
+產品只保留桌面模式；以 Joy-Con 遊玩也是桌面模式。「客廳大螢幕」顯示模式已移除（見下方「客廳大螢幕模式（已移除）」）。
 
 | 輸入 | 動作 |
 | --- | --- |
-| 右搖桿 | 方向導航，**只在內容之間**（deadzone 0.5；按住有 380ms 延遲後每 140ms 重複一次）。與客廳模式同一份排除規則（`Core.isDirectionalExcluded`）：六個全域分頁、回合列（結束行動／紅軍能力）、手牌卡內的「資源」「行動」「棄置」、陣營能力發動鈕、購買選擇按鈕、按鍵提示列**永遠不會**取得方向焦點（`.rl-pad-focus` 與瀏覽器原生 focus 皆然）；手牌只以整張卡牌取得焦點 |
+| 右搖桿 | 方向導航，**只在內容之間**（deadzone 0.5；按住有 380ms 延遲後每 140ms 重複一次）。與客廳模式同一份排除規則（`Core.isDirectionalExcluded`）：六個全域分頁、回合列（結束行動／紅軍能力）、手牌卡內的「資源」「行動」「棄置」、陣營能力發動鈕、購買選擇按鈕、按鍵提示列**永遠不會**取得方向焦點（`.rl-pad-focus` 與瀏覽器原生 focus 皆然）；手牌只以整張卡牌取得焦點。手牌超過手牌區可視張數（1280×720 舞台約 6 張）時，被裁掉的後段手牌仍在焦點集合內（只看是否顯示、有尺寸，不看 overflow 裁切），焦點移過去時手牌區自動水平捲動讓整張卡可見；手牌卡帶 `data-card-index`（伺服器手牌位置），每次狀態推送整列重建後焦點依位置重新綁定（同名手牌不會被綁回第一張），捲動位置也會保留 |
 | A | 確認／啟用目前焦點（呼叫既有 click handler）；**焦點在任何卡牌上時一律只開啟置中卡牌預覽**，不執行、不選擇、不購買 |
 | B | 返回／取消——只在目前 UI 本身有可見、可用的取消／關閉按鈕時才作用，否則什麼都不做 |
 | B（卡牌） | 焦點在購買區卡牌（選擇按鈕不進入焦點集合；卡面以 2px 不透明黃色邊框標示，框內透明）時切換選擇，點擊該卡既有選擇按鈕；按鈕停用（伺服器權威）則不作用。多張選擇照舊（逐張 B） |
-| X（手牌） | 焦點在整張手牌時＝以資源使用：點擊該卡既有「資源」按鈕；按鈕不存在（如一般奧援為「棄置」）、隱藏或停用則不作用 |
+| X（手牌） | 焦點在整張手牌時＝以資源使用：點擊該卡既有「資源」按鈕；隱藏或停用則不作用。**一般（非紅軍）奧援**的同一位置是既有「棄置」按鈕：X＝開啟危險確認單（預設焦點「返回」；B 或「返回」取消；右移到「確認」再按 A 才點既有「棄置」，以手牌 key 綁定並在確認當下重驗可見、啟用、標籤未變；伺服器照常驗證）。「棄置」鈕停用／隱藏／不只一顆時 X 不作用（不改走資源）。紅軍奧援的按鈕是「資源」，X 照舊＝資源。判斷只看該卡既有按鈕（`LR.discardControlIndex`：標籤恰好一顆「棄置」），不看卡名。與客廳模式同一個函式（`startDiscard`）與閘門 |
+| B（手牌） | 與其他非卡牌焦點相同的返回／取消語意（頁面上沒有可取消的 UI 時不作用）；**不是棄置快捷鍵** |
 | Y（手牌） | 焦點在整張手牌時＝以行動使用：點擊該卡既有「行動」按鈕；隱藏或停用則不作用 |
 | Y（購買卡） | **先 B 選擇，再按 Y**：焦點卡是有效的已選擇卡（選擇按鈕可見、未停用）且既有「購買所選」可用時，點它開啟既有購買確認單（內容是目前整份選擇；確認、資源檢查與 `buy_cards` 都在既有確認單）。未選擇、選擇按鈕停用／隱藏（例如售完）、合計買不起（按鈕停用）、按鈕隱藏或不存在一律 fail closed；**Y 永遠不會選擇任何卡**、不直接購買。與客廳模式同一個函式與閘門 |
 | Y（地圖目標） | 焦點在地圖城鎮目標時＝該目標的既有地圖操作（建立組織／確認移動／瓦解組織，見下方協定 `act`），與客廳模式同一條 iframe `act`＋`req` 確認路徑與閘門：可先用 A 走既有選取，也可直接 Y（iframe 會先走同一個選取）。只有對上 `req` 的 `ok:true` 才算執行（之後上處理中鎖）；沒有操作的目標（例如一般來源）、沒有 iframe、`ok:false`、1 秒逾時一律 fail closed，且不切換說明 |
-| R / SR | **選取六個全域區段的唯一方式**，與客廳模式同一個環：指揮中心→戰略地圖→戰況紀錄→我的陣營→事件卡→時代關卡（點既有分頁／開既有說明 modal；在事件卡／時代關卡說明 modal 內按 R／SR 以既有關閉收起並前往下一個區段，其他 modal 一律停用）。必選地圖目標時只回戰略地圖（已在地圖則不動）。切換後焦點放到新區段的內容，不留在分頁上（大廳則為區塊） |
+| R / SR | **選取六個全域區段的唯一方式**，與客廳模式同一個環：指揮中心→戰略地圖→戰況紀錄→我的陣營→事件卡→時代關卡（點既有分頁／開既有說明 modal；在事件卡／時代關卡說明 modal 內按 R／SR 以既有關閉收起並前往下一個區段，其他 modal 一律停用）。必選地圖目標時只回戰略地圖（已在地圖則不動）。切換後焦點放到新區段的內容，不留在分頁上（大廳則為區塊）。環上另有一個**額外焦點（不是第七個頁面）**：導覽列的「Joy-Con 說明」按鈕（時代關卡之後、回合列之前）；R／SR 到達時只聚焦按鈕、不切頁也不開圖，再按 R／SR 離開並繼續循環 |
+| Joy-Con 說明按鈕 | 焦點在按鈕上：A 開啟 Joy-Con 功能表原圖（`static/help/joycon-function-table.jpg`，1280×960，保持比例不裁切，小螢幕可捲動）；B 不作用。圖片開著＝modal scope lock：B（或 Esc、×、背景點擊）關閉並把焦點還回按鈕；R／SR、SL、ZR、X、Capture、`+` 都不穿透。滑鼠點按鈕同樣開啟。方向鍵不會落在按鈕上 |
 | CAPTURE | 既有「結束行動／結束步驟」，經危險確認單（預設焦點「返回」，向右到「確認」再按 A 才執行；與客廳模式同一張確認單與閘門）；結束行動本身不是方向焦點。實體鍵：只接右 Joy-Con 2 時送出 b1 `0x40`（上游 `c`，2026-10-10 實錄）；上游 `capture`（b1 `0x20`，左 Joy-Con 2／Pro）同樣接受 |
 | `+` | 發動唯一一個可見、啟用的既有陣營能力（例如賭徒耳語）；沒有或不只一個時不做事 |
-| SL | **聚焦選單**（與客廳模式相同，見下方「SL 聚焦選單」）：建立組織的 pending choice 時，依「統治者」或「陣營區域」把焦點移到該範圍內可建立組織的合法地圖城鎮；只移焦點，不建立、移動或瓦解。選單開著時再按 SL＝關閉 |
+| SL | **全域地圖聚焦選單**（與客廳模式相同，見下方「SL 全域地圖聚焦」）：任何遊戲分頁、不需要 pending choice；依「統治者」或「陣營區域」選 canonical 地圖上的任一城鎮，戰略地圖把它精確置中並放大到固定層級。只改地圖相機與 focus ring／標籤，不建立、移動或瓦解。選單開著時再按 SL＝關閉；其他 modal 內不作用 |
 | ZR | **戰略地圖縮放循環**（與客廳模式相同，見下方「ZR 戰略地圖縮放」）：在戰略地圖每按一次放大一級，到最大後再按回到最小（最大地圖範圍）。不需要焦點，第一下就執行；其他分頁、任何 modal（含 SL 聚焦選單）完全不作用，連焦點都不改 |
 | X | 非手牌焦點時不作用（回合列不是方向焦點，改用 CAPTURE） |
 | Y | 其他焦點時顯示／隱藏操作提示（手牌、購買卡、地圖目標見上；其他卡牌焦點時 X/Y 完全不作用；聚焦選單內不作用） |
 | HOME、STICK | 桌面模式不綁定 |
 
+**必選地圖目標停在其他分頁**（兩種顯示模式相同）：必選地圖目標時其他分頁沒有任何焦點。既有流程在手上還有可排入的建立／瓦解卡（`queueable_card_names`）時刻意不自動切到地圖，讓滑鼠可以繼續排入；控制器則：
+- 控制器使用中（`padActive`）出現這類 choice 時，reconcile 以既有分頁切換（與 R／SR 同一條路）自動帶到戰略地圖，**每個 choice 只做一次**（`choice_id`）；之後滑鼠離開地圖不會被再拉回。客廳輪流遮罩期間或不是該席位的 Joy-Con 時不自動切換（`gate.allowsPage`）。
+- 仍停在其他分頁時，方向與 A／B／X／Y／R／SR／STICK／`+`／CAPTURE 先切回戰略地圖，**該輸入本身不執行**（第一次輸入也一樣）。SL 走自己的「切到地圖再開聚焦選單」流程；ZR 在其他分頁照舊完全不作用；未對應的按鍵不做事。
+- 切到地圖時 iframe 可能尚未掛載或還在載入：controller 依序補要 snapshot（250ms～4s，共 5 次，有目標的 choice snapshot 到達、鎖解除或離開地圖即停止），iframe 載入完成與地圖狀態變更時也會自己推送；第一份有目標的 snapshot 到達後焦點放到地圖目標（桌面＝地圖城鎮目標，客廳＝地圖清單）。snapshot 只讀，所有建立／移動仍走既有 `act`＋`req` 與 iframe 重驗。
+- 只在 page scope、bridge 已連線、遊戲畫面顯示、戰略地圖分頁可用時才切換（`LR.choiceMapRedirect`）；其他一律不動。
+
 第一次有效操作（含 CAPTURE／`+`）只會把焦點放上去，不會執行；預設焦點與區段切換後的落點都是內容（指揮中心先放手牌）。ZR 不在此列：在戰略地圖不需要焦點，第一下就直接執行一次縮放循環（不放焦點、不改焦點）；不在戰略地圖時完全不作用，連焦點都不改。
 區段切換時，該區段只要有可取得方向焦點的內容就一定落在內容上；經確認沒有任何這類內容的區段可以維持無焦點，但一定仍可用 R／SR 離開。
 搖桿輸入、reconcile 與焦點變更時，若瀏覽器原生 focus 停在上述排除的控制上（例如滑鼠點過分頁），一律放掉；整張卡牌 div 本身無法取得原生 focus。
-滑鼠點擊分頁、手牌按鈕、結束行動、購買選擇按鈕等完全不變。畫面右下角只有一個精簡提示膠囊，不增加頂部窄條；專用鍵 fail closed 時，原因（例如「先按 B 選擇這張卡，再按 Y 購買」）會在膠囊前段顯示約 1.8 秒。
+滑鼠點擊分頁、手牌按鈕、結束行動、購買選擇按鈕等完全不變。遊戲畫面只有一個精簡提示膠囊，位於主導覽列下方、隨機購買卡上方的中央（不遮住導覽、購買卡、購買操作鈕與陣營能力；只是提示，不可點擊）；開始畫面／大廳仍在右下角；專用鍵 fail closed 時，原因（例如「先按 B 選擇這張卡，再按 Y 購買」）會在膠囊前段顯示約 1.8 秒。
 
 ## 輸入安全
 
@@ -98,17 +106,21 @@ parent 與 iframe 同源；雙方都驗證 `event.origin === location.origin` �
 
 - iframe → parent：`redline-controller-map-snapshot`
   `{scope: 'none'|'choice'|'move', seq, targets:[{town, role:'choice'|'move'|'origin', x, y, act?}], buttons:[{id,label,x,y,w,h}], focusTown, canCancel}`
-  在地圖狀態改變時推送（已合併）。座標是 iframe 內的 client 座標。選用欄位 `act`（客廳模式 Y 用）＝該目標的既有主要操作：
+  在地圖狀態改變時推送（已合併）。座標是 iframe 內的 client 座標；目標座標可以遠在畫面外（例如思想家的無視距離候選遍布全圖，SL 聚焦利雅德（zoom 9）後北美目標約 −6 萬 px，再按 ZR 放大到 zoom 10 約 −12 萬 px），
+  parent 只拒絕非有限數或超過 `MAP_POINT_LIMIT`（256px 圖磚在 zoom 22 的世界寬度）的值；按鈕外框是視窗內的 DOM rect，維持 ±100000 上限。選用欄位 `act`（客廳模式 Y 用）＝該目標的既有主要操作：
   choice 目標依 pending choice 為 `build`／`dissolve`；move 目標為 `move`；origin 只有可瓦解共享組織時為 `dissolve`。
   與 role／scope 不相容的 `act` 會讓整份 snapshot 作廢。
-  選用欄位 `groupMeta: 1`（SL 聚焦選單的分組資料版本）：此時每個目標都帶 `ruler`（1–8 個）、`camp`（0–16 個）字串陣列，由 iframe 取自 canonical
+  選用欄位 `groupMeta: 1`（地圖目標的分組資料版本；SL 全域地圖聚焦改用下方與目標分離的 `browseTowns`）：此時每個目標都帶 `ruler`（1–8 個）、`camp`（0–16 個）字串陣列，由 iframe 取自 canonical
   `/map-data`（`data/map.json` 的 `towns[town].ruler`／`.camp`，即統治者與陣營區域＝發展空間標籤）。iframe 端任一目標的 canonical 資料缺欄位、
   不是陣列、數量不合或含不是 1–16 字字串的名稱時，整份 snapshot 都不帶 `groupMeta` 與分組欄位（不過濾、不截斷、不補值；其餘地圖控制照常）。
   parent 端：版本不是 1、宣告了版本卻缺欄位或 `ruler` 為空、沒宣告版本卻帶欄位、名稱不合或數量超過上限一律整份作廢；重複名稱只算一次（同一份成員資格）。
+  選用欄位 `browseMeta: 1`＋`browseTowns:[{town, ruler, camp}]`（SL 全域地圖聚焦的完整 canonical 城鎮清單，與 `targets` 分離）：iframe 由 canonical `/map-data` 帶出**全部**城鎮，
+  與 pending choice、地圖目標、回合與地圖篩選無關；任一城鎮的分組資料不合法時整份不帶清單（不宣告 `browseMeta`）。parent 端：版本不是 1、宣告了版本卻缺清單或清單為空、
+  沒宣告版本卻帶清單、城鎮重複、超過 400 座或任一城鎮資料不合一律整份作廢。`browseTowns` 不會成為 action target，`targets`／`groupMeta` 也不受它影響。
   選用欄位 `req`：只有回應帶 `req` 的 `snapshot` 指令時才帶（原樣回傳，必須是合法 request id），一般推送沒有。
-- parent → iframe：`redline-controller-command`，`cmd` 為 `snapshot`、`focus {town}`、`clearFocus`、`activate {town}`、`button {id}`、`cancel`、`act {town, id, req}`（`id` 只限 `directBuildBtn`／`confirmMoveBtn`／`dissolveBtn`）、`zoom {req}`（ZR 縮放循環，見下方「ZR 戰略地圖縮放」）。**`act` 與 `zoom` 必須帶合法 `req`**，沒有或不合法的 `req` 在 iframe 端直接丟棄、不執行，它們的 result 也必須帶 `req`；其他指令可選 `req`（正整數 request id）。
+- parent → iframe：`redline-controller-command`，`cmd` 為 `snapshot`、`focus {town}`、`clearFocus`、`activate {town}`、`button {id}`、`cancel`、`act {town, id, req}`（`id` 只限 `directBuildBtn`／`confirmMoveBtn`／`dissolveBtn`）、`zoom {req}`（ZR 縮放循環，見下方「ZR 戰略地圖縮放」）、`focusTown {town, req}`（SL 全域地圖聚焦：canonical 城鎮置中放大，見下方「SL 全域地圖聚焦」）。**`act`、`zoom` 與 `focusTown` 必須帶合法 `req`**，沒有或不合法的 `req` 在 iframe 端直接丟棄、不執行，它們的 result 也必須帶 `req`；其他指令可選 `req`（正整數 request id）。
 - iframe → parent：`redline-controller-result` `{cmd, req, ok, reason, via}`，每個指令處理完都回覆；`req` 原樣回傳（沒帶則為 `null`），`via` 為 iframe 實際走的既有控制（按鈕 id，或取消時的 `cancelDissolveChoiceBtn`／`selection`）。
-  地圖執行型指令（兩種顯示模式的 Y 地圖操作；客廳模式另有清單選取、清單取消）、ZR 的 `zoom` 與 SL 聚焦選單的 `snapshot` 請求都帶 `req`，且同時只有一筆等待確認：**只有對上該 `req` 的 `ok:true`（iframe 執行前已重驗）才算執行**，此時才記錄 250ms 冷卻（SL 聚焦選單的 `snapshot` 請求例外：`ok:true` 只表示可以採用同一個 `req` 的 snapshot，真的開啟選單或移好焦點後才記錄），Y 地圖操作與 `via: cancelDissolveChoiceBtn` 的取消再上處理中鎖（`zoom` 不是遊戲動作，不上處理中鎖）。沒有 iframe、`ok:false`、1 秒內沒有回覆、過期或對不上的 `req` 一律 fail closed，不記錄冷卻也不上鎖；等待期間其他執行型按鍵被擋下（不重送），回覆或逾時後立即解除。桌面模式的 A／B（`activate`／`button`／`cancel`）不帶 `req`，行為不變。
+  地圖執行型指令（兩種顯示模式的 Y 地圖操作；客廳模式另有清單選取、清單取消）、ZR 的 `zoom`、SL 聚焦選單的 `snapshot` 請求與 `focusTown` 都帶 `req`，且同時只有一筆等待確認：**只有對上該 `req` 的 `ok:true`（iframe 執行前已重驗）才算執行**，此時才記錄 250ms 冷卻（SL 聚焦選單的 `snapshot` 請求例外：`ok:true` 只表示可以採用同一個 `req` 的 snapshot，真的開啟選單後才記錄），Y 地圖操作與 `via: cancelDissolveChoiceBtn` 的取消再上處理中鎖（`zoom`、`focusTown` 不是遊戲動作，不上處理中鎖）。沒有 iframe、`ok:false`、1 秒內沒有回覆、過期或對不上的 `req` 一律 fail closed，不記錄冷卻也不上鎖；等待期間其他執行型按鍵被擋下（不重送），回覆或逾時後立即解除。桌面模式的 A／B（`activate`／`button`／`cancel`）不帶 `req`，行為不變。
 - `act` 在 iframe 內：(1) 用權威資料重驗 town 是目前目標、其 `act` 對應的既有按鈕等於 `id`（否則 `not-a-target`／`action-mismatch`）；(2) 按鈕尚未作用在該 town 時，走與 A／滑鼠相同的既有 marker click 選取／預備；(3) 再驗一次目標仍在、按鈕可見啟用且作用在該 town，才 `click()` 既有按鈕（否則 `button-unavailable`）。失敗時不點任何按鈕、不送出遊戲動作（最多留下與按 A 相同的選取／預備狀態）。
 
 焦點集合只來自伺服器權威資料，且**每個指令執行當下 iframe 都重新驗證**（parent 的 snapshot 過期或被偽造也不會讓非法目標可 action）：
@@ -120,15 +132,22 @@ parent 與 iframe 同源；雙方都驗證 `event.origin === location.origin` �
 
 A 對城鎮走既有 marker `click` 路徑（選取來源／預備移動目的地／選擇 pending choice 候選），對按鈕呼叫既有 `click()`；是否真的移動、建立或瓦解仍由既有確認按鈕與伺服器驗證決定。B 只會：點可見且啟用的「取消瓦解」，或取消目前選取（既有「點地圖其他地方取消」流程）；兩者都沒有就不做事。焦點城鎮以黑底＋黃色雙圈與名稱標籤標示，必要時 `panInside`。
 
-## 客廳大螢幕模式（living-room）
+## 客廳大螢幕模式（living-room，已移除）
 
-同一 route、同一 DOM、同一套遊戲 action：`html[data-display="living-room"]` 只切換 CSS 版面層並加上搖桿的內容導航與專用快捷鍵。
-開啟方式：網址加 `?display=living-room`（`?display=desktop` 切回），或 🎮 設定面板「顯示模式」。存於 `localStorage`（`redline.display.v1`），不依螢幕尺寸自動切換。桌面模式（預設）版面不變，搖桿操作見上表；兩種模式共用同一份方向焦點排除規則、同一個 R／SR 六區段環與同一套 Capture／`+` 流程，客廳模式另外多了內容區兩層導航、按鍵提示列與下列專用鍵。
+**2026-10-25 起產品只保留桌面模式，這個顯示模式已無任何入口**：🎮 設定面板不再有「顯示模式」選單，`?display=living-room` 被忽略，
+`localStorage` `redline.display.v1` 裡舊的 `living-room`（或任何非 `desktop` 值）在載入時遷移成 `desktop`，`RedlineDisplayMode.set('living-room')` 也只會得到桌面
+（`LR.resolveDisplayMode`／`normalizeDisplayMode` 一律回傳 desktop）。舞台縮放的 5% title-safe 分支已刪除。
+`controller_living_room.js` 與 `living_room_core.js` 仍保留：桌面 Joy-Con 共用其中的 Capture／`+`、購買卡 Y、一般奧援 X 危險確認、地圖 Y／ZR、
+R／SR 區段環、SL 聚焦選單、必選地圖目標重導與閘門。客廳專用的內容區導航、提示列與 `html[data-display="living-room"]` CSS 目前為不會執行的休眠程式碼，
+下面保留原說明供日後清理參考。
+
+（以下為移除前的說明）同一 route、同一 DOM、同一套遊戲 action：`html[data-display="living-room"]` 只切換 CSS 版面層並加上搖桿的內容導航與專用快捷鍵。
+開啟方式（已移除）：網址加 `?display=living-room`，或 🎮 設定面板「顯示模式」。桌面模式（預設）版面不變，搖桿操作見上表；兩種模式共用同一份方向焦點排除規則、同一個 R／SR 六區段環與同一套 Capture／`+` 流程，客廳模式另外多了內容區兩層導航、按鍵提示列與下列專用鍵。
 
 - **安全區與字級**：舞台等比縮放後再留 5% title-safe（`resizeStage` 乘 0.9）；文字 16–28 設計單位，720p／1080p／4K 只差銳利度。卡牌列使用無捲軸的單列半高卡，完整卡面用 A 預覽（放大到畫面高約 80%）。
 - **方向鍵只在內容資料間**：內容區＝常設購買區、隨機購買區、陣營／根據地候選（只有非能力鈕的內容選項時才出現）、手牌、玩家動態（縮小在左下角的對手通知）；戰略地圖分頁是地圖目標清單；其他分頁是該分頁內容。
   方向焦點**永遠不會**落在：手牌卡內的「資源」「行動」「棄置」、結束行動／紅軍能力（回合列）、六個全域分頁、購買選擇按鈕、陣營能力發動鈕、按鍵提示列（`LR.isDirectionalExcluded`＝`Core.isDirectionalExcluded`，與桌面模式同一份）。手牌與購買卡只以整張卡取得焦點；瀏覽器原生 focus 停在這些控制上時，搖桿輸入、reconcile 與焦點變更都會放掉它。
-- **六個全域區段只由 R／SR 選取**：指揮中心 → 戰略地圖 → 戰況紀錄 → 我的陣營 → 事件卡 → 時代關卡（依分頁列順序循環；隱藏或停用的分頁跳過；有多個時代關卡時各是一站）。
+- **六個全域區段只由 R／SR 選取**：指揮中心 → 戰略地圖 → 戰況紀錄 → 我的陣營 → 事件卡 → 時代關卡（依分頁列順序循環；隱藏或停用的分頁跳過；有多個時代關卡時各是一站）。時代關卡之後是額外的「Joy-Con 說明」按鈕焦點（`LR.RING_HELP_KEY`；不是區段，只聚焦、A 才開圖），之後循環回指揮中心；必選地圖目標時不提供。
   分頁＝既有分頁切換；事件卡／時代關卡＝既有開啟說明 modal，在這兩個唯讀說明 modal 內再按 R／SR 會用該 modal 既有的關閉控制收起並前往下一站。其他 modal 一律維持 scope lock（R／SR 不作用）。
   有必選地圖目標時：在戰略地圖 R／SR 停用；在其他分頁 R／SR 只會回到戰略地圖，其他分頁沒有內容區。
 - **兩層導航**：區域層用搖桿在內容區之間移動（邊緣距離＋重疊，確定性），A 進入；內容層在區內移動，到邊界停住，不跨區。
@@ -137,14 +156,14 @@ A 對城鎮走既有 marker `click` 路徑（選取來源／預備移動目的�
 | --- | --- | --- |
 | 搖桿 | 在內容區間移動 | 卡牌列依索引左右（上下換列）、地圖清單上下；到邊界停住 |
 | A | 進入區域（還原上次項目） | 卡牌＝查看；內容控制項＝既有 click；地圖清單＝選取／預備（不執行） |
-| B | 不做事 | 購買卡＝選擇／取消；**一般奧援手牌＝既有「棄置」（危險確認）**，其他手牌不做事；地圖清單有既有取消流程時＝取消；其他＝回區域層 |
-| X | 不做事 | 手牌＝資源；其他不做事 |
+| B | 不做事 | 購買卡＝選擇／取消；手牌不做事（**不棄置**）；地圖清單有既有取消流程時＝取消；其他＝回區域層 |
+| X | 不做事 | 手牌＝資源；**一般奧援手牌＝既有「棄置」（危險確認）**；其他不做事 |
 | Y | 說明 | 手牌＝行動；**購買卡（先 B 選擇）＝既有「購買所選」**；**地圖目標＝建立組織／確認移動／瓦解組織**；其他＝說明 |
 | R／SR | 下一個／上一個全域區段 | 同左 |
 | PLUS（+） | **發動既有陣營能力** | 同左 |
 | CAPTURE | **既有結束行動／結束步驟（危險確認）** | 同左 |
 | STICK（按下搖桿） | **下一個內容區**（直接進入、還原上次項目；只移焦點） | 同左 |
-| SL | **聚焦選單**（任何分頁皆可開；只有建立組織的 pending choice 才有候選；只移焦點） | 同左 |
+| SL | **全域地圖聚焦選單**（任何分頁皆可開，不需要 pending choice；選任一 canonical 城鎮置中放大，只改地圖相機與焦點） | 同左 |
 | ZR | **戰略地圖＝放大一級，到最大後回到最小**（不需要焦點，第一下就執行；必選地圖目標時也可用）；其他分頁完全不作用，連焦點都不改 | 同左（焦點、區域與層級都不變） |
 
 ZR 不再回區域層或回指揮中心：要回區域層用 B（非卡牌項目與地圖清單），換區用按下搖桿，換分頁用 R／SR。
@@ -152,12 +171,12 @@ ZR 不再回區域層或回指揮中心：要回區域層用 B（非卡牌項目
 - **專用快捷鍵**（全部只點擊當下可見、啟用、合法的既有控制；按下當下重驗，失效即 fail closed 並在狀態列顯示原因）：
   - CAPTURE：`advanceStepBtn`（結束行動／結束回合／開始行動階段）→ 危險確認單，預設焦點「返回」；連按不會開第二張確認單；確認單開著時按鈕失效或文字改變（換了步驟）就自動關閉不執行。
   - PLUS：`#factionActionButtons` 內的既有發動鈕（例如「發動 賭徒耳語」）或 `redArmyAbilityBtn`，**恰好一個可用**才點擊；沒有或多於一個不做事。點擊後若沒有開啟既有視窗（handler 直接送出伺服器動作）才上處理中鎖。
-  - 手牌 B：該卡第一顆標示「棄置」的既有按鈕（一般奧援）→ 危險確認單（以手牌 key 綁定，確認當下再驗）；紅軍奧援的「資源」與其他卡牌永遠不是棄置。
+  - 手牌 X（一般奧援）：該卡第一顆標示「棄置」的既有按鈕 → 危險確認單（預設「返回」；以手牌 key 綁定，確認當下再驗）；按鈕停用／隱藏時 fail closed。紅軍奧援的「資源」與其他卡牌永遠不是棄置（X＝資源）。桌面模式同一套（`runDesktopCardDiscard`）。
   - 購買卡 Y（與桌面模式相同）：**先用 B 選擇焦點卡，再按 Y**。焦點卡是有效的已選擇卡（選擇按鈕可見、未停用，即仍在既有購買選取內）且既有「購買所選」可用時才點它，開啟既有購買確認單（內容是目前整份選擇）；資源檢查、確認與 `buy_cards` 送出都在既有流程。未選擇、選擇按鈕停用／隱藏（例如售完）、資源不足（按鈕停用）、按鈕隱藏或不存在一律 no-op 並顯示原因；不會自動選擇、不建立新購買 action。
   - 地圖 Y（與桌面模式相同）：清單列 `act` 對應的既有按鈕（`directBuildBtn`／`confirmMoveBtn`／`dissolveBtn`），以 iframe `act` 指令＋`req` 確認執行（見上方協定）；沒有 `act` 的列（例如一般來源）不做事。pending choice 目標用 A 選取後焦點**留在該列**（只有換了一份清單——來源 ↔ 目的地或換來源——才回第一列），所以接著按 Y 就是在剛選的城鎮建立／瓦解。
   - STICK：只移焦點，不執行；新焦點視為非使用者指定，300ms 內忽略 A／B／X／Y。沒有內容區時不做事。
   - ZR（與桌面模式相同）：戰略地圖縮放循環，見下方「ZR 戰略地圖縮放」。
-- **按鍵提示列**：固定在畫面下緣，**不接受焦點也不接受滑鼠**，只在 bridge 已連線時（未啟用、連線中、無法連線、訊號中斷時整列清空）以「鍵＋標籤」顯示目前可用的專用鍵操作（例如 `Y 購買所選 1 張`、`B ⚠ 棄置 歐洲奧援`、`SL 聚焦選單（85 個目標）`、`+ 發動 賭徒耳語`、`Capture ⚠ 結束行動`、`Y 移動 臺北→宜蘭`），來源同樣只限可見、啟用的既有控制（SL 只在最新權威 snapshot 有可分組的合法建立目標時出現，數字只是提示，開啟時仍以 req 綁定的新 snapshot 為準；聚焦選單開著時提示列清空，legend 改為選單按鍵）。「清除」與「卡牌置頂」不再有搖桿入口（滑鼠照常可用；搖桿可用 B 逐張取消勾選；未使用的頂牌權利在結束行動時由伺服器既有流程處理：只有一張候選時自動置頂，多張時開既有選擇視窗）。
+- **按鍵提示列**：固定在畫面下緣，**不接受焦點也不接受滑鼠**，只在 bridge 已連線時（未啟用、連線中、無法連線、訊號中斷時整列清空）以「鍵＋標籤」顯示目前可用的專用鍵操作（例如 `Y 購買所選 1 張`、`X ⚠ 棄置 歐洲奧援`、`SL 聚焦選單（289 個城鎮）`、`+ 發動 賭徒耳語`、`Capture ⚠ 結束行動`、`Y 移動 臺北→宜蘭`），來源同樣只限可見、啟用的既有控制（SL 只在最新 snapshot 帶完整 canonical 城鎮清單時出現，與 pending choice 無關；數字只是提示，開啟時仍以 req 綁定的新 snapshot 為準；聚焦選單開著時提示列清空，legend 改為選單按鍵）。「清除」與「卡牌置頂」不再有搖桿入口（滑鼠照常可用；搖桿可用 B 逐張取消勾選；未使用的頂牌權利在結束行動時由伺服器既有流程處理：只有一張候選時自動置頂，多張時開既有選擇視窗）。
 - **地圖兩段式清單**：來源（可行動城鎮）→ A → 該來源的伺服器合法目的地（依消耗、道路先於鐵路排序）→ A 只預備移動、Y 直接走既有「確認移動」。pending choice 目標：A 只選取、Y 走既有「建立組織」或「瓦解組織」。清單只來自 iframe 權威 snapshot（選用欄位 `selected`、`pending`、移動目標 `mode`／`cost`、目標 `act`，有給就嚴格驗證），iframe 執行每個指令前仍重驗；沒有 snapshot 或目標時清單為空、A／Y 無作用。滑鼠仍可直接操作地圖。
 - **防誤觸**（數值不變：處理中鎖 1500ms、重繪冷卻 300ms、執行冷卻 250ms、地圖確認逾時 1000ms）：送出遊戲動作後到下一份 state（或 1.5 秒）前不再送出 A／B／X／Y／CAPTURE／PLUS 類指令（處理中鎖）；任何**實際執行**（click 既有控制、開啟預覽／確認單／購買確認／說明 modal、B 勾選、iframe 確認成功的地圖操作與 ZR 縮放、成功進入區域，以及客廳模式下 modal 內的 A）之後 250ms 內不接受下一個執行型按鍵（fail-closed 的 no-op 不啟動冷卻；方向、R／SR、STICK、ZR、回區域層與 modal 的 B 不受影響）；重繪、分頁切換或 STICK 造成的焦點換項目後 300ms 內忽略與焦點有關的 A／B／X／Y（CAPTURE／PLUS 與焦點無關，不受此冷卻）；重繪後同 key 留原位、key 消失留同區域同索引、區域空了回同一分頁的預設內容區層，永不跨區域；沒有任何危險控制可取得方向焦點。第一次有效操作（含 CAPTURE／PLUS）只放焦點；戰略地圖上的 ZR 不需要焦點，第一下就執行縮放（不放焦點）。斷線／stale／重連 baseline 沿用上方規則（重連時按住 A＋PLUS＋CAPTURE 也不觸發）。
 
@@ -189,30 +208,37 @@ ZR 不再回區域層或回指揮中心：要回區域層用 B（非卡牌項目
 - **重新連線**：確認後整頁重新載入，主頁 WebSocket 與戰略地圖 iframe 都以該席位自己的 `resumeToken` 重新授權連線，前一席位的 DOM 全部丟棄；新連線的 viewer-scoped state 確認 actor 就是這一席才解除遮罩。行動中重新整理沿用本分頁的確認紀錄（`sessionStorage` `redline.hotseat.session.v1`）；新分頁或沒有紀錄時一律先遮罩要求確認。
 - **顯示時**：只有綁給目前席位的 Joy-Con 能操作（其他手把即使被選取也被攔下）。
 
-## SL 聚焦選單（兩種顯示模式）
+## SL 全域地圖聚焦（兩種顯示模式）
 
-可建立組織的合法城鎮很多時（例如組織經驗甲「無視距離於己方發展空間建立」一次 85 個），只用方向鍵很難走到目標。按 `SL` 開啟置中的精簡選單（不新增頂部窄條；客廳模式底部提示列照常可見），依範圍把焦點直接移到合法城鎮；實際建立仍只走既有地圖操作：Y → `mapAct` → iframe `act` → `directBuildBtn`，使用唯一的 `req` 並等待對上的 `ok:true`（見上方協定）。
+`SL` 是隨時可用的戰略地圖導覽器：任何遊戲分頁（指揮中心、戰略地圖、戰況紀錄等 page／map scope）只要沒有其他 modal，按 `SL` 就開啟置中的精簡選單（不新增頂部窄條；客廳模式底部提示列照常可見）。**不需要 pending choice、組織相關卡牌或能力，也不需要焦點**。選單列出 canonical 地圖的**全部城鎮**（不是目前的 action targets），選定城鎮後戰略地圖把它**精確置中並放大到固定層級**。聚焦只改地圖相機與 focus ring／標籤：不選取、不建立、不移動、不瓦解，不消耗行動或資源，也不改任何權威遊戲狀態。
 
-- **候選**＝目前建立組織 pending choice 的合法目標（地圖清單 choice 段，每列 `act`＝`build`），只來自 iframe 權威 snapshot。移動來源、移動目的地、瓦解組織的 pending choice，以及沒有 `build` 的其他 pending choice 一律 fail closed（`目前沒有可聚焦的地圖目標`）。
-- **分組**：一層、兩個區段，上下／左右即可選取（每列 4 個）：
-  - `統治者`：canonical 地圖資料的 `ruler`。統治者含紅軍的城鎮標示「牆內」（rules.md 牆內定義）。
-  - `陣營區域`：canonical 地圖資料的 `camp`（發展空間標籤）。沒有陣營標籤的城鎮不屬於任何陣營區域（仍在統治者分組內）。
-  - 每個候選都必須有非空的 `ruler` 與合法的 `camp` 陣列；任一候選缺少或格式不合 → 整份 fail closed（`地圖資料不足，無法分組`），不過濾、不截斷、不補值。
-  - 只列出至少含 1 個目前合法目標的項目，顯示匹配城鎮數；城鎮與成員資格都去重。排序：城鎮數多→少，同數依名稱（zh-Hant）；結果確定。
+- **候選**＝iframe 從 canonical `/map-data`（`data/map.json`）取得的全部城鎮（snapshot 的 `browseTowns`，見上方協定），與 pending choice、地圖目標、回合、資源、地圖篩選都無關。任一城鎮的 canonical 分組資料缺少或格式不合 → 整份不帶清單，選單 fail closed（`地圖資料不足，無法分組`），不過濾、不截斷、不補值。
+- **兩層選單**：
+  - 分組層：兩個區段，上下／左右即可選取（每列 4 個），每個選項顯示城鎮數。
+    - `統治者`：canonical 地圖資料的 `ruler`。統治者含紅軍的城鎮標示「牆內」（rules.md 牆內定義）。
+    - `陣營區域`：canonical 地圖資料的 `camp`（發展空間標籤）。沒有陣營標籤的城鎮不屬於任何陣營區域（仍在統治者分組內）。
+    - 只列出至少含 1 座城鎮的項目；城鎮與成員資格都去重。排序：城鎮數多→少，同數依名稱（zh-Hant）；結果確定。
+  - 城鎮層（A 打開分組）：第一個選項是「← 分組」（A＝回到分組層並聚焦剛才的分組），其後是該組全部城鎮（名稱 zh-Hant 順序，每列 5 個，可捲動）。預設聚焦開啟選單前的焦點城鎮（在這組時），否則第一座城鎮。目前也是地圖目標（pending choice 候選、移動目的地、可行動來源）的城鎮標「目標」，只是標示。
 - **按鍵**（選單是 modal，沿用既有 modal scope lock）：
 
   | 輸入 | 選單內 |
   | --- | --- |
   | 搖桿／方向 | 只在選項間移動，不穿透背景 |
-  | A | 選定該範圍：關閉選單，必要時用既有分頁切換到戰略地圖（與 R／SR 相同的分頁 click），焦點移到該範圍內的合法城鎮——**目前焦點城鎮若在該範圍內就保留**，否則取清單順序第一個（城鎮名稱 zh-Hant 順序）。不選取、不建立、不移動、不瓦解 |
+  | A | 分組＝打開城鎮層；「← 分組」＝回到分組層；城鎮＝關閉選單，必要時用既有分頁切換到戰略地圖（與 R／SR 相同的分頁 click），送 `focusTown` 置中放大（見下） |
   | B／SL／滑鼠 `×` | 關閉並回到開啟前的焦點，不執行任何操作（`×` 保留滑鼠操作，但不是方向焦點） |
   | R／SR、X、Y、`+`、Capture、ZR、STICK、HOME | 不作用（不切區段、不開說明／確認單、不縮放地圖、不送任何地圖操作） |
 
-- **權威與 fail closed**：開啟、選定與選單開著時的刷新都先向 iframe 送帶唯一 `req` 的 `snapshot` 指令，並與其他地圖指令共用「同時只有一筆等待」與 1000ms 逾時。只有**同一個 `req` 先及時回覆 `ok:true`，且同一個 `req` 的 snapshot 也在送出後 1000ms 內送達**才採用：`ok:false`、逾時、snapshot 先於 `ok:true` 或在 1000ms（含）之後才到、`req` 不同或沒有 `req` 的一般推送、不合 schema 一律不採用。等待中的請求一逾時（ack 計時器，或任一按鍵經過閘門時發現）就清掉，晚到的回覆不會再開啟或選定。以下一律不開選單（或不移焦點）並顯示短原因：地圖從未載入（`地圖尚未載入：先用 R 切到戰略地圖`）、iframe 沒有回應或回覆過期（`地圖沒有回應，請再試一次`）、iframe 回覆 `ok:false`（`此操作目前不可用`）、snapshot 不合 schema 或分組資料不足（`地圖資料不足，無法分組`）、沒有合法建立目標（`目前沒有可聚焦的地圖目標`）、遊戲尚未開始、戰略地圖分頁不可用。
-- **選定時狀態已改變**：選定時那份新 snapshot 的清單段或 pending choice 的已選城鎮與畫面上的選單不同 → 不移焦點，選單以新資料刷新（`地圖狀態已改變，請重新選擇`）；該範圍已沒有城鎮 → 不移焦點、刷新（`此範圍已沒有合法目標`）；完全沒有合法建立目標或分組資料不足 → 關閉並還原焦點。
-- **刷新只用 req 綁定的 snapshot**：選單開著時，一般推送（不帶 `req`）本身不改變選單內容，只觸發一次新的 `snapshot` 請求；畫面以那份通過上述檢查的回覆為準（另一個請求等待中時不另外送，等它的回覆）。刷新請求失敗就關閉選單。選單被其他視窗（例如伺服器推來的選擇視窗）蓋過或離開遊戲畫面就自動關閉。
-- **停用、清除與斷線**：停用搖桿控制、清除焦點、切換顯示模式、bridge 斷線（含重連中與 stale）時關閉選單並取消等待中的開啟／選定／刷新請求；之後才到的 iframe 回覆不會再開啟或選定。關閉後若沒有可還原的內容（例如必選地圖目標時的指揮中心），焦點不會殘留在隱藏的選項上。
-- **防誤觸**（數值不變：1500／300／250／1000ms）：開啟與選定只移焦點，不受處理中鎖限制；地圖確認等待中不送第二筆。**只有真的開啟選單、或真的把焦點移到合法城鎮**才記錄一次執行（之後 250ms 內的下一個執行型按鍵被擋，例如開啟後立刻按 A）；fail closed 的開啟或選定不記錄冷卻。選單在游標下刷新後 300ms 內忽略 A。第一次有效操作（含 SL）只放焦點。
+  其他 modal（危險確認、選擇視窗、卡面預覽等）開著時 SL 不作用。
+- **置中放大（`focusTown {town, req}`）**：iframe 以 canonical 資料重驗城鎮，用 Leaflet `setView`（不動畫）把城鎮的**顯示位置**放在容器正中央，層級固定為 `Core.MAP_FOCUS_ZOOM`（9，比 ZR 循環最大層級 10 低一級，與開局根據地視角同級，陣營標籤仍是短標籤、按 ZR 一下才到 10；Leaflet 設了低於 9 的 maxZoom 時取該上限的整數層級，絕不超過）。黑河／海蘭泡／臥龍的 marker 是依層級的像素偏移，iframe 先到目標層級再以該層級的顯示位置置中。剛從其他分頁切回時先 `invalidateSize` 取得目前容器尺寸。驗證城鎮顯示位置在容器中心 ±1px 且層級正確才回 `ok:true`，並畫 focus ring 與城鎮名稱標籤；不走 marker click、不點任何按鈕、不改選取／預備移動／pending choice。未知城鎮（`unknown-town`）、缺座標（`town-position-missing`）、頁面或容器不可見（`map-hidden`）、層級無法同時滿足 Leaflet min／max（`zoom-unavailable`）、驗證不符（`focus-unverified`）→ `ok:false`，不留下 ring。
+- **選定後的焦點**：
+  - 城鎮剛好是目前的地圖目標 → 綁到既有目標焦點（桌面＝地圖城鎮目標；客廳＝地圖清單的該列），之後 A 選取、Y 建立組織／確認移動／瓦解組織照舊走既有 `act`＋`req` 流程。
+  - 其他城鎮 → 只看的瀏覽焦點：不在 action 焦點集合內，A／Y 不對它執行任何操作。桌面模式提示「聚焦 〈城鎮〉（只看）」，方向鍵從地圖中心往該方向找最近的地圖目標；客廳模式停在地圖清單的區域層（狀態欄顯示「聚焦 〈城鎮〉」），A 照常進入清單。ring／標籤保留到下一次導航（方向、R／SR、進入清單、開其他視窗）；地圖目標改變（例如新的 pending choice）時，桌面模式改由既有的地圖預設焦點接手。
+  - 焦點在送出 `focusTown` 時就切過去（避免關閉選單後的還原把焦點拉回舊目標而平移相機）；`ok:false`、逾時或沒有 iframe → 放掉瀏覽焦點並提示「地圖無法聚焦這座城鎮」／「地圖沒有回應，請再試一次」。
+- **權威與 fail closed**：開啟與選單開著時的刷新都先向 iframe 送帶唯一 `req` 的 `snapshot` 指令，並與其他地圖指令共用「同時只有一筆等待」與 1000ms 逾時。只有**同一個 `req` 先及時回覆 `ok:true`，且同一個 `req` 的 snapshot 也在送出後 1000ms 內送達**才採用：`ok:false`、逾時、snapshot 先於 `ok:true` 或在 1000ms（含）之後才到、`req` 不同或沒有 `req` 的一般推送、不合 schema 一律不採用。等待中的請求一逾時就清掉，晚到的回覆不會再開啟。以下一律不開選單並顯示短原因：iframe 沒有回應或回覆過期（`地圖沒有回應，請再試一次`）、iframe 回覆 `ok:false`（`此操作目前不可用`）、snapshot 不合 schema 或分組資料不足（`地圖資料不足，無法分組`）、遊戲尚未開始、戰略地圖分頁不可用。城鎮在選定時已不在清單（`此範圍已沒有可瀏覽城鎮`）→ 不送 `focusTown`。
+- **戰略地圖從未載入**（parent 還沒有 snapshot；iframe 只在戰略地圖可見時由既有流程掛載）：SL 用既有分頁切換到戰略地圖並提示「戰略地圖載入中…載入後自動開啟聚焦選單」；6 秒內第一份含完整城鎮清單的 snapshot 到達、且仍在戰略地圖、沒有其他視窗、bridge 仍連線時，才送出上述的開啟請求。
+- **刷新只用 req 綁定的 snapshot**：選單開著時，一般推送（不帶 `req`）本身不改變選單內容，只觸發一次新的 `snapshot` 請求；畫面以那份通過上述檢查的回覆為準（例如「目標」標示更新；打開的分組不在新資料裡就回到分組層）。刷新請求失敗就關閉選單。選單被其他視窗（例如伺服器推來的選擇視窗）蓋過或離開遊戲畫面就自動關閉。
+- **停用、清除與斷線**：停用搖桿控制、清除焦點、切換顯示模式、bridge 斷線（含重連中與 stale）時關閉選單並取消等待中的開啟／刷新請求與「載入後開啟」；之後才到的 iframe 回覆不會再開啟。關閉後若沒有可還原的內容（例如必選地圖目標時的指揮中心），焦點不會殘留在隱藏的選項上。
+- **防誤觸**（數值不變：1500／300／250／1000ms）：開啟、換層與置中放大都不是遊戲動作，不受處理中鎖限制；地圖確認等待中不送第二筆。**只有真的開啟選單、真的換層，或 iframe 以同一個 `req` 確認 `focusTown` 成功**才記錄一次執行（之後 250ms 內的下一個執行型按鍵被擋，例如開啟後立刻按 A）；fail closed 的開啟或選定不記錄冷卻。選單在游標下刷新後 300ms 內忽略 A。第一次有效操作（含 SL）只放焦點。
 
 ## ZR 戰略地圖縮放（兩種顯示模式）
 
@@ -229,30 +255,31 @@ ZR 不再回區域層或回指揮中心：要回區域層用 B（非卡牌項目
 ## 測試
 
 ```bash
-node --test scripts/tests/js/controller_core.test.js scripts/tests/js/living_room_core.test.js scripts/tests/js/controller_dual.test.js   # 或透過 pytest 包裝
-uv run python -m pytest scripts/tests/test_controller_core_js.py scripts/tests/test_living_room_core_js.py scripts/tests/test_joycon_bridge.py scripts/tests/test_joycon_dual_bridge.py
-uv run python scripts/validate/validate_joycon_controller.py   # 瀏覽器 E2E（mock bridge；含桌面模式 SL 聚焦選單與 ZR 縮放循環），截圖到 /tmp/redline-joycon-proof/
-uv run python scripts/validate/validate_living_room_controller.py   # 客廳模式 E2E（固定按鍵序列、三種解析度，含兩種顯示模式的實機 Capture／購買卡 B→Y／地圖 Y 情境、客廳模式 SL 聚焦選單與 ZR 縮放循環），截圖到 /private/tmp/redline-living-room-proof/
+node --test scripts/tests/js/controller_core.test.js scripts/tests/js/living_room_core.test.js scripts/tests/js/controller_dual.test.js scripts/tests/js/controller_map_adapter.test.js   # 或透過 pytest 包裝
+uv run python -m pytest scripts/tests/test_controller_core_js.py scripts/tests/test_living_room_core_js.py scripts/tests/test_joycon_bridge.py scripts/tests/test_joycon_dual_bridge.py scripts/tests/test_sl_global_focus_browser.py scripts/tests/test_propagandist_joycon_browser.py scripts/tests/test_aid_x_discard_joycon_browser.py scripts/tests/test_thinker_sl_focus_joycon_browser.py scripts/tests/test_hand_over_five_joycon_browser.py
+uv run python scripts/validate/validate_joycon_controller.py   # 瀏覽器 E2E（mock bridge；含桌面模式 ZR 縮放循環；SL 情境尚待改寫，見下方），截圖到 /tmp/redline-joycon-proof/
+uv run python scripts/validate/validate_living_room_controller.py   # （客廳模式已移除，此 E2E 的客廳情境不再適用，待改寫或移除）客廳模式 E2E（固定按鍵序列、三種解析度，含兩種顯示模式的實機 Capture／購買卡 B→Y／地圖 Y 情境、ZR 縮放循環；SL 情境尚待改寫，見下方），截圖到 /private/tmp/redline-living-room-proof/
 ```
 
 E2E 以 mock WebSocket 取代 bridge 並注入 frame，驗證真實頁面的焦點、A click、B cancel、modal 優先權、斷線重連不誤觸、stale、地圖目標焦點與 fail-closed。注入的按鍵位元取自下方「限制」的實機證據，但 **mock E2E 本身不是實機證據，也不能取代 Mac 實機 Joy-Con 驗證**（見 `TODO.md`）。
-SL 聚焦選單的 E2E 用「組織經驗甲」（85 個合法城鎮、8 個統治者、7 個陣營區域）：分組與城鎮數由驗證端以伺服器 pending choice＋`data/map.json` 獨立計算比對，並驗證：
-- 移動來源、移動目的地與瓦解的 pending choice 都 fail closed，而且不開始執行冷卻。
-- A 只移焦點：不送 act／activate／button／cancel、不建立。兩種模式都驗證從指揮中心選定後切回戰略地圖，以及保留目前焦點。
-- 開啟後 250ms 內的 A 被擋，冷卻過後才選定。
-- scope lock 有正向對照：每個綁定鍵先在選單開著時驗證不作用，B 關閉並確認焦點回到原處後，在同一情境再按一次，驗證它確實會執行。
-  - 真實情境：方向鍵、R／SR、兩種模式的 ZR（地圖縮放），以及客廳模式的 Y（說明）與 STICK。
-  - pending choice 期間遊戲本身會停用結束行動、陣營能力與手牌按鈕：測試暫時啟用，click 在 capture 階段攔下，不送出任何動作。
-  - 只在必選鎖之外才會作用的鍵（兩種模式的 X，與桌面模式手牌 Y）：測試暫時解除 parent 的必選鎖旗標。
-  - 未綁定的鍵同樣不穿透。
-- B／×／SL 從非預設焦點開啟後精確還原。
-- 協定整合（攔下 parent 指令、由 iframe 偽造回覆）：`ok:false`、錯的 `req`、不合 schema、snapshot 先於 `ok:true`，以及逾時邊界（約 850ms 採用；`ok:true` 約 900ms 但 snapshot 在 1000ms 之後才到、或兩者都晚到則拒絕）。
-- 選定時已選城鎮改變。
-- 一般推送只觸發 req 綁定刷新，畫面以那份回覆為準。
-- 任一合法目標的 canonical 分組資料不合法。
-- 斷線、停用與晚到的回覆。
-- 候選在選定瞬間消失、iframe 無回應、沒有目標。
-- 選單開著時 Y 不穿透；關閉後 Y 仍走既有 `act`＋`req`＋`ok:true` 建立。
+SL 全域地圖聚焦的 regression（不啟動伺服器）：
+- `scripts/tests/js/controller_map_adapter.test.js`（node:test，以 vm 載入真實 iframe adapter、真實 `townDisplayLatLng` 與 `data/map.json`，Leaflet 換成可驗證的假地圖）：沒有 pending choice 時 snapshot 仍帶全部 canonical 城鎮；`focusTown` 精確置中（含黑河／海蘭泡／臥龍的依層級偏移）、固定層級 9（maxZoom 10 仍是 9）、不超過 maxZoom；不點按鈕、不觸發 marker click、不改遊戲狀態；未知城鎮、容器隱藏、缺座標、缺 `req`、非 parent 來源、min／max 無法滿足一律 fail closed；pending target 路徑（`focus`／`activate`／`act` 只接受合法目標）不變。
+- `scripts/tests/test_sl_global_focus_browser.py`（Playwright／Chromium；以 `page.route` 在合成 origin 提供最小 parent 頁與地圖 iframe，載入真實的 controller 腳本；mock bridge）：桌面模式從指揮中心開啟、兩層選單、置中放大、只看的瀏覽焦點上 A 不作用、合法目標城鎮綁到既有目標焦點且 Y 仍走既有建立流程、新的 pending choice 讓瀏覽焦點交回地圖目標、Leaflet maxZoom 低於 9 時取最大整數層級、iframe `ok:false` fail closed、戰略地圖從未載入時先切過去並在載入後自動開啟。
+- `controller_core.test.js`／`living_room_core.test.js`：`focusTown` 必須帶 `req`、`mapFocusZoom` 邊界、`browseTowns` schema 整份 fail closed、地圖目標簽章、真實 `data/map.json` 的完整分組、畫面外的目標座標（思想家全圖候選在 SL 的 zoom 9 與之後 ZR 的 zoom 10）不讓 snapshot 作廢。
+- `scripts/tests/test_thinker_sl_focus_joycon_browser.py`（真的 uvicorn＋`ENABLE_TEST_ROUTES=true`，`/test/setup-remove-to-purchase` 維吾爾（伊斯坦堡）＋思想家；mock bridge，SL 選單內也只用搖桿與 A）：桌面模式下，思想家 pending choice → SL → 天方 → 利雅德 → `focusTown` ok:true 與放大後的 snapshot → 放開按鍵後，控制器 scope／焦點／snapshot 目標簽章／A、Y 可用命令與同一 choice 直接用搖桿導航到利雅德完全一致；整條 SL 路徑重複 5 次、遊戲 WebSocket（parent 與 iframe）沒有任何 send、伺服器權威 state 不變；之後 A 選取、Y 建立並進入 3 次遷移。SL（zoom 9）後再按 ZR 放大到 zoom 10（北美目標超過舊的 ±10 萬 px 上限）snapshot 仍被採用，A 選取、Y 建立照常。對照組（不開 SL）同樣可完成；非目標城鎮（伊斯坦堡）只建立瀏覽焦點，A／Y 不選取、不送出。
+
+手牌超過可視張數的 regression：
+- `scripts/tests/test_hand_over_five_joycon_browser.py`（真的 uvicorn＋`ENABLE_TEST_ROUTES=true`，8 張手牌、第 7／8 張與第 1／2 張同名；桌面模式；mock bridge）：搖桿從第 1 張逐張到第 8 張再逐張回到第 1 張，每一步焦點卡（DOM 位置、`data-card-index`、控制器 sig）正確且整張在手牌區內，第 7、8 張時手牌區確實捲動；焦點在第 7 張時經過 `render()`／地圖 iframe `redline-map-state` 重繪、重繪後立即輸入、A 預覽（預覽中再重繪）與 B 關閉後仍在第 7 張且捲動位置不變；X／Y 點的是實際焦點卡的既有按鈕（第 7 張 index 6、第 6 張資助者 +2 資金、第 5 張不受影響）。不是實體 Joy-Con 驗證。
+
+必選地圖目標停在其他分頁的 regression：
+- `living_room_core.test.js`：`choiceMapRedirect` 只在 page scope／已連線／遊戲顯示／地圖可用時切換；自動切換每個 choice 一次且需控制器使用中；SL、ZR、未對應按鍵不切換。
+- `scripts/tests/test_propagandist_joycon_browser.py`（Playwright／Chromium；真的 uvicorn＋`ENABLE_TEST_ROUTES=true`，`/test/setup-remove-to-purchase`＋`/test/set-hand`；mock bridge）：兩種顯示模式打出並移除宣傳家 → 建立組織 → 遷移全程只用控制器（trusted pointer 事件為 0），含手上另一張宣傳家（可排入）、單張、滑鼠離開地圖後控制器輸入回到地圖且不執行、ZR 在其他分頁不作用、`/map-data` 延遲 2 秒、控制器尚未使用時由既有按鈕打出後第一個輸入即恢復。
+
+一般奧援手牌 X＝棄置的 regression：
+
+- `scripts/tests/test_aid_x_discard_joycon_browser.py`（同上 harness）：兩種顯示模式下，一般奧援 X → 危險確認單（預設「返回」）、確認單開著時 X／R 不作用、B 與「返回」上的 A 取消都不送出、右移「確認」＋A 才點一次既有「棄置」；B 在奧援手牌不開確認單；一般牌 X＝資源；紅軍奧援 X＝資源（不開確認單）；「棄置」鈕停用／隱藏時 X fail closed；help／legend／提示列不再出現「B 棄置」。
+
+`validate_joycon_controller.py`／`validate_living_room_controller.py` 的 SL 情境（「組織經驗甲」85 個合法建立目標）仍是舊版「只聚焦合法建立目標、選分組即移焦點」的驗證，尚未改寫成全域導覽（見 `TODO.md`）；它們的 ZR 與其他情境不受影響。
 
 ZR 縮放循環的 E2E（兩種模式）驗證：
 - 從最小層級連按走完 `min → … → max → min`，每一下一級、各自唯一的 `req`，中心、焦點城鎮、選取、預備移動與遊戲狀態都不變；不需要焦點，第一下就縮放且不放焦點。
@@ -268,10 +295,10 @@ ZR 縮放循環的 E2E（兩種模式）驗證：
   **SL＝`20 00`（b0 `0x20`）**、SR＝`10 00`、R＝`40 00`、ZR＝`80 00`、`+`＝`00 02`、STICK＝`00 04`、HOME＝`00 10`、Capture＝`00 40`。
   原始紀錄（前兩個 byte 即 `[b0 b1]`）：neutral `BUTTON AREA: 00 00 00 e0 00 00 00 00 00 00 00 00`、
   SL `BUTTON AREA: 20 00 00 e0 00 00 00 00 00 00 00 00`。
-  這是 SL 聚焦選單 mapping 的依據；與目前的 `BUTTON_BITS` 一致，SL 沿用 b0 `0x20`，沒有新增或重新指派任何位元。ZR 縮放循環同樣沿用既有的 ZR＝b0 `0x80`。
+  這是 SL 全域地圖聚焦 mapping 的依據；與目前的 `BUTTON_BITS` 一致，SL 沿用 b0 `0x20`，沒有新增或重新指派任何位元。ZR 縮放循環同樣沿用既有的 ZR＝b0 `0x80`。
   2026-10-10 的獨立 bridge WebSocket subscriber 也錄到 Y＝`[1, 0]`、實體 Capture＝`[0, 64]`。2026-10-11 另做的 bounded WebSocket capture
   因 FTCW 當時沒有送出任何 frame 而沒有資料，不影響上述紀錄。
-- 尚未以實體 Joy-Con 完整驗證 SL 聚焦選單與 ZR 縮放循環的操作流程（目前只有 mock E2E）。
+- 尚未以實體 Joy-Con 完整驗證 SL 全域地圖聚焦與 ZR 縮放循環的操作流程（目前只有 mock 測試）。
 - **左 Joy-Con 與多支手把沒有實機證據**：左手的封包 offset／位元、左搖桿 offset 與 Y 軸方向、`S2N1` 名稱格式、多支同時輸入、斷線與重連行為都只以 fixture 封包與假 FTCW（臨時 UDP 埠）測試；需實機確認的項目列在 `TODO.md`。
 - 文字輸入欄位只能聚焦，無法用搖桿輸入文字。
 - CAPTURE 接受 b1 `0x40` 與 b1 `0x20` 兩個位元（同一個邏輯鍵，按住時切換位元不會重複觸發）。上游 `Peterksharma/switch2mac`（commit `a8f2e61e85c3e4a43df3e6ed2f1467327df03d72`）`Switch2Protocol.swift` 定義 `capture = 0x0000_2000`、`c = 0x0000_4000`，UDPHub 以 little-endian u32 寫出。2026-10-10 以獨立 subscriber 實錄本機 bridge（只接右 Joy-Con 2）：Y＝`[1, 0]`、實體 Capture 鍵＝`[0, 64]`（b1 `0x40`，即上游 `c`；右 Joy-Con 2 沒有 `capture` 那顆鍵），因此 `0x40` 是主位元；`0x20` 保留給左 Joy-Con 2／Pro 手把的 `capture`（未實測）。兩個位元原本都沒有其他對應，沒有重新指派任何已知按鍵。字面封包回歸測試：`scripts/tests/test_joycon_bridge.py`、`scripts/tests/js/controller_core.test.js`。

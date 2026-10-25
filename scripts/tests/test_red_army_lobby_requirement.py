@@ -60,12 +60,14 @@ def test_last_seat_is_forced_to_choose_red_army_when_room_has_no_red_army():
     rejected = client.post('/choose-faction', json={
         'game_id': game_id,
         'player_id': last_player_id,
+        'resume_token': host_token(game_id, last_player_id),
         'faction_id': 'mongol',
         'base_name': '烏蘭巴托',
     }).json()
     accepted = client.post('/choose-faction', json={
         'game_id': game_id,
         'player_id': last_player_id,
+        'resume_token': host_token(game_id, last_player_id),
         'faction_id': 'red_army',
         'base_name': '北京',
     }).json()
@@ -91,6 +93,7 @@ def test_last_seat_can_choose_another_faction_when_red_army_already_exists():
     accepted = client.post('/choose-faction', json={
         'game_id': game_id,
         'player_id': last_player_id,
+        'resume_token': host_token(game_id, last_player_id),
         'faction_id': 'mongol',
         'base_name': '烏蘭巴托',
     }).json()

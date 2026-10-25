@@ -239,7 +239,7 @@ def test_human_cannot_choose_red_army_while_ai_is_enabled():
 
     result = client.post(
         "/choose-faction",
-        json={"game_id": game_id, "player_id": host_id, "faction_id": "red_army", "base_name": "北京"},
+        json={"game_id": game_id, "player_id": host_id, "resume_token": host_token(game_id, host_id), "faction_id": "red_army", "base_name": "北京"},
     ).json()
 
     assert result == {"error": "AI 紅軍已啟用，紅軍席位由電腦控制，玩家不可選擇"}

@@ -24,11 +24,11 @@ def main():
         page.wait_for_function("() => localStorage.getItem('redline.sessions.v1')")
         old_session = page.evaluate("() => Object.values(JSON.parse(localStorage.getItem('redline.sessions.v1')))[0]")
         started = page.evaluate("""async ({gameId, hostId, hostToken, deviceId}) => {
-          await fetch('/choose-faction', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({game_id:gameId, player_id:hostId, faction_id:'red_army', base_name:'北京'})});
-          await fetch('/ready', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({game_id:gameId, player_id:hostId, ready:true})});
+          await fetch('/choose-faction', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({game_id:gameId, player_id:hostId, resume_token:hostToken, faction_id:'red_army', base_name:'北京'})});
+          await fetch('/ready', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({game_id:gameId, player_id:hostId, resume_token:hostToken, ready:true})});
           const guest = await fetch('/join', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({game_id:gameId, name:'逃生對手', device_id:`${deviceId}-guest`})}).then(r => r.json());
-          await fetch('/choose-faction', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({game_id:gameId, player_id:guest.player_id, faction_id:'hong_kong', base_name:'香港城'})});
-          await fetch('/ready', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({game_id:gameId, player_id:guest.player_id, ready:true})});
+          await fetch('/choose-faction', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({game_id:gameId, player_id:guest.player_id, resume_token:guest.resume_token, faction_id:'hong_kong', base_name:'香港城'})});
+          await fetch('/ready', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({game_id:gameId, player_id:guest.player_id, resume_token:guest.resume_token, ready:true})});
           return fetch('/start', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({game_id:gameId, player_id:hostId, resume_token:hostToken})}).then(r => r.json());
         }""", {'gameId': old_session['game_id'], 'hostId': old_session['player_id'], 'hostToken': old_session['resume_token'], 'deviceId': page.evaluate("() => localStorage.getItem('redline.device_id.v1')")})
         if not started.get('success'):

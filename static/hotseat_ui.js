@@ -87,6 +87,8 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
     notice: '',
     claimAt: 0,
     reloading: false,
+    provisioning: null, // provisionSeats 進行中的 promise：配置期間不 claim／不監聽／不改名，且同時只跑一個
+    seqBusy: false,
     maskSig: null,
     lobbySig: null,
     timer: null,
@@ -376,6 +378,7 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
 
   // ------------------------------------------------------------ Joy-Con 擁有權：主連線只 claim 目前席位（或接手席位）綁定的那一支
   function syncClaim() {
+    if (hs.provisioning) return;
     const target = Core.claimTarget(inLobby() ? hs.lobby : hs.verdict);
     const cs = ctlState();
     if (!target || !cs || !cs.enabled || !cs.controller || cs.controller.mode !== 'v2') return;
@@ -471,7 +474,7 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
   /** 需要的監聽＝其他已綁定、在 server lobby 內的本機席位；不需要的關閉（bridge 釋放），斷線的稍後重開。 */
   function syncListeners() {
     const cs = ctlState();
-    const ready = inLobby() && !hs.reloading && !!CtlCore() && !!cs && cs.enabled && !!cs.url;
+    const ready = inLobby() && !hs.reloading && !hs.provisioning && !!CtlCore() && !!cs && cs.enabled && !!cs.url;
     const want = ready ? Core.lobbyListeners({ verdict: hs.lobby, store: loadStore(), gameId: session().gameId }) : [];
     const ids = new Set(want.map(w => w.controller));
     for (const listener of [...listeners.values()]) if (!ids.has(listener.controller)) closeListener(listener);
@@ -564,6 +567,7 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
     syncClaim();
     syncListeners();
     syncCodenames();
+    syncSequential();
     renderLobby();
   }
 
@@ -573,7 +577,7 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
 
   function syncCodenames() {
     const cur = session();
-    if (!inLobby() || !cur.gameId || cur.started || hs.reloading) return;
+    if (!inLobby() || !cur.gameId || cur.started || hs.reloading || hs.provisioning) return;
     const now = Date.now();
     for (const r of Core.codenameRenames({ lobby: cur.lobby, store: loadStore(), gameId: cur.gameId })) {
       if ((renaming.get(r.player_id) || 0) > now) continue;
@@ -635,7 +639,16 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
   const gate = {
     // 大廳 hot-seat 由 lobby actor 決定 claim；controller_ui.js 的單手把自動 claim 在此期間不送。
     managesClaims() { return inLobby() && refreshLobbyVerdict().view !== 'inactive'; },
+    // 遊戲畫面目前是否可由這支 Joy-Con 操作（未啟用 hot-seat 一律可以；遮罩或不是該席位的手把時不行）。
+    // controller_ui.js 用它擋掉沒有按鍵觸發的自動動作（例如必選地圖目標時自動切到戰略地圖）。
+    allowsPage({ owned }) {
+      if (inLobby()) return true;
+      const v = hs.verdict;
+      return !v || v.view === 'inactive' || (!Core.masked(v.view) && Core.allowsInput(v, owned));
+    },
     intercept(action, { owned }) {
+      // Joy-Con 自動建房尚未完成（配置中或失敗待重試）：席位還沒綁完，不可攔截或代為開啟陣營視窗，讓「重試」鈕能用 A 操作。
+      if (window.RedlineStartFlow?.autoSetupActive?.()) return false;
       if (inLobby() && hs.verdict.view === 'inactive') {
         const lv = refreshLobbyVerdict();
         if (lv.view === 'inactive') return false;
@@ -854,6 +867,77 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
     return true;
   }
 
+  // ------------------------------------------------------------ Joy-Con 逐棒：P1→P2→…→Pn→回到房主 P1 啟動
+  // 輪到誰完全由 server /lobby 的陣營＋準備狀態決定（Core.sequentialLobby）。這一棒完成（陣營已選且準備）後，目前分頁自動
+  // 整頁切換到下一棒（以該席自己的 resumeToken 重新授權＝browser session、bridge 擁有權、焦點一起交接）；
+  // 新分頁載入後依 sessionStorage 的一次性意圖開啟陣營選擇，或（最後回到房主）把焦點放在「啟動行動」。
+  const SEQ_KEY = 'redline.hotseat.sequence.v1';
+  const SEQ_MAX_SWITCHES = 4; // 同一個目標連續自動切換的上限，避免重新授權失敗時無限重新載入
+  const SEQ_INTENT_TTL_MS = 60000;
+
+  function readIntent() {
+    try {
+      const v = JSON.parse(sessionStorage.getItem(SEQ_KEY) || 'null');
+      return v && typeof v === 'object' && typeof v.gameId === 'string' && typeof v.playerId === 'string' ? v : null;
+    } catch { return null; }
+  }
+  function writeIntent(v) { try { sessionStorage.setItem(SEQ_KEY, JSON.stringify(v)); } catch { /* ignore */ } }
+  function clearIntent() { try { sessionStorage.removeItem(SEQ_KEY); } catch { /* ignore */ } }
+
+  function syncSequential() {
+    const cur = session();
+    const seq = hs.lobby && hs.lobby.sequential;
+    if (!inLobby() || hs.reloading || hs.provisioning || cur.started || !cur.gameId || !seq) return;
+    if (cur.playerId !== seq.turn) {
+      const seat = Core.findSeat(loadStore(), cur.gameId, seq.turn);
+      if (!seat || !seat.controller) return;
+      const target = seq.phase === 'start' ? 'start' : 'picker';
+      const prev = readIntent();
+      const same = prev && prev.gameId === cur.gameId && prev.playerId === seq.turn && prev.target === target;
+      const switches = same ? Number(prev.switches) || 0 : 0;
+      if (switches >= SEQ_MAX_SWITCHES) { lobbyHint('自動交棒失敗，請重新整理頁面。'); return; }
+      writeIntent({ gameId: cur.gameId, playerId: seq.turn, target, switches: switches + 1, at: Date.now() });
+      switchLobbySeat(seat);
+      return;
+    }
+    consumeIntent(cur, seq);
+  }
+
+  async function nextPaint() { await new Promise(r => requestAnimationFrame(() => r())); await new Promise(r => requestAnimationFrame(() => r())); }
+
+  function consumeIntent(cur, seq) {
+    const intent = readIntent();
+    if (!intent || intent.gameId !== cur.gameId || intent.playerId !== cur.playerId) return;
+    if (Date.now() - (Number(intent.at) || 0) > SEQ_INTENT_TTL_MS) { clearIntent(); return; }
+    const lv = hs.lobby;
+    const cs = ctlState();
+    // 等主連線真的取得這一棒綁定的那一支（上一棒的分頁已隨重新載入釋放）才聚焦。
+    if (lv.view !== 'lobby-open' || !lv.seat || !cs || !cs.controller || cs.controller.owned !== lv.seat.controller) return;
+    const kind = lv.actor && lv.actor.kind;
+    if (intent.target === 'start') {
+      const btn = document.getElementById('startGameBtn');
+      if (seq.phase !== 'start' || kind !== 'lobby_start' || !btn || btn.disabled) return;
+      if (ctlApi() && typeof ctlApi().focusElement === 'function' && ctlApi().focusElement(btn)) clearIntent();
+      return;
+    }
+    if (kind !== 'lobby_select') {
+      const ready = document.getElementById('toggleReadyBtn');
+      if (ready && !ready.disabled && ctlApi() && ctlApi().focusElement(ready)) clearIntent();
+      return;
+    }
+    if (hs.seqBusy || typeof window.openFactionPickerModal !== 'function') return;
+    hs.seqBusy = true;
+    (async () => {
+      try {
+        const opened = pickerShown() || await window.openFactionPickerModal();
+        if (!opened) return;
+        await nextPaint();
+        const first = document.querySelector('#factionPicker #factionList .faction-choice-btn:not(:disabled)');
+        if (first && ctlApi() && ctlApi().focusElement(first)) clearIntent();
+      } finally { hs.seqBusy = false; }
+    })();
+  }
+
   function lobbyHint(text) {
     const box = document.getElementById('hotseatLobby');
     if (box) box.dataset.hint = text || '';
@@ -867,7 +951,7 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
     const cur = session();
     if (enabled && cur.gameId && cur.playerId && cur.resumeToken) {
       // 名稱是否為系統預設，以建立／進入作戰室送出時的紀錄為準（app.js session name_auto），不是事後看字串。
-      rememberSeat(cur.gameId, cur.playerId, cur.resumeToken, (document.getElementById('playerName') || {}).value || '', cur.nameAuto);
+      rememberSeat(cur.gameId, cur.playerId, cur.resumeToken, cur.name || (document.getElementById('playerName') || {}).value || '', cur.nameAuto);
     }
     lobbyHint('');
   }
@@ -923,7 +1007,8 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
     if (nameInput && nameInput.dataset.userEdited) nameInput.dataset.userEdited = 'used';
     if (nameInput && me && me.name) nameInput.value = me.name;
     lobbyHint(`已新增〈${name}〉；請在下方替這位玩家綁定 Joy-Con，輪到時用它按 A 進入自己的陣營選擇。`);
-    if (typeof refreshLobbyState === 'function') await refreshLobbyState();
+    // 席位已在 server 與本機都建立；刷新名單只是顯示。失敗（網路瞬斷）不可讓呼叫端誤判成「席位建立失敗」。
+    if (typeof refreshLobbyState === 'function') await refreshLobbyState().catch(() => null);
     return data.player_id;
   }
 
@@ -933,7 +1018,19 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
    * 部分成功後重試不會產生重複席位。最後以本機席位表驗證每支手把都綁在預期席位，才回報成功。
    * 回傳 { ok, error? }。
    */
-  async function provisionSeats(controllers) {
+  function provisionSeats(controllers) {
+    // 同時只跑一個：重複呼叫（連點重試、雙重觸發）共用同一次配置，不會重複 /join。
+    if (hs.provisioning) return hs.provisioning;
+    const run = provisionSeatsOnce(controllers).catch(() => ({ ok: false, error: 'Joy-Con 席位建立失敗，請重試。' }))
+      .finally(() => {
+        hs.provisioning = null;
+        refreshLobbyVerdict(); syncClaim(); syncListeners(); renderLobby();
+      });
+    hs.provisioning = run;
+    return run;
+  }
+
+  async function provisionSeatsOnce(controllers) {
     const list = Array.isArray(controllers) ? controllers.filter(Core.isControllerId) : [];
     const cur = session();
     if (list.length < 2 || !cur.gameId || !cur.playerId) return { ok: false, error: '尚無可配置的房間或手把。' };
@@ -946,21 +1043,21 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
         // 固定預期代號 P{i+1}；若上次 /join 已在 server 建立該席位但回應遺失，取回同一席而不是跳號新增。
         const codename = Core.CODENAMES[i];
         const lobbyRes = (typeof refreshLobbyState === 'function' ? await refreshLobbyState().catch(() => null) : null) || session().lobby;
-        await addLocalSeat({ codename, resumePlayerId: Core.orphanSeatId(lobbyRes, loadStore(), cur.gameId, codename) || undefined });
-        seatId = others()[i - 1];
+        const created = await addLocalSeat({ codename, resumePlayerId: Core.orphanSeatId(lobbyRes, loadStore(), cur.gameId, codename) || undefined });
+        seatId = created || others()[i - 1];
       }
-      if (!seatId) return { ok: false, error: `P${i + 1} 席位建立失敗，請再按「建立作戰室」重試。` };
+      if (!seatId) return { ok: false, error: `P${i + 1} 席位建立失敗，請重試。` };
       seatIds.push(seatId);
     }
     for (let i = 0; i < list.length; i += 1) {
-      if (!bindSeat(seatIds[i], list[i], cur.gameId).ok) return { ok: false, error: `P${i + 1} 的 Joy-Con 綁定失敗，請再按「建立作戰室」重試。` };
+      if (!bindSeat(seatIds[i], list[i], cur.gameId).ok) return { ok: false, error: `P${i + 1} 的 Joy-Con 綁定失敗，請重試。` };
     }
     const store = loadStore();
     const verified = list.every((controller, i) => {
       const seat = Core.seatForController(store, cur.gameId, controller);
       return !!seat && seat.player_id === seatIds[i];
     });
-    return verified ? { ok: true } : { ok: false, error: 'Joy-Con 席位驗證失敗，請再按「建立作戰室」重試。' };
+    return verified ? { ok: true } : { ok: false, error: 'Joy-Con 席位驗證失敗，請重試。' };
   }
 
   function init() {
@@ -980,7 +1077,7 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
     }, true);
     hs.timer = setInterval(() => {
       if (hs.verdict.view !== 'inactive') { syncClaim(); renderMask(); }
-      else if (inLobby()) { refreshLobbyVerdict(); syncClaim(); }
+      else if (inLobby()) { refreshLobbyVerdict(); syncClaim(); syncSequential(); }
       syncListeners();
       renderLobby();
       const box = document.getElementById('hotseatLobby');
@@ -991,6 +1088,7 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
 
   window.RedlineHotSeat = {
     onConnect, onState, onLobby, onLobbyState, resumeTarget, rememberSeat, provisionSeats,
+    isLocalSeat: (gameId, playerId) => !!Core.findSeat(loadStore(), gameId, playerId),
     /** AI 紅軍公開行動視窗正開著：app.js 據此略過「玩家動態」通知，同一件事不顯示兩次。 */
     /** 客廳輪流遊戲裡有 AI 紅軍、伺服器還沒啟用「結束回合前等公開視窗確認」：app.js 送出 ai_public_hold。 */
     wantsAiPublicHold: (state) => !!state && hs.verdict.view !== 'inactive' && !!state.ai_red_army
@@ -1004,7 +1102,8 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
       const cs = ctlState();
       const owned = cs && cs.controller ? cs.controller.owned : null;
       const store = loadStore();
-      const ownerSeat = hs.gameId ? Core.seatForController(store, hs.gameId, owned) : null;
+      const stateGameId = hs.gameId || session().gameId;
+      const ownerSeat = stateGameId ? Core.seatForController(store, stateGameId, owned) : null;
       const aiEl = document.getElementById('hotseatMask');
       return {
         aiPublic: {

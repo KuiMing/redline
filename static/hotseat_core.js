@@ -485,12 +485,39 @@
     const actor = lobbyActor(lobby, rows, connectedSeatId);
     const seat = actor.playerId ? findSeat(store, gameId, actor.playerId) : null;
     if (!seat) return { ...base, view: 'lobby-waiting' };
-    return { view: seat.controller ? 'lobby-open' : 'lobby-bind', actor, seat, self: true, gameId, rows };
+    const sequential = sequentialLobby({ lobby, store, gameId });
+    // 逐棒：不是這一棒的席位一律不可操作（lobby-handoff），由 UI 自動把整個 session 交給這一棒。
+    if (sequential.active && sequential.turn !== connectedSeatId) {
+      return { view: 'lobby-handoff', actor, seat, self: true, gameId, rows, sequential };
+    }
+    return { view: seat.controller ? 'lobby-open' : 'lobby-bind', actor, seat, self: true, gameId, rows, sequential: sequential.active ? sequential : null };
   }
 
-  /** 這支 controller 綁定、在 server lobby 內、且不是目前席位的本機席位（＝它按 A 要切去的席位）；否則 null。 */
+  /**
+   * Joy-Con 房間的逐棒流程（純判定，只讀 server /lobby 公開資料＋本機席位表）。
+   * 啟用條件：房間是 Joy-Con、hot-seat 已啟用、server lobby 的每一位真人都是已綁手把的本機席位，且人數已達配對數（配置完成）。
+   * turn＝依加入順序（P1～Pn）第一位尚未「選好陣營並準備」的席位；全部完成後交回房主（phase 'start'），只有房主能啟動。
+   * 不滿足條件（訪客、電腦模式、配置未完成）→ active:false，維持原本的手動客廳。
+   */
+  function sequentialLobby({ lobby, store, gameId }) {
+    const off = { active: false, order: [], turn: null, phase: null };
+    if (!validLobby(lobby) || lobby.started === true || lobby.control_mode !== 'joycon') return off;
+    if (!store || store.enabled !== true) return off;
+    const ids = lobbyPlayerIds(lobby);
+    if (!ids || ids.length < 2 || ids.some(id => !id)) return off;
+    if (Number.isInteger(lobby.joycon_count) && ids.length < lobby.joycon_count) return off;
+    const seats = seatsFor(store, gameId);
+    if (!ids.every(id => seats.some(s => s.player_id === id && s.controller))) return off;
+    const ready = lobby.ready || {};
+    const factions = lobby.factions || {};
+    const next = ids.find(id => !(factions[id] && ready[id] === true));
+    if (next) return { active: true, order: ids, turn: next, phase: 'select' };
+    return ids.includes(lobby.host_id) ? { active: true, order: ids, turn: lobby.host_id, phase: 'start' } : off;
+  }
+
+  /** 這支 controller 綁定、在 server lobby 內、且不是目前席位的本機席位（＝它按 A 要切去的席位）；否則 null。逐棒流程不允許自行切換。 */
   function switchSeatFor(verdict, store, controller) {
-    if (!verdict || !['lobby-open', 'lobby-bind'].includes(verdict.view) || !isControllerId(controller)) return null;
+    if (!verdict || verdict.sequential || !['lobby-open', 'lobby-bind'].includes(verdict.view) || !isControllerId(controller)) return null;
     const row = (verdict.rows || []).find(r => r.inLobby && r.controller === controller && !r.connected);
     const seat = row ? findSeat(store, verdict.gameId, row.player_id) : null;
     return seat && seat.controller === controller ? { ...seat } : null;
@@ -554,11 +581,20 @@
   });
   const LOBBY_OTHERS = '其他本機玩家按自己 Joy-Con 的 A 進入自己的席位';
 
+  function turnName(verdict) {
+    const row = (verdict.rows || []).find(r => r.player_id === verdict.sequential.turn);
+    return (row && row.name) || '下一位玩家';
+  }
+
   function lobbyPrompt(verdict, controllerLabel) {
     const label = typeof controllerLabel === 'function' ? controllerLabel : controllerNames([]);
     const v = verdict || {};
     const name = (v.actor && v.actor.name) || (v.seat && v.seat.name) || '本機玩家';
     const kind = v.actor && v.actor.kind;
+    if (v.view === 'lobby-handoff') return `正在把操作權交給〈${(v.sequential && v.sequential.turn) ? turnName(v) : '下一位玩家'}〉…`;
+    if (v.view === 'lobby-open' && v.sequential) {
+      return `〈${name}〉正在操作（${label(v.seat.controller)}）：${v.sequential.phase === 'start' ? '所有玩家已準備，由房主按 A 啟動行動' : LOBBY_OPEN_TEXT[kind] || ''}。`;
+    }
     if (v.view === 'lobby-open') return `〈${name}〉正在操作（${label(v.seat.controller)}）：${LOBBY_OPEN_TEXT[kind] || ''}。${LOBBY_OTHERS}`;
     if (v.view === 'lobby-bind') return `請先替〈${name}〉綁定一支 Joy-Con，才能用 Joy-Con 操作自己的席位。${LOBBY_OTHERS}`;
     if (v.view === 'lobby-waiting') return '正在讀取作戰室狀態…';
@@ -587,6 +623,6 @@
     isControllerId, normalizeStore, seatsFor, findSeat, seatForController, addSeat, bindController, unbindController,
     isHotSeatGame, normalizeSession, confirmSession, lockSession, authoritativeActor, decide, masked, aiPublicView, aiLineText,
     confirmVerdict, allowsInput, bindableControllers, bindingLost, handoffTitle, reasonText,
-    seatControllerStatus, controllerDisplayNames, controllerNames, seatJoyStatus, controllerChoices, withLocalOwners, lobbySeats, decideLobby, lobbyInput, lobbyEntersSelection, lobbyListeners, listenerSwitchTarget, claimTarget, switchSession, lobbyPrompt,
+    seatControllerStatus, controllerDisplayNames, controllerNames, seatJoyStatus, controllerChoices, withLocalOwners, lobbySeats, decideLobby, sequentialLobby, lobbyInput, lobbyEntersSelection, lobbyListeners, listenerSwitchTarget, claimTarget, switchSession, lobbyPrompt,
   };
 });

@@ -784,3 +784,88 @@ test('回合結束的等待確認來自伺服器 awaiting_ack：current player �
   const next = aiState({ current_player: '香港玩家' });
   assert.equal(H.aiPublicView(next, aiVerdict(next)), null);
 });
+
+// ---- Joy-Con 逐棒：P1→P2→…→Pn→回房主；前一棒不能操作下一棒；最後一棒不能啟動
+const SEQ_IDS = ['p-1', 'p-2', 'p-3', 'p-4'];
+const SEQ_CTL = ['R24800-45619a3d', 'L24801-6551f913', 'R24802-45619a3d', 'L24803-6551f913'];
+function seqStore(n) {
+  let store = H.normalizeStore({ enabled: true });
+  for (let i = 0; i < n; i += 1) {
+    store = H.addSeat(store, G, { player_id: SEQ_IDS[i], resume_token: `tok-${i}`, name: `P${i + 1}` }).store;
+    store = H.bindController(store, G, SEQ_IDS[i], SEQ_CTL[i]).store;
+  }
+  return store;
+}
+function seqLobby(n, done = 0, extra = {}) {
+  const players = SEQ_IDS.slice(0, n).map((id, i) => [id, `P${i + 1}`]);
+  const factions = {};
+  const ready = {};
+  SEQ_IDS.slice(0, done).forEach((id) => { factions[id] = 'taiwan_green'; ready[id] = true; });
+  return { players, host_id: 'p-1', factions, ready, started: false, control_mode: 'joycon', joycon_count: n, ai_red_army: true, ...extra };
+}
+const seqTurn = (n, done) => H.sequentialLobby({ lobby: seqLobby(n, done), store: seqStore(n), gameId: G });
+
+test('逐棒：依 P1→P2→P3→P4 順序輪到第一位尚未選好陣營並準備者；全部完成後交回房主 P1 啟動', () => {
+  for (const n of [2, 3, 4]) {
+    for (let done = 0; done < n; done += 1) {
+      const seq = seqTurn(n, done);
+      assert.deepEqual([seq.active, seq.turn, seq.phase], [true, SEQ_IDS[done], 'select'], `n=${n} done=${done}`);
+    }
+    const last = seqTurn(n, n);
+    assert.deepEqual([last.active, last.turn, last.phase], [true, 'p-1', 'start'], `n=${n} 回到房主`);
+  }
+});
+
+test('逐棒：只選陣營沒準備不算完成；非 Joy-Con、單人、配置未完成、席位未綁手把、已開局都不啟用', () => {
+  const lobby = seqLobby(2, 0);
+  lobby.factions['p-1'] = 'taiwan_green';
+  assert.equal(H.sequentialLobby({ lobby, store: seqStore(2), gameId: G }).turn, 'p-1');
+  const off = (l, s = seqStore(2)) => H.sequentialLobby({ lobby: l, store: s, gameId: G }).active;
+  assert.equal(off(seqLobby(2, 0, { control_mode: 'computer' })), false);
+  assert.equal(off(seqLobby(1, 0, { joycon_count: 1 }), seqStore(1)), false);
+  assert.equal(off(seqLobby(2, 0, { joycon_count: 3 })), false, 'P3 尚未配置完成');
+  assert.equal(off(seqLobby(2, 0), H.unbindController(seqStore(2), G, 'p-2')), false);
+  assert.equal(off(seqLobby(2, 0, { started: true })), false);
+  assert.equal(H.sequentialLobby({ lobby: seqLobby(2, 0), store: H.normalizeStore({ enabled: false }), gameId: G }).active, false);
+});
+
+test('逐棒：不是這一棒的席位 view＝lobby-handoff，Joy-Con 輸入全擋、不能自行切換、沒有監聽連線', () => {
+  const store = seqStore(3);
+  const lobby = seqLobby(3, 1); // P1 已完成，輪到 P2
+  const stale = H.decideLobby({ lobby, store, gameId: G, connectedSeatId: 'p-1' });
+  assert.equal(stale.view, 'lobby-handoff');
+  assert.equal(stale.sequential.turn, 'p-2');
+  for (const owned of [SEQ_CTL[0], SEQ_CTL[1], SEQ_CTL[2]]) {
+    const r = H.lobbyInput({ verdict: stale, owned, action: A, store });
+    assert.deepEqual([r.pass, r.switchTo], [false, null], `舊棒不能操作 ${owned}`);
+  }
+  assert.deepEqual(H.lobbyListeners({ verdict: stale, store, gameId: G }), []);
+  const turn = H.decideLobby({ lobby, store, gameId: G, connectedSeatId: 'p-2' });
+  assert.equal(turn.view, 'lobby-open');
+  assert.equal(H.lobbyInput({ verdict: turn, owned: SEQ_CTL[1], action: A, store }).pass, true);
+  // 這一棒的分頁上，其他席位的手把按 A 也不能搶走流程（逐棒沒有手動切換）。
+  const r = H.lobbyInput({ verdict: turn, owned: SEQ_CTL[2], action: A, store });
+  assert.deepEqual([r.pass, r.switchTo], [false, null]);
+  assert.deepEqual(H.lobbyListeners({ verdict: turn, store, gameId: G }), []);
+});
+
+test('逐棒：最後一棒完成後，只有房主 P1 是 lobby-open 且 actor＝lobby_start；P2 是 lobby-handoff（不能啟動）', () => {
+  const store = seqStore(2);
+  const lobby = seqLobby(2, 2);
+  const p2 = H.decideLobby({ lobby, store, gameId: G, connectedSeatId: 'p-2' });
+  assert.equal(p2.view, 'lobby-handoff');
+  assert.equal(H.lobbyInput({ verdict: p2, owned: SEQ_CTL[1], action: A, store }).pass, false);
+  const p1 = H.decideLobby({ lobby, store, gameId: G, connectedSeatId: 'p-1' });
+  assert.deepEqual([p1.view, p1.actor.kind, p1.sequential.phase], ['lobby-open', 'lobby_start', 'start']);
+  assert.equal(H.lobbyInput({ verdict: p1, owned: SEQ_CTL[0], action: A, store }).pass, true);
+  assert.equal(H.claimTarget(p1), SEQ_CTL[0]);
+  assert.equal(H.claimTarget(p2), null);
+});
+
+test('非逐棒（電腦模式的客廳輪流）維持原行為：任一綁定席位的 Joy-Con 都可切換', () => {
+  const store = seqStore(2);
+  const lobby = seqLobby(2, 0, { control_mode: 'computer' });
+  const v = H.decideLobby({ lobby, store, gameId: G, connectedSeatId: 'p-1' });
+  assert.equal(v.view, 'lobby-open');
+  assert.equal(H.lobbyInput({ verdict: v, owned: SEQ_CTL[1], action: A, store }).switchTo.player_id, 'p-2');
+});

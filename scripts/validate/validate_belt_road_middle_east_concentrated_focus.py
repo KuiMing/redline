@@ -36,15 +36,15 @@ def formal_session() -> dict:
     joined = post_json("/join", {"game_id": game_id, "name": "紅軍"})
     red_id = joined["player_id"]
     red_token = joined["resume_token"]
-    for player_id, faction, base in (
-        (viewer_id, "taiwan_green", "臺北"),
-        (red_id, "red_army", "北京"),
+    for player_id, token, faction, base in (
+        (viewer_id, viewer_token, "taiwan_green", "臺北"),
+        (red_id, red_token, "red_army", "北京"),
     ):
         post_json(
             "/choose-faction",
-            {"game_id": game_id, "player_id": player_id, "faction_id": faction, "base_name": base},
+            {"game_id": game_id, "player_id": player_id, "resume_token": token, "faction_id": faction, "base_name": base},
         )
-        post_json("/ready", {"game_id": game_id, "player_id": player_id, "ready": True})
+        post_json("/ready", {"game_id": game_id, "player_id": player_id, "resume_token": token, "ready": True})
     post_json("/start", {"game_id": game_id, "player_id": viewer_id, "resume_token": viewer_token, "market_mode": "all_cards"})
     return {
         "game_id": game_id,

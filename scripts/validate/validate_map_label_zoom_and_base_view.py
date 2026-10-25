@@ -69,15 +69,17 @@ def check(browser):
     host.wait_for_function("() => document.querySelector('#roomId')?.value?.length > 10", timeout=10000)
     game_id = host.locator('#roomId').input_value()
     host_player_id = host.evaluate('playerId')
+    host_token = host.evaluate('resumeToken')
 
     ally.fill('#roomId', game_id)
     ally.fill('#playerName', 'ally')
     ally.click('#joinRoomBtn')
     ally.wait_for_function("() => typeof playerId !== 'undefined' && playerId", timeout=10000)
     ally_player_id = ally.evaluate('playerId')
+    ally_token = ally.evaluate('resumeToken')
 
-    request_json('/choose-faction', {'game_id': game_id, 'player_id': host_player_id, 'faction_id': 'red_army'})
-    request_json('/choose-faction', {'game_id': game_id, 'player_id': ally_player_id, 'faction_id': 'taiwan_green', 'base_name': '臺北'})
+    request_json('/choose-faction', {'game_id': game_id, 'player_id': host_player_id, 'resume_token': host_token, 'faction_id': 'red_army'})
+    request_json('/choose-faction', {'game_id': game_id, 'player_id': ally_player_id, 'resume_token': ally_token, 'faction_id': 'taiwan_green', 'base_name': '臺北'})
 
     host.click('#toggleReadyBtn')
     ally.click('#toggleReadyBtn')
