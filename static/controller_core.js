@@ -276,15 +276,111 @@
     }
   }
 
+  // ---------------------------------------------------------------- 遊戲選單（遊戲中按住搖桿按鈕 2 秒）
+  // 左右 Joy-Con 的按下搖桿都已由 bridge 正規化成邏輯 STICK（右 b1 0x04；左手實體 b1 0x08 → 同一個邏輯位元）。
+  // 長按只開啟選單（不送遊戲 mutation）；選單內的「重新開始」一律先經過第二層確認，沒有任何立即重新開始的快捷鍵。
+  const GAME_MENU_HOLD_MS = 2000;
+  const GAME_MENU_MODAL_ID = 'gameMenuModal';
+  const GAME_MENU_CONFIRM_ID = 'gameMenuConfirmModal';
+
+  function createStickHold() { return { since: null, latched: false, key: null }; }
+
+  /**
+   * 按住搖桿按鈕的長按累積（純函式）。input：
+   *   pressed  這一筆 frame 是 STICK 的按下瞬間（reduceFrame 的 press action）；held＝STICK 仍按住；
+   *   neutral  搖桿在中央（與方向導覽同一個 deadzone）；others＝其他任何按鍵按住；
+   *   eligible 目前可開啟遊戲選單（gameMenuBlocker 為 null）；key＝開始累積時的情境（手把／epoch／scope／行動者）。
+   * 只從 STICK 的按下瞬間開始累積（baseline 時已按住、或不合資格時按下 → latched，要先放開）。累積中搖桿離開中央、
+   * 放開、按了其他鍵、失去資格或 key 改變 → 立即取消並 latched（放開前不會重新開始）。到達 holdMs → fire 一次並 latched。
+   * consume＝這一筆的 STICK press 屬於長按，不再當成一般按鍵 dispatch（長按不產生個別按鍵命令）。
+   */
+  function stepStickHold(hold, input, now, holdMs = GAME_MENU_HOLD_MS) {
+    const h = hold || createStickHold();
+    const i = input || {};
+    const tracking = h.since !== null;
+    const latched = { since: null, latched: true, key: null };
+    if (i.held !== true) return { hold: createStickHold(), fire: false, cancelled: tracking, consume: false };
+    if (!tracking) {
+      if (h.latched || i.pressed !== true) return { hold: latched, fire: false, cancelled: false, consume: false };
+      if (i.eligible !== true || i.neutral !== true || i.others === true) return { hold: latched, fire: false, cancelled: false, consume: false };
+      return { hold: { since: now, latched: false, key: i.key ?? null }, fire: false, cancelled: false, consume: true };
+    }
+    if (i.eligible !== true || i.neutral !== true || i.others === true || (i.key ?? null) !== h.key) {
+      return { hold: latched, fire: false, cancelled: true, consume: false };
+    }
+    if (now - h.since >= holdMs) return { hold: latched, fire: true, cancelled: false, consume: false };
+    return { hold: h, fire: false, cancelled: false, consume: false };
+  }
+
+  /**
+   * 開啟遊戲選單的資格（純函式）；可以開啟回傳 null，否則回傳原因代碼（fail closed：缺任何一項都不開）。
+   * ctx：connected（bridge connected 且 socket 開著）、owned（本分頁擁有手把）、hidden（分頁隱藏）、inGame（遊戲畫面顯示）、
+   *   hasState（已收到伺服器 state）、startFlow（開始流程／配對／自動建房）、activeController（hot-seat：這支是目前行動席位的
+   *   Joy-Con；未啟用 hot-seat 為 true）、handoff（交接遮罩）、modal（任何 modal／overlay 開著，含遊戲選單本身）、
+   *   choiceRedirect（必選地圖目標但停在其他分頁：STICK 維持既有「先切回戰略地圖」，到地圖上才能長按開啟）。
+   */
+  function gameMenuBlocker(ctx) {
+    const c = ctx || {};
+    if (c.connected !== true) return 'disconnected';
+    if (c.owned !== true) return 'unbound';
+    if (c.hidden === true) return 'hidden';
+    if (c.startFlow !== false) return 'start-flow';
+    if (c.handoff !== false) return 'handoff'; // 交接遮罩把舞台設成 visibility:hidden，先於 not-in-game 判斷
+    if (c.inGame !== true) return 'not-in-game';
+    if (c.hasState !== true) return 'loading';
+    if (c.activeController !== true) return 'not-active-controller';
+    if (c.modal !== false) return 'overlay';
+    if (c.choiceRedirect !== false) return 'choice-redirect';
+    return null;
+  }
+
+  /** 選單的 release gate：開啟或換層級時仍按住的鍵（held＝reducer 的 held）。 */
+  function createMenuGate(held) {
+    return { blocked: BUTTON_NAMES.filter(name => !!held && held[name] === true) };
+  }
+
+  /** 每一筆 frame：已放開的鍵離開 gate（之後的按下才算新的按鍵）。 */
+  function stepMenuGate(gate, held) {
+    const blocked = (gate && gate.blocked) || [];
+    return { blocked: blocked.filter(name => !!held && held[name] === true) };
+  }
+
+  /** STICK 仍按住（剛用長按開啟）→ 選單不接受任何輸入；其他仍按住的鍵 → 該鍵不作用。 */
+  function menuGateAllows(gate, action) {
+    const blocked = (gate && gate.blocked) || [];
+    if (blocked.includes('STICK')) return false;
+    return !(action && action.type === 'press' && blocked.includes(action.button));
+  }
+
+  /**
+   * 遊戲選單內一個邏輯動作（level＝'menu'｜'confirm'）：只有方向、A、B 交回既有 modal 流程（pass：方向焦點、
+   * A＝點焦點中的既有按鈕、B＝點 scope 的取消鈕：選單＝返回遊戲、確認＝返回遊戲選單）；其他鍵一律吞掉（none，scope lock）。
+   * 選單是上下排列：左右不作用；確認畫面的兩個按鈕左右並排，四個方向都交回方向焦點。
+   */
+  function gameMenuCommand(level, logical) {
+    if (level !== 'menu' && level !== 'confirm') return { cmd: 'none' };
+    if (!logical) return { cmd: 'none' };
+    if (logical.name === 'move') {
+      if (level === 'menu' && logical.dir !== 'up' && logical.dir !== 'down') return { cmd: 'none' };
+      return { cmd: 'pass' };
+    }
+    return logical.name === 'confirm' || logical.name === 'cancel' ? { cmd: 'pass' } : { cmd: 'none' };
+  }
+
   // ---------------------------------------------------------------- scope / focus set
 
   // 由高到低：同時可見多個時，只有第一個取得輸入。cancel = B 可點的既有取消／關閉元素 selector。
   // initial = 開啟時的預設焦點（客廳模式危險操作確認單：永遠預設「返回」）。
   // SL 聚焦選單（兩種顯示模式共用）：B 點既有關閉 ×；預設焦點＝第一個選項。
+  // 遊戲選單（按住搖桿 2 秒）：只在沒有其他 modal 時開啟；開著時高於所有伺服器推來的 modal（危險確認單與 SL 聚焦選單
+  // 只能由選單內被吞掉的 Capture／X／SL 開啟，不會同時出現）。B＝返回遊戲。
+  // 重新開始確認：B＝返回遊戲選單；預設焦點＝「確認重新開始」（A 確認；需要新的 A 按下，同一個按住的 A 不會穿透）。
   const FOCUS_MENU_MODAL_ID = 'lrFocusMenu';
   const MODAL_SCOPES = Object.freeze([
     { id: 'lrConfirmModal', cancel: ['#lrConfirmCancelBtn'], initial: '#lrConfirmCancelBtn' },
     { id: FOCUS_MENU_MODAL_ID, cancel: ['#lrFocusMenuClose'], initial: '.lr-focus-option' },
+    { id: GAME_MENU_CONFIRM_ID, cancel: ['#gameMenuConfirmCancelBtn'], initial: '#gameMenuConfirmOkBtn' },
+    { id: GAME_MENU_MODAL_ID, cancel: ['#gameMenuResumeBtn'], initial: '#gameMenuResumeBtn' },
     { id: 'victoryArtViewer', cancel: ['#victoryArtViewerClose'] },
     // Joy-Con 說明圖：scope lock（R／SR、SL、ZR、X、Capture、+ 都不穿透）；B 點既有關閉 ×，焦點由 controller_ui 還原到說明按鈕。
     { id: 'joyconHelpModal', cancel: ['#joyconHelpCloseBtn'], initial: '#joyconHelpCloseBtn' },
@@ -960,6 +1056,8 @@
     decodeButtonBytes, parseButtons, normalizeFrame,
     createInputState, resetInputState, reduceFrame, stickDirection, isStale, bridgeInputGate, bridgeConnected,
     logicalAction, routeAction, FACTION_PICKER_PHASES, factionPickerCommand, factionPickerHint,
+    GAME_MENU_HOLD_MS, GAME_MENU_MODAL_ID, GAME_MENU_CONFIRM_ID, createStickHold, stepStickHold, gameMenuBlocker,
+    createMenuGate, stepMenuGate, menuGateAllows, gameMenuCommand,
     resolveModalScope, isDirectionalExcluded, isFocusableCandidate, buildFocusSet, pickInitial, pickDirectional, cycleIndex,
     isTrustedMessage, sanitizeMapSnapshot, sanitizeMapCommand, sanitizeMapResult, buildMapSnapshotModel,
     validateBridgeUrl, normalizeSettings, mixedContentRisk, reconnectDelayMs,

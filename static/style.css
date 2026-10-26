@@ -4086,6 +4086,19 @@ html:not([data-display="living-room"]) .lr-confirm-overlay { z-index: 85; }
 html:not([data-display="living-room"]) .lr-confirm-glass { border: 2px solid #fca5a5; }
 html:not([data-display="living-room"]) .lr-confirm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
 html:not([data-display="living-room"]) .lr-confirm-ok { background: #b91c1c; border-color: #fecaca; color: #ffffff; }
+/* 遊戲選單（遊戲中按住搖桿 2 秒，controller_ui.js）：精簡置中 modal，選項上下排列；重新開始確認沿用危險確認色 */
+.game-menu-overlay { z-index: 86; background: rgba(2, 6, 12, 0.72); }
+.game-menu-glass { width: 360px; box-sizing: border-box; border: 2px solid rgba(255, 225, 77, 0.7); font-family: 'Noto Sans TC', sans-serif; }
+.game-menu-glass .modal-title-text { font-size: 1.35rem; color: #ffe14d; text-align: center; }
+.game-menu-options { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
+.game-menu-option { width: 100%; min-height: 48px; font-family: inherit; font-size: 1rem; font-weight: 700; text-align: center; }
+.game-menu-danger { color: #fecaca; border-color: rgba(248, 113, 113, 0.5); }
+.game-menu-confirm-glass { width: 460px; border-color: #fca5a5; }
+.game-menu-confirm-glass .modal-title-text { color: #fecaca; text-align: left; }
+.game-menu-confirm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.game-menu-confirm-actions button { min-height: 44px; font-family: inherit; font-size: 0.95rem; font-weight: 700; }
+.game-menu-confirm-ok { background: #b91c1c; border-color: #fecaca; color: #ffffff; }
+.game-menu-confirm-ok:hover { background: #dc2626; }
 /* SL 聚焦選單（兩種顯示模式共用，controller_living_room.js）：精簡置中 modal；尺寸為 1280×720 設計單位，字級以 55 吋客廳可讀為準 */
 .lr-focus-overlay { z-index: 84; background: rgba(2, 6, 12, 0.72); }
 .lr-focus-glass {

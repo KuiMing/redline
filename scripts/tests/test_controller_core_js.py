@@ -30,6 +30,17 @@ def test_controller_dual_joycon_node_tests():
     assert result.returncode == 0, result.stdout[-3000:] + result.stderr[-2000:]
 
 
+def test_controller_game_menu_node_tests():
+    # 遊戲選單（遊戲中按住搖桿按鈕 2 秒）：門檻、neutral／資格／active controller、release gate、不產生個別按鍵命令或遊戲 mutation。
+    if shutil.which("node") is None:
+        pytest.skip("node not available")
+    result = subprocess.run(
+        ["node", "--test", str(_ROOT / "scripts/tests/js/controller_game_menu.test.js")],
+        cwd=_ROOT, capture_output=True, text=True, timeout=120, check=False,
+    )
+    assert result.returncode == 0, result.stdout[-3000:] + result.stderr[-2000:]
+
+
 def test_controller_map_adapter_node_tests():
     # 戰略地圖 iframe adapter 的 SL 全域地圖聚焦（canonical 城鎮清單、focusTown 精確置中放大、不觸發 action、fail closed）。
     if shutil.which("node") is None:

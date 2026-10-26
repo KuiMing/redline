@@ -67,6 +67,9 @@
     observer: null,
     reconcileTimer: null,
     choiceSnapTimer: null, // 必選地圖目標切到戰略地圖後補要 snapshot 的計時器（有目標的 snapshot 到達即停止）
+    // 遊戲選單：stickHold＝按住搖桿按鈕的長按累積（Core.stepStickHold）；menuGate＝開啟／換層級時仍按住的鍵（放開前不作用）。
+    stickHold: Core.createStickHold(),
+    menuGate: Core.createMenuGate(null),
   };
 
   // ------------------------------------------------------------ settings
@@ -99,7 +102,7 @@
   }
 
   // 失聯、停用、stale、換手把：清空 held state；之後第一筆 frame 只當 baseline。
-  function resetInput() { ctl.input = Core.resetInputState(); ctl.inputKey = null; }
+  function resetInput() { ctl.input = Core.resetInputState(); ctl.inputKey = null; ctl.stickHold = Core.createStickHold(); }
 
   function resetBinding(binding) {
     ctl.binding = binding;
@@ -207,10 +210,11 @@
     if (gate === 'drop') return;
     if (gate === 'recover') { resetInput(); setStatus('connected'); }
     // 換了手把或同一支重新連線（epoch 改變）：先清空，這一筆只當 baseline。
-    const step = Core.stepControllerInput({ input: ctl.input, key: ctl.inputKey }, msg, performance.now());
+    const now = performance.now();
+    const step = Core.stepControllerInput({ input: ctl.input, key: ctl.inputKey }, msg, now);
     ctl.input = step.pad.input;
     ctl.inputKey = step.pad.key;
-    for (const action of step.actions) dispatch(action);
+    for (const action of trackStickHold(step.actions, now)) dispatch(action);
   }
 
   // ------------------------------------------------------------ controller claim（bridge v2；bridge 是擁有權的權威）
@@ -885,6 +889,180 @@
     return null;
   }
 
+  // ------------------------------------------------------------ 遊戲選單（遊戲中按住搖桿按鈕 2 秒）
+  // 開啟、導覽、取消都只改這個分頁的 DOM（不送遊戲 mutation、不消耗行動、不動地圖）；「Joy-Con 設定」點既有說明按鈕，
+  // 「重新開始」先開第二層確認，確認後才點既有的 /new-game 連結。
+  const GAME_MENU_IDS = new Set([Core.GAME_MENU_MODAL_ID, Core.GAME_MENU_CONFIRM_ID]);
+
+  function gameMenuLevel() {
+    if (isShown(document.getElementById(Core.GAME_MENU_CONFIRM_ID))) return 'confirm';
+    if (isShown(document.getElementById(Core.GAME_MENU_MODAL_ID))) return 'menu';
+    return null;
+  }
+
+  /** 開始流程（含 Joy-Con 配對）畫面看得到，或 Joy-Con 自動建房／席位配置尚未完成。 */
+  function startFlowActive() {
+    const sf = window.RedlineStartFlow;
+    return isShown(document.getElementById('startFlow')) || !!(sf && typeof sf.autoSetupActive === 'function' && sf.autoSetupActive());
+  }
+
+  /** Core.gameMenuBlocker 的輸入（目前 DOM／連線／hot-seat 狀態）。 */
+  function gameMenuContext() {
+    const owned = ctl.binding.owned;
+    const scope = currentScope();
+    return {
+      connected: bridgeConnected(),
+      owned: !!owned,
+      hidden: document.hidden,
+      startFlow: startFlowActive(),
+      inGame: inGame() && !isShown(document.getElementById('lobby')),
+      hasState: !!window.lastGameState,
+      handoff: document.documentElement.dataset.hotseat === 'masked',
+      // 客廳輪流：只有目前行動席位綁定的 Joy-Con（未啟用 hot-seat＝本分頁擁有的那一支）。
+      activeController: !(gate && initialized && typeof gate.allowsPage === 'function') || gate.allowsPage({ owned }) === true,
+      modal: scope.kind === 'modal',
+      // 必選地圖目標停在其他分頁：STICK 照既有規則先切回戰略地圖（不被長按吃掉）。
+      choiceRedirect: scope.kind === 'page' && choiceLocked(),
+    };
+  }
+
+  /** 長按開始時的情境；累積中改變（換手把／epoch、換 scope、換行動者或 pending choice）就取消。 */
+  function stickHoldKey() {
+    const s = window.lastGameState || {};
+    const choice = s.pending_choice ? s.pending_choice.choice_id ?? null : null;
+    return JSON.stringify([ctl.inputKey, ctl.binding.owned, currentScope().id, s.current_player ?? null, choice]);
+  }
+
+  /** 每一筆已接受的 frame：更新 release gate 與長按累積；回傳要照常 dispatch 的 action（長按的 STICK press 不 dispatch）。 */
+  function trackStickHold(actions, now) {
+    const held = ctl.input.held || {};
+    const gated = ctl.menuGate.blocked.length;
+    ctl.menuGate = Core.stepMenuGate(ctl.menuGate, held);
+    if (ctl.menuGate.blocked.length !== gated && gameMenuLevel()) renderHud(); // 「放開搖桿按鈕後操作」提示消失
+    const pressed = actions.some(a => a.type === 'press' && a.button === 'STICK');
+    const evaluate = held.STICK === true && (pressed || ctl.stickHold.since !== null);
+    const r = Core.stepStickHold(ctl.stickHold, {
+      pressed,
+      held: held.STICK === true,
+      neutral: ctl.input.dir === null,
+      others: Core.BUTTON_NAMES.some(name => name !== 'STICK' && held[name] === true),
+      eligible: evaluate && Core.gameMenuBlocker(gameMenuContext()) === null,
+      key: evaluate ? stickHoldKey() : null,
+    }, now);
+    ctl.stickHold = r.hold;
+    if (r.consume || r.cancelled) renderHud(); // 「繼續按住」提示出現／消失
+    if (r.fire) openGameMenu();
+    return r.consume ? actions.filter(a => !(a.type === 'press' && a.button === 'STICK')) : actions;
+  }
+
+  function setOverlayShown(el, on) {
+    if (!el) return;
+    el.style.display = on ? 'flex' : 'none';
+    el.setAttribute('aria-hidden', on ? 'false' : 'true');
+  }
+
+  /** 換層級後的焦點：scope 改變由既有 reconcile 記住／還原頁面焦點並放到 scope 的預設焦點；id 有給時再移到該按鈕。 */
+  function settleGameMenuFocus(id) {
+    if (!ctl.padActive || !live()) return;
+    clearTimeout(ctl.reconcileTimer);
+    reconcile();
+    const el = id ? document.getElementById(id) : null;
+    const item = el ? buildItems(currentScope()).dom.find(i => i.el === el) : null;
+    if (item) applyItem(item);
+  }
+
+  function openGameMenu() {
+    const menu = document.getElementById(Core.GAME_MENU_MODAL_ID);
+    if (!menu || Core.gameMenuBlocker(gameMenuContext()) !== null) return false;
+    ctl.menuGate = Core.createMenuGate(ctl.input.held); // 開啟時 STICK 仍按住：放開前選單不接受任何輸入
+    setOverlayShown(menu, true);
+    ctl.padActive = true;
+    settleGameMenuFocus(null);
+    renderHud();
+    return true;
+  }
+
+  /** 返回遊戲／B／背景：關閉兩層；焦點交回既有 reconcile（還原開啟前的頁面焦點）。silent＝不重新放焦點（接著開啟其他 modal）。 */
+  function closeGameMenu({ silent = false } = {}) {
+    const wasOpen = !!gameMenuLevel();
+    for (const id of GAME_MENU_IDS) setOverlayShown(document.getElementById(id), false);
+    if (!wasOpen) return;
+    if (ctl.focusKind === 'dom' && ctl.focusEl && [...GAME_MENU_IDS].some(id => document.getElementById(id)?.contains(ctl.focusEl))) {
+      clearDomFocus();
+      ctl.focusEl = null;
+      ctl.focusSig = null;
+      ctl.focusKind = null;
+    }
+    if (!silent) settleGameMenuFocus(null);
+    renderHud();
+  }
+
+  /** 「Joy-Con 設定」：關閉選單後走既有 Joy-Con 說明按鈕（openJoyconHelp）；說明圖的 B／× 照既有流程關閉。 */
+  function openGameMenuSettings() {
+    if (gameMenuLevel() !== 'menu') return;
+    closeGameMenu({ silent: true });
+    const btn = document.getElementById(HELP_ENTRY_ID);
+    if (isUsable(btn)) btn.click();
+    else if (typeof window.openJoyconHelp === 'function') window.openJoyconHelp();
+    scheduleReconcile();
+  }
+
+  /** 「重新開始」：只開啟第二層確認（不執行）。 */
+  function openRestartConfirm() {
+    if (gameMenuLevel() !== 'menu') return;
+    ctl.menuGate = Core.createMenuGate(ctl.input.held); // 選這一項的 A 放開前，確認畫面不接受 A
+    setOverlayShown(document.getElementById(Core.GAME_MENU_MODAL_ID), false);
+    setOverlayShown(document.getElementById(Core.GAME_MENU_CONFIRM_ID), true);
+    settleGameMenuFocus(null);
+    renderHud();
+  }
+
+  /** 確認畫面的 B／返回選單：回到遊戲選單，焦點回到「重新開始」。 */
+  function cancelRestartConfirm() {
+    if (gameMenuLevel() !== 'confirm') return;
+    ctl.menuGate = Core.createMenuGate(ctl.input.held); // 同一個按住的 B 不會接著關閉遊戲選單
+    setOverlayShown(document.getElementById(Core.GAME_MENU_CONFIRM_ID), false);
+    setOverlayShown(document.getElementById(Core.GAME_MENU_MODAL_ID), true);
+    settleGameMenuFocus('gameMenuRestartBtn');
+    renderHud();
+  }
+
+  /** 確認重新開始：走既有正式 /new-game 入口（右上「重新開始」連結；不在就直接導向同一個 route）。 */
+  function confirmRestart() {
+    if (gameMenuLevel() !== 'confirm') return;
+    closeGameMenu({ silent: true });
+    const link = document.getElementById('emergencyNewGameBtn');
+    if (link && link.getAttribute('href') === '/new-game') link.click();
+    else window.location.assign('/new-game');
+  }
+
+  /** 選單開著時離開遊戲畫面、交接遮罩或回到開始流程：關閉（不還原焦點）。 */
+  function revalidateGameMenu() {
+    if (!gameMenuLevel()) return;
+    const c = gameMenuContext();
+    if (!c.inGame || c.handoff || c.startFlow) closeGameMenu({ silent: true });
+  }
+
+  function gameMenuIntercept(action) {
+    const level = gameMenuLevel();
+    if (!level || !GAME_MENU_IDS.has(currentScope().id)) return false;
+    if (!Core.menuGateAllows(ctl.menuGate, action)) { renderHud(); return true; }
+    return Core.gameMenuCommand(level, Core.logicalAction(action)).cmd === 'none';
+  }
+
+  function bindGameMenu() {
+    const $ = id => document.getElementById(id);
+    const on = (id, fn) => { const el = $(id); if (el) el.addEventListener('click', fn); };
+    on('gameMenuResumeBtn', () => closeGameMenu());
+    on('gameMenuSettingsBtn', openGameMenuSettings);
+    on('gameMenuRestartBtn', openRestartConfirm);
+    on('gameMenuConfirmCancelBtn', cancelRestartConfirm);
+    on('gameMenuConfirmOkBtn', confirmRestart);
+    // 滑鼠點背景：選單＝返回遊戲；確認畫面＝返回遊戲選單（不會執行重新開始）。
+    $(Core.GAME_MENU_MODAL_ID)?.addEventListener('click', (e) => { if (e.target === e.currentTarget) closeGameMenu(); });
+    $(Core.GAME_MENU_CONFIRM_ID)?.addEventListener('click', (e) => { if (e.target === e.currentTarget) cancelRestartConfirm(); });
+  }
+
   // ------------------------------------------------------------ dispatch (logical → UI)
   function dispatch(action) {
     // 開始流程的 Joy-Con 配對畫面（start_flow_ui.js）：P1 的 A＝既有「完成配對」、B＝取消配對（不需先移焦點）。其他畫面一律放行。
@@ -892,6 +1070,8 @@
     // 客廳輪流（hot-seat，hotseat_ui.js）：交接遮罩時所有輸入只給交接確認；顯示時只有該席位綁定的 Joy-Con 能操作。
     // 未啟用 hot-seat 時 gate 一律放行，既有行為不變。
     if (gate && initialized && gate.intercept(action, { owned: ctl.binding.owned })) return;
+    // 遊戲選單（按住搖桿 2 秒開啟）：release gate＋scope lock；方向／A／B 交回下面既有的 modal 流程。
+    if (gameMenuIntercept(action)) return;
     // 搖桿輸入一律先放掉停在排除控制上的原生焦點（分頁、結束行動、手牌按鈕等）。
     releaseExcludedFocus();
     // 必選地圖目標但停在其他分頁（那裡沒有任何焦點）：方向與 A／B／X／Y／R／SR／STICK／+／Capture 先切回戰略地圖，
@@ -1172,7 +1352,7 @@
           <button id="padReconnectBtn" type="button">重新連線</button>
           <button id="padResetBtn" type="button">預設</button>
         </div>
-        <div class="pad-note">搖桿＝移動　A 確認　B 返回　R/SR 六個區段＋Joy-Con 說明按鈕（A 開圖、B 關閉）　Y 說明<br>Capture 結束行動（確認）　+ 陣營能力<br>卡牌：A 查看　手牌 X 資源／Y 行動（一般奧援 X＝棄置，需確認）　購買卡 B 選擇 → Y 購買所選（確認）<br>地圖目標：A 選取　Y 建立組織／確認移動／瓦解組織<br>ZR（戰略地圖）：放大一級，到最大後再按回到最小<br>SL 地圖聚焦：依統治者／陣營區域選任一城鎮，置中放大（只改地圖畫面）</div>
+        <div class="pad-note">搖桿＝移動　A 確認　B 返回　R/SR 六個區段＋Joy-Con 說明按鈕（A 開圖、B 關閉）　Y 說明<br>Capture 結束行動（確認）　+ 陣營能力<br>卡牌：A 查看　手牌 X 資源／Y 行動（一般奧援 X＝棄置，需確認）　購買卡 B 選擇 → Y 購買所選（確認）<br>地圖目標：A 選取　Y 建立組織／確認移動／瓦解組織<br>ZR（戰略地圖）：放大一級，到最大後再按回到最小<br>SL 地圖聚焦：依統治者／陣營區域選任一城鎮，置中放大（只改地圖畫面）<br>遊戲中按住搖桿 2 秒：遊戲選單（返回遊戲／Joy-Con 設定／重新開始需確認）</div>
       </div>`;
     stage.appendChild(hud);
     const $ = id => document.getElementById(id);
@@ -1265,6 +1445,13 @@
 
   function hintText() {
     const scope = currentScope();
+    if (scope.kind === 'modal' && GAME_MENU_IDS.has(scope.id)) {
+      if (!Core.menuGateAllows(ctl.menuGate, null)) return '遊戲選單　放開搖桿按鈕後操作';
+      if (scope.id === Core.GAME_MENU_MODAL_ID) return '遊戲選單　搖桿上下 選擇　A 執行　B 返回遊戲';
+      const ok = ctl.focusEl && ctl.focusEl.id === 'gameMenuConfirmOkBtn';
+      return `重新開始確認　${ok ? 'A 確認重新開始（離開目前遊戲）' : '搖桿 選擇　A 執行'}　B 返回遊戲選單`;
+    }
+    if (ctl.stickHold.since !== null && scope.kind !== 'modal') return '繼續按住搖桿按鈕（2 秒）開啟遊戲選單';
     if (scope.kind === 'modal' && scope.id === Core.FOCUS_MENU_MODAL_ID) return '搖桿 選擇　A 開啟分組／置中放大城鎮（不執行）　B／SL 關閉';
     if (scope.kind === 'modal' && scope.id === 'joyconHelpModal') return 'Joy-Con 說明圖　B 關閉';
     if (helpFocused(scope)) return 'Joy-Con 說明　A 開啟說明圖　R/SR 區段';
@@ -1295,7 +1482,7 @@
       const hand = focused.zone === 'hand' ? `　${focused.hasDiscard ? 'X 棄置（確認）' : 'X 資源'}　Y 行動` : '';
       return `移動 搖桿　A 查看${focused.hasToggle ? '　B 選擇' : ''}${buy}${hand}　R/SR 區段`;
     }
-    return '移動 搖桿　A 確認　R/SR 區段　Capture 結束行動';
+    return '移動 搖桿　A 確認　R/SR 區段　Capture 結束行動　長按搖桿 選單';
   }
 
   function setText(el, text) { if (el.textContent !== text) el.textContent = text; }
@@ -1337,11 +1524,13 @@
     loadSettings();
     loadClaimPref();
     buildHud();
+    bindGameMenu();
     renderHud();
     ctl.staleTimer = setInterval(checkStale, 250);
     ctl.observer = new MutationObserver((records) => {
       // 自己的 HUD／焦點 class 與客廳模式覆蓋層變動不能再觸發重算，否則會自我迴圈。
       const relevant = records.some(r => !(hud && hud.contains(r.target)) && !isOverlayNode(r.target));
+      if (relevant) revalidateGameMenu();
       if (relevant && ctl.padActive) { scheduleReconcile(); renderHud(); }
       if (relevant && layerActive()) layer.scheduleRender();
       // 桌面模式的 Capture 危險確認單：既有按鈕失效或換了步驟就關閉；SL 聚焦選單：被其他視窗蓋過或離開遊戲就關閉
@@ -1398,6 +1587,12 @@
       } : null,
       livingRoom: layerActive() ? layer.debugState() : null,
       shortcuts: layer && initialized && !layerActive() ? layer.shortcutState() : null, // 桌面模式專用鍵的閘門狀態
+      // 遊戲選單：level＝null｜'menu'｜'confirm'；holding＝長按累積中（holdMs＝已按住多久）；gate＝放開前不作用的鍵；blocker＝目前不能開啟的原因。
+      gameMenu: {
+        level: gameMenuLevel(), holding: ctl.stickHold.since !== null, latched: ctl.stickHold.latched,
+        holdMs: ctl.stickHold.since !== null ? Math.round(performance.now() - ctl.stickHold.since) : null,
+        gate: [...ctl.menuGate.blocked], blocker: Core.gameMenuBlocker(gameMenuContext()),
+      },
       // 這個分頁擁有的手把（bridge roster 為準）與清單摘要；inputKey＝目前 reducer 屬於哪一支／哪一個 epoch。
       // 起始畫面導覽：on＝start flow 要求、live＝目前允許連線（含暫時連線）、claim＝自動 claim 的那一支（不是玩家席位）。
       startNav: { on: ctl.startNav, live: live(), claim: ctl.navClaim, off: ctl.navOff, manual: ctl.navManual },
