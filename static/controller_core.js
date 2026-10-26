@@ -229,6 +229,50 @@
     }
   }
 
+  // ---------------------------------------------------------------- 陣營／根據地選擇（factionPicker modal）的 Joy-Con 階段
+  // faction（陣營）→ variant（mode≠direct 類別的既有具體陣營，例如反賊、臺灣）→ base（根據地）→ read（閱讀陣營資訊）。
+  // 方向焦點只在目前階段的選項間移動（app.js 以 data-controller-skip 標記其他階段的按鈕）；滑鼠／鍵盤流程不經過這裡。
+  const FACTION_PICKER_PHASES = Object.freeze(['faction', 'variant', 'base', 'read']);
+
+  /**
+   * factionPicker 內一個邏輯動作的指令（純函式）：
+   *   {cmd:'pass'}           交回既有 modal 流程（階段內方向焦點、陣營階段 B＝既有「返回作戰室」、Y 說明等）；
+   *   {cmd:'none'}           吃掉、不作用（閱讀階段的左右）；
+   *   {cmd:'scroll', step}   閱讀階段搖桿上下：只捲動右側陣營資訊（-1 上、1 下），不改陣營／根據地焦點；
+   *   {cmd:'pick'}           選定焦點中的陣營／具體陣營／根據地，並自動交接到下一階段；
+   *   {cmd:'confirm'}        閱讀階段 A：最終確認（既有「確認陣營與根據地」）；
+   *   {cmd:'back'}           B：read→base（取消已選根據地）、base→variant 或 faction、variant→faction。
+   * 未知階段一律 pass（維持既有行為）。
+   */
+  function factionPickerCommand(phase, logical) {
+    if (!logical || !FACTION_PICKER_PHASES.includes(phase)) return { cmd: 'pass' };
+    switch (logical.name) {
+      case 'move':
+        if (phase !== 'read') return { cmd: 'pass' };
+        if (logical.dir === 'up') return { cmd: 'scroll', step: -1 };
+        if (logical.dir === 'down') return { cmd: 'scroll', step: 1 };
+        return { cmd: 'none' };
+      case 'confirm': return phase === 'read' ? { cmd: 'confirm' } : { cmd: 'pick' };
+      case 'cancel': return phase === 'faction' ? { cmd: 'pass' } : { cmd: 'back' };
+      default: return { cmd: 'pass' };
+    }
+  }
+
+  /**
+   * 底部 Joy-Con 提示（依階段）。opts：backTo（base 階段 B 回到 'variant'｜'faction'）、
+   * canConfirm（閱讀階段既有確認鈕可用）、hasBase（閱讀階段有已選根據地可取消）。
+   */
+  function factionPickerHint(phase, opts) {
+    const o = opts || {};
+    switch (phase) {
+      case 'faction': return '搖桿 選擇陣營　A 選定　B 返回作戰室';
+      case 'variant': return '搖桿 選擇具體陣營　A 選定　B 返回陣營';
+      case 'base': return `搖桿 選擇根據地　A 選定　B 返回${o.backTo === 'variant' ? '具體陣營' : '陣營'}`;
+      case 'read': return `搖桿上下 捲動　${o.canConfirm ? 'A 確認　' : ''}B ${o.hasBase ? '取消根據地／返回' : '返回'}`;
+      default: return null;
+    }
+  }
+
   // ---------------------------------------------------------------- scope / focus set
 
   // 由高到低：同時可見多個時，只有第一個取得輸入。cancel = B 可點的既有取消／關閉元素 selector。
@@ -906,7 +950,7 @@
     MAP_ZOOM_CYCLE, MAP_FOCUS_ZOOM, MAP_POINT_LIMIT, mapZoomBounds, nextMapZoom, mapFocusZoom, mapTargetsSig,
     decodeButtonBytes, parseButtons, normalizeFrame,
     createInputState, resetInputState, reduceFrame, stickDirection, isStale, bridgeInputGate, bridgeConnected,
-    logicalAction, routeAction,
+    logicalAction, routeAction, FACTION_PICKER_PHASES, factionPickerCommand, factionPickerHint,
     resolveModalScope, isDirectionalExcluded, isFocusableCandidate, buildFocusSet, pickInitial, pickDirectional, cycleIndex,
     isTrustedMessage, sanitizeMapSnapshot, sanitizeMapCommand, sanitizeMapResult, buildMapSnapshotModel,
     validateBridgeUrl, normalizeSettings, mixedContentRisk, reconnectDelayMs,

@@ -836,6 +836,263 @@ def test_joycon_faction_picker_navigation_a_and_b(browser, app_url, joycons):
 
 
 # ---------------------------------------------------------------- 配對畫面 P1 的 A／B（synthetic bridge，不等於實機）
+# ---------------------------------------------------------------- 陣營選擇的 Joy-Con 階段：陣營 →（具體陣營）→ 根據地 → 閱讀 → A 確認
+# Synthetic bridge（fixture 封包，非實體 Joy-Con）。AI 紅軍房間：唯一真人席位不會被限制只能選紅軍。
+PICKER_JS = """() => {
+  const a = document.activeElement;
+  const panel = document.getElementById('factionDetailPanel');
+  const hint = document.getElementById('padHint');
+  const ring = document.querySelector('#factionPicker .rl-pad-focus');
+  return {
+    open: getComputedStyle(document.getElementById('factionPicker')).display !== 'none',
+    phase: document.getElementById('factionPicker').dataset.padPhase || null,
+    focus: a && a.closest('#factionPicker') ? (a.id || a.textContent.trim()) : null,
+    focusIn: a && a.parentElement ? a.parentElement.id : null,
+    ring: ring ? (ring.id || ring.textContent.trim()) : null,
+    faction: pendingFactionChoice, base: pendingFactionBaseChoice,
+    category: pendingFactionCategory ? pendingFactionCategory.id : null,
+    scrollTop: panel.scrollTop, maxScroll: panel.scrollHeight - panel.clientHeight,
+    hint: hint && !hint.hidden ? hint.textContent : null,
+    outer: [document.scrollingElement.scrollTop, document.getElementById('lobby').scrollTop,
+      document.getElementById('designStage').scrollTop, document.getElementById('factionPicker').scrollTop,
+      document.querySelector('.faction-picker-dialog').scrollTop],
+  };
+}"""
+
+NAV_TOWARD_JS = """([sel, text]) => {
+  const t = [...document.querySelectorAll(sel)].find(b => b.textContent.trim() === text);
+  const a = document.activeElement;
+  if (!t || !a) return null;
+  if (a === t) return 'done';
+  const r1 = a.getBoundingClientRect(), r2 = t.getBoundingClientRect();
+  const dx = (r2.left + r2.right) / 2 - (r1.left + r1.right) / 2, dy = (r2.top + r2.bottom) / 2 - (r1.top + r1.bottom) / 2;
+  if (Math.abs(dy) > Math.max(8, r1.height / 2)) return dy > 0 ? 'down' : 'up';
+  return dx > 0 ? 'right' : 'left';
+}"""
+
+# 最後內容（時代關卡卡片或最後一段）完整落在右側面板可視範圍內，且不被底欄（footer）或 Joy-Con 提示遮住。
+LAST_CONTENT_JS = """() => {
+  const panel = document.getElementById('factionDetailPanel');
+  const kids = [...panel.querySelectorAll('#factionDetailEra > *')];
+  const last = kids[kids.length - 1] || panel.lastElementChild;
+  const lr = last.getBoundingClientRect(), pr = panel.getBoundingClientRect();
+  const footer = document.querySelector('.faction-picker-footer').getBoundingClientRect();
+  const hint = document.getElementById('padHint');
+  const hr = hint && !hint.hidden ? hint.getBoundingClientRect() : null;
+  const overlapsHint = !!hr && hr.left < lr.right && hr.right > lr.left && hr.top < lr.bottom && hr.bottom > lr.top;
+  return { lastBottom: lr.bottom, lastTop: lr.top, panelTop: pr.top, panelBottom: pr.bottom, footerTop: footer.top,
+    clientBottom: pr.top + panel.clientTop + panel.clientHeight, overlapsHint };
+}"""
+
+
+def picker(page):
+    return page.evaluate(PICKER_JS)
+
+
+def pad_nav_to(page, joycons, port, selector, text, limit=20):
+    """以搖桿把焦點移到 selector 內文字為 text 的按鈕（每次朝目標方向推一下）。"""
+    for _ in range(limit):
+        step = page.evaluate(NAV_TOWARD_JS, [selector, text])
+        if step == "done":
+            return
+        assert step, (selector, text, picker(page))
+        joycons.nav(port, step)
+    assert page.evaluate(NAV_TOWARD_JS, [selector, text]) == "done", picker(page)
+
+
+def wait_phase(page, phase, timeout=8000):
+    page.wait_for_function("document.getElementById('factionPicker').dataset.padPhase === '%s'" % phase, timeout=timeout)
+    page.wait_for_timeout(150)  # 讓 80ms reconcile 跑完，確認焦點穩定
+    return picker(page)
+
+
+def open_picker_with_pad(browser, app_url, joycons):
+    page = new_page(browser, app_url, joycons)
+    create_via_flow(page, ai=True, control="joycon")
+    pair_one_left(page, joycons)
+    pad_finish_pairing(page, joycons)
+    page.wait_for_selector("#factionPicker", state="visible", timeout=30000)
+    page.wait_for_function("(() => { const a = document.activeElement; return !!a && !!a.closest('#factionList') && a.classList.contains('faction-choice-btn') && !a.disabled; })()", timeout=15000)
+    page.wait_for_function("window.RedlineController.getState().padActive", timeout=5000)
+    return page
+
+
+def test_joycon_faction_picker_direct_faction_base_read_scroll_and_confirm(browser, app_url, joycons):
+    """一般陣營：A 選陣營 → 焦點自動進根據地 → A 選根據地 → 閱讀（上下只捲右側資訊、到底可見最後內容）→ B／B 退回 → A 最終確認。"""
+    page = open_picker_with_pad(browser, app_url, joycons)
+    port = 24801
+    s = picker(page)
+    assert s["phase"] == "faction" and s["hint"] and s["hint"].endswith("搖桿 選擇陣營　A 選定　B 返回作戰室"), s
+    pad_nav_to(page, joycons, port, "#factionList .faction-choice-btn", "蒙古")
+
+    # 陣營 A → 自動進入根據地選擇（焦點在根據地清單，不需要再移動）。
+    joycons.press(port, "A")
+    s = wait_phase(page, "base")
+    assert s["faction"] == "mongol" and s["base"] is None and s["focusIn"] == "factionBaseList" and s["ring"] == s["focus"], s
+    assert s["hint"].endswith("搖桿 選擇根據地　A 選定　B 返回陣營"), s
+    # 根據地階段：搖桿只在根據地之間移動，往上不會跳回陣營清單或關閉鈕。
+    first = s["focus"]
+    joycons.nav(port, "right")
+    s = picker(page)
+    assert s["focusIn"] == "factionBaseList" and s["focus"] != first and s["phase"] == "base", s
+    for _ in range(3):
+        joycons.nav(port, "up")
+    s = picker(page)
+    assert s["focusIn"] == "factionBaseList" and s["faction"] == "mongol", s
+    pad_nav_to(page, joycons, port, "#factionBaseList .base-choice-btn", "東京")
+
+    # 根據地 A → 閱讀陣營資訊：焦點在既有確認鈕，右側資訊從頂端開始。
+    joycons.press(port, "A")
+    s = wait_phase(page, "read")
+    assert (s["faction"], s["base"], s["focus"], s["scrollTop"]) == ("mongol", "東京", "confirmFactionBtn", 0), s
+    assert s["hint"].endswith("搖桿上下 捲動　A 確認　B 取消根據地／返回"), s
+    assert s["maxScroll"] > 40, "右側資訊必須超出可視高度，捲動才有意義"
+    outer = s["outer"]
+
+    # 上下只捲動右側面板；陣營、根據地、焦點、整頁與背景都不變；捲到底有邊界。
+    tops = [0]
+    for _ in range(12):
+        joycons.nav(port, "down")
+        s = picker(page)
+        assert (s["phase"], s["faction"], s["base"], s["focus"], s["outer"]) == ("read", "mongol", "東京", "confirmFactionBtn", outer), s
+        tops.append(s["scrollTop"])
+        if s["scrollTop"] >= s["maxScroll"] - 1:
+            break
+    assert tops == sorted(tops) and tops[-1] >= s["maxScroll"] - 1, tops
+    joycons.nav(port, "down")
+    s = picker(page)
+    assert abs(s["scrollTop"] - tops[-1]) <= 1 and s["outer"] == outer, s
+    last = page.evaluate(LAST_CONTENT_JS)
+    assert last["lastBottom"] <= last["clientBottom"] + 1 and last["lastBottom"] <= last["footerTop"] and not last["overlapsHint"], last
+    # 左右在閱讀階段不作用。
+    joycons.nav(port, "left")
+    s = picker(page)
+    assert (s["focus"], s["base"], s["phase"]) == ("confirmFactionBtn", "東京", "read"), s
+    proof = os.environ.get("REDLINE_FACTION_PICKER_READ_PROOF")
+    if proof:
+        page.screenshot(path=proof)
+    joycons.nav(port, "up")
+    assert picker(page)["scrollTop"] < tops[-1]
+
+    # B：取消已選根據地，回到根據地選擇（焦點回到剛才的根據地）；再按 B 回到陣營選擇；選擇視窗仍開著、伺服器沒有變更。
+    joycons.press(port, "B")
+    s = wait_phase(page, "base")
+    assert (s["faction"], s["base"], s["focus"], s["focusIn"]) == ("mongol", None, "東京", "factionBaseList"), s
+    assert s["scrollTop"] == 0, "根據地改變後右側資訊回到頂端"
+    joycons.press(port, "B")
+    s = wait_phase(page, "faction")
+    assert s["open"] and s["focus"] == "蒙古" and s["focusIn"] == "factionList", s
+    assert s["hint"].endswith("搖桿 選擇陣營　A 選定　B 返回作戰室"), s
+    game_id, lobby = lobby_of(app_url, page)
+    pid = page.evaluate("window.RedlineSession.current().playerId")
+    assert pid not in (lobby.get("factions") or {}), lobby
+
+    # 重新走一次，閱讀階段 A 才是最終確認。
+    joycons.press(port, "A")
+    wait_phase(page, "base")
+    pad_nav_to(page, joycons, port, "#factionBaseList .base-choice-btn", "紐約")
+    joycons.press(port, "A")
+    s = wait_phase(page, "read")
+    assert (s["base"], s["scrollTop"]) == ("紐約", 0), s
+    assert pid not in (requests.get(f"{app_url}/lobby/{game_id}").json().get("factions") or {})
+    joycons.press(port, "A")
+    page.wait_for_selector("#factionPicker", state="hidden", timeout=10000)
+    lobby = requests.get(f"{app_url}/lobby/{game_id}").json()
+    assert (lobby["factions"][pid], lobby["bases"][pid]) == ("mongol", "紐約"), lobby
+    assert page.evaluate("document.getElementById('factionPicker').dataset.padPhase") == "faction"
+    page.context.close()
+
+
+def test_joycon_faction_picker_rebel_variant_then_base_and_b_chain_back_out(browser, app_url, joycons):
+    """反賊：A 進入既有具體陣營選擇 → A 選定具體陣營後自動進根據地 → 閱讀；B 依序退回根據地、具體陣營、陣營，最後返回作戰室。"""
+    page = open_picker_with_pad(browser, app_url, joycons)
+    port = 24801
+    pad_nav_to(page, joycons, port, "#factionList .faction-choice-btn", "反賊")
+    joycons.press(port, "A")
+    s = wait_phase(page, "variant")
+    assert (s["category"], s["faction"], s["focusIn"]) == ("rebel", None, "factionVariantList"), s
+    assert s["hint"].endswith("搖桿 選擇具體陣營　A 選定　B 返回陣營"), s
+    # 具體陣營階段：搖桿不會離開具體陣營清單。
+    joycons.nav(port, "up")
+    joycons.nav(port, "right")
+    s = picker(page)
+    assert s["focusIn"] == "factionVariantList" and s["phase"] == "variant", s
+    variant_text = s["focus"]
+    expected_id = page.evaluate("(t) => availableFactionCategories.find(c => c.id === 'rebel').options.find(o => (o.variant || o.name || o.id) === t).id", variant_text)
+
+    joycons.press(port, "A")
+    s = wait_phase(page, "base")
+    assert (s["category"], s["faction"], s["base"], s["focusIn"]) == ("rebel", expected_id, None, "factionBaseList"), s
+    assert s["hint"].endswith("搖桿 選擇根據地　A 選定　B 返回具體陣營"), s
+    town = page.evaluate("document.activeElement.dataset.baseTown")
+    joycons.press(port, "A")
+    s = wait_phase(page, "read")
+    assert (s["faction"], s["base"], s["focus"]) == (expected_id, town, "confirmFactionBtn"), s
+
+    joycons.press(port, "B")
+    s = wait_phase(page, "base")
+    assert (s["faction"], s["base"]) == (expected_id, None) and page.evaluate("document.activeElement.dataset.baseTown") == town, s
+    joycons.press(port, "B")
+    s = wait_phase(page, "variant")
+    assert s["focus"] == variant_text and s["focusIn"] == "factionVariantList", s
+    joycons.press(port, "B")
+    s = wait_phase(page, "faction")
+    assert s["focus"] == "反賊" and s["open"], s
+    # 陣營階段的 B＝既有「返回作戰室」；沒有送出任何陣營選擇。
+    joycons.press(port, "B")
+    page.wait_for_selector("#factionPicker", state="hidden", timeout=5000)
+    game_id, lobby = lobby_of(app_url, page)
+    pid = page.evaluate("window.RedlineSession.current().playerId")
+    assert pid not in (lobby.get("factions") or {}), lobby
+    page.context.close()
+
+
+def test_mouse_faction_picker_flow_unchanged_and_detail_scroll_is_bounded(browser, app_url):
+    """滑鼠流程不回歸：點陣營／根據地不移動焦點、不進入 Joy-Con 階段；右側資訊在陣營／根據地改變時回到頂端，滾輪不捲背景。"""
+    page = new_page(browser, app_url)
+    create_via_flow(page, ai=True)
+    finish_and_create(page)
+    page.wait_for_selector("#factionPicker", state="visible")
+    page.locator("#factionList .faction-choice-btn", has_text="蒙古").click()
+    page.wait_for_selector("#factionBaseList .base-choice-btn")
+    s = picker(page)
+    assert s["phase"] == "faction" and s["focusIn"] != "factionBaseList" and s["ring"] is None, s
+    page.locator("#factionBaseList .base-choice-btn", has_text="東京").click()
+    page.wait_for_function("document.querySelector('#factionBaseList .base-choice-btn.active')?.dataset.baseTown === '東京'")
+    s = picker(page)
+    assert s["phase"] == "faction" and s["scrollTop"] == 0 and s["maxScroll"] > 40, s
+    outer = s["outer"]
+    box = page.locator("#factionDetailPanel").bounding_box()
+    page.mouse.move(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2)
+    for _ in range(12):
+        page.mouse.wheel(0, 400)
+        page.wait_for_timeout(60)
+    s = picker(page)
+    assert s["scrollTop"] >= s["maxScroll"] - 1 and s["outer"] == outer, s
+    last = page.evaluate(LAST_CONTENT_JS)
+    assert last["lastBottom"] <= last["clientBottom"] + 1 and last["lastBottom"] <= last["footerTop"], last
+    # 同一個選擇的重繪保留位置；換根據地回到頂端。
+    page.evaluate("renderFactionPicker()")
+    page.wait_for_timeout(300)
+    assert picker(page)["scrollTop"] >= s["maxScroll"] - 1
+    page.locator("#factionBaseList .base-choice-btn", has_text="紐約").click()
+    page.wait_for_function("document.querySelector('#factionBaseList .base-choice-btn.active')?.dataset.baseTown === '紐約'")
+    assert picker(page)["scrollTop"] == 0
+    page.click("#confirmFactionBtn")
+    page.wait_for_selector("#factionPicker", state="hidden")
+    game_id, lobby = lobby_of(app_url, page)
+    pid = page.evaluate("window.RedlineSession.current().playerId")
+    assert (lobby["factions"][pid], lobby["bases"][pid]) == ("mongol", "紐約"), lobby
+    # 重新開啟（變更陣營與根據地）：右側資訊從頂端開始，滑鼠仍可操作。
+    page.click("#openFactionPickerBtn")
+    page.wait_for_selector("#factionPicker", state="visible")
+    s = picker(page)
+    assert s["scrollTop"] == 0 and s["phase"] == "faction", s
+    page.click("#closeFactionPickerBtn")
+    page.wait_for_selector("#factionPicker", state="hidden")
+    page.context.close()
+
+
 def wait_listener_owns(page, controller_id, timeout=15000):
     page.wait_for_function(
         "window.RedlineStartFlow.getState().listeners.some(l => l.controller === '%s' && l.owned === '%s')"

@@ -25,6 +25,9 @@ let latestLobbyState = null;
 let lobbyTransientStatus = null;
 let factionPickerModalOpen = false;
 let factionPickerReturnFocus = null;
+let factionPickerPadPhase = 'faction'; // Joy-Con 陣營選擇階段：faction｜variant｜base｜read（見 RedlineFactionPickerPad）
+let factionPickerPadBusy = false;
+let factionDetailScrollKey = null;    // 右側陣營資訊目前內容（陣營｜根據地）；改變時捲回頂端
 let activeChoiceModal = null;
 let lastFactionActionResultKey = null;
 let activeSharedFactionActionResult = null;
@@ -1320,6 +1323,7 @@ function renderFactionDetails(factionId, selectedBaseName = null, selectedBaseGr
 
   if (!factionId) {
     panel.style.display = 'block';
+    resetFactionDetailScroll('');
     title.textContent = '選擇陣營以查看完整資訊';
     basesEl.innerHTML = '<div class="faction-detail-empty">左側選擇陣營後，這裡會顯示可用根據地。</div>';
     abilitiesEl.innerHTML = '<div class="faction-detail-empty">能力與觸發條件會完整顯示在這裡。</div>';
@@ -1382,6 +1386,15 @@ function renderFactionDetails(factionId, selectedBaseName = null, selectedBaseGr
        </article>`
     : `<div class="faction-detail-section-title faction-detail-era-heading">時代關卡</div><div class="faction-detail-empty">此陣營沒有個人時代關卡。</div>`;
   panel.style.display = 'block';
+  resetFactionDetailScroll(`${factionId}|${activeDetailBase || ''}`);
+}
+
+// 右側陣營資訊的捲動位置：陣營或根據地改變、或重新開啟選擇視窗時回到頂端；同一個選擇的重繪（例如大廳同步）保留目前位置。
+function resetFactionDetailScroll(key) {
+  const panel = document.getElementById('factionDetailPanel');
+  if (!panel || key === factionDetailScrollKey) return;
+  factionDetailScrollKey = key;
+  panel.scrollTop = 0;
 }
 
 async function openFactionPickerModal() {
@@ -1402,6 +1415,8 @@ async function openFactionPickerModal() {
   }
 
   factionPickerModalOpen = true;
+  factionPickerPadPhase = 'faction'; // 每次開啟都從陣營階段開始（Joy-Con）
+  factionDetailScrollKey = null; // 重新開啟：右側資訊從頂端開始
   await renderFactionPicker();
   const panel = document.getElementById('factionPicker');
   if (panel) {
@@ -1414,6 +1429,7 @@ async function openFactionPickerModal() {
 
 function closeFactionPickerModal() {
   factionPickerModalOpen = false;
+  setFactionPickerPadPhase('faction');
   const panel = document.getElementById('factionPicker');
   if (panel) {
     panel.style.display = 'none';
@@ -1561,6 +1577,7 @@ async function renderFactionPicker() {
         const bbtn = document.createElement('button');
         const isSelectedTown = activeBase === town;
         bbtn.className = `base-choice-btn${isSelectedTown ? ' active' : ''}`;
+        bbtn.dataset.baseTown = town;
         bbtn.textContent = baseDisplayName(town);
         bbtn.disabled = occupiedBases.has(town);
         bbtn.title = bbtn.disabled ? '此根據地已被其他玩家選擇' : '';
@@ -1573,7 +1590,159 @@ async function renderFactionPicker() {
       });
     }
   }
+  applyFactionPickerPadPhase();
 }
+
+// ------------------------------------------------------------ 陣營／根據地選擇：Joy-Con 階段流程
+// 陣營 →（mode≠direct 類別先選既有具體陣營）→ 根據地 → 閱讀陣營資訊 → A 最終確認。只由 controller_ui.js 的 factionPicker
+// scope 呼叫，選擇一律走既有按鈕的 onclick（selectCategory／chooseFaction／選根據地／confirmFactionChoice）；
+// 滑鼠／鍵盤流程不經過這裡，不改焦點也不改階段。指令表與提示文字在 controller_core.js（factionPickerCommand／factionPickerHint）。
+const FACTION_PICKER_PAD_GROUPS = Object.freeze({
+  faction: '#factionList .faction-choice-btn, #closeFactionPickerBtn',
+  variant: '#factionVariantList .faction-choice-btn',
+  base: '#factionBaseList .base-choice-btn',
+  read: '#confirmFactionBtn',
+});
+
+/** 方向焦點只停在目前階段的按鈕：其他階段的按鈕標 data-controller-skip（只影響 Joy-Con 焦點集合，不影響滑鼠／鍵盤）。 */
+function applyFactionPickerPadPhase() {
+  const picker = document.getElementById('factionPicker');
+  if (!picker) return;
+  picker.dataset.padPhase = factionPickerPadPhase;
+  const allowed = FACTION_PICKER_PAD_GROUPS[factionPickerPadPhase];
+  picker.querySelectorAll('button').forEach(btn => {
+    if (btn.matches(allowed)) btn.removeAttribute('data-controller-skip');
+    else btn.setAttribute('data-controller-skip', '');
+  });
+}
+
+function setFactionPickerPadPhase(phase) {
+  factionPickerPadPhase = FACTION_PICKER_PAD_GROUPS[phase] ? phase : 'faction';
+  applyFactionPickerPadPhase();
+}
+
+function factionPickerPadButtons(selector) {
+  return Array.from(document.querySelectorAll(`#factionPicker ${selector}`))
+    .filter(btn => !btn.disabled && btn.getClientRects().length > 0);
+}
+
+/** 進入某階段時的焦點：該階段已選定（active）的項目優先，其次第一個可用項目；閱讀階段＝既有確認鈕（可用時）。 */
+function factionPickerPadTarget(phase, preferTown = null) {
+  if (phase === 'read') return factionPickerPadButtons('#confirmFactionBtn')[0] || null;
+  const selector = phase === 'faction' ? '#factionList .faction-choice-btn'
+    : phase === 'variant' ? '#factionVariantList .faction-choice-btn' : '#factionBaseList .base-choice-btn';
+  const buttons = factionPickerPadButtons(selector);
+  return (preferTown && buttons.find(btn => btn.dataset.baseTown === preferTown))
+    || buttons.find(btn => btn.classList.contains('active')) || buttons[0] || null;
+}
+
+function enterFactionPickerPadPhase(phase, preferTown = null) {
+  setFactionPickerPadPhase(phase);
+  const target = factionPickerPadTarget(factionPickerPadPhase, preferTown);
+  const api = window.RedlineController;
+  if (target && api && typeof api.focusElement === 'function') api.focusElement(target);
+  if (api && typeof api.refreshHud === 'function') api.refreshHud();
+}
+
+/** 陣營（或具體陣營）已選定後：有可選根據地 → 根據地階段；沒有 → 直接閱讀（B 會回到陣營）。 */
+function enterFactionPickerPadAfterFaction() {
+  if (pendingFactionCategory && pendingFactionCategory.mode !== 'direct' && !pendingFactionChoice) {
+    enterFactionPickerPadPhase('variant');
+  } else if (factionPickerPadButtons('#factionBaseList .base-choice-btn').length) {
+    enterFactionPickerPadPhase('base');
+  } else {
+    enterFactionPickerPadPhase('read');
+  }
+}
+
+function factionPickerPadHasVariants() {
+  return !!pendingFactionCategory && pendingFactionCategory.mode !== 'direct';
+}
+
+function factionPickerPadHasBase() {
+  return !!document.querySelector('#factionPicker #factionBaseList .base-choice-btn');
+}
+
+/** 閱讀階段搖桿上下：只捲動右側陣營資訊面板（夾在 0～最底，不捲整頁或背景）。 */
+function scrollFactionDetailByPad(step) {
+  const panel = document.getElementById('factionDetailPanel');
+  if (!panel) return;
+  const max = Math.max(0, panel.scrollHeight - panel.clientHeight);
+  const delta = Math.max(60, Math.round(panel.clientHeight * 0.4));
+  panel.scrollTop = Math.min(max, Math.max(0, panel.scrollTop + step * delta));
+}
+
+async function runFactionPickerPadStep(work) {
+  factionPickerPadBusy = true;
+  try { await work(); } finally { factionPickerPadBusy = false; }
+}
+
+/**
+ * controller_ui.js 呼叫：command＝Core.factionPickerCommand 的結果，focusedEl＝目前 Joy-Con 焦點元素。
+ * 回傳 true＝已處理（含非同步進行中）；false＝交回既有 modal 流程（例如焦點在「返回作戰室」時的 A）。
+ */
+function runFactionPickerPadCommand(command, focusedEl) {
+  if (!factionPickerModalOpen || !command) return false;
+  if (factionPickerPadBusy) return command.cmd !== 'pass'; // 上一步的重繪尚未完成：不疊加輸入
+  const phase = factionPickerPadPhase;
+  switch (command.cmd) {
+    case 'none': return true;
+    case 'scroll': scrollFactionDetailByPad(command.step); return true;
+    case 'pick': {
+      const group = phase === 'faction' ? '#factionList .faction-choice-btn'
+        : phase === 'variant' ? '#factionVariantList .faction-choice-btn'
+          : phase === 'base' ? '#factionBaseList .base-choice-btn' : null;
+      if (!group || !focusedEl || !focusedEl.isConnected || !focusedEl.matches(`#factionPicker ${group}`)) return false;
+      if (focusedEl.disabled || typeof focusedEl.onclick !== 'function') return true;
+      const handler = focusedEl.onclick;
+      runFactionPickerPadStep(async () => {
+        await handler.call(focusedEl);
+        if (!factionPickerModalOpen) return;
+        if (phase === 'base') enterFactionPickerPadPhase('read');
+        else enterFactionPickerPadAfterFaction();
+      });
+      return true;
+    }
+    case 'confirm': {
+      const confirmBtn = factionPickerPadButtons('#confirmFactionBtn')[0];
+      if (!confirmBtn || typeof confirmBtn.onclick !== 'function') return true; // 尚不能確認（例如根據地已被選走）：不作用
+      const handler = confirmBtn.onclick;
+      runFactionPickerPadStep(async () => { await handler.call(confirmBtn); });
+      return true;
+    }
+    case 'back': {
+      if (phase === 'read') {
+        if (!factionPickerPadHasBase()) {
+          enterFactionPickerPadPhase(factionPickerPadHasVariants() ? 'variant' : 'faction');
+          return true;
+        }
+        const town = pendingFactionBaseChoice;
+        pendingFactionBaseChoice = null;
+        pendingFactionBaseGroup = null;
+        runFactionPickerPadStep(async () => {
+          await renderFactionPicker();
+          if (factionPickerModalOpen) enterFactionPickerPadPhase('base', town);
+        });
+        return true;
+      }
+      if (phase === 'base') { enterFactionPickerPadPhase(factionPickerPadHasVariants() ? 'variant' : 'faction'); return true; }
+      if (phase === 'variant') { enterFactionPickerPadPhase('faction'); return true; }
+      return false;
+    }
+    default: return false;
+  }
+}
+
+window.RedlineFactionPickerPad = {
+  phase: () => factionPickerPadPhase,
+  run: runFactionPickerPadCommand,
+  /** 提示文字所需的狀態（Core.factionPickerHint 的 opts）。 */
+  hintContext: () => ({
+    backTo: factionPickerPadHasVariants() ? 'variant' : 'faction',
+    canConfirm: factionPickerPadButtons('#confirmFactionBtn').length > 0,
+    hasBase: factionPickerPadHasBase(),
+  }),
+};
 
 async function joinRoom() {
   gameId = (document.getElementById('roomId')?.value || '').trim();

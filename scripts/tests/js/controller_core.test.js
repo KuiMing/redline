@@ -935,3 +935,43 @@ test('Joy-Con help image modal is a scope lock: B closes via the close button; R
   // 即使 helpEntry 旗標殘留，modal 內 A 也不會再開一次（照一般 modal 的 activate）。
   assert.deepEqual(C.routeAction({ ...ctx, helpEntry: true }, { name: 'confirm' }), { cmd: 'activate' });
 });
+
+test('faction picker phases: faction → (variant) → base → read; read stick up/down only scrolls, A confirms, B steps back', () => {
+  assert.deepEqual([...C.FACTION_PICKER_PHASES], ['faction', 'variant', 'base', 'read']);
+  const cmd = (phase, logical) => C.factionPickerCommand(phase, logical);
+  // 選擇階段：方向交回既有焦點（只在該階段選項間）、A＝選定並交接、B 退一階；陣營階段 B＝既有「返回作戰室」。
+  for (const phase of ['faction', 'variant', 'base']) {
+    for (const dir of ['up', 'down', 'left', 'right']) assert.deepEqual(cmd(phase, { name: 'move', dir }), { cmd: 'pass' }, `${phase} ${dir}`);
+    assert.deepEqual(cmd(phase, { name: 'confirm' }), { cmd: 'pick' }, phase);
+  }
+  assert.deepEqual(cmd('faction', { name: 'cancel' }), { cmd: 'pass' });
+  assert.deepEqual(cmd('variant', { name: 'cancel' }), { cmd: 'back' });
+  assert.deepEqual(cmd('base', { name: 'cancel' }), { cmd: 'back' });
+  // 閱讀階段：上下只捲動，左右不作用（不改陣營／根據地焦點）；A＝最終確認；B＝取消已選根據地。
+  assert.deepEqual(cmd('read', { name: 'move', dir: 'up' }), { cmd: 'scroll', step: -1 });
+  assert.deepEqual(cmd('read', { name: 'move', dir: 'down' }), { cmd: 'scroll', step: 1 });
+  assert.deepEqual(cmd('read', { name: 'move', dir: 'left' }), { cmd: 'none' });
+  assert.deepEqual(cmd('read', { name: 'move', dir: 'right' }), { cmd: 'none' });
+  assert.deepEqual(cmd('read', { name: 'confirm' }), { cmd: 'confirm' });
+  assert.deepEqual(cmd('read', { name: 'cancel' }), { cmd: 'back' });
+  // 其他鍵（Y 說明、R／SR、SL、ZR、X）與未知階段一律交回既有 modal 流程。
+  for (const phase of C.FACTION_PICKER_PHASES) {
+    for (const name of ['toggleHelp', 'nextSection', 'prevSection', 'focusMenu', 'mapZoom', 'focusTurnBar']) {
+      assert.deepEqual(cmd(phase, { name }), { cmd: 'pass' }, `${phase} ${name}`);
+    }
+  }
+  assert.deepEqual(cmd('bogus', { name: 'confirm' }), { cmd: 'pass' });
+  assert.deepEqual(cmd('read', null), { cmd: 'pass' });
+});
+
+test('faction picker hint follows the phase with concise zh-TW wording', () => {
+  assert.equal(C.factionPickerHint('faction'), '搖桿 選擇陣營　A 選定　B 返回作戰室');
+  assert.equal(C.factionPickerHint('variant'), '搖桿 選擇具體陣營　A 選定　B 返回陣營');
+  assert.equal(C.factionPickerHint('base', { backTo: 'faction' }), '搖桿 選擇根據地　A 選定　B 返回陣營');
+  assert.equal(C.factionPickerHint('base', { backTo: 'variant' }), '搖桿 選擇根據地　A 選定　B 返回具體陣營');
+  assert.equal(C.factionPickerHint('read', { canConfirm: true, hasBase: true }), '搖桿上下 捲動　A 確認　B 取消根據地／返回');
+  // 確認鈕不可用時不提示 A；沒有根據地可取消時 B 只是返回。
+  assert.equal(C.factionPickerHint('read', { canConfirm: false, hasBase: true }), '搖桿上下 捲動　B 取消根據地／返回');
+  assert.equal(C.factionPickerHint('read', { canConfirm: true, hasBase: false }), '搖桿上下 捲動　A 確認　B 返回');
+  assert.equal(C.factionPickerHint('bogus'), null);
+});

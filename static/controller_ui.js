@@ -866,6 +866,12 @@
     return true;
   }
 
+  /** app.js 的陣營選擇 Joy-Con 階段 API（RedlineFactionPickerPad）；不完整就當作沒有（維持既有 modal 流程）。 */
+  function factionPickerPad() {
+    const pad = window.RedlineFactionPickerPad;
+    return pad && typeof pad.phase === 'function' && typeof pad.run === 'function' && typeof pad.hintContext === 'function' ? pad : null;
+  }
+
   // ------------------------------------------------------------ B / cancel
   function modalCancelTarget(scope) {
     const root = document.getElementById(scope.id);
@@ -923,6 +929,15 @@
       if (scope.kind !== 'modal') layer.runDesktopShortcut(shortcut);
       renderHud();
       return;
+    }
+    // 陣營／根據地選擇：陣營 →（具體陣營）→ 根據地 → 閱讀陣營資訊 → A 最終確認；閱讀時搖桿上下只捲動右側資訊。
+    // 選擇一律由 app.js 走既有按鈕的 click handler；pass（例如焦點在「返回作戰室」時的 A、陣營階段的 B）交回下面的既有流程。
+    const pickerPad = scope.kind === 'modal' && scope.id === 'factionPicker' ? factionPickerPad() : null;
+    if (pickerPad && logical) {
+      const pickerCmd = Core.factionPickerCommand(pickerPad.phase(), logical);
+      const pickerKey = currentKey(items.all);
+      const pickerFocus = items.all.find(i => i.key === pickerKey && i.kind === 'dom') || null;
+      if (pickerCmd.cmd !== 'pass' && pickerPad.run(pickerCmd, pickerFocus ? pickerFocus.el : null)) { renderHud(); return; }
     }
     // 由 R／SR 開啟的事件卡／時代關卡說明 modal：R／SR 以既有關閉收起並前往下一個區段；其他 modal 維持 scope lock。
     if ((logical.name === 'nextSection' || logical.name === 'prevSection') && scope.kind === 'modal' && !layerActive()
@@ -1248,6 +1263,9 @@
     if (scope.kind === 'modal' && scope.id === Core.FOCUS_MENU_MODAL_ID) return '搖桿 選擇　A 開啟分組／置中放大城鎮（不執行）　B／SL 關閉';
     if (scope.kind === 'modal' && scope.id === 'joyconHelpModal') return 'Joy-Con 說明圖　B 關閉';
     if (helpFocused(scope)) return 'Joy-Con 說明　A 開啟說明圖　R/SR 區段';
+    const pickerPad = scope.kind === 'modal' && scope.id === 'factionPicker' ? factionPickerPad() : null;
+    const pickerHint = pickerPad ? Core.factionPickerHint(pickerPad.phase(), pickerPad.hintContext()) : null;
+    if (pickerHint) return pickerHint;
     if (scope.kind === 'modal') {
       const cancel = modalCancelTarget(scope);
       // 客廳模式的 legend 自己補「R/SR 下一個區段」；桌面模式在這裡補。
@@ -1386,6 +1404,7 @@
     selectController, // HUD 下拉選單同一個入口：claim 指定的手把，或 null＝不使用
     setStartNav,
     focusElement,
+    refreshHud: renderHud, // 畫面流程非同步改變階段後更新底部提示（例如陣營選擇進入閱讀階段）
     attachLayer,
     attachGate,
     attachStartGate,
