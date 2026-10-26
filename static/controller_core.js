@@ -178,6 +178,7 @@
    * context router。ctx: {scopeKind:'modal'|'map'|'page', hasFocus, cancelAvailable, sectionsLocked,
    *   card?: {zone, hasToggle, hasDiscard?} | null,   // 焦點位於卡牌元素內時的描述；hasDiscard＝手牌有既有「棄置」控制（一般奧援）
    *   mapTarget?: boolean,               // 焦點是地圖 snapshot 的城鎮目標（不是地圖按鈕）
+   *   browseFocus?: boolean,             // 焦點是 SL 聚焦的只看城鎮（map scope 的 A = townDetail，重新開啟城鎮說明）
    *   focusMenuOpen?: boolean}           // 目前的 modal 就是 SL 聚焦選單
    * 卡牌焦點：A = 查看預覽（絕不執行／選擇／購買）；B = 切換選擇（僅有選擇控制的卡牌，否則維持原本取消）；
    * 手牌焦點：X = 資源（一般奧援＝既有「棄置」→ 危險確認；紅軍奧援的按鈕是「資源」，仍＝資源）、Y = 行動；B 與其他牌相同（不棄置）；購買卡 Y = 既有「購買所選」→ 購買確認單（UI 要求焦點卡已用 B 選擇，不自動選擇）；
@@ -202,6 +203,8 @@
       case 'confirm':
         // 焦點停在「Joy-Con 說明」按鈕（ctx.helpEntry，R／SR 環的額外焦點）：A 才開啟說明圖。
         if (ctx.helpEntry && !modal) return { cmd: 'openHelp' };
+        // SL 聚焦的只看城鎮（ctx.browseFocus，不在 action 焦點集合內）：A＝重新開啟該城鎮說明（唯讀，不選取）。
+        if (ctx.browseFocus && ctx.scopeKind === 'map') return { cmd: 'townDetail' };
         if (!ctx.hasFocus) return null;
         return card ? { cmd: 'cardPreview' } : { cmd: 'activate' };
       case 'cancel':
@@ -370,7 +373,8 @@
   const MAP_SCOPES = Object.freeze(['none', 'choice', 'move']);
   const MAP_ROLES = Object.freeze(['choice', 'move', 'origin']);
   const MAP_BUTTON_IDS = Object.freeze(['directBuildBtn', 'confirmMoveBtn', 'dissolveBtn', 'cancelDissolveChoiceBtn']);
-  const MAP_COMMANDS = Object.freeze(['snapshot', 'focus', 'focusTown', 'clearFocus', 'activate', 'button', 'cancel', 'act', 'zoom']);
+  // detail＝重新開啟目前 map focus 城鎮的說明 popup（唯讀；SL 瀏覽焦點上的 A）。
+  const MAP_COMMANDS = Object.freeze(['snapshot', 'focus', 'focusTown', 'clearFocus', 'activate', 'button', 'cancel', 'act', 'zoom', 'detail']);
   // 一律要帶合法 req 的指令（指令與 result 都是）：地圖 Y（act）、ZR 縮放（zoom）與 SL 全域聚焦（focusTown）
   // 只在對上 req 的 ok:true 後才算執行。
   const MAP_REQ_REQUIRED = Object.freeze(['act', 'zoom', 'focusTown']);
@@ -564,6 +568,9 @@
     if (focusTown !== null && !isShortString(focusTown)) return null;
     const selected = isPresent(data.selected) ? data.selected : null;
     if (selected !== null && !isShortString(selected)) return null;
+    // detail＝iframe 目前開著標準說明 popup 的城鎮（B 的第一下只關閉它；canCancel 同時為 true）。
+    const detail = isPresent(data.detail) ? data.detail : null;
+    if (detail !== null && !isShortString(detail)) return null;
     let pending = null;
     if (isPresent(data.pending)) {
       const p = data.pending;
@@ -577,7 +584,8 @@
       targets,
       buttons,
       focusTown,
-      canCancel: data.canCancel === true,
+      canCancel: data.canCancel === true || detail !== null,
+      detail,
       selected,
       pending,
       groupMeta: groupMeta ? MAP_GROUP_META_VERSION : null,
@@ -599,12 +607,13 @@
 
   // 執行型指令的 request id：parent 產生、iframe 原樣回傳，用來把 result 對應回唯一一次送出。
   function isRequestId(v) { return Number.isSafeInteger(v) && v > 0; }
-  const MAP_RESULT_VIA = Object.freeze([...MAP_BUTTON_IDS, 'selection']);
+  // 'popup'＝B 的第一下只關閉了開著的城鎮說明 popup（選取、預備移動與 pending choice 都保留）。
+  const MAP_RESULT_VIA = Object.freeze([...MAP_BUTTON_IDS, 'selection', 'popup']);
 
   function sanitizeMapCommand(data) {
     if (!data || data.v !== MAP_MESSAGE_VERSION || data.type !== 'redline-controller-command') return null;
     if (!MAP_COMMANDS.includes(data.cmd)) return null;
-    if (['focus', 'focusTown', 'activate', 'act'].includes(data.cmd) && !isShortString(data.town)) return null;
+    if (['focus', 'focusTown', 'activate', 'act', 'detail'].includes(data.cmd) && !isShortString(data.town)) return null;
     if (data.cmd === 'button' && !MAP_BUTTON_IDS.includes(data.id)) return null;
     if (data.cmd === 'act' && !MAP_ACT_BUTTON_IDS.includes(data.id)) return null;
     // act／zoom 一律等 correlated ack；沒有合法 req 的 act／zoom 不可執行（parent 會把 req:null 視為 stale）。

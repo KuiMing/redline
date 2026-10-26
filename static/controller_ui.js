@@ -511,9 +511,11 @@
     const notifyMenu = (s) => { if (layer && initialized && typeof layer.onMapSnapshot === 'function') layer.onMapSnapshot(s); };
     if (!snap) { ctl.mapSnapshot = null; if (layerActive()) layer.scheduleRender(); notifyMenu(null); return; }
     if (ctl.mapSnapshot && snap.seq < ctl.mapSnapshot.seq) return;
+    const detailChanged = (ctl.mapSnapshot ? ctl.mapSnapshot.detail : null) !== snap.detail;
     ctl.mapSnapshot = snap;
     if (layerActive()) layer.scheduleRender();
     notifyMenu(snap);
+    if (detailChanged) renderHud(); // 城鎮說明開／關：提示列的 B 跟著更新
     if (ctl.padActive && ctl.autofocusMap && snap.targets.length) {
       // 用 R/SR 切進地圖後，第一份有目標的 snapshot 到達時把焦點放到地圖目標（而不是停在分頁上）。
       const scope = currentScope();
@@ -955,6 +957,7 @@
       helpEntry: onHelp,
       card: cardContext(focused),
       mapTarget: scope.kind === 'map' && !!focused && focused.kind === 'town',
+      browseFocus: scope.kind === 'map' && ctl.focusKind === 'browse' && !!ctl.focusTown,
       cancelAvailable: scope.kind === 'modal' ? !!modalCancelTarget(scope) : !!mapCancel,
       // 必選地圖目標：在地圖上 R／SR 不動；其他分頁的 R／SR 只回戰略地圖（由區段環處理）。
       sectionsLocked: scope.kind === 'map' && choiceLocked(),
@@ -963,8 +966,8 @@
     const command = Core.routeAction(ctx, logical);
     if (!command) return;
     // 沒有焦點時只有「移動」「取消」、R／SR 區段與 SL 聚焦選單可直接執行（無可聚焦項目的 modal，例如卡牌預覽，仍須能用 B 關閉；
-    // 分頁不是方向焦點，沒有內容的分頁也必須能用 R／SR 離開；聚焦選單本身就是用來找焦點的）。
-    if (key === null && !onHelp && !['move', 'cancel', 'section', 'focusMenu'].includes(command.cmd)) { applyItem(defaultItem(items, scope)); return; }
+    // 分頁不是方向焦點，沒有內容的分頁也必須能用 R／SR 離開；聚焦選單本身就是用來找焦點的；SL 瀏覽焦點的城鎮說明不在 action 焦點集合內）。
+    if (key === null && !onHelp && !['move', 'cancel', 'section', 'focusMenu', 'townDetail'].includes(command.cmd)) { applyItem(defaultItem(items, scope)); return; }
     const current = items.all.find(i => i.key === key);
     if (current) lastRect = { left: current.left, right: current.right, top: current.top, bottom: current.bottom };
 
@@ -981,6 +984,8 @@
       case 'activate': activated = activate(scope, items, current); break;
       // A 在 Joy-Con 說明按鈕上：點既有按鈕開啟說明圖（modal 開啟後 reconcile 記住回焦點＝說明按鈕）。
       case 'openHelp': if (helpEntryEl()) { helpEntryEl().click(); scheduleReconcile(); activated = true; } break;
+      // A 在 SL 瀏覽焦點上：重新開啟該城鎮說明（iframe 重驗 town＝目前的 map focus；唯讀，不選取、不動相機）。
+      case 'townDetail': sendToMap('detail', { town: ctl.focusTown }); break;
       case 'cardPreview': activated = previewCard(current); break;
       case 'cardToggle': activated = toggleCard(current); break;
       case 'cardMode': activated = playCardMode(current, command.mode); break;
@@ -1274,12 +1279,14 @@
     }
     // canonical 城鎮清單完整時，提示可用 SL 聚焦選單（客廳模式由提示列顯示）。
     const menu = !layerActive() && layer && layer.focusMenuAvailable() ? '　SL 聚焦選單' : '';
+    // 城鎮說明 popup 開著：B 的第一下只關閉說明。
+    const detail = scope.kind === 'map' && ctl.mapSnapshot && ctl.mapSnapshot.detail ? '　B 關閉城鎮說明' : '';
     if (scope.kind === 'map' && ctl.focusKind === 'browse') {
-      return `聚焦 ${ctl.focusTown}（只看）　搖桿 移到地圖目標　ZR 放大地圖（循環）${menu}${choiceLocked() ? '' : '　R/SR 區段'}`;
+      return `聚焦 ${ctl.focusTown}（只看）　搖桿 移到地圖目標${detail || '　A 城鎮說明'}　ZR 放大地圖（循環）${menu}${choiceLocked() ? '' : '　R/SR 區段'}`;
     }
     if (scope.kind === 'map') {
       const act = ctl.focusKind === 'map' && ctl.focusTown && layer && !layerActive() ? layer.desktopMapActLabel(ctl.focusTown) : null;
-      return `移動 搖桿　A 選取${act ? `　Y ${act}` : ''}　B 取消　ZR 放大地圖（循環）${menu}${choiceLocked() ? '' : '　R/SR 區段'}`;
+      return `移動 搖桿　A 選取${act ? `　Y ${act}` : ''}${detail || '　B 取消'}　ZR 放大地圖（循環）${menu}${choiceLocked() ? '' : '　R/SR 區段'}`;
     }
     if (choiceLocked()) return `必選地圖目標：R/SR 回戰略地圖${menu}`;
     const focused = ctl.focusKind === 'dom' ? cardContext({ kind: 'dom', el: ctl.focusEl }) : null;

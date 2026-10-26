@@ -242,3 +242,26 @@ def test_ai_public_window_wiring():
     # 伺服器端：ack／hold 不受「輪到誰」限制，且在 turn gate 之前處理
     main = (_ROOT / "server/main.py").read_text(encoding="utf-8")
     assert main.index('"ack_ai_red_army"') < main.index("current_player = game.current_player()")
+
+
+def test_ai_turn_summary_joycon_a_uses_the_same_ack_path_for_the_right_controllers():
+    # Playtest：「AI 紅軍回合結束」摘要按下一位的 Joy-Con A 沒反應。等待中主連線不 claim（Core.claimTarget），
+    # 只擁有目前畫面席位那一支；下一位接手席位那一支改由本分頁的監聽連線擁有。兩條路都只認 Core.aiAckConfirm
+    # （ended＋新的 A 按下＋aiAckControllers），並呼叫與「知道了」相同的 ackAiTurn()（伺服器 ack_ai_red_army）。
+    ui = (_ROOT / "static/hotseat_ui.js").read_text(encoding="utf-8")
+    intercept = _function_body(ui, "intercept(action, { owned }) {")
+    assert "Core.aiAckConfirm({ ai: hs.aiShown, controller: owned, action, controllers: aiAckControllers() })" in intercept
+    listener = _function_body(ui, "function onListenerMessage(listener, raw) {")
+    in_game = listener.split("if (!inLobby()) {", 1)[1].split("const seat = Core.listenerSwitchTarget(", 1)[0]
+    assert "Core.aiAckConfirm(" in in_game and "controller: listener.controller" in in_game and "ackAiTurn()" in in_game
+    assert "Core.masked(hs.verdict.view)" in in_game
+    sync = _function_body(ui, "function syncListeners() {")
+    assert "aiAckListeners(cs)" in sync and "Core.lobbyListeners(" in sync
+    want = _function_body(ui, "function aiAckListeners(cs) {")
+    assert "Core.aiNextLocalSeat(" in want and "hs.aiShown" in want
+    assert "syncListeners();" in _function_body(ui, "function onState(state, gameId, connectedSeatId) {")
+    # 滑鼠「知道了」與 A 同一個函式；等待中仍不 claim（handoff／open 才 claim）。
+    assert "addEventListener('click', ackAiTurn)" in ui
+    core = (_ROOT / "static/hotseat_core.js").read_text(encoding="utf-8")
+    claim = _function_body(core, "function claimTarget(verdict) {")
+    assert "'waiting'" not in claim

@@ -76,6 +76,9 @@
     if (name === 'endStep') return { cmd: 'endStep' };
     if (name === 'factionAbility') return { cmd: 'factionAbility' };
     if (name === 'nextZone') return { cmd: 'zoneCycle', step: 1 };
+    // 戰略地圖上城鎮說明 popup 開著：B 的第一下只關閉說明（任何區域、任何層級），不回區域層、不取消選取或 pending choice；
+    // 不受必選地圖目標鎖影響（關閉說明不是返回）。關閉後再按 B 才走下面原本的規則。
+    if (name === 'cancel' && ctx.view === 'map' && ctx.mapDetailOpen) return { cmd: 'mapCancel' };
 
     if (ctx.layer !== 'item') {
       switch (name) {

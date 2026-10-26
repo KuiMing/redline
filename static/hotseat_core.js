@@ -260,6 +260,40 @@
     };
   }
 
+  /**
+   * AI 紅軍之後第一個行動的本機席位（state.players＝座位環狀順序；紅軍永遠是整輪最後一席，確認後由它的下一席接手）。
+   * 只認伺服器 state 的 AI player_id 與座位順序；沒有 AI、AI 不在名單、或之後沒有本機席位 → null。
+   */
+  function aiNextLocalSeat(state, store, gameId) {
+    const ai = state && state.ai_red_army;
+    const players = state && Array.isArray(state.players) ? state.players.filter(p => p && isId(p.id)) : [];
+    const at = ai && isId(ai.player_id) ? players.findIndex(p => p.id === ai.player_id) : -1;
+    if (at < 0) return null;
+    for (let i = 1; i < players.length; i += 1) {
+      const seat = findSeat(store, gameId, players[(at + i) % players.length].id);
+      if (seat) return seat;
+    }
+    return null;
+  }
+
+  /**
+   * 「AI 紅軍回合結束」摘要可用 A 確認的手把：目前畫面席位（剛交出控制權、主連線擁有）綁定的那一支，
+   * 以及下一位接手的本機席位綁定的那一支。其他席位、未綁定或不認得的手把都不能確認。
+   */
+  function aiAckControllers({ state, store, gameId, connectedSeatId }) {
+    const out = [];
+    for (const seat of [findSeat(store, gameId, connectedSeatId), aiNextLocalSeat(state, store, gameId)]) {
+      if (seat && isControllerId(seat.controller) && !out.includes(seat.controller)) out.push(seat.controller);
+    }
+    return out;
+  }
+
+  /** 摘要的 A：只有伺服器正在等待確認（ended）、一次新的 A 按下（不是按住），且手把是 aiAckControllers 之一。 */
+  function aiAckConfirm({ ai, controller, action, controllers }) {
+    return !!ai && ai.ended === true && !!action && action.type === 'press' && action.button === 'A'
+      && isControllerId(controller) && Array.isArray(controllers) && controllers.includes(controller);
+  }
+
   /** 交接確認：只有 A，且本分頁（bridge 權威）擁有的正是綁給該席位的那一支。 */
   function confirmVerdict({ verdict, owned, action }) {
     if (!verdict || verdict.view !== 'handoff' || !verdict.seat) return { ok: false, reason: 'not-handoff' };
@@ -622,6 +656,7 @@
     STORE_KEY, SESSION_KEY, MAX_SEATS, CODENAMES, seatCodename, nextSeatCodename, orphanSeatId, codenameRenames,
     isControllerId, normalizeStore, seatsFor, findSeat, seatForController, addSeat, bindController, unbindController,
     isHotSeatGame, normalizeSession, confirmSession, lockSession, authoritativeActor, decide, masked, aiPublicView, aiLineText,
+    aiNextLocalSeat, aiAckControllers, aiAckConfirm,
     confirmVerdict, allowsInput, bindableControllers, bindingLost, handoffTitle, reasonText,
     seatControllerStatus, controllerDisplayNames, controllerNames, seatJoyStatus, controllerChoices, withLocalOwners, lobbySeats, decideLobby, sequentialLobby, lobbyInput, lobbyEntersSelection, lobbyListeners, listenerSwitchTarget, claimTarget, switchSession, lobbyPrompt,
   };

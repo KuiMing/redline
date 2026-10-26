@@ -785,6 +785,77 @@ test('回合結束的等待確認來自伺服器 awaiting_ack：current player �
   assert.equal(H.aiPublicView(next, aiVerdict(next)), null);
 });
 
+test('AI 摘要的下一位：紅軍之後（座位環狀順序）第一個本機席位；紅軍坐中間或第一席也一樣；沒有 AI／不在名單 → null', () => {
+  const store = storeWith(TW, HK);
+  // [臺灣, 香港, AI]：紅軍最後一席 → 繞回臺灣
+  assert.equal(H.aiNextLocalSeat(aiState(), store, G).player_id, 'p-tw');
+  // [臺灣, AI, 香港]：紅軍坐中間 → 香港
+  const middle = aiState();
+  middle.players = [middle.players[0], middle.players[2], middle.players[1]];
+  assert.equal(H.aiNextLocalSeat(middle, store, G).player_id, 'p-hk');
+  // 紅軍之後的第一席不是本機席位（遠端玩家）→ 跳過，取下一個本機席位
+  const remote = aiState();
+  remote.players = [remote.players[2], { id: 'p-remote', name: '遠端', faction: 'tibet_family' }, remote.players[1], remote.players[0]];
+  assert.equal(H.aiNextLocalSeat(remote, store, G).player_id, 'p-hk');
+  const off = aiState(); off.ai_red_army = undefined;
+  assert.equal(H.aiNextLocalSeat(off, store, G), null);
+  const missing = aiState(); missing.ai_red_army.player_id = 'p-gone';
+  assert.equal(H.aiNextLocalSeat(missing, store, G), null);
+  assert.equal(H.aiNextLocalSeat(null, store, G), null);
+});
+
+test('AI 摘要可確認的手把：目前畫面席位那一支＋下一位接手席位那一支；其他席位、未綁定、不認得的手把都不行', () => {
+  const L3 = 'L24803-0a1b2c3d';
+  const TIBET = { player_id: 'p-tb', resume_token: 'tok-tb', name: '藏國玩家' };
+  let store = storeWith(TW, HK, TIBET);
+  store = H.bindController(store, G, 'p-tw', L1).store;
+  store = H.bindController(store, G, 'p-hk', R1).store;
+  store = H.bindController(store, G, 'p-tb', L3).store;
+  // 座位 [臺灣, 香港, 藏國, AI]：藏國剛結束（畫面仍是藏國席位），紅軍是整輪最後一席 → 下一位是臺灣
+  const s = aiState({ awaiting_ack: undefined });
+  s.players = [s.players[0], s.players[1], { id: 'p-tb', name: '藏國玩家', faction: 'tibet_family' }, s.players[2]];
+  const controllers = H.aiAckControllers({ state: s, store, gameId: G, connectedSeatId: 'p-tb' });
+  assert.deepEqual(controllers, [L3, L1]); // 上一席（目前畫面）藏國＋下一位臺灣；香港不在內
+  // 目前畫面席位就是下一位：只有一支，不重複
+  assert.deepEqual(H.aiAckControllers({ state: s, store, gameId: G, connectedSeatId: 'p-tw' }), [L1]);
+  // 下一位未綁定 Joy-Con：只剩目前畫面席位那一支
+  const unbound = H.unbindController(store, G, 'p-tw');
+  assert.deepEqual(H.aiAckControllers({ state: s, store: unbound, gameId: G, connectedSeatId: 'p-tb' }), [L3]);
+
+  const ended = { ended: true };
+  const ok = (controller, action = A, ai = ended) => H.aiAckConfirm({ ai, controller, action, controllers });
+  assert.equal(ok(L1), true, '下一位的 A');
+  assert.equal(ok(L3), true, '目前畫面席位（剛交出控制權）的 A');
+  assert.equal(ok(R1), false, '其他席位（香港）的 A 不能確認');
+  assert.equal(ok('L24809-0a1b2c3d'), false, '沒有綁給本機席位的手把');
+  assert.equal(ok(null), false);
+  assert.equal(ok(L1, { type: 'press', button: 'B' }), false, 'A 以外的鍵');
+  assert.equal(ok(L1, { type: 'nav', dir: 'right' }), false);
+  assert.equal(ok(L1, null), false);
+  assert.equal(ok(L1, A, { ended: false }), false, 'AI 仍在行動（尚未等待確認）');
+  assert.equal(ok(L1, A, null), false, '沒有摘要');
+});
+
+test('AI 摘要的 A 是邊緣觸發：按住不放只算一次按下，放開再按才是新的按下（真的 reducer）', () => {
+  const C = require('../../../static/controller_core.js');
+  const controllers = [L1];
+  let pad = { input: C.createInputState(), key: null };
+  const frame = buttons => ({ kind: 'frame', controller: L1, side: 'left', epoch: 1, frame: { x: 0, y: 0, buttons: { ...buttons } } });
+  const acks = [];
+  const feed = (buttons, t) => {
+    const step = C.stepControllerInput(pad, frame(buttons), t);
+    pad = step.pad;
+    acks.push(step.actions.filter(action => H.aiAckConfirm({ ai: { ended: true }, controller: L1, action, controllers })).length);
+  };
+  feed({ A: true }, 0); // 新連線第一筆（已按住）＝baseline
+  for (let t = 16; t < 2000; t += 16) feed({ A: true }, t); // 一直按住
+  assert.equal(acks.reduce((a, b) => a + b, 0), 0, '連線前就按住的 A 不確認');
+  feed({ A: false }, 2001);
+  feed({ A: true }, 2017);
+  for (let t = 2033; t < 4000; t += 16) feed({ A: true }, t);
+  assert.equal(acks.reduce((a, b) => a + b, 0), 1, '一次按下（按住多久都一樣）只確認一次');
+});
+
 // ---- Joy-Con 逐棒：P1→P2→…→Pn→回房主；前一棒不能操作下一棒；最後一棒不能啟動
 const SEQ_IDS = ['p-1', 'p-2', 'p-3', 'p-4'];
 const SEQ_CTL = ['R24800-45619a3d', 'L24801-6551f913', 'R24802-45619a3d', 'L24803-6551f913'];

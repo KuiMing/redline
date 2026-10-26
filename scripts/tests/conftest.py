@@ -8,6 +8,11 @@ import os
 os.environ.setdefault("ENABLE_TEST_ROUTES", "true")
 
 
+def pytest_addoption(parser):
+    # Browser regression 的截圖／state proof 輸出目錄（未指定＝不輸出；也可用環境變數 REDLINE_EVIDENCE_DIR）。
+    parser.addoption("--redline-evidence-dir", default=None, help="write browser evidence (screenshots, state JSON) here")
+
+
 def host_token(game_id, player_id):
     """resume_token of a seat created through /create or /join (lobby mutations are token-gated)."""
     from server import main

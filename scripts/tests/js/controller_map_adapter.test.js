@@ -81,6 +81,8 @@ function loadAdapter(opts = {}) {
   const markerClicks = [];
   const parentMessages = [];
   const listeners = {};
+  // 城鎮說明 popup（leaflet_game_map_logic.js 的 canonical helper）：記錄呼叫，並模擬目前開著哪個城鎮。
+  const detail = { open: null, calls: [] };
   const buttons = new Map(C.MAP_BUTTON_IDS.map(id => [id, {
     id, disabled: false, isConnected: true, textContent: id,
     getBoundingClientRect: () => ({ left: 0, top: 0, width: 10, height: 10 }), getClientRects: () => [1],
@@ -105,7 +107,10 @@ function loadAdapter(opts = {}) {
     currentMarkers: new Map(towns.map(t => [t.name, { fire: (ev) => markerClicks.push([t.name, ev]) }])),
     markerRadius: () => 8,
     escapeHtml: s => String(s),
-    exitMovementSelection: () => clicks.push('exitMovementSelection'),
+    exitMovementSelection: () => { clicks.push('exitMovementSelection'); ctx.selectedTown = null; ctx.pendingMoveTarget = null; },
+    showTownDetail: (town, options) => { detail.calls.push(['show', town, JSON.parse(JSON.stringify(options || {}))]); detail.open = town; return true; },
+    closeTownDetail: () => { detail.calls.push(['close']); detail.open = null; },
+    townDetailOpenTown: () => detail.open,
     getComputedStyle: () => ({ visibility: 'visible' }),
     setTimeout: (fn) => { fn(); return 1; },
     console,
@@ -135,7 +140,7 @@ function loadAdapter(opts = {}) {
     const p = map.latLngToContainerPoint(ctx.townDisplayLatLng(byName.get(town)));
     return Math.abs(p.x - SIZE.x / 2) <= 1 && Math.abs(p.y - SIZE.y / 2) <= 1;
   };
-  return { ctx, map, byName, clicks, markerClicks, send, centered, parent };
+  return { ctx, map, byName, clicks, markerClicks, send, centered, parent, detail };
 }
 
 const canonicalNames = Object.keys(MAP_DATA.towns);
@@ -297,4 +302,153 @@ test('pending target paths are unchanged: focus/activate/act still accept only l
   assert.ok(b.centered('基隆'));
   assert.equal(b.send({ cmd: 'focus', town: '基隆' }).result.ok, true, 'binding the browse town to its target focus is the existing focus');
   assert.equal(b.map.pans, 0, 'already centered: no pan');
+});
+
+// ---- 城鎮說明 popup：SL 選定城鎮會打開標準說明；B 的第一下只關閉說明，第二下才是原本的取消
+test('SL focusTown opens the town detail without panning and without touching selection, pending move or choice', () => {
+  const a = loadAdapter({ choice: ['新北', '基隆'] });
+  a.ctx.selectedTown = '新北';
+  const { result } = a.send({ cmd: 'focusTown', town: '曼谷', req: 1 });
+  assert.equal(result.ok, true);
+  // 假地圖的 setTimeout 是同步的（moveend 推送早於說明開啟）：結果之後再要一份，等同瀏覽器裡結果後的推送。
+  const { snapshot } = a.send({ cmd: 'snapshot', req: 9 });
+  assert.deepEqual(a.detail.calls, [['show', '曼谷', { autoPan: false }]], 'canonical helper, no autoPan (stays exactly centered)');
+  assert.ok(a.centered('曼谷'));
+  assert.equal(a.map.getZoom(), C.MAP_FOCUS_ZOOM);
+  assert.deepEqual([a.clicks, a.markerClicks], [[], []], 'read-only: no button, no marker click');
+  assert.equal(a.ctx.selectedTown, '新北', 'selection untouched');
+  assert.equal(snapshot.detail, '曼谷');
+  const snap = C.sanitizeMapSnapshot(snapshot);
+  assert.equal(snap.detail, '曼谷');
+  assert.equal(snap.canCancel, true);
+  // ZR 之後說明仍是同一個城鎮，置中不變（zoom 10）。
+  assert.equal(a.send({ cmd: 'zoom', req: 2 }).result.ok, true);
+  assert.equal(a.map.getZoom(), C.MAP_ZOOM_CYCLE.max);
+  assert.ok(a.centered('曼谷'));
+  assert.equal(a.detail.open, '曼谷');
+  // 失敗的 focusTown 不打開說明。
+  const b = loadAdapter();
+  assert.equal(b.send({ cmd: 'focusTown', town: '不存在的城', req: 3 }).result.ok, false);
+  assert.deepEqual(b.detail.calls, []);
+});
+
+test('B with the town detail open: first cancel only closes the popup (pending move kept), second cancel runs the existing cancel', () => {
+  const a = loadAdapter({ origins: ['北京'] });
+  a.ctx.document.getElementById('cancelDissolveChoiceBtn').disabled = true; // 沒有瓦解 choice：只有選取可取消
+  a.ctx.selectedTown = '北京';
+  a.ctx.selectedMoveTargets = [{ town: '天津', mode: 'road', cost: 1 }];
+  a.ctx.pendingMoveTarget = { from: '北京', to: '天津', mode: 'road', cost: 1 };
+  a.detail.open = '天津';
+  let { result, snapshot } = a.send({ cmd: 'cancel' });
+  assert.deepEqual([result.ok, result.via], [true, 'popup']);
+  assert.ok(C.sanitizeMapResult(result), 'the parent accepts via:popup');
+  assert.equal(a.detail.open, null);
+  assert.deepEqual(a.clicks, [], 'selection not exited, no cancel button pressed');
+  assert.deepEqual(snapshot.pending, { from: '北京', to: '天津', mode: 'road', cost: 1 }, 'pending move kept');
+  assert.equal(snapshot.selected, '北京');
+  assert.equal(snapshot.detail, null);
+  assert.equal(snapshot.canCancel, true, 'the selection is still cancellable');
+  ({ result, snapshot } = a.send({ cmd: 'cancel' }));
+  assert.deepEqual([result.ok, result.via], [true, 'selection']);
+  assert.deepEqual(a.clicks, ['exitMovementSelection']);
+  assert.equal(snapshot.canCancel, false);
+  // 沒有選取時：說明開著 → 只關閉；關閉後沒有可取消的流程。
+  const b = loadAdapter();
+  b.ctx.document.getElementById('cancelDissolveChoiceBtn').disabled = true;
+  b.detail.open = '曼谷';
+  assert.equal(b.send({ cmd: 'cancel' }).result.via, 'popup');
+  const second = b.send({ cmd: 'cancel' }).result;
+  assert.deepEqual([second.ok, second.reason], [false, 'nothing-to-cancel']);
+  assert.deepEqual(b.clicks, []);
+});
+
+test('B with the detail open during a dissolve choice closes the popup before the existing 取消瓦解 button', () => {
+  const a = loadAdapter({ choice: ['新北', '基隆'] });
+  a.ctx.selectedTown = '新北';
+  a.detail.open = '新北';
+  assert.equal(a.send({ cmd: 'cancel' }).result.via, 'popup');
+  assert.deepEqual(a.clicks, [], '取消瓦解 not pressed by the first B');
+  assert.equal(a.send({ cmd: 'cancel' }).result.via, 'cancelDissolveChoiceBtn');
+  assert.deepEqual(a.clicks, ['cancelDissolveChoiceBtn']);
+});
+
+test('parent routing: detail open turns the first B into a map cancel in both display modes, then the original rule applies', () => {
+  const snap = detail => C.sanitizeMapSnapshot({
+    type: 'redline-controller-map-snapshot', v: 1, scope: 'none', targets: [], buttons: [], canCancel: false, detail,
+  });
+  assert.equal(snap('曼谷').canCancel, true);
+  assert.equal(snap(null).canCancel, false);
+  assert.equal(snap(''), null, 'malformed detail rejects the snapshot');
+  const B = { name: 'cancel' };
+  // 客廳模式：區域層、非地圖清單的內容層、必選地圖目標鎖住時，第一下 B 都只關閉說明（不回區域層）。
+  const base = { scopeKind: 'map', view: 'map', choiceLock: false, locked: false, mapCanCancel: true, mapDetailOpen: true };
+  assert.deepEqual(LR.routeLivingRoom({ ...base, layer: 'zone', zone: 'maplist' }, B), { cmd: 'mapCancel' });
+  assert.deepEqual(LR.routeLivingRoom({ ...base, layer: 'item', zone: 'mapButtons', item: null }, B), { cmd: 'mapCancel' });
+  assert.deepEqual(LR.routeLivingRoom({ ...base, layer: 'item', zone: 'maplist', locked: true, choiceLock: true, item: { mapRow: true } }, B), { cmd: 'mapCancel' });
+  // 關閉後：原本的規則（無可取消 → 回區域層；有選取 → mapCancel；區域層 B 不做事）。
+  const closed = { ...base, mapDetailOpen: false, mapCanCancel: false };
+  assert.deepEqual(LR.routeLivingRoom({ ...closed, layer: 'item', zone: 'maplist', item: { mapRow: true } }, B), { cmd: 'toZoneLayer' });
+  assert.equal(LR.routeLivingRoom({ ...closed, layer: 'zone', zone: 'maplist' }, B), null);
+  assert.deepEqual(LR.routeLivingRoom({ ...closed, mapCanCancel: true, layer: 'item', zone: 'maplist', item: { mapRow: true } }, B), { cmd: 'mapCancel' });
+  // 其他分頁不受影響。
+  assert.deepEqual(LR.routeLivingRoom({ ...base, view: 'command', scopeKind: 'page', layer: 'item', zone: 'hand', item: null }, B), { cmd: 'toZoneLayer' });
+  // 桌面模式：cancelAvailable 來自 snapshot.canCancel（說明開著時為 true）。
+  assert.deepEqual(C.routeAction({ scopeKind: 'map', hasFocus: true, cancelAvailable: snap('曼谷').canCancel }, C.logicalAction({ type: 'press', button: 'B' })), { cmd: 'cancel' });
+});
+
+// ---- SL 瀏覽焦點上 B 關閉說明後，A 重新開啟同一城鎮說明（唯讀；不選取、不預備移動、不碰 pending choice）
+test('detail command reopens the closed detail of the focused browse town read-only, at the current camera', () => {
+  for (const town of ['屏東', '宜蘭', '曼谷']) {
+    const a = loadAdapter({ choice: ['新北', '基隆'] });
+    a.ctx.selectedTown = '新北';
+    assert.equal(a.send({ cmd: 'focusTown', town, req: 1 }).result.ok, true, town);
+    assert.equal(a.send({ cmd: 'cancel' }).result.via, 'popup', `${town}: first B closes the detail`);
+    assert.equal(a.detail.open, null);
+    assert.equal(a.send({ cmd: 'zoom', req: 2 }).result.ok, true, `${town}: ZR keeps working after the close`);
+    const before = { zoom: a.map.getZoom(), views: a.map.setViews.length, pans: a.map.pans };
+    const { result, snapshot } = a.send({ cmd: 'detail', town });
+    assert.deepEqual([result.ok, result.reason], [true, null], town);
+    assert.ok(C.sanitizeMapResult(result), `${town}: the parent accepts the detail result`);
+    assert.equal(a.detail.open, town, `${town}: same town detail reopened`);
+    assert.deepEqual(a.detail.calls.at(-1), ['show', town, { autoPan: false }], `${town}: canonical helper, no autoPan`);
+    assert.deepEqual({ zoom: a.map.getZoom(), views: a.map.setViews.length, pans: a.map.pans }, before, `${town}: camera untouched (zoom 10 stays)`);
+    assert.ok(a.centered(town), town);
+    assert.deepEqual([a.clicks, a.markerClicks], [[], []], `${town}: no button, no marker click`);
+    assert.equal(a.ctx.selectedTown, '新北', `${town}: selection untouched`);
+    assert.equal(a.ctx.pendingMoveTarget, null, `${town}: no pending move`);
+    assert.equal(snapshot.detail, town);
+    assert.equal(snapshot.focusTown, null, `${town}: still not the action focus`);
+    assert.deepEqual(snapshot.targets.map(t => t.town), ['新北', '基隆'], `${town}: action targets unchanged`);
+  }
+});
+
+test('detail command fails closed: not the focused town, focus cleared, unknown town, no town, untrusted source', () => {
+  const a = loadAdapter();
+  assert.equal(a.send({ cmd: 'focusTown', town: '屏東', req: 1 }).result.ok, true);
+  a.send({ cmd: 'cancel' });
+  a.detail.calls.length = 0;
+  let r = a.send({ cmd: 'detail', town: '宜蘭' }).result;
+  assert.deepEqual([r.ok, r.reason], [false, 'not-focused'], 'another town than the map focus');
+  assert.equal(a.send({ cmd: 'detail' }).result, null, 'no town: dropped before running');
+  assert.equal(a.send({ cmd: 'detail', town: '屏東' }, { postMessage() {} }).result, null, 'not from window.parent');
+  a.send({ cmd: 'clearFocus' });
+  r = a.send({ cmd: 'detail', town: '屏東' }).result;
+  assert.deepEqual([r.ok, r.reason], [false, 'not-focused'], 'the map focus moved away');
+  r = a.send({ cmd: 'detail', town: '不存在的城' }).result;
+  assert.deepEqual([r.ok, r.reason], [false, 'unknown-town']);
+  assert.deepEqual(a.detail.calls, [], 'no detail opened by any rejected command');
+  assert.equal(a.detail.open, null);
+});
+
+test('desktop routing: A on the SL browse focus is the read-only town detail; other A semantics unchanged', () => {
+  const A = C.logicalAction({ type: 'press', button: 'A' });
+  assert.deepEqual(C.routeAction({ scopeKind: 'map', hasFocus: false, browseFocus: true }, A), { cmd: 'townDetail' });
+  assert.equal(C.routeAction({ scopeKind: 'map', hasFocus: false }, A), null, 'no focus at all: still nothing');
+  assert.deepEqual(C.routeAction({ scopeKind: 'map', hasFocus: true, mapTarget: true }, A), { cmd: 'activate' }, 'target A still selects');
+  assert.equal(C.routeAction({ scopeKind: 'modal', hasFocus: false, browseFocus: true }, A), null, 'modal scope lock');
+  assert.equal(C.routeAction({ scopeKind: 'page', hasFocus: false, browseFocus: true }, A), null, 'only on the map');
+  const Y = C.logicalAction({ type: 'press', button: 'Y' });
+  assert.deepEqual(C.routeAction({ scopeKind: 'map', hasFocus: false, browseFocus: true }, Y), { cmd: 'toggleHelp' }, 'Y unchanged on browse focus');
+  assert.ok(C.sanitizeMapCommand({ type: 'redline-controller-command', v: 1, cmd: 'detail', town: '屏東' }));
+  assert.equal(C.sanitizeMapCommand({ type: 'redline-controller-command', v: 1, cmd: 'detail' }), null, 'detail needs a town');
 });

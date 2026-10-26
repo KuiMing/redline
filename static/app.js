@@ -3264,7 +3264,7 @@ function openEthnicRitualGuessModal() {
 
 function strategicMapUrl() {
   const url = new URL('/static/leaflet_game_map.html', window.location.origin);
-  url.searchParams.set('v', 'map-projection-guard-20261006');
+  url.searchParams.set('v', 'sl-detail-reopen-20261026');
   if (gameId) url.searchParams.set('gameId', gameId);
   if (playerId) url.searchParams.set('playerId', playerId);
   return url.toString();

@@ -17,6 +17,6 @@ def test_shared_organization_uses_yellow_town_circle_without_s_badge():
 
 
 def test_map_asset_versions_match():
-    version = "map-projection-guard-20261006"
+    version = "sl-detail-reopen-20261026"
     assert f"leaflet_game_map_logic.js?v={version}" in MAP_HTML
     assert f"url.searchParams.set('v', '{version}')" in APP_JS

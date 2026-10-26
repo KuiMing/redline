@@ -49,7 +49,12 @@
     return { model, buttons: new Map(buttons.map(b => [b.id, b])) };
   }
 
+  /**
+   * B 的既有可取消流程。城鎮說明 popup 開著時第一下 B 只關閉說明（'popup'）：不取消選取、預備移動、pending choice，
+   * 也不讓 parent 退出地圖；關閉後才回到「取消瓦解」→「取消目前選取」的既有順序。
+   */
   function cancelAvailable(info) {
+    if (townDetailOpenTown()) return 'popup';
     const cancelBtn = info.buttons.get('cancelDissolveChoiceBtn');
     if (cancelBtn && cancelBtn.visible && !cancelBtn.disabled) return 'cancelDissolveChoiceBtn';
     if (selectedTown) return 'selection';
@@ -101,6 +106,7 @@
       buttons,
       focusTown: focusTown && targets.some(t => t.town === focusTown) ? focusTown : info.model.focusTown,
       canCancel: !!cancelAvailable(info),
+      detail: townDetailOpenTown(),
       selected: info.model.selected,
       pending: info.model.pending,
       ...(groupMeta ? { groupMeta: Core.MAP_GROUP_META_VERSION } : {}),
@@ -186,7 +192,19 @@
     }
     focusTown = townName;
     drawFocusRing();
+    // 唯讀導覽：只打開城鎮說明（不捲動地圖，置中驗證之後也維持精確置中）；不改選取、預備移動或 pending choice。
+    showTownDetail(townName, { autoPan: false });
     return { ok: true };
+  }
+
+  /**
+   * SL 瀏覽焦點上的 A：重新開啟目前 map focus 城鎮的說明 popup（B 關閉後）。只呼叫 canonical showTownDetail（不捲動），
+   * 不走 marker click、不改選取／預備移動／pending choice、不動相機。town 不是 canonical 或不是目前的 map focus → ok:false。
+   */
+  function showFocusedDetail(townName) {
+    if (!byName.has(townName)) return { ok: false, reason: 'unknown-town' };
+    if (focusTown !== townName) return { ok: false, reason: 'not-focused' };
+    return showTownDetail(townName, { autoPan: false }) ? { ok: true } : { ok: false, reason: 'detail-unavailable' };
   }
 
   function activate(townName) {
@@ -277,6 +295,10 @@
   function cancel() {
     const info = currentModel();
     const which = cancelAvailable(info);
+    if (which === 'popup') {
+      closeTownDetail();
+      return { ok: true, via: 'popup' };
+    }
     if (which === 'cancelDissolveChoiceBtn') {
       document.getElementById('cancelDissolveChoiceBtn').click();
       return { ok: true, via: 'cancelDissolveChoiceBtn' };
@@ -302,6 +324,7 @@
     else if (command.cmd === 'cancel') result = cancel();
     else if (command.cmd === 'act') result = act(command.town, command.id);
     else if (command.cmd === 'zoom') result = zoomCycle();
+    else if (command.cmd === 'detail') result = showFocusedDetail(command.town);
     // req 原樣回傳：parent 只在對應的 req 收到 ok:true（上面已在執行前重驗）時才視為已執行。
     postToParent({
       type: 'redline-controller-result', v: Core.MAP_MESSAGE_VERSION, cmd: command.cmd, req: command.req,
@@ -323,6 +346,7 @@
     try { window[name] = wrapped; } catch { /* function declarations are writable on window */ }
   }
   map.on('moveend zoomend', () => { if (focusTown) drawFocusRing(); scheduleSnapshot(); });
+  map.on('popupopen popupclose', scheduleSnapshot); // 城鎮說明開／關（含滑鼠 ×）：parent 的 B 路由跟著更新
   window.addEventListener('load', scheduleSnapshot);
   window.__redlineControllerAdapter = { snapshot: snapshotMessage };
 })();

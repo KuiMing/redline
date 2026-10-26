@@ -322,7 +322,9 @@
       if (act) sources.push({ id: 'mapAct', label: act.label, visible: true });
     }
     const snap = host.getMapSnapshot();
-    if (lr.zone === 'maplist' && activeView() === 'map' && snap && snap.canCancel) {
+    if (activeView() === 'map' && snap && snap.detail) {
+      sources.push({ id: 'mapCancel', label: '關閉城鎮說明', visible: true });
+    } else if (lr.zone === 'maplist' && activeView() === 'map' && snap && snap.canCancel) {
       const cancelBtn = snap.buttons.find(b => b.id === 'cancelDissolveChoiceBtn');
       sources.push({ id: 'mapCancel', label: cancelBtn ? cancelBtn.label : '取消選取', visible: true });
     }
@@ -751,6 +753,7 @@
       scopeKind: scope.kind, view, layer: zone ? lr.layer : 'zone', zone: zone ? zone.id : null,
       choiceLock, locked: scope.kind === 'map' && choiceLock,
       mapCanCancel: !!(snap && snap.canCancel),
+      mapDetailOpen: !!(snap && snap.detail),
       item: el ? itemContext(zone, el) : null,
     };
     const command = LR.routeLivingRoom(ctx, logical);

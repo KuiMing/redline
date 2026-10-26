@@ -168,6 +168,11 @@ function escapeHtml(s) { return String(s); }
 function exitMovementSelection() { window.__clicks.push('exitMovementSelection'); selectedTown = null; }
 function applySupportChoiceHighlight(payload) { supportChoiceHighlight = payload || null; selectedTown = null; }
 function applyGameStateToMap() {}
+// 城鎮說明 popup（canonical helper）：只記錄開著哪個城鎮（真 Leaflet popup 由 test_town_detail_popup_browser 驗證）。
+window.__detail = null;
+function showTownDetail(town) { window.__detail = town; return true; }
+function closeTownDetail() { window.__detail = null; }
+function townDetailOpenTown() { return window.__detail; }
 __DISPLAY_SRC__
 window.__mapProbe = (name) => {
   const town = byName.get(name);
@@ -317,6 +322,7 @@ def test_desktop_sl_without_pending_choice_lists_all_towns_and_centers_exactly(b
     assert after["ringAtTown"]
     assert (after["clicks"], after["markerClicks"], after["pans"]) == ([], [], 0)
     assert after["state"] == before["state"], "authoritative game state untouched"
+    assert frame_of(page).evaluate("window.__detail") == "曼谷", "SL selection opens the town detail (canonical showTownDetail)"
     # 之後的 reconcile 不會把 ring 清掉；只看的瀏覽焦點上 A 不作用。
     page.wait_for_timeout(300)
     tap(page, "A")
@@ -324,6 +330,14 @@ def test_desktop_sl_without_pending_choice_lists_all_towns_and_centers_exactly(b
     assert (s["focusKind"], s["focusTown"]) == ("browse", "曼谷")
     later = probe(page, "曼谷")
     assert later["ringAtTown"] and (later["clicks"], later["markerClicks"]) == ([], [])
+    # B 的第一下只關閉城鎮說明：瀏覽焦點、相機與選取都不變；關閉後沒有其他可取消的流程。
+    tap(page, "B")
+    page.wait_for_timeout(200)
+    assert frame_of(page).evaluate("window.__detail") is None
+    s = state(page)
+    assert (s["focusKind"], s["focusTown"], s["scope"]) == ("browse", "曼谷", "map")
+    closed = probe(page, "曼谷")
+    assert closed["zoom"] == 9 and (closed["clicks"], closed["markerClicks"]) == ([], [])
     assert page.__errors == []
 
 

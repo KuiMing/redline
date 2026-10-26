@@ -279,7 +279,8 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
     hs.aiShown = ai;
     const cs = ctlState();
     const ctl = cs && cs.controller;
-    const list = roster();
+    // AI 摘要確認後，下一位的手把可能仍由本分頁監聽連線擁有（即將釋放給主連線）：不誤報「其他分頁使用」。
+    const list = Core.withLocalOwners(roster(), listenerOwned());
     const name = (v.actor && v.actor.name) || (v.seat && v.seat.name) || '';
     let title = '客廳輪流';
     let status = '正在連線…';
@@ -329,6 +330,11 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
   /** 公開視窗的「知道了」／A：通知伺服器放行 AI 紅軍結束回合（伺服器才會把 current player 換到下一位）。 */
   function ackAiTurn() {
     if (typeof sendAction === 'function') sendAction('ack_ai_red_army');
+  }
+
+  /** 摘要可用 A 確認的手把：目前畫面席位的那一支（主連線）＋下一位接手本機席位的那一支（監聽連線）。 */
+  function aiAckControllers() {
+    return Core.aiAckControllers({ state: hs.lastState, store: loadStore(), gameId: hs.gameId, connectedSeatId: hs.connectedSeat });
   }
 
   function bindSeat(playerId, controllerId, gameId = hs.gameId) {
@@ -391,9 +397,11 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
     ctlApi().selectController(target);
   }
 
-  // ------------------------------------------------------------ 大廳監聽連線：其他已綁定本機席位，各一條只 claim 自己那一支的 bridge 連線
+  // ------------------------------------------------------------ 監聽連線：其他已綁定本機席位，各一條只 claim 自己那一支的 bridge 連線
   // bridge v2 一條連線最多擁有一支、且只收得到那一支的 frame（bridge 驗證 claim、每支只有一位擁有者）。這裡沿用 controller_core
   // 的訊息驗證、frame 接受與 reducer（重連／換手把第一筆只當 baseline），只看 reducer 產生的 A；不路由任何其他輸入。
+  // 大廳：其他已綁定席位（A＝切到該席）。遊戲中：AI 紅軍公開視窗開著時，下一位接手本機席位的那一支（A＝確認回合結束摘要）；
+  // 主連線仍擁有目前畫面席位的那一支，等待中不 claim（Core.claimTarget）。
   const CtlCore = () => window.RedlineControllerCore || null;
   const listeners = new Map(); // controller id → { controller, socket, binding, roster, pad, claimAt, retryAt }
   const RETRY_MS = 2000;
@@ -465,17 +473,39 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
     if (!CtlCore().acceptControllerFrame(listener.binding, msg)) return;
     const step = CtlCore().stepControllerInput(listener.pad, msg, performance.now());
     listener.pad = step.pad;
+    if (!inLobby()) {
+      // 遊戲中：下一位接手席位的 A＝與「知道了」同一條伺服器確認；其他鍵、按住、行動中（尚未 ended）一律不作用。
+      const controllers = aiAckControllers();
+      if (Core.masked(hs.verdict.view)
+        && step.actions.some(action => Core.aiAckConfirm({ ai: hs.aiShown, controller: listener.controller, action, controllers }))) ackAiTurn();
+      return;
+    }
     const seat = Core.listenerSwitchTarget({
       verdict: refreshLobbyVerdict(), store: loadStore(), gameId: session().gameId, controller: listener.controller, actions: step.actions,
     });
     if (seat) switchLobbySeat(seat);
   }
 
-  /** 需要的監聽＝其他已綁定、在 server lobby 內的本機席位；不需要的關閉（bridge 釋放），斷線的稍後重開。 */
+  /** 遊戲中：AI 紅軍公開視窗開著時，下一位接手本機席位綁定的那一支（主連線已擁有它時不需要）。 */
+  function aiAckListeners(cs) {
+    if (!hs.aiShown || !Core.masked(hs.verdict.view)) return [];
+    const seat = Core.aiNextLocalSeat(hs.lastState, loadStore(), hs.gameId);
+    const owned = cs.controller ? cs.controller.owned : null;
+    return seat && Core.isControllerId(seat.controller) && seat.controller !== owned ? [{ controller: seat.controller, player_id: seat.player_id }] : [];
+  }
+
+  /** 本分頁監聽連線目前擁有的手把（主連線 roster 會標成 'other'）。 */
+  function listenerOwned() {
+    return [...listeners.values()].filter(l => l.binding.owned === l.controller).map(l => l.controller);
+  }
+
+  /** 需要的監聽＝大廳其他已綁定、在 server lobby 內的本機席位，或遊戲中 AI 摘要的下一位；不需要的關閉（bridge 釋放），斷線的稍後重開。 */
   function syncListeners() {
     const cs = ctlState();
-    const ready = inLobby() && !hs.reloading && !hs.provisioning && !!CtlCore() && !!cs && cs.enabled && !!cs.url;
-    const want = ready ? Core.lobbyListeners({ verdict: hs.lobby, store: loadStore(), gameId: session().gameId }) : [];
+    const ready = !hs.reloading && !hs.provisioning && !!CtlCore() && !!cs && cs.enabled && !!cs.url;
+    const want = !ready ? []
+      : inLobby() ? Core.lobbyListeners({ verdict: hs.lobby, store: loadStore(), gameId: session().gameId })
+        : aiAckListeners(cs);
     const ids = new Set(want.map(w => w.controller));
     for (const listener of [...listeners.values()]) if (!ids.has(listener.controller)) closeListener(listener);
     const now = Date.now();
@@ -545,6 +575,7 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
     hs.verdict = verdict;
     render();
     syncClaim();
+    syncListeners(); // AI 摘要開／關：下一位接手席位的監聽連線立即開啟或釋放（交接時主連線才 claim 得到）
     if (verdict.view === 'reconnect') reloadInto(verdict.seat);
     return verdict.view;
   }
@@ -665,7 +696,7 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
       const v = hs.verdict;
       if (v.view === 'inactive') return false;
       if (Core.masked(v.view) && hs.aiShown) {
-        if (hs.aiShown.ended && action && action.type === 'press' && action.button === 'A') ackAiTurn();
+        if (Core.aiAckConfirm({ ai: hs.aiShown, controller: owned, action, controllers: aiAckControllers() })) ackAiTurn();
         return true; // 公開視窗開著時所有輸入都不穿透；A 只用來確認（伺服器放行後才會出現交接）
       }
       if (Core.masked(v.view)) {
@@ -799,8 +830,7 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
     const cur = session();
     const cs = ctlState();
     // 本分頁監聽連線擁有的手把在主連線 roster 裡是 'other'：顯示時視為本分頁的，不誤報「其他分頁使用中」。
-    const list = Core.withLocalOwners(roster(),
-      [...listeners.values()].filter(l => l.binding.owned === l.controller).map(l => l.controller));
+    const list = Core.withLocalOwners(roster(), listenerOwned());
     const rows = store.enabled && cur.gameId
       ? Core.lobbySeats({ lobby: cur.lobby, store, gameId: cur.gameId, connectedSeatId: cur.playerId }) : [];
     const lv = hs.lobby;
