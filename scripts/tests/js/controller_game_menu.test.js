@@ -301,7 +301,7 @@ test('the browser game-menu code sends no game mutation and only restarts throug
   assert.ok(confirmFn.includes("'emergencyNewGameBtn'") && confirmFn.includes("'/new-game'"));
   assert.equal(ui.split('confirmRestart').length - 1, 2, 'defined once + bound once to #gameMenuConfirmOkBtn');
   assert.ok(section.includes("on('gameMenuConfirmOkBtn', confirmRestart);"));
-  // Joy-Con 設定重用既有說明按鈕／openJoyconHelp（不複製說明 modal 的邏輯）
+  // Joy-Con 功能表重用既有說明按鈕／openJoyconHelp（不複製說明 modal 的邏輯）
   assert.ok(section.includes('document.getElementById(HELP_ENTRY_ID)') && section.includes('window.openJoyconHelp'));
   // ingest 只把長按沒有吃掉的 action 交給 dispatch
   assert.ok(ui.includes('for (const action of trackStickHold(step.actions, now)) dispatch(action);'));

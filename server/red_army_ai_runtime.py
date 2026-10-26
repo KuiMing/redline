@@ -78,6 +78,9 @@ _LAST_SUCCESS: dict[str, float] = {}
 # game_id -> currently inside a run_red_army_turn() call for that game.
 _RUNNING: set[str] = set()
 
+# 背景繼續的公開視窗確認等待（drive_red_army_turns 的 detach_ack_wait）；保留參照直到結束。
+_ACK_WAITERS: set[asyncio.Task] = set()
+
 
 def forget_game(game_id: str) -> None:
     """Drop the per-game cooldown state (game finished / fresh start).
@@ -260,6 +263,7 @@ async def drive_red_army_turns(
     delay_seconds: float | None = None,
     sleep: Callable[[float], Awaitable[Any]] | None = None,
     clock: Callable[[], float] | None = None,
+    detach_ack_wait: bool = False,
 ) -> None:
     """Play the AI one successful action at a time, `on_advance` (broadcast)
     after each, keeping >= `delay_seconds` between successful actions.
@@ -272,6 +276,12 @@ async def drive_red_army_turns(
     there is no sleep and the driver exits. Time a human spends reacting
     counts toward the cooldown; rejected retries neither wait nor reset it.
     Rules/legality stay in the policy and Game.
+
+    `detach_ack_wait`: the public-window ack wait (up to AI_ACK_TIMEOUT_SECONDS)
+    continues in a background task instead of inside this call. The caller is
+    the websocket handler that broadcast the human's turn end; blocking it here
+    would leave the 知道了／A `ack_ai_red_army` sent on that same socket unread
+    until the timeout.
     """
     if game_id in _DRIVING:
         return
@@ -305,11 +315,13 @@ async def drive_red_army_turns(
             signals.append("ack_released")
             return
         remaining.append(min(AI_ACK_POLL_SECONDS, ack["deadline"] - now()))
+        signals.append("ack_wait")
         raise SubmitDeferred()
 
     _gate.accepts_action = True  # type: ignore[attr-defined]
 
     _DRIVING.add(game_id)
+    detached = False
     try:
         while True:
             remaining.clear()
@@ -318,6 +330,9 @@ async def drive_red_army_turns(
             if "awaiting_ack" in signals:
                 await on_advance()  # 讓前端看到「紅軍回合結束，等待確認」（current player 仍是紅軍）
             if remaining:
+                if detach_ack_wait and "ack_wait" in signals:
+                    detached = True
+                    break
                 await sleeper(remaining[0])
                 continue
             if not advanced:
@@ -344,3 +359,9 @@ async def drive_red_army_turns(
                 break
     finally:
         _DRIVING.discard(game_id)
+    if detached:
+        # 等待確認改在背景繼續（輪詢確認／逾時後照常推進並廣播）；呼叫端的 websocket 才能讀到同一條連線送來的確認。
+        task = asyncio.get_running_loop().create_task(drive_red_army_turns(
+            game_id, game, on_advance, delay_seconds=delay_seconds, sleep=sleep, clock=clock))
+        _ACK_WAITERS.add(task)
+        task.add_done_callback(_ACK_WAITERS.discard)

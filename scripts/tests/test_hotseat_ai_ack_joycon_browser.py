@@ -11,6 +11,7 @@ Joy-Con **不是實體硬體**：真的 tools.joycon_bridge ControllerRegistry�
 from __future__ import annotations
 
 import json
+import os
 import sys
 import threading
 import time
@@ -34,6 +35,13 @@ from test_start_flow_browser import FakeJoyCons, free_port  # noqa: E402
 PORTS = (24801, 24800, 24803)  # P1 左、P2 右、P3 左
 A_BITS = {24800: (8, 0x08), 24801: (10, 0x04), 24802: (8, 0x08), 24803: (10, 0x04)}  # fixture：右 A／左 Right＝A
 HUMAN_FACTIONS = ("hong_kong", "taiwan_green", "tibet_family")
+
+
+def choice_index(choice):
+    """待決選擇的第一個合法答案：多張選擇（例如事件棄牌）要剛好 count 張。"""
+    if choice.get("type") == "multi_card_choice":
+        return list(range(int(choice.get("count") or 1)))
+    return 0
 
 
 class Seat:
@@ -70,7 +78,7 @@ class Seat:
                 town = ((choice.get("resolved") or {}).get(label) or [label])[0]
                 self.send({"action": "set_base", "town": town, "label": label})
         elif (s.get("pending_choice") or {}).get("player_id") == self.player_id:
-            self.send({"action": "resolve_choice", "choice_id": s["pending_choice"].get("choice_id"), "index": 0})
+            self.send({"action": "resolve_choice", "choice_id": s["pending_choice"].get("choice_id"), "index": choice_index(s["pending_choice"])})
         elif s.get("current_player") == self.name and not s.get("pending_choice"):
             self.send({"action": "advance"})
 
@@ -188,8 +196,26 @@ class Table:
         會暫留紅軍，但權威行動者已是該 choice 的擁有者（與 validate_hotseat_ai_red_army_public_browser 相同判定）。"""
         return not self.awaiting() and self.authority_actor() != self.red_id
 
-    def play_until(self, stop, limit=90.0):
-        """以 Joy-Con A 確認每次交接、以各席位 WebSocket 推進回合，直到 stop(hs) 成立。"""
+    def page_step(self, seat):
+        """畫面上的席位以分頁自己的遊戲 WebSocket（app.js sendAction）行動，與真人玩家同一條連線。"""
+        seat.drain()
+        s = seat.state
+        if s.get("game_phase") == "base_selection":
+            choice = (s.get("pending_base_choices") or {}).get(seat.player_id)
+            if choice:
+                label = choice["labels"][0]
+                town = ((choice.get("resolved") or {}).get(label) or [label])[0]
+                self.page.evaluate("([town, label]) => sendAction('set_base', { town, label })", [town, label])
+        elif (s.get("pending_choice") or {}).get("player_id") == seat.player_id:
+            self.page.evaluate("([id, index]) => sendAction('resolve_choice', { choice_id: id, index })",
+                               [s["pending_choice"].get("choice_id"), choice_index(s["pending_choice"])])
+        elif s.get("current_player") == seat.name and not s.get("pending_choice"):
+            self.page.evaluate("() => sendAction('advance')")
+        seat.drain(0.5)
+
+    def play_until(self, stop, limit=90.0, via_page=False):
+        """以 Joy-Con A 確認每次交接、以各席位 WebSocket 推進回合，直到 stop(hs) 成立。
+        via_page：畫面上的席位改由分頁自己的連線行動（結束回合與之後的確認走同一條連線）。"""
         deadline = time.time() + limit
         while time.time() < deadline:
             st = self.hs()
@@ -202,7 +228,11 @@ class Table:
             for sock in self.socks.values():
                 sock.drain()  # 每一席的 state 都保持最新（閒置席位的連線也持續讀取）
             if st["view"] == "open" and st["displayedSeat"] in self.socks:
-                self.socks[st["displayedSeat"]].step()
+                seat = self.socks[st["displayedSeat"]]
+                if via_page:
+                    self.page_step(seat)
+                else:
+                    seat.step()
             time.sleep(0.2)
         raise AssertionError(f"沒有到達預期狀態：{self.hs()}")
 
@@ -295,6 +325,60 @@ def test_previous_seat_joycon_and_mouse_button_still_ack(server_url, browser, jo
         table.page.click("#hotseatAiDismiss")
         assert wait_until(lambda: table.released_to_next(), timeout=4), "知道了沒有確認"
         assert wait_until(lambda: table.hs()["view"] == "handoff" and not table.hs()["aiPublic"]["open"], timeout=5)
+        assert not table.errors, table.errors
+    finally:
+        table.close()
+
+
+def test_turn_ended_on_the_page_socket_then_a_and_button_ack(server_url, browser, joycons):
+    """實際路徑：真人用分頁自己的遊戲連線結束回合（伺服器在同一個 handler 裡跑 AI 並等確認），之後的 A／知道了也走這條連線。
+    修正前：handler 卡在等待確認，同一條連線的 ack 要到逾時才被讀到——按 A 沒有反應。Joy-Con 為 fake UDP＋真 bridge app。"""
+    table = Table(server_url, browser, joycons)
+    proof = os.environ.get("REDLINE_AI_ACK_PROOF_DIR")
+    try:
+        fake, game = joycons, table.game
+        st = table.play_until(lambda s: s["aiPublic"]["open"] and s["aiPublic"]["ended"], limit=120, via_page=True)
+        nxt = table.humans[table.next_human_after_red()]
+        prev = table.humans[st["displayedSeat"]]
+        assert table.awaiting() and game.current_player().id == table.red_id
+        assert st["view"] == "waiting" and st["controllerOwner"]["controller"] == prev["controller"]
+        assert table.page.evaluate("() => window.lastGameState.ai_red_army.awaiting_ack.turn") == game.turn
+        assert wait_until(lambda: any(l["controller"] == nxt["controller"] and l["owned"] == nxt["controller"]
+                                      for l in table.hs()["lobby"]["listeners"]), timeout=8)
+        if proof:
+            Path(proof).mkdir(parents=True, exist_ok=True)
+            table.page.screenshot(path=str(Path(proof) / "1_summary_before_a.png"))
+        table.page.evaluate("() => { window.__ackSent = 0; const orig = window.sendAction; window.sendAction = function (a, p) {"
+                            " if (a === 'ack_ai_red_army') window.__ackSent += 1; return orig.apply(this, arguments); }; }")
+        # 下一位的 A（一次按下後按住）：遠早於 60 秒逾時就放行，並只送出一次 ack。
+        started = time.time()
+        hold_a(fake, nxt["port"])
+        assert wait_until(lambda: table.released_to_next(), timeout=4), f"A 沒有確認（{time.time() - started:.1f}s）"
+        assert game.ai_red_army_ack["acknowledged"] is True
+        expected = table.authority_actor()
+        st = wait_until(lambda: (lambda s: s if s["view"] == "handoff" and not s["aiPublic"]["open"] else None)(table.hs()), timeout=5)
+        assert st and st["handoffSeat"] == expected
+        assert table.page.evaluate("() => window.__ackSent") == 1
+        assert wait_until(lambda: table.hs()["controllerOwner"]["seat"] == expected, timeout=8), table.hs()
+        assert wait_until(lambda: "按 A 確認接手" in table.page.inner_text("#hotseatStatus"), timeout=5)
+        if proof:
+            table.page.screenshot(path=str(Path(proof) / "2_handoff_after_a.png"))
+        # 按住的 A 不穿透交接；放開後接手席位的下一次 A 才交接。
+        time.sleep(1.2)
+        st = table.hs()
+        assert st["view"] == "handoff" and st["displayedSeat"] == prev["player_id"] and st["session"]["unlocked"] is False
+        release_a(fake, nxt["port"])
+        press_a(fake, table.humans[expected]["port"])
+        assert wait_until(lambda: (lambda s: s["view"] == "open" and s["displayedSeat"] == expected)(table.hs()), timeout=20), table.hs()
+        if proof:
+            table.page.screenshot(path=str(Path(proof) / "3_next_player_open.png"))
+
+        # 下一輪：同樣由分頁連線結束回合，滑鼠「知道了」也立即生效。
+        table.play_until(lambda s: s["aiPublic"]["open"] and s["aiPublic"]["ended"] and s["view"] == "waiting", limit=120, via_page=True)
+        assert table.awaiting()
+        table.page.click("#hotseatAiDismiss")
+        assert wait_until(lambda: table.released_to_next(), timeout=4), "知道了沒有確認"
+        assert game.ai_red_army_ack["acknowledged"] is True
         assert not table.errors, table.errors
     finally:
         table.close()

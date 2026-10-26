@@ -13,7 +13,7 @@ route 攔截（不打到伺服器、不建立或破壞任何房間），只證�
   1. 不到 2 秒放開不開；搖桿離開中央立即取消（回中也不恢復）；滿 2 秒開啟置中的「遊戲選單」。
   2. 開啟時 STICK 仍按住：放開前 A 不作用（held-button 不穿透）。
   3. 搖桿上下導覽（不循環）、左右與其他鍵不作用；B 返回遊戲並還原開啟前的焦點。
-  4. Joy-Con 設定＝既有 Joy-Con 說明圖；重新開始＝第二層確認（明確顯示離開目前遊戲）；按住的 A／B 不連續觸發兩層；
+  4. Joy-Con 功能表＝既有 Joy-Con 說明圖；重新開始＝第二層確認（明確顯示離開目前遊戲）；按住的 A／B 不連續觸發兩層；
      確認層 B 回到遊戲選單（焦點在重新開始），選單 B 返回遊戲；選重新開始的 A 一直按住不會確認，放開後新的 A
      才點「確認重新開始」導向 /new-game。
   5. 左 Joy-Con（v2）同樣可開啟；其他 Joy-Con 的 frame 不能開啟；其他 overlay／交接遮罩期間不開啟。
@@ -253,7 +253,7 @@ def test_hold_threshold_neutral_cancel_navigation_settings_and_two_level_back(br
         f = focus_id(page)
         assert f["sig"] == "#gameMenuResumeBtn" and f["active"] == "gameMenuResumeBtn" and f["ring"], f
         layout = menu_layout(page)
-        assert layout["options"] == ["返回遊戲", "Joy-Con 設定", "重新開始…"], layout
+        assert layout["options"] == ["返回遊戲", "Joy-Con 功能表", "重新開始…"], layout
         assert abs(layout["glass"]["cx"] - layout["stage"]["cx"]) < 8 and abs(layout["glass"]["cy"] - layout["stage"]["cy"]) < 8, layout
         assert "遊戲選單" in hint(page) and "B 返回遊戲" in hint(page), hint(page)
         ev.record(page, hits, "menu-open", "02_menu_open")
@@ -287,7 +287,7 @@ def test_hold_threshold_neutral_cancel_navigation_settings_and_two_level_back(br
         assert pad(page)["scope"] in ("page", "map") and pad(page)["focusSig"] == page_focus, (pad(page), page_focus)
         ev.record(page, hits, "b-returned-to-game")
 
-        # 4a. Joy-Con 設定＝既有 Joy-Con 說明圖（B 照既有流程關閉）。
+        # 4a. Joy-Con 功能表＝既有 Joy-Con 說明圖（B 照既有流程關閉）。
         open_menu(page)
         stick(page, "down")
         press(page, "A")

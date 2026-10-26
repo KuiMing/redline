@@ -97,7 +97,7 @@ async def broadcast_game_state(game_id, game, last_action_result=None):
     async def _rebroadcast():
         await broadcast_game_state(game_id, game)
 
-    await drive_red_army_turns(game_id, game, _rebroadcast)
+    await drive_red_army_turns(game_id, game, _rebroadcast, detach_ack_wait=True)
 
 
 def schedule_reaction_timeout(game_id, game):

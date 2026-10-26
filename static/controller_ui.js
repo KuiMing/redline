@@ -890,7 +890,7 @@
   }
 
   // ------------------------------------------------------------ 遊戲選單（遊戲中按住搖桿按鈕 2 秒）
-  // 開啟、導覽、取消都只改這個分頁的 DOM（不送遊戲 mutation、不消耗行動、不動地圖）；「Joy-Con 設定」點既有說明按鈕，
+  // 開啟、導覽、取消都只改這個分頁的 DOM（不送遊戲 mutation、不消耗行動、不動地圖）；「Joy-Con 功能表」點既有說明按鈕，
   // 「重新開始」先開第二層確認，確認後才點既有的 /new-game 連結。
   const GAME_MENU_IDS = new Set([Core.GAME_MENU_MODAL_ID, Core.GAME_MENU_CONFIRM_ID]);
 
@@ -997,7 +997,7 @@
     renderHud();
   }
 
-  /** 「Joy-Con 設定」：關閉選單後走既有 Joy-Con 說明按鈕（openJoyconHelp）；說明圖的 B／× 照既有流程關閉。 */
+  /** 「Joy-Con 功能表」：關閉選單後走既有 Joy-Con 說明按鈕（openJoyconHelp）；說明圖的 B／× 照既有流程關閉。 */
   function openGameMenuSettings() {
     if (gameMenuLevel() !== 'menu') return;
     closeGameMenu({ silent: true });
@@ -1352,7 +1352,7 @@
           <button id="padReconnectBtn" type="button">重新連線</button>
           <button id="padResetBtn" type="button">預設</button>
         </div>
-        <div class="pad-note">搖桿＝移動　A 確認　B 返回　R/SR 六個區段＋Joy-Con 說明按鈕（A 開圖、B 關閉）　Y 說明<br>Capture 結束行動（確認）　+ 陣營能力<br>卡牌：A 查看　手牌 X 資源／Y 行動（一般奧援 X＝棄置，需確認）　購買卡 B 選擇 → Y 購買所選（確認）<br>地圖目標：A 選取　Y 建立組織／確認移動／瓦解組織<br>ZR（戰略地圖）：放大一級，到最大後再按回到最小<br>SL 地圖聚焦：依統治者／陣營區域選任一城鎮，置中放大（只改地圖畫面）<br>遊戲中按住搖桿 2 秒：遊戲選單（返回遊戲／Joy-Con 設定／重新開始需確認）</div>
+        <div class="pad-note">搖桿＝移動　A 確認　B 返回　R/SR 六個區段＋Joy-Con 說明按鈕（A 開圖、B 關閉）　Y 說明<br>Capture 結束行動（確認）　+ 陣營能力<br>卡牌：A 查看　手牌 X 資源／Y 行動（一般奧援 X＝棄置，需確認）　購買卡 B 選擇 → Y 購買所選（確認）<br>地圖目標：A 選取　Y 建立組織／確認移動／瓦解組織<br>ZR（戰略地圖）：放大一級，到最大後再按回到最小<br>SL 地圖聚焦：依統治者／陣營區域選任一城鎮，置中放大（只改地圖畫面）<br>遊戲中按住搖桿 2 秒：遊戲選單（返回遊戲／Joy-Con 功能表／重新開始需確認）</div>
       </div>`;
     stage.appendChild(hud);
     const $ = id => document.getElementById(id);

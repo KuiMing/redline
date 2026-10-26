@@ -4057,6 +4057,15 @@ body.victory-art-viewer-open {
   position: relative;
   z-index: 3;
 }
+/* 陣營選擇的陣營／具體陣營／根據地清單是 overflow:auto 捲動容器，上面的外擴 6px 焦點框在第一列與捲動後的最後一列會被裁掉；
+ * 這裡改成 3px 黃框畫在按鈕框線內（offset -3px）＋內側 2px 黑圈、不加外圈光暈，四邊永遠完整。按鈕尺寸／hit area 不變。 */
+#factionPicker #factionList .faction-choice-btn.rl-pad-focus,
+#factionPicker #factionVariantList .faction-choice-btn.rl-pad-focus,
+#factionPicker #factionBaseList .base-choice-btn.rl-pad-focus {
+  outline: 3px solid #ffe14d !important;
+  outline-offset: -3px !important;
+  box-shadow: inset 0 0 0 4px #000 !important;
+}
 #padHud { position: absolute; right: 8px; bottom: 6px; z-index: 90; display: flex; align-items: center; gap: 6px; flex-direction: row-reverse; font-size: 12px; }
 #padToggleBtn { width: 28px; height: 28px; padding: 0; border-radius: 14px; border: 1px solid rgba(255,255,255,0.35); background: rgba(10,16,32,0.82); color: #fff; cursor: pointer; line-height: 1; font-size: 14px; opacity: 0.7; }
 #padToggleBtn:hover, #padHud[data-status="connected"] #padToggleBtn { opacity: 1; }

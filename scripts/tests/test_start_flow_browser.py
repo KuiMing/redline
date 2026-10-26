@@ -9,6 +9,7 @@ ControllerRegistry＋WebSocket bridge app，由測試執行緒以 fixture 的 FT
 """
 from __future__ import annotations
 
+import base64
 import json
 import os
 import socket
@@ -1044,6 +1045,116 @@ def test_joycon_faction_picker_rebel_variant_then_base_and_b_chain_back_out(brow
     game_id, lobby = lobby_of(app_url, page)
     pid = page.evaluate("window.RedlineSession.current().playerId")
     assert pid not in (lobby.get("factions") or {}), lobby
+    page.context.close()
+
+
+# 陣營選擇清單（陣營／具體陣營／根據地）的 Joy-Con 焦點框：量 computed outline、按鈕 bounding box 是否因焦點改變，
+# 以及整個黃框是否落在清單捲動容器的可視範圍內（清單是 overflow:auto，框畫到按鈕外面就會被裁掉）。
+PICKER_RING_JS = """() => {
+  const el = document.querySelector('#factionPicker .rl-pad-focus');
+  if (!el) return null;
+  const list = el.parentElement;
+  const cs = getComputedStyle(el);
+  const width = parseFloat(cs.outlineWidth), offset = parseFloat(cs.outlineOffset);
+  const box = r => ({ left: r.left, top: r.top, right: r.right, bottom: r.bottom, width: r.width, height: r.height });
+  const focused = box(el.getBoundingClientRect());
+  el.classList.remove('rl-pad-focus');
+  const plain = box(el.getBoundingClientRect());
+  el.classList.add('rl-pad-focus');
+  const out = Math.max(0, width + offset);  // 黃框超出按鈕框線的距離（offset 為負＝畫在按鈕內）
+  const lr = list.getBoundingClientRect();
+  const clip = { left: lr.left + list.clientLeft, top: lr.top + list.clientTop };
+  clip.right = clip.left + list.clientWidth; clip.bottom = clip.top + list.clientHeight;
+  const ring = { left: focused.left - out, top: focused.top - out, right: focused.right + out, bottom: focused.bottom + out };
+  return {
+    text: el.textContent.trim(), list: list.id, width, offset, style: cs.outlineStyle, color: cs.outlineColor,
+    shadow: cs.boxShadow, focused, plain, ring, clip,
+    ringInside: ring.left >= clip.left - 0.5 && ring.top >= clip.top - 0.5 && ring.right <= clip.right + 0.5 && ring.bottom <= clip.bottom + 0.5,
+  };
+}"""
+
+# 在正式 Browser 截圖上取黃框四邊中點的像素（瀏覽器 canvas 解碼 PNG），確認四邊都真的畫出黃色。
+RING_PIXELS_JS = """async ([png, m]) => {
+  const img = new Image();
+  img.src = 'data:image/png;base64,' + png;
+  await img.decode();
+  const c = document.createElement('canvas');
+  c.width = img.naturalWidth; c.height = img.naturalHeight;
+  const g = c.getContext('2d');
+  g.drawImage(img, 0, 0);
+  const d = m.offset + m.width / 2;  // 黃框中線距按鈕框線的距離（負＝在按鈕內）
+  const f = m.focused, cx = (f.left + f.right) / 2, cy = (f.top + f.bottom) / 2;
+  const at = (x, y) => Array.from(g.getImageData(Math.floor(x), Math.floor(y), 1, 1).data.slice(0, 3));
+  return { top: at(cx, f.top - d), bottom: at(cx, f.bottom + d - 1), left: at(f.left - d, cy), right: at(f.right + d - 1, cy), size: [c.width, c.height] };
+}"""
+
+GLOBAL_RING_JS = """() => {
+  const b = document.createElement('button');
+  b.className = 'rl-pad-focus';
+  document.getElementById('designStage').appendChild(b);
+  const cs = getComputedStyle(b);
+  const r = { width: parseFloat(cs.outlineWidth), offset: parseFloat(cs.outlineOffset), shadow: cs.boxShadow };
+  b.remove();
+  return r;
+}"""
+
+
+def assert_picker_ring(page, list_id, proof_name=None):
+    m = page.evaluate(PICKER_RING_JS)
+    assert m and m["list"] == list_id, m
+    # 縮小後的焦點框：3px 黃框畫在按鈕框線內（outline-offset -3px），只剩內側 inset 黑圈，沒有外圈光暈。
+    assert (m["width"], m["offset"], m["style"]) == (3, -3, "solid"), m
+    assert m["color"] == "rgb(255, 225, 77)", m
+    assert m["shadow"].startswith("rgb(0, 0, 0)") and m["shadow"].endswith("inset") and m["shadow"].count("rgb") == 1, m
+    # 焦點不改按鈕尺寸與位置（hit area 不變）。
+    assert m["focused"] == m["plain"], m
+    # 按鈕完整在清單可視範圍內，黃框四邊都沒有被清單捲動容器裁掉。
+    assert m["ringInside"], m
+    png = page.screenshot()
+    px = page.evaluate(RING_PIXELS_JS, [base64.b64encode(png).decode(), m])
+    assert px["size"] == [1280, 720], px
+    for side in ("top", "bottom", "left", "right"):
+        r, g, b = px[side]
+        assert r >= 200 and g >= 180 and b <= 140, (side, px, m)
+    proof_dir = os.environ.get("REDLINE_FACTION_FOCUS_PROOF_DIR")
+    if proof_dir and proof_name:
+        Path(proof_dir).mkdir(parents=True, exist_ok=True)
+        Path(proof_dir, proof_name).write_bytes(png)
+    return m
+
+
+def test_joycon_faction_picker_focus_ring_is_compact_and_unclipped(browser, app_url, joycons):
+    """陣營／具體陣營／根據地的 Joy-Con 焦點框畫在按鈕內，清單邊緣（第一列、捲動後的最後一列）四邊完整；全域焦點框不變。
+    synthetic bridge（fixture 封包），不取代實體 Joy-Con 驗證。"""
+    page = open_picker_with_pad(browser, app_url, joycons)
+    port = 24801
+    g = page.evaluate(GLOBAL_RING_JS)
+    assert (g["width"], g["offset"]) == (4, 2) and "16px 4px" in g["shadow"], g
+
+    # 陣營：初始焦點在 #factionList 第一個（清單沒有 padding，框若畫在外面會被頂邊／左邊裁掉）。
+    wait_phase(page, "faction")
+    assert_picker_ring(page, "factionList", "faction_first.png")
+    pad_nav_to(page, joycons, port, "#factionList .faction-choice-btn", "反賊")
+    assert_picker_ring(page, "factionList", "faction_rebel.png")
+
+    # 具體陣營（反賊）：第一個，以及捲到清單最後一列的最後一個。
+    joycons.press(port, "A")
+    s = wait_phase(page, "variant")
+    assert s["focusIn"] == "factionVariantList", s
+    assert_picker_ring(page, "factionVariantList", "variant_first.png")
+    last_variant = page.evaluate("[...document.querySelectorAll('#factionVariantList .faction-choice-btn')].pop().textContent.trim()")
+    pad_nav_to(page, joycons, port, "#factionVariantList .faction-choice-btn", last_variant, limit=40)
+    assert page.evaluate("document.getElementById('factionVariantList').scrollTop") > 0, "最後一列需要捲動才看得到"
+    assert_picker_ring(page, "factionVariantList", "variant_last.png")
+
+    # 根據地：第一個與最後一個。
+    joycons.press(port, "A")
+    s = wait_phase(page, "base")
+    assert s["focusIn"] == "factionBaseList", s
+    assert_picker_ring(page, "factionBaseList", "base_first.png")
+    last_base = page.evaluate("[...document.querySelectorAll('#factionBaseList .base-choice-btn:not(:disabled)')].pop().textContent.trim()")
+    pad_nav_to(page, joycons, port, "#factionBaseList .base-choice-btn", last_base, limit=40)
+    assert_picker_ring(page, "factionBaseList", "base_last.png")
     page.context.close()
 
 
