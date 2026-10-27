@@ -29,6 +29,8 @@ let factionPickerPadPhase = 'faction'; // Joy-Con 陣營選擇階段：faction�
 let factionPickerPadBusy = false;
 let factionDetailScrollKey = null;    // 右側陣營資訊目前內容（陣營｜根據地）；改變時捲回頂端
 let activeChoiceModal = null;
+// 多選玩家目標（情報網 A 內鬥放置對象）的勾選暫存：以 choice_id 為鍵，狀態推送重繪 modal 時保留已選玩家。
+let multiTargetChoiceSelection = { choiceId: null, ids: [] };
 let lastFactionActionResultKey = null;
 let activeSharedFactionActionResult = null;
 let lastSupportChoiceMapHighlightPayload = null;
@@ -2910,6 +2912,8 @@ function renderChoiceModal(state) {
       };
       cards.appendChild(btn);
     });
+  } else if (choiceType === 'target_choice' && choice.multi_select) {
+    renderMultiTargetChoice(choice, cards, resolveCurrentChoice);
   } else if (choiceType === 'target_choice' || (choiceType === 'support_flow_choice' && choice.step === 'target')) {
     const row = document.createElement('div');
     row.className = 'modal-choice-row';
@@ -2948,6 +2952,66 @@ function renderChoiceModal(state) {
     closeBtn.style.display = 'none';
   }
   overlay.style.display = 'flex';
+}
+
+// 多選玩家目標（情報網 A：在 1 至 count 位其他玩家棄牌堆各放入 1 張內鬥）。點選切換、上限內才可加選，
+// 確認鈕在已選人數合法時才啟用；送出 target_player_ids，伺服器再完整驗證。按鈕文字固定為玩家名稱
+// （已選以 aria-pressed／樣式表示），Joy-Con 焦點靠文字 sig 重綁時才不會因勾選而跳走。
+function renderMultiTargetChoice(choice, container, resolveCurrentChoice) {
+  const targets = (choice.targets || []).filter(entry => entry && typeof entry.id === 'string');
+  const maxCount = Math.max(1, Math.min(Number(choice.count || 1), targets.length));
+  const minCount = Math.max(1, Number(choice.min_count ?? 1));
+  if (multiTargetChoiceSelection.choiceId !== choice.choice_id) {
+    multiTargetChoiceSelection = { choiceId: choice.choice_id, ids: [] };
+  }
+  const offeredIds = new Set(targets.map(entry => entry.id));
+  const selected = multiTargetChoiceSelection.ids.filter(id => offeredIds.has(id)).slice(0, maxCount);
+  multiTargetChoiceSelection.ids = selected;
+
+  const row = document.createElement('div');
+  row.className = 'modal-choice-row divide-target-choices multi-target-choices';
+  const summary = document.createElement('div');
+  summary.className = 'choice-multi-selection-summary';
+  const confirmBtn = document.createElement('button');
+  confirmBtn.id = 'choiceMultiTargetConfirm';
+  confirmBtn.className = 'modal-choice-btn divide-target-confirm';
+  confirmBtn.type = 'button';
+  const selectionValid = () => selected.length >= minCount && selected.length <= maxCount;
+  const refresh = () => {
+    summary.textContent = `已選 ${selected.length}／${maxCount} 位（可選 ${minCount}～${maxCount} 位）`;
+    confirmBtn.textContent = `確認選擇（${selected.length}／${maxCount}）`;
+    confirmBtn.disabled = !selectionValid();
+  };
+  row.appendChild(summary);
+  targets.forEach((entry) => {
+    const btn = document.createElement('button');
+    btn.className = 'modal-choice-btn divide-target-choice multi-target-choice';
+    btn.type = 'button';
+    btn.dataset.targetPlayerId = entry.id;
+    btn.textContent = entry.label || entry.id;
+    const sync = () => {
+      const on = selected.includes(entry.id);
+      btn.classList.toggle('divide-target-selected', on);
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    };
+    btn.onclick = () => {
+      const at = selected.indexOf(entry.id);
+      if (at >= 0) selected.splice(at, 1);
+      else if (selected.length < maxCount) selected.push(entry.id);
+      sync();
+      refresh();
+    };
+    sync();
+    row.appendChild(btn);
+  });
+  confirmBtn.onclick = () => {
+    if (!selectionValid()) return;
+    resolveCurrentChoice(null, { target_player_ids: [...selected] });
+    closeChoiceModal();
+  };
+  row.appendChild(confirmBtn);
+  refresh();
+  container.appendChild(row);
 }
 
 const EVENT_CARD_ART_NAMES = new Set([

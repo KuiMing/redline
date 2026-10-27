@@ -4561,6 +4561,10 @@ class Game(CardPlayMixin):
                     for entry in (self.pending_choice.get('targets') or [])
                 ],
                 'step': self.pending_choice.get('step'),
+                # Multi-pick player-target choice (情報網 A 內鬥放置對象): resolve with
+                # target_player_ids (or indices) of min_count..count entries from `targets`.
+                # Only present when true, so every other choice's projection is unchanged.
+                **({'multi_select': True} if self.pending_choice.get('multi_select') else {}),
             }
         return pending_choice
 

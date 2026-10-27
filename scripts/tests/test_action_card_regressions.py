@@ -886,6 +886,12 @@ def test_intel_network_first_branch_adds_internal_conflict_without_running_other
     assert result.get('success'), result
     resolved = g.resolve_pending_choice(p1.id, 0)
     assert resolved.get('success'), resolved
+    # A 會先開啟內鬥放置對象選擇（不再自動放給所有其他玩家）；這裡明確選滿 3 位。
+    assert resolved.get('pending_choice') is True, resolved
+    assert g.pending_choice['choice_key'] == 'intel_network_internal_conflict_targets'
+    assert names(p2.deck.discard_pile) == ['棄牌A']
+    picked = g.resolve_pending_choice(p1.id, None, target_player_ids=[p2.id, p3.id, p4.id])
+    assert picked.get('success'), picked
     assert names(p1.deck.discard_pile) == ['情報網']
     assert names(p2.deck.discard_pile) == ['棄牌A', '內鬥']
     assert names(p3.deck.discard_pile) == ['棄牌B', '內鬥']
@@ -3406,6 +3412,13 @@ def test_intel_network_first_option_adds_internal_conflict_to_up_to_three_other_
     resolved = g.resolve_pending_choice(actor.id, 0)
 
     assert resolved.get('success'), resolved
+    assert resolved.get('pending_choice') is True, resolved
+    picker = g.pending_choice
+    assert picker['choice_key'] == 'intel_network_internal_conflict_targets'
+    assert [target['id'] for target in picker['targets']] == [enemy_a.id, enemy_b.id, enemy_c.id]
+    assert picker['count'] == 3
+    picked = g.resolve_pending_choice(actor.id, None, target_player_ids=[enemy_a.id, enemy_b.id, enemy_c.id])
+    assert picked.get('success'), picked
     assert names(actor.deck.discard_pile) == ['情報網']
     assert names(enemy_a.deck.discard_pile) == ['內鬥']
     assert names(enemy_b.deck.discard_pile) == ['內鬥']

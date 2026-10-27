@@ -336,7 +336,7 @@ def _pending_choice_action_entry(pending: dict) -> dict:
             entry["index_range"] = [0, len(values) - 1]
             entry[key] = values
             break
-    if pending.get("type") == "multi_card_choice":
+    if pending.get("type") == "multi_card_choice" or pending.get("multi_select"):
         entry["use_indices_param"] = True
         entry["count"] = pending.get("count")
         entry["min_count"] = pending.get("min_count")

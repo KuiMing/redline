@@ -2363,6 +2363,18 @@ body.joycon-help-open {
   grid-column: 1 / -1;
 }
 
+/* 情報網 A 多選對象：放在 #choiceModalCards（3 欄卡牌 grid）內時橫跨整列，玩家名稱不被擠壓。 */
+.choice-card-grid > .multi-target-choices {
+  grid-column: 1 / -1;
+  width: 100%;
+  gap: 10px;
+}
+
+/* 已選玩家前加勾號（不改按鈕文字，Joy-Con 焦點 sig 保持不變）。 */
+.multi-target-choice.divide-target-selected::before {
+  content: '✓ ';
+}
+
 .modal-choice-row.red-army-action-choices {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
