@@ -328,6 +328,13 @@ class EffectEngine:
             if not removable:
                 return
             if source_name in {'宣傳家', '思想家', '資助者', '資本家', '分神'} and current_card is not None:
+                if context.get('borrowed_purchase_area_index') is not None:
+                    # 企業人脈借用購買區正面朝上的牌：只是臨時複本，沒有實體牌被移除，
+                    # 不可回補常設供應；複本直接消失（不進手牌/棄牌堆），購買區原牌不動。
+                    context['removed_current_card'] = True
+                    if hasattr(game, 'log'):
+                        game.log(f"{player.name} resolved borrowed {source_name}; static purchase supply unchanged")
+                    return {'removed_current_card': True, 'removed_card': None}
                 returned = game._return_removed_card_to_purchase_supply(current_card) if hasattr(game, '_return_removed_card_to_purchase_supply') else None
                 context['removed_current_card'] = True
                 if hasattr(game, 'log'):

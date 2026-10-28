@@ -35,6 +35,7 @@ let lastFactionActionResultKey = null;
 let activeSharedFactionActionResult = null;
 let lastSupportChoiceMapHighlightPayload = null;
 let lastEventRevealKey = null;
+let lastReactionRevealChoiceId = null;
 let lastPlayerErrorModalKey = null;
 let outboundActionSequence = 0;
 let unavailableActionModalReturnFocus = null;
@@ -3185,11 +3186,32 @@ function renderCurrentEvent(state) {
   if (revealOverlay?.style.display === 'flex' && revealCard) {
     revealCard.innerHTML = eventCardMarkup(event, true);
   }
-  const revealKey = `${state.turn ?? 0}:${event.id || event.name || 'event'}`;
-  if (lastEventRevealKey !== revealKey) {
-    lastEventRevealKey = revealKey;
-    openCurrentEventReveal();
-  }
+  // 取消反應（爆料黑幕／產業滲透／情報網）視窗開著時不自動揭示，且同一次觸發在反應結束後（含客廳輪流整頁重新載入）也不補開；
+  // 判定見 event_reveal_core.js。手動點「事件卡」分頁照常可看。
+  const decision = window.RedlineEventRevealCore.decideAutoReveal({
+    state,
+    viewerId: playerId,
+    lastKey: lastEventRevealKey,
+    suppressed: loadEventRevealSuppressed(),
+    lastReactionChoiceId: lastReactionRevealChoiceId,
+  });
+  lastReactionRevealChoiceId = decision.reactionChoiceId;
+  if (decision.record) saveEventRevealSuppressed(decision.record);
+  if (decision.closeForReaction) closeEventReveal();
+  lastEventRevealKey = decision.key;
+  if (decision.open) openCurrentEventReveal();
+}
+
+function loadEventRevealSuppressed() {
+  const Core = window.RedlineEventRevealCore;
+  try { return Core.normalizeSuppressed(JSON.parse(sessionStorage.getItem(Core.STORAGE_KEY) || 'null'), gameId); } catch { return []; }
+}
+
+function saveEventRevealSuppressed(token) {
+  const Core = window.RedlineEventRevealCore;
+  try {
+    sessionStorage.setItem(Core.STORAGE_KEY, JSON.stringify(Core.rememberSuppressed(loadEventRevealSuppressed(), gameId, token)));
+  } catch { /* storage may be blocked */ }
 }
 
 function minimizeEraAchievement() {

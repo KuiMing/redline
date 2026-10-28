@@ -109,3 +109,37 @@ test('訪客看到的房主設定摘要', () => {
     '真人紅軍｜簡單模式｜操作：電腦');
   assert.equal(S.settingsSummary(null), null);
 });
+
+// ---- 重新開始沿用上一局的 Joy-Con 配對（hotseat_ui.prepareRestart 寫入 sessionStorage）
+test('normalizeCarryover：2～4 支不重複的合法 id、未過期才沿用；其他 fail closed', () => {
+  const now = 1_000_000;
+  const ok = { v: 1, controllers: [C2, C1], at: now - 1000 };
+  assert.deepEqual(S.normalizeCarryover(ok, now), { controllers: [C2, C1] });
+  assert.equal(S.normalizeCarryover(null, now), null);
+  assert.equal(S.normalizeCarryover({ ...ok, v: 2 }, now), null);
+  assert.equal(S.normalizeCarryover({ ...ok, controllers: [C1] }, now), null, '只有一支不是客廳輪流');
+  assert.equal(S.normalizeCarryover({ ...ok, controllers: [C1, C2, C3, C4, C5] }, now), null);
+  assert.equal(S.normalizeCarryover({ ...ok, controllers: [C1, C1] }, now), null);
+  assert.equal(S.normalizeCarryover({ ...ok, controllers: [C1, 'nope'] }, now), null);
+  assert.equal(S.normalizeCarryover({ ...ok, at: now - S.CARRYOVER_TTL_MS - 1 }, now), null, '過期');
+  assert.equal(S.normalizeCarryover({ ...ok, at: now + 5000 }, now), null, '未來時間');
+  assert.equal(S.normalizeCarryover({ ...ok, at: 'x' }, now), null);
+  assert.equal(S.CARRYOVER_KEY, 'redline.startflow.carryover.v1');
+});
+
+test('carryoverPairing：依 P1～Pn 帶入，AI 紅軍上限 3 支截斷；已帶入的 SL＋SR 不重複配對', () => {
+  const carry = { controllers: [C2, C1, C3, C4] };
+  const human = S.carryoverPairing(carry, S.maxControllers(false));
+  assert.deepEqual(human.order, [C2, C1, C3, C4]);
+  assert.deepEqual(S.slots(human).map(s => s.controller), [C2, C1, C3, C4]);
+  assert.equal(S.canContinue({ controlMode: 'joycon' }, human), true);
+  const ai = S.carryoverPairing(carry, S.maxControllers(true));
+  assert.deepEqual(ai.order, [C2, C1, C3]);
+  assert.deepEqual(S.carryoverPairing(null, 4).order, []);
+  // 已帶入的手把再按 SL＋SR：不會被加第二次（第一筆只當 baseline）。
+  let p = S.carryoverPairing({ controllers: [C2, C1] }, 4);
+  p = S.observeFrame(p, C1, 1, NONE).pairing;
+  const r = S.observeFrame(p, C1, 1, CHORD);
+  assert.equal(r.added, null);
+  assert.deepEqual(r.pairing.order, [C2, C1]);
+});

@@ -111,9 +111,34 @@
     };
   }
 
+  // ---------------------------------------------------------------- 重新開始沿用的 Joy-Con 配對
+  // 上一局（客廳輪流，每一席都綁了手把）經既有 /new-game 重新開始時，hotseat_ui 在導向前把既有座位順序的手把寫進
+  // sessionStorage（同一分頁）。新的開始流程：起始導覽只交給 P1 那一支、選 Joy-Con 時直接帶入 P1～Pn，不必再按 SL＋SR。
+  // 內容不可信：格式不合、過期或不是 2～4 支不重複的合法 id → null（照常配對）。
+  const CARRYOVER_KEY = 'redline.startflow.carryover.v1';
+  const CARRYOVER_TTL_MS = 30 * 60 * 1000;
+
+  function normalizeCarryover(raw, now) {
+    if (!raw || typeof raw !== 'object' || raw.v !== 1 || !Array.isArray(raw.controllers)) return null;
+    const at = Number(raw.at);
+    const t = Number(now);
+    if (!Number.isFinite(at) || !Number.isFinite(t) || at > t || t - at > CARRYOVER_TTL_MS) return null;
+    const controllers = raw.controllers;
+    if (controllers.length < 2 || controllers.length > MAX_CONTROLLERS) return null;
+    if (!controllers.every(isControllerId) || new Set(controllers).size !== controllers.length) return null;
+    return { controllers: controllers.slice() };
+  }
+
+  /** 沿用的配對（依上限截斷：AI 紅軍只能 3 支）；沒有沿用 → 空的新配對。 */
+  function carryoverPairing(carry, max) {
+    const pairing = createPairing(max);
+    if (!carry || !Array.isArray(carry.controllers)) return pairing;
+    return { ...pairing, order: carry.controllers.filter(isControllerId).slice(0, pairing.max) };
+  }
+
   return {
-    MARKET_MODES, CONTROL_MODES, MAX_CONTROLLERS, MIN_CONTROLLERS,
+    MARKET_MODES, CONTROL_MODES, MAX_CONTROLLERS, MIN_CONTROLLERS, CARRYOVER_KEY, CARRYOVER_TTL_MS,
     isControllerId, maxControllers, normalizeDraft, createPairing, setPairingMax, observeFrame, removeController,
-    slots, canContinue, createSettings, cleanRoomCode, settingsSummary,
+    slots, canContinue, createSettings, cleanRoomCode, settingsSummary, normalizeCarryover, carryoverPairing,
   };
 });

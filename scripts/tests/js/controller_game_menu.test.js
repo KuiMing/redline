@@ -314,7 +314,9 @@ test('index.html: the two layers exist, are hidden by default, and the new scrip
   assert.match(html, /<div id="gameMenuModal"[^>]*aria-hidden="true" style="display:none;">/);
   assert.match(html, /<div id="gameMenuConfirmModal"[^>]*aria-hidden="true" style="display:none;">/);
   assert.ok(html.includes('離開目前遊戲'));
-  for (const file of ['controller_core.js', 'controller_ui.js', 'style.css']) {
-    assert.ok(html.includes(`/static/${file}?v=stick-game-menu-20261026`), file);
+  assert.ok(html.includes('/static/style.css?v=stick-game-menu-20261026'), 'style.css');
+  // controller_core／controller_ui 之後又改過（重新開始沿用 P1 起始導覽）：帶更新的 cache tag。
+  for (const file of ['controller_core.js', 'controller_ui.js']) {
+    assert.ok(html.includes(`/static/${file}?v=reaction-victory-controller-20261027`), file);
   }
 });

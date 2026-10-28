@@ -46,6 +46,7 @@
     // 起始畫面導覽（start_flow_ui.js 以 setStartNav 開關）：恰好一支有訊號的 Joy-Con 時自動 claim 它操作開始流程。
     // 未啟用搖桿控制時只為此開一條暫時連線（不寫入設定）；navClaim＝自動 claim 的那一支（不存成手把偏好、不綁席位）。
     startNav: false,
+    navPreferred: null, // 重新開始沿用的 P1：起始導覽只拿這一支（start_flow_ui.js 提供；沒有＝恰好一支的既有規則）
     navClaim: null,
     // 已送出的起始導覽 claim。即使離開起始流程時 claim 尚未完成，也不得把晚到的 ownership 當成一般手把並保存。
     navTransientClaim: null,
@@ -281,7 +282,7 @@
    * 它的輸入（unbound）並 release。不送任何 server mutation、不綁定玩家席位。
    */
   function syncNavClaim() {
-    const decision = Core.startNavDecision(ctl.roster, ctl.binding.owned);
+    const decision = Core.startNavDecision(ctl.roster, ctl.binding.owned, ctl.navPreferred);
     if (!decision) return;
     if (decision.type === 'release') { revokeNav(); return; }
     if (ctl.claimInFlight) return;
@@ -301,9 +302,17 @@
     if (ctl.claimInFlight !== 'release') sendClaim({ type: 'release' });
   }
 
-  /** start_flow_ui.js：起始畫面（尚未進入正式 SL＋SR 配對）顯示中＝on；離開、進入配對或改用既有 session＝off。 */
-  function setStartNav(on) {
+  /**
+   * start_flow_ui.js：起始畫面（尚未進入正式 SL＋SR 配對）顯示中＝on；離開、進入配對或改用既有 session＝off。
+   * opts.preferred：重新開始沿用的 P1 手把（只認這一支）；沒給＝恰好一支有訊號的既有規則。
+   */
+  function setStartNav(on, opts) {
     const next = !!on;
+    const preferred = opts && Core.isControllerId(opts.preferred) ? opts.preferred : null;
+    if (preferred !== ctl.navPreferred) {
+      ctl.navPreferred = preferred;
+      if (initialized && next && next === ctl.startNav) maybeAutoClaim(); // 同一畫面改了偏好：立即重新判定（不是 P1 的會被 release）
+    }
     // init() 之前（設定與 bridge 位址尚未載入）只記下，由 init() 依 live() 連線；不可先連預設位址。
     if (!initialized) { ctl.startNav = next; return; }
     if (next === ctl.startNav) { if (next && live() && !ctl.socket && !ctl.reconnectTimer) connect(); return; }
@@ -1032,8 +1041,11 @@
     if (gameMenuLevel() !== 'confirm') return;
     closeGameMenu({ silent: true });
     const link = document.getElementById('emergencyNewGameBtn');
-    if (link && link.getAttribute('href') === '/new-game') link.click();
-    else window.location.assign('/new-game');
+    if (link && link.getAttribute('href') === '/new-game') link.click(); // 連結的 click（capture）由 hotseat_ui 記下沿用的配對
+    else {
+      window.RedlineHotSeat?.prepareRestart?.();
+      window.location.assign('/new-game');
+    }
   }
 
   /** 選單開著時離開遊戲畫面、交接遮罩或回到開始流程：關閉（不還原焦點）。 */
@@ -1595,7 +1607,7 @@
       },
       // 這個分頁擁有的手把（bridge roster 為準）與清單摘要；inputKey＝目前 reducer 屬於哪一支／哪一個 epoch。
       // 起始畫面導覽：on＝start flow 要求、live＝目前允許連線（含暫時連線）、claim＝自動 claim 的那一支（不是玩家席位）。
-      startNav: { on: ctl.startNav, live: live(), claim: ctl.navClaim, off: ctl.navOff, manual: ctl.navManual },
+      startNav: { on: ctl.startNav, live: live(), claim: ctl.navClaim, off: ctl.navOff, manual: ctl.navManual, preferred: ctl.navPreferred },
       controller: {
         mode: ctl.binding.mode, owned: ctl.binding.owned, side: ctl.binding.side, pref: { ...ctl.claimPref },
         claimInFlight: ctl.claimInFlight, notice: ctl.claimNotice, inputKey: ctl.inputKey,

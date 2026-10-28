@@ -73,6 +73,25 @@
 
   function findSeat(store, gameId, playerId) { return seatsFor(store, gameId).find(s => s.player_id === playerId) || null; }
 
+  /**
+   * P1＝本機 hot-seat 席位表的第一席（建立順序＝房主先、P2～Pn 依配對／新增順序 append，即既有座位順序）。
+   * 不是勝利者、也不是目前行動玩家。沒有席位 → null。
+   */
+  function firstSeat(store, gameId) { return seatsFor(store, gameId)[0] || null; }
+
+  /**
+   * 重新開始（既有 /new-game）時要沿用的手把配對：依既有座位順序（P1 起）每一席綁定的 controller id。
+   * 只有 hot-seat 啟用、本機二～四席（開始流程最多配對 4 支）、且每一席都綁了合法且不重複的手把時才沿用；否則 null（新的開始流程照常配對）。
+   */
+  function restartCarryover(store, gameId) {
+    if (!store || store.enabled !== true) return null;
+    const seats = seatsFor(store, gameId);
+    if (seats.length < 2 || seats.length > CODENAMES.length) return null;
+    const controllers = seats.map(s => s.controller);
+    if (!controllers.every(isControllerId) || new Set(controllers).size !== controllers.length) return null;
+    return { controllers };
+  }
+
   function seatForController(store, gameId, controllerId) {
     if (!controllerId) return null;
     return seatsFor(store, gameId).find(s => s.controller === controllerId) || null;
@@ -185,7 +204,12 @@
     if (!isHotSeatGame(store, gameId, connectedSeatId)) return { view: 'inactive', actor: null, seat: null, needsBinding: false };
     const seats = seatsFor(store, gameId);
     const actor = authoritativeActor(state, seats.map(s => s.player_id));
-    if (actor.kind === 'finished') return { view: 'open', actor, seat: findSeat(store, gameId, connectedSeatId), needsBinding: false };
+    // 遊戲結束：勝利畫面與遊戲選單一律交給 P1（不論誰獲勝、結束時是哪一席在操作）。畫面也以 P1 自己的 token 重新連線
+    // （reconnect），P1 的 Joy-Con 只操作 P1 自己的席位，不會用其他席位的連線送出任何動作。
+    if (actor.kind === 'finished') {
+      const p1 = firstSeat(store, gameId);
+      return { view: p1 && p1.player_id !== connectedSeatId ? 'reconnect' : 'open', actor, seat: p1, needsBinding: false };
+    }
     const seat = actor.playerId ? seats.find(s => s.player_id === actor.playerId) || null : null;
     if (!seat) return { view: 'waiting', actor, seat: null, needsBinding: false };
     const s = normalizeSession(session, gameId);
@@ -654,7 +678,7 @@
 
   return {
     STORE_KEY, SESSION_KEY, MAX_SEATS, CODENAMES, seatCodename, nextSeatCodename, orphanSeatId, codenameRenames,
-    isControllerId, normalizeStore, seatsFor, findSeat, seatForController, addSeat, bindController, unbindController,
+    isControllerId, normalizeStore, seatsFor, findSeat, firstSeat, restartCarryover, seatForController, addSeat, bindController, unbindController,
     isHotSeatGame, normalizeSession, confirmSession, lockSession, authoritativeActor, decide, masked, aiPublicView, aiLineText,
     aiNextLocalSeat, aiAckControllers, aiAckConfirm,
     confirmVerdict, allowsInput, bindableControllers, bindingLost, handoffTitle, reasonText,

@@ -28,6 +28,7 @@
     claimTimer: null,
     cancelled: false, // 配對畫面上 P1 按 B 取消了整個配對、尚未重新配對（再按 B＝「← 重新選擇」）
     cancelledBy: null, // 取消配對的那一支（原 P1）controller id：只有它的 B 能觸發「← 重新選擇」
+    carry: null, // 重新開始沿用的上一局配對（Core.normalizeCarryover）：起始導覽只給 P1、選 Joy-Con 時直接帶入 P1～Pn
   };
 
   const ctlApi = () => window.RedlineController || null;
@@ -68,6 +69,19 @@
     sf.cancelled = false;
     sf.cancelledBy = null;
   }
+
+  // ------------------------------------------------------------ 重新開始沿用的配對（hotseat_ui.prepareRestart 寫入；同一分頁）
+  function readCarry() {
+    try { return Core.normalizeCarryover(JSON.parse(sessionStorage.getItem(Core.CARRYOVER_KEY) || 'null'), Date.now()); } catch { return null; }
+  }
+
+  /** 不再沿用（P1 按 B 取消配對、房間已建立，或內容無效）：之後照常 SL＋SR 配對。 */
+  function dropCarry() {
+    sf.carry = null;
+    try { sessionStorage.removeItem(Core.CARRYOVER_KEY); } catch { /* ignore */ }
+  }
+
+  const carriedPrimary = () => (sf.carry ? sf.carry.controllers[0] : null);
 
   /** 已取消、尚未重新配對時，只有取消的那一支（fail closed：沒有記錄就沒有任何一支）可以按 B 回到重新選擇。 */
   const mayReturnToEntry = controller => sf.cancelled && !sf.pairing.order.length
@@ -174,6 +188,7 @@
    */
   function cancelPairing(controller) {
     cancelClaimFirst();
+    dropCarry(); // 明確取消＝不再沿用上一局的配對
     sf.pairing = Core.createPairing(sf.pairing.max);
     sf.cancelled = true;
     sf.cancelledBy = controller || null;
@@ -219,12 +234,14 @@
   const startNavWanted = () => !!$('startFlow') && !$('startFlow').hidden && !pairingActive();
   function syncStartNav() {
     const api = ctlApi();
-    if (api && typeof api.setStartNav === 'function') api.setStartNav(startNavWanted());
+    if (api && typeof api.setStartNav === 'function') api.setStartNav(startNavWanted(), { preferred: carriedPrimary() });
   }
 
   // ------------------------------------------------------------ 畫面
   function show(step, moveFocus) {
     closeAllListeners();
+    sf.carry = readCarry();
+    if (!sf.carry) dropCarry();
     hideAuto();
     setJoyconLobby(false);
     syncPreRoomAiSeat(false);
@@ -307,7 +324,17 @@
     syncStartNav(); // 進入配對：導覽手把先釋放，P1 一樣要按 SL＋SR
     if (mode === 'joycon') {
       const api = ctlApi();
-      if (api) { api.setEnabled(true); api.selectController(null); } // 配對連線自己 claim；主連線先不自動搶
+      // 重新開始沿用上一局的配對：直接帶入 P1～Pn（不必再按 SL＋SR），主連線拿 P1（A＝完成配對、B＝取消配對）。
+      if (sf.carry && !sf.pairing.order.length) {
+        sf.pairing = Core.carryoverPairing(sf.carry, Core.maxControllers(sf.draft.aiRedArmy));
+        sf.status = `已沿用上一局的 Joy-Con 配對（P1～P${sf.pairing.order.length}）：P1 按 A 完成配對。`;
+      }
+      const carried = !!sf.carry && sf.pairing.order[0] === carriedPrimary();
+      if (api) {
+        api.setEnabled(true);
+        if (carried) claimFirst(sf.pairing.order[0]);
+        else api.selectController(null); // 配對連線自己 claim；主連線先不自動搶
+      }
       syncListeners();
     } else {
       closeAllListeners();
@@ -319,7 +346,8 @@
   }
 
   function chooseEntry(ai) {
-    sf.draft = Core.normalizeDraft({ ...sf.draft, aiRedArmy: ai });
+    // 重新開始沿用配對：操作方式直接是 Joy-Con（玩家不必重新設定手把）。
+    sf.draft = Core.normalizeDraft({ ...sf.draft, aiRedArmy: ai, ...(sf.carry ? { controlMode: 'joycon' } : {}) });
     sf.pairing = Core.createPairing(Core.maxControllers(ai));
     showStep('setup', true);
     if (sf.draft.controlMode === 'joycon') chooseControl('joycon');
@@ -529,6 +557,7 @@
 
   function clearPending() {
     sf.pending = null;
+    dropCarry(); // 房間已建立（配對已寫成本機席位）
     try { sessionStorage.removeItem(PAIRING_KEY); } catch { /* ignore */ }
   }
 
@@ -606,6 +635,7 @@
       claimPending: !!sf.claimTimer,
       startNav: startNavWanted(),
       pending: sf.pending ? { settings: { ...sf.pending.settings }, controllers: sf.pending.controllers.slice() } : null,
+      carry: sf.carry ? { controllers: sf.carry.controllers.slice() } : null,
     }),
   };
 

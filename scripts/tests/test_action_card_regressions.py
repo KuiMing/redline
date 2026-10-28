@@ -724,6 +724,64 @@ def test_business_network_borrowed_transport_card_grants_its_action_effect_after
     assert names(g.purchase_area)[7] == '交通經驗乙'
 
 
+STATIC_SELF_TRASH_CARDS = ['宣傳家', '思想家', '資助者', '資本家', '分神']
+
+
+def _business_network_purchase_area(g):
+    return [card(g, name) for name in STATIC_SELF_TRASH_CARDS + ['內鬥', '合作談判', '交通經驗乙', '模仿戰術']]
+
+
+def test_business_network_borrowing_static_self_trash_card_keeps_static_supply_unchanged():
+    # 企業人脈只是借用購買區正面朝上的牌（臨時複本），結算後不可讓常設供應 +1。
+    for purchase_index, static_name in enumerate(STATIC_SELF_TRASH_CARDS):
+        g = make_game()
+        p = g.current_player()
+        # 固定據點/組織，讓宣傳家/思想家的建組織效果一定有合法城鎮（避免隨機開局造成不穩定）。
+        p.base = '北京'
+        p.organizations = {'北京': 1}
+        g.players[1].base = '巴黎'
+        g.players[1].organizations = {'巴黎': 1}
+        p.hand = [card(g, '企業人脈')]
+        p.resources = {'money': 0, 'propaganda': 0}
+        g.purchase_area = _business_network_purchase_area(g)
+        supply_before = dict(g.static_purchase_supply)
+
+        result = g.play_card(0, mode='action')
+        assert result.get('success'), (static_name, result)
+        assert g.pending_choice['choice_key'] == 'use_purchase_area_card'
+        assert g.pending_choice['cards'][purchase_index]['name'] == static_name
+
+        resolved = g.resolve_pending_choice(p.id, purchase_index)
+        assert resolved.get('success'), (static_name, resolved)
+        assert resolved.get('chosen_card') == static_name
+        if g.pending_choice and g.pending_choice.get('choice_key') == 'card_build_organization':
+            _, built = resolve_first_build_town(g, p)
+            assert built.get('success'), (static_name, built)
+
+        assert g.pending_choice is None, (static_name, g.pending_choice)
+        assert g.static_purchase_supply == supply_before, static_name
+        assert names(g.purchase_area)[purchase_index] == static_name
+        assert static_name not in names(p.hand)
+        assert static_name not in names(p.deck.discard_pile)
+        if static_name == '資助者':
+            assert p.resources['money'] >= 2 and p.resources['propaganda'] >= 2
+        if static_name == '資本家':
+            assert p.resources['money'] >= 3 and p.resources['propaganda'] >= 3
+
+
+def test_owned_static_self_trash_card_still_returns_one_card_to_static_supply():
+    g = make_game()
+    p = g.current_player()
+    supply_before = g.static_purchase_supply['資助者']
+
+    play_only(g, '資助者')
+
+    assert g.static_purchase_supply['資助者'] == supply_before + 1
+    assert '資助者' not in names(p.hand)
+    assert '資助者' not in names(p.deck.discard_pile)
+    assert p.resources['money'] >= 2 and p.resources['propaganda'] >= 2
+
+
 
 def test_red_support_resource_mode_from_rebel_hand_grants_resources_and_discards_to_own_pile():
     # 「打出」指行動模式。反共玩家選擇資源模式時取得印刷的 1/1、不抽牌，

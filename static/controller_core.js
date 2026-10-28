@@ -941,9 +941,15 @@
    * 起始畫面的導覽手把（只控制開始流程的既有按鈕；不是玩家席位、不存成手把偏好）。roster＝已通過 sanitizeRoster 的清單。
    * 有訊號的手把恰好一支、且沒有其他分頁使用（未被擁有或就是本分頁）→ 它的 id。沒有清單、沒有或超過一支有訊號、
    * 唯一那支被其他分頁使用 → null（fail closed，不猜）。已登錄但 stale 的手把不算（與 autoClaimDecision 相同）。
+   * preferred＝重新開始沿用的 P1（上一局既有配對的第一席）：有給時只認這一支（有訊號、沒有其他分頁使用），
+   * 其他手把再多也不影響；它不可用 → null（不改拿別支）。
    */
-  function startNavCandidate(roster) {
+  function startNavCandidate(roster, preferred) {
     if (!roster || !Array.isArray(roster.controllers)) return null;
+    if (isControllerId(preferred)) {
+      const p = roster.controllers.find(c => c && c.id === preferred);
+      return p && p.status === 'active' && (p.owner === null || p.owner === 'you') ? p.id : null;
+    }
     const active = roster.controllers.filter(c => c && c.status === 'active');
     if (active.length !== 1) return null;
     const c = active[0];
@@ -954,8 +960,8 @@
    * 起始畫面導覽的 claim 決策。owned＝本分頁目前擁有的手把 id（或 null）。
    * 擁有的不是候選（多支、stale、消失、清單變了）→ release；沒有擁有且有候選 → claim；其餘 null。
    */
-  function startNavDecision(roster, owned) {
-    const want = startNavCandidate(roster);
+  function startNavDecision(roster, owned, preferred) {
+    const want = startNavCandidate(roster, preferred);
     if (owned && owned !== want) return { type: 'release' };
     if (!owned && want) return { type: 'claim', controller: want };
     return null;

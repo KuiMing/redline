@@ -375,3 +375,21 @@ test('Joy-Con help ring: left L／SL after bridge normalization route exactly li
   assert.equal(C.routeAction(HELP_CTX, C.logicalAction(pressThrough('left', lefts.Down.logical)[0])), null);
   assert.deepEqual(C.routeAction(HELP_CTX, C.logicalAction(pressThrough('left', lefts.SR.logical)[0])), { cmd: 'focusMenu' });
 });
+
+test('start-screen nav with a carried-over P1 (restart): only that controller, even when others are active; never another', () => {
+  const sr = (cs, owned = null) => C.sanitizeRoster(roster(cs, owned));
+  const L3 = 'L24803-22222222';
+  const both = sr([ctrl(L1, 'left'), ctrl(R1, 'right'), ctrl(L3, 'left')]);
+  assert.equal(C.startNavCandidate(both), null, '沒有偏好：多支照舊 fail closed');
+  assert.equal(C.startNavCandidate(both, L1), L1);
+  assert.deepEqual(C.startNavDecision(both, null, L1), { type: 'claim', controller: L1 });
+  // 主連線剛好拿到別支（例如上一局 P2 觸發重新開始時記住的手把）：撤銷。
+  assert.deepEqual(C.startNavDecision(sr([ctrl(L1, 'left'), ctrl(R1, 'right', 'active', 'you')], R1), R1, L1), { type: 'release' });
+  assert.equal(C.startNavDecision(sr([ctrl(L1, 'left', 'active', 'you'), ctrl(R1, 'right')], L1), L1, L1), null);
+  // P1 沒有訊號、被其他分頁使用或不在清單：不改拿別支。
+  assert.equal(C.startNavCandidate(sr([ctrl(L1, 'left', 'stale'), ctrl(R1, 'right')]), L1), null);
+  assert.equal(C.startNavCandidate(sr([ctrl(L1, 'left', 'active', 'other'), ctrl(R1, 'right')]), L1), null);
+  assert.equal(C.startNavCandidate(sr([ctrl(R1, 'right')]), L1), null);
+  // 不合法偏好＝沒有偏好（既有規則）。
+  assert.equal(C.startNavCandidate(sr([ctrl(R1, 'right')]), 'bogus'), R1);
+});

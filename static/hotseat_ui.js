@@ -93,6 +93,8 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
     lobbySig: null,
     timer: null,
     aiShown: null, // 目前顯示中的 AI 紅軍公開視窗內容（Core.aiPublicView）；沒有視窗時為 null
+    // 遊戲剛結束時主連線仍按住的鍵（controller_core menu gate）：全部放開前勝利畫面不接受任何 Joy-Con 輸入。
+    finishGate: { blocked: [] },
   };
 
   // ------------------------------------------------------------ storage（內容不可信，一律經 Core 正規化）
@@ -572,11 +574,20 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
       if (locked !== session) saveSession(locked);
     }
     if (verdict.view !== hs.verdict.view || (verdict.seat && verdict.seat.player_id) !== (hs.verdict.seat && hs.verdict.seat.player_id)) hs.notice = '';
+    const finishedNow = !!verdict.actor && verdict.actor.kind === 'finished';
+    if (finishedNow && !(hs.verdict.actor && hs.verdict.actor.kind === 'finished') && CtlCore()) {
+      const cs = ctlState();
+      hs.finishGate = CtlCore().createMenuGate(cs && cs.held); // 結束那一下（任何一席）仍按住的鍵不可穿透到勝利畫面
+    }
     hs.verdict = verdict;
     render();
     syncClaim();
     syncListeners(); // AI 摘要開／關：下一位接手席位的監聽連線立即開啟或釋放（交接時主連線才 claim 得到）
-    if (verdict.view === 'reconnect') reloadInto(verdict.seat);
+    if (verdict.view === 'reconnect') {
+      // 遊戲結束交回 P1：沒有交接確認（遊戲已結束），直接記成 P1 已確認，整頁以 P1 的 token 重新載入。
+      if (finishedNow && verdict.seat) saveSession(Core.confirmSession(gameId, verdict.seat.player_id));
+      reloadInto(verdict.seat);
+    }
     return verdict.view;
   }
 
@@ -709,6 +720,12 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
           }
         }
         return true; // 遮罩時任何輸入都不穿透到被遮住的頁面
+      }
+      // 遊戲結束：控制權只給 P1（Core.decide）；結束當下仍按住的鍵全部放開前不接受任何輸入。
+      if (v.actor && v.actor.kind === 'finished' && hs.finishGate.blocked.length && CtlCore()) {
+        const cs = ctlState();
+        hs.finishGate = CtlCore().stepMenuGate(hs.finishGate, cs && cs.held);
+        if (hs.finishGate.blocked.length) return true;
       }
       return !Core.allowsInput(v, owned);
     },
@@ -1090,7 +1107,37 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
     return verified ? { ok: true } : { ok: false, error: 'Joy-Con 席位驗證失敗，請重試。' };
   }
 
+  // ------------------------------------------------------------ 重新開始（既有 /new-game）：沿用本局的 Joy-Con 配對，控制權回到 P1
+  // 與 start_flow_core.CARRYOVER_KEY 相同（這支腳本在 <head> 先載入，不依賴 start_flow_core）。
+  const RESTART_CARRYOVER_KEY = 'redline.startflow.carryover.v1';
+
+  /**
+   * 離開目前 hot-seat 遊戲前往 /new-game 前呼叫（不論是哪一支手把或滑鼠觸發）：依既有座位順序記下每一席綁定的手把
+   * （Core.restartCarryover；配對不完整就不記，開始流程照常配對），並把本分頁的手把偏好改成 P1 那一支，
+   * 新頁面載入時主連線只會先拿 P1（不會沿用觸發重新開始的 P2）。回傳是否記下。
+   */
+  function prepareRestart() {
+    const gameId = hs.gameId || session().gameId;
+    if (!gameId) return false; // 開始畫面本身（沒有目前遊戲）：保留尚未用掉的沿用配對
+    const carry = Core.restartCarryover(loadStore(), gameId);
+    if (!carry) {
+      try { sessionStorage.removeItem(RESTART_CARRYOVER_KEY); } catch { /* ignore */ }
+      return false;
+    }
+    try {
+      sessionStorage.setItem(RESTART_CARRYOVER_KEY, JSON.stringify({ v: 1, controllers: carry.controllers, from: gameId, at: Date.now() }));
+    } catch { return false; }
+    const cs = ctlState();
+    if (ctlApi() && cs && cs.enabled && !(cs.controller && cs.controller.owned === carry.controllers[0])) ctlApi().selectController(carry.controllers[0]);
+    return true;
+  }
+
   function init() {
+    // 「重新開始」連結（右上角、勝利畫面、遊戲選單確認後點的同一個連結）：導向前記下沿用的配對。
+    document.addEventListener('click', (e) => {
+      const link = e.target && e.target.closest ? e.target.closest('a[href="/new-game"]') : null;
+      if (link && !e.defaultPrevented) prepareRestart();
+    }, true);
     const maskNode = maskEl();
     if (maskNode) maskNode.querySelector('#hotseatAiDismiss').addEventListener('click', ackAiTurn);
     const chk = document.getElementById('hotseatEnableChk');
@@ -1117,7 +1164,7 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
   }
 
   window.RedlineHotSeat = {
-    onConnect, onState, onLobby, onLobbyState, resumeTarget, rememberSeat, provisionSeats,
+    onConnect, onState, onLobby, onLobbyState, resumeTarget, rememberSeat, provisionSeats, prepareRestart,
     isLocalSeat: (gameId, playerId) => !!Core.findSeat(loadStore(), gameId, playerId),
     /** AI 紅軍公開行動視窗正開著：app.js 據此略過「玩家動態」通知，同一件事不顯示兩次。 */
     /** 客廳輪流遊戲裡有 AI 紅軍、伺服器還沒啟用「結束回合前等公開視窗確認」：app.js 送出 ai_public_hold。 */
@@ -1143,6 +1190,7 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
           text: aiEl && aiEl.dataset.aiPublic === 'on' ? (aiEl.querySelector('#hotseatAiPublic').textContent || '').replace(/\s+/g, ' ').trim() : '',
         },
         view: hs.verdict.view,
+        finishGate: [...hs.finishGate.blocked],
         displayedSeat: hs.connectedSeat,
         controllerOwner: { controller: owned, seat: ownerSeat ? ownerSeat.player_id : null },
         actor: hs.verdict.actor ? { ...hs.verdict.actor } : null,

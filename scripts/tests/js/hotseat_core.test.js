@@ -940,3 +940,73 @@ test('非逐棒（電腦模式的客廳輪流）維持原行為：任一綁定�
   assert.equal(v.view, 'lobby-open');
   assert.equal(H.lobbyInput({ verdict: v, owned: SEQ_CTL[1], action: A, store }).switchTo.player_id, 'p-2');
 });
+
+// ---- 遊戲結束：控制權一律回到 P1（本機席位表第一席＝既有座位順序），不論誰獲勝或結束時是哪一席在操作
+test('遊戲結束：P1 獲勝、P2 獲勝、紅軍（AI／其他玩家）獲勝、P2 正在操作 → seat 都是 P1，只有 P1 的 Joy-Con 能操作', () => {
+  let store = storeWith(TW, HK, RED);
+  store = H.bindController(store, G, 'p-tw', L1).store;
+  store = H.bindController(store, G, 'p-hk', R1).store;
+  const R3 = 'R24802-11111111';
+  store = H.bindController(store, G, 'p-red', R3).store;
+  const finishes = [
+    state({ winner: '臺灣玩家', game_phase: 'finished' }), // P1 獲勝
+    state({ winner: '香港玩家', game_phase: 'finished' }), // P2 獲勝
+    state({ winner: '紅軍', game_phase: 'finished' }), // 紅軍（另一位真人或 AI）獲勝
+    state({ winner: null, game_phase: 'finished', current_player: '香港玩家', pending_choice: { player_id: 'p-hk' } }),
+  ];
+  for (const s of finishes) {
+    for (const connected of ['p-tw', 'p-hk', 'p-red']) {
+      for (const session of [null, H.confirmSession(G, connected), { gameId: G, active: 'p-hk', unlocked: true }]) {
+        const v = H.decide({ state: s, connectedSeatId: connected, session, store, gameId: G });
+        assert.equal(v.actor.kind, 'finished');
+        assert.equal(v.seat.player_id, 'p-tw', `${s.winner}/${connected}: P1 controls`);
+        if (connected !== 'p-tw') {
+          // 畫面仍是其他席位：以 P1 自己的 token 重新連線（遮罩中，任何手把都不能操作其他席位的連線）。
+          assert.equal(v.view, 'reconnect', `${s.winner}/${connected}`);
+          assert.equal(H.masked(v.view), true);
+          for (const c of [L1, R1, R3, null]) assert.equal(H.allowsInput(v, c), false);
+          continue;
+        }
+        assert.equal(v.view, 'open', `${s.winner}/${connected}`);
+        assert.equal(H.claimTarget(v), L1, '主連線 claim P1 的 Joy-Con');
+        assert.equal(H.allowsInput(v, L1), true);
+        assert.equal(H.allowsInput(v, R1), false, 'P2 不能操作勝利畫面／遊戲選單');
+        assert.equal(H.allowsInput(v, R3), false);
+        assert.equal(H.allowsInput(v, null), false);
+      }
+    }
+  }
+  assert.equal(H.firstSeat(store, G).player_id, 'p-tw');
+  assert.equal(H.firstSeat(store, 'other'), null);
+  // 非 hot-seat（單席位）仍是 inactive：不介入。
+  assert.equal(H.decide({ state: finishes[1], connectedSeatId: 'p-solo', session: null, store, gameId: G }).view, 'inactive');
+});
+
+test('遊戲結束但 P1 席位沒有綁定 Joy-Con（電腦操作的客廳輪流）：維持既有的不限手把', () => {
+  const store = H.bindController(storeWith(TW, HK), G, 'p-hk', R1).store;
+  assert.equal(H.decide({ state: state({ winner: '香港玩家' }), connectedSeatId: 'p-hk', session: null, store, gameId: G }).view, 'reconnect');
+  const v = H.decide({ state: state({ winner: '香港玩家' }), connectedSeatId: 'p-tw', session: null, store, gameId: G });
+  assert.equal(v.view, 'open');
+  assert.equal(v.seat.player_id, 'p-tw');
+  assert.equal(H.claimTarget(v), null);
+  assert.equal(H.allowsInput(v, R1), true);
+});
+
+test('重新開始沿用配對：依既有座位順序的完整綁定（2～4 席、不重複、合法）；不完整或未啟用 → null', () => {
+  const R3 = 'R24802-11111111';
+  let store = storeWith(TW, HK, RED);
+  assert.equal(H.restartCarryover(store, G), null, '尚未綁定');
+  store = H.bindController(store, G, 'p-tw', L1).store;
+  store = H.bindController(store, G, 'p-hk', R1).store;
+  assert.equal(H.restartCarryover(store, G), null, '第三席未綁定：不沿用（照常配對）');
+  store = H.bindController(store, G, 'p-red', R3).store;
+  assert.deepEqual(H.restartCarryover(store, G), { controllers: [L1, R1, R3] });
+  assert.equal(H.restartCarryover({ ...store, enabled: false }, G), null);
+  assert.equal(H.restartCarryover(store, 'other-game'), null);
+  const solo = H.bindController(storeWith(TW), G, 'p-tw', L1).store;
+  assert.equal(H.restartCarryover(solo, G), null, '單席位不是 hot-seat');
+  let five = storeWith(TW, HK, RED, { player_id: 'p4', resume_token: 't4' }, { player_id: 'p5', resume_token: 't5' });
+  ['L24801-0a1b2c3d', 'R24800-3f2a9c1e', 'R24802-11111111', 'L24803-22222222', 'R24804-33333333']
+    .forEach((c, i) => { five = H.bindController(five, G, H.seatsFor(five, G)[i].player_id, c).store; });
+  assert.equal(H.restartCarryover(five, G), null, '超過開始流程可配對的 4 支');
+});
