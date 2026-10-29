@@ -31,8 +31,12 @@ const unproject = (p, zoom) => latLng(90 - (p.y / (256 * 2 ** zoom)) * 180, (p.x
 
 function fakeMap({ minZoom = 0, maxZoom = Infinity, visible = true } = {}) {
   const handlers = {};
+  // Leaflet 預設 pane 的 z-index（leaflet.css）；createPane 建立的 pane 由呼叫端設定 style。
+  const panes = { overlayPane: { style: { zIndex: '400' } }, markerPane: { style: { zIndex: '600' } } };
   const m = {
-    _loaded: true, center: latLng(30, 110), zoom: 4, minZoom, maxZoom, setViews: [], pans: 0, invalidations: 0,
+    _loaded: true, center: latLng(30, 110), zoom: 4, minZoom, maxZoom, setViews: [], pans: 0, invalidations: 0, panes,
+    getPane: name => panes[name],
+    createPane(name) { panes[name] = { style: {} }; return panes[name]; },
     container: { isConnected: true, clientWidth: visible ? SIZE.x : 0, clientHeight: visible ? SIZE.y : 0, getClientRects: () => (visible ? [1] : []) },
     on(names, fn) { for (const n of names.split(' ')) (handlers[n] = handlers[n] || []).push(fn); return m; },
     fire(name) { (handlers[name] || []).forEach(fn => fn()); },
@@ -67,9 +71,32 @@ function fakeMap({ minZoom = 0, maxZoom = Infinity, visible = true } = {}) {
   return m;
 }
 
-const layer = () => ({ addTo() { return this; }, clearLayers() {} });
+/**
+ * 假 Leaflet 圖層：drawn 依加入順序記錄每個圖形（同一 pane 內後加入者畫在上面，preferCanvas 的 overlay 也是如此）；
+ * layerGroup.clearLayers 移除該 group 的圖形。
+ */
+function fakeLeaflet(drawn) {
+  const group = () => ({
+    items: [],
+    addTo() { return this; },
+    clearLayers() { for (const it of this.items) drawn.splice(drawn.indexOf(it), 1); this.items = []; },
+  });
+  const shape = kind => (ll, options = {}) => ({
+    addTo(g) {
+      const it = { kind, options, pane: options.pane || (kind === 'marker' ? 'markerPane' : 'overlayPane') };
+      drawn.push(it);
+      if (g && g.items) g.items.push(it);
+      return this;
+    },
+  });
+  return { latLng, point, layerGroup: group, circleMarker: shape('circle'), marker: shape('marker'), divIcon: () => ({}) };
+}
 
-/** 載入真實 adapter。opts.choice＝pending choice 的地圖候選；opts.origins＝可行動來源（沒有＝不是自己的回合）。 */
+/**
+ * 載入真實 adapter。opts.choice＝pending choice 的地圖候選；opts.origins＝可行動來源（沒有＝不是自己的回合）。
+ * opts.redraw：提供 leaflet_game_map_logic 的 applyGameStateToMap／applySupportChoiceHighlight 替身——
+ * 狀態推送會經由（已被 adapter 包住的）window.applySupportChoiceHighlight 在 overlay 上重新加入候選外圈。
+ */
 function loadAdapter(opts = {}) {
   const map = fakeMap(opts.map);
   const towns = Object.entries(opts.mapData || MAP_DATA.towns).map(([name, raw]) => {
@@ -90,10 +117,9 @@ function loadAdapter(opts = {}) {
   }]));
   // postMessage 會 structured-clone：測試端同樣複製一份（也避開 vm realm 之間的原型差異）。
   const parent = { postMessage(message, origin) { parentMessages.push({ message: JSON.parse(JSON.stringify(message)), origin }); } };
-  const L = {
-    latLng, point,
-    layerGroup: layer, circleMarker: () => layer(), marker: () => layer(), divIcon: () => ({}),
-  };
+  const drawn = [];
+  const L = fakeLeaflet(drawn);
+  const redrawCalls = [];
   const ctx = {
     L, map, towns, byName, Core: undefined,
     lastGameState: { map: { towns: {} }, players: [{ id: 'p1', name: 'A' }] },
@@ -125,6 +151,25 @@ function loadAdapter(opts = {}) {
   ctx.window.location = { origin: ORIGIN };
   ctx.window.RedlineControllerCore = C;
   ctx.window.addEventListener = (type, fn) => { (listeners[type] = listeners[type] || []).push(fn); };
+  if (opts.redraw) {
+    const candidates = L.layerGroup();
+    const highlights = L.layerGroup();
+    ctx.applySupportChoiceHighlight = (payload) => {
+      redrawCalls.push('applySupportChoiceHighlight');
+      candidates.clearLayers();
+      for (const { town } of (payload && payload.towns) || []) {
+        // 與 renderSupportChoiceHighlights 的未聚焦候選外圈（= 目標點擊圈）同尺寸。
+        L.circleMarker(ctx.townDisplayLatLng(byName.get(town)), { radius: Math.max(14, ctx.markerRadius() + 6), color: '#cbd5e1', weight: 4 }).addTo(candidates);
+      }
+    };
+    ctx.applyGameStateToMap = (state) => {
+      redrawCalls.push('applyGameStateToMap');
+      ctx.window.applySupportChoiceHighlight(ctx.supportChoiceHighlight);
+      highlights.clearLayers();
+      L.circleMarker(ctx.townDisplayLatLng(byName.get('新北')), { radius: 20, color: '#facc15', weight: 3 }).addTo(highlights);
+      return state;
+    };
+  }
   vm.createContext(ctx);
   vm.runInContext(`${DISPLAY_SRC}\nthis.townDisplayLatLng = townDisplayLatLng;`, ctx);
   vm.runInContext(ADAPTER_SRC, ctx);
@@ -140,7 +185,7 @@ function loadAdapter(opts = {}) {
     const p = map.latLngToContainerPoint(ctx.townDisplayLatLng(byName.get(town)));
     return Math.abs(p.x - SIZE.x / 2) <= 1 && Math.abs(p.y - SIZE.y / 2) <= 1;
   };
-  return { ctx, map, byName, clicks, markerClicks, send, centered, parent, detail };
+  return { ctx, map, byName, clicks, markerClicks, send, centered, parent, detail, drawn, redrawCalls };
 }
 
 const canonicalNames = Object.keys(MAP_DATA.towns);
@@ -451,4 +496,45 @@ test('desktop routing: A on the SL browse focus is the read-only town detail; ot
   assert.deepEqual(C.routeAction({ scopeKind: 'map', hasFocus: false, browseFocus: true }, Y), { cmd: 'toggleHelp' }, 'Y unchanged on browse focus');
   assert.ok(C.sanitizeMapCommand({ type: 'redline-controller-command', v: 1, cmd: 'detail', town: '屏東' }));
   assert.equal(C.sanitizeMapCommand({ type: 'redline-controller-command', v: 1, cmd: 'detail' }), null, 'detail needs a town');
+});
+
+// ---- 地圖焦點圈：保留原本醒目的粗黑黃樣式；狀態推送／候選重繪後仍在候選外圈之上
+test('focus ring keeps the original bold geometry and is redrawn last in a higher pane', () => {
+  const a = loadAdapter({ choice: ['新北', '基隆'], redraw: true });
+  assert.equal(a.send({ cmd: 'focus', town: '新北' }).result.ok, true);
+  const focusRings = () => a.drawn.filter(it => it.kind === 'circle' && it.pane === 'redlineControllerFocusPane');
+  const check = (label) => {
+    const rings = focusRings();
+    assert.equal(rings.length, 2, `${label}: exactly one black + one yellow ring (old ring cleared, not stacked)`);
+    const black = rings.find(it => it.options.color === '#000000');
+    const yellow = rings.find(it => it.options.color === '#ffe14d');
+    assert.ok(black && yellow, label);
+    const circles = a.drawn.filter(it => it.kind === 'circle');
+    const candidates = circles.filter(it => it.options.color === '#cbd5e1');
+    assert.equal(candidates.length, 2, `${label}: the redraw re-added both candidate rings`);
+    assert.ok(circles.indexOf(yellow) > Math.max(...candidates.map(c => circles.indexOf(c))), `${label}: yellow ring drawn after the candidate rings`);
+    const pane = a.map.getPane(yellow.pane);
+    assert.ok(Number(pane.style.zIndex) > Number(a.map.getPane('overlayPane').style.zIndex), `${label}: focus pane above the overlay pane`);
+    assert.ok(Number(pane.style.zIndex) < Number(a.map.getPane('markerPane').style.zIndex), `${label}: below town labels / badges`);
+    assert.equal(pane.style.pointerEvents, 'none', `${label}: does not block candidate clicks underneath`);
+    assert.equal(yellow.options.interactive, false);
+    const originalRadius = Math.max(22, a.ctx.markerRadius() + 16);
+    assert.deepEqual(
+      [black.options.radius, black.options.weight, yellow.options.radius, yellow.options.weight],
+      [originalRadius + 3, 9, originalRadius, 5],
+      `${label}: original bold black/yellow geometry`,
+    );
+  };
+  a.redrawCalls.length = 0;
+  a.ctx.applyGameStateToMap({ map: { towns: {} } });
+  assert.deepEqual(a.redrawCalls, ['applyGameStateToMap', 'applySupportChoiceHighlight'], 'each original runs once: no recursion');
+  check('state push');
+  a.redrawCalls.length = 0;
+  a.ctx.applySupportChoiceHighlight(a.ctx.supportChoiceHighlight);
+  assert.deepEqual(a.redrawCalls, ['applySupportChoiceHighlight']);
+  check('choice highlight');
+  // 清除焦點後的重繪不再畫焦點圈。
+  a.send({ cmd: 'clearFocus' });
+  a.ctx.applyGameStateToMap({ map: { towns: {} } });
+  assert.deepEqual(focusRings(), []);
 });

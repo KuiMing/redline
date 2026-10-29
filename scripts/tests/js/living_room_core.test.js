@@ -1073,3 +1073,18 @@ test('snapshot model: move meta, selection, pending and target actions come only
   assert.deepEqual(choice('dissolve'), [{ town: '丁', role: 'choice', act: 'dissolve' }]);
   assert.deepEqual(choice('other'), [{ town: '丁', role: 'choice' }], 'unknown highlight kinds expose no Y action');
 });
+
+test('zone ring label: shown inside the ring on the zone layer, hidden on the item layer (would cover items)', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const css = fs.readFileSync(path.join(__dirname, '../../../static/style.css'), 'utf8');
+  const js = fs.readFileSync(path.join(__dirname, '../../../static/controller_living_room.js'), 'utf8');
+  const rule = sel => (css.match(new RegExp(`${sel.replace(/[[\]"#]/g, '\\$&')}\\s*\\{([^}]*)\\}`)) || [])[1];
+  const base = rule('html[data-display="living-room"] #lrZoneLabel');
+  assert.ok(base, 'zone-layer label rule exists');
+  assert.doesNotMatch(base, /display:\s*none/, 'zone layer keeps the label');
+  assert.match(base, /top:\s*4px/, 'zone-layer label sits inside the ring');
+  assert.match(rule('html[data-display="living-room"] #lrZoneRing[data-layer="item"] #lrZoneLabel') || '', /display:\s*none/);
+  assert.doesNotMatch(css, /data-label-inside/, 'no stale label-inside selector');
+  assert.doesNotMatch(js, /labelInside/, 'no stale dataset.labelInside write');
+});

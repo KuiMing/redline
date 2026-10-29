@@ -3350,7 +3350,7 @@ function openEthnicRitualGuessModal() {
 
 function strategicMapUrl() {
   const url = new URL('/static/leaflet_game_map.html', window.location.origin);
-  url.searchParams.set('v', 'sl-detail-reopen-20261026');
+  url.searchParams.set('v', 'map-focus-bold-20261029');
   if (gameId) url.searchParams.set('gameId', gameId);
   if (playerId) url.searchParams.set('playerId', playerId);
   return url.toString();

@@ -556,18 +556,17 @@
     const rect = unionRect([...zone.frames, focused]) || zone.rect;
     const sr = stage.getBoundingClientRect();
     const scale = stage.offsetWidth ? sr.width / stage.offsetWidth : 1;
-    const pad = 4;
-    const left = Math.max(2, (rect.left - sr.left) / scale - pad);
-    const top = Math.max(2, (rect.top - sr.top) / scale - pad);
-    const right = Math.min(stage.offsetWidth - 2, (rect.right - sr.left) / scale + pad);
-    const bottom = Math.min(stage.offsetHeight - 2, (rect.bottom - sr.top) / scale + pad);
+    // 區域框貼齊區域本身的 rect（border-box，黃框畫在區域內），不向外擴、不壓到相鄰區域。
+    const left = Math.max(2, (rect.left - sr.left) / scale);
+    const top = Math.max(2, (rect.top - sr.top) / scale);
+    const right = Math.min(stage.offsetWidth - 2, (rect.right - sr.left) / scale);
+    const bottom = Math.min(stage.offsetHeight - 2, (rect.bottom - sr.top) / scale);
     ring.style.left = `${left}px`;
     ring.style.top = `${top}px`;
     ring.style.width = `${Math.max(0, right - left)}px`;
     ring.style.height = `${Math.max(0, bottom - top)}px`;
     ring.dataset.layer = lr.layer;
     ring.dataset.zone = zone.id;
-    ring.dataset.labelInside = top < 30 ? 'true' : 'false';
     const summary = zoneSummary(zone);
     const label = `${zone.label}${summary ? `｜${summary}` : ''}${lr.layer === 'zone' ? '　A 進入' : ''}`;
     const labelEl = $('lrZoneLabel');

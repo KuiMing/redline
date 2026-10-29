@@ -284,7 +284,7 @@ body {
 .lobby-code-input:focus,
 .lobby-text-input:focus {
   border-color: rgba(245, 158, 11, 0.72);
-  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.18), inset 0 0 24px rgba(245, 158, 11, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.18), inset 0 0 24px rgba(245, 158, 11, 0.08);
 }
 
 .lobby-mini-btn,
@@ -379,7 +379,7 @@ body {
   border-color: rgba(251, 191, 36, 0.82);
   background: linear-gradient(180deg, rgba(245, 158, 11, 0.95), rgba(180, 83, 9, 0.96));
   color: #111827;
-  box-shadow: 0 12px 26px rgba(180, 83, 9, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.82), inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
 .lobby-roster {
@@ -522,7 +522,7 @@ body {
 .game-tab.my-faction-tab.attention {
   border-color: #facc15;
   color: #fef08a;
-  box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.3), 0 0 14px rgba(250, 204, 21, 0.2);
+  box-shadow: inset 0 0 0 1px rgba(250, 204, 21, 0.3), inset 0 0 14px rgba(250, 204, 21, 0.2);
 }
 
 #emergencyNewGameBtn {
@@ -666,7 +666,7 @@ body {
 
 #phaseActionMetaWrap.is-overflowing #phaseActionMeta:focus-visible {
   border-radius: 4px;
-  box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.55);
+  box-shadow: inset 0 0 0 2px rgba(251, 191, 36, 0.55);
 }
 
 #phaseActionMetaTooltip {
@@ -724,7 +724,7 @@ body {
   border: 1px solid rgba(245, 158, 11, 0.6);
   background: linear-gradient(180deg, rgba(245,158,11,0.94), rgba(180,83,9,0.94));
   color: #11161d;
-  box-shadow: 0 0 0 1px rgba(251,191,36,0.14), 0 10px 24px rgba(180,83,9,0.24);
+  box-shadow: inset 0 0 0 1px rgba(251,191,36,0.14), 0 10px 24px rgba(180,83,9,0.24);
 }
 
 #turnActionButtons {
@@ -1076,7 +1076,7 @@ body.joycon-help-open {
 .era-stage-tab.is-notified {
   border-color: rgba(251, 191, 36, 0.82);
   background: rgba(180, 83, 9, 0.42);
-  box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.14), 0 0 14px rgba(245, 158, 11, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.14), inset 0 0 14px rgba(245, 158, 11, 0.16);
 }
 
 .era-stage-tab-name,
@@ -1993,7 +1993,7 @@ body.joycon-help-open {
   border-color: #f6ad55;
   background: linear-gradient(180deg, #b45309, #92400e);
   color: #fff7ed;
-  box-shadow: 0 0 0 1px rgba(246, 173, 85, 0.28), 0 0 18px rgba(245, 158, 11, 0.22);
+  box-shadow: inset 0 0 0 1px rgba(246, 173, 85, 0.28), inset 0 0 18px rgba(245, 158, 11, 0.22);
 }
 
 #baseSelectionPanel {
@@ -2356,7 +2356,7 @@ body.joycon-help-open {
 .divide-target-choice.divide-target-selected {
   border-color: #f4c95d;
   background: #4a3b14;
-  box-shadow: 0 0 0 2px rgba(244, 201, 93, 0.3);
+  box-shadow: inset 0 0 0 2px rgba(244, 201, 93, 0.3);
 }
 
 .divide-target-confirm {
@@ -2791,12 +2791,43 @@ body.joycon-help-open {
 }
 
 .choice-card-btn-multi.selected {
-  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.9), 0 14px 28px rgba(37, 99, 235, 0.24);
   border-radius: 18px;
 }
 
 .choice-card-btn-multi.selected .card-face {
   filter: brightness(1.04);
+}
+
+/* card_choice／multi_card_choice 共用：選取（藍）與 Joy-Con 焦點（黃＋黑）都畫在卡面內（::after inset:0），
+   不框住上方來源標籤、不向外擴張、不被 .choice-card-grid 捲動容器裁切。按鈕本身不畫通用焦點框。 */
+.choice-card-btn.rl-pad-focus:not(.card) {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.choice-card-btn > .card-face::after {
+  content: none;
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  box-sizing: border-box;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.choice-card-btn-multi.selected > .card-face::after {
+  content: '';
+  box-shadow: inset 0 0 0 3px rgba(96, 165, 250, 0.95);
+}
+
+.choice-card-btn.rl-pad-focus > .card-face::after {
+  content: '';
+  border: 3px solid #ffe14d;
+  box-shadow: inset 0 0 0 2px #000;
+}
+
+.choice-card-btn-multi.selected.rl-pad-focus > .card-face::after {
+  box-shadow: inset 0 0 0 2px #000, inset 0 0 0 6px rgba(96, 165, 250, 0.95);
 }
 
 .choice-glass .modal-choice-btn[disabled] {
@@ -3130,7 +3161,7 @@ button.player-status-discard-card:focus-visible {
   background: rgba(185, 28, 28, 0.78);
   border-color: rgba(254, 202, 202, 0.82);
   outline: 2px solid rgba(251, 191, 36, 0.7);
-  outline-offset: 1px;
+  outline-offset: -2px;
 }
 
 .player-status-discard-empty {
@@ -4061,19 +4092,11 @@ body.victory-art-viewer-open {
   }
 }
 
-/* ---- Joy-Con／搖桿控制（controller_ui.js）：高對比焦點、不改版面尺寸 ---- */
+/* ---- Joy-Con／搖桿控制（controller_ui.js）：高對比焦點、不改版面尺寸 ----
+ * 3px 黃框畫在元素框線內（outline-offset -3px）＋內側黑圈，沒有外圈光暈：不向外擴張、不侵入相鄰控制、
+ * 不被 overflow 捲動容器（陣營清單、Modal 卡牌 grid）裁切；也不改 position／z-index，避免布局位移。
+ * 真正的 .card 用各自的內縮 ::after（指揮中心）；Modal 卡牌按鈕改畫在卡面內（.choice-card-btn 區段）。 */
 .rl-pad-focus:not(.card) {
-  outline: 4px solid #ffe14d !important;
-  outline-offset: 2px !important;
-  box-shadow: 0 0 0 2px #000, 0 0 16px 4px rgba(255, 225, 77, 0.75) !important;
-  position: relative;
-  z-index: 3;
-}
-/* 陣營選擇的陣營／具體陣營／根據地清單是 overflow:auto 捲動容器，上面的外擴 6px 焦點框在第一列與捲動後的最後一列會被裁掉；
- * 這裡改成 3px 黃框畫在按鈕框線內（offset -3px）＋內側 2px 黑圈、不加外圈光暈，四邊永遠完整。按鈕尺寸／hit area 不變。 */
-#factionPicker #factionList .faction-choice-btn.rl-pad-focus,
-#factionPicker #factionVariantList .faction-choice-btn.rl-pad-focus,
-#factionPicker #factionBaseList .base-choice-btn.rl-pad-focus {
   outline: 3px solid #ffe14d !important;
   outline-offset: -3px !important;
   box-shadow: inset 0 0 0 4px #000 !important;
@@ -4101,7 +4124,7 @@ body.victory-art-viewer-open {
 #designStage:has(#gameShell[style*="display: block"]) #padHint { max-width: 720px; overflow: hidden; text-overflow: ellipsis; padding: 3px 12px; line-height: 20px; }
 .pad-note { color: #94a3b8; font-size: 11px; line-height: 1.4; }
 .pad-error { color: #fca5a5; }
-#padButtonRing { position: absolute; z-index: 80; pointer-events: none; outline: 4px solid #ffe14d; outline-offset: 2px; box-shadow: 0 0 0 2px #000, 0 0 16px 4px rgba(255,225,77,0.75); border-radius: 4px; }
+#padButtonRing { position: absolute; z-index: 80; pointer-events: none; box-sizing: border-box; outline: 3px solid #ffe14d; outline-offset: -3px; box-shadow: inset 0 0 0 4px #000; border-radius: 4px; }
 /* 桌面模式也用同一張危險確認單（Capture 結束行動）：沿用既有 modal 外觀，只補按鈕列與危險色（客廳模式樣式在下方區段） */
 html:not([data-display="living-room"]) .lr-confirm-overlay { z-index: 85; }
 html:not([data-display="living-room"]) .lr-confirm-glass { border: 2px solid #fca5a5; }
@@ -4315,7 +4338,7 @@ html[data-display="living-room"] .lr-focus-overlay { height: 644px; }
   border-color: #ffe29a;
   background: linear-gradient(180deg, #b78b49, #81572b);
   outline: 3px solid rgba(255, 226, 154, 0.48);
-  outline-offset: 2px;
+  outline-offset: -3px;
 }
 #lobby[data-flow="start"][data-start-step="entry"] .sf-path-join {
   position: absolute;
@@ -4417,19 +4440,21 @@ html[data-display="living-room"] .purchase-selection-topdeck-btn { font-size: 15
 /* 卡面預覽放大到畫面高約 80% */
 html[data-display="living-room"] .card-preview-content { width: 469px; height: 576px; }
 
-/* 區域層焦點框（整區黃框＋大字標籤）；內容層時改為細虛線提示目前所在區域 */
+/* 區域層焦點框（整區黃框＋大字標籤）；內容層時改為細虛線提示目前所在區域。
+ * 框貼齊區域 rect（controller_living_room.js drawRing），黃框與黑圈、標籤都畫在區域內，不外擴光暈。 */
 html[data-display="living-room"] #lrZoneRing {
   position: absolute; z-index: 45; pointer-events: none; box-sizing: border-box;
-  border: 5px solid #ffe14d; border-radius: 12px; box-shadow: 0 0 0 3px #000, 0 0 24px 6px rgba(255, 225, 77, 0.5);
+  border: 5px solid #ffe14d; border-radius: 12px; box-shadow: inset 0 0 0 3px #000;
 }
-html[data-display="living-room"] #lrZoneRing[data-layer="item"] { border-width: 3px; border-style: dashed; box-shadow: 0 0 0 2px #000; }
+html[data-display="living-room"] #lrZoneRing[data-layer="item"] { border-width: 3px; border-style: dashed; box-shadow: inset 0 0 0 2px #000; }
 html[data-display="living-room"] #lrZoneLabel {
-  position: absolute; left: 8px; top: -16px; padding: 2px 10px; border-radius: 6px;
-  background: #ffe14d; color: #111827; box-shadow: 0 0 0 2px #000;
+  position: absolute; top: 4px; right: 8px; max-width: calc(100% - 16px); overflow: hidden; text-overflow: ellipsis;
+  padding: 2px 10px; border-radius: 6px; box-sizing: border-box;
+  background: #ffe14d; color: #111827; box-shadow: inset 0 0 0 2px #000;
   font: 700 18px/1.25 'Noto Sans TC', sans-serif; white-space: nowrap;
 }
-html[data-display="living-room"] #lrZoneRing[data-label-inside="true"] #lrZoneLabel { top: 4px; left: auto; right: 8px; }
-html[data-display="living-room"] #lrZoneRing[data-layer="item"] #lrZoneLabel { font-size: 16px; opacity: 0.92; }
+/* 內容層：內置標籤會蓋住區域內的項目，所以只留虛線框、不顯示標籤（區域層照常顯示）。 */
+html[data-display="living-room"] #lrZoneRing[data-layer="item"] #lrZoneLabel { display: none; }
 
 /* 固定按鍵提示列＋controller legend（只顯示、不接受焦點；在 title-safe 內、不遮擋內容：分頁內容高度已扣掉 76px） */
 html[data-display="living-room"] #lrBar {

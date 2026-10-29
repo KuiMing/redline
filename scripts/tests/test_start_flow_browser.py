@@ -1124,12 +1124,12 @@ def assert_picker_ring(page, list_id, proof_name=None):
 
 
 def test_joycon_faction_picker_focus_ring_is_compact_and_unclipped(browser, app_url, joycons):
-    """陣營／具體陣營／根據地的 Joy-Con 焦點框畫在按鈕內，清單邊緣（第一列、捲動後的最後一列）四邊完整；全域焦點框不變。
+    """陣營／具體陣營／根據地的 Joy-Con 焦點框畫在按鈕內，清單邊緣（第一列、捲動後的最後一列）四邊完整；全域焦點框同樣內縮。
     synthetic bridge（fixture 封包），不取代實體 Joy-Con 驗證。"""
     page = open_picker_with_pad(browser, app_url, joycons)
     port = 24801
     g = page.evaluate(GLOBAL_RING_JS)
-    assert (g["width"], g["offset"]) == (4, 2) and "16px 4px" in g["shadow"], g
+    assert (g["width"], g["offset"]) == (3, -3) and g["shadow"].endswith("inset") and g["shadow"].count("rgb") == 1, g
 
     # 陣營：初始焦點在 #factionList 第一個（清單沒有 padding，框若畫在外面會被頂邊／左邊裁掉）。
     wait_phase(page, "faction")

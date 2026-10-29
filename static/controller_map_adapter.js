@@ -135,6 +135,19 @@
     pushTimer = setTimeout(pushSnapshot, 0);
   }
 
+  // 焦點圈專用 pane：疊在 overlayPane（400：城鎮、候選外圈、移動高亮）之上、markerPane（600：標籤／徽章）之下。
+  // 候選外圈在狀態推送後會重新加入 overlay，若焦點圈也在 overlay 就會被蓋住；不吃滑鼠事件，不擋下方候選點擊。
+  const FOCUS_PANE = 'redlineControllerFocusPane';
+
+  function focusPane() {
+    if (!map.getPane(FOCUS_PANE)) {
+      const pane = map.createPane(FOCUS_PANE);
+      pane.style.zIndex = '450';
+      pane.style.pointerEvents = 'none';
+    }
+    return FOCUS_PANE;
+  }
+
   function drawFocusRing() {
     if (!focusLayer) focusLayer = L.layerGroup().addTo(map);
     focusLayer.clearLayers();
@@ -142,9 +155,11 @@
     const town = byName.get(focusTown);
     if (!town) return;
     const ll = townDisplayLatLng(town);
+    // 地圖焦點保留原本醒目的粗黑黃雙圈；其他卡牌、按鈕與視窗仍使用內縮焦點框。
     const radius = Math.max(22, markerRadius(map.getZoom()) + 16);
-    L.circleMarker(ll, { radius: radius + 3, color: '#000000', weight: 9, fill: false, opacity: 0.9, interactive: false }).addTo(focusLayer);
-    L.circleMarker(ll, { radius, color: '#ffe14d', weight: 5, fill: false, opacity: 1, interactive: false }).addTo(focusLayer);
+    const pane = focusPane();
+    L.circleMarker(ll, { pane, radius: radius + 3, color: '#000000', weight: 9, fill: false, opacity: 0.9, interactive: false }).addTo(focusLayer);
+    L.circleMarker(ll, { pane, radius, color: '#ffe14d', weight: 5, fill: false, opacity: 1, interactive: false }).addTo(focusLayer);
     L.marker(ll, {
       interactive: false, keyboard: false, zIndexOffset: 2000,
       icon: L.divIcon({ className: 'pad-focus-label-wrap', html: `<div class="pad-focus-label">${escapeHtml(focusTown)}</div>`, iconSize: [0, 0], iconAnchor: [0, 36] }),
@@ -335,11 +350,13 @@
   });
 
   // 既有函式變更地圖狀態時順便通知 parent（不改函式行為，只加掛 hook）。
+  // 這些函式會重畫候選外圈／高亮：有焦點時焦點圈跟著最後重畫（drawFocusRing 不呼叫任何被包的函式，不會遞迴）。
   for (const name of ['refreshDirectBuildUi', 'applySupportChoiceHighlight', 'applyGameStateToMap', 'exitMovementSelection']) {
     const original = window[name] || (typeof globalThis[name] === 'function' ? globalThis[name] : null);
     if (typeof original !== 'function') continue;
     const wrapped = function (...args) {
       const result = original.apply(this, args);
+      if (focusTown) drawFocusRing();
       scheduleSnapshot();
       return result;
     };
