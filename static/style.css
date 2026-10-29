@@ -45,10 +45,6 @@ body {
   inset: 0;
   overflow: hidden;
   background-color: #05080C;
-  background-image: url('/static/war_background.jpg');
-  background-size: cover;
-  background-position: center top;
-  background-repeat: no-repeat;
 }
 
 #stageViewport::before {
@@ -77,7 +73,11 @@ body {
   overflow: hidden;
   transform: scale(var(--stage-scale));
   transform-origin: top left;
-  background: transparent;
+  background-color: #05080C;
+  background-image: url('/static/war_background.jpg');
+  background-size: 1280px 720px;
+  background-position: center;
+  background-repeat: no-repeat;
   z-index: 1;
 }
 
