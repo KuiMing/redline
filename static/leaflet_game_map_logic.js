@@ -384,6 +384,12 @@ let townDetailTown = null;
 let townDetailHold = 0;
 let townDetailFresh = null; // { autoPan }：下一次 sync 是一次新的選取（重新開啟、需要時捲動地圖讓 popup 可見）
 
+// Leaflet 會依當下文字的 min-content 寬度量測 popup。中文可在每個字之間換行，重繪期間偶爾會先量到
+// 極窄寬度，造成說明變成狹長直欄；切換城鎮後再次量測才恢復。所有城鎮說明統一使用相同的寬度下限。
+function townDetailPopupOptions(extra = {}) {
+  return { minWidth: 280, maxWidth: 380, ...extra };
+}
+
 function withTownDetailHeld(fn) {
   townDetailHold += 1;
   try {
@@ -420,7 +426,7 @@ function syncTownDetailPopup() {
   try {
     map.closePopup(); // 舊城鎮或重新 bind 後留下的過期 popup
     // 捲動時上緣留空間給地圖右上按鈕列與 Joy-Con 提示列，標題不被蓋住。
-    marker.bindPopup(html, { maxWidth: 380, autoPan: !!(fresh && fresh.autoPan), autoPanPaddingTopLeft: [12, 64] });
+    marker.bindPopup(html, townDetailPopupOptions({ autoPan: !!(fresh && fresh.autoPan), autoPanPaddingTopLeft: [12, 64] }));
     marker.openPopup();
   } finally {
     townDetailHold -= 1;
@@ -1467,7 +1473,7 @@ function renderMapLayers() {
 
   visibleTowns.forEach(t => {
     const marker = L.circleMarker(townDisplayLatLng(t), markerStyleForTown(t.name)).addTo(markerLayer);
-    marker.bindPopup(popupHtml(t), { maxWidth:380 });
+    marker.bindPopup(popupHtml(t), townDetailPopupOptions());
 
     if (t.type === '軍火庫' && !currentArmoryBadges.has(t.name)) {
       const armoryBadge = L.marker(townDisplayLatLng(t), {
@@ -1839,7 +1845,7 @@ function applyGameStateToMapLayers(state) {
 
     const baseTown = byName.get(name);
     if (baseTown) {
-      layer.bindPopup(popupHtml(baseTown), { maxWidth: 380 });
+      layer.bindPopup(popupHtml(baseTown), townDetailPopupOptions());
       if (layer.getTooltip()) {
         layer.setTooltipContent(labelTextForTown(name));
       }

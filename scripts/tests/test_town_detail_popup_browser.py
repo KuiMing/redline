@@ -78,6 +78,16 @@ def detail(page):
     return frame(page).evaluate("window.__townDetailForTest()")
 
 
+def detail_box(page):
+    """實際 Leaflet popup 內容尺寸；城鎮切換／重繪後不得退化成狹長直欄。"""
+    return frame(page).evaluate("""() => {
+      const el = document.querySelector('.leaflet-popup-content');
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      return { width: r.width, height: r.height };
+    }""")
+
+
 def map_state(page):
     return frame(page).evaluate("window.__mapDebugStateForTest()")
 
@@ -143,10 +153,23 @@ def test_mouse_browse_selection_opens_detail_and_the_latest_town_wins_across_red
     assert map_state(page)["selectedTown"] == "曼谷"
     assert_only_detail(page, "曼谷")
     assert frame(page).evaluate("document.querySelector('#info .name')?.textContent.trim()") == "曼谷"
+    first_box = detail_box(page)
+    assert first_box["width"] >= 279, first_box
 
     # town A → town B：最後只顯示 B（舊 popup 不殘留、不覆蓋）。
     mouse_click_town(page, "河內")
     assert map_state(page)["selectedTown"] == "河內"
+    assert_only_detail(page, "河內")
+    second_box = detail_box(page)
+    assert second_box["width"] >= 279, second_box
+
+    # A → B → A：回點原城鎮時尺寸保持穩定；首次顯示也不能先變成狹長直欄。
+    mouse_click_town(page, "曼谷")
+    assert_only_detail(page, "曼谷")
+    reopened_box = detail_box(page)
+    assert reopened_box["width"] >= 279, reopened_box
+    assert abs(reopened_box["width"] - first_box["width"]) < 1, (first_box, reopened_box)
+    mouse_click_town(page, "河內")
     assert_only_detail(page, "河內")
 
     # Leaflet 重繪與 state render（每份 state 都會重新 bindPopup）之後仍是最新選取的 B，內容是最新的。
