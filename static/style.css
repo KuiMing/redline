@@ -4346,13 +4346,25 @@ html[data-display="living-room"] .lr-focus-overlay { height: 644px; }
   top: 606px;
   width: 294px;
   height: 64px;
+  min-width: 0;
+  margin: 0;
   padding: 0;
   border: 2px solid rgba(206, 161, 86, 0.72);
   border-radius: 13px;
   background: linear-gradient(180deg, rgba(153, 116, 62, 0.96), rgba(111, 77, 39, 0.96));
   box-shadow: inset 0 1px 0 rgba(255, 235, 190, 0.32), 0 5px 18px rgba(0, 0, 0, 0.46);
 }
-#lobby[data-flow="start"][data-start-step="entry"] .sf-path-join > label { display: none; }
+#lobby[data-flow="start"][data-start-step="entry"] .sf-path-join > legend {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
 #lobby[data-flow="start"][data-start-step="entry"] .sf-path-join .lobby-room-row {
   height: 60px;
   gap: 0;
@@ -4390,6 +4402,185 @@ html[data-display="living-room"] .lr-focus-overlay { height: 644px; }
 }
 #lobby[data-flow="start"][data-start-step="entry"] .sf-error:empty {
   display: none;
+}
+
+/* ---- 戰時指揮中心入口（WebGL2 特效層＋指揮卡）：全部限定在入口步驟，setup／lobby／遊戲內不受影響 ---- */
+/* 其他步驟完全不顯示特效 DOM（它們本來就在被隱藏的 #sfEntry 內，這裡是雙重保險）。 */
+.sf-fx, .sf-fx-controls { display: none; }
+#lobby[data-flow="start"][data-start-step="entry"] .sf-fx, #lobby[data-flow="start"][data-start-step="entry"] .sf-fx-controls { display: block; }
+#lobby[data-flow="start"][data-start-step="entry"] .sf-fx {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1280px;
+  height: 720px;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+/* 沒有 WebGL2（或 context lost）時的靜態 CSS 背景：同樣是暗紅底霧＋台灣位置的青綠雷達圈，不遮住主視覺。 */
+#lobby[data-flow="start"][data-start-step="entry"] .sf-fx[data-fx="fallback"] {
+  background:
+    radial-gradient(circle at 908px 402px, transparent 0 96px, rgba(26, 224, 184, 0.42) 97px 98px, transparent 99px 146px, rgba(26, 224, 184, 0.30) 147px 148px, transparent 149px),
+    radial-gradient(ellipse 760px 220px at 50% 100%, rgba(150, 24, 20, 0.40), transparent 70%);
+}
+#lobby[data-flow="start"][data-start-step="entry"] .sf-fx-canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1280px;
+  height: 720px;
+  pointer-events: none;
+}
+#lobby[data-flow="start"][data-start-step="entry"] .sf-fx[data-fx="fallback"] .sf-fx-canvas { display: none; }
+#lobby[data-flow="start"][data-start-step="entry"] .sf-fx-hud { position: absolute; inset: 0; font: 600 10px/1 'JetBrains Mono', monospace; letter-spacing: 0.16em; }
+#lobby[data-flow="start"][data-start-step="entry"] .sf-fx-tag { position: absolute; color: rgba(214, 226, 222, 0.78); text-shadow: 0 1px 3px #000, 0 0 6px #000; white-space: nowrap; }
+#lobby[data-flow="start"][data-start-step="entry"] .sf-fx-tag-top { left: 26px; top: 62px; color: rgba(236, 120, 104, 0.9); }
+#lobby[data-flow="start"][data-start-step="entry"] .sf-fx-tag-radar { left: 806px; top: 232px; color: rgba(110, 232, 208, 0.9); }
+#lobby[data-flow="start"][data-start-step="entry"] .sf-fx-tag-deck { left: 170px; top: 580px; color: rgba(222, 196, 140, 0.9); }
+#lobby[data-flow="start"][data-start-step="entry"] .sf-fx-tag-top::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 8px; background: #d63a30; }
+
+/* 特效控制（左上）：鍵盤可達的 switch＋兩段式按鈕，不佔用三個入口的位置 */
+#lobby[data-flow="start"][data-start-step="entry"] .sf-fx-controls {
+  position: absolute;
+  left: 24px;
+  top: 16px;
+  z-index: 6;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  width: 520px;
+  font: 600 12px/1 'Noto Sans TC', 'JetBrains Mono', sans-serif;
+}
+#lobby[data-flow="start"][data-start-step="entry"] .sf-fx-quality { display: flex; align-items: center; gap: 4px; padding-left: 8px; border-left: 1px solid rgba(148, 163, 184, 0.35); }
+#lobby[data-flow="start"][data-start-step="entry"] .sf-fx-name { color: rgba(226, 232, 240, 0.9); letter-spacing: 0.06em; margin-right: 4px; text-shadow: 0 1px 3px #000; }
+#lobby[data-flow="start"][data-start-step="entry"] .sf-fx-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  min-width: 36px;
+  padding: 0 10px;
+  justify-content: center;
+  border: 1px solid rgba(120, 132, 146, 0.7);
+  border-radius: 3px;
+  background: rgba(8, 11, 15, 0.82);
+  color: #dbe3ea;
+  font: 700 12px/1 'Noto Sans TC', sans-serif;
+  cursor: pointer;
+}
+#lobby[data-flow="start"][data-start-step="entry"] .sf-fx-btn:hover { border-color: #7ee8d0; }
+#lobby[data-flow="start"][data-start-step="entry"] .sf-fx-btn:focus-visible { outline: 2px solid #ffe29a; outline-offset: 1px; }
+#lobby[data-flow="start"][data-start-step="entry"] .sf-fx-btn[aria-checked="true"] .sf-fx-state, #lobby[data-flow="start"][data-start-step="entry"] .sf-fx-btn.active { color: #7ee8d0; }
+#lobby[data-flow="start"][data-start-step="entry"] .sf-fx-btn.active { border-color: #2fbfa5; background: rgba(14, 54, 48, 0.88); }
+#lobby[data-flow="start"][data-start-step="entry"] .sf-fx-btn[aria-checked="false"] .sf-fx-state { color: #f0a29a; }
+#lobby[data-flow="start"][data-start-step="entry"] .sf-fx-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+#lobby[data-flow="start"][data-start-step="entry"] .sf-fx-status { flex: 1 0 100%; min-height: 0; color: #e8c9a0; font-size: 11px; text-shadow: 0 1px 3px #000; }
+#lobby[data-flow="start"][data-start-step="entry"] .sf-fx-status:empty { display: none; }
+
+/* 指揮卡：位置與尺寸沿用原本三個入口（170/493/816，606，294×64），只換造型。真人＝紅、AI＝琥珀、加入＝青綠。 */
+#lobby[data-flow="start"][data-start-step="entry"] .sf-paths { position: relative; z-index: 3; }
+#lobby[data-flow="start"][data-start-step="entry"] .sf-path-btn,
+#lobby[data-flow="start"][data-start-step="entry"] .sf-path-join {
+  --sf-accent: #d63a30;
+  overflow: visible;
+  border: 1px solid rgba(138, 148, 160, 0.55);
+  border-left: 5px solid var(--sf-accent);
+  border-radius: 2px;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--sf-accent) 16%, transparent), transparent 55%),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 4px),
+    linear-gradient(180deg, rgba(24, 27, 31, 0.97), rgba(10, 12, 15, 0.97));
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.7), 0 6px 18px rgba(0, 0, 0, 0.6);
+  color: #eef2f5;
+  text-align: left;
+}
+/* 右上角細密刻度＋右下角編號，像戰情室的指揮卡 */
+#lobby[data-flow="start"][data-start-step="entry"] .sf-path-btn::before,
+#lobby[data-flow="start"][data-start-step="entry"] .sf-path-join::before {
+  content: "";
+  position: absolute;
+  right: 8px;
+  top: 6px;
+  width: 54px;
+  height: 6px;
+  background: repeating-linear-gradient(90deg, var(--sf-accent) 0 1px, transparent 1px 4px);
+  opacity: 0.8;
+  pointer-events: none;
+}
+#lobby[data-flow="start"][data-start-step="entry"] .sf-path-btn::after,
+#lobby[data-flow="start"][data-start-step="entry"] .sf-path-join::after {
+  position: absolute;
+  right: 9px;
+  bottom: 5px;
+  font: 700 9px/1 'JetBrains Mono', monospace;
+  letter-spacing: 0.18em;
+  color: var(--sf-accent);
+  pointer-events: none;
+}
+#lobby[data-flow="start"][data-start-step="entry"] #sfCreateHuman { --sf-accent: #e0453a; }
+#lobby[data-flow="start"][data-start-step="entry"] #sfCreateAi { --sf-accent: #f0a72c; }
+#lobby[data-flow="start"][data-start-step="entry"] .sf-path-join { --sf-accent: #2fd0b0; }
+#lobby[data-flow="start"][data-start-step="entry"] #sfCreateHuman::after { content: "A · HUMAN"; }
+#lobby[data-flow="start"][data-start-step="entry"] #sfCreateAi::after { content: "B · AUTO"; }
+#lobby[data-flow="start"][data-start-step="entry"] .sf-path-join::after { content: "C · JOIN"; }
+#lobby[data-flow="start"][data-start-step="entry"] .sf-path-join::before { display: none; }
+#lobby[data-flow="start"][data-start-step="entry"] .sf-path-join::after { top: -15px; bottom: auto; right: 2px; }
+#lobby[data-flow="start"][data-start-step="entry"] .sf-path-btn { padding: 0 20px 0 18px; }
+#lobby[data-flow="start"][data-start-step="entry"] .sf-path-btn strong {
+  display: block;
+  font: 900 18px/30px 'Noto Sans TC', sans-serif;
+  letter-spacing: 0.08em;
+  color: #f4f6f8;
+  text-align: left;
+}
+#lobby[data-flow="start"][data-start-step="entry"] .sf-path-btn span {
+  display: block;
+  margin-top: -3px;
+  font: 500 11px/16px 'Noto Sans TC', sans-serif;
+  letter-spacing: 0.04em;
+  color: rgba(200, 210, 220, 0.82);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#lobby[data-flow="start"][data-start-step="entry"] .sf-path-btn:hover,
+#lobby[data-flow="start"][data-start-step="entry"] .sf-path-btn:focus-visible {
+  border-color: var(--sf-accent);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--sf-accent) 30%, transparent), transparent 70%),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 4px),
+    linear-gradient(180deg, rgba(30, 33, 38, 0.98), rgba(12, 14, 18, 0.98));
+  outline: 2px solid #ffe29a;
+  outline-offset: 2px;
+}
+#lobby[data-flow="start"][data-start-step="entry"] .sf-path-btn:hover { outline: 1px solid var(--sf-accent); outline-offset: 0; }
+#lobby[data-flow="start"][data-start-step="entry"] .sf-path-join .lobby-room-row { align-items: stretch; padding: 8px 8px 8px 12px; }
+#lobby[data-flow="start"][data-start-step="entry"] #sfRoomCode {
+  border: 1px solid rgba(47, 208, 176, 0.5);
+  border-radius: 2px;
+  background: rgba(4, 18, 17, 0.92);
+  color: #d8fff6;
+  font: 700 15px/1 'JetBrains Mono', monospace;
+  letter-spacing: 0.12em;
+}
+#lobby[data-flow="start"][data-start-step="entry"] #sfRoomCode::placeholder { color: rgba(140, 190, 180, 0.72); letter-spacing: 0.04em; font-weight: 500; }
+#lobby[data-flow="start"][data-start-step="entry"] #sfRoomCode:focus-visible { outline: 2px solid #ffe29a; outline-offset: 1px; }
+#lobby[data-flow="start"][data-start-step="entry"] #sfJoinBtn {
+  border: 1px solid #2fd0b0;
+  border-radius: 2px;
+  background: rgba(20, 94, 82, 0.95);
+  color: #eafffa;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+#lobby[data-flow="start"][data-start-step="entry"] #sfJoinBtn:hover { background: rgba(28, 130, 112, 0.98); }
+#lobby[data-flow="start"][data-start-step="entry"] #sfJoinBtn:focus-visible { outline: 2px solid #ffe29a; outline-offset: 1px; }
+#lobby[data-flow="start"][data-start-step="entry"] .sf-error { border-radius: 2px; border-left: 3px solid #f87171; color: #ffd6d2; }
+
+@media (prefers-reduced-motion: reduce) {
+  #lobby[data-flow="start"][data-start-step="entry"] .sf-fx-btn, #lobby[data-flow="start"][data-start-step="entry"] .sf-path-btn { transition: none; }
 }
 
 /* ---- 客廳大螢幕模式（controller_living_room.js）：只在 html[data-display="living-room"] 下生效 ----

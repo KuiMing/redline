@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>REDLINE // STRATEGIC COMMAND</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="/static/style.css?v=stage-background-complete-bright-20261029" />
+  <link rel="stylesheet" href="/static/style.css?v=command-entry-webgl-20261031" />
   <!-- 客廳輪流（hot-seat）：在第一次繪製前就能遮住舞台，所以放在 <head>。 -->
   <script src="/static/hotseat_core.js?v=reaction-victory-controller-20261027"></script>
   <script src="/static/hotseat_ui.js?v=reaction-victory-controller-20261027"></script>
@@ -33,6 +33,25 @@
     <div id="sfTitle" class="lobby-title" tabindex="-1">開始遊戲</div>
 
     <div id="sfEntry" class="sf-panel" data-step="entry">
+      <div id="sfFx" class="sf-fx" data-fx="pending" data-fx-motion="on">
+        <canvas id="sfFxCanvas" class="sf-fx-canvas" width="640" height="360" aria-hidden="true"></canvas>
+        <div class="sf-fx-hud" aria-hidden="true">
+          <span class="sf-fx-tag sf-fx-tag-top">戰時指揮中心 · WAR ROOM</span>
+          <span class="sf-fx-tag sf-fx-tag-radar">TAIWAN RADAR · 23.7°N 121°E</span>
+          <span class="sf-fx-tag sf-fx-tag-deck">選擇作戰入口 // SELECT ENTRY</span>
+        </div>
+      </div>
+      <div class="sf-fx-controls" role="group" aria-label="開場特效設定">
+        <button id="sfFxMotion" class="sf-fx-btn" type="button" role="switch" aria-checked="true" aria-describedby="sfFxStatus" data-controller-skip>
+          <span class="sf-fx-name">動態效果</span><span class="sf-fx-state">開</span>
+        </button>
+        <div class="sf-fx-quality" role="group" aria-label="渲染畫質">
+          <span class="sf-fx-name" aria-hidden="true">渲染畫質</span>
+          <button class="sf-fx-btn" type="button" data-sf-fx-quality="low" aria-pressed="false" aria-label="渲染畫質：低" data-controller-skip>低</button>
+          <button class="sf-fx-btn" type="button" data-sf-fx-quality="high" aria-pressed="true" aria-label="渲染畫質：高" data-controller-skip>高</button>
+        </div>
+        <div id="sfFxStatus" class="sf-fx-status" role="status" aria-live="polite"></div>
+      </div>
       <div class="sf-paths" role="group" aria-label="開始方式">
         <button id="sfCreateHuman" class="sf-path-btn" type="button" data-sf-path="human">
           <strong>真人紅軍</strong>
@@ -42,14 +61,14 @@
           <strong>AI 紅軍</strong>
           <span>紅軍由電腦操作，不需要真人</span>
         </button>
-        <div class="sf-path-join">
-          <label for="sfRoomCode"><strong>加入現有房間</strong></label>
+        <fieldset class="sf-path-join" aria-labelledby="sfJoinTitle">
+          <legend id="sfJoinTitle">加入現有房間</legend>
           <div class="lobby-room-row">
             <input id="sfRoomCode" class="lobby-code-input" aria-label="房間代碼" placeholder="輸入房間代碼" autocomplete="off">
             <button id="sfJoinBtn" class="lobby-mini-btn" type="button">加入</button>
           </div>
           <div id="sfJoinError" class="sf-error" role="alert"></div>
-        </div>
+        </fieldset>
       </div>
     </div>
 
@@ -505,5 +524,6 @@
 <script src="/static/controller_living_room.js?v=yellow-focus-inset-20261029"></script>
 <script src="/static/start_flow_core.js?v=reaction-victory-controller-20261027"></script>
 <script src="/static/start_flow_ui.js?v=reaction-victory-controller-20261027"></script>
+<script src="/static/start_screen_fx.js?v=command-entry-webgl-20261031"></script>
 </body>
 </html>
