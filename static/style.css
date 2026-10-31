@@ -3637,6 +3637,29 @@ body.victory-art-viewer-open {
   margin-top: 4px;
 }
 
+.victory-art-shortcut-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  color: #dbe4f0;
+  font-size: 0.86rem;
+}
+
+.victory-art-shortcut-hint kbd {
+  min-width: 26px;
+  padding: 3px 7px;
+  border: 1px solid rgba(250, 204, 21, 0.72);
+  border-radius: 7px;
+  background: rgba(15, 23, 42, 0.82);
+  color: #fde68a;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1.2;
+  text-align: center;
+}
+
 .victory-glass > .era-achievement-actions .modal-choice-btn {
   display: inline-flex;
   align-items: center;

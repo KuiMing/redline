@@ -4226,7 +4226,8 @@ function openVictoryArtViewer() {
   const viewerImage = document.getElementById('victoryArtViewerImage');
   const sourceImage = document.getElementById('victoryEndingArt');
   const closeButton = document.getElementById('victoryArtViewerClose');
-  if (!viewer || !viewerImage || !sourceImage?.complete || !sourceImage.naturalWidth) return;
+  if (victoryArtViewerIsOpen()) return true;
+  if (!viewer || !viewerImage || !sourceImage?.complete || !sourceImage.naturalWidth) return false;
 
   victoryArtViewerReturnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   viewerImage.src = sourceImage.currentSrc || sourceImage.src;
@@ -4235,7 +4236,22 @@ function openVictoryArtViewer() {
   viewer.setAttribute('aria-hidden', 'false');
   document.body.classList.add('victory-art-viewer-open');
   requestAnimationFrame(() => closeButton?.focus());
+  return true;
 }
+
+// 遊戲結束後保留最後一張勝利插畫。勝利視窗縮小後，Joy-Con／鍵盤 Y 仍可重新開啟；
+// 這只重開既有圖片 viewer，不重新執行勝利結算、音效或任何遊戲狀態變更。
+window.RedlineVictoryArt = Object.freeze({
+  available() {
+    const state = window.lastGameState || {};
+    const sourceImage = document.getElementById('victoryEndingArt');
+    return Boolean(state.winner && sourceImage?.complete && sourceImage.naturalWidth);
+  },
+  open() {
+    return this.available() ? openVictoryArtViewer() : false;
+  },
+  isOpen: victoryArtViewerIsOpen,
+});
 
 // Joy-Con 說明圖（導覽列「Joy-Con 說明」按鈕；不是遊戲頁面）。關閉後焦點一律回到該按鈕。
 function joyconHelpIsOpen() {
@@ -4508,13 +4524,21 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('victoryArtViewerImage')?.addEventListener('click', event => event.stopPropagation());
   document.getElementById('victoryArtViewerClose')?.addEventListener('click', () => closeVictoryArtViewer());
   document.addEventListener('keydown', (event) => {
-    if (!victoryArtViewerIsOpen()) return;
-    if (event.key === 'Escape') {
+    if (victoryArtViewerIsOpen()) {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeVictoryArtViewer();
+      } else if (event.key === 'Tab') {
+        event.preventDefault();
+        document.getElementById('victoryArtViewerClose')?.focus();
+      }
+      return;
+    }
+    const target = event.target;
+    const typing = target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
+    if (!typing && !event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey
+      && event.key.toLowerCase() === 'y' && window.RedlineVictoryArt?.open()) {
       event.preventDefault();
-      closeVictoryArtViewer();
-    } else if (event.key === 'Tab') {
-      event.preventDefault();
-      document.getElementById('victoryArtViewerClose')?.focus();
     }
   });
 

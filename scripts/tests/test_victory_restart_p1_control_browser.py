@@ -158,6 +158,16 @@ def test_finish_moves_control_to_p1_with_release_gate_and_others_cannot_operate(
         assert (table.ctl()["focusSig"], focus_text(table.page)) == before
         assert table.ctl()["gameMenu"]["level"] is None
         assert table.owned() == table.by_name["P1"]["controller"]
+        # P1 的 Y 可直接看完整勝利插畫；B 返回結算畫面。其他席位不可開啟。
+        assert wait_until(lambda: table.page.evaluate("() => window.RedlineVictoryArt.available()"), 8.0)
+        press(joycons, P2_PORT, "Y")
+        assert not table.shown("victoryArtViewer")
+        press(joycons, P1_PORT, "Y")
+        assert wait_until(lambda: table.shown("victoryArtViewer"), 4.0)
+        assert table.page.locator("#victoryArtViewerImage").evaluate("el => el.naturalWidth > 0")
+        press(joycons, P1_PORT, "B")
+        assert wait_until(lambda: not table.shown("victoryArtViewer"), 4.0)
+        assert table.shown("victoryModal")
         # P1：方向焦點在勝利畫面兩個按鈕間移動（第一下只放焦點），A＝檢視最終盤面。
         assert nav_to(table.page, joycons, P1_PORT, "#victoryRestartBtn"), focus_text(table.page)
         assert nav_to(table.page, joycons, P1_PORT, "#victoryMinimizeBtn"), focus_text(table.page)
@@ -165,6 +175,16 @@ def test_finish_moves_control_to_p1_with_release_gate_and_others_cannot_operate(
             shot(request, table.page, "victory-p1-controls")
         press(joycons, P1_PORT, "A")
         assert wait_until(lambda: not table.shown("victoryModal"), 4.0)
+        # 結算視窗縮小後，鍵盤 Y 與 Joy-Con Y 都可重看最後勝利插畫。
+        assert table.page is not None
+        table.page.keyboard.press("y")
+        assert wait_until(lambda: table.shown("victoryArtViewer"), 4.0)
+        table.page.keyboard.press("Escape")
+        assert wait_until(lambda: not table.shown("victoryArtViewer"), 4.0)
+        press(joycons, P1_PORT, "Y")
+        assert wait_until(lambda: table.shown("victoryArtViewer"), 4.0)
+        press(joycons, P1_PORT, "B")
+        assert wait_until(lambda: not table.shown("victoryArtViewer"), 4.0)
         # 遊戲選單（按住搖桿 2 秒）：只有 P1 能開；P2 按住不會開。
         hold(joycons, P2_PORT, "STICK")
         time.sleep(2.4)

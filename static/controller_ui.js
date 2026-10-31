@@ -1084,6 +1084,19 @@
     if (gate && initialized && gate.intercept(action, { owned: ctl.binding.owned })) return;
     // 遊戲選單（按住搖桿 2 秒開啟）：release gate＋scope lock；方向／A／B 交回下面既有的 modal 流程。
     if (gameMenuIntercept(action)) return;
+    // 全螢幕勝利插畫是最高層 overlay。B 只關閉 viewer，不穿透到底下的結算視窗。
+    if (action?.type === 'press' && action.button === 'B' && window.RedlineVictoryArt?.isOpen()) {
+      document.getElementById('victoryArtViewerClose')?.click();
+      renderHud();
+      return;
+    }
+    // 遊戲結束後 Y 直接開啟最後勝利插畫。hot-seat gate 已先確認控制權，因此其他席位與交接遮罩不能穿透；
+    // 勝利視窗縮小後仍可使用，且不受「第一下只放焦點」規則限制。
+    if (action?.type === 'press' && action.button === 'Y' && window.RedlineVictoryArt?.available()) {
+      window.RedlineVictoryArt.open();
+      renderHud();
+      return;
+    }
     // 搖桿輸入一律先放掉停在排除控制上的原生焦點（分頁、結束行動、手牌按鈕等）。
     releaseExcludedFocus();
     // 必選地圖目標但停在其他分頁（那裡沒有任何焦點）：方向與 A／B／X／Y／R／SR／STICK／+／Capture 先切回戰略地圖，

@@ -27,9 +27,12 @@ from server.cards import Card  # noqa: E402
 from server.game import GamePhase, TurnPhase  # noqa: E402
 from test_start_flow_browser import free_port  # noqa: E402
 
-# fixture 實體位元（scripts/tests/fixtures/joycon_dual_layout.json）：左 Joy-Con 的 Right＝A、Down＝B、搖桿按下＝STICK；
-# 右 Joy-Con 的 A／B。方向一律用左搖桿（FakeJoyCons.stick 寫入左搖桿 offset）。
-BITS = {"L": {"A": (10, 0x04), "B": (10, 0x01), "STICK": (9, 0x08)}, "R": {"A": (8, 0x08), "B": (8, 0x04)}}
+# fixture 實體位元（scripts/tests/fixtures/joycon_dual_layout.json）：左 Joy-Con 的 Right＝A、Down＝B、Left＝Y、搖桿按下＝STICK；
+# 右 Joy-Con 的 A／B／Y。方向一律用左搖桿（FakeJoyCons.stick 寫入左搖桿 offset）。
+BITS = {
+    "L": {"A": (10, 0x04), "B": (10, 0x01), "Y": (10, 0x08), "STICK": (9, 0x08)},
+    "R": {"A": (8, 0x08), "B": (8, 0x04), "Y": (8, 0x01)},
+}
 SIDE = {24800: "R", 24801: "L", 24802: "R", 24803: "L"}
 
 
