@@ -16,9 +16,9 @@
   const FOCUSABLE = 'button, a[href], input:not([type="hidden"]), select, textarea, [role="button"], '
     + '[tabindex]:not([tabindex="-1"]), .card[data-card-zone]';
   const SKIP_IDS = new Set(['emergencyNewGameBtn', 'padToggleBtn']);
-  // 導覽列「Joy-Con 說明」按鈕：R／SR 環的額外焦點（focusKind 'help'；不是區段、不在方向焦點集合內），A 開啟說明圖。
-  const HELP_ENTRY_ID = 'joyconHelpBtn';
-  const HELP_RING_KEY = 'joyconHelp'; // = RedlineLivingRoomCore.RING_HELP_KEY（layer.runSectionRing 到達說明按鈕時的回傳值）
+  // 導覽列「遊戲選單」按鈕：R／SR 環的額外焦點（focusKind 'menuEntry'；不是區段、不在方向焦點集合內），A 開啟遊戲選單。
+  const MENU_ENTRY_ID = 'gameMenuBtn';
+  const MENU_RING_KEY = 'gameMenu'; // = RedlineLivingRoomCore.RING_MENU_KEY（layer.runSectionRing 到達遊戲選單按鈕時的回傳值）
   // unbound＝bridge v2 已連線但這個分頁還沒有手把：輸入一律丟棄（只有 connected 才處理）。
   const STATUS_TEXT = {
     off: '未啟用', connecting: '連線中…', connected: '已連線', unbound: '未選擇手把', stale: '訊號中斷', error: '無法連線',
@@ -448,7 +448,7 @@
       turnControl: !!el.closest('#turnActionButtons'),
       hintBar: !!el.closest('#lrBar'),
       factionAbility: !!el.closest('#factionActionButtons') || el.id === 'redArmyAbilityBtn',
-      helpEntry: el.id === HELP_ENTRY_ID,
+      menuEntry: el.id === MENU_ENTRY_ID,
     };
   }
 
@@ -462,7 +462,7 @@
    */
   function releaseExcludedFocus() {
     const active = document.activeElement;
-    if (ctl.focusKind === 'help' && active === ctl.focusEl) return; // R／SR 環放在 Joy-Con 說明按鈕上的焦點
+    if (ctl.focusKind === 'menuEntry' && active === ctl.focusEl) return; // R／SR 環放在遊戲選單按鈕上的焦點
     if (active && active !== document.body && padExcluded(active)) {
       try { active.blur(); } catch { /* ignore */ }
     }
@@ -702,25 +702,25 @@
     return { key: ctl.focusSig, kind: 'browse', left: x - 6, right: x + 6, top: y - 6, bottom: y + 6 };
   }
 
-  function helpEntryEl() {
-    const el = document.getElementById(HELP_ENTRY_ID);
+  function menuEntryEl() {
+    const el = document.getElementById(MENU_ENTRY_ID);
     return isShown(document.getElementById('gameShell')) && isUsable(el) ? el : null;
   }
 
-  /** 焦點目前停在可用的 Joy-Con 說明按鈕（modal 開著時不算）。 */
-  function helpFocused(scope) {
-    return ctl.focusKind === 'help' && scope.kind !== 'modal' && !!helpEntryEl() && ctl.focusEl === helpEntryEl();
+  /** 焦點目前停在可用的遊戲選單按鈕（modal 開著時不算）。 */
+  function menuEntryFocused(scope) {
+    return ctl.focusKind === 'menuEntry' && scope.kind !== 'modal' && !!menuEntryEl() && ctl.focusEl === menuEntryEl();
   }
 
-  /** R／SR 環到達 Joy-Con 說明按鈕，或說明圖關閉後回焦：只放焦點（不開圖）。回傳是否成功。 */
-  function focusHelpEntry() {
-    const el = helpEntryEl();
+  /** R／SR 環到達遊戲選單按鈕，或選單／說明圖關閉後回焦：只放焦點（不開選單）。回傳是否成功。 */
+  function focusMenuEntry() {
+    const el = menuEntryEl();
     if (!el) return false;
     clearDomFocus();
     if (ctl.focusKind === 'map' || ctl.focusKind === 'browse') sendToMap('clearFocus');
-    ctl.focusKind = 'help';
+    ctl.focusKind = 'menuEntry';
     ctl.focusEl = el;
-    ctl.focusSig = `#${HELP_ENTRY_ID}`;
+    ctl.focusSig = `#${MENU_ENTRY_ID}`;
     ctl.focusTown = null;
     ctl.browseTargets = null;
     ctl.autofocusMap = false;
@@ -733,11 +733,11 @@
     return true;
   }
 
-  /** 方向鍵從 Joy-Con 說明按鈕出發時的起點（按鈕本身不在方向焦點集合內）。 */
-  function helpOrigin(scope) {
-    if (!helpFocused(scope)) return null;
+  /** 方向鍵從遊戲選單按鈕出發時的起點（按鈕本身不在方向焦點集合內）。 */
+  function menuEntryOrigin(scope) {
+    if (!menuEntryFocused(scope)) return null;
     const r = ctl.focusEl.getBoundingClientRect();
-    return { key: ctl.focusSig, kind: 'help', left: r.left, right: r.right, top: r.top, bottom: r.bottom };
+    return { key: ctl.focusSig, kind: 'menuEntry', left: r.left, right: r.right, top: r.top, bottom: r.bottom };
   }
 
   /** 畫面流程明確指定新焦點時，同步控制器的內部焦點，避免 reconcile 拉回上一個已隱藏控制附近。 */
@@ -780,9 +780,9 @@
     if (redirectChoiceToMap(currentScope(), true)) return;
     if (layerActive() && layer.reconcile()) return;
     const scope = currentScope();
-    // Joy-Con 說明按鈕上的焦點（不在 action 焦點集合內）：按鈕仍可用就保留；說明圖關閉後回到按鈕。
-    if (scope.kind !== 'modal' && ctl.focusKind === 'help') {
-      if (helpFocused(scope)) {
+    // 遊戲選單按鈕上的焦點（不在 action 焦點集合內）：按鈕仍可用就保留；遊戲選單／說明圖關閉後回到按鈕。
+    if (scope.kind !== 'modal' && ctl.focusKind === 'menuEntry') {
+      if (menuEntryFocused(scope)) {
         ctl.lastScopeId = scope.id;
         if (!ctl.focusEl.classList.contains(FOCUS_CLASS)) ctl.focusEl.classList.add(FOCUS_CLASS);
         return;
@@ -790,8 +790,8 @@
       clearDomFocus();
       ctl.focusKind = null; ctl.focusEl = null; ctl.focusSig = null;
     }
-    if (scope.kind !== 'modal' && scope.id !== ctl.lastScopeId && ctl.pageFocusMemory && ctl.pageFocusMemory.kind === 'help'
-      && focusHelpEntry()) return;
+    if (scope.kind !== 'modal' && scope.id !== ctl.lastScopeId && ctl.pageFocusMemory && ctl.pageFocusMemory.kind === 'menuEntry'
+      && focusMenuEntry()) return;
     const items = buildItems(scope);
     // SL 瀏覽焦點刻意不在 action 焦點集合內：仍在戰略地圖、仍是 canonical 城鎮且地圖目標沒變時保留（直到下一次使用者導航）。
     // 目標改變（例如新的 pending choice）或城鎮不再可瀏覽 → 放掉，以既有的地圖預設焦點（iframe 的焦點城鎮或第一個城鎮目標）接手。
@@ -899,7 +899,7 @@
   }
 
   // ------------------------------------------------------------ 遊戲選單（遊戲中按住搖桿按鈕 2 秒）
-  // 開啟、導覽、取消都只改這個分頁的 DOM（不送遊戲 mutation、不消耗行動、不動地圖）；「Joy-Con 功能表」點既有說明按鈕，
+  // 開啟、導覽、取消都只改這個分頁的 DOM（不送遊戲 mutation、不消耗行動、不動地圖）；「Joy-Con 功能表」開啟 Joy-Con 說明圖，
   // 「重新開始」先開第二層確認，確認後才點既有的 /new-game 連結。
   const GAME_MENU_IDS = new Set([Core.GAME_MENU_MODAL_ID, Core.GAME_MENU_CONFIRM_ID]);
 
@@ -980,14 +980,37 @@
     if (item) applyItem(item);
   }
 
+  function presentGameMenu() {
+    ctl.menuGate = Core.createMenuGate(ctl.input.held); // 開啟時 STICK／A 仍按住：放開前選單不接受任何輸入
+    setOverlayShown(document.getElementById(Core.GAME_MENU_MODAL_ID), true);
+    settleGameMenuFocus(null); // 只有手把正在使用（padActive 且已連線）時才移動手把焦點
+    renderHud();
+  }
+
+  /** Joy-Con 入口（長按搖桿、或 R／SR 聚焦「遊戲選單」按鈕後按 A）：連線／控制席位／handoff／overlay／choice redirect 閘門全部維持。 */
   function openGameMenu() {
     const menu = document.getElementById(Core.GAME_MENU_MODAL_ID);
     if (!menu || Core.gameMenuBlocker(gameMenuContext()) !== null) return false;
-    ctl.menuGate = Core.createMenuGate(ctl.input.held); // 開啟時 STICK 仍按住：放開前選單不接受任何輸入
-    setOverlayShown(menu, true);
     ctl.padActive = true;
-    settleGameMenuFocus(null);
-    renderHud();
+    presentGameMenu();
+    return true;
+  }
+
+  /** 滑鼠／鍵盤入口（導覽列「遊戲選單」按鈕）的資格：不需要 Joy-Con，但開始流程、交接遮罩、未在遊戲畫面或有其他視窗時不開。 */
+  function mouseMenuBlocker() {
+    const c = gameMenuContext();
+    if (c.startFlow) return 'start-flow';
+    if (c.handoff) return 'handoff';
+    if (!c.inGame) return 'not-in-game';
+    if (c.modal) return 'overlay';
+    return null;
+  }
+
+  function openGameMenuByMouse() {
+    const menu = document.getElementById(Core.GAME_MENU_MODAL_ID);
+    if (!menu || gameMenuLevel() || mouseMenuBlocker() !== null) return false;
+    presentGameMenu();
+    if (!(ctl.padActive && live())) document.getElementById('gameMenuResumeBtn')?.focus({ preventScroll: true });
     return true;
   }
 
@@ -1002,17 +1025,23 @@
       ctl.focusSig = null;
       ctl.focusKind = null;
     }
-    if (!silent) settleGameMenuFocus(null);
+    if (!silent) {
+      settleGameMenuFocus(null);
+      // 滑鼠／鍵盤開啟、手把沒有在使用：原生焦點回到導覽列的「遊戲選單」按鈕。
+      const btn = document.getElementById(MENU_ENTRY_ID);
+      const active = document.activeElement;
+      if (!(ctl.padActive && live()) && btn && btn.isConnected && (!active || active === document.body || !active.isConnected || !isShown(active))) {
+        try { btn.focus({ preventScroll: true }); } catch { /* ignore */ }
+      }
+    }
     renderHud();
   }
 
-  /** 「Joy-Con 功能表」：關閉選單後走既有 Joy-Con 說明按鈕（openJoyconHelp）；說明圖的 B／× 照既有流程關閉。 */
+  /** 「Joy-Con 功能表」：關閉選單後開啟 Joy-Con 說明圖（openJoyconHelp）；說明圖的 B／× 照既有流程關閉。 */
   function openGameMenuSettings() {
     if (gameMenuLevel() !== 'menu') return;
     closeGameMenu({ silent: true });
-    const btn = document.getElementById(HELP_ENTRY_ID);
-    if (isUsable(btn)) btn.click();
-    else if (typeof window.openJoyconHelp === 'function') window.openJoyconHelp();
+    if (typeof window.openJoyconHelp === 'function') window.openJoyconHelp();
     scheduleReconcile();
   }
 
@@ -1073,6 +1102,25 @@
     // 滑鼠點背景：選單＝返回遊戲；確認畫面＝返回遊戲選單（不會執行重新開始）。
     $(Core.GAME_MENU_MODAL_ID)?.addEventListener('click', (e) => { if (e.target === e.currentTarget) closeGameMenu(); });
     $(Core.GAME_MENU_CONFIRM_ID)?.addEventListener('click', (e) => { if (e.target === e.currentTarget) cancelRestartConfirm(); });
+    // 導覽列「遊戲選單」按鈕：滑鼠（或鍵盤 Enter／Space）直接開啟，不需要 Joy-Con。
+    $(MENU_ENTRY_ID)?.addEventListener('click', () => { openGameMenuByMouse(); });
+    // 鍵盤：Esc＝B（確認層回遊戲選單、選單回遊戲）；Tab 只在目前這一層的按鈕間循環。
+    document.addEventListener('keydown', (e) => {
+      const level = gameMenuLevel();
+      if (!level) return;
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        if (level === 'confirm') cancelRestartConfirm(); else closeGameMenu();
+      } else if (e.key === 'Tab') {
+        const root = $(level === 'confirm' ? Core.GAME_MENU_CONFIRM_ID : Core.GAME_MENU_MODAL_ID);
+        const buttons = [...root.querySelectorAll('button')].filter(b => !b.disabled && isShown(b));
+        if (!buttons.length) return;
+        const i = buttons.indexOf(document.activeElement);
+        const next = e.shiftKey ? (i <= 0 ? buttons.length - 1 : i - 1) : (i < 0 || i === buttons.length - 1 ? 0 : i + 1);
+        e.preventDefault();
+        buttons[next].focus({ preventScroll: true });
+      }
+    });
   }
 
   // ------------------------------------------------------------ dispatch (logical → UI)
@@ -1155,11 +1203,11 @@
     const key = currentKey(items.all);
     const mapCancel = scope.kind === 'map' && ctl.mapSnapshot && ctl.mapSnapshot.canCancel;
     const focused = items.all.find(i => i.key === key) || null;
-    const onHelp = helpFocused(scope);
+    const onMenuEntry = menuEntryFocused(scope);
     const ctx = {
       scopeKind: scope.kind,
-      hasFocus: key !== null || onHelp,
-      helpEntry: onHelp,
+      hasFocus: key !== null || onMenuEntry,
+      menuEntry: onMenuEntry,
       card: cardContext(focused),
       mapTarget: scope.kind === 'map' && !!focused && focused.kind === 'town',
       browseFocus: scope.kind === 'map' && ctl.focusKind === 'browse' && !!ctl.focusTown,
@@ -1172,23 +1220,31 @@
     if (!command) return;
     // 沒有焦點時只有「移動」「取消」、R／SR 區段與 SL 聚焦選單可直接執行（無可聚焦項目的 modal，例如卡牌預覽，仍須能用 B 關閉；
     // 分頁不是方向焦點，沒有內容的分頁也必須能用 R／SR 離開；聚焦選單本身就是用來找焦點的；SL 瀏覽焦點的城鎮說明不在 action 焦點集合內）。
-    if (key === null && !onHelp && !['move', 'cancel', 'section', 'focusMenu', 'townDetail'].includes(command.cmd)) { applyItem(defaultItem(items, scope)); return; }
+    if (key === null && !onMenuEntry && !['move', 'cancel', 'section', 'focusMenu', 'townDetail'].includes(command.cmd)) { applyItem(defaultItem(items, scope)); return; }
     const current = items.all.find(i => i.key === key);
     if (current) lastRect = { left: current.left, right: current.right, top: current.top, bottom: current.bottom };
 
     let activated = false;
     switch (command.cmd) {
       case 'move': {
-        // SL 瀏覽焦點：從被聚焦的城鎮（地圖中心）往該方向找最近的地圖目標或控制；Joy-Con 說明按鈕：從按鈕位置出發。
-        const origin = browseOrigin(scope) || helpOrigin(scope);
+        // 遊戲選單：依列移動（含「配樂音量」的 − / +），不用幾何距離。
+        if (scope.kind === 'modal' && scope.id === Core.GAME_MENU_MODAL_ID) {
+          const id = Core.gameMenuMove(current && current.el ? current.el.id : null, command.dir);
+          const target = id ? items.dom.find(i => i.el.id === id) : null;
+          if (target && target.el !== current.el) applyItem(target);
+          break;
+        }
+        // SL 瀏覽焦點：從被聚焦的城鎮（地圖中心）往該方向找最近的地圖目標或控制；遊戲選單按鈕：從按鈕位置出發。
+        const origin = browseOrigin(scope) || menuEntryOrigin(scope);
         const from = origin ? origin.key : key;
         const next = Core.pickDirectional(origin ? [...items.all, origin] : items.all, from, command.dir);
         if (next && next.key !== from) applyItem(next);
         break;
       }
       case 'activate': activated = activate(scope, items, current); break;
-      // A 在 Joy-Con 說明按鈕上：點既有按鈕開啟說明圖（modal 開啟後 reconcile 記住回焦點＝說明按鈕）。
-      case 'openHelp': if (helpEntryEl()) { helpEntryEl().click(); scheduleReconcile(); activated = true; } break;
+      // A 在遊戲選單按鈕上：走與長按搖桿相同的 openGameMenu（含連線／席位／handoff／overlay／choice redirect 閘門）；
+      // 選單關閉後 reconcile 記住的回焦點＝遊戲選單按鈕。
+      case 'openMenu': activated = openGameMenu(); break;
       // A 在 SL 瀏覽焦點上：重新開啟該城鎮說明（iframe 重驗 town＝目前的 map focus；唯讀，不選取、不動相機）。
       case 'townDetail': sendToMap('detail', { town: ctl.focusTown }); break;
       case 'cardPreview': activated = previewCard(current); break;
@@ -1314,11 +1370,11 @@
       // 六個全域區段（四個分頁＋事件卡＋時代關卡）只由 R／SR 循環，與客廳模式同一個環與既有分頁／說明 modal；
       // 必選地圖目標時環只提供「戰略地圖」（已在地圖則不動）。分頁永遠不是方向焦點：切換後清掉舊焦點，
       // 再把焦點放到新區段的內容（不留在分頁上）。
-      // 環上另有一個額外焦點：導覽列的 Joy-Con 說明按鈕（layer 已把焦點放上去；不切頁、不開圖，焦點不清掉）。
+      // 環上另有一個額外焦點：導覽列的遊戲選單按鈕（layer 已把焦點放上去；不切頁、不開選單，焦點不清掉）。
       const reached = layer && layer.runSectionRing(step, scope.kind === 'modal' ? scope : null);
       if (!reached) return;
-      if (reached === HELP_RING_KEY) return;
-      if (ctl.focusKind === 'help') ctl.focusKind = null; // 離開說明按鈕：原生焦點也一併放掉
+      if (reached === MENU_RING_KEY) return;
+      if (ctl.focusKind === 'menuEntry') ctl.focusKind = null; // 離開遊戲選單按鈕：原生焦點也一併放掉
       clearDomFocus();
       if (ctl.focusKind === 'map' || ctl.focusKind === 'browse') sendToMap('clearFocus');
       ctl.focusEl = null;
@@ -1377,7 +1433,7 @@
           <button id="padReconnectBtn" type="button">重新連線</button>
           <button id="padResetBtn" type="button">預設</button>
         </div>
-        <div class="pad-note">搖桿＝移動　A 確認　B 返回　R/SR 六個區段＋Joy-Con 說明按鈕（A 開圖、B 關閉）　Y 說明<br>Capture 結束行動（確認）　+ 陣營能力<br>卡牌：A 查看　手牌 X 資源／Y 行動（一般奧援 X＝棄置，需確認）　購買卡 B 選擇 → Y 購買所選（確認）<br>地圖目標：A 選取　Y 建立組織／確認移動／瓦解組織<br>ZR（戰略地圖）：放大一級，到最大後再按回到最小<br>SL 地圖聚焦：依統治者／陣營區域選任一城鎮，置中放大（只改地圖畫面）<br>遊戲中按住搖桿 2 秒：遊戲選單（返回遊戲／Joy-Con 功能表／重新開始需確認）</div>
+        <div class="pad-note">搖桿＝移動　A 確認　B 返回　R/SR 六個區段＋遊戲選單按鈕（A 開啟選單）　Y 說明<br>Capture 結束行動（確認）　+ 陣營能力<br>卡牌：A 查看　手牌 X 資源／Y 行動（一般奧援 X＝棄置，需確認）　購買卡 B 選擇 → Y 購買所選（確認）<br>地圖目標：A 選取　Y 建立組織／確認移動／瓦解組織<br>ZR（戰略地圖）：放大一級，到最大後再按回到最小<br>SL 地圖聚焦：依統治者／陣營區域選任一城鎮，置中放大（只改地圖畫面）<br>遊戲中按住搖桿 2 秒：遊戲選單（返回遊戲／Joy-Con 功能表／重新開始需確認）</div>
       </div>`;
     stage.appendChild(hud);
     const $ = id => document.getElementById(id);
@@ -1472,14 +1528,14 @@
     const scope = currentScope();
     if (scope.kind === 'modal' && GAME_MENU_IDS.has(scope.id)) {
       if (!Core.menuGateAllows(ctl.menuGate, null)) return '遊戲選單　放開搖桿按鈕後操作';
-      if (scope.id === Core.GAME_MENU_MODAL_ID) return '遊戲選單　搖桿上下 選擇　A 執行　B 返回遊戲';
+      if (scope.id === Core.GAME_MENU_MODAL_ID) return '遊戲選單　搖桿 選擇（配樂音量：左右選 －／＋）　A 執行　B 返回遊戲';
       const ok = ctl.focusEl && ctl.focusEl.id === 'gameMenuConfirmOkBtn';
       return `重新開始確認　${ok ? 'A 確認重新開始（離開目前遊戲）' : '搖桿 選擇　A 執行'}　B 返回遊戲選單`;
     }
     if (ctl.stickHold.since !== null && scope.kind !== 'modal') return '繼續按住搖桿按鈕（2 秒）開啟遊戲選單';
     if (scope.kind === 'modal' && scope.id === Core.FOCUS_MENU_MODAL_ID) return '搖桿 選擇　A 開啟分組／置中放大城鎮（不執行）　B／SL 關閉';
     if (scope.kind === 'modal' && scope.id === 'joyconHelpModal') return 'Joy-Con 說明圖　B 關閉';
-    if (helpFocused(scope)) return 'Joy-Con 說明　A 開啟說明圖　R/SR 區段';
+    if (menuEntryFocused(scope)) return '遊戲選單　A 開啟遊戲選單　R/SR 區段';
     const pickerPad = scope.kind === 'modal' && scope.id === 'factionPicker' ? factionPickerPad() : null;
     const pickerHint = pickerPad ? Core.factionPickerHint(pickerPad.phase(), pickerPad.hintContext()) : null;
     if (pickerHint) return pickerHint;
@@ -1582,7 +1638,7 @@
   const host = {
     ctl, currentScope, buildItems, collectDom, applyItem, focusDom, clearDomFocus, defaultItem, isShown, isUsable,
     cardContext, previewCard, toggleCard, playCardMode, modalCancelTarget, sendToMap, choiceLocked, choiceLockKey, activeGameView,
-    scheduleReconcile, renderHud, hintText, clearFocus, bridgeConnected, directionalFlags, focusBrowseTown, dropBrowseFocus, focusHelpEntry,
+    scheduleReconcile, renderHud, hintText, clearFocus, bridgeConnected, directionalFlags, focusBrowseTown, dropBrowseFocus, focusMenuEntry,
     getMapSnapshot: () => ctl.mapSnapshot,
     statusText: statusLabel,
     bindingBadge: () => Core.bindingBadge(ctl.binding, rosterList()),

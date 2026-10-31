@@ -1546,7 +1546,11 @@ def nav_to(page, joycons, port, selector, limit=12):
           if (a === t) return 'done';
           if (!a || a === document.body || !a.classList.contains('rl-pad-focus')) return 'none';
           const r = t.getBoundingClientRect(), q = a.getBoundingClientRect();
-          return [(r.left + r.right - q.left - q.right) / 2, (r.top + r.bottom - q.top - q.bottom) / 2];
+          const dy = (r.top + r.bottom - q.top - q.bottom) / 2;
+          // 遊戲選單是依列導覽（上下走列、左右只在配樂音量的 −/+ 之間）：目標在別列就用垂直方向。
+          const menu = document.getElementById('gameMenuModal');
+          if (menu && menu.contains(t) && menu.contains(a) && Math.abs(dy) > 8) return [0, dy];
+          return [(r.left + r.right - q.left - q.right) / 2, dy];
         }""", selector)
         if delta == "done":
             return True

@@ -183,7 +183,7 @@
    * 卡牌焦點：A = 查看預覽（絕不執行／選擇／購買）；B = 切換選擇（僅有選擇控制的卡牌，否則維持原本取消）；
    * 手牌焦點：X = 資源（一般奧援＝既有「棄置」→ 危險確認；紅軍奧援的按鈕是「資源」，仍＝資源）、Y = 行動；B 與其他牌相同（不棄置）；購買卡 Y = 既有「購買所選」→ 購買確認單（UI 要求焦點卡已用 B 選擇，不自動選擇）；
    * 其他卡牌焦點的 X/Y 完全 no-op。地圖城鎮目標的 Y = 該目標的既有地圖操作（建立組織／確認移動／瓦解組織）。
-   * helpEntry（焦點在導覽列「Joy-Con 說明」按鈕）：A = openHelp（開啟說明圖）、B = null；其餘鍵照非卡牌焦點。
+   * menuEntry（焦點在導覽列「遊戲選單」按鈕）：A = openMenu（開啟遊戲選單）、B = null；其餘鍵照非卡牌焦點。
    * SL = 開啟聚焦選單（page／map scope；不需要 pending choice 或焦點）；選單開著時 SL = 關閉（同 B）；其他 modal 內 SL 不作用（scope lock）。
    * 聚焦選單內只有方向、A（選取選項）、B（關閉）與 SL 有作用。
    * ZR = 戰略地圖縮放循環：只在 map scope（與焦點無關）；page、任何 modal（含聚焦選單）一律 null。
@@ -201,14 +201,14 @@
       case 'mapZoom': return ctx.scopeKind === 'map' && !ctx.focusMenuOpen ? { cmd: 'mapZoom' } : null;
       case 'move': return { cmd: 'move', dir: logical.dir };
       case 'confirm':
-        // 焦點停在「Joy-Con 說明」按鈕（ctx.helpEntry，R／SR 環的額外焦點）：A 才開啟說明圖。
-        if (ctx.helpEntry && !modal) return { cmd: 'openHelp' };
+        // 焦點停在「遊戲選單」按鈕（ctx.menuEntry，R／SR 環的額外焦點）：A 才開啟遊戲選單。
+        if (ctx.menuEntry && !modal) return { cmd: 'openMenu' };
         // SL 聚焦的只看城鎮（ctx.browseFocus，不在 action 焦點集合內）：A＝重新開啟該城鎮說明（唯讀，不選取）。
         if (ctx.browseFocus && ctx.scopeKind === 'map') return { cmd: 'townDetail' };
         if (!ctx.hasFocus) return null;
         return card ? { cmd: 'cardPreview' } : { cmd: 'activate' };
       case 'cancel':
-        if (ctx.helpEntry && !modal) return null; // 說明按鈕上的 B 不作用（不取消地圖選取等其他流程）
+        if (ctx.menuEntry && !modal) return null; // 遊戲選單按鈕上的 B 不作用（不取消地圖選取等其他流程）
         if (ctx.hasFocus && card && card.hasToggle) return { cmd: 'cardToggle' };
         return ctx.cancelAvailable ? { cmd: 'cancel' } : null;
       case 'nextSection': return modal || ctx.sectionsLocked ? null : { cmd: 'section', step: 1 };
@@ -355,16 +355,35 @@
   /**
    * 遊戲選單內一個邏輯動作（level＝'menu'｜'confirm'）：只有方向、A、B 交回既有 modal 流程（pass：方向焦點、
    * A＝點焦點中的既有按鈕、B＝點 scope 的取消鈕：選單＝返回遊戲、確認＝返回遊戲選單）；其他鍵一律吞掉（none，scope lock）。
-   * 選單是上下排列：左右不作用；確認畫面的兩個按鈕左右並排，四個方向都交回方向焦點。
+   * 選單選項上下排列，「配樂音量」的 − / + 與確認畫面的兩個按鈕左右並排，所以四個方向都交回方向焦點。
    */
   function gameMenuCommand(level, logical) {
     if (level !== 'menu' && level !== 'confirm') return { cmd: 'none' };
     if (!logical) return { cmd: 'none' };
     if (logical.name === 'move') {
-      if (level === 'menu' && logical.dir !== 'up' && logical.dir !== 'down') return { cmd: 'none' };
       return { cmd: 'pass' };
     }
     return logical.name === 'confirm' || logical.name === 'cancel' ? { cmd: 'pass' } : { cmd: 'none' };
+  }
+
+  // 遊戲選單的列（上到下）。上下走列、左右只在同一列內移動（「配樂音量」的 − / +）；不用幾何距離，
+  // 所以並排的 − / + 不會被置中的「重新開始」搶走（不循環）。進入多按鈕列時保留欄位（單按鈕列＝第一欄）。
+  const GAME_MENU_ROWS = Object.freeze([
+    Object.freeze(['gameMenuResumeBtn']),
+    Object.freeze(['gameMenuSettingsBtn']),
+    Object.freeze(['gameMenuVolumeDownBtn', 'gameMenuVolumeUpBtn']),
+    Object.freeze(['gameMenuRestartBtn']),
+  ]);
+
+  /** 目前焦點的按鈕 id＋方向 → 下一個按鈕 id（沒有鄰居＝原地不動）；焦點不在列表內 → null（交回預設焦點）。 */
+  function gameMenuMove(currentId, dir, rows = GAME_MENU_ROWS) {
+    const r = rows.findIndex(row => row.includes(currentId));
+    if (r < 0) return null;
+    const c = rows[r].indexOf(currentId);
+    if (dir === 'left' || dir === 'right') return rows[r][c + (dir === 'right' ? 1 : -1)] ?? currentId;
+    if (dir !== 'up' && dir !== 'down') return currentId;
+    const next = rows[r + (dir === 'down' ? 1 : -1)];
+    return next ? next[Math.min(c, next.length - 1)] : currentId;
   }
 
   // ---------------------------------------------------------------- scope / focus set
@@ -382,7 +401,7 @@
     { id: GAME_MENU_CONFIRM_ID, cancel: ['#gameMenuConfirmCancelBtn'], initial: '#gameMenuConfirmOkBtn' },
     { id: GAME_MENU_MODAL_ID, cancel: ['#gameMenuResumeBtn'], initial: '#gameMenuResumeBtn' },
     { id: 'victoryArtViewer', cancel: ['#victoryArtViewerClose'] },
-    // Joy-Con 說明圖：scope lock（R／SR、SL、ZR、X、Capture、+ 都不穿透）；B 點既有關閉 ×，焦點由 controller_ui 還原到說明按鈕。
+    // Joy-Con 說明圖（由遊戲選單的「Joy-Con 功能表」開啟）：scope lock（R／SR、SL、ZR、X、Capture、+ 都不穿透）；B 點既有關閉 ×，焦點還原到遊戲選單按鈕。
     { id: 'joyconHelpModal', cancel: ['#joyconHelpCloseBtn'], initial: '#joyconHelpCloseBtn' },
     { id: 'cardPreviewModal', cancel: ['self'] },
     { id: 'eventRevealModal', cancel: ['self'] },
@@ -409,8 +428,8 @@
    */
   function isDirectionalExcluded(d) {
     if (!d || typeof d !== 'object') return true;
-    // helpEntry＝導覽列「Joy-Con 說明」按鈕：只由 R／SR 環聚焦（額外焦點，不是區段），方向鍵不會落在上面。
-    return !!(d.handAction || d.cardCheckbox || d.sectionTab || d.turnControl || d.hintBar || d.factionAbility || d.helpEntry);
+    // menuEntry＝導覽列「遊戲選單」按鈕：只由 R／SR 環聚焦（額外焦點，不是區段），方向鍵不會落在上面。
+    return !!(d.handAction || d.cardCheckbox || d.sectionTab || d.turnControl || d.hintBar || d.factionAbility || d.menuEntry);
   }
 
   function isFocusableCandidate(c) {
@@ -1063,7 +1082,7 @@
     createInputState, resetInputState, reduceFrame, stickDirection, isStale, bridgeInputGate, bridgeConnected,
     logicalAction, routeAction, FACTION_PICKER_PHASES, factionPickerCommand, factionPickerHint,
     GAME_MENU_HOLD_MS, GAME_MENU_MODAL_ID, GAME_MENU_CONFIRM_ID, createStickHold, stepStickHold, gameMenuBlocker,
-    createMenuGate, stepMenuGate, menuGateAllows, gameMenuCommand,
+    createMenuGate, stepMenuGate, menuGateAllows, gameMenuCommand, GAME_MENU_ROWS, gameMenuMove,
     resolveModalScope, isDirectionalExcluded, isFocusableCandidate, buildFocusSet, pickInitial, pickDirectional, cycleIndex,
     isTrustedMessage, sanitizeMapSnapshot, sanitizeMapCommand, sanitizeMapResult, buildMapSnapshotModel,
     validateBridgeUrl, normalizeSettings, mixedContentRisk, reconnectDelayMs,

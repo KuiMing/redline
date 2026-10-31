@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>REDLINE // STRATEGIC COMMAND</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="/static/style.css?v=victory-art-y-20261031" />
+  <link rel="stylesheet" href="/static/style.css?v=game-menu-music-20261031" />
   <!-- 客廳輪流（hot-seat）：在第一次繪製前就能遮住舞台，所以放在 <head>。 -->
   <script src="/static/hotseat_core.js?v=reaction-victory-controller-20261027"></script>
   <script src="/static/hotseat_ui.js?v=lobby-hotseat-cleanup-20261031"></script>
@@ -377,8 +377,8 @@
     <button id="myFactionBtn" class="game-tab my-faction-tab" type="button" data-view="myFaction">我的陣營</button>
     <button id="eventCardTab" class="game-tab event-card-tab" type="button" style="display:none;" onclick="openCurrentEventReveal()">事件卡</button>
     <div id="activeEraTabs" class="active-era-tabs" role="group" aria-label="生效中的時代關卡"></div>
-    <!-- 不是第七個遊戲頁面：只開啟 Joy-Con 按鍵功能表圖片。Joy-Con 以 R／SR 環聚焦它，按 A 才開啟。 -->
-    <button id="joyconHelpBtn" class="joycon-help-btn" type="button" aria-label="Joy-Con 說明" aria-haspopup="dialog" aria-controls="joyconHelpModal" title="Joy-Con 說明（按鍵功能表）" onclick="openJoyconHelp()"><svg class="joycon-help-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M7 6h10a5 5 0 0 1 4.9 6l-1 5a3 3 0 0 1-5.2 1.4L13.6 16h-3.2l-2.1 2.4A3 3 0 0 1 3.1 17l-1-5A5 5 0 0 1 7 6zm0 3v1.5H5.5v2H7V14h2v-1.5h1.5v-2H9V9H7zm8.5 1a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5zm2.5 2.5a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5z"/></svg><span>Joy-Con 說明</span></button>
+    <!-- 不是第七個遊戲頁面：只開啟遊戲選單（與長按搖桿 2 秒同一個 gameMenuModal）。滑鼠直接點；Joy-Con 以 R／SR 環聚焦它，按 A 才開啟。 -->
+    <button id="gameMenuBtn" class="game-menu-btn" type="button" aria-label="遊戲選單" aria-haspopup="dialog" aria-controls="gameMenuModal" title="遊戲選單（返回遊戲、配樂音量、Joy-Con 功能表、重新開始）"><svg class="game-menu-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M4 6h16v2.4H4zm0 4.8h16v2.4H4zm0 4.8h16V18H4z"/></svg><span>遊戲選單</span></button>
     <div id="turnActionButtons" role="group" aria-label="回合行動控制">
       <button id="redArmyAbilityBtn" class="phase-red-army-btn" type="button" style="display:none;" onclick="openRedArmyAbilityModal()">紅軍能力</button>
       <button id="advanceStepBtn" class="phase-action-btn" type="button" onclick="sendAction('advance')">結束目前步驟</button>
@@ -463,13 +463,21 @@
   </div>
 </div>
 <!-- 遊戲選單（遊戲中目前操作的 Joy-Con 按住搖桿按鈕 2 秒；controller_ui.js）：不送任何遊戲操作。
-     Joy-Con 功能表＝既有 Joy-Con 說明；重新開始一律先經過下方確認，確認後才走既有 /new-game。 -->
+     Joy-Con 功能表＝開啟 Joy-Con 說明圖；配樂音量＝− / + 按鈕（Joy-Con 方向＋A、滑鼠、鍵盤皆可）；重新開始一律先經過下方確認，確認後才走既有 /new-game。 -->
 <div id="gameMenuModal" class="modal-overlay game-menu-overlay" role="dialog" aria-modal="true" aria-labelledby="gameMenuTitle" aria-hidden="true" style="display:none;">
   <div class="modal-glass game-menu-glass">
     <div id="gameMenuTitle" class="modal-title-text">遊戲選單</div>
     <div class="game-menu-options" role="group" aria-label="遊戲選單選項">
       <button id="gameMenuResumeBtn" type="button" class="modal-choice-btn game-menu-option">返回遊戲</button>
       <button id="gameMenuSettingsBtn" type="button" class="modal-choice-btn game-menu-option">Joy-Con 功能表</button>
+      <div id="gameMenuVolume" class="game-menu-volume" role="group" aria-labelledby="gameMenuVolumeLabel" data-volume="30">
+        <span id="gameMenuVolumeLabel" class="game-menu-volume-label">配樂音量</span>
+        <div class="game-menu-volume-controls">
+          <button id="gameMenuVolumeDownBtn" type="button" class="modal-choice-btn game-menu-volume-btn" aria-label="降低配樂音量 10%">－</button>
+          <output id="gameMenuVolumeValue" class="game-menu-volume-value" for="gameMenuVolumeDownBtn gameMenuVolumeUpBtn" aria-live="polite">30%</output>
+          <button id="gameMenuVolumeUpBtn" type="button" class="modal-choice-btn game-menu-volume-btn" aria-label="提高配樂音量 10%">＋</button>
+        </div>
+      </div>
       <button id="gameMenuRestartBtn" type="button" class="modal-choice-btn game-menu-option game-menu-danger">重新開始…</button>
     </div>
   </div>
@@ -503,13 +511,14 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/static/player_messages_zh_tw.js?v=player-message-i18n-20260801"></script>
 <script src="/static/event_reveal_core.js?v=reaction-no-event-reveal-20261027"></script>
-<script src="/static/app.js?v=victory-art-y-20261031"></script>
-<script src="/static/controller_core.js?v=reaction-victory-controller-20261027"></script>
-<script src="/static/living_room_core.js?v=town-detail-popup-20261026"></script>
-<script src="/static/controller_ui.js?v=victory-art-y-20261031"></script>
-<script src="/static/controller_living_room.js?v=yellow-focus-inset-20261029"></script>
+<script src="/static/app.js?v=game-menu-music-20261031"></script>
+<script src="/static/controller_core.js?v=game-menu-music-20261031"></script>
+<script src="/static/living_room_core.js?v=game-menu-music-20261031"></script>
+<script src="/static/controller_ui.js?v=game-menu-music-20261031"></script>
+<script src="/static/controller_living_room.js?v=game-menu-music-20261031"></script>
 <script src="/static/start_flow_core.js?v=reaction-victory-controller-20261027"></script>
 <script src="/static/start_flow_ui.js?v=lobby-settings-cleanup-20261031"></script>
 <script src="/static/start_screen_fx.js?v=command-entry-webgl-20261031"></script>
+<script src="/static/game_music.js?v=game-menu-music-20261031"></script>
 </body>
 </html>

@@ -892,22 +892,22 @@
 
   // ------------------------------------------------------------ R / SR：六個全域區段
   function sectionKeyOf(tab) {
-    if (tab.id === 'joyconHelpBtn') return LR.RING_HELP_KEY;
+    if (tab.id === 'gameMenuBtn') return LR.RING_MENU_KEY;
     if (tab.dataset.view && LR.sectionOfKey(`view:${tab.dataset.view}`)) return `view:${tab.dataset.view}`;
     if (tab.id === 'eventCardTab') return 'event';
     if (tab.classList.contains('era-stage-tab') && tab.dataset.eraId) return `era:${tab.dataset.eraId}`;
     return null;
   }
 
-  // 六個區段的分頁＋導覽列的 Joy-Con 說明按鈕（額外焦點），依導覽列的文件順序。
+  // 六個區段的分頁＋導覽列的遊戲選單按鈕（額外焦點），依導覽列的文件順序。
   function sectionStops() {
-    return qa('#gameTabs .game-tab, #gameTabs #joyconHelpBtn')
+    return qa('#gameTabs .game-tab, #gameTabs #gameMenuBtn')
       .map(tab => ({ key: sectionKeyOf(tab), el: tab, usable: usable(tab) }))
       .filter(stop => stop.key);
   }
 
   function currentSectionKey(stops, modalScope) {
-    if (!modalScope && host.ctl.focusKind === 'help') return LR.RING_HELP_KEY;
+    if (!modalScope && host.ctl.focusKind === 'menuEntry') return LR.RING_MENU_KEY;
     if (modalScope && LR.SECTION_MODALS.get(modalScope.id) === 'event') return 'event';
     if (modalScope && LR.SECTION_MODALS.get(modalScope.id) === 'era') {
       if (lr.sectionKey && LR.sectionOfKey(lr.sectionKey) === 'era' && stops.some(s => s.key === lr.sectionKey)) return lr.sectionKey;
@@ -940,8 +940,8 @@
       close.click(); // 既有關閉（事件卡背景／時代關卡「縮小」）
     }
     lr.sectionKey = key;
-    // Joy-Con 說明：只把焦點放到按鈕（不切頁、不開圖；A 才開啟）。回傳 key 讓 controller_ui 不清掉這個焦點。
-    if (key === LR.RING_HELP_KEY) return host.focusHelpEntry() ? key : false;
+    // 遊戲選單按鈕：只把焦點放到按鈕（不切頁、不開選單；A 才開啟）。回傳 key 讓 controller_ui 不清掉這個焦點。
+    if (key === LR.RING_MENU_KEY) return host.focusMenuEntry() ? key : false;
     target.el.click(); // 既有分頁／事件卡／時代關卡
     if (key === 'view:map') host.sendToMap('snapshot');
     host.scheduleReconcile();

@@ -4253,7 +4253,7 @@ window.RedlineVictoryArt = Object.freeze({
   isOpen: victoryArtViewerIsOpen,
 });
 
-// Joy-Con 說明圖（導覽列「Joy-Con 說明」按鈕；不是遊戲頁面）。關閉後焦點一律回到該按鈕。
+// Joy-Con 說明圖（遊戲選單內的「Joy-Con 功能表」開啟；不是遊戲頁面）。關閉後焦點回到導覽列的「遊戲選單」按鈕。
 function joyconHelpIsOpen() {
   return document.getElementById('joyconHelpModal')?.getAttribute('aria-hidden') === 'false';
 }
@@ -4275,7 +4275,7 @@ function closeJoyconHelp() {
   modal.style.display = 'none';
   modal.setAttribute('aria-hidden', 'true');
   document.body.classList.remove('joycon-help-open');
-  const btn = document.getElementById('joyconHelpBtn');
+  const btn = document.getElementById('gameMenuBtn');
   if (btn?.isConnected) btn.focus({ preventScroll: true });
 }
 

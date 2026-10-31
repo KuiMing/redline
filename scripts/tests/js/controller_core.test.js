@@ -903,21 +903,21 @@ test('B on a focused purchase card toggles; disabled-checkbox handling stays in 
   assert.deepEqual(C.routeAction(cardCtx({ zone: 'purchase', hasToggle: true }), { name: 'cancel' }), { cmd: 'cardToggle' });
 });
 
-test('Joy-Con help button focus: A opens the help image, B does nothing, R/SR keep cycling, SL still opens the focus menu', () => {
+test('game menu button focus: A opens the game menu, B does nothing, R/SR keep cycling, SL still opens the focus menu', () => {
   for (const scopeKind of ['page', 'map']) {
-    const ctx = { scopeKind, hasFocus: true, helpEntry: true, card: null, cancelAvailable: scopeKind === 'map', sectionsLocked: false };
-    assert.deepEqual(C.routeAction(ctx, { name: 'confirm' }), { cmd: 'openHelp' }, scopeKind);
-    assert.equal(C.routeAction(ctx, { name: 'cancel' }), null, `${scopeKind}: B never cancels a map flow from the help button`);
+    const ctx = { scopeKind, hasFocus: true, menuEntry: true, card: null, cancelAvailable: scopeKind === 'map', sectionsLocked: false };
+    assert.deepEqual(C.routeAction(ctx, { name: 'confirm' }), { cmd: 'openMenu' }, scopeKind);
+    assert.equal(C.routeAction(ctx, { name: 'cancel' }), null, `${scopeKind}: B never cancels a map flow from the game menu button`);
     assert.deepEqual(C.routeAction(ctx, { name: 'nextSection' }), { cmd: 'section', step: 1 });
     assert.deepEqual(C.routeAction(ctx, { name: 'prevSection' }), { cmd: 'section', step: -1 });
     assert.deepEqual(C.routeAction(ctx, { name: 'focusMenu' }), { cmd: 'focusMenu' }, 'global SL town focus unchanged');
     assert.deepEqual(C.routeAction(ctx, { name: 'move', dir: 'down' }), { cmd: 'move', dir: 'down' });
   }
-  // 沒有 helpEntry 時一般焦點不變。
+  // 沒有 menuEntry 時一般焦點不變。
   assert.deepEqual(C.routeAction({ scopeKind: 'page', hasFocus: true }, { name: 'confirm' }), { cmd: 'activate' });
-  // 方向焦點永遠不落在說明按鈕上（只由 R／SR 環到達）。
-  assert.equal(C.isDirectionalExcluded({ helpEntry: true }), true);
-  assert.equal(C.buildFocusSet([{ key: 'h', scope: 'page', visible: true, helpEntry: true }], 'page').length, 0);
+  // 方向焦點永遠不落在遊戲選單按鈕上（只由 R／SR 環到達）。
+  assert.equal(C.isDirectionalExcluded({ menuEntry: true }), true);
+  assert.equal(C.buildFocusSet([{ key: 'h', scope: 'page', visible: true, menuEntry: true }], 'page').length, 0);
 });
 
 test('Joy-Con help image modal is a scope lock: B closes via the close button; R/SR, SL, ZR, X never pass through', () => {
@@ -927,13 +927,13 @@ test('Joy-Con help image modal is a scope lock: B closes via the close button; R
   assert.equal(C.resolveModalScope(['joyconHelpModal']).id, 'joyconHelpModal');
   // 說明圖蓋在一般頁面上：它優先於事件卡／時代關卡等（R／SR 可離開的）說明 modal。
   assert.equal(C.resolveModalScope(['eraAchievementModal', 'joyconHelpModal']).id, 'joyconHelpModal');
-  const ctx = { scopeKind: 'modal', hasFocus: true, cancelAvailable: true, helpEntry: false };
+  const ctx = { scopeKind: 'modal', hasFocus: true, cancelAvailable: true, menuEntry: false };
   assert.deepEqual(C.routeAction(ctx, { name: 'cancel' }), { cmd: 'cancel' });
   for (const name of ['nextSection', 'prevSection', 'focusMenu', 'mapZoom', 'focusTurnBar']) {
     assert.equal(C.routeAction(ctx, { name }), null, name);
   }
-  // 即使 helpEntry 旗標殘留，modal 內 A 也不會再開一次（照一般 modal 的 activate）。
-  assert.deepEqual(C.routeAction({ ...ctx, helpEntry: true }, { name: 'confirm' }), { cmd: 'activate' });
+  // 即使 menuEntry 旗標殘留，modal 內 A 也不會再開一次（照一般 modal 的 activate）。
+  assert.deepEqual(C.routeAction({ ...ctx, menuEntry: true }, { name: 'confirm' }), { cmd: 'activate' });
 });
 
 test('faction picker phases: faction → (variant) → base → read; read stick up/down only scrolls, A confirms, B steps back', () => {
@@ -974,4 +974,11 @@ test('faction picker hint follows the phase with concise zh-TW wording', () => {
   assert.equal(C.factionPickerHint('read', { canConfirm: false, hasBase: true }), '搖桿上下 捲動　B 取消根據地／返回');
   assert.equal(C.factionPickerHint('read', { canConfirm: true, hasBase: false }), '搖桿上下 捲動　A 確認　B 返回');
   assert.equal(C.factionPickerHint('bogus'), null);
+});
+
+test('the old Joy-Con help entry semantics are gone: a stale helpEntry flag neither opens anything nor is excluded from directional focus', () => {
+  const ctx = { scopeKind: 'page', hasFocus: true, helpEntry: true, card: null, cancelAvailable: false, sectionsLocked: false };
+  assert.deepEqual(C.routeAction(ctx, { name: 'confirm' }), { cmd: 'activate' });
+  assert.equal(C.routeAction(ctx, { name: 'confirm' }).cmd === 'openHelp', false);
+  assert.equal(C.isDirectionalExcluded({ helpEntry: true }), false);
 });

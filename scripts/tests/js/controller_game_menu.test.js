@@ -250,12 +250,10 @@ test('release gate: after opening, nothing works until the stick click is releas
   assert.deepEqual(q.dispatched.filter(a => a.type === 'press'), [{ type: 'press', button: 'A' }]);
 });
 
-test('menu routing: only up/down, A and B reach the existing modal flow; the confirm layer also allows left/right', () => {
+test('menu routing: direction, A and B reach the existing modal flow (left/right move between the volume − / + buttons); everything else is swallowed', () => {
   const press = button => C.logicalAction({ type: 'press', button });
   const move = dir => C.logicalAction({ type: 'nav', dir, repeat: false });
-  for (const dir of ['up', 'down']) assert.deepEqual(C.gameMenuCommand('menu', move(dir)), { cmd: 'pass' }, dir);
-  for (const dir of ['left', 'right']) assert.deepEqual(C.gameMenuCommand('menu', move(dir)), { cmd: 'none' }, dir);
-  for (const dir of ['up', 'down', 'left', 'right']) assert.deepEqual(C.gameMenuCommand('confirm', move(dir)), { cmd: 'pass' }, dir);
+  for (const level of ['menu', 'confirm']) for (const dir of ['up', 'down', 'left', 'right']) assert.deepEqual(C.gameMenuCommand(level, move(dir)), { cmd: 'pass' }, `${level} ${dir}`);
   for (const level of ['menu', 'confirm']) {
     assert.deepEqual(C.gameMenuCommand(level, press('A')), { cmd: 'pass' });
     assert.deepEqual(C.gameMenuCommand(level, press('B')), { cmd: 'pass' });
@@ -301,21 +299,62 @@ test('the browser game-menu code sends no game mutation and only restarts throug
   assert.ok(confirmFn.includes("'emergencyNewGameBtn'") && confirmFn.includes("'/new-game'"));
   assert.equal(ui.split('confirmRestart').length - 1, 2, 'defined once + bound once to #gameMenuConfirmOkBtn');
   assert.ok(section.includes("on('gameMenuConfirmOkBtn', confirmRestart);"));
-  // Joy-Con 功能表重用既有說明按鈕／openJoyconHelp（不複製說明 modal 的邏輯）
-  assert.ok(section.includes('document.getElementById(HELP_ENTRY_ID)') && section.includes('window.openJoyconHelp'));
+  // Joy-Con 功能表直接重用既有 openJoyconHelp（不複製說明 modal 的邏輯）；導覽列的舊 Joy-Con 說明按鈕已移除。
+  assert.ok(section.includes('window.openJoyconHelp'));
+  assert.equal(section.includes('HELP_ENTRY_ID'), false);
+  // 長按與導覽列按鈕（A／滑鼠）共用同一個 openGameMenu；滑鼠入口不需要 Joy-Con 連線，但仍擋開始流程、交接遮罩與未載入的遊戲。
+  assert.ok(ui.includes("case 'openMenu': activated = openGameMenu(); break;"));
+  const mouseFn = section.slice(section.indexOf('function openGameMenuByMouse()'), section.indexOf('/** 返回遊戲／B／背景'));
+  assert.ok(mouseFn.includes('mouseMenuBlocker') && !mouseFn.includes('connected') && !mouseFn.includes('bridgeConnected'));
+  assert.ok(section.includes("$(MENU_ENTRY_ID)?.addEventListener('click'"));
   // ingest 只把長按沒有吃掉的 action 交給 dispatch
   assert.ok(ui.includes('for (const action of trackStickHold(step.actions, now)) dispatch(action);'));
 });
 
-test('index.html: the two layers exist, are hidden by default, and the new scripts carry a fresh cache tag', () => {
+test('index.html: the layers exist, the nav button is the game menu (no old help button), the volume control is in the menu, and assets carry a fresh cache tag', () => {
   const html = fs.readFileSync(path.join(ROOT, 'static', 'index.html'), 'utf8');
   for (const id of ['gameMenuModal', 'gameMenuConfirmModal', 'gameMenuResumeBtn', 'gameMenuSettingsBtn', 'gameMenuRestartBtn',
-    'gameMenuConfirmCancelBtn', 'gameMenuConfirmOkBtn']) assert.ok(html.includes(`id="${id}"`), id);
+    'gameMenuConfirmCancelBtn', 'gameMenuConfirmOkBtn', 'gameMenuBtn', 'gameMenuVolume', 'gameMenuVolumeDownBtn', 'gameMenuVolumeUpBtn',
+    'gameMenuVolumeValue', 'joyconHelpModal']) assert.ok(html.includes(`id="${id}"`), id);
   assert.match(html, /<div id="gameMenuModal"[^>]*aria-hidden="true" style="display:none;">/);
   assert.match(html, /<div id="gameMenuConfirmModal"[^>]*aria-hidden="true" style="display:none;">/);
   assert.ok(html.includes('離開目前遊戲'));
-  assert.ok(html.includes('/static/style.css?v=victory-art-y-20261031'), 'style.css');
-  assert.ok(html.includes('/static/controller_core.js?v=reaction-victory-controller-20261027'), 'controller_core.js');
-  assert.ok(html.includes('/static/controller_ui.js?v=victory-art-y-20261031'), 'controller_ui.js');
-  assert.ok(html.includes('/static/app.js?v=victory-art-y-20261031'), 'app.js');
+  assert.match(html, /<button id="gameMenuBtn"[^>]*aria-label="遊戲選單"[^>]*aria-controls="gameMenuModal"/);
+  assert.ok(!/id="joyconHelpBtn"/.test(html) && !html.includes('openJoyconHelp()"'), 'old help nav button is gone');
+  assert.match(html, /id="gameMenuSettingsBtn"[^>]*>Joy-Con 功能表</);
+  assert.ok(html.includes('配樂音量'));
+  assert.ok(!html.includes('joyconHelpBtn'));
+  const tag = 'game-menu-music-20261031';
+  for (const f of ['style.css', 'controller_core.js', 'living_room_core.js', 'controller_ui.js', 'controller_living_room.js', 'app.js', 'game_music.js']) {
+    assert.ok(html.includes(`/static/${f}?v=${tag}`), f);
+  }
+  assert.ok(fs.existsSync(path.join(ROOT, 'static', 'audio', 'redline-theme.m4a')));
+  assert.ok(!/https?:\/\/[^"']*\.(m4a|mp3|ogg|wav)/i.test(html), 'no remote audio');
+});
+
+test('menu row navigation: up/down walk the rows (the − / + volume row is reachable), left/right move inside the volume row only', () => {
+  assert.deepEqual(C.GAME_MENU_ROWS.map(r => [...r]), [
+    ['gameMenuResumeBtn'], ['gameMenuSettingsBtn'], ['gameMenuVolumeDownBtn', 'gameMenuVolumeUpBtn'], ['gameMenuRestartBtn'],
+  ]);
+  const walk = (start, dirs) => dirs.reduce((id, dir) => C.gameMenuMove(id, dir), start);
+  assert.equal(C.gameMenuMove('gameMenuResumeBtn', 'down'), 'gameMenuSettingsBtn');
+  assert.equal(C.gameMenuMove('gameMenuSettingsBtn', 'down'), 'gameMenuVolumeDownBtn', 'entering the volume row lands on −');
+  assert.equal(walk('gameMenuSettingsBtn', ['down', 'right']), 'gameMenuVolumeUpBtn');
+  assert.equal(walk('gameMenuSettingsBtn', ['down', 'right', 'right']), 'gameMenuVolumeUpBtn', 'no wrap at the right end');
+  assert.equal(walk('gameMenuSettingsBtn', ['down', 'left']), 'gameMenuVolumeDownBtn', 'no wrap at the left end');
+  assert.equal(walk('gameMenuSettingsBtn', ['down', 'right', 'down']), 'gameMenuRestartBtn');
+  assert.equal(walk('gameMenuSettingsBtn', ['down', 'right', 'up']), 'gameMenuSettingsBtn');
+  assert.equal(C.gameMenuMove('gameMenuRestartBtn', 'down'), 'gameMenuRestartBtn', 'no wrap at the bottom');
+  assert.equal(C.gameMenuMove('gameMenuResumeBtn', 'up'), 'gameMenuResumeBtn', 'no wrap at the top');
+  for (const id of ['gameMenuResumeBtn', 'gameMenuSettingsBtn', 'gameMenuRestartBtn']) {
+    for (const dir of ['left', 'right']) assert.equal(C.gameMenuMove(id, dir), id, `${id} ${dir}`);
+  }
+  assert.equal(C.gameMenuMove('somethingElse', 'down'), null);
+  assert.equal(C.gameMenuMove(null, 'down'), null);
+});
+
+test('the volume buttons are inside the game-menu modal scope (B still returns to the game)', () => {
+  const scope = C.MODAL_SCOPES.find(s => s.id === C.GAME_MENU_MODAL_ID);
+  assert.deepEqual(scope.cancel, ['#gameMenuResumeBtn']);
+  assert.equal(scope.initial, '#gameMenuResumeBtn');
 });

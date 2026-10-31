@@ -313,28 +313,28 @@ test('section ring scope lock: a pending map choice only offers the strategic ma
   assert.equal(LR.stepSection(stops('view:command', { key: 'view:map', usable: false }), 'view:command', 1, { choiceLock: true, view: 'command' }), null);
 });
 
-test('Joy-Con help button is an extra ring focus after the six sections, never a seventh section', () => {
-  // 六個區段順序不變；Joy-Con 說明不是區段。
+test('Game menu button is an extra ring focus after the six sections, never a seventh section', () => {
+  // 六個區段順序不變；遊戲選單按鈕不是區段。
   assert.deepEqual(Object.keys(LR.SECTION_LABELS), ['command', 'map', 'log', 'myFaction', 'event', 'era']);
-  assert.equal(LR.sectionOfKey(LR.RING_HELP_KEY), null);
-  assert.equal(LR.ringStopOfKey(LR.RING_HELP_KEY), LR.RING_HELP_KEY);
+  assert.equal(LR.sectionOfKey(LR.RING_MENU_KEY), null);
+  assert.equal(LR.ringStopOfKey(LR.RING_MENU_KEY), LR.RING_MENU_KEY);
   assert.equal(LR.ringStopOfKey('view:map'), 'map');
   assert.equal(LR.ringStopOfKey('advanceStepBtn'), null);
-  // 導覽列順序：六個區段（含多個時代關卡）→ Joy-Con 說明 → 循環回指揮中心。
-  const ring = [...FULL, { key: LR.RING_HELP_KEY, usable: true }];
+  // 導覽列順序：六個區段（含多個時代關卡）→ 遊戲選單 → 循環回指揮中心。
+  const ring = [...FULL, { key: LR.RING_MENU_KEY, usable: true }];
   const seen = [];
   let key = 'view:command';
   for (let i = 0; i < ring.length; i += 1) { seen.push(key); key = LR.stepSection(ring, key, 1); }
-  assert.deepEqual(seen, ['view:command', 'view:map', 'view:log', 'view:myFaction', 'event', 'era:7', 'era:9', LR.RING_HELP_KEY]);
-  assert.equal(key, 'view:command', 'R from the help button continues the ring');
-  assert.equal(LR.stepSection(ring, LR.RING_HELP_KEY, -1), 'era:9', 'SR from the help button goes back to the previous section');
-  assert.equal(LR.stepSection(ring, 'view:command', -1), LR.RING_HELP_KEY, 'SR from the first section reaches the help button');
-  // 沒有事件卡／時代關卡：從我的陣營直接到說明按鈕。
-  const noExtras = stops('view:command', 'view:map', 'view:log', 'view:myFaction', { key: 'event', usable: false }, LR.RING_HELP_KEY);
-  assert.equal(LR.stepSection(noExtras, 'view:myFaction', 1), LR.RING_HELP_KEY);
-  // 必選地圖目標：環只提供戰略地圖（說明按鈕也不在其中）。
+  assert.deepEqual(seen, ['view:command', 'view:map', 'view:log', 'view:myFaction', 'event', 'era:7', 'era:9', LR.RING_MENU_KEY]);
+  assert.equal(key, 'view:command', 'R from the game menu button continues the ring');
+  assert.equal(LR.stepSection(ring, LR.RING_MENU_KEY, -1), 'era:9', 'SR from the game menu button goes back to the previous section');
+  assert.equal(LR.stepSection(ring, 'view:command', -1), LR.RING_MENU_KEY, 'SR from the first section reaches the game menu button');
+  // 沒有事件卡／時代關卡：從我的陣營直接到遊戲選單按鈕。
+  const noExtras = stops('view:command', 'view:map', 'view:log', 'view:myFaction', { key: 'event', usable: false }, LR.RING_MENU_KEY);
+  assert.equal(LR.stepSection(noExtras, 'view:myFaction', 1), LR.RING_MENU_KEY);
+  // 必選地圖目標：環只提供戰略地圖（遊戲選單按鈕也不在其中）。
   assert.equal(LR.stepSection(ring, 'era:9', 1, { choiceLock: true, view: 'log' }), 'view:map');
-  assert.equal(LR.stepSection(ring, LR.RING_HELP_KEY, 1, { choiceLock: true, view: 'map' }), null);
+  assert.equal(LR.stepSection(ring, LR.RING_MENU_KEY, 1, { choiceLock: true, view: 'map' }), null);
 });
 
 test('only the two read-only section modals let R/SR step out; every other modal keeps its scope lock', () => {
