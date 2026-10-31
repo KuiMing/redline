@@ -271,6 +271,9 @@
     $('sfSetupTitle').textContent = d.aiRedArmy ? '建立 AI 紅軍遊戲' : '建立真人紅軍遊戲';
     const setPressed = (b, on) => { b.classList.toggle('active', on); b.setAttribute('aria-pressed', String(on)); };
     document.querySelectorAll('[data-sf-market]').forEach(b => setPressed(b, b.dataset.sfMarket === d.marketMode));
+    document.querySelectorAll('[data-sf-mode-guide]').forEach(card => {
+      card.dataset.selected = String(card.dataset.sfModeGuide === d.marketMode);
+    });
     document.querySelectorAll('[data-sf-control]').forEach(b => setPressed(b, b.dataset.sfControl === d.controlMode));
     const joy = d.controlMode === 'joycon';
     $('sfPairing').hidden = !joy;

@@ -340,8 +340,18 @@ def test_toggles_expose_aria_pressed_and_focus_follows_step_changes(browser, app
     assert page.evaluate("document.activeElement.id") == "sfSetupTitle"
     assert pressed("market") == [["sample_53", "true"], ["all_cards", "false"]]
     assert pressed("control") == [["joycon", "false"], ["computer", "true"]]
+    assert page.locator('[data-sf-mode-guide="sample_53"]').get_attribute("data-selected") == "true"
+    assert page.locator('[data-sf-mode-guide="all_cards"]').get_attribute("data-selected") == "false"
+    guide_text = page.inner_text(".sf-mode-guide")
+    assert "53 張精簡牌組" in guide_text and "245 張完整牌組" in guide_text
+    setup_box = page.locator("#sfSetup").bounding_box()
+    guide_box = page.locator(".sf-mode-guide").bounding_box()
+    assert setup_box and guide_box
+    assert guide_box["y"] + guide_box["height"] <= setup_box["y"] + setup_box["height"]
     page.click('[data-sf-market="all_cards"]')
     assert pressed("market") == [["sample_53", "false"], ["all_cards", "true"]]
+    assert page.locator('[data-sf-mode-guide="sample_53"]').get_attribute("data-selected") == "false"
+    assert page.locator('[data-sf-mode-guide="all_cards"]').get_attribute("data-selected") == "true"
     page.click('[data-sf-control="joycon"]')
     assert pressed("control") == [["joycon", "true"], ["computer", "false"]]
     page.click('[data-sf-control="computer"]')
