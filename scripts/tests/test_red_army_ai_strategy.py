@@ -151,8 +151,33 @@ def test_threat_is_lexicographic_progress_beats_organization_count():
     assert select_pending_choice_submission(pending, assess(state, "red"))["index"] == 1
     targets = [{"player_id": "a", "town": "天津"}, {"player_id": "b", "town": "上海"}]
     chosen = rank(_score([_security(targets)], opponents))[0]
+    assert chosen is not None
     assert chosen.breakdown["threat_target_player_id"] == "b"
     assert chosen.breakdown["threat"] == 0.50
+    assert chosen.submit_overrides["target_player_id"] == "b"
+
+
+def test_state_security_submission_declares_target_for_cancel_usage_tracking():
+    """A canceled AI 國安部 must consume that target's per-turn use.
+
+    The reaction window opens before the organization target choice. The policy therefore has
+    to submit the target player selected by scoring; otherwise the server can only count the
+    generic action and the AI can immediately retry the same player after their 情報網 is spent.
+    """
+    opponents = [
+        _player("p1", "taiwan_green", 0.8, 8, {"石家莊": 1}),
+        _player("p2", "liberals", 0.2, 3, {"天津": 1}),
+    ]
+    targets = [
+        {"player_id": "p1", "town": "石家莊"},
+        {"player_id": "p2", "town": "天津"},
+    ]
+
+    chosen = rank(_score([_security(targets)], opponents))[0]
+
+    assert chosen is not None
+    assert chosen.action["name"] == "國安部"
+    assert chosen.submit_overrides == {"target_player_id": "p1"}
 
 
 def test_threat_exact_tie_uses_organizations_then_first_candidate():

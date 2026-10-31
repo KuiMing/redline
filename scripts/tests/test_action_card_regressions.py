@@ -2913,6 +2913,48 @@ def test_canceled_targeted_red_army_action_marks_that_target_as_used():
     assert g.turn_log.get('red_army_targeted_actions', {}).get('政工部:' + other.id) is True
 
 
+def test_canceled_ai_state_security_cannot_retry_same_target_after_intel_network():
+    """Regression for the public log sequence reported on 2026-10-31.
+
+    AI 紅軍 declared P1 as 國安部's target; P1 canceled it with 情報網. Even when a third
+    player gives Red Army a second faction-action allowance, the canceled target stays intact
+    and cannot be offered to 國安部 again in the same turn.
+    """
+    g = Game([('red', 'AI 紅軍'), ('p1', 'P1'), ('p2', 'P2')])
+    red, p1, p2 = g.players
+    red.faction_id = 'red_army'
+    p1.faction_id = 'liberals'
+    p2.faction_id = 'hong_kong'
+    red.base = '北京'
+    red.organizations = {'北京': 1}
+    p1.base = '臺北'
+    p1.organizations = {'石家莊': 1}
+    p2.base = '香港'
+    p2.organizations = {}
+    p1.hand = [card(g, '情報網')]
+    g.current_player_index = 0
+    g.game_phase = GamePhase.MAIN
+    g.turn_phase = TurnPhase.ACTION
+    g.pending_choice = None
+
+    opened = g._activated_faction_action(red, '國安部', target_player_id=p1.id)
+    assert opened.get('pending_choice') is True, opened
+    canceled = g.resolve_pending_choice(p1.id, 1)
+
+    assert canceled.get('canceled') is True, canceled
+    assert p1.organizations == {'石家莊': 1}
+    assert g.turn_log.get('red_army_targeted_actions', {}).get('國安部:' + p1.id) is True
+    assert all(
+        isinstance(target, dict) and target.get('player_id') != p1.id
+        for target in g._red_army_state_security_targets(red)
+    )
+
+    retry = g._activated_faction_action(red, '國安部', target_player_id=p1.id)
+    assert retry.get('success') is False, retry
+    assert retry.get('result', {}).get('reason') == 'no_dissolve_target', retry
+    assert p1.organizations == {'石家莊': 1}
+
+
 def test_industry_infiltration_requires_an_actual_action_card_target_to_cancel():
     g = make_game()
     p1, p2 = g.players

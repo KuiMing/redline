@@ -195,6 +195,12 @@ def _faction_action_score(action: dict, assessment: Assessment, config: PolicyCo
             "legal_dissolve_target_count": len(targets),
             "reason": "server-listed legal dissolve target exists; disrupting opponent organizations outranks growth/purchases",
         })
+        # 國安部的取消反應發生在實際組織選擇之前。把本次評分選定的目標玩家一併送給
+        # authoritative Game，讓取消結算可標記「本回合已對該玩家使用國安部」。否則 AI
+        # 在仍有第二次紅軍能力額度時會立刻重試同一玩家；反應卡已棄掉，第二次便直接瓦解，
+        # 公開紀錄看起來就像被取消的國安部仍執行了效果。
+        if top_player is not None:
+            overrides["target_player_id"] = top_player
         return score, breakdown, overrides
     if name == "國安部":
         bonus = weights.w2_block_opponent_progress * assessment.max_opponent_progress
