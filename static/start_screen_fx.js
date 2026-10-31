@@ -391,7 +391,7 @@ void main() {
         settings.motion = !settings.motion;
         writeSettings(settings);
         renderControls();
-        setStatus(settings.motion ? '動態效果已開啟。' : '動態效果已關閉，顯示靜態背景。');
+        setStatus('');
         sync();
       });
     }

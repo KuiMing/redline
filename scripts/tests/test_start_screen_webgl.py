@@ -191,6 +191,7 @@ def test_motion_toggle_stops_raf_persists_and_low_quality_lowers_resolution(brow
     page.wait_for_timeout(400)
     assert fx(page)["frames"] == frames  # 停止後不再繪製
     assert page.get_attribute("#sfFxMotion", "aria-checked") == "false"
+    assert page.locator("#sfFxStatus").inner_text() == ""  # 開關本身已顯示狀態，不重複提示
     page.click('[data-sf-fx-quality="low"]')
     low = fx(page)
     assert low["quality"] == "low" and low["renderWidth"] < high["renderWidth"] and low["config"]["octaves"] < high["config"]["octaves"]
