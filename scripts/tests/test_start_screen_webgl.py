@@ -194,6 +194,7 @@ def test_motion_toggle_stops_raf_persists_and_low_quality_lowers_resolution(brow
     page.click('[data-sf-fx-quality="low"]')
     low = fx(page)
     assert low["quality"] == "low" and low["renderWidth"] < high["renderWidth"] and low["config"]["octaves"] < high["config"]["octaves"]
+    assert page.locator("#sfFxStatus").inner_text() == ""  # 按鈕狀態已足夠，不顯示重複畫質文字
     stored = page.evaluate(f"JSON.parse(localStorage.getItem('{KEY}'))")
     assert stored == {"motion": False, "quality": "low"}
     page.reload()

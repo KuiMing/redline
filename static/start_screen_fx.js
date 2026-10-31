@@ -402,7 +402,7 @@ void main() {
         settings.quality = q;
         writeSettings(settings);
         renderControls();
-        setStatus('渲染畫質：' + (q === 'low' ? '低' : '高') + '。');
+        setStatus('');
         sync();
       });
     });
