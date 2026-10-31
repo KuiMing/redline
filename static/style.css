@@ -4276,15 +4276,9 @@ html[data-display="living-room"] .lr-focus-overlay { height: 644px; }
 #lobby[data-flow="create"][data-joycon-lobby] #roomSettingsField > span,
 #lobby[data-flow="create"][data-joycon-lobby] .lobby-room-column > label.lobby-field:has(#roomId),
 #lobby[data-flow="create"][data-joycon-lobby] #lanInfoField { display: none; }
-/* Joy-Con 行動代號固定為 P1～P4、房間在背景自動建立：不顯示代號欄、建立／加入鈕、客廳輪流開關。 */
+/* Joy-Con 行動代號固定為 P1～P4、房間在背景自動建立：不顯示代號欄與建立／加入鈕。 */
 #lobby[data-flow="create"][data-joycon-lobby] .lobby-field:has(#playerName),
 #lobby[data-flow="create"][data-joycon-lobby] #createRoomBtn,
-#lobby[data-flow="create"][data-joycon-lobby] #hotseatLobby > label,
-#lobby[data-flow="create"][data-joycon-lobby] #hotseatAddSeatBtn { display: none; }
-/* Joy-Con 建立畫面：席位已由配對決定，不再重複列出客廳輪流的席位／綁定下拉與配對說明（DOM 保留，hotseat_ui.js 照常更新）；
- * 操作者提示與錯誤通知（#hotseatLobbyPrompt／#hotseatLobbyNotice）照常顯示。 */
-#lobby[data-flow="create"][data-joycon-lobby] #hotseatSeatList,
-#lobby[data-flow="create"][data-joycon-lobby] #hotseatLobbyHint,
 #lobby[data-flow="create"][data-joycon-lobby] .lobby-room-column > .lobby-section-title,
 #lobby[data-flow="create"][data-joycon-lobby] #roomSettingsField { display: none; }
 /* 左欄只剩背景建房狀態：改單欄，玩家席位以整張卡片（＝1280×720 中線與底部按鈕列）水平置中；建房狀態出現時疊在席位上方。 */

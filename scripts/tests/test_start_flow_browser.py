@@ -719,14 +719,14 @@ ROSTER_LAYOUT_JS = """() => {
   const buttons = [...document.querySelectorAll('#lobby .lobby-actions .lobby-action-btn')]
     .filter(b => getComputedStyle(b).display !== 'none' && b.getClientRects().length).map(b => b.getBoundingClientRect());
   return {
-    column: box('#lobby .lobby-roster-column'), roster: box('#lobbyRoster'), hint: box('#lobbyStatusHint'), hotseat: box('#hotseatLobby'),
+    column: box('#lobby .lobby-roster-column'), roster: box('#lobbyRoster'), hint: box('#lobbyStatusHint'),
     actions: buttons.length ? { left: Math.min(...buttons.map(r => r.left)), right: Math.max(...buttons.map(r => r.right)), top: Math.min(...buttons.map(r => r.top)) } : null,
     buttonCount: buttons.length,
   };
 }"""
 
 
-def test_joycon_lobby_centers_roster_and_hides_duplicate_hotseat_details(browser, app_url, joycons):
+def test_joycon_lobby_centers_roster_without_duplicate_hotseat_controls(browser, app_url, joycons):
     """Synthetic bridge（非實體 Joy-Con）：Joy-Con 建立／準備畫面只留席位卡片、狀態提示與底部操作鈕，席位以畫面中線置中。"""
     page = new_page(browser, app_url, joycons)
     create_via_flow(page, ai=True, control="joycon")
@@ -737,13 +737,8 @@ def test_joycon_lobby_centers_roster_and_hides_duplicate_hotseat_details(browser
     page.wait_for_function("(window.RedlineSession.current().lobby.players || []).length === 2 && document.querySelectorAll('#lobbyRoster .ai-seat:not([data-preroom])').length === 1", timeout=20000)
     page.click("#closeFactionPickerBtn")
     page.wait_for_selector("#factionPicker", state="hidden")
-    # 重複的 hot-seat 細節（P1（目前）列、陣營／準備、Joy-Con 綁定下拉、配對長說明）不可見……
-    for sel in ("#hotseatSeatList", "#hotseatLobbyHint", ".hs-bind-select", ".hs-seat"):
-        assert not visible(page, sel), sel
-    # ……但 DOM 仍在且照常由 hotseat_ui.js 更新（隱藏不影響狀態邏輯）。
-    page.wait_for_function("document.querySelectorAll('#hotseatSeatList .hs-seat').length === 2", timeout=10000)
-    assert page.evaluate("document.querySelectorAll('#hotseatSeatList .hs-bind-select').length") == 2
-    assert page.evaluate("document.getElementById('hotseatLobbyHint').textContent.length") > 0
+    for sel in ("#hotseatLobby", "#hotseatEnableChk", "#hotseatAddSeatBtn", "#hotseatSeatList", "#hotseatLobbyHint"):
+        assert page.locator(sel).count() == 0, sel
     # 席位卡片、狀態提示、底部操作鈕仍可見。
     for sel in ("#lobbyRoster", "#lobbyStatusHint", "#openFactionPickerBtn", "#toggleReadyBtn", "#startGameBtn"):
         assert visible(page, sel), sel
@@ -755,7 +750,7 @@ def test_joycon_lobby_centers_roster_and_hides_duplicate_hotseat_details(browser
         assert abs(layout[key]["cx"] - 640) <= 2, (key, layout)
     assert abs(actions_cx - 640) <= 2, layout
     # 席位區不遮住底部按鈕。
-    assert max(layout["roster"]["bottom"], layout["hint"]["bottom"], layout["hotseat"]["bottom"]) <= layout["actions"]["top"], layout
+    assert max(layout["roster"]["bottom"], layout["hint"]["bottom"]) <= layout["actions"]["top"], layout
     proof = os.environ.get("REDLINE_CENTER_ROSTER_PROOF")
     if proof:
         page.screenshot(path=proof)
@@ -1357,13 +1352,11 @@ def test_computer_mode_keeps_room_settings_and_preroom_ai_seat_matches_entry(bro
     _, state = lobby_of(app_url, page)
     assert state["ai_red_army"] is ai
     page.wait_for_function(f"document.querySelectorAll('#lobbyRoster .ai-seat').length === {1 if ai else 0}")
-    # 非 Joy-Con：維持左右兩欄，#hotseatLobby（客廳輪流開關、席位列）照常可用。
+    # 非 Joy-Con：維持左右兩欄，但不顯示重複的客廳輪流設定區。
     page.click("#closeFactionPickerBtn")
     page.wait_for_selector("#factionPicker", state="hidden")
-    assert visible(page, "#hotseatEnableChk")
-    page.check("#hotseatEnableChk")
-    page.wait_for_function("document.querySelectorAll('#hotseatSeatList .hs-seat').length >= 1", timeout=10000)
-    assert visible(page, "#hotseatSeatList") and visible(page, "#hotseatLobbyHint") and visible(page, "#hotseatAddSeatBtn")
+    for sel in ("#hotseatLobby", "#hotseatEnableChk", "#hotseatAddSeatBtn", "#hotseatSeatList", "#hotseatLobbyHint"):
+        assert page.locator(sel).count() == 0, sel
     assert page.evaluate(ROSTER_LAYOUT_JS)["column"]["left"] > 640
     page.context.close()
 

@@ -4,10 +4,10 @@
   <meta charset="UTF-8" />
   <title>REDLINE // STRATEGIC COMMAND</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="/static/style.css?v=mode-guides-20261031" />
+  <link rel="stylesheet" href="/static/style.css?v=lobby-hotseat-cleanup-20261031" />
   <!-- 客廳輪流（hot-seat）：在第一次繪製前就能遮住舞台，所以放在 <head>。 -->
   <script src="/static/hotseat_core.js?v=reaction-victory-controller-20261027"></script>
-  <script src="/static/hotseat_ui.js?v=reaction-victory-controller-20261027"></script>
+  <script src="/static/hotseat_ui.js?v=lobby-hotseat-cleanup-20261031"></script>
 </head>
 <body>
 <div id="stageViewport">
@@ -196,14 +196,7 @@
         </div>
       </div>
       <div id="lobbyStatusHint" class="lobby-status-hint">先建立作戰室，或貼上房間代碼後進入。</div>
-      <div id="hotseatLobby" class="hotseat-lobby">
-        <label><input id="hotseatEnableChk" type="checkbox"> 客廳輪流（同一台多位玩家）</label>
-        <div id="hotseatLobbyPrompt" class="hs-prompt" aria-live="polite"></div>
-        <div id="hotseatLobbyNotice" class="hs-notice" aria-live="polite"></div>
-        <div id="hotseatSeatList"></div>
-        <button id="hotseatAddSeatBtn" class="lobby-mini-btn" type="button" hidden>新增本機玩家（用上方玩家名稱）</button>
-        <div id="hotseatLobbyHint" class="lobby-field-hint"></div>
-      </div>
+
     </div>
 
     <div class="lobby-actions">

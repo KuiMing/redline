@@ -46,32 +46,6 @@ html[data-hotseat="masked"] #hotseatMask { display: flex; }
 #hotseatMask .hs-ai-foot { margin: 12px 0 0; display: flex; align-items: center; justify-content: space-between; gap: 16px; color: #94a3b8; font-size: 16px; }
 #hotseatMask .hs-ai-foot button { flex: none; padding: 8px 22px; font-size: 20px; font-weight: 700; border-color: #fbbf24; }
 #hotseatMask .hs-ai-foot button[hidden] { display: none; }
-.hotseat-lobby { margin-top: 10px; font-size: 13px; }
-.hotseat-lobby .hs-seat { display: flex; flex-direction: column; margin: 2px 0; padding: 2px 6px; border: 1px solid transparent; border-radius: 6px; }
-.hotseat-lobby .hs-seat.hs-actor { border-color: #f59e0b; }
-.hotseat-lobby .hs-seat-name, .hotseat-lobby .hs-seat-meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.hotseat-lobby .hs-seat-line { display: flex; align-items: center; gap: 4px; min-width: 0; }
-.hotseat-lobby .hs-seat-line > * { flex: none; }
-.hotseat-lobby .hs-seat-line > .hs-seat-meta { flex: 0 1 auto; min-width: 0; }
-.hotseat-lobby .hs-seat-meta { opacity: .8; font-size: 12px; }
-/* 固定緊湊寬度：容得下最長的安全名稱「右 Joy-Con 4」與「— 未綁定 —」＋原生箭頭（Chrome 實測自然寬 8.83em），
-   留約 0.4em 餘裕；不再依展開清單裡最長的選項（例如「・已綁給〈…〉」）撐寬。 */
-.hotseat-lobby .hs-bind-select { width: 9.25em; font-size: 12px; }
-/* 靠右對齊：安全名稱＋燈 → 下拉 → 切換 是一個緊湊群組，margin-left:auto 推到列的右緣；空白只在陣營／準備與群組之間。
-   安全名稱＋燈 是固定寬度欄、靠左起排：每列名稱的左緣對齊。7.5em 容得下最長的「右 Joy-Con 4」＋燈（Chrome 實測 7.43em）
-   與「未綁定 Joy-Con」；較短的名稱只在燈之後留白，不裁切。 */
-.hotseat-lobby .hs-joy { display: inline-flex; align-items: center; justify-content: flex-start; width: 7.5em; white-space: nowrap;
-  font-size: 12px; margin-left: auto; }
-.hotseat-lobby .hs-switch-slot { visibility: hidden; }
-.hotseat-lobby .hs-joy-dot { display: inline-block; box-sizing: border-box; width: 10px; height: 10px; margin: 0 0 0 4px;
-  border-radius: 50%; }
-.hotseat-lobby .hs-joy-dot[data-tone="ok"] { background: #22c55e; box-shadow: 0 0 0 2px rgba(34, 197, 94, .3); }
-.hotseat-lobby .hs-joy-dot[data-tone="warn"] { background: #f59e0b; }
-.hotseat-lobby .hs-joy-dot[data-tone="error"] { background: #ef4444; }
-.hotseat-lobby .hs-joy-dot[data-tone="off"] { border: 2px solid #94a3b8; background: transparent; }
-.hotseat-lobby .hs-prompt { margin-top: 2px; color: #fcd34d; }
-.hotseat-lobby .hs-prompt:empty, .hotseat-lobby .hs-notice:empty { display: none; }
-.hotseat-lobby .hs-notice { color: #fca5a5; min-height: 1em; }
 `;
 
   const LOBBY_INACTIVE = Object.freeze({ view: 'inactive', actor: null, seat: null, self: false });
