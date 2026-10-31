@@ -4,14 +4,23 @@
 #
 # - `redline`  : the game's HTTP+WebSocket server (root Dockerfile), same
 #                image/behavior as running it standalone. Host port defaults
-#                to 8000, same as the existing single-container instructions
-#                in README.md — override with REDLINE_HOST_PORT.
+#                to 8100 (host 8000 belongs to `joycon-bridge`; README.md's
+#                Compose instructions already use 8100) — override with
+#                REDLINE_HOST_PORT.
 # - `redline-mcp` : the MCP server (mcp_server/Dockerfile), talking to
 #                `redline` over the Compose-internal network by service name
 #                (no host.docker.internal). Its host port mapping is bound
 #                to 127.0.0.1 ONLY by default, so `docker compose up` never
 #                exposes the unauthenticated MCP endpoint to the LAN — see
 #                docs/mcp_server.md's Docker section before changing this.
+#
+# - `joycon-bridge` : the Joy-Con WebSocket bridge (tools/joycon_bridge/Dockerfile).
+#                FTCW and Bluetooth stay on the macOS host (start FTCW first);
+#                the container reaches FTCW over UDP at host.docker.internal.
+#                Host port 8000 is published on 127.0.0.1 ONLY (override with
+#                REDLINE_JOYCON_HOST_PORT); it binds 0.0.0.0 inside the
+#                container solely so Docker's port mapping can reach it.
+#                See docs/joycon_controller.md.
 #
 # See docs/mcp_server.md for the full walkthrough, environment variables,
 # and an MCP client config example pointing at this stack.
@@ -22,7 +31,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "${REDLINE_HOST_PORT:-8000}:8000"
+      - "${REDLINE_HOST_PORT:-8100}:8000"
     healthcheck:
       # /server-info needs no room/game state to exist — never treat "no
       # rooms yet" as unhealthy.
@@ -62,6 +71,45 @@ services:
         condition: service_started
     healthcheck:
       test: ["CMD", "python3", "-c", "import urllib.request as u; u.urlopen('http://127.0.0.1:8080/health', timeout=3)"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    restart: unless-stopped
+    networks:
+      - redline-net
+
+  joycon-bridge:
+    build:
+      context: .
+      dockerfile: tools/joycon_bridge/Dockerfile
+    command:
+      - uv
+      - run
+      - --no-dev
+      - python
+      - -m
+      - tools.joycon_bridge
+      - --bind-host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --udp-host
+      - ${REDLINE_JOYCON_UDP_HOST:-host.docker.internal}
+    environment:
+      # Comma-separated page Origins allowed to open the bridge WebSocket.
+      # Default = the local Compose game URL (REDLINE_HOST_PORT).
+      REDLINE_JOYCON_ALLOW_ORIGINS: "${REDLINE_JOYCON_ALLOW_ORIGINS:-http://127.0.0.1:${REDLINE_HOST_PORT:-8100},http://localhost:${REDLINE_HOST_PORT:-8100}}"
+    extra_hosts:
+      # Docker Desktop (macOS) provides this name; this keeps it working on Linux engines too.
+      - "host.docker.internal:host-gateway"
+    ports:
+      # 127.0.0.1 only: the bridge has no auth and exposes controller input.
+      - "127.0.0.1:${REDLINE_JOYCON_HOST_PORT:-8000}:8000"
+    healthcheck:
+      # The bridge's own /health (Host must be loopback, which 127.0.0.1 is);
+      # stdlib only — no curl in the image.
+      test: ["CMD", "python3", "-c", "import urllib.request as u; u.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
       interval: 5s
       timeout: 3s
       retries: 10

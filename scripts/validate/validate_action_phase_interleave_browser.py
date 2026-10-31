@@ -35,17 +35,17 @@ def make_formal_game():
     joined = post_json('/join', {'game_id': game_id, 'name': 'ally'})
     ally_id = joined['player_id']
     seats = [
-        (host_id, 'red_army', '北京'),
-        (ally_id, 'hong_kong', '香港城'),
+        (host_id, create['resume_token'], 'red_army', '北京'),
+        (ally_id, joined['resume_token'], 'hong_kong', '香港城'),
     ]
-    for pid, faction_id, base_name in seats:
-        chosen = post_json('/choose-faction', {'game_id': game_id, 'player_id': pid, 'faction_id': faction_id, 'base_name': base_name})
+    for pid, token, faction_id, base_name in seats:
+        chosen = post_json('/choose-faction', {'game_id': game_id, 'player_id': pid, 'resume_token': token, 'faction_id': faction_id, 'base_name': base_name})
         if chosen.get('error'):
             raise AssertionError(chosen)
-        ready = post_json('/ready', {'game_id': game_id, 'player_id': pid, 'ready': True})
+        ready = post_json('/ready', {'game_id': game_id, 'player_id': pid, 'resume_token': token, 'ready': True})
         if ready.get('error'):
             raise AssertionError(ready)
-    started = post_json('/start', {'game_id': game_id, 'player_id': host_id, 'market_mode': 'sample_53'})
+    started = post_json('/start', {'game_id': game_id, 'player_id': host_id, 'resume_token': create['resume_token'], 'market_mode': 'sample_53'})
     if started.get('error'):
         raise AssertionError(started)
     return game_id, ally_id, joined.get('resume_token')
@@ -68,7 +68,7 @@ def play_first_follower(page):
 
 
 def buy_first_static_card(page):
-    page.locator('#purchaseStatic .purchase-card-checkbox input').first.check(timeout=5000)
+    page.locator('#purchaseStatic .purchase-card-select-button').first.click(timeout=5000)
     page.wait_for_timeout(200)
     page.locator('#openPurchaseConfirmBtn').click(timeout=5000)
     page.wait_for_timeout(250)
@@ -106,7 +106,7 @@ def main():
         # 1. 行動階段一開始就顯示「結束行動」，且購買區已可勾選。
         state0 = page.evaluate('window.lastGameState')
         advance_text = page.locator('#advanceStepBtn').inner_text(timeout=5000)
-        buy_selectable = not page.locator('#purchaseStatic .purchase-card-checkbox input').first.is_disabled()
+        buy_selectable = not page.locator('#purchaseStatic .purchase-card-select-button').first.is_disabled()
         page.screenshot(path=str(shots_dir / '01_action_phase_start_buy_already_selectable.png'), full_page=True)
         checks.append({
             'name': '01_action_phase_starts_with_end_action_button_and_selectable_purchase',

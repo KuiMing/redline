@@ -266,6 +266,7 @@ def main():
         creator.wait_for_function("() => document.querySelector('#roomId')?.value?.length > 10", timeout=10000)
         game_id = creator.locator('#roomId').input_value()
         player_ids = [creator.evaluate('playerId')]
+        resume_tokens = [creator.evaluate('resumeToken')]
 
         for seat, pg in zip(seats[1:], page_list[1:]):
             pg.fill('#roomId', game_id)
@@ -273,9 +274,10 @@ def main():
             pg.click('#joinRoomBtn')
             pg.wait_for_function("() => typeof playerId !== 'undefined' && playerId", timeout=10000)
             player_ids.append(pg.evaluate('playerId'))
+            resume_tokens.append(pg.evaluate('resumeToken'))
 
-        for seat, pid in zip(seats, player_ids):
-            payload = {'game_id': game_id, 'player_id': pid, 'faction_id': seat['faction_id']}
+        for seat, pid, token in zip(seats, player_ids, resume_tokens):
+            payload = {'game_id': game_id, 'player_id': pid, 'resume_token': token, 'faction_id': seat['faction_id']}
             if seat['base_name']:
                 payload['base_name'] = seat['base_name']
             resp = request_json('/choose-faction', payload)

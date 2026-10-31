@@ -32,22 +32,22 @@ def post_json(path: str, payload: dict | None = None) -> dict:
 def make_formal_game() -> tuple[dict, dict]:
     create = post_json("/create")
     join = post_json("/join", {"game_id": create["game_id"], "name": "臺灣"})
-    for player_id, faction_id, base_name in [
-        (create["host_id"], "red_army", "北京"),
-        (join["player_id"], "taiwan_green", "臺北"),
+    for player_id, token, faction_id, base_name in [
+        (create["host_id"], create["resume_token"], "red_army", "北京"),
+        (join["player_id"], join["resume_token"], "taiwan_green", "臺北"),
     ]:
         chosen = post_json(
             "/choose-faction",
-            {"game_id": create["game_id"], "player_id": player_id, "faction_id": faction_id, "base_name": base_name},
+            {"game_id": create["game_id"], "player_id": player_id, "resume_token": token, "faction_id": faction_id, "base_name": base_name},
         )
         if chosen.get("error"):
             raise AssertionError(chosen)
-        ready = post_json("/ready", {"game_id": create["game_id"], "player_id": player_id, "ready": True})
+        ready = post_json("/ready", {"game_id": create["game_id"], "player_id": player_id, "resume_token": token, "ready": True})
         if ready.get("error"):
             raise AssertionError(ready)
     started = post_json(
         "/start",
-        {"game_id": create["game_id"], "player_id": create["host_id"], "market_mode": "sample_53"},
+        {"game_id": create["game_id"], "player_id": create["host_id"], "resume_token": create["resume_token"], "market_mode": "sample_53"},
     )
     if started.get("error"):
         raise AssertionError(started)

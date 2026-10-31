@@ -37,17 +37,18 @@ def make_formal_game() -> tuple[str, str, str]:
     kazakh = post_json("/join", {"game_id": create["game_id"], "name": "哈薩克"})
     manchuria = post_json("/join", {"game_id": create["game_id"], "name": "滿洲"})
     players = [
-        (create["host_id"], "red_army", "北京"),
-        (hong_kong["player_id"], "hong_kong", "香港城"),
-        (kazakh["player_id"], "kazakh", "阿拉木圖"),
-        (manchuria["player_id"], "manchuria", "東京"),
+        (create["host_id"], create["resume_token"], "red_army", "北京"),
+        (hong_kong["player_id"], hong_kong["resume_token"], "hong_kong", "香港城"),
+        (kazakh["player_id"], kazakh["resume_token"], "kazakh", "阿拉木圖"),
+        (manchuria["player_id"], manchuria["resume_token"], "manchuria", "東京"),
     ]
-    for player_id, faction_id, base_name in players:
+    for player_id, token, faction_id, base_name in players:
         chosen = post_json(
             "/choose-faction",
             {
                 "game_id": create["game_id"],
                 "player_id": player_id,
+                "resume_token": token,
                 "faction_id": faction_id,
                 "base_name": base_name,
             },
@@ -56,13 +57,13 @@ def make_formal_game() -> tuple[str, str, str]:
             raise AssertionError(chosen)
         ready = post_json(
             "/ready",
-            {"game_id": create["game_id"], "player_id": player_id, "ready": True},
+            {"game_id": create["game_id"], "player_id": player_id, "resume_token": token, "ready": True},
         )
         if ready.get("error"):
             raise AssertionError(ready)
     started = post_json(
         "/start",
-        {"game_id": create["game_id"], "player_id": create["host_id"], "market_mode": "sample_53"},
+        {"game_id": create["game_id"], "player_id": create["host_id"], "resume_token": create["resume_token"], "market_mode": "sample_53"},
     )
     if started.get("error"):
         raise AssertionError(started)

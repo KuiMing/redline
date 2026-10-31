@@ -5,6 +5,7 @@ from server.main import (
     lobby,
     lobby_bases,
     lobby_factions,
+    lobby_player_credentials,
     lobby_ready,
 )
 
@@ -72,19 +73,21 @@ def test_choose_faction_rejects_a_base_already_selected_by_another_player():
     lobby_factions[game_id] = {red: "red_army"}
     lobby_bases[game_id] = {red: "北京"}
     lobby_ready[game_id] = {}
+    lobby_player_credentials[game_id] = {p1: {"resume_token": "tok-p1"}, p2: {"resume_token": "tok-p2"}}
     try:
-        first = choose_faction({"game_id": game_id, "player_id": p1, "faction_id": "manchuria", "base_name": "東京"})
+        first = choose_faction({"game_id": game_id, "player_id": p1, "resume_token": "tok-p1", "faction_id": "manchuria", "base_name": "東京"})
         assert first.get("success") is True
 
-        occupied = choose_faction({"game_id": game_id, "player_id": p2, "faction_id": "mongol", "base_name": "東京"})
+        occupied = choose_faction({"game_id": game_id, "player_id": p2, "resume_token": "tok-p2", "faction_id": "mongol", "base_name": "東京"})
         assert occupied == {"error": "Base already taken"}
         assert p2 not in lobby_factions[game_id]
         assert p2 not in lobby_bases[game_id]
 
-        available = choose_faction({"game_id": game_id, "player_id": p2, "faction_id": "mongol", "base_name": "紐約"})
+        available = choose_faction({"game_id": game_id, "player_id": p2, "resume_token": "tok-p2", "faction_id": "mongol", "base_name": "紐約"})
         assert available.get("success") is True
     finally:
         lobby.pop(game_id, None)
         lobby_factions.pop(game_id, None)
         lobby_bases.pop(game_id, None)
         lobby_ready.pop(game_id, None)
+        lobby_player_credentials.pop(game_id, None)

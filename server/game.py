@@ -188,6 +188,15 @@ class Game(CardPlayMixin):
         # None／idle：真人紅軍場次完全不受影響。見 server/red_army_ai_runtime.py。
         self.ai_red_army_player_id = None
         self.ai_red_army_status = {"state": "idle"}
+        # 客廳輪流的 AI 紅軍公開行動摘要（只含公開投影的 log 與公開資源）。由
+        # server/red_army_ai_runtime.py 寫入、state()["ai_red_army"]["public_report"] 輸出。
+        self.ai_red_army_public_report = None
+        # 客廳輪流：True 時，AI 紅軍結束回合前先停在 current player＝紅軍，等公開視窗確認（知道了／A／逾時）。
+        # ai_red_army_ack 是這個等待的權威狀態，見 server/red_army_ai_runtime.py。
+        self.ai_red_army_public_hold = False
+        # 啟用公開等待的 WebSocket 連線。只有至少一個客廳輪流顯示端仍連線時才等待。
+        self.ai_red_army_public_hold_clients = set()
+        self.ai_red_army_ack = None
         # 香港 special_rules（2026-07-11 裁決 S5-1）：香港抗暴之戰結算後、下一回合開始前的免費根據地遷移窗口
         self.hk_free_base_relocation = False
         # 事件於整輪結束結算後，先凍結換人；香港完成「遷移／留在」後才交棒。
@@ -260,6 +269,7 @@ class Game(CardPlayMixin):
         self.turn_log = self._new_turn_log()
         self.action_log = []
         self._action_log_visibility = []
+        self._log_seq = 0  # 累計寫入的 log 筆數（action_log 會截掉舊紀錄，所以另外計數）
         self.purchase_deck = self._initial_purchase_deck()
         self.purchase_area = self._initial_purchase_area()
         self.event_deck = EventDeck(self._draw_event_deck_cards())
@@ -2956,6 +2966,7 @@ class Game(CardPlayMixin):
     def log(self, message, *, private_messages=None, public_message=None):
         prefix = f"[Turn {self.turn}] "
         self.action_log.append(prefix + str(message))
+        self._log_seq = getattr(self, '_log_seq', 0) + 1
         visibility = None
         if private_messages or public_message is not None:
             visibility = {
@@ -3015,6 +3026,17 @@ class Game(CardPlayMixin):
 
     def _project_action_log(self, viewer_player_id=None):
         return project_action_log(self.action_log, getattr(self, '_action_log_visibility', []), viewer_player_id)
+
+    def public_action_log_since(self, seq):
+        """第 seq 筆 log 之後新增的紀錄，只含公開版本（沒有任何玩家的私密訊息）。
+
+        seq 是 `_log_seq` 的舊讀數。沒有玩家使用這個觀看者 id，所以每筆有私密版本的紀錄都
+        回到 public_message，與旁觀者看到的相同。
+        """
+        count = max(0, min(getattr(self, '_log_seq', 0) - int(seq), len(self.action_log)))
+        if not count:
+            return []
+        return self._project_action_log('__public_observer__')[-count:]
 
     def _support_card_has_legal_target(self, player, card, pre_reserved_shield_discards=0):
         # Non-mutating legal-target pre-check, sharing _support_interaction_targets (the
@@ -3528,6 +3550,18 @@ class Game(CardPlayMixin):
     def _hk_relocatable_base_towns(self):
         faction = self.faction_by_id.get('hong_kong', {})
         return [b.get('name') for b in (faction.get('bases') or []) if isinstance(b, dict) and b.get('type') == 'relocatable']
+
+    def _hk_base_relocation_player_id(self):
+        """Seat that must decide the free relocation while the window is open (public; None otherwise).
+
+        Clients (hot-seat handoff) need the authoritative decider: the window freezes the
+        seat handoff, so current_player is still the round's last seat. Fails closed to None
+        unless exactly one Hong Kong player exists.
+        """
+        if not getattr(self, 'hk_free_base_relocation', False):
+            return None
+        hong_kong = [p for p in self.players if getattr(p, 'faction_id', None) == 'hong_kong']
+        return hong_kong[0].id if len(hong_kong) == 1 else None
 
     def _open_hong_kong_base_relocation_window(self):
         self.hk_free_base_relocation = True
@@ -4527,6 +4561,10 @@ class Game(CardPlayMixin):
                     for entry in (self.pending_choice.get('targets') or [])
                 ],
                 'step': self.pending_choice.get('step'),
+                # Multi-pick player-target choice (情報網 A 內鬥放置對象): resolve with
+                # target_player_ids (or indices) of min_count..count entries from `targets`.
+                # Only present when true, so every other choice's projection is unchanged.
+                **({'multi_select': True} if self.pending_choice.get('multi_select') else {}),
             }
         return pending_choice
 
@@ -4619,8 +4657,26 @@ class Game(CardPlayMixin):
                 "enabled": bool(getattr(self, "ai_red_army_player_id", None)),
                 "player_id": getattr(self, "ai_red_army_player_id", None),
                 "status": dict(getattr(self, "ai_red_army_status", None) or {"state": "idle"}),
+                **(
+                    {"public_report": self.ai_red_army_public_report}
+                    if getattr(self, "ai_red_army_player_id", None) and getattr(self, "ai_red_army_public_report", None)
+                    else {}
+                ),
+                **(
+                    {
+                        "public_hold": bool(getattr(self, "ai_red_army_public_hold", False)),
+                        "awaiting_ack": (
+                            {"turn": self.ai_red_army_ack["turn"], "timeout_seconds": self.ai_red_army_ack["timeout_seconds"]}
+                            if getattr(self, "ai_red_army_ack", None) and not self.ai_red_army_ack.get("released")
+                            else None
+                        ),
+                    }
+                    if getattr(self, "ai_red_army_player_id", None)
+                    else {}
+                ),
             },
             "hk_free_base_relocation": bool(getattr(self, 'hk_free_base_relocation', False)),
+            "hk_base_relocation_player_id": self._hk_base_relocation_player_id(),
             "current_player": self.current_player().name,
             "active_eras": self.era_engine.get_active_eras() if self.era_engine else [],
             "active_era_details": active_era_details,

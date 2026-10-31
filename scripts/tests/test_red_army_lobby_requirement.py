@@ -8,6 +8,7 @@ if str(ROOT) not in sys.path:
 from fastapi.testclient import TestClient
 
 from server import main
+from conftest import host_token
 
 
 def create_four_player_room(client):
@@ -39,7 +40,7 @@ def test_room_without_red_army_cannot_start_even_when_everyone_is_ready():
     main.lobby_factions[game_id] = {host_id: 'liberals', guest_id: 'hong_kong'}
     main.lobby_ready[game_id] = {host_id: True, guest_id: True}
 
-    result = client.post('/start', json={'game_id': game_id, 'player_id': host_id}).json()
+    result = client.post('/start', json={'game_id': game_id, 'player_id': host_id, 'resume_token': host_token(game_id, host_id)}).json()
 
     assert result == {'error': '必須有且只能有一名玩家選擇紅軍，才能啟動行動'}
     assert main.manager.games.get(game_id) is None
@@ -59,12 +60,14 @@ def test_last_seat_is_forced_to_choose_red_army_when_room_has_no_red_army():
     rejected = client.post('/choose-faction', json={
         'game_id': game_id,
         'player_id': last_player_id,
+        'resume_token': host_token(game_id, last_player_id),
         'faction_id': 'mongol',
         'base_name': '烏蘭巴托',
     }).json()
     accepted = client.post('/choose-faction', json={
         'game_id': game_id,
         'player_id': last_player_id,
+        'resume_token': host_token(game_id, last_player_id),
         'faction_id': 'red_army',
         'base_name': '北京',
     }).json()
@@ -90,6 +93,7 @@ def test_last_seat_can_choose_another_faction_when_red_army_already_exists():
     accepted = client.post('/choose-faction', json={
         'game_id': game_id,
         'player_id': last_player_id,
+        'resume_token': host_token(game_id, last_player_id),
         'faction_id': 'mongol',
         'base_name': '烏蘭巴托',
     }).json()

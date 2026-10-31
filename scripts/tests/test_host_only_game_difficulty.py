@@ -10,6 +10,9 @@ from server import main
 from server.game import Game, STATIC_PURCHASE_CARD_NAMES
 
 
+HOST_TOKEN = "host-resume-token"
+
+
 def setup_room():
     game_id = "difficulty-room"
     host_id = "host-player"
@@ -17,6 +20,9 @@ def setup_room():
     main.lobby[game_id] = [(host_id, "房主"), (guest_id, "訪客")]
     main.lobby_hosts[game_id] = host_id
     main.lobby_market_mode[game_id] = "sample_53"
+    main.lobby_player_credentials[game_id] = {
+        host_id: {"device_id": "host-device", "resume_token": HOST_TOKEN},
+    }
     main.manager.games.pop(game_id, None)
     return game_id, host_id, guest_id
 
@@ -25,6 +31,7 @@ def teardown_room(game_id):
     main.lobby.pop(game_id, None)
     main.lobby_hosts.pop(game_id, None)
     main.lobby_market_mode.pop(game_id, None)
+    main.lobby_player_credentials.pop(game_id, None)
     main.manager.games.pop(game_id, None)
 
 
@@ -42,10 +49,30 @@ def test_only_host_can_change_game_difficulty():
         changed = main.set_lobby_market_mode({
             "game_id": game_id,
             "player_id": host_id,
+            "resume_token": HOST_TOKEN,
             "market_mode": "all_cards",
         })
         assert changed == {"success": True, "market_mode": "all_cards"}
         assert main.lobby_market_mode[game_id] == "all_cards"
+    finally:
+        teardown_room(game_id)
+
+
+def test_host_without_credential_or_token_fails_closed():
+    game_id, host_id, _ = setup_room()
+    try:
+        no_token = main.set_lobby_market_mode({
+            "game_id": game_id, "player_id": host_id, "market_mode": "all_cards"})
+        assert no_token == {"error": "Host authentication failed"}
+        main.lobby_player_credentials[game_id].pop(host_id)
+        no_credential = main.set_lobby_market_mode({
+            "game_id": game_id, "player_id": host_id, "market_mode": "all_cards",
+            "resume_token": HOST_TOKEN})
+        assert no_credential == {"error": "Host authentication failed"}
+        for call, extra in ((main.set_ai_red_army, {"enabled": True}), (main.start_game, {})):
+            assert call({"game_id": game_id, "player_id": host_id, **extra}) == {
+                "error": "Host authentication failed"}
+        assert main.lobby_market_mode[game_id] == "sample_53"
     finally:
         teardown_room(game_id)
 
@@ -56,6 +83,7 @@ def test_host_cannot_set_unknown_game_difficulty():
         rejected = main.set_lobby_market_mode({
             "game_id": game_id,
             "player_id": host_id,
+            "resume_token": HOST_TOKEN,
             "market_mode": "unknown",
         })
         assert rejected == {"error": "Invalid game difficulty"}

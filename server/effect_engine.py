@@ -328,6 +328,13 @@ class EffectEngine:
             if not removable:
                 return
             if source_name in {'宣傳家', '思想家', '資助者', '資本家', '分神'} and current_card is not None:
+                if context.get('borrowed_purchase_area_index') is not None:
+                    # 企業人脈借用購買區正面朝上的牌：只是臨時複本，沒有實體牌被移除，
+                    # 不可回補常設供應；複本直接消失（不進手牌/棄牌堆），購買區原牌不動。
+                    context['removed_current_card'] = True
+                    if hasattr(game, 'log'):
+                        game.log(f"{player.name} resolved borrowed {source_name}; static purchase supply unchanged")
+                    return {'removed_current_card': True, 'removed_card': None}
                 returned = game._return_removed_card_to_purchase_supply(current_card) if hasattr(game, '_return_removed_card_to_purchase_supply') else None
                 context['removed_current_card'] = True
                 if hasattr(game, 'log'):
@@ -570,9 +577,11 @@ class EffectEngine:
                 target = next((p for p in game.players if getattr(p, "id", None) == target_id), None)
                 if target is not None:
                     targets = [target]
-            elif effect.get("target_scope") == "others" or (context.get("card_name") == "情報網" and context.get("choice_index") == 0):
-                # 離間／情報網A：「在至多3位玩家棄牌堆各放入1張內鬥」——對象是其他玩家，
-                # 絕不包含施放者自己（P1 回報：紅軍離間把內鬥放進自己牌堆的 bug）
+            elif effect.get("target_scope") == "others":
+                # 離間：「在至多3位玩家棄牌堆各放入1張內鬥」——對象是其他玩家，
+                # 絕不包含施放者自己（P1 回報：紅軍離間把內鬥放進自己牌堆的 bug）。
+                # 情報網A 不走這裡：由打出者在 intel_network_internal_conflict_targets
+                # 明確選擇對象後以 target_player_ids 傳入，不會自動放給所有其他玩家。
                 max_targets = int(effect.get("max_targets", 3) or 3)
                 targets = [other for other in game.players if other != player][:max_targets]
             if not targets:

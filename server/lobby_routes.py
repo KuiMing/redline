@@ -9,7 +9,10 @@ main.py, not a rewrite — nothing about the logic changed.
 
 import json
 import secrets
+import threading
+import time
 import uuid
+from collections import OrderedDict
 from pathlib import Path
 
 from fastapi import APIRouter
@@ -36,6 +39,13 @@ lobby_ai_red_army = {}  # {game_id: bool} — host-owned toggle; see set_ai_red_
 # to False (off) for every room so existing human-vs-human flow is unchanged
 # unless the host opts in. Immutable once manager.games[game_id] exists.
 
+lobby_control_mode = {}  # {game_id: "computer" | "joycon"} — fixed by the creator at /create
+lobby_joycon_count = {}  # {game_id: int 1..4 | None} — controllers paired before the room existed
+lobby_create_requests = OrderedDict()  # {request id: (created_at, canonical payload, create response)}
+_lobby_create_lock = threading.Lock()
+CREATE_REQUEST_TTL_SECONDS = 15 * 60
+CREATE_REQUEST_CACHE_MAX = 512
+
 # A synthetic "virtual seat" player_id prefix used only inside start_game()
 # when lobby_ai_red_army[game_id] is True — never written into `lobby`,
 # `lobby_ready`, or `lobby_player_credentials` (it is not a human join and
@@ -54,22 +64,98 @@ def _max_human_players(game_id: str) -> int:
     return 3 if lobby_ai_red_army.get(game_id) else 4
 
 
+def _parse_create_settings(payload: dict):
+    """Validate the start-flow settings sent with /create. Absent keys keep the
+    legacy defaults, so a bare /create is unchanged. Returns (settings, error)."""
+    ai_red_army = payload.get("ai_red_army", False)
+    if not isinstance(ai_red_army, bool):
+        return None, "Invalid value"
+    market_mode = payload.get("market_mode", "sample_53")
+    if market_mode not in {"sample_53", "all_cards"}:
+        return None, "Invalid game difficulty"
+    control_mode = payload.get("control_mode", "computer")
+    if control_mode not in {"computer", "joycon"}:
+        return None, "Invalid control mode"
+    count = payload.get("joycon_count")
+    if control_mode == "joycon":
+        # bool is an int subclass; reject it explicitly.
+        if not isinstance(count, int) or isinstance(count, bool) or not 1 <= count <= 4:
+            return None, "Joy-Con count must be between 1 and 4"
+        if ai_red_army and count > 3:
+            return None, "AI 紅軍佔用一個席位，最多只能配對 3 支 Joy-Con"
+    elif count is not None:
+        return None, "Joy-Con count requires Joy-Con control mode"
+    return {
+        "ai_red_army": ai_red_army,
+        "market_mode": market_mode,
+        "control_mode": control_mode,
+        "joycon_count": count,
+    }, None
+
+
+def _prune_create_requests(now: float) -> None:
+    """Drop expired credential-bearing replay records in insertion order."""
+    while lobby_create_requests:
+        _, (created_at, _, _) = next(iter(lobby_create_requests.items()))
+        if now - created_at <= CREATE_REQUEST_TTL_SECONDS:
+            break
+        lobby_create_requests.popitem(last=False)
+
+
 @router.post("/create")
 def create_room(payload: dict = None):
+    payload = payload or {}
+    settings, error = _parse_create_settings(payload)
+    if error:
+        return {"error": error}
+    assert settings is not None
+    request_id = payload.get("create_request_id")
+    if request_id is not None:
+        if not isinstance(request_id, str) or not 16 <= len(request_id) <= 200:
+            return {"error": "Invalid create request id"}
+        signature = json.dumps({
+            "name": str(payload.get("name") or "").strip(),
+            "device_id": str(payload.get("device_id") or "").strip(),
+            **settings,
+        }, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+        # The lookup and room creation are one critical section. Concurrent retries
+        # with the same high-entropy key can therefore create only one room.
+        with _lobby_create_lock:
+            now = time.monotonic()
+            _prune_create_requests(now)
+            previous = lobby_create_requests.get(request_id)
+            if previous:
+                _, previous_signature, previous_response = previous
+                if previous_signature != signature:
+                    return {"error": "Create request payload conflict"}
+                return dict(previous_response)
+            # Capacity eviction applies only to a genuinely new request. A replay
+            # at capacity must be served before its oldest record can be evicted.
+            while len(lobby_create_requests) >= CREATE_REQUEST_CACHE_MAX:
+                lobby_create_requests.popitem(last=False)
+            response = _create_room(payload, settings)
+            lobby_create_requests[request_id] = (now, signature, dict(response))
+            return response
+    return _create_room(payload, settings)
+
+
+def _create_room(payload: dict, settings: dict):
     game_id = manager.create_room()
     host_id = str(uuid.uuid4())
 
     # 建房者的「行動代號」以前被無聲忽略（永遠叫 host）；現在採用前端帶來的名字，
     # 空值才 fallback 成 host（2026-07-18 自動桌測發現，2026-07-19 修正）。
-    host_name = str((payload or {}).get("name") or "").strip() or "host"
+    host_name = str(payload.get("name") or "").strip() or "host"
     lobby[game_id] = [(host_id, host_name)]  # host is immediately in lobby
     lobby_hosts[game_id] = host_id
     lobby_factions[game_id] = {}
     lobby_bases[game_id] = {}
     lobby_ready[game_id] = {host_id: False}
-    lobby_market_mode[game_id] = "sample_53"
-    lobby_ai_red_army[game_id] = False
-    device_id = str((payload or {}).get("device_id") or "").strip()
+    lobby_market_mode[game_id] = settings["market_mode"]
+    lobby_ai_red_army[game_id] = settings["ai_red_army"]
+    lobby_control_mode[game_id] = settings["control_mode"]
+    lobby_joycon_count[game_id] = settings["joycon_count"]
+    device_id = str(payload.get("device_id") or "").strip()
     resume_token = secrets.token_urlsafe(32)
     lobby_player_credentials[game_id] = {
         host_id: {"device_id": device_id, "resume_token": resume_token}
@@ -172,6 +258,31 @@ def _required_faction_for_player(game_id: str, player_id: str):
     return None
 
 
+def _player_token_valid(game_id: str, player_id, payload: dict) -> bool:
+    """A seat mutation must prove ownership of that seat. Fail closed: a seat
+    with no stored credential is rejected, so a public player_id alone (the
+    /lobby payload exposes them) is never enough."""
+    if not isinstance(game_id, str) or not isinstance(player_id, str):
+        return False
+    credential = lobby_player_credentials.get(game_id, {}).get(player_id)
+    if not credential:
+        return False
+    supplied = payload.get("resume_token")
+    expected = credential.get("resume_token")
+    if not isinstance(supplied, str) or not isinstance(expected, str):
+        return False
+    supplied = supplied.strip()
+    if not supplied or not expected:
+        return False
+    # Encode to bytes: compare_digest raises TypeError on non-ASCII str.
+    return secrets.compare_digest(supplied.encode("utf-8"), expected.encode("utf-8"))
+
+
+def _host_token_valid(game_id: str, player_id, payload: dict) -> bool:
+    """Host mutations must prove ownership of the host seat (see _player_token_valid)."""
+    return _player_token_valid(game_id, player_id, payload)
+
+
 @router.post("/market-mode")
 def set_lobby_market_mode(payload: dict):
     game_id = payload.get("game_id")
@@ -182,6 +293,8 @@ def set_lobby_market_mode(payload: dict):
         return {"error": "Game not found"}
     if lobby_hosts.get(game_id) != player_id:
         return {"error": "Only host can change game difficulty"}
+    if not _host_token_valid(game_id, player_id, payload):
+        return {"error": "Host authentication failed"}
     if manager.games.get(game_id) is not None:
         return {"error": "Game already started"}
     if market_mode not in {"sample_53", "all_cards"}:
@@ -208,6 +321,8 @@ def set_ai_red_army(payload: dict):
         return {"error": "Game not found"}
     if lobby_hosts.get(game_id) != player_id:
         return {"error": "Only host can change AI Red Army setting"}
+    if not _host_token_valid(game_id, player_id, payload):
+        return {"error": "Host authentication failed"}
     if manager.games.get(game_id) is not None:
         return {"error": "Game already started"}
     if not isinstance(enabled, bool):
@@ -227,7 +342,6 @@ def set_ai_red_army(payload: dict):
 def start_game(payload: dict):
     game_id = payload.get("game_id")
     player_id = payload.get("player_id")
-    market_mode = payload.get("market_mode")
 
     if game_id not in lobby:
         return {"error": "Game not found"}
@@ -240,15 +354,14 @@ def start_game(payload: dict):
 
     if lobby_hosts.get(game_id) != player_id:
         return {"error": "Only host can start"}
+    if not _host_token_valid(game_id, player_id, payload):
+        return {"error": "Host authentication failed"}
 
     ready = lobby_ready.setdefault(game_id, {})
     for pid, _ in human_players:
         ready.setdefault(pid, False)
     if any(not ready.get(pid, False) for pid, _ in human_players):
         return {"error": "All players must be ready before start"}
-
-    if market_mode in {"sample_53", "all_cards"}:
-        lobby_market_mode[game_id] = market_mode
 
     # For test/setup endpoints that already created a live game state,
     # preserve the prepared runtime instead of rebuilding a fresh one.
@@ -373,6 +486,9 @@ def choose_faction(payload: dict):
     if player_id not in [pid for pid, _ in lobby[game_id]]:
         return {"error": "Player not found in lobby"}
 
+    if not _player_token_valid(game_id, player_id, payload):
+        return {"error": "Invalid player credentials"}
+
     if faction_id == 'red_army' and lobby_ai_red_army.get(game_id):
         return {"error": "AI 紅軍已啟用，紅軍席位由電腦控制，玩家不可選擇"}
 
@@ -421,6 +537,8 @@ def set_ready(payload: dict):
         return {"error": "Game not found"}
     if player_id not in [pid for pid, _ in lobby[game_id]]:
         return {"error": "Player not found in lobby"}
+    if not _player_token_valid(game_id, player_id, payload):
+        return {"error": "Invalid player credentials"}
     if is_ready and player_id not in lobby_factions.get(game_id, {}):
         return {"error": "Choose faction before ready"}
 
@@ -448,6 +566,8 @@ def lobby_state(game_id: str):
         "started": manager.games.get(game_id) is not None,
         "market_mode": lobby_market_mode.get(game_id, "sample_53"),
         "ai_red_army": bool(lobby_ai_red_army.get(game_id, False)),
+        "control_mode": lobby_control_mode.get(game_id, "computer"),
+        "joycon_count": lobby_joycon_count.get(game_id),
         "required_faction_by_player": {
             pid: required
             for pid, _ in lobby[game_id]
