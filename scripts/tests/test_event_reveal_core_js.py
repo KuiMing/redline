@@ -29,3 +29,10 @@ def test_event_reveal_core_loads_before_app_and_render_uses_it():
     # 自動揭示只經過共用判定，不再有直接以事件 key 比對就打開的舊路徑。
     assert body.count("openCurrentEventReveal()") == 1
     assert "if (decision.open) openCurrentEventReveal();" in body
+
+    era_body = app.split("function renderEraAchievement(state) {", 1)[1].split("\nfunction ", 1)[0]
+    assert "window.RedlineEventRevealCore.decideAutoReveal(" in era_body
+    assert "keyOverride: key" in era_body
+    assert "if (decision.record) saveEventRevealSuppressed(decision.record);" in era_body
+    assert "if (decision.closeForReaction) closeEraAchievementModal();" in era_body
+    assert "if (decision.open)" in era_body

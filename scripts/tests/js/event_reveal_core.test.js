@@ -107,6 +107,31 @@ test('其他 pending choice（不是取消反應）不影響既有自動揭示',
   assert.equal(t.render(state({ pending_choice: { type: 'card_choice', player_id: 'p1', choice_id: 'x' } }), 'p1').open, true);
 });
 
+for (const outcome of ['decline', 'cancel']) {
+  test(`時代關卡：取消反應 ${outcome} 後不延後自動顯示，新的通知仍照常顯示`, () => {
+    const storage = { raw: null };
+    const eraKey = 'era:era-1:3';
+    const pending = state({ pending_choice: reaction('p2') });
+    const during = E.decideAutoReveal({
+      state: pending, viewerId: 'p2', lastKey: null, suppressed: [], lastReactionChoiceId: null, keyOverride: eraKey,
+    });
+    assert.equal(during.open, false);
+    assert.equal(during.closeForReaction, true);
+    storage.raw = E.rememberSuppressed([], G, during.record);
+
+    const after = E.decideAutoReveal({
+      state: state({ action_log: [outcome] }), viewerId: 'p1', lastKey: null,
+      suppressed: E.normalizeSuppressed(storage.raw, G), lastReactionChoiceId: null, keyOverride: eraKey,
+    });
+    assert.equal(after.open, false, '取消或放棄後不得補顯示同一個時代關卡通知');
+    const next = E.decideAutoReveal({
+      state: state({ current_player: 'P2' }), viewerId: 'p2', lastKey: null,
+      suppressed: E.normalizeSuppressed(storage.raw, G), lastReactionChoiceId: null, keyOverride: 'era:era-2:perm',
+    });
+    assert.equal(next.open, true, '沒有觸發取消機會的新通知維持既有自動顯示');
+  });
+}
+
 test('sessionStorage 內容不可信：其他遊戲、格式不合、超長 token 一律忽略；最多保留最近 16 個', () => {
   assert.deepEqual(E.normalizeSuppressed(null, G), []);
   assert.deepEqual(E.normalizeSuppressed({ gameId: 'other', tokens: ['a'] }, G), []);

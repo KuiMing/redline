@@ -17,6 +17,7 @@ let cachedFullMapData = null;
 let activeFactionActionModal = null;
 let cardPresentationCatalog = null;
 let lastEraNotificationKey = null;
+let lastEraReactionChoiceId = null;
 let eraAchievementDetailsById = {};   // 生效中的時代關卡說明，供釘選卡片重新點開使用
 let eraAchievementViewId = null;      // 時代關卡浮窗目前顯示的時代 id
 let stageResizeBound = false;
@@ -3185,7 +3186,7 @@ function renderEraAchievement(state) {
     return;
   }
 
-  const key = `${info.id}:${info.remaining ?? 'perm'}`;
+  const key = `era:${info.id}:${info.remaining ?? 'perm'}`;
   const isOpen = overlay.style.display === 'flex';
   // 浮窗開著，而且玩家正透過分頁查看其他時代時，不要被最新通知蓋掉內容。
   const viewing = isOpen && eraAchievementViewId && eraAchievementViewId !== info.id
@@ -3193,10 +3194,23 @@ function renderEraAchievement(state) {
     : info;
   fillEraAchievementModal(viewing || info);
 
-  if (lastEraNotificationKey !== key) {
+  // 時代關卡與事件卡採相同規則：只要這次動作觸發取消機會，就不自動顯示；取消或放棄後也不補顯示。
+  // 分頁列的按鈕仍直接呼叫 openEraAchievementById()，所以手動查看不受影響。
+  const decision = window.RedlineEventRevealCore.decideAutoReveal({
+    state,
+    viewerId: playerId,
+    lastKey: lastEraNotificationKey,
+    suppressed: loadEventRevealSuppressed(),
+    lastReactionChoiceId: lastEraReactionChoiceId,
+    keyOverride: key,
+  });
+  lastEraReactionChoiceId = decision.reactionChoiceId;
+  if (decision.record) saveEventRevealSuppressed(decision.record);
+  if (decision.closeForReaction) closeEraAchievementModal();
+  lastEraNotificationKey = decision.key;
+  if (decision.open) {
     overlay.style.display = 'flex';
     fillEraAchievementModal(info);
-    lastEraNotificationKey = key;
   }
 }
 

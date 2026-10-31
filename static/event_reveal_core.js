@@ -1,5 +1,5 @@
 /*
- * REDLINE 事件卡自動揭示（#eventRevealModal）— 純邏輯，無 DOM 依賴，可在 node 直接測試。
+ * REDLINE 事件卡／時代關卡自動揭示 — 純邏輯，無 DOM 依賴，可在 node 直接測試。
  *
  * 2026-10-27 playtest：對手的陣營能力或卡牌觸發取消反應（爆料黑幕／產業滲透／情報網）時，前端會先自動打開
  * 資訊用的事件卡揭示，擋在可操作的取消反應視窗上面（MODAL_SCOPES 中 eventRevealModal 高於 choiceModal）。
@@ -8,7 +8,7 @@
  *
  * 規則：
  *   - 取消反應視窗開著（state.pending_choice.type === 'reaction_choice'，所有 viewer 都看得到這個公開狀態）時，
- *     一律不自動揭示，並記下「這一次觸發」的 token（回合事件 key＋目前行動玩家）。
+ *     事件卡與時代關卡一律不自動揭示，並記下「這一次觸發」的 token（內容 key＋目前行動玩家）。
  *   - 之後同一 token（同一張事件卡、仍是同一位玩家的回合）的 render——含反應結束後整頁重新載入回行動者——都不再自動揭示。
  *   - 換到下一位玩家或下一張事件卡＝新的 token，維持原本的自動揭示。手動開啟（事件卡分頁）不受影響。
  *   - 遊戲已結束（winner／finished）不再自動揭示：勝利畫面是唯一的結果畫面。
@@ -66,6 +66,7 @@
    *   lastKey     — 這個分頁上一次處理過的事件 key（app.js lastEventRevealKey）
    *   suppressed  — normalizeSuppressed 的 token 清單
    *   lastReactionChoiceId — 這個分頁上一次為取消反應關閉揭示時的 choice_id
+   *   keyOverride — 非事件卡內容的穩定 key；時代關卡使用 `era:<通知 key>`
    * 回傳：
    *   key        — 本次事件 key（呼叫端記成 lastEventRevealKey；null＝沒有事件）
    *   open       — 是否自動揭示
@@ -73,8 +74,10 @@
    *   closeForReaction — viewer 是反應者且這是新的反應視窗：關閉仍開著的揭示（反應視窗必須是唯一的自動 modal）
    *   reactionChoiceId — 呼叫端記成 lastReactionChoiceId
    */
-  function decideAutoReveal({ state, viewerId, lastKey, suppressed, lastReactionChoiceId } = {}) {
-    const key = revealKey(state);
+  function decideAutoReveal({ state, viewerId, lastKey, suppressed, lastReactionChoiceId, keyOverride } = {}) {
+    const key = typeof keyOverride === 'string' && keyOverride.length > 0 && keyOverride.length <= MAX_TOKEN_LENGTH
+      ? keyOverride
+      : revealKey(state);
     const reaction = reactionWindowOpen(state);
     const choice = reaction ? state.pending_choice : null;
     const ownsReaction = !!choice && isId(viewerId) && choice.player_id === viewerId;
