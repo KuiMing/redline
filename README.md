@@ -1,6 +1,6 @@
 # Redline
 
-Redline 是一個以瀏覽器 UI 與 Python WebSocket 伺服器實作的桌遊原型專案。
+Redline 是一個以瀏覽器 UI 與 Python WebSocket 伺服器實作的不對稱政治策略桌遊。專案支援鍵盤、滑鼠、Joy-Con，以及透過 MCP 接入的 LLM 玩家。
 
 **不會玩、想知道畫面上要點哪裡？** 請看配有真實截圖的 [`docs/PLAYER_GUIDE.md`](docs/PLAYER_GUIDE.md)（玩家手冊）。
 
@@ -14,7 +14,7 @@ Redline 是一個以瀏覽器 UI 與 Python WebSocket 伺服器實作的桌遊�
 
 三種方式，依方便程度排列。
 
-### 方式一：Docker Compose（推薦，一次把遊戲跟 MCP 都開好）
+### 方式一：Docker Compose（推薦，一次啟動遊戲、MCP 與 Joy-Con Bridge）
 
 ```bash
 docker compose up --build -d
@@ -52,7 +52,23 @@ Lobby 畫面也會顯示這個網址。想讓 Agent 陪玩的話，另外開 MCP
 
 ### Joy-Con／搖桿（選用）
 
-在 Mac 上用 Joy-Con 玩（每位玩家各拿一支左或右 Joy-Con）：先啟動本機 bridge（`tools/joycon_bridge/run_mac.sh`），再在頁面右下角 🎮 啟用並選擇自己的手把。詳見 [`docs/joycon_controller.md`](docs/joycon_controller.md) 與 [`tools/joycon_bridge/README.md`](tools/joycon_bridge/README.md)。
+在 macOS 上使用 Joy-Con 時，藍牙連線與 FTCW 必須在 host 執行。Docker Compose 會啟動 Joy-Con Bridge container；Bridge 透過 `host.docker.internal` 接收 FTCW UDP 資料，並預設只在 `127.0.0.1:8000` 發布 WebSocket。
+
+每位玩家可各使用一支左或右 Joy-Con。進入遊戲後，在頁面右下角 🎮 啟用控制器並選擇自己的手把。遊戲內可開啟 `Joy-Con 功能表` 查看目前操作提示。
+
+遊戲結束後，按 Joy-Con **Y** 或鍵盤 **Y** 可重新查看最後勝利圖片。此操作只重新顯示圖片，不會再次執行結算、獎勵或音效。
+
+完整設定、控制方式與故障排除請參閱 [`docs/joycon_controller.md`](docs/joycon_controller.md) 與 [`tools/joycon_bridge/README.md`](tools/joycon_bridge/README.md)。
+
+## 開始遊戲
+
+1. 在首頁建立遊戲，或使用房間代碼加入現有遊戲。
+2. 選擇遊戲模式：
+   - 簡單模式：`53 張精簡牌組`，由 `18 張奧援卡與 35 張隨機一般卡` 組成。
+   - 一般模式：`245 張完整牌組`。
+3. 完成玩家與陣營設定後開始遊戲。
+
+遊戲介面固定使用 `1280 × 720` 舞台並等比例縮放。非 16:9 顯示區域會保留黑邊，不會裁切或拉伸畫面。
 
 ### 給 Agent 用的 MCP
 
