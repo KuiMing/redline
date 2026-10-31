@@ -381,8 +381,6 @@
     applyRoomDisplay(Core.settingsSummary(settings));
     $('roomSettingsHint').textContent = '輸入行動代號後按「建立作戰室」，房主設定會由伺服器保存。';
     $('sfBackBtn').hidden = false;
-    if (typeof applyMarketMode === 'function') applyMarketMode(settings.market_mode);
-    if (typeof applyAiRedArmy === 'function') applyAiRedArmy(settings.ai_red_army);
     const joy = settings.control_mode === 'joycon';
     setJoyconLobby(joy);
     syncPreRoomAiSeat(settings.ai_red_army);
@@ -525,10 +523,8 @@
     if (!lobbyRes) return;
     const summary = Core.settingsSummary(lobbyRes);
     applyRoomDisplay(summary);
-    if (typeof applyMarketMode === 'function' && lobbyRes.market_mode) applyMarketMode(lobbyRes.market_mode);
-    if (typeof applyAiRedArmy === 'function') applyAiRedArmy(!!lobbyRes.ai_red_army);
     const session = window.RedlineSession && window.RedlineSession.current ? window.RedlineSession.current() : {};
-    // Joy-Con 房間的本機席位（含逐棒交接後整頁重新載入的 P2～Pn、回到房主）：沿用建立時的精簡畫面，不顯示代碼／網址／難度／AI。
+    // Joy-Con 房間的本機席位（含逐棒交接後整頁重新載入的 P2～Pn、回到房主）：沿用建立時的精簡畫面，不顯示代碼或網址。
     const hs = window.RedlineHotSeat;
     const localJoycon = lobbyRes.control_mode === 'joycon' && !!session.playerId && !!hs && hs.isLocalSeat && hs.isLocalSeat(session.gameId, session.playerId);
     if (localJoycon && !sf.pending && lobbyEl() && lobbyEl().dataset.flow !== 'start') setFlow('create');

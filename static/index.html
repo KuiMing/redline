@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>REDLINE // STRATEGIC COMMAND</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="/static/style.css?v=setup-guides-20261031" />
+  <link rel="stylesheet" href="/static/style.css?v=lobby-settings-cleanup-20261031" />
   <!-- 客廳輪流（hot-seat）：在第一次繪製前就能遮住舞台，所以放在 <head>。 -->
   <script src="/static/hotseat_core.js?v=reaction-victory-controller-20261027"></script>
   <script src="/static/hotseat_ui.js?v=reaction-victory-controller-20261027"></script>
@@ -179,30 +179,7 @@
         <div class="lobby-field-hint">其他玩家在同一個 Wi-Fi／區網下，用瀏覽器打開這個網址，再貼上房間代碼加入。</div>
       </div>
 
-      <div class="lobby-field" id="difficultyField">
-        <span>遊戲難易度</span>
-        <select id="marketModeSelect" class="lobby-hidden-select" aria-label="遊戲難易度">
-          <option value="sample_53">簡單模式</option>
-          <option value="all_cards">一般模式</option>
-        </select>
-        <div class="lobby-market-toggle" role="group" aria-label="遊戲難易度">
-          <button class="lobby-market-option active" type="button" data-market-mode="sample_53" data-card-counts="共53張：奧援卡18張、一般卡35張（一般卡類型隨機抽取）。" data-tooltip="共53張：奧援卡18張、一般卡35張（一般卡類型隨機抽取）。" onclick="setMarketMode('sample_53')" disabled>簡單模式</button>
-          <button class="lobby-market-option" type="button" data-market-mode="all_cards" data-card-counts="共245張：奧援64張、指揮68張、間諜24張、資金20張、武裝16張、交通15張、特殊宣傳15張、整肅12張、組織11張。" data-tooltip="共245張：奧援64張、指揮68張、間諜24張、資金20張、武裝16張、交通15張、特殊宣傳15張、整肅12張、組織11張。" onclick="setMarketMode('all_cards')" disabled>一般模式</button>
-        </div>
-      </div>
 
-      <div class="lobby-field" id="aiRedArmyField">
-        <span>紅軍席位</span>
-        <select id="aiRedArmySelect" class="lobby-hidden-select" aria-label="紅軍席位">
-          <option value="off">真人紅軍</option>
-          <option value="on">AI 紅軍</option>
-        </select>
-        <div class="lobby-market-toggle" role="group" aria-label="紅軍席位">
-          <button class="lobby-market-option active" type="button" data-ai-red-army="off" data-tooltip="由一位玩家在作戰室中選擇紅軍陣營並親自操作。" onclick="setAiRedArmy(false)" disabled>真人紅軍</button>
-          <button class="lobby-market-option" type="button" data-ai-red-army="on" data-tooltip="紅軍席位改由電腦（決定性規則引擎）自動操作，不需要真人加入。" onclick="setAiRedArmy(true)" disabled>AI 紅軍</button>
-        </div>
-        <div class="lobby-field-hint" id="aiRedArmyHint">建立房間後，房主可以切換紅軍是否由 AI 代打。</div>
-      </div>
     </div>
 
     <div class="lobby-column lobby-roster-column">
@@ -537,13 +514,13 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/static/player_messages_zh_tw.js?v=player-message-i18n-20260801"></script>
 <script src="/static/event_reveal_core.js?v=reaction-no-event-reveal-20261027"></script>
-<script src="/static/app.js?v=reaction-no-event-reveal-20261027"></script>
+<script src="/static/app.js?v=lobby-settings-cleanup-20261031"></script>
 <script src="/static/controller_core.js?v=reaction-victory-controller-20261027"></script>
 <script src="/static/living_room_core.js?v=town-detail-popup-20261026"></script>
 <script src="/static/controller_ui.js?v=reaction-victory-controller-20261027"></script>
 <script src="/static/controller_living_room.js?v=yellow-focus-inset-20261029"></script>
 <script src="/static/start_flow_core.js?v=reaction-victory-controller-20261027"></script>
-<script src="/static/start_flow_ui.js?v=setup-guides-20261031"></script>
+<script src="/static/start_flow_ui.js?v=lobby-settings-cleanup-20261031"></script>
 <script src="/static/start_screen_fx.js?v=command-entry-webgl-20261031"></script>
 </body>
 </html>

@@ -4276,9 +4276,7 @@ html[data-display="living-room"] .lr-focus-overlay { height: 644px; }
 #lobby[data-flow="create"][data-joycon-lobby] #roomSettingsHint,
 #lobby[data-flow="create"][data-joycon-lobby] #roomSettingsField > span,
 #lobby[data-flow="create"][data-joycon-lobby] .lobby-room-column > label.lobby-field:has(#roomId),
-#lobby[data-flow="create"][data-joycon-lobby] #lanInfoField,
-#lobby[data-flow="create"][data-joycon-lobby] #difficultyField,
-#lobby[data-flow="create"][data-joycon-lobby] #aiRedArmyField { display: none; }
+#lobby[data-flow="create"][data-joycon-lobby] #lanInfoField { display: none; }
 /* Joy-Con 行動代號固定為 P1～P4、房間在背景自動建立：不顯示代號欄、建立／加入鈕、客廳輪流開關。 */
 #lobby[data-flow="create"][data-joycon-lobby] .lobby-field:has(#playerName),
 #lobby[data-flow="create"][data-joycon-lobby] #createRoomBtn,

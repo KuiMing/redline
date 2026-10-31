@@ -263,38 +263,6 @@ function updateLobbyActionControls(lobbyRes = latestLobbyState) {
   const readyBtn = document.getElementById('toggleReadyBtn');
   const factionPickerBtn = document.getElementById('openFactionPickerBtn');
   const status = lobbyReadiness(lobbyRes);
-  const marketMode = lobbyRes?.market_mode || document.getElementById('marketModeSelect')?.value || 'sample_53';
-  applyMarketMode(marketMode);
-  document.querySelectorAll('[data-market-mode]').forEach(button => {
-    button.disabled = !status.isHost;
-    button.setAttribute('aria-disabled', String(!status.isHost));
-    const cardCounts = button.dataset.cardCounts || '';
-    const hostNote = status.isHost
-      ? ''
-      : status.hasRoom
-        ? ' 只有房主可以切換遊戲難易度。'
-        : ' 建立房間後，只有房主可以切換遊戲難易度。';
-    button.dataset.tooltip = `${cardCounts}${hostNote}`.trim();
-  });
-
-  const gameStarted = !!lobbyRes?.started;
-  applyAiRedArmy(status.aiRedArmy);
-  document.querySelectorAll('[data-ai-red-army]').forEach(button => {
-    const locked = !status.isHost || gameStarted;
-    button.disabled = locked;
-    button.setAttribute('aria-disabled', String(locked));
-    const baseTip = button.dataset.aiRedArmy === 'on'
-      ? '紅軍席位改由電腦（決定性規則引擎）自動操作，不需要真人加入。'
-      : '由一位玩家在作戰室中選擇紅軍陣營並親自操作。';
-    const note = gameStarted
-      ? ' 作戰已啟動，無法變更。'
-      : status.isHost
-        ? ''
-        : status.hasRoom
-          ? ' 只有房主可以切換。'
-          : ' 建立房間後，只有房主可以切換。';
-    button.dataset.tooltip = `${baseTip}${note}`.trim();
-  });
 
   if (factionPickerBtn) {
     factionPickerBtn.disabled = !status.hasRoom;
@@ -396,80 +364,6 @@ function syncLobbyRoomCode() {
   if (lobby) lobby.classList.toggle('room-active', !!value);
 }
 
-function applyMarketMode(mode) {
-  const select = document.getElementById('marketModeSelect');
-  if (select) select.value = mode;
-  // Scoped to [data-market-mode] (not the shared .lobby-market-option
-  // class) so this never touches the AI Red Army toggle buttons, which
-  // reuse the same visual class but carry [data-ai-red-army] instead.
-  document.querySelectorAll('[data-market-mode]').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.marketMode === mode);
-    btn.setAttribute('aria-pressed', String(btn.dataset.marketMode === mode));
-  });
-}
-
-function applyAiRedArmy(enabled) {
-  const select = document.getElementById('aiRedArmySelect');
-  if (select) select.value = enabled ? 'on' : 'off';
-  document.querySelectorAll('[data-ai-red-army]').forEach(btn => {
-    btn.classList.toggle('active', (btn.dataset.aiRedArmy === 'on') === !!enabled);
-    btn.setAttribute('aria-pressed', String((btn.dataset.aiRedArmy === 'on') === !!enabled));
-  });
-  const hint = document.getElementById('aiRedArmyHint');
-  if (hint) {
-    hint.textContent = enabled
-      ? 'AI 紅軍已啟用：紅軍席位改由電腦自動操作，不需要真人加入；啟動行動後無法變更。'
-      : '紅軍席位需要一位玩家親自選擇並操作；房主可以切換改由 AI 代打。';
-  }
-}
-
-async function setAiRedArmy(enabled) {
-  const status = lobbyReadiness();
-  if (!status.hasRoom) {
-    updateLobbyStatus('請先建立作戰室。');
-    return;
-  }
-  if (!status.isHost) {
-    updateLobbyStatus('只有房主可以切換 AI 紅軍。');
-    updateLobbyActionControls();
-    return;
-  }
-  const res = await fetch('/ai-red-army', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({game_id: gameId, player_id: playerId, resume_token: resumeToken, enabled: !!enabled}),
-  });
-  const data = await res.json();
-  if (data.error) {
-    updateLobbyStatus(data.error === 'Only host can change AI Red Army setting' ? '只有房主可以切換 AI 紅軍。' : playerMessageZhTw(data.error));
-    await refreshLobbyState();
-    return;
-  }
-  applyAiRedArmy(!!data.ai_red_army);
-  await refreshLobbyState(data.ai_red_army ? 'AI 紅軍已啟用：紅軍席位改由電腦自動操作。' : 'AI 紅軍已關閉：紅軍席位需由玩家親自選擇。');
-}
-
-async function setMarketMode(mode) {
-  const status = lobbyReadiness();
-  if (!status.isHost) {
-    updateLobbyStatus(status.hasRoom ? '只有房主可以切換遊戲難易度。' : '請先建立作戰室。');
-    updateLobbyActionControls();
-    return;
-  }
-  const res = await fetch('/market-mode', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({game_id: gameId, player_id: playerId, resume_token: resumeToken, market_mode: mode}),
-  });
-  const data = await res.json();
-  if (data.error) {
-    updateLobbyStatus(data.error === 'Only host can change game difficulty' ? '只有房主可以切換遊戲難易度。' : playerMessageZhTw(data.error));
-    await refreshLobbyState();
-    return;
-  }
-  applyMarketMode(data.market_mode || mode);
-  await refreshLobbyState(data.market_mode === 'all_cards' ? '遊戲難易度已改為一般模式。' : '遊戲難易度已改為簡單模式。');
-}
 
 function selectRoomCodeForManualCopy(roomIdValue) {
   const roomInput = document.getElementById('roomId');
@@ -662,8 +556,6 @@ async function initLobbyControls() {
     roomInput.dataset.bound = '1';
     roomInput.addEventListener('input', syncLobbyRoomCode);
   }
-  const select = document.getElementById('marketModeSelect');
-  applyMarketMode(select?.value || 'sample_53');
   updateLobbyStatus();
   updateLobbyActionControls();
   syncLobbyRoomCode();
@@ -801,9 +693,6 @@ async function createRoom(options) {
     roomInput.value = gameId;
     syncLobbyRoomCode();
   }
-  const marketSelect = document.getElementById('marketModeSelect');
-  if (marketSelect) applyMarketMode(startSettings?.market_mode || 'sample_53');
-  applyAiRedArmy(!!startSettings?.ai_red_army);
   lobbyTransientStatus = '作戰室已建立；請選擇陣營，或分享房間代碼。';
   await loadFactions();
   startLobbySync();

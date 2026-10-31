@@ -283,6 +283,8 @@ def test_create_both_red_army_types_and_difficulties(browser, app_url, ai, marke
     _, state = lobby_of(app_url, page)
     assert (state["ai_red_army"], state["market_mode"], state["control_mode"], state["joycon_count"]) == (ai, market, "computer", None)
     assert label in page.inner_text("#roomSettingsSummary")
+    for selector in ("#difficultyField", "#marketModeSelect", "[data-market-mode]", "#aiRedArmyField", "#aiRedArmySelect", "[data-ai-red-army]"):
+        assert page.locator(selector).count() == 0, selector
     page.context.close()
 
 
@@ -308,9 +310,8 @@ def test_guest_joins_by_code_skips_setup_and_cannot_change_settings(browser, app
     # 加入者的代號欄不能預設成現有房主（「host」是房主欄位的預設值），而且焦點在代號欄等著輸入。
     assert guest.input_value("#playerName") == ""
     assert guest.evaluate("document.activeElement.id") == "playerName"
-    for sel in ("[data-market-mode]", "[data-ai-red-army]"):
-        for i in range(guest.locator(sel).count()):
-            assert guest.locator(sel).nth(i).is_disabled()
+    for selector in ("#difficultyField", "#marketModeSelect", "[data-market-mode]", "#aiRedArmyField", "#aiRedArmySelect", "[data-ai-red-army]"):
+        assert guest.locator(selector).count() == 0, selector
     shot(guest, "05_guest_join_readonly_settings.png")
     guest.fill("#playerName", "訪客")
     guest.click("#joinRoomBtn")
