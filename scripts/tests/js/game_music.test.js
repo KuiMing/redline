@@ -1,5 +1,5 @@
 // node --test scripts/tests/js/game_music.test.js
-// 遊戲配樂：音量預設／正規化／持久化、0..100 邊界與 10% step、只在遊戲畫面播放、autoplay 限制、音量 0 不重複 play。
+// 遊戲配樂：音量預設／正規化／持久化、0..100 邊界與 10% step、全流程播放、autoplay 限制、音量 0 不重複 play。
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const M = require('../../../static/game_music.js');
@@ -93,47 +93,47 @@ test('persistence: load normalizes, save writes the normalized value, broken sto
   assert.equal(M.saveVolume(null, 60), 60);
 });
 
-test('shouldPlay: needs the game screen, volume > 0 and a trusted user activation', () => {
-  const ok = { inGame: true, volume: 30, activated: true };
+test('shouldPlay: needs a visible game surface, volume > 0 and a trusted user activation', () => {
+  const ok = { surfaceActive: true, volume: 30, activated: true };
   assert.equal(M.shouldPlay(ok), true);
-  assert.equal(M.shouldPlay({ ...ok, inGame: false }), false);
+  assert.equal(M.shouldPlay({ ...ok, surfaceActive: false }), false);
   assert.equal(M.shouldPlay({ ...ok, volume: 0 }), false);
   assert.equal(M.shouldPlay({ ...ok, activated: false }), false);
   assert.equal(M.shouldPlay(null), false);
   assert.equal(M.shouldPlay({}), false);
 });
 
-test('player: loops, applies volume, plays only in game after a trusted activation, pauses when leaving the game', async () => {
+test('player: loops, applies volume, plays on a visible surface after activation, and pauses without a surface', async () => {
   const audio = fakeAudio();
   const p = M.createPlayer({ audio, storage: fakeStorage() });
   assert.equal(audio.loop, true);
   assert.equal(audio.volume, 0.3);
-  p.setInGame(true);
+  p.setSurfaceActive(true);
   await tick();
   assert.equal(audio.playCalls, 0, 'no play() before a user activation (autoplay policy)');
   p.activate();
   await tick();
   assert.equal(audio.playCalls, 1);
   assert.equal(audio.paused, false);
-  p.setInGame(true); p.setInGame(true); p.sync();
+  p.setSurfaceActive(true); p.setSurfaceActive(true); p.sync();
   assert.equal(audio.playCalls, 1, 'already playing: no duplicate play()');
-  p.setInGame(false);
+  p.setSurfaceActive(false);
   assert.equal(audio.paused, true);
-  p.setInGame(true);
+  p.setSurfaceActive(true);
   await tick();
   assert.equal(audio.playCalls, 2, 'returns to the game: resumes (same element, same position)');
   assert.equal(audio.paused, false);
 });
 
-test('player: never plays in the lobby／start flow even after an activation', async () => {
+test('player: starts on the start screen or lobby after an activation', async () => {
   const audio = fakeAudio();
   const p = M.createPlayer({ audio, storage: fakeStorage() });
   p.activate();
-  p.setInGame(false);
+  p.setSurfaceActive(true);
   p.sync();
   await tick();
-  assert.equal(audio.playCalls, 0);
-  assert.equal(audio.paused, true);
+  assert.equal(audio.playCalls, 1);
+  assert.equal(audio.paused, false);
 });
 
 test('player: volume 0 stays paused without calling play(); raising it again resumes; steps persist', async () => {
@@ -141,7 +141,7 @@ test('player: volume 0 stays paused without calling play(); raising it again res
   const audio = fakeAudio();
   const p = M.createPlayer({ audio, storage });
   assert.equal(p.volume(), 10);
-  p.activate(); p.setInGame(true);
+  p.activate(); p.setSurfaceActive(true);
   await tick();
   assert.equal(audio.playCalls, 1);
   p.stepVolume(-1);
@@ -149,7 +149,7 @@ test('player: volume 0 stays paused without calling play(); raising it again res
   assert.equal(storage.data.get(M.STORAGE_KEY), '0');
   assert.equal(audio.paused, true);
   assert.equal(audio.volume, 0);
-  for (let i = 0; i < 5; i += 1) { p.sync(); p.setInGame(true); p.activate(); p.stepVolume(-1); }
+  for (let i = 0; i < 5; i += 1) { p.sync(); p.setSurfaceActive(true); p.activate(); p.stepVolume(-1); }
   await tick();
   assert.equal(audio.playCalls, 1, 'volume 0: play() is never retried');
   p.stepVolume(1);
@@ -167,7 +167,7 @@ test('player: volume 0 stays paused without calling play(); raising it again res
 test('player: starting at stored volume 0 never calls play()', async () => {
   const audio = fakeAudio();
   const p = M.createPlayer({ audio, storage: fakeStorage({ [M.STORAGE_KEY]: '0' }), activated: true });
-  p.setInGame(true);
+  p.setSurfaceActive(true);
   await tick();
   assert.equal(audio.playCalls, 0);
   assert.equal(audio.paused, true);
@@ -176,10 +176,10 @@ test('player: starting at stored volume 0 never calls play()', async () => {
 test('player: an autoplay rejection is not retried until the next trusted activation', async () => {
   const audio = fakeAudio({ rejectWith: 'NotAllowedError' });
   const p = M.createPlayer({ audio, storage: fakeStorage(), activated: true });
-  p.setInGame(true);
+  p.setSurfaceActive(true);
   await tick();
   assert.equal(audio.playCalls, 1);
-  for (let i = 0; i < 10; i += 1) { p.sync(); p.setInGame(true); p.stepVolume(1); }
+  for (let i = 0; i < 10; i += 1) { p.sync(); p.setSurfaceActive(true); p.stepVolume(1); }
   await tick();
   assert.equal(audio.playCalls, 1, 'no play() spam after NotAllowedError');
   audio.rejectWith = null;
@@ -192,23 +192,22 @@ test('player: an autoplay rejection is not retried until the next trusted activa
 test('player: music state is independent of game state (handoff mask etc. do not pause it)', async () => {
   const audio = fakeAudio();
   const p = M.createPlayer({ audio, storage: fakeStorage(), activated: true });
-  p.setInGame(true);
+  p.setSurfaceActive(true);
   await tick();
   assert.equal(audio.paused, false);
   // 交接遮罩只是 DOM 遮蔽：播放器沒有任何 handoff／遊戲 state 輸入，連續 sync 不影響播放。
   p.sync(); p.sync();
   assert.equal(audio.paused, false);
   assert.equal(audio.pauseCalls, 0);
-  assert.deepEqual(Object.keys(p.state()).sort(), ['activated', 'inGame', 'paused', 'volume'].sort());
+  assert.deepEqual(Object.keys(p.state()).sort(), ['activated', 'surfaceActive', 'paused', 'volume'].sort());
 });
 
-test('detectInGame: game shell shown, lobby／start flow hidden (visibility:hidden handoff mask still counts as in game)', () => {
+test('detectMusicSurface: start screen, lobby, or game shell shown all count as active', () => {
   const shown = { isConnected: true, display: 'block', rects: 1 };
   const hidden = { isConnected: true, display: 'none', rects: 0 };
-  assert.equal(M.detectInGame({ gameShell: shown, lobby: hidden, startFlow: hidden, autoSetup: false }), true);
-  assert.equal(M.detectInGame({ gameShell: hidden, lobby: shown, startFlow: shown, autoSetup: false }), false);
-  assert.equal(M.detectInGame({ gameShell: shown, lobby: shown, startFlow: hidden, autoSetup: false }), false);
-  assert.equal(M.detectInGame({ gameShell: shown, lobby: hidden, startFlow: shown, autoSetup: false }), false);
-  assert.equal(M.detectInGame({ gameShell: shown, lobby: hidden, startFlow: hidden, autoSetup: true }), false);
-  assert.equal(M.detectInGame({ gameShell: null, lobby: null, startFlow: null, autoSetup: false }), false);
+  assert.equal(M.detectMusicSurface({ gameShell: shown, lobby: hidden, startFlow: hidden }), true);
+  assert.equal(M.detectMusicSurface({ gameShell: hidden, lobby: shown, startFlow: hidden }), true);
+  assert.equal(M.detectMusicSurface({ gameShell: hidden, lobby: hidden, startFlow: shown }), true);
+  assert.equal(M.detectMusicSurface({ gameShell: shown, lobby: shown, startFlow: shown }), true);
+  assert.equal(M.detectMusicSurface({ gameShell: null, lobby: null, startFlow: null }), false);
 });

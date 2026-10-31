@@ -1,7 +1,7 @@
 /*
  * REDLINE 遊戲配樂（redline-theme.m4a，同源本機檔）。
  *
- * 只負責配樂的播放與音量：只在實際遊戲畫面播放（開始流程／大廳不播）、循環、遵守瀏覽器 autoplay 限制（可信任的使用者互動之後才
+ * 只負責配樂的播放與音量：在開始畫面、大廳與實際遊戲畫面持續播放、循環、遵守瀏覽器 autoplay 限制（可信任的使用者互動之後才
  * 呼叫 play()，被拒絕後不重試直到下一次互動）、音量 0 時保持暫停（不呼叫 play()）。音量 0～100%、每次 10%、預設 30%，
  * 存在 localStorage。音樂狀態不讀、也不寫任何遊戲 state：交接遮罩（hot-seat）不會中斷音樂。
  * 純函式與播放器不依賴 DOM（node 可直接測試）；DOM 綁定在最下面的 init()。
@@ -50,26 +50,26 @@
     return v;
   }
 
-  /** 應該在播放：遊戲畫面、音量 > 0、且已有可信任的使用者互動（autoplay）。 */
+  /** 應該在播放：遊戲介面已顯示、音量 > 0、且已有可信任的使用者互動（autoplay）。 */
   function shouldPlay(s) {
-    return !!s && s.inGame === true && normalizeVolume(s.volume) > 0 && s.activated === true;
+    return !!s && s.surfaceActive === true && normalizeVolume(s.volume) > 0 && s.activated === true;
   }
 
   /**
-   * 是否在實際遊戲畫面。每個參數是 {isConnected, display, rects}：只看 display／版面，不看 visibility，
-   * 所以 hot-seat 交接遮罩（舞台 visibility:hidden）不算離開遊戲。
+   * 是否顯示任何遊戲介面。開始畫面、大廳、實際遊戲三者任一顯示時都播放。
+   * 每個參數是 {isConnected, display, rects}；不看 visibility，所以 hot-seat 交接遮罩不會中斷配樂。
    */
-  function detectInGame({ gameShell, lobby, startFlow, autoSetup } = {}) {
+  function detectMusicSurface({ gameShell, lobby, startFlow } = {}) {
     const shown = el => !!el && el.isConnected !== false && el.display !== 'none' && el.rects > 0;
-    return shown(gameShell) && !shown(lobby) && !shown(startFlow) && autoSetup !== true;
+    return shown(gameShell) || shown(lobby) || shown(startFlow);
   }
 
   /**
    * 播放器。audio＝HTMLAudioElement 形狀（paused／volume／loop／play()／pause()）。
-   * 不接受任何遊戲 state；只有 setInGame、activate（可信任互動）、音量三個輸入。
+   * 不接受任何遊戲 state；只有 setSurfaceActive、activate（可信任互動）、音量三個輸入。
    */
   function createPlayer({ audio, storage = null, activated = false } = {}) {
-    const st = { volume: loadVolume(storage), inGame: false, activated: activated === true, pending: false };
+    const st = { volume: loadVolume(storage), surfaceActive: false, activated: activated === true, pending: false };
     if (audio) audio.loop = true;
 
     function sync() {
@@ -98,12 +98,12 @@
     sync();
     return {
       sync,
-      setInGame(on) { st.inGame = on === true; sync(); },
+      setSurfaceActive(on) { st.surfaceActive = on === true; sync(); },
       activate() { st.activated = true; sync(); },
       setVolume(v) { st.volume = saveVolume(storage, v); sync(); return st.volume; },
       stepVolume(dir) { return this.setVolume(stepVolume(st.volume, dir)); },
       volume() { return st.volume; },
-      state() { return { volume: st.volume, inGame: st.inGame, activated: st.activated, paused: !audio || audio.paused }; },
+      state() { return { volume: st.volume, surfaceActive: st.surfaceActive, activated: st.activated, paused: !audio || audio.paused }; },
     };
   }
 
@@ -124,18 +124,16 @@
       const cs = getComputedStyle(el);
       return { isConnected: el.isConnected, display: cs.display, rects: el.getClientRects().length };
     }
-    function inGameNow() {
-      const sf = window.RedlineStartFlow;
-      return detectInGame({
+    function musicSurfaceNow() {
+      return detectMusicSurface({
         gameShell: describe($('gameShell')), lobby: describe($('lobby')), startFlow: describe($('startFlow')),
-        autoSetup: !!(sf && typeof sf.autoSetupActive === 'function' && sf.autoSetupActive()),
       });
     }
 
     let raf = 0;
     function refreshScreen() {
       raf = 0;
-      player.setInGame(inGameNow());
+      player.setSurfaceActive(musicSurfaceNow());
     }
     function scheduleRefresh() {
       if (raf) return;
@@ -181,6 +179,6 @@
 
   return {
     TRACK_SRC, STORAGE_KEY, DEFAULT_VOLUME, MIN_VOLUME, MAX_VOLUME, VOLUME_STEP,
-    normalizeVolume, stepVolume, formatVolume, loadVolume, saveVolume, shouldPlay, detectInGame, createPlayer, init,
+    normalizeVolume, stepVolume, formatVolume, loadVolume, saveVolume, shouldPlay, detectMusicSurface, createPlayer, init,
   };
 });

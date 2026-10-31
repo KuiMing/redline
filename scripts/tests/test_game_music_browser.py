@@ -5,7 +5,7 @@ Playwright 的 Chromium 不一定帶 AAC 解碼器、headless 也沒有真的音
 換成可觀察的 stub（記錄呼叫次數與播放狀態）；檔案本身另以 HTTP 驗證同源、MIME 與大小。
 
 驗證：預設 30%、遊戲選單 UI（−／＋／即時百分比）、10% step、0／100 邊界、localStorage 持久化與無效值正規化、
-只在遊戲畫面播放（大廳不播、離開暫停、回來繼續）、autoplay 限制（可信任互動前不呼叫 play()、被拒絕後不重複）、
+開始畫面、大廳與遊戲畫面持續播放、autoplay 限制（可信任互動前不呼叫 play()、被拒絕後不重複）、
 音量 0 保持暫停且不呼叫 play()、交接遮罩（舞台 visibility:hidden）不中斷音樂、Joy-Con 方向＋A 調整音量且 B／scope lock 不破壞。
 """
 from __future__ import annotations
@@ -133,7 +133,7 @@ def test_invalid_stored_values_are_normalized(browser, app_url):
             page.context.close()
 
 
-def test_plays_only_in_game_pauses_when_leaving_and_survives_handoff_mask(browser, app_url):
+def test_plays_from_start_screen_through_lobby_and_game_and_survives_handoff_mask(browser, app_url):
     ctx = browser.new_context(viewport={"width": 1280, "height": 720})
     ctx.add_init_script(AUDIO_STUB)
     page = ctx.new_page()
@@ -143,7 +143,7 @@ def test_plays_only_in_game_pauses_when_leaving_and_survives_handoff_mask(browse
         trusted_click(page)
         time.sleep(0.3)
         log = page.evaluate("window.__audioLog")
-        assert log["play"] == 0, log  # 大廳／開始流程：即使有使用者互動也不播
+        assert log["play"] == 1, log  # 開始畫面第一次可信任互動後立即播放
         assert not shown(page, "gameShell")
         ctx.close()
 
@@ -164,10 +164,10 @@ def test_plays_only_in_game_pauses_when_leaving_and_survives_handoff_mask(browse
         page.evaluate("document.getElementById('gameShell').style.display = ''; document.getElementById('gameShell').style.display = 'block'")
         assert wait_until(lambda: music(page)["paused"] is False), music(page)
         assert music(page)["play"] == plays + 1
-        # 開始流程可見時（例如重新開始）：暫停
+        # 開始流程／大廳可見時（例如重新開始）：不中斷
         page.evaluate("window.__lobbyDisplay = document.getElementById('lobby').style.display; "
                       "document.getElementById('lobby').style.display = 'block'; document.getElementById('startFlow').hidden = false")
-        assert wait_until(lambda: music(page)["paused"] is True), music(page)
+        assert wait_until(lambda: music(page)["paused"] is False), music(page)
         page.evaluate("document.getElementById('startFlow').hidden = true; document.getElementById('lobby').style.display = window.__lobbyDisplay")
         assert wait_until(lambda: music(page)["paused"] is False), music(page)
     finally:
