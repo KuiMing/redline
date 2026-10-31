@@ -344,6 +344,8 @@ def test_toggles_expose_aria_pressed_and_focus_follows_step_changes(browser, app
     assert page.locator('[data-sf-mode-guide="all_cards"]').get_attribute("data-selected") == "false"
     guide_text = page.inner_text(".sf-mode-guide")
     assert "53 張精簡牌組" in guide_text and "245 張完整牌組" in guide_text
+    assert "客廳輪流" in guide_text and "同一台電腦，多位玩家" in guide_text
+    assert "下一頁啟用" in guide_text and "遮蔽遊戲畫面" in guide_text
     setup_box = page.locator("#sfSetup").bounding_box()
     guide_box = page.locator(".sf-mode-guide").bounding_box()
     assert setup_box and guide_box

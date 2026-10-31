@@ -4267,6 +4267,7 @@ html[data-display="living-room"] .lr-focus-overlay { height: 644px; }
 .sf-mode-guide-card strong { color: #f8fafc; font-size: 0.94rem; }
 .sf-mode-guide-card span { margin-left: 8px; color: #fbbf24; font-size: 0.78rem; font-weight: 800; }
 .sf-mode-guide-card p { margin: 5px 0 0; font-size: 0.78rem; line-height: 1.45; }
+.sf-hotseat-guide { grid-column: 1 / -1; }
 .sf-summary { padding: 8px 10px; border: 1px solid rgba(148, 163, 184, 0.28); border-radius: 12px; background: rgba(15, 23, 42, 0.6); color: #e2e8f0; font-size: 0.85rem; line-height: 1.5; }
 #lobby[data-flow="create"] #joinRoomBtn, #lobby[data-flow="join"] #createRoomBtn { display: none; }
 #lobby[data-flow="join"] #lanInfoField { display: none; }
