@@ -17,12 +17,13 @@ Redline 是一個以瀏覽器 UI 與 Python WebSocket 伺服器實作的桌遊�
 ### 方式一：Docker Compose（推薦，一次把遊戲跟 MCP 都開好）
 
 ```bash
-export REDLINE_HOST_PORT=8100
 docker compose up --build -d
 ```
 
 - 遊戲 UI：`http://localhost:8100`
 - MCP（給 Agent 用，見下一節）：`http://127.0.0.1:8765/mcp`
+- Joy-Con Bridge：`ws://127.0.0.1:8000/ws`（macOS 需先開 FTCW，見 [`docs/joycon_controller.md`](docs/joycon_controller.md#用-docker-compose-啟動-bridge-macos)）
+- 遊戲 host port 預設 8100（8000 留給 Bridge）；用 `REDLINE_HOST_PORT` 修改。
 
 就算不需要 Agent，這個做法也沒有壞處——MCP 那個容器預設只綁本機、平常閒置不會影響什麼。
 細節見 [`docs/mcp_server.md`](docs/mcp_server.md#4-docker--docker-compose)。

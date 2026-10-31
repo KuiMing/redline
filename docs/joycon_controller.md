@@ -27,6 +27,25 @@
 - **HUD（玩家可見名稱）**：設定面板「我的手把」、「選擇手把」選項、提示膠囊與客廳狀態列只顯示玩家名稱（`Core.controllerLabel`／`bindingBadge`，帶目前 roster）：`左 Joy-Con`／`右 Joy-Con`；同側有多支時依**目前 roster** 給本機顯示序號（依埠號、同埠再依完整 id 排序，與 roster 順序無關），例如 `右 Joy-Con 1`、`右 Joy-Con 2`。**不顯示** FTCW UDP 埠、`S2N1` 名稱（指紋）、endpoint 或 controller id；同側手把增減時序號可能改變。選項的 value、claim、記住的選擇與 bridge 協定仍用完整 id（身份與授權模型不變）。左手玩家另顯示實體鍵對照。客廳輪流大廳用同一規則（`hotseat_core.controllerDisplayNames`，node 測試比對兩者一致）。
 - **協定（bridge v2，同一個 `/ws`）**：頁面連上後送 `{"type":"hello","v":2}`；bridge 回 `roster`（`owned`、`controllers:[{id, side, name, endpoint, status, owner:'you'|'other'|null, sideSource}]`，變動時與每秒送一次），只送本分頁擁有那一支的 `{"type":"frame","v":2,controller,side,epoch,x,y,buttons:[b0,b1]}`。client 送 `claim {controller}`、`claim-default`、`release`，bridge 回 `claim-result {request, ok, controller, reason}`；格式不合 → `error bad-message`。瀏覽器端所有訊息都驗證 schema，id 與左右不符、非本分頁擁有的 frame 一律丟棄。**相容**：舊版頁面（不送 hello）0.3 秒後當舊版 client，只拿「唯一一支右 Joy-Con」並收原本的 `{x, y, buttons}`；新版頁面連到舊版 bridge 時，在收到 roster 前把無型別 frame 當唯一一支右 Joy-Con（`右 Joy-Con（舊版 bridge 相容）`）。Host／Origin 檢查不變，`/health` 也只接受 loopback Host。
 
+## 用 Docker Compose 啟動 Bridge（macOS）
+
+FTCW 與 Bluetooth 只能在 macOS host 上跑，**不在 container 內**；container 內只有 Bridge，透過 UDP 連到 `host.docker.internal` 的 FTCW。
+
+1. 先啟動 Finally the Controller Works 並連上 Joy-Con。
+2. `docker compose up --build -d`（Bridge 健康檢查用 `/health`，`docker compose ps` 看到 `healthy`）。
+3. 開 `http://127.0.0.1:8100`（遊戲），🎮 → 啟用搖桿控制，連 `ws://127.0.0.1:8000/ws`。
+
+| 項目 | 預設 | 覆寫 |
+| --- | --- | --- |
+| Bridge host port（只發布到 `127.0.0.1`） | `8000` | `REDLINE_JOYCON_HOST_PORT` |
+| 遊戲 host port | `8100` | `REDLINE_HOST_PORT` |
+| FTCW 位址（UDP 24800–24803） | `host.docker.internal` | `REDLINE_JOYCON_UDP_HOST` |
+| 允許的頁面 Origin | `http://127.0.0.1:8100,http://localhost:8100`（跟著 `REDLINE_HOST_PORT`） | `REDLINE_JOYCON_ALLOW_ORIGINS`（逗號分隔） |
+
+- container 內 Bridge 綁 `0.0.0.0`（`--bind-host`，Docker port mapping 才進得來），但 compose 只把 port 發布到 host 的 `127.0.0.1`；不加 `--bind-host` 的原生執行仍預設只綁 `127.0.0.1`。
+- **區網限制**：Bridge 沒有認證，不要把 port 改發布到 `0.0.0.0`。其他裝置的頁面要連的是「它自己機器上的」Bridge；若頁面從區網位址載入，把該 Origin 加進 `REDLINE_JOYCON_ALLOW_ORIGINS`，且 `Host` 檢查仍只接受 loopback。
+- 若 host 改了 `REDLINE_JOYCON_HOST_PORT`，頁面端的 Bridge 位址要同步修改。
+
 ## 啟用
 
 開始畫面／大廳右下角 🎮 → 勾選「啟用搖桿控制」（遊戲畫面中不顯示 🎮，也不能開啟這個設定／狀態面板）。設定（是否啟用、Bridge 位址）存在 `localStorage`（`redline.controller.v1`）。

@@ -29,9 +29,11 @@ Joy-Con ×N ─▶ Finally the Controller Works ─UDP 127.0.0.1:24800–24803�
 | 選項 | 說明 |
 | --- | --- |
 | `--port N` | WebSocket/HTTP 連接埠，預設 8000。頁面端的 Bridge 位址要同步修改。 |
+| `--bind-host HOST` | WebSocket/HTTP 綁定位址，預設 `127.0.0.1`。Docker 容器內用 `0.0.0.0`（host port 仍只發布到 127.0.0.1）。 |
+| `--udp-host HOST` | FTCW 所在主機，預設 `127.0.0.1`。Docker 內用 `host.docker.internal`。 |
 | `--udp-port N` | Finally the Controller Works 的第一個 UDP 連接埠，預設 24800；也是舊版「單一右 Joy-Con」預設身份（`R24800-legacy`）所在的埠。 |
 | `--udp-port-count K` | 從 `--udp-port` 起連續探測 K 個 FTCW 埠（每埠一支手把），1–8，預設 4（24800–24803）。 |
-| `--allow-origin ORIGIN` | 額外允許的網頁 Origin，可重複。 |
+| `--allow-origin ORIGIN` | 額外允許的網頁 Origin，可重複；也可用環境變數 `REDLINE_JOYCON_ALLOW_ORIGINS`（逗號分隔）。 |
 | `--dump-packets` | 印出收到的原始 UDP 封包 hex（前綴 `[udp <埠>]`），用來校正欄位位置。 |
 | `--buttons-offset N` / `--stick-offset N` / `--left-stick-offset N` | 覆寫 S2B1 封包欄位位置（u32 buttons、右搖桿、左搖桿）。 |
 
@@ -39,7 +41,7 @@ Joy-Con ×N ─▶ Finally the Controller Works ─UDP 127.0.0.1:24800–24803�
 
 ## 安全
 
-- **只綁 `127.0.0.1`**（程式內固定，沒有 `--host` 選項）。
+- **預設只綁 `127.0.0.1`**（`--bind-host` 可覆寫，僅供 Docker 容器內使用；見 `docs/joycon_controller.md`「用 Docker Compose 啟動 Bridge」）。
 - WebSocket 會檢查 `Host`（必須是 `127.0.0.1`／`localhost`／`[::1]`，防 DNS rebinding）與 `Origin`。
 - **頁面從區網載入時**（例如 `http://192.168.x.x:8100`）瀏覽器的 Origin 是那個區網位址，預設會被拒絕。
   要明確放行：

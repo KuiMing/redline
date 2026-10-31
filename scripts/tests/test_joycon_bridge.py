@@ -206,3 +206,87 @@ def test_udp_receiver_sends_hello_and_ingests_packets():
         receiver.stop()
         receiver.join(2)
         server.close()
+
+
+def test_cli_defaults_keep_loopback():
+    args = bridge_main.build_parser().parse_args([])
+    assert args.bind_host == "127.0.0.1"
+    assert args.udp_host == "127.0.0.1"
+
+
+@pytest.fixture
+def captured_main(monkeypatch):
+    seen = {"receivers": [], "run": None, "registry": None}
+
+    class FakeReceiver:
+        def __init__(self, registry, port, dump=False, udp_host="127.0.0.1"):
+            seen["receivers"].append((port, udp_host))
+            seen["registry"] = registry
+
+        def start(self): pass
+        def stop(self): pass
+
+    def fake_run(app, **kwargs):
+        seen["run"] = kwargs
+        seen["app"] = app
+
+    monkeypatch.setattr(bridge_main, "UdpReceiver", FakeReceiver)
+    monkeypatch.setattr(bridge_main.uvicorn, "run", fake_run)
+    monkeypatch.delenv(bridge_main.ORIGINS_ENV, raising=False)
+    return seen
+
+
+def test_main_defaults_bind_and_udp_loopback(captured_main):
+    bridge_main.main(["--udp-port-count", "2"])
+    assert captured_main["run"]["host"] == "127.0.0.1"
+    assert captured_main["receivers"] == [(24800, "127.0.0.1"), (24801, "127.0.0.1")]
+
+
+def test_main_passes_bind_host_and_udp_host(captured_main):
+    bridge_main.main(["--bind-host", "0.0.0.0", "--udp-host", "host.docker.internal", "--port", "8123", "--udp-port-count", "2"])
+    assert captured_main["run"]["host"] == "0.0.0.0"
+    assert captured_main["run"]["port"] == 8123
+    assert captured_main["receivers"] == [(24800, "host.docker.internal"), (24801, "host.docker.internal")]
+    assert captured_main["registry"]._udp_host == "host.docker.internal"
+
+
+def test_allowed_origins_merge_env_and_cli(monkeypatch):
+    monkeypatch.setenv(bridge_main.ORIGINS_ENV, " http://a.example:8100, ,http://b.example:8100 ")
+    args = bridge_main.build_parser().parse_args(["--allow-origin", "http://b.example:8100", "--allow-origin", "http://c.example"])
+    assert bridge_main.allowed_origins(args) == ["http://a.example:8100", "http://b.example:8100", "http://c.example"]
+
+
+def test_main_env_origin_reaches_websocket_check(captured_main, monkeypatch):
+    monkeypatch.setenv(bridge_main.ORIGINS_ENV, "http://192.168.1.5:8100")
+    bridge_main.main([])
+    client = TestClient(captured_main["app"], base_url="http://127.0.0.1:8000")
+    with client.websocket_connect("/ws", headers={**WS_HEADERS, "origin": "http://192.168.1.5:8100"}):
+        pass
+    with pytest.raises(WebSocketDisconnect):
+        with client.websocket_connect("/ws", headers={**WS_HEADERS, "origin": "http://evil.example"}):
+            pass
+
+
+def test_udp_receiver_targets_configured_host_not_loopback(monkeypatch):
+    sent = []
+
+    class FakeSock:
+        def bind(self, addr): sent.append(("bind", addr))
+        def getsockname(self): return ("0.0.0.0", 1)
+        def settimeout(self, t): pass
+        def sendto(self, data, target):
+            sent.append(("sendto", target))
+            receiver.stop()
+        def recvfrom(self, n): raise socket.timeout()
+        def close(self): pass
+
+    monkeypatch.setattr(socket, "socket", lambda *a, **k: FakeSock())
+    receiver = UdpReceiver(ControllerRegistry([24800]), 24800, udp_host="host.docker.internal")
+    receiver.run()
+    assert ("sendto", ("host.docker.internal", 24800)) in sent
+    assert ("bind", ("0.0.0.0", 0)) in sent  # 非 loopback 目標：必須能收到來自 host 的回覆
+
+
+def test_roster_endpoint_reports_configured_udp_host():
+    reg = ControllerRegistry([24800], primary_port=24800, udp_host="host.docker.internal")
+    assert reg._udp_host == "host.docker.internal"

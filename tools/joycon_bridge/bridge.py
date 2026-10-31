@@ -4,7 +4,7 @@
 收 `S2N1`（裝置名稱）與 `S2B1`（輸入）封包。每支實體手把有自己的身份（左右＋FTCW 埠＋名稱指紋）、
 原始／正規化狀態、最後收到時間、stale 狀態與擁有者（一個瀏覽器 WebSocket 連線＝一位玩家）。
 左 Joy-Con 的實體按鍵在這裡正規化成既有右 Joy-Con 的邏輯 layout；瀏覽器只收 `{x, y, buttons:[b0,b1]}` 的共用邏輯位元。
-只綁 127.0.0.1；WebSocket 與 /health 會檢查 Host（防 DNS rebinding），WebSocket 另檢查 Origin。
+預設只綁 127.0.0.1（Docker 內可用 --bind-host 覆寫）；WebSocket 與 /health 會檢查 Host（防 DNS rebinding），WebSocket 另檢查 Origin。
 """
 
 from __future__ import annotations
@@ -27,7 +27,9 @@ from urllib.parse import urlsplit
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse
 
-BIND_HOST = "127.0.0.1"  # 固定值，刻意不提供設定
+DEFAULT_BIND_HOST = "127.0.0.1"  # 預設只綁 loopback；Docker 容器內由 --bind-host 0.0.0.0 明確覆寫（host 端 port 仍只發布到 127.0.0.1）
+BIND_HOST = DEFAULT_BIND_HOST  # 舊名稱相容
+DEFAULT_UDP_HOST = "127.0.0.1"  # FTCW 所在位址；容器內改用 host.docker.internal
 DEFAULT_PORT = 8000
 DEFAULT_UDP_PORT = 24800
 DEFAULT_UDP_PORT_COUNT = 4  # 24800–24803：FTCW 一個埠一支手把
@@ -250,7 +252,7 @@ class ControllerRegistry:
     """
 
     def __init__(self, ports: Iterable[int] = (DEFAULT_UDP_PORT,), primary_port: int | None = DEFAULT_UDP_PORT,
-                 layout: PacketLayout = PacketLayout(), clock=time.monotonic, udp_host: str = "127.0.0.1") -> None:
+                 layout: PacketLayout = PacketLayout(), clock=time.monotonic, udp_host: str = DEFAULT_UDP_HOST) -> None:
         self._lock = threading.Lock()
         self._clock = clock
         self._layout = layout
@@ -495,6 +497,10 @@ def frame_payload(frame: Frame) -> dict:
     return {"x": frame.x, "y": frame.y, "buttons": [frame.b0, frame.b1]}
 
 
+def _is_loopback_host(host: str) -> bool:
+    return host.lower() in LOOPBACK_NAMES or host.startswith("127.")
+
+
 def host_allowed(host_header: str | None) -> bool:
     """Host 必須是 loopback 名稱（可帶 port）。"""
     if not host_header:
@@ -521,13 +527,15 @@ def origin_allowed(origin: str | None, allowed: Iterable[str] = ()) -> bool:
 
 
 class UdpReceiver(threading.Thread):
-    """一個 FTCW UDP 埠（一支手把）：每次接收前送 hello，收到的封包交給 registry。socket 只綁 loopback。
+    """一個 FTCW UDP 埠（一支手把）：每次接收前送 hello，收到的封包交給 registry。
+
+    本機目標只綁 loopback；容器連 host 目標時綁 wildcard，讓 Docker bridge 網路可回傳 UDP。
 
     FTCW 的多手把介面以 request/response 方式逐筆回傳 S2N1／S2B1。若只定時送 hello，
     每個埠可能只重複收到裝置名稱，永遠收不到下一筆輸入。
     """
 
-    def __init__(self, registry: ControllerRegistry, udp_port: int, dump: bool = False, udp_host: str = "127.0.0.1") -> None:
+    def __init__(self, registry: ControllerRegistry, udp_port: int, dump: bool = False, udp_host: str = DEFAULT_UDP_HOST) -> None:
         super().__init__(daemon=True, name=f"joycon-udp-{udp_port}")
         self._registry = registry
         self._port = udp_port
@@ -541,7 +549,9 @@ class UdpReceiver(threading.Thread):
 
     def run(self) -> None:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.bind((BIND_HOST, 0))
+        # 目標是 loopback 時 UDP 只綁 loopback；目標在別處（容器 → host.docker.internal）
+        # 必須綁 wildcard 才能收到回覆（容器的 loopback 收不到來自 bridge 網路的封包）。
+        sock.bind((DEFAULT_BIND_HOST if _is_loopback_host(self._target[0]) else "0.0.0.0", 0))
         self.local_address = sock.getsockname()
         sock.settimeout(0.25)
         try:

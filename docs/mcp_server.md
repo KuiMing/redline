@@ -163,8 +163,9 @@ docker compose up --build
 
 - **`redline`** — the existing game server, built from the repo's root
   `Dockerfile` (unmodified — this Compose file adds a service around it, it
-  does not change how that image is built). Host port defaults to `8000`,
-  same as the single-container instructions above; override with
+  does not change how that image is built). Host port defaults to `8100`
+  (host `8000` is used by the `joycon-bridge` service; the single-container
+  `docker run -p 8000:8000` instructions above are unchanged); override with
   `REDLINE_HOST_PORT`.
 - **`redline-mcp`** — the MCP server, built from `mcp_server/Dockerfile` (a
   separate, minimal image — it copies only `mcp_server/`, `rules.md`, and
