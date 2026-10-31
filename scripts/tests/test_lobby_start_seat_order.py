@@ -14,7 +14,6 @@ import pytest
 from fastapi.testclient import TestClient
 
 from server import main
-from conftest import host_token
 from server.game import TurnPhase
 
 FACTIONS = {'Ben': 'aomen', 'Angie': 'mongol', 'Cy': 'liberals', 'Red': 'red_army'}
@@ -33,11 +32,11 @@ def start_room(seats, ai_red=False, pending=()):
             'game_id': game_id, 'name': name, 'device_id': f'seat-{tag}-{index}'}).json()['player_id']
     if ai_red:
         assert client.post('/ai-red-army', json={
-            'game_id': game_id, 'player_id': ids[seats[0]], 'resume_token': host_token(game_id, ids[seats[0]]), 'enabled': True}).json().get('success')
+            'game_id': game_id, 'player_id': ids[seats[0]], 'enabled': True}).json().get('success')
     main.lobby_factions[game_id] = {ids[n]: ('uyghur_family' if n in pending else FACTIONS[n]) for n in seats}
     main.lobby_bases[game_id] = {ids[n]: BASES[n] for n in seats if n not in pending}
     main.lobby_ready[game_id] = {ids[n]: True for n in seats}
-    result = client.post('/start', json={'game_id': game_id, 'player_id': ids[seats[0]], 'resume_token': host_token(game_id, ids[seats[0]])}).json()
+    result = client.post('/start', json={'game_id': game_id, 'player_id': ids[seats[0]]}).json()
     assert result.get('success') is True, result
     game = main.manager.games[game_id]
     if pending:

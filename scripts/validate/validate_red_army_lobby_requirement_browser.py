@@ -79,7 +79,7 @@ def main():
         page.wait_for_function("() => document.getElementById('startGameBtn')?.title.includes('紅軍')", timeout=15000)
         control = page.evaluate("() => ({disabled:startGameBtn.disabled, title:startGameBtn.title})")
         record('host_start_button_disabled_without_red_army', control['disabled'] and '紅軍' in control['title'], control)
-        start_result = api(page, '/start', {'game_id': game2, 'player_id': host2, 'resume_token': created2['resume_token']})
+        start_result = api(page, '/start', {'game_id': game2, 'player_id': host2})
         record('server_rejects_start_without_red_army', start_result.get('error') == '必須有且只能有一名玩家選擇紅軍，才能啟動行動', start_result)
         record('browser_console_has_no_errors', not console_errors, console_errors)
         browser.close()

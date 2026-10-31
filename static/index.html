@@ -4,10 +4,7 @@
   <meta charset="UTF-8" />
   <title>REDLINE // STRATEGIC COMMAND</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="/static/style.css?v=start-hero-20261024" />
-  <!-- 客廳輪流（hot-seat）：在第一次繪製前就能遮住舞台，所以放在 <head>。 -->
-  <script src="/static/hotseat_core.js?v=hotseat-ai-public-20261020"></script>
-  <script src="/static/hotseat_ui.js?v=hotseat-ai-public-clean-header-20261023"></script>
+  <link rel="stylesheet" href="/static/style.css?v=victory-restart-20260925" />
 </head>
 <body>
 <div id="stageViewport">
@@ -28,62 +25,6 @@
 <div id="debugSocketState" style="display:none"></div>
 
 <div id="lobby">
-  <section id="startFlow" class="startflow" aria-label="開始遊戲" hidden>
-    <div class="lobby-kicker">REDLINE COMMAND LOBBY</div>
-    <div id="sfTitle" class="lobby-title" tabindex="-1">開始遊戲</div>
-
-    <div id="sfEntry" class="sf-panel" data-step="entry">
-      <div class="sf-paths" role="group" aria-label="開始方式">
-        <button id="sfCreateHuman" class="sf-path-btn" type="button" data-sf-path="human">
-          <strong>真人紅軍</strong>
-          <span>由一位玩家擔任紅軍</span>
-        </button>
-        <button id="sfCreateAi" class="sf-path-btn" type="button" data-sf-path="ai">
-          <strong>AI 紅軍</strong>
-          <span>紅軍由電腦操作，不需要真人</span>
-        </button>
-        <div class="sf-path-join">
-          <label for="sfRoomCode"><strong>加入現有房間</strong></label>
-          <div class="lobby-room-row">
-            <input id="sfRoomCode" class="lobby-code-input" aria-label="房間代碼" placeholder="輸入房間代碼" autocomplete="off">
-            <button id="sfJoinBtn" class="lobby-mini-btn" type="button">加入</button>
-          </div>
-          <div id="sfJoinError" class="sf-error" role="alert"></div>
-        </div>
-      </div>
-    </div>
-
-    <div id="sfSetup" class="sf-panel" data-step="setup" hidden>
-      <div class="sf-setup-head">
-        <div id="sfSetupTitle" class="sf-setup-title" tabindex="-1">建立真人紅軍遊戲</div>
-        <button id="sfBackToEntry" class="lobby-mini-btn" type="button">← 重新選擇</button>
-      </div>
-      <div class="sf-row">
-        <span class="sf-row-label">遊戲難度</span>
-        <div class="lobby-market-toggle" role="group" aria-label="遊戲難度">
-          <button class="lobby-market-option active" type="button" data-sf-market="sample_53" aria-pressed="true">簡單模式</button>
-          <button class="lobby-market-option" type="button" data-sf-market="all_cards" aria-pressed="false">一般模式</button>
-        </div>
-      </div>
-      <div class="sf-row">
-        <span class="sf-row-label">操作方式</span>
-        <div class="lobby-market-toggle" role="group" aria-label="操作方式">
-          <button class="lobby-market-option" type="button" data-sf-control="joycon" aria-pressed="false">Joy-Con</button>
-          <button class="lobby-market-option active" type="button" data-sf-control="computer" aria-pressed="true">電腦</button>
-        </div>
-      </div>
-      <div id="sfPairing" class="sf-pairing" hidden>
-        <div id="sfPairingPrompt" class="sf-pairing-prompt">請玩家依序拿起自己的 Joy-Con，<b>同時按住 SL + SR</b>。配對成功的順序就是 P1、P2、P3、P4。</div>
-        <div id="sfSlots" class="sf-slots"></div>
-        <div id="sfPairingStatus" class="sf-pairing-status" aria-live="polite"></div>
-      </div>
-      <div class="sf-footer">
-        <div id="sfContinueHint" class="sf-continue-hint" aria-live="polite"></div>
-        <button id="sfContinueBtn" class="lobby-action-btn primary" type="button">繼續</button>
-      </div>
-    </div>
-  </section>
-
   <div class="lobby-brand">
     <div class="lobby-kicker">REDLINE COMMAND LOBBY</div>
     <div class="lobby-title">作戰準備室</div>
@@ -103,13 +44,6 @@
     <div class="lobby-card-glow"></div>
     <div class="lobby-column lobby-room-column">
       <div class="lobby-section-title">ROOM CONTROL</div>
-
-      <div class="lobby-field" id="roomSettingsField">
-        <span>房主設定</span>
-        <div id="roomSettingsSummary" class="sf-summary">—</div>
-        <div id="roomSettingsHint" class="lobby-field-hint"></div>
-        <button id="sfBackBtn" class="lobby-mini-btn" type="button" hidden>← 回開始畫面</button>
-      </div>
 
       <label class="lobby-field">
         <span>建立 / 加入房間代碼</span>
@@ -179,14 +113,6 @@
         </div>
       </div>
       <div id="lobbyStatusHint" class="lobby-status-hint">先建立作戰室，或貼上房間代碼後進入。</div>
-      <div id="hotseatLobby" class="hotseat-lobby">
-        <label><input id="hotseatEnableChk" type="checkbox"> 客廳輪流（同一台多位玩家）</label>
-        <div id="hotseatLobbyPrompt" class="hs-prompt" aria-live="polite"></div>
-        <div id="hotseatLobbyNotice" class="hs-notice" aria-live="polite"></div>
-        <div id="hotseatSeatList"></div>
-        <button id="hotseatAddSeatBtn" class="lobby-mini-btn" type="button" hidden>新增本機玩家（用上方玩家名稱）</button>
-        <div id="hotseatLobbyHint" class="lobby-field-hint"></div>
-      </div>
     </div>
 
     <div class="lobby-actions">
@@ -374,32 +300,32 @@
 
   <div id="commandView" class="game-view active">
     <div id="commandGrid">
-      <div id="randomMarketPanel" class="panel market-panel-wide">
-        <div class="panel-title">隨機購買區</div>
-        <div id="purchaseSelectionControls" style="display:none;">
-          <span id="purchaseSelectionSummary">尚未選擇卡牌</span>
-          <button id="topdeckRightBtn" class="phase-secondary-btn purchase-selection-topdeck-btn" type="button" style="display:none;" onclick="sendAction('use_topdeck_right')">卡牌置頂</button>
-          <button id="clearPurchaseSelectionBtn" class="purchase-selection-clear-btn" type="button" onclick="clearPurchaseSelection()">清除</button>
-          <button id="openPurchaseConfirmBtn" class="purchase-selection-buy-btn" type="button" onclick="openPurchaseConfirmModal()" disabled>購買</button>
-        </div>
-        <div id="purchaseRandom" class="purchase-card-grid"></div>
-        <div id="factionActionPanel" style="display:none;">
-          <div class="panel-title">陣營能力</div>
-          <div id="factionActionInfo"></div>
-          <div id="factionActionButtons"></div>
-        </div>
-      </div>
-
       <div id="controlPanel" class="panel">
         <div id="purchaseSection">
           <div class="panel-title">常設購買區</div>
           <div id="purchaseStatic" class="purchase-card-grid"></div>
+        </div>
+        <div id="factionActionPanel" style="display:none; margin-top:8px;">
+          <div class="panel-title">陣營能力</div>
+          <div id="factionActionInfo"></div>
+          <div id="factionActionButtons"></div>
         </div>
         <div id="baseSelectionPanel" style="display:none; margin-top:8px;">
           <div class="panel-title">根據地選擇</div>
           <div id="baseSelectionInfo"></div>
           <div id="baseSelectionChoices"></div>
         </div>
+      </div>
+
+      <div id="randomMarketPanel" class="panel market-panel-wide">
+        <div class="panel-title">隨機購買區</div>
+        <div id="purchaseSelectionControls" style="display:none;">
+          <span id="purchaseSelectionSummary">尚未選擇卡牌</span>
+          <button id="topdeckRightBtn" class="phase-secondary-btn purchase-selection-topdeck-btn" type="button" style="display:none;" onclick="sendAction('use_topdeck_right')">卡牌置頂</button>
+          <button id="clearPurchaseSelectionBtn" class="purchase-selection-clear-btn" type="button" onclick="clearPurchaseSelection()">清除</button>
+          <button id="openPurchaseConfirmBtn" class="purchase-selection-buy-btn" type="button" onclick="openPurchaseConfirmModal()" disabled>購買所選卡牌</button>
+        </div>
+        <div id="purchaseRandom" class="purchase-card-grid"></div>
       </div>
 
       <div id="handPanel" class="panel hand-panel-wide">
@@ -452,12 +378,6 @@
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/static/player_messages_zh_tw.js?v=player-message-i18n-20260801"></script>
-<script src="/static/app.js?v=compact-purchase-label-20261023"></script>
-<script src="/static/controller_core.js?v=joycon-labels-20261016"></script>
-<script src="/static/living_room_core.js?v=dual-joycon-20261014"></script>
-<script src="/static/controller_ui.js?v=half-height-command-centre-20261018"></script>
-<script src="/static/controller_living_room.js?v=half-height-command-centre-20261018b"></script>
-<script src="/static/start_flow_core.js?v=start-flow-20261024"></script>
-<script src="/static/start_flow_ui.js?v=start-hero-20261024"></script>
+<script src="/static/app.js?v=red-army-single-result-prompt-20260905"></script>
 </body>
 </html>

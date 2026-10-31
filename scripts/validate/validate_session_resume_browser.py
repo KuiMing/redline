@@ -75,7 +75,7 @@ def main():
             {'game_id': identity['game_id'], 'player_id': sessions_after[identity['game_id']]['player_id']},
         )
 
-        started_setup = page.evaluate("""async ({gameId, hostId, hostToken, deviceId}) => {
+        started_setup = page.evaluate("""async ({gameId, hostId, deviceId}) => {
           const guest = await fetch('/join', {
             method: 'POST', headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({game_id: gameId, name: '測試對手', device_id: `${deviceId}-guest`}),
@@ -90,12 +90,11 @@ def main():
           });
           return fetch('/start', {
             method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({game_id: gameId, player_id: hostId, resume_token: hostToken}),
+            body: JSON.stringify({game_id: gameId, player_id: hostId}),
           }).then(response => response.json());
         }""", {
             'gameId': identity['game_id'],
             'hostId': identity['player_id'],
-            'hostToken': sessions_after[identity['game_id']]['resume_token'],
             'deviceId': page.evaluate("() => localStorage.getItem('redline.device_id.v1')"),
         })
         assert started_setup.get('success') is True

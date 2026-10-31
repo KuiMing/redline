@@ -711,14 +711,9 @@ function townDisplayLatLng(town) {
   // 使用固定像素偏移分開重疊的 marker；只改 Leaflet 顯示位置，不改地圖資料、
   // 鐵路拓撲、距離或合法目標。黑河南移，海蘭泡北移，方向也符合地理位置；
   // 臥龍南移（南陽本身位置不變），方向同樣符合臥龍在南陽以南的真實地理位置。
-  // 地圖視圖切換（fitBounds／_moveEnd）的瞬間投影可能回傳非有限座標；此時退回原始座標，
-  // 避免產生 NaN LatLng（Leaflet 會丟出 Invalid LatLng）。
   const point = map.latLngToLayerPoint(latLng);
-  if (!point || !Number.isFinite(point.x) || !Number.isFinite(point.y)) return latLng;
   const yOffset = town.name === '海蘭泡' ? -12 : 12;
-  const shifted = map.layerPointToLatLng(L.point(point.x, point.y + yOffset));
-  if (!shifted || !Number.isFinite(shifted.lat) || !Number.isFinite(shifted.lng)) return latLng;
-  return shifted;
+  return map.layerPointToLatLng(L.point(point.x, point.y + yOffset));
 }
 
 function townLabelOptions(townName, zoom = map.getZoom()) {

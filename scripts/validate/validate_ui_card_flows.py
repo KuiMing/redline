@@ -145,18 +145,14 @@ def wait_for_my_turn(page, timeout_ms=15000):
     )
 
 
-HOST_TOKENS = {}  # {room: host resume_token}; /start is host-token gated
-
-
 def create_and_start(page, player_count):
     page.goto('http://127.0.0.1:8000/', wait_until='networkidle')
     create_payload = request_json(page, '/create', {})
     room = create_payload['game_id']
     host_id = create_payload['host_id']
-    HOST_TOKENS[room] = create_payload['resume_token']
     page.fill('#roomId', room)
     page.fill('#playerName', 'host')
-    host_join_payload = request_json(page, '/join', {'game_id': room, 'name': 'host', 'player_id': host_id, 'resume_token': HOST_TOKENS[room]})
+    host_join_payload = request_json(page, '/join', {'game_id': room, 'name': 'host', 'player_id': host_id})
     host_join_id = host_join_payload.get('player_id') or host_join_payload.get('id') or ((host_join_payload.get('player') or {}).get('id'))
     if host_join_id != host_id:
         raise RuntimeError(f'host join did not preserve reserved host id: {host_join_payload}')
@@ -295,7 +291,7 @@ def validate_visibility(player_count):
             deadline -= 250
         if deadline <= 0:
             raise RuntimeError(f'lobby not fully ready before start: {request_json(host, f"/lobby/{room}")}')
-        start_payload = request_json(host, '/start', {'game_id': room, 'player_id': players[0][1], 'resume_token': HOST_TOKENS[room], 'market_mode': 'sample_53'})
+        start_payload = request_json(host, '/start', {'game_id': room, 'player_id': players[0][1], 'market_mode': 'sample_53'})
         if start_payload.get('error'):
             raise RuntimeError(f'start failed: {start_payload}')
         connect_and_wait_for_state(host)
@@ -330,7 +326,7 @@ def validate_type_flow(card_type, card_name):
             deadline -= 250
         if deadline <= 0:
             raise RuntimeError(f'2p lobby not fully ready before start: {request_json(page, f"/lobby/{room}")}')
-        start_payload = request_json(page, '/start', {'game_id': room, 'player_id': players[0][1], 'resume_token': HOST_TOKENS[room], 'market_mode': 'sample_53'})
+        start_payload = request_json(page, '/start', {'game_id': room, 'player_id': players[0][1], 'market_mode': 'sample_53'})
         if start_payload.get('error'):
             raise RuntimeError(f'start failed: {start_payload}')
         wait_for_lobby_started(page)

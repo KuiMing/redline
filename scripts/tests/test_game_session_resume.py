@@ -8,7 +8,6 @@ if str(ROOT) not in sys.path:
 from fastapi.testclient import TestClient
 
 from server import main
-from conftest import host_token
 
 
 def test_resume_restores_existing_player_identity_and_rejects_wrong_device():
@@ -85,7 +84,7 @@ def test_resume_reports_started_game_without_rebuilding_player_state():
     main.lobby_factions[game_id] = {host_id: 'red_army', guest_id: 'liberals'}
     main.lobby_bases[game_id] = {host_id: '北京', guest_id: '臺北'}
     main.lobby_ready[game_id] = {host_id: True, guest_id: True}
-    started = client.post('/start', json={'game_id': game_id, 'player_id': host_id, 'resume_token': host_token(game_id, host_id)}).json()
+    started = client.post('/start', json={'game_id': game_id, 'player_id': host_id}).json()
     assert started['success'] is True
 
     game = main.manager.games[game_id]

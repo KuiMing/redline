@@ -78,8 +78,8 @@ def main():
             page.evaluate("closeEventReveal()")
             page.wait_for_timeout(200)
 
-        thinker = page.locator('#purchaseStatic .purchase-card-item').filter(has=page.locator('[data-card-name="思想家"]')).first
-        thinker.locator('.purchase-card-select-button').click()
+        thinker = page.locator("#purchaseStatic .card").filter(has_text="思想家").first
+        thinker.locator(".purchase-card-checkbox input").check()
         page.wait_for_timeout(200)
         summary = page.locator("#purchaseSelectionSummary").inner_text()
         buy_enabled = not page.locator("#openPurchaseConfirmBtn").is_disabled()
