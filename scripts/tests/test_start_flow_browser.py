@@ -218,6 +218,22 @@ def create_via_flow(page, ai=False, market=None, control="computer"):
     page.click(f'[data-sf-control="{control}"]')
 
 
+def test_joycon_connection_guide_only_appears_for_joycon(browser, app_url):
+    page = new_page(browser, app_url)
+    page.click("#sfCreateHuman")
+    guide = page.locator("#sfJoyconConnectGuide")
+    assert not guide.is_visible()
+    page.click('[data-sf-control="joycon"]')
+    assert guide.is_visible()
+    text = guide.inner_text()
+    assert "長按小圓同步按鈕約 3 秒" in text
+    assert "Joy-Con (L)" in text and "Joy-Con (R)" in text
+    assert "同時按 SL + SR" in text
+    assert page.locator("#sfJoyconConnectGuide svg").is_visible()
+    page.click('[data-sf-control="computer"]')
+    assert not guide.is_visible()
+
+
 def finish_and_create(page, name="Tester", proof=None):
     page.click("#sfContinueBtn")
     page.wait_for_selector("#startFlow", state="hidden")
