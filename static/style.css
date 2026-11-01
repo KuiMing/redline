@@ -4257,7 +4257,7 @@ html[data-display="living-room"] .lr-focus-overlay { height: 644px; }
 }
 .sf-path-join label strong { display: block; margin-bottom: 8px; font-size: 1.2rem; color: #e2e8f0; }
 .sf-error { min-height: 1.3em; margin-top: 6px; color: #fca5a5; font-size: 0.9rem; }
-.sf-setup-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.sf-setup-head { display: flex; align-items: center; justify-content: flex-start; gap: 12px; margin-bottom: 14px; }
 .sf-setup-title { font-size: 1.5rem; font-weight: 800; color: #fbbf24; }
 .sf-row { display: grid; grid-template-columns: 110px 1fr; align-items: center; gap: 14px; margin-bottom: 12px; }
 .sf-row-label { color: rgba(203, 213, 225, 0.9); font-size: 1rem; font-weight: 700; }
@@ -4267,7 +4267,7 @@ html[data-display="living-room"] .lr-focus-overlay { height: 644px; }
   top: 18px;
   right: 24px;
   z-index: 5;
-  width: 430px;
+  width: 520px;
   margin: 0;
   overflow: hidden;
   border: 1px solid rgba(251, 191, 36, 0.55);

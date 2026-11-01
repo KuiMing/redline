@@ -227,12 +227,16 @@ def test_joycon_connection_guide_only_appears_for_joycon(browser, app_url):
     assert guide.is_visible()
     guide_box = guide.bounding_box()
     flow_box = page.locator("#startFlow").bounding_box()
+    setup_title_box = page.locator("#sfSetupTitle").bounding_box()
+    back_box = page.locator("#sfBackToEntry").bounding_box()
     difficulty_box = page.locator("#sfSetup .sf-row").first.bounding_box()
-    assert guide_box and flow_box and difficulty_box
-    assert guide_box["x"] > flow_box["x"] + flow_box["width"] * 0.4
+    assert guide_box and flow_box and setup_title_box and back_box and difficulty_box
+    assert guide_box["width"] > flow_box["width"] * 0.55
+    assert guide_box["x"] > flow_box["x"] + flow_box["width"] * 0.3
     assert guide_box["x"] + guide_box["width"] <= flow_box["x"] + flow_box["width"]
     assert guide_box["y"] >= flow_box["y"]
     assert guide_box["y"] + guide_box["height"] < difficulty_box["y"]
+    assert 0 <= back_box["x"] - (setup_title_box["x"] + setup_title_box["width"]) < 20
     assert page.locator('#sfJoyconConnectGuide img[src="/static/help/joycon-connect-guide.jpg"]').count() == 1
     assert page.locator("#sfJoyconConnectGuide img").is_visible()
     page.click('[data-sf-control="computer"]')
