@@ -4211,9 +4211,8 @@ html[data-display="living-room"] .lr-focus-overlay { height: 644px; }
 
 /* ---- 開始遊戲前流程（start_flow_ui.js）：初始三條路徑 → 建立設定／Joy-Con 配對 → 既有行動代號／陣營畫面 ----
  * 與 #lobby 同一個 1280×720 設計單位；顯示開始流程時隱藏作戰準備室本體，Joy-Con 焦點集合因此只會落在開始流程上。 */
-#lobby[data-flow="start"] > :not(#startFlow):not(#sfJoyconConnectGuide) { display: none !important; }
+#lobby[data-flow="start"] > :not(#startFlow) { display: none !important; }
 #lobby:not([data-flow="start"]) > #startFlow { display: none; }
-#lobby:not([data-flow="start"]) > #sfJoyconConnectGuide { display: none; }
 .startflow {
   position: absolute;
   left: 50%;
@@ -4232,11 +4231,6 @@ html[data-display="living-room"] .lr-focus-overlay { height: 644px; }
   overflow-y: auto;
 }
 .startflow[hidden] { display: none; }
-.startflow[data-control-mode="joycon"] {
-  left: 20px;
-  width: 700px;
-  transform: translateY(-50%);
-}
 .startflow .lobby-title { margin-bottom: 14px; }
 .startflow .lobby-market-option::after { display: none; }
 .sf-panel[hidden], .sf-pairing[hidden] { display: none; }
@@ -4270,10 +4264,10 @@ html[data-display="living-room"] .lr-focus-overlay { height: 644px; }
 .sf-pairing { margin: 6px 0 4px; padding: 12px 14px; border: 1px solid rgba(251, 191, 36, 0.4); border-radius: 16px; background: rgba(15, 23, 42, 0.66); }
 .sf-joycon-connect {
   position: absolute;
-  top: 28px;
-  right: 20px;
+  top: 18px;
+  right: 24px;
   z-index: 5;
-  width: 520px;
+  width: 430px;
   margin: 0;
   overflow: hidden;
   border: 1px solid rgba(251, 191, 36, 0.55);
@@ -4282,6 +4276,7 @@ html[data-display="living-room"] .lr-focus-overlay { height: 644px; }
   box-shadow: 0 18px 52px rgba(0, 0, 0, 0.55), 0 0 24px rgba(245, 158, 11, 0.12);
 }
 .sf-joycon-connect[hidden] { display: none; }
+#lobby:not([data-start-step="setup"]) .sf-joycon-connect { display: none; }
 .sf-joycon-connect img { display: block; width: 100%; height: auto; }
 .sf-pairing-prompt { color: #fde68a; font-size: 1rem; line-height: 1.5; }
 .sf-slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 10px 0 6px; }

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>REDLINE // STRATEGIC COMMAND</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="/static/style.css?v=joycon-connect-image-20261101" />
+  <link rel="stylesheet" href="/static/style.css?v=joycon-connect-position-20261101" />
   <!-- 客廳輪流（hot-seat）：在第一次繪製前就能遮住舞台，所以放在 <head>。 -->
   <script src="/static/hotseat_core.js?v=reaction-victory-controller-20261027"></script>
   <script src="/static/hotseat_ui.js?v=lobby-hotseat-cleanup-20261031"></script>
@@ -31,6 +31,10 @@
   <section id="startFlow" class="startflow" aria-label="開始遊戲" hidden>
     <div class="lobby-kicker">REDLINE COMMAND LOBBY</div>
     <div id="sfTitle" class="lobby-title" tabindex="-1">開始遊戲</div>
+    <figure id="sfJoyconConnectGuide" class="sf-joycon-connect" hidden>
+      <img src="/static/help/joycon-connect-guide.jpg" width="950" height="221"
+        alt="Joy-Con 連線說明：長按側邊小圓同步按鈕約三秒，等待指示燈閃爍並完成與電腦連線。">
+    </figure>
 
     <div id="sfEntry" class="sf-panel" data-step="entry">
       <div id="sfFx" class="sf-fx" data-fx="pending" data-fx-motion="on">
@@ -117,11 +121,6 @@
       </section>
     </div>
   </section>
-
-  <figure id="sfJoyconConnectGuide" class="sf-joycon-connect" hidden>
-    <img src="/static/help/joycon-connect-guide.jpg" width="950" height="221"
-      alt="Joy-Con 連線說明：長按側邊小圓同步按鈕約三秒，等待指示燈閃爍並完成與電腦連線。">
-  </figure>
 
   <div class="lobby-brand">
     <div class="lobby-kicker">REDLINE COMMAND LOBBY</div>
@@ -522,7 +521,7 @@
 <script src="/static/controller_ui.js?v=game-menu-music-flow-20261101"></script>
 <script src="/static/controller_living_room.js?v=game-menu-music-flow-20261101"></script>
 <script src="/static/start_flow_core.js?v=reaction-victory-controller-20261027"></script>
-<script src="/static/start_flow_ui.js?v=joycon-connect-image-20261101"></script>
+<script src="/static/start_flow_ui.js?v=joycon-connect-position-20261101"></script>
 <script src="/static/start_screen_fx.js?v=command-entry-webgl-20261031"></script>
 <script src="/static/game_music.js?v=game-menu-music-flow-20261101"></script>
 </body>
