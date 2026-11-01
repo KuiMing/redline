@@ -4264,8 +4264,8 @@ html[data-display="living-room"] .lr-focus-overlay { height: 644px; }
 .sf-pairing { margin: 6px 0 4px; padding: 12px 14px; border: 1px solid rgba(251, 191, 36, 0.4); border-radius: 16px; background: rgba(15, 23, 42, 0.66); }
 .sf-joycon-connect {
   position: absolute;
-  top: 10px;
-  right: 24px;
+  top: 14px;
+  right: 8px;
   z-index: 5;
   width: 570px;
   margin: 0;
