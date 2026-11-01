@@ -45,6 +45,13 @@ class RemoveToPurchaseTestRoutes:
         else:
             viewer.hand = [Card(card_name, "command", {})]
 
+        # Game() 以隨機陣營建局，開局能力（達賴救援、活動家等）可能已把宣傳家洗入牌庫；
+        # 指定 deck 時改用固定牌庫（清空棄牌堆），讓建立後的抽牌（例如游擊隊）結果可預期。
+        deck = payload.get("deck")
+        if deck is not None:
+            viewer.deck.draw_pile = [game._starter_card(name) for name in deck]
+            viewer.deck.discard_pile = []
+
         red.faction_id = "red_army"
         red.base = "北京"
         red.organizations = {"北京": 1}

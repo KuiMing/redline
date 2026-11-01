@@ -46,6 +46,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -520,6 +521,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -972,6 +974,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -1416,6 +1419,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -1868,6 +1872,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -2326,6 +2331,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -2807,6 +2813,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -3266,6 +3273,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -3729,6 +3737,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -4188,6 +4197,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -4641,6 +4651,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -5122,6 +5133,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -5581,6 +5593,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -6044,6 +6057,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -6503,6 +6517,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -6959,6 +6974,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -7449,6 +7465,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -7917,6 +7934,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -8389,6 +8407,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -8857,6 +8876,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -9388,6 +9408,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -9953,6 +9974,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -10500,6 +10522,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -11047,6 +11070,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -11594,6 +11618,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -12138,6 +12163,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -12712,6 +12738,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -13268,6 +13295,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -13824,6 +13852,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -14380,6 +14409,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -14940,6 +14970,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -15521,6 +15552,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -16082,6 +16114,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -16643,6 +16676,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -17204,6 +17238,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -17768,6 +17803,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -18350,6 +18386,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -18912,6 +18949,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -19474,6 +19512,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -20036,6 +20075,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -20597,6 +20637,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -21186,6 +21227,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -21755,6 +21797,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -22324,6 +22367,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -22893,6 +22937,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -23470,6 +23515,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -24105,6 +24151,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -24722,6 +24769,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -25333,6 +25381,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -25942,6 +25991,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -26554,6 +26604,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -27188,6 +27239,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -27798,6 +27850,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -28416,6 +28469,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -29026,6 +29080,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -29637,6 +29692,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -30232,6 +30288,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -30811,6 +30868,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -31390,6 +31448,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -31969,6 +32028,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -32546,6 +32606,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -33141,6 +33202,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -33720,6 +33782,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -34299,6 +34362,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -34878,6 +34942,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -35458,6 +35523,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -36065,6 +36131,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -36654,6 +36721,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -37243,6 +37311,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -37834,6 +37903,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -38430,6 +38500,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -39038,6 +39109,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -39628,6 +39700,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -40218,6 +40291,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -40810,6 +40884,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -41405,6 +41480,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -42014,6 +42090,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -42605,6 +42682,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -43196,6 +43274,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -43789,6 +43868,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -44382,6 +44462,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -44988,6 +45069,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -45576,6 +45658,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -46162,6 +46245,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -46750,6 +46834,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -47347,6 +47432,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -47985,6 +48071,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -48605,6 +48692,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -49219,6 +49307,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -49831,6 +49920,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -50446,6 +50536,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -51085,6 +51176,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -51700,6 +51792,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -52323,6 +52416,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -52938,6 +53032,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -53554,6 +53649,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -54156,6 +54252,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -54742,6 +54839,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -55328,6 +55426,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -55914,6 +56013,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -56498,6 +56598,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -57100,6 +57201,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -57686,6 +57788,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -58272,6 +58375,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -58858,6 +58962,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -59446,6 +59551,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -60043,6 +60149,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -60622,6 +60729,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -61201,6 +61309,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -61782,6 +61891,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -62369,6 +62479,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -62960,6 +63071,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -63533,6 +63645,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -64106,6 +64219,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -64681,6 +64795,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -65255,6 +65370,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -65846,6 +65962,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -66419,6 +66536,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -66992,6 +67110,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -67567,6 +67686,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -68140,6 +68260,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -68732,6 +68853,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -69306,6 +69428,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -69880,6 +70003,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -70456,6 +70580,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -71031,6 +71156,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -71635,6 +71761,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -72221,6 +72348,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -72805,6 +72933,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -73391,6 +73520,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -73983,6 +74113,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -74610,6 +74741,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -75213,6 +75345,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -75820,6 +75953,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -76423,6 +76557,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -77025,6 +77160,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -77661,6 +77797,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -78273,6 +78410,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -78889,6 +79027,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -79501,6 +79640,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -80114,6 +80254,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -80751,6 +80892,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -81364,6 +81506,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -81981,6 +82124,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -82594,6 +82738,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -83206,6 +83351,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -83843,6 +83989,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -84456,6 +84603,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -85073,6 +85221,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -85686,6 +85835,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -86297,6 +86447,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -86935,6 +87086,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -87549,6 +87701,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -88167,6 +88320,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -88781,6 +88935,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -89394,6 +89549,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -90039,6 +90195,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -90660,6 +90817,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -91285,6 +91443,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -91906,6 +92065,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -92468,6 +92628,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -93062,6 +93223,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -93632,6 +93794,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -94206,6 +94369,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -94776,6 +94940,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -95345,6 +95510,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -95946,6 +96112,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -96523,6 +96690,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -97104,6 +97272,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -97681,6 +97850,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -98259,6 +98429,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -98867,6 +99038,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -99449,6 +99621,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -100035,6 +100208,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -100617,6 +100791,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -101199,6 +101374,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -101808,6 +101984,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -102391,6 +102568,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -102978,6 +103156,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -103561,6 +103740,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -104142,6 +104322,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -104751,6 +104932,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -105334,6 +105516,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -105921,6 +106104,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},
@@ -106504,6 +106688,7 @@
         "event_modifiers": [],
         "faction_action_used": false,
         "game_phase": "main",
+        "hk_base_relocation_player_id": null,
         "hk_free_base_relocation": false,
         "map": {
           "legal_organization_moves": {},

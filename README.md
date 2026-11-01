@@ -1,6 +1,6 @@
 # Redline
 
-Redline 是一個以瀏覽器 UI 與 Python WebSocket 伺服器實作的桌遊原型專案。
+Redline 是一個以瀏覽器 UI 與 Python WebSocket 伺服器實作的不對稱政治策略桌遊。專案支援鍵盤、滑鼠、Joy-Con，以及透過 MCP 接入的 LLM 玩家。
 
 **不會玩、想知道畫面上要點哪裡？** 請看配有真實截圖的 [`docs/PLAYER_GUIDE.md`](docs/PLAYER_GUIDE.md)（玩家手冊）。
 
@@ -14,15 +14,16 @@ Redline 是一個以瀏覽器 UI 與 Python WebSocket 伺服器實作的桌遊�
 
 三種方式，依方便程度排列。
 
-### 方式一：Docker Compose（推薦，一次把遊戲跟 MCP 都開好）
+### 方式一：Docker Compose（推薦，一次啟動遊戲、MCP 與 Joy-Con Bridge）
 
 ```bash
-export REDLINE_HOST_PORT=8100
 docker compose up --build -d
 ```
 
 - 遊戲 UI：`http://localhost:8100`
 - MCP（給 Agent 用，見下一節）：`http://127.0.0.1:8765/mcp`
+- Joy-Con Bridge：`ws://127.0.0.1:8000/ws`（macOS 需先開 FTCW，見 [`docs/joycon_controller.md`](docs/joycon_controller.md#用-docker-compose-啟動-bridge-macos)）
+- 遊戲 host port 預設 8100（8000 留給 Bridge）；用 `REDLINE_HOST_PORT` 修改。
 
 就算不需要 Agent，這個做法也沒有壞處——MCP 那個容器預設只綁本機、平常閒置不會影響什麼。
 細節見 [`docs/mcp_server.md`](docs/mcp_server.md#4-docker--docker-compose)。
@@ -48,6 +49,29 @@ Lobby 畫面也會顯示這個網址。想讓 Agent 陪玩的話，另外開 MCP
 以上三種都只能跑單一 worker／單一 container（房間與遊戲狀態存在該 process 的記憶體
 中，重開就會消失）。跑 `scripts/validate/validate_*_browser.py` 這類需要 `/test/*` 端點的
 驗證腳本時，方式三要另外加 `ENABLE_TEST_ROUTES=true`（不開的話 `/test/*` 一律回傳 404）。
+
+### Joy-Con／搖桿（選用）
+
+在 macOS 上使用 Joy-Con 時，藍牙連線與 FTCW 必須在 host 執行。Docker Compose 會啟動 Joy-Con Bridge container；Bridge 透過 `host.docker.internal` 接收 FTCW UDP 資料，並預設只在 `127.0.0.1:8000` 發布 WebSocket。
+
+每位玩家可各使用一支左或右 Joy-Con。建立遊戲時選擇 **Joy-Con**，畫面會顯示電腦連線說明；依序以 `SL + SR` 配對後，配對順序會決定 P1、P2、P3、P4。遊戲內仍可從頁面右下角 🎮 查看或調整控制器。
+
+遊戲內導覽列的 **遊戲選單** 按鈕（滑鼠點擊，或 Joy-Con 以 R／SR 聚焦後按 A；也可長按搖桿按鈕 2 秒）可開啟選單，其中 `Joy-Con 功能表` 顯示目前操作提示，`配樂音量` 以 −／＋ 調整遊戲配樂（範圍 0%～100%，預設 30%，每次 10%，會記在瀏覽器）。配樂從開始畫面延續到大廳與遊戲畫面，且需先有一次點擊、按鍵或觸控操作（瀏覽器 autoplay 限制）。
+
+遊戲結束後，按 Joy-Con **Y** 或鍵盤 **Y** 可重新查看最後勝利圖片。此操作只重新顯示圖片，不會再次執行結算、獎勵或音效。
+
+完整設定、控制方式與故障排除請參閱 [`docs/joycon_controller.md`](docs/joycon_controller.md) 與 [`tools/joycon_bridge/README.md`](tools/joycon_bridge/README.md)。
+
+## 開始遊戲
+
+1. 在「開始遊戲」選擇真人紅軍、AI 紅軍，或使用房間代碼加入現有遊戲。
+2. 建立遊戲時選擇遊戲模式：
+   - 簡單模式：`53 張精簡牌組`，由 `18 張奧援卡與 35 張隨機一般卡` 組成。
+   - 一般模式：`245 張完整牌組`。
+3. 選擇「電腦」或「Joy-Con」。選擇 Joy-Con 時，先依畫面說明完成電腦連線與玩家配對。
+4. 完成玩家與陣營設定後開始遊戲。
+
+遊戲介面固定使用 `1280 × 720` 舞台並等比例縮放。非 16:9 顯示區域會保留黑邊，不會裁切或拉伸畫面。
 
 ### 給 Agent 用的 MCP
 

@@ -155,11 +155,36 @@ def test_non_map_option_on_queued_intel_network_restores_original_dissolve_choic
 
     resolved = game.resolve_pending_choice(actor.id, 0)
 
+    # A 先開啟（非地圖的）內鬥放置對象選擇；原本的瓦解選擇仍保留在 deferred。
     assert resolved.get('pending_choice') is True, resolved
+    assert game.pending_choice['choice_key'] == 'intel_network_internal_conflict_targets'
+    assert game._deferred_build_choice['choice_key'] == 'card_dissolve_interaction'
+    picked = game.resolve_pending_choice(actor.id, None, target_player_ids=[enemy.id])
+
+    assert picked.get('pending_choice') is True, picked
     assert game.pending_choice['choice_key'] == 'card_dissolve_interaction'
     assert game._deferred_build_choice is None
     assert game._queued_card_build_choices == []
     assert [card.name for card in actor.hand] == []
+    assert [card.name for card in enemy.deck.discard_pile].count('內鬥') == 1
+
+
+def test_cancelling_intel_network_recipients_restores_original_dissolve_choice_and_card():
+    game, actor, enemy = make_dissolve_game()
+    actor.hand = [action_card(game, '內應間諜'), action_card(game, '情報網')]
+
+    assert game.play_card(0, mode='action', target_player_id=enemy.id).get('pending_choice') is True
+    assert game.play_card(0, mode='action').get('pending_choice') is True
+    assert game.resolve_pending_choice(actor.id, 0).get('pending_choice') is True
+    assert game.pending_choice['choice_key'] == 'intel_network_internal_conflict_targets'
+
+    cancelled = game.cancel_pending_choice(actor.id)
+
+    assert cancelled.get('cancelled') is True and cancelled.get('pending_choice') is True, cancelled
+    assert game.pending_choice['choice_key'] == 'card_dissolve_interaction'
+    assert game._deferred_build_choice is None
+    assert [card.name for card in actor.hand] == ['情報網']
+    assert [card.name for card in enemy.deck.discard_pile].count('內鬥') == 0
 
 
 def test_queued_map_card_reaction_decline_adds_card_once_and_restores_fifo_head():

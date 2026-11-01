@@ -724,6 +724,64 @@ def test_business_network_borrowed_transport_card_grants_its_action_effect_after
     assert names(g.purchase_area)[7] == '交通經驗乙'
 
 
+STATIC_SELF_TRASH_CARDS = ['宣傳家', '思想家', '資助者', '資本家', '分神']
+
+
+def _business_network_purchase_area(g):
+    return [card(g, name) for name in STATIC_SELF_TRASH_CARDS + ['內鬥', '合作談判', '交通經驗乙', '模仿戰術']]
+
+
+def test_business_network_borrowing_static_self_trash_card_keeps_static_supply_unchanged():
+    # 企業人脈只是借用購買區正面朝上的牌（臨時複本），結算後不可讓常設供應 +1。
+    for purchase_index, static_name in enumerate(STATIC_SELF_TRASH_CARDS):
+        g = make_game()
+        p = g.current_player()
+        # 固定據點/組織，讓宣傳家/思想家的建組織效果一定有合法城鎮（避免隨機開局造成不穩定）。
+        p.base = '北京'
+        p.organizations = {'北京': 1}
+        g.players[1].base = '巴黎'
+        g.players[1].organizations = {'巴黎': 1}
+        p.hand = [card(g, '企業人脈')]
+        p.resources = {'money': 0, 'propaganda': 0}
+        g.purchase_area = _business_network_purchase_area(g)
+        supply_before = dict(g.static_purchase_supply)
+
+        result = g.play_card(0, mode='action')
+        assert result.get('success'), (static_name, result)
+        assert g.pending_choice['choice_key'] == 'use_purchase_area_card'
+        assert g.pending_choice['cards'][purchase_index]['name'] == static_name
+
+        resolved = g.resolve_pending_choice(p.id, purchase_index)
+        assert resolved.get('success'), (static_name, resolved)
+        assert resolved.get('chosen_card') == static_name
+        if g.pending_choice and g.pending_choice.get('choice_key') == 'card_build_organization':
+            _, built = resolve_first_build_town(g, p)
+            assert built.get('success'), (static_name, built)
+
+        assert g.pending_choice is None, (static_name, g.pending_choice)
+        assert g.static_purchase_supply == supply_before, static_name
+        assert names(g.purchase_area)[purchase_index] == static_name
+        assert static_name not in names(p.hand)
+        assert static_name not in names(p.deck.discard_pile)
+        if static_name == '資助者':
+            assert p.resources['money'] >= 2 and p.resources['propaganda'] >= 2
+        if static_name == '資本家':
+            assert p.resources['money'] >= 3 and p.resources['propaganda'] >= 3
+
+
+def test_owned_static_self_trash_card_still_returns_one_card_to_static_supply():
+    g = make_game()
+    p = g.current_player()
+    supply_before = g.static_purchase_supply['資助者']
+
+    play_only(g, '資助者')
+
+    assert g.static_purchase_supply['資助者'] == supply_before + 1
+    assert '資助者' not in names(p.hand)
+    assert '資助者' not in names(p.deck.discard_pile)
+    assert p.resources['money'] >= 2 and p.resources['propaganda'] >= 2
+
+
 
 def test_red_support_resource_mode_from_rebel_hand_grants_resources_and_discards_to_own_pile():
     # 「打出」指行動模式。反共玩家選擇資源模式時取得印刷的 1/1、不抽牌，
@@ -886,6 +944,12 @@ def test_intel_network_first_branch_adds_internal_conflict_without_running_other
     assert result.get('success'), result
     resolved = g.resolve_pending_choice(p1.id, 0)
     assert resolved.get('success'), resolved
+    # A 會先開啟內鬥放置對象選擇（不再自動放給所有其他玩家）；這裡明確選滿 3 位。
+    assert resolved.get('pending_choice') is True, resolved
+    assert g.pending_choice['choice_key'] == 'intel_network_internal_conflict_targets'
+    assert names(p2.deck.discard_pile) == ['棄牌A']
+    picked = g.resolve_pending_choice(p1.id, None, target_player_ids=[p2.id, p3.id, p4.id])
+    assert picked.get('success'), picked
     assert names(p1.deck.discard_pile) == ['情報網']
     assert names(p2.deck.discard_pile) == ['棄牌A', '內鬥']
     assert names(p3.deck.discard_pile) == ['棄牌B', '內鬥']
@@ -2849,6 +2913,48 @@ def test_canceled_targeted_red_army_action_marks_that_target_as_used():
     assert g.turn_log.get('red_army_targeted_actions', {}).get('政工部:' + other.id) is True
 
 
+def test_canceled_ai_state_security_cannot_retry_same_target_after_intel_network():
+    """Regression for the public log sequence reported on 2026-10-31.
+
+    AI 紅軍 declared P1 as 國安部's target; P1 canceled it with 情報網. Even when a third
+    player gives Red Army a second faction-action allowance, the canceled target stays intact
+    and cannot be offered to 國安部 again in the same turn.
+    """
+    g = Game([('red', 'AI 紅軍'), ('p1', 'P1'), ('p2', 'P2')])
+    red, p1, p2 = g.players
+    red.faction_id = 'red_army'
+    p1.faction_id = 'liberals'
+    p2.faction_id = 'hong_kong'
+    red.base = '北京'
+    red.organizations = {'北京': 1}
+    p1.base = '臺北'
+    p1.organizations = {'石家莊': 1}
+    p2.base = '香港'
+    p2.organizations = {}
+    p1.hand = [card(g, '情報網')]
+    g.current_player_index = 0
+    g.game_phase = GamePhase.MAIN
+    g.turn_phase = TurnPhase.ACTION
+    g.pending_choice = None
+
+    opened = g._activated_faction_action(red, '國安部', target_player_id=p1.id)
+    assert opened.get('pending_choice') is True, opened
+    canceled = g.resolve_pending_choice(p1.id, 1)
+
+    assert canceled.get('canceled') is True, canceled
+    assert p1.organizations == {'石家莊': 1}
+    assert g.turn_log.get('red_army_targeted_actions', {}).get('國安部:' + p1.id) is True
+    assert all(
+        isinstance(target, dict) and target.get('player_id') != p1.id
+        for target in g._red_army_state_security_targets(red)
+    )
+
+    retry = g._activated_faction_action(red, '國安部', target_player_id=p1.id)
+    assert retry.get('success') is False, retry
+    assert retry.get('result', {}).get('reason') == 'no_dissolve_target', retry
+    assert p1.organizations == {'石家莊': 1}
+
+
 def test_industry_infiltration_requires_an_actual_action_card_target_to_cancel():
     g = make_game()
     p1, p2 = g.players
@@ -3406,6 +3512,13 @@ def test_intel_network_first_option_adds_internal_conflict_to_up_to_three_other_
     resolved = g.resolve_pending_choice(actor.id, 0)
 
     assert resolved.get('success'), resolved
+    assert resolved.get('pending_choice') is True, resolved
+    picker = g.pending_choice
+    assert picker['choice_key'] == 'intel_network_internal_conflict_targets'
+    assert [target['id'] for target in picker['targets']] == [enemy_a.id, enemy_b.id, enemy_c.id]
+    assert picker['count'] == 3
+    picked = g.resolve_pending_choice(actor.id, None, target_player_ids=[enemy_a.id, enemy_b.id, enemy_c.id])
+    assert picked.get('success'), picked
     assert names(actor.deck.discard_pile) == ['情報網']
     assert names(enemy_a.deck.discard_pile) == ['內鬥']
     assert names(enemy_b.deck.discard_pile) == ['內鬥']

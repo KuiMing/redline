@@ -11,7 +11,7 @@ except ModuleNotFoundError:
         os.execv(system_python, [system_python, __file__, *sys.argv[1:]])
     raise
 
-from validate_ui_card_flows import create_context, create_and_start, open_secondary_page, request_json, connect_and_wait_for_state
+from validate_ui_card_flows import HOST_TOKENS, create_context, create_and_start, open_secondary_page, request_json, connect_and_wait_for_state
 
 
 def main():
@@ -20,7 +20,7 @@ def main():
         page = ctx.new_page()
         room, players = create_and_start(page, 2)
         guest_page = open_secondary_page(ctx, room, 'guest2', players[1][1], faction_button='臺灣', variant_button='綠線', base_button='臺北', ready=True)
-        start_payload = request_json(page, '/start', {'game_id': room, 'player_id': players[0][1], 'market_mode': 'sample_53'})
+        start_payload = request_json(page, '/start', {'game_id': room, 'player_id': players[0][1], 'resume_token': HOST_TOKENS[room], 'market_mode': 'sample_53'})
         print('start_payload=', json.dumps(start_payload, ensure_ascii=False))
         connect_and_wait_for_state(page)
         connect_and_wait_for_state(guest_page)

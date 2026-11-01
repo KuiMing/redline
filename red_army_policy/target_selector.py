@@ -59,6 +59,19 @@ def select_pending_choice_submission(pending: dict, assessment: Assessment) -> d
     """
     choice_type = pending.get("type")
     reason = "default: first offered option"
+    if choice_type == "target_choice" and pending.get("multi_select"):
+        # 情報網 A（內鬥放置對象）：可選 min_count～count 位其他玩家；依威脅度排序取滿 count 位。
+        targets = pending.get("targets") or []
+        count = min(int(pending.get("count") or 0), len(targets))
+        ranked = sorted(
+            range(len(targets)),
+            key=lambda i: assessment.threat_key(targets[i].get("player_id") or targets[i].get("id")),
+            reverse=True,
+        )
+        return {
+            "indices": sorted(ranked[:count]),
+            "reason": f"picked the {count} highest-threat opponent(s) for a multi-target player choice",
+        }
     if choice_type == "target_choice":
         targets = pending.get("targets") or []
         index = _best_index_by_player_progress(targets, assessment) if targets else 0

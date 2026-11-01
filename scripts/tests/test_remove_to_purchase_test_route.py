@@ -135,6 +135,24 @@ def test_remove_to_purchase_custom_orgs_and_resources_overrides():
     assert viewer.resources == {"money": 1, "propaganda": 9}
 
 
+def test_remove_to_purchase_optional_deck_replaces_random_setup_deck():
+    runtime = _runtime()
+    routes = RemoveToPurchaseTestRoutes(lambda: runtime)
+
+    default = routes.test_setup_remove_to_purchase({})
+    default_viewer = runtime.manager.games[default["game_id"]].players[0]
+    assert default_viewer.deck.draw_pile  # 未指定 deck：沿用 Game() 的起始牌庫
+
+    result = routes.test_setup_remove_to_purchase({"deck": ["追隨者", "樂捐者"]})
+    viewer = runtime.manager.games[result["game_id"]].players[0]
+    assert [(card.name, card.card_type) for card in viewer.deck.draw_pile] == [
+        ("追隨者", "propaganda"),
+        ("樂捐者", "money"),
+    ]
+    assert viewer.deck.discard_pile == []
+    assert [card.name for card in viewer.hand] == ["宣傳家"]
+
+
 def test_main_remove_to_purchase_uses_rebound_runtime_and_callable(monkeypatch):
     manager = FakeManager()
     lobby = {}

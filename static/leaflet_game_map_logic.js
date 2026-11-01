@@ -375,6 +375,93 @@ function popupHtml(t) {
     <div>鐵路：${rails}</div>`;
 }
 
+// ---------------------------------------------------------------- 城鎮標準說明 popup（canonical）
+// 選取城鎮的每一條路徑（滑鼠／觸控、Joy-Con A、SL 全域聚焦、一般瀏覽、移動目的地與動作目標）都只走 showTownDetail。
+// renderMap() 會重建全部 marker（被點的 marker 連同它的 popup 一起被移除），applyGameStateToMap() 會為每個 marker
+// 重新 bindPopup（舊的 popup 留在地圖上、內容過期）。因此「該顯示哪個城鎮」由 townDetailTown 持有（最後一次選取勝出），
+// 重繪期間（townDetailHold > 0）的 popupclose 不算使用者關閉；最外層重繪結束後在新的 marker 上以最新內容重新開啟。
+let townDetailTown = null;
+let townDetailHold = 0;
+let townDetailFresh = null; // { autoPan }：下一次 sync 是一次新的選取（重新開啟、需要時捲動地圖讓 popup 可見）
+
+// Leaflet 會依當下文字的 min-content 寬度量測 popup。中文可在每個字之間換行，重繪期間偶爾會先量到
+// 極窄寬度，造成說明變成狹長直欄；切換城鎮後再次量測才恢復。所有城鎮說明統一使用相同的寬度下限。
+function townDetailPopupOptions(extra = {}) {
+  return { minWidth: 280, maxWidth: 380, ...extra };
+}
+
+function withTownDetailHeld(fn) {
+  townDetailHold += 1;
+  try {
+    return fn();
+  } finally {
+    townDetailHold -= 1;
+    if (townDetailHold === 0) syncTownDetailPopup();
+  }
+}
+
+function townDetailMarker() {
+  return townDetailTown ? currentMarkers.get(townDetailTown) || null : null;
+}
+
+function syncTownDetailPopup() {
+  const fresh = townDetailFresh;
+  townDetailFresh = null;
+  if (!townDetailTown) return false;
+  const town = byName.get(townDetailTown);
+  const marker = townDetailMarker();
+  if (!town || !marker || !map.hasLayer(marker)) {
+    // 被篩選隱藏或資料不存在：不留下過期的說明。
+    closeTownDetail();
+    return false;
+  }
+  const html = popupHtml(town);
+  const popup = marker.getPopup();
+  if (marker.isPopupOpen() && popup && popup.getContent() === html) return true;
+  if (!fresh && marker.isPopupOpen()) {
+    popup.setContent(html);
+    return true;
+  }
+  townDetailHold += 1;
+  try {
+    map.closePopup(); // 舊城鎮或重新 bind 後留下的過期 popup
+    // 捲動時上緣留空間給地圖右上按鈕列與 Joy-Con 提示列，標題不被蓋住。
+    marker.bindPopup(html, townDetailPopupOptions({ autoPan: !!(fresh && fresh.autoPan), autoPanPaddingTopLeft: [12, 64] }));
+    marker.openPopup();
+  } finally {
+    townDetailHold -= 1;
+  }
+  return marker.isPopupOpen();
+}
+
+/** 選取城鎮 → 打開該城鎮的標準說明 popup（只顯示，不改選取、預備移動或 pending choice）。 */
+function showTownDetail(townName, options = {}) {
+  const { autoPan = true } = options;
+  if (!byName.has(townName)) return false;
+  townDetailTown = townName;
+  townDetailFresh = { autoPan };
+  if (townDetailHold) return true; // 最外層重繪結束時開啟
+  return syncTownDetailPopup();
+}
+
+/** 關閉城鎮說明 popup（Joy-Con B 的第一下）。不碰選取、預備移動或 pending choice。 */
+function closeTownDetail() {
+  townDetailTown = null;
+  townDetailFresh = null;
+  townDetailHold += 1;
+  try {
+    map.closePopup();
+  } finally {
+    townDetailHold -= 1;
+  }
+}
+
+/** 目前真的開著的城鎮說明 popup 所屬城鎮；沒有則 null。 */
+function townDetailOpenTown() {
+  const marker = townDetailMarker();
+  return marker && marker.isPopupOpen() ? townDetailTown : null;
+}
+
 function resetMoveSelection() {
   routePreviewTarget = null;
   selectedMoveTargets = [];
@@ -441,18 +528,21 @@ function focusSupportChoiceTargets(bounds) {
 
 function selectTownForCurrentMapAction(townName, options = {}) {
   const { autoFocus = true } = options;
-  // Make the selected town authoritative before any redraw. renderMap() can open or
-  // replace Leaflet popups; those events must never restore details for the previous town.
-  selectedTown = townName;
-  updateInfoPanel(townName);
-  resetMoveSelection();
-  renderMap();
-  applyGameStateToMap(lastGameState);
-  const didHighlight = renderMovementHighlights(townName, { autoFocus });
-  refreshDirectBuildUi();
-  window.__lastSelectedTown = townName;
-  window.__lastHighlightSuccess = didHighlight;
-  return didHighlight;
+  return withTownDetailHeld(() => {
+    // Make the selected town authoritative before any redraw. renderMap() can open or
+    // replace Leaflet popups; those events must never restore details for the previous town.
+    selectedTown = townName;
+    showTownDetail(townName);
+    updateInfoPanel(townName);
+    resetMoveSelection();
+    renderMap();
+    applyGameStateToMap(lastGameState);
+    const didHighlight = renderMovementHighlights(townName, { autoFocus });
+    refreshDirectBuildUi();
+    window.__lastSelectedTown = townName;
+    window.__lastHighlightSuccess = didHighlight;
+    return didHighlight;
+  });
 }
 
 function isBuildSupportChoiceHighlight() {
@@ -711,9 +801,14 @@ function townDisplayLatLng(town) {
   // 使用固定像素偏移分開重疊的 marker；只改 Leaflet 顯示位置，不改地圖資料、
   // 鐵路拓撲、距離或合法目標。黑河南移，海蘭泡北移，方向也符合地理位置；
   // 臥龍南移（南陽本身位置不變），方向同樣符合臥龍在南陽以南的真實地理位置。
+  // 地圖視圖切換（fitBounds／_moveEnd）的瞬間投影可能回傳非有限座標；此時退回原始座標，
+  // 避免產生 NaN LatLng（Leaflet 會丟出 Invalid LatLng）。
   const point = map.latLngToLayerPoint(latLng);
+  if (!point || !Number.isFinite(point.x) || !Number.isFinite(point.y)) return latLng;
   const yOffset = town.name === '海蘭泡' ? -12 : 12;
-  return map.layerPointToLatLng(L.point(point.x, point.y + yOffset));
+  const shifted = map.layerPointToLatLng(L.point(point.x, point.y + yOffset));
+  if (!shifted || !Number.isFinite(shifted.lat) || !Number.isFinite(shifted.lng)) return latLng;
+  return shifted;
 }
 
 function townLabelOptions(townName, zoom = map.getZoom()) {
@@ -1337,12 +1432,19 @@ function renderParticipatingFactionBaseBadges() {
         })
       }).bindTooltip(tooltip, { direction: 'top', offset: [0, -18] }).addTo(baseBadgeLayer);
       badge.__redlineBaseTown = townName;
+      // 🏕 疊在城鎮圓圈正中央：點它等同點該城鎮（選取＋城鎮說明），不會被圖示吃掉。
+      badge.on('click', () => currentMarkers.get(townName)?.fire('click'));
       currentBaseBadges.set(player.id || `${player.faction}:${townName}:${index}`, badge);
     });
   });
 }
 
 function renderMap() {
+  // 重建全部 marker：開著的城鎮說明在新的 marker 上重新開啟（不因重繪而消失或換回舊城鎮）。
+  return withTownDetailHeld(renderMapLayers);
+}
+
+function renderMapLayers() {
   clearLayers();
   updateStatusPanel();
   const f = filters();
@@ -1371,7 +1473,7 @@ function renderMap() {
 
   visibleTowns.forEach(t => {
     const marker = L.circleMarker(townDisplayLatLng(t), markerStyleForTown(t.name)).addTo(markerLayer);
-    marker.bindPopup(popupHtml(t), { maxWidth:380 });
+    marker.bindPopup(popupHtml(t), townDetailPopupOptions());
 
     if (t.type === '軍火庫' && !currentArmoryBadges.has(t.name)) {
       const armoryBadge = L.marker(townDisplayLatLng(t), {
@@ -1402,6 +1504,7 @@ function renderMap() {
         pendingMoveTarget = { from: selectedTown, to: t.name, mode: moveOption.mode, cost: moveOption.cost };
         refreshMoveConfirmUi();
         refreshRouteHighlights();
+        showTownDetail(t.name);
         return;
       }
 
@@ -1415,6 +1518,7 @@ function renderMap() {
           selectTownForCurrentMapAction(t.name, { autoFocus: true });
         } else {
           exitMovementSelection();
+          showTownDetail(t.name); // 取消移動選取，但點到的城鎮仍顯示它的說明
         }
         return;
       }
@@ -1630,6 +1734,15 @@ map.on('popupopen', e => {
   // previous marker so an asynchronous popupopen cannot overwrite the new selection.
   if (node && node[0] === selectedTown) updateInfoPanel(node[0]);
 });
+map.on('popupclose', e => {
+  // 使用者關閉（×、點地圖空白處、開了別的 popup）才放掉城鎮說明；重繪造成的關閉由 withTownDetailHeld 重新開啟。
+  if (townDetailHold || !townDetailTown) return;
+  const marker = townDetailMarker();
+  if (!marker || e.popup === marker.getPopup() || e.popup._source === marker) {
+    townDetailTown = null;
+    townDetailFresh = null;
+  }
+});
 
 window.addEventListener('message', (event) => {
   if (event.origin !== window.location.origin) return;
@@ -1695,6 +1808,11 @@ function focusOwnBaseOnFirstState(state) {
 }
 
 function applyGameStateToMap(state) {
+  // 每份 state 都會重新 bindPopup：開著的城鎮說明以最新 state 的內容留在同一個城鎮。
+  return withTownDetailHeld(() => applyGameStateToMapLayers(state));
+}
+
+function applyGameStateToMapLayers(state) {
   const resolvingMove = pendingMove && !state?.error ? { ...pendingMove } : null;
   lastGameState = state;
   focusOwnBaseOnFirstState(state);
@@ -1727,7 +1845,7 @@ function applyGameStateToMap(state) {
 
     const baseTown = byName.get(name);
     if (baseTown) {
-      layer.bindPopup(popupHtml(baseTown), { maxWidth: 380 });
+      layer.bindPopup(popupHtml(baseTown), townDetailPopupOptions());
       if (layer.getTooltip()) {
         layer.setTooltipContent(labelTextForTown(name));
       }
@@ -1963,9 +2081,16 @@ window.__clickMoveTargetForTest = function (townName) {
 window.__openTownPopupForTest = function (townName) {
   const marker = currentMarkers.get(townName);
   if (!marker) return { ok: false, reason: 'marker-not-found', townName };
-  marker.bindPopup(popupHtml(byName.get(townName)), { maxWidth: 380 });
-  marker.openPopup();
-  return { ok: true, townName };
+  return { ok: showTownDetail(townName), townName };
+};
+window.__townDetailForTest = function () {
+  const popups = [...document.querySelectorAll('#map .leaflet-popup')];
+  return {
+    town: townDetailOpenTown(),
+    popups: popups.length,
+    names: popups.map(p => p.querySelector('.name')?.textContent.trim() || ''),
+    text: popups.map(p => p.querySelector('.leaflet-popup-content')?.textContent || ''),
+  };
 };
 window.__confirmPendingMoveForTest = function () {
   const btn = document.getElementById('confirmMoveBtn');

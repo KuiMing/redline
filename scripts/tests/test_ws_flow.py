@@ -11,6 +11,7 @@ async def run_test():
     data = r.json()
     room_id = data["game_id"]
     host_id = data["host_id"]
+    host_token = data["resume_token"]
     print("Room:", room_id)
 
     # 2️⃣ Join A
@@ -30,7 +31,8 @@ async def run_test():
     # 4️⃣ Start
     r = requests.post(f"{BASE}/start", json={
         "game_id": room_id,
-        "player_id": host_id
+        "player_id": host_id,
+        "resume_token": host_token
     })
     print("Start:", r.json())
 

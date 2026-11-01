@@ -87,7 +87,7 @@ def main() -> None:
         record('phase_description_moved_inside_status_bar', state['metaInsideTop'], {'meta': state['meta'], 'status': state['top']})
         record('restart_moved_to_status_right', state['freshInsideTop'] and state['freshRightGap'] is not None and state['freshRightGap'] <= 24, {'button': state['fresh'], 'status': state['top'], 'rightGap': state['freshRightGap']})
         record('advance_button_uses_old_new_game_tab_position', state['advanceInsideTabs'] and state['advanceRightGap'] is not None and state['advanceRightGap'] <= 24, {'button': state['advance'], 'tabs': state['tabs'], 'rightGap': state['advanceRightGap']})
-        record('event_card_is_a_visible_tab', not state['eventPanelExists'] and state['eventTabInsideTabs'] and '事件卡' in state['eventTabText'] and '紅軍權貴出逃' in state['eventTabText'], state)
+        record('event_card_is_a_visible_tab', not state['eventPanelExists'] and state['eventTabInsideTabs'] and state['eventTabText'] == '事件卡', state)
         page.screenshot(path=str(SHOT_1280), full_page=True)
 
         event_tab = page.locator('#eventCardTab')

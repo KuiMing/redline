@@ -45,9 +45,10 @@ from server.map_data_routes import (
     map_test,
     router as map_data_router,
 )
-from server.red_army_ai_runtime import drive_red_army_turns
+from server.red_army_ai_runtime import acknowledge_ai_turn, drive_red_army_turns, set_public_hold
 from server.test_routes.registry import register_test_routes
 from server.test_routes.runtime import GameSetupRuntime
+import mimetypes
 import os
 import asyncio
 import secrets
@@ -57,6 +58,9 @@ ENABLE_TEST_ROUTES = os.getenv("ENABLE_TEST_ROUTES", "false").strip().lower() in
     "true",
     "yes",
 )
+
+# 遊戲配樂（static/audio/redline-theme.m4a）：Python 預設把 .m4a 猜成 audio/mp4a-latm，瀏覽器不一定接受。
+mimetypes.add_type("audio/mp4", ".m4a")
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -97,7 +101,7 @@ async def broadcast_game_state(game_id, game, last_action_result=None):
     async def _rebroadcast():
         await broadcast_game_state(game_id, game)
 
-    await drive_red_army_turns(game_id, game, _rebroadcast)
+    await drive_red_army_turns(game_id, game, _rebroadcast, detach_ack_wait=True)
 
 
 def schedule_reaction_timeout(game_id, game):
@@ -312,6 +316,18 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
                 await broadcast_game_state(game_id, game)
                 continue
 
+            if action in {"ai_public_hold", "ack_ai_red_army"}:
+                # 客廳輪流的公開視窗：任何本機席位都可啟用／確認，不受「輪到誰」限制；只動 AI 紅軍的等待狀態，不碰規則狀態。
+                if action == "ai_public_hold":
+                    changed = set_public_hold(game, bool(data.get("enabled")), id(websocket))
+                else:
+                    changed = acknowledge_ai_turn(game)
+                if changed:
+                    await broadcast_game_state(game_id, game)
+                else:
+                    await websocket.send_json(game.state(player_id))
+                continue
+
             bypass_turn_check = action in {"relocate_base", "keep_hong_kong_base"}
             if action == "resolve_choice":
                 pending_choice = getattr(game, "pending_choice", None) or {}
@@ -429,6 +445,9 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: str)
 
     except Exception as e:
         print("WS ERROR:", e)
+    finally:
+        # 客廳輪流顯示端離線後撤銷該連線的登記。最後一個顯示端離線時，AI 不再無故等待 10 秒。
+        set_public_hold(game, False, id(websocket))
         manager.remove_connection(game_id, player_id, websocket)
 
 

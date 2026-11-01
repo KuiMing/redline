@@ -17,6 +17,7 @@ let cachedFullMapData = null;
 let activeFactionActionModal = null;
 let cardPresentationCatalog = null;
 let lastEraNotificationKey = null;
+let lastEraReactionChoiceId = null;
 let eraAchievementDetailsById = {};   // 生效中的時代關卡說明，供釘選卡片重新點開使用
 let eraAchievementViewId = null;      // 時代關卡浮窗目前顯示的時代 id
 let stageResizeBound = false;
@@ -25,11 +26,17 @@ let latestLobbyState = null;
 let lobbyTransientStatus = null;
 let factionPickerModalOpen = false;
 let factionPickerReturnFocus = null;
+let factionPickerPadPhase = 'faction'; // Joy-Con 陣營選擇階段：faction｜variant｜base｜read（見 RedlineFactionPickerPad）
+let factionPickerPadBusy = false;
+let factionDetailScrollKey = null;    // 右側陣營資訊目前內容（陣營｜根據地）；改變時捲回頂端
 let activeChoiceModal = null;
+// 多選玩家目標（情報網 A 內鬥放置對象）的勾選暫存：以 choice_id 為鍵，狀態推送重繪 modal 時保留已選玩家。
+let multiTargetChoiceSelection = { choiceId: null, ids: [] };
 let lastFactionActionResultKey = null;
 let activeSharedFactionActionResult = null;
 let lastSupportChoiceMapHighlightPayload = null;
 let lastEventRevealKey = null;
+let lastReactionRevealChoiceId = null;
 let lastPlayerErrorModalKey = null;
 let outboundActionSequence = 0;
 let unavailableActionModalReturnFocus = null;
@@ -55,6 +62,15 @@ function resizeStage() {
   document.documentElement.style.setProperty('--stage-top', `${Math.max(0, (window.innerHeight - 720 * scale) / 2)}px`);
 }
 
+function layoutGameShell() {
+  const hud = document.getElementById('hud');
+  const gameShell = document.getElementById('gameShell');
+  if (!hud || !gameShell) return;
+  const contentTop = hud.offsetTop + hud.offsetHeight + 8;
+  gameShell.style.top = `${contentTop}px`;
+  gameShell.style.height = `${Math.max(0, 720 - contentTop)}px`;
+}
+
 function playerInitialFromInput(name) {
   const trimmed = (name || '').trim();
   return (trimmed[0] || 'H').toUpperCase();
@@ -78,17 +94,37 @@ function storedRedlineSessions() {
   }
 }
 
-function saveRedlineSession(name = '') {
+// 「你的行動代號」仍是系統預設：欄位值等於 HTML 預設值（host）或空白，且使用者從未在欄位輸入過。
+// 使用者自行輸入的（即使也是 host）一律是自訂名稱：userEdited '1'＝剛輸入、'used'＝輸入的名稱已用於某個席位。
+function playerNameIsSystemDefault() {
+  const input = document.getElementById('playerName');
+  if (!input || input.dataset.userEdited) return false;
+  const value = input.value.trim();
+  return value === '' || value === input.defaultValue.trim();
+}
+
+// 輸入的行動代號已用於這個席位：之後客廳輪流「新增本機玩家」若沒有再輸入就用自動代號；它仍不會被當成系統預設。
+function markPlayerNameUsed() {
+  const input = document.getElementById('playerName');
+  if (input?.dataset.userEdited) input.dataset.userEdited = 'used';
+}
+
+// nameAuto：送出時行動代號是否為系統預設（客廳輪流據此把本機席位命名為 P1～P4）；未提供＝沿用同一席位先前的紀錄。
+function saveRedlineSession(name = '', nameAuto) {
   if (!gameId || !playerId || !resumeToken) return;
   const sessions = storedRedlineSessions();
+  const previous = sessions[gameId];
   sessions[gameId] = {
     game_id: gameId,
     player_id: playerId,
     resume_token: resumeToken,
     name: String(name || document.getElementById('playerName')?.value || '').trim(),
+    name_auto: typeof nameAuto === 'boolean' ? nameAuto : (previous?.player_id === playerId && previous?.name_auto === true),
     saved_at: Date.now(),
   };
   localStorage.setItem(REDLINE_SESSIONS_KEY, JSON.stringify(sessions));
+  // 客廳輪流（hot-seat）啟用時另外記住這個席位（同 player_id 只更新 token，不覆寫其他本機席位）。
+  window.RedlineHotSeat?.rememberSeat?.(gameId, playerId, resumeToken, sessions[gameId].name, sessions[gameId].name_auto);
 }
 
 function latestRedlineSession() {
@@ -143,6 +179,7 @@ function renderLobbyRoster(lobbyRes, statusText = null) {
   }
 
   latestLobbyState = lobbyRes;
+  window.RedlineStartFlow?.onRoomSettings?.(lobbyRes); // 房主設定（伺服器權威）：顯示並讓訪客唯讀
   const players = lobbyRes.players || [];
   const chosen = lobbyRes.factions || {};
   const bases = lobbyRes.bases || {};
@@ -195,6 +232,8 @@ function renderLobbyRoster(lobbyRes, statusText = null) {
 
   roster.innerHTML = cards + aiSeatCard + emptyCards;
   updateLobbyActionControls(lobbyRes);
+  // 客廳輪流（hot-seat）：大廳席位列與各席 Joy-Con 監聽只依這份 server /lobby 公開資料重算。
+  window.RedlineHotSeat?.onLobbyState?.();
   if (hint) {
     if (statusText) lobbyTransientStatus = statusText;
     const transient = lobbyTransientStatus;
@@ -225,38 +264,6 @@ function updateLobbyActionControls(lobbyRes = latestLobbyState) {
   const readyBtn = document.getElementById('toggleReadyBtn');
   const factionPickerBtn = document.getElementById('openFactionPickerBtn');
   const status = lobbyReadiness(lobbyRes);
-  const marketMode = lobbyRes?.market_mode || document.getElementById('marketModeSelect')?.value || 'sample_53';
-  applyMarketMode(marketMode);
-  document.querySelectorAll('[data-market-mode]').forEach(button => {
-    button.disabled = !status.isHost;
-    button.setAttribute('aria-disabled', String(!status.isHost));
-    const cardCounts = button.dataset.cardCounts || '';
-    const hostNote = status.isHost
-      ? ''
-      : status.hasRoom
-        ? ' 只有房主可以切換遊戲難易度。'
-        : ' 建立房間後，只有房主可以切換遊戲難易度。';
-    button.dataset.tooltip = `${cardCounts}${hostNote}`.trim();
-  });
-
-  const gameStarted = !!lobbyRes?.started;
-  applyAiRedArmy(status.aiRedArmy);
-  document.querySelectorAll('[data-ai-red-army]').forEach(button => {
-    const locked = !status.isHost || gameStarted;
-    button.disabled = locked;
-    button.setAttribute('aria-disabled', String(locked));
-    const baseTip = button.dataset.aiRedArmy === 'on'
-      ? '紅軍席位改由電腦（決定性規則引擎）自動操作，不需要真人加入。'
-      : '由一位玩家在作戰室中選擇紅軍陣營並親自操作。';
-    const note = gameStarted
-      ? ' 作戰已啟動，無法變更。'
-      : status.isHost
-        ? ''
-        : status.hasRoom
-          ? ' 只有房主可以切換。'
-          : ' 建立房間後，只有房主可以切換。';
-    button.dataset.tooltip = `${baseTip}${note}`.trim();
-  });
 
   if (factionPickerBtn) {
     factionPickerBtn.disabled = !status.hasRoom;
@@ -335,7 +342,7 @@ async function toggleReady() {
   const res = await fetch('/ready', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ game_id: gameId, player_id: playerId, ready: nextReady })
+    body: JSON.stringify({ game_id: gameId, player_id: playerId, resume_token: resumeToken, ready: nextReady })
   });
   const data = await res.json();
   if (data.error) {
@@ -358,78 +365,6 @@ function syncLobbyRoomCode() {
   if (lobby) lobby.classList.toggle('room-active', !!value);
 }
 
-function applyMarketMode(mode) {
-  const select = document.getElementById('marketModeSelect');
-  if (select) select.value = mode;
-  // Scoped to [data-market-mode] (not the shared .lobby-market-option
-  // class) so this never touches the AI Red Army toggle buttons, which
-  // reuse the same visual class but carry [data-ai-red-army] instead.
-  document.querySelectorAll('[data-market-mode]').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.marketMode === mode);
-  });
-}
-
-function applyAiRedArmy(enabled) {
-  const select = document.getElementById('aiRedArmySelect');
-  if (select) select.value = enabled ? 'on' : 'off';
-  document.querySelectorAll('[data-ai-red-army]').forEach(btn => {
-    btn.classList.toggle('active', (btn.dataset.aiRedArmy === 'on') === !!enabled);
-  });
-  const hint = document.getElementById('aiRedArmyHint');
-  if (hint) {
-    hint.textContent = enabled
-      ? 'AI 紅軍已啟用：紅軍席位改由電腦自動操作，不需要真人加入；啟動行動後無法變更。'
-      : '紅軍席位需要一位玩家親自選擇並操作；房主可以切換改由 AI 代打。';
-  }
-}
-
-async function setAiRedArmy(enabled) {
-  const status = lobbyReadiness();
-  if (!status.hasRoom) {
-    updateLobbyStatus('請先建立作戰室。');
-    return;
-  }
-  if (!status.isHost) {
-    updateLobbyStatus('只有房主可以切換 AI 紅軍。');
-    updateLobbyActionControls();
-    return;
-  }
-  const res = await fetch('/ai-red-army', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({game_id: gameId, player_id: playerId, enabled: !!enabled}),
-  });
-  const data = await res.json();
-  if (data.error) {
-    updateLobbyStatus(data.error === 'Only host can change AI Red Army setting' ? '只有房主可以切換 AI 紅軍。' : playerMessageZhTw(data.error));
-    await refreshLobbyState();
-    return;
-  }
-  applyAiRedArmy(!!data.ai_red_army);
-  await refreshLobbyState(data.ai_red_army ? 'AI 紅軍已啟用：紅軍席位改由電腦自動操作。' : 'AI 紅軍已關閉：紅軍席位需由玩家親自選擇。');
-}
-
-async function setMarketMode(mode) {
-  const status = lobbyReadiness();
-  if (!status.isHost) {
-    updateLobbyStatus(status.hasRoom ? '只有房主可以切換遊戲難易度。' : '請先建立作戰室。');
-    updateLobbyActionControls();
-    return;
-  }
-  const res = await fetch('/market-mode', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({game_id: gameId, player_id: playerId, market_mode: mode}),
-  });
-  const data = await res.json();
-  if (data.error) {
-    updateLobbyStatus(data.error === 'Only host can change game difficulty' ? '只有房主可以切換遊戲難易度。' : playerMessageZhTw(data.error));
-    await refreshLobbyState();
-    return;
-  }
-  applyMarketMode(data.market_mode || mode);
-  await refreshLobbyState(data.market_mode === 'all_cards' ? '遊戲難易度已改為一般模式。' : '遊戲難易度已改為簡單模式。');
-}
 
 function selectRoomCodeForManualCopy(roomIdValue) {
   const roomInput = document.getElementById('roomId');
@@ -547,7 +482,9 @@ function initProofSessionFromUrl() {
 }
 
 async function resumeStoredGame() {
-  const saved = latestRedlineSession();
+  // 客廳輪流（hot-seat）：以本分頁已確認（或正在交接）的席位恢復，各席位用自己的 resumeToken。
+  const hotSeat = window.RedlineHotSeat?.resumeTarget?.(latestRedlineSession()) || null;
+  const saved = hotSeat || latestRedlineSession();
   if (!saved) return false;
   const res = await fetch('/resume', {
     method: 'POST',
@@ -573,7 +510,8 @@ async function resumeStoredGame() {
   const nameInput = document.getElementById('playerName');
   if (roomInput) roomInput.value = gameId;
   if (nameInput && data.name) nameInput.value = data.name;
-  saveRedlineSession(data.name);
+  // hot-seat 換席位不改寫單席位的 session 紀錄（席位清單由 hotseat_ui.js 保存）。
+  if (!hotSeat) saveRedlineSession(data.name);
   if (data.started) {
     connect({reconnect: true});
   } else {
@@ -609,6 +547,7 @@ async function initLobbyControls() {
   if (nameInput && nameInput.dataset.bound !== '1') {
     nameInput.dataset.bound = '1';
     nameInput.addEventListener('input', () => {
+      nameInput.dataset.userEdited = '1';
       lobbyTransientStatus = null;
       updateLobbyStatus();
     });
@@ -618,13 +557,29 @@ async function initLobbyControls() {
     roomInput.dataset.bound = '1';
     roomInput.addEventListener('input', syncLobbyRoomCode);
   }
-  const select = document.getElementById('marketModeSelect');
-  applyMarketMode(select?.value || 'sample_53');
   updateLobbyStatus();
   updateLobbyActionControls();
   syncLobbyRoomCode();
-  if (!startFresh) await resumeStoredGame();
+  try {
+    if (!startFresh) await resumeStoredGame();
+  } finally {
+    // 沒有進入遊戲（大廳）就沒有私密畫面：客廳輪流的預先遮罩解除。
+    if (!ws) window.RedlineHotSeat?.onLobby?.();
+  }
+  // 沒有恢復到任何作戰室：先顯示開始畫面（建立真人／AI 紅軍、或輸入房間代碼加入）。
+  if (!ws && !gameId) window.RedlineStartFlow?.show?.();
 }
+
+// 客廳輪流（hot-seat，hotseat_ui.js）：讀目前席位與大廳狀態。
+// 換席位（大廳與遊戲中）一律由 hotseat_ui.js 整頁重新載入，resumeStoredGame 以該席位 resumeToken 重新授權（不只切 DOM）。
+window.RedlineSession = {
+  current: () => {
+    const saved = gameId ? storedRedlineSessions()[gameId] : null;
+    const nameAuto = !!saved && saved.player_id === playerId && saved.name_auto === true;
+    const name = saved && saved.player_id === playerId ? String(saved.name || '') : '';
+    return {gameId, playerId, resumeToken, started: !!ws, lobby: latestLobbyState, nameAuto, name};
+  },
+};
 
 async function setActiveGameView(view) {
   const tabs = document.querySelectorAll('.game-tab');
@@ -669,34 +624,80 @@ async function loadCardPresentationCatalog() {
   return cardPresentationCatalog;
 }
 
-async function createRoom() {
+// 房間已建立之後的步驟：Joy-Con 多席位配置成功才進陣營畫面；失敗時保留配對與房間，只重試配置（不再建立新房間）。
+// 回傳 { ok, error? }；按鈕呼叫端忽略回傳值，Joy-Con 自動流程據此顯示可重試的狀態。
+async function enterCreatedRoom(isCurrent) {
+  const cancelled = () => typeof isCurrent === 'function' && !isCurrent();
+  if (cancelled()) return { ok: false, cancelled: true };
+  const provisioned = await window.RedlineStartFlow?.afterCreate?.(gameId);
+  if (cancelled()) return { ok: false, cancelled: true };
+  if (provisioned && provisioned.ok === false) {
+    const error = provisioned.error || 'Joy-Con 席位建立失敗，請重試。';
+    updateLobbyStatus(error);
+    return { ok: false, error };
+  }
+  const opened = await openFactionPickerModal();
+  if (cancelled()) {
+    closeFactionPickerModal();
+    return { ok: false, cancelled: true };
+  }
+  if (!opened) {
+    const error = '無法開啟陣營選擇，請重試。';
+    updateLobbyStatus(error);
+    return { ok: false, error };
+  }
+  window.RedlineStartFlow?.entered?.(gameId);
+  updateLobbyStatus(lobbyTransientStatus);
+  return { ok: true };
+}
+
+// options.codename：Joy-Con 自動建房（行動代號固定為 P1，不讀欄位）。按鈕 onclick 不帶參數，電腦／訪客流程維持原樣。
+async function createRoom(options) {
+  const isCurrent = options?.isCurrent;
+  const cancelled = () => typeof isCurrent === 'function' && !isCurrent();
+  // 上一次已建房、只差席位配置或開啟陣營畫面：同一個房間重試，不再建立新房間（避免重複房間／席位）。
+  if (gameId && window.RedlineStartFlow?.hasPendingProvision?.(gameId)) {
+    await loadFactions();
+    startLobbySync();
+    return enterCreatedRoom(isCurrent);
+  }
   // 建房也要帶「行動代號」：/create 之前不吃名字、建房者永遠叫 host
   //（2026-07-18 自動桌測發現，2026-07-19 修正）。
-  const creatorName = (document.getElementById('playerName')?.value || '').trim();
+  const autoName = typeof options?.codename === 'string' ? options.codename : null;
+  const creatorName = autoName !== null ? autoName : (document.getElementById('playerName')?.value || '').trim();
+  const nameAuto = autoName !== null ? true : playerNameIsSystemDefault();
+  // 開始畫面（start_flow_ui.js）選好的房主設定：由伺服器 /create 驗證並保存；沒有走開始畫面則維持原預設。
+  const startSettings = window.RedlineStartFlow?.pendingCreate?.() || null;
   const res = await fetch('/create', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name: creatorName, device_id: redlineDeviceId() }),
+    body: JSON.stringify({ name: creatorName, device_id: redlineDeviceId(), ...(startSettings || {}) }),
   });
   const data = await res.json();
+  // An automatic request can finish after session recovery or an explicit
+  // hide. Never let that late response replace the active session.
+  if (cancelled()) return { ok: false, cancelled: true };
+  if (data.error || !data.game_id) {
+    const error = playerMessageZhTw(data.error || '建立作戰室失敗。');
+    updateLobbyStatus(error);
+    return { ok: false, error };
+  }
   gameId = data.game_id;
   playerId = data.host_id;
   resumeToken = data.resume_token;
   latestLobbyState = null;
-  saveRedlineSession(creatorName);
+  window.RedlineStartFlow?.roomCreated?.(gameId); // 之後任何失敗都從這個房間重試
+  saveRedlineSession(creatorName, nameAuto);
+  markPlayerNameUsed();
   const roomInput = document.getElementById('roomId');
   if (roomInput) {
     roomInput.value = gameId;
     syncLobbyRoomCode();
   }
-  const marketSelect = document.getElementById('marketModeSelect');
-  if (marketSelect) applyMarketMode('sample_53');
-  applyAiRedArmy(false);
   lobbyTransientStatus = '作戰室已建立；請選擇陣營，或分享房間代碼。';
   await loadFactions();
   startLobbySync();
-  await openFactionPickerModal();
-  updateLobbyStatus(lobbyTransientStatus);
+  return enterCreatedRoom(isCurrent); // Joy-Con 配對到多支：新增 P2～Pn 本機席位並依序綁定，成功才進陣營畫面
 }
 
 async function chooseFaction(factionId) {
@@ -732,7 +733,7 @@ async function confirmFactionChoice() {
   const res = await fetch('/choose-faction', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ game_id: gameId, player_id: playerId, faction_id: pendingFactionChoice, base_name: chosenBase })
+    body: JSON.stringify({ game_id: gameId, player_id: playerId, resume_token: resumeToken, faction_id: pendingFactionChoice, base_name: chosenBase })
   });
   const data = await res.json();
   if (data.error) {
@@ -1063,9 +1064,10 @@ const SUPPORT_CARD_ART_FILES = {
   '紅軍奧援': ['17_紅軍奧援_起始牌.png'],
 };
 
-function playableCardArtUrl(cardName, variantInfo = null) {
+function playableCardArtUrl(cardName, variantInfo = null, halfHeight = false) {
   const name = String(cardName || '').trim();
   if (!name || !cardPresentation(name)) return '';
+  const artRoot = halfHeight ? '/static/card-art-half-height' : '/static/card-art';
   if (/奧援/.test(name)) {
     const files = SUPPORT_CARD_ART_FILES[name];
     if (!files?.length) return '';
@@ -1074,9 +1076,9 @@ function playableCardArtUrl(cardName, variantInfo = null) {
       : 0;
     const file = files[requestedIndex] || files[0];
     const version = name === '紅軍奧援' ? '?v=action-card-layout-20260811' : '';
-    return `/static/card-art/support/${encodeURIComponent(file)}${version}`;
+    return `${artRoot}/support/${encodeURIComponent(file)}${version}`;
   }
-  return `/static/card-art/actions/${encodeURIComponent(name)}.png?v=head-safe-20260726`;
+  return `${artRoot}/actions/${encodeURIComponent(name)}.png?v=head-safe-20260726`;
 }
 
 function renderCardFace(cardName, zone, isStatic = false, compact = false, countOverride = null, variantInfo = null) {
@@ -1102,7 +1104,7 @@ function renderCardFace(cardName, zone, isStatic = false, compact = false, count
   const meaning = (info.meaning_text && !isSupport) ? `<div class="card-meaning">${escapeHtml(info.meaning_text)}</div>` : '';
   // 只在常設購買區顯示即時剩餘供應；手牌與隨機牌庫的目錄張數不是目前供應量，
   // 而且會遮住完整卡面的購買費用。
-  const countText = isStatic
+  const countText = isStatic && !compact
     ? (countOverride != null ? String(countOverride) : info.count_text)
     : null;
   const count = countText ? `<div class="card-count">剩 ${escapeHtml(countText)}</div>` : '';
@@ -1119,11 +1121,12 @@ function renderCardFace(cardName, zone, isStatic = false, compact = false, count
       ${meaning}
       ${renderBadgeList(badgeItems)}
     </div>`;
-  const artUrl = playableCardArtUrl(cardName, variantInfo);
+  const halfHeight = compact && (zone === 'purchase' || zone === 'hand');
+  const artUrl = playableCardArtUrl(cardName, variantInfo, halfHeight);
   if (!artUrl) return textFace;
   return `
     <div class="card-face card-art-face ${colorClass}${compact ? ' compact' : ''}" style="${colorStyle}">
-      <img class="playable-card-art-image" src="${artUrl}" alt="${escapeHtml(cardName)}完整卡面" decoding="async" onerror="this.parentElement.classList.add('playable-card-art-load-failed')">
+      <img class="playable-card-art-image" src="${artUrl}" alt="${escapeHtml(cardName)}${halfHeight ? '半高' : '完整'}卡面" decoding="async" onerror="this.parentElement.classList.add('playable-card-art-load-failed')">
       ${count}
       <div class="playable-card-art-fallback">${textFace}</div>
     </div>`;
@@ -1213,6 +1216,7 @@ function renderFactionDetails(factionId, selectedBaseName = null, selectedBaseGr
 
   if (!factionId) {
     panel.style.display = 'block';
+    resetFactionDetailScroll('');
     title.textContent = '選擇陣營以查看完整資訊';
     basesEl.innerHTML = '<div class="faction-detail-empty">左側選擇陣營後，這裡會顯示可用根據地。</div>';
     abilitiesEl.innerHTML = '<div class="faction-detail-empty">能力與觸發條件會完整顯示在這裡。</div>';
@@ -1275,6 +1279,15 @@ function renderFactionDetails(factionId, selectedBaseName = null, selectedBaseGr
        </article>`
     : `<div class="faction-detail-section-title faction-detail-era-heading">時代關卡</div><div class="faction-detail-empty">此陣營沒有個人時代關卡。</div>`;
   panel.style.display = 'block';
+  resetFactionDetailScroll(`${factionId}|${activeDetailBase || ''}`);
+}
+
+// 右側陣營資訊的捲動位置：陣營或根據地改變、或重新開啟選擇視窗時回到頂端；同一個選擇的重繪（例如大廳同步）保留目前位置。
+function resetFactionDetailScroll(key) {
+  const panel = document.getElementById('factionDetailPanel');
+  if (!panel || key === factionDetailScrollKey) return;
+  factionDetailScrollKey = key;
+  panel.scrollTop = 0;
 }
 
 async function openFactionPickerModal() {
@@ -1295,6 +1308,8 @@ async function openFactionPickerModal() {
   }
 
   factionPickerModalOpen = true;
+  factionPickerPadPhase = 'faction'; // 每次開啟都從陣營階段開始（Joy-Con）
+  factionDetailScrollKey = null; // 重新開啟：右側資訊從頂端開始
   await renderFactionPicker();
   const panel = document.getElementById('factionPicker');
   if (panel) {
@@ -1307,6 +1322,7 @@ async function openFactionPickerModal() {
 
 function closeFactionPickerModal() {
   factionPickerModalOpen = false;
+  setFactionPickerPadPhase('faction');
   const panel = document.getElementById('factionPicker');
   if (panel) {
     panel.style.display = 'none';
@@ -1454,6 +1470,7 @@ async function renderFactionPicker() {
         const bbtn = document.createElement('button');
         const isSelectedTown = activeBase === town;
         bbtn.className = `base-choice-btn${isSelectedTown ? ' active' : ''}`;
+        bbtn.dataset.baseTown = town;
         bbtn.textContent = baseDisplayName(town);
         bbtn.disabled = occupiedBases.has(town);
         bbtn.title = bbtn.disabled ? '此根據地已被其他玩家選擇' : '';
@@ -1466,7 +1483,159 @@ async function renderFactionPicker() {
       });
     }
   }
+  applyFactionPickerPadPhase();
 }
+
+// ------------------------------------------------------------ 陣營／根據地選擇：Joy-Con 階段流程
+// 陣營 →（mode≠direct 類別先選既有具體陣營）→ 根據地 → 閱讀陣營資訊 → A 最終確認。只由 controller_ui.js 的 factionPicker
+// scope 呼叫，選擇一律走既有按鈕的 onclick（selectCategory／chooseFaction／選根據地／confirmFactionChoice）；
+// 滑鼠／鍵盤流程不經過這裡，不改焦點也不改階段。指令表與提示文字在 controller_core.js（factionPickerCommand／factionPickerHint）。
+const FACTION_PICKER_PAD_GROUPS = Object.freeze({
+  faction: '#factionList .faction-choice-btn, #closeFactionPickerBtn',
+  variant: '#factionVariantList .faction-choice-btn',
+  base: '#factionBaseList .base-choice-btn',
+  read: '#confirmFactionBtn',
+});
+
+/** 方向焦點只停在目前階段的按鈕：其他階段的按鈕標 data-controller-skip（只影響 Joy-Con 焦點集合，不影響滑鼠／鍵盤）。 */
+function applyFactionPickerPadPhase() {
+  const picker = document.getElementById('factionPicker');
+  if (!picker) return;
+  picker.dataset.padPhase = factionPickerPadPhase;
+  const allowed = FACTION_PICKER_PAD_GROUPS[factionPickerPadPhase];
+  picker.querySelectorAll('button').forEach(btn => {
+    if (btn.matches(allowed)) btn.removeAttribute('data-controller-skip');
+    else btn.setAttribute('data-controller-skip', '');
+  });
+}
+
+function setFactionPickerPadPhase(phase) {
+  factionPickerPadPhase = FACTION_PICKER_PAD_GROUPS[phase] ? phase : 'faction';
+  applyFactionPickerPadPhase();
+}
+
+function factionPickerPadButtons(selector) {
+  return Array.from(document.querySelectorAll(`#factionPicker ${selector}`))
+    .filter(btn => !btn.disabled && btn.getClientRects().length > 0);
+}
+
+/** 進入某階段時的焦點：該階段已選定（active）的項目優先，其次第一個可用項目；閱讀階段＝既有確認鈕（可用時）。 */
+function factionPickerPadTarget(phase, preferTown = null) {
+  if (phase === 'read') return factionPickerPadButtons('#confirmFactionBtn')[0] || null;
+  const selector = phase === 'faction' ? '#factionList .faction-choice-btn'
+    : phase === 'variant' ? '#factionVariantList .faction-choice-btn' : '#factionBaseList .base-choice-btn';
+  const buttons = factionPickerPadButtons(selector);
+  return (preferTown && buttons.find(btn => btn.dataset.baseTown === preferTown))
+    || buttons.find(btn => btn.classList.contains('active')) || buttons[0] || null;
+}
+
+function enterFactionPickerPadPhase(phase, preferTown = null) {
+  setFactionPickerPadPhase(phase);
+  const target = factionPickerPadTarget(factionPickerPadPhase, preferTown);
+  const api = window.RedlineController;
+  if (target && api && typeof api.focusElement === 'function') api.focusElement(target);
+  if (api && typeof api.refreshHud === 'function') api.refreshHud();
+}
+
+/** 陣營（或具體陣營）已選定後：有可選根據地 → 根據地階段；沒有 → 直接閱讀（B 會回到陣營）。 */
+function enterFactionPickerPadAfterFaction() {
+  if (pendingFactionCategory && pendingFactionCategory.mode !== 'direct' && !pendingFactionChoice) {
+    enterFactionPickerPadPhase('variant');
+  } else if (factionPickerPadButtons('#factionBaseList .base-choice-btn').length) {
+    enterFactionPickerPadPhase('base');
+  } else {
+    enterFactionPickerPadPhase('read');
+  }
+}
+
+function factionPickerPadHasVariants() {
+  return !!pendingFactionCategory && pendingFactionCategory.mode !== 'direct';
+}
+
+function factionPickerPadHasBase() {
+  return !!document.querySelector('#factionPicker #factionBaseList .base-choice-btn');
+}
+
+/** 閱讀階段搖桿上下：只捲動右側陣營資訊面板（夾在 0～最底，不捲整頁或背景）。 */
+function scrollFactionDetailByPad(step) {
+  const panel = document.getElementById('factionDetailPanel');
+  if (!panel) return;
+  const max = Math.max(0, panel.scrollHeight - panel.clientHeight);
+  const delta = Math.max(60, Math.round(panel.clientHeight * 0.4));
+  panel.scrollTop = Math.min(max, Math.max(0, panel.scrollTop + step * delta));
+}
+
+async function runFactionPickerPadStep(work) {
+  factionPickerPadBusy = true;
+  try { await work(); } finally { factionPickerPadBusy = false; }
+}
+
+/**
+ * controller_ui.js 呼叫：command＝Core.factionPickerCommand 的結果，focusedEl＝目前 Joy-Con 焦點元素。
+ * 回傳 true＝已處理（含非同步進行中）；false＝交回既有 modal 流程（例如焦點在「返回作戰室」時的 A）。
+ */
+function runFactionPickerPadCommand(command, focusedEl) {
+  if (!factionPickerModalOpen || !command) return false;
+  if (factionPickerPadBusy) return command.cmd !== 'pass'; // 上一步的重繪尚未完成：不疊加輸入
+  const phase = factionPickerPadPhase;
+  switch (command.cmd) {
+    case 'none': return true;
+    case 'scroll': scrollFactionDetailByPad(command.step); return true;
+    case 'pick': {
+      const group = phase === 'faction' ? '#factionList .faction-choice-btn'
+        : phase === 'variant' ? '#factionVariantList .faction-choice-btn'
+          : phase === 'base' ? '#factionBaseList .base-choice-btn' : null;
+      if (!group || !focusedEl || !focusedEl.isConnected || !focusedEl.matches(`#factionPicker ${group}`)) return false;
+      if (focusedEl.disabled || typeof focusedEl.onclick !== 'function') return true;
+      const handler = focusedEl.onclick;
+      runFactionPickerPadStep(async () => {
+        await handler.call(focusedEl);
+        if (!factionPickerModalOpen) return;
+        if (phase === 'base') enterFactionPickerPadPhase('read');
+        else enterFactionPickerPadAfterFaction();
+      });
+      return true;
+    }
+    case 'confirm': {
+      const confirmBtn = factionPickerPadButtons('#confirmFactionBtn')[0];
+      if (!confirmBtn || typeof confirmBtn.onclick !== 'function') return true; // 尚不能確認（例如根據地已被選走）：不作用
+      const handler = confirmBtn.onclick;
+      runFactionPickerPadStep(async () => { await handler.call(confirmBtn); });
+      return true;
+    }
+    case 'back': {
+      if (phase === 'read') {
+        if (!factionPickerPadHasBase()) {
+          enterFactionPickerPadPhase(factionPickerPadHasVariants() ? 'variant' : 'faction');
+          return true;
+        }
+        const town = pendingFactionBaseChoice;
+        pendingFactionBaseChoice = null;
+        pendingFactionBaseGroup = null;
+        runFactionPickerPadStep(async () => {
+          await renderFactionPicker();
+          if (factionPickerModalOpen) enterFactionPickerPadPhase('base', town);
+        });
+        return true;
+      }
+      if (phase === 'base') { enterFactionPickerPadPhase(factionPickerPadHasVariants() ? 'variant' : 'faction'); return true; }
+      if (phase === 'variant') { enterFactionPickerPadPhase('faction'); return true; }
+      return false;
+    }
+    default: return false;
+  }
+}
+
+window.RedlineFactionPickerPad = {
+  phase: () => factionPickerPadPhase,
+  run: runFactionPickerPadCommand,
+  /** 提示文字所需的狀態（Core.factionPickerHint 的 opts）。 */
+  hintContext: () => ({
+    backTo: factionPickerPadHasVariants() ? 'variant' : 'faction',
+    canConfirm: factionPickerPadButtons('#confirmFactionBtn').length > 0,
+    hasBase: factionPickerPadHasBase(),
+  }),
+};
 
 async function joinRoom() {
   gameId = (document.getElementById('roomId')?.value || '').trim();
@@ -1479,6 +1648,7 @@ async function joinRoom() {
     return;
   }
   const name = document.getElementById('playerName').value;
+  const nameAuto = playerNameIsSystemDefault();
 
   const savedSession = storedRedlineSessions()[gameId] || null;
   const payload = {game_id: gameId, name, device_id: redlineDeviceId()};
@@ -1505,7 +1675,8 @@ async function joinRoom() {
   playerId = data.player_id;
   resumeToken = data.resume_token;
   latestLobbyState = null;
-  saveRedlineSession(name);
+  saveRedlineSession(name, nameAuto);
+  markPlayerNameUsed();
   await loadFactions();
   startLobbySync();
   await openFactionPickerModal();
@@ -1513,11 +1684,11 @@ async function joinRoom() {
 }
 
 async function startGame() {
-  const marketMode = document.getElementById('marketModeSelect')?.value || 'sample_53';
+  // 難度以伺服器保存的房間設定為準；/start 不帶 market_mode，只證明房主身份。
   const res = await fetch('/start', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({game_id: gameId, player_id: playerId, market_mode: marketMode})
+    body: JSON.stringify({game_id: gameId, player_id: playerId, resume_token: resumeToken})
   });
 
   const data = await res.json();
@@ -1571,6 +1742,8 @@ function connect(options = {}) {
     clearTimeout(wsReconnectTimer);
     wsReconnectTimer = null;
   }
+  // 客廳輪流：本機 hot-seat 席位在第一份 state 確認行動者之前一律遮住；其他遊戲不介入。
+  window.RedlineHotSeat?.onConnect?.(gameId, playerId);
   ws = resumeToken ? new WebSocket(websocketUrl(), resumeToken) : new WebSocket(websocketUrl());
 
   ws.onopen = () => {
@@ -1582,6 +1755,12 @@ function connect(options = {}) {
   ws.onmessage = async (event) => {
     const state = JSON.parse(event.data);
     window.lastGameState = state;
+    // 客廳輪流：依伺服器權威行動者先套用交接遮罩，再 render（遮罩在畫面更新前就位）。
+    window.RedlineHotSeat?.onState?.(state, gameId, playerId);
+    if (aiPublicHoldRequestedFor !== ws && window.RedlineHotSeat?.wantsAiPublicHold?.(state)) {
+      aiPublicHoldRequestedFor = ws; // 每條連線只要求一次；伺服器回的 state 會帶 public_hold: true
+      sendAction('ai_public_hold', {enabled: true});
+    }
     await render(state);
     syncStrategicMap(state);
   };
@@ -1625,6 +1804,8 @@ function connect(options = {}) {
 
   initTabs();
 }
+
+let aiPublicHoldRequestedFor = null;
 
 function sendAction(action, payload = {}) {
   if ((action === 'resolve_choice' || action === 'cancel_choice') && !payload.choice_id) {
@@ -1718,26 +1899,39 @@ function updatePurchaseSelectionControls(state = window.lastGameState || {}) {
   const selection = purchaseSelectionDetails(state);
   summary.textContent = selection.cards.length
     ? `已選 ${selection.cards.length} 張｜合計 ${purchaseCostText(selection.total)}`
-    : '請勾選要購買的卡牌';
+    : '';
   clearBtn.disabled = selection.cards.length === 0;
   buyBtn.disabled = selection.cards.length === 0 || !selection.affordable;
-  buyBtn.textContent = selection.cards.length ? `購買所選 ${selection.cards.length} 張` : '購買所選卡牌';
+  buyBtn.textContent = '購買';
   buyBtn.title = selection.cards.length > 0 && !selection.affordable ? '所選卡牌的合計費用超過目前資源。' : '';
 }
 
 function togglePurchaseSelection(event, index) {
   event.stopPropagation();
-  if (event.target.checked) selectedPurchaseIndices.add(index);
+  const button = event.currentTarget;
+  if (!(button instanceof HTMLButtonElement) || button.disabled) return;
+  const selected = !selectedPurchaseIndices.has(index);
+  if (selected) selectedPurchaseIndices.add(index);
   else selectedPurchaseIndices.delete(index);
-  const card = event.target.closest('.card');
-  if (card) card.classList.toggle('purchase-card-selected', event.target.checked);
+  const item = button.closest('.purchase-card-item');
+  const card = item?.querySelector('.card');
+  if (card) card.classList.toggle('purchase-card-selected', selected);
+  button.classList.toggle('is-selected', selected);
+  button.setAttribute('aria-pressed', String(selected));
+  const label = button.querySelector('.purchase-card-select-label');
+  if (label) label.textContent = selected ? '取消選擇' : '選擇卡牌';
   updatePurchaseSelectionControls();
 }
 
 function clearPurchaseSelection() {
   selectedPurchaseIndices.clear();
-  document.querySelectorAll('.purchase-card-checkbox input').forEach(input => { input.checked = false; });
   document.querySelectorAll('.purchase-card-selected').forEach(card => card.classList.remove('purchase-card-selected'));
+  document.querySelectorAll('.purchase-card-select-button.is-selected').forEach(button => {
+    button.classList.remove('is-selected');
+    button.setAttribute('aria-pressed', 'false');
+    const label = button.querySelector('.purchase-card-select-label');
+    if (label) label.textContent = '選擇卡牌';
+  });
   updatePurchaseSelectionControls();
 }
 
@@ -2609,6 +2803,8 @@ function renderChoiceModal(state) {
       };
       cards.appendChild(btn);
     });
+  } else if (choiceType === 'target_choice' && choice.multi_select) {
+    renderMultiTargetChoice(choice, cards, resolveCurrentChoice);
   } else if (choiceType === 'target_choice' || (choiceType === 'support_flow_choice' && choice.step === 'target')) {
     const row = document.createElement('div');
     row.className = 'modal-choice-row';
@@ -2647,6 +2843,66 @@ function renderChoiceModal(state) {
     closeBtn.style.display = 'none';
   }
   overlay.style.display = 'flex';
+}
+
+// 多選玩家目標（情報網 A：在 1 至 count 位其他玩家棄牌堆各放入 1 張內鬥）。點選切換、上限內才可加選，
+// 確認鈕在已選人數合法時才啟用；送出 target_player_ids，伺服器再完整驗證。按鈕文字固定為玩家名稱
+// （已選以 aria-pressed／樣式表示），Joy-Con 焦點靠文字 sig 重綁時才不會因勾選而跳走。
+function renderMultiTargetChoice(choice, container, resolveCurrentChoice) {
+  const targets = (choice.targets || []).filter(entry => entry && typeof entry.id === 'string');
+  const maxCount = Math.max(1, Math.min(Number(choice.count || 1), targets.length));
+  const minCount = Math.max(1, Number(choice.min_count ?? 1));
+  if (multiTargetChoiceSelection.choiceId !== choice.choice_id) {
+    multiTargetChoiceSelection = { choiceId: choice.choice_id, ids: [] };
+  }
+  const offeredIds = new Set(targets.map(entry => entry.id));
+  const selected = multiTargetChoiceSelection.ids.filter(id => offeredIds.has(id)).slice(0, maxCount);
+  multiTargetChoiceSelection.ids = selected;
+
+  const row = document.createElement('div');
+  row.className = 'modal-choice-row divide-target-choices multi-target-choices';
+  const summary = document.createElement('div');
+  summary.className = 'choice-multi-selection-summary';
+  const confirmBtn = document.createElement('button');
+  confirmBtn.id = 'choiceMultiTargetConfirm';
+  confirmBtn.className = 'modal-choice-btn divide-target-confirm';
+  confirmBtn.type = 'button';
+  const selectionValid = () => selected.length >= minCount && selected.length <= maxCount;
+  const refresh = () => {
+    summary.textContent = `已選 ${selected.length}／${maxCount} 位（可選 ${minCount}～${maxCount} 位）`;
+    confirmBtn.textContent = `確認選擇（${selected.length}／${maxCount}）`;
+    confirmBtn.disabled = !selectionValid();
+  };
+  row.appendChild(summary);
+  targets.forEach((entry) => {
+    const btn = document.createElement('button');
+    btn.className = 'modal-choice-btn divide-target-choice multi-target-choice';
+    btn.type = 'button';
+    btn.dataset.targetPlayerId = entry.id;
+    btn.textContent = entry.label || entry.id;
+    const sync = () => {
+      const on = selected.includes(entry.id);
+      btn.classList.toggle('divide-target-selected', on);
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    };
+    btn.onclick = () => {
+      const at = selected.indexOf(entry.id);
+      if (at >= 0) selected.splice(at, 1);
+      else if (selected.length < maxCount) selected.push(entry.id);
+      sync();
+      refresh();
+    };
+    sync();
+    row.appendChild(btn);
+  });
+  confirmBtn.onclick = () => {
+    if (!selectionValid()) return;
+    resolveCurrentChoice(null, { target_player_ids: [...selected] });
+    closeChoiceModal();
+  };
+  row.appendChild(confirmBtn);
+  refresh();
+  container.appendChild(row);
 }
 
 const EVENT_CARD_ART_NAMES = new Set([
@@ -2811,20 +3067,41 @@ function renderCurrentEvent(state) {
   }
   const statusText = eventStatusText(event);
   tab.style.display = 'inline-flex';
-  tab.textContent = `事件卡｜${event.name || '目前事件'}`;
-  tab.setAttribute('aria-label', `${event.name || '目前事件'}，${statusText}，點擊查看完整事件卡`);
-  tab.setAttribute('title', `${event.name || '目前事件'}｜${statusText}｜點擊查看完整事件卡`);
+  tab.textContent = '事件卡';
+  tab.setAttribute('aria-label', `事件卡，${statusText}，點擊查看完整事件卡`);
+  tab.setAttribute('title', `事件卡｜${statusText}｜點擊查看完整事件卡`);
 
   const revealCard = document.getElementById('eventRevealCard');
   const revealOverlay = document.getElementById('eventRevealModal');
   if (revealOverlay?.style.display === 'flex' && revealCard) {
     revealCard.innerHTML = eventCardMarkup(event, true);
   }
-  const revealKey = `${state.turn ?? 0}:${event.id || event.name || 'event'}`;
-  if (lastEventRevealKey !== revealKey) {
-    lastEventRevealKey = revealKey;
-    openCurrentEventReveal();
-  }
+  // 取消反應（爆料黑幕／產業滲透／情報網）視窗開著時不自動揭示，且同一次觸發在反應結束後（含客廳輪流整頁重新載入）也不補開；
+  // 判定見 event_reveal_core.js。手動點「事件卡」分頁照常可看。
+  const decision = window.RedlineEventRevealCore.decideAutoReveal({
+    state,
+    viewerId: playerId,
+    lastKey: lastEventRevealKey,
+    suppressed: loadEventRevealSuppressed(),
+    lastReactionChoiceId: lastReactionRevealChoiceId,
+  });
+  lastReactionRevealChoiceId = decision.reactionChoiceId;
+  if (decision.record) saveEventRevealSuppressed(decision.record);
+  if (decision.closeForReaction) closeEventReveal();
+  lastEventRevealKey = decision.key;
+  if (decision.open) openCurrentEventReveal();
+}
+
+function loadEventRevealSuppressed() {
+  const Core = window.RedlineEventRevealCore;
+  try { return Core.normalizeSuppressed(JSON.parse(sessionStorage.getItem(Core.STORAGE_KEY) || 'null'), gameId); } catch { return []; }
+}
+
+function saveEventRevealSuppressed(token) {
+  const Core = window.RedlineEventRevealCore;
+  try {
+    sessionStorage.setItem(Core.STORAGE_KEY, JSON.stringify(Core.rememberSuppressed(loadEventRevealSuppressed(), gameId, token)));
+  } catch { /* storage may be blocked */ }
 }
 
 function minimizeEraAchievement() {
@@ -2909,7 +3186,7 @@ function renderEraAchievement(state) {
     return;
   }
 
-  const key = `${info.id}:${info.remaining ?? 'perm'}`;
+  const key = `era:${info.id}:${info.remaining ?? 'perm'}`;
   const isOpen = overlay.style.display === 'flex';
   // 浮窗開著，而且玩家正透過分頁查看其他時代時，不要被最新通知蓋掉內容。
   const viewing = isOpen && eraAchievementViewId && eraAchievementViewId !== info.id
@@ -2917,10 +3194,23 @@ function renderEraAchievement(state) {
     : info;
   fillEraAchievementModal(viewing || info);
 
-  if (lastEraNotificationKey !== key) {
+  // 時代關卡與事件卡採相同規則：只要這次動作觸發取消機會，就不自動顯示；取消或放棄後也不補顯示。
+  // 分頁列的按鈕仍直接呼叫 openEraAchievementById()，所以手動查看不受影響。
+  const decision = window.RedlineEventRevealCore.decideAutoReveal({
+    state,
+    viewerId: playerId,
+    lastKey: lastEraNotificationKey,
+    suppressed: loadEventRevealSuppressed(),
+    lastReactionChoiceId: lastEraReactionChoiceId,
+    keyOverride: key,
+  });
+  lastEraReactionChoiceId = decision.reactionChoiceId;
+  if (decision.record) saveEventRevealSuppressed(decision.record);
+  if (decision.closeForReaction) closeEraAchievementModal();
+  lastEraNotificationKey = decision.key;
+  if (decision.open) {
     overlay.style.display = 'flex';
     fillEraAchievementModal(info);
-    lastEraNotificationKey = key;
   }
 }
 
@@ -2963,7 +3253,7 @@ function openEthnicRitualGuessModal() {
 
 function strategicMapUrl() {
   const url = new URL('/static/leaflet_game_map.html', window.location.origin);
-  url.searchParams.set('v', 'contextual-route-highlight-20261004');
+  url.searchParams.set('v', 'map-focus-bold-20261029');
   if (gameId) url.searchParams.set('gameId', gameId);
   if (playerId) url.searchParams.set('playerId', playerId);
   return url.toString();
@@ -3115,7 +3405,7 @@ function renderFactionActionPanel(state) {
 
   if (faction === 'aomen') {
     showActionPanel(
-      '澳門可在行動階段發動一次賭徒耳語：將 1 張手牌放進牌庫底，猜牌庫頂牌購買費用奇偶；若猜中獲得 3 點宣傳與 3 點資金。',
+      '將 1 張手牌放入牌庫底，再猜牌庫頂牌購買費用的奇偶；猜中獲得 3 點宣傳與 3 點資金。',
       '發動 賭徒耳語',
       openGamblerGuessModal
     );
@@ -3124,7 +3414,7 @@ function renderFactionActionPanel(state) {
 
   if (faction === 'reform_opening') {
     showActionPanel(
-      '改革開放派可在行動階段發動一次紅軍派系：檢視牌庫頂 3 張牌，以任意順序放回牌庫頂，然後抽 1 張牌。',
+      '檢視牌庫頂 3 張牌，以任意順序放回牌庫頂，然後抽 1 張牌。',
       '發動 紅軍派系',
       () => sendAction('faction_action', { name: '紅軍派系' })
     );
@@ -3133,7 +3423,7 @@ function renderFactionActionPanel(state) {
 
   if (faction === 'liberals') {
     showActionPanel(
-      '自由派可在行動階段發動一次立場試探：展示牌庫頂牌；若購買費用為奇數則加入手牌，若為偶數則放入棄牌堆。',
+      '展示牌庫頂牌；購買費用為奇數時加入手牌，為偶數時放入棄牌堆。',
       '發動 立場試探',
       () => sendAction('faction_action', { name: '立場試探' })
     );
@@ -3143,7 +3433,7 @@ function renderFactionActionPanel(state) {
   const ethnicRitualFactions = new Set(['zhuang','yi','bai','hani','dai','miao','tujia','dong','buyei','yao','li']);
   if (ethnicRitualFactions.has(faction)) {
     showActionPanel(
-      '可在行動階段發動一次民族祭儀：猜中可獲得 2 點宣傳與 2 點資金；沒猜中則獲得 2 點宣傳或 2 點資金（二選一）。',
+      '猜牌庫頂牌購買費用的奇偶。猜中獲得 2 點宣傳與 2 點資金；猜錯則選擇獲得 2 點宣傳或 2 點資金。',
       '發動 民族祭儀',
       openEthnicRitualGuessModal
     );
@@ -3936,7 +4226,8 @@ function openVictoryArtViewer() {
   const viewerImage = document.getElementById('victoryArtViewerImage');
   const sourceImage = document.getElementById('victoryEndingArt');
   const closeButton = document.getElementById('victoryArtViewerClose');
-  if (!viewer || !viewerImage || !sourceImage?.complete || !sourceImage.naturalWidth) return;
+  if (victoryArtViewerIsOpen()) return true;
+  if (!viewer || !viewerImage || !sourceImage?.complete || !sourceImage.naturalWidth) return false;
 
   victoryArtViewerReturnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   viewerImage.src = sourceImage.currentSrc || sourceImage.src;
@@ -3945,7 +4236,67 @@ function openVictoryArtViewer() {
   viewer.setAttribute('aria-hidden', 'false');
   document.body.classList.add('victory-art-viewer-open');
   requestAnimationFrame(() => closeButton?.focus());
+  return true;
 }
+
+// 遊戲結束後保留最後一張勝利插畫。勝利視窗縮小後，Joy-Con／鍵盤 Y 仍可重新開啟；
+// 這只重開既有圖片 viewer，不重新執行勝利結算、音效或任何遊戲狀態變更。
+window.RedlineVictoryArt = Object.freeze({
+  available() {
+    const state = window.lastGameState || {};
+    const sourceImage = document.getElementById('victoryEndingArt');
+    return Boolean(state.winner && sourceImage?.complete && sourceImage.naturalWidth);
+  },
+  open() {
+    return this.available() ? openVictoryArtViewer() : false;
+  },
+  isOpen: victoryArtViewerIsOpen,
+});
+
+// Joy-Con 說明圖（遊戲選單內的「Joy-Con 功能表」開啟；不是遊戲頁面）。關閉後焦點回到導覽列的「遊戲選單」按鈕。
+function joyconHelpIsOpen() {
+  return document.getElementById('joyconHelpModal')?.getAttribute('aria-hidden') === 'false';
+}
+
+function openJoyconHelp() {
+  const modal = document.getElementById('joyconHelpModal');
+  if (!modal || joyconHelpIsOpen()) return;
+  modal.style.display = 'flex';
+  modal.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('joycon-help-open');
+  const scroll = document.getElementById('joyconHelpScroll');
+  if (scroll) { scroll.scrollTop = 0; scroll.scrollLeft = 0; }
+  requestAnimationFrame(() => document.getElementById('joyconHelpCloseBtn')?.focus());
+}
+
+function closeJoyconHelp() {
+  const modal = document.getElementById('joyconHelpModal');
+  if (!modal || !joyconHelpIsOpen()) return;
+  modal.style.display = 'none';
+  modal.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('joycon-help-open');
+  const btn = document.getElementById('gameMenuBtn');
+  if (btn?.isConnected) btn.focus({ preventScroll: true });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const modal = document.getElementById('joyconHelpModal');
+  if (!modal) return;
+  document.getElementById('joyconHelpCloseBtn')?.addEventListener('click', () => closeJoyconHelp());
+  modal.addEventListener('click', (event) => { if (event.target === modal) closeJoyconHelp(); });
+  document.addEventListener('keydown', (event) => {
+    if (!joyconHelpIsOpen()) return;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeJoyconHelp();
+    } else if (event.key === 'Tab') {
+      const close = document.getElementById('joyconHelpCloseBtn');
+      const scroll = document.getElementById('joyconHelpScroll');
+      event.preventDefault();
+      (document.activeElement === close ? scroll : close)?.focus();
+    }
+  });
+});
 
 function closeVictoryArtViewer(restoreFocus = true) {
   const viewer = document.getElementById('victoryArtViewer');
@@ -4173,13 +4524,21 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('victoryArtViewerImage')?.addEventListener('click', event => event.stopPropagation());
   document.getElementById('victoryArtViewerClose')?.addEventListener('click', () => closeVictoryArtViewer());
   document.addEventListener('keydown', (event) => {
-    if (!victoryArtViewerIsOpen()) return;
-    if (event.key === 'Escape') {
+    if (victoryArtViewerIsOpen()) {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeVictoryArtViewer();
+      } else if (event.key === 'Tab') {
+        event.preventDefault();
+        document.getElementById('victoryArtViewerClose')?.focus();
+      }
+      return;
+    }
+    const target = event.target;
+    const typing = target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
+    if (!typing && !event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey
+      && event.key.toLowerCase() === 'y' && window.RedlineVictoryArt?.open()) {
       event.preventDefault();
-      closeVictoryArtViewer();
-    } else if (event.key === 'Tab') {
-      event.preventDefault();
-      document.getElementById('victoryArtViewerClose')?.focus();
     }
   });
 
@@ -4346,6 +4705,12 @@ function renderPeerActionNotice(state) {
     return;
   }
 
+  if (window.RedlineHotSeat?.aiPublicActive?.()) {
+    // 客廳輪流：AI 紅軍的行動已由置中的公開視窗顯示；消耗相同 log，避免再疊一層玩家動態。
+    closePeerActionNotice(entries);
+    return;
+  }
+
   const me = (state.players || []).find(p => p.id === playerId);
   if (me && state.current_player === me.name) {
     // 前一位玩家的廣播不應擋住本人新回合；連縮小狀態一併收掉，且消耗到最新 log，
@@ -4494,11 +4859,7 @@ async function render(state) {
       topdeckBtn.title = candidateCount === 0 ? '本回合尚未購買可頂的牌' : '';
     }
 
-    if (gameShell && hud) {
-      const contentTop = hud.offsetTop + hud.offsetHeight + 8;
-      gameShell.style.top = `${contentTop}px`;
-      gameShell.style.height = `${Math.max(0, 720 - contentTop)}px`;
-    }
+    if (gameShell && hud) layoutGameShell();
   }
 
   // ✅ 地圖節點不在 render 中重建
@@ -4507,6 +4868,9 @@ async function render(state) {
   // Hand
   const handDiv = document.getElementById('hand');
   if (handDiv) {
+    // 手牌每次 render 都整列重建：清空會把 #hand 的水平捲動歸零。記下來、重建後還原（超過可視張數時，
+    // Joy-Con 焦點已捲入的後段手牌不會因為一次狀態推送就被捲回第一張）。
+    const handScrollLeft = handDiv.scrollLeft;
     handDiv.innerHTML = '';
     const me = (state.players || []).find(p => p.id === playerId);
     const isMyTurn = isMyTurnState(state);
@@ -4578,7 +4942,7 @@ async function render(state) {
               return `<button class="hand-card-action-btn" type="button" ${resourceDisabledAttr} title="${escapeHtml(resourceTitle)}" data-card-index="${i}" data-card-name="${cardAttr}" data-card-mode="resource">資源</button>`;
             })();
         handDiv.innerHTML += `
-          <div class='card hand-card ${colorClass}' data-card-name="${cardAttr}" data-card-zone="hand" data-card-static="false" data-card-variant-index="${variantInfo?.variant_index ?? ''}" onclick="selectCardDetail(event.currentTarget)">
+          <div class='card hand-card ${colorClass}' data-card-name="${cardAttr}" data-card-zone="hand" data-card-index="${i}" data-card-static="false" data-card-variant-index="${variantInfo?.variant_index ?? ''}" onclick="selectCardDetail(event.currentTarget)">
             ${renderCardFace(card, 'hand', false, true, null, variantInfo)}
             <div class="hand-card-actions">
               ${firstButtonHtml}
@@ -4588,6 +4952,7 @@ async function render(state) {
       });
       bindHandCardActionButtons(handDiv);
     }
+    handDiv.scrollLeft = handScrollLeft;
   }
 
   // Purchase
@@ -4630,15 +4995,27 @@ async function render(state) {
               ? '請先處理目前待選擇效果。'
               : isStatic && (staticSupply == null || staticSupply <= 0)
                 ? '常設供應已售完'
-                : `勾選此卡（${costText}）`;
+                : `選擇此卡（${costText}）`;
       const variantInfo = (state.purchase_area_variants || [])[i] || null;
-      const isSelected = selectedPurchaseIndices.has(i);
+      let isSelected = selectedPurchaseIndices.has(i);
+      if (isSelected && !canSelect) {
+        selectedPurchaseIndices.delete(i);
+        isSelected = false;
+      }
+      const buttonLabel = canSelect ? (isSelected ? '取消選擇' : '選擇卡牌') : '不可選擇';
+      const remainingHtml = isStatic
+        ? `<span class="purchase-card-remaining">剩 ${escapeHtml(staticSupply ?? 0)}</span>`
+        : '';
       container.innerHTML += `
-        <div class='card ${typeClass}${supportClass} ${colorClass}${isSelected ? ' purchase-card-selected' : ''}' data-card-name="${escapeHtml(card)}" data-card-zone="purchase" data-card-static="${isStatic}" data-card-count="${isStatic && staticSupply != null ? staticSupply : ''}" data-card-variant-index="${variantInfo?.variant_index ?? ''}" onclick="selectCardDetail(event.currentTarget)">
-          ${renderCardFace(card, 'purchase', isStatic, true, isStatic ? staticSupply : null, variantInfo)}
-          <label class="purchase-card-checkbox" title="${escapeHtml(selectTitle)}" onclick="event.stopPropagation()">
-            <input type="checkbox" data-purchase-index="${i}" aria-label="勾選 ${escapeHtml(card)}" ${isSelected ? 'checked' : ''} ${canSelect ? '' : 'disabled aria-disabled="true"'} onchange="togglePurchaseSelection(event, ${i})">
-          </label>
+        <div class="purchase-card-item">
+          <div class='card ${typeClass}${supportClass} ${colorClass}${isSelected ? ' purchase-card-selected' : ''}' data-card-name="${escapeHtml(card)}" data-card-zone="purchase" data-card-static="${isStatic}" data-card-count="${isStatic && staticSupply != null ? staticSupply : ''}" data-card-variant-index="${variantInfo?.variant_index ?? ''}" onclick="selectCardDetail(event.currentTarget)">
+            ${renderCardFace(card, 'purchase', isStatic, true, isStatic ? staticSupply : null, variantInfo)}
+            <span class="purchase-card-selected-overlay" aria-hidden="true"></span>
+          </div>
+          <button class="purchase-card-select-button${isSelected ? ' is-selected' : ''}" type="button" data-purchase-index="${i}" aria-label="${escapeHtml(buttonLabel)}：${escapeHtml(card)}" aria-pressed="${isSelected}" title="${escapeHtml(selectTitle)}" ${canSelect ? '' : 'disabled aria-disabled="true"'} onclick="togglePurchaseSelection(event, ${i})">
+            <span class="purchase-card-select-label">${buttonLabel}</span>
+            ${remainingHtml}
+          </button>
         </div>`;
     });
     updatePurchaseSelectionControls(state);

@@ -155,6 +155,19 @@ def test_intel_network_custom_payload_and_mapping_copies():
     assert enemy_c.organizations == {"倫敦": 1}
 
 
+def test_intel_network_pin_noop_event_fixes_round_event():
+    runtime = _runtime()
+    routes = IntelNetworkTestRoutes(lambda: runtime)
+    for _ in range(20):
+        result = routes.test_setup_intel_network_proof({"pin_noop_event": True})
+        game = runtime.manager.games[result["game_id"]]
+        assert game.current_event["name"] == "歲月靜好"
+        assert game.event_progress["status"] == "idle" and game.event_progress["settled"] is True
+        assert game.event_modifiers == []
+        assert game.pending_choice is None
+        assert result["state"]["current_event"]["name"] == "歲月靜好"
+
+
 @pytest.mark.parametrize(
     ("value", "expected_count"),
     [(None, 1), (0, 1), (False, 1), (-2, 1), (2.9, 2), ("4", 4)],

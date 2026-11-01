@@ -266,7 +266,7 @@ def main() -> None:
         occupied_server_result = visitor.evaluate(
             """async () => (await fetch('/choose-faction', {
               method: 'POST', headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({game_id: gameId, player_id: playerId, faction_id: 'mongol', base_name: '東京'}),
+              body: JSON.stringify({game_id: gameId, player_id: playerId, resume_token: resumeToken, faction_id: 'mongol', base_name: '東京'}),
             })).json()"""
         )
         record(

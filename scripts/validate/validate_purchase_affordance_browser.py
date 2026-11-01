@@ -30,13 +30,14 @@ def make_formal_game():
         ('hk', joined['player_id'], 'hong_kong', '香港城'),
     ]
     for name, pid, faction_id, base_name in players:
-        chosen = post_json('/choose-faction', {'game_id': game_id, 'player_id': pid, 'faction_id': faction_id, 'base_name': base_name})
+        token = tokens[name]
+        chosen = post_json('/choose-faction', {'game_id': game_id, 'player_id': pid, 'resume_token': token, 'faction_id': faction_id, 'base_name': base_name})
         if chosen.get('error'):
             raise AssertionError(f'choose {name}: {chosen}')
-        ready = post_json('/ready', {'game_id': game_id, 'player_id': pid, 'ready': True})
+        ready = post_json('/ready', {'game_id': game_id, 'player_id': pid, 'resume_token': token, 'ready': True})
         if ready.get('error'):
             raise AssertionError(f'ready {name}: {ready}')
-    started = post_json('/start', {'game_id': game_id, 'player_id': host_id, 'market_mode': 'sample_53'})
+    started = post_json('/start', {'game_id': game_id, 'player_id': host_id, 'resume_token': tokens['host'], 'market_mode': 'sample_53'})
     if started.get('error'):
         raise AssertionError(started)
     return game_id, {name: pid for name, pid, *_ in players}, tokens
@@ -57,8 +58,9 @@ def wait_state(page):
     return page.evaluate('window.lastGameState')
 
 
-def static_card_checkbox(page, card_name='宣傳家'):
-    return page.locator('#purchaseStatic .card').filter(has_text=card_name).locator('.purchase-card-checkbox input').first
+def static_card_select_button(page, card_name='宣傳家'):
+    item = page.locator('#purchaseStatic .purchase-card-item').filter(has=page.locator(f'[data-card-name="{card_name}"]')).first
+    return item.locator('.purchase-card-select-button').first
 
 
 def play_follower_resources(page, count=3):
@@ -96,20 +98,77 @@ def main():
         meta = page.locator('#phaseActionMeta').inner_text(timeout=5000)
         advance_text = page.locator('#advanceStepBtn').inner_text(timeout=5000)
         advance_display = page.locator('#advanceStepBtn').evaluate('el => getComputedStyle(el).display')
+        ui_geometry = page.evaluate("""() => {
+          const rect = (selector) => {
+            const el = document.querySelector(selector);
+            if (!el) return null;
+            const box = el.getBoundingClientRect();
+            return {left: box.left, top: box.top, right: box.right, bottom: box.bottom, width: box.width, height: box.height};
+          };
+          const images = [...document.querySelectorAll('#commandGrid .playable-card-art-image')];
+          const staticItem = document.querySelector('#purchaseStatic .purchase-card-item');
+          const cardBox = staticItem?.querySelector('.card')?.getBoundingClientRect();
+          const buttonBox = staticItem?.querySelector('.purchase-card-select-button')?.getBoundingClientRect();
+          const labelBox = staticItem?.querySelector('.purchase-card-select-label')?.getBoundingClientRect();
+          const countBox = staticItem?.querySelector('.purchase-card-remaining')?.getBoundingClientRect();
+          return {
+            randomPanel: rect('#randomMarketPanel'),
+            staticPanel: rect('#controlPanel'),
+            handPanel: rect('#handPanel'),
+            handCard: rect('#hand .hand-card'),
+            cardWidth: cardBox?.width ?? null,
+            buttonWidth: buttonBox?.width ?? null,
+            labelCenterDelta: labelBox && buttonBox ? Math.abs((labelBox.left + labelBox.width / 2) - (buttonBox.left + buttonBox.width / 2)) : null,
+            countRightInset: countBox && buttonBox ? buttonBox.right - countBox.right : null,
+            halfHeightImages: images.length,
+            wrongRuntimeImages: images.filter((img) => !img.src.includes('/static/card-art-half-height/')).map((img) => img.src),
+            legacyCheckboxes: document.querySelectorAll('.purchase-card-checkbox').length,
+          };
+        }""")
+        ui_contract_ok = (
+            ui_geometry['randomPanel']['top'] < ui_geometry['staticPanel']['top'] < ui_geometry['handPanel']['top']
+            and abs(ui_geometry['cardWidth'] - ui_geometry['buttonWidth']) <= 1
+            and ui_geometry['labelCenterDelta'] <= 1
+            and ui_geometry['countRightInset'] >= 4
+            and ui_geometry['handCard']['bottom'] <= ui_geometry['handPanel']['bottom']
+            and ui_geometry['halfHeightImages'] >= 14
+            and not ui_geometry['wrongRuntimeImages']
+            and ui_geometry['legacyCheckboxes'] == 0
+        )
         shot1 = screenshot_dir / '01_initial_action_phase_no_continue_button.png'
         page.screenshot(path=str(shot1), full_page=True)
         checks.append({
             'name': 'initial_action_phase_offers_single_end_action_button',
-            'passed': state.get('turn_phase') == 'action' and '繼續行動階段' not in meta and advance_text == '結束行動' and advance_display != 'none',
-            'details': {'turn_phase': state.get('turn_phase'), 'meta': meta, 'advance_text': advance_text, 'advance_display': advance_display, 'screenshot': str(shot1.relative_to(BASE))},
+            'passed': state.get('turn_phase') == 'action' and '繼續行動階段' not in meta and advance_text == '結束行動' and advance_display != 'none' and ui_contract_ok,
+            'details': {'turn_phase': state.get('turn_phase'), 'meta': meta, 'advance_text': advance_text, 'advance_display': advance_display, 'ui_geometry': ui_geometry, 'screenshot': str(shot1.relative_to(BASE))},
         })
 
-        # 出牌與購買同屬一個行動階段：不必先按 advance，購買勾選框在 action 就已可用；
-        # 資源不足時擋在確認視窗（勾選仍可，確認鈕停用並顯示「資源不足」）。
+        # 出牌與購買同屬一個行動階段：不必先按 advance，購買選擇按鈕在 action 就已可用；
+        # 資源不足時擋在確認視窗（仍可選擇，確認鈕停用並顯示「資源不足」）。
         no_resource_state = page.evaluate('window.lastGameState')
-        no_resource_selectable = not static_card_checkbox(page).is_disabled()
-        static_card_checkbox(page).check(timeout=5000)
+        no_resource_selectable = not static_card_select_button(page).is_disabled()
+        static_card_select_button(page).click(timeout=5000)
         page.wait_for_timeout(250)
+        selected_visual = page.evaluate("""() => {
+          const item = document.querySelector('#purchaseStatic .purchase-card-item');
+          const button = item?.querySelector('.purchase-card-select-button');
+          const overlay = item?.querySelector('.purchase-card-selected-overlay');
+          const modal = document.querySelector('#cardPreviewModal');
+          return {
+            buttonText: button?.querySelector('.purchase-card-select-label')?.textContent?.trim(),
+            buttonBackground: button ? getComputedStyle(button).backgroundColor : null,
+            overlayDisplay: overlay ? getComputedStyle(overlay).display : null,
+            overlayBackground: overlay ? getComputedStyle(overlay).backgroundColor : null,
+            previewDisplayAfterButtonClick: modal ? getComputedStyle(modal).display : null,
+          };
+        }""")
+        page.locator('#purchaseStatic .purchase-card-item .card').first.click(timeout=5000)
+        page.wait_for_timeout(100)
+        full_preview = page.evaluate("""() => ({
+          display: getComputedStyle(document.querySelector('#cardPreviewModal')).display,
+          src: document.querySelector('#cardPreviewContent .playable-card-art-image')?.src || '',
+        })""")
+        page.evaluate('closeCardPreview()')
         no_resource_buy_disabled = page.locator('#openPurchaseConfirmBtn').is_disabled()
         no_resource_buy_title = page.locator('#openPurchaseConfirmBtn').get_attribute('title')
         shot2 = screenshot_dir / '02_action_phase_no_resources_buy_disabled.png'
@@ -118,8 +177,21 @@ def main():
         page.wait_for_timeout(200)
         checks.append({
             'name': 'purchase_selectable_in_action_phase_but_buy_blocked_without_resources',
-            'passed': no_resource_state.get('turn_phase') == 'action' and no_resource_selectable and no_resource_buy_disabled and '超過目前資源' in (no_resource_buy_title or ''),
-            'details': {'turn_phase': no_resource_state.get('turn_phase'), 'buy_title': no_resource_buy_title, 'hk_resources': next(pl for pl in no_resource_state['players'] if pl['id'] == ids['hk']).get('resources'), 'screenshot': str(shot2.relative_to(BASE))},
+            'passed': (
+                no_resource_state.get('turn_phase') == 'action'
+                and no_resource_selectable
+                and no_resource_buy_disabled
+                and '超過目前資源' in (no_resource_buy_title or '')
+                and selected_visual['buttonText'] == '取消選擇'
+                and selected_visual['buttonBackground'] == 'rgb(22, 101, 52)'
+                and selected_visual['overlayDisplay'] == 'block'
+                and selected_visual['overlayBackground'] == 'rgba(255, 255, 255, 0.28)'
+                and selected_visual['previewDisplayAfterButtonClick'] == 'none'
+                and full_preview['display'] == 'flex'
+                and '/static/card-art/' in full_preview['src']
+                and '/static/card-art-half-height/' not in full_preview['src']
+            ),
+            'details': {'turn_phase': no_resource_state.get('turn_phase'), 'buy_title': no_resource_buy_title, 'selected_visual': selected_visual, 'full_preview': full_preview, 'hk_resources': next(pl for pl in no_resource_state['players'] if pl['id'] == ids['hk']).get('resources'), 'screenshot': str(shot2.relative_to(BASE))},
         })
 
         prepared = post_json('/test/set-hand', {
@@ -136,10 +208,10 @@ def main():
         play_follower_resources(page, 3)
         resourced_state = page.evaluate('window.lastGameState')
         # 不按 advance，直接在行動階段購買。
-        checkbox = static_card_checkbox(page)
-        before_buy_disabled = checkbox.is_disabled()
-        before_buy_title = page.locator('#purchaseStatic .card').filter(has_text='宣傳家').locator('.purchase-card-checkbox').first.get_attribute('title')
-        checkbox.check(timeout=5000)
+        select_button = static_card_select_button(page)
+        before_buy_disabled = select_button.is_disabled()
+        before_buy_title = select_button.get_attribute('title')
+        select_button.click(timeout=5000)
         page.wait_for_timeout(200)
         page.locator('#openPurchaseConfirmBtn').click(timeout=5000)
         page.wait_for_timeout(250)
@@ -157,7 +229,7 @@ def main():
             'details': {
                 'resources_before_purchase_step': next(pl for pl in resourced_state['players'] if pl['id'] == ids['hk']).get('resources'),
                 'turn_phase_after_buy': bought_state.get('turn_phase'),
-                'checkbox_title_before_buy': before_buy_title,
+                'select_button_title_before_buy': before_buy_title,
                 'static_supply_after_buy': bought_state.get('static_purchase_supply'),
                 'hk_resources_after_buy': hk.get('resources'),
                 'hk_discard_pile': hk.get('discard_pile'),

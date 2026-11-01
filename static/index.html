@@ -4,7 +4,10 @@
   <meta charset="UTF-8" />
   <title>REDLINE // STRATEGIC COMMAND</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="/static/style.css?v=victory-restart-20260925" />
+  <link rel="stylesheet" href="/static/style.css?v=joycon-connect-offset-20261101" />
+  <!-- 客廳輪流（hot-seat）：在第一次繪製前就能遮住舞台，所以放在 <head>。 -->
+  <script src="/static/hotseat_core.js?v=reaction-victory-controller-20261027"></script>
+  <script src="/static/hotseat_ui.js?v=lobby-hotseat-cleanup-20261031"></script>
 </head>
 <body>
 <div id="stageViewport">
@@ -25,6 +28,100 @@
 <div id="debugSocketState" style="display:none"></div>
 
 <div id="lobby">
+  <section id="startFlow" class="startflow" aria-label="開始遊戲" hidden>
+    <div class="lobby-kicker">REDLINE COMMAND LOBBY</div>
+    <div id="sfTitle" class="lobby-title" tabindex="-1">開始遊戲</div>
+    <figure id="sfJoyconConnectGuide" class="sf-joycon-connect" hidden>
+      <img src="/static/help/joycon-connect-guide.jpg" width="950" height="221"
+        alt="Joy-Con 連線說明：長按側邊小圓同步按鈕約三秒，等待指示燈閃爍並完成與電腦連線。">
+    </figure>
+
+    <div id="sfEntry" class="sf-panel" data-step="entry">
+      <div id="sfFx" class="sf-fx" data-fx="pending" data-fx-motion="on">
+        <canvas id="sfFxCanvas" class="sf-fx-canvas" width="640" height="360" aria-hidden="true"></canvas>
+        <div class="sf-fx-hud" aria-hidden="true">
+          <span class="sf-fx-tag sf-fx-tag-top">戰時指揮中心 · WAR ROOM</span>
+          <span class="sf-fx-tag sf-fx-tag-radar">TAIWAN RADAR · 23.7°N 121°E</span>
+          <span class="sf-fx-tag sf-fx-tag-deck">選擇作戰入口 // SELECT ENTRY</span>
+        </div>
+      </div>
+      <div class="sf-fx-controls" role="group" aria-label="開場特效設定">
+        <button id="sfFxMotion" class="sf-fx-btn" type="button" role="switch" aria-checked="true" aria-describedby="sfFxStatus" data-controller-skip>
+          <span class="sf-fx-name">動態效果</span><span class="sf-fx-state">開</span>
+        </button>
+        <div class="sf-fx-quality" role="group" aria-label="渲染畫質">
+          <span class="sf-fx-name" aria-hidden="true">渲染畫質</span>
+          <button class="sf-fx-btn" type="button" data-sf-fx-quality="low" aria-pressed="false" aria-label="渲染畫質：低" data-controller-skip>低</button>
+          <button class="sf-fx-btn" type="button" data-sf-fx-quality="high" aria-pressed="true" aria-label="渲染畫質：高" data-controller-skip>高</button>
+        </div>
+        <div id="sfFxStatus" class="sf-fx-status" role="status" aria-live="polite"></div>
+      </div>
+      <div class="sf-paths" role="group" aria-label="開始方式">
+        <button id="sfCreateHuman" class="sf-path-btn" type="button" data-sf-path="human">
+          <strong>真人紅軍</strong>
+          <span>由一位玩家擔任紅軍</span>
+        </button>
+        <button id="sfCreateAi" class="sf-path-btn" type="button" data-sf-path="ai">
+          <strong>AI 紅軍</strong>
+          <span>紅軍由電腦操作，不需要真人</span>
+        </button>
+        <fieldset class="sf-path-join" aria-labelledby="sfJoinTitle">
+          <legend id="sfJoinTitle">加入現有房間</legend>
+          <div class="lobby-room-row">
+            <input id="sfRoomCode" class="lobby-code-input" aria-label="房間代碼" placeholder="輸入房間代碼" autocomplete="off">
+            <button id="sfJoinBtn" class="lobby-mini-btn" type="button">加入</button>
+          </div>
+          <div id="sfJoinError" class="sf-error" role="alert"></div>
+        </fieldset>
+      </div>
+    </div>
+
+    <div id="sfSetup" class="sf-panel" data-step="setup" hidden>
+      <div class="sf-setup-head">
+        <div id="sfSetupTitle" class="sf-setup-title" tabindex="-1">建立真人紅軍遊戲</div>
+        <button id="sfBackToEntry" class="lobby-mini-btn" type="button">← 重新選擇</button>
+      </div>
+      <div class="sf-row">
+        <span class="sf-row-label">遊戲難度</span>
+        <div class="lobby-market-toggle" role="group" aria-label="遊戲難度">
+          <button class="lobby-market-option active" type="button" data-sf-market="sample_53" aria-pressed="true">簡單模式</button>
+          <button class="lobby-market-option" type="button" data-sf-market="all_cards" aria-pressed="false">一般模式</button>
+        </div>
+      </div>
+      <div class="sf-row">
+        <span class="sf-row-label">操作方式</span>
+        <div class="lobby-market-toggle" role="group" aria-label="操作方式">
+          <button class="lobby-market-option" type="button" data-sf-control="joycon" aria-pressed="false">Joy-Con</button>
+          <button class="lobby-market-option active" type="button" data-sf-control="computer" aria-pressed="true">電腦</button>
+        </div>
+      </div>
+      <div id="sfPairing" class="sf-pairing" hidden>
+        <div id="sfPairingPrompt" class="sf-pairing-prompt">請玩家依序拿起自己的 Joy-Con，<b>同時按住 SL + SR</b>。配對成功的順序就是 P1、P2、P3、P4。</div>
+        <div id="sfSlots" class="sf-slots"></div>
+        <div id="sfPairingStatus" class="sf-pairing-status" aria-live="polite"></div>
+      </div>
+      <div class="sf-footer">
+        <div id="sfContinueHint" class="sf-continue-hint" aria-live="polite"></div>
+        <button id="sfContinueBtn" class="lobby-action-btn primary" type="button">繼續</button>
+      </div>
+      <section class="sf-mode-guide" aria-labelledby="sfModeGuideTitle">
+        <h3 id="sfModeGuideTitle">模式說明</h3>
+        <div class="sf-mode-guide-grid">
+          <article class="sf-mode-guide-card" data-sf-mode-guide="sample_53" data-selected="true">
+            <strong>簡單模式</strong>
+            <span>53 張精簡牌組</span>
+            <p>含 18 張奧援卡與 35 張隨機一般卡，適合初次遊玩。</p>
+          </article>
+          <article class="sf-mode-guide-card" data-sf-mode-guide="all_cards" data-selected="false">
+            <strong>一般模式</strong>
+            <span>245 張完整牌組</span>
+            <p>包含完整卡牌內容，卡牌組合與策略變化更多。</p>
+          </article>
+        </div>
+      </section>
+    </div>
+  </section>
+
   <div class="lobby-brand">
     <div class="lobby-kicker">REDLINE COMMAND LOBBY</div>
     <div class="lobby-title">作戰準備室</div>
@@ -45,6 +142,13 @@
     <div class="lobby-column lobby-room-column">
       <div class="lobby-section-title">ROOM CONTROL</div>
 
+      <div class="lobby-field" id="roomSettingsField">
+        <span>房主設定</span>
+        <div id="roomSettingsSummary" class="sf-summary">—</div>
+        <div id="roomSettingsHint" class="lobby-field-hint"></div>
+        <button id="sfBackBtn" class="lobby-mini-btn" type="button" hidden>← 回開始畫面</button>
+      </div>
+
       <label class="lobby-field">
         <span>建立 / 加入房間代碼</span>
         <div class="lobby-room-row">
@@ -53,6 +157,12 @@
         </div>
         <div class="lobby-field-hint">要加入別人的房間：把對方分享的代碼貼在這格，再按「進入作戰室」。</div>
       </label>
+
+      <div class="lobby-field" id="sfAutoSetup" role="status" hidden>
+        <span id="sfAutoStatus"></span>
+        <button id="sfAutoRetryBtn" class="lobby-mini-btn" type="button" hidden>重試</button>
+        <button id="sfAutoBackBtn" class="lobby-mini-btn" type="button" hidden>← 回到配對</button>
+      </div>
 
       <label class="lobby-field">
         <span>你的行動代號</span>
@@ -68,30 +178,7 @@
         <div class="lobby-field-hint">其他玩家在同一個 Wi-Fi／區網下，用瀏覽器打開這個網址，再貼上房間代碼加入。</div>
       </div>
 
-      <div class="lobby-field" id="difficultyField">
-        <span>遊戲難易度</span>
-        <select id="marketModeSelect" class="lobby-hidden-select" aria-label="遊戲難易度">
-          <option value="sample_53">簡單模式</option>
-          <option value="all_cards">一般模式</option>
-        </select>
-        <div class="lobby-market-toggle" role="group" aria-label="遊戲難易度">
-          <button class="lobby-market-option active" type="button" data-market-mode="sample_53" data-card-counts="共53張：奧援卡18張、一般卡35張（一般卡類型隨機抽取）。" data-tooltip="共53張：奧援卡18張、一般卡35張（一般卡類型隨機抽取）。" onclick="setMarketMode('sample_53')" disabled>簡單模式</button>
-          <button class="lobby-market-option" type="button" data-market-mode="all_cards" data-card-counts="共245張：奧援64張、指揮68張、間諜24張、資金20張、武裝16張、交通15張、特殊宣傳15張、整肅12張、組織11張。" data-tooltip="共245張：奧援64張、指揮68張、間諜24張、資金20張、武裝16張、交通15張、特殊宣傳15張、整肅12張、組織11張。" onclick="setMarketMode('all_cards')" disabled>一般模式</button>
-        </div>
-      </div>
 
-      <div class="lobby-field" id="aiRedArmyField">
-        <span>紅軍席位</span>
-        <select id="aiRedArmySelect" class="lobby-hidden-select" aria-label="紅軍席位">
-          <option value="off">真人紅軍</option>
-          <option value="on">AI 紅軍</option>
-        </select>
-        <div class="lobby-market-toggle" role="group" aria-label="紅軍席位">
-          <button class="lobby-market-option active" type="button" data-ai-red-army="off" data-tooltip="由一位玩家在作戰室中選擇紅軍陣營並親自操作。" onclick="setAiRedArmy(false)" disabled>真人紅軍</button>
-          <button class="lobby-market-option" type="button" data-ai-red-army="on" data-tooltip="紅軍席位改由電腦（決定性規則引擎）自動操作，不需要真人加入。" onclick="setAiRedArmy(true)" disabled>AI 紅軍</button>
-        </div>
-        <div class="lobby-field-hint" id="aiRedArmyHint">建立房間後，房主可以切換紅軍是否由 AI 代打。</div>
-      </div>
     </div>
 
     <div class="lobby-column lobby-roster-column">
@@ -113,6 +200,7 @@
         </div>
       </div>
       <div id="lobbyStatusHint" class="lobby-status-hint">先建立作戰室，或貼上房間代碼後進入。</div>
+
     </div>
 
     <div class="lobby-actions">
@@ -258,6 +346,7 @@
     </div>
     <div id="victorySummary" class="victory-summary"></div>
     <div class="era-achievement-actions">
+      <span class="victory-art-shortcut-hint" aria-hidden="true"><kbd>Y</kbd> 檢視勝利圖片</span>
       <button id="victoryMinimizeBtn" class="modal-choice-btn">檢視最終盤面</button>
       <a id="victoryRestartBtn" class="modal-choice-btn" href="/new-game">重新開始</a>
     </div>
@@ -268,7 +357,7 @@
 <div id="victoryArtViewer" class="victory-art-viewer" role="dialog" aria-modal="true" aria-label="完整勝利插畫" aria-hidden="true" style="display:none;">
   <button id="victoryArtViewerClose" class="victory-art-viewer-close" type="button" aria-label="關閉完整勝利插畫">×</button>
   <img id="victoryArtViewerImage" class="victory-art-viewer-image" alt="" />
-  <div class="victory-art-viewer-hint">按 Esc、背景或右上角 × 返回結算畫面</div>
+  <div class="victory-art-viewer-hint">按 B、Esc、背景或右上角 × 返回結算畫面</div>
 </div>
 
 <div id="peerActionNotice" class="peer-action-notice" style="display:none;">
@@ -292,6 +381,8 @@
     <button id="myFactionBtn" class="game-tab my-faction-tab" type="button" data-view="myFaction">我的陣營</button>
     <button id="eventCardTab" class="game-tab event-card-tab" type="button" style="display:none;" onclick="openCurrentEventReveal()">事件卡</button>
     <div id="activeEraTabs" class="active-era-tabs" role="group" aria-label="生效中的時代關卡"></div>
+    <!-- 不是第七個遊戲頁面：只開啟遊戲選單（與長按搖桿 2 秒同一個 gameMenuModal）。滑鼠直接點；Joy-Con 以 R／SR 環聚焦它，按 A 才開啟。 -->
+    <button id="gameMenuBtn" class="game-menu-btn" type="button" aria-label="遊戲選單" aria-haspopup="dialog" aria-controls="gameMenuModal" title="遊戲選單（返回遊戲、配樂音量、Joy-Con 功能表、重新開始）"><svg class="game-menu-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M4 6h16v2.4H4zm0 4.8h16v2.4H4zm0 4.8h16V18H4z"/></svg><span>遊戲選單</span></button>
     <div id="turnActionButtons" role="group" aria-label="回合行動控制">
       <button id="redArmyAbilityBtn" class="phase-red-army-btn" type="button" style="display:none;" onclick="openRedArmyAbilityModal()">紅軍能力</button>
       <button id="advanceStepBtn" class="phase-action-btn" type="button" onclick="sendAction('advance')">結束目前步驟</button>
@@ -300,32 +391,32 @@
 
   <div id="commandView" class="game-view active">
     <div id="commandGrid">
-      <div id="controlPanel" class="panel">
-        <div id="purchaseSection">
-          <div class="panel-title">常設購買區</div>
-          <div id="purchaseStatic" class="purchase-card-grid"></div>
-        </div>
-        <div id="factionActionPanel" style="display:none; margin-top:8px;">
-          <div class="panel-title">陣營能力</div>
-          <div id="factionActionInfo"></div>
-          <div id="factionActionButtons"></div>
-        </div>
-        <div id="baseSelectionPanel" style="display:none; margin-top:8px;">
-          <div class="panel-title">根據地選擇</div>
-          <div id="baseSelectionInfo"></div>
-          <div id="baseSelectionChoices"></div>
-        </div>
-      </div>
-
       <div id="randomMarketPanel" class="panel market-panel-wide">
         <div class="panel-title">隨機購買區</div>
         <div id="purchaseSelectionControls" style="display:none;">
           <span id="purchaseSelectionSummary">尚未選擇卡牌</span>
           <button id="topdeckRightBtn" class="phase-secondary-btn purchase-selection-topdeck-btn" type="button" style="display:none;" onclick="sendAction('use_topdeck_right')">卡牌置頂</button>
           <button id="clearPurchaseSelectionBtn" class="purchase-selection-clear-btn" type="button" onclick="clearPurchaseSelection()">清除</button>
-          <button id="openPurchaseConfirmBtn" class="purchase-selection-buy-btn" type="button" onclick="openPurchaseConfirmModal()" disabled>購買所選卡牌</button>
+          <button id="openPurchaseConfirmBtn" class="purchase-selection-buy-btn" type="button" onclick="openPurchaseConfirmModal()" disabled>購買</button>
         </div>
         <div id="purchaseRandom" class="purchase-card-grid"></div>
+        <div id="factionActionPanel" style="display:none;">
+          <div class="panel-title">陣營能力</div>
+          <div id="factionActionInfo"></div>
+          <div id="factionActionButtons"></div>
+        </div>
+      </div>
+
+      <div id="controlPanel" class="panel">
+        <div id="purchaseSection">
+          <div class="panel-title">常設購買區</div>
+          <div id="purchaseStatic" class="purchase-card-grid"></div>
+        </div>
+        <div id="baseSelectionPanel" style="display:none; margin-top:8px;">
+          <div class="panel-title">根據地選擇</div>
+          <div id="baseSelectionInfo"></div>
+          <div id="baseSelectionChoices"></div>
+        </div>
       </div>
 
       <div id="handPanel" class="panel hand-panel-wide">
@@ -375,9 +466,63 @@
     </section>
   </div>
 </div>
+<!-- 遊戲選單（遊戲中目前操作的 Joy-Con 按住搖桿按鈕 2 秒；controller_ui.js）：不送任何遊戲操作。
+     Joy-Con 功能表＝開啟 Joy-Con 說明圖；配樂音量＝− / + 按鈕（Joy-Con 方向＋A、滑鼠、鍵盤皆可）；重新開始一律先經過下方確認，確認後才走既有 /new-game。 -->
+<div id="gameMenuModal" class="modal-overlay game-menu-overlay" role="dialog" aria-modal="true" aria-labelledby="gameMenuTitle" aria-hidden="true" style="display:none;">
+  <div class="modal-glass game-menu-glass">
+    <div id="gameMenuTitle" class="modal-title-text">遊戲選單</div>
+    <div class="game-menu-options" role="group" aria-label="遊戲選單選項">
+      <button id="gameMenuResumeBtn" type="button" class="modal-choice-btn game-menu-option">返回遊戲</button>
+      <button id="gameMenuSettingsBtn" type="button" class="modal-choice-btn game-menu-option">Joy-Con 功能表</button>
+      <div id="gameMenuVolume" class="game-menu-volume" role="group" aria-labelledby="gameMenuVolumeLabel" data-volume="30">
+        <span id="gameMenuVolumeLabel" class="game-menu-volume-label">配樂音量</span>
+        <div class="game-menu-volume-controls">
+          <button id="gameMenuVolumeDownBtn" type="button" class="modal-choice-btn game-menu-volume-btn" aria-label="降低配樂音量 10%">－</button>
+          <output id="gameMenuVolumeValue" class="game-menu-volume-value" for="gameMenuVolumeDownBtn gameMenuVolumeUpBtn" aria-live="polite">30%</output>
+          <button id="gameMenuVolumeUpBtn" type="button" class="modal-choice-btn game-menu-volume-btn" aria-label="提高配樂音量 10%">＋</button>
+        </div>
+      </div>
+      <button id="gameMenuRestartBtn" type="button" class="modal-choice-btn game-menu-option game-menu-danger">重新開始…</button>
+    </div>
+  </div>
+</div>
+<div id="gameMenuConfirmModal" class="modal-overlay game-menu-overlay" role="alertdialog" aria-modal="true" aria-labelledby="gameMenuConfirmTitle" aria-describedby="gameMenuConfirmBody" aria-hidden="true" style="display:none;">
+  <div class="modal-glass game-menu-glass game-menu-confirm-glass">
+    <div class="panel-title">重新開始確認</div>
+    <div id="gameMenuConfirmTitle" class="modal-title-text">要離開目前遊戲並重新開始嗎？</div>
+    <div id="gameMenuConfirmBody" class="modal-body-text">確認後會離開目前遊戲，回到開始畫面重新建立或加入遊戲。</div>
+    <div class="game-menu-confirm-actions">
+      <button id="gameMenuConfirmCancelBtn" type="button" class="modal-cancel-btn">返回選單</button>
+      <button id="gameMenuConfirmOkBtn" type="button" class="modal-choice-btn game-menu-confirm-ok">確認重新開始</button>
+    </div>
+  </div>
+</div>
+</div>
+<!-- Joy-Con 說明圖（使用者提供的原圖 1280×960，不改字、不裁切）：舞台外的全視窗 modal，小螢幕可捲動。 -->
+<div id="joyconHelpModal" class="joycon-help-modal" role="dialog" aria-modal="true" aria-labelledby="joyconHelpTitle" aria-hidden="true" style="display:none;">
+  <div class="joycon-help-dialog">
+    <div class="joycon-help-header">
+      <h2 id="joyconHelpTitle" class="joycon-help-title">Joy-Con 說明</h2>
+      <span class="joycon-help-hint">按 B、Esc 或 × 關閉</span>
+      <button id="joyconHelpCloseBtn" class="joycon-help-close" type="button" aria-label="關閉 Joy-Con 說明">×</button>
+    </div>
+    <div id="joyconHelpScroll" class="joycon-help-scroll" role="region" aria-label="Joy-Con 功能表圖片" tabindex="0">
+      <img id="joyconHelpImage" class="joycon-help-image" src="/static/help/joycon-function-table.jpg" width="1280" height="960" loading="lazy" decoding="async"
+        alt="Joy-Con 功能表。左右 Joy-Con 的 L、R、ZL、ZR、SL、SR、Capture 按鍵位置圖。方向鍵對照：上＝X，手牌資源／奧援素質確認；下＝B，返回／取消／選取購買卡；右＝A，確認／查看卡牌／選擇地圖目標；左＝Y，卡牌行動／購買／執行地圖操作。其他按鍵對照：L＝R，下一個遊戲頁面；ZL＝ZR，地圖縮放；−＝+，發動陣營能力；左手 SR＝右手 SL，開啟城鎮聚焦選單；左手 SL＝右手 SR，上一個遊戲頁面；Capture，結束行動／步驟確認；按住搖桿 2 秒，開啟遊戲選單（返回遊戲、Joy-Con 功能表、重新開始需確認）。遊戲頁面：指揮中心、戰略地圖、戰況紀錄、我的陣營、事件卡和時代關卡。">
+    </div>
+  </div>
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/static/player_messages_zh_tw.js?v=player-message-i18n-20260801"></script>
-<script src="/static/app.js?v=red-army-single-result-prompt-20260905"></script>
+<script src="/static/event_reveal_core.js?v=reaction-no-event-reveal-20261027"></script>
+<script src="/static/app.js?v=game-menu-music-flow-20261101"></script>
+<script src="/static/controller_core.js?v=game-menu-music-flow-20261101"></script>
+<script src="/static/living_room_core.js?v=game-menu-music-flow-20261101"></script>
+<script src="/static/controller_ui.js?v=game-menu-music-flow-20261101"></script>
+<script src="/static/controller_living_room.js?v=game-menu-music-flow-20261101"></script>
+<script src="/static/start_flow_core.js?v=reaction-victory-controller-20261027"></script>
+<script src="/static/start_flow_ui.js?v=joycon-connect-expanded-20261101"></script>
+<script src="/static/start_screen_fx.js?v=command-entry-webgl-20261031"></script>
+<script src="/static/game_music.js?v=game-menu-music-flow-20261101"></script>
 </body>
 </html>

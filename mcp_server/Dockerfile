@@ -1,5 +1,3 @@
-# syntax=docker/dockerfile:1
-#
 # Separate image for the REDLINE MCP server — a *client* of the REDLINE game
 # server (see the root Dockerfile), never the game server itself. Build from
 # the repo root so it can read pyproject.toml/uv.lock (shared dependency

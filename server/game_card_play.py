@@ -32,6 +32,9 @@ CANCELLABLE_CHOICE_KEYS = frozenset({
     'red_army_state_security_target',          # 國安部
 })
 
+# 情報網 A 的內鬥放置對象（多選：1 至 3 位其他玩家）。以 target_player_ids（或 indices）一次送出。
+INTEL_NETWORK_RECIPIENT_CHOICE_KEY = 'intel_network_internal_conflict_targets'
+
 # `context['effect_type']` values that represent a *player-initiated* dissolve-organization
 # target pick (as opposed to a build/discard interaction that happens to share the same
 # `card_dissolve_interaction` / `support_interaction` choice_key plumbing). Used both to decide
@@ -1216,6 +1219,28 @@ class CardPlayMixin:
             for nested in selected.get('effect', []):
                 nested_type = nested.get('type') if isinstance(nested, dict) else None
                 source_name = context.get('card_name') or choice.get('source_name')
+                if nested_type == 'add_internal_conflict' and source_name == '情報網':
+                    # 情報網 A：「在至多3位玩家棄牌堆各放入1張內鬥」——由打出者明確挑選 1 至 3 位
+                    # 其他玩家（比照離間的 1～3 位慣例），不再自動放給所有其他玩家。與 B 分支的
+                    # intel_network_dissolve_target 相同：開一個巢狀 pending choice，帶著同一份
+                    # context（含延後的 post_play_faction_triggers 與取消用的 rollback snapshot）。
+                    recipients = self._intel_network_recipient_targets(player)
+                    if recipients:
+                        max_targets = min(int(nested.get('max_targets', 3) or 3), len(recipients))
+                        pending_target_result = self._set_pending_target_choice(
+                            player,
+                            INTEL_NETWORK_RECIPIENT_CHOICE_KEY,
+                            recipients,
+                            f'情報網：選擇 1 至 {max_targets} 位其他玩家，各在其棄牌堆放入 1 張內鬥。',
+                            source_name='情報網',
+                            context={**context, 'internal_conflict_effect': dict(nested)},
+                            multi_select=True,
+                            count=max_targets,
+                            min_count=1,
+                            **self._dissolve_cancel_kwargs(context),
+                        )
+                        result = pending_target_result
+                        continue
                 if nested_type == 'dissolve' and source_name == '情報網':
                     range_limit = int(context.get('range_limit', 1) or 1)
                     target_region = context.get('target_region')
@@ -1436,6 +1461,56 @@ class CardPlayMixin:
             'town': town,
             'selected': selected,
             'choice_key': choice_key,
+        }
+
+    def _intel_network_recipient_targets(self, player):
+        return [
+            {'id': other.id, 'player_id': other.id, 'label': other.name}
+            for other in self.players
+            if other is not player and getattr(other, 'id', None) != getattr(player, 'id', None)
+        ]
+
+    def _resolve_intel_network_recipient_choice(self, player, choice, index, target_player_ids=None):
+        """情報網 A：驗證打出者選的 1 至 count 位其他玩家，全部合法才放內鬥。
+
+        接受 target_player_ids（玩家 id 清單，網頁 UI）或 index 為 indices 清單（MCP／紅軍 AI）。
+        任何不合法的送出都在動到供應、棄牌堆或 pending choice 之前回傳錯誤。"""
+        targets = choice.get('targets') or []
+        max_count = int(choice.get('count') or 0)
+        if target_player_ids is not None and index is not None:
+            return {'error': '情報網目標格式無效'}
+        if target_player_ids is not None:
+            selected_ids = target_player_ids
+        elif isinstance(index, list):
+            if any(isinstance(i, bool) or not isinstance(i, int) or i < 0 or i >= len(targets) for i in index):
+                return {'error': 'Invalid choice index'}
+            selected_ids = [targets[i].get('id') for i in index]
+        else:
+            return {'error': f'情報網必須選擇 1 至 {max_count} 位其他玩家'}
+        if not isinstance(selected_ids, (list, tuple)) or any(not isinstance(i, str) for i in selected_ids):
+            return {'error': '情報網目標格式無效'}
+        selected_ids = list(selected_ids)
+        if not 1 <= len(selected_ids) <= max_count:
+            return {'error': f'情報網必須選擇 1 至 {max_count} 位其他玩家'}
+        if len(set(selected_ids)) != len(selected_ids):
+            return {'error': '情報網不能重複選擇同一位玩家'}
+        if player.id in selected_ids:
+            return {'error': '情報網不能選擇自己'}
+        offered_ids = {entry.get('id') for entry in targets}
+        live_ids = {entry['id'] for entry in self._intel_network_recipient_targets(player)}
+        if any(selected_id not in offered_ids or selected_id not in live_ids for selected_id in selected_ids):
+            return {'error': '情報網只能選擇其他有效玩家'}
+
+        context = dict(choice.get('context') if isinstance(choice.get('context'), dict) else {})
+        effect = context.pop('internal_conflict_effect', None) or {'type': 'add_internal_conflict', 'count': 1}
+        self.pending_choice = None
+        self.effect_engine.execute(effect, player, self, context={**context, 'target_player_ids': selected_ids})
+        # 內鬥已實際放入：這次選擇就是情報網的最後確認，延後的打出觸發在此結算。
+        choice['is_final_confirmation'] = True
+        return {
+            'success': True,
+            'choice_key': choice.get('choice_key'),
+            'target_player_ids': selected_ids,
         }
 
     def _resolve_target_choice(self, player, choice, index):
@@ -1935,6 +2010,13 @@ class CardPlayMixin:
         resolver = resolvers[choice_type]
         if choice_type == 'card_choice':
             result = resolver(
+                player,
+                choice,
+                index,
+                target_player_ids=target_player_ids,
+            )
+        elif choice.get('choice_key') == INTEL_NETWORK_RECIPIENT_CHOICE_KEY:
+            result = self._resolve_intel_network_recipient_choice(
                 player,
                 choice,
                 index,

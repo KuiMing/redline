@@ -30,13 +30,14 @@ def make_formal_game():
         ('hk', joined['player_id'], 'hong_kong', '香港城'),
     ]
     for name, pid, faction_id, base_name in players:
-        chosen = post_json('/choose-faction', {'game_id': game_id, 'player_id': pid, 'faction_id': faction_id, 'base_name': base_name})
+        token = tokens[name]
+        chosen = post_json('/choose-faction', {'game_id': game_id, 'player_id': pid, 'resume_token': token, 'faction_id': faction_id, 'base_name': base_name})
         if chosen.get('error'):
             raise AssertionError(f'choose {name}: {chosen}')
-        ready = post_json('/ready', {'game_id': game_id, 'player_id': pid, 'ready': True})
+        ready = post_json('/ready', {'game_id': game_id, 'player_id': pid, 'resume_token': token, 'ready': True})
         if ready.get('error'):
             raise AssertionError(f'ready {name}: {ready}')
-    started = post_json('/start', {'game_id': game_id, 'player_id': host_id, 'market_mode': 'sample_53'})
+    started = post_json('/start', {'game_id': game_id, 'player_id': host_id, 'resume_token': tokens['host'], 'market_mode': 'sample_53'})
     if started.get('error'):
         raise AssertionError(started)
     return game_id, {name: pid for name, pid, *_ in players}, tokens
@@ -94,13 +95,13 @@ def main():
         event_panel = event_panel_snapshot(page)
         resource_disabled = page.locator(".hand-card").filter(has_text='追隨者').locator("button[data-card-mode='resource']").first.is_disabled()
         action_disabled = page.locator(".hand-card").filter(has_text='追隨者').locator("button[data-card-mode='action']").first.is_disabled()
-        # 出牌與購買同屬一個行動階段：不必先按 advance，購買勾選框一開始就可用。
-        buy_enabled_action = not page.locator('#purchaseStatic .purchase-card-checkbox input').first.is_disabled()
+        # 出牌與購買同屬一個行動階段：不必先按 advance，購買選擇按鈕一開始就可用。
+        buy_enabled_action = not page.locator('#purchaseStatic .purchase-card-select-button').first.is_disabled()
         shot1 = screenshot_dir / '01_initial_action_phase_cards_and_buy_enabled.png'
         page.screenshot(path=str(shot1), full_page=True)
-        checks.append({'name': 'starts_in_action_phase', 'passed': state.get('turn_phase') == 'action' and '目前：行動｜下一步：結束行動階段' in meta and advance_text == '結束行動階段', 'details': {'meta': meta, 'advance_text': advance_text, 'turn_phase': state.get('turn_phase')}})
-        event_name = (state.get('current_event') or {}).get('name', '')
-        checks.append({'name': 'current_event_visible_at_action_start', 'passed': bool(state.get('current_event')) and event_panel['visible'] and (event_name in event_panel['text'] or event_name in event_panel['html']), 'details': {'current_event': state.get('current_event'), 'event_panel': {k: v for k, v in event_panel.items() if k != 'html'}}})
+        checks.append({'name': 'starts_in_action_phase', 'passed': state.get('turn_phase') == 'action' and '目前：行動｜下一步：結束行動' in meta and advance_text == '結束行動', 'details': {'meta': meta, 'advance_text': advance_text, 'turn_phase': state.get('turn_phase')}})
+        current_event = state.get('current_event') or {}
+        checks.append({'name': 'non_reveal_event_stays_hidden_at_action_start', 'passed': not event_panel['visible'], 'details': {'current_event': current_event, 'event_panel': {k: v for k, v in event_panel.items() if k != 'html'}}})
         checks.append({'name': 'hand_actions_enabled_initially', 'passed': not resource_disabled and not action_disabled})
         checks.append({'name': 'purchase_enabled_in_action_phase_without_advancing', 'passed': buy_enabled_action})
 
@@ -110,7 +111,7 @@ def main():
             page.wait_for_timeout(250)
         state_after_play = page.evaluate('window.lastGameState')
 
-        page.locator('#purchaseStatic .purchase-card-checkbox input').first.check(timeout=5000)
+        page.locator('#purchaseStatic .purchase-card-select-button').first.click(timeout=5000)
         page.wait_for_timeout(200)
         page.locator('#openPurchaseConfirmBtn').click(timeout=5000)
         page.wait_for_timeout(250)
@@ -124,7 +125,7 @@ def main():
         state_mid = page.evaluate('window.lastGameState')
         notice = page.locator('#phaseActionNotice')
         notice_text = notice.inner_text(timeout=2000) if notice.count() and notice.is_visible() else ''
-        buy_still_enabled = not page.locator('#purchaseStatic .purchase-card-checkbox input').first.is_disabled()
+        buy_still_enabled = not page.locator('#purchaseStatic .purchase-card-select-button').first.is_disabled()
         shot2 = screenshot_dir / '02_play_buy_play_all_inside_one_action_phase.png'
         page.screenshot(path=str(shot2), full_page=True)
         checks.append({

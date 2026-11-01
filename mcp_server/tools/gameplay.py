@@ -151,7 +151,8 @@ async def resolve_pending_choice(
     indices: list[int] | None = None,
 ) -> dict[str, Any]:
     """Most pending choices take a single `index`. A few (choice_type
-    'multi_card_choice' — see get_legal_actions' `count`/`min_count`) need
+    'multi_card_choice', or any choice with `multi_select` such as 情報網's
+    內鬥 recipients — see get_legal_actions' `count`/`min_count`) need
     several at once: pass those as `indices` instead. Exactly one of
     `index`/`indices` must be given."""
     if (index is None) == (indices is None):

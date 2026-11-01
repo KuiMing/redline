@@ -80,6 +80,19 @@ class IntelNetworkTestRoutes:
         game.turn_phase = TurnPhase.ACTION
         game.game_phase = GamePhase.MAIN
         game.pending_base_choices = {}
+        if payload.get("pin_noop_event"):
+            # Game() 初始化會隨機抽該輪事件；瀏覽器測試需要固定、無效果的事件，
+            # 前端才會每次都以同一個事件揭示開局。
+            game.current_event = dict(game._event_by_name("歲月靜好") or {})
+            game.event_progress = {
+                "count": 0,
+                "required": 0,
+                "succeeded": True,
+                "settled": True,
+                "status": "idle",
+            }
+            game.event_notification = game._event_display_payload()
+            game.event_modifiers = []
         game.id = game_id
 
         runtime.manager.games[game_id] = game

@@ -1,49 +1,62 @@
 # Purchase Section Alignment Validation
 
-summary: {'total': 3, 'passed': 3, 'failed': 0}
+summary: {'total': 7, 'passed': 7, 'failed': 0}
 
 screenshot: docs/records/purchase/purchase_section_alignment_validation.png
 
-## PASS — static_purchase_title_aligns_with_random_market_title
+## PASS — command_centre_uses_equal_random_static_hand_rows
 
 ```json
 {
-  "static_title_box": {
-    "x": 21,
-    "y": 219,
-    "width": 294,
-    "height": 17
+  "random_panel_box": {
+    "x": 6,
+    "y": 110,
+    "width": 1268,
+    "height": 197.328125
   },
-  "random_title_box": {
-    "x": 345,
-    "y": 219,
-    "width": 442,
-    "height": 17
+  "static_panel_box": {
+    "x": 6,
+    "y": 313.328125,
+    "width": 1268,
+    "height": 197.328125
   },
-  "top_delta_px": 0,
-  "allowed_delta_px": 4,
+  "hand_panel_box": {
+    "x": 6,
+    "y": 516.65625,
+    "width": 1268,
+    "height": 197.328125
+  },
+  "row_heights": [
+    197.328125,
+    197.328125,
+    197.328125
+  ],
   "base_selection_panel_display": "none"
 }
 ```
 
-## PASS — static_purchase_first_card_top_aligns_with_random_market_first_card
+## PASS — first_card_stays_inside_each_assigned_row
 
 ```json
 {
-  "static_first_card_box": {
-    "x": 21,
-    "y": 250,
-    "width": 220,
-    "height": 270
-  },
   "random_first_card_box": {
-    "x": 345,
-    "y": 250,
-    "width": 220,
-    "height": 270
+    "x": 15,
+    "y": 143,
+    "width": 203,
+    "height": 125
   },
-  "top_delta_px": 0,
-  "allowed_delta_px": 4
+  "static_first_card_box": {
+    "x": 15,
+    "y": 346.328125,
+    "width": 203,
+    "height": 125
+  },
+  "hand_first_card_box": {
+    "x": 15,
+    "y": 549.65625,
+    "width": 203,
+    "height": 156
+  }
 }
 ```
 
@@ -52,6 +65,168 @@ screenshot: docs/records/purchase/purchase_section_alignment_validation.png
 ```json
 {
   "static_cards": 6,
-  "random_cards": 5
+  "random_cards": 5,
+  "hand_cards": 5
+}
+```
+
+## PASS — card_rows_never_show_horizontal_scrollbars
+
+```json
+{
+  "purchaseRandom": {
+    "client_width": 1250,
+    "scroll_width": 1250,
+    "overflow_x": "hidden",
+    "has_horizontal_overflow": false
+  },
+  "purchaseStatic": {
+    "client_width": 1250,
+    "scroll_width": 1250,
+    "overflow_x": "hidden",
+    "has_horizontal_overflow": false
+  },
+  "hand": {
+    "client_width": 1250,
+    "scroll_width": 1250,
+    "overflow_x": "hidden",
+    "has_horizontal_overflow": false
+  }
+}
+```
+
+## PASS — controller_focus_uses_opaque_yellow_border_with_transparent_interior
+
+```json
+{
+  "card_name": "思想家",
+  "focus_background": "rgba(0, 0, 0, 0)",
+  "focus_background_image": "linear-gradient(rgb(255, 216, 61), rgb(255, 216, 61)), linear-gradient(90deg, rgb(255, 216, 61), rgb(255, 216, 61)), radial-gradient(circle, rgba(0, 0, 0, 0) 0px, rgba(0, 0, 0, 0) 14px, rgb(255, 216, 61) 14px, rgb(255, 216, 61) 16px, rgba(0, 0, 0, 0) 16px)",
+  "focus_border_width": "2px",
+  "focus_border_style": "solid",
+  "focus_border_color": "rgb(255, 216, 61)",
+  "focus_pointer_events": "none",
+  "selected_overlay_display": "block",
+  "button_background": "rgb(21, 128, 61)",
+  "selected_focus": {
+    "content": "\"\"",
+    "border_color": "rgb(255, 216, 61)",
+    "border_width": "2px",
+    "background_image": "linear-gradient(rgb(255, 216, 61), rgb(255, 216, 61)), linear-gradient(90deg, rgb(255, 216, 61), rgb(255, 216, 61)), radial-gradient(circle, rgba(0, 0, 0, 0) 0px, rgba(0, 0, 0, 0) 14px, rgb(255, 216, 61) 14px, rgb(255, 216, 61) 16px, rgba(0, 0, 0, 0) 16px)",
+    "z_index": "4"
+  },
+  "selected_overlay_background": "rgba(255, 255, 255, 0.28)",
+  "selected_overlay_z_index": "3",
+  "neutral_focus_content": "none",
+  "focused_card_count": 1
+}
+```
+
+## PASS — mouse_hover_uses_single_yellow_border_and_crosshair_in_all_card_rows
+
+```json
+{
+  "purchaseRandom": {
+    "content": "\"\"",
+    "background": "rgba(0, 0, 0, 0)",
+    "background_image": "linear-gradient(rgb(255, 216, 61), rgb(255, 216, 61)), linear-gradient(90deg, rgb(255, 216, 61), rgb(255, 216, 61)), radial-gradient(circle, rgba(0, 0, 0, 0) 0px, rgba(0, 0, 0, 0) 14px, rgb(255, 216, 61) 14px, rgb(255, 216, 61) 16px, rgba(0, 0, 0, 0) 16px)",
+    "border_width": "2px",
+    "border_style": "solid",
+    "border_color": "rgb(255, 216, 61)",
+    "pointer_events": "none",
+    "controller_focus_content": "none"
+  },
+  "purchaseStatic": {
+    "content": "\"\"",
+    "background": "rgba(0, 0, 0, 0)",
+    "background_image": "linear-gradient(rgb(255, 216, 61), rgb(255, 216, 61)), linear-gradient(90deg, rgb(255, 216, 61), rgb(255, 216, 61)), radial-gradient(circle, rgba(0, 0, 0, 0) 0px, rgba(0, 0, 0, 0) 14px, rgb(255, 216, 61) 14px, rgb(255, 216, 61) 16px, rgba(0, 0, 0, 0) 16px)",
+    "border_width": "2px",
+    "border_style": "solid",
+    "border_color": "rgb(255, 216, 61)",
+    "pointer_events": "none",
+    "controller_focus_content": "none"
+  },
+  "hand": {
+    "content": "\"\"",
+    "background": "rgba(0, 0, 0, 0)",
+    "background_image": "linear-gradient(rgb(255, 216, 61), rgb(255, 216, 61)), linear-gradient(90deg, rgb(255, 216, 61), rgb(255, 216, 61)), radial-gradient(circle, rgba(0, 0, 0, 0) 0px, rgba(0, 0, 0, 0) 14px, rgb(255, 216, 61) 14px, rgb(255, 216, 61) 16px, rgba(0, 0, 0, 0) 16px)",
+    "border_width": "2px",
+    "border_style": "solid",
+    "border_color": "rgb(255, 216, 61)",
+    "pointer_events": "none",
+    "controller_focus_content": "none"
+  }
+}
+```
+
+## PASS — living_room_keeps_three_rows_without_scrollbars_or_focus_glow
+
+```json
+{
+  "boxes": {
+    "randomMarketPanel": {
+      "x": 6,
+      "y": 114,
+      "width": 1268,
+      "height": 170.65625
+    },
+    "controlPanel": {
+      "x": 6,
+      "y": 290.65625,
+      "width": 1268,
+      "height": 170.671875
+    },
+    "handPanel": {
+      "x": 6,
+      "y": 467.328125,
+      "width": 1268,
+      "height": 170.671875
+    }
+  },
+  "rows": {
+    "purchaseRandom": {
+      "client_width": 1250,
+      "scroll_width": 1250,
+      "overflow_x": "hidden",
+      "has_horizontal_overflow": false
+    },
+    "purchaseStatic": {
+      "client_width": 1250,
+      "scroll_width": 1250,
+      "overflow_x": "hidden",
+      "has_horizontal_overflow": false
+    },
+    "hand": {
+      "client_width": 1250,
+      "scroll_width": 1250,
+      "overflow_x": "hidden",
+      "has_horizontal_overflow": false
+    }
+  },
+  "controls_outside_panel": [
+    {
+      "selector": "#purchaseRandom .purchase-card-select-button",
+      "count": 5,
+      "outside": 0
+    },
+    {
+      "selector": "#purchaseStatic .purchase-card-select-button",
+      "count": 6,
+      "outside": 0
+    },
+    {
+      "selector": "#hand .hand-card-action-btn",
+      "count": 10,
+      "outside": 0
+    }
+  ],
+  "focus_background": "rgba(0, 0, 0, 0)",
+  "focus_border_width": "2.5641px",
+  "focus_border_style": "solid",
+  "focus_border_color": "rgb(255, 216, 61)",
+  "focus_outline": "none",
+  "focus_shadow": "rgba(0, 0, 0, 0.34) 0px 12px 32px 0px",
+  "peer_outline": "none",
+  "peer_shadow": "rgba(0, 0, 0, 0.34) 0px 12px 32px 0px"
 }
 ```
