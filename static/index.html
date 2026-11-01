@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>REDLINE // STRATEGIC COMMAND</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="/static/style.css?v=joycon-connect-guide-20261101" />
+  <link rel="stylesheet" href="/static/style.css?v=joycon-connect-image-20261101" />
   <!-- 客廳輪流（hot-seat）：在第一次繪製前就能遮住舞台，所以放在 <head>。 -->
   <script src="/static/hotseat_core.js?v=reaction-victory-controller-20261027"></script>
   <script src="/static/hotseat_ui.js?v=lobby-hotseat-cleanup-20261031"></script>
@@ -92,45 +92,6 @@
         </div>
       </div>
       <div id="sfPairing" class="sf-pairing" hidden>
-        <section id="sfJoyconConnectGuide" class="sf-joycon-connect" aria-labelledby="sfJoyconConnectTitle">
-          <div class="sf-joycon-connect-head">
-            <span class="sf-joycon-link-icon" aria-hidden="true">↗</span>
-            <strong id="sfJoyconConnectTitle">Joy-Con 連線說明</strong>
-          </div>
-          <div class="sf-joycon-connect-body">
-            <figure class="sf-joycon-rail-figure">
-              <svg class="sf-joycon-rail" viewBox="0 0 430 118" role="img" aria-labelledby="sfJoyconRailTitle sfJoyconRailDesc">
-                <title id="sfJoyconRailTitle">Joy-Con 側邊按鍵示意圖</title>
-                <desc id="sfJoyconRailDesc">Joy-Con 側邊有 SL、同步按鈕與 SR。同步按鈕位於 SL 和 SR 之間，是一顆小圓按鈕。</desc>
-                <defs>
-                  <linearGradient id="sfRailBody" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0" stop-color="#fb923c"/><stop offset="1" stop-color="#c2410c"/>
-                  </linearGradient>
-                  <filter id="sfRailGlow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="4"/></filter>
-                </defs>
-                <rect x="12" y="30" width="406" height="58" rx="25" fill="#0b111b" stroke="#6b7280" stroke-width="3"/>
-                <rect x="40" y="35" width="350" height="48" rx="18" fill="url(#sfRailBody)" stroke="#fdba74" stroke-width="2"/>
-                <rect x="67" y="45" width="79" height="28" rx="8" fill="#7c2d12" stroke="#fed7aa" stroke-width="2"/>
-                <text x="106" y="65" text-anchor="middle" fill="#fff7ed" font-size="18" font-weight="800">SL</text>
-                <circle cx="215" cy="59" r="16" fill="#1f2937" stroke="#fed7aa" stroke-width="3"/>
-                <circle cx="215" cy="59" r="8" fill="#fb923c"/>
-                <g class="sf-joycon-sync-rays" fill="#fbbf24">
-                  <path d="M215 15l4 11h-8z"/><path d="M190 20l8 9-7 4z"/><path d="M240 20l-1 13-7-4z"/>
-                </g>
-                <rect x="284" y="45" width="79" height="28" rx="8" fill="#7c2d12" stroke="#fed7aa" stroke-width="2"/>
-                <text x="323" y="65" text-anchor="middle" fill="#fff7ed" font-size="18" font-weight="800">SR</text>
-                <path d="M215 78v22h-45" fill="none" stroke="#fbbf24" stroke-width="3"/>
-                <rect x="66" y="94" width="143" height="22" rx="11" fill="#111827" stroke="#f59e0b" stroke-width="2"/>
-                <text x="137" y="110" text-anchor="middle" fill="#fde68a" font-size="14" font-weight="800">同步按鈕（長按）</text>
-              </svg>
-            </figure>
-            <ol class="sf-joycon-connect-steps">
-              <li><b>長按小圓同步按鈕約 3 秒</b></li>
-              <li>四顆指示燈來回閃爍後，在電腦的「藍牙」選擇 <b>Joy-Con (L)</b> 或 <b>Joy-Con (R)</b></li>
-              <li>連線完成後回到此畫面，<b>同時按 SL + SR</b> 加入玩家</li>
-            </ol>
-          </div>
-        </section>
         <div id="sfPairingPrompt" class="sf-pairing-prompt">請玩家依序拿起自己的 Joy-Con，<b>同時按住 SL + SR</b>。配對成功的順序就是 P1、P2、P3、P4。</div>
         <div id="sfSlots" class="sf-slots"></div>
         <div id="sfPairingStatus" class="sf-pairing-status" aria-live="polite"></div>
@@ -156,6 +117,11 @@
       </section>
     </div>
   </section>
+
+  <figure id="sfJoyconConnectGuide" class="sf-joycon-connect" hidden>
+    <img src="/static/help/joycon-connect-guide.jpg" width="950" height="221"
+      alt="Joy-Con 連線說明：長按側邊小圓同步按鈕約三秒，等待指示燈閃爍並完成與電腦連線。">
+  </figure>
 
   <div class="lobby-brand">
     <div class="lobby-kicker">REDLINE COMMAND LOBBY</div>
@@ -556,7 +522,7 @@
 <script src="/static/controller_ui.js?v=game-menu-music-flow-20261101"></script>
 <script src="/static/controller_living_room.js?v=game-menu-music-flow-20261101"></script>
 <script src="/static/start_flow_core.js?v=reaction-victory-controller-20261027"></script>
-<script src="/static/start_flow_ui.js?v=lobby-settings-cleanup-20261031"></script>
+<script src="/static/start_flow_ui.js?v=joycon-connect-image-20261101"></script>
 <script src="/static/start_screen_fx.js?v=command-entry-webgl-20261031"></script>
 <script src="/static/game_music.js?v=game-menu-music-flow-20261101"></script>
 </body>

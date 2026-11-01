@@ -325,9 +325,11 @@ test('index.html: the layers exist, the nav button is the game menu (no old help
   assert.ok(html.includes('配樂音量'));
   assert.ok(!html.includes('joyconHelpBtn'));
   const tag = 'game-menu-music-flow-20261101';
-  for (const f of ['style.css', 'controller_core.js', 'living_room_core.js', 'controller_ui.js', 'controller_living_room.js', 'app.js', 'game_music.js']) {
+  for (const f of ['controller_core.js', 'living_room_core.js', 'controller_ui.js', 'controller_living_room.js', 'app.js', 'game_music.js']) {
     assert.ok(html.includes(`/static/${f}?v=${tag}`), f);
   }
+  assert.ok(html.includes('/static/style.css?v=joycon-connect-image-20261101'), 'style.css');
+  assert.ok(html.includes('/static/start_flow_ui.js?v=joycon-connect-image-20261101'), 'start_flow_ui.js');
   assert.ok(fs.existsSync(path.join(ROOT, 'static', 'audio', 'redline-theme.m4a')));
   assert.ok(!/https?:\/\/[^"']*\.(m4a|mp3|ogg|wav)/i.test(html), 'no remote audio');
 });

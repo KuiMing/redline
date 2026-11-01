@@ -4211,8 +4211,9 @@ html[data-display="living-room"] .lr-focus-overlay { height: 644px; }
 
 /* ---- 開始遊戲前流程（start_flow_ui.js）：初始三條路徑 → 建立設定／Joy-Con 配對 → 既有行動代號／陣營畫面 ----
  * 與 #lobby 同一個 1280×720 設計單位；顯示開始流程時隱藏作戰準備室本體，Joy-Con 焦點集合因此只會落在開始流程上。 */
-#lobby[data-flow="start"] > :not(#startFlow) { display: none !important; }
+#lobby[data-flow="start"] > :not(#startFlow):not(#sfJoyconConnectGuide) { display: none !important; }
 #lobby:not([data-flow="start"]) > #startFlow { display: none; }
+#lobby:not([data-flow="start"]) > #sfJoyconConnectGuide { display: none; }
 .startflow {
   position: absolute;
   left: 50%;
@@ -4231,6 +4232,11 @@ html[data-display="living-room"] .lr-focus-overlay { height: 644px; }
   overflow-y: auto;
 }
 .startflow[hidden] { display: none; }
+.startflow[data-control-mode="joycon"] {
+  left: 20px;
+  width: 700px;
+  transform: translateY(-50%);
+}
 .startflow .lobby-title { margin-bottom: 14px; }
 .startflow .lobby-market-option::after { display: none; }
 .sf-panel[hidden], .sf-pairing[hidden] { display: none; }
@@ -4263,33 +4269,20 @@ html[data-display="living-room"] .lr-focus-overlay { height: 644px; }
 .sf-row-label { color: rgba(203, 213, 225, 0.9); font-size: 1rem; font-weight: 700; }
 .sf-pairing { margin: 6px 0 4px; padding: 12px 14px; border: 1px solid rgba(251, 191, 36, 0.4); border-radius: 16px; background: rgba(15, 23, 42, 0.66); }
 .sf-joycon-connect {
-  margin: -12px -14px 12px;
+  position: absolute;
+  top: 28px;
+  right: 20px;
+  z-index: 5;
+  width: 520px;
+  margin: 0;
   overflow: hidden;
-  border-bottom: 1px solid rgba(251, 146, 60, 0.36);
-  border-radius: 16px 16px 0 0;
-  background:
-    radial-gradient(circle at 40% 45%, rgba(194, 65, 12, 0.2), transparent 38%),
-    linear-gradient(100deg, rgba(3, 7, 18, 0.98), rgba(15, 23, 42, 0.94));
+  border: 1px solid rgba(251, 191, 36, 0.55);
+  border-radius: 14px;
+  background: #050914;
+  box-shadow: 0 18px 52px rgba(0, 0, 0, 0.55), 0 0 24px rgba(245, 158, 11, 0.12);
 }
-.sf-joycon-connect-head {
-  display: flex; align-items: center; gap: 9px; padding: 9px 14px 6px;
-  color: #fff7ed; font-size: 1rem; letter-spacing: 0.04em;
-}
-.sf-joycon-link-icon {
-  display: grid; place-items: center; width: 25px; height: 25px; border-radius: 7px;
-  background: #f59e0b; color: #111827; font-size: 19px; font-weight: 900; transform: rotate(-45deg);
-}
-.sf-joycon-connect-body { display: grid; grid-template-columns: 1.15fr 1fr; align-items: center; gap: 16px; padding: 0 14px 10px; }
-.sf-joycon-rail-figure { min-width: 0; margin: 0; }
-.sf-joycon-rail { display: block; width: 100%; height: auto; }
-.sf-joycon-sync-rays { filter: url(#sfRailGlow); }
-.sf-joycon-connect-steps { margin: 0; padding: 0; list-style: none; counter-reset: joycon-connect; color: #e5e7eb; font-size: 0.82rem; line-height: 1.35; }
-.sf-joycon-connect-steps li { position: relative; min-height: 25px; padding: 3px 0 4px 34px; counter-increment: joycon-connect; }
-.sf-joycon-connect-steps li::before {
-  content: counter(joycon-connect); position: absolute; left: 0; top: 2px; display: grid; place-items: center;
-  width: 24px; height: 24px; border-radius: 7px; background: #ffedd5; color: #7c2d12; font-weight: 900;
-}
-.sf-joycon-connect-steps b { color: #fde68a; }
+.sf-joycon-connect[hidden] { display: none; }
+.sf-joycon-connect img { display: block; width: 100%; height: auto; }
 .sf-pairing-prompt { color: #fde68a; font-size: 1rem; line-height: 1.5; }
 .sf-slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 10px 0 6px; }
 .sf-slot { padding: 8px 10px; border: 1px dashed rgba(148, 163, 184, 0.5); border-radius: 12px; text-align: center; color: rgba(148, 163, 184, 0.9); }

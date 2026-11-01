@@ -225,11 +225,10 @@ def test_joycon_connection_guide_only_appears_for_joycon(browser, app_url):
     assert not guide.is_visible()
     page.click('[data-sf-control="joycon"]')
     assert guide.is_visible()
-    text = guide.inner_text()
-    assert "長按小圓同步按鈕約 3 秒" in text
-    assert "Joy-Con (L)" in text and "Joy-Con (R)" in text
-    assert "同時按 SL + SR" in text
-    assert page.locator("#sfJoyconConnectGuide svg").is_visible()
+    guide_box = guide.bounding_box()
+    assert guide_box and guide_box["x"] > 720 and guide_box["y"] < 60
+    assert page.locator('#sfJoyconConnectGuide img[src="/static/help/joycon-connect-guide.jpg"]').count() == 1
+    assert page.locator("#sfJoyconConnectGuide img").is_visible()
     page.click('[data-sf-control="computer"]')
     assert not guide.is_visible()
 

@@ -276,7 +276,9 @@
     });
     document.querySelectorAll('[data-sf-control]').forEach(b => setPressed(b, b.dataset.sfControl === d.controlMode));
     const joy = d.controlMode === 'joycon';
+    $('startFlow').dataset.controlMode = d.controlMode;
     $('sfPairing').hidden = !joy;
+    $('sfJoyconConnectGuide').hidden = !joy;
     const cancelled = joy && sf.cancelled && !sf.pairing.order.length;
     if (cancelled) $('sfPairing').dataset.cancelled = 'true'; else delete $('sfPairing').dataset.cancelled;
     const slots = Core.slots(sf.pairing);
