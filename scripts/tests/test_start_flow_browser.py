@@ -1610,7 +1610,7 @@ def test_single_joycon_drives_start_screen_without_sl_sr_and_creates_no_seat(bro
     fake.press(24801, "A")
     page.wait_for_function("window.RedlineStartFlow.getState().step === 'setup'", timeout=5000)
     assert page.evaluate("window.RedlineStartFlow.getState().draft.aiRedArmy") is ai
-    assert page.inner_text("#sfSetupTitle") == ("建立 AI 紅軍遊戲" if ai else "建立真人紅軍遊戲")
+    assert page.inner_text("#sfSetupTitle") == ("AI 紅軍" if ai else "建立真人紅軍遊戲")
     # 起始設定（難度）也由同一支操作；仍是導覽，不是 P1。
     assert nav_to(page, fake, 24801, '[data-sf-market="all_cards"]'), focus_id(page)
     fake.press(24801, "A")

@@ -328,8 +328,8 @@ test('index.html: the layers exist, the nav button is the game menu (no old help
   for (const f of ['controller_core.js', 'living_room_core.js', 'controller_ui.js', 'controller_living_room.js', 'app.js', 'game_music.js']) {
     assert.ok(html.includes(`/static/${f}?v=${tag}`), f);
   }
-  assert.ok(html.includes('/static/style.css?v=joycon-connect-layout-20261101'), 'style.css');
-  assert.ok(html.includes('/static/start_flow_ui.js?v=joycon-connect-layout-20261101'), 'start_flow_ui.js');
+  assert.ok(html.includes('/static/style.css?v=joycon-connect-expanded-20261101'), 'style.css');
+  assert.ok(html.includes('/static/start_flow_ui.js?v=joycon-connect-expanded-20261101'), 'start_flow_ui.js');
   assert.ok(fs.existsSync(path.join(ROOT, 'static', 'audio', 'redline-theme.m4a')));
   assert.ok(!/https?:\/\/[^"']*\.(m4a|mp3|ogg|wav)/i.test(html), 'no remote audio');
 });
