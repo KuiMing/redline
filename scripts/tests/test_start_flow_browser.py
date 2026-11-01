@@ -218,6 +218,31 @@ def create_via_flow(page, ai=False, market=None, control="computer"):
     page.click(f'[data-sf-control="{control}"]')
 
 
+def test_joycon_connection_guide_only_appears_for_joycon(browser, app_url):
+    page = new_page(browser, app_url)
+    page.click("#sfCreateHuman")
+    guide = page.locator("#sfJoyconConnectGuide")
+    assert not guide.is_visible()
+    page.click('[data-sf-control="joycon"]')
+    assert guide.is_visible()
+    guide_box = guide.bounding_box()
+    flow_box = page.locator("#startFlow").bounding_box()
+    setup_title_box = page.locator("#sfSetupTitle").bounding_box()
+    back_box = page.locator("#sfBackToEntry").bounding_box()
+    difficulty_box = page.locator("#sfSetup .sf-row").first.bounding_box()
+    assert guide_box and flow_box and setup_title_box and back_box and difficulty_box
+    assert guide_box["width"] > flow_box["width"] * 0.55
+    assert guide_box["x"] > flow_box["x"] + flow_box["width"] * 0.3
+    assert guide_box["x"] + guide_box["width"] <= flow_box["x"] + flow_box["width"]
+    assert guide_box["y"] >= flow_box["y"]
+    assert guide_box["y"] + guide_box["height"] < difficulty_box["y"]
+    assert 0 <= back_box["x"] - (setup_title_box["x"] + setup_title_box["width"]) < 20
+    assert page.locator('#sfJoyconConnectGuide img[src="/static/help/joycon-connect-guide.jpg"]').count() == 1
+    assert page.locator("#sfJoyconConnectGuide img").is_visible()
+    page.click('[data-sf-control="computer"]')
+    assert not guide.is_visible()
+
+
 def finish_and_create(page, name="Tester", proof=None):
     page.click("#sfContinueBtn")
     page.wait_for_selector("#startFlow", state="hidden")
@@ -1546,7 +1571,11 @@ def nav_to(page, joycons, port, selector, limit=12):
           if (a === t) return 'done';
           if (!a || a === document.body || !a.classList.contains('rl-pad-focus')) return 'none';
           const r = t.getBoundingClientRect(), q = a.getBoundingClientRect();
-          return [(r.left + r.right - q.left - q.right) / 2, (r.top + r.bottom - q.top - q.bottom) / 2];
+          const dy = (r.top + r.bottom - q.top - q.bottom) / 2;
+          // 遊戲選單是依列導覽（上下走列、左右只在配樂音量的 −/+ 之間）：目標在別列就用垂直方向。
+          const menu = document.getElementById('gameMenuModal');
+          if (menu && menu.contains(t) && menu.contains(a) && Math.abs(dy) > 8) return [0, dy];
+          return [(r.left + r.right - q.left - q.right) / 2, dy];
         }""", selector)
         if delta == "done":
             return True
@@ -1581,7 +1610,7 @@ def test_single_joycon_drives_start_screen_without_sl_sr_and_creates_no_seat(bro
     fake.press(24801, "A")
     page.wait_for_function("window.RedlineStartFlow.getState().step === 'setup'", timeout=5000)
     assert page.evaluate("window.RedlineStartFlow.getState().draft.aiRedArmy") is ai
-    assert page.inner_text("#sfSetupTitle") == ("建立 AI 紅軍遊戲" if ai else "建立真人紅軍遊戲")
+    assert page.inner_text("#sfSetupTitle") == ("AI 紅軍" if ai else "建立真人紅軍遊戲")
     # 起始設定（難度）也由同一支操作；仍是導覽，不是 P1。
     assert nav_to(page, fake, 24801, '[data-sf-market="all_cards"]'), focus_id(page)
     fake.press(24801, "A")

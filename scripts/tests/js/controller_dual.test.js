@@ -361,19 +361,19 @@ test('start-screen nav: newly claimed or reconnected controller treats held A as
   assert.deepEqual(p.fired, [{ type: 'press', button: 'A' }]);
 });
 
-test('Joy-Con help ring: left L／SL after bridge normalization route exactly like right R／SR (incl. on the help button)', () => {
+test('game menu ring: left L／SL after bridge normalization route exactly like right R／SR (incl. on the game menu button)', () => {
   const lefts = Object.fromEntries(FIXTURE.inputs.filter(e => e.side === 'left').map(e => [e.physical, e]));
-  const HELP_CTX = { scopeKind: 'page', hasFocus: true, helpEntry: true, card: null, cancelAvailable: false, sectionsLocked: false };
+  const MENU_CTX = { scopeKind: 'page', hasFocus: true, menuEntry: true, card: null, cancelAvailable: false, sectionsLocked: false };
   for (const [physical, rightName, step] of [['L', 'R', 1], ['SL', 'SR', -1]]) {
     const left = pressThrough('left', lefts[physical].logical);
     const right = pressThrough('right', rightName);
     assert.deepEqual(left, right, physical);
-    assert.deepEqual(C.routeAction(HELP_CTX, C.logicalAction(left[0])), { cmd: 'section', step }, physical);
+    assert.deepEqual(C.routeAction(MENU_CTX, C.logicalAction(left[0])), { cmd: 'section', step }, physical);
   }
-  // A（左＝→）在說明按鈕上開圖；B（左＝↓）不作用；左 SR（＝右 SL）仍是全域城鎮聚焦。
-  assert.deepEqual(C.routeAction(HELP_CTX, C.logicalAction(pressThrough('left', lefts.Right.logical)[0])), { cmd: 'openHelp' });
-  assert.equal(C.routeAction(HELP_CTX, C.logicalAction(pressThrough('left', lefts.Down.logical)[0])), null);
-  assert.deepEqual(C.routeAction(HELP_CTX, C.logicalAction(pressThrough('left', lefts.SR.logical)[0])), { cmd: 'focusMenu' });
+  // A（左＝→）在遊戲選單按鈕上開啟遊戲選單；B（左＝↓）不作用；左 SR（＝右 SL）仍是全域城鎮聚焦。
+  assert.deepEqual(C.routeAction(MENU_CTX, C.logicalAction(pressThrough('left', lefts.Right.logical)[0])), { cmd: 'openMenu' });
+  assert.equal(C.routeAction(MENU_CTX, C.logicalAction(pressThrough('left', lefts.Down.logical)[0])), null);
+  assert.deepEqual(C.routeAction(MENU_CTX, C.logicalAction(pressThrough('left', lefts.SR.logical)[0])), { cmd: 'focusMenu' });
 });
 
 test('start-screen nav with a carried-over P1 (restart): only that controller, even when others are active; never another', () => {

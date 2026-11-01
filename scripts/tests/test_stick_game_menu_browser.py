@@ -12,8 +12,8 @@ route 攔截（不打到伺服器、不建立或破壞任何房間），只證�
 驗證：
   1. 不到 2 秒放開不開；搖桿離開中央立即取消（回中也不恢復）；滿 2 秒開啟置中的「遊戲選單」。
   2. 開啟時 STICK 仍按住：放開前 A 不作用（held-button 不穿透）。
-  3. 搖桿上下導覽（不循環）、左右與其他鍵不作用；B 返回遊戲並還原開啟前的焦點。
-  4. Joy-Con 功能表＝既有 Joy-Con 說明圖；重新開始＝第二層確認（明確顯示離開目前遊戲）；按住的 A／B 不連續觸發兩層；
+  3. 搖桿上下導覽（不循環）；左右只在「配樂音量」的 − / + 之間移動；其他鍵不作用；B 返回遊戲並還原開啟前的焦點。
+  4. Joy-Con 功能表＝開啟 Joy-Con 說明圖；重新開始＝第二層確認（明確顯示離開目前遊戲）；按住的 A／B 不連續觸發兩層；
      確認層 B 回到遊戲選單（焦點在重新開始），選單 B 返回遊戲；選重新開始的 A 一直按住不會確認，放開後新的 A
      才點「確認重新開始」導向 /new-game。
   5. 左 Joy-Con（v2）同樣可開啟；其他 Joy-Con 的 frame 不能開啟；其他 overlay／交接遮罩期間不開啟。
@@ -30,7 +30,7 @@ from pathlib import Path
 
 import requests
 
-from test_joycon_help_button_browser import LEFT_ID, MOCK_BRIDGE_LEFT
+from test_game_menu_button_browser import LEFT_ID, MOCK_BRIDGE_LEFT
 from test_propagandist_joycon_browser import (  # noqa: F401  (app_url／browser 是 pytest fixture)
     MOCK_BRIDGE, app_url, browser, dismiss_modals, hint, me, pad, pending, settle, wait_until,
 )
@@ -261,12 +261,14 @@ def test_hold_threshold_neutral_cancel_navigation_settings_and_two_level_back(br
         # 3. 上下導覽（不循環）；左右與其他鍵不作用。
         stick(page, "down")
         assert focus_id(page)["sig"] == "#gameMenuSettingsBtn"
+        stick(page, "down")  # 配樂音量列（− / +）在 Joy-Con 功能表與重新開始之間
+        assert focus_id(page)["sig"] == "#gameMenuVolumeDownBtn", focus_id(page)
         stick(page, "down")
         assert focus_id(page)["sig"] == "#gameMenuRestartBtn"
         ev.record(page, hits, "nav-restart", "03_menu_nav_restart")
         stick(page, "down")
         assert focus_id(page)["sig"] == "#gameMenuRestartBtn"
-        for direction in ("left", "right"):
+        for direction in ("left", "right"):  # 重新開始左右沒有鄰居：焦點不動
             stick(page, direction)
             assert focus_id(page)["sig"] == "#gameMenuRestartBtn", direction
         for key in ("X", "Y", "R", "SR", "SL", "ZR", "PLUS", "CAPTURE"):
@@ -275,6 +277,7 @@ def test_hold_threshold_neutral_cancel_navigation_settings_and_two_level_back(br
             assert focus_id(page)["sig"] == "#gameMenuRestartBtn", key
         assert not shown(page, "lrConfirmModal") and not shown(page, "lrFocusMenu")
         assert view(page) == view_before
+        stick(page, "up")
         stick(page, "up")
         stick(page, "up")
         assert focus_id(page)["sig"] == "#gameMenuResumeBtn"
@@ -287,7 +290,7 @@ def test_hold_threshold_neutral_cancel_navigation_settings_and_two_level_back(br
         assert pad(page)["scope"] in ("page", "map") and pad(page)["focusSig"] == page_focus, (pad(page), page_focus)
         ev.record(page, hits, "b-returned-to-game")
 
-        # 4a. Joy-Con 功能表＝既有 Joy-Con 說明圖（B 照既有流程關閉）。
+        # 4a. Joy-Con 功能表＝開啟 Joy-Con 說明圖（B 照既有流程關閉）。
         open_menu(page)
         stick(page, "down")
         press(page, "A")
@@ -303,6 +306,7 @@ def test_hold_threshold_neutral_cancel_navigation_settings_and_two_level_back(br
 
         # 4b. 重新開始 → 第二層確認；選這一項的 A 按住 1 秒也不會直接確認。
         open_menu(page)
+        stick(page, "down")
         stick(page, "down")
         stick(page, "down")
         press(page, "A", hold=1.0)
@@ -337,6 +341,7 @@ def test_hold_threshold_neutral_cancel_navigation_settings_and_two_level_back(br
 
         # 4c. 選「重新開始」的 A 一直按住：確認層出現但 A 被 release gate 擋住，持續按住不會重新開始。
         open_menu(page)
+        stick(page, "down")
         stick(page, "down")
         stick(page, "down")
         assert focus_id(page)["sig"] == "#gameMenuRestartBtn", focus_id(page)
@@ -384,7 +389,7 @@ def test_left_joycon_opens_and_other_controllers_and_overlays_cannot(browser, ap
         assert menu(page)["level"] is None and menu(page)["holding"] is False, menu(page)
         assert pad(page)["controller"]["owned"] == LEFT_ID
 
-        # 其他 overlay 開著（既有 Joy-Con 說明圖）：不開啟。
+        # 其他 overlay 開著（Joy-Con 說明圖）：不開啟。
         page.evaluate("openJoyconHelp()")
         settle(page, "desktop")
         assert menu(page)["blocker"] == "overlay", menu(page)

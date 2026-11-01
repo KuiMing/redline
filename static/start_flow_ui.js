@@ -268,7 +268,7 @@
 
   function render() {
     const d = sf.draft;
-    $('sfSetupTitle').textContent = d.aiRedArmy ? '建立 AI 紅軍遊戲' : '建立真人紅軍遊戲';
+    $('sfSetupTitle').textContent = d.aiRedArmy ? 'AI 紅軍' : '建立真人紅軍遊戲';
     const setPressed = (b, on) => { b.classList.toggle('active', on); b.setAttribute('aria-pressed', String(on)); };
     document.querySelectorAll('[data-sf-market]').forEach(b => setPressed(b, b.dataset.sfMarket === d.marketMode));
     document.querySelectorAll('[data-sf-mode-guide]').forEach(card => {
@@ -276,7 +276,9 @@
     });
     document.querySelectorAll('[data-sf-control]').forEach(b => setPressed(b, b.dataset.sfControl === d.controlMode));
     const joy = d.controlMode === 'joycon';
+    $('startFlow').dataset.controlMode = d.controlMode;
     $('sfPairing').hidden = !joy;
+    $('sfJoyconConnectGuide').hidden = !joy;
     const cancelled = joy && sf.cancelled && !sf.pairing.order.length;
     if (cancelled) $('sfPairing').dataset.cancelled = 'true'; else delete $('sfPairing').dataset.cancelled;
     const slots = Core.slots(sf.pairing);

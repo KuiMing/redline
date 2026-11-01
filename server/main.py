@@ -48,6 +48,7 @@ from server.map_data_routes import (
 from server.red_army_ai_runtime import acknowledge_ai_turn, drive_red_army_turns, set_public_hold
 from server.test_routes.registry import register_test_routes
 from server.test_routes.runtime import GameSetupRuntime
+import mimetypes
 import os
 import asyncio
 import secrets
@@ -57,6 +58,9 @@ ENABLE_TEST_ROUTES = os.getenv("ENABLE_TEST_ROUTES", "false").strip().lower() in
     "true",
     "yes",
 )
+
+# 遊戲配樂（static/audio/redline-theme.m4a）：Python 預設把 .m4a 猜成 audio/mp4a-latm，瀏覽器不一定接受。
+mimetypes.add_type("audio/mp4", ".m4a")
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")

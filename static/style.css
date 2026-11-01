@@ -924,8 +924,8 @@ body {
   min-width: 0;
 }
 
-/* 導覽列的「Joy-Con 說明」按鈕：不是遊戲頁面（不帶 .game-tab），只開啟說明圖。 */
-.joycon-help-btn {
+/* 導覽列的「遊戲選單」按鈕：不是遊戲頁面（不帶 .game-tab），只開啟遊戲選單。 */
+.game-menu-btn {
   appearance: none;
   flex: 0 0 auto;
   display: inline-flex;
@@ -942,14 +942,14 @@ body {
   cursor: pointer;
 }
 
-.joycon-help-btn:hover,
-.joycon-help-btn:focus-visible {
+.game-menu-btn:hover,
+.game-menu-btn:focus-visible {
   border-color: rgba(255, 225, 77, 0.9);
   background: rgba(90, 72, 12, 0.72);
   color: #fff7cc;
 }
 
-.joycon-help-icon {
+.game-menu-icon {
   flex: 0 0 auto;
 }
 
@@ -4159,6 +4159,13 @@ html:not([data-display="living-room"]) .lr-confirm-ok { background: #b91c1c; bor
 .game-menu-glass .modal-title-text { font-size: 1.35rem; color: #ffe14d; text-align: center; }
 .game-menu-options { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
 .game-menu-option { width: 100%; min-height: 48px; font-family: inherit; font-size: 1rem; font-weight: 700; text-align: center; }
+/* 配樂音量：標籤＋ [－] 30% [＋]；− / + 是可聚焦的實體按鈕（Joy-Con 方向左右切換、A 調整；到 0%／100% 時維持可聚焦，不再變化）。 */
+.game-menu-volume { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; border: 1px solid rgba(255, 225, 77, 0.35); border-radius: 8px; background: rgba(255, 225, 77, 0.06); }
+.game-menu-volume-label { font-size: 0.9rem; font-weight: 700; color: #fde68a; text-align: center; }
+.game-menu-volume-controls { display: grid; grid-template-columns: 64px 1fr 64px; align-items: center; gap: 10px; }
+.game-menu-volume-btn { min-height: 44px; font-family: inherit; font-size: 1.3rem; font-weight: 700; line-height: 1; padding: 0; }
+.game-menu-volume-btn[data-at-limit="true"] { opacity: 0.55; }
+.game-menu-volume-value { text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 1.25rem; font-weight: 700; color: #ffffff; font-variant-numeric: tabular-nums; }
 .game-menu-danger { color: #fecaca; border-color: rgba(248, 113, 113, 0.5); }
 .game-menu-confirm-glass { width: 460px; border-color: #fca5a5; }
 .game-menu-confirm-glass .modal-title-text { color: #fecaca; text-align: left; }
@@ -4250,11 +4257,27 @@ html[data-display="living-room"] .lr-focus-overlay { height: 644px; }
 }
 .sf-path-join label strong { display: block; margin-bottom: 8px; font-size: 1.2rem; color: #e2e8f0; }
 .sf-error { min-height: 1.3em; margin-top: 6px; color: #fca5a5; font-size: 0.9rem; }
-.sf-setup-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.sf-setup-head { display: flex; align-items: center; justify-content: flex-start; gap: 12px; margin-bottom: 14px; }
 .sf-setup-title { font-size: 1.5rem; font-weight: 800; color: #fbbf24; }
 .sf-row { display: grid; grid-template-columns: 110px 1fr; align-items: center; gap: 14px; margin-bottom: 12px; }
 .sf-row-label { color: rgba(203, 213, 225, 0.9); font-size: 1rem; font-weight: 700; }
 .sf-pairing { margin: 6px 0 4px; padding: 12px 14px; border: 1px solid rgba(251, 191, 36, 0.4); border-radius: 16px; background: rgba(15, 23, 42, 0.66); }
+.sf-joycon-connect {
+  position: absolute;
+  top: 14px;
+  right: 8px;
+  z-index: 5;
+  width: 570px;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid rgba(251, 191, 36, 0.55);
+  border-radius: 14px;
+  background: #050914;
+  box-shadow: 0 18px 52px rgba(0, 0, 0, 0.55), 0 0 24px rgba(245, 158, 11, 0.12);
+}
+.sf-joycon-connect[hidden] { display: none; }
+#lobby:not([data-start-step="setup"]) .sf-joycon-connect { display: none; }
+.sf-joycon-connect img { display: block; width: 100%; height: auto; }
 .sf-pairing-prompt { color: #fde68a; font-size: 1rem; line-height: 1.5; }
 .sf-slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 10px 0 6px; }
 .sf-slot { padding: 8px 10px; border: 1px dashed rgba(148, 163, 184, 0.5); border-radius: 12px; text-align: center; color: rgba(148, 163, 184, 0.9); }

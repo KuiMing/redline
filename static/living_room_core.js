@@ -416,18 +416,18 @@
     return null;
   }
 
-  // R／SR 環上的額外焦點（不是區段、不切換頁面）：導覽列的「Joy-Con 說明」按鈕。進入時只放焦點，A 才開啟說明圖。
-  const RING_HELP_KEY = 'joyconHelp';
+  // R／SR 環上的額外焦點（不是區段、不切換頁面）：導覽列的「遊戲選單」按鈕。進入時只放焦點，A 才開啟遊戲選單。
+  const RING_MENU_KEY = 'gameMenu';
 
-  /** 環上的一站：六個區段之一，或額外的 Joy-Con 說明焦點；其他 → null。 */
+  /** 環上的一站：六個區段之一，或額外的遊戲選單焦點；其他 → null。 */
   function ringStopOfKey(key) {
-    return key === RING_HELP_KEY ? RING_HELP_KEY : sectionOfKey(key);
+    return key === RING_MENU_KEY ? RING_MENU_KEY : sectionOfKey(key);
   }
 
   /**
-   * R／SR：stops＝分頁列順序的 [{key, usable}]（呼叫端讀既有分頁是否可見、啟用；Joy-Con 說明按鈕依它在導覽列的位置）。
+   * R／SR：stops＝分頁列順序的 [{key, usable}]（呼叫端讀既有分頁是否可見、啟用；遊戲選單按鈕依它在導覽列的位置）。
    * 跳過不可用與非環上的項目、循環；只剩目前一個可用時回傳 null。
-   * opts.choiceLock：必選地圖目標時只提供「戰略地圖」（已在地圖則 null；Joy-Con 說明不在其中）。
+   * opts.choiceLock：必選地圖目標時只提供「戰略地圖」（已在地圖則 null；遊戲選單按鈕不在其中）。
    */
   function stepSection(stops, currentKey, step, opts) {
     const o = opts || {};
@@ -698,7 +698,7 @@
     createGuard, lockProcessing, noteRedraw, noteActivation, processingActive, gate,
     beginMapRequest, expireMapRequest, settleMapResult, mapZoomBlocker,
     isDirectionalExcluded, choiceMapRedirect, contentZonesFor, reconcileIndex, gridColumns, gridMove, listMove, pickZone, cycleZone, resolveZone,
-    RING_HELP_KEY, ringStopOfKey, sectionOfKey, stepSection, buildKeyHints, pickFactionAbility, purchaseBuyBlocker, discardControlIndex,
+    RING_MENU_KEY, ringStopOfKey, sectionOfKey, stepSection, buildKeyHints, pickFactionAbility, purchaseBuyBlocker, discardControlIndex,
     buildMapList, mapStageKey, mapActFor, moveModeLabel, confirmInfoLines,
     FOCUS_MENU_REASONS, buildFocusMenu, findFocusMenuGroup, pickFocusMenuTown, matchesMenuRequest, menuSnapshotVerdict,
   };
