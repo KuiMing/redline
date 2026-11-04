@@ -1,0 +1,77 @@
+# 手動建置未簽署的 Apple Silicon 測試版 DMG，只上傳 artifact，不發布 Release。
+name: macOS DMG
+
+on:
+  workflow_dispatch:
+  # 讓功能分支在合併至 dev 前先產出可下載的測試 artifact。
+  pull_request:
+    branches:
+      - dev
+
+permissions:
+  contents: read
+
+env:
+  # 與 packaging/macos/build.sh 的 REQUIRED_* 相同；不一致時 build.sh 會失敗。
+  UV_PYTHON: "3.11.15"
+  UV_PYTHON_PREFERENCE: only-managed
+
+jobs:
+  build:
+    # macos-15 是 GitHub-hosted arm64 runner。不用 macos-latest，避免映像無預警換版；
+    # 下一步仍以 uname 實際確認架構。
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Verify runner is arm64
+        run: |
+          uname -a
+          sw_vers
+          test "$(uname -m)" = "arm64"
+
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.11.8"
+          enable-cache: false
+
+      - name: Print tool versions
+        run: |
+          uv --version
+          uv python install "$UV_PYTHON"
+          uv run --no-project python --version
+
+      - name: Check uv.lock matches pyproject.toml
+        run: uv lock --check
+
+      - name: Launcher tests
+        run: uv run --frozen pytest scripts/tests/test_macos_app_launcher.py -q
+
+      - name: Build app and DMG
+        run: packaging/macos/build.sh
+
+      # --gui 包含真實視窗與 LaunchServices（open -n）啟動後以 application quit 結束的流程。
+      - name: Smoke test the DMG
+        run: build/macos/venv/bin/python packaging/macos/smoke_test.py --dmg dist/REDLINE-*-macOS-arm64.dmg --gui
+
+      - name: Compute artifact name
+        id: artifact
+        env:
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          COMMIT: ${{ github.sha }}
+        run: |
+          version="$(build/macos/venv/bin/python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
+          echo "name=REDLINE-${version}-macOS-arm64-run${RUN_ID}.${RUN_ATTEMPT}-${COMMIT:0:7}" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ${{ steps.artifact.outputs.name }}
+          path: |
+            dist/REDLINE-*-macOS-arm64.dmg
+            dist/REDLINE-*-macOS-arm64.dmg.sha256
+          if-no-files-found: error
+          # DMG 已壓縮，不需要再壓一次。
+          compression-level: 0
+          retention-days: 14

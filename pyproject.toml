@@ -20,5 +20,12 @@ dev = [
     "websocket-client",
 ]
 
+# 只有 macOS App 打包（packaging/macos/）才需要；Docker 與 `uv run` 不會安裝。
+# 用 `uv sync --frozen --no-dev --group macos-app` 明確啟用。
+macos-app = [
+    "pyinstaller",
+    "pywebview; sys_platform == 'darwin'",
+]
+
 [tool.uv]
 package = false
