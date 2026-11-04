@@ -6,6 +6,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- macOS 測試版 App：未簽署的 Apple Silicon `REDLINE.app` 與 DMG，內含遊戲伺服器與 Joy-Con Bridge，不需要 Python、uv 或 Docker（FTCW 仍需另外安裝）。提供 `packaging/macos/build.sh` 與手動觸發、只上傳 artifact 的 GitHub Actions workflow。App 的遊戲伺服器會拒絕惡意 `Host`／`Origin`，換埠時保留音量、控制器與顯示設定，並附第三方授權聲明。見 README「macOS 測試版 App」。
+
 ## [2.0.0] - 2026-11-01
 
 ### Added
