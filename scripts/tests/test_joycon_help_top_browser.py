@@ -205,3 +205,172 @@ def test_lobby_keeps_controller_settings_panel(browser, app_url):
         assert page.evaluate("document.getElementById('padPanel').hidden") is True
     finally:
         ctx.close()
+
+
+def test_joycon_first_command_centre_opens_help_once(browser, app_url):
+    """Joy-Con 牌局選完陣營後第一次進入指揮中心會自動顯示說明；同一玩家、同一局只顯示一次。"""
+    ctx = browser.new_context(viewport={"width": 1280, "height": 720})
+    ctx.add_init_script(MOCK_BRIDGE)
+    page = ctx.new_page()
+    try:
+        page.goto(app_url + "/?display=desktop")
+        setup = requests.post(app_url + "/test/setup-remove-to-purchase", json={"faction_id": "aomen"}, timeout=10).json()
+        assert setup.get("game_id") and setup.get("player_id"), setup
+        page.evaluate("""setup => {
+          latestLobbyState = {control_mode: 'joycon'};
+          gameId = setup.game_id;
+          playerId = setup.player_id;
+          connect();
+        }""", setup)
+        page.wait_for_function("window.lastGameState && (window.lastGameState.players || []).length > 0")
+        page.wait_for_function("document.querySelector('#gameTabs .game-tab.active')?.dataset.view === 'command'")
+
+        # 隨機事件等既有視窗優先；測試只保留本功能的說明視窗。
+        page.evaluate("""() => {
+          for (const modal of document.querySelectorAll('.modal-overlay')) {
+            if (modal.id !== 'joyconHelpModal') modal.style.display = 'none';
+          }
+          scheduleJoyconFirstCommandHelp(window.lastGameState);
+        }""")
+        page.wait_for_selector("#joyconHelpModal", state="visible", timeout=5000)
+        assert page.evaluate("document.getElementById('joyconHelpTitle').textContent.trim()") == "Joy-Con 說明"
+        assert page.evaluate("document.body.classList.contains('joycon-help-open')") is True
+        proof = os.environ.get("REDLINE_JOYCON_FIRST_HELP_PROOF")
+        if proof:
+            page.screenshot(path=proof)
+        marker = page.evaluate("""() => localStorage.getItem(
+          `redline.joycon-first-command-help.v1:${gameId}:${playerId}`
+        )""")
+        assert marker == "shown"
+
+        page.click("#joyconHelpCloseBtn")
+        page.wait_for_selector("#joyconHelpModal", state="hidden")
+        page.evaluate("render(window.lastGameState)")
+        time.sleep(0.8)
+        assert not visible(page, "#joyconHelpModal"), "同一玩家、同一局重新繪製後不得再次自動顯示"
+    finally:
+        ctx.close()
+
+
+def test_computer_game_does_not_auto_open_joycon_help(browser, app_url):
+    ctx = browser.new_context(viewport={"width": 1280, "height": 720})
+    ctx.add_init_script(MOCK_BRIDGE)
+    page = ctx.new_page()
+    try:
+        page.goto(app_url + "/?display=desktop")
+        setup = requests.post(app_url + "/test/setup-remove-to-purchase", json={"faction_id": "aomen"}, timeout=10).json()
+        assert setup.get("game_id") and setup.get("player_id"), setup
+        page.evaluate("""setup => {
+          latestLobbyState = {control_mode: 'computer'};
+          gameId = setup.game_id;
+          playerId = setup.player_id;
+          connect();
+        }""", setup)
+        page.wait_for_function("window.lastGameState && (window.lastGameState.players || []).length > 0")
+        time.sleep(0.8)
+        assert not visible(page, "#joyconHelpModal")
+        marker = page.evaluate("""() => localStorage.getItem(
+          `redline.joycon-first-command-help.v1:${gameId}:${playerId}`
+        )""")
+        assert marker is None
+    finally:
+        ctx.close()
+
+
+def test_finished_joycon_game_does_not_poll_for_first_help(browser, app_url):
+    """永久不符合資格的結束狀態只檢查一次，不建立無限輪詢。"""
+    ctx = browser.new_context(viewport={"width": 1280, "height": 720})
+    ctx.add_init_script(MOCK_BRIDGE)
+    page = ctx.new_page()
+    try:
+        page.goto(app_url + "/?display=desktop")
+        page.evaluate("""() => {
+          gameId = 'finished-help-test';
+          playerId = 'p1';
+          latestLobbyState = {control_mode: 'joycon'};
+          window.__helpPolls = 0;
+          const nativeTimeout = window.setTimeout;
+          window.setTimeout = (...args) => {
+            window.__helpPolls += 1;
+            return nativeTimeout(...args);
+          };
+          maybeOpenJoyconFirstCommandHelp({
+            game_over: true,
+            players: [{id: 'p1', faction: 'aomen', base: '澳門'}],
+          });
+        }""")
+        time.sleep(0.6)
+        assert page.evaluate("window.__helpPolls") == 0
+        assert not visible(page, "#joyconHelpModal")
+    finally:
+        ctx.close()
+
+
+def test_first_help_does_not_cover_controller_peer_notice(browser, app_url):
+    """控制器 scope 中不具 modal-overlay class 的視窗也有優先權。"""
+    ctx = browser.new_context(viewport={"width": 1280, "height": 720})
+    page = ctx.new_page()
+    try:
+        page.goto(app_url + "/?display=desktop")
+        page.evaluate("""() => {
+          gameId = 'peer-notice-help-test';
+          playerId = 'p1';
+          latestLobbyState = {control_mode: 'joycon'};
+          document.getElementById('gameShell').style.display = 'block';
+          document.querySelectorAll('#gameTabs .game-tab').forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.view === 'command');
+          });
+          const peer = document.getElementById('peerActionNotice');
+          peer.classList.remove('peer-action-notice-minimized');
+          peer.style.display = 'block';
+          window.lastGameState = {
+            game_over: false,
+            players: [{id: 'p1', faction: 'aomen', base: '澳門'}],
+          };
+          maybeOpenJoyconFirstCommandHelp(window.lastGameState);
+        }""")
+        time.sleep(0.3)
+        assert not visible(page, "#joyconHelpModal")
+        marker = page.evaluate("localStorage.getItem('redline.joycon-first-command-help.v1:peer-notice-help-test:p1')")
+        assert marker is None
+
+        # 關閉既有視窗後，屬性觀察器會重新檢查，不需等待下一次 server render。
+        page.evaluate("document.getElementById('peerActionNotice').style.display = 'none'")
+        page.wait_for_selector("#joyconHelpModal", state="visible", timeout=3000)
+        marker = page.evaluate("localStorage.getItem('redline.joycon-first-command-help.v1:peer-notice-help-test:p1')")
+        assert marker == "shown"
+    finally:
+        ctx.close()
+
+
+def test_entering_command_tab_rechecks_first_help_without_render(browser, app_url):
+    """首次從其他分頁進入指揮中心時立即顯示，不依賴下一次 server render。"""
+    ctx = browser.new_context(viewport={"width": 1280, "height": 720})
+    page = ctx.new_page()
+    try:
+        page.goto(app_url + "/?display=desktop")
+        page.evaluate("""() => {
+          gameId = 'command-tab-help-test';
+          playerId = 'p1';
+          latestLobbyState = {control_mode: 'joycon'};
+          document.getElementById('gameShell').style.display = 'block';
+          document.querySelectorAll('#gameTabs .game-tab').forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.view === 'map');
+          });
+          window.lastGameState = {
+            game_over: false,
+            players: [{id: 'p1', faction: 'aomen', base: '澳門'}],
+          };
+          maybeOpenJoyconFirstCommandHelp(window.lastGameState);
+        }""")
+        time.sleep(0.3)
+        assert not visible(page, "#joyconHelpModal")
+
+        page.evaluate("""() => {
+          document.querySelectorAll('#gameTabs .game-tab').forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.view === 'command');
+          });
+        }""")
+        page.wait_for_selector("#joyconHelpModal", state="visible", timeout=3000)
+    finally:
+        ctx.close()

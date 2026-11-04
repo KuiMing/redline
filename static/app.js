@@ -4279,9 +4279,119 @@ function closeJoyconHelp() {
   if (btn?.isConnected) btn.focus({ preventScroll: true });
 }
 
+const JOYCON_FIRST_COMMAND_HELP_KEY = 'redline.joycon-first-command-help.v1';
+const joyconControlModeByGame = new Map();
+const joyconControlModeRequests = new Map();
+const joyconFirstCommandHelpShown = new Set();
+let joyconFirstCommandHelpTimer = null;
+let joyconFirstCommandHelpObserver = null;
+
+function joyconFirstCommandHelpStorageKey() {
+  if (!gameId || !playerId) return null;
+  return `${JOYCON_FIRST_COMMAND_HELP_KEY}:${gameId}:${playerId}`;
+}
+
+function joyconFirstCommandHelpWasShown() {
+  const key = joyconFirstCommandHelpStorageKey();
+  if (!key) return true;
+  if (joyconFirstCommandHelpShown.has(key)) return true;
+  try { return localStorage.getItem(key) === 'shown'; } catch { return false; }
+}
+
+function rememberJoyconFirstCommandHelp() {
+  const key = joyconFirstCommandHelpStorageKey();
+  if (!key) return;
+  joyconFirstCommandHelpShown.add(key);
+  try { localStorage.setItem(key, 'shown'); } catch { /* private browsing/storage blocked: current page still guards via the open modal */ }
+}
+
+function knownJoyconControlMode() {
+  if (latestLobbyState?.control_mode) return latestLobbyState.control_mode;
+  if (gameId && joyconControlModeByGame.has(gameId)) return joyconControlModeByGame.get(gameId);
+  if (gameId && playerId && window.RedlineHotSeat?.isLocalSeat?.(gameId, playerId)) return 'joycon';
+  return null;
+}
+
+function requestJoyconControlMode() {
+  if (!gameId || joyconControlModeRequests.has(gameId) || joyconControlModeByGame.has(gameId)) return;
+  const requestedGameId = gameId;
+  const request = fetch(`/lobby/${encodeURIComponent(requestedGameId)}`)
+    .then(response => response.ok ? response.json() : null)
+    .then(lobby => {
+      const mode = lobby?.control_mode === 'joycon' ? 'joycon' : 'computer';
+      joyconControlModeByGame.set(requestedGameId, mode);
+      if (gameId === requestedGameId) scheduleJoyconFirstCommandHelp(window.lastGameState);
+    })
+    .catch(() => {})
+    .finally(() => joyconControlModeRequests.delete(requestedGameId));
+  joyconControlModeRequests.set(requestedGameId, request);
+}
+
+function anotherModalIsVisible() {
+  const scopes = window.RedlineControllerCore?.MODAL_SCOPES || [];
+  return scopes.some(({ id }) => {
+    if (!id || id === 'joyconHelpModal') return false;
+    const modal = document.getElementById(id);
+    if (!modal) return false;
+    const style = getComputedStyle(modal);
+    const shown = style.display !== 'none' && style.visibility !== 'hidden' && modal.getClientRects().length > 0;
+    if (!shown) return false;
+    return !(id === 'peerActionNotice' && modal.classList.contains('peer-action-notice-minimized'));
+  });
+}
+
+function maybeOpenJoyconFirstCommandHelp(state = window.lastGameState) {
+  joyconFirstCommandHelpTimer = null;
+  if (!state || !gameId || !playerId || joyconFirstCommandHelpWasShown()) return;
+  const mode = knownJoyconControlMode();
+  if (!mode) {
+    requestJoyconControlMode();
+    return;
+  }
+  if (mode !== 'joycon') return;
+
+  const me = (state.players || []).find(player => player.id === playerId);
+  const activeView = document.querySelector('#gameTabs .game-tab.active')?.dataset.view;
+  const gameShell = document.getElementById('gameShell');
+  const privacyMasked = document.documentElement.dataset.hotseat === 'masked';
+  const ready = !!me?.faction && !!me?.base && activeView === 'command'
+    && gameShell && getComputedStyle(gameShell).display !== 'none'
+    && !privacyMasked && !state.game_over;
+  // render()、分頁切換及 hot-seat 狀態更新會再次檢查。不要輪詢已結束或永久不符合資格的牌局。
+  if (!ready || anotherModalIsVisible()) return;
+
+  rememberJoyconFirstCommandHelp();
+  openJoyconHelp();
+}
+
+function scheduleJoyconFirstCommandHelp(state = window.lastGameState) {
+  if (joyconFirstCommandHelpTimer || joyconFirstCommandHelpWasShown()) return;
+  joyconFirstCommandHelpTimer = setTimeout(() => maybeOpenJoyconFirstCommandHelp(state), 250);
+}
+
+function observeJoyconFirstCommandHelpEligibility() {
+  if (joyconFirstCommandHelpObserver || typeof MutationObserver !== 'function') return;
+  joyconFirstCommandHelpObserver = new MutationObserver(() => scheduleJoyconFirstCommandHelp(window.lastGameState));
+  const targets = [
+    document.documentElement,
+    document.getElementById('gameShell'),
+    ...document.querySelectorAll('#gameTabs .game-tab'),
+    ...(window.RedlineControllerCore?.MODAL_SCOPES || [])
+      .map(({ id }) => document.getElementById(id))
+      .filter(Boolean),
+  ];
+  for (const target of new Set(targets.filter(Boolean))) {
+    joyconFirstCommandHelpObserver.observe(target, {
+      attributes: true,
+      attributeFilter: ['class', 'style', 'aria-hidden', 'data-hotseat'],
+    });
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const modal = document.getElementById('joyconHelpModal');
   if (!modal) return;
+  observeJoyconFirstCommandHelpEligibility();
   document.getElementById('joyconHelpCloseBtn')?.addEventListener('click', () => closeJoyconHelp());
   modal.addEventListener('click', (event) => { if (event.target === modal) closeJoyconHelp(); });
   document.addEventListener('keydown', (event) => {
@@ -5049,6 +5159,8 @@ async function render(state) {
       }
     }
   }
+
+  scheduleJoyconFirstCommandHelp(state);
 
 }
 

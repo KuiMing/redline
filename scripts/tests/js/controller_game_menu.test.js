@@ -324,7 +324,7 @@ test('index.html: the layers exist, the nav button is the game menu (no old help
   assert.match(html, /id="gameMenuSettingsBtn"[^>]*>Joy-Con 功能表</);
   assert.ok(html.includes('配樂音量'));
   assert.ok(!html.includes('joyconHelpBtn'));
-  const tag = 'game-menu-music-flow-20261101';
+  const tag = 'joycon-first-command-help-20261101';
   for (const f of ['controller_core.js', 'living_room_core.js', 'controller_ui.js', 'controller_living_room.js', 'app.js', 'game_music.js']) {
     assert.ok(html.includes(`/static/${f}?v=${tag}`), f);
   }
