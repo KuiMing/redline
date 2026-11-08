@@ -1,0 +1,138 @@
+# 在 GitHub Release 發布後，從相同 tag 建置未簽署的 Apple Silicon DMG，並附加至 Release。
+name: Publish macOS DMG to Release
+
+on:
+  release:
+    types:
+      - published
+  # 可對既有的已發布 Release 手動重試。tag 必須與 pyproject.toml 版本完全相符。
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "已發布的 Release tag，例如 v2.1.0"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: macos-release-${{ github.event.release.tag_name || inputs.tag }}
+  cancel-in-progress: false
+
+env:
+  UV_PYTHON: "3.11.15"
+  UV_PYTHON_PREFERENCE: only-managed
+  RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
+
+jobs:
+  build-and-publish:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - name: Validate published Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import os
+          import re
+
+          tag = os.environ["RELEASE_TAG"]
+          if re.fullmatch(r"v[0-9]+\.[0-9]+\.[0-9]+", tag) is None:
+              raise SystemExit("Release tag 必須使用 v<major>.<minor>.<patch> 格式")
+          PY
+          test "$(gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft)" = "false"
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: refs/tags/${{ github.event.release.tag_name || inputs.tag }}
+          persist-credentials: false
+
+      - name: Verify tag and project version match
+        id: version
+        run: |
+          test "$(git rev-parse HEAD)" = "$(git rev-list -n 1 "refs/tags/$RELEASE_TAG")" || {
+            echo "error: checkout commit 與 Release tag 不符" >&2
+            exit 1
+          }
+          project_version="$(python3 -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
+          test "$RELEASE_TAG" = "v$project_version" || {
+            echo "error: Release tag $RELEASE_TAG 與 pyproject.toml 版本 $project_version 不符" >&2
+            exit 1
+          }
+          echo "value=$project_version" >> "$GITHUB_OUTPUT"
+
+      - name: Verify runner is arm64
+        run: |
+          uname -a
+          sw_vers
+          test "$(uname -m)" = "arm64"
+
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.11.8"
+          enable-cache: false
+
+      - name: Print tool versions
+        run: |
+          uv --version
+          uv python install "$UV_PYTHON"
+          uv run --no-project python --version
+
+      - name: Check uv.lock matches pyproject.toml
+        run: uv lock --check
+
+      - name: Launcher tests
+        run: uv run --frozen pytest scripts/tests/test_macos_app_launcher.py -q
+
+      - name: Build app and DMG
+        run: packaging/macos/build.sh
+
+      - name: Smoke test the DMG
+        run: build/macos/venv/bin/python packaging/macos/smoke_test.py --dmg dist/REDLINE-*-macOS-arm64.dmg --gui
+
+      - name: Upload DMG to Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          dmg="dist/REDLINE-${VERSION}-macOS-arm64.dmg"
+          checksum="${dmg}.sha256"
+          test -f "$dmg"
+          test -f "$checksum"
+          (cd dist && shasum -a 256 -c "$(basename "$checksum")")
+          # 允許失敗或部分上傳後重跑；內容仍由下一步以 GitHub 的 SHA-256 digest 驗證。
+          gh release upload "$RELEASE_TAG" "$dmg" "$checksum" --clobber --repo "$GITHUB_REPOSITORY"
+
+      - name: Verify Release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          dmg="dist/REDLINE-${VERSION}-macOS-arm64.dmg"
+          checksum="${dmg}.sha256"
+          release_json="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${RELEASE_TAG}")"
+          RELEASE_JSON="$release_json" DMG="$dmg" CHECKSUM="$checksum" python3 - <<'PY'
+          import json
+          import hashlib
+          import os
+          from pathlib import Path
+
+          release = json.loads(os.environ["RELEASE_JSON"])
+          assets = {asset["name"]: asset for asset in release["assets"]}
+          for variable in ("DMG", "CHECKSUM"):
+              path = Path(os.environ[variable])
+              asset = assets.get(path.name)
+              if asset is None:
+                  raise SystemExit(f"Release 缺少 asset：{path.name}")
+              if asset["state"] != "uploaded":
+                  raise SystemExit(f"Release asset 尚未完成上傳：{path.name}")
+              if asset["size"] != path.stat().st_size:
+                  raise SystemExit(f"Release asset 大小不符：{path.name}")
+              with path.open("rb") as source:
+                  digest = "sha256:" + hashlib.file_digest(source, "sha256").hexdigest()
+              if asset.get("digest") != digest:
+                  raise SystemExit(f"Release asset SHA-256 不符：{path.name}")
+          print("Release assets verified")
+          PY
