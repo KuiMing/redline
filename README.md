@@ -69,7 +69,7 @@ Lobby 畫面也會顯示這個網址。想讓 Agent 陪玩的話，另外開 MCP
 > [!WARNING]
 > 這是**未簽署、未經 Apple 公證**的測試版（只有 arm64 核心要求的 ad-hoc 簽章），僅支援 Apple Silicon。macOS 無法驗證來源，請只使用你信任的人建置的版本。
 
-**下載**：到 GitHub Actions 的 [macOS DMG workflow](../../actions/workflows/macos-dmg.yml)，開啟一次成功的執行，下載名為 `REDLINE-<version>-macOS-arm64-run<run id>.<attempt>-<commit>` 的 artifact 並解壓縮（需登入 GitHub，保留 14 天；目前不發布 GitHub Release）。名稱中的 run id、attempt 與 commit 可對應到實際的建置。可用同目錄的 `.sha256` 以 `shasum -a 256 -c` 檢查。維護者可用 **Run workflow** 手動觸發建置。
+**下載**：正式發布的版本可直接到 [GitHub Releases](../../releases) 下載 `REDLINE-<version>-macOS-arm64.dmg` 與 `.sha256`。發布 `v<version>` Release 後，GitHub Actions 會從相同 tag 建置、測試並附加這兩個檔案；tag 必須與 `pyproject.toml` 的版本完全相符。PR 與手動測試版仍在 [macOS DMG workflow](../../actions/workflows/macos-dmg.yml) 的執行頁面下載，artifact 名稱為 `REDLINE-<version>-macOS-arm64-run<run id>.<attempt>-<commit>`，需登入 GitHub且保留 14 天。可用同目錄的 `.sha256` 以 `shasum -a 256 -c` 檢查。
 
 **第一次開啟（Gatekeeper）**：
 
